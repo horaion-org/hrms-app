@@ -1,0 +1,49 @@
+/**
+ * RFC 7807 problem detail, as returned by the API's global exception handler.
+ * `error_code` is a Horaion extension; branch on it rather than on `detail`,
+ * which is human-facing prose and may be reworded.
+ */
+export type ProblemDetail = {
+	type?: string;
+	title?: string;
+	status?: number;
+	detail?: string;
+	instance?: string;
+	error_code?: string;
+	errors?: Array<{ field: string; message: string }>;
+};
+
+const FALLBACK_MESSAGE = "Something went wrong. Please try again.";
+
+/** An API response that was not successful. */
+export class ApiProblemError extends Error {
+	public readonly status: number;
+	public readonly errorCode: string | undefined;
+	public readonly fieldErrors: Array<{ field: string; message: string }>;
+
+	public constructor(status: number, problem: ProblemDetail) {
+		super(problem.detail ?? problem.title ?? FALLBACK_MESSAGE);
+
+		this.name = "ApiProblemError";
+		this.status = status;
+		this.errorCode = problem.error_code;
+		this.fieldErrors = problem.errors ?? [];
+	}
+
+	/** True when the API refused the action rather than failing to perform it. */
+	public get isForbidden(): boolean {
+		return this.status === 403;
+	}
+
+	public get isUnauthenticated(): boolean {
+		return this.status === 401;
+	}
+
+	public get isNotFound(): boolean {
+		return this.status === 404;
+	}
+
+	public get isConflict(): boolean {
+		return this.status === 409;
+	}
+}

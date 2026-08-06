@@ -32,3 +32,8 @@ storybook-static
 
 # tests
 /coverage/
+
+# local environment
+.env
+.env.local
+.env.*.local
