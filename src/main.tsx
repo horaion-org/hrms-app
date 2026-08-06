@@ -2,9 +2,15 @@ import { createRouter } from "@tanstack/react-router";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "@/App";
+import { configureApiClient } from "@/common/api-client";
+import { accessToken } from "@/features/auth/cognito";
 import { routeTree } from "@/routeTree.gen";
 import "@/styles/tailwind.css";
 import "@/common/i18n";
+
+// The client asks the auth layer for a token rather than importing it, which
+// keeps the dependency acyclic. See src/common/api-client.ts.
+configureApiClient(accessToken);
 
 const router = createRouter({ routeTree });
 

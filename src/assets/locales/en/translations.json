@@ -1,13 +1,6 @@
 {
-    "home": {
-        "greeting": "Hello, world!"
-    },
-    "example": {
-        "title": "Matches Builder Example",
-        "tableHeading": "Matches table",
-        "formHeading": "Add a match",
-        "chartHeading": "Goals per match",
-        "loading": "Loading matches…",
-        "error": "Failed to load matches"
-    }
+	"auth": {
+		"signIn": "Sign in",
+		"signUp": "Create your company"
+	}
 }
