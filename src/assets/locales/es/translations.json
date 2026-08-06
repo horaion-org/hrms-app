@@ -1,13 +1,6 @@
 {
-    "home": {
-        "greeting": "¡Hola, Mundo!"
-    },
-    "example": {
-        "title": "Ejemplo de Matches Builder",
-        "tableHeading": "Tabla de partidos",
-        "formHeading": "Añadir un partido",
-        "chartHeading": "Goles por partido",
-        "loading": "Cargando partidos…",
-        "error": "Error al cargar los partidos"
-    }
+	"auth": {
+		"signIn": "Iniciar sesión",
+		"signUp": "Crea tu empresa"
+	}
 }
