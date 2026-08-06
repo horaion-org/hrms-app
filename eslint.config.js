@@ -33,7 +33,11 @@ const baseESLintConfig = {
     "no-unused-private-class-members": "error",
     "no-use-before-define": "error",
     "require-atomic-updates": "error",
-    "camelcase": "error",
+    // Identifiers stay camelCase, but property names do not: the Horaion API
+    // speaks snake_case on the wire and the client carries that casing all the
+    // way into components rather than maintaining a mapping layer.
+    // See docs/adr/0004-generated-api-types.md.
+    "camelcase": ["error", { properties: "never" }],
   }
 }
 
@@ -205,6 +209,10 @@ const eslintConfig = typescriptEslint.config(
 
 eslintConfig.map((config) => {
   config.files = ["src/**/*.ts", "src/**/*.tsx"]
+  // Generated from the API's OpenAPI specification by `npm run gen:api`. It is
+  // committed so the app builds without a running API, but it is not authored
+  // here and cannot satisfy rules such as array-type.
+  config.ignores = ["src/common/api-types.gen.ts", "src/routeTree.gen.ts"]
 })
 
 export default eslintConfig
