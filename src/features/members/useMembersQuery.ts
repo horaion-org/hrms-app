@@ -5,7 +5,7 @@ import {
 	type UseMutationResult,
 	type UseQueryResult,
 } from "@tanstack/react-query";
-import type { Member, MembershipImport } from "@/common/api";
+import type { Member, MembershipImport, Paged } from "@/common/api";
 import {
 	deactivateMember,
 	fetchMembers,
@@ -17,17 +17,19 @@ import {
 } from "@/features/members/api";
 import { notifyError, notifySuccess } from "@/store/useToastStore";
 
-export const membersQueryKey = (companyId: string): Array<string> => [
+export const membersQueryKey = (companyId: string, page = 0): Array<string> => [
 	"members",
 	companyId,
+	String(page),
 ];
 
 export function useMembersQuery(
-	companyId: string
-): UseQueryResult<Array<Member>, Error> {
+	companyId: string,
+	page = 0
+): UseQueryResult<Paged<Member>, Error> {
 	return useQuery({
-		queryKey: membersQueryKey(companyId),
-		queryFn: async () => fetchMembers(companyId),
+		queryKey: membersQueryKey(companyId, page),
+		queryFn: async () => fetchMembers(companyId, page),
 	});
 }
 
@@ -35,19 +37,24 @@ function useMembersInvalidator(companyId: string): () => void {
 	const queryClient = useQueryClient();
 
 	return (): void => {
+		// Every page of this company's members, since a change can move rows
+		// across page boundaries.
 		void queryClient.invalidateQueries({
-			queryKey: membersQueryKey(companyId),
+			queryKey: ["members", companyId],
 		});
 	};
 }
 
+export type InviteMember = { email: string; displayName: string };
+
 export function useInviteMemberMutation(
 	companyId: string
-): UseMutationResult<Member, Error, string> {
+): UseMutationResult<Member, Error, InviteMember> {
 	const invalidate = useMembersInvalidator(companyId);
 
-	return useMutation<Member, Error, string>({
-		mutationFn: async (email: string) => inviteMember(companyId, email),
+	return useMutation<Member, Error, InviteMember>({
+		mutationFn: async ({ email, displayName }: InviteMember) =>
+			inviteMember(companyId, email, displayName),
 		onSuccess: (member) => {
 			invalidate();
 			notifySuccess(`Invited ${member.email}. They will receive an email.`);

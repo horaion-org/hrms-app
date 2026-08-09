@@ -1,8 +1,13 @@
 import { apiRequest } from "@/common/api-client";
-import type { Member, MembershipImport } from "@/common/api";
+import type { Member, MembershipImport, Paged } from "@/common/api";
 
-export async function fetchMembers(companyId: string): Promise<Array<Member>> {
-	return apiRequest<Array<Member>>(`/api/v1/companies/${companyId}/members`);
+export async function fetchMembers(
+	companyId: string,
+	page: number
+): Promise<Paged<Member>> {
+	return apiRequest<Paged<Member>>(
+		`/api/v1/companies/${companyId}/members?page=${String(page)}`
+	);
 }
 
 /**
@@ -11,11 +16,17 @@ export async function fetchMembers(companyId: string): Promise<Array<Member>> {
  */
 export async function inviteMember(
 	companyId: string,
-	email: string
+	email: string,
+	displayName: string
 ): Promise<Member> {
 	return apiRequest<Member>(`/api/v1/companies/${companyId}/members`, {
 		method: "POST",
-		body: { email },
+		body: {
+			email,
+			// The API falls back to the email when this is blank, so an empty
+			// field is a legitimate answer rather than a validation failure.
+			display_name: displayName.trim() === "" ? undefined : displayName.trim(),
+		},
 	});
 }
 
