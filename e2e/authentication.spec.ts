@@ -19,9 +19,9 @@ test("the company sign-up form is reachable and asks for what onboarding needs",
 	await page.getByRole("link", { name: /create a company/i }).click();
 
 	await expect(page).toHaveURL(/\/sign-up/);
-	await expect(page.getByLabel("Company name")).toBeVisible();
-	await expect(page.getByLabel("Workspace address")).toBeVisible();
-	await expect(page.getByLabel("Email address")).toBeVisible();
+	await expect(page.getByLabel("Company Name")).toBeVisible();
+	await expect(page.getByLabel("Workspace Address")).toBeVisible();
+	await expect(page.getByLabel("Email Address")).toBeVisible();
 	await expect(page.getByLabel("Password")).toBeVisible();
 });
 

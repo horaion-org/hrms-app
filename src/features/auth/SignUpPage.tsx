@@ -57,7 +57,7 @@ export const SignUpPage = (): FunctionComponent => {
 			>
 				<Input
 					required
-					label="Company name"
+					label="Company Name"
 					maxLength={255}
 					value={companyName}
 					onChange={(event) => {
@@ -67,7 +67,7 @@ export const SignUpPage = (): FunctionComponent => {
 				<Input
 					required
 					hint="Your workspace address. Lowercase letters, numbers and hyphens."
-					label="Workspace address"
+					label="Workspace Address"
 					maxLength={30}
 					value={subdomain}
 					onChange={(event) => {
@@ -76,7 +76,7 @@ export const SignUpPage = (): FunctionComponent => {
 				/>
 				<Input
 					autoComplete="name"
-					label="Your name"
+					label="Your Name"
 					maxLength={255}
 					value={displayName}
 					onChange={(event) => {
@@ -86,7 +86,7 @@ export const SignUpPage = (): FunctionComponent => {
 				<Input
 					required
 					autoComplete="email"
-					label="Email address"
+					label="Email Address"
 					type="email"
 					value={email}
 					onChange={(event) => {

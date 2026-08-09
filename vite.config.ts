@@ -9,6 +9,16 @@ import tailwindcss from "@tailwindcss/vite";
 
 // https://vitejs.dev/config/
 export default defineConfig({
+	define: {
+		global: "globalThis",
+	},
+	optimizeDeps: {
+		esbuildOptions: {
+			define: {
+				global: "globalThis",
+			},
+		},
+	},
 	plugins: [
 		// Must be the first plugin so it can inject `data-tsd-source`
 		// attributes for the devtools Source Inspector ("open in editor").
