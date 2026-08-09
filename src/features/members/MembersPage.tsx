@@ -1,5 +1,4 @@
 import { useState } from "react";
-import type { ColumnDef } from "@tanstack/react-table";
 import type { Member } from "@/common/api";
 import { PERMISSION } from "@/common/permissions";
 import type { FunctionComponent } from "@/common/types";
@@ -33,7 +32,8 @@ export const MembersPage = (): FunctionComponent => {
 	const [editingRolesFor, setEditingRolesFor] = useState<Member | null>(null);
 
 	const roleName = (roleId: string): string =>
-		rolesQuery.data?.find((role) => role.id === roleId)?.name ?? "Unknown role";
+		rolesQuery.data?.content.find((role) => role.id === roleId)?.name ??
+		"Unknown role";
 
 	const columns: DataTableColumns<Member> = [
 		{
@@ -160,7 +160,7 @@ export const MembersPage = (): FunctionComponent => {
 					caption="Company members"
 					columns={columns}
 					emptyMessage="No members yet. Invite someone to get started."
-					rows={membersQuery.data}
+					rows={membersQuery.data.content}
 				/>
 			)}
 
@@ -185,5 +185,3 @@ export const MembersPage = (): FunctionComponent => {
 		</section>
 	);
 };
-
-export type { ColumnDef };

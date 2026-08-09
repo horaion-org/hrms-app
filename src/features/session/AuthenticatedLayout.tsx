@@ -2,6 +2,7 @@ import { Outlet, useNavigate } from "@tanstack/react-router";
 import { AppShell } from "@/components/layout/AppShell";
 import { LoadingState, PageState } from "@/components/ui/PageState";
 import { Button } from "@/components/ui/Button";
+import { ApiProblemError } from "@/common/problem";
 import type { FunctionComponent } from "@/common/types";
 import { signOut } from "@/features/auth/cognito";
 import { usePermissionsQuery } from "@/features/permissions/usePermissionsQuery";
@@ -28,11 +29,21 @@ export const AuthenticatedLayout = (): FunctionComponent => {
 	}
 
 	if (meQuery.isError) {
+		// A revoked membership is a refusal the API can name, so say what
+		// actually happened rather than blaming the network.
+		const revoked =
+			meQuery.error instanceof ApiProblemError &&
+			meQuery.error.errorCode === "MEMBERSHIP_REVOKED";
+
 		return (
 			<PageState
-				action={<Button onClick={leave}>Sign in again</Button>}
-				description={meQuery.error.message}
-				title="We could not load your account"
+				action={<Button onClick={leave}>Sign out</Button>}
+				title={revoked ? "Access removed" : "We could not load your account"}
+				description={
+					revoked
+						? "Your access to this company has been removed. Contact an administrator if you think this is a mistake."
+						: meQuery.error.message
+				}
 			/>
 		);
 	}

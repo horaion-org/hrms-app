@@ -5,7 +5,7 @@ import {
 	type UseMutationResult,
 	type UseQueryResult,
 } from "@tanstack/react-query";
-import type { PermissionKey, Role } from "@/common/api";
+import type { Paged, PermissionKey, Role } from "@/common/api";
 import {
 	createRole,
 	deleteRole,
@@ -21,7 +21,7 @@ export const rolesQueryKey = (companyId: string): Array<string> => [
 
 export function useRolesQuery(
 	companyId: string
-): UseQueryResult<Array<Role>, Error> {
+): UseQueryResult<Paged<Role>, Error> {
 	return useQuery({
 		queryKey: rolesQueryKey(companyId),
 		queryFn: async () => fetchRoles(companyId),

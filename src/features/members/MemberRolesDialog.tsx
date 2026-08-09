@@ -29,7 +29,7 @@ export const MemberRolesDialog = ({
 	const grant = useGrantRoleMutation(companyId);
 	const revoke = useRevokeRoleMutation(companyId);
 	const held = new Set(member?.role_ids ?? []);
-	const assignable = (rolesQuery.data ?? []).filter(
+	const assignable = (rolesQuery.data?.content ?? []).filter(
 		(role) => !role.protected_role
 	);
 

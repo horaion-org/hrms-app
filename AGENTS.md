@@ -97,6 +97,10 @@ in `src/components/ui` supplies the project's API and appearance. Icons come fro
 * Zod is for **form input validation only**. Do not re-declare response shapes as Zod schemas.
 * Every response is wrapped in an envelope: `{ success, data, message, timestamp, path }`. Unwrap in the
   API client, not in components.
+* List endpoints return a page, not an array: `data` is `{ content, page }`. Accept `page` and `size`
+  query parameters; `size` is capped at 100. Query keys must include the page, and an invalidation
+  after a write must clear every page of that collection, because a change can move rows across page
+  boundaries.
 * Errors are **RFC 7807** `ProblemDetail`: `type`, `title`, `status`, `detail`, `instance`, plus an
   `error_code` property. Surface `detail`; branch on `error_code`, never on `detail` text.
 

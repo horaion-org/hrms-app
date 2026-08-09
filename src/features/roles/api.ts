@@ -1,8 +1,13 @@
 import { apiRequest } from "@/common/api-client";
-import type { PermissionKey, Role } from "@/common/api";
+import type { Paged, PermissionKey, Role } from "@/common/api";
 
-export async function fetchRoles(companyId: string): Promise<Array<Role>> {
-	return apiRequest<Array<Role>>(`/api/v1/companies/${companyId}/roles`);
+export async function fetchRoles(
+	companyId: string,
+	page = 0
+): Promise<Paged<Role>> {
+	return apiRequest<Paged<Role>>(
+		`/api/v1/companies/${companyId}/roles?page=${String(page)}`
+	);
 }
 
 /**

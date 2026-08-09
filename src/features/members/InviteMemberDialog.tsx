@@ -18,14 +18,19 @@ export const InviteMemberDialog = ({
 	const { companyId } = useWorkspace();
 	const invite = useInviteMemberMutation(companyId);
 	const [email, setEmail] = useState("");
+	const [displayName, setDisplayName] = useState("");
 
 	const submit = (): void => {
-		invite.mutate(email, {
-			onSuccess: () => {
-				setEmail("");
-				onClose();
-			},
-		});
+		invite.mutate(
+			{ email, displayName },
+			{
+				onSuccess: () => {
+					setEmail("");
+					setDisplayName("");
+					onClose();
+				},
+			}
+		);
 	};
 
 	return (
@@ -50,6 +55,15 @@ export const InviteMemberDialog = ({
 					value={email}
 					onChange={(event) => {
 						setEmail(event.target.value);
+					}}
+				/>
+				<Input
+					hint="Optional. We will show their email address until they set one."
+					label="Name"
+					maxLength={255}
+					value={displayName}
+					onChange={(event) => {
+						setDisplayName(event.target.value);
 					}}
 				/>
 				<div className="flex justify-end gap-2">

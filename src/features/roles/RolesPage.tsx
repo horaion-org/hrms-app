@@ -49,7 +49,7 @@ export const RolesPage = (): FunctionComponent => {
 				/>
 			) : null}
 
-			{rolesQuery.data !== undefined && rolesQuery.data.length === 0 ? (
+			{rolesQuery.data !== undefined && rolesQuery.data.content.length === 0 ? (
 				<PageState
 					description="Create a role to start granting access to members."
 					title="No roles yet"
@@ -57,7 +57,7 @@ export const RolesPage = (): FunctionComponent => {
 			) : null}
 
 			<ul className="grid gap-3 sm:grid-cols-2">
-				{(rolesQuery.data ?? []).map((role) => (
+				{(rolesQuery.data?.content ?? []).map((role) => (
 					<li
 						key={role.id}
 						className="rounded-lg bg-white p-4 ring-1 ring-slate-200"
