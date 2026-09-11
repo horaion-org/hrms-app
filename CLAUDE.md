@@ -133,3 +133,26 @@ in `src/components/ui` supplies the project's API and appearance. Icons come fro
   `given_[State]_when_[Action]_then_[Result]`.
 * **Storybook** stories, rather than assertions, are the coverage for presentational primitives.
 * **Playwright** covers the critical path end to end against the real stack (`make up` in `../api`).
+
+## Decision records
+
+Security-relevant choices are written down as Architecture Decision Records in `docs/adr/`, numbered
+`NNNN-<slug>.md`. They are audit evidence (ISO 27001 clause 7.5, documented information) as much as
+engineering notes, so an ADR is written when the decision is made, in the same PR as the code, never
+reconstructed later.
+
+Write one whenever a change decides:
+
+* how identity or credentials are handled: the authentication flow, token storage and lifetime,
+  refresh, sign-out, challenge handling;
+* where anything lives in the browser and why: memory, `localStorage`, `sessionStorage`, cookies;
+* a security header or CSP directive, including every exception to it;
+* a third-party service or dependency the app sends data to, and what data;
+* what the client trusts from the API and what it must never decide itself;
+* anything a penetration tester or auditor could reasonably ask "why is it done this way?" about.
+
+Format matches the existing records: the title is a sentence stating the decision; the first line
+after it reads `Date: YYYY-MM-DD · Status: Proposed | Accepted | Superseded by ADR-NNNN`; then the
+context, the decision, the alternatives rejected and why, and the consequences. A decision is never
+changed by editing its ADR: a new ADR supersedes it and the old one's status line is updated to point
+forward. The module the ADR governs names it in a comment at the top, and the PR description links it.
