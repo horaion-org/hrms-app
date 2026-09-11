@@ -1,0 +1,45 @@
+# Weekly dependency updates, grouped so one PR covers a batch instead of one
+# PR per package. Security advisories still open their own PR immediately.
+version: 2
+
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Singapore"
+    target-branch: "development"
+    labels:
+      - "dependencies"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    groups:
+      # Minor and patch bumps are low risk and reviewed together.
+      minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+    # Majors arrive one per PR so a breaking change is reviewed on its own.
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Singapore"
+    target-branch: "development"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    groups:
+      github-actions:
+        patterns:
+          - "*"

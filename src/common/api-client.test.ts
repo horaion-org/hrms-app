@@ -26,12 +26,16 @@ function headersOf(request: CapturedRequest | undefined): Headers {
 	return (request?.init?.headers ?? new Headers()) as Headers;
 }
 
+// The client reads its base URL from the build environment. Tests set it
+// explicitly so they mean the same thing on a machine with no .env file.
 beforeEach(() => {
 	captured = [];
+	vi.stubEnv("VITE_API_BASE_URL", "http://api.test");
 });
 
 afterEach(() => {
 	vi.unstubAllGlobals();
+	vi.unstubAllEnvs();
 	configureApiClient(() => Promise.resolve(null));
 });
 
@@ -78,8 +82,10 @@ describe("apiRequest", () => {
 	});
 
 	it("given_unparseableErrorBody_when_requested_then_stillThrowsWithTheStatus", async () => {
-		vi.stubGlobal("fetch", (): Promise<Response> =>
-			Promise.resolve(new Response("<html>gateway</html>", { status: 502 }))
+		vi.stubGlobal(
+			"fetch",
+			(): Promise<Response> =>
+				Promise.resolve(new Response("<html>gateway</html>", { status: 502 }))
 		);
 
 		const failure: unknown = await apiRequest("/api/v1/roles").catch(
@@ -115,10 +121,11 @@ describe("apiRequest", () => {
 	});
 
 	it("given_aBaseUrlWithATrailingSlash_when_requested_then_doesNotDoubleTheSeparator", async () => {
+		vi.stubEnv("VITE_API_BASE_URL", "http://api.test/");
 		stubFetch(200, { data: null });
 
 		await apiRequest("/api/v1/me");
 
-		expect(captured[0]?.url).not.toContain("//api/v1");
+		expect(captured[0]?.url).toBe("http://api.test/api/v1/me");
 	});
 });
