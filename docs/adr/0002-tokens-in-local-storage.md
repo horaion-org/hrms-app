@@ -1,4 +1,5 @@
 # Cognito tokens in localStorage, bounded by CSP and instant revocation
+Date: 2026-08-06 · Status: Accepted
 
 Tokens obtained in the browser have to live somewhere, and every option trades cross-site scripting
 exposure against usability. Decided: the library's default `localStorage` storage, paired with a strict

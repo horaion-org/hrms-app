@@ -1,4 +1,5 @@
 # In-app Cognito authentication with amazon-cognito-identity-js
+Date: 2026-08-06 · Status: Accepted
 
 The Horaion API is a pure resource server. It validates a Cognito access token — checking issuer,
 `client_id`, and `token_use` — and issues nothing. There is no login endpoint, no refresh endpoint, and
