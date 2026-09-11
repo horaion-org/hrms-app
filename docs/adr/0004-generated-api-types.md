@@ -1,4 +1,5 @@
 # API types are generated from OpenAPI and committed
+Date: 2026-08-06 · Status: Accepted
 
 The app must speak roughly twenty-five request and response shapes, all `snake_case`, against an API
 that changes. Hand-written interfaces drift silently; hand-written Zod schemas for responses drift

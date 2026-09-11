@@ -1,4 +1,5 @@
 # UI primitives are built in-house on Headless UI
+Date: 2026-08-06 · Status: Accepted
 
 The console needs a data table, a modal, a dropdown menu, toasts, a file input for the spreadsheet
 import, and a grouped checkbox matrix for the nineteen permissions across six catalog resources.

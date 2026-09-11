@@ -1,4 +1,5 @@
 # The Company is implicit in app URLs and explicit in API calls
+Date: 2026-08-06 · Status: Accepted
 
 Every company-scoped API route names its tenant: `/api/v1/companies/{companyId}/members`. The obvious
 client mirror is `/companies/:companyId/members`, and it is the wrong shape for this product.
