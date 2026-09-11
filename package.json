@@ -1,19 +1,15 @@
 {
-  "name": "vite-react-boilerplate",
-  "author": "Vernon Wee Hong KOH <vernonweehongkoh.developer@gmail.com>",
-  "description": "A production ready, batteries included starter template for Vite + React projects",
-  "keywords": [
-    "vite",
-    "react",
-    "boilerplate",
-    "starter",
-    "template"
-  ],
-  "license": "MIT",
-  "version": "0.0.0",
+  "name": "hrms-app",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Horaion web client",
+  "license": "UNLICENSED",
   "type": "module",
+  "packageManager": "pnpm@11.9.0",
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
-    "setup": "git init && npx playwright install",
     "format": "prettier \"src/**/*.{ts,tsx}\" --write",
     "gen:api": "openapi-typescript ../api/src/main/resources/openapi.json -o src/common/api-types.gen.ts",
     "lint": "eslint --max-warnings 0",
