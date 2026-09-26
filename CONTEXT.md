@@ -24,6 +24,14 @@ _Avoid_: Pill, chip, tag
 The meaning a Badge conveys, drawn from Success, Warning, Error, or Neutral. A Badge with no stated tone is Neutral.
 _Avoid_: Status, variant, colour
 
+**Stepper**:
+A control that shows a person's progress through an ordered sequence of steps and which step they are on.
+_Avoid_: Wizard, progress bar, progress indicator, breadcrumb
+
+**Step**:
+One stage in a stepper's sequence. A step is completed, current, or upcoming. At most one step is current, and when the sequence is finished every step is completed. A person can return to a completed step but cannot jump ahead to an upcoming one.
+_Avoid_: Stage, phase, tab
+
 ## Visual language
 
 **Colour range**:
