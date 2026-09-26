@@ -15,14 +15,21 @@ export default defineConfig({
 		// Production exclusion is handled by our `isProduction` + lazy-load
 		// wrapper, so the plugin's own build-time removal is disabled.
 		devtools({ removeDevtoolsOnBuild: false }),
+		// Splits each route into its own chunk; must run before the JSX
+		// transform in `react()`.
+		TanStackRouterVite({ autoCodeSplitting: true }),
 		react(),
 		tailwindcss(),
-		TanStackRouterVite(),
+		// Copies src/assets/locales to dist/locales, where the production
+		// i18next backend fetches them. Stripping `src/assets` also keeps the
+		// dev server from shadowing the translation files that are imported
+		// as modules.
 		viteStaticCopy({
 			targets: [
 				{
-					src: normalizePath(path.resolve("./src/assets/locales")),
-					dest: normalizePath(path.resolve("./dist")),
+					src: "src/assets/locales",
+					dest: ".",
+					rename: { stripBase: 2 },
 				},
 			],
 		}),

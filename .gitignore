@@ -32,3 +32,6 @@ storybook-static
 
 # tests
 /coverage/
+
+# read-only agent handoff snapshots
+codex-handoff/

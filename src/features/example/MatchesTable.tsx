@@ -1,17 +1,20 @@
 import {
 	createColumnHelper,
 	flexRender,
-	getCoreRowModel,
-	useReactTable,
+	tableFeatures,
+	useTable,
 } from "@tanstack/react-table";
 import type { FunctionComponent } from "@/common/types";
 import type { Match } from "@/features/example/api";
 import { TanStackTableDevelopmentTools } from "@/components/utils/development-tools/TanStackTableDevelopmentTools";
 import { useExampleStore } from "@/store/useExampleStore";
 
-const columnHelper = createColumnHelper<Match>();
+// The table uses no optional features; the core row model is built in.
+const features = tableFeatures({});
 
-const columns = [
+const columnHelper = createColumnHelper<typeof features, Match>();
+
+const columns = columnHelper.columns([
 	columnHelper.accessor("homeTeam", { header: "Home" }),
 	columnHelper.accessor("awayTeam", { header: "Away" }),
 	columnHelper.accessor(
@@ -21,7 +24,7 @@ const columns = [
 			header: "Score",
 		}
 	),
-];
+]);
 
 interface MatchesTableProps {
 	data: Array<Match>;
@@ -35,13 +38,12 @@ export const MatchesTable = ({
 		(state) => state.setSelectedMatchId
 	);
 
-	// React Compiler cannot memoize TanStack Table's returned API; this is
-	// expected and safe here (the table is used directly, not re-memoized).
-	// eslint-disable-next-line react-hooks/incompatible-library
-	const table = useReactTable({
+	const table = useTable({
+		// Names the table in the TanStack Table devtools panel.
+		key: "matches",
+		features,
 		data,
 		columns,
-		getCoreRowModel: getCoreRowModel(),
 	});
 
 	return (
@@ -77,7 +79,7 @@ export const MatchesTable = ({
 									setSelectedMatchId(row.original.id);
 								}}
 							>
-								{row.getVisibleCells().map((cell) => (
+								{row.getAllCells().map((cell) => (
 									<td
 										key={cell.id}
 										className="cursor-pointer border-b px-3 py-2"

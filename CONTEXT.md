@@ -1,0 +1,47 @@
+# Horaion
+
+Horaion is a human resources management system. This glossary fixes the words the product, design, and code share.
+
+## Product structure
+
+**Module**:
+A self-contained area of the product that serves one HR concern, reached from the main navigation. The modules are Dashboard, Scheduling, Leave, People, and Organisation.
+_Avoid_: Section, area, page, workspace
+
+## Visual language
+
+**Colour range**:
+A named family of ten shades, numbered 50 (lightest) to 900 (darkest).
+_Avoid_: Palette, scale, ramp
+
+**Default shade**:
+The one shade of a colour range that stands for the whole range when no shade number is given.
+_Avoid_: Base shade, main shade
+
+**Base**:
+The two absolute colours, Black and White, that anchor contrast across every surface.
+_Avoid_: Default, core colours
+
+**Ink Blue**:
+The primary colour range and Horaion's identity colour, used for key actions, active states, and focus. Its default shade is 900.
+_Avoid_: Brand, primary blue
+
+**Porcelain**:
+The secondary colour range, a warm brown that adds depth to surfaces and supporting elements without competing with Ink Blue. Its default shade is 50.
+_Avoid_: Secondary, beige, brown
+
+**Neutral**:
+The grey colour range for hierarchy: backgrounds, dividers, borders, disabled states, and secondary text. Its default shade is 900.
+_Avoid_: Grey, gray
+
+**Success**:
+The colour range for positive outcomes, confirmations, and completed actions. Its default shade is 600.
+_Avoid_: Positive, green
+
+**Warning**:
+The colour range for potential issues that deserve attention before acting, without urgency. Its default shade is 600.
+_Avoid_: Caution, alert, yellow
+
+**Error**:
+The colour range for critical issues, failed actions, and missing inputs that need immediate attention. Its default shade is 600.
+_Avoid_: Danger, destructive, red

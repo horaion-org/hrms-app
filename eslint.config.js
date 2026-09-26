@@ -1,4 +1,4 @@
-import { fixupPluginRules } from '@eslint/compat';
+import { fixupConfigRules, fixupPluginRules } from '@eslint/compat';
 import eslintJS from "@eslint/js"
 import tsParser from '@typescript-eslint/parser';
 //import eslintPluginStorybook from "eslint-plugin-storybook" // does not support eslint v9
@@ -100,7 +100,7 @@ const typescriptConfig = {
 const reactConfig = {
   name: "react",
   extends: [
-    eslintPluginReact.configs.flat["jsx-runtime"],
+    ...fixupConfigRules(eslintPluginReact.configs.flat["jsx-runtime"]),
   ],
   plugins: {
     "react-hooks": patchedReactHooksPlugin,
@@ -168,7 +168,7 @@ const unicornConfig = {
     "unicorn/no-console-spaces": "error",
     "unicorn/no-null": "off",
     "unicorn/filename-case": "off",
-    "unicorn/prevent-abbreviations": [
+    "unicorn/name-replacements": [
       "error",
       {
         "replacements": {
@@ -206,5 +206,8 @@ const eslintConfig = typescriptEslint.config(
 eslintConfig.map((config) => {
   config.files = ["src/**/*.ts", "src/**/*.tsx"]
 })
+
+// Build output carries inline disable directives for rules this config doesn't load.
+eslintConfig.push({ name: "ignores", ignores: ["storybook-static/"] })
 
 export default eslintConfig

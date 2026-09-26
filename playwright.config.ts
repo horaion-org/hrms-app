@@ -70,7 +70,10 @@ export default defineConfig({
 
 	/* Run your local dev server before starting the tests */
 	webServer: {
-		command: "pnpm dev",
+		// Start Vite directly, not through `pnpm dev`: pnpm runs scripts in
+		// their own process group, so stopping it would orphan Vite on the
+		// port, and the next run would reuse that dying server.
+		command: "node node_modules/vite/bin/vite.js",
 		url: "http://localhost:5173",
 		reuseExistingServer: !process.env.CI,
 		timeout: 120 * 1000,

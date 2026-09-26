@@ -1,4 +1,4 @@
-import { faker } from "@faker-js/faker/locale/en";
+import type { Faker } from "@faker-js/faker";
 
 export interface Match {
 	id: string;
@@ -9,7 +9,7 @@ export interface Match {
 	playedOn: string;
 }
 
-const createMatch = (): Match => ({
+const createMatch = (faker: Faker): Match => ({
 	id: faker.string.uuid(),
 	homeTeam: faker.location.city(),
 	awayTeam: faker.location.city(),
@@ -20,11 +20,11 @@ const createMatch = (): Match => ({
 
 /**
  * Stand-in for a real API call. Resolves with locally generated mock data so
- * the TanStack Query example works offline. Swap the body for a real `fetch`
- * when wiring up a backend.
+ * the TanStack Query example works offline. Faker is loaded on first call so
+ * it stays out of the page's bundle. Swap the body for a real `fetch` when
+ * wiring up a backend.
  */
-export const fetchMatches = (count = 8): Promise<Array<Match>> => {
-	return Promise.resolve(
-		Array.from({ length: count }, (): Match => createMatch())
-	);
+export const fetchMatches = async (count = 8): Promise<Array<Match>> => {
+	const { faker } = await import("@faker-js/faker/locale/en");
+	return Array.from({ length: count }, (): Match => createMatch(faker));
 };

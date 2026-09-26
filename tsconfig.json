@@ -30,6 +30,6 @@
 		"noPropertyAccessFromIndexSignature": true,
 		"noUncheckedIndexedAccess": true
 	},
-	"include": ["src", "e2e"],
+	"include": ["src", "e2e", "vitest.setup.ts"],
 	"references": [{ "path": "./tsconfig.node.json" }]
 }

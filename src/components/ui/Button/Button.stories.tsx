@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { FunctionComponent } from "@/common/types";
 import { Button, type ButtonProps } from "./Button";
+import { buttonSizes, buttonVariants } from "./Button.constants";
 
 const PlaceholderIcon = (): FunctionComponent => (
 	<svg aria-hidden="true" fill="none" viewBox="0 0 24 24">
@@ -22,9 +23,9 @@ const meta = {
 	argTypes: {
 		variant: {
 			control: "select",
-			options: ["primary", "secondary", "textlink", "hyperlink"],
+			options: buttonVariants,
 		},
-		size: { control: "inline-radio", options: ["lg", "sm"] },
+		size: { control: "inline-radio", options: buttonSizes },
 		leadingIcon: { control: false },
 		trailingIcon: { control: false },
 	},
@@ -78,7 +79,7 @@ export const Matrix: Story = {
 		<div className="grid grid-cols-[auto_auto_auto] items-center gap-x-8 gap-y-6">
 			{rows.map(({ label, props }) => (
 				<div key={label} className="contents">
-					<span className="text-right text-brand-700">{label}</span>
+					<span className="text-right text-ink-blue-700">{label}</span>
 					<Button {...args} {...props} />
 					<Button {...args} {...props} disabled />
 				</div>

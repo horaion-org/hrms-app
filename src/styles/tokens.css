@@ -1,0 +1,83 @@
+/*
+ * Horaion design tokens.
+ *
+ * Colour: the six colour ranges (Neutral, Ink Blue, Porcelain, Success,
+ * Warning, Error), each with shades 50 to 900 and an unnumbered token for its
+ * default shade. The Base colours (black, white) are Tailwind's stock values,
+ * which already match the design, so they are not redefined here.
+ */
+@theme {
+	/* Neutral replaces Tailwind's stock neutral entirely (no neutral-950). */
+	--color-neutral-*: initial;
+	--color-neutral-50: #fbfdff;
+	--color-neutral-100: #f6f8fd;
+	--color-neutral-200: #f1f3f8;
+	--color-neutral-300: #edeef3;
+	--color-neutral-400: #cdced3;
+	--color-neutral-500: #b0b1b6;
+	--color-neutral-600: #85868b;
+	--color-neutral-700: #707176;
+	--color-neutral-800: #505156;
+	--color-neutral-900: #2e2f33;
+	--color-neutral: var(--color-neutral-900);
+
+	--color-ink-blue-50: #e4f2fd;
+	--color-ink-blue-100: #bedffb;
+	--color-ink-blue-200: #95ccf8;
+	--color-ink-blue-300: #6eb7f5;
+	--color-ink-blue-400: #52a8f3;
+	--color-ink-blue-500: #3c99f1;
+	--color-ink-blue-600: #378be3;
+	--color-ink-blue-700: #3179d0;
+	--color-ink-blue-800: #2c68bd;
+	--color-ink-blue-900: #234a9e;
+	--color-ink-blue: var(--color-ink-blue-900);
+
+	--color-porcelain-50: #efebe8;
+	--color-porcelain-100: #d6ccc6;
+	--color-porcelain-200: #bbaaa1;
+	--color-porcelain-300: #9f897c;
+	--color-porcelain-400: #8a6f5f;
+	--color-porcelain-500: #765643;
+	--color-porcelain-600: #6a4d3c;
+	--color-porcelain-700: #5b4133;
+	--color-porcelain-800: #4c352a;
+	--color-porcelain-900: #3d281f;
+	--color-porcelain: var(--color-porcelain-50);
+
+	--color-success-50: #e2f3f1;
+	--color-success-100: #b8e1db;
+	--color-success-200: #8bcec4;
+	--color-success-300: #61baad;
+	--color-success-400: #46aa9b;
+	--color-success-500: #389a8a;
+	--color-success-600: #348d7d;
+	--color-success-700: #2f7d6d;
+	--color-success-800: #2b6d5f;
+	--color-success-900: #225044;
+	--color-success: var(--color-success-600);
+
+	--color-warning-50: #f7f2e3;
+	--color-warning-100: #edddb7;
+	--color-warning-200: #e2c78a;
+	--color-warning-300: #d8b15e;
+	--color-warning-400: #d2a243;
+	--color-warning-500: #cc9433;
+	--color-warning-600: #c88a2e;
+	--color-warning-700: #c27d28;
+	--color-warning-800: #ba7124;
+	--color-warning-900: #ae5e20;
+	--color-warning: var(--color-warning-600);
+
+	--color-error-50: #fbecef;
+	--color-error-100: #f6cfd4;
+	--color-error-200: #e19da0;
+	--color-error-300: #d3797c;
+	--color-error-400: #dc5d5f;
+	--color-error-500: #e1504a;
+	--color-error-600: #d24847;
+	--color-error-700: #bf3f40;
+	--color-error-800: #b23a3a;
+	--color-error-900: #a13331;
+	--color-error: var(--color-error-600);
+}

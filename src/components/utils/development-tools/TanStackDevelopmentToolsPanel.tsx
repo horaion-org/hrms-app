@@ -1,5 +1,6 @@
 import { TanStackDevtools } from "@tanstack/react-devtools";
 import { ReactQueryDevtoolsPanel } from "@tanstack/react-query-devtools";
+import { tableDevtoolsPlugin } from "@tanstack/react-table-devtools";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/router-devtools";
 import type { FunctionComponent } from "@/common/types";
 import type { TanstackRouter } from "@/main";
@@ -20,6 +21,7 @@ export const TanStackDevelopmentToolsPanel = ({
 					name: "TanStack Query",
 					render: <ReactQueryDevtoolsPanel />,
 				},
+				tableDevtoolsPlugin(),
 			]}
 		/>
 	);
