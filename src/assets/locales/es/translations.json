@@ -1,4 +1,9 @@
 {
+    "select": {
+        "noOptions": "No hay opciones",
+        "selectedCount_one": "{{count}} seleccionado",
+        "selectedCount_other": "{{count}} seleccionados"
+    },
     "home": {
         "greeting": "¡Hola, Mundo!"
     },
