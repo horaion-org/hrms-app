@@ -14,6 +14,16 @@ _Avoid_: Section, area, page, workspace
 A form control for choosing one or several values from a fixed list of options.
 _Avoid_: Dropdown, picker
 
+## Indicators
+
+**Badge**:
+A small, read-only label that shows the tone of a record at a glance, such as a leave request's approval state. It is never clicked, toggled, or removed.
+_Avoid_: Pill, chip, tag
+
+**Tone**:
+The meaning a Badge conveys, drawn from Success, Warning, Error, or Neutral. A Badge with no stated tone is Neutral.
+_Avoid_: Status, variant, colour
+
 ## Visual language
 
 **Colour range**:
