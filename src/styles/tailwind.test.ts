@@ -9,6 +9,7 @@ import { HomeIcon as HomeFilledIcon } from "@heroicons/react/24/solid";
 import { renderToStaticMarkup } from "react-dom/server";
 import { compile } from "tailwindcss";
 import { beforeAll, describe, expect, it } from "vitest";
+import { Input, inputStatuses } from "@/components/forms/Input";
 import { Button, buttonSizes, buttonVariants } from "@/components/ui/Button";
 import { createMemoryRouter } from "@/common/createMemoryRouter";
 import { Sidebar, SidebarItem } from "@/components/layout/Sidebar";
@@ -193,11 +194,29 @@ const defaultShadeCases = Object.entries(colourRanges).map(
 	([range, { defaultShade }]) => ({ range, defaultShade })
 );
 
+const attributeEntities: Record<string, string> = {
+	"&amp;": "&",
+	"&gt;": ">",
+	"&lt;": "<",
+	"&quot;": '"',
+	"&#x27;": "'",
+};
+
+/** Decodes the entities React escapes in attributes, e.g. `[&amp;_svg]` → `[&_svg]`. */
+const decodeAttribute = (value: string): string =>
+	value.replace(
+		/&(?:amp|gt|lt|quot|#x27);/g,
+		(entity) => attributeEntities[entity] ?? entity
+	);
+
 /** Includes descendants (not only the root), so icons are checked too. */
 const collectMarkupClasses = (element: ReactNode): Array<string> => [
 	...new Set(
 		[...renderToStaticMarkup(element).matchAll(/class="([^"]*)"/g)].flatMap(
-			(match) => (match[1] ?? "").split(/\s+/).filter(Boolean)
+			(match) =>
+				decodeAttribute(match[1] ?? "")
+					.split(/\s+/)
+					.filter(Boolean)
 		)
 	),
 ];
@@ -318,6 +337,28 @@ describe("compiled app stylesheet", () => {
 
 	it("keeps Tailwind's stock colours outside neutral", () => {
 		expect(colourDeclarationOf("bg-red-500")).toBeDefined();
+	});
+
+	it("compiles every colour the Input renders across its states", () => {
+		const colours = [
+			...new Set(
+				[{}, { disabled: true }, ...inputStatuses.map((status) => ({ status }))]
+					.flatMap((props) => collectMarkupClasses(createElement(Input, props)))
+					.filter(isColourUtility)
+			),
+		];
+		expect(colours).toEqual(
+			expect.arrayContaining([
+				"border-success-600",
+				"border-error-600",
+				"focus-within:outline-ink-blue-500",
+				"has-[>input:disabled]:bg-neutral-200",
+				"has-[>input:disabled]:[&_svg]:text-neutral-500",
+			])
+		);
+		for (const className of colours) {
+			expect(colourDeclarationOf(className), className).toBeDefined();
+		}
 	});
 
 	it("finds the colour utilities in the Button's variant styles", () => {
