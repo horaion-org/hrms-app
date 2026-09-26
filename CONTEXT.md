@@ -8,6 +8,12 @@ Horaion is a human resources management system. This glossary fixes the words th
 A self-contained area of the product that serves one HR concern, reached from the main navigation. The modules are Dashboard, Scheduling, Leave, People, and Organisation.
 _Avoid_: Section, area, page, workspace
 
+## Controls
+
+**Select**:
+A form control for choosing one or several values from a fixed list of options.
+_Avoid_: Dropdown, picker
+
 ## Visual language
 
 **Colour range**:
