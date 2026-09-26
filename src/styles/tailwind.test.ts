@@ -11,8 +11,10 @@ import { compile } from "tailwindcss";
 import { beforeAll, describe, expect, it } from "vitest";
 import { Input, inputStatuses } from "@/components/forms/Input";
 import { Button, buttonSizes, buttonVariants } from "@/components/ui/Button";
+import { CountBadge, type CountBadgeProps } from "@/components/ui/CountBadge";
 import { createMemoryRouter } from "@/common/createMemoryRouter";
 import { Sidebar, SidebarItem } from "@/components/layout/Sidebar";
+import { Tabs, TabList, Tab, TabPanels, TabPanel } from "@/components/ui/Tabs";
 
 /*
  * Compiles the app's real Tailwind entry and inspects the generated CSS.
@@ -269,6 +271,183 @@ const routedColourClasses = async (
 };
 
 describe("compiled app stylesheet", () => {
+	it("compiles the Count badge tones and no-wrap layout that Tabs renders", () => {
+		const classes = collectMarkupClasses(
+			createElement(
+				Tabs,
+				null,
+				createElement(
+					TabList,
+					{ "aria-label": "Leave requests" },
+					createElement(Tab, { count: 3 }, "Pending"),
+					createElement(Tab, { count: 150 }, "Approved"),
+					createElement(Tab, { count: 7, disabled: true }, "Archived")
+				),
+				createElement(
+					TabPanels,
+					null,
+					createElement(TabPanel, null, "Pending requests"),
+					createElement(TabPanel, null, "Approved requests"),
+					createElement(TabPanel, null, "Archived requests")
+				)
+			)
+		);
+		// Pending is selected, Approved is inactive and Archived is disabled.
+		const expectedColours = {
+			"bg-ink-blue-900": "#234A9E",
+			"text-white": "#FFF",
+			"bg-neutral-300": "#EDEEF3",
+			"text-neutral-800": "#505156",
+			"bg-neutral-200": "#F1F3F8",
+			"text-neutral-400": "#CDCED3",
+		};
+		for (const [className, colour] of Object.entries(expectedColours)) {
+			expect(classes).toContain(className);
+			expect(colourDeclarationOf(className)?.toUpperCase()).toBe(colour);
+		}
+		const css = compileCss(classes);
+		for (const [className, declaration] of [
+			["flex-nowrap", "flex-wrap: nowrap;"],
+			["whitespace-nowrap", "white-space: nowrap;"],
+			["gap-2", "gap: calc(var(--spacing) * 2);"],
+		] as const) {
+			expect(classes).toContain(className);
+			expect(css).toContain(`${selectorOf(className)} {\n    ${declaration}`);
+		}
+	});
+
+	it("compiles Tabs colours and selected, hover and focus data-state rules", () => {
+		const classes = collectMarkupClasses(
+			createElement(
+				Tabs,
+				null,
+				createElement(
+					TabList,
+					{ "aria-label": "Profile" },
+					createElement(Tab, null, "Overview"),
+					createElement(Tab, null, "Employment")
+				),
+				createElement(
+					TabPanels,
+					null,
+					createElement(TabPanel, null, "Overview content"),
+					createElement(TabPanel, null, "Employment content")
+				)
+			)
+		);
+		const colours = classes.filter(isColourUtility);
+		const expectedColours = {
+			"text-neutral-600": "#85868B",
+			"border-transparent": "transparent",
+			"not-data-disabled:data-selected:text-ink-blue-900": "#234A9E",
+			"not-data-disabled:data-selected:border-ink-blue-900": "#234A9E",
+			"not-data-disabled:not-data-selected:data-hover:text-ink-blue-700":
+				"#3179D0",
+			"data-disabled:text-neutral-400": "#CDCED3",
+			"data-focus:outline-ink-blue-500": "#3C99F1",
+		};
+		expect(colours).toEqual(
+			expect.arrayContaining(Object.keys(expectedColours))
+		);
+		for (const className of colours) {
+			expect(colourDeclarationOf(className), className).toBeDefined();
+		}
+		for (const [className, colour] of Object.entries(expectedColours)) {
+			expect(colourDeclarationOf(className)?.toUpperCase()).toBe(
+				colour.toUpperCase()
+			);
+		}
+		for (const className of [
+			"h-10",
+			"px-1",
+			"text-base",
+			"border-b-2",
+			"gap-6",
+			"data-focus:outline-solid",
+			"data-focus:outline-2",
+			"data-focus:outline-offset-2",
+		]) {
+			expect(classes).toContain(className);
+			expect(compileCss([className])).toContain(selectorOf(className));
+		}
+		const css = compileCss(classes);
+		for (const [className, declaration] of Object.entries({
+			"flex-nowrap": "flex-wrap: nowrap;",
+			"overflow-x-auto": "overflow-x: auto;",
+			"shrink-0": "flex-shrink: 0;",
+			"whitespace-nowrap": "white-space: nowrap;",
+			"[scrollbar-width:none]": "scrollbar-width: none;",
+			"[&::-webkit-scrollbar]:hidden": "display: none;",
+		})) {
+			expect(classes).toContain(className);
+			expect(css).toMatch(
+				new RegExp(
+					`${escapeRegExp(selectorOf(className))}[^{}]*\\{[^}]*${escapeRegExp(declaration)}`
+				)
+			);
+		}
+		expect(css).toContain(
+			`${selectorOf("[&::-webkit-scrollbar]:hidden")}::-webkit-scrollbar`
+		);
+		expect(css).toContain(
+			`${selectorOf("not-data-disabled:data-selected:text-ink-blue-900")}:not([data-disabled])[data-selected]`
+		);
+		expect(css).toContain(
+			`${selectorOf("not-data-disabled:not-data-selected:data-hover:text-ink-blue-700")}:not([data-disabled]):not([data-selected])[data-hover]`
+		);
+		expect(css).toContain(
+			`${selectorOf("data-focus:outline-ink-blue-500")}[data-focus]`
+		);
+		expect(css).toMatch(
+			/data-focus\\:outline-solid\[data-focus\]\s*\{[^}]*outline-style: solid;/
+		);
+		expect(classes).toContain("data-disabled:cursor-not-allowed");
+		expect(css).toMatch(
+			/data-disabled\\:cursor-not-allowed\[data-disabled\]\s*\{[^}]*cursor: not-allowed;/
+		);
+		expect(css).toContain(
+			`${selectorOf("data-disabled:text-neutral-400")}[data-disabled]`
+		);
+		// Disabled styling wins even if selected/hover attributes coexist.
+		for (const className of colours.filter(
+			(value) =>
+				value.includes("data-selected:") || value.includes("data-hover:")
+		)) {
+			expect(className).toMatch(/^not-data-disabled:/);
+			expect(css).toContain(`${selectorOf(className)}:not([data-disabled])`);
+		}
+	});
+	it.each<{
+		tone: CountBadgeProps["tone"];
+		colours: Record<string, string>;
+	}>([
+		{
+			tone: "active",
+			colours: { "bg-ink-blue-900": "#234A9E", "text-white": "#FFF" },
+		},
+		{
+			tone: "inactive",
+			colours: { "bg-neutral-300": "#EDEEF3", "text-neutral-800": "#505156" },
+		},
+		{
+			tone: "disabled",
+			colours: { "bg-neutral-200": "#F1F3F8", "text-neutral-400": "#CDCED3" },
+		},
+	])("compiles the Count badge's $tone colours", ({ tone, colours }) => {
+		const renderedColours = collectMarkupClasses(
+			createElement(CountBadge, { count: 5, tone })
+		).filter(isColourUtility);
+		expect(renderedColours).toHaveLength(Object.keys(colours).length);
+		expect(renderedColours).toEqual(
+			expect.arrayContaining(Object.keys(colours))
+		);
+		for (const [className, hex] of Object.entries(colours)) {
+			expect(colourDeclarationOf(className)?.toUpperCase(), className).toBe(
+				hex
+			);
+		}
+	});
+
 	it("compiles every colour the Sidebar rail and logo render", async () => {
 		const colours = await routedColourClasses(
 			createElement(Sidebar, { children: null })
