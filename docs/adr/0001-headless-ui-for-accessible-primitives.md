@@ -1,0 +1,3 @@
+# Use Headless UI for accessible interactive primitives
+
+Interactive primitives (starting with Tabs) are thin, Tailwind-styled wrappers around `@headlessui/react` rather than hand-rolled implementations of the WAI-ARIA patterns or another headless library such as React Aria or Radix. Headless UI is already a project dependency, it is unstyled so our tokens stay in full control, and it gives us keyboard handling, focus management and ARIA wiring we would otherwise have to write and test ourselves. Our wrappers follow the library's own API shape (for Tabs, selection by index with panels matched to tabs by order) instead of layering a different model on top, so the wrappers stay thin and the library's documentation stays applicable.

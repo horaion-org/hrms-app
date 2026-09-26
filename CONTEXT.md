@@ -51,3 +51,13 @@ _Avoid_: Caution, alert, yellow
 **Error**:
 The colour range for critical issues, failed actions, and missing inputs that need immediate attention. Its default shade is 600.
 _Avoid_: Danger, destructive, red
+
+## Interface elements
+
+**Tab**:
+One of a set of labelled views of the same page, shown side by side in a row. Exactly one tab in the set is active at a time, and choosing another tab changes the view without leaving the page. This differs from moving between Modules, which uses the main navigation.
+_Avoid_: Segment, pill tab, sub-nav, section
+
+**Count badge**:
+A small number shown beside a label that says how many items wait behind it, such as pending leave requests on a tab.
+_Avoid_: Badge, chip, pill, counter
