@@ -12,6 +12,12 @@ type LabelledButtonProps = {
 	size?: ButtonSize;
 	leadingIcon?: ReactNode;
 	trailingIcon?: ReactNode;
+	/**
+	 * Shows a spinner in place of the leading icon and blocks presses while an
+	 * action runs. The button stays in the tab order's disabled state and
+	 * reports `aria-busy`.
+	 */
+	loading?: boolean;
 };
 
 type IconButtonProps = {
@@ -19,6 +25,7 @@ type IconButtonProps = {
 	size?: never;
 	leadingIcon?: never;
 	trailingIcon?: never;
+	loading?: never;
 } & ({ "aria-label": string } | { "aria-labelledby": string });
 
 export type ButtonProps = ComponentPropsWithRef<"button"> &
@@ -46,6 +53,32 @@ const sizeClasses: Record<ButtonSize, string> = {
 	sm: "h-12 gap-3 text-sm [&_svg]:size-5.5",
 };
 
+const Spinner = (): FunctionComponent => (
+	<svg
+		aria-hidden="true"
+		className="animate-spin"
+		data-testid="button-spinner"
+		fill="none"
+		viewBox="0 0 24 24"
+	>
+		<circle
+			className="opacity-25"
+			cx="12"
+			cy="12"
+			r="10"
+			stroke="currentColor"
+			strokeWidth="3"
+		/>
+		<path
+			className="opacity-75"
+			d="M22 12a10 10 0 0 0-10-10"
+			stroke="currentColor"
+			strokeLinecap="round"
+			strokeWidth="3"
+		/>
+	</svg>
+);
+
 const isPill = (variant: ButtonVariant): boolean =>
 	variant === "primary" || variant === "secondary";
 
@@ -54,8 +87,10 @@ export const Button = ({
 	size = "lg",
 	leadingIcon,
 	trailingIcon,
+	loading = false,
 	className,
 	type = "button",
+	disabled,
 	children,
 	...rest
 }: ButtonProps): FunctionComponent => {
@@ -67,8 +102,14 @@ export const Button = ({
 	);
 
 	return (
-		<button className={classes} type={type} {...rest}>
-			{leadingIcon}
+		<button
+			aria-busy={loading || undefined}
+			className={classes}
+			disabled={disabled ?? loading}
+			type={type}
+			{...rest}
+		>
+			{loading ? <Spinner /> : leadingIcon}
 			{children}
 			{trailingIcon}
 		</button>

@@ -60,6 +60,36 @@ describe("Button", () => {
 		expect(screen.getByRole("button")).toHaveClass("underline");
 	});
 
+	it("shows a spinner, reports busy and blocks presses while loading", async () => {
+		const onClick = vi.fn();
+		render(
+			<Button
+				loading
+				leadingIcon={<span data-testid="leading" />}
+				onClick={onClick}
+			>
+				Save
+			</Button>
+		);
+
+		const button = screen.getByRole("button", { name: "Save" });
+		expect(button).toHaveAttribute("aria-busy", "true");
+		expect(button).toBeDisabled();
+		expect(screen.getByTestId("button-spinner")).toBeInTheDocument();
+		expect(screen.queryByTestId("leading")).not.toBeInTheDocument();
+		await userEvent.click(button);
+		expect(onClick).not.toHaveBeenCalled();
+	});
+
+	it("is not busy by default", () => {
+		render(<Button>Save</Button>);
+
+		const button = screen.getByRole("button", { name: "Save" });
+		expect(button).not.toHaveAttribute("aria-busy");
+		expect(button).toBeEnabled();
+		expect(screen.queryByTestId("button-spinner")).not.toBeInTheDocument();
+	});
+
 	it("merges a custom className", () => {
 		render(<Button className="w-full">Save</Button>);
 
@@ -123,6 +153,11 @@ describe("Button icon variant", () => {
 			variant: "icon";
 			"aria-label": string;
 			trailingIcon: string;
+		}>().not.toExtend<ButtonProps>();
+		expectTypeOf<{
+			variant: "icon";
+			"aria-label": string;
+			loading: true;
 		}>().not.toExtend<ButtonProps>();
 	});
 

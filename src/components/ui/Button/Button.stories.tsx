@@ -33,6 +33,7 @@ const meta = {
 		size: { control: "inline-radio", options: buttonSizes },
 		leadingIcon: { control: false },
 		trailingIcon: { control: false },
+		loading: { control: "boolean" },
 	},
 } satisfies Meta<typeof Button>;
 
@@ -60,6 +61,8 @@ export const Hyperlink: Story = {
 };
 
 export const Disabled: Story = { args: { disabled: true } };
+
+export const Loading: Story = { args: { loading: true } };
 
 export const Icon: Story = {
 	args: {
