@@ -17,9 +17,15 @@ export const createMemoryRouter = (
 	const root = createRootRoute({
 		component: (): FunctionComponent => <>{children}</>,
 	});
-	const routes = ["/", "/example"].map((path) =>
-		createRoute({ getParentRoute: () => root, path })
-	);
+	const routes = [
+		"/",
+		"/example",
+		"/sign-in",
+		"/sign-up",
+		"/confirm-email",
+		"/forgot-password",
+		"/new-password",
+	].map((path) => createRoute({ getParentRoute: () => root, path }));
 	return createRouter({
 		routeTree: root.addChildren(routes),
 		history: createMemoryHistory({ initialEntries: [initialEntry] }),

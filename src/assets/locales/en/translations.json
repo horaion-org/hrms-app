@@ -36,5 +36,85 @@
         "chartHeading": "Goals per match",
         "loading": "Loading matches…",
         "error": "Failed to load matches"
+    },
+    "passwordInput": {
+        "show": "Show password"
+    },
+    "toaster": {
+        "dismiss": "Dismiss"
+    },
+    "authLayout": {
+        "headline": "Smarter scheduling, simplified.",
+        "tagline": "Plan shifts, assign teams, and stay on top of every schedule — all in one place.",
+        "slideAlt": "Active Workforce",
+        "goToSlide": "Go to slide {{number}}"
+    },
+    "auth": {
+        "fallbackError": "Something went wrong. Please try again.",
+        "validation": {
+            "required": "This field is required",
+            "email": "Enter a valid email address",
+            "tooLong": "Use at most {{max}} characters",
+            "passwordLength": "Use 8 to 128 characters",
+            "passwordPolicy": "Include an uppercase letter, a lowercase letter, a number and a symbol",
+            "subdomainPattern": "Use 3–30 lowercase letters, numbers or hyphens, starting and ending with a letter or number",
+            "subdomainReserved": "This address is reserved. Choose another"
+        },
+        "signIn": {
+            "title": "Login",
+            "subtitle": "Sign in with your email and password.",
+            "email": "Email",
+            "emailPlaceholder": "e.g. jose@horaion.com",
+            "password": "Password",
+            "remember": "Remember me",
+            "trouble": "Having trouble signing in?",
+            "submit": "Sign in",
+            "noAccount": "Don’t have an account?",
+            "signUp": "Signup"
+        },
+        "signUp": {
+            "title": "Create your company",
+            "subtitle": "You will be the owner of this company.",
+            "companyName": "Company name",
+            "subdomain": "Workspace address",
+            "subdomainHint": "Lowercase letters, numbers and hyphens.",
+            "displayName": "Your name",
+            "email": "Email address",
+            "password": "Password",
+            "passwordHint": "8+ characters with uppercase, lowercase, a number and a symbol.",
+            "submit": "Create company",
+            "haveAccount": "Already have an account? Sign in"
+        },
+        "confirmEmail": {
+            "title": "Confirm your email",
+            "subtitle": "We emailed a confirmation code to {{email}}.",
+            "code": "Confirmation code",
+            "submit": "Confirm",
+            "resend": "Send another code",
+            "confirmed": "Email confirmed. You can sign in now.",
+            "resent": "We sent another code."
+        },
+        "forgotPassword": {
+            "title": "Reset your password",
+            "requestSubtitle": "We will email you a code to reset it.",
+            "resetSubtitle": "Enter the code we emailed you and choose a new password.",
+            "email": "Email address",
+            "code": "Reset code",
+            "password": "New password",
+            "request": "Send reset code",
+            "submit": "Change password",
+            "sent": "Check your email for a reset code.",
+            "changed": "Password changed. Sign in with it now.",
+            "back": "Back to sign in"
+        },
+        "newPassword": {
+            "title": "Set your password",
+            "subtitle": "Your temporary password has been used. Choose a permanent one.",
+            "password": "New password",
+            "submit": "Set password and continue",
+            "noChallengeTitle": "Nothing to set",
+            "noChallengeSubtitle": "Sign in with the temporary password we emailed you to continue.",
+            "back": "Back to sign in"
+        }
     }
 }

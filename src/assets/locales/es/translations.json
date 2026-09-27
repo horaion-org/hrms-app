@@ -36,5 +36,85 @@
         "chartHeading": "Goles por partido",
         "loading": "Cargando partidos…",
         "error": "Error al cargar los partidos"
+    },
+    "passwordInput": {
+        "show": "Mostrar contraseña"
+    },
+    "toaster": {
+        "dismiss": "Cerrar"
+    },
+    "authLayout": {
+        "headline": "Planificación más inteligente, simplificada.",
+        "tagline": "Planifica turnos, asigna equipos y controla cada horario, todo en un solo lugar.",
+        "slideAlt": "Plantilla activa",
+        "goToSlide": "Ir a la diapositiva {{number}}"
+    },
+    "auth": {
+        "fallbackError": "Algo salió mal. Inténtalo de nuevo.",
+        "validation": {
+            "required": "Este campo es obligatorio",
+            "email": "Introduce un correo electrónico válido",
+            "tooLong": "Usa como máximo {{max}} caracteres",
+            "passwordLength": "Usa entre 8 y 128 caracteres",
+            "passwordPolicy": "Incluye una mayúscula, una minúscula, un número y un símbolo",
+            "subdomainPattern": "Usa de 3 a 30 letras minúsculas, números o guiones, empezando y terminando con una letra o un número",
+            "subdomainReserved": "Esta dirección está reservada. Elige otra"
+        },
+        "signIn": {
+            "title": "Iniciar sesión",
+            "subtitle": "Inicia sesión con tu correo y contraseña.",
+            "email": "Correo electrónico",
+            "emailPlaceholder": "p. ej. jose@horaion.com",
+            "password": "Contraseña",
+            "remember": "Recordarme",
+            "trouble": "¿Problemas para iniciar sesión?",
+            "submit": "Iniciar sesión",
+            "noAccount": "¿No tienes una cuenta?",
+            "signUp": "Regístrate"
+        },
+        "signUp": {
+            "title": "Crea tu empresa",
+            "subtitle": "Serás el propietario de esta empresa.",
+            "companyName": "Nombre de la empresa",
+            "subdomain": "Dirección del espacio de trabajo",
+            "subdomainHint": "Letras minúsculas, números y guiones.",
+            "displayName": "Tu nombre",
+            "email": "Correo electrónico",
+            "password": "Contraseña",
+            "passwordHint": "8 o más caracteres con mayúscula, minúscula, un número y un símbolo.",
+            "submit": "Crear empresa",
+            "haveAccount": "¿Ya tienes una cuenta? Inicia sesión"
+        },
+        "confirmEmail": {
+            "title": "Confirma tu correo",
+            "subtitle": "Enviamos un código de confirmación a {{email}}.",
+            "code": "Código de confirmación",
+            "submit": "Confirmar",
+            "resend": "Enviar otro código",
+            "confirmed": "Correo confirmado. Ya puedes iniciar sesión.",
+            "resent": "Te enviamos otro código."
+        },
+        "forgotPassword": {
+            "title": "Restablece tu contraseña",
+            "requestSubtitle": "Te enviaremos un código para restablecerla.",
+            "resetSubtitle": "Introduce el código que te enviamos y elige una nueva contraseña.",
+            "email": "Correo electrónico",
+            "code": "Código de restablecimiento",
+            "password": "Nueva contraseña",
+            "request": "Enviar código",
+            "submit": "Cambiar contraseña",
+            "sent": "Revisa tu correo para ver el código.",
+            "changed": "Contraseña cambiada. Inicia sesión con ella.",
+            "back": "Volver a iniciar sesión"
+        },
+        "newPassword": {
+            "title": "Establece tu contraseña",
+            "subtitle": "Tu contraseña temporal ya se usó. Elige una permanente.",
+            "password": "Nueva contraseña",
+            "submit": "Guardar contraseña y continuar",
+            "noChallengeTitle": "Nada que establecer",
+            "noChallengeSubtitle": "Inicia sesión con la contraseña temporal que te enviamos para continuar.",
+            "back": "Volver a iniciar sesión"
+        }
     }
 }
