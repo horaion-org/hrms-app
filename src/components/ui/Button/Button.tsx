@@ -1,15 +1,28 @@
 import type { ComponentPropsWithRef, ReactNode } from "react";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
-import type { ButtonSize, ButtonVariant } from "./Button.constants";
+import type {
+	ButtonSize,
+	ButtonVariant,
+} from "@/components/ui/Button/Button.constants";
 
-export type ButtonProps = ComponentPropsWithRef<"button"> & {
-	variant?: ButtonVariant;
+type LabelledButtonProps = {
+	variant?: Exclude<ButtonVariant, "icon">;
 	/** Only applies to the pill variants (`primary` and `secondary`). */
 	size?: ButtonSize;
 	leadingIcon?: ReactNode;
 	trailingIcon?: ReactNode;
 };
+
+type IconButtonProps = {
+	variant: "icon";
+	size?: never;
+	leadingIcon?: never;
+	trailingIcon?: never;
+} & ({ "aria-label": string } | { "aria-labelledby": string });
+
+export type ButtonProps = ComponentPropsWithRef<"button"> &
+	(LabelledButtonProps | IconButtonProps);
 
 const baseClasses =
 	"inline-flex items-center justify-center font-medium whitespace-nowrap transition-colors select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-blue-500 disabled:cursor-not-allowed";
@@ -25,6 +38,7 @@ const variantClasses: Record<ButtonVariant, string> = {
 		"gap-2 text-sm text-ink-blue-700 enabled:hover:text-ink-blue-500 enabled:active:text-ink-blue-300 disabled:text-neutral-400 [&_svg]:size-4 [&_svg]:shrink-0",
 	hyperlink:
 		"gap-2 text-base text-ink-blue-700 underline underline-offset-4 enabled:hover:text-ink-blue-500 enabled:active:text-ink-blue-300 disabled:text-neutral-400 [&_svg]:size-4 [&_svg]:shrink-0",
+	icon: "size-9 shrink-0 rounded bg-transparent text-neutral-900 enabled:hover:text-ink-blue-700 enabled:active:text-ink-blue-500 disabled:text-neutral-400 [&_svg]:size-4 [&_svg]:shrink-0",
 };
 
 const sizeClasses: Record<ButtonSize, string> = {

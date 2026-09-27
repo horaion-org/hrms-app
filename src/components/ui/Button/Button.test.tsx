@@ -1,7 +1,10 @@
 import { render, screen } from "@testing-library/react";
+import { composeStories } from "@storybook/react-vite";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
-import { Button } from "./Button";
+import { describe, expect, expectTypeOf, it, vi } from "vitest";
+import { Button, type ButtonProps } from "@/components/ui/Button";
+import { ChevronLeftIcon } from "@/components/ui/Icon";
+import * as stories from "@/components/ui/Button/Button.stories";
 
 describe("Button", () => {
 	it("renders its label as a button with type=button by default", () => {
@@ -62,4 +65,115 @@ describe("Button", () => {
 
 		expect(screen.getByRole("button")).toHaveClass("w-full");
 	});
+});
+
+describe("Button icon variant", () => {
+	it("supports an external accessible label and blocks clicks when disabled", async () => {
+		const onClick = vi.fn();
+		render(
+			<>
+				<span id="previous-month">Previous month</span>
+				<Button
+					disabled
+					aria-labelledby="previous-month"
+					variant="icon"
+					onClick={onClick}
+				>
+					<ChevronLeftIcon />
+				</Button>
+			</>
+		);
+
+		const button = screen.getByRole("button", { name: "Previous month" });
+		expect(button).toBeDisabled();
+		expect(button).toHaveClass(
+			"disabled:text-neutral-400",
+			"disabled:cursor-not-allowed"
+		);
+		await userEvent.click(button);
+		expect(onClick).not.toHaveBeenCalled();
+	});
+
+	it("requires an accessible name and rejects pill sizing and accessory icons", () => {
+		expectTypeOf<{
+			variant: "icon";
+			"aria-label": string;
+		}>().toExtend<ButtonProps>();
+		expectTypeOf<{
+			variant: "icon";
+			"aria-labelledby": string;
+		}>().toExtend<ButtonProps>();
+		expectTypeOf<{
+			variant: "icon";
+			"aria-label": string;
+			"aria-labelledby": string;
+		}>().toExtend<ButtonProps>();
+		expectTypeOf<{ variant: "icon" }>().not.toExtend<ButtonProps>();
+		expectTypeOf<{
+			variant: "icon";
+			"aria-label": string;
+			size: "sm";
+		}>().not.toExtend<ButtonProps>();
+		expectTypeOf<{
+			variant: "icon";
+			"aria-label": string;
+			leadingIcon: string;
+		}>().not.toExtend<ButtonProps>();
+		expectTypeOf<{
+			variant: "icon";
+			"aria-label": string;
+			trailingIcon: string;
+		}>().not.toExtend<ButtonProps>();
+	});
+
+	it("renders a named icon-only action with square transparent styling", async () => {
+		const onClick = vi.fn();
+		render(
+			<Button
+				aria-label="Previous month"
+				className="custom-arrow"
+				variant="icon"
+				onClick={onClick}
+			>
+				<ChevronLeftIcon />
+			</Button>
+		);
+
+		const button = screen.getByRole("button", { name: "Previous month" });
+		expect(button).toHaveAttribute("type", "button");
+		expect(button).toHaveClass(
+			"size-9",
+			"bg-transparent",
+			"text-neutral-900",
+			"enabled:hover:text-ink-blue-700",
+			"enabled:active:text-ink-blue-500",
+			"focus-visible:outline-ink-blue-500",
+			"custom-arrow"
+		);
+		expect(button).not.toHaveClass("rounded-full", "px-6");
+		await userEvent.click(button);
+		expect(onClick).toHaveBeenCalledOnce();
+	});
+});
+
+describe("Button stories", () => {
+	const { Icon, IconDisabled } = composeStories(stories);
+
+	it.each([
+		{ Story: Icon, disabled: false },
+		{ Story: IconDisabled, disabled: true },
+	])(
+		"renders the icon story with disabled=$disabled",
+		({ Story, disabled }) => {
+			render(<Story />);
+			const button = screen.getByRole("button", { name: "Previous month" });
+			expect(button).toHaveClass("size-9", "bg-transparent");
+			expect(button.children).toHaveLength(1);
+			if (disabled) {
+				expect(button).toBeDisabled();
+			} else {
+				expect(button).toBeEnabled();
+			}
+		}
+	);
 });

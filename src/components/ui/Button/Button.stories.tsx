@@ -1,7 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { FunctionComponent } from "@/common/types";
-import { Button, type ButtonProps } from "./Button";
-import { buttonSizes, buttonVariants } from "./Button.constants";
+import {
+	Button,
+	buttonSizes,
+	buttonVariants,
+	type ButtonProps,
+} from "@/components/ui/Button";
+import { ChevronLeftIcon } from "@/components/ui/Icon";
 
 const PlaceholderIcon = (): FunctionComponent => (
 	<svg aria-hidden="true" fill="none" viewBox="0 0 24 24">
@@ -23,7 +28,7 @@ const meta = {
 	argTypes: {
 		variant: {
 			control: "select",
-			options: buttonVariants,
+			options: [...buttonVariants, "icon"],
 		},
 		size: { control: "inline-radio", options: buttonSizes },
 		leadingIcon: { control: false },
@@ -56,7 +61,25 @@ export const Hyperlink: Story = {
 
 export const Disabled: Story = { args: { disabled: true } };
 
-const rows: Array<{ label: string; props: ButtonProps }> = [
+export const Icon: Story = {
+	args: {
+		variant: "icon",
+		children: <ChevronLeftIcon />,
+		"aria-label": "Previous month",
+		size: undefined,
+		leadingIcon: undefined,
+		trailingIcon: undefined,
+	},
+};
+
+export const IconDisabled: Story = {
+	args: { ...Icon.args, disabled: true },
+};
+
+const rows: Array<{
+	label: string;
+	props: Exclude<ButtonProps, { variant: "icon" }>;
+}> = [
 	{ label: "Primary, lg", props: { variant: "primary", size: "lg" } },
 	{ label: "Secondary, lg", props: { variant: "secondary", size: "lg" } },
 	{ label: "Primary, sm", props: { variant: "primary", size: "sm" } },
@@ -80,8 +103,8 @@ export const Matrix: Story = {
 			{rows.map(({ label, props }) => (
 				<div key={label} className="contents">
 					<span className="text-right text-ink-blue-700">{label}</span>
-					<Button {...args} {...props} />
-					<Button {...args} {...props} disabled />
+					<Button {...args} {...props} variant={props.variant} />
+					<Button {...args} {...props} disabled variant={props.variant} />
 				</div>
 			))}
 		</div>
