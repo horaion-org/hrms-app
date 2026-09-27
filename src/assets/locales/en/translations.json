@@ -58,19 +58,19 @@
             "passwordLength": "Use 8 to 128 characters",
             "passwordPolicy": "Include an uppercase letter, a lowercase letter, a number and a symbol",
             "subdomainPattern": "Use 3–30 lowercase letters, numbers or hyphens, starting and ending with a letter or number",
-            "subdomainReserved": "This address is reserved. Choose another"
+            "subdomainReserved": "This address is reserved. Choose another",
+            "totpCode": "Enter the 6-digit code from your authenticator app"
         },
         "signIn": {
-            "title": "Login",
-            "subtitle": "Sign in with your email and password.",
+            "title": "Log in",
+            "subtitle": "Log in with your email and password.",
             "email": "Email",
             "emailPlaceholder": "e.g. jose@horaion.com",
             "password": "Password",
-            "remember": "Remember me",
-            "trouble": "Having trouble signing in?",
-            "submit": "Sign in",
+            "trouble": "Having trouble logging in?",
+            "submit": "Log in",
             "noAccount": "Don’t have an account?",
-            "signUp": "Signup"
+            "signUp": "Sign up"
         },
         "signUp": {
             "title": "Create your company",
@@ -83,7 +83,7 @@
             "password": "Password",
             "passwordHint": "8+ characters with uppercase, lowercase, a number and a symbol.",
             "submit": "Create company",
-            "haveAccount": "Already have an account? Sign in"
+            "haveAccount": "Already have an account? Log in"
         },
         "confirmEmail": {
             "title": "Confirm your email",
@@ -91,8 +91,10 @@
             "code": "Confirmation code",
             "submit": "Confirm",
             "resend": "Send another code",
-            "confirmed": "Email confirmed. You can sign in now.",
-            "resent": "We sent another code."
+            "confirmed": "Email confirmed. You can log in now.",
+            "resent": "We sent another code.",
+            "email": "Email address",
+            "subtitleNoEmail": "Enter your email address and the confirmation code we emailed you."
         },
         "forgotPassword": {
             "title": "Reset your password",
@@ -104,8 +106,8 @@
             "request": "Send reset code",
             "submit": "Change password",
             "sent": "Check your email for a reset code.",
-            "changed": "Password changed. Sign in with it now.",
-            "back": "Back to sign in"
+            "changed": "Password changed and every device logged out. Log in with your new password.",
+            "back": "Back to log in"
         },
         "newPassword": {
             "title": "Set your password",
@@ -113,8 +115,68 @@
             "password": "New password",
             "submit": "Set password and continue",
             "noChallengeTitle": "Nothing to set",
-            "noChallengeSubtitle": "Sign in with the temporary password we emailed you to continue.",
-            "back": "Back to sign in"
-        }
+            "noChallengeSubtitle": "Log in with the temporary password we emailed you to continue.",
+            "back": "Back to log in"
+        },
+        "companyPicker": {
+            "title": "Choose a company",
+            "subtitle": "You belong to several companies. Choose the one to work in.",
+            "noneTitle": "No company to open",
+            "noneSubtitle": "You are not an active member of any company. Ask a company owner to add you, or log in with another account."
+        },
+        "mfa": {
+            "title": "Enter your code",
+            "subtitle": "Open your authenticator app and enter the code it shows for Horaion.",
+            "code": "Authentication code",
+            "submit": "Verify and log in",
+            "noChallengeTitle": "No code needed",
+            "noChallengeSubtitle": "Log in with your email and password first.",
+            "back": "Back to log in"
+        },
+        "totp": {
+            "qrAlt": "QR code to add Horaion to your authenticator app",
+            "scan": "Scan this QR code with your authenticator app.",
+            "secretLabel": "Can’t scan it? Enter this key instead:",
+            "copy": "Copy key",
+            "copied": "Key copied.",
+            "copyFailed": "Could not copy the key. Select it and copy it instead.",
+            "code": "Code from the app",
+            "hint": "Enter the 6-digit code to confirm the app works. Two-step login starts only after this.",
+            "submit": "Confirm and turn on"
+        },
+        "security": {
+            "title": "Security",
+            "subtitle": "Protect your account with an authenticator app.",
+            "loading": "Loading your security settings…",
+            "loadError": "We could not load your security settings.",
+            "retry": "Try again",
+            "off": "Two-step login is off. Anyone with your password can log in.",
+            "on": "Two-step login is on. Logging in asks for a code from your authenticator app.",
+            "turnOn": "Turn on authenticator app",
+            "turnedOn": "Two-step login is on.",
+            "changeIntro": "To turn it off or move it to a new device, confirm your password and a current code.",
+            "password": "Password",
+            "code": "Current code",
+            "turnOff": "Turn off",
+            "turnedOff": "Two-step login is off.",
+            "replace": "Move to a new device",
+            "replaceStarted": "Two-step login is off until you confirm the new device.",
+            "wrongPassword": "Your password is incorrect.",
+            "cancel": "Cancel",
+            "open": "Security settings",
+            "back": "Back to home"
+        },
+        "errors": {
+            "invalidCredentials": "Your email or password is incorrect.",
+            "rateLimited": "Too many attempts. Wait a moment and try again.",
+            "rateLimitedFor_one": "Too many attempts. Try again in {{count}} second.",
+            "rateLimitedFor_other": "Too many attempts. Try again in {{count}} seconds.",
+            "sessionExpired": "Your session has ended. Log in again.",
+            "challengeExpired": "This login took too long. Log in again.",
+            "invalidCode": "That code is not right. Check it and try again.",
+            "passwordPolicyViolation": "Choose a stronger password: 8 to 128 characters with upper and lower case letters, a number and a symbol.",
+            "mfaAlreadyEnabled": "An authenticator app is already on. Turn it off first to set up a new one."
+        },
+        "signOut": "Log out"
     }
 }

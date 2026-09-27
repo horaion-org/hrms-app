@@ -34,11 +34,11 @@ describe("Link", () => {
 	it("renders an anchor to its route", async () => {
 		render(
 			<MemoryRouterHarness>
-				<Link to="/sign-up">Signup</Link>
+				<Link to="/sign-up">Sign up</Link>
 			</MemoryRouterHarness>
 		);
 
-		const link = await screen.findByRole("link", { name: "Signup" });
+		const link = await screen.findByRole("link", { name: "Sign up" });
 		expect(link).toHaveAttribute("href", "/sign-up");
 		expect(link).toHaveClass("text-ink-blue-900", "underline");
 	});
@@ -46,12 +46,12 @@ describe("Link", () => {
 	it("navigates when clicked", async () => {
 		render(
 			<MemoryRouterHarness initialEntry="/sign-in">
-				<Link to="/sign-up">Signup</Link>
+				<Link to="/sign-up">Sign up</Link>
 				<Link to="/sign-in">Sign in</Link>
 			</MemoryRouterHarness>
 		);
 
-		const signUp = await screen.findByRole("link", { name: "Signup" });
+		const signUp = await screen.findByRole("link", { name: "Sign up" });
 		expect(signUp).not.toHaveAttribute("data-status", "active");
 
 		await userEvent.click(signUp);
@@ -79,10 +79,10 @@ describe("Link stories", () => {
 	const { Action, Muted } = composeStories(stories);
 
 	it.each([
-		{ Story: Action, name: "Signup", href: "/sign-up" },
+		{ Story: Action, name: "Sign up", href: "/sign-up" },
 		{
 			Story: Muted,
-			name: "Having trouble signing in?",
+			name: "Having trouble logging in?",
 			href: "/forgot-password",
 		},
 	])("renders $name", async ({ Story, name, href }) => {

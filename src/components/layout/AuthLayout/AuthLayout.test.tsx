@@ -43,20 +43,20 @@ afterEach(() => {
 
 describe("AuthLayout", () => {
 	it("given_children_when_theLayoutRenders_then_showsThem", () => {
-		render(<AuthLayout title="Login">the page form</AuthLayout>);
+		render(<AuthLayout title="Log in">the page form</AuthLayout>);
 
 		expect(screen.getByText("the page form")).toBeInTheDocument();
 	});
 
 	it("given_theLayout_when_rendered_then_showsTheBrandHeadlineAndSubtext", () => {
-		render(<AuthLayout title="Login">form</AuthLayout>);
+		render(<AuthLayout title="Log in">form</AuthLayout>);
 
 		expect(screen.getByText(/smarter scheduling/i)).toBeInTheDocument();
 		expect(screen.getByText(/plan shifts/i)).toBeInTheDocument();
 	});
 
 	it("given_theLayout_when_rendered_then_theBrandPanelIsHiddenBelowLg", () => {
-		render(<AuthLayout title="Login">form</AuthLayout>);
+		render(<AuthLayout title="Log in">form</AuthLayout>);
 
 		const panel = screen.getByRole("complementary");
 		expect(panel.className).toContain("hidden");
@@ -64,7 +64,7 @@ describe("AuthLayout", () => {
 	});
 
 	it("given_theLayout_when_rendered_then_theWordmarkHasAnAccessibleName", () => {
-		render(<AuthLayout title="Login">form</AuthLayout>);
+		render(<AuthLayout title="Log in">form</AuthLayout>);
 
 		expect(
 			screen.getByRole("img", { name: "Active Workforce" })
@@ -72,7 +72,7 @@ describe("AuthLayout", () => {
 	});
 
 	it("given_theLayout_when_rendered_then_theMiddleSlideIsCurrentAsInTheDesign", () => {
-		render(<AuthLayout title="Login">form</AuthLayout>);
+		render(<AuthLayout title="Log in">form</AuthLayout>);
 
 		expect(
 			screen.getAllByRole("button", { name: /go to slide/i })
@@ -83,7 +83,7 @@ describe("AuthLayout", () => {
 	});
 
 	it("given_theLayout_when_rendered_then_theQueueShowsThePreviousAndNextSlides", () => {
-		const { container } = render(<AuthLayout title="Login">form</AuthLayout>);
+		const { container } = render(<AuthLayout title="Log in">form</AuthLayout>);
 
 		const images = container.querySelectorAll("img");
 		expect(images).toHaveLength(3);
@@ -94,7 +94,7 @@ describe("AuthLayout", () => {
 
 	it("given_theSlider_when_timePasses_then_theQueueRotates", () => {
 		vi.useFakeTimers();
-		const { container } = render(<AuthLayout title="Login">form</AuthLayout>);
+		const { container } = render(<AuthLayout title="Log in">form</AuthLayout>);
 
 		act(() => {
 			vi.advanceTimersByTime(5000);
@@ -108,7 +108,7 @@ describe("AuthLayout", () => {
 
 	it("given_theSlider_when_itAdvances_then_theWordmarkImageKeepsItsAccessibleName", () => {
 		vi.useFakeTimers();
-		render(<AuthLayout title="Login">form</AuthLayout>);
+		render(<AuthLayout title="Log in">form</AuthLayout>);
 
 		act(() => {
 			vi.advanceTimersByTime(5000);
@@ -120,7 +120,7 @@ describe("AuthLayout", () => {
 	});
 
 	it("given_aDot_when_clicked_then_thatSlideBecomesCurrent", () => {
-		render(<AuthLayout title="Login">form</AuthLayout>);
+		render(<AuthLayout title="Log in">form</AuthLayout>);
 
 		fireEvent.click(screen.getByRole("button", { name: "Go to slide 3" }));
 
@@ -134,7 +134,7 @@ describe("AuthLayout", () => {
 
 	it("given_theSlider_when_timePasses_then_itAdvances", () => {
 		vi.useFakeTimers();
-		render(<AuthLayout title="Login">form</AuthLayout>);
+		render(<AuthLayout title="Log in">form</AuthLayout>);
 
 		act(() => {
 			vi.advanceTimersByTime(5000);
@@ -147,7 +147,7 @@ describe("AuthLayout", () => {
 
 	it("given_thePanelIsHovered_when_timePasses_then_theSliderHolds", () => {
 		vi.useFakeTimers();
-		render(<AuthLayout title="Login">form</AuthLayout>);
+		render(<AuthLayout title="Log in">form</AuthLayout>);
 
 		fireEvent.mouseEnter(screen.getByRole("complementary"));
 		act(() => {
@@ -171,7 +171,7 @@ describe("AuthLayout", () => {
 			dispatchEvent: vi.fn(),
 		}));
 		vi.useFakeTimers();
-		render(<AuthLayout title="Login">form</AuthLayout>);
+		render(<AuthLayout title="Log in">form</AuthLayout>);
 
 		act(() => {
 			vi.advanceTimersByTime(15000);

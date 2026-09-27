@@ -1,6 +1,8 @@
-import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
+import { Button } from "@/components/ui/Button";
+import { Link } from "@/components/ui/Link";
+import { signOut } from "@/features/auth/session";
 
 export const Home = (): FunctionComponent => {
 	const { t, i18n } = useTranslation();
@@ -23,9 +25,21 @@ export const Home = (): FunctionComponent => {
 			>
 				translate
 			</button>
-			<Link className="mt-4 text-white underline" to="/example">
+			<Link className="mt-4" to="/example">
 				View example demo
 			</Link>
+			<Link className="mt-4" to="/settings/security">
+				{t("auth.security.open")}
+			</Link>
+			<Button
+				className="mt-4"
+				variant="secondary"
+				onClick={() => {
+					void signOut();
+				}}
+			>
+				{t("auth.signOut")}
+			</Button>
 		</div>
 	);
 };

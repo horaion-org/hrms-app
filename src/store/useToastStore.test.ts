@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
+import { ApiProblemError } from "@/common/problem";
 import {
 	notifyError,
 	notifySuccess,
@@ -12,7 +13,7 @@ afterEach(() => {
 describe("useToastStore", () => {
 	it("queues toasts in order with distinct ids", () => {
 		notifySuccess("Saved");
-		notifyError(new Error("Refused"), "Fallback");
+		notifyError(new ApiProblemError(409, { detail: "Refused" }), "Fallback");
 
 		const [first, second] = useToastStore.getState().toasts;
 		expect(first).toMatchObject({ tone: "success", message: "Saved" });
@@ -20,8 +21,12 @@ describe("useToastStore", () => {
 		expect(first?.id).not.toBe(second?.id);
 	});
 
-	it("uses the fallback message for a non-Error failure", () => {
-		notifyError("boom", "Something went wrong");
+	it.each([
+		["a network failure", new TypeError("Failed to fetch")],
+		["unparsable JSON", new SyntaxError("Unexpected token < in JSON")],
+		["a non-Error", "boom"],
+	])("shows the fallback message for %s", (_label, failure) => {
+		notifyError(failure, "Something went wrong");
 
 		expect(useToastStore.getState().toasts[0]?.message).toBe(
 			"Something went wrong"

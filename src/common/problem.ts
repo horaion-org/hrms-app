@@ -21,15 +21,22 @@ export class ApiProblemError extends Error {
 	public readonly status: number;
 	public readonly errorCode: string | undefined;
 	public readonly fieldErrors: Array<{ field: string; message: string }>;
+	/** Seconds to wait before retrying, from a 429's `Retry-After` header. */
+	public readonly retryAfterSeconds: number | undefined;
 
 	// eslint-disable-next-line unicorn/custom-error-definition -- built from an HTTP status and RFC 7807 body, not (message, ErrorOptions)
-	public constructor(status: number, problem: ProblemDetail) {
+	public constructor(
+		status: number,
+		problem: ProblemDetail,
+		retryAfterSeconds?: number
+	) {
 		super(problem.detail ?? problem.title ?? FALLBACK_MESSAGE);
 
 		this.name = "ApiProblemError";
 		this.status = status;
 		this.errorCode = problem.errorCode;
 		this.fieldErrors = problem.errors ?? [];
+		this.retryAfterSeconds = retryAfterSeconds;
 	}
 
 	/** True when the API refused the action rather than failing to perform it. */

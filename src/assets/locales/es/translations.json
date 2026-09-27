@@ -58,7 +58,8 @@
             "passwordLength": "Usa entre 8 y 128 caracteres",
             "passwordPolicy": "Incluye una mayúscula, una minúscula, un número y un símbolo",
             "subdomainPattern": "Usa de 3 a 30 letras minúsculas, números o guiones, empezando y terminando con una letra o un número",
-            "subdomainReserved": "Esta dirección está reservada. Elige otra"
+            "subdomainReserved": "Esta dirección está reservada. Elige otra",
+            "totpCode": "Introduce el código de 6 dígitos de tu app de autenticación"
         },
         "signIn": {
             "title": "Iniciar sesión",
@@ -66,7 +67,6 @@
             "email": "Correo electrónico",
             "emailPlaceholder": "p. ej. jose@horaion.com",
             "password": "Contraseña",
-            "remember": "Recordarme",
             "trouble": "¿Problemas para iniciar sesión?",
             "submit": "Iniciar sesión",
             "noAccount": "¿No tienes una cuenta?",
@@ -92,7 +92,9 @@
             "submit": "Confirmar",
             "resend": "Enviar otro código",
             "confirmed": "Correo confirmado. Ya puedes iniciar sesión.",
-            "resent": "Te enviamos otro código."
+            "resent": "Te enviamos otro código.",
+            "email": "Correo electrónico",
+            "subtitleNoEmail": "Escribe tu correo electrónico y el código de confirmación que te enviamos."
         },
         "forgotPassword": {
             "title": "Restablece tu contraseña",
@@ -104,7 +106,7 @@
             "request": "Enviar código",
             "submit": "Cambiar contraseña",
             "sent": "Revisa tu correo para ver el código.",
-            "changed": "Contraseña cambiada. Inicia sesión con ella.",
+            "changed": "Contraseña cambiada y todas las sesiones cerradas. Inicia sesión con tu nueva contraseña.",
             "back": "Volver a iniciar sesión"
         },
         "newPassword": {
@@ -115,6 +117,66 @@
             "noChallengeTitle": "Nada que establecer",
             "noChallengeSubtitle": "Inicia sesión con la contraseña temporal que te enviamos para continuar.",
             "back": "Volver a iniciar sesión"
-        }
+        },
+        "companyPicker": {
+            "title": "Elige una empresa",
+            "subtitle": "Perteneces a varias empresas. Elige en cuál quieres trabajar.",
+            "noneTitle": "No hay ninguna empresa que abrir",
+            "noneSubtitle": "No eres miembro activo de ninguna empresa. Pide a un propietario que te añada o inicia sesión con otra cuenta."
+        },
+        "mfa": {
+            "title": "Introduce tu código",
+            "subtitle": "Abre tu app de autenticación e introduce el código que muestra para Horaion.",
+            "code": "Código de autenticación",
+            "submit": "Verificar e iniciar sesión",
+            "noChallengeTitle": "No se necesita código",
+            "noChallengeSubtitle": "Primero inicia sesión con tu correo y contraseña.",
+            "back": "Volver a iniciar sesión"
+        },
+        "totp": {
+            "qrAlt": "Código QR para añadir Horaion a tu app de autenticación",
+            "scan": "Escanea este código QR con tu app de autenticación.",
+            "secretLabel": "¿No puedes escanearlo? Introduce esta clave:",
+            "copy": "Copiar clave",
+            "copied": "Clave copiada.",
+            "copyFailed": "No se pudo copiar la clave. Selecciónala y cópiala tú.",
+            "code": "Código de la app",
+            "hint": "Introduce el código de 6 dígitos para confirmar que la app funciona. El inicio de sesión en dos pasos empieza solo después.",
+            "submit": "Confirmar y activar"
+        },
+        "security": {
+            "title": "Seguridad",
+            "subtitle": "Protege tu cuenta con una app de autenticación.",
+            "loading": "Cargando tu configuración de seguridad…",
+            "loadError": "No pudimos cargar tu configuración de seguridad.",
+            "retry": "Reintentar",
+            "off": "El inicio de sesión en dos pasos está desactivado. Cualquiera con tu contraseña puede iniciar sesión.",
+            "on": "El inicio de sesión en dos pasos está activado. Al iniciar sesión se pide un código de tu app de autenticación.",
+            "turnOn": "Activar app de autenticación",
+            "turnedOn": "El inicio de sesión en dos pasos está activado.",
+            "changeIntro": "Para desactivarlo o moverlo a otro dispositivo, confirma tu contraseña y un código actual.",
+            "password": "Contraseña",
+            "code": "Código actual",
+            "turnOff": "Desactivar",
+            "turnedOff": "El inicio de sesión en dos pasos está desactivado.",
+            "replace": "Mover a otro dispositivo",
+            "replaceStarted": "El inicio de sesión en dos pasos está desactivado hasta que confirmes el nuevo dispositivo.",
+            "wrongPassword": "Tu contraseña no es correcta.",
+            "cancel": "Cancelar",
+            "open": "Configuración de seguridad",
+            "back": "Volver al inicio"
+        },
+        "errors": {
+            "invalidCredentials": "Tu correo o tu contraseña no son correctos.",
+            "rateLimited": "Demasiados intentos. Espera un momento y vuelve a intentarlo.",
+            "rateLimitedFor_one": "Demasiados intentos. Vuelve a intentarlo en {{count}} segundo.",
+            "rateLimitedFor_other": "Demasiados intentos. Vuelve a intentarlo en {{count}} segundos.",
+            "sessionExpired": "Tu sesión ha terminado. Vuelve a iniciar sesión.",
+            "challengeExpired": "El inicio de sesión tardó demasiado. Vuelve a iniciar sesión.",
+            "invalidCode": "Ese código no es correcto. Revísalo y vuelve a intentarlo.",
+            "passwordPolicyViolation": "Elige una contraseña más segura: de 8 a 128 caracteres, con mayúsculas y minúsculas, un número y un símbolo.",
+            "mfaAlreadyEnabled": "Ya tienes una app de autenticación activada. Desactívala primero para configurar una nueva."
+        },
+        "signOut": "Cerrar sesión"
     }
 }

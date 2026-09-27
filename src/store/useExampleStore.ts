@@ -16,8 +16,9 @@ export const useExampleStore = create<ExampleState>()(
 	devtools(
 		(set) => ({
 			selectedMatchId: null,
-			setSelectedMatchId: (id): void =>
-				{ set({ selectedMatchId: id }, undefined, "example/setSelectedMatchId"); },
+			setSelectedMatchId: (id): void => {
+				set({ selectedMatchId: id }, undefined, "example/setSelectedMatchId");
+			},
 		}),
 		{ name: "ExampleStore" }
 	)

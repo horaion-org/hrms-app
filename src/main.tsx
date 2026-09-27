@@ -2,17 +2,17 @@ import { createRouter } from "@tanstack/react-router";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "@/App";
-import { configureApiClient } from "@/common/api-client";
-import { accessToken } from "@/features/auth/cognito";
+import { queryClient } from "@/common/query-client";
+import { connectSession } from "@/features/auth/connectSession";
 import { routeTree } from "@/routeTree.gen";
 import "@/styles/tailwind.css";
 import "@/common/i18n";
 
-// The client asks the auth layer for a token rather than importing it, which
-// keeps the dependency acyclic. See src/common/api-client.ts.
-configureApiClient(accessToken);
+const router = createRouter({ routeTree, context: { queryClient } });
 
-const router = createRouter({ routeTree });
+// The request helper reaches the Session holder through this wiring rather
+// than importing it, which keeps the dependency acyclic.
+connectSession(router, queryClient);
 
 export type TanstackRouter = typeof router;
 

@@ -21,9 +21,12 @@ const i18nOptions: InitOptions<HttpBackendOptions> = {
 		escapeValue: false, // not needed for react as it escapes by default
 	},
 	backend: {
+		// Rooted at the app's base URL: a relative path resolves against the
+		// current route, so a nested route such as /settings/security would
+		// fetch /settings/locales/… and render raw translation keys.
 		loadPath: isProduction
-			? "locales/{{lng}}/translations.json"
-			: "src/assets/locales/{{lng}}/translations.json",
+			? `${import.meta.env.BASE_URL}locales/{{lng}}/translations.json`
+			: `${import.meta.env.BASE_URL}src/assets/locales/{{lng}}/translations.json`,
 	},
 };
 

@@ -1,5 +1,7 @@
 # Spec: Sign-in and company sign-up
 
+Superseded in part by `.scratch/bff-sessions/spec.md` (Sessions move to the API's BFF).
+
 Status: ready-for-human
 
 ## Problem Statement

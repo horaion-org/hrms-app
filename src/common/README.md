@@ -7,6 +7,17 @@ The directory contains:
 - `types.ts`: the `FunctionComponent` return type, and the `Heroicon` type that also describes Horaion's own icons.
 - `createMemoryRouter.tsx`: the memory router used by tests and stories (below).
 - `joinClassNames.ts`: joins the class names that are set, for components that accept a `className`.
+- `api-client.ts`: `apiRequest`, the one way the app calls the API. It sends JSON, attaches the
+  access pass unless the call is `anonymous`, lets the Session cookie travel only to the Session
+  routes, renews the pass once when the API refuses it, and unwraps the `ApiResponse` envelope.
+  A refusal is thrown as an `ApiProblemError`.
+- `problem.ts`: `ApiProblemError`, the RFC 7807 problem the API answers with: status, `errorCode`,
+  per-field errors and, for a `429`, the `Retry-After` seconds.
+- `query-client.ts`: the app's single TanStack Query client.
+- `i18n.ts`: i18next set up with the English and Spanish resources.
+- `testing/`: helpers for unit tests only. `stubApi.ts` stubs `fetch` with a table of canned
+  replies keyed by `"<METHOD> <path>"` and records every call; `openApp.ts` renders the whole
+  app at a URL.
 
 ## Memory router (tests and stories)
 

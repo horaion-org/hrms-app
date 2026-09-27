@@ -1,9 +1,8 @@
 import { defineConfig, devices } from "@playwright/test";
-import { E2E_COGNITO_CLIENT_ID, E2E_COGNITO_USER_POOL_ID } from "./e2e/session";
-
 /*
- * The e2e server has its own port and a fake Cognito pool, so it never reuses
- * a dev server pointed at the real pool and tests can seed a session.
+ * The e2e server has its own port, so it never reuses a dev server pointed at
+ * a real API. Its API base URL is its own origin, where tests answer the API's
+ * routes with `page.route` (see e2e/session.ts).
  */
 const E2E_PORT = 5174;
 
@@ -83,10 +82,7 @@ export default defineConfig({
 		command: `node node_modules/vite/bin/vite.js --port ${E2E_PORT} --strictPort`,
 		url: `http://localhost:${E2E_PORT}`,
 		env: {
-			VITE_API_BASE_URL: "http://localhost:8080",
-			VITE_COGNITO_REGION: "ap-southeast-1",
-			VITE_COGNITO_USER_POOL_ID: E2E_COGNITO_USER_POOL_ID,
-			VITE_COGNITO_CLIENT_ID: E2E_COGNITO_CLIENT_ID,
+			VITE_API_BASE_URL: `http://localhost:${E2E_PORT}`,
 		},
 		reuseExistingServer: !process.env.CI,
 		timeout: 120 * 1000,

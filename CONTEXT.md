@@ -19,16 +19,24 @@ _Avoid_: Registration, sign-up (in code), account creation
 The short, unique name a Company chooses at Onboarding, such as `acme`. People see it as the workspace address; the API calls it the subdomain. It is display only, never used for routing or permissions.
 _Avoid_: Tenant ID, slug
 
+**Log in**:
+What a person does to start a Session, with their email and password and any Challenge that follows. **Log out** ends the Session on this device only; the person's other devices stay logged in. As a noun the step is a login, as in two-step login. Code keeps the older `sign-in` spelling in routes and identifiers.
+_Avoid_: Sign in, sign out, Login or logout as verbs
+
 **Session**:
-The Cognito tokens the app holds for a signed-in person. A valid Session does not mean the API will serve them, because the API checks their membership on every request.
-_Avoid_: Login, auth state
+A logged-in person's standing with Horaion, kept by the API for up to seven days. The app holds only a short-lived access pass derived from it, so reloading or opening a new tab keeps the person logged in, and logging out ends it on this device. A valid Session does not mean the API will serve them, because the API checks their membership on every request.
+_Avoid_: A login, auth state, tokens
+
+**Current Company**:
+The Company a logged-in person is working in. After logging in it is the Company they used last; if that one is no longer available, it is their only Company, or the one they choose when they belong to several.
+_Avoid_: Active tenant, selected workspace, current org
 
 **Guarded route**:
-A route beneath `_authenticated`, reachable only with a Session. Without one, the person is sent to sign in. Every other route is public: sign-in, sign-up, email confirmation and password reset.
+A route beneath `_authenticated`, reachable only with a Session. Without one, the person is sent to log in. Every other route is public: login, sign-up, email confirmation and password reset.
 _Avoid_: Private route, protected page
 
 **Challenge**:
-A Cognito step that blocks sign-in until the person completes it, each with its own screen: confirming their email after Onboarding, or replacing a temporary password. A step, not an error.
+A step that blocks logging in until the person completes it, each with its own screen: confirming their email after Onboarding, replacing a temporary password, or entering a code from their authenticator app. A step, not an error.
 _Avoid_: Error, prompt
 
 ## Controls

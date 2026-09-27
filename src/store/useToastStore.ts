@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { ApiProblemError } from "@/common/problem";
 
 export type ToastTone = "success" | "error";
 
@@ -38,12 +39,12 @@ export function notifySuccess(message: string): void {
 }
 
 /**
- * Reports a failure. The API's problem detail and Cognito's messages are
- * written for people, so an Error's message is shown verbatim; anything else
- * falls back to the caller's (translated) message.
+ * Reports a failure. The API's problem detail is written for people, so it is
+ * shown as it comes; any other failure (a network TypeError, unparsable JSON)
+ * speaks to developers, so the caller's translated message is shown instead.
  */
 export function notifyError(error: unknown, fallback: string): void {
-	const message = error instanceof Error ? error.message : fallback;
+	const message = error instanceof ApiProblemError ? error.message : fallback;
 
 	useToastStore.getState().push("error", message);
 }

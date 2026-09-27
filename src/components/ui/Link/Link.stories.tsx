@@ -7,7 +7,7 @@ const meta = {
 	component: Link,
 	args: {
 		to: "/sign-up",
-		children: "Signup",
+		children: "Sign up",
 		variant: "action",
 	},
 	argTypes: {
@@ -25,7 +25,7 @@ export const Action: Story = {};
 export const Muted: Story = {
 	args: {
 		to: "/forgot-password",
-		children: "Having trouble signing in?",
+		children: "Having trouble logging in?",
 		variant: "muted",
 	},
 };

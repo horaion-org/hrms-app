@@ -1,7 +1,11 @@
-import { createRootRoute, Outlet } from "@tanstack/react-router";
+import type { QueryClient } from "@tanstack/react-query";
+import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
 import { Toaster } from "@/components/ui/Toaster";
 
-export const Route = createRootRoute({
+/** What every route's loaders can reach. */
+export type RouterContext = { queryClient: QueryClient };
+
+export const Route = createRootRouteWithContext<RouterContext>()({
 	component: () => (
 		<>
 			<Outlet />

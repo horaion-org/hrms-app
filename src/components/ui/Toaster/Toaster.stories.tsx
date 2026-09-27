@@ -24,7 +24,7 @@ export const Success: Story = {
 		{
 			id: 1,
 			tone: "success",
-			message: "Email confirmed. You can sign in now.",
+			message: "Email confirmed. You can log in now.",
 		},
 	]),
 };

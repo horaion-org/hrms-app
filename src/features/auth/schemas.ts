@@ -60,14 +60,12 @@ type FormSchema<TValues> = z.ZodType<TValues, TValues>;
 export type SignInValues = {
 	email: string;
 	password: string;
-	remember: boolean;
 };
 
 export const signInSchema = (t: TFunction): FormSchema<SignInValues> =>
 	z.object({
 		email: email(t),
 		password: z.string().min(1, t("auth.validation.required")),
-		remember: z.boolean(),
 	});
 
 export type SignUpValues = {
@@ -98,11 +96,12 @@ export const signUpSchema = (t: TFunction): FormSchema<SignUpValues> =>
 		password: newPasswordSchema(t),
 	});
 
-export type ConfirmEmailValues = { code: string };
+export type ConfirmEmailValues = { email: string; code: string };
 
 export const confirmEmailSchema = (
 	t: TFunction
-): FormSchema<ConfirmEmailValues> => z.object({ code: required(t) });
+): FormSchema<ConfirmEmailValues> =>
+	z.object({ email: email(t), code: required(t) });
 
 export type ForgotPasswordRequestValues = { email: string };
 
@@ -123,3 +122,23 @@ export const newPasswordFormSchema = (
 	t: TFunction
 ): FormSchema<NewPasswordValues> =>
 	z.object({ password: newPasswordSchema(t) });
+
+/** An authenticator app's current code: six digits. */
+const totpCode = (t: TFunction): z.ZodType<string, string> =>
+	z
+		.string()
+		.trim()
+		.regex(/^\d{6}$/, t("auth.validation.totpCode"));
+
+export type MfaCodeValues = { code: string };
+
+export const mfaCodeSchema = (t: TFunction): FormSchema<MfaCodeValues> =>
+	z.object({ code: totpCode(t) });
+
+export type TurnOffMfaValues = { password: string; code: string };
+
+export const turnOffMfaSchema = (t: TFunction): FormSchema<TurnOffMfaValues> =>
+	z.object({
+		password: z.string().min(1, t("auth.validation.required")),
+		code: totpCode(t),
+	});

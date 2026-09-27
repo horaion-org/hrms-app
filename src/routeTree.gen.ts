@@ -13,10 +13,12 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as ConfirmEmailRouteImport } from './routes/confirm-email'
 import { Route as ExampleRouteImport } from './routes/example'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as MfaRouteImport } from './routes/mfa'
 import { Route as NewPasswordRouteImport } from './routes/new-password'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as SignUpRouteImport } from './routes/sign-up'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated.index'
+import { Route as AuthenticatedSettingsSecurityRouteImport } from './routes/_authenticated.settings.security'
 
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
@@ -35,6 +37,11 @@ const ExampleRoute = ExampleRouteImport.update({
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
   id: '/forgot-password',
   path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MfaRoute = MfaRouteImport.update({
+  id: '/mfa',
+  path: '/mfa',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NewPasswordRoute = NewPasswordRouteImport.update({
@@ -57,24 +64,34 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedSettingsSecurityRoute =
+  AuthenticatedSettingsSecurityRouteImport.update({
+    id: '/settings/security',
+    path: '/settings/security',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/confirm-email': typeof ConfirmEmailRoute
   '/example': typeof ExampleRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/mfa': typeof MfaRoute
   '/new-password': typeof NewPasswordRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
+  '/settings/security': typeof AuthenticatedSettingsSecurityRoute
 }
 export interface FileRoutesByTo {
   '/confirm-email': typeof ConfirmEmailRoute
   '/example': typeof ExampleRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/mfa': typeof MfaRoute
   '/new-password': typeof NewPasswordRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/': typeof AuthenticatedIndexRoute
+  '/settings/security': typeof AuthenticatedSettingsSecurityRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -82,10 +99,12 @@ export interface FileRoutesById {
   '/confirm-email': typeof ConfirmEmailRoute
   '/example': typeof ExampleRoute
   '/forgot-password': typeof ForgotPasswordRoute
+  '/mfa': typeof MfaRoute
   '/new-password': typeof NewPasswordRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/settings/security': typeof AuthenticatedSettingsSecurityRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -94,28 +113,34 @@ export interface FileRouteTypes {
     | '/confirm-email'
     | '/example'
     | '/forgot-password'
+    | '/mfa'
     | '/new-password'
     | '/sign-in'
     | '/sign-up'
+    | '/settings/security'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/confirm-email'
     | '/example'
     | '/forgot-password'
+    | '/mfa'
     | '/new-password'
     | '/sign-in'
     | '/sign-up'
     | '/'
+    | '/settings/security'
   id:
     | '__root__'
     | '/_authenticated'
     | '/confirm-email'
     | '/example'
     | '/forgot-password'
+    | '/mfa'
     | '/new-password'
     | '/sign-in'
     | '/sign-up'
     | '/_authenticated/'
+    | '/_authenticated/settings/security'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -123,6 +148,7 @@ export interface RootRouteChildren {
   ConfirmEmailRoute: typeof ConfirmEmailRoute
   ExampleRoute: typeof ExampleRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
+  MfaRoute: typeof MfaRoute
   NewPasswordRoute: typeof NewPasswordRoute
   SignInRoute: typeof SignInRoute
   SignUpRoute: typeof SignUpRoute
@@ -158,6 +184,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mfa': {
+      id: '/mfa'
+      path: '/mfa'
+      fullPath: '/mfa'
+      preLoaderRoute: typeof MfaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/new-password': {
       id: '/new-password'
       path: '/new-password'
@@ -186,15 +219,24 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/settings/security': {
+      id: '/_authenticated/settings/security'
+      path: '/settings/security'
+      fullPath: '/settings/security'
+      preLoaderRoute: typeof AuthenticatedSettingsSecurityRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
 interface AuthenticatedRouteChildren {
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedSettingsSecurityRoute: typeof AuthenticatedSettingsSecurityRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedSettingsSecurityRoute: AuthenticatedSettingsSecurityRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
@@ -206,6 +248,7 @@ const rootRouteChildren: RootRouteChildren = {
   ConfirmEmailRoute: ConfirmEmailRoute,
   ExampleRoute: ExampleRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
+  MfaRoute: MfaRoute,
   NewPasswordRoute: NewPasswordRoute,
   SignInRoute: SignInRoute,
   SignUpRoute: SignUpRoute,

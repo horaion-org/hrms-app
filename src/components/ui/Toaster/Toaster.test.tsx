@@ -5,6 +5,7 @@ import { createInstance } from "i18next";
 import { initReactI18next } from "react-i18next";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import en from "@/assets/locales/en/translations.json";
+import { ApiProblemError } from "@/common/problem";
 import { Toaster } from "@/components/ui/Toaster";
 import * as stories from "@/components/ui/Toaster/Toaster.stories";
 import {
@@ -38,7 +39,7 @@ describe("Toaster", () => {
 
 		act(() => {
 			notifySuccess("Saved");
-			notifyError(new Error("Refused"), "Fallback");
+			notifyError(new ApiProblemError(409, { detail: "Refused" }), "Fallback");
 		});
 
 		expect(screen.getByRole("status")).toHaveTextContent("Saved");

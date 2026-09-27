@@ -35,3 +35,8 @@ storybook-static
 
 # read-only agent handoff snapshots
 codex-handoff/
+
+# TypeScript build output: `tsc` builds the referenced node project, which must never land in the repo
+*.tsbuildinfo
+/vite.config.js
+/vite.config.d.ts

@@ -1,5 +1,7 @@
 # Cognito tokens live in localStorage, bounded by CSP and instant revocation
 
+Superseded by [ADR 0005](0005-sessions-through-the-api-bff.md).
+
 Tokens obtained in the browser must live somewhere, and each option trades cross-site-scripting exposure against usability. We use the library's default `localStorage`, paired with a strict Content-Security-Policy and a shortened refresh token lifetime in the user pool. When a person unticks "Remember me", that sign-in is kept in `sessionStorage` instead, so it ends with the tab.
 
 The damage window is bounded by the API rather than the browser. The API re-checks User, Membership and Company status on every request with no cache, so deactivating someone blocks their next request whether or not their token is still valid. A stolen token is therefore revocable in a way a stolen password is not.
