@@ -9,6 +9,10 @@ import tailwindcss from "@tailwindcss/vite";
 
 // https://vitejs.dev/config/
 export default defineConfig({
+	// amazon-cognito-identity-js expects Node's `global` in the browser.
+	define: {
+		global: "globalThis",
+	},
 	plugins: [
 		// Must be the first plugin so it can inject `data-tsd-source`
 		// attributes for the devtools Source Inspector ("open in editor").
@@ -45,6 +49,13 @@ export default defineConfig({
 	},
 	test: {
 		environment: "jsdom",
+		// Node's experimental Web Storage shadows jsdom's localStorage and
+		// sessionStorage, which the Cognito session storage tests rely on.
+		execArgv: process.allowedNodeEnvironmentFlags.has(
+			"--no-experimental-webstorage"
+		)
+			? ["--no-experimental-webstorage"]
+			: [],
 		setupFiles: ["./vitest.setup.ts"],
 		css: true,
 	},
