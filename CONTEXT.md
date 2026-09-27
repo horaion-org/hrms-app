@@ -8,6 +8,29 @@ Horaion is a human resources management system. This glossary fixes the words th
 A self-contained area of the product that serves one HR concern, reached from the main navigation. The modules are Dashboard, Scheduling, Leave, People, and Organisation.
 _Avoid_: Section, area, page, workspace
 
+
+## Access
+
+**Onboarding**:
+The public sign-up that creates a Company with the person signing up as its Owner. It goes through the API, never straight to Cognito, so the Company, the person and their Owner role are created together.
+_Avoid_: Registration, sign-up (in code), account creation
+
+**Workspace address**:
+The short, unique name a Company chooses at Onboarding, such as `acme`. People see it as the workspace address; the API calls it the subdomain. It is display only, never used for routing or permissions.
+_Avoid_: Tenant ID, slug
+
+**Session**:
+The Cognito tokens the app holds for a signed-in person. A valid Session does not mean the API will serve them, because the API checks their membership on every request.
+_Avoid_: Login, auth state
+
+**Guarded route**:
+A route beneath `_authenticated`, reachable only with a Session. Without one, the person is sent to sign in. Every other route is public: sign-in, sign-up, email confirmation and password reset.
+_Avoid_: Private route, protected page
+
+**Challenge**:
+A Cognito step that blocks sign-in until the person completes it, each with its own screen: confirming their email after Onboarding, or replacing a temporary password. A step, not an error.
+_Avoid_: Error, prompt
+
 ## Controls
 
 **Select**:
