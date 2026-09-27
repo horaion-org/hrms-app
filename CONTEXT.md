@@ -32,6 +32,22 @@ _Avoid_: Wizard, progress bar, progress indicator, breadcrumb
 One stage in a stepper's sequence. A step is completed, current, or upcoming. At most one step is current, and when the sequence is finished every step is completed. A person can return to a completed step but cannot jump ahead to an upcoming one.
 _Avoid_: Stage, phase, tab
 
+**Calendar**:
+An always-visible panel for choosing a single date or a date range by browsing days, months, and years.
+_Avoid_: Date grid, month view
+
+**Date picker**:
+A form control that shows the chosen date or date range in a field and opens a Calendar to change it.
+_Avoid_: Datepicker, date dropdown, calendar
+
+**Date range**:
+A start date and an end date, both included, chosen together.
+_Avoid_: Period, span
+
+**Weekend**:
+Saturday and Sunday. The week starts on Monday everywhere in Horaion.
+_Avoid_: Rest days, off days
+
 ## Visual language
 
 **Colour range**:

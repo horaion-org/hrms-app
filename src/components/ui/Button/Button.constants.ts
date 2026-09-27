@@ -3,6 +3,7 @@
  * exports components (`react-refresh/only-export-components`).
  */
 
+/** Labelled variants that accept the shared size and accessory icon props. */
 export const buttonVariants = [
 	"primary",
 	"secondary",
@@ -12,5 +13,5 @@ export const buttonVariants = [
 
 export const buttonSizes = ["lg", "sm"] as const;
 
-export type ButtonVariant = (typeof buttonVariants)[number];
+export type ButtonVariant = (typeof buttonVariants)[number] | "icon";
 export type ButtonSize = (typeof buttonSizes)[number];

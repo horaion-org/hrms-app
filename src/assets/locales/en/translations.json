@@ -1,4 +1,26 @@
 {
+    "calendar": {
+        "previousMonth": "Previous month",
+        "nextMonth": "Next month",
+        "previousYear": "Previous year",
+        "nextYear": "Next year",
+        "showMonths": "Show months",
+        "showYears": "Show years",
+        "previousYears": "Previous 12 years",
+        "nextYears": "Next 12 years",
+        "range": {
+            "draftStart": "Range start; choose an end date",
+            "start": "Range start",
+            "middle": "Within range",
+            "end": "Range end",
+            "start-end": "Range start and end",
+            "preview": {
+                "start": "Preview: range start",
+                "middle": "Preview: within range",
+                "end": "Preview: range end"
+            }
+        }
+    },
     "select": {
         "noOptions": "No options",
         "selectedCount_one": "{{count}} selected",

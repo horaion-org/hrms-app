@@ -1,4 +1,26 @@
 {
+    "calendar": {
+        "previousMonth": "Mes anterior",
+        "nextMonth": "Mes siguiente",
+        "previousYear": "Año anterior",
+        "nextYear": "Año siguiente",
+        "showMonths": "Mostrar meses",
+        "showYears": "Mostrar años",
+        "previousYears": "12 años anteriores",
+        "nextYears": "12 años siguientes",
+        "range": {
+            "draftStart": "Inicio del rango; elige una fecha de fin",
+            "start": "Inicio del rango",
+            "middle": "Dentro del rango",
+            "end": "Fin del rango",
+            "start-end": "Inicio y fin del rango",
+            "preview": {
+                "start": "Vista previa: inicio del rango",
+                "middle": "Vista previa: dentro del rango",
+                "end": "Vista previa: fin del rango"
+            }
+        }
+    },
     "select": {
         "noOptions": "No hay opciones",
         "selectedCount_one": "{{count}} seleccionado",
