@@ -14,13 +14,13 @@ afterEach(() => {
 });
 
 const exampleLink = (label: string): FunctionComponent => (
-	<Link to="/example">{label}</Link>
+	<Link to="/register">{label}</Link>
 );
 
 describe("MemoryRouterHarness", () => {
 	it("starts at the initial entry", async () => {
 		render(
-			<MemoryRouterHarness initialEntry="/example">
+			<MemoryRouterHarness initialEntry="/register">
 				{exampleLink("Example")}
 			</MemoryRouterHarness>
 		);

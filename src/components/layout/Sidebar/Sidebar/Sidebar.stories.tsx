@@ -35,7 +35,7 @@ const meta = {
 				icon={SchedulingIcon}
 				label="Scheduling"
 				search={{ module: "scheduling" }}
-				to="/example"
+				to="/register"
 			/>,
 			<SidebarItem
 				key="leave"
@@ -43,7 +43,7 @@ const meta = {
 				icon={LeaveIcon}
 				label="Leave"
 				search={{ module: "leave" }}
-				to="/example"
+				to="/register"
 			/>,
 			<SidebarItem
 				key="people"
@@ -51,7 +51,7 @@ const meta = {
 				icon={PeopleIcon}
 				label="People"
 				search={{ module: "people" }}
-				to="/example"
+				to="/register"
 			/>,
 			<SidebarItem
 				key="organisation"
@@ -59,7 +59,7 @@ const meta = {
 				icon={OrganisationIcon}
 				label="Organisation"
 				search={{ module: "organisation" }}
-				to="/example"
+				to="/register"
 			/>,
 		],
 	},
@@ -72,14 +72,14 @@ type Story = StoryObj<typeof meta>;
 // Sample Module destinations stay within the app's registered route types.
 export const Dashboard: Story = {};
 export const Scheduling: Story = {
-	parameters: { initialEntry: "/example?module=scheduling" },
+	parameters: { initialEntry: "/register?module=scheduling" },
 };
 export const Leave: Story = {
-	parameters: { initialEntry: "/example?module=leave" },
+	parameters: { initialEntry: "/register?module=leave" },
 };
 export const People: Story = {
-	parameters: { initialEntry: "/example?module=people" },
+	parameters: { initialEntry: "/register?module=people" },
 };
 export const Organisation: Story = {
-	parameters: { initialEntry: "/example?module=organisation" },
+	parameters: { initialEntry: "/register?module=organisation" },
 };

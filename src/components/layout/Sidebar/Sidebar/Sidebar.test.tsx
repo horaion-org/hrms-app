@@ -37,7 +37,7 @@ describe("Sidebar", () => {
 					icon={SchedulingIcon}
 					label="Scheduling"
 					search={{ module: "scheduling" }}
-					to="/example"
+					to="/register"
 				/>
 			</Sidebar>
 		);
@@ -53,7 +53,7 @@ describe("Sidebar", () => {
 		expect(scheduling).not.toHaveAttribute("aria-current");
 		expect(scheduling.querySelector("[fill=currentColor]")).toBeNull();
 		await user.click(scheduling);
-		expect(router.state.location.href).toBe("/example?module=scheduling");
+		expect(router.state.location.href).toBe("/register?module=scheduling");
 		expect(scheduling).toHaveAttribute("aria-current", "page");
 		expect(scheduling.querySelector("[fill=currentColor]")).not.toBeNull();
 		expect(dashboard).not.toHaveAttribute("aria-current");
@@ -78,7 +78,7 @@ describe("Sidebar", () => {
 								activeOptions={{ exact: true }}
 								icon={DashboardIcon}
 								label={label}
-								to={label === "Dashboard" ? "/" : "/example"}
+								to={label === "Dashboard" ? "/" : "/register"}
 								search={
 									label === "Dashboard" ? {} : { module: label.toLowerCase() }
 								}

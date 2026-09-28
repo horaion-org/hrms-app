@@ -4,6 +4,14 @@ Horaion is a human resources management system. This glossary fixes the words th
 
 ## Product structure
 
+**Company**:
+The business that uses Horaion. Each company's people and records are kept apart from every other company's.
+_Avoid_: Workspace, tenant, account
+
+**Workspace address**:
+A company's unique web address in Horaion. "Workspace" is only ever used in this phrase, never on its own.
+_Avoid_: Subdomain, company address, URL
+
 **Module**:
 A self-contained area of the product that serves one HR concern, reached from the main navigation. The modules are Dashboard, Scheduling, Leave, People, and Organisation.
 _Avoid_: Section, area, page, workspace
@@ -95,3 +103,13 @@ _Avoid_: Segment, pill tab, sub-nav, section
 **Count badge**:
 A small number shown beside a label that says how many items wait behind it, such as pending leave requests on a tab.
 _Avoid_: Badge, chip, pill, counter
+
+## Interface copy
+
+Use **sentence case for all UI text**, except document titles (`<title>`) and proper names, which retain their conventional capitalization. Preserve acronyms such as ID and API. HTML does not prescribe capitalization; this is Horaion’s chosen writing standard.
+
+This applies to headings (`<h1>` through `<h6>`), form labels and legends, placeholders, buttons, links, navigation items, select options, table headers, captions, summaries, tooltips, accessible names (`alt` and ARIA labels), helper text, validation messages, success and empty states, and body text.
+
+Examples: **Company name**, **Registration number**, **First name**, **Last name**, **Email address**, **Workspace name**, **Confirm password**, **Sign up**, **Log in**, and **Save changes**. Proper names such as **Horaion** keep their established spelling.
+
+Write the intended casing directly in source strings, including translations. Do not use CSS `text-transform: uppercase` or `text-transform: capitalize` to impose casing. Keep the convention consistent even when reference designs or older branches differ. This replaces the previous Title Case rule for labels and buttons and the uppercase display treatment.

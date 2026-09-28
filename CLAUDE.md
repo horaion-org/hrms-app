@@ -2,6 +2,14 @@
 
 Guidance for Claude Code when working in this repository.
 
+## Workspace context (read first)
+
+@../context.md
+
+Before any implementation or change request, follow `../context.md`: build context from both
+`../api/repomix-output.xml` and `../app/repomix-output.xml`, then confirm against the live files. After the
+implementation is complete, run `npx repomix@latest` at the root of each repository you changed.
+
 ## Components are first-class citizens
 
 React components are the primary unit of work in this codebase. UI is assembled

@@ -30,7 +30,7 @@ afterEach(() => {
 describe("SidebarItem", () => {
 	it("keeps destinations restricted to registered router links", () => {
 		expectTypeOf<string>().not.toExtend<SidebarItemProps["to"]>();
-		expectTypeOf<"/" | "/example">().toExtend<SidebarItemProps["to"]>();
+		expectTypeOf<"/" | "/register">().toExtend<SidebarItemProps["to"]>();
 		expectTypeOf<"/scheduling">().not.toExtend<SidebarItemProps["to"]>();
 	});
 
@@ -47,7 +47,7 @@ describe("SidebarItem", () => {
 					rel="noreferrer"
 					target="_blank"
 					title="Open Scheduling"
-					to="/example"
+					to="/register"
 					inactiveProps={{
 						className: "custom-inactive",
 						"aria-describedby": "hint",
@@ -84,13 +84,13 @@ describe("SidebarItem", () => {
 	it("uses search matching for sample Modules and honours click handlers and hash navigation", async () => {
 		const onClick = vi.fn();
 		render(
-			<MemoryRouterHarness initialEntry="/example?module=leave">
+			<MemoryRouterHarness initialEntry="/register?module=leave">
 				<SidebarItem
 					activeIcon={HomeFilledIcon}
 					icon={HomeIcon}
 					label="Leave"
 					search={{ module: "leave" }}
-					to="/example"
+					to="/register"
 				/>
 				<SidebarItem
 					activeIcon={HomeFilledIcon}
@@ -98,7 +98,7 @@ describe("SidebarItem", () => {
 					icon={HomeIcon}
 					label="People"
 					search={{ module: "people" }}
-					to="/example"
+					to="/register"
 					activeOptions={{
 						exact: true,
 						includeSearch: true,
@@ -112,7 +112,7 @@ describe("SidebarItem", () => {
 		const people = screen.getByRole("link", { name: "People" });
 		expect(leave).toHaveAttribute("aria-current", "page");
 		expect(people).not.toHaveAttribute("aria-current");
-		expect(people).toHaveAttribute("href", "/example?module=people#team");
+		expect(people).toHaveAttribute("href", "/register?module=people#team");
 		await userEvent.click(people);
 		expect(onClick).toHaveBeenCalledOnce();
 		expect(people).toHaveAttribute("aria-current", "page");
@@ -133,7 +133,7 @@ describe("SidebarItem", () => {
 					activeIcon={HomeFilledIcon}
 					icon={HomeIcon}
 					label="Scheduling"
-					to="/example"
+					to="/register"
 				/>
 			</MemoryRouterHarness>
 		);
@@ -168,12 +168,12 @@ describe("SidebarItem", () => {
 					activeIcon={HomeFilledIcon}
 					icon={HomeIcon}
 					label="Scheduling"
-					to="/example"
+					to="/register"
 				/>
 			</MemoryRouterHarness>
 		);
 		const link = await screen.findByRole("link", { name: "Scheduling" });
-		expect(link).toHaveAttribute("href", "/example");
+		expect(link).toHaveAttribute("href", "/register");
 		expect(link).not.toHaveAttribute("aria-current");
 		expect(link.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
 		expect(link.querySelector("svg")).toHaveAttribute("fill", "none");

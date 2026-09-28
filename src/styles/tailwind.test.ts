@@ -463,12 +463,12 @@ describe("compiled app stylesheet", () => {
 			expect(colourDeclarationOf(className), className).toBeDefined();
 		}
 	});
-	it.each(["/", "/example"])(
+	it.each(["/", "/register"])(
 		"compiles Sidebar item colours at %s",
 		async (initialEntry) => {
 			const colours = await routedColourClasses(
 				createElement(SidebarItem, {
-					to: "/example",
+					to: "/register",
 					label: "Scheduling",
 					icon: HomeIcon,
 					activeIcon: HomeFilledIcon,
@@ -483,7 +483,7 @@ describe("compiled app stylesheet", () => {
 					"data-[status=active]:bg-ink-blue-100",
 					"data-[status=active]:text-neutral-900",
 					"focus-visible:outline-white",
-					initialEntry === "/example" ? "text-ink-blue-900" : "text-white",
+					initialEntry === "/register" ? "text-ink-blue-900" : "text-white",
 				])
 			);
 			for (const className of colours) {

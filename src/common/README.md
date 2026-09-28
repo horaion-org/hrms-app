@@ -17,12 +17,12 @@ New children, such as changed Storybook args, re-render in place and keep the
 current location. In stories, add the `withMemoryRouter` decorator and set an
 `initialEntry` parameter instead of wrapping the story by hand.
 
-The isolated route tree supports `/` and `/example`, matching the app's registered
-destinations without loading app screens or changing route registration. For five
-Module stories, use `/` for Dashboard with `activeOptions={{ exact: true }}` and
-`/example` for the other Modules with `search={{ module: "scheduling" }}` (and
-`"leave"`, `"people"`, `"organisation"`). Set the story's initial entry to e.g.
-`/example?module=people`. Router search matching distinguishes the items.
+The isolated route tree supports `/` and `/register` without loading app screens.
+Module stories use `/` for Dashboard with `activeOptions={{ exact: true }}` and
+`/register` as a stand-in destination for the other Modules, distinguished with
+`search={{ module: "scheduling" }}` (and `"leave"`, `"people"`, `"organisation"`).
+For example, use `/register?module=people` as the initial entry. These are isolated
+component examples, not the application's module navigation.
 
 For tests that inspect the location, or server/static rendering, use
 `createMemoryRouter(children, initialEntry)` from `@/common/createMemoryRouter`.

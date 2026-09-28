@@ -1,13 +1,12 @@
 {
-  "name": "vite-react-boilerplate",
+  "name": "horaion-app",
   "author": "Vernon Wee Hong KOH <vernonweehongkoh.developer@gmail.com>",
-  "description": "A production ready, batteries included starter template for Vite + React projects",
+  "description": "Horaion people, scheduling, and leave management",
   "keywords": [
-    "vite",
-    "react",
-    "boilerplate",
-    "starter",
-    "template"
+    "horaion",
+    "hr",
+    "scheduling",
+    "leave"
   ],
   "license": "MIT",
   "version": "0.0.0",

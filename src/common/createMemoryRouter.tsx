@@ -17,7 +17,7 @@ export const createMemoryRouter = (
 	const root = createRootRoute({
 		component: (): FunctionComponent => <>{children}</>,
 	});
-	const routes = ["/", "/example"].map((path) =>
+	const routes = ["/", "/register"].map((path) =>
 		createRoute({ getParentRoute: () => root, path })
 	);
 	return createRouter({

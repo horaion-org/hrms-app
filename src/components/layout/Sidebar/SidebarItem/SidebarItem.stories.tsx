@@ -19,7 +19,7 @@ const meta = {
 		icon: { control: false },
 		activeIcon: { control: false },
 	},
-	parameters: { initialEntry: "/example" },
+	parameters: { initialEntry: "/register" },
 	decorators: [
 		(Story): NonNullable<FunctionComponent> => (
 			<div className="bg-ink-blue-900 p-7">
