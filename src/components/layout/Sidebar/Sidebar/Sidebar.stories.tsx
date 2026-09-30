@@ -1,3 +1,5 @@
+import { Button } from "@/components/ui/Button";
+import en from "@/assets/locales/en/translations.json";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Sidebar, SidebarItem } from "@/components/layout/Sidebar";
 import { withMemoryRouter } from "@/components/utils/MemoryRouterHarness";
@@ -82,4 +84,8 @@ export const People: Story = {
 };
 export const Organisation: Story = {
 	parameters: { initialEntry: "/register?module=organisation" },
+};
+
+export const WithFooter: Story = {
+	args: { footer: <Button>{en.auth.logOut}</Button> },
 };

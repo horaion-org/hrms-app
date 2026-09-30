@@ -1,10 +1,20 @@
 import { test, expect } from "@playwright/test";
+import {
+	E2E_ACCESS_PASS,
+	E2E_EMAIL,
+	logIn,
+	mockSessionRoutes,
+	webStorage,
+} from "./session";
 
 test("home opens Horaion login and navigates to registration", async ({
 	page,
+	context,
 }) => {
+	await mockSessionRoutes(context);
 	await page.goto("/");
-	await expect(page).toHaveURL(/\/login$/);
+	await expect(page).toHaveURL(/\/login\?redirect=/);
+	expect(new URL(page.url()).searchParams.get("redirect")).toBe("/");
 	await expect(page).toHaveTitle(/Horaion/);
 	await expect(page.getByRole("heading", { name: "Log in" })).toBeVisible();
 	await page.getByRole("link", { name: "Sign up" }).click();
@@ -51,7 +61,14 @@ test("registration submits the onboarding contract and requires email verificati
 		.getByLabel("Confirm password", { exact: true })
 		.fill("Example123!");
 	await page.getByRole("button", { name: "Sign up", exact: true }).click();
-	await expect(page.getByRole("status")).toContainText("verify your email");
+	await expect(page).toHaveURL(/\/confirm-email$/);
+	await expect(
+		page.getByRole("heading", { name: "Email confirmation" })
+	).toBeVisible();
+	await expect(page.getByLabel("Email address")).toHaveValue(
+		"alex@example.com"
+	);
+	expect(page.url()).not.toContain("alex");
 	await expect(page.getByLabel("Password", { exact: true })).toHaveCount(0);
 });
 
@@ -78,20 +95,49 @@ test("registration reports a service error without pretending to create an accou
 	await expect(page.getByRole("alert")).toContainText("already in use");
 });
 
-test("login is honest about the unavailable session service", async ({
+test("Log in, reload and Log out keep both tabs in sync without web storage tokens", async ({
 	page,
+	context,
 }) => {
+	const api = await mockSessionRoutes(context);
 	await page.goto("/login");
-	await page.getByLabel("Email", { exact: true }).fill("alex@example.com");
-	await page.getByLabel("Password", { exact: true }).fill("Example123!");
-	await page.getByRole("button", { name: "Show password" }).click();
-	await expect(page.getByLabel("Password", { exact: true })).toHaveAttribute(
-		"type",
-		"text"
-	);
-	await page.getByRole("button", { name: "Log in", exact: true }).click();
-	await expect(page.getByRole("alert")).toContainText(
-		"Sign-in is not available yet"
+	await logIn(page);
+	await expect(
+		page.getByRole("heading", { name: "Welcome, Owner" })
+	).toBeVisible();
+	expect(await webStorage(page)).not.toContain(E2E_ACCESS_PASS);
+	expect(page.url()).not.toContain(E2E_EMAIL);
+	await page.reload();
+	await expect(
+		page.getByRole("heading", { name: "Welcome, Owner" })
+	).toBeVisible();
+	expect(api.calls).toContain("POST /api/v1/public/sessions/refreshes");
+	expect(await webStorage(page)).not.toContain(E2E_ACCESS_PASS);
+	const otherTab = await context.newPage();
+	await otherTab.goto("/");
+	await expect(
+		otherTab.getByRole("heading", { name: "Welcome, Owner" })
+	).toBeVisible();
+	expect(await webStorage(otherTab)).not.toContain(E2E_ACCESS_PASS);
+	await page.getByRole("button", { name: "Log out", exact: true }).click();
+	await expect(page).toHaveURL(/\/login$/);
+	await expect(otherTab).toHaveURL(/\/login$/);
+	await expect(otherTab.getByRole("heading", { name: "Log in" })).toBeVisible();
+	expect(await webStorage(page)).not.toContain(E2E_ACCESS_PASS);
+	expect(await webStorage(otherTab)).not.toContain(E2E_ACCESS_PASS);
+	await otherTab.reload();
+	await expect(otherTab.getByRole("heading", { name: "Log in" })).toBeVisible();
+});
+
+test("Log in refuses invalid credentials with one message", async ({
+	page,
+	context,
+}) => {
+	await mockSessionRoutes(context);
+	await page.goto("/login");
+	await logIn(page, "Wrong123!");
+	await expect(page.getByRole("alert")).toHaveText(
+		"Your email or password is incorrect."
 	);
 	await expect(page).toHaveURL(/\/login$/);
 });
@@ -207,6 +253,13 @@ test("registration blocks mismatched passwords and allows correction", async ({
 		"password"
 	);
 	await page.getByRole("button", { name: "Sign up", exact: true }).click();
-	await expect(page.getByRole("status")).toContainText("verify your email");
+	await expect(page).toHaveURL(/\/confirm-email$/);
+	await expect(
+		page.getByRole("heading", { name: "Email confirmation" })
+	).toBeVisible();
+	await expect(page.getByLabel("Email address")).toHaveValue(
+		"alex@example.com"
+	);
+	expect(page.url()).not.toContain("alex");
 	expect(requests).toBe(1);
 });

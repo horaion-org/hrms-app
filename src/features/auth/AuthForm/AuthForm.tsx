@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
-import { Checkbox } from "@/components/ui/Checkbox";
-import { Link } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
+import { Link, useNavigate } from "@tanstack/react-router";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { AuthField } from "@/features/auth/AuthField";
+import { AuthMessage } from "@/features/auth/AuthMessage";
+import { withEmail } from "@/features/auth/historyState";
 import { registerCompany } from "@/features/auth/api";
 import {
 	passwordRequirements,
@@ -13,23 +14,16 @@ import {
 	type RegistrationErrors,
 } from "@/features/auth/validation";
 
-export const AuthForm = ({
-	mode,
-}: {
-	mode: "login" | "register";
-}): FunctionComponent => {
-	const registering = mode === "register";
-	const [showPassword, setShowPassword] = useState(false);
-	const [showConfirmation, setShowConfirmation] = useState(false);
+export const AuthForm = (): FunctionComponent => {
+	const { t } = useTranslation();
+	const navigate = useNavigate();
 	const [fieldErrors, setFieldErrors] = useState<RegistrationErrors>({});
 	const [submitted, setSubmitted] = useState(false);
-	const [remember, setRemember] = useState(true);
 	const [pending, setPending] = useState(false);
 	const inFlight = useRef(false);
 	// A server refusal arrives while the fieldset is disabled, so its input is focused once released.
 	const refusedInput = useRef<HTMLElement | null>(null);
 	const [error, setError] = useState("");
-	const [complete, setComplete] = useState(false);
 	const releaseSubmission = (): void => {
 		inFlight.current = false;
 		setPending(false);
@@ -45,8 +39,7 @@ export const AuthForm = ({
 		event: FormEvent<HTMLFormElement>,
 		onBlur: boolean
 	): void => {
-		if (!registering || pending || !(event.target instanceof HTMLInputElement))
-			return;
+		if (pending || !(event.target instanceof HTMLInputElement)) return;
 		const targetName = event.target.name;
 		const field = registrationFields.find((name) => name === targetName);
 		if (!field) return;
@@ -67,12 +60,6 @@ export const AuthForm = ({
 		event.preventDefault();
 		if (inFlight.current) return;
 		setError("");
-		if (!registering) {
-			setError(
-				"Sign-in is not available yet. Please try again once Horaion sign-in is enabled."
-			);
-			return;
-		}
 		const form = event.currentTarget;
 		const data = new FormData(form);
 		const value = (name: string): string => {
@@ -107,8 +94,10 @@ export const AuthForm = ({
 				if (input instanceof HTMLElement) refusedInput.current = input;
 				return;
 			}
-			form.reset();
-			setComplete(true);
+			await navigate({
+				to: "/confirm-email",
+				state: withEmail(value("email").trim()),
+			});
 		} catch (cause) {
 			setError(
 				cause instanceof Error
@@ -120,40 +109,19 @@ export const AuthForm = ({
 		}
 	};
 
-	if (complete)
-		return (
-			<div className="space-y-6">
-				<h1 className="text-3xl font-semibold tracking-tight">
-					Check your email
-				</h1>
-				<p className="leading-relaxed text-neutral-800" role="status">
-					Your workspace has been created. Please verify your email before
-					signing in to Horaion.
-				</p>
-				<Link
-					className="font-medium text-ink-blue-900 underline underline-offset-4"
-					to="/login"
-				>
-					Back to log in
-				</Link>
-			</div>
-		);
-
 	return (
 		<>
 			<div className="space-y-3">
 				<h1 className="text-[32px] leading-12 font-medium text-ink-blue-900">
-					{registering ? "Sign up" : "Log in"}
+					Sign up
 				</h1>
 				<p className="text-base leading-6 text-neutral-800">
-					{registering
-						? "Set up your company account."
-						: "Sign in with your email and password."}
+					Set up your company account.
 				</p>
 			</div>
 			<form
-				className={registering ? "mt-10 space-y-10" : "mt-9 space-y-16"}
-				noValidate={registering}
+				noValidate
+				className="mt-10 space-y-10"
 				onSubmit={submit}
 				onBlur={(event): void => {
 					// Let submission validate before adding errors that could move the clicked button.
@@ -168,16 +136,9 @@ export const AuthForm = ({
 					checkFields(event, false);
 				}}
 			>
-				<fieldset
-					disabled={pending}
-					className={
-						registering ? "flex flex-col gap-6" : "flex flex-col gap-4"
-					}
-				>
-					<legend className="sr-only">
-						{registering ? "Account details" : "Login details"}
-					</legend>
-					{registering && (
+				<fieldset className="flex flex-col gap-6" disabled={pending}>
+					<legend className="sr-only">Account details</legend>
+					{
 						<>
 							<div className="grid grid-cols-1 gap-6 min-[480px]:grid-cols-2 min-[480px]:gap-5">
 								<AuthField
@@ -242,16 +203,15 @@ export const AuthForm = ({
 								title="3–30 lowercase letters, numbers, or hyphens. Start and end with a letter or number."
 							/>
 						</>
-					)}
+					}
 
 					<AuthField
 						required
 						autoCapitalize="none"
 						autoComplete="email"
 						error={fieldErrors.email}
-						hideLabel={!registering}
 						id="email"
-						label={registering ? "Email address" : "Email"}
+						label="Email address"
 						maxLength={320}
 						name="email"
 						placeholder="Email address"
@@ -259,37 +219,19 @@ export const AuthForm = ({
 					/>
 					<AuthField
 						required
-						autoComplete={registering ? "new-password" : "current-password"}
+						autoComplete="new-password"
 						error={fieldErrors.password}
-						hideLabel={!registering}
-						hint={registering ? passwordRequirements : undefined}
+						hint={passwordRequirements}
 						id="password"
 						label="Password"
-						maxLength={registering ? 128 : undefined}
-						minLength={registering ? 8 : undefined}
+						maxLength={128}
+						minLength={8}
 						name="password"
 						placeholder="Password"
-						title={registering ? passwordRequirements : undefined}
-						type={showPassword ? "text" : "password"}
-
-						trailingIcon={
-							<Button
-								aria-label={showPassword ? "Hide password" : "Show password"}
-								aria-pressed={showPassword}
-								variant="icon"
-								onClick={(): void => {
-									setShowPassword(!showPassword);
-								}}
-							>
-								{showPassword ? (
-									<EyeSlashIcon aria-hidden="true" />
-								) : (
-									<EyeIcon aria-hidden="true" />
-								)}
-							</Button>
-						}
+						title={passwordRequirements}
+						type="password"
 					/>
-					{registering && (
+					{
 						<AuthField
 							required
 							autoComplete="new-password"
@@ -299,66 +241,26 @@ export const AuthForm = ({
 							maxLength={128}
 							name="confirmPassword"
 							placeholder="Confirm password"
-							type={showConfirmation ? "text" : "password"}
-							trailingIcon={
-								<Button
-									aria-pressed={showConfirmation}
-									variant="icon"
-									aria-label={
-										showConfirmation
-											? "Hide confirmed password"
-											: "Show confirmed password"
-									}
-									onClick={(): void => {
-										setShowConfirmation(!showConfirmation);
-									}}
-								>
-									{showConfirmation ? (
-										<EyeSlashIcon aria-hidden="true" />
-									) : (
-										<EyeIcon aria-hidden="true" />
-									)}
-								</Button>
-							}
+							type="password"
+							toggleLabels={{
+								show: t("auth.showConfirmedPassword"),
+								hide: t("auth.hideConfirmedPassword"),
+							}}
 						/>
-					)}
-					{!registering && (
-						<div className="mt-6 flex min-h-6 items-center justify-between gap-2">
-							<Checkbox
-								checked={remember}
-								label="Remember me"
-								onChange={(event): void => {
-									setRemember(event.target.checked);
-								}}
-							/>
-							<Link
-								className="text-base leading-6 text-neutral-700 underline underline-offset-2 hover:text-neutral-900"
-								to="/forgot-password"
-							>
-								Having trouble signing in?
-							</Link>
-						</div>
-					)}
+					}
 				</fieldset>
-				{error && (
-					<p
-						className="rounded-lg border border-error-200 bg-error-50 p-3 text-sm text-error-900"
-						role="alert"
-					>
-						{error}
-					</p>
-				)}
+				{error && <AuthMessage kind="error">{error}</AuthMessage>}
 				<Button className="w-full" disabled={pending} size="lg" type="submit">
-					{pending ? "Creating account…" : registering ? "Sign up" : "Log in"}
+					{pending ? "Creating account…" : "Sign up"}
 				</Button>
 			</form>
 			<p className="mt-7 text-center text-base leading-6 text-neutral-800 [&_a]:ml-2">
-				{registering ? "Already have an account?" : "Don’t have an account?"}
+				Already have an account?
 				<Link
 					className="text-ink-blue-900 underline underline-offset-2 hover:text-ink-blue-700"
-					to={registering ? "/login" : "/register"}
+					to="/login"
 				>
-					{registering ? "Log in" : "Sign up"}
+					Log in
 				</Link>
 			</p>
 		</>
