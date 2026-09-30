@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/Button";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { RouterProvider } from "@tanstack/react-router";
@@ -89,19 +90,18 @@ describe("Sidebar", () => {
 			</MemoryRouterHarness>
 		);
 		await screen.findByRole("navigation", { name: "Main navigation" });
-		for (const name of [
+		await [
 			"Horaion home",
 			"Dashboard",
 			"Scheduling",
 			"Leave",
 			"People",
 			"Organisation",
-		]) {
-			// Keyboard focus advances sequentially; parallel tabs would race.
-			// eslint-disable-next-line no-await-in-loop
+		].reduce(async (previous, name) => {
+			await previous;
 			await user.tab();
 			expect(screen.getByRole("link", { name })).toHaveFocus();
-		}
+		}, Promise.resolve());
 		await user.keyboard("{Enter}");
 		expect(screen.getByRole("link", { name: "Organisation" })).toHaveAttribute(
 			"aria-current",
@@ -138,4 +138,24 @@ describe("Sidebar", () => {
 		).not.toBeInTheDocument();
 		expect(navigation.parentElement).toHaveClass("consumer-layout");
 	});
+});
+
+it("renders a usable footer after navigation", async () => {
+	const user = userEvent.setup();
+	const logOut = vi.fn();
+	render(
+		<MemoryRouterHarness>
+			<Sidebar footer={<Button onClick={logOut}>Log out</Button>}>
+				{null}
+			</Sidebar>
+		</MemoryRouterHarness>
+	);
+	const button = await screen.findByRole("button", { name: "Log out" });
+	expect(screen.getByRole("navigation")).not.toContainElement(button);
+	await user.tab();
+	expect(screen.getByRole("link", { name: "Horaion home" })).toHaveFocus();
+	await user.tab();
+	expect(button).toHaveFocus();
+	await user.keyboard("{Enter}");
+	expect(logOut).toHaveBeenCalledOnce();
 });

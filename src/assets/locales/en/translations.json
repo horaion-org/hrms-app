@@ -1,4 +1,116 @@
 {
+  "passwordInput": {
+    "show": "Show password",
+    "hide": "Hide password"
+  },
+  "auth": {
+    "passwordReset": {
+      "title": "Reset your password",
+      "requestSubtitle": "Enter your email to request a reset code.",
+      "completeSubtitle": "Enter the code from your email and choose a new password.",
+      "details": "Password reset details",
+      "email": "Email",
+      "code": "Code",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm password",
+      "request": "Send reset code",
+      "complete": "Reset password",
+      "resend": "Send a new code",
+      "pending": "Please wait…",
+      "back": "Back to Log in",
+      "sent": "If that email has an account, we've sent a code",
+      "success": "Your password was reset. Every device was logged out. Log in with your new password.",
+      "invalidCode": "This code is incorrect or has expired. Try again or send a new code.",
+      "codeFormat": "Enter the six-digit code from your email.",
+      "passwordPolicy": "Use 8–128 characters, including a lowercase letter, an uppercase letter, a digit and a symbol.",
+      "passwordMismatch": "Passwords don’t match. Enter the same password in both fields.",
+      "failed": "We couldn’t reset your password. Please try again."
+    },
+    "company": {
+      "title": "Choose a company",
+      "description": "Choose the company you want to work in.",
+      "current": "Current company",
+      "switch": "Switch company",
+      "noneTitle": "You no longer have access to any company",
+      "noneDescription": "Contact your company administrator if you need access."
+    },
+    "challenge": {
+      "newPasswordTitle": "Choose a new password",
+      "newPasswordSubtitle": "Choose your own password to continue logging in.",
+      "newPassword": "New password",
+      "confirmPassword": "Confirm password",
+      "passwordPolicy": "Use 8–128 characters with a lowercase letter, an uppercase letter, a number and a symbol.",
+      "passwordMismatch": "Passwords don’t match. Enter the same password in both fields.",
+      "passwordRejected": "This password doesn’t meet the requirements. Choose another password.",
+      "codeTitle": "Enter your authenticator code",
+      "codeSubtitle": "Enter the six-digit code from your authenticator app to continue logging in.",
+      "code": "Authenticator code",
+      "codeFormat": "Enter a six-digit code.",
+      "invalidCode": "That code didn’t match. Enter a new code from your authenticator app.",
+      "expired": "This step expired. Log in again to continue.",
+      "continue": "Continue",
+      "pending": "Continuing…"
+    },
+    "showConfirmedPassword": "Show confirmed password",
+    "hideConfirmedPassword": "Hide confirmed password",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "logIn": {
+      "title": "Log in",
+      "subtitle": "Log in with your email and password.",
+      "details": "Log in details",
+      "email": "Email",
+      "emailPlaceholder": "Email address",
+      "password": "Password",
+      "trouble": "Having trouble logging in?",
+      "pending": "Logging in…",
+      "noAccount": "Don’t have an account?",
+      "signUp": "Sign up"
+    },
+    "logOut": "Log out",
+    "welcome": "Welcome, {{name}}",
+    "errors": {
+      "invalidCredentials": "Your email or password is incorrect.",
+      "generic": "We can’t log you in yet. Please try again.",
+      "unreachable": "We couldn’t reach Horaion. Please try again shortly.",
+      "invalidCode": "That code is incorrect or has expired. Try again or send a new code."
+    },
+    "validation": {
+      "required": "This field is required.",
+      "tooLong": "Use at most {{max}} characters.",
+      "email": "Enter a valid email address, such as name@company.com.",
+      "passwordRejected": "Check your password and try again."
+    },
+    "unreachable": {
+      "title": "We can't reach Horaion",
+      "explanation": "Check your connection and try again. Horaion may be temporarily unavailable.",
+      "tryAgain": "Try again"
+    },
+    "retryHold": {
+      "later": "Too many attempts. Try again later.",
+      "aboutAMinute": "Too many attempts. Try again in about a minute.",
+      "minutes_one": "Too many attempts. Try again in about {{count}} minute.",
+      "minutes_other": "Too many attempts. Try again in about {{count}} minutes."
+    },
+    "emailConfirmation": {
+      "title": "Email confirmation",
+      "subtitle": "Enter the six-digit code sent to your email.",
+      "details": "Email confirmation details",
+      "email": "Email address",
+      "code": "Confirmation code",
+      "submit": "Confirm email",
+      "pending": "Confirming email…",
+      "didNotReceive": "Didn’t receive a code?",
+      "resend": "Resend",
+      "resending": "Sending…",
+      "resent": "If that email needs confirming, we've sent a new code",
+      "redirecting": "Your email is confirmed. Redirecting to log in in 3 seconds.",
+      "required": "Confirm your email before logging in.",
+      "invalidCode": "That code is incorrect or has expired. Try again or send a new code.",
+      "codeFormat": "Enter a six-digit code.",
+      "failed": "We couldn’t confirm your email. Please try again."
+    }
+  },
   "calendar": {
     "previousMonth": "Previous month",
     "nextMonth": "Next month",

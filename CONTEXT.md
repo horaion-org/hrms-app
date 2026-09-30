@@ -9,12 +9,38 @@ The business that uses Horaion. Each company's people and records are kept apart
 _Avoid_: Workspace, tenant, account
 
 **Workspace address**:
-A company's unique web address in Horaion. "Workspace" is only ever used in this phrase, never on its own.
-_Avoid_: Subdomain, company address, URL
+The short, unique name a company chooses at Onboarding, such as `acme`. It is shown to people but never decides which company they are working in; everyone logs in at the same address. "Workspace" is only ever used in this phrase, never on its own.
+_Avoid_: Subdomain, company address, URL, slug
 
 **Module**:
 A self-contained area of the product that serves one HR concern, reached from the main navigation. The modules are Dashboard, Scheduling, Leave, People, and Organisation.
 _Avoid_: Section, area, page, workspace
+
+## Access
+
+**Onboarding**:
+The public sign-up that creates a Company with the person signing up as its Owner. People see it as "Sign up".
+_Avoid_: Registration (the Company's Registration number already uses that word), account creation
+
+**Email confirmation**:
+Proving a person owns the email they gave at Onboarding by entering the code emailed to them. Until it is done they cannot log in.
+_Avoid_: Verification, sign-up confirmation, Challenge
+
+**Log in**:
+What a person does to start a Session with their email and password, and any Challenge that follows. **Log out** ends the Session in every open tab on this device; their other devices stay logged in. The API calls the same steps sign in and sign out.
+_Avoid_: Sign in, sign out, login or logout as verbs
+
+**Challenge**:
+A step the API requires partway through logging in before a Session starts: choosing a new password in place of a temporary one, or entering a code from an authenticator app. A step, not an error.
+_Avoid_: Error, prompt, Email confirmation
+
+**Session**:
+A logged-in person's standing with Horaion, lasting seven days unless ended earlier. Reloading or opening a new tab keeps the person logged in. A Session does not guarantee access: every request still checks that the person's membership of the company is active.
+_Avoid_: A login, auth state, tokens
+
+**Current Company**:
+The Company a logged-in person is working in: the last one they chose while they can still use it, otherwise their only usable Company, otherwise the one they choose. A person with no usable Company has no Current Company.
+_Avoid_: Active tenant, selected workspace, current org
 
 ## Controls
 

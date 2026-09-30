@@ -7,11 +7,13 @@ import { HoraionLogo } from "@/components/layout/Sidebar/HoraionLogo";
 export type SidebarProps = {
 	children: ReactNode;
 	className?: string;
+	footer?: ReactNode;
 };
 
 export const Sidebar = ({
 	children,
 	className,
+	footer,
 }: SidebarProps): FunctionComponent => (
 	<div
 		className={joinClassNames(
@@ -32,5 +34,6 @@ export const Sidebar = ({
 				{Children.map(children, (child) => child && <li>{child}</li>)}
 			</ul>
 		</nav>
+		{footer && <div className="mt-auto w-full">{footer}</div>}
 	</div>
 );

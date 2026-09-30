@@ -1,3 +1,5 @@
+import { z } from "zod";
+import { apiRequest } from "@/common/api-client";
 import {
 	passwordRequirements,
 	type RegistrationErrors,
@@ -108,3 +110,31 @@ export const registerCompany = async (
 		);
 	throw new Error("We couldn’t create your account. Please try again shortly.");
 };
+
+const currentUserSchema = z.object({
+	userId: z.string(),
+	email: z.string(),
+	displayName: z.string(),
+	status: z.enum(["ACTIVE", "INACTIVE"]),
+	memberships: z.array(
+		z.object({
+			membershipId: z.string(),
+			companyId: z.string(),
+			companyName: z.string(),
+			subdomain: z.string(),
+			companyStatus: z.enum([
+				"PENDING_VERIFICATION",
+				"ACTIVE",
+				"SUSPENDED",
+				"CLOSED",
+			]),
+			status: z.enum(["ACTIVE", "INACTIVE"]),
+		})
+	),
+});
+
+export type CurrentUser = z.infer<typeof currentUserSchema>;
+export type Membership = CurrentUser["memberships"][number];
+
+export const fetchCurrentUser = (): Promise<CurrentUser> =>
+	apiRequest("/api/v1/me", currentUserSchema);

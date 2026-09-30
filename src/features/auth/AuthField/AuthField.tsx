@@ -1,12 +1,17 @@
 import type { FunctionComponent } from "@/common/types";
 import { Input, type InputProps } from "@/components/forms/Input";
+import {
+	PasswordInput,
+	type PasswordInputProps,
+} from "@/components/forms/PasswordInput";
 
-type AuthFieldProps = InputProps & {
+export type AuthFieldProps = InputProps & {
 	id: string;
 	label: string;
 	hint?: string;
 	error?: string;
 	hideLabel?: boolean;
+	toggleLabels?: PasswordInputProps["toggleLabels"];
 };
 export const AuthField = ({
 	id,
@@ -14,6 +19,8 @@ export const AuthField = ({
 	hint,
 	error,
 	hideLabel = false,
+	type,
+	toggleLabels,
 	...props
 }: AuthFieldProps): FunctionComponent => (
 	<div className={hideLabel ? undefined : "space-y-3"}>
@@ -25,12 +32,27 @@ export const AuthField = ({
 		>
 			{label}
 		</label>
-		<Input
-			aria-describedby={error ? `${id}-error` : hint ? `${id}-hint` : undefined}
-			id={id}
-			status={error ? "error" : undefined}
-			{...props}
-		/>
+		{type === "password" ? (
+			<PasswordInput
+				id={id}
+				status={error ? "error" : undefined}
+				toggleLabels={toggleLabels}
+				aria-describedby={
+					error ? `${id}-error` : hint ? `${id}-hint` : undefined
+				}
+				{...props}
+			/>
+		) : (
+			<Input
+				id={id}
+				status={error ? "error" : undefined}
+				type={type}
+				aria-describedby={
+					error ? `${id}-error` : hint ? `${id}-hint` : undefined
+				}
+				{...props}
+			/>
+		)}
 		{error && (
 			<p className="text-sm text-error-700" id={`${id}-error`} role="alert">
 				{error}
