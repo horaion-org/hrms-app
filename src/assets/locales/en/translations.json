@@ -4,7 +4,81 @@
 		"entries": "{{start}}–{{end}} of {{total}} entries",
 		"previousPage": "Previous page",
 		"nextPage": "Next page",
-		"page": "Page {{page}} of {{total}}"
+		"page": "Page {{page}} of {{total}}",
+		"close": "Close dialog",
+		"title": "Leave overview",
+		"subtitle": "Manage employee leave requests and upcoming absences.",
+		"preview": "Design preview · Sample data. Changes last until you leave this page.",
+		"country": "Country",
+		"branch": "Branch",
+		"countries": {
+			"SG": "Singapore",
+			"MY": "Malaysia"
+		},
+		"branches": {
+			"main": "Main branch",
+			"jurong": "Jurong branch",
+			"kl": "Kuala Lumpur branch"
+		},
+		"requests": "Requests",
+		"timeline": "Timeline",
+		"views": "Leave views",
+		"apply": "Apply leave",
+		"showing": "Showing",
+		"all": "All requests",
+		"employee": "Employee",
+		"period": "Period",
+		"duration": "Duration",
+		"type": "Type",
+		"status": "Status",
+		"actions": "Actions",
+		"requested": "Requested",
+		"requestedOn": "Requested {{date}}",
+		"days_one": "{{count}} day",
+		"days_other": "{{count}} days",
+		"statuses": {
+			"approved": "Approved",
+			"pending": "Pending",
+			"rejected": "Rejected",
+			"blocked": "Blocked"
+		},
+		"types": {
+			"annual": "Annual leave",
+			"sick": "Sick leave",
+			"hospitalisation": "Hospitalisation leave",
+			"compassionate": "Compassionate leave",
+			"maternity": "Maternity leave",
+			"unpaid": "Unpaid leave",
+			"marriage": "Marriage leave"
+		},
+		"view": "View request for {{name}}",
+		"approveFor": "Approve request for {{name}}",
+		"rejectFor": "Reject request for {{name}}",
+		"empty": "No leave requests match these filters.",
+		"dateRange": "Timeline date range",
+		"previousPeriod": "Previous period",
+		"nextPeriod": "Next period",
+		"legend": "Leave status legend",
+		"weekend": "Blocked: weekend",
+		"today": "Today",
+		"timelineEntry": "{{name}} · {{type}} · {{period}} · {{status}}",
+		"requestTitle": "Leave request",
+		"attachments": "Attachments",
+		"none": "None",
+		"approve": "Approve",
+		"reject": "Reject",
+		"reason": "Reason for rejection",
+		"note": "Add a note",
+		"required": "Enter a reason for rejection.",
+		"cancel": "Cancel",
+		"confirmRejection": "Confirm rejection",
+		"approved": "Request approved in this preview.",
+		"rejected": "Request rejected in this preview.",
+		"applied": "Leave request added to this preview.",
+		"submit": "Submit request",
+		"applyPeriod": "Leave dates",
+		"chooseEmployee": "Choose an employee",
+		"previewApplication": "Create a sample request to explore the design. No request will be sent."
 	},
 	"dialog": {
 		"close": "Close"
@@ -680,7 +754,9 @@
 				"forbidden": "You don’t have permission to change this job title.",
 				"failed": "We couldn’t change the job title. Try again."
 			},
-			"department": "Department"
+			"department": "Department",
+			"systemRole": "System Role",
+			"employeeCount": "Employee Count"
 		},
 		"accessRoles": {
 			"title": "System roles",
