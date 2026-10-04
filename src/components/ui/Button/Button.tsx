@@ -8,15 +8,25 @@ import type {
 } from "@/components/ui/Button/Button.constants";
 
 type LabelledButtonProps = {
-	variant?: Exclude<ButtonVariant, "icon">;
+	variant?: "primary" | "secondary";
+	loading?: boolean;
 	/** Only applies to the pill variants (`primary` and `secondary`). */
 	size?: ButtonSize;
 	leadingIcon?: ReactNode;
 	trailingIcon?: ReactNode;
 };
 
+type IdleLabelledButtonProps = Omit<
+	LabelledButtonProps,
+	"variant" | "loading"
+> & {
+	variant?: Exclude<ButtonVariant, "icon">;
+	loading?: never;
+};
+
 type IconButtonProps = {
 	variant: "icon";
+	loading?: never;
 	size?: never;
 	leadingIcon?: never;
 	trailingIcon?: never;
@@ -37,7 +47,7 @@ type LinkElementProps = Omit<
 	};
 
 export type ButtonProps = (ButtonElementProps | LinkElementProps) &
-	(LabelledButtonProps | IconButtonProps);
+	(LabelledButtonProps | IdleLabelledButtonProps | IconButtonProps);
 
 const baseClasses =
 	"inline-flex items-center justify-center font-medium whitespace-nowrap transition-colors select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-blue-500 disabled:cursor-not-allowed";
@@ -67,6 +77,7 @@ const isPill = (variant: ButtonVariant): boolean =>
 export const Button = ({
 	variant = "primary",
 	size = "lg",
+	loading = false,
 	leadingIcon,
 	trailingIcon,
 	className,
@@ -78,12 +89,32 @@ export const Button = ({
 		baseClasses,
 		variantClasses[variant],
 		isPill(variant) ? `${pillClasses} ${sizeClasses[size]}` : undefined,
+		loading ? "relative" : undefined,
 		className
 	);
 
+	const spinner = (
+		<span
+			aria-hidden="true"
+			className="absolute left-1/2 top-1/2 size-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-current border-r-transparent motion-safe:animate-spin"
+		/>
+	);
 	const content = (
 		<>
-			{leadingIcon}
+			{loading ? (
+				leadingIcon ? (
+					<span className="relative inline-flex shrink-0">
+						<span aria-hidden="true" className="invisible inline-flex">
+							{leadingIcon}
+						</span>
+						{spinner}
+					</span>
+				) : (
+					<span className="absolute left-3 top-1/2">{spinner}</span>
+				)
+			) : (
+				leadingIcon
+			)}
 			{children}
 			{trailingIcon}
 		</>
@@ -91,13 +122,27 @@ export const Button = ({
 
 	if (rest.to !== undefined)
 		return (
-			<Link {...rest} className={classes}>
+			<Link
+				{...rest}
+				aria-busy={loading || rest["aria-busy"]}
+				aria-disabled={loading || rest["aria-disabled"]}
+				className={classes}
+				disabled={loading}
+				onClick={loading ? undefined : rest.onClick}
+			>
 				{content}
 			</Link>
 		);
 
 	return (
-		<button className={classes} type={type} {...rest}>
+		<button
+			{...rest}
+			aria-busy={loading || rest["aria-busy"]}
+			aria-disabled={loading || rest["aria-disabled"]}
+			className={classes}
+			disabled={loading || rest.disabled}
+			type={type}
+		>
 			{content}
 		</button>
 	);

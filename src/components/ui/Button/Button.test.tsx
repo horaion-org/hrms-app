@@ -8,6 +8,37 @@ import { MemoryRouterHarness } from "@/components/utils/MemoryRouterHarness";
 import * as stories from "@/components/ui/Button/Button.stories";
 
 describe("Button", () => {
+	it.each(["primary", "secondary"] as const)(
+		"keeps the %s label and ignores clicks while loading",
+		async (variant) => {
+			const onClick = vi.fn();
+			const { rerender } = render(
+				<Button variant={variant} onClick={onClick}>
+					Create branch
+				</Button>
+			);
+			const button = screen.getByRole("button", { name: "Create branch" });
+			expect(button).not.toHaveAttribute("aria-busy", "true");
+			rerender(
+				<Button loading variant={variant} onClick={onClick}>
+					Create branch
+				</Button>
+			);
+			expect(button).toHaveAttribute("aria-busy", "true");
+			expect(button).toHaveAttribute("aria-disabled", "true");
+			expect(button).toHaveAccessibleName("Create branch");
+			await userEvent.click(button);
+			expect(onClick).not.toHaveBeenCalled();
+			rerender(
+				<Button variant={variant} onClick={onClick}>
+					Create branch
+				</Button>
+			);
+			await userEvent.click(button);
+			expect(onClick).toHaveBeenCalledOnce();
+		}
+	);
+
 	it("renders its label as a button with type=button by default", () => {
 		render(<Button>Save</Button>);
 
@@ -113,6 +144,24 @@ describe("Button icon variant", () => {
 		expectTypeOf<{
 			variant: "icon";
 			"aria-label": string;
+			loading: true;
+		}>().not.toExtend<ButtonProps>();
+		expectTypeOf<{
+			variant: "textlink";
+			loading: true;
+		}>().not.toExtend<ButtonProps>();
+		expectTypeOf<{
+			variant: "hyperlink";
+			loading: true;
+		}>().not.toExtend<ButtonProps>();
+		expectTypeOf<{ loading: true }>().toExtend<ButtonProps>();
+		expectTypeOf<{
+			variant: "secondary";
+			loading: true;
+		}>().toExtend<ButtonProps>();
+		expectTypeOf<{
+			variant: "icon";
+			"aria-label": string;
 			size: "sm";
 		}>().not.toExtend<ButtonProps>();
 		expectTypeOf<{
@@ -158,6 +207,25 @@ describe("Button icon variant", () => {
 });
 
 describe("Button as a link", () => {
+	it("prevents link navigation and click callbacks while loading", async () => {
+		const user = userEvent.setup();
+		const onClick = vi.fn();
+		render(
+			<MemoryRouterHarness>
+				<Button loading to="/register" onClick={onClick}>
+					Register
+				</Button>
+			</MemoryRouterHarness>
+		);
+		const link = await screen.findByText("Register");
+		expect(link).toHaveAttribute("aria-busy", "true");
+		expect(link).toHaveAttribute("aria-disabled", "true");
+		expect(link).not.toHaveAttribute("href");
+		await user.click(link);
+		expect(onClick).not.toHaveBeenCalled();
+		expect(link).not.toHaveAttribute("data-status", "active");
+	});
+
 	it("renders a router link with the variant's styling when given `to`", async () => {
 		render(
 			<MemoryRouterHarness>
@@ -206,9 +274,18 @@ describe("Button as a link", () => {
 
 	it("rejects button-only props on a link", () => {
 		expectTypeOf<{ to: "/register" }>().toExtend<ButtonProps>();
-		expectTypeOf<{ to: "/register"; disabled: true }>().not.toExtend<ButtonProps>();
-		expectTypeOf<{ to: "/register"; type: "submit" }>().not.toExtend<ButtonProps>();
-		expectTypeOf<{ to: "/register"; variant: "icon" }>().not.toExtend<ButtonProps>();
+		expectTypeOf<{
+			to: "/register";
+			disabled: true;
+		}>().not.toExtend<ButtonProps>();
+		expectTypeOf<{
+			to: "/register";
+			type: "submit";
+		}>().not.toExtend<ButtonProps>();
+		expectTypeOf<{
+			to: "/register";
+			variant: "icon";
+		}>().not.toExtend<ButtonProps>();
 	});
 });
 
