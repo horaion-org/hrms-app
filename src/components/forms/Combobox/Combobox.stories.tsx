@@ -49,8 +49,34 @@ const meta = {
 	render: function Render(
 		args: ComboboxProps<Person>
 	): NonNullable<FunctionComponent> {
-		const [value, setValue] = useState(args.value);
+		const [value, setValue] = useState(
+			args.multiple === false ? [] : args.value
+		);
+		const [singleValue, setSingleValue] = useState(
+			args.multiple === false ? args.value : null
+		);
 		const [query, setQuery] = useState(args.query);
+		if (args.multiple === false)
+			return (
+				<div className="w-96 max-w-full">
+					<Combobox
+						{...args}
+						query={query}
+						value={singleValue}
+						options={args.options.filter((person) =>
+							person.name.toLowerCase().includes(query.toLowerCase())
+						)}
+						onChange={(next: Person | null) => {
+							setSingleValue(next);
+							args.onChange(next);
+						}}
+						onQueryChange={(next) => {
+							setQuery(next);
+							args.onQueryChange(next);
+						}}
+					/>
+				</div>
+			);
 		return (
 			<div className="w-96 max-w-full">
 				<Combobox
@@ -75,6 +101,21 @@ const meta = {
 } satisfies Meta<typeof Combobox<Person>>;
 export default meta;
 type Story = StoryObj<typeof meta>;
+export const SingleEmpty = {
+	args: {
+		multiple: false,
+		value: null,
+		maxSelected: undefined,
+		"aria-label": "Branch head",
+		placeholder: "Select a branch head",
+	},
+} satisfies Story;
+export const SingleChosen: Story = {
+	args: { ...SingleEmpty.args, value: people[0] ?? null },
+};
+export const SingleError: Story = {
+	args: { ...SingleEmpty.args, status: "error" },
+};
 export const Empty: Story = {};
 export const TwoChosen: Story = { args: { value: people.slice(0, 2) } };
 export const Loading: Story = { args: { options: [], loading: true } };
