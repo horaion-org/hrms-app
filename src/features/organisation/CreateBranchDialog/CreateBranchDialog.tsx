@@ -56,6 +56,7 @@ export const CreateBranchDialog = ({
 		defaultValues: { name: "", code: "", city: "", country: "", heads: [] },
 		mode: "onSubmit",
 		reValidateMode: "onChange",
+		shouldFocusError: false,
 	});
 	const name = useWatch({ control, name: "name" });
 	const code = useWatch({ control, name: "code" });
@@ -179,7 +180,14 @@ export const CreateBranchDialog = ({
 				aria-busy={isSubmitting}
 				className="space-y-6"
 				id={formId}
-				onSubmit={(event) => handleSubmit(submit)(event)}
+				onSubmit={(event) =>
+					handleSubmit(submit, (invalid) => {
+						const first = (
+							["name", "code", "city", "country", "heads"] as const
+						).find((field) => invalid[field]);
+						if (first) setFocus(first);
+					})(event)
+				}
 			>
 				{message && (
 					<p
