@@ -23,3 +23,11 @@ export const Checked: Story = {
 export const Disabled: Story = {
 	args: { disabled: true },
 };
+
+export const Indeterminate: Story = {
+	args: { label: "Select all", indeterminate: true, readOnly: true },
+};
+
+export const HiddenLabel: Story = {
+	args: { label: "Select Orchard", hideLabel: true },
+};

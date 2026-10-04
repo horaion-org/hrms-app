@@ -30,3 +30,44 @@ export const Hover: Story = {
 };
 
 export const Disabled: Story = { args: { disabled: true } };
+
+/** In horizontal Tabs the description is the accessible description only. */
+export const WithDescription: Story = {
+	args: { description: "Contract, role and reporting line" },
+};
+
+const renderVertical = (
+	args: Story["args"]
+): NonNullable<FunctionComponent> => (
+	<Tabs className="w-63" orientation="vertical">
+		<TabList aria-label="Settings">
+			<Tab description="Core workspace preferences.">General</Tab>
+			<Tab {...args} />
+		</TabList>
+		<TabPanels className="pt-6">
+			<TabPanel>General content</TabPanel>
+			<TabPanel>Notifications content</TabPanel>
+		</TabPanels>
+	</Tabs>
+);
+
+export const Vertical: Story = {
+	args: {
+		children: "Notifications",
+		description: "Control what you are notified about and how.",
+	},
+	render: renderVertical,
+};
+
+export const VerticalHover: Story = {
+	args: {
+		...Vertical.args,
+		className: "not-data-disabled:not-data-selected:bg-neutral-50",
+	},
+	render: renderVertical,
+};
+
+export const VerticalDisabled: Story = {
+	args: { ...Vertical.args, disabled: true },
+	render: renderVertical,
+};

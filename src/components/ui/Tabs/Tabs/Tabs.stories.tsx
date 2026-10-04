@@ -119,3 +119,43 @@ export const Controlled: Story = {
 		);
 	},
 };
+
+const settingsSections = [
+	{ label: "General", description: "Core workspace preferences." },
+	{
+		label: "Notifications",
+		description: "Control what you are notified about and how.",
+	},
+	{
+		label: "Scheduling",
+		description: "Configure approval workflows and hierarchies.",
+	},
+];
+
+/** A navigation column: ArrowUp/ArrowDown move between tabs. */
+export const Vertical: Story = {
+	args: {
+		orientation: "vertical",
+		className:
+			"flex flex-col overflow-hidden rounded-xl border border-neutral-400 sm:min-h-144 sm:flex-row",
+	},
+	render: (args): NonNullable<FunctionComponent> => (
+		<Tabs {...args}>
+			<TabList
+				aria-label="Settings"
+				className="sm:w-63 sm:shrink-0 sm:border-r sm:border-neutral-400"
+			>
+				{settingsSections.map(({ label, description }) => (
+					<Tab key={label} description={description}>
+						{label}
+					</Tab>
+				))}
+			</TabList>
+			<TabPanels className="min-w-0 flex-1 p-6">
+				{settingsSections.map(({ label }) => (
+					<TabPanel key={label}>{label} content</TabPanel>
+				))}
+			</TabPanels>
+		</Tabs>
+	),
+};
