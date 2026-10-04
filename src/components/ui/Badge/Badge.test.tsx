@@ -93,7 +93,7 @@ describe("Badge", () => {
 		);
 	});
 
-	it("styles a compact rounded uppercase label without changing its text", () => {
+	it("styles a compact rounded label while preserving sentence case", () => {
 		render(<Badge>Pending review</Badge>);
 
 		const badge = screen.getByText("Pending review");
@@ -101,12 +101,12 @@ describe("Badge", () => {
 		expect(badge).toHaveClass(
 			"inline-block",
 			"rounded-full",
-			"uppercase",
 			"font-normal",
 			"text-sm",
 			"leading-6",
 			"px-3"
 		);
+		expect(badge).not.toHaveClass("uppercase", "capitalize");
 	});
 
 	it("merges caller classes and passes span attributes and ref through", () => {
