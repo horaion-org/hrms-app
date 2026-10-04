@@ -48,9 +48,11 @@ export const ListToolbar = ({
 						onSearchChange(event.target.value);
 					}}
 				/>
-				<Button leadingIcon={<PlusIcon />} onClick={onCreate}>
-					{createLabel}
-				</Button>
+				{onCreate && (
+					<Button leadingIcon={<PlusIcon />} onClick={onCreate}>
+						{createLabel}
+					</Button>
+				)}
 			</div>
 			{filter && (
 				<div className="mt-10 flex items-center gap-3">
