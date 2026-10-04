@@ -11,7 +11,7 @@ const meta = {
 	parameters: { layout: "padded" },
 	args: {
 		htmlFor: "workspace-name",
-		label: "Workspace Name",
+		label: "Workspace name",
 		children: null,
 	},
 	argTypes: {
@@ -24,9 +24,15 @@ const meta = {
 				className="w-full"
 				defaultValue="Horaion"
 				id={args.htmlFor}
+				maxLength={100}
+				required={args.required}
 				status={args.error ? "error" : undefined}
 				aria-describedby={
-					args.error ? formRowIds(args.htmlFor).errorId : undefined
+					args.error
+						? formRowIds(args.htmlFor).errorId
+						: args.hint != null
+							? formRowIds(args.htmlFor).hintId
+							: undefined
 				}
 			/>
 		</FormRow>
@@ -38,13 +44,29 @@ type Story = StoryObj<typeof meta>;
 
 export const WithInput: Story = {};
 
+export const StackedWithHelperAndCounter: Story = {
+	args: {
+		layout: "stacked",
+		required: true,
+		hint: "Use 2 to 100 characters.",
+		counter: "7/100",
+	},
+};
+
+export const StackedWithErrorAndCounter: Story = {
+	args: {
+		...StackedWithHelperAndCounter.args,
+		error: "This name is already in use.",
+	},
+};
+
 export const WithError: Story = {
 	args: { error: "This field is required." },
 };
 
 /** Select is labelled through `aria-labelledby`, since it is a button. */
 export const WithSelect: Story = {
-	args: { htmlFor: "date-format", label: "Date Format" },
+	args: { htmlFor: "date-format", label: "Date format" },
 	render: (args): NonNullable<FunctionComponent> => (
 		<FormRow {...args}>
 			<Select
