@@ -35,3 +35,34 @@ describe("Checkbox", () => {
 		expect(screen.getByRole("checkbox", { name: "Remember me" })).toBeChecked();
 	});
 });
+
+describe("Checkbox labelling and mixed state", () => {
+	it("given_hideLabel_when_rendered_then_keepsTheNameButHidesTheText", () => {
+		render(<Checkbox hideLabel label="Select Orchard" />);
+
+		expect(
+			screen.getByRole("checkbox", { name: "Select Orchard" })
+		).toBeInTheDocument();
+		expect(screen.getByText("Select Orchard")).toHaveClass("sr-only");
+	});
+
+	it("given_indeterminate_when_rendered_then_reportsTheMixedState", () => {
+		const { rerender } = render(
+			<Checkbox indeterminate readOnly label="Select all" />
+		);
+
+		const box = screen.getByRole("checkbox", { name: "Select all" });
+		expect(box).toBePartiallyChecked();
+
+		rerender(<Checkbox readOnly label="Select all" />);
+		expect(box).not.toBePartiallyChecked();
+	});
+
+	it("given_aClassName_when_rendered_then_appliesItToTheWrapper", () => {
+		render(<Checkbox className="justify-center" label="Remember me" />);
+
+		expect(
+			screen.getByRole("checkbox", { name: "Remember me" }).parentElement
+		).toHaveClass("flex", "justify-center");
+	});
+});

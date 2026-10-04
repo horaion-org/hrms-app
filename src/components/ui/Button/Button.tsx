@@ -1,3 +1,4 @@
+import { Link, type LinkProps } from "@tanstack/react-router";
 import type { ComponentPropsWithRef, ReactNode } from "react";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
@@ -21,7 +22,21 @@ type IconButtonProps = {
 	trailingIcon?: never;
 } & ({ "aria-label": string } | { "aria-labelledby": string });
 
-export type ButtonProps = ComponentPropsWithRef<"button"> &
+type ButtonElementProps = ComponentPropsWithRef<"button"> & { to?: never };
+
+/** Given `to`, the Button renders as a router link styled the same way. */
+type LinkElementProps = Omit<
+	ComponentPropsWithRef<"a">,
+	keyof LinkProps | "children"
+> &
+	Omit<LinkProps, "children" | "to" | "disabled"> & {
+		to: NonNullable<LinkProps["to"]>;
+		children?: ReactNode;
+		disabled?: never;
+		type?: never;
+	};
+
+export type ButtonProps = (ButtonElementProps | LinkElementProps) &
 	(LabelledButtonProps | IconButtonProps);
 
 const baseClasses =
@@ -31,14 +46,14 @@ const pillClasses = "rounded-full px-6 [&_svg]:shrink-0";
 
 const variantClasses: Record<ButtonVariant, string> = {
 	primary:
-		"bg-ink-blue-700 text-white enabled:hover:bg-ink-blue-500 enabled:active:bg-ink-blue-300 disabled:bg-neutral-400 disabled:text-neutral-500",
+		"bg-ink-blue-700 text-white not-disabled:hover:bg-ink-blue-500 not-disabled:active:bg-ink-blue-300 disabled:bg-neutral-400 disabled:text-neutral-500",
 	secondary:
-		"border border-neutral-500 bg-white text-neutral-900 enabled:hover:text-ink-blue-700 enabled:active:text-ink-blue-500 disabled:text-neutral-300",
+		"border border-neutral-500 bg-white text-neutral-900 not-disabled:hover:text-ink-blue-700 not-disabled:active:text-ink-blue-500 disabled:text-neutral-300",
 	textlink:
-		"gap-2 text-sm text-ink-blue-700 enabled:hover:text-ink-blue-500 enabled:active:text-ink-blue-300 disabled:text-neutral-400 [&_svg]:size-4 [&_svg]:shrink-0",
+		"gap-2 text-sm text-ink-blue-700 not-disabled:hover:text-ink-blue-500 not-disabled:active:text-ink-blue-300 disabled:text-neutral-400 [&_svg]:size-4 [&_svg]:shrink-0",
 	hyperlink:
-		"gap-2 text-base text-ink-blue-700 underline underline-offset-4 enabled:hover:text-ink-blue-500 enabled:active:text-ink-blue-300 disabled:text-neutral-400 [&_svg]:size-4 [&_svg]:shrink-0",
-	icon: "size-9 shrink-0 rounded bg-transparent text-neutral-900 enabled:hover:text-ink-blue-700 enabled:active:text-ink-blue-500 disabled:text-neutral-400 [&_svg]:size-4 [&_svg]:shrink-0",
+		"gap-2 text-base text-ink-blue-700 underline underline-offset-4 not-disabled:hover:text-ink-blue-500 not-disabled:active:text-ink-blue-300 disabled:text-neutral-400 [&_svg]:size-4 [&_svg]:shrink-0",
+	icon: "size-9 shrink-0 rounded bg-transparent text-neutral-900 not-disabled:hover:text-ink-blue-700 not-disabled:active:text-ink-blue-500 disabled:text-neutral-400 [&_svg]:size-4 [&_svg]:shrink-0",
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
@@ -66,11 +81,24 @@ export const Button = ({
 		className
 	);
 
-	return (
-		<button className={classes} type={type} {...rest}>
+	const content = (
+		<>
 			{leadingIcon}
 			{children}
 			{trailingIcon}
+		</>
+	);
+
+	if (rest.to !== undefined)
+		return (
+			<Link {...rest} className={classes}>
+				{content}
+			</Link>
+		);
+
+	return (
+		<button className={classes} type={type} {...rest}>
+			{content}
 		</button>
 	);
 };

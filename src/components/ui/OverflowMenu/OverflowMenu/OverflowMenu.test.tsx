@@ -301,3 +301,46 @@ describe("OverflowMenu", () => {
 		expect(within(menu).getAllByRole("menuitem")).toHaveLength(2);
 	});
 });
+
+describe("OverflowMenu icon variant", () => {
+	it("names an icon-only trigger by its label and opens the actions below its end", async () => {
+		const user = userEvent.setup();
+		render(
+			<OverflowMenu label="More actions for Orchard" variant="icon">
+				<OverflowMenuItem>Edit</OverflowMenuItem>
+				<OverflowMenuItem>Deactivate</OverflowMenuItem>
+			</OverflowMenu>
+		);
+		const trigger = screen.getByRole("button", {
+			name: "More actions for Orchard",
+		});
+		expect(trigger).toHaveTextContent("");
+		expect(trigger).toHaveClass("size-9", "bg-transparent");
+		expect(trigger).toHaveAttribute("aria-haspopup", "menu");
+		expect(trigger.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
+
+		await user.click(trigger);
+
+		const menu = screen.getByRole("menu");
+		expect(menu).toHaveAttribute("data-anchor", "bottom end");
+		expect(within(menu).getAllByRole("menuitem")).toHaveLength(2);
+		await user.keyboard("{Escape}");
+		expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+		await waitFor(() => expect(trigger).toHaveFocus());
+	});
+
+	it("cannot open when disabled", async () => {
+		const user = userEvent.setup();
+		render(
+			<OverflowMenu disabled label="More actions" variant="icon">
+				<OverflowMenuItem>Edit</OverflowMenuItem>
+			</OverflowMenu>
+		);
+		const trigger = screen.getByRole("button", { name: "More actions" });
+
+		await user.click(trigger);
+
+		expect(trigger).toBeDisabled();
+		expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+	});
+});

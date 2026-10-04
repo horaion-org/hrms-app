@@ -1,4 +1,8 @@
-export { Tabs, type TabsProps } from "@/components/ui/Tabs/Tabs";
+export {
+	Tabs,
+	type TabsOrientation,
+	type TabsProps,
+} from "@/components/ui/Tabs/Tabs";
 export { TabList, type TabListProps } from "@/components/ui/Tabs/TabList";
 export { Tab, type TabProps } from "@/components/ui/Tabs/Tab";
 export { TabPanels, type TabPanelsProps } from "@/components/ui/Tabs/TabPanels";

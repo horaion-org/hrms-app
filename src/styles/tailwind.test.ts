@@ -15,6 +15,11 @@ import { CountBadge, type CountBadgeProps } from "@/components/ui/CountBadge";
 import { createMemoryRouter } from "@/common/createMemoryRouter";
 import { Sidebar, SidebarItem } from "@/components/layout/Sidebar";
 import { Tabs, TabList, Tab, TabPanels, TabPanel } from "@/components/ui/Tabs";
+import { ActivityItem } from "@/components/ui/ActivityItem";
+import { AppHeader } from "@/components/layout/AppHeader";
+import { AppShell } from "@/components/layout/AppShell";
+import { Avatar } from "@/components/ui/Avatar";
+import { StatCard } from "@/components/ui/StatCard";
 
 /*
  * Compiles the app's real Tailwind entry and inspects the generated CSS.
@@ -247,7 +252,7 @@ const colourUtility =
 	/^(?:bg|text|border(?:-[xytrblse])?|outline|ring|decoration|fill|stroke|accent|caret)-([^/]+)(?:\/.+)?$/;
 
 const nonColourValue =
-	/^(?:\d+(?:\.\d+)?|\d*xs|sm|base|lg|\d*xl|offset-.+|left|center|right|justify|start|end|top|bottom|wrap|nowrap|balance|pretty|ellipsis|clip(?:-.+)?|none|auto|solid|dashed|dotted|double|wavy|hidden|collapse|separate|from-font|inset|cover|contain|fixed|local|scroll|repeat(?:-.+)?|no-repeat|origin-.+|blend-.+|linear-.+|radial(?:-.+)?|conic(?:-.+)?|\[.+\]|\(.+\))$/;
+	/^(?:\d+(?:\.\d+)?|[xytrblse]|\d*xs|sm|base|lg|\d*xl|offset-.+|left|center|right|justify|start|end|top|bottom|wrap|nowrap|balance|pretty|ellipsis|clip(?:-.+)?|none|auto|solid|dashed|dotted|double|wavy|hidden|collapse|separate|from-font|inset|cover|contain|fixed|local|scroll|repeat(?:-.+)?|no-repeat|origin-.+|blend-.+|linear-.+|radial(?:-.+)?|conic(?:-.+)?|\[.+\]|\(.+\))$/;
 
 const isColourUtility = (className: string): boolean => {
 	const value = colourUtility.exec(
@@ -537,6 +542,56 @@ describe("compiled app stylesheet", () => {
 		);
 		for (const className of colours) {
 			expect(colourDeclarationOf(className), className).toBeDefined();
+		}
+	});
+
+	it("compiles the Organisation Overview design colours of the shell, cards and activity rows", () => {
+		const rendered = [
+			createElement(Avatar, { name: "John Doe" }),
+			createElement(AppHeader, {
+				title: "Welcome, John.",
+				actions: createElement(Avatar, { name: "John Doe" }),
+			}),
+			createElement(AppShell, { sidebar: null, children: null }),
+			createElement(StatCard, {
+				title: "Branches",
+				value: "2",
+				caption: "Active Branches",
+			}),
+			createElement(ActivityItem, {
+				icon: HomeIcon,
+				title: "Branch created: Orchard",
+				details: ["by Aisha Rahman", "2 hours ago"],
+			}),
+		].flatMap(collectMarkupClasses);
+		const colours = [...new Set(rendered.filter(isColourUtility))];
+		const designColours: Record<string, string> = {
+			"bg-ink-blue-500": "#3C99F1",
+			"bg-ink-blue-100": "#BEDFFB",
+			"bg-neutral-100": "#F6F8FD",
+			"border-neutral-400": "#CDCED3",
+			"text-ink-blue-900": "#234A9E",
+			"text-neutral-900": "#2E2F33",
+			"text-neutral-700": "#707176",
+		};
+		expect(colours).toEqual(expect.arrayContaining(Object.keys(designColours)));
+		for (const className of colours) {
+			expect(colourDeclarationOf(className), className).toBeDefined();
+		}
+		for (const [className, hex] of Object.entries(designColours)) {
+			expect(colourDeclarationOf(className)?.toUpperCase(), className).toBe(
+				hex
+			);
+		}
+		// The Recent Activity heading, styled on the page itself.
+		expect(colourDeclarationOf("text-ink-blue-600")?.toUpperCase()).toBe(
+			"#378BE3"
+		);
+		for (const className of ["min-h-22.5", "size-13"]) {
+			expect(rendered).toContain(className);
+			expect(compileCss([className]), className).toContain(
+				selectorOf(className)
+			);
 		}
 	});
 

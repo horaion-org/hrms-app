@@ -7,6 +7,7 @@ import {
 } from "react";
 import type { FunctionComponent } from "@/common/types";
 import { joinClassNames } from "@/common/joinClassNames";
+import { useTabsOrientation } from "@/components/ui/Tabs/Tabs/Tabs.context";
 
 export type TabListProps = ComponentPropsWithRef<"div"> &
 	(
@@ -19,12 +20,14 @@ export const TabList = ({
 	className,
 	...props
 }: TabListProps): FunctionComponent => {
+	const orientation = useTabsOrientation();
 	const listRef = useRef<HTMLDivElement>(null);
 	useImperativeHandle(ref, () => listRef.current!, []);
 
 	useEffect(() => {
 		const list = listRef.current;
-		if (!list) return;
+		// A vertical list wraps its tabs to its width, so nothing scrolls sideways.
+		if (!list || orientation === "vertical") return;
 
 		const revealSelectedTab = (): void => {
 			const selected = [
@@ -82,13 +85,15 @@ export const TabList = ({
 		return (): void => {
 			observer.disconnect();
 		};
-	}, []);
+	}, [orientation]);
 
 	return (
 		<HeadlessTabList
 			ref={listRef}
 			className={joinClassNames(
-				"flex min-w-0 max-w-full flex-nowrap gap-6 overflow-x-auto p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+				orientation === "vertical"
+					? "flex min-w-0 flex-col"
+					: "flex min-w-0 max-w-full flex-nowrap gap-6 overflow-x-auto p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
 				className
 			)}
 			{...props}
