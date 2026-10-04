@@ -29,6 +29,7 @@ test("log in and create a branch with an active head, then see the refreshed lis
 		name: "Orchard Road",
 		code: "ORC",
 		city: "Singapore",
+		country: "SG",
 		status: "ACTIVE",
 	};
 	await context.route("**/api/v1/me/workspace", (route) =>
@@ -57,6 +58,7 @@ test("log in and create a branch with an active head, then see the refreshed lis
 				name: "Orchard Road",
 				code: "ORC",
 				city: "Singapore",
+				country: "SG",
 				initialHeadCompanyMembershipIds: ["marcus-membership"],
 			});
 			created = true;
@@ -125,6 +127,11 @@ test("log in and create a branch with an active head, then see the refreshed lis
 	await page.keyboard.press("Tab");
 	await expect(dialog.getByLabel("City", { exact: true })).toBeFocused();
 	await page.keyboard.press("Tab");
+	await expect(dialog.getByLabel("Country", { exact: true })).toBeFocused();
+	await expect(dialog.getByLabel("Country", { exact: true })).toHaveText(
+		"Select a country"
+	);
+	await page.keyboard.press("Tab");
 	await expect(
 		dialog.getByLabel("Branch heads", { exact: true })
 	).toBeFocused();
@@ -145,6 +152,9 @@ test("log in and create a branch with an active head, then see the refreshed lis
 		"  ORC  "
 	);
 	await dialog.getByLabel("City", { exact: true }).fill("  Singapore  ");
+	await dialog.getByLabel("Country", { exact: true }).click();
+	await page.getByRole("combobox", { name: "Search countries" }).fill("singap");
+	await page.getByRole("option", { name: "Singapore", exact: true }).click();
 	await dialog.getByLabel("Branch heads", { exact: true }).click();
 	await page.getByRole("option", { name: /Marcus Lim/ }).click();
 	await page.keyboard.press("Escape");
@@ -163,7 +173,7 @@ test("log in and create a branch with an active head, then see the refreshed lis
 		page
 			.getByRole("row", { name: /Orchard Road/ })
 			.getByRole("cell", { name: "Singapore", exact: true })
-	).toBeVisible();
+	).toHaveCount(2);
 	await expect(create).toBeFocused();
 
 	await page.getByRole("link", { name: "Organisation", exact: true }).click();

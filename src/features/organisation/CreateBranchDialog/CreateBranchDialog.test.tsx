@@ -31,6 +31,7 @@ const branch = {
 	name: "Orchard Road",
 	code: "ORC",
 	city: "São Paulo",
+	country: "SG",
 	status: "ACTIVE",
 };
 const page = (
@@ -88,12 +89,125 @@ const fill = async (
 	await user.type(within(dialog).getByLabelText("Branch name"), name);
 	await user.type(within(dialog).getByLabelText("Branch code"), "  orc  ");
 	await user.type(within(dialog).getByLabelText("City"), "  São  Paulo  ");
+	await user.click(within(dialog).getByLabelText("Country"));
+	await user.type(
+		screen.getByRole("combobox", { name: "Search countries" }),
+		"singap"
+	);
+	await user.click(await screen.findByRole("option", { name: "Singapore" }));
 	await user.click(within(dialog).getByLabelText("Branch heads"));
 	await user.click(await screen.findByRole("option", { name: "Marcus Lim" }));
 	await user.keyboard("{Escape}");
 };
 
 describe("create branch through the Branches page", () => {
+	it.each([false, true])(
+		"retains country and heads and focuses country on refusal (heads error: %s)",
+		async (withHeads) => {
+			stubApi({
+				...routes(),
+				[CREATE]: {
+					status: 400,
+					body: {
+						status: 400,
+						errors: [
+							{ field: "country", message: "Private server wording" },
+							...(withHeads
+								? [
+										{
+											field: "initialHeadCompanyMembershipIds",
+											message: "Private server wording",
+										},
+									]
+								: []),
+						],
+					},
+				},
+			});
+			await open();
+			const dialog = await openDialog();
+			await fill(dialog);
+			await userEvent.click(
+				within(dialog).getByRole("button", { name: "Create branch" })
+			);
+			expect(
+				await within(dialog).findByText("Check the country and try again.")
+			).toBeVisible();
+			await waitFor(() => {
+				expect(within(dialog).getByLabelText("Country")).toHaveFocus();
+			});
+			expect(within(dialog).getByLabelText("Country")).toHaveTextContent(
+				"Singapore"
+			);
+			expect(within(dialog).getByLabelText("Branch name")).toHaveValue(
+				"Orchard Road"
+			);
+			expect(within(dialog).getByLabelText("Branch code")).toHaveValue(
+				"  ORC  "
+			);
+			expect(within(dialog).getByLabelText("City")).toHaveValue(
+				"  São  Paulo  "
+			);
+			expect(
+				within(dialog).getByRole("button", { name: "Remove Marcus Lim" })
+			).toBeVisible();
+			if (withHeads)
+				expect(
+					within(dialog).getByText("Check the chosen people and try again.")
+				).toBeVisible();
+			expect(
+				screen.queryByText("Private server wording")
+			).not.toBeInTheDocument();
+		},
+		10000
+	);
+	it("requires a country on submission and clears its error after choosing one", async () => {
+		const calls = stubApi(routes());
+		await open();
+		const dialog = await openDialog();
+		await fill(dialog);
+		const country = within(dialog).getByLabelText("Country");
+		country.focus();
+		await userEvent.keyboard("{Backspace}");
+		expect(country).toHaveTextContent("Select a country");
+		await userEvent.click(
+			within(dialog).getByRole("button", { name: "Create branch" })
+		);
+		expect(await within(dialog).findByText("Choose a country.")).toBeVisible();
+		expect(country).toHaveFocus();
+		expect(
+			calls.some(
+				(call) => call.method === "POST" && call.path.endsWith("/branches")
+			)
+		).toBe(false);
+		await userEvent.click(country);
+		await userEvent.click(
+			await screen.findByRole("option", { name: "Singapore" })
+		);
+		expect(
+			within(dialog).queryByText("Choose a country.")
+		).not.toBeInTheDocument();
+	});
+	it("starts country empty and offers all 249 ISO countries alphabetically with localized search", async () => {
+		stubApi(routes());
+		await open();
+		const dialog = await openDialog();
+		const country = within(dialog).getByLabelText("Country");
+		expect(country).toHaveTextContent("Select a country");
+		expect(country).toHaveAttribute("aria-required", "true");
+		await userEvent.click(country);
+		expect(screen.getAllByRole("option")).toHaveLength(249);
+		expect(screen.getAllByRole("option")[0]).toHaveTextContent("Afghanistan");
+		expect(screen.getAllByRole("option")[248]).toHaveTextContent("Zimbabwe");
+		await userEvent.type(
+			screen.getByRole("combobox", { name: "Search countries" }),
+			"singap"
+		);
+		expect(screen.getAllByRole("option")).toHaveLength(1);
+		await userEvent.click(screen.getByRole("option", { name: "Singapore" }));
+		expect(country).toHaveTextContent("Singapore");
+		expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+	});
 	it.each([
 		["branch:read", "branch:create"],
 		["branch:read", "company_member:read"],
@@ -242,6 +356,7 @@ describe("create branch through the Branches page", () => {
 			name: "Orchard Road",
 			code: "ORC",
 			city: "São Paulo",
+			country: "SG",
 			initialHeadCompanyMembershipIds: ["m-1"],
 		});
 	});

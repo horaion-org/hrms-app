@@ -13,6 +13,7 @@ describe("create branch validation", () => {
 					name,
 					code: "ORC",
 					city: "Singapore",
+					country: "SG",
 					heads: [head],
 				}).success
 			).toBe(true);
@@ -26,6 +27,7 @@ describe("create branch validation", () => {
 					name,
 					code: "ORC",
 					city: "Singapore",
+					country: "SG",
 					heads: [head],
 				}).success
 			).toBe(false);
@@ -37,6 +39,7 @@ describe("create branch validation", () => {
 				name: "Orchard",
 				code: "ORC",
 				city: "Singapore",
+				country: "SG",
 				heads: [],
 			}).success
 		).toBe(false);
@@ -45,6 +48,7 @@ describe("create branch validation", () => {
 				name: "Orchard",
 				code: "ORC",
 				city: "Singapore",
+				country: "SG",
 				heads: Array.from({ length: 20 }, () => head),
 			}).success
 		).toBe(true);
@@ -53,6 +57,7 @@ describe("create branch validation", () => {
 				name: "Orchard",
 				code: "ORC",
 				city: "Singapore",
+				country: "SG",
 				heads: Array.from({ length: 21 }, () => head),
 			}).success
 		).toBe(false);

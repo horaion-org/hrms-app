@@ -14,6 +14,8 @@ import {
 	stubApi,
 	type StubReply,
 } from "@/common/testing/stubApi";
+import es from "@/assets/locales/es/translations.json";
+import { authTestI18n } from "@/features/auth/testingI18n";
 import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
 
@@ -80,6 +82,7 @@ const branch = (
 	name,
 	code: "SG-ORC-01",
 	city: "Singapore",
+	country: "SG",
 	status,
 	headMembershipIds: [],
 });
@@ -102,6 +105,36 @@ const searchesOf = (
 	calls.filter((call) => call.path === path).map((call) => call.search);
 
 describe("Branches", () => {
+	it.each([
+		["en", "Singapore", "Country"],
+		["es", "Singapur", "País"],
+	])(
+		"localizes countries in %s with raw fallback and no country sort",
+		async (language, label, header) => {
+			authTestI18n.addResourceBundle("es", "translation", es);
+			await authTestI18n.changeLanguage(language);
+			try {
+				stubApi({
+					...baseRoutes(),
+					[BRANCHES]: pageReply([
+						{ ...branch("b-1", "Orchard"), city: "Central" },
+						{ ...branch("b-2", "Unknown"), city: "Central", country: "QQ" },
+					]),
+				});
+				await open("/organisation/branches");
+				const table = await screen.findByRole("table");
+				expect(await within(table).findByText(label)).toBeVisible();
+				expect(within(table).getByText("QQ")).toBeVisible();
+				expect(
+					within(
+						within(table).getByRole("columnheader", { name: header })
+					).queryByRole("button")
+				).not.toBeInTheDocument();
+			} finally {
+				await authTestI18n.changeLanguage("en");
+			}
+		}
+	);
 	it("lists the company's branches sorted by name on the server", async () => {
 		const calls = stubApi({
 			...baseRoutes(),
@@ -129,6 +162,7 @@ describe("Branches", () => {
 			"Branch name",
 			"Code",
 			"City",
+			"Country",
 			"Status",
 			"Actions",
 		]);
@@ -207,7 +241,7 @@ describe("Branches", () => {
 		});
 		await open("/organisation/branches");
 		const table = await screen.findByRole("table", { name: "Branches" });
-		expect(await within(table).findByText("Singapore")).toBeVisible();
+		expect(await within(table).findAllByText("Singapore")).toHaveLength(2);
 		await user.click(screen.getByRole("button", { name: "Sort by City" }));
 		await waitFor(() => {
 			expect(searchesOf(calls, "/api/v1/companies/c-1/branches")).toContain(

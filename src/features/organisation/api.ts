@@ -74,6 +74,7 @@ const branchSchema = z.object({
 	name: z.string(),
 	code: z.string(),
 	city: z.string(),
+	country: z.string(),
 	status: unitStatusSchema,
 });
 
@@ -83,6 +84,7 @@ export type CreateBranchBody = {
 	name: string;
 	code: string;
 	city: string;
+	country: string;
 	initialHeadCompanyMembershipIds: Array<string>;
 };
 

@@ -75,6 +75,20 @@ describe("create branch refusal mapping", () => {
 			refreshMembers: false,
 		});
 	});
+	it("maps country validation with frontend copy", () => {
+		expect(
+			refusalFor(
+				problem(400, "VALIDATION_ERROR", [
+					{ field: "country", message: "Private server wording" },
+				]),
+				{ name: "Orchard", code: "ORC" },
+				t
+			)
+		).toEqual({
+			fields: { country: "Check the country and try again." },
+			refreshMembers: false,
+		});
+	});
 	it("marks stale heads and asks for fresh options", () => {
 		expect(
 			refusalFor(

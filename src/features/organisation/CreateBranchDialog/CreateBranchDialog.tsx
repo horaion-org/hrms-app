@@ -1,3 +1,4 @@
+import { countryCodes, countryName } from "@/features/organisation/countries";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
@@ -28,16 +29,18 @@ export const CreateBranchDialog = ({
 	companyId,
 	onClose,
 }: CreateBranchDialogProps): FunctionComponent => {
-	const { t } = useTranslation();
+	const { t, i18n } = useTranslation();
 	const key = "organisation.branches.createDialog";
 	const formId = useId();
 	const nameId = `${formId}-name`,
 		codeId = `${formId}-code`,
 		cityId = `${formId}-city`,
+		countryId = `${formId}-country`,
 		headsId = `${formId}-heads`;
 	const nameIds = formRowIds(nameId),
 		codeIds = formRowIds(codeId),
 		cityIds = formRowIds(cityId),
+		countryIds = formRowIds(countryId),
 		headsIds = formRowIds(headsId);
 	const schema = useMemo(() => createBranchSchema(t), [t]);
 	const {
@@ -50,19 +53,30 @@ export const CreateBranchDialog = ({
 		formState: { errors, isSubmitting },
 	} = useForm<CreateBranchValues>({
 		resolver: zodResolver(schema),
-		defaultValues: { name: "", code: "", city: "", heads: [] },
+		defaultValues: { name: "", code: "", city: "", country: "", heads: [] },
 		mode: "onSubmit",
 		reValidateMode: "onChange",
 	});
 	const name = useWatch({ control, name: "name" });
 	const code = useWatch({ control, name: "code" });
 	const city = useWatch({ control, name: "city" });
+	const country = useWatch({ control, name: "country" });
+	const [countryQuery, setCountryQuery] = useState("");
+	const countries = useMemo(
+		() =>
+			countryCodes
+				.map((code) => ({ code, name: countryName(code, i18n.language) }))
+				.sort((a, b) => a.name.localeCompare(b.name, i18n.language)),
+		[i18n.language]
+	);
 	const heads = useWatch({ control, name: "heads" });
 	const [query, setQuery] = useState("");
 	const members = useCompanyMemberSearch(companyId, query);
 	const create = useCreateBranch(companyId);
 	const [message, setMessage] = useState<string>();
-	const refusedField = useRef<"name" | "code" | "city" | "heads" | null>(null);
+	const refusedField = useRef<
+		"name" | "code" | "city" | "country" | "heads" | null
+	>(null);
 	const alert = useRef<HTMLParagraphElement>(null);
 	const inFlight = useRef(false);
 	useEffect(() => {
@@ -89,6 +103,7 @@ export const CreateBranchDialog = ({
 				name: values.name,
 				code: values.code,
 				city: values.city,
+				country: values.country,
 				initialHeadCompanyMembershipIds: values.heads.map(
 					(head) => head.membershipId
 				),
@@ -103,6 +118,11 @@ export const CreateBranchDialog = ({
 				setError("name", { type: "server", message: refusal.fields.name });
 			if (refusal.fields.city)
 				setError("city", { type: "server", message: refusal.fields.city });
+			if (refusal.fields.country)
+				setError("country", {
+					type: "server",
+					message: refusal.fields.country,
+				});
 			if (refusal.fields.heads)
 				setError("heads", {
 					type: "server",
@@ -114,9 +134,11 @@ export const CreateBranchDialog = ({
 					? "code"
 					: refusal.fields.city
 						? "city"
-						: refusal.fields.heads
-							? "heads"
-							: null;
+						: refusal.fields.country
+							? "country"
+							: refusal.fields.heads
+								? "heads"
+								: null;
 			setMessage(refusal.message);
 			if (refusal.refreshMembers) void members.refetch();
 		} finally {
@@ -139,7 +161,11 @@ export const CreateBranchDialog = ({
 						loading={isSubmitting}
 						type="submit"
 						disabled={
-							!name.trim() && !code.trim() && !city.trim() && heads.length === 0
+							!name.trim() &&
+							!code.trim() &&
+							!city.trim() &&
+							!country &&
+							heads.length === 0
 						}
 					>
 						{t(`${key}.submit`)}
@@ -242,6 +268,54 @@ export const CreateBranchDialog = ({
 						placeholder={t(`${key}.cityPlaceholder`)}
 						status={errors.city ? "error" : undefined}
 						{...register("city")}
+					/>
+				</FormRow>
+				<FormRow
+					required
+					error={errors.country?.message}
+					htmlFor={countryId}
+					label={t(`${key}.country`)}
+					layout="stacked"
+				>
+					<Controller
+						control={control}
+						name="country"
+						render={({ field }) => (
+							<Combobox
+								ref={field.ref}
+								aria-required
+								aria-invalid={Boolean(errors.country)}
+								aria-label={t(`${key}.country`)}
+								disabled={isSubmitting}
+								emptyText={t(`${key}.countryEmpty`)}
+								getKey={(option) => option.code}
+								getLabel={(option) => option.name}
+								id={countryId}
+								multiple={false}
+								placeholder={t(`${key}.countryPlaceholder`)}
+								query={countryQuery}
+								searchPlaceholder={t(`${key}.countrySearch`)}
+								status={errors.country ? "error" : undefined}
+								aria-describedby={
+									errors.country ? countryIds.errorId : undefined
+								}
+								options={countries.filter((option) =>
+									option.name
+										.toLocaleLowerCase(i18n.language)
+										.includes(
+											countryQuery.trim().toLocaleLowerCase(i18n.language)
+										)
+								)}
+								value={
+									countries.find((option) => option.code === field.value) ??
+									null
+								}
+								onQueryChange={setCountryQuery}
+								onChange={(option) => {
+									field.onChange(option?.code ?? "");
+								}}
+							/>
+						)}
 					/>
 				</FormRow>
 				<FormRow
