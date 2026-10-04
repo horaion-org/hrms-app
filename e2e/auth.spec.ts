@@ -36,7 +36,6 @@ test("registration submits the onboarding contract and requires email verificati
 		expect(route.request().postDataJSON()).toEqual({
 			displayName: "Alex Tan",
 			companyName: "Acme",
-			registrationNumber: "202600001A",
 			subdomain: "acme",
 			email: "alex@example.com",
 			password: "Example123!",
