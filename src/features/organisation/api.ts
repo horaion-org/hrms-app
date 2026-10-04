@@ -1,3 +1,4 @@
+import { normalizeBranchCity } from "@/features/organisation/city";
 import { z } from "zod";
 import { apiRequest } from "@/common/api-client";
 
@@ -72,6 +73,7 @@ const branchSchema = z.object({
 	branchId: z.string(),
 	name: z.string(),
 	code: z.string(),
+	city: z.string(),
 	status: unitStatusSchema,
 });
 
@@ -80,6 +82,7 @@ export type Branch = z.infer<typeof branchSchema>;
 export type CreateBranchBody = {
 	name: string;
 	code: string;
+	city: string;
 	initialHeadCompanyMembershipIds: Array<string>;
 };
 
@@ -94,6 +97,7 @@ export const createBranch = (
 			...body,
 			name: body.name.trim(),
 			code: body.code.trim().toUpperCase(),
+			city: normalizeBranchCity(body.city),
 		},
 	});
 
@@ -175,7 +179,7 @@ export const searchCompanyMembers = (
 	);
 };
 
-/** The company's branches; sortable by `name`, `code` or `status`. */
+/** The company's branches; sortable by `name`, `code`, `city` or `status`. */
 export const fetchBranches = (
 	companyId: string,
 	query: ListQuery

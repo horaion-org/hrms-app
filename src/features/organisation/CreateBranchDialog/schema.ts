@@ -1,5 +1,6 @@
 import type { TFunction } from "i18next";
 import { z } from "zod";
+import { normalizeBranchCity } from "@/features/organisation/city";
 
 /** Mirrors the server's name allow-list; uniqueness remains a server decision. */
 export const createBranchSchema = (
@@ -7,6 +8,10 @@ export const createBranchSchema = (
 ): z.ZodObject<{
 	name: z.ZodString;
 	code: z.ZodString;
+	city: z.ZodPipe<
+		z.ZodPipe<z.ZodString, z.ZodTransform<string, string>>,
+		z.ZodString
+	>;
 	heads: z.ZodArray<
 		z.ZodObject<{
 			membershipId: z.ZodString;
@@ -31,6 +36,16 @@ export const createBranchSchema = (
 			.min(1, t(`${key}.codeRequired`))
 			.max(10, t(`${key}.codeLength`))
 			.regex(/^[A-Z0-9-]+$/, t(`${key}.codeCharacters`)),
+		city: z
+			.string()
+			.transform(normalizeBranchCity)
+			.pipe(
+				z
+					.string()
+					.min(1, t(`${key}.cityRequired`))
+					.refine((value) => [...value].length <= 100, t(`${key}.cityLength`))
+					.regex(/^[\p{L} .'-]+$/u, t(`${key}.cityCharacters`))
+			),
 		heads: z
 			.array(
 				z.object({

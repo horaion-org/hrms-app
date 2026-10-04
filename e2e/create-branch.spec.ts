@@ -28,6 +28,7 @@ test("log in and create a branch with an active head, then see the refreshed lis
 		branchId: "orchard-road",
 		name: "Orchard Road",
 		code: "ORC",
+		city: "Singapore",
 		status: "ACTIVE",
 	};
 	await context.route("**/api/v1/me/workspace", (route) =>
@@ -55,6 +56,7 @@ test("log in and create a branch with an active head, then see the refreshed lis
 			expect(route.request().postDataJSON()).toEqual({
 				name: "Orchard Road",
 				code: "ORC",
+				city: "Singapore",
 				initialHeadCompanyMembershipIds: ["marcus-membership"],
 			});
 			created = true;
@@ -121,6 +123,8 @@ test("log in and create a branch with an active head, then see the refreshed lis
 	await page.keyboard.press("Tab");
 	await expect(dialog.getByLabel("Branch code", { exact: true })).toBeFocused();
 	await page.keyboard.press("Tab");
+	await expect(dialog.getByLabel("City", { exact: true })).toBeFocused();
+	await page.keyboard.press("Tab");
 	await expect(
 		dialog.getByLabel("Branch heads", { exact: true })
 	).toBeFocused();
@@ -140,6 +144,7 @@ test("log in and create a branch with an active head, then see the refreshed lis
 	await expect(dialog.getByLabel("Branch code", { exact: true })).toHaveValue(
 		"  ORC  "
 	);
+	await dialog.getByLabel("City", { exact: true }).fill("  Singapore  ");
 	await dialog.getByLabel("Branch heads", { exact: true }).click();
 	await page.getByRole("option", { name: /Marcus Lim/ }).click();
 	await page.keyboard.press("Escape");
@@ -153,6 +158,11 @@ test("log in and create a branch with an active head, then see the refreshed lis
 		page
 			.getByRole("row", { name: /Orchard Road/ })
 			.getByRole("cell", { name: "ORC", exact: true })
+	).toBeVisible();
+	await expect(
+		page
+			.getByRole("row", { name: /Orchard Road/ })
+			.getByRole("cell", { name: "Singapore", exact: true })
 	).toBeVisible();
 	await expect(create).toBeFocused();
 

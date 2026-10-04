@@ -30,6 +30,7 @@ const branch = {
 	branchId: "b-1",
 	name: "Orchard Road",
 	code: "ORC",
+	city: "São Paulo",
 	status: "ACTIVE",
 };
 const page = (
@@ -86,6 +87,7 @@ const fill = async (
 	const user = userEvent.setup();
 	await user.type(within(dialog).getByLabelText("Branch name"), name);
 	await user.type(within(dialog).getByLabelText("Branch code"), "  orc  ");
+	await user.type(within(dialog).getByLabelText("City"), "  São  Paulo  ");
 	await user.click(within(dialog).getByLabelText("Branch heads"));
 	await user.click(await screen.findByRole("option", { name: "Marcus Lim" }));
 	await user.keyboard("{Escape}");
@@ -219,7 +221,12 @@ describe("create branch through the Branches page", () => {
 			within(dialog)
 				.getAllByRole("textbox")
 				.map((input) => input.getAttribute("aria-label"))
-		).toEqual(["Branch name", "Branch code"]);
+		).toEqual(["Branch name", "Branch code", "City"]);
+		expect(within(dialog).getByLabelText("City")).toBeRequired();
+		expect(within(dialog).getByLabelText("City")).toHaveAccessibleDescription(
+			"1–100 characters. Letters, spaces and . ' - only."
+		);
+		expect(within(dialog).getByText("14/100")).toBeVisible();
 		await userEvent.click(
 			within(dialog).getByRole("button", { name: "Create branch" })
 		);
@@ -234,7 +241,128 @@ describe("create branch through the Branches page", () => {
 		).toEqual({
 			name: "Orchard Road",
 			code: "ORC",
+			city: "São Paulo",
 			initialHeadCompanyMembershipIds: ["m-1"],
+		});
+	});
+	it.each(["", "A".repeat(101), "City1", "City&", "\uFEFFCity", "\u0001City"])(
+		"validates city %j on submit and change",
+		async (value) => {
+			const calls = stubApi(routes());
+			await open();
+			const dialog = await openDialog();
+			await fill(dialog);
+			const city = within(dialog).getByLabelText("City");
+			await userEvent.clear(city);
+			if (value) await userEvent.type(city, value);
+			expect(city).toHaveAttribute("aria-invalid", "false");
+			await userEvent.click(
+				within(dialog).getByRole("button", { name: "Create branch" })
+			);
+			expect(city).toHaveAttribute("aria-invalid", "true");
+			expect(city).toHaveFocus();
+			expect(
+				calls.some(
+					(call) => call.method === "POST" && call.path.endsWith("/branches")
+				)
+			).toBe(false);
+			await userEvent.clear(city);
+			await userEvent.type(city, "St. John's");
+			expect(city).toHaveAttribute("aria-invalid", "false");
+		}
+	);
+	it.each([
+		["\u0085São\u00a0\u2003Paulo\u2029", "São Paulo"],
+		["A".repeat(100), "A".repeat(100)],
+		["𐐀".repeat(100), "𐐀".repeat(100)],
+		["X", "X"],
+		["St. John's-South", "St. John's-South"],
+	])("normalizes valid city %j preserving case", async (value, normalized) => {
+		const calls = stubApi(routes());
+		await open();
+		const dialog = await openDialog();
+		await fill(dialog);
+		const city = within(dialog).getByLabelText("City");
+		await userEvent.clear(city);
+		await userEvent.type(city, value);
+		if (value === "𐐀".repeat(100))
+			expect(within(dialog).getAllByText("100/100")).toHaveLength(1);
+		await userEvent.click(
+			within(dialog).getByRole("button", { name: "Create branch" })
+		);
+		await waitFor(() => {
+			expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+		});
+		expect(
+			calls.find(
+				(call) => call.method === "POST" && call.path.endsWith("/branches")
+			)?.body
+		).toMatchObject({ city: normalized });
+	});
+	it("focuses city on field refusal and retains all entered values", async () => {
+		stubApi({
+			...routes(),
+			[CREATE]: {
+				status: 400,
+				body: {
+					status: 400,
+					errorCode: "VALIDATION_ERROR",
+					errors: [{ field: "city", message: "Private server wording" }],
+				},
+			},
+		});
+		await open();
+		const dialog = await openDialog();
+		await fill(dialog);
+		await userEvent.click(
+			within(dialog).getByRole("button", { name: "Create branch" })
+		);
+		expect(
+			await within(dialog).findByText("Check the city and try again.")
+		).toBeVisible();
+		await waitFor(() => {
+			expect(within(dialog).getByLabelText("City")).toHaveFocus();
+		});
+		expect(within(dialog).getByLabelText("City")).toHaveValue("  São  Paulo  ");
+		expect(within(dialog).getByLabelText("Branch name")).toHaveValue(
+			"Orchard Road"
+		);
+		expect(within(dialog).getByLabelText("Branch code")).toHaveValue("  ORC  ");
+		expect(
+			within(dialog).getByRole("button", { name: "Remove Marcus Lim" })
+		).toBeVisible();
+		expect(
+			screen.queryByText("Private server wording")
+		).not.toBeInTheDocument();
+	});
+	it("shows both city and heads refusals while focusing city first", async () => {
+		stubApi({
+			...routes(),
+			[CREATE]: {
+				status: 400,
+				body: {
+					status: 400,
+					errors: [
+						{ field: "city", message: "Private" },
+						{ field: "initialHeadCompanyMembershipIds", message: "Private" },
+					],
+				},
+			},
+		});
+		await open();
+		const dialog = await openDialog();
+		await fill(dialog);
+		await userEvent.click(
+			within(dialog).getByRole("button", { name: "Create branch" })
+		);
+		expect(
+			await within(dialog).findByText("Check the city and try again.")
+		).toBeVisible();
+		expect(
+			within(dialog).getByText("Check the chosen people and try again.")
+		).toBeVisible();
+		await waitFor(() => {
+			expect(within(dialog).getByLabelText("City")).toHaveFocus();
 		});
 	});
 	it("refetches stale people, retains selected Tokens and focuses heads on refusal", async () => {

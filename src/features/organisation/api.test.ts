@@ -28,6 +28,7 @@ describe("create branch client", () => {
 					branchId: "b-1",
 					name: "Orchard Road",
 					code: "ORC",
+					city: "Singapore",
 					status: "ACTIVE",
 				}),
 			},
@@ -36,17 +37,20 @@ describe("create branch client", () => {
 			createBranch("c-1", {
 				name: "  Orchard Road  ",
 				code: "  orc  ",
+				city: "Singapore",
 				initialHeadCompanyMembershipIds: ["m-1"],
 			})
 		).resolves.toEqual({
 			branchId: "b-1",
 			name: "Orchard Road",
 			code: "ORC",
+			city: "Singapore",
 			status: "ACTIVE",
 		});
 		expect(calls[0]?.body).toEqual({
 			name: "Orchard Road",
 			code: "ORC",
+			city: "Singapore",
 			initialHeadCompanyMembershipIds: ["m-1"],
 		});
 	});
@@ -59,6 +63,7 @@ describe("create branch client", () => {
 					branchId: "b-1",
 					name: "Orchard",
 					code: "ORC",
+					city: "Singapore",
 					status: "UNKNOWN",
 				}),
 			},
@@ -67,6 +72,7 @@ describe("create branch client", () => {
 			createBranch("c-1", {
 				name: "Orchard",
 				code: "ORC",
+				city: "Singapore",
 				initialHeadCompanyMembershipIds: ["m-1"],
 			})
 		).rejects.toBeInstanceOf(UnexpectedResponseError);
@@ -83,6 +89,7 @@ describe("create branch client", () => {
 			createBranch("c-1", {
 				name: "Orchard",
 				code: "ORC",
+				city: "Singapore",
 				initialHeadCompanyMembershipIds: ["m-1"],
 			})
 		).rejects.toBeInstanceOf(ApiProblemError);

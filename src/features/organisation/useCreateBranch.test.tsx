@@ -27,6 +27,7 @@ it("invalidates this company's lists and overview without invalidating another c
 				branchId: "b-1",
 				name: "Orchard",
 				code: "ORC",
+				city: "Singapore",
 				status: "ACTIVE",
 			}),
 		},
@@ -51,6 +52,7 @@ it("invalidates this company's lists and overview without invalidating another c
 		await result.current.mutateAsync({
 			name: "Orchard",
 			code: "ORC",
+			city: "Singapore",
 			initialHeadCompanyMembershipIds: ["m-1"],
 		});
 	});

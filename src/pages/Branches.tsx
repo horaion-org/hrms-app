@@ -58,6 +58,12 @@ export const Branches = (): FunctionComponent => {
 				cell: (branch: Branch): string => branch.code,
 				sortValue: (branch: Branch): string => branch.code,
 			},
+			{
+				id: "city",
+				header: t("organisation.branches.city"),
+				cell: (branch: Branch): string => branch.city,
+				sortValue: (branch: Branch): string => branch.city,
+			},
 			statusColumn<Branch>(t),
 			actionsColumn<Branch>(
 				t,

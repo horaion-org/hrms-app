@@ -93,6 +93,7 @@ const fill = async (body: HTMLElement): Promise<void> => {
 		"Orchard Road"
 	);
 	await userEvent.type(page.getByLabelText("Branch code"), "orc");
+	await userEvent.type(page.getByLabelText("City"), "Singapore");
 	await userEvent.click(page.getByLabelText("Branch heads"));
 	await userEvent.click(
 		await page.findByRole("option", { name: "Marcus Lim" })
@@ -119,6 +120,7 @@ export const ChoosingHeads: Story = {
 			"Orchard Road"
 		);
 		await userEvent.type(page.getByLabelText("Branch code"), "orc");
+		await userEvent.type(page.getByLabelText("City"), "Singapore");
 		await userEvent.click(page.getByLabelText("Branch heads"));
 	},
 };
@@ -160,6 +162,24 @@ export const CodeValidation: Story = {
 		await fill(canvasElement.ownerDocument.body);
 		await userEvent.clear(page.getByLabelText("Branch code"));
 		await userEvent.type(page.getByLabelText("Branch code"), "invalid_");
+		await userEvent.click(page.getByRole("button", { name: "Create branch" }));
+	},
+};
+
+export const CityEntered: Story = {
+	play: async ({ canvasElement }) => {
+		await userEvent.type(
+			await within(canvasElement.ownerDocument.body).findByLabelText("City"),
+			"São Paulo"
+		);
+	},
+};
+export const CityValidation: Story = {
+	play: async ({ canvasElement }) => {
+		const page = within(canvasElement.ownerDocument.body);
+		await fill(canvasElement.ownerDocument.body);
+		await userEvent.clear(page.getByLabelText("City"));
+		await userEvent.type(page.getByLabelText("City"), "City1");
 		await userEvent.click(page.getByRole("button", { name: "Create branch" }));
 	},
 };
