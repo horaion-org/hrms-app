@@ -76,6 +76,21 @@ const branchSchema = z.object({
 
 export type Branch = z.infer<typeof branchSchema>;
 
+export type CreateBranchBody = {
+	name: string;
+	initialHeadCompanyMembershipIds: Array<string>;
+};
+
+/** Creates a Branch with its first heads; the server owns uniqueness and membership checks. */
+export const createBranch = (
+	companyId: string,
+	body: CreateBranchBody
+): Promise<Branch> =>
+	apiRequest(`${companyPath(companyId)}/branches`, branchSchema, {
+		method: "POST",
+		body: { ...body, name: body.name.trim() },
+	});
+
 const departmentSchema = z.object({
 	departmentId: z.string(),
 	name: z.string(),
@@ -127,6 +142,31 @@ const fetchList = async <T extends z.ZodType>(
 ): Promise<ListPage<z.infer<T>>> => {
 	const page = await apiRequest(path, pageOf(item));
 	return { items: page.content, total: page.page.totalElements };
+};
+
+export const companyMemberSchema = z.object({
+	membershipId: z.string(),
+	displayName: z.string(),
+	status: unitStatusSchema,
+});
+
+export type CompanyMember = z.infer<typeof companyMemberSchema>;
+
+/** Active people for the heads picker; never searches private email addresses. */
+export const searchCompanyMembers = (
+	companyId: string,
+	{ search, status, size }: { search: string; status: "ACTIVE"; size: number }
+): Promise<ListPage<CompanyMember>> => {
+	const query = new URLSearchParams({
+		status,
+		size: String(size),
+		sort: "user.displayName",
+	});
+	if (search.trim()) query.set("search", search.trim());
+	return fetchList(
+		`${companyPath(companyId)}/members?${query.toString()}`,
+		companyMemberSchema
+	);
 };
 
 /** The company's branches; sortable by `name` or `status`. */
