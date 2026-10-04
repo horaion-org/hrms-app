@@ -52,7 +52,7 @@ test("Log in → authenticator code → home preserves the return path", async (
 	await page.getByLabel("Authenticator code", { exact: true }).fill("012345");
 	await page.getByRole("button", { name: "Continue" }).click();
 	await expect(
-		page.getByRole("heading", { name: "Welcome, Owner" })
+		page.getByRole("banner").getByText("Welcome, Owner.")
 	).toBeVisible();
 	await expect(page).toHaveURL(/\/\?tab=2$/);
 	expect(page.url()).not.toContain(E2E_EMAIL);

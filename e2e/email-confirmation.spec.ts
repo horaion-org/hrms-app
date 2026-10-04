@@ -72,7 +72,7 @@ test("Onboarding → Email confirmation → Log in → home keeps the email out 
 	await page.getByLabel("Password", { exact: true }).fill(E2E_PASSWORD);
 	await page.getByRole("button", { name: "Log in", exact: true }).click();
 	await expect(
-		page.getByRole("heading", { name: "Welcome, Owner" })
+		page.getByRole("banner").getByText("Welcome, Owner.")
 	).toBeVisible();
 	await expect(page).toHaveURL(/\/$/);
 	for (const url of urls)

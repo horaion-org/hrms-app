@@ -31,7 +31,7 @@ describe("SidebarItem", () => {
 	it("keeps destinations restricted to registered router links", () => {
 		expectTypeOf<string>().not.toExtend<SidebarItemProps["to"]>();
 		expectTypeOf<"/" | "/register">().toExtend<SidebarItemProps["to"]>();
-		expectTypeOf<"/scheduling">().not.toExtend<SidebarItemProps["to"]>();
+		expectTypeOf<"/payroll">().not.toExtend<SidebarItemProps["to"]>();
 	});
 
 	it("passes anchor attributes, refs and router active/inactive props through", async () => {

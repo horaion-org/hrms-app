@@ -103,20 +103,20 @@ test("Log in, reload and Log out keep both tabs in sync without web storage toke
 	await page.goto("/login");
 	await logIn(page);
 	await expect(
-		page.getByRole("heading", { name: "Welcome, Owner" })
+		page.getByRole("banner").getByText("Welcome, Owner.")
 	).toBeVisible();
 	expect(await webStorage(page)).not.toContain(E2E_ACCESS_PASS);
 	expect(page.url()).not.toContain(E2E_EMAIL);
 	await page.reload();
 	await expect(
-		page.getByRole("heading", { name: "Welcome, Owner" })
+		page.getByRole("banner").getByText("Welcome, Owner.")
 	).toBeVisible();
 	expect(api.calls).toContain("POST /api/v1/public/sessions/refreshes");
 	expect(await webStorage(page)).not.toContain(E2E_ACCESS_PASS);
 	const otherTab = await context.newPage();
 	await otherTab.goto("/");
 	await expect(
-		otherTab.getByRole("heading", { name: "Welcome, Owner" })
+		otherTab.getByRole("banner").getByText("Welcome, Owner.")
 	).toBeVisible();
 	expect(await webStorage(otherTab)).not.toContain(E2E_ACCESS_PASS);
 	await page.getByRole("button", { name: "Log out", exact: true }).click();

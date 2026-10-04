@@ -210,6 +210,81 @@ describe("Tabs", () => {
 		expect(screen.getByRole("tabpanel", { name: "Documents" })).toHaveFocus();
 	});
 
+	it("is horizontal by default and ignores ArrowUp/ArrowDown", async () => {
+		const user = userEvent.setup();
+		render(
+			<Tabs>
+				<TabList aria-label="Profile">
+					<Tab>Overview</Tab>
+					<Tab>Employment</Tab>
+				</TabList>
+				<TabPanels>
+					<TabPanel>Overview content</TabPanel>
+					<TabPanel>Employment content</TabPanel>
+				</TabPanels>
+			</Tabs>
+		);
+		expect(screen.getByRole("tablist")).toHaveAttribute(
+			"aria-orientation",
+			"horizontal"
+		);
+		await user.tab();
+		await user.keyboard("{ArrowDown}{ArrowUp}");
+		expect(
+			screen.getByRole("tab", { name: "Overview", selected: true })
+		).toHaveFocus();
+	});
+
+	it("moves through vertical tabs with ArrowUp/ArrowDown, wrapping, and ignores ArrowLeft/ArrowRight", async () => {
+		const user = userEvent.setup();
+		const onChange = vi.fn<(index: number) => void>();
+		render(
+			<Tabs orientation="vertical" onChange={onChange}>
+				<TabList aria-label="Settings">
+					<Tab>General</Tab>
+					<Tab>Notifications</Tab>
+					<Tab>Scheduling</Tab>
+				</TabList>
+				<TabPanels>
+					<TabPanel>General content</TabPanel>
+					<TabPanel>Notifications content</TabPanel>
+					<TabPanel>Scheduling content</TabPanel>
+				</TabPanels>
+			</Tabs>
+		);
+		expect(screen.getByRole("tablist", { name: "Settings" })).toHaveAttribute(
+			"aria-orientation",
+			"vertical"
+		);
+		await user.tab();
+		expect(screen.getByRole("tab", { name: "General" })).toHaveFocus();
+		await user.keyboard("{ArrowRight}{ArrowLeft}");
+		expect(onChange).not.toHaveBeenCalled();
+		expect(
+			screen.getByRole("tab", { name: "General", selected: true })
+		).toHaveFocus();
+		for (const [key, name] of [
+			["{ArrowDown}", "Notifications"],
+			["{ArrowDown}", "Scheduling"],
+			["{ArrowDown}", "General"],
+			["{ArrowUp}", "Scheduling"],
+			["{ArrowUp}", "Notifications"],
+			["{Home}", "General"],
+			["{End}", "Scheduling"],
+		] as const) {
+			// Each key starts from the focus/selection left by the previous key.
+			// eslint-disable-next-line no-await-in-loop
+			await user.keyboard(key);
+			expect(screen.getByRole("tab", { name, selected: true })).toHaveFocus();
+			expect(screen.getByRole("tabpanel", { name })).toHaveTextContent(
+				`${name} content`
+			);
+		}
+		expect(onChange.mock.calls).toEqual([[1], [2], [0], [2], [1], [0], [2]]);
+		await user.tab();
+		expect(screen.getByRole("tabpanel", { name: "Scheduling" })).toHaveFocus();
+	});
+
 	it.each([
 		{ name: "TabList", Part: TabList },
 		{ name: "Tab", Part: Tab },
@@ -222,6 +297,9 @@ describe("Tabs", () => {
 	});
 	it("accepts starting and controlled indexes but excludes alternative modes", () => {
 		expectTypeOf<{ defaultIndex: number }>().toExtend<TabsProps>();
+		expectTypeOf<TabsProps["orientation"]>().toEqualTypeOf<
+			"horizontal" | "vertical" | undefined
+		>();
 		expectTypeOf<TabsProps["selectedIndex"]>().toEqualTypeOf<
 			number | undefined
 		>();

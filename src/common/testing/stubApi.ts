@@ -11,6 +11,8 @@ export type StubReply = {
 type StubCall = {
 	method: string;
 	path: string;
+	/** The query string, without its leading "?". */
+	search: string;
 	headers: Headers;
 	credentials: RequestCredentials | undefined;
 	body: unknown;
@@ -31,9 +33,11 @@ export const stubApi = (
 	vi.stubGlobal(
 		"fetch",
 		(url: string, init: RequestInit = {}): Promise<Response> => {
+			const parsed = new URL(url, "http://localhost");
 			const call: StubCall = {
 				method: init.method ?? "GET",
-				path: new URL(url, "http://localhost").pathname,
+				path: parsed.pathname,
+				search: parsed.search.slice(1),
 				headers: new Headers(init.headers),
 				credentials: init.credentials,
 				body: typeof init.body === "string" ? JSON.parse(init.body) : undefined,

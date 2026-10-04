@@ -36,7 +36,7 @@ test("a failed refresh on reload shows the retry screen and keeps the route", as
 	await page.goto("/login");
 	await logIn(page);
 	await expect(
-		page.getByRole("heading", { name: "Welcome, Owner" })
+		page.getByRole("banner").getByText("Welcome, Owner.")
 	).toBeVisible();
 	const storage = await webStorage(page);
 	await page.route("**/api/v1/public/sessions/refreshes", (route) =>
@@ -51,6 +51,6 @@ test("a failed refresh on reload shows the retry screen and keeps the route", as
 	await page.unroute("**/api/v1/public/sessions/refreshes");
 	await page.getByRole("button", { name: "Try again" }).click();
 	await expect(
-		page.getByRole("heading", { name: "Welcome, Owner" })
+		page.getByRole("banner").getByText("Welcome, Owner.")
 	).toBeVisible();
 });

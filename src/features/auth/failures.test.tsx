@@ -96,7 +96,7 @@ it.each(outages)(
 				.setup()
 				.click(screen.getByRole("button", { name: "Try again" }));
 			expect(
-				await screen.findByRole("heading", { name: "Welcome, José" })
+				await screen.findByRole("heading", { name: "Dashboard" })
 			).toBeVisible();
 			expect(
 				calls.filter((call) => call.path.endsWith("refreshes"))
@@ -126,7 +126,7 @@ it.each(outages)(
 			.setup()
 			.click(screen.getByRole("button", { name: "Try again" }));
 		expect(
-			await screen.findByRole("heading", { name: "Welcome, José" })
+			await screen.findByRole("heading", { name: "Dashboard" })
 		).toBeVisible();
 		expect(
 			calls.filter((call) => call.path.endsWith("refreshes"))
@@ -213,7 +213,7 @@ it.each([undefined, "/?tab=2", "//evil.test", "https://evil.test"])(
 		});
 		app = await openApp("/");
 		renderAuthApp(app);
-		await screen.findByRole("heading", { name: "Welcome, José" });
+		await screen.findByRole("heading", { name: "Dashboard" });
 		calls.length = 0;
 		const router = app.router;
 		await act(async () => {
@@ -246,7 +246,7 @@ it("does not mistake an access pass expiring during /me for an expired Session",
 	app = await openApp("/");
 	renderAuthApp(app);
 	expect(
-		await screen.findByRole("heading", { name: "Welcome, José" })
+		await screen.findByRole("heading", { name: "Dashboard" })
 	).toBeVisible();
 	expect(app.router.state.location.pathname).toBe("/");
 });

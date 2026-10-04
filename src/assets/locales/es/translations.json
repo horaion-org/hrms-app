@@ -25,5 +25,10 @@
     "noOptions": "No hay opciones",
     "selectedCount_one": "{{count}} seleccionado",
     "selectedCount_other": "{{count}} seleccionados"
+  },
+  "dataTable": {
+    "selectAll": "Seleccionar todo",
+    "selectRow": "Seleccionar {{name}}",
+    "sortBy": "Ordenar por {{column}}"
   }
 }

@@ -3,7 +3,8 @@ import { composeStories } from "@storybook/react-vite";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, expectTypeOf, it, vi } from "vitest";
 import { Button, type ButtonProps } from "@/components/ui/Button";
-import { ChevronLeftIcon } from "@/components/ui/Icon";
+import { ChevronLeftIcon, SettingsIcon } from "@/components/ui/Icon";
+import { MemoryRouterHarness } from "@/components/utils/MemoryRouterHarness";
 import * as stories from "@/components/ui/Button/Button.stories";
 
 describe("Button", () => {
@@ -145,14 +146,69 @@ describe("Button icon variant", () => {
 			"size-9",
 			"bg-transparent",
 			"text-neutral-900",
-			"enabled:hover:text-ink-blue-700",
-			"enabled:active:text-ink-blue-500",
+			"not-disabled:hover:text-ink-blue-700",
+			"not-disabled:active:text-ink-blue-500",
 			"focus-visible:outline-ink-blue-500",
 			"custom-arrow"
 		);
 		expect(button).not.toHaveClass("rounded-full", "px-6");
 		await userEvent.click(button);
 		expect(onClick).toHaveBeenCalledOnce();
+	});
+});
+
+describe("Button as a link", () => {
+	it("renders a router link with the variant's styling when given `to`", async () => {
+		render(
+			<MemoryRouterHarness>
+				<Button size="sm" to="/register" variant="secondary">
+					Register
+				</Button>
+			</MemoryRouterHarness>
+		);
+
+		const link = await screen.findByRole("link", { name: "Register" });
+		expect(link).toHaveAttribute("href", "/register");
+		expect(link).not.toHaveAttribute("type");
+		expect(link).toHaveClass(
+			"rounded-full",
+			"h-12",
+			"not-disabled:hover:text-ink-blue-700"
+		);
+		expect(screen.queryByRole("button")).not.toBeInTheDocument();
+	});
+
+	it("renders a named icon-only link", async () => {
+		render(
+			<MemoryRouterHarness>
+				<Button aria-label="Settings" to="/register" variant="icon">
+					<SettingsIcon />
+				</Button>
+			</MemoryRouterHarness>
+		);
+
+		const link = await screen.findByRole("link", { name: "Settings" });
+		expect(link).toHaveClass("size-9", "bg-transparent");
+	});
+
+	it("navigates when clicked", async () => {
+		render(
+			<MemoryRouterHarness>
+				<Button to="/register">Register</Button>
+			</MemoryRouterHarness>
+		);
+
+		const link = await screen.findByRole("link", { name: "Register" });
+		await userEvent.click(link);
+
+		expect(link).toHaveAttribute("data-status", "active");
+	});
+
+	it("rejects button-only props on a link", () => {
+		expectTypeOf<{ to: "/register" }>().toExtend<ButtonProps>();
+		expectTypeOf<{ to: "/register"; disabled: true }>().not.toExtend<ButtonProps>();
+		expectTypeOf<{ to: "/register"; type: "submit" }>().not.toExtend<ButtonProps>();
+		expectTypeOf<{ to: "/register"; variant: "icon" }>().not.toExtend<ButtonProps>();
 	});
 });
 

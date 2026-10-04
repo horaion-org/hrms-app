@@ -68,7 +68,6 @@
       "signUp": "Sign up"
     },
     "logOut": "Log out",
-    "welcome": "Welcome, {{name}}",
     "errors": {
       "invalidCredentials": "Your email or password is incorrect.",
       "generic": "We can’t log you in yet. Please try again.",
@@ -137,5 +136,169 @@
     "noOptions": "No options",
     "selectedCount_one": "{{count}} selected",
     "selectedCount_other": "{{count}} selected"
+  },
+  "dataTable": {
+    "selectAll": "Select all",
+    "selectRow": "Select {{name}}",
+    "sortBy": "Sort by {{column}}"
+  },
+  "shell": {
+    "welcome": "Welcome, <name>{{name}}</name>.",
+    "navigation": {
+      "dashboard": "Dashboard",
+      "scheduling": "Scheduling",
+      "leave": "Leave",
+      "people": "People",
+      "organisation": "Organisation"
+    },
+    "comingSoon": "This Module is coming soon.",
+    "settings": "Settings"
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Manage your workspace preferences.",
+    "sections": "Settings sections",
+    "comingSoon": "These settings are coming soon.",
+    "general": {
+      "title": "General",
+      "description": "Core workspace preferences.",
+      "subtitle": "Manage your workspace preferences.",
+      "workspaceName": "Workspace Name",
+      "defaultLanguage": "Default Language",
+      "timeZone": "Time Zone",
+      "dateFormat": "Date Format",
+      "country": "Country",
+      "languages": {
+        "en": "English"
+      },
+      "timeZones": {
+        "asiaSingapore": "Singapore (GMT +8)"
+      },
+      "dateFormats": {
+        "dayMonthYear": "DD MM YYYY",
+        "monthDayYear": "MM DD YYYY",
+        "yearMonthDay": "YYYY MM DD"
+      },
+      "countries": {
+        "sg": "Singapore"
+      },
+      "cancel": "Cancel",
+      "save": "Save Changes",
+      "saveUnavailable": "Saving settings isn’t available yet.",
+      "failed": "We couldn’t load your workspace details. Please try again.",
+      "validation": {
+        "required": "Enter a workspace name.",
+        "tooLong": "Use at most {{max}} characters."
+      }
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "Control what you are notified about and how."
+    },
+    "scheduling": {
+      "title": "Scheduling",
+      "description": "Configure approval workflows and hierarchies."
+    }
+  },
+  "organisation": {
+    "title": "Organisation Overview",
+    "subtitle": "Manage your organisation’s structure and workforce settings.",
+    "unknownCount": "—",
+    "failed": "We couldn’t load your organisation details. Please try again.",
+    "viewAll": "View All",
+    "status": {
+      "ACTIVE": "Active",
+      "INACTIVE": "Inactive"
+    },
+    "list": {
+      "showing": "Showing:",
+      "status": "Status",
+      "actions": "Actions",
+      "edit": "Edit {{name}}",
+      "moreActions": "More actions for {{name}}",
+      "editItem": "Edit",
+      "activateItem": "Activate",
+      "deactivateItem": "Deactivate",
+      "deleteItem": "Delete",
+      "loading": "Loading…",
+      "failed": "We couldn’t load this list. Please try again.",
+      "forbidden": "You don’t have permission to view this list.",
+      "noMatches": "Nothing matches your search or filter.",
+      "truncated": "Showing the first {{shown}} of {{total}}. Use the status filter to narrow the list."
+    },
+    "branches": {
+      "title": "Branches",
+      "caption": "Active Branches",
+      "subtitle": "Create and manage organisation branches.",
+      "search": "Search Branch",
+      "create": "Create Branch",
+      "all": "All Branches",
+      "name": "Branch Name",
+      "label": "Branches",
+      "empty": "No branches yet."
+    },
+    "departments": {
+      "title": "Departments",
+      "caption": "Active Departments",
+      "subtitle": "Create and manage organisation departments.",
+      "search": "Search Department",
+      "create": "Create Department",
+      "all": "All Departments",
+      "name": "Department Name",
+      "label": "Departments",
+      "empty": "No departments yet."
+    },
+    "jobTitles": {
+      "title": "Job Titles",
+      "caption": "Coming soon",
+      "subtitle": "Create and manage organisation job titles.",
+      "search": "Search Job Title",
+      "create": "Create Job Title",
+      "all": "All Job Titles",
+      "name": "Job Title",
+      "systemRole": "System Role",
+      "employeeCount": "Employee Count",
+      "label": "Job titles",
+      "empty": "No job titles yet."
+    },
+    "accessRoles": {
+      "title": "System Roles",
+      "caption": "Configured Roles",
+      "subtitle": "Create and manage system roles and access permissions.",
+      "search": "Search System Role",
+      "create": "Create Role",
+      "name": "System Role",
+      "permissions": "Key Permissions",
+      "fullAccess": "Full system access",
+      "permissionCount_one": "{{count}} permission",
+      "permissionCount_other": "{{count}} permissions",
+      "label": "System roles",
+      "empty": "No system roles yet."
+    },
+    "activity": {
+      "title": "Recent Activity",
+      "empty": "No recent activity yet.",
+      "failed": "We couldn’t load recent activity.",
+      "by": "by {{name}}",
+      "justNow": "Just now",
+      "named": {
+        "branchCreated": "Branch created: {{name}}",
+        "branchUpdated": "Branch updated: {{name}}",
+        "departmentCreated": "Department created: {{name}}",
+        "departmentUpdated": "Department updated: {{name}}",
+        "roleCreated": "Role created: {{name}}",
+        "roleUpdated": "Permissions updated for {{name}} role",
+        "roleDeleted": "Role deleted: {{name}}"
+      },
+      "unnamed": {
+        "branchCreated": "Branch created",
+        "branchUpdated": "Branch updated",
+        "departmentCreated": "Department created",
+        "departmentUpdated": "Department updated",
+        "roleCreated": "Role created",
+        "roleUpdated": "Role permissions updated",
+        "roleDeleted": "Role deleted"
+      }
+    }
   }
 }

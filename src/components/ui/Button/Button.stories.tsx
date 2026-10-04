@@ -6,7 +6,8 @@ import {
 	buttonVariants,
 	type ButtonProps,
 } from "@/components/ui/Button";
-import { ChevronLeftIcon } from "@/components/ui/Icon";
+import { ChevronLeftIcon, SettingsIcon } from "@/components/ui/Icon";
+import { withMemoryRouter } from "@/components/utils/MemoryRouterHarness";
 
 const PlaceholderIcon = (): FunctionComponent => (
 	<svg aria-hidden="true" fill="none" viewBox="0 0 24 24">
@@ -14,9 +15,13 @@ const PlaceholderIcon = (): FunctionComponent => (
 	</svg>
 );
 
+/** The stories render the native button; `AsLink` covers the router link. */
+type ButtonElementProps = Extract<ButtonProps, { to?: never }>;
+const ButtonElement: (props: ButtonElementProps) => FunctionComponent = Button;
+
 const meta = {
 	title: "UI/Button",
-	component: Button,
+	component: ButtonElement,
 	args: {
 		children: "Button",
 		variant: "primary",
@@ -34,7 +39,7 @@ const meta = {
 		leadingIcon: { control: false },
 		trailingIcon: { control: false },
 	},
-} satisfies Meta<typeof Button>;
+} satisfies Meta<typeof ButtonElement>;
 
 export default meta;
 
@@ -76,9 +81,25 @@ export const IconDisabled: Story = {
 	args: { ...Icon.args, disabled: true },
 };
 
+/** Given `to`, the Button renders as a router link with the same styling. */
+export const AsLink: Story = {
+	decorators: [withMemoryRouter],
+	render: () => (
+		<div className="flex items-center gap-6">
+			<Button to="/register">Register</Button>
+			<Button to="/register" variant="textlink">
+				Register
+			</Button>
+			<Button aria-label="Settings" to="/register" variant="icon">
+				<SettingsIcon />
+			</Button>
+		</div>
+	),
+};
+
 const rows: Array<{
 	label: string;
-	props: Exclude<ButtonProps, { variant: "icon" }>;
+	props: Exclude<ButtonElementProps, { variant: "icon" }>;
 }> = [
 	{ label: "Primary, lg", props: { variant: "primary", size: "lg" } },
 	{ label: "Secondary, lg", props: { variant: "secondary", size: "lg" } },

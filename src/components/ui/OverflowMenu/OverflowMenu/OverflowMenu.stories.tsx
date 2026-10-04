@@ -41,3 +41,9 @@ export const Open: Story = {
 		await userEvent.click(within(canvasElement).getByRole("button"));
 	},
 };
+
+/** The compact trigger used in a table row's actions cell. */
+export const Icon: Story = {
+	args: { variant: "icon", label: "More actions", className: undefined },
+	play: Open.play,
+};

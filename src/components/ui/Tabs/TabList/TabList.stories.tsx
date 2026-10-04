@@ -24,3 +24,21 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+export const Vertical: Story = {
+	args: { "aria-label": "Settings", className: "w-63" },
+	render: (args): NonNullable<FunctionComponent> => (
+		<Tabs className="flex gap-6" orientation="vertical">
+			<TabList {...args}>
+				<Tab description="Core workspace preferences.">General</Tab>
+				<Tab description="Control what you are notified about and how.">
+					Notifications
+				</Tab>
+			</TabList>
+			<TabPanels>
+				<TabPanel>General content</TabPanel>
+				<TabPanel>Notifications content</TabPanel>
+			</TabPanels>
+		</Tabs>
+	),
+};

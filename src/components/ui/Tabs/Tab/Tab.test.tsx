@@ -241,3 +241,93 @@ it("initially selects the first enabled tab and skips disabled tabs in both dire
 		);
 	}
 });
+
+it("describes a vertical tab with its visible description and keeps the label as its name", async () => {
+	const user = userEvent.setup();
+	render(
+		<Tabs orientation="vertical">
+			<TabList aria-label="Settings">
+				<Tab description="Core workspace preferences.">General</Tab>
+				<Tab
+					aria-describedby="notifications-note"
+					count={2}
+					description="Control what you are notified about and how."
+				>
+					Notifications
+				</Tab>
+				<Tab disabled description="Configure approval workflows.">
+					Scheduling
+				</Tab>
+			</TabList>
+			<TabPanels>
+				<TabPanel>General content</TabPanel>
+				<TabPanel>Notifications content</TabPanel>
+				<TabPanel>Scheduling content</TabPanel>
+			</TabPanels>
+			<p id="notifications-note">Two unread</p>
+		</Tabs>
+	);
+	const general = screen.getByRole("tab", {
+		name: "General",
+		description: "Core workspace preferences.",
+		selected: true,
+	});
+	expect(screen.getByRole("tabpanel")).toHaveAccessibleName("General");
+	expect(screen.getByText("Core workspace preferences.")).toBeVisible();
+	expect(screen.getByText("Core workspace preferences.")).toHaveClass(
+		"text-xs",
+		"text-neutral-800"
+	);
+	expect(general).toHaveClass(
+		"min-h-25",
+		"border-b",
+		"border-neutral-400",
+		"not-data-disabled:data-selected:bg-neutral-100",
+		"data-focus:-outline-offset-2"
+	);
+	expect(general).not.toHaveClass("h-10", "border-b-2", "whitespace-nowrap");
+	// The chevron is decorative.
+	expect(general.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
+	const notifications = screen.getByRole("tab", {
+		name: "Notifications 2",
+		description: "Control what you are notified about and how. Two unread",
+	});
+	await user.click(notifications);
+	expect(screen.getByRole("tabpanel")).toHaveAccessibleName("Notifications 2");
+	const scheduling = screen.getByRole("tab", {
+		name: "Scheduling",
+		description: "Configure approval workflows.",
+	});
+	expect(scheduling).toBeDisabled();
+	expect(screen.getByText("Configure approval workflows.")).toHaveClass(
+		"text-neutral-400"
+	);
+	expect(scheduling.querySelector("svg")).toHaveClass("text-neutral-400");
+});
+
+it("keeps a horizontal tab one line high and exposes its description only to assistive technology", () => {
+	render(
+		<Tabs>
+			<TabList aria-label="Profile">
+				<Tab aria-describedby="hint" description="Personal and job details">
+					Overview
+				</Tab>
+				<Tab>Employment</Tab>
+			</TabList>
+			<TabPanels>
+				<TabPanel>Overview content</TabPanel>
+				<TabPanel>Employment content</TabPanel>
+			</TabPanels>
+			<p id="hint">Hint</p>
+		</Tabs>
+	);
+	const overview = screen.getByRole("tab", {
+		name: "Overview",
+		description: "Personal and job details Hint",
+	});
+	expect(overview).toHaveClass("h-10", "whitespace-nowrap");
+	expect(screen.getByText("Personal and job details")).toHaveClass("sr-only");
+	expect(overview.querySelector("svg")).toBeNull();
+	const employment = screen.getByRole("tab", { name: "Employment" });
+	expect(employment).not.toHaveAttribute("aria-describedby");
+});

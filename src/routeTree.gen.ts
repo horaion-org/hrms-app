@@ -18,7 +18,17 @@ import { Route as NewPasswordRouteImport } from './routes/new-password'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as SignUpRouteImport } from './routes/sign-up'
-import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated.index'
+import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated._app'
+import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated._app.index'
+import { Route as AuthenticatedAppLeaveRouteImport } from './routes/_authenticated._app.leave'
+import { Route as AuthenticatedAppPeopleRouteImport } from './routes/_authenticated._app.people'
+import { Route as AuthenticatedAppSchedulingRouteImport } from './routes/_authenticated._app.scheduling'
+import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated._app.settings'
+import { Route as AuthenticatedAppOrganisationIndexRouteImport } from './routes/_authenticated._app.organisation.index'
+import { Route as AuthenticatedAppOrganisationBranchesRouteImport } from './routes/_authenticated._app.organisation.branches'
+import { Route as AuthenticatedAppOrganisationDepartmentsRouteImport } from './routes/_authenticated._app.organisation.departments'
+import { Route as AuthenticatedAppOrganisationJobTitlesRouteImport } from './routes/_authenticated._app.organisation.job-titles'
+import { Route as AuthenticatedAppOrganisationSystemRolesRouteImport } from './routes/_authenticated._app.organisation.system-roles'
 
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
@@ -64,14 +74,70 @@ const SignUpRoute = SignUpRouteImport.update({
   path: '/sign-up',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
+  id: '/_app',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppLeaveRoute = AuthenticatedAppLeaveRouteImport.update({
+  id: '/leave',
+  path: '/leave',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppPeopleRoute = AuthenticatedAppPeopleRouteImport.update({
+  id: '/people',
+  path: '/people',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppSchedulingRoute =
+  AuthenticatedAppSchedulingRouteImport.update({
+    id: '/scheduling',
+    path: '/scheduling',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppSettingsRoute =
+  AuthenticatedAppSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppOrganisationIndexRoute =
+  AuthenticatedAppOrganisationIndexRouteImport.update({
+    id: '/organisation/',
+    path: '/organisation/',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppOrganisationBranchesRoute =
+  AuthenticatedAppOrganisationBranchesRouteImport.update({
+    id: '/organisation/branches',
+    path: '/organisation/branches',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppOrganisationDepartmentsRoute =
+  AuthenticatedAppOrganisationDepartmentsRouteImport.update({
+    id: '/organisation/departments',
+    path: '/organisation/departments',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppOrganisationJobTitlesRoute =
+  AuthenticatedAppOrganisationJobTitlesRouteImport.update({
+    id: '/organisation/job-titles',
+    path: '/organisation/job-titles',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppOrganisationSystemRolesRoute =
+  AuthenticatedAppOrganisationSystemRolesRouteImport.update({
+    id: '/organisation/system-roles',
+    path: '/organisation/system-roles',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof AuthenticatedIndexRoute
+  '/': typeof AuthenticatedAppIndexRoute
   '/confirm-email': typeof ConfirmEmailRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
@@ -80,8 +146,18 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
+  '/leave': typeof AuthenticatedAppLeaveRoute
+  '/people': typeof AuthenticatedAppPeopleRoute
+  '/scheduling': typeof AuthenticatedAppSchedulingRoute
+  '/settings': typeof AuthenticatedAppSettingsRoute
+  '/organisation/branches': typeof AuthenticatedAppOrganisationBranchesRoute
+  '/organisation/departments': typeof AuthenticatedAppOrganisationDepartmentsRoute
+  '/organisation/job-titles': typeof AuthenticatedAppOrganisationJobTitlesRoute
+  '/organisation/system-roles': typeof AuthenticatedAppOrganisationSystemRolesRoute
+  '/organisation/': typeof AuthenticatedAppOrganisationIndexRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof AuthenticatedAppIndexRoute
   '/confirm-email': typeof ConfirmEmailRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
@@ -90,7 +166,15 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
-  '/': typeof AuthenticatedIndexRoute
+  '/leave': typeof AuthenticatedAppLeaveRoute
+  '/people': typeof AuthenticatedAppPeopleRoute
+  '/scheduling': typeof AuthenticatedAppSchedulingRoute
+  '/settings': typeof AuthenticatedAppSettingsRoute
+  '/organisation/branches': typeof AuthenticatedAppOrganisationBranchesRoute
+  '/organisation/departments': typeof AuthenticatedAppOrganisationDepartmentsRoute
+  '/organisation/job-titles': typeof AuthenticatedAppOrganisationJobTitlesRoute
+  '/organisation/system-roles': typeof AuthenticatedAppOrganisationSystemRolesRoute
+  '/organisation': typeof AuthenticatedAppOrganisationIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -103,7 +187,17 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
-  '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/_app': typeof AuthenticatedAppRouteWithChildren
+  '/_authenticated/_app/leave': typeof AuthenticatedAppLeaveRoute
+  '/_authenticated/_app/people': typeof AuthenticatedAppPeopleRoute
+  '/_authenticated/_app/scheduling': typeof AuthenticatedAppSchedulingRoute
+  '/_authenticated/_app/settings': typeof AuthenticatedAppSettingsRoute
+  '/_authenticated/_app/': typeof AuthenticatedAppIndexRoute
+  '/_authenticated/_app/organisation/branches': typeof AuthenticatedAppOrganisationBranchesRoute
+  '/_authenticated/_app/organisation/departments': typeof AuthenticatedAppOrganisationDepartmentsRoute
+  '/_authenticated/_app/organisation/job-titles': typeof AuthenticatedAppOrganisationJobTitlesRoute
+  '/_authenticated/_app/organisation/system-roles': typeof AuthenticatedAppOrganisationSystemRolesRoute
+  '/_authenticated/_app/organisation/': typeof AuthenticatedAppOrganisationIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -117,8 +211,18 @@ export interface FileRouteTypes {
     | '/register'
     | '/sign-in'
     | '/sign-up'
+    | '/leave'
+    | '/people'
+    | '/scheduling'
+    | '/settings'
+    | '/organisation/branches'
+    | '/organisation/departments'
+    | '/organisation/job-titles'
+    | '/organisation/system-roles'
+    | '/organisation/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/confirm-email'
     | '/forgot-password'
     | '/login'
@@ -127,7 +231,15 @@ export interface FileRouteTypes {
     | '/register'
     | '/sign-in'
     | '/sign-up'
-    | '/'
+    | '/leave'
+    | '/people'
+    | '/scheduling'
+    | '/settings'
+    | '/organisation/branches'
+    | '/organisation/departments'
+    | '/organisation/job-titles'
+    | '/organisation/system-roles'
+    | '/organisation'
   id:
     | '__root__'
     | '/_authenticated'
@@ -139,7 +251,17 @@ export interface FileRouteTypes {
     | '/register'
     | '/sign-in'
     | '/sign-up'
-    | '/_authenticated/'
+    | '/_authenticated/_app'
+    | '/_authenticated/_app/leave'
+    | '/_authenticated/_app/people'
+    | '/_authenticated/_app/scheduling'
+    | '/_authenticated/_app/settings'
+    | '/_authenticated/_app/'
+    | '/_authenticated/_app/organisation/branches'
+    | '/_authenticated/_app/organisation/departments'
+    | '/_authenticated/_app/organisation/job-titles'
+    | '/_authenticated/_app/organisation/system-roles'
+    | '/_authenticated/_app/organisation/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -219,22 +341,126 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignUpRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/': {
-      id: '/_authenticated/'
+    '/_authenticated/_app': {
+      id: '/_authenticated/_app'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedAppRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/_app/': {
+      id: '/_authenticated/_app/'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
+      preLoaderRoute: typeof AuthenticatedAppIndexRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/leave': {
+      id: '/_authenticated/_app/leave'
+      path: '/leave'
+      fullPath: '/leave'
+      preLoaderRoute: typeof AuthenticatedAppLeaveRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/people': {
+      id: '/_authenticated/_app/people'
+      path: '/people'
+      fullPath: '/people'
+      preLoaderRoute: typeof AuthenticatedAppPeopleRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/scheduling': {
+      id: '/_authenticated/_app/scheduling'
+      path: '/scheduling'
+      fullPath: '/scheduling'
+      preLoaderRoute: typeof AuthenticatedAppSchedulingRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/settings': {
+      id: '/_authenticated/_app/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedAppSettingsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/organisation/': {
+      id: '/_authenticated/_app/organisation/'
+      path: '/organisation'
+      fullPath: '/organisation/'
+      preLoaderRoute: typeof AuthenticatedAppOrganisationIndexRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/organisation/branches': {
+      id: '/_authenticated/_app/organisation/branches'
+      path: '/organisation/branches'
+      fullPath: '/organisation/branches'
+      preLoaderRoute: typeof AuthenticatedAppOrganisationBranchesRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/organisation/departments': {
+      id: '/_authenticated/_app/organisation/departments'
+      path: '/organisation/departments'
+      fullPath: '/organisation/departments'
+      preLoaderRoute: typeof AuthenticatedAppOrganisationDepartmentsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/organisation/job-titles': {
+      id: '/_authenticated/_app/organisation/job-titles'
+      path: '/organisation/job-titles'
+      fullPath: '/organisation/job-titles'
+      preLoaderRoute: typeof AuthenticatedAppOrganisationJobTitlesRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/organisation/system-roles': {
+      id: '/_authenticated/_app/organisation/system-roles'
+      path: '/organisation/system-roles'
+      fullPath: '/organisation/system-roles'
+      preLoaderRoute: typeof AuthenticatedAppOrganisationSystemRolesRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
     }
   }
 }
 
+interface AuthenticatedAppRouteChildren {
+  AuthenticatedAppLeaveRoute: typeof AuthenticatedAppLeaveRoute
+  AuthenticatedAppPeopleRoute: typeof AuthenticatedAppPeopleRoute
+  AuthenticatedAppSchedulingRoute: typeof AuthenticatedAppSchedulingRoute
+  AuthenticatedAppSettingsRoute: typeof AuthenticatedAppSettingsRoute
+  AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
+  AuthenticatedAppOrganisationBranchesRoute: typeof AuthenticatedAppOrganisationBranchesRoute
+  AuthenticatedAppOrganisationDepartmentsRoute: typeof AuthenticatedAppOrganisationDepartmentsRoute
+  AuthenticatedAppOrganisationJobTitlesRoute: typeof AuthenticatedAppOrganisationJobTitlesRoute
+  AuthenticatedAppOrganisationSystemRolesRoute: typeof AuthenticatedAppOrganisationSystemRolesRoute
+  AuthenticatedAppOrganisationIndexRoute: typeof AuthenticatedAppOrganisationIndexRoute
+}
+
+const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
+  AuthenticatedAppLeaveRoute: AuthenticatedAppLeaveRoute,
+  AuthenticatedAppPeopleRoute: AuthenticatedAppPeopleRoute,
+  AuthenticatedAppSchedulingRoute: AuthenticatedAppSchedulingRoute,
+  AuthenticatedAppSettingsRoute: AuthenticatedAppSettingsRoute,
+  AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
+  AuthenticatedAppOrganisationBranchesRoute:
+    AuthenticatedAppOrganisationBranchesRoute,
+  AuthenticatedAppOrganisationDepartmentsRoute:
+    AuthenticatedAppOrganisationDepartmentsRoute,
+  AuthenticatedAppOrganisationJobTitlesRoute:
+    AuthenticatedAppOrganisationJobTitlesRoute,
+  AuthenticatedAppOrganisationSystemRolesRoute:
+    AuthenticatedAppOrganisationSystemRolesRoute,
+  AuthenticatedAppOrganisationIndexRoute:
+    AuthenticatedAppOrganisationIndexRoute,
+}
+
+const AuthenticatedAppRouteWithChildren =
+  AuthenticatedAppRoute._addFileChildren(AuthenticatedAppRouteChildren)
+
 interface AuthenticatedRouteChildren {
-  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedAppRoute: typeof AuthenticatedAppRouteWithChildren
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
-  AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedAppRoute: AuthenticatedAppRouteWithChildren,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(

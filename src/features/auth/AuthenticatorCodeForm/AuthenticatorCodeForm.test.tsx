@@ -88,7 +88,7 @@ it("starts MFA from Log in, retries an invalid code without losing the Challenge
 	await user.clear(code);
 	await user.type(code, "012345");
 	await user.click(screen.getByRole("button", { name: "Continue" }));
-	await screen.findByRole("heading", { name: "Welcome, José" });
+	await screen.findByRole("heading", { name: "Dashboard" });
 	expect(
 		calls
 			.filter((call) => call.path.endsWith("/challenge"))

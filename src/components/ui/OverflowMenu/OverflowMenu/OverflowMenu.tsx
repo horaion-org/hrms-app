@@ -2,21 +2,72 @@ import { Menu, MenuButton, MenuItems } from "@headlessui/react";
 import { useCallback, useRef, type ReactNode } from "react";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
+import { Button } from "@/components/ui/Button";
 import { MoreVerticalIcon } from "@/components/ui/Icon";
 
 export type OverflowMenuProps = {
-	label: ReactNode;
 	children: ReactNode;
 	disabled?: boolean;
 	className?: string;
-};
+} & (
+	| {
+			/** A full-width card whose visible label names the menu. */
+			variant?: "card";
+			label: ReactNode;
+	  }
+	| {
+			/** A compact icon-only trigger, e.g. a table row's "More actions". */
+			variant: "icon";
+			/** The trigger's accessible name. */
+			label: string;
+	  }
+);
 
-export const OverflowMenu = ({
+const IconOverflowMenu = ({
 	label,
 	children,
 	disabled,
 	className,
-}: OverflowMenuProps): FunctionComponent => {
+}: {
+	label: string;
+	children: ReactNode;
+	disabled?: boolean;
+	className?: string;
+}): FunctionComponent => (
+	<Menu
+		key={disabled ? "disabled" : "enabled"}
+		as="div"
+		className={joinClassNames("inline-flex", className)}
+	>
+		<MenuButton
+			aria-label={label}
+			as={Button}
+			className="data-open:text-ink-blue-700"
+			disabled={disabled}
+			variant="icon"
+		>
+			<MoreVerticalIcon />
+		</MenuButton>
+		<MenuItems
+			anchor="bottom end"
+			className="z-10 w-max min-w-40 divide-y divide-neutral-400 overflow-hidden rounded-lg border border-neutral-400 bg-white shadow-md outline-none [--anchor-gap:4px]"
+		>
+			{children}
+		</MenuItems>
+	</Menu>
+);
+
+const CardOverflowMenu = ({
+	label,
+	children,
+	disabled,
+	className,
+}: {
+	label: ReactNode;
+	children: ReactNode;
+	disabled?: boolean;
+	className?: string;
+}): FunctionComponent => {
 	const triggerRef = useRef<HTMLButtonElement>(null);
 	const stopObservingRef = useRef<(() => void) | null>(null);
 	// Headless UI exposes resolved placement on the portalled panel, but not in
@@ -69,4 +120,9 @@ export const OverflowMenu = ({
 			</MenuItems>
 		</Menu>
 	);
+};
+
+export const OverflowMenu = (props: OverflowMenuProps): FunctionComponent => {
+	if (props.variant === "icon") return <IconOverflowMenu {...props} />;
+	return <CardOverflowMenu {...props} />;
 };
