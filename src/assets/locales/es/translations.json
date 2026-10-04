@@ -1,4 +1,12 @@
 {
+  "dialog": {
+    "close": "Cerrar"
+  },
+  "combobox": {
+    "remove": "Quitar {{label}}",
+    "loading": "Cargando…",
+    "noResults": "No hay resultados"
+  },
   "calendar": {
     "previousMonth": "Mes anterior",
     "nextMonth": "Mes siguiente",
@@ -30,5 +38,50 @@
     "selectAll": "Seleccionar todo",
     "selectRow": "Seleccionar {{name}}",
     "sortBy": "Ordenar por {{column}}"
+  },
+  "organisation": {
+    "branches": {
+      "title": "Sucursales",
+      "subtitle": "Crea y administra las sucursales de la organización.",
+      "search": "Buscar sucursal",
+      "create": "Crear sucursal",
+      "all": "Todas las sucursales",
+      "name": "Nombre de la sucursal",
+      "label": "Sucursales",
+      "empty": "Todavía no hay sucursales.",
+      "createDialog": {
+        "title": "Crear sucursal",
+        "description": "Añade una sucursal y elige a las personas que la lideran.",
+        "name": "Nombre de la sucursal",
+        "namePlaceholder": "p. ej., Centro",
+        "nameHint": "Entre 2 y 100 caracteres. Solo letras, números, espacios y . ' & -.",
+        "nameCounter": "{{count}}/100",
+        "heads": "Responsables de la sucursal",
+        "headsPlaceholder": "Seleccionar responsables",
+        "searchPlaceholder": "Buscar personas",
+        "headsHint": "Los responsables lideran la sucursal. Añade al menos 1, hasta 20.",
+        "headsCounter": "{{count}}/20",
+        "active": "Activo",
+        "loading": "Cargando personas…",
+        "noResults": "No se encontraron miembros activos.",
+        "membersFailed": "No pudimos cargar las personas. Inténtalo de nuevo.",
+        "membersFooter": "Mostrando miembros activos de la empresa",
+        "membersTruncated": "Mostrando 20 de {{total}} miembros activos de la empresa. Escribe para acotar la búsqueda.",
+        "cancel": "Cancelar",
+        "submit": "Crear sucursal",
+        "submitting": "Creando sucursal…",
+        "nameRequired": "Introduce un nombre para la sucursal.",
+        "nameLength": "Usa entre 2 y 100 caracteres.",
+        "nameCharacters": "Usa solo letras, números, espacios y . ' & -.",
+        "headsRequired": "Elige al menos un responsable de la sucursal.",
+        "headsMax": "Elige un máximo de 20 responsables.",
+        "nameConflict": "Ya existe una sucursal llamada \"{{name}}\". Elige otro nombre.",
+        "headsUnavailable": "Una de las personas elegidas ya no es un miembro activo. Elimínala e inténtalo de nuevo.",
+        "nameRejected": "Revisa el nombre de la sucursal e inténtalo de nuevo.",
+        "headsRejected": "Revisa las personas elegidas e inténtalo de nuevo.",
+        "forbidden": "Ya no tienes permiso para crear sucursales.",
+        "failed": "No pudimos crear la sucursal. Inténtalo de nuevo."
+      }
+    }
   }
 }
