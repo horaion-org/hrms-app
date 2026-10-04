@@ -49,6 +49,12 @@ export const Primary: Story = {};
 
 export const Secondary: Story = { args: { variant: "secondary" } };
 
+export const PrimaryLoading: Story = { args: { loading: true } };
+
+export const SecondaryLoading: Story = {
+	args: { variant: "secondary", loading: true },
+};
+
 export const Small: Story = { args: { size: "sm" } };
 
 export const Textlink: Story = {
@@ -124,8 +130,19 @@ export const Matrix: Story = {
 			{rows.map(({ label, props }) => (
 				<div key={label} className="contents">
 					<span className="text-right text-ink-blue-700">{label}</span>
-					<Button {...args} {...props} variant={props.variant} />
-					<Button {...args} {...props} disabled variant={props.variant} />
+					<Button
+						{...args}
+						{...props}
+						loading={undefined}
+						variant={props.variant}
+					/>
+					<Button
+						{...args}
+						{...props}
+						disabled
+						loading={undefined}
+						variant={props.variant}
+					/>
 				</div>
 			))}
 		</div>
