@@ -5,8 +5,16 @@
  * Warning, Error), each with shades 50 to 900 and an unnumbered token for its
  * default shade. The Base colours (black, white) are Tailwind's stock values,
  * which already match the design, so they are not redefined here.
+ *
+ * Typography: Manrope is the application typeface. It is self-hosted through
+ * @fontsource-variable/manrope and set as the sans family, which Tailwind
+ * applies to the whole document by default.
  */
 @theme {
+	--font-sans:
+		"Manrope Variable", ui-sans-serif, system-ui, sans-serif,
+		"Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
 	/* Neutral replaces Tailwind's stock neutral entirely (no neutral-950). */
 	--color-neutral-*: initial;
 	--color-neutral-50: #fbfdff;
