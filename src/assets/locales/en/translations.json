@@ -1,4 +1,12 @@
 {
+  "dialog": {
+    "close": "Close"
+  },
+  "combobox": {
+    "remove": "Remove {{label}}",
+    "loading": "Loading…",
+    "noResults": "No results"
+  },
   "passwordInput": {
     "show": "Show password",
     "hide": "Hide password"
@@ -230,12 +238,45 @@
       "title": "Branches",
       "caption": "Active Branches",
       "subtitle": "Create and manage organisation branches.",
-      "search": "Search Branch",
-      "create": "Create Branch",
-      "all": "All Branches",
-      "name": "Branch Name",
+      "search": "Search branch",
+      "create": "Create branch",
+      "all": "All branches",
+      "name": "Branch name",
       "label": "Branches",
-      "empty": "No branches yet."
+      "empty": "No branches yet.",
+      "createDialog": {
+        "title": "Create branch",
+        "description": "Add a branch to your organisation and choose who heads it.",
+        "name": "Branch name",
+        "namePlaceholder": "e.g. Orchard Road",
+        "nameHint": "2–100 characters. Letters, numbers, spaces and . ' & - only.",
+        "nameCounter": "{{count}}/100",
+        "heads": "Branch heads",
+        "headsPlaceholder": "Select branch heads",
+        "searchPlaceholder": "Search people",
+        "headsHint": "Heads lead the branch. Add at least 1, up to 20.",
+        "headsCounter": "{{count}}/20",
+        "active": "Active",
+        "loading": "Loading people…",
+        "noResults": "No active members found.",
+        "membersFailed": "We couldn’t load people. Try again.",
+        "membersFooter": "Showing active company members",
+        "membersTruncated": "Showing 20 of {{total}} active company members. Type to narrow.",
+        "cancel": "Cancel",
+        "submit": "Create branch",
+        "submitting": "Creating branch…",
+        "nameRequired": "Enter a branch name.",
+        "nameLength": "Use 2 to 100 characters.",
+        "nameCharacters": "Use only letters, numbers, spaces and . ' & - in the name.",
+        "headsRequired": "Choose at least one branch head.",
+        "headsMax": "Choose no more than 20 branch heads.",
+        "nameConflict": "A branch named \"{{name}}\" already exists. Choose a different name.",
+        "headsUnavailable": "One of the chosen people is no longer an active member. Remove them and try again.",
+        "nameRejected": "Check the branch name and try again.",
+        "headsRejected": "Check the chosen people and try again.",
+        "forbidden": "You no longer have permission to create branches.",
+        "failed": "We couldn’t create the branch. Try again."
+      }
     },
     "departments": {
       "title": "Departments",
