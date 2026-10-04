@@ -110,7 +110,7 @@ it.each([undefined, "/?tab=2", "https://evil.test", "//evil.test"])(
 			"012345"
 		);
 		await user.click(screen.getByRole("button", { name: "Continue" }));
-		await screen.findByRole("heading", { name: "Welcome, José" });
+		await screen.findByRole("heading", { name: "Dashboard" });
 		expect(opened.router.state.location.href).toBe(target);
 		expect(pendingChallenge()).toBeNull();
 		expect(hasAccessPass()).toBe(true);
@@ -167,7 +167,7 @@ it("checks matching passwords before sending, maps a policy refusal to the field
 	expect(pendingChallenge()).toBe("NEW_PASSWORD_REQUIRED");
 	expect(screen.queryByText(/API says|Refused/)).not.toBeInTheDocument();
 	await user.click(screen.getByRole("button", { name: "Continue" }));
-	await screen.findByRole("heading", { name: "Welcome, José" });
+	await screen.findByRole("heading", { name: "Dashboard" });
 });
 
 it.each([

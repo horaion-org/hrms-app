@@ -96,7 +96,7 @@ it.each([
 				: `/login?redirect=${encodeURIComponent(redirect)}`
 		);
 		await submit();
-		await screen.findByRole("heading", { name: "Welcome, José" });
+		await screen.findByRole("heading", { name: "Dashboard" });
 		expect(opened.router.state.location.href).toBe(
 			redirect === "/?tab=2" ? redirect : "/"
 		);
