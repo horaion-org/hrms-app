@@ -19,6 +19,201 @@ const options = [
 	{ id: "sarah", name: "Sarah Tan" },
 ];
 
+describe("Combobox single choice", () => {
+	it("reports search, loading and empty results with a footer while retaining a choice absent from results", async () => {
+		const user = userEvent.setup();
+		const searched = vi.fn();
+		const props = {
+			multiple: false as const,
+			"aria-label": "Branch head",
+			getKey: (option: (typeof options)[number]): string => option.id,
+			getLabel: (option: (typeof options)[number]): string => option.name,
+			placeholder: "Select a branch head",
+			searchPlaceholder: "Search people",
+			query: "",
+			value: options[0] ?? null,
+			footer: "Only active people are shown.",
+			onChange: vi.fn(),
+			onQueryChange: searched,
+		};
+		const { rerender } = render(
+			<Combobox
+				{...props}
+				loading
+				loadingText="Searching people"
+				options={options}
+			/>
+		);
+		const trigger = screen.getByRole("button", { name: "Branch head" });
+		await user.click(trigger);
+		expect(screen.getByRole("status")).toHaveTextContent("Searching people");
+		expect(screen.getAllByRole("option")).toHaveLength(2);
+		expect(
+			screen.getByText("Only active people are shown.")
+		).toBeInTheDocument();
+		await user.type(screen.getByRole("combobox"), "z");
+		expect(searched).toHaveBeenLastCalledWith("z");
+		rerender(
+			<Combobox {...props} emptyText="Nobody matches" options={[]} query="z" />
+		);
+		expect(screen.getByRole("status")).toHaveTextContent("Nobody matches");
+		expect(trigger).toHaveTextContent("Marcus Lim");
+		await user.keyboard("{Escape}");
+		expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+		await waitFor(() => expect(trigger).toHaveFocus());
+	});
+	it("names a single-choice list, connects errors and required state, and cannot open or clear when disabled", async () => {
+		const user = userEvent.setup();
+		const changed = vi.fn();
+		const ref = createRef<HTMLButtonElement>();
+		const props = {
+			multiple: false as const,
+			"aria-labelledby": "head-label",
+			"aria-describedby": "head-error",
+			"aria-required": true as const,
+			id: "head-control",
+			getKey: (option: (typeof options)[number]): string => option.id,
+			getLabel: (option: (typeof options)[number]): string => option.name,
+			options,
+			placeholder: "Select a branch head",
+			searchPlaceholder: "Search people",
+			query: "",
+			value: options[0] ?? null,
+			onChange: changed,
+			onQueryChange: vi.fn(),
+		};
+		const { rerender } = render(
+			<>
+				<span id="head-label">Branch head</span>
+				<span id="head-error">Choose a branch head</span>
+				<Combobox {...props} ref={ref} status="error" />
+				<button type="button">Next field</button>
+			</>
+		);
+		const trigger = screen.getByRole("button", { name: "Branch head" });
+		expect(ref.current).toBe(trigger);
+		expect(trigger).toHaveAttribute("aria-invalid", "true");
+		expect(trigger).toHaveAttribute("aria-required", "true");
+		expect(trigger).toHaveAttribute("id", "head-control");
+		expect(trigger).toHaveAccessibleDescription("Choose a branch head");
+		await user.tab();
+		expect(trigger).toHaveFocus();
+		await user.keyboard(" ");
+		const search = screen.getByRole("combobox", { name: "Search people" });
+		const list = screen.getByRole("listbox", { name: "Branch head" });
+		expect(list).not.toHaveAttribute("aria-multiselectable", "true");
+		expect(search).toHaveFocus();
+		expect(search).toHaveAttribute("aria-controls", list.id);
+		expect(trigger).toHaveAttribute("aria-controls", list.id);
+		await user.tab();
+		await waitFor(() =>
+			expect(screen.queryByRole("listbox")).not.toBeInTheDocument()
+		);
+		expect(screen.getByRole("button", { name: "Next field" })).toHaveFocus();
+		changed.mockClear();
+		rerender(
+			<Combobox
+				{...props}
+				ref={ref}
+				disabled
+				aria-label="Branch head"
+				aria-labelledby={undefined}
+				status="error"
+			/>
+		);
+		expect(ref.current).toBeDisabled();
+		await user.click(screen.getByRole("button", { name: "Branch head" }));
+		await user.keyboard("{Backspace}{Enter}");
+		expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+		expect(changed).not.toHaveBeenCalled();
+		expect(ref.current).toHaveTextContent("Marcus Lim");
+	});
+	it("clears the chosen value with Backspace on the trigger and shows the placeholder again", async () => {
+		const user = userEvent.setup();
+		const changed = vi.fn();
+		const Example = (): FunctionComponent => {
+			const [value, setValue] = useState<(typeof options)[number] | null>(
+				options[0] ?? null
+			);
+			return (
+				<Combobox
+					aria-label="Branch head"
+					getKey={(option) => option.id}
+					getLabel={(option) => option.name}
+					multiple={false}
+					options={options}
+					placeholder="Select a branch head"
+					query=""
+					searchPlaceholder="Search people"
+					value={value}
+					onQueryChange={vi.fn()}
+					onChange={(next) => {
+						setValue(next);
+						changed(next);
+					}}
+				/>
+			);
+		};
+		render(<Example />);
+		const trigger = screen.getByRole("button", { name: "Branch head" });
+		await user.tab();
+		expect(trigger).toHaveFocus();
+		await user.keyboard("{Backspace}");
+		expect(changed).toHaveBeenCalledExactlyOnceWith(null);
+		expect(trigger).toHaveTextContent("Select a branch head");
+		expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+		expect(trigger).toHaveFocus();
+	});
+	it("chooses one value, replaces it, and closes with the chosen label and focus on the trigger", async () => {
+		const user = userEvent.setup();
+		const changed = vi.fn();
+		const Example = (): FunctionComponent => {
+			const [value, setValue] = useState<(typeof options)[number] | null>(null);
+			return (
+				<Combobox
+					aria-label="Branch head"
+					getKey={(option) => option.id}
+					getLabel={(option) => option.name}
+					multiple={false}
+					options={options}
+					placeholder="Select a branch head"
+					query=""
+					searchPlaceholder="Search people"
+					value={value}
+					onQueryChange={vi.fn()}
+					onChange={(next) => {
+						setValue(next);
+						changed(next);
+					}}
+				/>
+			);
+		};
+		render(<Example />);
+		const trigger = screen.getByRole("button", { name: "Branch head" });
+		expect(trigger).toHaveTextContent("Select a branch head");
+		await user.click(trigger);
+		await user.click(screen.getByRole("option", { name: "Marcus Lim" }));
+		expect(changed).toHaveBeenLastCalledWith(options[0]);
+		expect(trigger).toHaveTextContent("Marcus Lim");
+		expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+		await waitFor(() => expect(trigger).toHaveFocus());
+		await user.keyboard("{Enter}");
+		expect(screen.getByRole("option", { name: "Marcus Lim" })).toHaveAttribute(
+			"aria-selected",
+			"true"
+		);
+		await user.keyboard("{ArrowDown}{Enter}");
+		expect(changed).toHaveBeenLastCalledWith(options[1]);
+		expect(trigger).toHaveTextContent("Sarah Tan");
+		expect(trigger).not.toHaveTextContent("Marcus Lim");
+		expect(
+			screen.queryByRole("button", { name: /Remove/ })
+		).not.toBeInTheDocument();
+		expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+		await waitFor(() => expect(trigger).toHaveFocus());
+	});
+});
+
 describe("Combobox", () => {
 	it("is reachable with Tab, names the popup correctly, and lets Tab leave without stealing focus", async () => {
 		const user = userEvent.setup();
