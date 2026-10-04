@@ -101,6 +101,21 @@ const fill = async (
 };
 
 describe("create branch through the Branches page", () => {
+	it("focuses Code before City when both are missing after a valid name", async () => {
+		stubApi(routes());
+		await open();
+		const dialog = await openDialog();
+		await userEvent.type(
+			within(dialog).getByLabelText("Branch name"),
+			"Orchard Road"
+		);
+		await userEvent.click(
+			within(dialog).getByRole("button", { name: "Create branch" })
+		);
+		await waitFor(() => {
+			expect(within(dialog).getByLabelText("Branch code")).toHaveFocus();
+		});
+	});
 	it.each([false, true])(
 		"retains country and heads and focuses country on refusal (heads error: %s)",
 		async (withHeads) => {
