@@ -1,0 +1,283 @@
+import {
+	Combobox as HeadlessCombobox,
+	ComboboxButton,
+	ComboboxInput,
+	ComboboxOption,
+	ComboboxOptions,
+} from "@headlessui/react";
+import {
+	Fragment,
+	useCallback,
+	useId,
+	useRef,
+	type AriaAttributes,
+	type ReactNode,
+	type Ref,
+} from "react";
+import { useTranslation } from "react-i18next";
+import { joinClassNames } from "@/common/joinClassNames";
+import type { FunctionComponent } from "@/common/types";
+import type { InputStatus } from "@/components/forms/Input";
+import { ComboboxTrigger } from "@/components/forms/Combobox/ComboboxTrigger";
+import { ComboboxPanel } from "@/components/forms/Combobox/ComboboxPanel";
+import { ComboboxSearch } from "@/components/forms/Combobox/ComboboxSearch";
+import { Token } from "@/components/forms/Combobox/Token";
+import {
+	CheckboxFilledIcon,
+	CheckboxIcon,
+	ChevronDownIcon,
+} from "@/components/ui/Icon";
+
+export type ComboboxProps<T> = {
+	value: Array<T>;
+	onChange: (value: Array<T>) => void;
+	options: Array<T>;
+	getKey: (option: T) => string;
+	getLabel: (option: T) => string;
+	renderOption?: (option: T) => ReactNode;
+	query: string;
+	onQueryChange: (query: string) => void;
+	loading?: boolean;
+	loadingText?: string;
+	emptyText?: string;
+	footer?: ReactNode;
+	maxSelected?: number;
+	placeholder: string;
+	searchPlaceholder: string;
+	status?: InputStatus;
+	disabled?: boolean;
+	id?: string;
+	className?: string;
+	ref?: Ref<HTMLButtonElement>;
+	"aria-label"?: string;
+	"aria-labelledby"?: string;
+	"aria-describedby"?: string;
+	"aria-invalid"?: AriaAttributes["aria-invalid"];
+	"aria-required"?: AriaAttributes["aria-required"];
+};
+
+export const Combobox = <T,>(props: ComboboxProps<T>): FunctionComponent => {
+	const { t } = useTranslation();
+	const trigger = useRef<HTMLButtonElement>(null);
+	const listId = useId();
+	const tabbing = useRef(false);
+	const focusSearch = useCallback((element: HTMLInputElement | null): void => {
+		element?.focus();
+	}, []);
+	const {
+		value,
+		options,
+		getKey,
+		getLabel,
+		query,
+		onQueryChange,
+		onChange,
+		disabled,
+	} = props;
+	const validation = {
+		"aria-invalid":
+			props["aria-invalid"] ?? (props.status === "error" ? true : undefined),
+	};
+	const statusClasses: Record<InputStatus, string> = {
+		error: "border-error-600",
+		success: "border-success-600",
+	};
+	return (
+		<HeadlessCombobox
+			multiple
+			as="div"
+			by={(a: T, b: T) => getKey(a) === getKey(b)}
+			disabled={disabled}
+			value={value}
+			onChange={(next: Array<T>) => {
+				if (
+					disabled ||
+					(props.maxSelected !== undefined &&
+						next.length > props.maxSelected &&
+						next.length > value.length)
+				)
+					return;
+				onChange(next);
+			}}
+			onClose={() => {
+				if (!tabbing.current)
+					requestAnimationFrame(() => {
+						trigger.current?.focus();
+					});
+				tabbing.current = false;
+			}}
+		>
+			{({ open }) => (
+				<>
+					<div
+						className={joinClassNames(
+							"relative min-h-11 rounded-lg border px-4 py-2 text-sm focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-ink-blue-500",
+							disabled
+								? "cursor-not-allowed border-neutral-400 bg-neutral-200 text-neutral-500"
+								: joinClassNames(
+										"bg-white text-ink-blue-900",
+										props.status
+											? statusClasses[props.status]
+											: "border-neutral-400 focus-within:border-ink-blue-900"
+									),
+							props.className
+						)}
+					>
+						<ComboboxButton
+							ref={(element) => {
+								trigger.current = element;
+								if (typeof props.ref === "function") return props.ref(element);
+								if (props.ref) props.ref.current = element;
+							}}
+							aria-required={props["aria-required"]}
+							as={ComboboxTrigger}
+							labelledBy={props["aria-labelledby"]}
+							listId={listId}
+							{...validation}
+							aria-controls={open ? listId : undefined}
+							aria-describedby={props["aria-describedby"]}
+							aria-label={props["aria-label"]}
+							aria-labelledby={props["aria-labelledby"]}
+							className="absolute inset-0 flex w-full items-center justify-between gap-3 px-4 text-left"
+							id={props.id}
+							type="button"
+						>
+							<span>{value.length === 0 ? props.placeholder : null}</span>
+							<ChevronDownIcon className="size-5 shrink-0" />
+						</ComboboxButton>
+						{value.length > 0 && (
+							<div className="pointer-events-none relative flex flex-wrap gap-1.5 pr-6 [&_button]:pointer-events-auto">
+								{value.map((option) => (
+									<Token
+										key={getKey(option)}
+										disabled={disabled}
+										label={getLabel(option)}
+										onRemove={() => {
+											onChange(
+												value.filter(
+													(chosen) => getKey(chosen) !== getKey(option)
+												)
+											);
+											trigger.current?.focus();
+										}}
+									/>
+								))}
+							</div>
+						)}
+					</div>
+					<ComboboxOptions
+						portal
+						as={ComboboxPanel}
+						className="flex flex-col overflow-hidden rounded-lg border border-neutral-400 bg-white shadow-sm"
+						modal={false}
+						trigger={trigger}
+					>
+						<ComboboxInput as={Fragment}>
+							<ComboboxSearch
+								ref={focusSearch}
+								aria-controls={listId}
+								aria-label={props.searchPlaceholder}
+								className="h-11 w-full shrink-0 border-b border-neutral-300 px-4 outline-hidden"
+								listId={listId}
+								placeholder={props.searchPlaceholder}
+								value={query}
+								onChange={(event) => {
+									onQueryChange(event.target.value);
+								}}
+								onKeyDown={(event) => {
+									if (event.key === "Tab") {
+										tabbing.current = true;
+										trigger.current?.focus();
+									}
+									if (
+										event.key === " " &&
+										query === "" &&
+										!event.nativeEvent.isComposing
+									) {
+										const activeId = event.currentTarget.getAttribute(
+											"aria-activedescendant"
+										);
+										const active = activeId
+											? event.currentTarget.ownerDocument.getElementById(
+													activeId
+												)
+											: null;
+										if (
+											active &&
+											active.getAttribute("aria-disabled") !== "true"
+										) {
+											event.preventDefault();
+											event.currentTarget.dispatchEvent(
+												new KeyboardEvent("keydown", {
+													key: "Enter",
+													bubbles: true,
+													cancelable: true,
+												})
+											);
+										}
+									}
+									if (
+										event.key === "Backspace" &&
+										query === "" &&
+										value.length > 0 &&
+										!event.nativeEvent.isComposing
+									) {
+										event.preventDefault();
+										onChange(value.slice(0, -1));
+									}
+								}}
+							/>
+						</ComboboxInput>
+						<div
+							aria-label={props["aria-label"]}
+							aria-labelledby={props["aria-labelledby"]}
+							aria-multiselectable="true"
+							className="min-h-0 max-h-60 overflow-y-auto py-1"
+							id={listId}
+							role="listbox"
+						>
+							{options.map((option) => (
+								<ComboboxOption
+									key={getKey(option)}
+									aria-label={getLabel(option)}
+									className="flex min-h-12 cursor-pointer items-center gap-3 px-4 text-sm data-focus:bg-neutral-100 data-disabled:cursor-not-allowed data-disabled:text-neutral-500"
+									value={option}
+									disabled={
+										props.maxSelected !== undefined &&
+										value.length >= props.maxSelected &&
+										!value.some((chosen) => getKey(chosen) === getKey(option))
+									}
+								>
+									{({ selected }) => (
+										<>
+											<span className="min-w-0 flex-1">
+												{props.renderOption?.(option) ?? getLabel(option)}
+											</span>
+											{selected ? (
+												<CheckboxFilledIcon className="size-5" />
+											) : (
+												<CheckboxIcon className="size-5" />
+											)}
+										</>
+									)}
+								</ComboboxOption>
+							))}
+						</div>
+						{(props.loading || options.length === 0) && (
+							<div className="px-4 py-3 text-sm text-neutral-500" role="status">
+								{props.loading
+									? (props.loadingText ?? t("combobox.loading"))
+									: (props.emptyText ?? t("combobox.noResults"))}
+							</div>
+						)}
+						{props.footer && (
+							<div className="border-t border-neutral-300 px-4 py-3 text-xs text-neutral-500">
+								{props.footer}
+							</div>
+						)}
+					</ComboboxOptions>
+				</>
+			)}
+		</HeadlessCombobox>
+	);
+};
