@@ -16,6 +16,16 @@ _Avoid_: Subdomain, company address, URL, slug
 A self-contained area of the product that serves one HR concern, reached from the main navigation. The modules are Dashboard, Scheduling, Leave, People, and Organisation.
 _Avoid_: Section, area, page, workspace
 
+## Organisation
+
+**Branch**:
+A unit of a Company that groups its people, such as one location. A branch is active or inactive, never deleted, and its name is unique within the Company ignoring letter case and extra spaces.
+_Avoid_: Site, outlet, office
+
+**Branch head**:
+A person who leads a Branch on the org chart. An active Branch always has at least one. Being a Branch head does not by itself give a person any permissions.
+_Avoid_: Branch manager, branch owner, branch admin
+
 ## Access
 
 **Onboarding**:
@@ -47,6 +57,18 @@ _Avoid_: Active tenant, selected workspace, current org
 **Select**:
 A form control for choosing one or several values from a fixed list of options.
 _Avoid_: Dropdown, picker
+
+**Combobox**:
+A form control for choosing one or several values by typing to search a list too long to show at once, such as a company's people.
+_Avoid_: Autocomplete, typeahead, picker, Select
+
+**Token**:
+A removable item inside a multi-choice control that shows one chosen value. Removing it un-chooses that value.
+_Avoid_: Chip, pill, tag, Badge
+
+**Dialog**:
+A window over the page that holds one focused task, such as creating a branch, and blocks the page until it is closed.
+_Avoid_: Modal, popup, overlay
 
 ## Indicators
 
