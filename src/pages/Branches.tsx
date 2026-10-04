@@ -1,5 +1,8 @@
 import { useMemo, useState } from "react";
 import { useCan } from "@/features/workspace/useCan";
+import { useQuery } from "@tanstack/react-query";
+import { companyPermissions, workspaceQuery } from "@/features/workspace/api";
+import { CreateBranchDialog } from "@/features/organisation/CreateBranchDialog";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { DataTable, type DataTableSort } from "@/components/ui/DataTable";
@@ -22,6 +25,13 @@ export const Branches = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
 	const { t } = useTranslation();
 	const can = useCan();
+	const [creating, setCreating] = useState(false);
+	const workspace = useQuery(workspaceQuery);
+	const permissions = workspace.data
+		? companyPermissions(workspace.data, companyId)
+		: new Set<string>();
+	const canCreate =
+		permissions.has("branch:create") && permissions.has("company_member:read");
 	const [search, setSearch] = useState("");
 	const [status, setStatus] = useState<StatusFilter>("all");
 	const [sort, setSort] = useState<DataTableSort>({ id: "name", desc: false });
@@ -85,7 +95,23 @@ export const Branches = (): FunctionComponent => {
 					},
 				}}
 				onSearchChange={setSearch}
+				onCreate={
+					canCreate
+						? (): void => {
+								setCreating(true);
+							}
+						: undefined
+				}
 			/>
+			{creating && canCreate && (
+				<CreateBranchDialog
+					key={companyId}
+					companyId={companyId}
+					onClose={() => {
+						setCreating(false);
+					}}
+				/>
+			)}
 			{view.problem ? (
 				<p
 					className="mt-8 text-sm text-neutral-700 data-alert:text-error-700"

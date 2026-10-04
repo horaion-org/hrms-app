@@ -120,6 +120,8 @@ describe("ListToolbar", () => {
 		);
 
 		expect(screen.queryByText("Showing:")).not.toBeInTheDocument();
-		expect(screen.getAllByRole("button")).toHaveLength(1);
+		expect(
+			screen.queryByRole("button", { name: "Create Role" })
+		).not.toBeInTheDocument();
 	});
 });

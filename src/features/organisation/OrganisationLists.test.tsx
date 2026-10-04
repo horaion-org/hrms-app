@@ -122,7 +122,7 @@ describe("Branches", () => {
 			within(table)
 				.getAllByRole("columnheader")
 				.map((header) => header.textContent)
-		).toEqual(["Select all", "Branch Name", "Status", "Actions"]);
+		).toEqual(["Select all", "Branch name", "Status", "Actions"]);
 		expect(
 			bodyRows(table).map(
 				(row) => within(row).getAllByRole("cell")[1]?.textContent
@@ -139,9 +139,11 @@ describe("Branches", () => {
 		).toBeInTheDocument();
 		expect(screen.getByRole("button", { name: "Edit Orchard" })).toBeEnabled();
 		expect(
-			screen.getByRole("searchbox", { name: "Search Branch" })
+			screen.getByRole("searchbox", { name: "Search branch" })
 		).toBeVisible();
-		expect(screen.getByRole("button", { name: "Create Branch" })).toBeVisible();
+		expect(
+			screen.queryByRole("button", { name: "Create branch" })
+		).not.toBeInTheDocument();
 		expect(searchesOf(calls, "/api/v1/companies/c-1/branches")).toEqual([
 			"size=100&sort=name%2Casc",
 		]);
@@ -157,11 +159,11 @@ describe("Branches", () => {
 		await screen.findByText("Main Branch");
 
 		await user.click(
-			screen.getByRole("button", { name: "Sort by Branch Name" })
+			screen.getByRole("button", { name: "Sort by Branch name" })
 		);
 		await waitFor(() =>
 			expect(
-				screen.getByRole("columnheader", { name: /Branch Name/ })
+				screen.getByRole("columnheader", { name: /Branch name/ })
 			).toHaveAttribute("aria-sort", "descending")
 		);
 		await user.click(screen.getByRole("button", { name: "Sort by Status" }));
@@ -195,14 +197,14 @@ describe("Branches", () => {
 		await within(table).findByText("Orchard");
 
 		await user.type(
-			screen.getByRole("searchbox", { name: "Search Branch" }),
+			screen.getByRole("searchbox", { name: "Search branch" }),
 			"  orch "
 		);
 
 		expect(bodyRows(table)).toHaveLength(1);
 		expect(within(table).getByText("Orchard")).toBeVisible();
 		await user.type(
-			screen.getByRole("searchbox", { name: "Search Branch" }),
+			screen.getByRole("searchbox", { name: "Search branch" }),
 			"zzz"
 		);
 		expect(
@@ -319,8 +321,8 @@ describe("Departments", () => {
 			screen.getByRole("searchbox", { name: "Search Department" })
 		).toBeVisible();
 		expect(
-			screen.getByRole("button", { name: "Create Department" })
-		).toBeVisible();
+			screen.queryByRole("button", { name: "Create Department" })
+		).not.toBeInTheDocument();
 		expect(screen.getByRole("button", { name: "Showing:" })).toHaveTextContent(
 			"All Departments"
 		);
@@ -388,7 +390,9 @@ describe("System Roles", () => {
 		).toBeDisabled();
 		expect(screen.getByRole("button", { name: "Edit Manager" })).toBeEnabled();
 		expect(screen.queryByText("Showing:")).not.toBeInTheDocument();
-		expect(screen.getByRole("button", { name: "Create Role" })).toBeVisible();
+		expect(
+			screen.queryByRole("button", { name: "Create Role" })
+		).not.toBeInTheDocument();
 
 		await user.click(
 			screen.getByRole("button", { name: "Sort by System Role" })
@@ -431,8 +435,8 @@ describe("Job Titles", () => {
 			screen.getByRole("searchbox", { name: "Search Job Title" })
 		).toBeVisible();
 		expect(
-			screen.getByRole("button", { name: "Create Job Title" })
-		).toBeVisible();
+			screen.queryByRole("button", { name: "Create Job Title" })
+		).not.toBeInTheDocument();
 		expect(screen.getByRole("button", { name: "Showing:" })).toHaveTextContent(
 			"All Job Titles"
 		);
