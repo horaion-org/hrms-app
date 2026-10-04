@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 
-type Module = "scheduling" | "leave";
+type Module = "scheduling";
 
 const ComingSoon = ({ module }: { module: Module }): FunctionComponent => {
 	const { t } = useTranslation();
@@ -18,5 +18,3 @@ const ComingSoon = ({ module }: { module: Module }): FunctionComponent => {
 export const Scheduling = (): FunctionComponent => (
 	<ComingSoon module="scheduling" />
 );
-
-export const Leave = (): FunctionComponent => <ComingSoon module="leave" />;
