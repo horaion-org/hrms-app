@@ -225,6 +225,8 @@
       "edit": "Edit {{name}}",
       "moreActions": "More actions for {{name}}",
       "editItem": "Edit",
+      "viewItem": "View",
+      "duplicateItem": "Duplicate",
       "activateItem": "Activate",
       "deactivateItem": "Deactivate",
       "deleteItem": "Delete",

@@ -215,26 +215,54 @@ describe("Branches", () => {
 		expect(searchesOf(calls, "/api/v1/companies/c-1/branches")).toHaveLength(1);
 	});
 
-	it("offers each row's more actions without pretending to change status", async () => {
-		const user = userEvent.setup();
-		stubApi({
-			...baseRoutes(),
-			[BRANCHES]: pageReply([branch("b-1", "Main Branch")]),
-		});
-		await open("/organisation/branches");
+	it.each([
+		{ status: "ACTIVE", statusAction: "Deactivate" },
+		{ status: "INACTIVE", statusAction: "Activate" },
+	])(
+		"offers disabled secondary actions for a $status branch without repeating Edit",
+		async ({ status, statusAction }) => {
+			const user = userEvent.setup();
+			const calls = stubApi({
+				...baseRoutes(),
+				[BRANCHES]: pageReply([branch("b-1", "Main Branch", status)]),
+			});
+			await open("/organisation/branches");
 
-		await user.click(
-			await screen.findByRole("button", {
+			const trigger = await screen.findByRole("button", {
 				name: "More actions for Main Branch",
-			})
-		);
+			});
+			expect(
+				screen.getByRole("button", { name: "Edit Main Branch" })
+			).toBeEnabled();
+			await user.click(trigger);
 
-		const menu = screen.getByRole("menu");
-		expect(within(menu).getByRole("menuitem", { name: "Edit" })).toBeEnabled();
-		expect(
-			within(menu).getByRole("menuitem", { name: "Deactivate" })
-		).toHaveAttribute("aria-disabled", "true");
-	});
+			const menu = screen.getByRole("menu");
+			const items = within(menu).getAllByRole("menuitem");
+			expect(items.map((item) => item.textContent)).toEqual([
+				"View",
+				"Duplicate",
+				statusAction,
+			]);
+			expect(
+				within(menu).queryByRole("menuitem", { name: "Edit" })
+			).not.toBeInTheDocument();
+			const callCount = calls.length;
+			for (const item of items)
+				expect(item).toHaveAttribute("aria-disabled", "true");
+			await user.click(within(menu).getByRole("menuitem", { name: "View" }));
+			await user.click(
+				within(menu).getByRole("menuitem", { name: "Duplicate" })
+			);
+			await user.click(
+				within(menu).getByRole("menuitem", { name: statusAction })
+			);
+			expect(calls).toHaveLength(callCount);
+			expect(menu).toBeVisible();
+			await user.keyboard("{Escape}");
+			expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+			expect(trigger).toHaveFocus();
+		}
+	);
 
 	it("says when there are no branches yet", async () => {
 		stubApi({ ...baseRoutes(), [BRANCHES]: pageReply([]) });

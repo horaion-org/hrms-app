@@ -38733,6 +38733,7 @@ describe("Branches", () => {
 		expect(searchesOf(calls, "/api/v1/companies/c-1/branches")).toHaveLength(1);
 	});
 
+<<<<<<< Updated upstream
 	it("offers each row's more actions without pretending to change status", async () => {
 		const user = userEvent.setup();
 		stubApi({
@@ -38753,6 +38754,56 @@ describe("Branches", () => {
 			within(menu).getByRole("menuitem", { name: "Deactivate" })
 		).toHaveAttribute("aria-disabled", "true");
 	});
+=======
+	it.each([
+		{ status: "ACTIVE", statusAction: "Deactivate" },
+		{ status: "INACTIVE", statusAction: "Activate" },
+	])(
+		"offers disabled secondary actions for a $status branch without repeating Edit",
+		async ({ status, statusAction }) => {
+			const user = userEvent.setup();
+			const calls = stubApi({
+				...baseRoutes(),
+				[BRANCHES]: pageReply([branch("b-1", "Main Branch", status)]),
+			});
+			await open("/organisation/branches");
+
+			const trigger = await screen.findByRole("button", {
+				name: "More actions for Main Branch",
+			});
+			expect(
+				screen.getByRole("button", { name: "Edit Main Branch" })
+			).toBeEnabled();
+			await user.click(trigger);
+
+			const menu = screen.getByRole("menu");
+			const items = within(menu).getAllByRole("menuitem");
+			expect(items.map((item) => item.textContent)).toEqual([
+				"View",
+				"Duplicate",
+				statusAction,
+			]);
+			expect(
+				within(menu).queryByRole("menuitem", { name: "Edit" })
+			).not.toBeInTheDocument();
+			const callCount = calls.length;
+			for (const item of items)
+				expect(item).toHaveAttribute("aria-disabled", "true");
+			await user.click(within(menu).getByRole("menuitem", { name: "View" }));
+			await user.click(
+				within(menu).getByRole("menuitem", { name: "Duplicate" })
+			);
+			await user.click(
+				within(menu).getByRole("menuitem", { name: statusAction })
+			);
+			expect(calls).toHaveLength(callCount);
+			expect(menu).toBeVisible();
+			await user.keyboard("{Escape}");
+			expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+			expect(trigger).toHaveFocus();
+		}
+	);
+>>>>>>> Stashed changes
 
 	it("says when there are no branches yet", async () => {
 		stubApi({ ...baseRoutes(), [BRANCHES]: pageReply([]) });
@@ -39066,7 +39117,16 @@ export const Branches = (): FunctionComponent => {
 			statusColumn<Branch>(t),
 			actionsColumn<Branch>(t, (branch) => (
 				<>
+<<<<<<< Updated upstream
 					<OverflowMenuItem>{t("organisation.list.editItem")}</OverflowMenuItem>
+=======
+					<OverflowMenuItem disabled>
+						{t("organisation.list.viewItem")}
+					</OverflowMenuItem>
+					<OverflowMenuItem disabled>
+						{t("organisation.list.duplicateItem")}
+					</OverflowMenuItem>
+>>>>>>> Stashed changes
 					<OverflowMenuItem disabled>
 						{t(
 							branch.status === "ACTIVE"
@@ -41115,7 +41175,10 @@ export const Home = (): FunctionComponent => {
     "preview": "vite preview"
   },
   "dependencies": {
+<<<<<<< Updated upstream
     "@fontsource-variable/manrope": "^5.3.0",
+=======
+>>>>>>> Stashed changes
     "@headlessui/react": "^2.2.10",
     "@hookform/resolvers": "^5.9.1",
     "@nivo/bar": "^0.99.0",
@@ -42912,6 +42975,8 @@ export const routeTree = rootRouteImport
       "edit": "Edit {{name}}",
       "moreActions": "More actions for {{name}}",
       "editItem": "Edit",
+      "viewItem": "View",
+      "duplicateItem": "Duplicate",
       "activateItem": "Activate",
       "deactivateItem": "Deactivate",
       "deleteItem": "Delete",
