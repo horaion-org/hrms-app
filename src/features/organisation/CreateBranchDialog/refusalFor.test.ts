@@ -61,6 +61,20 @@ describe("create branch refusal mapping", () => {
 		}
 	);
 
+	it("maps a city field refusal to frontend copy only", () => {
+		expect(
+			refusalFor(
+				problem(400, "VALIDATION_ERROR", [
+					{ field: "city", message: "Private server wording" },
+				]),
+				{ name: "Orchard", code: "ORC" },
+				t
+			)
+		).toEqual({
+			fields: { city: "Check the city and try again." },
+			refreshMembers: false,
+		});
+	});
 	it("marks stale heads and asks for fresh options", () => {
 		expect(
 			refusalFor(

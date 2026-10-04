@@ -9,7 +9,12 @@ describe("create branch validation", () => {
 		"accepts allowed Unicode names: %s",
 		(name) => {
 			expect(
-				schema.safeParse({ name, code: "ORC", heads: [head] }).success
+				schema.safeParse({
+					name,
+					code: "ORC",
+					city: "Singapore",
+					heads: [head],
+				}).success
 			).toBe(true);
 		}
 	);
@@ -17,18 +22,29 @@ describe("create branch validation", () => {
 		"rejects invalid names: %s",
 		(name) => {
 			expect(
-				schema.safeParse({ name, code: "ORC", heads: [head] }).success
+				schema.safeParse({
+					name,
+					code: "ORC",
+					city: "Singapore",
+					heads: [head],
+				}).success
 			).toBe(false);
 		}
 	);
 	it("requires one to twenty heads", () => {
 		expect(
-			schema.safeParse({ name: "Orchard", code: "ORC", heads: [] }).success
+			schema.safeParse({
+				name: "Orchard",
+				code: "ORC",
+				city: "Singapore",
+				heads: [],
+			}).success
 		).toBe(false);
 		expect(
 			schema.safeParse({
 				name: "Orchard",
 				code: "ORC",
+				city: "Singapore",
 				heads: Array.from({ length: 20 }, () => head),
 			}).success
 		).toBe(true);
@@ -36,6 +52,7 @@ describe("create branch validation", () => {
 			schema.safeParse({
 				name: "Orchard",
 				code: "ORC",
+				city: "Singapore",
 				heads: Array.from({ length: 21 }, () => head),
 			}).success
 		).toBe(false);

@@ -33,9 +33,11 @@ export const CreateBranchDialog = ({
 	const formId = useId();
 	const nameId = `${formId}-name`,
 		codeId = `${formId}-code`,
+		cityId = `${formId}-city`,
 		headsId = `${formId}-heads`;
 	const nameIds = formRowIds(nameId),
 		codeIds = formRowIds(codeId),
+		cityIds = formRowIds(cityId),
 		headsIds = formRowIds(headsId);
 	const schema = useMemo(() => createBranchSchema(t), [t]);
 	const {
@@ -48,18 +50,19 @@ export const CreateBranchDialog = ({
 		formState: { errors, isSubmitting },
 	} = useForm<CreateBranchValues>({
 		resolver: zodResolver(schema),
-		defaultValues: { name: "", code: "", heads: [] },
+		defaultValues: { name: "", code: "", city: "", heads: [] },
 		mode: "onSubmit",
 		reValidateMode: "onChange",
 	});
 	const name = useWatch({ control, name: "name" });
 	const code = useWatch({ control, name: "code" });
+	const city = useWatch({ control, name: "city" });
 	const heads = useWatch({ control, name: "heads" });
 	const [query, setQuery] = useState("");
 	const members = useCompanyMemberSearch(companyId, query);
 	const create = useCreateBranch(companyId);
 	const [message, setMessage] = useState<string>();
-	const refusedField = useRef<"name" | "code" | "heads" | null>(null);
+	const refusedField = useRef<"name" | "code" | "city" | "heads" | null>(null);
 	const alert = useRef<HTMLParagraphElement>(null);
 	const inFlight = useRef(false);
 	useEffect(() => {
@@ -85,6 +88,7 @@ export const CreateBranchDialog = ({
 			await create.mutateAsync({
 				name: values.name,
 				code: values.code,
+				city: values.city,
 				initialHeadCompanyMembershipIds: values.heads.map(
 					(head) => head.membershipId
 				),
@@ -97,15 +101,22 @@ export const CreateBranchDialog = ({
 				setError("code", { type: "server", message: refusal.fields.code });
 			if (refusal.fields.name)
 				setError("name", { type: "server", message: refusal.fields.name });
+			if (refusal.fields.city)
+				setError("city", { type: "server", message: refusal.fields.city });
 			if (refusal.fields.heads)
-				setError("heads", { type: "server", message: refusal.fields.heads });
+				setError("heads", {
+					type: "server",
+					message: refusal.fields.heads,
+				});
 			refusedField.current = refusal.fields.name
 				? "name"
 				: refusal.fields.code
 					? "code"
-					: refusal.fields.heads
-						? "heads"
-						: null;
+					: refusal.fields.city
+						? "city"
+						: refusal.fields.heads
+							? "heads"
+							: null;
 			setMessage(refusal.message);
 			if (refusal.refreshMembers) void members.refetch();
 		} finally {
@@ -124,10 +135,12 @@ export const CreateBranchDialog = ({
 						{t(`${key}.cancel`)}
 					</Button>
 					<Button
-						disabled={!name.trim() && !code.trim() && heads.length === 0}
 						form={formId}
 						loading={isSubmitting}
 						type="submit"
+						disabled={
+							!name.trim() && !code.trim() && !city.trim() && heads.length === 0
+						}
 					>
 						{t(`${key}.submit`)}
 					</Button>
@@ -202,10 +215,33 @@ export const CreateBranchDialog = ({
 								aria-describedby={
 									errors.code ? codeIds.errorId : codeIds.hintId
 								}
-								onChange={(event) => { field.onChange(event.target.value.toUpperCase()); }
-								}
+								onChange={(event) => {
+									field.onChange(event.target.value.toUpperCase());
+								}}
 							/>
 						)}
+					/>
+				</FormRow>
+				<FormRow
+					required
+					counter={t(`${key}.cityCounter`, { count: [...city].length })}
+					error={errors.city?.message}
+					hint={t(`${key}.cityHint`)}
+					htmlFor={cityId}
+					label={t(`${key}.city`)}
+					layout="stacked"
+				>
+					<Input
+						required
+						aria-describedby={errors.city ? cityIds.errorId : cityIds.hintId}
+						aria-invalid={Boolean(errors.city)}
+						aria-label={t(`${key}.city`)}
+						className="w-full"
+						disabled={isSubmitting}
+						id={cityId}
+						placeholder={t(`${key}.cityPlaceholder`)}
+						status={errors.city ? "error" : undefined}
+						{...register("city")}
 					/>
 				</FormRow>
 				<FormRow

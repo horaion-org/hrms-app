@@ -79,6 +79,7 @@ const branch = (
 	companyId: "c-1",
 	name,
 	code: "SG-ORC-01",
+	city: "Singapore",
 	status,
 	headMembershipIds: [],
 });
@@ -123,7 +124,14 @@ describe("Branches", () => {
 			within(table)
 				.getAllByRole("columnheader")
 				.map((header) => header.textContent)
-		).toEqual(["Select all", "Branch name", "Code", "Status", "Actions"]);
+		).toEqual([
+			"Select all",
+			"Branch name",
+			"Code",
+			"City",
+			"Status",
+			"Actions",
+		]);
 		expect(
 			within(bodyRows(table)[0] as HTMLElement).getByText("SG-ORC-01")
 		).toBeVisible();
@@ -166,16 +174,18 @@ describe("Branches", () => {
 		const table = await screen.findByRole("table", { name: "Branches" });
 		await within(table).findByText("Orchard");
 		await user.click(screen.getByRole("button", { name: "Sort by Code" }));
-		await waitFor(() => { expect(searchesOf(calls, "/api/v1/companies/c-1/branches")).toEqual([
+		await waitFor(() => {
+			expect(searchesOf(calls, "/api/v1/companies/c-1/branches")).toEqual([
 				"size=100&sort=name%2Casc",
 				"size=100&sort=code%2Casc",
-			]); }
-		);
+			]);
+		});
 		await user.click(screen.getByRole("button", { name: "Sort by Code" }));
-		await waitFor(() => { expect(searchesOf(calls, "/api/v1/companies/c-1/branches")).toHaveLength(
+		await waitFor(() => {
+			expect(searchesOf(calls, "/api/v1/companies/c-1/branches")).toHaveLength(
 				3
-			); }
-		);
+			);
+		});
 		expect(searchesOf(calls, "/api/v1/companies/c-1/branches")[2]).toBe(
 			"size=100&sort=code%2Cdesc"
 		);
@@ -186,6 +196,38 @@ describe("Branches", () => {
 		expect(bodyRows(table)).toHaveLength(1);
 		expect(within(table).getByText("Orchard")).toBeVisible();
 		expect(within(table).queryByText("Main Branch")).not.toBeInTheDocument();
+		expect(searchesOf(calls, "/api/v1/companies/c-1/branches")).toHaveLength(3);
+	});
+
+	it("shows City after Code, sorts it on the server and never searches by city", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...baseRoutes(),
+			[BRANCHES]: pageReply([branch("b-1", "Orchard")]),
+		});
+		await open("/organisation/branches");
+		const table = await screen.findByRole("table", { name: "Branches" });
+		expect(await within(table).findByText("Singapore")).toBeVisible();
+		await user.click(screen.getByRole("button", { name: "Sort by City" }));
+		await waitFor(() => {
+			expect(searchesOf(calls, "/api/v1/companies/c-1/branches")).toContain(
+				"size=100&sort=city%2Casc"
+			);
+		});
+		await user.click(screen.getByRole("button", { name: "Sort by City" }));
+		await waitFor(() => {
+			expect(searchesOf(calls, "/api/v1/companies/c-1/branches")).toContain(
+				"size=100&sort=city%2Cdesc"
+			);
+		});
+		await user.type(
+			screen.getByRole("searchbox", { name: "Search branch" }),
+			"singapore"
+		);
+		expect(
+			within(table).getByText("Nothing matches your search or filter.")
+		).toBeVisible();
+		expect(within(table).queryByText("Orchard")).not.toBeInTheDocument();
 		expect(searchesOf(calls, "/api/v1/companies/c-1/branches")).toHaveLength(3);
 	});
 
