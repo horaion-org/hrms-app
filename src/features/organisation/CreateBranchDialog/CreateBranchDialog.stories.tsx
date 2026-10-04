@@ -40,6 +40,16 @@ const meta = {
 		globalThis.fetch = (input, init): Promise<Response> => {
 			if (init?.method === "POST") {
 				if (parameters["pending"]) return new Promise<Response>(() => {});
+				if (parameters["codeConflict"])
+					return Promise.resolve(
+						new Response(
+							JSON.stringify({
+								status: 409,
+								errorCode: "BRANCH_CODE_CONFLICT",
+							}),
+							{ status: 409, headers: { "Content-Type": "application/json" } }
+						)
+					);
 				return Promise.resolve(
 					new Response(
 						JSON.stringify({ status: 500, errorCode: "INTERNAL_ERROR" }),
@@ -82,6 +92,7 @@ const fill = async (body: HTMLElement): Promise<void> => {
 		await page.findByLabelText("Branch name"),
 		"Orchard Road"
 	);
+	await userEvent.type(page.getByLabelText("Branch code"), "orc");
 	await userEvent.click(page.getByLabelText("Branch heads"));
 	await userEvent.click(
 		await page.findByRole("option", { name: "Marcus Lim" })
@@ -107,6 +118,7 @@ export const ChoosingHeads: Story = {
 			await page.findByLabelText("Branch name"),
 			"Orchard Road"
 		);
+		await userEvent.type(page.getByLabelText("Branch code"), "orc");
 		await userEvent.click(page.getByLabelText("Branch heads"));
 	},
 };
@@ -127,3 +139,27 @@ export const Submitting: Story = {
 	},
 };
 export const FormError: Story = { play: Submitting.play };
+
+export const CodeEntered: Story = {
+	play: async ({ canvasElement }) => {
+		await userEvent.type(
+			await within(canvasElement.ownerDocument.body).findByLabelText(
+				"Branch code"
+			),
+			"sg-orc-01"
+		);
+	},
+};
+export const CodeConflict: Story = {
+	parameters: { codeConflict: true },
+	play: Submitting.play,
+};
+export const CodeValidation: Story = {
+	play: async ({ canvasElement }) => {
+		const page = within(canvasElement.ownerDocument.body);
+		await fill(canvasElement.ownerDocument.body);
+		await userEvent.clear(page.getByLabelText("Branch code"));
+		await userEvent.type(page.getByLabelText("Branch code"), "invalid_");
+		await userEvent.click(page.getByRole("button", { name: "Create branch" }));
+	},
+};

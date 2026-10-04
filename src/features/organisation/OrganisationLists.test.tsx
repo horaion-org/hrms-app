@@ -78,6 +78,7 @@ const branch = (
 	branchId,
 	companyId: "c-1",
 	name,
+	code: "SG-ORC-01",
 	status,
 	headMembershipIds: [],
 });
@@ -122,7 +123,10 @@ describe("Branches", () => {
 			within(table)
 				.getAllByRole("columnheader")
 				.map((header) => header.textContent)
-		).toEqual(["Select all", "Branch name", "Status", "Actions"]);
+		).toEqual(["Select all", "Branch name", "Code", "Status", "Actions"]);
+		expect(
+			within(bodyRows(table)[0] as HTMLElement).getByText("SG-ORC-01")
+		).toBeVisible();
 		expect(
 			bodyRows(table).map(
 				(row) => within(row).getAllByRole("cell")[1]?.textContent
@@ -147,6 +151,42 @@ describe("Branches", () => {
 		expect(searchesOf(calls, "/api/v1/companies/c-1/branches")).toEqual([
 			"size=100&sort=name%2Casc",
 		]);
+	});
+
+	it("sorts codes on the server and searches loaded rows by code without another request", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...baseRoutes(),
+			[BRANCHES]: pageReply([
+				{ ...branch("b-1", "Main Branch"), code: "MAIN" },
+				branch("b-2", "Orchard"),
+			]),
+		});
+		await open("/organisation/branches");
+		const table = await screen.findByRole("table", { name: "Branches" });
+		await within(table).findByText("Orchard");
+		await user.click(screen.getByRole("button", { name: "Sort by Code" }));
+		await waitFor(() => { expect(searchesOf(calls, "/api/v1/companies/c-1/branches")).toEqual([
+				"size=100&sort=name%2Casc",
+				"size=100&sort=code%2Casc",
+			]); }
+		);
+		await user.click(screen.getByRole("button", { name: "Sort by Code" }));
+		await waitFor(() => { expect(searchesOf(calls, "/api/v1/companies/c-1/branches")).toHaveLength(
+				3
+			); }
+		);
+		expect(searchesOf(calls, "/api/v1/companies/c-1/branches")[2]).toBe(
+			"size=100&sort=code%2Cdesc"
+		);
+		await user.type(
+			screen.getByRole("searchbox", { name: "Search branch" }),
+			"  sg-orc "
+		);
+		expect(bodyRows(table)).toHaveLength(1);
+		expect(within(table).getByText("Orchard")).toBeVisible();
+		expect(within(table).queryByText("Main Branch")).not.toBeInTheDocument();
+		expect(searchesOf(calls, "/api/v1/companies/c-1/branches")).toHaveLength(3);
 	});
 
 	it("asks the server for the chosen sort and status", async () => {
