@@ -2,7 +2,7 @@ import type { TFunction } from "i18next";
 import { ApiProblemError } from "@/common/problem";
 
 export type Refusal = {
-	fields: { name?: string; heads?: string };
+	fields: { name?: string; code?: string; heads?: string };
 	message?: string;
 	refreshMembers: boolean;
 };
@@ -10,7 +10,7 @@ export type Refusal = {
 /** Server codes select frontend-owned copy; untrusted server prose is never displayed. */
 export const refusalFor = (
 	error: unknown,
-	name: string,
+	{ name, code }: { name: string; code: string },
 	t: TFunction
 ): Refusal => {
 	const key = "organisation.branches.createDialog";
@@ -18,6 +18,11 @@ export const refusalFor = (
 		if (error.status === 409 && error.errorCode === "BRANCH_NAME_CONFLICT")
 			return {
 				fields: { name: t(`${key}.nameConflict`, { name }) },
+				refreshMembers: false,
+			};
+		if (error.status === 409 && error.errorCode === "BRANCH_CODE_CONFLICT")
+			return {
+				fields: { code: t(`${key}.codeConflict`, { code }) },
 				refreshMembers: false,
 			};
 		if (
@@ -32,10 +37,12 @@ export const refusalFor = (
 			const fields: Refusal["fields"] = {};
 			for (const { field } of error.fieldErrors) {
 				if (field === "name") fields.name = t(`${key}.nameRejected`);
+				if (field === "code") fields.code = t(`${key}.codeRejected`);
 				if (field === "initialHeadCompanyMembershipIds")
 					fields.heads = t(`${key}.headsRejected`);
 			}
-			if (fields.name || fields.heads) return { fields, refreshMembers: false };
+			if (fields.name || fields.code || fields.heads)
+				return { fields, refreshMembers: false };
 		}
 		if (error.status === 403)
 			return {

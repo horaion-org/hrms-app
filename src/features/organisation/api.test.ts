@@ -27,6 +27,7 @@ describe("create branch client", () => {
 				body: envelope({
 					branchId: "b-1",
 					name: "Orchard Road",
+					code: "ORC",
 					status: "ACTIVE",
 				}),
 			},
@@ -34,15 +35,18 @@ describe("create branch client", () => {
 		await expect(
 			createBranch("c-1", {
 				name: "  Orchard Road  ",
+				code: "  orc  ",
 				initialHeadCompanyMembershipIds: ["m-1"],
 			})
 		).resolves.toEqual({
 			branchId: "b-1",
 			name: "Orchard Road",
+			code: "ORC",
 			status: "ACTIVE",
 		});
 		expect(calls[0]?.body).toEqual({
 			name: "Orchard Road",
+			code: "ORC",
 			initialHeadCompanyMembershipIds: ["m-1"],
 		});
 	});
@@ -51,12 +55,18 @@ describe("create branch client", () => {
 		stubApi({
 			"POST /api/v1/companies/c-1/branches": {
 				status: 201,
-				body: envelope({ branchId: "b-1", name: "Orchard", status: "UNKNOWN" }),
+				body: envelope({
+					branchId: "b-1",
+					name: "Orchard",
+					code: "ORC",
+					status: "UNKNOWN",
+				}),
 			},
 		});
 		await expect(
 			createBranch("c-1", {
 				name: "Orchard",
+				code: "ORC",
 				initialHeadCompanyMembershipIds: ["m-1"],
 			})
 		).rejects.toBeInstanceOf(UnexpectedResponseError);
@@ -72,6 +82,7 @@ describe("create branch client", () => {
 		await expect(
 			createBranch("c-1", {
 				name: "Orchard",
+				code: "ORC",
 				initialHeadCompanyMembershipIds: ["m-1"],
 			})
 		).rejects.toBeInstanceOf(ApiProblemError);

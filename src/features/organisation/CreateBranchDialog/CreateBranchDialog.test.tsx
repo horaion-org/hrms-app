@@ -26,7 +26,12 @@ const member = {
 	displayName: "Marcus Lim",
 	status: "ACTIVE",
 };
-const branch = { branchId: "b-1", name: "Orchard Road", status: "ACTIVE" };
+const branch = {
+	branchId: "b-1",
+	name: "Orchard Road",
+	code: "ORC",
+	status: "ACTIVE",
+};
 const page = (
 	content: Array<unknown>,
 	totalElements = content.length
@@ -80,6 +85,7 @@ const fill = async (
 ): Promise<void> => {
 	const user = userEvent.setup();
 	await user.type(within(dialog).getByLabelText("Branch name"), name);
+	await user.type(within(dialog).getByLabelText("Branch code"), "  orc  ");
 	await user.click(within(dialog).getByLabelText("Branch heads"));
 	await user.click(await screen.findByRole("option", { name: "Marcus Lim" }));
 	await user.keyboard("{Escape}");
@@ -121,6 +127,7 @@ describe("create branch through the Branches page", () => {
 		expect(screen.getByRole("button", { name: "Create branch" })).toHaveFocus();
 		const fresh = await openDialog();
 		expect(within(fresh).getByLabelText("Branch name")).toHaveValue("");
+		expect(within(fresh).getByLabelText("Branch code")).toHaveValue("");
 	});
 	it("validates missing heads only on submit and clears the error after choosing one", async () => {
 		stubApi(routes());
@@ -147,6 +154,52 @@ describe("create branch through the Branches page", () => {
 			).not.toBeInTheDocument();
 		});
 	});
+	it.each([
+		["", "Enter a branch code."],
+		["abcdefghijk", "Use 1 to 10 characters."],
+		["or c", "Use only letters A–Z, numbers and hyphens in the code."],
+		["or_c", "Use only letters A–Z, numbers and hyphens in the code."],
+	])(
+		"validates code %j on submit then revalidates on change",
+		async (value, message) => {
+			const calls = stubApi(routes());
+			await open();
+			const dialog = await openDialog();
+			await fill(dialog);
+			const code = within(dialog).getByLabelText("Branch code");
+			await userEvent.clear(code);
+			if (value) await userEvent.type(code, value);
+			expect(within(dialog).queryByRole("alert")).not.toBeInTheDocument();
+			await userEvent.click(
+				within(dialog).getByRole("button", { name: "Create branch" })
+			);
+			expect(await within(dialog).findByText(message)).toBeVisible();
+			expect(code).toHaveFocus();
+			expect(
+				calls.some(
+					(call) => call.method === "POST" && call.path.endsWith("/branches")
+				)
+			).toBe(false);
+			await userEvent.clear(code);
+			await userEvent.type(code, "sg-orch-01");
+			await waitFor(() =>
+				expect(code).toHaveAttribute("aria-invalid", "false")
+			);
+			expect(code).toHaveValue("SG-ORCH-01");
+			expect(within(dialog).getByText("10/10")).toBeVisible();
+		}
+	);
+
+	it("enables submit when only code has a value", async () => {
+		stubApi(routes());
+		await open();
+		const dialog = await openDialog();
+		await userEvent.type(within(dialog).getByLabelText("Branch code"), "0001");
+		expect(
+			within(dialog).getByRole("button", { name: "Create branch" })
+		).toBeEnabled();
+	});
+
 	it("creates a trimmed branch, closes, and refetches the visible list", async () => {
 		const calls = stubApi({
 			...routes(),
@@ -155,6 +208,18 @@ describe("create branch through the Branches page", () => {
 		await open();
 		const dialog = await openDialog();
 		await fill(dialog, "  Orchard Road  ");
+		const code = within(dialog).getByLabelText("Branch code");
+		expect(code).toBeRequired();
+		expect(code).toHaveValue("  ORC  ");
+		expect(code).toHaveAccessibleDescription(
+			"1–10 characters. Letters A–Z, numbers and hyphens only."
+		);
+		expect(within(dialog).getByText("7/10")).toBeVisible();
+		expect(
+			within(dialog)
+				.getAllByRole("textbox")
+				.map((input) => input.getAttribute("aria-label"))
+		).toEqual(["Branch name", "Branch code"]);
 		await userEvent.click(
 			within(dialog).getByRole("button", { name: "Create branch" })
 		);
@@ -168,6 +233,7 @@ describe("create branch through the Branches page", () => {
 			)?.body
 		).toEqual({
 			name: "Orchard Road",
+			code: "ORC",
 			initialHeadCompanyMembershipIds: ["m-1"],
 		});
 	});
@@ -200,6 +266,58 @@ describe("create branch through the Branches page", () => {
 			within(dialog).getByRole("button", { name: "Remove Marcus Lim" })
 		).toBeVisible();
 	});
+	it.each([
+		{
+			status: 409,
+			errorCode: "BRANCH_CODE_CONFLICT",
+			errors: [],
+			message:
+				'A branch with code "ORC" already exists. Choose a different code.',
+		},
+		{
+			status: 400,
+			errorCode: "VALIDATION_ERROR",
+			errors: [{ field: "code", message: "Private server wording" }],
+			message: "Check the branch code and try again.",
+		},
+	])(
+		"retains all inputs and focuses code on $status refusal",
+		async ({ status, errorCode, errors, message }) => {
+			stubApi({
+				...routes(),
+				[CREATE]: {
+					status,
+					body: { status, errorCode, detail: "Private server wording", errors },
+				},
+			});
+			await open();
+			const dialog = await openDialog();
+			await fill(dialog);
+			await userEvent.click(
+				within(dialog).getByRole("button", { name: "Create branch" })
+			);
+			expect(await within(dialog).findByText(message)).toBeVisible();
+			await waitFor(() =>
+				expect(within(dialog).getByLabelText("Branch code")).toHaveFocus()
+			);
+			expect(within(dialog).getByLabelText("Branch code")).toHaveValue(
+				"  ORC  "
+			);
+			expect(
+				within(dialog).getByLabelText("Branch code")
+			).toHaveAccessibleDescription(message);
+			expect(within(dialog).getByLabelText("Branch name")).toHaveValue(
+				"Orchard Road"
+			);
+			expect(
+				within(dialog).getByRole("button", { name: "Remove Marcus Lim" })
+			).toBeVisible();
+			expect(
+				within(dialog).queryByText("Private server wording")
+			).not.toBeInTheDocument();
+		}
+	);
+
 	it("locks fields and all close paths while submitting", async () => {
 		stubApi(routes());
 		const fetchBefore = globalThis.fetch;
@@ -225,6 +343,7 @@ describe("create branch through the Branches page", () => {
 		});
 		expect(pending).toHaveAttribute("aria-busy", "true");
 		expect(within(dialog).getByLabelText("Branch name")).toBeDisabled();
+		expect(within(dialog).getByLabelText("Branch code")).toBeDisabled();
 		expect(within(dialog).getByLabelText("Branch heads")).toBeDisabled();
 		expect(
 			within(dialog).getByRole("button", { name: "Cancel" })

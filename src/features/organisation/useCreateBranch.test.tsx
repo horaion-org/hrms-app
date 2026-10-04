@@ -23,7 +23,12 @@ it("invalidates this company's lists and overview without invalidating another c
 	stubApi({
 		"POST /api/v1/companies/c-1/branches": {
 			status: 201,
-			body: envelope({ branchId: "b-1", name: "Orchard", status: "ACTIVE" }),
+			body: envelope({
+				branchId: "b-1",
+				name: "Orchard",
+				code: "ORC",
+				status: "ACTIVE",
+			}),
 		},
 	});
 	const client = new QueryClient();
@@ -45,6 +50,7 @@ it("invalidates this company's lists and overview without invalidating another c
 	await act(async () => {
 		await result.current.mutateAsync({
 			name: "Orchard",
+			code: "ORC",
 			initialHeadCompanyMembershipIds: ["m-1"],
 		});
 	});

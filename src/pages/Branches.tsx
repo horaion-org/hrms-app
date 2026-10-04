@@ -13,6 +13,7 @@ import {
 	actionsColumn,
 	describeList,
 	isStatusFilter,
+	matchesSearch,
 	nameColumn,
 	statusColumn,
 	statusFilterOptions,
@@ -44,11 +45,19 @@ export const Branches = (): FunctionComponent => {
 		search,
 		status !== "all",
 		t("organisation.branches.empty"),
-		t
+		t,
+		(branch, query) =>
+			matchesSearch(branch.name, query) || matchesSearch(branch.code, query)
 	);
 	const columns = useMemo(
 		() => [
 			nameColumn<Branch>(t("organisation.branches.name")),
+			{
+				id: "code",
+				header: t("organisation.branches.code"),
+				cell: (branch: Branch): string => branch.code,
+				sortValue: (branch: Branch): string => branch.code,
+			},
 			statusColumn<Branch>(t),
 			actionsColumn<Branch>(
 				t,

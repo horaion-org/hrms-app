@@ -8,28 +8,34 @@ describe("create branch validation", () => {
 	it.each(["Orchard Road", "École & Sons", "東京 2", "O'Neill-West."])(
 		"accepts allowed Unicode names: %s",
 		(name) => {
-			expect(schema.safeParse({ name, heads: [head] }).success).toBe(true);
+			expect(
+				schema.safeParse({ name, code: "ORC", heads: [head] }).success
+			).toBe(true);
 		}
 	);
 	it.each([" ", " A ", "Invalid_", "x".repeat(101)])(
 		"rejects invalid names: %s",
 		(name) => {
-			expect(schema.safeParse({ name, heads: [head] }).success).toBe(false);
+			expect(
+				schema.safeParse({ name, code: "ORC", heads: [head] }).success
+			).toBe(false);
 		}
 	);
 	it("requires one to twenty heads", () => {
-		expect(schema.safeParse({ name: "Orchard", heads: [] }).success).toBe(
-			false
-		);
+		expect(
+			schema.safeParse({ name: "Orchard", code: "ORC", heads: [] }).success
+		).toBe(false);
 		expect(
 			schema.safeParse({
 				name: "Orchard",
+				code: "ORC",
 				heads: Array.from({ length: 20 }, () => head),
 			}).success
 		).toBe(true);
 		expect(
 			schema.safeParse({
 				name: "Orchard",
+				code: "ORC",
 				heads: Array.from({ length: 21 }, () => head),
 			}).success
 		).toBe(false);

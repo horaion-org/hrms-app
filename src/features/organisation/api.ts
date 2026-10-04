@@ -71,6 +71,7 @@ export type UnitStatus = z.infer<typeof unitStatusSchema>;
 const branchSchema = z.object({
 	branchId: z.string(),
 	name: z.string(),
+	code: z.string(),
 	status: unitStatusSchema,
 });
 
@@ -78,6 +79,7 @@ export type Branch = z.infer<typeof branchSchema>;
 
 export type CreateBranchBody = {
 	name: string;
+	code: string;
 	initialHeadCompanyMembershipIds: Array<string>;
 };
 
@@ -88,7 +90,11 @@ export const createBranch = (
 ): Promise<Branch> =>
 	apiRequest(`${companyPath(companyId)}/branches`, branchSchema, {
 		method: "POST",
-		body: { ...body, name: body.name.trim() },
+		body: {
+			...body,
+			name: body.name.trim(),
+			code: body.code.trim().toUpperCase(),
+		},
 	});
 
 const departmentSchema = z.object({
@@ -169,7 +175,7 @@ export const searchCompanyMembers = (
 	);
 };
 
-/** The company's branches; sortable by `name` or `status`. */
+/** The company's branches; sortable by `name`, `code` or `status`. */
 export const fetchBranches = (
 	companyId: string,
 	query: ListQuery

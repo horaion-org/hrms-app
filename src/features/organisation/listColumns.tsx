@@ -107,7 +107,9 @@ export const describeList = <T extends { name: string }>(
 	search: string,
 	filtered: boolean,
 	emptyText: string,
-	t: TFunction
+	t: TFunction,
+	matches: (row: T, search: string) => boolean = (row, query) =>
+		matchesSearch(row.name, query)
 ): ListView<T> => {
 	switch (list.status) {
 		case "pending":
@@ -127,7 +129,7 @@ export const describeList = <T extends { name: string }>(
 		case "ready": {
 			// Unfiltered rows keep their identity, so the table keeps its models.
 			const rows = search.trim()
-				? list.items.filter((row) => matchesSearch(row.name, search))
+				? list.items.filter((row) => matches(row, search))
 				: list.items;
 			return {
 				rows,

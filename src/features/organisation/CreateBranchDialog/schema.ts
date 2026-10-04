@@ -6,6 +6,7 @@ export const createBranchSchema = (
 	t: TFunction
 ): z.ZodObject<{
 	name: z.ZodString;
+	code: z.ZodString;
 	heads: z.ZodArray<
 		z.ZodObject<{
 			membershipId: z.ZodString;
@@ -23,6 +24,13 @@ export const createBranchSchema = (
 			.min(2, t(`${key}.nameLength`))
 			.max(100, t(`${key}.nameLength`))
 			.regex(/^[\p{L}\p{N} .'&-]+$/u, t(`${key}.nameCharacters`)),
+		code: z
+			.string()
+			.trim()
+			.toUpperCase()
+			.min(1, t(`${key}.codeRequired`))
+			.max(10, t(`${key}.codeLength`))
+			.regex(/^[A-Z0-9-]+$/, t(`${key}.codeCharacters`)),
 		heads: z
 			.array(
 				z.object({
