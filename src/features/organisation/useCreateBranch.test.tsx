@@ -28,6 +28,7 @@ it("invalidates this company's lists and overview without invalidating another c
 				name: "Orchard",
 				code: "ORC",
 				city: "Singapore",
+				country: "SG",
 				status: "ACTIVE",
 			}),
 		},
@@ -53,6 +54,7 @@ it("invalidates this company's lists and overview without invalidating another c
 			name: "Orchard",
 			code: "ORC",
 			city: "Singapore",
+			country: "SG",
 			initialHeadCompanyMembershipIds: ["m-1"],
 		});
 	});

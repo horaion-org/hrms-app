@@ -8,6 +8,7 @@ export const createBranchSchema = (
 ): z.ZodObject<{
 	name: z.ZodString;
 	code: z.ZodString;
+	country: z.ZodString;
 	city: z.ZodPipe<
 		z.ZodPipe<z.ZodString, z.ZodTransform<string, string>>,
 		z.ZodString
@@ -46,6 +47,7 @@ export const createBranchSchema = (
 					.refine((value) => [...value].length <= 100, t(`${key}.cityLength`))
 					.regex(/^[\p{L} .'-]+$/u, t(`${key}.cityCharacters`))
 			),
+		country: z.string().min(1, t(`${key}.countryRequired`)),
 		heads: z
 			.array(
 				z.object({

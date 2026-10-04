@@ -1,3 +1,4 @@
+import { countryName } from "@/features/organisation/countries";
 import { useMemo, useState } from "react";
 import { useCan } from "@/features/workspace/useCan";
 import { useQuery } from "@tanstack/react-query";
@@ -24,8 +25,8 @@ import { useBranches } from "@/features/organisation/useOrganisationList";
 
 export const Branches = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
-	const { t } = useTranslation();
 	const can = useCan();
+	const { t, i18n } = useTranslation();
 	const [creating, setCreating] = useState(false);
 	const workspace = useQuery(workspaceQuery);
 	const permissions = workspace.data
@@ -64,6 +65,12 @@ export const Branches = (): FunctionComponent => {
 				cell: (branch: Branch): string => branch.city,
 				sortValue: (branch: Branch): string => branch.city,
 			},
+			{
+				id: "country",
+				header: t("organisation.branches.country"),
+				cell: (branch: Branch): string =>
+					countryName(branch.country, i18n.language),
+			},
 			statusColumn<Branch>(t),
 			actionsColumn<Branch>(
 				t,
@@ -85,7 +92,7 @@ export const Branches = (): FunctionComponent => {
 				(branch) => can("branch:update", branch.branchId)
 			),
 		],
-		[t, can]
+		[t, i18n.language]
 	);
 
 	return (

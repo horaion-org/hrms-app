@@ -94,6 +94,12 @@ const fill = async (body: HTMLElement): Promise<void> => {
 	);
 	await userEvent.type(page.getByLabelText("Branch code"), "orc");
 	await userEvent.type(page.getByLabelText("City"), "Singapore");
+	await userEvent.click(page.getByLabelText("Country"));
+	await userEvent.type(
+		page.getByRole("combobox", { name: "Search countries" }),
+		"singap"
+	);
+	await userEvent.click(await page.findByRole("option", { name: "Singapore" }));
 	await userEvent.click(page.getByLabelText("Branch heads"));
 	await userEvent.click(
 		await page.findByRole("option", { name: "Marcus Lim" })
@@ -121,6 +127,14 @@ export const ChoosingHeads: Story = {
 		);
 		await userEvent.type(page.getByLabelText("Branch code"), "orc");
 		await userEvent.type(page.getByLabelText("City"), "Singapore");
+		await userEvent.click(page.getByLabelText("Country"));
+		await userEvent.type(
+			page.getByRole("combobox", { name: "Search countries" }),
+			"singap"
+		);
+		await userEvent.click(
+			await page.findByRole("option", { name: "Singapore" })
+		);
 		await userEvent.click(page.getByLabelText("Branch heads"));
 	},
 };
@@ -183,3 +197,15 @@ export const CityValidation: Story = {
 		await userEvent.click(page.getByRole("button", { name: "Create branch" }));
 	},
 };
+
+export const ChoosingCountry: Story = {
+	play: async ({ canvasElement }) => {
+		const page = within(canvasElement.ownerDocument.body);
+		await userEvent.click(await page.findByLabelText("Country"));
+		await userEvent.type(
+			page.getByRole("combobox", { name: "Search countries" }),
+			"singap"
+		);
+	},
+};
+export const CountrySelected: Story = { play: HeadsSelected.play };

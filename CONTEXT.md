@@ -19,7 +19,7 @@ _Avoid_: Section, area, page, workspace
 ## Organisation
 
 **Branch**:
-A unit of a Company that groups its people, such as one location. A branch is active or inactive, never deleted, and its name is unique within the Company ignoring letter case and extra spaces.
+A unit of a Company that groups its people, such as one location. A branch is active or inactive, never deleted, and its name is unique within the Company ignoring letter case and extra spaces. Every Branch has a code unique within its Company, a city, and a country; the country is stored as an ISO 3166-1 alpha-2 code and shown by its name in the user’s language.
 _Avoid_: Site, outlet, office
 
 **Branch head**:

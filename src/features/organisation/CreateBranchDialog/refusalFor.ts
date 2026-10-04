@@ -2,7 +2,13 @@ import type { TFunction } from "i18next";
 import { ApiProblemError } from "@/common/problem";
 
 export type Refusal = {
-	fields: { name?: string; code?: string; city?: string; heads?: string };
+	fields: {
+		name?: string;
+		code?: string;
+		city?: string;
+		country?: string;
+		heads?: string;
+	};
 	message?: string;
 	refreshMembers: boolean;
 };
@@ -39,10 +45,17 @@ export const refusalFor = (
 				if (field === "name") fields.name = t(`${key}.nameRejected`);
 				if (field === "code") fields.code = t(`${key}.codeRejected`);
 				if (field === "city") fields.city = t(`${key}.cityRejected`);
+				if (field === "country") fields.country = t(`${key}.countryRejected`);
 				if (field === "initialHeadCompanyMembershipIds")
 					fields.heads = t(`${key}.headsRejected`);
 			}
-			if (fields.name || fields.code || fields.city || fields.heads)
+			if (
+				fields.name ||
+				fields.code ||
+				fields.city ||
+				fields.country ||
+				fields.heads
+			)
 				return { fields, refreshMembers: false };
 		}
 		if (error.status === 403)
