@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useCallback } from "react";
 import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import { workspaceQuery } from "@/features/workspace/api";
+import { retry } from "@/features/workspace/retry";
 import type { PermissionKey } from "@/features/workspace/permissionKeys";
 import { holdsAnywhere, permissionsAt } from "@/features/workspace/scopes";
 
@@ -22,7 +23,7 @@ export const useCan = (): ((
 	scopeId?: string
 ) => boolean) => {
 	const companyId = useCurrentCompanyId();
-	const { data } = useQuery(workspaceQuery);
+	const { data } = useQuery({ ...workspaceQuery, retry });
 	return useCallback(
 		(permission, scopeId) =>
 			data !== undefined &&
@@ -39,7 +40,7 @@ export const useCanAnywhere = (): ((
 	permissions: ReadonlyArray<PermissionKey>
 ) => boolean) => {
 	const companyId = useCurrentCompanyId();
-	const { data } = useQuery(workspaceQuery);
+	const { data } = useQuery({ ...workspaceQuery, retry });
 	return useCallback(
 		(permissions) =>
 			data !== undefined && holdsAnywhere(data, companyId, permissions),

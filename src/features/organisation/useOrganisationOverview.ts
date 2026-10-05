@@ -3,8 +3,9 @@ import {
 	useQuery,
 	type UseQueryResult,
 } from "@tanstack/react-query";
-import { ApiProblemError } from "@/common/problem";
-import { companyPermissions, workspaceQuery } from "@/features/workspace/api";
+import { workspaceQuery } from "@/features/workspace/api";
+import { retry } from "@/features/workspace/retry";
+import { useCan } from "@/features/workspace/useCan";
 import {
 	fetchAccessRoleCount,
 	fetchActiveBranchCount,
@@ -33,9 +34,7 @@ export type OrganisationOverview =
 			}>;
 	  };
 
-/** Retries what may pass next time (outages); a refusal or a bad request won't. */
-export const retry = (failureCount: number, error: Error): boolean =>
-	failureCount < 2 && !(error instanceof ApiProblemError && error.status < 500);
+export { retry };
 
 const visibleCount = (
 	allowed: boolean,
@@ -52,13 +51,11 @@ export const useOrganisationOverview = (
 	companyId: string
 ): OrganisationOverview => {
 	const workspace = useQuery({ ...workspaceQuery, retry });
-	const permissions = workspace.data
-		? companyPermissions(workspace.data, companyId)
-		: new Set<string>();
-	const canReadBranches = permissions.has("branch:read");
-	const canReadDepartments = permissions.has("department:read");
-	const canReadAccessRoles = permissions.has("access_role:read");
-	const canReadActivity = permissions.has("audit_event:read");
+	const can = useCan();
+	const canReadBranches = can("branch:read");
+	const canReadDepartments = can("department:read");
+	const canReadAccessRoles = can("access_role:read");
+	const canReadActivity = can("audit_event:read");
 
 	const branches = useQuery({
 		queryKey: ["organisation", companyId, "active-branch-count"],

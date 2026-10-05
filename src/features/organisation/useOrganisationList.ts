@@ -5,7 +5,9 @@ import {
 	type QueryKey,
 } from "@tanstack/react-query";
 import { ApiProblemError } from "@/common/problem";
-import { companyPermissions, workspaceQuery } from "@/features/workspace/api";
+import { workspaceQuery } from "@/features/workspace/api";
+import type { PermissionKey } from "@/features/workspace/permissionKeys";
+import { useCan } from "@/features/workspace/useCan";
 import {
 	fetchAccessRoles,
 	fetchBranches,
@@ -28,14 +30,12 @@ export type OrganisationList<T> =
 
 const useOrganisationList = <T>(
 	companyId: string,
-	permission: string,
+	permission: PermissionKey,
 	key: QueryKey,
 	fetchPage: () => Promise<ListPage<T>>
 ): OrganisationList<T> => {
 	const workspace = useQuery({ ...workspaceQuery, retry });
-	const allowed = workspace.data
-		? companyPermissions(workspace.data, companyId).has(permission)
-		: false;
+	const allowed = useCan()(permission);
 	const list = useQuery({
 		queryKey: ["organisation", companyId, ...key],
 		retry,
