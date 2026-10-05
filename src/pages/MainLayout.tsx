@@ -22,12 +22,15 @@ import {
 } from "@/components/ui/Icon";
 import { usableCompanies } from "@/features/auth/currentCompany";
 import { logOut } from "@/features/auth/session";
+import { ORGANISATION_READ_KEYS } from "@/features/workspace/permissionKeys";
+import { useCanAnywhere } from "@/features/workspace/useCan";
 import { CompanySelection } from "@/pages/CompanySelection";
 
 export const MainLayout = (): FunctionComponent => {
 	const context = useRouteContext({ from: "/_authenticated" });
 	const [switching, setSwitching] = useState(false);
 	const { t } = useTranslation();
+	const canAnywhere = useCanAnywhere();
 	if (
 		!("currentUser" in context) ||
 		!context.currentUser ||
@@ -118,12 +121,15 @@ export const MainLayout = (): FunctionComponent => {
 						label={t("shell.navigation.people")}
 						to="/people"
 					/>
-					<SidebarItem
-						activeIcon={OrganisationFilledIcon}
-						icon={OrganisationIcon}
-						label={t("shell.navigation.organisation")}
-						to="/organisation"
-					/>
+					{/* Offered only when the workspace grants something in it, at any scope. */}
+					{canAnywhere(ORGANISATION_READ_KEYS) && (
+						<SidebarItem
+							activeIcon={OrganisationFilledIcon}
+							icon={OrganisationIcon}
+							label={t("shell.navigation.organisation")}
+							to="/organisation"
+						/>
+					)}
 				</Sidebar>
 			}
 		>
