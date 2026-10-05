@@ -8,6 +8,7 @@ import {
 	type DataTableColumn,
 	type DataTableSort,
 } from "@/components/ui/DataTable";
+import { Button } from "@/components/ui/Button";
 import { OverflowMenuItem } from "@/components/ui/OverflowMenu";
 import type { AccessRole } from "@/features/organisation/api";
 import { ListToolbar } from "@/features/organisation/ListToolbar";
@@ -18,6 +19,7 @@ import {
 } from "@/features/organisation/listColumns";
 import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import { useAccessRoles } from "@/features/organisation/useOrganisationList";
+import { AssignSystemRole } from "@/pages/SystemRoleHolders";
 
 /** Access roles, shown as "System Roles". Roles have no status, so no filter. */
 export const SystemRoles = (): FunctionComponent => {
@@ -43,16 +45,25 @@ export const SystemRoles = (): FunctionComponent => {
 		[can]
 	);
 	const navigate = useNavigate();
-	// The same page shows a role the person can't change, read-only.
+	// Opens the role on its permissions, which are read-only for a role the person can't change.
 	const open = useCallback(
 		(role: AccessRole): void => {
 			void navigate({
 				to: "/organisation/system-roles/$accessRoleId",
 				params: { accessRoleId: role.accessRoleId },
+				search: { tab: "permissions" },
 			});
 		},
 		[navigate]
 	);
+	const [assigning, setAssigning] = useState(false);
+	// The Company Owner role is never assigned here; choosing a person needs the company's list of people.
+	const assignable =
+		list.status === "ready" &&
+		can("access_role:assign") &&
+		can("company_member:read")
+			? list.items.filter((role) => !role.protectedRole)
+			: [];
 	const columns = useMemo(
 		(): Array<DataTableColumn<AccessRole>> => [
 			nameColumn<AccessRole>(t("organisation.accessRoles.name")),
@@ -65,6 +76,26 @@ export const SystemRoles = (): FunctionComponent => {
 						: t("organisation.accessRoles.permissionCount", {
 								count: role.permissions.length,
 							}),
+			},
+			{
+				id: "people",
+				header: t("organisation.accessRoles.people"),
+				// Opens the role on who has it and where.
+				cell: (role) => (
+					<Button
+						params={{ accessRoleId: role.accessRoleId }}
+						to="/organisation/system-roles/$accessRoleId"
+						variant="textlink"
+						aria-label={t("organisation.accessRoles.viewPeople", {
+							count: role.holderCount,
+							name: role.name,
+						})}
+					>
+						{t("organisation.accessRoles.peopleCount", {
+							count: role.holderCount,
+						})}
+					</Button>
+				),
 			},
 			actionsColumn<AccessRole>(
 				t,
@@ -106,6 +137,16 @@ export const SystemRoles = (): FunctionComponent => {
 				createLabel={t("organisation.accessRoles.create")}
 				search={search}
 				searchLabel={t("organisation.accessRoles.search")}
+				secondaryAction={
+					assignable.length > 0
+						? {
+								label: t("organisation.accessRoles.assign"),
+								onClick: (): void => {
+									setAssigning(true);
+								},
+							}
+						: undefined
+				}
 				onSearchChange={setSearch}
 				onCreate={
 					can("access_role:create")
@@ -115,6 +156,14 @@ export const SystemRoles = (): FunctionComponent => {
 						: undefined
 				}
 			/>
+			{assigning && (
+				<AssignSystemRole
+					roles={assignable}
+					onClose={() => {
+						setAssigning(false);
+					}}
+				/>
+			)}
 			{view.problem ? (
 				<p
 					className="mt-8 text-sm text-neutral-700 data-alert:text-error-700"

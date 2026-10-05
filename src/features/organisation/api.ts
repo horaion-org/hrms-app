@@ -1,6 +1,6 @@
 import { normalizeBranchCity } from "@/features/organisation/city";
 import { z } from "zod";
-import { apiRequest } from "@/common/api-client";
+import { apiRequest, apiRequestVoid } from "@/common/api-client";
 
 const totalSchema = z.object({
 	page: z.object({ totalElements: z.number().int().nonnegative() }),
@@ -116,6 +116,8 @@ const accessRoleSchema = z.object({
 	name: z.string(),
 	protectedRole: z.boolean(),
 	permissions: z.array(z.string()),
+	/** How many people hold the role; someone holding it at several places counts once. */
+	holderCount: z.number().int().nonnegative(),
 });
 
 export type AccessRole = z.infer<typeof accessRoleSchema>;
@@ -201,6 +203,77 @@ export const fetchAccessRoles = (
 	query: Omit<ListQuery, "status">
 ): Promise<ListPage<AccessRole>> =>
 	fetchList(listPath(companyId, "access-roles", query), accessRoleSchema);
+
+/** A Department with the Branch it belongs to, for choosing where a role applies. */
+const departmentUnitSchema = departmentSchema.extend({ branchId: z.string() });
+
+export type DepartmentUnit = z.infer<typeof departmentUnitSchema>;
+
+/** The company's active departments, each with its Branch. */
+export const fetchDepartmentUnits = (
+	companyId: string
+): Promise<ListPage<DepartmentUnit>> =>
+	fetchList(
+		listPath(companyId, "departments", {
+			sort: { field: "name", desc: false },
+			status: "ACTIVE",
+		}),
+		departmentUnitSchema
+	);
+
+const accessRoleHolderSchema = z.object({
+	accessRoleAssignmentId: z.string(),
+	companyMembershipId: z.string(),
+	displayName: z.string(),
+	branchName: z.string().nullable(),
+	departmentName: z.string().nullable(),
+});
+
+/** One person holding an access role, and the Branch or Department it applies at, if not the whole company. */
+export type AccessRoleHolder = z.infer<typeof accessRoleHolderSchema>;
+
+/** Who holds an access role and where. */
+export const fetchAccessRoleHolders = (
+	companyId: string,
+	accessRoleId: string
+): Promise<Array<AccessRoleHolder>> =>
+	apiRequest(
+		`${companyPath(companyId)}/access-roles/${encodeURIComponent(accessRoleId)}/access-role-assignments`,
+		z.array(accessRoleHolderSchema)
+	);
+
+/** Who gets which role, and the Branch or Department it applies at; neither means the whole company. */
+export type AccessRoleGrant = {
+	companyMembershipId: string;
+	accessRoleId: string;
+	branchId?: string;
+	departmentId?: string;
+};
+
+/** Assigns an access role. Where it applies is the URL, as the API requires. */
+export const grantAccessRole = async (
+	companyId: string,
+	{ branchId, departmentId, ...body }: AccessRoleGrant
+): Promise<void> => {
+	const branch = branchId ? `/branches/${encodeURIComponent(branchId)}` : "";
+	const department = departmentId
+		? `/departments/${encodeURIComponent(departmentId)}`
+		: "";
+	await apiRequestVoid(
+		`${companyPath(companyId)}${branch}${department}/access-role-assignments`,
+		{ method: "POST", body }
+	);
+};
+
+/** Removes one assignment of an access role. */
+export const revokeAccessRole = (
+	companyId: string,
+	accessRoleAssignmentId: string
+): Promise<void> =>
+	apiRequestVoid(
+		`${companyPath(companyId)}/access-role-assignments/${encodeURIComponent(accessRoleAssignmentId)}`,
+		{ method: "DELETE" }
+	);
 
 const accessRolePath = (companyId: string, accessRoleId: string): string =>
 	`${companyPath(companyId)}/access-roles/${encodeURIComponent(accessRoleId)}`;

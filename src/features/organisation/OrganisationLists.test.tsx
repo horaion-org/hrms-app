@@ -488,6 +488,7 @@ describe("System Roles", () => {
 					name: "Company Owner",
 					protectedRole: true,
 					permissions: ["branch:read", "branch:create"],
+					holderCount: 1,
 				},
 				{
 					accessRoleId: "r-2",
@@ -495,6 +496,7 @@ describe("System Roles", () => {
 					name: "Manager",
 					protectedRole: false,
 					permissions: ["branch:read", "department:read", "leave:approve"],
+					holderCount: 3,
 				},
 				{
 					accessRoleId: "r-3",
@@ -502,6 +504,7 @@ describe("System Roles", () => {
 					name: "Staff",
 					protectedRole: false,
 					permissions: ["leave:create"],
+					holderCount: 0,
 				},
 			]),
 		});
@@ -516,18 +519,24 @@ describe("System Roles", () => {
 			within(table)
 				.getAllByRole("columnheader")
 				.map((header) => header.textContent)
-		).toEqual(["Select all", "System Role", "Key Permissions", "Actions"]);
+		).toEqual([
+			"Select all",
+			"System Role",
+			"Key Permissions",
+			"People",
+			"Actions",
+		]);
 		expect(
 			bodyRows(table).map((row) =>
 				within(row)
 					.getAllByRole("cell")
-					.slice(1, 3)
+					.slice(1, 4)
 					.map((cell) => cell.textContent)
 			)
 		).toEqual([
-			["Company Owner", "Full system access"],
-			["Manager", "3 permissions"],
-			["Staff", "1 permission"],
+			["Company Owner", "Full system access", "1 person"],
+			["Manager", "3 permissions", "3 people"],
+			["Staff", "1 permission", "0 people"],
 		]);
 		expect(
 			screen.getByRole("button", { name: "Edit Company Owner" })

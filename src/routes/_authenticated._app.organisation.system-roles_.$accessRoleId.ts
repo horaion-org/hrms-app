@@ -9,6 +9,8 @@ import {
 export const Route = createFileRoute(
 	"/_authenticated/_app/organisation/system-roles_/$accessRoleId"
 )({
+	validateSearch: (search: Record<string, unknown>): { tab?: "permissions" } =>
+		search["tab"] === "permissions" ? { tab: "permissions" } : {},
 	// Fetched afresh on every visit: an edit must start from the role as it is now.
 	loader: async ({ context, params }) => {
 		const companyId =
