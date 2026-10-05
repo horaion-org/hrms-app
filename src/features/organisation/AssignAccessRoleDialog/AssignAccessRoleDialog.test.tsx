@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { I18nextProvider } from "react-i18next";
 import { describe, expect, it, vi } from "vitest";
@@ -20,6 +20,7 @@ const roles = [
 		accessRoleId: "r-1",
 		name: "Manager",
 		protectedRole: false,
+		status: "ACTIVE" as const,
 		permissions: ["branch:read", "department:read"],
 		holderCount: 0,
 	},
@@ -27,6 +28,7 @@ const roles = [
 		accessRoleId: "r-2",
 		name: "Supervisor",
 		protectedRole: false,
+		status: "ACTIVE" as const,
 		permissions: ["audit_event:read"],
 		holderCount: 0,
 	},
@@ -78,5 +80,40 @@ describe("AssignAccessRoleDialog", () => {
 			targets[1],
 			targets[2],
 		]);
+	});
+
+	it("edits where a person has the role, starting from the places they hold it", async () => {
+		const user = userEvent.setup();
+		const onAssign = vi.fn();
+		render(
+			<I18nextProvider i18n={authTestI18n}>
+				<AssignAccessRoleDialog
+					editing={{ person: people[1]!, places: [targets[1]!] }}
+					people={[]}
+					query=""
+					roles={[roles[0]!]}
+					targets={targets}
+					onAssign={onAssign}
+					onClose={vi.fn()}
+					onQueryChange={vi.fn()}
+				/>
+			</I18nextProvider>
+		);
+		const dialog = await screen.findByRole("dialog", {
+			name: "Edit assignment",
+		});
+
+		// The person is fixed; only the places change.
+		expect(within(dialog).getByLabelText("Person")).toBeDisabled();
+		expect(dialog).toHaveTextContent("Priya Nair");
+		await user.click(
+			within(dialog).getByRole("button", { name: "Remove Orchard" })
+		);
+		expect(dialog).toHaveTextContent(
+			"Saving with no places removes this role from Priya Nair."
+		);
+		await user.click(screen.getByRole("button", { name: "Save changes" }));
+
+		expect(onAssign).toHaveBeenCalledWith("r-1", "m-2", []);
 	});
 });

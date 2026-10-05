@@ -11,29 +11,39 @@ const meta = {
 	parameters: { layout: "padded" },
 	args: {
 		assignments: [
-			{ assignmentId: "a-1", membershipId: "m-1", displayName: "Priya Nair" },
+			{
+				assignmentId: "a-1",
+				membershipId: "m-1",
+				name: "Priya Nair",
+				status: "ACTIVE" as const,
+			},
 			{
 				assignmentId: "a-2",
 				membershipId: "m-2",
-				displayName: "Marcus Lim",
+				name: "Marcus Lim",
+				status: "ACTIVE" as const,
 				branchName: "Orchard",
 			},
 			{
 				assignmentId: "a-3",
 				membershipId: "m-3",
-				displayName: "Daniel Tan",
+				name: "Daniel Tan",
+				status: "ACTIVE" as const,
 				branchName: "Orchard",
 				departmentName: "Kitchen",
 			},
 			{
 				assignmentId: "a-4",
 				membershipId: "m-3",
-				displayName: "Daniel Tan",
+				name: "Daniel Tan",
+				status: "ACTIVE" as const,
 				branchName: "Tampines",
 				departmentName: "Front of house",
 			},
 		],
 		onAssign: fn(),
+		onEdit: fn(),
+		onSetStatus: fn(),
 		onRemove: fn(),
 	},
 	decorators: [
@@ -53,7 +63,12 @@ export const Default: Story = {};
 
 export const Empty: Story = { args: { assignments: [] } };
 
-/** For someone who may see who holds the role but not change it. */
+/** For someone who may see who has the role but not change it. */
 export const ViewOnly: Story = {
-	args: { onAssign: undefined, onRemove: undefined },
+	args: {
+		onAssign: undefined,
+		onEdit: undefined,
+		onSetStatus: undefined,
+		onRemove: undefined,
+	},
 };

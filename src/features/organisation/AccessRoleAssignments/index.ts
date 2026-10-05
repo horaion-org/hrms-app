@@ -2,4 +2,5 @@ export { AccessRoleAssignments } from "@/features/organisation/AccessRoleAssignm
 export type {
 	AccessRoleAssignmentRow,
 	AccessRoleAssignmentsProps,
+	AccessRolePerson,
 } from "@/features/organisation/AccessRoleAssignments/AccessRoleAssignments";

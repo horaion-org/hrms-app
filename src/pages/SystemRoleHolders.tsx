@@ -2,16 +2,27 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
-import { AccessRoleAssignments } from "@/features/organisation/AccessRoleAssignments";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import {
+	AccessRoleAssignments,
+	type AccessRoleAssignmentRow,
+	type AccessRolePerson,
+} from "@/features/organisation/AccessRoleAssignments";
 import {
 	fetchBranches,
 	fetchDepartmentUnits,
 	type AccessRole,
-	type AccessRoleHolder,
 } from "@/features/organisation/api";
 import { AssignAccessRoleDialog } from "@/features/organisation/AssignAccessRoleDialog";
-import { assignmentRefusal } from "@/features/organisation/assignmentRefusal";
-import { assignmentTargets } from "@/features/organisation/assignmentTargets";
+import {
+	assignmentRefusal,
+	assignmentStatusRefusal,
+} from "@/features/organisation/assignmentRefusal";
+import {
+	assignmentTargets,
+	placeKey,
+	placeOf,
+} from "@/features/organisation/assignmentTargets";
 import { PermissionSummary } from "@/features/organisation/PermissionSummary";
 import { useChangeAccessRoleHolders } from "@/features/organisation/useAccessRoleHolders";
 import { useCompanyMemberSearch } from "@/features/organisation/useCompanyMemberSearch";
@@ -28,13 +39,17 @@ const ACTIVE_BY_NAME = {
 /**
  * The assign dialog with its people search and the places a role can apply;
  * mounted only while open. Given one role, that role is assigned; given
- * several, the person chooses.
+ * several, the person chooses. Given `editing`, it changes where that person
+ * already has the role: places newly chosen are granted and places cleared
+ * are removed.
  */
 export const AssignSystemRole = ({
 	roles,
+	editing,
 	onClose,
 }: {
 	roles: Array<AccessRole>;
+	editing?: AccessRolePerson;
 	onClose: () => void;
 }): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
@@ -49,15 +64,30 @@ export const AssignSystemRole = ({
 		queryKey: ["organisation", companyId, "department-units"],
 		queryFn: () => fetchDepartmentUnits(companyId),
 	});
-	const { assign } = useChangeAccessRoleHolders(companyId);
+	const change = useChangeAccessRoleHolders(companyId);
+	const held = editing?.places ?? [];
 
 	return (
 		<AssignAccessRoleDialog
-			error={assign.error ? assignmentRefusal(assign.error, t) : undefined}
+			error={change.error ? assignmentRefusal(change.error, t) : undefined}
 			people={people.data?.items ?? []}
 			query={query}
 			roles={roles}
-			submitting={assign.isPending}
+			submitting={change.isPending}
+			editing={
+				editing && {
+					person: {
+						membershipId: editing.membershipId,
+						displayName: editing.name,
+						status: editing.status,
+					},
+					places: held.map((place) => ({
+						label: placeOf(place, t),
+						branchId: place.branchId,
+						departmentId: place.departmentId,
+					})),
+				}
+			}
 			targets={assignmentTargets(
 				branches.data?.items ?? [],
 				departments.data?.items ?? [],
@@ -66,13 +96,22 @@ export const AssignSystemRole = ({
 			onClose={onClose}
 			onQueryChange={setQuery}
 			onAssign={(accessRoleId, companyMembershipId, targets) => {
-				assign.mutate(
-					targets.map((target) => ({
-						companyMembershipId,
-						accessRoleId,
-						branchId: target.branchId,
-						departmentId: target.departmentId,
-					})),
+				const chosen = new Set(targets.map(placeKey));
+				const already = new Set(held.map(placeKey));
+				change.mutate(
+					{
+						grants: targets
+							.filter((target) => !already.has(placeKey(target)))
+							.map((target) => ({
+								companyMembershipId,
+								accessRoleId,
+								branchId: target.branchId,
+								departmentId: target.departmentId,
+							})),
+						revokes: held
+							.filter((place) => !chosen.has(placeKey(place)))
+							.map((place) => place.assignmentId),
+					},
 					{ onSuccess: onClose }
 				);
 			}}
@@ -83,13 +122,14 @@ export const AssignSystemRole = ({
 export type SystemRoleHoldersProps = {
 	role: AccessRole;
 	/** Who holds the role and where; `undefined` when the list couldn't be loaded. */
-	holders: Array<AccessRoleHolder> | undefined;
+	holders: Array<AccessRoleAssignmentRow> | undefined;
 };
 
 /**
- * What a system role allows, then who has it and where, with assigning and
- * removing for those who may. The Company Owner role is listed but never
- * assigned or removed here: ownership moves only through its own transfer.
+ * What a system role allows, then who has it and where, with assigning,
+ * editing and removing for those who may. The Company Owner role is listed
+ * but never assigned or changed here: ownership moves only through its own
+ * transfer.
  */
 export const SystemRoleHolders = ({
 	role,
@@ -98,12 +138,25 @@ export const SystemRoleHolders = ({
 	const companyId = useCurrentCompanyId();
 	const can = useCan();
 	const { t } = useTranslation();
-	const { revoke } = useChangeAccessRoleHolders(companyId);
+	const change = useChangeAccessRoleHolders(companyId);
 	const [assigning, setAssigning] = useState(false);
-	const canChange = !role.protectedRole && can("access_role:assign");
-	const problem = holders
-		? revoke.isError && t(`${key}.removeFailed`)
-		: t(`${key}.loadFailed`);
+	const [editing, setEditing] = useState<AccessRolePerson>();
+	const [removing, setRemoving] = useState<AccessRolePerson>();
+	const [switching, setSwitching] = useState<AccessRolePerson>();
+	const switchKey = `${key}.status.${
+		switching?.status === "ACTIVE" ? "deactivate" : "activate"
+	}` as const;
+	const active = role.status === "ACTIVE";
+	// Choosing a person or a place needs the company's list of people.
+	const canChange =
+		!role.protectedRole &&
+		can("access_role:assign") &&
+		can("company_member:read");
+	const closeConfirm = (): void => {
+		change.reset();
+		setRemoving(undefined);
+		setSwitching(undefined);
+	};
 
 	return (
 		<>
@@ -111,41 +164,87 @@ export const SystemRoleHolders = ({
 				permissions={role.permissions.filter(isPermissionKey)}
 				title={t(`${key}.allows`)}
 			/>
-			{problem && (
+			{!active && (
+				<p className="mt-6 text-sm font-semibold text-neutral-900">
+					{t(`${key}.inactive`)}
+				</p>
+			)}
+			{!holders && (
 				<p className="mt-6 text-sm text-error-700" role="alert">
-					{problem}
+					{t(`${key}.loadFailed`)}
 				</p>
 			)}
 			<AccessRoleAssignments
+				assignments={holders ?? []}
 				className="mt-8"
-				assignments={(holders ?? []).map((holder) => ({
-					assignmentId: holder.accessRoleAssignmentId,
-					membershipId: holder.companyMembershipId,
-					displayName: holder.displayName,
-					branchName: holder.branchName ?? undefined,
-					departmentName: holder.departmentName ?? undefined,
-				}))}
+				onEdit={canChange ? setEditing : undefined}
+				onRemove={canChange ? setRemoving : undefined}
+				onSetStatus={canChange ? setSwitching : undefined}
 				onAssign={
-					// Choosing a person needs the company's list of people.
-					canChange && can("company_member:read")
+					// An inactive role isn't newly assigned.
+					canChange && active
 						? (): void => {
 								setAssigning(true);
 							}
 						: undefined
 				}
-				onRemove={
-					canChange
-						? (assignment): void => {
-								revoke.mutate(assignment.assignmentId);
-							}
-						: undefined
-				}
 			/>
-			{assigning && (
+			{(assigning || editing) && (
 				<AssignSystemRole
+					editing={editing}
 					roles={[role]}
 					onClose={() => {
 						setAssigning(false);
+						setEditing(undefined);
+					}}
+				/>
+			)}
+			{switching && (
+				<ConfirmDialog
+					cancelLabel={t("organisation.list.cancel")}
+					confirmLabel={t(`${switchKey}Confirm`, { name: switching.name })}
+					submitting={change.isPending}
+					title={t(`${switchKey}Title`, { name: switching.name })}
+					description={t(`${switchKey}Description`, {
+						name: switching.name,
+						role: role.name,
+					})}
+					error={
+						change.error ? assignmentStatusRefusal(change.error, t) : undefined
+					}
+					onClose={closeConfirm}
+					onConfirm={() => {
+						change.mutate(
+							{
+								statuses: {
+									assignmentIds: switching.places.map(
+										(place) => place.assignmentId
+									),
+									status: switching.status === "ACTIVE" ? "INACTIVE" : "ACTIVE",
+								},
+							},
+							{ onSuccess: closeConfirm }
+						);
+					}}
+				/>
+			)}
+			{removing && (
+				<ConfirmDialog
+					cancelLabel={t("organisation.list.cancel")}
+					confirmLabel={t(`${key}.remove.confirm`)}
+					error={change.isError ? t(`${key}.removeFailed`) : undefined}
+					submitting={change.isPending}
+					title={t(`${key}.remove.title`, { name: removing.name })}
+					description={t(`${key}.remove.description`, {
+						name: removing.name,
+						role: role.name,
+					})}
+					onClose={closeConfirm}
+					onConfirm={() => {
+						change.mutate(
+							{ revokes: removing.places.map((place) => place.assignmentId) },
+							{ onSuccess: closeConfirm }
+						);
 					}}
 				/>
 			)}

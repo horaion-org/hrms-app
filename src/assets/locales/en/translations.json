@@ -234,7 +234,8 @@
 			"failed": "We couldn’t load this list. Please try again.",
 			"forbidden": "You don’t have permission to view this list.",
 			"noMatches": "Nothing matches your search or filter.",
-			"truncated": "Showing the first {{shown}} of {{total}}. Use the status filter to narrow the list."
+			"truncated": "Showing the first {{shown}} of {{total}}. Use the status filter to narrow the list.",
+			"cancel": "Cancel"
 		},
 		"branches": {
 			"title": "Branches",
@@ -304,6 +305,16 @@
 				"headsRejected": "Check the chosen people and try again.",
 				"forbidden": "You no longer have permission to create branches.",
 				"failed": "We couldn’t create the branch. Try again."
+			},
+			"status": {
+				"deactivateTitle": "Deactivate {{name}}",
+				"deactivateDescription": "The branch stays in your lists as inactive and can be activated again.",
+				"deactivateConfirm": "Deactivate branch",
+				"activateTitle": "Activate {{name}}",
+				"activateDescription": "The branch becomes active again.",
+				"activateConfirm": "Activate branch",
+				"forbidden": "You don’t have permission to change this branch.",
+				"failed": "We couldn’t change the branch. Try again."
 			}
 		},
 		"departments": {
@@ -348,6 +359,16 @@
 				"headsRejected": "Check the chosen people and try again.",
 				"forbidden": "You no longer have permission to create departments.",
 				"failed": "We couldn’t create the department. Try again."
+			},
+			"status": {
+				"deactivateTitle": "Deactivate {{name}}",
+				"deactivateDescription": "The department stays in your lists as inactive and can be activated again.",
+				"deactivateConfirm": "Deactivate department",
+				"activateTitle": "Activate {{name}}",
+				"activateDescription": "The department becomes active again.",
+				"activateConfirm": "Activate department",
+				"forbidden": "You don’t have permission to change this department.",
+				"failed": "We couldn’t change the department. Try again."
 			}
 		},
 		"jobTitles": {
@@ -432,10 +453,32 @@
 					"conflict": "This person already has the role at one of those places.",
 					"notMember": "This person isn’t an active member of one of those branches or departments.",
 					"forbidden": "You can only assign a role whose permissions you hold there.",
-					"failed": "We couldn’t assign the role. Try again."
+					"failed": "We couldn’t assign the role. Try again.",
+					"editTitle": "Edit assignment",
+					"editDescription": "Change where this person can use the role.",
+					"editSubmit": "Save changes",
+					"removesAll": "Saving with no places removes this role from {{name}}."
 				},
 				"loadFailed": "We couldn’t load who holds this role.",
-				"removeFailed": "We couldn’t remove that assignment. Try again."
+				"inactive": "This role is inactive, so the people below don’t have its permissions until it is activated again.",
+				"removeFailed": "We couldn’t remove the role from that person. Try again.",
+				"remove": {
+					"title": "Remove {{name}} from this role",
+					"description": "{{name}} will no longer have the {{role}} role anywhere. This takes effect immediately.",
+					"confirm": "Remove from role"
+				},
+				"status": {
+					"deactivateTitle": "Deactivate the role for {{name}}",
+					"deactivateDescription": "{{name}} will lose the access the {{role}} role gives them. This takes effect immediately, and activating it again gives the access back.",
+					"deactivateConfirm": "Deactivate for {{name}}",
+					"activateTitle": "Activate the role for {{name}}",
+					"activateDescription": "{{name}} will get back the access the {{role}} role gives them. This takes effect immediately.",
+					"activateConfirm": "Activate for {{name}}",
+					"roleInactive": "The role itself is inactive. Activate the role first.",
+					"notMember": "This person is no longer an active member of one of those branches or departments.",
+					"forbidden": "You can only activate a role whose permissions you hold there.",
+					"failed": "We couldn’t change this. Try again."
+				}
 			},
 			"createDialog": {
 				"title": "Create system role",
@@ -493,6 +536,46 @@
 				"loadForbidden": "You don’t have permission to view this role.",
 				"loadMissing": "This role doesn’t exist or has been deleted.",
 				"loadFailed": "We couldn’t load this role. Please try again."
+			},
+			"all": "All roles",
+			"copyName": "{{name}} copy",
+			"status": {
+				"loading": "Checking who holds this role…",
+				"loadFailed": "We couldn’t check who holds this role, so it can’t be changed right now. Try again.",
+				"forbidden": "You can only change a role whose permissions you hold yourself.",
+				"failed": "We couldn’t change the role. Try again.",
+				"deactivate": {
+					"title": "Deactivate {{name}}",
+					"description_one": "Deactivating this role removes the access it gives {{count}} person.",
+					"description_other": "Deactivating this role removes the access it gives {{count}} people.",
+					"none": "Nobody holds this role, so no one loses access.",
+					"self": "You hold this role. You will lose these permissions too.",
+					"allows": "They will no longer be able to",
+					"timing": "This takes effect immediately. Activating the role again gives the same people their access back.",
+					"confirm_one": "Deactivate and remove access for {{count}} person",
+					"confirm_other": "Deactivate and remove access for {{count}} people",
+					"confirmNone": "Deactivate role"
+				},
+				"activate": {
+					"title": "Activate {{name}}",
+					"description_one": "Activating this role gives {{count}} person their access back.",
+					"description_other": "Activating this role gives {{count}} people their access back.",
+					"none": "Nobody holds this role, so nothing changes until it is assigned.",
+					"self": "You hold this role. You will get these permissions back.",
+					"allows": "They will be able to",
+					"timing": "This takes effect immediately.",
+					"confirm_one": "Activate and give access to {{count}} person",
+					"confirm_other": "Activate and give access to {{count}} people",
+					"confirmNone": "Activate role"
+				}
+			},
+			"delete": {
+				"title": "Delete {{name}}",
+				"description": "Nobody holds this role. Deleting it can’t be undone.",
+				"confirm": "Delete role",
+				"inUse": "This role is still assigned to someone. Remove it from everyone first.",
+				"forbidden": "You don’t have permission to delete this role.",
+				"failed": "We couldn’t delete the role. Try again."
 			}
 		},
 		"permissions": {
@@ -529,23 +612,36 @@
 			"job_title": {
 				"name": "Job titles",
 				"description": "The company’s job titles.",
-				"actions": { "read": "View", "create": "Create", "update": "Edit" }
+				"actions": {
+					"read": "View",
+					"create": "Create",
+					"update": "Edit"
+				}
 			},
 			"none": "No permissions yet.",
 			"company": {
 				"name": "Company",
 				"description": "The company’s own details.",
-				"actions": { "read": "View", "update": "Edit" }
+				"actions": {
+					"read": "View",
+					"update": "Edit"
+				}
 			},
 			"company_member": {
 				"name": "Company members",
 				"description": "The list of everyone in the company, by name.",
-				"actions": { "read": "View" }
+				"actions": {
+					"read": "View"
+				}
 			},
 			"branch": {
 				"name": "Branches",
 				"description": "The company’s branches and their details.",
-				"actions": { "read": "View", "create": "Create", "update": "Edit" }
+				"actions": {
+					"read": "View",
+					"create": "Create",
+					"update": "Edit"
+				}
 			},
 			"branch_member": {
 				"name": "Branch members",
@@ -560,7 +656,11 @@
 			"department": {
 				"name": "Departments",
 				"description": "The departments inside each branch.",
-				"actions": { "read": "View", "create": "Create", "update": "Edit" }
+				"actions": {
+					"read": "View",
+					"create": "Create",
+					"update": "Edit"
+				}
 			},
 			"department_member": {
 				"name": "Department members",
@@ -586,7 +686,9 @@
 			"audit_event": {
 				"name": "Activity",
 				"description": "The record of who changed what in the company.",
-				"actions": { "read": "View" }
+				"actions": {
+					"read": "View"
+				}
 			},
 			"empty": "No system roles yet."
 		},

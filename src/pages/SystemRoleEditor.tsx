@@ -56,9 +56,8 @@ export const SystemRoleEditor = (): FunctionComponent => {
 	const update = useUpdateAccessRole(companyId, role.accessRoleId);
 	const holders = useAccessRoleHolders(companyId, role.accessRoleId);
 	// A person with the role at several places is counted once.
-	const people = new Set(
-		holders.data?.map((holder) => holder.companyMembershipId)
-	).size;
+	const people = new Set(holders.data?.map((holder) => holder.membershipId))
+		.size;
 	// Keys newer than this app's catalog can't be shown, so they are saved back untouched.
 	const unknown = role.permissions.filter(
 		(permission) => !isPermissionKey(permission)
@@ -70,6 +69,9 @@ export const SystemRoleEditor = (): FunctionComponent => {
 			<div className="mt-4 flex flex-wrap items-center gap-3">
 				<h1 className="text-4xl font-medium text-neutral-900">{role.name}</h1>
 				{role.protectedRole && <Badge>{t(`${key}.fullAccess`)}</Badge>}
+				{role.status === "INACTIVE" && (
+					<Badge>{t("organisation.status.INACTIVE")}</Badge>
+				)}
 			</div>
 			<Tabs
 				className="mt-8"
@@ -106,6 +108,7 @@ export const SystemRoleEditor = (): FunctionComponent => {
 								await update.mutateAsync({
 									name: values.name,
 									permissions: [...values.permissions, ...unknown],
+									status: role.status,
 								});
 								await navigate({ to: SYSTEM_ROLES_PATH });
 							}}
