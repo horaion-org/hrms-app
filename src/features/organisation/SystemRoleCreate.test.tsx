@@ -102,27 +102,28 @@ const fillIn = async (name: string): Promise<void> => {
 };
 
 describe("Create system role", () => {
-	it("opens empty from the list's Create Role button", async () => {
+	it("opens an empty creation dialog from the list", async () => {
 		const user = userEvent.setup();
 		stubApi(routes());
 		const opened = await open(LIST);
 
 		await user.click(
-			await screen.findByRole("button", { name: "Create Role" })
+			await screen.findByRole("button", { name: "Create system role" })
 		);
 
+		const dialog = await screen.findByRole("dialog", {
+			name: "Create system role",
+		});
+		expect(dialog).toBeVisible();
+		expect(opened.router.state.location.pathname).toBe(LIST);
 		expect(
-			await screen.findByRole("heading", {
-				level: 1,
-				name: "Create system role",
-			})
-		).toBeVisible();
-		expect(opened.router.state.location.pathname).toBe(CREATOR);
-		expect(screen.getByRole("textbox", { name: /Role name/ })).toHaveValue("");
-		for (const item of screen.getAllByRole("checkbox"))
+			within(dialog).getByRole("textbox", { name: /Role name/ })
+		).toHaveValue("");
+		for (const item of within(dialog).getAllByRole("checkbox"))
 			expect(item).not.toBeChecked();
-		expect(screen.getByText("Choose at least one permission.")).toBeVisible();
-		expect(create()).toBeDisabled();
+		expect(
+			within(dialog).getByText("Choose at least 1 permission.")
+		).toBeVisible();
 		expect(screen.queryByText(/unavailable/)).not.toBeInTheDocument();
 	});
 
@@ -132,7 +133,7 @@ describe("Create system role", () => {
 
 		await screen.findByRole("button", { name: "Edit Manager" });
 		expect(
-			screen.queryByRole("button", { name: "Create Role" })
+			screen.queryByRole("button", { name: "Create system role" })
 		).not.toBeInTheDocument();
 	});
 
@@ -147,11 +148,11 @@ describe("Create system role", () => {
 
 		await open(LIST);
 		await screen.findByText("Manager");
-		await userEvent.click(screen.getByRole("button", { name: "Create Role" }));
+		await app?.router.navigate({ to: CREATOR });
 		await fillIn("  Supervisor ");
 
 		expect(
-			await screen.findByRole("heading", { level: 1, name: "System Roles" })
+			await screen.findByRole("heading", { level: 1, name: "System roles" })
 		).toBeVisible();
 		expect(app?.router.state.location.pathname).toBe(LIST);
 		expect(

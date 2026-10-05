@@ -831,6 +831,22 @@ describe("Select", () => {
 		).toHaveTextContent("People");
 	});
 
+	it("describes the trigger with the caller's helper or error text", () => {
+		render(
+			<>
+				<span id="branch-hint">The branch it belongs to.</span>
+				<Select
+					aria-describedby="branch-hint"
+					aria-label="Branch"
+					options={options}
+				/>
+			</>
+		);
+		expect(
+			screen.getByRole("button", { name: "Branch" })
+		).toHaveAccessibleDescription("The branch it belongs to.");
+	});
+
 	it("keeps a controlled value until the caller updates it", async () => {
 		const user = userEvent.setup();
 		const onChange = vi.fn();

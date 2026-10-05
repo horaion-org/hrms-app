@@ -76,8 +76,11 @@ export const Branches = (): FunctionComponent => {
 				t,
 				(branch) => (
 					<>
-						<OverflowMenuItem disabled={!can("branch:update", branch.branchId)}>
-							{t("organisation.list.editItem")}
+						<OverflowMenuItem disabled>
+							{t("organisation.list.viewItem")}
+						</OverflowMenuItem>
+						<OverflowMenuItem disabled>
+							{t("organisation.list.duplicateItem")}
 						</OverflowMenuItem>
 						<OverflowMenuItem disabled>
 							{t(
@@ -92,7 +95,7 @@ export const Branches = (): FunctionComponent => {
 				(branch) => can("branch:update", branch.branchId)
 			),
 		],
-		[t, i18n.language]
+		[t, i18n.language, can]
 	);
 
 	return (

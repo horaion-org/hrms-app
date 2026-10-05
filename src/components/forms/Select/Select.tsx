@@ -30,6 +30,7 @@ type SharedProps = {
 	ref?: Ref<HTMLButtonElement>;
 	"aria-label"?: string;
 	"aria-labelledby"?: string;
+	"aria-describedby"?: string;
 	"aria-invalid"?: AriaAttributes["aria-invalid"];
 };
 
@@ -71,6 +72,7 @@ export const Select = (props: SelectProps): FunctionComponent => {
 		defaultValue,
 		"aria-label": ariaLabel,
 		"aria-labelledby": ariaLabelledby,
+		"aria-describedby": ariaDescribedby,
 		"aria-invalid": ariaInvalid,
 	} = props;
 	return (
@@ -112,6 +114,7 @@ export const Select = (props: SelectProps): FunctionComponent => {
 							{/* eslint-disable-next-line jsx-a11y/role-supports-aria-props -- Select's form-control trigger exposes validation per its public ARIA contract. */}
 							<button
 								ref={ref}
+								aria-describedby={ariaDescribedby}
 								aria-label={ariaLabel}
 								aria-labelledby={ariaLabelledby}
 								type="button"

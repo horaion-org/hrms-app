@@ -4,6 +4,7 @@ import {
 	DepartmentIcon,
 	OrganisationIcon,
 	PermissionsIcon,
+	RoleIcon,
 	UserIcon,
 } from "@/components/ui/Icon";
 import type { AuditEvent } from "@/features/organisation/api";
@@ -13,6 +14,8 @@ type ActivityKey =
 	| "branchUpdated"
 	| "departmentCreated"
 	| "departmentUpdated"
+	| "jobTitleCreated"
+	| "jobTitleUpdated"
 	| "roleCreated"
 	| "roleUpdated"
 	| "roleDeleted";
@@ -22,6 +25,8 @@ const ACTIVITIES: Record<string, { key: ActivityKey; icon: Heroicon }> = {
 	"branch.update": { key: "branchUpdated", icon: OrganisationIcon },
 	"department.create": { key: "departmentCreated", icon: DepartmentIcon },
 	"department.update": { key: "departmentUpdated", icon: DepartmentIcon },
+	"job_title.create": { key: "jobTitleCreated", icon: RoleIcon },
+	"job_title.update": { key: "jobTitleUpdated", icon: RoleIcon },
 	"access_role.create": { key: "roleCreated", icon: UserIcon },
 	"access_role.update": { key: "roleUpdated", icon: PermissionsIcon },
 	"access_role.delete": { key: "roleDeleted", icon: UserIcon },

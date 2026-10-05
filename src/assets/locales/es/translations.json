@@ -108,6 +108,166 @@
         "forbidden": "Ya no tienes permiso para crear sucursales.",
         "failed": "No pudimos crear la sucursal. Inténtalo de nuevo."
       }
+    },
+    "headsField": {
+      "searchPlaceholder": "Buscar personas",
+      "active": "Activo",
+      "loading": "Cargando personas…",
+      "noResults": "No se encontraron miembros activos.",
+      "membersFailed": "No pudimos cargar las personas. Inténtalo de nuevo.",
+      "membersFooter": "Mostrando miembros activos de la empresa",
+      "membersTruncated": "Mostrando 20 de {{total}} miembros activos de la empresa. Escribe para acotar la búsqueda.",
+      "counter": "{{count}}/20"
+    },
+    "permissions": {
+      "area": "Área",
+      "cell": "{{resource}}: {{action}}",
+      "resources": {
+        "company": "Empresa",
+        "company_member": "Miembro de la empresa",
+        "branch": "Sucursal",
+        "branch_member": "Miembro de la sucursal",
+        "department": "Departamento",
+        "department_member": "Miembro del departamento",
+        "job_title": "Puesto",
+        "access_role": "Rol del sistema",
+        "audit_event": "Registro de actividad"
+      },
+      "actions": {
+        "read": "Ver",
+        "create": "Crear",
+        "update": "Editar",
+        "deactivate": "Desactivar",
+        "delete": "Eliminar",
+        "assign": "Asignar"
+      },
+      "actionNames": {
+        "read": "ver",
+        "create": "crear",
+        "update": "editar",
+        "deactivate": "desactivar",
+        "delete": "eliminar",
+        "assign": "asignar"
+      }
+    },
+    "jobTitles": {
+      "title": "Puestos",
+      "caption": "Puestos activos",
+      "subtitle": "Crea y administra los puestos de la organización.",
+      "search": "Buscar puesto",
+      "create": "Crear puesto",
+      "all": "Todos los puestos",
+      "name": "Puesto",
+      "label": "Puestos",
+      "empty": "Todavía no hay puestos.",
+      "createDialog": {
+        "title": "Crear puesto",
+        "description": "Añade un puesto que las personas de toda la organización puedan ocupar.",
+        "name": "Nombre del puesto",
+        "namePlaceholder": "p. ej., Supervisor de turno",
+        "nameHint": "Entre 2 y 100 caracteres. Solo letras, números, espacios y . ' & -.",
+        "nameCounter": "{{count}}/100",
+        "cancel": "Cancelar",
+        "submit": "Crear puesto",
+        "nameRequired": "Introduce un nombre para el puesto.",
+        "nameLength": "Usa entre 2 y 100 caracteres.",
+        "nameCharacters": "Usa solo letras, números, espacios y . ' & -.",
+        "nameConflict": "Ya existe un puesto llamado \"{{name}}\". Elige otro nombre.",
+        "nameRejected": "Revisa el nombre del puesto e inténtalo de nuevo.",
+        "forbidden": "Ya no tienes permiso para crear puestos.",
+        "failed": "No pudimos crear el puesto. Inténtalo de nuevo."
+      }
+    },
+    "activity": {
+      "named": {
+        "jobTitleCreated": "Puesto creado: {{name}}",
+        "jobTitleUpdated": "Puesto actualizado: {{name}}"
+      },
+      "unnamed": {
+        "jobTitleCreated": "Puesto creado",
+        "jobTitleUpdated": "Puesto actualizado"
+      }
+    },
+    "departments": {
+      "title": "Departamentos",
+      "caption": "Departamentos activos",
+      "subtitle": "Crea y administra los departamentos de la organización.",
+      "search": "Buscar departamento",
+      "create": "Crear departamento",
+      "all": "Todos los departamentos",
+      "name": "Nombre del departamento",
+      "label": "Departamentos",
+      "empty": "Todavía no hay departamentos.",
+      "createDialog": {
+        "title": "Crear departamento",
+        "description": "Añade un departamento a una sucursal y elige a las personas que lo lideran.",
+        "branch": "Sucursal",
+        "branchPlaceholder": "Seleccionar una sucursal",
+        "branchHint": "La sucursal activa a la que pertenece el departamento.",
+        "branchesLoading": "Cargando sucursales…",
+        "branchesEmpty": "No hay sucursales activas. Crea primero una sucursal.",
+        "branchesFailed": "No pudimos cargar las sucursales. Inténtalo de nuevo.",
+        "branchRequired": "Elige una sucursal.",
+        "branchUnavailable": "Esta sucursal ya no está disponible. Elige otra sucursal.",
+        "name": "Nombre del departamento",
+        "namePlaceholder": "p. ej., Atención al cliente",
+        "nameHint": "Entre 2 y 100 caracteres. Solo letras, números, espacios y . ' & -.",
+        "nameCounter": "{{count}}/100",
+        "heads": "Responsables del departamento",
+        "headsPlaceholder": "Seleccionar responsables",
+        "headsHint": "Los responsables lideran el departamento y se unen a su sucursal si hace falta. Añade al menos 1, hasta 20.",
+        "headsCounter": "{{count}}/20",
+        "cancel": "Cancelar",
+        "submit": "Crear departamento",
+        "nameRequired": "Introduce un nombre para el departamento.",
+        "nameLength": "Usa entre 2 y 100 caracteres.",
+        "nameCharacters": "Usa solo letras, números, espacios y . ' & -.",
+        "headsRequired": "Elige al menos un responsable del departamento.",
+        "headsMax": "Elige un máximo de 20 responsables.",
+        "nameConflict": "Ya existe un departamento llamado \"{{name}}\" en esta sucursal. Elige otro nombre.",
+        "headsUnavailable": "Una de las personas elegidas ya no es un miembro activo. Elimínala e inténtalo de nuevo.",
+        "nameRejected": "Revisa el nombre del departamento e inténtalo de nuevo.",
+        "headsRejected": "Revisa las personas elegidas e inténtalo de nuevo.",
+        "forbidden": "Ya no tienes permiso para crear departamentos.",
+        "failed": "No pudimos crear el departamento. Inténtalo de nuevo."
+      }
+    },
+    "accessRoles": {
+      "title": "Roles del sistema",
+      "caption": "Roles configurados",
+      "subtitle": "Crea y administra los roles del sistema y sus permisos de acceso.",
+      "search": "Buscar rol del sistema",
+      "create": "Crear rol del sistema",
+      "name": "Rol del sistema",
+      "permissions": "Permisos clave",
+      "fullAccess": "Acceso total al sistema",
+      "permissionCount_one": "{{count}} permiso",
+      "permissionCount_other": "{{count}} permisos",
+      "label": "Roles del sistema",
+      "empty": "Todavía no hay roles del sistema.",
+      "createDialog": {
+        "title": "Crear rol del sistema",
+        "description": "Pon nombre al rol y elige qué pueden hacer las personas que lo tengan.",
+        "name": "Nombre del rol",
+        "namePlaceholder": "p. ej., Gerente de sucursal",
+        "nameHint": "Entre 2 y 100 caracteres. Solo letras, números, espacios y . ' & -.",
+        "nameCounter": "{{count}}/100",
+        "permissions": "Permisos",
+        "permissionsHint": "Elige al menos 1 permiso.",
+        "permissionsHeld": "Elige al menos 1 permiso. Solo puedes conceder los permisos que tienes.",
+        "permissionsCounter": "{{count}} seleccionados",
+        "cancel": "Cancelar",
+        "submit": "Crear rol del sistema",
+        "nameRequired": "Introduce un nombre para el rol.",
+        "nameLength": "Usa entre 2 y 100 caracteres.",
+        "nameCharacters": "Usa solo letras, números, espacios y . ' & -.",
+        "permissionsRequired": "Elige al menos un permiso.",
+        "nameConflict": "Ya existe un rol del sistema llamado \"{{name}}\". Elige otro nombre.",
+        "nameRejected": "Revisa el nombre del rol e inténtalo de nuevo.",
+        "permissionsRejected": "Algunos permisos ya no están disponibles. Recarga la página e inténtalo de nuevo.",
+        "forbidden": "No puedes crear este rol. Es posible que ya no tengas algunos de los permisos elegidos o el permiso para crear roles del sistema.",
+        "failed": "No pudimos crear el rol del sistema. Inténtalo de nuevo."
+      }
     }
   }
 }

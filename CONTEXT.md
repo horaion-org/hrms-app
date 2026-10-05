@@ -26,6 +26,22 @@ _Avoid_: Site, outlet, office
 A person who leads a Branch on the org chart. An active Branch always has at least one. Being a Branch head does not by itself give a person any permissions.
 _Avoid_: Branch manager, branch owner, branch admin
 
+**Department**:
+A unit of a Branch that groups some of its people. Like a Branch, it is active or inactive, never deleted, and its name is unique within its Branch ignoring letter case and extra spaces.
+_Avoid_: Team, division, section
+
+**Department head**:
+A person who leads a Department on the org chart. An active Department always has at least one. Being a Department head does not by itself give a person any permissions.
+_Avoid_: Department manager, supervisor
+
+**Job title**:
+The name of a person's job as shown on their card, such as Manager, defined once for the whole Company. A job title is active or inactive, never deleted, and never gives a person any permissions.
+_Avoid_: Role, position, job grade
+
+**System role**:
+A named set of permissions a Company grants to people. The API calls it an access role.
+_Avoid_: Access role (in UI copy), role on its own, permission group, Job title
+
 ## Access
 
 **Onboarding**:

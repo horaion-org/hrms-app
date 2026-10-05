@@ -10,6 +10,7 @@ import {
 	fetchAccessRoleCount,
 	fetchActiveBranchCount,
 	fetchActiveDepartmentCount,
+	fetchActiveJobTitleCount,
 	fetchRecentActivity,
 	type AuditEvent,
 } from "@/features/organisation/api";
@@ -27,6 +28,7 @@ export type OrganisationOverview =
 			status: "ready";
 			branches: Visible<Count>;
 			departments: Visible<Count>;
+			jobTitles: Visible<Count>;
 			accessRoles: Visible<Count>;
 			activity: Visible<{
 				events: Array<AuditEvent> | undefined;
@@ -56,6 +58,7 @@ export const useOrganisationOverview = (
 	const canReadDepartments = can("department:read");
 	const canReadAccessRoles = can("access_role:read");
 	const canReadActivity = can("audit_event:read");
+	const canReadJobTitles = can("job_title:read");
 
 	const branches = useQuery({
 		queryKey: ["organisation", companyId, "active-branch-count"],
@@ -69,6 +72,13 @@ export const useOrganisationOverview = (
 		retry,
 		queryFn: canReadDepartments
 			? (): Promise<number> => fetchActiveDepartmentCount(companyId)
+			: skipToken,
+	});
+	const jobTitles = useQuery({
+		queryKey: ["organisation", companyId, "active-job-title-count"],
+		retry,
+		queryFn: canReadJobTitles
+			? (): Promise<number> => fetchActiveJobTitleCount(companyId)
 			: skipToken,
 	});
 	const accessRoles = useQuery({
@@ -93,6 +103,7 @@ export const useOrganisationOverview = (
 		status: "ready",
 		branches: visibleCount(canReadBranches, branches),
 		departments: visibleCount(canReadDepartments, departments),
+		jobTitles: visibleCount(canReadJobTitles, jobTitles),
 		accessRoles: visibleCount(canReadAccessRoles, accessRoles),
 		activity: canReadActivity
 			? { hidden: false, events: activity.data, failed: activity.isError }

@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { useCan } from "@/features/workspace/useCan";
 import { useTranslation } from "react-i18next";
@@ -5,6 +6,7 @@ import type { FunctionComponent } from "@/common/types";
 import { DataTable, type DataTableSort } from "@/components/ui/DataTable";
 import { OverflowMenuItem } from "@/components/ui/OverflowMenu";
 import type { Department } from "@/features/organisation/api";
+import { CreateDepartmentDialog } from "@/features/organisation/CreateDepartmentDialog";
 import { ListToolbar } from "@/features/organisation/ListToolbar";
 import {
 	actionsColumn,
@@ -17,10 +19,21 @@ import {
 } from "@/features/organisation/listColumns";
 import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import { useDepartments } from "@/features/organisation/useOrganisationList";
+import { companyPermissions, workspaceQuery } from "@/features/workspace/api";
 
 export const Departments = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
 	const { t } = useTranslation();
+	const [creating, setCreating] = useState(false);
+	const workspace = useQuery(workspaceQuery);
+	const permissions = workspace.data
+		? companyPermissions(workspace.data, companyId)
+		: new Set<string>();
+	// Choosing a Branch and searching for heads need their own read grants.
+	const canCreate =
+		permissions.has("department:create") &&
+		permissions.has("company_member:read") &&
+		permissions.has("branch:read");
 	const [search, setSearch] = useState("");
 	const [status, setStatus] = useState<StatusFilter>("all");
 	const [sort, setSort] = useState<DataTableSort>({ id: "name", desc: false });
@@ -87,7 +100,23 @@ export const Departments = (): FunctionComponent => {
 					},
 				}}
 				onSearchChange={setSearch}
+				onCreate={
+					canCreate
+						? (): void => {
+								setCreating(true);
+							}
+						: undefined
+				}
 			/>
+			{creating && canCreate && (
+				<CreateDepartmentDialog
+					key={companyId}
+					companyId={companyId}
+					onClose={() => {
+						setCreating(false);
+					}}
+				/>
+			)}
 			{view.problem ? (
 				<p
 					className="mt-8 text-sm text-neutral-700 data-alert:text-error-700"

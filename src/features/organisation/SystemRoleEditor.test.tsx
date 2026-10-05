@@ -139,7 +139,7 @@ describe("System role editor", () => {
 		await user.click(save());
 
 		expect(
-			await screen.findByRole("heading", { level: 1, name: "System Roles" })
+			await screen.findByRole("heading", { level: 1, name: "System roles" })
 		).toBeVisible();
 		expect(opened.router.state.location.pathname).toBe(
 			"/organisation/system-roles"

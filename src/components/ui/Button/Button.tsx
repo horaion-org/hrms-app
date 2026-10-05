@@ -99,6 +99,7 @@ export const Button = ({
 			className="absolute left-1/2 top-1/2 size-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-current border-r-transparent motion-safe:animate-spin"
 		/>
 	);
+
 	const content = (
 		<>
 			{loading ? (

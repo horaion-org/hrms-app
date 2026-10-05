@@ -1,513 +1,633 @@
 {
-  "dialog": {
-    "close": "Close"
-  },
-  "combobox": {
-    "remove": "Remove {{label}}",
-    "loading": "Loading…",
-    "noResults": "No results"
-  },
-  "passwordInput": {
-    "show": "Show password",
-    "hide": "Hide password"
-  },
-  "auth": {
-    "passwordReset": {
-      "title": "Reset your password",
-      "requestSubtitle": "Enter your email to request a reset code.",
-      "completeSubtitle": "Enter the code from your email and choose a new password.",
-      "details": "Password reset details",
-      "email": "Email",
-      "code": "Code",
-      "newPassword": "New password",
-      "confirmPassword": "Confirm password",
-      "request": "Send reset code",
-      "complete": "Reset password",
-      "resend": "Send a new code",
-      "pending": "Please wait…",
-      "back": "Back to Log in",
-      "sent": "If that email has an account, we've sent a code",
-      "success": "Your password was reset. Every device was logged out. Log in with your new password.",
-      "invalidCode": "This code is incorrect or has expired. Try again or send a new code.",
-      "codeFormat": "Enter the six-digit code from your email.",
-      "passwordPolicy": "Use 8–128 characters, including a lowercase letter, an uppercase letter, a digit and a symbol.",
-      "passwordMismatch": "Passwords don’t match. Enter the same password in both fields.",
-      "failed": "We couldn’t reset your password. Please try again."
-    },
-    "company": {
-      "title": "Choose a company",
-      "description": "Choose the company you want to work in.",
-      "current": "Current company",
-      "switch": "Switch company",
-      "noneTitle": "You no longer have access to any company",
-      "noneDescription": "Contact your company administrator if you need access."
-    },
-    "challenge": {
-      "newPasswordTitle": "Choose a new password",
-      "newPasswordSubtitle": "Choose your own password to continue logging in.",
-      "newPassword": "New password",
-      "confirmPassword": "Confirm password",
-      "passwordPolicy": "Use 8–128 characters with a lowercase letter, an uppercase letter, a number and a symbol.",
-      "passwordMismatch": "Passwords don’t match. Enter the same password in both fields.",
-      "passwordRejected": "This password doesn’t meet the requirements. Choose another password.",
-      "codeTitle": "Enter your authenticator code",
-      "codeSubtitle": "Enter the six-digit code from your authenticator app to continue logging in.",
-      "code": "Authenticator code",
-      "codeFormat": "Enter a six-digit code.",
-      "invalidCode": "That code didn’t match. Enter a new code from your authenticator app.",
-      "expired": "This step expired. Log in again to continue.",
-      "continue": "Continue",
-      "pending": "Continuing…"
-    },
-    "showConfirmedPassword": "Show confirmed password",
-    "hideConfirmedPassword": "Hide confirmed password",
-    "showPassword": "Show password",
-    "hidePassword": "Hide password",
-    "logIn": {
-      "title": "Log in",
-      "subtitle": "Log in with your email and password.",
-      "details": "Log in details",
-      "email": "Email",
-      "emailPlaceholder": "Email address",
-      "password": "Password",
-      "trouble": "Having trouble logging in?",
-      "pending": "Logging in…",
-      "noAccount": "Don’t have an account?",
-      "signUp": "Sign up"
-    },
-    "logOut": "Log out",
-    "errors": {
-      "invalidCredentials": "Your email or password is incorrect.",
-      "generic": "We can’t log you in yet. Please try again.",
-      "unreachable": "We couldn’t reach Horaion. Please try again shortly.",
-      "invalidCode": "That code is incorrect or has expired. Try again or send a new code."
-    },
-    "validation": {
-      "required": "This field is required.",
-      "tooLong": "Use at most {{max}} characters.",
-      "email": "Enter a valid email address, such as name@company.com.",
-      "passwordRejected": "Check your password and try again."
-    },
-    "unreachable": {
-      "title": "We can't reach Horaion",
-      "explanation": "Check your connection and try again. Horaion may be temporarily unavailable.",
-      "tryAgain": "Try again"
-    },
-    "retryHold": {
-      "later": "Too many attempts. Try again later.",
-      "aboutAMinute": "Too many attempts. Try again in about a minute.",
-      "minutes_one": "Too many attempts. Try again in about {{count}} minute.",
-      "minutes_other": "Too many attempts. Try again in about {{count}} minutes."
-    },
-    "emailConfirmation": {
-      "title": "Email confirmation",
-      "subtitle": "Enter the six-digit code sent to your email.",
-      "details": "Email confirmation details",
-      "email": "Email address",
-      "code": "Confirmation code",
-      "submit": "Confirm email",
-      "pending": "Confirming email…",
-      "didNotReceive": "Didn’t receive a code?",
-      "resend": "Resend",
-      "resending": "Sending…",
-      "resent": "If that email needs confirming, we've sent a new code",
-      "redirecting": "Your email is confirmed. Redirecting to log in in 3 seconds.",
-      "required": "Confirm your email before logging in.",
-      "invalidCode": "That code is incorrect or has expired. Try again or send a new code.",
-      "codeFormat": "Enter a six-digit code.",
-      "failed": "We couldn’t confirm your email. Please try again."
-    }
-  },
-  "calendar": {
-    "previousMonth": "Previous month",
-    "nextMonth": "Next month",
-    "previousYear": "Previous year",
-    "nextYear": "Next year",
-    "showMonths": "Show months",
-    "showYears": "Show years",
-    "previousYears": "Previous 12 years",
-    "nextYears": "Next 12 years",
-    "range": {
-      "draftStart": "Range start; choose an end date",
-      "start": "Range start",
-      "middle": "Within range",
-      "end": "Range end",
-      "start-end": "Range start and end",
-      "preview": {
-        "start": "Preview: range start",
-        "middle": "Preview: within range",
-        "end": "Preview: range end"
-      }
-    }
-  },
-  "select": {
-    "noOptions": "No options",
-    "selectedCount_one": "{{count}} selected",
-    "selectedCount_other": "{{count}} selected"
-  },
-  "dataTable": {
-    "selectAll": "Select all",
-    "selectRow": "Select {{name}}",
-    "sortBy": "Sort by {{column}}"
-  },
-  "shell": {
-    "welcome": "Welcome, <name>{{name}}</name>.",
-    "navigation": {
-      "dashboard": "Dashboard",
-      "scheduling": "Scheduling",
-      "leave": "Leave",
-      "people": "People",
-      "organisation": "Organisation"
-    },
-    "comingSoon": "This Module is coming soon.",
-    "settings": "Settings"
-  },
-  "settings": {
-    "title": "Settings",
-    "subtitle": "Manage your workspace preferences.",
-    "sections": "Settings sections",
-    "comingSoon": "These settings are coming soon.",
-    "general": {
-      "title": "General",
-      "description": "Core workspace preferences.",
-      "subtitle": "Manage your workspace preferences.",
-      "workspaceName": "Workspace Name",
-      "defaultLanguage": "Default Language",
-      "timeZone": "Time Zone",
-      "dateFormat": "Date Format",
-      "country": "Country",
-      "languages": {
-        "en": "English"
-      },
-      "timeZones": {
-        "asiaSingapore": "Singapore (GMT +8)"
-      },
-      "dateFormats": {
-        "dayMonthYear": "DD MM YYYY",
-        "monthDayYear": "MM DD YYYY",
-        "yearMonthDay": "YYYY MM DD"
-      },
-      "countries": {
-        "sg": "Singapore"
-      },
-      "cancel": "Cancel",
-      "save": "Save Changes",
-      "saveUnavailable": "Saving settings isn’t available yet.",
-      "failed": "We couldn’t load your workspace details. Please try again.",
-      "validation": {
-        "required": "Enter a workspace name.",
-        "tooLong": "Use at most {{max}} characters."
-      }
-    },
-    "notifications": {
-      "title": "Notifications",
-      "description": "Control what you are notified about and how."
-    },
-    "scheduling": {
-      "title": "Scheduling",
-      "description": "Configure approval workflows and hierarchies."
-    }
-  },
-  "organisation": {
-    "title": "Organisation Overview",
-    "subtitle": "Manage your organisation’s structure and workforce settings.",
-    "unknownCount": "—",
-    "failed": "We couldn’t load your organisation details. Please try again.",
-    "viewAll": "View All",
-    "status": {
-      "ACTIVE": "Active",
-      "INACTIVE": "Inactive"
-    },
-    "list": {
-      "showing": "Showing:",
-      "status": "Status",
-      "actions": "Actions",
-      "edit": "Edit {{name}}",
-      "moreActions": "More actions for {{name}}",
-      "editItem": "Edit",
-      "viewItem": "View",
-      "duplicateItem": "Duplicate",
-      "activateItem": "Activate",
-      "deactivateItem": "Deactivate",
-      "deleteItem": "Delete",
-      "loading": "Loading…",
-      "failed": "We couldn’t load this list. Please try again.",
-      "forbidden": "You don’t have permission to view this list.",
-      "noMatches": "Nothing matches your search or filter.",
-      "truncated": "Showing the first {{shown}} of {{total}}. Use the status filter to narrow the list."
-    },
-    "branches": {
-      "title": "Branches",
-      "caption": "Active Branches",
-      "subtitle": "Create and manage organisation branches.",
-      "search": "Search branch",
-      "create": "Create branch",
-      "all": "All branches",
-      "name": "Branch name",
-      "code": "Code",
-      "country": "Country",
-      "city": "City",
-      "label": "Branches",
-      "empty": "No branches yet.",
-      "createDialog": {
-        "title": "Create branch",
-        "description": "Add a branch to your organisation and choose who heads it.",
-        "name": "Branch name",
-        "namePlaceholder": "e.g. Orchard Road",
-        "nameHint": "2–100 characters. Letters, numbers, spaces and . ' & - only.",
-        "nameCounter": "{{count}}/100",
-        "code": "Branch code",
-        "codePlaceholder": "e.g. ORC",
-        "codeHint": "1–10 characters. Letters A–Z, numbers and hyphens only.",
-        "codeCounter": "{{count}}/10",
-        "codeConflict": "A branch with code \"{{code}}\" already exists. Choose a different code.",
-        "codeRejected": "Check the branch code and try again.",
-        "codeRequired": "Enter a branch code.",
-        "codeLength": "Use 1 to 10 characters.",
-        "codeCharacters": "Use only letters A–Z, numbers and hyphens in the code.",
-        "city": "City",
-        "cityPlaceholder": "e.g. Singapore",
-        "cityHint": "1–100 characters. Letters, spaces and . ' - only.",
-        "cityCounter": "{{count}}/100",
-        "cityRequired": "Enter a city.",
-        "cityRejected": "Check the city and try again.",
-        "cityLength": "Use 1 to 100 characters.",
-        "cityCharacters": "Use only letters, spaces and . ' - in the city.",
-        "country": "Country",
-        "countryPlaceholder": "Select a country",
-        "countrySearch": "Search countries",
-        "countryEmpty": "No countries found.",
-        "countryRequired": "Choose a country.",
-        "countryRejected": "Check the country and try again.",
-        "heads": "Branch heads",
-        "headsPlaceholder": "Select branch heads",
-        "searchPlaceholder": "Search people",
-        "headsHint": "Heads lead the branch. Add at least 1, up to 20.",
-        "headsCounter": "{{count}}/20",
-        "active": "Active",
-        "loading": "Loading people…",
-        "noResults": "No active members found.",
-        "membersFailed": "We couldn’t load people. Try again.",
-        "membersFooter": "Showing active company members",
-        "membersTruncated": "Showing 20 of {{total}} active company members. Type to narrow.",
-        "cancel": "Cancel",
-        "submit": "Create branch",
-        "submitting": "Creating branch…",
-        "nameRequired": "Enter a branch name.",
-        "nameLength": "Use 2 to 100 characters.",
-        "nameCharacters": "Use only letters, numbers, spaces and . ' & - in the name.",
-        "headsRequired": "Choose at least one branch head.",
-        "headsMax": "Choose no more than 20 branch heads.",
-        "nameConflict": "A branch named \"{{name}}\" already exists. Choose a different name.",
-        "headsUnavailable": "One of the chosen people is no longer an active member. Remove them and try again.",
-        "nameRejected": "Check the branch name and try again.",
-        "headsRejected": "Check the chosen people and try again.",
-        "forbidden": "You no longer have permission to create branches.",
-        "failed": "We couldn’t create the branch. Try again."
-      }
-    },
-    "departments": {
-      "title": "Departments",
-      "caption": "Active Departments",
-      "subtitle": "Create and manage organisation departments.",
-      "search": "Search Department",
-      "create": "Create Department",
-      "all": "All Departments",
-      "name": "Department Name",
-      "label": "Departments",
-      "empty": "No departments yet."
-    },
-    "jobTitles": {
-      "title": "Job Titles",
-      "caption": "Coming soon",
-      "subtitle": "Create and manage organisation job titles.",
-      "search": "Search Job Title",
-      "create": "Create Job Title",
-      "all": "All Job Titles",
-      "name": "Job Title",
-      "systemRole": "System Role",
-      "employeeCount": "Employee Count",
-      "label": "Job titles",
-      "empty": "No job titles yet."
-    },
-    "accessRoles": {
-      "title": "System Roles",
-      "caption": "Configured Roles",
-      "subtitle": "Create and manage system roles and access permissions.",
-      "search": "Search System Role",
-      "create": "Create Role",
-      "name": "System Role",
-      "permissions": "Key Permissions",
-      "people": "People",
-      "peopleCount_one": "{{count}} person",
-      "peopleCount_other": "{{count}} people",
-      "viewPeople": "{{count}} people with the {{name}} role",
-      "assign": "Assign role",
-      "fullAccess": "Full system access",
-      "permissionCount_one": "{{count}} permission",
-      "permissionCount_other": "{{count}} permissions",
-      "label": "System roles",
-      "empty": "No system roles yet.",
-      "assignments": {
-        "tab": "People",
-        "permissionsTab": "Permissions",
-        "tabs": "Role sections",
-        "allows": "This role allows",
-        "title": "Who has this role",
-        "label": "People with this role",
-        "count_one": "{{count}} person",
-        "count_other": "{{count}} people",
-        "placesOf": "Where {{name}} has this role",
-        "assign": "Assign role",
-        "person": "Person",
-        "appliesTo": "Applies to",
-        "wholeCompany": "Whole company",
-        "department": "{{branch}} › {{department}}",
-        "empty": "Nobody has this role yet.",
-        "dialog": {
-          "title": "Assign role",
-          "description": "Give a role to a person and choose where they can use it.",
-          "role": "Role",
-          "rolePlaceholder": "Select a role",
-          "person": "Person",
-          "personPlaceholder": "Select a person",
-          "searchPlaceholder": "Search people",
-          "noResults": "No active members found.",
-          "places": "Applies to",
-          "placesPlaceholder": "Select where it applies",
-          "placesSearch": "Search branches and departments",
-          "placesEmpty": "Nothing matches.",
-          "placesHint": "Choose one or several. A branch includes its departments; the whole company includes everything.",
-          "allows": "There, they will be able to",
-          "cancel": "Cancel",
-          "submit": "Assign role",
-          "conflict": "This person already has the role at one of those places.",
-          "notMember": "This person isn’t an active member of one of those branches or departments.",
-          "forbidden": "You can only assign a role whose permissions you hold there.",
-          "failed": "We couldn’t assign the role. Try again."
-        },
-        "loadFailed": "We couldn’t load who holds this role.",
-        "removeFailed": "We couldn’t remove that assignment. Try again."
-      },
-      "editor": {
-        "back": "System roles",
-        "createTitle": "Create system role",
-        "create": "Create role",
-        "createForbidden": "You don’t have permission to create system roles.",
-        "unavailable": "You can only give a role permissions you hold yourself, so the others are unavailable.",
-        "scope": "Where this role applies is chosen when you assign it to a person.",
-        "fullAccess": "Full access",
-        "protected": "The Company Owner role always has every permission and can’t be changed.",
-        "viewOnly": "You don’t have permission to change system roles.",
-        "locked": "This role includes permissions you don’t hold, so you can’t change it.",
-        "name": "Role name",
-        "nameHint": "2–100 characters. Letters, numbers, spaces and . ' & - only.",
-        "nameCounter": "{{count}}/100",
-        "nameRequired": "Enter a role name.",
-        "nameLength": "Use 2 to 100 characters.",
-        "nameCharacters": "Use only letters, numbers, spaces and . ' & - in the name.",
-        "nameConflict": "A role named \"{{name}}\" already exists. Choose a different name.",
-        "nameRejected": "Check the role name and try again.",
-        "permissions": "Permissions",
-        "selected": "{{count}} of {{total}} selected",
-        "permissionsRequired": "Choose at least one permission.",
-        "added": "{{count}} added",
-        "removed": "{{count}} removed",
-        "discard": "Discard changes",
-        "save": "Save changes",
-        "forbidden": "This role includes permissions you don’t hold, or you can no longer change system roles.",
-        "gone": "This role no longer exists.",
-        "protectedRefused": "The Company Owner role can’t be changed.",
-        "failed": "We couldn’t save the role. Try again.",
-        "loadForbidden": "You don’t have permission to view this role.",
-        "loadMissing": "This role doesn’t exist or has been deleted.",
-        "loadFailed": "We couldn’t load this role. Please try again."
-      }
-    },
-    "permissions": {
-      "groupCount": "{{count}} of {{total}}",
-      "none": "No permissions yet.",
-      "company": {
-        "name": "Company",
-        "description": "The company’s own details.",
-        "actions": { "read": "View", "update": "Edit" }
-      },
-      "company_member": {
-        "name": "Company members",
-        "description": "The list of everyone in the company, by name.",
-        "actions": { "read": "View" }
-      },
-      "branch": {
-        "name": "Branches",
-        "description": "The company’s branches and their details.",
-        "actions": { "read": "View", "create": "Create", "update": "Edit" }
-      },
-      "branch_member": {
-        "name": "Branch members",
-        "description": "Who belongs to a branch and who heads it.",
-        "actions": {
-          "read": "View",
-          "create": "Add",
-          "update": "Edit",
-          "deactivate": "Deactivate"
-        }
-      },
-      "department": {
-        "name": "Departments",
-        "description": "The departments inside each branch.",
-        "actions": { "read": "View", "create": "Create", "update": "Edit" }
-      },
-      "department_member": {
-        "name": "Department members",
-        "description": "Who belongs to a department and who heads it.",
-        "actions": {
-          "read": "View",
-          "create": "Add",
-          "update": "Edit",
-          "deactivate": "Deactivate"
-        }
-      },
-      "access_role": {
-        "name": "System roles",
-        "description": "Roles like this one, and who they are assigned to.",
-        "actions": {
-          "read": "View",
-          "create": "Create",
-          "update": "Edit",
-          "delete": "Delete",
-          "assign": "Assign"
-        }
-      },
-      "audit_event": {
-        "name": "Activity",
-        "description": "The record of who changed what in the company.",
-        "actions": { "read": "View" }
-      }
-    },
-    "activity": {
-      "title": "Recent Activity",
-      "empty": "No recent activity yet.",
-      "failed": "We couldn’t load recent activity.",
-      "by": "by {{name}}",
-      "justNow": "Just now",
-      "named": {
-        "branchCreated": "Branch created: {{name}}",
-        "branchUpdated": "Branch updated: {{name}}",
-        "departmentCreated": "Department created: {{name}}",
-        "departmentUpdated": "Department updated: {{name}}",
-        "roleCreated": "Role created: {{name}}",
-        "roleUpdated": "Permissions updated for {{name}} role",
-        "roleDeleted": "Role deleted: {{name}}"
-      },
-      "unnamed": {
-        "branchCreated": "Branch created",
-        "branchUpdated": "Branch updated",
-        "departmentCreated": "Department created",
-        "departmentUpdated": "Department updated",
-        "roleCreated": "Role created",
-        "roleUpdated": "Role permissions updated",
-        "roleDeleted": "Role deleted"
-      }
-    }
-  }
+	"dialog": {
+		"close": "Close"
+	},
+	"combobox": {
+		"remove": "Remove {{label}}",
+		"loading": "Loading…",
+		"noResults": "No results"
+	},
+	"passwordInput": {
+		"show": "Show password",
+		"hide": "Hide password"
+	},
+	"auth": {
+		"passwordReset": {
+			"title": "Reset your password",
+			"requestSubtitle": "Enter your email to request a reset code.",
+			"completeSubtitle": "Enter the code from your email and choose a new password.",
+			"details": "Password reset details",
+			"email": "Email",
+			"code": "Code",
+			"newPassword": "New password",
+			"confirmPassword": "Confirm password",
+			"request": "Send reset code",
+			"complete": "Reset password",
+			"resend": "Send a new code",
+			"pending": "Please wait…",
+			"back": "Back to Log in",
+			"sent": "If that email has an account, we've sent a code",
+			"success": "Your password was reset. Every device was logged out. Log in with your new password.",
+			"invalidCode": "This code is incorrect or has expired. Try again or send a new code.",
+			"codeFormat": "Enter the six-digit code from your email.",
+			"passwordPolicy": "Use 8–128 characters, including a lowercase letter, an uppercase letter, a digit and a symbol.",
+			"passwordMismatch": "Passwords don’t match. Enter the same password in both fields.",
+			"failed": "We couldn’t reset your password. Please try again."
+		},
+		"company": {
+			"title": "Choose a company",
+			"description": "Choose the company you want to work in.",
+			"current": "Current company",
+			"switch": "Switch company",
+			"noneTitle": "You no longer have access to any company",
+			"noneDescription": "Contact your company administrator if you need access."
+		},
+		"challenge": {
+			"newPasswordTitle": "Choose a new password",
+			"newPasswordSubtitle": "Choose your own password to continue logging in.",
+			"newPassword": "New password",
+			"confirmPassword": "Confirm password",
+			"passwordPolicy": "Use 8–128 characters with a lowercase letter, an uppercase letter, a number and a symbol.",
+			"passwordMismatch": "Passwords don’t match. Enter the same password in both fields.",
+			"passwordRejected": "This password doesn’t meet the requirements. Choose another password.",
+			"codeTitle": "Enter your authenticator code",
+			"codeSubtitle": "Enter the six-digit code from your authenticator app to continue logging in.",
+			"code": "Authenticator code",
+			"codeFormat": "Enter a six-digit code.",
+			"invalidCode": "That code didn’t match. Enter a new code from your authenticator app.",
+			"expired": "This step expired. Log in again to continue.",
+			"continue": "Continue",
+			"pending": "Continuing…"
+		},
+		"showConfirmedPassword": "Show confirmed password",
+		"hideConfirmedPassword": "Hide confirmed password",
+		"showPassword": "Show password",
+		"hidePassword": "Hide password",
+		"logIn": {
+			"title": "Log in",
+			"subtitle": "Log in with your email and password.",
+			"details": "Log in details",
+			"email": "Email",
+			"emailPlaceholder": "Email address",
+			"password": "Password",
+			"trouble": "Having trouble logging in?",
+			"pending": "Logging in…",
+			"noAccount": "Don’t have an account?",
+			"signUp": "Sign up"
+		},
+		"logOut": "Log out",
+		"errors": {
+			"invalidCredentials": "Your email or password is incorrect.",
+			"generic": "We can’t log you in yet. Please try again.",
+			"unreachable": "We couldn’t reach Horaion. Please try again shortly.",
+			"invalidCode": "That code is incorrect or has expired. Try again or send a new code."
+		},
+		"validation": {
+			"required": "This field is required.",
+			"tooLong": "Use at most {{max}} characters.",
+			"email": "Enter a valid email address, such as name@company.com.",
+			"passwordRejected": "Check your password and try again."
+		},
+		"unreachable": {
+			"title": "We can't reach Horaion",
+			"explanation": "Check your connection and try again. Horaion may be temporarily unavailable.",
+			"tryAgain": "Try again"
+		},
+		"retryHold": {
+			"later": "Too many attempts. Try again later.",
+			"aboutAMinute": "Too many attempts. Try again in about a minute.",
+			"minutes_one": "Too many attempts. Try again in about {{count}} minute.",
+			"minutes_other": "Too many attempts. Try again in about {{count}} minutes."
+		},
+		"emailConfirmation": {
+			"title": "Email confirmation",
+			"subtitle": "Enter the six-digit code sent to your email.",
+			"details": "Email confirmation details",
+			"email": "Email address",
+			"code": "Confirmation code",
+			"submit": "Confirm email",
+			"pending": "Confirming email…",
+			"didNotReceive": "Didn’t receive a code?",
+			"resend": "Resend",
+			"resending": "Sending…",
+			"resent": "If that email needs confirming, we've sent a new code",
+			"redirecting": "Your email is confirmed. Redirecting to log in in 3 seconds.",
+			"required": "Confirm your email before logging in.",
+			"invalidCode": "That code is incorrect or has expired. Try again or send a new code.",
+			"codeFormat": "Enter a six-digit code.",
+			"failed": "We couldn’t confirm your email. Please try again."
+		}
+	},
+	"calendar": {
+		"previousMonth": "Previous month",
+		"nextMonth": "Next month",
+		"previousYear": "Previous year",
+		"nextYear": "Next year",
+		"showMonths": "Show months",
+		"showYears": "Show years",
+		"previousYears": "Previous 12 years",
+		"nextYears": "Next 12 years",
+		"range": {
+			"draftStart": "Range start; choose an end date",
+			"start": "Range start",
+			"middle": "Within range",
+			"end": "Range end",
+			"start-end": "Range start and end",
+			"preview": {
+				"start": "Preview: range start",
+				"middle": "Preview: within range",
+				"end": "Preview: range end"
+			}
+		}
+	},
+	"select": {
+		"noOptions": "No options",
+		"selectedCount_one": "{{count}} selected",
+		"selectedCount_other": "{{count}} selected"
+	},
+	"dataTable": {
+		"selectAll": "Select all",
+		"selectRow": "Select {{name}}",
+		"sortBy": "Sort by {{column}}"
+	},
+	"shell": {
+		"welcome": "Welcome, <name>{{name}}</name>.",
+		"navigation": {
+			"dashboard": "Dashboard",
+			"scheduling": "Scheduling",
+			"leave": "Leave",
+			"people": "People",
+			"organisation": "Organisation"
+		},
+		"comingSoon": "This Module is coming soon.",
+		"settings": "Settings"
+	},
+	"settings": {
+		"title": "Settings",
+		"subtitle": "Manage your workspace preferences.",
+		"sections": "Settings sections",
+		"comingSoon": "These settings are coming soon.",
+		"general": {
+			"title": "General",
+			"description": "Core workspace preferences.",
+			"subtitle": "Manage your workspace preferences.",
+			"workspaceName": "Workspace Name",
+			"defaultLanguage": "Default Language",
+			"timeZone": "Time Zone",
+			"dateFormat": "Date Format",
+			"country": "Country",
+			"languages": {
+				"en": "English"
+			},
+			"timeZones": {
+				"asiaSingapore": "Singapore (GMT +8)"
+			},
+			"dateFormats": {
+				"dayMonthYear": "DD MM YYYY",
+				"monthDayYear": "MM DD YYYY",
+				"yearMonthDay": "YYYY MM DD"
+			},
+			"countries": {
+				"sg": "Singapore"
+			},
+			"cancel": "Cancel",
+			"save": "Save Changes",
+			"saveUnavailable": "Saving settings isn’t available yet.",
+			"failed": "We couldn’t load your workspace details. Please try again.",
+			"validation": {
+				"required": "Enter a workspace name.",
+				"tooLong": "Use at most {{max}} characters."
+			}
+		},
+		"notifications": {
+			"title": "Notifications",
+			"description": "Control what you are notified about and how."
+		},
+		"scheduling": {
+			"title": "Scheduling",
+			"description": "Configure approval workflows and hierarchies."
+		}
+	},
+	"organisation": {
+		"title": "Organisation Overview",
+		"subtitle": "Manage your organisation’s structure and workforce settings.",
+		"unknownCount": "—",
+		"failed": "We couldn’t load your organisation details. Please try again.",
+		"viewAll": "View All",
+		"status": {
+			"ACTIVE": "Active",
+			"INACTIVE": "Inactive"
+		},
+		"list": {
+			"showing": "Showing:",
+			"status": "Status",
+			"actions": "Actions",
+			"edit": "Edit {{name}}",
+			"moreActions": "More actions for {{name}}",
+			"editItem": "Edit",
+			"viewItem": "View",
+			"duplicateItem": "Duplicate",
+			"activateItem": "Activate",
+			"deactivateItem": "Deactivate",
+			"deleteItem": "Delete",
+			"loading": "Loading…",
+			"failed": "We couldn’t load this list. Please try again.",
+			"forbidden": "You don’t have permission to view this list.",
+			"noMatches": "Nothing matches your search or filter.",
+			"truncated": "Showing the first {{shown}} of {{total}}. Use the status filter to narrow the list."
+		},
+		"branches": {
+			"title": "Branches",
+			"caption": "Active Branches",
+			"subtitle": "Create and manage organisation branches.",
+			"search": "Search branch",
+			"create": "Create branch",
+			"all": "All branches",
+			"name": "Branch name",
+			"code": "Code",
+			"country": "Country",
+			"city": "City",
+			"label": "Branches",
+			"empty": "No branches yet.",
+			"createDialog": {
+				"title": "Create branch",
+				"description": "Add a branch to your organisation and choose who heads it.",
+				"name": "Branch name",
+				"namePlaceholder": "e.g. Orchard Road",
+				"nameHint": "2–100 characters. Letters, numbers, spaces and . ' & - only.",
+				"nameCounter": "{{count}}/100",
+				"code": "Branch code",
+				"codePlaceholder": "e.g. ORC",
+				"codeHint": "1–10 characters. Letters A–Z, numbers and hyphens only.",
+				"codeCounter": "{{count}}/10",
+				"codeConflict": "A branch with code \"{{code}}\" already exists. Choose a different code.",
+				"codeRejected": "Check the branch code and try again.",
+				"codeRequired": "Enter a branch code.",
+				"codeLength": "Use 1 to 10 characters.",
+				"codeCharacters": "Use only letters A–Z, numbers and hyphens in the code.",
+				"city": "City",
+				"cityPlaceholder": "e.g. Singapore",
+				"cityHint": "1–100 characters. Letters, spaces and . ' - only.",
+				"cityCounter": "{{count}}/100",
+				"cityRequired": "Enter a city.",
+				"cityRejected": "Check the city and try again.",
+				"cityLength": "Use 1 to 100 characters.",
+				"cityCharacters": "Use only letters, spaces and . ' - in the city.",
+				"country": "Country",
+				"countryPlaceholder": "Select a country",
+				"countrySearch": "Search countries",
+				"countryEmpty": "No countries found.",
+				"countryRequired": "Choose a country.",
+				"countryRejected": "Check the country and try again.",
+				"heads": "Branch heads",
+				"headsPlaceholder": "Select branch heads",
+				"searchPlaceholder": "Search people",
+				"headsHint": "Heads lead the branch. Add at least 1, up to 20.",
+				"headsCounter": "{{count}}/20",
+				"active": "Active",
+				"loading": "Loading people…",
+				"noResults": "No active members found.",
+				"membersFailed": "We couldn’t load people. Try again.",
+				"membersFooter": "Showing active company members",
+				"membersTruncated": "Showing 20 of {{total}} active company members. Type to narrow.",
+				"cancel": "Cancel",
+				"submit": "Create branch",
+				"submitting": "Creating branch…",
+				"nameRequired": "Enter a branch name.",
+				"nameLength": "Use 2 to 100 characters.",
+				"nameCharacters": "Use only letters, numbers, spaces and . ' & - in the name.",
+				"headsRequired": "Choose at least one branch head.",
+				"headsMax": "Choose no more than 20 branch heads.",
+				"nameConflict": "A branch named \"{{name}}\" already exists. Choose a different name.",
+				"headsUnavailable": "One of the chosen people is no longer an active member. Remove them and try again.",
+				"nameRejected": "Check the branch name and try again.",
+				"headsRejected": "Check the chosen people and try again.",
+				"forbidden": "You no longer have permission to create branches.",
+				"failed": "We couldn’t create the branch. Try again."
+			}
+		},
+		"departments": {
+			"title": "Departments",
+			"caption": "Active departments",
+			"subtitle": "Create and manage organisation departments.",
+			"search": "Search department",
+			"create": "Create department",
+			"all": "All departments",
+			"name": "Department name",
+			"label": "Departments",
+			"empty": "No departments yet.",
+			"createDialog": {
+				"title": "Create department",
+				"description": "Add a department to a branch and choose who heads it.",
+				"branch": "Branch",
+				"branchPlaceholder": "Select a branch",
+				"branchHint": "The active branch the department belongs to.",
+				"branchesLoading": "Loading branches…",
+				"branchesEmpty": "No active branches. Create a branch first.",
+				"branchesFailed": "We couldn’t load branches. Try again.",
+				"branchRequired": "Choose a branch.",
+				"branchUnavailable": "This branch is no longer available. Choose another branch.",
+				"name": "Department name",
+				"namePlaceholder": "e.g. Front of house",
+				"nameHint": "2–100 characters. Letters, numbers, spaces and . ' & - only.",
+				"nameCounter": "{{count}}/100",
+				"heads": "Department heads",
+				"headsPlaceholder": "Select department heads",
+				"headsHint": "Heads lead the department and join its branch if needed. Add at least 1, up to 20.",
+				"headsCounter": "{{count}}/20",
+				"cancel": "Cancel",
+				"submit": "Create department",
+				"nameRequired": "Enter a department name.",
+				"nameLength": "Use 2 to 100 characters.",
+				"nameCharacters": "Use only letters, numbers, spaces and . ' & - in the name.",
+				"headsRequired": "Choose at least one department head.",
+				"headsMax": "Choose no more than 20 department heads.",
+				"nameConflict": "A department named \"{{name}}\" already exists in this branch. Choose a different name.",
+				"headsUnavailable": "One of the chosen people is no longer an active member. Remove them and try again.",
+				"nameRejected": "Check the department name and try again.",
+				"headsRejected": "Check the chosen people and try again.",
+				"forbidden": "You no longer have permission to create departments.",
+				"failed": "We couldn’t create the department. Try again."
+			}
+		},
+		"jobTitles": {
+			"title": "Job titles",
+			"caption": "Active job titles",
+			"subtitle": "Create and manage organisation job titles.",
+			"search": "Search job title",
+			"create": "Create job title",
+			"all": "All job titles",
+			"name": "Job title",
+			"label": "Job titles",
+			"empty": "No job titles yet.",
+			"createDialog": {
+				"title": "Create job title",
+				"description": "Add a job title that people across your organisation can hold.",
+				"name": "Job title name",
+				"namePlaceholder": "e.g. Shift supervisor",
+				"nameHint": "2–100 characters. Letters, numbers, spaces and . ' & - only.",
+				"nameCounter": "{{count}}/100",
+				"cancel": "Cancel",
+				"submit": "Create job title",
+				"nameRequired": "Enter a job title name.",
+				"nameLength": "Use 2 to 100 characters.",
+				"nameCharacters": "Use only letters, numbers, spaces and . ' & - in the name.",
+				"nameConflict": "A job title named \"{{name}}\" already exists. Choose a different name.",
+				"nameRejected": "Check the job title name and try again.",
+				"forbidden": "You no longer have permission to create job titles.",
+				"failed": "We couldn’t create the job title. Try again."
+			}
+		},
+		"accessRoles": {
+			"title": "System roles",
+			"caption": "Configured roles",
+			"subtitle": "Create and manage system roles and access permissions.",
+			"search": "Search system role",
+			"create": "Create system role",
+			"name": "System role",
+			"permissions": "Key permissions",
+			"people": "People",
+			"peopleCount_one": "{{count}} person",
+			"peopleCount_other": "{{count}} people",
+			"viewPeople": "{{count}} people with the {{name}} role",
+			"assign": "Assign role",
+			"fullAccess": "Full system access",
+			"permissionCount_one": "{{count}} permission",
+			"permissionCount_other": "{{count}} permissions",
+			"label": "System roles",
+			"empty": "No system roles yet.",
+			"assignments": {
+				"tab": "People",
+				"permissionsTab": "Permissions",
+				"tabs": "Role sections",
+				"allows": "This role allows",
+				"title": "Who has this role",
+				"label": "People with this role",
+				"count_one": "{{count}} person",
+				"count_other": "{{count}} people",
+				"placesOf": "Where {{name}} has this role",
+				"assign": "Assign role",
+				"person": "Person",
+				"appliesTo": "Applies to",
+				"wholeCompany": "Whole company",
+				"department": "{{branch}} › {{department}}",
+				"empty": "Nobody has this role yet.",
+				"dialog": {
+					"title": "Assign role",
+					"description": "Give a role to a person and choose where they can use it.",
+					"role": "Role",
+					"rolePlaceholder": "Select a role",
+					"person": "Person",
+					"personPlaceholder": "Select a person",
+					"searchPlaceholder": "Search people",
+					"noResults": "No active members found.",
+					"places": "Applies to",
+					"placesPlaceholder": "Select where it applies",
+					"placesSearch": "Search branches and departments",
+					"placesEmpty": "Nothing matches.",
+					"placesHint": "Choose one or several. A branch includes its departments; the whole company includes everything.",
+					"allows": "There, they will be able to",
+					"cancel": "Cancel",
+					"submit": "Assign role",
+					"conflict": "This person already has the role at one of those places.",
+					"notMember": "This person isn’t an active member of one of those branches or departments.",
+					"forbidden": "You can only assign a role whose permissions you hold there.",
+					"failed": "We couldn’t assign the role. Try again."
+				},
+				"loadFailed": "We couldn’t load who holds this role.",
+				"removeFailed": "We couldn’t remove that assignment. Try again."
+			},
+			"createDialog": {
+				"title": "Create system role",
+				"description": "Name the role and choose what people who hold it can do.",
+				"name": "Role name",
+				"namePlaceholder": "e.g. Branch manager",
+				"nameHint": "2–100 characters. Letters, numbers, spaces and . ' & - only.",
+				"nameCounter": "{{count}}/100",
+				"permissions": "Permissions",
+				"permissionsHint": "Choose at least 1 permission.",
+				"permissionsHeld": "Choose at least 1 permission. You can only grant permissions you hold.",
+				"permissionsCounter": "{{count}} selected",
+				"cancel": "Cancel",
+				"submit": "Create system role",
+				"nameRequired": "Enter a role name.",
+				"nameLength": "Use 2 to 100 characters.",
+				"nameCharacters": "Use only letters, numbers, spaces and . ' & - in the name.",
+				"permissionsRequired": "Choose at least one permission.",
+				"nameConflict": "A system role named \"{{name}}\" already exists. Choose a different name.",
+				"nameRejected": "Check the role name and try again.",
+				"permissionsRejected": "Some permissions are no longer available. Reload the page and try again.",
+				"forbidden": "You can’t create this role. You may no longer hold some of the chosen permissions, or permission to create system roles.",
+				"failed": "We couldn’t create the system role. Try again."
+			},
+			"editor": {
+				"back": "System roles",
+				"createTitle": "Create system role",
+				"create": "Create role",
+				"createForbidden": "You don’t have permission to create system roles.",
+				"unavailable": "You can only give a role permissions you hold yourself, so the others are unavailable.",
+				"scope": "Where this role applies is chosen when you assign it to a person.",
+				"fullAccess": "Full access",
+				"protected": "The Company Owner role always has every permission and can’t be changed.",
+				"viewOnly": "You don’t have permission to change system roles.",
+				"locked": "This role includes permissions you don’t hold, so you can’t change it.",
+				"name": "Role name",
+				"nameHint": "2–100 characters. Letters, numbers, spaces and . ' & - only.",
+				"nameCounter": "{{count}}/100",
+				"nameRequired": "Enter a role name.",
+				"nameLength": "Use 2 to 100 characters.",
+				"nameCharacters": "Use only letters, numbers, spaces and . ' & - in the name.",
+				"nameConflict": "A role named \"{{name}}\" already exists. Choose a different name.",
+				"nameRejected": "Check the role name and try again.",
+				"permissions": "Permissions",
+				"selected": "{{count}} of {{total}} selected",
+				"permissionsRequired": "Choose at least one permission.",
+				"added": "{{count}} added",
+				"removed": "{{count}} removed",
+				"discard": "Discard changes",
+				"save": "Save changes",
+				"forbidden": "This role includes permissions you don’t hold, or you can no longer change system roles.",
+				"gone": "This role no longer exists.",
+				"protectedRefused": "The Company Owner role can’t be changed.",
+				"failed": "We couldn’t save the role. Try again.",
+				"loadForbidden": "You don’t have permission to view this role.",
+				"loadMissing": "This role doesn’t exist or has been deleted.",
+				"loadFailed": "We couldn’t load this role. Please try again."
+			}
+		},
+		"permissions": {
+			"area": "Area",
+			"cell": "{{resource}}: {{action}}",
+			"resources": {
+				"company": "Company",
+				"company_member": "Company member",
+				"branch": "Branch",
+				"branch_member": "Branch member",
+				"department": "Department",
+				"department_member": "Department member",
+				"job_title": "Job title",
+				"access_role": "System role",
+				"audit_event": "Activity log"
+			},
+			"actions": {
+				"read": "Read",
+				"create": "Create",
+				"update": "Update",
+				"deactivate": "Deactivate",
+				"delete": "Delete",
+				"assign": "Assign"
+			},
+			"actionNames": {
+				"read": "read",
+				"create": "create",
+				"update": "update",
+				"deactivate": "deactivate",
+				"delete": "delete",
+				"assign": "assign"
+			},
+			"groupCount": "{{count}} of {{total}}",
+			"job_title": {
+				"name": "Job titles",
+				"description": "The company’s job titles.",
+				"actions": { "read": "View", "create": "Create", "update": "Edit" }
+			},
+			"none": "No permissions yet.",
+			"company": {
+				"name": "Company",
+				"description": "The company’s own details.",
+				"actions": { "read": "View", "update": "Edit" }
+			},
+			"company_member": {
+				"name": "Company members",
+				"description": "The list of everyone in the company, by name.",
+				"actions": { "read": "View" }
+			},
+			"branch": {
+				"name": "Branches",
+				"description": "The company’s branches and their details.",
+				"actions": { "read": "View", "create": "Create", "update": "Edit" }
+			},
+			"branch_member": {
+				"name": "Branch members",
+				"description": "Who belongs to a branch and who heads it.",
+				"actions": {
+					"read": "View",
+					"create": "Add",
+					"update": "Edit",
+					"deactivate": "Deactivate"
+				}
+			},
+			"department": {
+				"name": "Departments",
+				"description": "The departments inside each branch.",
+				"actions": { "read": "View", "create": "Create", "update": "Edit" }
+			},
+			"department_member": {
+				"name": "Department members",
+				"description": "Who belongs to a department and who heads it.",
+				"actions": {
+					"read": "View",
+					"create": "Add",
+					"update": "Edit",
+					"deactivate": "Deactivate"
+				}
+			},
+			"access_role": {
+				"name": "System roles",
+				"description": "Roles like this one, and who they are assigned to.",
+				"actions": {
+					"read": "View",
+					"create": "Create",
+					"update": "Edit",
+					"delete": "Delete",
+					"assign": "Assign"
+				}
+			},
+			"audit_event": {
+				"name": "Activity",
+				"description": "The record of who changed what in the company.",
+				"actions": { "read": "View" }
+			},
+			"empty": "No system roles yet."
+		},
+		"activity": {
+			"title": "Recent Activity",
+			"empty": "No recent activity yet.",
+			"failed": "We couldn’t load recent activity.",
+			"by": "by {{name}}",
+			"justNow": "Just now",
+			"named": {
+				"branchCreated": "Branch created: {{name}}",
+				"branchUpdated": "Branch updated: {{name}}",
+				"departmentCreated": "Department created: {{name}}",
+				"departmentUpdated": "Department updated: {{name}}",
+				"roleCreated": "Role created: {{name}}",
+				"roleUpdated": "Permissions updated for {{name}} role",
+				"roleDeleted": "Role deleted: {{name}}",
+				"jobTitleCreated": "Job title created: {{name}}",
+				"jobTitleUpdated": "Job title updated: {{name}}"
+			},
+			"unnamed": {
+				"branchCreated": "Branch created",
+				"branchUpdated": "Branch updated",
+				"departmentCreated": "Department created",
+				"departmentUpdated": "Department updated",
+				"roleCreated": "Role created",
+				"roleUpdated": "Role permissions updated",
+				"roleDeleted": "Role deleted",
+				"jobTitleCreated": "Job title created",
+				"jobTitleUpdated": "Job title updated"
+			}
+		},
+		"headsField": {
+			"searchPlaceholder": "Search people",
+			"active": "Active",
+			"loading": "Loading people…",
+			"noResults": "No active members found.",
+			"membersFailed": "We couldn’t load people. Try again.",
+			"membersFooter": "Showing active company members",
+			"membersTruncated": "Showing 20 of {{total}} active company members. Type to narrow.",
+			"counter": "{{count}}/20"
+		}
+	}
 }
