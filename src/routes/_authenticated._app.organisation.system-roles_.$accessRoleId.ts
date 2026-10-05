@@ -1,0 +1,26 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { fetchAccessRole } from "@/features/organisation/api";
+import { workspaceQuery } from "@/features/workspace/api";
+import {
+	SystemRoleEditor,
+	SystemRoleEditorProblem,
+} from "@/pages/SystemRoleEditor";
+
+export const Route = createFileRoute(
+	"/_authenticated/_app/organisation/system-roles_/$accessRoleId"
+)({
+	// Fetched afresh on every visit: an edit must start from the role as it is now.
+	loader: async ({ context, params }) => {
+		const companyId =
+			"currentCompany" in context && context.currentCompany.kind === "settled"
+				? context.currentCompany.company.companyId
+				: "";
+		const [role] = await Promise.all([
+			fetchAccessRole(companyId, params.accessRoleId),
+			context.queryClient.ensureQueryData(workspaceQuery),
+		]);
+		return role;
+	},
+	component: SystemRoleEditor,
+	errorComponent: SystemRoleEditorProblem,
+});
