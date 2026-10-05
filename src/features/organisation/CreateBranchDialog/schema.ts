@@ -1,8 +1,9 @@
 import type { TFunction } from "i18next";
 import { z } from "zod";
 import { normalizeBranchCity } from "@/features/organisation/city";
+import { nameSchema } from "@/features/organisation/nameSchema";
 
-/** Mirrors the server's name allow-list; uniqueness remains a server decision. */
+/** Mirrors the server's allow-lists; uniqueness remains a server decision. */
 export const createBranchSchema = (
 	t: TFunction
 ): z.ZodObject<{
@@ -23,13 +24,11 @@ export const createBranchSchema = (
 }> => {
 	const key = "organisation.branches.createDialog";
 	return z.object({
-		name: z
-			.string()
-			.trim()
-			.min(1, t(`${key}.nameRequired`))
-			.min(2, t(`${key}.nameLength`))
-			.max(100, t(`${key}.nameLength`))
-			.regex(/^[\p{L}\p{N} .'&-]+$/u, t(`${key}.nameCharacters`)),
+		name: nameSchema({
+			required: t(`${key}.nameRequired`),
+			length: t(`${key}.nameLength`),
+			characters: t(`${key}.nameCharacters`),
+		}),
 		code: z
 			.string()
 			.trim()
