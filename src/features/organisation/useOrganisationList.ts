@@ -12,9 +12,11 @@ import {
 	fetchAccessRoles,
 	fetchBranches,
 	fetchDepartments,
+	fetchJobTitles,
 	type AccessRole,
 	type Branch,
 	type Department,
+	type JobTitle,
 	type ListPage,
 	type ListQuery,
 } from "@/features/organisation/api";
@@ -71,6 +73,14 @@ export const useDepartments = (
 		"department:read",
 		["departments", query],
 		() => fetchDepartments(companyId, query)
+	);
+
+export const useJobTitles = (
+	companyId: string,
+	query: ListQuery
+): OrganisationList<JobTitle> =>
+	useOrganisationList(companyId, "job_title:read", ["job-titles", query], () =>
+		fetchJobTitles(companyId, query)
 	);
 
 export const useAccessRoles = (

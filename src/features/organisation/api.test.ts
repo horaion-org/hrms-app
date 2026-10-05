@@ -3,7 +3,11 @@ import { configureApiClient, resetApiClient } from "@/common/api-client";
 import { ApiProblemError, UnexpectedResponseError } from "@/common/problem";
 import { envelope, problemReply, stubApi } from "@/common/testing/stubApi";
 import {
+	createAccessRole,
 	createBranch,
+	createDepartment,
+	createJobTitle,
+	fetchJobTitles,
 	searchCompanyMembers,
 } from "@/features/organisation/api";
 
@@ -158,5 +162,129 @@ describe("company member search", () => {
 		await expect(
 			searchCompanyMembers("c-1", { search: "", status: "ACTIVE", size: 20 })
 		).rejects.toBeInstanceOf(UnexpectedResponseError);
+	});
+});
+
+describe("create department client", () => {
+	it("posts a trimmed name and heads under the chosen branch", async () => {
+		const department = {
+			departmentId: "d-1",
+			branchId: "b-1",
+			companyId: "c-1",
+			name: "Front of house",
+			status: "ACTIVE",
+			headMembershipIds: ["m-1"],
+		};
+		const calls = stubApi({
+			"POST /api/v1/companies/c-1/branches/b-1/departments": {
+				status: 201,
+				body: envelope(department),
+			},
+		});
+		await expect(
+			createDepartment("c-1", "b-1", {
+				name: "  Front of house ",
+				initialHeadCompanyMembershipIds: ["m-1"],
+			})
+		).resolves.toEqual({
+			departmentId: "d-1",
+			name: "Front of house",
+			status: "ACTIVE",
+		});
+		expect(calls[0]?.body).toEqual({
+			name: "Front of house",
+			initialHeadCompanyMembershipIds: ["m-1"],
+		});
+	});
+});
+
+describe("job title clients", () => {
+	const jobTitle = {
+		jobTitleId: "j-1",
+		companyId: "c-1",
+		name: "Shift supervisor",
+		status: "ACTIVE",
+	};
+	it("posts only a trimmed name and parses the job title", async () => {
+		const calls = stubApi({
+			"POST /api/v1/companies/c-1/job-titles": {
+				status: 201,
+				body: envelope(jobTitle),
+			},
+		});
+		await expect(
+			createJobTitle("c-1", { name: " Shift supervisor " })
+		).resolves.toEqual({
+			jobTitleId: "j-1",
+			name: "Shift supervisor",
+			status: "ACTIVE",
+		});
+		expect(calls[0]?.body).toEqual({ name: "Shift supervisor" });
+	});
+	it("lists with the server sort and status filter", async () => {
+		const calls = stubApi({
+			"GET /api/v1/companies/c-1/job-titles": {
+				status: 200,
+				body: envelope({ content: [jobTitle], page: { totalElements: 3 } }),
+			},
+		});
+		await expect(
+			fetchJobTitles("c-1", {
+				sort: { field: "status", desc: true },
+				status: "ACTIVE",
+			})
+		).resolves.toEqual({
+			items: [
+				{ jobTitleId: "j-1", name: "Shift supervisor", status: "ACTIVE" },
+			],
+			total: 3,
+		});
+		expect(Object.fromEntries(new URLSearchParams(calls[0]?.search))).toEqual({
+			size: "100",
+			sort: "status,desc",
+			status: "ACTIVE",
+		});
+	});
+	it("preserves a typed name conflict", async () => {
+		stubApi({
+			"POST /api/v1/companies/c-1/job-titles": problemReply(
+				409,
+				"JOB_TITLE_NAME_CONFLICT"
+			),
+		});
+		await expect(
+			createJobTitle("c-1", { name: "Manager" })
+		).rejects.toMatchObject({
+			status: 409,
+			errorCode: "JOB_TITLE_NAME_CONFLICT",
+		});
+	});
+});
+
+describe("create access role client", () => {
+	it("posts a trimmed name with the chosen permission keys", async () => {
+		const calls = stubApi({
+			"POST /api/v1/companies/c-1/access-roles": {
+				status: 201,
+				body: envelope({
+					accessRoleId: "r-1",
+					companyId: "c-1",
+					name: "Branch manager",
+					protectedRole: false,
+					holderCount: 0,
+					permissions: ["branch:read", "branch:update"],
+				}),
+			},
+		});
+		await expect(
+			createAccessRole("c-1", {
+				name: " Branch manager ",
+				permissions: ["branch:read", "branch:update"],
+			})
+		).resolves.toMatchObject({ accessRoleId: "r-1", protectedRole: false });
+		expect(calls[0]?.body).toEqual({
+			name: "Branch manager",
+			permissions: ["branch:read", "branch:update"],
+		});
 	});
 });

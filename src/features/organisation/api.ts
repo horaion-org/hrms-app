@@ -25,6 +25,7 @@ export const ORGANISATION_ENTITY_TYPES = [
 	"Branch",
 	"Department",
 	"AccessRole",
+	"JobTitle",
 ] as const;
 
 const companyPath = (companyId: string): string =>
@@ -44,6 +45,9 @@ export const fetchActiveDepartmentCount = (
 
 export const fetchAccessRoleCount = (companyId: string): Promise<number> =>
 	countOf(`${companyPath(companyId)}/access-roles?size=1`);
+
+export const fetchActiveJobTitleCount = (companyId: string): Promise<number> =>
+	countOf(`${companyPath(companyId)}/job-titles?status=ACTIVE&size=1`);
 
 /** The newest successful Organisation changes, newest first. */
 export const fetchRecentActivity = async (
@@ -66,7 +70,7 @@ export const LIST_PAGE_SIZE = 100;
 
 const unitStatusSchema = z.enum(["ACTIVE", "INACTIVE"]);
 
-/** A Branch's or Department's lifecycle status. */
+/** A Branch's, Department's or Job title's lifecycle status. */
 export type UnitStatus = z.infer<typeof unitStatusSchema>;
 
 const branchSchema = z.object({
@@ -111,6 +115,46 @@ const departmentSchema = z.object({
 
 export type Department = z.infer<typeof departmentSchema>;
 
+export type CreateDepartmentBody = {
+	name: string;
+	initialHeadCompanyMembershipIds: Array<string>;
+};
+
+/**
+ * Creates a Department in one Branch with its first heads. Heads not yet in
+ * the Branch join it; the server owns uniqueness and membership checks.
+ */
+export const createDepartment = (
+	companyId: string,
+	branchId: string,
+	body: CreateDepartmentBody
+): Promise<Department> =>
+	apiRequest(
+		`${companyPath(companyId)}/branches/${encodeURIComponent(branchId)}/departments`,
+		departmentSchema,
+		{ method: "POST", body: { ...body, name: body.name.trim() } }
+	);
+
+const jobTitleSchema = z.object({
+	jobTitleId: z.string(),
+	name: z.string(),
+	status: unitStatusSchema,
+});
+
+export type JobTitle = z.infer<typeof jobTitleSchema>;
+
+export type CreateJobTitleBody = { name: string };
+
+/** Creates an active, company-wide Job title; the server owns uniqueness. */
+export const createJobTitle = (
+	companyId: string,
+	body: CreateJobTitleBody
+): Promise<JobTitle> =>
+	apiRequest(`${companyPath(companyId)}/job-titles`, jobTitleSchema, {
+		method: "POST",
+		body: { name: body.name.trim() },
+	});
+
 const accessRoleSchema = z.object({
 	accessRoleId: z.string(),
 	name: z.string(),
@@ -121,6 +165,8 @@ const accessRoleSchema = z.object({
 });
 
 export type AccessRole = z.infer<typeof accessRoleSchema>;
+
+export type CreateAccessRoleBody = AccessRoleBody;
 
 const pageOf = <T extends z.ZodType>(
 	item: T
@@ -311,3 +357,9 @@ export const updateAccessRole = (
 		method: "PUT",
 		body: { ...body, name: body.name.trim() },
 	});
+/** The company's job titles; sortable by `name` or `status`. */
+export const fetchJobTitles = (
+	companyId: string,
+	query: ListQuery
+): Promise<ListPage<JobTitle>> =>
+	fetchList(listPath(companyId, "job-titles", query), jobTitleSchema);

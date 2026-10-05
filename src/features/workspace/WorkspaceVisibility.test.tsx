@@ -217,6 +217,7 @@ describe("Edit on the System Roles list", () => {
 		companyId: "c-1",
 		name,
 		protectedRole,
+		holderCount: 0,
 		permissions: [],
 	});
 

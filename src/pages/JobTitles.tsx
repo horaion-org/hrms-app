@@ -1,60 +1,51 @@
+import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
-import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
+import { DataTable, type DataTableSort } from "@/components/ui/DataTable";
 import { OverflowMenuItem } from "@/components/ui/OverflowMenu";
-import type { UnitStatus } from "@/features/organisation/api";
+import type { JobTitle } from "@/features/organisation/api";
+import { CreateJobTitleDialog } from "@/features/organisation/CreateJobTitleDialog";
 import { ListToolbar } from "@/features/organisation/ListToolbar";
 import {
 	actionsColumn,
+	describeList,
 	isStatusFilter,
-	matchesSearch,
 	nameColumn,
 	statusColumn,
 	statusFilterOptions,
 	type StatusFilter,
 } from "@/features/organisation/listColumns";
+import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
+import { useJobTitles } from "@/features/organisation/useOrganisationList";
+import { companyPermissions, workspaceQuery } from "@/features/workspace/api";
 
-/** The design's Job Title row. The API has no Job Titles yet, so none load. */
-type JobTitle = {
-	id: string;
-	name: string;
-	systemRole: string;
-	employeeCount: number;
-	status: UnitStatus;
-};
-
-const JOB_TITLES: Array<JobTitle> = [];
-
+/** The company's Job titles: HR labels only, so no role or headcount columns yet. */
 export const JobTitles = (): FunctionComponent => {
-	const { t, i18n } = useTranslation();
+	const companyId = useCurrentCompanyId();
+	const { t } = useTranslation();
+	const [creating, setCreating] = useState(false);
+	const workspace = useQuery(workspaceQuery);
+	const canCreate = workspace.data
+		? companyPermissions(workspace.data, companyId).has("job_title:create")
+		: false;
 	const [search, setSearch] = useState("");
 	const [status, setStatus] = useState<StatusFilter>("all");
-	const rows = useMemo(
-		() =>
-			JOB_TITLES.filter(
-				(jobTitle) =>
-					(status === "all" || jobTitle.status === status) &&
-					matchesSearch(jobTitle.name, search)
-			),
-		[search, status]
+	const [sort, setSort] = useState<DataTableSort>({ id: "name", desc: false });
+	const list = useJobTitles(companyId, {
+		sort: { field: sort.id, desc: sort.desc },
+		status: status === "all" ? undefined : status,
+	});
+	const view = describeList(
+		list,
+		search,
+		status !== "all",
+		t("organisation.jobTitles.empty"),
+		t
 	);
-	const columns = useMemo((): Array<DataTableColumn<JobTitle>> => {
-		const numbers = new Intl.NumberFormat(i18n.language);
-		return [
+	const columns = useMemo(
+		() => [
 			nameColumn<JobTitle>(t("organisation.jobTitles.name")),
-			{
-				id: "systemRole",
-				header: t("organisation.jobTitles.systemRole"),
-				cell: (jobTitle) => jobTitle.systemRole,
-				sortValue: (jobTitle) => jobTitle.systemRole,
-			},
-			{
-				id: "employeeCount",
-				header: t("organisation.jobTitles.employeeCount"),
-				cell: (jobTitle) => numbers.format(jobTitle.employeeCount),
-				sortValue: (jobTitle) => jobTitle.employeeCount,
-			},
 			statusColumn<JobTitle>(t),
 			actionsColumn<JobTitle>(t, (jobTitle) => (
 				<>
@@ -68,8 +59,9 @@ export const JobTitles = (): FunctionComponent => {
 					</OverflowMenuItem>
 				</>
 			)),
-		];
-	}, [t, i18n.language]);
+		],
+		[t]
+	);
 
 	return (
 		<>
@@ -93,17 +85,50 @@ export const JobTitles = (): FunctionComponent => {
 					},
 				}}
 				onSearchChange={setSearch}
+				onCreate={
+					canCreate
+						? (): void => {
+								setCreating(true);
+							}
+						: undefined
+				}
 			/>
-			<DataTable
-				className="mt-8"
-				columns={columns}
-				data={rows}
-				defaultSort={{ id: "name", desc: false }}
-				emptyState={t("organisation.jobTitles.empty")}
-				getRowId={(jobTitle) => jobTitle.id}
-				label={t("organisation.jobTitles.label")}
-				selection={{ rowLabel: (jobTitle) => jobTitle.name }}
-			/>
+			{creating && canCreate && (
+				<CreateJobTitleDialog
+					key={companyId}
+					companyId={companyId}
+					onClose={() => {
+						setCreating(false);
+					}}
+				/>
+			)}
+			{view.problem ? (
+				<p
+					className="mt-8 text-sm text-neutral-700 data-alert:text-error-700"
+					data-alert={view.problem.alert || undefined}
+					role={view.problem.alert ? "alert" : undefined}
+				>
+					{view.problem.message}
+				</p>
+			) : (
+				<>
+					<DataTable
+						manualSorting
+						className="mt-8"
+						columns={columns}
+						data={view.rows}
+						emptyState={view.empty}
+						getRowId={(jobTitle) => jobTitle.jobTitleId}
+						label={t("organisation.jobTitles.label")}
+						selection={{ rowLabel: (jobTitle) => jobTitle.name }}
+						sort={sort}
+						onSortChange={setSort}
+					/>
+					{view.truncated && (
+						<p className="mt-4 text-sm text-neutral-700">{view.truncated}</p>
+					)}
+				</>
+			)}
 		</>
 	);
 };

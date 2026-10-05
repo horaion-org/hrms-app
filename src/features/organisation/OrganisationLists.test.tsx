@@ -25,6 +25,7 @@ const WORKSPACE = "GET /api/v1/me/workspace";
 const BRANCHES = "GET /api/v1/companies/c-1/branches";
 const DEPARTMENTS = "GET /api/v1/companies/c-1/departments";
 const ACCESS_ROLES = "GET /api/v1/companies/c-1/access-roles";
+const JOB_TITLES = "GET /api/v1/companies/c-1/job-titles";
 const EVERY_PERMISSION = [
 	"branch:read",
 	"branch:update",
@@ -32,6 +33,7 @@ const EVERY_PERMISSION = [
 	"department:update",
 	"access_role:read",
 	"access_role:update",
+	"job_title:read",
 ];
 
 let app: OpenedApp | undefined;
@@ -460,15 +462,15 @@ describe("Departments", () => {
 			within(table)
 				.getAllByRole("columnheader")
 				.map((header) => header.textContent)
-		).toEqual(["Select all", "Department Name", "Status", "Actions"]);
+		).toEqual(["Select all", "Department name", "Status", "Actions"]);
 		expect(
-			screen.getByRole("searchbox", { name: "Search Department" })
+			screen.getByRole("searchbox", { name: "Search department" })
 		).toBeVisible();
 		expect(
-			screen.queryByRole("button", { name: "Create Department" })
+			screen.queryByRole("button", { name: "Create department" })
 		).not.toBeInTheDocument();
 		expect(screen.getByRole("button", { name: "Showing:" })).toHaveTextContent(
-			"All Departments"
+			"All departments"
 		);
 		expect(searchesOf(calls, "/api/v1/companies/c-1/departments")).toEqual([
 			"size=100&sort=name%2Casc",
@@ -476,7 +478,7 @@ describe("Departments", () => {
 	});
 });
 
-describe("System Roles", () => {
+describe("System roles", () => {
 	it("lists access roles with their permission reach and no status filter", async () => {
 		const user = userEvent.setup();
 		const calls = stubApi({
@@ -511,7 +513,7 @@ describe("System Roles", () => {
 		await open("/organisation/system-roles");
 
 		expect(
-			await screen.findByRole("heading", { level: 1, name: "System Roles" })
+			await screen.findByRole("heading", { level: 1, name: "System roles" })
 		).toBeVisible();
 		const table = await screen.findByRole("table", { name: "System roles" });
 		await within(table).findByText("Manager");
@@ -521,8 +523,8 @@ describe("System Roles", () => {
 				.map((header) => header.textContent)
 		).toEqual([
 			"Select all",
-			"System Role",
-			"Key Permissions",
+			"System role",
+			"Key permissions",
 			"People",
 			"Actions",
 		]);
@@ -544,11 +546,11 @@ describe("System Roles", () => {
 		expect(screen.getByRole("button", { name: "Edit Manager" })).toBeEnabled();
 		expect(screen.queryByText("Showing:")).not.toBeInTheDocument();
 		expect(
-			screen.queryByRole("button", { name: "Create Role" })
+			screen.queryByRole("button", { name: "Create system role" })
 		).not.toBeInTheDocument();
 
 		await user.click(
-			screen.getByRole("button", { name: "Sort by System Role" })
+			screen.getByRole("button", { name: "Sort by System role" })
 		);
 
 		await waitFor(() => {
@@ -560,42 +562,74 @@ describe("System Roles", () => {
 	});
 });
 
-describe("Job Titles", () => {
-	it("shows the full list layout with an empty state and asks the API for nothing", async () => {
-		const calls = stubApi(baseRoutes());
+describe("Job titles", () => {
+	it("lists the company's job titles with server sort and status filter", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...baseRoutes(),
+			[JOB_TITLES]: pageReply([
+				{
+					jobTitleId: "j-1",
+					companyId: "c-1",
+					name: "Shift supervisor",
+					status: "ACTIVE",
+				},
+				{
+					jobTitleId: "j-2",
+					companyId: "c-1",
+					name: "Trainee",
+					status: "INACTIVE",
+				},
+			]),
+		});
 		await open("/organisation/job-titles");
 
 		expect(
-			await screen.findByRole("heading", { level: 1, name: "Job Titles" })
+			await screen.findByRole("heading", { level: 1, name: "Job titles" })
 		).toBeVisible();
-		const table = screen.getByRole("table", { name: "Job titles" });
+		const table = await screen.findByRole("table", { name: "Job titles" });
+		expect(await within(table).findByText("Shift supervisor")).toBeVisible();
 		expect(
 			within(table)
 				.getAllByRole("columnheader")
 				.map((header) => header.textContent)
-		).toEqual([
-			"Select all",
-			"Job Title",
-			"System Role",
-			"Employee Count",
-			"Status",
-			"Actions",
-		]);
+		).toEqual(["Select all", "Job title", "Status", "Actions"]);
 		expect(
-			within(table).getByRole("cell", { name: "No job titles yet." })
+			bodyRows(table).map(
+				(row) => within(row).getAllByRole("cell")[2]?.textContent
+			)
+		).toEqual(["Active", "Inactive"]);
+		expect(
+			screen.getByRole("searchbox", { name: "Search job title" })
 		).toBeVisible();
 		expect(
-			screen.getByRole("searchbox", { name: "Search Job Title" })
-		).toBeVisible();
-		expect(
-			screen.queryByRole("button", { name: "Create Job Title" })
+			screen.queryByRole("button", { name: "Create job title" })
 		).not.toBeInTheDocument();
 		expect(screen.getByRole("button", { name: "Showing:" })).toHaveTextContent(
-			"All Job Titles"
+			"All job titles"
 		);
+
+		await user.click(screen.getByRole("button", { name: "Showing:" }));
+		await user.click(screen.getByRole("option", { name: "Inactive" }));
+		await user.click(screen.getByRole("button", { name: "Sort by Status" }));
+
+		await waitFor(() => {
+			expect(searchesOf(calls, "/api/v1/companies/c-1/job-titles")).toEqual([
+				"size=100&sort=name%2Casc",
+				"size=100&sort=name%2Casc&status=INACTIVE",
+				"size=100&sort=status%2Casc&status=INACTIVE",
+			]);
+		});
+	});
+
+	it("never asks for job titles the workspace does not grant", async () => {
+		const calls = stubApi(baseRoutes(["branch:read"]));
+		await open("/organisation/job-titles");
+
 		expect(
-			calls.some((call) => call.path.startsWith("/api/v1/companies/"))
-		).toBe(false);
+			await screen.findByText("You don’t have permission to view this list.")
+		).toBeVisible();
+		expect(searchesOf(calls, "/api/v1/companies/c-1/job-titles")).toEqual([]);
 	});
 });
 
@@ -607,6 +641,7 @@ describe("Organisation navigation", () => {
 			[BRANCHES]: pageReply([branch("b-1", "Main Branch")]),
 			[DEPARTMENTS]: pageReply([]),
 			[ACCESS_ROLES]: pageReply([]),
+			[JOB_TITLES]: pageReply([]),
 		});
 		const opened = await open("/organisation");
 		const navigation = await screen.findByRole("navigation", {
@@ -614,7 +649,7 @@ describe("Organisation navigation", () => {
 		});
 
 		const hrefs = await Promise.all(
-			["Branches", "Departments", "Job Titles", "System Roles"].map(
+			["Branches", "Departments", "Job titles", "System roles"].map(
 				async (name) =>
 					within(await screen.findByRole("region", { name }))
 						.getByRole("link", { name: "View All" })

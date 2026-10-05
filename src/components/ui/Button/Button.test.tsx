@@ -286,6 +286,9 @@ describe("Button as a link", () => {
 			to: "/register";
 			variant: "icon";
 		}>().not.toExtend<ButtonProps>();
+		expectTypeOf<{ to: "/register"; disabled: true }>().not.toExtend<ButtonProps>();
+		expectTypeOf<{ to: "/register"; type: "submit" }>().not.toExtend<ButtonProps>();
+		expectTypeOf<{ to: "/register"; variant: "icon" }>().not.toExtend<ButtonProps>();
 	});
 });
 

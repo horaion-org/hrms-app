@@ -3,6 +3,7 @@ import {
 	DepartmentIcon,
 	OrganisationIcon,
 	PermissionsIcon,
+	RoleIcon,
 	UserIcon,
 } from "@/components/ui/Icon";
 import { authTestI18n } from "@/features/auth/testingI18n";
@@ -28,6 +29,8 @@ describe("describeActivity", () => {
 		["branch.update", "Branch updated: Orchard", OrganisationIcon],
 		["department.create", "Department created: Orchard", DepartmentIcon],
 		["department.update", "Department updated: Orchard", DepartmentIcon],
+		["job_title.create", "Job title created: Orchard", RoleIcon],
+		["job_title.update", "Job title updated: Orchard", RoleIcon],
 		["access_role.create", "Role created: Orchard", UserIcon],
 		[
 			"access_role.update",

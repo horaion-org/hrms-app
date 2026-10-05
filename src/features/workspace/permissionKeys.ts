@@ -22,6 +22,9 @@ export const PERMISSION_KEYS = [
 	"department_member:create",
 	"department_member:update",
 	"department_member:deactivate",
+	"job_title:read",
+	"job_title:create",
+	"job_title:update",
 	"access_role:read",
 	"access_role:create",
 	"access_role:update",
@@ -40,6 +43,7 @@ export type PermissionKey = (typeof PERMISSION_KEYS)[number];
 export const ORGANISATION_READ_KEYS: ReadonlyArray<PermissionKey> = [
 	"branch:read",
 	"department:read",
+	"job_title:read",
 	"access_role:read",
 	"audit_event:read",
 ];

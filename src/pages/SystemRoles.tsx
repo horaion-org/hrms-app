@@ -1,6 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useMemo, useState } from "react";
 import { useCan } from "@/features/workspace/useCan";
+import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import {
@@ -11,6 +12,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { OverflowMenuItem } from "@/components/ui/OverflowMenu";
 import type { AccessRole } from "@/features/organisation/api";
+import { CreateSystemRoleDialog } from "@/features/organisation/CreateSystemRoleDialog";
 import { ListToolbar } from "@/features/organisation/ListToolbar";
 import {
 	actionsColumn,
@@ -20,11 +22,22 @@ import {
 import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import { useAccessRoles } from "@/features/organisation/useOrganisationList";
 import { AssignSystemRole } from "@/pages/SystemRoleHolders";
+import { companyPermissions, workspaceQuery } from "@/features/workspace/api";
 
-/** Access roles, shown as "System Roles". Roles have no status, so no filter. */
+/** Access roles, shown as "System roles". Roles have no status, so no filter. */
 export const SystemRoles = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
 	const { t } = useTranslation();
+	const [creating, setCreating] = useState(false);
+	const workspace = useQuery(workspaceQuery);
+	const permissions = useMemo(
+		() =>
+			workspace.data
+				? companyPermissions(workspace.data, companyId)
+				: new Set<string>(),
+		[workspace.data, companyId]
+	);
+	const canCreate = permissions.has("access_role:create");
 	const [search, setSearch] = useState("");
 	const [sort, setSort] = useState<DataTableSort>({ id: "name", desc: false });
 	const list = useAccessRoles(companyId, {
@@ -149,9 +162,9 @@ export const SystemRoles = (): FunctionComponent => {
 				}
 				onSearchChange={setSearch}
 				onCreate={
-					can("access_role:create")
+					canCreate
 						? (): void => {
-								void navigate({ to: "/organisation/system-roles/new" });
+								setCreating(true);
 							}
 						: undefined
 				}
@@ -161,6 +174,16 @@ export const SystemRoles = (): FunctionComponent => {
 					roles={assignable}
 					onClose={() => {
 						setAssigning(false);
+					}}
+				/>
+			)}
+			{creating && canCreate && (
+				<CreateSystemRoleDialog
+					key={companyId}
+					companyId={companyId}
+					heldPermissions={permissions}
+					onClose={() => {
+						setCreating(false);
 					}}
 				/>
 			)}

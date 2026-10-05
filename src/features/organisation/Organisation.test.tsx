@@ -1,4 +1,4 @@
-import { screen, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { resetApiClient } from "@/common/api-client";
@@ -23,10 +23,12 @@ const WORKSPACE = "GET /api/v1/me/workspace";
 const BRANCHES = "GET /api/v1/companies/c-1/branches";
 const DEPARTMENTS = "GET /api/v1/companies/c-1/departments";
 const ACCESS_ROLES = "GET /api/v1/companies/c-1/access-roles";
+const JOB_TITLES = "GET /api/v1/companies/c-1/job-titles";
 const AUDIT_EVENTS = "GET /api/v1/companies/c-1/audit-events";
 const EVERY_PERMISSION = [
 	"branch:read",
 	"department:read",
+	"job_title:read",
 	"access_role:read",
 	"audit_event:read",
 ];
@@ -101,6 +103,7 @@ it("shows the overview figures and recent activity for the current company", asy
 		[BRANCHES]: totalReply(2),
 		[DEPARTMENTS]: totalReply(1234),
 		[ACCESS_ROLES]: totalReply(4),
+		[JOB_TITLES]: totalReply(12),
 		[AUDIT_EVENTS]: activityReply([
 			auditEvent({}),
 			auditEvent({
@@ -119,6 +122,14 @@ it("shows the overview figures and recent activity for the current company", asy
 				actorDisplayName: null,
 				occurredAt: "2026-10-03T11:59:40Z",
 			}),
+			auditEvent({
+				auditEventId: "e-4",
+				action: "job_title.create",
+				entityType: "JobTitle",
+				entityName: "Shift supervisor",
+				actorDisplayName: "Ethan Wong",
+				occurredAt: "2026-10-03T11:00:00Z",
+			}),
 		]),
 	});
 	await open();
@@ -134,9 +145,11 @@ it("shows the overview figures and recent activity for the current company", asy
 	).toBeVisible();
 	expect(within(card("Branches")).getByText("Active Branches")).toBeVisible();
 	expect(await within(card("Departments")).findByText("1,234")).toBeVisible();
-	expect(await within(card("System Roles")).findByText("4")).toBeVisible();
-	expect(within(card("Job Titles")).getByText("—")).toBeVisible();
-	expect(within(card("Job Titles")).getByText("Coming soon")).toBeVisible();
+	expect(await within(card("System roles")).findByText("4")).toBeVisible();
+	expect(await within(card("Job titles")).findByText("12")).toBeVisible();
+	expect(
+		within(card("Job titles")).getByText("Active job titles")
+	).toBeVisible();
 
 	const activity = screen.getByRole("region", { name: "Recent Activity" });
 	const items = await within(activity).findAllByRole("listitem");
@@ -144,6 +157,7 @@ it("shows the overview figures and recent activity for the current company", asy
 		"Branch created: Orchardby Aisha Rahman•2 hours ago",
 		"Department updated: Front Officeby Ethan Wong•Yesterday",
 		"Role deletedJust now",
+		"Job title created: Shift supervisorby Ethan Wong•1 hour ago",
 	]);
 	expect(
 		within(items[0] as HTMLElement).getByText("2 hours ago")
@@ -158,8 +172,11 @@ it("shows the overview figures and recent activity for the current company", asy
 		"status=ACTIVE&size=1"
 	);
 	expect(searchOf("/api/v1/companies/c-1/access-roles")).toBe("size=1");
+	expect(searchOf("/api/v1/companies/c-1/job-titles")).toBe(
+		"status=ACTIVE&size=1"
+	);
 	expect(searchOf("/api/v1/companies/c-1/audit-events")).toBe(
-		"size=4&entityType=Branch&entityType=Department&entityType=AccessRole"
+		"size=4&entityType=Branch&entityType=Department&entityType=AccessRole&entityType=JobTitle"
 	);
 });
 
@@ -175,13 +192,8 @@ it("hides what the workspace does not grant and never asks for it", async () => 
 	expect(
 		await within(await findCard("Branches")).findByText("3")
 	).toBeVisible();
-	expect(card("Job Titles")).toBeVisible();
-	expect(
-		screen.queryByRole("region", { name: "Departments" })
-	).not.toBeInTheDocument();
-	expect(
-		screen.queryByRole("region", { name: "System Roles" })
-	).not.toBeInTheDocument();
+	for (const name of ["Departments", "Job titles", "System roles"])
+		expect(screen.queryByRole("region", { name })).not.toBeInTheDocument();
 	expect(
 		screen.queryByRole("region", { name: "Recent Activity" })
 	).not.toBeInTheDocument();
@@ -210,12 +222,17 @@ it("reads permissions only from the current company", async () => {
 			}),
 		},
 	});
-	await open();
+	const opened = await open();
 
+	await waitFor(() => {
+		expect(opened.queryClient.getQueryState(["workspace"])?.status).toBe(
+			"success"
+		);
+	});
 	expect(
-		await screen.findByRole("region", { name: "Job Titles" })
+		await screen.findByRole("heading", { name: "Organisation Overview" })
 	).toBeVisible();
-	expect(screen.getAllByRole("region")).toHaveLength(1);
+	expect(screen.queryByRole("region")).not.toBeInTheDocument();
 	expect(calls.some((call) => call.path.startsWith("/api/v1/companies/"))).toBe(
 		false
 	);
