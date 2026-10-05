@@ -21,8 +21,11 @@ import { PERMISSION_KEYS } from "@/features/workspace/permissionKeys";
 const WORKSPACE = "GET /api/v1/me/workspace";
 const ROLES = "GET /api/v1/companies/c-1/access-roles";
 const ROLE = "GET /api/v1/companies/c-1/access-roles/r-2";
+const HOLDERS =
+	"GET /api/v1/companies/c-1/access-roles/r-2/access-role-assignments";
 const SAVE = "PUT /api/v1/companies/c-1/access-roles/r-2";
-const EDITOR = "/organisation/system-roles/r-2";
+const ROLE_PAGE = "/organisation/system-roles/r-2";
+const EDITOR = `${ROLE_PAGE}?tab=permissions`;
 
 const role = (
 	overrides: Record<string, unknown> = {}
@@ -32,6 +35,7 @@ const role = (
 	name: "Manager",
 	protectedRole: false,
 	permissions: ["branch:read", "branch:create", "department:read"],
+	holderCount: 0,
 	...overrides,
 });
 
@@ -58,6 +62,7 @@ const routes = (
 		body: envelope({ content: [role()], page: { totalElements: 1 } }),
 	},
 	[ROLE]: roleReply(),
+	[HOLDERS]: { status: 200, body: envelope([]) },
 	[SAVE]: roleReply(),
 });
 
@@ -100,9 +105,9 @@ describe("System role editor", () => {
 		);
 
 		expect(
-			await screen.findByRole("heading", { level: 1, name: "Edit system role" })
+			await screen.findByRole("heading", { level: 1, name: "Manager" })
 		).toBeVisible();
-		expect(opened.router.state.location.pathname).toBe(EDITOR);
+		expect(opened.router.state.location.pathname).toBe(ROLE_PAGE);
 		expect(screen.getByRole("textbox", { name: /Role name/ })).toHaveValue(
 			"Manager"
 		);
@@ -219,7 +224,7 @@ describe("System role editor", () => {
 		).toBeVisible();
 		expect(name).toHaveFocus();
 		expect(name).toHaveValue("Staff");
-		expect(opened.router.state.location.pathname).toBe(EDITOR);
+		expect(opened.router.state.location.pathname).toBe(ROLE_PAGE);
 		expect(screen.queryByText(/API says/)).not.toBeInTheDocument();
 	});
 
@@ -265,9 +270,6 @@ describe("System role editor", () => {
 
 describe("System role editor, read-only", () => {
 	const expectReadOnly = (): void => {
-		expect(
-			screen.getByRole("heading", { level: 1, name: "System role" })
-		).toBeVisible();
 		expect(screen.getByRole("textbox", { name: /Role name/ })).toBeDisabled();
 		for (const item of screen.getAllByRole("checkbox"))
 			expect(item).toBeDisabled();
