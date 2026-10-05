@@ -26,3 +26,9 @@ it("translates its removal name and supports keyboard removal unless disabled", 
 	await user.click(remove);
 	expect(onRemove).toHaveBeenCalledOnce();
 });
+it("shows a value read-only, with nothing to remove, when given no way to remove it", () => {
+	render(<Token label="Orchard" />);
+
+	expect(screen.getByText("Orchard")).toBeVisible();
+	expect(screen.queryByRole("button")).not.toBeInTheDocument();
+});
