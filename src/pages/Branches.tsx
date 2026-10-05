@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useCan } from "@/features/workspace/useCan";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { DataTable, type DataTableSort } from "@/components/ui/DataTable";
@@ -20,6 +21,7 @@ import { useBranches } from "@/features/organisation/useOrganisationList";
 export const Branches = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
 	const { t } = useTranslation();
+	const can = useCan();
 	const [search, setSearch] = useState("");
 	const [status, setStatus] = useState<StatusFilter>("all");
 	const [sort, setSort] = useState<DataTableSort>({ id: "name", desc: false });
@@ -38,20 +40,27 @@ export const Branches = (): FunctionComponent => {
 		() => [
 			nameColumn<Branch>(t("organisation.branches.name")),
 			statusColumn<Branch>(t),
-			actionsColumn<Branch>(t, (branch) => (
-				<>
-					<OverflowMenuItem>{t("organisation.list.editItem")}</OverflowMenuItem>
-					<OverflowMenuItem disabled>
-						{t(
-							branch.status === "ACTIVE"
-								? "organisation.list.deactivateItem"
-								: "organisation.list.activateItem"
-						)}
-					</OverflowMenuItem>
-				</>
-			)),
+			actionsColumn<Branch>(
+				t,
+				(branch) => (
+					<>
+						<OverflowMenuItem disabled={!can("branch:update", branch.branchId)}>
+							{t("organisation.list.editItem")}
+						</OverflowMenuItem>
+						<OverflowMenuItem disabled>
+							{t(
+								branch.status === "ACTIVE"
+									? "organisation.list.deactivateItem"
+									: "organisation.list.activateItem"
+							)}
+						</OverflowMenuItem>
+					</>
+				),
+				// Editing a Branch is granted at that Branch, or company-wide.
+				(branch) => can("branch:update", branch.branchId)
+			),
 		],
-		[t]
+		[t, can]
 	);
 
 	return (

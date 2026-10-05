@@ -23,7 +23,14 @@ const WORKSPACE = "GET /api/v1/me/workspace";
 const BRANCHES = "GET /api/v1/companies/c-1/branches";
 const DEPARTMENTS = "GET /api/v1/companies/c-1/departments";
 const ACCESS_ROLES = "GET /api/v1/companies/c-1/access-roles";
-const EVERY_PERMISSION = ["branch:read", "department:read", "access_role:read"];
+const EVERY_PERMISSION = [
+	"branch:read",
+	"branch:update",
+	"department:read",
+	"department:update",
+	"access_role:read",
+	"access_role:update",
+];
 
 let app: OpenedApp | undefined;
 beforeEach(() => {

@@ -272,7 +272,7 @@ it("reaches the overview from the Sidebar and marks Organisation current", async
 	stubApi({
 		[REFRESH]: accessPassReply(),
 		[ME]: currentUserReply(),
-		[WORKSPACE]: workspaceReply([]),
+		[WORKSPACE]: workspaceReply(["branch:read"]),
 	});
 	const opened = await open("/");
 	const user = userEvent.setup();
@@ -280,6 +280,8 @@ it("reaches the overview from the Sidebar and marks Organisation current", async
 		name: "Main navigation",
 	});
 
+	// Organisation is offered once the workspace says it may be.
+	await within(navigation).findByRole("link", { name: "Organisation" });
 	expect(
 		within(navigation)
 			.getAllByRole("link")

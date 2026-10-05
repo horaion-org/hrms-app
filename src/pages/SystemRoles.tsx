@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { useCan } from "@/features/workspace/useCan";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import {
@@ -33,6 +34,13 @@ export const SystemRoles = (): FunctionComponent => {
 		t("organisation.accessRoles.empty"),
 		t
 	);
+	const can = useCan();
+	// The Company Owner role is never edited; any other needs the update key.
+	const canEdit = useCallback(
+		(role: AccessRole): boolean =>
+			!role.protectedRole && can("access_role:update"),
+		[can]
+	);
 	const columns = useMemo(
 		(): Array<DataTableColumn<AccessRole>> => [
 			nameColumn<AccessRole>(t("organisation.accessRoles.name")),
@@ -50,7 +58,7 @@ export const SystemRoles = (): FunctionComponent => {
 				t,
 				(role) => (
 					<>
-						<OverflowMenuItem disabled={role.protectedRole}>
+						<OverflowMenuItem disabled={!canEdit(role)}>
 							{t("organisation.list.editItem")}
 						</OverflowMenuItem>
 						<OverflowMenuItem disabled>
@@ -58,11 +66,10 @@ export const SystemRoles = (): FunctionComponent => {
 						</OverflowMenuItem>
 					</>
 				),
-				// The Company Owner role cannot be edited.
-				(role) => !role.protectedRole
+				canEdit
 			),
 		],
-		[t]
+		[t, canEdit]
 	);
 
 	return (

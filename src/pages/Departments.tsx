@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useCan } from "@/features/workspace/useCan";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { DataTable, type DataTableSort } from "@/components/ui/DataTable";
@@ -34,24 +35,34 @@ export const Departments = (): FunctionComponent => {
 		t("organisation.departments.empty"),
 		t
 	);
+	const can = useCan();
 	const columns = useMemo(
 		() => [
 			nameColumn<Department>(t("organisation.departments.name")),
 			statusColumn<Department>(t),
-			actionsColumn<Department>(t, (department) => (
-				<>
-					<OverflowMenuItem>{t("organisation.list.editItem")}</OverflowMenuItem>
-					<OverflowMenuItem disabled>
-						{t(
-							department.status === "ACTIVE"
-								? "organisation.list.deactivateItem"
-								: "organisation.list.activateItem"
-						)}
-					</OverflowMenuItem>
-				</>
-			)),
+			actionsColumn<Department>(
+				t,
+				(department) => (
+					<>
+						<OverflowMenuItem
+							disabled={!can("department:update", department.departmentId)}
+						>
+							{t("organisation.list.editItem")}
+						</OverflowMenuItem>
+						<OverflowMenuItem disabled>
+							{t(
+								department.status === "ACTIVE"
+									? "organisation.list.deactivateItem"
+									: "organisation.list.activateItem"
+							)}
+						</OverflowMenuItem>
+					</>
+				),
+				// Editing a Department is granted at that Department, its Branch, or company-wide.
+				(department) => can("department:update", department.departmentId)
+			),
 		],
-		[t]
+		[t, can]
 	);
 
 	return (
