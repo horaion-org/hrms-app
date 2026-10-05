@@ -13,6 +13,8 @@ export type ListToolbarProps = {
 	/** The primary action's label, e.g. "Create Branch". */
 	createLabel: string;
 	onCreate?: () => void;
+	/** A second action beside the primary one, e.g. "Assign role"; left out when there is none. */
+	secondaryAction?: { label: string; onClick: () => void };
 	/** The "Showing:" filter under the toolbar; left out when the list has none. */
 	filter?: {
 		label: string;
@@ -30,6 +32,7 @@ export const ListToolbar = ({
 	onSearchChange,
 	createLabel,
 	onCreate,
+	secondaryAction,
 	filter,
 	className,
 }: ListToolbarProps): FunctionComponent => {
@@ -48,11 +51,18 @@ export const ListToolbar = ({
 						onSearchChange(event.target.value);
 					}}
 				/>
-				{onCreate && (
-					<Button leadingIcon={<PlusIcon />} onClick={onCreate}>
-						{createLabel}
-					</Button>
-				)}
+				<div className="flex flex-wrap items-center gap-3">
+					{secondaryAction && (
+						<Button variant="secondary" onClick={secondaryAction.onClick}>
+							{secondaryAction.label}
+						</Button>
+					)}
+					{onCreate && (
+						<Button leadingIcon={<PlusIcon />} onClick={onCreate}>
+							{createLabel}
+						</Button>
+					)}
+				</div>
 			</div>
 			{filter && (
 				<div className="mt-10 flex items-center gap-3">

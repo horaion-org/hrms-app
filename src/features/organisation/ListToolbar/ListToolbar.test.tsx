@@ -93,6 +93,16 @@ describe("ListToolbar", () => {
 		expect(onCreate).toHaveBeenCalledOnce();
 	});
 
+	it("offers a second action beside the primary one when given", async () => {
+		const user = userEvent.setup();
+		const onClick = vi.fn();
+		render(<Harness secondaryAction={{ label: "Assign role", onClick }} />);
+
+		await user.click(screen.getByRole("button", { name: "Assign role" }));
+
+		expect(onClick).toHaveBeenCalledOnce();
+	});
+
 	it("filters by status through the labelled Showing select", async () => {
 		const user = userEvent.setup();
 		const onStatus = vi.fn();
