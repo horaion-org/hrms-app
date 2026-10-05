@@ -342,7 +342,102 @@
       "permissionCount_one": "{{count}} permission",
       "permissionCount_other": "{{count}} permissions",
       "label": "System roles",
-      "empty": "No system roles yet."
+      "empty": "No system roles yet.",
+      "editor": {
+        "back": "System roles",
+        "title": "Edit system role",
+        "viewTitle": "System role",
+        "createTitle": "Create system role",
+        "create": "Create role",
+        "createForbidden": "You don’t have permission to create system roles.",
+        "unavailable": "You can only give a role permissions you hold yourself, so the others are unavailable.",
+        "scope": "Where this role applies is chosen when you assign it to a person.",
+        "fullAccess": "Full access",
+        "protected": "The Company Owner role always has every permission and can’t be changed.",
+        "viewOnly": "You don’t have permission to change system roles.",
+        "locked": "This role includes permissions you don’t hold, so you can’t change it.",
+        "name": "Role name",
+        "nameHint": "2–100 characters. Letters, numbers, spaces and . ' & - only.",
+        "nameCounter": "{{count}}/100",
+        "nameRequired": "Enter a role name.",
+        "nameLength": "Use 2 to 100 characters.",
+        "nameCharacters": "Use only letters, numbers, spaces and . ' & - in the name.",
+        "nameConflict": "A role named \"{{name}}\" already exists. Choose a different name.",
+        "nameRejected": "Check the role name and try again.",
+        "permissions": "Permissions",
+        "selected": "{{count}} of {{total}} selected",
+        "permissionsRequired": "Choose at least one permission.",
+        "added": "{{count}} added",
+        "removed": "{{count}} removed",
+        "discard": "Discard changes",
+        "save": "Save changes",
+        "forbidden": "This role includes permissions you don’t hold, or you can no longer change system roles.",
+        "gone": "This role no longer exists.",
+        "protectedRefused": "The Company Owner role can’t be changed.",
+        "failed": "We couldn’t save the role. Try again.",
+        "loadForbidden": "You don’t have permission to view this role.",
+        "loadMissing": "This role doesn’t exist or has been deleted.",
+        "loadFailed": "We couldn’t load this role. Please try again."
+      }
+    },
+    "permissions": {
+      "groupCount": "{{count}} of {{total}}",
+      "company": {
+        "name": "Company",
+        "description": "The company’s own details.",
+        "actions": { "read": "View", "update": "Edit" }
+      },
+      "company_member": {
+        "name": "Company members",
+        "description": "The list of everyone in the company, by name.",
+        "actions": { "read": "View" }
+      },
+      "branch": {
+        "name": "Branches",
+        "description": "The company’s branches and their details.",
+        "actions": { "read": "View", "create": "Create", "update": "Edit" }
+      },
+      "branch_member": {
+        "name": "Branch members",
+        "description": "Who belongs to a branch and who heads it.",
+        "actions": {
+          "read": "View",
+          "create": "Add",
+          "update": "Edit",
+          "deactivate": "Deactivate"
+        }
+      },
+      "department": {
+        "name": "Departments",
+        "description": "The departments inside each branch.",
+        "actions": { "read": "View", "create": "Create", "update": "Edit" }
+      },
+      "department_member": {
+        "name": "Department members",
+        "description": "Who belongs to a department and who heads it.",
+        "actions": {
+          "read": "View",
+          "create": "Add",
+          "update": "Edit",
+          "deactivate": "Deactivate"
+        }
+      },
+      "access_role": {
+        "name": "System roles",
+        "description": "Roles like this one, and who they are assigned to.",
+        "actions": {
+          "read": "View",
+          "create": "Create",
+          "update": "Edit",
+          "delete": "Delete",
+          "assign": "Assign"
+        }
+      },
+      "audit_event": {
+        "name": "Activity",
+        "description": "The record of who changed what in the company.",
+        "actions": { "read": "View" }
+      }
     },
     "activity": {
       "title": "Recent Activity",
