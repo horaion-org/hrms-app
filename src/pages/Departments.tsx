@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { useCan } from "@/features/workspace/useCan";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { DataTable, type DataTableSort } from "@/components/ui/DataTable";
 import { OverflowMenuItem } from "@/components/ui/OverflowMenu";
 import type { Department } from "@/features/organisation/api";
@@ -17,6 +18,8 @@ import {
 	statusFilterOptions,
 	type StatusFilter,
 } from "@/features/organisation/listColumns";
+import { mapRefusal } from "@/features/organisation/refusal";
+import { useSetDepartmentStatus } from "@/features/organisation/useChangeListRow";
 import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import { useDepartments } from "@/features/organisation/useOrganisationList";
 import { companyPermissions, workspaceQuery } from "@/features/workspace/api";
@@ -25,6 +28,16 @@ export const Departments = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
 	const { t } = useTranslation();
 	const [creating, setCreating] = useState(false);
+	// The Department whose status the person asked to change, until they confirm or cancel.
+	const [changing, setChanging] = useState<Department>();
+	const setDepartmentStatus = useSetDepartmentStatus(companyId);
+	const statusKey = `organisation.departments.status.${
+		changing?.status === "ACTIVE" ? "deactivate" : "activate"
+	}` as const;
+	const closeChange = (): void => {
+		setDepartmentStatus.reset();
+		setChanging(undefined);
+	};
 	const workspace = useQuery(workspaceQuery);
 	const permissions = workspace.data
 		? companyPermissions(workspace.data, companyId)
@@ -62,7 +75,12 @@ export const Departments = (): FunctionComponent => {
 						>
 							{t("organisation.list.editItem")}
 						</OverflowMenuItem>
-						<OverflowMenuItem disabled>
+						<OverflowMenuItem
+							disabled={!can("department:update", department.departmentId)}
+							onClick={() => {
+								setChanging(department);
+							}}
+						>
 							{t(
 								department.status === "ACTIVE"
 									? "organisation.list.deactivateItem"
@@ -114,6 +132,33 @@ export const Departments = (): FunctionComponent => {
 					companyId={companyId}
 					onClose={() => {
 						setCreating(false);
+					}}
+				/>
+			)}
+			{changing && (
+				<ConfirmDialog
+					cancelLabel={t("organisation.list.cancel")}
+					confirmLabel={t(`${statusKey}Confirm`)}
+					description={t(`${statusKey}Description`)}
+					submitting={setDepartmentStatus.isPending}
+					title={t(`${statusKey}Title`, { name: changing.name })}
+					error={
+						setDepartmentStatus.error
+							? mapRefusal(setDepartmentStatus.error, {
+									forbidden: t("organisation.departments.status.forbidden"),
+									failed: t("organisation.departments.status.failed"),
+								}).message
+							: undefined
+					}
+					onClose={closeChange}
+					onConfirm={() => {
+						setDepartmentStatus.mutate(
+							{
+								row: changing,
+								status: changing.status === "ACTIVE" ? "INACTIVE" : "ACTIVE",
+							},
+							{ onSuccess: closeChange }
+						);
 					}}
 				/>
 			)}

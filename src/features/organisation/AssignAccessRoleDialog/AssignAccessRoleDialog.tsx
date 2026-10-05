@@ -7,7 +7,10 @@ import { Select } from "@/components/forms/Select";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
 import type { AccessRole, CompanyMember } from "@/features/organisation/api";
-import type { AssignmentTarget } from "@/features/organisation/assignmentTargets";
+import {
+	placeKey,
+	type AssignmentTarget,
+} from "@/features/organisation/assignmentTargets";
 import { PermissionSummary } from "@/features/organisation/PermissionSummary";
 import { isPermissionKey } from "@/features/workspace/permissionKeys";
 
@@ -20,6 +23,11 @@ export type AssignAccessRoleDialogProps = {
 	onQueryChange: (query: string) => void;
 	/** Every place a role can apply, widest first. */
 	targets: Array<AssignmentTarget>;
+	/**
+	 * Set to change where one person already has the role: the person is
+	 * fixed and the form starts from the places they hold it.
+	 */
+	editing?: { person: CompanyMember; places: Array<AssignmentTarget> };
 	/** Why the last attempt was refused. */
 	error?: string;
 	/** True while an attempt is being sent. */
@@ -35,8 +43,9 @@ export type AssignAccessRoleDialogProps = {
 const key = "organisation.accessRoles.assignments.dialog";
 
 /**
- * Gives one access role to one person at one or several places, showing
- * what the role allows so it is clear what is being given.
+ * Gives one access role to one person at one or several places, or changes
+ * the places a person already has it, showing what the role allows so it is
+ * clear what is being given.
  */
 export const AssignAccessRoleDialog = ({
 	roles,
@@ -44,6 +53,7 @@ export const AssignAccessRoleDialog = ({
 	query,
 	onQueryChange,
 	targets,
+	editing,
 	error,
 	submitting = false,
 	onAssign,
@@ -58,31 +68,36 @@ export const AssignAccessRoleDialog = ({
 	const [chosenRoleId, setChosenRoleId] = useState(
 		onlyRole?.accessRoleId ?? ""
 	);
-	const [person, setPerson] = useState<CompanyMember | null>(null);
-	const [places, setPlaces] = useState<Array<AssignmentTarget>>([]);
+	const [person, setPerson] = useState<CompanyMember | null>(
+		editing?.person ?? null
+	);
+	const [places, setPlaces] = useState<Array<AssignmentTarget>>(
+		editing?.places ?? []
+	);
 	const [placeQuery, setPlaceQuery] = useState("");
 	const role = roles.find((item) => item.accessRoleId === chosenRoleId);
 
 	return (
 		<Dialog
 			open
-			description={t(`${key}.description`)}
+			description={t(editing ? `${key}.editDescription` : `${key}.description`)}
 			preventClose={submitting}
-			title={t(`${key}.title`)}
+			title={t(editing ? `${key}.editTitle` : `${key}.title`)}
 			footer={
 				<div className="flex justify-end gap-3">
 					<Button disabled={submitting} variant="secondary" onClick={onClose}>
 						{t(`${key}.cancel`)}
 					</Button>
 					<Button
-						disabled={!role || !person || places.length === 0}
+						// Editing may clear every place, which removes the role from the person.
+						disabled={!role || !person || (!editing && places.length === 0)}
 						loading={submitting}
 						onClick={() => {
 							if (role && person)
 								onAssign(role.accessRoleId, person.membershipId, places);
 						}}
 					>
-						{t(`${key}.submit`)}
+						{t(editing ? `${key}.editSubmit` : `${key}.submit`)}
 					</Button>
 				</div>
 			}
@@ -122,7 +137,7 @@ export const AssignAccessRoleDialog = ({
 					<Combobox
 						aria-required
 						aria-label={t(`${key}.person`)}
-						disabled={submitting}
+						disabled={submitting || editing !== undefined}
 						emptyText={t(`${key}.noResults`)}
 						getKey={(member) => member.membershipId}
 						getLabel={(member) => member.displayName}
@@ -150,7 +165,7 @@ export const AssignAccessRoleDialog = ({
 						aria-label={t(`${key}.places`)}
 						disabled={submitting}
 						emptyText={t(`${key}.placesEmpty`)}
-						getKey={(target) => target.departmentId ?? target.branchId ?? ""}
+						getKey={placeKey}
 						getLabel={(target) => target.label}
 						id={placesId}
 						placeholder={t(`${key}.placesPlaceholder`)}
@@ -166,6 +181,11 @@ export const AssignAccessRoleDialog = ({
 						onQueryChange={setPlaceQuery}
 					/>
 				</FormRow>
+				{editing && places.length === 0 && (
+					<p className="text-sm font-semibold text-error-700">
+						{t(`${key}.removesAll`, { name: editing.person.displayName })}
+					</p>
+				)}
 				{role && (
 					<PermissionSummary
 						permissions={role.permissions.filter(isPermissionKey)}

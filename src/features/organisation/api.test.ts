@@ -188,6 +188,7 @@ describe("create department client", () => {
 			})
 		).resolves.toEqual({
 			departmentId: "d-1",
+			branchId: "b-1",
 			name: "Front of house",
 			status: "ACTIVE",
 		});
@@ -271,6 +272,7 @@ describe("create access role client", () => {
 					companyId: "c-1",
 					name: "Branch manager",
 					protectedRole: false,
+					status: "ACTIVE",
 					holderCount: 0,
 					permissions: ["branch:read", "branch:update"],
 				}),

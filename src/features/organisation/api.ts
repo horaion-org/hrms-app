@@ -109,6 +109,7 @@ export const createBranch = (
 
 const departmentSchema = z.object({
 	departmentId: z.string(),
+	branchId: z.string(),
 	name: z.string(),
 	status: unitStatusSchema,
 });
@@ -159,6 +160,8 @@ const accessRoleSchema = z.object({
 	accessRoleId: z.string(),
 	name: z.string(),
 	protectedRole: z.boolean(),
+	/** An inactive role stays assigned but grants nothing until it is activated again. */
+	status: unitStatusSchema,
 	permissions: z.array(z.string()),
 	/** How many people hold the role; someone holding it at several places counts once. */
 	holderCount: z.number().int().nonnegative(),
@@ -246,32 +249,31 @@ export const fetchDepartments = (
 /** The company's access roles ("System Roles"); sortable by `name`, with no status. */
 export const fetchAccessRoles = (
 	companyId: string,
-	query: Omit<ListQuery, "status">
+	query: ListQuery
 ): Promise<ListPage<AccessRole>> =>
 	fetchList(listPath(companyId, "access-roles", query), accessRoleSchema);
-
-/** A Department with the Branch it belongs to, for choosing where a role applies. */
-const departmentUnitSchema = departmentSchema.extend({ branchId: z.string() });
-
-export type DepartmentUnit = z.infer<typeof departmentUnitSchema>;
 
 /** The company's active departments, each with its Branch. */
 export const fetchDepartmentUnits = (
 	companyId: string
-): Promise<ListPage<DepartmentUnit>> =>
+): Promise<ListPage<Department>> =>
 	fetchList(
 		listPath(companyId, "departments", {
 			sort: { field: "name", desc: false },
 			status: "ACTIVE",
 		}),
-		departmentUnitSchema
+		departmentSchema
 	);
 
 const accessRoleHolderSchema = z.object({
 	accessRoleAssignmentId: z.string(),
 	companyMembershipId: z.string(),
 	displayName: z.string(),
+	/** An inactive assignment is kept but gives the person nothing until it is activated again. */
+	status: unitStatusSchema,
+	branchId: z.string().nullable(),
 	branchName: z.string().nullable(),
+	departmentId: z.string().nullable(),
 	departmentName: z.string().nullable(),
 });
 
@@ -311,6 +313,17 @@ export const grantAccessRole = async (
 	);
 };
 
+/** Switches one assignment of an access role on or off without removing it. */
+export const setAccessRoleAssignmentStatus = (
+	companyId: string,
+	accessRoleAssignmentId: string,
+	status: UnitStatus
+): Promise<void> =>
+	apiRequestVoid(
+		`${companyPath(companyId)}/access-role-assignments/${encodeURIComponent(accessRoleAssignmentId)}`,
+		{ method: "PUT", body: { status } }
+	);
+
 /** Removes one assignment of an access role. */
 export const revokeAccessRole = (
 	companyId: string,
@@ -347,16 +360,50 @@ export const createAccessRole = (
 		body: { ...body, name: body.name.trim() },
 	});
 
-/** Replaces a role's name and permissions; the server owns uniqueness and what the person may grant. */
+export type UpdateAccessRoleBody = AccessRoleBody & { status: UnitStatus };
+
+/** Replaces a role's name, permissions and status; the server owns uniqueness and what the person may grant. */
 export const updateAccessRole = (
 	companyId: string,
 	accessRoleId: string,
-	body: AccessRoleBody
+	body: UpdateAccessRoleBody
 ): Promise<AccessRole> =>
 	apiRequest(accessRolePath(companyId, accessRoleId), accessRoleSchema, {
 		method: "PUT",
 		body: { ...body, name: body.name.trim() },
 	});
+
+/** Deletes a role nobody holds; the server refuses one that is still assigned. */
+export const deleteAccessRole = (
+	companyId: string,
+	accessRoleId: string
+): Promise<void> =>
+	apiRequestVoid(accessRolePath(companyId, accessRoleId), {
+		method: "DELETE",
+	});
+
+/** Replaces a Branch's details and status; the server owns uniqueness. */
+export const updateBranch = (
+	companyId: string,
+	{ branchId, ...body }: Branch
+): Promise<Branch> =>
+	apiRequest(
+		`${companyPath(companyId)}/branches/${encodeURIComponent(branchId)}`,
+		branchSchema,
+		{ method: "PUT", body }
+	);
+
+/** Replaces a Department's name and status; the server owns uniqueness. */
+export const updateDepartment = (
+	companyId: string,
+	{ departmentId, branchId, ...body }: Department
+): Promise<Department> =>
+	apiRequest(
+		`${companyPath(companyId)}/branches/${encodeURIComponent(branchId)}/departments/${encodeURIComponent(departmentId)}`,
+		departmentSchema,
+		{ method: "PUT", body }
+	);
+
 /** The company's job titles; sortable by `name` or `status`. */
 export const fetchJobTitles = (
 	companyId: string,

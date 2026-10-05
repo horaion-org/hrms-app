@@ -17,14 +17,22 @@ import { ListToolbar } from "@/features/organisation/ListToolbar";
 import {
 	actionsColumn,
 	describeList,
+	isStatusFilter,
 	nameColumn,
+	statusColumn,
+	statusFilterOptions,
+	type StatusFilter,
 } from "@/features/organisation/listColumns";
 import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import { useAccessRoles } from "@/features/organisation/useOrganisationList";
+import {
+	SystemRoleActionDialog,
+	type SystemRoleAction,
+} from "@/pages/SystemRoleActions";
 import { AssignSystemRole } from "@/pages/SystemRoleHolders";
 import { companyPermissions, workspaceQuery } from "@/features/workspace/api";
 
-/** Access roles, shown as "System roles". Roles have no status, so no filter. */
+/** Access roles, shown as "System roles". */
 export const SystemRoles = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
 	const { t } = useTranslation();
@@ -39,14 +47,16 @@ export const SystemRoles = (): FunctionComponent => {
 	);
 	const canCreate = permissions.has("access_role:create");
 	const [search, setSearch] = useState("");
+	const [status, setStatus] = useState<StatusFilter>("all");
 	const [sort, setSort] = useState<DataTableSort>({ id: "name", desc: false });
 	const list = useAccessRoles(companyId, {
 		sort: { field: sort.id, desc: sort.desc },
+		status: status === "all" ? undefined : status,
 	});
 	const view = describeList(
 		list,
 		search,
-		false,
+		status !== "all",
 		t("organisation.accessRoles.empty"),
 		t
 	);
@@ -70,12 +80,15 @@ export const SystemRoles = (): FunctionComponent => {
 		[navigate]
 	);
 	const [assigning, setAssigning] = useState(false);
-	// The Company Owner role is never assigned here; choosing a person needs the company's list of people.
+	const [action, setAction] = useState<SystemRoleAction>();
+	// Neither the Company Owner role nor an inactive role is assigned here; choosing a person needs the company's list of people.
 	const assignable =
 		list.status === "ready" &&
 		can("access_role:assign") &&
 		can("company_member:read")
-			? list.items.filter((role) => !role.protectedRole)
+			? list.items.filter(
+					(role) => !role.protectedRole && role.status === "ACTIVE"
+				)
 			: [];
 	const columns = useMemo(
 		(): Array<DataTableColumn<AccessRole>> => [
@@ -110,22 +123,52 @@ export const SystemRoles = (): FunctionComponent => {
 					</Button>
 				),
 			},
+			statusColumn<AccessRole>(t),
 			actionsColumn<AccessRole>(
 				t,
 				(role) => (
 					<>
 						<OverflowMenuItem
 							onClick={() => {
-								open(role);
+								void navigate({
+									to: "/organisation/system-roles/$accessRoleId",
+									params: { accessRoleId: role.accessRoleId },
+								});
+							}}
+						>
+							{t("organisation.list.viewItem")}
+						</OverflowMenuItem>
+						<OverflowMenuItem
+							disabled={!canCreate}
+							onClick={() => {
+								setAction({ kind: "duplicate", role });
+							}}
+						>
+							{t("organisation.list.duplicateItem")}
+						</OverflowMenuItem>
+						<OverflowMenuItem
+							disabled={!canEdit(role)}
+							onClick={() => {
+								setAction({ kind: "status", role });
 							}}
 						>
 							{t(
-								canEdit(role)
-									? "organisation.list.editItem"
-									: "organisation.list.viewItem"
+								role.status === "ACTIVE"
+									? "organisation.list.deactivateItem"
+									: "organisation.list.activateItem"
 							)}
 						</OverflowMenuItem>
-						<OverflowMenuItem disabled>
+						<OverflowMenuItem
+							// Only a role nobody holds can be deleted.
+							disabled={
+								role.protectedRole ||
+								role.holderCount > 0 ||
+								!can("access_role:delete")
+							}
+							onClick={() => {
+								setAction({ kind: "delete", role });
+							}}
+						>
 							{t("organisation.list.deleteItem")}
 						</OverflowMenuItem>
 					</>
@@ -134,7 +177,7 @@ export const SystemRoles = (): FunctionComponent => {
 				open
 			),
 		],
-		[t, canEdit, open]
+		[t, can, canCreate, canEdit, navigate, open]
 	);
 
 	return (
@@ -150,6 +193,14 @@ export const SystemRoles = (): FunctionComponent => {
 				createLabel={t("organisation.accessRoles.create")}
 				search={search}
 				searchLabel={t("organisation.accessRoles.search")}
+				filter={{
+					label: t("organisation.list.showing"),
+					value: status,
+					options: statusFilterOptions(t, t("organisation.accessRoles.all")),
+					onChange: (value) => {
+						if (isStatusFilter(value)) setStatus(value);
+					},
+				}}
 				secondaryAction={
 					assignable.length > 0
 						? {
@@ -174,6 +225,17 @@ export const SystemRoles = (): FunctionComponent => {
 					roles={assignable}
 					onClose={() => {
 						setAssigning(false);
+					}}
+				/>
+			)}
+			{action && (
+				<SystemRoleActionDialog
+					// A fresh dialog for each row and action.
+					key={`${action.kind}-${action.role.accessRoleId}`}
+					action={action}
+					heldPermissions={permissions}
+					onClose={() => {
+						setAction(undefined);
 					}}
 				/>
 			)}
