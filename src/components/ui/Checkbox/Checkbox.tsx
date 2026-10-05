@@ -14,6 +14,8 @@ type CheckboxProps = Omit<
 	indeterminate?: boolean;
 	/** Classes for the wrapper holding the box and its label. */
 	className?: string;
+	/** Classes for the label's text, e.g. a heavier weight for a group's box. */
+	labelClassName?: string;
 };
 
 export const Checkbox = ({
@@ -21,6 +23,7 @@ export const Checkbox = ({
 	hideLabel = false,
 	indeterminate = false,
 	className,
+	labelClassName,
 	...rest
 }: CheckboxProps): FunctionComponent => {
 	const id = useId();
@@ -41,7 +44,8 @@ export const Checkbox = ({
 				htmlFor={id}
 				className={joinClassNames(
 					"text-base leading-6 text-slate-900",
-					hideLabel && "sr-only"
+					hideLabel && "sr-only",
+					labelClassName
 				)}
 			>
 				{label}

@@ -46,6 +46,12 @@ describe("Checkbox labelling and mixed state", () => {
 		expect(screen.getByText("Select Orchard")).toHaveClass("sr-only");
 	});
 
+	it("given_labelClassName_when_rendered_then_stylesTheLabelText", () => {
+		render(<Checkbox label="Branches" labelClassName="font-semibold" />);
+
+		expect(screen.getByText("Branches")).toHaveClass("font-semibold");
+	});
+
 	it("given_indeterminate_when_rendered_then_reportsTheMixedState", () => {
 		const { rerender } = render(
 			<Checkbox indeterminate readOnly label="Select all" />
