@@ -201,3 +201,40 @@ export const fetchAccessRoles = (
 	query: Omit<ListQuery, "status">
 ): Promise<ListPage<AccessRole>> =>
 	fetchList(listPath(companyId, "access-roles", query), accessRoleSchema);
+
+const accessRolePath = (companyId: string, accessRoleId: string): string =>
+	`${companyPath(companyId)}/access-roles/${encodeURIComponent(accessRoleId)}`;
+
+/** One access role with the permission keys it grants. */
+export const fetchAccessRole = (
+	companyId: string,
+	accessRoleId: string
+): Promise<AccessRole> =>
+	apiRequest(accessRolePath(companyId, accessRoleId), accessRoleSchema);
+
+export type AccessRoleBody = {
+	name: string;
+	/** The role's whole permission set; on an update, keys left out are removed. */
+	permissions: Array<string>;
+};
+
+/** Creates an access role; the server owns uniqueness and what the person may grant. */
+export const createAccessRole = (
+	companyId: string,
+	body: AccessRoleBody
+): Promise<AccessRole> =>
+	apiRequest(`${companyPath(companyId)}/access-roles`, accessRoleSchema, {
+		method: "POST",
+		body: { ...body, name: body.name.trim() },
+	});
+
+/** Replaces a role's name and permissions; the server owns uniqueness and what the person may grant. */
+export const updateAccessRole = (
+	companyId: string,
+	accessRoleId: string,
+	body: AccessRoleBody
+): Promise<AccessRole> =>
+	apiRequest(accessRolePath(companyId, accessRoleId), accessRoleSchema, {
+		method: "PUT",
+		body: { ...body, name: body.name.trim() },
+	});

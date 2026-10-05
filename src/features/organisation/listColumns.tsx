@@ -50,13 +50,15 @@ export const statusColumn = <T extends { status: UnitStatus }>(
 });
 
 /**
- * Each row's Edit button and "More actions" menu. Editing is not built yet,
- * so the button does nothing and `menu` decides which items to offer.
+ * Each row's Edit button and "More actions" menu. `menu` decides which items
+ * to offer. The button does nothing on a list whose editing is not built
+ * yet, which is one that passes no `onEdit`.
  */
 export const actionsColumn = <T extends { name: string }>(
 	t: TFunction,
 	menu: (row: T) => ReactNode,
-	canEdit: (row: T) => boolean = (): boolean => true
+	canEdit: (row: T) => boolean = (): boolean => true,
+	onEdit?: (row: T) => void
 ): DataTableColumn<T> => ({
 	id: "actions",
 	header: t("organisation.list.actions"),
@@ -66,6 +68,12 @@ export const actionsColumn = <T extends { name: string }>(
 				aria-label={t("organisation.list.edit", { name: row.name })}
 				disabled={!canEdit(row)}
 				variant="icon"
+				onClick={
+					onEdit &&
+					((): void => {
+						onEdit(row);
+					})
+				}
 			>
 				<EditIcon />
 			</Button>

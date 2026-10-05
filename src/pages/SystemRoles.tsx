@@ -1,3 +1,4 @@
+import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useMemo, useState } from "react";
 import { useCan } from "@/features/workspace/useCan";
 import { useTranslation } from "react-i18next";
@@ -41,6 +42,17 @@ export const SystemRoles = (): FunctionComponent => {
 			!role.protectedRole && can("access_role:update"),
 		[can]
 	);
+	const navigate = useNavigate();
+	// The same page shows a role the person can't change, read-only.
+	const open = useCallback(
+		(role: AccessRole): void => {
+			void navigate({
+				to: "/organisation/system-roles/$accessRoleId",
+				params: { accessRoleId: role.accessRoleId },
+			});
+		},
+		[navigate]
+	);
 	const columns = useMemo(
 		(): Array<DataTableColumn<AccessRole>> => [
 			nameColumn<AccessRole>(t("organisation.accessRoles.name")),
@@ -58,18 +70,27 @@ export const SystemRoles = (): FunctionComponent => {
 				t,
 				(role) => (
 					<>
-						<OverflowMenuItem disabled={!canEdit(role)}>
-							{t("organisation.list.editItem")}
+						<OverflowMenuItem
+							onClick={() => {
+								open(role);
+							}}
+						>
+							{t(
+								canEdit(role)
+									? "organisation.list.editItem"
+									: "organisation.list.viewItem"
+							)}
 						</OverflowMenuItem>
 						<OverflowMenuItem disabled>
 							{t("organisation.list.deleteItem")}
 						</OverflowMenuItem>
 					</>
 				),
-				canEdit
+				canEdit,
+				open
 			),
 		],
-		[t, canEdit]
+		[t, canEdit, open]
 	);
 
 	return (
@@ -86,6 +107,13 @@ export const SystemRoles = (): FunctionComponent => {
 				search={search}
 				searchLabel={t("organisation.accessRoles.search")}
 				onSearchChange={setSearch}
+				onCreate={
+					can("access_role:create")
+						? (): void => {
+								void navigate({ to: "/organisation/system-roles/new" });
+							}
+						: undefined
+				}
 			/>
 			{view.problem ? (
 				<p
