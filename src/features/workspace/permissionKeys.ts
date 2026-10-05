@@ -43,3 +43,7 @@ export const ORGANISATION_READ_KEYS: ReadonlyArray<PermissionKey> = [
 	"access_role:read",
 	"audit_event:read",
 ];
+
+/** Whether a key the API sent is one this app's copy of the catalog knows. */
+export const isPermissionKey = (key: string): key is PermissionKey =>
+	(PERMISSION_KEYS as ReadonlyArray<string>).includes(key);
