@@ -6,7 +6,7 @@ import {
 import {
 	updateAccessRole,
 	type AccessRole,
-	type AccessRoleBody,
+	type UpdateAccessRoleBody,
 } from "@/features/organisation/api";
 import { workspaceQuery } from "@/features/workspace/api";
 
@@ -18,10 +18,10 @@ import { workspaceQuery } from "@/features/workspace/api";
 export const useUpdateAccessRole = (
 	companyId: string,
 	accessRoleId: string
-): UseMutationResult<AccessRole, Error, AccessRoleBody> => {
+): UseMutationResult<AccessRole, Error, UpdateAccessRoleBody> => {
 	const client = useQueryClient();
 	return useMutation({
-		mutationFn: (body: AccessRoleBody) =>
+		mutationFn: (body: UpdateAccessRoleBody) =>
 			updateAccessRole(companyId, accessRoleId, body),
 		onSuccess: () =>
 			Promise.all([

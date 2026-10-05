@@ -5,6 +5,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { PlusIcon } from "@/components/ui/Icon";
+import { placeOf } from "@/features/organisation/AccessRoleAssignments/placeOf";
 
 /** One person holding the role at one place. */
 export type AccessRoleAssignmentRow = {
@@ -63,14 +64,6 @@ export const AccessRoleAssignments = ({
 }: AccessRoleAssignmentsProps): FunctionComponent => {
 	const { t } = useTranslation();
 	const holders = byHolder(assignments);
-	const placeOf = (row: AccessRoleAssignmentRow): string => {
-		if (!row.branchName) return t(`${key}.wholeCompany`);
-		if (!row.departmentName) return row.branchName;
-		return t(`${key}.department`, {
-			branch: row.branchName,
-			department: row.departmentName,
-		});
-	};
 	const columns: Array<DataTableColumn<Holder>> = [
 		{
 			id: "person",
@@ -97,13 +90,13 @@ export const AccessRoleAssignments = ({
 						<li key={place.assignmentId}>
 							{onRemove ? (
 								<Token
-									label={placeOf(place)}
+									label={placeOf(place, t)}
 									onRemove={() => {
 										onRemove(place);
 									}}
 								/>
 							) : (
-								placeOf(place)
+								placeOf(place, t)
 							)}
 						</li>
 					))}

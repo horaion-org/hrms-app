@@ -159,6 +159,8 @@ const accessRoleSchema = z.object({
 	accessRoleId: z.string(),
 	name: z.string(),
 	protectedRole: z.boolean(),
+	/** An inactive role stays assigned but grants nothing until it is activated again. */
+	status: unitStatusSchema,
 	permissions: z.array(z.string()),
 	/** How many people hold the role; someone holding it at several places counts once. */
 	holderCount: z.number().int().nonnegative(),
@@ -246,7 +248,7 @@ export const fetchDepartments = (
 /** The company's access roles ("System Roles"); sortable by `name`, with no status. */
 export const fetchAccessRoles = (
 	companyId: string,
-	query: Omit<ListQuery, "status">
+	query: ListQuery
 ): Promise<ListPage<AccessRole>> =>
 	fetchList(listPath(companyId, "access-roles", query), accessRoleSchema);
 
@@ -347,16 +349,39 @@ export const createAccessRole = (
 		body: { ...body, name: body.name.trim() },
 	});
 
-/** Replaces a role's name and permissions; the server owns uniqueness and what the person may grant. */
+export type UpdateAccessRoleBody = AccessRoleBody & { status: UnitStatus };
+
+/** Replaces a role's name, permissions and status; the server owns uniqueness and what the person may grant. */
 export const updateAccessRole = (
 	companyId: string,
 	accessRoleId: string,
-	body: AccessRoleBody
+	body: UpdateAccessRoleBody
 ): Promise<AccessRole> =>
 	apiRequest(accessRolePath(companyId, accessRoleId), accessRoleSchema, {
 		method: "PUT",
 		body: { ...body, name: body.name.trim() },
 	});
+
+/** Deletes a role nobody holds; the server refuses one that is still assigned. */
+export const deleteAccessRole = (
+	companyId: string,
+	accessRoleId: string
+): Promise<void> =>
+	apiRequestVoid(accessRolePath(companyId, accessRoleId), {
+		method: "DELETE",
+	});
+
+/** Replaces a Branch's details and status; the server owns uniqueness. */
+export const updateBranch = (
+	companyId: string,
+	{ branchId, ...body }: Branch
+): Promise<Branch> =>
+	apiRequest(
+		`${companyPath(companyId)}/branches/${encodeURIComponent(branchId)}`,
+		branchSchema,
+		{ method: "PUT", body }
+	);
+
 /** The company's job titles; sortable by `name` or `status`. */
 export const fetchJobTitles = (
 	companyId: string,

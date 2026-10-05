@@ -33,6 +33,7 @@ const role = {
 	accessRoleId: "r-1",
 	name: "Auditor",
 	protectedRole: false,
+	status: "ACTIVE",
 	holderCount: 0,
 	permissions: ["audit_event:read"],
 };

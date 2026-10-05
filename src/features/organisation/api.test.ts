@@ -271,6 +271,7 @@ describe("create access role client", () => {
 					companyId: "c-1",
 					name: "Branch manager",
 					protectedRole: false,
+					status: "ACTIVE",
 					holderCount: 0,
 					permissions: ["branch:read", "branch:update"],
 				}),

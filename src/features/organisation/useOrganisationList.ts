@@ -85,7 +85,7 @@ export const useJobTitles = (
 
 export const useAccessRoles = (
 	companyId: string,
-	query: Omit<ListQuery, "status">
+	query: ListQuery
 ): OrganisationList<AccessRole> =>
 	useOrganisationList(
 		companyId,

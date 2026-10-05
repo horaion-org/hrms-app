@@ -22,15 +22,19 @@ export type CreateSystemRoleDialogProps = {
 	 * (the API's subset rule), so every other box is disabled.
 	 */
 	heldPermissions: ReadonlySet<string>;
+	/** What the form starts from when duplicating a role; empty otherwise. */
+	initial?: CreateSystemRoleValues;
 	onClose: () => void;
 };
 
 const FIELDS = ["name", "permissions"] as const;
+const EMPTY: CreateSystemRoleValues = { name: "", permissions: [] };
 
 /** Mount when opened and unmount when closed so every attempt starts fresh. */
 export const CreateSystemRoleDialog = ({
 	companyId,
 	heldPermissions,
+	initial = EMPTY,
 	onClose,
 }: CreateSystemRoleDialogProps): FunctionComponent => {
 	const { t } = useTranslation();
@@ -39,7 +43,7 @@ export const CreateSystemRoleDialog = ({
 	const schema = useMemo(() => createSystemRoleSchema(t), [t]);
 	const form = useForm<CreateSystemRoleValues>({
 		resolver: zodResolver(schema),
-		defaultValues: { name: "", permissions: [] },
+		defaultValues: initial,
 		mode: "onSubmit",
 		reValidateMode: "onChange",
 	});

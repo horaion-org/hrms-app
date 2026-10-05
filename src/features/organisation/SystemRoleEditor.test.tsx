@@ -34,6 +34,7 @@ const role = (
 	companyId: "c-1",
 	name: "Manager",
 	protectedRole: false,
+	status: "ACTIVE",
 	permissions: ["branch:read", "branch:create", "department:read"],
 	holderCount: 0,
 	...overrides,
@@ -95,7 +96,7 @@ const save = (): HTMLElement =>
 	screen.getByRole("button", { name: "Save changes" });
 
 describe("System role editor", () => {
-	it("opens from the list's Edit button showing the role as it is", async () => {
+	it("opens on the role's permissions from the list's Edit button", async () => {
 		const user = userEvent.setup();
 		stubApi(routes());
 		const opened = await open("/organisation/system-roles");
@@ -104,10 +105,18 @@ describe("System role editor", () => {
 			await screen.findByRole("button", { name: "Edit Manager" })
 		);
 
+		await waitFor(() => {
+			expect(opened.router.state.location.href).toBe(EDITOR);
+		});
+	});
+
+	it("shows the role as it is, with nothing to save yet", async () => {
+		stubApi(routes());
+		await open(EDITOR);
+
 		expect(
 			await screen.findByRole("heading", { level: 1, name: "Manager" })
 		).toBeVisible();
-		expect(opened.router.state.location.pathname).toBe(ROLE_PAGE);
 		expect(screen.getByRole("textbox", { name: /Role name/ })).toHaveValue(
 			"Manager"
 		);
@@ -150,6 +159,7 @@ describe("System role editor", () => {
 			{
 				name: "Area manager",
 				permissions: ["branch:read", "department:read", "department:update"],
+				status: "ACTIVE",
 			},
 		]);
 		// The role may be one the person holds, so the workspace is asked again.
@@ -262,6 +272,7 @@ describe("System role editor", () => {
 				{
 					name: "Manager",
 					permissions: ["branch:read", "branch:update", "leave:approve"],
+					status: "ACTIVE",
 				},
 			]);
 		});
@@ -289,6 +300,7 @@ describe("System role editor, read-only", () => {
 						role({
 							name: "Company Owner",
 							protectedRole: true,
+							status: "ACTIVE",
 							permissions: PERMISSION_KEYS,
 						}),
 					],
@@ -298,6 +310,7 @@ describe("System role editor, read-only", () => {
 			[ROLE]: roleReply({
 				name: "Company Owner",
 				protectedRole: true,
+				status: "ACTIVE",
 				permissions: PERMISSION_KEYS,
 			}),
 		});
@@ -308,7 +321,9 @@ describe("System role editor, read-only", () => {
 				name: "More actions for Company Owner",
 			})
 		);
+		// View opens the role on who has it; its permissions are one tab over.
 		await user.click(await screen.findByRole("menuitem", { name: "View" }));
+		await user.click(await screen.findByRole("tab", { name: "Permissions" }));
 
 		expect(
 			await screen.findByText(

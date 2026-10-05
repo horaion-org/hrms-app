@@ -25,6 +25,7 @@ const role = {
 	companyId: "c-1",
 	name: "Branch manager",
 	protectedRole: false,
+	status: "ACTIVE",
 	holderCount: 0,
 	permissions: ["branch:read", "branch:update"],
 };

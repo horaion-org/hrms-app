@@ -11,3 +11,12 @@ export const useCurrentCompanyId = (): string => {
 		? context.currentCompany.company.companyId
 		: "";
 };
+
+/** The person's own membership of the current company, to tell when a change affects them. */
+export const useCurrentMembershipId = (): string => {
+	const context = useRouteContext({ from: "/_authenticated" });
+	return "currentCompany" in context &&
+		context.currentCompany.kind === "settled"
+		? context.currentCompany.company.membershipId
+		: "";
+};

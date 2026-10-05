@@ -2,7 +2,12 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
-import { AccessRoleAssignments } from "@/features/organisation/AccessRoleAssignments";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import {
+	AccessRoleAssignments,
+	placeOf,
+	type AccessRoleAssignmentRow,
+} from "@/features/organisation/AccessRoleAssignments";
 import {
 	fetchBranches,
 	fetchDepartmentUnits,
@@ -100,6 +105,8 @@ export const SystemRoleHolders = ({
 	const { t } = useTranslation();
 	const { revoke } = useChangeAccessRoleHolders(companyId);
 	const [assigning, setAssigning] = useState(false);
+	const [removing, setRemoving] = useState<AccessRoleAssignmentRow>();
+	const active = role.status === "ACTIVE";
 	const canChange = !role.protectedRole && can("access_role:assign");
 	const problem = holders
 		? revoke.isError && t(`${key}.removeFailed`)
@@ -111,6 +118,11 @@ export const SystemRoleHolders = ({
 				permissions={role.permissions.filter(isPermissionKey)}
 				title={t(`${key}.allows`)}
 			/>
+			{!active && (
+				<p className="mt-6 text-sm font-semibold text-neutral-900">
+					{t(`${key}.inactive`)}
+				</p>
+			)}
 			{problem && (
 				<p className="mt-6 text-sm text-error-700" role="alert">
 					{problem}
@@ -125,22 +137,39 @@ export const SystemRoleHolders = ({
 					branchName: holder.branchName ?? undefined,
 					departmentName: holder.departmentName ?? undefined,
 				}))}
+				onRemove={canChange ? setRemoving : undefined}
 				onAssign={
-					// Choosing a person needs the company's list of people.
-					canChange && can("company_member:read")
+					// An inactive role isn't assigned; choosing a person needs the company's list of people.
+					canChange && active && can("company_member:read")
 						? (): void => {
 								setAssigning(true);
 							}
 						: undefined
 				}
-				onRemove={
-					canChange
-						? (assignment): void => {
-								revoke.mutate(assignment.assignmentId);
-							}
-						: undefined
-				}
 			/>
+			{removing && (
+				<ConfirmDialog
+					cancelLabel={t("organisation.list.cancel")}
+					confirmLabel={t(`${key}.remove.confirm`)}
+					submitting={revoke.isPending}
+					title={t(`${key}.remove.title`)}
+					description={t(`${key}.remove.description`, {
+						name: removing.displayName,
+						role: role.name,
+						place: placeOf(removing, t),
+					})}
+					onClose={() => {
+						setRemoving(undefined);
+					}}
+					onConfirm={() => {
+						revoke.mutate(removing.assignmentId, {
+							onSettled: () => {
+								setRemoving(undefined);
+							},
+						});
+					}}
+				/>
+			)}
 			{assigning && (
 				<AssignSystemRole
 					roles={[role]}

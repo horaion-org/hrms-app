@@ -5,7 +5,9 @@ import { useQuery } from "@tanstack/react-query";
 import { companyPermissions, workspaceQuery } from "@/features/workspace/api";
 import { CreateBranchDialog } from "@/features/organisation/CreateBranchDialog";
 import { useTranslation } from "react-i18next";
+import { ApiProblemError } from "@/common/problem";
 import type { FunctionComponent } from "@/common/types";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { DataTable, type DataTableSort } from "@/components/ui/DataTable";
 import { OverflowMenuItem } from "@/components/ui/OverflowMenu";
 import type { Branch } from "@/features/organisation/api";
@@ -20,6 +22,7 @@ import {
 	statusFilterOptions,
 	type StatusFilter,
 } from "@/features/organisation/listColumns";
+import { useSetBranchStatus } from "@/features/organisation/useChangeListRow";
 import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import { useBranches } from "@/features/organisation/useOrganisationList";
 
@@ -28,6 +31,16 @@ export const Branches = (): FunctionComponent => {
 	const can = useCan();
 	const { t, i18n } = useTranslation();
 	const [creating, setCreating] = useState(false);
+	// The Branch whose status the person asked to change, until they confirm or cancel.
+	const [changing, setChanging] = useState<Branch>();
+	const setBranchStatus = useSetBranchStatus(companyId);
+	const statusKey = `organisation.branches.status.${
+		changing?.status === "ACTIVE" ? "deactivate" : "activate"
+	}` as const;
+	const closeChange = (): void => {
+		setBranchStatus.reset();
+		setChanging(undefined);
+	};
 	const workspace = useQuery(workspaceQuery);
 	const permissions = workspace.data
 		? companyPermissions(workspace.data, companyId)
@@ -82,7 +95,12 @@ export const Branches = (): FunctionComponent => {
 						<OverflowMenuItem disabled>
 							{t("organisation.list.duplicateItem")}
 						</OverflowMenuItem>
-						<OverflowMenuItem disabled>
+						<OverflowMenuItem
+							disabled={!can("branch:update", branch.branchId)}
+							onClick={() => {
+								setChanging(branch);
+							}}
+						>
 							{t(
 								branch.status === "ACTIVE"
 									? "organisation.list.deactivateItem"
@@ -134,6 +152,35 @@ export const Branches = (): FunctionComponent => {
 					companyId={companyId}
 					onClose={() => {
 						setCreating(false);
+					}}
+				/>
+			)}
+			{changing && (
+				<ConfirmDialog
+					cancelLabel={t("organisation.list.cancel")}
+					confirmLabel={t(`${statusKey}Confirm`)}
+					description={t(`${statusKey}Description`)}
+					submitting={setBranchStatus.isPending}
+					title={t(`${statusKey}Title`, { name: changing.name })}
+					error={
+						setBranchStatus.error
+							? t(
+									setBranchStatus.error instanceof ApiProblemError &&
+										setBranchStatus.error.status === 403
+										? "organisation.branches.status.forbidden"
+										: "organisation.branches.status.failed"
+								)
+							: undefined
+					}
+					onClose={closeChange}
+					onConfirm={() => {
+						setBranchStatus.mutate(
+							{
+								row: changing,
+								status: changing.status === "ACTIVE" ? "INACTIVE" : "ACTIVE",
+							},
+							{ onSuccess: closeChange }
+						);
 					}}
 				/>
 			)}

@@ -337,12 +337,17 @@ describe("Branches", () => {
 		{ status: "ACTIVE", statusAction: "Deactivate" },
 		{ status: "INACTIVE", statusAction: "Activate" },
 	])(
-		"offers disabled secondary actions for a $status branch without repeating Edit",
+		"offers View and Duplicate as not yet built and changes a $status branch's status after asking",
 		async ({ status, statusAction }) => {
 			const user = userEvent.setup();
+			const next = status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
 			const calls = stubApi({
 				...baseRoutes(),
 				[BRANCHES]: pageReply([branch("b-1", "Main Branch", status)]),
+				"PUT /api/v1/companies/c-1/branches/b-1": {
+					status: 200,
+					body: envelope(branch("b-1", "Main Branch", next)),
+				},
 			});
 			await open("/organisation/branches");
 
@@ -364,21 +369,35 @@ describe("Branches", () => {
 			expect(
 				within(menu).queryByRole("menuitem", { name: "Edit" })
 			).not.toBeInTheDocument();
-			const callCount = calls.length;
-			for (const item of items)
-				expect(item).toHaveAttribute("aria-disabled", "true");
-			await user.click(within(menu).getByRole("menuitem", { name: "View" }));
-			await user.click(
-				within(menu).getByRole("menuitem", { name: "Duplicate" })
-			);
+			expect(items[0]).toHaveAttribute("aria-disabled", "true");
+			expect(items[1]).toHaveAttribute("aria-disabled", "true");
+
 			await user.click(
 				within(menu).getByRole("menuitem", { name: statusAction })
 			);
-			expect(calls).toHaveLength(callCount);
-			expect(menu).toBeVisible();
-			await user.keyboard("{Escape}");
-			expect(screen.queryByRole("menu")).not.toBeInTheDocument();
-			expect(trigger).toHaveFocus();
+			// Nothing is sent until the person confirms.
+			const dialog = await screen.findByRole("dialog", {
+				name: `${statusAction} Main Branch`,
+			});
+			expect(calls.some((call) => call.method === "PUT")).toBe(false);
+			await user.click(
+				within(dialog).getByRole("button", { name: `${statusAction} branch` })
+			);
+
+			await waitFor(() => {
+				expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+			});
+			expect(
+				calls.filter((call) => call.method === "PUT").map((call) => call.body)
+			).toEqual([
+				{
+					name: "Main Branch",
+					code: "SG-ORC-01",
+					city: "Singapore",
+					country: "SG",
+					status: next,
+				},
+			]);
 		}
 	);
 
@@ -479,7 +498,7 @@ describe("Departments", () => {
 });
 
 describe("System roles", () => {
-	it("lists access roles with their permission reach and no status filter", async () => {
+	it("lists access roles with their permission reach, people and status", async () => {
 		const user = userEvent.setup();
 		const calls = stubApi({
 			...baseRoutes(),
@@ -489,6 +508,7 @@ describe("System roles", () => {
 					companyId: "c-1",
 					name: "Company Owner",
 					protectedRole: true,
+					status: "ACTIVE",
 					permissions: ["branch:read", "branch:create"],
 					holderCount: 1,
 				},
@@ -497,6 +517,7 @@ describe("System roles", () => {
 					companyId: "c-1",
 					name: "Manager",
 					protectedRole: false,
+					status: "ACTIVE",
 					permissions: ["branch:read", "department:read", "leave:approve"],
 					holderCount: 3,
 				},
@@ -505,6 +526,7 @@ describe("System roles", () => {
 					companyId: "c-1",
 					name: "Staff",
 					protectedRole: false,
+					status: "ACTIVE",
 					permissions: ["leave:create"],
 					holderCount: 0,
 				},
@@ -526,6 +548,7 @@ describe("System roles", () => {
 			"System role",
 			"Key permissions",
 			"People",
+			"Status",
 			"Actions",
 		]);
 		expect(
@@ -544,7 +567,9 @@ describe("System roles", () => {
 			screen.getByRole("button", { name: "Edit Company Owner" })
 		).toBeDisabled();
 		expect(screen.getByRole("button", { name: "Edit Manager" })).toBeEnabled();
-		expect(screen.queryByText("Showing:")).not.toBeInTheDocument();
+		expect(screen.getByRole("button", { name: "Showing:" })).toHaveTextContent(
+			"All roles"
+		);
 		expect(
 			screen.queryByRole("button", { name: "Create system role" })
 		).not.toBeInTheDocument();

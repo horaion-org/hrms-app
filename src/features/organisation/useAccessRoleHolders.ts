@@ -13,6 +13,7 @@ import {
 	type AccessRoleHolder,
 } from "@/features/organisation/api";
 import { workspaceQuery } from "@/features/workspace/api";
+import { retry } from "@/features/workspace/retry";
 
 /** Who holds an access role and where. */
 export const useAccessRoleHolders = (
@@ -22,6 +23,7 @@ export const useAccessRoleHolders = (
 	useQuery({
 		queryKey: ["organisation", companyId, "access-role-holders", accessRoleId],
 		queryFn: () => fetchAccessRoleHolders(companyId, accessRoleId),
+		retry,
 	});
 
 /**
