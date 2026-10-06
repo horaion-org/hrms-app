@@ -49,6 +49,9 @@ export const stubStoryApi = (
 				json(
 					{
 						success: true,
+						message: "OK",
+						path: "/",
+						timestamp: "2026-09-27T00:00:00Z",
 						data: {
 							content: list.content,
 							page: { totalElements: list.content.length },
