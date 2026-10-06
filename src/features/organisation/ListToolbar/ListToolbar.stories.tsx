@@ -63,3 +63,37 @@ export const WithoutFilter: Story = {
 		filter: undefined,
 	},
 };
+
+/** People ticks each status on its own; both, like neither, shows everyone. */
+export const MultipleFilter: Story = {
+	args: {
+		searchLabel: "Search employee",
+		createLabel: undefined,
+		onCreate: undefined,
+		filter: undefined,
+		multipleFilter: {
+			label: "Showing:",
+			value: ["ACTIVE", "INACTIVE"],
+			options: statusOptions.slice(1),
+			placeholder: "All employees",
+			formatSummary: () => "All employees",
+			onChange: fn(),
+		},
+	},
+	argTypes: { multipleFilter: { control: false } },
+	render: function ControlledMultiple(args): NonNullable<FunctionComponent> {
+		const [statuses, setStatuses] = useState(args.multipleFilter?.value ?? []);
+		return (
+			<ListToolbar
+				{...args}
+				multipleFilter={
+					args.multipleFilter && {
+						...args.multipleFilter,
+						value: statuses,
+						onChange: setStatuses,
+					}
+				}
+			/>
+		);
+	},
+};

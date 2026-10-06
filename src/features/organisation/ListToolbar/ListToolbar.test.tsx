@@ -119,6 +119,36 @@ describe("ListToolbar", () => {
 		);
 	});
 
+	it("ticks statuses on their own through a multiple-choice Showing select", async () => {
+		const user = userEvent.setup();
+		const onChange = vi.fn();
+		render(
+			<ListToolbar
+				search=""
+				searchLabel="Search employee"
+				multipleFilter={{
+					label: "Showing:",
+					value: ["ACTIVE", "INACTIVE"],
+					options: options.slice(1),
+					placeholder: "All employees",
+					formatSummary: () => "All employees",
+					onChange,
+				}}
+				onSearchChange={vi.fn()}
+			/>
+		);
+
+		const filter = screen.getByRole("button", { name: "Showing:" });
+		expect(filter).toHaveTextContent("All employees");
+		await user.click(filter);
+		await user.click(screen.getByRole("option", { name: "Active" }));
+
+		expect(onChange).toHaveBeenCalledWith(["INACTIVE"]);
+		expect(
+			screen.queryByRole("button", { name: "Create Branch" })
+		).not.toBeInTheDocument();
+	});
+
 	it("leaves the filter out when the list has none", () => {
 		render(
 			<ListToolbar
