@@ -80,4 +80,19 @@ describe("Checkbox labelling and mixed state", () => {
 			screen.getByRole("checkbox", { name: "Remember me" }).parentElement
 		).toHaveClass("flex", "justify-center");
 	});
+
+	it("given_aDescription_when_rendered_then_describesTheBox", () => {
+		render(
+			<Checkbox
+				description="Consider approved leave when generating the schedule."
+				label="Include leave requests"
+			/>
+		);
+
+		expect(
+			screen.getByRole("checkbox", { name: "Include leave requests" })
+		).toHaveAccessibleDescription(
+			"Consider approved leave when generating the schedule."
+		);
+	});
 });

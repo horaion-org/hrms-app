@@ -35,3 +35,10 @@ export const HiddenLabel: Story = {
 export const WithDescription: Story = {
 	args: { label: "Create", description: "Company only" },
 };
+
+export const WithScheduleDescription: Story = {
+	args: {
+		label: "Include leave requests",
+		description: "Consider approved leave when generating the schedule.",
+	},
+};

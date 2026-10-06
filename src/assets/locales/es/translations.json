@@ -379,6 +379,180 @@
       "mineFailed": "No pudimos cargar tu perfil. Inténtalo de nuevo."
     }
   },
+  "numberStepper": {
+    "decrease": "Menos {{label}}",
+    "increase": "Más {{label}}"
+  },
+  "scheduling": {
+    "overview": {
+      "createSchedule": "Crear horario"
+    },
+    "create": {
+      "back": "Volver al resumen",
+      "title": "Crear horario",
+      "subtitle": "Configura la generación de tu horario en unos pocos pasos.",
+      "steps": {
+        "setup": "Configuración",
+        "shifts": "Turnos",
+        "constraints": "Restricciones",
+        "forecast": "Previsión",
+        "generate": "Generar"
+      },
+      "unavailable": "Todavía no se pueden guardar borradores ni generar horarios."
+    },
+    "actions": {
+      "back": "Atrás",
+      "next": "Siguiente",
+      "saveDraft": "Guardar borrador",
+      "generate": "Generar"
+    },
+    "timeRange": "{{start}} – {{end}}",
+    "days": {
+      "MON": "lun",
+      "TUE": "mar",
+      "WED": "mié",
+      "THU": "jue",
+      "FRI": "vie",
+      "SAT": "sáb",
+      "SUN": "dom",
+      "weekdays": "Entre semana"
+    },
+    "setup": {
+      "title": "Configuración del horario",
+      "description": "Selecciona el departamento y el periodo de tu nuevo horario.",
+      "department": "Departamento",
+      "departmentPlaceholder": "Selecciona un departamento",
+      "departmentsLoading": "Cargando departamentos…",
+      "departmentsHidden": "No tienes permiso para ver los departamentos.",
+      "departmentsError": "No se pudieron cargar los departamentos. Inténtalo más tarde.",
+      "name": "Nombre del horario",
+      "namePlaceholder": "p. ej., Recepción – Semana 16",
+      "period": "Periodo del horario",
+      "periodNote": "Selecciona un periodo que se ajuste a la operativa de tu negocio.",
+      "additional": "Ajustes adicionales",
+      "includeLeave": "Incluir solicitudes de ausencia",
+      "includeLeaveDescription": "Tener en cuenta las ausencias aprobadas al generar el horario.",
+      "allowOpenShifts": "Permitir turnos abiertos",
+      "allowOpenShiftsDescription": "Generar el horario aunque algunos turnos queden sin asignar.",
+      "validation": {
+        "department": "Elige un departamento.",
+        "name": "Escribe un nombre para el horario.",
+        "nameTooLong": "Usa {{max}} caracteres como máximo.",
+        "period": "Elige un periodo."
+      }
+    },
+    "shifts": {
+      "title": "Seleccionar turnos",
+      "description": "Elige los turnos que incluirá este horario.",
+      "add": "Añadir turno personalizado",
+      "label": "Turnos",
+      "name": "Nombre del turno",
+      "timeRange": "Horario",
+      "days": "Días",
+      "roleCount": "Puestos",
+      "roleCountValue_one": "{{count}} puesto",
+      "roleCountValue_other": "{{count}} puestos",
+      "actions": "Acciones",
+      "edit": "Editar {{name}}",
+      "delete": "Eliminar {{name}}",
+      "deleted": "Turno eliminado",
+      "empty": "Todavía no hay turnos.",
+      "required": "Elige al menos un turno para este horario."
+    },
+    "constraints": {
+      "title": "Restricciones del horario",
+      "description": "Define las restricciones de tu horario.",
+      "add": "Añadir restricción",
+      "label": "Restricciones",
+      "name": "Nombre de la restricción",
+      "type": "Tipo de restricción",
+      "details": "Detalles",
+      "priority": "Prioridad",
+      "status": "Estado",
+      "actions": "Acciones",
+      "edit": "Editar {{name}}",
+      "delete": "Eliminar {{name}}",
+      "deleted": "Restricción eliminada",
+      "empty": "Todavía no hay restricciones.",
+      "types": {
+        "STAFFING_REQUIREMENT": "Dotación mínima",
+        "ROLE_COVERAGE": "Cobertura de puestos",
+        "SHIFT_PATTERN": "Patrón de turnos",
+        "WORKING_HOURS": "Horas de trabajo"
+      },
+      "typeHints": {
+        "STAFFING_REQUIREMENT": "Número mínimo de personas",
+        "ROLE_COVERAGE": "Puestos o antigüedad requeridos",
+        "SHIFT_PATTERN": "Días consecutivos, secuencias no permitidas",
+        "WORKING_HOURS": "Horas máximas, horas extra, descansos"
+      },
+      "priorities": {
+        "HIGH": "Alta",
+        "MEDIUM": "Media",
+        "LOW": "Baja"
+      },
+      "statuses": {
+        "ACTIVE": "Activa",
+        "DRAFT": "Borrador",
+        "DISABLED": "Desactivada"
+      }
+    },
+    "forecast": {
+      "title": "Previsión de personal",
+      "description": "Define la demanda de personal de tus turnos. Puedes empezar con algo sencillo y ajustarlo después.",
+      "import": "Importar",
+      "export": "Exportar",
+      "useExisting": "Usar una previsión existente",
+      "question": "¿Cómo quieres definir la demanda de personal?",
+      "byShift": "Por turno (recomendado)",
+      "byShiftDescription": "Indica el personal necesario en cada turno.",
+      "byShiftBenefit": "Más rápido y sencillo para la mayoría de los equipos.",
+      "blocks": "Bloques horarios detallados",
+      "blocksDescription": "Indica la demanda en intervalos de 30 minutos.",
+      "blocksBenefit": "Para un control detallado del día.",
+      "label": "Asignación de personal por turno",
+      "shift": "Turno",
+      "allocation": "Asignación de personal",
+      "appliesTo": "Se aplica a",
+      "hours_one": "{{count}} h",
+      "hours_other": "{{count}} h",
+      "allocated": "{{allocated}}/{{needed}} personas asignadas",
+      "limitNote": "El personal asignado a un turno no puede superar el total indicado en el paso 2: Turnos.",
+      "overAllocated": "Algunos turnos asignan más personal del necesario. Redúcelo en Por turno antes de continuar.",
+      "blocksLabel": "Demanda de personal por bloque horario",
+      "time": "Hora",
+      "autoFill": "Autocompletar",
+      "levels": {
+        "low": "Baja (1 – 2)",
+        "medium": "Media (3 – 5)",
+        "high": "Alta (6+)"
+      },
+      "groups": {
+        "earlyMorning": "Primera hora",
+        "morning": "Mañana",
+        "midday": "Mediodía",
+        "afternoon": "Tarde",
+        "evening": "Noche"
+      },
+      "demandCell": "{{role}}, {{slot}}",
+      "scrollHint": "Desplázate horizontalmente para ver todos los puestos."
+    },
+    "generate": {
+      "title": "Listo para generar",
+      "description": "La configuración del horario está completa y lista para generarse.",
+      "summary": "Resumen del horario",
+      "shifts": "Turnos",
+      "roles": "Puestos",
+      "coverage": "Cobertura",
+      "coverageValue": "{{value}} %",
+      "conflicts": "Conflictos",
+      "nextTitle": "¿Qué pasa después?",
+      "nextOptimise": "Generaremos un horario optimizado a partir de tus turnos, reglas y previsión.",
+      "nextBalance": "El horario equilibrará la cobertura, las restricciones y la disponibilidad del personal.",
+      "nextReview": "Podrás revisarlo y hacer cualquier ajuste después de generarlo.",
+      "note": "La generación puede tardar unos momentos. Cuantas más restricciones y datos, más puede tardar."
+    }
+  },
   "workspace": {
     "branchSelector": {
       "country": "País",
