@@ -155,7 +155,9 @@
 	"dataTable": {
 		"selectAll": "Select all",
 		"selectRow": "Select {{name}}",
-		"sortBy": "Sort by {{column}}"
+		"sortBy": "Sort by {{column}}",
+		"sortAscending": "A – Z",
+		"sortDescending": "Z – A"
 	},
 	"shell": {
 		"welcome": "Welcome, <name>{{name}}</name>.",

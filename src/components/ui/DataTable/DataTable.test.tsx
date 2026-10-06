@@ -168,6 +168,99 @@ describe("DataTable", () => {
 		expect(screen.getAllByRole("row")[1]).toHaveTextContent("Orchard");
 	});
 
+	it("offers ascending and descending in a menu, marking the applied one", async () => {
+		const user = userEvent.setup();
+		render(
+			<DataTable
+				columns={columns}
+				data={branches}
+				getRowId={getRowId}
+				label="Branches"
+				sortControl="menu"
+			/>
+		);
+		const header = screen.getByRole("columnheader", { name: /Branch Name/ });
+		expect(header).toHaveAttribute("aria-sort", "none");
+		expect(
+			screen.queryByRole("button", { name: "Sort by Code" })
+		).not.toBeInTheDocument();
+		const trigger = screen.getByRole("button", { name: "Sort by Branch Name" });
+		expect(trigger).toHaveAttribute("aria-haspopup", "menu");
+
+		await user.click(trigger);
+
+		const menu = screen.getByRole("menu");
+		expect(
+			within(menu)
+				.getAllByRole("menuitem")
+				.map((item) => item.textContent)
+		).toEqual(["A – Z", "Z – A"]);
+		expect(
+			within(menu).getByRole("menuitem", { name: "A – Z" })
+		).not.toHaveAttribute("aria-current");
+
+		await user.click(screen.getByRole("menuitem", { name: "Z – A" }));
+
+		expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+		expect(header).toHaveAttribute("aria-sort", "descending");
+		expect(
+			screen
+				.getAllByRole("row")
+				.slice(1)
+				.map((row) => row.textContent)
+		).toEqual(["Orchard0002", "Main Branch0010", "Jurong0003"]);
+
+		await user.click(trigger);
+
+		const descending = screen.getByRole("menuitem", { name: "Z – A" });
+		expect(descending).toHaveAttribute("aria-current", "true");
+		expect(descending.querySelector("svg")).toBeInTheDocument();
+		const ascending = screen.getByRole("menuitem", { name: "A – Z" });
+		expect(ascending).not.toHaveAttribute("aria-current");
+		expect(ascending.querySelector("svg")).not.toBeInTheDocument();
+
+		await user.click(ascending);
+
+		expect(header).toHaveAttribute("aria-sort", "ascending");
+		expect(screen.getAllByRole("row")[1]).toHaveTextContent("Jurong");
+	});
+
+	it("reports the direction chosen from the menu when the caller owns the sort", async () => {
+		const user = userEvent.setup();
+		const onSortChange = vi.fn();
+		render(
+			<DataTable
+				manualSorting
+				columns={columns}
+				data={branches}
+				getRowId={getRowId}
+				label="Branches"
+				sort={{ id: "name", desc: false }}
+				sortControl="menu"
+				onSortChange={onSortChange}
+			/>
+		);
+		const header = screen.getByRole("columnheader", { name: /Branch Name/ });
+		const trigger = screen.getByRole("button", { name: "Sort by Branch Name" });
+
+		await user.click(trigger);
+		expect(screen.getByRole("menuitem", { name: "A – Z" })).toHaveAttribute(
+			"aria-current",
+			"true"
+		);
+		await user.click(screen.getByRole("menuitem", { name: "Z – A" }));
+
+		expect(onSortChange).toHaveBeenLastCalledWith({ id: "name", desc: true });
+		// The caller owns the sort until it passes the new one back.
+		expect(header).toHaveAttribute("aria-sort", "ascending");
+		expect(screen.getAllByRole("row")[1]).toHaveTextContent("Orchard");
+
+		await user.click(trigger);
+		await user.click(screen.getByRole("menuitem", { name: "A – Z" }));
+
+		expect(onSortChange).toHaveBeenLastCalledWith({ id: "name", desc: false });
+	});
+
 	it("selects rows one by one and all at once, showing a partial selection", async () => {
 		const user = userEvent.setup();
 		const onChange = vi.fn();

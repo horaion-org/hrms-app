@@ -1,3 +1,4 @@
+import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import {
 	createSortedRowModel,
 	rowSelectionFeature,
@@ -16,7 +17,12 @@ import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
-import { ArrowDownIcon, ArrowUpIcon, SortIcon } from "@/components/ui/Icon";
+import {
+	ArrowDownIcon,
+	ArrowUpIcon,
+	SortIcon,
+	TickIcon,
+} from "@/components/ui/Icon";
 
 const features = tableFeatures({
 	rowSortingFeature,
@@ -56,6 +62,8 @@ export type DataTableProps<TData extends object> = {
 	onSortChange?: (sort: DataTableSort) => void;
 	/** `data` already arrives in `sort` order, e.g. sorted by the server. */
 	manualSorting?: boolean;
+	/** A sortable header's button toggles the direction, or opens a menu of both. */
+	sortControl?: "toggle" | "menu";
 	/** Adds a select-all box and one box per row, named by `rowLabel`. */
 	selection?: {
 		rowLabel: (row: TData) => string;
@@ -98,6 +106,59 @@ const SortDirectionIcon = ({
 	return <SortIcon className="text-neutral-700" />;
 };
 
+const sortMenuItemClasses =
+	"flex h-11 w-full items-center justify-between gap-3 bg-white px-4 text-left text-sm font-normal text-neutral-900 outline-none data-focus:bg-neutral-100";
+
+const SortMenu = ({
+	label,
+	direction,
+	onSort,
+}: {
+	label: string;
+	direction: false | "asc" | "desc";
+	onSort: (desc: boolean) => void;
+}): FunctionComponent => {
+	const { t } = useTranslation();
+	const options = [
+		{ desc: false, label: t("dataTable.sortAscending") },
+		{ desc: true, label: t("dataTable.sortDescending") },
+	];
+	return (
+		<Menu as="div" className="-my-2 -mr-2 inline-flex">
+			<MenuButton aria-label={label} as={Button} variant="icon">
+				<SortDirectionIcon direction={direction} />
+			</MenuButton>
+			<MenuItems
+				anchor="bottom end"
+				className="z-10 w-max min-w-40 divide-y divide-neutral-400 overflow-hidden rounded-lg border border-neutral-400 bg-white shadow-md outline-none [--anchor-gap:4px]"
+			>
+				{options.map((option) => {
+					const applied = direction === (option.desc ? "desc" : "asc");
+					return (
+						// Headless UI fixes the role to `menuitem`, so the applied
+						// direction is `aria-current` rather than `aria-checked`.
+						<MenuItem
+							key={option.label}
+							aria-current={applied ? "true" : undefined}
+							as="button"
+							className={sortMenuItemClasses}
+							type="button"
+							onClick={() => {
+								onSort(option.desc);
+							}}
+						>
+							<span>{option.label}</span>
+							<span className="size-5 shrink-0">
+								{applied && <TickIcon className="size-5 text-ink-blue-900" />}
+							</span>
+						</MenuItem>
+					);
+				})}
+			</MenuItems>
+		</Menu>
+	);
+};
+
 export const DataTable = <TData extends object>({
 	label,
 	columns,
@@ -107,6 +168,7 @@ export const DataTable = <TData extends object>({
 	defaultSort,
 	onSortChange,
 	manualSorting = false,
+	sortControl = "toggle",
 	selection,
 	emptyState,
 	className,
@@ -212,7 +274,18 @@ export const DataTable = <TData extends object>({
 								>
 									<div className="flex items-center justify-between gap-2">
 										<span className="min-w-0 truncate">{column?.header}</span>
-										{sortable && (
+										{sortable && sortControl === "menu" && (
+											<SortMenu
+												direction={direction}
+												label={t("dataTable.sortBy", {
+													column: column?.header,
+												})}
+												onSort={(desc) => {
+													header.column.toggleSorting(desc);
+												}}
+											/>
+										)}
+										{sortable && sortControl === "toggle" && (
 											<Button
 												className="-my-2 -mr-2"
 												variant="icon"

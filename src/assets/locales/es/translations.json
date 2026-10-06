@@ -44,7 +44,9 @@
   "dataTable": {
     "selectAll": "Seleccionar todo",
     "selectRow": "Seleccionar {{name}}",
-    "sortBy": "Ordenar por {{column}}"
+    "sortBy": "Ordenar por {{column}}",
+    "sortAscending": "A – Z",
+    "sortDescending": "Z – A"
   },
   "organisation": {
     "branches": {
