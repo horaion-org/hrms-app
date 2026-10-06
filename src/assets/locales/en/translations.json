@@ -193,6 +193,9 @@
 		"contact": "Contact",
 		"notSet": "—",
 		"empty": "No people yet.",
+		"add": "Add employee",
+		"added": "{{name}} was added. We’ve emailed them an invitation to log in.",
+		"roleNotAssigned": "{{name}} was added, but their system role wasn’t assigned. Assign it from Organisation, under System roles.",
 		"form": {
 			"title": "Add employee",
 			"subtitle": "Set up employee details to manage roles, shifts, and availability.",
