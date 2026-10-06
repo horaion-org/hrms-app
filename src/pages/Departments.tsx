@@ -1,6 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { useCan } from "@/features/workspace/useCan";
+import { useCan, useCanAnywhere } from "@/features/workspace/useCan";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -22,7 +21,6 @@ import { mapRefusal } from "@/features/organisation/refusal";
 import { useSetDepartmentStatus } from "@/features/organisation/useChangeListRow";
 import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import { useDepartments } from "@/features/organisation/useOrganisationList";
-import { companyPermissions, workspaceQuery } from "@/features/workspace/api";
 
 export const Departments = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
@@ -38,15 +36,13 @@ export const Departments = (): FunctionComponent => {
 		setDepartmentStatus.reset();
 		setChanging(undefined);
 	};
-	const workspace = useQuery(workspaceQuery);
-	const permissions = workspace.data
-		? companyPermissions(workspace.data, companyId)
-		: new Set<string>();
-	// Choosing a Branch and searching for heads need their own read grants.
+	const can = useCan();
+	const canAnywhere = useCanAnywhere();
+	// Creating happens at a Branch the person may create in; the heads picker needs the company's people.
 	const canCreate =
-		permissions.has("department:create") &&
-		permissions.has("company_member:read") &&
-		permissions.has("branch:read");
+		canAnywhere(["department:create"]) &&
+		canAnywhere(["branch:read"]) &&
+		can("company_member:read");
 	const [search, setSearch] = useState("");
 	const [status, setStatus] = useState<StatusFilter>("all");
 	const [sort, setSort] = useState<DataTableSort>({ id: "name", desc: false });
@@ -61,7 +57,6 @@ export const Departments = (): FunctionComponent => {
 		t("organisation.departments.empty"),
 		t
 	);
-	const can = useCan();
 	const columns = useMemo(
 		() => [
 			nameColumn<Department>(t("organisation.departments.name")),

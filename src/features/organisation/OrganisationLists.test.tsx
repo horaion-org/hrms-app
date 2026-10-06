@@ -66,6 +66,30 @@ const workspaceReply = (permissions: Array<string>): StubReply => ({
 	}),
 });
 
+/** A workspace granting nothing at the company and `permissions` only at department d-1 of branch b-1. */
+const departmentScopedWorkspaceReply = (
+	permissions: Array<string>
+): StubReply => ({
+	status: 200,
+	body: envelope({
+		companies: [
+			{
+				uuid: "c-1",
+				name: "Company c-1",
+				permissions: [],
+				branches: [
+					{
+						uuid: "b-1",
+						name: "Orchard",
+						permissions: [],
+						departments: [{ uuid: "d-1", name: "Kitchen", permissions }],
+					},
+				],
+			},
+		],
+	}),
+});
+
 const pageReply = (
 	content: Array<Record<string, unknown>>,
 	totalElements = content.length
@@ -452,6 +476,19 @@ describe("Branches", () => {
 		).toBeVisible();
 	});
 
+	it("shows the list to a person granted only at one department, since the API filters it", async () => {
+		const calls = stubApi({
+			...baseRoutes(),
+			[WORKSPACE]: departmentScopedWorkspaceReply(["branch:read"]),
+			[BRANCHES]: pageReply([branch("b-1", "Orchard")]),
+		});
+		await open("/organisation/branches");
+
+		const table = await screen.findByRole("table", { name: "Branches" });
+		expect(await within(table).findByText("Orchard")).toBeVisible();
+		expect(searchesOf(calls, "/api/v1/companies/c-1/branches")).toHaveLength(1);
+	});
+
 	it("never asks for branches the workspace does not grant", async () => {
 		const calls = stubApi(baseRoutes([]));
 		await open("/organisation/branches");
@@ -759,6 +796,18 @@ describe("Job titles", () => {
 			).toEqual([{ name: "Shift supervisor", status: next }]);
 		}
 	);
+
+	it("shows job titles to a person granted only at one department", async () => {
+		stubApi({
+			...baseRoutes(),
+			[WORKSPACE]: departmentScopedWorkspaceReply(["job_title:read"]),
+			[JOB_TITLES]: pageReply([jobTitle("j-1", "Shift supervisor")]),
+		});
+		await open("/organisation/job-titles");
+
+		const table = await screen.findByRole("table", { name: "Job titles" });
+		expect(await within(table).findByText("Shift supervisor")).toBeVisible();
+	});
 
 	it("never asks for job titles the workspace does not grant", async () => {
 		const calls = stubApi(baseRoutes(["branch:read"]));

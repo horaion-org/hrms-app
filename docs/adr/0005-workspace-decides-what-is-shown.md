@@ -16,4 +16,4 @@ Until the workspace has loaded, every answer is "no": controls appear once it ar
 
 Permission keys are a typed list in `features/workspace/permissionKeys.ts` mirroring the API's catalog. A key the API adds must be added there before the app can gate on it; an unknown key in a response is harmless.
 
-The company-wide list requests still need their read key at company level on the API, so a person granted only at one Branch or Department is offered the Module but sees its lists as hidden until the API offers unit-scoped lists.
+The company-wide lists of Branches, Departments and Job titles are filtered by the API to the units where the person holds the list's read key (API ADR-0037), so the app shows such a list whenever the key is held anywhere in the company and never trims rows itself. A row the API returns is one the person may read. System roles and the activity feed have no unit and still need their key at company level. (Amended 2026-10-06; before this, these lists were hidden unless the key was held at company level.)

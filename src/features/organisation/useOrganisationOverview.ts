@@ -5,7 +5,7 @@ import {
 } from "@tanstack/react-query";
 import { workspaceQuery } from "@/features/workspace/api";
 import { retry } from "@/features/workspace/retry";
-import { useCan } from "@/features/workspace/useCan";
+import { useCan, useCanAnywhere } from "@/features/workspace/useCan";
 import {
 	fetchAccessRoleCount,
 	fetchActiveBranchCount,
@@ -54,11 +54,14 @@ export const useOrganisationOverview = (
 ): OrganisationOverview => {
 	const workspace = useQuery({ ...workspaceQuery, retry });
 	const can = useCan();
-	const canReadBranches = can("branch:read");
-	const canReadDepartments = can("department:read");
+	const canAnywhere = useCanAnywhere();
+	// Unit lists are filtered to the person's grant scopes by the API, so a key held anywhere is enough.
+	const canReadBranches = canAnywhere(["branch:read"]);
+	const canReadDepartments = canAnywhere(["department:read"]);
+	const canReadJobTitles = canAnywhere(["job_title:read"]);
+	// Roles and the activity feed have no unit, so they still need the key at the company.
 	const canReadAccessRoles = can("access_role:read");
 	const canReadActivity = can("audit_event:read");
-	const canReadJobTitles = can("job_title:read");
 
 	const branches = useQuery({
 		queryKey: ["organisation", companyId, "active-branch-count"],

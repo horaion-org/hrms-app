@@ -204,6 +204,54 @@ it("hides what the workspace does not grant and never asks for it", async () => 
 	).toEqual(["/api/v1/companies/c-1/branches"]);
 });
 
+it("shows the unit counts to a person granted only at one branch", async () => {
+	const calls = stubApi({
+		[REFRESH]: accessPassReply(),
+		[ME]: currentUserReply(),
+		[WORKSPACE]: {
+			status: 200,
+			body: envelope({
+				companies: [
+					{
+						uuid: "c-1",
+						name: "Company c-1",
+						permissions: [],
+						branches: [
+							{
+								uuid: "b-1",
+								name: "Orchard",
+								permissions: ["branch:read", "department:read"],
+								departments: [],
+							},
+						],
+					},
+				],
+			}),
+		},
+		[BRANCHES]: totalReply(1),
+		[DEPARTMENTS]: totalReply(2),
+	});
+	await open();
+
+	expect(
+		await within(await findCard("Branches")).findByText("1")
+	).toBeVisible();
+	expect(
+		await within(await findCard("Departments")).findByText("2")
+	).toBeVisible();
+	// Roles and the activity feed have no unit, so a branch grant doesn't reach them.
+	for (const name of ["System roles", "Recent Activity"])
+		expect(screen.queryByRole("region", { name })).not.toBeInTheDocument();
+	expect(
+		calls
+			.map((call) => call.path)
+			.filter((path) => path.startsWith("/api/v1/companies/"))
+	).toEqual([
+		"/api/v1/companies/c-1/branches",
+		"/api/v1/companies/c-1/departments",
+	]);
+});
+
 it("reads permissions only from the current company", async () => {
 	const calls = stubApi({
 		[REFRESH]: accessPassReply(),

@@ -7,7 +7,7 @@ import {
 import { ApiProblemError } from "@/common/problem";
 import { workspaceQuery } from "@/features/workspace/api";
 import type { PermissionKey } from "@/features/workspace/permissionKeys";
-import { useCan } from "@/features/workspace/useCan";
+import { useCanAnywhere } from "@/features/workspace/useCan";
 import {
 	fetchAccessRoles,
 	fetchBranches,
@@ -23,8 +23,10 @@ import {
 import { retry } from "@/features/organisation/useOrganisationOverview";
 
 /**
- * One Organisation list. `hidden` when the person's grants don't reach it,
- * whether the workspace says so up front or the API refuses with a 403.
+ * One Organisation list. `hidden` when the person's grants don't reach it
+ * anywhere, whether the workspace says so up front or the API refuses with
+ * a 403. The API returns only the rows in units where the key is held, so a
+ * person granted at one Branch or Department sees their part of the list.
  */
 export type OrganisationList<T> =
 	| { status: "pending" | "error" | "hidden" }
@@ -37,7 +39,7 @@ const useOrganisationList = <T>(
 	fetchPage: () => Promise<ListPage<T>>
 ): OrganisationList<T> => {
 	const workspace = useQuery({ ...workspaceQuery, retry });
-	const allowed = useCan()(permission);
+	const allowed = useCanAnywhere()([permission]);
 	const list = useQuery({
 		queryKey: ["organisation", companyId, ...key],
 		retry,

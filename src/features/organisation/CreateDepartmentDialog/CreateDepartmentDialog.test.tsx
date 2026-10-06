@@ -172,6 +172,46 @@ describe("create department through the Departments page", () => {
 		).toEqual(["Orchard Road", "Tampines"]);
 	});
 
+	it("offers only the branches where the person may create departments, and preselects a single one", async () => {
+		stubApi({
+			...routes(["company_member:read", "branch:read"]),
+			"GET /api/v1/me/workspace": {
+				status: 200,
+				body: envelope({
+					companies: [
+						{
+							uuid: "c-1",
+							name: "Company c-1",
+							permissions: ["company_member:read", "branch:read"],
+							branches: [
+								{
+									uuid: "b-2",
+									name: "Tampines",
+									permissions: ["department:create"],
+									departments: [],
+								},
+							],
+						},
+					],
+				}),
+			},
+		});
+		await open();
+		const dialog = await openDialog();
+
+		await waitFor(() => {
+			expect(
+				within(dialog).getByRole("button", { name: "Branch" })
+			).toHaveTextContent("Tampines");
+		});
+		await userEvent.click(
+			within(dialog).getByRole("button", { name: "Branch" })
+		);
+		expect(
+			screen.getAllByRole("option").map((option) => option.textContent)
+		).toEqual(["Tampines"]);
+	});
+
 	it("preselects the only active branch", async () => {
 		stubApi(routes(permissions, [orchard]));
 		await open();
