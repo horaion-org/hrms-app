@@ -17,6 +17,7 @@ import { UnitNameField } from "@/features/organisation/UnitNameField";
 import { useCreateFormSubmit } from "@/features/organisation/useCreateFormSubmit";
 import { useCreateDepartment } from "@/features/organisation/useCreateInOrganisation";
 import { useBranches } from "@/features/organisation/useOrganisationList";
+import { useCan } from "@/features/workspace/useCan";
 
 export type CreateDepartmentDialogProps = {
 	companyId: string;
@@ -35,6 +36,7 @@ export const CreateDepartmentDialog = ({
 	onClose,
 }: CreateDepartmentDialogProps): FunctionComponent => {
 	const { t } = useTranslation();
+	const can = useCan();
 	const client = useQueryClient();
 	const key = "organisation.departments.createDialog";
 	const formId = useId();
@@ -57,23 +59,24 @@ export const CreateDepartmentDialog = ({
 	} = form;
 	const [name, heads] = useWatch({ control, name: ["name", "heads"] });
 	const branches = useBranches(companyId, ACTIVE_BRANCHES);
+	// Only branches where the person may create departments are offered.
+	const branchOptions =
+		branches.status === "ready"
+			? branches.items
+					.filter((branch) => can("department:create", branch.branchId))
+					.map((branch) => ({
+						value: branch.branchId,
+						label: branch.name,
+					}))
+			: [];
 	const onlyBranch =
-		branches.status === "ready" && branches.items.length === 1
-			? branches.items[0]?.branchId
-			: undefined;
+		branchOptions.length === 1 ? branchOptions[0]?.value : undefined;
 	useEffect(() => {
 		// One active branch leaves nothing to choose.
 		if (onlyBranch && !getValues("branchId")) setValue("branchId", onlyBranch);
 	}, [onlyBranch, getValues, setValue]);
 	const create = useCreateDepartment(companyId);
 	const submit = useCreateFormSubmit(form, FIELDS, onClose);
-	const branchOptions =
-		branches.status === "ready"
-			? branches.items.map((branch) => ({
-					value: branch.branchId,
-					label: branch.name,
-				}))
-			: [];
 	const branchError = errors.branchId?.message;
 	return (
 		<CreateFormDialog
