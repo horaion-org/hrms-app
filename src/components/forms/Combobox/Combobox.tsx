@@ -13,6 +13,7 @@ import {
 	type AriaAttributes,
 	type ReactNode,
 	type Ref,
+	type RefObject,
 } from "react";
 import { useTranslation } from "react-i18next";
 import { joinClassNames } from "@/common/joinClassNames";
@@ -46,6 +47,8 @@ export type ComboboxProps<T> = ComboboxSelectionProps<T> & {
 	options: Array<T>;
 	getKey: (option: T) => string;
 	getLabel: (option: T) => string;
+	/** Single choice: the trigger's text for the chosen option; defaults to `getLabel`. */
+	formatValue?: (option: T) => string;
 	renderOption?: (option: T) => ReactNode;
 	query: string;
 	onQueryChange: (query: string) => void;
@@ -53,6 +56,8 @@ export type ComboboxProps<T> = ComboboxSelectionProps<T> & {
 	loadingText?: string;
 	emptyText?: string;
 	footer?: ReactNode;
+	/** Places the list under this element, e.g. a wider field the trigger sits in, instead of the trigger. */
+	panelAnchor?: RefObject<HTMLElement | null>;
 	placeholder: string;
 	searchPlaceholder: string;
 	status?: InputStatus;
@@ -153,7 +158,7 @@ export const Combobox = <T,>(props: ComboboxProps<T>): FunctionComponent => {
 						{props.multiple === false
 							? props.value === null
 								? props.placeholder
-								: getLabel(props.value)
+								: (props.formatValue ?? getLabel)(props.value)
 							: values.length === 0
 								? props.placeholder
 								: null}
@@ -183,7 +188,7 @@ export const Combobox = <T,>(props: ComboboxProps<T>): FunctionComponent => {
 				as={ComboboxPanel}
 				className="flex flex-col overflow-hidden rounded-lg border border-neutral-400 bg-white shadow-sm"
 				modal={false}
-				trigger={trigger}
+				trigger={props.panelAnchor ?? trigger}
 			>
 				<ComboboxInput as={Fragment}>
 					<ComboboxSearch
