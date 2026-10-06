@@ -653,6 +653,13 @@
 					"update": "Edit"
 				}
 			},
+			"member_profile": {
+				"name": "People",
+				"description": "Each person’s employee ID, department, job title and contact details.",
+				"actions": {
+					"read": "View"
+				}
+			},
 			"none": "No permissions yet.",
 			"company": {
 				"name": "Company",
