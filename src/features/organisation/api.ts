@@ -138,6 +138,11 @@ export const createDepartment = (
 
 const jobTitleSchema = z.object({
 	jobTitleId: z.string(),
+	/** The Department the title belongs to, and its Branch, by id and name. */
+	branchId: z.string(),
+	branchName: z.string(),
+	departmentId: z.string(),
+	departmentName: z.string(),
 	name: z.string(),
 	status: unitStatusSchema,
 });
@@ -146,12 +151,22 @@ export type JobTitle = z.infer<typeof jobTitleSchema>;
 
 export type CreateJobTitleBody = { name: string };
 
-/** Creates an active, company-wide Job title; the server owns uniqueness. */
+/** Job titles live under their Department, as the API's routes do. */
+const jobTitlesPath = (
+	companyId: string,
+	branchId: string,
+	departmentId: string
+): string =>
+	`${companyPath(companyId)}/branches/${encodeURIComponent(branchId)}/departments/${encodeURIComponent(departmentId)}/job-titles`;
+
+/** Creates an active Job title in one Department; the server owns uniqueness within it. */
 export const createJobTitle = (
 	companyId: string,
+	branchId: string,
+	departmentId: string,
 	body: CreateJobTitleBody
 ): Promise<JobTitle> =>
-	apiRequest(`${companyPath(companyId)}/job-titles`, jobTitleSchema, {
+	apiRequest(jobTitlesPath(companyId, branchId, departmentId), jobTitleSchema, {
 		method: "POST",
 		body: { name: body.name.trim() },
 	});
@@ -402,6 +417,17 @@ export const updateDepartment = (
 		`${companyPath(companyId)}/branches/${encodeURIComponent(branchId)}/departments/${encodeURIComponent(departmentId)}`,
 		departmentSchema,
 		{ method: "PUT", body }
+	);
+
+/** Replaces a Job title's name and status; its Department never changes. */
+export const updateJobTitle = (
+	companyId: string,
+	{ jobTitleId, branchId, departmentId, name, status }: JobTitle
+): Promise<JobTitle> =>
+	apiRequest(
+		`${jobTitlesPath(companyId, branchId, departmentId)}/${encodeURIComponent(jobTitleId)}`,
+		jobTitleSchema,
+		{ method: "PUT", body: { name: name.trim(), status } }
 	);
 
 /** The company's job titles; sortable by `name` or `status`. */

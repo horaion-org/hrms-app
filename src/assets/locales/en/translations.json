@@ -383,7 +383,7 @@
 			"empty": "No job titles yet.",
 			"createDialog": {
 				"title": "Create job title",
-				"description": "Add a job title that people across your organisation can hold.",
+				"description": "Add a job title that people in a department can hold.",
 				"name": "Job title name",
 				"namePlaceholder": "e.g. Shift supervisor",
 				"nameHint": "2–100 characters. Letters, numbers, spaces and . ' & - only.",
@@ -396,8 +396,34 @@
 				"nameConflict": "A job title named \"{{name}}\" already exists. Choose a different name.",
 				"nameRejected": "Check the job title name and try again.",
 				"forbidden": "You no longer have permission to create job titles.",
-				"failed": "We couldn’t create the job title. Try again."
-			}
+				"failed": "We couldn’t create the job title. Try again.",
+				"department": "Department",
+				"departmentPlaceholder": "Select a department",
+				"departmentHint": "The active department the job title belongs to.",
+				"departmentsLoading": "Loading departments…",
+				"departmentsEmpty": "No active department you can add job titles to. Create a department first.",
+				"departmentsFailed": "We couldn’t load departments. Try again.",
+				"departmentRequired": "Choose a department.",
+				"departmentUnavailable": "This department is no longer available. Choose another department.",
+				"departmentInactive": "This department is inactive. Activate it first, or choose another department.",
+				"editTitle": "Edit job title",
+				"editDescription": "Change the job title’s name. It stays in {{department}}.",
+				"editSubmit": "Save changes",
+				"editForbidden": "You no longer have permission to change this job title.",
+				"editFailed": "We couldn’t save the job title. Try again.",
+				"gone": "This job title no longer exists."
+			},
+			"status": {
+				"deactivateTitle": "Deactivate {{name}}",
+				"deactivateDescription": "The job title stays in your lists as inactive and can be activated again.",
+				"deactivateConfirm": "Deactivate job title",
+				"activateTitle": "Activate {{name}}",
+				"activateDescription": "The job title becomes active again.",
+				"activateConfirm": "Activate job title",
+				"forbidden": "You don’t have permission to change this job title.",
+				"failed": "We couldn’t change the job title. Try again."
+			},
+			"department": "Department"
 		},
 		"accessRoles": {
 			"title": "System roles",

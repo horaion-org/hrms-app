@@ -13,7 +13,38 @@ const meta = {
 	args: { companyId: "story-company", onClose: fn() },
 	decorators: [storyProviders(client)],
 	beforeEach: ({ parameters }): (() => void) =>
-		stubStoryApi([], Boolean(parameters["pending"]), client),
+		stubStoryApi(
+			[
+				{
+					path: "/branches",
+					content: [
+						{
+							branchId: "b-1",
+							companyId: "story-company",
+							name: "Orchard Road",
+							code: "ORC",
+							city: "Singapore",
+							country: "SG",
+							status: "ACTIVE",
+						},
+					],
+				},
+				{
+					path: "/departments",
+					content: [
+						{
+							departmentId: "d-1",
+							branchId: "b-1",
+							companyId: "story-company",
+							name: "Kitchen",
+							status: "ACTIVE",
+						},
+					],
+				},
+			],
+			Boolean(parameters["pending"]),
+			client
+		),
 } satisfies Meta<typeof CreateJobTitleDialog>;
 export default meta;
 type Story = StoryObj<typeof meta>;
