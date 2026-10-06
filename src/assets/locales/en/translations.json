@@ -1,4 +1,11 @@
 {
+	"leaveUi": {
+		"pagination": "Pagination",
+		"entries": "{{start}}–{{end}} of {{total}} entries",
+		"previousPage": "Previous page",
+		"nextPage": "Next page",
+		"page": "Page {{page}} of {{total}}"
+	},
 	"dialog": {
 		"close": "Close"
 	},
