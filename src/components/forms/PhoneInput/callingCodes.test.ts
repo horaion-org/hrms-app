@@ -3,7 +3,7 @@ import {
 	callingCodes,
 	primaryRegions,
 } from "@/components/forms/PhoneInput/callingCodes";
-import { countryCodes } from "@/features/organisation/countries";
+import { countryCodes } from "@/common/countries";
 
 describe("calling codes", () => {
 	it("covers exactly the regions of the country list", () => {

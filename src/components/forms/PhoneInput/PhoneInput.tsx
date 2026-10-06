@@ -17,7 +17,7 @@ import {
 	parsePhone,
 	type PhoneParts,
 } from "@/components/forms/PhoneInput/PhoneInput.utils";
-import { countryCodes, countryName } from "@/features/organisation/countries";
+import { countryCodes, countryName } from "@/common/countries";
 
 export type PhoneInputProps = {
 	/** E.164, such as "+6583247931", or "" when no number is entered. */
