@@ -680,7 +680,8 @@
 				"name": "People",
 				"description": "Each person’s employee ID, department, job title and contact details.",
 				"actions": {
-					"read": "View"
+					"read": "View",
+					"create": "Create"
 				}
 			},
 			"none": "No permissions yet.",

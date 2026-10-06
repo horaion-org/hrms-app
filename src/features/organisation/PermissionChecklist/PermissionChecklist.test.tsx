@@ -69,6 +69,8 @@ describe("PermissionChecklist", () => {
 		expect(within(row("System roles")).getAllByRole("checkbox")).toHaveLength(
 			6
 		);
+		expect(within(row("People")).getAllByRole("checkbox")).toHaveLength(3);
+		expect(box("People", "Create")).not.toBeChecked();
 	});
 
 	it("ticks what the role holds and counts it per row", () => {

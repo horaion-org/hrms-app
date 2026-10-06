@@ -26,6 +26,7 @@ export const PERMISSION_KEYS = [
 	"job_title:create",
 	"job_title:update",
 	"member_profile:read",
+	"member_profile:create",
 	"access_role:read",
 	"access_role:create",
 	"access_role:update",
