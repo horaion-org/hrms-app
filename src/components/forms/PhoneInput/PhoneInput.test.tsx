@@ -150,6 +150,30 @@ describe("PhoneInput reading a value", () => {
 		expect(changed).toHaveBeenLastCalledWith("+65999123456");
 	});
 
+	it("adopts a default country that arrives later, until a country is chosen or a number typed", async () => {
+		const user = userEvent.setup();
+		const changed = vi.fn();
+		const { rerender } = render(<Harness onValue={changed} />);
+		expect(codeButton()).toHaveTextContent("Code");
+		rerender(<Harness defaultCountry="SG" onValue={changed} />);
+		expect(codeButton()).toHaveTextContent("+65");
+		rerender(<Harness defaultCountry="MY" onValue={changed} />);
+		expect(codeButton()).toHaveTextContent("+60");
+		expect(changed).not.toHaveBeenCalled();
+		await user.type(numberBox(), "1");
+		rerender(<Harness defaultCountry="SG" onValue={changed} />);
+		expect(codeButton()).toHaveTextContent("+60");
+		expect(changed).toHaveBeenLastCalledWith("+601");
+	});
+
+	it("keeps a chosen country when the default changes", async () => {
+		const user = userEvent.setup();
+		const { rerender } = render(<Harness defaultCountry="SG" />);
+		await chooseCountry(user, "malay", "Malaysia +60");
+		rerender(<Harness defaultCountry="ID" />);
+		expect(codeButton()).toHaveTextContent("+60");
+	});
+
 	it("re-reads the value when it changes from outside", () => {
 		const { rerender } = render(
 			<PhoneInput value="+6583247931" onChange={vi.fn()} />

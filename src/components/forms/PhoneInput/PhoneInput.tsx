@@ -73,6 +73,15 @@ export const PhoneInput = ({
 		if (value !== formatPhone(parts))
 			setParts(parsePhone(value, defaultCountry));
 	}
+	// A default that arrives or changes later is adopted until the person
+	// chooses a country or types a number.
+	const [chose, setChose] = useState(false);
+	const [seenDefault, setSeenDefault] = useState(defaultCountry);
+	if (defaultCountry !== seenDefault) {
+		setSeenDefault(defaultCountry);
+		if (!chose && parts.national === "")
+			setParts(parsePhone("", defaultCountry));
+	}
 	const countries = useMemo(
 		() =>
 			countryCodes
@@ -137,6 +146,7 @@ export const PhoneInput = ({
 				)}
 				onQueryChange={setQuery}
 				onChange={(country) => {
+					setChose(true);
 					update({ ...parts, region: country?.code ?? null });
 				}}
 			/>
