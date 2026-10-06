@@ -337,7 +337,8 @@ it("reaches the overview from the Sidebar and marks Organisation current", async
 	stubApi({
 		[REFRESH]: accessPassReply(),
 		[ME]: currentUserReply(),
-		[WORKSPACE]: workspaceReply(["branch:read"]),
+		// People is offered only with its own key.
+		[WORKSPACE]: workspaceReply(["branch:read", "member_profile:read"]),
 	});
 	const opened = await open("/");
 	const user = userEvent.setup();

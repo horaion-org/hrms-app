@@ -1,0 +1,99 @@
+import type { TFunction } from "i18next";
+import type { DataTableColumn } from "@/components/ui/DataTable";
+import { statusColumn } from "@/features/organisation/listColumns";
+import type { MemberProfile } from "@/features/people/api";
+import { ContactCell } from "@/features/people/ContactCell";
+import { PersonCell } from "@/features/people/PersonCell";
+import type { PeopleList } from "@/features/people/usePeople";
+
+/**
+ * The People table's columns. Each sortable column's id is the API's sort
+ * field, so a header's sort goes to the server as it is.
+ */
+export const peopleColumns = (
+	t: TFunction
+): Array<DataTableColumn<MemberProfile>> => [
+	{
+		id: "displayName",
+		header: t("people.employee"),
+		cell: (person) => (
+			<PersonCell
+				employeeCode={person.employeeCode}
+				name={person.displayName}
+			/>
+		),
+		sortValue: (person) => person.displayName,
+		headerClassName: "w-1/4",
+	},
+	{
+		id: "department",
+		header: t("people.department"),
+		cell: (person) => person.departmentName ?? t("people.notSet"),
+		sortValue: (person) => person.departmentName ?? "",
+	},
+	{
+		id: "jobTitle",
+		header: t("people.jobTitle"),
+		cell: (person) => person.jobTitleName ?? t("people.notSet"),
+		sortValue: (person) => person.jobTitleName ?? "",
+	},
+	{
+		id: "contact",
+		header: t("people.contact"),
+		cell: (person) => <ContactCell email={person.email} phone={person.phone} />,
+		headerClassName: "w-1/4",
+	},
+	statusColumn<MemberProfile>(t),
+];
+
+/** What the People page shows for the list's state. */
+export type PeopleView = {
+	rows: Array<MemberProfile>;
+	/** How many people match in all, across every page. */
+	total: number;
+	/** Shown in the table body when `rows` is empty. */
+	empty: string;
+	/** Replaces the table when the list can't be shown. */
+	problem?: { message: string; alert: boolean };
+};
+
+const NO_ROWS: Array<never> = [];
+
+/**
+ * The rows and copy for every state of the list. `filtered` says whether a
+ * search or status filter is narrowing it, which decides the empty copy.
+ */
+export const describePeople = (
+	list: PeopleList,
+	filtered: boolean,
+	t: TFunction
+): PeopleView => {
+	switch (list.status) {
+		case "pending":
+			return { rows: NO_ROWS, total: 0, empty: t("organisation.list.loading") };
+		case "hidden":
+			return {
+				rows: NO_ROWS,
+				total: 0,
+				empty: t("people.empty"),
+				problem: { message: t("organisation.list.forbidden"), alert: false },
+			};
+		case "error":
+			return {
+				rows: NO_ROWS,
+				total: 0,
+				empty: t("people.empty"),
+				problem: { message: t("organisation.list.failed"), alert: true },
+			};
+		case "ready":
+			return {
+				rows: list.items,
+				total: list.total,
+				empty: filtered ? t("organisation.list.noMatches") : t("people.empty"),
+			};
+		default: {
+			const exhaustive: never = list;
+			return exhaustive;
+		}
+	}
+};
