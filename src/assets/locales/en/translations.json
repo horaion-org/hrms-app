@@ -18,6 +18,13 @@
 		"show": "Show password",
 		"hide": "Hide password"
 	},
+	"phoneInput": {
+		"countryCode": "Country code",
+		"countryCodeValue": "Country code: {{country}}",
+		"countryPlaceholder": "Code",
+		"searchCountries": "Search country or code",
+		"number": "Phone number"
+	},
 	"auth": {
 		"passwordReset": {
 			"title": "Reset your password",
