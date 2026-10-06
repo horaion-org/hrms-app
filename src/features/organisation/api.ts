@@ -199,18 +199,24 @@ export type ListPage<T> = { items: Array<T>; total: number };
 /** A server-side sort on one of the API's allow-listed fields. */
 export type ListSort = { field: string; desc: boolean };
 
-export type ListQuery = { sort: ListSort; status?: UnitStatus };
+export type ListQuery = {
+	sort: ListSort;
+	status?: UnitStatus;
+	/** Job titles only: those of one Department. */
+	departmentId?: string;
+};
 
 const listPath = (
 	companyId: string,
 	resource: string,
-	{ sort, status }: ListQuery
+	{ sort, status, departmentId }: ListQuery
 ): string => {
 	const search = new URLSearchParams({
 		size: String(LIST_PAGE_SIZE),
 		sort: `${sort.field},${sort.desc ? "desc" : "asc"}`,
 	});
 	if (status) search.set("status", status);
+	if (departmentId) search.set("departmentId", departmentId);
 	return `${companyPath(companyId)}/${resource}?${search.toString()}`;
 };
 
