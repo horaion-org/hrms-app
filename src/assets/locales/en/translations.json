@@ -147,6 +147,9 @@
 			}
 		}
 	},
+	"datePicker": {
+		"clear": "Clear date"
+	},
 	"select": {
 		"noOptions": "No options",
 		"selectedCount_one": "{{count}} selected",
