@@ -16,7 +16,7 @@ type CheckboxProps = Omit<
 	className?: string;
 	/** Classes for the label's text, e.g. a heavier weight for a group's box. */
 	labelClassName?: string;
-	/** Short supporting text shown after the label and announced as the box's description. */
+	/** A line under the label saying what the choice does; also describes the box. */
 	description?: string;
 };
 
@@ -30,33 +30,49 @@ export const Checkbox = ({
 	...rest
 }: CheckboxProps): FunctionComponent => {
 	const id = useId();
+	const labelElement = (
+		<Label
+			htmlFor={id}
+			className={joinClassNames(
+				"text-base leading-6 text-slate-900",
+				hideLabel && "sr-only",
+				labelClassName
+			)}
+		>
+			{label}
+		</Label>
+	);
 
 	return (
-		<Field className={joinClassNames("flex items-center gap-2", className)}>
+		<Field
+			className={joinClassNames(
+				"flex gap-2",
+				description === undefined ? "items-center" : "items-start",
+				className
+			)}
+		>
 			<Input
 				// `indeterminate` exists only as a DOM property, never as an attribute.
 				ref={(input: HTMLInputElement | null) => {
 					if (input) input.indeterminate = indeterminate;
 				}}
-				className="size-4 shrink-0 accent-ink-blue-900 disabled:opacity-50"
 				id={id}
 				type="checkbox"
+				className={joinClassNames(
+					"size-4 shrink-0 accent-ink-blue-900 disabled:opacity-50",
+					description !== undefined && "mt-1"
+				)}
 				{...rest}
 			/>
-			<Label
-				htmlFor={id}
-				className={joinClassNames(
-					"text-base leading-6 text-slate-900",
-					hideLabel && "sr-only",
-					labelClassName
-				)}
-			>
-				{label}
-			</Label>
-			{description && (
-				<Description className="text-xs text-neutral-600">
-					{description}
-				</Description>
+			{description === undefined ? (
+				labelElement
+			) : (
+				<div className="flex min-w-0 flex-col gap-2">
+					{labelElement}
+					<Description className="text-xs text-neutral-800">
+						{description}
+					</Description>
+				</div>
 			)}
 		</Field>
 	);
