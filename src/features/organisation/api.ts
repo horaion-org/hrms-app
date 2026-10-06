@@ -28,7 +28,7 @@ export const ORGANISATION_ENTITY_TYPES = [
 	"JobTitle",
 ] as const;
 
-const companyPath = (companyId: string): string =>
+export const companyPath = (companyId: string): string =>
 	`/api/v1/companies/${encodeURIComponent(companyId)}`;
 
 /** A one-row page is enough: only the page's total is read. */
@@ -199,22 +199,29 @@ export type ListPage<T> = { items: Array<T>; total: number };
 /** A server-side sort on one of the API's allow-listed fields. */
 export type ListSort = { field: string; desc: boolean };
 
-export type ListQuery = { sort: ListSort; status?: UnitStatus };
+export type ListQuery = {
+	sort: ListSort;
+	status?: UnitStatus;
+	/** Job titles only: those of one Department. */
+	departmentId?: string;
+};
 
 const listPath = (
 	companyId: string,
 	resource: string,
-	{ sort, status }: ListQuery
+	{ sort, status, departmentId }: ListQuery
 ): string => {
 	const search = new URLSearchParams({
 		size: String(LIST_PAGE_SIZE),
 		sort: `${sort.field},${sort.desc ? "desc" : "asc"}`,
 	});
 	if (status) search.set("status", status);
+	if (departmentId) search.set("departmentId", departmentId);
 	return `${companyPath(companyId)}/${resource}?${search.toString()}`;
 };
 
-const fetchList = async <T extends z.ZodType>(
+/** One page of a paged list, read from the API's `content` and page total. */
+export const fetchList = async <T extends z.ZodType>(
 	path: string,
 	item: T
 ): Promise<ListPage<z.infer<T>>> => {

@@ -36,7 +36,8 @@ const useOrganisationList = <T>(
 	companyId: string,
 	permission: PermissionKey,
 	key: QueryKey,
-	fetchPage: () => Promise<ListPage<T>>
+	fetchPage: () => Promise<ListPage<T>>,
+	enabled = true
 ): OrganisationList<T> => {
 	const workspace = useQuery({ ...workspaceQuery, retry });
 	const allowed = useCanAnywhere()([permission]);
@@ -45,7 +46,7 @@ const useOrganisationList = <T>(
 		retry,
 		// Keep the current rows on screen while a new sort or filter loads.
 		placeholderData: keepPreviousData,
-		queryFn: allowed ? fetchPage : skipToken,
+		queryFn: allowed && enabled ? fetchPage : skipToken,
 	});
 
 	if (workspace.isPending) return { status: "pending" };
@@ -77,12 +78,18 @@ export const useDepartments = (
 		() => fetchDepartments(companyId, query)
 	);
 
+/** `enabled` false asks for nothing yet, e.g. until a Department is chosen to filter by. */
 export const useJobTitles = (
 	companyId: string,
-	query: ListQuery
+	query: ListQuery,
+	enabled = true
 ): OrganisationList<JobTitle> =>
-	useOrganisationList(companyId, "job_title:read", ["job-titles", query], () =>
-		fetchJobTitles(companyId, query)
+	useOrganisationList(
+		companyId,
+		"job_title:read",
+		["job-titles", query],
+		() => fetchJobTitles(companyId, query),
+		enabled
 	);
 
 export const useAccessRoles = (

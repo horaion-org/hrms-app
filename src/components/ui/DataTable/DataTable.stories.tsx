@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn } from "storybook/test";
+import { fn, userEvent, within } from "storybook/test";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
@@ -112,5 +112,17 @@ export const Empty: Story = {
 		data: [],
 		emptyState: "No branches yet.",
 		selection: { rowLabel: (branch: Branch): string => branch.name },
+	},
+};
+
+/** Each sortable header's button opens a menu of both directions. */
+export const SortMenu: Story = { args: { sortControl: "menu" } };
+
+export const SortMenuOpen: Story = {
+	args: { sortControl: "menu" },
+	play: async ({ canvasElement }) => {
+		await userEvent.click(
+			within(canvasElement).getByRole("button", { name: "Sort by Branch Name" })
+		);
 	},
 };

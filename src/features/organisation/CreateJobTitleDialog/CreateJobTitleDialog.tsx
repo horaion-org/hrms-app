@@ -9,6 +9,7 @@ import { Select, type SelectOption } from "@/components/forms/Select";
 import type { JobTitle } from "@/features/organisation/api";
 import { placeOf } from "@/features/organisation/assignmentTargets";
 import { CreateFormDialog } from "@/features/organisation/CreateFormDialog";
+import { departmentChoices } from "@/features/organisation/departmentChoices";
 import { refusalFor } from "@/features/organisation/CreateJobTitleDialog/refusalFor";
 import {
 	createJobTitleSchema,
@@ -86,22 +87,15 @@ export const CreateJobTitleDialog = ({
 				},
 			]
 		: branches.status === "ready" && departments.status === "ready"
-			? departments.items
-					.filter((department) =>
-						can("job_title:create", department.departmentId)
-					)
-					.map((department) => ({
-						value: department.departmentId,
-						label: placeOf(
-							{
-								branchName: branches.items.find(
-									(branch) => branch.branchId === department.branchId
-								)?.name,
-								departmentName: department.name,
-							},
-							t
-						),
-					}))
+			? departmentChoices(
+					branches.items,
+					departments.items,
+					(departmentId) => can("job_title:create", departmentId),
+					t
+				).map(({ department, label }) => ({
+					value: department.departmentId,
+					label,
+				}))
 			: [];
 	const onlyDepartment =
 		departmentOptions.length === 1 ? departmentOptions[0]?.value : undefined;

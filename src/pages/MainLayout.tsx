@@ -22,7 +22,10 @@ import {
 } from "@/components/ui/Icon";
 import { usableCompanies } from "@/features/auth/currentCompany";
 import { logOut } from "@/features/auth/session";
-import { ORGANISATION_READ_KEYS } from "@/features/workspace/permissionKeys";
+import {
+	ORGANISATION_READ_KEYS,
+	PEOPLE_READ_KEYS,
+} from "@/features/workspace/permissionKeys";
 import { Can } from "@/features/workspace/Can";
 import { CompanySelection } from "@/pages/CompanySelection";
 
@@ -114,13 +117,15 @@ export const MainLayout = (): FunctionComponent => {
 						label={t("shell.navigation.leave")}
 						to="/leave"
 					/>
-					<SidebarItem
-						activeIcon={PeopleFilledIcon}
-						icon={PeopleIcon}
-						label={t("shell.navigation.people")}
-						to="/people"
-					/>
-					{/* Offered only when the workspace grants something in it, at any scope. */}
+					{/* People and Organisation are offered only when the workspace grants something in them, at any scope. */}
+					<Can anywhere permission={PEOPLE_READ_KEYS}>
+						<SidebarItem
+							activeIcon={PeopleFilledIcon}
+							icon={PeopleIcon}
+							label={t("shell.navigation.people")}
+							to="/people"
+						/>
+					</Can>
 					<Can anywhere permission={ORGANISATION_READ_KEYS}>
 						<SidebarItem
 							activeIcon={OrganisationFilledIcon}

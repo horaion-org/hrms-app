@@ -25,6 +25,8 @@ export const PERMISSION_KEYS = [
 	"job_title:read",
 	"job_title:create",
 	"job_title:update",
+	"member_profile:read",
+	"member_profile:create",
 	"access_role:read",
 	"access_role:create",
 	"access_role:update",
@@ -46,6 +48,14 @@ export const ORGANISATION_READ_KEYS: ReadonlyArray<PermissionKey> = [
 	"job_title:read",
 	"access_role:read",
 	"audit_event:read",
+];
+
+/**
+ * Holding this at any scope is what makes the People Module worth offering.
+ * The API lists only the people in the units where it is held.
+ */
+export const PEOPLE_READ_KEYS: ReadonlyArray<PermissionKey> = [
+	"member_profile:read",
 ];
 
 /** Whether a key the API sent is one this app's copy of the catalog knows. */

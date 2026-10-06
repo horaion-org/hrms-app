@@ -266,6 +266,25 @@ describe("job title clients", () => {
 			status: "ACTIVE",
 		});
 	});
+	it("lists one department's titles when asked", async () => {
+		const calls = stubApi({
+			"GET /api/v1/companies/c-1/job-titles": {
+				status: 200,
+				body: envelope({ content: [jobTitle], page: { totalElements: 1 } }),
+			},
+		});
+		await fetchJobTitles("c-1", {
+			sort: { field: "name", desc: false },
+			status: "ACTIVE",
+			departmentId: "d-1",
+		});
+		expect(Object.fromEntries(new URLSearchParams(calls[0]?.search))).toEqual({
+			size: "100",
+			sort: "name,asc",
+			status: "ACTIVE",
+			departmentId: "d-1",
+		});
+	});
 	it("preserves a typed name conflict", async () => {
 		stubApi({
 			[`POST ${TITLES}`]: problemReply(409, "JOB_TITLE_NAME_CONFLICT"),

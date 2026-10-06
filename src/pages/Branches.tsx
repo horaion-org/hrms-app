@@ -1,4 +1,4 @@
-import { countryName } from "@/features/organisation/countries";
+import { countryName } from "@/common/countries";
 import { useMemo, useState } from "react";
 import { useCan } from "@/features/workspace/useCan";
 import { useQuery } from "@tanstack/react-query";

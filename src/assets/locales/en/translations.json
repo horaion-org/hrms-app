@@ -1,4 +1,11 @@
 {
+	"leaveUi": {
+		"pagination": "Pagination",
+		"entries": "{{start}}–{{end}} of {{total}} entries",
+		"previousPage": "Previous page",
+		"nextPage": "Next page",
+		"page": "Page {{page}} of {{total}}"
+	},
 	"dialog": {
 		"close": "Close"
 	},
@@ -10,6 +17,13 @@
 	"passwordInput": {
 		"show": "Show password",
 		"hide": "Hide password"
+	},
+	"phoneInput": {
+		"countryCode": "Country code",
+		"countryCodeValue": "Country code: {{country}}",
+		"countryPlaceholder": "Code",
+		"searchCountries": "Search country or code",
+		"number": "Phone number"
 	},
 	"auth": {
 		"passwordReset": {
@@ -140,6 +154,9 @@
 			}
 		}
 	},
+	"datePicker": {
+		"clear": "Clear date"
+	},
 	"select": {
 		"noOptions": "No options",
 		"selectedCount_one": "{{count}} selected",
@@ -148,7 +165,9 @@
 	"dataTable": {
 		"selectAll": "Select all",
 		"selectRow": "Select {{name}}",
-		"sortBy": "Sort by {{column}}"
+		"sortBy": "Sort by {{column}}",
+		"sortAscending": "A – Z",
+		"sortDescending": "Z – A"
 	},
 	"shell": {
 		"welcome": "Welcome, <name>{{name}}</name>.",
@@ -161,6 +180,89 @@
 		},
 		"comingSoon": "This Module is coming soon.",
 		"settings": "Settings"
+	},
+	"people": {
+		"title": "People overview",
+		"subtitle": "Manage employee records, roles, and workforce information across your organisation.",
+		"search": "Search employee",
+		"all": "All employees",
+		"label": "People",
+		"employee": "Employee",
+		"department": "Department",
+		"jobTitle": "Job title",
+		"contact": "Contact",
+		"notSet": "—",
+		"empty": "No people yet.",
+		"add": "Add employee",
+		"added": "{{name}} was added. We’ve emailed them an invitation to log in.",
+		"roleNotAssigned": "{{name}} was added, but their system role wasn’t assigned. Assign it from Organisation, under System roles.",
+		"form": {
+			"title": "Add employee",
+			"subtitle": "Set up employee details to manage roles, shifts, and availability.",
+			"forbidden": "You don’t have permission to add employees.",
+			"confirm": "Confirm",
+			"none": "None",
+			"datePlaceholder": "Select date",
+			"personal": "Personal information",
+			"contact": "Contact information",
+			"employment": "Employment information",
+			"placement": "Department & role information",
+			"fullName": "Full name",
+			"fullNamePlaceholder": "Enter full name",
+			"fullNameRequired": "Enter the employee’s full name.",
+			"fullNameLength": "Use 255 characters or fewer.",
+			"dateOfBirth": "Date of birth",
+			"dateOfBirthPast": "Choose a date in the past.",
+			"phone": "Phone number",
+			"phonePlaceholder": "8123 4567",
+			"phoneCountry": "Choose the country code.",
+			"phoneInvalid": "Enter a valid phone number.",
+			"email": "Email address",
+			"emailPlaceholder": "Enter email address",
+			"emailHint": "We’ll email an invitation to log in to this address.",
+			"emailRequired": "Enter the employee’s email address.",
+			"emailLength": "Use 320 characters or fewer.",
+			"emailInvalid": "Enter a valid email address.",
+			"employmentType": "Employment type",
+			"employmentTypePlaceholder": "Select type",
+			"employmentTypes": {
+				"FULL_TIME": "Full-time",
+				"PART_TIME": "Part-time",
+				"CONTRACT": "Contract",
+				"INTERN": "Intern"
+			},
+			"hireDate": "Hire date",
+			"probationEndDate": "Probation end date",
+			"probationBeforeHire": "Choose a date on or after the hire date.",
+			"jobTitle": "Job title",
+			"jobTitlePlaceholder": "Select job title",
+			"jobTitleNeedsDepartment": "Choose a department first.",
+			"jobTitlesLoading": "Loading job titles…",
+			"jobTitlesFailed": "We couldn’t load job titles. Try again.",
+			"jobTitlesEmpty": "This department has no active job titles.",
+			"department": "Department",
+			"departmentPlaceholder": "Select department",
+			"searchDepartments": "Search departments",
+			"departmentsLoading": "Loading departments…",
+			"departmentsFailed": "We couldn’t load departments. Try again.",
+			"departmentsEmpty": "No active department you can add employees to.",
+			"noDepartmentMatches": "No departments match your search.",
+			"departmentRequired": "Choose a department.",
+			"manager": "Manager",
+			"managerPlaceholder": "Select manager",
+			"managerHint": "An active member of the company.",
+			"systemRole": "System role",
+			"systemRolePlaceholder": "Select system role",
+			"systemRoleHint": "Applies in the chosen department.",
+			"departmentUnavailable": "This department is no longer available. Choose another department.",
+			"jobTitleUnavailable": "This job title is no longer available. Choose another job title.",
+			"managerUnavailable": "This person is no longer available. Choose another manager.",
+			"emailTaken": "This email address already has an account. Use another email address.",
+			"identityRejected": "We couldn’t set up a login for this email address. Check it, or try again later.",
+			"forbiddenSubmit": "You no longer have permission to add employees to this department.",
+			"rejected": "Check this field and try again.",
+			"failed": "We couldn’t add the employee. Try again."
+		}
 	},
 	"settings": {
 		"title": "Settings",
@@ -642,6 +744,14 @@
 					"read": "View",
 					"create": "Create",
 					"update": "Edit"
+				}
+			},
+			"member_profile": {
+				"name": "People",
+				"description": "Each person’s employee ID, department, job title and contact details.",
+				"actions": {
+					"read": "View",
+					"create": "Create"
 				}
 			},
 			"none": "No permissions yet.",

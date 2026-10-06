@@ -1,0 +1,69 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
+import { useChangeAccessRoleHolders } from "@/features/organisation/useAccessRoleHolders";
+import { withAddedNotice } from "@/features/people/addedNotice";
+import {
+	createMemberProfile,
+	type CreateMemberProfileBody,
+	type MemberProfilePlace,
+} from "@/features/people/api";
+import type { ProfileFormValues } from "@/features/people/profileFormSchema";
+import { profileRequest } from "@/features/people/profileRequest";
+
+/**
+ * Adds a person, then gives them the chosen system role in their Department,
+ * then returns to the People list with a notice saying so. A refused create
+ * rejects for the form to explain. A refused role does not: the person
+ * exists, so the list says they were added and the role still needs assigning.
+ */
+export const useAddEmployee = (
+	companyId: string
+): ((
+	values: ProfileFormValues,
+	place: MemberProfilePlace
+) => Promise<void>) => {
+	const client = useQueryClient();
+	const navigate = useNavigate();
+	const create = useMutation({
+		mutationFn: ({
+			place,
+			body,
+		}: {
+			place: MemberProfilePlace;
+			body: CreateMemberProfileBody;
+		}) => createMemberProfile(companyId, place, body),
+		onSuccess: () =>
+			Promise.all([
+				client.invalidateQueries({ queryKey: ["people", companyId] }),
+				client.invalidateQueries({
+					queryKey: ["organisation", companyId, "members"],
+				}),
+			]),
+	});
+	const assign = useChangeAccessRoleHolders(companyId);
+	return async (values, place) => {
+		const person = await create.mutateAsync({
+			place,
+			body: profileRequest(values),
+		});
+		let roleNotAssigned = false;
+		if (values.accessRoleId)
+			try {
+				await assign.mutateAsync({
+					grants: [
+						{
+							companyMembershipId: person.membershipId,
+							accessRoleId: values.accessRoleId,
+							...place,
+						},
+					],
+				});
+			} catch {
+				roleNotAssigned = true;
+			}
+		await navigate({
+			to: "/people",
+			state: withAddedNotice({ name: person.displayName, roleNotAssigned }),
+		});
+	};
+};

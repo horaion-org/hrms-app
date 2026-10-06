@@ -1,6 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { createRef, useState } from "react";
+import { createRef, useRef, useState } from "react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { createInstance } from "i18next";
 import { initReactI18next } from "react-i18next";
@@ -211,6 +211,49 @@ describe("Combobox single choice", () => {
 		).not.toBeInTheDocument();
 		expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
 		await waitFor(() => expect(trigger).toHaveFocus());
+	});
+	it("shows a compact chosen value in the trigger and places the list under an anchor", async () => {
+		const user = userEvent.setup();
+		const Example = (): FunctionComponent => {
+			const anchor = useRef<HTMLDivElement>(null);
+			return (
+				<div ref={anchor} data-testid="anchor">
+					<Combobox
+						aria-label="Branch head"
+						formatValue={(option) => option.id}
+						getKey={(option) => option.id}
+						getLabel={(option) => option.name}
+						multiple={false}
+						options={options}
+						panelAnchor={anchor}
+						placeholder="Select a branch head"
+						query=""
+						searchPlaceholder="Search people"
+						value={options[0] ?? null}
+						onChange={vi.fn()}
+						onQueryChange={vi.fn()}
+					/>
+				</div>
+			);
+		};
+		render(<Example />);
+		vi.spyOn(
+			screen.getByTestId("anchor"),
+			"getBoundingClientRect"
+		).mockReturnValue(
+			DOMRect.fromRect({ x: 10, y: 20, width: 300, height: 44 })
+		);
+		const trigger = screen.getByRole("button", { name: "Branch head" });
+		expect(trigger).toHaveTextContent("marcus");
+		expect(trigger).not.toHaveTextContent("Marcus Lim");
+		await user.click(trigger);
+		expect(
+			screen.getByRole("option", { name: "Marcus Lim" })
+		).toBeInTheDocument();
+		expect(screen.getByRole("presentation")).toHaveStyle({
+			left: "10px",
+			width: "300px",
+		});
 	});
 });
 

@@ -10,7 +10,8 @@ import type { FunctionComponent } from "@/common/types";
 import { positionPanel } from "@/components/forms/Combobox/ComboboxPanel/positionPanel";
 
 export type ComboboxPanelProps = ComponentPropsWithRef<"div"> & {
-	trigger?: RefObject<HTMLButtonElement | null>;
+	/** The element the panel is placed under and matches in width. */
+	trigger?: RefObject<HTMLElement | null>;
 };
 
 /** Search and footer sit outside the inner listbox. Headless UI owns portal, focus and dismissal.

@@ -10,8 +10,8 @@ export type ListToolbarProps = {
 	searchLabel: string;
 	search: string;
 	onSearchChange: (search: string) => void;
-	/** The primary action's label, e.g. "Create Branch". */
-	createLabel: string;
+	/** The primary action's label, e.g. "Create Branch"; needed only with `onCreate`. */
+	createLabel?: string;
 	onCreate?: () => void;
 	/** A second action beside the primary one, e.g. "Assign role"; left out when there is none. */
 	secondaryAction?: { label: string; onClick: () => void };
@@ -22,10 +22,23 @@ export type ListToolbarProps = {
 		options: Array<SelectOption>;
 		onChange: (value: string) => void;
 	};
+	/**
+	 * The "Showing:" filter with each option ticked on its own, in place of
+	 * `filter`. `placeholder` and `formatSummary` name the choice when none or
+	 * several are ticked.
+	 */
+	multipleFilter?: {
+		label: string;
+		value: Array<string>;
+		options: Array<SelectOption>;
+		onChange: (value: Array<string>) => void;
+		placeholder?: string;
+		formatSummary?: (selected: Array<SelectOption>) => string;
+	};
 	className?: string;
 };
 
-/** An Organisation list's search, create action, and status filter. */
+/** A list's search, create action, and status filter; People uses it too. */
 export const ListToolbar = ({
 	searchLabel,
 	search,
@@ -34,9 +47,11 @@ export const ListToolbar = ({
 	onCreate,
 	secondaryAction,
 	filter,
+	multipleFilter,
 	className,
 }: ListToolbarProps): FunctionComponent => {
 	const filterLabelId = useId();
+	const filterLabel = (filter ?? multipleFilter)?.label;
 	return (
 		<div className={className}>
 			<div className="flex flex-wrap items-center justify-between gap-4">
@@ -64,21 +79,35 @@ export const ListToolbar = ({
 					)}
 				</div>
 			</div>
-			{filter && (
+			{filterLabel !== undefined && (
 				<div className="mt-10 flex items-center gap-3">
 					<span
 						className="min-w-15.5 text-sm font-medium text-neutral-800"
 						id={filterLabelId}
 					>
-						{filter.label}
+						{filterLabel}
 					</span>
-					<Select
-						aria-labelledby={filterLabelId}
-						className="w-40 font-semibold"
-						options={filter.options}
-						value={filter.value}
-						onChange={filter.onChange}
-					/>
+					{filter && (
+						<Select
+							aria-labelledby={filterLabelId}
+							className="w-40 font-semibold"
+							options={filter.options}
+							value={filter.value}
+							onChange={filter.onChange}
+						/>
+					)}
+					{!filter && multipleFilter && (
+						<Select
+							multiple
+							aria-labelledby={filterLabelId}
+							className="w-40 font-semibold"
+							formatSummary={multipleFilter.formatSummary}
+							options={multipleFilter.options}
+							placeholder={multipleFilter.placeholder}
+							value={multipleFilter.value}
+							onChange={multipleFilter.onChange}
+						/>
+					)}
 				</div>
 			)}
 		</div>

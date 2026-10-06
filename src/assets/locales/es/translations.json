@@ -1,4 +1,11 @@
 {
+  "leaveUi": {
+    "pagination": "Paginación",
+    "entries": "{{start}}–{{end}} de {{total}} registros",
+    "previousPage": "Página anterior",
+    "nextPage": "Página siguiente",
+    "page": "Página {{page}} de {{total}}"
+  },
   "dialog": {
     "close": "Cerrar"
   },
@@ -37,7 +44,9 @@
   "dataTable": {
     "selectAll": "Seleccionar todo",
     "selectRow": "Seleccionar {{name}}",
-    "sortBy": "Ordenar por {{column}}"
+    "sortBy": "Ordenar por {{column}}",
+    "sortAscending": "A – Z",
+    "sortDescending": "Z – A"
   },
   "organisation": {
     "branches": {

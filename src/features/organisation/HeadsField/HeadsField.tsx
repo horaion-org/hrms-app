@@ -2,7 +2,11 @@ import { useState, type Ref } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { Combobox } from "@/components/forms/Combobox";
-import { FormRow, formRowIds } from "@/components/forms/FormRow";
+import {
+	FormRow,
+	formRowIds,
+	type FormRowProps,
+} from "@/components/forms/FormRow";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import type { CompanyMember } from "@/features/organisation/api";
@@ -15,16 +19,30 @@ export type HeadsFieldProps = {
 	label: string;
 	placeholder: string;
 	hint: string;
-	value: Array<CompanyMember>;
-	onChange: (value: Array<CompanyMember>) => void;
 	error?: string;
 	disabled?: boolean;
+	/** Heads are required; another use of the picker, such as a manager, may not be. */
+	required?: boolean;
+	layout?: FormRowProps["layout"];
 	ref?: Ref<HTMLButtonElement>;
-};
+} & (
+	| {
+			multiple?: true;
+			value: Array<CompanyMember>;
+			onChange: (value: Array<CompanyMember>) => void;
+	  }
+	| {
+			/** One person, such as a manager, instead of up to twenty heads. */
+			multiple: false;
+			value: CompanyMember | null;
+			onChange: (value: CompanyMember | null) => void;
+	  }
+);
 
 /**
- * Chooses one to twenty heads by searching the company's active people.
- * Invalidate `["organisation", companyId, "members"]` to reload the options.
+ * Chooses one to twenty heads by searching the company's active people, or
+ * one person with `multiple={false}`. Invalidate
+ * `["organisation", companyId, "members"]` to reload the options.
  */
 export const HeadsField = ({
 	companyId,
@@ -32,11 +50,12 @@ export const HeadsField = ({
 	label,
 	placeholder,
 	hint,
-	value,
-	onChange,
 	error,
 	disabled = false,
+	required = true,
+	layout = "stacked",
 	ref,
+	...selection
 }: HeadsFieldProps): FunctionComponent => {
 	const { t } = useTranslation();
 	const key = "organisation.headsField";
@@ -45,33 +64,38 @@ export const HeadsField = ({
 	const members = useCompanyMemberSearch(companyId, query);
 	return (
 		<FormRow
-			required
-			counter={t(`${key}.counter`, { count: value.length })}
 			error={error}
 			hint={hint}
 			htmlFor={id}
 			label={label}
-			layout="stacked"
+			layout={layout}
+			required={required}
+			counter={
+				selection.multiple === false
+					? undefined
+					: t(`${key}.counter`, { count: selection.value.length })
+			}
 		>
 			<Combobox
 				ref={ref}
-				aria-required
+				{...(selection.multiple === false
+					? selection
+					: { ...selection, maxSelected: MAX_HEADS })}
 				aria-describedby={error ? ids.errorId : ids.hintId}
 				aria-invalid={Boolean(error)}
 				aria-label={label}
+				aria-required={required || undefined}
 				disabled={disabled}
 				getKey={(member) => member.membershipId}
 				getLabel={(member) => member.displayName}
 				id={id}
 				loading={members.isFetching}
 				loadingText={t(`${key}.loading`)}
-				maxSelected={MAX_HEADS}
 				options={members.data?.items ?? []}
 				placeholder={placeholder}
 				query={query}
 				searchPlaceholder={t(`${key}.searchPlaceholder`)}
 				status={error ? "error" : undefined}
-				value={value}
 				emptyText={t(
 					members.isError ? `${key}.membersFailed` : `${key}.noResults`
 				)}
@@ -95,7 +119,6 @@ export const HeadsField = ({
 						</Badge>
 					</span>
 				)}
-				onChange={onChange}
 				onQueryChange={setQuery}
 			/>
 		</FormRow>
