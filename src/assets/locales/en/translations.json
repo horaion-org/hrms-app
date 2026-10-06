@@ -261,6 +261,10 @@
 		"copied": "Copied",
 		"failed": "Couldn’t copy"
 	},
+	"numberStepper": {
+		"decrease": "Fewer {{label}}",
+		"increase": "More {{label}}"
+	},
 	"dataTable": {
 		"selectAll": "Select all",
 		"selectRow": "Select {{name}}",
@@ -1133,6 +1137,176 @@
 			"membersFooter": "Showing active company members",
 			"membersTruncated": "Showing 20 of {{total}} active company members. Type to narrow.",
 			"counter": "{{count}}/20"
+		}
+	},
+	"scheduling": {
+		"overview": {
+			"createSchedule": "Create Schedule"
+		},
+		"create": {
+			"back": "Back to Overview",
+			"title": "Create Schedule",
+			"subtitle": "Set up your schedule generation in a few simple steps.",
+			"steps": {
+				"setup": "Setup",
+				"shifts": "Shifts",
+				"constraints": "Constraints",
+				"forecast": "Forecast",
+				"generate": "Generate"
+			},
+			"unavailable": "Saving drafts and generating schedules aren’t available yet."
+		},
+		"actions": {
+			"back": "Back",
+			"next": "Next",
+			"saveDraft": "Save Draft",
+			"generate": "Generate"
+		},
+		"timeRange": "{{start}} – {{end}}",
+		"days": {
+			"MON": "Mon",
+			"TUE": "Tue",
+			"WED": "Wed",
+			"THU": "Thu",
+			"FRI": "Fri",
+			"SAT": "Sat",
+			"SUN": "Sun",
+			"weekdays": "Weekdays"
+		},
+		"setup": {
+			"title": "Schedule Setup",
+			"description": "Select the department and scheduling period for your new schedule.",
+			"department": "Department",
+			"departmentPlaceholder": "Select a department",
+			"departmentsLoading": "Loading departments…",
+			"departmentsHidden": "You don’t have permission to see departments.",
+			"departmentsError": "Departments couldn’t be loaded. Try again later.",
+			"name": "Schedule Name",
+			"namePlaceholder": "e.g. Front Office – Week 16",
+			"period": "Schedule Period",
+			"periodNote": "Select a period that aligns with your business operations.",
+			"additional": "Additional Settings",
+			"includeLeave": "Include leave requests",
+			"includeLeaveDescription": "Consider approved leave when generating the schedule.",
+			"allowOpenShifts": "Allow open shifts",
+			"allowOpenShiftsDescription": "Generate schedule even if some shifts remain unassigned.",
+			"validation": {
+				"department": "Choose a department.",
+				"name": "Enter a schedule name.",
+				"nameTooLong": "Use {{max}} characters or fewer.",
+				"period": "Choose a schedule period."
+			}
+		},
+		"shifts": {
+			"title": "Select Shifts",
+			"description": "Choose the shifts to include in this schedule.",
+			"add": "Add Custom Shift",
+			"label": "Shifts",
+			"name": "Shift Name",
+			"timeRange": "Time Range",
+			"days": "Days Applied To",
+			"roleCount": "Role Count",
+			"roleCountValue_one": "{{count}} role",
+			"roleCountValue_other": "{{count}} roles",
+			"actions": "Actions",
+			"edit": "Edit {{name}}",
+			"delete": "Delete {{name}}",
+			"deleted": "Shift successfully deleted",
+			"empty": "No shifts yet.",
+			"required": "Choose at least one shift to include in this schedule."
+		},
+		"constraints": {
+			"title": "Scheduling Constraints",
+			"description": "Define the constraints for your schedule.",
+			"add": "Add Constraint",
+			"label": "Constraints",
+			"name": "Constraint Name",
+			"type": "Constraint Type",
+			"details": "Details",
+			"priority": "Priority",
+			"status": "Status",
+			"actions": "Actions",
+			"edit": "Edit {{name}}",
+			"delete": "Delete {{name}}",
+			"deleted": "Constraint successfully deleted",
+			"empty": "No constraints yet.",
+			"types": {
+				"STAFFING_REQUIREMENT": "Staffing Requirement",
+				"ROLE_COVERAGE": "Role Coverage",
+				"SHIFT_PATTERN": "Shift Pattern",
+				"WORKING_HOURS": "Working Hours"
+			},
+			"typeHints": {
+				"STAFFING_REQUIREMENT": "Minimum staff counts",
+				"ROLE_COVERAGE": "Required roles / seniority",
+				"SHIFT_PATTERN": "Consecutive days, banned sequences",
+				"WORKING_HOURS": "Maximum hours, overtime, rest periods"
+			},
+			"priorities": {
+				"HIGH": "High",
+				"MEDIUM": "Medium",
+				"LOW": "Low"
+			},
+			"statuses": {
+				"ACTIVE": "Active",
+				"DRAFT": "Draft",
+				"DISABLED": "Disabled"
+			}
+		},
+		"forecast": {
+			"title": "Staffing Forecast",
+			"description": "Define the staffing demand for your shifts. You can start simple and refine later.",
+			"import": "Import",
+			"export": "Export",
+			"useExisting": "Use Existing Forecast",
+			"question": "How would you like to define staffing demand?",
+			"byShift": "By Shift (Recommended)",
+			"byShiftDescription": "Set required staff for each shift.",
+			"byShiftBenefit": "Faster and easier for most teams.",
+			"blocks": "Detailed Time Blocks",
+			"blocksDescription": "Set demand for 30-minute intervals.",
+			"blocksBenefit": "For granular control over the day.",
+			"label": "Staff allocation by shift",
+			"shift": "Shift",
+			"allocation": "Staff Allocation",
+			"appliesTo": "Applies To",
+			"hours_one": "{{count}} hr",
+			"hours_other": "{{count}} hrs",
+			"allocated": "{{allocated}}/{{needed}} staff allocated",
+			"limitNote": "Total allocated staff for a shift cannot exceed the total staff set in Step 2: Shifts.",
+			"overAllocated": "Some shifts allocate more staff than they need. Reduce them under By Shift before continuing.",
+			"blocksLabel": "Staffing demand by time block",
+			"time": "Time",
+			"autoFill": "Auto-fill",
+			"levels": {
+				"low": "Low (1 – 2)",
+				"medium": "Medium (3 – 5)",
+				"high": "High (6+)"
+			},
+			"groups": {
+				"earlyMorning": "Early Morning",
+				"morning": "Morning",
+				"midday": "Midday",
+				"afternoon": "Afternoon",
+				"evening": "Evening"
+			},
+			"demandCell": "{{role}}, {{slot}}",
+			"scrollHint": "Scroll horizontally to view all roles."
+		},
+		"generate": {
+			"title": "Ready to Generate",
+			"description": "Your schedule setup is complete and ready for generation.",
+			"summary": "Schedule summary",
+			"shifts": "Shifts",
+			"roles": "Roles",
+			"coverage": "Coverage",
+			"coverageValue": "{{value}}%",
+			"conflicts": "Conflicts",
+			"nextTitle": "What happens next?",
+			"nextOptimise": "We’ll generate an optimised schedule based on your shifts, rules, and forecast.",
+			"nextBalance": "The schedule will balance coverage, constraints, and employee availability.",
+			"nextReview": "You’ll be able to review and make any adjustments after generation.",
+			"note": "Generation may take a few moments. The more constraints and data, the longer it may take."
 		}
 	}
 }

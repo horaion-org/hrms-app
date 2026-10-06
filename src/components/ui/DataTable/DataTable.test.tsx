@@ -306,6 +306,38 @@ describe("DataTable", () => {
 		expect(onChange).toHaveBeenLastCalledWith([]);
 	});
 
+	it("shows the caller's selection and reports changes without keeping its own", async () => {
+		const user = userEvent.setup();
+		const onChange = vi.fn();
+		render(
+			<DataTable
+				columns={columns}
+				data={branches}
+				getRowId={getRowId}
+				label="Branches"
+				selection={{
+					rowLabel: (branch) => branch.name,
+					selectedIds: ["b-1"],
+					onChange,
+				}}
+			/>
+		);
+		const main = screen.getByRole("checkbox", { name: "Select Main Branch" });
+		const orchard = screen.getByRole("checkbox", { name: "Select Orchard" });
+		expect(main).toBeChecked();
+		expect(
+			screen.getByRole("checkbox", { name: "Select all" })
+		).toBePartiallyChecked();
+
+		await user.click(orchard);
+
+		expect(onChange).toHaveBeenLastCalledWith(
+			expect.arrayContaining(["b-1", "b-2"])
+		);
+		// The caller has not passed the new ids back, so nothing moves.
+		expect(orchard).not.toBeChecked();
+	});
+
 	it("shows the empty state across every column and disables select-all", () => {
 		render(
 			<DataTable
