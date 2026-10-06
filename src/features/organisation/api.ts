@@ -28,7 +28,7 @@ export const ORGANISATION_ENTITY_TYPES = [
 	"JobTitle",
 ] as const;
 
-const companyPath = (companyId: string): string =>
+export const companyPath = (companyId: string): string =>
 	`/api/v1/companies/${encodeURIComponent(companyId)}`;
 
 /** A one-row page is enough: only the page's total is read. */
@@ -214,7 +214,8 @@ const listPath = (
 	return `${companyPath(companyId)}/${resource}?${search.toString()}`;
 };
 
-const fetchList = async <T extends z.ZodType>(
+/** One page of a paged list, read from the API's `content` and page total. */
+export const fetchList = async <T extends z.ZodType>(
 	path: string,
 	item: T
 ): Promise<ListPage<z.infer<T>>> => {

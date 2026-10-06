@@ -171,6 +171,19 @@
 		"comingSoon": "This Module is coming soon.",
 		"settings": "Settings"
 	},
+	"people": {
+		"title": "People overview",
+		"subtitle": "Manage employee records, roles, and workforce information across your organisation.",
+		"search": "Search employee",
+		"all": "All employees",
+		"label": "People",
+		"employee": "Employee",
+		"department": "Department",
+		"jobTitle": "Job title",
+		"contact": "Contact",
+		"notSet": "—",
+		"empty": "No people yet."
+	},
 	"settings": {
 		"title": "Settings",
 		"subtitle": "Manage your workspace preferences.",
