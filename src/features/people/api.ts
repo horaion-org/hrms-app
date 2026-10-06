@@ -5,6 +5,7 @@ import {
 	type UndefinedInitialDataOptions,
 } from "@tanstack/react-query";
 import { z } from "zod";
+import { apiRequest } from "@/common/api-client";
 import {
 	companyPath,
 	fetchList,
@@ -118,3 +119,54 @@ export const peopleQuery = (
 		staleTime: 30_000,
 		retry,
 	});
+
+const employmentTypeSchema = z.enum([
+	"FULL_TIME",
+	"PART_TIME",
+	"CONTRACT",
+	"INTERN",
+]);
+
+/** How a person is employed. */
+export type EmploymentType = z.infer<typeof employmentTypeSchema>;
+
+export const EMPLOYMENT_TYPES = employmentTypeSchema.options;
+
+export const isEmploymentType = (value: string): value is EmploymentType =>
+	employmentTypeSchema.safeParse(value).success;
+
+/**
+ * A new person, as the API takes them. Their Department (and its Branch) is
+ * the URL, as the API requires. Optional fields are left out rather than sent
+ * empty; dates are ISO `YYYY-MM-DD` and the phone is E.164.
+ */
+export type CreateMemberProfileBody = {
+	displayName: string;
+	email: string;
+	jobTitleId?: string;
+	/** The person's manager, as the API calls it. */
+	reportsToMembershipId?: string;
+	dateOfBirth?: string;
+	phone?: string;
+	employmentType?: EmploymentType;
+	hireDate?: string;
+	probationEndDate?: string;
+};
+
+/** Where a new person joins: one Department of one Branch. */
+export type MemberProfilePlace = { branchId: string; departmentId: string };
+
+/**
+ * Adds a person to one Department and invites them by email; the identity
+ * provider sends their temporary password. Returns them as the list shows them.
+ */
+export const createMemberProfile = (
+	companyId: string,
+	{ branchId, departmentId }: MemberProfilePlace,
+	body: CreateMemberProfileBody
+): Promise<MemberProfile> =>
+	apiRequest(
+		`${companyPath(companyId)}/branches/${encodeURIComponent(branchId)}/departments/${encodeURIComponent(departmentId)}/member-profiles`,
+		memberProfileSchema,
+		{ method: "POST", body }
+	);
