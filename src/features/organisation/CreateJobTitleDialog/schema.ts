@@ -4,9 +4,10 @@ import { unitNameSchema } from "@/features/organisation/createSchemas";
 
 export const createJobTitleSchema = (
 	t: TFunction
-): z.ZodObject<{ name: z.ZodString }> => {
+): z.ZodObject<{ departmentId: z.ZodString; name: z.ZodString }> => {
 	const key = "organisation.jobTitles.createDialog";
 	return z.object({
+		departmentId: z.string().min(1, t(`${key}.departmentRequired`)),
 		name: unitNameSchema({
 			required: t(`${key}.nameRequired`),
 			length: t(`${key}.nameLength`),

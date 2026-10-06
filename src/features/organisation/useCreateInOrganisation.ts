@@ -40,11 +40,19 @@ export const useCreateDepartment = (
 		createDepartment(companyId, branchId, body)
 	);
 
+export type CreateJobTitleVariables = {
+	branchId: string;
+	departmentId: string;
+	body: CreateJobTitleBody;
+};
+
 export const useCreateJobTitle = (
 	companyId: string
-): UseMutationResult<JobTitle, Error, CreateJobTitleBody> =>
-	useCompanyCreate(companyId, (body: CreateJobTitleBody) =>
-		createJobTitle(companyId, body)
+): UseMutationResult<JobTitle, Error, CreateJobTitleVariables> =>
+	useCompanyCreate(
+		companyId,
+		({ branchId, departmentId, body }: CreateJobTitleVariables) =>
+			createJobTitle(companyId, branchId, departmentId, body)
 	);
 
 export const useCreateAccessRole = (

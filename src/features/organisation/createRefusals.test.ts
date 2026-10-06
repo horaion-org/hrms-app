@@ -61,10 +61,34 @@ describe("create job title refusals", () => {
 			"Check the job title name and try again.",
 		],
 	])("places %s on the name", (error, message) => {
-		expect(jobTitleRefusal(error, "Chef", t)).toEqual({
+		expect(jobTitleRefusal(error, "Chef", false, t)).toEqual({
 			fields: { name: message },
 			refreshMembers: false,
 		});
+	});
+	it.each([
+		[
+			problem(409, "DEPARTMENT_INACTIVE"),
+			"This department is inactive. Activate it first, or choose another department.",
+		],
+		[
+			problem(404, "DEPARTMENT_NOT_FOUND"),
+			"This department is no longer available. Choose another department.",
+		],
+	])("places %s on the department", (error, message) => {
+		expect(jobTitleRefusal(error, "Chef", false, t)).toEqual({
+			fields: { departmentId: message },
+			refreshMembers: false,
+		});
+	});
+	it("words a forbidden or failed edit as an edit", () => {
+		expect(
+			jobTitleRefusal(problem(403, "AUTHORIZATION_DENIED"), "Chef", true, t)
+				.message
+		).toBe("You no longer have permission to change this job title.");
+		expect(jobTitleRefusal(new Error("offline"), "Chef", true, t).message).toBe(
+			"We couldn’t save the job title. Try again."
+		);
 	});
 });
 

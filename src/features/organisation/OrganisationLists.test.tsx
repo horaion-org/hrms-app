@@ -89,6 +89,21 @@ const branch = (
 	headMembershipIds: [],
 });
 
+const jobTitle = (
+	jobTitleId: string,
+	name: string,
+	status = "ACTIVE"
+): Record<string, unknown> => ({
+	jobTitleId,
+	companyId: "c-1",
+	branchId: "b-1",
+	branchName: "Orchard",
+	departmentId: "d-1",
+	departmentName: "Kitchen",
+	name,
+	status,
+});
+
 const department = (
 	departmentId: string,
 	name: string,
@@ -650,18 +665,8 @@ describe("Job titles", () => {
 		const calls = stubApi({
 			...baseRoutes(),
 			[JOB_TITLES]: pageReply([
-				{
-					jobTitleId: "j-1",
-					companyId: "c-1",
-					name: "Shift supervisor",
-					status: "ACTIVE",
-				},
-				{
-					jobTitleId: "j-2",
-					companyId: "c-1",
-					name: "Trainee",
-					status: "INACTIVE",
-				},
+				jobTitle("j-1", "Shift supervisor", "ACTIVE"),
+				jobTitle("j-2", "Trainee", "INACTIVE"),
 			]),
 		});
 		await open("/organisation/job-titles");
@@ -675,12 +680,18 @@ describe("Job titles", () => {
 			within(table)
 				.getAllByRole("columnheader")
 				.map((header) => header.textContent)
-		).toEqual(["Select all", "Job title", "Status", "Actions"]);
+		).toEqual(["Select all", "Job title", "Department", "Status", "Actions"]);
 		expect(
-			bodyRows(table).map(
-				(row) => within(row).getAllByRole("cell")[2]?.textContent
+			bodyRows(table).map((row) =>
+				within(row)
+					.getAllByRole("cell")
+					.slice(2, 4)
+					.map((cell) => cell.textContent)
 			)
-		).toEqual(["Active", "Inactive"]);
+		).toEqual([
+			["Orchard › Kitchen", "Active"],
+			["Orchard › Kitchen", "Inactive"],
+		]);
 		expect(
 			screen.getByRole("searchbox", { name: "Search job title" })
 		).toBeVisible();
@@ -703,6 +714,51 @@ describe("Job titles", () => {
 			]);
 		});
 	});
+
+	it.each([
+		{ status: "ACTIVE", statusAction: "Deactivate" },
+		{ status: "INACTIVE", statusAction: "Activate" },
+	])(
+		"changes a $status job title's status after asking",
+		async ({ status, statusAction }) => {
+			const user = userEvent.setup();
+			const next = status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+			const calls = stubApi({
+				...baseRoutes([...EVERY_PERMISSION, "job_title:update"]),
+				[JOB_TITLES]: pageReply([jobTitle("j-1", "Shift supervisor", status)]),
+				"PUT /api/v1/companies/c-1/branches/b-1/departments/d-1/job-titles/j-1":
+					{
+						status: 200,
+						body: envelope(jobTitle("j-1", "Shift supervisor", next)),
+					},
+			});
+			await open("/organisation/job-titles");
+
+			await user.click(
+				await screen.findByRole("button", {
+					name: "More actions for Shift supervisor",
+				})
+			);
+			await user.click(screen.getByRole("menuitem", { name: statusAction }));
+			// Nothing is sent until the person confirms.
+			const dialog = await screen.findByRole("dialog", {
+				name: `${statusAction} Shift supervisor`,
+			});
+			expect(calls.some((call) => call.method === "PUT")).toBe(false);
+			await user.click(
+				within(dialog).getByRole("button", {
+					name: `${statusAction} job title`,
+				})
+			);
+
+			await waitFor(() => {
+				expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+			});
+			expect(
+				calls.filter((call) => call.method === "PUT").map((call) => call.body)
+			).toEqual([{ name: "Shift supervisor", status: next }]);
+		}
+	);
 
 	it("never asks for job titles the workspace does not grant", async () => {
 		const calls = stubApi(baseRoutes(["branch:read"]));

@@ -8,9 +8,11 @@ import {
 	updateAccessRole,
 	updateBranch,
 	updateDepartment,
+	updateJobTitle,
 	type AccessRole,
 	type Branch,
 	type Department,
+	type JobTitle,
 	type UnitStatus,
 } from "@/features/organisation/api";
 import { workspaceQuery } from "@/features/workspace/api";
@@ -51,6 +53,22 @@ export const useSetDepartmentStatus = (
 ): UseMutationResult<Department, Error, StatusChange<Department>> =>
 	useRowChange(companyId, ({ row, status }: StatusChange<Department>) =>
 		updateDepartment(companyId, { ...row, status })
+	);
+
+/** Renames a Job title; its status and Department stay as they are. */
+export const useUpdateJobTitle = (
+	companyId: string
+): UseMutationResult<JobTitle, Error, JobTitle> =>
+	useRowChange(companyId, (jobTitle: JobTitle) =>
+		updateJobTitle(companyId, jobTitle)
+	);
+
+/** Activates or deactivates a Job title, leaving its name as it is. */
+export const useSetJobTitleStatus = (
+	companyId: string
+): UseMutationResult<JobTitle, Error, StatusChange<JobTitle>> =>
+	useRowChange(companyId, ({ row, status }: StatusChange<JobTitle>) =>
+		updateJobTitle(companyId, { ...row, status })
 	);
 
 /** Activates or deactivates an access role, leaving its name and permissions as they are. */

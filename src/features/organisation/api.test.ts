@@ -8,6 +8,7 @@ import {
 	createDepartment,
 	createJobTitle,
 	fetchJobTitles,
+	updateJobTitle,
 	searchCompanyMembers,
 } from "@/features/organisation/api";
 
@@ -203,24 +204,48 @@ describe("job title clients", () => {
 	const jobTitle = {
 		jobTitleId: "j-1",
 		companyId: "c-1",
+		branchId: "b-1",
+		branchName: "Orchard",
+		departmentId: "d-1",
+		departmentName: "Kitchen",
 		name: "Shift supervisor",
 		status: "ACTIVE",
 	};
-	it("posts only a trimmed name and parses the job title", async () => {
+	const parsed = {
+		jobTitleId: "j-1",
+		branchId: "b-1",
+		branchName: "Orchard",
+		departmentId: "d-1",
+		departmentName: "Kitchen",
+		name: "Shift supervisor",
+		status: "ACTIVE",
+	};
+	const TITLES =
+		"/api/v1/companies/c-1/branches/b-1/departments/d-1/job-titles";
+	it("posts only a trimmed name under the department and parses the job title", async () => {
 		const calls = stubApi({
-			"POST /api/v1/companies/c-1/job-titles": {
-				status: 201,
-				body: envelope(jobTitle),
-			},
+			[`POST ${TITLES}`]: { status: 201, body: envelope(jobTitle) },
 		});
 		await expect(
-			createJobTitle("c-1", { name: " Shift supervisor " })
-		).resolves.toEqual({
-			jobTitleId: "j-1",
-			name: "Shift supervisor",
-			status: "ACTIVE",
-		});
+			createJobTitle("c-1", "b-1", "d-1", { name: " Shift supervisor " })
+		).resolves.toEqual(parsed);
 		expect(calls[0]?.body).toEqual({ name: "Shift supervisor" });
+	});
+	it("puts the trimmed name and status under the department", async () => {
+		const calls = stubApi({
+			[`PUT ${TITLES}/j-1`]: { status: 200, body: envelope(jobTitle) },
+		});
+		await expect(
+			updateJobTitle("c-1", {
+				...parsed,
+				name: " Shift supervisor ",
+				status: "INACTIVE",
+			})
+		).resolves.toEqual(parsed);
+		expect(calls[0]?.body).toEqual({
+			name: "Shift supervisor",
+			status: "INACTIVE",
+		});
 	});
 	it("lists with the server sort and status filter", async () => {
 		const calls = stubApi({
@@ -234,12 +259,7 @@ describe("job title clients", () => {
 				sort: { field: "status", desc: true },
 				status: "ACTIVE",
 			})
-		).resolves.toEqual({
-			items: [
-				{ jobTitleId: "j-1", name: "Shift supervisor", status: "ACTIVE" },
-			],
-			total: 3,
-		});
+		).resolves.toEqual({ items: [parsed], total: 3 });
 		expect(Object.fromEntries(new URLSearchParams(calls[0]?.search))).toEqual({
 			size: "100",
 			sort: "status,desc",
@@ -248,13 +268,10 @@ describe("job title clients", () => {
 	});
 	it("preserves a typed name conflict", async () => {
 		stubApi({
-			"POST /api/v1/companies/c-1/job-titles": problemReply(
-				409,
-				"JOB_TITLE_NAME_CONFLICT"
-			),
+			[`POST ${TITLES}`]: problemReply(409, "JOB_TITLE_NAME_CONFLICT"),
 		});
 		await expect(
-			createJobTitle("c-1", { name: "Manager" })
+			createJobTitle("c-1", "b-1", "d-1", { name: "Manager" })
 		).rejects.toMatchObject({
 			status: 409,
 			errorCode: "JOB_TITLE_NAME_CONFLICT",

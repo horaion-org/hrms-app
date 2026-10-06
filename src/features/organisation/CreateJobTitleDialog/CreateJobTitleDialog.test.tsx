@@ -18,14 +18,45 @@ import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
 
 const JOB_TITLES = "GET /api/v1/companies/c-1/job-titles";
-const CREATE = "POST /api/v1/companies/c-1/job-titles";
-const permissions = ["job_title:read", "job_title:create"];
+const TITLES = "/api/v1/companies/c-1/branches/b-1/departments/d-1/job-titles";
+const CREATE = `POST ${TITLES}`;
+const UPDATE = `PUT ${TITLES}/j-1`;
+const permissions = [
+	"job_title:read",
+	"job_title:create",
+	"job_title:update",
+	"branch:read",
+	"department:read",
+];
 const jobTitle = {
 	jobTitleId: "j-1",
 	companyId: "c-1",
+	branchId: "b-1",
+	branchName: "Orchard",
+	departmentId: "d-1",
+	departmentName: "Kitchen",
 	name: "Shift supervisor",
 	status: "ACTIVE",
 };
+const branch = {
+	branchId: "b-1",
+	companyId: "c-1",
+	name: "Orchard",
+	code: "ORC",
+	city: "Singapore",
+	country: "SG",
+	status: "ACTIVE",
+};
+const departmentOf = (
+	departmentId: string,
+	name: string
+): Record<string, unknown> => ({
+	departmentId,
+	branchId: "b-1",
+	companyId: "c-1",
+	name,
+	status: "ACTIVE",
+});
 const page = (content: Array<unknown>): StubReply => ({
 	status: 200,
 	body: envelope({ content, page: { totalElements: content.length } }),
@@ -42,7 +73,13 @@ const routes = (grants = permissions): Record<string, StubReply> => ({
 		}),
 	},
 	[JOB_TITLES]: page([]),
+	"GET /api/v1/companies/c-1/branches": page([branch]),
+	"GET /api/v1/companies/c-1/departments": page([
+		departmentOf("d-1", "Kitchen"),
+		departmentOf("d-2", "Front of house"),
+	]),
 	[CREATE]: { status: 201, body: envelope(jobTitle) },
+	[UPDATE]: { status: 200, body: envelope(jobTitle) },
 });
 let app: OpenedApp | undefined;
 beforeEach(() => {
@@ -71,6 +108,15 @@ const openDialog = async (): Promise<HTMLElement> => {
 };
 const nameField = (dialog: HTMLElement): HTMLElement =>
 	within(dialog).getByLabelText("Job title name");
+const chooseDepartment = async (
+	dialog: HTMLElement,
+	label = "Orchard › Kitchen"
+): Promise<void> => {
+	await userEvent.click(
+		await within(dialog).findByRole("button", { name: "Department" })
+	);
+	await userEvent.click(await screen.findByRole("option", { name: label }));
+};
 const submit = (dialog: HTMLElement): Promise<void> =>
 	userEvent.click(
 		within(dialog).getByRole("button", { name: "Create job title" })
@@ -132,6 +178,7 @@ describe("create job title through the Job titles page", () => {
 		});
 		await open();
 		const dialog = await openDialog();
+		await chooseDepartment(dialog);
 		await userEvent.type(nameField(dialog), "  Shift supervisor  ");
 		await submit(dialog);
 		await waitFor(() => {
@@ -139,10 +186,49 @@ describe("create job title through the Job titles page", () => {
 		});
 		expect(await screen.findByText("Shift supervisor")).toBeVisible();
 		expect(
-			calls.find(
-				(call) => call.method === "POST" && call.path.endsWith("/job-titles")
-			)?.body
-		).toEqual({ name: "Shift supervisor" });
+			calls
+				.filter(
+					(call) => call.method === "POST" && call.path.endsWith("/job-titles")
+				)
+				.map((call) => [call.path, call.body])
+		).toEqual([[TITLES, { name: "Shift supervisor" }]]);
+	});
+
+	it("needs a department, offering only the active ones the person may add to", async () => {
+		stubApi(routes());
+		await open();
+		const dialog = await openDialog();
+
+		await userEvent.type(nameField(dialog), "Chef");
+		await submit(dialog);
+		expect(
+			await within(dialog).findByText("Choose a department.")
+		).toBeVisible();
+
+		await userEvent.click(
+			within(dialog).getByRole("button", { name: "Department" })
+		);
+		expect(
+			screen.getAllByRole("option").map((option) => option.textContent)
+		).toEqual(["Orchard › Kitchen", "Orchard › Front of house"]);
+	});
+
+	it("puts a department refusal on the department field", async () => {
+		stubApi({
+			...routes(),
+			[CREATE]: problemReply(409, "DEPARTMENT_INACTIVE"),
+		});
+		await open();
+		const dialog = await openDialog();
+		await chooseDepartment(dialog);
+		await userEvent.type(nameField(dialog), "Chef");
+		await submit(dialog);
+
+		expect(
+			await within(dialog).findByText(
+				"This department is inactive. Activate it first, or choose another department."
+			)
+		).toBeVisible();
 	});
 
 	it.each([
@@ -161,6 +247,7 @@ describe("create job title through the Job titles page", () => {
 			});
 			await open();
 			const dialog = await openDialog();
+			await chooseDepartment(dialog);
 			await userEvent.type(nameField(dialog), "Manager");
 			await submit(dialog);
 			expect(await within(dialog).findByText(String(message))).toBeVisible();
@@ -191,6 +278,7 @@ describe("create job title through the Job titles page", () => {
 			});
 			await open();
 			const dialog = await openDialog();
+			await chooseDepartment(dialog);
 			await userEvent.type(nameField(dialog), "Manager");
 			await submit(dialog);
 			expect(await within(dialog).findByRole("alert")).toHaveTextContent(
@@ -216,6 +304,7 @@ describe("create job title through the Job titles page", () => {
 		);
 		await open();
 		const dialog = await openDialog();
+		await chooseDepartment(dialog);
 		await userEvent.type(nameField(dialog), "Manager");
 		await submit(dialog);
 		expect(
@@ -236,5 +325,53 @@ describe("create job title through the Job titles page", () => {
 		await waitFor(() => {
 			expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 		});
+	});
+});
+
+describe("edit job title through the Job titles page", () => {
+	it("renames from the pencil, keeping the department fixed", async () => {
+		const calls = stubApi({ ...routes(), [JOB_TITLES]: page([jobTitle]) });
+		await open();
+
+		await userEvent.click(
+			await screen.findByRole("button", { name: "Edit Shift supervisor" })
+		);
+		const dialog = await screen.findByRole("dialog", {
+			name: "Edit job title",
+		});
+		expect(dialog).toHaveTextContent("It stays in Orchard › Kitchen.");
+		expect(
+			within(dialog).getByRole("button", { name: "Department" })
+		).toBeDisabled();
+		expect(nameField(dialog)).toHaveValue("Shift supervisor");
+
+		await userEvent.clear(nameField(dialog));
+		await userEvent.type(nameField(dialog), " Senior supervisor ");
+		await userEvent.click(
+			within(dialog).getByRole("button", { name: "Save changes" })
+		);
+
+		await waitFor(() => {
+			expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+		});
+		expect(
+			calls
+				.filter((call) => call.method === "PUT")
+				.map((call) => [call.path, call.body])
+		).toEqual([
+			[`${TITLES}/j-1`, { name: "Senior supervisor", status: "ACTIVE" }],
+		]);
+	});
+
+	it("offers no pencil or status change without job_title:update", async () => {
+		stubApi({
+			...routes(["job_title:read", "branch:read", "department:read"]),
+			[JOB_TITLES]: page([jobTitle]),
+		});
+		await open();
+
+		expect(
+			await screen.findByRole("button", { name: "Edit Shift supervisor" })
+		).toBeDisabled();
 	});
 });
