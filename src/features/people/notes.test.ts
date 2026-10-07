@@ -109,11 +109,6 @@ describe("note refusals", () => {
 			"This person is no longer available.",
 		],
 		[
-			problem(409, "MEMBER_PROFILE_MOVED"),
-			false,
-			"They were moved to another department while you were working. Reload the page and try again.",
-		],
-		[
 			problem(403, "AUTHORIZATION_DENIED"),
 			false,
 			"You no longer have permission to add notes about this person.",

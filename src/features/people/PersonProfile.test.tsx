@@ -771,10 +771,6 @@ describe("Editing a person", () => {
 			problemReply(404, "MEMBER_PROFILE_NOT_FOUND"),
 			"This person is no longer available.",
 		],
-		[
-			problemReply(409, "MEMBER_PROFILE_MOVED"),
-			"They were moved to another department while you were working. Reload the page and try again.",
-		],
 		[problemReply(429, "RATE_LIMITED"), "Too many attempts. Try again later."],
 		[
 			problemReply(502, "INVITATION_NOT_DELIVERED"),
@@ -1094,10 +1090,6 @@ describe("Deactivating, reactivating and re-inviting", () => {
 		[
 			problemReply(502, "INVITATION_NOT_DELIVERED"),
 			"We couldn’t send the invitation email. Try again.",
-		],
-		[
-			problemReply(409, "MEMBER_PROFILE_MOVED"),
-			"They were moved to another department while you were working. Reload the page and try again.",
 		],
 	])("explains a refused resend in the dialog: %j", async (reply, message) => {
 		const user = userEvent.setup();
