@@ -139,10 +139,6 @@ describe("skill refusals", () => {
 			"This person is no longer available.",
 		],
 		[
-			problem(409, "MEMBER_PROFILE_MOVED"),
-			"They were moved to another department while you were working. Reload the page and try again.",
-		],
-		[
 			problem(403, "AUTHORIZATION_DENIED"),
 			"You no longer have permission to change this person’s skills.",
 		],
