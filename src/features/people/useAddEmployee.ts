@@ -1,12 +1,12 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useChangeAccessRoleHolders } from "@/features/organisation/useAccessRoleHolders";
-import { withAddedNotice } from "@/features/people/addedNotice";
 import {
 	createMemberProfile,
 	type CreateMemberProfileBody,
 	type MemberProfilePlace,
 } from "@/features/people/api";
+import { withPeopleNotice } from "@/features/people/peopleNoticeState";
 import type { ProfileFormValues } from "@/features/people/profileFormSchema";
 import { profileRequest } from "@/features/people/profileRequest";
 
@@ -63,7 +63,11 @@ export const useAddEmployee = (
 			}
 		await navigate({
 			to: "/people",
-			state: withAddedNotice({ name: person.displayName, roleNotAssigned }),
+			state: withPeopleNotice({
+				kind: "added",
+				name: person.displayName,
+				roleNotAssigned,
+			}),
 		});
 	};
 };
