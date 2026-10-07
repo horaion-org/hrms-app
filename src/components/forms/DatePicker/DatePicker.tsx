@@ -1,6 +1,4 @@
 import { Popover, PopoverButton, PopoverPanel } from "@headlessui/react";
-import dayjs from "dayjs";
-import "dayjs/locale/es";
 import {
 	useId,
 	useRef,
@@ -16,6 +14,7 @@ import {
 	Calendar,
 	type CalendarProps,
 	type DateRange,
+	formatDate,
 	type IsoDate,
 	todayDate,
 } from "@/components/forms/Calendar";
@@ -69,14 +68,6 @@ const statusClasses: Record<InputStatus, string> = {
 	success: `border-success-600 ${statusFocusClasses}`,
 	error: `border-error-600 ${statusFocusClasses}`,
 };
-
-/* Same locale choice as Calendar's labels, so the field and grid agree. */
-const localeFor = (language: string): string =>
-	language.split("-")[0] === "es" ? "es" : "en";
-
-/** Day first in every language, e.g. "22 Mar 1987"; month names are localised. */
-const formatDate = (date: IsoDate, language: string): string =>
-	dayjs(date).locale(localeFor(language)).format("D MMM YYYY");
 
 export const DatePicker = (props: DatePickerProps): FunctionComponent => {
 	const { label } = props;

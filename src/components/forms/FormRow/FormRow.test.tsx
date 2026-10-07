@@ -188,3 +188,18 @@ it("lays the label left of a fixed field column that stacks below sm and passes 
 	expect(fieldColumn).toHaveClass("w-full", "sm:w-95");
 	expect(fieldColumn?.childElementCount).toBe(1);
 });
+
+it("lets the caller size the inline field column in place of the fixed 380px", () => {
+	render(
+		<FormRow
+			fieldWidth="sm:w-1/2"
+			htmlFor="probation"
+			label="Probation end date"
+		>
+			<Input id="probation" />
+		</FormRow>
+	);
+	const fieldColumn = screen.getByRole("textbox").parentElement?.parentElement;
+	expect(fieldColumn).toHaveClass("w-full", "sm:w-1/2", "sm:shrink-0");
+	expect(fieldColumn).not.toHaveClass("sm:w-95");
+});

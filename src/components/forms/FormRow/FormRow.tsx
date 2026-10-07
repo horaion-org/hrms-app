@@ -20,6 +20,11 @@ export type FormRowProps = Omit<ComponentPropsWithRef<"div">, "children"> & {
 	counter?: ReactNode;
 	/** The control, sized to fill the field column (e.g. `className="w-full"`). */
 	children: ReactNode;
+	/**
+	 * The inline field column's width from `sm` up, e.g. `sm:w-1/2` so labels
+	 * fit beside fields in a half-width card; 380px when left out.
+	 */
+	fieldWidth?: string;
 };
 
 /** A labelled field with optional supporting text; inline by default. */
@@ -32,6 +37,7 @@ export const FormRow = ({
 	hint,
 	counter,
 	children,
+	fieldWidth = "sm:w-95",
 	className,
 	...rest
 }: FormRowProps): FunctionComponent => {
@@ -64,7 +70,7 @@ export const FormRow = ({
 			<div
 				className={joinClassNames(
 					"flex w-full min-w-0 flex-col gap-2",
-					layout === "inline" && "sm:w-95 sm:shrink-0"
+					layout === "inline" && `${fieldWidth} sm:shrink-0`
 				)}
 			>
 				{children}

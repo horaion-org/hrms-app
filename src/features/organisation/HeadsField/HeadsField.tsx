@@ -24,6 +24,8 @@ export type HeadsFieldProps = {
 	/** Heads are required; another use of the picker, such as a manager, may not be. */
 	required?: boolean;
 	layout?: FormRowProps["layout"];
+	/** The inline field column's width; see `FormRow`. */
+	fieldWidth?: FormRowProps["fieldWidth"];
 	ref?: Ref<HTMLButtonElement>;
 } & (
 	| {
@@ -54,6 +56,7 @@ export const HeadsField = ({
 	disabled = false,
 	required = true,
 	layout = "stacked",
+	fieldWidth,
 	ref,
 	...selection
 }: HeadsFieldProps): FunctionComponent => {
@@ -65,6 +68,7 @@ export const HeadsField = ({
 	return (
 		<FormRow
 			error={error}
+			fieldWidth={fieldWidth}
 			hint={hint}
 			htmlFor={id}
 			label={label}

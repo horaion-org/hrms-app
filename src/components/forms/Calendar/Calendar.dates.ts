@@ -24,6 +24,10 @@ const isoFormat = "YYYY-MM-DD";
 const localeFor = (language: string): string =>
 	language.split("-")[0] === "es" ? "es" : "en";
 
+/** Day first in every language, e.g. "22 Mar 1987"; month names are localised. */
+export const formatDate = (date: IsoDate, language: string): string =>
+	dayjs(date).locale(localeFor(language)).format("D MMM YYYY");
+
 export const isDayDisabled = (
 	date: IsoDate,
 	{
