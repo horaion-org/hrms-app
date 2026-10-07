@@ -100,6 +100,8 @@ const person = (
 	displayName,
 	email: `${membershipId}@company.com`,
 	phone: "+6591234821",
+	branchId: "b-1",
+	branchName: "Orchard",
 	departmentId: "d-1",
 	departmentName: "Front Office",
 	jobTitleId: "j-1",
@@ -138,6 +140,8 @@ describe("People", () => {
 					person("m-1", "Moses Lee"),
 					person("m-2", "Daniel Koh", {
 						phone: null,
+						branchId: null,
+						branchName: null,
 						departmentId: null,
 						departmentName: null,
 						jobTitleId: null,
@@ -164,7 +168,14 @@ describe("People", () => {
 			within(table)
 				.getAllByRole("columnheader")
 				.map((header) => header.textContent)
-		).toEqual(["Employee", "Department", "Job title", "Contact", "Status"]);
+		).toEqual([
+			"Employee",
+			"Department",
+			"Job title",
+			"Contact",
+			"Status",
+			"Actions",
+		]);
 		const [moses, daniel] = bodyRows(table) as [HTMLElement, HTMLElement];
 		expect(
 			within(moses)
@@ -176,18 +187,26 @@ describe("People", () => {
 			"Front office manager",
 			"+6591234821m-1@company.com",
 			"Active",
+			"",
 		]);
 		expect(within(moses).getByText("Active")).toHaveClass("bg-success-100");
 		expect(
 			within(daniel)
 				.getAllByRole("cell")
 				.map((cell) => cell.textContent)
-		).toEqual(["DKDaniel KohEMP-m-2", "—", "—", "m-2@company.com", "Inactive"]);
+		).toEqual([
+			"DKDaniel KohEMP-m-2",
+			"—",
+			"—",
+			"m-2@company.com",
+			"Inactive",
+			"",
+		]);
 		expect(within(daniel).getByText("Inactive")).toHaveClass("bg-neutral-400");
 		// Nothing that does nothing yet is offered.
 		expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
 		expect(
-			within(table).queryByRole("columnheader", { name: "Actions" })
+			within(table).queryByRole("button", { name: "Sort by Actions" })
 		).not.toBeInTheDocument();
 		expect(
 			within(table).queryByRole("button", { name: "Sort by Contact" })

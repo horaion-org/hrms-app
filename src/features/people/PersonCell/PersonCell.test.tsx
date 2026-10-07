@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { MemoryRouterHarness } from "@/components/utils/MemoryRouterHarness";
 import { PersonCell } from "@/features/people/PersonCell";
 
 describe("PersonCell", () => {
@@ -21,5 +22,21 @@ describe("PersonCell", () => {
 			"aria-hidden",
 			"true"
 		);
+	});
+
+	it("links the name to the person's profile when told who they are", async () => {
+		render(
+			<MemoryRouterHarness>
+				<PersonCell
+					employeeCode="EMP-10482"
+					membershipId="m-1"
+					name="Moses Lee"
+				/>
+			</MemoryRouterHarness>
+		);
+
+		expect(
+			await screen.findByRole("link", { name: "Moses Lee" })
+		).toHaveAttribute("href", "/people/m-1");
 	});
 });

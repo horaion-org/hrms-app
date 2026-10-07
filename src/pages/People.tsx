@@ -6,7 +6,6 @@ import { DataTable } from "@/components/ui/DataTable";
 import { Pagination } from "@/components/ui/Pagination";
 import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import { ListToolbar } from "@/features/organisation/ListToolbar";
-import { addedNoticeFrom } from "@/features/people/addedNotice";
 import {
 	isMemberStatus,
 	isPeopleSortField,
@@ -14,6 +13,8 @@ import {
 	PEOPLE_PAGE_SIZE,
 } from "@/features/people/api";
 import { describePeople, peopleColumns } from "@/features/people/peopleColumns";
+import { PeopleNotice } from "@/features/people/PeopleNotice";
+import { peopleNoticeFrom } from "@/features/people/peopleNoticeState";
 import {
 	pageParameter,
 	peopleQueryOf,
@@ -23,7 +24,7 @@ import {
 	type PeopleSearch,
 } from "@/features/people/peopleSearch";
 import { usePeople, useSettledSearch } from "@/features/people/usePeople";
-import { useCanAnywhere } from "@/features/workspace/useCan";
+import { useCan, useCanAnywhere } from "@/features/workspace/useCan";
 
 const route = getRouteApi("/_authenticated/_app/people");
 
@@ -47,9 +48,10 @@ export const People = (): FunctionComponent => {
 		query.search !== "" || query.status !== undefined,
 		t
 	);
-	const columns = useMemo(() => peopleColumns(t), [t]);
+	const can = useCan();
+	const columns = useMemo(() => peopleColumns(t, can), [t, can]);
 	const canAdd = useCanAnywhere()(["member_profile:create"]);
-	const added = addedNoticeFrom(
+	const notice = peopleNoticeFrom(
 		useRouterState({ select: (state) => state.location.state })
 	);
 	// Anything that changes which people are listed starts again from the first page.
@@ -65,17 +67,7 @@ export const People = (): FunctionComponent => {
 				{t("people.title")}
 			</h1>
 			<p className="mt-4 text-sm text-neutral-800">{t("people.subtitle")}</p>
-			{added && (
-				<p
-					className="mt-6 text-sm font-semibold text-success-700 data-warning:text-warning-700"
-					data-warning={added.roleNotAssigned || undefined}
-					role="status"
-				>
-					{t(added.roleNotAssigned ? "people.roleNotAssigned" : "people.added", {
-						name: added.name,
-					})}
-				</p>
-			)}
+			{notice && <PeopleNotice className="mt-6" notice={notice} />}
 			<ListToolbar
 				className="mt-10"
 				createLabel={t("people.add")}

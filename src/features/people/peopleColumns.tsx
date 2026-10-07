@@ -1,17 +1,24 @@
 import type { TFunction } from "i18next";
+import type { FunctionComponent } from "@/common/types";
+import { Button } from "@/components/ui/Button";
 import type { DataTableColumn } from "@/components/ui/DataTable";
+import { EditIcon, ViewIcon } from "@/components/ui/Icon";
 import { statusColumn } from "@/features/organisation/listColumns";
 import type { MemberProfile } from "@/features/people/api";
 import { ContactCell } from "@/features/people/ContactCell";
 import { PersonCell } from "@/features/people/PersonCell";
+import { profileEditAccess } from "@/features/people/profileEditAccess";
 import type { PeopleList } from "@/features/people/usePeople";
+import type { PermissionKey } from "@/features/workspace/permissionKeys";
 
 /**
  * The People table's columns. Each sortable column's id is the API's sort
- * field, so a header's sort goes to the server as it is.
+ * field, so a header's sort goes to the server as it is. Every row can be
+ * viewed; `can` decides which can be edited, by where each is filed.
  */
 export const peopleColumns = (
-	t: TFunction
+	t: TFunction,
+	can: (permission: PermissionKey, scopeId?: string) => boolean
 ): Array<DataTableColumn<MemberProfile>> => [
 	{
 		id: "displayName",
@@ -19,6 +26,7 @@ export const peopleColumns = (
 		cell: (person) => (
 			<PersonCell
 				employeeCode={person.employeeCode}
+				membershipId={person.membershipId}
 				name={person.displayName}
 			/>
 		),
@@ -44,6 +52,39 @@ export const peopleColumns = (
 		headerClassName: "w-1/4",
 	},
 	statusColumn<MemberProfile>(t),
+	{
+		id: "actions",
+		header: t("organisation.list.actions"),
+		cell: (person): FunctionComponent => {
+			const profile = { membershipId: person.membershipId };
+			return (
+				<div className="flex items-center gap-2">
+					<Button
+						aria-label={t("people.view", { name: person.displayName })}
+						params={profile}
+						to="/people/$membershipId"
+						variant="icon"
+					>
+						<ViewIcon />
+					</Button>
+					{profileEditAccess(person, can) && (
+						<Button
+							params={profile}
+							search={{ edit: true }}
+							to="/people/$membershipId"
+							variant="icon"
+							aria-label={t("organisation.list.edit", {
+								name: person.displayName,
+							})}
+						>
+							<EditIcon />
+						</Button>
+					)}
+				</div>
+			);
+		},
+		headerClassName: "w-30",
+	},
 ];
 
 /** What the People page shows for the list's state. */
