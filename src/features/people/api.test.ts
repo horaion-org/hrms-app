@@ -22,6 +22,8 @@ const person = {
 	displayName: "Moses Lee",
 	email: "moses.lee@company.com",
 	phone: null,
+	branchId: null,
+	branchName: null,
 	departmentId: null,
 	departmentName: null,
 	jobTitleId: null,

@@ -85,3 +85,14 @@ export const peopleQueryOf = (
 	...(search.status ? { status: search.status } : {}),
 	search: text.trim(),
 });
+
+/**
+ * A person's page in the URL: `edit` opens it ready to change, so an edit can
+ * be linked to from the People list and survives a reload.
+ */
+export type ProfileSearch = { edit?: true };
+
+/** Reads a person's page's URL state, dropping anything it does not recognise. */
+export const parseProfileSearch = (
+	search: Record<string, unknown>
+): ProfileSearch => (search["edit"] === true ? { edit: true } : {});

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
 	pageParameter,
 	parsePeopleSearch,
+	parseProfileSearch,
 	peopleQueryOf,
 	sortOf,
 	sortParameter,
@@ -75,5 +76,14 @@ describe("People URL state", () => {
 			sort: { field: "displayName", desc: false },
 			search: "",
 		});
+	});
+});
+
+describe("a person's URL state", () => {
+	it("opens the page ready to edit only for edit=true", () => {
+		expect(parseProfileSearch({ edit: true })).toEqual({ edit: true });
+		expect(parseProfileSearch({})).toEqual({});
+		expect(parseProfileSearch({ edit: "true" })).toEqual({});
+		expect(parseProfileSearch({ edit: false, page: 2 })).toEqual({});
 	});
 });

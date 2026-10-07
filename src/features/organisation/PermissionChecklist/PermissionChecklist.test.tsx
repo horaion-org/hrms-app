@@ -59,18 +59,23 @@ describe("PermissionChecklist", () => {
 			"Department members",
 			"Job titles",
 			"People",
+			"Notes",
 			"System roles",
 			"Activity",
 		]);
 		// One box per key, plus each row's own.
 		expect(screen.getAllByRole("checkbox")).toHaveLength(
-			PERMISSION_KEYS.length + 10
+			PERMISSION_KEYS.length + 11
 		);
 		expect(within(row("System roles")).getAllByRole("checkbox")).toHaveLength(
 			6
 		);
-		expect(within(row("People")).getAllByRole("checkbox")).toHaveLength(3);
+		expect(within(row("People")).getAllByRole("checkbox")).toHaveLength(4);
 		expect(box("People", "Create")).not.toBeChecked();
+		expect(box("People", "Edit")).not.toBeChecked();
+		expect(within(row("Notes")).getAllByRole("checkbox")).toHaveLength(5);
+		for (const action of ["View", "Add", "Edit", "Delete"])
+			expect(box("Notes", action)).not.toBeChecked();
 	});
 
 	it("ticks what the role holds and counts it per row", () => {
