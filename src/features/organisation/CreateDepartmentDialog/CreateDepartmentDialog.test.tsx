@@ -19,15 +19,10 @@ import { renderAuthApp } from "@/features/auth/testing";
 
 const DEPARTMENTS = "GET /api/v1/companies/c-1/departments";
 const BRANCHES = "GET /api/v1/companies/c-1/branches";
-const MEMBERS = "GET /api/v1/companies/c-1/members";
+const MEMBERS = "GET /api/v1/companies/c-1/me/colleagues";
 const CREATE_IN = (branchId: string): string =>
 	`POST /api/v1/companies/c-1/branches/${branchId}/departments`;
-const permissions = [
-	"department:read",
-	"department:create",
-	"company_member:read",
-	"branch:read",
-];
+const permissions = ["department:read", "department:create", "branch:read"];
 const member = {
 	membershipId: "m-1",
 	displayName: "Marcus Lim",
@@ -134,9 +129,8 @@ const submit = (dialog: HTMLElement): Promise<void> =>
 
 describe("create department through the Departments page", () => {
 	it.each([
-		["department:read", "department:create", "company_member:read"],
-		["department:read", "department:create", "branch:read"],
-		["department:read", "company_member:read", "branch:read"],
+		["department:read", "department:create"],
+		["department:read", "branch:read"],
 	])(
 		"hides create when one required grant is missing: %j",
 		async (...grants) => {
@@ -145,7 +139,9 @@ describe("create department through the Departments page", () => {
 			expect(
 				screen.queryByRole("button", { name: "Create department" })
 			).not.toBeInTheDocument();
-			expect(calls.some((call) => call.path.endsWith("/members"))).toBe(false);
+			expect(calls.some((call) => call.path.endsWith("/me/colleagues"))).toBe(
+				false
+			);
 		}
 	);
 
@@ -174,7 +170,7 @@ describe("create department through the Departments page", () => {
 
 	it("offers only the branches where the person may create departments, and preselects a single one", async () => {
 		stubApi({
-			...routes(["company_member:read", "branch:read"]),
+			...routes(["branch:read"]),
 			"GET /api/v1/me/workspace": {
 				status: 200,
 				body: envelope({
@@ -182,7 +178,7 @@ describe("create department through the Departments page", () => {
 						{
 							uuid: "c-1",
 							name: "Company c-1",
-							permissions: ["company_member:read", "branch:read"],
+							permissions: ["branch:read"],
 							branches: [
 								{
 									uuid: "b-2",
@@ -325,7 +321,7 @@ describe("create department through the Departments page", () => {
 		await chooseBranch(dialog, "Orchard Road");
 		await fill(dialog);
 		const before = calls.filter((call) =>
-			call.path.endsWith("/members")
+			call.path.endsWith("/me/colleagues")
 		).length;
 		await submit(dialog);
 		expect(
@@ -336,7 +332,7 @@ describe("create department through the Departments page", () => {
 		await waitFor(() => {
 			expect(within(dialog).getByLabelText("Department heads")).toHaveFocus();
 			expect(
-				calls.filter((call) => call.path.endsWith("/members")).length
+				calls.filter((call) => call.path.endsWith("/me/colleagues")).length
 			).toBeGreaterThan(before);
 		});
 		expect(

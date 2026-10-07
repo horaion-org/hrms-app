@@ -25,7 +25,6 @@ const page = (content: Array<unknown>): unknown => ({
 const OWNER = [
 	"company:read",
 	"company:update",
-	"company_member:read",
 	"branch:read",
 	"branch:create",
 	"branch:update",
@@ -76,7 +75,7 @@ const mockOrganisation = async (context: BrowserContext): Promise<void> => {
 			])
 		)
 	);
-	await context.route("**/api/v1/companies/acme/members**", (route) =>
+	await context.route("**/api/v1/companies/acme/me/colleagues**", (route) =>
 		reply(
 			route,
 			page([

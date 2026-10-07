@@ -63,7 +63,7 @@ const meta = {
 					: input instanceof URL
 						? input.href
 						: input.url
-				).includes("/members")
+				).includes("/me/colleagues")
 			)
 				return Promise.resolve(
 					new Response(

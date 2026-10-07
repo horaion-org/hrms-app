@@ -52,7 +52,6 @@ describe("PermissionChecklist", () => {
 				.map((group) => group.getAttribute("aria-label"))
 		).toEqual([
 			"Company",
-			"Company members",
 			"Branches",
 			"Branch members",
 			"Departments",
@@ -65,7 +64,7 @@ describe("PermissionChecklist", () => {
 		]);
 		// One box per key, plus each row's own.
 		expect(screen.getAllByRole("checkbox")).toHaveLength(
-			PERMISSION_KEYS.length + 11
+			PERMISSION_KEYS.length + 10
 		);
 		expect(within(row("System roles")).getAllByRole("checkbox")).toHaveLength(
 			6
