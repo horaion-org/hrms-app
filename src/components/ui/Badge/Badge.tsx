@@ -9,7 +9,7 @@ export type BadgeProps = Omit<ComponentPropsWithRef<"span">, "children"> & {
 };
 
 const baseClasses =
-	"inline-block min-w-0 max-w-full truncate rounded-full px-3 text-sm leading-6 font-normal uppercase";
+	"inline-block min-w-0 max-w-full truncate rounded-full px-3 text-sm leading-6 font-normal";
 
 const toneClasses: Record<BadgeTone, string> = {
 	success: "bg-success-100 text-success-900",

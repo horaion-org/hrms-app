@@ -24,6 +24,7 @@ import { Route as AuthenticatedAppLeaveRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedAppPeopleRouteImport } from './routes/_authenticated._app.people'
 import { Route as AuthenticatedAppSchedulingRouteImport } from './routes/_authenticated._app.scheduling'
 import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated._app.settings'
+import { Route as AuthenticatedAppMeProfileRouteImport } from './routes/_authenticated._app.me.profile'
 import { Route as AuthenticatedAppOrganisationIndexRouteImport } from './routes/_authenticated._app.organisation.index'
 import { Route as AuthenticatedAppOrganisationBranchesRouteImport } from './routes/_authenticated._app.organisation.branches'
 import { Route as AuthenticatedAppOrganisationDepartmentsRouteImport } from './routes/_authenticated._app.organisation.departments'
@@ -109,6 +110,12 @@ const AuthenticatedAppSettingsRoute =
     path: '/settings',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppMeProfileRoute =
+  AuthenticatedAppMeProfileRouteImport.update({
+    id: '/me/profile',
+    path: '/me/profile',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppOrganisationIndexRoute =
   AuthenticatedAppOrganisationIndexRouteImport.update({
     id: '/organisation/',
@@ -178,6 +185,7 @@ export interface FileRoutesByFullPath {
   '/people': typeof AuthenticatedAppPeopleRoute
   '/scheduling': typeof AuthenticatedAppSchedulingRoute
   '/settings': typeof AuthenticatedAppSettingsRoute
+  '/me/profile': typeof AuthenticatedAppMeProfileRoute
   '/organisation/branches': typeof AuthenticatedAppOrganisationBranchesRoute
   '/organisation/departments': typeof AuthenticatedAppOrganisationDepartmentsRoute
   '/organisation/job-titles': typeof AuthenticatedAppOrganisationJobTitlesRoute
@@ -202,6 +210,7 @@ export interface FileRoutesByTo {
   '/people': typeof AuthenticatedAppPeopleRoute
   '/scheduling': typeof AuthenticatedAppSchedulingRoute
   '/settings': typeof AuthenticatedAppSettingsRoute
+  '/me/profile': typeof AuthenticatedAppMeProfileRoute
   '/organisation/branches': typeof AuthenticatedAppOrganisationBranchesRoute
   '/organisation/departments': typeof AuthenticatedAppOrganisationDepartmentsRoute
   '/organisation/job-titles': typeof AuthenticatedAppOrganisationJobTitlesRoute
@@ -229,6 +238,7 @@ export interface FileRoutesById {
   '/_authenticated/_app/scheduling': typeof AuthenticatedAppSchedulingRoute
   '/_authenticated/_app/settings': typeof AuthenticatedAppSettingsRoute
   '/_authenticated/_app/': typeof AuthenticatedAppIndexRoute
+  '/_authenticated/_app/me/profile': typeof AuthenticatedAppMeProfileRoute
   '/_authenticated/_app/organisation/branches': typeof AuthenticatedAppOrganisationBranchesRoute
   '/_authenticated/_app/organisation/departments': typeof AuthenticatedAppOrganisationDepartmentsRoute
   '/_authenticated/_app/organisation/job-titles': typeof AuthenticatedAppOrganisationJobTitlesRoute
@@ -255,6 +265,7 @@ export interface FileRouteTypes {
     | '/people'
     | '/scheduling'
     | '/settings'
+    | '/me/profile'
     | '/organisation/branches'
     | '/organisation/departments'
     | '/organisation/job-titles'
@@ -279,6 +290,7 @@ export interface FileRouteTypes {
     | '/people'
     | '/scheduling'
     | '/settings'
+    | '/me/profile'
     | '/organisation/branches'
     | '/organisation/departments'
     | '/organisation/job-titles'
@@ -305,6 +317,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/scheduling'
     | '/_authenticated/_app/settings'
     | '/_authenticated/_app/'
+    | '/_authenticated/_app/me/profile'
     | '/_authenticated/_app/organisation/branches'
     | '/_authenticated/_app/organisation/departments'
     | '/_authenticated/_app/organisation/job-titles'
@@ -435,6 +448,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppSettingsRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/_app/me/profile': {
+      id: '/_authenticated/_app/me/profile'
+      path: '/me/profile'
+      fullPath: '/me/profile'
+      preLoaderRoute: typeof AuthenticatedAppMeProfileRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/_app/organisation/': {
       id: '/_authenticated/_app/organisation/'
       path: '/organisation'
@@ -507,6 +527,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppSchedulingRoute: typeof AuthenticatedAppSchedulingRoute
   AuthenticatedAppSettingsRoute: typeof AuthenticatedAppSettingsRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
+  AuthenticatedAppMeProfileRoute: typeof AuthenticatedAppMeProfileRoute
   AuthenticatedAppOrganisationBranchesRoute: typeof AuthenticatedAppOrganisationBranchesRoute
   AuthenticatedAppOrganisationDepartmentsRoute: typeof AuthenticatedAppOrganisationDepartmentsRoute
   AuthenticatedAppOrganisationJobTitlesRoute: typeof AuthenticatedAppOrganisationJobTitlesRoute
@@ -524,6 +545,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppSchedulingRoute: AuthenticatedAppSchedulingRoute,
   AuthenticatedAppSettingsRoute: AuthenticatedAppSettingsRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
+  AuthenticatedAppMeProfileRoute: AuthenticatedAppMeProfileRoute,
   AuthenticatedAppOrganisationBranchesRoute:
     AuthenticatedAppOrganisationBranchesRoute,
   AuthenticatedAppOrganisationDepartmentsRoute:

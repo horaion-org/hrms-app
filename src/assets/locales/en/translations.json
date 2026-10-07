@@ -1,10 +1,105 @@
 {
-	"leaveUi": {
-		"pagination": "Pagination",
+	"pagination": {
+		"label": "Pagination",
 		"entries": "{{start}}–{{end}} of {{total}} entries",
 		"previousPage": "Previous page",
 		"nextPage": "Next page",
 		"page": "Page {{page}} of {{total}}"
+	},
+	"modal": {
+		"close": "Close dialog"
+	},
+	"leave": {
+		"title": "Leave overview",
+		"subtitle": "Manage employee leave requests and upcoming absences.",
+		"country": "Country",
+		"branch": "Branch",
+		"noBranches": "Add a branch to the organisation before managing leave.",
+		"hidden": "You don’t have access to leave requests in this company.",
+		"failed": "We couldn’t load leave requests. Try again.",
+		"requests": "Requests",
+		"timeline": "Timeline",
+		"views": "Leave views",
+		"apply": "Apply leave",
+		"showing": "Showing",
+		"all": "All requests",
+		"employee": "Employee",
+		"period": "Period",
+		"duration": "Duration",
+		"type": "Type",
+		"status": "Status",
+		"actions": "Actions",
+		"requested": "Requested",
+		"requestedOn": "Requested {{date}}",
+		"requestedBy": "Requested by",
+		"reviewedBy": "Decided by",
+		"days_one": "{{count}} day",
+		"days_other": "{{count}} days",
+		"statuses": {
+			"PENDING": "Pending",
+			"APPROVED": "Approved",
+			"REJECTED": "Rejected",
+			"blocked": "Blocked"
+		},
+		"types": {
+			"ANNUAL": "Annual leave",
+			"SICK": "Sick leave",
+			"HOSPITALISATION": "Hospitalisation leave",
+			"COMPASSIONATE": "Compassionate leave",
+			"MATERNITY": "Maternity leave",
+			"UNPAID": "Unpaid leave",
+			"MARRIAGE": "Marriage leave"
+		},
+		"view": "View request for {{name}}",
+		"approveFor": "Approve request for {{name}}",
+		"rejectFor": "Reject request for {{name}}",
+		"empty": "No leave requests match these filters.",
+		"dateRange": "Timeline date range",
+		"previousPeriod": "Previous period",
+		"nextPeriod": "Next period",
+		"legend": "Leave status legend",
+		"weekend": "Blocked: weekend",
+		"today": "Today",
+		"timelineEntry": "{{name}} · {{type}} · {{period}} · {{status}}",
+		"requestTitle": "Leave request",
+		"attachments": "Attachments",
+		"none": "None",
+		"approve": "Approve",
+		"reject": "Reject",
+		"reason": "Reason for rejection",
+		"note": "Add a note",
+		"required": "Enter a reason for rejection.",
+		"cancel": "Cancel",
+		"close": "Close",
+		"confirmRejection": "Confirm rejection",
+		"approved": "Request for {{name}} approved.",
+		"rejected": "Request for {{name}} rejected.",
+		"applied": "Leave request for {{name}} submitted.",
+		"submit": "Submit request",
+		"applyPeriod": "Leave dates",
+		"chooseEmployee": "Choose an employee",
+		"searchEmployee": "Search employees",
+		"noEmployees": "No one you may apply for matches this search.",
+		"refusal": {
+			"overlaps": "They already have leave on one of these days.",
+			"noWorkingDays": "Choose at least one weekday.",
+			"invalidPeriod": "Choose an end date on or after the start, at most a year later.",
+			"notPending": "This request was already decided. Reload the page to see it.",
+			"requestMissing": "This request is no longer available.",
+			"profileMissing": "This person is no longer available.",
+			"reasonRejected": "Enter a reason of up to 2,000 characters.",
+			"forbiddenApply": "You no longer have permission to apply for this person.",
+			"forbiddenDecide": "You no longer have permission to decide this request.",
+			"applyFailed": "We couldn’t submit the request. Try again.",
+			"decideFailed": "We couldn’t save the decision. Try again."
+		},
+		"myLeave": "My leave",
+		"teamRequests": "Team requests",
+		"teamTimeline": "Team timeline",
+		"applyOwn": "Apply for leave",
+		"appliedOwn": "Your leave request was submitted.",
+		"myEmpty": "You have no leave requests yet.",
+		"myFailed": "We couldn’t load your leave requests. Try again."
 	},
 	"dialog": {
 		"close": "Close"
@@ -183,7 +278,8 @@
 			"organisation": "Organisation"
 		},
 		"comingSoon": "This Module is coming soon.",
-		"settings": "Settings"
+		"settings": "Settings",
+		"myProfile": "My profile"
 	},
 	"people": {
 		"title": "People overview",
@@ -325,7 +421,10 @@
 			},
 			"invitationNotPending": "They’ve already logged in, so there’s no invitation to resend.",
 			"actionForbidden": "You no longer have permission to change this person.",
-			"actionFailed": "We couldn’t make this change. Try again."
+			"actionFailed": "We couldn’t make this change. Try again.",
+			"mine": "My profile",
+			"mineSubtitle": "Your details as your company has them. Ask your administrator to change anything that is out of date.",
+			"mineFailed": "We couldn’t load your profile. Try again."
 		},
 		"notes": {
 			"title": "Notes",
@@ -679,7 +778,9 @@
 				"forbidden": "You don’t have permission to change this job title.",
 				"failed": "We couldn’t change the job title. Try again."
 			},
-			"department": "Department"
+			"department": "Department",
+			"systemRole": "System Role",
+			"employeeCount": "Employee Count"
 		},
 		"accessRoles": {
 			"title": "System roles",
@@ -916,6 +1017,15 @@
 					"create": "Add",
 					"update": "Edit",
 					"delete": "Delete"
+				}
+			},
+			"leave_request": {
+				"name": "Leave",
+				"description": "Each person’s leave requests, including the kind of leave and why a request was refused.",
+				"actions": {
+					"read": "View",
+					"create": "Apply",
+					"review": "Approve or reject"
 				}
 			},
 			"none": "No permissions yet.",

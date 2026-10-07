@@ -223,6 +223,25 @@ export const fetchMemberProfile = (
 	);
 
 /** One person's profile; inside the People entries, so changes to people reload it. */
+/** The caller's own profile in the company: no member id, the API resolves it from the membership. */
+export const fetchMyProfile = (companyId: string): Promise<MemberProfileDetail> =>
+	apiRequest(`${companyPath(companyId)}/me/profile`, memberProfileDetailSchema);
+
+export const myProfileQuery = (
+	companyId: string
+): UnusedSkipTokenOptions<
+	MemberProfileDetail,
+	Error,
+	MemberProfileDetail,
+	readonly ["people", string, "me"]
+> =>
+	queryOptions({
+		queryKey: ["people", companyId, "me"] as const,
+		queryFn: () => fetchMyProfile(companyId),
+		staleTime: 30_000,
+		retry,
+	});
+
 export const memberProfileQuery = (
 	companyId: string,
 	membershipId: string

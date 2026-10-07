@@ -1,4 +1,4 @@
-import { Outlet, useRouteContext } from "@tanstack/react-router";
+import { Link, Outlet, useRouteContext } from "@tanstack/react-router";
 import { useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
@@ -62,7 +62,13 @@ export const MainLayout = (): FunctionComponent => {
 							>
 								<SettingsIcon />
 							</Button>
-							<Avatar name={displayName} />
+							<Link
+								aria-label={t("shell.myProfile")}
+								className="rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-blue-500"
+								to="/me/profile"
+							>
+								<Avatar name={displayName} />
+							</Link>
 						</>
 					}
 					title={
@@ -111,6 +117,7 @@ export const MainLayout = (): FunctionComponent => {
 						label={t("shell.navigation.scheduling")}
 						to="/scheduling"
 					/>
+					{/* Leave is for everyone: a member's own leave needs nothing granted. */}
 					<SidebarItem
 						activeIcon={LeaveFilledIcon}
 						icon={LeaveIcon}

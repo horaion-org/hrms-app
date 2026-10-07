@@ -31,6 +31,9 @@ export const PERMISSION_KEYS = [
 	"member_note:create",
 	"member_note:update",
 	"member_note:delete",
+	"leave_request:read",
+	"leave_request:create",
+	"leave_request:review",
 	"access_role:read",
 	"access_role:create",
 	"access_role:update",
@@ -60,6 +63,14 @@ export const ORGANISATION_READ_KEYS: ReadonlyArray<PermissionKey> = [
  */
 export const PEOPLE_READ_KEYS: ReadonlyArray<PermissionKey> = [
 	"member_profile:read",
+];
+
+/**
+ * Holding this at any scope is what makes the Leave Module worth offering.
+ * The API lists only the requests of people in the units where it is held.
+ */
+export const LEAVE_READ_KEYS: ReadonlyArray<PermissionKey> = [
+	"leave_request:read",
 ];
 
 /** Whether a key the API sent is one this app's copy of the catalog knows. */

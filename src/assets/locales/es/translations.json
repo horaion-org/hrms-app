@@ -1,10 +1,105 @@
 {
-  "leaveUi": {
-    "pagination": "Paginación",
+  "pagination": {
+    "label": "Paginación",
     "entries": "{{start}}–{{end}} de {{total}} registros",
     "previousPage": "Página anterior",
     "nextPage": "Página siguiente",
     "page": "Página {{page}} de {{total}}"
+  },
+  "modal": {
+    "close": "Cerrar diálogo"
+  },
+  "leave": {
+    "title": "Resumen de ausencias",
+    "subtitle": "Gestiona las solicitudes de permiso y las próximas ausencias.",
+    "country": "País",
+    "branch": "Sucursal",
+    "noBranches": "Añade una sucursal a la organización antes de gestionar ausencias.",
+    "hidden": "No tienes acceso a las solicitudes de permiso de esta empresa.",
+    "failed": "No pudimos cargar las solicitudes. Inténtalo de nuevo.",
+    "requests": "Solicitudes",
+    "timeline": "Cronología",
+    "views": "Vistas de ausencias",
+    "apply": "Solicitar permiso",
+    "showing": "Mostrar",
+    "all": "Todas las solicitudes",
+    "employee": "Empleado",
+    "period": "Periodo",
+    "duration": "Duración",
+    "type": "Tipo",
+    "status": "Estado",
+    "actions": "Acciones",
+    "requested": "Solicitado",
+    "requestedOn": "Solicitado el {{date}}",
+    "requestedBy": "Solicitado por",
+    "reviewedBy": "Decidido por",
+    "days_one": "{{count}} día",
+    "days_other": "{{count}} días",
+    "statuses": {
+      "PENDING": "Pendiente",
+      "APPROVED": "Aprobado",
+      "REJECTED": "Rechazado",
+      "blocked": "Bloqueado"
+    },
+    "types": {
+      "ANNUAL": "Vacaciones",
+      "SICK": "Baja por enfermedad",
+      "HOSPITALISATION": "Hospitalización",
+      "COMPASSIONATE": "Permiso por duelo",
+      "MATERNITY": "Permiso de maternidad",
+      "UNPAID": "Permiso sin sueldo",
+      "MARRIAGE": "Permiso por matrimonio"
+    },
+    "view": "Ver solicitud de {{name}}",
+    "approveFor": "Aprobar solicitud de {{name}}",
+    "rejectFor": "Rechazar solicitud de {{name}}",
+    "empty": "Ninguna solicitud coincide con estos filtros.",
+    "dateRange": "Periodo de la cronología",
+    "previousPeriod": "Periodo anterior",
+    "nextPeriod": "Periodo siguiente",
+    "legend": "Leyenda de estados",
+    "weekend": "Bloqueado: fin de semana",
+    "today": "Hoy",
+    "timelineEntry": "{{name}} · {{type}} · {{period}} · {{status}}",
+    "requestTitle": "Solicitud de permiso",
+    "attachments": "Adjuntos",
+    "none": "Ninguno",
+    "approve": "Aprobar",
+    "reject": "Rechazar",
+    "reason": "Motivo del rechazo",
+    "note": "Añade una nota",
+    "required": "Introduce un motivo de rechazo.",
+    "cancel": "Cancelar",
+    "close": "Cerrar",
+    "confirmRejection": "Confirmar rechazo",
+    "approved": "Solicitud de {{name}} aprobada.",
+    "rejected": "Solicitud de {{name}} rechazada.",
+    "applied": "Solicitud de permiso de {{name}} enviada.",
+    "submit": "Enviar solicitud",
+    "applyPeriod": "Fechas del permiso",
+    "chooseEmployee": "Elige un empleado",
+    "searchEmployee": "Buscar empleados",
+    "noEmployees": "Nadie para quien puedas solicitar coincide con esta búsqueda.",
+    "refusal": {
+      "overlaps": "Ya tiene un permiso en uno de estos días.",
+      "noWorkingDays": "Elige al menos un día laborable.",
+      "invalidPeriod": "Elige una fecha de fin igual o posterior al inicio, como máximo un año después.",
+      "notPending": "Esta solicitud ya fue decidida. Recarga la página para verla.",
+      "requestMissing": "Esta solicitud ya no está disponible.",
+      "profileMissing": "Esta persona ya no está disponible.",
+      "reasonRejected": "Introduce un motivo de hasta 2.000 caracteres.",
+      "forbiddenApply": "Ya no tienes permiso para solicitar en nombre de esta persona.",
+      "forbiddenDecide": "Ya no tienes permiso para decidir esta solicitud.",
+      "applyFailed": "No pudimos enviar la solicitud. Inténtalo de nuevo.",
+      "decideFailed": "No pudimos guardar la decisión. Inténtalo de nuevo."
+    },
+    "myLeave": "Mis ausencias",
+    "teamRequests": "Solicitudes del equipo",
+    "teamTimeline": "Cronología del equipo",
+    "applyOwn": "Solicitar permiso",
+    "appliedOwn": "Tu solicitud de permiso se ha enviado.",
+    "myEmpty": "Aún no tienes solicitudes de permiso.",
+    "myFailed": "No pudimos cargar tus solicitudes. Inténtalo de nuevo."
   },
   "dialog": {
     "close": "Cerrar"
@@ -276,6 +371,16 @@
         "forbidden": "No puedes crear este rol. Es posible que ya no tengas algunos de los permisos elegidos o el permiso para crear roles del sistema.",
         "failed": "No pudimos crear el rol del sistema. Inténtalo de nuevo."
       }
+    }
+  },
+  "shell": {
+    "myProfile": "Mi perfil"
+  },
+  "people": {
+    "profile": {
+      "mine": "Mi perfil",
+      "mineSubtitle": "Tus datos tal como los tiene tu empresa. Pide a tu administrador que corrija lo que esté desactualizado.",
+      "mineFailed": "No pudimos cargar tu perfil. Inténtalo de nuevo."
     }
   }
 }
