@@ -38,11 +38,9 @@ export const Departments = (): FunctionComponent => {
 	};
 	const can = useCan();
 	const canAnywhere = useCanAnywhere();
-	// Creating happens at a Branch the person may create in; the heads picker needs the company's people.
+	// Creating happens at a Branch the person may create in, so the branch picker needs the Branches.
 	const canCreate =
-		canAnywhere(["department:create"]) &&
-		canAnywhere(["branch:read"]) &&
-		can("company_member:read");
+		canAnywhere(["department:create"]) && canAnywhere(["branch:read"]);
 	const [search, setSearch] = useState("");
 	const [status, setStatus] = useState<StatusFilter>("all");
 	const [sort, setSort] = useState<DataTableSort>({ id: "name", desc: false });

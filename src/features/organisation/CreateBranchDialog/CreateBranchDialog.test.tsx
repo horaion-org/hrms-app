@@ -19,8 +19,8 @@ import { renderAuthApp } from "@/features/auth/testing";
 
 const BRANCHES = "GET /api/v1/companies/c-1/branches";
 const CREATE = "POST /api/v1/companies/c-1/branches";
-const MEMBERS = "GET /api/v1/companies/c-1/members";
-const permissions = ["branch:read", "branch:create", "company_member:read"];
+const MEMBERS = "GET /api/v1/companies/c-1/me/colleagues";
+const permissions = ["branch:read", "branch:create"];
 const member = {
 	membershipId: "m-1",
 	displayName: "Marcus Lim",
@@ -223,11 +223,7 @@ describe("create branch through the Branches page", () => {
 		expect(country).toHaveTextContent("Singapore");
 		expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
 	});
-	it.each([
-		["branch:read", "branch:create"],
-		["branch:read", "company_member:read"],
-		["branch:read"],
-	])(
+	it.each([["branch:read"]])(
 		"hides create when one required grant is missing: %j",
 		async (...grants) => {
 			const calls = stubApi(routes(grants));
@@ -235,7 +231,9 @@ describe("create branch through the Branches page", () => {
 			expect(
 				screen.queryByRole("button", { name: "Create branch" })
 			).not.toBeInTheDocument();
-			expect(calls.some((call) => call.path.endsWith("/members"))).toBe(false);
+			expect(calls.some((call) => call.path.endsWith("/me/colleagues"))).toBe(
+				false
+			);
 		}
 	);
 	it("starts empty, focuses name and disables submit; cancel discards and restores focus", async () => {
@@ -504,7 +502,7 @@ describe("create branch through the Branches page", () => {
 		const dialog = await openDialog();
 		await fill(dialog);
 		const before = calls.filter((call) =>
-			call.path.endsWith("/members")
+			call.path.endsWith("/me/colleagues")
 		).length;
 		await userEvent.click(
 			within(dialog).getByRole("button", { name: "Create branch" })
@@ -517,7 +515,7 @@ describe("create branch through the Branches page", () => {
 		await waitFor(() => {
 			expect(within(dialog).getByLabelText("Branch heads")).toHaveFocus();
 			expect(
-				calls.filter((call) => call.path.endsWith("/members"))
+				calls.filter((call) => call.path.endsWith("/me/colleagues"))
 			).toHaveLength(before + 1);
 		});
 		expect(
@@ -697,9 +695,9 @@ describe("create branch through the Branches page", () => {
 		expect(
 			within(dialog).getByRole("button", { name: "Remove Person 19" })
 		).toBeVisible();
-		expect(calls.filter((call) => call.path.endsWith("/members"))).toHaveLength(
-			2
-		);
+		expect(
+			calls.filter((call) => call.path.endsWith("/me/colleagues"))
+		).toHaveLength(2);
 		await userEvent.keyboard("{Escape}");
 		await userEvent.click(
 			within(dialog).getByRole("button", { name: "Remove Person 19" })

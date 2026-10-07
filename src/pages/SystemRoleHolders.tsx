@@ -147,11 +147,7 @@ export const SystemRoleHolders = ({
 		switching?.status === "ACTIVE" ? "deactivate" : "activate"
 	}` as const;
 	const active = role.status === "ACTIVE";
-	// Choosing a person or a place needs the company's list of people.
-	const canChange =
-		!role.protectedRole &&
-		can("access_role:assign") &&
-		can("company_member:read");
+	const canChange = !role.protectedRole && can("access_role:assign");
 	const closeConfirm = (): void => {
 		change.reset();
 		setRemoving(undefined);

@@ -29,7 +29,6 @@ const ALL = [
 	"branch:read",
 	"department:read",
 	"job_title:read",
-	"company_member:read",
 	"access_role:read",
 	"access_role:assign",
 ];
@@ -137,7 +136,7 @@ const routes = (
 		new URLSearchParams(call.search).get("departmentId") === "d-1"
 			? page([jobTitle("j-1", "d-1", "Chef")])
 			: page([jobTitle("j-2", "d-2", "Cook")]),
-	[`GET ${COMPANY}/members`]: page([
+	[`GET ${COMPANY}/me/colleagues`]: page([
 		{ membershipId: "m-9", displayName: "Marcus Lim", status: "ACTIVE" },
 	]),
 	[`GET ${COMPANY}/access-roles`]: page([
@@ -231,8 +230,13 @@ describe("Add employee", () => {
 			await screen.findByRole("button", { name: "Add employee" })
 		);
 
+		// Reaching the page from the list renders the whole form, pickers included, which outlasts the default wait.
 		expect(
-			await screen.findByRole("heading", { level: 1, name: "Add employee" })
+			await screen.findByRole(
+				"heading",
+				{ level: 1, name: "Add employee" },
+				{ timeout: 10_000 }
+			)
 		).toBeVisible();
 		expect(opened.router.state.location.pathname).toBe("/people/new");
 		expect(
@@ -263,7 +267,11 @@ describe("Add employee", () => {
 			await screen.findByRole("button", { name: "Add employee" })
 		);
 		await user.click(
-			await screen.findByRole("button", { name: /^Department/ })
+			await screen.findByRole(
+				"button",
+				{ name: /^Department/ },
+				{ timeout: 10_000 }
+			)
 		);
 
 		expect(
@@ -467,7 +475,7 @@ describe("Add employee", () => {
 		).toEqual(["Cook"]);
 	});
 
-	it("leaves out the manager and system role without the keys they need", async () => {
+	it("always offers the manager, and leaves out the system role without the keys it needs", async () => {
 		stubApi(
 			routes(
 				workspaceReply([
@@ -482,7 +490,7 @@ describe("Add employee", () => {
 		await open();
 
 		await screen.findByRole("button", { name: /^Department/ });
-		expect(screen.queryByText("Manager")).not.toBeInTheDocument();
+		expect(screen.getByText("Manager")).toBeInTheDocument();
 		expect(screen.queryByText("System role")).not.toBeInTheDocument();
 	});
 
@@ -565,7 +573,7 @@ describe("Add employee", () => {
 		const before = {
 			departments: count(`GET ${COMPANY}/departments`),
 			jobTitles: count(`GET ${COMPANY}/job-titles`),
-			members: count(`GET ${COMPANY}/members`),
+			members: count(`GET ${COMPANY}/me/colleagues`),
 		};
 
 		await user.click(confirm());
@@ -578,7 +586,7 @@ describe("Add employee", () => {
 		});
 		await user.click(confirm());
 		await waitFor(() => {
-			expect(count(`GET ${COMPANY}/members`)).toBe(before.members + 1);
+			expect(count(`GET ${COMPANY}/me/colleagues`)).toBe(before.members + 1);
 		});
 	});
 

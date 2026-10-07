@@ -865,7 +865,6 @@
 			"cell": "{{resource}}: {{action}}",
 			"resources": {
 				"company": "Company",
-				"company_member": "Company member",
 				"branch": "Branch",
 				"branch_member": "Branch member",
 				"department": "Department",
@@ -926,13 +925,6 @@
 				"actions": {
 					"read": "View",
 					"update": "Edit"
-				}
-			},
-			"company_member": {
-				"name": "Company members",
-				"description": "The list of everyone in the company, by name.",
-				"actions": {
-					"read": "View"
 				}
 			},
 			"branch": {

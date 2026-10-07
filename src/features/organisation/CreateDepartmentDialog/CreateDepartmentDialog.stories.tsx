@@ -42,7 +42,7 @@ const meta = {
 					path: "/branches",
 					content: parameters["branches"] as Array<unknown>,
 				},
-				{ path: "/members", content: STORY_PEOPLE },
+				{ path: "/me/colleagues", content: STORY_PEOPLE },
 			],
 			Boolean(parameters["pending"]),
 			client

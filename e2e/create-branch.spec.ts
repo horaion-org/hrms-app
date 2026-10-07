@@ -38,12 +38,7 @@ test("log in and create a branch with an active head, then see the refreshed lis
 				{
 					uuid: "acme",
 					name: "Acme",
-					permissions: [
-						"branch:read",
-						"branch:create",
-						"company_member:read",
-						"audit_event:read",
-					],
+					permissions: ["branch:read", "branch:create", "audit_event:read"],
 					branches: [],
 				},
 			],
@@ -69,7 +64,7 @@ test("log in and create a branch with an active head, then see the refreshed lis
 			page: { totalElements: created ? 1 : 0 },
 		});
 	});
-	await context.route("**/api/v1/companies/acme/members**", (route) => {
+	await context.route("**/api/v1/companies/acme/me/colleagues**", (route) => {
 		const query = new URL(route.request().url()).searchParams;
 		expect(query.get("status")).toBe("ACTIVE");
 		expect(query.get("size")).toBe("20");

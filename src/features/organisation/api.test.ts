@@ -116,7 +116,7 @@ describe("company member search", () => {
 			status: "ACTIVE",
 		};
 		const calls = stubApi({
-			"GET /api/v1/companies/c-1/members": {
+			"GET /api/v1/companies/c-1/me/colleagues": {
 				status: 200,
 				body: envelope({ content: [member], page: { totalElements: 25 } }),
 			},
@@ -138,7 +138,7 @@ describe("company member search", () => {
 	});
 	it("omits blank search rather than requesting whitespace", async () => {
 		const calls = stubApi({
-			"GET /api/v1/companies/c-1/members": {
+			"GET /api/v1/companies/c-1/me/colleagues": {
 				status: 200,
 				body: envelope({ content: [], page: { totalElements: 0 } }),
 			},
@@ -152,7 +152,7 @@ describe("company member search", () => {
 	});
 	it("rejects malformed external membership data", async () => {
 		stubApi({
-			"GET /api/v1/companies/c-1/members": {
+			"GET /api/v1/companies/c-1/me/colleagues": {
 				status: 200,
 				body: envelope({
 					content: [{ membershipId: "m-1", displayName: 42, status: "ACTIVE" }],

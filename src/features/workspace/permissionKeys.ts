@@ -7,7 +7,6 @@
 export const PERMISSION_KEYS = [
 	"company:read",
 	"company:update",
-	"company_member:read",
 	"branch:read",
 	"branch:create",
 	"branch:update",

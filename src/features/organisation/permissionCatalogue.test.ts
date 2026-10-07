@@ -11,7 +11,6 @@ describe("permission catalogue copy", () => {
 		expect(PERMISSION_KEYS).toEqual([
 			"company:read",
 			"company:update",
-			"company_member:read",
 			"branch:read",
 			"branch:create",
 			"branch:update",

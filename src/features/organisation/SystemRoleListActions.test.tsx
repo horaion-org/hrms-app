@@ -284,7 +284,7 @@ describe("System role people", () => {
 				status: 200,
 				body: envelope({ content: [], page: { totalElements: 0 } }),
 			},
-			"GET /api/v1/companies/c-1/members": {
+			"GET /api/v1/companies/c-1/me/colleagues": {
 				status: 200,
 				body: envelope({ content: [], page: { totalElements: 0 } }),
 			},

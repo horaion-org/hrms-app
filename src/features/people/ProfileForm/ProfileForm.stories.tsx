@@ -16,7 +16,6 @@ const ALL = [
 	"branch:read",
 	"department:read",
 	"job_title:read",
-	"company_member:read",
 	"access_role:read",
 	"access_role:assign",
 ];
@@ -91,7 +90,7 @@ const meta = {
 					],
 				},
 				{
-					path: "/members",
+					path: "/me/colleagues",
 					content: [
 						{
 							membershipId: "m-1",
@@ -207,7 +206,6 @@ export const Editing: Story = {
 			"branch:read",
 			"department:read",
 			"job_title:read",
-			"company_member:read",
 			"access_role:read",
 			"access_role:assign",
 		],
