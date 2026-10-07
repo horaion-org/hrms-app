@@ -27,7 +27,7 @@ it("debounces by 250 ms and retains earlier people while searching", async () =>
 		status: "ACTIVE",
 	};
 	const calls = stubApi({
-		"GET /api/v1/companies/c-1/members": {
+		"GET /api/v1/companies/c-1/me/colleagues": {
 			status: 200,
 			body: envelope({ content: [marcus], page: { totalElements: 1 } }),
 		},
@@ -70,7 +70,7 @@ it("debounces by 250 ms and retains earlier people while searching", async () =>
 
 it("never shows the previous company's people while the next company loads", async () => {
 	stubApi({
-		"GET /api/v1/companies/c-1/members": {
+		"GET /api/v1/companies/c-1/me/colleagues": {
 			status: 200,
 			body: envelope({
 				content: [

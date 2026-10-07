@@ -249,7 +249,7 @@ export const searchCompanyMembers = (
 	});
 	if (search.trim()) query.set("search", search.trim());
 	return fetchList(
-		`${companyPath(companyId)}/members?${query.toString()}`,
+		`${companyPath(companyId)}/me/colleagues?${query.toString()}`,
 		companyMemberSchema
 	);
 };

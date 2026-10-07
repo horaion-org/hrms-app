@@ -221,7 +221,6 @@
       "cell": "{{resource}}: {{action}}",
       "resources": {
         "company": "Empresa",
-        "company_member": "Miembro de la empresa",
         "branch": "Sucursal",
         "branch_member": "Miembro de la sucursal",
         "department": "Departamento",

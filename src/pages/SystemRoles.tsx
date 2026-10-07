@@ -81,11 +81,9 @@ export const SystemRoles = (): FunctionComponent => {
 	);
 	const [assigning, setAssigning] = useState(false);
 	const [action, setAction] = useState<SystemRoleAction>();
-	// Neither the Company Owner role nor an inactive role is assigned here; choosing a person needs the company's list of people.
+	// Neither the Company Owner role nor an inactive role is assigned here.
 	const assignable =
-		list.status === "ready" &&
-		can("access_role:assign") &&
-		can("company_member:read")
+		list.status === "ready" && can("access_role:assign")
 			? list.items.filter(
 					(role) => !role.protectedRole && role.status === "ACTIVE"
 				)

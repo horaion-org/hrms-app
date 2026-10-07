@@ -30,7 +30,6 @@ const ALL = [
 	"branch:read",
 	"department:read",
 	"job_title:read",
-	"company_member:read",
 	"access_role:read",
 	"access_role:assign",
 ];
@@ -202,7 +201,7 @@ const routes = (
 				status: "ACTIVE",
 			},
 		]),
-		[`GET ${COMPANY}/members`]: page([
+		[`GET ${COMPANY}/me/colleagues`]: page([
 			{ membershipId: "m-9", displayName: "Faris Ahmad", status: "ACTIVE" },
 		]),
 		[`GET ${COMPANY}/access-roles`]: page([

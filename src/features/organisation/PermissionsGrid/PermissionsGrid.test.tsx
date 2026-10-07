@@ -56,7 +56,6 @@ describe("PermissionsGrid", () => {
 				.map((header) => header.textContent)
 		).toEqual([
 			"Company",
-			"Company member",
 			"Branch",
 			"Branch member",
 			"Department",

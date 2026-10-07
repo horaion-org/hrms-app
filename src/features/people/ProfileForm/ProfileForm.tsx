@@ -181,7 +181,6 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 						label: jobTitle.name,
 					}))
 			: [];
-	const showManager = can("company_member:read");
 	// The same keys the System roles page asks for before offering to assign.
 	const showRole =
 		can("access_role:read") &&
@@ -655,30 +654,28 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 								)}
 							/>
 						</FormRow>
-						{showManager && (
-							<Controller
-								control={control}
-								name="reportsTo"
-								render={({ field }) => (
-									<HeadsField
-										ref={field.ref}
-										companyId={companyId}
-										disabled={isSubmitting}
-										error={errors.reportsTo?.message}
-										fieldWidth={fieldWidth}
-										hint={t(`${key}.managerHint`)}
-										id={idOf("reportsTo")}
-										label={t(`${key}.manager`)}
-										layout="inline"
-										multiple={false}
-										placeholder={t(`${key}.managerPlaceholder`)}
-										required={false}
-										value={field.value}
-										onChange={field.onChange}
-									/>
-								)}
-							/>
-						)}
+						<Controller
+							control={control}
+							name="reportsTo"
+							render={({ field }) => (
+								<HeadsField
+									ref={field.ref}
+									companyId={companyId}
+									disabled={isSubmitting}
+									error={errors.reportsTo?.message}
+									fieldWidth={fieldWidth}
+									hint={t(`${key}.managerHint`)}
+									id={idOf("reportsTo")}
+									label={t(`${key}.manager`)}
+									layout="inline"
+									multiple={false}
+									placeholder={t(`${key}.managerPlaceholder`)}
+									required={false}
+									value={field.value}
+									onChange={field.onChange}
+								/>
+							)}
+						/>
 						{showRole && (
 							<FormRow
 								error={roleError}

@@ -45,8 +45,7 @@ export const Branches = (): FunctionComponent => {
 	const permissions = workspace.data
 		? companyPermissions(workspace.data, companyId)
 		: new Set<string>();
-	const canCreate =
-		permissions.has("branch:create") && permissions.has("company_member:read");
+	const canCreate = permissions.has("branch:create");
 	const [search, setSearch] = useState("");
 	const [status, setStatus] = useState<StatusFilter>("all");
 	const [sort, setSort] = useState<DataTableSort>({ id: "name", desc: false });

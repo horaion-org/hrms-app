@@ -5,7 +5,6 @@
  */
 export const PERMISSION_CATALOGUE = [
 	{ resource: "company", actions: ["read", "update"] },
-	{ resource: "company_member", actions: ["read"] },
 	{ resource: "branch", actions: ["read", "create", "update"] },
 	{
 		resource: "branch_member",
