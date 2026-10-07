@@ -30,3 +30,12 @@ export const rangeDays = (range: DateRange): Array<string> =>
 		{ length: dayjs(range.end).diff(dayjs(range.start), "day") + 1 },
 		(_, index) => dayjs(range.start).add(index, "day").format("YYYY-MM-DD")
 	);
+
+/** Four weeks from the Monday of this week, the timeline's first window. */
+export const defaultRange = (today = dayjs()): DateRange => {
+	const monday = today.subtract((today.day() + 6) % 7, "day");
+	return {
+		start: monday.format("YYYY-MM-DD"),
+		end: monday.add(27, "day").format("YYYY-MM-DD"),
+	};
+};
