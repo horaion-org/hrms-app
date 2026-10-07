@@ -4,4 +4,7 @@ export type {
 	IsoDate,
 	DateRange,
 } from "@/components/forms/Calendar/Calendar.constants";
-export { todayDate } from "@/components/forms/Calendar/Calendar.dates";
+export {
+	formatDate,
+	todayDate,
+} from "@/components/forms/Calendar/Calendar.dates";

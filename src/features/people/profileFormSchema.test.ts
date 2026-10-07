@@ -96,3 +96,12 @@ describe("profile form rules", () => {
 		});
 	});
 });
+
+describe("profile status rule", () => {
+	it("accepts only the statuses the API knows", () => {
+		expect(refusals({ status: "INACTIVE" })).toEqual({});
+		expect(Object.keys(refusals({ status: "PENDING" as "ACTIVE" }))).toEqual([
+			"status",
+		]);
+	});
+});

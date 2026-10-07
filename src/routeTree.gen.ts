@@ -29,6 +29,7 @@ import { Route as AuthenticatedAppOrganisationBranchesRouteImport } from './rout
 import { Route as AuthenticatedAppOrganisationDepartmentsRouteImport } from './routes/_authenticated._app.organisation.departments'
 import { Route as AuthenticatedAppOrganisationJobTitlesRouteImport } from './routes/_authenticated._app.organisation.job-titles'
 import { Route as AuthenticatedAppOrganisationSystemRolesRouteImport } from './routes/_authenticated._app.organisation.system-roles'
+import { Route as AuthenticatedAppPeopleMembershipIdRouteImport } from './routes/_authenticated._app.people_.$membershipId'
 import { Route as AuthenticatedAppPeopleNewRouteImport } from './routes/_authenticated._app.people_.new'
 import { Route as AuthenticatedAppOrganisationSystemRolesAccessRoleIdRouteImport } from './routes/_authenticated._app.organisation.system-roles_.$accessRoleId'
 import { Route as AuthenticatedAppOrganisationSystemRolesNewRouteImport } from './routes/_authenticated._app.organisation.system-roles_.new'
@@ -138,6 +139,12 @@ const AuthenticatedAppOrganisationSystemRolesRoute =
     path: '/organisation/system-roles',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppPeopleMembershipIdRoute =
+  AuthenticatedAppPeopleMembershipIdRouteImport.update({
+    id: '/people_/$membershipId',
+    path: '/people/$membershipId',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppPeopleNewRoute =
   AuthenticatedAppPeopleNewRouteImport.update({
     id: '/people_/new',
@@ -175,6 +182,7 @@ export interface FileRoutesByFullPath {
   '/organisation/departments': typeof AuthenticatedAppOrganisationDepartmentsRoute
   '/organisation/job-titles': typeof AuthenticatedAppOrganisationJobTitlesRoute
   '/organisation/system-roles': typeof AuthenticatedAppOrganisationSystemRolesRoute
+  '/people/$membershipId': typeof AuthenticatedAppPeopleMembershipIdRoute
   '/people/new': typeof AuthenticatedAppPeopleNewRoute
   '/organisation/': typeof AuthenticatedAppOrganisationIndexRoute
   '/organisation/system-roles/$accessRoleId': typeof AuthenticatedAppOrganisationSystemRolesAccessRoleIdRoute
@@ -198,6 +206,7 @@ export interface FileRoutesByTo {
   '/organisation/departments': typeof AuthenticatedAppOrganisationDepartmentsRoute
   '/organisation/job-titles': typeof AuthenticatedAppOrganisationJobTitlesRoute
   '/organisation/system-roles': typeof AuthenticatedAppOrganisationSystemRolesRoute
+  '/people/$membershipId': typeof AuthenticatedAppPeopleMembershipIdRoute
   '/people/new': typeof AuthenticatedAppPeopleNewRoute
   '/organisation': typeof AuthenticatedAppOrganisationIndexRoute
   '/organisation/system-roles/$accessRoleId': typeof AuthenticatedAppOrganisationSystemRolesAccessRoleIdRoute
@@ -224,6 +233,7 @@ export interface FileRoutesById {
   '/_authenticated/_app/organisation/departments': typeof AuthenticatedAppOrganisationDepartmentsRoute
   '/_authenticated/_app/organisation/job-titles': typeof AuthenticatedAppOrganisationJobTitlesRoute
   '/_authenticated/_app/organisation/system-roles': typeof AuthenticatedAppOrganisationSystemRolesRoute
+  '/_authenticated/_app/people_/$membershipId': typeof AuthenticatedAppPeopleMembershipIdRoute
   '/_authenticated/_app/people_/new': typeof AuthenticatedAppPeopleNewRoute
   '/_authenticated/_app/organisation/': typeof AuthenticatedAppOrganisationIndexRoute
   '/_authenticated/_app/organisation/system-roles_/$accessRoleId': typeof AuthenticatedAppOrganisationSystemRolesAccessRoleIdRoute
@@ -249,6 +259,7 @@ export interface FileRouteTypes {
     | '/organisation/departments'
     | '/organisation/job-titles'
     | '/organisation/system-roles'
+    | '/people/$membershipId'
     | '/people/new'
     | '/organisation/'
     | '/organisation/system-roles/$accessRoleId'
@@ -272,6 +283,7 @@ export interface FileRouteTypes {
     | '/organisation/departments'
     | '/organisation/job-titles'
     | '/organisation/system-roles'
+    | '/people/$membershipId'
     | '/people/new'
     | '/organisation'
     | '/organisation/system-roles/$accessRoleId'
@@ -297,6 +309,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/organisation/departments'
     | '/_authenticated/_app/organisation/job-titles'
     | '/_authenticated/_app/organisation/system-roles'
+    | '/_authenticated/_app/people_/$membershipId'
     | '/_authenticated/_app/people_/new'
     | '/_authenticated/_app/organisation/'
     | '/_authenticated/_app/organisation/system-roles_/$accessRoleId'
@@ -457,6 +470,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppOrganisationSystemRolesRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/_app/people_/$membershipId': {
+      id: '/_authenticated/_app/people_/$membershipId'
+      path: '/people/$membershipId'
+      fullPath: '/people/$membershipId'
+      preLoaderRoute: typeof AuthenticatedAppPeopleMembershipIdRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/_app/people_/new': {
       id: '/_authenticated/_app/people_/new'
       path: '/people/new'
@@ -491,6 +511,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppOrganisationDepartmentsRoute: typeof AuthenticatedAppOrganisationDepartmentsRoute
   AuthenticatedAppOrganisationJobTitlesRoute: typeof AuthenticatedAppOrganisationJobTitlesRoute
   AuthenticatedAppOrganisationSystemRolesRoute: typeof AuthenticatedAppOrganisationSystemRolesRoute
+  AuthenticatedAppPeopleMembershipIdRoute: typeof AuthenticatedAppPeopleMembershipIdRoute
   AuthenticatedAppPeopleNewRoute: typeof AuthenticatedAppPeopleNewRoute
   AuthenticatedAppOrganisationIndexRoute: typeof AuthenticatedAppOrganisationIndexRoute
   AuthenticatedAppOrganisationSystemRolesAccessRoleIdRoute: typeof AuthenticatedAppOrganisationSystemRolesAccessRoleIdRoute
@@ -511,6 +532,8 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
     AuthenticatedAppOrganisationJobTitlesRoute,
   AuthenticatedAppOrganisationSystemRolesRoute:
     AuthenticatedAppOrganisationSystemRolesRoute,
+  AuthenticatedAppPeopleMembershipIdRoute:
+    AuthenticatedAppPeopleMembershipIdRoute,
   AuthenticatedAppPeopleNewRoute: AuthenticatedAppPeopleNewRoute,
   AuthenticatedAppOrganisationIndexRoute:
     AuthenticatedAppOrganisationIndexRoute,

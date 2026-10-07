@@ -198,3 +198,42 @@ export const FormError: Story = {
 	args: { onSubmit: fn(() => Promise.reject(new Error("Unreachable"))) },
 	play: Submitting.play,
 };
+
+/** Changing an existing person who has logged in: their email address is kept. */
+export const Editing: Story = {
+	parameters: {
+		permissions: [
+			"member_profile:update",
+			"branch:read",
+			"department:read",
+			"job_title:read",
+			"company_member:read",
+			"access_role:read",
+			"access_role:assign",
+		],
+	},
+	args: {
+		title: undefined,
+		description: undefined,
+		initial: {
+			...EMPTY_PROFILE,
+			displayName: "Kent Chua",
+			email: "kent.chua@company.com",
+			phone: "+6583247931",
+			employmentType: "FULL_TIME",
+			hireDate: "2024-01-15",
+			departmentId: "d-1",
+			jobTitleId: "j-1",
+			accessRoleId: "r-1",
+			status: "ACTIVE",
+		},
+		edit: {
+			employeeCode: "EMP-10392",
+			roleEditable: true,
+			otherRoles: ["Admin"],
+			header: (actions) => (
+				<div className="flex justify-end gap-3">{actions}</div>
+			),
+		},
+	},
+};

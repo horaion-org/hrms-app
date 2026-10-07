@@ -1,11 +1,15 @@
 import {
+	infiniteQueryOptions,
 	keepPreviousData,
 	queryOptions,
 	skipToken,
+	type InfiniteData,
 	type UndefinedInitialDataOptions,
+	type UnusedSkipTokenInfiniteOptions,
+	type UnusedSkipTokenOptions,
 } from "@tanstack/react-query";
 import { z } from "zod";
-import { apiRequest } from "@/common/api-client";
+import { apiRequest, apiRequestVoid } from "@/common/api-client";
 import {
 	companyPath,
 	fetchList,
@@ -30,6 +34,9 @@ const memberProfileSchema = z.object({
 	email: z.string(),
 	/** E.164, e.g. `+6591234821`. */
 	phone: z.string().nullable(),
+	/** The Branch of the person's Department; null with no Department. */
+	branchId: z.string().nullable(),
+	branchName: z.string().nullable(),
 	departmentId: z.string().nullable(),
 	departmentName: z.string().nullable(),
 	jobTitleId: z.string().nullable(),
@@ -153,7 +160,10 @@ export type CreateMemberProfileBody = {
 	probationEndDate?: string;
 };
 
-/** Where a new person joins: one Department of one Branch. */
+/**
+ * A Department of a Branch: where a new person joins, and where a system
+ * role is granted. Changes to an existing person never name it in their URL.
+ */
 export type MemberProfilePlace = { branchId: string; departmentId: string };
 
 /**
@@ -170,3 +180,267 @@ export const createMemberProfile = (
 		memberProfileSchema,
 		{ method: "POST", body }
 	);
+
+/** ISO `YYYY-MM-DD`, or null when not set. */
+const isoDateSchema = z.string().nullable();
+
+const memberProfileDetailSchema = memberProfileSchema.extend({
+	dateOfBirth: isoDateSchema,
+	employmentType: employmentTypeSchema.nullable(),
+	hireDate: isoDateSchema,
+	probationEndDate: isoDateSchema,
+	endDate: isoDateSchema,
+	/** The person's manager, as the API calls it. */
+	reportsTo: z
+		.object({ membershipId: z.string(), displayName: z.string() })
+		.nullable(),
+});
+
+/** One person's whole profile, as their page shows it. */
+export type MemberProfileDetail = z.infer<typeof memberProfileDetailSchema>;
+
+/**
+ * A person's address, for reading and for every change. The API finds their
+ * Department itself and checks each key there, or at the company for
+ * someone without one.
+ */
+const memberProfilePath = (companyId: string, membershipId: string): string =>
+	`${companyPath(companyId)}/member-profiles/${encodeURIComponent(membershipId)}`;
+
+/**
+ * One person. The API answers 404 for nobody and 403 for someone outside
+ * the units where the person may read profiles; the page treats both alike.
+ */
+export const fetchMemberProfile = (
+	companyId: string,
+	membershipId: string
+): Promise<MemberProfileDetail> =>
+	apiRequest(
+		memberProfilePath(companyId, membershipId),
+		memberProfileDetailSchema
+	);
+
+/** One person's profile; inside the People entries, so changes to people reload it. */
+export const memberProfileQuery = (
+	companyId: string,
+	membershipId: string
+): UnusedSkipTokenOptions<
+	MemberProfileDetail,
+	Error,
+	MemberProfileDetail,
+	readonly ["people", string, "profile", string]
+> =>
+	queryOptions({
+		queryKey: ["people", companyId, "profile", membershipId] as const,
+		queryFn: () => fetchMemberProfile(companyId, membershipId),
+		// The route loader's fetch serves the first render instead of being repeated on mount.
+		staleTime: 30_000,
+		retry,
+	});
+
+/**
+ * A person's profile as an update sends it. `PUT` replaces the profile, so
+ * every field is sent and an empty one is null, never "". The employee ID
+ * and the login email never change here, and a person always has a Department.
+ */
+export type UpdateMemberProfileBody = {
+	displayName: string;
+	status: MemberStatus;
+	/** A different one from their current Department moves them there. */
+	departmentId: string;
+	jobTitleId: string | null;
+	reportsToMembershipId: string | null;
+	dateOfBirth: string | null;
+	phone: string | null;
+	employmentType: EmploymentType | null;
+	hireDate: string | null;
+	probationEndDate: string | null;
+};
+
+/** Saves a person's profile and returns it as saved. */
+export const updateMemberProfile = (
+	companyId: string,
+	membershipId: string,
+	body: UpdateMemberProfileBody
+): Promise<MemberProfileDetail> =>
+	apiRequest(
+		memberProfilePath(companyId, membershipId),
+		memberProfileDetailSchema,
+		{ method: "PUT", body }
+	);
+
+const memberNoteSchema = z.object({
+	noteId: z.string(),
+	/** As written, line breaks kept. */
+	body: z.string(),
+	/** The name is null when the API can't show who wrote it. */
+	author: z.object({
+		membershipId: z.string(),
+		displayName: z.string().nullable(),
+	}),
+	createdAt: z.string(),
+	updatedAt: z.string(),
+	edited: z.boolean(),
+});
+
+/** One note about a person. */
+export type MemberNote = z.infer<typeof memberNoteSchema>;
+
+/** How many notes one page brings: the API's own default. */
+export const NOTES_PAGE_SIZE = 20;
+
+/** The longest note the API keeps, after trimming. */
+export const NOTE_MAX_LENGTH = 1000;
+
+/** One page of a person's notes, newest first; `page` counts from 0, as the API does. */
+export const fetchMemberNotes = (
+	companyId: string,
+	membershipId: string,
+	page: number
+): Promise<ListPage<MemberNote>> =>
+	fetchList(
+		`${memberProfilePath(companyId, membershipId)}/notes?${new URLSearchParams({
+			page: String(page),
+			size: String(NOTES_PAGE_SIZE),
+		}).toString()}`,
+		memberNoteSchema
+	);
+
+/**
+ * A person's notes, a page at a time as more are asked for. The API returns
+ * only the notes the person may read.
+ */
+export const memberNotesQuery = (
+	companyId: string,
+	membershipId: string
+): UnusedSkipTokenInfiniteOptions<
+	ListPage<MemberNote>,
+	Error,
+	InfiniteData<ListPage<MemberNote>>,
+	readonly ["people", string, "profile", string, "notes"],
+	number
+> =>
+	infiniteQueryOptions({
+		queryKey: ["people", companyId, "profile", membershipId, "notes"] as const,
+		queryFn: ({ pageParam }) =>
+			fetchMemberNotes(companyId, membershipId, pageParam),
+		initialPageParam: 0,
+		getNextPageParam: (last, pages) =>
+			pages.reduce((count, page) => count + page.items.length, 0) <
+				last.total && last.items.length > 0
+				? pages.length
+				: undefined,
+		retry,
+	});
+
+/** Adds a note about a person. */
+export const createMemberNote = (
+	companyId: string,
+	membershipId: string,
+	body: string
+): Promise<MemberNote> =>
+	apiRequest(
+		`${memberProfilePath(companyId, membershipId)}/notes`,
+		memberNoteSchema,
+		{ method: "POST", body: { body } }
+	);
+
+/** Rewrites a note. */
+export const updateMemberNote = (
+	companyId: string,
+	membershipId: string,
+	noteId: string,
+	body: string
+): Promise<MemberNote> =>
+	apiRequest(
+		`${memberProfilePath(companyId, membershipId)}/notes/${encodeURIComponent(noteId)}`,
+		memberNoteSchema,
+		{ method: "PUT", body: { body } }
+	);
+
+/** Deletes a note. */
+export const deleteMemberNote = (
+	companyId: string,
+	membershipId: string,
+	noteId: string
+): Promise<void> =>
+	apiRequestVoid(
+		`${memberProfilePath(companyId, membershipId)}/notes/${encodeURIComponent(noteId)}`,
+		{ method: "DELETE" }
+	);
+
+const memberSkillSchema = z.object({
+	skillId: z.string(),
+	name: z.string(),
+	/** 1 to 10. */
+	proficiency: z.number().int(),
+});
+
+/** One of a person's skills and how well they do it. */
+export type MemberSkill = z.infer<typeof memberSkillSchema>;
+
+/** A skill as a change sends it: the name finds or creates the company's skill. */
+export type SkillValue = { name: string; proficiency: number };
+
+/** A person's skills, ordered by name; not paged. */
+export const fetchMemberSkills = (
+	companyId: string,
+	membershipId: string
+): Promise<Array<MemberSkill>> =>
+	apiRequest(
+		`${memberProfilePath(companyId, membershipId)}/skills`,
+		z.array(memberSkillSchema)
+	);
+
+/** A person's skills; inside their profile's entries, so a saved profile reloads them. */
+export const memberSkillsQuery = (
+	companyId: string,
+	membershipId: string
+): UnusedSkipTokenOptions<
+	Array<MemberSkill>,
+	Error,
+	Array<MemberSkill>,
+	readonly ["people", string, "profile", string, "skills"]
+> =>
+	queryOptions({
+		queryKey: ["people", companyId, "profile", membershipId, "skills"] as const,
+		queryFn: () => fetchMemberSkills(companyId, membershipId),
+		retry,
+	});
+
+/** Replaces a person's skills with `skills`, the complete new set, and returns them as saved. */
+export const replaceMemberSkills = (
+	companyId: string,
+	membershipId: string,
+	skills: ReadonlyArray<SkillValue>
+): Promise<Array<MemberSkill>> =>
+	apiRequest(
+		`${memberProfilePath(companyId, membershipId)}/skills`,
+		z.array(memberSkillSchema),
+		{ method: "PUT", body: { skills } }
+	);
+
+const companySkillSchema = z.object({ skillId: z.string(), name: z.string() });
+
+/** A skill name the company already uses. */
+export type CompanySkill = z.infer<typeof companySkillSchema>;
+
+/** How many suggestions one search brings. */
+export const SKILL_SUGGESTIONS_SIZE = 20;
+
+/** The company's skill names containing `search`, ignoring case, sorted by name. */
+export const searchCompanySkills = (
+	companyId: string,
+	search: string
+): Promise<ListPage<CompanySkill>> => {
+	const query = new URLSearchParams({
+		page: "0",
+		size: String(SKILL_SUGGESTIONS_SIZE),
+	});
+	const text = search.trim().slice(0, PEOPLE_SEARCH_MAX_LENGTH);
+	if (text) query.set("search", text);
+	return fetchList(
+		`${companyPath(companyId)}/skills?${query.toString()}`,
+		companySkillSchema
+	);
+};

@@ -5,7 +5,12 @@ import {
 	companyMemberSchema,
 	type CompanyMember,
 } from "@/features/organisation/api";
-import { EMPLOYMENT_TYPES, type EmploymentType } from "@/features/people/api";
+import {
+	EMPLOYMENT_TYPES,
+	MEMBER_STATUSES,
+	type EmploymentType,
+	type MemberStatus,
+} from "@/features/people/api";
 
 /** The API's phone rule: "+", then 7 to 15 digits, the first not 0. */
 export const E164_PATTERN = /^\+[1-9]\d{6,14}$/;
@@ -31,6 +36,8 @@ export type ProfileFormValues = {
 	reportsTo: CompanyMember | null;
 	/** A system role to assign in the Department once the person is added. */
 	accessRoleId: string;
+	/** Edited on an existing person only; a new person is always active. */
+	status?: MemberStatus;
 };
 
 /**
@@ -83,6 +90,7 @@ export const profileFormSchema = (
 			departmentId: z.string().min(1, t(`${key}.departmentRequired`)),
 			reportsTo: companyMemberSchema.nullable(),
 			accessRoleId: z.string(),
+			status: z.enum(MEMBER_STATUSES).optional(),
 		})
 		.refine(
 			({ hireDate, probationEndDate }) =>

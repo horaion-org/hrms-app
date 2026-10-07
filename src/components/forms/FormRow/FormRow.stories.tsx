@@ -94,3 +94,19 @@ export const Narrow: Story = {
 		</div>
 	),
 };
+
+/** In a half-width card the field column takes a share of the row, so a longer label stays on one line. */
+export const SharedFieldWidth: Story = {
+	args: {
+		htmlFor: "probation-end-date",
+		label: "Probation end date",
+		fieldWidth: "sm:w-[52.5%]",
+	},
+	render: (args): NonNullable<FunctionComponent> => (
+		<div className="w-120 max-w-full">
+			<FormRow {...args}>
+				<Input className="w-full" id={args.htmlFor} />
+			</FormRow>
+		</div>
+	),
+};

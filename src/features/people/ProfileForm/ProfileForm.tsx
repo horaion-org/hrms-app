@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
-import { useId, useMemo, useState } from "react";
+import { useId, useMemo, useState, type ReactNode } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
@@ -14,11 +14,13 @@ import { PhoneInput } from "@/components/forms/PhoneInput";
 import { Select, type SelectOption } from "@/components/forms/Select";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
 	CrossIcon,
 	OrganisationIcon,
 	PhoneIcon,
 	RoleIcon,
+	SaveIcon,
 	TickIcon,
 	UserIcon,
 } from "@/components/ui/Icon";
@@ -37,6 +39,8 @@ import {
 import {
 	EMPLOYMENT_TYPES,
 	isEmploymentType,
+	isMemberStatus,
+	MEMBER_STATUSES,
 	type MemberProfilePlace,
 } from "@/features/people/api";
 import {
@@ -47,13 +51,25 @@ import {
 	PROFILE_FIELDS,
 	profileRefusal,
 } from "@/features/people/profileRefusal";
+import { PROFILE_FIELD_WIDTH } from "@/features/people/profileLayout";
 import { useCan } from "@/features/workspace/useCan";
+
+/** What only changing an existing person needs. */
+export type ProfileFormEdit = {
+	/** Shown in the personal card, never changed. */
+	employeeCode: string;
+	/** False leaves out the system role, e.g. when their roles couldn't be loaded. */
+	roleEditable: boolean;
+	/** System roles they hold outside their Department: shown, never changed here. */
+	otherRoles: ReadonlyArray<string>;
+	/** The page's header, given the form's Cancel and Save changes buttons to place. */
+	header: (actions: ReactNode) => ReactNode;
+	/** Changes held outside the form, such as skills, which leaving also asks about. */
+	unsaved?: boolean;
+};
 
 export type ProfileFormProps = {
 	companyId: string;
-	/** The page's heading and the line under it. */
-	title: string;
-	description: string;
 	/** What the form starts from. */
 	initial: ProfileFormValues;
 	/**
@@ -65,10 +81,23 @@ export type ProfileFormProps = {
 		values: ProfileFormValues,
 		place: MemberProfilePlace
 	) => Promise<void>;
-	/** Leaves without saving. */
+	/** Leaves without saving; when editing, after asking if anything changed. */
 	onCancel: () => void;
 	className?: string;
-};
+} & (
+	| {
+			/** The page's heading and the line under it. */
+			title: string;
+			description: string;
+			edit?: undefined;
+	  }
+	| {
+			/** Changes an existing person: see `ProfileFormEdit`. */
+			edit: ProfileFormEdit;
+			title?: undefined;
+			description?: undefined;
+	  }
+);
 
 const key = "people.form";
 const BY_NAME = { sort: { field: "name", desc: false } } as const;
@@ -78,23 +107,21 @@ const NOTHING = (): void => {};
 /**
  * A person's profile in four cards: personal, contact, employment, and their
  * Department and role. Only Departments where the person may add employees
- * are offered. The manager and system role appear only for those who may
- * search people, and read and assign roles.
+ * are offered, or, with `edit`, change them. The manager and system role
+ * appear only for those who may search people, and read and assign roles.
+ *
+ * With `edit` it changes an existing person: their employee ID and email
+ * address are shown but not changed, their status can be changed, and
+ * leaving with changes asks first.
  */
-export const ProfileForm = ({
-	companyId,
-	title,
-	description,
-	initial,
-	onSubmit,
-	onCancel,
-	className,
-}: ProfileFormProps): FunctionComponent => {
+export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
+	const { companyId, initial, onSubmit, onCancel, className, edit } = props;
 	const { t } = useTranslation();
 	const can = useCan();
 	const client = useQueryClient();
 	const formId = useId();
 	const [today] = useState(() => todayDate(Date.now()));
+	const [discarding, setDiscarding] = useState(false);
 	const schema = useMemo(() => profileFormSchema(t, today), [t, today]);
 	const form = useForm<ProfileFormValues>({
 		resolver: zodResolver(schema),
@@ -109,7 +136,7 @@ export const ProfileForm = ({
 		setValue,
 		setError,
 		setFocus,
-		formState: { errors, isSubmitting },
+		formState: { errors, isSubmitting, isDirty },
 	} = form;
 	const { message, alertRef, run } = useCreateFormSubmit(
 		form,
@@ -129,7 +156,8 @@ export const ProfileForm = ({
 			? departmentChoices(
 					branches.items,
 					departments.items,
-					(id) => can("member_profile:create", id),
+					(id) =>
+						can(edit ? "member_profile:update" : "member_profile:create", id),
 					t
 				)
 			: [];
@@ -153,7 +181,10 @@ export const ProfileForm = ({
 			: [];
 	const showManager = can("company_member:read");
 	// The same keys the System roles page asks for before offering to assign.
-	const showRole = can("access_role:read") && can("access_role:assign");
+	const showRole =
+		can("access_role:read") &&
+		can("access_role:assign") &&
+		(edit?.roleEditable ?? true);
 	const roles = useAccessRoles(companyId, BY_NAME);
 	// The Company Owner role moves only through its own transfer.
 	const roleOptions: Array<SelectOption> =
@@ -199,6 +230,7 @@ export const ProfileForm = ({
 			: hint
 				? formRowIds(idOf(name)).hintId
 				: undefined;
+	const fieldWidth = PROFILE_FIELD_WIDTH;
 	const date = (
 		name: "dateOfBirth" | "hireDate" | "probationEndDate",
 		label: string,
@@ -206,7 +238,12 @@ export const ProfileForm = ({
 	): FunctionComponent => {
 		const error = errors[name]?.message;
 		return (
-			<FormRow error={error} htmlFor={idOf(name)} label={label}>
+			<FormRow
+				error={error}
+				fieldWidth={fieldWidth}
+				htmlFor={idOf(name)}
+				label={label}
+			>
 				<Controller
 					control={control}
 					name={name}
@@ -242,6 +279,43 @@ export const ProfileForm = ({
 	const jobTitleError = errors.jobTitleId?.message;
 	const departmentError = errors.departmentId?.message;
 	const roleError = errors.accessRoleId?.message;
+	const statusError = errors.status?.message;
+	const emailLocked = edit !== undefined;
+	const emailHint = edit ? t(`${key}.emailFixed`) : t(`${key}.emailHint`);
+	const roleHint =
+		edit && edit.otherRoles.length > 0 ? (
+			<>
+				<span className="block">{t(`${key}.systemRoleHint`)}</span>
+				<span className="block">
+					{t(`${key}.otherRoles`, { roles: edit.otherRoles.join(", ") })}
+				</span>
+			</>
+		) : (
+			t(`${key}.systemRoleHint`)
+		);
+	const cancel = (): void => {
+		if (edit && (isDirty || edit.unsaved)) setDiscarding(true);
+		else onCancel();
+	};
+	const actions = (
+		<>
+			<Button
+				disabled={isSubmitting}
+				leadingIcon={<CrossIcon />}
+				variant="secondary"
+				onClick={cancel}
+			>
+				{t("organisation.list.cancel")}
+			</Button>
+			<Button
+				leadingIcon={edit ? <SaveIcon /> : <TickIcon />}
+				loading={isSubmitting}
+				type="submit"
+			>
+				{t(edit ? `${key}.save` : `${key}.confirm`)}
+			</Button>
+		</>
+	);
 
 	return (
 		<form
@@ -264,7 +338,15 @@ export const ProfileForm = ({
 								branchId: chosen.department.branchId,
 								departmentId: chosen.department.departmentId,
 							}),
-						(error) => profileRefusal(error, t)
+						(error) =>
+							profileRefusal(
+								error,
+								t,
+								edit && {
+									departmentChanged:
+										values.departmentId !== initial.departmentId,
+								}
+							)
 					);
 					if (refusal?.fields.departmentId)
 						void client.invalidateQueries({
@@ -281,29 +363,19 @@ export const ProfileForm = ({
 				})(event)
 			}
 		>
-			<div className="flex flex-wrap items-start justify-between gap-6">
-				<div>
-					<h1 className="text-4xl font-medium text-neutral-900">{title}</h1>
-					<p className="mt-4 text-sm text-neutral-800">{description}</p>
+			{edit ? (
+				edit.header(actions)
+			) : (
+				<div className="flex flex-wrap items-start justify-between gap-6">
+					<div>
+						<h1 className="text-4xl font-medium text-neutral-900">
+							{props.title}
+						</h1>
+						<p className="mt-4 text-sm text-neutral-800">{props.description}</p>
+					</div>
+					<div className="flex flex-wrap gap-3">{actions}</div>
 				</div>
-				<div className="flex flex-wrap gap-3">
-					<Button
-						disabled={isSubmitting}
-						leadingIcon={<CrossIcon />}
-						variant="secondary"
-						onClick={onCancel}
-					>
-						{t("organisation.list.cancel")}
-					</Button>
-					<Button
-						leadingIcon={<TickIcon />}
-						loading={isSubmitting}
-						type="submit"
-					>
-						{t(`${key}.confirm`)}
-					</Button>
-				</div>
-			</div>
+			)}
 			{message && (
 				<p
 					ref={alertRef}
@@ -320,6 +392,7 @@ export const ProfileForm = ({
 						<FormRow
 							required
 							error={nameError}
+							fieldWidth={fieldWidth}
 							htmlFor={idOf("displayName")}
 							label={t(`${key}.fullName`)}
 						>
@@ -340,12 +413,28 @@ export const ProfileForm = ({
 						{date("dateOfBirth", t(`${key}.dateOfBirth`), {
 							maxDate: dayjs(today).subtract(1, "day").format("YYYY-MM-DD"),
 						})}
+						{edit && (
+							<FormRow
+								fieldWidth={fieldWidth}
+								htmlFor={idOf("employeeId")}
+								label={t(`${key}.employeeId`)}
+							>
+								<Input
+									disabled
+									readOnly
+									className="w-full"
+									id={idOf("employeeId")}
+									value={edit.employeeCode}
+								/>
+							</FormRow>
+						)}
 					</div>
 				</Card>
 				<Card icon={PhoneIcon} title={t(`${key}.contact`)}>
 					<div className="flex flex-col gap-4">
 						<FormRow
 							error={phoneError}
+							fieldWidth={fieldWidth}
 							htmlFor={idOf("phone")}
 							label={t(`${key}.phone`)}
 						>
@@ -375,17 +464,18 @@ export const ProfileForm = ({
 						<FormRow
 							required
 							error={emailError}
-							hint={t(`${key}.emailHint`)}
+							fieldWidth={fieldWidth}
+							hint={emailHint}
 							htmlFor={idOf("email")}
 							label={t(`${key}.email`)}
 						>
 							<Input
 								required
-								aria-describedby={describedBy("email", emailError, true)}
+								aria-describedby={describedBy("email", emailError, emailHint)}
 								aria-invalid={Boolean(emailError)}
 								autoComplete="off"
 								className="w-full"
-								disabled={isSubmitting}
+								disabled={isSubmitting || emailLocked}
 								id={idOf("email")}
 								maxLength={320}
 								placeholder={t(`${key}.emailPlaceholder`)}
@@ -400,6 +490,7 @@ export const ProfileForm = ({
 					<div className="flex flex-col gap-4">
 						<FormRow
 							error={typeError}
+							fieldWidth={fieldWidth}
 							htmlFor={idOf("employmentType")}
 							label={t(`${key}.employmentType`)}
 						>
@@ -438,12 +529,46 @@ export const ProfileForm = ({
 							t(`${key}.probationEndDate`),
 							hireDate ? { minDate: hireDate } : {}
 						)}
+						{edit && (
+							<FormRow
+								error={statusError}
+								fieldWidth={fieldWidth}
+								htmlFor={idOf("status")}
+								label={t(`${key}.employmentStatus`)}
+							>
+								<Controller
+									control={control}
+									name="status"
+									render={({ field }) => (
+										<Select
+											ref={field.ref}
+											aria-describedby={describedBy("status", statusError)}
+											aria-invalid={Boolean(statusError)}
+											aria-labelledby={formRowIds(idOf("status")).labelId}
+											className="w-full"
+											disabled={isSubmitting}
+											name={field.name}
+											status={statusError ? "error" : undefined}
+											value={field.value ?? ""}
+											options={MEMBER_STATUSES.map((status) => ({
+												value: status,
+												label: t(`organisation.status.${status}`),
+											}))}
+											onChange={(value) => {
+												if (isMemberStatus(value)) field.onChange(value);
+											}}
+										/>
+									)}
+								/>
+							</FormRow>
+						)}
 					</div>
 				</Card>
 				<Card icon={OrganisationIcon} title={t(`${key}.placement`)}>
 					<div className="flex flex-col gap-4">
 						<FormRow
 							error={jobTitleError}
+							fieldWidth={fieldWidth}
 							hint={jobTitleHint}
 							htmlFor={idOf("jobTitleId")}
 							label={t(`${key}.jobTitle`)}
@@ -476,6 +601,7 @@ export const ProfileForm = ({
 						<FormRow
 							required
 							error={departmentError}
+							fieldWidth={fieldWidth}
 							hint={departmentHint}
 							htmlFor={idOf("departmentId")}
 							label={t(`${key}.department`)}
@@ -533,6 +659,7 @@ export const ProfileForm = ({
 										companyId={companyId}
 										disabled={isSubmitting}
 										error={errors.reportsTo?.message}
+										fieldWidth={fieldWidth}
 										hint={t(`${key}.managerHint`)}
 										id={idOf("reportsTo")}
 										label={t(`${key}.manager`)}
@@ -549,7 +676,8 @@ export const ProfileForm = ({
 						{showRole && (
 							<FormRow
 								error={roleError}
-								hint={t(`${key}.systemRoleHint`)}
+								fieldWidth={fieldWidth}
+								hint={roleHint}
 								htmlFor={idOf("accessRoleId")}
 								label={t(`${key}.systemRole`)}
 							>
@@ -582,6 +710,20 @@ export const ProfileForm = ({
 					</div>
 				</Card>
 			</div>
+			{discarding && (
+				<ConfirmDialog
+					cancelLabel={t(`${key}.keepEditing`)}
+					confirmLabel={t(`${key}.discard`)}
+					title={t(`${key}.discardTitle`)}
+					description={t(`${key}.discardDescription`, {
+						name: initial.displayName,
+					})}
+					onConfirm={onCancel}
+					onClose={() => {
+						setDiscarding(false);
+					}}
+				/>
+			)}
 		</form>
 	);
 };

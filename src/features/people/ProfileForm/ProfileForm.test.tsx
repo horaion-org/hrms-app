@@ -108,6 +108,8 @@ const created = {
 	displayName: "Priya Nair",
 	email: "priya@company.com",
 	phone: null,
+	branchId: "b-1",
+	branchName: "Orchard",
 	departmentId: "d-1",
 	departmentName: "Kitchen",
 	jobTitleId: null,

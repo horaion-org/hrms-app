@@ -1,5 +1,6 @@
 import type { ReactElement } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { withMemoryRouter } from "@/components/utils/MemoryRouterHarness";
 import { PersonCell } from "@/features/people/PersonCell";
 
 const meta = {
@@ -25,4 +26,10 @@ export const Default: Story = {};
 /** A long name is cut short rather than widening the column. */
 export const LongName: Story = {
 	args: { name: "Aisha binte Abdul Rahman Mohamed Salleh" },
+};
+
+/** In the People list the name links to the person's profile. */
+export const LinkedName: Story = {
+	args: { membershipId: "m-1" },
+	decorators: [withMemoryRouter],
 };

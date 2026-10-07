@@ -312,6 +312,28 @@ export const fetchAccessRoleHolders = (
 		z.array(accessRoleHolderSchema)
 	);
 
+const memberAssignmentSchema = z.object({
+	accessRoleAssignmentId: z.string(),
+	accessRoleId: z.string(),
+	/** An inactive assignment is kept but gives the person nothing until it is activated again. */
+	status: unitStatusSchema,
+	branchId: z.string().nullable(),
+	departmentId: z.string().nullable(),
+});
+
+/** One access role a person holds, and the Branch or Department it applies at, if not the whole company. */
+export type MemberAccessRoleAssignment = z.infer<typeof memberAssignmentSchema>;
+
+/** Every access role one person holds, at every place. */
+export const fetchMemberAccessRoleAssignments = (
+	companyId: string,
+	companyMembershipId: string
+): Promise<Array<MemberAccessRoleAssignment>> =>
+	apiRequest(
+		`${companyPath(companyId)}/access-role-assignments?${new URLSearchParams({ companyMembershipId }).toString()}`,
+		z.array(memberAssignmentSchema)
+	);
+
 /** Who gets which role, and the Branch or Department it applies at; neither means the whole company. */
 export type AccessRoleGrant = {
 	companyMembershipId: string;
