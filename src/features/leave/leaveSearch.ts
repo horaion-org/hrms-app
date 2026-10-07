@@ -22,7 +22,7 @@ export type LeaveSortParameter = z.infer<typeof sortParameterSchema>;
 const DEFAULT_SORT_PARAMETER: LeaveSortParameter = "requestedAt,desc";
 
 const searchSchema = z.object({
-	view: z.enum(["timeline"]).optional().catch(undefined),
+	view: z.enum(["requests", "timeline"]).optional().catch(undefined),
 	branch: z.string().min(1).optional().catch(undefined),
 	status: z.enum(LEAVE_STATUSES).optional().catch(undefined),
 	page: z.number().int().min(1).optional().catch(undefined),
@@ -31,8 +31,9 @@ const searchSchema = z.object({
 
 /**
  * The Leave page's state that belongs in the URL, so it survives a reload
- * and can be shared: the view, the Branch, and the table's status, page and
- * sort. Each part is left out at its default: the requests view, the first
+ * and can be shared: the view (the caller's own leave unless `requests` or
+ * `timeline` names a team view), the Branch, and the table's status, page
+ * and sort. Each part is left out at its default: own leave, the first
  * Branch, every status, the first page, newest first.
  */
 export type LeaveSearch = z.infer<typeof searchSchema>;
@@ -80,6 +81,14 @@ export const leaveQueryOf = (
 	size: LEAVE_PAGE_SIZE,
 	sort: sortOf(search),
 	branchId,
+	...(search.status ? { status: search.status } : {}),
+});
+
+/** The page of the caller's own requests the table asks the API for. */
+export const myLeaveQueryOf = (search: LeaveSearch): LeaveQuery => ({
+	page: search.page ?? 1,
+	size: LEAVE_PAGE_SIZE,
+	sort: sortOf(search),
 	...(search.status ? { status: search.status } : {}),
 });
 

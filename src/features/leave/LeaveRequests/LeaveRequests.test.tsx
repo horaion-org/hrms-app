@@ -59,3 +59,31 @@ it("hands sorting, filtering and paging to the caller and offers decisions only 
 	expect(handlers.onApprove).toHaveBeenCalledWith(LEAVE_FIXTURES[0]);
 	expect(screen.getByText("2 days")).toBeInTheDocument();
 });
+
+it("in own mode shows no employee column and offers only viewing", async () => {
+	const user = userEvent.setup();
+	render(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveRequests
+				{...handlers}
+				own
+				canReview={() => true}
+				emptyState="You have no leave requests yet."
+				page={1}
+				rows={LEAVE_FIXTURES}
+				sort={{ field: "requestedAt", desc: true }}
+				total={LEAVE_FIXTURES.length}
+			/>
+		</I18nextProvider>
+	);
+	expect(
+		screen.getAllByRole("columnheader").map((header) => header.textContent)
+	).not.toContain("Employee");
+	expect(
+		screen.queryByRole("button", { name: "Approve request for Aisha Rahman" })
+	).not.toBeInTheDocument();
+	await user.click(
+		screen.getByRole("button", { name: "View request for Aisha Rahman" })
+	);
+	expect(handlers.onOpen).toHaveBeenCalledWith(LEAVE_FIXTURES[0]);
+});

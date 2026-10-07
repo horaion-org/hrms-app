@@ -92,7 +92,14 @@
 			"forbiddenDecide": "You no longer have permission to decide this request.",
 			"applyFailed": "We couldn’t submit the request. Try again.",
 			"decideFailed": "We couldn’t save the decision. Try again."
-		}
+		},
+		"myLeave": "My leave",
+		"teamRequests": "Team requests",
+		"teamTimeline": "Team timeline",
+		"applyOwn": "Apply for leave",
+		"appliedOwn": "Your leave request was submitted.",
+		"myEmpty": "You have no leave requests yet.",
+		"myFailed": "We couldn’t load your leave requests. Try again."
 	},
 	"dialog": {
 		"close": "Close"
@@ -271,7 +278,8 @@
 			"organisation": "Organisation"
 		},
 		"comingSoon": "This Module is coming soon.",
-		"settings": "Settings"
+		"settings": "Settings",
+		"myProfile": "My profile"
 	},
 	"people": {
 		"title": "People overview",
@@ -413,7 +421,10 @@
 			},
 			"invitationNotPending": "They’ve already logged in, so there’s no invitation to resend.",
 			"actionForbidden": "You no longer have permission to change this person.",
-			"actionFailed": "We couldn’t make this change. Try again."
+			"actionFailed": "We couldn’t make this change. Try again.",
+			"mine": "My profile",
+			"mineSubtitle": "Your details as your company has them. Ask your administrator to change anything that is out of date.",
+			"mineFailed": "We couldn’t load your profile. Try again."
 		},
 		"notes": {
 			"title": "Notes",

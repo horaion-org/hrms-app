@@ -140,3 +140,30 @@ it("applies for the chosen employee with the chosen type and dates, and shows a 
 		"They already have leave on one of these days."
 	);
 });
+
+it("applies for the caller themself when no employees are offered", async () => {
+	const user = userEvent.setup();
+	const onCreate = vi.fn();
+	render(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveRequestDialog
+				mode="apply"
+				onApprove={vi.fn()}
+				onClose={vi.fn()}
+				onCreate={onCreate}
+				onReject={vi.fn()}
+			/>
+		</I18nextProvider>
+	);
+	expect(
+		screen.getByRole("dialog", { name: "Apply for leave" })
+	).toBeInTheDocument();
+	expect(
+		screen.queryByRole("searchbox", { name: "Search employees" })
+	).not.toBeInTheDocument();
+	await user.click(screen.getByRole("button", { name: "Submit request" }));
+	expect(onCreate).toHaveBeenCalledWith(
+		null,
+		expect.objectContaining({ leaveType: "ANNUAL" })
+	);
+});

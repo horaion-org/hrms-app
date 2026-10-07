@@ -24,6 +24,8 @@ const WORKSPACE = "GET /api/v1/me/workspace";
 const BRANCHES = "GET /api/v1/companies/c-1/branches";
 const LEAVE_PATH = "/api/v1/companies/c-1/leave-requests";
 const LEAVE = `GET ${LEAVE_PATH}`;
+const MY_LEAVE_PATH = "/api/v1/companies/c-1/me/leave-requests";
+const MY_LEAVE = `GET ${MY_LEAVE_PATH}`;
 const PEOPLE = "GET /api/v1/companies/c-1/member-profiles";
 const AISHA = "/api/v1/companies/c-1/member-profiles/m-aisha/leave-requests";
 const CHERYL = "/api/v1/companies/c-1/member-profiles/m-cheryl/leave-requests";
@@ -123,6 +125,7 @@ const routes = (
 		branch("b-3", "Kuala Lumpur branch", "MY"),
 	]),
 	[LEAVE]: pageReply(LEAVE_FIXTURES, 24),
+	[MY_LEAVE]: pageReply([LEAVE_FIXTURES[0], LEAVE_FIXTURES[3]], 2),
 });
 
 const searchesOf = (calls: Array<Call>, path: string): Array<string> =>
@@ -136,7 +139,7 @@ const sent = (calls: Array<Call>, route: string): Array<unknown> =>
 describe("Leave", () => {
 	it("lists the first Branch's requests a page at a time, as the API filters and sorts them", async () => {
 		const calls = stubApi(routes());
-		await open("/leave");
+		await open("/leave?view=requests");
 
 		expect(
 			await screen.findByRole("heading", { level: 1, name: "Leave overview" })
@@ -159,13 +162,16 @@ describe("Leave", () => {
 	it("puts the Branch, status, sort and page in the URL and asks the API again", async () => {
 		const user = userEvent.setup();
 		const calls = stubApi(routes());
-		const { router } = await open("/leave");
+		const { router } = await open("/leave?view=requests");
 		await screen.findByText("Aisha Rahman");
 
 		await user.click(screen.getByRole("button", { name: "Country" }));
 		await user.click(screen.getByRole("option", { name: "Malaysia" }));
 		await waitFor(() => {
-			expect(router.state.location.search).toEqual({ branch: "b-3" });
+			expect(router.state.location.search).toEqual({
+				view: "requests",
+				branch: "b-3",
+			});
 		});
 		expect(screen.getByRole("button", { name: "Branch" })).toHaveTextContent(
 			"Kuala Lumpur branch"
@@ -176,6 +182,7 @@ describe("Leave", () => {
 		await user.click(screen.getByRole("button", { name: "Next page" }));
 		await waitFor(() => {
 			expect(router.state.location.search).toEqual({
+				view: "requests",
 				branch: "b-3",
 				status: "PENDING",
 				sort: "displayName,asc",
@@ -194,7 +201,7 @@ describe("Leave", () => {
 		await open("/leave?view=timeline");
 
 		expect(
-			await screen.findByRole("tab", { name: "Timeline" })
+			await screen.findByRole("tab", { name: "Team timeline" })
 		).toHaveAttribute("aria-selected", "true");
 		await screen.findByRole("button", { name: "Next period" });
 		const [first] = searchesOf(calls, LEAVE_PATH);
@@ -221,7 +228,7 @@ describe("Leave", () => {
 				body: envelope(LEAVE_FIXTURES[1]),
 			},
 		});
-		await open("/leave");
+		await open("/leave?view=requests");
 		await screen.findByText("Aisha Rahman");
 
 		await user.click(
@@ -262,7 +269,7 @@ describe("Leave", () => {
 				"LEAVE_REQUEST_NOT_PENDING"
 			),
 		});
-		await open("/leave");
+		await open("/leave?view=requests");
 		await screen.findByText("Aisha Rahman");
 
 		await user.click(
@@ -298,7 +305,7 @@ describe("Leave", () => {
 				{ status: 201, body: envelope(LEAVE_FIXTURES[0]) },
 			],
 		});
-		await open("/leave");
+		await open("/leave?view=requests");
 		await screen.findByText("Aisha Rahman");
 
 		await user.click(screen.getByRole("button", { name: "Apply leave" }));
@@ -335,7 +342,7 @@ describe("Leave", () => {
 
 	it("offers decisions only where the key is held", async () => {
 		stubApi(routes(workspaceReply(["leave_request:read"], true)));
-		await open("/leave");
+		await open("/leave?view=requests");
 		await screen.findByText("Aisha Rahman");
 
 		expect(
@@ -346,17 +353,76 @@ describe("Leave", () => {
 		).toBeDisabled();
 	});
 
-	it("hides the Module, and explains the page, to someone holding the key nowhere", async () => {
-		stubApi(routes(workspaceReply([])));
+	it("opens on the member's own leave, which needs nothing granted, and offers only that to someone holding the key nowhere", async () => {
+		const calls = stubApi(routes(workspaceReply([])));
 		await open("/leave");
 
 		expect(
-			await screen.findByText(
-				"You don’t have access to leave requests in this company."
-			)
-		).toBeVisible();
+			await screen.findByRole("tab", { name: "My leave" })
+		).toHaveAttribute("aria-selected", "true");
 		expect(
-			screen.queryByRole("link", { name: "Leave" })
+			screen.queryByRole("tab", { name: "Team requests" })
 		).not.toBeInTheDocument();
+		const table = await screen.findByRole("table", { name: "Requests" });
+		await within(table).findByText("Approved");
+		expect(within(table).queryByText("Aisha Rahman")).not.toBeInTheDocument();
+		expect(
+			screen.queryByRole("button", { name: "Approve request for Aisha Rahman" })
+		).not.toBeInTheDocument();
+		expect(screen.getByRole("link", { name: "Leave" })).toBeInTheDocument();
+		expect(searchesOf(calls, MY_LEAVE_PATH)).toEqual([
+			"page=0&size=10&sort=requestedAt%2Cdesc",
+		]);
+		expect(searchesOf(calls, LEAVE_PATH)).toEqual([]);
+	});
+
+	it("applies for the member's own leave through the me route", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...routes(workspaceReply([])),
+			[`POST ${MY_LEAVE_PATH}`]: {
+				status: 201,
+				body: envelope(LEAVE_FIXTURES[0]),
+			},
+		});
+		await open("/leave");
+		await screen.findByRole("table", { name: "Requests" });
+
+		await user.click(screen.getByRole("button", { name: "Apply for leave" }));
+		const dialog = await screen.findByRole("dialog", {
+			name: "Apply for leave",
+		});
+		expect(
+			within(dialog).queryByRole("searchbox", { name: "Search employees" })
+		).not.toBeInTheDocument();
+		await user.click(within(dialog).getByRole("button", { name: "Type" }));
+		await user.click(screen.getByRole("option", { name: "Sick leave" }));
+		await user.click(
+			within(dialog).getByRole("button", { name: "Submit request" })
+		);
+		expect(
+			await screen.findByText("Your leave request was submitted.")
+		).toBeVisible();
+		expect(sent(calls, `POST ${MY_LEAVE_PATH}`)).toEqual([
+			expect.objectContaining({ leaveType: "SICK" }),
+		]);
+	});
+
+	it("keeps the team tabs for someone holding the read key, with their own leave first", async () => {
+		const user = userEvent.setup();
+		stubApi(routes());
+		const { router } = await open("/leave");
+
+		expect(
+			screen.getAllByRole("tab").map((tab) => tab.textContent?.trim())
+		).toEqual(["My leave", "Team requests", "Team timeline"]);
+		await user.click(screen.getByRole("tab", { name: "Team requests" }));
+		await waitFor(() => {
+			expect(router.state.location.search).toEqual({ view: "requests" });
+		});
+		await screen.findByText("Cheryl Ng");
+		expect(
+			screen.getByRole("button", { name: "Apply leave" })
+		).toBeInTheDocument();
 	});
 });

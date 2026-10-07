@@ -160,6 +160,41 @@ export const leaveRequestsQuery = (
 		retry,
 	});
 
+/** The caller's own requests: the same page shape, keyed on their membership by the API. */
+export const myLeaveRequestsPath = (
+	companyId: string,
+	query: LeaveQuery
+): string =>
+	leaveRequestsPath(companyId, query).replace(
+		`${companyPath(companyId)}/leave-requests?`,
+		`${companyPath(companyId)}/me/leave-requests?`
+	);
+
+export const fetchMyLeaveRequests = (
+	companyId: string,
+	query: LeaveQuery
+): Promise<ListPage<LeaveRequest>> =>
+	fetchList(myLeaveRequestsPath(companyId, query), leaveRequestSchema);
+
+/** One page of the caller's own leave requests; any active member may ask. */
+export const myLeaveRequestsQuery = (
+	companyId: string,
+	query: LeaveQuery
+): UndefinedInitialDataOptions<
+	ListPage<LeaveRequest>,
+	Error,
+	ListPage<LeaveRequest>,
+	readonly ["leave", string, "me", LeaveQuery]
+> =>
+	queryOptions({
+		queryKey: ["leave", companyId, "me", query] as const,
+		queryFn: (): Promise<ListPage<LeaveRequest>> =>
+			fetchMyLeaveRequests(companyId, query),
+		placeholderData: keepPreviousData,
+		staleTime: 30_000,
+		retry,
+	});
+
 /** What applying for leave sends: inclusive ISO dates. */
 export type LeaveRequestBody = {
 	leaveType: LeaveType;
@@ -180,6 +215,20 @@ export const createLeaveRequest = (
 		method: "POST",
 		body,
 	});
+
+/** Applies for the caller's own leave; the member and the applicant are both the caller. */
+export const createMyLeaveRequest = (
+	companyId: string,
+	body: LeaveRequestBody
+): Promise<LeaveRequest> =>
+	apiRequest(
+		`${companyPath(companyId)}/me/leave-requests`,
+		leaveRequestSchema,
+		{
+			method: "POST",
+			body,
+		}
+	);
 
 /** Grants a pending request; the reviewer is the caller. */
 export const approveLeaveRequest = (

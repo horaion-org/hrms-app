@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
-import { useState } from "react";
 import type { TFunction } from "i18next";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { DateRange } from "@/components/forms/Calendar";
 import type { FunctionComponent } from "@/common/types";
@@ -20,6 +20,7 @@ import {
 } from "@/features/leave/leaveRefusal";
 import {
 	leaveQueryOf,
+	myLeaveQueryOf,
 	pageParameter,
 	sortParameter,
 	timelineQueryOf,
@@ -30,6 +31,7 @@ import type { LeaveRequest } from "@/features/leave/types";
 import {
 	useLeaveActions,
 	useLeaveRequests,
+	useMyLeaveRequests,
 	type LeaveList,
 } from "@/features/leave/useLeaveRequests";
 import type { Refusal } from "@/features/organisation/refusal";
@@ -43,27 +45,35 @@ const route = getRouteApi("/_authenticated/_app/leave");
 
 type Dialog = {
 	request?: LeaveRequest;
-	mode: "view" | "reject" | "apply";
+	mode: "view" | "reject" | "apply" | "applyOwn";
 };
+
+/** The three views, in tab order; the team views exist only with the read key held somewhere. */
+type View = "mine" | "requests" | "timeline";
+
+const VIEWS: ReadonlyArray<View> = ["mine", "requests", "timeline"];
 
 /** The copy a list that is not ready is explained with, if any. */
 const problemOf = (
 	list: LeaveList,
-	t: TFunction
+	t: TFunction,
+	own: boolean
 ): { message: string; alert: boolean } | undefined => {
 	if (list.status === "hidden")
 		return { message: t("leave.hidden"), alert: false };
 	if (list.status === "error")
-		return { message: t("leave.failed"), alert: true };
+		return { message: t(own ? "leave.myFailed" : "leave.failed"), alert: true };
 	return undefined;
 };
 
 /**
- * The company's leave, one Branch at a time: the requests table and the
- * timeline, both read through the person's grants, and applying, approving
- * and rejecting for the people they may decide for. The view, Branch and
- * table state live in the URL; the timeline's window stays on the page.
- * Page-level composition only: the parts live in `features/leave`.
+ * Leave, in three tabs. "My leave" is every member's own requests and their
+ * own applications, with nothing to grant. "Team requests" and "Team
+ * timeline" are the company's requests one Branch at a time, read through
+ * the person's grants, with applying on behalf, approving and rejecting for
+ * the people they may decide for. The view, Branch and table state live in
+ * the URL; the timeline's window stays on the page. Page-level composition
+ * only: the parts live in `features/leave`.
  */
 export const Leave = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
@@ -74,6 +84,8 @@ export const Leave = (): FunctionComponent => {
 	const canAnywhere = useCanAnywhere();
 	const canRead = canAnywhere(LEAVE_READ_KEYS);
 	const canApply = canAnywhere(["leave_request:create"]);
+	const view: View = canRead && search.view ? search.view : "mine";
+	const team = view !== "mine";
 	const branches = useQuery(activeBranchesQuery(companyId, canRead));
 	const branchRows = branches.data?.items ?? [];
 	const selected =
@@ -82,18 +94,24 @@ export const Leave = (): FunctionComponent => {
 	const countries = [
 		...new Set(branchRows.map((branch) => branch.country)),
 	].sort((a, b) => a.localeCompare(b, i18n.language));
-	const regionName = new Intl.DisplayNames([i18n.language], { type: "region" });
-	const timeline = search.view === "timeline";
+	const regionName = new Intl.DisplayNames([i18n.language], {
+		type: "region",
+	});
 	const [range, setRange] = useState<DateRange>(defaultRange);
+	const mine = useMyLeaveRequests(
+		companyId,
+		myLeaveQueryOf(search),
+		view === "mine"
+	);
 	const list = useLeaveRequests(
 		companyId,
 		selected && leaveQueryOf(search, selected.branchId),
-		!timeline
+		view === "requests"
 	);
 	const window = useLeaveRequests(
 		companyId,
 		selected && timelineQueryOf(selected.branchId, range),
-		timeline
+		view === "timeline"
 	);
 	const actions = useLeaveActions(companyId);
 	const [dialog, setDialog] = useState<Dialog | null>(null);
@@ -150,8 +168,15 @@ export const Leave = (): FunctionComponent => {
 	const busy =
 		actions.approve.isPending ||
 		actions.reject.isPending ||
-		actions.apply.isPending;
-	const listProblem = problemOf(timeline ? window : list, t);
+		actions.apply.isPending ||
+		actions.applyOwn.isPending;
+	const current = view === "mine" ? mine : view === "requests" ? list : window;
+	const listProblem = problemOf(current, t, view === "mine");
+	const paging = (page: number): void => {
+		void navigate({
+			search: (previous) => ({ ...previous, page: pageParameter(page) }),
+		});
+	};
 	return (
 		<div>
 			<div className="flex flex-wrap items-start justify-between gap-6">
@@ -161,7 +186,7 @@ export const Leave = (): FunctionComponent => {
 					</h1>
 					<p className="mt-3 text-sm text-neutral-800">{t("leave.subtitle")}</p>
 				</div>
-				{selected && (
+				{team && selected && (
 					<div className="flex flex-wrap items-center gap-5 pt-1">
 						<div className="flex items-center gap-3">
 							<span className="text-sm text-neutral-800">
@@ -205,31 +230,50 @@ export const Leave = (): FunctionComponent => {
 					</div>
 				)}
 			</div>
-			{branches.isSuccess && branchRows.length === 0 && (
+			{team && branches.isSuccess && branchRows.length === 0 && (
 				<p className="mt-8 text-sm text-neutral-700">{t("leave.noBranches")}</p>
 			)}
 			<Tabs
 				className="mt-8"
-				selectedIndex={timeline ? 1 : 0}
+				selectedIndex={VIEWS.indexOf(view)}
 				onChange={(index) => {
-					show({ view: index === 1 ? "timeline" : undefined });
+					const next = VIEWS[index] ?? "mine";
+					show({ view: next === "mine" ? undefined : next });
 				}}
 			>
 				<div className="mb-8 flex flex-wrap items-center justify-between gap-4">
 					<TabList aria-label={t("leave.views")}>
-						<Tab className="text-xl!">{t("leave.requests")}</Tab>
-						<Tab className="text-xl!">{t("leave.timeline")}</Tab>
+						<Tab className="text-xl!">{t("leave.myLeave")}</Tab>
+						{canRead && (
+							<Tab className="text-xl!">{t("leave.teamRequests")}</Tab>
+						)}
+						{canRead && (
+							<Tab className="text-xl!">{t("leave.teamTimeline")}</Tab>
+						)}
 					</TabList>
-					{canApply && selected && (
+					{view === "mine" ? (
 						<Button
 							className="bg-ink-blue-900! hover:bg-ink-blue-800!"
 							leadingIcon={<PlusIcon />}
 							onClick={() => {
-								setDialog({ mode: "apply" });
+								setDialog({ mode: "applyOwn" });
 							}}
 						>
-							{t("leave.apply")}
+							{t("leave.applyOwn")}
 						</Button>
+					) : (
+						canApply &&
+						selected && (
+							<Button
+								className="bg-ink-blue-900! hover:bg-ink-blue-800!"
+								leadingIcon={<PlusIcon />}
+								onClick={() => {
+									setDialog({ mode: "apply" });
+								}}
+							>
+								{t("leave.apply")}
+							</Button>
+						)
 					)}
 				</div>
 				{listProblem ? (
@@ -244,23 +288,18 @@ export const Leave = (): FunctionComponent => {
 					<TabPanels>
 						<TabPanel>
 							<LeaveRequests
-								canReview={canReview}
+								own
+								canReview={() => false}
+								emptyState={t("leave.myEmpty")}
 								page={search.page ?? 1}
-								rows={list.status === "ready" ? list.items : []}
-								sort={leaveQueryOf(search, "").sort}
+								rows={mine.status === "ready" ? mine.items : []}
+								sort={myLeaveQueryOf(search).sort}
 								status={search.status}
-								total={list.status === "ready" ? list.total : 0}
-								onApprove={approve}
-								onOpen={(request, rejecting = false) => {
-									setDialog({ request, mode: rejecting ? "reject" : "view" });
-								}}
-								onPageChange={(page) => {
-									void navigate({
-										search: (previous) => ({
-											...previous,
-											page: pageParameter(page),
-										}),
-									});
+								total={mine.status === "ready" ? mine.total : 0}
+								onApprove={() => {}}
+								onPageChange={paging}
+								onOpen={(request) => {
+									setDialog({ request, mode: "view" });
 								}}
 								onSortChange={(sort) => {
 									show({ sort: sortParameter(sort) });
@@ -270,16 +309,44 @@ export const Leave = (): FunctionComponent => {
 								}}
 							/>
 						</TabPanel>
-						<TabPanel>
-							<LeaveTimeline
-								range={range}
-								requests={window.status === "ready" ? window.items : []}
-								onRangeChange={setRange}
-								onOpen={(request) => {
-									setDialog({ request, mode: "view" });
-								}}
-							/>
-						</TabPanel>
+						{canRead && (
+							<TabPanel>
+								<LeaveRequests
+									canReview={canReview}
+									page={search.page ?? 1}
+									rows={list.status === "ready" ? list.items : []}
+									sort={leaveQueryOf(search, "").sort}
+									status={search.status}
+									total={list.status === "ready" ? list.total : 0}
+									onApprove={approve}
+									onPageChange={paging}
+									onOpen={(request, rejecting = false) => {
+										setDialog({
+											request,
+											mode: rejecting ? "reject" : "view",
+										});
+									}}
+									onSortChange={(sort) => {
+										show({ sort: sortParameter(sort) });
+									}}
+									onStatusChange={(status) => {
+										show({ status });
+									}}
+								/>
+							</TabPanel>
+						)}
+						{canRead && (
+							<TabPanel>
+								<LeaveTimeline
+									range={range}
+									requests={window.status === "ready" ? window.items : []}
+									onRangeChange={setRange}
+									onOpen={(request) => {
+										setDialog({ request, mode: "view" });
+									}}
+								/>
+							</TabPanel>
+						)}
 					</TabPanels>
 				)}
 			</Tabs>
@@ -300,32 +367,42 @@ export const Leave = (): FunctionComponent => {
 					key={`${dialog.request?.leaveRequestId ?? "new"}-${dialog.mode}`}
 					busy={busy}
 					canReview={dialog.request ? canReview(dialog.request) : false}
-					mode={dialog.mode}
+					mode={dialog.mode === "applyOwn" ? "apply" : dialog.mode}
 					refusal={refusal}
 					request={dialog.request}
-					employees={{
-						search: employeeSearch,
-						onSearch: setEmployeeSearch,
-						options: (people.data?.items ?? []).filter((person) =>
-							can("leave_request:create", person.departmentId ?? undefined)
-						),
-					}}
+					employees={
+						dialog.mode === "apply"
+							? {
+									search: employeeSearch,
+									onSearch: setEmployeeSearch,
+									options: (people.data?.items ?? []).filter((person) =>
+										can(
+											"leave_request:create",
+											person.departmentId ?? undefined
+										)
+									),
+								}
+							: undefined
+					}
 					onApprove={approve}
 					onClose={close}
 					onCreate={(membershipId, body) => {
-						actions.apply.mutate(
-							{ membershipId, body },
-							{
-								onSuccess: (created) => {
-									done(t("leave.applied", { name: created.displayName }));
-								},
-								onError: (error) => {
-									const next = applyRefusal(error, t);
-									setRefusal(next);
-									if (next.refreshMembers) void people.refetch();
-								},
-							}
-						);
+						const handlers = {
+							onSuccess: (created: LeaveRequest): void => {
+								done(
+									membershipId === null
+										? t("leave.appliedOwn")
+										: t("leave.applied", { name: created.displayName })
+								);
+							},
+							onError: (error: Error): void => {
+								const next = applyRefusal(error, t);
+								setRefusal(next);
+								if (next.refreshMembers) void people.refetch();
+							},
+						};
+						if (membershipId === null) actions.applyOwn.mutate(body, handlers);
+						else actions.apply.mutate({ membershipId, body }, handlers);
 					}}
 					onReject={(request, reason) => {
 						actions.reject.mutate(

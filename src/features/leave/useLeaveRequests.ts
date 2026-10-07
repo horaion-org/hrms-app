@@ -8,7 +8,9 @@ import { ApiProblemError } from "@/common/problem";
 import {
 	approveLeaveRequest,
 	createLeaveRequest,
+	createMyLeaveRequest,
 	leaveRequestsQuery,
+	myLeaveRequestsQuery,
 	rejectLeaveRequest,
 	type LeaveRequestBody,
 	type LeaveQuery,
@@ -56,6 +58,21 @@ export const useLeaveRequests = (
 	return { status: "ready", ...list.data };
 };
 
+/** One page of the caller's own requests; nothing is hidden, since any active member may ask. */
+export const useMyLeaveRequests = (
+	companyId: string,
+	query: LeaveQuery,
+	wanted = true
+): LeaveList => {
+	const list = useQuery({
+		...myLeaveRequestsQuery(companyId, query),
+		enabled: wanted,
+	});
+	if (list.isError) return { status: "error" };
+	if (list.data === undefined) return { status: "pending" };
+	return { status: "ready", ...list.data };
+};
+
 export type LeaveActions = {
 	approve: UseMutationResult<LeaveRequest, Error, LeaveRequest>;
 	reject: UseMutationResult<
@@ -68,6 +85,8 @@ export type LeaveActions = {
 		Error,
 		{ membershipId: string; body: LeaveRequestBody }
 	>;
+	/** The caller's own application. */
+	applyOwn: UseMutationResult<LeaveRequest, Error, LeaveRequestBody>;
 };
 
 /** Deciding and applying; each success reloads every list and window of the company's requests. */
@@ -109,6 +128,11 @@ export const useLeaveActions = (companyId: string): LeaveActions => {
 				membershipId: string;
 				body: LeaveRequestBody;
 			}) => createLeaveRequest(companyId, membershipId, body),
+			onSuccess: reload,
+		}),
+		applyOwn: useMutation({
+			mutationFn: (body: LeaveRequestBody) =>
+				createMyLeaveRequest(companyId, body),
 			onSuccess: reload,
 		}),
 	};

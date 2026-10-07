@@ -36,7 +36,7 @@ export type ApplyEmployees = {
 export type LeaveRequestDialogProps = {
 	request?: LeaveRequest;
 	mode?: "view" | "reject" | "apply";
-	/** Who leave may be applied for; required in `apply` mode. */
+	/** Who leave may be applied for; left out in `apply` mode when the caller applies for themself. */
 	employees?: ApplyEmployees;
 	/** Whether the person may decide the shown request; Approve and Reject are offered only then. */
 	canReview?: boolean;
@@ -47,7 +47,8 @@ export type LeaveRequestDialogProps = {
 	onClose: () => void;
 	onApprove: (request: LeaveRequest) => void;
 	onReject: (request: LeaveRequest, reason: string) => void;
-	onCreate: (membershipId: string, body: LeaveRequestBody) => void;
+	/** `membershipId` is null when the caller applies for themself. */
+	onCreate: (membershipId: string | null, body: LeaveRequestBody) => void;
 };
 
 /**
@@ -77,6 +78,7 @@ export const LeaveRequestDialog = ({
 	const today = dayjs().format("YYYY-MM-DD");
 	const [dates, setDates] = useState({ start: today, end: today });
 	const applying = mode === "apply";
+	const own = applying && employees === undefined;
 	const chosen = employees?.options.find(
 		(person) => person.membershipId === membershipId
 	);
@@ -92,14 +94,17 @@ export const LeaveRequestDialog = ({
 	return (
 		<Modal
 			open
-			title={t(applying ? "leave.apply" : "leave.requestTitle")}
 			footer={
 				applying ? (
 					<>
 						<Button variant="secondary" onClick={onClose}>
 							{t("leave.cancel")}
 						</Button>
-						<Button disabled={!chosen || busy} form={id} type="submit">
+						<Button
+							disabled={(!own && !chosen) || busy}
+							form={id}
+							type="submit"
+						>
 							{t("leave.submit")}
 						</Button>
 					</>
@@ -153,6 +158,9 @@ export const LeaveRequestDialog = ({
 					</Button>
 				)
 			}
+			title={t(
+				own ? "leave.applyOwn" : applying ? "leave.apply" : "leave.requestTitle"
+			)}
 			onClose={onClose}
 		>
 			{applying ? (
@@ -161,8 +169,8 @@ export const LeaveRequestDialog = ({
 					id={id}
 					onSubmit={(event) => {
 						event.preventDefault();
-						if (!chosen) return;
-						onCreate(chosen.membershipId, {
+						if (!own && !chosen) return;
+						onCreate(own ? null : (chosen?.membershipId ?? null), {
 							leaveType: type,
 							startDate: dates.start,
 							endDate: dates.end,
@@ -170,50 +178,52 @@ export const LeaveRequestDialog = ({
 					}}
 				>
 					{alert}
-					<div className="space-y-2">
-						<p className="text-sm font-medium" id={`${id}-employee`}>
-							{t("leave.employee")}
-						</p>
-						<Input
-							aria-label={t("leave.searchEmployee")}
-							leadingIcon={<SearchIcon />}
-							placeholder={t("leave.searchEmployee")}
-							type="search"
-							value={employees?.search ?? ""}
-							onChange={(event) => {
-								employees?.onSearch(event.target.value);
-							}}
-						/>
-						<Select
-							aria-describedby={employeeError}
-							aria-labelledby={`${id}-employee`}
-							className="w-full"
-							placeholder={t("leave.chooseEmployee")}
-							status={fields.employee ? "error" : undefined}
-							value={membershipId}
-							options={(employees?.options ?? []).map((person) => ({
-								value: person.membershipId,
-								label: `${person.displayName} · ${person.employeeCode}`,
-							}))}
-							onChange={setMembershipId}
-						/>
-						{employees &&
-							employees.options.length === 0 &&
-							employees.search.trim() !== "" && (
-								<p className="text-sm text-neutral-700">
-									{t("leave.noEmployees")}
+					{!own && (
+						<div className="space-y-2">
+							<p className="text-sm font-medium" id={`${id}-employee`}>
+								{t("leave.employee")}
+							</p>
+							<Input
+								aria-label={t("leave.searchEmployee")}
+								leadingIcon={<SearchIcon />}
+								placeholder={t("leave.searchEmployee")}
+								type="search"
+								value={employees?.search ?? ""}
+								onChange={(event) => {
+									employees?.onSearch(event.target.value);
+								}}
+							/>
+							<Select
+								aria-describedby={employeeError}
+								aria-labelledby={`${id}-employee`}
+								className="w-full"
+								placeholder={t("leave.chooseEmployee")}
+								status={fields.employee ? "error" : undefined}
+								value={membershipId}
+								options={(employees?.options ?? []).map((person) => ({
+									value: person.membershipId,
+									label: `${person.displayName} · ${person.employeeCode}`,
+								}))}
+								onChange={setMembershipId}
+							/>
+							{employees &&
+								employees.options.length === 0 &&
+								employees.search.trim() !== "" && (
+									<p className="text-sm text-neutral-700">
+										{t("leave.noEmployees")}
+									</p>
+								)}
+							{fields.employee && (
+								<p
+									className="text-sm text-error-700"
+									id={`${id}-employee-error`}
+									role="alert"
+								>
+									{fields.employee}
 								</p>
 							)}
-						{fields.employee && (
-							<p
-								className="text-sm text-error-700"
-								id={`${id}-employee-error`}
-								role="alert"
-							>
-								{fields.employee}
-							</p>
-						)}
-					</div>
+						</div>
+					)}
 					<div className="space-y-2">
 						<p className="text-sm font-medium" id={`${id}-type`}>
 							{t("leave.type")}

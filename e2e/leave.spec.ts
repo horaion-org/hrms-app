@@ -93,6 +93,13 @@ test.beforeEach(async ({ context }) => {
 			])
 		)
 	);
+	await context.route("**/api/v1/companies/acme/me/leave-requests**", (route) =>
+		json(
+			route,
+			200,
+			page_([request({ membershipId: "m-acme", displayName: "Owner" })])
+		)
+	);
 	let rejected = false;
 	await context.route("**/api/v1/companies/acme/leave-requests**", (route) =>
 		json(
@@ -136,18 +143,23 @@ test("requests, timeline, and a rejection against the API", async ({
 	await expect(
 		page.getByRole("heading", { name: "Leave overview" })
 	).toBeVisible();
+	await expect(page.getByRole("tab", { name: "My leave" })).toHaveAttribute(
+		"aria-selected",
+		"true"
+	);
+	await page.getByRole("tab", { name: "Team requests" }).click();
 	await expect(page.getByText("1–10 of 24 entries")).toBeVisible();
 	await page.screenshot({
 		path: testInfo.outputPath("requests.png"),
 		fullPage: true,
 	});
-	await page.getByRole("tab", { name: "Timeline" }).click();
+	await page.getByRole("tab", { name: "Team timeline" }).click();
 	await expect(page).toHaveURL(/view=timeline/);
 	await page.screenshot({
 		path: testInfo.outputPath("timeline.png"),
 		fullPage: true,
 	});
-	await page.getByRole("tab", { name: "Requests" }).click();
+	await page.getByRole("tab", { name: "Team requests" }).click();
 	await page
 		.getByRole("button", { name: "Reject request for Cheryl Ng" })
 		.click();
@@ -182,7 +194,7 @@ test("narrow-screen layout keeps the page within the viewport", async ({
 	expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(
 		375
 	);
-	await page.getByRole("tab", { name: "Timeline" }).click();
+	await page.getByRole("tab", { name: "Team timeline" }).click();
 	expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(
 		375
 	);

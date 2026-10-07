@@ -34,6 +34,9 @@ export type LeaveRequestsProps = {
 	onApprove: (request: LeaveRequest) => void;
 	/** Whether the person may decide this request, as the workspace says. */
 	canReview: (request: LeaveRequest) => boolean;
+	/** The caller's own requests: no employee column, no decisions, only viewing. */
+	own?: boolean;
+	emptyState?: string;
 };
 
 /**
@@ -53,24 +56,31 @@ export const LeaveRequests = ({
 	onOpen,
 	onApprove,
 	canReview,
+	own = false,
+	emptyState,
 }: LeaveRequestsProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
+	const employee: Array<DataTableColumn<LeaveRequest>> = own
+		? []
+		: [
+				{
+					id: "displayName",
+					header: t("leave.employee"),
+					headerClassName: "min-w-51",
+					sortValue: (row) => row.displayName,
+					cell: (row) => (
+						<div className="flex items-center gap-3">
+							<Avatar className="size-10! text-base!" name={row.displayName} />
+							<div>
+								<p className="font-semibold">{row.displayName}</p>
+								<p className="mt-1">{row.employeeCode}</p>
+							</div>
+						</div>
+					),
+				},
+			];
 	const columns: Array<DataTableColumn<LeaveRequest>> = [
-		{
-			id: "displayName",
-			header: t("leave.employee"),
-			headerClassName: "min-w-51",
-			sortValue: (row) => row.displayName,
-			cell: (row) => (
-				<div className="flex items-center gap-3">
-					<Avatar className="size-10! text-base!" name={row.displayName} />
-					<div>
-						<p className="font-semibold">{row.displayName}</p>
-						<p className="mt-1">{row.employeeCode}</p>
-					</div>
-				</div>
-			),
-		},
+		...employee,
 		{
 			id: "startDate",
 			header: t("leave.period"),
@@ -122,7 +132,7 @@ export const LeaveRequests = ({
 			header: t("leave.actions"),
 			headerClassName: "w-35",
 			cell: (row): ReactNode => {
-				const decidable = row.status === "PENDING" && canReview(row);
+				const decidable = !own && row.status === "PENDING" && canReview(row);
 				return (
 					<div className="flex items-center gap-1">
 						<Button
@@ -134,26 +144,30 @@ export const LeaveRequests = ({
 						>
 							<ViewIcon />
 						</Button>
-						<Button
-							aria-label={t("leave.rejectFor", { name: row.displayName })}
-							disabled={!decidable}
-							variant="icon"
-							onClick={() => {
-								onOpen(row, true);
-							}}
-						>
-							<CrossIcon />
-						</Button>
-						<Button
-							aria-label={t("leave.approveFor", { name: row.displayName })}
-							disabled={!decidable}
-							variant="icon"
-							onClick={() => {
-								onApprove(row);
-							}}
-						>
-							<TickIcon />
-						</Button>
+						{!own && (
+							<>
+								<Button
+									aria-label={t("leave.rejectFor", { name: row.displayName })}
+									disabled={!decidable}
+									variant="icon"
+									onClick={() => {
+										onOpen(row, true);
+									}}
+								>
+									<CrossIcon />
+								</Button>
+								<Button
+									aria-label={t("leave.approveFor", { name: row.displayName })}
+									disabled={!decidable}
+									variant="icon"
+									onClick={() => {
+										onApprove(row);
+									}}
+								>
+									<TickIcon />
+								</Button>
+							</>
+						)}
 					</div>
 				);
 			},
@@ -186,7 +200,7 @@ export const LeaveRequests = ({
 				className="[&>table]:min-w-250"
 				columns={columns}
 				data={rows}
-				emptyState={t("leave.empty")}
+				emptyState={emptyState ?? t("leave.empty")}
 				getRowId={(row) => row.leaveRequestId}
 				label={t("leave.requests")}
 				sort={{ id: sort.field, desc: sort.desc }}

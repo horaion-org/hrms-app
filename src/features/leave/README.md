@@ -1,8 +1,10 @@
 # Leave
 
-The authenticated `/leave` route: the company's leave requests one Branch at a time, as a table and as a
-timeline, with applying on a member's behalf, approving and rejecting. Everything comes from the API
-(`features/leave/api.ts`); nothing is sampled or kept in page state beyond the timeline's window.
+The authenticated `/leave` route, in three tabs. **My leave** is every member's own requests and their own
+applications (`/companies/{c}/me/leave-requests`), with nothing to grant. **Team requests** and **Team
+timeline** are the company's requests one Branch at a time, read through the person's grants, with applying
+on a member's behalf, approving and rejecting. Everything comes from the API (`features/leave/api.ts`); nothing
+is sampled or kept in page state beyond the timeline's window.
 
 ## Shape
 
@@ -24,8 +26,8 @@ timeline, with applying on a member's behalf, approving and rejecting. Everythin
 
 ## Permissions
 
-The Module is offered to anyone holding `leave_request:read` anywhere; the API lists only the requests of
-people in the units where it is held. Apply appears with `leave_request:create` held anywhere and offers only
+The Module is offered to everyone, for their own leave. The team tabs appear for anyone holding
+`leave_request:read` anywhere; the API lists only the requests of people in the units where it is held. Apply appears with `leave_request:create` held anywhere and offers only
 the people it is held for; Approve and Reject appear on a pending request only with `leave_request:review` at
 that person's Department. The API checks every request regardless.
 
