@@ -1,25 +1,22 @@
 {
-  "leaveUi": {
-    "pagination": "Paginación",
+  "pagination": {
+    "label": "Paginación",
     "entries": "{{start}}–{{end}} de {{total}} registros",
     "previousPage": "Página anterior",
     "nextPage": "Página siguiente",
-    "page": "Página {{page}} de {{total}}",
-    "close": "Cerrar diálogo",
+    "page": "Página {{page}} de {{total}}"
+  },
+  "modal": {
+    "close": "Cerrar diálogo"
+  },
+  "leave": {
     "title": "Resumen de ausencias",
     "subtitle": "Gestiona las solicitudes de permiso y las próximas ausencias.",
-    "preview": "Vista previa · Datos de ejemplo. Los cambios duran hasta que salgas de esta página.",
     "country": "País",
     "branch": "Sucursal",
-    "countries": {
-      "SG": "Singapur",
-      "MY": "Malasia"
-    },
-    "branches": {
-      "main": "Sucursal principal",
-      "jurong": "Sucursal de Jurong",
-      "kl": "Sucursal de Kuala Lumpur"
-    },
+    "noBranches": "Añade una sucursal a la organización antes de gestionar ausencias.",
+    "hidden": "No tienes acceso a las solicitudes de permiso de esta empresa.",
+    "failed": "No pudimos cargar las solicitudes. Inténtalo de nuevo.",
     "requests": "Solicitudes",
     "timeline": "Cronología",
     "views": "Vistas de ausencias",
@@ -34,22 +31,24 @@
     "actions": "Acciones",
     "requested": "Solicitado",
     "requestedOn": "Solicitado el {{date}}",
+    "requestedBy": "Solicitado por",
+    "reviewedBy": "Decidido por",
     "days_one": "{{count}} día",
     "days_other": "{{count}} días",
     "statuses": {
-      "approved": "Aprobado",
-      "pending": "Pendiente",
-      "rejected": "Rechazado",
+      "PENDING": "Pendiente",
+      "APPROVED": "Aprobado",
+      "REJECTED": "Rechazado",
       "blocked": "Bloqueado"
     },
     "types": {
-      "annual": "Vacaciones",
-      "sick": "Baja por enfermedad",
-      "hospitalisation": "Hospitalización",
-      "compassionate": "Permiso por duelo",
-      "maternity": "Permiso de maternidad",
-      "unpaid": "Permiso sin sueldo",
-      "marriage": "Permiso por matrimonio"
+      "ANNUAL": "Vacaciones",
+      "SICK": "Baja por enfermedad",
+      "HOSPITALISATION": "Hospitalización",
+      "COMPASSIONATE": "Permiso por duelo",
+      "MATERNITY": "Permiso de maternidad",
+      "UNPAID": "Permiso sin sueldo",
+      "MARRIAGE": "Permiso por matrimonio"
     },
     "view": "Ver solicitud de {{name}}",
     "approveFor": "Aprobar solicitud de {{name}}",
@@ -71,14 +70,29 @@
     "note": "Añade una nota",
     "required": "Introduce un motivo de rechazo.",
     "cancel": "Cancelar",
+    "close": "Cerrar",
     "confirmRejection": "Confirmar rechazo",
-    "approved": "Solicitud aprobada en esta vista previa.",
-    "rejected": "Solicitud rechazada en esta vista previa.",
-    "applied": "Solicitud añadida a esta vista previa.",
+    "approved": "Solicitud de {{name}} aprobada.",
+    "rejected": "Solicitud de {{name}} rechazada.",
+    "applied": "Solicitud de permiso de {{name}} enviada.",
     "submit": "Enviar solicitud",
     "applyPeriod": "Fechas del permiso",
     "chooseEmployee": "Elige un empleado",
-    "previewApplication": "Crea una solicitud de ejemplo para explorar el diseño. No se enviará ninguna solicitud."
+    "searchEmployee": "Buscar empleados",
+    "noEmployees": "Nadie para quien puedas solicitar coincide con esta búsqueda.",
+    "refusal": {
+      "overlaps": "Ya tiene un permiso en uno de estos días.",
+      "noWorkingDays": "Elige al menos un día laborable.",
+      "invalidPeriod": "Elige una fecha de fin igual o posterior al inicio, como máximo un año después.",
+      "notPending": "Esta solicitud ya fue decidida. Recarga la página para verla.",
+      "requestMissing": "Esta solicitud ya no está disponible.",
+      "profileMissing": "Esta persona ya no está disponible.",
+      "reasonRejected": "Introduce un motivo de hasta 2.000 caracteres.",
+      "forbiddenApply": "Ya no tienes permiso para solicitar en nombre de esta persona.",
+      "forbiddenDecide": "Ya no tienes permiso para decidir esta solicitud.",
+      "applyFailed": "No pudimos enviar la solicitud. Inténtalo de nuevo.",
+      "decideFailed": "No pudimos guardar la decisión. Inténtalo de nuevo."
+    }
   },
   "dialog": {
     "close": "Cerrar"

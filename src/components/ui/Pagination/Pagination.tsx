@@ -22,11 +22,11 @@ export const Pagination = ({
 	const numbers = new Intl.NumberFormat(i18n.language);
 	return (
 		<nav
-			aria-label={t("leaveUi.pagination")}
+			aria-label={t("pagination.label")}
 			className="mt-8 flex items-center justify-between gap-4 text-xs text-neutral-800"
 		>
 			<p aria-live="polite">
-				{t("leaveUi.entries", {
+				{t("pagination.entries", {
 					start: numbers.format(total === 0 ? 0 : (current - 1) * pageSize + 1),
 					end: numbers.format(Math.min(current * pageSize, total)),
 					total: numbers.format(total),
@@ -34,7 +34,7 @@ export const Pagination = ({
 			</p>
 			<div className="flex items-center gap-2">
 				<Button
-					aria-label={t("leaveUi.previousPage")}
+					aria-label={t("pagination.previousPage")}
 					disabled={current <= 1}
 					variant="icon"
 					onClick={() => {
@@ -45,13 +45,13 @@ export const Pagination = ({
 				</Button>
 				<span
 					aria-current="page"
-					aria-label={t("leaveUi.page", { page: current, total: lastPage })}
+					aria-label={t("pagination.page", { page: current, total: lastPage })}
 					className="flex size-11 items-center justify-center rounded-lg border border-neutral-400 text-sm font-semibold"
 				>
 					{numbers.format(current)}
 				</span>
 				<Button
-					aria-label={t("leaveUi.nextPage")}
+					aria-label={t("pagination.nextPage")}
 					disabled={current >= lastPage}
 					variant="icon"
 					onClick={() => {

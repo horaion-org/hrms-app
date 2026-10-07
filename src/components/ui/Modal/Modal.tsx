@@ -37,7 +37,7 @@ export const Modal = ({
 								{title}
 							</DialogTitle>
 							<Button
-								aria-label={t("leaveUi.close")}
+								aria-label={t("modal.close")}
 								variant="icon"
 								onClick={onClose}
 							>

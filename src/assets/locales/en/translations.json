@@ -1,25 +1,22 @@
 {
-	"leaveUi": {
-		"pagination": "Pagination",
+	"pagination": {
+		"label": "Pagination",
 		"entries": "{{start}}–{{end}} of {{total}} entries",
 		"previousPage": "Previous page",
 		"nextPage": "Next page",
-		"page": "Page {{page}} of {{total}}",
-		"close": "Close dialog",
+		"page": "Page {{page}} of {{total}}"
+	},
+	"modal": {
+		"close": "Close dialog"
+	},
+	"leave": {
 		"title": "Leave overview",
 		"subtitle": "Manage employee leave requests and upcoming absences.",
-		"preview": "Design preview · Sample data. Changes last until you leave this page.",
 		"country": "Country",
 		"branch": "Branch",
-		"countries": {
-			"SG": "Singapore",
-			"MY": "Malaysia"
-		},
-		"branches": {
-			"main": "Main branch",
-			"jurong": "Jurong branch",
-			"kl": "Kuala Lumpur branch"
-		},
+		"noBranches": "Add a branch to the organisation before managing leave.",
+		"hidden": "You don’t have access to leave requests in this company.",
+		"failed": "We couldn’t load leave requests. Try again.",
 		"requests": "Requests",
 		"timeline": "Timeline",
 		"views": "Leave views",
@@ -34,22 +31,24 @@
 		"actions": "Actions",
 		"requested": "Requested",
 		"requestedOn": "Requested {{date}}",
+		"requestedBy": "Requested by",
+		"reviewedBy": "Decided by",
 		"days_one": "{{count}} day",
 		"days_other": "{{count}} days",
 		"statuses": {
-			"approved": "Approved",
-			"pending": "Pending",
-			"rejected": "Rejected",
+			"PENDING": "Pending",
+			"APPROVED": "Approved",
+			"REJECTED": "Rejected",
 			"blocked": "Blocked"
 		},
 		"types": {
-			"annual": "Annual leave",
-			"sick": "Sick leave",
-			"hospitalisation": "Hospitalisation leave",
-			"compassionate": "Compassionate leave",
-			"maternity": "Maternity leave",
-			"unpaid": "Unpaid leave",
-			"marriage": "Marriage leave"
+			"ANNUAL": "Annual leave",
+			"SICK": "Sick leave",
+			"HOSPITALISATION": "Hospitalisation leave",
+			"COMPASSIONATE": "Compassionate leave",
+			"MATERNITY": "Maternity leave",
+			"UNPAID": "Unpaid leave",
+			"MARRIAGE": "Marriage leave"
 		},
 		"view": "View request for {{name}}",
 		"approveFor": "Approve request for {{name}}",
@@ -71,14 +70,29 @@
 		"note": "Add a note",
 		"required": "Enter a reason for rejection.",
 		"cancel": "Cancel",
+		"close": "Close",
 		"confirmRejection": "Confirm rejection",
-		"approved": "Request approved in this preview.",
-		"rejected": "Request rejected in this preview.",
-		"applied": "Leave request added to this preview.",
+		"approved": "Request for {{name}} approved.",
+		"rejected": "Request for {{name}} rejected.",
+		"applied": "Leave request for {{name}} submitted.",
 		"submit": "Submit request",
 		"applyPeriod": "Leave dates",
 		"chooseEmployee": "Choose an employee",
-		"previewApplication": "Create a sample request to explore the design. No request will be sent."
+		"searchEmployee": "Search employees",
+		"noEmployees": "No one you may apply for matches this search.",
+		"refusal": {
+			"overlaps": "They already have leave on one of these days.",
+			"noWorkingDays": "Choose at least one weekday.",
+			"invalidPeriod": "Choose an end date on or after the start, at most a year later.",
+			"notPending": "This request was already decided. Reload the page to see it.",
+			"requestMissing": "This request is no longer available.",
+			"profileMissing": "This person is no longer available.",
+			"reasonRejected": "Enter a reason of up to 2,000 characters.",
+			"forbiddenApply": "You no longer have permission to apply for this person.",
+			"forbiddenDecide": "You no longer have permission to decide this request.",
+			"applyFailed": "We couldn’t submit the request. Try again.",
+			"decideFailed": "We couldn’t save the decision. Try again."
+		}
 	},
 	"dialog": {
 		"close": "Close"
@@ -993,6 +1007,15 @@
 					"create": "Add",
 					"update": "Edit",
 					"delete": "Delete"
+				}
+			},
+			"leave_request": {
+				"name": "Leave",
+				"description": "Each person’s leave requests, including the kind of leave and why a request was refused.",
+				"actions": {
+					"read": "View",
+					"create": "Apply",
+					"review": "Approve or reject"
 				}
 			},
 			"none": "No permissions yet.",
