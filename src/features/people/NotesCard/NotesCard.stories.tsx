@@ -58,6 +58,7 @@ const meta = {
 			probationEndDate: null,
 			endDate: null,
 			reportsTo: null,
+			invitationPending: false,
 		},
 	},
 	decorators: [storyCompany(client, COMPANY), storyProviders(client)],

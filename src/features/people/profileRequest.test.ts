@@ -71,6 +71,7 @@ const kent: MemberProfileDetail = {
 	probationEndDate: null,
 	endDate: null,
 	reportsTo: { membershipId: "m-9", displayName: "Faris Ahmad" },
+	invitationPending: false,
 };
 
 describe("profile update request", () => {
@@ -95,7 +96,7 @@ describe("profile update request", () => {
 		});
 	});
 
-	it("sends every field, an empty one as null, and never the employee ID, email or role", () => {
+	it("sends every field, an empty one as null, and never the employee ID or role", () => {
 		expect(
 			profileUpdateRequest({
 				...profileEditValues(kent),
@@ -106,6 +107,7 @@ describe("profile update request", () => {
 			})
 		).toStrictEqual({
 			displayName: "Kent Chua",
+			email: "kent.chua@company.com",
 			status: "INACTIVE",
 			departmentId: "d-1",
 			jobTitleId: "j-1",

@@ -6,6 +6,8 @@ import {
 import { useNavigate } from "@tanstack/react-router";
 import {
 	memberProfileQuery,
+	savedProfile,
+	resendInvitation,
 	updateMemberProfile,
 	type MemberProfileDetail,
 	type MemberStatus,
@@ -54,7 +56,7 @@ export const useSetProfileStatus = (
 		onSuccess: async (saved) => {
 			client.setQueryData<MemberProfileDetail>(
 				memberProfileQuery(companyId, profile.membershipId).queryKey,
-				() => saved
+				(previous) => savedProfile(saved, previous)
 			);
 			await client.invalidateQueries({ queryKey: ["people", companyId] });
 			await show({
@@ -63,5 +65,22 @@ export const useSetProfileStatus = (
 				roleNotAssigned: false,
 			});
 		},
+	});
+};
+
+/** Emails the person a new invitation to log in. */
+export const useResendInvitation = (
+	companyId: string,
+	profile: MemberProfileDetail
+): UseMutationResult<void, Error, void> => {
+	const show = useShowNotice(profile.membershipId);
+	return useMutation({
+		mutationFn: () => resendInvitation(companyId, profile.membershipId),
+		onSuccess: () =>
+			show({
+				kind: "invited",
+				name: profile.displayName,
+				roleNotAssigned: false,
+			}),
 	});
 };

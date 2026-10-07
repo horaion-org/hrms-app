@@ -14,6 +14,7 @@ const meta = {
 			employeeCode: "EMP-10392",
 			jobTitleName: "Pastry chef",
 			status: "ACTIVE",
+			invitationPending: false,
 		},
 		actions: (
 			<Button leadingIcon={<EditIcon />} variant="secondary">
@@ -29,6 +30,11 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+/** Someone who has yet to log in for the first time. */
+export const Invited: Story = {
+	args: { profile: { ...meta.args.profile, invitationPending: true } },
+};
 
 export const Inactive: Story = {
 	args: {

@@ -67,6 +67,8 @@ export const PersonProfileEdit = ({
 				initial={profileEditValues(profile, atDepartment?.accessRoleId)}
 				edit={{
 					employeeCode: profile.employeeCode,
+					// Unknown counts as logged in: the API would refuse the change.
+					emailEditable: profile.invitationPending === true,
 					roleEditable: ready,
 					otherRoles: roleNames(elsewhere),
 					unsaved: skillsDraft.changed,

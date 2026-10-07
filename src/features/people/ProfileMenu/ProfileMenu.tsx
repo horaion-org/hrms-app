@@ -5,7 +5,10 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { OverflowMenu, OverflowMenuItem } from "@/components/ui/OverflowMenu";
 import type { MemberProfileDetail } from "@/features/people/api";
 import { profileActionRefusal } from "@/features/people/profileRefusal";
-import { useSetProfileStatus } from "@/features/people/useProfileActions";
+import {
+	useResendInvitation,
+	useSetProfileStatus,
+} from "@/features/people/useProfileActions";
 
 export type ProfileMenuProps = {
 	companyId: string;
@@ -49,10 +52,36 @@ const ChangeStatus = ({
 	);
 };
 
+/** Emails the person a new invitation to log in, once asked. */
+const ResendInvitation = ({
+	companyId,
+	profile,
+	onClose,
+}: DialogProps): FunctionComponent => {
+	const { t } = useTranslation();
+	const resend = useResendInvitation(companyId, profile);
+	const key = "people.profile.resend";
+	return (
+		<ConfirmDialog
+			cancelLabel={t("organisation.list.cancel")}
+			confirmLabel={t(`${key}.confirm`)}
+			description={t(`${key}.description`, { email: profile.email })}
+			error={resend.error ? profileActionRefusal(resend.error, t) : undefined}
+			submitting={resend.isPending}
+			title={t(`${key}.title`, { name: profile.displayName })}
+			onClose={onClose}
+			onConfirm={() => {
+				resend.mutate(undefined, { onSuccess: onClose });
+			}}
+		/>
+	);
+};
+
 /**
- * A person's "More actions" menu: deactivate or reactivate them. Only what
- * applies is offered; with nothing to offer there is no menu. Shown only to
- * someone who may change the person: see `profileEditAccess`.
+ * A person's "More actions" menu: deactivate or reactivate them, and resend
+ * their invitation while they have yet to log in. Only what applies is
+ * offered; with nothing to offer there is no menu. Shown only to someone who
+ * may change the person: see `profileEditAccess`.
  */
 export const ProfileMenu = ({
 	companyId,
@@ -60,13 +89,14 @@ export const ProfileMenu = ({
 	self,
 }: ProfileMenuProps): FunctionComponent => {
 	const { t } = useTranslation();
-	const [open, setOpen] = useState<"status">();
+	const [open, setOpen] = useState<"status" | "invitation">();
 	const close = (): void => {
 		setOpen(undefined);
 	};
 	const active = profile.status === "ACTIVE";
 	const canChangeStatus = !(active && self);
-	if (!canChangeStatus) return null;
+	const canResend = profile.invitationPending === true;
+	if (!canChangeStatus && !canResend) return null;
 
 	return (
 		<>
@@ -87,9 +117,25 @@ export const ProfileMenu = ({
 						)}
 					</OverflowMenuItem>
 				)}
+				{canResend && (
+					<OverflowMenuItem
+						onClick={() => {
+							setOpen("invitation");
+						}}
+					>
+						{t("people.profile.resend.item")}
+					</OverflowMenuItem>
+				)}
 			</OverflowMenu>
 			{open === "status" && (
 				<ChangeStatus companyId={companyId} profile={profile} onClose={close} />
+			)}
+			{open === "invitation" && (
+				<ResendInvitation
+					companyId={companyId}
+					profile={profile}
+					onClose={close}
+				/>
 			)}
 		</>
 	);

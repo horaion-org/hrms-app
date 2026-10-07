@@ -38,12 +38,12 @@ export type ProfileEditValues = ProfileFormValues & { status: MemberStatus };
 
 /**
  * The update request for an edited profile. `PUT` replaces the profile, so
- * every field is sent and an empty one is null, never "". The login email
- * is not changed here and a system role is assigned separately, so neither
- * is part of the body.
+ * every field is sent and an empty one is null, never "". A system role is
+ * assigned separately, so it is not part of the body.
  */
 export const profileUpdateRequest = ({
 	displayName,
+	email,
 	status,
 	departmentId,
 	jobTitleId,
@@ -55,6 +55,7 @@ export const profileUpdateRequest = ({
 	probationEndDate,
 }: ProfileEditValues): UpdateMemberProfileBody => ({
 	displayName: displayName.trim(),
+	email: email.trim(),
 	status,
 	departmentId,
 	jobTitleId: jobTitleId || null,

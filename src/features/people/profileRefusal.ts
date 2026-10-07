@@ -21,10 +21,13 @@ export type ProfileField = (typeof PROFILE_FIELDS)[number];
 
 /**
  * The refusals of a change to an existing person, as `"<status> <errorCode>"`.
- * Every code an edit or a status change can be refused with is named here
- * once, so a code the API settles on differently is a one-line change.
+ * Every code an edit, a status change or an invitation can be refused with
+ * is named here once, so a code the API settles on differently is a
+ * one-line change.
  */
 export const PROFILE_REFUSAL_CODES = {
+	/** The email can be corrected only until the person first logs in. */
+	emailChangeNotAllowed: "409 EMAIL_CHANGE_NOT_ALLOWED",
 	/** The name belongs to a login the person also uses in another company. */
 	identityShared: "409 IDENTITY_SHARED_ACROSS_COMPANIES",
 	selfDeactivation: "409 CANNOT_DEACTIVATE_SELF",
@@ -37,6 +40,9 @@ export const PROFILE_REFUSAL_CODES = {
 	lastDepartmentHead: "409 LAST_ACTIVE_DEPARTMENT_HEAD",
 	/** Nobody, or nobody the person may see. */
 	profileNotFound: "404 MEMBER_PROFILE_NOT_FOUND",
+	invitationNotPending: "409 INVITATION_NOT_PENDING",
+	/** The invitation email, after an email correction or a resend, couldn't be sent. */
+	invitationNotDelivered: "502 INVITATION_NOT_DELIVERED",
 	/** They were moved to another Department since their profile was loaded. */
 	profileMoved: "409 MEMBER_PROFILE_MOVED",
 	rateLimited: "429 RATE_LIMITED",
@@ -93,6 +99,7 @@ export const profileRefusal = (
 				refreshMembers: true,
 			},
 			...(edit && {
+				[codes.emailChangeNotAllowed]: field("email", t(`${key}.emailLocked`)),
 				[codes.identityShared]: field(
 					"displayName",
 					t(`${key}.identityShared`)
@@ -116,6 +123,7 @@ export const profileRefusal = (
 				[codes.lastDepartmentHead]: lastHead,
 				[codes.profileNotFound]: t(`${key}.profileMissing`),
 				[codes.profileMoved]: t("people.profile.moved"),
+				[codes.invitationNotDelivered]: t(`${key}.invitationNotDelivered`),
 			}),
 		},
 		// A 400 names the request's fields; the manager is `reportsToMembershipId` there.
@@ -143,8 +151,8 @@ export const profileRefusal = (
 };
 
 /**
- * Why deactivating or reactivating a person was refused, for the dialog
- * that asked. Never the API's own text.
+ * Why deactivating, reactivating or re-inviting a person was refused, for
+ * the dialog that asked. Never the API's own text.
  */
 export const profileActionRefusal = (error: unknown, t: TFunction): string =>
 	mapRefusal<never>(error, {
@@ -152,6 +160,8 @@ export const profileActionRefusal = (error: unknown, t: TFunction): string =>
 			[codes.selfDeactivation]: t("people.form.selfDeactivation"),
 			[codes.ownerDeactivation]: t("people.form.ownerDeactivation"),
 			[codes.lastDepartmentHead]: t("people.form.lastDepartmentHead"),
+			[codes.invitationNotPending]: t("people.profile.invitationNotPending"),
+			[codes.invitationNotDelivered]: t("people.form.invitationNotDelivered"),
 			[codes.profileNotFound]: t("people.form.profileMissing"),
 			[codes.profileMoved]: t("people.profile.moved"),
 			[codes.rateLimited]: t("auth.retryHold.later"),

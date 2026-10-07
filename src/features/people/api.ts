@@ -194,6 +194,8 @@ const memberProfileDetailSchema = memberProfileSchema.extend({
 	reportsTo: z
 		.object({ membershipId: z.string(), displayName: z.string() })
 		.nullable(),
+	/** True until the person first logs in; null when the API can't tell. */
+	invitationPending: z.boolean().nullable(),
 });
 
 /** One person's whole profile, as their page shows it. */
@@ -239,12 +241,27 @@ export const memberProfileQuery = (
 	});
 
 /**
+ * A saved profile to show until it is read again. A save's answer has
+ * `invitationPending` null unless the email was changed, which says nothing
+ * about the invitation, so what was known before is kept.
+ */
+export const savedProfile = (
+	saved: MemberProfileDetail,
+	previous: MemberProfileDetail | undefined
+): MemberProfileDetail => ({
+	...saved,
+	invitationPending:
+		saved.invitationPending ?? previous?.invitationPending ?? null,
+});
+
+/**
  * A person's profile as an update sends it. `PUT` replaces the profile, so
  * every field is sent and an empty one is null, never "". The employee ID
- * and the login email never change here, and a person always has a Department.
+ * never changes, and a person always has a Department.
  */
 export type UpdateMemberProfileBody = {
 	displayName: string;
+	email: string;
 	status: MemberStatus;
 	/** A different one from their current Department moves them there. */
 	departmentId: string;
@@ -268,6 +285,15 @@ export const updateMemberProfile = (
 		memberProfileDetailSchema,
 		{ method: "PUT", body }
 	);
+
+/** Emails the person a new invitation to log in; only while they have never logged in. */
+export const resendInvitation = (
+	companyId: string,
+	membershipId: string
+): Promise<void> =>
+	apiRequestVoid(`${memberProfilePath(companyId, membershipId)}/invitation`, {
+		method: "POST",
+	});
 
 const memberNoteSchema = z.object({
 	noteId: z.string(),
