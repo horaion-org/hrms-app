@@ -27,6 +27,7 @@ const meta = {
 			probationEndDate: null,
 			endDate: null,
 			reportsTo: { membershipId: "m-9", displayName: "Faris Ahmad" },
+			invitationPending: false,
 		},
 		systemRoles: "User",
 	},

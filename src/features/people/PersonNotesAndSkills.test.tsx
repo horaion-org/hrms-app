@@ -89,6 +89,7 @@ const kent = (
 	probationEndDate: null,
 	endDate: null,
 	reportsTo: null,
+	invitationPending: false,
 	...overrides,
 });
 const unfiled = kent({

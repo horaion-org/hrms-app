@@ -58,6 +58,8 @@ import { useCan } from "@/features/workspace/useCan";
 export type ProfileFormEdit = {
 	/** Shown in the personal card, never changed. */
 	employeeCode: string;
+	/** False once they have logged in, after which the API refuses a new address. */
+	emailEditable: boolean;
 	/** False leaves out the system role, e.g. when their roles couldn't be loaded. */
 	roleEditable: boolean;
 	/** System roles they hold outside their Department: shown, never changed here. */
@@ -110,9 +112,9 @@ const NOTHING = (): void => {};
  * are offered, or, with `edit`, change them. The manager and system role
  * appear only for those who may search people, and read and assign roles.
  *
- * With `edit` it changes an existing person: their employee ID and email
- * address are shown but not changed, their status can be changed, and
- * leaving with changes asks first.
+ * With `edit` it changes an existing person: their employee ID is shown,
+ * their status can be changed, their email address only while they have
+ * yet to log in, and leaving with changes asks first.
  */
 export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 	const { companyId, initial, onSubmit, onCancel, className, edit } = props;
@@ -280,8 +282,12 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 	const departmentError = errors.departmentId?.message;
 	const roleError = errors.accessRoleId?.message;
 	const statusError = errors.status?.message;
-	const emailLocked = edit !== undefined;
-	const emailHint = edit ? t(`${key}.emailFixed`) : t(`${key}.emailHint`);
+	const emailLocked = edit !== undefined && !edit.emailEditable;
+	const emailHint = edit
+		? emailLocked
+			? t(`${key}.emailLocked`)
+			: undefined
+		: t(`${key}.emailHint`);
 	const roleHint =
 		edit && edit.otherRoles.length > 0 ? (
 			<>

@@ -36,6 +36,7 @@ const meta = {
 			probationEndDate: null,
 			endDate: null,
 			reportsTo: null,
+			invitationPending: true,
 		},
 	},
 	decorators: [storyCompany(client, COMPANY), storyProviders(client)],
@@ -63,7 +64,13 @@ export const ConfirmDeactivate: Story = {
 	},
 };
 
-/** An inactive person: only reactivating applies. */
+/** An inactive person who has logged in: only reactivating applies. */
 export const Inactive: Story = {
-	args: { profile: { ...meta.args.profile, status: "INACTIVE" } },
+	args: {
+		profile: {
+			...meta.args.profile,
+			status: "INACTIVE",
+			invitationPending: false,
+		},
+	},
 };

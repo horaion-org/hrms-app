@@ -12,6 +12,7 @@ export type ProfileHeaderProps = {
 		| "employeeCode"
 		| "jobTitleName"
 		| "status"
+		| "invitationPending"
 	>;
 	/** Placed at the right, e.g. "Edit profile" and the "More actions" menu. */
 	actions?: ReactNode;
@@ -19,7 +20,7 @@ export type ProfileHeaderProps = {
 
 /**
  * The top of a person's page: their initials, name as the page's heading,
- * status, and their employee ID and job title.
+ * status, whether they have yet to log in, and their employee ID and job title.
  */
 export const ProfileHeader = ({
 	profile,
@@ -43,6 +44,9 @@ export const ProfileHeader = ({
 						<Badge tone={profile.status === "ACTIVE" ? "success" : "neutral"}>
 							{t(`organisation.status.${profile.status}`)}
 						</Badge>
+						{profile.invitationPending === true && (
+							<Badge tone="warning">{t("people.profile.invited")}</Badge>
+						)}
 					</div>
 					<p className="mt-2 flex flex-wrap items-center gap-2 text-base text-neutral-800">
 						<span>{profile.employeeCode}</span>

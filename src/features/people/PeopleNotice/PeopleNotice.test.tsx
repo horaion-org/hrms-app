@@ -38,6 +38,7 @@ describe("PeopleNotice", () => {
 			"Priya Nair was deactivated and can no longer log in.",
 		],
 		["reactivated", false, "Priya Nair was reactivated and can log in again."],
+		["invited", false, "We’ve emailed Priya Nair a new invitation to log in."],
 	] as const)(
 		"confirms %s (role not changed: %s)",
 		(kind, roleNotAssigned, text) => {

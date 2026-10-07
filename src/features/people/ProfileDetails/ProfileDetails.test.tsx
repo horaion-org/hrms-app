@@ -24,6 +24,7 @@ const kent: MemberProfileDetail = {
 	probationEndDate: null,
 	endDate: null,
 	reportsTo: { membershipId: "m-9", displayName: "Faris Ahmad" },
+	invitationPending: false,
 };
 
 const show = (profile: MemberProfileDetail, systemRoles?: string): void => {

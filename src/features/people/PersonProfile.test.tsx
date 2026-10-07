@@ -94,11 +94,13 @@ const kent = (
 	probationEndDate: null,
 	endDate: null,
 	reportsTo: { membershipId: "m-9", displayName: "Faris Ahmad" },
+	invitationPending: false,
 	...overrides,
 });
 /** The body a save of Kent, unchanged, sends. */
 const kentBody = {
 	displayName: "Kent Chua",
+	email: "kent.chua@company.com",
 	status: "ACTIVE",
 	departmentId: "d-1",
 	jobTitleId: "j-1",
@@ -219,6 +221,7 @@ const routes = (
 		[ASSIGN]: { status: 201 },
 		[ASSIGN_IN_BAR]: { status: 201 },
 		[REVOKE]: { status: 204 },
+		[`POST ${PROFILE}/invitation`]: { status: 204 },
 		[`GET ${PROFILE}/skills`]: { status: 200, body: envelope([]) },
 	};
 };
@@ -322,6 +325,7 @@ describe("A person's profile", () => {
 		).toHaveAttribute("href", "/people");
 		// The header's badge comes first.
 		expect(screen.getAllByText("Active")[0]).toHaveClass("bg-success-100");
+		expect(screen.queryByText("Invited")).not.toBeInTheDocument();
 		expect(screen.getAllByText("EMP-10392")[0]).toBeVisible();
 		expect(rows("Personal information")).toEqual([
 			"Full name: Kent Chua",
@@ -364,11 +368,17 @@ describe("A person's profile", () => {
 		});
 	});
 
-	it("leaves out the system role for someone who may not read roles", async () => {
-		stubApi(routes(workspaceReply(["member_profile:read"]), kent()));
+	it("leaves out the system role for someone who may not read roles, and shows a pending invitation", async () => {
+		stubApi(
+			routes(
+				workspaceReply(["member_profile:read"]),
+				kent({ invitationPending: true })
+			)
+		);
 		await open();
 
 		await screen.findByRole("heading", { level: 1, name: "Kent Chua" });
+		expect(screen.getByText("Invited")).toBeVisible();
 		expect(rows("Department & role information")).toEqual([
 			"Job title: Pastry chef",
 			"Department: Kitchen",
@@ -509,16 +519,33 @@ describe("Editing a person", () => {
 		expect(screen.getByText("Also holds elsewhere: Admin.")).toBeVisible();
 	});
 
-	it("shows the email address but never changes it here", async () => {
+	it("keeps the email address once they've logged in, and lets it be corrected before", async () => {
 		stubApi(routes());
 		await open("/people/m-1?edit=true");
 
 		const email = await screen.findByRole("textbox", { name: "Email address" });
-		expect(email).toHaveValue("kent.chua@company.com");
 		expect(email).toBeDisabled();
 		expect(email).toHaveAccessibleDescription(
-			"The email address can’t be changed here."
+			"They’ve already logged in, so their email address can’t be changed."
 		);
+	});
+
+	it("lets the email address be corrected while the invitation is pending", async () => {
+		const user = userEvent.setup();
+		const { calls } = await openEditing(
+			routes(workspaceReply(ALL), kent({ invitationPending: true }))
+		);
+
+		const email = textbox("Email address");
+		expect(email).toBeEnabled();
+		await user.clear(email);
+		await user.type(email, "kent@company.com");
+		await save(user);
+
+		await screen.findByText("Changes to Kent Chua were saved.");
+		expect(sent(calls, `PUT ${PROFILE}`)).toEqual([
+			{ ...kentBody, email: "kent@company.com" },
+		]);
 	});
 
 	it("saves a typical edit to the person's address for someone granted company-wide, and shows the saved profile", async () => {
@@ -667,6 +694,11 @@ describe("Editing a person", () => {
 
 	it.each([
 		[
+			problemReply(409, "EMAIL_CHANGE_NOT_ALLOWED"),
+			"They’ve already logged in, so their email address can’t be changed.",
+			(): HTMLElement => textbox("Email address"),
+		],
+		[
 			problemReply(409, "IDENTITY_SHARED_ACROSS_COMPANIES"),
 			"This name can’t be changed here because they also belong to another company.",
 			(): HTMLElement => textbox("Full name"),
@@ -688,7 +720,10 @@ describe("Editing a person", () => {
 		],
 	])("places a refusal on its field: %j", async (reply, message, field) => {
 		const user = userEvent.setup();
-		await openEditing({ ...routes(), [`PUT ${PROFILE}`]: reply });
+		await openEditing({
+			...routes(workspaceReply(ALL), kent({ invitationPending: true })),
+			[`PUT ${PROFILE}`]: reply,
+		});
 
 		await save(user);
 
@@ -742,6 +777,10 @@ describe("Editing a person", () => {
 		],
 		[problemReply(429, "RATE_LIMITED"), "Too many attempts. Try again later."],
 		[
+			problemReply(502, "INVITATION_NOT_DELIVERED"),
+			"We couldn’t send the invitation email. Try again.",
+		],
+		[
 			problemReply(500, "INTERNAL_ERROR"),
 			"We couldn’t save the changes. Try again.",
 		],
@@ -760,6 +799,27 @@ describe("Editing a person", () => {
 			});
 		}
 	);
+
+	it("keeps showing a pending invitation after a save whose answer doesn't say", async () => {
+		const user = userEvent.setup();
+		await openEditing({
+			...routes(workspaceReply(ALL), kent({ invitationPending: true })),
+			// The answer leaves the invitation null when the email wasn't changed.
+			[`PUT ${PROFILE}`]: (call) => ({
+				status: 200,
+				body: envelope({
+					...kent(),
+					...(call.body as object),
+					invitationPending: null,
+				}),
+			}),
+		});
+
+		await save(user);
+
+		await screen.findByText("Changes to Kent Chua were saved.");
+		expect(screen.getByText("Invited")).toBeVisible();
+	});
 
 	it("explains a refusal of permission and reloads the workspace", async () => {
 		const user = userEvent.setup();
@@ -838,7 +898,7 @@ describe("Changing a person's system role", () => {
 	});
 });
 
-describe("Deactivating and reactivating", () => {
+describe("Deactivating, reactivating and re-inviting", () => {
 	it("deactivates after saying what it does, sending only the status changed", async () => {
 		const user = userEvent.setup();
 		const calls = stubApi(routes());
@@ -927,8 +987,9 @@ describe("Deactivating and reactivating", () => {
 			branchName: null,
 			departmentId: null,
 			departmentName: null,
+			invitationPending: true,
 		});
-		stubApi(routes(workspaceReply(ALL), unfiled));
+		const calls = stubApi(routes(workspaceReply(ALL), unfiled));
 		await open();
 
 		await screen.findByRole("link", { name: "Edit profile" });
@@ -937,7 +998,20 @@ describe("Deactivating and reactivating", () => {
 		);
 		expect(
 			screen.getAllByRole("menuitem").map((item) => item.textContent)
-		).toEqual(["Deactivate"]);
+		).toEqual(["Deactivate", "Resend invitation"]);
+		await user.click(
+			screen.getByRole("menuitem", { name: "Resend invitation" })
+		);
+		await user.click(
+			within(await screen.findByRole("dialog")).getByRole("button", {
+				name: "Resend invitation",
+			})
+		);
+
+		await screen.findByText(
+			"We’ve emailed Kent Chua a new invitation to log in."
+		);
+		expect(sent(calls, `POST ${PROFILE}/invitation`)).toHaveLength(1);
 	});
 
 	it("offers nothing for a person without a department to someone granted only at a department", async () => {
@@ -952,6 +1026,7 @@ describe("Deactivating and reactivating", () => {
 					branchName: null,
 					departmentId: null,
 					departmentName: null,
+					invitationPending: true,
 				})
 			)
 		);
@@ -982,4 +1057,70 @@ describe("Deactivating and reactivating", () => {
 		).not.toBeInTheDocument();
 	});
 
+	it("resends the invitation only while it is pending", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi(
+			routes(workspaceReply(ALL), kent({ invitationPending: true }))
+		);
+		await open();
+
+		await user.click(
+			await screen.findByRole("button", { name: "More actions for Kent Chua" })
+		);
+		await user.click(
+			screen.getByRole("menuitem", { name: "Resend invitation" })
+		);
+		const dialog = await screen.findByRole("dialog", {
+			name: "Resend the invitation to Kent Chua?",
+		});
+		expect(dialog).toHaveTextContent(
+			"We’ll email a new invitation to log in to kent.chua@company.com."
+		);
+		await user.click(
+			within(dialog).getByRole("button", { name: "Resend invitation" })
+		);
+
+		await screen.findByText(
+			"We’ve emailed Kent Chua a new invitation to log in."
+		);
+		expect(sent(calls, `POST ${PROFILE}/invitation`)).toHaveLength(1);
+	});
+
+	it.each([
+		[
+			problemReply(409, "INVITATION_NOT_PENDING"),
+			"They’ve already logged in, so there’s no invitation to resend.",
+		],
+		[
+			problemReply(502, "INVITATION_NOT_DELIVERED"),
+			"We couldn’t send the invitation email. Try again.",
+		],
+		[
+			problemReply(409, "MEMBER_PROFILE_MOVED"),
+			"They were moved to another department while you were working. Reload the page and try again.",
+		],
+	])("explains a refused resend in the dialog: %j", async (reply, message) => {
+		const user = userEvent.setup();
+		stubApi({
+			...routes(workspaceReply(ALL), kent({ invitationPending: true })),
+			[`POST ${PROFILE}/invitation`]: reply,
+		});
+		await open();
+
+		await user.click(
+			await screen.findByRole("button", { name: "More actions for Kent Chua" })
+		);
+		await user.click(
+			screen.getByRole("menuitem", { name: "Resend invitation" })
+		);
+		const dialog = await screen.findByRole("dialog");
+		await user.click(
+			within(dialog).getByRole("button", { name: "Resend invitation" })
+		);
+
+		expect(await within(dialog).findByText(message)).toHaveAttribute(
+			"role",
+			"alert"
+		);
+	});
 });

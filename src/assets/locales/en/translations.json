@@ -206,6 +206,7 @@
 		"roleAndSkillsNotChanged": "Changes to {{name}} were saved, but their system role and skills weren’t. Change the role from Organisation, under System roles, and edit their profile to try the skills again.",
 		"deactivated": "{{name}} was deactivated and can no longer log in.",
 		"reactivated": "{{name}} was reactivated and can log in again.",
+		"invited": "We’ve emailed {{name}} a new invitation to log in.",
 		"view": "View {{name}}",
 		"form": {
 			"title": "Add employee",
@@ -235,7 +236,7 @@
 			"emailRequired": "Enter the employee’s email address.",
 			"emailLength": "Use 320 characters or fewer.",
 			"emailInvalid": "Enter a valid email address.",
-			"emailFixed": "The email address can’t be changed here.",
+			"emailLocked": "They’ve already logged in, so their email address can’t be changed.",
 			"employmentType": "Employment type",
 			"employmentTypePlaceholder": "Select type",
 			"employmentTypes": {
@@ -287,6 +288,7 @@
 			"inactiveMove": "They’re inactive. Reactivate them before moving them to another department.",
 			"forbiddenSave": "You no longer have permission to edit this person.",
 			"profileMissing": "This person is no longer available.",
+			"invitationNotDelivered": "We couldn’t send the invitation email. Try again.",
 			"saveFailed": "We couldn’t save the changes. Try again.",
 			"discardTitle": "Discard your changes?",
 			"discardDescription": "Your changes to {{name}} won’t be saved.",
@@ -296,6 +298,7 @@
 		"profile": {
 			"back": "Back to people overview",
 			"edit": "Edit profile",
+			"invited": "Invited",
 			"moreActions": "More actions for {{name}}",
 			"copyPhone": "Copy phone number",
 			"copyEmail": "Copy email address",
@@ -314,6 +317,13 @@
 				"description": "{{name}} will be able to log in to Horaion again.",
 				"confirm": "Reactivate"
 			},
+			"resend": {
+				"item": "Resend invitation",
+				"title": "Resend the invitation to {{name}}?",
+				"description": "We’ll email a new invitation to log in to {{email}}.",
+				"confirm": "Resend invitation"
+			},
+			"invitationNotPending": "They’ve already logged in, so there’s no invitation to resend.",
 			"actionForbidden": "You no longer have permission to change this person.",
 			"actionFailed": "We couldn’t make this change. Try again.",
 			"moved": "They were moved to another department while you were working. Reload the page and try again."

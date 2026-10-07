@@ -30,6 +30,7 @@ const kent: MemberProfileDetail = {
 	probationEndDate: null,
 	endDate: null,
 	reportsTo: null,
+	invitationPending: false,
 };
 
 const show = async (props: Partial<ProfileMenuProps> = {}): Promise<void> => {
@@ -62,12 +63,19 @@ describe("ProfileMenu", () => {
 		expect(await items()).toEqual(["Deactivate"]);
 	});
 
-	it("offers to reactivate an inactive person", async () => {
-		await show({ profile: { ...kent, status: "INACTIVE" } });
-		expect(await items()).toEqual(["Reactivate"]);
+	it("offers to reactivate an inactive person, and to resend a pending invitation", async () => {
+		await show({
+			profile: { ...kent, status: "INACTIVE", invitationPending: true },
+		});
+		expect(await items()).toEqual(["Reactivate", "Resend invitation"]);
 	});
 
-	it("is not drawn when nothing applies, such as for yourself while active", async () => {
+	it("never offers to deactivate yourself", async () => {
+		await show({ self: true, profile: { ...kent, invitationPending: true } });
+		expect(await items()).toEqual(["Resend invitation"]);
+	});
+
+	it("is not drawn when nothing applies", async () => {
 		await show({ self: true });
 
 		expect(

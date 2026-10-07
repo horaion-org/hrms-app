@@ -229,6 +229,7 @@ export const Editing: Story = {
 		},
 		edit: {
 			employeeCode: "EMP-10392",
+			emailEditable: false,
 			roleEditable: true,
 			otherRoles: ["Admin"],
 			header: (actions) => (

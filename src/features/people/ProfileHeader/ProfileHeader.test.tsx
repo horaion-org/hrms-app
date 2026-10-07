@@ -12,6 +12,7 @@ const kent: ProfileHeaderProps["profile"] = {
 	employeeCode: "EMP-10392",
 	jobTitleName: "Pastry chef",
 	status: "ACTIVE",
+	invitationPending: false,
 };
 
 const show = (
@@ -39,13 +40,15 @@ describe("ProfileHeader", () => {
 		expect(screen.getByText("EMP-10392")).toBeVisible();
 		expect(screen.getByText("Pastry chef")).toBeVisible();
 		expect(screen.getByText("KC")).toBeVisible();
+		expect(screen.queryByText("Invited")).not.toBeInTheDocument();
 		expect(screen.getByRole("button", { name: "Edit profile" })).toBeVisible();
 	});
 
-	it("shows an inactive person with the neutral tone", () => {
-		show({ status: "INACTIVE", jobTitleName: null });
+	it("shows an inactive person with the neutral tone, and a pending invitation", () => {
+		show({ status: "INACTIVE", invitationPending: true, jobTitleName: null });
 
 		expect(screen.getByText("Inactive")).toHaveClass("bg-neutral-400");
+		expect(screen.getByText("Invited")).toBeVisible();
 		expect(screen.queryByText("•")).not.toBeInTheDocument();
 	});
 

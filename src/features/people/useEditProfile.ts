@@ -3,6 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useChangeAccessRoleHolders } from "@/features/organisation/useAccessRoleHolders";
 import {
 	memberProfileQuery,
+	savedProfile,
 	updateMemberProfile,
 	type MemberProfileDetail,
 	type MemberProfilePlace,
@@ -47,7 +48,7 @@ export const useEditProfile = (
 		onSuccess: (saved) => {
 			client.setQueryData<MemberProfileDetail>(
 				memberProfileQuery(companyId, membershipId).queryKey,
-				() => saved
+				(previous) => savedProfile(saved, previous)
 			);
 			return Promise.all([
 				client.invalidateQueries({ queryKey: ["people", companyId] }),
