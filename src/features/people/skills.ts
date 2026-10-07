@@ -107,11 +107,8 @@ export const skillsRefusal = (
 	row: number
 ): Refusal<SkillField> => {
 	const key = "people.skills.dialog";
-	const moved =
-		error instanceof ApiProblemError &&
-		`${error.status} ${error.errorCode}` === PROFILE_REFUSAL_CODES.profileMoved;
 	// A plain 409, or SKILL_NAME_CONFLICT: both mean someone else changed them.
-	if (error instanceof ApiProblemError && error.status === 409 && !moved)
+	if (error instanceof ApiProblemError && error.status === 409)
 		return { fields: {}, message: t(`${key}.conflict`), refreshMembers: false };
 	const refusal = mapRefusal<SkillField>(error, {
 		codes: {
@@ -126,7 +123,6 @@ export const skillsRefusal = (
 		},
 		alerts: {
 			[PROFILE_REFUSAL_CODES.profileNotFound]: t("people.form.profileMissing"),
-			[PROFILE_REFUSAL_CODES.profileMoved]: t("people.profile.moved"),
 		},
 		fieldErrors: {
 			[`skills[${row}].name`]: {

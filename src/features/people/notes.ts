@@ -54,7 +54,6 @@ export type NoteFormValues = z.infer<ReturnType<typeof noteFormSchema>>;
 /** The refusals any change to a note shares, by `"<status> <errorCode>"`. */
 const personAlerts = (t: TFunction): Record<string, string> => ({
 	[PROFILE_REFUSAL_CODES.profileNotFound]: t("people.form.profileMissing"),
-	[PROFILE_REFUSAL_CODES.profileMoved]: t("people.profile.moved"),
 });
 
 /** Whether a refusal means the note is gone, so the list should reload. */

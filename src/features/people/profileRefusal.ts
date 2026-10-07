@@ -43,8 +43,6 @@ export const PROFILE_REFUSAL_CODES = {
 	invitationNotPending: "409 INVITATION_NOT_PENDING",
 	/** The invitation email, after an email correction or a resend, couldn't be sent. */
 	invitationNotDelivered: "502 INVITATION_NOT_DELIVERED",
-	/** They were moved to another Department since their profile was loaded. */
-	profileMoved: "409 MEMBER_PROFILE_MOVED",
 	rateLimited: "429 RATE_LIMITED",
 } as const;
 
@@ -122,7 +120,6 @@ export const profileRefusal = (
 			...(edit && {
 				[codes.lastDepartmentHead]: lastHead,
 				[codes.profileNotFound]: t(`${key}.profileMissing`),
-				[codes.profileMoved]: t("people.profile.moved"),
 				[codes.invitationNotDelivered]: t(`${key}.invitationNotDelivered`),
 			}),
 		},
@@ -163,7 +160,6 @@ export const profileActionRefusal = (error: unknown, t: TFunction): string =>
 			[codes.invitationNotPending]: t("people.profile.invitationNotPending"),
 			[codes.invitationNotDelivered]: t("people.form.invitationNotDelivered"),
 			[codes.profileNotFound]: t("people.form.profileMissing"),
-			[codes.profileMoved]: t("people.profile.moved"),
 			[codes.rateLimited]: t("auth.retryHold.later"),
 		},
 		forbidden: t("people.profile.actionForbidden"),

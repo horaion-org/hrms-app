@@ -399,8 +399,7 @@
 			},
 			"invitationNotPending": "They’ve already logged in, so there’s no invitation to resend.",
 			"actionForbidden": "You no longer have permission to change this person.",
-			"actionFailed": "We couldn’t make this change. Try again.",
-			"moved": "They were moved to another department while you were working. Reload the page and try again."
+			"actionFailed": "We couldn’t make this change. Try again."
 		},
 		"notes": {
 			"title": "Notes",
