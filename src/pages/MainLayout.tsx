@@ -23,6 +23,7 @@ import {
 import { usableCompanies } from "@/features/auth/currentCompany";
 import { logOut } from "@/features/auth/session";
 import {
+	LEAVE_READ_KEYS,
 	ORGANISATION_READ_KEYS,
 	PEOPLE_READ_KEYS,
 } from "@/features/workspace/permissionKeys";
@@ -111,13 +112,15 @@ export const MainLayout = (): FunctionComponent => {
 						label={t("shell.navigation.scheduling")}
 						to="/scheduling"
 					/>
-					<SidebarItem
-						activeIcon={LeaveFilledIcon}
-						icon={LeaveIcon}
-						label={t("shell.navigation.leave")}
-						to="/leave"
-					/>
-					{/* People and Organisation are offered only when the workspace grants something in them, at any scope. */}
+					{/* Leave, People and Organisation are offered only when the workspace grants something in them, at any scope. */}
+					<Can anywhere permission={LEAVE_READ_KEYS}>
+						<SidebarItem
+							activeIcon={LeaveFilledIcon}
+							icon={LeaveIcon}
+							label={t("shell.navigation.leave")}
+							to="/leave"
+						/>
+					</Can>
 					<Can anywhere permission={PEOPLE_READ_KEYS}>
 						<SidebarItem
 							activeIcon={PeopleFilledIcon}

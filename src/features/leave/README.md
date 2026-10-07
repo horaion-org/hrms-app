@@ -1,41 +1,41 @@
-# Leave overview
+# Leave
 
-The authenticated `/leave` route implements the supplied Desktop-1 through
-Desktop-4 SVG references: requests, timeline, request review, and rejection.
+The authenticated `/leave` route: the company's leave requests one Branch at a time, as a table and as a
+timeline, with applying on a member's behalf, approving and rejecting. Everything comes from the API
+(`features/leave/api.ts`); nothing is sampled or kept in page state beyond the timeline's window.
 
-## Preview data
+## Shape
 
-There are no leave endpoints in the current API. `sampleData.ts` supplies 24
-fictional requests for the Singapore main branch. The page explicitly labels
-these as sample data. Approval, rejection, and sample applications update React
-state only and reset when the page is unmounted. No requests are persisted or
-sent to the API. Other location filters demonstrate the empty state.
+- `api.ts` — the zod schemas, `leaveRequestsQuery` (one entry per page, sort, filter and window), the
+  active-Branches query that drives the country and Branch filters, and the three writes: apply on behalf,
+  approve, reject.
+- `leaveSearch.ts` — what belongs in the URL (`view`, `branch`, `status`, `sort`, `page`) and the API queries
+  built from it; `timelineQueryOf` asks for one window of up to 200 rows.
+- `useLeaveRequests.ts` — the list hook (`hidden` when the key is held nowhere, or the API refuses) and the
+  mutations, each reloading every list and window of the company.
+- `leaveRefusal.ts` — API codes to frontend-owned copy, on a field or as the dialog's alert.
+- `LeaveRequests` — one server page: sorting, the status filter and paging are handed to the caller.
+- `LeaveTimeline` — rows per person, bars per pending or approved request clipped to the window, weekends
+  hatched; the window is the caller's.
+- `LeaveRequestDialog` — review, reject with a reason, or apply for someone found through the People search.
+- `fixtures.ts` — API-shaped rows for stories and component tests.
 
-`LeaveOverview` owns the shared request state. `LeaveRequests` sorts the entire
-filtered result before paginating. `LeaveTimeline` groups requests by employee,
-clips bars to the selected inclusive date range, and omits rejected requests.
-Hatched weekend columns represent blocked days in this preview. The initial
-range starts on Monday, 18 May 2026, matching the reference's visible grid.
+`src/pages/Leave.tsx` composes them and owns the dialog, the decisions and the status line.
 
-The sample application uses inclusive calendar-day duration. A future API
-integration must supply authoritative balances, working-day calculations,
-permissions, attachment handling, and mutation results.
+## Permissions
 
-## Components and verification
+The Module is offered to anyone holding `leave_request:read` anywhere; the API lists only the requests of
+people in the units where it is held. Apply appears with `leave_request:create` held anywhere and offers only
+the people it is held for; Approve and Reject appear on a pending request only with `leave_request:review` at
+that person's Department. The API checks every request regardless.
 
-Shared components: `Modal`, `Pagination`, `Textarea`, and `DatePicker`.
-The date picker composes the existing range `Calendar`; dialogs use Headless UI
-for focus containment, Escape dismissal, and focus restoration.
-
-Each added component includes a Storybook story and unit test. Interactive
-screen preview: **Features / Leave / LeaveOverview / Default**.
+## Verification
 
 ```sh
 pnpm lint
-pnpm test:unit --run
+pnpm test:unit --run src/features/leave src/pages
 pnpm build
 pnpm test:e2e e2e/leave.spec.ts --project=chromium --reporter=list
 ```
 
-The browser tests exercise the authenticated route at desktop and narrow-screen
-sizes and capture each reference state in Playwright's test output directory.
+The browser tests stub the API like `e2e/session.ts` does and capture each state in Playwright's output.
