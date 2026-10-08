@@ -31,3 +31,10 @@ export const Indeterminate: Story = {
 export const HiddenLabel: Story = {
 	args: { label: "Select Orchard", hideLabel: true },
 };
+
+export const WithDescription: Story = {
+	args: {
+		label: "Include leave requests",
+		description: "Consider approved leave when generating the schedule.",
+	},
+};

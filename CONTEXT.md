@@ -38,6 +38,10 @@ _Avoid_: Department manager, supervisor
 The name of a person's job as shown on their card, such as Manager, defined once for the whole Company. A job title is active or inactive, never deleted, and never gives a person any permissions.
 _Avoid_: Role, position, job grade
 
+**Employee number**:
+The number a Company gives each of its people, such as EMP-10602, entered when they are invited and unique within the Company. "Employee" is only ever used in this phrase.
+_Avoid_: Employee ID, staff number, member number
+
 **System role**:
 A named set of permissions a Company grants to people. The API calls it an access role.
 _Avoid_: Access role (in UI copy), role on its own, permission group, Job title
@@ -67,6 +71,40 @@ _Avoid_: A login, auth state, tokens
 **Current Company**:
 The Company a logged-in person is working in: the last one they chose while they can still use it, otherwise their only usable Company, otherwise the one they choose. A person with no usable Company has no Current Company.
 _Avoid_: Active tenant, selected workspace, current org
+
+## Leave
+
+**Leave request**:
+A person's request to be away from work over a Date range, decided by an Approver. It is a Draft, pending, approved, rejected, or cancelled; a pending one can be cancelled at any time, an approved one only until it starts. Every calendar day in the range counts, Weekends included, and the smallest amount is a Half day. Someone with permission can make one on another person's behalf.
+_Avoid_: Leave application, absence request, time-off request
+
+**Draft**:
+A Leave request that has been saved but not submitted. Only the person who saved it can see it, it uses none of anyone's leave, and no Approver is asked to decide it.
+_Avoid_: Saved request, unsubmitted request
+
+**Approver**:
+The person named on a Leave request to decide it. Being named is not enough: the Approver must also hold permission to approve leave for the person taking it. Often a Department head, but being one does not by itself make someone an Approver.
+_Avoid_: Supervisor, manager, line manager
+
+**Half day**:
+The morning or the afternoon of one day; the smallest amount of leave a person can take. Only a Leave request for a single day can be a Half day.
+_Avoid_: Partial day, AM leave, PM leave
+
+**Leave type**:
+The kind of leave a Leave request is for. Every Company has the same fixed list: Annual, Sick, Hospitalisation, Compassionate, Maternity, Unpaid, and Marriage.
+_Avoid_: Leave category, leave code
+
+**Allowance**:
+The number of days of one Leave type a person may take in a Leave year. A Company sets one for each Leave type and can give a particular person a different one.
+_Avoid_: Entitlement (that is a Company's plan), quota
+
+**Balance**:
+What is left of an Allowance in the current Leave year: the Allowance less leave that is approved or waiting for a decision. Drafts do not reduce it.
+_Avoid_: Remaining leave, leave left
+
+**Leave year**:
+1 January to 31 December. Each Leave year starts again from the full Allowance; unused days are not carried over.
+_Avoid_: Fiscal year, leave period, cycle
 
 ## Controls
 

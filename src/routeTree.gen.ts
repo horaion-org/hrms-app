@@ -32,6 +32,7 @@ import { Route as AuthenticatedAppOrganisationJobTitlesRouteImport } from './rou
 import { Route as AuthenticatedAppOrganisationSystemRolesRouteImport } from './routes/_authenticated._app.organisation.system-roles'
 import { Route as AuthenticatedAppPeopleMembershipIdRouteImport } from './routes/_authenticated._app.people_.$membershipId'
 import { Route as AuthenticatedAppPeopleNewRouteImport } from './routes/_authenticated._app.people_.new'
+import { Route as AuthenticatedAppSchedulingNewRouteImport } from './routes/_authenticated._app.scheduling_.new'
 import { Route as AuthenticatedAppOrganisationSystemRolesAccessRoleIdRouteImport } from './routes/_authenticated._app.organisation.system-roles_.$accessRoleId'
 import { Route as AuthenticatedAppOrganisationSystemRolesNewRouteImport } from './routes/_authenticated._app.organisation.system-roles_.new'
 
@@ -158,6 +159,12 @@ const AuthenticatedAppPeopleNewRoute =
     path: '/people/new',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppSchedulingNewRoute =
+  AuthenticatedAppSchedulingNewRouteImport.update({
+    id: '/scheduling_/new',
+    path: '/scheduling/new',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppOrganisationSystemRolesAccessRoleIdRoute =
   AuthenticatedAppOrganisationSystemRolesAccessRoleIdRouteImport.update({
     id: '/organisation/system-roles_/$accessRoleId',
@@ -192,6 +199,7 @@ export interface FileRoutesByFullPath {
   '/organisation/system-roles': typeof AuthenticatedAppOrganisationSystemRolesRoute
   '/people/$membershipId': typeof AuthenticatedAppPeopleMembershipIdRoute
   '/people/new': typeof AuthenticatedAppPeopleNewRoute
+  '/scheduling/new': typeof AuthenticatedAppSchedulingNewRoute
   '/organisation/': typeof AuthenticatedAppOrganisationIndexRoute
   '/organisation/system-roles/$accessRoleId': typeof AuthenticatedAppOrganisationSystemRolesAccessRoleIdRoute
   '/organisation/system-roles/new': typeof AuthenticatedAppOrganisationSystemRolesNewRoute
@@ -217,6 +225,7 @@ export interface FileRoutesByTo {
   '/organisation/system-roles': typeof AuthenticatedAppOrganisationSystemRolesRoute
   '/people/$membershipId': typeof AuthenticatedAppPeopleMembershipIdRoute
   '/people/new': typeof AuthenticatedAppPeopleNewRoute
+  '/scheduling/new': typeof AuthenticatedAppSchedulingNewRoute
   '/organisation': typeof AuthenticatedAppOrganisationIndexRoute
   '/organisation/system-roles/$accessRoleId': typeof AuthenticatedAppOrganisationSystemRolesAccessRoleIdRoute
   '/organisation/system-roles/new': typeof AuthenticatedAppOrganisationSystemRolesNewRoute
@@ -245,6 +254,7 @@ export interface FileRoutesById {
   '/_authenticated/_app/organisation/system-roles': typeof AuthenticatedAppOrganisationSystemRolesRoute
   '/_authenticated/_app/people_/$membershipId': typeof AuthenticatedAppPeopleMembershipIdRoute
   '/_authenticated/_app/people_/new': typeof AuthenticatedAppPeopleNewRoute
+  '/_authenticated/_app/scheduling_/new': typeof AuthenticatedAppSchedulingNewRoute
   '/_authenticated/_app/organisation/': typeof AuthenticatedAppOrganisationIndexRoute
   '/_authenticated/_app/organisation/system-roles_/$accessRoleId': typeof AuthenticatedAppOrganisationSystemRolesAccessRoleIdRoute
   '/_authenticated/_app/organisation/system-roles_/new': typeof AuthenticatedAppOrganisationSystemRolesNewRoute
@@ -272,6 +282,7 @@ export interface FileRouteTypes {
     | '/organisation/system-roles'
     | '/people/$membershipId'
     | '/people/new'
+    | '/scheduling/new'
     | '/organisation/'
     | '/organisation/system-roles/$accessRoleId'
     | '/organisation/system-roles/new'
@@ -297,6 +308,7 @@ export interface FileRouteTypes {
     | '/organisation/system-roles'
     | '/people/$membershipId'
     | '/people/new'
+    | '/scheduling/new'
     | '/organisation'
     | '/organisation/system-roles/$accessRoleId'
     | '/organisation/system-roles/new'
@@ -324,6 +336,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/organisation/system-roles'
     | '/_authenticated/_app/people_/$membershipId'
     | '/_authenticated/_app/people_/new'
+    | '/_authenticated/_app/scheduling_/new'
     | '/_authenticated/_app/organisation/'
     | '/_authenticated/_app/organisation/system-roles_/$accessRoleId'
     | '/_authenticated/_app/organisation/system-roles_/new'
@@ -504,6 +517,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppPeopleNewRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/_app/scheduling_/new': {
+      id: '/_authenticated/_app/scheduling_/new'
+      path: '/scheduling/new'
+      fullPath: '/scheduling/new'
+      preLoaderRoute: typeof AuthenticatedAppSchedulingNewRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/_app/organisation/system-roles_/$accessRoleId': {
       id: '/_authenticated/_app/organisation/system-roles_/$accessRoleId'
       path: '/organisation/system-roles/$accessRoleId'
@@ -534,6 +554,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppOrganisationSystemRolesRoute: typeof AuthenticatedAppOrganisationSystemRolesRoute
   AuthenticatedAppPeopleMembershipIdRoute: typeof AuthenticatedAppPeopleMembershipIdRoute
   AuthenticatedAppPeopleNewRoute: typeof AuthenticatedAppPeopleNewRoute
+  AuthenticatedAppSchedulingNewRoute: typeof AuthenticatedAppSchedulingNewRoute
   AuthenticatedAppOrganisationIndexRoute: typeof AuthenticatedAppOrganisationIndexRoute
   AuthenticatedAppOrganisationSystemRolesAccessRoleIdRoute: typeof AuthenticatedAppOrganisationSystemRolesAccessRoleIdRoute
   AuthenticatedAppOrganisationSystemRolesNewRoute: typeof AuthenticatedAppOrganisationSystemRolesNewRoute
@@ -557,6 +578,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppPeopleMembershipIdRoute:
     AuthenticatedAppPeopleMembershipIdRoute,
   AuthenticatedAppPeopleNewRoute: AuthenticatedAppPeopleNewRoute,
+  AuthenticatedAppSchedulingNewRoute: AuthenticatedAppSchedulingNewRoute,
   AuthenticatedAppOrganisationIndexRoute:
     AuthenticatedAppOrganisationIndexRoute,
   AuthenticatedAppOrganisationSystemRolesAccessRoleIdRoute:
