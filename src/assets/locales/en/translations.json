@@ -1429,5 +1429,13 @@
 			"createFailed": "We couldn’t create the draft. Try again.",
 			"saveFailed": "We couldn’t save the draft. Try again."
 		}
+	},
+	"workspace": {
+		"branchSelector": {
+			"country": "Country",
+			"branch": "Branch",
+			"allBranches": "All branches",
+			"allCountries": "All countries"
+		}
 	}
 }
