@@ -382,5 +382,13 @@
       "mineSubtitle": "Tus datos tal como los tiene tu empresa. Pide a tu administrador que corrija lo que esté desactualizado.",
       "mineFailed": "No pudimos cargar tu perfil. Inténtalo de nuevo."
     }
+  },
+  "workspace": {
+    "branchSelector": {
+      "country": "País",
+      "branch": "Sucursal",
+      "allBranches": "Todas las sucursales",
+      "allCountries": "Todos los países"
+    }
   }
 }

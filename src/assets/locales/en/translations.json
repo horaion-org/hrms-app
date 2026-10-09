@@ -1134,5 +1134,13 @@
 			"membersTruncated": "Showing 20 of {{total}} active company members. Type to narrow.",
 			"counter": "{{count}}/20"
 		}
+	},
+	"workspace": {
+		"branchSelector": {
+			"country": "Country",
+			"branch": "Branch",
+			"allBranches": "All branches",
+			"allCountries": "All countries"
+		}
 	}
 }
