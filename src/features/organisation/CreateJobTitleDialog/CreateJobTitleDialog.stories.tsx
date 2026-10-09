@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn, userEvent, within } from "storybook/test";
 import { CreateJobTitleDialog } from "@/features/organisation/CreateJobTitleDialog";
 import { storyProviders, stubStoryApi } from "@/features/organisation/storyApi";
+import { workspaceQuery } from "@/features/workspace/api";
 
 const client = new QueryClient({
 	defaultOptions: { queries: { retry: false } },
@@ -12,39 +13,37 @@ const meta = {
 	component: CreateJobTitleDialog,
 	args: { companyId: "story-company", onClose: fn() },
 	decorators: [storyProviders(client)],
-	beforeEach: ({ parameters }): (() => void) =>
-		stubStoryApi(
-			[
+	beforeEach: ({ parameters }): (() => void) => {
+		const stop = stubStoryApi([], Boolean(parameters["pending"]), client);
+		// One Department the person may add job titles to, so it is chosen for them.
+		client.setQueryData(workspaceQuery.queryKey, {
+			companies: [
 				{
-					path: "/branches",
-					content: [
+					uuid: "story-company",
+					name: "Story company",
+					permissions: ["job_title:create"],
+					branches: [
 						{
-							branchId: "b-1",
-							companyId: "story-company",
+							uuid: "b-1",
 							name: "Orchard Road",
-							code: "ORC",
-							city: "Singapore",
+							status: "ACTIVE",
 							country: "SG",
-							status: "ACTIVE",
-						},
-					],
-				},
-				{
-					path: "/departments",
-					content: [
-						{
-							departmentId: "d-1",
-							branchId: "b-1",
-							companyId: "story-company",
-							name: "Kitchen",
-							status: "ACTIVE",
+							permissions: [],
+							departments: [
+								{
+									uuid: "d-1",
+									name: "Kitchen",
+									status: "ACTIVE",
+									permissions: [],
+								},
+							],
 						},
 					],
 				},
 			],
-			Boolean(parameters["pending"]),
-			client
-		),
+		});
+		return stop;
+	},
 } satisfies Meta<typeof CreateJobTitleDialog>;
 export default meta;
 type Story = StoryObj<typeof meta>;

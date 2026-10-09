@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import { getRouteApi, useRouterState } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -24,13 +25,22 @@ import {
 	type PeopleSearch,
 } from "@/features/people/peopleSearch";
 import { usePeople, useSettledSearch } from "@/features/people/usePeople";
+import { workspaceQuery } from "@/features/workspace/api";
+import { BranchSelector } from "@/features/workspace/BranchSelector";
+import {
+	branchChoices,
+	chosenBranch,
+} from "@/features/workspace/unitChoices";
+import { PEOPLE_READ_KEYS } from "@/features/workspace/permissionKeys";
+import { retry } from "@/features/workspace/retry";
 import { useCan, useCanAnywhere } from "@/features/workspace/useCan";
 
 const route = getRouteApi("/_authenticated/_app/people");
 
 /**
  * The company's people, a page at a time, sorted, filtered and searched by
- * the server. The page, sort and status live in the URL; the search text
+ * the server: everyone in reach unless one Branch is chosen. The Branch,
+ * page, sort and status live in the URL; the search text
  * stays on the page so names never reach browser history. Someone just
  * added on the Add employee page is confirmed above the list.
  */
@@ -41,7 +51,16 @@ export const People = (): FunctionComponent => {
 	const navigate = route.useNavigate();
 	const [text, setText] = useState("");
 	const settled = useSettledSearch(text);
-	const query = peopleQueryOf(search, settled);
+	const workspace = useQuery({ ...workspaceQuery, retry });
+	// The same Branch the selector shows, none for every Branch in reach.
+	const selected = chosenBranch(
+		workspace.data
+			? branchChoices(workspace.data, companyId, PEOPLE_READ_KEYS)
+			: [],
+		search.branch,
+		true
+	);
+	const query = peopleQueryOf(search, settled, selected?.branchId);
 	const list = usePeople(companyId, query);
 	const view = describePeople(
 		list,
@@ -60,13 +79,37 @@ export const People = (): FunctionComponent => {
 			search: (previous) => ({ ...previous, page: undefined, ...next }),
 		});
 	};
+	const chooseBranch = (branch: string | undefined): void => {
+		// The selector naming the Branch already shown keeps the page, the history entry and its state.
+		if (branch === selected?.branchId)
+			void navigate({
+				search: (previous) => ({ ...previous, branch }),
+				replace: true,
+				state: true,
+			});
+		else show({ branch });
+	};
 
 	return (
 		<>
-			<h1 className="text-4xl font-medium text-neutral-900">
-				{t("people.title")}
-			</h1>
-			<p className="mt-4 text-sm text-neutral-800">{t("people.subtitle")}</p>
+			<div className="flex flex-wrap items-start justify-between gap-6">
+				<div>
+					<h1 className="text-4xl font-medium text-neutral-900">
+						{t("people.title")}
+					</h1>
+					<p className="mt-4 text-sm text-neutral-800">
+						{t("people.subtitle")}
+					</p>
+				</div>
+				<BranchSelector
+					allowAll
+					className="pt-1"
+					companyId={companyId}
+					keys={PEOPLE_READ_KEYS}
+					value={search.branch}
+					onChange={chooseBranch}
+				/>
+			</div>
 			{notice && <PeopleNotice className="mt-6" notice={notice} />}
 			<ListToolbar
 				className="mt-10"

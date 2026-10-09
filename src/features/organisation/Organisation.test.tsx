@@ -220,6 +220,8 @@ it("shows the unit counts to a person granted only at one branch", async () => {
 							{
 								uuid: "b-1",
 								name: "Orchard",
+								status: "ACTIVE",
+								country: "SG",
 								permissions: ["branch:read", "department:read"],
 								departments: [],
 							},

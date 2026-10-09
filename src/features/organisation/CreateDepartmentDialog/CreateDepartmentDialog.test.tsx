@@ -183,6 +183,8 @@ describe("create department through the Departments page", () => {
 								{
 									uuid: "b-2",
 									name: "Tampines",
+									status: "ACTIVE",
+									country: "SG",
 									permissions: ["department:create"],
 									departments: [],
 								},

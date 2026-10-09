@@ -6,6 +6,7 @@ import { storyProviders, stubStoryApi } from "@/features/organisation/storyApi";
 import { EMPTY_PROFILE } from "@/features/people/profileFormSchema";
 import { ProfileForm } from "@/features/people/ProfileForm";
 import { storyCompany } from "@/features/people/storyCompany";
+import type { Workspace } from "@/features/workspace/api";
 
 const COMPANY = "story-company";
 const client = new QueryClient({
@@ -13,11 +14,33 @@ const client = new QueryClient({
 });
 const ALL = [
 	"member_profile:create",
-	"branch:read",
-	"department:read",
 	"job_title:read",
 	"access_role:read",
 	"access_role:assign",
+];
+
+/** The same Department name in two Branches, told apart by the Branch. */
+const BRANCHES: Workspace["companies"][number]["branches"] = [
+	{
+		uuid: "b-1",
+		name: "Orchard Road",
+		status: "ACTIVE",
+		country: "SG",
+		permissions: [],
+		departments: [
+			{ uuid: "d-1", name: "Kitchen", status: "ACTIVE", permissions: [] },
+		],
+	},
+	{
+		uuid: "b-2",
+		name: "Bukit Bintang",
+		status: "ACTIVE",
+		country: "MY",
+		permissions: [],
+		departments: [
+			{ uuid: "d-2", name: "Kitchen", status: "ACTIVE", permissions: [] },
+		],
+	},
 ];
 
 const meta = {
@@ -33,7 +56,7 @@ const meta = {
 		onSubmit: fn(() => Promise.resolve()),
 		onCancel: fn(),
 	},
-	decorators: [storyCompany(client, COMPANY), storyProviders(client)],
+	decorators: [storyCompany(client, COMPANY, BRANCHES), storyProviders(client)],
 	beforeEach: (): (() => void) =>
 		stubStoryApi(
 			[
@@ -47,44 +70,6 @@ const meta = {
 							departmentId: "d-1",
 							departmentName: "Kitchen",
 							name: "Chef",
-							status: "ACTIVE",
-						},
-					],
-				},
-				{
-					path: "/branches",
-					content: [
-						{
-							branchId: "b-1",
-							name: "Orchard Road",
-							code: "ORC",
-							city: "Singapore",
-							country: "SG",
-							status: "ACTIVE",
-						},
-						{
-							branchId: "b-2",
-							name: "Bukit Bintang",
-							code: "BKB",
-							city: "Kuala Lumpur",
-							country: "MY",
-							status: "ACTIVE",
-						},
-					],
-				},
-				{
-					path: "/departments",
-					content: [
-						{
-							departmentId: "d-1",
-							branchId: "b-1",
-							name: "Kitchen",
-							status: "ACTIVE",
-						},
-						{
-							departmentId: "d-2",
-							branchId: "b-2",
-							name: "Kitchen",
 							status: "ACTIVE",
 						},
 					],
@@ -136,7 +121,7 @@ const fillIn = async (canvas: HTMLElement): Promise<void> => {
 		"priya@company.com"
 	);
 	const department = page.getByRole("button", { name: /^Department/ });
-	// Enabled once the departments have loaded.
+	// Enabled once the workspace has loaded.
 	await waitFor(async () => {
 		await expect(department).toBeEnabled();
 	});
@@ -158,7 +143,7 @@ export const DepartmentChosen: Story = {
 /** For someone who may not search people, nor read and assign roles. */
 export const WithoutManagerOrRole: Story = {
 	parameters: {
-		permissions: ["member_profile:create", "branch:read", "department:read"],
+		permissions: ["member_profile:create"],
 	},
 };
 
@@ -203,8 +188,6 @@ export const Editing: Story = {
 	parameters: {
 		permissions: [
 			"member_profile:update",
-			"branch:read",
-			"department:read",
 			"job_title:read",
 			"access_role:read",
 			"access_role:assign",

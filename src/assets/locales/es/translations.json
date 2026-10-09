@@ -12,8 +12,6 @@
   "leave": {
     "title": "Resumen de ausencias",
     "subtitle": "Gestiona las solicitudes de permiso y las próximas ausencias.",
-    "country": "País",
-    "branch": "Sucursal",
     "noBranches": "Añade una sucursal a la organización antes de gestionar ausencias.",
     "hidden": "No tienes acceso a las solicitudes de permiso de esta empresa.",
     "failed": "No pudimos cargar las solicitudes. Inténtalo de nuevo.",
@@ -381,6 +379,14 @@
       "mine": "Mi perfil",
       "mineSubtitle": "Tus datos tal como los tiene tu empresa. Pide a tu administrador que corrija lo que esté desactualizado.",
       "mineFailed": "No pudimos cargar tu perfil. Inténtalo de nuevo."
+    }
+  },
+  "workspace": {
+    "branchSelector": {
+      "country": "País",
+      "branch": "Sucursal",
+      "allBranches": "Todas las sucursales",
+      "allCountries": "Todos los países"
     }
   }
 }

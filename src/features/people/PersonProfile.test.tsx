@@ -54,10 +54,17 @@ const workspaceReply = (
 					{
 						uuid: "b-1",
 						name: "Orchard",
+						status: "ACTIVE",
+						country: "SG",
 						permissions: [],
 						departments: [
-							{ uuid: "d-1", name: "Kitchen", permissions: kitchen },
-							{ uuid: "d-2", name: "Bar", permissions: [] },
+							{
+								uuid: "d-1",
+								name: "Kitchen",
+								status: "ACTIVE",
+								permissions: kitchen,
+							},
+							{ uuid: "d-2", name: "Bar", status: "ACTIVE", permissions: [] },
 						],
 					},
 				],
@@ -65,10 +72,10 @@ const workspaceReply = (
 		],
 	}),
 });
-/** Granted company-wide only the lists, and the profile keys at d-1. */
+/** Granted company-wide only the job titles, and the profile keys at d-1. */
 const kitchenHolder = (): StubReply =>
 	workspaceReply(
-		["branch:read", "department:read", "job_title:read"],
+		["job_title:read"],
 		["member_profile:read", "member_profile:update"]
 	);
 
@@ -171,25 +178,6 @@ const routes = (
 		[`GET ${PROFILE}`]: () => ({ status: 200, body: envelope(current) }),
 		// Every change goes to the person's own address, wherever they are.
 		[`PUT ${PROFILE}`]: saved,
-		[`GET ${COMPANY}/branches`]: page([
-			{
-				branchId: "b-1",
-				name: "Orchard",
-				code: "ORC",
-				city: "Singapore",
-				country: "SG",
-				status: "ACTIVE",
-			},
-		]),
-		[`GET ${COMPANY}/departments`]: page([
-			{
-				departmentId: "d-1",
-				branchId: "b-1",
-				name: "Kitchen",
-				status: "ACTIVE",
-			},
-			{ departmentId: "d-2", branchId: "b-1", name: "Bar", status: "ACTIVE" },
-		]),
 		[`GET ${COMPANY}/job-titles`]: page([
 			{
 				jobTitleId: "j-1",
@@ -291,7 +279,7 @@ const choose = async (
 	await user.click(await screen.findByRole("option", { name: option }));
 };
 const moveToBar = async (user: User): Promise<void> => {
-	// Enabled once the departments have loaded.
+	// Enabled once the workspace has loaded.
 	await waitFor(() => {
 		expect(button(/^Department/)).toBeEnabled();
 	});
@@ -604,7 +592,7 @@ describe("Editing a person", () => {
 		await user.click(button(/^Department/));
 		expect(
 			(await screen.findAllByRole("option")).map((option) => option.textContent)
-		).toEqual(["Orchard › Kitchen", "Orchard › Bar"]);
+		).toEqual(["Orchard › Bar", "Orchard › Kitchen"]);
 		await user.keyboard("{Escape}");
 		await moveToBar(user);
 		await save(user);
@@ -625,7 +613,7 @@ describe("Editing a person", () => {
 		await user.click(button(/^Department/));
 		expect(
 			(await screen.findAllByRole("option")).map((option) => option.textContent)
-		).toEqual(["Orchard › Kitchen", "Orchard › Bar"]);
+		).toEqual(["Orchard › Bar", "Orchard › Kitchen"]);
 	});
 
 	it("saves the same way for someone granted only at the department, who can't move people elsewhere", async () => {

@@ -7,16 +7,21 @@ import {
 	RouterProvider,
 } from "@tanstack/react-router";
 import type { Decorator } from "@storybook/react-vite";
-import { workspaceQuery } from "@/features/workspace/api";
+import { workspaceQuery, type Workspace } from "@/features/workspace/api";
 
 /**
  * Renders a story inside the current company, holding the `permissions`
  * parameter's keys company-wide, for components that ask `useCan` or read
  * the current company from the `/_authenticated` route, as the app's pages
- * do. List it before `storyProviders` so the query client wraps it.
+ * do. `branches` are the units the workspace lists, for the unit pickers.
+ * List it before `storyProviders` so the query client wraps it.
  */
 export const storyCompany =
-	(client: QueryClient, companyId: string): Decorator =>
+	(
+		client: QueryClient,
+		companyId: string,
+		branches: Workspace["companies"][number]["branches"] = []
+	): Decorator =>
 	(Story, { parameters }) => {
 		const permissions: unknown = parameters["permissions"];
 		client.setQueryData(workspaceQuery.queryKey, {
@@ -27,7 +32,7 @@ export const storyCompany =
 					permissions: Array.isArray(permissions)
 						? permissions.filter((key) => typeof key === "string")
 						: [],
-					branches: [],
+					branches,
 				},
 			],
 		});

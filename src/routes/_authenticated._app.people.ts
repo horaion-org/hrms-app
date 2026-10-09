@@ -5,6 +5,10 @@ import {
 	peopleQueryOf,
 } from "@/features/people/peopleSearch";
 import { workspaceQuery } from "@/features/workspace/api";
+import {
+	branchChoices,
+	chosenBranch,
+} from "@/features/workspace/unitChoices";
 import { PEOPLE_READ_KEYS } from "@/features/workspace/permissionKeys";
 import { holdsAnywhere } from "@/features/workspace/scopes";
 import { People } from "@/pages/People";
@@ -23,13 +27,18 @@ export const Route = createFileRoute("/_authenticated/_app/people")({
 			.ensureQueryData(workspaceQuery)
 			.catch(() => undefined);
 		// Nothing is asked for when the workspace does not grant the list anywhere.
-		if (workspace && holdsAnywhere(workspace, companyId, PEOPLE_READ_KEYS))
-			await context.queryClient.prefetchQuery(
-				peopleQuery(
-					companyId,
-					peopleQueryOf(parsePeopleSearch(location.search), "")
-				)
+		if (workspace && holdsAnywhere(workspace, companyId, PEOPLE_READ_KEYS)) {
+			const search = parsePeopleSearch(location.search);
+			// The Branch the page will show, none for all, so its first list is the one fetched here.
+			const branch = chosenBranch(
+				branchChoices(workspace, companyId, PEOPLE_READ_KEYS),
+				search.branch,
+				true
 			);
+			await context.queryClient.prefetchQuery(
+				peopleQuery(companyId, peopleQueryOf(search, "", branch?.branchId))
+			);
+		}
 	},
 	component: People,
 });

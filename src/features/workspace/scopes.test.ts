@@ -12,12 +12,26 @@ const workspace: Workspace = {
 				{
 					uuid: "b-1",
 					name: "Orchard",
+					status: "ACTIVE",
+					country: "SG",
 					permissions: ["branch:update"],
 					departments: [
-						{ uuid: "d-1", name: "Kitchen", permissions: ["department:read"] },
+						{
+							uuid: "d-1",
+							name: "Kitchen",
+							status: "ACTIVE",
+							permissions: ["department:read"],
+						},
 					],
 				},
-				{ uuid: "b-2", name: "Bugis", permissions: [], departments: [] },
+				{
+					uuid: "b-2",
+					name: "Bugis",
+					status: "ACTIVE",
+					country: "SG",
+					permissions: [],
+					departments: [],
+				},
 			],
 		},
 	],

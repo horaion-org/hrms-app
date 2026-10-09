@@ -1,12 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { useId, useMemo, useState, type ReactNode } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { todayDate } from "@/components/forms/Calendar";
-import { Combobox } from "@/components/forms/Combobox";
 import { DatePicker } from "@/components/forms/DatePicker";
 import { FormRow, formRowIds } from "@/components/forms/FormRow";
 import { Input } from "@/components/forms/Input";
@@ -24,16 +23,10 @@ import {
 	TickIcon,
 	UserIcon,
 } from "@/components/ui/Icon";
-import {
-	departmentChoices,
-	type DepartmentChoice,
-} from "@/features/organisation/departmentChoices";
 import { HeadsField } from "@/features/organisation/HeadsField";
 import { useCreateFormSubmit } from "@/features/organisation/useCreateFormSubmit";
 import {
 	useAccessRoles,
-	useBranches,
-	useDepartments,
 	useJobTitles,
 } from "@/features/organisation/useOrganisationList";
 import {
@@ -52,6 +45,10 @@ import {
 	profileRefusal,
 } from "@/features/people/profileRefusal";
 import { PROFILE_FIELD_WIDTH } from "@/features/people/profileLayout";
+import { workspaceQuery } from "@/features/workspace/api";
+import { DepartmentSelector } from "@/features/workspace/DepartmentSelector";
+import { retry } from "@/features/workspace/retry";
+import { departmentChoices } from "@/features/workspace/unitChoices";
 import { useCan } from "@/features/workspace/useCan";
 
 /** What only changing an existing person needs. */
@@ -149,23 +146,16 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 		control,
 		name: ["departmentId", "hireDate"],
 	});
-	const [departmentQuery, setDepartmentQuery] = useState("");
 
-	const branches = useBranches(companyId, ACTIVE_BY_NAME);
-	const departments = useDepartments(companyId, ACTIVE_BY_NAME);
-	const choices: Array<DepartmentChoice> =
-		branches.status === "ready" && departments.status === "ready"
-			? departmentChoices(
-					branches.items,
-					departments.items,
-					(id) =>
-						can(edit ? "member_profile:update" : "member_profile:create", id),
-					t
-				)
-			: [];
-	const chosen = choices.find(
-		(choice) => choice.department.departmentId === departmentId
-	);
+	// The Departments the selector offers, to find the chosen one's Branch and country.
+	const departmentKeys = [
+		edit ? "member_profile:update" : "member_profile:create",
+	] as const;
+	const { data: workspace } = useQuery({ ...workspaceQuery, retry });
+	const choices = workspace
+		? departmentChoices(workspace, companyId, departmentKeys)
+		: [];
+	const chosen = choices.find((choice) => choice.departmentId === departmentId);
 	const jobTitles = useJobTitles(
 		companyId,
 		{ ...ACTIVE_BY_NAME, departmentId },
@@ -195,13 +185,9 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 					.map((role) => ({ value: role.accessRoleId, label: role.name }))
 			: [];
 	const departmentHint =
-		branches.status === "pending" || departments.status === "pending"
-			? t(`${key}.departmentsLoading`)
-			: branches.status !== "ready" || departments.status !== "ready"
-				? t(`${key}.departmentsFailed`)
-				: choices.length === 0
-					? t(`${key}.departmentsEmpty`)
-					: undefined;
+		workspace && choices.length === 0
+			? t(`${key}.departmentsEmpty`)
+			: undefined;
 	const jobTitleHint =
 		departmentId === ""
 			? t(`${key}.jobTitleNeedsDepartment`)
@@ -340,8 +326,8 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 					const refusal = await run(
 						() =>
 							onSubmit(values, {
-								branchId: chosen.department.branchId,
-								departmentId: chosen.department.departmentId,
+								branchId: chosen.branchId,
+								departmentId: chosen.departmentId,
 							}),
 						(error) =>
 							profileRefusal(
@@ -355,7 +341,7 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 					);
 					if (refusal?.fields.departmentId)
 						void client.invalidateQueries({
-							queryKey: ["organisation", companyId, "departments"],
+							queryKey: workspaceQuery.queryKey,
 						});
 					if (refusal?.fields.jobTitleId)
 						void client.invalidateQueries({
@@ -453,7 +439,7 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 										aria-invalid={Boolean(phoneError)}
 										aria-labelledby={formRowIds(idOf("phone")).labelId}
 										className="w-full"
-										defaultCountry={chosen?.branch?.country}
+										defaultCountry={chosen?.country}
 										disabled={isSubmitting}
 										id={idOf("phone")}
 										name={field.name}
@@ -615,36 +601,25 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 								control={control}
 								name="departmentId"
 								render={({ field }) => (
-									<Combobox
+									<DepartmentSelector
 										ref={field.ref}
-										aria-required
+										activeOnly
 										aria-invalid={Boolean(departmentError)}
 										aria-labelledby={formRowIds(idOf("departmentId")).labelId}
 										className="w-full"
-										disabled={isSubmitting || choices.length === 0}
-										emptyText={t(`${key}.noDepartmentMatches`)}
-										getKey={(choice) => choice.department.departmentId}
-										getLabel={(choice) => choice.label}
-										id={idOf("departmentId")}
-										multiple={false}
+										companyId={companyId}
+										disabled={isSubmitting}
+										keys={departmentKeys}
+										name={field.name}
 										placeholder={t(`${key}.departmentPlaceholder`)}
-										query={departmentQuery}
-										searchPlaceholder={t(`${key}.searchDepartments`)}
 										status={departmentError ? "error" : undefined}
-										value={chosen ?? null}
+										value={field.value}
 										aria-describedby={describedBy(
 											"departmentId",
 											departmentError,
 											departmentHint
 										)}
-										options={choices.filter((choice) =>
-											choice.label
-												.toLocaleLowerCase()
-												.includes(departmentQuery.trim().toLocaleLowerCase())
-										)}
-										onQueryChange={setDepartmentQuery}
-										onChange={(choice) => {
-											const next = choice?.department.departmentId ?? "";
+										onChange={(next) => {
 											if (next === field.value) return;
 											field.onChange(next);
 											// Job titles belong to one Department.

@@ -4,6 +4,8 @@ import { apiRequest } from "@/common/api-client";
 
 const permissionsSchema = z.array(z.string());
 
+const unitStatusSchema = z.enum(["ACTIVE", "INACTIVE"]);
+
 const workspaceSchema = z.object({
 	companies: z.array(
 		z.object({
@@ -14,11 +16,15 @@ const workspaceSchema = z.object({
 				z.object({
 					uuid: z.string(),
 					name: z.string(),
+					status: unitStatusSchema,
+					/** ISO 3166-1 alpha-2, for grouping Branches in selectors; not a grant. */
+					country: z.string(),
 					permissions: permissionsSchema,
 					departments: z.array(
 						z.object({
 							uuid: z.string(),
 							name: z.string(),
+							status: unitStatusSchema,
 							permissions: permissionsSchema,
 						})
 					),

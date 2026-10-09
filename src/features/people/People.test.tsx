@@ -58,6 +58,35 @@ const workspaceReply = (permissions: Array<string>): StubReply => ({
 	}),
 });
 
+/**
+ * A workspace granting `permissions` company-wide over Orchard and Jurong in
+ * Singapore and Kuala Lumpur in Malaysia.
+ */
+const branchesWorkspaceReply = (permissions: Array<string>): StubReply => ({
+	status: 200,
+	body: envelope({
+		companies: [
+			{
+				uuid: "c-1",
+				name: "Company c-1",
+				permissions,
+				branches: [
+					["b-1", "Orchard", "SG"],
+					["b-2", "Jurong", "SG"],
+					["b-3", "Kuala Lumpur", "MY"],
+				].map(([uuid, name, country]) => ({
+					uuid,
+					name,
+					status: "ACTIVE",
+					country,
+					permissions: [],
+					departments: [],
+				})),
+			},
+		],
+	}),
+});
+
 /** A workspace granting nothing at the company and `permissions` only at department d-1 of branch b-1. */
 const departmentScopedWorkspaceReply = (
 	permissions: Array<string>
@@ -73,8 +102,12 @@ const departmentScopedWorkspaceReply = (
 					{
 						uuid: "b-1",
 						name: "Orchard",
+						status: "ACTIVE",
+						country: "SG",
 						permissions: [],
-						departments: [{ uuid: "d-1", name: "Kitchen", permissions }],
+						departments: [
+							{ uuid: "d-1", name: "Kitchen", status: "ACTIVE", permissions },
+						],
 					},
 				],
 			},
@@ -215,6 +248,10 @@ describe("People", () => {
 		expect(
 			screen.getByRole("searchbox", { name: "Search employee" })
 		).toBeVisible();
+		// No Branch in the workspace: everyone in reach, with nothing to choose.
+		expect(
+			screen.queryByRole("button", { name: "Branch" })
+		).not.toBeInTheDocument();
 		expect(screen.getByRole("button", { name: "Showing:" })).toHaveTextContent(
 			"All employees"
 		);
@@ -395,12 +432,88 @@ describe("People", () => {
 			[WORKSPACE]: departmentScopedWorkspaceReply(["member_profile:read"]),
 			[PEOPLE]: pageReply([person("m-1", "Moses Lee")]),
 		});
-		await open("/people");
+		const opened = await open("/people");
 
 		const table = await screen.findByRole("table", { name: "People" });
 		expect(await within(table).findByText("Moses Lee")).toBeVisible();
 		expect(screen.getByRole("link", { name: "People" })).toBeVisible();
+		// Every Branch in reach by default, so the URL and the request name none.
+		expect(screen.getByRole("button", { name: "Branch" })).toHaveTextContent(
+			"All branches"
+		);
+		expect(opened.router.state.location.search).toEqual({});
 		expect(peopleCalls(calls)).toEqual([FIRST_PAGE]);
+	});
+
+	it("lists everyone in reach by default and one Branch once chosen", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...baseRoutes(),
+			[WORKSPACE]: branchesWorkspaceReply(["member_profile:read"]),
+			[PEOPLE]: pageReply([person("m-1", "Moses Lee")], 40),
+		});
+		const opened = await open("/people?page=2");
+		await screen.findByText("Moses Lee");
+
+		expect(screen.getByRole("button", { name: "Country" })).toHaveTextContent(
+			"All countries"
+		);
+		expect(screen.getByRole("button", { name: "Branch" })).toHaveTextContent(
+			"All branches"
+		);
+		expect(opened.router.state.location.search).toEqual({ page: 2 });
+
+		await user.click(screen.getByRole("button", { name: "Country" }));
+		await user.click(screen.getByRole("option", { name: "Singapore" }));
+		await waitFor(() => {
+			expect(opened.router.state.location.search).toEqual({ branch: "b-2" });
+		});
+		await user.click(screen.getByRole("button", { name: "Branch" }));
+		await user.click(screen.getByRole("option", { name: "Orchard" }));
+		await waitFor(() => {
+			expect(opened.router.state.location.search).toEqual({ branch: "b-1" });
+		});
+		await user.click(screen.getByRole("button", { name: "Branch" }));
+		await user.click(screen.getByRole("option", { name: "All branches" }));
+		await waitFor(() => {
+			expect(opened.router.state.location.search).toEqual({});
+		});
+		expect(peopleCalls(calls)).toEqual([
+			"page=1&size=10&sort=displayName%2Casc",
+			`${FIRST_PAGE}&branchId=b-2`,
+			`${FIRST_PAGE}&branchId=b-1`,
+			FIRST_PAGE,
+		]);
+	});
+
+	it("drops a Branch from the URL that is no longer offered, listing everyone", async () => {
+		const calls = stubApi({
+			...baseRoutes(),
+			[WORKSPACE]: branchesWorkspaceReply(["member_profile:read"]),
+			[PEOPLE]: pageReply([person("m-1", "Moses Lee")]),
+		});
+		const opened = await open("/people?branch=b-9");
+		await screen.findByText("Moses Lee");
+
+		await waitFor(() => {
+			expect(opened.router.state.location.search).toEqual({});
+		});
+		expect(peopleCalls(calls)).toEqual([FIRST_PAGE]);
+	});
+
+	it("opens on the Branch the URL names", async () => {
+		const calls = stubApi({
+			...baseRoutes(),
+			[WORKSPACE]: branchesWorkspaceReply(["member_profile:read"]),
+			[PEOPLE]: pageReply([person("m-1", "Moses Lee")]),
+		});
+		await open("/people?branch=b-2");
+		await screen.findByText("Moses Lee");
+
+		expect(screen.getByRole("button", { name: "Branch" })).toHaveTextContent(
+			"Jurong"
+		);
+		expect(peopleCalls(calls)).toEqual([`${FIRST_PAGE}&branchId=b-2`]);
 	});
 
 	it("is neither offered nor asked for without the key", async () => {

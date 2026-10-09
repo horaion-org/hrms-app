@@ -11,10 +11,20 @@ import {
 } from "@/features/people/peopleSearch";
 
 describe("People URL state", () => {
-	it("keeps a recognised page, sort and status", () => {
+	it("keeps a recognised page, sort, status and Branch", () => {
 		expect(
-			parsePeopleSearch({ page: 3, sort: "jobTitle,desc", status: "INACTIVE" })
-		).toEqual({ page: 3, sort: "jobTitle,desc", status: "INACTIVE" });
+			parsePeopleSearch({
+				page: 3,
+				sort: "jobTitle,desc",
+				status: "INACTIVE",
+				branch: "b-1",
+			})
+		).toEqual({
+			page: 3,
+			sort: "jobTitle,desc",
+			status: "INACTIVE",
+			branch: "b-1",
+		});
 	});
 
 	it.each([
@@ -27,6 +37,8 @@ describe("People URL state", () => {
 		{ sort: "displayName,up" },
 		{ status: "PENDING" },
 		{ status: "active" },
+		{ branch: "" },
+		{ branch: 7 },
 	])("drops what it does not recognise: %o", (search) => {
 		expect(parsePeopleSearch(search)).toEqual({});
 	});
@@ -75,6 +87,12 @@ describe("People URL state", () => {
 			page: 1,
 			sort: { field: "displayName", desc: false },
 			search: "",
+		});
+		expect(peopleQueryOf({ branch: "b-9" }, "", "b-1")).toEqual({
+			page: 1,
+			sort: { field: "displayName", desc: false },
+			search: "",
+			branchId: "b-1",
 		});
 	});
 });

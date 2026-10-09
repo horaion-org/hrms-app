@@ -42,6 +42,10 @@ _Avoid_: Role, position, job grade
 A named set of permissions a Company grants to people. The API calls it an access role.
 _Avoid_: Access role (in UI copy), role on its own, permission group, Job title
 
+**Unit selector**:
+Pages borrow a resource's list (`useBranches`, `useDepartments`) only to manage that resource, on the Organisation screens. To choose a unit anywhere else, use the workspace selectors (`BranchSelector`, `DepartmentSelector`) keyed by the page's own permission; they offer only the units the caller holds something at, so no screen needs `branch:read` or `department:read` to work inside a unit. Selectors used to create or assign pass `activeOnly`, so they offer only ACTIVE units; selectors that read do not, since inactive units may hold history.
+_Avoid_: Unit picker, branch dropdown, department dropdown
+
 ## Access
 
 **Onboarding**:

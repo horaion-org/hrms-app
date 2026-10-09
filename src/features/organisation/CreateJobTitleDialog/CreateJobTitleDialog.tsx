@@ -1,15 +1,14 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useId, useMemo } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { FormRow, formRowIds } from "@/components/forms/FormRow";
-import { Select, type SelectOption } from "@/components/forms/Select";
+import { Select } from "@/components/forms/Select";
 import type { JobTitle } from "@/features/organisation/api";
 import { placeOf } from "@/features/organisation/assignmentTargets";
 import { CreateFormDialog } from "@/features/organisation/CreateFormDialog";
-import { departmentChoices } from "@/features/organisation/departmentChoices";
 import { refusalFor } from "@/features/organisation/CreateJobTitleDialog/refusalFor";
 import {
 	createJobTitleSchema,
@@ -19,11 +18,10 @@ import { UnitNameField } from "@/features/organisation/UnitNameField";
 import { useUpdateJobTitle } from "@/features/organisation/useChangeListRow";
 import { useCreateFormSubmit } from "@/features/organisation/useCreateFormSubmit";
 import { useCreateJobTitle } from "@/features/organisation/useCreateInOrganisation";
-import {
-	useBranches,
-	useDepartments,
-} from "@/features/organisation/useOrganisationList";
-import { useCan } from "@/features/workspace/useCan";
+import { workspaceQuery } from "@/features/workspace/api";
+import { DepartmentSelector } from "@/features/workspace/DepartmentSelector";
+import { retry } from "@/features/workspace/retry";
+import { departmentChoices } from "@/features/workspace/unitChoices";
 
 export type CreateJobTitleDialogProps = {
 	companyId: string;
@@ -33,10 +31,7 @@ export type CreateJobTitleDialogProps = {
 };
 
 const FIELDS = ["departmentId", "name"] as const;
-const ACTIVE_BY_NAME = {
-	sort: { field: "name", desc: false },
-	status: "ACTIVE",
-} as const;
+const CREATE_KEYS = ["job_title:create"] as const;
 
 /**
  * Creates a Job title in one Department, or renames one. Mount when opened
@@ -48,7 +43,6 @@ export const CreateJobTitleDialog = ({
 	onClose,
 }: CreateJobTitleDialogProps): FunctionComponent => {
 	const { t } = useTranslation();
-	const can = useCan();
 	const client = useQueryClient();
 	const key = "organisation.jobTitles.createDialog";
 	const formId = useId();
@@ -73,40 +67,22 @@ export const CreateJobTitleDialog = ({
 		formState: { errors, isSubmitting },
 	} = form;
 	const name = useWatch({ control, name: "name" });
-	const branches = useBranches(companyId, ACTIVE_BY_NAME);
-	const departments = useDepartments(companyId, ACTIVE_BY_NAME);
+	const { data: workspace } = useQuery({ ...workspaceQuery, retry });
 	const create = useCreateJobTitle(companyId);
 	const update = useUpdateJobTitle(companyId);
 	const submit = useCreateFormSubmit(form, FIELDS, onClose);
 	// Only departments where the person may create job titles are offered; when editing, just the title's own.
-	const departmentOptions: Array<SelectOption> = editing
-		? [
-				{
-					value: editing.departmentId,
-					label: placeOf(editing, t),
-				},
-			]
-		: branches.status === "ready" && departments.status === "ready"
-			? departmentChoices(
-					branches.items,
-					departments.items,
-					(departmentId) => can("job_title:create", departmentId),
-					t
-				).map(({ department, label }) => ({
-					value: department.departmentId,
-					label,
-				}))
+	const choices =
+		workspace && !editing
+			? departmentChoices(workspace, companyId, CREATE_KEYS)
 			: [];
 	const onlyDepartment =
-		departmentOptions.length === 1 ? departmentOptions[0]?.value : undefined;
+		choices.length === 1 ? choices[0]?.departmentId : undefined;
 	useEffect(() => {
 		// One department leaves nothing to choose.
 		if (onlyDepartment && !getValues("departmentId"))
 			setValue("departmentId", onlyDepartment);
 	}, [onlyDepartment, getValues, setValue]);
-	const loading =
-		branches.status === "pending" || departments.status === "pending";
-	const failed = branches.status === "error" || departments.status === "error";
 	const departmentError = errors.departmentId?.message;
 	return (
 		<CreateFormDialog
@@ -130,12 +106,9 @@ export const CreateJobTitleDialog = ({
 						() => {
 							if (editing)
 								return update.mutateAsync({ ...editing, name: values.name });
-							const department =
-								departments.status === "ready"
-									? departments.items.find(
-											(item) => item.departmentId === values.departmentId
-										)
-									: undefined;
+							const department = choices.find(
+								(choice) => choice.departmentId === values.departmentId
+							);
 							return create.mutateAsync({
 								branchId: department?.branchId ?? "",
 								departmentId: values.departmentId,
@@ -146,7 +119,7 @@ export const CreateJobTitleDialog = ({
 					);
 					if (refusal?.fields.departmentId)
 						void client.invalidateQueries({
-							queryKey: ["organisation", companyId, "departments"],
+							queryKey: workspaceQuery.queryKey,
 						});
 				})(event)
 			}
@@ -160,40 +133,48 @@ export const CreateJobTitleDialog = ({
 				hint={
 					editing
 						? undefined
-						: loading
-							? t(`${key}.departmentsLoading`)
-							: failed
-								? t(`${key}.departmentsFailed`)
-								: departmentOptions.length === 0
-									? t(`${key}.departmentsEmpty`)
-									: t(`${key}.departmentHint`)
+						: workspace && choices.length === 0
+							? t(`${key}.departmentsEmpty`)
+							: t(`${key}.departmentHint`)
 				}
 			>
 				<Controller
 					control={control}
 					name="departmentId"
-					render={({ field }) => (
-						<Select
-							ref={field.ref}
-							aria-invalid={Boolean(departmentError)}
-							aria-labelledby={departmentIds.labelId}
-							className="w-full"
-							name={field.name}
-							options={departmentOptions}
-							placeholder={t(`${key}.departmentPlaceholder`)}
-							status={departmentError ? "error" : undefined}
-							value={field.value}
-							aria-describedby={
-								departmentError ? departmentIds.errorId : departmentIds.hintId
-							}
-							disabled={
-								isSubmitting ||
-								editing !== undefined ||
-								departmentOptions.length === 0
-							}
-							onChange={field.onChange}
-						/>
-					)}
+					render={({ field }) => {
+						const shared = {
+							ref: field.ref,
+							"aria-invalid": Boolean(departmentError),
+							"aria-labelledby": departmentIds.labelId,
+							"aria-describedby": departmentError
+								? departmentIds.errorId
+								: departmentIds.hintId,
+							className: "w-full",
+							name: field.name,
+							placeholder: t(`${key}.departmentPlaceholder`),
+							status: departmentError ? ("error" as const) : undefined,
+							value: field.value,
+						};
+						// A title stays in its own Department, which is shown, not chosen.
+						return editing ? (
+							<Select
+								{...shared}
+								disabled
+								options={[
+									{ value: editing.departmentId, label: placeOf(editing, t) },
+								]}
+							/>
+						) : (
+							<DepartmentSelector
+								{...shared}
+								activeOnly
+								companyId={companyId}
+								disabled={isSubmitting}
+								keys={CREATE_KEYS}
+								onChange={field.onChange}
+							/>
+						);
+					}}
 				/>
 			</FormRow>
 			<UnitNameField
