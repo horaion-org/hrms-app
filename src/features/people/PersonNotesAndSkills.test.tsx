@@ -68,10 +68,10 @@ const workspaceReply = (
 /** Reads profiles company-wide; `kitchen` adds keys at department d-1. */
 const reader = (kitchen: Array<string> = []): StubReply =>
 	workspaceReply(["member_profile:read"], kitchen);
-/** May edit profiles at d-1, with the lists the form needs. */
+/** May edit profiles at d-1, with the job titles the form needs. */
 const editor = (kitchen: Array<string> = []): StubReply =>
 	workspaceReply(
-		["member_profile:read", "branch:read", "department:read", "job_title:read"],
+		["member_profile:read", "job_title:read"],
 		["member_profile:update", ...kitchen]
 	);
 
@@ -175,19 +175,6 @@ const routes = (
 			].filter(({ name }) => name.toLowerCase().includes(search.toLowerCase()))
 		);
 	},
-	[`GET ${COMPANY}/branches`]: page([
-		{
-			branchId: "b-1",
-			name: "Orchard",
-			code: "ORC",
-			city: "Singapore",
-			country: "SG",
-			status: "ACTIVE",
-		},
-	]),
-	[`GET ${COMPANY}/departments`]: page([
-		{ departmentId: "d-1", branchId: "b-1", name: "Kitchen", status: "ACTIVE" },
-	]),
 	[`GET ${COMPANY}/job-titles`]: page([]),
 });
 

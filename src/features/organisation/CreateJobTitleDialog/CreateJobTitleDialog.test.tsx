@@ -21,13 +21,7 @@ const JOB_TITLES = "GET /api/v1/companies/c-1/job-titles";
 const TITLES = "/api/v1/companies/c-1/branches/b-1/departments/d-1/job-titles";
 const CREATE = `POST ${TITLES}`;
 const UPDATE = `PUT ${TITLES}/j-1`;
-const permissions = [
-	"job_title:read",
-	"job_title:create",
-	"job_title:update",
-	"branch:read",
-	"department:read",
-];
+const permissions = ["job_title:read", "job_title:create", "job_title:update"];
 const jobTitle = {
 	jobTitleId: "j-1",
 	companyId: "c-1",
@@ -38,25 +32,6 @@ const jobTitle = {
 	name: "Shift supervisor",
 	status: "ACTIVE",
 };
-const branch = {
-	branchId: "b-1",
-	companyId: "c-1",
-	name: "Orchard",
-	code: "ORC",
-	city: "Singapore",
-	country: "SG",
-	status: "ACTIVE",
-};
-const departmentOf = (
-	departmentId: string,
-	name: string
-): Record<string, unknown> => ({
-	departmentId,
-	branchId: "b-1",
-	companyId: "c-1",
-	name,
-	status: "ACTIVE",
-});
 const page = (content: Array<unknown>): StubReply => ({
 	status: 200,
 	body: envelope({ content, page: { totalElements: content.length } }),
@@ -68,16 +43,38 @@ const routes = (grants = permissions): Record<string, StubReply> => ({
 		status: 200,
 		body: envelope({
 			companies: [
-				{ uuid: "c-1", name: "Company c-1", permissions: grants, branches: [] },
+				{
+					uuid: "c-1",
+					name: "Company c-1",
+					permissions: grants,
+					branches: [
+						{
+							uuid: "b-1",
+							name: "Orchard",
+							status: "ACTIVE",
+							country: "SG",
+							permissions: [],
+							departments: [
+								{
+									uuid: "d-1",
+									name: "Kitchen",
+									status: "ACTIVE",
+									permissions: [],
+								},
+								{
+									uuid: "d-2",
+									name: "Front of house",
+									status: "ACTIVE",
+									permissions: [],
+								},
+							],
+						},
+					],
+				},
 			],
 		}),
 	},
 	[JOB_TITLES]: page([]),
-	"GET /api/v1/companies/c-1/branches": page([branch]),
-	"GET /api/v1/companies/c-1/departments": page([
-		departmentOf("d-1", "Kitchen"),
-		departmentOf("d-2", "Front of house"),
-	]),
 	[CREATE]: { status: 201, body: envelope(jobTitle) },
 	[UPDATE]: { status: 200, body: envelope(jobTitle) },
 });
@@ -194,7 +191,7 @@ describe("create job title through the Job titles page", () => {
 		).toEqual([[TITLES, { name: "Shift supervisor" }]]);
 	});
 
-	it("needs a department, offering only the active ones the person may add to", async () => {
+	it("needs a department, offering only the ones the person may add to", async () => {
 		stubApi(routes());
 		await open();
 		const dialog = await openDialog();
@@ -210,7 +207,7 @@ describe("create job title through the Job titles page", () => {
 		);
 		expect(
 			screen.getAllByRole("option").map((option) => option.textContent)
-		).toEqual(["Orchard › Kitchen", "Orchard › Front of house"]);
+		).toEqual(["Orchard › Front of house", "Orchard › Kitchen"]);
 	});
 
 	it("puts a department refusal on the department field", async () => {
@@ -365,7 +362,7 @@ describe("edit job title through the Job titles page", () => {
 
 	it("offers no pencil or status change without job_title:update", async () => {
 		stubApi({
-			...routes(["job_title:read", "branch:read", "department:read"]),
+			...routes(["job_title:read"]),
 			[JOB_TITLES]: page([jobTitle]),
 		});
 		await open();

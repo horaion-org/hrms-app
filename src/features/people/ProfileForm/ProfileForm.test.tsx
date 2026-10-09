@@ -26,8 +26,6 @@ const WORKSPACE = "GET /api/v1/me/workspace";
 const ALL = [
 	"member_profile:read",
 	"member_profile:create",
-	"branch:read",
-	"department:read",
 	"job_title:read",
 	"access_role:read",
 	"access_role:assign",
@@ -64,24 +62,27 @@ const workspaceReply = (
 							},
 						],
 					},
+					// The same Department name in another Branch, told apart by the Branch.
+					{
+						uuid: "b-2",
+						name: "Bukit Bintang",
+						status: "ACTIVE",
+						country: "MY",
+						permissions: [],
+						departments: [
+							{
+								uuid: "d-2",
+								name: "Kitchen",
+								status: "ACTIVE",
+								permissions: [],
+							},
+						],
+					},
 				],
 			},
 		],
 	}),
 });
-const branch = (branchId: string, name: string, country: string): unknown => ({
-	branchId,
-	name,
-	code: branchId.toUpperCase(),
-	city: "City",
-	country,
-	status: "ACTIVE",
-});
-const department = (
-	departmentId: string,
-	branchId: string,
-	name: string
-): unknown => ({ departmentId, branchId, name, status: "ACTIVE" });
 const jobTitle = (
 	jobTitleId: string,
 	departmentId: string,
@@ -130,15 +131,6 @@ const routes = (
 	"GET /api/v1/me": currentUserReply(),
 	[WORKSPACE]: workspace,
 	[`GET ${COMPANY}/member-profiles`]: page([]),
-	[`GET ${COMPANY}/branches`]: page([
-		branch("b-1", "Orchard", "SG"),
-		branch("b-2", "Bukit Bintang", "MY"),
-	]),
-	// The same name in two branches, told apart by the branch.
-	[`GET ${COMPANY}/departments`]: page([
-		department("d-1", "b-1", "Kitchen"),
-		department("d-2", "b-2", "Kitchen"),
-	]),
 	[`GET ${COMPANY}/job-titles`]: (call) =>
 		new URLSearchParams(call.search).get("departmentId") === "d-1"
 			? page([jobTitle("j-1", "d-1", "Chef")])
@@ -263,7 +255,7 @@ describe("Add employee", () => {
 		stubApi(
 			routes(
 				workspaceReply(
-					["branch:read", "department:read", "job_title:read"],
+					["job_title:read"],
 					["member_profile:read", "member_profile:create"]
 				)
 			)
@@ -488,8 +480,6 @@ describe("Add employee", () => {
 				workspaceReply([
 					"member_profile:read",
 					"member_profile:create",
-					"branch:read",
-					"department:read",
 					"access_role:read",
 				])
 			)
@@ -563,7 +553,7 @@ describe("Add employee", () => {
 		);
 	});
 
-	it("reloads the options of a refused department, job title or manager", async () => {
+	it("reloads the workspace, job titles or people behind a refused department, job title or manager", async () => {
 		const user = userEvent.setup();
 		const calls = stubApi({
 			...routes(),
@@ -578,14 +568,14 @@ describe("Add employee", () => {
 		await fillRequired(user);
 		await choose(user, /^Job title/, "Chef");
 		const before = {
-			departments: count(`GET ${COMPANY}/departments`),
+			workspace: count(WORKSPACE),
 			jobTitles: count(`GET ${COMPANY}/job-titles`),
 			members: count(`GET ${COMPANY}/me/colleagues`),
 		};
 
 		await user.click(confirm());
 		await waitFor(() => {
-			expect(count(`GET ${COMPANY}/departments`)).toBe(before.departments + 1);
+			expect(count(WORKSPACE)).toBe(before.workspace + 1);
 		});
 		await user.click(confirm());
 		await waitFor(() => {
