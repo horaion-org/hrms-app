@@ -52,9 +52,16 @@ const workspaceReply = (
 					{
 						uuid: "b-1",
 						name: "Orchard",
+						status: "ACTIVE",
+						country: "SG",
 						permissions: [],
 						departments: [
-							{ uuid: "d-1", name: "Kitchen", permissions: kitchen },
+							{
+								uuid: "d-1",
+								name: "Kitchen",
+								status: "ACTIVE",
+								permissions: kitchen,
+							},
 						],
 					},
 				],

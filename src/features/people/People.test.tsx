@@ -73,8 +73,12 @@ const departmentScopedWorkspaceReply = (
 					{
 						uuid: "b-1",
 						name: "Orchard",
+						status: "ACTIVE",
+						country: "SG",
 						permissions: [],
-						departments: [{ uuid: "d-1", name: "Kitchen", permissions }],
+						departments: [
+							{ uuid: "d-1", name: "Kitchen", status: "ACTIVE", permissions },
+						],
 					},
 				],
 			},

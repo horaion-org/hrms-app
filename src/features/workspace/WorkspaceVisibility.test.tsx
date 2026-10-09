@@ -62,10 +62,13 @@ const workspaceReply = (
 					{
 						uuid: "b-1",
 						name: "Orchard",
+						status: "ACTIVE",
+						country: "SG",
 						permissions: branchPermissions,
 						departments: departments.map((department) => ({
 							...department,
 							name: department.uuid,
+							status: "ACTIVE",
 						})),
 					},
 				],
