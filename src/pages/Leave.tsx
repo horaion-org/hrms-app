@@ -5,11 +5,9 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { DateRange } from "@/components/forms/Calendar";
 import type { FunctionComponent } from "@/common/types";
-import { Select } from "@/components/forms/Select";
 import { Button } from "@/components/ui/Button";
 import { PlusIcon } from "@/components/ui/Icon";
 import { Tabs, TabList, Tab, TabPanels, TabPanel } from "@/components/ui/Tabs";
-import { activeBranchesQuery } from "@/features/leave/api";
 import { defaultRange } from "@/features/leave/dates";
 import { LeaveRequestDialog } from "@/features/leave/LeaveRequestDialog";
 import { LeaveRequests } from "@/features/leave/LeaveRequests";
@@ -38,7 +36,14 @@ import type { Refusal } from "@/features/organisation/refusal";
 import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import { peopleQuery } from "@/features/people/api";
 import { useSettledSearch } from "@/features/people/usePeople";
+import { workspaceQuery } from "@/features/workspace/api";
+import { BranchSelector } from "@/features/workspace/BranchSelector";
+import {
+	branchChoices,
+	chosenBranch,
+} from "@/features/workspace/unitChoices";
 import { LEAVE_READ_KEYS } from "@/features/workspace/permissionKeys";
+import { retry } from "@/features/workspace/retry";
 import { useCan, useCanAnywhere } from "@/features/workspace/useCan";
 
 const route = getRouteApi("/_authenticated/_app/leave");
@@ -77,7 +82,7 @@ const problemOf = (
  */
 export const Leave = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
-	const { t, i18n } = useTranslation();
+	const { t } = useTranslation();
 	const search = route.useSearch();
 	const navigate = route.useNavigate();
 	const can = useCan();
@@ -86,17 +91,12 @@ export const Leave = (): FunctionComponent => {
 	const canApply = canAnywhere(["leave_request:create"]);
 	const view: View = canRead && search.view ? search.view : "mine";
 	const team = view !== "mine";
-	const branches = useQuery(activeBranchesQuery(companyId, canRead));
-	const branchRows = branches.data?.items ?? [];
-	const selected =
-		branchRows.find((branch) => branch.branchId === search.branch) ??
-		branchRows[0];
-	const countries = [
-		...new Set(branchRows.map((branch) => branch.country)),
-	].sort((a, b) => a.localeCompare(b, i18n.language));
-	const regionName = new Intl.DisplayNames([i18n.language], {
-		type: "region",
-	});
+	const workspace = useQuery({ ...workspaceQuery, retry });
+	const branches = workspace.data
+		? branchChoices(workspace.data, companyId, LEAVE_READ_KEYS)
+		: undefined;
+	// The same Branch the selector shows, so the list asks for it before the URL names it.
+	const selected = chosenBranch(branches ?? [], search.branch);
 	const [range, setRange] = useState<DateRange>(defaultRange);
 	const mine = useMyLeaveRequests(
 		companyId,
@@ -172,6 +172,16 @@ export const Leave = (): FunctionComponent => {
 		actions.applyOwn.isPending;
 	const current = view === "mine" ? mine : view === "requests" ? list : window;
 	const listProblem = problemOf(current, t, view === "mine");
+	const chooseBranch = (branch: string | undefined): void => {
+		// The selector naming the Branch already shown keeps the page, the history entry and its state.
+		if (branch === selected?.branchId)
+			void navigate({
+				search: (previous) => ({ ...previous, branch }),
+				replace: true,
+				state: true,
+			});
+		else show({ branch });
+	};
 	const paging = (page: number): void => {
 		void navigate({
 			search: (previous) => ({ ...previous, page: pageParameter(page) }),
@@ -186,51 +196,17 @@ export const Leave = (): FunctionComponent => {
 					</h1>
 					<p className="mt-3 text-sm text-neutral-800">{t("leave.subtitle")}</p>
 				</div>
-				{team && selected && (
-					<div className="flex flex-wrap items-center gap-5 pt-1">
-						<div className="flex items-center gap-3">
-							<span className="text-sm text-neutral-800">
-								{t("leave.country")}
-							</span>
-							<Select
-								aria-label={t("leave.country")}
-								className="w-44 font-semibold text-ink-blue-900"
-								value={selected.country}
-								options={countries.map((value) => ({
-									value,
-									label: regionName.of(value) ?? value,
-								}))}
-								onChange={(country) => {
-									const first = branchRows.find(
-										(branch) => branch.country === country
-									);
-									if (first) show({ branch: first.branchId });
-								}}
-							/>
-						</div>
-						<div className="flex items-center gap-3">
-							<span className="text-sm text-neutral-800">
-								{t("leave.branch")}
-							</span>
-							<Select
-								aria-label={t("leave.branch")}
-								className="w-44 font-semibold text-ink-blue-900"
-								value={selected.branchId}
-								options={branchRows
-									.filter((branch) => branch.country === selected.country)
-									.map((branch) => ({
-										value: branch.branchId,
-										label: branch.name,
-									}))}
-								onChange={(branch) => {
-									show({ branch });
-								}}
-							/>
-						</div>
-					</div>
+				{team && (
+					<BranchSelector
+						className="pt-1"
+						companyId={companyId}
+						keys={LEAVE_READ_KEYS}
+						value={search.branch}
+						onChange={chooseBranch}
+					/>
 				)}
 			</div>
-			{team && branches.isSuccess && branchRows.length === 0 && (
+			{team && branches?.length === 0 && (
 				<p className="mt-8 text-sm text-neutral-700">{t("leave.noBranches")}</p>
 			)}
 			<Tabs

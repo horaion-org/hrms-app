@@ -8,9 +8,7 @@ import { z } from "zod";
 import { apiRequest } from "@/common/api-client";
 import {
 	companyPath,
-	fetchBranches,
 	fetchList,
-	type Branch,
 	type ListPage,
 } from "@/features/organisation/api";
 import { retry } from "@/features/workspace/retry";
@@ -254,26 +252,3 @@ export const rejectLeaveRequest = (
 		leaveRequestSchema,
 		{ method: "POST", body: { reason: reason.trim() } }
 	);
-
-/** The company's active Branches, A to Z, which drive the Leave page's country and Branch filters. */
-export const activeBranchesQuery = (
-	companyId: string,
-	allowed = true
-): UndefinedInitialDataOptions<
-	ListPage<Branch>,
-	Error,
-	ListPage<Branch>,
-	readonly ["leave", "branches", string]
-> =>
-	queryOptions({
-		queryKey: ["leave", "branches", companyId] as const,
-		queryFn: allowed
-			? (): Promise<ListPage<Branch>> =>
-					fetchBranches(companyId, {
-						sort: { field: "name", desc: false },
-						status: "ACTIVE",
-					})
-			: skipToken,
-		staleTime: 30_000,
-		retry,
-	});

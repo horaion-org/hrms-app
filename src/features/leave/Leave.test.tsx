@@ -21,7 +21,6 @@ import { LEAVE_FIXTURES, leaveFixture } from "@/features/leave/fixtures";
 const REFRESH = "POST /api/v1/public/sessions/refreshes";
 const ME = "GET /api/v1/me";
 const WORKSPACE = "GET /api/v1/me/workspace";
-const BRANCHES = "GET /api/v1/companies/c-1/branches";
 const LEAVE_PATH = "/api/v1/companies/c-1/leave-requests";
 const LEAVE = `GET ${LEAVE_PATH}`;
 const MY_LEAVE_PATH = "/api/v1/companies/c-1/me/leave-requests";
@@ -68,20 +67,11 @@ const pageReply = (
 	body: envelope({ content, page: { totalElements } }),
 });
 
-const branch = (
-	branchId: string,
-	name: string,
-	country: string
-): Record<string, string> => ({
-	branchId,
-	name,
-	code: branchId.toUpperCase(),
-	city: name,
-	country,
-	status: "ACTIVE",
-});
-
-/** A workspace holding `permissions` company-wide; `departmentOnly` holds them at department d-1 only. */
+/**
+ * A workspace holding `permissions` company-wide; `departmentOnly` holds them
+ * at department d-1 of Main branch only. Main and Jurong branches are in
+ * Singapore, Kuala Lumpur branch in Malaysia.
+ */
 const workspaceReply = (
 	permissions: Array<string>,
 	departmentOnly = false
@@ -115,6 +105,22 @@ const workspaceReply = (
 							},
 						],
 					},
+					{
+						uuid: "b-2",
+						name: "Jurong branch",
+						status: "ACTIVE",
+						country: "SG",
+						permissions: [],
+						departments: [],
+					},
+					{
+						uuid: "b-3",
+						name: "Kuala Lumpur branch",
+						status: "ACTIVE",
+						country: "MY",
+						permissions: [],
+						departments: [],
+					},
 				],
 			},
 		],
@@ -127,11 +133,6 @@ const routes = (
 	[REFRESH]: accessPassReply(),
 	[ME]: currentUserReply(),
 	[WORKSPACE]: workspace,
-	[BRANCHES]: pageReply([
-		branch("b-1", "Main branch", "SG"),
-		branch("b-2", "Jurong branch", "SG"),
-		branch("b-3", "Kuala Lumpur branch", "MY"),
-	]),
 	[LEAVE]: pageReply(LEAVE_FIXTURES, 24),
 	[MY_LEAVE]: pageReply([LEAVE_FIXTURES[0], LEAVE_FIXTURES[3]], 2),
 });
@@ -147,24 +148,35 @@ const sent = (calls: Array<Call>, route: string): Array<unknown> =>
 describe("Leave", () => {
 	it("lists the first Branch's requests a page at a time, as the API filters and sorts them", async () => {
 		const calls = stubApi(routes());
-		await open("/leave?view=requests");
+		const { router } = await open("/leave?view=requests");
 
 		expect(
 			await screen.findByRole("heading", { level: 1, name: "Leave overview" })
 		).toBeVisible();
 		const table = await screen.findByRole("table", { name: "Requests" });
 		await within(table).findByText("Aisha Rahman");
+		// The workspace's Branches by country, then name: Malaysia comes first.
 		expect(screen.getByRole("button", { name: "Country" })).toHaveTextContent(
-			"Singapore"
+			"Malaysia"
 		);
 		expect(screen.getByRole("button", { name: "Branch" })).toHaveTextContent(
-			"Main branch"
+			"Kuala Lumpur branch"
 		);
 		expect(screen.getByText("1–10 of 24 entries")).toBeVisible();
 		expect(within(table).getByText("Rejected")).toHaveClass("bg-error-100");
+		await waitFor(() => {
+			expect(router.state.location.search).toEqual({
+				view: "requests",
+				branch: "b-3",
+			});
+		});
+		// Naming the default Branch in the URL asks for nothing again.
 		expect(searchesOf(calls, LEAVE_PATH)).toEqual([
-			"page=0&size=10&sort=requestedAt%2Cdesc&branchId=b-1",
+			"page=0&size=10&sort=requestedAt%2Cdesc&branchId=b-3",
 		]);
+		expect(
+			calls.filter((call) => call.path.endsWith("/branches"))
+		).toHaveLength(0);
 	});
 
 	it("puts the Branch, status, sort and page in the URL and asks the API again", async () => {
@@ -174,15 +186,15 @@ describe("Leave", () => {
 		await screen.findByText("Aisha Rahman");
 
 		await user.click(screen.getByRole("button", { name: "Country" }));
-		await user.click(screen.getByRole("option", { name: "Malaysia" }));
+		await user.click(screen.getByRole("option", { name: "Singapore" }));
 		await waitFor(() => {
 			expect(router.state.location.search).toEqual({
 				view: "requests",
-				branch: "b-3",
+				branch: "b-2",
 			});
 		});
 		expect(screen.getByRole("button", { name: "Branch" })).toHaveTextContent(
-			"Kuala Lumpur branch"
+			"Jurong branch"
 		);
 		await user.click(screen.getByRole("button", { name: "Showing" }));
 		await user.click(screen.getByRole("option", { name: "Pending" }));
@@ -191,7 +203,7 @@ describe("Leave", () => {
 		await waitFor(() => {
 			expect(router.state.location.search).toEqual({
 				view: "requests",
-				branch: "b-3",
+				branch: "b-2",
 				status: "PENDING",
 				sort: "displayName,asc",
 				page: 2,
@@ -199,7 +211,7 @@ describe("Leave", () => {
 		});
 		const searches = searchesOf(calls, LEAVE_PATH);
 		expect(searches[searches.length - 1]).toBe(
-			"page=1&size=10&sort=displayName%2Casc&status=PENDING&branchId=b-3"
+			"page=1&size=10&sort=displayName%2Casc&status=PENDING&branchId=b-2"
 		);
 	});
 
@@ -348,10 +360,50 @@ describe("Leave", () => {
 		);
 	});
 
+	it("says there is no Branch to show when the workspace offers none, and asks for no list", async () => {
+		const calls = stubApi(
+			routes({
+				status: 200,
+				body: envelope({
+					companies: [
+						{
+							uuid: "c-1",
+							name: "Company c-1",
+							permissions: ALL,
+							branches: [],
+						},
+					],
+				}),
+			})
+		);
+		await open("/leave?view=requests");
+
+		expect(
+			await screen.findByText(
+				"Add a branch to the organisation before managing leave."
+			)
+		).toBeVisible();
+		expect(
+			screen.queryByRole("button", { name: "Branch" })
+		).not.toBeInTheDocument();
+		expect(searchesOf(calls, LEAVE_PATH)).toEqual([]);
+	});
+
 	it("offers decisions only where the key is held", async () => {
-		stubApi(routes(workspaceReply(["leave_request:read"], true)));
+		const calls = stubApi(routes(workspaceReply(["leave_request:read"], true)));
 		await open("/leave?view=requests");
 		await screen.findByText("Aisha Rahman");
+
+		// Only the Branch holding the key beneath it is offered, so no country is asked for.
+		expect(
+			screen.queryByRole("button", { name: "Country" })
+		).not.toBeInTheDocument();
+		expect(screen.getByRole("button", { name: "Branch" })).toHaveTextContent(
+			"Main branch"
+		);
+		expect(searchesOf(calls, LEAVE_PATH)).toEqual([
+			"page=0&size=10&sort=requestedAt%2Cdesc&branchId=b-1",
+		]);
 
 		expect(
 			screen.queryByRole("button", { name: "Apply leave" })
@@ -426,7 +478,10 @@ describe("Leave", () => {
 		).toEqual(["My leave", "Team requests", "Team timeline"]);
 		await user.click(screen.getByRole("tab", { name: "Team requests" }));
 		await waitFor(() => {
-			expect(router.state.location.search).toEqual({ view: "requests" });
+			expect(router.state.location.search).toEqual({
+				view: "requests",
+				branch: "b-3",
+			});
 		});
 		await screen.findByText("Cheryl Ng");
 		expect(

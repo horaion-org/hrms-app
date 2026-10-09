@@ -72,26 +72,19 @@ test.beforeEach(async ({ context }) => {
 						"leave_request:create",
 						"leave_request:review",
 					],
-					branches: [],
+					branches: [
+						{
+							uuid: "b-1",
+							name: "Main branch",
+							status: "ACTIVE",
+							country: "SG",
+							permissions: [],
+							departments: [],
+						},
+					],
 				},
 			],
 		})
-	);
-	await context.route("**/api/v1/companies/acme/branches**", (route) =>
-		json(
-			route,
-			200,
-			page_([
-				{
-					branchId: "b-1",
-					name: "Main branch",
-					code: "MAIN",
-					city: "Singapore",
-					country: "SG",
-					status: "ACTIVE",
-				},
-			])
-		)
 	);
 	await context.route("**/api/v1/companies/acme/me/leave-requests**", (route) =>
 		json(
