@@ -23,12 +23,13 @@ const searchSchema = z.object({
 	page: z.number().int().min(1).optional().catch(undefined),
 	sort: sortParameterSchema.optional().catch(undefined),
 	status: z.enum(MEMBER_STATUSES).optional().catch(undefined),
+	branch: z.string().min(1).optional().catch(undefined),
 });
 
 /**
  * The People table's state that belongs in the URL, so it survives a reload
  * and can be shared. Each part is left out at its default: the first page,
- * sorted by name, every status. The search text is never here: names
+ * sorted by name, every status, every Branch. The search text is never here: names
  * typed into it must not land in browser history or logs.
  */
 export type PeopleSearch = z.infer<typeof searchSchema>;
@@ -37,11 +38,12 @@ export type PeopleSearch = z.infer<typeof searchSchema>;
 export const parsePeopleSearch = (
 	search: Record<string, unknown>
 ): PeopleSearch => {
-	const { page, sort, status } = searchSchema.parse(search);
+	const { page, sort, status, branch } = searchSchema.parse(search);
 	return {
 		...(page === undefined || page === 1 ? {} : { page }),
 		...(sort === undefined || sort === DEFAULT_SORT_PARAMETER ? {} : { sort }),
 		...(status === undefined ? {} : { status }),
+		...(branch === undefined ? {} : { branch }),
 	};
 };
 
@@ -75,15 +77,17 @@ export const statusParameter = (
 ): MemberStatus | undefined =>
 	statuses.length === 1 ? statuses[0] : undefined;
 
-/** The page of people to ask the API for. */
+/** The page of people to ask the API for, inside the Branch shown, if any. */
 export const peopleQueryOf = (
 	search: PeopleSearch,
-	text: string
+	text: string,
+	branchId?: string
 ): PeopleQuery => ({
 	page: search.page ?? 1,
 	sort: sortOf(search),
 	...(search.status ? { status: search.status } : {}),
 	search: text.trim(),
+	...(branchId ? { branchId } : {}),
 });
 
 /**

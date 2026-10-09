@@ -44,12 +44,13 @@ describe("people list client", () => {
 		);
 	});
 
-	it("adds the status and a trimmed search cut to 100 characters", () => {
+	it("adds the status, a trimmed search cut to 100 characters and the Branch", () => {
 		const path = peoplePath("c-1", {
 			page: 3,
 			sort: { field: "jobTitle", desc: true },
 			status: "INACTIVE",
 			search: `  ${"a".repeat(120)}  `,
+			branchId: "b-1",
 		});
 		const query = new URLSearchParams(path.split("?")[1]);
 
@@ -59,6 +60,7 @@ describe("people list client", () => {
 			sort: "jobTitle,desc",
 			status: "INACTIVE",
 			search: "a".repeat(100),
+			branchId: "b-1",
 		});
 	});
 
