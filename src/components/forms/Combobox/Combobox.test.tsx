@@ -212,6 +212,59 @@ describe("Combobox single choice", () => {
 		expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
 		await waitFor(() => expect(trigger).toHaveFocus());
 	});
+	it("offers a create row for an unknown query, by click or Enter, and never for a known label", async () => {
+		const user = userEvent.setup();
+		const created = vi.fn();
+		const changed = vi.fn();
+		const Example = (): FunctionComponent => {
+			const [query, setQuery] = useState("");
+			return (
+				<Combobox
+					aria-label="Shift group"
+					getKey={(option) => option.id}
+					getLabel={(option) => option.name}
+					multiple={false}
+					placeholder="Select or create a group"
+					query={query}
+					searchPlaceholder="Search groups"
+					value={null}
+					options={options.filter((option) =>
+						option.name.toLowerCase().includes(query.trim().toLowerCase())
+					)}
+					onChange={changed}
+					onQueryChange={setQuery}
+					onCreate={(name) => {
+						created(name);
+						setQuery("");
+					}}
+				/>
+			);
+		};
+		render(<Example />);
+		await user.click(screen.getByRole("button", { name: "Shift group" }));
+		expect(screen.queryByRole("option", { name: /^Create/ })).toBeNull();
+
+		await user.type(screen.getByRole("combobox"), "marcus lim ");
+		expect(screen.queryByRole("option", { name: /^Create/ })).toBeNull();
+		expect(screen.getByRole("option", { name: "Marcus Lim" })).toBeVisible();
+
+		await user.clear(screen.getByRole("combobox"));
+		// Clearing the search reports null, as it always has; only the create row is under test.
+		changed.mockClear();
+		await user.type(screen.getByRole("combobox"), "Night ");
+		const row = screen.getByRole("option", { name: 'Create "Night"' });
+		expect(row).toHaveTextContent('Create "Night"');
+		expect(screen.queryByRole("status")).toBeNull();
+		await user.click(row);
+		expect(created).toHaveBeenLastCalledWith("Night");
+		expect(changed).not.toHaveBeenCalled();
+
+		await user.click(screen.getByRole("button", { name: "Shift group" }));
+		await user.type(screen.getByRole("combobox"), "Dawn");
+		await user.keyboard("{ArrowDown}{Enter}");
+		expect(created).toHaveBeenLastCalledWith("Dawn");
+		expect(changed).not.toHaveBeenCalled();
+	});
 	it("shows a compact chosen value in the trigger and places the list under an anchor", async () => {
 		const user = userEvent.setup();
 		const Example = (): FunctionComponent => {

@@ -13,8 +13,8 @@ beforeAll(async () => {
 });
 
 const ROLES = [
-	{ roleId: "cashier", name: "Cashier" },
-	{ roleId: "prep-cook", name: "Prep Cook" },
+	{ jobTitleId: "cashier", name: "Cashier" },
+	{ jobTitleId: "prep-cook", name: "Prep Cook" },
 ];
 
 describe("TimeBlockGrid", () => {

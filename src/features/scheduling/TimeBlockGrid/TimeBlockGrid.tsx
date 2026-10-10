@@ -20,9 +20,13 @@ import {
 
 export type TimeBlockGridProps = {
 	/** One column per job role. */
-	roles: Array<Pick<ShiftRole, "roleId" | "name">>;
+	roles: Array<ShiftRole>;
 	demand: TimeBlockDemand;
-	onDemandChange: (slotStart: string, roleId: string, staff: number) => void;
+	onDemandChange: (
+		slotStart: string,
+		jobTitleId: string,
+		staff: number
+	) => void;
 	/** Fills every slot from the staff the shifts allocate. */
 	onAutoFill: () => void;
 	/** The schedule's week, e.g. "13 – 19 Apr 2026". */
@@ -110,7 +114,11 @@ export const TimeBlockGrid = ({
 								{t("scheduling.forecast.time")}
 							</th>
 							{roles.map((role) => (
-								<th key={role.roleId} className={headerCellClasses} scope="col">
+								<th
+									key={role.jobTitleId}
+									className={headerCellClasses}
+									scope="col"
+								>
 									{role.name}
 								</th>
 							))}
@@ -169,10 +177,11 @@ export const TimeBlockGrid = ({
 													{slotLabel}
 												</th>
 												{roles.map((role) => {
-													const staff = demand[slot.start]?.[role.roleId] ?? 0;
+													const staff =
+														demand[slot.start]?.[role.jobTitleId] ?? 0;
 													return (
 														<td
-															key={role.roleId}
+															key={role.jobTitleId}
 															className="border-l border-neutral-400 bg-white p-1.5"
 														>
 															<input
@@ -199,7 +208,7 @@ export const TimeBlockGrid = ({
 																	);
 																	onDemandChange(
 																		slot.start,
-																		role.roleId,
+																		role.jobTitleId,
 																		Number.isNaN(next)
 																			? 0
 																			: Math.min(MAX_STAFF, Math.max(0, next))

@@ -1,7 +1,7 @@
 import type { TFunction } from "i18next";
 import { z } from "zod";
 
-/** Long enough for "Front Office – Week 16" style names with room to spare. */
+/** Long enough for "Front Office - Week 16" style names with room to spare. */
 export const SCHEDULE_NAME_MAX_LENGTH = 100;
 
 type ScheduleSetupSchema = z.ZodObject<{

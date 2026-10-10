@@ -5,7 +5,7 @@ import { initReactI18next } from "react-i18next";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import en from "@/assets/locales/en/translations.json";
 import { ConstraintsStep } from "@/features/scheduling/ConstraintsStep";
-import { seedScheduleDraft } from "@/features/scheduling/scheduleDraft";
+import { emptyScheduleDraft } from "@/features/scheduling/scheduleDraft";
 
 beforeAll(async () => {
 	await createInstance()
@@ -13,7 +13,7 @@ beforeAll(async () => {
 		.init({ lng: "en", resources: { en: { translation: en } } });
 });
 
-const { constraints, includedConstraintIds } = seedScheduleDraft();
+const { constraints, includedConstraintIds } = emptyScheduleDraft();
 
 const names = (table: HTMLElement): Array<string> =>
 	within(table)

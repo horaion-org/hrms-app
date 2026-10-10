@@ -53,7 +53,7 @@ const Harness = (props: Partial<ScheduleSetupStepProps>): FunctionComponent => (
 			departments={READY}
 			formId="setup"
 			periods={PERIODS}
-			onSubmit={vi.fn()}
+			onSubmit={vi.fn().mockResolvedValue(undefined)}
 			{...props}
 		/>
 		<button form="setup" type="submit">
@@ -65,7 +65,7 @@ const Harness = (props: Partial<ScheduleSetupStepProps>): FunctionComponent => (
 describe("ScheduleSetupStep", () => {
 	it("given_nothingEntered_when_submitted_then_asksForDepartmentAndName", async () => {
 		const user = userEvent.setup();
-		const onSubmit = vi.fn();
+		const onSubmit = vi.fn().mockResolvedValue(undefined);
 		render(<Harness onSubmit={onSubmit} />);
 
 		await user.click(screen.getByRole("button", { name: "Next" }));
@@ -77,7 +77,7 @@ describe("ScheduleSetupStep", () => {
 
 	it("given_everythingChosen_when_submitted_then_reportsTheSetup", async () => {
 		const user = userEvent.setup();
-		const onSubmit = vi.fn();
+		const onSubmit = vi.fn().mockResolvedValue(undefined);
 		render(<Harness onSubmit={onSubmit} />);
 
 		await user.click(screen.getByRole("button", { name: /Department/ }));
@@ -125,5 +125,38 @@ describe("ScheduleSetupStep", () => {
 		expect(
 			screen.getByText("You don’t have permission to see departments.")
 		).toBeVisible();
+	});
+
+	it("given_aSavedDraft_when_rendered_then_showsItsDepartmentWithoutAChoice", () => {
+		render(
+			<Harness
+				defaultValues={{ ...DEFAULTS, departmentId: "d-9", name: "Week 42" }}
+				departments={{ status: "pending" }}
+				lockedDepartment={{ departmentId: "d-9", name: "Concierge" }}
+			/>
+		);
+
+		const department = screen.getByRole("button", { name: /Department/ });
+		expect(department).toBeDisabled();
+		expect(department).toHaveTextContent("Concierge");
+		expect(
+			screen.getByText("A saved draft stays with its department.")
+		).toBeVisible();
+	});
+
+	it("given_aRefusedField_when_submitted_then_showsItOnTheField", async () => {
+		const user = userEvent.setup();
+		render(
+			<Harness
+				defaultValues={{ ...DEFAULTS, departmentId: "d-1", name: "Week 42" }}
+				onSubmit={vi
+					.fn()
+					.mockResolvedValue({ periodStart: "Choose a Monday." })}
+			/>
+		);
+
+		await user.click(screen.getByRole("button", { name: "Next" }));
+
+		expect(await screen.findByText("Choose a Monday.")).toBeVisible();
 	});
 });

@@ -21,6 +21,11 @@ import {
 } from "@/features/scheduling/setupSchema";
 import { StepPanel } from "@/features/scheduling/StepPanel";
 
+/** Why the API refused a setup field, per field. */
+export type SetupFieldErrors = Partial<
+	Record<keyof ScheduleSetupValues, string>
+>;
+
 export type ScheduleSetupStepProps = {
 	/** Lets the step's Next button, outside the form, submit it. */
 	formId: string;
@@ -28,7 +33,15 @@ export type ScheduleSetupStepProps = {
 	/** The Company's active departments to schedule. */
 	departments: OrganisationList<Department>;
 	periods: Array<SchedulePeriod>;
-	onSubmit: (values: ScheduleSetupValues) => void;
+	/**
+	 * Set once the draft is saved: its department, shown and no longer
+	 * chosen, since a draft's department never changes.
+	 */
+	lockedDepartment?: { departmentId: string; name: string };
+	/** Saves the setup; what it answers lands on the refused fields. */
+	onSubmit: (
+		values: ScheduleSetupValues
+	) => Promise<SetupFieldErrors | undefined>;
 	className?: string;
 };
 
@@ -51,6 +64,7 @@ export const ScheduleSetupStep = ({
 	defaultValues,
 	departments,
 	periods,
+	lockedDepartment,
 	onSubmit,
 	className,
 }: ScheduleSetupStepProps): FunctionComponent => {
@@ -60,6 +74,8 @@ export const ScheduleSetupStep = ({
 		register,
 		control,
 		handleSubmit,
+		setError,
+		setFocus,
 		formState: { errors },
 	} = useForm<ScheduleSetupValues>({
 		resolver: zodResolver(schema),
@@ -77,15 +93,19 @@ export const ScheduleSetupStep = ({
 		if (errors[name]) return ids.errorId;
 		return hint ? ids.hintId : undefined;
 	};
-	const departmentOptions =
-		departments.status === "ready"
+	const departmentOptions = lockedDepartment
+		? [{ value: lockedDepartment.departmentId, label: lockedDepartment.name }]
+		: departments.status === "ready"
 			? departments.items.map((department) => ({
 					value: department.departmentId,
 					label: department.name,
 				}))
 			: [];
-	const departmentHint =
-		departments.status === "hidden"
+	const departmentFixed =
+		lockedDepartment !== undefined || departments.status !== "ready";
+	const departmentHint = lockedDepartment
+		? t("scheduling.setup.departmentLocked")
+		: departments.status === "hidden"
 			? t("scheduling.setup.departmentsHidden")
 			: departments.status === "error"
 				? t("scheduling.setup.departmentsError")
@@ -95,6 +115,16 @@ export const ScheduleSetupStep = ({
 		value: period.start,
 		label: formatPeriod(period, language),
 	}));
+	const save = async (values: ScheduleSetupValues): Promise<void> => {
+		const refused = await onSubmit(values);
+		const fields = Object.keys(refused ?? {}) as Array<
+			keyof ScheduleSetupValues
+		>;
+		for (const name of fields)
+			setError(name, { type: "server", message: refused?.[name] });
+		const [first] = fields;
+		if (first) setFocus(first);
+	};
 
 	return (
 		<StepPanel
@@ -106,7 +136,7 @@ export const ScheduleSetupStep = ({
 				noValidate
 				id={formId}
 				onSubmit={(event) => {
-					void handleSubmit(onSubmit)(event);
+					void handleSubmit(save)(event);
 				}}
 			>
 				<div className="mt-10 flex flex-col gap-8">
@@ -129,7 +159,7 @@ export const ScheduleSetupStep = ({
 										aria-describedby={describedBy("departmentId", true)}
 										aria-invalid={errors.departmentId ? true : undefined}
 										className="w-full"
-										disabled={departments.status !== "ready"}
+										disabled={departmentFixed}
 										name={field.name}
 										options={departmentOptions}
 										status={errors.departmentId ? "error" : undefined}

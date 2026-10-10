@@ -9,9 +9,11 @@ import {
 	type ForecastStepProps,
 } from "@/features/scheduling/ForecastStep";
 import {
-	includedShifts,
-	seedScheduleDraft,
-} from "@/features/scheduling/scheduleDraft";
+	ALLOCATION_FIXTURES,
+	INCLUDED_SHIFT_IDS,
+	SHIFT_FIXTURES,
+} from "@/features/scheduling/shifts/fixtures";
+import { includedShifts } from "@/features/scheduling/scheduleDraft";
 
 beforeAll(async () => {
 	await createInstance()
@@ -22,9 +24,13 @@ beforeAll(async () => {
 const props = (
 	overrides: Partial<ForecastStepProps> = {}
 ): ForecastStepProps => ({
-	mode: "shift",
+	mode: "SHIFT",
 	onModeChange: vi.fn(),
-	shifts: includedShifts(seedScheduleDraft()),
+	shifts: includedShifts(
+		{ includedShiftIds: INCLUDED_SHIFT_IDS },
+		SHIFT_FIXTURES
+	),
+	allocations: ALLOCATION_FIXTURES,
 	onAllocationChange: vi.fn(),
 	demand: {},
 	onDemandChange: vi.fn(),
@@ -34,7 +40,7 @@ const props = (
 });
 
 describe("ForecastStep", () => {
-	it("given_byShift_when_rendered_then_showsTheAllocationTableAndItsLimit", () => {
+	it("given_byShift_when_rendered_then_showsTheAllocationTable", () => {
 		render(<ForecastStep {...props()} />);
 
 		expect(
@@ -48,9 +54,6 @@ describe("ForecastStep", () => {
 		expect(
 			screen.getByRole("table", { name: "Staff allocation by shift" })
 		).toBeInTheDocument();
-		expect(screen.getByRole("note")).toHaveTextContent(
-			"cannot exceed the total staff set in Step 2: Shifts."
-		);
 		expect(screen.getByRole("button", { name: "Import" })).toBeDisabled();
 	});
 
@@ -63,11 +66,11 @@ describe("ForecastStep", () => {
 			screen.getByRole("radio", { name: "Detailed Time Blocks" })
 		);
 
-		expect(onModeChange).toHaveBeenCalledWith("blocks");
+		expect(onModeChange).toHaveBeenCalledWith("BLOCKS");
 	});
 
 	it("given_timeBlocks_when_rendered_then_showsTheGridForTheIncludedRoles", () => {
-		render(<ForecastStep {...props({ mode: "blocks" })} />);
+		render(<ForecastStep {...props({ mode: "BLOCKS" })} />);
 
 		expect(
 			screen.getByRole("table", { name: "Staffing demand by time block" })
@@ -78,11 +81,5 @@ describe("ForecastStep", () => {
 		expect(
 			screen.getByRole("button", { name: "Use Existing Forecast" })
 		).toBeDisabled();
-	});
-
-	it("given_aProblem_when_rendered_then_announcesIt", () => {
-		render(<ForecastStep {...props({ problem: "Too many staff." })} />);
-
-		expect(screen.getByRole("alert")).toHaveTextContent("Too many staff.");
 	});
 });

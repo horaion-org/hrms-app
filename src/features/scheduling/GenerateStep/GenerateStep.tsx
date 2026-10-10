@@ -40,11 +40,6 @@ export const GenerateStep = ({
 				value: summary.coverage,
 			}),
 		},
-		{
-			key: "conflicts",
-			label: t("scheduling.generate.conflicts"),
-			value: summary.conflicts,
-		},
 	];
 
 	return (
@@ -63,7 +58,7 @@ export const GenerateStep = ({
 		>
 			<dl
 				aria-label={t("scheduling.generate.summary")}
-				className="mt-7 grid grid-cols-2 gap-6 rounded-xl border border-neutral-400 p-6 lg:grid-cols-4 lg:gap-0 lg:divide-x lg:divide-neutral-400"
+				className="mt-7 grid grid-cols-2 gap-6 rounded-xl border border-neutral-400 p-6 lg:grid-cols-3 lg:gap-0 lg:divide-x lg:divide-neutral-400"
 			>
 				{figures.map(({ key, label, value }) => (
 					<div key={key} className="lg:px-8 lg:first:pl-0">

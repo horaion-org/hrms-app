@@ -3,16 +3,23 @@ import { useState } from "react";
 import { fn } from "storybook/test";
 import type { FunctionComponent } from "@/common/types";
 import {
+	ALLOCATION_FIXTURES,
+	INCLUDED_SHIFT_IDS,
+	SHIFT_FIXTURES,
+} from "@/features/scheduling/shifts/fixtures";
+import {
 	autoFillDemand,
 	includedShifts,
 	rolesOf,
-	seedScheduleDraft,
 	type TimeBlockDemand,
 } from "@/features/scheduling/scheduleDraft";
 import { TimeBlockGrid } from "@/features/scheduling/TimeBlockGrid";
 import "@/common/i18n";
 
-const shifts = includedShifts(seedScheduleDraft());
+const shifts = includedShifts(
+	{ includedShiftIds: INCLUDED_SHIFT_IDS },
+	SHIFT_FIXTURES
+);
 
 const meta = {
 	title: "Features/Scheduling/TimeBlockGrid",
@@ -20,7 +27,7 @@ const meta = {
 	parameters: { layout: "padded" },
 	args: {
 		roles: rolesOf(shifts),
-		demand: autoFillDemand(shifts),
+		demand: autoFillDemand(shifts, ALLOCATION_FIXTURES),
 		periodLabel: "13 – 19 Apr 2026",
 		onDemandChange: fn(),
 		onAutoFill: fn(),
@@ -39,12 +46,12 @@ const InteractiveDemo = (): FunctionComponent => {
 			periodLabel="13 – 19 Apr 2026"
 			roles={rolesOf(shifts)}
 			onAutoFill={() => {
-				setDemand(autoFillDemand(shifts));
+				setDemand(autoFillDemand(shifts, ALLOCATION_FIXTURES));
 			}}
-			onDemandChange={(slotStart, roleId, staff) => {
+			onDemandChange={(slotStart, jobTitleId, staff) => {
 				setDemand((current) => ({
 					...current,
-					[slotStart]: { ...current[slotStart], [roleId]: staff },
+					[slotStart]: { ...current[slotStart], [jobTitleId]: staff },
 				}));
 			}}
 		/>

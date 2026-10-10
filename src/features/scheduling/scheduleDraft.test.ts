@@ -1,39 +1,53 @@
 import { describe, expect, it } from "vitest";
+import { scheduleFixture } from "@/features/scheduling/schedules/fixtures";
 import {
-	allocationStatus,
+	ALLOCATION_FIXTURES,
+	INCLUDED_SHIFT_IDS,
+	SHIFT_FIXTURES,
+	shiftFixture,
+} from "@/features/scheduling/shifts/fixtures";
+import {
 	autoFillDemand,
 	demandLevel,
+	emptyScheduleDraft,
+	includedShifts,
 	isWeekdays,
 	rolesOf,
 	scheduleDraftReducer,
-	seedScheduleDraft,
 	shiftHours,
 	slotsOf,
 	summarise,
-	type Shift,
+	timeSteps,
+	type ScheduleDraft,
 } from "@/features/scheduling/scheduleDraft";
 
-const shift = (overrides: Partial<Shift> = {}): Shift => ({
+const shift = shiftFixture({
 	shiftId: "s-1",
 	name: "Front Desk AM",
-	start: "09:00",
-	end: "15:00",
 	days: ["MON"],
-	staffNeeded: 4,
 	roles: [
-		{ roleId: "staff", name: "Front Desk Staff", allocated: 3 },
-		{ roleId: "lead", name: "Front Desk Lead", allocated: 1 },
+		{ jobTitleId: "staff", name: "Front Desk Staff" },
+		{ jobTitleId: "lead", name: "Front Desk Lead" },
 	],
-	...overrides,
 });
+
+const allocations = { "s-1": { staff: 3, lead: 1 } };
 
 const setup = {
 	departmentId: "d-1",
-	name: "Front Office – Week 16",
+	name: "Front Office - Week 16",
 	periodStart: "2026-10-12",
 	includeLeave: true,
 	allowOpenShifts: false,
 };
+
+/** The fixture shifts chosen and allocated, as the Forecast step leaves them. */
+const chosen = (): ScheduleDraft => ({
+	...emptyScheduleDraft(),
+	setup,
+	includedShiftIds: INCLUDED_SHIFT_IDS,
+	allocations: ALLOCATION_FIXTURES,
+});
 
 describe("shift calculations", () => {
 	it.each([
@@ -44,16 +58,10 @@ describe("shift calculations", () => {
 		["06:00", "06:00", 24],
 	])(
 		"given_%s_to_%s_when_measured_then_lasts_%i_hours",
-		(start, end, hours) => {
-			expect(shiftHours({ start, end })).toBe(hours);
+		(startTime, endTime, hours) => {
+			expect(shiftHours({ startTime, endTime })).toBe(hours);
 		}
 	);
-
-	it("given_allocations_when_compared_with_theNeed_then_reportCompleteShortOrOver", () => {
-		expect(allocationStatus(shift())).toBe("complete");
-		expect(allocationStatus(shift({ staffNeeded: 5 }))).toBe("short");
-		expect(allocationStatus(shift({ staffNeeded: 3 }))).toBe("over");
-	});
 
 	it("given_days_when_checked_then_onlyMondayToFridayCountsAsWeekdays", () => {
 		expect(isWeekdays(["MON", "TUE", "WED", "THU", "FRI"])).toBe(true);
@@ -63,17 +71,18 @@ describe("shift calculations", () => {
 
 	it("given_shiftsSharingARole_when_listed_then_eachRoleAppearsOnceInFirstOrder", () => {
 		const roles = rolesOf([
-			shift(),
-			shift({
+			shift,
+			shiftFixture({
 				shiftId: "s-2",
+				name: "Front Desk PM",
 				roles: [
-					{ roleId: "lead", name: "Front Desk Lead", allocated: 2 },
-					{ roleId: "cashier", name: "Cashier", allocated: 1 },
+					{ jobTitleId: "lead", name: "Front Desk Lead" },
+					{ jobTitleId: "cashier", name: "Cashier" },
 				],
 			}),
 		]);
 
-		expect(roles.map((role) => role.roleId)).toEqual([
+		expect(roles.map((role) => role.jobTitleId)).toEqual([
 			"staff",
 			"lead",
 			"cashier",
@@ -82,6 +91,14 @@ describe("shift calculations", () => {
 });
 
 describe("time blocks", () => {
+	it("given_theDay_when_stepped_then_offersEveryHalfHourFromMidnight", () => {
+		const times = timeSteps();
+
+		expect(times).toHaveLength(48);
+		expect(times.slice(0, 3)).toEqual(["00:00", "00:30", "01:00"]);
+		expect(times[47]).toBe("23:30");
+	});
+
 	it("given_aGroup_when_sliced_then_givesHalfHourSlots", () => {
 		expect(slotsOf({ start: "06:00", end: "07:30" })).toEqual([
 			{ start: "06:00", end: "06:30" },
@@ -102,15 +119,19 @@ describe("time blocks", () => {
 	});
 
 	it("given_shifts_when_autoFilled_then_eachSlotAddsTheShiftsRunningThen", () => {
-		const demand = autoFillDemand([
-			shift(),
-			shift({
-				shiftId: "s-2",
-				start: "14:00",
-				end: "22:00",
-				roles: [{ roleId: "lead", name: "Front Desk Lead", allocated: 2 }],
-			}),
-		]);
+		const demand = autoFillDemand(
+			[
+				shift,
+				shiftFixture({
+					shiftId: "s-2",
+					name: "Front Desk PM",
+					startTime: "14:00",
+					endTime: "22:00",
+					roles: [{ jobTitleId: "lead", name: "Front Desk Lead" }],
+				}),
+			],
+			{ ...allocations, "s-2": { lead: 2 } }
+		);
 
 		expect(demand["08:30"]).toEqual({});
 		expect(demand["09:00"]).toEqual({ staff: 3, lead: 1 });
@@ -121,64 +142,99 @@ describe("time blocks", () => {
 });
 
 describe("summarise", () => {
-	it("given_theSeed_when_summarised_then_countsIncludedShiftsAndCappedCoverage", () => {
-		// Lunch Rush allocates 7 of 6, which counts as a conflict but fills only 6.
-		expect(summarise(seedScheduleDraft())).toEqual({
+	it("given_theChosenShifts_when_summarised_then_countsDistinctRolesAndFilledPositions", () => {
+		// Eleven shift roles across the four shifts; only the pastry assistant has nobody.
+		expect(
+			summarise(includedShifts(chosen(), SHIFT_FIXTURES), ALLOCATION_FIXTURES)
+		).toEqual({
 			shifts: 4,
-			roles: 18,
-			coverage: 94,
-			conflicts: 1,
+			roles: 11,
+			coverage: 91,
 		});
 	});
 
 	it("given_noShifts_when_summarised_then_coverageIsZero", () => {
-		const draft = { ...seedScheduleDraft(), includedShiftIds: [] };
-
-		expect(summarise(draft)).toEqual({
-			shifts: 0,
-			roles: 0,
-			coverage: 0,
-			conflicts: 0,
-		});
+		expect(summarise([], {})).toEqual({ shifts: 0, roles: 0, coverage: 0 });
 	});
 });
 
 describe("scheduleDraftReducer", () => {
-	it("given_setup_when_saved_then_keepsItAndOpensTheNextStep", () => {
-		const draft = scheduleDraftReducer(seedScheduleDraft(), {
+	it("given_setup_when_saved_then_keepsWhatIsChosen", () => {
+		const draft = scheduleDraftReducer(chosen(), {
 			type: "setupSaved",
-			setup,
+			setup: { ...setup, name: "Week 43" },
 		});
 
-		expect(draft.setup).toEqual(setup);
-		expect(draft.reached).toBe(1);
+		expect(draft.setup).toEqual({ ...setup, name: "Week 43" });
+		expect(draft.includedShiftIds).toEqual(chosen().includedShiftIds);
+		expect(draft.allocations).toEqual(chosen().allocations);
 	});
 
-	it("given_aLaterStepReached_when_anEarlierOneIsReached_then_keepsTheFurthest", () => {
-		const reached = scheduleDraftReducer(seedScheduleDraft(), {
-			type: "stepReached",
-			step: 3,
+	it("given_aSchedule_when_loaded_then_startsFromItsSetupWithNoShiftsYet", () => {
+		const draft = scheduleDraftReducer(chosen(), {
+			type: "scheduleLoaded",
+			schedule: scheduleFixture(),
 		});
 
-		expect(
-			scheduleDraftReducer(reached, { type: "stepReached", step: 1 }).reached
-		).toBe(3);
+		expect(draft.setup).toEqual({
+			departmentId: "d-1",
+			name: "Front Office - Week 42",
+			periodStart: "2026-10-12",
+			includeLeave: true,
+			allowOpenShifts: false,
+		});
+		expect(draft.saved).toEqual({
+			scheduleId: "s-1",
+			branchId: "b-1",
+			departmentId: "d-1",
+			departmentName: "Front Office",
+		});
+		expect(draft.includedShiftIds).toEqual([]);
+		expect(draft.shiftsSeeded).toBe(false);
+		expect(draft.allocations).toEqual({});
 	});
 
-	it("given_anIncludedShift_when_deleted_then_leavesTheListAndTheSelection", () => {
-		const draft = scheduleDraftReducer(seedScheduleDraft(), {
-			type: "shiftDeleted",
+	it("given_aLoadedSchedule_when_itsShiftsLoad_then_ticksTheIncludedOnesOnce", () => {
+		const loaded = scheduleDraftReducer(emptyScheduleDraft(), {
+			type: "scheduleLoaded",
+			schedule: scheduleFixture(),
+		});
+		const shifts = SHIFT_FIXTURES.map((shift) => ({
+			...shift,
+			included: shift.shiftId === "lunch-rush",
+		}));
+
+		const seeded = scheduleDraftReducer(loaded, {
+			type: "shiftsLoaded",
+			shifts,
+		});
+		const ticked = scheduleDraftReducer(seeded, {
+			type: "shiftsIncluded",
+			shiftIds: ["lunch-rush", "swing-shift"],
+		});
+		// A reload of the same shifts keeps what the person ticked since.
+		const reloaded = scheduleDraftReducer(ticked, {
+			type: "shiftsLoaded",
+			shifts,
+		});
+
+		expect(seeded.includedShiftIds).toEqual(["lunch-rush"]);
+		expect(reloaded.includedShiftIds).toEqual(["lunch-rush", "swing-shift"]);
+	});
+
+	it("given_anIncludedShift_when_removed_then_leavesTheSelectionAndItsAllocations", () => {
+		const draft = scheduleDraftReducer(chosen(), {
+			type: "shiftRemoved",
 			shiftId: "front-desk-am",
 		});
 
-		expect(draft.shifts.map((item) => item.shiftId)).not.toContain(
-			"front-desk-am"
-		);
 		expect(draft.includedShiftIds).not.toContain("front-desk-am");
+		expect(draft.allocations["front-desk-am"]).toBeUndefined();
+		expect(draft.allocations["lunch-rush"]).toBeDefined();
 	});
 
 	it("given_anIncludedConstraint_when_deleted_then_leavesTheListAndTheSelection", () => {
-		const draft = scheduleDraftReducer(seedScheduleDraft(), {
+		const draft = scheduleDraftReducer(chosen(), {
 			type: "constraintDeleted",
 			constraintId: "required-role-coverage",
 		});
@@ -188,39 +244,36 @@ describe("scheduleDraftReducer", () => {
 	});
 
 	it("given_anAllocation_when_changed_then_updatesOnlyThatRoleAndNeverBelowZero", () => {
-		const raised = scheduleDraftReducer(seedScheduleDraft(), {
+		const raised = scheduleDraftReducer(chosen(), {
 			type: "allocationChanged",
 			shiftId: "breakfast-prep",
-			roleId: "pastry-assistant",
+			jobTitleId: "pastry-assistant",
 			allocated: 1,
 		});
 		const lowered = scheduleDraftReducer(raised, {
 			type: "allocationChanged",
 			shiftId: "breakfast-prep",
-			roleId: "prep-cook",
+			jobTitleId: "prep-cook",
 			allocated: -1,
 		});
 
-		const roles = lowered.shifts.find(
-			(item) => item.shiftId === "breakfast-prep"
-		)?.roles;
-		expect(roles).toEqual([
-			{ roleId: "prep-cook", name: "Prep Cook", allocated: 0 },
-			{ roleId: "pastry-assistant", name: "Pastry Assistant", allocated: 1 },
-		]);
+		expect(lowered.allocations["breakfast-prep"]).toEqual({
+			"prep-cook": 0,
+			"pastry-assistant": 1,
+		});
 	});
 
 	it("given_demand_when_changed_then_keepsTheSlotsOtherRoles", () => {
-		const first = scheduleDraftReducer(seedScheduleDraft(), {
+		const first = scheduleDraftReducer(emptyScheduleDraft(), {
 			type: "demandChanged",
 			slotStart: "06:00",
-			roleId: "cashier",
+			jobTitleId: "cashier",
 			staff: 2,
 		});
 		const second = scheduleDraftReducer(first, {
 			type: "demandChanged",
 			slotStart: "06:00",
-			roleId: "prep-cook",
+			jobTitleId: "prep-cook",
 			staff: 4,
 		});
 
@@ -228,8 +281,9 @@ describe("scheduleDraftReducer", () => {
 	});
 
 	it("given_includedShifts_when_autoFilled_then_ignoresExcludedOnes", () => {
-		const draft = scheduleDraftReducer(seedScheduleDraft(), {
+		const draft = scheduleDraftReducer(chosen(), {
 			type: "demandAutoFilled",
+			shifts: SHIFT_FIXTURES,
 		});
 
 		// Overnight Ops is not included, so nobody is wanted before breakfast prep.

@@ -107,7 +107,8 @@
 	"combobox": {
 		"remove": "Remove {{label}}",
 		"loading": "Loading…",
-		"noResults": "No results"
+		"noResults": "No results",
+		"create": "Create \"{{query}}\""
 	},
 	"passwordInput": {
 		"show": "Show password",
@@ -1032,6 +1033,25 @@
 					"review": "Approve or reject"
 				}
 			},
+			"schedule": {
+				"name": "Schedules",
+				"description": "Each department’s schedules: their week and settings.",
+				"actions": {
+					"read": "View",
+					"create": "Create",
+					"update": "Edit"
+				}
+			},
+			"shift": {
+				"name": "Shifts",
+				"description": "Each schedule’s shifts: their times, days, group and roles, and which ones the schedule includes.",
+				"actions": {
+					"read": "View",
+					"create": "Add",
+					"update": "Edit",
+					"delete": "Delete"
+				}
+			},
 			"none": "No permissions yet.",
 			"company": {
 				"name": "Company",
@@ -1154,7 +1174,7 @@
 				"forecast": "Forecast",
 				"generate": "Generate"
 			},
-			"unavailable": "Saving drafts and generating schedules aren’t available yet."
+			"unavailable": "Generating schedules isn’t available yet."
 		},
 		"actions": {
 			"back": "Back",
@@ -1173,6 +1193,37 @@
 			"SUN": "Sun",
 			"weekdays": "Weekdays"
 		},
+		"dayNames": {
+			"MON": "Monday",
+			"TUE": "Tuesday",
+			"WED": "Wednesday",
+			"THU": "Thursday",
+			"FRI": "Friday",
+			"SAT": "Saturday",
+			"SUN": "Sunday"
+		},
+		"shiftColours": {
+			"terracotta": "Terracotta",
+			"peach": "Peach",
+			"orange": "Orange",
+			"rosyBrown": "Rosy brown",
+			"sand": "Sand",
+			"olive": "Olive",
+			"lime": "Lime",
+			"sage": "Sage",
+			"green": "Green",
+			"mint": "Mint",
+			"teal": "Teal",
+			"skyBlue": "Sky blue",
+			"steelBlue": "Steel blue",
+			"slate": "Slate",
+			"purple": "Purple",
+			"lilac": "Lilac",
+			"orchid": "Orchid",
+			"maroon": "Maroon",
+			"pink": "Pink",
+			"grey": "Grey"
+		},
 		"setup": {
 			"title": "Schedule Setup",
 			"description": "Select the department and scheduling period for your new schedule.",
@@ -1182,7 +1233,7 @@
 			"departmentsHidden": "You don’t have permission to see departments.",
 			"departmentsError": "Departments couldn’t be loaded. Try again later.",
 			"name": "Schedule Name",
-			"namePlaceholder": "e.g. Front Office – Week 16",
+			"namePlaceholder": "e.g. Front Office - Week 16",
 			"period": "Schedule Period",
 			"periodNote": "Select a period that aligns with your business operations.",
 			"additional": "Additional Settings",
@@ -1195,13 +1246,16 @@
 				"name": "Enter a schedule name.",
 				"nameTooLong": "Use {{max}} characters or fewer.",
 				"period": "Choose a schedule period."
-			}
+			},
+			"departmentLocked": "A saved draft stays with its department."
 		},
 		"shifts": {
 			"title": "Select Shifts",
 			"description": "Choose the shifts to include in this schedule.",
 			"add": "Add Custom Shift",
 			"label": "Shifts",
+			"allShifts": "All",
+			"groups": "Shift groups",
 			"name": "Shift Name",
 			"timeRange": "Time Range",
 			"days": "Days Applied To",
@@ -1213,7 +1267,60 @@
 			"delete": "Delete {{name}}",
 			"deleted": "Shift successfully deleted",
 			"empty": "No shifts yet.",
-			"required": "Choose at least one shift to include in this schedule."
+			"required": "Choose at least one shift to include in this schedule.",
+			"added": "Shift added",
+			"edited": "Shift saved",
+			"loading": "Loading shifts…",
+			"hidden": "You don’t have permission to see this schedule’s shifts.",
+			"failed": "We couldn’t load shifts. Try again.",
+			"deleteForbidden": "You no longer have permission to delete shifts here.",
+			"deleteFailed": "We couldn’t delete the shift. Try again.",
+			"dialog": {
+				"title": "Add Custom Shift",
+				"editTitle": "Edit Shift",
+				"name": "Shift Name",
+				"namePlaceholder": "E.g. Morning Shift",
+				"nameHint": "2–100 characters. Letters, numbers, spaces and . ' & - only.",
+				"nameCounter": "{{count}}/100",
+				"group": "Shift Group",
+				"groupPlaceholder": "Select or create a group",
+				"groupSearch": "Search groups",
+				"colour": "Shift Colour",
+				"startTime": "Start Time",
+				"endTime": "End Time",
+				"days": "Days Applied To",
+				"roles": "Roles Applied To",
+				"pleaseSelect": "Please Select",
+				"selectAll": "Select All",
+				"rolesHint": "The job titles the shift applies to.",
+				"rolesLoading": "Loading job titles…",
+				"rolesEmpty": "This department has no active job titles yet. Create one under Organisation first.",
+				"rolesHidden": "You don’t have permission to see this department’s job titles.",
+				"rolesFailed": "We couldn’t load job titles. Try again.",
+				"reset": "Reset",
+				"submit": "Save",
+				"nameRequired": "Enter a shift name.",
+				"nameLength": "Use 2 to 100 characters.",
+				"nameCharacters": "Use only letters, numbers, spaces and . ' & - in the name.",
+				"nameConflict": "A shift named \"{{name}}\" already exists in this schedule. Choose a different name.",
+				"nameRejected": "Check the shift name and try again.",
+				"groupRequired": "Choose or create a group.",
+				"colourRequired": "Choose a colour.",
+				"timeRequired": "Choose a time.",
+				"timeRejected": "Check the time and try again.",
+				"daysRequired": "Choose at least one day.",
+				"rolesRequired": "Choose at least one role.",
+				"rolesMax": "Choose at most {{max}} roles.",
+				"roleRejected": "A chosen role isn’t a job title of this department. Choose again.",
+				"departmentInactive": "This department is inactive. Activate it first.",
+				"departmentGone": "This department is no longer available.",
+				"forbidden": "You no longer have permission to add shifts here.",
+				"failed": "We couldn’t add the shift. Try again.",
+				"editForbidden": "You no longer have permission to change this shift.",
+				"editFailed": "We couldn’t save the shift. Try again.",
+				"gone": "This shift no longer exists."
+			},
+			"inclusionForbidden": "You no longer have permission to change which shifts this schedule includes."
 		},
 		"constraints": {
 			"title": "Scheduling Constraints",
@@ -1272,9 +1379,8 @@
 			"appliesTo": "Applies To",
 			"hours_one": "{{count}} hr",
 			"hours_other": "{{count}} hrs",
-			"allocated": "{{allocated}}/{{needed}} staff allocated",
-			"limitNote": "Total allocated staff for a shift cannot exceed the total staff set in Step 2: Shifts.",
-			"overAllocated": "Some shifts allocate more staff than they need. Reduce them under By Shift before continuing.",
+			"allocatedTotal_one": "{{count}} staff allocated",
+			"allocatedTotal_other": "{{count}} staff allocated",
 			"blocksLabel": "Staffing demand by time block",
 			"time": "Time",
 			"autoFill": "Auto-fill",
@@ -1301,12 +1407,26 @@
 			"roles": "Roles",
 			"coverage": "Coverage",
 			"coverageValue": "{{value}}%",
-			"conflicts": "Conflicts",
 			"nextTitle": "What happens next?",
 			"nextOptimise": "We’ll generate an optimised schedule based on your shifts, rules, and forecast.",
 			"nextBalance": "The schedule will balance coverage, constraints, and employee availability.",
 			"nextReview": "You’ll be able to review and make any adjustments after generation.",
 			"note": "Generation may take a few moments. The more constraints and data, the longer it may take."
+		},
+		"draft": {
+			"loading": "Loading the draft…",
+			"missing": "This draft doesn’t exist or you don’t have permission to see it.",
+			"failed": "We couldn’t load the draft. Try again.",
+			"saved": "Draft saved",
+			"periodRejected": "Choose a period that starts on a Monday.",
+			"nameRejected": "Check the schedule name and try again.",
+			"notDraft": "This schedule is no longer a draft, so it can’t be changed.",
+			"gone": "This draft no longer exists.",
+			"shiftGone": "A chosen shift no longer exists. Check the shifts and try again.",
+			"createForbidden": "You don’t have permission to create schedules for this department.",
+			"saveForbidden": "You no longer have permission to change this schedule.",
+			"createFailed": "We couldn’t create the draft. Try again.",
+			"saveFailed": "We couldn’t save the draft. Try again."
 		}
 	}
 }

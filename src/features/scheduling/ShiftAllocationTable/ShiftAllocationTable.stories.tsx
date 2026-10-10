@@ -3,10 +3,19 @@ import { useState } from "react";
 import { fn } from "storybook/test";
 import type { FunctionComponent } from "@/common/types";
 import {
+	ALLOCATION_FIXTURES,
+	INCLUDED_SHIFT_IDS,
+	SHIFT_FIXTURES,
+} from "@/features/scheduling/shifts/fixtures";
+import {
 	includedShifts,
-	scheduleDraftReducer,
-	seedScheduleDraft,
+	type Allocations,
 } from "@/features/scheduling/scheduleDraft";
+
+const shifts = includedShifts(
+	{ includedShiftIds: INCLUDED_SHIFT_IDS },
+	SHIFT_FIXTURES
+);
 import { ShiftAllocationTable } from "@/features/scheduling/ShiftAllocationTable";
 import "@/common/i18n";
 
@@ -15,7 +24,8 @@ const meta = {
 	component: ShiftAllocationTable,
 	parameters: { layout: "padded" },
 	args: {
-		shifts: includedShifts(seedScheduleDraft()),
+		shifts,
+		allocations: ALLOCATION_FIXTURES,
 		onAllocationChange: fn(),
 	},
 } satisfies Meta<typeof ShiftAllocationTable>;
@@ -25,19 +35,17 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const InteractiveDemo = (): FunctionComponent => {
-	const [draft, setDraft] = useState(seedScheduleDraft);
+	const [allocations, setAllocations] =
+		useState<Allocations>(ALLOCATION_FIXTURES);
 	return (
 		<ShiftAllocationTable
-			shifts={includedShifts(draft)}
-			onAllocationChange={(shiftId, roleId, allocated) => {
-				setDraft((current) =>
-					scheduleDraftReducer(current, {
-						type: "allocationChanged",
-						shiftId,
-						roleId,
-						allocated,
-					})
-				);
+			allocations={allocations}
+			shifts={shifts}
+			onAllocationChange={(shiftId, jobTitleId, allocated) => {
+				setAllocations((current) => ({
+					...current,
+					[shiftId]: { ...current[shiftId], [jobTitleId]: allocated },
+				}));
 			}}
 		/>
 	);

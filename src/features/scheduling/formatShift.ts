@@ -3,9 +3,10 @@ import { isWeekdays, type Shift } from "@/features/scheduling/scheduleDraft";
 
 /** "09:00 – 15:00" */
 export const formatTimeRange = (
-	shift: Pick<Shift, "start" | "end">,
+	shift: Pick<Shift, "startTime" | "endTime">,
 	t: TFunction
-): string => t("scheduling.timeRange", { start: shift.start, end: shift.end });
+): string =>
+	t("scheduling.timeRange", { start: shift.startTime, end: shift.endTime });
 
 /** "Weekdays" for Monday to Friday, otherwise each day, e.g. "Mon, Wed, Fri". */
 export const formatDays = (days: Shift["days"], t: TFunction): string =>

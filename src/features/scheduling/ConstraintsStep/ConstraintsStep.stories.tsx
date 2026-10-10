@@ -3,10 +3,10 @@ import { useState } from "react";
 import { fn } from "storybook/test";
 import type { FunctionComponent } from "@/common/types";
 import { ConstraintsStep } from "@/features/scheduling/ConstraintsStep";
-import { seedScheduleDraft } from "@/features/scheduling/scheduleDraft";
+import { emptyScheduleDraft } from "@/features/scheduling/scheduleDraft";
 import "@/common/i18n";
 
-const { constraints, includedConstraintIds } = seedScheduleDraft();
+const { constraints, includedConstraintIds } = emptyScheduleDraft();
 
 const meta = {
 	title: "Features/Scheduling/ConstraintsStep",

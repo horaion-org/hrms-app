@@ -4,8 +4,12 @@ import { createInstance } from "i18next";
 import { initReactI18next } from "react-i18next";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import en from "@/assets/locales/en/translations.json";
-import { seedScheduleDraft } from "@/features/scheduling/scheduleDraft";
-import { ShiftsStep } from "@/features/scheduling/ShiftsStep";
+import {
+	INCLUDED_SHIFT_IDS,
+	SHIFT_FIXTURES,
+} from "@/features/scheduling/shifts/fixtures";
+import { groupsOf } from "@/features/scheduling/shifts/api";
+import { ShiftsStep } from "@/features/scheduling/shifts/ShiftsStep";
 
 beforeAll(async () => {
 	await createInstance()
@@ -13,7 +17,8 @@ beforeAll(async () => {
 		.init({ lng: "en", resources: { en: { translation: en } } });
 });
 
-const { shifts, includedShiftIds } = seedScheduleDraft();
+const shifts = SHIFT_FIXTURES;
+const includedShiftIds = INCLUDED_SHIFT_IDS;
 
 describe("ShiftsStep", () => {
 	it("given_shifts_when_rendered_then_listsEachWithItsTimesDaysAndRoles", () => {
@@ -30,7 +35,46 @@ describe("ShiftsStep", () => {
 		const row = within(table).getByRole("row", { name: /Front Desk AM/ });
 		expect(row).toHaveTextContent("09:00 – 15:00");
 		expect(row).toHaveTextContent("Mon, Tue, Wed, Thu, Fri");
-		expect(row).toHaveTextContent("4 roles");
+		expect(row).toHaveTextContent("2 roles");
+		expect(screen.getByRole("tab", { name: /Front Desk/ })).toBeVisible();
+	});
+
+	it("given_aGroupTab_when_chosen_then_showsOnlyThatGroupAndKeepsTheSelection", async () => {
+		const user = userEvent.setup();
+		const onIncludedChange = vi.fn();
+		render(
+			<ShiftsStep
+				includedShiftIds={includedShiftIds}
+				shifts={shifts}
+				onIncludedChange={onIncludedChange}
+			/>
+		);
+		const table = screen.getByRole("table", { name: "Shifts" });
+		expect(within(table).getAllByRole("row")).toHaveLength(shifts.length + 1);
+		const tabs = screen.getByRole("tablist", { name: "Shift groups" });
+		expect(within(tabs).getAllByRole("tab")).toHaveLength(
+			groupsOf(shifts).length + 1
+		);
+		expect(within(tabs).getByRole("tab", { name: /^All/ })).toHaveAttribute(
+			"aria-selected",
+			"true"
+		);
+
+		await user.click(within(tabs).getByRole("tab", { name: /Service/ }));
+		expect(within(table).getAllByRole("row")).toHaveLength(4);
+		expect(
+			within(table).getByRole("row", { name: /Lunch Rush/ })
+		).toBeVisible();
+		expect(
+			within(table).queryByRole("row", { name: /Front Desk AM/ })
+		).toBeNull();
+
+		await user.click(
+			screen.getByRole("checkbox", { name: "Select Closing Crew" })
+		);
+		expect(onIncludedChange).toHaveBeenCalledWith(
+			expect.arrayContaining([...includedShiftIds, "closing-crew"])
+		);
 	});
 
 	it("given_includedShifts_when_rendered_then_onlyThoseAreTicked", () => {
@@ -93,22 +137,61 @@ describe("ShiftsStep", () => {
 		);
 	});
 
-	it("given_theApiIsMissing_when_rendered_then_addAndEditAreDisabled", () => {
+	it("given_noAddEditOrDelete_when_rendered_then_offersNone", () => {
 		render(
 			<ShiftsStep
 				includedShiftIds={includedShiftIds}
 				shifts={shifts}
-				onDelete={vi.fn()}
 				onIncludedChange={vi.fn()}
 			/>
 		);
 
 		expect(
-			screen.getByRole("button", { name: "Add Custom Shift" })
-		).toBeDisabled();
-		expect(
+			screen.queryByRole("button", { name: "Add Custom Shift" })
+		).toBeNull();
+		expect(screen.queryByRole("button", { name: /^Edit / })).toBeNull();
+		expect(screen.queryByRole("button", { name: /^Delete / })).toBeNull();
+	});
+
+	it("given_addAndEdit_when_clicked_then_reportsEach", async () => {
+		const user = userEvent.setup();
+		const onAdd = vi.fn();
+		const onEdit = vi.fn();
+		render(
+			<ShiftsStep
+				includedShiftIds={includedShiftIds}
+				shifts={shifts}
+				onAdd={onAdd}
+				onEdit={onEdit}
+				onIncludedChange={vi.fn()}
+			/>
+		);
+
+		await user.click(screen.getByRole("button", { name: "Add Custom Shift" }));
+		await user.click(
 			screen.getByRole("button", { name: "Edit Front Desk AM" })
-		).toBeDisabled();
+		);
+
+		expect(onAdd).toHaveBeenCalledOnce();
+		expect(onEdit).toHaveBeenCalledWith(
+			expect.objectContaining({ shiftId: "front-desk-am" })
+		);
+	});
+
+	it("given_aListProblem_when_rendered_then_saysSoInsteadOfTheTable", () => {
+		render(
+			<ShiftsStep
+				includedShiftIds={[]}
+				listProblem={{ message: "We couldn’t load shifts.", alert: true }}
+				shifts={[]}
+				onIncludedChange={vi.fn()}
+			/>
+		);
+
+		expect(screen.getByRole("alert")).toHaveTextContent(
+			"We couldn’t load shifts."
+		);
+		expect(screen.queryByRole("table")).toBeNull();
 	});
 
 	it("given_aProblem_when_rendered_then_announcesIt", () => {

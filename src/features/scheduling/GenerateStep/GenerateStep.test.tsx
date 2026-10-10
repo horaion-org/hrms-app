@@ -13,11 +13,7 @@ beforeAll(async () => {
 
 describe("GenerateStep", () => {
 	it("given_aSummary_when_rendered_then_listsEachFigureByName", () => {
-		render(
-			<GenerateStep
-				summary={{ shifts: 4, roles: 18, coverage: 96, conflicts: 0 }}
-			/>
-		);
+		render(<GenerateStep summary={{ shifts: 4, roles: 11, coverage: 91 }} />);
 
 		const list = screen.getByLabelText("Schedule summary");
 		const terms = within(list)
@@ -26,16 +22,12 @@ describe("GenerateStep", () => {
 		const values = within(list)
 			.getAllByRole("definition")
 			.map((value) => value.textContent);
-		expect(terms).toEqual(["Shifts", "Roles", "Coverage", "Conflicts"]);
-		expect(values).toEqual(["4", "18", "96%", "0"]);
+		expect(terms).toEqual(["Shifts", "Roles", "Coverage"]);
+		expect(values).toEqual(["4", "11", "91%"]);
 	});
 
 	it("given_theStep_when_rendered_then_saysWhatHappensNext", () => {
-		render(
-			<GenerateStep
-				summary={{ shifts: 1, roles: 2, coverage: 100, conflicts: 0 }}
-			/>
-		);
+		render(<GenerateStep summary={{ shifts: 1, roles: 2, coverage: 100 }} />);
 
 		expect(
 			screen.getByRole("region", { name: "Ready to Generate" })

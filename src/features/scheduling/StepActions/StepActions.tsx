@@ -8,8 +8,10 @@ import { ArrowLeftIcon, SaveIcon } from "@/components/ui/Icon";
 export type StepActionsProps = {
 	/** Shows Back, returning to the previous step. */
 	onBack?: () => void;
-	/** Shows Save Draft, which waits for the scheduling API and stays disabled. */
-	saveDraft?: boolean;
+	/** Shows Save Draft, which saves the schedule as it stands. */
+	onSaveDraft?: () => void;
+	/** A save is in flight: Save Draft shows it and the forward action waits. */
+	busy?: boolean;
 	nextLabel: string;
 	nextIcon: ReactNode;
 	onNext?: () => void;
@@ -17,7 +19,7 @@ export type StepActionsProps = {
 	form?: string;
 	/** For an action the API can't take yet; the note says so. */
 	nextDisabled?: boolean;
-	/** Explains the disabled actions; shown whenever one is. */
+	/** Explains why the forward action is disabled; shown whenever it is. */
 	unavailableNote: string;
 	className?: string;
 };
@@ -25,7 +27,8 @@ export type StepActionsProps = {
 /** Back, Save Draft and the forward action at the foot of a Create Schedule step. */
 export const StepActions = ({
 	onBack,
-	saveDraft = false,
+	onSaveDraft,
+	busy = false,
 	nextLabel,
 	nextIcon,
 	onNext,
@@ -36,7 +39,6 @@ export const StepActions = ({
 }: StepActionsProps): FunctionComponent => {
 	const { t } = useTranslation();
 	const noteId = useId();
-	const noted = saveDraft || nextDisabled;
 
 	return (
 		<div className={joinClassNames("flex flex-col gap-3", className)}>
@@ -52,12 +54,12 @@ export const StepActions = ({
 					</Button>
 				)}
 				<div className="ml-auto flex flex-wrap gap-4">
-					{saveDraft && (
+					{onSaveDraft && (
 						<Button
-							disabled
-							aria-describedby={noteId}
 							leadingIcon={<SaveIcon />}
+							loading={busy}
 							variant="secondary"
+							onClick={onSaveDraft}
 						>
 							{t("scheduling.actions.saveDraft")}
 						</Button>
@@ -65,7 +67,7 @@ export const StepActions = ({
 					<Button
 						aria-describedby={nextDisabled ? noteId : undefined}
 						className="min-w-30"
-						disabled={nextDisabled}
+						disabled={nextDisabled || busy}
 						form={form}
 						trailingIcon={nextIcon}
 						type={form === undefined ? "button" : "submit"}
@@ -75,7 +77,7 @@ export const StepActions = ({
 					</Button>
 				</div>
 			</div>
-			{noted && (
+			{nextDisabled && (
 				<p className="text-right text-sm text-neutral-700" id={noteId}>
 					{unavailableNote}
 				</p>

@@ -6,7 +6,7 @@ const meta = {
 	title: "Features/Scheduling/GenerateStep",
 	component: GenerateStep,
 	parameters: { layout: "padded" },
-	args: { summary: { shifts: 4, roles: 18, coverage: 96, conflicts: 0 } },
+	args: { summary: { shifts: 4, roles: 11, coverage: 91 } },
 } satisfies Meta<typeof GenerateStep>;
 
 export default meta;
@@ -16,5 +16,5 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const PartialCoverage: Story = {
-	args: { summary: { shifts: 2, roles: 9, coverage: 67, conflicts: 0 } },
+	args: { summary: { shifts: 2, roles: 4, coverage: 75 } },
 };

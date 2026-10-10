@@ -13,7 +13,7 @@ beforeAll(async () => {
 		.init({ lng: "en", resources: { en: { translation: en } } });
 });
 
-const NOTE = "Saving drafts and generating schedules aren’t available yet.";
+const NOTE = "Generating schedules isn’t available yet.";
 
 describe("StepActions", () => {
 	it("given_theFirstStep_when_rendered_then_showsOnlyNext", async () => {
@@ -40,11 +40,11 @@ describe("StepActions", () => {
 		const onBack = vi.fn();
 		render(
 			<StepActions
-				saveDraft
 				nextIcon={<ArrowRightIcon />}
 				nextLabel="Next"
 				unavailableNote={NOTE}
 				onBack={onBack}
+				onSaveDraft={vi.fn()}
 			/>
 		);
 
@@ -53,19 +53,36 @@ describe("StepActions", () => {
 		expect(onBack).toHaveBeenCalledOnce();
 	});
 
-	it("given_saveDraft_when_rendered_then_isDisabledAndSaysWhy", () => {
+	it("given_saveDraft_when_clicked_then_savesWithoutTheNote", async () => {
+		const user = userEvent.setup();
+		const onSaveDraft = vi.fn();
 		render(
 			<StepActions
-				saveDraft
 				nextIcon={<ArrowRightIcon />}
 				nextLabel="Next"
 				unavailableNote={NOTE}
+				onSaveDraft={onSaveDraft}
 			/>
 		);
 
-		const save = screen.getByRole("button", { name: "Save Draft" });
-		expect(save).toBeDisabled();
-		expect(save).toHaveAccessibleDescription(NOTE);
+		await user.click(screen.getByRole("button", { name: "Save Draft" }));
+
+		expect(onSaveDraft).toHaveBeenCalledOnce();
+		expect(screen.queryByText(NOTE)).toBeNull();
+	});
+
+	it("given_aSaveInFlight_when_rendered_then_nextWaits", () => {
+		render(
+			<StepActions
+				busy
+				nextIcon={<ArrowRightIcon />}
+				nextLabel="Next"
+				unavailableNote={NOTE}
+				onSaveDraft={vi.fn()}
+			/>
+		);
+
+		expect(screen.getByRole("button", { name: "Next" })).toBeDisabled();
 	});
 
 	it("given_aForm_when_rendered_then_nextSubmitsIt", () => {
@@ -87,10 +104,10 @@ describe("StepActions", () => {
 		render(
 			<StepActions
 				nextDisabled
-				saveDraft
 				nextIcon={<ArrowRightIcon />}
 				nextLabel="Generate"
 				unavailableNote={NOTE}
+				onSaveDraft={vi.fn()}
 			/>
 		);
 

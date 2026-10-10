@@ -127,6 +127,14 @@ export const ManySelected: Story = {
 	args: { multiple: true, defaultValue: ["people", "finance", "operations"] },
 };
 
+export const SelectAll: Story = {
+	args: {
+		multiple: true,
+		defaultValue: ["people"],
+		selectAllLabel: "Select all",
+	},
+};
+
 export const CustomSummary: Story = {
 	args: {
 		multiple: true,

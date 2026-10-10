@@ -34,7 +34,7 @@ const meta = {
 			})),
 		},
 		periods: ["2026-04-13", "2026-04-20", "2026-04-27"].map(periodStartingOn),
-		onSubmit: fn(),
+		onSubmit: fn(() => Promise.resolve(undefined)),
 	},
 } satisfies Meta<typeof ScheduleSetupStep>;
 
@@ -50,4 +50,17 @@ export const LoadingDepartments: Story = {
 
 export const DepartmentsHidden: Story = {
 	args: { departments: { status: "hidden" } },
+};
+
+export const SavedDraft: Story = {
+	args: {
+		defaultValues: {
+			departmentId: "d-1",
+			name: "Front Office - Week 16",
+			periodStart: "2026-04-13",
+			includeLeave: true,
+			allowOpenShifts: false,
+		},
+		lockedDepartment: { departmentId: "d-1", name: "Front Office" },
+	},
 };

@@ -11,8 +11,7 @@ const meta = {
 	args: {
 		nextLabel: "Next",
 		nextIcon: <ArrowRightIcon />,
-		unavailableNote:
-			"Saving drafts and generating schedules aren’t available yet.",
+		unavailableNote: "Generating schedules isn’t available yet.",
 		onNext: fn(),
 	},
 } satisfies Meta<typeof StepActions>;
@@ -24,13 +23,17 @@ type Story = StoryObj<typeof meta>;
 export const FirstStep: Story = {};
 
 export const MiddleStep: Story = {
-	args: { onBack: fn(), saveDraft: true },
+	args: { onBack: fn(), onSaveDraft: fn() },
+};
+
+export const Saving: Story = {
+	args: { onBack: fn(), onSaveDraft: fn(), busy: true },
 };
 
 export const LastStep: Story = {
 	args: {
 		onBack: fn(),
-		saveDraft: true,
+		onSaveDraft: fn(),
 		nextLabel: "Generate",
 		nextIcon: <GenerateScheduleIcon />,
 		nextDisabled: true,

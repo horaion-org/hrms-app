@@ -116,6 +116,23 @@ export const SingleChosen: Story = {
 export const SingleError: Story = {
 	args: { ...SingleEmpty.args, status: "error" },
 };
+export const SingleCreatable: Story = {
+	args: {
+		...SingleEmpty.args,
+		"aria-label": "Shift group",
+		placeholder: "Select or create a group",
+		searchPlaceholder: "Search groups",
+		onCreate: fn(),
+	},
+	parameters: {
+		docs: {
+			description: {
+				story:
+					"Type a name that matches nobody to see the create row; choosing it reports the trimmed query.",
+			},
+		},
+	},
+};
 export const Empty: Story = {};
 export const TwoChosen: Story = { args: { value: people.slice(0, 2) } };
 export const Loading: Story = { args: { options: [], loading: true } };

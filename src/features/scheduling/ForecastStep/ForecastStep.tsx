@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { RadioCard } from "@/components/forms/RadioCard";
 import { Button } from "@/components/ui/Button";
-import { Callout } from "@/components/ui/Callout";
 import {
 	DownloadIcon,
 	GridIcon,
@@ -13,6 +12,7 @@ import {
 } from "@/components/ui/Icon";
 import {
 	rolesOf,
+	type Allocations,
 	type ForecastMode,
 	type Shift,
 	type TimeBlockDemand,
@@ -26,37 +26,40 @@ export type ForecastStepProps = {
 	onModeChange: (mode: ForecastMode) => void;
 	/** The shifts this schedule includes. */
 	shifts: Array<Shift>;
+	allocations: Allocations;
 	onAllocationChange: (
 		shiftId: string,
-		roleId: string,
+		jobTitleId: string,
 		allocated: number
 	) => void;
 	demand: TimeBlockDemand;
-	onDemandChange: (slotStart: string, roleId: string, staff: number) => void;
+	onDemandChange: (
+		slotStart: string,
+		jobTitleId: string,
+		staff: number
+	) => void;
 	onAutoFill: () => void;
 	/** The schedule's week, e.g. "13 – 19 Apr 2026". */
 	periodLabel: string;
-	/** What stops the person moving on, e.g. an over-allocated shift. */
-	problem?: string;
 };
 
 const isForecastMode = (value: string): value is ForecastMode =>
-	value === "shift" || value === "blocks";
+	value === "SHIFT" || value === "BLOCKS";
 
 /**
- * How many staff the schedule needs, either per shift or per 30-minute block.
+ * How many staff the schedule needs, either per shift or per time block.
  * Importing, exporting and reusing forecasts wait for the scheduling API.
  */
 export const ForecastStep = ({
 	mode,
 	onModeChange,
 	shifts,
+	allocations,
 	onAllocationChange,
 	demand,
 	onDemandChange,
 	onAutoFill,
 	periodLabel,
-	problem,
 }: ForecastStepProps): FunctionComponent => {
 	const { t } = useTranslation();
 	const questionId = useId();
@@ -70,7 +73,7 @@ export const ForecastStep = ({
 				description={t("scheduling.forecast.description")}
 				title={t("scheduling.forecast.title")}
 				actions={
-					mode === "shift" ? (
+					mode === "SHIFT" ? (
 						<>
 							<Button
 								disabled
@@ -110,11 +113,11 @@ export const ForecastStep = ({
 					role="radiogroup"
 				>
 					<RadioCard
-						checked={mode === "shift"}
+						checked={mode === "SHIFT"}
 						icon={<ListIcon />}
 						label={t("scheduling.forecast.byShift")}
 						name={`${questionId}-mode`}
-						value="shift"
+						value="SHIFT"
 						description={
 							<>
 								{t("scheduling.forecast.byShiftDescription")}
@@ -125,11 +128,11 @@ export const ForecastStep = ({
 						onChange={choose}
 					/>
 					<RadioCard
-						checked={mode === "blocks"}
+						checked={mode === "BLOCKS"}
 						icon={<GridIcon />}
 						label={t("scheduling.forecast.blocks")}
 						name={`${questionId}-mode`}
-						value="blocks"
+						value="BLOCKS"
 						description={
 							<>
 								{t("scheduling.forecast.blocksDescription")}
@@ -141,22 +144,13 @@ export const ForecastStep = ({
 					/>
 				</div>
 			</StepPanel>
-			{problem && (
-				<p className="mt-6 text-sm text-error-700" role="alert">
-					{problem}
-				</p>
-			)}
-			{mode === "shift" ? (
-				<>
-					<ShiftAllocationTable
-						className="mt-12"
-						shifts={shifts}
-						onAllocationChange={onAllocationChange}
-					/>
-					<Callout className="mt-5">
-						{t("scheduling.forecast.limitNote")}
-					</Callout>
-				</>
+			{mode === "SHIFT" ? (
+				<ShiftAllocationTable
+					allocations={allocations}
+					className="mt-12"
+					shifts={shifts}
+					onAllocationChange={onAllocationChange}
+				/>
 			) : (
 				<TimeBlockGrid
 					className="mt-12"
