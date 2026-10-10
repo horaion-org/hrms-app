@@ -1085,7 +1085,15 @@
 					"read": "View"
 				}
 			},
-			"empty": "No system roles yet."
+			"empty": "No system roles yet.",
+			"addedFor": "Added for {{by}}",
+			"stillNeededBy": "Still needed by {{by}}",
+			"modules": {
+				"people": "People",
+				"leave": "Leave",
+				"organisation": "Organisation",
+				"company": "Company"
+			}
 		},
 		"activity": {
 			"title": "Recent Activity",

@@ -41,3 +41,25 @@ export const NothingSelected: Story = { args: { value: [] } };
 export const ReadOnly: Story = {
 	args: { value: [...PERMISSION_KEYS], disabled: true },
 };
+
+/** Creating people needs their job title picker, so Job titles: View says why it is ticked. */
+export const ImpliedPermission: Story = {
+	args: {
+		value: [
+			"job_title:read",
+			"member_profile:read",
+			"member_profile:create",
+			"member_profile:update",
+		],
+	},
+};
+
+/** An implied permission cleared by hand stays clear, with a warning of what still needs it. */
+export const ImpliedPermissionCleared: Story = {
+	args: { value: ["member_profile:read", "member_profile:create"] },
+};
+
+/** A tick never adds an implied permission the person may not grant. */
+export const ImpliedPermissionUnavailable: Story = {
+	args: { value: [], unavailable: ["job_title:read"] },
+};

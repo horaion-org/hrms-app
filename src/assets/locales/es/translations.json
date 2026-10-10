@@ -249,6 +249,14 @@
         "deactivate": "desactivar",
         "delete": "eliminar",
         "assign": "asignar"
+      },
+      "addedFor": "Añadido para {{by}}",
+      "stillNeededBy": "Todavía lo necesita {{by}}",
+      "modules": {
+        "people": "Personas",
+        "leave": "Ausencias",
+        "organisation": "Organización",
+        "company": "Empresa"
       }
     },
     "jobTitles": {

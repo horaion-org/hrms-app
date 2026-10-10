@@ -26,6 +26,19 @@ describe("PermissionSummary", () => {
 		).toEqual(["View, Create", "View"]);
 	});
 
+	it("lists resources Module by Module, as the checklist does", () => {
+		show([
+			"company:read",
+			"branch:read",
+			"leave_request:read",
+			"member_profile:read",
+		]);
+
+		expect(screen.getAllByRole("term").map((term) => term.textContent)).toEqual(
+			["People", "Leave", "Branches", "Company"]
+		);
+	});
+
 	it("says so when nothing is allowed", () => {
 		show([]);
 

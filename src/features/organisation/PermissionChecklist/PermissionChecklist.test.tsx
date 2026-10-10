@@ -43,25 +43,28 @@ const box = (group: string, name: string): HTMLElement =>
 	within(row(group)).getByRole("checkbox", { name });
 
 describe("PermissionChecklist", () => {
-	it("shows one row per resource with a box for every permission in the catalog", () => {
+	it("shows one row per resource, Module by Module, with a box for every permission in the catalog", () => {
 		render(<Harness initial={[]} />);
 
+		expect(
+			screen.getAllByRole("heading").map((heading) => heading.textContent)
+		).toEqual(["People", "Leave", "Organisation", "Company"]);
 		expect(
 			within(screen.getByRole("group", { name: "Permissions" }))
 				.getAllByRole("group")
 				.map((group) => group.getAttribute("aria-label"))
 		).toEqual([
-			"Company",
+			"People",
+			"Notes",
+			"Leave",
 			"Branches",
 			"Branch members",
 			"Departments",
 			"Department members",
 			"Job titles",
-			"People",
-			"Notes",
-			"Leave",
 			"System roles",
 			"Activity",
+			"Company",
 		]);
 		// One box per key, plus each row's own.
 		expect(screen.getAllByRole("checkbox")).toHaveLength(
@@ -159,6 +162,84 @@ describe("PermissionChecklist", () => {
 
 		await user.click(box("Departments", "Edit"));
 		expect(latest).toEqual(["department:update"]);
+	});
+
+	it("ticks what a permission implies and says why", async () => {
+		const user = userEvent.setup();
+		render(<Harness initial={[]} />);
+
+		await user.click(box("People", "Create"));
+
+		expect(latest).toEqual([
+			"job_title:read",
+			"member_profile:read",
+			"member_profile:create",
+		]);
+		expect(box("Job titles", "View")).toBeChecked();
+		expect(
+			within(row("Job titles")).getByText("Added for People: Create")
+		).toBeVisible();
+		expect(within(row("Job titles")).getByText("1 of 3")).toBeVisible();
+		expect(box("Job titles", "Job titles")).toBePartiallyChecked();
+
+		await user.click(box("People", "Edit"));
+
+		expect(
+			within(row("Job titles")).getByText(
+				"Added for People: Create, People: Edit"
+			)
+		).toBeVisible();
+	});
+
+	it("ticks what the row's own box implies", async () => {
+		const user = userEvent.setup();
+		render(<Harness initial={[]} />);
+
+		await user.click(box("People", "People"));
+
+		expect(latest).toEqual([
+			"job_title:read",
+			"member_profile:read",
+			"member_profile:create",
+			"member_profile:update",
+		]);
+	});
+
+	it("lets an implied permission be cleared and warns what still needs it", async () => {
+		const user = userEvent.setup();
+		render(
+			<Harness
+				initial={[
+					"job_title:read",
+					"member_profile:read",
+					"member_profile:create",
+				]}
+			/>
+		);
+
+		await user.click(box("Job titles", "View"));
+
+		expect(latest).toEqual(["member_profile:read", "member_profile:create"]);
+		expect(box("Job titles", "View")).not.toBeChecked();
+		expect(
+			within(row("Job titles")).getByText("Still needed by People: Create")
+		).toBeVisible();
+	});
+
+	it("says nothing about a permission no ticked one implies", () => {
+		render(<Harness initial={["job_title:read", "member_profile:read"]} />);
+
+		expect(screen.queryByText(/Added for|Still needed by/)).toBeNull();
+	});
+
+	it("never adds an unavailable permission a tick implies", async () => {
+		const user = userEvent.setup();
+		render(<Harness initial={[]} unavailable={["job_title:read"]} />);
+
+		await user.click(box("People", "Create"));
+
+		expect(latest).toEqual(["member_profile:read", "member_profile:create"]);
+		expect(box("Job titles", "View")).not.toBeChecked();
 	});
 
 	it("lets nothing be changed when disabled", () => {

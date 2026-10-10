@@ -1,32 +1,42 @@
 import {
 	PERMISSION_KEYS,
+	PERMISSION_MODULES,
 	type PermissionKey,
+	type PermissionModule,
+	type PermissionResource,
+	resourceOf,
 } from "@/features/workspace/permissionKeys";
 
-type ResourceOf<K> = K extends `${infer R}:${string}` ? R : never;
 type LabelKeyOf<K> = K extends `${infer R}:${infer A}`
 	? `organisation.permissions.${R}.actions.${A}`
 	: never;
 
-/** The resource half of a permission key, e.g. `branch`. */
-export type PermissionResource = ResourceOf<PermissionKey>;
+export type { PermissionResource };
 
 /** One resource's keys, in the catalog's order. */
 export type PermissionGroup = {
+	module: PermissionModule;
 	resource: PermissionResource;
 	keys: ReadonlyArray<PermissionKey>;
 };
 
-const resourceOf = (key: PermissionKey): PermissionResource =>
-	key.split(":")[0] as PermissionResource;
+/**
+ * The catalog grouped by resource, Module by Module, and in the catalog's
+ * order within each Module.
+ */
+const CATALOG_RESOURCES = [...new Set(PERMISSION_KEYS.map(resourceOf))];
 
-/** The catalog grouped by resource, both in the catalog's order. */
-export const PERMISSION_GROUPS: ReadonlyArray<PermissionGroup> = [
-	...new Set(PERMISSION_KEYS.map(resourceOf)),
-].map((resource) => ({
-	resource,
-	keys: PERMISSION_KEYS.filter((key) => resourceOf(key) === resource),
-}));
+export const PERMISSION_GROUPS: ReadonlyArray<PermissionGroup> =
+	PERMISSION_MODULES.flatMap((entry) => {
+		const resources: ReadonlyArray<PermissionResource> = entry.resources;
+		return CATALOG_RESOURCES.filter((resource) =>
+			resources.includes(resource)
+		).map((resource) => ({
+			module: entry.module,
+			resource,
+			keys: PERMISSION_KEYS.filter((key) => resourceOf(key) === resource),
+		}));
+	});
 
 /** The translation key of a permission's label; a key without copy fails to compile. */
 export const labelKeyOf = (key: PermissionKey): LabelKeyOf<PermissionKey> =>
