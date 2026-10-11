@@ -17,10 +17,8 @@ import {
 	type LeaveRequest,
 } from "@/features/leave/api";
 import type { ListPage } from "@/features/organisation/api";
-import { workspaceQuery } from "@/features/workspace/api";
 import { LEAVE_READ_KEYS } from "@/features/workspace/permissionKeys";
-import { retry } from "@/features/workspace/retry";
-import { useCanAnywhere } from "@/features/workspace/useCan";
+import { useAccess } from "@/features/workspace/useAccess";
 
 /**
  * One page of leave requests. `hidden` when the person's grants don't reach
@@ -38,8 +36,8 @@ export const useLeaveRequests = (
 	query: LeaveQuery | undefined,
 	wanted = true
 ): LeaveList => {
-	const workspace = useQuery({ ...workspaceQuery, retry });
-	const allowed = useCanAnywhere()(LEAVE_READ_KEYS);
+	const access = useAccess();
+	const allowed = access.canAny(LEAVE_READ_KEYS, "anywhere");
 	const list = useQuery(
 		leaveRequestsQuery(
 			companyId,
@@ -48,8 +46,7 @@ export const useLeaveRequests = (
 		)
 	);
 
-	if (workspace.isPending) return { status: "pending" };
-	if (workspace.isError) return { status: "error" };
+	if (access.status !== "ready") return { status: access.status };
 	if (!allowed) return { status: "hidden" };
 	if (list.error instanceof ApiProblemError && list.error.status === 403)
 		return { status: "hidden" };
@@ -58,7 +55,11 @@ export const useLeaveRequests = (
 	return { status: "ready", ...list.data };
 };
 
-/** One page of the caller's own requests; nothing is hidden, since any active member may ask. */
+/**
+ * One page of the caller's own requests; nothing is hidden, since any
+ * active member may ask. It never consults the workspace, so it works with
+ * no grants at all, or while the workspace is failing.
+ */
 export const useMyLeaveRequests = (
 	companyId: string,
 	query: LeaveQuery,

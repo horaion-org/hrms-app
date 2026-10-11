@@ -1,6 +1,11 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+	companyWideWorkspace,
+	effectiveWorkspace,
+	TEST_BRANCHES,
+} from "@/common/testing/effectiveWorkspace";
 import { resetApiClient } from "@/common/api-client";
 import {
 	currentUserReply,
@@ -68,11 +73,7 @@ const routes = (
 	"GET /api/v1/me": currentUserReply(),
 	"GET /api/v1/me/workspace": {
 		status: 200,
-		body: envelope({
-			companies: [
-				{ uuid: "c-1", name: "Company c-1", permissions: held, branches: [] },
-			],
-		}),
+		body: envelope(companyWideWorkspace(held)),
 	},
 	[ROLES]: {
 		status: 200,
@@ -260,15 +261,14 @@ describe("System role list actions", () => {
 		expect(within(dialog).getByLabelText("Role name")).toHaveValue(
 			"Manager copy"
 		);
-		expect(
-			within(dialog).getByRole("checkbox", { name: "Branch: read" })
-		).toBeChecked();
-		expect(
-			within(dialog).getByRole("checkbox", { name: "Department: read" })
-		).toBeChecked();
-		expect(
-			within(dialog).getByRole("checkbox", { name: "Branch: update" })
-		).not.toBeChecked();
+		const box = (group: string, name: string): HTMLElement =>
+			within(within(dialog).getByRole("group", { name: group })).getByRole(
+				"checkbox",
+				{ name }
+			);
+		expect(box("Branches", "View")).toBeChecked();
+		expect(box("Departments", "View")).toBeChecked();
+		expect(box("Branches", "Edit")).not.toBeChecked();
 	});
 });
 
@@ -397,5 +397,241 @@ describe("System role people", () => {
 		expect(
 			screen.queryByRole("button", { name: "Assign role" })
 		).not.toBeInTheDocument();
+	});
+});
+
+/**
+ * Reads roles company-wide but may assign only at Orchard › Kitchen (`d-1`),
+ * as the API's workspace shows that narrow grant.
+ */
+const kitchenAssigner = (): StubReply => ({
+	status: 200,
+	body: envelope(
+		effectiveWorkspace({
+			companies: [
+				{
+					uuid: "c-1",
+					name: "Company c-1",
+					permissions: ["access_role:read", "branch:read", "department:read"],
+					branches: TEST_BRANCHES.map((branch) => ({
+						...branch,
+						departments: branch.departments.map((department) => ({
+							...department,
+							permissions:
+								department.uuid === "d-1" ? ["access_role:assign"] : [],
+						})),
+					})),
+				},
+			],
+		})
+	),
+});
+
+/** Daniel Tan holds the role at Kitchen (`a-2`) and at Tampines (`a-3`). */
+const spreadHolders = [
+	...holders,
+	{
+		accessRoleAssignmentId: "a-3",
+		companyMembershipId: "m-9",
+		displayName: "Daniel Tan",
+		status: "ACTIVE",
+		branchId: "b-2",
+		branchName: "Tampines",
+		departmentId: null,
+		departmentName: null,
+	},
+];
+
+const COLLEAGUES = "GET /api/v1/companies/c-1/me/colleagues";
+const ASSIGNMENTS = "/access-role-assignments";
+
+describe("System role people, checked at each assignment's own place", () => {
+	it("names what keeps a role from fitting the only places the person may assign at", async () => {
+		stubApi({
+			...routes(),
+			"GET /api/v1/me/workspace": kitchenAssigner(),
+			[COLLEAGUES]: {
+				status: 200,
+				body: envelope({ content: [], page: { totalElements: 0 } }),
+			},
+		});
+		app = await openApp("/organisation/system-roles/r-2");
+		renderAuthApp(app);
+
+		await userEvent.click(
+			await screen.findByRole("button", { name: "Assign role" })
+		);
+		const dialog = await screen.findByRole("dialog", { name: "Assign role" });
+
+		// Branches: View can't be given at a Department, the only place in reach.
+		expect(dialog).toHaveTextContent(
+			"This role can’t be given at any place you may assign it: Branches: View can only be given more widely."
+		);
+	});
+
+	it("offers only the places where the person may assign, from the workspace, to any active member", async () => {
+		const calls = stubApi({
+			...routes(role({ permissions: ["department:read"] })),
+			"GET /api/v1/me/workspace": kitchenAssigner(),
+			[COLLEAGUES]: {
+				status: 200,
+				body: envelope({
+					content: [
+						{ membershipId: "m-5", displayName: "Alice Lim", status: "ACTIVE" },
+					],
+					page: { totalElements: 1 },
+				}),
+			},
+		});
+		app = await openApp("/organisation/system-roles/r-2");
+		renderAuthApp(app);
+
+		await userEvent.click(
+			await screen.findByRole("button", { name: "Assign role" })
+		);
+		const dialog = await screen.findByRole("dialog", { name: "Assign role" });
+		await userEvent.click(within(dialog).getByLabelText("Applies to"));
+		expect(
+			(await screen.findAllByRole("option")).map((option) => option.textContent)
+		).toEqual(["Orchard › Kitchen"]);
+		await userEvent.keyboard("{Escape}");
+		await userEvent.click(within(dialog).getByLabelText("Person"));
+		expect(
+			await screen.findByRole("option", { name: "Alice Lim" })
+		).toBeVisible();
+
+		// Recipients come from the colleagues directory; places never need the unit lists.
+		expect(calls.some((call) => call.path.endsWith("/me/colleagues"))).toBe(
+			true
+		);
+		expect(
+			calls.some(
+				(call) =>
+					call.path === "/api/v1/companies/c-1/branches" ||
+					call.path === "/api/v1/companies/c-1/departments"
+			)
+		).toBe(false);
+	});
+
+	it("changes only the assignments at places the person may assign at, leaving the rest of the row untouched (R14)", async () => {
+		const calls = stubApi({
+			...routes(),
+			"GET /api/v1/me/workspace": kitchenAssigner(),
+			[HOLDERS]: { status: 200, body: envelope(spreadHolders) },
+			[COLLEAGUES]: {
+				status: 200,
+				body: envelope({ content: [], page: { totalElements: 0 } }),
+			},
+		});
+		app = await openApp("/organisation/system-roles/r-2");
+		renderAuthApp(app);
+
+		// Priya holds it company-wide, out of reach: nothing on her row can be changed.
+		expect(
+			await screen.findByRole("button", { name: "Edit Priya Nair" })
+		).toBeDisabled();
+
+		await userEvent.click(
+			screen.getByRole("button", { name: "Edit Daniel Tan" })
+		);
+		const dialog = await screen.findByRole("dialog", {
+			name: "Edit assignment",
+		});
+		expect(dialog).toHaveTextContent(
+			"Daniel Tan also has this role at Tampines. You can’t change those places"
+		);
+		await userEvent.click(
+			within(dialog).getByRole("button", { name: "Remove Orchard › Kitchen" })
+		);
+		await userEvent.click(
+			within(dialog).getByRole("button", { name: "Save changes" })
+		);
+
+		await waitFor(() => {
+			expect(
+				calls
+					.filter((call) => call.method === "DELETE")
+					.map((call) => call.path)
+			).toEqual([ASSIGNMENT_PATH]);
+		});
+		expect(calls.some((call) => call.path.endsWith("/a-3"))).toBe(false);
+	});
+
+	it("removes a grouped person only where the person may assign", async () => {
+		const calls = stubApi({
+			...routes(),
+			"GET /api/v1/me/workspace": kitchenAssigner(),
+			[HOLDERS]: { status: 200, body: envelope(spreadHolders) },
+		});
+		app = await openApp("/organisation/system-roles/r-2");
+		renderAuthApp(app);
+
+		await userEvent.click(
+			await screen.findByRole("button", { name: "More actions for Daniel Tan" })
+		);
+		await userEvent.click(screen.getByRole("menuitem", { name: "Delete" }));
+		await userEvent.click(
+			within(
+				await screen.findByRole("dialog", {
+					name: "Remove Daniel Tan from this role",
+				})
+			).getByRole("button", { name: "Remove from role" })
+		);
+
+		await waitFor(() => {
+			expect(
+				calls
+					.filter((call) => call.method === "DELETE")
+					.map((call) => call.path)
+			).toEqual([ASSIGNMENT_PATH]);
+		});
+	});
+
+	it("says how many changes failed when only some did, keeping the dialog open (F12)", async () => {
+		const calls = stubApi({
+			...routes(),
+			[COLLEAGUES]: {
+				status: 200,
+				body: envelope({ content: [], page: { totalElements: 0 } }),
+			},
+			[`POST /api/v1/companies/c-1/branches/b-2${ASSIGNMENTS}`]: problemReply(
+				403,
+				"AUTHORIZATION_DENIED"
+			),
+		});
+		app = await openApp("/organisation/system-roles/r-2");
+		renderAuthApp(app);
+
+		await userEvent.click(
+			await screen.findByRole("button", { name: "Edit Daniel Tan" })
+		);
+		const dialog = await screen.findByRole("dialog", {
+			name: "Edit assignment",
+		});
+		// Remove Kitchen (succeeds) and add Tampines (refused).
+		await userEvent.click(
+			within(dialog).getByRole("button", { name: "Remove Orchard › Kitchen" })
+		);
+		await userEvent.click(within(dialog).getByLabelText("Applies to"));
+		await userEvent.click(
+			await screen.findByRole("option", { name: "Tampines" })
+		);
+		await userEvent.keyboard("{Escape}");
+		await userEvent.click(
+			within(dialog).getByRole("button", { name: "Save changes" })
+		);
+
+		expect(await within(dialog).findByRole("alert")).toHaveTextContent(
+			"1 of 2 changes couldn’t be made; the others were saved. You can only assign a role whose permissions you hold there."
+		);
+		expect(
+			calls.filter((call) => call.method === "DELETE").map((call) => call.path)
+		).toEqual([ASSIGNMENT_PATH]);
+		// Where things now stand is asked for again.
+		await waitFor(() => {
+			expect(
+				calls.filter((call) => `${call.method} ${call.path}` === HOLDERS).length
+			).toBeGreaterThan(1);
+		});
 	});
 });

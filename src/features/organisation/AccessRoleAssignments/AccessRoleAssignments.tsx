@@ -50,6 +50,12 @@ export type AccessRoleAssignmentsProps = {
 	onEdit?: (person: AccessRolePerson) => void;
 	onSetStatus?: (person: AccessRolePerson) => void;
 	onRemove?: (person: AccessRolePerson) => void;
+	/**
+	 * Whether the person may change any of this row's assignments: each is
+	 * checked at its own place, so a row whose places are all out of reach
+	 * has its actions disabled. All rows by default.
+	 */
+	canChange?: (person: AccessRolePerson) => boolean;
 	className?: string;
 };
 
@@ -84,6 +90,7 @@ export const AccessRoleAssignments = ({
 	onEdit,
 	onSetStatus,
 	onRemove,
+	canChange = (): boolean => true,
 	className,
 }: AccessRoleAssignmentsProps): FunctionComponent => {
 	const { t } = useTranslation();
@@ -125,6 +132,7 @@ export const AccessRoleAssignments = ({
 				(person) => (
 					<>
 						<OverflowMenuItem
+							disabled={!canChange(person)}
 							onClick={() => {
 								onSetStatus(person);
 							}}
@@ -136,6 +144,7 @@ export const AccessRoleAssignments = ({
 							)}
 						</OverflowMenuItem>
 						<OverflowMenuItem
+							disabled={!canChange(person)}
 							onClick={() => {
 								onRemove(person);
 							}}
@@ -145,7 +154,7 @@ export const AccessRoleAssignments = ({
 					</>
 				),
 				// Places are changed while the role is on for the person; activate it first.
-				(person) => person.status === "ACTIVE",
+				(person) => person.status === "ACTIVE" && canChange(person),
 				onEdit
 			)
 		);

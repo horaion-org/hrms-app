@@ -223,9 +223,10 @@ const listPath = (
 /** One page of a paged list, read from the API's `content` and page total. */
 export const fetchList = async <T extends z.ZodType>(
 	path: string,
-	item: T
+	item: T,
+	signal?: AbortSignal
 ): Promise<ListPage<z.infer<T>>> => {
-	const page = await apiRequest(path, pageOf(item));
+	const page = await apiRequest(path, pageOf(item), { signal });
 	return { items: page.content, total: page.page.totalElements };
 };
 
@@ -237,10 +238,16 @@ export const companyMemberSchema = z.object({
 
 export type CompanyMember = z.infer<typeof companyMemberSchema>;
 
-/** Active people for the heads picker; never searches private email addresses. */
+/**
+ * Active company members from the colleagues directory (membership id,
+ * display name, status only), for the heads picker and role recipients.
+ * Any active member may read it, so a recipient need not belong to the
+ * unit a role is assigned at. Never searches private email addresses.
+ */
 export const searchCompanyMembers = (
 	companyId: string,
-	{ search, status, size }: { search: string; status: "ACTIVE"; size: number }
+	{ search, status, size }: { search: string; status: "ACTIVE"; size: number },
+	signal?: AbortSignal
 ): Promise<ListPage<CompanyMember>> => {
 	const query = new URLSearchParams({
 		status,
@@ -250,30 +257,42 @@ export const searchCompanyMembers = (
 	if (search.trim()) query.set("search", search.trim());
 	return fetchList(
 		`${companyPath(companyId)}/me/colleagues?${query.toString()}`,
-		companyMemberSchema
+		companyMemberSchema,
+		signal
 	);
 };
 
 /** The company's branches; sortable by `name`, `code`, `city` or `status`. */
 export const fetchBranches = (
 	companyId: string,
-	query: ListQuery
+	query: ListQuery,
+	signal?: AbortSignal
 ): Promise<ListPage<Branch>> =>
-	fetchList(listPath(companyId, "branches", query), branchSchema);
+	fetchList(listPath(companyId, "branches", query), branchSchema, signal);
 
 /** The company's departments across every branch; sortable by `name` or `status`. */
 export const fetchDepartments = (
 	companyId: string,
-	query: ListQuery
+	query: ListQuery,
+	signal?: AbortSignal
 ): Promise<ListPage<Department>> =>
-	fetchList(listPath(companyId, "departments", query), departmentSchema);
+	fetchList(
+		listPath(companyId, "departments", query),
+		departmentSchema,
+		signal
+	);
 
 /** The company's access roles ("System Roles"); sortable by `name`, with no status. */
 export const fetchAccessRoles = (
 	companyId: string,
-	query: ListQuery
+	query: ListQuery,
+	signal?: AbortSignal
 ): Promise<ListPage<AccessRole>> =>
-	fetchList(listPath(companyId, "access-roles", query), accessRoleSchema);
+	fetchList(
+		listPath(companyId, "access-roles", query),
+		accessRoleSchema,
+		signal
+	);
 
 /** The company's active departments, each with its Branch. */
 export const fetchDepartmentUnits = (
@@ -305,11 +324,13 @@ export type AccessRoleHolder = z.infer<typeof accessRoleHolderSchema>;
 /** Who holds an access role and where. */
 export const fetchAccessRoleHolders = (
 	companyId: string,
-	accessRoleId: string
+	accessRoleId: string,
+	signal?: AbortSignal
 ): Promise<Array<AccessRoleHolder>> =>
 	apiRequest(
 		`${companyPath(companyId)}/access-roles/${encodeURIComponent(accessRoleId)}/access-role-assignments`,
-		z.array(accessRoleHolderSchema)
+		z.array(accessRoleHolderSchema),
+		{ signal }
 	);
 
 const memberAssignmentSchema = z.object({
@@ -327,11 +348,13 @@ export type MemberAccessRoleAssignment = z.infer<typeof memberAssignmentSchema>;
 /** Every access role one person holds, at every place. */
 export const fetchMemberAccessRoleAssignments = (
 	companyId: string,
-	companyMembershipId: string
+	companyMembershipId: string,
+	signal?: AbortSignal
 ): Promise<Array<MemberAccessRoleAssignment>> =>
 	apiRequest(
 		`${companyPath(companyId)}/access-role-assignments?${new URLSearchParams({ companyMembershipId }).toString()}`,
-		z.array(memberAssignmentSchema)
+		z.array(memberAssignmentSchema),
+		{ signal }
 	);
 
 /** Who gets which role, and the Branch or Department it applies at; neither means the whole company. */
@@ -462,6 +485,7 @@ export const updateJobTitle = (
 /** The company's job titles; sortable by `name` or `status`. */
 export const fetchJobTitles = (
 	companyId: string,
-	query: ListQuery
+	query: ListQuery,
+	signal?: AbortSignal
 ): Promise<ListPage<JobTitle>> =>
-	fetchList(listPath(companyId, "job-titles", query), jobTitleSchema);
+	fetchList(listPath(companyId, "job-titles", query), jobTitleSchema, signal);

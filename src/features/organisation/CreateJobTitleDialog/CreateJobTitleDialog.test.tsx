@@ -1,6 +1,7 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { effectiveWorkspace } from "@/common/testing/effectiveWorkspace";
 import { resetApiClient } from "@/common/api-client";
 import {
 	currentUserReply,
@@ -41,38 +42,40 @@ const routes = (grants = permissions): Record<string, StubReply> => ({
 	"GET /api/v1/me": currentUserReply(),
 	"GET /api/v1/me/workspace": {
 		status: 200,
-		body: envelope({
-			companies: [
-				{
-					uuid: "c-1",
-					name: "Company c-1",
-					permissions: grants,
-					branches: [
-						{
-							uuid: "b-1",
-							name: "Orchard",
-							status: "ACTIVE",
-							country: "SG",
-							permissions: [],
-							departments: [
-								{
-									uuid: "d-1",
-									name: "Kitchen",
-									status: "ACTIVE",
-									permissions: [],
-								},
-								{
-									uuid: "d-2",
-									name: "Front of house",
-									status: "ACTIVE",
-									permissions: [],
-								},
-							],
-						},
-					],
-				},
-			],
-		}),
+		body: envelope(
+			effectiveWorkspace({
+				companies: [
+					{
+						uuid: "c-1",
+						name: "Company c-1",
+						permissions: grants,
+						branches: [
+							{
+								uuid: "b-1",
+								name: "Orchard",
+								status: "ACTIVE",
+								country: "SG",
+								permissions: [],
+								departments: [
+									{
+										uuid: "d-1",
+										name: "Kitchen",
+										status: "ACTIVE",
+										permissions: [],
+									},
+									{
+										uuid: "d-2",
+										name: "Front of house",
+										status: "ACTIVE",
+										permissions: [],
+									},
+								],
+							},
+						],
+					},
+				],
+			})
+		),
 	},
 	[JOB_TITLES]: page([]),
 	[CREATE]: { status: 201, body: envelope(jobTitle) },

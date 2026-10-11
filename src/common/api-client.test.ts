@@ -126,3 +126,25 @@ it("parses an HTTP date Retry-After", async () => {
 		apiRequest(path, schema, { anonymous: true })
 	).rejects.toMatchObject({ retryAfterSeconds: 60 });
 });
+it("passes the caller's signal and rethrows its abort as itself, not as an outage", async () => {
+	let received: AbortSignal | undefined;
+	vi.stubGlobal(
+		"fetch",
+		(_url: string, init: RequestInit): Promise<Response> =>
+			new Promise((_resolve, reject) => {
+				received = init.signal ?? undefined;
+				init.signal?.addEventListener("abort", () => {
+					reject(new DOMException("Aborted", "AbortError"));
+				});
+			})
+	);
+	const controller = new AbortController();
+	const reason = new Error("withdrawn");
+	const request = apiRequest(path, schema, {
+		anonymous: true,
+		signal: controller.signal,
+	});
+	controller.abort(reason);
+	await expect(request).rejects.toBe(reason);
+	expect(received?.aborted).toBe(true);
+});

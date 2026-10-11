@@ -1,0 +1,487 @@
+{
+  "permissions": [
+    {
+      "action": "read",
+      "actionName": "Read",
+      "assignableScopes": [
+        "COMPANY"
+      ],
+      "key": "company:read",
+      "prerequisites": [],
+      "resource": "company",
+      "resourceName": "Company"
+    },
+    {
+      "action": "update",
+      "actionName": "Update",
+      "assignableScopes": [
+        "COMPANY"
+      ],
+      "key": "company:update",
+      "prerequisites": [
+        "company:read"
+      ],
+      "resource": "company",
+      "resourceName": "Company"
+    },
+    {
+      "action": "read",
+      "actionName": "Read",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH"
+      ],
+      "key": "branch:read",
+      "prerequisites": [],
+      "resource": "branch",
+      "resourceName": "Branch"
+    },
+    {
+      "action": "create",
+      "actionName": "Create",
+      "assignableScopes": [
+        "COMPANY"
+      ],
+      "key": "branch:create",
+      "prerequisites": [
+        "branch:read"
+      ],
+      "resource": "branch",
+      "resourceName": "Branch"
+    },
+    {
+      "action": "update",
+      "actionName": "Update",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH"
+      ],
+      "key": "branch:update",
+      "prerequisites": [
+        "branch:read"
+      ],
+      "resource": "branch",
+      "resourceName": "Branch"
+    },
+    {
+      "action": "read",
+      "actionName": "Read",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH"
+      ],
+      "key": "branch_member:read",
+      "prerequisites": [],
+      "resource": "branch_member",
+      "resourceName": "Branch Member"
+    },
+    {
+      "action": "create",
+      "actionName": "Create",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH"
+      ],
+      "key": "branch_member:create",
+      "prerequisites": [
+        "branch_member:read"
+      ],
+      "resource": "branch_member",
+      "resourceName": "Branch Member"
+    },
+    {
+      "action": "update",
+      "actionName": "Update",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH"
+      ],
+      "key": "branch_member:update",
+      "prerequisites": [
+        "branch_member:read"
+      ],
+      "resource": "branch_member",
+      "resourceName": "Branch Member"
+    },
+    {
+      "action": "deactivate",
+      "actionName": "Deactivate",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH"
+      ],
+      "key": "branch_member:deactivate",
+      "prerequisites": [
+        "branch_member:read"
+      ],
+      "resource": "branch_member",
+      "resourceName": "Branch Member"
+    },
+    {
+      "action": "read",
+      "actionName": "Read",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
+      "key": "department:read",
+      "prerequisites": [],
+      "resource": "department",
+      "resourceName": "Department"
+    },
+    {
+      "action": "create",
+      "actionName": "Create",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH"
+      ],
+      "key": "department:create",
+      "prerequisites": [
+        "department:read"
+      ],
+      "resource": "department",
+      "resourceName": "Department"
+    },
+    {
+      "action": "update",
+      "actionName": "Update",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
+      "key": "department:update",
+      "prerequisites": [
+        "department:read"
+      ],
+      "resource": "department",
+      "resourceName": "Department"
+    },
+    {
+      "action": "read",
+      "actionName": "Read",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
+      "key": "department_member:read",
+      "prerequisites": [],
+      "resource": "department_member",
+      "resourceName": "Department Member"
+    },
+    {
+      "action": "create",
+      "actionName": "Create",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
+      "key": "department_member:create",
+      "prerequisites": [
+        "department_member:read"
+      ],
+      "resource": "department_member",
+      "resourceName": "Department Member"
+    },
+    {
+      "action": "update",
+      "actionName": "Update",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
+      "key": "department_member:update",
+      "prerequisites": [
+        "department_member:read"
+      ],
+      "resource": "department_member",
+      "resourceName": "Department Member"
+    },
+    {
+      "action": "deactivate",
+      "actionName": "Deactivate",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
+      "key": "department_member:deactivate",
+      "prerequisites": [
+        "department_member:read"
+      ],
+      "resource": "department_member",
+      "resourceName": "Department Member"
+    },
+    {
+      "action": "read",
+      "actionName": "Read",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
+      "key": "job_title:read",
+      "prerequisites": [],
+      "resource": "job_title",
+      "resourceName": "Job Title"
+    },
+    {
+      "action": "create",
+      "actionName": "Create",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
+      "key": "job_title:create",
+      "prerequisites": [
+        "job_title:read"
+      ],
+      "resource": "job_title",
+      "resourceName": "Job Title"
+    },
+    {
+      "action": "update",
+      "actionName": "Update",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
+      "key": "job_title:update",
+      "prerequisites": [
+        "job_title:read"
+      ],
+      "resource": "job_title",
+      "resourceName": "Job Title"
+    },
+    {
+      "action": "read",
+      "actionName": "Read",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
+      "key": "member_profile:read",
+      "prerequisites": [],
+      "resource": "member_profile",
+      "resourceName": "Member Profile"
+    },
+    {
+      "action": "create",
+      "actionName": "Create",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
+      "key": "member_profile:create",
+      "prerequisites": [
+        "member_profile:read"
+      ],
+      "resource": "member_profile",
+      "resourceName": "Member Profile"
+    },
+    {
+      "action": "update",
+      "actionName": "Update",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
+      "key": "member_profile:update",
+      "prerequisites": [
+        "member_profile:read"
+      ],
+      "resource": "member_profile",
+      "resourceName": "Member Profile"
+    },
+    {
+      "action": "read",
+      "actionName": "Read",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
+      "key": "member_note:read",
+      "prerequisites": [],
+      "resource": "member_note",
+      "resourceName": "Member Note"
+    },
+    {
+      "action": "create",
+      "actionName": "Create",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
+      "key": "member_note:create",
+      "prerequisites": [
+        "member_note:read"
+      ],
+      "resource": "member_note",
+      "resourceName": "Member Note"
+    },
+    {
+      "action": "update",
+      "actionName": "Update",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
+      "key": "member_note:update",
+      "prerequisites": [
+        "member_note:read"
+      ],
+      "resource": "member_note",
+      "resourceName": "Member Note"
+    },
+    {
+      "action": "delete",
+      "actionName": "Delete",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
+      "key": "member_note:delete",
+      "prerequisites": [
+        "member_note:read"
+      ],
+      "resource": "member_note",
+      "resourceName": "Member Note"
+    },
+    {
+      "action": "read",
+      "actionName": "Read",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
+      "key": "leave_request:read",
+      "prerequisites": [],
+      "resource": "leave_request",
+      "resourceName": "Leave Request"
+    },
+    {
+      "action": "create",
+      "actionName": "Create",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
+      "key": "leave_request:create",
+      "prerequisites": [
+        "leave_request:read"
+      ],
+      "resource": "leave_request",
+      "resourceName": "Leave Request"
+    },
+    {
+      "action": "review",
+      "actionName": "Review",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
+      "key": "leave_request:review",
+      "prerequisites": [
+        "leave_request:read"
+      ],
+      "resource": "leave_request",
+      "resourceName": "Leave Request"
+    },
+    {
+      "action": "read",
+      "actionName": "Read",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
+      "key": "access_role:read",
+      "prerequisites": [],
+      "resource": "access_role",
+      "resourceName": "Access Role"
+    },
+    {
+      "action": "create",
+      "actionName": "Create",
+      "assignableScopes": [
+        "COMPANY"
+      ],
+      "key": "access_role:create",
+      "prerequisites": [
+        "access_role:read"
+      ],
+      "resource": "access_role",
+      "resourceName": "Access Role"
+    },
+    {
+      "action": "update",
+      "actionName": "Update",
+      "assignableScopes": [
+        "COMPANY"
+      ],
+      "key": "access_role:update",
+      "prerequisites": [
+        "access_role:read"
+      ],
+      "resource": "access_role",
+      "resourceName": "Access Role"
+    },
+    {
+      "action": "delete",
+      "actionName": "Delete",
+      "assignableScopes": [
+        "COMPANY"
+      ],
+      "key": "access_role:delete",
+      "prerequisites": [
+        "access_role:read"
+      ],
+      "resource": "access_role",
+      "resourceName": "Access Role"
+    },
+    {
+      "action": "assign",
+      "actionName": "Assign",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
+      "key": "access_role:assign",
+      "prerequisites": [
+        "access_role:read"
+      ],
+      "resource": "access_role",
+      "resourceName": "Access Role"
+    },
+    {
+      "action": "read",
+      "actionName": "Read",
+      "assignableScopes": [
+        "COMPANY"
+      ],
+      "key": "audit_event:read",
+      "prerequisites": [],
+      "resource": "audit_event",
+      "resourceName": "Audit Event"
+    }
+  ],
+  "schemaVersion": 1
+}

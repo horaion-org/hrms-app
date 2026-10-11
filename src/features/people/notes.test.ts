@@ -9,16 +9,21 @@ import {
 	noteRefusal,
 	noteWhen,
 } from "@/features/people/notes";
+import type { ScopeRef } from "@/features/workspace/scopes";
 
 const t = authTestI18n.t;
 const filed = { departmentId: "d-1" };
 const unfiled = { departmentId: null };
-/** A `can` granting `keys` at these departments; "" is the company. */
+/**
+ * A `can` granting `keys` at these departments; "" is a company grant,
+ * which the API's workspace shows as effective at every unit too.
+ */
 const grantedAt =
 	(keys: Array<string>, ...scopes: Array<string>) =>
-	(permission: string, scopeId = ""): boolean =>
+	(permission: string, target: ScopeRef): boolean =>
 		keys.includes(permission) &&
-		(scopes.includes("") || scopes.includes(scopeId));
+		(scopes.includes("") ||
+			(target.kind !== "company" && scopes.includes(target.id)));
 const problem = (
 	status: number,
 	errorCode?: string,

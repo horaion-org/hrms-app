@@ -20,7 +20,8 @@ export const useAddEmployee = (
 	companyId: string
 ): ((
 	values: ProfileFormValues,
-	place: MemberProfilePlace
+	place: MemberProfilePlace,
+	role: { shown: boolean }
 ) => Promise<void>) => {
 	const client = useQueryClient();
 	const navigate = useNavigate();
@@ -41,13 +42,13 @@ export const useAddEmployee = (
 			]),
 	});
 	const assign = useChangeAccessRoleHolders(companyId);
-	return async (values, place) => {
+	return async (values, place, role) => {
 		const person = await create.mutateAsync({
 			place,
 			body: profileRequest(values),
 		});
 		let roleNotAssigned = false;
-		if (values.accessRoleId)
+		if (role.shown && values.accessRoleId)
 			try {
 				await assign.mutateAsync({
 					grants: [

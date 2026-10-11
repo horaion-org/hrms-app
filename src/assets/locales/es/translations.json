@@ -88,6 +88,7 @@
       "reasonRejected": "Introduce un motivo de hasta 2.000 caracteres.",
       "forbiddenApply": "Ya no tienes permiso para solicitar en nombre de esta persona.",
       "forbiddenDecide": "Ya no tienes permiso para decidir esta solicitud.",
+      "ownReview": "No puedes aprobar ni rechazar tu propia solicitud de permiso. Otra persona revisora debe decidirla.",
       "applyFailed": "No pudimos enviar la solicitud. Inténtalo de nuevo.",
       "decideFailed": "No pudimos guardar la decisión. Inténtalo de nuevo."
     },
@@ -222,33 +223,14 @@
       "counter": "{{count}}/20"
     },
     "permissions": {
-      "area": "Área",
-      "cell": "{{resource}}: {{action}}",
-      "resources": {
-        "company": "Empresa",
-        "branch": "Sucursal",
-        "branch_member": "Miembro de la sucursal",
-        "department": "Departamento",
-        "department_member": "Miembro del departamento",
-        "job_title": "Puesto",
-        "access_role": "Rol del sistema",
-        "audit_event": "Registro de actividad"
-      },
-      "actions": {
-        "read": "Ver",
-        "create": "Crear",
-        "update": "Editar",
-        "deactivate": "Desactivar",
-        "delete": "Eliminar",
-        "assign": "Asignar"
-      },
-      "actionNames": {
-        "read": "ver",
-        "create": "crear",
-        "update": "editar",
-        "deactivate": "desactivar",
-        "delete": "eliminar",
-        "assign": "asignar"
+      "qualified": "{{resource}}: {{permission}}",
+      "needs_one": "{{permissions}} requiere {{prerequisites}}.",
+      "needs_other": "{{permissions}} requieren {{prerequisites}}.",
+      "blockedBy": "Requiere {{prerequisites}}, que no puedes otorgar",
+      "companyOnly": "Solo para toda la empresa",
+      "unknown": {
+        "name": "No reconocidos",
+        "description": "Esta versión de la aplicación no conoce estos permisos. Se mantienen en el rol al guardar."
       }
     },
     "jobTitles": {
@@ -368,6 +350,21 @@
         "permissionsRejected": "Algunos permisos ya no están disponibles. Recarga la página e inténtalo de nuevo.",
         "forbidden": "No puedes crear este rol. Es posible que ya no tengas algunos de los permisos elegidos o el permiso para crear roles del sistema.",
         "failed": "No pudimos crear el rol del sistema. Inténtalo de nuevo."
+      },
+      "assignments": {
+        "dialog": {
+          "fixedPlaces": "{{name}} también tiene este rol en {{places}}. No puedes cambiar esos lugares, así que se quedan como están.",
+          "notMember": "No se puede dar este rol a esta persona en uno de esos lugares. Puede que ya no sea miembro activo o que el rol no encaje en ese lugar.",
+          "noFit": "Este rol no se puede asignar en ningún lugar donde puedes asignarlo: {{permissions}} solo se puede otorgar a un nivel más amplio."
+        },
+        "partial": "No se pudieron hacer {{failed}} de {{total}} cambios; los demás se guardaron. {{reason}}",
+        "status": {
+          "notMember": "Este rol no puede estar activo para esta persona en uno de esos lugares. Puede que ya no sea miembro activo o que el rol no encaje en ese lugar."
+        }
+      },
+      "editor": {
+        "unknownKeys_one": "Este rol tiene un permiso que esta versión de la aplicación no reconoce. Se mantiene tal cual al guardar. Recarga la página para actualizar la aplicación y cambiarlo.",
+        "unknownKeys_other": "Este rol tiene {{count}} permisos que esta versión de la aplicación no reconoce. Se mantienen tal cual al guardar. Recarga la página para actualizar la aplicación y cambiarlos."
       }
     }
   },

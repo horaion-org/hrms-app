@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import type { FunctionComponent } from "@/common/types";
 import { storyProviders } from "@/features/organisation/storyApi";
+import { effectiveWorkspace } from "@/common/testing/effectiveWorkspace";
 import { workspaceQuery, type Workspace } from "@/features/workspace/api";
 import { BranchSelector } from "@/features/workspace/BranchSelector";
 
@@ -33,21 +34,24 @@ const company = (
 const client = new QueryClient({
 	defaultOptions: { queries: { retry: false, staleTime: Infinity } },
 });
-client.setQueryData(workspaceQuery.queryKey, {
-	companies: [
-		company("several", [
-			branch("b-1", "Orchard", "SG"),
-			branch("b-2", "Jurong", "SG"),
-			branch("b-3", "Kuala Lumpur", "MY"),
-			branch("b-4", "Jakarta", "ID"),
-		]),
-		company("one", [
-			branch("b-5", "Orchard", "SG"),
-			branch("b-6", "Tampines", "SG"),
-		]),
-		company("none", []),
-	],
-});
+client.setQueryData(
+	workspaceQuery.queryKey,
+	effectiveWorkspace({
+		companies: [
+			company("several", [
+				branch("b-1", "Orchard", "SG"),
+				branch("b-2", "Jurong", "SG"),
+				branch("b-3", "Kuala Lumpur", "MY"),
+				branch("b-4", "Jakarta", "ID"),
+			]),
+			company("one", [
+				branch("b-5", "Orchard", "SG"),
+				branch("b-6", "Tampines", "SG"),
+			]),
+			company("none", []),
+		],
+	})
+);
 
 const meta = {
 	title: "Features/Workspace/BranchSelector",

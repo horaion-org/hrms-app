@@ -7,10 +7,8 @@ import {
 	type MemberProfile,
 	type PeopleQuery,
 } from "@/features/people/api";
-import { workspaceQuery } from "@/features/workspace/api";
 import { PEOPLE_READ_KEYS } from "@/features/workspace/permissionKeys";
-import { retry } from "@/features/workspace/retry";
-import { useCanAnywhere } from "@/features/workspace/useCan";
+import { useAccess } from "@/features/workspace/useAccess";
 
 /**
  * One page of the People list. `hidden` when the person's grants don't reach
@@ -26,12 +24,11 @@ export const usePeople = (
 	companyId: string,
 	query: PeopleQuery
 ): PeopleList => {
-	const workspace = useQuery({ ...workspaceQuery, retry });
-	const allowed = useCanAnywhere()(PEOPLE_READ_KEYS);
+	const access = useAccess();
+	const allowed = access.canAny(PEOPLE_READ_KEYS, "anywhere");
 	const list = useQuery(peopleQuery(companyId, query, allowed));
 
-	if (workspace.isPending) return { status: "pending" };
-	if (workspace.isError) return { status: "error" };
+	if (access.status !== "ready") return { status: access.status };
 	if (!allowed) return { status: "hidden" };
 	if (list.error instanceof ApiProblemError && list.error.status === 403)
 		return { status: "hidden" };

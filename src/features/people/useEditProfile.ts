@@ -37,7 +37,8 @@ export const useEditProfile = (
 	skills?: ReadonlyArray<SkillValue>
 ): ((
 	values: ProfileFormValues,
-	place: MemberProfilePlace
+	place: MemberProfilePlace,
+	roleField: { shown: boolean }
 ) => Promise<void>) => {
 	const client = useQueryClient();
 	const navigate = useNavigate();
@@ -60,15 +61,17 @@ export const useEditProfile = (
 	});
 	const assign = useChangeAccessRoleHolders(companyId);
 	const replaceSkills = useReplaceSkills(companyId, membershipId);
-	return async (values, place) => {
+	return async (values, place, roleField) => {
 		const saved = await save.mutateAsync(
 			profileUpdateRequest({
 				...values,
 				status: values.status ?? profile.status,
 			})
 		);
+		// A role field that was not offered changes nothing, so a role is never moved or removed unseen.
 		const change =
 			role &&
+			roleField.shown &&
 			departmentRoleChange({
 				membershipId,
 				held: role.held,

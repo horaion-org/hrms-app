@@ -2,6 +2,10 @@ import { QueryClient } from "@tanstack/react-query";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ApiProblemError } from "@/common/problem";
 import { workspaceQuery } from "@/features/workspace/api";
+import {
+	administrativeMeta,
+	type QueryAccessMeta,
+} from "@/features/workspace/queryAccess";
 import { refreshWorkspaceOnRefusal } from "@/features/workspace/refreshWorkspaceOnRefusal";
 
 const refusal = (status: number, errorCode: string): ApiProblemError =>
@@ -30,10 +34,11 @@ const listen = (): QueryClient => {
 const failQuery = async (
 	queryClient: QueryClient,
 	queryKey: ReadonlyArray<string>,
-	error: Error
+	error: Error,
+	meta?: QueryAccessMeta
 ): Promise<void> => {
 	await queryClient
-		.fetchQuery({ queryKey, queryFn: () => Promise.reject(error) })
+		.fetchQuery({ queryKey, queryFn: () => Promise.reject(error), meta })
 		.catch(() => undefined);
 };
 
@@ -74,6 +79,46 @@ describe("refreshWorkspaceOnRefusal", () => {
 			queryClient,
 			[...workspaceQuery.queryKey],
 			refusal(403, "ACCESS_DENIED")
+		);
+		expect(invalidate).not.toHaveBeenCalled();
+	});
+
+	it("leaves a business-rule refusal alone: reloading roles cannot change it", async () => {
+		const queryClient = listen();
+		const invalidate = vi.spyOn(queryClient, "invalidateQueries");
+		await queryClient
+			.getMutationCache()
+			.build(queryClient, {
+				mutationFn: () =>
+					Promise.reject(refusal(403, "OWN_LEAVE_REVIEW_DENIED")),
+			})
+			.execute(undefined)
+			.catch(() => undefined);
+		expect(invalidate).not.toHaveBeenCalled();
+	});
+
+	it("reloads the workspace when one administrative record answers 404, as it may have moved out of reach", async () => {
+		const queryClient = listen();
+		const invalidate = vi.spyOn(queryClient, "invalidateQueries");
+		await failQuery(
+			queryClient,
+			["people", "c-1", "profile", "m-1"],
+			refusal(404, "MEMBER_PROFILE_NOT_FOUND"),
+			administrativeMeta("c-1", { record: true })
+		);
+		expect(invalidate).toHaveBeenCalledWith({
+			queryKey: workspaceQuery.queryKey,
+		});
+	});
+
+	it("leaves a list's 404 alone, so not every 404 reloads the workspace", async () => {
+		const queryClient = listen();
+		const invalidate = vi.spyOn(queryClient, "invalidateQueries");
+		await failQuery(
+			queryClient,
+			["people", "c-1", "list"],
+			refusal(404, "NOT_FOUND"),
+			administrativeMeta("c-1")
 		);
 		expect(invalidate).not.toHaveBeenCalled();
 	});

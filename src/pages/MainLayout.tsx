@@ -125,7 +125,7 @@ export const MainLayout = (): FunctionComponent => {
 						to="/leave"
 					/>
 					{/* People and Organisation are offered only when the workspace grants something in them, at any scope. */}
-					<Can anywhere permission={PEOPLE_READ_KEYS}>
+					<Can anyOf={PEOPLE_READ_KEYS} at="anywhere">
 						<SidebarItem
 							activeIcon={PeopleFilledIcon}
 							icon={PeopleIcon}
@@ -133,7 +133,7 @@ export const MainLayout = (): FunctionComponent => {
 							to="/people"
 						/>
 					</Can>
-					<Can anywhere permission={ORGANISATION_READ_KEYS}>
+					<Can anyOf={ORGANISATION_READ_KEYS} at="anywhere">
 						<SidebarItem
 							activeIcon={OrganisationFilledIcon}
 							icon={OrganisationIcon}

@@ -17,7 +17,10 @@ export const Route = createFileRoute(
 			context.queryClient.ensureQueryData(
 				memberProfileQuery(companyId, params.membershipId)
 			),
-			context.queryClient.ensureQueryData(workspaceQuery),
+			// Controls fail closed without the workspace; the profile itself still shows.
+			context.queryClient
+				.ensureQueryData(workspaceQuery)
+				.catch(() => undefined),
 		]);
 	},
 	component: PersonProfile,

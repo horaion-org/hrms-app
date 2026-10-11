@@ -33,7 +33,7 @@ import {
 } from "@/features/workspace/unitChoices";
 import { PEOPLE_READ_KEYS } from "@/features/workspace/permissionKeys";
 import { retry } from "@/features/workspace/retry";
-import { useCan, useCanAnywhere } from "@/features/workspace/useCan";
+import { useAccess } from "@/features/workspace/useAccess";
 
 const route = getRouteApi("/_authenticated/_app/people");
 
@@ -67,9 +67,9 @@ export const People = (): FunctionComponent => {
 		query.search !== "" || query.status !== undefined,
 		t
 	);
-	const can = useCan();
-	const columns = useMemo(() => peopleColumns(t, can), [t, can]);
-	const canAdd = useCanAnywhere()(["member_profile:create"]);
+	const access = useAccess();
+	const columns = useMemo(() => peopleColumns(t, access.can), [t, access.can]);
+	const canAdd = access.canAnywhere("member_profile:create");
 	const notice = peopleNoticeFrom(
 		useRouterState({ select: (state) => state.location.state })
 	);

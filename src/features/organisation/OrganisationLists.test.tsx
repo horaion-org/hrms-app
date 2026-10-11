@@ -1,6 +1,10 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+	companyWideWorkspace,
+	effectiveWorkspace,
+} from "@/common/testing/effectiveWorkspace";
 import { resetApiClient } from "@/common/api-client";
 import {
 	currentUserReply,
@@ -59,11 +63,7 @@ const open = async (entry: string): Promise<OpenedApp> => {
 
 const workspaceReply = (permissions: Array<string>): StubReply => ({
 	status: 200,
-	body: envelope({
-		companies: [
-			{ uuid: "c-1", name: "Company c-1", permissions, branches: [] },
-		],
-	}),
+	body: envelope(companyWideWorkspace(permissions)),
 });
 
 /** A workspace granting nothing at the company and `permissions` only at department d-1 of branch b-1. */
@@ -71,27 +71,29 @@ const departmentScopedWorkspaceReply = (
 	permissions: Array<string>
 ): StubReply => ({
 	status: 200,
-	body: envelope({
-		companies: [
-			{
-				uuid: "c-1",
-				name: "Company c-1",
-				permissions: [],
-				branches: [
-					{
-						uuid: "b-1",
-						name: "Orchard",
-						status: "ACTIVE",
-						country: "SG",
-						permissions: [],
-						departments: [
-							{ uuid: "d-1", name: "Kitchen", status: "ACTIVE", permissions },
-						],
-					},
-				],
-			},
-		],
-	}),
+	body: envelope(
+		effectiveWorkspace({
+			companies: [
+				{
+					uuid: "c-1",
+					name: "Company c-1",
+					permissions: [],
+					branches: [
+						{
+							uuid: "b-1",
+							name: "Orchard",
+							status: "ACTIVE",
+							country: "SG",
+							permissions: [],
+							departments: [
+								{ uuid: "d-1", name: "Kitchen", status: "ACTIVE", permissions },
+							],
+						},
+					],
+				},
+			],
+		})
+	),
 });
 
 const pageReply = (

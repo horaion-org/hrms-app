@@ -14,7 +14,8 @@ import { ProfileHeader } from "@/features/people/ProfileHeader";
 import { ProfileNotesAndSkills } from "@/features/people/ProfileNotesAndSkills";
 import { useEditProfile } from "@/features/people/useEditProfile";
 import { useMemberSkills, useSkillsDraft } from "@/features/people/useSkills";
-import { useCan } from "@/features/workspace/useCan";
+import { departmentScope } from "@/features/workspace/scopes";
+import { useAccess } from "@/features/workspace/useAccess";
 
 export type PersonProfileEditProps = {
 	profile: MemberProfileDetail;
@@ -34,15 +35,24 @@ export const PersonProfileEdit = ({
 }: PersonProfileEditProps): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
 	const navigate = useNavigate();
-	const can = useCan();
+	const access = useAccess();
 	const { t } = useTranslation();
-	// The same keys Add employee asks for before offering a role.
-	const manageRole = can("access_role:read") && can("access_role:assign");
+	// Roles are read anywhere; where one may be assigned is checked per place below and in the form.
+	const manageRole =
+		access.canAnywhere("access_role:read") &&
+		access.canAnywhere("access_role:assign");
 	const ready = roles.status === "ready";
 	const { atDepartment, elsewhere } = rolesByPlace(
 		ready ? roles.roles : [],
 		profile.departmentId
 	);
+	// Replacing the role they hold at their Department also removes it there, which needs assigning there.
+	const heldChangeable =
+		!atDepartment?.departmentId ||
+		access.can(
+			"access_role:assign",
+			departmentScope(atDepartment.departmentId)
+		);
 	const skillsDraft = useSkillsDraft(
 		useMemberSkills(companyId, profile.membershipId).data
 	);
@@ -69,7 +79,7 @@ export const PersonProfileEdit = ({
 					employeeCode: profile.employeeCode,
 					// Unknown counts as logged in: the API would refuse the change.
 					emailEditable: profile.invitationPending === true,
-					roleEditable: ready,
+					roleEditable: ready && heldChangeable,
 					otherRoles: roleNames(elsewhere),
 					unsaved: skillsDraft.changed,
 					header: (actions) => (

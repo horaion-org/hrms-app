@@ -9,6 +9,12 @@ import {
 	renewSession,
 } from "@/features/auth/session";
 
+/** The company a refused company path named, if any. */
+const companyOfPath = (path: string): string | undefined => {
+	const match = /^\/api\/v1\/companies\/([^/?]+)/.exec(path);
+	return match?.[1] === undefined ? undefined : decodeURIComponent(match[1]);
+};
+
 export function connectSession(
 	router: AnyRouter,
 	queryClient: QueryClient
@@ -25,6 +31,12 @@ export function connectSession(
 			)
 				return;
 			queryClient.removeQueries({ queryKey: ["me"], exact: true });
+			// Company access is gone: nothing read in that company, the person's own records included, stays on screen.
+			const companyId = companyOfPath(path);
+			if (companyId !== undefined)
+				queryClient.removeQueries({
+					predicate: (query) => query.meta?.companyId === companyId,
+				});
 			resettling = router.invalidate().finally(() => {
 				resettling = undefined;
 			});

@@ -12,7 +12,7 @@ import { departmentChoices } from "@/features/workspace/unitChoices";
 
 export type DepartmentSelectorProps = {
 	companyId: string;
-	/** A Department is offered when any of these is held company-wide, at its Branch, or at it. */
+	/** A Department is offered when any of these is effective at it (its node already carries grants made above it). */
 	keys: ReadonlyArray<PermissionKey>;
 	/** The chosen Department's id; empty or undefined for none. */
 	value?: string;

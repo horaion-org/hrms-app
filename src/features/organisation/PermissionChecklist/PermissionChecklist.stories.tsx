@@ -41,3 +41,13 @@ export const NothingSelected: Story = { args: { value: [] } };
 export const ReadOnly: Story = {
 	args: { value: [...PERMISSION_KEYS], disabled: true },
 };
+
+/** A creator who holds Notes' changes but not its View: they can't give any of them. */
+export const PrerequisiteUnavailable: Story = {
+	args: { value: [], unavailable: ["member_note:read"] },
+};
+
+/** A role holding a key newer than this app: shown ticked and locked. */
+export const UnknownKeys: Story = {
+	args: { unknown: ["leave:approve"] },
+};

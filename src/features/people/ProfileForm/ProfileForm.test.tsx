@@ -1,6 +1,7 @@
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { effectiveWorkspace } from "@/common/testing/effectiveWorkspace";
 import { resetApiClient } from "@/common/api-client";
 import {
 	currentUserReply,
@@ -16,7 +17,6 @@ import {
 } from "@/common/testing/stubApi";
 import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
-import { refreshWorkspaceOnRefusal } from "@/features/workspace/refreshWorkspaceOnRefusal";
 
 const COMPANY = "/api/v1/companies/c-1";
 const KITCHEN = `${COMPANY}/branches/b-1/departments/d-1`;
@@ -40,48 +40,50 @@ const workspaceReply = (
 	kitchen: Array<string> = []
 ): StubReply => ({
 	status: 200,
-	body: envelope({
-		companies: [
-			{
-				uuid: "c-1",
-				name: "Company c-1",
-				permissions: company,
-				branches: [
-					{
-						uuid: "b-1",
-						name: "Orchard",
-						status: "ACTIVE",
-						country: "SG",
-						permissions: [],
-						departments: [
-							{
-								uuid: "d-1",
-								name: "Kitchen",
-								status: "ACTIVE",
-								permissions: kitchen,
-							},
-						],
-					},
-					// The same Department name in another Branch, told apart by the Branch.
-					{
-						uuid: "b-2",
-						name: "Bukit Bintang",
-						status: "ACTIVE",
-						country: "MY",
-						permissions: [],
-						departments: [
-							{
-								uuid: "d-2",
-								name: "Kitchen",
-								status: "ACTIVE",
-								permissions: [],
-							},
-						],
-					},
-				],
-			},
-		],
-	}),
+	body: envelope(
+		effectiveWorkspace({
+			companies: [
+				{
+					uuid: "c-1",
+					name: "Company c-1",
+					permissions: company,
+					branches: [
+						{
+							uuid: "b-1",
+							name: "Orchard",
+							status: "ACTIVE",
+							country: "SG",
+							permissions: [],
+							departments: [
+								{
+									uuid: "d-1",
+									name: "Kitchen",
+									status: "ACTIVE",
+									permissions: kitchen,
+								},
+							],
+						},
+						// The same Department name in another Branch, told apart by the Branch.
+						{
+							uuid: "b-2",
+							name: "Bukit Bintang",
+							status: "ACTIVE",
+							country: "MY",
+							permissions: [],
+							departments: [
+								{
+									uuid: "d-2",
+									name: "Kitchen",
+									status: "ACTIVE",
+									permissions: [],
+								},
+							],
+						},
+					],
+				},
+			],
+		})
+	),
 });
 const jobTitle = (
 	jobTitleId: string,
@@ -148,15 +150,12 @@ const routes = (
 });
 
 let app: OpenedApp | undefined;
-let stopRefreshing: (() => void) | undefined;
 beforeEach(() => {
 	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
 	// Only the clock is fixed, so the date pickers open on a known month.
 	vi.useFakeTimers({ toFake: ["Date"], now: new Date("2026-10-06T09:00:00") });
 });
 afterEach(() => {
-	stopRefreshing?.();
-	stopRefreshing = undefined;
 	app?.disconnect();
 	app?.queryClient.clear();
 	app = undefined;
@@ -170,7 +169,6 @@ afterEach(() => {
 
 const open = async (entry = "/people/new"): Promise<OpenedApp> => {
 	app = await openApp(entry);
-	stopRefreshing = refreshWorkspaceOnRefusal(app.queryClient);
 	renderAuthApp(app);
 	return app;
 };
@@ -472,6 +470,47 @@ describe("Add employee", () => {
 		expect(
 			(await screen.findAllByRole("option")).map((option) => option.textContent)
 		).toEqual(["Cook"]);
+	});
+
+	it("offers the system role only once a Department where the person may assign it is chosen", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...routes(
+				workspaceReply(
+					[
+						"member_profile:read",
+						"member_profile:create",
+						"access_role:read",
+						"job_title:read",
+					],
+					["access_role:assign"]
+				)
+			),
+			[`POST ${COMPANY}/branches/b-2/departments/d-2/member-profiles`]: {
+				status: 201,
+				body: envelope(created),
+			},
+		});
+		await open();
+
+		await screen.findByRole("button", { name: /^Department/ });
+		expect(screen.queryByText("System role")).not.toBeInTheDocument();
+		await chooseDepartment(user, "Bukit Bintang › Kitchen");
+		expect(screen.queryByText("System role")).not.toBeInTheDocument();
+		await chooseDepartment(user, "Orchard › Kitchen");
+		expect(await screen.findByText("System role")).toBeVisible();
+
+		// A role field taken away again is never a request to assign the role chosen in it.
+		await choose(user, /^System role/, "Supervisor");
+		await user.type(textbox("Full name"), "Priya Nair");
+		await user.type(textbox("Email address"), "priya@company.com");
+		await chooseDepartment(user, "Bukit Bintang › Kitchen");
+		expect(screen.queryByText("System role")).not.toBeInTheDocument();
+		await user.click(confirm());
+		await screen.findByText(/Priya Nair was added\./);
+		expect(
+			calls.filter((call) => call.path.endsWith("/access-role-assignments"))
+		).toEqual([]);
 	});
 
 	it("always offers the manager, and leaves out the system role without the keys it needs", async () => {

@@ -11,7 +11,7 @@ import { NoteItem, type NoteItemProps } from "@/features/people/NoteItem";
 import { noteAccess, noteDeleteRefusal } from "@/features/people/notes";
 import { isRefused } from "@/features/people/profileEditAccess";
 import { useDeleteNote, useMemberNotes } from "@/features/people/useNotes";
-import { useCan } from "@/features/workspace/useCan";
+import { useAccess } from "@/features/workspace/useAccess";
 
 export type NotesCardProps = {
 	companyId: string;
@@ -69,7 +69,7 @@ export const NotesCard = ({
 	className,
 }: NotesCardProps): FunctionComponent => {
 	const { t } = useTranslation();
-	const access = noteAccess(profile, useCan());
+	const access = noteAccess(profile, useAccess().can);
 	const notes = useMemberNotes(companyId, profile.membershipId, access.read);
 	const [open, setOpen] = useState<
 		| { kind: "add" }

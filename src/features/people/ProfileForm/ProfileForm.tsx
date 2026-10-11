@@ -49,7 +49,8 @@ import { workspaceQuery } from "@/features/workspace/api";
 import { DepartmentSelector } from "@/features/workspace/DepartmentSelector";
 import { retry } from "@/features/workspace/retry";
 import { departmentChoices } from "@/features/workspace/unitChoices";
-import { useCan } from "@/features/workspace/useCan";
+import { departmentScope } from "@/features/workspace/scopes";
+import { useAccess } from "@/features/workspace/useAccess";
 
 /** What only changing an existing person needs. */
 export type ProfileFormEdit = {
@@ -57,7 +58,11 @@ export type ProfileFormEdit = {
 	employeeCode: string;
 	/** False once they have logged in, after which the API refuses a new address. */
 	emailEditable: boolean;
-	/** False leaves out the system role, e.g. when their roles couldn't be loaded. */
+	/**
+	 * False leaves out the system role, e.g. when their roles couldn't be
+	 * loaded, or the role they hold at their Department sits where the
+	 * person may not assign.
+	 */
 	roleEditable: boolean;
 	/** System roles they hold outside their Department: shown, never changed here. */
 	otherRoles: ReadonlyArray<string>;
@@ -72,13 +77,16 @@ export type ProfileFormProps = {
 	/** What the form starts from. */
 	initial: ProfileFormValues;
 	/**
-	 * Saves the profile in the chosen Department. A rejection is explained on
-	 * its field or above the cards; anything after a save, such as leaving the
-	 * page, is the caller's.
+	 * Saves the profile in the chosen Department. `role.shown` says whether
+	 * the system role was offered, so the caller changes roles only when it
+	 * was: a hidden field is never a request to remove or move a role. A
+	 * rejection is explained on its field or above the cards; anything after
+	 * a save, such as leaving the page, is the caller's.
 	 */
 	onSubmit: (
 		values: ProfileFormValues,
-		place: MemberProfilePlace
+		place: MemberProfilePlace,
+		role: { shown: boolean }
 	) => Promise<void>;
 	/** Leaves without saving; when editing, after asking if anything changed. */
 	onCancel: () => void;
@@ -106,8 +114,8 @@ const NOTHING = (): void => {};
 /**
  * A person's profile in four cards: personal, contact, employment, and their
  * Department and role. Only Departments where the person may add employees
- * are offered, or, with `edit`, change them. The manager and system role
- * appear only for those who may search people, and read and assign roles.
+ * are offered, or, with `edit`, change them. The system role appears only
+ * for those who may read roles and assign them at the chosen Department.
  *
  * With `edit` it changes an existing person: their employee ID is shown,
  * their status can be changed, their email address only while they have
@@ -116,7 +124,7 @@ const NOTHING = (): void => {};
 export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 	const { companyId, initial, onSubmit, onCancel, className, edit } = props;
 	const { t } = useTranslation();
-	const can = useCan();
+	const access = useAccess();
 	const client = useQueryClient();
 	const formId = useId();
 	const [today] = useState(() => todayDate(Date.now()));
@@ -171,10 +179,11 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 						label: jobTitle.name,
 					}))
 			: [];
-	// The same keys the System roles page asks for before offering to assign.
+	// Roles are read anywhere; assigning is checked at the Department the role would apply at.
 	const showRole =
-		can("access_role:read") &&
-		can("access_role:assign") &&
+		access.canAnywhere("access_role:read") &&
+		chosen !== undefined &&
+		access.can("access_role:assign", departmentScope(chosen.departmentId)) &&
 		(edit?.roleEditable ?? true);
 	const roles = useAccessRoles(companyId, BY_NAME);
 	// The Company Owner role moves only through its own transfer.
@@ -325,10 +334,14 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 					}
 					const refusal = await run(
 						() =>
-							onSubmit(values, {
-								branchId: chosen.branchId,
-								departmentId: chosen.departmentId,
-							}),
+							onSubmit(
+								values,
+								{
+									branchId: chosen.branchId,
+									departmentId: chosen.departmentId,
+								},
+								{ shown: showRole }
+							),
 						(error) =>
 							profileRefusal(
 								error,

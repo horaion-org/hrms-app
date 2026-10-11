@@ -23,6 +23,8 @@ export const LEAVE_REFUSAL_CODES = {
 	/** Nobody, or nobody the person may see. */
 	profileNotFound: "404 MEMBER_PROFILE_NOT_FOUND",
 	invalidReason: "400 INVALID_REJECTION_REASON",
+	/** Nobody decides their own leave, whatever their roles; reloading roles cannot change it. */
+	ownReview: "403 OWN_LEAVE_REVIEW_DENIED",
 } as const;
 
 const codes = LEAVE_REFUSAL_CODES;
@@ -77,6 +79,7 @@ export const decisionRefusal = (
 			[codes.notPending]: t(`${key}.notPending`),
 			[codes.requestNotFound]: t(`${key}.requestMissing`),
 			[codes.profileNotFound]: t(`${key}.profileMissing`),
+			[codes.ownReview]: t(`${key}.ownReview`),
 		},
 		fieldErrors: { reason },
 		forbidden: t(`${key}.forbiddenDecide`),

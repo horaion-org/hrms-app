@@ -18,6 +18,7 @@ type RequestOptions = {
 	method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
 	body?: unknown;
 	anonymous?: boolean;
+	/** Aborts the request; an abort is rethrown as itself, never as an outage. */
 	signal?: AbortSignal;
 };
 const emptySession: ApiAuthentication = {
@@ -60,7 +61,9 @@ async function send(
 					: timeout,
 			}
 		);
-	} catch {
+	} catch (cause) {
+		// Cancelled by the caller (e.g. a query withdrawn after an access change): not an outage.
+		if (options.signal?.aborted) throw options.signal.reason ?? cause;
 		throw new UnreachableError("API could not be reached");
 	}
 }

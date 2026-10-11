@@ -23,7 +23,7 @@ import { ProfileHeader } from "@/features/people/ProfileHeader";
 import { ProfileMenu } from "@/features/people/ProfileMenu";
 import { ProfileNotesAndSkills } from "@/features/people/ProfileNotesAndSkills";
 import { useMemberRoles } from "@/features/people/useMemberRoles";
-import { useCan } from "@/features/workspace/useCan";
+import { useAccess } from "@/features/workspace/useAccess";
 import { PersonProfileEdit } from "@/pages/PersonProfileEdit";
 
 const route = getRouteApi("/_authenticated/_app/people_/$membershipId");
@@ -49,7 +49,7 @@ export const PersonProfile = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
 	const self = useCurrentMembershipId() === membershipId;
 	const { t } = useTranslation();
-	const can = useCan();
+	const { can } = useAccess();
 	const { data: profile } = useSuspenseQuery(
 		memberProfileQuery(companyId, membershipId)
 	);

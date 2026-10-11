@@ -1,6 +1,12 @@
 import type { UnitStatus } from "@/features/organisation/api";
 import type { Workspace } from "@/features/workspace/api";
 import type { PermissionKey } from "@/features/workspace/permissionKeys";
+import {
+	accessIndexOf,
+	branchScope,
+	canAny,
+	departmentScope,
+} from "@/features/workspace/scopes";
 
 /** A Branch a page may be narrowed to, as a selector offers it. */
 export type BranchChoice = {
@@ -14,9 +20,11 @@ export type BranchChoice = {
 export type UnitChoiceOptions = { activeOnly?: boolean };
 
 /**
- * The Branches of a company where any of `keys` applies: held company-wide,
- * at the Branch, or at a Department beneath it, as `permissionsAt` adds the
- * keys granted above a unit to its own. Sorted by country code, then name.
+ * The Branches of a company where any of `keys` is effective at the Branch
+ * or at a Department beneath it. Each node's permissions are already
+ * effective (a company grant appears on every Branch), so nothing is merged
+ * here. A Department-only grant offers its parent Branch for navigation
+ * only: it is not authority at the Branch. Sorted by country code, then name.
  * Only units the workspace lists are offered, so a page never needs
  * `branch:read` to choose among them. With `activeOnly`, only ACTIVE
  * Branches are offered.
@@ -31,15 +39,15 @@ export const branchChoices = (
 		(candidate) => candidate.uuid === companyId
 	);
 	if (!company) return [];
-	const held = (permissions: ReadonlyArray<string>): boolean =>
-		keys.some((key) => permissions.includes(key));
+	const index = accessIndexOf(workspace, companyId);
 	return company.branches
 		.filter((branch) => !activeOnly || branch.status === "ACTIVE")
 		.filter(
 			(branch) =>
-				held(company.permissions) ||
-				held(branch.permissions) ||
-				branch.departments.some((department) => held(department.permissions))
+				canAny(index, keys, branchScope(branch.uuid)) ||
+				branch.departments.some((department) =>
+					canAny(index, keys, departmentScope(department.uuid))
+				)
 		)
 		.map(({ uuid, name, country, status }) => ({
 			branchId: uuid,
@@ -77,9 +85,9 @@ export type DepartmentChoice = {
 };
 
 /**
- * The Departments of a company where any of `keys` applies: held
- * company-wide, at the Department's Branch, or at the Department itself.
- * Sorted by country code, then Branch name, then name. Only units the
+ * The Departments of a company where any of `keys` is effective at the
+ * Department itself (its node already carries grants made at its Branch or
+ * the company). Sorted by country code, then Branch name, then name. Only units the
  * workspace lists are offered, so a page never needs `department:read` to
  * choose among them. With `activeOnly`, a Department is offered only when
  * it and its Branch are ACTIVE.
@@ -94,18 +102,14 @@ export const departmentChoices = (
 		(candidate) => candidate.uuid === companyId
 	);
 	if (!company) return [];
-	const held = (permissions: ReadonlyArray<string>): boolean =>
-		keys.some((key) => permissions.includes(key));
+	const index = accessIndexOf(workspace, companyId);
 	return company.branches
 		.filter((branch) => !activeOnly || branch.status === "ACTIVE")
 		.flatMap((branch) =>
 			branch.departments
 				.filter((department) => !activeOnly || department.status === "ACTIVE")
-				.filter(
-					(department) =>
-						held(company.permissions) ||
-						held(branch.permissions) ||
-						held(department.permissions)
+				.filter((department) =>
+					canAny(index, keys, departmentScope(department.uuid))
 				)
 				.map((department) => ({
 					departmentId: department.uuid,

@@ -8,6 +8,7 @@ import { CompanySelection } from "@/pages/CompanySelection";
 import { Unreachable } from "@/pages/Unreachable";
 import { fetchCurrentUser } from "@/features/auth/api";
 import { hasAccessPass, renewSession } from "@/features/auth/session";
+import { selfMeta } from "@/features/workspace/queryAccess";
 
 export const Route = createFileRoute("/_authenticated")({
 	beforeLoad: async ({ location, context }) => {
@@ -33,6 +34,7 @@ export const Route = createFileRoute("/_authenticated")({
 			const currentUser = await context.queryClient.ensureQueryData({
 				queryKey: ["me"],
 				queryFn: fetchCurrentUser,
+				meta: selfMeta(),
 				staleTime: Infinity,
 				gcTime: Infinity,
 				retry: false,

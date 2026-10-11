@@ -1,4 +1,4 @@
-import { Field, Input, Label } from "@headlessui/react";
+import { Description, Field, Input, Label } from "@headlessui/react";
 import { useId, type InputHTMLAttributes } from "react";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
@@ -16,6 +16,8 @@ type CheckboxProps = Omit<
 	className?: string;
 	/** Classes for the label's text, e.g. a heavier weight for a group's box. */
 	labelClassName?: string;
+	/** Short supporting text shown after the label and announced as the box's description. */
+	description?: string;
 };
 
 export const Checkbox = ({
@@ -24,6 +26,7 @@ export const Checkbox = ({
 	indeterminate = false,
 	className,
 	labelClassName,
+	description,
 	...rest
 }: CheckboxProps): FunctionComponent => {
 	const id = useId();
@@ -50,6 +53,11 @@ export const Checkbox = ({
 			>
 				{label}
 			</Label>
+			{description && (
+				<Description className="text-xs text-neutral-600">
+					{description}
+				</Description>
+			)}
 		</Field>
 	);
 };

@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
-import { useCan, useCanAnywhere } from "@/features/workspace/useCan";
+import { useCallback, useMemo, useState } from "react";
+import { departmentScope } from "@/features/workspace/scopes";
+import { useAccess } from "@/features/workspace/useAccess";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -36,11 +37,16 @@ export const Departments = (): FunctionComponent => {
 		setDepartmentStatus.reset();
 		setChanging(undefined);
 	};
-	const can = useCan();
-	const canAnywhere = useCanAnywhere();
+	const access = useAccess();
 	// Creating happens at a Branch the person may create in, so the branch picker needs the Branches.
 	const canCreate =
-		canAnywhere(["department:create"]) && canAnywhere(["branch:read"]);
+		access.canAnywhere("department:create") &&
+		access.canAnywhere("branch:read");
+	const canUpdate = useCallback(
+		(department: Department): boolean =>
+			access.can("department:update", departmentScope(department.departmentId)),
+		[access]
+	);
 	const [search, setSearch] = useState("");
 	const [status, setStatus] = useState<StatusFilter>("all");
 	const [sort, setSort] = useState<DataTableSort>({ id: "name", desc: false });
@@ -63,13 +69,11 @@ export const Departments = (): FunctionComponent => {
 				t,
 				(department) => (
 					<>
-						<OverflowMenuItem
-							disabled={!can("department:update", department.departmentId)}
-						>
+						<OverflowMenuItem disabled={!canUpdate(department)}>
 							{t("organisation.list.editItem")}
 						</OverflowMenuItem>
 						<OverflowMenuItem
-							disabled={!can("department:update", department.departmentId)}
+							disabled={!canUpdate(department)}
 							onClick={() => {
 								setChanging(department);
 							}}
@@ -82,11 +86,11 @@ export const Departments = (): FunctionComponent => {
 						</OverflowMenuItem>
 					</>
 				),
-				// Editing a Department is granted at that Department, its Branch, or company-wide.
-				(department) => can("department:update", department.departmentId)
+				// Effective at the Department, whether granted there, at its Branch, or company-wide.
+				canUpdate
 			),
 		],
-		[t, can]
+		[t, canUpdate]
 	);
 
 	return (

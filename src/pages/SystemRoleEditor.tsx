@@ -14,7 +14,10 @@ import { useAccessRoleHolders } from "@/features/organisation/useAccessRoleHolde
 import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import { useUpdateAccessRole } from "@/features/organisation/useUpdateAccessRole";
 import { companyPermissions, workspaceQuery } from "@/features/workspace/api";
-import { isPermissionKey } from "@/features/workspace/permissionKeys";
+import {
+	isPermissionKey,
+	unknownKeys,
+} from "@/features/workspace/permissionKeys";
 import { SystemRoleHolders } from "@/pages/SystemRoleHolders";
 
 const route = getRouteApi(
@@ -58,10 +61,8 @@ export const SystemRoleEditor = (): FunctionComponent => {
 	// A person with the role at several places is counted once.
 	const people = new Set(holders.data?.map((holder) => holder.membershipId))
 		.size;
-	// Keys newer than this app's catalog can't be shown, so they are saved back untouched.
-	const unknown = role.permissions.filter(
-		(permission) => !isPermissionKey(permission)
-	);
+	// Keys newer than this app's catalog are shown locked and saved back untouched.
+	const unknown = unknownKeys(role.permissions);
 
 	return (
 		<>
@@ -97,9 +98,15 @@ export const SystemRoleEditor = (): FunctionComponent => {
 								{t(`${key}.${reason}`)}
 							</p>
 						)}
+						{unknown.length > 0 && (
+							<p className="mb-6 text-sm text-neutral-700">
+								{t(`${key}.unknownKeys`, { count: unknown.length })}
+							</p>
+						)}
 						<AccessRoleForm
 							mode="edit"
 							readOnly={reason !== undefined}
+							unknown={unknown}
 							initial={{
 								name: role.name,
 								permissions: role.permissions.filter(isPermissionKey),

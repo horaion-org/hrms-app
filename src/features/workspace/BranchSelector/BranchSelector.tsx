@@ -15,7 +15,7 @@ const ALL = "";
 
 export type BranchSelectorProps = {
 	companyId: string;
-	/** A Branch is offered when any of these is held company-wide, at it, or at a Department beneath it. */
+	/** A Branch is offered when any of these is effective at it or at a Department beneath it (navigation only, not Branch authority). */
 	keys: ReadonlyArray<PermissionKey>;
 	/** The chosen Branch's id; undefined, or one no longer offered, means the default. */
 	value?: string;

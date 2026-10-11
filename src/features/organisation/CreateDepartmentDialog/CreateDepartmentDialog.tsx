@@ -17,7 +17,8 @@ import { UnitNameField } from "@/features/organisation/UnitNameField";
 import { useCreateFormSubmit } from "@/features/organisation/useCreateFormSubmit";
 import { useCreateDepartment } from "@/features/organisation/useCreateInOrganisation";
 import { useBranches } from "@/features/organisation/useOrganisationList";
-import { useCan } from "@/features/workspace/useCan";
+import { branchScope } from "@/features/workspace/scopes";
+import { useAccess } from "@/features/workspace/useAccess";
 
 export type CreateDepartmentDialogProps = {
 	companyId: string;
@@ -36,7 +37,7 @@ export const CreateDepartmentDialog = ({
 	onClose,
 }: CreateDepartmentDialogProps): FunctionComponent => {
 	const { t } = useTranslation();
-	const can = useCan();
+	const access = useAccess();
 	const client = useQueryClient();
 	const key = "organisation.departments.createDialog";
 	const formId = useId();
@@ -63,7 +64,9 @@ export const CreateDepartmentDialog = ({
 	const branchOptions =
 		branches.status === "ready"
 			? branches.items
-					.filter((branch) => can("department:create", branch.branchId))
+					.filter((branch) =>
+						access.can("department:create", branchScope(branch.branchId))
+					)
 					.map((branch) => ({
 						value: branch.branchId,
 						label: branch.name,

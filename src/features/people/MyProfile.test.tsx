@@ -114,4 +114,31 @@ describe("My profile", () => {
 			"We couldn’t load your profile. Try again."
 		);
 	});
+
+	it("still opens, with My leave on offer, when the workspace fails, and reads nothing administrative (M01, M05, M09)", async () => {
+		const calls = stubApi({
+			...routes({ status: 200, body: envelope(profile) }),
+			[WORKSPACE]: problemReply(503, "AUTHORIZATION_UNAVAILABLE"),
+		});
+		await open("/me/profile");
+
+		expect(
+			await screen.findByRole("heading", { level: 1, name: "Kent Chua" })
+		).toBeVisible();
+		expect(screen.getByRole("link", { name: "Leave" })).toBeVisible();
+		expect(
+			screen.queryByRole("link", { name: "People" })
+		).not.toBeInTheDocument();
+		expect(
+			screen.queryByRole("region", { name: /^Notes/ })
+		).not.toBeInTheDocument();
+		// Only the caller's own record is read: no colleague's profile, notes or roles.
+		expect(
+			calls.filter(
+				(call) =>
+					call.path.includes("/member-profiles") ||
+					call.path.includes("/access-role-assignments")
+			)
+		).toEqual([]);
+	});
 });

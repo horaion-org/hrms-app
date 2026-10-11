@@ -9,16 +9,18 @@ import { ContactCell } from "@/features/people/ContactCell";
 import { PersonCell } from "@/features/people/PersonCell";
 import { profileEditAccess } from "@/features/people/profileEditAccess";
 import type { PeopleList } from "@/features/people/usePeople";
-import type { PermissionKey } from "@/features/workspace/permissionKeys";
+import type { CanAt } from "@/features/workspace/scopes";
 
 /**
  * The People table's columns. Each sortable column's id is the API's sort
  * field, so a header's sort goes to the server as it is. Every row can be
- * viewed; `can` decides which can be edited, by where each is filed.
+ * viewed (the API lists only readable rows); `can` decides which can be
+ * edited, each row by where it is filed, since read and update may be
+ * granted at different places.
  */
 export const peopleColumns = (
 	t: TFunction,
-	can: (permission: PermissionKey, scopeId?: string) => boolean
+	can: CanAt
 ): Array<DataTableColumn<MemberProfile>> => [
 	{
 		id: "displayName",

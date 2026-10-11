@@ -26,6 +26,11 @@ export type AccessRoleFormProps = {
 	readOnly?: boolean;
 	/** Permissions the person may not grant. */
 	unavailable?: ReadonlyArray<PermissionKey>;
+	/**
+	 * Keys the role holds that this app doesn't know: shown locked, never
+	 * part of the values. The caller saves them back untouched.
+	 */
+	unknown?: ReadonlyArray<string>;
 	/** Saves the role. A rejection is explained on the name field or above the form. */
 	onSubmit: (values: AccessRoleFormValues) => Promise<void>;
 	className?: string;
@@ -43,6 +48,7 @@ export const AccessRoleForm = ({
 	initial,
 	readOnly = false,
 	unavailable,
+	unknown = [],
 	onSubmit,
 	className,
 }: AccessRoleFormProps): FunctionComponent => {
@@ -77,7 +83,7 @@ export const AccessRoleForm = ({
 		.filter(Boolean)
 		.join(", ");
 	const ready =
-		permissions.length > 0 &&
+		permissions.length + unknown.length > 0 &&
 		(mode === "create" ? name.trim() !== "" : isDirty);
 	const submit = async (values: AccessRoleFormValues): Promise<void> => {
 		setMessage(undefined);
@@ -147,6 +153,7 @@ export const AccessRoleForm = ({
 						disabled={readOnly || isSubmitting}
 						label={t(`${key}.permissions`)}
 						unavailable={unavailable}
+						unknown={unknown}
 						value={field.value}
 						onChange={field.onChange}
 					/>
@@ -155,7 +162,7 @@ export const AccessRoleForm = ({
 			{!readOnly && (
 				<div className="mt-8 flex flex-wrap items-center justify-end gap-3">
 					<p aria-live="polite" className="mr-auto text-sm text-neutral-700">
-						{permissions.length === 0
+						{permissions.length + unknown.length === 0
 							? t(`${key}.permissionsRequired`)
 							: mode === "edit" && changes}
 					</p>

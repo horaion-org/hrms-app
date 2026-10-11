@@ -4,7 +4,7 @@ import ReactDOM from "react-dom/client";
 import { App } from "@/App";
 import { queryClient } from "@/common/query-client";
 import { connectSession } from "@/features/auth/connectSession";
-import { refreshWorkspaceOnRefusal } from "@/features/workspace/refreshWorkspaceOnRefusal";
+import { connectAccess } from "@/features/workspace/connectAccess";
 import { routeTree } from "@/routeTree.gen";
 import "@/styles/tailwind.css";
 import "@/common/i18n";
@@ -12,7 +12,7 @@ import "@/common/i18n";
 const router = createRouter({ routeTree, context: { queryClient } });
 
 connectSession(router, queryClient);
-refreshWorkspaceOnRefusal(queryClient);
+connectAccess(queryClient);
 
 export type TanstackRouter = typeof router;
 

@@ -1,48 +1,40 @@
-/**
- * The API's permission catalog as `resource:action` keys, in the API's own
- * order. The catalog is code-versioned on the API and has no endpoint, so
- * this is the app's copy of that contract: a key that is not here cannot be
- * asked about, and a typo fails to compile.
- */
-export const PERMISSION_KEYS = [
-	"company:read",
-	"company:update",
-	"branch:read",
-	"branch:create",
-	"branch:update",
-	"branch_member:read",
-	"branch_member:create",
-	"branch_member:update",
-	"branch_member:deactivate",
-	"department:read",
-	"department:create",
-	"department:update",
-	"department_member:read",
-	"department_member:create",
-	"department_member:update",
-	"department_member:deactivate",
-	"job_title:read",
-	"job_title:create",
-	"job_title:update",
-	"member_profile:read",
-	"member_profile:create",
-	"member_profile:update",
-	"member_note:read",
-	"member_note:create",
-	"member_note:update",
-	"member_note:delete",
-	"leave_request:read",
-	"leave_request:create",
-	"leave_request:review",
-	"access_role:read",
-	"access_role:create",
-	"access_role:update",
-	"access_role:delete",
-	"access_role:assign",
-	"audit_event:read",
-] as const;
+import {
+	type ASSIGNABLE_SCOPES,
+	PERMISSION_DEFINITIONS,
+	PERMISSION_KEYS,
+	type PermissionKey,
+} from "@/features/workspace/permissionContract.generated";
 
-export type PermissionKey = (typeof PERMISSION_KEYS)[number];
+/**
+ * The API's permission catalogue, read from the module generated from its
+ * contract (`contracts/permission-catalog.json`). Every editor, summary, type
+ * guard and gate goes through here; nothing else lists permissions.
+ */
+export { PERMISSION_DEFINITIONS, PERMISSION_KEYS, type PermissionKey };
+
+/** A level a System role can be assigned at. */
+export type AssignableScope = (typeof ASSIGNABLE_SCOPES)[number];
+
+/** The resource half of a permission key, e.g. `branch`. */
+export type PermissionResource =
+	(typeof PERMISSION_DEFINITIONS)[number]["resource"];
+
+/** One permission as the contract defines it, widened for lookups. */
+export type PermissionDefinition = {
+	key: PermissionKey;
+	resource: PermissionResource;
+	action: string;
+	/** The levels an assignment of a role holding it may be made at. */
+	assignableScopes: ReadonlyArray<AssignableScope>;
+	/** Keys a role must also hold to hold this one. */
+	prerequisites: ReadonlyArray<PermissionKey>;
+};
+
+// Widening checks every prerequisite names a known key at compile time.
+const DEFINITIONS: ReadonlyArray<PermissionDefinition> = PERMISSION_DEFINITIONS;
+const BY_KEY = new Map<string, PermissionDefinition>(
+	DEFINITIONS.map((definition) => [definition.key, definition])
+);
 
 /**
  * Holding any of these, at any scope, is what makes the Organisation Module
@@ -73,6 +65,63 @@ export const LEAVE_READ_KEYS: ReadonlyArray<PermissionKey> = [
 	"leave_request:read",
 ];
 
-/** Whether a key the API sent is one this app's copy of the catalog knows. */
+/**
+ * Whether a key the API sent is one this app's contract knows. A key it
+ * doesn't know is newer than the app: gates may ignore it, but a role's
+ * editor keeps it (see `unknownKeys`).
+ */
 export const isPermissionKey = (key: string): key is PermissionKey =>
-	(PERMISSION_KEYS as ReadonlyArray<string>).includes(key);
+	BY_KEY.has(key);
+
+/** The keys of `keys` this app's contract doesn't know, in their given order. */
+export const unknownKeys = (keys: ReadonlyArray<string>): Array<string> =>
+	keys.filter((key) => !isPermissionKey(key));
+
+/** A known key's definition. */
+export const definitionOf = (key: PermissionKey): PermissionDefinition =>
+	BY_KEY.get(key) as PermissionDefinition;
+
+/** The resource half of a permission key, e.g. `branch`. */
+export const resourceOf = (key: PermissionKey): PermissionResource =>
+	definitionOf(key).resource;
+
+/** `key` and every key it needs, directly or through another, in catalogue order. */
+export const requiredFor = (key: PermissionKey): Array<PermissionKey> => {
+	const needed = new Set<PermissionKey>([key]);
+	const add = (current: PermissionKey): void => {
+		for (const required of definitionOf(current).prerequisites)
+			if (!needed.has(required)) {
+				needed.add(required);
+				add(required);
+			}
+	};
+	add(key);
+	return PERMISSION_KEYS.filter((item) => needed.has(item));
+};
+
+/** `key` and every key that needs it, directly or through another, in catalogue order. */
+export const dependingOn = (key: PermissionKey): Array<PermissionKey> =>
+	PERMISSION_KEYS.filter((item) => requiredFor(item).includes(key));
+
+/** Whether a role holding `key` may be assigned at `scope`. */
+export const assignableAt = (
+	key: PermissionKey,
+	scope: AssignableScope
+): boolean => definitionOf(key).assignableScopes.includes(scope);
+
+/** Whether `key` can only be given company-wide. */
+export const isCompanyOnly = (key: PermissionKey): boolean =>
+	definitionOf(key).assignableScopes.every((scope) => scope === "COMPANY");
+
+/**
+ * The known keys of `permissions` a role can't carry at `scope`, in
+ * catalogue order. Keys this app doesn't know are not judged here: the API
+ * decides, and names them if it refuses.
+ */
+export const incompatibleKeys = (
+	permissions: ReadonlyArray<string>,
+	scope: AssignableScope
+): Array<PermissionKey> =>
+	PERMISSION_KEYS.filter(
+		(key) => permissions.includes(key) && !assignableAt(key, scope)
+	);
