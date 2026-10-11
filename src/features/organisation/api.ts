@@ -230,6 +230,32 @@ export const fetchList = async <T extends z.ZodType>(
 	return { items: page.content, total: page.page.totalElements };
 };
 
+/**
+ * One page of the company's activity, newest first, limited to
+ * `entityTypes`; `page` counts from 1, as people do.
+ */
+export const fetchActivityPage = (
+	companyId: string,
+	{
+		page,
+		size,
+		entityTypes,
+	}: { page: number; size: number; entityTypes: ReadonlyArray<string> },
+	signal?: AbortSignal
+): Promise<ListPage<AuditEvent>> => {
+	// The API counts pages from 0.
+	const query = new URLSearchParams({
+		page: String(page - 1),
+		size: String(size),
+	});
+	for (const type of entityTypes) query.append("entityType", type);
+	return fetchList(
+		`${companyPath(companyId)}/audit-events?${query.toString()}`,
+		auditEventSchema,
+		signal
+	);
+};
+
 export const companyMemberSchema = z.object({
 	membershipId: z.string(),
 	displayName: z.string(),

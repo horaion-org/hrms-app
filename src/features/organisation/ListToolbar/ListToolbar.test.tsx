@@ -103,6 +103,25 @@ describe("ListToolbar", () => {
 		expect(onClick).toHaveBeenCalledOnce();
 	});
 
+	it("shows further actions before the others when given", () => {
+		render(
+			<Harness
+				actions={<button type="button">Export</button>}
+				onCreate={vi.fn()}
+			/>
+		);
+
+		const buttons = screen.getAllByRole("button");
+		expect(buttons.map((button) => button.textContent)).toEqual(
+			expect.arrayContaining(["Export"])
+		);
+		expect(
+			buttons.findIndex((button) => button.textContent === "Export")
+		).toBeLessThan(
+			buttons.findIndex((button) => button.textContent === "Create Branch")
+		);
+	});
+
 	it("filters by status through the labelled Showing select", async () => {
 		const user = userEvent.setup();
 		const onStatus = vi.fn();

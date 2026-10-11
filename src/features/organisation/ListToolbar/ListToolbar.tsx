@@ -1,4 +1,4 @@
-import { useId } from "react";
+import { useId, type ReactNode } from "react";
 import type { FunctionComponent } from "@/common/types";
 import { Input } from "@/components/forms/Input";
 import { Select, type SelectOption } from "@/components/forms/Select";
@@ -13,6 +13,8 @@ export type ListToolbarProps = {
 	/** The primary action's label, e.g. "Create Branch"; needed only with `onCreate`. */
 	createLabel?: string;
 	onCreate?: () => void;
+	/** Further controls before the others, e.g. Import and Export buttons or a link. */
+	actions?: ReactNode;
 	/** A second action beside the primary one, e.g. "Assign role"; left out when there is none. */
 	secondaryAction?: { label: string; onClick: () => void };
 	/** The "Showing:" filter under the toolbar; left out when the list has none. */
@@ -45,6 +47,7 @@ export const ListToolbar = ({
 	onSearchChange,
 	createLabel,
 	onCreate,
+	actions,
 	secondaryAction,
 	filter,
 	multipleFilter,
@@ -67,6 +70,7 @@ export const ListToolbar = ({
 					}}
 				/>
 				<div className="flex flex-wrap items-center gap-3">
+					{actions}
 					{secondaryAction && (
 						<Button variant="secondary" onClick={secondaryAction.onClick}>
 							{secondaryAction.label}
