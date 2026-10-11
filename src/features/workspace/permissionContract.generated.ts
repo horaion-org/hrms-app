@@ -3,7 +3,7 @@
 
 /** SHA-256 of the contract file this module was generated from. */
 export const PERMISSION_CONTRACT_SHA256 =
-	"b4eb60fd73a4a5d61d1c83ded4779ed8c72aff676d3db3b6bc28644654c349bb";
+	"aa0c3491a81fc405021fc41b60a8f910461fd7ab54af9ad2c8834d546fd1cc31";
 
 /** The places a permission can be assigned at, widest first. */
 export const ASSIGNABLE_SCOPES = ["COMPANY", "BRANCH", "DEPARTMENT"] as const;
@@ -214,6 +214,62 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: ["leave_request:read"],
 	},
 	{
+		key: "schedule:read",
+		resource: "schedule",
+		action: "read",
+		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
+		prerequisites: [],
+	},
+	{
+		key: "schedule:create",
+		resource: "schedule",
+		action: "create",
+		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
+		prerequisites: ["schedule:read"],
+	},
+	{
+		key: "schedule:update",
+		resource: "schedule",
+		action: "update",
+		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
+		prerequisites: ["schedule:read"],
+	},
+	{
+		key: "schedule:generate",
+		resource: "schedule",
+		action: "generate",
+		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
+		prerequisites: ["schedule:read"],
+	},
+	{
+		key: "shift:read",
+		resource: "shift",
+		action: "read",
+		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
+		prerequisites: [],
+	},
+	{
+		key: "shift:create",
+		resource: "shift",
+		action: "create",
+		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
+		prerequisites: ["shift:read"],
+	},
+	{
+		key: "shift:update",
+		resource: "shift",
+		action: "update",
+		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
+		prerequisites: ["shift:read"],
+	},
+	{
+		key: "shift:delete",
+		resource: "shift",
+		action: "delete",
+		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
+		prerequisites: ["shift:read"],
+	},
+	{
 		key: "access_role:read",
 		resource: "access_role",
 		action: "read",
@@ -294,6 +350,14 @@ export const PERMISSION_KEYS = [
 	"leave_request:read",
 	"leave_request:create",
 	"leave_request:review",
+	"schedule:read",
+	"schedule:create",
+	"schedule:update",
+	"schedule:generate",
+	"shift:read",
+	"shift:create",
+	"shift:update",
+	"shift:delete",
 	"access_role:read",
 	"access_role:create",
 	"access_role:update",

@@ -1072,6 +1072,26 @@
 			"unknown": {
 				"name": "Not recognised",
 				"description": "This version of the app doesn’t know these permissions. They stay on the role when you save."
+			},
+			"schedule": {
+				"name": "Schedules",
+				"description": "Each department’s schedules: their week, settings and chosen shifts, and generating them.",
+				"actions": {
+					"read": "View",
+					"create": "Create",
+					"update": "Edit",
+					"generate": "Generate"
+				}
+			},
+			"shift": {
+				"name": "Shifts",
+				"description": "Each department’s shifts: their times, days, group, colour and roles.",
+				"actions": {
+					"read": "View",
+					"create": "Add",
+					"update": "Edit",
+					"delete": "Delete"
+				}
 			}
 		},
 		"activity": {
