@@ -20,6 +20,7 @@ import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as SignUpRouteImport } from './routes/sign-up'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated._app'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated._app.index'
+import { Route as AuthenticatedAppActivityRouteImport } from './routes/_authenticated._app.activity'
 import { Route as AuthenticatedAppLeaveRouteImport } from './routes/_authenticated._app.leave'
 import { Route as AuthenticatedAppPeopleRouteImport } from './routes/_authenticated._app.people'
 import { Route as AuthenticatedAppSchedulingRouteImport } from './routes/_authenticated._app.scheduling'
@@ -32,6 +33,7 @@ import { Route as AuthenticatedAppOrganisationJobTitlesRouteImport } from './rou
 import { Route as AuthenticatedAppOrganisationSystemRolesRouteImport } from './routes/_authenticated._app.organisation.system-roles'
 import { Route as AuthenticatedAppPeopleMembershipIdRouteImport } from './routes/_authenticated._app.people_.$membershipId'
 import { Route as AuthenticatedAppPeopleNewRouteImport } from './routes/_authenticated._app.people_.new'
+import { Route as AuthenticatedAppSchedulingScheduleIdRouteImport } from './routes/_authenticated._app.scheduling_.$scheduleId'
 import { Route as AuthenticatedAppSchedulingNewRouteImport } from './routes/_authenticated._app.scheduling_.new'
 import { Route as AuthenticatedAppOrganisationSystemRolesAccessRoleIdRouteImport } from './routes/_authenticated._app.organisation.system-roles_.$accessRoleId'
 import { Route as AuthenticatedAppOrganisationSystemRolesNewRouteImport } from './routes/_authenticated._app.organisation.system-roles_.new'
@@ -89,6 +91,12 @@ const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAppActivityRoute =
+  AuthenticatedAppActivityRouteImport.update({
+    id: '/activity',
+    path: '/activity',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppLeaveRoute = AuthenticatedAppLeaveRouteImport.update({
   id: '/leave',
   path: '/leave',
@@ -159,6 +167,12 @@ const AuthenticatedAppPeopleNewRoute =
     path: '/people/new',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppSchedulingScheduleIdRoute =
+  AuthenticatedAppSchedulingScheduleIdRouteImport.update({
+    id: '/scheduling_/$scheduleId',
+    path: '/scheduling/$scheduleId',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppSchedulingNewRoute =
   AuthenticatedAppSchedulingNewRouteImport.update({
     id: '/scheduling_/new',
@@ -188,6 +202,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
+  '/activity': typeof AuthenticatedAppActivityRoute
   '/leave': typeof AuthenticatedAppLeaveRoute
   '/people': typeof AuthenticatedAppPeopleRoute
   '/scheduling': typeof AuthenticatedAppSchedulingRoute
@@ -199,6 +214,7 @@ export interface FileRoutesByFullPath {
   '/organisation/system-roles': typeof AuthenticatedAppOrganisationSystemRolesRoute
   '/people/$membershipId': typeof AuthenticatedAppPeopleMembershipIdRoute
   '/people/new': typeof AuthenticatedAppPeopleNewRoute
+  '/scheduling/$scheduleId': typeof AuthenticatedAppSchedulingScheduleIdRoute
   '/scheduling/new': typeof AuthenticatedAppSchedulingNewRoute
   '/organisation/': typeof AuthenticatedAppOrganisationIndexRoute
   '/organisation/system-roles/$accessRoleId': typeof AuthenticatedAppOrganisationSystemRolesAccessRoleIdRoute
@@ -214,6 +230,7 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
+  '/activity': typeof AuthenticatedAppActivityRoute
   '/leave': typeof AuthenticatedAppLeaveRoute
   '/people': typeof AuthenticatedAppPeopleRoute
   '/scheduling': typeof AuthenticatedAppSchedulingRoute
@@ -225,6 +242,7 @@ export interface FileRoutesByTo {
   '/organisation/system-roles': typeof AuthenticatedAppOrganisationSystemRolesRoute
   '/people/$membershipId': typeof AuthenticatedAppPeopleMembershipIdRoute
   '/people/new': typeof AuthenticatedAppPeopleNewRoute
+  '/scheduling/$scheduleId': typeof AuthenticatedAppSchedulingScheduleIdRoute
   '/scheduling/new': typeof AuthenticatedAppSchedulingNewRoute
   '/organisation': typeof AuthenticatedAppOrganisationIndexRoute
   '/organisation/system-roles/$accessRoleId': typeof AuthenticatedAppOrganisationSystemRolesAccessRoleIdRoute
@@ -242,6 +260,7 @@ export interface FileRoutesById {
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/_authenticated/_app': typeof AuthenticatedAppRouteWithChildren
+  '/_authenticated/_app/activity': typeof AuthenticatedAppActivityRoute
   '/_authenticated/_app/leave': typeof AuthenticatedAppLeaveRoute
   '/_authenticated/_app/people': typeof AuthenticatedAppPeopleRoute
   '/_authenticated/_app/scheduling': typeof AuthenticatedAppSchedulingRoute
@@ -254,6 +273,7 @@ export interface FileRoutesById {
   '/_authenticated/_app/organisation/system-roles': typeof AuthenticatedAppOrganisationSystemRolesRoute
   '/_authenticated/_app/people_/$membershipId': typeof AuthenticatedAppPeopleMembershipIdRoute
   '/_authenticated/_app/people_/new': typeof AuthenticatedAppPeopleNewRoute
+  '/_authenticated/_app/scheduling_/$scheduleId': typeof AuthenticatedAppSchedulingScheduleIdRoute
   '/_authenticated/_app/scheduling_/new': typeof AuthenticatedAppSchedulingNewRoute
   '/_authenticated/_app/organisation/': typeof AuthenticatedAppOrganisationIndexRoute
   '/_authenticated/_app/organisation/system-roles_/$accessRoleId': typeof AuthenticatedAppOrganisationSystemRolesAccessRoleIdRoute
@@ -271,6 +291,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/sign-in'
     | '/sign-up'
+    | '/activity'
     | '/leave'
     | '/people'
     | '/scheduling'
@@ -282,6 +303,7 @@ export interface FileRouteTypes {
     | '/organisation/system-roles'
     | '/people/$membershipId'
     | '/people/new'
+    | '/scheduling/$scheduleId'
     | '/scheduling/new'
     | '/organisation/'
     | '/organisation/system-roles/$accessRoleId'
@@ -297,6 +319,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/sign-in'
     | '/sign-up'
+    | '/activity'
     | '/leave'
     | '/people'
     | '/scheduling'
@@ -308,6 +331,7 @@ export interface FileRouteTypes {
     | '/organisation/system-roles'
     | '/people/$membershipId'
     | '/people/new'
+    | '/scheduling/$scheduleId'
     | '/scheduling/new'
     | '/organisation'
     | '/organisation/system-roles/$accessRoleId'
@@ -324,6 +348,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-up'
     | '/_authenticated/_app'
+    | '/_authenticated/_app/activity'
     | '/_authenticated/_app/leave'
     | '/_authenticated/_app/people'
     | '/_authenticated/_app/scheduling'
@@ -336,6 +361,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/organisation/system-roles'
     | '/_authenticated/_app/people_/$membershipId'
     | '/_authenticated/_app/people_/new'
+    | '/_authenticated/_app/scheduling_/$scheduleId'
     | '/_authenticated/_app/scheduling_/new'
     | '/_authenticated/_app/organisation/'
     | '/_authenticated/_app/organisation/system-roles_/$accessRoleId'
@@ -433,6 +459,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppIndexRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/_app/activity': {
+      id: '/_authenticated/_app/activity'
+      path: '/activity'
+      fullPath: '/activity'
+      preLoaderRoute: typeof AuthenticatedAppActivityRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/_app/leave': {
       id: '/_authenticated/_app/leave'
       path: '/leave'
@@ -517,6 +550,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppPeopleNewRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/_app/scheduling_/$scheduleId': {
+      id: '/_authenticated/_app/scheduling_/$scheduleId'
+      path: '/scheduling/$scheduleId'
+      fullPath: '/scheduling/$scheduleId'
+      preLoaderRoute: typeof AuthenticatedAppSchedulingScheduleIdRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/_app/scheduling_/new': {
       id: '/_authenticated/_app/scheduling_/new'
       path: '/scheduling/new'
@@ -542,6 +582,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedAppRouteChildren {
+  AuthenticatedAppActivityRoute: typeof AuthenticatedAppActivityRoute
   AuthenticatedAppLeaveRoute: typeof AuthenticatedAppLeaveRoute
   AuthenticatedAppPeopleRoute: typeof AuthenticatedAppPeopleRoute
   AuthenticatedAppSchedulingRoute: typeof AuthenticatedAppSchedulingRoute
@@ -554,6 +595,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppOrganisationSystemRolesRoute: typeof AuthenticatedAppOrganisationSystemRolesRoute
   AuthenticatedAppPeopleMembershipIdRoute: typeof AuthenticatedAppPeopleMembershipIdRoute
   AuthenticatedAppPeopleNewRoute: typeof AuthenticatedAppPeopleNewRoute
+  AuthenticatedAppSchedulingScheduleIdRoute: typeof AuthenticatedAppSchedulingScheduleIdRoute
   AuthenticatedAppSchedulingNewRoute: typeof AuthenticatedAppSchedulingNewRoute
   AuthenticatedAppOrganisationIndexRoute: typeof AuthenticatedAppOrganisationIndexRoute
   AuthenticatedAppOrganisationSystemRolesAccessRoleIdRoute: typeof AuthenticatedAppOrganisationSystemRolesAccessRoleIdRoute
@@ -561,6 +603,7 @@ interface AuthenticatedAppRouteChildren {
 }
 
 const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
+  AuthenticatedAppActivityRoute: AuthenticatedAppActivityRoute,
   AuthenticatedAppLeaveRoute: AuthenticatedAppLeaveRoute,
   AuthenticatedAppPeopleRoute: AuthenticatedAppPeopleRoute,
   AuthenticatedAppSchedulingRoute: AuthenticatedAppSchedulingRoute,
@@ -578,6 +621,8 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppPeopleMembershipIdRoute:
     AuthenticatedAppPeopleMembershipIdRoute,
   AuthenticatedAppPeopleNewRoute: AuthenticatedAppPeopleNewRoute,
+  AuthenticatedAppSchedulingScheduleIdRoute:
+    AuthenticatedAppSchedulingScheduleIdRoute,
   AuthenticatedAppSchedulingNewRoute: AuthenticatedAppSchedulingNewRoute,
   AuthenticatedAppOrganisationIndexRoute:
     AuthenticatedAppOrganisationIndexRoute,
