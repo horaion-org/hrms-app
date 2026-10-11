@@ -133,6 +133,27 @@ _Avoid_: Remaining leave, leave left
 **Leave year**:
 1 January to 31 December. Each Leave year starts again from the full Allowance; unused days are not carried over.
 _Avoid_: Fiscal year, leave period, cycle
+## Permissions
+
+**Target**:
+The exact place a permission is asked about: the Company itself, one Branch, or one Department, always named explicitly (`ScopeRef` in code). A member's records are at their Department, or at the Company when they have none. A place the app does not know answers no.
+_Avoid_: Scope id, level, context
+
+**Permission catalogue**:
+Every permission key the API knows, with the places a role holding it can be assigned at and the keys it needs alongside it (a change needs its resource's view). It is generated from the API's contract: `contracts/permission-catalog.json` is a byte copy of `hrms-backend-v2/contracts/permission-catalog.json`, refreshed by copying that file over it and running `pnpm generate:permissions`, which validates it and writes `src/features/workspace/permissionContract.generated.ts`. Never edit the generated file; `pnpm lint` fails when it no longer matches the contract. A key the catalogue does not know is newer than the app: gates ignore it, and a role's editor keeps it untouched.
+_Avoid_: Permission list, permission catalog (in prose), permissions copy
+
+**Effective permissions**:
+The permissions a person has at one Target once grants made above it are counted, as the API computes them and the workspace sends them for every Company, Branch and Department. The app reads them as sent and never adds a parent's permissions again. They decide what is shown; the API still decides every request.
+_Avoid_: Inherited permissions (in code), roles, rights
+
+**Administrative data**:
+Records reached through a person's System roles, such as the People list, a colleague's profile, team leave, or who holds a role. It is withdrawn from the screen and the cache as soon as the workspace shows the person's access there shrank.
+_Avoid_: Admin data, protected data
+
+**Own records**:
+What a member sees about themselves without any System role: My profile and My leave, plus the colleagues directory of names. They never depend on the workspace, so they stay available when it is empty or failing.
+_Avoid_: Self-service data, personal data, me data
 
 ## Controls
 
