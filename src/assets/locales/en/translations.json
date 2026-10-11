@@ -1148,6 +1148,12 @@
 		"increase": "More {{label}}"
 	},
 	"scheduling": {
+		"actions": {
+			"back": "Back",
+			"next": "Next",
+			"saveDraft": "Save draft",
+			"generate": "Generate"
+		},
 		"timeRange": "{{start}} – {{end}}",
 		"days": {
 			"MON": "Mon",

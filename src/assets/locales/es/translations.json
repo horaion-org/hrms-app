@@ -392,6 +392,12 @@
     "increase": "Más {{label}}"
   },
   "scheduling": {
+    "actions": {
+      "back": "Atrás",
+      "next": "Siguiente",
+      "saveDraft": "Guardar borrador",
+      "generate": "Generar"
+    },
     "timeRange": "{{start}} – {{end}}",
     "days": {
       "MON": "lun",
