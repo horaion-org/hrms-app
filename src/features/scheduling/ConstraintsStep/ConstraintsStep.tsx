@@ -20,6 +20,7 @@ export type ConstraintsStepProps = {
 	/** The constraints this schedule applies. */
 	includedConstraintIds: Array<string>;
 	onIncludedChange: (constraintIds: Array<string>) => void;
+	onAdd: () => void;
 	onDelete: (constraint: Constraint) => void;
 	className?: string;
 };
@@ -31,13 +32,14 @@ const statusTones: Record<ConstraintStatus, BadgeTone> = {
 };
 
 /**
- * The rules the schedule must respect. Adding and editing constraints wait
- * for the scheduling API, so those actions stay disabled.
+ * The rules the schedule must respect. Editing waits for the scheduling API,
+ * so that action stays disabled.
  */
 export const ConstraintsStep = ({
 	constraints,
 	includedConstraintIds,
 	onIncludedChange,
+	onAdd,
 	onDelete,
 	className,
 }: ConstraintsStepProps): FunctionComponent => {
@@ -124,7 +126,7 @@ export const ConstraintsStep = ({
 			description={t("scheduling.constraints.description")}
 			title={t("scheduling.constraints.title")}
 			actions={
-				<Button disabled leadingIcon={<PlusIcon />} size="sm">
+				<Button leadingIcon={<PlusIcon />} size="sm" onClick={onAdd}>
 					{t("scheduling.constraints.add")}
 				</Button>
 			}

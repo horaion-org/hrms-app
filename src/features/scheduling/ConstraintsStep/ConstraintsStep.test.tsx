@@ -27,6 +27,7 @@ describe("ConstraintsStep", () => {
 			<ConstraintsStep
 				constraints={constraints}
 				includedConstraintIds={includedConstraintIds}
+				onAdd={vi.fn()}
 				onDelete={vi.fn()}
 				onIncludedChange={vi.fn()}
 			/>
@@ -47,6 +48,7 @@ describe("ConstraintsStep", () => {
 			<ConstraintsStep
 				constraints={[...constraints].reverse()}
 				includedConstraintIds={includedConstraintIds}
+				onAdd={vi.fn()}
 				onDelete={vi.fn()}
 				onIncludedChange={vi.fn()}
 			/>
@@ -68,6 +70,7 @@ describe("ConstraintsStep", () => {
 			<ConstraintsStep
 				constraints={constraints}
 				includedConstraintIds={includedConstraintIds}
+				onAdd={vi.fn()}
 				onDelete={onDelete}
 				onIncludedChange={vi.fn()}
 			/>
@@ -82,11 +85,30 @@ describe("ConstraintsStep", () => {
 		);
 	});
 
-	it("given_theApiIsMissing_when_rendered_then_addAndEditAreDisabled", () => {
+	it("given_addClicked_when_rendered_then_asksToAdd", async () => {
+		const user = userEvent.setup();
+		const onAdd = vi.fn();
 		render(
 			<ConstraintsStep
 				constraints={constraints}
 				includedConstraintIds={includedConstraintIds}
+				onAdd={onAdd}
+				onDelete={vi.fn()}
+				onIncludedChange={vi.fn()}
+			/>
+		);
+
+		await user.click(screen.getByRole("button", { name: "Add constraint" }));
+
+		expect(onAdd).toHaveBeenCalled();
+	});
+
+	it("given_theApiIsMissing_when_rendered_then_editIsDisabled", () => {
+		render(
+			<ConstraintsStep
+				constraints={constraints}
+				includedConstraintIds={includedConstraintIds}
+				onAdd={vi.fn()}
 				onDelete={vi.fn()}
 				onIncludedChange={vi.fn()}
 			/>

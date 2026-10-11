@@ -166,6 +166,21 @@ describe("summarise", () => {
 });
 
 describe("scheduleDraftReducer", () => {
+	it("includes a newly added constraint", () => {
+		const draft = scheduleDraftReducer(emptyScheduleDraft(), {
+			type: "constraintAdded",
+			constraint: {
+				constraintId: "new-rule",
+				name: "Availability",
+				type: "AVAILABILITY",
+				details: "There must be at least 1 employees",
+				priority: "MEDIUM",
+				status: "ACTIVE",
+			},
+		});
+		expect(draft.constraints.map((item) => item.constraintId)).toContain("new-rule");
+		expect(draft.includedConstraintIds).toContain("new-rule");
+	});
 	it("given_setup_when_saved_then_keepsWhatIsChosen", () => {
 		const draft = scheduleDraftReducer(chosen(), {
 			type: "setupSaved",

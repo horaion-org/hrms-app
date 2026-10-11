@@ -15,6 +15,7 @@ import { Stepper, StepperStep } from "@/components/ui/Stepper";
 import { Toast } from "@/components/ui/Toast";
 import { placeOf } from "@/features/organisation/assignmentTargets";
 import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
+import { AddConstraintDialog } from "@/features/scheduling/AddConstraintDialog";
 import { ConstraintsStep } from "@/features/scheduling/ConstraintsStep";
 import { departmentUnitOf } from "@/features/scheduling/departmentUnit";
 import { ForecastStep } from "@/features/scheduling/ForecastStep";
@@ -28,10 +29,12 @@ import {
 	emptyScheduleDraft,
 	includedShifts,
 	isFrozen,
+	rolesOf,
 	scheduleDraftReducer,
 	summarise,
 	tickedOf,
 	type Constraint,
+	type ConstraintRule,
 	type ScheduleSetup,
 	type Shift,
 } from "@/features/scheduling/scheduleDraft";
@@ -214,6 +217,7 @@ export const CreateSchedule = (): FunctionComponent => {
 	const shiftActions = useShiftActions(companyId);
 	const [toast, setToast] = useState<{ id: number; message: string }>();
 	const [problem, setProblem] = useState("");
+	const [addingConstraint, setAddingConstraint] = useState(false);
 	// Set when Next is refused, so the reason shows only after a try.
 	const [blocked, setBlocked] = useState(false);
 	const setupFormId = useId();
@@ -253,6 +257,22 @@ export const CreateSchedule = (): FunctionComponent => {
 	};
 	const openShiftDialog = (editing?: Shift): void => {
 		setDialog({ editing });
+	};
+	const addConstraint = (rule: ConstraintRule, details: string): void => {
+		dispatch({
+			type: "constraintAdded",
+			constraint: {
+				constraintId: crypto.randomUUID(),
+				name: t(`scheduling.constraints.types.${rule.type}`),
+				type: rule.type,
+				details,
+				priority: "MEDIUM",
+				status: "ACTIVE",
+				rule,
+			},
+		});
+		setAddingConstraint(false);
+		notify(t("scheduling.constraints.added"));
 	};
 
 	const current = SCHEDULE_STEPS.indexOf(step);
@@ -505,6 +525,9 @@ export const CreateSchedule = (): FunctionComponent => {
 					<ConstraintsStep
 						constraints={draft.constraints}
 						includedConstraintIds={draft.includedConstraintIds}
+						onAdd={() => {
+							setAddingConstraint(true);
+						}}
 						onDelete={deleteConstraint}
 						onIncludedChange={(constraintIds) => {
 							dispatch({ type: "constraintsIncluded", constraintIds });
@@ -590,6 +613,16 @@ export const CreateSchedule = (): FunctionComponent => {
 								editing ? "scheduling.shifts.edited" : "scheduling.shifts.added"
 							)
 						);
+					}}
+				/>
+			)}
+			{step === "constraints" && addingConstraint && (
+				<AddConstraintDialog
+					roles={rolesOf(shiftRows)}
+					shifts={shiftRows}
+					onSubmit={addConstraint}
+					onClose={() => {
+						setAddingConstraint(false);
 					}}
 				/>
 			)}
