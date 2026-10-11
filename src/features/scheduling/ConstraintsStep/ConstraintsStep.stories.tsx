@@ -16,6 +16,7 @@ const meta = {
 		constraints,
 		includedConstraintIds,
 		onIncludedChange: fn(),
+		onAdd: fn(),
 		onDelete: fn(),
 	},
 } satisfies Meta<typeof ConstraintsStep>;
@@ -31,6 +32,7 @@ const InteractiveDemo = (): FunctionComponent => {
 		<ConstraintsStep
 			constraints={rows}
 			includedConstraintIds={included}
+			onAdd={fn()}
 			onIncludedChange={setIncluded}
 			onDelete={(constraint) => {
 				setRows((current) =>

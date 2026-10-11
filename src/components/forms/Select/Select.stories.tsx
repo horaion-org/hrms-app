@@ -143,6 +143,29 @@ export const CustomSummary: Story = {
 	},
 };
 
+const SelectAllExample = (): NonNullable<FunctionComponent> => {
+	const [value, setValue] = useState<Array<string>>([]);
+	return (
+		<Select
+			multiple
+			aria-label="Departments"
+			className="w-80"
+			formatSummary={(selected) => selected.map((o) => o.label).join(", ")}
+			placeholder="Please Select"
+			selectAllLabel="Select All"
+			value={value}
+			options={[
+				{ value: "people", label: "People" },
+				{ value: "finance", label: "Finance" },
+				{ value: "operations", label: "Operations" },
+			]}
+			onChange={setValue}
+		/>
+	);
+};
+
+export const SelectAll: Story = { render: () => <SelectAllExample /> };
+
 type FormValues = {
 	department: string;
 	departments: Array<string>;
