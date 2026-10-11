@@ -1,9 +1,12 @@
 import type { TFunction } from "i18next";
 import type { Heroicon } from "@/common/types";
 import {
+	AddStaffIcon,
 	DepartmentIcon,
+	LeaveIcon,
 	OrganisationIcon,
 	PermissionsIcon,
+	RemoveUserIcon,
 	RoleIcon,
 	UserIcon,
 } from "@/components/ui/Icon";
@@ -18,7 +21,13 @@ type ActivityKey =
 	| "jobTitleUpdated"
 	| "roleCreated"
 	| "roleUpdated"
-	| "roleDeleted";
+	| "roleDeleted"
+	| "memberAdded"
+	| "memberDeactivated"
+	| "memberReactivated"
+	| "leaveRequested"
+	| "leaveApproved"
+	| "leaveRejected";
 
 const ACTIVITIES: Record<string, { key: ActivityKey; icon: Heroicon }> = {
 	"branch.create": { key: "branchCreated", icon: OrganisationIcon },
@@ -30,6 +39,15 @@ const ACTIVITIES: Record<string, { key: ActivityKey; icon: Heroicon }> = {
 	"access_role.create": { key: "roleCreated", icon: UserIcon },
 	"access_role.update": { key: "roleUpdated", icon: PermissionsIcon },
 	"access_role.delete": { key: "roleDeleted", icon: UserIcon },
+	"member_profile.create": { key: "memberAdded", icon: AddStaffIcon },
+	"member_profile.deactivate": {
+		key: "memberDeactivated",
+		icon: RemoveUserIcon,
+	},
+	"member_profile.reactivate": { key: "memberReactivated", icon: UserIcon },
+	"leave_request.create": { key: "leaveRequested", icon: LeaveIcon },
+	"leave_request.approve": { key: "leaveApproved", icon: LeaveIcon },
+	"leave_request.reject": { key: "leaveRejected", icon: LeaveIcon },
 };
 
 export type Activity = { id: string; icon: Heroicon; title: string };
@@ -77,3 +95,16 @@ export const timeAgo = (
 	);
 	return text.charAt(0).toLocaleUpperCase(locale) + text.slice(1);
 };
+
+/** An activity's details for `ActivityItem`: who did it, if known, and how long ago. */
+export const activityDetails = (
+	event: AuditEvent,
+	t: TFunction,
+	now: Date,
+	locale: string
+): Array<string> => [
+	event.actorDisplayName
+		? t("organisation.activity.by", { name: event.actorDisplayName })
+		: "",
+	timeAgo(event.occurredAt, now, locale) ?? t("organisation.activity.justNow"),
+];
