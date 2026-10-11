@@ -106,7 +106,8 @@
   "combobox": {
     "remove": "Quitar {{label}}",
     "loading": "Cargando…",
-    "noResults": "No hay resultados"
+    "noResults": "No hay resultados",
+    "create": "Crear \"{{query}}\""
   },
   "calendar": {
     "previousMonth": "Mes anterior",

@@ -815,6 +815,83 @@ describe("Select", () => {
 		);
 	});
 
+	it("offers a select-all row that chooses or clears every available option and reflects partial choices", async () => {
+		const user = userEvent.setup();
+		const onChange = vi.fn();
+		render(
+			<Select
+				multiple
+				aria-label="Departments"
+				defaultValue={["finance"]}
+				placeholder="Choose departments"
+				selectAllLabel="Select all"
+				options={[
+					...options,
+					{ value: "legal", label: "Legal", disabled: true },
+				]}
+				onChange={onChange}
+			/>
+		);
+		const trigger = screen.getByRole("button", { name: "Departments" });
+		await user.click(trigger);
+		const row = screen.getByRole("option", { name: "Select all" });
+		expect(row.querySelector("svg")).toHaveClass("text-ink-blue-900");
+		expect(screen.getAllByRole("option")[0]).toBe(row);
+
+		await user.click(row);
+		expect(onChange).toHaveBeenLastCalledWith([
+			"people",
+			"finance",
+			"operations",
+		]);
+		expect(screen.getByRole("option", { name: "People" })).toHaveAttribute(
+			"aria-selected",
+			"true"
+		);
+		expect(screen.getByRole("option", { name: "Legal" })).toHaveAttribute(
+			"aria-selected",
+			"false"
+		);
+		expect(trigger).toHaveTextContent("3 selected");
+
+		await user.click(row);
+		expect(onChange).toHaveBeenLastCalledWith([]);
+		expect(trigger).toHaveTextContent("Choose departments");
+		expect(row.querySelector("svg")).toHaveClass("text-neutral-400");
+		expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+	});
+
+	it("reaches the select-all row with the keyboard and keeps a controlled value until the caller updates it", async () => {
+		const user = userEvent.setup();
+		const onChange = vi.fn();
+		render(
+			<Select
+				multiple
+				aria-label="Departments"
+				options={options}
+				selectAllLabel="Select all"
+				value={[]}
+				onChange={onChange}
+			/>
+		);
+		await user.tab();
+		await user.keyboard("{ArrowDown}{ArrowDown}");
+		expect(screen.getByRole("listbox")).toHaveAttribute(
+			"aria-activedescendant",
+			screen.getByRole("option", { name: "Select all" }).id
+		);
+		await user.keyboard("{Enter}");
+		expect(onChange).toHaveBeenLastCalledWith([
+			"people",
+			"finance",
+			"operations",
+		]);
+		expect(screen.getByRole("option", { name: "Finance" })).toHaveAttribute(
+			"aria-selected",
+			"false"
+		);
+	});
+
 	it("uses aria-labelledby independently of the selected label", () => {
 		render(
 			<>

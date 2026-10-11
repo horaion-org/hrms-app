@@ -106,7 +106,8 @@
 	"combobox": {
 		"remove": "Remove {{label}}",
 		"loading": "Loading…",
-		"noResults": "No results"
+		"noResults": "No results",
+		"create": "Create \"{{query}}\""
 	},
 	"passwordInput": {
 		"show": "Show password",

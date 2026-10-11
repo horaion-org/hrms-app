@@ -27,7 +27,11 @@ import {
 	CheckboxFilledIcon,
 	CheckboxIcon,
 	ChevronDownIcon,
+	PlusIcon,
 } from "@/components/ui/Icon";
+
+/** The create row's value; never reported as a choice. */
+const CREATE = Symbol("create");
 
 type ComboboxSelectionProps<T> =
 	| {
@@ -41,6 +45,12 @@ type ComboboxSelectionProps<T> =
 			value: T | null;
 			onChange: (value: T | null) => void;
 			maxSelected?: never;
+			/**
+			 * Offers a "Create" row for a query that matches no option's label,
+			 * ignoring case, in place of the empty text; chosen, it receives
+			 * the trimmed query.
+			 */
+			onCreate?: (query: string) => void;
 	  };
 
 export type ComboboxProps<T> = ComboboxSelectionProps<T> & {
@@ -82,10 +92,20 @@ export const Combobox = <T,>(props: ComboboxProps<T>): FunctionComponent => {
 	}, []);
 	const { options, getKey, getLabel, query, onQueryChange, disabled } = props;
 	const values = props.multiple === false ? [] : props.value;
+	const onCreate = props.multiple === false ? props.onCreate : undefined;
+	const creatable = query.trim();
+	const createRow =
+		onCreate !== undefined &&
+		creatable !== "" &&
+		!options.some(
+			(option) => getLabel(option).toLowerCase() === creatable.toLowerCase()
+		);
 	const rootProps = {
 		as: "div" as const,
 		by: (a: T | null, b: T | null): boolean =>
-			a === null || b === null ? a === b : getKey(a) === getKey(b),
+			a === null || b === null || a === CREATE || b === CREATE
+				? a === b
+				: getKey(a) === getKey(b),
 		disabled,
 		onClose: (): void => {
 			if (!tabbing.current)
@@ -276,8 +296,20 @@ export const Combobox = <T,>(props: ComboboxProps<T>): FunctionComponent => {
 							)}
 						</ComboboxOption>
 					))}
+					{createRow && (
+						<ComboboxOption
+							aria-label={t("combobox.create", { query: creatable })}
+							className="flex min-h-12 cursor-pointer items-center gap-3 px-4 text-sm font-medium text-ink-blue-700 data-focus:bg-neutral-100"
+							value={CREATE as unknown as T}
+						>
+							<PlusIcon className="size-5 shrink-0" />
+							<span className="min-w-0 flex-1 truncate">
+								{t("combobox.create", { query: creatable })}
+							</span>
+						</ComboboxOption>
+					)}
 				</div>
-				{(props.loading || options.length === 0) && (
+				{(props.loading || (options.length === 0 && !createRow)) && (
 					<div className="px-4 py-3 text-sm text-neutral-500" role="status">
 						{props.loading
 							? (props.loadingText ?? t("combobox.loading"))
@@ -296,7 +328,10 @@ export const Combobox = <T,>(props: ComboboxProps<T>): FunctionComponent => {
 		<HeadlessCombobox<T | null, false, "div">
 			{...rootProps}
 			value={props.value}
-			onChange={props.onChange}
+			onChange={(next) => {
+				if ((next as unknown) === CREATE) onCreate?.(creatable);
+				else props.onChange(next);
+			}}
 		>
 			{renderControl}
 		</HeadlessCombobox>

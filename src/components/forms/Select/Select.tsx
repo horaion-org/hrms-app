@@ -4,7 +4,7 @@ import {
 	ListboxOption,
 	ListboxOptions,
 } from "@headlessui/react";
-import { Fragment, type AriaAttributes, type Ref } from "react";
+import { Fragment, useState, type AriaAttributes, type Ref } from "react";
 import { useTranslation } from "react-i18next";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
@@ -12,6 +12,7 @@ import type { InputStatus } from "@/components/forms/Input";
 import type { SelectOption } from "@/components/forms/Select";
 import {
 	CheckboxFilledIcon,
+	CheckboxHalfIcon,
 	CheckboxIcon,
 	ChevronDownIcon,
 	ChevronUpIcon,
@@ -47,8 +48,16 @@ export type SelectProps = SharedProps &
 				value?: Array<string>;
 				defaultValue?: Array<string>;
 				onChange?: (value: Array<string>) => void;
+				/**
+				 * Offers a row above the options that chooses or clears every
+				 * available option at once; disabled options keep their state.
+				 */
+				selectAllLabel?: string;
 		  }
 	);
+
+/** The value of the select-all row; never reported, never submitted. */
+const SELECT_ALL = "\u0000select-all";
 
 const statusFocusClasses =
 	"focus:outline-2 focus:outline-solid focus:outline-offset-2 focus:outline-ink-blue-500";
@@ -75,22 +84,45 @@ export const Select = (props: SelectProps): FunctionComponent => {
 		"aria-describedby": ariaDescribedby,
 		"aria-invalid": ariaInvalid,
 	} = props;
+	const selectAllLabel = props.multiple ? props.selectAllLabel : undefined;
+	// With a select-all row the Select keeps its own value, so the row can set
+	// every option at once even when the caller gave only a default.
+	const [own, setOwn] = useState<Array<string>>(() =>
+		Array.isArray(defaultValue) ? defaultValue : []
+	);
+	const current = selectAllLabel === undefined ? value : (value ?? own);
+	const chosenValues = Array.isArray(current) ? current : [];
+	const available = options.filter((option) => !option.disabled);
+	const allChosen =
+		available.length > 0 &&
+		available.every((option) => chosenValues.includes(option.value));
+	const someChosen = available.some((option) =>
+		chosenValues.includes(option.value)
+	);
 	return (
 		<Listbox
 			as="div"
 			className="contents"
-			defaultValue={defaultValue}
+			defaultValue={selectAllLabel === undefined ? defaultValue : undefined}
 			disabled={disabled}
 			multiple={props.multiple}
 			name={props.name}
-			value={value}
+			value={current}
 			onChange={(nextValue: string | Array<string>) => {
 				if (props.multiple && Array.isArray(nextValue)) {
-					props.onChange?.(
-						options
-							.filter((option) => nextValue.includes(option.value))
-							.map((option) => option.value)
-					);
+					const next = nextValue.includes(SELECT_ALL)
+						? options
+								.filter((option) =>
+									option.disabled
+										? chosenValues.includes(option.value)
+										: !allChosen
+								)
+								.map((option) => option.value)
+						: options
+								.filter((option) => nextValue.includes(option.value))
+								.map((option) => option.value);
+					if (selectAllLabel !== undefined) setOwn(next);
+					props.onChange?.(next);
 				} else if (!props.multiple && typeof nextValue === "string") {
 					props.onChange?.(nextValue);
 				}
@@ -172,6 +204,24 @@ export const Select = (props: SelectProps): FunctionComponent => {
 								<div className="flex h-10 items-center px-4 text-sm text-neutral-500">
 									{emptyText ?? t("select.noOptions")}
 								</div>
+							)}
+							{selectAllLabel !== undefined && options.length > 0 && (
+								<ListboxOption
+									className="mb-1 flex h-10 cursor-pointer items-center justify-between gap-3 border-b border-neutral-300 px-4 text-sm font-medium text-neutral-900 select-none data-focus:bg-neutral-100"
+									disabled={available.length === 0}
+									value={SELECT_ALL}
+								>
+									<span className="truncate">{selectAllLabel}</span>
+									<span className="size-5 shrink-0">
+										{allChosen ? (
+											<CheckboxFilledIcon className="size-5 text-ink-blue-900" />
+										) : someChosen ? (
+											<CheckboxHalfIcon className="size-5 text-ink-blue-900" />
+										) : (
+											<CheckboxIcon className="size-5 text-neutral-400" />
+										)}
+									</span>
+								</ListboxOption>
 							)}
 							{options.map((option) => (
 								<ListboxOption
