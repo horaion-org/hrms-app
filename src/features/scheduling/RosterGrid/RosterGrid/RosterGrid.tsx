@@ -179,12 +179,24 @@ export const RosterGrid = ({
 																<RosterShift
 																	selected={shift.shiftId === selectedShiftId}
 																	shift={shift}
-																	timeRange={formatTimeRange(shift, t)}
 																	label={t("scheduling.detail.shiftLabel", {
 																		name: person.name,
 																		day: weekday.format(dayjs(date).toDate()),
-																		time: formatTimeRange(shift, t),
+																		time: formatTimeRange(
+																			{
+																				startTime: shift.start,
+																				endTime: shift.end,
+																			},
+																			t
+																		),
 																	})}
+																	timeRange={formatTimeRange(
+																		{
+																			startTime: shift.start,
+																			endTime: shift.end,
+																		},
+																		t
+																	)}
 																	onSelect={() => {
 																		onShiftSelect(person, shift);
 																	}}

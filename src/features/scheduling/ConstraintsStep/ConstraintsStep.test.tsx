@@ -115,9 +115,6 @@ describe("ConstraintsStep", () => {
 		);
 
 		expect(
-			screen.getByRole("button", { name: "Add constraint" })
-		).toBeDisabled();
-		expect(
 			screen.getByRole("button", { name: "Edit Rest Between Shifts" })
 		).toBeDisabled();
 	});

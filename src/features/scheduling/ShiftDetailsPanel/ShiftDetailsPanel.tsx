@@ -47,7 +47,10 @@ export const ShiftDetailsPanel = ({
 	}).format(dayjs(shift.date).toDate());
 	const details = [
 		{ label: t(`${key}.date`), value: date },
-		{ label: t(`${key}.time`), value: formatTimeRange(shift, t) },
+		{
+			label: t(`${key}.time`),
+			value: formatTimeRange({ startTime: shift.start, endTime: shift.end }, t),
+		},
 		{
 			label: t(`${key}.break`),
 			value:
