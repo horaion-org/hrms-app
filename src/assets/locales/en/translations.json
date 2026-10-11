@@ -1297,6 +1297,83 @@
 				"gone": "This shift no longer exists."
 			}
 		},
+		"constraints": {
+			"title": "Scheduling constraints",
+			"description": "Define the constraints for your schedule.",
+			"add": "Add constraint",
+			"label": "Constraints",
+			"name": "Constraint name",
+			"type": "Constraint type",
+			"details": "Details",
+			"priority": "Priority",
+			"status": "Status",
+			"actions": "Actions",
+			"edit": "Edit {{name}}",
+			"delete": "Delete {{name}}",
+			"deleted": "Constraint successfully deleted",
+			"empty": "No constraints yet.",
+			"types": {
+				"STAFFING_REQUIREMENT": "Staffing requirement",
+				"ROLE_COVERAGE": "Role coverage",
+				"SHIFT_PATTERN": "Shift pattern",
+				"WORKING_HOURS": "Working hours"
+			},
+			"typeHints": {
+				"STAFFING_REQUIREMENT": "Minimum staff counts",
+				"ROLE_COVERAGE": "Required roles / seniority",
+				"SHIFT_PATTERN": "Consecutive days, banned sequences",
+				"WORKING_HOURS": "Maximum hours, overtime, rest periods"
+			},
+			"priorities": {
+				"HIGH": "High",
+				"MEDIUM": "Medium",
+				"LOW": "Low"
+			},
+			"statuses": {
+				"ACTIVE": "Active",
+				"DRAFT": "Draft",
+				"DISABLED": "Disabled"
+			}
+		},
+		"forecast": {
+			"title": "Staffing forecast",
+			"description": "Define the staffing demand for your shifts. You can start simple and refine later.",
+			"import": "Import",
+			"export": "Export",
+			"useExisting": "Use existing forecast",
+			"question": "How would you like to define staffing demand?",
+			"byShift": "By shift (recommended)",
+			"byShiftDescription": "Set required staff for each shift.",
+			"byShiftBenefit": "Faster and easier for most teams.",
+			"blocks": "Detailed time blocks",
+			"blocksDescription": "Set demand for 30-minute intervals.",
+			"blocksBenefit": "For granular control over the day.",
+			"label": "Staff allocation by shift",
+			"shift": "Shift",
+			"allocation": "Staff allocation",
+			"appliesTo": "Applies to",
+			"hours_one": "{{count}} hr",
+			"hours_other": "{{count}} hrs",
+			"allocatedTotal_one": "{{count}} staff allocated",
+			"allocatedTotal_other": "{{count}} staff allocated",
+			"blocksLabel": "Staffing demand by time block",
+			"time": "Time",
+			"autoFill": "Auto-fill",
+			"levels": {
+				"low": "Low (1 – 2)",
+				"medium": "Medium (3 – 5)",
+				"high": "High (6+)"
+			},
+			"groups": {
+				"earlyMorning": "Early morning",
+				"morning": "Morning",
+				"midday": "Midday",
+				"afternoon": "Afternoon",
+				"evening": "Evening"
+			},
+			"demandCell": "{{role}}, {{slot}}",
+			"scrollHint": "Scroll horizontally to view all roles."
+		},
 		"generate": {
 			"title": "Ready to generate",
 			"description": "Your schedule setup is complete and ready for generation.",

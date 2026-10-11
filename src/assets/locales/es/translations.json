@@ -541,6 +541,83 @@
         "gone": "Este turno ya no existe."
       }
     },
+    "constraints": {
+      "title": "Restricciones del horario",
+      "description": "Define las restricciones de tu horario.",
+      "add": "Añadir restricción",
+      "label": "Restricciones",
+      "name": "Nombre de la restricción",
+      "type": "Tipo de restricción",
+      "details": "Detalles",
+      "priority": "Prioridad",
+      "status": "Estado",
+      "actions": "Acciones",
+      "edit": "Editar {{name}}",
+      "delete": "Eliminar {{name}}",
+      "deleted": "Restricción eliminada",
+      "empty": "Todavía no hay restricciones.",
+      "types": {
+        "STAFFING_REQUIREMENT": "Dotación mínima",
+        "ROLE_COVERAGE": "Cobertura de puestos",
+        "SHIFT_PATTERN": "Patrón de turnos",
+        "WORKING_HOURS": "Horas de trabajo"
+      },
+      "typeHints": {
+        "STAFFING_REQUIREMENT": "Número mínimo de personas",
+        "ROLE_COVERAGE": "Puestos o antigüedad requeridos",
+        "SHIFT_PATTERN": "Días consecutivos, secuencias no permitidas",
+        "WORKING_HOURS": "Horas máximas, horas extra, descansos"
+      },
+      "priorities": {
+        "HIGH": "Alta",
+        "MEDIUM": "Media",
+        "LOW": "Baja"
+      },
+      "statuses": {
+        "ACTIVE": "Activa",
+        "DRAFT": "Borrador",
+        "DISABLED": "Desactivada"
+      }
+    },
+    "forecast": {
+      "title": "Previsión de personal",
+      "description": "Define la demanda de personal de tus turnos. Puedes empezar con algo sencillo y ajustarlo después.",
+      "import": "Importar",
+      "export": "Exportar",
+      "useExisting": "Usar una previsión existente",
+      "question": "¿Cómo quieres definir la demanda de personal?",
+      "byShift": "Por turno (recomendado)",
+      "byShiftDescription": "Indica el personal necesario en cada turno.",
+      "byShiftBenefit": "Más rápido y sencillo para la mayoría de los equipos.",
+      "blocks": "Bloques horarios detallados",
+      "blocksDescription": "Indica la demanda en intervalos de 30 minutos.",
+      "blocksBenefit": "Para un control detallado del día.",
+      "label": "Asignación de personal por turno",
+      "shift": "Turno",
+      "allocation": "Asignación de personal",
+      "appliesTo": "Se aplica a",
+      "hours_one": "{{count}} h",
+      "hours_other": "{{count}} h",
+      "allocatedTotal_one": "{{count}} persona asignada",
+      "allocatedTotal_other": "{{count}} personas asignadas",
+      "blocksLabel": "Demanda de personal por bloque horario",
+      "time": "Hora",
+      "autoFill": "Autocompletar",
+      "levels": {
+        "low": "Baja (1 – 2)",
+        "medium": "Media (3 – 5)",
+        "high": "Alta (6+)"
+      },
+      "groups": {
+        "earlyMorning": "Primera hora",
+        "morning": "Mañana",
+        "midday": "Mediodía",
+        "afternoon": "Tarde",
+        "evening": "Noche"
+      },
+      "demandCell": "{{role}}, {{slot}}",
+      "scrollHint": "Desplázate horizontalmente para ver todos los puestos."
+    },
     "generate": {
       "title": "Listo para generar",
       "description": "La configuración del horario está completa y lista para generarse.",
