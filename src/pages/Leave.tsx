@@ -41,10 +41,7 @@ import { peopleQuery } from "@/features/people/api";
 import { useSettledSearch } from "@/features/people/usePeople";
 import { workspaceQuery } from "@/features/workspace/api";
 import { BranchSelector } from "@/features/workspace/BranchSelector";
-import {
-	branchChoices,
-	chosenBranch,
-} from "@/features/workspace/unitChoices";
+import { branchChoices, chosenBranch } from "@/features/workspace/unitChoices";
 import { LEAVE_READ_KEYS } from "@/features/workspace/permissionKeys";
 import { retry } from "@/features/workspace/retry";
 import { recordScope } from "@/features/workspace/scopes";
