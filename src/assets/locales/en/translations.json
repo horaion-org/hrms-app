@@ -1141,5 +1141,9 @@
 			"allBranches": "All branches",
 			"allCountries": "All countries"
 		}
+	},
+	"numberStepper": {
+		"decrease": "Fewer {{label}}",
+		"increase": "More {{label}}"
 	}
 }

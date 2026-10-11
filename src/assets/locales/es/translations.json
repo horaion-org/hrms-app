@@ -385,5 +385,9 @@
       "allBranches": "Todas las sucursales",
       "allCountries": "Todos los países"
     }
+  },
+  "numberStepper": {
+    "decrease": "Menos {{label}}",
+    "increase": "Más {{label}}"
   }
 }
