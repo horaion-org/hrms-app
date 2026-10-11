@@ -44,3 +44,33 @@ export const Grid: Story = {
 		</div>
 	),
 };
+
+export const WithDetail: Story = {
+	args: {
+		title: "Pending Approvals",
+		value: "42",
+		caption: "Requests waiting",
+		children: <p className="mt-4 text-sm text-neutral-700">64% Resolved</p>,
+	},
+};
+
+export const Tile: Story = {
+	args: {
+		variant: "tile",
+		title: "Schedule Coverage",
+		value: "98.2%",
+		caption: "Shifts Filled",
+	},
+	render: framed,
+};
+
+export const LeadTile: Story = {
+	args: {
+		variant: "tile",
+		size: "lg",
+		title: "Active Workforce",
+		value: "1,620",
+		caption: undefined,
+	},
+	render: framed,
+};

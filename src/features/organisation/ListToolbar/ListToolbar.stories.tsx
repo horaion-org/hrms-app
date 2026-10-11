@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { fn } from "storybook/test";
 import type { FunctionComponent } from "@/common/types";
+import { Button } from "@/components/ui/Button";
 import { ListToolbar } from "@/features/organisation/ListToolbar";
 import "@/common/i18n";
 
@@ -54,6 +55,18 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+/** People adds Import and Export before its primary action. */
+export const WithActions: Story = {
+	args: {
+		actions: (
+			<>
+				<Button variant="secondary">Import</Button>
+				<Button variant="secondary">Export</Button>
+			</>
+		),
+	},
+};
 
 /** System Roles has no status, so its list shows no filter. */
 export const WithoutFilter: Story = {
