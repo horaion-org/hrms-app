@@ -75,6 +75,45 @@ describe("Select", () => {
 		}
 	);
 
+	it("selects every enabled option from Select All and clears them on a second click", async () => {
+		const user = userEvent.setup();
+		const onChange = vi.fn();
+		const choices = [
+			...options,
+			{ value: "legal", label: "Legal", disabled: true },
+		];
+		const { rerender } = render(
+			<Select
+				multiple
+				aria-label="Departments"
+				options={choices}
+				selectAllLabel="Select All"
+				value={["finance"]}
+				onChange={onChange}
+			/>
+		);
+		await user.click(screen.getByRole("button", { name: "Departments" }));
+		await user.click(screen.getByRole("option", { name: "Select All" }));
+		expect(onChange).toHaveBeenLastCalledWith([
+			"people",
+			"finance",
+			"operations",
+		]);
+
+		rerender(
+			<Select
+				multiple
+				aria-label="Departments"
+				options={choices}
+				selectAllLabel="Select All"
+				value={["people", "finance", "operations"]}
+				onChange={onChange}
+			/>
+		);
+		await user.click(screen.getByRole("option", { name: "Select All" }));
+		expect(onChange).toHaveBeenLastCalledWith([]);
+	});
+
 	it("keeps an unavailable selected option with a Neutral tick without allowing it to be picked", async () => {
 		const user = userEvent.setup();
 		const onChange = vi.fn();
