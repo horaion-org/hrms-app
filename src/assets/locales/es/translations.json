@@ -392,6 +392,24 @@
     "increase": "Más {{label}}"
   },
   "scheduling": {
+    "overview": {
+      "createSchedule": "Crear horario",
+      "generated": "Se solicitó la generación de {{name}}."
+    },
+    "create": {
+      "back": "Volver al resumen",
+      "title": "Crear horario",
+      "subtitle": "Configura la generación de tu horario en unos pocos pasos.",
+      "steps": {
+        "setup": "Configuración",
+        "shifts": "Turnos",
+        "constraints": "Restricciones",
+        "forecast": "Previsión",
+        "generate": "Generar"
+      },
+      "generateForbidden": "No tienes permiso para generar este horario.",
+      "generated": "Este horario ya se generó."
+    },
     "actions": {
       "back": "Atrás",
       "next": "Siguiente",

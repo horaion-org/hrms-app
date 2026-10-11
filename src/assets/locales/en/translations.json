@@ -1148,6 +1148,24 @@
 		"increase": "More {{label}}"
 	},
 	"scheduling": {
+		"overview": {
+			"createSchedule": "Create schedule",
+			"generated": "Generation requested for {{name}}."
+		},
+		"create": {
+			"back": "Back to overview",
+			"title": "Create schedule",
+			"subtitle": "Set up your schedule generation in a few simple steps.",
+			"steps": {
+				"setup": "Setup",
+				"shifts": "Shifts",
+				"constraints": "Constraints",
+				"forecast": "Forecast",
+				"generate": "Generate"
+			},
+			"generateForbidden": "You don’t have permission to generate this schedule.",
+			"generated": "This schedule has already been generated."
+		},
 		"actions": {
 			"back": "Back",
 			"next": "Next",
