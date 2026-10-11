@@ -511,6 +511,17 @@
 				"forbidden": "You no longer have permission to change this person’s skills.",
 				"failed": "We couldn’t save the skills. Try again."
 			}
+		},
+		"import": "Import",
+		"export": "Export",
+		"bulk": {
+			"selected_one": "{{count}} employee selected",
+			"selected_other": "{{count}} employees selected",
+			"editDepartment": "Edit Department",
+			"editRole": "Edit Role",
+			"exportSelected": "Export Selected",
+			"setInactive": "Set Inactive",
+			"unavailable": "Coming soon: this needs bulk actions from the people service."
 		}
 	},
 	"settings": {
@@ -1110,7 +1121,13 @@
 				"roleUpdated": "Permissions updated for {{name}} role",
 				"roleDeleted": "Role deleted: {{name}}",
 				"jobTitleCreated": "Job title created: {{name}}",
-				"jobTitleUpdated": "Job title updated: {{name}}"
+				"jobTitleUpdated": "Job title updated: {{name}}",
+				"memberAdded": "{{name}} added to People",
+				"memberDeactivated": "{{name}} set inactive",
+				"memberReactivated": "{{name}} reactivated",
+				"leaveRequested": "Leave requested: {{name}}",
+				"leaveApproved": "Leave approved: {{name}}",
+				"leaveRejected": "Leave rejected: {{name}}"
 			},
 			"unnamed": {
 				"branchCreated": "Branch created",
@@ -1121,7 +1138,13 @@
 				"roleUpdated": "Role permissions updated",
 				"roleDeleted": "Role deleted",
 				"jobTitleCreated": "Job title created",
-				"jobTitleUpdated": "Job title updated"
+				"jobTitleUpdated": "Job title updated",
+				"memberAdded": "Employee added",
+				"memberDeactivated": "Employee set inactive",
+				"memberReactivated": "Employee reactivated",
+				"leaveRequested": "Leave requested",
+				"leaveApproved": "Leave request approved",
+				"leaveRejected": "Leave request rejected"
 			}
 		},
 		"headsField": {
@@ -1150,7 +1173,39 @@
 	"scheduling": {
 		"overview": {
 			"createSchedule": "Create schedule",
-			"generated": "Generation requested for {{name}}."
+			"generated": "Generation requested for {{name}}.",
+			"title": "Schedule Overview",
+			"subtitle": "View and manage schedules by departments.",
+			"example": "Example data: schedules will come from the scheduling service once it is available.",
+			"search": "Search Department",
+			"view": "View Schedule",
+			"viewNamed": "View schedule {{code}}",
+			"coverage": "Coverage",
+			"percent": "{{value}}%",
+			"openShifts_one": "{{count}} Open Shift",
+			"openShifts_other": "{{count}} Open Shifts",
+			"conflicts_one": "{{count}} Conflict",
+			"conflicts_other": "{{count}} Conflicts",
+			"generating": "Generating schedule",
+			"noMatch": "No schedules match your search.",
+			"statuses": {
+				"PROCESSING": "Processing",
+				"PENDING": "Pending",
+				"APPROVED": "Approved",
+				"COMPLETED": "Completed",
+				"ARCHIVED": "Archived",
+				"CANCELLED": "Cancelled"
+			},
+			"history": {
+				"title": "Schedule History",
+				"description": "View previously completed schedules and past workforce allocations.",
+				"name": "Name",
+				"date": "Date",
+				"createdAt": "Created At",
+				"status": "Status",
+				"department": "Department",
+				"actions": "Actions"
+			}
 		},
 		"create": {
 			"back": "Back to overview",
@@ -1312,7 +1367,36 @@
 				"failed": "We couldn’t add the shift. Try again.",
 				"editForbidden": "You no longer have permission to change this shift.",
 				"editFailed": "We couldn’t save the shift. Try again.",
-				"gone": "This shift no longer exists."
+				"gone": "This shift no longer exists.",
+				"type": "Shift Type",
+				"start": "Start Time",
+				"end": "End Time",
+				"selectPlaceholder": "Please Select",
+				"allDays": "All days",
+				"allRoles": "All roles",
+				"save": "Save",
+				"weekdays": {
+					"MON": "Monday",
+					"TUE": "Tuesday",
+					"WED": "Wednesday",
+					"THU": "Thursday",
+					"FRI": "Friday",
+					"SAT": "Saturday",
+					"SUN": "Sunday"
+				},
+				"validation": {
+					"name": "Enter a shift name.",
+					"nameTooLong": "Use {{max}} characters or fewer.",
+					"type": "Choose a shift type.",
+					"start": "Choose a start time.",
+					"end": "Choose an end time."
+				}
+			},
+			"types": {
+				"REGULAR": "Regular",
+				"SPLIT": "Split",
+				"ON_CALL": "On Call",
+				"OVERTIME": "Overtime"
 			}
 		},
 		"constraints": {
@@ -1334,13 +1418,15 @@
 				"STAFFING_REQUIREMENT": "Staffing requirement",
 				"ROLE_COVERAGE": "Role coverage",
 				"SHIFT_PATTERN": "Shift pattern",
-				"WORKING_HOURS": "Working hours"
+				"WORKING_HOURS": "Working hours",
+				"AVAILABILITY": "Availability"
 			},
 			"typeHints": {
 				"STAFFING_REQUIREMENT": "Minimum staff counts",
 				"ROLE_COVERAGE": "Required roles / seniority",
 				"SHIFT_PATTERN": "Consecutive days, banned sequences",
-				"WORKING_HOURS": "Maximum hours, overtime, rest periods"
+				"WORKING_HOURS": "Maximum hours, overtime, rest periods",
+				"AVAILABILITY": "When employees can or cannot work"
 			},
 			"priorities": {
 				"HIGH": "High",
@@ -1351,6 +1437,53 @@
 				"ACTIVE": "Active",
 				"DRAFT": "Draft",
 				"DISABLED": "Disabled"
+			},
+			"added": "Constraint successfully added",
+			"dialog": {
+				"title": "Add Constraint",
+				"rule": "Rule",
+				"requirement": "Requirement",
+				"condition": "Condition",
+				"headcount": "Headcount",
+				"roles": "Roles",
+				"shifts": "Shifts",
+				"selectPlaceholder": "Please Select",
+				"enterPlaceholder": "Please Enter",
+				"selectAll": "Select All",
+				"allRoles": "All roles",
+				"allShifts": "All shifts",
+				"reset": "Reset",
+				"save": "Save",
+				"validation": {
+					"requirement": "Choose whether employees must or must not be assigned.",
+					"condition": "Choose a condition.",
+					"headcount": "Enter a headcount from {{min}} to {{max}}.",
+					"roles": "Choose at least one role.",
+					"shifts": "Choose at least one shift."
+				}
+			},
+			"requirements": {
+				"MUST": "must",
+				"MUST_NOT": "must not"
+			},
+			"conditions": {
+				"AT_LEAST": "at least",
+				"AT_MOST": "at most",
+				"EXACTLY": "exactly"
+			},
+			"preview": {
+				"title": "Rule Preview",
+				"complete": "Complete",
+				"incomplete": "Incomplete",
+				"sentence": "There <requirement/> be <condition/> <headcount/> employees with roles <roles/> assigned to the <shifts/> shifts.",
+				"details": "There {{requirement}} be {{condition}} {{headcount}} employees with roles {{roles}} assigned to the {{shifts}} shifts.",
+				"empty": {
+					"requirement": "must",
+					"condition": "condition",
+					"headcount": "headcount",
+					"roles": "role",
+					"shifts": "shift"
+				}
 			}
 		},
 		"forecast": {
@@ -1428,14 +1561,126 @@
 			"saveForbidden": "You no longer have permission to change this schedule.",
 			"createFailed": "We couldn’t create the draft. Try again.",
 			"saveFailed": "We couldn’t save the draft. Try again."
+		},
+		"detail": {
+			"back": "Back to Overview",
+			"title": "{{department}} Schedule",
+			"notFound": "This schedule could not be found.",
+			"edit": "Edit Schedule",
+			"publish": "Publish",
+			"published": "Schedule published",
+			"coverage": "Coverage",
+			"coverageCaption": "Shifts filled",
+			"openShifts": "Open Shifts",
+			"openShiftsCaption": "Waiting for someone",
+			"conflicts": "Conflicts",
+			"conflictsCaption": "Need attention",
+			"staffAssigned": "Staff Assigned",
+			"staffAssignedCaption": "of {{total}} staff",
+			"today": "Today",
+			"previousWeek": "Previous week",
+			"nextWeek": "Next week",
+			"week": "Week",
+			"legend": "Legend",
+			"kinds": {
+				"full": "Full Shift",
+				"half": "Half Shift",
+				"off": "Day Off",
+				"open": "Open Shift"
+			},
+			"roster": "Roster",
+			"staff": "Staff",
+			"collapse": "Collapse {{name}}",
+			"expand": "Expand {{name}}",
+			"noStaff": "No one is listed in this group.",
+			"hours_one": "{{count}} hr",
+			"hours_other": "{{count}} hrs",
+			"off": "OFF",
+			"shiftLabel": "{{name}}, {{day}} {{time}}",
+			"shiftDeleted": "Shift successfully deleted",
+			"shiftDetails": {
+				"title": "Shift Details",
+				"close": "Close shift details",
+				"assigned": "Assigned",
+				"open": "Open Shift",
+				"date": "Date",
+				"time": "Time",
+				"break": "Break",
+				"noBreak": "No break",
+				"breakMinutes_one": "{{count}} minute",
+				"breakMinutes_other": "{{count}} minutes",
+				"role": "Role",
+				"location": "Location",
+				"notes": "Notes",
+				"edit": "Edit Shift",
+				"reassign": "Reassign Shift",
+				"duplicate": "Duplicate Shift",
+				"delete": "Delete Shift"
+			}
 		}
 	},
-	"workspace": {
-		"branchSelector": {
-			"country": "Country",
-			"branch": "Branch",
-			"allBranches": "All branches",
-			"allCountries": "All countries"
+	"colourSwatchPicker": {
+		"colour": "Colour {{colour}}"
+	},
+	"bulkActionBar": {
+		"clear": "Clear selection"
+	},
+	"dashboard": {
+		"viewSchedule": "View Schedule",
+		"viewAll": "View All",
+		"example": "Example data: the workforce and coverage figures, and the shift swap and shortage notifications, will come from the scheduling service once it is available.",
+		"exampleTag": "Example",
+		"workforce": {
+			"title": "Active Workforce",
+			"caption": "People active today",
+			"onShift": "On Shift",
+			"onCall": "On Call",
+			"remote": "Remote"
+		},
+		"coverage": {
+			"title": "Schedule Coverage",
+			"caption": "Shifts filled"
+		},
+		"approvals": {
+			"title": "Pending Approvals",
+			"caption": "Leave requests waiting",
+			"resolved": "{{value}}% Resolved",
+			"resolvedLabel": "Resolved"
+		},
+		"notifications": {
+			"title": "Notifications",
+			"failed": "We couldn’t load pending leave requests.",
+			"open": "Open {{title}}",
+			"leaveTitle": "{{type}} request",
+			"leaveDetail": "from {{name}} ({{period}})",
+			"approve": "Approve",
+			"deny": "Deny with reason",
+			"examples": {
+				"shiftSwap": {
+					"title": "Shift swap request",
+					"detail": "between Aisha Rahman and Wei Jun for next Friday",
+					"primary": "Approve",
+					"secondary": "Deny with reason"
+				},
+				"staffShortage": {
+					"title": "Staff shortage detected",
+					"detail": "for Saturday (Dinner Shift), 2 roles unfilled",
+					"primary": "Fill shift",
+					"secondary": "Dismiss"
+				}
+			}
+		},
+		"quickActions": {
+			"title": "Quick Actions",
+			"generate": "Generate Schedule",
+			"addStaff": "Add Staff",
+			"approve": "Approve Requests",
+			"fillShifts": "Fill Open Shifts"
+		},
+		"activity": {
+			"back": "Back to Overview",
+			"subtitle": "View recent schedule changes, approvals, and workforce updates.",
+			"hidden": "You don’t have access to this company’s activity."
 		}
 	}
 }
