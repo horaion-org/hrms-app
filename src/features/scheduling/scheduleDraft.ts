@@ -42,8 +42,9 @@ export const shiftRowsOf = (shifts: Array<ScheduleShift>): Array<Shift> =>
 export const CONSTRAINT_TYPES = [
 	"STAFFING_REQUIREMENT",
 	"ROLE_COVERAGE",
-	"SHIFT_PATTERN",
 	"WORKING_HOURS",
+	"SHIFT_PATTERN",
+	"AVAILABILITY",
 ] as const;
 
 export type ConstraintType = (typeof CONSTRAINT_TYPES)[number];
@@ -56,6 +57,24 @@ export const CONSTRAINT_STATUSES = ["ACTIVE", "DRAFT", "DISABLED"] as const;
 
 export type ConstraintStatus = (typeof CONSTRAINT_STATUSES)[number];
 
+export const RULE_REQUIREMENTS = ["MUST", "MUST_NOT"] as const;
+
+export type RuleRequirement = (typeof RULE_REQUIREMENTS)[number];
+
+export const RULE_CONDITIONS = ["AT_LEAST", "AT_MOST", "EXACTLY"] as const;
+
+export type RuleCondition = (typeof RULE_CONDITIONS)[number];
+
+/** A rule built in Add Constraint: "There must be at least 2 employees with roles … assigned to the … shifts." */
+export type ConstraintRule = {
+	type: ConstraintType;
+	requirement: RuleRequirement;
+	condition: RuleCondition;
+	headcount: number;
+	roleIds: Array<string>;
+	shiftIds: Array<string>;
+};
+
 export type Constraint = {
 	constraintId: string;
 	name: string;
@@ -64,6 +83,8 @@ export type Constraint = {
 	details: string;
 	priority: Priority;
 	status: ConstraintStatus;
+	/** The rule's parts, for constraints added in this draft. */
+	rule?: ConstraintRule;
 };
 
 /** Whether demand is set per shift or per time block. */
@@ -397,6 +418,7 @@ export type ScheduleDraftAction =
 	/** A shift the API no longer has; its selection and allocations go with it. */
 	| { type: "shiftRemoved"; shiftId: string }
 	| { type: "constraintsIncluded"; constraintIds: Array<string> }
+	| { type: "constraintAdded"; constraint: Constraint }
 	| { type: "constraintDeleted"; constraintId: string }
 	| { type: "forecastModeChosen"; mode: ForecastMode }
 	| {
@@ -447,6 +469,15 @@ export const scheduleDraftReducer = (
 			};
 		case "constraintsIncluded":
 			return { ...draft, includedConstraintIds: action.constraintIds };
+		case "constraintAdded":
+			return {
+				...draft,
+				constraints: [...draft.constraints, action.constraint],
+				includedConstraintIds: [
+					...draft.includedConstraintIds,
+					action.constraint.constraintId,
+				],
+			};
 		case "constraintDeleted":
 			return {
 				...draft,

@@ -13,6 +13,7 @@ const dotClasses: Record<ConstraintType, string> = {
 	ROLE_COVERAGE: "bg-violet-500",
 	SHIFT_PATTERN: "bg-teal-500",
 	WORKING_HOURS: "bg-amber-500",
+	AVAILABILITY: "bg-rose-500",
 };
 
 /** A constraint's type with its colour key; hovering says what the type covers. */
