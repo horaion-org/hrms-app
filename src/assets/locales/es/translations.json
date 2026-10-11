@@ -409,6 +409,15 @@
       "SUN": "dom",
       "weekdays": "Entre semana"
     },
+    "dayNames": {
+      "MON": "Lunes",
+      "TUE": "Martes",
+      "WED": "Miércoles",
+      "THU": "Jueves",
+      "FRI": "Viernes",
+      "SAT": "Sábado",
+      "SUN": "Domingo"
+    },
     "shiftColours": {
       "terracotta": "Terracota",
       "peach": "Melocotón",
