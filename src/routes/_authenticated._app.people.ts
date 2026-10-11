@@ -5,10 +5,7 @@ import {
 	peopleQueryOf,
 } from "@/features/people/peopleSearch";
 import { workspaceQuery } from "@/features/workspace/api";
-import {
-	branchChoices,
-	chosenBranch,
-} from "@/features/workspace/unitChoices";
+import { branchChoices, chosenBranch } from "@/features/workspace/unitChoices";
 import { PEOPLE_READ_KEYS } from "@/features/workspace/permissionKeys";
 import { accessIndexOf, canAny } from "@/features/workspace/scopes";
 import { People } from "@/pages/People";

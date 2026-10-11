@@ -205,6 +205,7 @@ describe("People", () => {
 				.getAllByRole("columnheader")
 				.map((header) => header.textContent)
 		).toEqual([
+			"Select all",
 			"Employee",
 			"Department",
 			"Job title",
@@ -218,6 +219,7 @@ describe("People", () => {
 				.getAllByRole("cell")
 				.map((cell) => cell.textContent)
 		).toEqual([
+			"Select Moses Lee",
 			"MLMoses LeeEMP-m-1",
 			"Front Office",
 			"Front office manager",
@@ -231,6 +233,7 @@ describe("People", () => {
 				.getAllByRole("cell")
 				.map((cell) => cell.textContent)
 		).toEqual([
+			"Select Daniel Koh",
 			"DKDaniel KohEMP-m-2",
 			"—",
 			"—",
@@ -239,8 +242,10 @@ describe("People", () => {
 			"",
 		]);
 		expect(within(daniel).getByText("Inactive")).toHaveClass("bg-neutral-400");
-		// Nothing that does nothing yet is offered.
-		expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+		// Rows can be ticked for the bulk bar; its actions wait for the API.
+		expect(
+			within(moses).getByRole("checkbox", { name: "Select Moses Lee" })
+		).not.toBeChecked();
 		expect(
 			within(table).queryByRole("button", { name: "Sort by Actions" })
 		).not.toBeInTheDocument();
@@ -328,6 +333,58 @@ describe("People", () => {
 		await waitFor(() => {
 			expect(opened.router.state.location.search).toEqual({});
 		});
+	});
+
+	it("ticks people for bulk actions and clears the selection on another page", async () => {
+		const user = userEvent.setup();
+		stubApi({
+			...baseRoutes(),
+			[PEOPLE]: pageReply(
+				[person("m-1", "Moses Lee"), person("m-2", "Aisha Rahman")],
+				25
+			),
+		});
+		await open("/people");
+		await screen.findByText("Moses Lee");
+		expect(screen.getByRole("button", { name: "Import" })).toBeDisabled();
+		expect(screen.getByRole("button", { name: "Export" })).toBeDisabled();
+		expect(screen.queryByText(/employees? selected/)).toBeNull();
+
+		await user.click(
+			screen.getByRole("checkbox", { name: "Select Moses Lee" })
+		);
+		await user.click(
+			screen.getByRole("checkbox", { name: "Select Aisha Rahman" })
+		);
+
+		expect(screen.getByText("2 employees selected")).toBeVisible();
+		expect(screen.getByRole("button", { name: "Set Inactive" })).toBeDisabled();
+
+		await user.click(screen.getByRole("button", { name: "Next page" }));
+		await waitFor(() => {
+			expect(screen.queryByText(/employees? selected/)).toBeNull();
+		});
+	});
+
+	it("clears ticked people from the bulk bar", async () => {
+		const user = userEvent.setup();
+		stubApi({
+			...baseRoutes(),
+			[PEOPLE]: pageReply([person("m-1", "Moses Lee")], 1),
+		});
+		await open("/people");
+		await screen.findByText("Moses Lee");
+
+		await user.click(
+			screen.getByRole("checkbox", { name: "Select Moses Lee" })
+		);
+		expect(screen.getByText("1 employee selected")).toBeVisible();
+		await user.click(screen.getByRole("button", { name: "Clear selection" }));
+
+		expect(screen.queryByText("1 employee selected")).toBeNull();
+		expect(
+			screen.getByRole("checkbox", { name: "Select Moses Lee" })
+		).not.toBeChecked();
 	});
 
 	it("filters by one status, and by none when both or neither are ticked", async () => {
