@@ -52,8 +52,23 @@ const open = async (): Promise<OpenedApp> => {
 	renderAuthApp(app);
 	return app;
 };
-const companyHeading = (id: string): Promise<HTMLElement> =>
-	screen.findByRole("heading", { name: `Company ${id}` });
+/** The company the app settled on, read from the route context once the Dashboard shows. */
+const settledCompany = (): string | undefined => {
+	const context = app?.router.state.matches.find(
+		(match) => "currentCompany" in match.context
+	)?.context as
+		| { currentCompany: { kind: string; company?: { companyId: string } } }
+		| undefined;
+	return context?.currentCompany.kind === "settled"
+		? context.currentCompany.company?.companyId
+		: undefined;
+};
+const companySettled = async (id: string): Promise<void> => {
+	await screen.findByRole("heading", { level: 1, name: "Dashboard" });
+	await waitFor(() => {
+		expect(settledCompany()).toBe(id);
+	});
+};
 const noAccess = (): Promise<HTMLElement> =>
 	screen.findByRole("heading", {
 		name: "You no longer have access to any company",
@@ -66,12 +81,12 @@ it("uses the remembered company even when several are usable", async () => {
 		[ME]: currentUserReply([membership("a"), membership("b")]),
 	});
 	await open();
-	expect(await companyHeading("b")).toBeVisible();
+	await companySettled("b");
 });
 it("uses the only usable company and hides switching", async () => {
 	stubApi({ [REFRESH]: accessPassReply(), [ME]: currentUserReply() });
 	await open();
-	expect(await companyHeading("c-1")).toBeVisible();
+	await companySettled("c-1");
 	expect(
 		screen.queryByRole("button", { name: "Switch company" })
 	).not.toBeInTheDocument();
@@ -88,7 +103,7 @@ it.each([
 		[ME]: currentUserReply([membership("a", overrides), membership("b")]),
 	});
 	await open();
-	expect(await companyHeading("b")).toBeVisible();
+	await companySettled("b");
 });
 it.each([undefined, "missing", "revoked"])(
 	"asks for a choice when the remembered id is %s",
@@ -128,12 +143,12 @@ it.each([false, true])(
 		await user.click(
 			await screen.findByRole("button", { name: "Company a a" })
 		);
-		expect(await companyHeading("a")).toBeVisible();
+		await companySettled("a");
 		await user.click(screen.getByRole("button", { name: "Switch company" }));
 		await user.click(
 			await screen.findByRole("button", { name: "Company b b" })
 		);
-		expect(await companyHeading("b")).toBeVisible();
+		await companySettled("b");
 		if (!blocked) expect(localStorage.getItem(CURRENT_COMPANY_KEY)).toBe("b");
 		expect(calls.filter((call) => call.path === "/api/v1/me")).toHaveLength(1);
 		expect(hasAccessPass()).toBe(true);
@@ -159,13 +174,13 @@ it.each(["another", "picker", "none", "refused"])(
 			"GET /api/v1/example": problemReply(403, "MEMBERSHIP_REVOKED"),
 		});
 		const opened = await open();
-		await companyHeading("a");
+		await companySettled("a");
 		await act(async () => {
 			await expect(
 				apiRequest("/api/v1/example", z.unknown())
 			).rejects.toMatchObject({ status: 403, errorCode: "MEMBERSHIP_REVOKED" });
 		});
-		if (outcome === "another") expect(await companyHeading("b")).toBeVisible();
+		if (outcome === "another") await companySettled("b");
 		else if (outcome === "picker")
 			expect(
 				await screen.findByRole("heading", { name: "Choose a company" })
@@ -221,7 +236,7 @@ it("handles revocation from a bearer retry after renewal", async () => {
 			apiRequest("/api/v1/example", z.unknown())
 		).rejects.toMatchObject({ errorCode: "MEMBERSHIP_REVOKED" });
 	});
-	expect(await companyHeading("b")).toBeVisible();
+	await companySettled("b");
 	expect(hasAccessPass()).toBe(true);
 });
 
@@ -241,7 +256,7 @@ it("re-settles on a bodyless bearer mutation refusal", async () => {
 			apiRequestVoid("/api/v1/example", { method: "DELETE" })
 		).rejects.toMatchObject({ errorCode: "MEMBERSHIP_REVOKED" });
 	});
-	expect(await companyHeading("b")).toBeVisible();
+	await companySettled("b");
 	expect(hasAccessPass()).toBe(true);
 });
 
@@ -271,7 +286,7 @@ it("restores a switched company with a fresh router and Session renewal", async 
 	const user = userEvent.setup();
 	await user.click(screen.getByRole("button", { name: "Switch company" }));
 	await user.click(await screen.findByRole("button", { name: "Company b b" }));
-	expect(await companyHeading("b")).toBeVisible();
+	await companySettled("b");
 	opened.disconnect();
 	opened.queryClient.clear();
 	endSession("expired");
@@ -295,7 +310,7 @@ it("drops everything read in a company whose membership was revoked, own records
 		"GET /api/v1/companies/a/example": problemReply(403, "MEMBERSHIP_REVOKED"),
 	});
 	const opened = await open();
-	await companyHeading("a");
+	await companySettled("a");
 	const seed = (queryKey: Array<string>, meta: QueryAccessMeta): void => {
 		opened.queryClient.getQueryCache().build(opened.queryClient, {
 			queryKey,
@@ -322,5 +337,5 @@ it("drops everything read in a company whose membership was revoked, own records
 	expect(opened.queryClient.getQueryData(["people", "b", "list"])).toEqual([
 		"cached",
 	]);
-	expect(await companyHeading("b")).toBeVisible();
+	await companySettled("b");
 });
