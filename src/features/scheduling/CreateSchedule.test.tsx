@@ -199,6 +199,29 @@ const grantedAt = (grants: Record<string, Array<string>>): Workspace => {
 };
 
 describe("Create Schedule: opening and setup", () => {
+	it("adds a local constraint using the saved draft's live shifts and roles", async () => {
+		const user = userEvent.setup();
+		const { calls } = await reopen();
+		await user.click(next());
+		await user.click(
+			await screen.findByRole("button", { name: "Add constraint" })
+		);
+		const dialog = screen.getByRole("dialog", { name: "Add Constraint" });
+		await pick(user, dialog, /^Condition/, "at least");
+		await user.type(
+			within(dialog).getByRole("spinbutton", { name: /Headcount/ }),
+			"2"
+		);
+		await pick(user, dialog, /^Roles/, "Cashier");
+		await pick(user, dialog, /^Shifts/, "Lunch Rush");
+		await user.click(within(dialog).getByRole("button", { name: "Save" }));
+		expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+		const row = screen.getByRole("row", {
+			name: /There must be at least 2 employees with roles Cashier assigned to the Lunch Rush shifts/,
+		});
+		expect(within(row).getByRole("checkbox")).toBeChecked();
+		expect(writes(calls)).toEqual([]);
+	});
 	it("given_theSchedulingOverview_when_createClicked_then_opensSetup", async () => {
 		const user = userEvent.setup();
 		const { opened } = await open("/scheduling");
@@ -229,7 +252,10 @@ describe("Create Schedule: opening and setup", () => {
 		await open("/scheduling", {}, ["schedule:read"]);
 
 		expect(
-			await screen.findByRole("heading", { level: 1, name: "Scheduling" })
+			await screen.findByRole("heading", {
+				level: 1,
+				name: "Schedule Overview",
+			})
 		).toBeVisible();
 		expect(screen.queryByRole("link", { name: "Create schedule" })).toBeNull();
 	});

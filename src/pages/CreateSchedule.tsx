@@ -525,10 +525,10 @@ export const CreateSchedule = (): FunctionComponent => {
 					<ConstraintsStep
 						constraints={draft.constraints}
 						includedConstraintIds={draft.includedConstraintIds}
+						onDelete={deleteConstraint}
 						onAdd={() => {
 							setAddingConstraint(true);
 						}}
-						onDelete={deleteConstraint}
 						onIncludedChange={(constraintIds) => {
 							dispatch({ type: "constraintsIncluded", constraintIds });
 						}}

@@ -12,7 +12,10 @@ beforeAll(async () => {
 		.init({ lng: "en", resources: { en: { translation: en } } });
 });
 
-const shifts = [{ shiftId: "lunch-rush", name: "Lunch Rush" }];
+const shifts = [
+	{ shiftId: "lunch-rush", name: "Lunch Rush" },
+	{ shiftId: "closing", name: "Closing" },
+];
 const roles = [{ jobTitleId: "cashier", name: "Cashier" }];
 
 const show = (): { onSubmit: ReturnType<typeof vi.fn> } => {

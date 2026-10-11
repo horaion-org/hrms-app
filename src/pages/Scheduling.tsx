@@ -168,7 +168,11 @@ export const Scheduling = (): FunctionComponent => {
 				/>
 			</section>
 			{notice && !dismissed && (
-				<Toast onDismiss={() => { setDismissed(true); }}>
+				<Toast
+					onDismiss={() => {
+						setDismissed(true);
+					}}
+				>
 					{t("scheduling.overview.generated", { name: notice.name })}
 				</Toast>
 			)}

@@ -178,7 +178,9 @@ describe("scheduleDraftReducer", () => {
 				status: "ACTIVE",
 			},
 		});
-		expect(draft.constraints.map((item) => item.constraintId)).toContain("new-rule");
+		expect(draft.constraints.map((item) => item.constraintId)).toContain(
+			"new-rule"
+		);
 		expect(draft.includedConstraintIds).toContain("new-rule");
 	});
 	it("given_setup_when_saved_then_keepsWhatIsChosen", () => {

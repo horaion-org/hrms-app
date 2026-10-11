@@ -164,7 +164,9 @@ const SelectAllExample = (): NonNullable<FunctionComponent> => {
 	);
 };
 
-export const SelectAll: Story = { render: () => <SelectAllExample /> };
+export const ControlledSelectAll: Story = {
+	render: () => <SelectAllExample />,
+};
 
 type FormValues = {
 	department: string;
