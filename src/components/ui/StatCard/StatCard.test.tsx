@@ -88,4 +88,31 @@ describe("StatCard", () => {
 		expect(card).toHaveAttribute("data-stat", "branches");
 		expect(ref.current).toBe(card);
 	});
+
+	it("given_children_when_rendered_then_showsThemAfterTheCaption", () => {
+		render(
+			<StatCard caption="Shifts Filled" title="Coverage" value="98.2%">
+				<p>64% Resolved</p>
+			</StatCard>
+		);
+
+		const card = screen.getByRole("region", { name: "Coverage" });
+		expect(within(card).getByText("64% Resolved")).toBeInTheDocument();
+	});
+
+	it("given_theTileVariant_when_rendered_then_isTintedWithAnUppercaseTitle", () => {
+		render(
+			<StatCard
+				size="lg"
+				title="Active Workforce"
+				value="1,620"
+				variant="tile"
+			/>
+		);
+
+		const card = screen.getByRole("region", { name: "Active Workforce" });
+		expect(card).toHaveClass("bg-ink-blue-50");
+		expect(within(card).getByRole("heading")).toHaveClass("uppercase");
+		expect(within(card).getByText("1,620")).toHaveClass("text-[5rem]");
+	});
 });
