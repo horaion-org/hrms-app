@@ -392,6 +392,17 @@
     "increase": "Más {{label}}"
   },
   "scheduling": {
+    "timeRange": "{{start}} – {{end}}",
+    "days": {
+      "MON": "lun",
+      "TUE": "mar",
+      "WED": "mié",
+      "THU": "jue",
+      "FRI": "vie",
+      "SAT": "sáb",
+      "SUN": "dom",
+      "weekdays": "Entre semana"
+    },
     "shiftColours": {
       "terracotta": "Terracota",
       "peach": "Melocotón",
@@ -413,6 +424,31 @@
       "maroon": "Granate",
       "pink": "Rosa",
       "grey": "Gris"
+    },
+    "setup": {
+      "title": "Configuración del horario",
+      "description": "Selecciona el departamento y el periodo de tu nuevo horario.",
+      "department": "Departamento",
+      "departmentPlaceholder": "Selecciona un departamento",
+      "departmentsNone": "No tienes permiso para crear horarios en ningún departamento activo.",
+      "departmentsError": "No se pudieron cargar los departamentos. Inténtalo más tarde.",
+      "departmentLocked": "Un borrador guardado se queda en su departamento.",
+      "name": "Nombre del horario",
+      "namePlaceholder": "p. ej., Recepción - Semana 16",
+      "period": "Periodo del horario",
+      "periodNote": "Selecciona un periodo que se ajuste a la operativa de tu negocio.",
+      "additional": "Ajustes adicionales",
+      "includeLeave": "Incluir solicitudes de ausencia",
+      "includeLeaveDescription": "Tener en cuenta las ausencias aprobadas al generar el horario.",
+      "allowOpenShifts": "Permitir turnos abiertos",
+      "allowOpenShiftsDescription": "Generar el horario aunque algunos turnos queden sin asignar.",
+      "validation": {
+        "department": "Elige un departamento.",
+        "name": "Escribe un nombre para el horario.",
+        "nameLength": "Usa de 2 a {{max}} caracteres.",
+        "nameCharacters": "Usa solo letras, números, espacios y . ' & - en el nombre.",
+        "period": "Elige un periodo."
+      }
     },
     "shifts": {
       "title": "Seleccionar turnos",

@@ -1148,6 +1148,17 @@
 		"increase": "More {{label}}"
 	},
 	"scheduling": {
+		"timeRange": "{{start}} – {{end}}",
+		"days": {
+			"MON": "Mon",
+			"TUE": "Tue",
+			"WED": "Wed",
+			"THU": "Thu",
+			"FRI": "Fri",
+			"SAT": "Sat",
+			"SUN": "Sun",
+			"weekdays": "Weekdays"
+		},
 		"shiftColours": {
 			"terracotta": "Terracotta",
 			"peach": "Peach",
@@ -1169,6 +1180,31 @@
 			"maroon": "Maroon",
 			"pink": "Pink",
 			"grey": "Grey"
+		},
+		"setup": {
+			"title": "Schedule setup",
+			"description": "Select the department and scheduling period for your new schedule.",
+			"department": "Department",
+			"departmentPlaceholder": "Select a department",
+			"departmentsNone": "You don’t have permission to create schedules in any active department.",
+			"departmentsError": "Departments couldn’t be loaded. Try again later.",
+			"departmentLocked": "A saved draft stays with its department.",
+			"name": "Schedule name",
+			"namePlaceholder": "e.g. Front Office - Week 16",
+			"period": "Schedule period",
+			"periodNote": "Select a period that aligns with your business operations.",
+			"additional": "Additional settings",
+			"includeLeave": "Include leave requests",
+			"includeLeaveDescription": "Consider approved leave when generating the schedule.",
+			"allowOpenShifts": "Allow open shifts",
+			"allowOpenShiftsDescription": "Generate schedule even if some shifts remain unassigned.",
+			"validation": {
+				"department": "Choose a department.",
+				"name": "Enter a schedule name.",
+				"nameLength": "Use 2 to {{max}} characters.",
+				"nameCharacters": "Use only letters, numbers, spaces and . ' & - in the name.",
+				"period": "Choose a schedule period."
+			}
 		},
 		"shifts": {
 			"title": "Select shifts",
