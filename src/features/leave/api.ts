@@ -11,6 +11,11 @@ import {
 	fetchList,
 	type ListPage,
 } from "@/features/organisation/api";
+import {
+	accessiblePreviousData,
+	administrativeMeta,
+	selfMeta,
+} from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";
 
 const leaveTypeSchema = z.enum([
@@ -127,9 +132,10 @@ export const leaveRequestsPath = (
 
 export const fetchLeaveRequests = (
 	companyId: string,
-	query: LeaveQuery
+	query: LeaveQuery,
+	signal?: AbortSignal
 ): Promise<ListPage<LeaveRequest>> =>
-	fetchList(leaveRequestsPath(companyId, query), leaveRequestSchema);
+	fetchList(leaveRequestsPath(companyId, query), leaveRequestSchema, signal);
 
 /**
  * One page of the company's leave requests inside the person's grants; each
@@ -149,11 +155,12 @@ export const leaveRequestsQuery = (
 	queryOptions({
 		queryKey: ["leave", companyId, query] as const,
 		queryFn: allowed
-			? (): Promise<ListPage<LeaveRequest>> =>
-					fetchLeaveRequests(companyId, query)
+			? ({ signal }): Promise<ListPage<LeaveRequest>> =>
+					fetchLeaveRequests(companyId, query, signal)
 			: skipToken,
-		// Keep the current rows on screen while another page, filter or window loads.
-		placeholderData: keepPreviousData,
+		// Keep the current rows on screen while another page, filter or window loads, unless withdrawn.
+		placeholderData: accessiblePreviousData(),
+		meta: administrativeMeta(companyId),
 		staleTime: 30_000,
 		retry,
 	});
@@ -170,9 +177,10 @@ export const myLeaveRequestsPath = (
 
 export const fetchMyLeaveRequests = (
 	companyId: string,
-	query: LeaveQuery
+	query: LeaveQuery,
+	signal?: AbortSignal
 ): Promise<ListPage<LeaveRequest>> =>
-	fetchList(myLeaveRequestsPath(companyId, query), leaveRequestSchema);
+	fetchList(myLeaveRequestsPath(companyId, query), leaveRequestSchema, signal);
 
 /** One page of the caller's own leave requests; any active member may ask. */
 export const myLeaveRequestsQuery = (
@@ -186,9 +194,11 @@ export const myLeaveRequestsQuery = (
 > =>
 	queryOptions({
 		queryKey: ["leave", companyId, "me", query] as const,
-		queryFn: (): Promise<ListPage<LeaveRequest>> =>
-			fetchMyLeaveRequests(companyId, query),
+		queryFn: ({ signal }): Promise<ListPage<LeaveRequest>> =>
+			fetchMyLeaveRequests(companyId, query, signal),
 		placeholderData: keepPreviousData,
+		// Own records: never gated by, or withdrawn for, administrative grants.
+		meta: selfMeta(companyId),
 		staleTime: 30_000,
 		retry,
 	});

@@ -4,18 +4,22 @@ import userEvent from "@testing-library/user-event";
 import { useState, type ReactElement } from "react";
 import { I18nextProvider } from "react-i18next";
 import { describe, expect, it, vi } from "vitest";
+import { effectiveWorkspace } from "@/common/testing/effectiveWorkspace";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import { workspaceQuery, type Workspace } from "@/features/workspace/api";
 import { BranchSelector } from "@/features/workspace/BranchSelector";
 
 const LEAVE_READ = "leave_request:read";
 
-const workspace = (
+const grantedWorkspace = (
 	branches: Workspace["companies"][number]["branches"],
 	permissions: Array<string> = []
 ): Workspace => ({
 	companies: [{ uuid: "c-1", name: "Acme", permissions, branches }],
 });
+/** As the API sends it: grants made above a unit are effective at it too. */
+const workspace = (...args: Parameters<typeof grantedWorkspace>): Workspace =>
+	effectiveWorkspace(grantedWorkspace(...args));
 
 /** Orchard and Jurong in Singapore, Kuala Lumpur in Malaysia; the key is held where `held` names. */
 const threeBranches = (held: ReadonlyArray<string>): Workspace =>
@@ -110,11 +114,13 @@ describe("BranchSelector", () => {
 
 	it("offers every Branch for a key held company-wide, by country then name", async () => {
 		const user = userEvent.setup();
-		renderWith({
-			companies: [
-				{ ...threeBranches([]).companies[0]!, permissions: [LEAVE_READ] },
-			],
-		});
+		renderWith(
+			effectiveWorkspace({
+				companies: [
+					{ ...threeBranches([]).companies[0]!, permissions: [LEAVE_READ] },
+				],
+			})
+		);
 
 		await user.click(await screen.findByRole("button", { name: "Country" }));
 		expect(

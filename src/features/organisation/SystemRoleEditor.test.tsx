@@ -253,7 +253,7 @@ describe("System role editor", () => {
 		expect(box("Branches", "Edit")).toBeChecked();
 	});
 
-	it("saves back untouched any permission this app's catalog doesn't know", async () => {
+	it("shows a permission this app's catalog doesn't know as locked and saves it back untouched", async () => {
 		const user = userEvent.setup();
 		const calls = stubApi({
 			...routes([...PERMISSION_KEYS, "leave:approve"]),
@@ -261,6 +261,15 @@ describe("System role editor", () => {
 		});
 		await open(EDITOR);
 		await screen.findByRole("textbox", { name: /Role name/ });
+
+		expect(
+			screen.getByText(
+				"This role has a permission this version of the app doesn’t recognise. It is kept as it is when you save. Reload the page to update the app and change it."
+			)
+		).toBeVisible();
+		const unknown = box("Not recognised", "leave:approve");
+		expect(unknown).toBeChecked();
+		expect(unknown).toBeDisabled();
 
 		await user.click(box("Branches", "Edit"));
 		await user.click(save());

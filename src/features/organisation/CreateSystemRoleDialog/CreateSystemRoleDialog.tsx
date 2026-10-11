@@ -9,11 +9,12 @@ import {
 	createSystemRoleSchema,
 	type CreateSystemRoleValues,
 } from "@/features/organisation/CreateSystemRoleDialog/schema";
-import { PermissionsGrid } from "@/features/organisation/PermissionsGrid";
-import { PERMISSION_KEYS } from "@/features/organisation/permissionCatalogue";
+import { FormRow, formRowIds } from "@/components/forms/FormRow";
+import { PermissionChecklist } from "@/features/organisation/PermissionChecklist";
 import { UnitNameField } from "@/features/organisation/UnitNameField";
 import { useCreateFormSubmit } from "@/features/organisation/useCreateFormSubmit";
 import { useCreateAccessRole } from "@/features/organisation/useCreateInOrganisation";
+import { PERMISSION_KEYS } from "@/features/workspace/permissionKeys";
 
 export type CreateSystemRoleDialogProps = {
 	companyId: string;
@@ -57,9 +58,11 @@ export const CreateSystemRoleDialog = ({
 		control,
 		name: ["name", "permissions"],
 	});
-	const holdsEverything = PERMISSION_KEYS.every((permission) =>
-		heldPermissions.has(permission)
+	const unavailable = PERMISSION_KEYS.filter(
+		(permission) => !heldPermissions.has(permission)
 	);
+	const permissionsId = `${formId}-permissions`;
+	const permissionsIds = formRowIds(permissionsId);
 	const create = useCreateAccessRole(companyId);
 	const submit = useCreateFormSubmit(form, FIELDS, onClose);
 	return (
@@ -103,24 +106,36 @@ export const CreateSystemRoleDialog = ({
 				control={control}
 				name="permissions"
 				render={({ field }) => (
-					<PermissionsGrid
-						ref={field.ref}
+					<FormRow
 						required
-						disabled={isSubmitting}
 						error={errors.permissions?.message}
-						grantable={heldPermissions}
-						legend={t(`${key}.permissions`)}
-						value={field.value}
+						htmlFor={permissionsId}
+						label={t(`${key}.permissions`)}
+						layout="stacked"
 						counter={t(`${key}.permissionsCounter`, {
 							count: field.value.length,
 						})}
 						hint={t(
-							holdsEverything
+							unavailable.length === 0
 								? `${key}.permissionsHint`
 								: `${key}.permissionsHeld`
 						)}
-						onChange={field.onChange}
-					/>
+					>
+						<PermissionChecklist
+							ref={field.ref}
+							disabled={isSubmitting}
+							id={permissionsId}
+							label={t(`${key}.permissions`)}
+							unavailable={unavailable}
+							value={field.value}
+							describedBy={
+								errors.permissions
+									? permissionsIds.errorId
+									: permissionsIds.hintId
+							}
+							onChange={field.onChange}
+						/>
+					</FormRow>
 				)}
 			/>
 		</CreateFormDialog>

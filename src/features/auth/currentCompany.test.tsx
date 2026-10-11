@@ -24,6 +24,11 @@ import {
 } from "@/features/auth/currentCompany";
 import { endSession, hasAccessPass } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
+import {
+	administrativeMeta,
+	selfMeta,
+	type QueryAccessMeta,
+} from "@/features/workspace/queryAccess";
 
 const REFRESH = "POST /api/v1/public/sessions/refreshes";
 const ME = "GET /api/v1/me";
@@ -278,4 +283,44 @@ it("restores a switched company with a fresh router and Session renewal", async 
 		currentCompany: { kind: "settled", company: { companyId: "b" } },
 	});
 	expect(hasAccessPass()).toBe(true);
+});
+it("drops everything read in a company whose membership was revoked, own records included, and keeps other companies' (F09)", async () => {
+	rememberCompany("a");
+	stubApi({
+		[REFRESH]: accessPassReply(),
+		[ME]: [
+			currentUserReply([membership("a"), membership("b")]),
+			currentUserReply([membership("b")]),
+		],
+		"GET /api/v1/companies/a/example": problemReply(403, "MEMBERSHIP_REVOKED"),
+	});
+	const opened = await open();
+	await companyHeading("a");
+	const seed = (queryKey: Array<string>, meta: QueryAccessMeta): void => {
+		opened.queryClient.getQueryCache().build(opened.queryClient, {
+			queryKey,
+			meta,
+		});
+		opened.queryClient.setQueryData(queryKey, ["cached"]);
+	};
+	seed(["people", "a", "list"], administrativeMeta("a"));
+	seed(["people", "a", "me"], selfMeta("a"));
+	seed(["people", "b", "list"], administrativeMeta("b"));
+
+	await act(async () => {
+		await expect(
+			apiRequest("/api/v1/companies/a/example", z.unknown())
+		).rejects.toMatchObject({ errorCode: "MEMBERSHIP_REVOKED" });
+	});
+
+	expect(
+		opened.queryClient.getQueryData(["people", "a", "list"])
+	).toBeUndefined();
+	expect(
+		opened.queryClient.getQueryData(["people", "a", "me"])
+	).toBeUndefined();
+	expect(opened.queryClient.getQueryData(["people", "b", "list"])).toEqual([
+		"cached",
+	]);
+	expect(await companyHeading("b")).toBeVisible();
 });

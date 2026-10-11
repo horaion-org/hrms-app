@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { I18nextProvider } from "react-i18next";
 import { describe, expect, it, vi } from "vitest";
+import { effectiveWorkspace } from "@/common/testing/effectiveWorkspace";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import { workspaceQuery, type Workspace } from "@/features/workspace/api";
 import { DepartmentSelector } from "@/features/workspace/DepartmentSelector";
@@ -10,7 +11,7 @@ import { DepartmentSelector } from "@/features/workspace/DepartmentSelector";
 const CREATE = "job_title:create";
 
 /** Kitchen and Bar at Orchard (SG), Kitchen at Bukit Bintang (MY); the key held where `held` names. */
-const workspace = (
+const grantedWorkspace = (
 	held: ReadonlyArray<string>,
 	companyPermissions: Array<string> = []
 ): Workspace => {
@@ -64,6 +65,9 @@ const workspace = (
 		],
 	};
 };
+/** As the API sends it: grants made above a unit are effective at it too. */
+const workspace = (...args: Parameters<typeof grantedWorkspace>): Workspace =>
+	effectiveWorkspace(grantedWorkspace(...args));
 
 /** Renders the selector; without `data` the workspace is still loading. */
 const renderWith = (

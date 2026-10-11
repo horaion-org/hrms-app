@@ -19,7 +19,7 @@ export const AddEmployee = (): FunctionComponent => {
 
 	return (
 		<Can
-			anywhere
+			at="anywhere"
 			permission="member_profile:create"
 			fallback={
 				<>

@@ -10,7 +10,7 @@ import {
 	chosenBranch,
 } from "@/features/workspace/unitChoices";
 import { PEOPLE_READ_KEYS } from "@/features/workspace/permissionKeys";
-import { holdsAnywhere } from "@/features/workspace/scopes";
+import { accessIndexOf, canAny } from "@/features/workspace/scopes";
 import { People } from "@/pages/People";
 
 export const Route = createFileRoute("/_authenticated/_app/people")({
@@ -27,11 +27,13 @@ export const Route = createFileRoute("/_authenticated/_app/people")({
 			.ensureQueryData(workspaceQuery)
 			.catch(() => undefined);
 		// Nothing is asked for when the workspace does not grant the list anywhere.
-		if (workspace && holdsAnywhere(workspace, companyId, PEOPLE_READ_KEYS)) {
+		if (
+			canAny(accessIndexOf(workspace, companyId), PEOPLE_READ_KEYS, "anywhere")
+		) {
 			const search = parsePeopleSearch(location.search);
 			// The Branch the page will show, none for all, so its first list is the one fetched here.
 			const branch = chosenBranch(
-				branchChoices(workspace, companyId, PEOPLE_READ_KEYS),
+				workspace ? branchChoices(workspace, companyId, PEOPLE_READ_KEYS) : [],
 				search.branch,
 				true
 			);

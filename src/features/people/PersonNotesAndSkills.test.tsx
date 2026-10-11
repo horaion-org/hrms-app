@@ -1,6 +1,7 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { effectiveWorkspace } from "@/common/testing/effectiveWorkspace";
 import { resetApiClient } from "@/common/api-client";
 import {
 	currentUserReply,
@@ -16,7 +17,6 @@ import {
 } from "@/common/testing/stubApi";
 import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
-import { refreshWorkspaceOnRefusal } from "@/features/workspace/refreshWorkspaceOnRefusal";
 
 const COMPANY = "/api/v1/companies/c-1";
 const PROFILE = `${COMPANY}/member-profiles/m-1`;
@@ -37,33 +37,35 @@ const workspaceReply = (
 	kitchen: Array<string> = []
 ): StubReply => ({
 	status: 200,
-	body: envelope({
-		companies: [
-			{
-				uuid: "c-1",
-				name: "Company c-1",
-				permissions: company,
-				branches: [
-					{
-						uuid: "b-1",
-						name: "Orchard",
-						status: "ACTIVE",
-						country: "SG",
-						permissions: [],
-						departments: [
-							{
-								uuid: "d-1",
-								name: "Kitchen",
-								status: "ACTIVE",
-								permissions: kitchen,
-							},
-							{ uuid: "d-2", name: "Bar", status: "ACTIVE", permissions: [] },
-						],
-					},
-				],
-			},
-		],
-	}),
+	body: envelope(
+		effectiveWorkspace({
+			companies: [
+				{
+					uuid: "c-1",
+					name: "Company c-1",
+					permissions: company,
+					branches: [
+						{
+							uuid: "b-1",
+							name: "Orchard",
+							status: "ACTIVE",
+							country: "SG",
+							permissions: [],
+							departments: [
+								{
+									uuid: "d-1",
+									name: "Kitchen",
+									status: "ACTIVE",
+									permissions: kitchen,
+								},
+								{ uuid: "d-2", name: "Bar", status: "ACTIVE", permissions: [] },
+							],
+						},
+					],
+				},
+			],
+		})
+	),
 });
 /** Reads profiles company-wide; `kitchen` adds keys at department d-1. */
 const reader = (kitchen: Array<string> = []): StubReply =>
@@ -179,13 +181,10 @@ const routes = (
 });
 
 let app: OpenedApp | undefined;
-let stopRefreshing: (() => void) | undefined;
 beforeEach(() => {
 	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
 });
 afterEach(() => {
-	stopRefreshing?.();
-	stopRefreshing = undefined;
 	app?.disconnect();
 	app?.queryClient.clear();
 	app = undefined;
@@ -206,7 +205,6 @@ const open = async (
 	const calls = stubApi(reply);
 	received = calls;
 	app = await openApp(entry);
-	stopRefreshing = refreshWorkspaceOnRefusal(app.queryClient);
 	renderAuthApp(app);
 	await screen.findByRole("heading", { level: 1, name: "Kent Chua" });
 	return calls;

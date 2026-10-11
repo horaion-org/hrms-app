@@ -1,6 +1,5 @@
 import {
 	infiniteQueryOptions,
-	keepPreviousData,
 	queryOptions,
 	skipToken,
 	type InfiniteData,
@@ -15,6 +14,11 @@ import {
 	fetchList,
 	type ListPage,
 } from "@/features/organisation/api";
+import {
+	accessiblePreviousData,
+	administrativeMeta,
+	selfMeta,
+} from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";
 
 const memberStatusSchema = z.enum(["ACTIVE", "INACTIVE"]);
@@ -99,9 +103,10 @@ export const peoplePath = (
 
 export const fetchPeople = (
 	companyId: string,
-	query: PeopleQuery
+	query: PeopleQuery,
+	signal?: AbortSignal
 ): Promise<ListPage<MemberProfile>> =>
-	fetchList(peoplePath(companyId, query), memberProfileSchema);
+	fetchList(peoplePath(companyId, query), memberProfileSchema, signal);
 
 /**
  * One page of the company's people; each page, sort, status and search is
@@ -121,10 +126,12 @@ export const peopleQuery = (
 	queryOptions({
 		queryKey: ["people", companyId, query] as const,
 		queryFn: allowed
-			? (): Promise<ListPage<MemberProfile>> => fetchPeople(companyId, query)
+			? ({ signal }): Promise<ListPage<MemberProfile>> =>
+					fetchPeople(companyId, query, signal)
 			: skipToken,
-		// Keep the current rows on screen while another page, sort or filter loads.
-		placeholderData: keepPreviousData,
+		// Keep the current rows on screen while another page, sort or filter loads, unless withdrawn.
+		placeholderData: accessiblePreviousData(),
+		meta: administrativeMeta(companyId),
 		// The route loader's fetch serves the first render instead of being repeated on mount.
 		staleTime: 30_000,
 		retry,
@@ -218,17 +225,26 @@ const memberProfilePath = (companyId: string, membershipId: string): string =>
  */
 export const fetchMemberProfile = (
 	companyId: string,
-	membershipId: string
+	membershipId: string,
+	signal?: AbortSignal
 ): Promise<MemberProfileDetail> =>
 	apiRequest(
 		memberProfilePath(companyId, membershipId),
-		memberProfileDetailSchema
+		memberProfileDetailSchema,
+		{ signal }
 	);
 
 /** One person's profile; inside the People entries, so changes to people reload it. */
 /** The caller's own profile in the company: no member id, the API resolves it from the membership. */
-export const fetchMyProfile = (companyId: string): Promise<MemberProfileDetail> =>
-	apiRequest(`${companyPath(companyId)}/me/profile`, memberProfileDetailSchema);
+export const fetchMyProfile = (
+	companyId: string,
+	signal?: AbortSignal
+): Promise<MemberProfileDetail> =>
+	apiRequest(
+		`${companyPath(companyId)}/me/profile`,
+		memberProfileDetailSchema,
+		{ signal }
+	);
 
 export const myProfileQuery = (
 	companyId: string
@@ -240,7 +256,9 @@ export const myProfileQuery = (
 > =>
 	queryOptions({
 		queryKey: ["people", companyId, "me"] as const,
-		queryFn: () => fetchMyProfile(companyId),
+		queryFn: ({ signal }) => fetchMyProfile(companyId, signal),
+		// Own record: never gated by, or withdrawn for, administrative grants.
+		meta: selfMeta(companyId),
 		staleTime: 30_000,
 		retry,
 	});
@@ -256,7 +274,10 @@ export const memberProfileQuery = (
 > =>
 	queryOptions({
 		queryKey: ["people", companyId, "profile", membershipId] as const,
-		queryFn: () => fetchMemberProfile(companyId, membershipId),
+		queryFn: ({ signal }) =>
+			fetchMemberProfile(companyId, membershipId, signal),
+		// A 404 here may mean the person moved out of reach: see `refreshWorkspaceOnRefusal`.
+		meta: administrativeMeta(companyId, { record: true }),
 		// The route loader's fetch serves the first render instead of being repeated on mount.
 		staleTime: 30_000,
 		retry,
@@ -344,14 +365,16 @@ export const NOTE_MAX_LENGTH = 1000;
 export const fetchMemberNotes = (
 	companyId: string,
 	membershipId: string,
-	page: number
+	page: number,
+	signal?: AbortSignal
 ): Promise<ListPage<MemberNote>> =>
 	fetchList(
 		`${memberProfilePath(companyId, membershipId)}/notes?${new URLSearchParams({
 			page: String(page),
 			size: String(NOTES_PAGE_SIZE),
 		}).toString()}`,
-		memberNoteSchema
+		memberNoteSchema,
+		signal
 	);
 
 /**
@@ -370,8 +393,9 @@ export const memberNotesQuery = (
 > =>
 	infiniteQueryOptions({
 		queryKey: ["people", companyId, "profile", membershipId, "notes"] as const,
-		queryFn: ({ pageParam }) =>
-			fetchMemberNotes(companyId, membershipId, pageParam),
+		queryFn: ({ pageParam, signal }) =>
+			fetchMemberNotes(companyId, membershipId, pageParam, signal),
+		meta: administrativeMeta(companyId),
 		initialPageParam: 0,
 		getNextPageParam: (last, pages) =>
 			pages.reduce((count, page) => count + page.items.length, 0) <
@@ -433,11 +457,13 @@ export type SkillValue = { name: string; proficiency: number };
 /** A person's skills, ordered by name; not paged. */
 export const fetchMemberSkills = (
 	companyId: string,
-	membershipId: string
+	membershipId: string,
+	signal?: AbortSignal
 ): Promise<Array<MemberSkill>> =>
 	apiRequest(
 		`${memberProfilePath(companyId, membershipId)}/skills`,
-		z.array(memberSkillSchema)
+		z.array(memberSkillSchema),
+		{ signal }
 	);
 
 /** A person's skills; inside their profile's entries, so a saved profile reloads them. */
@@ -452,7 +478,8 @@ export const memberSkillsQuery = (
 > =>
 	queryOptions({
 		queryKey: ["people", companyId, "profile", membershipId, "skills"] as const,
-		queryFn: () => fetchMemberSkills(companyId, membershipId),
+		queryFn: ({ signal }) => fetchMemberSkills(companyId, membershipId, signal),
+		meta: administrativeMeta(companyId),
 		retry,
 	});
 

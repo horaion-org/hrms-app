@@ -10,6 +10,7 @@ import {
 	type ListPage,
 } from "@/features/organisation/api";
 import { retry } from "@/features/organisation/useOrganisationOverview";
+import { selfMeta } from "@/features/workspace/queryAccess";
 
 /** Delays search requests while typing and preserves the current page during a new request. */
 export const useCompanyMemberSearch = (
@@ -27,12 +28,14 @@ export const useCompanyMemberSearch = (
 	}, [query]);
 	return useQuery({
 		queryKey: ["organisation", companyId, "members", "ACTIVE", debounced],
-		queryFn: () =>
-			searchCompanyMembers(companyId, {
-				search: debounced,
-				status: "ACTIVE",
-				size: 20,
-			}),
+		queryFn: ({ signal }) =>
+			searchCompanyMembers(
+				companyId,
+				{ search: debounced, status: "ACTIVE", size: 20 },
+				signal
+			),
+		// The colleagues directory is open to every active member, not reached through grants.
+		meta: selfMeta(companyId),
 		placeholderData: (previous, previousQuery) =>
 			previousQuery?.queryKey[1] === companyId
 				? keepPreviousData(previous)

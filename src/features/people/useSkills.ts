@@ -1,5 +1,4 @@
 import {
-	keepPreviousData,
 	useMutation,
 	useQuery,
 	useQueryClient,
@@ -17,6 +16,10 @@ import {
 	type SkillValue,
 } from "@/features/people/api";
 import { sameSkills } from "@/features/people/skills";
+import {
+	accessiblePreviousData,
+	administrativeMeta,
+} from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 
@@ -57,7 +60,8 @@ export const useSkillSuggestions = (
 	return useQuery({
 		queryKey: ["people", companyId, "skills", search] as const,
 		queryFn: () => searchCompanySkills(companyId, search),
-		placeholderData: keepPreviousData,
+		placeholderData: accessiblePreviousData(),
+		meta: administrativeMeta(companyId),
 		retry,
 	});
 };

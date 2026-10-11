@@ -21,7 +21,8 @@ import { useSetJobTitleStatus } from "@/features/organisation/useChangeListRow";
 import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import { useJobTitles } from "@/features/organisation/useOrganisationList";
 import { placeOf } from "@/features/organisation/assignmentTargets";
-import { useCan, useCanAnywhere } from "@/features/workspace/useCan";
+import { departmentScope } from "@/features/workspace/scopes";
+import { useAccess } from "@/features/workspace/useAccess";
 
 /** The company's Job titles: HR labels only, so no role or headcount columns yet. */
 export const JobTitles = (): FunctionComponent => {
@@ -29,12 +30,12 @@ export const JobTitles = (): FunctionComponent => {
 	const { t } = useTranslation();
 	const [creating, setCreating] = useState(false);
 	// Creating needs the key at some department; editing a title needs it at that title's department.
-	const canCreate = useCanAnywhere()(["job_title:create"]);
-	const can = useCan();
+	const access = useAccess();
+	const canCreate = access.canAnywhere("job_title:create");
 	const canEdit = useCallback(
 		(jobTitle: JobTitle): boolean =>
-			can("job_title:update", jobTitle.departmentId),
-		[can]
+			access.can("job_title:update", departmentScope(jobTitle.departmentId)),
+		[access]
 	);
 	const [editing, setEditing] = useState<JobTitle>();
 	// The Job title whose status the person asked to change, until they confirm or cancel.

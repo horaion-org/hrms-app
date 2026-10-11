@@ -3,9 +3,10 @@ import {
 	useQuery,
 	type UseQueryResult,
 } from "@tanstack/react-query";
-import { workspaceQuery } from "@/features/workspace/api";
+import { administrativeMeta } from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";
-import { useCan, useCanAnywhere } from "@/features/workspace/useCan";
+import { COMPANY_SCOPE } from "@/features/workspace/scopes";
+import { useAccess } from "@/features/workspace/useAccess";
 import {
 	fetchAccessRoleCount,
 	fetchActiveBranchCount,
@@ -52,20 +53,20 @@ const visibleCount = (
 export const useOrganisationOverview = (
 	companyId: string
 ): OrganisationOverview => {
-	const workspace = useQuery({ ...workspaceQuery, retry });
-	const can = useCan();
-	const canAnywhere = useCanAnywhere();
+	const access = useAccess();
+	const meta = administrativeMeta(companyId);
 	// Unit lists are filtered to the person's grant scopes by the API, so a key held anywhere is enough.
-	const canReadBranches = canAnywhere(["branch:read"]);
-	const canReadDepartments = canAnywhere(["department:read"]);
-	const canReadJobTitles = canAnywhere(["job_title:read"]);
+	const canReadBranches = access.canAnywhere("branch:read");
+	const canReadDepartments = access.canAnywhere("department:read");
+	const canReadJobTitles = access.canAnywhere("job_title:read");
 	// Roles and the activity feed have no unit, so they still need the key at the company.
-	const canReadAccessRoles = can("access_role:read");
-	const canReadActivity = can("audit_event:read");
+	const canReadAccessRoles = access.can("access_role:read", COMPANY_SCOPE);
+	const canReadActivity = access.can("audit_event:read", COMPANY_SCOPE);
 
 	const branches = useQuery({
 		queryKey: ["organisation", companyId, "active-branch-count"],
 		retry,
+		meta,
 		queryFn: canReadBranches
 			? (): Promise<number> => fetchActiveBranchCount(companyId)
 			: skipToken,
@@ -73,6 +74,7 @@ export const useOrganisationOverview = (
 	const departments = useQuery({
 		queryKey: ["organisation", companyId, "active-department-count"],
 		retry,
+		meta,
 		queryFn: canReadDepartments
 			? (): Promise<number> => fetchActiveDepartmentCount(companyId)
 			: skipToken,
@@ -80,6 +82,7 @@ export const useOrganisationOverview = (
 	const jobTitles = useQuery({
 		queryKey: ["organisation", companyId, "active-job-title-count"],
 		retry,
+		meta,
 		queryFn: canReadJobTitles
 			? (): Promise<number> => fetchActiveJobTitleCount(companyId)
 			: skipToken,
@@ -87,6 +90,7 @@ export const useOrganisationOverview = (
 	const accessRoles = useQuery({
 		queryKey: ["organisation", companyId, "access-role-count"],
 		retry,
+		meta,
 		queryFn: canReadAccessRoles
 			? (): Promise<number> => fetchAccessRoleCount(companyId)
 			: skipToken,
@@ -94,14 +98,14 @@ export const useOrganisationOverview = (
 	const activity = useQuery({
 		queryKey: ["organisation", companyId, "recent-activity"],
 		retry,
+		meta,
 		queryFn: canReadActivity
 			? (): Promise<Array<AuditEvent>> =>
 					fetchRecentActivity(companyId, RECENT_ACTIVITY_SIZE)
 			: skipToken,
 	});
 
-	if (workspace.isPending) return { status: "pending" };
-	if (workspace.isError) return { status: "error" };
+	if (access.status !== "ready") return { status: access.status };
 	return {
 		status: "ready",
 		branches: visibleCount(canReadBranches, branches),

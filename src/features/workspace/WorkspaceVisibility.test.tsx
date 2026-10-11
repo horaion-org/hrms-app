@@ -1,5 +1,6 @@
-import { screen, within } from "@testing-library/react";
+import { act, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { effectiveWorkspace } from "@/common/testing/effectiveWorkspace";
 import { resetApiClient } from "@/common/api-client";
 import {
 	currentUserReply,
@@ -14,6 +15,7 @@ import {
 } from "@/common/testing/stubApi";
 import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
+import { workspaceQuery } from "@/features/workspace/api";
 
 const REFRESH = "POST /api/v1/public/sessions/refreshes";
 const ME = "GET /api/v1/me";
@@ -45,36 +47,49 @@ const open = async (entry: string): Promise<OpenedApp> => {
 	return app;
 };
 
-/** One Branch, `b-1`, holding the given Departments. */
+/**
+ * Two Branches, `b-1` holding the given Departments and `b-2` with none,
+ * as the API sends them: grants made above a unit are effective at it too.
+ */
 const workspaceReply = (
 	companyPermissions: Array<string>,
 	branchPermissions: Array<string> = [],
 	departments: Array<Unit> = []
 ): StubReply => ({
 	status: 200,
-	body: envelope({
-		companies: [
-			{
-				uuid: "c-1",
-				name: "Company c-1",
-				permissions: companyPermissions,
-				branches: [
-					{
-						uuid: "b-1",
-						name: "Orchard",
-						status: "ACTIVE",
-						country: "SG",
-						permissions: branchPermissions,
-						departments: departments.map((department) => ({
-							...department,
-							name: department.uuid,
+	body: envelope(
+		effectiveWorkspace({
+			companies: [
+				{
+					uuid: "c-1",
+					name: "Company c-1",
+					permissions: companyPermissions,
+					branches: [
+						{
+							uuid: "b-1",
+							name: "Orchard",
 							status: "ACTIVE",
-						})),
-					},
-				],
-			},
-		],
-	}),
+							country: "SG",
+							permissions: branchPermissions,
+							departments: departments.map((department) => ({
+								...department,
+								name: department.uuid,
+								status: "ACTIVE",
+							})),
+						},
+						{
+							uuid: "b-2",
+							name: "Bugis",
+							status: "ACTIVE",
+							country: "SG",
+							permissions: [],
+							departments: [],
+						},
+					],
+				},
+			],
+		})
+	),
 });
 
 const pageReply = (content: Array<Record<string, unknown>>): StubReply => ({
@@ -111,6 +126,50 @@ describe("the Organisation entry in the sidebar", () => {
 			await screen.findByRole("link", { name: "Dashboard" })
 		).toBeVisible();
 		expect(organisationLink()).not.toBeInTheDocument();
+	});
+
+	it("appears after the workspace reloads with a grant made elsewhere, without logging out, and stays through later reloads (F06)", async () => {
+		const calls = stubApi({
+			...routes(workspaceReply(["company:read"])),
+			[WORKSPACE]: [
+				workspaceReply(["company:read"]),
+				workspaceReply(["company:read", "branch:read"]),
+			],
+		});
+		const opened = await open("/");
+		await screen.findByRole("link", { name: "Dashboard" });
+		expect(organisationLink()).not.toBeInTheDocument();
+
+		// What polling, focus or reconnect does once the answer is stale.
+		await act(async () => {
+			await opened.queryClient.refetchQueries({ queryKey: ["workspace"] });
+		});
+		expect(
+			await screen.findByRole("link", { name: "Organisation" })
+		).toBeVisible();
+
+		// A reload in flight keeps the last answer on screen.
+		const reload = opened.queryClient.refetchQueries({
+			queryKey: ["workspace"],
+		});
+		expect(organisationLink()).toBeVisible();
+		await act(async () => {
+			await reload;
+		});
+		expect(organisationLink()).toBeVisible();
+		expect(
+			calls.filter((call) => call.path === "/api/v1/me/workspace")
+		).toHaveLength(3);
+	});
+
+	it("keeps the workspace fresh within bounds rather than forever", () => {
+		expect(workspaceQuery).toMatchObject({
+			staleTime: 30_000,
+			refetchOnWindowFocus: true,
+			refetchOnReconnect: true,
+			refetchInterval: 60_000,
+			refetchIntervalInBackground: false,
+		});
 	});
 
 	it("is offered when a read key is held company-wide", async () => {

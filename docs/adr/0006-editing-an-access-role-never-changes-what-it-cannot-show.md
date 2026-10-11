@@ -19,3 +19,7 @@ After a save the app reloads the workspace as well as the Organisation lists, be
 Two people editing the same role overwrite each other, the later save winning. The API has no version check on access roles; adding one is an API decision.
 
 The role is fetched again on every visit to the editor and is never read from a cache, so an edit always starts from the role as it is now.
+
+## Amended 2026-10-09: the catalogue comes from the API's contract
+
+The app's catalogue is now generated from the API's permission contract (ADR-0005), which also declares each key's prerequisites. A key the role holds that the generated catalogue does not know is now shown, ticked and locked, in a "Not recognised" row with a notice that the app needs updating, and is still sent back unchanged with every save. Ticking follows the contract's `prerequisites` instead of a hand-coded "every write needs its resource's view" rule (today the two are the same), and a key whose prerequisite the person cannot grant is disabled with the reason. The rule still applies only to what the person ticks: an existing role holding a write without its prerequisite is shown as it is and not altered by opening it.

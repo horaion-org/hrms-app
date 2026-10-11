@@ -1,8 +1,7 @@
 import { countryName } from "@/common/countries";
 import { useMemo, useState } from "react";
-import { useCan } from "@/features/workspace/useCan";
-import { useQuery } from "@tanstack/react-query";
-import { companyPermissions, workspaceQuery } from "@/features/workspace/api";
+import { useAccess } from "@/features/workspace/useAccess";
+import { branchScope, COMPANY_SCOPE } from "@/features/workspace/scopes";
 import { CreateBranchDialog } from "@/features/organisation/CreateBranchDialog";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
@@ -28,7 +27,7 @@ import { useBranches } from "@/features/organisation/useOrganisationList";
 
 export const Branches = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
-	const can = useCan();
+	const access = useAccess();
 	const { t, i18n } = useTranslation();
 	const [creating, setCreating] = useState(false);
 	// The Branch whose status the person asked to change, until they confirm or cancel.
@@ -41,11 +40,8 @@ export const Branches = (): FunctionComponent => {
 		setBranchStatus.reset();
 		setChanging(undefined);
 	};
-	const workspace = useQuery(workspaceQuery);
-	const permissions = workspace.data
-		? companyPermissions(workspace.data, companyId)
-		: new Set<string>();
-	const canCreate = permissions.has("branch:create");
+	// A Branch is created at the company.
+	const canCreate = access.can("branch:create", COMPANY_SCOPE);
 	const [search, setSearch] = useState("");
 	const [status, setStatus] = useState<StatusFilter>("all");
 	const [sort, setSort] = useState<DataTableSort>({ id: "name", desc: false });
@@ -95,7 +91,9 @@ export const Branches = (): FunctionComponent => {
 							{t("organisation.list.duplicateItem")}
 						</OverflowMenuItem>
 						<OverflowMenuItem
-							disabled={!can("branch:update", branch.branchId)}
+							disabled={
+								!access.can("branch:update", branchScope(branch.branchId))
+							}
 							onClick={() => {
 								setChanging(branch);
 							}}
@@ -109,10 +107,10 @@ export const Branches = (): FunctionComponent => {
 					</>
 				),
 				// Editing a Branch is granted at that Branch, or company-wide.
-				(branch) => can("branch:update", branch.branchId)
+				(branch) => access.can("branch:update", branchScope(branch.branchId))
 			),
 		],
-		[t, i18n.language, can]
+		[t, i18n.language, access]
 	);
 
 	return (

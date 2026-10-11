@@ -1,7 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useMemo, useState } from "react";
-import { useCan } from "@/features/workspace/useCan";
-import { useQuery } from "@tanstack/react-query";
+import { COMPANY_SCOPE, effectiveAt } from "@/features/workspace/scopes";
+import { useAccess } from "@/features/workspace/useAccess";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import {
@@ -30,22 +30,17 @@ import {
 	type SystemRoleAction,
 } from "@/pages/SystemRoleActions";
 import { AssignSystemRole } from "@/pages/SystemRoleHolders";
-import { companyPermissions, workspaceQuery } from "@/features/workspace/api";
 
 /** Access roles, shown as "System roles". */
 export const SystemRoles = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
 	const { t } = useTranslation();
 	const [creating, setCreating] = useState(false);
-	const workspace = useQuery(workspaceQuery);
-	const permissions = useMemo(
-		() =>
-			workspace.data
-				? companyPermissions(workspace.data, companyId)
-				: new Set<string>(),
-		[workspace.data, companyId]
-	);
-	const canCreate = permissions.has("access_role:create");
+	const access = useAccess();
+	// Role definitions are shared by the whole company: changing them is company authority.
+	const canCreate = access.can("access_role:create", COMPANY_SCOPE);
+	// The API's subset rule compares a role with what the person holds company-wide.
+	const permissions = effectiveAt(access.index, COMPANY_SCOPE);
 	const [search, setSearch] = useState("");
 	const [status, setStatus] = useState<StatusFilter>("all");
 	const [sort, setSort] = useState<DataTableSort>({ id: "name", desc: false });
@@ -60,12 +55,11 @@ export const SystemRoles = (): FunctionComponent => {
 		t("organisation.accessRoles.empty"),
 		t
 	);
-	const can = useCan();
 	// The Company Owner role is never edited; any other needs the update key.
 	const canEdit = useCallback(
 		(role: AccessRole): boolean =>
-			!role.protectedRole && can("access_role:update"),
-		[can]
+			!role.protectedRole && access.can("access_role:update", COMPANY_SCOPE),
+		[access]
 	);
 	const navigate = useNavigate();
 	// Opens the role on its permissions, which are read-only for a role the person can't change.
@@ -83,7 +77,8 @@ export const SystemRoles = (): FunctionComponent => {
 	const [action, setAction] = useState<SystemRoleAction>();
 	// Neither the Company Owner role nor an inactive role is assigned here.
 	const assignable =
-		list.status === "ready" && can("access_role:assign")
+		// Assigning happens at a place; the dialog offers only places where it is held.
+		list.status === "ready" && access.canAnywhere("access_role:assign")
 			? list.items.filter(
 					(role) => !role.protectedRole && role.status === "ACTIVE"
 				)
@@ -161,7 +156,7 @@ export const SystemRoles = (): FunctionComponent => {
 							disabled={
 								role.protectedRole ||
 								role.holderCount > 0 ||
-								!can("access_role:delete")
+								!access.can("access_role:delete", COMPANY_SCOPE)
 							}
 							onClick={() => {
 								setAction({ kind: "delete", role });
@@ -175,7 +170,7 @@ export const SystemRoles = (): FunctionComponent => {
 				open
 			),
 		],
-		[t, can, canCreate, canEdit, navigate, open]
+		[t, access, canCreate, canEdit, navigate, open]
 	);
 
 	return (

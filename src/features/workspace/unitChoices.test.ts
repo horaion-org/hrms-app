@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { effectiveWorkspace } from "@/common/testing/effectiveWorkspace";
 import type { Workspace } from "@/features/workspace/api";
 import {
 	branchChoices,
@@ -9,7 +10,9 @@ import {
 const KEYS = ["leave_request:read"] as const;
 
 /** Orchard and Jurong in Singapore, Kuala Lumpur in Malaysia, Bugis holding another key. */
-const workspace = (companyPermissions: Array<string> = []): Workspace => ({
+const grantedWorkspace = (
+	companyPermissions: Array<string> = []
+): Workspace => ({
 	companies: [
 		{
 			uuid: "c-1",
@@ -60,6 +63,9 @@ const workspace = (companyPermissions: Array<string> = []): Workspace => ({
 		},
 	],
 });
+/** As the API sends it: grants made above a unit are effective at it too. */
+const workspace = (...args: Parameters<typeof grantedWorkspace>): Workspace =>
+	effectiveWorkspace(grantedWorkspace(...args));
 
 describe("branchChoices", () => {
 	it("offers the Branches holding a key at the Branch or a Department beneath it", () => {
@@ -159,7 +165,7 @@ describe("departmentChoices", () => {
 	});
 
 	/** Bar at Orchard, Sales and Kitchen at Jurong, Cafe at Kuala Lumpur. */
-	const departments = (
+	const grantedDepartments = (
 		held: ReadonlyArray<string>,
 		companyPermissions: Array<string> = []
 	): Workspace => ({
@@ -183,6 +189,10 @@ describe("departmentChoices", () => {
 			},
 		],
 	});
+	/** As the API sends it: grants made above a unit are effective at it too. */
+	const departments = (
+		...args: Parameters<typeof grantedDepartments>
+	): Workspace => effectiveWorkspace(grantedDepartments(...args));
 
 	const ids = (
 		data: Workspace,

@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn, userEvent, within } from "storybook/test";
 import { CreateJobTitleDialog } from "@/features/organisation/CreateJobTitleDialog";
 import { storyProviders, stubStoryApi } from "@/features/organisation/storyApi";
+import { effectiveWorkspace } from "@/common/testing/effectiveWorkspace";
 import { workspaceQuery } from "@/features/workspace/api";
 
 const client = new QueryClient({
@@ -16,32 +17,35 @@ const meta = {
 	beforeEach: ({ parameters }): (() => void) => {
 		const stop = stubStoryApi([], Boolean(parameters["pending"]), client);
 		// One Department the person may add job titles to, so it is chosen for them.
-		client.setQueryData(workspaceQuery.queryKey, {
-			companies: [
-				{
-					uuid: "story-company",
-					name: "Story company",
-					permissions: ["job_title:create"],
-					branches: [
-						{
-							uuid: "b-1",
-							name: "Orchard Road",
-							status: "ACTIVE",
-							country: "SG",
-							permissions: [],
-							departments: [
-								{
-									uuid: "d-1",
-									name: "Kitchen",
-									status: "ACTIVE",
-									permissions: [],
-								},
-							],
-						},
-					],
-				},
-			],
-		});
+		client.setQueryData(
+			workspaceQuery.queryKey,
+			effectiveWorkspace({
+				companies: [
+					{
+						uuid: "story-company",
+						name: "Story company",
+						permissions: ["job_title:create"],
+						branches: [
+							{
+								uuid: "b-1",
+								name: "Orchard Road",
+								status: "ACTIVE",
+								country: "SG",
+								permissions: [],
+								departments: [
+									{
+										uuid: "d-1",
+										name: "Kitchen",
+										status: "ACTIVE",
+										permissions: [],
+									},
+								],
+							},
+						],
+					},
+				],
+			})
+		);
 		return stop;
 	},
 } satisfies Meta<typeof CreateJobTitleDialog>;

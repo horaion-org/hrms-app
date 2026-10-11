@@ -1,6 +1,7 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { effectiveWorkspace } from "@/common/testing/effectiveWorkspace";
 import { resetApiClient } from "@/common/api-client";
 import {
 	currentUserReply,
@@ -16,7 +17,6 @@ import {
 } from "@/common/testing/stubApi";
 import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
-import { refreshWorkspaceOnRefusal } from "@/features/workspace/refreshWorkspaceOnRefusal";
 
 const COMPANY = "/api/v1/companies/c-1";
 const PROFILE = `${COMPANY}/member-profiles/m-1`;
@@ -44,33 +44,35 @@ const workspaceReply = (
 	kitchen: Array<string> = []
 ): StubReply => ({
 	status: 200,
-	body: envelope({
-		companies: [
-			{
-				uuid: "c-1",
-				name: "Company c-1",
-				permissions: company,
-				branches: [
-					{
-						uuid: "b-1",
-						name: "Orchard",
-						status: "ACTIVE",
-						country: "SG",
-						permissions: [],
-						departments: [
-							{
-								uuid: "d-1",
-								name: "Kitchen",
-								status: "ACTIVE",
-								permissions: kitchen,
-							},
-							{ uuid: "d-2", name: "Bar", status: "ACTIVE", permissions: [] },
-						],
-					},
-				],
-			},
-		],
-	}),
+	body: envelope(
+		effectiveWorkspace({
+			companies: [
+				{
+					uuid: "c-1",
+					name: "Company c-1",
+					permissions: company,
+					branches: [
+						{
+							uuid: "b-1",
+							name: "Orchard",
+							status: "ACTIVE",
+							country: "SG",
+							permissions: [],
+							departments: [
+								{
+									uuid: "d-1",
+									name: "Kitchen",
+									status: "ACTIVE",
+									permissions: kitchen,
+								},
+								{ uuid: "d-2", name: "Bar", status: "ACTIVE", permissions: [] },
+							],
+						},
+					],
+				},
+			],
+		})
+	),
 });
 /** Granted company-wide only the job titles, and the profile keys at d-1. */
 const kitchenHolder = (): StubReply =>
@@ -214,13 +216,10 @@ const routes = (
 };
 
 let app: OpenedApp | undefined;
-let stopRefreshing: (() => void) | undefined;
 beforeEach(() => {
 	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
 });
 afterEach(() => {
-	stopRefreshing?.();
-	stopRefreshing = undefined;
 	app?.disconnect();
 	app?.queryClient.clear();
 	app = undefined;
@@ -233,7 +232,6 @@ afterEach(() => {
 
 const open = async (entry = "/people/m-1"): Promise<OpenedApp> => {
 	app = await openApp(entry);
-	stopRefreshing = refreshWorkspaceOnRefusal(app.queryClient);
 	renderAuthApp(app);
 	return app;
 };
@@ -426,6 +424,27 @@ describe("Who may edit a person", () => {
 
 	it("is someone granted at the person's department, only for the people there", async () => {
 		stubApi(routes(kitchenHolder()));
+		await open("/people");
+
+		const table = await screen.findByRole("table", { name: "People" });
+		await within(table).findByRole("link", { name: "View Wei Jun" });
+		expect(
+			within(table).getByRole("link", { name: "Edit Kent Chua" })
+		).toBeVisible();
+		expect(
+			within(table).queryByRole("link", { name: "Edit Wei Jun" })
+		).not.toBeInTheDocument();
+	});
+
+	it("follows update, not read: reading everyone does not make every row editable (A03)", async () => {
+		stubApi(
+			routes(
+				workspaceReply(
+					["member_profile:read", "job_title:read"],
+					["member_profile:update"]
+				)
+			)
+		);
 		await open("/people");
 
 		const table = await screen.findByRole("table", { name: "People" });

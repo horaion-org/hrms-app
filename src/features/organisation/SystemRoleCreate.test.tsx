@@ -219,17 +219,19 @@ describe("Create system role", () => {
 		).toBeVisible();
 		expect(box("Branches", "View")).toBeDisabled();
 		expect(box("Branches", "Create")).toBeDisabled();
-		expect(box("Branches", "Edit")).toBeEnabled();
+		// Edit is held, but it needs View, which isn't, so it can't be given either.
+		expect(box("Branches", "Edit")).toBeDisabled();
+		expect(box("Branches", "Edit")).toHaveAccessibleDescription(
+			"Needs View, which you can’t give"
+		);
+		expect(box("Branches", "Branches")).toBeDisabled();
 		expect(box("Departments", "Departments")).toBeDisabled();
 
-		// Neither the row's select-all nor the automatic View adds what isn't held.
-		await user.click(box("Branches", "Branches"));
-		expect(box("Branches", "Edit")).toBeChecked();
-		expect(box("Branches", "View")).not.toBeChecked();
-		expect(box("Branches", "Create")).not.toBeChecked();
-		await user.click(box("Branches", "Branches"));
-		await user.click(box("Branches", "Edit"));
-		expect(box("Branches", "View")).not.toBeChecked();
+		// The row's select-all for what is held adds it with what it needs.
+		await user.click(box("System roles", "System roles"));
+		expect(box("System roles", "View")).toBeChecked();
+		expect(box("System roles", "Create")).toBeChecked();
+		expect(box("System roles", "Edit")).not.toBeChecked();
 	});
 
 	it("says so instead of showing the form without permission to create roles", async () => {

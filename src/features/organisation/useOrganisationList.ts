@@ -1,13 +1,11 @@
-import {
-	keepPreviousData,
-	skipToken,
-	useQuery,
-	type QueryKey,
-} from "@tanstack/react-query";
+import { skipToken, useQuery, type QueryKey } from "@tanstack/react-query";
 import { ApiProblemError } from "@/common/problem";
-import { workspaceQuery } from "@/features/workspace/api";
 import type { PermissionKey } from "@/features/workspace/permissionKeys";
-import { useCanAnywhere } from "@/features/workspace/useCan";
+import {
+	accessiblePreviousData,
+	administrativeMeta,
+} from "@/features/workspace/queryAccess";
+import { useAccess } from "@/features/workspace/useAccess";
 import {
 	fetchAccessRoles,
 	fetchBranches,
@@ -36,21 +34,24 @@ const useOrganisationList = <T>(
 	companyId: string,
 	permission: PermissionKey,
 	key: QueryKey,
-	fetchPage: () => Promise<ListPage<T>>,
+	fetchPage: (signal: AbortSignal) => Promise<ListPage<T>>,
 	enabled = true
 ): OrganisationList<T> => {
-	const workspace = useQuery({ ...workspaceQuery, retry });
-	const allowed = useCanAnywhere()([permission]);
+	const access = useAccess();
+	const allowed = access.canAnywhere(permission);
 	const list = useQuery({
 		queryKey: ["organisation", companyId, ...key],
 		retry,
-		// Keep the current rows on screen while a new sort or filter loads.
-		placeholderData: keepPreviousData,
-		queryFn: allowed && enabled ? fetchPage : skipToken,
+		// Keep the current rows on screen while a new sort or filter loads, unless withdrawn.
+		placeholderData: accessiblePreviousData(),
+		meta: administrativeMeta(companyId),
+		queryFn:
+			allowed && enabled
+				? ({ signal }): Promise<ListPage<T>> => fetchPage(signal)
+				: skipToken,
 	});
 
-	if (workspace.isPending) return { status: "pending" };
-	if (workspace.isError) return { status: "error" };
+	if (access.status !== "ready") return { status: access.status };
 	if (!allowed) return { status: "hidden" };
 	if (list.error instanceof ApiProblemError && list.error.status === 403)
 		return { status: "hidden" };
@@ -63,8 +64,8 @@ export const useBranches = (
 	companyId: string,
 	query: ListQuery
 ): OrganisationList<Branch> =>
-	useOrganisationList(companyId, "branch:read", ["branches", query], () =>
-		fetchBranches(companyId, query)
+	useOrganisationList(companyId, "branch:read", ["branches", query], (signal) =>
+		fetchBranches(companyId, query, signal)
 	);
 
 export const useDepartments = (
@@ -75,7 +76,7 @@ export const useDepartments = (
 		companyId,
 		"department:read",
 		["departments", query],
-		() => fetchDepartments(companyId, query)
+		(signal) => fetchDepartments(companyId, query, signal)
 	);
 
 /** `enabled` false asks for nothing yet, e.g. until a Department is chosen to filter by. */
@@ -88,10 +89,15 @@ export const useJobTitles = (
 		companyId,
 		"job_title:read",
 		["job-titles", query],
-		() => fetchJobTitles(companyId, query),
+		(signal) => fetchJobTitles(companyId, query, signal),
 		enabled
 	);
 
+/**
+ * Role definitions are shared company reference data: their names and
+ * permission templates are read with `access_role:read` held anywhere.
+ * Who holds them, and where, is scoped separately by the API.
+ */
 export const useAccessRoles = (
 	companyId: string,
 	query: ListQuery
@@ -100,5 +106,5 @@ export const useAccessRoles = (
 		companyId,
 		"access_role:read",
 		["access-roles", query],
-		() => fetchAccessRoles(companyId, query)
+		(signal) => fetchAccessRoles(companyId, query, signal)
 	);

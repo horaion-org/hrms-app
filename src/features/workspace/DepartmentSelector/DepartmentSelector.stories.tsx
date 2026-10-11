@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import type { FunctionComponent } from "@/common/types";
 import { storyProviders } from "@/features/organisation/storyApi";
+import { effectiveWorkspace } from "@/common/testing/effectiveWorkspace";
 import { workspaceQuery, type Workspace } from "@/features/workspace/api";
 import { DepartmentSelector } from "@/features/workspace/DepartmentSelector";
 
@@ -40,15 +41,18 @@ const company = (
 const loaded = new QueryClient({
 	defaultOptions: { queries: { retry: false, staleTime: Infinity } },
 });
-loaded.setQueryData(workspaceQuery.queryKey, {
-	companies: [
-		company("several", [
-			branch("b-1", "Orchard", ["Kitchen", "Bar", "Front of house"]),
-			branch("b-2", "Jurong", ["Kitchen", "Delivery"]),
-		]),
-		company("none", []),
-	],
-});
+loaded.setQueryData(
+	workspaceQuery.queryKey,
+	effectiveWorkspace({
+		companies: [
+			company("several", [
+				branch("b-1", "Orchard", ["Kitchen", "Bar", "Front of house"]),
+				branch("b-2", "Jurong", ["Kitchen", "Delivery"]),
+			]),
+			company("none", []),
+		],
+	})
+);
 
 /** A workspace that never arrives. */
 const loading = new QueryClient({

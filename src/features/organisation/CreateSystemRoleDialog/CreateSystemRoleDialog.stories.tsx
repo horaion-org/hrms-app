@@ -2,8 +2,8 @@ import { QueryClient } from "@tanstack/react-query";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn, userEvent, within } from "storybook/test";
 import { CreateSystemRoleDialog } from "@/features/organisation/CreateSystemRoleDialog";
-import { PERMISSION_KEYS } from "@/features/organisation/permissionCatalogue";
 import { storyProviders, stubStoryApi } from "@/features/organisation/storyApi";
+import { PERMISSION_KEYS } from "@/features/workspace/permissionKeys";
 
 const client = new QueryClient({
 	defaultOptions: { queries: { retry: false } },
@@ -29,8 +29,13 @@ const fill = async (body: HTMLElement): Promise<void> => {
 		await page.findByLabelText("Role name"),
 		"Branch manager"
 	);
-	await userEvent.click(page.getByRole("checkbox", { name: "Branch: read" }));
-	await userEvent.click(page.getByRole("checkbox", { name: "Branch: update" }));
+	// Edit needs View, so both are chosen.
+	await userEvent.click(
+		within(page.getByRole("group", { name: "Branches" })).getByRole(
+			"checkbox",
+			{ name: "Edit" }
+		)
+	);
 };
 const submit = async (body: HTMLElement): Promise<void> => {
 	await userEvent.click(

@@ -3,28 +3,31 @@ import { ApiProblemError } from "@/common/problem";
 import { fetchMemberAccessRoleAssignments } from "@/features/organisation/api";
 import { useAccessRoles } from "@/features/organisation/useOrganisationList";
 import { memberRoles, type MemberRoles } from "@/features/people/memberRoles";
+import { administrativeMeta } from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";
-import { useCan } from "@/features/workspace/useCan";
+import { useAccess } from "@/features/workspace/useAccess";
 
 const BY_NAME = { sort: { field: "name", desc: false } } as const;
 
 /**
- * The system roles a person holds. Roles have no unit, so reading them needs
- * the key company-wide; without it, or when the API refuses with a 403, they
- * are `hidden`.
+ * The system roles a person holds. Asked for with `access_role:read` held
+ * anywhere: the API returns only the assignments whose own place is inside
+ * the caller's read scopes. Without the key, or when the API refuses with a
+ * 403, they are `hidden`.
  */
 export const useMemberRoles = (
 	companyId: string,
 	membershipId: string
 ): MemberRoles => {
-	const allowed = useCan()("access_role:read");
+	const allowed = useAccess().canAnywhere("access_role:read");
 	// Inside the Organisation entries, so assigning or removing a role reloads it.
 	const assignments = useQuery({
 		queryKey: ["organisation", companyId, "member-assignments", membershipId],
 		queryFn: allowed
-			? (): ReturnType<typeof fetchMemberAccessRoleAssignments> =>
-					fetchMemberAccessRoleAssignments(companyId, membershipId)
+			? ({ signal }): ReturnType<typeof fetchMemberAccessRoleAssignments> =>
+					fetchMemberAccessRoleAssignments(companyId, membershipId, signal)
 			: skipToken,
+		meta: administrativeMeta(companyId),
 		retry,
 	});
 	const roles = useAccessRoles(companyId, BY_NAME);

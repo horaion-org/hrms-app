@@ -14,6 +14,7 @@ import {
 	useCurrentCompanyId,
 	useCurrentMembershipId,
 } from "@/features/organisation/useCurrentCompanyId";
+import { isPermissionKey } from "@/features/workspace/permissionKeys";
 
 /** What the person chose from a role's "More actions" menu. */
 export type SystemRoleAction = {
@@ -110,9 +111,10 @@ export const SystemRoleActionDialog = ({
 			heldPermissions={heldPermissions}
 			initial={{
 				name: t("organisation.accessRoles.copyName", { name: role.name }),
-				permissions: role.permissions.filter((permission) =>
-					heldPermissions.has(permission)
-				),
+				// A copy starts from what the person may grant and this app knows.
+				permissions: role.permissions
+					.filter(isPermissionKey)
+					.filter((permission) => heldPermissions.has(permission)),
 			}}
 			onClose={onClose}
 		/>

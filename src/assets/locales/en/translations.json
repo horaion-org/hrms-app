@@ -88,6 +88,7 @@
 			"reasonRejected": "Enter a reason of up to 2,000 characters.",
 			"forbiddenApply": "You no longer have permission to apply for this person.",
 			"forbiddenDecide": "You no longer have permission to decide this request.",
+			"ownReview": "You can’t approve or reject your own leave. Another reviewer needs to decide it.",
 			"applyFailed": "We couldn’t submit the request. Try again.",
 			"decideFailed": "We couldn’t save the decision. Try again."
 		},
@@ -826,17 +827,20 @@
 					"cancel": "Cancel",
 					"submit": "Assign role",
 					"conflict": "This person already has the role at one of those places.",
-					"notMember": "This person isn’t an active member of one of those branches or departments.",
+					"notMember": "This role can’t be given to this person at one of those places. They may no longer be an active member, or the role may not fit that place.",
 					"forbidden": "You can only assign a role whose permissions you hold there.",
 					"failed": "We couldn’t assign the role. Try again.",
 					"editTitle": "Edit assignment",
 					"editDescription": "Change where this person can use the role.",
 					"editSubmit": "Save changes",
-					"removesAll": "Saving with no places removes this role from {{name}}."
+					"removesAll": "Saving with no places removes this role from {{name}}.",
+					"fixedPlaces": "{{name}} also has this role at {{places}}. You can’t change those places, so they stay as they are.",
+					"noFit": "This role can’t be given at any place you may assign it: {{permissions}} can only be given more widely."
 				},
 				"loadFailed": "We couldn’t load who holds this role.",
 				"inactive": "This role is inactive, so the people below don’t have its permissions until it is activated again.",
 				"removeFailed": "We couldn’t remove the role from that person. Try again.",
+				"partial": "{{failed}} of {{total}} changes couldn’t be made; the others were saved. {{reason}}",
 				"remove": {
 					"title": "Remove {{name}} from this role",
 					"description": "{{name}} will no longer have the {{role}} role anywhere. This takes effect immediately.",
@@ -850,7 +854,7 @@
 					"activateDescription": "{{name}} will get back the access the {{role}} role gives them. This takes effect immediately.",
 					"activateConfirm": "Activate for {{name}}",
 					"roleInactive": "The role itself is inactive. Activate the role first.",
-					"notMember": "This person is no longer an active member of one of those branches or departments.",
+					"notMember": "This role can’t be active for this person at one of those places. They may no longer be an active member, or the role may not fit that place.",
 					"forbidden": "You can only activate a role whose permissions you hold there.",
 					"failed": "We couldn’t change this. Try again."
 				}
@@ -910,7 +914,9 @@
 				"failed": "We couldn’t save the role. Try again.",
 				"loadForbidden": "You don’t have permission to view this role.",
 				"loadMissing": "This role doesn’t exist or has been deleted.",
-				"loadFailed": "We couldn’t load this role. Please try again."
+				"loadFailed": "We couldn’t load this role. Please try again.",
+				"unknownKeys_one": "This role has a permission this version of the app doesn’t recognise. It is kept as it is when you save. Reload the page to update the app and change it.",
+				"unknownKeys_other": "This role has {{count}} permissions this version of the app doesn’t recognise. They are kept as they are when you save. Reload the page to update the app and change them."
 			},
 			"all": "All roles",
 			"copyName": "{{name}} copy",
@@ -954,34 +960,6 @@
 			}
 		},
 		"permissions": {
-			"area": "Area",
-			"cell": "{{resource}}: {{action}}",
-			"resources": {
-				"company": "Company",
-				"branch": "Branch",
-				"branch_member": "Branch member",
-				"department": "Department",
-				"department_member": "Department member",
-				"job_title": "Job title",
-				"access_role": "System role",
-				"audit_event": "Activity log"
-			},
-			"actions": {
-				"read": "Read",
-				"create": "Create",
-				"update": "Update",
-				"deactivate": "Deactivate",
-				"delete": "Delete",
-				"assign": "Assign"
-			},
-			"actionNames": {
-				"read": "read",
-				"create": "create",
-				"update": "update",
-				"deactivate": "deactivate",
-				"delete": "delete",
-				"assign": "assign"
-			},
 			"groupCount": "{{count}} of {{total}}",
 			"job_title": {
 				"name": "Job titles",
@@ -1085,7 +1063,16 @@
 					"read": "View"
 				}
 			},
-			"empty": "No system roles yet."
+			"empty": "No system roles yet.",
+			"qualified": "{{resource}}: {{permission}}",
+			"needs_one": "{{permissions}} needs {{prerequisites}}.",
+			"needs_other": "{{permissions}} need {{prerequisites}}.",
+			"blockedBy": "Needs {{prerequisites}}, which you can’t give",
+			"companyOnly": "Company only",
+			"unknown": {
+				"name": "Not recognised",
+				"description": "This version of the app doesn’t know these permissions. They stay on the role when you save."
+			}
 		},
 		"activity": {
 			"title": "Recent Activity",

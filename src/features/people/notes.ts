@@ -7,13 +7,13 @@ import { mapRefusal, type Refusal } from "@/features/organisation/refusal";
 import { NOTE_MAX_LENGTH, type MemberProfile } from "@/features/people/api";
 import { personScope } from "@/features/people/profileEditAccess";
 import { PROFILE_REFUSAL_CODES } from "@/features/people/profileRefusal";
-import type { PermissionKey } from "@/features/workspace/permissionKeys";
+import type { CanAt } from "@/features/workspace/scopes";
 
 /**
  * What the person may do with a profile's notes, as the workspace says. Each
- * key is asked where the profile is (see `personScope`): at its Department,
- * where a grant at its Branch or the company counts, or at the company for
- * a profile without one.
+ * action is its own key, asked where the profile is (see `personScope`): at
+ * its Department, or at the company for a profile without one. Reading notes
+ * never implies deleting them, and profile access never implies notes.
  */
 export type NoteAccess = {
 	read: boolean;
@@ -24,7 +24,7 @@ export type NoteAccess = {
 
 export const noteAccess = (
 	profile: Pick<MemberProfile, "departmentId">,
-	can: (permission: PermissionKey, scopeId?: string) => boolean
+	can: CanAt
 ): NoteAccess => {
 	const scope = personScope(profile);
 	return {

@@ -1,6 +1,7 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { effectiveWorkspace } from "@/common/testing/effectiveWorkspace";
 import { resetApiClient } from "@/common/api-client";
 import {
 	currentUserReply,
@@ -77,54 +78,56 @@ const workspaceReply = (
 	departmentOnly = false
 ): StubReply => ({
 	status: 200,
-	body: envelope({
-		companies: [
-			{
-				uuid: "c-1",
-				name: "Company c-1",
-				permissions: departmentOnly ? [] : permissions,
-				branches: [
-					{
-						uuid: "b-1",
-						name: "Main branch",
-						status: "ACTIVE",
-						country: "SG",
-						permissions: [],
-						departments: [
-							{
-								uuid: "d-1",
-								name: "Sales",
-								status: "ACTIVE",
-								permissions: departmentOnly ? permissions : [],
-							},
-							{
-								uuid: "d-2",
-								name: "Kitchen",
-								status: "ACTIVE",
-								permissions: [],
-							},
-						],
-					},
-					{
-						uuid: "b-2",
-						name: "Jurong branch",
-						status: "ACTIVE",
-						country: "SG",
-						permissions: [],
-						departments: [],
-					},
-					{
-						uuid: "b-3",
-						name: "Kuala Lumpur branch",
-						status: "ACTIVE",
-						country: "MY",
-						permissions: [],
-						departments: [],
-					},
-				],
-			},
-		],
-	}),
+	body: envelope(
+		effectiveWorkspace({
+			companies: [
+				{
+					uuid: "c-1",
+					name: "Company c-1",
+					permissions: departmentOnly ? [] : permissions,
+					branches: [
+						{
+							uuid: "b-1",
+							name: "Main branch",
+							status: "ACTIVE",
+							country: "SG",
+							permissions: [],
+							departments: [
+								{
+									uuid: "d-1",
+									name: "Sales",
+									status: "ACTIVE",
+									permissions: departmentOnly ? permissions : [],
+								},
+								{
+									uuid: "d-2",
+									name: "Kitchen",
+									status: "ACTIVE",
+									permissions: [],
+								},
+							],
+						},
+						{
+							uuid: "b-2",
+							name: "Jurong branch",
+							status: "ACTIVE",
+							country: "SG",
+							permissions: [],
+							departments: [],
+						},
+						{
+							uuid: "b-3",
+							name: "Kuala Lumpur branch",
+							status: "ACTIVE",
+							country: "MY",
+							permissions: [],
+							departments: [],
+						},
+					],
+				},
+			],
+		})
+	),
 });
 
 const routes = (
@@ -487,5 +490,73 @@ describe("Leave", () => {
 		expect(
 			screen.getByRole("button", { name: "Apply leave" })
 		).toBeInTheDocument();
+	});
+
+	it("never offers to decide the person's own request, whatever their roles (M06)", async () => {
+		// The person testing is `m-c-1`.
+		const own = leaveFixture({
+			leaveRequestId: "leave-own",
+			membershipId: "m-c-1",
+			displayName: "José",
+		});
+		stubApi({
+			...routes(),
+			[LEAVE]: pageReply([own, LEAVE_FIXTURES[0]], 2),
+		});
+		await open("/leave?view=requests");
+		await screen.findByText("Aisha Rahman");
+
+		expect(
+			screen.getByRole("button", { name: "Approve request for Aisha Rahman" })
+		).toBeEnabled();
+		expect(
+			screen.getByRole("button", { name: "Approve request for José" })
+		).toBeDisabled();
+	});
+
+	it("explains the server's own-review refusal in its own words, without reloading the workspace", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...routes(),
+			[`POST ${AISHA}/leave-aisha/approval`]: problemReply(
+				403,
+				"OWN_LEAVE_REVIEW_DENIED"
+			),
+		});
+		await open("/leave?view=requests");
+		await screen.findByText("Aisha Rahman");
+		const workspaces = calls.filter(
+			(call) => `${call.method} ${call.path}` === WORKSPACE
+		).length;
+
+		await user.click(
+			screen.getByRole("button", { name: "Approve request for Aisha Rahman" })
+		);
+		expect(await screen.findByRole("alert")).toHaveTextContent(
+			"You can’t approve or reject your own leave. Another reviewer needs to decide it."
+		);
+		expect(
+			calls.filter((call) => `${call.method} ${call.path}` === WORKSPACE)
+		).toHaveLength(workspaces);
+	});
+
+	it("keeps My leave usable when the workspace fails, offering no team views (M09, F10)", async () => {
+		const calls = stubApi(
+			routes(problemReply(503, "AUTHORIZATION_UNAVAILABLE"))
+		);
+		await open("/leave");
+
+		expect(
+			await screen.findByRole("tab", { name: "My leave" })
+		).toHaveAttribute("aria-selected", "true");
+		const table = await screen.findByRole("table", { name: "Requests" });
+		await within(table).findByText("Approved");
+		expect(
+			screen.getByRole("button", { name: "Apply for leave" })
+		).toBeEnabled();
+		expect(
+			screen.queryByRole("tab", { name: "Team requests" })
+		).not.toBeInTheDocument();
+		expect(searchesOf(calls, LEAVE_PATH)).toEqual([]);
 	});
 });

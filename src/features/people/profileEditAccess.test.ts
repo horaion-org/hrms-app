@@ -3,24 +3,29 @@ import {
 	personScope,
 	profileEditAccess,
 } from "@/features/people/profileEditAccess";
+import type { ScopeRef } from "@/features/workspace/scopes";
 
 const filed = { departmentId: "d-1" };
 const unfiled = { departmentId: null };
 
-/** A `can` granting `member_profile:update` at these scopes; "" is the company. */
+/**
+ * A `can` granting `member_profile:update` at these units; "" is a company
+ * grant, which the API's workspace shows as effective at every unit too.
+ */
 const grantedAt =
 	(...scopes: Array<string>) =>
-	(permission: string, scopeId = ""): boolean =>
+	(permission: string, target: ScopeRef): boolean =>
 		permission === "member_profile:update" &&
-		(scopes.includes("") || scopes.includes(scopeId));
+		(scopes.includes("") ||
+			(target.kind !== "company" && scopes.includes(target.id)));
 
 describe("profile edit access", () => {
 	it("asks at the person's department, or at the company for someone without one", () => {
-		expect(personScope(filed)).toBe("d-1");
-		expect(personScope(unfiled)).toBeUndefined();
+		expect(personScope(filed)).toEqual({ kind: "department", id: "d-1" });
+		expect(personScope(unfiled)).toEqual({ kind: "company" });
 	});
 
-	it("is granted at the person's department, or above it", () => {
+	it("is granted where the key is effective at the person's department", () => {
 		expect(profileEditAccess(filed, grantedAt("d-1"))).toBe(true);
 		expect(profileEditAccess(filed, grantedAt(""))).toBe(true);
 	});

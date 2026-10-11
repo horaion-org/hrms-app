@@ -16,7 +16,7 @@ import {
 } from "@/common/testing/stubApi";
 import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
-import { PERMISSION_KEYS } from "@/features/organisation/permissionCatalogue";
+import { PERMISSION_KEYS } from "@/features/workspace/permissionKeys";
 
 const ACCESS_ROLES = "GET /api/v1/companies/c-1/access-roles";
 const CREATE = "POST /api/v1/companies/c-1/access-roles";
@@ -73,6 +73,11 @@ const openDialog = async (): Promise<HTMLElement> => {
 	);
 	return screen.findByRole("dialog", { name: "Create system role" });
 };
+const box = (dialog: HTMLElement, group: string, name: string): HTMLElement =>
+	within(within(dialog).getByRole("group", { name: group })).getByRole(
+		"checkbox",
+		{ name }
+	);
 const submit = (dialog: HTMLElement): Promise<void> =>
 	userEvent.click(
 		within(dialog).getByRole("button", { name: "Create system role" })
@@ -94,12 +99,13 @@ describe("create system role through the System roles page", () => {
 		stubApi(routes(owner));
 		await open();
 		const dialog = await openDialog();
-		const grid = within(dialog).getByRole("group", { name: /Permissions/ });
-		expect(within(grid).getAllByRole("checkbox")).toHaveLength(
-			PERMISSION_KEYS.length
+		const list = within(dialog).getByRole("group", { name: "Permissions" });
+		// One box per key, plus each resource's own.
+		expect(within(list).getAllByRole("checkbox")).toHaveLength(
+			PERMISSION_KEYS.length + 11
 		);
-		for (const box of within(grid).getAllByRole("checkbox"))
-			expect(box).toBeEnabled();
+		for (const item of within(list).getAllByRole("checkbox"))
+			expect(item).toBeEnabled();
 		expect(
 			within(dialog).getByText("Choose at least 1 permission.")
 		).toBeVisible();
@@ -109,15 +115,9 @@ describe("create system role through the System roles page", () => {
 		stubApi(routes(["access_role:read", "access_role:create", "branch:read"]));
 		await open();
 		const dialog = await openDialog();
-		expect(
-			within(dialog).getByRole("checkbox", { name: "Branch: read" })
-		).toBeEnabled();
-		expect(
-			within(dialog).getByRole("checkbox", { name: "Branch: update" })
-		).toBeDisabled();
-		expect(
-			within(dialog).getByRole("checkbox", { name: "System role: create" })
-		).toBeEnabled();
+		expect(box(dialog, "Branches", "View")).toBeEnabled();
+		expect(box(dialog, "Branches", "Edit")).toBeDisabled();
+		expect(box(dialog, "System roles", "Create")).toBeEnabled();
 		expect(
 			within(dialog).getByText(
 				"Choose at least 1 permission. You can only grant permissions you hold."
@@ -125,7 +125,7 @@ describe("create system role through the System roles page", () => {
 		).toBeVisible();
 	});
 
-	it("requires at least one permission on submit and focuses the grid", async () => {
+	it("requires at least one permission on submit and focuses the list", async () => {
 		stubApi(routes(owner));
 		await open();
 		const dialog = await openDialog();
@@ -135,13 +135,9 @@ describe("create system role through the System roles page", () => {
 			await within(dialog).findByText("Choose at least one permission.")
 		).toBeVisible();
 		await waitFor(() => {
-			expect(
-				within(dialog).getByRole("checkbox", { name: "Company: read" })
-			).toHaveFocus();
+			expect(box(dialog, "Company", "Company")).toHaveFocus();
 		});
-		await userEvent.click(
-			within(dialog).getByRole("checkbox", { name: "Activity log: read" })
-		);
+		await userEvent.click(box(dialog, "Activity", "View"));
 		await waitFor(() => {
 			expect(
 				within(dialog).queryByText("Choose at least one permission.")
@@ -160,12 +156,9 @@ describe("create system role through the System roles page", () => {
 			within(dialog).getByLabelText("Role name"),
 			"  Branch manager "
 		);
-		await userEvent.click(
-			within(dialog).getByRole("checkbox", { name: "Branch: update" })
-		);
-		await userEvent.click(
-			within(dialog).getByRole("checkbox", { name: "Branch: read" })
-		);
+		// Edit needs View, so ticking it ticks both.
+		await userEvent.click(box(dialog, "Branches", "Edit"));
+		expect(box(dialog, "Branches", "View")).toBeChecked();
 		expect(within(dialog).getByText("2 selected")).toBeVisible();
 		await submit(dialog);
 		await waitFor(() => {
@@ -190,9 +183,7 @@ describe("create system role through the System roles page", () => {
 		await open();
 		const dialog = await openDialog();
 		await userEvent.type(within(dialog).getByLabelText("Role name"), "Manager");
-		await userEvent.click(
-			within(dialog).getByRole("checkbox", { name: "Branch: read" })
-		);
+		await userEvent.click(box(dialog, "Branches", "View"));
 		await submit(dialog);
 		expect(
 			await within(dialog).findByText(
@@ -228,18 +219,14 @@ describe("create system role through the System roles page", () => {
 				within(dialog).getByLabelText("Role name"),
 				"Manager"
 			);
-			await userEvent.click(
-				within(dialog).getByRole("checkbox", { name: "Branch: read" })
-			);
+			await userEvent.click(box(dialog, "Branches", "View"));
 			await submit(dialog);
 			const alert = await within(dialog).findByText(String(message));
 			expect(alert).toHaveAttribute("role", "alert");
 			await waitFor(() => {
 				expect(alert).toHaveFocus();
 			});
-			expect(
-				within(dialog).getByRole("checkbox", { name: "Branch: read" })
-			).toBeChecked();
+			expect(box(dialog, "Branches", "View")).toBeChecked();
 		}
 	);
 });

@@ -1,6 +1,7 @@
-import { screen, waitFor, within } from "@testing-library/react";
+import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { effectiveWorkspace } from "@/common/testing/effectiveWorkspace";
 import { resetApiClient } from "@/common/api-client";
 import {
 	currentUserReply,
@@ -16,7 +17,6 @@ import {
 } from "@/common/testing/stubApi";
 import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
-import { refreshWorkspaceOnRefusal } from "@/features/workspace/refreshWorkspaceOnRefusal";
 
 const REFRESH = "POST /api/v1/public/sessions/refreshes";
 const ME = "GET /api/v1/me";
@@ -26,13 +26,10 @@ const PEOPLE_PATH = "/api/v1/companies/c-1/member-profiles";
 const FIRST_PAGE = "page=0&size=10&sort=displayName%2Casc";
 
 let app: OpenedApp | undefined;
-let stopRefreshing: (() => void) | undefined;
 beforeEach(() => {
 	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
 });
 afterEach(() => {
-	stopRefreshing?.();
-	stopRefreshing = undefined;
 	app?.disconnect();
 	app?.queryClient.clear();
 	app = undefined;
@@ -51,11 +48,13 @@ const open = async (entry: string): Promise<OpenedApp> => {
 
 const workspaceReply = (permissions: Array<string>): StubReply => ({
 	status: 200,
-	body: envelope({
-		companies: [
-			{ uuid: "c-1", name: "Company c-1", permissions, branches: [] },
-		],
-	}),
+	body: envelope(
+		effectiveWorkspace({
+			companies: [
+				{ uuid: "c-1", name: "Company c-1", permissions, branches: [] },
+			],
+		})
+	),
 });
 
 /**
@@ -64,27 +63,29 @@ const workspaceReply = (permissions: Array<string>): StubReply => ({
  */
 const branchesWorkspaceReply = (permissions: Array<string>): StubReply => ({
 	status: 200,
-	body: envelope({
-		companies: [
-			{
-				uuid: "c-1",
-				name: "Company c-1",
-				permissions,
-				branches: [
-					["b-1", "Orchard", "SG"],
-					["b-2", "Jurong", "SG"],
-					["b-3", "Kuala Lumpur", "MY"],
-				].map(([uuid, name, country]) => ({
-					uuid,
-					name,
-					status: "ACTIVE",
-					country,
-					permissions: [],
-					departments: [],
-				})),
-			},
-		],
-	}),
+	body: envelope(
+		effectiveWorkspace({
+			companies: [
+				{
+					uuid: "c-1",
+					name: "Company c-1",
+					permissions,
+					branches: [
+						["b-1", "Orchard", "SG"],
+						["b-2", "Jurong", "SG"],
+						["b-3", "Kuala Lumpur", "MY"],
+					].map(([uuid = "", name = "", country = ""]) => ({
+						uuid,
+						name,
+						status: "ACTIVE",
+						country,
+						permissions: [],
+						departments: [],
+					})),
+				},
+			],
+		})
+	),
 });
 
 /** A workspace granting nothing at the company and `permissions` only at department d-1 of branch b-1. */
@@ -92,27 +93,29 @@ const departmentScopedWorkspaceReply = (
 	permissions: Array<string>
 ): StubReply => ({
 	status: 200,
-	body: envelope({
-		companies: [
-			{
-				uuid: "c-1",
-				name: "Company c-1",
-				permissions: [],
-				branches: [
-					{
-						uuid: "b-1",
-						name: "Orchard",
-						status: "ACTIVE",
-						country: "SG",
-						permissions: [],
-						departments: [
-							{ uuid: "d-1", name: "Kitchen", status: "ACTIVE", permissions },
-						],
-					},
-				],
-			},
-		],
-	}),
+	body: envelope(
+		effectiveWorkspace({
+			companies: [
+				{
+					uuid: "c-1",
+					name: "Company c-1",
+					permissions: [],
+					branches: [
+						{
+							uuid: "b-1",
+							name: "Orchard",
+							status: "ACTIVE",
+							country: "SG",
+							permissions: [],
+							departments: [
+								{ uuid: "d-1", name: "Kitchen", status: "ACTIVE", permissions },
+							],
+						},
+					],
+				},
+			],
+		})
+	),
 });
 
 const pageReply = (
@@ -445,6 +448,45 @@ describe("People", () => {
 		expect(peopleCalls(calls)).toEqual([FIRST_PAGE]);
 	});
 
+	it("clears rows read under a grant that shrank, never showing them again (F07)", async () => {
+		const calls = stubApi({
+			...baseRoutes(),
+			[WORKSPACE]: [
+				departmentScopedWorkspaceReply(["member_profile:read"]),
+				departmentScopedWorkspaceReply([]),
+			],
+			[PEOPLE]: [
+				pageReply([person("m-1", "Moses Lee")]),
+				problemReply(403, "AUTHORIZATION_DENIED"),
+			],
+		});
+		const opened = await open("/people");
+		const table = await screen.findByRole("table", { name: "People" });
+		expect(await within(table).findByText("Moses Lee")).toBeVisible();
+
+		await act(async () => {
+			await opened.queryClient.refetchQueries({ queryKey: ["workspace"] });
+		});
+
+		// The cached rows went with the old grant, before any new answer arrives.
+		const cachedRows = (): Array<unknown> =>
+			opened.queryClient
+				.getQueryCache()
+				.findAll({ queryKey: ["people", "c-1"] })
+				.map((query) => query.state.data)
+				.filter(Boolean);
+		expect(cachedRows()).toEqual([]);
+		await waitFor(() => {
+			expect(screen.queryByText("Moses Lee")).not.toBeInTheDocument();
+		});
+		expect(
+			await screen.findByText("You don’t have permission to view this list.")
+		).toBeVisible();
+		// The read key is gone everywhere, so nothing is asked for again.
+		expect(peopleCalls(calls)).toEqual([FIRST_PAGE]);
+		expect(cachedRows()).toEqual([]);
+	});
+
 	it("lists everyone in reach by default and one Branch once chosen", async () => {
 		const user = userEvent.setup();
 		const calls = stubApi({
@@ -538,7 +580,6 @@ describe("People", () => {
 			[PEOPLE]: problemReply(403, "AUTHORIZATION_DENIED"),
 		});
 		app = await openApp("/people");
-		stopRefreshing = refreshWorkspaceOnRefusal(app.queryClient);
 		renderAuthApp(app);
 
 		expect(

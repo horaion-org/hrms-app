@@ -7,6 +7,7 @@ import {
 import { expect, vi } from "vitest";
 import { envelope, type StubReply } from "@/common/testing/stubApi";
 import { connectSession } from "@/features/auth/connectSession";
+import { connectAccess } from "@/features/workspace/connectAccess";
 import { routeTree } from "@/routeTree.gen";
 
 export type OpenedApp = {
@@ -16,7 +17,7 @@ export type OpenedApp = {
 	disconnect: () => void;
 };
 
-/** The app's real route tree, loaded at `entry` and wired to the Session. */
+/** The app's real route tree, loaded at `entry` and wired to the Session and access refresh. */
 export const openApp = async (entry: string): Promise<OpenedApp> => {
 	const queryClient = new QueryClient();
 	const router = createRouter({
@@ -25,7 +26,13 @@ export const openApp = async (entry: string): Promise<OpenedApp> => {
 		defaultPendingMinMs: 0,
 		history: createMemoryHistory({ initialEntries: [entry] }),
 	});
-	const disconnect = connectSession(router, queryClient);
+	const disconnectSession = connectSession(router, queryClient);
+	// The same access wiring as `main.tsx`.
+	const disconnectAccess = connectAccess(queryClient);
+	const disconnect = (): void => {
+		disconnectSession();
+		disconnectAccess();
+	};
 	await router.load();
 
 	return { router, queryClient, disconnect };

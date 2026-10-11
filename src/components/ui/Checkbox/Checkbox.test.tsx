@@ -12,6 +12,15 @@ describe("Checkbox", () => {
 		).toBeInTheDocument();
 	});
 
+	it("given_aDescription_when_rendered_then_showsAndAnnouncesIt", () => {
+		render(<Checkbox description="Company only" label="Create" />);
+
+		expect(screen.getByText("Company only")).toBeVisible();
+		expect(
+			screen.getByRole("checkbox", { name: "Create" })
+		).toHaveAccessibleDescription("Company only");
+	});
+
 	it("given_unchecked_when_clicked_then_reportsTheChange", async () => {
 		const user = userEvent.setup();
 		let seen = false;

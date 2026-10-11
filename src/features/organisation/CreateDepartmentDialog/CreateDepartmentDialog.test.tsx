@@ -1,6 +1,7 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { companyWideWorkspace } from "@/common/testing/effectiveWorkspace";
 import { resetApiClient } from "@/common/api-client";
 import {
 	currentUserReply,
@@ -67,11 +68,7 @@ const routes = (
 	"GET /api/v1/me": currentUserReply(),
 	"GET /api/v1/me/workspace": {
 		status: 200,
-		body: envelope({
-			companies: [
-				{ uuid: "c-1", name: "Company c-1", permissions: grants, branches: [] },
-			],
-		}),
+		body: envelope(companyWideWorkspace(grants)),
 	},
 	[DEPARTMENTS]: page([]),
 	[BRANCHES]: page(branches),

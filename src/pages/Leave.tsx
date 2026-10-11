@@ -33,7 +33,10 @@ import {
 	type LeaveList,
 } from "@/features/leave/useLeaveRequests";
 import type { Refusal } from "@/features/organisation/refusal";
-import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
+import {
+	useCurrentCompanyId,
+	useCurrentMembershipId,
+} from "@/features/organisation/useCurrentCompanyId";
 import { peopleQuery } from "@/features/people/api";
 import { useSettledSearch } from "@/features/people/usePeople";
 import { workspaceQuery } from "@/features/workspace/api";
@@ -44,7 +47,8 @@ import {
 } from "@/features/workspace/unitChoices";
 import { LEAVE_READ_KEYS } from "@/features/workspace/permissionKeys";
 import { retry } from "@/features/workspace/retry";
-import { useCan, useCanAnywhere } from "@/features/workspace/useCan";
+import { recordScope } from "@/features/workspace/scopes";
+import { useAccess } from "@/features/workspace/useAccess";
 
 const route = getRouteApi("/_authenticated/_app/leave");
 
@@ -85,10 +89,11 @@ export const Leave = (): FunctionComponent => {
 	const { t } = useTranslation();
 	const search = route.useSearch();
 	const navigate = route.useNavigate();
-	const can = useCan();
-	const canAnywhere = useCanAnywhere();
-	const canRead = canAnywhere(LEAVE_READ_KEYS);
-	const canApply = canAnywhere(["leave_request:create"]);
+	const ownMembershipId = useCurrentMembershipId();
+	const access = useAccess();
+	// "My leave" asks nothing of the workspace: it stays usable when the workspace is empty or failing.
+	const canRead = access.canAny(LEAVE_READ_KEYS, "anywhere");
+	const canApply = access.canAnywhere("leave_request:create");
 	const view: View = canRead && search.view ? search.view : "mine";
 	const team = view !== "mine";
 	const workspace = useQuery({ ...workspaceQuery, retry });
@@ -163,8 +168,10 @@ export const Leave = (): FunctionComponent => {
 			},
 		});
 	};
+	// Each request is decided where its member is filed; nobody decides their own, whatever their roles.
 	const canReview = (request: LeaveRequest): boolean =>
-		can("leave_request:review", request.departmentId ?? undefined);
+		request.membershipId !== ownMembershipId &&
+		access.can("leave_request:review", recordScope(request.departmentId));
 	const busy =
 		actions.approve.isPending ||
 		actions.reject.isPending ||
@@ -352,9 +359,9 @@ export const Leave = (): FunctionComponent => {
 									search: employeeSearch,
 									onSearch: setEmployeeSearch,
 									options: (people.data?.items ?? []).filter((person) =>
-										can(
+										access.can(
 											"leave_request:create",
-											person.departmentId ?? undefined
+											recordScope(person.departmentId)
 										)
 									),
 								}

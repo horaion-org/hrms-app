@@ -8,9 +8,13 @@ import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
 import type { AccessRole, CompanyMember } from "@/features/organisation/api";
 import {
+	keysThatFitNowhere,
 	placeKey,
+	roleFitsScope,
+	scopeOfPlace,
 	type AssignmentTarget,
 } from "@/features/organisation/assignmentTargets";
+import { permissionList } from "@/features/organisation/PermissionChecklist/groups";
 import { PermissionSummary } from "@/features/organisation/PermissionSummary";
 import { isPermissionKey } from "@/features/workspace/permissionKeys";
 
@@ -21,13 +25,23 @@ export type AssignAccessRoleDialogProps = {
 	people: Array<CompanyMember>;
 	query: string;
 	onQueryChange: (query: string) => void;
-	/** Every place a role can apply, widest first. */
+	/**
+	 * The places the person may give a role at, widest first. Only those the
+	 * chosen role fits are offered; when it fits none, the keys in the way
+	 * are named.
+	 */
 	targets: Array<AssignmentTarget>;
 	/**
 	 * Set to change where one person already has the role: the person is
-	 * fixed and the form starts from the places they hold it.
+	 * fixed and the form starts from the places they hold it that the person
+	 * may change. `fixedPlaces` names the others, which are shown but never
+	 * touched: leaving them out of the choice does not remove them.
 	 */
-	editing?: { person: CompanyMember; places: Array<AssignmentTarget> };
+	editing?: {
+		person: CompanyMember;
+		places: Array<AssignmentTarget>;
+		fixedPlaces?: Array<string>;
+	};
 	/** Why the last attempt was refused. */
 	error?: string;
 	/** True while an attempt is being sent. */
@@ -59,7 +73,7 @@ export const AssignAccessRoleDialog = ({
 	onAssign,
 	onClose,
 }: AssignAccessRoleDialogProps): FunctionComponent => {
-	const { t } = useTranslation();
+	const { t, i18n } = useTranslation();
 	const roleId = useId();
 	const personId = useId();
 	const placesId = useId();
@@ -76,6 +90,10 @@ export const AssignAccessRoleDialog = ({
 	);
 	const [placeQuery, setPlaceQuery] = useState("");
 	const role = roles.find((item) => item.accessRoleId === chosenRoleId);
+	const offered = role
+		? targets.filter((target) => roleFitsScope(role, scopeOfPlace(target)))
+		: targets;
+	const misfits = role ? keysThatFitNowhere(role, targets) : [];
 
 	return (
 		<Dialog
@@ -172,7 +190,7 @@ export const AssignAccessRoleDialog = ({
 						query={placeQuery}
 						searchPlaceholder={t(`${key}.placesSearch`)}
 						value={places}
-						options={targets.filter((target) =>
+						options={offered.filter((target) =>
 							target.label
 								.toLocaleLowerCase()
 								.includes(placeQuery.trim().toLocaleLowerCase())
@@ -181,11 +199,32 @@ export const AssignAccessRoleDialog = ({
 						onQueryChange={setPlaceQuery}
 					/>
 				</FormRow>
-				{editing && places.length === 0 && (
-					<p className="text-sm font-semibold text-error-700">
-						{t(`${key}.removesAll`, { name: editing.person.displayName })}
+				{misfits.length > 0 && (
+					<p className="text-sm text-neutral-700">
+						{t(`${key}.noFit`, {
+							permissions: permissionList(
+								misfits,
+								t,
+								i18n.resolvedLanguage ?? i18n.language
+							),
+						})}
 					</p>
 				)}
+				{editing?.fixedPlaces && editing.fixedPlaces.length > 0 && (
+					<p className="text-sm text-neutral-700">
+						{t(`${key}.fixedPlaces`, {
+							name: editing.person.displayName,
+							places: editing.fixedPlaces.join(", "),
+						})}
+					</p>
+				)}
+				{editing &&
+					places.length === 0 &&
+					(editing.fixedPlaces ?? []).length === 0 && (
+						<p className="text-sm font-semibold text-error-700">
+							{t(`${key}.removesAll`, { name: editing.person.displayName })}
+						</p>
+					)}
 				{role && (
 					<PermissionSummary
 						permissions={role.permissions.filter(isPermissionKey)}
