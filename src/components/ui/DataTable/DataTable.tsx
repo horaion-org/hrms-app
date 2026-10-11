@@ -67,6 +67,8 @@ export type DataTableProps<TData extends object> = {
 	/** Adds a select-all box and one box per row, named by `rowLabel`. */
 	selection?: {
 		rowLabel: (row: TData) => string;
+		/** The selected row ids when the caller owns them; otherwise the table keeps its own. */
+		selectedIds?: Array<string>;
 		onChange?: (selectedIds: Array<string>) => void;
 	};
 	/** Shown across the table body when there are no rows. */
@@ -178,7 +180,15 @@ export const DataTable = <TData extends object>({
 		defaultSort ? [defaultSort] : []
 	);
 	const sorting = sort ? [sort] : ownSorting;
-	const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+	const [ownRowSelection, setOwnRowSelection] = useState<RowSelectionState>({});
+	const selectedIds = selection?.selectedIds;
+	const rowSelection = useMemo(
+		(): RowSelectionState =>
+			selectedIds
+				? Object.fromEntries(selectedIds.map((rowId) => [rowId, true]))
+				: ownRowSelection,
+		[selectedIds, ownRowSelection]
+	);
 
 	const columnsById = useMemo(
 		() => new Map(columns.map((column) => [column.id, column])),
@@ -216,7 +226,7 @@ export const DataTable = <TData extends object>({
 		},
 		onRowSelectionChange: (updater) => {
 			const next = resolve(updater, rowSelection);
-			setRowSelection(next);
+			if (!selectedIds) setOwnRowSelection(next);
 			selection?.onChange?.(Object.keys(next).filter((rowId) => next[rowId]));
 		},
 	});

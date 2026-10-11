@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { useState } from "react";
 import { fn, userEvent, within } from "storybook/test";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -104,6 +105,23 @@ export const Selectable: Story = {
 			rowLabel: (branch: Branch): string => branch.name,
 			onChange: fn(),
 		},
+	},
+};
+
+/** The caller owns the selection, e.g. to start with some rows already chosen. */
+export const ControlledSelection: Story = {
+	render: function ControlledSelectionStory(args) {
+		const [selectedIds, setSelectedIds] = useState<Array<string>>(["b-1"]);
+		return (
+			<DataTable
+				{...args}
+				selection={{
+					rowLabel: (branch: Branch): string => branch.name,
+					selectedIds,
+					onChange: setSelectedIds,
+				}}
+			/>
+		);
 	},
 };
 

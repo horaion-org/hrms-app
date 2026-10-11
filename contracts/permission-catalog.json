@@ -412,6 +412,122 @@
         "BRANCH",
         "DEPARTMENT"
       ],
+      "key": "schedule:read",
+      "prerequisites": [],
+      "resource": "schedule",
+      "resourceName": "Schedule"
+    },
+    {
+      "action": "create",
+      "actionName": "Create",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
+      "key": "schedule:create",
+      "prerequisites": [
+        "schedule:read"
+      ],
+      "resource": "schedule",
+      "resourceName": "Schedule"
+    },
+    {
+      "action": "update",
+      "actionName": "Update",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
+      "key": "schedule:update",
+      "prerequisites": [
+        "schedule:read"
+      ],
+      "resource": "schedule",
+      "resourceName": "Schedule"
+    },
+    {
+      "action": "generate",
+      "actionName": "Generate",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
+      "key": "schedule:generate",
+      "prerequisites": [
+        "schedule:read"
+      ],
+      "resource": "schedule",
+      "resourceName": "Schedule"
+    },
+    {
+      "action": "read",
+      "actionName": "Read",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
+      "key": "shift:read",
+      "prerequisites": [],
+      "resource": "shift",
+      "resourceName": "Shift"
+    },
+    {
+      "action": "create",
+      "actionName": "Create",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
+      "key": "shift:create",
+      "prerequisites": [
+        "shift:read"
+      ],
+      "resource": "shift",
+      "resourceName": "Shift"
+    },
+    {
+      "action": "update",
+      "actionName": "Update",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
+      "key": "shift:update",
+      "prerequisites": [
+        "shift:read"
+      ],
+      "resource": "shift",
+      "resourceName": "Shift"
+    },
+    {
+      "action": "delete",
+      "actionName": "Delete",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
+      "key": "shift:delete",
+      "prerequisites": [
+        "shift:read"
+      ],
+      "resource": "shift",
+      "resourceName": "Shift"
+    },
+    {
+      "action": "read",
+      "actionName": "Read",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
       "key": "access_role:read",
       "prerequisites": [],
       "resource": "access_role",

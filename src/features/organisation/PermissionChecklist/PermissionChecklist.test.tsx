@@ -63,13 +63,21 @@ describe("PermissionChecklist", () => {
 			"People",
 			"Notes",
 			"Leave",
+			"Schedules",
+			"Shifts",
 			"System roles",
 			"Activity",
 		]);
 		// One box per key, plus each row's own.
 		expect(screen.getAllByRole("checkbox")).toHaveLength(
-			PERMISSION_KEYS.length + 11
+			PERMISSION_KEYS.length + 13
 		);
+		expect(within(row("Schedules")).getAllByRole("checkbox")).toHaveLength(5);
+		for (const action of ["View", "Create", "Edit", "Generate"])
+			expect(box("Schedules", action)).not.toBeChecked();
+		expect(within(row("Shifts")).getAllByRole("checkbox")).toHaveLength(5);
+		for (const action of ["View", "Add", "Edit", "Delete"])
+			expect(box("Shifts", action)).not.toBeChecked();
 		expect(within(row("System roles")).getAllByRole("checkbox")).toHaveLength(
 			6
 		);
@@ -90,6 +98,21 @@ describe("PermissionChecklist", () => {
 		expect(box("Branches", "Branches")).toBePartiallyChecked();
 		expect(within(row("Branches")).getByText("2 of 3")).toBeVisible();
 		expect(within(row("Departments")).getByText("0 of 3")).toBeVisible();
+	});
+
+	it("ticks a schedule's or a shift's view along with generating or deleting", async () => {
+		const user = userEvent.setup();
+		render(<Harness initial={[]} />);
+
+		await user.click(box("Schedules", "Generate"));
+		await user.click(box("Shifts", "Delete"));
+
+		expect(latest).toEqual([
+			"schedule:read",
+			"schedule:generate",
+			"shift:read",
+			"shift:delete",
+		]);
 	});
 
 	it("ticks view along with any other permission of the resource", async () => {
