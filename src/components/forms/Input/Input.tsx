@@ -7,10 +7,17 @@ export type InputProps = ComponentPropsWithRef<"input"> & {
 	leadingIcon?: ReactNode;
 	trailingIcon?: ReactNode;
 	status?: InputStatus;
+	/** "lg" matches a large Button's height, for a search beside page actions; "md" suits forms. */
+	inputSize?: "md" | "lg";
 };
 
 const baseClasses =
-	"flex h-11 items-center gap-3 rounded-lg border bg-white px-4 text-sm text-neutral-900 [&>:not(input)]:shrink-0 [&_svg]:size-5 [&_svg]:shrink-0 [&_svg]:text-neutral-900";
+	"flex items-center gap-3 rounded-lg border bg-white text-neutral-900 [&>:not(input)]:shrink-0 [&_svg]:size-5 [&_svg]:shrink-0 [&_svg]:text-neutral-900";
+
+const sizeClasses: Record<NonNullable<InputProps["inputSize"]>, string> = {
+	md: "h-11 px-4 text-sm",
+	lg: "h-14 px-5 text-base font-semibold",
+};
 
 /* A status keeps its border on focus, so focus is shown by a ring instead. */
 const statusFocusClasses =
@@ -37,11 +44,13 @@ export const Input = ({
 	leadingIcon,
 	trailingIcon,
 	status,
+	inputSize = "md",
 	...rest
 }: InputProps): FunctionComponent => (
 	<div
 		className={joinClassNames(
 			baseClasses,
+			sizeClasses[inputSize],
 			status ? statusClasses[status] : neutralClasses,
 			disabledClasses,
 			className

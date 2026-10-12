@@ -410,4 +410,14 @@ describe("Input", () => {
 		expect(input.parentElement).toHaveClass(...disabledLook);
 		expect(input).toHaveClass("disabled:cursor-not-allowed");
 	});
+
+	it("given_theLargeSize_when_rendered_then_matchesALargeButtonsHeight", () => {
+		render(<Input aria-label="Search" inputSize="lg" type="search" />);
+
+		const field = screen.getByRole("searchbox", {
+			name: "Search",
+		}).parentElement;
+		expect(field).toHaveClass("h-14");
+		expect(field).not.toHaveClass("h-11");
+	});
 });
