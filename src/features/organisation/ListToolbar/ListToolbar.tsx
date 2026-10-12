@@ -61,6 +61,7 @@ export const ListToolbar = ({
 				<Input
 					aria-label={searchLabel}
 					className="w-full sm:w-97.5"
+					inputSize="lg"
 					leadingIcon={<SearchIcon />}
 					placeholder={searchLabel}
 					type="search"

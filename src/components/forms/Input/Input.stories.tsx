@@ -93,3 +93,8 @@ export const Error: Story = {
 export const DisabledWithError: Story = {
 	args: { disabled: true, status: "error", defaultValue: "Vernon" },
 };
+
+/** Beside page actions such as a large Button, e.g. a list's search. */
+export const Large: Story = {
+	args: { inputSize: "lg", placeholder: "Search Employee" },
+};
