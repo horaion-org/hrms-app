@@ -528,6 +528,64 @@
         "BRANCH",
         "DEPARTMENT"
       ],
+      "key": "constraint:read",
+      "prerequisites": [],
+      "resource": "constraint",
+      "resourceName": "Constraint"
+    },
+    {
+      "action": "create",
+      "actionName": "Create",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
+      "key": "constraint:create",
+      "prerequisites": [
+        "constraint:read"
+      ],
+      "resource": "constraint",
+      "resourceName": "Constraint"
+    },
+    {
+      "action": "update",
+      "actionName": "Update",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
+      "key": "constraint:update",
+      "prerequisites": [
+        "constraint:read"
+      ],
+      "resource": "constraint",
+      "resourceName": "Constraint"
+    },
+    {
+      "action": "delete",
+      "actionName": "Delete",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
+      "key": "constraint:delete",
+      "prerequisites": [
+        "constraint:read"
+      ],
+      "resource": "constraint",
+      "resourceName": "Constraint"
+    },
+    {
+      "action": "read",
+      "actionName": "Read",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
       "key": "access_role:read",
       "prerequisites": [],
       "resource": "access_role",

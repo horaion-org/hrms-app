@@ -1104,6 +1104,16 @@
 					"update": "Edit",
 					"delete": "Delete"
 				}
+			},
+			"constraint": {
+				"name": "Constraints",
+				"description": "Each department’s scheduling constraints: what they say, whether they must or should be kept, and whether schedules can use them.",
+				"actions": {
+					"read": "View",
+					"create": "Add",
+					"update": "Edit",
+					"delete": "Delete"
+				}
 			}
 		},
 		"activity": {
