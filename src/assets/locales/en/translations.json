@@ -1417,6 +1417,7 @@
 			"name": "Constraint name",
 			"type": "Constraint type",
 			"details": "Details",
+			"requirement": "Requirement",
 			"priority": "Priority",
 			"status": "Status",
 			"actions": "Actions",
@@ -1426,12 +1427,45 @@
 			"empty": "No constraints yet.",
 			"deleteForbidden": "You no longer have permission to delete constraints here.",
 			"deleteFailed": "We couldn’t delete the constraint. Try again.",
+			"list": "{{items, list}}",
+			"categories": {
+				"STAFFING": "Staffing",
+				"ROLE_COVERAGE": "Role coverage",
+				"SHIFT_PATTERN": "Shift pattern",
+				"WORKING_HOURS": "Working hours"
+			},
+			"categoryHints": {
+				"STAFFING": "How many people a shift needs",
+				"ROLE_COVERAGE": "Which job titles must be present while a shift runs",
+				"SHIFT_PATTERN": "How days off fall across the week",
+				"WORKING_HOURS": "How long people rest between shifts"
+			},
 			"types": {
 				"STAFFING_REQUIREMENT": "Staffing requirement",
 				"ROLE_COVERAGE": "Role coverage",
 				"SHIFT_PATTERN": "Shift pattern",
 				"WORKING_HOURS": "Working hours",
 				"AVAILABILITY": "Availability"
+			},
+			"sentences": {
+				"SHIFT_STAFFING": "Staff on <SHIFT/>, counting <JOB_TITLE/>, <REQUIREMENT/> total <COMPARISON/> <HEADCOUNT/>.",
+				"SHIFT_STAFFING_WITH_STAND_INS": "Staff on <SHIFT/>, counting <JOB_TITLE/>, <REQUIREMENT/> total at least <HEADCOUNT/>, with <STAND_IN_JOB_TITLE/> standing in at <STAND_INS_PER_PERSON/> to one.",
+				"ROLE_PRESENCE": "Staff present throughout <SHIFT/>, counting <JOB_TITLE/>, <REQUIREMENT/> be <COMPARISON/> <HEADCOUNT/>.",
+				"DAYS_OFF_PER_PERIOD": "Days off for everyone in any <PERIOD_DAYS/>-day period <REQUIREMENT/> be <COMPARISON/> <DAYS_OFF/>.",
+				"AVOID_DAYS_OFF_ON": "Try not to give days off on <WEEKDAY/>.",
+				"REST_BETWEEN_SHIFTS": "Hours of rest between one shift and the next must be at least <REST_HOURS/>."
+			},
+			"fields": {
+				"COMPARISON": "Comparison",
+				"HEADCOUNT": "Headcount",
+				"STAND_INS_PER_PERSON": "Stand-ins per person",
+				"DAYS_OFF": "Days off",
+				"PERIOD_DAYS": "Period in days",
+				"REST_HOURS": "Rest in hours",
+				"JOB_TITLE": "Job titles",
+				"STAND_IN_JOB_TITLE": "Stand-in job titles",
+				"SHIFT": "Shifts",
+				"WEEKDAY": "Days"
 			},
 			"typeHints": {
 				"STAFFING_REQUIREMENT": "Minimum staff counts",
@@ -1491,13 +1525,22 @@
 				"MUST": "must",
 				"MUST_NOT": "must not"
 			},
+			"requirementWords": {
+				"MUST": "must",
+				"SHOULD": "should"
+			},
+			"comparisonWords": {
+				"AT_LEAST": "at least",
+				"AT_MOST": "at most",
+				"EXACTLY": "exactly"
+			},
 			"conditions": {
 				"AT_LEAST": "at least",
 				"AT_MOST": "at most",
 				"EXACTLY": "exactly"
 			},
 			"preview": {
-				"title": "Rule Preview",
+				"title": "Constraint preview",
 				"complete": "Complete",
 				"incomplete": "Incomplete",
 				"sentence": "There <requirement/> be <condition/> <headcount/> employees with roles <roles/> assigned to the <shifts/> shifts.",

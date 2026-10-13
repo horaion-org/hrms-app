@@ -643,6 +643,7 @@
 			"name": "Nombre de la restricción",
 			"type": "Tipo de restricción",
 			"details": "Detalles",
+			"requirement": "Requisito",
 			"priority": "Prioridad",
 			"status": "Estado",
 			"actions": "Acciones",
@@ -652,12 +653,45 @@
 			"empty": "Todavía no hay restricciones.",
 			"deleteForbidden": "Ya no tienes permiso para eliminar restricciones aquí.",
 			"deleteFailed": "No pudimos eliminar la restricción. Inténtalo de nuevo.",
+			"list": "{{items, list}}",
+			"categories": {
+				"STAFFING": "Dotación",
+				"ROLE_COVERAGE": "Cobertura de puestos",
+				"SHIFT_PATTERN": "Patrón de turnos",
+				"WORKING_HOURS": "Horas de trabajo"
+			},
+			"categoryHints": {
+				"STAFFING": "Cuántas personas necesita un turno",
+				"ROLE_COVERAGE": "Qué puestos deben estar presentes mientras dura un turno",
+				"SHIFT_PATTERN": "Cómo se reparten los días libres en la semana",
+				"WORKING_HOURS": "Cuánto descansa el personal entre turnos"
+			},
 			"types": {
 				"STAFFING_REQUIREMENT": "Dotación mínima",
 				"ROLE_COVERAGE": "Cobertura de puestos",
 				"SHIFT_PATTERN": "Patrón de turnos",
 				"WORKING_HOURS": "Horas de trabajo",
 				"AVAILABILITY": "Disponibilidad"
+			},
+			"sentences": {
+				"SHIFT_STAFFING": "El personal en <SHIFT/>, contando <JOB_TITLE/>, <REQUIREMENT/> sumar <COMPARISON/> <HEADCOUNT/>.",
+				"SHIFT_STAFFING_WITH_STAND_INS": "El personal en <SHIFT/>, contando <JOB_TITLE/>, <REQUIREMENT/> sumar al menos <HEADCOUNT/>, y <STAND_IN_JOB_TITLE/> pueden suplir a razón de <STAND_INS_PER_PERSON/> por uno.",
+				"ROLE_PRESENCE": "El personal presente durante todo <SHIFT/>, contando <JOB_TITLE/>, <REQUIREMENT/> ser <COMPARISON/> <HEADCOUNT/>.",
+				"DAYS_OFF_PER_PERIOD": "Los días libres de cada persona en cualquier periodo de <PERIOD_DAYS/> días <REQUIREMENT/> ser <COMPARISON/> <DAYS_OFF/>.",
+				"AVOID_DAYS_OFF_ON": "Intenta no dar días libres en: <WEEKDAY/>.",
+				"REST_BETWEEN_SHIFTS": "Las horas de descanso entre un turno y el siguiente deben ser al menos <REST_HOURS/>."
+			},
+			"fields": {
+				"COMPARISON": "Comparación",
+				"HEADCOUNT": "Número de personas",
+				"STAND_INS_PER_PERSON": "Suplentes por persona",
+				"DAYS_OFF": "Días libres",
+				"PERIOD_DAYS": "Periodo en días",
+				"REST_HOURS": "Descanso en horas",
+				"JOB_TITLE": "Puestos",
+				"STAND_IN_JOB_TITLE": "Puestos suplentes",
+				"SHIFT": "Turnos",
+				"WEEKDAY": "Días"
 			},
 			"typeHints": {
 				"STAFFING_REQUIREMENT": "Número mínimo de personas",
@@ -717,13 +751,22 @@
 				"MUST": "debe",
 				"MUST_NOT": "no debe"
 			},
+			"requirementWords": {
+				"MUST": "debe",
+				"SHOULD": "debería"
+			},
+			"comparisonWords": {
+				"AT_LEAST": "al menos",
+				"AT_MOST": "como máximo",
+				"EXACTLY": "exactamente"
+			},
 			"conditions": {
 				"AT_LEAST": "al menos",
 				"AT_MOST": "como máximo",
 				"EXACTLY": "exactamente"
 			},
 			"preview": {
-				"title": "Vista previa de la regla",
+				"title": "Vista previa de la restricción",
 				"complete": "Completa",
 				"incomplete": "Incompleta",
 				"sentence": "En los turnos <shifts/> <requirement/> haber <condition/> <headcount/> empleados con los roles <roles/>.",
