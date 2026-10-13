@@ -6,6 +6,12 @@ import {
 import { z } from "zod";
 import { apiRequest, apiRequestVoid } from "@/common/api-client";
 import {
+	constraintCategorySchema,
+	constraintRequirementSchema,
+	constraintTypeSchema,
+	constraintValueSchema,
+} from "@/features/scheduling/constraints/api";
+import {
 	SCHEDULING_QUERY_ROOT,
 	schedulePath,
 	schedulesPath,
@@ -21,10 +27,11 @@ import { retry } from "@/features/workspace/retry";
 
 /*
  * The schedules API: a Department's schedules. A schedule exists as a DRAFT
- * from the moment Setup is completed and remembers which of the
- * Department's live shifts are ticked; generating it freezes those shifts
- * into the schedule. Paths, fields and codes follow §2.4 of the API's
- * `docs/implementation/2026-10-11-shifts-module.md`.
+ * from the moment Setup is completed and remembers which of the Department's
+ * live shifts and constraints are ticked; generating it freezes those shifts
+ * and constraints into the schedule. Paths, fields and codes follow §2.4 of the
+ * API's `docs/implementation/2026-10-11-shifts-module.md` and §4.5 of its
+ * `docs/implementation/2026-10-12-scheduling-constraints.md`.
  */
 
 const scheduleStatusSchema = z.enum(["DRAFT", "GENERATION_REQUESTED"]);
@@ -49,6 +56,8 @@ const scheduleSchema = z.object({
 	status: scheduleStatusSchema,
 	/** A draft's ticked live shifts; once generated, the frozen copies' sources. */
 	includedShiftIds: z.array(z.string()),
+	/** A draft's ticked live ACTIVE constraints; once generated, the frozen copies' sources still live and ACTIVE. */
+	includedConstraintIds: z.array(z.string()),
 	/** Set exactly when the status is not DRAFT. */
 	generationRequestedAt: z.string().nullable(),
 	/** `displayName` is null once the requester has left the company. */
@@ -59,7 +68,7 @@ const scheduleSchema = z.object({
 	updatedAt: z.string(),
 });
 
-/** A schedule as the API answers it; its shifts are read on their own. */
+/** A schedule as the API answers it; its shifts and constraints are read on their own. */
 export type Schedule = z.infer<typeof scheduleSchema>;
 
 /** What creating or replacing a schedule sends: its setup and the ticked live shifts. */
@@ -105,7 +114,7 @@ export const updateSchedule = (
 	});
 
 /**
- * Freezes a DRAFT's ticked live shifts into it and marks it
+ * Freezes a DRAFT's ticked live shifts and constraints into it and marks it
  * GENERATION_REQUESTED. Whatever it answers is not read: the page leaves
  * the schedule and every scheduling query reloads.
  */
@@ -152,6 +161,43 @@ export const fetchScheduleShifts = (
 	apiRequest(
 		`${schedulePath(companyId, unit, scheduleId)}/shifts`,
 		scheduleShiftsSchema,
+		{ signal }
+	);
+
+const scheduleConstraintSchema = z.object({
+	/** The live constraint while DRAFT; once frozen its source, null when that was deleted or deactivated. */
+	constraintId: z.string().nullable(),
+	name: z.string(),
+	type: constraintTypeSchema,
+	category: constraintCategorySchema,
+	requirement: constraintRequirementSchema.nullable(),
+	/** As on a live constraint; once frozen, a shift is the schedule's frozen copy and each name is as it was at generation. */
+	values: z.array(constraintValueSchema),
+	/** Whether the schedule ticks it. */
+	included: z.boolean(),
+	/** A copy made at generation, never changed again. */
+	frozen: z.boolean(),
+});
+
+/**
+ * One row of a schedule's constraints: for a DRAFT, one of the Department's
+ * live ACTIVE constraints with whether it is ticked; once generated, one frozen
+ * copy.
+ */
+export type ScheduleConstraint = z.infer<typeof scheduleConstraintSchema>;
+
+const scheduleConstraintsSchema = z.array(scheduleConstraintSchema);
+
+/** A schedule's constraints, by name. */
+export const fetchScheduleConstraints = (
+	companyId: string,
+	unit: DepartmentPath,
+	scheduleId: string,
+	signal?: AbortSignal
+): Promise<Array<ScheduleConstraint>> =>
+	apiRequest(
+		`${schedulePath(companyId, unit, scheduleId)}/constraints`,
+		scheduleConstraintsSchema,
 		{ signal }
 	);
 
@@ -212,6 +258,37 @@ export const scheduleShiftsQuery = (
 			allowed && unit
 				? ({ signal }): Promise<Array<ScheduleShift>> =>
 						fetchScheduleShifts(companyId, unit, scheduleId, signal)
+				: skipToken,
+		meta: administrativeMeta(companyId),
+		staleTime: 30_000,
+		retry,
+	});
+
+/** The key a schedule's constraints are cached under, below the schedule's own. */
+export const scheduleConstraintsKey = (
+	companyId: string,
+	scheduleId: string
+): readonly ["scheduling", string, "schedules", string, "constraints"] =>
+	[...scheduleKey(companyId, scheduleId), "constraints"] as const;
+
+/** A schedule's constraints; `unit` undefined, or `allowed` false, asks for nothing. */
+export const scheduleConstraintsQuery = (
+	companyId: string,
+	unit: DepartmentPath | undefined,
+	scheduleId: string,
+	allowed = true
+): UndefinedInitialDataOptions<
+	Array<ScheduleConstraint>,
+	Error,
+	Array<ScheduleConstraint>,
+	ReturnType<typeof scheduleConstraintsKey>
+> =>
+	queryOptions({
+		queryKey: scheduleConstraintsKey(companyId, scheduleId),
+		queryFn:
+			allowed && unit
+				? ({ signal }): Promise<Array<ScheduleConstraint>> =>
+						fetchScheduleConstraints(companyId, unit, scheduleId, signal)
 				: skipToken,
 		meta: administrativeMeta(companyId),
 		staleTime: 30_000,

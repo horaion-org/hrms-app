@@ -6,7 +6,7 @@ export type DepartmentPath = { branchId: string; departmentId: string };
 /** Every scheduling query key starts `["scheduling", companyId, …]`. */
 export const SCHEDULING_QUERY_ROOT = "scheduling";
 
-/** One Department's routes; its shifts and schedules sit under it. */
+/** One Department's routes; its shifts, constraints and schedules sit under it. */
 export const departmentPath = (
 	companyId: string,
 	{ branchId, departmentId }: DepartmentPath
@@ -23,13 +23,25 @@ export const shiftRoleOptionsPath = (
 	unit: DepartmentPath
 ): string => `${departmentPath(companyId, unit)}/shift-role-options`;
 
+/** A department's live constraints. */
+export const constraintsPath = (
+	companyId: string,
+	unit: DepartmentPath
+): string => `${departmentPath(companyId, unit)}/constraints`;
+
+/** The constraint types with their fields, and the department's shifts and active job titles, as the constraint dialog offers them. */
+export const constraintOptionsPath = (
+	companyId: string,
+	unit: DepartmentPath
+): string => `${departmentPath(companyId, unit)}/constraint-options`;
+
 /** A department's schedules. */
 export const schedulesPath = (
 	companyId: string,
 	unit: DepartmentPath
 ): string => `${departmentPath(companyId, unit)}/schedules`;
 
-/** One schedule of a department; its shifts and its generation sit under it. */
+/** One schedule of a department; its shifts, its constraints and its generation sit under it. */
 export const schedulePath = (
 	companyId: string,
 	unit: DepartmentPath,
