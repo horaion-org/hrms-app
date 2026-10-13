@@ -20,12 +20,16 @@ export type CreateFormSubmit<F extends string> = {
 	) => Promise<Refusal<F> | undefined>;
 };
 
-/** The submit, refusal and focus handling every Organisation create Dialog shares. */
+/**
+ * The submit, refusal and focus handling every Organisation create Dialog
+ * shares. It reads only the form's state and resets it, so the form may
+ * submit a value of another shape than it holds (a resolver's output).
+ */
 export const useCreateFormSubmit = <
 	V extends FieldValues,
 	F extends Path<V> & string,
 >(
-	form: UseFormReturn<V>,
+	form: Pick<UseFormReturn<V>, "reset" | "setError" | "setFocus" | "formState">,
 	fieldOrder: ReadonlyArray<F>,
 	onClose: () => void
 ): CreateFormSubmit<F> => {

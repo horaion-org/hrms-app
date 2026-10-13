@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+	CONSTRAINT_FIXTURES,
+	frozenConstraintsFixture,
+} from "@/features/scheduling/constraints/fixtures";
+import {
 	generatedScheduleFixture,
 	scheduleFixture,
 } from "@/features/scheduling/schedules/fixtures";
@@ -12,6 +16,7 @@ import {
 } from "@/features/scheduling/shifts/fixtures";
 import {
 	autoFillDemand,
+	constraintRowsOf,
 	demandLevel,
 	emptyScheduleDraft,
 	includedShifts,
@@ -23,6 +28,7 @@ import {
 	shiftRowsOf,
 	slotsOf,
 	summarise,
+	tickedConstraintsOf,
 	tickedOf,
 	timeSteps,
 	type ScheduleDraft,
@@ -166,23 +172,6 @@ describe("summarise", () => {
 });
 
 describe("scheduleDraftReducer", () => {
-	it("includes a newly added constraint", () => {
-		const draft = scheduleDraftReducer(emptyScheduleDraft(), {
-			type: "constraintAdded",
-			constraint: {
-				constraintId: "new-rule",
-				name: "Availability",
-				type: "AVAILABILITY",
-				details: "There must be at least 1 employees",
-				priority: "MEDIUM",
-				status: "ACTIVE",
-			},
-		});
-		expect(draft.constraints.map((item) => item.constraintId)).toContain(
-			"new-rule"
-		);
-		expect(draft.includedConstraintIds).toContain("new-rule");
-	});
 	it("given_setup_when_saved_then_keepsWhatIsChosen", () => {
 		const draft = scheduleDraftReducer(chosen(), {
 			type: "setupSaved",
@@ -217,6 +206,9 @@ describe("scheduleDraftReducer", () => {
 		});
 		// Until the shifts load, the ticks are the ones the schedule keeps.
 		expect(draft.includedShiftIds).toEqual(scheduleFixture().includedShiftIds);
+		expect(draft.includedConstraintIds).toEqual(
+			scheduleFixture().includedConstraintIds
+		);
 		expect(draft.shiftsSeeded).toBe(false);
 		expect(draft.allocations).toEqual({});
 	});
@@ -260,14 +252,18 @@ describe("scheduleDraftReducer", () => {
 		expect(draft.allocations["lunch-rush"]).toBeDefined();
 	});
 
-	it("given_anIncludedConstraint_when_deleted_then_leavesTheListAndTheSelection", () => {
-		const draft = scheduleDraftReducer(chosen(), {
-			type: "constraintDeleted",
-			constraintId: "required-role-coverage",
+	it("given_constraintsTicked_when_oneIsRemoved_then_onlyItsTickGoes", () => {
+		const ticked = scheduleDraftReducer(chosen(), {
+			type: "constraintsIncluded",
+			constraintIds: ["morning-cover", "two-days-off"],
+		});
+		const draft = scheduleDraftReducer(ticked, {
+			type: "constraintRemoved",
+			constraintId: "morning-cover",
 		});
 
-		expect(draft.constraints).toHaveLength(5);
-		expect(draft.includedConstraintIds).toEqual(["minimum-shift-staffing"]);
+		expect(draft.includedConstraintIds).toEqual(["two-days-off"]);
+		expect(draft.includedShiftIds).toEqual(chosen().includedShiftIds);
 	});
 
 	it("given_anAllocation_when_changed_then_updatesOnlyThatRoleAndNeverBelowZero", () => {
@@ -352,5 +348,33 @@ describe("frozen schedules and ticks", () => {
 			"front-desk-am",
 			"deleted-shift",
 		]);
+	});
+
+	it("given_aFrozenConstraintWhoseSourceIsGone_when_listed_then_itGetsALocalId", () => {
+		const rows = constraintRowsOf(frozenConstraintsFixture());
+
+		expect(rows.map((row) => row.constraintId)).toEqual([
+			"lunch-stand-ins",
+			"morning-cover",
+			"frozen-2",
+		]);
+	});
+
+	it("given_ticksForConstraintsNoLongerListedOrInactive_when_read_then_onlyListedActiveOnesRemain", () => {
+		const draft = {
+			includedConstraintIds: [
+				"morning-cover",
+				"weekend-days-on",
+				"deleted-constraint",
+			],
+		};
+
+		expect(tickedConstraintsOf(draft, CONSTRAINT_FIXTURES)).toEqual([
+			"morning-cover",
+		]);
+		// Before the constraints are listed, the ticks are taken as they are.
+		expect(tickedConstraintsOf(draft, undefined)).toEqual(
+			draft.includedConstraintIds
+		);
 	});
 });

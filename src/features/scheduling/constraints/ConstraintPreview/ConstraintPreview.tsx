@@ -2,36 +2,39 @@ import { Trans, useTranslation } from "react-i18next";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { Badge } from "@/components/ui/Badge";
+import type { ConstraintType } from "@/features/scheduling/constraints/api";
+import {
+	sentenceKey,
+	type ConstraintSlot,
+	type ConstraintWords,
+} from "@/features/scheduling/constraints/constraintSentence";
 
-const RULE_SLOTS = [
-	"requirement",
-	"condition",
-	"headcount",
-	"roles",
-	"shifts",
-] as const;
-
-export type RuleSlot = (typeof RULE_SLOTS)[number];
-
-export type RulePreviewProps = {
-	/** Each part of the rule in words; a missing or empty part shows its placeholder. */
-	values: Partial<Record<RuleSlot, string>>;
+export type ConstraintPreviewProps = {
+	/** The constraint's type, whose sentence is read. */
+	type: ConstraintType;
+	/** Every slot the type's sentence has (see `sentenceSlotsOf`). */
+	slots: Array<ConstraintSlot>;
+	/** The slots chosen so far, in words (see `constraintWords`); a missing or empty one shows its label. */
+	words: ConstraintWords;
 	className?: string;
 };
 
 /**
- * A rule read back as a sentence while it is being built, with each part
- * marked as filled in or still to choose, and whether the rule is complete.
+ * A constraint read back as its type's sentence while it is being built, with
+ * each part marked as filled in or still to choose, and whether the constraint
+ * is complete.
  */
-export const RulePreview = ({
-	values,
+export const ConstraintPreview = ({
+	type,
+	slots,
+	words,
 	className,
-}: RulePreviewProps): FunctionComponent => {
+}: ConstraintPreviewProps): FunctionComponent => {
 	const { t } = useTranslation();
-	const complete = RULE_SLOTS.every((slot) => Boolean(values[slot]));
-	const slots = Object.fromEntries(
-		RULE_SLOTS.map((slot) => {
-			const value = values[slot];
+	const complete = slots.every((slot) => Boolean(words[slot]));
+	const parts = Object.fromEntries(
+		slots.map((slot) => {
+			const value = words[slot];
 			return [
 				slot,
 				<span
@@ -43,7 +46,10 @@ export const RulePreview = ({
 							: "border-neutral-500 bg-neutral-300 text-neutral-600"
 					)}
 				>
-					{value || t(`scheduling.constraints.preview.empty.${slot}`)}
+					{value ||
+						(slot === "REQUIREMENT"
+							? t("scheduling.constraints.requirement")
+							: t(`scheduling.constraints.fields.${slot}`))}
 				</span>,
 			];
 		})
@@ -68,10 +74,7 @@ export const RulePreview = ({
 				</Badge>
 			</div>
 			<p className="mt-5 flex flex-wrap items-center gap-2 text-xs font-semibold text-neutral-900">
-				<Trans
-					components={slots}
-					i18nKey="scheduling.constraints.preview.sentence"
-				/>
+				<Trans components={parts} i18nKey={sentenceKey(type)} />
 			</p>
 		</section>
 	);

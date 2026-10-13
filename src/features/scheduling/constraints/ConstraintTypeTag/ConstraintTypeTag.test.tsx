@@ -3,7 +3,7 @@ import { createInstance } from "i18next";
 import { initReactI18next } from "react-i18next";
 import { beforeAll, describe, expect, it } from "vitest";
 import en from "@/assets/locales/en/translations.json";
-import { ConstraintTypeTag } from "@/features/scheduling/ConstraintTypeTag";
+import { ConstraintTypeTag } from "@/features/scheduling/constraints/ConstraintTypeTag";
 
 beforeAll(async () => {
 	await createInstance()
@@ -12,20 +12,20 @@ beforeAll(async () => {
 });
 
 describe("ConstraintTypeTag", () => {
-	it("given_aType_when_rendered_then_namesItAndExplainsItOnHover", () => {
-		render(<ConstraintTypeTag type="ROLE_COVERAGE" />);
+	it("given_aCategory_when_rendered_then_namesItAndExplainsItOnHover", () => {
+		render(<ConstraintTypeTag category="ROLE_COVERAGE" />);
 
 		expect(screen.getByText("Role coverage").parentElement).toHaveAttribute(
 			"title",
-			"Required roles / seniority"
+			"Which job titles must be present while a shift runs"
 		);
 	});
 
-	it("given_twoTypes_when_rendered_then_colourKeysDiffer", () => {
+	it("given_twoCategories_when_rendered_then_colourKeysDiffer", () => {
 		const { container } = render(
 			<>
-				<ConstraintTypeTag type="SHIFT_PATTERN" />
-				<ConstraintTypeTag type="WORKING_HOURS" />
+				<ConstraintTypeTag category="SHIFT_PATTERN" />
+				<ConstraintTypeTag category="WORKING_HOURS" />
 			</>
 		);
 

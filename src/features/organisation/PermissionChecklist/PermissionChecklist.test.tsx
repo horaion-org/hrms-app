@@ -65,12 +65,13 @@ describe("PermissionChecklist", () => {
 			"Leave",
 			"Schedules",
 			"Shifts",
+			"Constraints",
 			"System roles",
 			"Activity",
 		]);
 		// One box per key, plus each row's own.
 		expect(screen.getAllByRole("checkbox")).toHaveLength(
-			PERMISSION_KEYS.length + 13
+			PERMISSION_KEYS.length + 14
 		);
 		expect(within(row("Schedules")).getAllByRole("checkbox")).toHaveLength(5);
 		for (const action of ["View", "Create", "Edit", "Generate"])
@@ -78,6 +79,9 @@ describe("PermissionChecklist", () => {
 		expect(within(row("Shifts")).getAllByRole("checkbox")).toHaveLength(5);
 		for (const action of ["View", "Add", "Edit", "Delete"])
 			expect(box("Shifts", action)).not.toBeChecked();
+		expect(within(row("Constraints")).getAllByRole("checkbox")).toHaveLength(5);
+		for (const action of ["View", "Add", "Edit", "Delete"])
+			expect(box("Constraints", action)).not.toBeChecked();
 		expect(within(row("System roles")).getAllByRole("checkbox")).toHaveLength(
 			6
 		);
@@ -100,18 +104,21 @@ describe("PermissionChecklist", () => {
 		expect(within(row("Departments")).getByText("0 of 3")).toBeVisible();
 	});
 
-	it("ticks a schedule's or a shift's view along with generating or deleting", async () => {
+	it("ticks a schedule's, a shift's or a constraint's view along with generating or changing", async () => {
 		const user = userEvent.setup();
 		render(<Harness initial={[]} />);
 
 		await user.click(box("Schedules", "Generate"));
 		await user.click(box("Shifts", "Delete"));
+		await user.click(box("Constraints", "Edit"));
 
 		expect(latest).toEqual([
 			"schedule:read",
 			"schedule:generate",
 			"shift:read",
 			"shift:delete",
+			"constraint:read",
+			"constraint:update",
 		]);
 	});
 

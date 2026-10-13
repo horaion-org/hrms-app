@@ -3,7 +3,7 @@
 
 /** SHA-256 of the contract file this module was generated from. */
 export const PERMISSION_CONTRACT_SHA256 =
-	"aa0c3491a81fc405021fc41b60a8f910461fd7ab54af9ad2c8834d546fd1cc31";
+	"a0f357b02f22aaa715b39866c9887d89637024987871e4baabd15f9cdefac0bb";
 
 /** The places a permission can be assigned at, widest first. */
 export const ASSIGNABLE_SCOPES = ["COMPANY", "BRANCH", "DEPARTMENT"] as const;
@@ -270,6 +270,34 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: ["shift:read"],
 	},
 	{
+		key: "constraint:read",
+		resource: "constraint",
+		action: "read",
+		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
+		prerequisites: [],
+	},
+	{
+		key: "constraint:create",
+		resource: "constraint",
+		action: "create",
+		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
+		prerequisites: ["constraint:read"],
+	},
+	{
+		key: "constraint:update",
+		resource: "constraint",
+		action: "update",
+		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
+		prerequisites: ["constraint:read"],
+	},
+	{
+		key: "constraint:delete",
+		resource: "constraint",
+		action: "delete",
+		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
+		prerequisites: ["constraint:read"],
+	},
+	{
 		key: "access_role:read",
 		resource: "access_role",
 		action: "read",
@@ -358,6 +386,10 @@ export const PERMISSION_KEYS = [
 	"shift:create",
 	"shift:update",
 	"shift:delete",
+	"constraint:read",
+	"constraint:create",
+	"constraint:update",
+	"constraint:delete",
 	"access_role:read",
 	"access_role:create",
 	"access_role:update",

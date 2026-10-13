@@ -5,7 +5,8 @@ import type { Workspace } from "@/features/workspace/api";
 /*
  * API-shaped schedules for stories and tests; never sent anywhere. A
  * draft of "Front Office" (d-1) of "Main branch" (b-1) ticking four of the
- * department's shifts, which are read on their own (`shifts/fixtures.ts`).
+ * department's shifts and three of its constraints, which are read on their own
+ * (`shifts/fixtures.ts`, `constraints/fixtures.ts`).
  */
 
 /** Draft s-1; `overrides` set it apart. */
@@ -29,6 +30,11 @@ export const scheduleFixture = (
 		"breakfast-prep",
 		"lunch-rush",
 		"swing-shift",
+	],
+	includedConstraintIds: [
+		"lunch-stand-ins",
+		"morning-cover",
+		"rest-between-shifts",
 	],
 	generationRequestedAt: null,
 	generationRequestedBy: null,

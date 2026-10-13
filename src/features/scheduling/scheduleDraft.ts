@@ -1,6 +1,8 @@
+import type { ConstraintStatus } from "@/features/scheduling/constraints/api";
 import type { DepartmentPath } from "@/features/scheduling/paths";
 import type {
 	Schedule,
+	ScheduleConstraint,
 	ScheduleShift,
 	ScheduleStatus,
 } from "@/features/scheduling/schedules/api";
@@ -12,14 +14,13 @@ import {
 
 /*
  * A schedule being set up in the Create Schedule steps. The schedule exists
- * on the API as a DRAFT from the moment Setup is completed. Its shifts are
- * the Department's live shifts, read on their own; the page keeps the setup
- * and which shifts are ticked (seeded from the schedule, then from the
- * shifts once they load) until they are saved again. Once generated, the
- * schedule shows the frozen copies it was generated with and changes no
- * more. Constraints are still a stand-in kept in the page (seeded by
- * `emptyScheduleDraft`), and allocations and demand stay in the page too,
- * until their API exists.
+ * on the API as a DRAFT from the moment Setup is completed. Its shifts and
+ * constraints are the Department's live ones, read on their own; the page keeps
+ * the setup and which shifts and constraints are ticked (seeded from the
+ * schedule, the shifts' again once they load) until they are saved again.
+ * Once generated, the schedule shows the frozen copies it was generated
+ * with and changes no more. Allocations and demand stay in the page until
+ * their API exists.
  */
 
 export { WEEKDAYS, type ShiftRole, type Weekday };
@@ -39,53 +40,37 @@ export const shiftRowsOf = (shifts: Array<ScheduleShift>): Array<Shift> =>
 		shiftId: shift.shiftId ?? `frozen-${index}`,
 	}));
 
-export const CONSTRAINT_TYPES = [
-	"STAFFING_REQUIREMENT",
-	"ROLE_COVERAGE",
-	"WORKING_HOURS",
-	"SHIFT_PATTERN",
-	"AVAILABILITY",
-] as const;
-
-export type ConstraintType = (typeof CONSTRAINT_TYPES)[number];
-
-export const PRIORITIES = ["HIGH", "MEDIUM", "LOW"] as const;
-
-export type Priority = (typeof PRIORITIES)[number];
-
-export const CONSTRAINT_STATUSES = ["ACTIVE", "DRAFT", "DISABLED"] as const;
-
-export type ConstraintStatus = (typeof CONSTRAINT_STATUSES)[number];
-
-export const RULE_REQUIREMENTS = ["MUST", "MUST_NOT"] as const;
-
-export type RuleRequirement = (typeof RULE_REQUIREMENTS)[number];
-
-export const RULE_CONDITIONS = ["AT_LEAST", "AT_MOST", "EXACTLY"] as const;
-
-export type RuleCondition = (typeof RULE_CONDITIONS)[number];
-
-/** A rule built in Add Constraint: "There must be at least 2 employees with roles … assigned to the … shifts." */
-export type ConstraintRule = {
-	type: ConstraintType;
-	requirement: RuleRequirement;
-	condition: RuleCondition;
-	headcount: number;
-	roleIds: Array<string>;
-	shiftIds: Array<string>;
-};
-
-export type Constraint = {
+/**
+ * One of a schedule's constraints as the Constraints step shows it: for a
+ * draft, one of the Department's live constraints, inactive ones included; once
+ * generated, one of its frozen copies, which has no status. `constraintId` is
+ * always set: a frozen copy whose source constraint was deleted or deactivated
+ * gets a local id from `constraintRowsOf`, which is never sent.
+ */
+export type Constraint = Omit<
+	ScheduleConstraint,
+	"constraintId" | "included" | "frozen"
+> & {
 	constraintId: string;
-	name: string;
-	type: ConstraintType;
-	/** The rule in words, as the person wrote it. */
-	details: string;
-	priority: Priority;
-	status: ConstraintStatus;
-	/** The rule's parts, for constraints added in this draft. */
-	rule?: ConstraintRule;
+	/** A live constraint's; a frozen copy has none. */
+	status?: ConstraintStatus;
 };
+
+/** The rows a generated schedule's constraints show, each with an id (see `Constraint`). */
+export const constraintRowsOf = (
+	constraints: Array<ScheduleConstraint>
+): Array<Constraint> =>
+	constraints.map((constraint, index) => ({
+		...constraint,
+		constraintId: constraint.constraintId ?? `frozen-${index}`,
+	}));
+
+/** Only an ACTIVE constraint can be ticked; the API refuses an inactive one. */
+export const isTickable = (constraint: Pick<Constraint, "status">): boolean =>
+	constraint.status === "ACTIVE";
+
+/** Why a step's list is not shown: a notice, or an alert when loading failed. */
+export type ListProblem = { message: string; alert: boolean };
 
 /** Whether demand is set per shift or per time block. */
 export type ForecastMode = "SHIFT" | "BLOCKS";
@@ -123,78 +108,20 @@ export type ScheduleDraft = {
 	includedShiftIds: Array<string>;
 	/** Set once `includedShiftIds` was taken from the loaded shifts; later reloads keep the page's ticks. */
 	shiftsSeeded: boolean;
-	/** Stand-in constraints kept in the page until the scheduling constraints API exists. */
-	constraints: Array<Constraint>;
+	/** The ticked constraints: the schedule's own, then the person's. */
 	includedConstraintIds: Array<string>;
 	allocations: Allocations;
 	forecastMode: ForecastMode;
 	demand: TimeBlockDemand;
 };
 
-/** Stand-in constraints until the scheduling constraints API exists. */
-export const seedConstraints = (): Array<Constraint> => [
-	{
-		constraintId: "minimum-shift-staffing",
-		name: "Minimum Shift Staffing",
-		type: "STAFFING_REQUIREMENT",
-		details:
-			"There should be at least 2 employees assigned to Front Desk AM (09:00 – 15:00) shift",
-		priority: "HIGH",
-		status: "ACTIVE",
-	},
-	{
-		constraintId: "required-role-coverage",
-		name: "Required Role Coverage",
-		type: "ROLE_COVERAGE",
-		details:
-			"There should be at least 1 supervisor assigned to Closing Crew (16:00 – 00:00) shift",
-		priority: "HIGH",
-		status: "ACTIVE",
-	},
-	{
-		constraintId: "minimum-daily-staffing",
-		name: "Minimum Daily Staffing",
-		type: "STAFFING_REQUIREMENT",
-		details: "There should be at least 8 employees scheduled each weekday",
-		priority: "MEDIUM",
-		status: "ACTIVE",
-	},
-	{
-		constraintId: "maximum-consecutive-working-days",
-		name: "Maximum Consecutive Working Days",
-		type: "SHIFT_PATTERN",
-		details: "Employees should not work more than 6 consecutive days",
-		priority: "MEDIUM",
-		status: "ACTIVE",
-	},
-	{
-		constraintId: "rest-between-shifts",
-		name: "Rest Between Shifts",
-		type: "WORKING_HOURS",
-		details:
-			"Employees should have at least 10 hours between consecutive shifts",
-		priority: "HIGH",
-		status: "DRAFT",
-	},
-	{
-		constraintId: "weekend-staffing-coverage",
-		name: "Weekend Staffing Coverage",
-		type: "STAFFING_REQUIREMENT",
-		details:
-			"There should be at least 3 employees assigned during weekend peak hours",
-		priority: "LOW",
-		status: "DISABLED",
-	},
-];
-
-/** A fresh draft; only the stand-in constraints are filled in. */
+/** A fresh draft, with nothing chosen yet. */
 export const emptyScheduleDraft = (): ScheduleDraft => ({
 	setup: undefined,
 	saved: undefined,
 	includedShiftIds: [],
 	shiftsSeeded: false,
-	constraints: seedConstraints(),
-	includedConstraintIds: ["minimum-shift-staffing", "required-role-coverage"],
+	includedConstraintIds: [],
 	allocations: {},
 	forecastMode: "SHIFT",
 	demand: {},
@@ -367,7 +294,10 @@ export const summarise = (
 /** The setup, the saved schedule and its ticks, as the API answers a schedule. */
 export const fromSchedule = (
 	schedule: Schedule
-): Pick<ScheduleDraft, "setup" | "saved" | "includedShiftIds"> => ({
+): Pick<
+	ScheduleDraft,
+	"setup" | "saved" | "includedShiftIds" | "includedConstraintIds"
+> => ({
 	setup: {
 		departmentId: schedule.departmentId,
 		name: schedule.name,
@@ -384,6 +314,7 @@ export const fromSchedule = (
 		status: schedule.status,
 	},
 	includedShiftIds: schedule.includedShiftIds,
+	includedConstraintIds: schedule.includedConstraintIds,
 });
 
 /** Whether the schedule was generated: its shifts are frozen and nothing is saved again. */
@@ -404,6 +335,24 @@ export const tickedOf = (
 				shifts.some((shift) => shift.shiftId === shiftId)
 			);
 
+/**
+ * The constraint ticks that still name a listed ACTIVE constraint. A constraint
+ * deleted or deactivated since it was ticked drops out once the constraints
+ * reload, so it is never sent again.
+ */
+export const tickedConstraintsOf = (
+	draft: Pick<ScheduleDraft, "includedConstraintIds">,
+	constraints: Array<Pick<Constraint, "constraintId" | "status">> | undefined
+): Array<string> =>
+	constraints === undefined
+		? draft.includedConstraintIds
+		: draft.includedConstraintIds.filter((constraintId) =>
+				constraints.some(
+					(constraint) =>
+						constraint.constraintId === constraintId && isTickable(constraint)
+				)
+			);
+
 /** The ids of the shifts the API keeps as included. */
 export const includedIdsOf = (shifts: Array<Shift>): Array<string> =>
 	shifts.filter((shift) => shift.included).map((shift) => shift.shiftId);
@@ -418,8 +367,8 @@ export type ScheduleDraftAction =
 	/** A shift the API no longer has; its selection and allocations go with it. */
 	| { type: "shiftRemoved"; shiftId: string }
 	| { type: "constraintsIncluded"; constraintIds: Array<string> }
-	| { type: "constraintAdded"; constraint: Constraint }
-	| { type: "constraintDeleted"; constraintId: string }
+	/** A constraint the API no longer has; its tick goes with it. */
+	| { type: "constraintRemoved"; constraintId: string }
 	| { type: "forecastModeChosen"; mode: ForecastMode }
 	| {
 			type: "allocationChanged";
@@ -469,21 +418,9 @@ export const scheduleDraftReducer = (
 			};
 		case "constraintsIncluded":
 			return { ...draft, includedConstraintIds: action.constraintIds };
-		case "constraintAdded":
+		case "constraintRemoved":
 			return {
 				...draft,
-				constraints: [...draft.constraints, action.constraint],
-				includedConstraintIds: [
-					...draft.includedConstraintIds,
-					action.constraint.constraintId,
-				],
-			};
-		case "constraintDeleted":
-			return {
-				...draft,
-				constraints: draft.constraints.filter(
-					(constraint) => constraint.constraintId !== action.constraintId
-				),
 				includedConstraintIds: draft.includedConstraintIds.filter(
 					(constraintId) => constraintId !== action.constraintId
 				),
