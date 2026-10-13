@@ -100,6 +100,12 @@ _Avoid_: Admin data, protected data
 What a member sees about themselves without any System role: My profile and My leave, plus the colleagues directory of names. They never depend on the workspace, so they stay available when it is empty or failing.
 _Avoid_: Self-service data, personal data, me data
 
+## Scheduling
+
+**Constraint**:
+Something a Department's schedules can be held to, such as "Staff on Front desk AM, counting Front desk staff, must total at least 2". Each is of one fixed type, which decides the values it takes, and is a Must or a Should (a few types are always one of them); it is active or inactive, and only an active one can be applied. A draft schedule ticks the constraints it applies, and generating it keeps a copy of each as it was then. The UI, the code and the API all call it a constraint.
+_Avoid_: Rule, scheduling rule, condition, priority
+
 ## Leave
 
 **Leave request**:
