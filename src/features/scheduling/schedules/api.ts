@@ -71,13 +71,14 @@ const scheduleSchema = z.object({
 /** A schedule as the API answers it; its shifts and constraints are read on their own. */
 export type Schedule = z.infer<typeof scheduleSchema>;
 
-/** What creating or replacing a schedule sends: its setup and the ticked live shifts. */
+/** What creating or replacing a schedule sends: its setup and the ticked live shifts and constraints. */
 export type ScheduleBody = {
 	name: string;
 	periodStart: string;
 	includeLeave: boolean;
 	allowOpenShifts: boolean;
 	includedShiftIds: Array<string>;
+	includedConstraintIds: Array<string>;
 };
 
 /** Creates a DRAFT schedule for a Department. */

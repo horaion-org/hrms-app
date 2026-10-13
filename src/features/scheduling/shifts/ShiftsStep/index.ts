@@ -1,5 +1,1 @@
-export {
-	ShiftsStep,
-	type ListProblem,
-	type ShiftsStepProps,
-} from "./ShiftsStep";
+export { ShiftsStep, type ShiftsStepProps } from "./ShiftsStep";

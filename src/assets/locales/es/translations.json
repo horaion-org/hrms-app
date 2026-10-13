@@ -637,20 +637,25 @@
 		},
 		"constraints": {
 			"title": "Restricciones del horario",
-			"description": "Define las restricciones de tu horario.",
+			"description": "Elige qué restricciones del departamento aplica este horario. Un cambio en una restricción se aplica a todos los borradores del departamento.",
+			"frozenDescription": "Las restricciones con las que se generó este horario, tal como eran entonces.",
 			"add": "Añadir restricción",
 			"label": "Restricciones",
 			"name": "Nombre de la restricción",
 			"type": "Tipo de restricción",
 			"details": "Detalles",
 			"requirement": "Requisito",
-			"priority": "Prioridad",
 			"status": "Estado",
 			"actions": "Acciones",
 			"edit": "Editar {{name}}",
 			"delete": "Eliminar {{name}}",
+			"added": "Restricción añadida correctamente",
+			"edited": "Restricción guardada",
 			"deleted": "Restricción eliminada",
 			"empty": "Todavía no hay restricciones.",
+			"loading": "Cargando restricciones…",
+			"hidden": "No tienes permiso para ver las restricciones de este departamento.",
+			"failed": "No pudimos cargar las restricciones. Inténtalo de nuevo.",
 			"deleteForbidden": "Ya no tienes permiso para eliminar restricciones aquí.",
 			"deleteFailed": "No pudimos eliminar la restricción. Inténtalo de nuevo.",
 			"list": "{{items, list}}",
@@ -667,11 +672,12 @@
 				"WORKING_HOURS": "Cuánto descansa el personal entre turnos"
 			},
 			"types": {
-				"STAFFING_REQUIREMENT": "Dotación mínima",
-				"ROLE_COVERAGE": "Cobertura de puestos",
-				"SHIFT_PATTERN": "Patrón de turnos",
-				"WORKING_HOURS": "Horas de trabajo",
-				"AVAILABILITY": "Disponibilidad"
+				"SHIFT_STAFFING": "Dotación del turno",
+				"SHIFT_STAFFING_WITH_STAND_INS": "Dotación del turno con suplentes",
+				"ROLE_PRESENCE": "Presencia de puestos",
+				"DAYS_OFF_PER_PERIOD": "Días libres por periodo",
+				"AVOID_DAYS_OFF_ON": "Evitar días libres en",
+				"REST_BETWEEN_SHIFTS": "Descanso entre turnos"
 			},
 			"sentences": {
 				"SHIFT_STAFFING": "El personal en <SHIFT/>, contando <JOB_TITLE/>, <REQUIREMENT/> sumar <COMPARISON/> <HEADCOUNT/>.",
@@ -680,6 +686,14 @@
 				"DAYS_OFF_PER_PERIOD": "Los días libres de cada persona en cualquier periodo de <PERIOD_DAYS/> días <REQUIREMENT/> ser <COMPARISON/> <DAYS_OFF/>.",
 				"AVOID_DAYS_OFF_ON": "Intenta no dar días libres en: <WEEKDAY/>.",
 				"REST_BETWEEN_SHIFTS": "Las horas de descanso entre un turno y el siguiente deben ser al menos <REST_HOURS/>."
+			},
+			"fixedRequirements": {
+				"SHIFT_STAFFING": "Debe o debería",
+				"SHIFT_STAFFING_WITH_STAND_INS": "Debe o debería",
+				"ROLE_PRESENCE": "Debe o debería",
+				"DAYS_OFF_PER_PERIOD": "Debe o debería",
+				"AVOID_DAYS_OFF_ON": "Debería (siempre)",
+				"REST_BETWEEN_SHIFTS": "Debe (siempre)"
 			},
 			"fields": {
 				"COMPARISON": "Comparación",
@@ -693,38 +707,53 @@
 				"SHIFT": "Turnos",
 				"WEEKDAY": "Días"
 			},
-			"typeHints": {
-				"STAFFING_REQUIREMENT": "Número mínimo de personas",
-				"ROLE_COVERAGE": "Puestos o antigüedad requeridos",
-				"SHIFT_PATTERN": "Días consecutivos, secuencias no permitidas",
-				"WORKING_HOURS": "Horas máximas, horas extra, descansos",
-				"AVAILABILITY": "Cuándo pueden o no pueden trabajar los empleados"
+			"requirements": {
+				"MUST": "Debe",
+				"SHOULD": "Debería"
 			},
-			"priorities": {
-				"HIGH": "Alta",
-				"MEDIUM": "Media",
-				"LOW": "Baja"
+			"requirementWords": {
+				"MUST": "debe",
+				"SHOULD": "debería"
+			},
+			"comparisons": {
+				"AT_LEAST": "Al menos",
+				"AT_MOST": "Como máximo",
+				"EXACTLY": "Exactamente"
+			},
+			"comparisonWords": {
+				"AT_LEAST": "al menos",
+				"AT_MOST": "como máximo",
+				"EXACTLY": "exactamente"
 			},
 			"statuses": {
 				"ACTIVE": "Activa",
-				"DRAFT": "Borrador",
-				"DISABLED": "Desactivada"
+				"INACTIVE": "Inactiva"
 			},
-			"added": "Restricción añadida correctamente",
 			"dialog": {
 				"title": "Añadir restricción",
-				"rule": "Regla",
+				"editTitle": "Editar restricción",
+				"name": "Nombre de la restricción",
+				"namePlaceholder": "p. ej., Cobertura de mañana",
+				"nameHint": "De 2 a 100 caracteres. Solo letras, números, espacios y . ' & -.",
+				"nameCounter": "{{count}}/100",
+				"type": "Tipo de restricción",
+				"typeOption": "{{category}}: {{type}}",
+				"typeHint": "Lo que dice la restricción. Los campos de abajo dependen de él.",
+				"optionsLoading": "Cargando tipos de restricción…",
+				"optionsHidden": "No tienes permiso para ver los tipos de restricción de este departamento.",
+				"optionsFailed": "No pudimos cargar los tipos de restricción. Inténtalo de nuevo.",
 				"requirement": "Requisito",
-				"condition": "Condición",
-				"headcount": "Número de empleados",
-				"roles": "Roles",
-				"shifts": "Turnos",
-				"selectPlaceholder": "Selecciona",
-				"enterPlaceholder": "Introduce",
+				"requirementHint": "Debe: un horario nunca la incumple. Debería: se cumple siempre que se pueda.",
+				"status": "Estado",
+				"statusHint": "Solo una restricción activa se puede aplicar a un horario.",
+				"pleaseSelect": "Selecciona",
+				"enterNumber": "Escribe un número",
 				"selectAll": "Seleccionar todo",
-				"allRoles": "Todos los roles",
-				"allShifts": "Todos los turnos",
+				"numberHint": "Un número entero de {{min}} a {{max}}.",
+				"noJobTitles": "Este departamento aún no tiene puestos activos. Crea uno en Organización primero.",
+				"noShifts": "Este departamento aún no tiene turnos. Añade uno en el paso Turnos primero.",
 				"reset": "Restablecer",
+				"submit": "Guardar",
 				"nameRequired": "Escribe un nombre de restricción.",
 				"nameLength": "Usa de 2 a 100 caracteres.",
 				"nameCharacters": "Usa solo letras, números, espacios y . ' & - en el nombre.",
@@ -749,47 +778,12 @@
 				"failed": "No pudimos añadir la restricción. Inténtalo de nuevo.",
 				"editForbidden": "Ya no tienes permiso para cambiar esta restricción.",
 				"editFailed": "No pudimos guardar la restricción. Inténtalo de nuevo.",
-				"gone": "Esta restricción ya no existe.",
-				"save": "Guardar",
-				"validation": {
-					"requirement": "Elige si los empleados deben o no deben estar asignados.",
-					"condition": "Elige una condición.",
-					"headcount": "Introduce un número de empleados entre {{min}} y {{max}}.",
-					"roles": "Elige al menos un rol.",
-					"shifts": "Elige al menos un turno."
-				}
-			},
-			"requirements": {
-				"MUST": "debe",
-				"MUST_NOT": "no debe"
-			},
-			"requirementWords": {
-				"MUST": "debe",
-				"SHOULD": "debería"
-			},
-			"comparisonWords": {
-				"AT_LEAST": "al menos",
-				"AT_MOST": "como máximo",
-				"EXACTLY": "exactamente"
-			},
-			"conditions": {
-				"AT_LEAST": "al menos",
-				"AT_MOST": "como máximo",
-				"EXACTLY": "exactamente"
+				"gone": "Esta restricción ya no existe."
 			},
 			"preview": {
 				"title": "Vista previa de la restricción",
 				"complete": "Completa",
-				"incomplete": "Incompleta",
-				"sentence": "En los turnos <shifts/> <requirement/> haber <condition/> <headcount/> empleados con los roles <roles/>.",
-				"details": "En los turnos {{shifts}} {{requirement}} haber {{condition}} {{headcount}} empleados con los roles {{roles}}.",
-				"empty": {
-					"requirement": "debe",
-					"condition": "condición",
-					"headcount": "número",
-					"roles": "rol",
-					"shifts": "turno"
-				}
+				"incomplete": "Incompleta"
 			}
 		},
 		"forecast": {
@@ -840,7 +834,7 @@
 			"coverage": "Cobertura",
 			"coverageValue": "{{value}} %",
 			"nextTitle": "¿Qué pasa después?",
-			"nextOptimise": "Generaremos un horario optimizado a partir de tus turnos, reglas y previsión.",
+			"nextOptimise": "Generaremos un horario optimizado a partir de tus turnos, restricciones y previsión.",
 			"nextBalance": "El horario equilibrará la cobertura, las restricciones y la disponibilidad del personal.",
 			"nextReview": "Podrás revisarlo y hacer cualquier ajuste después de generarlo.",
 			"note": "La generación puede tardar unos momentos. Cuantas más restricciones y datos, más puede tardar.",
@@ -855,7 +849,7 @@
 			"missing": "Este borrador no existe o no tienes permiso para verlo.",
 			"failed": "No pudimos cargar el borrador. Inténtalo de nuevo.",
 			"saved": "Borrador guardado",
-			"generated": "Este horario ya se generó. Muestra los turnos con los que se generó y ya no se puede cambiar.",
+			"generated": "Este horario ya se generó. Muestra los turnos y las restricciones con los que se generó y ya no se puede cambiar.",
 			"readOnly": "Puedes ver este borrador, pero no tienes permiso para cambiarlo.",
 			"periodRejected": "Elige un periodo que empiece en lunes.",
 			"nameRejected": "Revisa el nombre del horario e inténtalo de nuevo.",

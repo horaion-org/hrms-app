@@ -40,6 +40,7 @@ const BODY: ScheduleBody = {
 	includeLeave: true,
 	allowOpenShifts: false,
 	includedShiftIds: ["front-desk-am"],
+	includedConstraintIds: ["morning-cover"],
 };
 
 beforeEach(() => {

@@ -1411,20 +1411,25 @@
 		},
 		"constraints": {
 			"title": "Scheduling constraints",
-			"description": "Define the constraints for your schedule.",
+			"description": "Choose which of the department’s constraints this schedule applies. A change to a constraint applies to every draft of the department.",
+			"frozenDescription": "The constraints this schedule was generated with, as they were then.",
 			"add": "Add constraint",
 			"label": "Constraints",
 			"name": "Constraint name",
 			"type": "Constraint type",
 			"details": "Details",
 			"requirement": "Requirement",
-			"priority": "Priority",
 			"status": "Status",
 			"actions": "Actions",
 			"edit": "Edit {{name}}",
 			"delete": "Delete {{name}}",
+			"added": "Constraint successfully added",
+			"edited": "Constraint saved",
 			"deleted": "Constraint successfully deleted",
 			"empty": "No constraints yet.",
+			"loading": "Loading constraints…",
+			"hidden": "You don’t have permission to see this department’s constraints.",
+			"failed": "We couldn’t load constraints. Try again.",
 			"deleteForbidden": "You no longer have permission to delete constraints here.",
 			"deleteFailed": "We couldn’t delete the constraint. Try again.",
 			"list": "{{items, list}}",
@@ -1441,11 +1446,12 @@
 				"WORKING_HOURS": "How long people rest between shifts"
 			},
 			"types": {
-				"STAFFING_REQUIREMENT": "Staffing requirement",
-				"ROLE_COVERAGE": "Role coverage",
-				"SHIFT_PATTERN": "Shift pattern",
-				"WORKING_HOURS": "Working hours",
-				"AVAILABILITY": "Availability"
+				"SHIFT_STAFFING": "Shift staffing",
+				"SHIFT_STAFFING_WITH_STAND_INS": "Shift staffing with stand-ins",
+				"ROLE_PRESENCE": "Role presence",
+				"DAYS_OFF_PER_PERIOD": "Days off per period",
+				"AVOID_DAYS_OFF_ON": "Avoid days off on",
+				"REST_BETWEEN_SHIFTS": "Rest between shifts"
 			},
 			"sentences": {
 				"SHIFT_STAFFING": "Staff on <SHIFT/>, counting <JOB_TITLE/>, <REQUIREMENT/> total <COMPARISON/> <HEADCOUNT/>.",
@@ -1454,6 +1460,14 @@
 				"DAYS_OFF_PER_PERIOD": "Days off for everyone in any <PERIOD_DAYS/>-day period <REQUIREMENT/> be <COMPARISON/> <DAYS_OFF/>.",
 				"AVOID_DAYS_OFF_ON": "Try not to give days off on <WEEKDAY/>.",
 				"REST_BETWEEN_SHIFTS": "Hours of rest between one shift and the next must be at least <REST_HOURS/>."
+			},
+			"fixedRequirements": {
+				"SHIFT_STAFFING": "Must or should",
+				"SHIFT_STAFFING_WITH_STAND_INS": "Must or should",
+				"ROLE_PRESENCE": "Must or should",
+				"DAYS_OFF_PER_PERIOD": "Must or should",
+				"AVOID_DAYS_OFF_ON": "Should (always)",
+				"REST_BETWEEN_SHIFTS": "Must (always)"
 			},
 			"fields": {
 				"COMPARISON": "Comparison",
@@ -1467,38 +1481,53 @@
 				"SHIFT": "Shifts",
 				"WEEKDAY": "Days"
 			},
-			"typeHints": {
-				"STAFFING_REQUIREMENT": "Minimum staff counts",
-				"ROLE_COVERAGE": "Required roles / seniority",
-				"SHIFT_PATTERN": "Consecutive days, banned sequences",
-				"WORKING_HOURS": "Maximum hours, overtime, rest periods",
-				"AVAILABILITY": "When employees can or cannot work"
+			"requirements": {
+				"MUST": "Must",
+				"SHOULD": "Should"
 			},
-			"priorities": {
-				"HIGH": "High",
-				"MEDIUM": "Medium",
-				"LOW": "Low"
+			"requirementWords": {
+				"MUST": "must",
+				"SHOULD": "should"
+			},
+			"comparisons": {
+				"AT_LEAST": "At least",
+				"AT_MOST": "At most",
+				"EXACTLY": "Exactly"
+			},
+			"comparisonWords": {
+				"AT_LEAST": "at least",
+				"AT_MOST": "at most",
+				"EXACTLY": "exactly"
 			},
 			"statuses": {
 				"ACTIVE": "Active",
-				"DRAFT": "Draft",
-				"DISABLED": "Disabled"
+				"INACTIVE": "Inactive"
 			},
-			"added": "Constraint successfully added",
 			"dialog": {
-				"title": "Add Constraint",
-				"rule": "Rule",
+				"title": "Add constraint",
+				"editTitle": "Edit constraint",
+				"name": "Constraint name",
+				"namePlaceholder": "e.g. Morning cover",
+				"nameHint": "2–100 characters. Letters, numbers, spaces and . ' & - only.",
+				"nameCounter": "{{count}}/100",
+				"type": "Constraint type",
+				"typeOption": "{{category}}: {{type}}",
+				"typeHint": "What the constraint says. The fields below follow from it.",
+				"optionsLoading": "Loading constraint types…",
+				"optionsHidden": "You don’t have permission to see this department’s constraint types.",
+				"optionsFailed": "We couldn’t load constraint types. Try again.",
 				"requirement": "Requirement",
-				"condition": "Condition",
-				"headcount": "Headcount",
-				"roles": "Roles",
-				"shifts": "Shifts",
-				"selectPlaceholder": "Please Select",
-				"enterPlaceholder": "Please Enter",
-				"selectAll": "Select All",
-				"allRoles": "All roles",
-				"allShifts": "All shifts",
+				"requirementHint": "Must: a schedule never breaks it. Should: kept wherever it can be.",
+				"status": "Status",
+				"statusHint": "Only an active constraint can be applied to a schedule.",
+				"pleaseSelect": "Please select",
+				"enterNumber": "Enter a number",
+				"selectAll": "Select all",
+				"numberHint": "A whole number from {{min}} to {{max}}.",
+				"noJobTitles": "This department has no active job titles yet. Create one under Organisation first.",
+				"noShifts": "This department has no shifts yet. Add one on the Shifts step first.",
 				"reset": "Reset",
+				"submit": "Save",
 				"nameRequired": "Enter a constraint name.",
 				"nameLength": "Use 2 to 100 characters.",
 				"nameCharacters": "Use only letters, numbers, spaces and . ' & - in the name.",
@@ -1523,47 +1552,12 @@
 				"failed": "We couldn’t add the constraint. Try again.",
 				"editForbidden": "You no longer have permission to change this constraint.",
 				"editFailed": "We couldn’t save the constraint. Try again.",
-				"gone": "This constraint no longer exists.",
-				"save": "Save",
-				"validation": {
-					"requirement": "Choose whether employees must or must not be assigned.",
-					"condition": "Choose a condition.",
-					"headcount": "Enter a headcount from {{min}} to {{max}}.",
-					"roles": "Choose at least one role.",
-					"shifts": "Choose at least one shift."
-				}
-			},
-			"requirements": {
-				"MUST": "must",
-				"MUST_NOT": "must not"
-			},
-			"requirementWords": {
-				"MUST": "must",
-				"SHOULD": "should"
-			},
-			"comparisonWords": {
-				"AT_LEAST": "at least",
-				"AT_MOST": "at most",
-				"EXACTLY": "exactly"
-			},
-			"conditions": {
-				"AT_LEAST": "at least",
-				"AT_MOST": "at most",
-				"EXACTLY": "exactly"
+				"gone": "This constraint no longer exists."
 			},
 			"preview": {
 				"title": "Constraint preview",
 				"complete": "Complete",
-				"incomplete": "Incomplete",
-				"sentence": "There <requirement/> be <condition/> <headcount/> employees with roles <roles/> assigned to the <shifts/> shifts.",
-				"details": "There {{requirement}} be {{condition}} {{headcount}} employees with roles {{roles}} assigned to the {{shifts}} shifts.",
-				"empty": {
-					"requirement": "must",
-					"condition": "condition",
-					"headcount": "headcount",
-					"roles": "role",
-					"shifts": "shift"
-				}
+				"incomplete": "Incomplete"
 			}
 		},
 		"forecast": {
@@ -1614,7 +1608,7 @@
 			"coverage": "Coverage",
 			"coverageValue": "{{value}}%",
 			"nextTitle": "What happens next?",
-			"nextOptimise": "We’ll generate an optimised schedule based on your shifts, rules, and forecast.",
+			"nextOptimise": "We’ll generate an optimised schedule based on your shifts, constraints, and forecast.",
 			"nextBalance": "The schedule will balance coverage, constraints, and employee availability.",
 			"nextReview": "You’ll be able to review and make any adjustments after generation.",
 			"note": "Generation may take a few moments. The more constraints and data, the longer it may take.",
@@ -1629,7 +1623,7 @@
 			"missing": "This draft doesn’t exist or you don’t have permission to see it.",
 			"failed": "We couldn’t load the draft. Try again.",
 			"saved": "Draft saved",
-			"generated": "This schedule has been generated. It shows the shifts it was generated with and can no longer be changed.",
+			"generated": "This schedule has been generated. It shows the shifts and constraints it was generated with and can no longer be changed.",
 			"readOnly": "You can view this draft, but you don’t have permission to change it.",
 			"periodRejected": "Choose a period that starts on a Monday.",
 			"nameRejected": "Check the schedule name and try again.",

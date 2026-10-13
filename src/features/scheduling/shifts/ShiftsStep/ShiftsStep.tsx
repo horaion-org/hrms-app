@@ -6,15 +6,12 @@ import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { DeleteIcon, EditIcon, PlusIcon } from "@/components/ui/Icon";
 import { Tab, TabList, Tabs } from "@/components/ui/Tabs";
 import { formatTimeRange } from "@/features/scheduling/formatShift";
-import type { Shift } from "@/features/scheduling/scheduleDraft";
+import type { ListProblem, Shift } from "@/features/scheduling/scheduleDraft";
 import { groupsOf } from "@/features/scheduling/shifts/api";
 import { StepPanel } from "@/features/scheduling/StepPanel";
 
 /** The first tab shows every shift; the ones after it, one group each. */
 const ALL_TAB = 0;
-
-/** Why a step's list is not shown: a notice, or an alert when loading failed. */
-export type ListProblem = { message: string; alert: boolean };
 
 export type ShiftsStepProps = {
 	shifts: Array<Shift>;
