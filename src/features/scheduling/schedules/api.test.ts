@@ -6,6 +6,7 @@ import { authTestI18n } from "@/features/auth/testingI18n";
 import {
 	createSchedule,
 	fetchSchedule,
+	fetchScheduleConstraints,
 	fetchScheduleShifts,
 	requestGeneration,
 	updateSchedule,
@@ -15,6 +16,10 @@ import {
 	generatedScheduleFixture,
 	scheduleFixture,
 } from "@/features/scheduling/schedules/fixtures";
+import {
+	CONSTRAINT_FIXTURES,
+	frozenConstraintsFixture,
+} from "@/features/scheduling/constraints/fixtures";
 import {
 	generationRefusal,
 	scheduleRefusal,
@@ -119,6 +124,38 @@ describe("schedules client", () => {
 		expect(copies.some((shift) => shift.shiftId === null)).toBe(true);
 	});
 
+	it("lists a draft's live active constraints with their ticks and a generated schedule's frozen copies", async () => {
+		const live = CONSTRAINT_FIXTURES.filter(
+			(constraint) => constraint.status === "ACTIVE"
+		).map((constraint) => ({
+			constraintId: constraint.constraintId,
+			name: constraint.name,
+			type: constraint.type,
+			category: constraint.category,
+			requirement: constraint.requirement,
+			values: constraint.values,
+			included: constraint.constraintId === "morning-cover",
+			frozen: false,
+		}));
+		const frozen = frozenConstraintsFixture();
+		stubApi({
+			[`GET ${SCHEDULES}/s-1/constraints`]: [
+				{ status: 200, body: envelope(live) },
+				{ status: 200, body: envelope(frozen) },
+			],
+		});
+
+		await expect(fetchScheduleConstraints("c-1", UNIT, "s-1")).resolves.toEqual(
+			live
+		);
+		const copies = await fetchScheduleConstraints("c-1", UNIT, "s-1");
+		expect(copies).toEqual(frozen);
+		// A source constraint deactivated since has no id.
+		expect(copies.some((constraint) => constraint.constraintId === null)).toBe(
+			true
+		);
+	});
+
 	it("requests generation with no body and reads nothing back", async () => {
 		const calls = stubApi({
 			[`POST ${SCHEDULES}/s-1/generation`]: {
@@ -164,6 +201,19 @@ describe("schedule refusals", () => {
 		).toBe("A chosen shift no longer exists. Check the shifts and try again.");
 	});
 
+	it("explains a ticked constraint that is gone or inactive", () => {
+		expect(
+			scheduleRefusalMessage(problem(404, "CONSTRAINT_NOT_FOUND"), false, t)
+		).toBe(
+			"A chosen constraint no longer exists. Check the constraints and try again."
+		);
+		expect(
+			scheduleRefusalMessage(problem(409, "CONSTRAINT_INACTIVE"), false, t)
+		).toBe(
+			"A chosen constraint is inactive. Untick it or make it active, then try again."
+		);
+	});
+
 	it("puts a refused field into one message where no field can show it", () => {
 		expect(
 			scheduleRefusalMessage(
@@ -181,6 +231,11 @@ describe("schedule refusals", () => {
 			"Choose at least one shift before generating this schedule.",
 		],
 		["SCHEDULE_NOT_DRAFT", 409, "This schedule has already been generated."],
+		[
+			"SCHEDULE_CONSTRAINT_UNUSABLE",
+			409,
+			"A chosen constraint names a shift this schedule doesn’t include or a job title that’s no longer active. Tick that shift, edit the constraint or untick it, then try again.",
+		],
 		["SCHEDULE_NOT_FOUND", 404, "This draft no longer exists."],
 		[
 			"ACCESS_DENIED",

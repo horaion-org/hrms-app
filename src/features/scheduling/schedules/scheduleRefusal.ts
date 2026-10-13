@@ -10,8 +10,11 @@ export const SCHEDULE_REFUSAL_CODES = {
 	periodNotMonday: "400 SCHEDULE_PERIOD_NOT_MONDAY",
 	notDraft: "409 SCHEDULE_NOT_DRAFT",
 	hasNoShifts: "409 SCHEDULE_HAS_NO_SHIFTS",
+	constraintUnusable: "409 SCHEDULE_CONSTRAINT_UNUSABLE",
 	scheduleNotFound: "404 SCHEDULE_NOT_FOUND",
 	shiftNotFound: "404 SHIFT_NOT_FOUND",
+	constraintNotFound: "404 CONSTRAINT_NOT_FOUND",
+	constraintInactive: "409 CONSTRAINT_INACTIVE",
 	departmentInactive: "409 DEPARTMENT_INACTIVE",
 	departmentNotFound: "404 DEPARTMENT_NOT_FOUND",
 } as const;
@@ -41,6 +44,8 @@ export const scheduleRefusal = (
 			[codes.notDraft]: t(`${key}.notDraft`),
 			[codes.scheduleNotFound]: t(`${key}.gone`),
 			[codes.shiftNotFound]: t(`${key}.shiftGone`),
+			[codes.constraintNotFound]: t(`${key}.constraintGone`),
+			[codes.constraintInactive]: t(`${key}.constraintInactive`),
 			[codes.departmentInactive]: t(`${key}.departmentInactive`),
 			[codes.departmentNotFound]: t(`${key}.departmentGone`),
 		},
@@ -76,6 +81,7 @@ export const generationRefusal = (error: unknown, t: TFunction): string => {
 		mapRefusal<never>(error, {
 			alerts: {
 				[codes.hasNoShifts]: t(`${key}.noShifts`),
+				[codes.constraintUnusable]: t(`${key}.constraintUnusable`),
 				[codes.notDraft]: t(`${key}.notDraft`),
 				[codes.scheduleNotFound]: t("scheduling.draft.gone"),
 			},
