@@ -122,7 +122,12 @@ describe("schedules client", () => {
 		);
 		const copies = await fetchScheduleShifts("c-1", UNIT, "s-1");
 		expect(copies).toEqual(frozen);
-		expect(copies.some((shift) => shift.shiftId === null)).toBe(true);
+		// Each copy has its own id, never a live shift's.
+		expect(
+			copies.some((copy) =>
+				live.some((shift) => shift.shiftId === copy.shiftId)
+			)
+		).toBe(false);
 	});
 
 	it("lists a draft's live active constraints with their ticks and a generated schedule's frozen copies", async () => {
@@ -151,10 +156,12 @@ describe("schedules client", () => {
 		);
 		const copies = await fetchScheduleConstraints("c-1", UNIT, "s-1");
 		expect(copies).toEqual(frozen);
-		// A source constraint deactivated since has no id.
-		expect(copies.some((constraint) => constraint.constraintId === null)).toBe(
-			true
-		);
+		// Each copy has its own id, never a live constraint's.
+		expect(
+			copies.some((copy) =>
+				live.some((constraint) => constraint.constraintId === copy.constraintId)
+			)
+		).toBe(false);
 	});
 
 	it("requests generation with no body and reads nothing back", async () => {

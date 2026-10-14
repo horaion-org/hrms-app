@@ -8,7 +8,10 @@ import type {
 	DepartmentConstraint,
 } from "@/features/scheduling/constraints/api";
 import type { ScheduleConstraint } from "@/features/scheduling/schedules/api";
-import { SHIFT_FIXTURES } from "@/features/scheduling/shifts/fixtures";
+import {
+	SHIFT_FIXTURES,
+	shiftCopyId,
+} from "@/features/scheduling/shifts/fixtures";
 
 /*
  * API-shaped rows for stories and tests; never sent anywhere. Every constraint
@@ -234,23 +237,30 @@ export const INCLUDED_CONSTRAINT_IDS = [
 	"rest-between-shifts",
 ];
 
+/** The id generation gives the frozen copy of a live constraint: its own, never a live constraint's. */
+export const constraintCopyId = (constraintId: string): string =>
+	`${constraintId}-copy`;
+
 /**
- * A generated schedule's constraints: the frozen copies of what was ticked.
- * Rest between shifts was deactivated since, so it names no live constraint.
+ * A generated schedule's constraints: the frozen copies of what was ticked,
+ * each with its own id, a shift named by its frozen copy's (see
+ * `frozenShiftsFixture`). Rest between shifts was since deactivated; its copy
+ * is kept as it was.
  */
 export const frozenConstraintsFixture = (): Array<ScheduleConstraint> =>
 	CONSTRAINT_FIXTURES.filter((constraint) =>
 		INCLUDED_CONSTRAINT_IDS.includes(constraint.constraintId)
 	).map((constraint) => ({
-		constraintId:
-			constraint.constraintId === "rest-between-shifts"
-				? null
-				: constraint.constraintId,
+		constraintId: constraintCopyId(constraint.constraintId),
 		name: constraint.name,
 		type: constraint.type,
 		category: constraint.category,
 		requirement: constraint.requirement,
-		values: constraint.values,
+		values: constraint.values.map((value) =>
+			value.field === "SHIFT"
+				? { ...value, value: shiftCopyId(value.value) }
+				: value
+		),
 		included: true,
 		frozen: true,
 	}));

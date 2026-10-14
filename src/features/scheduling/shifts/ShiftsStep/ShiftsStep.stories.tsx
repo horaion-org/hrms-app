@@ -7,7 +7,7 @@ import {
 	SHIFT_FIXTURES,
 	frozenShiftsFixture,
 } from "@/features/scheduling/shifts/fixtures";
-import { shiftRowsOf, type Shift } from "@/features/scheduling/scheduleDraft";
+import type { ScheduleShift } from "@/features/scheduling/schedules/api";
 import { ShiftsStep } from "@/features/scheduling/shifts/ShiftsStep";
 import "@/common/i18n";
 
@@ -33,7 +33,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const InteractiveDemo = (): FunctionComponent => {
-	const [rows, setRows] = useState<Array<Shift>>(shifts);
+	const [rows, setRows] = useState<Array<ScheduleShift>>(shifts);
 	const [included, setIncluded] = useState(includedShiftIds);
 	return (
 		<ShiftsStep
@@ -77,7 +77,7 @@ export const Hidden: Story = {
 	},
 };
 
-const frozen = shiftRowsOf(frozenShiftsFixture());
+const frozen = frozenShiftsFixture();
 
 /** A generated schedule: its frozen copies, with nothing to tick, add, edit or delete. */
 export const Generated: Story = {

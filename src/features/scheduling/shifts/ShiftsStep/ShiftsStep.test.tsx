@@ -4,7 +4,6 @@ import { createInstance } from "i18next";
 import { initReactI18next } from "react-i18next";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import en from "@/assets/locales/en/translations.json";
-import { shiftRowsOf } from "@/features/scheduling/scheduleDraft";
 import {
 	INCLUDED_SHIFT_IDS,
 	SHIFT_FIXTURES,
@@ -213,7 +212,7 @@ describe("ShiftsStep", () => {
 	});
 
 	it("given_aGeneratedSchedule_when_rendered_then_listsItsFrozenShiftsWithNothingToTickOrChange", () => {
-		const frozen = shiftRowsOf(frozenShiftsFixture());
+		const frozen = frozenShiftsFixture();
 		render(
 			<ShiftsStep
 				frozen
@@ -228,10 +227,12 @@ describe("ShiftsStep", () => {
 			)
 		).toBeVisible();
 		const table = screen.getByRole("table", { name: "Shifts" });
-		// A copy whose source shift was since deleted is still listed.
-		expect(
-			within(table).getByRole("row", { name: /Breakfast Prep/ })
-		).toBeVisible();
+		// A copy whose source shift was since deleted is still listed in full.
+		const copy = within(table).getByRole("row", { name: /Breakfast Prep/ });
+		expect(copy).toBeVisible();
+		expect(copy).toHaveTextContent("06:00 – 12:00");
+		expect(copy).toHaveTextContent("Mon, Wed, Fri, Sat");
+		expect(copy).toHaveTextContent("2 roles");
 		expect(within(table).getAllByRole("row")).toHaveLength(frozen.length + 1);
 		expect(screen.queryByRole("checkbox")).toBeNull();
 		expect(

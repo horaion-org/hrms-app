@@ -12,7 +12,8 @@ import { Dialog } from "@/components/ui/Dialog";
 import { SaveIcon, SwapIcon } from "@/components/ui/Icon";
 import { UnitNameField } from "@/features/organisation/UnitNameField";
 import { useCreateFormSubmit } from "@/features/organisation/useCreateFormSubmit";
-import { timeSteps, type Shift } from "@/features/scheduling/scheduleDraft";
+import { timeSteps } from "@/features/scheduling/scheduleDraft";
+import type { ScheduleShift } from "@/features/scheduling/schedules/api";
 import { WEEKDAYS, type ShiftBody } from "@/features/scheduling/shifts/api";
 import {
 	shiftSchema,
@@ -25,7 +26,7 @@ import type { ShiftRoleOptions } from "@/features/scheduling/shifts/useShiftRole
 
 export type ShiftDialogProps = {
 	/** Set to change one of the department's shifts. */
-	editing?: Shift;
+	editing?: ScheduleShift;
 	/** The department's active job titles, which the shift's roles are chosen from. */
 	roles: ShiftRoleOptions;
 	/** The groups the department's shifts already belong to; a new one may be created in place. */

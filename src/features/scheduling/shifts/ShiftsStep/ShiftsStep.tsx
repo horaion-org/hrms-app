@@ -6,7 +6,8 @@ import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { DeleteIcon, EditIcon, PlusIcon } from "@/components/ui/Icon";
 import { Tab, TabList, Tabs } from "@/components/ui/Tabs";
 import { formatTimeRange } from "@/features/scheduling/formatShift";
-import type { ListProblem, Shift } from "@/features/scheduling/scheduleDraft";
+import type { ListProblem } from "@/features/scheduling/scheduleDraft";
+import type { ScheduleShift } from "@/features/scheduling/schedules/api";
 import { groupsOf } from "@/features/scheduling/shifts/api";
 import { StepPanel } from "@/features/scheduling/StepPanel";
 
@@ -14,7 +15,7 @@ import { StepPanel } from "@/features/scheduling/StepPanel";
 const ALL_TAB = 0;
 
 export type ShiftsStepProps = {
-	shifts: Array<Shift>;
+	shifts: Array<ScheduleShift>;
 	/** The shifts this schedule includes. */
 	includedShiftIds: Array<string>;
 	/** Offers a box per shift to tick it; without it the list is read-only, as a generated schedule's is. */
@@ -24,8 +25,8 @@ export type ShiftsStepProps = {
 	/** Offered only when the person may add shifts to the department. */
 	onAdd?: () => void;
 	/** Offered on each row only when the person may change shifts here. */
-	onEdit?: (shift: Shift) => void;
-	onDelete?: (shift: Shift) => void;
+	onEdit?: (shift: ScheduleShift) => void;
+	onDelete?: (shift: ScheduleShift) => void;
 	/** What stops the person moving on, e.g. no shift chosen. */
 	problem?: string;
 	/** Why the list is not available, e.g. not permitted or failed to load. */
@@ -64,7 +65,7 @@ export const ShiftsStep = ({
 			? shifts
 			: shifts.filter((shift) => shift.group === group);
 	const columns = useMemo(
-		(): Array<DataTableColumn<Shift>> => [
+		(): Array<DataTableColumn<ScheduleShift>> => [
 			{
 				id: "name",
 				header: t("scheduling.shifts.name"),
@@ -94,7 +95,7 @@ export const ShiftsStep = ({
 							id: "actions",
 							header: t("scheduling.shifts.actions"),
 							headerClassName: "w-35",
-							cell: (shift: Shift) => (
+							cell: (shift: ScheduleShift) => (
 								<div className="flex justify-center gap-2">
 									{onEdit && (
 										<Button

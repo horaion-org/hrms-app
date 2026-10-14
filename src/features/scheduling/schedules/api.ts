@@ -54,9 +54,9 @@ const scheduleSchema = z.object({
 	includeLeave: z.boolean(),
 	allowOpenShifts: z.boolean(),
 	status: scheduleStatusSchema,
-	/** A draft's ticked live shifts; once generated, the frozen copies' sources. */
+	/** A draft's ticked live shifts; once generated, every frozen copy's own id. */
 	includedShiftIds: z.array(z.string()),
-	/** A draft's ticked live ACTIVE constraints; once generated, the frozen copies' sources still live and ACTIVE. */
+	/** A draft's ticked live ACTIVE constraints; once generated, every frozen copy's own id. */
 	includedConstraintIds: z.array(z.string()),
 	/** Set exactly when the status is not DRAFT. */
 	generationRequestedAt: z.string().nullable(),
@@ -129,8 +129,8 @@ export const requestGeneration = (
 	});
 
 const scheduleShiftSchema = z.object({
-	/** The live shift while DRAFT; once frozen its source, null when that was deleted. */
-	shiftId: z.string().nullable(),
+	/** The live shift while DRAFT; once frozen, the copy's own id, which no shift route knows. */
+	shiftId: z.string(),
 	name: z.string(),
 	group: z.string(),
 	colour: z.string().regex(SHIFT_COLOUR_PATTERN),
@@ -166,8 +166,8 @@ export const fetchScheduleShifts = (
 	);
 
 const scheduleConstraintSchema = z.object({
-	/** The live constraint while DRAFT; once frozen its source, null when that was deleted or deactivated. */
-	constraintId: z.string().nullable(),
+	/** The live constraint while DRAFT; once frozen, the copy's own id, which no constraint route knows. */
+	constraintId: z.string(),
 	name: z.string(),
 	type: constraintTypeSchema,
 	category: constraintCategorySchema,

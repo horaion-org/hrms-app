@@ -1,8 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { ApiProblemError } from "@/common/problem";
 import type { DepartmentPath } from "@/features/scheduling/paths";
-import { scheduleShiftsQuery } from "@/features/scheduling/schedules/api";
-import { shiftRowsOf, type Shift } from "@/features/scheduling/scheduleDraft";
+import {
+	scheduleShiftsQuery,
+	type ScheduleShift,
+} from "@/features/scheduling/schedules/api";
 import { departmentScope } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
 
@@ -13,7 +15,7 @@ import { useAccess } from "@/features/workspace/useAccess";
  */
 export type ShiftList =
 	| { status: "pending" | "error" | "hidden" }
-	| { status: "ready"; items: Array<Shift> };
+	| { status: "ready"; items: Array<ScheduleShift> };
 
 /** `unit` or `scheduleId` undefined asks for nothing and stays pending. */
 export const useScheduleShifts = (
@@ -25,15 +27,14 @@ export const useScheduleShifts = (
 	const allowed =
 		unit !== undefined &&
 		access.can("shift:read", departmentScope(unit.departmentId));
-	const list = useQuery({
-		...scheduleShiftsQuery(
+	const list = useQuery(
+		scheduleShiftsQuery(
 			companyId,
 			unit,
 			scheduleId ?? "",
 			allowed && scheduleId !== undefined
-		),
-		select: shiftRowsOf,
-	});
+		)
+	);
 
 	if (access.status !== "ready") return { status: access.status };
 	if (unit === undefined || scheduleId === undefined)

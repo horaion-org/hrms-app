@@ -14,9 +14,9 @@ import {
 	rolesOf,
 	type Allocations,
 	type ForecastMode,
-	type Shift,
 	type TimeBlockDemand,
 } from "@/features/scheduling/scheduleDraft";
+import type { ScheduleShift } from "@/features/scheduling/schedules/api";
 import { ShiftAllocationTable } from "@/features/scheduling/ShiftAllocationTable";
 import { StepPanel } from "@/features/scheduling/StepPanel";
 import { TimeBlockGrid } from "@/features/scheduling/TimeBlockGrid";
@@ -25,7 +25,7 @@ export type ForecastStepProps = {
 	mode: ForecastMode;
 	onModeChange: (mode: ForecastMode) => void;
 	/** The shifts this schedule includes. */
-	shifts: Array<Shift>;
+	shifts: Array<ScheduleShift>;
 	allocations: Allocations;
 	onAllocationChange: (
 		shiftId: string,

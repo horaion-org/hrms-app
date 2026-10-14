@@ -8,10 +8,7 @@ import {
 	INCLUDED_CONSTRAINT_IDS,
 	frozenConstraintsFixture,
 } from "@/features/scheduling/constraints/fixtures";
-import {
-	constraintRowsOf,
-	type Constraint,
-} from "@/features/scheduling/scheduleDraft";
+import type { Constraint } from "@/features/scheduling/scheduleDraft";
 import "@/common/i18n";
 
 const constraints: Array<Constraint> = CONSTRAINT_FIXTURES;
@@ -76,7 +73,7 @@ export const Hidden: Story = {
 	},
 };
 
-const frozen = constraintRowsOf(frozenConstraintsFixture());
+const frozen = frozenConstraintsFixture();
 
 /** A generated schedule: its frozen copies, with nothing to tick, add, edit or delete. */
 export const Generated: Story = {
