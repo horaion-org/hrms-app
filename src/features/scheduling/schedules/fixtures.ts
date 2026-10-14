@@ -1,5 +1,13 @@
 import { companyWideWorkspace } from "@/common/testing/effectiveWorkspace";
+import {
+	INCLUDED_CONSTRAINT_IDS,
+	constraintCopyId,
+} from "@/features/scheduling/constraints/fixtures";
 import type { Schedule } from "@/features/scheduling/schedules/api";
+import {
+	INCLUDED_SHIFT_IDS,
+	shiftCopyId,
+} from "@/features/scheduling/shifts/fixtures";
 import type { Workspace } from "@/features/workspace/api";
 
 /*
@@ -43,12 +51,14 @@ export const scheduleFixture = (
 	...overrides,
 });
 
-/** Schedule s-1 once generated: frozen, with who asked and when. */
+/** Schedule s-1 once generated: frozen, naming every frozen copy by its own id, with who asked and when. */
 export const generatedScheduleFixture = (
 	overrides: Partial<Schedule> = {}
 ): Schedule =>
 	scheduleFixture({
 		status: "GENERATION_REQUESTED",
+		includedShiftIds: INCLUDED_SHIFT_IDS.map(shiftCopyId),
+		includedConstraintIds: INCLUDED_CONSTRAINT_IDS.map(constraintCopyId),
 		generationRequestedAt: "2026-10-09T10:00:00Z",
 		generationRequestedBy: { membershipId: "m-c-1", displayName: "José" },
 		...overrides,

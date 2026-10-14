@@ -26,44 +26,16 @@ import {
 export { WEEKDAYS, type ShiftRole, type Weekday };
 
 /**
- * One of a schedule's shifts as the steps show it. `shiftId` is always set:
- * a frozen copy whose source shift was deleted gets a local id from
- * `shiftRowsOf`, which is never sent, since a generated schedule is never
- * saved again.
- */
-export type Shift = Omit<ScheduleShift, "shiftId"> & { shiftId: string };
-
-/** The rows the steps show, each with an id (see `Shift`). */
-export const shiftRowsOf = (shifts: Array<ScheduleShift>): Array<Shift> =>
-	shifts.map((shift, index) => ({
-		...shift,
-		shiftId: shift.shiftId ?? `frozen-${index}`,
-	}));
-
-/**
  * One of a schedule's constraints as the Constraints step shows it: for a
  * draft, one of the Department's live constraints, inactive ones included; once
- * generated, one of its frozen copies, which has no status. `constraintId` is
- * always set: a frozen copy whose source constraint was deleted or deactivated
- * gets a local id from `constraintRowsOf`, which is never sent.
+ * generated, one of its frozen copies, which has no status and whose id is
+ * never sent to a constraint route, since a generated schedule is never
+ * changed again.
  */
-export type Constraint = Omit<
-	ScheduleConstraint,
-	"constraintId" | "included" | "frozen"
-> & {
-	constraintId: string;
+export type Constraint = Omit<ScheduleConstraint, "included" | "frozen"> & {
 	/** A live constraint's; a frozen copy has none. */
 	status?: ConstraintStatus;
 };
-
-/** The rows a generated schedule's constraints show, each with an id (see `Constraint`). */
-export const constraintRowsOf = (
-	constraints: Array<ScheduleConstraint>
-): Array<Constraint> =>
-	constraints.map((constraint, index) => ({
-		...constraint,
-		constraintId: constraint.constraintId ?? `frozen-${index}`,
-	}));
 
 /** Only an ACTIVE constraint can be ticked; the API refuses an inactive one. */
 export const isTickable = (constraint: Pick<Constraint, "status">): boolean =>
@@ -153,7 +125,7 @@ export const timeSteps = (): Array<string> => {
 
 /** How long a shift lasts in hours, counting past midnight. */
 export const shiftHours = (
-	shift: Pick<Shift, "startTime" | "endTime">
+	shift: Pick<ScheduleShift, "startTime" | "endTime">
 ): number => {
 	const length =
 		(minutesOf(shift.endTime) - minutesOf(shift.startTime) + MINUTES_PER_DAY) %
@@ -169,7 +141,7 @@ export const allocatedTo = (
 ): number => allocations[shiftId]?.[jobTitleId] ?? 0;
 
 export const allocatedStaff = (
-	shift: Shift,
+	shift: ScheduleShift,
 	allocations: Allocations
 ): number =>
 	shift.roles.reduce(
@@ -185,12 +157,12 @@ export const isWeekdays = (days: Array<Weekday>): boolean =>
 /** The shifts the draft includes, in the list's order. */
 export const includedShifts = (
 	draft: Pick<ScheduleDraft, "includedShiftIds">,
-	shifts: Array<Shift>
-): Array<Shift> =>
+	shifts: Array<ScheduleShift>
+): Array<ScheduleShift> =>
 	shifts.filter((shift) => draft.includedShiftIds.includes(shift.shiftId));
 
 /** Every job role the shifts need, once each, in the order first met. */
-export const rolesOf = (shifts: Array<Shift>): Array<ShiftRole> => {
+export const rolesOf = (shifts: Array<ScheduleShift>): Array<ShiftRole> => {
 	const roles = new Map<string, string>();
 	for (const shift of shifts)
 		for (const role of shift.roles)
@@ -235,7 +207,7 @@ export const demandLevel = (staff: number): DemandLevel => {
 	return staff <= 5 ? "medium" : "high";
 };
 
-const covers = (shift: Shift, slotStart: string): boolean => {
+const covers = (shift: ScheduleShift, slotStart: string): boolean => {
 	const offset =
 		(minutesOf(slotStart) - minutesOf(shift.startTime) + MINUTES_PER_DAY) %
 		MINUTES_PER_DAY;
@@ -244,7 +216,7 @@ const covers = (shift: Shift, slotStart: string): boolean => {
 
 /** Demand for every slot from the staff each shift allocates while it runs. */
 export const autoFillDemand = (
-	shifts: Array<Shift>,
+	shifts: Array<ScheduleShift>,
 	allocations: Allocations
 ): TimeBlockDemand => {
 	const demand: TimeBlockDemand = {};
@@ -272,7 +244,7 @@ export type ScheduleSummary = {
 
 /** What the Generate step reports, from the included shifts and their allocations. */
 export const summarise = (
-	shifts: Array<Shift>,
+	shifts: Array<ScheduleShift>,
 	allocations: Allocations
 ): ScheduleSummary => {
 	const positions = shifts.flatMap((shift) =>
@@ -327,7 +299,7 @@ export const isFrozen = (saved: Pick<SavedSchedule, "status">): boolean =>
  */
 export const tickedOf = (
 	draft: Pick<ScheduleDraft, "includedShiftIds">,
-	shifts: Array<Pick<Shift, "shiftId">> | undefined
+	shifts: Array<Pick<ScheduleShift, "shiftId">> | undefined
 ): Array<string> =>
 	shifts === undefined
 		? draft.includedShiftIds
@@ -354,14 +326,14 @@ export const tickedConstraintsOf = (
 			);
 
 /** The ids of the shifts the API keeps as included. */
-export const includedIdsOf = (shifts: Array<Shift>): Array<string> =>
+export const includedIdsOf = (shifts: Array<ScheduleShift>): Array<string> =>
 	shifts.filter((shift) => shift.included).map((shift) => shift.shiftId);
 
 export type ScheduleDraftAction =
 	/** A schedule the API created or answered: what the page holds starts again from it, ticks included. */
 	| { type: "scheduleLoaded"; schedule: Schedule }
 	/** The schedule's shifts as the API answers them: the first answer after a load seeds the ticks from `included`. */
-	| { type: "shiftsLoaded"; shifts: Array<Shift> }
+	| { type: "shiftsLoaded"; shifts: Array<ScheduleShift> }
 	| { type: "setupSaved"; setup: ScheduleSetup }
 	| { type: "shiftsIncluded"; shiftIds: Array<string> }
 	/** A shift the API no longer has; its selection and allocations go with it. */
@@ -382,7 +354,7 @@ export type ScheduleDraftAction =
 			jobTitleId: string;
 			staff: number;
 	  }
-	| { type: "demandAutoFilled"; shifts: Array<Shift> };
+	| { type: "demandAutoFilled"; shifts: Array<ScheduleShift> };
 
 export const scheduleDraftReducer = (
 	draft: ScheduleDraft,

@@ -24,7 +24,7 @@ import {
 	constraintFixture,
 	frozenConstraintsFixture,
 } from "@/features/scheduling/constraints/fixtures";
-import type { Shift } from "@/features/scheduling/scheduleDraft";
+import type { ScheduleShift } from "@/features/scheduling/schedules/api";
 import {
 	generatedScheduleFixture,
 	scheduleFixture,
@@ -70,7 +70,7 @@ const ALL = [
 const DRAFT = scheduleFixture();
 const DRAFT_SHIFTS = scheduleShiftsFixture();
 /** Front Desk AM, the first shift listed. */
-const FIRST_SHIFT = DRAFT_SHIFTS[0] as Shift;
+const FIRST_SHIFT = DRAFT_SHIFTS[0] as ScheduleShift;
 /** A reopened draft lands here. */
 const REOPEN = "/scheduling/new?step=shifts&scheduleId=s-1&departmentId=d-1";
 const DRAFT_SETUP = {

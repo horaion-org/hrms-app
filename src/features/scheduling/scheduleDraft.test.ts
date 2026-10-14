@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-	CONSTRAINT_FIXTURES,
-	frozenConstraintsFixture,
-} from "@/features/scheduling/constraints/fixtures";
+import { CONSTRAINT_FIXTURES } from "@/features/scheduling/constraints/fixtures";
 import {
 	generatedScheduleFixture,
 	scheduleFixture,
@@ -16,7 +13,6 @@ import {
 } from "@/features/scheduling/shifts/fixtures";
 import {
 	autoFillDemand,
-	constraintRowsOf,
 	demandLevel,
 	emptyScheduleDraft,
 	includedShifts,
@@ -25,7 +21,6 @@ import {
 	rolesOf,
 	scheduleDraftReducer,
 	shiftHours,
-	shiftRowsOf,
 	slotsOf,
 	summarise,
 	tickedConstraintsOf,
@@ -328,15 +323,20 @@ describe("frozen schedules and ticks", () => {
 		expect(loaded.saved?.status).toBe("GENERATION_REQUESTED");
 	});
 
-	it("given_aFrozenCopyWhoseSourceWasDeleted_when_listed_then_itGetsALocalId", () => {
-		const rows = shiftRowsOf(frozenShiftsFixture());
+	it("given_aGeneratedSchedule_when_itsShiftsLoad_then_includesEveryFrozenCopyByItsOwnId", () => {
+		const loaded = scheduleDraftReducer(emptyScheduleDraft(), {
+			type: "scheduleLoaded",
+			schedule: generatedScheduleFixture(),
+		});
+		const copies = frozenShiftsFixture();
 
-		expect(rows.map((row) => row.shiftId)).toEqual([
-			"front-desk-am",
-			"frozen-1",
-			"lunch-rush",
-			"swing-shift",
-		]);
+		const seeded = scheduleDraftReducer(loaded, {
+			type: "shiftsLoaded",
+			shifts: copies,
+		});
+
+		expect(seeded.includedShiftIds).toEqual(copies.map((copy) => copy.shiftId));
+		expect(includedShifts(seeded, copies)).toEqual(copies);
 	});
 
 	it("given_ticksForShiftsNoLongerListed_when_read_then_onlyListedOnesRemain", () => {
@@ -347,16 +347,6 @@ describe("frozen schedules and ticks", () => {
 		expect(tickedOf(draft, undefined)).toEqual([
 			"front-desk-am",
 			"deleted-shift",
-		]);
-	});
-
-	it("given_aFrozenConstraintWhoseSourceIsGone_when_listed_then_itGetsALocalId", () => {
-		const rows = constraintRowsOf(frozenConstraintsFixture());
-
-		expect(rows.map((row) => row.constraintId)).toEqual([
-			"lunch-stand-ins",
-			"morning-cover",
-			"frozen-2",
 		]);
 	});
 

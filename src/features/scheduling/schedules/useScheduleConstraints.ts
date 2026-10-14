@@ -2,7 +2,6 @@ import { useQuery } from "@tanstack/react-query";
 import { ApiProblemError } from "@/common/problem";
 import { constraintsQuery } from "@/features/scheduling/constraints/api";
 import {
-	constraintRowsOf,
 	isFrozen,
 	type Constraint,
 	type SavedSchedule,
@@ -33,15 +32,14 @@ export const useScheduleConstraints = (
 		access.can("constraint:read", departmentScope(saved.departmentId));
 	const frozen = saved !== undefined && isFrozen(saved);
 	const live = useQuery(constraintsQuery(companyId, saved, allowed && !frozen));
-	const copies = useQuery({
-		...scheduleConstraintsQuery(
+	const copies = useQuery(
+		scheduleConstraintsQuery(
 			companyId,
 			saved,
 			saved?.scheduleId ?? "",
 			allowed && frozen
-		),
-		select: constraintRowsOf,
-	});
+		)
+	);
 	const list = frozen ? copies : live;
 
 	if (access.status !== "ready") return { status: access.status };

@@ -83,8 +83,8 @@ their API exists.
 - `schedules/fixtures.ts` — draft s-1 and its generated twin, and a workspace for company c-1.
 - `scheduleDraft.ts` — what the page holds: the setup, the saved schedule (id, department and status, which never
   change in the page), the shift and constraint ticks, the allocations per shift and job title, and the demand per
-  time slot. `shiftRowsOf` and `constraintRowsOf` give a frozen copy whose source is gone a local id; `tickedOf` drops
-  ticks of shifts no longer listed and `tickedConstraintsOf` of constraints no longer listed or no longer ACTIVE.
+  time slot. A frozen copy has its own id, never sent to a shift or constraint route; `tickedOf` drops ticks of shifts
+  no longer listed and `tickedConstraintsOf` of constraints no longer listed or no longer ACTIVE.
   `ListProblem` is why a step's list is not shown, for the Shifts and Constraints steps alike. `TIME_STEP_MINUTES` is
   the one grain shift times and demand slots share.
 - `schedulingNotice.ts` — the confirmation the Scheduling page shows after a generation, carried in history state.

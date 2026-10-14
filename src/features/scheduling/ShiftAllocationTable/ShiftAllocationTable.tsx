@@ -9,11 +9,11 @@ import {
 	allocatedTo,
 	shiftHours,
 	type Allocations,
-	type Shift,
 } from "@/features/scheduling/scheduleDraft";
+import type { ScheduleShift } from "@/features/scheduling/schedules/api";
 
 export type ShiftAllocationTableProps = {
-	shifts: Array<Shift>;
+	shifts: Array<ScheduleShift>;
 	/** People allocated so far, by shift then job title. */
 	allocations: Allocations;
 	onAllocationChange: (
@@ -33,7 +33,7 @@ export const ShiftAllocationTable = ({
 }: ShiftAllocationTableProps): FunctionComponent => {
 	const { t } = useTranslation();
 	const columns = useMemo(
-		(): Array<DataTableColumn<Shift>> => [
+		(): Array<DataTableColumn<ScheduleShift>> => [
 			{
 				id: "shift",
 				header: t("scheduling.forecast.shift"),

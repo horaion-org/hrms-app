@@ -10,7 +10,6 @@ import {
 	INCLUDED_CONSTRAINT_IDS,
 	frozenConstraintsFixture,
 } from "@/features/scheduling/constraints/fixtures";
-import { constraintRowsOf } from "@/features/scheduling/scheduleDraft";
 
 beforeAll(async () => {
 	await createInstance()
@@ -227,7 +226,7 @@ describe("ConstraintsStep", () => {
 	});
 
 	it("given_aGeneratedSchedule_when_rendered_then_listsItsFrozenConstraintsWithNothingToTickOrChange", () => {
-		const frozen = constraintRowsOf(frozenConstraintsFixture());
+		const frozen = frozenConstraintsFixture();
 		render(
 			<ConstraintsStep
 				frozen
@@ -248,11 +247,13 @@ describe("ConstraintsStep", () => {
 				"row"
 			)
 		).toHaveLength(frozen.length + 1);
-		// A frozen copy keeps the names it was generated with; a constraint deactivated since is still listed.
+		// A frozen copy keeps the names it was generated with; one whose source was deactivated since is still listed in full.
 		expect(row("Morning cover")).toHaveTextContent(
 			"Staff on Breakfast Prep and Front Desk AM"
 		);
-		expect(row("Rest between shifts")).toBeVisible();
+		expect(row("Rest between shifts")).toHaveTextContent(
+			"Hours of rest between one shift and the next must be at least 10."
+		);
 		expect(screen.queryByRole("checkbox")).toBeNull();
 		expect(screen.queryByRole("columnheader", { name: "Status" })).toBeNull();
 		expect(

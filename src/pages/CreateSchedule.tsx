@@ -40,9 +40,11 @@ import {
 	type Constraint,
 	type ListProblem,
 	type ScheduleSetup,
-	type Shift,
 } from "@/features/scheduling/scheduleDraft";
-import type { ScheduleBody } from "@/features/scheduling/schedules/api";
+import type {
+	ScheduleBody,
+	ScheduleShift,
+} from "@/features/scheduling/schedules/api";
 import {
 	generationRefusal,
 	scheduleRefusal,
@@ -222,9 +224,9 @@ export const CreateSchedule = (): FunctionComponent => {
 		draft,
 		constraints.status === "ready" ? constraints.items : undefined
 	);
-	const [shiftDialog, setShiftDialog] = useState<{ editing?: Shift } | null>(
-		null
-	);
+	const [shiftDialog, setShiftDialog] = useState<{
+		editing?: ScheduleShift;
+	} | null>(null);
 	const roles = useShiftRoleOptions(companyId, saved, shiftDialog !== null);
 	const [constraintDialog, setConstraintDialog] = useState<{
 		editing?: Constraint;
@@ -246,7 +248,7 @@ export const CreateSchedule = (): FunctionComponent => {
 	const notify = (message: string): void => {
 		setToast((previous) => ({ id: (previous?.id ?? 0) + 1, message }));
 	};
-	const deleteShift = (shift: Shift): void => {
+	const deleteShift = (shift: ScheduleShift): void => {
 		if (!saved) return;
 		setProblem("");
 		shiftActions.deleteShift.mutate(
@@ -288,7 +290,7 @@ export const CreateSchedule = (): FunctionComponent => {
 	): void => {
 		dispatch({ type: "allocationChanged", shiftId, jobTitleId, allocated });
 	};
-	const openShiftDialog = (editing?: Shift): void => {
+	const openShiftDialog = (editing?: ScheduleShift): void => {
 		setShiftDialog({ editing });
 	};
 	const openConstraintDialog = (editing?: Constraint): void => {

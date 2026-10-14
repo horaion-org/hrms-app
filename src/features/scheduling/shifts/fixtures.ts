@@ -1,5 +1,5 @@
 import type { ScheduleShift } from "@/features/scheduling/schedules/api";
-import type { Allocations, Shift } from "@/features/scheduling/scheduleDraft";
+import type { Allocations } from "@/features/scheduling/scheduleDraft";
 import type {
 	DepartmentShift,
 	ShiftRole,
@@ -19,8 +19,8 @@ const role = (jobTitleId: string, name: string): ShiftRole => ({
 
 /** One row of a draft's shifts as the API answers it; `shiftId` and `name` set it apart. */
 export const shiftFixture = (
-	overrides: Partial<Shift> & Pick<Shift, "shiftId" | "name">
-): Shift => ({
+	overrides: Partial<ScheduleShift> & Pick<ScheduleShift, "shiftId" | "name">
+): ScheduleShift => ({
 	included: true,
 	frozen: false,
 	group: "Front Desk",
@@ -32,7 +32,7 @@ export const shiftFixture = (
 	...overrides,
 });
 
-export const SHIFT_FIXTURES: Array<Shift> = [
+export const SHIFT_FIXTURES: Array<ScheduleShift> = [
 	shiftFixture({
 		shiftId: "front-desk-am",
 		name: "Front Desk AM",
@@ -123,29 +123,33 @@ export const INCLUDED_SHIFT_IDS = [
 ];
 
 /** Draft s-1's shifts as its list answers them: `INCLUDED_SHIFT_IDS` ticked, the rest not. */
-export const scheduleShiftsFixture = (): Array<Shift> =>
+export const scheduleShiftsFixture = (): Array<ScheduleShift> =>
 	SHIFT_FIXTURES.map((shift) => ({
 		...shift,
 		included: INCLUDED_SHIFT_IDS.includes(shift.shiftId),
 	}));
 
+/** The id generation gives the frozen copy of a live shift: its own, never a live shift's. */
+export const shiftCopyId = (shiftId: string): string => `${shiftId}-copy`;
+
 /**
- * A generated schedule's shifts: the frozen copies of what was ticked, one
- * of them (Breakfast Prep) since deleted from the department.
+ * A generated schedule's shifts: the frozen copies of what was ticked, each
+ * with its own id. Breakfast Prep was since deleted from the department; its
+ * copy is kept as it was.
  */
 export const frozenShiftsFixture = (): Array<ScheduleShift> =>
 	SHIFT_FIXTURES.filter((shift) =>
 		INCLUDED_SHIFT_IDS.includes(shift.shiftId)
 	).map((shift) => ({
 		...shift,
-		shiftId: shift.shiftId === "breakfast-prep" ? null : shift.shiftId,
+		shiftId: shiftCopyId(shift.shiftId),
 		included: true,
 		frozen: true,
 	}));
 
 /** A live shift as the department's shift routes answer it. */
 export const departmentShiftFixture = (
-	shift: Shift = SHIFT_FIXTURES[0] as Shift
+	shift: ScheduleShift = SHIFT_FIXTURES[0] as ScheduleShift
 ): DepartmentShift => ({
 	shiftId: shift.shiftId,
 	departmentId: "d-1",
