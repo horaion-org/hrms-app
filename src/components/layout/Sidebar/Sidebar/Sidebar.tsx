@@ -17,7 +17,7 @@ export const Sidebar = ({
 }: SidebarProps): FunctionComponent => (
 	<div
 		className={joinClassNames(
-			"flex min-h-dvh w-70 shrink-0 flex-col items-start gap-10 bg-ink-blue-900 p-7",
+			"sticky top-0 flex h-dvh w-70 shrink-0 flex-col items-start gap-10 overflow-y-auto bg-ink-blue-900 p-7",
 			className
 		)}
 	>

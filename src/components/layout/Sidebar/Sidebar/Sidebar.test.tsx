@@ -136,7 +136,13 @@ describe("Sidebar", () => {
 		expect(
 			screen.queryByRole("link", { name: "Dashboard" })
 		).not.toBeInTheDocument();
-		expect(navigation.parentElement).toHaveClass("consumer-layout");
+		expect(navigation.parentElement).toHaveClass(
+			"consumer-layout",
+			"sticky",
+			"top-0",
+			"h-dvh",
+			"overflow-y-auto"
+		);
 	});
 });
 

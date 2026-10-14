@@ -84,7 +84,7 @@ export const MainLayout = (): FunctionComponent => {
 			}
 			sidebar={
 				<Sidebar
-					className="min-h-0 w-full sm:min-h-dvh sm:w-70"
+					className="static h-auto w-full sm:sticky sm:h-dvh sm:w-70"
 					footer={
 						<div className="flex flex-col gap-3">
 							{usableCompanies(context.currentUser).length > 1 && (

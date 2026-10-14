@@ -13,7 +13,7 @@ const meta = {
 	decorators: [withMemoryRouter],
 	args: {
 		sidebar: (
-			<Sidebar className="min-h-0 w-full sm:min-h-dvh sm:w-70">
+			<Sidebar className="static h-auto w-full sm:sticky sm:h-dvh sm:w-70">
 				<SidebarItem
 					activeIcon={DashboardFilledIcon}
 					activeOptions={{ exact: true }}
