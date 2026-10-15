@@ -124,7 +124,7 @@ async function request(
 export async function apiRequest<S extends z.ZodType>(
 	path: string,
 	schema: S,
-	options: RequestOptions = {}
+	options: RequestOptions & { responseFormat?: "envelope" | "record" } = {}
 ): Promise<z.output<S>> {
 	const response = await request(path, options);
 	let body: unknown;
@@ -134,6 +134,12 @@ export async function apiRequest<S extends z.ZodType>(
 		if (!(cause instanceof SyntaxError))
 			throw new UnreachableError("API response was interrupted");
 		throw new UnexpectedResponseError("API returned invalid JSON");
+	}
+	if (options.responseFormat === "record") {
+		const payload = schema.safeParse(body);
+		if (!payload.success)
+			throw new UnexpectedResponseError("API returned an unexpected payload");
+		return payload.data;
 	}
 	const envelope = z
 		.object({

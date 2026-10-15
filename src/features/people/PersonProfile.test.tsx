@@ -242,9 +242,6 @@ const sent = (calls: Array<Call>, route: string): Array<unknown> =>
 	calls
 		.filter((call) => `${call.method} ${call.path}` === route)
 		.map((call) => call.body);
-/** Anything but a read sent to `path`. */
-const writesTo = (calls: Array<Call>, path: string): Array<Call> =>
-	calls.filter((call) => call.path === path && call.method !== "GET");
 const button = (name: RegExp | string): HTMLElement =>
 	screen.getByRole("button", { name });
 const textbox = (name: string): HTMLElement =>
@@ -493,6 +490,49 @@ describe("Who may edit a person", () => {
 });
 
 describe("Editing a person", () => {
+	it("saves other details while leaving an unassigned person without a department", async () => {
+		const user = userEvent.setup();
+		const { calls } = await openEditing(
+			routes(
+				workspaceReply(ALL),
+				kent({
+					branchId: null,
+					branchName: null,
+					departmentId: null,
+					departmentName: null,
+					jobTitleId: null,
+					jobTitleName: null,
+				})
+			)
+		);
+		await choose(user, /^Employment type/, "Part-time");
+		await save(user);
+		await screen.findByText("Changes to Kent Chua were saved.");
+		expect(sent(calls, `PUT ${PROFILE}`)).toEqual([
+			{
+				...kentBody,
+				departmentId: null,
+				jobTitleId: null,
+				employmentType: "PART_TIME",
+			},
+		]);
+	});
+	it("allows clearing the optional department and saves without a job title", async () => {
+		const user = userEvent.setup();
+		const { calls } = await openEditing();
+
+		await waitFor(() => {
+			expect(button(/^Department/)).toBeEnabled();
+		});
+		await choose(user, /^Department/, "No department yet");
+		await save(user);
+
+		await screen.findByText("Changes to Kent Chua were saved.");
+		expect(sent(calls, `PUT ${PROFILE}`)).toEqual([
+			{ ...kentBody, departmentId: null, jobTitleId: null },
+		]);
+	});
+
 	it("opens from Edit profile, linkable, with every field filled in and the employee ID fixed", async () => {
 		const user = userEvent.setup();
 		stubApi(routes());
@@ -584,7 +624,7 @@ describe("Editing a person", () => {
 		expect(sent(calls, REVOKE)).toEqual([]);
 	});
 
-	it("files a person who has no department in the one chosen, which is required", async () => {
+	it("files a person who has no department in the one chosen", async () => {
 		const user = userEvent.setup();
 		const { calls } = await openEditing(
 			routes(
@@ -600,10 +640,6 @@ describe("Editing a person", () => {
 			)
 		);
 
-		await save(user);
-		expect(await screen.findByText("Choose a department.")).toBeVisible();
-		expect(writesTo(calls, PROFILE)).toEqual([]);
-
 		// Granted company-wide, they may file them in any active department.
 		await waitFor(() => {
 			expect(button(/^Department/)).toBeEnabled();
@@ -611,7 +647,7 @@ describe("Editing a person", () => {
 		await user.click(button(/^Department/));
 		expect(
 			(await screen.findAllByRole("option")).map((option) => option.textContent)
-		).toEqual(["Orchard › Bar", "Orchard › Kitchen"]);
+		).toEqual(["No department yet", "Orchard › Bar", "Orchard › Kitchen"]);
 		await user.keyboard("{Escape}");
 		await moveToBar(user);
 		await save(user);
@@ -622,7 +658,7 @@ describe("Editing a person", () => {
 		]);
 	});
 
-	it("never offers to leave a person without a department", async () => {
+	it("offers to leave a person without a department", async () => {
 		const user = userEvent.setup();
 		await openEditing();
 
@@ -632,7 +668,7 @@ describe("Editing a person", () => {
 		await user.click(button(/^Department/));
 		expect(
 			(await screen.findAllByRole("option")).map((option) => option.textContent)
-		).toEqual(["Orchard › Bar", "Orchard › Kitchen"]);
+		).toEqual(["No department yet", "Orchard › Bar", "Orchard › Kitchen"]);
 	});
 
 	it("saves the same way for someone granted only at the department, who can't move people elsewhere", async () => {

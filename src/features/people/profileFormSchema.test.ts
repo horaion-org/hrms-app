@@ -26,6 +26,15 @@ const refusals = (
 	);
 
 describe("profile form rules", () => {
+	it("allows no department only when explicitly optional for company creation", () => {
+		const withoutDepartment = { ...valid, departmentId: "" };
+		expect(schema.safeParse(withoutDepartment).success).toBe(false);
+		expect(
+			profileFormSchema(t, "2026-10-06", {
+				departmentRequired: false,
+			}).safeParse(withoutDepartment).success
+		).toBe(true);
+	});
 	it("needs only a name, an email address and a department", () => {
 		expect(schema.safeParse(valid).success).toBe(true);
 		expect(

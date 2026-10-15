@@ -4,6 +4,7 @@ import {
 	ComboboxInput,
 	ComboboxOption,
 	ComboboxOptions,
+	Portal,
 } from "@headlessui/react";
 import {
 	Fragment,
@@ -11,6 +12,7 @@ import {
 	useId,
 	useRef,
 	type AriaAttributes,
+	type ComponentPropsWithRef,
 	type ReactNode,
 	type Ref,
 	type RefObject,
@@ -32,6 +34,18 @@ import {
 
 /** The create row's value; never reported as a choice. */
 const CREATE = Symbol("create");
+
+/** Keep the field's accessible name rather than the trigger-derived name. */
+const ComboboxList = ({
+	label,
+	labelledBy,
+	...props
+}: ComponentPropsWithRef<"div"> & {
+	label?: string;
+	labelledBy?: string;
+}): FunctionComponent => (
+	<div {...props} aria-label={label} aria-labelledby={labelledBy} />
+);
 
 type ComboboxSelectionProps<T> =
 	| {
@@ -63,6 +77,8 @@ export type ComboboxProps<T> = ComboboxSelectionProps<T> & {
 	query: string;
 	onQueryChange: (query: string) => void;
 	loading?: boolean;
+	/** Render only visible options for large lists. Not used with the create row. */
+	virtual?: boolean;
 	loadingText?: string;
 	emptyText?: string;
 	footer?: ReactNode;
@@ -93,6 +109,7 @@ export const Combobox = <T,>(props: ComboboxProps<T>): FunctionComponent => {
 	const { options, getKey, getLabel, query, onQueryChange, disabled } = props;
 	const values = props.multiple === false ? [] : props.value;
 	const onCreate = props.multiple === false ? props.onCreate : undefined;
+	const virtualized = props.virtual === true && onCreate === undefined;
 	const creatable = query.trim();
 	const createRow =
 		onCreate !== undefined &&
@@ -123,6 +140,33 @@ export const Combobox = <T,>(props: ComboboxProps<T>): FunctionComponent => {
 		error: "border-error-600",
 		success: "border-success-600",
 	};
+	const optionDisabled = (option: T | null): boolean =>
+		option !== null &&
+		props.maxSelected !== undefined &&
+		values.length >= props.maxSelected &&
+		!values.some((chosen) => getKey(chosen) === getKey(option));
+	const renderOption = (option: T): NonNullable<FunctionComponent> => (
+		<ComboboxOption
+			key={getKey(option)}
+			aria-label={getLabel(option)}
+			className="flex min-h-12 w-full cursor-pointer items-center gap-3 px-4 py-2 text-sm data-focus:bg-neutral-100 data-disabled:cursor-not-allowed data-disabled:text-neutral-500"
+			disabled={optionDisabled(option)}
+			value={option}
+		>
+			{({ selected }) => (
+				<>
+					<span className="min-w-0 flex-1">
+						{props.renderOption?.(option) ?? getLabel(option)}
+					</span>
+					{selected ? (
+						<CheckboxFilledIcon className="size-5" />
+					) : (
+						<CheckboxIcon className="size-5" />
+					)}
+				</>
+			)}
+		</ComboboxOption>
+	);
 	const renderControl = ({
 		open,
 	}: {
@@ -203,131 +247,121 @@ export const Combobox = <T,>(props: ComboboxProps<T>): FunctionComponent => {
 					</div>
 				)}
 			</div>
-			<ComboboxOptions
-				portal
-				as={ComboboxPanel}
-				className="flex flex-col overflow-hidden rounded-lg border border-neutral-400 bg-white shadow-sm"
-				modal={false}
-				trigger={props.panelAnchor ?? trigger}
-			>
-				<ComboboxInput as={Fragment}>
-					<ComboboxSearch
-						ref={focusSearch}
-						aria-controls={listId}
-						aria-label={props.searchPlaceholder}
-						className="h-11 w-full shrink-0 border-b border-neutral-300 px-4 outline-hidden"
-						listId={listId}
-						placeholder={props.searchPlaceholder}
-						value={query}
-						onChange={(event) => {
-							onQueryChange(event.target.value);
-						}}
-						onKeyDown={(event) => {
-							if (event.key === "Tab") {
-								tabbing.current = true;
-								trigger.current?.focus();
-							}
-							if (
-								event.key === " " &&
-								query === "" &&
-								!event.nativeEvent.isComposing
-							) {
-								const activeId = event.currentTarget.getAttribute(
-									"aria-activedescendant"
-								);
-								const active = activeId
-									? event.currentTarget.ownerDocument.getElementById(activeId)
-									: null;
-								if (active && active.getAttribute("aria-disabled") !== "true") {
-									event.preventDefault();
-									event.currentTarget.dispatchEvent(
-										new KeyboardEvent("keydown", {
-											key: "Enter",
-											bubbles: true,
-											cancelable: true,
-										})
-									);
-								}
-							}
-							if (
-								event.key === "Backspace" &&
-								query === "" &&
-								props.multiple !== false &&
-								values.length > 0 &&
-								!event.nativeEvent.isComposing
-							) {
-								event.preventDefault();
-								props.onChange(values.slice(0, -1));
-							}
-						}}
-					/>
-				</ComboboxInput>
-				<div
-					aria-label={props["aria-label"]}
-					aria-labelledby={props["aria-labelledby"]}
-					aria-multiselectable={props.multiple === false ? undefined : true}
-					className="min-h-0 max-h-60 overflow-y-auto py-1"
-					id={listId}
-					role="listbox"
-				>
-					{options.map((option) => (
-						<ComboboxOption
-							key={getKey(option)}
-							aria-label={getLabel(option)}
-							className="flex min-h-12 cursor-pointer items-center gap-3 px-4 text-sm data-focus:bg-neutral-100 data-disabled:cursor-not-allowed data-disabled:text-neutral-500"
-							value={option}
-							disabled={
-								props.maxSelected !== undefined &&
-								values.length >= props.maxSelected &&
-								!values.some((chosen) => getKey(chosen) === getKey(option))
-							}
+			{open && (
+				<Portal>
+					<ComboboxPanel
+						className="flex flex-col overflow-hidden rounded-lg border border-neutral-400 bg-white shadow-sm"
+						trigger={props.panelAnchor ?? trigger}
+					>
+						<ComboboxInput as={Fragment}>
+							<ComboboxSearch
+								ref={focusSearch}
+								aria-controls={listId}
+								aria-label={props.searchPlaceholder}
+								className="h-11 w-full shrink-0 border-b border-neutral-300 px-4 outline-hidden"
+								listId={listId}
+								placeholder={props.searchPlaceholder}
+								value={query}
+								onChange={(event) => {
+									onQueryChange(event.target.value);
+								}}
+								onKeyDown={(event) => {
+									if (event.key === "Tab") {
+										tabbing.current = true;
+										trigger.current?.focus();
+									}
+									if (
+										event.key === " " &&
+										query === "" &&
+										!event.nativeEvent.isComposing
+									) {
+										const activeId = event.currentTarget.getAttribute(
+											"aria-activedescendant"
+										);
+										const active = activeId
+											? event.currentTarget.ownerDocument.getElementById(
+													activeId
+												)
+											: null;
+										if (
+											active &&
+											active.getAttribute("aria-disabled") !== "true"
+										) {
+											event.preventDefault();
+											event.currentTarget.dispatchEvent(
+												new KeyboardEvent("keydown", {
+													key: "Enter",
+													bubbles: true,
+													cancelable: true,
+												})
+											);
+										}
+									}
+									if (
+										event.key === "Backspace" &&
+										query === "" &&
+										props.multiple !== false &&
+										values.length > 0 &&
+										!event.nativeEvent.isComposing
+									) {
+										event.preventDefault();
+										props.onChange(values.slice(0, -1));
+									}
+								}}
+							/>
+						</ComboboxInput>
+						<ComboboxOptions
+							aria-multiselectable={props.multiple === false ? undefined : true}
+							as={ComboboxList}
+							className="min-h-0 max-h-60 overflow-y-auto py-2"
+							id={listId}
+							label={props["aria-label"]}
+							labelledBy={props["aria-labelledby"]}
+							modal={false}
 						>
-							{({ selected }) => (
+							{virtualized ? (
+								({ option }: { option: T }): NonNullable<FunctionComponent> =>
+									renderOption(option)
+							) : (
 								<>
-									<span className="min-w-0 flex-1">
-										{props.renderOption?.(option) ?? getLabel(option)}
-									</span>
-									{selected ? (
-										<CheckboxFilledIcon className="size-5" />
-									) : (
-										<CheckboxIcon className="size-5" />
+									{options.map(renderOption)}
+									{createRow && (
+										<ComboboxOption
+											aria-label={t("combobox.create", { query: creatable })}
+											className="flex min-h-12 cursor-pointer items-center gap-3 px-4 py-2 text-sm font-medium text-ink-blue-700 data-focus:bg-neutral-100"
+											value={CREATE as unknown as T}
+										>
+											<PlusIcon className="size-5 shrink-0" />
+											<span className="min-w-0 flex-1 truncate">
+												{t("combobox.create", { query: creatable })}
+											</span>
+										</ComboboxOption>
 									)}
 								</>
 							)}
-						</ComboboxOption>
-					))}
-					{createRow && (
-						<ComboboxOption
-							aria-label={t("combobox.create", { query: creatable })}
-							className="flex min-h-12 cursor-pointer items-center gap-3 px-4 text-sm font-medium text-ink-blue-700 data-focus:bg-neutral-100"
-							value={CREATE as unknown as T}
-						>
-							<PlusIcon className="size-5 shrink-0" />
-							<span className="min-w-0 flex-1 truncate">
-								{t("combobox.create", { query: creatable })}
-							</span>
-						</ComboboxOption>
-					)}
-				</div>
-				{(props.loading || (options.length === 0 && !createRow)) && (
-					<div className="px-4 py-3 text-sm text-neutral-500" role="status">
-						{props.loading
-							? (props.loadingText ?? t("combobox.loading"))
-							: (props.emptyText ?? t("combobox.noResults"))}
-					</div>
-				)}
-				{props.footer && (
-					<div className="border-t border-neutral-300 px-4 py-3 text-xs text-neutral-500">
-						{props.footer}
-					</div>
-				)}
-			</ComboboxOptions>
+						</ComboboxOptions>
+						{(props.loading || (options.length === 0 && !createRow)) && (
+							<div className="px-4 py-3 text-sm text-neutral-500" role="status">
+								{props.loading
+									? (props.loadingText ?? t("combobox.loading"))
+									: (props.emptyText ?? t("combobox.noResults"))}
+							</div>
+						)}
+						{props.footer && (
+							<div className="border-t border-neutral-300 px-4 py-3 text-xs text-neutral-500">
+								{props.footer}
+							</div>
+						)}
+					</ComboboxPanel>
+				</Portal>
+			)}
 		</>
 	);
 	return props.multiple === false ? (
 		<HeadlessCombobox<T | null, false, "div">
 			{...rootProps}
 			value={props.value}
+			virtual={virtualized ? { options, disabled: optionDisabled } : undefined}
 			onChange={(next) => {
 				if ((next as unknown) === CREATE) onCreate?.(creatable);
 				else props.onChange(next);
@@ -340,6 +374,7 @@ export const Combobox = <T,>(props: ComboboxProps<T>): FunctionComponent => {
 			{...rootProps}
 			multiple
 			value={props.value}
+			virtual={virtualized ? { options, disabled: optionDisabled } : undefined}
 			onChange={(next) => {
 				if (
 					disabled ||

@@ -21,6 +21,7 @@ import { renderAuthApp } from "@/features/auth/testing";
 const COMPANY = "/api/v1/companies/c-1";
 const KITCHEN = `${COMPANY}/branches/b-1/departments/d-1`;
 const CREATE = `POST ${KITCHEN}/member-profiles`;
+const CREATE_COMPANY = `POST ${COMPANY}/member-profiles`;
 const ASSIGN = `POST ${KITCHEN}/access-role-assignments`;
 const WORKSPACE = "GET /api/v1/me/workspace";
 const ALL = [
@@ -218,6 +219,103 @@ const fillRequired = async (user: User): Promise<void> => {
 };
 
 describe("Add employee", () => {
+	it("adds a company member before any branch or department exists", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...routes({
+				status: 200,
+				body: envelope({
+					companies: [
+						{
+							uuid: "c-1",
+							name: "Company c-1",
+							permissions: ALL,
+							branches: [],
+						},
+					],
+				}),
+			}),
+			[CREATE_COMPANY]: {
+				status: 201,
+				body: {
+					...created,
+					branchId: null,
+					branchName: null,
+					departmentId: null,
+					departmentName: null,
+				},
+			},
+		});
+		const opened = await open();
+		await user.type(
+			await screen.findByRole("textbox", { name: "Full name" }),
+			"Priya Nair"
+		);
+		await user.type(textbox("Email address"), "priya@company.com");
+		expect(
+			screen.getByText("Optional. You can assign a department later.")
+		).toBeVisible();
+		expect(button(/^Job title/)).toBeDisabled();
+		expect(
+			screen.queryByRole("button", { name: /^System role/ })
+		).not.toBeInTheDocument();
+		await user.click(confirm());
+		await screen.findByText(/Priya Nair was added/);
+		expect(opened.router.state.location.pathname).toBe("/people");
+		expect(sent(calls, CREATE_COMPANY).map((call) => call.body)).toEqual([
+			{ displayName: "Priya Nair", email: "priya@company.com" },
+		]);
+		expect(sent(calls, CREATE)).toEqual([]);
+		expect(sent(calls, ASSIGN)).toEqual([]);
+	});
+
+	it("can clear a chosen department and its dependent job title before company creation", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...routes(),
+			[CREATE_COMPANY]: {
+				status: 201,
+				body: {
+					...created,
+					branchId: null,
+					branchName: null,
+					departmentId: null,
+					departmentName: null,
+				},
+			},
+		});
+		await open();
+		await fillRequired(user);
+		await choose(user, /^Job title/, "Chef");
+		await choose(user, /^System role/, "Supervisor");
+		await chooseDepartment(user, "No department yet");
+		expect(button(/^Job title/)).toBeDisabled();
+		await user.click(confirm());
+		await screen.findByText(/Priya Nair was added/);
+		expect(sent(calls, CREATE_COMPANY).map((call) => call.body)).toEqual([
+			{ displayName: "Priya Nair", email: "priya@company.com" },
+		]);
+		expect(sent(calls, ASSIGN)).toEqual([]);
+	});
+
+	it("still requires a department for a department-scoped creator", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi(
+			routes(
+				workspaceReply([], ["member_profile:read", "member_profile:create"])
+			)
+		);
+		await open();
+		await user.type(
+			await screen.findByRole("textbox", { name: "Full name" }),
+			"Priya Nair"
+		);
+		await user.type(textbox("Email address"), "priya@company.com");
+		await user.click(confirm());
+		expect(await screen.findByText("Choose a department.")).toBeVisible();
+		expect(sent(calls, CREATE_COMPANY)).toEqual([]);
+		expect(sent(calls, CREATE)).toEqual([]);
+	});
 	it("is offered on the People list to someone who may add employees, and opens the page", async () => {
 		const user = userEvent.setup();
 		stubApi(routes());
@@ -403,7 +501,7 @@ describe("Add employee", () => {
 			await screen.findByText("Enter the employee’s full name.")
 		).toBeVisible();
 		expect(screen.getByText("Enter a valid email address.")).toBeVisible();
-		expect(screen.getByText("Choose a department.")).toBeVisible();
+		expect(screen.queryByText("Choose a department.")).not.toBeInTheDocument();
 		expect(textbox("Full name")).toHaveFocus();
 		expect(sent(calls, CREATE)).toEqual([]);
 	});

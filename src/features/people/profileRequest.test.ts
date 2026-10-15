@@ -8,6 +8,16 @@ import {
 } from "@/features/people/profileRequest";
 
 describe("profile request", () => {
+	it("does not send a stale job title when no department is selected", () => {
+		expect(
+			profileRequest({
+				...EMPTY_PROFILE,
+				displayName: "Priya Nair",
+				email: "priya@company.com",
+				jobTitleId: "j-1",
+			})
+		).toStrictEqual({ displayName: "Priya Nair", email: "priya@company.com" });
+	});
 	it("leaves out every optional field left empty, and the department and role", () => {
 		expect(
 			profileRequest({
@@ -75,6 +85,15 @@ const kent: MemberProfileDetail = {
 };
 
 describe("profile update request", () => {
+	it("sends no department or dependent job title when the department is cleared", () => {
+		expect(
+			profileUpdateRequest({
+				...profileEditValues(kent),
+				departmentId: "",
+			})
+		).toMatchObject({ departmentId: null, jobTitleId: null });
+	});
+
 	it("starts the form from the saved profile, empties as empty", () => {
 		expect(profileEditValues(kent, "r-1")).toStrictEqual({
 			displayName: "Kent Chua",

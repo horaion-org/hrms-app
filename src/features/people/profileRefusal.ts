@@ -92,6 +92,10 @@ export const profileRefusal = (
 			"409 DEPARTMENT_INACTIVE": department,
 			"404 JOB_TITLE_NOT_FOUND": jobTitle,
 			"409 JOB_TITLE_INACTIVE": jobTitle,
+			"400 JOB_TITLE_REQUIRES_DEPARTMENT": field(
+				"jobTitleId",
+				t(`${key}.jobTitleNeedsDepartment`)
+			),
 			"404 REPORTS_TO_NOT_FOUND": {
 				...field("reportsTo", t(`${key}.managerUnavailable`)),
 				refreshMembers: true,

@@ -20,6 +20,8 @@ export type DepartmentSelectorProps = {
 	placeholder: string;
 	/** Offers only ACTIVE Departments under ACTIVE Branches. */
 	activeOnly?: boolean;
+	/** Offers an explicit empty choice for forms where Department is optional. */
+	emptyLabel?: string;
 	disabled?: boolean;
 	status?: InputStatus;
 	name?: string;
@@ -52,6 +54,7 @@ export const DepartmentSelector = ({
 	onChange,
 	disabled = false,
 	activeOnly = false,
+	emptyLabel,
 	...selectProps
 }: DepartmentSelectorProps): FunctionComponent => {
 	const { t } = useTranslation();
@@ -71,8 +74,12 @@ export const DepartmentSelector = ({
 		<Select
 			{...selectProps}
 			disabled={disabled || !data}
-			options={options}
 			value={value}
+			options={
+				data && emptyLabel
+					? [{ value: "", label: emptyLabel }, ...options]
+					: options
+			}
 			onChange={onChange}
 		/>
 	);

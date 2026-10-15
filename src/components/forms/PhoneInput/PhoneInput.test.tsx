@@ -214,11 +214,15 @@ describe("PhoneInput countries", () => {
 		].map((option) => option.getAttribute("aria-label"));
 	};
 
-	it("lists every country with its code", async () => {
+	it("renders only a window of the full country list with its codes", async () => {
 		const options = await searchFor("");
-		expect(options).toHaveLength(249);
-		expect(options).toContain("Singapore +65");
-		expect(options).toContain("United States +1");
+		expect(options.length).toBeGreaterThan(0);
+		expect(options.length).toBeLessThan(249);
+		expect(options[0]).toBe("Afghanistan +93");
+		expect(screen.getAllByRole("option")[0]).toHaveAttribute(
+			"aria-setsize",
+			"249"
+		);
 	});
 
 	it("searches by country name", async () => {

@@ -2,7 +2,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { configureApiClient, resetApiClient } from "@/common/api-client";
 import { UnexpectedResponseError } from "@/common/problem";
 import { envelope, stubApi } from "@/common/testing/stubApi";
-import { fetchPeople, peoplePath } from "@/features/people/api";
+import {
+	createMemberProfile,
+	fetchPeople,
+	peoplePath,
+} from "@/features/people/api";
 
 beforeEach(() => {
 	configureApiClient({
@@ -30,6 +34,52 @@ const person = {
 	jobTitleName: null,
 	status: "ACTIVE",
 };
+
+describe("member creation client", () => {
+	it("uses the company endpoint and reads its direct record when no department is selected", async () => {
+		const calls = stubApi({
+			"POST /api/v1/companies/c-1/member-profiles": {
+				status: 201,
+				body: person,
+			},
+		});
+		const body = { displayName: person.displayName, email: person.email };
+		await expect(createMemberProfile("c-1", undefined, body)).resolves.toEqual(
+			person
+		);
+		expect(calls[0]).toMatchObject({
+			method: "POST",
+			path: "/api/v1/companies/c-1/member-profiles",
+			body,
+		});
+	});
+	it("preserves the department endpoint and envelope contract when a department is selected", async () => {
+		const placed = {
+			...person,
+			departmentId: "d-1",
+			departmentName: "Sales",
+			branchId: "b-1",
+			branchName: "North",
+		};
+		stubApi({
+			"POST /api/v1/companies/c-1/branches/b-1/departments/d-1/member-profiles":
+				{
+					status: 201,
+					body: envelope(placed),
+				},
+		});
+		await expect(
+			createMemberProfile(
+				"c-1",
+				{ branchId: "b-1", departmentId: "d-1" },
+				{
+					displayName: person.displayName,
+					email: person.email,
+				}
+			)
+		).resolves.toEqual(placed);
+	});
+});
 
 describe("people list client", () => {
 	it("asks for a 0-based page of 10 with the sort, and nothing else by default", () => {

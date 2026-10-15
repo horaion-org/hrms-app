@@ -354,6 +354,8 @@
 			"department": "Department",
 			"departmentPlaceholder": "Select department",
 			"departmentsEmpty": "No active department you can add employees to.",
+			"departmentOptional": "Optional. You can assign a department later.",
+			"departmentNone": "No department yet",
 			"departmentRequired": "Choose a department.",
 			"manager": "Manager",
 			"managerPlaceholder": "Select manager",

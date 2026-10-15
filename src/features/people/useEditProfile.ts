@@ -37,7 +37,7 @@ export const useEditProfile = (
 	skills?: ReadonlyArray<SkillValue>
 ): ((
 	values: ProfileFormValues,
-	place: MemberProfilePlace,
+	place: MemberProfilePlace | undefined,
 	roleField: { shown: boolean }
 ) => Promise<void>) => {
 	const client = useQueryClient();

@@ -203,7 +203,7 @@ describe("create branch through the Branches page", () => {
 			within(dialog).queryByText("Choose a country.")
 		).not.toBeInTheDocument();
 	});
-	it("starts country empty and offers all 249 ISO countries alphabetically with localized search", async () => {
+	it("starts country empty and virtualizes all 249 ISO countries with localized search", async () => {
 		stubApi(routes());
 		await open();
 		const dialog = await openDialog();
@@ -211,9 +211,12 @@ describe("create branch through the Branches page", () => {
 		expect(country).toHaveTextContent("Select a country");
 		expect(country).toHaveAttribute("aria-required", "true");
 		await userEvent.click(country);
-		expect(screen.getAllByRole("option")).toHaveLength(249);
+		expect(screen.getAllByRole("option").length).toBeLessThan(249);
 		expect(screen.getAllByRole("option")[0]).toHaveTextContent("Afghanistan");
-		expect(screen.getAllByRole("option")[248]).toHaveTextContent("Zimbabwe");
+		expect(screen.getAllByRole("option")[0]).toHaveAttribute(
+			"aria-setsize",
+			"249"
+		);
 		await userEvent.type(
 			screen.getByRole("combobox", { name: "Search countries" }),
 			"singap"

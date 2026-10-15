@@ -292,6 +292,7 @@ export const CreateBranchDialog = ({
 							<Combobox
 								ref={field.ref}
 								aria-required
+								virtual
 								aria-invalid={Boolean(errors.country)}
 								aria-label={t(`${key}.country`)}
 								disabled={isSubmitting}

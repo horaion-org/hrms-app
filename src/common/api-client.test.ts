@@ -20,6 +20,31 @@ it("returns only the schema-parsed payload", async () => {
 		id: "one",
 	});
 });
+it("reads an explicitly declared direct record without an envelope", async () => {
+	stubApi({
+		[`GET ${path}`]: { status: 200, body: { id: "one", extra: "discarded" } },
+	});
+	await expect(
+		apiRequest(path, schema, { anonymous: true, responseFormat: "record" })
+	).resolves.toEqual({ id: "one" });
+});
+it("does not accept a direct record on an envelope route", async () => {
+	stubApi({ [`GET ${path}`]: { status: 200, body: { id: "one" } } });
+	await expect(
+		apiRequest(path, schema, { anonymous: true })
+	).rejects.toMatchObject({
+		reason: "unexpected-response",
+	});
+});
+it.each([{}, { id: 3 }, envelope({ id: "one" })])(
+	"refuses an invalid direct record: %j",
+	async (body) => {
+		stubApi({ [`GET ${path}`]: { status: 200, body } });
+		await expect(
+			apiRequest(path, schema, { anonymous: true, responseFormat: "record" })
+		).rejects.toMatchObject({ reason: "unexpected-response" });
+	}
+);
 it.each([
 	{},
 	{ success: false, data: { id: "x" } },

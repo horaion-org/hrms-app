@@ -46,7 +46,8 @@ export type ProfileFormValues = {
  */
 export const profileFormSchema = (
 	t: TFunction,
-	today: IsoDate = todayDate(Date.now())
+	today: IsoDate = todayDate(Date.now()),
+	options: { departmentRequired?: boolean } = {}
 ): z.ZodType<ProfileFormValues, ProfileFormValues> => {
 	const dates = z.object({
 		hireDate: z.string(),
@@ -87,7 +88,10 @@ export const profileFormSchema = (
 			hireDate: z.string(),
 			probationEndDate: z.string(),
 			jobTitleId: z.string(),
-			departmentId: z.string().min(1, t(`${key}.departmentRequired`)),
+			departmentId:
+				options.departmentRequired === false
+					? z.string()
+					: z.string().min(1, t(`${key}.departmentRequired`)),
 			reportsTo: companyMemberSchema.nullable(),
 			accessRoleId: z.string(),
 			status: z.enum(MEMBER_STATUSES).optional(),

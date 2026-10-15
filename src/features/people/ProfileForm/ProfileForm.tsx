@@ -49,7 +49,7 @@ import { workspaceQuery } from "@/features/workspace/api";
 import { DepartmentSelector } from "@/features/workspace/DepartmentSelector";
 import { retry } from "@/features/workspace/retry";
 import { departmentChoices } from "@/features/workspace/unitChoices";
-import { departmentScope } from "@/features/workspace/scopes";
+import { COMPANY_SCOPE, departmentScope } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
 
 /** What only changing an existing person needs. */
@@ -85,7 +85,7 @@ export type ProfileFormProps = {
 	 */
 	onSubmit: (
 		values: ProfileFormValues,
-		place: MemberProfilePlace,
+		place: MemberProfilePlace | undefined,
 		role: { shown: boolean }
 	) => Promise<void>;
 	/** Leaves without saving; when editing, after asking if anything changed. */
@@ -129,7 +129,14 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 	const formId = useId();
 	const [today] = useState(() => todayDate(Date.now()));
 	const [discarding, setDiscarding] = useState(false);
-	const schema = useMemo(() => profileFormSchema(t, today), [t, today]);
+	const departmentRequired = !access.can(
+		edit ? "member_profile:update" : "member_profile:create",
+		COMPANY_SCOPE
+	);
+	const schema = useMemo(
+		() => profileFormSchema(t, today, { departmentRequired }),
+		[t, today, departmentRequired]
+	);
 	const form = useForm<ProfileFormValues>({
 		resolver: zodResolver(schema),
 		defaultValues: initial,
@@ -193,8 +200,9 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 					.filter((role) => role.status === "ACTIVE" && !role.protectedRole)
 					.map((role) => ({ value: role.accessRoleId, label: role.name }))
 			: [];
-	const departmentHint =
-		workspace && choices.length === 0
+	const departmentHint = !departmentRequired
+		? t(`${key}.departmentOptional`)
+		: workspace && choices.length === 0
 			? t(`${key}.departmentsEmpty`)
 			: undefined;
 	const jobTitleHint =
@@ -324,7 +332,7 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 			className={className}
 			onSubmit={(event) =>
 				handleSubmit(async (values) => {
-					if (!chosen) {
+					if (!chosen && (departmentRequired || values.departmentId !== "")) {
 						setError("departmentId", {
 							type: "server",
 							message: t(`${key}.departmentUnavailable`),
@@ -336,10 +344,12 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 						() =>
 							onSubmit(
 								values,
-								{
-									branchId: chosen.branchId,
-									departmentId: chosen.departmentId,
-								},
+								chosen
+									? {
+											branchId: chosen.branchId,
+											departmentId: chosen.departmentId,
+										}
+									: undefined,
 								{ shown: showRole }
 							),
 						(error) =>
@@ -603,12 +613,12 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 							/>
 						</FormRow>
 						<FormRow
-							required
 							error={departmentError}
 							fieldWidth={fieldWidth}
 							hint={departmentHint}
 							htmlFor={idOf("departmentId")}
 							label={t(`${key}.department`)}
+							required={departmentRequired}
 						>
 							<Controller
 								control={control}
@@ -632,11 +642,17 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 											departmentError,
 											departmentHint
 										)}
+										emptyLabel={
+											departmentRequired
+												? undefined
+												: t(`${key}.departmentNone`)
+										}
 										onChange={(next) => {
 											if (next === field.value) return;
 											field.onChange(next);
 											// Job titles belong to one Department.
 											setValue("jobTitleId", "");
+											if (next === "") setValue("accessRoleId", "");
 										}}
 									/>
 								)}

@@ -20,7 +20,7 @@ export const useAddEmployee = (
 	companyId: string
 ): ((
 	values: ProfileFormValues,
-	place: MemberProfilePlace,
+	place: MemberProfilePlace | undefined,
 	role: { shown: boolean }
 ) => Promise<void>) => {
 	const client = useQueryClient();
@@ -30,7 +30,7 @@ export const useAddEmployee = (
 			place,
 			body,
 		}: {
-			place: MemberProfilePlace;
+			place: MemberProfilePlace | undefined;
 			body: CreateMemberProfileBody;
 		}) => createMemberProfile(companyId, place, body),
 		onSuccess: () =>
@@ -48,7 +48,7 @@ export const useAddEmployee = (
 			body: profileRequest(values),
 		});
 		let roleNotAssigned = false;
-		if (role.shown && values.accessRoleId)
+		if (place && role.shown && values.accessRoleId)
 			try {
 				await assign.mutateAsync({
 					grants: [

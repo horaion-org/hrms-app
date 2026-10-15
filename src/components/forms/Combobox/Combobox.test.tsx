@@ -20,6 +20,52 @@ const options = [
 ];
 
 describe("Combobox single choice", () => {
+	it("virtualizes large lists while retaining keyboard selection, search and reopening", async () => {
+		const user = userEvent.setup();
+		const countries = Array.from({ length: 249 }, (_, index) => ({
+			id: String(index),
+			name: `Country ${String(index).padStart(3, "0")}`,
+		}));
+		const Harness = (): FunctionComponent => {
+			const [value, setValue] = useState<(typeof countries)[number] | null>(
+				null
+			);
+			const [query, setQuery] = useState("");
+			return (
+				<Combobox
+					virtual
+					aria-label="Country"
+					getKey={(option) => option.id}
+					getLabel={(option) => option.name}
+					multiple={false}
+					options={countries.filter((option) => option.name.includes(query))}
+					placeholder="Select a country"
+					query={query}
+					searchPlaceholder="Search countries"
+					value={value}
+					onChange={setValue}
+					onQueryChange={setQuery}
+				/>
+			);
+		};
+		render(<Harness />);
+		const trigger = screen.getByRole("button", { name: "Country" });
+		await user.click(trigger);
+		expect(screen.getAllByRole("option").length).toBeLessThan(50);
+		expect(screen.getAllByRole("option")[0]).toHaveAttribute(
+			"aria-setsize",
+			"249"
+		);
+		await user.keyboard("{End}{Enter}");
+		expect(trigger).toHaveTextContent("Country 248");
+		expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+		await user.click(trigger);
+		await user.type(screen.getByRole("combobox"), "123");
+		expect(screen.getAllByRole("option")).toHaveLength(1);
+		await user.keyboard("{ArrowDown}{Enter}");
+		expect(trigger).toHaveTextContent("Country 123");
+	});
+
 	it("reports search, loading and empty results with a footer while retaining a choice absent from results", async () => {
 		const user = userEvent.setup();
 		const searched = vi.fn();

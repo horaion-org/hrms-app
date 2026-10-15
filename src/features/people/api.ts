@@ -153,8 +153,8 @@ export const isEmploymentType = (value: string): value is EmploymentType =>
 	employmentTypeSchema.safeParse(value).success;
 
 /**
- * A new person, as the API takes them. Their Department (and its Branch) is
- * the URL, as the API requires. Optional fields are left out rather than sent
+ * A new person, as the API takes them. When selected, their Department (and its Branch) is
+ * in the URL; otherwise they join the company without unit placement. Optional fields are left out rather than sent
  * empty; dates are ISO `YYYY-MM-DD` and the phone is E.164.
  */
 export type CreateMemberProfileBody = {
@@ -177,19 +177,26 @@ export type CreateMemberProfileBody = {
 export type MemberProfilePlace = { branchId: string; departmentId: string };
 
 /**
- * Adds a person to one Department and invites them by email; the identity
+ * Adds a person to one Department, or to the company without a Department, and invites them by email; the identity
  * provider sends their temporary password. Returns them as the list shows them.
  */
 export const createMemberProfile = (
 	companyId: string,
-	{ branchId, departmentId }: MemberProfilePlace,
+	place: MemberProfilePlace | undefined,
 	body: CreateMemberProfileBody
-): Promise<MemberProfile> =>
-	apiRequest(
-		`${companyPath(companyId)}/branches/${encodeURIComponent(branchId)}/departments/${encodeURIComponent(departmentId)}/member-profiles`,
+): Promise<MemberProfile> => {
+	if (!place)
+		return apiRequest(
+			`${companyPath(companyId)}/member-profiles`,
+			memberProfileSchema,
+			{ method: "POST", body, responseFormat: "record" }
+		);
+	return apiRequest(
+		`${companyPath(companyId)}/branches/${encodeURIComponent(place.branchId)}/departments/${encodeURIComponent(place.departmentId)}/member-profiles`,
 		memberProfileSchema,
 		{ method: "POST", body }
 	);
+};
 
 /** ISO `YYYY-MM-DD`, or null when not set. */
 const isoDateSchema = z.string().nullable();
@@ -300,14 +307,14 @@ export const savedProfile = (
 /**
  * A person's profile as an update sends it. `PUT` replaces the profile, so
  * every field is sent and an empty one is null, never "". The employee ID
- * never changes, and a person always has a Department.
+ * never changes, and a person may have no Department.
  */
 export type UpdateMemberProfileBody = {
 	displayName: string;
 	email: string;
 	status: MemberStatus;
 	/** A different one from their current Department moves them there. */
-	departmentId: string;
+	departmentId: string | null;
 	jobTitleId: string | null;
 	reportsToMembershipId: string | null;
 	dateOfBirth: string | null;

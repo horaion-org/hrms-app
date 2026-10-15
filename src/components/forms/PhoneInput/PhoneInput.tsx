@@ -111,6 +111,7 @@ export const PhoneInput = ({
 			role="group"
 		>
 			<Combobox
+				virtual
 				aria-describedby={ariaDescribedby}
 				className="w-28 shrink-0"
 				disabled={disabled}

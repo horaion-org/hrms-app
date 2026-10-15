@@ -8,8 +8,8 @@ import { useAddEmployee } from "@/features/people/useAddEmployee";
 import { Can } from "@/features/workspace/Can";
 
 /**
- * A new person in one of the Departments where the person may add
- * employees, who is then emailed an invitation to log in.
+ * A new person in a Department where the caller may add employees, or without one
+ * when the caller may add them company-wide, emailed an invitation to log in.
  */
 export const AddEmployee = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
