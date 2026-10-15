@@ -8,8 +8,9 @@ import {
 	type Branch,
 	type CreateBranchBody,
 } from "@/features/organisation/api";
+import { workspaceQuery } from "@/features/workspace/api";
 
-/** Refreshes the company's lists, counts and activity after creating a Branch. */
+/** Refreshes lists and workspace access so the new Branch is available to selectors. */
 export const useCreateBranch = (
 	companyId: string
 ): UseMutationResult<Branch, Error, CreateBranchBody> => {
@@ -17,6 +18,9 @@ export const useCreateBranch = (
 	return useMutation({
 		mutationFn: (body: CreateBranchBody) => createBranch(companyId, body),
 		onSuccess: () =>
-			client.invalidateQueries({ queryKey: ["organisation", companyId] }),
+			Promise.all([
+				client.invalidateQueries({ queryKey: ["organisation", companyId] }),
+				client.invalidateQueries({ queryKey: workspaceQuery.queryKey }),
+			]),
 	});
 };

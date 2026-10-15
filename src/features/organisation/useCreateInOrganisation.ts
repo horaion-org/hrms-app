@@ -14,8 +14,9 @@ import {
 	type Department,
 	type JobTitle,
 } from "@/features/organisation/api";
+import { workspaceQuery } from "@/features/workspace/api";
 
-/** A create that refreshes this company's lists, counts and activity on success. */
+/** Refreshes company lists and workspace access, including newly created units. */
 const useCompanyCreate = <TBody, TResult>(
 	companyId: string,
 	create: (body: TBody) => Promise<TResult>
@@ -24,7 +25,10 @@ const useCompanyCreate = <TBody, TResult>(
 	return useMutation({
 		mutationFn: create,
 		onSuccess: () =>
-			client.invalidateQueries({ queryKey: ["organisation", companyId] }),
+			Promise.all([
+				client.invalidateQueries({ queryKey: ["organisation", companyId] }),
+				client.invalidateQueries({ queryKey: workspaceQuery.queryKey }),
+			]),
 	});
 };
 

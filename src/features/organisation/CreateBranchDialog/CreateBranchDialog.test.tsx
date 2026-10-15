@@ -1,4 +1,5 @@
-import { screen, waitFor, within } from "@testing-library/react";
+import { act, screen, waitFor, within } from "@testing-library/react";
+import { companyWideWorkspace } from "@/common/testing/effectiveWorkspace";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resetApiClient } from "@/common/api-client";
@@ -101,6 +102,66 @@ const fill = async (
 };
 
 describe("create branch through the Branches page", () => {
+	it("refreshes workspace access so a newly created branch is available when creating a department", async () => {
+		const grants = [...permissions, "department:read", "department:create"];
+		let created = false;
+		stubApi({
+			...routes(grants),
+			[CREATE]: () => {
+				created = true;
+				return { status: 201, body: envelope(branch) };
+			},
+			[BRANCHES]: () => page(created ? [branch] : []),
+			"GET /api/v1/me/workspace": () => ({
+				status: 200,
+				body: envelope(
+					companyWideWorkspace(
+						grants,
+						created
+							? [
+									{
+										uuid: branch.branchId,
+										name: branch.name,
+										status: "ACTIVE",
+										country: branch.country,
+										permissions: [],
+										departments: [],
+									},
+								]
+							: []
+					)
+				),
+			}),
+			"GET /api/v1/companies/c-1/departments": page([]),
+		});
+		await open();
+		const dialog = await openDialog();
+		await fill(dialog);
+		await userEvent.click(
+			within(dialog).getByRole("button", { name: "Create branch" })
+		);
+		await waitFor(() =>
+			expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
+		);
+		await act(async () => {
+			await app?.router.navigate({ to: "/organisation/departments" });
+		});
+		await userEvent.click(
+			await screen.findByRole("button", { name: "Create department" })
+		);
+		const departmentDialog = await screen.findByRole("dialog", {
+			name: "Create department",
+		});
+		await waitFor(() => {
+			expect(
+				within(departmentDialog).getByRole("button", { name: "Branch" })
+			).toHaveTextContent(branch.name);
+		});
+		expect(
+			screen.queryByText("No active branches. Create a branch first.")
+		).not.toBeInTheDocument();
+	});
+
 	it("focuses Code before City when both are missing after a valid name", async () => {
 		stubApi(routes());
 		await open();
