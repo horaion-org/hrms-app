@@ -127,6 +127,21 @@ export const CONSTRAINT_OPTIONS: ConstraintOptions = {
 	],
 };
 
+/** ConstraintOptionsResponse wire shape, distinct from the dialog's mapped choices. */
+export const CONSTRAINT_OPTIONS_RESPONSE = {
+	types: CONSTRAINT_OPTIONS.types,
+	links: {
+		SHIFT: CONSTRAINT_OPTIONS.shifts.map(({ shiftId, name }) => ({
+			id: shiftId,
+			name,
+		})),
+		JOB_TITLE: CONSTRAINT_OPTIONS.jobTitles.map(({ jobTitleId, name }) => ({
+			id: jobTitleId,
+			name,
+		})),
+	},
+};
+
 /** A plain value: a number, a comparison or a weekday. */
 const plain = (field: ConstraintField, value: string): ConstraintValue => ({
 	field,

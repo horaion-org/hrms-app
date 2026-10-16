@@ -262,14 +262,28 @@ const constraintTypeOptionSchema = z.object({
 /** A constraint type and the fields it takes. */
 export type ConstraintTypeOption = z.infer<typeof constraintTypeOptionSchema>;
 
-const constraintOptionsSchema = z.object({
-	/** Every constraint type, grouped by category. */
-	types: z.array(constraintTypeOptionSchema),
-	/** The Department's live shifts, by group then name. */
-	shifts: z.array(z.object({ shiftId: z.string(), name: z.string() })),
-	/** The Department's ACTIVE job titles, by name. */
-	jobTitles: z.array(z.object({ jobTitleId: z.string(), name: z.string() })),
+const constraintLinkOptionSchema = z.object({
+	id: z.string(),
+	name: z.string(),
 });
+
+/** The API groups generic { id, name } choices by link kind (ADR-0050). */
+const constraintOptionsSchema = z
+	.object({
+		types: z.array(constraintTypeOptionSchema),
+		links: z.object({
+			SHIFT: z.array(constraintLinkOptionSchema),
+			JOB_TITLE: z.array(constraintLinkOptionSchema),
+		}),
+	})
+	.transform(({ types, links }) => ({
+		types,
+		shifts: links.SHIFT.map(({ id, name }) => ({ shiftId: id, name })),
+		jobTitles: links.JOB_TITLE.map(({ id, name }) => ({
+			jobTitleId: id,
+			name,
+		})),
+	}));
 
 /** What the constraint dialog offers. */
 export type ConstraintOptions = z.infer<typeof constraintOptionsSchema>;

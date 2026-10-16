@@ -19,7 +19,7 @@ import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
 import {
 	CONSTRAINT_FIXTURES,
-	CONSTRAINT_OPTIONS,
+	CONSTRAINT_OPTIONS_RESPONSE,
 	INCLUDED_CONSTRAINT_IDS,
 	constraintFixture,
 	frozenConstraintsFixture,
@@ -118,7 +118,7 @@ const routes = (
 	[`GET ${SCHEDULE_SHIFTS}`]: reply(DRAFT_SHIFTS),
 	[`GET ${ROLE_OPTIONS}`]: reply(SHIFT_ROLE_OPTIONS),
 	[`GET ${LIVE_CONSTRAINTS}`]: reply(CONSTRAINT_FIXTURES),
-	[`GET ${CONSTRAINT_OPTIONS_PATH}`]: reply(CONSTRAINT_OPTIONS),
+	[`GET ${CONSTRAINT_OPTIONS_PATH}`]: reply(CONSTRAINT_OPTIONS_RESPONSE),
 });
 
 const open = async (
@@ -379,7 +379,7 @@ describe("Create Schedule: a reopened draft", () => {
 			expect.arrayContaining([`GET ${SCHEDULE}`, `GET ${SCHEDULE_SHIFTS}`])
 		);
 		// A tab per group, above the table.
-		const tabs = screen.getByRole("tablist", { name: "Shift groups" });
+		const tabs = screen.getByRole("tablist", { name: "Shift types" });
 		expect(within(tabs).getAllByRole("tab")).toHaveLength(6);
 
 		await user.click(screen.getByRole("button", { name: "Back" }));
@@ -518,10 +518,11 @@ describe("Create Schedule: the department's shifts", () => {
 			"Evening Desk"
 		);
 		await user.click(
-			within(dialog).getByRole("button", { name: /Shift group/ })
+			within(dialog).getByRole("button", { name: /Shift type/ })
 		);
 		await user.type(screen.getByRole("combobox"), "Evening");
 		await user.click(screen.getByRole("option", { name: 'Create "Evening"' }));
+		expect(writes(calls)).toEqual([]);
 		await user.click(within(dialog).getByRole("radio", { name: "Slate" }));
 		await pick(user, dialog, /Start time/, "17:00");
 		await pick(user, dialog, /End time/, "23:00");
@@ -555,6 +556,7 @@ describe("Create Schedule: the department's shifts", () => {
 				jobTitleIds: ["front-desk-staff"],
 			},
 		]);
+		expect(writes(calls)).toEqual([`POST ${LIVE_SHIFTS}`]);
 		// The roles come from the shifts module, never from the job titles list.
 		expect(calls.filter((call) => call.path.endsWith("/job-titles"))).toEqual(
 			[]

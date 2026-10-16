@@ -248,6 +248,7 @@ export const ShiftDialog = ({
 								ref={field.ref}
 								aria-describedby={describedBy("group")}
 								aria-labelledby={labelledBy("group")}
+								emptyText={t(`${key}.groupEmpty`)}
 								getKey={same}
 								getLabel={same}
 								id={fieldId("group")}

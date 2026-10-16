@@ -52,7 +52,7 @@ describe("ShiftsStep", () => {
 		);
 		const table = screen.getByRole("table", { name: "Shifts" });
 		expect(within(table).getAllByRole("row")).toHaveLength(shifts.length + 1);
-		const tabs = screen.getByRole("tablist", { name: "Shift groups" });
+		const tabs = screen.getByRole("tablist", { name: "Shift types" });
 		expect(within(tabs).getAllByRole("tab")).toHaveLength(
 			groupsOf(shifts).length + 1
 		);

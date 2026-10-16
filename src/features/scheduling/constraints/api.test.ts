@@ -18,6 +18,7 @@ import {
 import {
 	CONSTRAINT_FIXTURES,
 	CONSTRAINT_OPTIONS,
+	CONSTRAINT_OPTIONS_RESPONSE,
 } from "@/features/scheduling/constraints/fixtures";
 
 const UNIT = { branchId: "b-1", departmentId: "d-1" };
@@ -134,7 +135,7 @@ describe("constraints client", () => {
 		const calls = stubApi({
 			[`GET ${DEPARTMENT}/constraint-options`]: {
 				status: 200,
-				body: envelope(CONSTRAINT_OPTIONS),
+				body: envelope(CONSTRAINT_OPTIONS_RESPONSE),
 			},
 		});
 
@@ -164,13 +165,44 @@ describe("constraints client", () => {
 		]);
 	});
 
+	it("keeps all six types when the department has no shifts or job titles", async () => {
+		stubApi({
+			[`GET ${DEPARTMENT}/constraint-options`]: {
+				status: 200,
+				body: envelope({
+					types: CONSTRAINT_OPTIONS_RESPONSE.types,
+					links: { SHIFT: [], JOB_TITLE: [] },
+				}),
+			},
+		});
+		const options = await fetchConstraintOptions("c-1", UNIT);
+		expect(options.types).toHaveLength(6);
+		expect(options.shifts).toEqual([]);
+		expect(options.jobTitles).toEqual([]);
+	});
+
+	it("rejects malformed link choices instead of displaying unusable options", async () => {
+		stubApi({
+			[`GET ${DEPARTMENT}/constraint-options`]: {
+				status: 200,
+				body: envelope({
+					types: CONSTRAINT_OPTIONS_RESPONSE.types,
+					links: { SHIFT: [{ name: "Missing id" }], JOB_TITLE: [] },
+				}),
+			},
+		});
+		await expect(fetchConstraintOptions("c-1", UNIT)).rejects.toBeInstanceOf(
+			UnexpectedResponseError
+		);
+	});
+
 	it("rejects a field of an unknown kind, which no control could choose", async () => {
 		const [first, ...rest] = CONSTRAINT_OPTIONS.types;
 		stubApi({
 			[`GET ${DEPARTMENT}/constraint-options`]: {
 				status: 200,
 				body: envelope({
-					...CONSTRAINT_OPTIONS,
+					...CONSTRAINT_OPTIONS_RESPONSE,
 					types: [
 						{
 							...first,
