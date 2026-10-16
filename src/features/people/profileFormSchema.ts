@@ -34,7 +34,7 @@ export type ProfileFormValues = {
 	departmentId: string;
 	/** The person's manager; the API calls it who they report to. */
 	reportsTo: CompanyMember | null;
-	/** A system role to assign in the Department once the person is added. */
+	/** A system role to assign at the separately selected target. */
 	accessRoleId: string;
 	/** Edited on an existing person only; a new person is always active. */
 	status?: MemberStatus;

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { AccessRole } from "@/features/organisation/api";
 import type { TFunction } from "i18next";
 import {
-	departmentRoleChange,
+	memberRoleChange,
 	describeMemberRoles,
 	memberRoles,
 	roleNames,
@@ -73,12 +73,16 @@ describe("member roles", () => {
 				accessRoleId: "r-1",
 				name: "Supervisor",
 				departmentId: "d-1",
+				branchId: null,
+				protectedRole: false,
 			},
 			{
 				assignmentId: "a-4",
 				accessRoleId: "r-1",
 				name: "Supervisor",
 				departmentId: null,
+				branchId: "b-2",
+				protectedRole: false,
 			},
 		]);
 		expect(roleNames(roles)).toEqual(["Supervisor"]);
@@ -89,23 +93,23 @@ describe("member roles", () => {
 		const companyWide = held("a-2", "r-2", null);
 
 		expect(rolesByPlace([companyWide, atKitchen], "d-1")).toEqual({
-			atDepartment: atKitchen,
+			selected: atKitchen,
 			elsewhere: [companyWide],
 		});
 		expect(rolesByPlace([atKitchen], null)).toEqual({
-			atDepartment: undefined,
-			elsewhere: [atKitchen],
+			selected: atKitchen,
+			elsewhere: [],
 		});
 	});
 });
 
-describe("department role change", () => {
+describe("member role change", () => {
 	const change = (
 		chosen: string,
 		place: typeof kitchen | undefined,
 		current: MemberRole | "none" = held("a-1", "r-1", "d-1")
-	): ReturnType<typeof departmentRoleChange> =>
-		departmentRoleChange({
+	): ReturnType<typeof memberRoleChange> =>
+		memberRoleChange({
 			membershipId: "m-1",
 			held: current === "none" ? undefined : current,
 			chosen,
@@ -125,7 +129,7 @@ describe("department role change", () => {
 		});
 	});
 
-	it("moves the role with the person to their new department", () => {
+	it("moves the role when its explicit target changes", () => {
 		expect(change("r-1", bar)).toEqual({
 			grants: [{ companyMembershipId: "m-1", accessRoleId: "r-1", ...bar }],
 			revokes: ["a-1"],

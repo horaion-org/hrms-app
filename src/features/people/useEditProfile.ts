@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useChangeAccessRoleHolders } from "@/features/organisation/useAccessRoleHolders";
+import type { AssignmentTarget } from "@/features/organisation/assignmentTargets";
 import {
 	memberProfileQuery,
 	savedProfile,
@@ -11,7 +12,7 @@ import {
 	type UpdateMemberProfileBody,
 } from "@/features/people/api";
 import {
-	departmentRoleChange,
+	memberRoleChange,
 	type MemberRole,
 } from "@/features/people/memberRoles";
 import { withPeopleNotice } from "@/features/people/peopleNoticeState";
@@ -20,8 +21,8 @@ import { profileUpdateRequest } from "@/features/people/profileRequest";
 import { useReplaceSkills } from "@/features/people/useSkills";
 
 /**
- * Saves a person's profile, in the Department chosen for them. Then, when
- * `role` is given, it changes the system role at that Department, then
+ * Saves a person's profile. Then, when `role` is given, it changes the
+ * selected assignment at its independently chosen target, then
  * shows their profile again with a notice saying so. A refused save rejects
  * for the form to explain. A refused role does not: the profile is saved, so
  * the notice says so and that the role still needs changing. Given
@@ -31,14 +32,14 @@ import { useReplaceSkills } from "@/features/people/useSkills";
 export const useEditProfile = (
 	companyId: string,
 	profile: MemberProfileDetail,
-	/** The role held at their Department before saving; left out when roles can't be changed here. */
+	/** The selected assignment before saving; omitted when roles can't be changed here. */
 	role: { held: MemberRole | undefined } | undefined,
 	/** Their skills as changed on the page; left out when unchanged or not changeable here. */
 	skills?: ReadonlyArray<SkillValue>
 ): ((
 	values: ProfileFormValues,
 	place: MemberProfilePlace | undefined,
-	roleField: { shown: boolean }
+	roleField: { shown: boolean; place?: AssignmentTarget }
 ) => Promise<void>) => {
 	const client = useQueryClient();
 	const navigate = useNavigate();
@@ -61,7 +62,7 @@ export const useEditProfile = (
 	});
 	const assign = useChangeAccessRoleHolders(companyId);
 	const replaceSkills = useReplaceSkills(companyId, membershipId);
-	return async (values, place, roleField) => {
+	return async (values, _place, roleField) => {
 		const saved = await save.mutateAsync(
 			profileUpdateRequest({
 				...values,
@@ -72,11 +73,11 @@ export const useEditProfile = (
 		const change =
 			role &&
 			roleField.shown &&
-			departmentRoleChange({
+			memberRoleChange({
 				membershipId,
 				held: role.held,
 				chosen: values.accessRoleId,
-				place,
+				place: roleField.place,
 			});
 		let roleNotAssigned = false;
 		if (change)

@@ -108,7 +108,7 @@ const role = (
 	name,
 	protectedRole: false,
 	status: "ACTIVE",
-	permissions: ["branch:read"],
+	permissions: ["member_profile:read"],
 	holderCount: 0,
 	...overrides,
 });
@@ -258,7 +258,7 @@ describe("Add employee", () => {
 		expect(button(/^Job title/)).toBeDisabled();
 		expect(
 			screen.queryByRole("button", { name: /^System role/ })
-		).not.toBeInTheDocument();
+		).toBeVisible();
 		await user.click(confirm());
 		await screen.findByText(/Priya Nair was added/);
 		expect(opened.router.state.location.pathname).toBe("/people");
@@ -287,6 +287,7 @@ describe("Add employee", () => {
 		await open();
 		await fillRequired(user);
 		await choose(user, /^Job title/, "Chef");
+		await choose(user, /^Role scope/, "Orchard › Kitchen");
 		await choose(user, /^System role/, "Supervisor");
 		await chooseDepartment(user, "No department yet");
 		expect(button(/^Job title/)).toBeDisabled();
@@ -295,7 +296,7 @@ describe("Add employee", () => {
 		expect(sent(calls, CREATE_COMPANY).map((call) => call.body)).toEqual([
 			{ displayName: "Priya Nair", email: "priya@company.com" },
 		]);
-		expect(sent(calls, ASSIGN)).toEqual([]);
+		expect(sent(calls, ASSIGN)).toHaveLength(1);
 	});
 
 	it("still requires a department for a department-scoped creator", async () => {
@@ -438,6 +439,7 @@ describe("Add employee", () => {
 		await open();
 
 		await fillRequired(user);
+		await choose(user, /^Role scope/, "Orchard › Kitchen");
 		await user.click(button(/^System role/));
 		// The owner's role and inactive roles are never offered.
 		expect(
@@ -477,6 +479,7 @@ describe("Add employee", () => {
 		const opened = await open();
 
 		await fillRequired(user);
+		await choose(user, /^Role scope/, "Orchard › Kitchen");
 		await choose(user, /^System role/, "Supervisor");
 		await user.click(confirm());
 
@@ -570,7 +573,7 @@ describe("Add employee", () => {
 		).toEqual(["Cook"]);
 	});
 
-	it("offers the system role only once a Department where the person may assign it is chosen", async () => {
+	it("offers role targets independently of the member's department, limited to assignment permissions", async () => {
 		const user = userEvent.setup();
 		const calls = stubApi({
 			...routes(
@@ -592,23 +595,27 @@ describe("Add employee", () => {
 		await open();
 
 		await screen.findByRole("button", { name: /^Department/ });
-		expect(screen.queryByText("System role")).not.toBeInTheDocument();
+		expect(screen.getByText("System role")).toBeVisible();
 		await chooseDepartment(user, "Bukit Bintang › Kitchen");
-		expect(screen.queryByText("System role")).not.toBeInTheDocument();
+		expect(screen.getByText("System role")).toBeVisible();
 		await chooseDepartment(user, "Orchard › Kitchen");
 		expect(await screen.findByText("System role")).toBeVisible();
 
-		// A role field taken away again is never a request to assign the role chosen in it.
+		await user.click(button(/^Role scope/));
+		expect(
+			(await screen.findAllByRole("option")).map((option) => option.textContent)
+		).toEqual(["Orchard › Kitchen"]);
+		await user.click(screen.getByRole("option", { name: "Orchard › Kitchen" }));
 		await choose(user, /^System role/, "Supervisor");
 		await user.type(textbox("Full name"), "Priya Nair");
 		await user.type(textbox("Email address"), "priya@company.com");
 		await chooseDepartment(user, "Bukit Bintang › Kitchen");
-		expect(screen.queryByText("System role")).not.toBeInTheDocument();
+		expect(screen.getByText("System role")).toBeVisible();
 		await user.click(confirm());
 		await screen.findByText(/Priya Nair was added\./);
 		expect(
 			calls.filter((call) => call.path.endsWith("/access-role-assignments"))
-		).toEqual([]);
+		).toHaveLength(1);
 	});
 
 	it("always offers the manager, and leaves out the system role without the keys it needs", async () => {

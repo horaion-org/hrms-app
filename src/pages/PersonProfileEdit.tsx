@@ -14,7 +14,7 @@ import { ProfileHeader } from "@/features/people/ProfileHeader";
 import { ProfileNotesAndSkills } from "@/features/people/ProfileNotesAndSkills";
 import { useEditProfile } from "@/features/people/useEditProfile";
 import { useMemberSkills, useSkillsDraft } from "@/features/people/useSkills";
-import { departmentScope } from "@/features/workspace/scopes";
+import { scopeOfPlace } from "@/features/organisation/assignmentTargets";
 import { useAccess } from "@/features/workspace/useAccess";
 
 export type PersonProfileEditProps = {
@@ -25,8 +25,8 @@ export type PersonProfileEditProps = {
 /**
  * A person's profile, ready to change, under the same header as when read;
  * shown only to someone who may change it (see `profileEditAccess`). The
- * system role here is the one they hold at their Department; roles held
- * elsewhere are listed but left alone. Changes to their skills are held
+ * system role edits one assignment with its own target; other assignments
+ * are listed but left alone. Changes to their skills are held
  * until the profile is saved.
  */
 export const PersonProfileEdit = ({
@@ -42,24 +42,26 @@ export const PersonProfileEdit = ({
 		access.canAnywhere("access_role:read") &&
 		access.canAnywhere("access_role:assign");
 	const ready = roles.status === "ready";
-	const { atDepartment, elsewhere } = rolesByPlace(
+	const { selected, elsewhere } = rolesByPlace(
 		ready ? roles.roles : [],
 		profile.departmentId
 	);
-	// Replacing the role they hold at their Department also removes it there, which needs assigning there.
+	// Replacing an assignment needs permission at its original target too.
+	const rolePlace = selected
+		? {
+				branchId: selected.branchId ?? undefined,
+				departmentId: selected.departmentId ?? undefined,
+			}
+		: undefined;
 	const heldChangeable =
-		!atDepartment?.departmentId ||
-		access.can(
-			"access_role:assign",
-			departmentScope(atDepartment.departmentId)
-		);
+		!rolePlace || access.can("access_role:assign", scopeOfPlace(rolePlace));
 	const skillsDraft = useSkillsDraft(
 		useMemberSkills(companyId, profile.membershipId).data
 	);
 	const save = useEditProfile(
 		companyId,
 		profile,
-		manageRole && ready ? { held: atDepartment } : undefined,
+		manageRole && ready ? { held: selected } : undefined,
 		skillsDraft.changed ? skillsDraft.skills : undefined
 	);
 
@@ -74,12 +76,13 @@ export const PersonProfileEdit = ({
 		<>
 			<ProfileForm
 				companyId={companyId}
-				initial={profileEditValues(profile, atDepartment?.accessRoleId)}
+				initial={profileEditValues(profile, selected?.accessRoleId)}
 				edit={{
 					employeeCode: profile.employeeCode,
 					// Unknown counts as logged in: the API would refuse the change.
 					emailEditable: profile.invitationPending === true,
 					roleEditable: ready && heldChangeable,
+					rolePlace,
 					otherRoles: roleNames(elsewhere),
 					unsaved: skillsDraft.changed,
 					header: (actions) => (

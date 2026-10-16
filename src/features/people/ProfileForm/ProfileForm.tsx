@@ -24,6 +24,13 @@ import {
 	UserIcon,
 } from "@/components/ui/Icon";
 import { HeadsField } from "@/features/organisation/HeadsField";
+import {
+	assignmentTargets,
+	placeKey,
+	roleFitsScope,
+	scopeOfPlace,
+	type AssignmentTarget,
+} from "@/features/organisation/assignmentTargets";
 import { useCreateFormSubmit } from "@/features/organisation/useCreateFormSubmit";
 import {
 	useAccessRoles,
@@ -49,7 +56,7 @@ import { workspaceQuery } from "@/features/workspace/api";
 import { DepartmentSelector } from "@/features/workspace/DepartmentSelector";
 import { retry } from "@/features/workspace/retry";
 import { departmentChoices } from "@/features/workspace/unitChoices";
-import { COMPANY_SCOPE, departmentScope } from "@/features/workspace/scopes";
+import { COMPANY_SCOPE } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
 
 /** What only changing an existing person needs. */
@@ -60,11 +67,12 @@ export type ProfileFormEdit = {
 	emailEditable: boolean;
 	/**
 	 * False leaves out the system role, e.g. when their roles couldn't be
-	 * loaded, or the role they hold at their Department sits where the
+	 * loaded, or the selected assignment sits where the
 	 * person may not assign.
 	 */
 	roleEditable: boolean;
-	/** System roles they hold outside their Department: shown, never changed here. */
+	rolePlace?: { branchId?: string; departmentId?: string };
+	/** Other assignments: shown, never changed here. */
 	otherRoles: ReadonlyArray<string>;
 	/** The page's header, given the form's Cancel and Save changes buttons to place. */
 	header: (actions: ReactNode) => ReactNode;
@@ -86,7 +94,7 @@ export type ProfileFormProps = {
 	onSubmit: (
 		values: ProfileFormValues,
 		place: MemberProfilePlace | undefined,
-		role: { shown: boolean }
+		role: { shown: boolean; place?: AssignmentTarget }
 	) => Promise<void>;
 	/** Leaves without saving; when editing, after asking if anything changed. */
 	onCancel: () => void;
@@ -114,8 +122,8 @@ const NOTHING = (): void => {};
 /**
  * A person's profile in four cards: personal, contact, employment, and their
  * Department and role. Only Departments where the person may add employees
- * are offered, or, with `edit`, change them. The system role appears only
- * for those who may read roles and assign them at the chosen Department.
+ * are offered, or, with `edit`, change them. Roles have an independent target
+ * selected from the places where the caller may assign them.
  *
  * With `edit` it changes an existing person: their employee ID is shown,
  * their status can be changed, their email address only while they have
@@ -129,6 +137,9 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 	const formId = useId();
 	const [today] = useState(() => todayDate(Date.now()));
 	const [discarding, setDiscarding] = useState(false);
+	const [rolePlaceKey, setRolePlaceKey] = useState<string | undefined>(
+		edit?.rolePlace ? placeKey(edit.rolePlace) : undefined
+	);
 	const departmentRequired = !access.can(
 		edit ? "member_profile:update" : "member_profile:create",
 		COMPANY_SCOPE
@@ -186,18 +197,24 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 						label: jobTitle.name,
 					}))
 			: [];
-	// Roles are read anywhere; assigning is checked at the Department the role would apply at.
+	// Assignment targets are independent of the person's organisational placement.
+	const targets = assignmentTargets(workspace, companyId, access.can, t);
+	const rolePlace = targets.find((target) => placeKey(target) === rolePlaceKey);
 	const showRole =
 		access.canAnywhere("access_role:read") &&
-		chosen !== undefined &&
-		access.can("access_role:assign", departmentScope(chosen.departmentId)) &&
+		targets.length > 0 &&
 		(edit?.roleEditable ?? true);
 	const roles = useAccessRoles(companyId, BY_NAME);
 	// The Company Owner role moves only through its own transfer.
 	const roleOptions: Array<SelectOption> =
 		roles.status === "ready"
 			? roles.items
-					.filter((role) => role.status === "ACTIVE" && !role.protectedRole)
+					.filter(
+						(role) =>
+							role.status === "ACTIVE" &&
+							!role.protectedRole &&
+							(!rolePlace || roleFitsScope(role, scopeOfPlace(rolePlace)))
+					)
 					.map((role) => ({ value: role.accessRoleId, label: role.name }))
 			: [];
 	const departmentHint = !departmentRequired
@@ -302,7 +319,14 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 			t(`${key}.systemRoleHint`)
 		);
 	const cancel = (): void => {
-		if (edit && (isDirty || edit.unsaved)) setDiscarding(true);
+		if (
+			edit &&
+			(isDirty ||
+				edit.unsaved ||
+				rolePlaceKey !==
+					(edit.rolePlace ? placeKey(edit.rolePlace) : undefined))
+		)
+			setDiscarding(true);
 		else onCancel();
 	};
 	const actions = (
@@ -340,6 +364,13 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 						setFocus("departmentId");
 						return;
 					}
+					if (showRole && values.accessRoleId && !rolePlace) {
+						setError("accessRoleId", {
+							type: "server",
+							message: t(`${key}.roleScopeRequired`),
+						});
+						return;
+					}
 					const refusal = await run(
 						() =>
 							onSubmit(
@@ -350,7 +381,7 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 											departmentId: chosen.departmentId,
 										}
 									: undefined,
-								{ shown: showRole }
+								{ shown: showRole, place: rolePlace }
 							),
 						(error) =>
 							profileRefusal(
@@ -652,7 +683,6 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 											field.onChange(next);
 											// Job titles belong to one Department.
 											setValue("jobTitleId", "");
-											if (next === "") setValue("accessRoleId", "");
 										}}
 									/>
 								)}
@@ -681,38 +711,81 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 							)}
 						/>
 						{showRole && (
-							<FormRow
-								error={roleError}
-								fieldWidth={fieldWidth}
-								hint={roleHint}
-								htmlFor={idOf("accessRoleId")}
-								label={t(`${key}.systemRole`)}
-							>
-								<Controller
-									control={control}
-									name="accessRoleId"
-									render={({ field }) => (
-										<Select
-											ref={field.ref}
-											aria-invalid={Boolean(roleError)}
-											aria-labelledby={formRowIds(idOf("accessRoleId")).labelId}
-											className="w-full"
-											disabled={isSubmitting}
-											name={field.name}
-											options={withNone(roleOptions, field.value)}
-											placeholder={t(`${key}.systemRolePlaceholder`)}
-											status={roleError ? "error" : undefined}
-											value={field.value}
-											aria-describedby={describedBy(
-												"accessRoleId",
-												roleError,
-												true
-											)}
-											onChange={field.onChange}
-										/>
-									)}
-								/>
-							</FormRow>
+							<>
+								<FormRow
+									fieldWidth={fieldWidth}
+									hint={t(`${key}.roleScopeHint`)}
+									htmlFor={idOf("roleScope")}
+									label={t(`${key}.roleScope`)}
+								>
+									<Select
+										aria-describedby={formRowIds(idOf("roleScope")).hintId}
+										aria-labelledby={formRowIds(idOf("roleScope")).labelId}
+										className="w-full"
+										disabled={isSubmitting}
+										placeholder={t(`${key}.roleScopePlaceholder`)}
+										value={rolePlaceKey ?? "unselected"}
+										options={targets.map((target) => ({
+											value: placeKey(target),
+											label: target.label,
+										}))}
+										onChange={(value) => {
+											setRolePlaceKey(value);
+											const target = targets.find(
+												(item) => placeKey(item) === value
+											);
+											const role =
+												roles.status === "ready"
+													? roles.items.find(
+															(item) =>
+																item.accessRoleId ===
+																form.getValues("accessRoleId")
+														)
+													: undefined;
+											if (
+												role &&
+												target &&
+												!roleFitsScope(role, scopeOfPlace(target))
+											)
+												setValue("accessRoleId", "", { shouldDirty: true });
+										}}
+									/>
+								</FormRow>
+								<FormRow
+									error={roleError}
+									fieldWidth={fieldWidth}
+									hint={roleHint}
+									htmlFor={idOf("accessRoleId")}
+									label={t(`${key}.systemRole`)}
+								>
+									<Controller
+										control={control}
+										name="accessRoleId"
+										render={({ field }) => (
+											<Select
+												ref={field.ref}
+												aria-invalid={Boolean(roleError)}
+												className="w-full"
+												disabled={isSubmitting}
+												name={field.name}
+												options={withNone(roleOptions, field.value)}
+												placeholder={t(`${key}.systemRolePlaceholder`)}
+												status={roleError ? "error" : undefined}
+												value={field.value}
+												aria-describedby={describedBy(
+													"accessRoleId",
+													roleError,
+													true
+												)}
+												aria-labelledby={
+													formRowIds(idOf("accessRoleId")).labelId
+												}
+												onChange={field.onChange}
+											/>
+										)}
+									/>
+								</FormRow>
+							</>
 						)}
 					</div>
 				</Card>

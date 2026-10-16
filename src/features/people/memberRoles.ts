@@ -4,7 +4,6 @@ import type {
 	MemberAccessRoleAssignment,
 } from "@/features/organisation/api";
 import type { AccessRoleHoldersChange } from "@/features/organisation/useAccessRoleHolders";
-import type { MemberProfilePlace } from "@/features/people/api";
 
 /** One system role a person holds, and where. */
 export type MemberRole = {
@@ -13,6 +12,8 @@ export type MemberRole = {
 	name: string;
 	/** Set for a role held at a Department; null at a Branch or company-wide. */
 	departmentId: string | null;
+	branchId?: string | null;
+	protectedRole?: boolean;
 };
 
 /** A person's system roles as loaded, or why they aren't shown. */
@@ -39,6 +40,8 @@ export const memberRoles = (
 						accessRoleId: assignment.accessRoleId,
 						name: role.name,
 						departmentId: assignment.departmentId,
+						branchId: assignment.branchId,
+						protectedRole: role.protectedRole,
 					},
 				]
 			: [];
@@ -50,50 +53,61 @@ export const roleNames = (roles: ReadonlyArray<MemberRole>): Array<string> => [
 ];
 
 /**
- * The role a person holds at their Department, which the profile form
- * changes, and the ones held elsewhere, which it only shows.
+ * Select an editable assignment for the form, preferring the person's
+ * department. Other assignments are displayed but preserved.
  */
 export const rolesByPlace = (
 	roles: ReadonlyArray<MemberRole>,
 	departmentId: string | null
-): { atDepartment: MemberRole | undefined; elsewhere: Array<MemberRole> } => {
-	const atDepartment = departmentId
-		? roles.find((role) => role.departmentId === departmentId)
-		: undefined;
+): { selected: MemberRole | undefined; elsewhere: Array<MemberRole> } => {
+	const selected =
+		roles.find(
+			(role) =>
+				!role.protectedRole &&
+				departmentId &&
+				role.departmentId === departmentId
+		) ?? roles.find((role) => !role.protectedRole);
 	return {
-		atDepartment,
-		elsewhere: roles.filter((role) => role !== atDepartment),
+		selected,
+		elsewhere: roles.filter((role) => role !== selected),
 	};
 };
 
 /**
- * What saving a profile does to the role at the person's Department: the
- * chosen role is granted at the Department they are now in, and the one held
- * at their previous Department is removed. Nothing when neither changed.
+ * Replace the selected assignment only when its role or explicit target
+ * changes. Organisational placement is not an input.
  */
-export const departmentRoleChange = ({
+export const memberRoleChange = ({
 	membershipId,
 	held,
 	chosen,
 	place,
 }: {
 	membershipId: string;
-	/** The role held at the Department the person was in before saving. */
+	/** The selected assignment before saving. */
 	held: MemberRole | undefined;
 	/** The role chosen in the form; "" for none. */
 	chosen: string;
-	/** The Department they are in after saving, if any. */
-	place: MemberProfilePlace | undefined;
+	/** The independently selected target; an empty object means company-wide. */
+	place: { branchId?: string; departmentId?: string } | undefined;
 }):
 	Required<Pick<AccessRoleHoldersChange, "grants" | "revokes">> | undefined => {
 	if (
 		held?.accessRoleId === (chosen || undefined) &&
-		held?.departmentId === place?.departmentId
+		(held?.departmentId ?? undefined) === place?.departmentId &&
+		(held?.departmentId || (held?.branchId ?? undefined) === place?.branchId)
 	)
 		return undefined;
 	const grants =
 		chosen && place
-			? [{ companyMembershipId: membershipId, accessRoleId: chosen, ...place }]
+			? [
+					{
+						companyMembershipId: membershipId,
+						accessRoleId: chosen,
+						branchId: place.branchId,
+						departmentId: place.departmentId,
+					},
+				]
 			: [];
 	const revokes = held ? [held.assignmentId] : [];
 	return grants.length + revokes.length > 0 ? { grants, revokes } : undefined;

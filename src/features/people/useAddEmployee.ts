@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useChangeAccessRoleHolders } from "@/features/organisation/useAccessRoleHolders";
+import type { AssignmentTarget } from "@/features/organisation/assignmentTargets";
 import {
 	createMemberProfile,
 	type CreateMemberProfileBody,
@@ -11,7 +12,7 @@ import type { ProfileFormValues } from "@/features/people/profileFormSchema";
 import { profileRequest } from "@/features/people/profileRequest";
 
 /**
- * Adds a person, then gives them the chosen system role in their Department,
+ * Adds a person, then gives them the chosen system role at its explicit target,
  * then returns to the People list with a notice saying so. A refused create
  * rejects for the form to explain. A refused role does not: the person
  * exists, so the list says they were added and the role still needs assigning.
@@ -21,7 +22,7 @@ export const useAddEmployee = (
 ): ((
 	values: ProfileFormValues,
 	place: MemberProfilePlace | undefined,
-	role: { shown: boolean }
+	role: { shown: boolean; place?: AssignmentTarget }
 ) => Promise<void>) => {
 	const client = useQueryClient();
 	const navigate = useNavigate();
@@ -48,14 +49,15 @@ export const useAddEmployee = (
 			body: profileRequest(values),
 		});
 		let roleNotAssigned = false;
-		if (place && role.shown && values.accessRoleId)
+		if (role.place && role.shown && values.accessRoleId)
 			try {
 				await assign.mutateAsync({
 					grants: [
 						{
 							companyMembershipId: person.membershipId,
 							accessRoleId: values.accessRoleId,
-							...place,
+							branchId: role.place.branchId,
+							departmentId: role.place.departmentId,
 						},
 					],
 				});

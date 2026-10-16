@@ -128,7 +128,7 @@ const role = (
 	name,
 	protectedRole: false,
 	status: "ACTIVE",
-	permissions: ["branch:read"],
+	permissions: ["member_profile:read"],
 	holderCount: 1,
 	...overrides,
 });
@@ -880,6 +880,81 @@ describe("Editing a person", () => {
 });
 
 describe("Changing a person's system role", () => {
+	it.each([
+		["Orchard", `${COMPANY}/branches/b-1/access-role-assignments`],
+		["Whole company", `${COMPANY}/access-role-assignments`],
+	])("assigns a role at %s without a department", async (target, path) => {
+		const user = userEvent.setup();
+		const { calls } = await openEditing({
+			...routes(
+				workspaceReply(ALL),
+				kent({
+					branchId: null,
+					branchName: null,
+					departmentId: null,
+					departmentName: null,
+					jobTitleId: null,
+					jobTitleName: null,
+				})
+			),
+			[`GET ${COMPANY}/access-role-assignments`]: {
+				status: 200,
+				body: envelope([]),
+			},
+			[`POST ${path}`]: { status: 201 },
+		});
+		await choose(user, /^Role scope/, target);
+		await choose(user, /^System role/, "Manager");
+		await save(user);
+		await screen.findByText("Changes to Kent Chua were saved.");
+		expect(sent(calls, `PUT ${PROFILE}`)).toEqual([
+			{ ...kentBody, departmentId: null, jobTitleId: null },
+		]);
+		expect(sent(calls, `POST ${path}`)).toEqual([
+			{ companyMembershipId: "m-1", accessRoleId: "r-2" },
+		]);
+		expect(sent(calls, REVOKE)).toEqual([]);
+	});
+
+	it("loads a branch assignment without a department and preserves it on an ordinary save", async () => {
+		const user = userEvent.setup();
+		const { calls } = await openEditing({
+			...routes(
+				workspaceReply(ALL),
+				kent({
+					branchId: null,
+					branchName: null,
+					departmentId: null,
+					departmentName: null,
+					jobTitleId: null,
+					jobTitleName: null,
+				})
+			),
+			[`GET ${COMPANY}/access-role-assignments`]: {
+				status: 200,
+				body: envelope([
+					{
+						accessRoleAssignmentId: "a-1",
+						accessRoleId: "r-2",
+						status: "ACTIVE",
+						branchId: "b-1",
+						departmentId: null,
+					},
+				]),
+			},
+		});
+		expect(button(/^Role scope/)).toHaveTextContent("Orchard");
+		expect(button(/^System role/)).toHaveTextContent("Manager");
+		await save(user);
+		await screen.findByText("Changes to Kent Chua were saved.");
+		expect(
+			calls.filter(
+				(call) =>
+					call.method !== "GET" && call.path.includes("access-role-assignments")
+			)
+		).toEqual([]);
+	});
+
 	it("replaces the role at their department after the profile is saved, leaving roles elsewhere alone", async () => {
 		const user = userEvent.setup();
 		const { calls } = await openEditing();
@@ -900,7 +975,7 @@ describe("Changing a person's system role", () => {
 		]);
 	});
 
-	it("moves the role with them to a new department", async () => {
+	it("preserves the role target when the person moves to a new department", async () => {
 		const user = userEvent.setup();
 		const { calls } = await openEditing();
 
@@ -911,10 +986,8 @@ describe("Changing a person's system role", () => {
 		expect(sent(calls, `PUT ${PROFILE}`)).toEqual([
 			{ ...kentBody, departmentId: "d-2", jobTitleId: null },
 		]);
-		expect(sent(calls, ASSIGN_IN_BAR)).toEqual([
-			{ companyMembershipId: "m-1", accessRoleId: "r-1" },
-		]);
-		expect(sent(calls, REVOKE)).toHaveLength(1);
+		expect(sent(calls, ASSIGN_IN_BAR)).toEqual([]);
+		expect(sent(calls, REVOKE)).toEqual([]);
 	});
 
 	it("says the profile was saved when only the role couldn't be changed, and keeps the old role", async () => {
