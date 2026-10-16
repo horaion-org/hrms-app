@@ -12,6 +12,21 @@ their API exists.
 
 ## Shape
 
+- `ShiftDetailsPanel/ReassignRosterShiftDialog.tsx` — reassigns to active API members of the shift's exact branch
+  and department. Sample shifts without ids require a unit selection first. Uses the existing profile list under
+  `member_profile:read`, reads every branch-filtered page and matches department ids locally; no sample people are
+  offered. Selected members absent from the preview roster are added to their department group in memory.
+
+- `ShiftDetailsPanel/ApiRosterShiftDialog.tsx` — the roster preview's Edit shift choices: active branches and
+  departments from the workspace under `shift:read`, then active job titles from the department's
+  `shift-role-options` API. Location is a branch; role choices are department-specific. Changing the unit clears
+  the role, and saving requires a valid API choice. The preview retains the selected ids and labels in memory;
+  it does not persist roster assignments to the API.
+
+- `schedules/useSchedules.ts` — the overview's permission-aware company-wide history. Reads every page of
+  `GET /api/v1/companies/{companyId}/schedules`, with API names, dates, departments and statuses; search covers
+  every returned row. View opens the saved draft or frozen schedule in the existing steps.
+
 - `paths.ts` — the department, shift, constraint and schedule paths every scheduling request is built from, and the
   query root (`["scheduling", companyId, …]`).
 - `departmentUnit.ts` — the Branch and Department a route names, for a Department the workspace offers under the
