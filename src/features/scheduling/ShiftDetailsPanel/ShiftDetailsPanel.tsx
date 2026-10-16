@@ -17,15 +17,16 @@ export type ShiftDetailsPanelProps = {
 	editable: boolean;
 	onClose: () => void;
 	onDelete: (shift: RosterShift) => void;
+	onEdit: () => void;
+	onReassign: () => void;
+	onDuplicate: () => void;
 	className?: string;
 };
 
 const key = "scheduling.detail.shiftDetails";
 
 /**
- * One shift beside the roster: who, when, where, and any notes. Editing,
- * reassigning and duplicating wait for the scheduling API, so only Delete
- * works for now.
+ * One shift beside the roster, with actions supplied by its owning screen.
  */
 export const ShiftDetailsPanel = ({
 	staffName,
@@ -33,6 +34,9 @@ export const ShiftDetailsPanel = ({
 	editable,
 	onClose,
 	onDelete,
+	onEdit,
+	onReassign,
+	onDuplicate,
 	className,
 }: ShiftDetailsPanelProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
@@ -113,13 +117,13 @@ export const ShiftDetailsPanel = ({
 			</div>
 			{editable && (
 				<div className="mt-6 flex flex-col gap-4">
-					<Button disabled size="sm" variant="secondary">
+					<Button size="sm" variant="secondary" onClick={onEdit}>
 						{t(`${key}.edit`)}
 					</Button>
-					<Button disabled size="sm" variant="secondary">
+					<Button size="sm" variant="secondary" onClick={onReassign}>
 						{t(`${key}.reassign`)}
 					</Button>
-					<Button disabled size="sm" variant="secondary">
+					<Button size="sm" variant="secondary" onClick={onDuplicate}>
 						{t(`${key}.duplicate`)}
 					</Button>
 					<Button

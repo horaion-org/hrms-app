@@ -21,6 +21,9 @@ import {
 	type ScheduleDetail as Detail,
 } from "@/features/scheduling/schedules";
 import { ShiftDetailsPanel } from "@/features/scheduling/ShiftDetailsPanel";
+import type { RosterShiftAction } from "@/features/scheduling/ShiftDetailsPanel/RosterShiftDialog";
+import { ApiRosterShiftDialog } from "@/features/scheduling/ShiftDetailsPanel/ApiRosterShiftDialog";
+import { ReassignRosterShiftDialog } from "@/features/scheduling/ShiftDetailsPanel/ReassignRosterShiftDialog";
 
 const route = getRouteApi("/_authenticated/_app/scheduling_/$scheduleId");
 
@@ -63,15 +66,19 @@ const Schedule = ({ initial }: { initial: Detail }): FunctionComponent => {
 	const [schedule, setSchedule] = useState(initial);
 	const [week, setWeek] = useState(() => weekForToday(initial));
 	const [selected, setSelected] = useState<{
+		staffId: string;
 		staffName: string;
 		shift: RosterShift;
 	}>();
+	const [action, setAction] = useState<RosterShiftAction>();
 	const [toast, setToast] = useState<{ id: number; message: string }>();
 	const notify = (message: string): void => {
 		setToast((previous) => ({ id: (previous?.id ?? 0) + 1, message }));
 	};
 	const editable = schedule.status === "PENDING";
 	const numbers = new Intl.NumberFormat(language, { maximumFractionDigits: 1 });
+	const ActionDialog =
+		action === "reassign" ? ReassignRosterShiftDialog : ApiRosterShiftDialog;
 
 	return (
 		<>
@@ -158,7 +165,11 @@ const Schedule = ({ initial }: { initial: Detail }): FunctionComponent => {
 					groups={schedule.groups}
 					selectedShiftId={selected?.shift.shiftId}
 					onShiftSelect={(person, shift) => {
-						setSelected({ staffName: person.name, shift });
+						setSelected({
+							staffId: person.staffId,
+							staffName: person.name,
+							shift,
+						});
 					}}
 				/>
 				{selected && (
@@ -174,9 +185,99 @@ const Schedule = ({ initial }: { initial: Detail }): FunctionComponent => {
 							setSelected(undefined);
 							notify(t(`${key}.shiftDeleted`));
 						}}
+						onDuplicate={() => {
+							setAction("duplicate");
+						}}
+						onEdit={() => {
+							setAction("edit");
+						}}
+						onReassign={() => {
+							setAction("reassign");
+						}}
 					/>
 				)}
 			</div>
+			{action && selected && (
+				<ActionDialog
+					action={action}
+					period={schedule.period}
+					shift={selected.shift}
+					staff={schedule.groups.flatMap((group) => group.staff)}
+					staffId={selected.staffId}
+					onApply={(staffId, changed, apiPerson) => {
+						const shift =
+							action === "duplicate"
+								? { ...changed, shiftId: crypto.randomUUID() }
+								: changed;
+						setSchedule((current) => {
+							const base =
+								action === "duplicate"
+									? current
+									: withoutShift(current, selected.shift.shiftId);
+							if (
+								apiPerson &&
+								!base.groups.some((group) =>
+									group.staff.some((person) => person.staffId === staffId)
+								)
+							) {
+								const groupId = changed.departmentId ?? "api-staff";
+								const person = { ...apiPerson, shifts: [shift] };
+								const existing = base.groups.some(
+									(group) => group.groupId === groupId
+								);
+								return {
+									...base,
+									groups: existing
+										? base.groups.map((group) =>
+												group.groupId === groupId
+													? {
+															...group,
+															headcount: group.headcount + 1,
+															staff: [...group.staff, person],
+														}
+													: group
+											)
+										: [
+												...base.groups,
+												{
+													groupId,
+													name:
+														apiPerson.departmentName ?? schedule.departmentName,
+													headcount: 1,
+													staff: [person],
+												},
+											],
+								};
+							}
+							return {
+								...base,
+								groups: base.groups.map((group) => ({
+									...group,
+									staff: group.staff.map((person) =>
+										person.staffId === staffId
+											? { ...person, shifts: [...person.shifts, shift] }
+											: person
+									),
+								})),
+							};
+						});
+						const person = schedule.groups
+							.flatMap((group) => group.staff)
+							.find((item) => item.staffId === staffId);
+						setSelected({
+							staffId,
+							staffName: apiPerson?.name ?? person?.name ?? selected.staffName,
+							shift,
+						});
+						setWeek(mondayOf(shift.date));
+						notify(t(`scheduling.detail.shiftAction.done.${action}`));
+						setAction(undefined);
+					}}
+					onClose={() => {
+						setAction(undefined);
+					}}
+				/>
+			)}
 			{toast && (
 				<Toast
 					key={toast.id}
@@ -193,8 +294,8 @@ const Schedule = ({ initial }: { initial: Detail }): FunctionComponent => {
 
 /**
  * One schedule's roster, a week at a time, with a shift's details beside it.
- * There is no scheduling API yet, so it shows example data; publishing and
- * deleting a shift change only this page.
+ * Roster assignments remain example data; editing, publishing and deleting
+ * change only this page. Edit choices use workspace units and API shift roles.
  */
 export const ScheduleDetailPage = (): FunctionComponent => {
 	const { t } = useTranslation();

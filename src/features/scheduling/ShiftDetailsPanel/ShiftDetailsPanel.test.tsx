@@ -34,6 +34,9 @@ describe("ShiftDetailsPanel", () => {
 				staffName="John Lim"
 				onClose={vi.fn()}
 				onDelete={vi.fn()}
+				onDuplicate={vi.fn()}
+				onEdit={vi.fn()}
+				onReassign={vi.fn()}
 			/>
 		);
 
@@ -45,13 +48,16 @@ describe("ShiftDetailsPanel", () => {
 		expect(panel).toHaveTextContent("Swapped with Wednesday.");
 		expect(
 			within(panel).getByRole("button", { name: "Edit Shift" })
-		).toBeDisabled();
+		).toBeEnabled();
 	});
 
 	it("given_deleteAndClose_when_clicked_then_reportsThem", async () => {
 		const user = userEvent.setup();
 		const onDelete = vi.fn();
 		const onClose = vi.fn();
+		const onEdit = vi.fn();
+		const onReassign = vi.fn();
+		const onDuplicate = vi.fn();
 		render(
 			<ShiftDetailsPanel
 				editable
@@ -59,9 +65,18 @@ describe("ShiftDetailsPanel", () => {
 				staffName="John Lim"
 				onClose={onClose}
 				onDelete={onDelete}
+				onDuplicate={onDuplicate}
+				onEdit={onEdit}
+				onReassign={onReassign}
 			/>
 		);
 
+		await user.click(screen.getByRole("button", { name: "Edit Shift" }));
+		await user.click(screen.getByRole("button", { name: "Reassign Shift" }));
+		await user.click(screen.getByRole("button", { name: "Duplicate Shift" }));
+		expect(onEdit).toHaveBeenCalledOnce();
+		expect(onReassign).toHaveBeenCalledOnce();
+		expect(onDuplicate).toHaveBeenCalledOnce();
 		await user.click(screen.getByRole("button", { name: "Delete Shift" }));
 		await user.click(
 			screen.getByRole("button", { name: "Close shift details" })
@@ -79,6 +94,9 @@ describe("ShiftDetailsPanel", () => {
 				staffName="John Lim"
 				onClose={vi.fn()}
 				onDelete={vi.fn()}
+				onDuplicate={vi.fn()}
+				onEdit={vi.fn()}
+				onReassign={vi.fn()}
 			/>
 		);
 
