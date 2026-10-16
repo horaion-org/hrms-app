@@ -12,6 +12,8 @@ import { departmentChoices } from "@/features/workspace/unitChoices";
 
 export type DepartmentSelectorProps = {
 	companyId: string;
+	/** Optionally restrict choices to the selected Branch. */
+	branchId?: string;
 	/** A Department is offered when any of these is effective at it (its node already carries grants made above it). */
 	keys: ReadonlyArray<PermissionKey>;
 	/** The chosen Department's id; empty or undefined for none. */
@@ -49,6 +51,7 @@ export type DepartmentSelectorProps = {
  */
 export const DepartmentSelector = ({
 	companyId,
+	branchId,
 	keys,
 	value,
 	onChange,
@@ -60,15 +63,17 @@ export const DepartmentSelector = ({
 	const { t } = useTranslation();
 	const { data } = useQuery({ ...workspaceQuery, retry });
 	const options = data
-		? departmentChoices(data, companyId, keys, { activeOnly }).map(
-				(choice) => ({
+		? departmentChoices(data, companyId, keys, { activeOnly })
+				.filter(
+					(choice) => branchId === undefined || choice.branchId === branchId
+				)
+				.map((choice) => ({
 					value: choice.departmentId,
 					label: placeOf(
 						{ branchName: choice.branchName, departmentName: choice.name },
 						t
 					),
-				})
-			)
+				}))
 		: [];
 	return (
 		<Select

@@ -73,7 +73,8 @@ const workspace = (...args: Parameters<typeof grantedWorkspace>): Workspace =>
 const renderWith = (
 	data?: Workspace,
 	value?: string,
-	activeOnly = false
+	activeOnly = false,
+	branchId?: string
 ): { onChange: ReturnType<typeof vi.fn> } => {
 	const client = new QueryClient({
 		defaultOptions: { queries: { retry: false } },
@@ -90,6 +91,7 @@ const renderWith = (
 				<DepartmentSelector
 					activeOnly={activeOnly}
 					aria-label="Department"
+					branchId={branchId}
 					companyId="c-1"
 					keys={[CREATE]}
 					placeholder="Select department"
@@ -110,6 +112,15 @@ const optionLabels = async (
 };
 
 describe("DepartmentSelector", () => {
+	it("restricts departments to the selected branch", async () => {
+		const user = userEvent.setup();
+		renderWith(workspace([], [CREATE]), undefined, true, "b-1");
+		expect(await optionLabels(user)).toEqual([
+			"Orchard › Bar",
+			"Orchard › Kitchen",
+		]);
+	});
+
 	it("offers the Departments where the key is held, at the Department or its Branch", async () => {
 		const user = userEvent.setup();
 		renderWith(workspace(["d-2", "b-2"]));

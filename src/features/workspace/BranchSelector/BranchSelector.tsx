@@ -26,6 +26,8 @@ export type BranchSelectorProps = {
 	/** Offers only ACTIVE Branches. */
 	activeOnly?: boolean;
 	className?: string;
+	/** Context-specific field label, e.g. a shift's location. */
+	label?: string;
 };
 
 /**
@@ -53,6 +55,7 @@ export const BranchSelector = ({
 	allowAll = false,
 	activeOnly = false,
 	className,
+	label,
 }: BranchSelectorProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const id = useId();
@@ -124,7 +127,7 @@ export const BranchSelector = ({
 			<FormRow
 				fieldWidth="sm:w-44"
 				htmlFor={branchId}
-				label={t("workspace.branchSelector.branch")}
+				label={label ?? t("workspace.branchSelector.branch")}
 			>
 				<Select
 					aria-labelledby={formRowIds(branchId).labelId}
