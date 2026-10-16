@@ -92,7 +92,7 @@ const meta = {
 							name: "Supervisor",
 							protectedRole: false,
 							status: "ACTIVE",
-							permissions: ["branch:read"],
+							permissions: ["member_profile:read"],
 							holderCount: 0,
 						},
 					],
@@ -212,7 +212,33 @@ export const Editing: Story = {
 			employeeCode: "EMP-10392",
 			emailEditable: false,
 			roleEditable: true,
+			rolePlace: { branchId: "b-1", departmentId: "d-1" },
 			otherRoles: ["Admin"],
+			header: (actions) => (
+				<div className="flex justify-end gap-3">{actions}</div>
+			),
+		},
+	},
+};
+
+export const BranchRoleWithoutDepartment: Story = {
+	parameters: Editing.parameters,
+	args: {
+		title: undefined,
+		description: undefined,
+		initial: {
+			...EMPTY_PROFILE,
+			displayName: "Kent Chua",
+			email: "kent.chua@company.com",
+			accessRoleId: "r-1",
+			status: "ACTIVE",
+		},
+		edit: {
+			employeeCode: "EMP-10392",
+			emailEditable: false,
+			roleEditable: true,
+			rolePlace: { branchId: "b-1" },
+			otherRoles: [],
 			header: (actions) => (
 				<div className="flex justify-end gap-3">{actions}</div>
 			),

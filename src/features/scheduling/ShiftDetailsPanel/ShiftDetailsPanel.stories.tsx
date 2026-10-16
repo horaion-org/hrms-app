@@ -22,6 +22,9 @@ const meta = {
 		editable: true,
 		onClose: fn(),
 		onDelete: fn(),
+		onEdit: fn(),
+		onReassign: fn(),
+		onDuplicate: fn(),
 	},
 } satisfies Meta<typeof ShiftDetailsPanel>;
 
