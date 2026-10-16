@@ -71,6 +71,35 @@ const scheduleSchema = z.object({
 /** A schedule as the API answers it; its shifts and constraints are read on their own. */
 export type Schedule = z.infer<typeof scheduleSchema>;
 
+const schedulePageSchema = z.object({
+	content: z.array(scheduleSchema),
+	page: z.object({ hasNext: z.boolean() }),
+});
+
+/** Read every page so history and its search include all accessible schedules. */
+export const fetchSchedules = async (
+	companyId: string,
+	signal?: AbortSignal
+): Promise<Array<Schedule>> => {
+	const schedules: Array<Schedule> = [];
+	for (let page = 0; ; page += 1) {
+		const search = new URLSearchParams({
+			page: String(page),
+			size: "100",
+			sort: "updatedAt,desc",
+		});
+		// The next page is requested only when this page reports one exists.
+		// eslint-disable-next-line no-await-in-loop
+		const result = await apiRequest(
+			`/api/v1/companies/${encodeURIComponent(companyId)}/schedules?${search.toString()}`,
+			schedulePageSchema,
+			{ signal }
+		);
+		schedules.push(...result.content);
+		if (!result.page.hasNext) return schedules;
+	}
+};
+
 /** What creating or replacing a schedule sends: its setup and the ticked live shifts and constraints. */
 export type ScheduleBody = {
 	name: string;

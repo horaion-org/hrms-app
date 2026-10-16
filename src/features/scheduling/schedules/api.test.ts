@@ -6,6 +6,7 @@ import { authTestI18n } from "@/features/auth/testingI18n";
 import {
 	createSchedule,
 	fetchSchedule,
+	fetchSchedules,
 	fetchScheduleConstraints,
 	fetchScheduleShifts,
 	requestGeneration,
@@ -56,6 +57,43 @@ afterEach(() => {
 });
 
 describe("schedules client", () => {
+	it("reads all company schedule pages, including drafts and generation requests", async () => {
+		const draft = scheduleFixture();
+		const generated = generatedScheduleFixture({ scheduleId: "s-2" });
+		const calls = stubApi({
+			"GET /api/v1/companies/c-1/schedules": [
+				{
+					status: 200,
+					body: envelope({ content: [draft], page: { hasNext: true } }),
+				},
+				{
+					status: 200,
+					body: envelope({ content: [generated], page: { hasNext: false } }),
+				},
+			],
+		});
+		await expect(fetchSchedules("c-1")).resolves.toEqual([draft, generated]);
+		expect(
+			calls.map((call) => new URLSearchParams(call.search).get("page"))
+		).toEqual(["0", "1"]);
+	});
+
+	it("does not return partial history when a later page fails", async () => {
+		stubApi({
+			"GET /api/v1/companies/c-1/schedules": [
+				{
+					status: 200,
+					body: envelope({
+						content: [scheduleFixture()],
+						page: { hasNext: true },
+					}),
+				},
+				{ status: 500 },
+			],
+		});
+		await expect(fetchSchedules("c-1")).rejects.toThrow();
+	});
+
 	it("creates a draft for a department and parses it", async () => {
 		const schedule = scheduleFixture();
 		const calls = stubApi({

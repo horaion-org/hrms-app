@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { Callout } from "@/components/ui/Callout";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { PlusIcon, ViewIcon } from "@/components/ui/Icon";
 import { Toast } from "@/components/ui/Toast";
@@ -12,28 +11,24 @@ import { schedulingNoticeFrom } from "@/features/scheduling/schedulingNotice";
 import { Can } from "@/features/workspace/Can";
 import { ListToolbar } from "@/features/organisation/ListToolbar";
 import { formatPeriod } from "@/features/scheduling/periods";
+import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
+import { useSchedules } from "@/features/scheduling/schedules/useSchedules";
+import type { Schedule } from "@/features/scheduling/schedules/api";
 import { ScheduleCard } from "@/features/scheduling/ScheduleCard";
-import {
-	exampleSchedules,
-	scheduleStatusTones,
-	type ScheduleRecord,
-} from "@/features/scheduling/schedules";
+import { exampleSchedules } from "@/features/scheduling/schedules";
 
 const key = "scheduling.overview";
 
-const matches = (schedule: ScheduleRecord, search: string): boolean => {
+const matches = (schedule: Schedule, search: string): boolean => {
 	const text = search.trim().toLocaleLowerCase();
 	return (
 		text === "" ||
-		schedule.code.toLocaleLowerCase().includes(text) ||
+		schedule.name.toLocaleLowerCase().includes(text) ||
 		schedule.departmentName.toLocaleLowerCase().includes(text)
 	);
 };
 
-/**
- * Each department's current schedule and the schedules before them. There is
- * no overview API yet, so both show example data, labelled as such.
- */
+/** Dashboard cards and history from the company's accessible schedules. */
 export const Scheduling = (): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const notice = schedulingNoticeFrom(
@@ -41,15 +36,16 @@ export const Scheduling = (): FunctionComponent => {
 	);
 	const [dismissed, setDismissed] = useState(false);
 	const language = i18n.resolvedLanguage ?? i18n.language;
-	const [schedules] = useState(() => exampleSchedules(new Date()));
+	const list = useSchedules(useCurrentCompanyId());
 	const [search, setSearch] = useState("");
-	const current = schedules.current.filter((schedule) =>
-		matches(schedule, search)
+	const [originalCard] = useState(
+		() => exampleSchedules(new Date()).current[0]
 	);
-	const history = schedules.history.filter((schedule) =>
-		matches(schedule, search)
-	);
-	const columns = useMemo((): Array<DataTableColumn<ScheduleRecord>> => {
+	const history =
+		list.status === "ready"
+			? list.schedules.filter((schedule) => matches(schedule, search))
+			: [];
+	const columns = useMemo((): Array<DataTableColumn<Schedule>> => {
 		const createdAt = new Intl.DateTimeFormat(language, {
 			day: "2-digit",
 			month: "short",
@@ -62,14 +58,18 @@ export const Scheduling = (): FunctionComponent => {
 			{
 				id: "name",
 				header: t(`${key}.history.name`),
-				cell: (schedule) => schedule.code,
+				cell: (schedule) => schedule.name,
 				cellClassName: "font-semibold",
 			},
 			{
 				id: "date",
 				header: t(`${key}.history.date`),
-				cell: (schedule) => formatPeriod(schedule.period, language),
-				sortValue: (schedule) => schedule.period.start,
+				cell: (schedule) =>
+					formatPeriod(
+						{ start: schedule.periodStart, end: schedule.periodEnd },
+						language
+					),
+				sortValue: (schedule) => schedule.periodStart,
 			},
 			{
 				id: "createdAt",
@@ -85,10 +85,7 @@ export const Scheduling = (): FunctionComponent => {
 				id: "status",
 				header: t(`${key}.history.status`),
 				cell: (schedule) => (
-					<Badge
-						className="uppercase"
-						tone={scheduleStatusTones[schedule.status]}
-					>
+					<Badge tone={schedule.status === "DRAFT" ? "neutral" : "warning"}>
 						{t(`${key}.statuses.${schedule.status}`)}
 					</Badge>
 				),
@@ -106,10 +103,14 @@ export const Scheduling = (): FunctionComponent => {
 				cell: (schedule) => (
 					<div className="flex justify-center">
 						<Button
-							aria-label={t(`${key}.viewNamed`, { code: schedule.code })}
-							params={{ scheduleId: schedule.scheduleId }}
-							to="/scheduling/$scheduleId"
+							aria-label={t(`${key}.viewNamed`, { code: schedule.name })}
+							to="/scheduling/new"
 							variant="icon"
+							search={{
+								step: "setup",
+								scheduleId: schedule.scheduleId,
+								departmentId: schedule.departmentId,
+							}}
 						>
 							<ViewIcon />
 						</Button>
@@ -118,6 +119,14 @@ export const Scheduling = (): FunctionComponent => {
 			},
 		];
 	}, [t, language]);
+	const periods = new Map<string, Array<Schedule>>();
+	for (const schedule of history) {
+		const periodKey = `${schedule.periodStart}/${schedule.periodEnd}`;
+		const group = periods.get(periodKey) ?? [];
+		group.push(schedule);
+		periods.set(periodKey, group);
+	}
+	const groups = [...periods.entries()].sort(([a], [b]) => b.localeCompare(a));
 
 	return (
 		<>
@@ -125,7 +134,6 @@ export const Scheduling = (): FunctionComponent => {
 				{t(`${key}.title`)}
 			</h1>
 			<p className="mt-3 text-sm text-neutral-800">{t(`${key}.subtitle`)}</p>
-			<Callout className="mt-6">{t(`${key}.example`)}</Callout>
 			<ListToolbar
 				className="mt-10"
 				search={search}
@@ -139,15 +147,62 @@ export const Scheduling = (): FunctionComponent => {
 				}
 				onSearchChange={setSearch}
 			/>
-			{current.length > 0 ? (
-				<div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-					{current.map((schedule) => (
-						<ScheduleCard key={schedule.scheduleId} schedule={schedule} />
-					))}
-				</div>
-			) : (
-				<p className="mt-12 text-sm text-neutral-700">{t(`${key}.noMatch`)}</p>
+			{originalCard && (
+				<section aria-labelledby="original-card-preview" className="mt-12">
+					<h2
+						className="text-2xl font-semibold text-neutral-900"
+						id="original-card-preview"
+					>
+						{t(`${key}.originalCard`)}
+					</h2>
+					<p className="mt-2 text-sm text-neutral-700">
+						{t(`${key}.originalCardDescription`)}
+					</p>
+					<div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+						<ScheduleCard schedule={originalCard} />
+					</div>
+				</section>
 			)}
+			{groups.map(([periodKey, schedules]) => (
+				<section
+					key={periodKey}
+					aria-labelledby={`period-${periodKey}`}
+					className="mt-12"
+				>
+					<h2
+						className="text-2xl font-semibold text-neutral-900"
+						id={`period-${periodKey}`}
+					>
+						{formatPeriod(
+							{
+								start: schedules[0]!.periodStart,
+								end: schedules[0]!.periodEnd,
+							},
+							language
+						)}
+					</h2>
+					<div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+						{schedules.map((schedule) => (
+							<ScheduleCard
+								key={schedule.scheduleId}
+								details={schedule}
+								schedule={{
+									scheduleId: schedule.scheduleId,
+									departmentId: schedule.departmentId,
+									departmentName: schedule.departmentName,
+									code: schedule.name,
+									period: {
+										start: schedule.periodStart,
+										end: schedule.periodEnd,
+									},
+									status: schedule.status,
+									createdAt: schedule.createdAt,
+								}}
+							/>
+						))}
+					</div>
+				</section>
+			))}
 			<section aria-labelledby="schedule-history" className="mt-16">
 				<h2
 					className="text-2xl font-semibold text-neutral-900"
@@ -158,14 +213,23 @@ export const Scheduling = (): FunctionComponent => {
 				<p className="mt-2 text-sm text-neutral-800">
 					{t(`${key}.history.description`)}
 				</p>
-				<DataTable
-					className="mt-8"
-					columns={columns}
-					data={history}
-					emptyState={t(`${key}.noMatch`)}
-					getRowId={(schedule) => schedule.scheduleId}
-					label={t(`${key}.history.title`)}
-				/>
+				{list.status !== "ready" ? (
+					<p
+						className="mt-8 text-sm text-neutral-700"
+						role={list.status === "error" ? "alert" : "status"}
+					>
+						{t(`${key}.${list.status}`)}
+					</p>
+				) : (
+					<DataTable
+						className="mt-8"
+						columns={columns}
+						data={history}
+						emptyState={t(`${key}.${search.trim() ? "noMatch" : "empty"}`)}
+						getRowId={(schedule) => schedule.scheduleId}
+						label={t(`${key}.history.title`)}
+					/>
+				)}
 			</section>
 			{notice && !dismissed && (
 				<Toast

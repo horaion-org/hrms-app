@@ -10,6 +10,8 @@ import type { ProgressBarTone } from "@/components/ui/ProgressBar";
 import type { SchedulePeriod } from "@/features/scheduling/periods";
 
 export const SCHEDULE_STATUSES = [
+	"DRAFT",
+	"GENERATION_REQUESTED",
 	"PROCESSING",
 	"PENDING",
 	"APPROVED",
@@ -21,6 +23,8 @@ export const SCHEDULE_STATUSES = [
 export type ScheduleStatus = (typeof SCHEDULE_STATUSES)[number];
 
 export const scheduleStatusTones: Record<ScheduleStatus, BadgeTone> = {
+	DRAFT: "neutral",
+	GENERATION_REQUESTED: "warning",
 	PROCESSING: "neutral",
 	PENDING: "warning",
 	APPROVED: "success",
@@ -38,6 +42,7 @@ export const coverageTone = (coverage: number): ProgressBarTone => {
 /** One department's schedule for a period. */
 export type ScheduleRecord = {
 	scheduleId: string;
+	departmentId?: string;
 	/** e.g. "FO-260413": the department's prefix and the period's first day. */
 	code: string;
 	departmentName: string;
@@ -56,6 +61,9 @@ export type RosterShiftKind = "full" | "half" | "open";
 
 export type RosterShift = {
 	shiftId: string;
+	branchId?: string;
+	departmentId?: string;
+	jobTitleId?: string;
 	/** ISO date. */
 	date: string;
 	/** "HH:mm" */
@@ -70,6 +78,7 @@ export type RosterShift = {
 
 export type RosterStaff = {
 	staffId: string;
+	departmentName?: string;
 	name: string;
 	jobTitle: string;
 	/** At most one shift a day; a day without one is a day off. */
