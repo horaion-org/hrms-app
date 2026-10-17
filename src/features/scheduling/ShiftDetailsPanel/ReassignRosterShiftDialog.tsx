@@ -13,8 +13,10 @@ import { workspaceQuery } from "@/features/workspace/api";
 import { DepartmentSelector } from "@/features/workspace/DepartmentSelector";
 import { departmentChoices } from "@/features/workspace/unitChoices";
 import { retry } from "@/features/workspace/retry";
+import { useAccess } from "@/features/workspace/useAccess";
+import { departmentScope } from "@/features/workspace/scopes";
 
-const KEYS = ["member_profile:read"] as const;
+const KEYS = ["shift:update"] as const;
 const key = "scheduling.detail.shiftAction";
 
 export const ReassignRosterShiftDialog = (
@@ -23,6 +25,7 @@ export const ReassignRosterShiftDialog = (
 	const { t } = useTranslation();
 	const id = useId();
 	const companyId = useCurrentCompanyId();
+	const access = useAccess();
 	const [departmentId, setDepartmentId] = useState(props.shift.departmentId);
 	const { data: workspace, isError } = useQuery({ ...workspaceQuery, retry });
 	const choices = workspace
@@ -31,6 +34,7 @@ export const ReassignRosterShiftDialog = (
 	const unit = choices.find(
 		(item) =>
 			item.departmentId === departmentId &&
+			access.can("member_profile:read", departmentScope(item.departmentId)) &&
 			(!props.shift.branchId || item.branchId === props.shift.branchId)
 	);
 	const list = useReassignmentStaff(companyId, unit);

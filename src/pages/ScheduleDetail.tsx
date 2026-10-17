@@ -5,7 +5,14 @@ import type { FunctionComponent } from "@/common/types";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
-import { ArrowLeftIcon, EditIcon, PublishIcon } from "@/components/ui/Icon";
+import { ArrowLeftIcon } from "@/components/ui/Icon";
+import { useQuery } from "@tanstack/react-query";
+import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
+import { DepartmentSelector } from "@/features/workspace/DepartmentSelector";
+import { workspaceQuery } from "@/features/workspace/api";
+import { departmentChoices } from "@/features/workspace/unitChoices";
+import { useAccess } from "@/features/workspace/useAccess";
+import { rosterPreviewAccess } from "@/features/scheduling/ShiftDetailsPanel/rosterPreviewAccess";
 import { StatCard } from "@/components/ui/StatCard";
 import { Toast } from "@/components/ui/Toast";
 import { formatPeriod } from "@/features/scheduling/periods";
@@ -71,6 +78,28 @@ const Schedule = ({ initial }: { initial: Detail }): FunctionComponent => {
 		shift: RosterShift;
 	}>();
 	const [action, setAction] = useState<RosterShiftAction>();
+	const companyId = useCurrentCompanyId();
+	const access = useAccess();
+	const { data: workspace } = useQuery(workspaceQuery);
+	const [previewDepartmentId, setPreviewDepartmentId] = useState("");
+	const previewUnit = workspace
+		? departmentChoices(workspace, companyId, ["shift:read"], {
+				activeOnly: true,
+			}).find((unit) => unit.departmentId === previewDepartmentId)
+		: undefined;
+	const selectedShift = selected
+		? {
+				...selected.shift,
+				departmentId: selected.shift.departmentId ?? previewUnit?.departmentId,
+				branchId: selected.shift.branchId ?? previewUnit?.branchId,
+			}
+		: undefined;
+	const permissions = rosterPreviewAccess(
+		access,
+		selectedShift?.departmentId,
+		schedule.status === "PENDING"
+	);
+	if (action && !permissions[action]) setAction(undefined);
 	const [toast, setToast] = useState<{ id: number; message: string }>();
 	const notify = (message: string): void => {
 		setToast((previous) => ({ id: (previous?.id ?? 0) + 1, message }));
@@ -98,31 +127,26 @@ const Schedule = ({ initial }: { initial: Detail }): FunctionComponent => {
 						</Badge>
 					</p>
 				</div>
-				{editable && (
-					<div className="flex flex-wrap gap-4">
-						<Button
-							disabled
-							leadingIcon={<EditIcon />}
-							size="sm"
-							variant="secondary"
-						>
-							{t(`${key}.edit`)}
-						</Button>
-						<Button
-							leadingIcon={<PublishIcon />}
-							size="sm"
-							onClick={() => {
-								setSchedule((current) => ({ ...current, status: "APPROVED" }));
-								setSelected(undefined);
-								notify(t(`${key}.published`));
-							}}
-						>
-							{t(`${key}.publish`)}
-						</Button>
-					</div>
-				)}
 			</div>
 			<Callout className="mt-6">{t("scheduling.overview.example")}</Callout>
+			<div className="mt-6 max-w-lg space-y-2">
+				<p className="text-sm text-neutral-700">
+					{t(`${key}.shiftAction.permissionScopeHelp`)}
+				</p>
+				<DepartmentSelector
+					activeOnly
+					aria-label={t(`${key}.shiftAction.permissionScope`)}
+					companyId={companyId}
+					keys={["shift:read"]}
+					placeholder={t(`${key}.shiftAction.permissionScope`)}
+					value={previewUnit?.departmentId ?? ""}
+					onChange={(id) => {
+						setPreviewDepartmentId(id);
+						setSelected(undefined);
+						setAction(undefined);
+					}}
+				/>
+			</div>
 			<div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
 				<StatCard
 					caption={t(`${key}.coverageCaption`)}
@@ -180,31 +204,57 @@ const Schedule = ({ initial }: { initial: Detail }): FunctionComponent => {
 						onClose={() => {
 							setSelected(undefined);
 						}}
-						onDelete={(shift) => {
-							setSchedule((current) => withoutShift(current, shift.shiftId));
-							setSelected(undefined);
-							notify(t(`${key}.shiftDeleted`));
-						}}
-						onDuplicate={() => {
-							setAction("duplicate");
-						}}
-						onEdit={() => {
-							setAction("edit");
-						}}
-						onReassign={() => {
-							setAction("reassign");
-						}}
+						onDelete={
+							permissions.delete
+								? (shift): void => {
+										if (!permissions.delete) return;
+										setSchedule((current) =>
+											withoutShift(current, shift.shiftId)
+										);
+										setSelected(undefined);
+										notify(t(`${key}.shiftDeleted`));
+									}
+								: undefined
+						}
+						onDuplicate={
+							permissions.duplicate
+								? (): void => {
+										setAction("duplicate");
+									}
+								: undefined
+						}
+						onEdit={
+							permissions.edit
+								? (): void => {
+										setAction("edit");
+									}
+								: undefined
+						}
+						onReassign={
+							permissions.reassign
+								? (): void => {
+										setAction("reassign");
+									}
+								: undefined
+						}
 					/>
 				)}
 			</div>
-			{action && selected && (
+			{action && selected && selectedShift && permissions[action] && (
 				<ActionDialog
 					action={action}
 					period={schedule.period}
-					shift={selected.shift}
+					shift={selectedShift}
 					staff={schedule.groups.flatMap((group) => group.staff)}
 					staffId={selected.staffId}
 					onApply={(staffId, changed, apiPerson) => {
+						if (
+							!permissions[action] ||
+							!rosterPreviewAccess(access, changed.departmentId, editable)[
+								action
+							]
+						)
+							return;
 						const shift =
 							action === "duplicate"
 								? { ...changed, shiftId: crypto.randomUUID() }
@@ -294,11 +344,12 @@ const Schedule = ({ initial }: { initial: Detail }): FunctionComponent => {
 
 /**
  * One schedule's roster, a week at a time, with a shift's details beside it.
- * Roster assignments remain example data; editing, publishing and deleting
+ * Roster assignments remain example data; editing and deleting
  * change only this page. Edit choices use workspace units and API shift roles.
  */
 export const ScheduleDetailPage = (): FunctionComponent => {
 	const { t } = useTranslation();
+	const companyId = useCurrentCompanyId();
 	const { scheduleId } = route.useParams();
 	const found = useMemo(
 		() => exampleScheduleDetail(scheduleId, new Date()),
@@ -313,5 +364,5 @@ export const ScheduleDetailPage = (): FunctionComponent => {
 				</p>
 			</>
 		);
-	return <Schedule key={scheduleId} initial={found} />;
+	return <Schedule key={`${companyId}/${scheduleId}`} initial={found} />;
 };

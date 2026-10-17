@@ -16,7 +16,6 @@ import { DepartmentSelector } from "@/features/workspace/DepartmentSelector";
 import { departmentChoices } from "@/features/workspace/unitChoices";
 import { retry } from "@/features/workspace/retry";
 
-const KEYS = ["shift:read"] as const;
 const key = "scheduling.detail.shiftAction";
 
 /** Reference choices come from the API; the preview still applies changes in memory. */
@@ -26,12 +25,16 @@ export const ApiRosterShiftDialog = (
 	const { t } = useTranslation();
 	const id = useId();
 	const companyId = useCurrentCompanyId();
+	const keys =
+		props.action === "duplicate"
+			? (["shift:create"] as const)
+			: (["shift:update"] as const);
 	const { data: workspace, isError } = useQuery({ ...workspaceQuery, retry });
 	const [branchId, setBranchId] = useState(props.shift.branchId);
 	const [departmentId, setDepartmentId] = useState(props.shift.departmentId);
 	const [jobTitleId, setJobTitleId] = useState(props.shift.jobTitleId);
 	const departments = workspace
-		? departmentChoices(workspace, companyId, KEYS, { activeOnly: true })
+		? departmentChoices(workspace, companyId, keys, { activeOnly: true })
 		: [];
 	const department = departments.find(
 		(item) => item.departmentId === departmentId && item.branchId === branchId
@@ -73,7 +76,7 @@ export const ApiRosterShiftDialog = (
 							<BranchSelector
 								activeOnly
 								companyId={companyId}
-								keys={KEYS}
+								keys={keys}
 								label={t(`${key}.location`)}
 								value={branchId}
 								onChange={(value) => {
@@ -93,7 +96,7 @@ export const ApiRosterShiftDialog = (
 									branchId={branchId}
 									companyId={companyId}
 									disabled={!branchId}
-									keys={KEYS}
+									keys={keys}
 									placeholder={t(`${key}.choose`)}
 									value={department?.departmentId}
 									onChange={(value) => {

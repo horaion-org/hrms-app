@@ -16,10 +16,10 @@ export type ShiftDetailsPanelProps = {
 	/** Offers the shift's actions; a published schedule is read-only. */
 	editable: boolean;
 	onClose: () => void;
-	onDelete: (shift: RosterShift) => void;
-	onEdit: () => void;
-	onReassign: () => void;
-	onDuplicate: () => void;
+	onDelete?: (shift: RosterShift) => void;
+	onEdit?: () => void;
+	onReassign?: () => void;
+	onDuplicate?: () => void;
 	className?: string;
 };
 
@@ -117,26 +117,34 @@ export const ShiftDetailsPanel = ({
 			</div>
 			{editable && (
 				<div className="mt-6 flex flex-col gap-4">
-					<Button size="sm" variant="secondary" onClick={onEdit}>
-						{t(`${key}.edit`)}
-					</Button>
-					<Button size="sm" variant="secondary" onClick={onReassign}>
-						{t(`${key}.reassign`)}
-					</Button>
-					<Button size="sm" variant="secondary" onClick={onDuplicate}>
-						{t(`${key}.duplicate`)}
-					</Button>
-					<Button
-						className="border-error-200! bg-error-50! text-error-600!"
-						leadingIcon={<DeleteIcon />}
-						size="sm"
-						variant="secondary"
-						onClick={() => {
-							onDelete(shift);
-						}}
-					>
-						{t(`${key}.delete`)}
-					</Button>
+					{onEdit && (
+						<Button size="sm" variant="secondary" onClick={onEdit}>
+							{t(`${key}.edit`)}
+						</Button>
+					)}
+					{onReassign && (
+						<Button size="sm" variant="secondary" onClick={onReassign}>
+							{t(`${key}.reassign`)}
+						</Button>
+					)}
+					{onDuplicate && (
+						<Button size="sm" variant="secondary" onClick={onDuplicate}>
+							{t(`${key}.duplicate`)}
+						</Button>
+					)}
+					{onDelete && (
+						<Button
+							className="border-error-200! bg-error-50! text-error-600!"
+							leadingIcon={<DeleteIcon />}
+							size="sm"
+							variant="secondary"
+							onClick={() => {
+								onDelete(shift);
+							}}
+						>
+							{t(`${key}.delete`)}
+						</Button>
+					)}
 				</div>
 			)}
 		</aside>

@@ -50,7 +50,7 @@ const member = (
 });
 const open = (
 	knownUnit = true,
-	permissions = ["member_profile:read"]
+	permissions = ["member_profile:read", "shift:read", "shift:update"]
 ): ReturnType<typeof vi.fn> => {
 	client.setQueryData(
 		workspaceQuery.queryKey,

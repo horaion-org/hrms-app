@@ -31,7 +31,9 @@ afterEach(() => {
 	vi.unstubAllGlobals();
 });
 
-const open = (permissions = ["shift:read"]): ReturnType<typeof vi.fn> => {
+const open = (
+	permissions = ["shift:read", "shift:update"]
+): ReturnType<typeof vi.fn> => {
 	client.setQueryData(
 		workspaceQuery.queryKey,
 		schedulingWorkspace(permissions)
@@ -137,7 +139,7 @@ it("keeps saving disabled when the role API refuses access", async () => {
 
 it("offers no locations and makes no role requests without shift permission", () => {
 	const calls = stubApi({});
-	open([]);
+	open(["shift:read"]);
 	expect(
 		screen.getByText(
 			"No active locations are available with your shift permissions."

@@ -1702,6 +1702,8 @@
 			"shiftLabel": "{{name}}, {{day}} {{time}}",
 			"shiftDeleted": "Shift successfully deleted",
 			"shiftAction": {
+				"permissionScope": "Preview permission department",
+				"permissionScopeHelp": "Choose a department to preview the actions your workspace permissions allow. This roster remains example data.",
 				"apiChoices": "Choose an active branch for the location, then a department and one of its existing job titles for the role.",
 				"department": "Department",
 				"optionsError": "Locations could not be loaded. Please try again.",

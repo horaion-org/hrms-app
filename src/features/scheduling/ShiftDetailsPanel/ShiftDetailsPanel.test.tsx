@@ -26,6 +26,23 @@ const shift: RosterShift = {
 };
 
 describe("ShiftDetailsPanel", () => {
+	it("offers only the actions supplied by workspace gates", () => {
+		render(
+			<ShiftDetailsPanel
+				editable
+				shift={shift}
+				staffName="John Lim"
+				onClose={vi.fn()}
+				onEdit={vi.fn()}
+			/>
+		);
+		expect(screen.getByRole("button", { name: "Edit Shift" })).toBeEnabled();
+		expect(screen.queryByRole("button", { name: "Reassign Shift" })).toBeNull();
+		expect(
+			screen.queryByRole("button", { name: "Duplicate Shift" })
+		).toBeNull();
+		expect(screen.queryByRole("button", { name: "Delete Shift" })).toBeNull();
+	});
 	it("given_aShift_when_rendered_then_describesIt", () => {
 		render(
 			<ShiftDetailsPanel
