@@ -36,7 +36,7 @@ export const Card = ({
 			<div className="flex items-center justify-between gap-4">
 				<div className="flex min-w-0 items-center gap-2 text-neutral-900">
 					<Icon aria-hidden="true" className="size-5 shrink-0" />
-					<Heading className="min-w-0 text-base font-semibold" id={titleId}>
+					<Heading className="min-w-0 text-base font-bold" id={titleId}>
 						{title}
 					</Heading>
 				</div>

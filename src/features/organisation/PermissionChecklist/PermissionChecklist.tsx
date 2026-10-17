@@ -111,10 +111,10 @@ export const PermissionChecklist = ({
 					<div
 						key={group.resource}
 						aria-label={name}
-						className="flex flex-col gap-3 border-t border-neutral-400 p-4 first:border-t-0 hover:bg-neutral-50 md:flex-row md:items-start md:gap-6"
+						className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 border-t border-neutral-400 p-4 first:border-t-0 hover:bg-neutral-50 xl:grid-cols-[20rem_minmax(0,1fr)_3.5rem] xl:gap-6"
 						role="group"
 					>
-						<div className="md:w-80 md:shrink-0">
+						<div className="min-w-0">
 							<Checkbox
 								checked={full}
 								disabled={disabled || open.length === 0}
@@ -143,7 +143,7 @@ export const PermissionChecklist = ({
 								</p>
 							))}
 						</div>
-						<div className="flex min-w-0 flex-1 flex-wrap gap-x-6 gap-y-2 pl-6 md:pl-0">
+						<div className="col-span-2 row-start-2 mt-1 grid min-w-0 grid-cols-3 content-start items-start gap-x-6 gap-y-2 border-t border-neutral-200 pt-4 pl-6 xl:col-span-1 xl:col-start-2 xl:row-start-1 xl:mt-0 xl:border-t-0 xl:pt-0 xl:pl-0">
 							{group.keys.map((key) => {
 								const missing = unavailable.includes(key)
 									? []
@@ -162,6 +162,7 @@ export const PermissionChecklist = ({
 									<Checkbox
 										key={key}
 										checked={value.includes(key)}
+										className="min-w-0"
 										description={description || undefined}
 										disabled={disabled || !tickable(key)}
 										label={t(labelKeyOf(key))}
@@ -179,7 +180,7 @@ export const PermissionChecklist = ({
 								);
 							})}
 						</div>
-						<p className="pl-6 text-sm text-neutral-700 md:w-14 md:shrink-0 md:pl-0 md:text-right md:leading-6">
+						<p className="col-start-2 row-start-1 text-right text-sm leading-6 text-neutral-700 xl:col-start-3">
 							{t("organisation.permissions.groupCount", { count, total })}
 						</p>
 					</div>
@@ -188,10 +189,10 @@ export const PermissionChecklist = ({
 			{unknown.length > 0 && (
 				<div
 					aria-label={t("organisation.permissions.unknown.name")}
-					className="flex flex-col gap-3 border-t border-neutral-400 bg-warning-50 p-4 md:flex-row md:items-start md:gap-6"
+					className="flex flex-col gap-3 border-t border-neutral-400 bg-warning-50 p-4 xl:flex-row xl:items-start xl:gap-6"
 					role="group"
 				>
-					<div className="md:w-80 md:shrink-0">
+					<div className="xl:w-80 xl:shrink-0">
 						<p className="font-semibold text-neutral-900">
 							{t("organisation.permissions.unknown.name")}
 						</p>
@@ -199,9 +200,16 @@ export const PermissionChecklist = ({
 							{t("organisation.permissions.unknown.description")}
 						</p>
 					</div>
-					<div className="flex min-w-0 flex-1 flex-wrap gap-x-6 gap-y-2">
+					<div className="mt-1 grid min-w-0 flex-1 grid-cols-3 content-start items-start gap-x-6 gap-y-2 border-t border-neutral-200 pt-4 xl:mt-0 xl:border-t-0 xl:pt-0">
 						{unknown.map((key) => (
-							<Checkbox key={key} checked disabled readOnly label={key} />
+							<Checkbox
+								key={key}
+								checked
+								disabled
+								readOnly
+								className="min-w-0"
+								label={key}
+							/>
 						))}
 					</div>
 				</div>

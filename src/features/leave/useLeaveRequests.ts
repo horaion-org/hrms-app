@@ -91,12 +91,16 @@ export type LeaveActions = {
 };
 
 /** Deciding and applying; each success reloads every list and window of the company's requests. */
-export const useLeaveActions = (companyId: string): LeaveActions => {
+export const useLeaveActions = (
+	companyId: string,
+	{ ownConfirmation = false }: { ownConfirmation?: boolean } = {}
+): LeaveActions => {
 	const client = useQueryClient();
 	const reload = (): Promise<void> =>
 		client.invalidateQueries({ queryKey: ["leave", companyId] });
 	return {
 		approve: useMutation({
+			meta: { successMessage: ownConfirmation ? false : undefined },
 			mutationFn: (request: LeaveRequest) =>
 				approveLeaveRequest(
 					companyId,
@@ -106,6 +110,7 @@ export const useLeaveActions = (companyId: string): LeaveActions => {
 			onSuccess: reload,
 		}),
 		reject: useMutation({
+			meta: { successMessage: ownConfirmation ? false : undefined },
 			mutationFn: ({
 				request,
 				reason,

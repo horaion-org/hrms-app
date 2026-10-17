@@ -1,4 +1,7 @@
 {
+	"notifications": {
+		"operationSucceeded": "Operación completada correctamente."
+	},
 	"pagination": {
 		"label": "Paginación",
 		"entries": "{{start}}–{{end}} de {{total}} registros",

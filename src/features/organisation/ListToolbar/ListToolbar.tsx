@@ -60,7 +60,7 @@ export const ListToolbar = ({
 			<div className="flex flex-wrap items-center justify-between gap-4">
 				<Input
 					aria-label={searchLabel}
-					className="w-full sm:w-97.5"
+					className="w-full min-w-0 lg:flex-1"
 					inputSize="lg"
 					leadingIcon={<SearchIcon />}
 					placeholder={searchLabel}
@@ -70,7 +70,7 @@ export const ListToolbar = ({
 						onSearchChange(event.target.value);
 					}}
 				/>
-				<div className="flex flex-wrap items-center gap-3">
+				<div className="ml-auto flex w-full flex-wrap items-center justify-end gap-3 lg:w-auto">
 					{actions}
 					{secondaryAction && (
 						<Button variant="secondary" onClick={secondaryAction.onClick}>

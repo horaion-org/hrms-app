@@ -96,11 +96,13 @@ export const useScheduleActions = (companyId: string): ScheduleActions => {
 			onSuccess: saved,
 		}),
 		update: useMutation({
+			meta: { successMessage: false },
 			mutationFn: ({ unit, scheduleId, body }: Replaced) =>
 				updateSchedule(companyId, unit, scheduleId, body),
 			onSuccess: saved,
 		}),
 		generate: useMutation({
+			meta: { successMessage: false },
 			mutationFn: ({ unit, scheduleId }: Generated) =>
 				requestGeneration(companyId, unit, scheduleId),
 			onSuccess: reload,

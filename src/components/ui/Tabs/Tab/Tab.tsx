@@ -53,6 +53,7 @@ export const Tab = ({
 					: ariaDescribedBy
 			}
 			className={joinClassNames(
+				"cursor-pointer",
 				vertical ? verticalClasses : horizontalClasses,
 				className
 			)}

@@ -93,7 +93,7 @@ const Dashboard = (): FunctionComponent => {
 		branchId,
 	});
 	const activity = useActivityPage(companyId, 1, ACTIVITY_COUNT);
-	const actions = useLeaveActions(companyId);
+	const actions = useLeaveActions(companyId, { ownConfirmation: true });
 	const busy = actions.approve.isPending || actions.reject.isPending;
 	const now = new Date();
 	const exampleTag = (

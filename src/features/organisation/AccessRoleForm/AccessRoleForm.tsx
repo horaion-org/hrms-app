@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useId, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
@@ -70,6 +70,24 @@ export const AccessRoleForm = ({
 	const name = useWatch({ control, name: "name" });
 	const permissions = useWatch({ control, name: "permissions" });
 	const [message, setMessage] = useState<string>();
+	const stickyMarker = useRef<HTMLDivElement>(null);
+	const [isStuck, setIsStuck] = useState(false);
+	useEffect(() => {
+		const marker = stickyMarker.current;
+		if (!marker || typeof IntersectionObserver === "undefined") return;
+		const observer = new IntersectionObserver(
+			([entry]) => {
+				if (entry) {
+					setIsStuck(entry.boundingClientRect.top < (entry.rootBounds?.top ?? 0));
+				}
+			},
+			{ threshold: 1 }
+		);
+		observer.observe(marker);
+		return (): void => {
+			observer.disconnect();
+		};
+	}, []);
 	const added = permissions.filter(
 		(item) => !initial.permissions.includes(item)
 	).length;
@@ -111,28 +129,59 @@ export const AccessRoleForm = ({
 					{message}
 				</p>
 			)}
-			<FormRow
-				className="max-w-97.5"
-				counter={t(`${key}.nameCounter`, { count: name.length })}
-				error={errors.name?.message}
-				hint={t(`${key}.nameHint`)}
-				htmlFor={nameId}
-				label={t(`${key}.name`)}
-				layout="stacked"
-				required={!readOnly}
+			<div ref={stickyMarker} aria-hidden="true" className="-mb-px h-px" />
+			<div
+				className="sticky top-0 z-20 flex flex-wrap items-start justify-between gap-6 bg-white py-4 data-stuck:shadow-[0_6px_6px_-6px_rgb(0_0_0/0.2)]"
+				data-stuck={isStuck || undefined}
 			>
-				<Input
-					aria-describedby={errors.name ? nameIds.errorId : nameIds.hintId}
-					aria-invalid={Boolean(errors.name)}
-					className="w-full"
-					disabled={readOnly || isSubmitting}
-					id={nameId}
-					maxLength={100}
+				<FormRow
+					className="min-w-0 grow basis-full lg:basis-0"
+					counter={t(`${key}.nameCounter`, { count: name.length })}
+					error={errors.name?.message}
+					hint={t(`${key}.nameHint`)}
+					htmlFor={nameId}
+					label={t(`${key}.name`)}
+					layout="stacked"
 					required={!readOnly}
-					status={errors.name ? "error" : undefined}
-					{...register("name")}
-				/>
-			</FormRow>
+				>
+					<Input
+						aria-describedby={errors.name ? nameIds.errorId : nameIds.hintId}
+						aria-invalid={Boolean(errors.name)}
+						className="w-full"
+						disabled={readOnly || isSubmitting}
+						id={nameId}
+						maxLength={100}
+						required={!readOnly}
+						status={errors.name ? "error" : undefined}
+						{...register("name")}
+					/>
+				</FormRow>
+				{!readOnly && (
+					<div className="ml-auto flex flex-wrap items-center justify-end gap-3">
+						<Button
+							disabled={!isDirty || isSubmitting}
+							variant="secondary"
+							onClick={() => {
+								setMessage(undefined);
+								reset();
+							}}
+						>
+							{t(`${key}.discard`)}
+						</Button>
+						<Button disabled={!ready} loading={isSubmitting} type="submit">
+							{t(mode === "edit" ? `${key}.save` : `${key}.create`)}
+						</Button>
+						<p
+							aria-live="polite"
+							className="w-full text-right text-sm text-neutral-700"
+						>
+							{permissions.length + unknown.length === 0
+								? t(`${key}.permissionsRequired`)
+								: mode === "edit" && changes}
+						</p>
+					</div>
+				)}
+			</div>
 			<div className="mt-10 flex items-baseline justify-between gap-4">
 				<h2 className="text-xl font-medium text-neutral-900">
 					{t(`${key}.permissions`)}
@@ -159,28 +208,6 @@ export const AccessRoleForm = ({
 					/>
 				)}
 			/>
-			{!readOnly && (
-				<div className="mt-8 flex flex-wrap items-center justify-end gap-3">
-					<p aria-live="polite" className="mr-auto text-sm text-neutral-700">
-						{permissions.length + unknown.length === 0
-							? t(`${key}.permissionsRequired`)
-							: mode === "edit" && changes}
-					</p>
-					<Button
-						disabled={!isDirty || isSubmitting}
-						variant="secondary"
-						onClick={() => {
-							setMessage(undefined);
-							reset();
-						}}
-					>
-						{t(`${key}.discard`)}
-					</Button>
-					<Button disabled={!ready} loading={isSubmitting} type="submit">
-						{t(mode === "edit" ? `${key}.save` : `${key}.create`)}
-					</Button>
-				</div>
-			)}
 		</form>
 	);
 };

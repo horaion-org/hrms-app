@@ -1,4 +1,7 @@
 {
+	"notifications": {
+		"operationSucceeded": "Operation completed successfully."
+	},
 	"pagination": {
 		"label": "Pagination",
 		"entries": "{{start}}–{{end}} of {{total}} entries",

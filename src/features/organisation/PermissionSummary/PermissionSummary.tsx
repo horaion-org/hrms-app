@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
+import { Badge } from "@/components/ui/Badge";
 import {
 	labelKeyOf,
 	PERMISSION_GROUPS,
@@ -15,8 +16,8 @@ export type PermissionSummaryProps = {
 };
 
 /**
- * What a set of permissions allows, read at a glance: one line per resource
- * naming its actions. Resources with nothing allowed are left out.
+ * What a set of permissions allows, read at a glance: action badges grouped
+ * by resource. Resources with nothing allowed are left out.
  */
 export const PermissionSummary = ({
 	title,
@@ -36,20 +37,22 @@ export const PermissionSummary = ({
 				className
 			)}
 		>
-			<p className="text-sm font-bold text-neutral-800">{title}</p>
+			<h3 className="text-lg font-semibold text-neutral-900">{title}</h3>
 			{groups.length === 0 ? (
 				<p className="mt-2 text-sm text-neutral-700">
 					{t("organisation.permissions.none")}
 				</p>
 			) : (
-				<dl className="mt-2 grid gap-x-8 gap-y-1 text-sm sm:grid-cols-2">
+				<dl className="mt-4 grid gap-x-8 gap-y-5 text-sm sm:grid-cols-2">
 					{groups.map((group) => (
-						<div key={group.resource} className="flex gap-2">
-							<dt className="shrink-0 font-semibold text-neutral-900">
+						<div key={group.resource} className="flex min-w-0 flex-col gap-2">
+							<dt className="font-semibold text-neutral-900">
 								{t(`organisation.permissions.${group.resource}.name`)}
 							</dt>
-							<dd className="min-w-0 text-neutral-700">
-								{group.keys.map((key) => t(labelKeyOf(key))).join(", ")}
+							<dd className="flex flex-wrap gap-2">
+								{group.keys.map((key) => (
+									<Badge key={key}>{t(labelKeyOf(key))}</Badge>
+								))}
 							</dd>
 						</div>
 					))}

@@ -47,7 +47,7 @@ export const FormRow = ({
 			className={joinClassNames(
 				"flex flex-col gap-2",
 				layout === "inline" &&
-					"sm:flex-row sm:items-center sm:justify-between sm:gap-6",
+					"sm:flex-row sm:items-start sm:justify-between sm:gap-6",
 				className
 			)}
 			{...rest}
@@ -56,7 +56,7 @@ export const FormRow = ({
 				htmlFor={htmlFor}
 				id={labelId}
 				className={joinClassNames(
-					"font-bold text-neutral-800",
+					"font-normal text-neutral-800",
 					layout === "stacked" ? "text-sm" : "text-base"
 				)}
 			>

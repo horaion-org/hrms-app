@@ -50,7 +50,7 @@ export type ButtonProps = (ButtonElementProps | LinkElementProps) &
 	(LabelledButtonProps | IdleLabelledButtonProps | IconButtonProps);
 
 const baseClasses =
-	"inline-flex items-center justify-center font-medium whitespace-nowrap transition-colors select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-blue-500 disabled:cursor-not-allowed";
+	"inline-flex cursor-pointer items-center justify-center font-medium whitespace-nowrap transition-colors select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-blue-500 disabled:cursor-not-allowed";
 
 const pillClasses = "rounded-full px-6 [&_svg]:shrink-0";
 
@@ -111,7 +111,9 @@ export const Button = ({
 						{spinner}
 					</span>
 				) : (
-					<span className="absolute left-3 top-1/2">{spinner}</span>
+					<span className="relative inline-flex size-5.5 shrink-0">
+						{spinner}
+					</span>
 				)
 			) : (
 				leadingIcon

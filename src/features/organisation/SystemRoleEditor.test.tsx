@@ -170,6 +170,38 @@ describe("System role editor", () => {
 		});
 	});
 
+	it("shows saved permissions when reopening the editor without a page refresh", async () => {
+		const user = userEvent.setup();
+		let saved = false;
+		const updated = {
+			permissions: [
+				"branch:read",
+				"branch:create",
+				"department:read",
+				"department:update",
+			],
+		};
+		stubApi({
+			...routes(),
+			[ROLE]: () => roleReply(saved ? updated : {}),
+			[SAVE]: () => {
+				saved = true;
+				return roleReply(updated);
+			},
+		});
+		await open(EDITOR);
+		await screen.findByRole("textbox", { name: /Role name/ });
+		await user.click(box("Departments", "Edit"));
+		await user.click(save());
+		await user.click(
+			await screen.findByRole("button", { name: "Edit Manager" })
+		);
+		await screen.findByRole("textbox", { name: /Role name/ });
+
+		await waitFor(() => expect(box("Departments", "Edit")).toBeChecked());
+		expect(save()).toBeDisabled();
+	});
+
 	it("puts back what was loaded when changes are discarded", async () => {
 		const user = userEvent.setup();
 		const calls = stubApi(routes());

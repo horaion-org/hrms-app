@@ -233,7 +233,6 @@ export const Leave = (): FunctionComponent => {
 					</TabList>
 					{view === "mine" ? (
 						<Button
-							className="bg-ink-blue-900! hover:bg-ink-blue-800!"
 							leadingIcon={<PlusIcon />}
 							onClick={() => {
 								setDialog({ mode: "applyOwn" });
@@ -245,7 +244,6 @@ export const Leave = (): FunctionComponent => {
 						canApply &&
 						selected && (
 							<Button
-								className="bg-ink-blue-900! hover:bg-ink-blue-800!"
 								leadingIcon={<PlusIcon />}
 								onClick={() => {
 									setDialog({ mode: "apply" });
