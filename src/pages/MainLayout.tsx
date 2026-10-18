@@ -12,6 +12,7 @@ import {
 	DashboardIcon,
 	LeaveFilledIcon,
 	LeaveIcon,
+	NotificationIcon,
 	OrganisationFilledIcon,
 	OrganisationIcon,
 	PeopleFilledIcon,
@@ -28,6 +29,9 @@ import {
 } from "@/features/workspace/permissionKeys";
 import { Can } from "@/features/workspace/Can";
 import { CompanySelection } from "@/pages/CompanySelection";
+
+const headerIconClasses =
+	"h-12 w-12 [&>svg]:size-8 [&>svg]:text-ink-blue-900 hover:[&>svg]:text-ink-blue-700";
 
 export const MainLayout = (): FunctionComponent => {
 	const context = useRouteContext({ from: "/_authenticated" });
@@ -56,7 +60,17 @@ export const MainLayout = (): FunctionComponent => {
 					actions={
 						<>
 							<Button
+								aria-label={t("shell.notifications")}
+								className={headerIconClasses}
+								hash="notifications"
+								to="/"
+								variant="icon"
+							>
+								<NotificationIcon />
+							</Button>
+							<Button
 								aria-label={t("shell.settings")}
+								className={headerIconClasses}
 								to="/settings"
 								variant="icon"
 							>
@@ -64,7 +78,7 @@ export const MainLayout = (): FunctionComponent => {
 							</Button>
 							<Link
 								aria-label={t("shell.myProfile")}
-								className="rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-blue-500"
+								className="ml-3 inline-flex size-12 shrink-0 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-blue-500"
 								to="/me/profile"
 							>
 								<Avatar name={displayName} />
