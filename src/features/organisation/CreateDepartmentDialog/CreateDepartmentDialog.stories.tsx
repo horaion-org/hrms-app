@@ -69,6 +69,16 @@ const fill = async (body: HTMLElement): Promise<void> => {
 };
 
 export const Empty: Story = {};
+export const Editing: Story = {
+	args: {
+		editing: {
+			departmentId: "d-1",
+			branchId: "b-1",
+			name: "Front of house",
+			status: "ACTIVE",
+		},
+	},
+};
 /** One active branch is chosen for the person. */
 export const OnlyBranch: Story = { parameters: { branches: [branches[0]] } };
 export const NoActiveBranch: Story = { parameters: { branches: [] } };

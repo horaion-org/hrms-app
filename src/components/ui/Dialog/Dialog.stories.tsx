@@ -22,7 +22,7 @@ const Example = (args: DialogProps): FunctionComponent => {
 					<div className="flex justify-end gap-3">
 						<Button
 							disabled={args.preventClose}
-							variant="secondary"
+							variant="cancel"
 							onClick={() => {
 								setOpen(false);
 							}}

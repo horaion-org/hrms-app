@@ -38,7 +38,7 @@ const meta = {
 			onUnauthenticated: () => {},
 		});
 		globalThis.fetch = (input, init): Promise<Response> => {
-			if (init?.method === "POST") {
+			if (init?.method === "POST" || init?.method === "PUT") {
 				if (parameters["pending"]) return new Promise<Response>(() => {});
 				if (parameters["codeConflict"])
 					return Promise.resolve(
@@ -108,6 +108,18 @@ const fill = async (body: HTMLElement): Promise<void> => {
 };
 
 export const Empty: Story = {};
+export const Editing: Story = {
+	args: {
+		editing: {
+			branchId: "b-1",
+			name: "Orchard Road",
+			code: "ORC",
+			city: "Singapore",
+			country: "SG",
+			status: "ACTIVE",
+		},
+	},
+};
 export const NameEntered: Story = {
 	play: async ({ canvasElement }) => {
 		await userEvent.type(

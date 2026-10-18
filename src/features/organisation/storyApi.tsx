@@ -21,8 +21,8 @@ const urlOf = (input: RequestInfo | URL): string =>
 			: input.url;
 
 /**
- * Stubs the API for a create Dialog story: each GET answers the first list
- * whose `path` it contains, and every POST either stays pending (`pending`
+ * Stubs the API for a create/edit Dialog story: each GET answers the first list
+ * whose `path` it contains, and every POST/PUT either stays pending (`pending`
  * parameter) or fails with a 500 so the form-level alert shows.
  */
 export const stubStoryApi = (
@@ -37,7 +37,7 @@ export const stubStoryApi = (
 		onUnauthenticated: () => {},
 	});
 	globalThis.fetch = (input, init): Promise<Response> => {
-		if (init?.method === "POST")
+		if (init?.method === "POST" || init?.method === "PUT")
 			return pending
 				? new Promise<Response>(() => {})
 				: Promise.resolve(
