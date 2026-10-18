@@ -129,7 +129,7 @@ export const RosterShiftDialog = ({
 			title={t(`${key}.${action}`)}
 			footer={
 				<div className="flex justify-end gap-3">
-					<Button variant="secondary" onClick={onClose}>
+					<Button variant="cancel" onClick={onClose}>
 						{t(`${key}.cancel`)}
 					</Button>
 					<Button

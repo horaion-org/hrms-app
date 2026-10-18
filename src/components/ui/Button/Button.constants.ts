@@ -7,6 +7,7 @@
 export const buttonVariants = [
 	"primary",
 	"secondary",
+	"cancel",
 	"textlink",
 	"hyperlink",
 ] as const;

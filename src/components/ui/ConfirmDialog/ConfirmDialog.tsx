@@ -48,7 +48,7 @@ export const ConfirmDialog = ({
 		title={title}
 		footer={
 			<div className="flex justify-end gap-3">
-				<Button disabled={submitting} variant="secondary" onClick={onClose}>
+				<Button disabled={submitting} variant="cancel" onClick={onClose}>
 					{cancelLabel}
 				</Button>
 				<Button

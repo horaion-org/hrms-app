@@ -136,7 +136,7 @@ export const GeneralSettingsForm = ({
 				<div className="flex flex-wrap justify-end gap-4">
 					<Button
 						leadingIcon={<CrossIcon />}
-						variant="secondary"
+						variant="cancel"
 						onClick={() => {
 							reset();
 						}}
