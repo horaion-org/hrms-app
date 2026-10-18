@@ -176,12 +176,12 @@ export const LeaveRequests = ({
 	return (
 		<section aria-label={t("leave.requests")}>
 			<div className="mb-8 flex items-center gap-3">
-				<span className="text-sm font-medium text-neutral-800">
+				<span className="min-w-15.5 text-sm font-medium text-neutral-800">
 					{t("leave.showing")}
 				</span>
 				<Select
 					aria-label={t("leave.showing")}
-					className="w-44 font-semibold text-ink-blue-900"
+					className="w-40 font-semibold"
 					value={status ?? "all"}
 					options={[
 						{ value: "all", label: t("leave.all") },
