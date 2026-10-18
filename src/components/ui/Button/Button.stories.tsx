@@ -49,6 +49,14 @@ export const Primary: Story = {};
 
 export const Secondary: Story = { args: { variant: "secondary" } };
 
+export const Cancel: Story = {
+	args: { variant: "cancel", children: "Cancel" },
+};
+
+export const CancelDisabled: Story = {
+	args: { ...Cancel.args, disabled: true },
+};
+
 export const PrimaryLoading: Story = { args: { loading: true } };
 
 export const SecondaryLoading: Story = {
@@ -109,8 +117,16 @@ const rows: Array<{
 }> = [
 	{ label: "Primary, lg", props: { variant: "primary", size: "lg" } },
 	{ label: "Secondary, lg", props: { variant: "secondary", size: "lg" } },
+	{
+		label: "Cancel, lg",
+		props: { variant: "cancel", size: "lg", children: "Cancel" },
+	},
 	{ label: "Primary, sm", props: { variant: "primary", size: "sm" } },
 	{ label: "Secondary, sm", props: { variant: "secondary", size: "sm" } },
+	{
+		label: "Cancel, sm",
+		props: { variant: "cancel", size: "sm", children: "Cancel" },
+	},
 	{ label: "Textlink", props: { variant: "textlink", children: "Textlink" } },
 	{
 		label: "Hyperlink",
