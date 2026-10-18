@@ -8,9 +8,9 @@ import type {
 } from "@/components/ui/Button/Button.constants";
 
 type LabelledButtonProps = {
-	variant?: "primary" | "secondary";
+	variant?: "primary" | "secondary" | "cancel";
 	loading?: boolean;
-	/** Only applies to the pill variants (`primary` and `secondary`). */
+	/** Only applies to the pill variants (`primary`, `secondary`, and `cancel`). */
 	size?: ButtonSize;
 	leadingIcon?: ReactNode;
 	trailingIcon?: ReactNode;
@@ -58,7 +58,9 @@ const variantClasses: Record<ButtonVariant, string> = {
 	primary:
 		"bg-ink-blue-700 text-white not-disabled:hover:bg-ink-blue-500 not-disabled:active:bg-ink-blue-300 disabled:bg-neutral-400 disabled:text-neutral-500",
 	secondary:
-		"border border-neutral-500 bg-white text-neutral-900 not-disabled:hover:text-ink-blue-700 not-disabled:active:text-ink-blue-500 disabled:text-neutral-300",
+		"border border-neutral-500 bg-white text-neutral-900 not-disabled:hover:text-ink-blue-700 not-disabled:active:text-ink-blue-500 disabled:text-neutral-600",
+	cancel:
+		"border border-error-700 bg-white text-error-700 not-disabled:hover:border-error-800 not-disabled:hover:text-error-800 not-disabled:active:border-error-900 not-disabled:active:text-error-900 disabled:border-neutral-500 disabled:text-neutral-600",
 	textlink:
 		"gap-2 text-sm text-ink-blue-700 not-disabled:hover:text-ink-blue-500 not-disabled:active:text-ink-blue-300 disabled:text-neutral-400 [&_svg]:size-4 [&_svg]:shrink-0",
 	hyperlink:
@@ -72,7 +74,7 @@ const sizeClasses: Record<ButtonSize, string> = {
 };
 
 const isPill = (variant: ButtonVariant): boolean =>
-	variant === "primary" || variant === "secondary";
+	variant === "primary" || variant === "secondary" || variant === "cancel";
 
 export const Button = ({
 	variant = "primary",

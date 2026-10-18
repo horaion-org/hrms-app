@@ -1,13 +1,14 @@
 import type { TFunction } from "i18next";
 import { z } from "zod";
-import type { companyMemberSchema } from "@/features/organisation/api";
+import { companyMemberSchema } from "@/features/organisation/api";
 import {
 	headsSchema,
 	unitNameSchema,
 } from "@/features/organisation/createSchemas";
 
 export const createDepartmentSchema = (
-	t: TFunction
+	t: TFunction,
+	editing = false
 ): z.ZodObject<{
 	branchId: z.ZodString;
 	name: z.ZodString;
@@ -21,10 +22,12 @@ export const createDepartmentSchema = (
 			length: t(`${key}.nameLength`),
 			characters: t(`${key}.nameCharacters`),
 		}),
-		heads: headsSchema({
-			required: t(`${key}.headsRequired`),
-			max: t(`${key}.headsMax`),
-		}),
+		heads: editing
+			? z.array(companyMemberSchema)
+			: headsSchema({
+					required: t(`${key}.headsRequired`),
+					max: t(`${key}.headsMax`),
+				}),
 	});
 };
 

@@ -27,6 +27,7 @@ export const Departments = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
 	const { t } = useTranslation();
 	const [creating, setCreating] = useState(false);
+	const [editing, setEditing] = useState<Department>();
 	// The Department whose status the person asked to change, until they confirm or cancel.
 	const [changing, setChanging] = useState<Department>();
 	const setDepartmentStatus = useSetDepartmentStatus(companyId);
@@ -69,7 +70,12 @@ export const Departments = (): FunctionComponent => {
 				t,
 				(department) => (
 					<>
-						<OverflowMenuItem disabled={!canUpdate(department)}>
+						<OverflowMenuItem
+							disabled={!canUpdate(department)}
+							onClick={() => {
+								setEditing(department);
+							}}
+						>
 							{t("organisation.list.editItem")}
 						</OverflowMenuItem>
 						<OverflowMenuItem
@@ -87,7 +93,8 @@ export const Departments = (): FunctionComponent => {
 					</>
 				),
 				// Effective at the Department, whether granted there, at its Branch, or company-wide.
-				canUpdate
+				canUpdate,
+				setEditing
 			),
 		],
 		[t, canUpdate]
@@ -129,6 +136,16 @@ export const Departments = (): FunctionComponent => {
 					companyId={companyId}
 					onClose={() => {
 						setCreating(false);
+					}}
+				/>
+			)}
+			{editing && canUpdate(editing) && (
+				<CreateDepartmentDialog
+					key={`${companyId}-${editing.departmentId}`}
+					companyId={companyId}
+					editing={editing}
+					onClose={() => {
+						setEditing(undefined);
 					}}
 				/>
 			)}

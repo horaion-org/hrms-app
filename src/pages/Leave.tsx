@@ -212,10 +212,10 @@ export const Leave = (): FunctionComponent => {
 			)}
 			<div className="flex flex-wrap items-start justify-between gap-6">
 				<div>
-					<h1 className="text-2xl font-semibold text-neutral-900 sm:text-[32px] sm:leading-11">
+					<h1 className="text-4xl font-medium text-neutral-900">
 						{t("leave.title")}
 					</h1>
-					<p className="mt-3 text-sm text-neutral-800">{t("leave.subtitle")}</p>
+					<p className="mt-4 text-sm text-neutral-800">{t("leave.subtitle")}</p>
 				</div>
 				{team && (
 					<BranchSelector
@@ -231,25 +231,22 @@ export const Leave = (): FunctionComponent => {
 				<p className="mt-8 text-sm text-neutral-700">{t("leave.noBranches")}</p>
 			)}
 			<Tabs
-				className="mt-8"
+				className="mt-10"
 				selectedIndex={VIEWS.indexOf(view)}
 				onChange={(index) => {
 					const next = VIEWS[index] ?? "mine";
 					show({ view: next === "mine" ? undefined : next });
 				}}
 			>
-				<div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-					<TabList aria-label={t("leave.views")}>
-						<Tab className="text-xl!">{t("leave.myLeave")}</Tab>
-						{canRead && (
-							<Tab className="text-xl!">{t("leave.teamRequests")}</Tab>
-						)}
-						{canRead && (
-							<Tab className="text-xl!">{t("leave.teamTimeline")}</Tab>
-						)}
+				<div className="mb-10 flex min-h-14 flex-wrap items-center justify-between gap-4">
+					<TabList aria-label={t("leave.views")} className="-ml-1">
+						<Tab>{t("leave.myLeave")}</Tab>
+						{canRead && <Tab>{t("leave.teamRequests")}</Tab>}
+						{canRead && <Tab>{t("leave.teamTimeline")}</Tab>}
 					</TabList>
 					{view === "mine" ? (
 						<Button
+							className="ml-auto shrink-0"
 							leadingIcon={<PlusIcon />}
 							onClick={() => {
 								setDialog({ mode: "applyOwn" });
@@ -261,6 +258,7 @@ export const Leave = (): FunctionComponent => {
 						canApply &&
 						selected && (
 							<Button
+								className="ml-auto shrink-0"
 								leadingIcon={<PlusIcon />}
 								onClick={() => {
 									setDialog({ mode: "apply" });

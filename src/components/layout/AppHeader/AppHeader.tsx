@@ -27,7 +27,7 @@ export const AppHeader = ({
 	>
 		<p className="min-w-0 truncate text-2xl text-neutral-900">{title}</p>
 		{actions && (
-			<div className="flex shrink-0 items-center gap-4">{actions}</div>
+			<div className="flex shrink-0 items-center gap-2">{actions}</div>
 		)}
 	</header>
 );

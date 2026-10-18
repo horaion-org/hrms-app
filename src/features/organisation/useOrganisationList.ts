@@ -62,10 +62,15 @@ const useOrganisationList = <T>(
 
 export const useBranches = (
 	companyId: string,
-	query: ListQuery
+	query: ListQuery,
+	enabled = true
 ): OrganisationList<Branch> =>
-	useOrganisationList(companyId, "branch:read", ["branches", query], (signal) =>
-		fetchBranches(companyId, query, signal)
+	useOrganisationList(
+		companyId,
+		"branch:read",
+		["branches", query],
+		(signal) => fetchBranches(companyId, query, signal),
+		enabled
 	);
 
 export const useDepartments = (

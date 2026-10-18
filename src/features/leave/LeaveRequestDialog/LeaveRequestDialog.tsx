@@ -97,7 +97,7 @@ export const LeaveRequestDialog = ({
 			footer={
 				applying ? (
 					<>
-						<Button variant="secondary" onClick={onClose}>
+						<Button variant="cancel" onClick={onClose}>
 							{t("leave.cancel")}
 						</Button>
 						<Button
@@ -111,7 +111,7 @@ export const LeaveRequestDialog = ({
 				) : rejecting ? (
 					<>
 						<Button
-							variant="secondary"
+							variant="cancel"
 							onClick={() => {
 								setRejecting(false);
 								setMissingReason(false);

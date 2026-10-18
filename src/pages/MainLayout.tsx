@@ -70,7 +70,7 @@ export const MainLayout = (): FunctionComponent => {
 							</Button>
 							<Link
 								aria-label={t("shell.myProfile")}
-								className="rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-blue-500"
+								className="ml-3 inline-flex size-12 shrink-0 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-blue-500"
 								to="/me/profile"
 							>
 								<Avatar name={displayName} />

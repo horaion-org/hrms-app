@@ -334,7 +334,7 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 			<Button
 				disabled={isSubmitting}
 				leadingIcon={<CrossIcon />}
-				variant="secondary"
+				variant="cancel"
 				onClick={cancel}
 			>
 				{t("organisation.list.cancel")}

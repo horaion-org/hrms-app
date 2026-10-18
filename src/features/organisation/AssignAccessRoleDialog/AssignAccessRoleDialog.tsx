@@ -103,7 +103,7 @@ export const AssignAccessRoleDialog = ({
 			title={t(editing ? `${key}.editTitle` : `${key}.title`)}
 			footer={
 				<div className="flex justify-end gap-3">
-					<Button disabled={submitting} variant="secondary" onClick={onClose}>
+					<Button disabled={submitting} variant="cancel" onClick={onClose}>
 						{t(`${key}.cancel`)}
 					</Button>
 					<Button

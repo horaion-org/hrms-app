@@ -39,6 +39,20 @@ const useRowChange = <TVariables, TResult>(
 
 export type StatusChange<T> = { row: T; status: UnitStatus };
 
+/** Updates a Branch's details and refreshes the company's lists and workspace. */
+export const useUpdateBranch = (
+	companyId: string
+): UseMutationResult<Branch, Error, Branch> =>
+	useRowChange(companyId, (branch: Branch) => updateBranch(companyId, branch));
+
+/** Renames a Department within its existing Branch. */
+export const useUpdateDepartment = (
+	companyId: string
+): UseMutationResult<Department, Error, Department> =>
+	useRowChange(companyId, (department: Department) =>
+		updateDepartment(companyId, department)
+	);
+
 /** Activates or deactivates a Branch, leaving its other details as they are. */
 export const useSetBranchStatus = (
 	companyId: string

@@ -1,11 +1,15 @@
 import { useRouteContext } from "@tanstack/react-router";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
+import { Button } from "@/components/ui/Button";
+import { ArrowUpIcon } from "@/components/ui/Icon";
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from "@/components/ui/Tabs";
 import { GeneralSettingsForm } from "@/features/settings/GeneralSettingsForm";
+import { PlanSettings } from "@/features/settings/PlanSettings";
 import { useGeneralSettings } from "@/features/settings/useGeneralSettings";
 
-const SECTIONS = ["general", "notifications", "scheduling"] as const;
+const SECTIONS = ["general", "notifications", "scheduling", "plan"] as const;
 const COMING_SOON_SECTIONS = ["notifications", "scheduling"] as const;
 
 const panelClasses =
@@ -20,16 +24,36 @@ export const Settings = (): FunctionComponent => {
 			: "";
 	const { t } = useTranslation();
 	const general = useGeneralSettings(companyId);
+	const [selectedIndex, setSelectedIndex] = useState(0);
+	const planTabRef = useRef<HTMLButtonElement>(null);
 
 	return (
 		<>
-			<h1 className="text-4xl font-medium text-neutral-900">
-				{t("settings.title")}
-			</h1>
-			<p className="mt-3 text-sm text-neutral-800">{t("settings.subtitle")}</p>
+			<div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+				<div>
+					<h1 className="text-4xl font-medium text-neutral-900">
+						{t("settings.title")}
+					</h1>
+					<p className="mt-3 text-sm text-neutral-800">
+						{t("settings.subtitle")}
+					</p>
+				</div>
+				<Button
+					className="self-start sm:self-auto"
+					leadingIcon={<ArrowUpIcon />}
+					onClick={() => {
+						setSelectedIndex(SECTIONS.indexOf("plan"));
+						planTabRef.current?.focus();
+					}}
+				>
+					{t("settings.upgrade.action")}
+				</Button>
+			</div>
 			<Tabs
 				className="mt-10 flex flex-col overflow-hidden rounded-xl border border-neutral-400 sm:min-h-144 sm:flex-row"
 				orientation="vertical"
+				selectedIndex={selectedIndex}
+				onChange={setSelectedIndex}
 			>
 				<TabList
 					aria-label={t("settings.sections")}
@@ -38,6 +62,7 @@ export const Settings = (): FunctionComponent => {
 					{SECTIONS.map((section) => (
 						<Tab
 							key={section}
+							ref={section === "plan" ? planTabRef : undefined}
 							description={t(`settings.${section}.description`)}
 						>
 							{t(`settings.${section}.title`)}
@@ -77,6 +102,9 @@ export const Settings = (): FunctionComponent => {
 							</p>
 						</TabPanel>
 					))}
+					<TabPanel className={panelClasses}>
+						<PlanSettings />
+					</TabPanel>
 				</TabPanels>
 			</Tabs>
 		</>

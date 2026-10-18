@@ -137,6 +137,30 @@
 	"dialog": {
 		"close": "Cerrar"
 	},
+	"settings": {
+		"plan": {
+			"title": "Plan y facturación",
+			"description": "Consulta tu plan, las opciones de mejora y los datos de facturación.",
+			"preview": "Estos datos del plan son de ejemplo. Las mejoras de pago y la facturación estarán disponibles pronto.",
+			"current": "Plan actual · vista previa",
+			"free": "Plan gratuito",
+			"freeDescription": "Una vista previa del plan inicial de tu empresa.",
+			"pricing": "Precio",
+			"features": "Funciones incluidas",
+			"toBeAnnounced": "Por anunciar",
+			"billing": "Datos de facturación",
+			"billingPlaceholder": "Tu ciclo de facturación, método de pago y facturas aparecerán aquí cuando la facturación esté disponible."
+		},
+		"upgrade": {
+			"action": "Mejorar plan",
+			"description": "Cambia a un plan de pago para tu empresa.",
+			"plan": "Plan de pago",
+			"comingSoon": "Próximamente",
+			"details": "Las funciones y los precios del plan estarán disponibles pronto.",
+			"unavailable": "Podrás cambiar de plan aquí cuando la facturación esté disponible.",
+			"dismiss": "Entendido"
+		}
+	},
 	"combobox": {
 		"remove": "Quitar {{label}}",
 		"loading": "Cargando…",
@@ -193,6 +217,12 @@
 			"createDialog": {
 				"title": "Crear sucursal",
 				"description": "Añade una sucursal y elige a las personas que la lideran.",
+				"editTitle": "Editar sucursal",
+				"editDescription": "Actualiza el nombre, el código y la ubicación de la sucursal.",
+				"editSubmit": "Guardar cambios",
+				"editForbidden": "Ya no tienes permiso para editar esta sucursal.",
+				"editFailed": "No pudimos guardar la sucursal. Inténtalo de nuevo.",
+				"gone": "Esta sucursal ya no está disponible. Cierra este diálogo y actualiza la lista.",
 				"name": "Nombre de la sucursal",
 				"namePlaceholder": "p. ej., Centro",
 				"nameHint": "Entre 2 y 100 caracteres. Solo letras, números, espacios y . ' & -.",
@@ -331,6 +361,12 @@
 			"createDialog": {
 				"title": "Crear departamento",
 				"description": "Añade un departamento a una sucursal y elige a las personas que lo lideran.",
+				"editTitle": "Editar departamento",
+				"editDescription": "Actualiza el nombre del departamento.",
+				"editSubmit": "Guardar cambios",
+				"editForbidden": "Ya no tienes permiso para editar este departamento.",
+				"editFailed": "No pudimos guardar el departamento. Inténtalo de nuevo.",
+				"gone": "Este departamento ya no está disponible. Cierra este diálogo y actualiza la lista.",
 				"branch": "Sucursal",
 				"branchPlaceholder": "Seleccionar una sucursal",
 				"branchHint": "La sucursal activa a la que pertenece el departamento.",
@@ -416,6 +452,7 @@
 		}
 	},
 	"shell": {
+		"notifications": "Notificaciones",
 		"myProfile": "Mi perfil"
 	},
 	"people": {

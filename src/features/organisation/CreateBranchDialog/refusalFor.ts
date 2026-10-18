@@ -17,10 +17,17 @@ export type Refusal = {
 export const refusalFor = (
 	error: unknown,
 	{ name, code }: { name: string; code: string },
-	t: TFunction
+	t: TFunction,
+	editing = false
 ): Refusal => {
 	const key = "organisation.branches.createDialog";
 	if (error instanceof ApiProblemError) {
+		if (editing && error.status === 404)
+			return {
+				fields: {},
+				message: t(`${key}.gone`),
+				refreshMembers: false,
+			};
 		if (error.status === 409 && error.errorCode === "BRANCH_NAME_CONFLICT")
 			return {
 				fields: { name: t(`${key}.nameConflict`, { name }) },
@@ -61,9 +68,13 @@ export const refusalFor = (
 		if (error.status === 403)
 			return {
 				fields: {},
-				message: t(`${key}.forbidden`),
+				message: t(editing ? `${key}.editForbidden` : `${key}.forbidden`),
 				refreshMembers: false,
 			};
 	}
-	return { fields: {}, message: t(`${key}.failed`), refreshMembers: false };
+	return {
+		fields: {},
+		message: t(editing ? `${key}.editFailed` : `${key}.failed`),
+		refreshMembers: false,
+	};
 };

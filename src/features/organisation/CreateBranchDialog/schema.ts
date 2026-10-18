@@ -5,7 +5,8 @@ import { nameSchema } from "@/features/organisation/nameSchema";
 
 /** Mirrors the server's allow-lists; uniqueness remains a server decision. */
 export const createBranchSchema = (
-	t: TFunction
+	t: TFunction,
+	editing = false
 ): z.ZodObject<{
 	name: z.ZodString;
 	code: z.ZodString;
@@ -55,7 +56,7 @@ export const createBranchSchema = (
 					status: z.enum(["ACTIVE", "INACTIVE"]),
 				})
 			)
-			.min(1, t(`${key}.headsRequired`))
+			.min(editing ? 0 : 1, t(`${key}.headsRequired`))
 			.max(20, t(`${key}.headsMax`)),
 	});
 };

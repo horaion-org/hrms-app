@@ -312,6 +312,7 @@
 			"organisation": "Organisation"
 		},
 		"comingSoon": "This Module is coming soon.",
+		"notifications": "Notifications",
 		"settings": "Settings",
 		"myProfile": "My profile"
 	},
@@ -569,6 +570,28 @@
 		"subtitle": "Manage your workspace preferences.",
 		"sections": "Settings sections",
 		"comingSoon": "These settings are coming soon.",
+		"plan": {
+			"title": "Plan and billing",
+			"description": "View your plan, upgrade options and billing details.",
+			"preview": "These plan details are placeholders. Paid upgrades and billing are coming soon.",
+			"current": "Current plan · preview",
+			"free": "Free plan",
+			"freeDescription": "A preview of your company’s starter plan.",
+			"pricing": "Pricing",
+			"features": "Included features",
+			"toBeAnnounced": "To be announced",
+			"billing": "Billing details",
+			"billingPlaceholder": "Your billing cycle, payment method and invoices will appear here once billing is available."
+		},
+		"upgrade": {
+			"action": "Upgrade plan",
+			"description": "Switch to a paid plan for your company.",
+			"plan": "Paid plan",
+			"comingSoon": "Coming soon",
+			"details": "Plan features and pricing will be available soon.",
+			"unavailable": "Upgrades will be available here once billing is ready.",
+			"dismiss": "Got it"
+		},
 		"general": {
 			"title": "General",
 			"description": "Core workspace preferences.",
@@ -655,6 +678,12 @@
 			"createDialog": {
 				"title": "Create branch",
 				"description": "Add a branch to your organisation and choose who heads it.",
+				"editTitle": "Edit branch",
+				"editDescription": "Update the branch name, code and location.",
+				"editSubmit": "Save changes",
+				"editForbidden": "You no longer have permission to edit this branch.",
+				"editFailed": "We couldn’t save the branch. Try again.",
+				"gone": "This branch is no longer available. Close this dialog and refresh the list.",
 				"name": "Branch name",
 				"namePlaceholder": "e.g. Orchard Road",
 				"nameHint": "2–100 characters. Letters, numbers, spaces and . ' & - only.",
@@ -732,6 +761,12 @@
 			"createDialog": {
 				"title": "Create department",
 				"description": "Add a department to a branch and choose who heads it.",
+				"editTitle": "Edit department",
+				"editDescription": "Update the department name.",
+				"editSubmit": "Save changes",
+				"editForbidden": "You no longer have permission to edit this department.",
+				"editFailed": "We couldn’t save the department. Try again.",
+				"gone": "This department is no longer available. Close this dialog and refresh the list.",
 				"branch": "Branch",
 				"branchPlaceholder": "Select a branch",
 				"branchHint": "The active branch the department belongs to.",
