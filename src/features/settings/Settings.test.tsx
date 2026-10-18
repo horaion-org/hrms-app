@@ -84,6 +84,10 @@ it("shows the General settings prefilled with the current company's name", async
 		["true", "General Core workspace preferences."],
 		["false", "Notifications Control what you are notified about and how."],
 		["false", "Scheduling Configure approval workflows and hierarchies."],
+		[
+			"false",
+			"Plan and billing View your plan, upgrade options and billing details.",
+		],
 	]);
 	expect(
 		screen.getByRole("tab", {
@@ -120,7 +124,7 @@ it("shows the General settings prefilled with the current company's name", async
 	).toHaveLength(1);
 });
 
-it("switches to the coming-soon Notifications and Scheduling sections with the arrow keys", async () => {
+it("switches through the settings sections with the arrow keys", async () => {
 	stubApi({
 		[REFRESH]: accessPassReply(),
 		[ME]: currentUserReply(),
@@ -146,6 +150,12 @@ it("switches to the coming-soon Notifications and Scheduling sections with the a
 	expect(
 		screen.getByRole("tabpanel", { name: "Scheduling" })
 	).toHaveTextContent("These settings are coming soon.");
+
+	await user.keyboard("{ArrowDown}");
+	const plan = screen.getByRole("tabpanel", { name: "Plan and billing" });
+	expect(plan).toHaveTextContent("Free plan");
+	expect(plan).toHaveTextContent("Paid plan");
+	expect(plan).toHaveTextContent("Billing details");
 
 	await user.keyboard("{ArrowDown}");
 	expect(
