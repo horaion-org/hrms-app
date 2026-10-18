@@ -1,5 +1,36 @@
 {
 	"notifications": {
+		"title": "Notifications",
+		"audiences": "Notification views",
+		"personal": "For you",
+		"review": "Needs review",
+		"pendingReview": "Pending leave requests",
+		"unreadOnly": "Unread only",
+		"unread": "Unread",
+		"unreadCount_one": "Notifications, {{count}} unread",
+		"unreadCount_other": "Notifications, {{count}} unread",
+		"countUnavailable": "Notifications, unread count unavailable",
+		"markRead": "Mark as read",
+		"markAllRead": "Mark all as read",
+		"readFailed": "We couldn’t mark notifications as read. Try again.",
+		"failed": "We couldn’t load notifications. Try again.",
+		"loading": "Loading notifications…",
+		"empty": "You have no notifications in this view.",
+		"firstPage": "Return to the first page",
+		"reviewUnavailable": "You don’t currently have access to review notifications.",
+		"targetUnavailable": "This leave request is no longer available to you.",
+		"leaveRequest": "Leave request",
+		"viewAll": "View all notifications",
+		"closePanel": "Close notifications",
+		"showDemo": "Show demo data",
+		"showLive": "Show live notifications",
+		"demoLabel": "Demo data",
+		"demoHint": "Sample notifications for layout preview. Read actions affect only these examples; leave links are unavailable.",
+		"types": {
+			"LEAVE_REQUEST_SUBMITTED": "A leave request needs review.",
+			"LEAVE_REQUEST_APPROVED": "Your leave request was approved.",
+			"LEAVE_REQUEST_REJECTED": "Your leave request was rejected."
+		},
 		"operationSucceeded": "Operation completed successfully."
 	},
 	"pagination": {
@@ -1743,8 +1774,16 @@
 				"required": "Choose a value.",
 				"invalid": "Enter a valid value.",
 				"occupied": "This person already has a shift on that date. Choose another person or date.",
-				"confirm": { "edit": "Save changes", "reassign": "Reassign", "duplicate": "Duplicate" },
-				"done": { "edit": "Shift updated in preview", "reassign": "Shift reassigned in preview", "duplicate": "Shift duplicated in preview" }
+				"confirm": {
+					"edit": "Save changes",
+					"reassign": "Reassign",
+					"duplicate": "Duplicate"
+				},
+				"done": {
+					"edit": "Shift updated in preview",
+					"reassign": "Shift reassigned in preview",
+					"duplicate": "Shift duplicated in preview"
+				}
 			},
 			"shiftDetails": {
 				"title": "Shift Details",

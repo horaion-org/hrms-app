@@ -1,5 +1,36 @@
 {
 	"notifications": {
+		"title": "Notificaciones",
+		"audiences": "Vistas de notificaciones",
+		"personal": "Para ti",
+		"review": "Pendientes de revisión",
+		"pendingReview": "Solicitudes de permiso pendientes",
+		"unreadOnly": "Solo sin leer",
+		"unread": "Sin leer",
+		"unreadCount_one": "Notificaciones, {{count}} sin leer",
+		"unreadCount_other": "Notificaciones, {{count}} sin leer",
+		"countUnavailable": "Notificaciones, recuento no disponible",
+		"markRead": "Marcar como leída",
+		"markAllRead": "Marcar todas como leídas",
+		"readFailed": "No pudimos marcar las notificaciones como leídas. Inténtalo de nuevo.",
+		"failed": "No pudimos cargar las notificaciones. Inténtalo de nuevo.",
+		"loading": "Cargando notificaciones…",
+		"empty": "No tienes notificaciones en esta vista.",
+		"firstPage": "Volver a la primera página",
+		"reviewUnavailable": "Actualmente no tienes acceso a las notificaciones de revisión.",
+		"targetUnavailable": "Esta solicitud de permiso ya no está disponible para ti.",
+		"leaveRequest": "Solicitud de permiso",
+		"viewAll": "Ver todas las notificaciones",
+		"closePanel": "Cerrar notificaciones",
+		"showDemo": "Mostrar datos de ejemplo",
+		"showLive": "Mostrar notificaciones reales",
+		"demoLabel": "Datos de ejemplo",
+		"demoHint": "Notificaciones de ejemplo para previsualizar el diseño. Marcar como leída solo afecta a estos ejemplos; los enlaces a permisos no están disponibles.",
+		"types": {
+			"LEAVE_REQUEST_SUBMITTED": "Una solicitud de permiso necesita revisión.",
+			"LEAVE_REQUEST_APPROVED": "Tu solicitud de permiso fue aprobada.",
+			"LEAVE_REQUEST_REJECTED": "Tu solicitud de permiso fue rechazada."
+		},
 		"operationSucceeded": "Operación completada correctamente."
 	},
 	"pagination": {

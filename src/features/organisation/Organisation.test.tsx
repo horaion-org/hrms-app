@@ -200,7 +200,11 @@ it("hides what the workspace does not grant and never asks for it", async () => 
 	expect(
 		calls
 			.map((call) => call.path)
-			.filter((path) => path.startsWith("/api/v1/companies/"))
+			.filter(
+				(path) =>
+					path.startsWith("/api/v1/companies/") &&
+					!path.includes("/me/notifications")
+			)
 	).toEqual(["/api/v1/companies/c-1/branches"]);
 });
 
@@ -247,7 +251,11 @@ it("shows the unit counts to a person granted only at one branch", async () => {
 	expect(
 		calls
 			.map((call) => call.path)
-			.filter((path) => path.startsWith("/api/v1/companies/"))
+			.filter(
+				(path) =>
+					path.startsWith("/api/v1/companies/") &&
+					!path.includes("/me/notifications")
+			)
 	).toEqual([
 		"/api/v1/companies/c-1/branches",
 		"/api/v1/companies/c-1/departments",
@@ -283,9 +291,13 @@ it("reads permissions only from the current company", async () => {
 		await screen.findByRole("heading", { name: "Organisation Overview" })
 	).toBeVisible();
 	expect(screen.queryByRole("region")).not.toBeInTheDocument();
-	expect(calls.some((call) => call.path.startsWith("/api/v1/companies/"))).toBe(
-		false
-	);
+	expect(
+		calls.some(
+			(call) =>
+				call.path.startsWith("/api/v1/companies/") &&
+				!call.path.includes("/me/notifications")
+		)
+	).toBe(false);
 });
 
 it("keeps a refused figure unknown and reports a failed activity load", async () => {

@@ -10,6 +10,7 @@ import { PlusIcon } from "@/components/ui/Icon";
 import { Tabs, TabList, Tab, TabPanels, TabPanel } from "@/components/ui/Tabs";
 import { defaultRange } from "@/features/leave/dates";
 import { LeaveRequestDialog } from "@/features/leave/LeaveRequestDialog";
+import { LinkedLeaveRequest } from "@/features/leave/LinkedLeaveRequest";
 import { LeaveRequests } from "@/features/leave/LeaveRequests";
 import {
 	applyRefusal,
@@ -193,6 +194,22 @@ export const Leave = (): FunctionComponent => {
 	};
 	return (
 		<div>
+			{search.requestId && (
+				<LinkedLeaveRequest
+					key={`${companyId}:${ownMembershipId}:${search.requestId}:${search.memberId ?? "me"}`}
+					memberId={search.memberId}
+					requestId={search.requestId}
+					onClose={() => {
+						void navigate({
+							search: (previous) => ({
+								...previous,
+								requestId: undefined,
+								memberId: undefined,
+							}),
+						});
+					}}
+				/>
+			)}
 			<div className="flex flex-wrap items-start justify-between gap-6">
 				<div>
 					<h1 className="text-2xl font-semibold text-neutral-900 sm:text-[32px] sm:leading-11">

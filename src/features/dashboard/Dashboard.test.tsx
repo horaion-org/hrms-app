@@ -130,13 +130,13 @@ describe("Dashboard", () => {
 		});
 		await within(approvals).findByText("3");
 		expect(approvals).toHaveTextContent("70% Resolved");
-		const notifications = screen.getByRole("region", { name: "Notifications" });
+		const notifications = screen.getByRole("region", { name: "Pending leave requests" });
 		expect(
 			await within(notifications).findByText("from Aisha Rahman", {
 				exact: false,
 			})
 		).toBeInTheDocument();
-		expect(within(notifications).getAllByText("Example")).toHaveLength(2);
+		expect(within(notifications).queryByText("Example")).toBeNull();
 		expect(
 			await screen.findByText("Kent Chua added to People")
 		).toBeInTheDocument();
@@ -158,7 +158,7 @@ describe("Dashboard", () => {
 		});
 		await open();
 		const notifications = await screen.findByRole("region", {
-			name: "Notifications",
+			name: "Pending leave requests",
 		});
 		await within(notifications).findByText("from Aisha Rahman", {
 			exact: false,

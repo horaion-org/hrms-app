@@ -28,6 +28,10 @@ import {
 } from "@/features/workspace/permissionKeys";
 import { Can } from "@/features/workspace/Can";
 import { CompanySelection } from "@/pages/CompanySelection";
+import { NotificationBell } from "@/features/notifications/NotificationBell";
+
+const headerIconClasses =
+	"h-12 w-12 [&>svg]:size-8 [&>svg]:text-ink-blue-900 hover:[&>svg]:text-ink-blue-700";
 
 export const MainLayout = (): FunctionComponent => {
 	const context = useRouteContext({ from: "/_authenticated" });
@@ -55,8 +59,10 @@ export const MainLayout = (): FunctionComponent => {
 				<AppHeader
 					actions={
 						<>
+							<NotificationBell />
 							<Button
 								aria-label={t("shell.settings")}
+								className={headerIconClasses}
 								to="/settings"
 								variant="icon"
 							>

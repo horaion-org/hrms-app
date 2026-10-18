@@ -51,7 +51,7 @@ const participantSchema = z.object({
 	displayName: z.string(),
 });
 
-const leaveRequestSchema = z.object({
+export const leaveRequestSchema = z.object({
 	leaveRequestId: z.string(),
 	membershipId: z.string(),
 	employeeCode: z.string(),
@@ -212,6 +212,39 @@ export type LeaveRequestBody = {
 
 const memberLeavePath = (companyId: string, membershipId: string): string =>
 	`${companyPath(companyId)}/member-profiles/${encodeURIComponent(membershipId)}/leave-requests`;
+
+/** A deep link reads one guarded record, independent of list filters and pagination. */
+export const leaveRequestQuery = (
+	companyId: string,
+	ownMembershipId: string,
+	requestId: string,
+	memberId?: string
+): UndefinedInitialDataOptions<
+	LeaveRequest,
+	Error,
+	LeaveRequest,
+	readonly ["leave", string, "detail", string, string, string]
+> =>
+	queryOptions({
+		queryKey: [
+			"leave",
+			companyId,
+			"detail",
+			ownMembershipId,
+			memberId ?? "me",
+			requestId,
+		] as const,
+		queryFn: ({ signal }) =>
+			apiRequest(
+				`${memberId ? memberLeavePath(companyId, memberId) : `${companyPath(companyId)}/me/leave-requests`}/${encodeURIComponent(requestId)}`,
+				leaveRequestSchema,
+				{ signal, responseFormat: "record" }
+			),
+		meta: memberId
+			? administrativeMeta(companyId, { record: true })
+			: selfMeta(companyId),
+		retry,
+	});
 
 /** Applies for leave on a member's behalf; the applicant is the caller. */
 export const createLeaveRequest = (

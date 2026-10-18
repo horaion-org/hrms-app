@@ -22,6 +22,8 @@ export type LeaveSortParameter = z.infer<typeof sortParameterSchema>;
 const DEFAULT_SORT_PARAMETER: LeaveSortParameter = "requestedAt,desc";
 
 const searchSchema = z.object({
+	requestId: z.string().min(1).optional().catch(undefined),
+	memberId: z.string().min(1).optional().catch(undefined),
 	view: z.enum(["requests", "timeline"]).optional().catch(undefined),
 	branch: z.string().min(1).optional().catch(undefined),
 	status: z.enum(LEAVE_STATUSES).optional().catch(undefined),
@@ -42,8 +44,10 @@ export type LeaveSearch = z.infer<typeof searchSchema>;
 export const parseLeaveSearch = (
 	search: Record<string, unknown>
 ): LeaveSearch => {
-	const { view, branch, status, page, sort } = searchSchema.parse(search);
+	const { view, branch, status, page, sort, requestId, memberId } =
+		searchSchema.parse(search);
 	return {
+		...(requestId ? { requestId, ...(memberId ? { memberId } : {}) } : {}),
 		...(view === undefined ? {} : { view }),
 		...(branch === undefined ? {} : { branch }),
 		...(status === undefined ? {} : { status }),

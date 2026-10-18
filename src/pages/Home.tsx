@@ -17,10 +17,8 @@ import {
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { StatCard } from "@/components/ui/StatCard";
 import { Toast } from "@/components/ui/Toast";
-import {
-	EXAMPLE_NOTIFICATIONS,
-	exampleWorkforce,
-} from "@/features/dashboard/exampleDashboard";
+import { exampleWorkforce } from "@/features/dashboard/exampleDashboard";
+import { NotificationList } from "@/features/notifications/NotificationList";
 import { NotificationItem } from "@/features/dashboard/NotificationItem";
 import { QuickActions } from "@/features/dashboard/QuickActions";
 import { useActivityPage } from "@/features/dashboard/useActivityPage";
@@ -232,12 +230,15 @@ const Dashboard = (): FunctionComponent => {
 					</div>
 				</div>
 				<section
-					aria-labelledby="notifications"
+					aria-labelledby="pending-review"
 					className="flex min-w-0 flex-col rounded-xl bg-neutral-200 px-6 pt-6 pb-2 lg:h-113"
 				>
 					<div className="flex items-center justify-between gap-4">
-						<h2 className={sectionHeading} id="notifications">
-							{t(`${key}.notifications.title`)}
+						<h2
+							className="text-base font-semibold text-ink-blue-600"
+							id="pending-review"
+						>
+							{t("notifications.pendingReview")}
 						</h2>
 						{pending.status !== "hidden" && (
 							<Link className={viewAllLink} to="/leave">
@@ -291,30 +292,27 @@ const Dashboard = (): FunctionComponent => {
 									</li>
 								);
 							})}
-						{EXAMPLE_NOTIFICATIONS.map((example) => (
-							<li key={example} className="py-5 first:pt-0">
-								<NotificationItem
-									detail={t(`${key}.notifications.examples.${example}.detail`)}
-									tag={t(`${key}.exampleTag`)}
-									title={t(`${key}.notifications.examples.${example}.title`)}
-									primaryAction={{
-										label: t(
-											`${key}.notifications.examples.${example}.primary`
-										),
-										disabled: true,
-									}}
-									secondaryAction={{
-										label: t(
-											`${key}.notifications.examples.${example}.secondary`
-										),
-										disabled: true,
-									}}
-								/>
-							</li>
-						))}
 					</ul>
 				</section>
 			</div>
+			<section
+				aria-labelledby="inbox-preview"
+				className="mt-8 rounded-xl border border-neutral-300 p-6"
+			>
+				<div className="mb-4 flex items-center justify-between gap-4">
+					<h2 className="text-base font-semibold" id="inbox-preview">
+						{t("notifications.title")}
+					</h2>
+					<Link className={viewAllLink} to="/notifications">
+						{t("notifications.viewAll")}
+					</Link>
+				</div>
+				<NotificationList
+					key={`${companyId}:${ownMembershipId}`}
+					compact
+					audience="PERSONAL"
+				/>
+			</section>
 			<div className="mt-12 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,666fr)_minmax(0,390fr)]">
 				{activity.status === "hidden" ? (
 					<div />

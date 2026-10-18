@@ -96,8 +96,12 @@ export const useLeaveActions = (
 	{ ownConfirmation = false }: { ownConfirmation?: boolean } = {}
 ): LeaveActions => {
 	const client = useQueryClient();
-	const reload = (): Promise<void> =>
-		client.invalidateQueries({ queryKey: ["leave", companyId] });
+	const reload = async (): Promise<void> => {
+		await Promise.all([
+			client.invalidateQueries({ queryKey: ["leave", companyId] }),
+			client.invalidateQueries({ queryKey: ["notifications", companyId] }),
+		]);
+	};
 	return {
 		approve: useMutation({
 			meta: { successMessage: ownConfirmation ? false : undefined },
