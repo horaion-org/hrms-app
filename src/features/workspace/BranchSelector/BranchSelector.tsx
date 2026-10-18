@@ -111,6 +111,7 @@ export const BranchSelector = ({
 		>
 			{countries.length > 1 && (
 				<FormRow
+					className="sm:[&>label]:self-center"
 					fieldWidth="sm:w-44"
 					htmlFor={countryId}
 					label={t("workspace.branchSelector.country")}
@@ -125,6 +126,7 @@ export const BranchSelector = ({
 				</FormRow>
 			)}
 			<FormRow
+				className="sm:[&>label]:self-center"
 				fieldWidth="sm:w-44"
 				htmlFor={branchId}
 				label={label ?? t("workspace.branchSelector.branch")}

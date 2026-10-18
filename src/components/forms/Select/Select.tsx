@@ -158,7 +158,7 @@ export const Select = (props: SelectProps): FunctionComponent => {
 									disabled
 										? "cursor-not-allowed border-neutral-400 bg-neutral-200 text-neutral-500"
 										: joinClassNames(
-												"bg-white text-ink-blue-900",
+												"cursor-pointer bg-white text-ink-blue-900",
 												status
 													? statusClasses[status]
 													: "border-neutral-400 focus:border-ink-blue-900"
