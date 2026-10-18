@@ -11,6 +11,8 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
+import type { Branch } from "@/features/organisation/api";
+import { useUpdateBranch } from "@/features/organisation/useChangeListRow";
 import { useCompanyMemberSearch } from "@/features/organisation/useCompanyMemberSearch";
 import { useCreateBranch } from "@/features/organisation/useCreateBranch";
 import { refusalFor } from "@/features/organisation/CreateBranchDialog/refusalFor";
@@ -21,12 +23,15 @@ import {
 
 export type CreateBranchDialogProps = {
 	companyId: string;
+	/** When editing, only details change; status and existing heads are preserved. */
+	editing?: Branch;
 	onClose: () => void;
 };
 
 /** Mount when opened and unmount when closed so every attempt starts fresh. */
 export const CreateBranchDialog = ({
 	companyId,
+	editing,
 	onClose,
 }: CreateBranchDialogProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
@@ -42,7 +47,11 @@ export const CreateBranchDialog = ({
 		cityIds = formRowIds(cityId),
 		countryIds = formRowIds(countryId),
 		headsIds = formRowIds(headsId);
-	const schema = useMemo(() => createBranchSchema(t), [t]);
+	const isEditing = editing !== undefined;
+	const schema = useMemo(
+		() => createBranchSchema(t, isEditing),
+		[t, isEditing]
+	);
 	const {
 		register,
 		control,
@@ -50,10 +59,16 @@ export const CreateBranchDialog = ({
 		reset,
 		setError,
 		setFocus,
-		formState: { errors, isSubmitting },
+		formState: { errors, isSubmitting, isDirty },
 	} = useForm<CreateBranchValues>({
 		resolver: zodResolver(schema),
-		defaultValues: { name: "", code: "", city: "", country: "", heads: [] },
+		defaultValues: {
+			name: editing?.name ?? "",
+			code: editing?.code ?? "",
+			city: editing?.city ?? "",
+			country: editing?.country ?? "",
+			heads: [],
+		},
 		mode: "onSubmit",
 		reValidateMode: "onChange",
 		shouldFocusError: false,
@@ -72,8 +87,9 @@ export const CreateBranchDialog = ({
 	);
 	const heads = useWatch({ control, name: "heads" });
 	const [query, setQuery] = useState("");
-	const members = useCompanyMemberSearch(companyId, query);
+	const members = useCompanyMemberSearch(companyId, query, !isEditing);
 	const create = useCreateBranch(companyId);
+	const update = useUpdateBranch(companyId);
 	const [message, setMessage] = useState<string>();
 	const refusedField = useRef<
 		"name" | "code" | "city" | "country" | "heads" | null
@@ -100,19 +116,26 @@ export const CreateBranchDialog = ({
 		inFlight.current = true;
 		setMessage(undefined);
 		try {
-			await create.mutateAsync({
+			const details = {
 				name: values.name,
 				code: values.code,
 				city: values.city,
 				country: values.country,
-				initialHeadCompanyMembershipIds: values.heads.map(
-					(head) => head.membershipId
-				),
-			});
+			};
+			if (editing) {
+				await update.mutateAsync({ ...editing, ...details });
+			} else {
+				await create.mutateAsync({
+					...details,
+					initialHeadCompanyMembershipIds: values.heads.map(
+						(head) => head.membershipId
+					),
+				});
+			}
 			reset();
 			onClose();
 		} catch (error) {
-			const refusal = refusalFor(error, values, t);
+			const refusal = refusalFor(error, values, t, isEditing);
 			if (refusal.fields.code)
 				setError("code", { type: "server", message: refusal.fields.code });
 			if (refusal.fields.name)
@@ -149,12 +172,14 @@ export const CreateBranchDialog = ({
 	return (
 		<Dialog
 			open
-			description={t(`${key}.description`)}
 			preventClose={isSubmitting}
-			title={t(`${key}.title`)}
+			title={t(isEditing ? `${key}.editTitle` : `${key}.title`)}
+			description={t(
+				isEditing ? `${key}.editDescription` : `${key}.description`
+			)}
 			footer={
 				<div className="flex justify-end gap-3">
-					<Button disabled={isSubmitting} variant="secondary" onClick={close}>
+					<Button disabled={isSubmitting} variant="cancel" onClick={close}>
 						{t(`${key}.cancel`)}
 					</Button>
 					<Button
@@ -162,14 +187,16 @@ export const CreateBranchDialog = ({
 						loading={isSubmitting}
 						type="submit"
 						disabled={
-							!name.trim() &&
-							!code.trim() &&
-							!city.trim() &&
-							!country &&
-							heads.length === 0
+							isEditing
+								? !isDirty
+								: !name.trim() &&
+									!code.trim() &&
+									!city.trim() &&
+									!country &&
+									heads.length === 0
 						}
 					>
-						{t(`${key}.submit`)}
+						{t(isEditing ? `${key}.editSubmit` : `${key}.submit`)}
 					</Button>
 				</div>
 			}
@@ -327,72 +354,76 @@ export const CreateBranchDialog = ({
 						)}
 					/>
 				</FormRow>
-				<FormRow
-					required
-					counter={t(`${key}.headsCounter`, { count: heads.length })}
-					error={errors.heads?.message}
-					hint={t(`${key}.headsHint`)}
-					htmlFor={headsId}
-					label={t(`${key}.heads`)}
-					layout="stacked"
-				>
-					<Controller
-						control={control}
-						name="heads"
-						render={({ field }) => (
-							<Combobox
-								ref={field.ref}
-								aria-required
-								aria-invalid={Boolean(errors.heads)}
-								aria-label={t(`${key}.heads`)}
-								disabled={isSubmitting}
-								getKey={(member) => member.membershipId}
-								getLabel={(member) => member.displayName}
-								id={headsId}
-								loading={members.isFetching}
-								loadingText={t(`${key}.loading`)}
-								maxSelected={20}
-								options={members.data?.items ?? []}
-								placeholder={t(`${key}.headsPlaceholder`)}
-								query={query}
-								searchPlaceholder={t(`${key}.searchPlaceholder`)}
-								status={errors.heads ? "error" : undefined}
-								value={field.value}
-								aria-describedby={
-									errors.heads ? headsIds.errorId : headsIds.hintId
-								}
-								emptyText={t(
-									members.isError ? `${key}.membersFailed` : `${key}.noResults`
-								)}
-								footer={
-									members.data &&
-									t(
-										members.data.total > 20
-											? `${key}.membersTruncated`
-											: `${key}.membersFooter`,
-										{ total: members.data.total }
-									)
-								}
-								renderOption={(member) => (
-									<span className="flex items-center gap-3">
-										<Avatar
-											className="size-9 text-sm"
-											name={member.displayName}
-										/>
-										<span className="min-w-0 flex-1 truncate">
-											{member.displayName}
+				{!isEditing && (
+					<FormRow
+						required
+						counter={t(`${key}.headsCounter`, { count: heads.length })}
+						error={errors.heads?.message}
+						hint={t(`${key}.headsHint`)}
+						htmlFor={headsId}
+						label={t(`${key}.heads`)}
+						layout="stacked"
+					>
+						<Controller
+							control={control}
+							name="heads"
+							render={({ field }) => (
+								<Combobox
+									ref={field.ref}
+									aria-required
+									aria-invalid={Boolean(errors.heads)}
+									aria-label={t(`${key}.heads`)}
+									disabled={isSubmitting}
+									getKey={(member) => member.membershipId}
+									getLabel={(member) => member.displayName}
+									id={headsId}
+									loading={members.isFetching}
+									loadingText={t(`${key}.loading`)}
+									maxSelected={20}
+									options={members.data?.items ?? []}
+									placeholder={t(`${key}.headsPlaceholder`)}
+									query={query}
+									searchPlaceholder={t(`${key}.searchPlaceholder`)}
+									status={errors.heads ? "error" : undefined}
+									value={field.value}
+									aria-describedby={
+										errors.heads ? headsIds.errorId : headsIds.hintId
+									}
+									emptyText={t(
+										members.isError
+											? `${key}.membersFailed`
+											: `${key}.noResults`
+									)}
+									footer={
+										members.data &&
+										t(
+											members.data.total > 20
+												? `${key}.membersTruncated`
+												: `${key}.membersFooter`,
+											{ total: members.data.total }
+										)
+									}
+									renderOption={(member) => (
+										<span className="flex items-center gap-3">
+											<Avatar
+												className="size-9 text-sm"
+												name={member.displayName}
+											/>
+											<span className="min-w-0 flex-1 truncate">
+												{member.displayName}
+											</span>
+											<Badge className="normal-case" tone="success">
+												{t(`${key}.active`)}
+											</Badge>
 										</span>
-										<Badge className="normal-case" tone="success">
-											{t(`${key}.active`)}
-										</Badge>
-									</span>
-								)}
-								onChange={field.onChange}
-								onQueryChange={setQuery}
-							/>
-						)}
-					/>
-				</FormRow>
+									)}
+									onChange={field.onChange}
+									onQueryChange={setQuery}
+								/>
+							)}
+						/>
+					</FormRow>
+				)}
 			</form>
 		</Dialog>
 	);

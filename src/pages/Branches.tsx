@@ -30,6 +30,7 @@ export const Branches = (): FunctionComponent => {
 	const access = useAccess();
 	const { t, i18n } = useTranslation();
 	const [creating, setCreating] = useState(false);
+	const [editing, setEditing] = useState<Branch>();
 	// The Branch whose status the person asked to change, until they confirm or cancel.
 	const [changing, setChanging] = useState<Branch>();
 	const setBranchStatus = useSetBranchStatus(companyId);
@@ -107,7 +108,8 @@ export const Branches = (): FunctionComponent => {
 					</>
 				),
 				// Editing a Branch is granted at that Branch, or company-wide.
-				(branch) => access.can("branch:update", branchScope(branch.branchId))
+				(branch) => access.can("branch:update", branchScope(branch.branchId)),
+				setEditing
 			),
 		],
 		[t, i18n.language, access]
@@ -152,6 +154,17 @@ export const Branches = (): FunctionComponent => {
 					}}
 				/>
 			)}
+			{editing &&
+				access.can("branch:update", branchScope(editing.branchId)) && (
+					<CreateBranchDialog
+						key={`${companyId}-${editing.branchId}`}
+						companyId={companyId}
+						editing={editing}
+						onClose={() => {
+							setEditing(undefined);
+						}}
+					/>
+				)}
 			{changing && (
 				<ConfirmDialog
 					cancelLabel={t("organisation.list.cancel")}

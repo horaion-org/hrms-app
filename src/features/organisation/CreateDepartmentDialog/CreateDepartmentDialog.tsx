@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { FormRow, formRowIds } from "@/components/forms/FormRow";
 import { Select } from "@/components/forms/Select";
+import type { Department } from "@/features/organisation/api";
 import { refusalFor } from "@/features/organisation/CreateDepartmentDialog/refusalFor";
 import {
 	createDepartmentSchema,
@@ -15,6 +16,7 @@ import { CreateFormDialog } from "@/features/organisation/CreateFormDialog";
 import { HeadsField } from "@/features/organisation/HeadsField";
 import { UnitNameField } from "@/features/organisation/UnitNameField";
 import { useCreateFormSubmit } from "@/features/organisation/useCreateFormSubmit";
+import { useUpdateDepartment } from "@/features/organisation/useChangeListRow";
 import { useCreateDepartment } from "@/features/organisation/useCreateInOrganisation";
 import { useBranches } from "@/features/organisation/useOrganisationList";
 import { branchScope } from "@/features/workspace/scopes";
@@ -22,6 +24,8 @@ import { useAccess } from "@/features/workspace/useAccess";
 
 export type CreateDepartmentDialogProps = {
 	companyId: string;
+	/** Renames an existing Department without moving it or changing its heads. */
+	editing?: Department;
 	onClose: () => void;
 };
 
@@ -34,6 +38,7 @@ const ACTIVE_BRANCHES = {
 /** Mount when opened and unmount when closed so every attempt starts fresh. */
 export const CreateDepartmentDialog = ({
 	companyId,
+	editing,
 	onClose,
 }: CreateDepartmentDialogProps): FunctionComponent => {
 	const { t } = useTranslation();
@@ -43,10 +48,18 @@ export const CreateDepartmentDialog = ({
 	const formId = useId();
 	const branchId = `${formId}-branch`;
 	const branchIds = formRowIds(branchId);
-	const schema = useMemo(() => createDepartmentSchema(t), [t]);
+	const isEditing = editing !== undefined;
+	const schema = useMemo(
+		() => createDepartmentSchema(t, isEditing),
+		[t, isEditing]
+	);
 	const form = useForm<CreateDepartmentValues>({
 		resolver: zodResolver(schema),
-		defaultValues: { branchId: "", name: "", heads: [] },
+		defaultValues: {
+			branchId: editing?.branchId ?? "",
+			name: editing?.name ?? "",
+			heads: [],
+		},
 		mode: "onSubmit",
 		reValidateMode: "onChange",
 	});
@@ -56,13 +69,13 @@ export const CreateDepartmentDialog = ({
 		handleSubmit,
 		getValues,
 		setValue,
-		formState: { errors, isSubmitting },
+		formState: { errors, isSubmitting, isDirty },
 	} = form;
 	const [name, heads] = useWatch({ control, name: ["name", "heads"] });
-	const branches = useBranches(companyId, ACTIVE_BRANCHES);
+	const branches = useBranches(companyId, ACTIVE_BRANCHES, !isEditing);
 	// Only branches where the person may create departments are offered.
 	const branchOptions =
-		branches.status === "ready"
+		!isEditing && branches.status === "ready"
 			? branches.items
 					.filter((branch) =>
 						access.can("department:create", branchScope(branch.branchId))
@@ -79,25 +92,30 @@ export const CreateDepartmentDialog = ({
 		if (onlyBranch && !getValues("branchId")) setValue("branchId", onlyBranch);
 	}, [onlyBranch, getValues, setValue]);
 	const create = useCreateDepartment(companyId);
+	const update = useUpdateDepartment(companyId);
 	const submit = useCreateFormSubmit(form, FIELDS, onClose);
 	const branchError = errors.branchId?.message;
 	return (
 		<CreateFormDialog
 			alertRef={submit.alertRef}
 			cancelLabel={t(`${key}.cancel`)}
-			description={t(`${key}.description`)}
 			formId={formId}
 			message={submit.message}
-			submitDisabled={!name.trim() && heads.length === 0}
-			submitLabel={t(`${key}.submit`)}
+			submitDisabled={isEditing ? !isDirty : !name.trim() && heads.length === 0}
+			submitLabel={t(isEditing ? `${key}.editSubmit` : `${key}.submit`)}
 			submitting={isSubmitting}
-			title={t(`${key}.title`)}
+			title={t(isEditing ? `${key}.editTitle` : `${key}.title`)}
+			description={t(
+				isEditing ? `${key}.editDescription` : `${key}.description`
+			)}
 			onClose={submit.close}
 			onSubmit={(event) =>
 				handleSubmit(async (values) => {
 					const refusal = await submit.run(
-						() =>
-							create.mutateAsync({
+						() => {
+							if (editing)
+								return update.mutateAsync({ ...editing, name: values.name });
+							return create.mutateAsync({
 								branchId: values.branchId,
 								body: {
 									name: values.name,
@@ -105,8 +123,9 @@ export const CreateDepartmentDialog = ({
 										(head) => head.membershipId
 									),
 								},
-							}),
-						(error) => refusalFor(error, values.name, t)
+							});
+						},
+						(error) => refusalFor(error, values.name, t, isEditing)
 					);
 					if (refusal?.fields.branchId)
 						void client.invalidateQueries({
@@ -119,45 +138,47 @@ export const CreateDepartmentDialog = ({
 				})(event)
 			}
 		>
-			<FormRow
-				required
-				error={branchError}
-				htmlFor={branchId}
-				label={t(`${key}.branch`)}
-				layout="stacked"
-				hint={
-					branches.status === "pending"
-						? t(`${key}.branchesLoading`)
-						: branches.status === "error"
-							? t(`${key}.branchesFailed`)
-							: branchOptions.length === 0
-								? t(`${key}.branchesEmpty`)
-								: t(`${key}.branchHint`)
-				}
-			>
-				<Controller
-					control={control}
-					name="branchId"
-					render={({ field }) => (
-						<Select
-							ref={field.ref}
-							aria-invalid={Boolean(branchError)}
-							aria-labelledby={branchIds.labelId}
-							className="w-full"
-							disabled={isSubmitting || branchOptions.length === 0}
-							name={field.name}
-							options={branchOptions}
-							placeholder={t(`${key}.branchPlaceholder`)}
-							status={branchError ? "error" : undefined}
-							value={field.value}
-							aria-describedby={
-								branchError ? branchIds.errorId : branchIds.hintId
-							}
-							onChange={field.onChange}
-						/>
-					)}
-				/>
-			</FormRow>
+			{!isEditing && (
+				<FormRow
+					required
+					error={branchError}
+					htmlFor={branchId}
+					label={t(`${key}.branch`)}
+					layout="stacked"
+					hint={
+						branches.status === "pending"
+							? t(`${key}.branchesLoading`)
+							: branches.status === "error"
+								? t(`${key}.branchesFailed`)
+								: branchOptions.length === 0
+									? t(`${key}.branchesEmpty`)
+									: t(`${key}.branchHint`)
+					}
+				>
+					<Controller
+						control={control}
+						name="branchId"
+						render={({ field }) => (
+							<Select
+								ref={field.ref}
+								aria-invalid={Boolean(branchError)}
+								aria-labelledby={branchIds.labelId}
+								className="w-full"
+								disabled={isSubmitting || branchOptions.length === 0}
+								name={field.name}
+								options={branchOptions}
+								placeholder={t(`${key}.branchPlaceholder`)}
+								status={branchError ? "error" : undefined}
+								value={field.value}
+								aria-describedby={
+									branchError ? branchIds.errorId : branchIds.hintId
+								}
+								onChange={field.onChange}
+							/>
+						)}
+					/>
+				</FormRow>
+			)}
 			<UnitNameField
 				autoFocus
 				counter={t(`${key}.nameCounter`, { count: name.length })}
@@ -169,24 +190,26 @@ export const CreateDepartmentDialog = ({
 				placeholder={t(`${key}.namePlaceholder`)}
 				registration={register("name")}
 			/>
-			<Controller
-				control={control}
-				name="heads"
-				render={({ field }) => (
-					<HeadsField
-						ref={field.ref}
-						companyId={companyId}
-						disabled={isSubmitting}
-						error={errors.heads?.message}
-						hint={t(`${key}.headsHint`)}
-						id={`${formId}-heads`}
-						label={t(`${key}.heads`)}
-						placeholder={t(`${key}.headsPlaceholder`)}
-						value={field.value}
-						onChange={field.onChange}
-					/>
-				)}
-			/>
+			{!isEditing && (
+				<Controller
+					control={control}
+					name="heads"
+					render={({ field }) => (
+						<HeadsField
+							ref={field.ref}
+							companyId={companyId}
+							disabled={isSubmitting}
+							error={errors.heads?.message}
+							hint={t(`${key}.headsHint`)}
+							id={`${formId}-heads`}
+							label={t(`${key}.heads`)}
+							placeholder={t(`${key}.headsPlaceholder`)}
+							value={field.value}
+							onChange={field.onChange}
+						/>
+					)}
+				/>
+			)}
 		</CreateFormDialog>
 	);
 };

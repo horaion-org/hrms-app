@@ -15,7 +15,8 @@ import { selfMeta } from "@/features/workspace/queryAccess";
 /** Delays search requests while typing and preserves the current page during a new request. */
 export const useCompanyMemberSearch = (
 	companyId: string,
-	query: string
+	query: string,
+	enabled = true
 ): UseQueryResult<ListPage<CompanyMember>> => {
 	const [debounced, setDebounced] = useState(query.trim());
 	useEffect(() => {
@@ -27,6 +28,7 @@ export const useCompanyMemberSearch = (
 		};
 	}, [query]);
 	return useQuery({
+		enabled,
 		queryKey: ["organisation", companyId, "members", "ACTIVE", debounced],
 		queryFn: ({ signal }) =>
 			searchCompanyMembers(

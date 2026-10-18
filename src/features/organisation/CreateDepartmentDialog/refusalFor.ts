@@ -7,7 +7,8 @@ export type DepartmentField = "branchId" | "name" | "heads";
 export const refusalFor = (
 	error: unknown,
 	name: string,
-	t: TFunction
+	t: TFunction,
+	editing = false
 ): Refusal<DepartmentField> => {
 	const key = "organisation.departments.createDialog";
 	return mapRefusal<DepartmentField>(error, {
@@ -26,11 +27,17 @@ export const refusalFor = (
 				refreshMembers: true,
 			},
 			// The chosen branch was deactivated or removed since the list loaded.
-			"404 BRANCH_NOT_FOUND": {
-				field: "branchId",
-				message: t(`${key}.branchUnavailable`),
-				refreshMembers: true,
-			},
+			"404 BRANCH_NOT_FOUND": editing
+				? undefined
+				: {
+						field: "branchId",
+						message: t(`${key}.branchUnavailable`),
+						refreshMembers: true,
+					},
+		},
+		alerts: {
+			"404 DEPARTMENT_NOT_FOUND": t(`${key}.gone`),
+			"404 BRANCH_NOT_FOUND": t(`${key}.gone`),
 		},
 		fieldErrors: {
 			name: { field: "name", message: t(`${key}.nameRejected`) },
@@ -39,7 +46,7 @@ export const refusalFor = (
 				message: t(`${key}.headsRejected`),
 			},
 		},
-		forbidden: t(`${key}.forbidden`),
-		failed: t(`${key}.failed`),
+		forbidden: t(editing ? `${key}.editForbidden` : `${key}.forbidden`),
+		failed: t(editing ? `${key}.editFailed` : `${key}.failed`),
 	});
 };
