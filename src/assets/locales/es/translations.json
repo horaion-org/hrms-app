@@ -914,6 +914,7 @@
 			"nextReview": "Podrás revisarlo y hacer cualquier ajuste después de generarlo.",
 			"note": "La generación puede tardar unos momentos. Cuantas más restricciones y datos, más puede tardar.",
 			"noShifts": "Elige al menos un turno antes de generar este horario.",
+			"noEmployees": "Este departamento no tiene empleados que se puedan programar. Asigna un puesto a al menos un miembro activo del departamento e inténtalo de nuevo.",
 			"constraintUnusable": "Una restricción elegida nombra un turno que este horario no incluye o un puesto que ya no está activo. Marca ese turno, edita la restricción o desmárcala e inténtalo de nuevo.",
 			"notDraft": "Este horario ya se generó.",
 			"forbidden": "Ya no tienes permiso para generar este horario.",

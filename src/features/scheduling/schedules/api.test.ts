@@ -262,6 +262,12 @@ describe("schedule refusals", () => {
 		).toEqual({ periodStart: "Choose a period that starts on a Monday." });
 	});
 
+	it("puts a name the naming rule refuses on the name, even without field errors", () => {
+		expect(
+			scheduleRefusal(problem(400, "INVALID_SCHEDULE_NAME"), false, t).fields
+		).toEqual({ name: "Check the schedule name and try again." });
+	});
+
 	it("explains a schedule that is no longer a draft, and a ticked shift that is gone", () => {
 		expect(
 			scheduleRefusal(problem(409, "SCHEDULE_NOT_DRAFT"), false, t).message
@@ -299,6 +305,11 @@ describe("schedule refusals", () => {
 			"SCHEDULE_HAS_NO_SHIFTS",
 			409,
 			"Choose at least one shift before generating this schedule.",
+		],
+		[
+			"SCHEDULE_HAS_NO_EMPLOYEES",
+			409,
+			"This department has no employees who can be scheduled. Give at least one active member of the department a job title, then try again.",
 		],
 		["SCHEDULE_NOT_DRAFT", 409, "This schedule has already been generated."],
 		[

@@ -8,8 +8,10 @@ import { mapRefusal, type Refusal } from "@/features/organisation/refusal";
  */
 export const SCHEDULE_REFUSAL_CODES = {
 	periodNotMonday: "400 SCHEDULE_PERIOD_NOT_MONDAY",
+	invalidName: "400 INVALID_SCHEDULE_NAME",
 	notDraft: "409 SCHEDULE_NOT_DRAFT",
 	hasNoShifts: "409 SCHEDULE_HAS_NO_SHIFTS",
+	hasNoEmployees: "409 SCHEDULE_HAS_NO_EMPLOYEES",
 	constraintUnusable: "409 SCHEDULE_CONSTRAINT_UNUSABLE",
 	scheduleNotFound: "404 SCHEDULE_NOT_FOUND",
 	shiftNotFound: "404 SHIFT_NOT_FOUND",
@@ -39,6 +41,7 @@ export const scheduleRefusal = (
 	return mapRefusal<ScheduleField>(error, {
 		codes: {
 			[codes.periodNotMonday]: field("periodStart", t(`${key}.periodRejected`)),
+			[codes.invalidName]: field("name", t(`${key}.nameRejected`)),
 		},
 		alerts: {
 			[codes.notDraft]: t(`${key}.notDraft`),
@@ -81,6 +84,7 @@ export const generationRefusal = (error: unknown, t: TFunction): string => {
 		mapRefusal<never>(error, {
 			alerts: {
 				[codes.hasNoShifts]: t(`${key}.noShifts`),
+				[codes.hasNoEmployees]: t(`${key}.noEmployees`),
 				[codes.constraintUnusable]: t(`${key}.constraintUnusable`),
 				[codes.notDraft]: t(`${key}.notDraft`),
 				[codes.scheduleNotFound]: t("scheduling.draft.gone"),

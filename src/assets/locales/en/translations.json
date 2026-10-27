@@ -1710,6 +1710,7 @@
 			"nextReview": "You’ll be able to review and make any adjustments after generation.",
 			"note": "Generation may take a few moments. The more constraints and data, the longer it may take.",
 			"noShifts": "Choose at least one shift before generating this schedule.",
+			"noEmployees": "This department has no employees who can be scheduled. Give at least one active member of the department a job title, then try again.",
 			"constraintUnusable": "A chosen constraint names a shift this schedule doesn’t include or a job title that’s no longer active. Tick that shift, edit the constraint or untick it, then try again.",
 			"notDraft": "This schedule has already been generated.",
 			"forbidden": "You no longer have permission to generate this schedule.",
