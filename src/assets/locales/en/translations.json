@@ -1293,6 +1293,8 @@
 			"statuses": {
 				"DRAFT": "Draft",
 				"GENERATION_REQUESTED": "Generation requested",
+				"GENERATED": "Generated",
+				"GENERATION_FAILED": "Generation failed",
 				"PROCESSING": "Processing",
 				"PENDING": "Pending",
 				"APPROVED": "Approved",

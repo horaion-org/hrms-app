@@ -496,6 +496,8 @@
 			"generating": "Generando horario",
 			"noMatch": "Ningún horario coincide con tu búsqueda.",
 			"statuses": {
+				"GENERATED": "Generado",
+				"GENERATION_FAILED": "Generación fallida",
 				"PROCESSING": "Procesando",
 				"PENDING": "Pendiente",
 				"APPROVED": "Aprobado",

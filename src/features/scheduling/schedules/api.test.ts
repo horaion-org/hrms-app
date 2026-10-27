@@ -132,6 +132,30 @@ describe("schedules client", () => {
 		await expect(fetchSchedule("c-1", UNIT, "s-1")).resolves.toEqual(schedule);
 	});
 
+	it("reads schedules whose generation ended, each keeping its status", async () => {
+		const generated = generatedScheduleFixture({ status: "GENERATED" });
+		const failed = generatedScheduleFixture({
+			scheduleId: "s-2",
+			status: "GENERATION_FAILED",
+		});
+		stubApi({
+			"GET /api/v1/companies/c-1/schedules": {
+				status: 200,
+				body: envelope({
+					content: [generated, failed],
+					page: { hasNext: false },
+				}),
+			},
+		});
+
+		const schedules = await fetchSchedules("c-1");
+		expect(schedules).toEqual([generated, failed]);
+		expect(schedules.map((schedule) => schedule.status)).toEqual([
+			"GENERATED",
+			"GENERATION_FAILED",
+		]);
+	});
+
 	it("rejects a schedule with an unknown status instead of trusting its type", async () => {
 		stubApi({
 			[`GET ${SCHEDULES}/s-1`]: {
