@@ -496,6 +496,8 @@
 			"generating": "Generando horario",
 			"noMatch": "Ningún horario coincide con tu búsqueda.",
 			"statuses": {
+				"DRAFT": "Borrador",
+				"GENERATION_REQUESTED": "Generación solicitada",
 				"GENERATED": "Generado",
 				"GENERATION_FAILED": "Generación fallida",
 				"PROCESSING": "Procesando",
@@ -922,7 +924,9 @@
 			"missing": "Este borrador no existe o no tienes permiso para verlo.",
 			"failed": "No pudimos cargar el borrador. Inténtalo de nuevo.",
 			"saved": "Borrador guardado",
+			"generationRequested": "Se solicitó la generación de este horario. Muestra los turnos y las restricciones con los que se generará y ya no se puede cambiar.",
 			"generated": "Este horario ya se generó. Muestra los turnos y las restricciones con los que se generó y ya no se puede cambiar.",
+			"generationFailed": "No se pudo generar este horario. Muestra los turnos y las restricciones con los que se iba a generar y ya no se puede cambiar.",
 			"readOnly": "Puedes ver este borrador, pero no tienes permiso para cambiarlo.",
 			"periodRejected": "Elige un periodo que empiece en lunes.",
 			"nameRejected": "Revisa el nombre del horario e inténtalo de nuevo.",

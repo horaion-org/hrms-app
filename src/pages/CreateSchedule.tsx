@@ -44,6 +44,7 @@ import {
 import type {
 	ScheduleBody,
 	ScheduleShift,
+	ScheduleStatus,
 } from "@/features/scheduling/schedules/api";
 import {
 	generationRefusal,
@@ -122,6 +123,19 @@ const draftProblemKey = (
 	if (status === "hidden" || status === "missing")
 		return "scheduling.draft.missing";
 	return "scheduling.draft.loading";
+};
+
+/** What a frozen schedule's notice says: generation requested, done or failed. */
+const frozenNoticeKey = (
+	status: ScheduleStatus
+):
+	| "scheduling.draft.generationRequested"
+	| "scheduling.draft.generated"
+	| "scheduling.draft.generationFailed" => {
+	if (status === "GENERATED") return "scheduling.draft.generated";
+	if (status === "GENERATION_FAILED")
+		return "scheduling.draft.generationFailed";
+	return "scheduling.draft.generationRequested";
 };
 
 /**
@@ -471,7 +485,7 @@ export const CreateSchedule = (): FunctionComponent => {
 	};
 	// A frozen schedule, or a draft the person may not change, is shown as it is.
 	const notice = frozen
-		? t("scheduling.draft.generated")
+		? t(frozenNoticeKey(saved.status))
 		: saved && !canSave
 			? t("scheduling.draft.readOnly")
 			: undefined;
