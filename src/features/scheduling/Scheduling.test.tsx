@@ -12,6 +12,7 @@ import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
 import { exampleSchedules } from "@/features/scheduling/schedules";
 import {
+	generatedScheduleFixture,
 	scheduleFixture,
 	schedulingWorkspace,
 } from "@/features/scheduling/schedules/fixtures";
@@ -134,4 +135,53 @@ it("shows API history and links to the saved schedule instead of an example rost
 	expect(
 		screen.getByRole("region", { name: "Original card preview" })
 	).toBeInTheDocument();
+});
+
+it("labels and tones every API status in the history", async () => {
+	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+	const statuses = [
+		{ status: "DRAFT", label: "Draft", background: "bg-neutral-400" },
+		{
+			status: "GENERATION_REQUESTED",
+			label: "Generation requested",
+			background: "bg-warning-100",
+		},
+		{ status: "GENERATED", label: "Generated", background: "bg-success-100" },
+		{
+			status: "GENERATION_FAILED",
+			label: "Generation failed",
+			background: "bg-error-100",
+		},
+	] as const;
+	stubApi({
+		"POST /api/v1/public/sessions/refreshes": accessPassReply(),
+		"GET /api/v1/me": currentUserReply(),
+		"GET /api/v1/me/workspace": {
+			status: 200,
+			body: envelope(schedulingWorkspace(["schedule:read"])),
+		},
+		"GET /api/v1/companies/c-1/schedules": {
+			status: 200,
+			body: envelope({
+				content: statuses.map(({ status }) => {
+					const overrides = { scheduleId: status, name: `${status} schedule` };
+					return status === "DRAFT"
+						? scheduleFixture(overrides)
+						: generatedScheduleFixture({ ...overrides, status });
+				}),
+				page: { hasNext: false },
+			}),
+		},
+	});
+	app = await openApp("/scheduling");
+	renderAuthApp(app);
+	const history = await screen.findByRole("table", {
+		name: "Schedule history",
+	});
+	for (const { status, label, background } of statuses) {
+		const row = within(history).getByRole("row", {
+			name: new RegExp(`^${status} schedule`),
+		});
+		expect(within(row).getByText(label)).toHaveClass(background);
+	}
 });

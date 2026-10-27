@@ -15,7 +15,10 @@ import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId
 import { useSchedules } from "@/features/scheduling/schedules/useSchedules";
 import type { Schedule } from "@/features/scheduling/schedules/api";
 import { ScheduleCard } from "@/features/scheduling/ScheduleCard";
-import { exampleSchedules } from "@/features/scheduling/schedules";
+import {
+	exampleSchedules,
+	scheduleStatusTones,
+} from "@/features/scheduling/schedules";
 
 const key = "scheduling.overview";
 
@@ -85,7 +88,7 @@ export const Scheduling = (): FunctionComponent => {
 				id: "status",
 				header: t(`${key}.history.status`),
 				cell: (schedule) => (
-					<Badge tone={schedule.status === "DRAFT" ? "neutral" : "warning"}>
+					<Badge tone={scheduleStatusTones[schedule.status]}>
 						{t(`${key}.statuses.${schedule.status}`)}
 					</Badge>
 				),

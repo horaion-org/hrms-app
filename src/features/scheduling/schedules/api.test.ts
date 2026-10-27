@@ -132,6 +132,30 @@ describe("schedules client", () => {
 		await expect(fetchSchedule("c-1", UNIT, "s-1")).resolves.toEqual(schedule);
 	});
 
+	it("reads schedules whose generation ended, each keeping its status", async () => {
+		const generated = generatedScheduleFixture({ status: "GENERATED" });
+		const failed = generatedScheduleFixture({
+			scheduleId: "s-2",
+			status: "GENERATION_FAILED",
+		});
+		stubApi({
+			"GET /api/v1/companies/c-1/schedules": {
+				status: 200,
+				body: envelope({
+					content: [generated, failed],
+					page: { hasNext: false },
+				}),
+			},
+		});
+
+		const schedules = await fetchSchedules("c-1");
+		expect(schedules).toEqual([generated, failed]);
+		expect(schedules.map((schedule) => schedule.status)).toEqual([
+			"GENERATED",
+			"GENERATION_FAILED",
+		]);
+	});
+
 	it("rejects a schedule with an unknown status instead of trusting its type", async () => {
 		stubApi({
 			[`GET ${SCHEDULES}/s-1`]: {
@@ -238,6 +262,12 @@ describe("schedule refusals", () => {
 		).toEqual({ periodStart: "Choose a period that starts on a Monday." });
 	});
 
+	it("puts a name the naming rule refuses on the name, even without field errors", () => {
+		expect(
+			scheduleRefusal(problem(400, "INVALID_SCHEDULE_NAME"), false, t).fields
+		).toEqual({ name: "Check the schedule name and try again." });
+	});
+
 	it("explains a schedule that is no longer a draft, and a ticked shift that is gone", () => {
 		expect(
 			scheduleRefusal(problem(409, "SCHEDULE_NOT_DRAFT"), false, t).message
@@ -275,6 +305,11 @@ describe("schedule refusals", () => {
 			"SCHEDULE_HAS_NO_SHIFTS",
 			409,
 			"Choose at least one shift before generating this schedule.",
+		],
+		[
+			"SCHEDULE_HAS_NO_EMPLOYEES",
+			409,
+			"This department has no employees who can be scheduled. Give at least one active member of the department a job title, then try again.",
 		],
 		["SCHEDULE_NOT_DRAFT", 409, "This schedule has already been generated."],
 		[

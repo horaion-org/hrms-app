@@ -1089,10 +1089,38 @@ describe("Create Schedule: generating", () => {
 		);
 	});
 
+	it.each([
+		[
+			"GENERATION_REQUESTED",
+			"Generation has been requested for this schedule. It shows the shifts and constraints it will be generated with and can no longer be changed.",
+		],
+		[
+			"GENERATED",
+			"This schedule has been generated. It shows the shifts and constraints it was generated with and can no longer be changed.",
+		],
+		[
+			"GENERATION_FAILED",
+			"This schedule couldn’t be generated. It shows the shifts and constraints it was to be generated with and can no longer be changed.",
+		],
+	] as const)(
+		"given_%s_when_reopened_then_theNoticeSaysHowGenerationStands",
+		async (status, notice) => {
+			await reopen({
+				[`GET ${SCHEDULE}`]: reply(generatedScheduleFixture({ status })),
+				[`GET ${SCHEDULE_SHIFTS}`]: reply(frozenShiftsFixture()),
+				[`GET ${SCHEDULE_CONSTRAINTS}`]: reply(frozenConstraintsFixture()),
+			});
+
+			expect(await screen.findByText(notice)).toBeVisible();
+		}
+	);
+
 	it("given_aGeneratedSchedule_when_reopened_then_showsItsFrozenShiftsReadOnly", async () => {
 		const user = userEvent.setup();
 		const { calls } = await reopen({
-			[`GET ${SCHEDULE}`]: reply(generatedScheduleFixture()),
+			[`GET ${SCHEDULE}`]: reply(
+				generatedScheduleFixture({ status: "GENERATED" })
+			),
 			[`GET ${SCHEDULE_SHIFTS}`]: reply(frozenShiftsFixture()),
 			[`GET ${SCHEDULE_CONSTRAINTS}`]: reply(frozenConstraintsFixture()),
 		});

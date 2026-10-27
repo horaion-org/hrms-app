@@ -12,6 +12,8 @@ import type { SchedulePeriod } from "@/features/scheduling/periods";
 export const SCHEDULE_STATUSES = [
 	"DRAFT",
 	"GENERATION_REQUESTED",
+	"GENERATED",
+	"GENERATION_FAILED",
 	"PROCESSING",
 	"PENDING",
 	"APPROVED",
@@ -25,6 +27,8 @@ export type ScheduleStatus = (typeof SCHEDULE_STATUSES)[number];
 export const scheduleStatusTones: Record<ScheduleStatus, BadgeTone> = {
 	DRAFT: "neutral",
 	GENERATION_REQUESTED: "warning",
+	GENERATED: "success",
+	GENERATION_FAILED: "error",
 	PROCESSING: "neutral",
 	PENDING: "warning",
 	APPROVED: "success",

@@ -34,9 +34,17 @@ import { retry } from "@/features/workspace/retry";
  * `docs/implementation/2026-10-12-scheduling-constraints.md`.
  */
 
-const scheduleStatusSchema = z.enum(["DRAFT", "GENERATION_REQUESTED"]);
+const scheduleStatusSchema = z.enum([
+	"DRAFT",
+	"GENERATION_REQUESTED",
+	"GENERATED",
+	"GENERATION_FAILED",
+]);
 
-/** A DRAFT can be changed; once generation is requested it is frozen. */
+/**
+ * A DRAFT can be changed; once generation is requested it is frozen, and its
+ * generation run ends as GENERATED or GENERATION_FAILED.
+ */
 export type ScheduleStatus = z.infer<typeof scheduleStatusSchema>;
 
 const scheduleSchema = z.object({
