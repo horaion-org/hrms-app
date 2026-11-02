@@ -5,7 +5,10 @@ import { beforeAll, describe, expect, it } from "vitest";
 import en from "@/assets/locales/en/translations.json";
 import { MemoryRouterHarness } from "@/components/utils/MemoryRouterHarness";
 import { ScheduleCard } from "@/features/scheduling/ScheduleCard";
-import type { ScheduleRecord } from "@/features/scheduling/schedules";
+import {
+	generatedScheduleFixture,
+	scheduleFixture,
+} from "@/features/scheduling/schedules/fixtures";
 
 beforeAll(async () => {
 	await createInstance()
@@ -13,55 +16,45 @@ beforeAll(async () => {
 		.init({ lng: "en", resources: { en: { translation: en } } });
 });
 
-const schedule: ScheduleRecord = {
-	scheduleId: "fo-260413",
-	code: "FO-260413",
-	departmentName: "Front Office",
-	period: { start: "2026-04-13", end: "2026-04-26" },
-	status: "PENDING",
-	createdAt: "2026-04-07T09:30:00.000Z",
-	coverage: 92.4,
-	openShifts: 5,
-	conflicts: 1,
-};
-
 describe("ScheduleCard", () => {
-	it("given_aSchedule_when_rendered_then_showsItsPeriodStatusAndCoverage", async () => {
+	it("given_aDraft_when_rendered_then_showsWhereItIsFiledAndReopensItsSetup", async () => {
 		render(
 			<MemoryRouterHarness>
-				<ScheduleCard schedule={schedule} />
+				<ScheduleCard schedule={scheduleFixture()} />
 			</MemoryRouterHarness>
 		);
 
-		const card = await screen.findByRole("region", { name: "FO-260413" });
-		expect(within(card).getByText("Pending")).toBeInTheDocument();
-		expect(within(card).getByText("92.4%")).toBeInTheDocument();
+		const card = await screen.findByRole("region", {
+			name: "Front Office - Week 42",
+		});
+		expect(card).toHaveTextContent("Main branch › Front Office");
+		expect(within(card).getByText("Draft")).toBeInTheDocument();
 		expect(
-			within(card).getByRole("progressbar", { name: "Coverage" })
-		).toHaveAttribute("aria-valuenow", "92.4");
-		expect(card).toHaveTextContent("5 Open Shifts");
-		expect(card).toHaveTextContent("1 Conflict");
-		expect(
-			within(card).getByRole("link", { name: "View schedule FO-260413" })
-		).toHaveAttribute("href", "/scheduling/fo-260413");
+			within(card).getByRole("link", {
+				name: "View schedule Front Office - Week 42",
+			})
+		).toHaveAttribute(
+			"href",
+			"/scheduling/new?step=setup&scheduleId=s-1&departmentId=d-1"
+		);
 	});
 
-	it("given_aProcessingSchedule_when_rendered_then_isBusyWithPlaceholders", async () => {
+	it("given_aGeneratedSchedule_when_rendered_then_opensItsRoster", async () => {
 		render(
 			<MemoryRouterHarness>
 				<ScheduleCard
-					schedule={{
-						...schedule,
-						status: "PROCESSING",
-						coverage: undefined,
-					}}
+					schedule={generatedScheduleFixture({ status: "GENERATED" })}
 				/>
 			</MemoryRouterHarness>
 		);
 
-		const card = await screen.findByRole("region", { name: "FO-260413" });
-		expect(card).toHaveAttribute("aria-busy", "true");
-		expect(within(card).getByText("Generating schedule")).toBeInTheDocument();
-		expect(within(card).queryByRole("progressbar")).toBeNull();
+		const card = await screen.findByRole("region", {
+			name: "Front Office - Week 42",
+		});
+		expect(within(card).getByText("Generated")).toBeInTheDocument();
+		expect(within(card).getByRole("link")).toHaveAttribute(
+			"href",
+			"/scheduling/s-1?branchId=b-1&departmentId=d-1"
+		);
 	});
 });
