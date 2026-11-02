@@ -7,24 +7,20 @@ const meta = {
 	title: "Features/Scheduling/ShiftDetailsPanel",
 	component: ShiftDetailsPanel,
 	args: {
-		staffName: "John Lim",
+		staffName: "Aisha Rahman",
 		shift: {
-			shiftId: "s-1",
-			date: "2026-04-16",
+			kind: "shift",
+			assignmentId: "a-1",
+			shiftId: "front-desk-am-copy",
+			name: "Front Desk AM",
+			group: "Front Desk",
+			colour: "#E9A55A",
 			start: "09:00",
-			end: "18:00",
-			role: "Front Desk",
-			kind: "full",
-			breakMinutes: 60,
-			location: "Main Branch",
-			notes: "Swapped with Wednesday to avoid consecutive days.",
+			end: "15:00",
+			role: "Front Desk Lead",
+			date: "2026-10-13",
 		},
-		editable: true,
 		onClose: fn(),
-		onDelete: fn(),
-		onEdit: fn(),
-		onReassign: fn(),
-		onDuplicate: fn(),
 	},
 } satisfies Meta<typeof ShiftDetailsPanel>;
 
@@ -32,17 +28,5 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Editable: Story = {};
-
-export const ReadOnly: Story = { args: { editable: false } };
-
-export const OpenShift: Story = {
-	args: {
-		shift: {
-			...meta.args.shift,
-			kind: "open",
-			role: "Open Shift",
-			notes: undefined,
-		},
-	},
-};
+/** A generated roster's day: its frozen shift, read-only. */
+export const Default: Story = {};

@@ -8,17 +8,18 @@ const meta = {
 	component: RosterShift,
 	args: {
 		shift: {
-			shiftId: "s-1",
-			date: "2026-04-16",
+			kind: "shift",
+			assignmentId: "a-1",
+			shiftId: "front-desk-am-copy",
+			name: "Front Desk AM",
+			group: "Front Desk",
+			colour: "#E9A55A",
 			start: "09:00",
-			end: "18:00",
-			role: "Front Desk",
-			kind: "full",
-			breakMinutes: 60,
-			location: "Main Branch",
+			end: "15:00",
+			role: "Front Desk Lead",
 		},
-		label: "John Lim, Thu 09:00 – 18:00",
-		timeRange: "09:00 – 18:00",
+		label: "Aisha Rahman, Mon 09:00 – 15:00",
+		timeRange: "09:00 – 15:00",
 		selected: false,
 		onSelect: fn(),
 	},
@@ -35,16 +36,6 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Full: Story = {};
-
-export const Half: Story = {
-	args: { shift: { ...meta.args.shift, kind: "half" } },
-};
-
-export const Open: Story = {
-	args: {
-		shift: { ...meta.args.shift, kind: "open", role: "Open Shift" },
-	},
-};
+export const Default: Story = {};
 
 export const Selected: Story = { args: { selected: true } };

@@ -7,7 +7,10 @@ import {
 	canAt,
 	departmentScope,
 } from "@/features/workspace/scopes";
-import { ScheduleDetailPage } from "@/pages/ScheduleDetail";
+import {
+	ScheduleDetailPage,
+	ScheduleDetailProblem,
+} from "@/pages/ScheduleDetail";
 
 /** A schedule's roster, read at the Department its URL names beside it. */
 export const Route = createFileRoute(
@@ -32,4 +35,5 @@ export const Route = createFileRoute(
 			);
 	},
 	component: ScheduleDetailPage,
+	errorComponent: ScheduleDetailProblem,
 });

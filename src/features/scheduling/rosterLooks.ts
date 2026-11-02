@@ -1,9 +1,30 @@
-import type { RosterShiftKind } from "@/features/scheduling/schedules";
+import type { CSSProperties } from "react";
 
-/** A roster day's tile colours: each kind of shift, and a day off. */
-export const rosterLooks: Record<RosterShiftKind | "off", string> = {
-	full: "border-success-200 bg-success-50 text-success-900",
-	half: "border-warning-200 bg-warning-50 text-warning-900",
-	open: "border-error-200 bg-error-50 text-error-900",
+/** A roster day's colours when no shift is worked: a day off, or leave. */
+export const rosterLooks: Record<"off" | "leave", string> = {
 	off: "border-neutral-400 bg-neutral-100 text-neutral-600",
+	leave: "border-ink-blue-200 bg-ink-blue-50 text-ink-blue-900",
+};
+
+/** How much of a shift's colour tints its tile; the rest is white, so dark text stays readable. */
+const TINT_SHARE = 0.15;
+
+const channelsOf = (colour: string): Array<number> =>
+	[1, 3, 5].map((offset) =>
+		Number.parseInt(colour.slice(offset, offset + 2), 16)
+	);
+
+/**
+ * A generated shift's tile, coloured by its frozen shift's "#RRGGBB": the
+ * colour itself as the border, as the swatch picker shows it, over a light
+ * tint of it that dark text reads on.
+ */
+export const shiftTileStyle = (colour: string): CSSProperties => {
+	const [red, green, blue] = channelsOf(colour).map((channel) =>
+		Math.round(channel * TINT_SHARE + 255 * (1 - TINT_SHARE))
+	);
+	return {
+		borderColor: colour,
+		backgroundColor: `rgb(${red}, ${green}, ${blue})`,
+	};
 };
