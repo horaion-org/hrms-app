@@ -3,7 +3,6 @@ import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "node:path";
 import { loadEnv, normalizePath } from "vite";
-import { viteStaticCopy } from "vite-plugin-static-copy";
 import { defineConfig } from "vitest/config";
 import tailwindcss from "@tailwindcss/vite";
 
@@ -20,19 +19,6 @@ export default defineConfig(({ mode }) => ({
 		TanStackRouterVite({ autoCodeSplitting: true }),
 		react(),
 		tailwindcss(),
-		// Copies src/assets/locales to dist/locales, where the production
-		// i18next backend fetches them. Stripping `src/assets` also keeps the
-		// dev server from shadowing the translation files that are imported
-		// as modules.
-		viteStaticCopy({
-			targets: [
-				{
-					src: "src/assets/locales",
-					dest: ".",
-					rename: { stripBase: 2 },
-				},
-			],
-		}),
 	],
 	resolve: {
 		alias: {
