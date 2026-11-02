@@ -998,6 +998,45 @@
 				"duplicate": "Duplicar turno",
 				"delete": "Eliminar turno"
 			}
+		},
+		"generation": {
+			"inProgress": "Se está generando este horario. Su cuadrante aparecerá aquí cuando esté listo; esta página vuelve a comprobarlo cada 15 segundos.",
+			"failedTitle": "Por qué no se generó",
+			"failed": "No se pudo generar este horario.",
+			"infeasible": "Ningún cuadrante podía cumplir todos los turnos y restricciones de este horario.",
+			"code": "Código de error: {{code}}",
+			"engineSaid": "La explicación del motor",
+			"byMember": "Notas por empleado",
+			"wholeRoster": "Todo el cuadrante",
+			"notesSummary_one": "El motor de planificación dejó {{count}} nota para revisar en este cuadrante.",
+			"notesSummary_other": "El motor de planificación dejó {{count}} notas para revisar en este cuadrante.",
+			"reviewNotes": "Revisar notas",
+			"notesDescription": "Lo que el motor de planificación anotó sobre este cuadrante, citado tal como lo escribió.",
+			"conflicts": "Conflictos",
+			"conflictWhen": "{{day}}, {{time}}",
+			"missing_one": "Falta {{count}} persona",
+			"missing_other": "Faltan {{count}} personas",
+			"rule": "Regla: {{rule}}",
+			"errorCodes": {
+				"engine_unreachable": "No se pudo contactar con el motor de planificación a tiempo, así que no se generó nada.",
+				"result_unmappable": "El cuadrante del motor no encajaba con los turnos y el personal de este horario, así que no se guardó. Ponte en contacto con soporte.",
+				"engine_http": "El motor de planificación respondió con un error (HTTP {{status}}).",
+				"FAILED": "El trabajo del motor terminó sin cuadrante.",
+				"CANCELLED": "El trabajo del motor se canceló antes de terminar.",
+				"job_not_finished": "El motor aún no había terminado el trabajo.",
+				"job_failed": "El trabajo del motor terminó sin cuadrante.",
+				"result_expired": "El cuadrante caducó en el motor antes de poder guardarse.",
+				"idempotency_key_required": "La solicitud al motor estaba incompleta. Ponte en contacto con soporte.",
+				"idempotency_conflict": "La solicitud al motor chocaba con una anterior. Ponte en contacto con soporte.",
+				"payload_too_large": "Este horario es demasiado grande para que el motor lo genere.",
+				"snapshot_invalid": "El motor no pudo usar los turnos y restricciones de este horario.",
+				"too_many_jobs": "El motor estaba demasiado ocupado para aceptar el trabajo.",
+				"job_not_found": "El motor ya no conocía el trabajo.",
+				"unauthorized": "El motor rechazó la solicitud. Ponte en contacto con soporte.",
+				"forbidden": "El motor rechazó la solicitud. Ponte en contacto con soporte.",
+				"worker_failed": "El motor se detuvo mientras preparaba el cuadrante.",
+				"worker_crashed": "El motor se detuvo mientras preparaba el cuadrante."
+			}
 		}
 	},
 	"workspace": {
