@@ -5,7 +5,9 @@ import { initReactI18next } from "react-i18next";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import en from "@/assets/locales/en/translations.json";
 import { RosterGrid } from "@/features/scheduling/RosterGrid";
-import { daysOf, type RosterGroup } from "@/features/scheduling/schedules";
+import { rosterFromAssignments } from "@/features/scheduling/roster/roster";
+import { daysOf } from "@/features/scheduling/schedules";
+import { scheduleAssignmentsFixture } from "@/features/scheduling/schedules/fixtures";
 
 beforeAll(async () => {
 	await createInstance()
@@ -13,94 +15,66 @@ beforeAll(async () => {
 		.init({ lng: "en", resources: { en: { translation: en } } });
 });
 
-const days = daysOf("2026-04-13");
-
-const groups: Array<RosterGroup> = [
-	{
-		groupId: "front-office",
-		name: "Front Office",
-		headcount: 1,
-		staff: [
-			{
-				staffId: "john-lim",
-				name: "John Lim",
-				jobTitle: "Front Office Manager",
-				shifts: [
-					{
-						shiftId: "a",
-						date: "2026-04-13",
-						start: "09:00",
-						end: "18:00",
-						role: "Front Desk",
-						kind: "full",
-						breakMinutes: 60,
-						location: "Main Branch",
-					},
-					{
-						shiftId: "b",
-						date: "2026-04-15",
-						start: "09:00",
-						end: "13:00",
-						role: "Front Desk",
-						kind: "half",
-						breakMinutes: 0,
-						location: "Main Branch",
-					},
-					{
-						shiftId: "next-week",
-						date: "2026-04-20",
-						start: "09:00",
-						end: "18:00",
-						role: "Front Desk",
-						kind: "full",
-						breakMinutes: 60,
-						location: "Main Branch",
-					},
-				],
-			},
-		],
-	},
-	{ groupId: "kitchen", name: "Kitchen", headcount: 5, staff: [] },
-];
-
 describe("RosterGrid", () => {
-	it("given_aWeek_when_rendered_then_showsEachDayAsAShiftOrOff", () => {
-		render(<RosterGrid days={days} groups={groups} onShiftSelect={vi.fn()} />);
-
-		const row = screen.getByRole("row", { name: /John Lim/ });
-		expect(within(row).getAllByRole("button")).toHaveLength(2);
-		expect(within(row).getAllByText("OFF")).toHaveLength(5);
-		expect(row).toHaveTextContent("12 hrs");
-		expect(screen.getAllByRole("columnheader")).toHaveLength(8);
+	const week = daysOf("2026-10-12");
+	const rows = rosterFromAssignments(scheduleAssignmentsFixture(), {
+		start: "2026-10-12",
+		end: "2026-10-18",
 	});
 
-	it("given_aShift_when_chosen_then_reportsThePersonAndShift", async () => {
-		const user = userEvent.setup();
-		const onShiftSelect = vi.fn();
-		render(
-			<RosterGrid days={days} groups={groups} onShiftSelect={onShiftSelect} />
-		);
+	it("when_rendered_then_showsEachMembersShiftsDaysOffAndLeave", () => {
+		render(<RosterGrid days={week} rows={rows} />);
 
-		await user.click(screen.getByRole("button", { name: /John Lim, Mon/ }));
-
-		expect(onShiftSelect).toHaveBeenCalledWith(
-			expect.objectContaining({ staffId: "john-lim" }),
-			expect.objectContaining({ shiftId: "a" })
-		);
-	});
-
-	it("given_groups_when_toggled_then_foldAndUnfold", async () => {
-		const user = userEvent.setup();
-		render(<RosterGrid days={days} groups={groups} onShiftSelect={vi.fn()} />);
-
-		await user.click(
-			screen.getByRole("button", { name: "Collapse Front Office" })
-		);
-		expect(screen.queryByRole("row", { name: /John Lim/ })).toBeNull();
-
-		await user.click(screen.getByRole("button", { name: "Expand Kitchen" }));
+		expect(screen.queryByRole("button", { name: /Collapse/ })).toBeNull();
+		const ben = screen.getByRole("row", { name: /Ben Ong/ });
+		expect(within(ben).getAllByRole("button")).toHaveLength(4);
+		expect(within(ben).getAllByText("LEAVE")).toHaveLength(2);
+		expect(within(ben).getAllByText("OFF")).toHaveLength(1);
+		expect(ben).toHaveTextContent("Front Desk Staff");
+		expect(ben).toHaveTextContent("16 hrs");
 		expect(
-			screen.getByText("No one is listed in this group.")
-		).toBeInTheDocument();
+			within(ben).getByRole("button", {
+				name: "Ben Ong, Fri 11:00 – 13:00",
+			})
+		).toHaveTextContent("Lunch RushCashier11:00 – 13:00");
+		expect(screen.getAllByRole("row")).toHaveLength(4);
+	});
+
+	it("when_aTileIsChosen_then_reportsTheMemberDayAndShift", async () => {
+		const user = userEvent.setup();
+		const onAssignmentSelect = vi.fn();
+		render(
+			<RosterGrid
+				days={week}
+				rows={rows}
+				selectedShiftId="a-mp-1-2026-10-13"
+				onAssignmentSelect={onAssignmentSelect}
+			/>
+		);
+
+		expect(
+			screen.getByRole("button", { name: "Aisha Rahman, Tue 09:00 – 15:00" })
+		).toHaveAttribute("aria-pressed", "true");
+		await user.click(
+			screen.getByRole("button", { name: "Chen Wei, Mon 14:00 – 22:00" })
+		);
+
+		expect(onAssignmentSelect).toHaveBeenCalledWith(
+			expect.objectContaining({ key: "m-3" }),
+			"2026-10-12",
+			expect.objectContaining({ assignmentId: "a-mp-3-2026-10-12" })
+		);
+	});
+
+	it("when_aMemberIsGone_then_namesThemAFormerMember", () => {
+		render(
+			<RosterGrid
+				days={week}
+				rows={[{ ...rows[0]!, name: null, jobTitle: null }]}
+			/>
+		);
+
+		const row = screen.getByRole("row", { name: /Former member/ });
+		expect(row).toHaveTextContent("EMP-001");
 	});
 });

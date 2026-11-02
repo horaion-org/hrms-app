@@ -14,11 +14,9 @@ import { formatPeriod } from "@/features/scheduling/periods";
 import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import { useSchedules } from "@/features/scheduling/schedules/useSchedules";
 import type { Schedule } from "@/features/scheduling/schedules/api";
+import { scheduleViewLink } from "@/features/scheduling/schedules/scheduleViewLink";
 import { ScheduleCard } from "@/features/scheduling/ScheduleCard";
-import {
-	exampleSchedules,
-	scheduleStatusTones,
-} from "@/features/scheduling/schedules";
+import { scheduleStatusTones } from "@/features/scheduling/schedules";
 
 const key = "scheduling.overview";
 
@@ -41,9 +39,6 @@ export const Scheduling = (): FunctionComponent => {
 	const language = i18n.resolvedLanguage ?? i18n.language;
 	const list = useSchedules(useCurrentCompanyId());
 	const [search, setSearch] = useState("");
-	const [originalCard] = useState(
-		() => exampleSchedules(new Date()).current[0]
-	);
 	const history =
 		list.status === "ready"
 			? list.schedules.filter((schedule) => matches(schedule, search))
@@ -106,14 +101,9 @@ export const Scheduling = (): FunctionComponent => {
 				cell: (schedule) => (
 					<div className="flex justify-center">
 						<Button
+							{...scheduleViewLink(schedule)}
 							aria-label={t(`${key}.viewNamed`, { code: schedule.name })}
-							to="/scheduling/new"
 							variant="icon"
-							search={{
-								step: "setup",
-								scheduleId: schedule.scheduleId,
-								departmentId: schedule.departmentId,
-							}}
 						>
 							<ViewIcon />
 						</Button>
@@ -150,22 +140,6 @@ export const Scheduling = (): FunctionComponent => {
 				}
 				onSearchChange={setSearch}
 			/>
-			{originalCard && (
-				<section aria-labelledby="original-card-preview" className="mt-12">
-					<h2
-						className="text-2xl font-semibold text-neutral-900"
-						id="original-card-preview"
-					>
-						{t(`${key}.originalCard`)}
-					</h2>
-					<p className="mt-2 text-sm text-neutral-700">
-						{t(`${key}.originalCardDescription`)}
-					</p>
-					<div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-						<ScheduleCard schedule={originalCard} />
-					</div>
-				</section>
-			)}
 			{groups.map(([periodKey, schedules]) => (
 				<section
 					key={periodKey}
@@ -186,22 +160,7 @@ export const Scheduling = (): FunctionComponent => {
 					</h2>
 					<div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
 						{schedules.map((schedule) => (
-							<ScheduleCard
-								key={schedule.scheduleId}
-								details={schedule}
-								schedule={{
-									scheduleId: schedule.scheduleId,
-									departmentId: schedule.departmentId,
-									departmentName: schedule.departmentName,
-									code: schedule.name,
-									period: {
-										start: schedule.periodStart,
-										end: schedule.periodEnd,
-									},
-									status: schedule.status,
-									createdAt: schedule.createdAt,
-								}}
-							/>
+							<ScheduleCard key={schedule.scheduleId} schedule={schedule} />
 						))}
 					</div>
 				</section>

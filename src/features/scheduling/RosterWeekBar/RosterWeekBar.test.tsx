@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createInstance } from "i18next";
 import { initReactI18next } from "react-i18next";
@@ -21,6 +21,7 @@ describe("RosterWeekBar", () => {
 		const onWeekChange = vi.fn();
 		render(
 			<RosterWeekBar
+				legend={[]}
 				week="2026-04-13"
 				weeks={weeks}
 				onToday={vi.fn()}
@@ -40,6 +41,7 @@ describe("RosterWeekBar", () => {
 		const onToday = vi.fn();
 		render(
 			<RosterWeekBar
+				legend={[]}
 				week="2026-04-20"
 				weeks={weeks}
 				onToday={onToday}
@@ -52,18 +54,32 @@ describe("RosterWeekBar", () => {
 		expect(onToday).toHaveBeenCalled();
 	});
 
-	it("given_theLegend_when_rendered_then_namesEachKindOfDay", () => {
+	it("given_aGeneratedLegend_when_rendered_then_namesOffLeaveAndEachShiftInItsColour", () => {
 		render(
 			<RosterWeekBar
 				week="2026-04-13"
 				weeks={weeks}
+				legend={[
+					{ kind: "off" },
+					{ kind: "leave" },
+					{
+						kind: "shift",
+						shiftId: "front-desk-am-copy",
+						name: "Front Desk AM",
+						colour: "#E9A55A",
+					},
+				]}
 				onToday={vi.fn()}
 				onWeekChange={vi.fn()}
 			/>
 		);
 
-		expect(screen.getByRole("list", { name: "Legend" })).toHaveTextContent(
-			"Full ShiftHalf ShiftDay OffOpen Shift"
-		);
+		const legend = screen.getByRole("list", { name: "Legend" });
+		expect(legend).toHaveTextContent("Day OffOn LeaveFront Desk AM");
+		const [, leave, shift] = within(legend).getAllByRole("listitem");
+		expect(leave!.firstElementChild).toHaveClass("bg-ink-blue-50");
+		expect(shift!.firstElementChild).toHaveStyle({
+			backgroundColor: "#E9A55A",
+		});
 	});
 });

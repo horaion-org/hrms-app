@@ -6,43 +6,30 @@ import type { FunctionComponent } from "@/common/types";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { CloseIcon, DeleteIcon } from "@/components/ui/Icon";
+import { CloseIcon } from "@/components/ui/Icon";
 import { formatTimeRange } from "@/features/scheduling/formatShift";
-import type { RosterShift } from "@/features/scheduling/schedules";
+import type { RosterShiftCell } from "@/features/scheduling/roster/roster";
 
 export type ShiftDetailsPanelProps = {
 	staffName: string;
-	shift: RosterShift;
-	/** Offers the shift's actions; a published schedule is read-only. */
-	editable: boolean;
+	/** A worked day: its frozen shift on `date` (ISO). */
+	shift: RosterShiftCell & { date: string };
 	onClose: () => void;
-	onDelete?: (shift: RosterShift) => void;
-	onEdit?: () => void;
-	onReassign?: () => void;
-	onDuplicate?: () => void;
 	className?: string;
 };
 
 const key = "scheduling.detail.shiftDetails";
 
-/**
- * One shift beside the roster, with actions supplied by its owning screen.
- */
+/** One worked day beside the roster, read-only: its date, time, shift, group and role. */
 export const ShiftDetailsPanel = ({
 	staffName,
 	shift,
-	editable,
 	onClose,
-	onDelete,
-	onEdit,
-	onReassign,
-	onDuplicate,
 	className,
 }: ShiftDetailsPanelProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const titleId = useId();
 	const language = i18n.resolvedLanguage ?? i18n.language;
-	const open = shift.kind === "open";
 	const date = new Intl.DateTimeFormat(language, {
 		weekday: "short",
 		day: "numeric",
@@ -55,15 +42,9 @@ export const ShiftDetailsPanel = ({
 			label: t(`${key}.time`),
 			value: formatTimeRange({ startTime: shift.start, endTime: shift.end }, t),
 		},
-		{
-			label: t(`${key}.break`),
-			value:
-				shift.breakMinutes === 0
-					? t(`${key}.noBreak`)
-					: t(`${key}.breakMinutes`, { count: shift.breakMinutes }),
-		},
+		{ label: t(`${key}.shift`), value: shift.name },
+		{ label: t(`${key}.group`), value: shift.group },
 		{ label: t(`${key}.role`), value: shift.role },
-		{ label: t(`${key}.location`), value: shift.location },
 	];
 
 	return (
@@ -89,8 +70,8 @@ export const ShiftDetailsPanel = ({
 						<Avatar className="size-10! text-base!" name={staffName} />
 						<span className="font-semibold text-neutral-900">{staffName}</span>
 					</div>
-					<Badge className="mt-5 uppercase" tone={open ? "error" : "success"}>
-						{open ? t(`${key}.open`) : t(`${key}.assigned`)}
+					<Badge className="mt-5 uppercase" tone="success">
+						{t(`${key}.assigned`)}
 					</Badge>
 				</div>
 				<dl className="flex flex-col gap-4 px-4 py-4 text-sm">
@@ -106,47 +87,7 @@ export const ShiftDetailsPanel = ({
 						</div>
 					))}
 				</dl>
-				{shift.notes && (
-					<div className="px-4 py-4 text-sm">
-						<h3 className="font-semibold text-neutral-800">
-							{t(`${key}.notes`)}
-						</h3>
-						<p className="mt-3 font-semibold text-neutral-900">{shift.notes}</p>
-					</div>
-				)}
 			</div>
-			{editable && (
-				<div className="mt-6 flex flex-col gap-4">
-					{onEdit && (
-						<Button size="sm" variant="secondary" onClick={onEdit}>
-							{t(`${key}.edit`)}
-						</Button>
-					)}
-					{onReassign && (
-						<Button size="sm" variant="secondary" onClick={onReassign}>
-							{t(`${key}.reassign`)}
-						</Button>
-					)}
-					{onDuplicate && (
-						<Button size="sm" variant="secondary" onClick={onDuplicate}>
-							{t(`${key}.duplicate`)}
-						</Button>
-					)}
-					{onDelete && (
-						<Button
-							className="border-error-200! bg-error-50! text-error-600!"
-							leadingIcon={<DeleteIcon />}
-							size="sm"
-							variant="secondary"
-							onClick={() => {
-								onDelete(shift);
-							}}
-						>
-							{t(`${key}.delete`)}
-						</Button>
-					)}
-				</div>
-			)}
 		</aside>
 	);
 };

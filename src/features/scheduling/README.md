@@ -12,20 +12,19 @@ their API exists.
 
 ## Shape
 
-- `ShiftDetailsPanel/ReassignRosterShiftDialog.tsx` — reassigns to active API members of the shift's exact branch
-  and department. Sample shifts without ids require a unit selection first. Uses the existing profile list under
-  `member_profile:read`, reads every branch-filtered page and matches department ids locally; no sample people are
-  offered. Selected members absent from the preview roster are added to their department group in memory.
-
-- `ShiftDetailsPanel/ApiRosterShiftDialog.tsx` — the roster preview's Edit shift choices: active branches and
-  departments from the workspace under `shift:read`, then active job titles from the department's
-  `shift-role-options` API. Location is a branch; role choices are department-specific. Changing the unit clears
-  the role, and saving requires a valid API choice. The preview retains the selected ids and labels in memory;
-  it does not persist roster assignments to the API.
+- `ShiftDetailsPanel/RosterShiftDialog.tsx`, `ApiRosterShiftDialog.tsx`, `ReassignRosterShiftDialog.tsx` (with
+  `useReassignmentStaff.ts` and `rosterPreviewAccess.ts`) — edit, duplicate and reassign dialogs for one shift, with
+  workspace units, API shift roles and API members as choices. They change only the in-memory `RosterShift` they are
+  given and are not wired to any page: a generated roster is read-only until assignments can be changed through the
+  API.
 
 - `schedules/useSchedules.ts` — the overview's permission-aware company-wide history. Reads every page of
   `GET /api/v1/companies/{companyId}/schedules`, with API names, dates, departments and statuses; search covers
-  every returned row. View opens the saved draft or frozen schedule in the existing steps.
+  every returned row.
+- `ScheduleCard` — one API schedule on the overview, grouped by period: branch and department, status, what it
+  includes (`ScheduleSummary`) and View.
+- `schedules.ts` — each status's badge tone, the period's weeks and days (`mondayOf`, `weeksOf`, `daysOf`), and the
+  dialogs' in-memory `RosterShift` and `RosterStaff`.
 
 - `paths.ts` — the department, shift, constraint and schedule paths every scheduling request is built from, and the
   query root (`["scheduling", companyId, …]`).
@@ -81,10 +80,11 @@ their API exists.
 - `constraints/ConstraintsStep` — the department's constraints ticked as the schedule applies them: name, category tag
   and type, the constraint as a sentence, Must or Should (or the type's fixed meaning), status, and Edit and Delete.
   An inactive constraint is listed but never ticked. A generated schedule's frozen copies are listed read-only.
-- `schedules/api.ts` — the schedule schema (DRAFT or GENERATION_REQUESTED, its ticked `includedShiftIds` and
-  `includedConstraintIds`) and its requests: create, read, replace (setup and ticks together), request generation,
-  the schedule's shifts (a draft's live shifts with `included`, or the frozen copies) and its constraints (a draft's
-  live ACTIVE constraints with `included`, or the frozen copies).
+- `schedules/api.ts` — the schedule schema (its status, ticked `includedShiftIds` and `includedConstraintIds`, the
+  branch's `timeZone` and its newest `generation` run with the engine's findings) and its requests: create, read,
+  replace (setup and ticks together), request generation, the schedule's shifts (a draft's live shifts with
+  `included`, or the frozen copies), its constraints (a draft's live ACTIVE constraints with `included`, or the
+  frozen copies) and its roster (`GET …/assignments`).
 - `schedules/useSchedule.ts` — `useSchedule` (`hidden` without `schedule:read` at the department or on a 403,
   `missing` on a 404) and `useScheduleActions` (create, update, generate).
 - `schedules/useScheduleShifts.ts` — the schedule's shifts as the steps show them (`hidden` without `shift:read` at
@@ -95,7 +95,8 @@ their API exists.
 - `schedules/scheduleRefusal.ts` — the schedules API's codes to copy, for a save (`CONSTRAINT_NOT_FOUND`,
   `CONSTRAINT_INACTIVE`, …) and for a generation (`SCHEDULE_HAS_NO_SHIFTS`, `SCHEDULE_CONSTRAINT_UNUSABLE`,
   `SCHEDULE_NOT_DRAFT`).
-- `schedules/fixtures.ts` — draft s-1 and its generated twin, and a workspace for company c-1.
+- `schedules/fixtures.ts` — draft s-1 and its generated twin (with the run its status implies), the engine's
+  findings, the 21-row roster of its three members, and a workspace for company c-1.
 - `scheduleDraft.ts` — what the page holds: the setup, the saved schedule (id, department and status, which never
   change in the page), the shift and constraint ticks, the allocations per shift and job title, and the demand per
   time slot. A frozen copy has its own id, never sent to a shift or constraint route; `tickedOf` drops ticks of shifts
@@ -108,6 +109,47 @@ their API exists.
 
 `src/pages/CreateSchedule.tsx` composes the steps and owns the draft, the saves, generation and the shift and
 constraint dialogs.
+
+## Roster page
+
+`/scheduling/$scheduleId?branchId=…&departmentId=…` shows a schedule past DRAFT, read-only. The contract is the
+API's `docs/implementation/2026-10-27-roster-read-model.md`. Read it top to bottom:
+
+1. Route `src/routes/_authenticated._app.scheduling_.$scheduleId.ts` — `validateSearch: parseRosterSearch`; a URL
+   without both ids renders `ScheduleDetailProblem` ("not found"). The loader warms the workspace and, where
+   `schedule:read` holds at the department, `scheduleQuery`.
+2. Page `src/pages/ScheduleDetail.tsx` — hooks and composition only: `useSchedule(…, { pollWhileGenerating: true })`,
+   then `useScheduleAssignments` once the schedule is GENERATED with no open run. Under `RosterHeader` it shows, by
+   state: a generating note (read again every 15 s), `GenerationFailurePanel`, `GeneratedRoster`, or a draft's note.
+3. Queries `schedules/api.ts` — `scheduleQuery` (`refetchInterval` while `generationInProgress`) and
+   `scheduleAssignmentsQuery` → `fetchScheduleAssignments`.
+4. Pure mappers `roster/` — no I/O. They turn API rows into what the components draw.
+5. Components, plain props only — `RosterHeader`, `GenerationFailurePanel` and `ReviewNotes` (both with
+   `MemberNotes`), `GeneratedRoster` (stat cards, `RosterWeekBar`, `RosterGrid` → `RosterShift`, the review-notes
+   `Dialog`, and `ShiftDetailsPanel` read-only for a chosen day).
+
+- `schedules/scheduleViewLink.ts` — View on a card or history row: a DRAFT reopens at the wizard's Setup, any other
+  status opens the roster; `scheduleSetupLink` is the roster's "View setup".
+- `roster/rosterSearch.ts` — the roster URL's branch and department, both required.
+- `schedules/useScheduleAssignments.ts` — the roster rows, asked for only when enabled (`hidden` without
+  `schedule:read` at the department or on a 403).
+- `roster/roster.ts` — `rosterFromAssignments` (one row per member, each day a shift, off or leave; a row whose
+  member is gone keyed by its assignment), `hoursOf`/`hoursInDays` (via `shiftHours`), `weekDays`, `legendOf`,
+  `rosterStats`, and `isoDateIn`/`dateTimeFormatIn` for the branch's time zone.
+- `roster/findingsByMember.ts` — the engine's errors grouped by member, named through `findings.members`, and
+  `reviewNoteCount`.
+- `roster/generationFailure.ts` — a FAILED run's `errorCode` in the app's words (the closed set,
+  `engine_http_<status>`, then a generic fallback), or INFEASIBLE.
+- `rosterLooks.ts` — the classes of a day off and of leave, and `shiftTileStyle` for a frozen shift's colour.
+- `periods.ts` `formatDay` — "Mon, 12 Oct" for a finding's day.
+- `RosterHeader` — department, period, status badge, time zone, requested by/at and finished at; `actions` at the right.
+- `GenerationFailurePanel` — a failed run's copy and code, the engine's reason quoted, and its errors by member.
+- `ReviewNotes` — a generated roster's conflicts and errors by member, quoted; shown in a `Dialog`.
+- `MemberNotes` — the engine's errors grouped by member, each message quoted.
+- `GeneratedRoster` — the roster's figures, review-notes callout, week bar, grid and chosen day's panel; owns only
+  the shown week, the chosen day and whether the notes are open.
+
+Engine prose (failure reason, errors, conflicts) is shown quoted, never as the app's own copy (ADR-0003).
 
 ## Draft flow
 

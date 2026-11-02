@@ -6,15 +6,21 @@ import { authTestI18n } from "@/features/auth/testingI18n";
 import {
 	createSchedule,
 	fetchSchedule,
+	fetchScheduleAssignments,
 	fetchSchedules,
 	fetchScheduleConstraints,
 	fetchScheduleShifts,
+	generationInProgress,
 	requestGeneration,
 	updateSchedule,
+	type ScheduleAssignment,
 	type ScheduleBody,
 } from "@/features/scheduling/schedules/api";
 import {
 	generatedScheduleFixture,
+	generationFindingsFixture,
+	generationFixture,
+	scheduleAssignmentsFixture,
 	scheduleFixture,
 } from "@/features/scheduling/schedules/fixtures";
 import {
@@ -241,6 +247,189 @@ describe("schedules client", () => {
 			`POST ${SCHEDULES}/s-1/generation`,
 		]);
 		expect(calls[0]?.body).toBeUndefined();
+	});
+});
+
+describe("a schedule's generation", () => {
+	it("parses a generated schedule with its time zone, its run and everything the engine found", async () => {
+		const schedule = generatedScheduleFixture({ status: "GENERATED" });
+		stubApi({
+			[`GET ${SCHEDULES}/s-1`]: { status: 200, body: envelope(schedule) },
+		});
+
+		const parsed = await fetchSchedule("c-1", UNIT, "s-1");
+		expect(parsed).toEqual(schedule);
+		expect(parsed.timeZone).toBe("Asia/Singapore");
+		expect(parsed.generation?.findings?.members).toHaveLength(3);
+	});
+
+	it("reads a run without findings yet, and a draft without a run", async () => {
+		const requested = generatedScheduleFixture();
+		stubApi({
+			[`GET ${SCHEDULES}/s-1`]: [
+				{ status: 200, body: envelope(requested) },
+				{ status: 200, body: envelope(scheduleFixture()) },
+			],
+		});
+
+		await expect(fetchSchedule("c-1", UNIT, "s-1")).resolves.toMatchObject({
+			generation: { status: "SUBMITTED", findings: null, finishedAt: null },
+		});
+		await expect(fetchSchedule("c-1", UNIT, "s-1")).resolves.toMatchObject({
+			generation: null,
+		});
+	});
+
+	it("drops keys it doesn't know and reads findings without members as naming none", async () => {
+		// Undefined is left out of the JSON the API answers.
+		const findings = { ...generationFindingsFixture(), members: undefined };
+		const schedule = generatedScheduleFixture({ status: "GENERATED" });
+		stubApi({
+			[`GET ${SCHEDULES}/s-1`]: {
+				status: 200,
+				body: envelope({
+					...schedule,
+					generation: {
+						...generationFixture(),
+						attempts: 3,
+						findings: { ...findings, solverSeconds: 4.2 },
+					},
+				}),
+			},
+		});
+
+		const parsed = await fetchSchedule("c-1", UNIT, "s-1");
+		expect(parsed.generation).toEqual(
+			generationFixture({
+				findings: generationFindingsFixture({ members: [] }),
+			})
+		);
+	});
+
+	it("rejects a run whose status it doesn't know instead of trusting its type", async () => {
+		stubApi({
+			[`GET ${SCHEDULES}/s-1`]: {
+				status: 200,
+				body: envelope(
+					generatedScheduleFixture({
+						generation: generationFixture({
+							status: "RETRYING" as "SUBMITTED",
+						}),
+					})
+				),
+			},
+		});
+
+		await expect(fetchSchedule("c-1", UNIT, "s-1")).rejects.toBeInstanceOf(
+			UnexpectedResponseError
+		);
+	});
+
+	it.each([
+		["a draft", scheduleFixture(), false],
+		["a requested schedule", generatedScheduleFixture(), true],
+		[
+			"a generated schedule whose run succeeded",
+			generatedScheduleFixture({ status: "GENERATED" }),
+			false,
+		],
+		[
+			"a generated schedule with a newer run still open",
+			generatedScheduleFixture({
+				status: "GENERATED",
+				generation: generationFixture({
+					status: "PENDING_SUBMIT",
+					finishedAt: null,
+				}),
+			}),
+			true,
+		],
+		[
+			"a schedule whose generation failed",
+			generatedScheduleFixture({ status: "GENERATION_FAILED" }),
+			false,
+		],
+	])("knows whether %s is still being generated", (_, schedule, expected) => {
+		expect(generationInProgress(schedule)).toBe(expected);
+	});
+});
+
+describe("a schedule's roster", () => {
+	it("reads a generated schedule's rows: shifts worked, days off and leave", async () => {
+		const rows = scheduleAssignmentsFixture();
+		const calls = stubApi({
+			[`GET ${SCHEDULES}/s-1/assignments`]: {
+				status: 200,
+				body: envelope(rows),
+			},
+		});
+
+		const parsed = await fetchScheduleAssignments("c-1", UNIT, "s-1");
+		expect(parsed).toEqual(rows);
+		expect(parsed).toHaveLength(21);
+		expect(calls.map((call) => `${call.method} ${call.path}`)).toEqual([
+			`GET ${SCHEDULES}/s-1/assignments`,
+		]);
+		expect(parsed.filter((row) => row.offReason === "LEAVE")).toHaveLength(2);
+		expect(parsed[0]).toMatchObject({
+			member: { displayName: "Aisha Rahman", employeeCode: "EMP-001" },
+			off: false,
+			shift: { name: "Front Desk AM", colour: "#E9A55A" },
+			jobTitle: { name: "Front Desk Lead" },
+		});
+	});
+
+	it("keeps a row whose member is gone, and one whose member is no longer named", async () => {
+		const [first, second] = scheduleAssignmentsFixture() as [
+			ScheduleAssignment,
+			ScheduleAssignment,
+		];
+		const rows = [
+			{ ...first, member: null },
+			{ ...second, member: { ...second.member!, displayName: null } },
+		];
+		stubApi({
+			[`GET ${SCHEDULES}/s-1/assignments`]: {
+				status: 200,
+				body: envelope(rows),
+			},
+		});
+
+		await expect(fetchScheduleAssignments("c-1", UNIT, "s-1")).resolves.toEqual(
+			rows
+		);
+	});
+
+	it("reads no rows for a schedule that isn't generated", async () => {
+		stubApi({
+			[`GET ${SCHEDULES}/s-1/assignments`]: { status: 200, body: envelope([]) },
+		});
+
+		await expect(fetchScheduleAssignments("c-1", UNIT, "s-1")).resolves.toEqual(
+			[]
+		);
+	});
+
+	it("rejects a day off whose reason it doesn't know", async () => {
+		const [row] = scheduleAssignmentsFixture();
+		stubApi({
+			[`GET ${SCHEDULES}/s-1/assignments`]: {
+				status: 200,
+				body: envelope([
+					{
+						...row,
+						off: true,
+						offReason: "SICK",
+						shift: null,
+						jobTitle: null,
+					},
+				]),
+			},
+		});
+
+		await expect(
+			fetchScheduleAssignments("c-1", UNIT, "s-1")
+		).rejects.toBeInstanceOf(UnexpectedResponseError);
 	});
 });
 

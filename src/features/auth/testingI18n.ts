@@ -4,6 +4,9 @@ import en from "@/assets/locales/en/translations.json";
 
 /** Bundled English for tests and stories only; production loading stays unchanged. */
 export const authTestI18n = createInstance();
-void authTestI18n
-	.use(initReactI18next)
-	.init({ lng: "en", resources: { en: { translation: en } } });
+void authTestI18n.use(initReactI18next).init({
+	lng: "en",
+	resources: { en: { translation: en } },
+	// As in production (`src/common/i18n.ts`): React escapes, so values such as "Asia/Singapore" read as sent.
+	interpolation: { escapeValue: false },
+});

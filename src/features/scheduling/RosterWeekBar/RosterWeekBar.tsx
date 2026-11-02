@@ -8,6 +8,7 @@ import {
 	formatPeriod,
 	type SchedulePeriod,
 } from "@/features/scheduling/periods";
+import type { RosterLegendEntry } from "@/features/scheduling/roster/roster";
 import { rosterLooks } from "@/features/scheduling/rosterLooks";
 
 export type RosterWeekBarProps = {
@@ -18,10 +19,13 @@ export type RosterWeekBarProps = {
 	onWeekChange: (week: string) => void;
 	/** Shows the week holding today, or the first week when today is outside the schedule. */
 	onToday: () => void;
+	/** What the roster's colours mean: a day off, leave and each shift. */
+	legend: Array<RosterLegendEntry>;
 	className?: string;
 };
 
-const LEGEND = ["full", "half", "off", "open"] as const;
+/** One legend entry: a look from `rosterLooks`, or a shift's own colour. */
+type Swatch = { key: string; label: string; look?: string; colour?: string };
 
 /** Moves a roster between its weeks, and keys its colours. */
 export const RosterWeekBar = ({
@@ -29,11 +33,21 @@ export const RosterWeekBar = ({
 	week,
 	onWeekChange,
 	onToday,
+	legend,
 	className,
 }: RosterWeekBarProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const language = i18n.resolvedLanguage ?? i18n.language;
 	const index = weeks.findIndex((item) => item.start === week);
+	const swatches = legend.map((entry): Swatch =>
+		entry.kind === "shift"
+			? { key: entry.shiftId, label: entry.name, colour: entry.colour }
+			: {
+					key: entry.kind,
+					label: t(`scheduling.detail.kinds.${entry.kind}`),
+					look: rosterLooks[entry.kind],
+				}
+	);
 	const step = (by: number): void => {
 		const next = weeks[index + by];
 		if (next) onWeekChange(next.start);
@@ -82,16 +96,18 @@ export const RosterWeekBar = ({
 				aria-label={t("scheduling.detail.legend")}
 				className="ml-auto flex flex-wrap gap-x-6 gap-y-2 text-xs font-medium text-neutral-800"
 			>
-				{LEGEND.map((kind) => (
-					<li key={kind} className="flex items-center gap-2">
+				{swatches.map(({ key, label, look, colour }) => (
+					<li key={key} className="flex items-center gap-2">
 						<span
 							aria-hidden="true"
-							className={joinClassNames(
-								"size-2.5 rounded-xs border",
-								rosterLooks[kind]
-							)}
+							className={joinClassNames("size-2.5 rounded-xs border", look)}
+							style={
+								colour
+									? { backgroundColor: colour, borderColor: colour }
+									: undefined
+							}
 						/>
-						{t(`scheduling.detail.kinds.${kind}`)}
+						{label}
 					</li>
 				))}
 			</ul>
