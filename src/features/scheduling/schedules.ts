@@ -46,7 +46,6 @@ export const coverageTone = (coverage: number): ProgressBarTone => {
 /** One department's schedule for a period. */
 export type ScheduleRecord = {
 	scheduleId: string;
-	departmentId?: string;
 	/** e.g. "FO-260413": the department's prefix and the period's first day. */
 	code: string;
 	departmentName: string;

@@ -64,7 +64,9 @@ it("adds an API colleague to the preview roster when a shift is reassigned", asy
 		},
 	});
 	const schedule = exampleSchedules(new Date()).current[0]!;
-	app = await openApp(`/scheduling/${schedule.scheduleId}`);
+	app = await openApp(
+		`/scheduling/${schedule.scheduleId}?branchId=b-1&departmentId=d-1`
+	);
 	renderAuthApp(app);
 	const user = userEvent.setup();
 	await user.click(
@@ -183,5 +185,67 @@ it("labels and tones every API status in the history", async () => {
 			name: new RegExp(`^${status} schedule`),
 		});
 		expect(within(row).getByText(label)).toHaveClass(background);
+	}
+});
+
+it("opens a draft in the wizard and any other schedule's roster, from its card and its history row", async () => {
+	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+	const views = [
+		{
+			status: "DRAFT",
+			href: "/scheduling/new?step=setup&scheduleId=DRAFT&departmentId=d-1",
+		},
+		{
+			status: "GENERATION_REQUESTED",
+			href: "/scheduling/GENERATION_REQUESTED?branchId=b-1&departmentId=d-1",
+		},
+		{
+			status: "GENERATED",
+			href: "/scheduling/GENERATED?branchId=b-1&departmentId=d-1",
+		},
+		{
+			status: "GENERATION_FAILED",
+			href: "/scheduling/GENERATION_FAILED?branchId=b-1&departmentId=d-1",
+		},
+	] as const;
+	stubApi({
+		"POST /api/v1/public/sessions/refreshes": accessPassReply(),
+		"GET /api/v1/me": currentUserReply(),
+		"GET /api/v1/me/workspace": {
+			status: 200,
+			body: envelope(schedulingWorkspace(["schedule:read"])),
+		},
+		"GET /api/v1/companies/c-1/schedules": {
+			status: 200,
+			body: envelope({
+				content: views.map(({ status }) => {
+					const overrides = { scheduleId: status, name: `${status} schedule` };
+					return status === "DRAFT"
+						? scheduleFixture(overrides)
+						: generatedScheduleFixture({ ...overrides, status });
+				}),
+				page: { hasNext: false },
+			}),
+		},
+	});
+	app = await openApp("/scheduling");
+	renderAuthApp(app);
+	const history = await screen.findByRole("table", {
+		name: "Schedule history",
+	});
+	for (const { status, href } of views) {
+		const name = `View schedule ${status} schedule`;
+		const card = screen.getByRole("region", { name: `${status} schedule` });
+		const row = within(history).getByRole("row", {
+			name: new RegExp(`^${status} schedule`),
+		});
+		expect(within(card).getByRole("link", { name })).toHaveAttribute(
+			"href",
+			href
+		);
+		expect(within(row).getByRole("link", { name })).toHaveAttribute(
+			"href",
+			href
+		);
 	}
 });

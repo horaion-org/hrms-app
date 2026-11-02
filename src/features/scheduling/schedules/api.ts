@@ -29,9 +29,11 @@ import { retry } from "@/features/workspace/retry";
  * The schedules API: a Department's schedules. A schedule exists as a DRAFT
  * from the moment Setup is completed and remembers which of the Department's
  * live shifts and constraints are ticked; generating it freezes those shifts
- * and constraints into the schedule. Paths, fields and codes follow §2.4 of the
- * API's `docs/implementation/2026-10-11-shifts-module.md` and §4.5 of its
- * `docs/implementation/2026-10-12-scheduling-constraints.md`.
+ * and constraints into the schedule, and once generated it has a roster.
+ * Paths, fields and codes follow §2.4 of the API's
+ * `docs/implementation/2026-10-11-shifts-module.md`, §4.5 of its
+ * `docs/implementation/2026-10-12-scheduling-constraints.md` and its
+ * `docs/implementation/2026-10-27-roster-read-model.md`.
  */
 
 const scheduleStatusSchema = z.enum([
@@ -47,6 +49,117 @@ const scheduleStatusSchema = z.enum([
  */
 export type ScheduleStatus = z.infer<typeof scheduleStatusSchema>;
 
+const generationRunStatusSchema = z.enum([
+	"PENDING_SUBMIT",
+	"SUBMITTED",
+	"SUCCEEDED",
+	"FAILED",
+]);
+
+/** A generation run is open while PENDING_SUBMIT or SUBMITTED, then ends as SUCCEEDED or FAILED. */
+export type GenerationRunStatus = z.infer<typeof generationRunStatusSchema>;
+
+const OPEN_RUN_STATUSES: ReadonlyArray<GenerationRunStatus> = [
+	"PENDING_SUBMIT",
+	"SUBMITTED",
+];
+
+/*
+ * What the engine reported besides the roster (§1.2 of the API's
+ * `docs/implementation/2026-10-27-roster-read-model.md`). Every message is the
+ * engine's prose and may name members: shown quoted, never as the app's own
+ * copy (ADR-0003). Keys the app doesn't know are dropped.
+ */
+
+const findingsViolationSchema = z.object({
+	/** The member profile it is about, or null for a day's entry. */
+	employeeId: z.string().nullable(),
+	/** The day it is about, or null for a member's entry. */
+	date: z.string().nullable(),
+	messages: z.array(z.string()),
+});
+
+const findingsDiagnosticSchema = z.object({
+	code: z.string(),
+	severity: z.string(),
+	audience: z.string(),
+	message: z.string(),
+	/** The ids and values it is about, as the engine keyed them. */
+	entities: z.record(z.string(), z.unknown()),
+});
+
+const findingsConflictSchema = z.object({
+	kind: z.string(),
+	conflictId: z.string(),
+	date: z.string(),
+	/** The job title that is short. */
+	roleUuid: z.string(),
+	startBlock: z.number(),
+	endBlock: z.number(),
+	start: z.string(),
+	end: z.string(),
+	/** The largest shortfall over the span. */
+	missing: z.number(),
+	message: z.string().nullable(),
+	sourceRule: z.string(),
+	sourceRuleId: z.string().nullable(),
+	shiftUuids: z.array(z.string()),
+	repairRungs: z.array(z.string()),
+	/** The member an employee-scoped hole is about, otherwise null. */
+	employeeUuid: z.string().nullable(),
+});
+
+const findingsAssignmentMessagesSchema = z.object({
+	employeeId: z.string(),
+	day: z.string(),
+	messages: z.array(z.string()),
+});
+
+const findingsMemberSchema = z.object({
+	/** The engine's employee id, which the other findings refer to. */
+	memberProfileId: z.string(),
+	/** Null when the id did not resolve to a member of the company. */
+	membershipId: z.string().nullable(),
+	/** Null when the id did not resolve or the member has since been removed. */
+	displayName: z.string().nullable(),
+});
+
+const generationFindingsSchema = z.object({
+	/** The solver's own status, e.g. OPTIMAL or INFEASIBLE. */
+	scheduleStatus: z.string(),
+	/** The engine's explanation of a failed solve. */
+	failureReason: z.string().nullable(),
+	generatedAt: z.string(),
+	errors: z.array(findingsViolationSchema),
+	diagnostics: z.array(findingsDiagnosticSchema),
+	conflicts: z.array(findingsConflictSchema),
+	assignmentMessages: z.array(findingsAssignmentMessagesSchema),
+	/** Every member the findings refer to, so an id can be shown as a name. */
+	members: z.array(findingsMemberSchema).default([]),
+});
+
+export type GenerationFindings = z.infer<typeof generationFindingsSchema>;
+
+const generationSchema = z.object({
+	runId: z.string(),
+	status: generationRunStatusSchema,
+	/** The engine's outcome once the job succeeded (OPTIMAL, FEASIBLE, INFEASIBLE), otherwise null. */
+	engineOutcome: z.string().nullable(),
+	/**
+	 * The run's last error code. Why the run ended only when FAILED: an open
+	 * run carries the failure being retried, and a SUCCEEDED one may keep the
+	 * code of a retry before it succeeded. The engine may add codes.
+	 */
+	errorCode: z.string().nullable(),
+	requestedAt: z.string(),
+	finishedAt: z.string().nullable(),
+	/** Null until a result is applied. */
+	findings: generationFindingsSchema.nullable(),
+});
+
+/** A schedule's newest generation run and what it found. */
+export type ScheduleGeneration = z.infer<typeof generationSchema>;
+
 const scheduleSchema = z.object({
 	scheduleId: z.string(),
 	companyId: z.string(),
@@ -54,6 +167,8 @@ const scheduleSchema = z.object({
 	branchName: z.string(),
 	departmentId: z.string(),
 	departmentName: z.string(),
+	/** The IANA name of the branch's time zone, which the schedule's days are in. */
+	timeZone: z.string(),
 	name: z.string(),
 	/** The Monday the week-long period starts, as an ISO date. */
 	periodStart: z.string(),
@@ -72,12 +187,30 @@ const scheduleSchema = z.object({
 	generationRequestedBy: z
 		.object({ membershipId: z.string(), displayName: z.string().nullable() })
 		.nullable(),
+	/** The newest generation run, or null for a schedule that has none. */
+	generation: generationSchema.nullable(),
 	createdAt: z.string(),
 	updatedAt: z.string(),
 });
 
-/** A schedule as the API answers it; its shifts and constraints are read on their own. */
+/** A schedule as the API answers it; its shifts, constraints and roster are read on their own. */
 export type Schedule = z.infer<typeof scheduleSchema>;
+
+/** How often a schedule whose generation is in progress is read again. */
+const GENERATION_POLL_INTERVAL_MS = 15_000;
+
+/**
+ * Whether a schedule is still being generated: requested, or GENERATED while
+ * a newer run is still open. Its roster page shows that and polls meanwhile.
+ */
+export const generationInProgress = ({
+	status,
+	generation,
+}: Schedule): boolean =>
+	status === "GENERATION_REQUESTED" ||
+	(status === "GENERATED" &&
+		generation !== null &&
+		OPEN_RUN_STATUSES.includes(generation.status));
 
 const schedulePageSchema = z.object({
 	content: z.array(scheduleSchema),
@@ -239,6 +372,70 @@ export const fetchScheduleConstraints = (
 		{ signal }
 	);
 
+const assignmentOffReasonSchema = z.enum(["OFF", "LEAVE"]);
+
+/** Why a member is off on a day: a plain day off, or approved leave. */
+export type AssignmentOffReason = z.infer<typeof assignmentOffReasonSchema>;
+
+const scheduleAssignmentSchema = z.object({
+	/** The row's own id: a stable key even when its member no longer resolves. */
+	assignmentId: z.string(),
+	/** Null once the member's profile is no longer live in the company. */
+	member: z
+		.object({
+			membershipId: z.string(),
+			/** The engine's employee id, as the findings name members. */
+			memberProfileId: z.string(),
+			/** Null once their membership or user is removed. */
+			displayName: z.string().nullable(),
+			employeeCode: z.string(),
+			/** Their current home job title, or null when they hold none. */
+			jobTitleName: z.string().nullable(),
+		})
+		.nullable(),
+	/** A day of the schedule's week, as an ISO date. */
+	day: z.string(),
+	off: z.boolean(),
+	/** Why they are off, or null on a working day. */
+	offReason: assignmentOffReasonSchema.nullable(),
+	/** The frozen shift worked, or null when off. */
+	shift: z
+		.object({
+			/** The frozen copy's own id, as the schedule's shifts list it. */
+			shiftId: z.string(),
+			name: z.string(),
+			group: z.string(),
+			colour: z.string().regex(SHIFT_COLOUR_PATTERN),
+			/** "HH:mm"; an end at or before the start runs past midnight. */
+			startTime: z.string(),
+			endTime: z.string(),
+		})
+		.nullable(),
+	/** The job title the shift is worked as, named as frozen with it; null when off. */
+	jobTitle: z.object({ jobTitleId: z.string(), name: z.string() }).nullable(),
+});
+
+/** One member's day in a generated schedule: a frozen shift, or off with its reason. */
+export type ScheduleAssignment = z.infer<typeof scheduleAssignmentSchema>;
+
+const scheduleAssignmentsSchema = z.array(scheduleAssignmentSchema);
+
+/**
+ * A schedule's roster: one row per member per day of its week, by display
+ * name, member, then day. Empty unless the schedule is GENERATED.
+ */
+export const fetchScheduleAssignments = (
+	companyId: string,
+	unit: DepartmentPath,
+	scheduleId: string,
+	signal?: AbortSignal
+): Promise<Array<ScheduleAssignment>> =>
+	apiRequest(
+		`${schedulePath(companyId, unit, scheduleId)}/assignments`,
+		scheduleAssignmentsSchema,
+		{ signal }
+	);
+
 /** The key one schedule is cached under, whichever department it is reached through. */
 export const scheduleKey = (
 	companyId: string,
@@ -246,12 +443,20 @@ export const scheduleKey = (
 ): readonly ["scheduling", string, "schedules", string] =>
 	[SCHEDULING_QUERY_ROOT, companyId, "schedules", scheduleId] as const;
 
-/** One schedule; `unit` undefined, or `allowed` false, asks for nothing. */
+/** Whether a schedule is read again every 15 seconds while it is being generated. */
+export type SchedulePolling = { pollWhileGenerating?: boolean };
+
+/**
+ * One schedule; `unit` undefined, or `allowed` false, asks for nothing. With
+ * `pollWhileGenerating`, it is read again every 15 seconds while its
+ * generation is in progress, and no longer once it ends.
+ */
 export const scheduleQuery = (
 	companyId: string,
 	unit: DepartmentPath | undefined,
 	scheduleId: string,
-	allowed = true
+	allowed = true,
+	{ pollWhileGenerating = false }: SchedulePolling = {}
 ): UndefinedInitialDataOptions<
 	Schedule,
 	Error,
@@ -268,6 +473,14 @@ export const scheduleQuery = (
 		// One record: a 404 may mean it moved out of reach.
 		meta: administrativeMeta(companyId, { record: true }),
 		staleTime: 30_000,
+		refetchInterval: pollWhileGenerating
+			? (query): number | false =>
+					query.state.data !== undefined &&
+					generationInProgress(query.state.data)
+						? GENERATION_POLL_INTERVAL_MS
+						: false
+			: false,
+		refetchIntervalInBackground: false,
 		retry,
 	});
 
@@ -327,6 +540,37 @@ export const scheduleConstraintsQuery = (
 			allowed && unit
 				? ({ signal }): Promise<Array<ScheduleConstraint>> =>
 						fetchScheduleConstraints(companyId, unit, scheduleId, signal)
+				: skipToken,
+		meta: administrativeMeta(companyId),
+		staleTime: 30_000,
+		retry,
+	});
+
+/** The key a schedule's roster is cached under, below the schedule's own. */
+export const scheduleAssignmentsKey = (
+	companyId: string,
+	scheduleId: string
+): readonly ["scheduling", string, "schedules", string, "assignments"] =>
+	[...scheduleKey(companyId, scheduleId), "assignments"] as const;
+
+/** A schedule's roster; `unit` undefined, or `allowed` false, asks for nothing. */
+export const scheduleAssignmentsQuery = (
+	companyId: string,
+	unit: DepartmentPath | undefined,
+	scheduleId: string,
+	allowed = true
+): UndefinedInitialDataOptions<
+	Array<ScheduleAssignment>,
+	Error,
+	Array<ScheduleAssignment>,
+	ReturnType<typeof scheduleAssignmentsKey>
+> =>
+	queryOptions({
+		queryKey: scheduleAssignmentsKey(companyId, scheduleId),
+		queryFn:
+			allowed && unit
+				? ({ signal }): Promise<Array<ScheduleAssignment>> =>
+						fetchScheduleAssignments(companyId, unit, scheduleId, signal)
 				: skipToken,
 		meta: administrativeMeta(companyId),
 		staleTime: 30_000,

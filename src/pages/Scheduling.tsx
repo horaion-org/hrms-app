@@ -14,6 +14,7 @@ import { formatPeriod } from "@/features/scheduling/periods";
 import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import { useSchedules } from "@/features/scheduling/schedules/useSchedules";
 import type { Schedule } from "@/features/scheduling/schedules/api";
+import { scheduleViewLink } from "@/features/scheduling/schedules/scheduleViewLink";
 import { ScheduleCard } from "@/features/scheduling/ScheduleCard";
 import {
 	exampleSchedules,
@@ -106,14 +107,9 @@ export const Scheduling = (): FunctionComponent => {
 				cell: (schedule) => (
 					<div className="flex justify-center">
 						<Button
+							{...scheduleViewLink(schedule)}
 							aria-label={t(`${key}.viewNamed`, { code: schedule.name })}
-							to="/scheduling/new"
 							variant="icon"
-							search={{
-								step: "setup",
-								scheduleId: schedule.scheduleId,
-								departmentId: schedule.departmentId,
-							}}
 						>
 							<ViewIcon />
 						</Button>
@@ -191,7 +187,6 @@ export const Scheduling = (): FunctionComponent => {
 								details={schedule}
 								schedule={{
 									scheduleId: schedule.scheduleId,
-									departmentId: schedule.departmentId,
 									departmentName: schedule.departmentName,
 									code: schedule.name,
 									period: {

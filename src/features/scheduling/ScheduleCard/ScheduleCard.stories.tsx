@@ -29,7 +29,6 @@ export const SavedDraft: Story = {
 		schedule: {
 			...schedule!,
 			scheduleId: draft.scheduleId,
-			departmentId: draft.departmentId,
 			code: draft.name,
 			status: draft.status,
 			period: { start: draft.periodStart, end: draft.periodEnd },

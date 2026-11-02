@@ -17,6 +17,7 @@ import {
 	updateSchedule,
 	type Schedule,
 	type ScheduleBody,
+	type SchedulePolling,
 } from "@/features/scheduling/schedules/api";
 import { departmentScope } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
@@ -33,11 +34,15 @@ export type ScheduleState =
 const refused = (error: unknown, status: number): boolean =>
 	error instanceof ApiProblemError && error.status === status;
 
-/** `unit` or `scheduleId` undefined asks for nothing and stays pending. */
+/**
+ * `unit` or `scheduleId` undefined asks for nothing and stays pending.
+ * `polling` reads it again while its generation is in progress.
+ */
 export const useSchedule = (
 	companyId: string,
 	unit: DepartmentPath | undefined,
-	scheduleId: string | undefined
+	scheduleId: string | undefined,
+	polling: SchedulePolling = {}
 ): ScheduleState => {
 	const access = useAccess();
 	const allowed =
@@ -48,7 +53,8 @@ export const useSchedule = (
 			companyId,
 			unit,
 			scheduleId ?? "",
-			allowed && scheduleId !== undefined
+			allowed && scheduleId !== undefined,
+			polling
 		)
 	);
 

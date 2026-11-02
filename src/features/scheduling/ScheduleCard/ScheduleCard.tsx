@@ -9,6 +9,7 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { formatPeriod } from "@/features/scheduling/periods";
 import type { Schedule } from "@/features/scheduling/schedules/api";
+import { scheduleViewLink } from "@/features/scheduling/schedules/scheduleViewLink";
 import { ScheduleSummary } from "@/features/scheduling/ScheduleCard/ScheduleSummary";
 import {
 	coverageTone,
@@ -19,6 +20,7 @@ import {
 export type ScheduleCardProps = {
 	schedule: ScheduleRecord;
 	className?: string;
+	/** The API's schedule behind the card; View then opens it by its status. */
 	details?: Schedule;
 };
 
@@ -59,16 +61,11 @@ export const ScheduleCard = ({
 				>
 					{schedule.code}
 				</h2>
-				{schedule.departmentId ? (
+				{details ? (
 					<Button
+						{...scheduleViewLink(details)}
 						aria-label={t(`${key}.viewNamed`, { code: schedule.code })}
-						to="/scheduling/new"
 						variant="textlink"
-						search={{
-							step: "setup",
-							scheduleId: schedule.scheduleId,
-							departmentId: schedule.departmentId,
-						}}
 					>
 						{t(`${key}.view`)}
 					</Button>
