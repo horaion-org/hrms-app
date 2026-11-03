@@ -571,6 +571,13 @@
 			"failed": "We couldn’t load the availability. Try again.",
 			"none": "Not available",
 			"empty": "Add the hours this person can work. Without them they can’t be rostered.",
+			"week": {
+				"label": "Week",
+				"pattern": "Default pattern",
+				"of": "Week of {{date}}",
+				"custom": "Custom",
+				"default": "Default"
+			},
 			"dialog": {
 				"title": "Edit availability",
 				"description": "The hours {{name}} can work each week. A window that ends at or before its start runs past midnight.",
@@ -596,7 +603,15 @@
 				"someRejected": "Some windows were refused. Check the windows marked below.",
 				"notPartTime": "Only part-time members can have availability, and this person isn’t part-time any more. Reload the page.",
 				"forbidden": "You no longer have permission to change this person’s availability.",
-				"failed": "We couldn’t save the availability. Try again."
+				"failed": "We couldn’t save the availability. Try again.",
+				"weekTitle": "Edit availability · Week of {{date}}",
+				"weekDescription": "The hours {{name}} can work in the week of {{date}}, in place of their default pattern.",
+				"notAvailable": "Not available this week",
+				"reset": "Reset to default",
+				"resetTitle": "Reset this week to the default pattern?",
+				"resetDescription": "The week of {{date}} will follow {{name}}’s default pattern again.",
+				"resetConfirm": "Reset to default",
+				"resetCancel": "Keep this week"
 			}
 		},
 		"import": "Import",

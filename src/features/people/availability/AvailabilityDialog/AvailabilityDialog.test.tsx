@@ -5,11 +5,16 @@ import { describe, expect, it, vi } from "vitest";
 import { ApiProblemError } from "@/common/problem";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import { AvailabilityDialog } from "@/features/people/availability/AvailabilityDialog";
-import type { WeeklyWindow } from "@/features/people/availability/availabilityModel";
+import {
+	formatWeekStart,
+	type AvailabilityScope,
+	type WeeklyWindow,
+} from "@/features/people/availability/availabilityModel";
 
 const show = (
 	windows: Array<WeeklyWindow> = [],
-	onSubmit = vi.fn().mockResolvedValue(undefined)
+	onSubmit = vi.fn().mockResolvedValue(undefined),
+	week?: { scope: AvailabilityScope; onReset?: () => Promise<unknown> }
 ): {
 	onSubmit: ReturnType<typeof vi.fn>;
 	onClose: ReturnType<typeof vi.fn>;
@@ -19,8 +24,10 @@ const show = (
 		<I18nextProvider i18n={authTestI18n}>
 			<AvailabilityDialog
 				name="Kent Chua"
+				scope={week?.scope ?? { kind: "pattern" }}
 				windows={windows}
 				onClose={onClose}
+				onReset={week?.onReset}
 				onSubmit={onSubmit}
 			/>
 		</I18nextProvider>
@@ -163,5 +170,71 @@ describe("AvailabilityDialog", () => {
 			)
 		).toBeVisible();
 		expect(onClose).not.toHaveBeenCalled();
+	});
+
+	describe("for one week", () => {
+		const week: AvailabilityScope = {
+			kind: "week",
+			weekStartMonday: "2026-11-09",
+		};
+		const date = formatWeekStart("2026-11-09", "en");
+
+		it("given_aWeek_when_opened_then_saysWhichWeekAndOffersNoResetWithoutAnOverride", () => {
+			show([], undefined, { scope: week });
+
+			expect(
+				screen.getByRole("dialog", {
+					name: `Edit availability · Week of ${date}`,
+				})
+			).toBeVisible();
+			expect(
+				screen.queryByRole("button", { name: "Reset to default" })
+			).not.toBeInTheDocument();
+		});
+
+		it("given_notAvailableThisWeek_when_pressed_then_savesAnEmptyWeek", async () => {
+			const user = userEvent.setup();
+			const { onSubmit, onClose } = show(
+				[{ day: "MON", startTime: "09:00", endTime: "13:00" }],
+				undefined,
+				{ scope: week }
+			);
+
+			await user.click(
+				screen.getByRole("button", { name: "Not available this week" })
+			);
+
+			await waitFor(() => {
+				expect(onSubmit).toHaveBeenCalledWith([]);
+			});
+			expect(onClose).toHaveBeenCalled();
+		});
+
+		it("given_anOverride_when_resetIsConfirmed_then_returnsTheWeekToThePattern", async () => {
+			const user = userEvent.setup();
+			const onReset = vi.fn().mockResolvedValue(undefined);
+			const { onSubmit, onClose } = show(
+				[{ day: "MON", startTime: "09:00", endTime: "13:00" }],
+				undefined,
+				{ scope: week, onReset }
+			);
+
+			await user.click(
+				screen.getByRole("button", { name: "Reset to default" })
+			);
+			expect(onReset).not.toHaveBeenCalled();
+			const confirm = await screen.findByRole("dialog", {
+				name: "Reset this week to the default pattern?",
+			});
+			await user.click(
+				within(confirm).getByRole("button", { name: "Reset to default" })
+			);
+
+			await waitFor(() => {
+				expect(onReset).toHaveBeenCalledOnce();
+			});
+			expect(onClose).toHaveBeenCalled();
+			expect(onSubmit).not.toHaveBeenCalled();
+		});
 	});
 });

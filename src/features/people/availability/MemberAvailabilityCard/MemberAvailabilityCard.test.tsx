@@ -5,10 +5,14 @@ import type { ReactElement } from "react";
 import { I18nextProvider } from "react-i18next";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { configureApiClient, resetApiClient } from "@/common/api-client";
-import { envelope, stubApi } from "@/common/testing/stubApi";
+import { envelope, stubApi, type StubReply } from "@/common/testing/stubApi";
 import { WEEKDAYS } from "@/common/weekdays";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import type { MemberProfileDetail } from "@/features/people/api";
+import {
+	formatWeekStart,
+	upcomingMondays,
+} from "@/features/people/availability/availabilityModel";
 import { MemberAvailabilityCard } from "@/features/people/availability/MemberAvailabilityCard";
 import { storyCompany } from "@/features/people/storyCompany";
 
@@ -26,10 +30,12 @@ const kent = (
 	}) as MemberProfileDetail;
 
 const pattern = (
-	windows: Array<{ startTime: string; endTime: string }>
+	windows: Array<{ startTime: string; endTime: string }>,
+	overrideWeeks: Array<string> = []
 ): unknown =>
 	envelope({
 		membershipId: "m-1",
+		overrideWeeks,
 		days: WEEKDAYS.map((day) => ({
 			day,
 			windows: day === "MON" ? windows : [],
@@ -168,6 +174,116 @@ describe("MemberAvailabilityCard", () => {
 		const put = calls.find((call) => call.method === "PUT");
 		expect(put?.body).toEqual({
 			windows: [{ day: "MON", startTime: "10:00", endTime: "17:00" }],
+		});
+	});
+
+	describe("one week", () => {
+		const [, nextWeek = "", weekAfter = ""] = upcomingMondays(new Date());
+		const weekOf = (monday: string): string =>
+			`Week of ${formatWeekStart(monday, "en")}`;
+		const routesWithOverride = (): Record<string, StubReply> => ({
+			[`GET ${PATH}`]: {
+				status: 200,
+				body: pattern([{ startTime: "09:00", endTime: "17:00" }], [nextWeek]),
+			},
+			[`GET ${PATH}/weeks/${nextWeek}`]: {
+				status: 200,
+				body: envelope({
+					membershipId: "m-1",
+					weekStartMonday: nextWeek,
+					days: WEEKDAYS.map((day) => ({
+						day,
+						windows:
+							day === "TUE" ? [{ startTime: "10:00", endTime: "12:00" }] : [],
+					})),
+				}),
+			},
+			[`DELETE ${PATH}/weeks/${nextWeek}`]: { status: 204 },
+		});
+		const chooseWeek = async (
+			user: ReturnType<typeof userEvent.setup>,
+			monday: string
+		): Promise<void> => {
+			await user.click(await screen.findByRole("button", { name: "Week" }));
+			await user.click(
+				await screen.findByRole("option", { name: weekOf(monday) })
+			);
+		};
+
+		it("given_aWeekWithAnOverride_when_chosen_then_showsItsWindowsMarkedCustom", async () => {
+			const user = userEvent.setup();
+			stubApi(routesWithOverride());
+			show(() => (
+				<MemberAvailabilityCard
+					changeable
+					companyId="c-1"
+					profile={kent("PART_TIME")}
+				/>
+			));
+
+			await chooseWeek(user, nextWeek);
+
+			expect(await screen.findByText("10:00–12:00")).toBeVisible();
+			expect(screen.queryByText("09:00–17:00")).not.toBeInTheDocument();
+			expect(screen.getByText("Custom")).toBeVisible();
+			expect(screen.queryByText("Default")).not.toBeInTheDocument();
+		});
+
+		it("given_aWeekWithoutAnOverride_when_chosen_then_showsThePatternMarkedDefaultAndAsksNothingMore", async () => {
+			const user = userEvent.setup();
+			const calls = stubApi(routesWithOverride());
+			show(() => (
+				<MemberAvailabilityCard
+					changeable
+					companyId="c-1"
+					profile={kent("PART_TIME")}
+				/>
+			));
+
+			await chooseWeek(user, weekAfter);
+
+			expect(await screen.findByText("Default")).toBeVisible();
+			expect(screen.getByText("09:00–17:00")).toBeVisible();
+			expect(screen.queryByText("Custom")).not.toBeInTheDocument();
+			expect(calls.some((call) => call.path.includes("/weeks/"))).toBe(false);
+		});
+
+		it("given_aCustomWeek_when_resetIsConfirmed_then_deletesItsOverride", async () => {
+			const user = userEvent.setup();
+			const calls = stubApi(routesWithOverride());
+			show(() => (
+				<MemberAvailabilityCard
+					changeable
+					companyId="c-1"
+					profile={kent("PART_TIME")}
+				/>
+			));
+
+			await chooseWeek(user, nextWeek);
+			await screen.findByText("10:00–12:00");
+			await user.click(
+				screen.getByRole("button", { name: "Edit availability" })
+			);
+			const editor = await screen.findByRole("dialog", {
+				name: `Edit availability · ${weekOf(nextWeek)}`,
+			});
+			await user.click(
+				within(editor).getByRole("button", { name: "Reset to default" })
+			);
+			const confirm = await screen.findByRole("dialog", {
+				name: "Reset this week to the default pattern?",
+			});
+			await user.click(
+				within(confirm).getByRole("button", { name: "Reset to default" })
+			);
+
+			await waitFor(() => {
+				expect(
+					calls
+						.filter((call) => call.method === "DELETE")
+						.map((call) => call.path)
+				).toEqual([`${PATH}/weeks/${nextWeek}`]);
+			});
 		});
 	});
 });

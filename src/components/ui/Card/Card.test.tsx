@@ -96,4 +96,19 @@ describe("Card", () => {
 		expect(card).toHaveAttribute("data-card", "contact");
 		expect(ref.current).toBe(card);
 	});
+
+	it("places a title aside right after the heading, in the title's row", () => {
+		render(
+			<Card
+				icon={NotesIcon}
+				title="Availability"
+				titleAside={<button type="button">Week</button>}
+			/>
+		);
+
+		const heading = screen.getByRole("heading", { name: "Availability" });
+		expect(heading.nextElementSibling).toBe(
+			screen.getByRole("button", { name: "Week" })
+		);
+	});
 });

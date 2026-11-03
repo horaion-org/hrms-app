@@ -1,14 +1,9 @@
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import { myProfileQuery } from "@/features/people/api";
-import { myAvailabilityQuery } from "@/features/people/availability/api";
-import { AvailabilityCard } from "@/features/people/availability/AvailabilityCard";
-import {
-	isPartTime,
-	windowsOf,
-} from "@/features/people/availability/availabilityModel";
+import { MyAvailabilityCard } from "@/features/people/availability/MyAvailabilityCard";
 import { ProfileDetails } from "@/features/people/ProfileDetails";
 import { ProfileHeader } from "@/features/people/ProfileHeader";
 
@@ -22,8 +17,6 @@ export const MyProfile = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
 	const { t } = useTranslation();
 	const { data: profile } = useSuspenseQuery(myProfileQuery(companyId));
-	const partTime = isPartTime(profile.employmentType);
-	const availability = useQuery(myAvailabilityQuery(companyId, partTime));
 	return (
 		<>
 			<p className="text-sm text-neutral-800">
@@ -32,13 +25,11 @@ export const MyProfile = (): FunctionComponent => {
 			<div className="mt-8">
 				<ProfileHeader profile={profile} />
 				<ProfileDetails className="mt-10" profile={profile} />
-				{partTime && (
-					<AvailabilityCard
-						className="mt-6"
-						failed={availability.isError}
-						windows={availability.data && windowsOf(availability.data)}
-					/>
-				)}
+				<MyAvailabilityCard
+					className="mt-6"
+					companyId={companyId}
+					profile={profile}
+				/>
 			</div>
 		</>
 	);

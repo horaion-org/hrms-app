@@ -8,6 +8,8 @@ export type CardProps = Omit<ComponentPropsWithRef<"section">, "title"> & {
 	icon: Heroicon;
 	/** Usually a hyperlink Button such as "Add note", placed at the top right. */
 	action?: ReactNode;
+	/** A small control beside the title, such as a Select choosing what the card shows. */
+	titleAside?: ReactNode;
 	/** Cards sit under the page's h1 by default; use 3 under another h2. */
 	headingLevel?: 2 | 3;
 };
@@ -17,6 +19,7 @@ export const Card = ({
 	title,
 	icon: Icon,
 	action,
+	titleAside,
 	headingLevel = 2,
 	className,
 	children,
@@ -39,6 +42,7 @@ export const Card = ({
 					<Heading className="min-w-0 text-base font-bold" id={titleId}>
 						{title}
 					</Heading>
+					{titleAside}
 				</div>
 				{action}
 			</div>

@@ -77,7 +77,8 @@ const CREATE_KEYS: ReadonlyArray<PermissionKey> = ["schedule:create"];
  * shifts count. A new draft's department is chosen from the active ones
  * where the person may create schedules, as the workspace offers them.
  * While the setup can change, the chosen department's part-timers without
- * availability are named, for someone who may read availability there.
+ * availability in the chosen week are named, for someone who may read
+ * availability there.
  */
 export const ScheduleSetupStep = ({
 	formId,
@@ -104,7 +105,10 @@ export const ScheduleSetupStep = ({
 		defaultValues,
 		mode: "onTouched",
 	});
-	const departmentId = useWatch({ control, name: "departmentId" });
+	const [departmentId, periodStart] = useWatch({
+		control,
+		name: ["departmentId", "periodStart"],
+	});
 	// Only where availability may be read: the workspace offers the department under its key.
 	const readinessUnit =
 		!readOnly && workspace.data && departmentId
@@ -115,7 +119,9 @@ export const ScheduleSetupStep = ({
 					departmentId
 				)
 			: undefined;
-	const readiness = useQuery(partTimeReadinessQuery(companyId, readinessUnit));
+	const readiness = useQuery(
+		partTimeReadinessQuery(companyId, readinessUnit, periodStart || undefined)
+	);
 	const idPrefix = useId();
 	const fieldId = (name: keyof ScheduleSetupValues): string =>
 		`${idPrefix}-${name}`;

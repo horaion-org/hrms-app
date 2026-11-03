@@ -16,6 +16,8 @@ export type AvailabilityCardProps = {
 	failed?: boolean;
 	/** Usually an "Edit availability" hyperlink, placed at the top right. */
 	action?: ReactNode;
+	/** Beside the title, such as the week selector. */
+	titleAside?: ReactNode;
 	/** Shown in place of the week when there are no windows at all; without it, every day reads "—". */
 	emptyMessage?: string;
 	className?: string;
@@ -32,6 +34,7 @@ export const AvailabilityCard = ({
 	windows,
 	failed = false,
 	action,
+	titleAside,
 	emptyMessage,
 	className,
 }: AvailabilityCardProps): FunctionComponent => {
@@ -43,6 +46,7 @@ export const AvailabilityCard = ({
 			className={className}
 			icon={TimeIcon}
 			title={t(`${key}.title`)}
+			titleAside={titleAside}
 		>
 			{failed ? (
 				<p className="text-sm text-error-700" role="alert">

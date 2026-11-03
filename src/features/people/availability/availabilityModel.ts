@@ -1,12 +1,15 @@
+import dayjs from "dayjs";
 import { MINUTES_PER_DAY, minutesOfDay } from "@/common/timeOfDay";
 import { WEEKDAYS, type Weekday } from "@/common/weekdays";
+import { mondayOf } from "@/features/scheduling/schedules";
 
 /*
  * A part-time member's work availability: a weekly pattern of windows, each
  * starting on one weekday at a half-hour time. An end at or before the start
  * runs past midnight into the next day, so the week is a circle: Sunday's
- * late window runs into Monday. The rules mirror the API's (ADR-0053).
- * Pure: no React, no requests.
+ * late window runs into Monday. One week may instead have windows of its
+ * own, an override, which replace the pattern for that week only. The rules
+ * mirror the API's (ADR-0053). Pure: no React, no requests.
  */
 
 /** A start and an end, each "HH:mm". */
@@ -18,11 +21,32 @@ export type WeeklyWindow = TimeWindow & { day: Weekday };
 /** One day of the pattern and its windows, earliest first. */
 export type AvailabilityDay = { day: Weekday; windows: Array<TimeWindow> };
 
-/** A member's pattern as the API answers it: all seven days, Monday first. */
+/**
+ * A member's pattern as the API answers it: all seven days, Monday first,
+ * and the weeks from this one on that have an override, as their Mondays.
+ */
 export type WeeklyAvailability = {
 	membershipId: string;
 	days: Array<AvailabilityDay>;
+	overrideWeeks: Array<string>;
 };
+
+/** One week's override as the API answers it: all seven days, Monday first. */
+export type WeekAvailability = {
+	membershipId: string;
+	/** "YYYY-MM-DD", a Monday. */
+	weekStartMonday: string;
+	days: Array<AvailabilityDay>;
+};
+
+/** What is shown and edited: the default pattern, or one week of it. */
+export type AvailabilityScope =
+	{ kind: "pattern" } | { kind: "week"; weekStartMonday: string };
+
+export const PATTERN_SCOPE: AvailabilityScope = { kind: "pattern" };
+
+/** How many weeks, this one first, a week can be chosen from. */
+const UPCOMING_WEEKS = 6;
 
 /** What replacing a member's pattern sends: the complete new set. */
 export type ReplaceAvailabilityRequest = { windows: Array<WeeklyWindow> };
@@ -55,9 +79,9 @@ export const isPartTime = (
 	employmentType: string | null | undefined
 ): boolean => employmentType === "PART_TIME";
 
-/** Every window of an API answer, Monday first. */
+/** Every window of an API answer, a pattern or a week's, Monday first. */
 export const windowsOf = (
-	availability: WeeklyAvailability
+	availability: Pick<WeeklyAvailability, "days">
 ): Array<WeeklyWindow> =>
 	availability.days.flatMap(({ day, windows }) =>
 		windows.map((window) => ({ day, ...window }))
@@ -182,3 +206,36 @@ export const validateWindows = (
 	});
 	return [...problems.values()].sort((a, b) => a.row - b.row);
 };
+
+/** The Mondays of the next `count` weeks as "YYYY-MM-DD", this week's first. */
+export const upcomingMondays = (
+	today: Date | string,
+	count = UPCOMING_WEEKS
+): Array<string> => {
+	const first = dayjs(mondayOf(today));
+	return Array.from({ length: count }, (_, week) =>
+		first.add(week, "week").format("YYYY-MM-DD")
+	);
+};
+
+/** A week's Monday as a short date in the person's language, e.g. "10 Nov". */
+export const formatWeekStart = (monday: string, language: string): string =>
+	new Intl.DateTimeFormat(language, { day: "numeric", month: "short" }).format(
+		dayjs(monday).toDate()
+	);
+
+/** Whether `scope` is a week with an override of its own. */
+export const hasOverride = (
+	scope: AvailabilityScope,
+	overrideWeeks: ReadonlyArray<string>
+): boolean =>
+	scope.kind === "week" && overrideWeeks.includes(scope.weekStartMonday);
+
+/**
+ * The windows in force: a week's override when it has one (an empty one
+ * meaning not available that week), otherwise the default pattern.
+ */
+export const effectiveWindows = (
+	pattern: ReadonlyArray<WeeklyWindow>,
+	override: ReadonlyArray<WeeklyWindow> | null | undefined
+): Array<WeeklyWindow> => [...(override ?? pattern)];

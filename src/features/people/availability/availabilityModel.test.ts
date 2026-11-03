@@ -2,10 +2,14 @@ import { describe, expect, it } from "vitest";
 import {
 	byDay,
 	draftsOf,
+	effectiveWindows,
 	expandDrafts,
+	formatWeekStart,
 	formatWindow,
+	hasOverride,
 	isPartTime,
 	toReplaceRequest,
+	upcomingMondays,
 	validateWindows,
 	windowsOf,
 	type WindowDraft,
@@ -30,7 +34,6 @@ describe("isPartTime", () => {
 describe("windowsOf and byDay", () => {
 	it("given_anApiAnswer_when_flattenedAndRegrouped_then_everyDayIsPresentEarliestFirst", () => {
 		const windows = windowsOf({
-			membershipId: "m-1",
 			days: [
 				{ day: "TUE", windows: [{ startTime: "09:00", endTime: "13:00" }] },
 				{ day: "SUN", windows: [{ startTime: "22:00", endTime: "06:00" }] },
@@ -205,5 +208,68 @@ describe("validateWindows", () => {
 				row(["MON"], "10:00", "11:00"),
 			])
 		).toEqual([{ row: 0, kind: "noTimes" }]);
+	});
+});
+
+describe("upcomingMondays", () => {
+	it("given_aWednesday_when_listed_then_startsWithThisWeeksMondayAndCountsSix", () => {
+		expect(upcomingMondays("2026-11-04")).toEqual([
+			"2026-11-02",
+			"2026-11-09",
+			"2026-11-16",
+			"2026-11-23",
+			"2026-11-30",
+			"2026-12-07",
+		]);
+	});
+
+	it("given_aSunday_when_listed_then_thisWeekIsTheOneThatStartedOnMonday", () => {
+		expect(upcomingMondays("2026-11-08", 2)).toEqual([
+			"2026-11-02",
+			"2026-11-09",
+		]);
+	});
+});
+
+describe("formatWeekStart", () => {
+	it("given_aMonday_when_formatted_then_showsItsDayAndShortMonth", () => {
+		expect(formatWeekStart("2026-11-10", "en-GB")).toBe("10 Nov");
+	});
+});
+
+describe("hasOverride", () => {
+	it("given_aWeekListedWithAnOverride_when_asked_then_onlyThatWeekHasOne", () => {
+		const weeks = ["2026-11-09"];
+
+		expect(
+			hasOverride({ kind: "week", weekStartMonday: "2026-11-09" }, weeks)
+		).toBe(true);
+		expect(
+			hasOverride({ kind: "week", weekStartMonday: "2026-11-16" }, weeks)
+		).toBe(false);
+		expect(hasOverride({ kind: "pattern" }, weeks)).toBe(false);
+	});
+});
+
+describe("effectiveWindows", () => {
+	const pattern = [
+		{ day: "MON", startTime: "09:00", endTime: "17:00" },
+	] as const;
+
+	it("given_noOverride_when_resolved_then_thePatternApplies", () => {
+		expect(effectiveWindows(pattern, null)).toEqual(pattern);
+		expect(effectiveWindows(pattern, undefined)).toEqual(pattern);
+	});
+
+	it("given_anOverride_when_resolved_then_itReplacesThePattern", () => {
+		const week = [
+			{ day: "TUE", startTime: "10:00", endTime: "12:00" },
+		] as const;
+
+		expect(effectiveWindows(pattern, week)).toEqual(week);
+	});
+
+	it("given_anEmptyOverride_when_resolved_then_theWeekHasNoWindowsAtAll", () => {
+		expect(effectiveWindows(pattern, [])).toEqual([]);
 	});
 });

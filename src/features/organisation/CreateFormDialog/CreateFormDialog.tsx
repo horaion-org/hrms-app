@@ -13,6 +13,8 @@ export type CreateFormDialogProps = {
 	submitting: boolean;
 	/** Disables submit, e.g. while every field is still empty. */
 	submitDisabled?: boolean;
+	/** Further buttons for the task, placed before Cancel. */
+	extraActions?: ReactNode;
 	/** A form-level refusal, announced and focusable. */
 	message?: string;
 	alertRef?: RefObject<HTMLParagraphElement | null>;
@@ -34,6 +36,7 @@ export const CreateFormDialog = ({
 	cancelLabel,
 	submitting,
 	submitDisabled = false,
+	extraActions,
 	message,
 	alertRef,
 	onSubmit,
@@ -49,6 +52,7 @@ export const CreateFormDialog = ({
 		title={title}
 		footer={
 			<div className="flex justify-end gap-3">
+				{extraActions}
 				<Button disabled={submitting} variant="cancel" onClick={onClose}>
 					{cancelLabel}
 				</Button>

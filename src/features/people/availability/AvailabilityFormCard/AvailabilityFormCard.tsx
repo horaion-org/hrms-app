@@ -12,14 +12,19 @@ import { AvailabilityCard } from "@/features/people/availability/AvailabilityCar
 import { AvailabilityDialog } from "@/features/people/availability/AvailabilityDialog";
 import {
 	isPartTime,
+	PATTERN_SCOPE,
 	windowsOf,
 	type WeeklyWindow,
 } from "@/features/people/availability/availabilityModel";
+import { WeekSelector } from "@/features/people/availability/WeekSelector";
 import {
 	availabilityReadAccess,
 	isRefused,
 } from "@/features/people/profileEditAccess";
 import { useAccess } from "@/features/workspace/useAccess";
+
+/** The selector is read-only here: the pattern is all that is edited. */
+const keepPattern = (): void => {};
 
 export type AvailabilityFormCardProps = {
 	companyId: string;
@@ -35,8 +40,9 @@ export type AvailabilityFormCardProps = {
 /**
  * A person's availability while their profile is being edited: shown once
  * Part-time is chosen, and hidden again, keeping what the API has, when
- * another type is. Changes made in the dialog are held in `draft` until the
- * page saves.
+ * another type is. Only the default pattern is edited here, so the week
+ * selector stays on it; changes made in the dialog are held in `draft`
+ * until the page saves.
  */
 export const AvailabilityFormCard = ({
 	companyId,
@@ -76,10 +82,19 @@ export const AvailabilityFormCard = ({
 						</Button>
 					)
 				}
+				titleAside={
+					<WeekSelector
+						disabled
+						overrideWeeks={loaded.data?.overrideWeeks ?? []}
+						scope={PATTERN_SCOPE}
+						onChange={keepPattern}
+					/>
+				}
 			/>
 			{editing && windows && (
 				<AvailabilityDialog
 					name={profile.displayName}
+					scope={PATTERN_SCOPE}
 					windows={windows}
 					onClose={() => {
 						setEditing(false);

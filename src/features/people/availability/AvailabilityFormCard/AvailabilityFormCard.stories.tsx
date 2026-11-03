@@ -14,6 +14,7 @@ const client = new QueryClient({
 });
 client.setQueryData(memberAvailabilityQuery(COMPANY, "m-1").queryKey, {
 	membershipId: "m-1",
+	overrideWeeks: [],
 	days: WEEKDAYS.map((day) => ({ day, windows: [] })),
 });
 

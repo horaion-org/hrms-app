@@ -10,6 +10,7 @@ const meta = {
 	component: AvailabilityDialog,
 	args: {
 		name: "Kent Chua",
+		scope: { kind: "pattern" },
 		windows: [
 			{ day: "MON", startTime: "09:00", endTime: "13:00" },
 			{ day: "WED", startTime: "09:00", endTime: "13:00" },
@@ -34,3 +35,11 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const Empty: Story = { args: { windows: [] } };
+
+/** One week with an override: it can be reset to the pattern or marked not available. */
+export const CustomWeek: Story = {
+	args: {
+		scope: { kind: "week", weekStartMonday: "2026-11-09" },
+		onReset: fn(() => Promise.resolve()),
+	},
+};

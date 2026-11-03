@@ -222,12 +222,15 @@ describe("ScheduleSetupStep", () => {
 	});
 
 	describe("part-timers without availability", () => {
-		/** Kitchen's readiness answered with Kent, under a workspace holding `permissions`. */
+		/** Kitchen's readiness for the week of 12 Oct answered with Kent, under a workspace holding `permissions`. */
 		const kitchenWithKent = (permissions: Array<string>): QueryClient => {
 			const client = clientWith(schedulingWorkspace(permissions));
 			client.setQueryData(
-				partTimeReadinessQuery("c-1", { branchId: "b-1", departmentId: "d-2" })
-					.queryKey,
+				partTimeReadinessQuery(
+					"c-1",
+					{ branchId: "b-1", departmentId: "d-2" },
+					"2026-10-12"
+				).queryKey,
 				[
 					{
 						membershipId: "m-1",
@@ -240,7 +243,7 @@ describe("ScheduleSetupStep", () => {
 		};
 		const kitchenDraft = { ...DEFAULTS, departmentId: "d-2", name: "Week 42" };
 
-		it("given_workAvailabilityRead_when_aDepartmentIsChosen_then_warnsAndNamesThem", async () => {
+		it("given_workAvailabilityRead_when_aDepartmentAndWeekAreChosen_then_warnsAndNamesThemForThatWeek", async () => {
 			render(
 				<MemoryRouterHarness>
 					<Harness

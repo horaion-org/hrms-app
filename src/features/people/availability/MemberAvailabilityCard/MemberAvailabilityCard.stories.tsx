@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { WEEKDAYS } from "@/common/weekdays";
 import { storyProviders } from "@/features/organisation/storyApi";
 import type { MemberProfileDetail } from "@/features/people/api";
+import { upcomingMondays } from "@/features/people/availability/availabilityModel";
 import { memberAvailabilityQuery } from "@/features/people/availability/api";
 import { MemberAvailabilityCard } from "@/features/people/availability/MemberAvailabilityCard";
 import { storyCompany } from "@/features/people/storyCompany";
@@ -13,6 +14,7 @@ const client = new QueryClient({
 });
 client.setQueryData(memberAvailabilityQuery(COMPANY, "m-1").queryKey, {
 	membershipId: "m-1",
+	overrideWeeks: [upcomingMondays(new Date())[1] ?? ""],
 	days: WEEKDAYS.map((day) => ({
 		day,
 		windows:
