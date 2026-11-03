@@ -129,3 +129,17 @@ Default vocabulary: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-
 ### Domain docs
 
 Single-context: one `CONTEXT.md` plus `docs/adr/` at the repo root. See `docs/agents/domain.md`.
+
+## Security, Data Protection And Compliance
+
+Security, data protection and auditability are first-class requirements for every change. The app targets ISO 27001:2022 and SOC 2 Type II as one programme with `hrms-backend-v2`, `engine` and `horaion-infra`. The canonical, audit-facing statement of these rules is `docs/security/secure-development-policy.md`: cite that document (never this file) in ADRs and security docs, and keep the two in sync when either changes.
+
+- **Security Considerations everywhere.** Every spec under `.scratch/` and every PR description has a Security Considerations paragraph: the data shown or entered and its class (`docs/security/data-classification.md`), the permission keys that gate it, anything kept in the browser, and the abuse case considered.
+- **ADRs for security-relevant decisions.** Session or token handling, browser storage, response headers or CSP, new third-party scripts, fonts or services, and telemetry get an ADR in `docs/adr/` in the same PR.
+- **The API is the access control.** Hiding a control is presentation only. Gate UI on the permission contract (`pnpm check:contract`), and never treat client-side state as proof of access.
+- **Sessions follow ADR-0004.** The access pass lives in memory only; the session is the API's HttpOnly cookie. Never put tokens, passwords, email addresses or other personal data in `localStorage`, `sessionStorage`, IndexedDB, URLs or query strings. Every browser-storage key is listed in `docs/security/frontend-security.md`.
+- **No personal data in logs or telemetry.** Never log API payloads or form values to the console in committed code. No analytics, error-reporting or session-replay SDK without an ADR and an entry in `docs/security/vendors.md`.
+- **Content Security Policy.** No inline scripts, `eval`, `dangerouslySetInnerHTML`, or third-party script, style or font origins. The app must run under the CSP and headers recorded in `docs/security/frontend-security.md`.
+- **Dependencies** are added only with a justification in the PR body and the `pnpm-lock.yaml` update in the same PR. Reject packages with known high or critical advisories or without maintenance.
+- **Keep `docs/security/` complete.** The `docs/security/` set must stay complete as listed in `docs/security/README.md`. Register every new security document or runbook in that README and in `docs/security/controls-matrix.md` in the same PR.
+- **Suggest missing controls; do not stay silent.** If a standard control is absent but relevant to the change, flag it in the spec or PR with a short rationale and a proposed approach, and let Moses decide. Known gaps to keep flagging until resolved: no CI runs on pull requests; no CSP or security headers are configured for the deployed app; both `package-lock.json` and `pnpm-lock.yaml` are committed; the language detector caches a locale in `localStorage` (ADR-0004). The full list is `docs/security/accepted-risks.md`.
