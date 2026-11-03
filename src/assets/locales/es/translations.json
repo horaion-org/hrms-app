@@ -194,6 +194,15 @@
 		"selectedCount_one": "{{count}} seleccionado",
 		"selectedCount_other": "{{count}} seleccionados"
 	},
+	"weekdays": {
+		"MON": "Lunes",
+		"TUE": "Martes",
+		"WED": "Miércoles",
+		"THU": "Jueves",
+		"FRI": "Viernes",
+		"SAT": "Sábado",
+		"SUN": "Domingo"
+	},
 	"dataTable": {
 		"selectAll": "Seleccionar todo",
 		"selectRow": "Seleccionar {{name}}",
@@ -535,15 +544,6 @@
 			"SAT": "sáb",
 			"SUN": "dom",
 			"weekdays": "Entre semana"
-		},
-		"dayNames": {
-			"MON": "Lunes",
-			"TUE": "Martes",
-			"WED": "Miércoles",
-			"THU": "Jueves",
-			"FRI": "Viernes",
-			"SAT": "Sábado",
-			"SUN": "Domingo"
 		},
 		"shiftColours": {
 			"terracotta": "Terracota",

@@ -5,6 +5,7 @@ import {
 } from "@tanstack/react-query";
 import { z } from "zod";
 import { apiRequest, apiRequestVoid } from "@/common/api-client";
+import { WEEKDAYS, weekdaySchema, type Weekday } from "@/common/weekdays";
 import {
 	SCHEDULING_QUERY_ROOT,
 	shiftRoleOptionsPath,
@@ -23,22 +24,8 @@ import { retry } from "@/features/workspace/retry";
  * `docs/implementation/2026-10-11-shifts-module.md`.
  */
 
-export type { DepartmentPath };
-
-export const weekdaySchema = z.enum([
-	"MON",
-	"TUE",
-	"WED",
-	"THU",
-	"FRI",
-	"SAT",
-	"SUN",
-]);
-
-export type Weekday = z.infer<typeof weekdaySchema>;
-
-/** Monday first, as the week-long periods run. */
-export const WEEKDAYS = weekdaySchema.options;
+export type { DepartmentPath, Weekday };
+export { WEEKDAYS, weekdaySchema };
 
 /** A shift's colour as the API keeps it: `#RRGGBB`, upper case. */
 export const SHIFT_COLOUR_PATTERN = /^#[0-9A-F]{6}$/;

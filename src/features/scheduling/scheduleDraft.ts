@@ -1,3 +1,10 @@
+import {
+	MINUTES_PER_DAY,
+	minutesOfDay,
+	TIME_STEP_MINUTES,
+	timeOfDay,
+	timeSteps,
+} from "@/common/timeOfDay";
 import type { ConstraintStatus } from "@/features/scheduling/constraints/api";
 import type { DepartmentPath } from "@/features/scheduling/paths";
 import type {
@@ -23,7 +30,7 @@ import {
  * their API exists.
  */
 
-export { WEEKDAYS, type ShiftRole, type Weekday };
+export { TIME_STEP_MINUTES, timeSteps, WEEKDAYS, type ShiftRole, type Weekday };
 
 /**
  * One of a schedule's constraints as the Constraints step shows it: for a
@@ -99,36 +106,14 @@ export const emptyScheduleDraft = (): ScheduleDraft => ({
 	demand: {},
 });
 
-const MINUTES_PER_DAY = 24 * 60;
-
-/** The grain of the day: shift times are chosen in these steps and demand forecast per such slot. */
-export const TIME_STEP_MINUTES = 30;
-
-const minutesOf = (time: string): number => {
-	const [hours = 0, minutes = 0] = time.split(":").map(Number);
-	return hours * 60 + minutes;
-};
-
-const timeOf = (minutes: number): string => {
-	const wrapped = minutes % MINUTES_PER_DAY;
-	const hours = String(Math.floor(wrapped / 60)).padStart(2, "0");
-	return `${hours}:${String(wrapped % 60).padStart(2, "0")}`;
-};
-
-/** Every "HH:mm" a shift may start or end at, one per step from midnight. */
-export const timeSteps = (): Array<string> => {
-	const times: Array<string> = [];
-	for (let minutes = 0; minutes < MINUTES_PER_DAY; minutes += TIME_STEP_MINUTES)
-		times.push(timeOf(minutes));
-	return times;
-};
-
 /** How long a shift lasts in hours, counting past midnight. */
 export const shiftHours = (
 	shift: Pick<ScheduleShift, "startTime" | "endTime">
 ): number => {
 	const length =
-		(minutesOf(shift.endTime) - minutesOf(shift.startTime) + MINUTES_PER_DAY) %
+		(minutesOfDay(shift.endTime) -
+			minutesOfDay(shift.startTime) +
+			MINUTES_PER_DAY) %
 		MINUTES_PER_DAY;
 	return (length === 0 ? MINUTES_PER_DAY : length) / 60;
 };
@@ -187,13 +172,13 @@ export const slotsOf = (group: {
 }): Array<TimeSlot> => {
 	const slots: Array<TimeSlot> = [];
 	for (
-		let minutes = minutesOf(group.start);
-		minutes < minutesOf(group.end);
+		let minutes = minutesOfDay(group.start);
+		minutes < minutesOfDay(group.end);
 		minutes += TIME_STEP_MINUTES
 	)
 		slots.push({
-			start: timeOf(minutes),
-			end: timeOf(minutes + TIME_STEP_MINUTES),
+			start: timeOfDay(minutes),
+			end: timeOfDay(minutes + TIME_STEP_MINUTES),
 		});
 	return slots;
 };
@@ -209,7 +194,9 @@ export const demandLevel = (staff: number): DemandLevel => {
 
 const covers = (shift: ScheduleShift, slotStart: string): boolean => {
 	const offset =
-		(minutesOf(slotStart) - minutesOf(shift.startTime) + MINUTES_PER_DAY) %
+		(minutesOfDay(slotStart) -
+			minutesOfDay(shift.startTime) +
+			MINUTES_PER_DAY) %
 		MINUTES_PER_DAY;
 	return offset < shiftHours(shift) * 60;
 };

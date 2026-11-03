@@ -167,7 +167,7 @@ export const ConstraintDialog = ({
 		})),
 		WEEKDAY: WEEKDAYS.map((day) => ({
 			value: day,
-			label: t(`scheduling.dayNames.${day}`),
+			label: t(`weekdays.${day}`),
 		})),
 		JOB_TITLE: (offered?.jobTitles ?? []).map((jobTitle) => ({
 			value: jobTitle.jobTitleId,
