@@ -134,6 +134,81 @@
 		"myEmpty": "You have no leave requests yet.",
 		"myFailed": "We couldn’t load your leave requests. Try again."
 	},
+	"availability": {
+		"title": "Availability",
+		"subtitle": "The hours part-time people can work, week by week.",
+		"views": "Availability views",
+		"mine": {
+			"tab": "My availability",
+			"label": "Your week",
+			"patternWeek": "This week follows your default pattern.",
+			"customWeek": "This week has its own hours in place of your default pattern.",
+			"empty": "No availability set. Add the hours you can work so you can be rostered."
+		},
+		"team": {
+			"tab": "Team",
+			"label": "Team availability",
+			"member": "Member",
+			"actions": "Actions",
+			"empty": "No part-time members here.",
+			"editFor": "Edit {{name}}’s availability"
+		},
+		"edit": "Edit availability",
+		"custom": "Custom",
+		"none": "Not available",
+		"department": "Department",
+		"allDepartments": "All departments",
+		"teamFailed": "We couldn’t load the team’s availability. Try again.",
+		"patternFailed": "We couldn’t load {{name}}’s default pattern. Try again.",
+		"hidden": "You don’t have access to anyone’s availability in this company.",
+		"noBranches": "Add a branch to the organisation before managing availability.",
+		"unavailable": "Availability is for part-time members and the people who manage them, so there’s nothing here for you in this company.",
+		"loading": "Loading availability…",
+		"failed": "We couldn’t load the availability. Try again.",
+		"pastWeek": "This week has ended, so its availability can’t be changed.",
+		"dialog": {
+			"title": "Edit availability",
+			"description": "The hours {{name}} can work each week. A window that ends at or before its start runs past midnight.",
+			"applies": "Applies to",
+			"thisWeekOnly": "This week only",
+			"thisWeekOnlyDescription": "The week of {{date}}, in place of the default pattern.",
+			"everyWeek": "Every week",
+			"everyWeekDescription": "The default pattern, for every week without hours of its own.",
+			"patternLoading": "Loading the default pattern…",
+			"window": "Window {{number}}",
+			"days": "Days",
+			"startTime": "Start time",
+			"endTime": "End time",
+			"pleaseSelect": "Please select",
+			"selectAll": "Select all",
+			"remove": "Remove window {{number}}",
+			"add": "Add window",
+			"noWindows": "No windows yet. Add one for each stretch of hours they can work.",
+			"submit": "Save",
+			"cancel": "Cancel",
+			"problems": {
+				"noDays": "Choose at least one day.",
+				"noTimes": "Choose a start and an end time.",
+				"emptyWindow": "Choose an end time different from the start.",
+				"crowdedDay": "{{day}} has more than 4 windows, the most allowed.",
+				"overlap": "This window overlaps {{overlapping}}."
+			},
+			"rejected": "This window was refused. Check that it doesn’t overlap another or crowd its day.",
+			"someRejected": "Some windows were refused. Check the windows marked below.",
+			"notPartTime": "Only part-time members can have availability, and this person isn’t part-time any more. Reload the page.",
+			"forbidden": "You no longer have permission to change this person’s availability.",
+			"failed": "We couldn’t save the availability. Try again.",
+			"weekDescription": "The hours {{name}} can work in the week of {{date}}, in place of their default pattern.",
+			"notAvailable": "Not available this week",
+			"reset": "Reset to default",
+			"resetTitle": "Reset this week to the default pattern?",
+			"resetDescription": "The week of {{date}} will follow {{name}}’s default pattern again.",
+			"resetConfirm": "Reset to default",
+			"resetCancel": "Keep this week",
+			"weekInPast": "This week has already ended, so its availability can’t be changed. Choose this week or a later one.",
+			"weekNotMonday": "That week couldn’t be found. Reload the page and choose the week again."
+		}
+	},
 	"dialog": {
 		"close": "Close"
 	},
@@ -291,6 +366,15 @@
 		"selectedCount_one": "{{count}} selected",
 		"selectedCount_other": "{{count}} selected"
 	},
+	"weekdays": {
+		"MON": "Monday",
+		"TUE": "Tuesday",
+		"WED": "Wednesday",
+		"THU": "Thursday",
+		"FRI": "Friday",
+		"SAT": "Saturday",
+		"SUN": "Sunday"
+	},
 	"copyButton": {
 		"copied": "Copied",
 		"failed": "Couldn’t copy"
@@ -302,12 +386,19 @@
 		"sortAscending": "A – Z",
 		"sortDescending": "Z – A"
 	},
+	"weekNavigator": {
+		"label": "Week",
+		"thisWeek": "This week",
+		"previous": "Previous week",
+		"next": "Next week"
+	},
 	"shell": {
 		"welcome": "Welcome, <name>{{name}}</name>.",
 		"navigation": {
 			"dashboard": "Dashboard",
 			"scheduling": "Scheduling",
 			"leave": "Leave",
+			"availability": "Availability",
 			"people": "People",
 			"organisation": "Organisation"
 		},
@@ -1076,6 +1167,14 @@
 					"delete": "Delete"
 				}
 			},
+			"work_availability": {
+				"name": "Availability",
+				"description": "The hours each part-time person can work in a week, and who has none set.",
+				"actions": {
+					"read": "View",
+					"update": "Edit"
+				}
+			},
 			"leave_request": {
 				"name": "Leave",
 				"description": "Each person’s leave requests, including the kind of leave and why a request was refused.",
@@ -1328,15 +1427,6 @@
 			"SUN": "Sun",
 			"weekdays": "Weekdays"
 		},
-		"dayNames": {
-			"MON": "Monday",
-			"TUE": "Tuesday",
-			"WED": "Wednesday",
-			"THU": "Thursday",
-			"FRI": "Friday",
-			"SAT": "Saturday",
-			"SUN": "Sunday"
-		},
 		"shiftColours": {
 			"terracotta": "Terracotta",
 			"peach": "Peach",
@@ -1371,6 +1461,8 @@
 			"namePlaceholder": "e.g. Front Office - Week 16",
 			"period": "Schedule period",
 			"periodNote": "Select a period that aligns with your business operations.",
+			"partTimeWithoutAvailability_one": "{{count}} part-time member has no availability and will be left off the roster:",
+			"partTimeWithoutAvailability_other": "{{count}} part-time members have no availability and will be left off the roster:",
 			"additional": "Additional settings",
 			"includeLeave": "Include leave requests",
 			"includeLeaveDescription": "Consider approved leave when generating the schedule.",

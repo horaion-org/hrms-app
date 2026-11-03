@@ -23,3 +23,11 @@ export const LongText: Story = {
 			"Generation may take a few moments. The more constraints and data, the longer it may take.",
 	},
 };
+
+export const Warning: Story = {
+	args: {
+		tone: "warning",
+		children:
+			"2 part-time members have no availability and will be left off the roster.",
+	},
+};

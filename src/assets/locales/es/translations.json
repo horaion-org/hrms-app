@@ -134,6 +134,81 @@
 		"myEmpty": "Aún no tienes solicitudes de permiso.",
 		"myFailed": "No pudimos cargar tus solicitudes. Inténtalo de nuevo."
 	},
+	"availability": {
+		"title": "Disponibilidad",
+		"subtitle": "Las horas en que las personas a tiempo parcial pueden trabajar, semana a semana.",
+		"views": "Vistas de disponibilidad",
+		"mine": {
+			"tab": "Mi disponibilidad",
+			"label": "Tu semana",
+			"patternWeek": "Esta semana sigue tu patrón habitual.",
+			"customWeek": "Esta semana tiene sus propias horas en lugar de tu patrón habitual.",
+			"empty": "No hay disponibilidad indicada. Añade las horas en que puedes trabajar para que se te puedan asignar turnos."
+		},
+		"team": {
+			"tab": "Equipo",
+			"label": "Disponibilidad del equipo",
+			"member": "Persona",
+			"actions": "Acciones",
+			"empty": "No hay personas a tiempo parcial aquí.",
+			"editFor": "Editar la disponibilidad de {{name}}"
+		},
+		"edit": "Editar disponibilidad",
+		"custom": "Personalizada",
+		"none": "No disponible",
+		"department": "Departamento",
+		"allDepartments": "Todos los departamentos",
+		"teamFailed": "No pudimos cargar la disponibilidad del equipo. Inténtalo de nuevo.",
+		"patternFailed": "No pudimos cargar el patrón habitual de {{name}}. Inténtalo de nuevo.",
+		"hidden": "No tienes acceso a la disponibilidad de nadie en esta empresa.",
+		"noBranches": "Añade una sucursal a la organización antes de gestionar la disponibilidad.",
+		"unavailable": "La disponibilidad es para las personas a tiempo parcial y quienes las gestionan, así que aquí no hay nada para ti en esta empresa.",
+		"loading": "Cargando disponibilidad…",
+		"failed": "No pudimos cargar la disponibilidad. Inténtalo de nuevo.",
+		"pastWeek": "Esta semana ya terminó, así que su disponibilidad no se puede cambiar.",
+		"dialog": {
+			"title": "Editar disponibilidad",
+			"description": "Las horas en que {{name}} puede trabajar cada semana. Una franja que termina a la hora de inicio o antes continúa pasada la medianoche.",
+			"applies": "Se aplica a",
+			"thisWeekOnly": "Solo esta semana",
+			"thisWeekOnlyDescription": "La semana del {{date}}, en lugar del patrón habitual.",
+			"everyWeek": "Todas las semanas",
+			"everyWeekDescription": "El patrón habitual, para cada semana sin horas propias.",
+			"patternLoading": "Cargando el patrón habitual…",
+			"window": "Franja {{number}}",
+			"days": "Días",
+			"startTime": "Hora de inicio",
+			"endTime": "Hora de fin",
+			"pleaseSelect": "Selecciona",
+			"selectAll": "Seleccionar todo",
+			"remove": "Quitar franja {{number}}",
+			"add": "Añadir franja",
+			"noWindows": "Aún no hay franjas. Añade una por cada tramo de horas en que puede trabajar.",
+			"submit": "Guardar",
+			"cancel": "Cancelar",
+			"problems": {
+				"noDays": "Elige al menos un día.",
+				"noTimes": "Elige una hora de inicio y una de fin.",
+				"emptyWindow": "Elige una hora de fin distinta de la de inicio.",
+				"crowdedDay": "{{day}} tiene más de 4 franjas, el máximo permitido.",
+				"overlap": "Esta franja se solapa con {{overlapping}}."
+			},
+			"rejected": "Esta franja fue rechazada. Comprueba que no se solape con otra ni sobrecargue su día.",
+			"someRejected": "Algunas franjas fueron rechazadas. Revisa las franjas marcadas abajo.",
+			"notPartTime": "Solo las personas a tiempo parcial pueden tener disponibilidad, y esta persona ya no lo es. Recarga la página.",
+			"forbidden": "Ya no tienes permiso para cambiar la disponibilidad de esta persona.",
+			"failed": "No pudimos guardar la disponibilidad. Inténtalo de nuevo.",
+			"weekDescription": "Las horas en que {{name}} puede trabajar la semana del {{date}}, en lugar de su patrón habitual.",
+			"notAvailable": "No disponible esta semana",
+			"reset": "Volver al patrón habitual",
+			"resetTitle": "¿Volver al patrón habitual esta semana?",
+			"resetDescription": "La semana del {{date}} volverá a seguir el patrón habitual de {{name}}.",
+			"resetConfirm": "Volver al patrón habitual",
+			"resetCancel": "Mantener esta semana",
+			"weekInPast": "Esta semana ya terminó, así que su disponibilidad no se puede cambiar. Elige esta semana o una posterior.",
+			"weekNotMonday": "No encontramos esa semana. Recarga la página y vuelve a elegirla."
+		}
+	},
 	"dialog": {
 		"close": "Cerrar"
 	},
@@ -194,12 +269,27 @@
 		"selectedCount_one": "{{count}} seleccionado",
 		"selectedCount_other": "{{count}} seleccionados"
 	},
+	"weekdays": {
+		"MON": "Lunes",
+		"TUE": "Martes",
+		"WED": "Miércoles",
+		"THU": "Jueves",
+		"FRI": "Viernes",
+		"SAT": "Sábado",
+		"SUN": "Domingo"
+	},
 	"dataTable": {
 		"selectAll": "Seleccionar todo",
 		"selectRow": "Seleccionar {{name}}",
 		"sortBy": "Ordenar por {{column}}",
 		"sortAscending": "A – Z",
 		"sortDescending": "Z – A"
+	},
+	"weekNavigator": {
+		"label": "Semana",
+		"thisWeek": "Esta semana",
+		"previous": "Semana anterior",
+		"next": "Semana siguiente"
 	},
 	"organisation": {
 		"branches": {
@@ -296,6 +386,14 @@
 			"unknown": {
 				"name": "No reconocidos",
 				"description": "Esta versión de la aplicación no conoce estos permisos. Se mantienen en el rol al guardar."
+			},
+			"work_availability": {
+				"name": "Disponibilidad",
+				"description": "Las horas en que cada persona a tiempo parcial puede trabajar en una semana, y quién no tiene ninguna.",
+				"actions": {
+					"read": "Ver",
+					"update": "Editar"
+				}
 			}
 		},
 		"jobTitles": {
@@ -453,7 +551,10 @@
 	},
 	"shell": {
 		"notifications": "Notificaciones",
-		"myProfile": "Mi perfil"
+		"myProfile": "Mi perfil",
+		"navigation": {
+			"availability": "Disponibilidad"
+		}
 	},
 	"people": {
 		"profile": {
@@ -536,15 +637,6 @@
 			"SUN": "dom",
 			"weekdays": "Entre semana"
 		},
-		"dayNames": {
-			"MON": "Lunes",
-			"TUE": "Martes",
-			"WED": "Miércoles",
-			"THU": "Jueves",
-			"FRI": "Viernes",
-			"SAT": "Sábado",
-			"SUN": "Domingo"
-		},
 		"shiftColours": {
 			"terracotta": "Terracota",
 			"peach": "Melocotón",
@@ -579,6 +671,8 @@
 			"namePlaceholder": "p. ej., Recepción - Semana 16",
 			"period": "Periodo del horario",
 			"periodNote": "Selecciona un periodo que se ajuste a la operativa de tu negocio.",
+			"partTimeWithoutAvailability_one": "{{count}} persona a tiempo parcial no tiene disponibilidad y quedará fuera del cuadrante:",
+			"partTimeWithoutAvailability_other": "{{count}} personas a tiempo parcial no tienen disponibilidad y quedarán fuera del cuadrante:",
 			"additional": "Ajustes adicionales",
 			"includeLeave": "Incluir solicitudes de ausencia",
 			"includeLeaveDescription": "Tener en cuenta las ausencias aprobadas al generar el horario.",

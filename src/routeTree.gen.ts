@@ -21,6 +21,7 @@ import { Route as SignUpRouteImport } from './routes/sign-up'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated._app'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated._app.index'
 import { Route as AuthenticatedAppActivityRouteImport } from './routes/_authenticated._app.activity'
+import { Route as AuthenticatedAppAvailabilityRouteImport } from './routes/_authenticated._app.availability'
 import { Route as AuthenticatedAppLeaveRouteImport } from './routes/_authenticated._app.leave'
 import { Route as AuthenticatedAppNotificationsRouteImport } from './routes/_authenticated._app.notifications'
 import { Route as AuthenticatedAppPeopleRouteImport } from './routes/_authenticated._app.people'
@@ -96,6 +97,12 @@ const AuthenticatedAppActivityRoute =
   AuthenticatedAppActivityRouteImport.update({
     id: '/activity',
     path: '/activity',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppAvailabilityRoute =
+  AuthenticatedAppAvailabilityRouteImport.update({
+    id: '/availability',
+    path: '/availability',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
 const AuthenticatedAppLeaveRoute = AuthenticatedAppLeaveRouteImport.update({
@@ -210,6 +217,7 @@ export interface FileRoutesByFullPath {
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/activity': typeof AuthenticatedAppActivityRoute
+  '/availability': typeof AuthenticatedAppAvailabilityRoute
   '/leave': typeof AuthenticatedAppLeaveRoute
   '/notifications': typeof AuthenticatedAppNotificationsRoute
   '/people': typeof AuthenticatedAppPeopleRoute
@@ -239,6 +247,7 @@ export interface FileRoutesByTo {
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/activity': typeof AuthenticatedAppActivityRoute
+  '/availability': typeof AuthenticatedAppAvailabilityRoute
   '/leave': typeof AuthenticatedAppLeaveRoute
   '/notifications': typeof AuthenticatedAppNotificationsRoute
   '/people': typeof AuthenticatedAppPeopleRoute
@@ -270,6 +279,7 @@ export interface FileRoutesById {
   '/sign-up': typeof SignUpRoute
   '/_authenticated/_app': typeof AuthenticatedAppRouteWithChildren
   '/_authenticated/_app/activity': typeof AuthenticatedAppActivityRoute
+  '/_authenticated/_app/availability': typeof AuthenticatedAppAvailabilityRoute
   '/_authenticated/_app/leave': typeof AuthenticatedAppLeaveRoute
   '/_authenticated/_app/notifications': typeof AuthenticatedAppNotificationsRoute
   '/_authenticated/_app/people': typeof AuthenticatedAppPeopleRoute
@@ -302,6 +312,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-up'
     | '/activity'
+    | '/availability'
     | '/leave'
     | '/notifications'
     | '/people'
@@ -331,6 +342,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-up'
     | '/activity'
+    | '/availability'
     | '/leave'
     | '/notifications'
     | '/people'
@@ -361,6 +373,7 @@ export interface FileRouteTypes {
     | '/sign-up'
     | '/_authenticated/_app'
     | '/_authenticated/_app/activity'
+    | '/_authenticated/_app/availability'
     | '/_authenticated/_app/leave'
     | '/_authenticated/_app/notifications'
     | '/_authenticated/_app/people'
@@ -477,6 +490,13 @@ declare module '@tanstack/react-router' {
       path: '/activity'
       fullPath: '/activity'
       preLoaderRoute: typeof AuthenticatedAppActivityRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/availability': {
+      id: '/_authenticated/_app/availability'
+      path: '/availability'
+      fullPath: '/availability'
+      preLoaderRoute: typeof AuthenticatedAppAvailabilityRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/_app/leave': {
@@ -603,6 +623,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedAppRouteChildren {
   AuthenticatedAppActivityRoute: typeof AuthenticatedAppActivityRoute
+  AuthenticatedAppAvailabilityRoute: typeof AuthenticatedAppAvailabilityRoute
   AuthenticatedAppLeaveRoute: typeof AuthenticatedAppLeaveRoute
   AuthenticatedAppNotificationsRoute: typeof AuthenticatedAppNotificationsRoute
   AuthenticatedAppPeopleRoute: typeof AuthenticatedAppPeopleRoute
@@ -625,6 +646,7 @@ interface AuthenticatedAppRouteChildren {
 
 const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppActivityRoute: AuthenticatedAppActivityRoute,
+  AuthenticatedAppAvailabilityRoute: AuthenticatedAppAvailabilityRoute,
   AuthenticatedAppLeaveRoute: AuthenticatedAppLeaveRoute,
   AuthenticatedAppNotificationsRoute: AuthenticatedAppNotificationsRoute,
   AuthenticatedAppPeopleRoute: AuthenticatedAppPeopleRoute,

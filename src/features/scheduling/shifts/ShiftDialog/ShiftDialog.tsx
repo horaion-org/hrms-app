@@ -4,17 +4,18 @@ import { Controller, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { Combobox } from "@/components/forms/Combobox";
+import { DaysMultiSelect } from "@/components/forms/DaysMultiSelect";
 import { FormRow, formRowIds } from "@/components/forms/FormRow";
 import { Select, type SelectOption } from "@/components/forms/Select";
 import { SwatchPicker } from "@/components/forms/SwatchPicker";
+import { TimeSelect } from "@/components/forms/TimeSelect";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
 import { SaveIcon, SwapIcon } from "@/components/ui/Icon";
 import { UnitNameField } from "@/features/organisation/UnitNameField";
 import { useCreateFormSubmit } from "@/features/organisation/useCreateFormSubmit";
-import { timeSteps } from "@/features/scheduling/scheduleDraft";
 import type { ScheduleShift } from "@/features/scheduling/schedules/api";
-import { WEEKDAYS, type ShiftBody } from "@/features/scheduling/shifts/api";
+import type { ShiftBody } from "@/features/scheduling/shifts/api";
 import {
 	shiftSchema,
 	type ShiftFormValues,
@@ -45,11 +46,6 @@ const FIELDS = [
 	"days",
 	"jobTitleIds",
 ] as const;
-
-const TIME_OPTIONS: Array<SelectOption> = timeSteps().map((time) => ({
-	value: time,
-	label: time,
-}));
 
 const same = (a: string): string => a;
 
@@ -117,10 +113,6 @@ export const ShiftDialog = ({
 		value: colour.value,
 		label: t(`scheduling.shiftColours.${colour.key}`),
 	}));
-	const dayOptions: Array<SelectOption> = WEEKDAYS.map((day) => ({
-		value: day,
-		label: t(`scheduling.dayNames.${day}`),
-	}));
 	const roleOptions: Array<SelectOption> =
 		roles.status === "ready"
 			? roles.items.map((role) => ({
@@ -151,13 +143,12 @@ export const ShiftDialog = ({
 				control={control}
 				name={field}
 				render={({ field: control }) => (
-					<Select
+					<TimeSelect
 						ref={control.ref}
 						aria-describedby={describedBy(field)}
 						aria-labelledby={labelledBy(field)}
 						className="w-full"
 						name={control.name}
-						options={TIME_OPTIONS}
 						placeholder={t(`${key}.pleaseSelect`)}
 						status={errors[field] ? "error" : undefined}
 						value={control.value}
@@ -312,14 +303,12 @@ export const ShiftDialog = ({
 							control={control}
 							name="days"
 							render={({ field }) => (
-								<Select
+								<DaysMultiSelect
 									ref={field.ref}
-									multiple
 									aria-describedby={describedBy("days")}
 									aria-labelledby={labelledBy("days")}
 									className="w-full"
 									name={field.name}
-									options={dayOptions}
 									placeholder={t(`${key}.pleaseSelect`)}
 									selectAllLabel={t(`${key}.selectAll`)}
 									status={errors.days ? "error" : undefined}

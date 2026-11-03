@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import { useId, useMemo } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { FormRow, formRowIds } from "@/components/forms/FormRow";
@@ -9,6 +9,9 @@ import { Input } from "@/components/forms/Input";
 import { Select } from "@/components/forms/Select";
 import { Callout } from "@/components/ui/Callout";
 import { Checkbox } from "@/components/ui/Checkbox";
+import { partTimeReadinessQuery } from "@/features/availability/api";
+import { departmentUnitOf } from "@/features/scheduling/departmentUnit";
+import { PartTimeReadinessCallout } from "@/features/scheduling/PartTimeReadinessCallout";
 import {
 	formatPeriod,
 	type SchedulePeriod,
@@ -21,7 +24,10 @@ import {
 import { StepPanel } from "@/features/scheduling/StepPanel";
 import { workspaceQuery } from "@/features/workspace/api";
 import { DepartmentSelector } from "@/features/workspace/DepartmentSelector";
-import type { PermissionKey } from "@/features/workspace/permissionKeys";
+import {
+	AVAILABILITY_READ_KEYS,
+	type PermissionKey,
+} from "@/features/workspace/permissionKeys";
 import { retry } from "@/features/workspace/retry";
 import { departmentChoices } from "@/features/workspace/unitChoices";
 
@@ -70,6 +76,9 @@ const CREATE_KEYS: ReadonlyArray<PermissionKey> = ["schedule:create"];
  * Which department and week the schedule is for, and how leave and open
  * shifts count. A new draft's department is chosen from the active ones
  * where the person may create schedules, as the workspace offers them.
+ * While the setup can change, the chosen department's part-timers without
+ * availability in the chosen week are named, for someone who may read
+ * availability there.
  */
 export const ScheduleSetupStep = ({
 	formId,
@@ -96,6 +105,23 @@ export const ScheduleSetupStep = ({
 		defaultValues,
 		mode: "onTouched",
 	});
+	const [departmentId, periodStart] = useWatch({
+		control,
+		name: ["departmentId", "periodStart"],
+	});
+	// Only where availability may be read: the workspace offers the department under its key.
+	const readinessUnit =
+		!readOnly && workspace.data && departmentId
+			? departmentUnitOf(
+					workspace.data,
+					companyId,
+					AVAILABILITY_READ_KEYS,
+					departmentId
+				)
+			: undefined;
+	const readiness = useQuery(
+		partTimeReadinessQuery(companyId, readinessUnit, periodStart || undefined)
+	);
 	const idPrefix = useId();
 	const fieldId = (name: keyof ScheduleSetupValues): string =>
 		`${idPrefix}-${name}`;
@@ -224,6 +250,13 @@ export const ScheduleSetupStep = ({
 							/>
 						</FormRow>
 					</div>
+					{readinessUnit && (
+						<PartTimeReadinessCallout
+							members={readiness.data ?? []}
+							periodStart={periodStart || undefined}
+							unit={readinessUnit}
+						/>
+					)}
 					<div className="flex flex-col gap-8 sm:flex-row sm:items-end">
 						<FormRow
 							required

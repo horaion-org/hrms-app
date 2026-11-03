@@ -203,7 +203,8 @@ it("hides what the workspace does not grant and never asks for it", async () => 
 			.filter(
 				(path) =>
 					path.startsWith("/api/v1/companies/") &&
-					!path.includes("/me/notifications")
+					!path.includes("/me/notifications") &&
+					!path.endsWith("/me/profile")
 			)
 	).toEqual(["/api/v1/companies/c-1/branches"]);
 });
@@ -254,7 +255,8 @@ it("shows the unit counts to a person granted only at one branch", async () => {
 			.filter(
 				(path) =>
 					path.startsWith("/api/v1/companies/") &&
-					!path.includes("/me/notifications")
+					!path.includes("/me/notifications") &&
+					!path.endsWith("/me/profile")
 			)
 	).toEqual([
 		"/api/v1/companies/c-1/branches",
@@ -295,7 +297,9 @@ it("reads permissions only from the current company", async () => {
 		calls.some(
 			(call) =>
 				call.path.startsWith("/api/v1/companies/") &&
-				!call.path.includes("/me/notifications")
+				!call.path.includes("/me/notifications") &&
+				// The shell reads the caller's own profile, to offer Availability to a part-timer.
+				!call.path.endsWith("/me/profile")
 		)
 	).toBe(false);
 });

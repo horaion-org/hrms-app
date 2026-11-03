@@ -55,7 +55,7 @@ const wordOf = ({ value, name }: SentenceValue, t: TFunction): string => {
 	if (name !== null) return name;
 	if (isComparison(value))
 		return t(`scheduling.constraints.comparisonWords.${value}`);
-	if (isWeekday(value)) return t(`scheduling.dayNames.${value}`);
+	if (isWeekday(value)) return t(`weekdays.${value}`);
 	return value;
 };
 

@@ -16,4 +16,19 @@ describe("Callout", () => {
 
 		expect(screen.getByRole("note")).toHaveClass("mt-5", "flex");
 	});
+
+	it("given_noTone_when_rendered_then_readsAsInformation", () => {
+		render(<Callout>Guidance</Callout>);
+
+		expect(screen.getByRole("note")).toHaveClass("bg-ink-blue-50");
+	});
+
+	it("given_theWarningTone_when_rendered_then_drawsAttentionInWarningColours", () => {
+		render(<Callout tone="warning">Two people will be left off.</Callout>);
+
+		expect(screen.getByRole("note")).toHaveClass(
+			"border-warning-400",
+			"bg-warning-50"
+		);
+	});
 });
