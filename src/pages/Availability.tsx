@@ -1,14 +1,13 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
+import { Callout } from "@/components/ui/Callout";
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from "@/components/ui/Tabs";
-import {
-	memberAvailabilityQuery,
-	type MemberWeek,
-} from "@/features/availability/api";
-import type { AvailabilityScope } from "@/features/availability/availabilityModel";
+import { WeekNavigator } from "@/components/ui/WeekNavigator";
+import type { MemberWeek } from "@/features/availability/api";
+import { isPastWeek } from "@/features/availability/availabilityModel";
 import {
 	availabilityQueryOf,
 	viewOf,
@@ -25,9 +24,9 @@ import {
 	useAvailabilityList,
 	type TeamAvailabilityList,
 } from "@/features/availability/useAvailability";
-import { WeekSelector } from "@/features/availability/WeekSelector";
 import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import { myProfileQuery } from "@/features/people/api";
+import { mondayOf } from "@/features/scheduling/schedules";
 import { workspaceQuery } from "@/features/workspace/api";
 import { BranchSelector } from "@/features/workspace/BranchSelector";
 import { DepartmentSelector } from "@/features/workspace/DepartmentSelector";
@@ -41,8 +40,6 @@ import { branchChoices, chosenBranch } from "@/features/workspace/unitChoices";
 import { useAccess } from "@/features/workspace/useAccess";
 
 const route = getRouteApi("/_authenticated/_app/availability");
-
-type Editing = { member: MemberWeek; scope: AvailabilityScope };
 
 /** The copy a team list that is not ready is explained with, if any. */
 const problemKeyOf = (
@@ -63,7 +60,7 @@ const problemKeyOf = (
  * is a Branch's part-timers for one week, read through the person's grants,
  * with editing on the rows they may change. The tab, Branch, Department and
  * week live in the URL; a week left out is this one, worked out on every
- * render. Page-level composition only: the parts live in
+ * render. Any week can be read; only this week and later ones are edited. Page-level composition only: the parts live in
  * `features/availability`.
  */
 export const Availability = (): FunctionComponent => {
@@ -71,7 +68,6 @@ export const Availability = (): FunctionComponent => {
 	const { t } = useTranslation();
 	const search = route.useSearch();
 	const navigate = route.useNavigate();
-	const client = useQueryClient();
 	const access = useAccess();
 	const offered = useAvailabilityViews();
 	const profile = useQuery(myProfileQuery(companyId));
@@ -79,6 +75,8 @@ export const Availability = (): FunctionComponent => {
 	const view = viewOf(search.view, views);
 	const today = new Date();
 	const week = weekOf(search, today);
+	// A week that has ended is shown, never changed: the API refuses it too.
+	const past = isPastWeek(week, today);
 	const workspace = useQuery({ ...workspaceQuery, retry });
 	const branches = workspace.data
 		? branchChoices(workspace.data, companyId, AVAILABILITY_READ_KEYS)
@@ -90,8 +88,7 @@ export const Availability = (): FunctionComponent => {
 		selected && availabilityQueryOf(search, selected.branchId, week),
 		view === "team"
 	);
-	const [editing, setEditing] = useState<Editing | null>(null);
-	const [problem, setProblem] = useState("");
+	const [editing, setEditing] = useState<MemberWeek | null>(null);
 
 	const show = (next: AvailabilitySearch): void => {
 		void navigate({ search: (previous) => ({ ...previous, ...next }) });
@@ -106,29 +103,11 @@ export const Availability = (): FunctionComponent => {
 			});
 		else show({ branch, department: undefined });
 	};
-	// A row is changed where its member is filed.
+	// A row is changed where its member is filed, and only in a week still to come.
 	const canEdit = (member: MemberWeek): boolean =>
+		!past &&
 		access.can(AVAILABILITY_UPDATE_KEY, recordScope(member.departmentId));
-	const edit = (member: MemberWeek, scope: AvailabilityScope): void => {
-		setProblem("");
-		if (scope.kind === "week") {
-			setEditing({ member, scope });
-			return;
-		}
-		// The pattern is read when asked for, so the editor opens on what is saved.
-		client
-			.ensureQueryData(memberAvailabilityQuery(companyId, member.membershipId))
-			.then(
-				() => {
-					setEditing({ member, scope });
-				},
-				() => {
-					setProblem(
-						t("availability.patternFailed", { name: member.displayName })
-					);
-				}
-			);
-	};
+	const editsAnywhere = access.canAnywhere(AVAILABILITY_UPDATE_KEY);
 
 	const header = (
 		<div>
@@ -200,11 +179,11 @@ export const Availability = (): FunctionComponent => {
 							<Tab key={each}>{t(`availability.${each}.tab`)}</Tab>
 						))}
 					</TabList>
-					<WeekSelector
-						className="ml-auto w-48 shrink-0 font-semibold"
-						today={today}
-						value={week}
-						onChange={(monday) => {
+					<WeekNavigator
+						className="ml-auto"
+						currentWeek={mondayOf(today)}
+						week={week}
+						onWeekChange={(monday) => {
 							show({ week: weekParameter(monday, new Date()) });
 						}}
 					/>
@@ -215,6 +194,7 @@ export const Availability = (): FunctionComponent => {
 							{each === "mine" ? (
 								<MyAvailability
 									companyId={companyId}
+									editable={!past}
 									name={profile.data?.displayName ?? ""}
 									weekStartMonday={week}
 								/>
@@ -227,28 +207,31 @@ export const Availability = (): FunctionComponent => {
 									{t(teamProblem.key)}
 								</p>
 							) : (
-								<TeamAvailability
-									canEdit={canEdit}
-									members={team.status === "ready" ? team.members : []}
-									weekStartMonday={week}
-									onEdit={edit}
-								/>
+								<>
+									{past && editsAnywhere && (
+										<Callout className="mb-4">
+											{t("availability.pastWeek")}
+										</Callout>
+									)}
+									<TeamAvailability
+										canEdit={canEdit}
+										members={team.status === "ready" ? team.members : []}
+										showDepartment={!search.department}
+										weekStartMonday={week}
+										onEdit={setEditing}
+									/>
+								</>
 							)}
 						</TabPanel>
 					))}
 				</TabPanels>
 			</Tabs>
-			{problem && (
-				<p className="mt-4 text-sm text-error-700" role="alert">
-					{problem}
-				</p>
-			)}
 			{editing && (
 				<MemberAvailabilityDialog
-					key={`${editing.member.membershipId}-${editing.scope.kind}`}
+					key={editing.membershipId}
 					companyId={companyId}
-					member={editing.member}
-					scope={editing.scope}
+					member={editing}
+					weekStartMonday={week}
 					onClose={() => {
 						setEditing(null);
 					}}

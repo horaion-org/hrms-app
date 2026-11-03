@@ -6,11 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { configureApiClient, resetApiClient } from "@/common/api-client";
 import { envelope, stubApi } from "@/common/testing/stubApi";
 import { authTestI18n } from "@/features/auth/testingI18n";
-import {
-	memberAvailabilityQuery,
-	type MemberWeek,
-} from "@/features/availability/api";
-import type { AvailabilityScope } from "@/features/availability/availabilityModel";
+import type { MemberWeek } from "@/features/availability/api";
 import {
 	FIXTURE_WEEK,
 	MEMBER_WEEK_FIXTURES,
@@ -19,13 +15,17 @@ import {
 } from "@/features/availability/fixtures";
 import { MemberAvailabilityDialog } from "@/features/availability/MemberAvailabilityDialog";
 
-const AISHA = "/api/v1/companies/c-1/member-profiles/m-aisha/availability";
-const CHERYL_WEEK = `/api/v1/companies/c-1/member-profiles/m-cheryl/availability/weeks/${FIXTURE_WEEK}`;
-const THIS_WEEK: AvailabilityScope = {
-	kind: "week",
-	weekStartMonday: FIXTURE_WEEK,
-};
+const MEMBERS = "/api/v1/companies/c-1/member-profiles";
+const AISHA = `${MEMBERS}/m-aisha/availability`;
+const AISHA_WEEK = `${AISHA}/weeks/${FIXTURE_WEEK}`;
+const CHERYL = `${MEMBERS}/m-cheryl/availability`;
+const CHERYL_WEEK = `${CHERYL}/weeks/${FIXTURE_WEEK}`;
 const [aisha, cheryl] = MEMBER_WEEK_FIXTURES as [MemberWeek, MemberWeek];
+/** Aisha's row as weekly windows: Monday morning and Wednesday evening. */
+const AISHA_WINDOWS = [
+	{ day: "MON", startTime: "09:00", endTime: "13:00" },
+	{ day: "WED", startTime: "18:00", endTime: "22:00" },
+];
 
 beforeEach(() => {
 	configureApiClient({
@@ -39,63 +39,60 @@ afterEach(() => {
 	vi.unstubAllGlobals();
 });
 
-const show = (member: MemberWeek, scope: AvailabilityScope): QueryClient => {
+const show = (member: MemberWeek): void => {
 	const client = new QueryClient({
 		defaultOptions: { queries: { retry: false } },
 	});
-	client.setQueryData(
-		memberAvailabilityQuery("c-1", "m-aisha").queryKey,
-		weeklyAvailabilityFixture(WEEKDAY_MORNINGS, { membershipId: "m-aisha" })
-	);
 	render(
 		<I18nextProvider i18n={authTestI18n}>
 			<QueryClientProvider client={client}>
 				<MemberAvailabilityDialog
 					companyId="c-1"
 					member={member}
-					scope={scope}
+					weekStartMonday={FIXTURE_WEEK}
 					onClose={vi.fn()}
 				/>
 			</QueryClientProvider>
 		</I18nextProvider>
 	);
-	return client;
 };
 
-describe("MemberAvailabilityDialog", () => {
-	it("given_aWeekOnThePattern_when_opened_then_startsFromTheRowAndOffersNoReset", () => {
-		stubApi({});
-		show(aisha, THIS_WEEK);
+const everyWeek = (): HTMLElement =>
+	screen.getByRole("radio", { name: "Every week" });
 
-		const dialog = screen.getByRole("dialog");
+describe("MemberAvailabilityDialog", () => {
+	it("given_aWeekOnThePattern_when_opened_then_editsTheWeekFromTheRowWithoutReadingThePattern", () => {
+		const calls = stubApi({});
+		show(aisha);
+
+		const dialog = screen.getByRole("dialog", { name: "Edit availability" });
+		expect(
+			within(dialog).getByRole("radio", { name: "This week only" })
+		).toBeChecked();
 		expect(within(dialog).getAllByRole("group")).toHaveLength(2);
+		expect(everyWeek()).toBeEnabled();
 		expect(
 			within(dialog).queryByRole("button", { name: "Reset to default" })
 		).not.toBeInTheDocument();
+		expect(calls).toEqual([]);
 	});
 
-	it("given_aCustomWeek_when_reset_then_deletesThatWeekOfTheMember", async () => {
+	it("given_thisWeekOnly_when_saved_then_putsTheWeekToTheMembersRoute", async () => {
 		const user = userEvent.setup();
-		const calls = stubApi({ [`DELETE ${CHERYL_WEEK}`]: { status: 204 } });
-		show(cheryl, THIS_WEEK);
+		const calls = stubApi({ [`PUT ${AISHA_WEEK}`]: { status: 204 } });
+		show(aisha);
 
-		await user.click(screen.getByRole("button", { name: "Reset to default" }));
-		await user.click(
-			within(
-				await screen.findByRole("dialog", {
-					name: "Reset this week to the default pattern?",
-				})
-			).getByRole("button", { name: "Reset to default" })
-		);
+		await user.click(screen.getByRole("button", { name: "Save" }));
 
 		await waitFor(() => {
 			expect(calls.map((call) => `${call.method} ${call.path}`)).toEqual([
-				`DELETE ${CHERYL_WEEK}`,
+				`PUT ${AISHA_WEEK}`,
 			]);
 		});
+		expect(calls[0]?.body).toEqual({ windows: AISHA_WINDOWS });
 	});
 
-	it("given_thePattern_when_saved_then_putsTheWholeSetToTheMembersRoute", async () => {
+	it("given_everyWeekChosen_when_saved_then_putsTheWholeSetAsThePattern", async () => {
 		const user = userEvent.setup();
 		const calls = stubApi({
 			[`PUT ${AISHA}`]: {
@@ -107,17 +104,82 @@ describe("MemberAvailabilityDialog", () => {
 				),
 			},
 		});
-		show(aisha, { kind: "pattern" });
+		show(aisha);
 
-		expect(
-			screen.getByRole("heading", { name: "Edit availability" })
-		).toBeVisible();
+		await user.click(everyWeek());
 		await user.click(screen.getByRole("button", { name: "Save" }));
 
 		await waitFor(() => {
-			expect(calls.filter((call) => call.method === "PUT")).toHaveLength(1);
+			expect(calls.map((call) => `${call.method} ${call.path}`)).toEqual([
+				`PUT ${AISHA}`,
+			]);
 		});
-		expect(calls[0]?.path).toBe(AISHA);
-		expect(calls[0]?.body).toEqual({ windows: WEEKDAY_MORNINGS });
+		expect(calls[0]?.body).toEqual({ windows: AISHA_WINDOWS });
+	});
+
+	it("given_aCustomWeek_when_opened_then_readsThePatternAndShowsItWhenEveryWeekIsChosen", async () => {
+		const user = userEvent.setup();
+		stubApi({
+			[`GET ${CHERYL}`]: {
+				status: 200,
+				body: envelope(
+					weeklyAvailabilityFixture(WEEKDAY_MORNINGS, {
+						membershipId: "m-cheryl",
+					})
+				),
+			},
+		});
+		show(cheryl);
+
+		expect(screen.getByRole("radio", { name: "This week only" })).toBeChecked();
+		expect(everyWeek()).toBeDisabled();
+		await waitFor(() => {
+			expect(everyWeek()).toBeEnabled();
+		});
+		await user.click(everyWeek());
+
+		// Weekday mornings share one row.
+		expect(screen.getAllByRole("group")).toHaveLength(1);
+		expect(
+			screen.queryByRole("button", { name: "Reset to default" })
+		).not.toBeInTheDocument();
+	});
+
+	it("given_aCustomWeekWhosePatternCantBeRead_when_opened_then_offersOnlyTheWeek", async () => {
+		stubApi({ [`GET ${CHERYL}`]: { status: 404 } });
+		show(cheryl);
+
+		expect(
+			await screen.findByText(
+				"We couldn’t load Cheryl Ng’s default pattern. Try again."
+			)
+		).toBeVisible();
+		expect(everyWeek()).toBeDisabled();
+	});
+
+	it("given_aCustomWeek_when_reset_then_deletesThatWeekOfTheMember", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			[`GET ${CHERYL}`]: { status: 404 },
+			[`DELETE ${CHERYL_WEEK}`]: { status: 204 },
+		});
+		show(cheryl);
+
+		await user.click(screen.getByRole("button", { name: "Reset to default" }));
+		await user.click(
+			within(
+				await screen.findByRole("dialog", {
+					name: "Reset this week to the default pattern?",
+				})
+			).getByRole("button", { name: "Reset to default" })
+		);
+
+		await waitFor(() => {
+			expect(
+				calls
+					.filter((call) => call.method === "DELETE")
+					.map((call) => call.path)
+			).toEqual([CHERYL_WEEK]);
+		});
 	});
 });

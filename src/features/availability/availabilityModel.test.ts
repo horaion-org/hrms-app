@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
 	byDay,
+	defaultEditTarget,
 	draftsOf,
 	effectiveWindows,
 	expandDrafts,
@@ -9,11 +10,12 @@ import {
 	hasOverride,
 	isMonday,
 	isPartTime,
+	isPastWeek,
 	toReplaceRequest,
-	upcomingMondays,
 	validateWindows,
 	weekdayOf,
 	weeklyWindowsOf,
+	windowsByDay,
 	windowsOf,
 	type WindowDraft,
 } from "@/features/availability/availabilityModel";
@@ -114,6 +116,33 @@ describe("toReplaceRequest", () => {
 		expect(expandDrafts(rows).map(({ row: from }) => from)).toEqual([0, 0, 1]);
 	});
 
+	it("given_twoRowsOnTheSameDay_when_mapped_then_sendsBothWindows", () => {
+		const rows = [
+			row(["MON"], "03:00", "05:00"),
+			row(["MON"], "08:00", "10:00"),
+		];
+
+		expect(toReplaceRequest(rows)).toEqual({
+			windows: [
+				{ day: "MON", startTime: "03:00", endTime: "05:00" },
+				{ day: "MON", startTime: "08:00", endTime: "10:00" },
+			],
+		});
+	});
+
+	it("given_twoWindowsOnOneDay_when_turnedIntoRowsAndBack_then_bothAreKept", () => {
+		const windows = [
+			{ day: "MON" as const, startTime: "08:00", endTime: "10:00" },
+			{ day: "MON" as const, startTime: "03:00", endTime: "05:00" },
+		];
+
+		expect(draftsOf(windows)).toEqual([
+			row(["MON"], "03:00", "05:00"),
+			row(["MON"], "08:00", "10:00"),
+		]);
+		expect(toReplaceRequest(draftsOf(windows)).windows).toHaveLength(2);
+	});
+
 	it("given_noRows_when_mapped_then_sendsAnEmptySet", () => {
 		expect(toReplaceRequest([])).toEqual({ windows: [] });
 	});
@@ -165,7 +194,13 @@ describe("validateWindows", () => {
 				row(["WED"], "09:00", "13:00"),
 				row(["WED"], "12:30", "17:00"),
 			])
-		).toEqual([{ row: 1, kind: "overlap", day: "WED" }]);
+		).toEqual([
+			{
+				row: 1,
+				kind: "overlap",
+				overlapping: { day: "WED", startTime: "09:00", endTime: "13:00" },
+			},
+		]);
 	});
 
 	it("given_windowsThatOnlyTouch_when_checked_then_findsNothing", () => {
@@ -183,7 +218,46 @@ describe("validateWindows", () => {
 				row(["MON"], "22:00", "06:00"),
 				row(["TUE"], "05:00", "09:00"),
 			])
-		).toEqual([{ row: 1, kind: "overlap", day: "TUE" }]);
+		).toEqual([
+			{
+				row: 1,
+				kind: "overlap",
+				overlapping: { day: "MON", startTime: "22:00", endTime: "06:00" },
+			},
+		]);
+	});
+
+	it("given_twoSeparateWindowsOnOneDay_when_checked_then_findsNothing", () => {
+		expect(
+			validateWindows([
+				row(["MON"], "03:00", "05:00"),
+				row(["MON"], "08:00", "10:00"),
+			])
+		).toEqual([]);
+	});
+
+	it("given_anOvernightWindowAndALaterOneTheNextDay_when_checked_then_findsNothing", () => {
+		expect(
+			validateWindows([
+				row(["MON"], "22:00", "06:00"),
+				row(["TUE"], "08:00", "10:00"),
+			])
+		).toEqual([]);
+	});
+
+	it("given_anOvernightWindowAndTheNextDayStartingBeforeItEnds_when_checked_then_refusesTheOverlap", () => {
+		expect(
+			validateWindows([
+				row(["MON"], "22:00", "06:00"),
+				row(["TUE"], "05:00", "07:00"),
+			])
+		).toEqual([
+			{
+				row: 1,
+				kind: "overlap",
+				overlapping: { day: "MON", startTime: "22:00", endTime: "06:00" },
+			},
+		]);
 	});
 
 	it("given_anOvernightWindowEndingWhenTheNextStarts_when_checked_then_findsNothing", () => {
@@ -201,7 +275,29 @@ describe("validateWindows", () => {
 				row(["MON"], "05:00", "09:00"),
 				row(["SUN"], "23:00", "06:00"),
 			])
-		).toEqual([{ row: 1, kind: "overlap", day: "SUN" }]);
+		).toEqual([
+			{
+				row: 1,
+				kind: "overlap",
+				overlapping: { day: "MON", startTime: "05:00", endTime: "09:00" },
+			},
+		]);
+	});
+
+	it("given_twoSeparateMondayWindowsAndASundayOvernightRunningIntoMonday_when_checked_then_namesTheSundayWindow", () => {
+		expect(
+			validateWindows([
+				row(["MON", "SUN"], "22:00", "04:00"),
+				row(["MON"], "03:00", "05:00"),
+				row(["MON"], "08:00", "10:00"),
+			])
+		).toEqual([
+			{
+				row: 1,
+				kind: "overlap",
+				overlapping: { day: "SUN", startTime: "22:00", endTime: "04:00" },
+			},
+		]);
 	});
 
 	it("given_aRowWithItsOwnProblem_when_checked_then_itIsLeftOutOfTheComparisons", () => {
@@ -214,23 +310,15 @@ describe("validateWindows", () => {
 	});
 });
 
-describe("upcomingMondays", () => {
-	it("given_aWednesday_when_listed_then_startsWithThisWeeksMondayAndCountsSix", () => {
-		expect(upcomingMondays("2026-11-04")).toEqual([
-			"2026-11-02",
-			"2026-11-09",
-			"2026-11-16",
-			"2026-11-23",
-			"2026-11-30",
-			"2026-12-07",
-		]);
+describe("isPastWeek", () => {
+	it("given_aWednesday_when_compared_then_onlyEarlierWeeksArePast", () => {
+		expect(isPastWeek("2026-10-26", "2026-11-04")).toBe(true);
+		expect(isPastWeek("2026-11-02", "2026-11-04")).toBe(false);
+		expect(isPastWeek("2026-11-09", "2026-11-04")).toBe(false);
 	});
 
-	it("given_aSunday_when_listed_then_thisWeekIsTheOneThatStartedOnMonday", () => {
-		expect(upcomingMondays("2026-11-08", 2)).toEqual([
-			"2026-11-02",
-			"2026-11-09",
-		]);
+	it("given_aSunday_when_compared_then_itsOwnWeekIsNotPast", () => {
+		expect(isPastWeek("2026-11-02", "2026-11-08")).toBe(false);
 	});
 });
 
@@ -297,5 +385,52 @@ describe("weeklyWindowsOf", () => {
 			{ day: "MON", startTime: "09:00", endTime: "13:00" },
 			{ day: "SUN", startTime: "22:00", endTime: "06:00" },
 		]);
+	});
+});
+
+describe("windowsByDay", () => {
+	it("given_aWeeksDatedWindows_when_grouped_then_givesSevenDaysEachEarliestFirst", () => {
+		const days = windowsByDay([
+			{ date: "2026-11-11", startTime: "18:00", endTime: "22:00" },
+			{ date: "2026-11-11", startTime: "09:00", endTime: "13:00" },
+			{ date: "2026-11-15", startTime: "22:00", endTime: "06:00" },
+		]);
+
+		expect(days.map(({ day }) => day)).toEqual([
+			"MON",
+			"TUE",
+			"WED",
+			"THU",
+			"FRI",
+			"SAT",
+			"SUN",
+		]);
+		expect(days[2]?.windows).toEqual([
+			{ startTime: "09:00", endTime: "13:00" },
+			{ startTime: "18:00", endTime: "22:00" },
+		]);
+		expect(days[6]?.windows).toEqual([
+			{ startTime: "22:00", endTime: "06:00" },
+		]);
+		expect(days[0]?.windows).toEqual([]);
+	});
+});
+
+describe("defaultEditTarget", () => {
+	const monday = [
+		{ day: "MON" as const, startTime: "09:00", endTime: "13:00" },
+	];
+
+	it("given_aWeekWithItsOwnHours_when_opened_then_editsThatWeek", () => {
+		expect(defaultEditTarget(true, monday)).toBe("week");
+		expect(defaultEditTarget(true, [])).toBe("week");
+	});
+
+	it("given_nothingSetAtAll_when_opened_then_editsEveryWeek", () => {
+		expect(defaultEditTarget(false, [])).toBe("pattern");
+	});
+
+	it("given_aWeekOnAPattern_when_opened_then_editsThatWeek", () => {
+		expect(defaultEditTarget(false, monday)).toBe("week");
 	});
 });

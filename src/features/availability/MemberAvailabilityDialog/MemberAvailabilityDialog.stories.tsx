@@ -16,11 +16,11 @@ const client = new QueryClient({
 	defaultOptions: { queries: { retry: false, staleTime: Infinity } },
 });
 client.setQueryData(
-	memberAvailabilityQuery(COMPANY, "m-aisha").queryKey,
-	weeklyAvailabilityFixture(WEEKDAY_MORNINGS, { membershipId: "m-aisha" })
+	memberAvailabilityQuery(COMPANY, "m-cheryl").queryKey,
+	weeklyAvailabilityFixture(WEEKDAY_MORNINGS, { membershipId: "m-cheryl" })
 );
 
-const [aisha, cheryl] = MEMBER_WEEK_FIXTURES;
+const [aisha, cheryl, faris] = MEMBER_WEEK_FIXTURES;
 
 const meta = {
 	title: "Features/Availability/MemberAvailabilityDialog",
@@ -29,7 +29,7 @@ const meta = {
 	args: {
 		companyId: COMPANY,
 		member: aisha ?? MEMBER_WEEK_FIXTURES[0],
-		scope: { kind: "week", weekStartMonday: FIXTURE_WEEK },
+		weekStartMonday: FIXTURE_WEEK,
 		onClose: fn(),
 	},
 	decorators: [storyProviders(client)],
@@ -39,8 +39,11 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+/** A week on the pattern: opens on this week only. */
 export const ThisWeek: Story = {};
 
+/** A week with hours of its own: opens on it, with its reset. */
 export const CustomWeek: Story = { args: { member: cheryl } };
 
-export const DefaultPattern: Story = { args: { scope: { kind: "pattern" } } };
+/** Nothing set at all: opens on every week. */
+export const NothingSet: Story = { args: { member: faris } };

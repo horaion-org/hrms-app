@@ -36,7 +36,7 @@ const patternReply = (overrideWeeks: Array<string> = []): StubReply => ({
 	),
 });
 
-const show = (): void => {
+const show = (editable = true): void => {
 	const client = new QueryClient({
 		defaultOptions: { queries: { retry: false } },
 	});
@@ -45,6 +45,7 @@ const show = (): void => {
 			<QueryClientProvider client={client}>
 				<MyAvailability
 					companyId="c-1"
+					editable={editable}
 					name="Aisha Rahman"
 					weekStartMonday={FIXTURE_WEEK}
 				/>
@@ -101,8 +102,11 @@ describe("MyAvailability", () => {
 		show();
 		await screen.findAllByText("09:00–13:00");
 
-		await user.click(screen.getByRole("button", { name: "Edit this week" }));
+		await user.click(screen.getByRole("button", { name: "Edit availability" }));
 		const dialog = await screen.findByRole("dialog");
+		expect(
+			within(dialog).getByRole("radio", { name: "This week only" })
+		).toBeChecked();
 		await user.click(
 			within(dialog).getByRole("button", { name: "Not available this week" })
 		);
@@ -126,10 +130,9 @@ describe("MyAvailability", () => {
 		show();
 		await screen.findAllByText("09:00–13:00");
 
-		await user.click(
-			screen.getByRole("button", { name: "Edit default pattern" })
-		);
+		await user.click(screen.getByRole("button", { name: "Edit availability" }));
 		const dialog = await screen.findByRole("dialog");
+		await user.click(within(dialog).getByRole("radio", { name: "Every week" }));
 		await user.click(within(dialog).getByRole("button", { name: "Save" }));
 
 		await waitFor(() => {
@@ -140,6 +143,45 @@ describe("MyAvailability", () => {
 		expect(calls.find((call) => call.method === "PUT")?.body).toEqual({
 			windows: WEEKDAY_MORNINGS,
 		});
+	});
+
+	it("given_nothingSet_when_edited_then_warnsAndOpensOnEveryWeek", async () => {
+		const user = userEvent.setup();
+		stubApi({
+			[`GET ${MINE}`]: {
+				status: 200,
+				body: envelope(weeklyAvailabilityFixture([])),
+			},
+		});
+		show();
+
+		expect(
+			await screen.findByText(
+				"No availability set. Add the hours you can work so you can be rostered."
+			)
+		).toBeVisible();
+		expect(screen.getAllByText("Not available")).toHaveLength(7);
+		await user.click(screen.getByRole("button", { name: "Edit availability" }));
+		expect(
+			within(await screen.findByRole("dialog")).getByRole("radio", {
+				name: "Every week",
+			})
+		).toBeChecked();
+	});
+
+	it("given_aWeekThatHasEnded_when_shown_then_offersNoEditing", async () => {
+		stubApi({ [`GET ${MINE}`]: patternReply() });
+		show(false);
+
+		expect(await screen.findAllByText("09:00–13:00")).toHaveLength(5);
+		expect(
+			screen.getByText(
+				"This week has ended, so its availability can’t be changed."
+			)
+		).toBeVisible();
+		expect(
+			screen.queryByRole("button", { name: "Edit availability" })
+		).not.toBeInTheDocument();
 	});
 
 	it("given_theirPatternCannotBeRead_when_shown_then_saysSo", async () => {

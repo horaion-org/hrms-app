@@ -16,6 +16,7 @@ const meta = {
 	args: {
 		members: MEMBER_WEEK_FIXTURES,
 		weekStartMonday: FIXTURE_WEEK,
+		showDepartment: true,
 		canEdit: (): boolean => true,
 		onEdit: fn(),
 	},
@@ -35,5 +36,7 @@ type Story = StoryObj<typeof meta>;
 export const Editable: Story = {};
 
 export const ReadOnly: Story = { args: { canEdit: (): boolean => false } };
+
+export const OneDepartment: Story = { args: { showDepartment: false } };
 
 export const NoPartTimers: Story = { args: { members: [] } };

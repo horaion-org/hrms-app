@@ -15,6 +15,8 @@ import { MyAvailability } from "@/features/availability/MyAvailability";
 import { storyProviders } from "@/features/organisation/storyApi";
 
 const COMPANY = "story-company";
+/** A company where the caller has set nothing at all. */
+const NOTHING_SET_COMPANY = "story-company-nothing-set";
 const CUSTOM_WEEK = "2026-11-16";
 const client = new QueryClient({
 	defaultOptions: { queries: { retry: false, staleTime: Infinity } },
@@ -22,6 +24,10 @@ const client = new QueryClient({
 client.setQueryData(
 	myAvailabilityQuery(COMPANY).queryKey,
 	weeklyAvailabilityFixture(WEEKDAY_MORNINGS, { overrideWeeks: [CUSTOM_WEEK] })
+);
+client.setQueryData(
+	myAvailabilityQuery(NOTHING_SET_COMPANY).queryKey,
+	weeklyAvailabilityFixture([])
 );
 client.setQueryData(
 	weekAvailabilityQuery(COMPANY, MY_AVAILABILITY, CUSTOM_WEEK).queryKey,
@@ -51,3 +57,7 @@ type Story = StoryObj<typeof meta>;
 export const FollowingThePattern: Story = {};
 
 export const CustomWeek: Story = { args: { weekStartMonday: CUSTOM_WEEK } };
+
+export const NothingSet: Story = { args: { companyId: NOTHING_SET_COMPANY } };
+
+export const WeekThatHasEnded: Story = { args: { editable: false } };

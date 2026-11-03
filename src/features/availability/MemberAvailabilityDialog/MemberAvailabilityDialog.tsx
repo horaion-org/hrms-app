@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import type { MemberWeek } from "@/features/availability/api";
 import { AvailabilityDialog } from "@/features/availability/AvailabilityDialog";
@@ -18,61 +19,64 @@ export type MemberAvailabilityDialogProps = {
 	companyId: string;
 	/** The member's row of the shown week. */
 	member: MemberWeek;
-	/** The shown week, opened with the row's windows, or the member's default pattern. */
-	scope: AvailabilityScope;
+	/** The shown week, as its Monday. */
+	weekStartMonday: string;
 	onClose: () => void;
 };
 
 /**
- * Edits a colleague's availability from the team view: the shown week,
- * starting from what is in force that week and resettable when it has
- * hours of its own, or their default pattern, read when opened. Saves
- * straight away through the member's routes. Nothing is drawn while the
- * pattern loads, or when it could not be read.
+ * Edits a colleague's availability from the team view, this week only or
+ * every week. A week on the pattern shows the pattern itself, so it is read
+ * only for a week with hours of its own; until then, or when it can't be
+ * read, only the week can be changed. Saves straight away through the
+ * member's routes.
  */
 export const MemberAvailabilityDialog = ({
 	companyId,
 	member,
-	scope,
+	weekStartMonday,
 	onClose,
 }: MemberAvailabilityDialogProps): FunctionComponent => {
+	const { t } = useTranslation();
 	const { membershipId } = member;
-	const pattern = useMemberAvailability(
-		companyId,
-		membershipId,
-		scope.kind === "pattern"
-	);
+	const overridden = member.source === "OVERRIDE";
+	const pattern = useMemberAvailability(companyId, membershipId, overridden);
 	const replace = useReplaceMemberAvailability(companyId, membershipId);
 	const replaceWeek = useReplaceMemberWeekAvailability(companyId, membershipId);
 	const resetWeek = useResetMemberWeekAvailability(companyId, membershipId);
 
-	const windows: Array<WeeklyWindow> | undefined =
-		scope.kind === "week"
-			? weeklyWindowsOf(member.windows)
-			: pattern.status === "ready"
-				? windowsOf(pattern.pattern)
-				: undefined;
-	if (!windows) return null;
+	const weekWindows = weeklyWindowsOf(member.windows);
+	const patternWindows: Array<WeeklyWindow> | undefined = !overridden
+		? weekWindows
+		: pattern.status === "ready"
+			? windowsOf(pattern.pattern)
+			: undefined;
+	const patternNote =
+		pattern.status === "pending"
+			? t("availability.dialog.patternLoading")
+			: t("availability.patternFailed", { name: member.displayName });
 
-	const save = (next: Array<WeeklyWindow>): Promise<unknown> =>
+	const save = (
+		scope: AvailabilityScope,
+		windows: Array<WeeklyWindow>
+	): Promise<unknown> =>
 		scope.kind === "week"
 			? replaceWeek.mutateAsync({
 					weekStartMonday: scope.weekStartMonday,
-					request: { windows: next },
+					request: { windows },
 				})
-			: replace.mutateAsync({ windows: next });
-	const reset =
-		scope.kind === "week" && member.source === "OVERRIDE"
-			? (): Promise<unknown> => resetWeek.mutateAsync(scope.weekStartMonday)
-			: undefined;
+			: replace.mutateAsync({ windows });
 
 	return (
 		<AvailabilityDialog
 			name={member.displayName}
-			scope={scope}
-			windows={windows}
+			overridden={overridden}
+			patternNote={patternNote}
+			patternWindows={patternWindows}
+			weekStartMonday={weekStartMonday}
+			weekWindows={weekWindows}
 			onClose={onClose}
-			onReset={reset}
+			onReset={() => resetWeek.mutateAsync(weekStartMonday)}
 			onSubmit={save}
 		/>
 	);

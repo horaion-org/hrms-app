@@ -2,6 +2,7 @@ import type { TFunction } from "i18next";
 import { z } from "zod";
 import { weekdaySchema } from "@/common/weekdays";
 import {
+	formatWindow,
 	validateWindows,
 	type WindowDraft,
 	type WindowProblem,
@@ -10,13 +11,16 @@ import {
 /** The availability editor's values: one row per window, each on any number of days. */
 export type AvailabilityFormValues = { rows: Array<WindowDraft> };
 
-/** A row's problem, in the person's language. */
+/** A row's problem, in the person's language; an overlap names the window it is with, e.g. "Sunday 22:00–04:00". */
 export const windowProblemMessage = (
-	{ kind, day }: WindowProblem,
+	{ kind, day, overlapping }: WindowProblem,
 	t: TFunction
 ): string =>
 	t(`availability.dialog.problems.${kind}`, {
 		day: day ? t(`weekdays.${day}`) : "",
+		overlapping: overlapping
+			? `${t(`weekdays.${overlapping.day}`)} ${formatWindow(overlapping)}`
+			: "",
 	});
 
 /**

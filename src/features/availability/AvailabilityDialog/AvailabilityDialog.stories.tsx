@@ -5,18 +5,23 @@ import { fn } from "storybook/test";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import { AvailabilityDialog } from "@/features/availability/AvailabilityDialog";
 
+const PATTERN = [
+	{ day: "MON", startTime: "09:00", endTime: "13:00" },
+	{ day: "WED", startTime: "09:00", endTime: "13:00" },
+	{ day: "FRI", startTime: "22:00", endTime: "06:00" },
+] as const;
+
 const meta = {
 	title: "Features/Availability/AvailabilityDialog",
 	component: AvailabilityDialog,
 	args: {
 		name: "Kent Chua",
-		scope: { kind: "pattern" },
-		windows: [
-			{ day: "MON", startTime: "09:00", endTime: "13:00" },
-			{ day: "WED", startTime: "09:00", endTime: "13:00" },
-			{ day: "FRI", startTime: "22:00", endTime: "06:00" },
-		],
+		weekStartMonday: "2026-11-09",
+		weekWindows: PATTERN,
+		patternWindows: PATTERN,
+		overridden: false,
 		onSubmit: fn(() => Promise.resolve()),
+		onReset: fn(() => Promise.resolve()),
 		onClose: fn(),
 	},
 	decorators: [
@@ -32,14 +37,27 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+/** A week on the pattern: opens on this week only. */
+export const ThisWeek: Story = {};
 
-export const Empty: Story = { args: { windows: [] } };
-
-/** One week with an override: it can be reset to the pattern or marked not available. */
+/** A week with hours of its own: it can be reset to the pattern or marked not available. */
 export const CustomWeek: Story = {
 	args: {
-		scope: { kind: "week", weekStartMonday: "2026-11-09" },
-		onReset: fn(() => Promise.resolve()),
+		overridden: true,
+		weekWindows: [{ day: "SAT", startTime: "10:00", endTime: "14:00" }],
+	},
+};
+
+/** Nothing set at all: opens on every week, so the first hours become the pattern. */
+export const NothingSet: Story = {
+	args: { weekWindows: [], patternWindows: [] },
+};
+
+/** A colleague's custom week whose pattern is still loading: only the week can be changed. */
+export const PatternLoading: Story = {
+	args: {
+		overridden: true,
+		patternWindows: undefined,
+		patternNote: "Loading the default pattern…",
 	},
 };

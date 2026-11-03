@@ -1,4 +1,5 @@
 import { screen, waitFor, within } from "@testing-library/react";
+import dayjs from "dayjs";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resetApiClient } from "@/common/api-client";
@@ -16,10 +17,6 @@ import {
 } from "@/common/testing/stubApi";
 import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
-import {
-	formatWeekStart,
-	upcomingMondays,
-} from "@/features/availability/availabilityModel";
 import {
 	MEMBER_WEEK_FIXTURES,
 	WEEKDAY_MORNINGS,
@@ -147,6 +144,10 @@ const routes = (
 	},
 });
 
+/** The Monday `by` weeks from this one. */
+const weekFromThis = (by: number): string =>
+	dayjs(mondayOf(new Date())).add(by, "week").format("YYYY-MM-DD");
+
 const navigation = (): HTMLElement => screen.getByRole("navigation");
 
 const tabNames = (): Array<string | null> =>
@@ -247,60 +248,80 @@ describe("Availability", () => {
 		await within(table).findByText("Aisha Rahman");
 		expect(
 			within(table).getByRole("button", {
-				name: "Edit Aisha Rahman’s availability this week",
+				name: "Edit Aisha Rahman’s availability",
 			})
 		).toBeVisible();
 		expect(
 			within(table).queryByRole("button", {
-				name: "Edit Faris Ahmad’s availability this week",
+				name: "Edit Faris Ahmad’s availability",
 			})
 		).not.toBeInTheDocument();
 	});
 
-	it("reads a member's pattern when its editing is asked for, then opens it", async () => {
+	it("shows a week that has ended without offering to change it", async () => {
 		const user = userEvent.setup();
-		const calls = stubApi({
-			...routes("FULL_TIME", workspaceReply([READ, UPDATE])),
-			"GET /api/v1/companies/c-1/member-profiles/m-aisha/availability": {
-				status: 200,
-				body: envelope(
-					weeklyAvailabilityFixture(WEEKDAY_MORNINGS, {
-						membershipId: "m-aisha",
-					})
-				),
-			},
+		const calls = stubApi(routes("FULL_TIME", workspaceReply([READ, UPDATE])));
+		const { router } = await open("/availability");
+		const table = await screen.findByRole("table", {
+			name: "Team availability",
 		});
+		await within(table).findByText("Aisha Rahman");
+		const lastWeek = weekFromThis(-1);
+
+		await user.click(screen.getByRole("button", { name: "Previous week" }));
+
+		await waitFor(() => {
+			expect(router.state.location.search).toMatchObject({ week: lastWeek });
+		});
+		await waitFor(() => {
+			expect(
+				calls
+					.filter((call) => call.path === TEAM_PATH)
+					.map((call) => call.search)
+			).toContain(`weekStartMonday=${lastWeek}&branchId=b-1`);
+		});
+		expect(
+			await screen.findByText(
+				"This week has ended, so its availability can’t be changed."
+			)
+		).toBeVisible();
+		expect(
+			within(
+				screen.getByRole("table", { name: "Team availability" })
+			).queryByRole("button", { name: /^Edit / })
+		).not.toBeInTheDocument();
+	});
+
+	it("opens one editor for a row, on this week, without reading a pattern it already shows", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi(routes("FULL_TIME", workspaceReply([READ, UPDATE])));
 		await open("/availability");
 		await screen.findByText("Aisha Rahman");
 
 		await user.click(
-			screen.getByRole("button", {
-				name: "Edit Aisha Rahman’s default pattern",
-			})
+			screen.getByRole("button", { name: "Edit Aisha Rahman’s availability" })
 		);
 
 		const dialog = await screen.findByRole("dialog", {
 			name: "Edit availability",
 		});
-		expect(within(dialog).getAllByRole("group")).toHaveLength(1);
 		expect(
-			calls.filter((call) => call.path.endsWith("/m-aisha/availability"))
-		).toHaveLength(1);
+			within(dialog).getByRole("radio", { name: "This week only" })
+		).toBeChecked();
+		expect(within(dialog).getAllByRole("group")).toHaveLength(2);
+		expect(
+			calls.filter((call) => call.path.includes("/member-profiles/"))
+		).toEqual([]);
 	});
 
-	it("puts another week in the URL and asks for it", async () => {
+	it("moves a week on, and back to this week, through the URL", async () => {
 		const user = userEvent.setup();
 		const calls = stubApi(routes("FULL_TIME", workspaceReply([READ])));
 		const { router } = await open("/availability");
 		await screen.findByRole("table", { name: "Team availability" });
-		const next = upcomingMondays(new Date())[1] ?? "";
+		const next = weekFromThis(1);
 
-		await user.click(screen.getByRole("button", { name: "Week" }));
-		await user.click(
-			screen.getByRole("option", {
-				name: `Week of ${formatWeekStart(next, "en")}`,
-			})
-		);
+		await user.click(screen.getByRole("button", { name: "Next week" }));
 
 		await waitFor(() => {
 			expect(router.state.location.search).toMatchObject({ week: next });
@@ -311,6 +332,12 @@ describe("Availability", () => {
 					.filter((call) => call.path === TEAM_PATH)
 					.map((call) => call.search)
 			).toContain(`weekStartMonday=${next}&branchId=b-1`);
+		});
+
+		await user.click(screen.getByRole("button", { name: "This week" }));
+
+		await waitFor(() => {
+			expect(router.state.location.search).not.toHaveProperty("week");
 		});
 	});
 });

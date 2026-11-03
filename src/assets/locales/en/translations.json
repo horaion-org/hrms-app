@@ -140,23 +140,20 @@
 		"views": "Availability views",
 		"mine": {
 			"tab": "My availability",
-			"title": "Week of {{date}}",
+			"label": "Your week",
 			"patternWeek": "This week follows your default pattern.",
 			"customWeek": "This week has its own hours in place of your default pattern.",
-			"empty": "You haven’t set the hours you can work. Without them you can’t be rostered."
+			"empty": "No availability set. Add the hours you can work so you can be rostered."
 		},
 		"team": {
 			"tab": "Team",
 			"label": "Team availability",
 			"member": "Member",
-			"department": "Department",
 			"actions": "Actions",
 			"empty": "No part-time members here.",
-			"editWeekFor": "Edit {{name}}’s availability this week",
-			"editPatternFor": "Edit {{name}}’s default pattern"
+			"editFor": "Edit {{name}}’s availability"
 		},
-		"editWeek": "Edit this week",
-		"editPattern": "Edit default pattern",
+		"edit": "Edit availability",
 		"custom": "Custom",
 		"none": "Not available",
 		"department": "Department",
@@ -166,15 +163,18 @@
 		"hidden": "You don’t have access to anyone’s availability in this company.",
 		"noBranches": "Add a branch to the organisation before managing availability.",
 		"unavailable": "Availability is for part-time members and the people who manage them, so there’s nothing here for you in this company.",
-		"week": {
-			"label": "Week",
-			"of": "Week of {{date}}"
-		},
 		"loading": "Loading availability…",
 		"failed": "We couldn’t load the availability. Try again.",
+		"pastWeek": "This week has ended, so its availability can’t be changed.",
 		"dialog": {
 			"title": "Edit availability",
 			"description": "The hours {{name}} can work each week. A window that ends at or before its start runs past midnight.",
+			"applies": "Applies to",
+			"thisWeekOnly": "This week only",
+			"thisWeekOnlyDescription": "The week of {{date}}, in place of the default pattern.",
+			"everyWeek": "Every week",
+			"everyWeekDescription": "The default pattern, for every week without hours of its own.",
+			"patternLoading": "Loading the default pattern…",
 			"window": "Window {{number}}",
 			"days": "Days",
 			"startTime": "Start time",
@@ -191,14 +191,13 @@
 				"noTimes": "Choose a start and an end time.",
 				"emptyWindow": "Choose an end time different from the start.",
 				"crowdedDay": "{{day}} has more than 4 windows, the most allowed.",
-				"overlap": "This window overlaps another on {{day}}."
+				"overlap": "This window overlaps {{overlapping}}."
 			},
 			"rejected": "This window was refused. Check that it doesn’t overlap another or crowd its day.",
 			"someRejected": "Some windows were refused. Check the windows marked below.",
 			"notPartTime": "Only part-time members can have availability, and this person isn’t part-time any more. Reload the page.",
 			"forbidden": "You no longer have permission to change this person’s availability.",
 			"failed": "We couldn’t save the availability. Try again.",
-			"weekTitle": "Edit availability · Week of {{date}}",
 			"weekDescription": "The hours {{name}} can work in the week of {{date}}, in place of their default pattern.",
 			"notAvailable": "Not available this week",
 			"reset": "Reset to default",
@@ -386,6 +385,12 @@
 		"sortBy": "Sort by {{column}}",
 		"sortAscending": "A – Z",
 		"sortDescending": "Z – A"
+	},
+	"weekNavigator": {
+		"label": "Week",
+		"thisWeek": "This week",
+		"previous": "Previous week",
+		"next": "Next week"
 	},
 	"shell": {
 		"welcome": "Welcome, <name>{{name}}</name>.",

@@ -15,23 +15,33 @@ through the person's grants, with editing on the rows they may change. Everythin
 - `availabilitySearch.ts` — what belongs in the URL (`view`, `branch`, `department`, `week` as its Monday), the
   tabs a person has, and the list asked for (`availabilityQueryOf`). A week left out is the one today is in, worked out on every render, so a page left open
   across a Monday moves on.
-- `availabilityModel.ts` — the pure rules: windows by day, the editor's rows and their validation (overlaps on
-  the week as a circle, at most four starts a day), the coming Mondays, dated windows as weekly ones.
+- `availabilityModel.ts` — the pure rules: windows by day (`byDay`, and `windowsByDay` for a week's dated windows),
+  the editor's rows and their validation (overlaps on the week as a circle, at most four starts a day), what the
+  editor opens on (`defaultEditTarget`), whether a week has ended (`isPastWeek`), dated windows as weekly ones.
 - `useAvailability.ts` — `useAvailabilityViews` (the tabs, for the page and the sidebar), the read hooks
   (`useMyAvailability`, `useMemberAvailability`, `useAvailabilityList`, each with `useLeaveRequests`'
   `pending`/`error`/`hidden`/`ready` states) and the writes for a member or the caller, each reloading every
   availability entry of the company.
 - `availabilityRefusal.ts` — API codes to frontend-owned copy, on the editor's rows or as its alert.
-- `MyAvailability` — the caller's week, "Custom" when it has its own hours, with editing of the week or the
-  pattern.
-- `TeamAvailability` — a row per part-timer: Department, Monday to Sunday, "Custom" for an overridden week, and
-  editing where allowed.
-- `MemberAvailabilityDialog` — the editor for a colleague's week (from the row) or pattern (read when opened).
-- `AvailabilityDialog` — the editor itself: rows of windows on any days, "Not available this week" and "Reset to
-  default" for a week. `WeekSelector` — the week, one of the coming six or the URL's.
+- `WeekGrid` — a week laid out as the roster lays one out: a column per day with its weekday and date, a row each,
+  every day's windows as chips. Its parts, each a quad of its own: `WeekGridRow` (an optional heading, seven
+  cells, an optional action), `AvailabilityCell` (one day: its chips, or a muted dash read as "Not available") and
+  `WindowChip` ("09:00–13:00"). Shared by both tabs.
+- `MyAvailability` — the caller's week as a one-row `WeekGrid`, "Custom" when it has hours of its own, a warning
+  when nothing is set, and one Edit. A week that has ended is shown with a note and no Edit.
+- `TeamAvailability` — a `WeekGrid` row per part-timer (name, their Department when no Department is chosen,
+  "Custom" for an overridden week) with an edit button on the rows the person may change.
+- `AvailabilityDialog` — the one editor: "This week only" / "Every week" (`RadioCard`s) at the top, then rows of
+  windows on any days; "Not available this week" and "Reset to default" for the week. It opens on the week when it
+  has hours of its own, on every week when nothing is set at all, otherwise on the week; choosing the other shows
+  what is saved for it.
+- `MemberAvailabilityDialog` — the editor for a colleague: a week on the pattern is the pattern, so it is read only
+  for an overridden week, and "Every week" waits for it (or stays off when it can't be read).
 - `fixtures.ts` — API-shaped rows and patterns for stories and component tests.
 
-`src/pages/Availability.tsx` composes them and owns the tabs, the selectors and the colleague's editor. The
+`src/pages/Availability.tsx` composes them and owns the tabs, the selectors, the week (the shared
+`components/ui/WeekNavigator`: previous, next, "This week" and the dates; any week can be read, and editing is
+offered only from this week on) and the colleague's editor. The
 Schedule wizard's warning about part-timers without availability is `scheduling/PartTimeReadinessCallout`, fed by
 `partTimeReadinessQuery`.
 

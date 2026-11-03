@@ -45,5 +45,5 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const WithProblem: Story = {
-	args: { error: "This window overlaps another on Monday." },
+	args: { error: "This window overlaps Monday 09:00–13:00." },
 };

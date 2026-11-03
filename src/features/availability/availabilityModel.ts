@@ -48,8 +48,8 @@ export type AvailabilityScope =
 
 export const PATTERN_SCOPE: AvailabilityScope = { kind: "pattern" };
 
-/** How many weeks, this one first, a week can be chosen from. */
-const UPCOMING_WEEKS = 6;
+/** What the editor saves to: the shown week only, or every week (the default pattern). */
+export type EditTarget = AvailabilityScope["kind"];
 
 /** What replacing a member's pattern sends: the complete new set. */
 export type ReplaceAvailabilityRequest = { windows: Array<WeeklyWindow> };
@@ -68,8 +68,14 @@ export type WindowDraft = {
 export type WindowProblem = {
 	row: number;
 	kind: "noDays" | "noTimes" | "emptyWindow" | "crowdedDay" | "overlap";
-	/** The day a crowded day or an overlap is on. */
+	/** The day that is crowded. */
 	day?: Weekday;
+	/**
+	 * The earlier window an overlap is with, named so the person can find
+	 * it: it may be on another day, e.g. Sunday's late window running into
+	 * Monday.
+	 */
+	overlapping?: WeeklyWindow;
 };
 
 /** The most windows that may start on one day. */
@@ -203,23 +209,20 @@ export const validateWindows = (
 			problems.set(row, { row, kind: "crowdedDay", day: window.day });
 		const earlier = comparable
 			.slice(0, index)
-			.some((other) => overlaps(other.window, window));
+			.find((other) => overlaps(other.window, window));
 		if (earlier && !problems.has(row))
-			problems.set(row, { row, kind: "overlap", day: window.day });
+			problems.set(row, {
+				row,
+				kind: "overlap",
+				overlapping: earlier.window,
+			});
 	});
 	return [...problems.values()].sort((a, b) => a.row - b.row);
 };
 
-/** The Mondays of the next `count` weeks as "YYYY-MM-DD", this week's first. */
-export const upcomingMondays = (
-	today: Date | string,
-	count = UPCOMING_WEEKS
-): Array<string> => {
-	const first = dayjs(mondayOf(today));
-	return Array.from({ length: count }, (_, week) =>
-		first.add(week, "week").format("YYYY-MM-DD")
-	);
-};
+/** Whether the week starting `monday` ended before the week `today` is in. */
+export const isPastWeek = (monday: string, today: Date | string): boolean =>
+	monday < mondayOf(today);
 
 /** Whether "YYYY-MM-DD" is a Monday, the only day a week may start on. */
 export const isMonday = (date: string): boolean => dayjs(date).day() === 1;
@@ -237,6 +240,11 @@ export const weeklyWindowsOf = (
 		startTime,
 		endTime,
 	}));
+
+/** One week's dated windows by day, Monday first: what a grid row draws. */
+export const windowsByDay = (
+	windows: ReadonlyArray<DatedWindow>
+): Array<AvailabilityDay> => byDay(weeklyWindowsOf(windows));
 
 /** A week's Monday as a short date in the person's language, e.g. "10 Nov". */
 export const formatWeekStart = (monday: string, language: string): string =>
@@ -259,3 +267,13 @@ export const effectiveWindows = (
 	pattern: ReadonlyArray<WeeklyWindow>,
 	override: ReadonlyArray<WeeklyWindow> | null | undefined
 ): Array<WeeklyWindow> => [...(override ?? pattern)];
+
+/**
+ * What the editor opens on: the week when it has hours of its own; every
+ * week when nothing is set at all (a week on an empty pattern), so the
+ * first hours a person enters become their pattern; otherwise the week.
+ */
+export const defaultEditTarget = (
+	overridden: boolean,
+	weekWindows: ReadonlyArray<WeeklyWindow>
+): EditTarget => (!overridden && weekWindows.length === 0 ? "pattern" : "week");

@@ -3,6 +3,7 @@ import { useId, useMemo, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
+import { RadioCard } from "@/components/forms/RadioCard";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { PlusIcon } from "@/components/ui/Icon";
@@ -14,10 +15,13 @@ import {
 } from "@/features/availability/AvailabilityDialog/schema";
 import { WindowRow } from "@/features/availability/AvailabilityDialog/WindowRow";
 import {
+	defaultEditTarget,
 	draftsOf,
 	formatWeekStart,
+	PATTERN_SCOPE,
 	toReplaceRequest,
 	type AvailabilityScope,
+	type EditTarget,
 	type WeeklyWindow,
 	type WindowDraft,
 } from "@/features/availability/availabilityModel";
@@ -26,17 +30,29 @@ import { availabilityRefusal } from "@/features/availability/availabilityRefusal
 export type AvailabilityDialogProps = {
 	/** Whose availability it is, for the dialog's description. */
 	name: string;
-	/** What is edited: the default pattern, or one week of it. */
-	scope: AvailabilityScope;
-	/** The windows the editor opens with: the pattern, or what applies to the week. */
-	windows: ReadonlyArray<WeeklyWindow>;
+	/** The week the editor was opened from, as its Monday. */
+	weekStartMonday: string;
+	/** What is in force that week: its own hours, or the pattern's. */
+	weekWindows: ReadonlyArray<WeeklyWindow>;
 	/**
-	 * Takes the complete new set. A rejection is explained on the rows it
-	 * names or as the dialog's alert.
+	 * The default pattern. Left out while it can't be offered (still loading,
+	 * or unreadable): then only the week can be changed.
 	 */
-	onSubmit: (windows: Array<WeeklyWindow>) => Promise<unknown>;
-	/** Given for a week with an override: returns it to the pattern, once confirmed. */
-	onReset?: () => Promise<unknown>;
+	patternWindows?: ReadonlyArray<WeeklyWindow>;
+	/** Said under "Every week" while the pattern is left out, e.g. that it is loading. */
+	patternNote?: string;
+	/** Whether the week has hours of its own: the editor opens on it and offers its reset. */
+	overridden: boolean;
+	/**
+	 * Takes the complete new set for the week or the pattern. A rejection is
+	 * explained on the rows it names or as the dialog's alert.
+	 */
+	onSubmit: (
+		scope: AvailabilityScope,
+		windows: Array<WeeklyWindow>
+	) => Promise<unknown>;
+	/** Returns an overridden week to the pattern, once confirmed. */
+	onReset: () => Promise<unknown>;
 	onClose: () => void;
 };
 
@@ -45,41 +61,51 @@ const key = "availability.dialog";
 const emptyRow = (): WindowDraft => ({ days: [], startTime: "", endTime: "" });
 
 /**
- * Edits a part-time person's default weekly pattern, or one week of it, as
- * rows of windows, each on any number of days, and submits the whole set at
- * once. A week can also be saved as not available at all, or, when it has
- * an override, reset to the pattern. Mount when opened and unmount when
- * closed so every attempt starts fresh.
+ * The one editor of a part-time person's availability: "This week only"
+ * or "Every week" (the default pattern) at the top, then rows of windows,
+ * each on any number of days, submitted as a whole set. Choosing the other
+ * target shows what is saved for it. A week can also be saved as not
+ * available at all, or, when it has hours of its own, reset to the
+ * pattern. Mount when opened and unmount when closed so every attempt
+ * starts fresh.
  */
 export const AvailabilityDialog = ({
 	name,
-	scope,
-	windows,
+	weekStartMonday,
+	weekWindows,
+	patternWindows,
+	patternNote,
+	overridden,
 	onSubmit,
 	onReset,
 	onClose,
 }: AvailabilityDialogProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
+	const [target, setTarget] = useState<EditTarget>(() =>
+		patternWindows ? defaultEditTarget(overridden, weekWindows) : "week"
+	);
 	const [confirmingReset, setConfirmingReset] = useState(false);
 	const [resetting, setResetting] = useState(false);
-	const date =
-		scope.kind === "week"
-			? formatWeekStart(
-					scope.weekStartMonday,
-					i18n.resolvedLanguage ?? i18n.language
-				)
-			: undefined;
+	const date = formatWeekStart(
+		weekStartMonday,
+		i18n.resolvedLanguage ?? i18n.language
+	);
+	const windowsFor = (next: EditTarget): ReadonlyArray<WeeklyWindow> =>
+		next === "week" ? weekWindows : (patternWindows ?? []);
+	const scope: AvailabilityScope =
+		target === "week" ? { kind: "week", weekStartMonday } : PATTERN_SCOPE;
 	const formId = useId();
 	const schema = useMemo(() => availabilityFormSchema(t), [t]);
 	const form = useForm<AvailabilityFormValues>({
 		resolver: zodResolver(schema),
-		defaultValues: { rows: draftsOf(windows) },
+		defaultValues: { rows: draftsOf(windowsFor(target)) },
 		mode: "onSubmit",
 		reValidateMode: "onChange",
 	});
 	const {
 		control,
 		handleSubmit,
+		reset,
 		formState: { errors, isSubmitting },
 	} = form;
 	const { fields, append, remove } = useFieldArray({ control, name: "rows" });
@@ -90,20 +116,24 @@ export const AvailabilityDialog = ({
 	);
 	const save = handleSubmit(async ({ rows }) => {
 		await submit.run(
-			() => onSubmit(toReplaceRequest(rows).windows),
+			() => onSubmit(scope, toReplaceRequest(rows).windows),
 			(error) => availabilityRefusal(error, rows, t)
 		);
 	});
+	const choose = (value: string): void => {
+		const next: EditTarget = value === "pattern" ? "pattern" : "week";
+		setTarget(next);
+		reset({ rows: draftsOf(windowsFor(next)) });
+	};
 	const resetToPattern = async (): Promise<void> => {
-		if (!onReset) return;
 		setResetting(true);
 		await submit.run(onReset, (error) => availabilityRefusal(error, [], t));
 		setResetting(false);
 		setConfirmingReset(false);
 	};
-	const weekActions = scope.kind === "week" && (
+	const weekActions = target === "week" && (
 		<>
-			{onReset && (
+			{overridden && (
 				<Button
 					disabled={isSubmitting}
 					variant="textlink"
@@ -136,15 +166,41 @@ export const AvailabilityDialog = ({
 			message={submit.message}
 			submitLabel={t(`${key}.submit`)}
 			submitting={isSubmitting}
-			title={date ? t(`${key}.weekTitle`, { date }) : t(`${key}.title`)}
+			title={t(`${key}.title`)}
 			description={
-				date
+				target === "week"
 					? t(`${key}.weekDescription`, { name, date })
 					: t(`${key}.description`, { name })
 			}
 			onClose={submit.close}
 			onSubmit={(event) => save(event)}
 		>
+			<div
+				aria-label={t(`${key}.applies`)}
+				className="grid gap-4 sm:grid-cols-2"
+				role="radiogroup"
+			>
+				<RadioCard
+					checked={target === "week"}
+					description={t(`${key}.thisWeekOnlyDescription`, { date })}
+					disabled={isSubmitting}
+					label={t(`${key}.thisWeekOnly`)}
+					name={`${formId}-target`}
+					value="week"
+					onChange={choose}
+				/>
+				<RadioCard
+					checked={target === "pattern"}
+					disabled={isSubmitting || !patternWindows}
+					label={t(`${key}.everyWeek`)}
+					name={`${formId}-target`}
+					value="pattern"
+					description={
+						patternWindows ? t(`${key}.everyWeekDescription`) : patternNote
+					}
+					onChange={choose}
+				/>
+			</div>
 			{fields.length === 0 && (
 				<p className="text-sm text-neutral-700">{t(`${key}.noWindows`)}</p>
 			)}
@@ -170,7 +226,7 @@ export const AvailabilityDialog = ({
 			>
 				{t(`${key}.add`)}
 			</Button>
-			{confirmingReset && date && (
+			{confirmingReset && (
 				<ConfirmDialog
 					cancelLabel={t(`${key}.resetCancel`)}
 					confirmLabel={t(`${key}.resetConfirm`)}
