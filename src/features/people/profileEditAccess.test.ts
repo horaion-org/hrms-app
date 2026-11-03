@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+	availabilityReadAccess,
 	personScope,
 	profileEditAccess,
 } from "@/features/people/profileEditAccess";
@@ -38,5 +39,20 @@ describe("profile edit access", () => {
 	it("needs the key at the company for a person without a department", () => {
 		expect(profileEditAccess(unfiled, grantedAt(""))).toBe(true);
 		expect(profileEditAccess(unfiled, grantedAt("d-2"))).toBe(false);
+	});
+});
+
+describe("availability read access", () => {
+	it("needs work_availability:read where the profile is, not the profile key", () => {
+		const canRead = (permission: string, target: ScopeRef): boolean =>
+			permission === "work_availability:read" &&
+			target.kind === "department" &&
+			target.id === "d-1";
+
+		expect(availabilityReadAccess(filed, canRead)).toBe(true);
+		expect(availabilityReadAccess({ departmentId: "d-2" }, canRead)).toBe(
+			false
+		);
+		expect(availabilityReadAccess(filed, grantedAt("d-1"))).toBe(false);
 	});
 });

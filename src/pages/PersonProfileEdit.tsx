@@ -1,8 +1,14 @@
 import { useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
-import type { MemberProfileDetail } from "@/features/people/api";
+import type {
+	EmploymentType,
+	MemberProfileDetail,
+} from "@/features/people/api";
+import { AvailabilityFormCard } from "@/features/people/availability/AvailabilityFormCard";
+import type { WeeklyWindow } from "@/features/people/availability/availabilityModel";
 import {
 	roleNames,
 	rolesByPlace,
@@ -26,8 +32,9 @@ export type PersonProfileEditProps = {
  * A person's profile, ready to change, under the same header as when read;
  * shown only to someone who may change it (see `profileEditAccess`). The
  * system role edits one assignment with its own target; other assignments
- * are listed but left alone. Changes to their skills are held
- * until the profile is saved.
+ * are listed but left alone. Changes to their skills and
+ * availability are held until the profile is saved; availability is shown
+ * while Part-time is chosen.
  */
 export const PersonProfileEdit = ({
 	profile,
@@ -58,11 +65,17 @@ export const PersonProfileEdit = ({
 	const skillsDraft = useSkillsDraft(
 		useMemberSkills(companyId, profile.membershipId).data
 	);
+	const [employmentType, setEmploymentType] = useState<EmploymentType | "">(
+		profile.employmentType ?? ""
+	);
+	const [availabilityDraft, setAvailabilityDraft] =
+		useState<Array<WeeklyWindow>>();
 	const save = useEditProfile(
 		companyId,
 		profile,
 		manageRole && ready ? { held: selected } : undefined,
-		skillsDraft.changed ? skillsDraft.skills : undefined
+		skillsDraft.changed ? skillsDraft.skills : undefined,
+		availabilityDraft
 	);
 
 	// The form starts from the role they hold, so it waits for it.
@@ -84,7 +97,8 @@ export const PersonProfileEdit = ({
 					roleEditable: ready && heldChangeable,
 					rolePlace,
 					otherRoles: roleNames(elsewhere),
-					unsaved: skillsDraft.changed,
+					unsaved: skillsDraft.changed || availabilityDraft !== undefined,
+					onEmploymentTypeChange: setEmploymentType,
 					header: (actions) => (
 						<ProfileHeader actions={actions} profile={profile} />
 					),
@@ -98,6 +112,14 @@ export const PersonProfileEdit = ({
 						replace: true,
 					});
 				}}
+			/>
+			<AvailabilityFormCard
+				className="mt-6"
+				companyId={companyId}
+				draft={availabilityDraft}
+				employmentType={employmentType}
+				profile={profile}
+				onDraftChange={setAvailabilityDraft}
 			/>
 			<ProfileNotesAndSkills
 				skillsChangeable

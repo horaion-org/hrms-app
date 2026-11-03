@@ -13,6 +13,7 @@ import {
 	stubApi,
 	type StubReply,
 } from "@/common/testing/stubApi";
+import { WEEKDAYS } from "@/common/weekdays";
 import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
 
@@ -140,5 +141,53 @@ describe("My profile", () => {
 					call.path.includes("/access-role-assignments")
 			)
 		).toEqual([]);
+	});
+});
+
+describe("My availability", () => {
+	const MY_AVAILABILITY = "GET /api/v1/companies/c-1/me/availability";
+
+	it("shows a part-timer their own week, read-only, with nothing granted", async () => {
+		stubApi({
+			...routes({
+				status: 200,
+				body: envelope({ ...profile, employmentType: "PART_TIME" }),
+			}),
+			[MY_AVAILABILITY]: {
+				status: 200,
+				body: envelope({
+					membershipId: "m-c-1",
+					days: WEEKDAYS.map((day) => ({
+						day,
+						windows:
+							day === "SUN" ? [{ startTime: "22:00", endTime: "06:00" }] : [],
+					})),
+				}),
+			},
+		});
+		await open("/me/profile");
+
+		expect(
+			await screen.findByRole("region", { name: "Availability" })
+		).toBeVisible();
+		expect(screen.getByText("22:00–06:00")).toBeVisible();
+		expect(
+			screen.queryByRole("button", { name: "Edit availability" })
+		).not.toBeInTheDocument();
+	});
+
+	it("shows nothing about availability to someone who isn't part-time, and asks for none", async () => {
+		const calls = stubApi(routes({ status: 200, body: envelope(profile) }));
+		await open("/me/profile");
+
+		expect(
+			await screen.findByRole("heading", { level: 1, name: "Kent Chua" })
+		).toBeVisible();
+		expect(
+			screen.queryByRole("region", { name: "Availability" })
+		).not.toBeInTheDocument();
+		expect(calls.some((call) => call.path.endsWith("/me/availability"))).toBe(
+			false
+		);
 	});
 });

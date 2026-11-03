@@ -305,6 +305,13 @@
 			"unknown": {
 				"name": "No reconocidos",
 				"description": "Esta versión de la aplicación no conoce estos permisos. Se mantienen en el rol al guardar."
+			},
+			"work_availability": {
+				"name": "Disponibilidad",
+				"description": "Las horas en que cada persona a tiempo parcial puede trabajar en una semana, y quién no tiene ninguna.",
+				"actions": {
+					"read": "Ver"
+				}
 			}
 		},
 		"jobTitles": {
@@ -470,6 +477,41 @@
 			"mineSubtitle": "Tus datos tal como los tiene tu empresa. Pide a tu administrador que corrija lo que esté desactualizado.",
 			"mineFailed": "No pudimos cargar tu perfil. Inténtalo de nuevo."
 		},
+		"availability": {
+			"title": "Disponibilidad",
+			"edit": "Editar disponibilidad",
+			"loading": "Cargando disponibilidad…",
+			"failed": "No pudimos cargar la disponibilidad. Inténtalo de nuevo.",
+			"none": "No disponible",
+			"empty": "Añade las horas en que esta persona puede trabajar. Sin ellas no se le pueden asignar turnos.",
+			"dialog": {
+				"title": "Editar disponibilidad",
+				"description": "Las horas en que {{name}} puede trabajar cada semana. Una franja que termina a la hora de inicio o antes continúa pasada la medianoche.",
+				"window": "Franja {{number}}",
+				"days": "Días",
+				"startTime": "Hora de inicio",
+				"endTime": "Hora de fin",
+				"pleaseSelect": "Selecciona",
+				"selectAll": "Seleccionar todo",
+				"remove": "Quitar franja {{number}}",
+				"add": "Añadir franja",
+				"noWindows": "Aún no hay franjas. Añade una por cada tramo de horas en que puede trabajar.",
+				"submit": "Guardar",
+				"cancel": "Cancelar",
+				"problems": {
+					"noDays": "Elige al menos un día.",
+					"noTimes": "Elige una hora de inicio y una de fin.",
+					"emptyWindow": "Elige una hora de fin distinta de la de inicio.",
+					"crowdedDay": "{{day}} tiene más de 4 franjas, el máximo permitido.",
+					"overlap": "Esta franja se solapa con otra el {{day}}."
+				},
+				"rejected": "Esta franja fue rechazada. Comprueba que no se solape con otra ni sobrecargue su día.",
+				"someRejected": "Algunas franjas fueron rechazadas. Revisa las franjas marcadas abajo.",
+				"notPartTime": "Solo las personas a tiempo parcial pueden tener disponibilidad, y esta persona ya no lo es. Recarga la página.",
+				"forbidden": "Ya no tienes permiso para cambiar la disponibilidad de esta persona.",
+				"failed": "No pudimos guardar la disponibilidad. Inténtalo de nuevo."
+			}
+		},
 		"import": "Importar",
 		"export": "Exportar",
 		"bulk": {
@@ -480,7 +522,9 @@
 			"exportSelected": "Exportar selección",
 			"setInactive": "Desactivar",
 			"unavailable": "Próximamente: requiere acciones masivas del servicio de personas."
-		}
+		},
+		"availabilityNotSaved": "Se guardaron los cambios de {{name}}, pero no su disponibilidad. Edita su disponibilidad para intentarlo de nuevo.",
+		"someChangesNotSaved": "Se guardaron los cambios de {{name}}, pero no todos. Revisa su perfil e inténtalo de nuevo."
 	},
 	"numberStepper": {
 		"decrease": "Menos {{label}}",

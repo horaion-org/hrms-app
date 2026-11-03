@@ -369,6 +369,19 @@
         "BRANCH",
         "DEPARTMENT"
       ],
+      "key": "work_availability:read",
+      "prerequisites": [],
+      "resource": "work_availability",
+      "resourceName": "Work Availability"
+    },
+    {
+      "action": "read",
+      "actionName": "Read",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
       "key": "leave_request:read",
       "prerequisites": [],
       "resource": "leave_request",

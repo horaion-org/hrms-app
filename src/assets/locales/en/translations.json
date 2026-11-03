@@ -344,6 +344,8 @@
 		"roleNotChanged": "Changes to {{name}} were saved, but their system role wasn’t changed. Change it from Organisation, under System roles.",
 		"skillsNotSaved": "Changes to {{name}} were saved, but their skills weren’t. Edit their profile to try again.",
 		"roleAndSkillsNotChanged": "Changes to {{name}} were saved, but their system role and skills weren’t. Change the role from Organisation, under System roles, and edit their profile to try the skills again.",
+		"availabilityNotSaved": "Changes to {{name}} were saved, but their availability wasn’t. Edit their availability to try again.",
+		"someChangesNotSaved": "Changes to {{name}} were saved, but not all of them. Check their profile and try again.",
 		"deactivated": "{{name}} was deactivated and can no longer log in.",
 		"reactivated": "{{name}} was reactivated and can log in again.",
 		"invited": "We’ve emailed {{name}} a new invitation to log in.",
@@ -560,6 +562,41 @@
 				"otherRejected": "One of their saved skills was refused. Reload the page and try again.",
 				"forbidden": "You no longer have permission to change this person’s skills.",
 				"failed": "We couldn’t save the skills. Try again."
+			}
+		},
+		"availability": {
+			"title": "Availability",
+			"edit": "Edit availability",
+			"loading": "Loading availability…",
+			"failed": "We couldn’t load the availability. Try again.",
+			"none": "Not available",
+			"empty": "Add the hours this person can work. Without them they can’t be rostered.",
+			"dialog": {
+				"title": "Edit availability",
+				"description": "The hours {{name}} can work each week. A window that ends at or before its start runs past midnight.",
+				"window": "Window {{number}}",
+				"days": "Days",
+				"startTime": "Start time",
+				"endTime": "End time",
+				"pleaseSelect": "Please select",
+				"selectAll": "Select all",
+				"remove": "Remove window {{number}}",
+				"add": "Add window",
+				"noWindows": "No windows yet. Add one for each stretch of hours they can work.",
+				"submit": "Save",
+				"cancel": "Cancel",
+				"problems": {
+					"noDays": "Choose at least one day.",
+					"noTimes": "Choose a start and an end time.",
+					"emptyWindow": "Choose an end time different from the start.",
+					"crowdedDay": "{{day}} has more than 4 windows, the most allowed.",
+					"overlap": "This window overlaps another on {{day}}."
+				},
+				"rejected": "This window was refused. Check that it doesn’t overlap another or crowd its day.",
+				"someRejected": "Some windows were refused. Check the windows marked below.",
+				"notPartTime": "Only part-time members can have availability, and this person isn’t part-time any more. Reload the page.",
+				"forbidden": "You no longer have permission to change this person’s availability.",
+				"failed": "We couldn’t save the availability. Try again."
 			}
 		},
 		"import": "Import",
@@ -1083,6 +1120,13 @@
 					"create": "Add",
 					"update": "Edit",
 					"delete": "Delete"
+				}
+			},
+			"work_availability": {
+				"name": "Availability",
+				"description": "The hours each part-time person can work in a week, and who has none set.",
+				"actions": {
+					"read": "View"
 				}
 			},
 			"leave_request": {

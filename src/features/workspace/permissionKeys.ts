@@ -66,6 +66,14 @@ export const LEAVE_READ_KEYS: ReadonlyArray<PermissionKey> = [
 ];
 
 /**
+ * Holding this at a Department is what lets a person see the work
+ * availability of its part-time members, and who of them has none.
+ */
+export const AVAILABILITY_READ_KEYS: ReadonlyArray<PermissionKey> = [
+	"work_availability:read",
+];
+
+/**
  * Whether a key the API sent is one this app's contract knows. A key it
  * doesn't know is newer than the app: gates may ignore it, but a role's
  * editor keeps it (see `unknownKeys`).

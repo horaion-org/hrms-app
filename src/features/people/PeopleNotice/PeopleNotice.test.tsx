@@ -73,4 +73,28 @@ describe("PeopleNotice", () => {
 			expect(line).toHaveAttribute("data-warning");
 		}
 	);
+
+	it.each([
+		[
+			false,
+			"Changes to Priya Nair were saved, but their availability wasn’t. Edit their availability to try again.",
+		],
+		[
+			true,
+			"Changes to Priya Nair were saved, but not all of them. Check their profile and try again.",
+		],
+	])(
+		"warns when the availability wasn't saved (role not changed too: %s)",
+		(roleNotAssigned, text) => {
+			const line = show({
+				kind: "saved",
+				name: "Priya Nair",
+				roleNotAssigned,
+				availabilityNotSaved: true,
+			});
+
+			expect(line).toHaveTextContent(text);
+			expect(line).toHaveAttribute("data-warning");
+		}
+	);
 });

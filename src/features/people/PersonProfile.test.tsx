@@ -15,6 +15,7 @@ import {
 	stubApi,
 	type StubReply,
 } from "@/common/testing/stubApi";
+import { WEEKDAYS } from "@/common/weekdays";
 import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
 
@@ -1229,5 +1230,117 @@ describe("Deactivating, reactivating and re-inviting", () => {
 			"role",
 			"alert"
 		);
+	});
+});
+
+describe("A part-timer's availability", () => {
+	const AVAILABILITY = `${PROFILE}/availability`;
+	const week = (windows: Record<string, Array<unknown>> = {}): StubReply => ({
+		status: 200,
+		body: envelope({
+			membershipId: "m-1",
+			days: WEEKDAYS.map((day) => ({
+				day,
+				windows: windows[day] ?? [],
+			})),
+		}),
+	});
+	const withAvailability = (
+		profile = kent()
+	): Record<string, Route | Array<StubReply>> => ({
+		...routes(workspaceReply([...ALL, "work_availability:read"]), profile),
+		[`GET ${AVAILABILITY}`]: week(),
+		[`PUT ${AVAILABILITY}`]: week({
+			MON: [{ startTime: "09:00", endTime: "13:00" }],
+		}),
+	});
+
+	it("is shown under the employment details only for a part-timer", async () => {
+		stubApi(withAvailability(kent({ employmentType: "PART_TIME" })));
+		await open();
+
+		expect(
+			await screen.findByRole("region", { name: "Availability" })
+		).toBeVisible();
+		expect(button("Edit availability")).toBeVisible();
+	});
+
+	it("appears once Part-time is chosen while editing, goes again for another type, and is saved with the profile", async () => {
+		const user = userEvent.setup();
+		const { calls } = await openEditing(withAvailability());
+
+		expect(
+			screen.queryByRole("region", { name: "Availability" })
+		).not.toBeInTheDocument();
+		await choose(user, /^Employment type/, "Part-time");
+		expect(
+			await screen.findByText(
+				"Add the hours this person can work. Without them they can’t be rostered."
+			)
+		).toBeVisible();
+
+		await user.click(button("Edit availability"));
+		const dialog = await screen.findByRole("dialog");
+		await user.click(
+			within(dialog).getByRole("button", { name: "Add window" })
+		);
+		await user.click(within(dialog).getByRole("button", { name: "Days" }));
+		await user.click(await screen.findByRole("option", { name: "Monday" }));
+		await user.keyboard("{Escape}");
+		await user.click(
+			within(dialog).getByRole("button", { name: "Start time" })
+		);
+		await user.click(await screen.findByRole("option", { name: "09:00" }));
+		await user.click(within(dialog).getByRole("button", { name: "End time" }));
+		await user.click(await screen.findByRole("option", { name: "13:00" }));
+		await user.click(within(dialog).getByRole("button", { name: "Save" }));
+		expect(await screen.findByText("09:00–13:00")).toBeVisible();
+		expect(sent(calls, `PUT ${AVAILABILITY}`)).toEqual([]);
+
+		await choose(user, /^Employment type/, "Contract");
+		expect(
+			screen.queryByRole("region", { name: "Availability" })
+		).not.toBeInTheDocument();
+		await choose(user, /^Employment type/, "Part-time");
+		await save(user);
+
+		expect(
+			await screen.findByText("Changes to Kent Chua were saved.")
+		).toBeVisible();
+		expect(sent(calls, `PUT ${AVAILABILITY}`)).toEqual([
+			{ windows: [{ day: "MON", startTime: "09:00", endTime: "13:00" }] },
+		]);
+	});
+
+	it("is kept, not sent, when the person is saved as another type", async () => {
+		const user = userEvent.setup();
+		const { calls } = await openEditing(
+			withAvailability(kent({ employmentType: "PART_TIME" }))
+		);
+
+		await user.click(
+			await screen.findByRole("button", { name: "Edit availability" })
+		);
+		const dialog = await screen.findByRole("dialog");
+		await user.click(
+			within(dialog).getByRole("button", { name: "Add window" })
+		);
+		await user.click(within(dialog).getByRole("button", { name: "Days" }));
+		await user.click(await screen.findByRole("option", { name: "Friday" }));
+		await user.keyboard("{Escape}");
+		await user.click(
+			within(dialog).getByRole("button", { name: "Start time" })
+		);
+		await user.click(await screen.findByRole("option", { name: "09:00" }));
+		await user.click(within(dialog).getByRole("button", { name: "End time" }));
+		await user.click(await screen.findByRole("option", { name: "13:00" }));
+		await user.click(within(dialog).getByRole("button", { name: "Save" }));
+		await choose(user, /^Employment type/, "Full-time");
+		await save(user);
+
+		expect(
+			await screen.findByText("Changes to Kent Chua were saved.")
+		).toBeVisible();
+		expect(sent(calls, `PUT ${AVAILABILITY}`)).toEqual([]);
 	});
 });
