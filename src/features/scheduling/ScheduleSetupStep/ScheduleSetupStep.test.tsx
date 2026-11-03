@@ -4,7 +4,9 @@ import userEvent from "@testing-library/user-event";
 import { I18nextProvider } from "react-i18next";
 import { describe, expect, it, vi } from "vitest";
 import type { FunctionComponent } from "@/common/types";
+import { MemoryRouterHarness } from "@/components/utils/MemoryRouterHarness";
 import { authTestI18n } from "@/features/auth/testingI18n";
+import { partTimeReadinessQuery } from "@/features/people/availability/api";
 import { periodStartingOn } from "@/features/scheduling/periods";
 import { schedulingWorkspace } from "@/features/scheduling/schedules/fixtures";
 import {
@@ -36,12 +38,14 @@ const clientWith = (workspace: Workspace): QueryClient => {
 
 const Harness = ({
 	workspace = schedulingWorkspace(["schedule:read", "schedule:create"]),
+	client = clientWith(workspace),
 	...props
 }: Partial<ScheduleSetupStepProps> & {
 	workspace?: Workspace;
+	client?: QueryClient;
 }): FunctionComponent => (
 	<I18nextProvider i18n={authTestI18n}>
-		<QueryClientProvider client={clientWith(workspace)}>
+		<QueryClientProvider client={client}>
 			<ScheduleSetupStep
 				companyId="c-1"
 				defaultValues={DEFAULTS}
@@ -215,5 +219,66 @@ describe("ScheduleSetupStep", () => {
 		await user.click(screen.getByRole("button", { name: "Next" }));
 
 		expect(await screen.findByText("Choose a Monday.")).toBeVisible();
+	});
+
+	describe("part-timers without availability", () => {
+		/** Kitchen's readiness answered with Kent, under a workspace holding `permissions`. */
+		const kitchenWithKent = (permissions: Array<string>): QueryClient => {
+			const client = clientWith(schedulingWorkspace(permissions));
+			client.setQueryData(
+				partTimeReadinessQuery("c-1", { branchId: "b-1", departmentId: "d-2" })
+					.queryKey,
+				[
+					{
+						membershipId: "m-1",
+						memberProfileId: "p-1",
+						displayName: "Kent Chua",
+					},
+				]
+			);
+			return client;
+		};
+		const kitchenDraft = { ...DEFAULTS, departmentId: "d-2", name: "Week 42" };
+
+		it("given_workAvailabilityRead_when_aDepartmentIsChosen_then_warnsAndNamesThem", async () => {
+			render(
+				<MemoryRouterHarness>
+					<Harness
+						defaultValues={kitchenDraft}
+						client={kitchenWithKent([
+							"schedule:read",
+							"schedule:create",
+							"work_availability:read",
+						])}
+					/>
+				</MemoryRouterHarness>
+			);
+
+			expect(
+				await screen.findByText(
+					"1 part-time member has no availability and will be left off the roster:"
+				)
+			).toBeVisible();
+			expect(screen.getByRole("link", { name: "Kent Chua" })).toHaveAttribute(
+				"href",
+				"/people/m-1"
+			);
+		});
+
+		it("given_noWorkAvailabilityRead_when_aDepartmentIsChosen_then_saysNothing", async () => {
+			render(
+				<MemoryRouterHarness>
+					<Harness
+						client={kitchenWithKent(["schedule:read", "schedule:create"])}
+						defaultValues={kitchenDraft}
+					/>
+				</MemoryRouterHarness>
+			);
+
+			expect(
+				await screen.findByRole("textbox", { name: /Schedule name/ })
+			).toBeVisible();
+			expect(screen.queryByText(/part-time/)).not.toBeInTheDocument();
+		});
 	});
 });

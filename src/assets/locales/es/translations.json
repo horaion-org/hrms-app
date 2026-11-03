@@ -623,6 +623,8 @@
 			"namePlaceholder": "p. ej., Recepción - Semana 16",
 			"period": "Periodo del horario",
 			"periodNote": "Selecciona un periodo que se ajuste a la operativa de tu negocio.",
+			"partTimeWithoutAvailability_one": "{{count}} persona a tiempo parcial no tiene disponibilidad y quedará fuera del cuadrante:",
+			"partTimeWithoutAvailability_other": "{{count}} personas a tiempo parcial no tienen disponibilidad y quedarán fuera del cuadrante:",
 			"additional": "Ajustes adicionales",
 			"includeLeave": "Incluir solicitudes de ausencia",
 			"includeLeaveDescription": "Tener en cuenta las ausencias aprobadas al generar el horario.",
