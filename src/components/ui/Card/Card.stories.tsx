@@ -19,7 +19,6 @@ const meta = {
 	argTypes: {
 		icon: { control: false },
 		action: { control: false },
-		titleAside: { control: false },
 		children: { control: false },
 	},
 } satisfies Meta<typeof Card>;
@@ -51,17 +50,6 @@ export const LongTitle: Story = {
 		title:
 			"Department and system role information for people who move between branches",
 		action: <Button variant="hyperlink">Add skill</Button>,
-	},
-	render: framed,
-};
-
-export const WithTitleAside: Story = {
-	args: {
-		title: "Availability",
-		titleAside: (
-			<span className="text-sm text-neutral-700">Week of 10 Nov</span>
-		),
-		action: <Button variant="hyperlink">Edit availability</Button>,
 	},
 	render: framed,
 };

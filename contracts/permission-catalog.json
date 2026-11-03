@@ -375,6 +375,21 @@
       "resourceName": "Work Availability"
     },
     {
+      "action": "update",
+      "actionName": "Update",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
+      "key": "work_availability:update",
+      "prerequisites": [
+        "work_availability:read"
+      ],
+      "resource": "work_availability",
+      "resourceName": "Work Availability"
+    },
+    {
       "action": "read",
       "actionName": "Read",
       "assignableScopes": [

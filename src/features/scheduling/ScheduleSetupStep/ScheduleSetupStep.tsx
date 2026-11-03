@@ -9,7 +9,7 @@ import { Input } from "@/components/forms/Input";
 import { Select } from "@/components/forms/Select";
 import { Callout } from "@/components/ui/Callout";
 import { Checkbox } from "@/components/ui/Checkbox";
-import { partTimeReadinessQuery } from "@/features/people/availability/api";
+import { partTimeReadinessQuery } from "@/features/availability/api";
 import { departmentUnitOf } from "@/features/scheduling/departmentUnit";
 import { PartTimeReadinessCallout } from "@/features/scheduling/PartTimeReadinessCallout";
 import {
@@ -250,7 +250,13 @@ export const ScheduleSetupStep = ({
 							/>
 						</FormRow>
 					</div>
-					<PartTimeReadinessCallout members={readiness.data ?? []} />
+					{readinessUnit && (
+						<PartTimeReadinessCallout
+							members={readiness.data ?? []}
+							periodStart={periodStart || undefined}
+							unit={readinessUnit}
+						/>
+					)}
 					<div className="flex flex-col gap-8 sm:flex-row sm:items-end">
 						<FormRow
 							required

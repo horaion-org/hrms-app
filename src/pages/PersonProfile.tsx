@@ -14,7 +14,6 @@ import {
 	useCurrentMembershipId,
 } from "@/features/organisation/useCurrentCompanyId";
 import { memberProfileQuery } from "@/features/people/api";
-import { MemberAvailabilityCard } from "@/features/people/availability/MemberAvailabilityCard";
 import { describeMemberRoles } from "@/features/people/memberRoles";
 import { PeopleNotice } from "@/features/people/PeopleNotice";
 import { peopleNoticeFrom } from "@/features/people/peopleNoticeState";
@@ -98,12 +97,6 @@ export const PersonProfile = (): FunctionComponent => {
 							className="mt-10"
 							profile={profile}
 							systemRoles={describeMemberRoles(roles, t)}
-						/>
-						<MemberAvailabilityCard
-							changeable={access}
-							className="mt-6"
-							companyId={companyId}
-							profile={profile}
 						/>
 						<ProfileNotesAndSkills
 							className="mt-6"

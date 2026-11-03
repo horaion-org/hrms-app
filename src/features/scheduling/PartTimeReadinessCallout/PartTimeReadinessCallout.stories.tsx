@@ -11,6 +11,8 @@ const meta = {
 	parameters: { layout: "padded" },
 	args: {
 		className: "max-w-xl",
+		unit: { branchId: "b-1", departmentId: "d-1" },
+		periodStart: "2026-11-09",
 		members: [
 			{ membershipId: "m-1", memberProfileId: "p-1", displayName: "Kent Chua" },
 			{

@@ -27,16 +27,6 @@ export const profileEditAccess = (
 ): boolean => can("member_profile:update", personScope(profile));
 
 /**
- * Whether the person may see this profile's work availability, as the
- * workspace says: with `work_availability:read` where the profile is, see
- * `personScope`. Changing it rides on `profileEditAccess`.
- */
-export const availabilityReadAccess = (
-	profile: Pick<MemberProfile, "departmentId">,
-	can: CanAt
-): boolean => can("work_availability:read", personScope(profile));
-
-/**
  * Whether the API refused a read about one person: a 403 when they are
  * outside the units where the key is held, which the workspace had not yet
  * shown. It is treated like not holding the key.

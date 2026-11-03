@@ -41,7 +41,6 @@ import {
 	isEmploymentType,
 	isMemberStatus,
 	MEMBER_STATUSES,
-	type EmploymentType,
 	type MemberProfilePlace,
 } from "@/features/people/api";
 import {
@@ -79,8 +78,6 @@ export type ProfileFormEdit = {
 	header: (actions: ReactNode) => ReactNode;
 	/** Changes held outside the form, such as skills, which leaving also asks about. */
 	unsaved?: boolean;
-	/** Told each time another employment type is chosen, for what depends on it outside the form. */
-	onEmploymentTypeChange?: (employmentType: EmploymentType | "") => void;
 };
 
 export type ProfileFormProps = {
@@ -565,9 +562,7 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 											field.value
 										)}
 										onChange={(value) => {
-											const chosenType = isEmploymentType(value) ? value : "";
-											field.onChange(chosenType);
-											edit?.onEmploymentTypeChange?.(chosenType);
+											field.onChange(isEmploymentType(value) ? value : "");
 										}}
 									/>
 								)}

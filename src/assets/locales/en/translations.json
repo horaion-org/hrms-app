@@ -134,6 +134,82 @@
 		"myEmpty": "You have no leave requests yet.",
 		"myFailed": "We couldn’t load your leave requests. Try again."
 	},
+	"availability": {
+		"title": "Availability",
+		"subtitle": "The hours part-time people can work, week by week.",
+		"views": "Availability views",
+		"mine": {
+			"tab": "My availability",
+			"title": "Week of {{date}}",
+			"patternWeek": "This week follows your default pattern.",
+			"customWeek": "This week has its own hours in place of your default pattern.",
+			"empty": "You haven’t set the hours you can work. Without them you can’t be rostered."
+		},
+		"team": {
+			"tab": "Team",
+			"label": "Team availability",
+			"member": "Member",
+			"department": "Department",
+			"actions": "Actions",
+			"empty": "No part-time members here.",
+			"editWeekFor": "Edit {{name}}’s availability this week",
+			"editPatternFor": "Edit {{name}}’s default pattern"
+		},
+		"editWeek": "Edit this week",
+		"editPattern": "Edit default pattern",
+		"custom": "Custom",
+		"none": "Not available",
+		"department": "Department",
+		"allDepartments": "All departments",
+		"teamFailed": "We couldn’t load the team’s availability. Try again.",
+		"patternFailed": "We couldn’t load {{name}}’s default pattern. Try again.",
+		"hidden": "You don’t have access to anyone’s availability in this company.",
+		"noBranches": "Add a branch to the organisation before managing availability.",
+		"unavailable": "Availability is for part-time members and the people who manage them, so there’s nothing here for you in this company.",
+		"week": {
+			"label": "Week",
+			"of": "Week of {{date}}"
+		},
+		"loading": "Loading availability…",
+		"failed": "We couldn’t load the availability. Try again.",
+		"dialog": {
+			"title": "Edit availability",
+			"description": "The hours {{name}} can work each week. A window that ends at or before its start runs past midnight.",
+			"window": "Window {{number}}",
+			"days": "Days",
+			"startTime": "Start time",
+			"endTime": "End time",
+			"pleaseSelect": "Please select",
+			"selectAll": "Select all",
+			"remove": "Remove window {{number}}",
+			"add": "Add window",
+			"noWindows": "No windows yet. Add one for each stretch of hours they can work.",
+			"submit": "Save",
+			"cancel": "Cancel",
+			"problems": {
+				"noDays": "Choose at least one day.",
+				"noTimes": "Choose a start and an end time.",
+				"emptyWindow": "Choose an end time different from the start.",
+				"crowdedDay": "{{day}} has more than 4 windows, the most allowed.",
+				"overlap": "This window overlaps another on {{day}}."
+			},
+			"rejected": "This window was refused. Check that it doesn’t overlap another or crowd its day.",
+			"someRejected": "Some windows were refused. Check the windows marked below.",
+			"notPartTime": "Only part-time members can have availability, and this person isn’t part-time any more. Reload the page.",
+			"forbidden": "You no longer have permission to change this person’s availability.",
+			"failed": "We couldn’t save the availability. Try again.",
+			"weekTitle": "Edit availability · Week of {{date}}",
+			"weekDescription": "The hours {{name}} can work in the week of {{date}}, in place of their default pattern.",
+			"notAvailable": "Not available this week",
+			"reset": "Reset to default",
+			"resetTitle": "Reset this week to the default pattern?",
+			"resetDescription": "The week of {{date}} will follow {{name}}’s default pattern again.",
+			"resetConfirm": "Reset to default",
+			"resetCancel": "Keep this week",
+			"weekInPast": "This week has already ended, so its availability can’t be changed. Choose this week or a later one.",
+			"weekNotMonday": "That week couldn’t be found. Reload the page and choose the week again."
+		}
+	},
 	"dialog": {
 		"close": "Close"
 	},
@@ -317,6 +393,7 @@
 			"dashboard": "Dashboard",
 			"scheduling": "Scheduling",
 			"leave": "Leave",
+			"availability": "Availability",
 			"people": "People",
 			"organisation": "Organisation"
 		},
@@ -344,8 +421,6 @@
 		"roleNotChanged": "Changes to {{name}} were saved, but their system role wasn’t changed. Change it from Organisation, under System roles.",
 		"skillsNotSaved": "Changes to {{name}} were saved, but their skills weren’t. Edit their profile to try again.",
 		"roleAndSkillsNotChanged": "Changes to {{name}} were saved, but their system role and skills weren’t. Change the role from Organisation, under System roles, and edit their profile to try the skills again.",
-		"availabilityNotSaved": "Changes to {{name}} were saved, but their availability wasn’t. Edit their availability to try again.",
-		"someChangesNotSaved": "Changes to {{name}} were saved, but not all of them. Check their profile and try again.",
 		"deactivated": "{{name}} was deactivated and can no longer log in.",
 		"reactivated": "{{name}} was reactivated and can log in again.",
 		"invited": "We’ve emailed {{name}} a new invitation to log in.",
@@ -562,56 +637,6 @@
 				"otherRejected": "One of their saved skills was refused. Reload the page and try again.",
 				"forbidden": "You no longer have permission to change this person’s skills.",
 				"failed": "We couldn’t save the skills. Try again."
-			}
-		},
-		"availability": {
-			"title": "Availability",
-			"edit": "Edit availability",
-			"loading": "Loading availability…",
-			"failed": "We couldn’t load the availability. Try again.",
-			"none": "Not available",
-			"empty": "Add the hours this person can work. Without them they can’t be rostered.",
-			"week": {
-				"label": "Week",
-				"pattern": "Default pattern",
-				"of": "Week of {{date}}",
-				"custom": "Custom",
-				"default": "Default"
-			},
-			"dialog": {
-				"title": "Edit availability",
-				"description": "The hours {{name}} can work each week. A window that ends at or before its start runs past midnight.",
-				"window": "Window {{number}}",
-				"days": "Days",
-				"startTime": "Start time",
-				"endTime": "End time",
-				"pleaseSelect": "Please select",
-				"selectAll": "Select all",
-				"remove": "Remove window {{number}}",
-				"add": "Add window",
-				"noWindows": "No windows yet. Add one for each stretch of hours they can work.",
-				"submit": "Save",
-				"cancel": "Cancel",
-				"problems": {
-					"noDays": "Choose at least one day.",
-					"noTimes": "Choose a start and an end time.",
-					"emptyWindow": "Choose an end time different from the start.",
-					"crowdedDay": "{{day}} has more than 4 windows, the most allowed.",
-					"overlap": "This window overlaps another on {{day}}."
-				},
-				"rejected": "This window was refused. Check that it doesn’t overlap another or crowd its day.",
-				"someRejected": "Some windows were refused. Check the windows marked below.",
-				"notPartTime": "Only part-time members can have availability, and this person isn’t part-time any more. Reload the page.",
-				"forbidden": "You no longer have permission to change this person’s availability.",
-				"failed": "We couldn’t save the availability. Try again.",
-				"weekTitle": "Edit availability · Week of {{date}}",
-				"weekDescription": "The hours {{name}} can work in the week of {{date}}, in place of their default pattern.",
-				"notAvailable": "Not available this week",
-				"reset": "Reset to default",
-				"resetTitle": "Reset this week to the default pattern?",
-				"resetDescription": "The week of {{date}} will follow {{name}}’s default pattern again.",
-				"resetConfirm": "Reset to default",
-				"resetCancel": "Keep this week"
 			}
 		},
 		"import": "Import",
@@ -1141,7 +1166,8 @@
 				"name": "Availability",
 				"description": "The hours each part-time person can work in a week, and who has none set.",
 				"actions": {
-					"read": "View"
+					"read": "View",
+					"update": "Edit"
 				}
 			},
 			"leave_request": {

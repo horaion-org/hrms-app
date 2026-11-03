@@ -19,9 +19,11 @@ import {
 	SchedulingFilledIcon,
 	SchedulingIcon,
 	SettingsIcon,
+	TimeIcon,
 } from "@/components/ui/Icon";
 import { usableCompanies } from "@/features/auth/currentCompany";
 import { logOut } from "@/features/auth/session";
+import { useAvailabilityViews } from "@/features/availability/useAvailability";
 import {
 	ORGANISATION_READ_KEYS,
 	PEOPLE_READ_KEYS,
@@ -37,6 +39,7 @@ export const MainLayout = (): FunctionComponent => {
 	const context = useRouteContext({ from: "/_authenticated" });
 	const [switching, setSwitching] = useState(false);
 	const { t } = useTranslation();
+	const availability = useAvailabilityViews();
 	if (
 		!("currentUser" in context) ||
 		!context.currentUser ||
@@ -130,6 +133,15 @@ export const MainLayout = (): FunctionComponent => {
 						label={t("shell.navigation.leave")}
 						to="/leave"
 					/>
+					{/* Availability is offered to a part-timer, for their own, and to anyone who may read others'. */}
+					{(availability.mine || availability.team) && (
+						<SidebarItem
+							activeIcon={TimeIcon}
+							icon={TimeIcon}
+							label={t("shell.navigation.availability")}
+							to="/availability"
+						/>
+					)}
 					{/* People and Organisation are offered only when the workspace grants something in them, at any scope. */}
 					<Can anyOf={PEOPLE_READ_KEYS} at="anywhere">
 						<SidebarItem

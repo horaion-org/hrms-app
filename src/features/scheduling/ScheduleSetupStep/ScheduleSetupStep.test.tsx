@@ -6,7 +6,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { FunctionComponent } from "@/common/types";
 import { MemoryRouterHarness } from "@/components/utils/MemoryRouterHarness";
 import { authTestI18n } from "@/features/auth/testingI18n";
-import { partTimeReadinessQuery } from "@/features/people/availability/api";
+import { partTimeReadinessQuery } from "@/features/availability/api";
 import { periodStartingOn } from "@/features/scheduling/periods";
 import { schedulingWorkspace } from "@/features/scheduling/schedules/fixtures";
 import {
@@ -264,8 +264,37 @@ describe("ScheduleSetupStep", () => {
 			).toBeVisible();
 			expect(screen.getByRole("link", { name: "Kent Chua" })).toHaveAttribute(
 				"href",
-				"/people/m-1"
+				"/availability?view=team&branch=b-1&department=d-2&week=2026-10-12"
 			);
+		});
+
+		it("given_theWarningShown_when_nextIsPressed_then_stillGoesAhead", async () => {
+			const user = userEvent.setup();
+			const onSubmit = vi.fn().mockResolvedValue(undefined);
+			render(
+				<MemoryRouterHarness>
+					<Harness
+						defaultValues={kitchenDraft}
+						client={kitchenWithKent([
+							"schedule:read",
+							"schedule:create",
+							"work_availability:read",
+						])}
+						onSubmit={onSubmit}
+					/>
+				</MemoryRouterHarness>
+			);
+			await screen.findByText(
+				"1 part-time member has no availability and will be left off the roster:"
+			);
+
+			const next = screen.getByRole("button", { name: "Next" });
+			expect(next).toBeEnabled();
+			await user.click(next);
+
+			await vi.waitFor(() => {
+				expect(onSubmit).toHaveBeenCalledOnce();
+			});
 		});
 
 		it("given_noWorkAvailabilityRead_when_aDepartmentIsChosen_then_saysNothing", async () => {

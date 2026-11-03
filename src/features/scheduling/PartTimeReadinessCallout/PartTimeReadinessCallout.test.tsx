@@ -3,14 +3,22 @@ import { I18nextProvider } from "react-i18next";
 import { describe, expect, it } from "vitest";
 import { MemoryRouterHarness } from "@/components/utils/MemoryRouterHarness";
 import { authTestI18n } from "@/features/auth/testingI18n";
-import type { MemberWithoutAvailability } from "@/features/people/availability/api";
+import type { MemberWithoutAvailability } from "@/features/availability/api";
 import { PartTimeReadinessCallout } from "@/features/scheduling/PartTimeReadinessCallout";
+
+/** The Department's team availability for the schedule's week: the period starts on Wednesday 11 Nov. */
+const TEAM_WEEK =
+	"/availability?view=team&branch=b-1&department=d-2&week=2026-11-09";
 
 const show = (members: Array<MemberWithoutAvailability>): void => {
 	render(
 		<I18nextProvider i18n={authTestI18n}>
 			<MemoryRouterHarness>
-				<PartTimeReadinessCallout members={members} />
+				<PartTimeReadinessCallout
+					members={members}
+					periodStart="2026-11-11"
+					unit={{ branchId: "b-1", departmentId: "d-2" }}
+				/>
 				<p>Rendered</p>
 			</MemoryRouterHarness>
 		</I18nextProvider>
@@ -18,7 +26,7 @@ const show = (members: Array<MemberWithoutAvailability>): void => {
 };
 
 describe("PartTimeReadinessCallout", () => {
-	it("given_partTimersWithoutAvailability_when_shown_then_warnsAndLinksEachProfile", async () => {
+	it("given_partTimersWithoutAvailability_when_shown_then_warnsAndLinksTheTeamsWeek", async () => {
 		show([
 			{ membershipId: "m-1", memberProfileId: "p-1", displayName: "Kent Chua" },
 			{
@@ -35,10 +43,10 @@ describe("PartTimeReadinessCallout", () => {
 		expect(note).toHaveClass("bg-warning-50");
 		expect(
 			within(note).getByRole("link", { name: "Kent Chua" })
-		).toHaveAttribute("href", "/people/m-1");
+		).toHaveAttribute("href", TEAM_WEEK);
 		expect(
 			within(note).getByRole("link", { name: "Priya Nair" })
-		).toHaveAttribute("href", "/people/m-2");
+		).toHaveAttribute("href", TEAM_WEEK);
 	});
 
 	it("given_onePartTimer_when_shown_then_speaksOfOneMember", async () => {

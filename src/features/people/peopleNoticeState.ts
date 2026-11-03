@@ -10,8 +10,6 @@ const noticeSchema = z.object({
 		roleNotAssigned: z.boolean(),
 		/** Set when the person was saved but the changes to their skills were not. */
 		skillsNotSaved: z.boolean().optional(),
-		/** Set when the person was saved but the changes to their availability were not. */
-		availabilityNotSaved: z.boolean().optional(),
 	}),
 });
 

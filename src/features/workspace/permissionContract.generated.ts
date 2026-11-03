@@ -3,7 +3,7 @@
 
 /** SHA-256 of the contract file this module was generated from. */
 export const PERMISSION_CONTRACT_SHA256 =
-	"74fd20b0772ef0653db8b2663be04372c21e2e89f1696402c8f6c547102d6bc9";
+	"5e1848d53fae9b8248d5d057cf9d6425de543098bbed7a3847674b10fdf819cb";
 
 /** The places a permission can be assigned at, widest first. */
 export const ASSIGNABLE_SCOPES = ["COMPANY", "BRANCH", "DEPARTMENT"] as const;
@@ -200,6 +200,13 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: [],
 	},
 	{
+		key: "work_availability:update",
+		resource: "work_availability",
+		action: "update",
+		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
+		prerequisites: ["work_availability:read"],
+	},
+	{
 		key: "leave_request:read",
 		resource: "leave_request",
 		action: "read",
@@ -383,6 +390,7 @@ export const PERMISSION_KEYS = [
 	"member_note:update",
 	"member_note:delete",
 	"work_availability:read",
+	"work_availability:update",
 	"leave_request:read",
 	"leave_request:create",
 	"leave_request:review",

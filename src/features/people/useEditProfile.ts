@@ -12,11 +12,6 @@ import {
 	type UpdateMemberProfileBody,
 } from "@/features/people/api";
 import {
-	isPartTime,
-	type WeeklyWindow,
-} from "@/features/people/availability/availabilityModel";
-import { useReplaceMemberAvailability } from "@/features/people/availability/useAvailability";
-import {
 	memberRoleChange,
 	type MemberRole,
 } from "@/features/people/memberRoles";
@@ -32,9 +27,7 @@ import { useReplaceSkills } from "@/features/people/useSkills";
  * for the form to explain. A refused role does not: the profile is saved, so
  * the notice says so and that the role still needs changing. Given
  * `skills`, the complete new set is then sent, and a refusal of it is said
- * in the notice the same way; so is `availability`, sent only when the
- * person is part-time once saved, so changing them away from part-time
- * never removes the windows the API keeps.
+ * in the notice the same way.
  */
 export const useEditProfile = (
 	companyId: string,
@@ -42,9 +35,7 @@ export const useEditProfile = (
 	/** The selected assignment before saving; omitted when roles can't be changed here. */
 	role: { held: MemberRole | undefined } | undefined,
 	/** Their skills as changed on the page; left out when unchanged or not changeable here. */
-	skills?: ReadonlyArray<SkillValue>,
-	/** Their availability as changed on the page; left out when unchanged. */
-	availability?: ReadonlyArray<WeeklyWindow>
+	skills?: ReadonlyArray<SkillValue>
 ): ((
 	values: ProfileFormValues,
 	place: MemberProfilePlace | undefined,
@@ -71,10 +62,6 @@ export const useEditProfile = (
 	});
 	const assign = useChangeAccessRoleHolders(companyId);
 	const replaceSkills = useReplaceSkills(companyId, membershipId);
-	const replaceAvailability = useReplaceMemberAvailability(
-		companyId,
-		membershipId
-	);
 	return async (values, _place, roleField) => {
 		const saved = await save.mutateAsync(
 			profileUpdateRequest({
@@ -108,13 +95,6 @@ export const useEditProfile = (
 			} catch {
 				skillsNotSaved = true;
 			}
-		let availabilityNotSaved = false;
-		if (availability && isPartTime(saved.employmentType))
-			try {
-				await replaceAvailability.mutateAsync({ windows: [...availability] });
-			} catch {
-				availabilityNotSaved = true;
-			}
 		await navigate({
 			to: "/people/$membershipId",
 			params: { membershipId },
@@ -125,7 +105,6 @@ export const useEditProfile = (
 				name: saved.displayName,
 				roleNotAssigned,
 				...(skillsNotSaved && { skillsNotSaved }),
-				...(availabilityNotSaved && { availabilityNotSaved }),
 			}),
 		});
 	};
