@@ -147,12 +147,23 @@ const jobTitleSchema = z.object({
 	departmentId: z.string(),
 	departmentName: z.string(),
 	name: z.string(),
+	/** What the title is for, in a sentence; `null` when it has none. */
+	description: z.string().nullable(),
 	status: unitStatusSchema,
+	/** How many people hold the title; they keep it while it is inactive. */
+	holderCount: z.number().int().nonnegative(),
 });
 
 export type JobTitle = z.infer<typeof jobTitleSchema>;
 
-export type CreateJobTitleBody = { name: string };
+/** The longest job title description the API keeps, after trimming. */
+export const JOB_TITLE_DESCRIPTION_MAX_LENGTH = 300;
+
+export type CreateJobTitleBody = { name: string; description: string };
+
+/** A blank description is sent as none, so the list never shows an empty line. */
+export const descriptionOrNull = (description: string | null): string | null =>
+	description?.trim() || null;
 
 /** Job titles live under their Department, as the API's routes do. */
 const jobTitlesPath = (
@@ -171,7 +182,10 @@ export const createJobTitle = (
 ): Promise<JobTitle> =>
 	apiRequest(jobTitlesPath(companyId, branchId, departmentId), jobTitleSchema, {
 		method: "POST",
-		body: { name: body.name.trim() },
+		body: {
+			name: body.name.trim(),
+			description: descriptionOrNull(body.description),
+		},
 	});
 
 const accessRoleSchema = z.object({
@@ -500,15 +514,23 @@ export const updateDepartment = (
 		{ method: "PUT", body }
 	);
 
-/** Replaces a Job title's name and status; its Department never changes. */
+/** Replaces a Job title's name, description and status; its Department never changes. */
 export const updateJobTitle = (
 	companyId: string,
-	{ jobTitleId, branchId, departmentId, name, status }: JobTitle
+	{ jobTitleId, branchId, departmentId, name, description, status }: JobTitle
 ): Promise<JobTitle> =>
 	apiRequest(
 		`${jobTitlesPath(companyId, branchId, departmentId)}/${encodeURIComponent(jobTitleId)}`,
 		jobTitleSchema,
-		{ method: "PUT", body: { name: name.trim(), status } }
+		{
+			method: "PUT",
+			// The API replaces the whole title, so the description always goes along, even on a status change.
+			body: {
+				name: name.trim(),
+				description: descriptionOrNull(description),
+				status,
+			},
+		}
 	);
 
 /** The company's job titles; sortable by `name` or `status`. */

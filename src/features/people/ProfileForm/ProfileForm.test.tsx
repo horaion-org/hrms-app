@@ -97,7 +97,9 @@ const jobTitle = (
 	departmentId,
 	departmentName: departmentId === "d-1" ? "Kitchen" : "Kitchen",
 	name,
+	description: null,
 	status: "ACTIVE",
+	holderCount: 0,
 });
 const role = (
 	accessRoleId: string,

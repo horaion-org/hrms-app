@@ -966,6 +966,10 @@
 				"nameCharacters": "Use only letters, numbers, spaces and . ' & - in the name.",
 				"nameConflict": "A job title named \"{{name}}\" already exists. Choose a different name.",
 				"nameRejected": "Check the job title name and try again.",
+				"descriptionLabel": "Description (optional)",
+				"descriptionPlaceholder": "What this role does, in a sentence",
+				"descriptionCounter": "{{count}}/300",
+				"descriptionLength": "Keep the description to 300 characters or fewer.",
 				"forbidden": "You no longer have permission to create job titles.",
 				"failed": "We couldn’t create the job title. Try again.",
 				"department": "Department",
@@ -976,7 +980,7 @@
 				"departmentUnavailable": "This department is no longer available. Choose another department.",
 				"departmentInactive": "This department is inactive. Activate it first, or choose another department.",
 				"editTitle": "Edit job title",
-				"editDescription": "Change the job title’s name. It stays in {{department}}.",
+				"editDescription": "Change the job title’s name or description. It stays in {{department}}.",
 				"editSubmit": "Save changes",
 				"editForbidden": "You no longer have permission to change this job title.",
 				"editFailed": "We couldn’t save the job title. Try again.",
@@ -985,7 +989,11 @@
 			"status": {
 				"deactivateTitle": "Deactivate {{name}}",
 				"deactivateDescription": "The job title stays in your lists as inactive and can be activated again.",
+				"deactivateDescriptionHeld_one": "{{count}} person has this job title. They keep it, but it can’t be given to anyone else or added to shifts while it’s inactive. The job title stays in your lists and can be activated again.",
+				"deactivateDescriptionHeld_other": "{{count}} people have this job title. They keep it, but it can’t be given to anyone else or added to shifts while it’s inactive. The job title stays in your lists and can be activated again.",
 				"deactivateConfirm": "Deactivate job title",
+				"deactivateConfirmHeld_one": "Deactivate for {{count}} person",
+				"deactivateConfirmHeld_other": "Deactivate for {{count}} people",
 				"activateTitle": "Activate {{name}}",
 				"activateDescription": "The job title becomes active again.",
 				"activateConfirm": "Activate job title",
@@ -993,8 +1001,10 @@
 				"failed": "We couldn’t change the job title. Try again."
 			},
 			"department": "Department",
-			"systemRole": "System Role",
-			"employeeCount": "Employee Count"
+			"people": "People",
+			"peopleCount_one": "{{count}} person",
+			"peopleCount_other": "{{count}} people",
+			"systemRole": "System Role"
 		},
 		"accessRoles": {
 			"title": "System roles",

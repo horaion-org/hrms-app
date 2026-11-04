@@ -123,7 +123,7 @@ const branch = (
 const jobTitle = (
 	jobTitleId: string,
 	name: string,
-	status = "ACTIVE"
+	overrides: Record<string, unknown> = {}
 ): Record<string, unknown> => ({
 	jobTitleId,
 	companyId: "c-1",
@@ -132,7 +132,10 @@ const jobTitle = (
 	departmentId: "d-1",
 	departmentName: "Kitchen",
 	name,
-	status,
+	description: null,
+	status: "ACTIVE",
+	holderCount: 0,
+	...overrides,
 });
 
 const department = (
@@ -710,8 +713,8 @@ describe("Job titles", () => {
 		const calls = stubApi({
 			...baseRoutes(),
 			[JOB_TITLES]: pageReply([
-				jobTitle("j-1", "Shift supervisor", "ACTIVE"),
-				jobTitle("j-2", "Trainee", "INACTIVE"),
+				jobTitle("j-1", "Shift supervisor", { holderCount: 3 }),
+				jobTitle("j-2", "Trainee", { status: "INACTIVE" }),
 			]),
 		});
 		await open("/organisation/job-titles");
@@ -725,18 +728,29 @@ describe("Job titles", () => {
 			within(table)
 				.getAllByRole("columnheader")
 				.map((header) => header.textContent)
-		).toEqual(["Select all", "Job title", "Department", "Status", "Actions"]);
+		).toEqual([
+			"Select all",
+			"Job title",
+			"Department",
+			"People",
+			"Status",
+			"Actions",
+		]);
 		expect(
 			bodyRows(table).map((row) =>
 				within(row)
 					.getAllByRole("cell")
-					.slice(2, 4)
+					.slice(2, 5)
 					.map((cell) => cell.textContent)
 			)
 		).toEqual([
-			["Orchard › Kitchen", "Active"],
-			["Orchard › Kitchen", "Inactive"],
+			["Orchard › Kitchen", "3 people", "Active"],
+			["Orchard › Kitchen", "0 people", "Inactive"],
 		]);
+		// The count is not a sort the API offers.
+		expect(
+			screen.queryByRole("button", { name: "Sort by People" })
+		).not.toBeInTheDocument();
 		expect(
 			screen.getByRole("searchbox", { name: "Search job title" })
 		).toBeVisible();
@@ -760,6 +774,34 @@ describe("Job titles", () => {
 		});
 	});
 
+	it("shows a description as a muted second line under the name, with the full text on hover", async () => {
+		stubApi({
+			...baseRoutes(),
+			[JOB_TITLES]: pageReply([
+				jobTitle("j-1", "Shift supervisor", {
+					description: "Runs the floor and opens the store.",
+				}),
+				jobTitle("j-2", "Trainee"),
+			]),
+		});
+		await open("/organisation/job-titles");
+
+		const table = await screen.findByRole("table", { name: "Job titles" });
+		await within(table).findByText("Trainee");
+		const [described, plain] = bodyRows(table).map(
+			(row) => within(row).getAllByRole("cell")[1]
+		);
+		expect(described).toHaveTextContent(
+			"Shift supervisorRuns the floor and opens the store."
+		);
+		expect(
+			within(described as HTMLElement).getByText(
+				"Runs the floor and opens the store."
+			)
+		).toHaveAttribute("title", "Runs the floor and opens the store.");
+		expect(plain).toHaveTextContent(/^Trainee$/);
+	});
+
 	it.each([
 		{ status: "ACTIVE", statusAction: "Deactivate" },
 		{ status: "INACTIVE", statusAction: "Activate" },
@@ -770,11 +812,18 @@ describe("Job titles", () => {
 			const next = status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
 			const calls = stubApi({
 				...baseRoutes([...EVERY_PERMISSION, "job_title:update"]),
-				[JOB_TITLES]: pageReply([jobTitle("j-1", "Shift supervisor", status)]),
+				[JOB_TITLES]: pageReply([
+					jobTitle("j-1", "Shift supervisor", {
+						status,
+						description: "Runs the floor.",
+					}),
+				]),
 				"PUT /api/v1/companies/c-1/branches/b-1/departments/d-1/job-titles/j-1":
 					{
 						status: 200,
-						body: envelope(jobTitle("j-1", "Shift supervisor", next)),
+						body: envelope(
+							jobTitle("j-1", "Shift supervisor", { status: next })
+						),
 					},
 			});
 			await open("/organisation/job-titles");
@@ -801,9 +850,86 @@ describe("Job titles", () => {
 			});
 			expect(
 				calls.filter((call) => call.method === "PUT").map((call) => call.body)
-			).toEqual([{ name: "Shift supervisor", status: next }]);
+			).toEqual([
+				{
+					name: "Shift supervisor",
+					description: "Runs the floor.",
+					status: next,
+				},
+			]);
 		}
 	);
+
+	it.each([
+		{ holderCount: 12, confirm: "Deactivate for 12 people" },
+		{ holderCount: 1, confirm: "Deactivate for 1 person" },
+	])(
+		"deactivates a title $holderCount people hold after saying they keep it",
+		async ({ holderCount, confirm }) => {
+			const user = userEvent.setup();
+			const calls = stubApi({
+				...baseRoutes([...EVERY_PERMISSION, "job_title:update"]),
+				[JOB_TITLES]: pageReply([
+					jobTitle("j-1", "Shift supervisor", { holderCount }),
+				]),
+				"PUT /api/v1/companies/c-1/branches/b-1/departments/d-1/job-titles/j-1":
+					{
+						status: 200,
+						body: envelope(
+							jobTitle("j-1", "Shift supervisor", {
+								status: "INACTIVE",
+								holderCount,
+							})
+						),
+					},
+			});
+			await open("/organisation/job-titles");
+
+			await user.click(
+				await screen.findByRole("button", {
+					name: "More actions for Shift supervisor",
+				})
+			);
+			await user.click(screen.getByRole("menuitem", { name: "Deactivate" }));
+			const dialog = await screen.findByRole("dialog", {
+				name: "Deactivate Shift supervisor",
+			});
+			expect(dialog).toHaveTextContent(
+				"They keep it, but it can’t be given to anyone else or added to shifts while it’s inactive."
+			);
+			await user.click(within(dialog).getByRole("button", { name: confirm }));
+
+			await waitFor(() => {
+				expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+			});
+			expect(calls.filter((call) => call.method === "PUT")).toHaveLength(1);
+		}
+	);
+
+	it("keeps the plain deactivate copy for a title nobody holds", async () => {
+		const user = userEvent.setup();
+		stubApi({
+			...baseRoutes([...EVERY_PERMISSION, "job_title:update"]),
+			[JOB_TITLES]: pageReply([jobTitle("j-1", "Shift supervisor")]),
+		});
+		await open("/organisation/job-titles");
+
+		await user.click(
+			await screen.findByRole("button", {
+				name: "More actions for Shift supervisor",
+			})
+		);
+		await user.click(screen.getByRole("menuitem", { name: "Deactivate" }));
+		const dialog = await screen.findByRole("dialog", {
+			name: "Deactivate Shift supervisor",
+		});
+		expect(dialog).toHaveTextContent(
+			"The job title stays in your lists as inactive and can be activated again."
+		);
+		expect(
+			within(dialog).getByRole("button", { name: "Deactivate job title" })
+		).toBeVisible();
+	});
 
 	it("shows job titles to a person granted only at one department", async () => {
 		stubApi({

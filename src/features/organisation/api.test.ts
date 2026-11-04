@@ -216,7 +216,9 @@ describe("job title clients", () => {
 		departmentId: "d-1",
 		departmentName: "Kitchen",
 		name: "Shift supervisor",
+		description: "Runs the floor.",
 		status: "ACTIVE",
+		holderCount: 3,
 	};
 	const parsed = {
 		jobTitleId: "j-1",
@@ -225,20 +227,41 @@ describe("job title clients", () => {
 		departmentId: "d-1",
 		departmentName: "Kitchen",
 		name: "Shift supervisor",
+		description: "Runs the floor.",
 		status: "ACTIVE",
+		holderCount: 3,
 	};
 	const TITLES =
 		"/api/v1/companies/c-1/branches/b-1/departments/d-1/job-titles";
-	it("posts only a trimmed name under the department and parses the job title", async () => {
+	it("posts a trimmed name and description under the department and parses the job title", async () => {
 		const calls = stubApi({
 			[`POST ${TITLES}`]: { status: 201, body: envelope(jobTitle) },
 		});
 		await expect(
-			createJobTitle("c-1", "b-1", "d-1", { name: " Shift supervisor " })
+			createJobTitle("c-1", "b-1", "d-1", {
+				name: " Shift supervisor ",
+				description: " Runs the floor. ",
+			})
 		).resolves.toEqual(parsed);
-		expect(calls[0]?.body).toEqual({ name: "Shift supervisor" });
+		expect(calls[0]?.body).toEqual({
+			name: "Shift supervisor",
+			description: "Runs the floor.",
+		});
 	});
-	it("puts the trimmed name and status under the department", async () => {
+	it("sends a blank description as none", async () => {
+		const calls = stubApi({
+			[`POST ${TITLES}`]: { status: 201, body: envelope(jobTitle) },
+		});
+		await createJobTitle("c-1", "b-1", "d-1", {
+			name: "Shift supervisor",
+			description: "   ",
+		});
+		expect(calls[0]?.body).toEqual({
+			name: "Shift supervisor",
+			description: null,
+		});
+	});
+	it("puts the trimmed name, description and status under the department", async () => {
 		const calls = stubApi({
 			[`PUT ${TITLES}/j-1`]: { status: 200, body: envelope(jobTitle) },
 		});
@@ -251,8 +274,23 @@ describe("job title clients", () => {
 		).resolves.toEqual(parsed);
 		expect(calls[0]?.body).toEqual({
 			name: "Shift supervisor",
+			description: "Runs the floor.",
 			status: "INACTIVE",
 		});
+	});
+	it("parses a job title without a description", async () => {
+		stubApi({
+			[`POST ${TITLES}`]: {
+				status: 201,
+				body: envelope({ ...jobTitle, description: null }),
+			},
+		});
+		await expect(
+			createJobTitle("c-1", "b-1", "d-1", {
+				name: "Shift supervisor",
+				description: "",
+			})
+		).resolves.toMatchObject({ description: null });
 	});
 	it("lists with the server sort and status filter", async () => {
 		const calls = stubApi({
@@ -297,7 +335,7 @@ describe("job title clients", () => {
 			[`POST ${TITLES}`]: problemReply(409, "JOB_TITLE_NAME_CONFLICT"),
 		});
 		await expect(
-			createJobTitle("c-1", "b-1", "d-1", { name: "Manager" })
+			createJobTitle("c-1", "b-1", "d-1", { name: "Manager", description: "" })
 		).rejects.toMatchObject({
 			status: 409,
 			errorCode: "JOB_TITLE_NAME_CONFLICT",

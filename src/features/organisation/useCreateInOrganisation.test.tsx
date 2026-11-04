@@ -29,7 +29,17 @@ const department = {
 	name: "Bar",
 	status: "ACTIVE",
 };
-const jobTitle = { jobTitleId: "j-1", name: "Chef", status: "ACTIVE" };
+const jobTitle = {
+	jobTitleId: "j-1",
+	branchId: "b-1",
+	branchName: "Orchard",
+	departmentId: "d-1",
+	departmentName: "Kitchen",
+	name: "Chef",
+	description: null,
+	status: "ACTIVE",
+	holderCount: 0,
+};
 const role = {
 	accessRoleId: "r-1",
 	name: "Auditor",
@@ -52,10 +62,14 @@ it.each([
 	],
 	[
 		"job title",
-		"POST /api/v1/companies/c-1/job-titles",
+		"POST /api/v1/companies/c-1/branches/b-1/departments/d-1/job-titles",
 		jobTitle,
 		(): unknown => useCreateJobTitle("c-1"),
-		{ name: "Chef" },
+		{
+			branchId: "b-1",
+			departmentId: "d-1",
+			body: { name: "Chef", description: "" },
+		},
 	],
 	[
 		"system role",

@@ -6,7 +6,11 @@ import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { FormRow, formRowIds } from "@/components/forms/FormRow";
 import { Select } from "@/components/forms/Select";
-import type { JobTitle } from "@/features/organisation/api";
+import { Textarea } from "@/components/forms/Textarea";
+import {
+	JOB_TITLE_DESCRIPTION_MAX_LENGTH,
+	type JobTitle,
+} from "@/features/organisation/api";
 import { placeOf } from "@/features/organisation/assignmentTargets";
 import { CreateFormDialog } from "@/features/organisation/CreateFormDialog";
 import { refusalFor } from "@/features/organisation/CreateJobTitleDialog/refusalFor";
@@ -25,17 +29,17 @@ import { departmentChoices } from "@/features/workspace/unitChoices";
 
 export type CreateJobTitleDialogProps = {
 	companyId: string;
-	/** Set to rename an existing Job title; its Department is shown but can't change. */
+	/** Set to edit an existing Job title; its Department is shown but can't change. */
 	editing?: JobTitle;
 	onClose: () => void;
 };
 
-const FIELDS = ["departmentId", "name"] as const;
+const FIELDS = ["departmentId", "name", "description"] as const;
 const CREATE_KEYS = ["job_title:create"] as const;
 
 /**
- * Creates a Job title in one Department, or renames one. Mount when opened
- * and unmount when closed so every attempt starts fresh.
+ * Creates a Job title in one Department, or edits its name and description.
+ * Mount when opened and unmount when closed so every attempt starts fresh.
  */
 export const CreateJobTitleDialog = ({
 	companyId,
@@ -48,12 +52,15 @@ export const CreateJobTitleDialog = ({
 	const formId = useId();
 	const departmentId = `${formId}-department`;
 	const departmentIds = formRowIds(departmentId);
+	const descriptionId = `${formId}-description`;
+	const descriptionIds = formRowIds(descriptionId);
 	const schema = useMemo(() => createJobTitleSchema(t), [t]);
 	const form = useForm<CreateJobTitleValues>({
 		resolver: zodResolver(schema),
 		defaultValues: {
 			departmentId: editing?.departmentId ?? "",
 			name: editing?.name ?? "",
+			description: editing?.description ?? "",
 		},
 		mode: "onSubmit",
 		reValidateMode: "onChange",
@@ -67,6 +74,7 @@ export const CreateJobTitleDialog = ({
 		formState: { errors, isSubmitting },
 	} = form;
 	const name = useWatch({ control, name: "name" });
+	const description = useWatch({ control, name: "description" });
 	const { data: workspace } = useQuery({ ...workspaceQuery, retry });
 	const create = useCreateJobTitle(companyId);
 	const update = useUpdateJobTitle(companyId);
@@ -84,6 +92,7 @@ export const CreateJobTitleDialog = ({
 			setValue("departmentId", onlyDepartment);
 	}, [onlyDepartment, getValues, setValue]);
 	const departmentError = errors.departmentId?.message;
+	const descriptionError = errors.description?.message;
 	return (
 		<CreateFormDialog
 			alertRef={submit.alertRef}
@@ -105,14 +114,18 @@ export const CreateJobTitleDialog = ({
 					const refusal = await submit.run(
 						() => {
 							if (editing)
-								return update.mutateAsync({ ...editing, name: values.name });
+								return update.mutateAsync({
+									...editing,
+									name: values.name,
+									description: values.description,
+								});
 							const department = choices.find(
 								(choice) => choice.departmentId === values.departmentId
 							);
 							return create.mutateAsync({
 								branchId: department?.branchId ?? "",
 								departmentId: values.departmentId,
-								body: { name: values.name },
+								body: { name: values.name, description: values.description },
 							});
 						},
 						(error) => refusalFor(error, values.name, editing !== undefined, t)
@@ -188,6 +201,25 @@ export const CreateJobTitleDialog = ({
 				placeholder={t(`${key}.namePlaceholder`)}
 				registration={register("name")}
 			/>
+			<FormRow
+				counter={t(`${key}.descriptionCounter`, { count: description.length })}
+				error={descriptionError}
+				htmlFor={descriptionId}
+				label={t(`${key}.descriptionLabel`)}
+				layout="stacked"
+			>
+				<Textarea
+					aria-describedby={descriptionError && descriptionIds.errorId}
+					aria-invalid={Boolean(descriptionError)}
+					disabled={isSubmitting}
+					id={descriptionId}
+					maxLength={JOB_TITLE_DESCRIPTION_MAX_LENGTH}
+					placeholder={t(`${key}.descriptionPlaceholder`)}
+					rows={3}
+					status={descriptionError ? "error" : undefined}
+					{...register("description")}
+				/>
+			</FormRow>
 		</CreateFormDialog>
 	);
 };

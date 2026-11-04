@@ -31,7 +31,9 @@ const jobTitle = {
 	departmentId: "d-1",
 	departmentName: "Kitchen",
 	name: "Shift supervisor",
+	description: null,
 	status: "ACTIVE",
+	holderCount: 0,
 };
 const page = (content: Array<unknown>): StubReply => ({
 	status: 200,
@@ -108,6 +110,8 @@ const openDialog = async (): Promise<HTMLElement> => {
 };
 const nameField = (dialog: HTMLElement): HTMLElement =>
 	within(dialog).getByLabelText("Job title name");
+const descriptionField = (dialog: HTMLElement): HTMLElement =>
+	within(dialog).getByLabelText("Description (optional)");
 const chooseDepartment = async (
 	dialog: HTMLElement,
 	label = "Orchard › Kitchen"
@@ -191,7 +195,64 @@ describe("create job title through the Job titles page", () => {
 					(call) => call.method === "POST" && call.path.endsWith("/job-titles")
 				)
 				.map((call) => [call.path, call.body])
-		).toEqual([[TITLES, { name: "Shift supervisor" }]]);
+		).toEqual([[TITLES, { name: "Shift supervisor", description: null }]]);
+	});
+
+	it("offers an optional description after the name, counts it and sends it trimmed", async () => {
+		const calls = stubApi(routes());
+		await open();
+		const dialog = await openDialog();
+		const fields = within(dialog)
+			.getAllByRole("textbox")
+			.map((field) => field.getAttribute("id"));
+		expect(fields.indexOf(descriptionField(dialog).id)).toBe(
+			fields.indexOf(nameField(dialog).id) + 1
+		);
+		expect(descriptionField(dialog)).toHaveAttribute("maxLength", "300");
+		expect(descriptionField(dialog)).not.toBeRequired();
+		expect(within(dialog).getByText("0/300")).toBeVisible();
+
+		await chooseDepartment(dialog);
+		await userEvent.type(nameField(dialog), "Chef");
+		await userEvent.type(descriptionField(dialog), " Runs the pass. ");
+		expect(within(dialog).getByText("16/300")).toBeVisible();
+		await submit(dialog);
+
+		await waitFor(() => {
+			expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+		});
+		expect(
+			calls
+				.filter((call) => call.method === "POST" && call.path === TITLES)
+				.map((call) => call.body)
+		).toEqual([{ name: "Chef", description: "Runs the pass." }]);
+	});
+
+	it("puts a refused description under its field", async () => {
+		stubApi({
+			...routes(),
+			[CREATE]: {
+				status: 400,
+				body: {
+					status: 400,
+					detail: "API says no",
+					errors: [{ field: "description", message: "API says too long" }],
+				},
+			},
+		});
+		await open();
+		const dialog = await openDialog();
+		await chooseDepartment(dialog);
+		await userEvent.type(nameField(dialog), "Chef");
+		await userEvent.type(descriptionField(dialog), "Runs the pass.");
+		await submit(dialog);
+
+		expect(
+			await within(dialog).findByText(
+				"Keep the description to 300 characters or fewer."
+			)
+		).toBeVisible();
+		expect(screen.queryByText(/API says/)).not.toBeInTheDocument();
 	});
 
 	it("needs a department, offering only the ones the person may add to", async () => {
@@ -329,8 +390,11 @@ describe("create job title through the Job titles page", () => {
 });
 
 describe("edit job title through the Job titles page", () => {
-	it("renames from the pencil, keeping the department fixed", async () => {
-		const calls = stubApi({ ...routes(), [JOB_TITLES]: page([jobTitle]) });
+	it("edits the name and description from the pencil, keeping the department fixed", async () => {
+		const calls = stubApi({
+			...routes(),
+			[JOB_TITLES]: page([{ ...jobTitle, description: "Runs the floor." }]),
+		});
 		await open();
 
 		await userEvent.click(
@@ -344,9 +408,11 @@ describe("edit job title through the Job titles page", () => {
 			within(dialog).getByRole("button", { name: "Department" })
 		).toBeDisabled();
 		expect(nameField(dialog)).toHaveValue("Shift supervisor");
+		expect(descriptionField(dialog)).toHaveValue("Runs the floor.");
 
 		await userEvent.clear(nameField(dialog));
 		await userEvent.type(nameField(dialog), " Senior supervisor ");
+		await userEvent.clear(descriptionField(dialog));
 		await userEvent.click(
 			within(dialog).getByRole("button", { name: "Save changes" })
 		);
@@ -359,7 +425,10 @@ describe("edit job title through the Job titles page", () => {
 				.filter((call) => call.method === "PUT")
 				.map((call) => [call.path, call.body])
 		).toEqual([
-			[`${TITLES}/j-1`, { name: "Senior supervisor", status: "ACTIVE" }],
+			[
+				`${TITLES}/j-1`,
+				{ name: "Senior supervisor", description: null, status: "ACTIVE" },
+			],
 		]);
 	});
 
