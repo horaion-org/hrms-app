@@ -344,7 +344,9 @@
 		"selectRow": "Seleccionar {{name}}",
 		"sortBy": "Ordenar por {{column}}",
 		"sortAscending": "A – Z",
-		"sortDescending": "Z – A"
+		"sortDescending": "Z – A",
+		"details": "Detalles",
+		"showDetails": "Ver detalles de {{name}}"
 	},
 	"weekNavigator": {
 		"label": "Semana",

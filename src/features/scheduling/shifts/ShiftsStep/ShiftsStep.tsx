@@ -71,6 +71,7 @@ export const ShiftsStep = ({
 				header: t("scheduling.shifts.name"),
 				cell: (shift) => shift.name,
 				cellClassName: "font-semibold",
+				pin: "start",
 			},
 			{
 				id: "timeRange",
@@ -95,6 +96,7 @@ export const ShiftsStep = ({
 							id: "actions",
 							header: t("scheduling.shifts.actions"),
 							headerClassName: "w-35",
+							pin: "end" as const,
 							cell: (shift: ScheduleShift) => (
 								<div className="flex justify-center gap-2">
 									{onEdit && (

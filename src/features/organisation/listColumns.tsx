@@ -53,6 +53,7 @@ export const nameColumn = <T extends { name: string }>(
 	},
 	sortValue: (row) => row.name,
 	cellClassName: "font-semibold",
+	pin: "start",
 });
 
 /** The Branch each row belongs to, by name. */
@@ -143,6 +144,7 @@ export const actionsColumn = <T extends { name: string }>(
 	),
 	headerClassName: "w-35",
 	cellClassName: "px-0",
+	pin: "end",
 });
 
 /** Whether a name contains the search, ignoring case and outer spaces. */

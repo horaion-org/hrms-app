@@ -39,6 +39,7 @@ export const ShiftAllocationTable = ({
 				header: t("scheduling.forecast.shift"),
 				headerClassName: "w-60",
 				cellClassName: "py-4 align-top",
+				pin: "start",
 				cell: (shift) => (
 					<div className="flex flex-col items-start">
 						<span className="text-sm font-bold">{shift.name}</span>

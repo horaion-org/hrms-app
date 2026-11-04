@@ -458,7 +458,9 @@
 		"selectRow": "Select {{name}}",
 		"sortBy": "Sort by {{column}}",
 		"sortAscending": "A – Z",
-		"sortDescending": "Z – A"
+		"sortDescending": "Z – A",
+		"details": "Details",
+		"showDetails": "Show details for {{name}}"
 	},
 	"weekNavigator": {
 		"label": "Week",

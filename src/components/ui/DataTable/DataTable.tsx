@@ -1,25 +1,43 @@
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import {
+	columnPinningFeature,
 	createSortedRowModel,
+	rowExpandingFeature,
 	rowSelectionFeature,
 	rowSortingFeature,
 	sortFn_alphanumeric as sortAlphanumeric,
 	tableFeatures,
 	useTable,
 	type ColumnDef,
+	type ExpandedState,
 	type RowSelectionState,
 	type SortingState,
 	type Updater,
 } from "@tanstack/react-table";
-import { useMemo, useState, type ReactNode } from "react";
+import {
+	Fragment,
+	useId,
+	useMemo,
+	useRef,
+	useState,
+	type ReactNode,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import {
+	pinnedCellClasses,
+	pinningStateOf,
+	stickyStartClasses,
+	type ColumnPin,
+} from "@/components/ui/DataTable/columnPinning";
+import { useScrollEdges } from "@/components/ui/DataTable/useScrollEdges";
+import {
 	ArrowDownIcon,
 	ArrowUpIcon,
+	ChevronRightIcon,
 	SortIcon,
 	TickIcon,
 } from "@/components/ui/Icon";
@@ -29,6 +47,8 @@ const features = tableFeatures({
 	sortedRowModel: createSortedRowModel(),
 	sortFns: { alphanumeric: sortAlphanumeric },
 	rowSelectionFeature,
+	columnPinningFeature,
+	rowExpandingFeature,
 });
 
 /** One column: its header text, how a cell renders, and whether it sorts. */
@@ -43,6 +63,12 @@ export type DataTableColumn<TData extends object> = {
 	headerClassName?: string;
 	/** Classes for each body cell, e.g. `font-semibold` or `text-center`. */
 	cellClassName?: string;
+	/**
+	 * Keeps the column in view while the table scrolls sideways, from `md` up:
+	 * `start` for the column naming each row, `end` for its actions. At most
+	 * one column per side.
+	 */
+	pin?: ColumnPin;
 };
 
 /** The sorted column and its direction. */
@@ -71,6 +97,20 @@ export type DataTableProps<TData extends object> = {
 		selectedIds?: Array<string>;
 		onChange?: (selectedIds: Array<string>) => void;
 	};
+	/**
+	 * Adds a leading button per row, named by `rowLabel`, that shows
+	 * `render(row)` in a full-width row beneath it. Several rows may be open;
+	 * the content mounts only while its row is open.
+	 */
+	expansion?: {
+		rowLabel: (row: TData) => string;
+		render: (row: TData) => ReactNode;
+		/** Rows that can open; every row when left out. */
+		canExpand?: (row: TData) => boolean;
+		/** The open row ids when the caller owns them; otherwise the table keeps its own. */
+		expandedIds?: Array<string>;
+		onChange?: (expandedIds: Array<string>) => void;
+	};
 	/** Shown across the table body when there are no rows. */
 	emptyState?: ReactNode;
 	className?: string;
@@ -84,9 +124,12 @@ const resolve = <T,>(updater: Updater<T>, current: T): T =>
 const headerCellClasses =
 	"h-11 border-l border-neutral-400 bg-neutral-200 px-3 text-left text-sm font-bold text-neutral-900 first:border-l-0";
 
+// Row borders sit on the cells: the table keeps separate borders so pinned
+// (sticky) cells carry their own lines while the rest scrolls beneath them.
 const bodyCellClasses =
-	"h-16 border-l border-neutral-400 bg-white px-3 py-2 text-xs break-words text-neutral-900 first:border-l-0";
+	"h-16 border-t border-l border-neutral-400 bg-white px-3 py-2 text-xs break-words text-neutral-900 first:border-l-0";
 
+// The leading cells (row expander, row checkbox) are each 3rem wide.
 const selectionCellClasses = "w-12 px-0";
 
 const ariaSort = (
@@ -161,6 +204,44 @@ const SortMenu = ({
 	);
 };
 
+// TanStack may set every row open at once as `true`; keep the per-row record.
+const expandedRecordOf = (
+	state: ExpandedState,
+	rowIds: Array<string>
+): Record<string, boolean> =>
+	state === true
+		? Object.fromEntries(rowIds.map((rowId) => [rowId, true]))
+		: state;
+
+/** The leading button that opens and closes a row's details. */
+const RowExpander = ({
+	label,
+	open,
+	detailsId,
+	onToggle,
+}: {
+	label: string;
+	open: boolean;
+	detailsId: string;
+	onToggle: () => void;
+}): FunctionComponent => (
+	<Button
+		aria-controls={open ? detailsId : undefined}
+		aria-expanded={open}
+		aria-label={label}
+		className="mx-auto flex items-center justify-center"
+		variant="icon"
+		onClick={onToggle}
+	>
+		<ChevronRightIcon
+			className={joinClassNames(
+				"motion-safe:transition-transform",
+				open && "rotate-90"
+			)}
+		/>
+	</Button>
+);
+
 export const DataTable = <TData extends object>({
 	label,
 	columns,
@@ -172,6 +253,7 @@ export const DataTable = <TData extends object>({
 	manualSorting = false,
 	sortControl = "toggle",
 	selection,
+	expansion,
 	emptyState,
 	className,
 }: DataTableProps<TData>): FunctionComponent => {
@@ -189,6 +271,16 @@ export const DataTable = <TData extends object>({
 				: ownRowSelection,
 		[selectedIds, ownRowSelection]
 	);
+	const [ownExpanded, setOwnExpanded] = useState<Record<string, boolean>>({});
+	const expandedIds = expansion?.expandedIds;
+	const expanded = useMemo(
+		(): Record<string, boolean> =>
+			expandedIds
+				? Object.fromEntries(expandedIds.map((rowId) => [rowId, true]))
+				: ownExpanded,
+		[expandedIds, ownExpanded]
+	);
+	const detailsIdPrefix = useId();
 
 	const columnsById = useMemo(
 		() => new Map(columns.map((column) => [column.id, column])),
@@ -206,6 +298,15 @@ export const DataTable = <TData extends object>({
 			})),
 		[columns]
 	);
+	const columnPinning = useMemo(() => pinningStateOf(columns), [columns]);
+	const pinned = columnPinning.start.length + columnPinning.end.length > 0;
+	// Leading cells stick along with a start-pinned column, so it never slides under them.
+	const leadingClasses = (index: number): string | undefined =>
+		columnPinning.start.length > 0 ? stickyStartClasses(index) : undefined;
+	const selectionIndex = expansion ? 1 : 0;
+	const leadingCount = selectionIndex + (selection ? 1 : 0);
+	const frameRef = useRef<HTMLDivElement>(null);
+	const edges = useScrollEdges(frameRef, pinned);
 
 	const table = useTable({
 		features,
@@ -217,7 +318,12 @@ export const DataTable = <TData extends object>({
 		enableMultiSort: false,
 		sortDescFirst: false,
 		enableRowSelection: selection !== undefined,
-		state: { sorting, rowSelection },
+		enableExpanding: expansion !== undefined,
+		getRowCanExpand: (row) =>
+			expansion?.canExpand?.(row.original) ?? expansion !== undefined,
+		// Open rows stay open when the data refetches or re-sorts.
+		autoResetExpanded: false,
+		state: { sorting, rowSelection, columnPinning, expanded },
 		onSortingChange: (updater) => {
 			const next = resolve(updater, sorting);
 			if (!sort) setOwnSorting(next);
@@ -229,32 +335,59 @@ export const DataTable = <TData extends object>({
 			if (!selectedIds) setOwnRowSelection(next);
 			selection?.onChange?.(Object.keys(next).filter((rowId) => next[rowId]));
 		},
+		onExpandedChange: (updater) => {
+			const next = expandedRecordOf(
+				resolve<ExpandedState>(updater, expanded),
+				table.getRowModel().rows.map((row) => row.id)
+			);
+			if (!expandedIds) setOwnExpanded(next);
+			expansion?.onChange?.(Object.keys(next).filter((rowId) => next[rowId]));
+		},
 	});
 
 	const rows = table.getRowModel().rows;
 	const headers = table.getHeaderGroups()[0]?.headers ?? [];
-	const columnCount = headers.length + (selection ? 1 : 0);
+	const columnCount = headers.length + leadingCount;
 	const allSelected = rows.length > 0 && table.getIsAllRowsSelected();
 
 	return (
 		<div
+			ref={frameRef}
+			data-overflows-end={edges.overflowsEnd || undefined}
+			data-overflows-start={edges.overflowsStart || undefined}
 			className={joinClassNames(
 				"overflow-x-auto rounded-lg border border-neutral-400",
+				pinned && "group",
+				// Open details measure the frame (100cqw) to stay in view while it scrolls.
+				expansion && "@container",
 				className
 			)}
 		>
 			<table
 				aria-label={label}
-				className="w-full min-w-xl table-fixed border-collapse"
+				className="w-full min-w-xl table-fixed border-separate border-spacing-0"
 			>
 				<thead>
 					<tr>
+						{expansion && (
+							<th
+								scope="col"
+								className={joinClassNames(
+									headerCellClasses,
+									selectionCellClasses,
+									leadingClasses(0)
+								)}
+							>
+								<span className="sr-only">{t("dataTable.details")}</span>
+							</th>
+						)}
 						{selection && (
 							<th
 								scope="col"
 								className={joinClassNames(
 									headerCellClasses,
-									selectionCellClasses
+									selectionCellClasses,
+									leadingClasses(selectionIndex)
 								)}
 							>
 								<Checkbox
@@ -279,7 +412,8 @@ export const DataTable = <TData extends object>({
 									scope="col"
 									className={joinClassNames(
 										headerCellClasses,
-										column?.headerClassName
+										column?.headerClassName,
+										pinnedCellClasses(header.column.getIsPinned(), leadingCount)
 									)}
 								>
 									<div className="flex items-center justify-between gap-2">
@@ -315,54 +449,101 @@ export const DataTable = <TData extends object>({
 				</thead>
 				<tbody>
 					{rows.length === 0 && (
-						<tr className="border-t border-neutral-400">
+						<tr>
 							<td
-								className="h-16 bg-white px-3 text-center text-sm text-neutral-700"
+								className="h-16 border-t border-neutral-400 bg-white px-3 text-center text-sm text-neutral-700"
 								colSpan={columnCount}
 							>
 								{emptyState}
 							</td>
 						</tr>
 					)}
-					{rows.map((row) => (
-						<tr
-							key={row.id}
-							className="border-t border-neutral-400 hover:[&>td]:bg-neutral-50"
-						>
-							{selection && (
-								<td
-									className={joinClassNames(
-										bodyCellClasses,
-										selectionCellClasses
-									)}
+					{rows.map((row) => {
+						const open = row.getIsExpanded();
+						const detailsId = `${detailsIdPrefix}-details-${row.id}`;
+						return (
+							<Fragment key={row.id}>
+								<tr
+									className="hover:[&>td]:bg-neutral-50 data-expanded:[&>td]:bg-neutral-50"
+									data-expanded={open || undefined}
 								>
-									<Checkbox
-										hideLabel
-										checked={row.getIsSelected()}
-										className="justify-center"
-										label={t("dataTable.selectRow", {
-											name: selection.rowLabel(row.original),
-										})}
-										onChange={row.getToggleSelectedHandler()}
-									/>
-								</td>
-							)}
-							{row.getAllCells().map((cell) => {
-								const column = columnsById.get(cell.column.id);
-								return (
-									<td
-										key={cell.id}
-										className={joinClassNames(
-											bodyCellClasses,
-											column?.cellClassName
-										)}
-									>
-										{column?.cell(row.original)}
-									</td>
-								);
-							})}
-						</tr>
-					))}
+									{expansion && (
+										<td
+											className={joinClassNames(
+												bodyCellClasses,
+												selectionCellClasses,
+												leadingClasses(0)
+											)}
+										>
+											{row.getCanExpand() && (
+												<RowExpander
+													detailsId={detailsId}
+													open={open}
+													label={t("dataTable.showDetails", {
+														name: expansion.rowLabel(row.original),
+													})}
+													onToggle={row.getToggleExpandedHandler()}
+												/>
+											)}
+										</td>
+									)}
+									{selection && (
+										<td
+											className={joinClassNames(
+												bodyCellClasses,
+												selectionCellClasses,
+												leadingClasses(selectionIndex)
+											)}
+										>
+											<Checkbox
+												hideLabel
+												checked={row.getIsSelected()}
+												className="justify-center"
+												label={t("dataTable.selectRow", {
+													name: selection.rowLabel(row.original),
+												})}
+												onChange={row.getToggleSelectedHandler()}
+											/>
+										</td>
+									)}
+									{[
+										...row.getStartVisibleCells(),
+										...row.getCenterVisibleCells(),
+										...row.getEndVisibleCells(),
+									].map((cell) => {
+										const column = columnsById.get(cell.column.id);
+										return (
+											<td
+												key={cell.id}
+												className={joinClassNames(
+													bodyCellClasses,
+													column?.cellClassName,
+													pinnedCellClasses(
+														cell.column.getIsPinned(),
+														leadingCount
+													)
+												)}
+											>
+												{column?.cell(row.original)}
+											</td>
+										);
+									})}
+								</tr>
+								{open && expansion && (
+									<tr id={detailsId}>
+										<td
+											className="bg-neutral-50 p-0 text-sm text-neutral-900"
+											colSpan={columnCount}
+										>
+											<div className="px-3 py-4 md:sticky md:start-0 md:w-[100cqw]">
+												{expansion.render(row.original)}
+											</div>
+										</td>
+									</tr>
+								)}
+							</Fragment>
+						);
+					})}
 				</tbody>
 			</table>
 		</div>

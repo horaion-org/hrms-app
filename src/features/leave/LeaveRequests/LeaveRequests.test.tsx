@@ -123,3 +123,24 @@ it("leaves the Remarks column out when no request on the page carries remarks", 
 	).not.toContain("Remarks");
 	expect(screen.queryByText("No remarks")).not.toBeInTheDocument();
 });
+
+it("keeps the employee and actions in view while the wide table scrolls", () => {
+	render(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveRequests
+				{...handlers}
+				canReview={() => true}
+				page={1}
+				rows={LEAVE_FIXTURES}
+				sort={{ field: "requestedAt", desc: true }}
+				total={LEAVE_FIXTURES.length}
+			/>
+		</I18nextProvider>
+	);
+	const headers = screen.getAllByRole("columnheader");
+	expect(headers[0]).toHaveTextContent("Employee");
+	expect(headers[0]).toHaveClass("md:sticky", "md:start-0");
+	const actions = headers[headers.length - 1];
+	expect(actions).toHaveTextContent("Actions");
+	expect(actions).toHaveClass("md:sticky", "md:end-0");
+});

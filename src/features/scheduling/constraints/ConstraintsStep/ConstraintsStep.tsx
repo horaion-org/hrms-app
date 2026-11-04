@@ -90,6 +90,7 @@ export const ConstraintsStep = ({
 				header: t(`${key}.name`),
 				cell: (constraint) => constraint.name,
 				cellClassName: "font-semibold",
+				pin: "start",
 			},
 			{
 				id: "type",
@@ -145,6 +146,7 @@ export const ConstraintsStep = ({
 							id: "actions",
 							header: t(`${key}.actions`),
 							headerClassName: "w-30",
+							pin: "end" as const,
 							cell: (constraint: Constraint) => (
 								<div className="flex justify-center gap-2">
 									{onEdit && (
