@@ -87,13 +87,12 @@ const problemOf = (
 
 /**
  * Leave, in three tabs. "My leave" is every member's own requests and their
- * own applications, with nothing to grant. "Team requests" is the
- * company's requests in one Branch, the first by default, or every Branch
- * in reach, and optionally one Department; "Team timeline" draws one
- * Branch at a time. Both are read
- * through the person's grants, with applying on behalf, approving and
- * rejecting for the people they may decide for. Beneath the tabs, one
- * toolbar holds the view's units, filter and action. The view, units and
+ * own applications, with nothing to grant. "Team requests" and "Team
+ * timeline" show the requests of the header's Branch (every Branch in
+ * reach under "All branches"), optionally narrowed to one Department. Both
+ * are read through the person's grants, with applying on behalf, approving
+ * and rejecting for the people they may decide for. Beneath the tabs, one
+ * toolbar holds the view's Filters, period and action. The view, units and
  * table state live in the URL; the timeline's window stays on the page.
  * Page-level composition only: the parts live in `features/leave`.
  */
@@ -111,7 +110,7 @@ export const Leave = (): FunctionComponent => {
 	const team = view !== "mine";
 	const workspace = useQuery({ ...workspaceQuery, retry });
 	const requested = unitSelectionOf(search);
-	// The same units the selector shows, so the lists ask for them before the URL names them.
+	// Resolved as the header resolves them, so the lists ask for the default Branch before the URL names one.
 	const units = useUnitSelection(
 		companyId,
 		LEAVE_READ_KEYS,

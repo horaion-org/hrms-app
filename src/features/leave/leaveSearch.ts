@@ -44,8 +44,8 @@ const searchSchema = z.object({
  * and can be shared: the view (the caller's own leave unless `requests` or
  * `timeline` names a team view), the Branch and Department, and the
  * table's status, page and sort. Each part is left out at its default: own
- * leave, the first Branch (`all` names every Branch, on Team requests only),
- * every Department, every status, the first page, newest first.
+ * leave, the default Branch (see `resolveUnitSelection`; `all` names every
+ * Branch), every Department, every status, the first page, newest first.
  */
 export type LeaveSearch = z.infer<typeof searchSchema>;
 

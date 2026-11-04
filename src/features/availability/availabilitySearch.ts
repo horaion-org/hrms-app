@@ -21,7 +21,8 @@ const searchSchema = z.object({
  * The Availability page's state that belongs in the URL, so it survives a
  * reload and can be shared: the tab, the Branch and Department of the team
  * view, and the week, as its Monday. Each part is left out at its default:
- * the person's first tab, the first Branch, every Department, this week.
+ * the person's first tab, the default Branch (see `resolveUnitSelection`),
+ * every Department, this week.
  */
 export type AvailabilitySearch = z.infer<typeof searchSchema>;
 

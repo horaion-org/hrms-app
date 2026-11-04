@@ -54,10 +54,11 @@ const exportRefusal = (error: unknown): string | undefined =>
 
 /**
  * The company's people, a page at a time, sorted, filtered and searched by
- * the server: everyone in reach unless a Branch, and then a Department, is
- * chosen. The units, page, sort and status live in the URL; the search text
- * stays on the page so names never reach browser history. Someone just
- * added on the Add employee page is confirmed above the list.
+ * the server: the people of the header's Branch (every Branch in reach under
+ * "All branches"), narrowed to a Department from the Filters. The units,
+ * page, sort and status live in the URL; the search text stays on the page
+ * so names never reach browser history. Someone just added on the Add
+ * employee page is confirmed above the list.
  */
 export const People = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
@@ -67,7 +68,7 @@ export const People = (): FunctionComponent => {
 	const [text, setText] = useState("");
 	const settled = useSettledSearch(text);
 	const requested = unitSelectionOf(search);
-	// The same units the selector shows, so the list asks for them before the URL names them.
+	// Resolved as the header resolves them, so the list asks for the default Branch before the URL names one.
 	const units = useUnitSelection(
 		companyId,
 		PEOPLE_READ_KEYS,

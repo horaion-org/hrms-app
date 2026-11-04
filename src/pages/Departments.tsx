@@ -34,9 +34,9 @@ import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 const route = getRouteApi("/_authenticated/_app/organisation/departments");
 
 /**
- * The company's Departments across the Branches in reach, one Branch at a
- * time when one is chosen in the header. The Branch lives in the URL; search, status and
- * sort stay on the page.
+ * The company's Departments in the header's Branch, or across every Branch
+ * in reach under "All branches". The Branch lives in the URL; search,
+ * status and sort stay on the page.
  */
 export const Departments = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
