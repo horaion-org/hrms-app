@@ -97,6 +97,14 @@ const fill = async (
 		"singap"
 	);
 	await user.click(await screen.findByRole("option", { name: "Singapore" }));
+	await user.click(within(dialog).getByLabelText("Time zone"));
+	await user.type(
+		screen.getByRole("combobox", { name: "Search city, region or offset" }),
+		"singapore"
+	);
+	await user.click(
+		await screen.findByRole("option", { name: /Asia\/Singapore/ })
+	);
 	await user.click(within(dialog).getByLabelText("Branch heads"));
 	await user.click(await screen.findByRole("option", { name: "Marcus Lim" }));
 	await user.keyboard("{Escape}");
@@ -264,6 +272,77 @@ describe("create branch through the Branches page", () => {
 		expect(
 			within(dialog).queryByText("Choose a country.")
 		).not.toBeInTheDocument();
+	});
+	it("requires a time zone on submission and clears its error after choosing one", async () => {
+		const calls = stubApi(routes());
+		await open();
+		const dialog = await openDialog();
+		await fill(dialog);
+		const timeZone = within(dialog).getByLabelText("Time zone");
+		timeZone.focus();
+		await userEvent.keyboard("{Backspace}");
+		expect(timeZone).toHaveTextContent("Select a time zone");
+		await userEvent.click(
+			within(dialog).getByRole("button", { name: "Create branch" })
+		);
+		expect(
+			await within(dialog).findByText("Choose the branch's time zone.")
+		).toBeVisible();
+		expect(timeZone).toHaveFocus();
+		expect(
+			calls.some(
+				(call) => call.method === "POST" && call.path.endsWith("/branches")
+			)
+		).toBe(false);
+		await userEvent.click(timeZone);
+		await userEvent.click(screen.getAllByRole("option")[0] as HTMLElement);
+		expect(
+			within(dialog).queryByText("Choose the branch's time zone.")
+		).not.toBeInTheDocument();
+	});
+	it("starts time zone empty with the viewer's own zone listed first", async () => {
+		stubApi(routes());
+		await open();
+		const dialog = await openDialog();
+		const timeZone = within(dialog).getByLabelText("Time zone");
+		expect(timeZone).toHaveTextContent("Select a time zone");
+		expect(timeZone).toHaveAttribute("aria-required", "true");
+		expect(
+			within(dialog).getByText(
+				"The branch's days, weeks and shift times use this zone."
+			)
+		).toBeVisible();
+		await userEvent.click(timeZone);
+		expect(screen.getAllByRole("option")[0]).toHaveTextContent(
+			"Your time zone"
+		);
+		expect(within(dialog).queryByRole("note")).not.toBeInTheDocument();
+	});
+	it("maps a refused time zone to the field and focuses it", async () => {
+		stubApi({
+			...routes(),
+			[CREATE]: {
+				status: 400,
+				body: {
+					status: 400,
+					errorCode: "INVALID_BRANCH_TIME_ZONE",
+					errors: [{ field: "timeZone", message: "PRIVATE ZONE" }],
+				},
+			},
+		});
+		await open();
+		const dialog = await openDialog();
+		await fill(dialog);
+		await userEvent.click(
+			within(dialog).getByRole("button", { name: "Create branch" })
+		);
+		expect(
+			await within(dialog).findByText("Check the time zone and try again.")
+		).toBeVisible();
+		expect(screen.queryByText(/PRIVATE/)).not.toBeInTheDocument();
+		await waitFor(() => {
+			expect(within(dialog).getByLabelText("Time zone")).toHaveFocus();
+		});
 	});
 	it("starts country empty and virtualizes all 249 ISO countries with localized search", async () => {
 		stubApi(routes());
@@ -435,6 +514,7 @@ describe("create branch through the Branches page", () => {
 			code: "ORC",
 			city: "São Paulo",
 			country: "SG",
+			timeZone: "Asia/Singapore",
 			initialHeadCompanyMembershipIds: ["m-1"],
 		});
 	});

@@ -46,6 +46,7 @@ describe("create branch client", () => {
 				code: "  orc  ",
 				city: "Singapore",
 				country: "SG",
+				timeZone: "Asia/Singapore",
 				initialHeadCompanyMembershipIds: ["m-1"],
 			})
 		).resolves.toEqual({
@@ -62,6 +63,7 @@ describe("create branch client", () => {
 			code: "ORC",
 			city: "Singapore",
 			country: "SG",
+			timeZone: "Asia/Singapore",
 			initialHeadCompanyMembershipIds: ["m-1"],
 		});
 	});
@@ -87,6 +89,7 @@ describe("create branch client", () => {
 				code: "ORC",
 				city: "Singapore",
 				country: "SG",
+				timeZone: "Asia/Singapore",
 				initialHeadCompanyMembershipIds: ["m-1"],
 			})
 		).rejects.toBeInstanceOf(UnexpectedResponseError);
@@ -105,6 +108,7 @@ describe("create branch client", () => {
 				code: "ORC",
 				city: "Singapore",
 				country: "SG",
+				timeZone: "Asia/Singapore",
 				initialHeadCompanyMembershipIds: ["m-1"],
 			})
 		).rejects.toBeInstanceOf(ApiProblemError);

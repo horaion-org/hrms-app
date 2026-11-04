@@ -14,6 +14,7 @@ describe("create branch validation", () => {
 					code: "ORC",
 					city: "Singapore",
 					country: "SG",
+					timeZone: "Asia/Singapore",
 					heads: [head],
 				}).success
 			).toBe(true);
@@ -28,11 +29,26 @@ describe("create branch validation", () => {
 					code: "ORC",
 					city: "Singapore",
 					country: "SG",
+					timeZone: "Asia/Singapore",
 					heads: [head],
 				}).success
 			).toBe(false);
 		}
 	);
+	it("requires a time zone", () => {
+		const result = schema.safeParse({
+			name: "Orchard",
+			code: "ORC",
+			city: "Singapore",
+			country: "SG",
+			timeZone: "",
+			heads: [head],
+		});
+		expect(result.success).toBe(false);
+		expect(result.error?.issues.map((issue) => issue.path)).toEqual([
+			["timeZone"],
+		]);
+	});
 	it("requires one to twenty heads", () => {
 		expect(
 			schema.safeParse({
@@ -40,6 +56,7 @@ describe("create branch validation", () => {
 				code: "ORC",
 				city: "Singapore",
 				country: "SG",
+				timeZone: "Asia/Singapore",
 				heads: [],
 			}).success
 		).toBe(false);
@@ -49,6 +66,7 @@ describe("create branch validation", () => {
 				code: "ORC",
 				city: "Singapore",
 				country: "SG",
+				timeZone: "Asia/Singapore",
 				heads: Array.from({ length: 20 }, () => head),
 			}).success
 		).toBe(true);
@@ -58,6 +76,7 @@ describe("create branch validation", () => {
 				code: "ORC",
 				city: "Singapore",
 				country: "SG",
+				timeZone: "Asia/Singapore",
 				heads: Array.from({ length: 21 }, () => head),
 			}).success
 		).toBe(false);

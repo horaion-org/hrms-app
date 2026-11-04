@@ -11,6 +11,7 @@ export const createBranchSchema = (
 	name: z.ZodString;
 	code: z.ZodString;
 	country: z.ZodString;
+	timeZone: z.ZodString;
 	city: z.ZodPipe<
 		z.ZodPipe<z.ZodString, z.ZodTransform<string, string>>,
 		z.ZodString
@@ -48,6 +49,7 @@ export const createBranchSchema = (
 					.regex(/^[\p{L} .'-]+$/u, t(`${key}.cityCharacters`))
 			),
 		country: z.string().min(1, t(`${key}.countryRequired`)),
+		timeZone: z.string().min(1, t(`${key}.timeZoneRequired`)),
 		heads: z
 			.array(
 				z.object({

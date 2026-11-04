@@ -154,6 +154,20 @@ describe.each(cases)("editing a $kind from its list", (item) => {
 			await userEvent.click(
 				await screen.findByRole("option", { name: "Malaysia" })
 			);
+			const timeZone = within(dialog).getByLabelText("Time zone");
+			expect(timeZone).toHaveTextContent("(GMT+08:00) Asia/Singapore");
+			expect(within(dialog).queryByRole("note")).not.toBeInTheDocument();
+			await userEvent.click(timeZone);
+			await userEvent.type(
+				screen.getByRole("combobox", { name: "Search city, region or offset" }),
+				"kuala"
+			);
+			await userEvent.click(
+				await screen.findByRole("option", { name: /Asia\/Kuala Lumpur/ })
+			);
+			expect(within(dialog).getByRole("note")).toHaveTextContent(
+				"Changing the time zone changes when this branch's days start"
+			);
 		} else {
 			expect(
 				within(dialog).queryByRole("button", { name: "Branch" })
@@ -180,7 +194,7 @@ describe.each(cases)("editing a $kind from its list", (item) => {
 								code: "CEN-2",
 								city: "Kuala Lumpur",
 								country: "MY",
-								timeZone: "Asia/Singapore",
+								timeZone: "Asia/Kuala_Lumpur",
 								status: "INACTIVE",
 							}
 						: { name: "Central", status: "INACTIVE" },

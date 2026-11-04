@@ -7,9 +7,11 @@ import type { FunctionComponent } from "@/common/types";
 import { Combobox } from "@/components/forms/Combobox";
 import { FormRow, formRowIds } from "@/components/forms/FormRow";
 import { Input } from "@/components/forms/Input";
+import { TimeZoneSelect } from "@/components/forms/TimeZoneSelect";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { Callout } from "@/components/ui/Callout";
 import { Dialog } from "@/components/ui/Dialog";
 import type { Branch } from "@/features/organisation/api";
 import { useUpdateBranch } from "@/features/organisation/useChangeListRow";
@@ -20,6 +22,16 @@ import {
 	createBranchSchema,
 	type CreateBranchValues,
 } from "@/features/organisation/CreateBranchDialog/schema";
+
+/** The form's fields in the order they appear, for focusing the first problem. */
+const FIELDS = [
+	"name",
+	"code",
+	"city",
+	"country",
+	"timeZone",
+	"heads",
+] as const;
 
 export type CreateBranchDialogProps = {
 	companyId: string;
@@ -41,11 +53,13 @@ export const CreateBranchDialog = ({
 		codeId = `${formId}-code`,
 		cityId = `${formId}-city`,
 		countryId = `${formId}-country`,
+		timeZoneId = `${formId}-time-zone`,
 		headsId = `${formId}-heads`;
 	const nameIds = formRowIds(nameId),
 		codeIds = formRowIds(codeId),
 		cityIds = formRowIds(cityId),
 		countryIds = formRowIds(countryId),
+		timeZoneIds = formRowIds(timeZoneId),
 		headsIds = formRowIds(headsId);
 	const isEditing = editing !== undefined;
 	const schema = useMemo(
@@ -67,6 +81,7 @@ export const CreateBranchDialog = ({
 			code: editing?.code ?? "",
 			city: editing?.city ?? "",
 			country: editing?.country ?? "",
+			timeZone: editing?.timeZone ?? "",
 			heads: [],
 		},
 		mode: "onSubmit",
@@ -77,6 +92,10 @@ export const CreateBranchDialog = ({
 	const code = useWatch({ control, name: "code" });
 	const city = useWatch({ control, name: "city" });
 	const country = useWatch({ control, name: "country" });
+	const timeZone = useWatch({ control, name: "timeZone" });
+	// Editing the zone moves when the branch's days start, so say so before saving.
+	const timeZoneChanged =
+		editing !== undefined && timeZone !== "" && timeZone !== editing.timeZone;
 	const [countryQuery, setCountryQuery] = useState("");
 	const countries = useMemo(
 		() =>
@@ -91,9 +110,7 @@ export const CreateBranchDialog = ({
 	const create = useCreateBranch(companyId);
 	const update = useUpdateBranch(companyId);
 	const [message, setMessage] = useState<string>();
-	const refusedField = useRef<
-		"name" | "code" | "city" | "country" | "heads" | null
-	>(null);
+	const refusedField = useRef<(typeof FIELDS)[number] | null>(null);
 	const alert = useRef<HTMLParagraphElement>(null);
 	const inFlight = useRef(false);
 	useEffect(() => {
@@ -121,6 +138,7 @@ export const CreateBranchDialog = ({
 				code: values.code,
 				city: values.city,
 				country: values.country,
+				timeZone: values.timeZone,
 			};
 			if (editing) {
 				await update.mutateAsync({ ...editing, ...details });
@@ -136,33 +154,13 @@ export const CreateBranchDialog = ({
 			onClose();
 		} catch (error) {
 			const refusal = refusalFor(error, values, t, isEditing);
-			if (refusal.fields.code)
-				setError("code", { type: "server", message: refusal.fields.code });
-			if (refusal.fields.name)
-				setError("name", { type: "server", message: refusal.fields.name });
-			if (refusal.fields.city)
-				setError("city", { type: "server", message: refusal.fields.city });
-			if (refusal.fields.country)
-				setError("country", {
-					type: "server",
-					message: refusal.fields.country,
-				});
-			if (refusal.fields.heads)
-				setError("heads", {
-					type: "server",
-					message: refusal.fields.heads,
-				});
-			refusedField.current = refusal.fields.name
-				? "name"
-				: refusal.fields.code
-					? "code"
-					: refusal.fields.city
-						? "city"
-						: refusal.fields.country
-							? "country"
-							: refusal.fields.heads
-								? "heads"
-								: null;
+			for (const field of FIELDS) {
+				const fieldMessage = refusal.fields[field];
+				if (fieldMessage)
+					setError(field, { type: "server", message: fieldMessage });
+			}
+			refusedField.current =
+				FIELDS.find((field) => refusal.fields[field]) ?? null;
 			setMessage(refusal.message);
 			if (refusal.refreshMembers) void members.refetch();
 		} finally {
@@ -193,6 +191,7 @@ export const CreateBranchDialog = ({
 									!code.trim() &&
 									!city.trim() &&
 									!country &&
+									!timeZone &&
 									heads.length === 0
 						}
 					>
@@ -209,9 +208,7 @@ export const CreateBranchDialog = ({
 				id={formId}
 				onSubmit={(event) =>
 					handleSubmit(submit, (invalid) => {
-						const first = (
-							["name", "code", "city", "country", "heads"] as const
-						).find((field) => invalid[field]);
+						const first = FIELDS.find((field) => invalid[field]);
 						if (first) setFocus(first);
 					})(event)
 				}
@@ -354,6 +351,38 @@ export const CreateBranchDialog = ({
 						)}
 					/>
 				</FormRow>
+				<FormRow
+					required
+					error={errors.timeZone?.message}
+					hint={t(`${key}.timeZoneHint`)}
+					htmlFor={timeZoneId}
+					label={t(`${key}.timeZone`)}
+					layout="stacked"
+				>
+					<Controller
+						control={control}
+						name="timeZone"
+						render={({ field }) => (
+							<TimeZoneSelect
+								ref={field.ref}
+								aria-required
+								aria-invalid={Boolean(errors.timeZone)}
+								aria-label={t(`${key}.timeZone`)}
+								disabled={isSubmitting}
+								id={timeZoneId}
+								status={errors.timeZone ? "error" : undefined}
+								value={field.value}
+								aria-describedby={
+									errors.timeZone ? timeZoneIds.errorId : timeZoneIds.hintId
+								}
+								onChange={field.onChange}
+							/>
+						)}
+					/>
+				</FormRow>
+				{timeZoneChanged && (
+					<Callout tone="warning">{t(`${key}.timeZoneChanged`)}</Callout>
+				)}
 				{!isEditing && (
 					<FormRow
 						required

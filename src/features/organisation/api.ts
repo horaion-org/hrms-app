@@ -91,6 +91,7 @@ export type CreateBranchBody = {
 	code: string;
 	city: string;
 	country: string;
+	timeZone: string;
 	initialHeadCompanyMembershipIds: Array<string>;
 };
 

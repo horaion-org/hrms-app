@@ -7,6 +7,7 @@ export type Refusal = {
 		code?: string;
 		city?: string;
 		country?: string;
+		timeZone?: string;
 		heads?: string;
 	};
 	message?: string;
@@ -53,6 +54,8 @@ export const refusalFor = (
 				if (field === "code") fields.code = t(`${key}.codeRejected`);
 				if (field === "city") fields.city = t(`${key}.cityRejected`);
 				if (field === "country") fields.country = t(`${key}.countryRejected`);
+				if (field === "timeZone")
+					fields.timeZone = t(`${key}.timeZoneRejected`);
 				if (field === "initialHeadCompanyMembershipIds")
 					fields.heads = t(`${key}.headsRejected`);
 			}
@@ -61,6 +64,7 @@ export const refusalFor = (
 				fields.code ||
 				fields.city ||
 				fields.country ||
+				fields.timeZone ||
 				fields.heads
 			)
 				return { fields, refreshMembers: false };

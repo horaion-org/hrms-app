@@ -56,6 +56,7 @@ it("invalidates this company's lists and overview without invalidating another c
 			code: "ORC",
 			city: "Singapore",
 			country: "SG",
+			timeZone: "Asia/Singapore",
 			initialHeadCompanyMembershipIds: ["m-1"],
 		});
 	});
