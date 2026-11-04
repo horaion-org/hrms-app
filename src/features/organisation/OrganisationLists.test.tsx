@@ -347,7 +347,7 @@ describe("Branches", () => {
 			).toHaveAttribute("aria-sort", "descending")
 		);
 		await user.click(screen.getByRole("button", { name: "Sort by Status" }));
-		await user.click(screen.getByRole("button", { name: "Showing:" }));
+		await user.click(screen.getByRole("button", { name: "Showing" }));
 		await user.click(screen.getByRole("option", { name: "Active" }));
 
 		await waitFor(() => {
@@ -358,7 +358,7 @@ describe("Branches", () => {
 				"size=100&sort=status%2Casc&status=ACTIVE",
 			]);
 		});
-		expect(screen.getByRole("button", { name: "Showing:" })).toHaveTextContent(
+		expect(screen.getByRole("button", { name: "Showing" })).toHaveTextContent(
 			"Active"
 		);
 	});
@@ -555,7 +555,7 @@ describe("Departments", () => {
 		expect(
 			screen.queryByRole("button", { name: "Create department" })
 		).not.toBeInTheDocument();
-		expect(screen.getByRole("button", { name: "Showing:" })).toHaveTextContent(
+		expect(screen.getByRole("button", { name: "Showing" })).toHaveTextContent(
 			"All departments"
 		);
 		expect(searchesOf(calls, "/api/v1/companies/c-1/departments")).toEqual([
@@ -687,7 +687,7 @@ describe("System roles", () => {
 			screen.getByRole("button", { name: "Edit Company Owner" })
 		).toBeDisabled();
 		expect(screen.getByRole("button", { name: "Edit Manager" })).toBeEnabled();
-		expect(screen.getByRole("button", { name: "Showing:" })).toHaveTextContent(
+		expect(screen.getByRole("button", { name: "Showing" })).toHaveTextContent(
 			"All roles"
 		);
 		expect(
@@ -757,11 +757,11 @@ describe("Job titles", () => {
 		expect(
 			screen.queryByRole("button", { name: "Create job title" })
 		).not.toBeInTheDocument();
-		expect(screen.getByRole("button", { name: "Showing:" })).toHaveTextContent(
+		expect(screen.getByRole("button", { name: "Showing" })).toHaveTextContent(
 			"All job titles"
 		);
 
-		await user.click(screen.getByRole("button", { name: "Showing:" }));
+		await user.click(screen.getByRole("button", { name: "Showing" }));
 		await user.click(screen.getByRole("option", { name: "Inactive" }));
 		await user.click(screen.getByRole("button", { name: "Sort by Status" }));
 

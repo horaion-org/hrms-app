@@ -572,6 +572,9 @@
 				"unknownKeys_one": "Este rol tiene un permiso que esta versión de la aplicación no reconoce. Se mantiene tal cual al guardar. Recarga la página para actualizar la aplicación y cambiarlo.",
 				"unknownKeys_other": "Este rol tiene {{count}} permisos que esta versión de la aplicación no reconoce. Se mantienen tal cual al guardar. Recarga la página para actualizar la aplicación y cambiarlos."
 			}
+		},
+		"list": {
+			"showing": "Mostrar"
 		}
 	},
 	"shell": {
@@ -1298,6 +1301,7 @@
 		}
 	},
 	"pageToolbar": {
-		"clearFilters": "Borrar filtros"
+		"clearFilters": "Borrar filtros",
+		"listControls": "Controles de la lista"
 	}
 }

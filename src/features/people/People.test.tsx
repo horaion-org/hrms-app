@@ -260,7 +260,7 @@ describe("People", () => {
 		expect(
 			screen.queryByRole("button", { name: "Branch" })
 		).not.toBeInTheDocument();
-		expect(screen.getByRole("button", { name: "Showing:" })).toHaveTextContent(
+		expect(screen.getByRole("button", { name: "Showing" })).toHaveTextContent(
 			"All employees"
 		);
 		expect(
@@ -396,7 +396,7 @@ describe("People", () => {
 		const opened = await open("/people?page=2");
 		await screen.findByText("Moses Lee");
 
-		await user.click(screen.getByRole("button", { name: "Showing:" }));
+		await user.click(screen.getByRole("button", { name: "Showing" }));
 		await user.click(screen.getByRole("option", { name: "Active" }));
 
 		await waitFor(() => {
@@ -408,7 +408,7 @@ describe("People", () => {
 		expect(opened.router.state.location.search).toEqual({
 			status: "INACTIVE",
 		});
-		expect(screen.getByRole("button", { name: "Showing:" })).toHaveTextContent(
+		expect(screen.getByRole("button", { name: "Showing" })).toHaveTextContent(
 			"Inactive"
 		);
 
@@ -416,7 +416,7 @@ describe("People", () => {
 		await waitFor(() => {
 			expect(opened.router.state.location.search).toEqual({});
 		});
-		expect(screen.getByRole("button", { name: "Showing:" })).toHaveTextContent(
+		expect(screen.getByRole("button", { name: "Showing" })).toHaveTextContent(
 			"All employees"
 		);
 	});

@@ -773,7 +773,7 @@
 			"INACTIVE": "Inactive"
 		},
 		"list": {
-			"showing": "Showing:",
+			"showing": "Showing",
 			"status": "Status",
 			"actions": "Actions",
 			"edit": "Edit {{name}}",
@@ -2118,6 +2118,7 @@
 		}
 	},
 	"pageToolbar": {
-		"clearFilters": "Clear filters"
+		"clearFilters": "Clear filters",
+		"listControls": "List controls"
 	}
 }

@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { fn } from "storybook/test";
 import type { FunctionComponent } from "@/common/types";
+import { Select } from "@/components/forms/Select";
 import { Button } from "@/components/ui/Button";
 import { ListToolbar } from "@/features/organisation/ListToolbar";
 import "@/common/i18n";
@@ -23,7 +24,7 @@ const meta = {
 		createLabel: "Create Branch",
 		onCreate: fn(),
 		filter: {
-			label: "Showing:",
+			label: "Showing",
 			value: "all",
 			options: statusOptions,
 			onChange: fn(),
@@ -68,6 +69,21 @@ export const WithActions: Story = {
 	},
 };
 
+/** Departments, Job titles and People narrow to units first; "Clear filters" shows while one is chosen. */
+export const WithScope: Story = {
+	args: {
+		scope: (
+			<Select
+				aria-label="Branch"
+				className="w-full sm:w-44"
+				options={[{ value: "b-1", label: "Orchard" }]}
+				value="b-1"
+			/>
+		),
+		onClearFilters: fn(),
+	},
+};
+
 /** System Roles has no status, so its list shows no filter. */
 export const WithoutFilter: Story = {
 	args: {
@@ -85,7 +101,7 @@ export const MultipleFilter: Story = {
 		onCreate: undefined,
 		filter: undefined,
 		multipleFilter: {
-			label: "Showing:",
+			label: "Showing",
 			value: ["ACTIVE", "INACTIVE"],
 			options: statusOptions.slice(1),
 			placeholder: "All employees",
