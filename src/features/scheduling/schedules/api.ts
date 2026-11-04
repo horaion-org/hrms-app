@@ -47,11 +47,15 @@ const scheduleStatusSchema = z.enum([
 	"GENERATION_REQUESTED",
 	"GENERATED",
 	"GENERATION_FAILED",
+	"PUBLISHED",
+	"REJECTED",
 ]);
 
 /**
  * A DRAFT can be changed; once generation is requested it is frozen, and its
- * generation run ends as GENERATED or GENERATION_FAILED.
+ * generation run ends as GENERATED or GENERATION_FAILED. A GENERATED roster
+ * is then decided once: PUBLISHED (final for its week) or REJECTED with a
+ * reason (it can be generated again).
  */
 export type ScheduleStatus = z.infer<typeof scheduleStatusSchema>;
 
@@ -172,6 +176,12 @@ const generationSchema = z.object({
 /** A schedule's newest generation run and what it found. */
 export type ScheduleGeneration = z.infer<typeof generationSchema>;
 
+/** A company member named on a schedule; `displayName` is null once they have left the company. */
+const participantSchema = z.object({
+	membershipId: z.string(),
+	displayName: z.string().nullable(),
+});
+
 const scheduleSchema = z.object({
 	scheduleId: z.string(),
 	companyId: z.string(),
@@ -195,10 +205,13 @@ const scheduleSchema = z.object({
 	includedConstraintIds: z.array(z.string()),
 	/** Set exactly when the status is not DRAFT. */
 	generationRequestedAt: z.string().nullable(),
-	/** `displayName` is null once the requester has left the company. */
-	generationRequestedBy: z
-		.object({ membershipId: z.string(), displayName: z.string().nullable() })
-		.nullable(),
+	generationRequestedBy: participantSchema.nullable(),
+	/** When the roster was published or rejected; null while undecided (and from an API without publishing). */
+	decidedAt: z.string().nullable().default(null),
+	/** Who published or rejected it. */
+	decidedBy: participantSchema.nullable().default(null),
+	/** Why it was rejected; null unless REJECTED. */
+	rejectionReason: z.string().nullable().default(null),
 	/** The newest generation run, or null for a schedule that has none. */
 	generation: generationSchema.nullable(),
 	createdAt: z.string(),
@@ -225,13 +238,25 @@ export const generationInProgress = ({
 		OPEN_RUN_STATUSES.includes(generation.status));
 
 /**
- * Whether a schedule can be generated again: its last generation ended,
- * GENERATED or GENERATION_FAILED, and no newer run is open.
+ * Whether a schedule can be generated again: its last generation ended and
+ * wasn't published (GENERATED, GENERATION_FAILED or REJECTED), and no newer
+ * run is open.
  */
 export const regenerable = (schedule: Schedule): boolean =>
 	(schedule.status === "GENERATED" ||
-		schedule.status === "GENERATION_FAILED") &&
+		schedule.status === "GENERATION_FAILED" ||
+		schedule.status === "REJECTED") &&
 	!generationInProgress(schedule);
+
+/** Whether a schedule has a roster to show: generated, then published or rejected. */
+export const hasRoster = (schedule: Schedule): boolean =>
+	schedule.status === "GENERATED" ||
+	schedule.status === "PUBLISHED" ||
+	schedule.status === "REJECTED";
+
+/** Whether a schedule's roster awaits a decision: GENERATED with no run open. */
+export const decidable = (schedule: Schedule): boolean =>
+	schedule.status === "GENERATED" && !generationInProgress(schedule);
 
 const schedulePageSchema = z.object({
 	content: z.array(scheduleSchema),

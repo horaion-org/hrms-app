@@ -1701,7 +1701,9 @@
 				"DRAFT": "Draft",
 				"GENERATION_REQUESTED": "Generation requested",
 				"GENERATED": "Generated",
-				"GENERATION_FAILED": "Generation failed"
+				"GENERATION_FAILED": "Generation failed",
+				"PUBLISHED": "Published",
+				"REJECTED": "Rejected"
 			},
 			"history": {
 				"title": "Schedule history",

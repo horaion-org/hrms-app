@@ -129,17 +129,18 @@ const draftProblemKey = (
 	return "scheduling.draft.loading";
 };
 
-/** What a frozen schedule's notice says: generation requested, done or failed. */
+/** What a frozen schedule's notice says: generation requested, failed, or done (also once decided). */
 const frozenNoticeKey = (
 	status: ScheduleStatus
 ):
 	| "scheduling.draft.generationRequested"
 	| "scheduling.draft.generated"
 	| "scheduling.draft.generationFailed" => {
-	if (status === "GENERATED") return "scheduling.draft.generated";
+	if (status === "GENERATION_REQUESTED")
+		return "scheduling.draft.generationRequested";
 	if (status === "GENERATION_FAILED")
 		return "scheduling.draft.generationFailed";
-	return "scheduling.draft.generationRequested";
+	return "scheduling.draft.generated";
 };
 
 /**

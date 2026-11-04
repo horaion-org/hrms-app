@@ -55,6 +55,9 @@ export const scheduleFixture = (
 	],
 	generationRequestedAt: null,
 	generationRequestedBy: null,
+	decidedAt: null,
+	decidedBy: null,
+	rejectionReason: null,
 	generation: null,
 	createdAt: "2026-10-08T09:00:00Z",
 	updatedAt: "2026-10-08T09:00:00Z",
@@ -294,7 +297,22 @@ const RUN_FOR_STATUS: Record<
 			errorCode: "snapshot_invalid",
 			findings: null,
 		}),
+	PUBLISHED: () => generationFixture(),
+	REJECTED: () => generationFixture(),
 };
+
+/** The decision a PUBLISHED or REJECTED schedule carries: José decided the roster he asked for. */
+const decisionFor = (status: ScheduleStatus): Partial<Schedule> =>
+	status === "PUBLISHED" || status === "REJECTED"
+		? {
+				decidedAt: "2026-10-09T11:00:00Z",
+				decidedBy: { membershipId: "m-c-1", displayName: "José" },
+				rejectionReason:
+					status === "REJECTED"
+						? "Two nights have no supervisor. Regenerate once Siti is back."
+						: null,
+			}
+		: {};
 
 /**
  * Schedule s-1 once generation was requested: frozen, naming every frozen copy
@@ -312,6 +330,7 @@ export const generatedScheduleFixture = (
 		generationRequestedAt: "2026-10-09T10:00:00Z",
 		generationRequestedBy: { membershipId: "m-c-1", displayName: "José" },
 		generation: status === "DRAFT" ? null : RUN_FOR_STATUS[status](),
+		...decisionFor(status),
 		...overrides,
 	});
 };

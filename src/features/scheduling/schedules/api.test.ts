@@ -12,7 +12,9 @@ import {
 	fetchSchedules,
 	fetchScheduleConstraints,
 	fetchScheduleShifts,
+	decidable,
 	generationInProgress,
+	hasRoster,
 	regenerable,
 	requestGeneration,
 	requestRegeneration,
@@ -189,7 +191,7 @@ describe("schedules client", () => {
 		stubApi({
 			[`GET ${SCHEDULES}/s-1`]: {
 				status: 200,
-				body: envelope(scheduleFixture({ status: "PUBLISHED" as "DRAFT" })),
+				body: envelope(scheduleFixture({ status: "ARCHIVED" as "DRAFT" })),
 			},
 		});
 
@@ -428,9 +430,104 @@ describe("a schedule's generation", () => {
 			generatedScheduleFixture({ status: "GENERATION_FAILED" }),
 			true,
 		],
+		[
+			"a rejected schedule",
+			generatedScheduleFixture({ status: "REJECTED" }),
+			true,
+		],
+		[
+			"a published schedule",
+			generatedScheduleFixture({ status: "PUBLISHED" }),
+			false,
+		],
 	])("knows whether %s can be generated again", (_, schedule, expected) => {
 		expect(regenerable(schedule)).toBe(expected);
 	});
+});
+
+describe("a schedule's decision", () => {
+	it("parses who published or rejected a roster, when and why", async () => {
+		const rejected = generatedScheduleFixture({ status: "REJECTED" });
+		stubApi({
+			[`GET ${SCHEDULES}/s-1`]: { status: 200, body: envelope(rejected) },
+		});
+
+		const parsed = await fetchSchedule("c-1", UNIT, "s-1");
+		expect(parsed.status).toBe("REJECTED");
+		expect(parsed.decidedBy).toEqual({
+			membershipId: "m-c-1",
+			displayName: "José",
+		});
+		expect(parsed.decidedAt).toBe("2026-10-09T11:00:00Z");
+		expect(parsed.rejectionReason).toMatch(/supervisor/);
+	});
+
+	it("reads a schedule from an API without decisions as undecided", async () => {
+		const decisionFields = ["decidedAt", "decidedBy", "rejectionReason"];
+		const withoutDecision = Object.fromEntries(
+			Object.entries(generatedScheduleFixture({ status: "GENERATED" })).filter(
+				([field]) => !decisionFields.includes(field)
+			)
+		);
+		stubApi({
+			[`GET ${SCHEDULES}/s-1`]: {
+				status: 200,
+				body: envelope(withoutDecision),
+			},
+		});
+
+		const parsed = await fetchSchedule("c-1", UNIT, "s-1");
+		expect(parsed.decidedAt).toBeNull();
+		expect(parsed.decidedBy).toBeNull();
+		expect(parsed.rejectionReason).toBeNull();
+	});
+
+	it.each([
+		["a draft", scheduleFixture(), false, false],
+		["a requested schedule", generatedScheduleFixture(), false, false],
+		[
+			"a generated schedule",
+			generatedScheduleFixture({ status: "GENERATED" }),
+			true,
+			true,
+		],
+		[
+			"a generated schedule with a newer run still open",
+			generatedScheduleFixture({
+				status: "GENERATED",
+				generation: generationFixture({
+					status: "SUBMITTED",
+					finishedAt: null,
+				}),
+			}),
+			true,
+			false,
+		],
+		[
+			"a schedule whose generation failed",
+			generatedScheduleFixture({ status: "GENERATION_FAILED" }),
+			false,
+			false,
+		],
+		[
+			"a published schedule",
+			generatedScheduleFixture({ status: "PUBLISHED" }),
+			true,
+			false,
+		],
+		[
+			"a rejected schedule",
+			generatedScheduleFixture({ status: "REJECTED" }),
+			true,
+			false,
+		],
+	])(
+		"knows whether %s has a roster and awaits a decision",
+		(_, schedule, roster, awaiting) => {
+			expect(hasRoster(schedule)).toBe(roster);
+			expect(decidable(schedule)).toBe(awaiting);
+		}
+	);
 });
 
 describe("a schedule's roster", () => {

@@ -9,6 +9,7 @@ import { OverflowMenu, OverflowMenuItem } from "@/components/ui/OverflowMenu";
 import { DeleteScheduleDialog } from "@/features/scheduling/DeleteScheduleDialog";
 import {
 	exportRoster,
+	hasRoster,
 	type Schedule,
 } from "@/features/scheduling/schedules/api";
 import { departmentScope } from "@/features/workspace/scopes";
@@ -56,9 +57,7 @@ export const ScheduleMenu = ({
 	const scope = departmentScope(schedule.departmentId);
 	const canDelete = access.can("schedule:delete", scope);
 	const canExport =
-		withExport &&
-		schedule.status === "GENERATED" &&
-		access.can("schedule:read", scope);
+		withExport && hasRoster(schedule) && access.can("schedule:read", scope);
 	if (!canDelete && !canExport) return null;
 	const draft =
 		exporting.error instanceof ApiProblemError &&

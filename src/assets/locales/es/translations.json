@@ -891,7 +891,9 @@
 				"DRAFT": "Borrador",
 				"GENERATION_REQUESTED": "Generación solicitada",
 				"GENERATED": "Generado",
-				"GENERATION_FAILED": "Generación fallida"
+				"GENERATION_FAILED": "Generación fallida",
+				"PUBLISHED": "Publicado",
+				"REJECTED": "Rechazado"
 			},
 			"history": {
 				"title": "Historial de horarios",

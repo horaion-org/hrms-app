@@ -200,26 +200,27 @@ it("deletes the schedule from the header's menu and goes back to the overview", 
 	).toHaveLength(1);
 });
 
-it("offers only Export roster in the header menu without schedule:delete", async () => {
-	await openRoster({
-		...signedIn(),
-		[`GET ${SCHEDULE_READ}`]: ok(
-			generatedScheduleFixture({ status: "GENERATED" })
-		),
-		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
-	});
-	const user = userEvent.setup();
+it.each(["GENERATED", "PUBLISHED", "REJECTED"] as const)(
+	"offers only Export roster in the header menu of a %s roster without schedule:delete",
+	async (status) => {
+		await openRoster({
+			...signedIn(),
+			[`GET ${SCHEDULE_READ}`]: ok(generatedScheduleFixture({ status })),
+			[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+		});
+		const user = userEvent.setup();
 
-	await user.click(
-		await screen.findByRole("button", {
-			name: "More actions for Front Office - Week 42",
-		})
-	);
+		await user.click(
+			await screen.findByRole("button", {
+				name: "More actions for Front Office - Week 42",
+			})
+		);
 
-	expect(
-		screen.getAllByRole("menuitem").map((item) => item.textContent)
-	).toEqual(["Export roster"]);
-});
+		expect(
+			screen.getAllByRole("menuitem").map((item) => item.textContent)
+		).toEqual(["Export roster"]);
+	}
+);
 
 it("downloads the roster as a spreadsheet from the header's menu", async () => {
 	const createObjectUrl = vi.fn(() => "blob:roster");
@@ -231,7 +232,9 @@ it("downloads the roster as a spreadsheet from the header's menu", async () => {
 	vi.stubGlobal("URL", DownloadUrl);
 	const calls = await openRoster({
 		...signedIn(),
-		[`GET ${SCHEDULE}`]: ok(generatedScheduleFixture({ status: "GENERATED" })),
+		[`GET ${SCHEDULE_READ}`]: ok(
+			generatedScheduleFixture({ status: "GENERATED" })
+		),
 		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
 		[`GET ${SCHEDULE}/export`]: {
 			status: 200,
@@ -271,7 +274,9 @@ it("downloads the roster as a spreadsheet from the header's menu", async () => {
 it("says when the roster couldn't be downloaded and lets the person try again", async () => {
 	await openRoster({
 		...signedIn(),
-		[`GET ${SCHEDULE}`]: ok(generatedScheduleFixture({ status: "GENERATED" })),
+		[`GET ${SCHEDULE_READ}`]: ok(
+			generatedScheduleFixture({ status: "GENERATED" })
+		),
 		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
 		[`GET ${SCHEDULE}/export`]: { status: 500 },
 	});

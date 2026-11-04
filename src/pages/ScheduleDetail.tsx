@@ -14,6 +14,7 @@ import { RosterHeader } from "@/features/scheduling/RosterHeader";
 import { ScheduleMenu } from "@/features/scheduling/ScheduleMenu";
 import {
 	generationInProgress,
+	hasRoster,
 	regenerable,
 	type Schedule,
 } from "@/features/scheduling/schedules/api";
@@ -127,7 +128,7 @@ const RosterBody = ({
 				onRegenerate={onRegenerate}
 			/>
 		);
-	if (schedule.status !== "GENERATED")
+	if (!hasRoster(schedule))
 		return <Callout className="mt-8">{t(`${key}.draft`)}</Callout>;
 	if (assignments.status !== "ready")
 		return (
@@ -176,7 +177,7 @@ const ApiSchedule = ({
 			: undefined;
 	const showsRoster =
 		state.status === "ready" &&
-		state.schedule.status === "GENERATED" &&
+		hasRoster(state.schedule) &&
 		!generationInProgress(state.schedule);
 	const assignments = useScheduleAssignments(
 		companyId,
