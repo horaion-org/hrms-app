@@ -338,8 +338,10 @@ export const LeaveRequestDialog = ({
 								<dd className="font-semibold">
 									{t(`leave.types.${request.leaveType}`)}
 								</dd>
-								<dt className="text-neutral-800">{t("leave.attachments")}</dt>
-								<dd className="font-semibold">{t("leave.none")}</dd>
+								<dt className="text-neutral-800">{t("leave.remarks")}</dt>
+								<dd className="whitespace-pre-line break-words font-semibold">
+									{request.notes ?? t("leave.none")}
+								</dd>
 								{request.reviewedBy && (
 									<>
 										<dt className="text-neutral-800">

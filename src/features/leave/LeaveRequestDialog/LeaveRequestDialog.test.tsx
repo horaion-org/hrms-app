@@ -219,3 +219,35 @@ it("sends trimmed remarks, counts them as they are typed, and leaves them out wh
 		screen.getByRole("textbox", { name: "Remarks (optional)" })
 	).toHaveAccessibleDescription("Use 1,000 characters or fewer.");
 });
+
+it("shows the request's remarks with their line breaks, or none", () => {
+	const view = render(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveRequestDialog
+				request={pending}
+				onApprove={vi.fn()}
+				onClose={vi.fn()}
+				onCreate={vi.fn()}
+				onReject={vi.fn()}
+			/>
+		</I18nextProvider>
+	);
+	expect(screen.getByText("Remarks")).toBeInTheDocument();
+	expect(
+		screen.getByText(/Handover notes are with Ben\.\s+Back on Friday\./)
+	).toHaveClass("whitespace-pre-line");
+	view.rerender(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveRequestDialog
+				request={LEAVE_FIXTURES[0]}
+				onApprove={vi.fn()}
+				onClose={vi.fn()}
+				onCreate={vi.fn()}
+				onReject={vi.fn()}
+			/>
+		</I18nextProvider>
+	);
+	expect(screen.getByText("Remarks").nextElementSibling).toHaveTextContent(
+		"None"
+	);
+});
