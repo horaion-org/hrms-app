@@ -313,4 +313,79 @@ describe("ScheduleSetupStep", () => {
 			expect(screen.queryByText(/part-time/)).not.toBeInTheDocument();
 		});
 	});
+
+	describe("weeks", () => {
+		const placed = [
+			{
+				...periodStartingOn("2026-10-26"),
+				relative: "last" as const,
+				started: true,
+			},
+			{
+				...periodStartingOn("2026-11-02"),
+				relative: "this" as const,
+				started: true,
+			},
+			{ ...periodStartingOn("2026-11-09"), relative: "next" as const },
+			periodStartingOn("2026-11-16"),
+		];
+
+		it("given_weeksNextToToday_when_listed_then_eachNamesWhereItSits", async () => {
+			const user = userEvent.setup();
+			render(
+				<Harness
+					defaultValues={{ ...DEFAULTS, periodStart: "2026-11-09" }}
+					periods={placed}
+				/>
+			);
+
+			await user.click(screen.getByRole("button", { name: /Schedule period/ }));
+
+			expect(
+				(await screen.findAllByRole("option")).map(
+					(option) => option.textContent
+				)
+			).toEqual([
+				expect.stringMatching(/Oct 26.+Nov 1, 2026 · Last week$/u),
+				expect.stringMatching(/Nov 2.+8, 2026 · This week$/u),
+				expect.stringMatching(/Nov 9.+15, 2026 · Next week$/u),
+				expect.stringMatching(/Nov 16.+22, 2026$/u),
+			]);
+		});
+
+		it("given_aWeekThatHasStarted_when_chosen_then_saysItIsScheduledWhole", async () => {
+			const user = userEvent.setup();
+			render(
+				<Harness
+					defaultValues={{ ...DEFAULTS, periodStart: "2026-11-09" }}
+					periods={placed}
+				/>
+			);
+			const started =
+				"This week has already begun. The schedule still covers all of it, including days that have passed.";
+			expect(screen.queryByText(started)).not.toBeInTheDocument();
+
+			await user.click(screen.getByRole("button", { name: /Schedule period/ }));
+			await user.click(
+				await screen.findByRole("option", { name: /This week/ })
+			);
+
+			expect(await screen.findByText(started)).toBeVisible();
+			expect(
+				screen.getByRole("button", { name: /Schedule period/ })
+			).toHaveAccessibleDescription(started);
+		});
+
+		it("given_aStartedWeekShownReadOnly_when_rendered_then_saysNothingAboutIt", () => {
+			render(
+				<Harness
+					readOnly
+					defaultValues={{ ...DEFAULTS, periodStart: "2026-10-26" }}
+					periods={placed}
+				/>
+			);
+
+			expect(screen.queryByText(/already begun/)).not.toBeInTheDocument();
+		});
+	});
 });

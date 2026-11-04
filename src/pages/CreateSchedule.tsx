@@ -24,9 +24,11 @@ import { departmentUnitOf } from "@/features/scheduling/departmentUnit";
 import { ForecastStep } from "@/features/scheduling/ForecastStep";
 import { GenerateStep } from "@/features/scheduling/GenerateStep";
 import {
+	defaultPeriod,
 	formatPeriod,
 	periodStartingOn,
-	upcomingPeriods,
+	selectablePeriods,
+	withPeriod,
 } from "@/features/scheduling/periods";
 import {
 	emptyScheduleDraft,
@@ -170,7 +172,8 @@ export const CreateSchedule = (): FunctionComponent => {
 		undefined,
 		emptyScheduleDraft
 	);
-	const [upcoming] = useState(() => upcomingPeriods(new Date()));
+	// Today is read once, so the offered weeks hold still while the page is open.
+	const [today] = useState(() => new Date());
 	// The draft the page holds, when it is the one the URL names.
 	const saved =
 		named !== undefined &&
@@ -452,25 +455,26 @@ export const CreateSchedule = (): FunctionComponent => {
 		if (stepProblem) setBlocked(true);
 		else goTo(current + 1);
 	};
-	const firstPeriod = upcoming[0];
+	const firstPeriod = defaultPeriod(today);
 	const setupDefaults: ScheduleSetupValues = draft.setup ?? {
 		departmentId: "",
 		name: "",
-		periodStart: firstPeriod?.start ?? "",
+		periodStart: firstPeriod.start,
 		includeLeave: true,
 		allowOpenShifts: false,
 	};
 	const chosenStart = draft.setup?.periodStart;
-	// A reopened draft's week may have passed out of the upcoming ones.
+	// A reopened draft's week may lie outside the offered ones.
+	const offered = selectablePeriods(today);
 	const periods =
-		chosenStart === undefined ||
-		upcoming.some((period) => period.start === chosenStart)
-			? upcoming
-			: [periodStartingOn(chosenStart), ...upcoming];
+		chosenStart === undefined
+			? offered
+			: withPeriod(offered, chosenStart, today);
 	const period = chosenStart ? periodStartingOn(chosenStart) : firstPeriod;
-	const periodLabel = period
-		? formatPeriod(period, i18n.resolvedLanguage ?? i18n.language)
-		: "";
+	const periodLabel = formatPeriod(
+		period,
+		i18n.resolvedLanguage ?? i18n.language
+	);
 	const isLast = current === SCHEDULE_STEPS.length - 1;
 	const busy =
 		scheduleActions.create.isPending ||

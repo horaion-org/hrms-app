@@ -2,7 +2,7 @@ import { QueryClient } from "@tanstack/react-query";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
 import { storyProviders } from "@/features/organisation/storyApi";
-import { periodStartingOn } from "@/features/scheduling/periods";
+import { selectablePeriods } from "@/features/scheduling/periods";
 import { schedulingWorkspace } from "@/features/scheduling/schedules/fixtures";
 import { ScheduleSetupStep } from "@/features/scheduling/ScheduleSetupStep";
 import { workspaceQuery } from "@/features/workspace/api";
@@ -33,7 +33,8 @@ const meta = {
 			includeLeave: true,
 			allowOpenShifts: false,
 		},
-		periods: ["2026-04-13", "2026-04-20", "2026-04-27"].map(periodStartingOn),
+		// Wednesday 8 Apr 2026: two weeks back, this week (started) and ten ahead.
+		periods: selectablePeriods(new Date(2026, 3, 8)),
 		onSubmit: fn(() => Promise.resolve(undefined)),
 	},
 	decorators: [
@@ -67,6 +68,13 @@ const savedDraft = {
 };
 
 export const SavedDraft: Story = { args: savedDraft };
+
+/** A week whose Monday has passed: the field says it is still scheduled whole. */
+export const StartedWeek: Story = {
+	args: {
+		defaultValues: { ...meta.args.defaultValues, periodStart: "2026-04-06" },
+	},
+};
 
 /** A generated schedule, or a draft the person may not change. */
 export const ReadOnly: Story = { args: { ...savedDraft, readOnly: true } };

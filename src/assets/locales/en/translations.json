@@ -1732,6 +1732,13 @@
 			"namePlaceholder": "e.g. Front Office - Week 16",
 			"period": "Schedule period",
 			"periodNote": "Select a period that aligns with your business operations.",
+			"relative": {
+				"last": "Last week",
+				"this": "This week",
+				"next": "Next week"
+			},
+			"periodWithRelative": "{{period}} · {{relative}}",
+			"periodStarted": "This week has already begun. The schedule still covers all of it, including days that have passed.",
 			"partTimeWithoutAvailability_one": "{{count}} part-time member has no availability and will be left off the roster:",
 			"partTimeWithoutAvailability_other": "{{count}} part-time members have no availability and will be left off the roster:",
 			"additional": "Additional settings",

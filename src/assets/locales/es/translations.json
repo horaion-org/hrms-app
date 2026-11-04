@@ -923,6 +923,13 @@
 			"namePlaceholder": "p. ej., Recepción - Semana 16",
 			"period": "Periodo del horario",
 			"periodNote": "Selecciona un periodo que se ajuste a la operativa de tu negocio.",
+			"relative": {
+				"last": "Semana pasada",
+				"this": "Esta semana",
+				"next": "Próxima semana"
+			},
+			"periodWithRelative": "{{period}} · {{relative}}",
+			"periodStarted": "Esta semana ya ha comenzado. El horario la cubre entera, incluidos los días que ya han pasado.",
 			"partTimeWithoutAvailability_one": "{{count}} persona a tiempo parcial no tiene disponibilidad y quedará fuera del cuadrante:",
 			"partTimeWithoutAvailability_other": "{{count}} personas a tiempo parcial no tienen disponibilidad y quedarán fuera del cuadrante:",
 			"additional": "Ajustes adicionales",
