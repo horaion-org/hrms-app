@@ -256,7 +256,7 @@ describe("Create Schedule: opening and setup", () => {
 		expect(
 			await screen.findByRole("heading", {
 				level: 1,
-				name: "Schedule Overview",
+				name: "Schedule overview",
 			})
 		).toBeVisible();
 		expect(screen.queryByRole("link", { name: "Create schedule" })).toBeNull();
