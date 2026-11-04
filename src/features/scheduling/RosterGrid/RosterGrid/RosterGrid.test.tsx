@@ -7,7 +7,12 @@ import en from "@/assets/locales/en/translations.json";
 import { RosterGrid } from "@/features/scheduling/RosterGrid";
 import { rosterFromAssignments } from "@/features/scheduling/roster/roster";
 import { daysOf } from "@/features/scheduling/schedules";
-import { scheduleAssignmentsFixture } from "@/features/scheduling/schedules/fixtures";
+import { findingNames } from "@/features/scheduling/roster/findings/findingNames";
+import { placeFindings } from "@/features/scheduling/roster/findings/findingsOnGrid";
+import {
+	findingsOfEveryKindFixture,
+	scheduleAssignmentsFixture,
+} from "@/features/scheduling/schedules/fixtures";
 
 beforeAll(async () => {
 	await createInstance()
@@ -76,5 +81,54 @@ describe("RosterGrid", () => {
 
 		const row = screen.getByRole("row", { name: /Former member/ });
 		expect(row).toHaveTextContent("EMP-001");
+	});
+
+	it("when_findingsAreGiven_then_marksEachCellRowAndDayThatHasAny", () => {
+		const findings = findingsOfEveryKindFixture();
+		render(
+			<RosterGrid
+				days={week}
+				rows={rows}
+				findings={{
+					placed: placeFindings(findings, week),
+					names: findingNames(findings, {
+						assignments: scheduleAssignmentsFixture(),
+						shifts: [],
+						constraints: [],
+					}),
+					onShowAll: vi.fn(),
+				}}
+			/>
+		);
+
+		const ben = screen.getByRole("row", { name: /Ben Ong/ });
+		expect(
+			within(ben).getByRole("button", { name: "3 notes for Ben Ong" })
+		).toHaveTextContent("3");
+		expect(
+			screen.getByRole("button", { name: "3 notes for Friday, October 16" })
+		).toBeInTheDocument();
+		expect(
+			screen.getByRole("button", { name: "1 note for Saturday, October 17" })
+		).toBeInTheDocument();
+		expect(
+			screen.getByRole("button", {
+				name: "1 note for Chen Wei on Sunday, October 18",
+			})
+		).toBeInTheDocument();
+		expect(
+			screen.getByRole("button", {
+				name: "Chen Wei, Sun 14:00 – 22:00, 1 note",
+			})
+		).toBeInTheDocument();
+		expect(
+			screen.getAllByRole("button", { name: /\bnotes? for\b/ })
+		).toHaveLength(4);
+	});
+
+	it("when_noFindingsAreGiven_then_marksNothing", () => {
+		render(<RosterGrid days={week} rows={rows} />);
+
+		expect(screen.queryByRole("button", { name: /\bnotes? for\b/ })).toBeNull();
 	});
 });

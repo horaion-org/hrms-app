@@ -40,11 +40,3 @@ export const findingsByMember = ({
 	}
 	return [...groups.values()];
 };
-
-/** How many things the engine asks to review: each conflict and each error message. */
-export const reviewNoteCount = ({
-	errors,
-	conflicts,
-}: Pick<GenerationFindings, "errors" | "conflicts">): number =>
-	conflicts.length +
-	errors.reduce((total, error) => total + error.messages.length, 0);

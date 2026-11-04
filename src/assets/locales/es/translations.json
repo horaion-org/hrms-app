@@ -1114,15 +1114,6 @@
 			"engineSaid": "La explicación del motor",
 			"byMember": "Notas por empleado",
 			"wholeRoster": "Todo el cuadrante",
-			"notesSummary_one": "El motor de planificación dejó {{count}} nota para revisar en este cuadrante.",
-			"notesSummary_other": "El motor de planificación dejó {{count}} notas para revisar en este cuadrante.",
-			"reviewNotes": "Revisar notas",
-			"notesDescription": "Lo que el motor de planificación anotó sobre este cuadrante, citado tal como lo escribió.",
-			"conflicts": "Conflictos",
-			"conflictWhen": "{{day}}, {{time}}",
-			"missing_one": "Falta {{count}} persona",
-			"missing_other": "Faltan {{count}} personas",
-			"rule": "Regla: {{rule}}",
 			"errorCodes": {
 				"engine_unreachable": "No se pudo contactar con el motor de planificación a tiempo, así que no se generó nada.",
 				"result_unmappable": "El cuadrante del motor no encajaba con los turnos y el personal de este horario, así que no se guardó. Ponte en contacto con soporte.",
@@ -1143,6 +1134,63 @@
 				"worker_failed": "El motor se detuvo mientras preparaba el cuadrante.",
 				"worker_crashed": "El motor se detuvo mientras preparaba el cuadrante."
 			}
+		},
+		"findings": {
+			"rosterNotes_one": "{{count}} nota del cuadrante",
+			"rosterNotes_other": "{{count}} notas del cuadrante",
+			"setupIssues_one": "{{count}} problema de configuración",
+			"setupIssues_other": "{{count}} problemas de configuración",
+			"summaryBoth": "El motor de planificación dejó {{rosterNotes}} y {{setupIssues}}.",
+			"summaryOne": "El motor de planificación dejó {{findings}}.",
+			"showDetails": "Ver detalles",
+			"hideDetails": "Ocultar detalles",
+			"setupTitle": "Problemas de configuración ({{count}})",
+			"setupHint": "Corrígelos en la configuración del horario; generarlo de nuevo con la misma configuración no los resolverá.",
+			"rosterTitle": "Notas del cuadrante ({{count}})",
+			"groupTitle": "{{label}} · {{count}}",
+			"wholeRoster": "Todo el cuadrante",
+			"when": "{{day}}, {{time}}",
+			"missing_one": "Falta {{count}} persona",
+			"missing_other": "Faltan {{count}} personas",
+			"rule": "Regla: {{rule}}",
+			"forecastDemand": "Demanda prevista",
+			"unknownMember": "Un antiguo miembro",
+			"unknownShift": "uno de sus turnos",
+			"unknownJobTitle": "un puesto",
+			"unknownRule": "Una de sus reglas",
+			"codes": {
+				"UNCOVERABLE_DEMAND": {
+					"label": "Demanda que ningún turno cubre",
+					"sentence": "Ningún turno puede cubrir parte de la demanda de {{jobTitle}}."
+				},
+				"RULE_REFERENCES_MISSING_ENTITY": {
+					"label": "Reglas que nombran elementos ausentes",
+					"sentence_one": "{{rule}} nombra {{count}} elemento que no está en este horario.",
+					"sentence_other": "{{rule}} nombra {{count}} elementos que no están en este horario."
+				},
+				"UNASSIGNABLE_EMPLOYEE": {
+					"label": "Miembros a los que no encaja ningún turno",
+					"sentence": "{{member}} solo puede quedar libre: ningún turno encaja con su puesto y disponibilidad."
+				},
+				"DEAD_SHIFT": {
+					"label": "Turnos que nadie puede cubrir",
+					"sentence": "Nadie en este horario puede cubrir {{shift}}."
+				}
+			},
+			"marker": {
+				"row_one": "{{count}} nota para {{name}}",
+				"row_other": "{{count}} notas para {{name}}",
+				"date_one": "{{count}} nota para el {{day}}",
+				"date_other": "{{count}} notas para el {{day}}",
+				"cell_one": "{{count}} nota para {{name}} el {{day}}",
+				"cell_other": "{{count}} notas para {{name}} el {{day}}",
+				"tileLabel_one": "{{label}}, {{count}} nota",
+				"tileLabel_other": "{{label}}, {{count}} notas",
+				"roster": "Cuadrante",
+				"setup": "Configuración",
+				"close": "Cerrar"
+			},
+			"showInFindings": "Ver en los hallazgos"
 		}
 	},
 	"workspace": {

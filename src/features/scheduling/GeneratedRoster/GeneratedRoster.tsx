@@ -1,12 +1,19 @@
-import { useState } from "react";
+import { useId, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
-import { Button } from "@/components/ui/Button";
-import { Callout } from "@/components/ui/Callout";
-import { Dialog } from "@/components/ui/Dialog";
 import { StatCard } from "@/components/ui/StatCard";
-import { ReviewNotes } from "@/features/scheduling/ReviewNotes";
-import { reviewNoteCount } from "@/features/scheduling/roster/findingsByMember";
+import { FindingsPanel } from "@/features/scheduling/FindingsPanel";
+import { FindingsSummary } from "@/features/scheduling/FindingsSummary";
+import {
+	findingCounts,
+	hasFindings,
+} from "@/features/scheduling/roster/findings/findingCounts";
+import {
+	findingNames,
+	type FindingNameSources,
+} from "@/features/scheduling/roster/findings/findingNames";
+import { placeFindings } from "@/features/scheduling/roster/findings/findingsOnGrid";
 import {
 	isoDateIn,
 	legendOf,
@@ -29,6 +36,10 @@ export type GeneratedRosterProps = {
 	schedule: Schedule;
 	/** The schedule's roster rows, as `GET …/assignments` answers them. */
 	assignments: Array<ScheduleAssignment>;
+	/** The schedule's frozen shifts, which name the findings' shifts; empty when not readable. */
+	shifts?: FindingNameSources["shifts"];
+	/** The schedule's frozen constraints, which name the findings' rules; empty when not readable. */
+	constraints?: FindingNameSources["constraints"];
 };
 
 /** A worked day chosen on the roster. */
@@ -37,12 +48,15 @@ type ChosenDay = { row: RosterRow; day: string; shift: RosterShiftCell };
 const key = "scheduling.detail";
 
 /**
- * A generated schedule's roster, a week at a time: what it adds up to, the
- * engine's notes to review, and a chosen day's shift beside it, read-only.
+ * A generated schedule's roster, a week at a time: what it adds up to, what
+ * the engine found (a summary, the findings panel and marks on the grid), and
+ * a chosen day's shift beside it, read-only.
  */
 export const GeneratedRoster = ({
 	schedule,
 	assignments,
+	shifts = [],
+	constraints = [],
 }: GeneratedRosterProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const language = i18n.resolvedLanguage ?? i18n.language;
@@ -51,14 +65,27 @@ export const GeneratedRoster = ({
 		mondayOf(isoDateIn(schedule.timeZone, new Date()));
 	const [week, setWeek] = useState(thisWeek);
 	const [chosen, setChosen] = useState<ChosenDay>();
-	const [notesOpen, setNotesOpen] = useState(false);
+	const [findingsOpen, setFindingsOpen] = useState(false);
+	const findingsPanelId = useId();
+	const findingsPanel = useRef<HTMLDivElement>(null);
 	const period = { start: schedule.periodStart, end: schedule.periodEnd };
 	const rows = rosterFromAssignments(assignments, period);
 	const stats = rosterStats(rows);
 	const days = weekDays(period, week);
 	const findings = schedule.generation?.findings ?? null;
-	const notes = findings ? reviewNoteCount(findings) : 0;
+	const counts = findings ? findingCounts(findings) : null;
+	const names =
+		findings && counts && hasFindings(counts)
+			? findingNames(findings, { assignments, shifts, constraints })
+			: null;
 	const numbers = new Intl.NumberFormat(language);
+	// Opened from a marker's popover: open the panel now, then move to it.
+	const showAllFindings = (): void => {
+		flushSync(() => {
+			setFindingsOpen(true);
+		});
+		findingsPanel.current?.focus();
+	};
 
 	return (
 		<>
@@ -91,31 +118,32 @@ export const GeneratedRoster = ({
 					value={numbers.format(findings?.conflicts.length ?? 0)}
 				/>
 			</div>
-			{findings && notes > 0 && (
+			{findings && counts && names && (
 				<>
-					<Callout className="mt-6">
-						<span className="flex flex-wrap items-center gap-x-4 gap-y-1">
-							{t("scheduling.generation.notesSummary", { count: notes })}
-							<Button
-								variant="textlink"
-								onClick={() => {
-									setNotesOpen(true);
-								}}
-							>
-								{t("scheduling.generation.reviewNotes")}
-							</Button>
-						</span>
-					</Callout>
-					<Dialog
-						description={t("scheduling.generation.notesDescription")}
-						open={notesOpen}
-						title={t("scheduling.generation.reviewNotes")}
-						onClose={() => {
-							setNotesOpen(false);
+					<FindingsSummary
+						className="mt-6"
+						counts={counts}
+						expanded={findingsOpen}
+						panelId={findingsPanelId}
+						onToggle={() => {
+							setFindingsOpen(!findingsOpen);
 						}}
+					/>
+					<div
+						ref={findingsPanel}
+						className="mt-4 outline-none"
+						hidden={!findingsOpen}
+						id={findingsPanelId}
+						tabIndex={-1}
 					>
-						<ReviewNotes findings={findings} />
-					</Dialog>
+						{findingsOpen && (
+							<FindingsPanel
+								findings={findings}
+								names={names}
+								visibleDays={days}
+							/>
+						)}
+					</div>
 				</>
 			)}
 			{rows.length === 0 ? (
@@ -138,6 +166,15 @@ export const GeneratedRoster = ({
 							days={days}
 							rows={rows}
 							selectedShiftId={chosen?.shift.assignmentId}
+							findings={
+								findings && names
+									? {
+											placed: placeFindings(findings, days),
+											names,
+											onShowAll: showAllFindings,
+										}
+									: undefined
+							}
 							onAssignmentSelect={(row, day, shift) => {
 								setChosen({ row, day, shift });
 							}}
