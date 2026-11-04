@@ -245,6 +245,23 @@
 			"details": "Las funciones y los precios del plan estarán disponibles pronto.",
 			"unavailable": "Podrás cambiar de plan aquí cuando la facturación esté disponible.",
 			"dismiss": "Entendido"
+		},
+		"general": {
+			"workspaceName": "Nombre del espacio de trabajo",
+			"cancel": "Cancelar",
+			"save": "Guardar cambios",
+			"saving": "Guardando…",
+			"saved": "Nombre del espacio de trabajo guardado.",
+			"preferencesUnavailable": "El idioma, la zona horaria, el formato de fecha y el país aún no se pueden cambiar.",
+			"renameUnavailable": "Solo quienes pueden actualizar la empresa pueden cambiar el nombre del espacio de trabajo.",
+			"renameForbidden": "Ya no tienes permiso para cambiar el nombre de este espacio de trabajo.",
+			"saveFailed": "No pudimos guardar el nombre del espacio de trabajo. Inténtalo de nuevo.",
+			"validation": {
+				"required": "Escribe un nombre para el espacio de trabajo.",
+				"length": "Usa entre 2 y 100 caracteres.",
+				"characters": "Usa solo letras, números, espacios y . ' & - en el nombre.",
+				"rejected": "Revisa el nombre del espacio de trabajo e inténtalo de nuevo."
+			}
 		}
 	},
 	"combobox": {

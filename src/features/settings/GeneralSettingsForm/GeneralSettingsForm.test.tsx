@@ -1,7 +1,8 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { I18nextProvider } from "react-i18next";
-import { expect, it } from "vitest";
+import { expect, it, vi } from "vitest";
+import { ApiProblemError } from "@/common/problem";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import { GeneralSettingsForm } from "@/features/settings/GeneralSettingsForm";
 import type { GeneralSettingsValues } from "@/features/settings/schemas";
@@ -14,16 +15,49 @@ const loaded: GeneralSettingsValues = {
 	country: "SG",
 };
 
-const renderForm = (defaultValues = loaded): void => {
+type Save = (workspaceName: string) => Promise<string>;
+
+const renderForm = ({
+	defaultValues = loaded,
+	canRename = true,
+	onSave = vi.fn<Save>((name) => Promise.resolve(name.trim())),
+}: {
+	defaultValues?: GeneralSettingsValues;
+	canRename?: boolean;
+	onSave?: Save;
+} = {}): void => {
 	render(
 		<I18nextProvider i18n={authTestI18n}>
-			<GeneralSettingsForm defaultValues={defaultValues} />
+			<GeneralSettingsForm
+				canRename={canRename}
+				defaultValues={defaultValues}
+				onSave={onSave}
+			/>
 		</I18nextProvider>
 	);
 };
 
+const problem = (status: number, errorCode: string): ApiProblemError =>
+	new ApiProblemError({
+		message: "Refused",
+		status,
+		errorCode,
+		fieldErrors: [],
+		reason: status === 403 ? "forbidden" : "validation",
+	});
+
 const workspaceName = (): HTMLElement =>
 	screen.getByRole("textbox", { name: "Workspace Name" });
+const save = (): HTMLElement =>
+	screen.getByRole("button", { name: "Save Changes" });
+
+/** Replaces the workspace name and leaves the field, as a person would. */
+const rename = async (name: string): Promise<void> => {
+	const user = userEvent.setup();
+	await user.clear(workspaceName());
+	if (name) await user.type(workspaceName(), name);
+	await user.tab();
+};
 
 it("prefills every field from the loaded settings with labelled controls", () => {
 	renderForm();
@@ -38,44 +72,53 @@ it("prefills every field from the loaded settings with labelled controls", () =>
 	}
 });
 
-it("offers the three date formats in the design's order", async () => {
-	const user = userEvent.setup();
+it("keeps the preferences fixed and says so", () => {
 	renderForm();
-	await user.click(screen.getByRole("button", { name: "Date Format" }));
+	for (const name of [
+		"Default Language",
+		"Time Zone",
+		"Date Format",
+		"Country",
+	])
+		expect(screen.getByRole("button", { name })).toBeDisabled();
 	expect(
-		within(screen.getByRole("listbox"))
-			.getAllByRole("option")
-			.map((option) => option.textContent)
-	).toEqual(["DD MM YYYY", "MM DD YYYY", "YYYY MM DD"]);
+		screen.getByText(
+			"Language, time zone, date format and country can’t be changed yet."
+		)
+	).toBeVisible();
 });
 
-it("keeps Save Changes disabled and says why", async () => {
-	const user = userEvent.setup();
+it("enables Save Changes only once the workspace name changed", async () => {
 	renderForm();
-	const save = screen.getByRole("button", { name: "Save Changes" });
-	expect(save).toBeDisabled();
-	expect(save).toHaveAttribute("type", "submit");
-	expect(save).toHaveAccessibleDescription(
-		"Saving settings isn’t available yet."
-	);
-	await user.clear(workspaceName());
-	await user.type(workspaceName(), "Renamed{Enter}");
-	expect(save).toBeDisabled();
-	expect(workspaceName()).toHaveValue("Renamed");
+	expect(save()).toBeDisabled();
+	expect(save()).toHaveAttribute("type", "submit");
+
+	await rename("Acme");
+	expect(save()).toBeEnabled();
+
+	await rename("Horaion");
+	expect(save()).toBeDisabled();
 });
 
-it("returns every edited field to its loaded value on Cancel and clears errors", async () => {
+it("saves the trimmed name and shows the name as saved", async () => {
+	const user = userEvent.setup();
+	const onSave = vi.fn<Save>(() => Promise.resolve("Prospect Protection"));
+	renderForm({ onSave });
+
+	await rename("  Prospect   Protection ");
+	await user.click(save());
+
+	expect(onSave).toHaveBeenCalledExactlyOnceWith("Prospect   Protection");
+	expect(workspaceName()).toHaveValue("Prospect Protection");
+	expect(save()).toBeDisabled();
+});
+
+it("returns the name to its loaded value on Cancel and clears errors", async () => {
 	const user = userEvent.setup();
 	renderForm();
-	await user.clear(workspaceName());
-	await user.tab();
+	await rename("");
 	expect(await screen.findByRole("alert")).toHaveTextContent(
 		"Enter a workspace name."
-	);
-	await user.click(screen.getByRole("button", { name: "Date Format" }));
-	await user.click(screen.getByRole("option", { name: "YYYY MM DD" }));
-	expect(screen.getByRole("button", { name: "Date Format" })).toHaveTextContent(
-		"YYYY MM DD"
 	);
 
 	const cancel = screen.getByRole("button", { name: "Cancel" });
@@ -83,9 +126,6 @@ it("returns every edited field to its loaded value on Cancel and clears errors",
 	await user.click(cancel);
 
 	expect(workspaceName()).toHaveValue("Horaion");
-	expect(screen.getByRole("button", { name: "Date Format" })).toHaveTextContent(
-		"DD MM YYYY"
-	);
 	expect(screen.queryByRole("alert")).not.toBeInTheDocument();
 	expect(workspaceName()).not.toHaveAttribute("aria-invalid");
 });
@@ -108,14 +148,84 @@ it("requires a workspace name once the field is left, ignoring surrounding space
 	expect(workspaceName()).not.toHaveAccessibleDescription();
 });
 
-it("limits the workspace name to 255 characters", async () => {
+it.each([
+	["A", "Use 2 to 100 characters."],
+	["a".repeat(101), "Use 2 to 100 characters."],
+	["Acme <Asia>", "Use only letters, numbers, spaces and . ' & - in the name."],
+])("refuses %s before saving", async (name, message) => {
 	const user = userEvent.setup();
-	renderForm({ ...loaded, workspaceName: "a".repeat(255) });
-	await user.click(workspaceName());
-	await user.tab();
+	const onSave = vi.fn<Save>();
+	renderForm({ onSave });
+
+	await rename(name);
+	await user.click(save());
+
+	expect(await screen.findByRole("alert")).toHaveTextContent(message);
+	expect(onSave).not.toHaveBeenCalled();
+});
+
+it("accepts 100 characters and the allowed punctuation", async () => {
+	const user = userEvent.setup();
+	const onSave = vi.fn<Save>((name) => Promise.resolve(name));
+	renderForm({ onSave });
+
+	await rename("Prospect Protection Pte. Ltd. & O'Neil-Co");
+	await user.click(save());
+	await rename("a".repeat(100));
+	await user.click(save());
+
+	expect(onSave).toHaveBeenCalledTimes(2);
 	expect(screen.queryByRole("alert")).not.toBeInTheDocument();
-	await user.type(workspaceName(), "b");
+});
+
+it("places the API's name refusal on the field", async () => {
+	const user = userEvent.setup();
+	renderForm({
+		onSave: () => Promise.reject(problem(400, "INVALID_COMPANY_NAME")),
+	});
+
+	await rename("Acme");
+	await user.click(save());
+
 	expect(await screen.findByRole("alert")).toHaveTextContent(
-		"Use at most 255 characters."
+		"Check the workspace name and try again."
 	);
+	expect(workspaceName()).toHaveAttribute("aria-invalid", "true");
+});
+
+it("explains a refusal of permission, and any other failure, under the form", async () => {
+	const user = userEvent.setup();
+	const onSave = vi
+		.fn<Save>()
+		.mockRejectedValueOnce(problem(403, "AUTHORIZATION_DENIED"))
+		.mockRejectedValueOnce(new Error("offline"));
+	renderForm({ onSave });
+
+	await rename("Acme");
+	await user.click(save());
+	expect(await screen.findByRole("alert")).toHaveTextContent(
+		"You no longer have permission to rename this workspace."
+	);
+
+	await user.click(save());
+	expect(await screen.findByRole("alert")).toHaveTextContent(
+		"We couldn’t save the workspace name. Please try again."
+	);
+});
+
+it("shows the name read-only, with the reason, without permission to rename", () => {
+	renderForm({ canRename: false });
+	expect(workspaceName()).toBeDisabled();
+	expect(workspaceName()).toHaveValue("Horaion");
+	expect(
+		screen.getByText(
+			"Only people who can update the company can rename the workspace."
+		)
+	).toBeVisible();
+	expect(
+		screen.queryByRole("button", { name: "Save Changes" })
+	).not.toBeInTheDocument();
+	expect(
+		screen.queryByRole("button", { name: "Cancel" })
+	).not.toBeInTheDocument();
 });

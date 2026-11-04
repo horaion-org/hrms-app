@@ -1,7 +1,10 @@
-import { screen, within } from "@testing-library/react";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, beforeEach, expect, it, vi } from "vitest";
+import { I18nextProvider } from "react-i18next";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resetApiClient } from "@/common/api-client";
+import { SuccessNotifications } from "@/common/SuccessNotifications";
 import {
 	currentUserReply,
 	openApp,
@@ -16,6 +19,7 @@ import {
 } from "@/common/testing/stubApi";
 import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
+import { authTestI18n } from "@/features/auth/testingI18n";
 
 const REFRESH = "POST /api/v1/public/sessions/refreshes";
 const ME = "GET /api/v1/me";
@@ -43,13 +47,13 @@ const open = async (entry = "/settings"): Promise<OpenedApp> => {
 };
 
 const workspaceReply = (
-	companies: Array<{ uuid: string; name: string }>
+	companies: Array<{ uuid: string; name: string; permissions?: Array<string> }>
 ): StubReply => ({
 	status: 200,
 	body: envelope({
 		companies: companies.map((company) => ({
-			...company,
 			permissions: [],
+			...company,
 			branches: [],
 		})),
 	}),
@@ -115,10 +119,13 @@ it("shows the General settings prefilled with the current company's name", async
 	expect(
 		within(general).getByRole("button", { name: "Country" })
 	).toHaveTextContent("Singapore");
+	// No company:update in this workspace, so the name is shown read-only.
 	expect(
-		within(general).getByRole("button", { name: "Save Changes" })
+		within(general).getByRole("textbox", { name: "Workspace Name" })
 	).toBeDisabled();
-	expect(within(general).getByRole("button", { name: "Cancel" })).toBeEnabled();
+	expect(
+		within(general).queryByRole("button", { name: "Save Changes" })
+	).not.toBeInTheDocument();
 	expect(
 		calls.filter((call) => call.path === "/api/v1/me/workspace")
 	).toHaveLength(1);
@@ -232,4 +239,115 @@ it("opens Settings from the header's settings link", async () => {
 	expect(
 		await screen.findByRole("heading", { level: 1, name: "Settings" })
 	).toBeVisible();
+});
+
+describe("workspace name", () => {
+	const RENAME = "PUT /api/v1/companies/c-1";
+
+	/** The app-level toast queue, which `renderAuthApp` leaves out. */
+	const renderToasts = ({ queryClient }: OpenedApp): void => {
+		render(
+			<I18nextProvider i18n={authTestI18n}>
+				<QueryClientProvider client={queryClient}>
+					<SuccessNotifications />
+				</QueryClientProvider>
+			</I18nextProvider>
+		);
+	};
+
+	it("renames the company, confirms it and reloads the workspace", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			[REFRESH]: accessPassReply(),
+			[ME]: currentUserReply(),
+			[WORKSPACE]: [
+				workspaceReply([
+					{ uuid: "c-1", name: "Horaion", permissions: ["company:update"] },
+				]),
+				workspaceReply([
+					{
+						uuid: "c-1",
+						name: "Prospect Protection",
+						permissions: ["company:update"],
+					},
+				]),
+			],
+			[RENAME]: {
+				status: 200,
+				body: envelope({ companyId: "c-1", name: "Prospect Protection" }),
+			},
+		});
+		renderToasts(await open());
+		const name = await screen.findByRole("textbox", { name: "Workspace Name" });
+		const save = screen.getByRole("button", { name: "Save Changes" });
+		expect(save).toBeDisabled();
+
+		await user.clear(name);
+		await user.type(name, "  Prospect   Protection ");
+		await user.click(save);
+
+		expect(await screen.findByRole("status")).toHaveTextContent(
+			"Workspace name saved."
+		);
+		expect(
+			calls.filter((call) => `${call.method} ${call.path}` === RENAME)
+		).toEqual([
+			expect.objectContaining({ body: { name: "Prospect   Protection" } }),
+		]);
+		expect(name).toHaveValue("Prospect Protection");
+		expect(save).toBeDisabled();
+		await waitFor(() => {
+			expect(
+				calls.filter((call) => call.path === "/api/v1/me/workspace")
+			).toHaveLength(2);
+		});
+	});
+
+	it("shows the name read-only, with the reason, without permission to update the company", async () => {
+		const calls = stubApi({
+			[REFRESH]: accessPassReply(),
+			[ME]: currentUserReply(),
+			[WORKSPACE]: workspaceReply([
+				{ uuid: "c-1", name: "Horaion", permissions: ["company:read"] },
+			]),
+		});
+		await open();
+
+		expect(
+			await screen.findByRole("textbox", { name: "Workspace Name" })
+		).toBeDisabled();
+		expect(
+			screen.getByText(
+				"Only people who can update the company can rename the workspace."
+			)
+		).toBeVisible();
+		expect(
+			screen.queryByRole("button", { name: "Save Changes" })
+		).not.toBeInTheDocument();
+		expect(calls.some((call) => call.method === "PUT")).toBe(false);
+	});
+
+	it("explains a refusal of permission on save", async () => {
+		const user = userEvent.setup();
+		stubApi({
+			[REFRESH]: accessPassReply(),
+			[ME]: currentUserReply(),
+			[WORKSPACE]: workspaceReply([
+				{ uuid: "c-1", name: "Horaion", permissions: ["company:update"] },
+			]),
+			[RENAME]: problemReply(403, "AUTHORIZATION_DENIED"),
+		});
+		await open();
+		const name = await screen.findByRole("textbox", { name: "Workspace Name" });
+
+		await user.clear(name);
+		await user.type(name, "Acme");
+		await user.click(screen.getByRole("button", { name: "Save Changes" }));
+
+		expect(
+			await screen.findByText(
+				"You no longer have permission to rename this workspace."
+			)
+		).toHaveAttribute("role", "alert");
+	});
 });

@@ -8,6 +8,9 @@ import { Tab, TabList, TabPanel, TabPanels, Tabs } from "@/components/ui/Tabs";
 import { GeneralSettingsForm } from "@/features/settings/GeneralSettingsForm";
 import { PlanSettings } from "@/features/settings/PlanSettings";
 import { useGeneralSettings } from "@/features/settings/useGeneralSettings";
+import { useRenameWorkspace } from "@/features/settings/useRenameWorkspace";
+import { COMPANY_SCOPE } from "@/features/workspace/scopes";
+import { useAccess } from "@/features/workspace/useAccess";
 
 const SECTIONS = ["general", "notifications", "scheduling", "plan"] as const;
 const COMING_SOON_SECTIONS = ["notifications", "scheduling"] as const;
@@ -24,6 +27,8 @@ export const Settings = (): FunctionComponent => {
 			: "";
 	const { t } = useTranslation();
 	const general = useGeneralSettings(companyId);
+	const access = useAccess();
+	const renameWorkspace = useRenameWorkspace(companyId);
 	const [selectedIndex, setSelectedIndex] = useState(0);
 	const planTabRef = useRef<HTMLButtonElement>(null);
 
@@ -84,8 +89,10 @@ export const Settings = (): FunctionComponent => {
 						)}
 						{general.status === "ready" && (
 							<GeneralSettingsForm
+								canRename={access.can("company:update", COMPANY_SCOPE)}
 								className="mt-8 flex-1"
 								defaultValues={general.values}
+								onSave={renameWorkspace.mutateAsync}
 							/>
 						)}
 					</TabPanel>

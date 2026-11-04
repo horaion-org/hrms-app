@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useId, useMemo, type ComponentPropsWithRef } from "react";
+import { useId, useMemo, useState, type ComponentPropsWithRef } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { joinClassNames } from "@/common/joinClassNames";
@@ -19,6 +19,7 @@ import {
 	generalSettingsSchema,
 	type GeneralSettingsValues,
 } from "@/features/settings/schemas";
+import { workspaceNameRefusal } from "@/features/settings/workspaceNameRefusal";
 
 export type GeneralSettingsFormProps = Omit<
 	ComponentPropsWithRef<"form">,
@@ -26,6 +27,10 @@ export type GeneralSettingsFormProps = Omit<
 > & {
 	/** The workspace's current settings; Cancel returns the form to them. */
 	defaultValues: GeneralSettingsValues;
+	/** Whether the person may rename the workspace (`company:update` at the company). */
+	canRename: boolean;
+	/** Saves the trimmed workspace name; resolves to the name as saved. */
+	onSave: (workspaceName: string) => Promise<string>;
 };
 
 const SELECT_FIELDS = [
@@ -52,11 +57,15 @@ const SELECT_FIELDS = [
 ] as const;
 
 /**
- * The General settings. There is no endpoint to save them yet, so Save
- * Changes stays disabled (and says why); Cancel discards any edits.
+ * The General settings. Only the workspace name can be saved so far: Save
+ * Changes renames the company once the name changed, and the preferences
+ * stay fixed (and say so). Without permission to rename, the name is shown
+ * read-only with the reason instead of Save and Cancel.
  */
 export const GeneralSettingsForm = ({
 	defaultValues,
+	canRename,
+	onSave,
 	className,
 	...rest
 }: GeneralSettingsFormProps): FunctionComponent => {
@@ -66,24 +75,42 @@ export const GeneralSettingsForm = ({
 		register,
 		control,
 		reset,
-		formState: { errors },
+		handleSubmit,
+		setError,
+		formState: { errors, dirtyFields, isSubmitting },
 	} = useForm<GeneralSettingsValues>({
 		resolver: zodResolver(schema),
 		defaultValues,
 		mode: "onTouched",
 	});
+	const [alert, setAlert] = useState<string | undefined>();
 	const idPrefix = useId();
 	const fieldId = (name: keyof GeneralSettingsValues): string =>
 		`${idPrefix}-${name}`;
-	const saveNoteId = `${idPrefix}-save-note`;
 	const workspaceNameError = errors.workspaceName?.message;
+
+	const save = async (values: GeneralSettingsValues): Promise<void> => {
+		setAlert(undefined);
+		try {
+			const saved = await onSave(values.workspaceName);
+			reset({ ...values, workspaceName: saved });
+		} catch (error) {
+			const refusal = workspaceNameRefusal(error, t);
+			if (refusal.workspaceName)
+				setError("workspaceName", {
+					type: "server",
+					message: refusal.workspaceName,
+				});
+			setAlert(refusal.message);
+		}
+	};
 
 	return (
 		<form
 			noValidate
 			className={joinClassNames("flex flex-col", className)}
 			onSubmit={(event) => {
-				event.preventDefault();
+				void handleSubmit(save)(event);
 			}}
 			{...rest}
 		>
@@ -96,6 +123,7 @@ export const GeneralSettingsForm = ({
 					<Input
 						autoComplete="organization"
 						className="w-full"
+						disabled={!canRename || isSubmitting}
 						id={fieldId("workspaceName")}
 						status={workspaceNameError ? "error" : undefined}
 						aria-describedby={
@@ -114,6 +142,7 @@ export const GeneralSettingsForm = ({
 							render={({ field }) => (
 								<Select
 									ref={field.ref}
+									disabled
 									aria-labelledby={formRowIds(fieldId(name)).labelId}
 									className="w-full"
 									name={field.name}
@@ -130,28 +159,44 @@ export const GeneralSettingsForm = ({
 				))}
 			</div>
 			<div className="mt-auto flex flex-col items-end gap-3 pt-8">
-				<p className="text-sm text-neutral-700" id={saveNoteId}>
-					{t("settings.general.saveUnavailable")}
+				<p className="text-sm text-neutral-700">
+					{t("settings.general.preferencesUnavailable")}
 				</p>
-				<div className="flex flex-wrap justify-end gap-4">
-					<Button
-						leadingIcon={<CrossIcon />}
-						variant="cancel"
-						onClick={() => {
-							reset();
-						}}
-					>
-						{t("settings.general.cancel")}
-					</Button>
-					<Button
-						disabled
-						aria-describedby={saveNoteId}
-						leadingIcon={<SaveIcon />}
-						type="submit"
-					>
-						{t("settings.general.save")}
-					</Button>
-				</div>
+				{alert && (
+					<p className="text-sm text-error-700" role="alert">
+						{alert}
+					</p>
+				)}
+				{canRename ? (
+					<div className="flex flex-wrap justify-end gap-4">
+						<Button
+							disabled={isSubmitting}
+							leadingIcon={<CrossIcon />}
+							variant="cancel"
+							onClick={() => {
+								setAlert(undefined);
+								reset();
+							}}
+						>
+							{t("settings.general.cancel")}
+						</Button>
+						<Button
+							disabled={!dirtyFields.workspaceName || isSubmitting}
+							leadingIcon={<SaveIcon />}
+							type="submit"
+						>
+							{t(
+								isSubmitting
+									? "settings.general.saving"
+									: "settings.general.save"
+							)}
+						</Button>
+					</div>
+				) : (
+					<p className="text-sm text-neutral-700">
+						{t("settings.general.renameUnavailable")}
+					</p>
+				)}
 			</div>
 		</form>
 	);

@@ -1,14 +1,12 @@
 import type { TFunction } from "i18next";
 import { z } from "zod";
+import { nameSchema } from "@/features/organisation/nameSchema";
 import {
 	COUNTRY_OPTIONS,
 	DATE_FORMAT_OPTIONS,
 	LANGUAGE_OPTIONS,
 	TIME_ZONE_OPTIONS,
 } from "@/features/settings/options";
-
-/** Matches the API's limit on a company name. */
-export const WORKSPACE_NAME_MAX_LENGTH = 255;
 
 const valuesOf = <T extends string>(
 	options: ReadonlyArray<{ value: T }>
@@ -29,16 +27,12 @@ export const generalSettingsSchema = (
 	country: OptionEnum<typeof COUNTRY_OPTIONS>;
 }> =>
 	z.object({
-		workspaceName: z
-			.string()
-			.trim()
-			.min(1, t("settings.general.validation.required"))
-			.max(
-				WORKSPACE_NAME_MAX_LENGTH,
-				t("settings.general.validation.tooLong", {
-					max: WORKSPACE_NAME_MAX_LENGTH,
-				})
-			),
+		// The company name follows the API's unit-name rule, like Branch names.
+		workspaceName: nameSchema({
+			required: t("settings.general.validation.required"),
+			length: t("settings.general.validation.length"),
+			characters: t("settings.general.validation.characters"),
+		}),
 		defaultLanguage: z.enum(valuesOf(LANGUAGE_OPTIONS)),
 		timeZone: z.enum(valuesOf(TIME_ZONE_OPTIONS)),
 		dateFormat: z.enum(valuesOf(DATE_FORMAT_OPTIONS)),

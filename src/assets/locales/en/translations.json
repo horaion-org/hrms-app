@@ -757,12 +757,19 @@
 			},
 			"cancel": "Cancel",
 			"save": "Save Changes",
-			"saveUnavailable": "Saving settings isn’t available yet.",
 			"failed": "We couldn’t load your workspace details. Please try again.",
 			"validation": {
 				"required": "Enter a workspace name.",
-				"tooLong": "Use at most {{max}} characters."
-			}
+				"length": "Use 2 to 100 characters.",
+				"characters": "Use only letters, numbers, spaces and . ' & - in the name.",
+				"rejected": "Check the workspace name and try again."
+			},
+			"saving": "Saving…",
+			"saved": "Workspace name saved.",
+			"preferencesUnavailable": "Language, time zone, date format and country can’t be changed yet.",
+			"renameUnavailable": "Only people who can update the company can rename the workspace.",
+			"renameForbidden": "You no longer have permission to rename this workspace.",
+			"saveFailed": "We couldn’t save the workspace name. Please try again."
 		},
 		"notifications": {
 			"title": "Notifications",
