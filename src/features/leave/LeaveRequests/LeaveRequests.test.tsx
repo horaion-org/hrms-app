@@ -104,3 +104,22 @@ it("in own mode shows no employee column and offers only viewing", async () => {
 	);
 	expect(handlers.onOpen).toHaveBeenCalledWith(LEAVE_FIXTURES[0]);
 });
+
+it("leaves the Remarks column out when no request on the page carries remarks", () => {
+	render(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveRequests
+				{...handlers}
+				canReview={() => true}
+				page={1}
+				rows={[LEAVE_FIXTURES[0]!, LEAVE_FIXTURES[2]!]}
+				sort={{ field: "requestedAt", desc: true }}
+				total={2}
+			/>
+		</I18nextProvider>
+	);
+	expect(
+		screen.getAllByRole("columnheader").map((header) => header.textContent)
+	).not.toContain("Remarks");
+	expect(screen.queryByText("No remarks")).not.toBeInTheDocument();
+});

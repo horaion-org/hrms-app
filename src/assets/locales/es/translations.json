@@ -94,7 +94,6 @@
 		"today": "Hoy",
 		"timelineEntry": "{{name}} · {{type}} · {{period}} · {{status}}",
 		"requestTitle": "Solicitud de permiso",
-		"none": "Ninguno",
 		"remarks": "Observaciones",
 		"remarksOptional": "Observaciones (opcional)",
 		"remarksPlaceholder": "Añade lo que deba saber quien revise la solicitud",

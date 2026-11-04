@@ -70,6 +70,27 @@ export const LeaveRequests = ({
 					),
 				},
 			];
+	// The API serves remarks only to people allowed to read them, so the column shows only when this page has some.
+	const remarks: Array<DataTableColumn<LeaveRequest>> = rows.some(
+		(row) => row.notes !== null
+	)
+		? [
+				{
+					id: "notes",
+					header: t("leave.remarks"),
+					headerClassName: "min-w-48",
+					cell: (row) =>
+						row.notes === null ? (
+							<>
+								<span aria-hidden="true">—</span>
+								<span className="sr-only">{t("leave.noRemarks")}</span>
+							</>
+						) : (
+							<p className="max-w-56 truncate">{row.notes}</p>
+						),
+				},
+			]
+		: [];
 	const columns: Array<DataTableColumn<LeaveRequest>> = [
 		...employee,
 		{
@@ -107,20 +128,7 @@ export const LeaveRequests = ({
 			sortValue: (row) => row.leaveType,
 			cell: (row) => t(`leave.types.${row.leaveType}`),
 		},
-		{
-			id: "notes",
-			header: t("leave.remarks"),
-			headerClassName: "min-w-48",
-			cell: (row) =>
-				row.notes === null ? (
-					<>
-						<span aria-hidden="true">—</span>
-						<span className="sr-only">{t("leave.noRemarks")}</span>
-					</>
-				) : (
-					<p className="max-w-56 truncate">{row.notes}</p>
-				),
-		},
+		...remarks,
 		{
 			id: "status",
 			header: t("leave.status"),

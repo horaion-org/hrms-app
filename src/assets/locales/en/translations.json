@@ -94,7 +94,6 @@
 		"today": "Today",
 		"timelineEntry": "{{name}} · {{type}} · {{period}} · {{status}}",
 		"requestTitle": "Leave request",
-		"none": "None",
 		"remarks": "Remarks",
 		"remarksOptional": "Remarks (optional)",
 		"remarksPlaceholder": "Add anything the reviewer should know",

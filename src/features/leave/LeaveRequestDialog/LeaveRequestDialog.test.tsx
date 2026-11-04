@@ -297,7 +297,7 @@ it("sends trimmed remarks, counts them as they are typed, and leaves them out wh
 	).toHaveAccessibleDescription("Use 1,000 characters or fewer.");
 });
 
-it("shows the request's remarks with their line breaks, or none", () => {
+it("shows the request's remarks with their line breaks, and no Remarks row when the API sends none", () => {
 	const view = render(
 		<I18nextProvider i18n={authTestI18n}>
 			<LeaveRequestDialog
@@ -324,7 +324,22 @@ it("shows the request's remarks with their line breaks, or none", () => {
 			/>
 		</I18nextProvider>
 	);
-	expect(screen.getByText("Remarks").nextElementSibling).toHaveTextContent(
-		"None"
+	// Remarks are withheld from people who may not read them, so absent remarks leave no row behind.
+	expect(screen.queryByText("Remarks")).not.toBeInTheDocument();
+});
+
+it("shows no reason row for a rejected request whose reason the API withholds", () => {
+	render(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveRequestDialog
+				request={{ ...LEAVE_FIXTURES[2]!, rejectionReason: null }}
+				onApprove={vi.fn()}
+				onClose={vi.fn()}
+				onCreate={vi.fn()}
+				onReject={vi.fn()}
+			/>
+		</I18nextProvider>
 	);
+	expect(screen.getByText("Rejected")).toBeInTheDocument();
+	expect(screen.queryByText("Reason for rejection")).not.toBeInTheDocument();
 });
