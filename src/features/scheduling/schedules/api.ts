@@ -47,11 +47,15 @@ const scheduleStatusSchema = z.enum([
 	"GENERATION_REQUESTED",
 	"GENERATED",
 	"GENERATION_FAILED",
+	"PUBLISHED",
+	"REJECTED",
 ]);
 
 /**
  * A DRAFT can be changed; once generation is requested it is frozen, and its
- * generation run ends as GENERATED or GENERATION_FAILED.
+ * generation run ends as GENERATED or GENERATION_FAILED. A GENERATED roster
+ * is then decided once: PUBLISHED (final for its week) or REJECTED with a
+ * reason (it can be generated again).
  */
 export type ScheduleStatus = z.infer<typeof scheduleStatusSchema>;
 
@@ -172,6 +176,12 @@ const generationSchema = z.object({
 /** A schedule's newest generation run and what it found. */
 export type ScheduleGeneration = z.infer<typeof generationSchema>;
 
+/** A company member named on a schedule; `displayName` is null once they have left the company. */
+const participantSchema = z.object({
+	membershipId: z.string(),
+	displayName: z.string().nullable(),
+});
+
 const scheduleSchema = z.object({
 	scheduleId: z.string(),
 	companyId: z.string(),
@@ -195,10 +205,13 @@ const scheduleSchema = z.object({
 	includedConstraintIds: z.array(z.string()),
 	/** Set exactly when the status is not DRAFT. */
 	generationRequestedAt: z.string().nullable(),
-	/** `displayName` is null once the requester has left the company. */
-	generationRequestedBy: z
-		.object({ membershipId: z.string(), displayName: z.string().nullable() })
-		.nullable(),
+	generationRequestedBy: participantSchema.nullable(),
+	/** When the roster was published or rejected; null while undecided (and from an API without publishing). */
+	decidedAt: z.string().nullable().default(null),
+	/** Who published or rejected it. */
+	decidedBy: participantSchema.nullable().default(null),
+	/** Why it was rejected; null unless REJECTED. */
+	rejectionReason: z.string().nullable().default(null),
 	/** The newest generation run, or null for a schedule that has none. */
 	generation: generationSchema.nullable(),
 	createdAt: z.string(),
@@ -225,13 +238,25 @@ export const generationInProgress = ({
 		OPEN_RUN_STATUSES.includes(generation.status));
 
 /**
- * Whether a schedule can be generated again: its last generation ended,
- * GENERATED or GENERATION_FAILED, and no newer run is open.
+ * Whether a schedule can be generated again: its last generation ended and
+ * wasn't published (GENERATED, GENERATION_FAILED or REJECTED), and no newer
+ * run is open.
  */
 export const regenerable = (schedule: Schedule): boolean =>
 	(schedule.status === "GENERATED" ||
-		schedule.status === "GENERATION_FAILED") &&
+		schedule.status === "GENERATION_FAILED" ||
+		schedule.status === "REJECTED") &&
 	!generationInProgress(schedule);
+
+/** Whether a schedule has a roster to show: generated, then published or rejected. */
+export const hasRoster = (schedule: Schedule): boolean =>
+	schedule.status === "GENERATED" ||
+	schedule.status === "PUBLISHED" ||
+	schedule.status === "REJECTED";
+
+/** Whether a schedule's roster awaits a decision: GENERATED with no run open. */
+export const decidable = (schedule: Schedule): boolean =>
+	schedule.status === "GENERATED" && !generationInProgress(schedule);
 
 const schedulePageSchema = z.object({
 	content: z.array(scheduleSchema),
@@ -330,7 +355,7 @@ export const requestGeneration = (
 	});
 
 /**
- * Generates a GENERATED or GENERATION_FAILED schedule again from its frozen
+ * Generates a GENERATED, GENERATION_FAILED or REJECTED schedule again from its frozen
  * shifts and constraints: its roster is removed and it is
  * GENERATION_REQUESTED until the new run ends. Whatever it answers is not
  * read: every scheduling query reloads.
@@ -343,6 +368,41 @@ export const requestRegeneration = (
 	apiRequestVoid(`${schedulePath(companyId, unit, scheduleId)}/regeneration`, {
 		method: "POST",
 	});
+
+/**
+ * Records a publish decision on a GENERATED schedule's roster. It answers
+ * the schedule: read its status from the answer (PUBLISHED today), never
+ * assume it.
+ */
+export const publishSchedule = (
+	companyId: string,
+	unit: DepartmentPath,
+	scheduleId: string
+): Promise<Schedule> =>
+	apiRequest(
+		`${schedulePath(companyId, unit, scheduleId)}/approval`,
+		scheduleSchema,
+		{ method: "POST" }
+	);
+
+/** The longest rejection reason the API keeps, in characters. */
+export const SCHEDULE_REJECTION_REASON_MAX_LENGTH = 2000;
+
+/**
+ * Rejects a GENERATED schedule's roster with a reason, after which it can be
+ * generated again or deleted. It answers the schedule, REJECTED.
+ */
+export const rejectSchedule = (
+	companyId: string,
+	unit: DepartmentPath,
+	scheduleId: string,
+	reason: string
+): Promise<Schedule> =>
+	apiRequest(
+		`${schedulePath(companyId, unit, scheduleId)}/rejection`,
+		scheduleSchema,
+		{ method: "POST", body: { reason: reason.trim() } }
+	);
 
 /**
  * Soft-deletes a schedule in any status but GENERATION_REQUESTED, which the

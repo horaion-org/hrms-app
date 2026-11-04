@@ -13,6 +13,8 @@ import {
 	companyScheduleQuery,
 	createSchedule,
 	deleteSchedule,
+	publishSchedule,
+	rejectSchedule,
 	requestGeneration,
 	requestRegeneration,
 	scheduleKey,
@@ -106,6 +108,8 @@ type Created = { unit: DepartmentPath; body: ScheduleBody };
 type Replaced = Created & { scheduleId: string };
 type Generated = { unit: DepartmentPath; scheduleId: string };
 type Removed = { unit: DepartmentPath; scheduleId: string };
+type Decided = { unit: DepartmentPath; scheduleId: string };
+type Rejected = Decided & { reason: string };
 
 export type ScheduleActions = {
 	create: UseMutationResult<Schedule, Error, Created>;
@@ -113,14 +117,17 @@ export type ScheduleActions = {
 	generate: UseMutationResult<void, Error, Generated>;
 	regenerate: UseMutationResult<void, Error, Generated>;
 	remove: UseMutationResult<void, Error, Removed>;
+	publish: UseMutationResult<Schedule, Error, Decided>;
+	reject: UseMutationResult<Schedule, Error, Rejected>;
 };
 
 /**
- * Creating, replacing, generating, regenerating and deleting a schedule. A saved schedule
- * is cached at once, so the next step shows it without waiting, and every
- * scheduling query of the company reloads after each. Deleting reloads only
- * the list, so a roster still on screen isn't read again and found missing;
- * a refused regeneration or delete reloads everything, so the schedule's
+ * Creating, replacing, generating, regenerating, deleting, publishing and
+ * rejecting a schedule. A saved or decided schedule is cached at once from
+ * the answer, so the page shows it without waiting, and every scheduling
+ * query of the company reloads after each. Deleting reloads only the list,
+ * so a roster still on screen isn't read again and found missing; a refused
+ * regeneration, delete or decision reloads everything, so the schedule's
  * status catches up.
  */
 export const useScheduleActions = (companyId: string): ScheduleActions => {
@@ -164,6 +171,20 @@ export const useScheduleActions = (companyId: string): ScheduleActions => {
 				deleteSchedule(companyId, unit, scheduleId),
 			onSuccess: () =>
 				client.invalidateQueries({ queryKey: schedulesKey(companyId) }),
+			onError: reload,
+		}),
+		publish: useMutation({
+			meta: { successMessage: "scheduling.decision.published" },
+			mutationFn: ({ unit, scheduleId }: Decided) =>
+				publishSchedule(companyId, unit, scheduleId),
+			onSuccess: saved,
+			onError: reload,
+		}),
+		reject: useMutation({
+			meta: { successMessage: "scheduling.decision.rejected" },
+			mutationFn: ({ unit, scheduleId, reason }: Rejected) =>
+				rejectSchedule(companyId, unit, scheduleId, reason),
+			onSuccess: saved,
 			onError: reload,
 		}),
 	};

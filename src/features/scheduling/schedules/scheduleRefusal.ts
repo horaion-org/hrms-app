@@ -21,6 +21,10 @@ export const SCHEDULE_REFUSAL_CODES = {
 	constraintInactive: "409 CONSTRAINT_INACTIVE",
 	departmentInactive: "409 DEPARTMENT_INACTIVE",
 	departmentNotFound: "404 DEPARTMENT_NOT_FOUND",
+	notGenerated: "409 SCHEDULE_NOT_GENERATED",
+	alreadyDecided: "409 SCHEDULE_ALREADY_DECIDED",
+	published: "409 SCHEDULE_PUBLISHED",
+	invalidRejectionReason: "400 INVALID_REJECTION_REASON",
 } as const;
 
 const codes = SCHEDULE_REFUSAL_CODES;
@@ -120,6 +124,7 @@ export const regenerationRefusal = (error: unknown, t: TFunction): string => {
 			alerts: {
 				[codes.isDraft]: t(`${key}.draft`),
 				[codes.generationInProgress]: t(`${key}.inProgress`),
+				[codes.published]: t(`${key}.published`),
 				[codes.hasNoEmployees]: t("scheduling.generate.noEmployees"),
 				[codes.scheduleNotFound]: t("scheduling.delete.gone"),
 			},
@@ -127,4 +132,34 @@ export const regenerationRefusal = (error: unknown, t: TFunction): string => {
 			failed: t(`${key}.failed`),
 		}).message ?? t(`${key}.failed`)
 	);
+};
+
+/** The field a refused rejection can land on. */
+export type RejectionField = "reason";
+
+/**
+ * Why publishing or rejecting a schedule was refused: an invalid reason on
+ * the reason field, otherwise one message for the dialog.
+ */
+export const decisionRefusal = (
+	error: unknown,
+	t: TFunction
+): Refusal<RejectionField> => {
+	const key = "scheduling.decision.refusal";
+	const reason = {
+		field: "reason",
+		message: t(`${key}.reasonRejected`),
+	} as const;
+	return mapRefusal<RejectionField>(error, {
+		codes: { [codes.invalidRejectionReason]: reason },
+		alerts: {
+			[codes.generationInProgress]: t(`${key}.inProgress`),
+			[codes.notGenerated]: t(`${key}.notGenerated`),
+			[codes.alreadyDecided]: t(`${key}.alreadyDecided`),
+			[codes.scheduleNotFound]: t("scheduling.delete.gone"),
+		},
+		fieldErrors: { reason },
+		forbidden: t(`${key}.forbidden`),
+		failed: t(`${key}.failed`),
+	});
 };

@@ -10,8 +10,11 @@ import type { ScheduleStatus } from "@/features/scheduling/schedules/api";
 export const scheduleStatusTones: Record<ScheduleStatus, BadgeTone> = {
 	DRAFT: "neutral",
 	GENERATION_REQUESTED: "warning",
-	GENERATED: "success",
+	// Generated and not yet decided: someone still has to publish or reject it.
+	GENERATED: "warning",
 	GENERATION_FAILED: "error",
+	PUBLISHED: "success",
+	REJECTED: "error",
 };
 
 /*

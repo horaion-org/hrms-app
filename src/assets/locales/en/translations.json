@@ -1542,13 +1542,14 @@
 			},
 			"schedule": {
 				"name": "Schedules",
-				"description": "Each department’s schedules: their week, settings and chosen shifts, generating them and deleting them.",
+				"description": "Each department’s schedules: their week, settings and chosen shifts, generating them, publishing or rejecting their rosters, and deleting them.",
 				"actions": {
 					"read": "View",
 					"create": "Create",
 					"update": "Edit",
 					"generate": "Generate",
-					"delete": "Delete"
+					"delete": "Delete",
+					"publish": "Publish"
 				}
 			},
 			"shift": {
@@ -1700,7 +1701,9 @@
 				"DRAFT": "Draft",
 				"GENERATION_REQUESTED": "Generation requested",
 				"GENERATED": "Generated",
-				"GENERATION_FAILED": "Generation failed"
+				"GENERATION_FAILED": "Generation failed",
+				"PUBLISHED": "Published",
+				"REJECTED": "Rejected"
 			},
 			"history": {
 				"title": "Schedule history",
@@ -2359,6 +2362,7 @@
 			"done": "Regeneration requested.",
 			"draft": "This schedule hasn’t been generated yet. Generate it from its setup.",
 			"inProgress": "This schedule is being generated. Try again once the run finishes.",
+			"published": "This roster is published, so it can’t be regenerated. It can still be deleted.",
 			"forbidden": "You no longer have permission to regenerate this schedule.",
 			"failed": "We couldn’t regenerate the roster. Try again."
 		},
@@ -2370,6 +2374,38 @@
 			"draft": "This schedule has no roster yet.",
 			"retry": "Try again",
 			"close": "Close"
+		},
+		"decision": {
+			"label": "Roster decision",
+			"pending": "This roster hasn’t been published yet. Publish it to make it final for its week, or reject it with a reason.",
+			"pendingReadOnly": "This roster is waiting to be published or rejected.",
+			"publish": "Publish roster",
+			"reject": "Reject",
+			"publishedBy": "Published by {{name}} · {{at}}",
+			"publishedAt": "Published · {{at}}",
+			"rejectedBy": "Rejected by {{name}} · {{at}}",
+			"rejectedAt": "Rejected · {{at}}",
+			"rejectedNext": "Regenerate the roster, or delete the schedule.",
+			"reason": "Reason for rejection",
+			"publishTitle": "Publish this roster?",
+			"publishDescription": "Publishing makes this roster final for its week. It can’t be regenerated afterwards, but the schedule can still be deleted.",
+			"publishConfirm": "Publish roster",
+			"rejectTitle": "Reject this roster?",
+			"rejectDescription": "Say what needs to change. The roster stays visible, and the schedule can then be regenerated or deleted.",
+			"rejectConfirm": "Confirm rejection",
+			"note": "Add a note",
+			"required": "Enter a reason for rejection.",
+			"cancel": "Cancel",
+			"published": "Roster published.",
+			"rejected": "Roster rejected.",
+			"refusal": {
+				"inProgress": "This schedule is being generated. Try again once the run finishes.",
+				"notGenerated": "This schedule has no generated roster to publish or reject.",
+				"alreadyDecided": "This roster was already published or rejected. Reload the page to see it.",
+				"reasonRejected": "Enter a reason of up to 2,000 characters.",
+				"forbidden": "You no longer have permission to publish or reject this roster.",
+				"failed": "We couldn’t save the decision. Try again."
+			}
 		}
 	},
 	"colourSwatchPicker": {

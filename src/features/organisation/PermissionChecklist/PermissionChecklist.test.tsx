@@ -74,8 +74,15 @@ describe("PermissionChecklist", () => {
 		expect(screen.getAllByRole("checkbox")).toHaveLength(
 			PERMISSION_KEYS.length + 15
 		);
-		expect(within(row("Schedules")).getAllByRole("checkbox")).toHaveLength(6);
-		for (const action of ["View", "Create", "Edit", "Generate", "Delete"])
+		expect(within(row("Schedules")).getAllByRole("checkbox")).toHaveLength(7);
+		for (const action of [
+			"View",
+			"Create",
+			"Edit",
+			"Generate",
+			"Delete",
+			"Publish",
+		])
 			expect(box("Schedules", action)).not.toBeChecked();
 		expect(within(row("Shifts")).getAllByRole("checkbox")).toHaveLength(5);
 		for (const action of ["View", "Add", "Edit", "Delete"])

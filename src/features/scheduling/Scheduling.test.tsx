@@ -88,12 +88,14 @@ it("labels and tones every API status in the history", async () => {
 			label: "Generation requested",
 			background: "bg-warning-100",
 		},
-		{ status: "GENERATED", label: "Generated", background: "bg-success-100" },
+		{ status: "GENERATED", label: "Generated", background: "bg-warning-100" },
 		{
 			status: "GENERATION_FAILED",
 			label: "Generation failed",
 			background: "bg-error-100",
 		},
+		{ status: "PUBLISHED", label: "Published", background: "bg-success-100" },
+		{ status: "REJECTED", label: "Rejected", background: "bg-error-100" },
 	] as const;
 	stubApi({
 		"POST /api/v1/public/sessions/refreshes": accessPassReply(),

@@ -9,11 +9,16 @@ import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId
 import { GeneratedRoster } from "@/features/scheduling/GeneratedRoster";
 import { GenerationFailurePanel } from "@/features/scheduling/GenerationFailurePanel";
 import type { DepartmentPath } from "@/features/scheduling/paths";
+import { PublishScheduleDialog } from "@/features/scheduling/PublishScheduleDialog";
 import { RegenerateDialog } from "@/features/scheduling/RegenerateDialog";
+import { RejectScheduleDialog } from "@/features/scheduling/RejectScheduleDialog";
 import { RosterHeader } from "@/features/scheduling/RosterHeader";
+import { ScheduleDecisionPanel } from "@/features/scheduling/ScheduleDecisionPanel";
 import { ScheduleMenu } from "@/features/scheduling/ScheduleMenu";
 import {
+	decidable,
 	generationInProgress,
+	hasRoster,
 	regenerable,
 	type Schedule,
 } from "@/features/scheduling/schedules/api";
@@ -127,7 +132,7 @@ const RosterBody = ({
 				onRegenerate={onRegenerate}
 			/>
 		);
-	if (schedule.status !== "GENERATED")
+	if (!hasRoster(schedule))
 		return <Callout className="mt-8">{t(`${key}.draft`)}</Callout>;
 	if (assignments.status !== "ready")
 		return (
@@ -145,12 +150,17 @@ const RosterBody = ({
 	);
 };
 
+/** The decision dialog open on the roster, if any. */
+type Deciding = "publish" | "reject" | undefined;
+
 /**
  * One schedule read by its id alone. It is read again every
  * 15 seconds while its generation is in progress; its roster, and the frozen
- * shifts and constraints that name its findings, are read once it is GENERATED.
- * Where the person may, its header offers to regenerate an ended generation
- * (as does the failure panel) and to delete it.
+ * shifts and constraints that name its findings, are read once it has one
+ * (generated, published or rejected). Where the person may, its header
+ * offers to regenerate a generation that ended and wasn't published (as does
+ * the failure panel) and to delete it, and the decision panel under the
+ * header offers to publish or reject a generated roster.
  */
 const ApiSchedule = ({
 	companyId,
@@ -163,6 +173,7 @@ const ApiSchedule = ({
 	const navigate = useNavigate();
 	const access = useAccess();
 	const [regenerating, setRegenerating] = useState(false);
+	const [deciding, setDeciding] = useState<Deciding>();
 	const state = useCompanySchedule(companyId, scheduleId, {
 		pollWhileGenerating: true,
 	});
@@ -176,7 +187,7 @@ const ApiSchedule = ({
 			: undefined;
 	const showsRoster =
 		state.status === "ready" &&
-		state.schedule.status === "GENERATED" &&
+		hasRoster(state.schedule) &&
 		!generationInProgress(state.schedule);
 	const assignments = useScheduleAssignments(
 		companyId,
@@ -208,6 +219,12 @@ const ApiSchedule = ({
 					setRegenerating(true);
 				}
 			: undefined;
+	const canDecide =
+		decidable(state.schedule) &&
+		access.can(
+			"schedule:publish",
+			departmentScope(state.schedule.departmentId)
+		);
 	return (
 		<>
 			<RosterHeader
@@ -234,6 +251,25 @@ const ApiSchedule = ({
 					</div>
 				}
 			/>
+			<ScheduleDecisionPanel
+				className="mt-6"
+				schedule={state.schedule}
+				showsNextStep={regenerable(state.schedule)}
+				onPublish={
+					canDecide
+						? (): void => {
+								setDeciding("publish");
+							}
+						: undefined
+				}
+				onReject={
+					canDecide
+						? (): void => {
+								setDeciding("reject");
+							}
+						: undefined
+				}
+			/>
 			<RosterBody
 				assignments={assignments}
 				constraints={constraints}
@@ -241,6 +277,24 @@ const ApiSchedule = ({
 				shifts={shifts}
 				onRegenerate={openRegenerate}
 			/>
+			{deciding === "publish" && (
+				<PublishScheduleDialog
+					companyId={companyId}
+					schedule={state.schedule}
+					onClose={() => {
+						setDeciding(undefined);
+					}}
+				/>
+			)}
+			{deciding === "reject" && (
+				<RejectScheduleDialog
+					companyId={companyId}
+					schedule={state.schedule}
+					onClose={() => {
+						setDeciding(undefined);
+					}}
+				/>
+			)}
 			{regenerating && (
 				<RegenerateDialog
 					companyId={companyId}

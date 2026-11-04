@@ -200,26 +200,27 @@ it("deletes the schedule from the header's menu and goes back to the overview", 
 	).toHaveLength(1);
 });
 
-it("offers only Export roster in the header menu without schedule:delete", async () => {
-	await openRoster({
-		...signedIn(),
-		[`GET ${SCHEDULE_READ}`]: ok(
-			generatedScheduleFixture({ status: "GENERATED" })
-		),
-		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
-	});
-	const user = userEvent.setup();
+it.each(["GENERATED", "PUBLISHED", "REJECTED"] as const)(
+	"offers only Export roster in the header menu of a %s roster without schedule:delete",
+	async (status) => {
+		await openRoster({
+			...signedIn(),
+			[`GET ${SCHEDULE_READ}`]: ok(generatedScheduleFixture({ status })),
+			[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+		});
+		const user = userEvent.setup();
 
-	await user.click(
-		await screen.findByRole("button", {
-			name: "More actions for Front Office - Week 42",
-		})
-	);
+		await user.click(
+			await screen.findByRole("button", {
+				name: "More actions for Front Office - Week 42",
+			})
+		);
 
-	expect(
-		screen.getAllByRole("menuitem").map((item) => item.textContent)
-	).toEqual(["Export roster"]);
-});
+		expect(
+			screen.getAllByRole("menuitem").map((item) => item.textContent)
+		).toEqual(["Export roster"]);
+	}
+);
 
 it("downloads the roster as a spreadsheet from the header's menu", async () => {
 	const createObjectUrl = vi.fn(() => "blob:roster");
@@ -231,7 +232,9 @@ it("downloads the roster as a spreadsheet from the header's menu", async () => {
 	vi.stubGlobal("URL", DownloadUrl);
 	const calls = await openRoster({
 		...signedIn(),
-		[`GET ${SCHEDULE}`]: ok(generatedScheduleFixture({ status: "GENERATED" })),
+		[`GET ${SCHEDULE_READ}`]: ok(
+			generatedScheduleFixture({ status: "GENERATED" })
+		),
 		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
 		[`GET ${SCHEDULE}/export`]: {
 			status: 200,
@@ -271,7 +274,9 @@ it("downloads the roster as a spreadsheet from the header's menu", async () => {
 it("says when the roster couldn't be downloaded and lets the person try again", async () => {
 	await openRoster({
 		...signedIn(),
-		[`GET ${SCHEDULE}`]: ok(generatedScheduleFixture({ status: "GENERATED" })),
+		[`GET ${SCHEDULE_READ}`]: ok(
+			generatedScheduleFixture({ status: "GENERATED" })
+		),
 		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
 		[`GET ${SCHEDULE}/export`]: { status: 500 },
 	});
@@ -423,6 +428,11 @@ it.each([
 		["schedule:read", "schedule:generate"],
 		scheduleFixture(),
 	],
+	[
+		"once it is published",
+		["schedule:read", "schedule:generate"],
+		generatedScheduleFixture({ status: "PUBLISHED" }),
+	],
 ] as const)("offers no regeneration %s", async (_, permissions, schedule) => {
 	await openRoster({
 		...signedIn([...permissions]),
@@ -434,6 +444,144 @@ it.each([
 	expect(
 		screen.queryByRole("button", { name: "Regenerate roster" })
 	).toBeNull();
+});
+
+it("publishes a generated roster after a confirm, then says who published it", async () => {
+	const calls = await openRoster({
+		...signedIn(["schedule:read", "schedule:generate", "schedule:publish"]),
+		[`GET ${SCHEDULE_READ}`]: [
+			ok(generatedScheduleFixture({ status: "GENERATED" })),
+			ok(generatedScheduleFixture({ status: "PUBLISHED" })),
+		],
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+		[`POST ${SCHEDULE}/approval`]: ok(
+			generatedScheduleFixture({ status: "PUBLISHED" })
+		),
+	});
+	const user = userEvent.setup();
+
+	const panel = await screen.findByRole("region", { name: "Roster decision" });
+	expect(panel).toHaveTextContent("This roster hasn’t been published yet.");
+	await user.click(
+		within(panel).getByRole("button", { name: "Publish roster" })
+	);
+	const dialog = screen.getByRole("dialog", { name: "Publish this roster?" });
+	expect(dialog).toHaveTextContent("It can’t be regenerated afterwards");
+	await user.click(
+		within(dialog).getByRole("button", { name: "Publish roster" })
+	);
+
+	expect(
+		await within(panel).findByText(/^Published by José · /)
+	).toBeInTheDocument();
+	expect(screen.queryByRole("dialog")).toBeNull();
+	expect(within(panel).queryByRole("button")).toBeNull();
+	expect(
+		screen.queryByRole("button", { name: "Regenerate roster" })
+	).toBeNull();
+	const decisions = calls.filter(
+		(call) => call.method === "POST" && call.path.startsWith(SCHEDULE)
+	);
+	expect(decisions.map((call) => call.path)).toEqual([`${SCHEDULE}/approval`]);
+	expect(decisions[0]?.body).toBeUndefined();
+});
+
+it("asks for a reason before rejecting a roster, then shows the reason", async () => {
+	const calls = await openRoster({
+		...signedIn(["schedule:read", "schedule:generate", "schedule:publish"]),
+		[`GET ${SCHEDULE_READ}`]: [
+			ok(generatedScheduleFixture({ status: "GENERATED" })),
+			ok(generatedScheduleFixture({ status: "REJECTED" })),
+		],
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+		[`POST ${SCHEDULE}/rejection`]: ok(
+			generatedScheduleFixture({ status: "REJECTED" })
+		),
+	});
+	const user = userEvent.setup();
+
+	const panel = await screen.findByRole("region", { name: "Roster decision" });
+	await user.click(within(panel).getByRole("button", { name: "Reject" }));
+	const dialog = screen.getByRole("dialog", { name: "Reject this roster?" });
+	const confirm = within(dialog).getByRole("button", {
+		name: "Confirm rejection",
+	});
+	expect(confirm).toHaveClass("not-disabled:bg-error-600!");
+	await user.click(confirm);
+	expect(within(dialog).getByRole("alert")).toHaveTextContent(
+		"Enter a reason for rejection."
+	);
+	expect(
+		calls.filter(
+			(call) => call.method === "POST" && call.path.startsWith(SCHEDULE)
+		)
+	).toHaveLength(0);
+
+	await user.type(
+		within(dialog).getByRole("textbox", { name: "Reason for rejection" }),
+		"Two nights have no supervisor."
+	);
+	await user.click(confirm);
+
+	expect(
+		await within(panel).findByText(/^Rejected by José · /)
+	).toBeInTheDocument();
+	expect(panel).toHaveTextContent(
+		"Two nights have no supervisor. Regenerate once Siti is back."
+	);
+	expect(panel).toHaveTextContent(
+		"Regenerate the roster, or delete the schedule."
+	);
+	expect(
+		calls.find((call) => call.path === `${SCHEDULE}/rejection`)?.body
+	).toEqual({ reason: "Two nights have no supervisor." });
+	expect(
+		screen.getByRole("button", { name: "Regenerate roster" })
+	).toBeInTheDocument();
+});
+
+it("shows a refused decision inside the dialog and keeps it open", async () => {
+	await openRoster({
+		...signedIn(["schedule:read", "schedule:publish"]),
+		[`GET ${SCHEDULE_READ}`]: ok(
+			generatedScheduleFixture({ status: "GENERATED" })
+		),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+		[`POST ${SCHEDULE}/approval`]: problemReply(
+			409,
+			"SCHEDULE_ALREADY_DECIDED"
+		),
+	});
+	const user = userEvent.setup();
+
+	await user.click(
+		await screen.findByRole("button", { name: "Publish roster" })
+	);
+	const dialog = screen.getByRole("dialog", { name: "Publish this roster?" });
+	await user.click(
+		within(dialog).getByRole("button", { name: "Publish roster" })
+	);
+
+	expect(await within(dialog).findByRole("alert")).toHaveTextContent(
+		"This roster was already published or rejected. Reload the page to see it."
+	);
+	expect(screen.getByRole("dialog")).toBeInTheDocument();
+});
+
+it("shows a generated roster as waiting, without buttons, to someone without schedule:publish", async () => {
+	await openRoster({
+		...signedIn(["schedule:read"]),
+		[`GET ${SCHEDULE_READ}`]: ok(
+			generatedScheduleFixture({ status: "GENERATED" })
+		),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+	});
+
+	const panel = await screen.findByRole("region", { name: "Roster decision" });
+	expect(panel).toHaveTextContent(
+		"This roster is waiting to be published or rejected."
+	);
+	expect(within(panel).queryByRole("button")).toBeNull();
 });
 
 it("shows a chosen day's shift read-only", async () => {
