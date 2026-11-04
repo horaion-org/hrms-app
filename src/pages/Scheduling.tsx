@@ -23,7 +23,10 @@ import { DepartmentFilter } from "@/features/workspace/DepartmentFilter";
 import { departmentChips } from "@/features/workspace/filterChips";
 import { SCHEDULE_READ_KEYS } from "@/features/workspace/permissionKeys";
 import { unitSelectionOf } from "@/features/workspace/unitSearch";
-import { selectedUnits } from "@/features/workspace/unitSelection";
+import {
+	offersDepartmentChoice,
+	selectedUnits,
+} from "@/features/workspace/unitSelection";
 import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 
 const key = "scheduling.overview";
@@ -176,7 +179,10 @@ export const Scheduling = (): FunctionComponent => {
 					</Can>
 				}
 				filterFields={
-					<DepartmentFilter selection={units} onChange={chooseDepartment} />
+					// Scheduling has no status filter: with no Department to choose, no Filters.
+					offersDepartmentChoice(units) && (
+						<DepartmentFilter selection={units} onChange={chooseDepartment} />
+					)
 				}
 				onSearchChange={setSearch}
 				onClearFilters={() => {

@@ -41,7 +41,10 @@ import { recordScope } from "@/features/workspace/scopes";
 import { DepartmentFilter } from "@/features/workspace/DepartmentFilter";
 import { departmentChips } from "@/features/workspace/filterChips";
 import { unitSelectionOf } from "@/features/workspace/unitSearch";
-import { selectedUnits } from "@/features/workspace/unitSelection";
+import {
+	offersDepartmentChoice,
+	selectedUnits,
+} from "@/features/workspace/unitSelection";
 import { useAccess } from "@/features/workspace/useAccess";
 import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 
@@ -189,7 +192,7 @@ export const Availability = (): FunctionComponent => {
 					}
 					filters={
 						<>
-							{view === "team" && (
+							{view === "team" && offersDepartmentChoice(units) && (
 								<FiltersPopover count={chips.length}>
 									<DepartmentFilter
 										selection={units}

@@ -422,3 +422,32 @@ it("lists every Branch once All branches is chosen, with every Department under 
 		`${FIRST_PAGE}&departmentId=d-3`,
 	]);
 });
+
+it("offers no Filters while the header Branch has only one Department to choose", async () => {
+	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+	// Orchard (Kitchen d-1, Bar d-2) and Tampines (Front d-3 only).
+	stubApi({
+		"POST /api/v1/public/sessions/refreshes": accessPassReply(),
+		"GET /api/v1/me": currentUserReply(),
+		"GET /api/v1/me/workspace": {
+			status: 200,
+			body: envelope(companyWideWorkspace(["schedule:read"])),
+		},
+		[`GET ${SCHEDULES_PATH}`]: listOf([scheduleFixture()]),
+	});
+	app = await openApp("/scheduling?branch=b-1");
+	renderAuthApp(app);
+	const user = userEvent.setup();
+	await screen.findByRole("table", { name: "Schedule history" });
+	expect(screen.getByRole("button", { name: "Filters" })).toBeVisible();
+
+	await user.click(screen.getByRole("button", { name: "Branch" }));
+	await user.click(screen.getByRole("option", { name: "Tampines" }));
+
+	// Scheduling has no status filter, so a lone Department would leave the panel empty.
+	await waitFor(() => {
+		expect(
+			screen.queryByRole("button", { name: "Filters" })
+		).not.toBeInTheDocument();
+	});
+});

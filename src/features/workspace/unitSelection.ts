@@ -52,6 +52,15 @@ export const offersAllBranches = (
 ): boolean => branches.length > 1;
 
 /**
+ * Whether a Department is left to choose: two or more in reach. A
+ * `DepartmentFilter` renders nothing otherwise, so a Filters panel that
+ * would hold only that field is left out rather than opening empty.
+ */
+export const offersDepartmentChoice = ({
+	departmentMode,
+}: ResolvedUnitSelection): boolean => departmentMode === "select";
+
+/**
  * The Branch shown while nothing is chosen: the person's home Branch when
  * it is offered, else the first offered Branch by name.
  */

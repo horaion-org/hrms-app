@@ -56,7 +56,10 @@ import { recordScope } from "@/features/workspace/scopes";
 import { DepartmentFilter } from "@/features/workspace/DepartmentFilter";
 import { departmentChips, filterChip } from "@/features/workspace/filterChips";
 import { unitSelectionOf } from "@/features/workspace/unitSearch";
-import { selectedUnits } from "@/features/workspace/unitSelection";
+import {
+	offersDepartmentChoice,
+	selectedUnits,
+} from "@/features/workspace/unitSelection";
 import { useAccess } from "@/features/workspace/useAccess";
 import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 
@@ -199,6 +202,7 @@ export const Leave = (): FunctionComponent => {
 	const listProblem = problemOf(current, t, view === "mine");
 	// The timeline has no status filter; My leave has no Department. The Branch is the header's scope.
 	const showsStatus = view !== "timeline";
+	const showsDepartment = team && offersDepartmentChoice(units);
 	const chips = [
 		...(team
 			? departmentChips(
@@ -306,24 +310,26 @@ export const Leave = (): FunctionComponent => {
 					label={t("leave.controls")}
 					filters={
 						<>
-							<FiltersPopover count={chips.length}>
-								{team && (
-									<DepartmentFilter
-										selection={units}
-										onChange={(department) => {
-											show({ department });
-										}}
-									/>
-								)}
-								{showsStatus && (
-									<LeaveStatusFilter
-										status={search.status}
-										onChange={(status) => {
-											show({ status });
-										}}
-									/>
-								)}
-							</FiltersPopover>
+							{(showsDepartment || showsStatus) && (
+								<FiltersPopover count={chips.length}>
+									{showsDepartment && (
+										<DepartmentFilter
+											selection={units}
+											onChange={(department) => {
+												show({ department });
+											}}
+										/>
+									)}
+									{showsStatus && (
+										<LeaveStatusFilter
+											status={search.status}
+											onChange={(status) => {
+												show({ status });
+											}}
+										/>
+									)}
+								</FiltersPopover>
+							)}
 							{view === "timeline" && (
 								<LeaveRangeNavigator range={range} onRangeChange={setRange} />
 							)}

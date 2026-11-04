@@ -6,6 +6,7 @@ import type {
 import {
 	ALL_BRANCHES,
 	offersAllBranches,
+	offersDepartmentChoice,
 	resolveUnitSelection,
 	selectedUnits,
 	staleBranch,
@@ -195,6 +196,34 @@ describe("resolveUnitSelection: the Department", () => {
 
 		expect(resolved.department).toBeUndefined();
 		expect(resolved.departmentMode).toBe("hidden");
+	});
+});
+
+describe("offersDepartmentChoice", () => {
+	it("given_severalDepartmentsInTheBranch_when_asked_then_offersAChoice", () => {
+		expect(
+			offersDepartmentChoice(
+				resolveUnitSelection(
+					[orchard],
+					[kitchen, bar],
+					{ branchId: "b-1" },
+					WITH_DEPARTMENT
+				)
+			)
+		).toBe(true);
+	});
+
+	it("given_oneDepartmentInTheBranch_when_asked_then_offersNone", () => {
+		expect(
+			offersDepartmentChoice(
+				resolveUnitSelection(
+					[jurong],
+					[floor],
+					{ branchId: "b-2" },
+					WITH_DEPARTMENT
+				)
+			)
+		).toBe(false);
 	});
 });
 

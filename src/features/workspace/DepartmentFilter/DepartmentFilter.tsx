@@ -3,7 +3,10 @@ import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { FormRow, formRowIds } from "@/components/forms/FormRow";
 import { Select } from "@/components/forms/Select";
-import type { ResolvedUnitSelection } from "@/features/workspace/unitSelection";
+import {
+	offersDepartmentChoice,
+	type ResolvedUnitSelection,
+} from "@/features/workspace/unitSelection";
 
 /** The option value standing for every Department; never a real id. */
 const ALL = "";
@@ -27,7 +30,7 @@ export const DepartmentFilter = ({
 }: DepartmentFilterProps): FunctionComponent => {
 	const { t } = useTranslation();
 	const id = useId();
-	if (selection.departmentMode !== "select") return null;
+	if (!offersDepartmentChoice(selection)) return null;
 	return (
 		<FormRow
 			htmlFor={id}
