@@ -104,7 +104,7 @@ export const SwatchPicker = ({
 						tabIndex={index === focusable ? 0 : -1}
 						type="button"
 						className={joinClassNames(
-							"size-14 rounded-lg transition-shadow focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-blue-500 disabled:cursor-not-allowed disabled:opacity-50",
+							"size-14 cursor-pointer rounded-lg transition-shadow focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-blue-500 disabled:cursor-not-allowed disabled:opacity-50",
 							selected && "ring-2 ring-neutral-900 ring-offset-2"
 						)}
 						onClick={() => {
