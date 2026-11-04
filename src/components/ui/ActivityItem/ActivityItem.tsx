@@ -7,7 +7,8 @@ export type ActivityItemProps = Omit<
 	"children" | "title"
 > & {
 	icon: Heroicon;
-	title: string;
+	/** Usually text; a page may pass a link to what the activity is about. */
+	title: ReactNode;
 	/** Secondary facts such as the actor and time, shown in order with dot separators. */
 	details?: Array<ReactNode>;
 };

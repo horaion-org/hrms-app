@@ -1702,6 +1702,42 @@
 				"scheduleGenerated": "Schedule generated",
 				"scheduleDeleted": "Schedule deleted",
 				"organisationImported": "Organisation imported"
+			},
+			"fallback": {
+				"named": "{{entity}} {{verb}}: {{name}}",
+				"unnamed": "{{entity}} {{verb}}"
+			},
+			"verbs": {
+				"created": "created",
+				"updated": "updated",
+				"deleted": "deleted",
+				"added": "added",
+				"deactivated": "deactivated",
+				"reactivated": "reactivated",
+				"granted": "granted",
+				"revoked": "revoked",
+				"approved": "approved",
+				"rejected": "rejected",
+				"started": "started",
+				"finished": "finished"
+			},
+			"entityTypes": {
+				"Company": "Workspace",
+				"Branch": "Branch",
+				"Department": "Department",
+				"AccessRole": "Role",
+				"AccessRoleAssignment": "Role assignment",
+				"BranchMembership": "Branch membership",
+				"DepartmentMembership": "Department membership",
+				"JobTitle": "Job title",
+				"MemberProfile": "Employee",
+				"MemberNote": "Note",
+				"MemberImportJob": "Employee import",
+				"Skill": "Skill",
+				"LeaveRequest": "Leave request",
+				"Schedule": "Schedule",
+				"Shift": "Shift",
+				"Constraint": "Constraint"
 			}
 		},
 		"headsField": {
