@@ -1,4 +1,4 @@
-import type { LeaveRequest } from "@/features/leave/api";
+import type { CompanyLeaveType, LeaveRequest } from "@/features/leave/api";
 
 /** One request as the API answers it, for stories and tests; never sent anywhere. */
 export const leaveFixture = (
@@ -13,6 +13,8 @@ export const leaveFixture = (
 	departmentId: "d-1",
 	departmentName: "Sales",
 	leaveType: "ANNUAL",
+	leaveTypeId: "lt-annual",
+	leaveTypeName: "Annual leave",
 	startDate: "2026-05-22",
 	endDate: "2026-05-22",
 	workingDays: 1,
@@ -36,6 +38,8 @@ export const LEAVE_FIXTURES: Array<LeaveRequest> = [
 		employeeCode: "EMP-10620",
 		displayName: "Cheryl Ng",
 		leaveType: "SICK",
+		leaveTypeId: "lt-sick",
+		leaveTypeName: "Sick leave",
 		startDate: "2026-05-20",
 		endDate: "2026-05-21",
 		workingDays: 2,
@@ -48,6 +52,8 @@ export const LEAVE_FIXTURES: Array<LeaveRequest> = [
 		employeeCode: "EMP-10488",
 		displayName: "Faris Ahmad",
 		leaveType: "UNPAID",
+		leaveTypeId: "lt-unpaid",
+		leaveTypeName: "Unpaid leave",
 		startDate: "2026-05-25",
 		endDate: "2026-05-29",
 		workingDays: 5,
@@ -76,3 +82,102 @@ export const LEAVE_FIXTURES: Array<LeaveRequest> = [
 
 /** The window the fixtures fall in, for stories and tests. */
 export const FIXTURE_RANGE = { start: "2026-05-18", end: "2026-06-14" };
+
+/** One catalogue entry as the API lists it, for stories and tests. */
+export const leaveTypeFixture = (
+	overrides: Partial<CompanyLeaveType> &
+		Pick<CompanyLeaveType, "code" | "name" | "grantKind">
+): CompanyLeaveType => ({
+	leaveTypeId: `lt-${overrides.code.toLowerCase()}`,
+	paid: true,
+	requiresReason: false,
+	status: "ACTIVE",
+	displayOrder: 1,
+	system: false,
+	...overrides,
+});
+
+/** The default catalogue every company starts with, the scheduler's day off included. */
+export const LEAVE_TYPE_FIXTURES: Array<CompanyLeaveType> = [
+	leaveTypeFixture({
+		code: "ANNUAL",
+		name: "Annual leave",
+		grantKind: "ALLOWANCE",
+		displayOrder: 1,
+	}),
+	leaveTypeFixture({
+		code: "SICK",
+		name: "Sick leave",
+		grantKind: "ALLOWANCE",
+		displayOrder: 2,
+	}),
+	leaveTypeFixture({
+		code: "HOSPITALISATION",
+		name: "Hospitalisation leave",
+		grantKind: "ALLOWANCE",
+		displayOrder: 3,
+	}),
+	leaveTypeFixture({
+		code: "CHILDCARE",
+		name: "Childcare leave",
+		grantKind: "ALLOWANCE",
+		displayOrder: 4,
+	}),
+	leaveTypeFixture({
+		code: "MATERNITY",
+		name: "Maternity leave",
+		grantKind: "PER_OCCASION",
+		displayOrder: 1,
+	}),
+	leaveTypeFixture({
+		code: "PATERNITY",
+		name: "Paternity leave",
+		grantKind: "PER_OCCASION",
+		displayOrder: 2,
+	}),
+	leaveTypeFixture({
+		code: "SHARED_PARENTAL",
+		name: "Shared parental leave",
+		grantKind: "PER_OCCASION",
+		displayOrder: 3,
+	}),
+	leaveTypeFixture({
+		code: "MARRIAGE",
+		name: "Marriage leave",
+		grantKind: "PER_OCCASION",
+		displayOrder: 4,
+	}),
+	leaveTypeFixture({
+		code: "COMPASSIONATE",
+		name: "Compassionate leave",
+		grantKind: "PER_OCCASION",
+		displayOrder: 5,
+	}),
+	leaveTypeFixture({
+		code: "OFF_IN_LIEU",
+		name: "Off in lieu",
+		grantKind: "UNTRACKED",
+		displayOrder: 1,
+	}),
+	leaveTypeFixture({
+		code: "UNPAID",
+		name: "Unpaid leave",
+		grantKind: "UNTRACKED",
+		paid: false,
+		displayOrder: 2,
+	}),
+	leaveTypeFixture({
+		code: "OTHER",
+		name: "Other",
+		grantKind: "UNTRACKED",
+		requiresReason: true,
+		displayOrder: 3,
+	}),
+	leaveTypeFixture({
+		code: "OFF",
+		name: "Day off",
+		grantKind: "UNTRACKED",
+		displayOrder: 0,
+		system: true,
+	}),
+];

@@ -4,7 +4,14 @@ import {
 	ListboxOption,
 	ListboxOptions,
 } from "@headlessui/react";
-import { Fragment, useState, type AriaAttributes, type Ref } from "react";
+import {
+	Fragment,
+	useId,
+	useState,
+	type AriaAttributes,
+	type ReactNode,
+	type Ref,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
@@ -59,6 +66,18 @@ export type SelectProps = SharedProps &
 /** The value of the select-all row; never reported, never submitted. */
 const SELECT_ALL = "\u0000select-all";
 
+/** A run of consecutive options sharing one heading, or none. */
+type OptionRun = { group: string | undefined; options: Array<SelectOption> };
+
+/** Splits the options into runs of the same group, keeping the caller's order. */
+const optionRuns = (options: Array<SelectOption>): Array<OptionRun> =>
+	options.reduce<Array<OptionRun>>((runs, option) => {
+		const last = runs[runs.length - 1];
+		if (last && last.group === option.group) last.options.push(option);
+		else runs.push({ group: option.group, options: [option] });
+		return runs;
+	}, []);
+
 const statusFocusClasses =
 	"focus:outline-2 focus:outline-solid focus:outline-offset-2 focus:outline-ink-blue-500";
 
@@ -69,6 +88,7 @@ const statusClasses: Record<InputStatus, string> = {
 
 export const Select = (props: SelectProps): FunctionComponent => {
 	const { t } = useTranslation();
+	const groupId = useId();
 	const {
 		options,
 		placeholder,
@@ -98,6 +118,48 @@ export const Select = (props: SelectProps): FunctionComponent => {
 		available.every((option) => chosenValues.includes(option.value));
 	const someChosen = available.some((option) =>
 		chosenValues.includes(option.value)
+	);
+	const renderOption = (option: SelectOption): ReactNode => (
+		<ListboxOption
+			key={option.value}
+			disabled={option.disabled}
+			value={option.value}
+			className={joinClassNames(
+				"flex h-10 items-center justify-between gap-3 px-4 text-sm select-none",
+				option.disabled
+					? "cursor-not-allowed text-neutral-500"
+					: "cursor-pointer text-neutral-800 data-focus:bg-neutral-100"
+			)}
+		>
+			{({ selected }) => (
+				<>
+					<span className="truncate">{option.label}</span>
+					<span className="size-5 shrink-0">
+						{props.multiple ? (
+							selected ? (
+								<CheckboxFilledIcon
+									className={joinClassNames(
+										"size-5",
+										option.disabled ? "text-neutral-400" : "text-ink-blue-900"
+									)}
+								/>
+							) : (
+								<CheckboxIcon className="size-5 text-neutral-400" />
+							)
+						) : (
+							selected && (
+								<TickIcon
+									className={joinClassNames(
+										"size-5",
+										option.disabled ? "text-neutral-400" : "text-ink-blue-900"
+									)}
+								/>
+							)
+						)}
+					</span>
+				</>
+			)}
+		</ListboxOption>
 	);
 	return (
 		<Listbox
@@ -223,52 +285,27 @@ export const Select = (props: SelectProps): FunctionComponent => {
 									</span>
 								</ListboxOption>
 							)}
-							{options.map((option) => (
-								<ListboxOption
-									key={option.value}
-									disabled={option.disabled}
-									value={option.value}
-									className={joinClassNames(
-										"flex h-10 items-center justify-between gap-3 px-4 text-sm select-none",
-										option.disabled
-											? "cursor-not-allowed text-neutral-500"
-											: "cursor-pointer text-neutral-800 data-focus:bg-neutral-100"
-									)}
-								>
-									{({ selected }) => (
-										<>
-											<span className="truncate">{option.label}</span>
-											<span className="size-5 shrink-0">
-												{props.multiple ? (
-													selected ? (
-														<CheckboxFilledIcon
-															className={joinClassNames(
-																"size-5",
-																option.disabled
-																	? "text-neutral-400"
-																	: "text-ink-blue-900"
-															)}
-														/>
-													) : (
-														<CheckboxIcon className="size-5 text-neutral-400" />
-													)
-												) : (
-													selected && (
-														<TickIcon
-															className={joinClassNames(
-																"size-5",
-																option.disabled
-																	? "text-neutral-400"
-																	: "text-ink-blue-900"
-															)}
-														/>
-													)
-												)}
-											</span>
-										</>
-									)}
-								</ListboxOption>
-							))}
+							{optionRuns(options).map((run, index) =>
+								run.group === undefined ? (
+									<Fragment key={`run-${String(index)}`}>
+										{run.options.map(renderOption)}
+									</Fragment>
+								) : (
+									<div
+										key={`run-${String(index)}`}
+										aria-labelledby={`${groupId}-${String(index)}`}
+										role="group"
+									>
+										<div
+											className="px-4 pt-2 pb-1 text-xs font-semibold tracking-wide text-neutral-700 uppercase"
+											id={`${groupId}-${String(index)}`}
+										>
+											{run.group}
+										</div>
+										{run.options.map(renderOption)}
+									</div>
+								)
+							)}
 						</ListboxOptions>
 					</>
 				);

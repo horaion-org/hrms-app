@@ -18,23 +18,63 @@ import {
 } from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";
 
-const leaveTypeSchema = z.enum([
-	"ANNUAL",
-	"SICK",
-	"HOSPITALISATION",
-	"COMPASSIONATE",
-	"MATERNITY",
-	"UNPAID",
-	"MARRIAGE",
-]);
+/**
+ * One leave type of the company's catalogue. `grantKind` is read as any
+ * string so a kind added later (EARNED) cannot fail the catalogue; the app
+ * groups only the kinds it knows. A `system` type (the scheduler's day off)
+ * is never applied for.
+ */
+export const companyLeaveTypeSchema = z.object({
+	leaveTypeId: z.string(),
+	code: z.string(),
+	name: z.string(),
+	grantKind: z.string(),
+	paid: z.boolean(),
+	requiresReason: z.boolean(),
+	status: z.enum(["ACTIVE", "INACTIVE"]),
+	displayOrder: z.number().int(),
+	system: z.boolean(),
+});
 
-/** The kinds of leave the API knows, a fixed list until leave schemes arrive. */
-export type LeaveType = z.infer<typeof leaveTypeSchema>;
+/** One leave type a company offers, as its catalogue lists it. */
+export type CompanyLeaveType = z.infer<typeof companyLeaveTypeSchema>;
 
-export const LEAVE_TYPES = leaveTypeSchema.options;
+/** The company's active leave types, in the API's order: kind, then the company's order. */
+export const fetchActiveLeaveTypes = (
+	companyId: string,
+	signal?: AbortSignal
+): Promise<Array<CompanyLeaveType>> =>
+	apiRequest(
+		`${companyPath(companyId)}/me/leave-types?${new URLSearchParams({ status: "ACTIVE" }).toString()}`,
+		z.array(companyLeaveTypeSchema),
+		{ signal }
+	);
 
-export const isLeaveType = (value: string): value is LeaveType =>
-	leaveTypeSchema.safeParse(value).success;
+/**
+ * The company's active leave types, for applying. Any active member may read
+ * the catalogue, so it is the caller's own context, never withdrawn with
+ * administrative grants. It changes rarely, so it stays fresh for minutes.
+ * `allowed` false asks for nothing, until someone opens an application.
+ */
+export const activeLeaveTypesQuery = (
+	companyId: string,
+	allowed = true
+): UndefinedInitialDataOptions<
+	Array<CompanyLeaveType>,
+	Error,
+	Array<CompanyLeaveType>,
+	readonly ["leave-types", string, "ACTIVE"]
+> =>
+	queryOptions({
+		queryKey: ["leave-types", companyId, "ACTIVE"] as const,
+		queryFn: allowed
+			? ({ signal }): Promise<Array<CompanyLeaveType>> =>
+					fetchActiveLeaveTypes(companyId, signal)
+			: skipToken,
+		meta: selfMeta(companyId),
+		staleTime: 5 * 60_000,
+		retry,
+	});
 
 const leaveStatusSchema = z.enum(["PENDING", "APPROVED", "REJECTED"]);
 
@@ -62,7 +102,15 @@ export const leaveRequestSchema = z.object({
 	branchCountry: z.string().nullable(),
 	departmentId: z.string().nullable(),
 	departmentName: z.string().nullable(),
-	leaveType: leaveTypeSchema,
+	/**
+	 * The leave type's code. Any string: a company names its own types, and a
+	 * code this app has never seen must not fail the whole page.
+	 */
+	leaveType: z.string(),
+	/** The company's leave type. Absent from an API older than the leave type catalogue. */
+	leaveTypeId: z.string().nullable().default(null),
+	/** What the company calls the leave type. Absent from an API older than the leave type catalogue. */
+	leaveTypeName: z.string().nullable().default(null),
 	startDate: z.iso.date(),
 	endDate: z.iso.date(),
 	/** Monday-to-Friday days in the period, as the API counts them. */
@@ -254,7 +302,8 @@ export const LEAVE_NOTES_MAX_LENGTH = 1000;
 
 /** What applying for leave sends: inclusive ISO dates, and remarks only when some were written. */
 export type LeaveRequestBody = {
-	leaveType: LeaveType;
+	/** The code of one of the company's applicable leave types. */
+	leaveType: string;
 	startDate: string;
 	endDate: string;
 	notes?: string;

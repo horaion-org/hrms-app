@@ -92,6 +92,29 @@ export const DisabledOptions: Story = {
 	},
 };
 
+export const Grouped: Story = {
+	args: {
+		"aria-label": "Leave type",
+		placeholder: "Choose a leave type",
+		defaultValue: "annual",
+		options: [
+			{ value: "annual", label: "Annual leave", group: "Yearly allowance" },
+			{ value: "sick", label: "Sick leave", group: "Yearly allowance" },
+			{ value: "maternity", label: "Maternity leave", group: "Per occasion" },
+			{ value: "marriage", label: "Marriage leave", group: "Per occasion" },
+			{ value: "unpaid", label: "Unpaid leave", group: "No allowance" },
+		],
+	},
+	parameters: {
+		docs: {
+			description: {
+				story:
+					"Options that name a group are listed beneath its heading, in the caller's order. Headings are labels, never choices: the keyboard moves from option to option.",
+			},
+		},
+	},
+};
+
 export const EmptyList: Story = { args: { options: [] } };
 
 export const LongList: Story = {

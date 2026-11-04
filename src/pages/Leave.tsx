@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { PlusIcon } from "@/components/ui/Icon";
 import { PageToolbar } from "@/components/ui/PageToolbar";
 import { Tabs, TabList, Tab, TabPanels, TabPanel } from "@/components/ui/Tabs";
+import { activeLeaveTypesQuery } from "@/features/leave/api";
 import { defaultRange } from "@/features/leave/dates";
 import { LeaveRangeNavigator } from "@/features/leave/LeaveRangeNavigator";
 import { LeaveRequestDialog } from "@/features/leave/LeaveRequestDialog";
@@ -163,6 +164,8 @@ export const Leave = (): FunctionComponent => {
 			canApply && dialog?.mode === "apply"
 		)
 	);
+	const applying = dialog?.mode === "apply" || dialog?.mode === "applyOwn";
+	const leaveTypes = useQuery(activeLeaveTypesQuery(companyId, applying));
 	// Anything that changes which requests are listed starts again from the first page.
 	const show = (next: LeaveSearch): void => {
 		void navigate({
@@ -392,6 +395,7 @@ export const Leave = (): FunctionComponent => {
 					key={`${dialog.request?.leaveRequestId ?? "new"}-${dialog.mode}`}
 					busy={busy}
 					canReview={dialog.request ? canReview(dialog.request) : false}
+					leaveTypes={leaveTypes.data}
 					mode={dialog.mode === "applyOwn" ? "apply" : dialog.mode}
 					refusal={refusal}
 					request={dialog.request}

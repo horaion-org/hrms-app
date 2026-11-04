@@ -9,8 +9,14 @@ is sampled or kept in page state beyond the timeline's window.
 ## Shape
 
 - `api.ts` — the zod schemas, `leaveRequestsQuery` (one entry per page, sort, filter and window), the
-  active-Branches query that drives the country and Branch filters, and the writes: apply (own or on behalf,
-  with optional remarks), approve (with an optional comment) and reject (with a reason).
+  active-Branches query that drives the country and Branch filters, `activeLeaveTypesQuery` (the company's
+  active leave types, asked for once an application opens), and the writes: apply (own or on behalf, with
+  remarks, required when the leave type asks for a reason), approve (with an optional comment) and reject (with
+  a reason). A request's `leaveType` is any code: a company names its own types.
+- `leaveTypeLabel.ts` — what a request's leave type is called: the company's name, or the app's words for a code
+  of the old fixed list when an older API sends no name, or "Leave".
+- `leaveTypeOptions.ts` — the applicable leave types (active, never the scheduler's day off) as Select options,
+  grouped by Grant kind in the company's order.
 - `leaveSearch.ts` — what belongs in the URL (`view`, `branch`, `status`, `sort`, `page`) and the API queries
   built from it; `timelineQueryOf` asks for one window of up to 200 rows.
 - `useLeaveRequests.ts` — the list hook (`hidden` when the key is held nowhere, or the API refuses) and the
@@ -20,8 +26,8 @@ is sampled or kept in page state beyond the timeline's window.
 - `LeaveTimeline` — rows per person, bars per pending or approved request clipped to the window, weekends
   hatched; the window is the caller's.
 - `LeaveRequestDialog` — review a request with its remarks; approve with an optional comment or reject with a
-  reason, each confirmed in a second step; or apply, with optional remarks, for yourself or someone found through
-  the People search.
+  reason, each confirmed in a second step; or apply for yourself or someone found through the People search,
+  choosing from the grouped leave types, with remarks that become a required Reason when the type asks for one.
 - `fixtures.ts` — API-shaped rows for stories and component tests.
 
 `src/pages/Leave.tsx` composes them and owns the dialog, the decisions and the status line.

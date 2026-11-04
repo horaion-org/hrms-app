@@ -14,17 +14,17 @@ import { CrossIcon, SearchIcon, TickIcon } from "@/components/ui/Icon";
 import { Modal } from "@/components/ui/Modal";
 import {
 	APPROVAL_COMMENT_MAX_LENGTH,
-	isLeaveType,
 	LEAVE_NOTES_MAX_LENGTH,
-	LEAVE_TYPES,
+	type CompanyLeaveType,
 } from "@/features/leave/api";
 import { formatPeriod } from "@/features/leave/dates";
 import type { ApplyField, DecisionField } from "@/features/leave/leaveRefusal";
+import { leaveTypeLabel } from "@/features/leave/leaveTypeLabel";
+import { leaveTypeOptions } from "@/features/leave/leaveTypeOptions";
 import {
 	statusTone,
 	type LeaveRequest,
 	type LeaveRequestBody,
-	type LeaveType,
 } from "@/features/leave/types";
 import type { Refusal } from "@/features/organisation/refusal";
 
@@ -51,6 +51,11 @@ export type LeaveRequestDialogProps = {
 	mode?: "view" | "reject" | "approve" | "apply";
 	/** Who leave may be applied for; left out in `apply` mode when the caller applies for themself. */
 	employees?: ApplyEmployees;
+	/**
+	 * The company's leave types, for `apply` mode. Only active types that are
+	 * not the scheduler's own are offered, grouped by how they are counted.
+	 */
+	leaveTypes?: ReadonlyArray<CompanyLeaveType>;
 	/** Whether the person may decide the shown request; Approve and Reject are offered only then. */
 	canReview?: boolean;
 	/** While a decision or an application is being sent. */
@@ -75,6 +80,7 @@ export const LeaveRequestDialog = ({
 	request,
 	mode = "view",
 	employees,
+	leaveTypes = [],
 	canReview = false,
 	busy = false,
 	refusal,
@@ -92,7 +98,8 @@ export const LeaveRequestDialog = ({
 	const [comment, setComment] = useState("");
 	const [missingReason, setMissingReason] = useState(false);
 	const [membershipId, setMembershipId] = useState("");
-	const [type, setType] = useState<LeaveType>("ANNUAL");
+	const [chosenType, setChosenType] = useState<string | null>(null);
+	const [missingNotes, setMissingNotes] = useState(false);
 	const today = dayjs().format("YYYY-MM-DD");
 	const [dates, setDates] = useState({ start: today, end: today });
 	const [notes, setNotes] = useState("");
@@ -108,6 +115,17 @@ export const LeaveRequestDialog = ({
 	const reasonError = missingReason ? t("leave.required") : fields.reason;
 	const decisionError = rejecting ? reasonError : fields.comment;
 	const notesIds = formRowIds(`${id}-notes`);
+	const typeOptions = leaveTypeOptions(leaveTypes, t);
+	// Until the person picks one, the first type offered is chosen, even if the catalogue arrives after opening.
+	const typeCode = chosenType ?? typeOptions[0]?.value ?? "";
+	const reasonRequired =
+		leaveTypes.find((leaveType) => leaveType.code === typeCode)
+			?.requiresReason ?? false;
+	const notesError =
+		missingNotes && reasonRequired
+			? t("leave.leaveReasonRequired")
+			: fields.notes;
+	const typeError = fields.type ? `${id}-type-error` : undefined;
 	if (!applying && !request) return null;
 	const alert = refusal?.message && (
 		<p className="text-sm text-error-700" role="alert">
@@ -124,7 +142,7 @@ export const LeaveRequestDialog = ({
 							{t("leave.cancel")}
 						</Button>
 						<Button
-							disabled={(!own && !chosen) || busy}
+							disabled={(!own && !chosen) || typeCode === "" || busy}
 							form={id}
 							type="submit"
 						>
@@ -196,10 +214,14 @@ export const LeaveRequestDialog = ({
 					id={id}
 					onSubmit={(event) => {
 						event.preventDefault();
-						if (!own && !chosen) return;
+						if ((!own && !chosen) || typeCode === "") return;
 						const remarks = notes.trim();
+						if (reasonRequired && remarks === "") {
+							setMissingNotes(true);
+							return;
+						}
 						onCreate(own ? null : (chosen?.membershipId ?? null), {
-							leaveType: type,
+							leaveType: typeCode,
 							startDate: dates.start,
 							endDate: dates.end,
 							...(remarks === "" ? {} : { notes: remarks }),
@@ -258,17 +280,23 @@ export const LeaveRequestDialog = ({
 							{t("leave.type")}
 						</p>
 						<Select
+							aria-describedby={typeError}
 							aria-labelledby={`${id}-type`}
 							className="w-full"
-							value={type}
-							options={LEAVE_TYPES.map((value) => ({
-								value,
-								label: t(`leave.types.${value}`),
-							}))}
-							onChange={(value) => {
-								if (isLeaveType(value)) setType(value);
-							}}
+							options={typeOptions}
+							status={fields.type ? "error" : undefined}
+							value={typeCode}
+							onChange={setChosenType}
 						/>
+						{fields.type && (
+							<p
+								className="text-sm text-error-700"
+								id={`${id}-type-error`}
+								role="alert"
+							>
+								{fields.type}
+							</p>
+						)}
 					</div>
 					<div className="space-y-2">
 						<p className="text-sm font-medium">{t("leave.applyPeriod")}</p>
@@ -285,23 +313,32 @@ export const LeaveRequestDialog = ({
 					</div>
 					<FormRow
 						counter={t("leave.remarksCounter", { count: notes.length })}
-						error={fields.notes}
-						hint={t("leave.remarksHint")}
+						error={notesError}
 						htmlFor={`${id}-notes`}
-						label={t("leave.remarksOptional")}
 						layout="stacked"
+						required={reasonRequired}
+						hint={t(
+							reasonRequired ? "leave.leaveReasonHint" : "leave.remarksHint"
+						)}
+						label={t(
+							reasonRequired ? "leave.leaveReason" : "leave.remarksOptional"
+						)}
 					>
 						<Textarea
+							aria-describedby={notesError ? notesIds.errorId : notesIds.hintId}
 							id={`${id}-notes`}
 							maxLength={LEAVE_NOTES_MAX_LENGTH}
-							placeholder={t("leave.remarksPlaceholder")}
-							status={fields.notes ? "error" : undefined}
+							required={reasonRequired}
+							status={notesError ? "error" : undefined}
 							value={notes}
-							aria-describedby={
-								fields.notes ? notesIds.errorId : notesIds.hintId
-							}
+							placeholder={t(
+								reasonRequired
+									? "leave.leaveReasonPlaceholder"
+									: "leave.remarksPlaceholder"
+							)}
 							onChange={(event) => {
 								setNotes(event.target.value);
+								setMissingNotes(false);
 							}}
 						/>
 					</FormRow>
@@ -355,9 +392,7 @@ export const LeaveRequestDialog = ({
 									{t("leave.days", { count: request.workingDays })}
 								</dd>
 								<dt className="text-neutral-800">{t("leave.type")}</dt>
-								<dd className="font-semibold">
-									{t(`leave.types.${request.leaveType}`)}
-								</dd>
+								<dd className="font-semibold">{leaveTypeLabel(request, t)}</dd>
 								{request.notes && (
 									<>
 										<dt className="text-neutral-800">{t("leave.remarks")}</dt>

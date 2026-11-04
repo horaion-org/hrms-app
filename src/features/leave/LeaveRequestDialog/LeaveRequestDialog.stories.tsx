@@ -2,7 +2,7 @@ import type { ReactElement } from "react";
 import { I18nextProvider } from "react-i18next";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { authTestI18n } from "@/features/auth/testingI18n";
-import { LEAVE_FIXTURES } from "@/features/leave/fixtures";
+import { LEAVE_FIXTURES, LEAVE_TYPE_FIXTURES } from "@/features/leave/fixtures";
 import { LeaveRequestDialog } from "@/features/leave/LeaveRequestDialog";
 
 const employees = {
@@ -47,10 +47,13 @@ export const Rejection: Story = { args: { mode: "reject" } };
 export const Approval: Story = { args: { mode: "approve" } };
 export const Rejected: Story = { args: { request: LEAVE_FIXTURES[2] } };
 export const Approved: Story = { args: { request: LEAVE_FIXTURES[3] } };
-export const Apply: Story = { args: { mode: "apply" } };
+export const Apply: Story = {
+	args: { mode: "apply", leaveTypes: LEAVE_TYPE_FIXTURES },
+};
 export const ApplyRefused: Story = {
 	args: {
 		mode: "apply",
+		leaveTypes: LEAVE_TYPE_FIXTURES,
 		refusal: {
 			fields: { endDate: "They already have leave on one of these days." },
 			refreshMembers: false,

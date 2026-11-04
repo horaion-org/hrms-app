@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { expect, it, vi } from "vitest";
 import { I18nextProvider } from "react-i18next";
 import { authTestI18n } from "@/features/auth/testingI18n";
-import { LEAVE_FIXTURES } from "@/features/leave/fixtures";
+import { LEAVE_FIXTURES, LEAVE_TYPE_FIXTURES } from "@/features/leave/fixtures";
 import {
 	LeaveRequestDialog,
 	type LeaveRequestDialogProps,
@@ -175,6 +175,7 @@ it("applies for the chosen employee with the chosen type and dates, and shows a 
 		<I18nextProvider i18n={authTestI18n}>
 			<LeaveRequestDialog
 				employees={employees}
+				leaveTypes={LEAVE_TYPE_FIXTURES}
 				mode="apply"
 				onApprove={vi.fn()}
 				onClose={vi.fn()}
@@ -204,6 +205,7 @@ it("applies for the chosen employee with the chosen type and dates, and shows a 
 		<I18nextProvider i18n={authTestI18n}>
 			<LeaveRequestDialog
 				employees={employees}
+				leaveTypes={LEAVE_TYPE_FIXTURES}
 				mode="apply"
 				refusal={{
 					fields: { endDate: "They already have leave on one of these days." },
@@ -227,6 +229,7 @@ it("applies for the caller themself when no employees are offered", async () => 
 	render(
 		<I18nextProvider i18n={authTestI18n}>
 			<LeaveRequestDialog
+				leaveTypes={LEAVE_TYPE_FIXTURES}
 				mode="apply"
 				onApprove={vi.fn()}
 				onClose={vi.fn()}
@@ -254,6 +257,7 @@ it("sends trimmed remarks, counts them as they are typed, and leaves them out wh
 	const view = render(
 		<I18nextProvider i18n={authTestI18n}>
 			<LeaveRequestDialog
+				leaveTypes={LEAVE_TYPE_FIXTURES}
 				mode="apply"
 				onApprove={vi.fn()}
 				onClose={vi.fn()}
@@ -277,6 +281,7 @@ it("sends trimmed remarks, counts them as they are typed, and leaves them out wh
 	view.rerender(
 		<I18nextProvider i18n={authTestI18n}>
 			<LeaveRequestDialog
+				leaveTypes={LEAVE_TYPE_FIXTURES}
 				mode="apply"
 				refusal={{
 					fields: { notes: "Use 1,000 characters or fewer." },
@@ -342,4 +347,119 @@ it("shows no reason row for a rejected request whose reason the API withholds", 
 	);
 	expect(screen.getByText("Rejected")).toBeInTheDocument();
 	expect(screen.queryByText("Reason for rejection")).not.toBeInTheDocument();
+});
+
+it("offers the company's applicable leave types grouped by how they are counted", async () => {
+	const user = userEvent.setup();
+	render(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveRequestDialog
+				leaveTypes={LEAVE_TYPE_FIXTURES}
+				mode="apply"
+				onApprove={vi.fn()}
+				onClose={vi.fn()}
+				onCreate={vi.fn()}
+				onReject={vi.fn()}
+			/>
+		</I18nextProvider>
+	);
+	const type = screen.getByRole("button", { name: "Type" });
+	expect(type).toHaveTextContent("Annual leave");
+	await user.click(type);
+	expect(
+		screen.getAllByRole("group").map((group) => group.firstChild?.textContent)
+	).toEqual(["Yearly allowance", "Per occasion", "No allowance"]);
+	expect(screen.getByRole("group", { name: "Per occasion" })).toContainElement(
+		screen.getByRole("option", { name: "Paternity leave" })
+	);
+	expect(
+		screen.queryByRole("option", { name: "Day off" })
+	).not.toBeInTheDocument();
+});
+
+it("asks for a reason when the chosen leave type requires one, and sends it as remarks", async () => {
+	const user = userEvent.setup();
+	const onCreate = vi.fn<LeaveRequestDialogProps["onCreate"]>();
+	render(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveRequestDialog
+				leaveTypes={LEAVE_TYPE_FIXTURES}
+				mode="apply"
+				onApprove={vi.fn()}
+				onClose={vi.fn()}
+				onCreate={onCreate}
+				onReject={vi.fn()}
+			/>
+		</I18nextProvider>
+	);
+	await user.type(
+		screen.getByRole("textbox", { name: "Remarks (optional)" }),
+		" "
+	);
+	await user.click(screen.getByRole("button", { name: "Type" }));
+	await user.click(screen.getByRole("option", { name: "Other" }));
+	const reason = screen.getByRole("textbox", { name: "Reason" });
+	expect(reason).toBeRequired();
+	expect(reason).toHaveAttribute("placeholder", "What is this leave for?");
+	expect(reason).toHaveAccessibleDescription(
+		"Say what this leave is for. Reviewers of this request can read it."
+	);
+	await user.click(screen.getByRole("button", { name: "Submit request" }));
+	expect(onCreate).not.toHaveBeenCalled();
+	expect(reason).toHaveAccessibleDescription("Enter what this leave is for.");
+	await user.type(reason, "Jury service");
+	expect(reason).not.toHaveAccessibleDescription(
+		"Enter what this leave is for."
+	);
+	await user.click(screen.getByRole("button", { name: "Submit request" }));
+	expect(onCreate).toHaveBeenCalledWith(
+		null,
+		expect.objectContaining({ leaveType: "OTHER", notes: "Jury service" })
+	);
+	await user.click(screen.getByRole("button", { name: "Type" }));
+	await user.click(screen.getByRole("option", { name: "Annual leave" }));
+	expect(
+		screen.getByRole("textbox", { name: "Remarks (optional)" })
+	).toHaveValue(" Jury service");
+});
+
+it("shows a refused leave type on the type field", () => {
+	render(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveRequestDialog
+				leaveTypes={LEAVE_TYPE_FIXTURES}
+				mode="apply"
+				refusal={{
+					fields: {
+						type: "This leave type is no longer offered. Choose another.",
+					},
+					refreshMembers: false,
+				}}
+				onApprove={vi.fn()}
+				onClose={vi.fn()}
+				onCreate={vi.fn()}
+				onReject={vi.fn()}
+			/>
+		</I18nextProvider>
+	);
+	expect(
+		screen.getByRole("button", { name: "Type" })
+	).toHaveAccessibleDescription(
+		"This leave type is no longer offered. Choose another."
+	);
+});
+
+it("cannot submit before the company's leave types arrive", () => {
+	render(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveRequestDialog
+				mode="apply"
+				onApprove={vi.fn()}
+				onClose={vi.fn()}
+				onCreate={vi.fn()}
+				onReject={vi.fn()}
+			/>
+		</I18nextProvider>
+	);
+	expect(screen.getByRole("button", { name: "Submit request" })).toBeDisabled();
 });

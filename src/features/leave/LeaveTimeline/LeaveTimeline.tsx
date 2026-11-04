@@ -8,6 +8,7 @@ import { SortIcon } from "@/components/ui/Icon";
 import { Pagination } from "@/components/ui/Pagination";
 import type { DateRange } from "@/components/forms/Calendar";
 import { formatPeriod, rangeDays } from "@/features/leave/dates";
+import { leaveTypeLabel } from "@/features/leave/leaveTypeLabel";
 import type { LeaveRequest } from "@/features/leave/types";
 
 export type LeaveTimelineProps = {
@@ -243,7 +244,7 @@ export const LeaveTimeline = ({
 																type="button"
 																aria-label={t("leave.timelineEntry", {
 																	name: request.displayName,
-																	type: t(`leave.types.${request.leaveType}`),
+																	type: leaveTypeLabel(request, t),
 																	period,
 																	status: t(`leave.statuses.${request.status}`),
 																})}
@@ -258,7 +259,7 @@ export const LeaveTimeline = ({
 															>
 																<span className="block">{period}</span>
 																<span className="mt-1 block font-semibold">
-																	{t(`leave.types.${request.leaveType}`)}
+																	{leaveTypeLabel(request, t)}
 																</span>
 															</span>
 														</div>
