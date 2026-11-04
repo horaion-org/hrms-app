@@ -218,6 +218,15 @@ export const generationInProgress = ({
 		generation !== null &&
 		OPEN_RUN_STATUSES.includes(generation.status));
 
+/**
+ * Whether a schedule can be generated again: its last generation ended,
+ * GENERATED or GENERATION_FAILED, and no newer run is open.
+ */
+export const regenerable = (schedule: Schedule): boolean =>
+	(schedule.status === "GENERATED" ||
+		schedule.status === "GENERATION_FAILED") &&
+	!generationInProgress(schedule);
+
 const schedulePageSchema = z.object({
 	content: z.array(scheduleSchema),
 	page: z.object({ hasNext: z.boolean() }),
@@ -301,6 +310,21 @@ export const requestGeneration = (
 	scheduleId: string
 ): Promise<void> =>
 	apiRequestVoid(`${schedulePath(companyId, unit, scheduleId)}/generation`, {
+		method: "POST",
+	});
+
+/**
+ * Generates a GENERATED or GENERATION_FAILED schedule again from its frozen
+ * shifts and constraints: its roster is removed and it is
+ * GENERATION_REQUESTED until the new run ends. Whatever it answers is not
+ * read: every scheduling query reloads.
+ */
+export const requestRegeneration = (
+	companyId: string,
+	unit: DepartmentPath,
+	scheduleId: string
+): Promise<void> =>
+	apiRequestVoid(`${schedulePath(companyId, unit, scheduleId)}/regeneration`, {
 		method: "POST",
 	});
 

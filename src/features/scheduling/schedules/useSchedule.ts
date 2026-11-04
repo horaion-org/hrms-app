@@ -13,6 +13,7 @@ import {
 	createSchedule,
 	deleteSchedule,
 	requestGeneration,
+	requestRegeneration,
 	scheduleKey,
 	schedulesKey,
 	scheduleQuery,
@@ -81,15 +82,17 @@ export type ScheduleActions = {
 	create: UseMutationResult<Schedule, Error, Created>;
 	update: UseMutationResult<Schedule, Error, Replaced>;
 	generate: UseMutationResult<void, Error, Generated>;
+	regenerate: UseMutationResult<void, Error, Generated>;
 	remove: UseMutationResult<void, Error, Removed>;
 };
 
 /**
- * Creating, replacing, generating and deleting a schedule. A saved schedule
+ * Creating, replacing, generating, regenerating and deleting a schedule. A saved schedule
  * is cached at once, so the next step shows it without waiting, and every
  * scheduling query of the company reloads after each. Deleting reloads only
  * the list, so a roster still on screen isn't read again and found missing;
- * a refused delete reloads everything, so the schedule's status catches up.
+ * a refused regeneration or delete reloads everything, so the schedule's
+ * status catches up.
  */
 export const useScheduleActions = (companyId: string): ScheduleActions => {
 	const client = useQueryClient();
@@ -118,6 +121,13 @@ export const useScheduleActions = (companyId: string): ScheduleActions => {
 			mutationFn: ({ unit, scheduleId }: Generated) =>
 				requestGeneration(companyId, unit, scheduleId),
 			onSuccess: reload,
+		}),
+		regenerate: useMutation({
+			meta: { successMessage: "scheduling.regenerate.done" },
+			mutationFn: ({ unit, scheduleId }: Generated) =>
+				requestRegeneration(companyId, unit, scheduleId),
+			onSuccess: reload,
+			onError: reload,
 		}),
 		remove: useMutation({
 			meta: { successMessage: "scheduling.delete.done" },

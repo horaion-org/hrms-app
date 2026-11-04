@@ -12,7 +12,9 @@ import {
 	fetchScheduleConstraints,
 	fetchScheduleShifts,
 	generationInProgress,
+	regenerable,
 	requestGeneration,
+	requestRegeneration,
 	updateSchedule,
 	type ScheduleAssignment,
 	type ScheduleBody,
@@ -31,9 +33,9 @@ import {
 import {
 	deleteRefusal,
 	generationRefusal,
+	regenerationRefusal,
 	scheduleRefusal,
 	scheduleRefusalMessage,
-	regenerationRefusal,
 } from "@/features/scheduling/schedules/scheduleRefusal";
 import {
 	frozenShiftsFixture,
@@ -235,6 +237,23 @@ describe("schedules client", () => {
 		).toBe(false);
 	});
 
+	it("requests a regeneration with no body and reads nothing back", async () => {
+		const calls = stubApi({
+			[`POST ${SCHEDULES}/s-1/regeneration`]: {
+				status: 200,
+				body: envelope(generatedScheduleFixture()),
+			},
+		});
+
+		await expect(
+			requestRegeneration("c-1", UNIT, "s-1")
+		).resolves.toBeUndefined();
+		expect(calls.map((call) => `${call.method} ${call.path}`)).toEqual([
+			`POST ${SCHEDULES}/s-1/regeneration`,
+		]);
+		expect(calls[0]?.body).toBeUndefined();
+	});
+
 	it("deletes a schedule with no body and reads nothing back", async () => {
 		const calls = stubApi({
 			[`DELETE ${SCHEDULES}/s-1`]: { status: 204 },
@@ -365,6 +384,34 @@ describe("a schedule's generation", () => {
 		],
 	])("knows whether %s is still being generated", (_, schedule, expected) => {
 		expect(generationInProgress(schedule)).toBe(expected);
+	});
+
+	it.each([
+		["a draft", scheduleFixture(), false],
+		["a requested schedule", generatedScheduleFixture(), false],
+		[
+			"a generated schedule",
+			generatedScheduleFixture({ status: "GENERATED" }),
+			true,
+		],
+		[
+			"a generated schedule with a newer run still open",
+			generatedScheduleFixture({
+				status: "GENERATED",
+				generation: generationFixture({
+					status: "SUBMITTED",
+					finishedAt: null,
+				}),
+			}),
+			false,
+		],
+		[
+			"a schedule whose generation failed",
+			generatedScheduleFixture({ status: "GENERATION_FAILED" }),
+			true,
+		],
+	])("knows whether %s can be generated again", (_, schedule, expected) => {
+		expect(regenerable(schedule)).toBe(expected);
 	});
 });
 
@@ -557,7 +604,6 @@ describe("schedule refusals", () => {
 			"We couldn’t delete the schedule. Try again."
 		);
 	});
-});
 
 	it.each([
 		[
@@ -590,3 +636,4 @@ describe("schedule refusals", () => {
 			"We couldn’t regenerate the roster. Try again."
 		);
 	});
+});
