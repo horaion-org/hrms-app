@@ -36,6 +36,7 @@ const orchard = {
 	code: "ORC",
 	city: "Singapore",
 	country: "SG",
+	timeZone: "Asia/Singapore",
 };
 const tampines = {
 	branchId: "b-2",
@@ -44,6 +45,7 @@ const tampines = {
 	code: "TAM",
 	city: "Singapore",
 	country: "SG",
+	timeZone: "Asia/Singapore",
 };
 const department = {
 	departmentId: "d-1",

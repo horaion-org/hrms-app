@@ -33,6 +33,7 @@ const branch = {
 	code: "ORC",
 	city: "São Paulo",
 	country: "SG",
+	timeZone: "Asia/Singapore",
 	status: "ACTIVE",
 };
 const page = (

@@ -34,6 +34,7 @@ const cases = [
 			code: "ORC",
 			city: "Singapore",
 			country: "SG",
+			timeZone: "Asia/Singapore",
 			status: "INACTIVE",
 		},
 	},
@@ -179,6 +180,7 @@ describe.each(cases)("editing a $kind from its list", (item) => {
 								code: "CEN-2",
 								city: "Kuala Lumpur",
 								country: "MY",
+								timeZone: "Asia/Singapore",
 								status: "INACTIVE",
 							}
 						: { name: "Central", status: "INACTIVE" },

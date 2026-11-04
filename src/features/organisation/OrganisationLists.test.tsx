@@ -115,6 +115,7 @@ const branch = (
 	code: "SG-ORC-01",
 	city: "Singapore",
 	country: "SG",
+	timeZone: "Asia/Singapore",
 	status,
 	headMembershipIds: [],
 });
@@ -453,6 +454,7 @@ describe("Branches", () => {
 					code: "SG-ORC-01",
 					city: "Singapore",
 					country: "SG",
+					timeZone: "Asia/Singapore",
 					status: next,
 				},
 			]);

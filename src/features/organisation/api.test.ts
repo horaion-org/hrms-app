@@ -35,6 +35,7 @@ describe("create branch client", () => {
 					code: "ORC",
 					city: "Singapore",
 					country: "SG",
+					timeZone: "Asia/Singapore",
 					status: "ACTIVE",
 				}),
 			},
@@ -53,6 +54,7 @@ describe("create branch client", () => {
 			code: "ORC",
 			city: "Singapore",
 			country: "SG",
+			timeZone: "Asia/Singapore",
 			status: "ACTIVE",
 		});
 		expect(calls[0]?.body).toEqual({
@@ -74,6 +76,7 @@ describe("create branch client", () => {
 					code: "ORC",
 					city: "Singapore",
 					country: "SG",
+					timeZone: "Asia/Singapore",
 					status: "UNKNOWN",
 				}),
 			},

@@ -19,6 +19,7 @@ const branches = [
 		code: "ORC",
 		city: "Singapore",
 		country: "SG",
+		timeZone: "Asia/Singapore",
 	},
 	{
 		branchId: "b-2",
@@ -27,6 +28,7 @@ const branches = [
 		code: "TAM",
 		city: "Singapore",
 		country: "SG",
+		timeZone: "Asia/Singapore",
 	},
 ];
 const meta = {
