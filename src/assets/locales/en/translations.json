@@ -98,6 +98,11 @@
 			"MARRIAGE": "Marriage leave",
 			"unknown": "Leave"
 		},
+		"grantKinds": {
+			"ALLOWANCE": "Yearly allowance",
+			"PER_OCCASION": "Per occasion",
+			"UNTRACKED": "No allowance"
+		},
 		"view": "View request for {{name}}",
 		"approveFor": "Approve request for {{name}}",
 		"rejectFor": "Reject request for {{name}}",

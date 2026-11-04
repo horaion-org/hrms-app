@@ -98,6 +98,11 @@
 			"MARRIAGE": "Permiso por matrimonio",
 			"unknown": "Permiso"
 		},
+		"grantKinds": {
+			"ALLOWANCE": "Asignación anual",
+			"PER_OCCASION": "Por ocasión",
+			"UNTRACKED": "Sin asignación"
+		},
 		"view": "Ver solicitud de {{name}}",
 		"approveFor": "Aprobar solicitud de {{name}}",
 		"rejectFor": "Rechazar solicitud de {{name}}",

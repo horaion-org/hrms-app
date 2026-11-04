@@ -36,6 +36,60 @@ export const LEAVE_TYPES = leaveTypeSchema.options;
 export const isLeaveType = (value: string): value is LeaveType =>
 	leaveTypeSchema.safeParse(value).success;
 
+/**
+ * One leave type of the company's catalogue. `grantKind` is read as any
+ * string so a kind added later (EARNED) cannot fail the catalogue; the app
+ * groups only the kinds it knows. A `system` type (the scheduler's day off)
+ * is never applied for.
+ */
+export const companyLeaveTypeSchema = z.object({
+	leaveTypeId: z.string(),
+	code: z.string(),
+	name: z.string(),
+	grantKind: z.string(),
+	paid: z.boolean(),
+	requiresReason: z.boolean(),
+	status: z.enum(["ACTIVE", "INACTIVE"]),
+	displayOrder: z.number().int(),
+	system: z.boolean(),
+});
+
+/** One leave type a company offers, as its catalogue lists it. */
+export type CompanyLeaveType = z.infer<typeof companyLeaveTypeSchema>;
+
+/** The company's active leave types, in the API's order: kind, then the company's order. */
+export const fetchActiveLeaveTypes = (
+	companyId: string,
+	signal?: AbortSignal
+): Promise<Array<CompanyLeaveType>> =>
+	apiRequest(
+		`${companyPath(companyId)}/me/leave-types?${new URLSearchParams({ status: "ACTIVE" }).toString()}`,
+		z.array(companyLeaveTypeSchema),
+		{ signal }
+	);
+
+/**
+ * The company's active leave types, for applying. Any active member may read
+ * the catalogue, so it is the caller's own context, never withdrawn with
+ * administrative grants. It changes rarely, so it stays fresh for minutes.
+ */
+export const activeLeaveTypesQuery = (
+	companyId: string
+): UndefinedInitialDataOptions<
+	Array<CompanyLeaveType>,
+	Error,
+	Array<CompanyLeaveType>,
+	readonly ["leave-types", string, "ACTIVE"]
+> =>
+	queryOptions({
+		queryKey: ["leave-types", companyId, "ACTIVE"] as const,
+		queryFn: ({ signal }): Promise<Array<CompanyLeaveType>> =>
+			fetchActiveLeaveTypes(companyId, signal),
+		meta: selfMeta(companyId),
+		staleTime: 5 * 60_000,
+		retry,
+	});
+
 const leaveStatusSchema = z.enum(["PENDING", "APPROVED", "REJECTED"]);
 
 /** Where a request stands; a decision is final. */
