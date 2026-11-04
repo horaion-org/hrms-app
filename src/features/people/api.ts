@@ -111,6 +111,17 @@ export const fetchPeople = (
 ): Promise<ListPage<MemberProfile>> =>
 	fetchList(peoplePath(companyId, query), memberProfileSchema, signal);
 
+/** How many active people the person can see; one row is enough, only the total is read. */
+export const fetchActiveMemberCount = async (
+	companyId: string
+): Promise<number> =>
+	(
+		await fetchList(
+			`${companyPath(companyId)}/member-profiles?status=ACTIVE&size=1`,
+			memberProfileSchema
+		)
+	).total;
+
 /**
  * One page of the company's people; each page, sort, status and search is
  * its own entry. `allowed` false asks for nothing, for a person the

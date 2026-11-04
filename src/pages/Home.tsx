@@ -21,7 +21,9 @@ import { exampleWorkforce } from "@/features/dashboard/exampleDashboard";
 import { NotificationList } from "@/features/notifications/NotificationList";
 import { NotificationItem } from "@/features/dashboard/NotificationItem";
 import { QuickActions } from "@/features/dashboard/QuickActions";
+import { SetupChecklistCard } from "@/features/dashboard/SetupChecklistCard";
 import { useActivityPage } from "@/features/dashboard/useActivityPage";
+import { useSetupChecklist } from "@/features/dashboard/useSetupChecklist";
 import type { LeaveRequest } from "@/features/leave/api";
 import { formatPeriod } from "@/features/leave/dates";
 import { LeaveRequestDialog } from "@/features/leave/LeaveRequestDialog";
@@ -94,6 +96,7 @@ const Dashboard = (): FunctionComponent => {
 		branchId,
 	});
 	const activity = useActivityPage(companyId, 1, ACTIVITY_COUNT);
+	const setup = useSetupChecklist(companyId);
 	const actions = useLeaveActions(companyId, { ownConfirmation: true });
 	const busy = actions.approve.isPending || actions.reject.isPending;
 	const now = new Date();
@@ -165,6 +168,16 @@ const Dashboard = (): FunctionComponent => {
 					onChange={setBranchId}
 				/>
 			</div>
+			{setup.status === "shown" && (
+				<SetupChecklistCard
+					canImportOrganisation={setup.canImportOrganisation}
+					canImportPeople={setup.canImportPeople}
+					className="mt-10"
+					counts={setup.counts}
+					progress={setup.progress}
+					onDismiss={setup.dismiss}
+				/>
+			)}
 			<div className="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,666fr)_minmax(0,390fr)]">
 				<div>
 					<StatCard
