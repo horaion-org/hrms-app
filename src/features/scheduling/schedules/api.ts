@@ -4,7 +4,12 @@ import {
 	type UndefinedInitialDataOptions,
 } from "@tanstack/react-query";
 import { z } from "zod";
-import { apiRequest, apiRequestVoid } from "@/common/api-client";
+import {
+	apiDownload,
+	apiRequest,
+	apiRequestVoid,
+	type DownloadedFile,
+} from "@/common/api-client";
 import {
 	constraintCategorySchema,
 	constraintRequirementSchema,
@@ -340,6 +345,17 @@ export const deleteSchedule = (
 	apiRequestVoid(schedulePath(companyId, unit, scheduleId), {
 		method: "DELETE",
 	});
+
+/** The generated roster as a spreadsheet: members by days, and a summary sheet. */
+export const exportRoster = (
+	companyId: string,
+	unit: DepartmentPath,
+	scheduleId: string
+): Promise<DownloadedFile> =>
+	apiDownload(
+		`${schedulePath(companyId, unit, scheduleId)}/export`,
+		"roster.xlsx"
+	);
 
 const scheduleShiftSchema = z.object({
 	/** The live shift while DRAFT; once frozen, the copy's own id, which no shift route knows. */

@@ -42,6 +42,9 @@ const openDelete = async (canvasElement: HTMLElement): Promise<HTMLElement> => {
 
 export const Default: Story = {};
 
+/** On the roster header the menu also downloads the roster as a spreadsheet. */
+export const WithExport: Story = { args: { withExport: true } };
+
 /** Deleting asks first, in red, naming the department and week. */
 export const ConfirmDelete: Story = {
 	play: async ({ canvasElement }) => {

@@ -187,19 +187,97 @@ it("deletes the schedule from the header's menu and goes back to the overview", 
 	).toHaveLength(1);
 });
 
-it("offers no header menu without schedule:delete", async () => {
+it("offers only Export roster in the header menu without schedule:delete", async () => {
 	await openRoster({
 		...signedIn(),
 		[`GET ${SCHEDULE}`]: ok(generatedScheduleFixture({ status: "GENERATED" })),
 		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
 	});
+	const user = userEvent.setup();
 
-	await screen.findByRole("link", { name: "View setup" });
-	expect(
-		screen.queryByRole("button", {
+	await user.click(
+		await screen.findByRole("button", {
 			name: "More actions for Front Office - Week 42",
 		})
-	).toBeNull();
+	);
+
+	expect(
+		screen.getAllByRole("menuitem").map((item) => item.textContent)
+	).toEqual(["Export roster"]);
+});
+
+it("downloads the roster as a spreadsheet from the header's menu", async () => {
+	const createObjectUrl = vi.fn(() => "blob:roster");
+	// jsdom has no object URLs; a subclass stands in without changing the real URL.
+	class DownloadUrl extends URL {
+		public static override createObjectURL = createObjectUrl;
+		public static override revokeObjectURL = vi.fn();
+	}
+	vi.stubGlobal("URL", DownloadUrl);
+	const calls = await openRoster({
+		...signedIn(),
+		[`GET ${SCHEDULE}`]: ok(generatedScheduleFixture({ status: "GENERATED" })),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+		[`GET ${SCHEDULE}/export`]: {
+			status: 200,
+			body: "xlsx",
+			headers: {
+				"Content-Disposition":
+					'attachment; filename="roster-front-office-2026-10-12.xlsx"',
+			},
+		},
+	});
+	const user = userEvent.setup();
+
+	await user.click(
+		await screen.findByRole("button", {
+			name: "More actions for Front Office - Week 42",
+		})
+	);
+	await user.click(screen.getByRole("menuitem", { name: "Export roster" }));
+
+	await waitFor(() => {
+		expect(createObjectUrl).toHaveBeenCalled();
+	});
+	expect(
+		calls
+			.find((call) => call.path === `${SCHEDULE}/export`)
+			?.headers.get("Accept")
+	).toBe("*/*");
+	// The app-level success toast (not mounted in page tests) reads this key.
+	expect(
+		app?.queryClient
+			.getMutationCache()
+			.getAll()
+			.map((mutation) => mutation.options.meta?.successMessage)
+	).toContain("scheduling.export.done");
+});
+
+it("says when the roster couldn't be downloaded and lets the person try again", async () => {
+	await openRoster({
+		...signedIn(),
+		[`GET ${SCHEDULE}`]: ok(generatedScheduleFixture({ status: "GENERATED" })),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+		[`GET ${SCHEDULE}/export`]: { status: 500 },
+	});
+	const user = userEvent.setup();
+
+	await user.click(
+		await screen.findByRole("button", {
+			name: "More actions for Front Office - Week 42",
+		})
+	);
+	await user.click(screen.getByRole("menuitem", { name: "Export roster" }));
+
+	const dialog = await screen.findByRole("dialog", {
+		name: "The roster couldn't be downloaded",
+	});
+	expect(
+		within(dialog).getByText("Check your connection and try again.")
+	).toBeVisible();
+	expect(
+		within(dialog).getByRole("button", { name: "Try again" })
+	).toBeEnabled();
 });
 
 it("regenerates a generated roster after a danger confirm, then follows the new run", async () => {
