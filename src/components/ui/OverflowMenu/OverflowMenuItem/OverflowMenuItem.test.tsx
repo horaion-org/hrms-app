@@ -183,4 +183,21 @@ describe("OverflowMenuItem", () => {
 		expect(trigger).toHaveAttribute("aria-expanded", "false");
 		await waitFor(() => expect(trigger).toHaveFocus());
 	});
+
+	it("draws a danger action's label red and a default one neutral", async () => {
+		const user = userEvent.setup();
+		render(
+			<OverflowMenu label="Actions">
+				<OverflowMenuItem>Edit</OverflowMenuItem>
+				<OverflowMenuItem tone="danger">Delete</OverflowMenuItem>
+			</OverflowMenu>
+		);
+		await user.click(screen.getByRole("button", { name: "Actions" }));
+		const edit = screen.getByRole("menuitem", { name: "Edit" });
+		const remove = screen.getByRole("menuitem", { name: "Delete" });
+		expect(edit).toHaveClass("text-neutral-900");
+		expect(edit).not.toHaveClass("text-error-700");
+		expect(remove).toHaveClass("text-error-700");
+		expect(remove).not.toHaveClass("text-neutral-900");
+	});
 });
