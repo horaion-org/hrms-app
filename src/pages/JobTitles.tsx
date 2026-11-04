@@ -1,3 +1,4 @@
+import type { TFunction } from "i18next";
 import { type ReactNode, useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
@@ -24,6 +25,32 @@ import { placeOf } from "@/features/organisation/assignmentTargets";
 import { departmentScope } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
 
+/** What the status confirm says; deactivating a title people hold names how many keep it. */
+const statusChangeCopy = (
+	jobTitle: JobTitle,
+	t: TFunction
+): { title: string; description: string; confirmLabel: string } => {
+	const key = "organisation.jobTitles.status";
+	if (jobTitle.status === "INACTIVE")
+		return {
+			title: t(`${key}.activateTitle`, { name: jobTitle.name }),
+			description: t(`${key}.activateDescription`),
+			confirmLabel: t(`${key}.activateConfirm`),
+		};
+	const count = jobTitle.holderCount;
+	return {
+		title: t(`${key}.deactivateTitle`, { name: jobTitle.name }),
+		description:
+			count > 0
+				? t(`${key}.deactivateDescriptionHeld`, { count })
+				: t(`${key}.deactivateDescription`),
+		confirmLabel:
+			count > 0
+				? t(`${key}.deactivateConfirmHeld`, { count })
+				: t(`${key}.deactivateConfirm`),
+	};
+};
+
 /** The company's Job titles: HR labels with how many people hold each; holding grants nothing. */
 export const JobTitles = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
@@ -41,9 +68,6 @@ export const JobTitles = (): FunctionComponent => {
 	// The Job title whose status the person asked to change, until they confirm or cancel.
 	const [changing, setChanging] = useState<JobTitle>();
 	const setJobTitleStatus = useSetJobTitleStatus(companyId);
-	const statusKey = `organisation.jobTitles.status.${
-		changing?.status === "ACTIVE" ? "deactivate" : "activate"
-	}` as const;
 	const closeChange = (): void => {
 		setJobTitleStatus.reset();
 		setChanging(undefined);
@@ -164,11 +188,9 @@ export const JobTitles = (): FunctionComponent => {
 			)}
 			{changing && (
 				<ConfirmDialog
+					{...statusChangeCopy(changing, t)}
 					cancelLabel={t("organisation.list.cancel")}
-					confirmLabel={t(`${statusKey}Confirm`)}
-					description={t(`${statusKey}Description`)}
 					submitting={setJobTitleStatus.isPending}
-					title={t(`${statusKey}Title`, { name: changing.name })}
 					error={
 						setJobTitleStatus.error
 							? mapRefusal(setJobTitleStatus.error, {

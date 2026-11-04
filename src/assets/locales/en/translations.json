@@ -946,7 +946,11 @@
 			"status": {
 				"deactivateTitle": "Deactivate {{name}}",
 				"deactivateDescription": "The job title stays in your lists as inactive and can be activated again.",
+				"deactivateDescriptionHeld_one": "{{count}} person has this job title. They keep it, but it can’t be given to anyone else or added to shifts while it’s inactive. The job title stays in your lists and can be activated again.",
+				"deactivateDescriptionHeld_other": "{{count}} people have this job title. They keep it, but it can’t be given to anyone else or added to shifts while it’s inactive. The job title stays in your lists and can be activated again.",
 				"deactivateConfirm": "Deactivate job title",
+				"deactivateConfirmHeld_one": "Deactivate for {{count}} person",
+				"deactivateConfirmHeld_other": "Deactivate for {{count}} people",
 				"activateTitle": "Activate {{name}}",
 				"activateDescription": "The job title becomes active again.",
 				"activateConfirm": "Activate job title",

@@ -430,6 +430,12 @@
 				"forbidden": "Ya no tienes permiso para crear puestos.",
 				"failed": "No pudimos crear el puesto. Inténtalo de nuevo.",
 				"editDescription": "Cambia el nombre o la descripción del puesto. Sigue en {{department}}."
+			},
+			"status": {
+				"deactivateDescriptionHeld_one": "{{count}} persona tiene este puesto. Lo conserva, pero no se puede asignar a nadie más ni añadir a turnos mientras esté inactivo. El puesto sigue en tus listas y se puede volver a activar.",
+				"deactivateDescriptionHeld_other": "{{count}} personas tienen este puesto. Lo conservan, pero no se puede asignar a nadie más ni añadir a turnos mientras esté inactivo. El puesto sigue en tus listas y se puede volver a activar.",
+				"deactivateConfirmHeld_one": "Desactivar para {{count}} persona",
+				"deactivateConfirmHeld_other": "Desactivar para {{count}} personas"
 			}
 		},
 		"activity": {
