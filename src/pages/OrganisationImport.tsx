@@ -89,10 +89,10 @@ export const OrganisationImport = (): FunctionComponent => {
 		undefined
 	);
 	const [confirming, setConfirming] = useState(false);
-	const shown = search.import;
+	const openedImportId = search.import;
 	const current = useQuery({
-		...organisationImportQuery(companyId, shown ?? ""),
-		enabled: shown !== undefined,
+		...organisationImportQuery(companyId, openedImportId ?? ""),
+		enabled: openedImportId !== undefined,
 	});
 	const template = useMutation({
 		mutationFn: () => downloadOrganisationTemplate(companyId),
@@ -142,7 +142,8 @@ export const OrganisationImport = (): FunctionComponent => {
 		setRefusal(undefined);
 		void navigate({ search: {} });
 	};
-	const currentStep = shown === undefined ? step : IMPORT_STEP;
+	// An import named in the URL (just started, or opened from a list of imports) shows its result, whatever step the wizard was on.
+	const currentStep = openedImportId === undefined ? step : IMPORT_STEP;
 	const blocked =
 		!check ||
 		check.errorRows > 0 ||
@@ -161,7 +162,7 @@ export const OrganisationImport = (): FunctionComponent => {
 				className="mt-10"
 				currentStep={currentStep}
 				onStepClick={(index) => {
-					if (shown === undefined) setStep(index);
+					if (openedImportId === undefined) setStep(index);
 				}}
 			>
 				{STEPS.map((name) => (
