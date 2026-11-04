@@ -95,7 +95,7 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 		fields: [
 			choice("COMPARISON", "COMPARISON"),
 			number("DAYS_OFF", 0, 31),
-			number("PERIOD_DAYS", 1, 365),
+			number("PERIOD_DAYS", 1, 7),
 		],
 	},
 	{
