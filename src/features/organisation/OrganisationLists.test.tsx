@@ -107,6 +107,18 @@ const pageReply = (
 /** 06:00 UTC: the local date is 4 Nov 2026 anywhere from UTC-6 to UTC+17, so the tests need no fixed zone. */
 const CREATED_AT = "2026-11-04T06:00:00Z";
 
+/** The Created cell's date, checked to be a `<time>` carrying the exact instant and its full text on hover. */
+const expectCreatedCell = (table: HTMLElement): void => {
+	const [created] = within(table).getAllByText("4 Nov 2026");
+	expect(created?.tagName).toBe("TIME");
+	expect(created).toHaveAttribute("datetime", CREATED_AT);
+	expect(created?.getAttribute("title")).toMatch(/2026/);
+	expect(created?.closest("td")).toHaveClass("hidden", "md:table-cell");
+	expect(
+		within(table).getByRole("columnheader", { name: /Created/ })
+	).toHaveClass("hidden", "md:table-cell");
+};
+
 const branch = (
 	branchId: string,
 	name: string,
@@ -235,6 +247,7 @@ describe("Branches", () => {
 			"City",
 			"Country",
 			"Status",
+			"Created",
 			"Actions",
 		]);
 		expect(
@@ -264,6 +277,26 @@ describe("Branches", () => {
 		expect(searchesOf(calls, "/api/v1/companies/c-1/branches")).toEqual([
 			"size=100&sort=name%2Casc",
 		]);
+	});
+
+	it("shows when each branch was created and sorts by it on the server", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...baseRoutes(),
+			[BRANCHES]: pageReply([branch("b-1", "Main Branch")]),
+		});
+		await open("/organisation/branches");
+		const table = await screen.findByRole("table", { name: "Branches" });
+		await within(table).findByText("Main Branch");
+
+		expectCreatedCell(table);
+		await user.click(screen.getByRole("button", { name: "Sort by Created" }));
+		await waitFor(() => {
+			expect(searchesOf(calls, "/api/v1/companies/c-1/branches")).toEqual([
+				"size=100&sort=name%2Casc",
+				"size=100&sort=createdAt%2Casc",
+			]);
+		});
 	});
 
 	it("sorts codes on the server and searches loaded rows by code without another request", async () => {
