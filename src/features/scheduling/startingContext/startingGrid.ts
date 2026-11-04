@@ -18,11 +18,15 @@ export type PreviousWeek =
 
 const SHIFT_PREFIX = "shift:";
 
+/** The value a cell holds when it names the shift worked. */
+export const shiftCellValue = (shiftId: string): CellValue =>
+	`${SHIFT_PREFIX}${shiftId}`;
+
 /** The value an entered cell holds; a locked or unknown cell holds none. */
 const valueOf = (cell: StartingCell): CellValue => {
 	if (cell.locked || cell.kind === null) return "";
 	if (cell.kind === "OFF") return "OFF";
-	return cell.shiftId === null ? "" : `shift:${cell.shiftId}`;
+	return cell.shiftId === null ? "" : shiftCellValue(cell.shiftId);
 };
 
 /** The grid's entered values as the API answered them. */
@@ -108,13 +112,9 @@ export const enteredMemberCount = (entries: Entries): number =>
  */
 export const runsByMember = (context: StartingContext): Map<string, number> =>
 	new Map(
-		context.members
-			.filter(
-				(member) =>
-					member.memberProfileId !== null && member.consecutiveWorkingDays > 0
-			)
-			.map((member) => [
-				member.memberProfileId ?? "",
-				member.consecutiveWorkingDays,
-			])
+		context.members.flatMap(({ memberProfileId, consecutiveWorkingDays }) =>
+			memberProfileId !== null && consecutiveWorkingDays > 0
+				? [[memberProfileId, consecutiveWorkingDays] as const]
+				: []
+		)
 	);
