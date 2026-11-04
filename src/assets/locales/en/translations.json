@@ -252,6 +252,36 @@
 			"passwordMismatch": "Passwords don’t match. Enter the same password in both fields.",
 			"failed": "We couldn’t reset your password. Please try again."
 		},
+		"changePassword": {
+			"title": "Change password",
+			"subtitle": "Changing your password logs you out on every device, this one included.",
+			"details": "Password details",
+			"currentPassword": "Current password",
+			"newPassword": "New password",
+			"confirmPassword": "Confirm new password",
+			"showCurrentPassword": "Show current password",
+			"hideCurrentPassword": "Hide current password",
+			"rulesLabel": "Your new password needs",
+			"rules": {
+				"length": "8 to 128 characters",
+				"uppercase": "An uppercase letter",
+				"lowercase": "A lowercase letter",
+				"number": "A number",
+				"symbol": "A symbol",
+				"different": "Different from your current password"
+			},
+			"ruleMet": "met",
+			"ruleUnmet": "not met",
+			"currentRequired": "Enter your current password.",
+			"invalidCurrent": "Your current password is incorrect.",
+			"passwordPolicy": "Use 8–128 characters, including a lowercase letter, an uppercase letter, a digit and a symbol.",
+			"unchanged": "Choose a password that is different from your current one.",
+			"passwordMismatch": "Passwords don’t match. Enter the same password in both fields.",
+			"submit": "Change password",
+			"pending": "Please wait…",
+			"failed": "We couldn’t change your password. Please try again.",
+			"success": "Your password was changed. Every device was logged out. Log in with your new password."
+		},
 		"company": {
 			"title": "Choose a company",
 			"description": "Choose the company you want to work in.",
@@ -405,7 +435,9 @@
 		"comingSoon": "This Module is coming soon.",
 		"notifications": "Notifications",
 		"settings": "Settings",
-		"myProfile": "My profile"
+		"myProfile": "My profile",
+		"accountMenu": "Account menu",
+		"changePassword": "Change password"
 	},
 	"people": {
 		"title": "People overview",

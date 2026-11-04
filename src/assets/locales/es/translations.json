@@ -552,6 +552,8 @@
 	"shell": {
 		"notifications": "Notificaciones",
 		"myProfile": "Mi perfil",
+		"accountMenu": "Menú de la cuenta",
+		"changePassword": "Cambiar contraseña",
 		"navigation": {
 			"availability": "Disponibilidad"
 		}
@@ -1188,6 +1190,38 @@
 			"back": "Volver al resumen",
 			"subtitle": "Consulta los cambios recientes de horarios, aprobaciones y plantilla.",
 			"hidden": "No tienes acceso a la actividad de esta empresa."
+		}
+	},
+	"auth": {
+		"changePassword": {
+			"title": "Cambiar contraseña",
+			"subtitle": "Al cambiar tu contraseña se cerrará la sesión en todos tus dispositivos, incluido este.",
+			"details": "Datos de la contraseña",
+			"currentPassword": "Contraseña actual",
+			"newPassword": "Nueva contraseña",
+			"confirmPassword": "Confirmar nueva contraseña",
+			"showCurrentPassword": "Mostrar contraseña actual",
+			"hideCurrentPassword": "Ocultar contraseña actual",
+			"rulesLabel": "Tu nueva contraseña necesita",
+			"rules": {
+				"length": "De 8 a 128 caracteres",
+				"uppercase": "Una letra mayúscula",
+				"lowercase": "Una letra minúscula",
+				"number": "Un número",
+				"symbol": "Un símbolo",
+				"different": "Ser distinta de tu contraseña actual"
+			},
+			"ruleMet": "cumplido",
+			"ruleUnmet": "no cumplido",
+			"currentRequired": "Introduce tu contraseña actual.",
+			"invalidCurrent": "Tu contraseña actual no es correcta.",
+			"passwordPolicy": "Usa entre 8 y 128 caracteres, con una minúscula, una mayúscula, un número y un símbolo.",
+			"unchanged": "Elige una contraseña distinta de la actual.",
+			"passwordMismatch": "Las contraseñas no coinciden. Escribe la misma contraseña en ambos campos.",
+			"submit": "Cambiar contraseña",
+			"pending": "Espera…",
+			"failed": "No pudimos cambiar tu contraseña. Inténtalo de nuevo.",
+			"success": "Tu contraseña se cambió y se cerró la sesión en todos los dispositivos. Inicia sesión con tu nueva contraseña."
 		}
 	}
 }
