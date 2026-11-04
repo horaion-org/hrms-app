@@ -4,6 +4,7 @@ import {
 	useNavigate,
 	type ErrorComponentProps,
 } from "@tanstack/react-router";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
@@ -13,10 +14,12 @@ import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId
 import { GeneratedRoster } from "@/features/scheduling/GeneratedRoster";
 import { GenerationFailurePanel } from "@/features/scheduling/GenerationFailurePanel";
 import type { DepartmentPath } from "@/features/scheduling/paths";
+import { RegenerateDialog } from "@/features/scheduling/RegenerateDialog";
 import { RosterHeader } from "@/features/scheduling/RosterHeader";
 import { ScheduleMenu } from "@/features/scheduling/ScheduleMenu";
 import {
 	generationInProgress,
+	regenerable,
 	type Schedule,
 } from "@/features/scheduling/schedules/api";
 import { scheduleSetupLink } from "@/features/scheduling/schedules/scheduleViewLink";
@@ -33,6 +36,8 @@ import {
 	useScheduleShifts,
 	type ShiftList,
 } from "@/features/scheduling/schedules/useScheduleShifts";
+import { departmentScope } from "@/features/workspace/scopes";
+import { useAccess } from "@/features/workspace/useAccess";
 
 const route = getRouteApi("/_authenticated/_app/scheduling_/$scheduleId");
 
@@ -114,11 +119,14 @@ const RosterBody = ({
 	assignments,
 	shifts,
 	constraints,
+	onRegenerate,
 }: {
 	schedule: Schedule;
 	assignments: AssignmentList;
 	shifts: ShiftList;
 	constraints: ConstraintList;
+	/** Left out when the schedule can't be generated again by this person. */
+	onRegenerate?: () => void;
 }): FunctionComponent => {
 	const { t } = useTranslation();
 	if (generationInProgress(schedule))
@@ -132,6 +140,7 @@ const RosterBody = ({
 			<GenerationFailurePanel
 				className="mt-8"
 				generation={schedule.generation}
+				onRegenerate={onRegenerate}
 			/>
 		);
 	if (schedule.status !== "GENERATED")
@@ -156,6 +165,8 @@ const RosterBody = ({
  * One schedule read at the Department its URL names. It is read again every
  * 15 seconds while its generation is in progress; its roster, and the frozen
  * shifts and constraints that name its findings, are read once it is GENERATED.
+ * Where the person may, its header offers to regenerate an ended generation
+ * (as does the failure panel) and to delete it.
  */
 const ApiSchedule = ({
 	companyId,
@@ -168,6 +179,8 @@ const ApiSchedule = ({
 }): FunctionComponent => {
 	const { t } = useTranslation();
 	const navigate = useNavigate();
+	const access = useAccess();
+	const [regenerating, setRegenerating] = useState(false);
 	const state = useSchedule(companyId, unit, scheduleId, {
 		pollWhileGenerating: true,
 	});
@@ -195,6 +208,13 @@ const ApiSchedule = ({
 				{t(`${key}.${SCHEDULE_PROBLEMS[state.status]}`)}
 			</Problem>
 		);
+	const openRegenerate =
+		regenerable(state.schedule) &&
+		access.can("schedule:generate", departmentScope(unit.departmentId))
+			? (): void => {
+					setRegenerating(true);
+				}
+			: undefined;
 	return (
 		<>
 			<RosterHeader
@@ -205,6 +225,11 @@ const ApiSchedule = ({
 						<Button {...scheduleSetupLink(state.schedule)} variant="textlink">
 							{t(`${key}.viewSetup`)}
 						</Button>
+						{openRegenerate && (
+							<Button size="sm" variant="secondary" onClick={openRegenerate}>
+								{t("scheduling.regenerate.button")}
+							</Button>
+						)}
 						<ScheduleMenu
 							companyId={companyId}
 							schedule={state.schedule}
@@ -220,7 +245,17 @@ const ApiSchedule = ({
 				constraints={constraints}
 				schedule={state.schedule}
 				shifts={shifts}
+				onRegenerate={openRegenerate}
 			/>
+			{regenerating && (
+				<RegenerateDialog
+					companyId={companyId}
+					schedule={state.schedule}
+					onClose={() => {
+						setRegenerating(false);
+					}}
+				/>
+			)}
 		</>
 	);
 };
