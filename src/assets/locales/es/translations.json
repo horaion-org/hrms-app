@@ -1296,5 +1296,8 @@
 			"failed": "No pudimos cambiar tu contraseña. Inténtalo de nuevo.",
 			"success": "Tu contraseña se cambió y se cerró la sesión en todos los dispositivos. Inicia sesión con tu nueva contraseña."
 		}
+	},
+	"pageToolbar": {
+		"clearFilters": "Borrar filtros"
 	}
 }

@@ -2116,5 +2116,8 @@
 			"subtitle": "View recent schedule changes, approvals, and workforce updates.",
 			"hidden": "You don’t have access to this company’s activity."
 		}
+	},
+	"pageToolbar": {
+		"clearFilters": "Clear filters"
 	}
 }
