@@ -15,6 +15,7 @@ import {
 	createdColumn,
 	describeList,
 	isStatusFilter,
+	statusFilterChips,
 	nameColumn,
 	statusColumn,
 	statusFilterOptions,
@@ -26,17 +27,11 @@ import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId
 import { useJobTitles } from "@/features/organisation/useOrganisationList";
 import { JOB_TITLE_READ_KEYS } from "@/features/workspace/permissionKeys";
 import { departmentScope } from "@/features/workspace/scopes";
-import {
-	unitSearchFor,
-	unitSelectionOf,
-} from "@/features/workspace/unitSearch";
-import {
-	clearedUnits,
-	selectedUnits,
-	unitsNarrowed,
-	type UnitSelection,
-} from "@/features/workspace/unitSelection";
-import { UnitSelector } from "@/features/workspace/UnitSelector";
+import { JOB_TITLES_UNIT_RULES } from "@/features/organisation/listUnitRules";
+import { DepartmentFilter } from "@/features/workspace/DepartmentFilter";
+import { departmentChips } from "@/features/workspace/filterChips";
+import { unitSelectionOf } from "@/features/workspace/unitSearch";
+import { selectedUnits } from "@/features/workspace/unitSelection";
 import { useAccess } from "@/features/workspace/useAccess";
 import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 
@@ -68,9 +63,6 @@ const statusChangeCopy = (
 
 const route = getRouteApi("/_authenticated/_app/organisation/job-titles");
 
-/** Every Branch by default, and a Department once a Branch is chosen. */
-const UNIT_RULES = { allowAllBranches: true, withDepartment: true };
-
 /**
  * The company's Job titles: HR labels with how many people hold each;
  * holding grants nothing. Narrowed to a Branch and Department kept in the
@@ -85,7 +77,7 @@ export const JobTitles = (): FunctionComponent => {
 		companyId,
 		JOB_TITLE_READ_KEYS,
 		requested,
-		UNIT_RULES
+		JOB_TITLES_UNIT_RULES
 	);
 	const branchShown = units.branch !== undefined;
 	const departmentShown = units.department !== undefined;
@@ -114,7 +106,23 @@ export const JobTitles = (): FunctionComponent => {
 		status: status === "all" ? undefined : status,
 		...selectedUnits(units),
 	});
-	const filtered = status !== "all" || unitsNarrowed(units);
+	const chooseDepartment = (department: string | undefined): void => {
+		void navigate({ search: (previous) => ({ ...previous, department }) });
+	};
+	// The Branch is the header's scope; Department and status are the filters.
+	const chips = [
+		...departmentChips(
+			units,
+			() => {
+				chooseDepartment(undefined);
+			},
+			t
+		),
+		...statusFilterChips(t, status, () => {
+			setStatus("all");
+		}),
+	];
+	const filtered = chips.length > 0 || units.branch !== undefined;
 	const view = describeList(
 		list,
 		search,
@@ -122,16 +130,9 @@ export const JobTitles = (): FunctionComponent => {
 		t("organisation.jobTitles.empty"),
 		t
 	);
-	const chooseUnits = (next: UnitSelection, cleanup = false): void => {
-		// Taking out a unit the page cannot show replaces the history entry instead of adding one.
-		void navigate({
-			search: (previous) => ({ ...previous, ...unitSearchFor(next) }),
-			replace: cleanup,
-		});
-	};
 	const clearFilters = (): void => {
 		setStatus("all");
-		chooseUnits(clearedUnits(units, requested));
+		chooseDepartment(undefined);
 	};
 	const columns = useMemo(
 		() => [
@@ -200,6 +201,7 @@ export const JobTitles = (): FunctionComponent => {
 				{t("organisation.jobTitles.subtitle")}
 			</p>
 			<ListToolbar
+				chips={chips}
 				className="mt-10"
 				createLabel={t("organisation.jobTitles.create")}
 				search={search}
@@ -212,14 +214,10 @@ export const JobTitles = (): FunctionComponent => {
 						if (isStatusFilter(value)) setStatus(value);
 					},
 				}}
-				scope={
-					<UnitSelector
-						requested={requested}
-						selection={units}
-						onChange={chooseUnits}
-					/>
+				filterFields={
+					<DepartmentFilter selection={units} onChange={chooseDepartment} />
 				}
-				onClearFilters={filtered ? clearFilters : undefined}
+				onClearFilters={clearFilters}
 				onSearchChange={setSearch}
 				onCreate={
 					canCreate
