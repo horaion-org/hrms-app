@@ -96,7 +96,8 @@ their API exists.
   `CONSTRAINT_INACTIVE`, …) and for a generation (`SCHEDULE_HAS_NO_SHIFTS`, `SCHEDULE_CONSTRAINT_UNUSABLE`,
   `SCHEDULE_NOT_DRAFT`).
 - `schedules/fixtures.ts` — draft s-1 and its generated twin (with the run its status implies), the engine's
-  findings, the 21-row roster of its three members, and a workspace for company c-1.
+  findings as the API serves them (`generationFindingsFixture`, `findingsOfEveryKindFixture`,
+  `emptyFindingsFixture`), the 21-row roster of its three members, and a workspace for company c-1.
 - `scheduleDraft.ts` — what the page holds: the setup, the saved schedule (id, department and status, which never
   change in the page), the shift and constraint ticks, the allocations per shift and job title, and the demand per
   time slot. A frozen copy has its own id, never sent to a shift or constraint route; `tickedOf` drops ticks of shifts
@@ -119,14 +120,15 @@ API's `docs/implementation/2026-10-27-roster-read-model.md`. Read it top to bott
    without both ids renders `ScheduleDetailProblem` ("not found"). The loader warms the workspace and, where
    `schedule:read` holds at the department, `scheduleQuery`.
 2. Page `src/pages/ScheduleDetail.tsx` — hooks and composition only: `useSchedule(…, { pollWhileGenerating: true })`,
-   then `useScheduleAssignments` once the schedule is GENERATED with no open run. Under `RosterHeader` it shows, by
+   then `useScheduleAssignments` once the schedule is GENERATED with no open run, and `useScheduleShifts` /
+   `useScheduleConstraints` (frozen copies, only to name the findings; empty when not readable). Under `RosterHeader` it shows, by
    state: a generating note (read again every 15 s), `GenerationFailurePanel`, `GeneratedRoster`, or a draft's note.
 3. Queries `schedules/api.ts` — `scheduleQuery` (`refetchInterval` while `generationInProgress`) and
    `scheduleAssignmentsQuery` → `fetchScheduleAssignments`.
 4. Pure mappers `roster/` — no I/O. They turn API rows into what the components draw.
-5. Components, plain props only — `RosterHeader`, `GenerationFailurePanel` and `ReviewNotes` (both with
-   `MemberNotes`), `GeneratedRoster` (stat cards, `RosterWeekBar`, `RosterGrid` → `RosterShift`, the review-notes
-   `Dialog`, and `ShiftDetailsPanel` read-only for a chosen day).
+5. Components, plain props only — `RosterHeader`, `GenerationFailurePanel` (with `MemberNotes`), `GeneratedRoster`
+   (stat cards, `FindingsSummary` and `FindingsPanel`, `RosterWeekBar`, `RosterGrid` → `RosterShift` and
+   `FindingsMarker`, and `ShiftDetailsPanel` read-only for a chosen day).
 
 - `schedules/scheduleViewLink.ts` — View on a card or history row: a DRAFT reopens at the wizard's Setup, any other
   status opens the roster; `scheduleSetupLink` is the roster's "View setup".
@@ -136,20 +138,41 @@ API's `docs/implementation/2026-10-27-roster-read-model.md`. Read it top to bott
 - `roster/roster.ts` — `rosterFromAssignments` (one row per member, each day a shift, off or leave; a row whose
   member is gone keyed by its assignment), `hoursOf`/`hoursInDays` (via `shiftHours`), `weekDays`, `legendOf`,
   `rosterStats`, and `isoDateIn`/`dateTimeFormatIn` for the branch's time zone.
-- `roster/findingsByMember.ts` — the engine's errors grouped by member, named through `findings.members`, and
-  `reviewNoteCount`.
+- `roster/findingsByMember.ts` — a failed run's errors grouped by member, named through `findings.members`.
+- `roster/findings/` — the engine's findings on a generated roster, in three levels (summary, panel, grid markers):
+  - `finding.ts` — `Finding`, the one unit the panel and the markers list (a conflict, a message, a diagnostic); its
+    family (roster note or setup issue) and tone (roster notes error; a diagnostic by `severity`, unknown → warning).
+  - `findingCounts.ts` — roster notes (each conflict and each message) and setup issues (each diagnostic).
+  - `findingNames.ts` — the names the findings' ids stand for: members, frozen shifts, job titles and frozen
+    constraints, from the findings, the roster and the schedule's setup.
+  - `ruleLabel.ts` — a rule's name: its frozen constraint's (`sourceRuleId`), else its type's via the engine rule
+    name (mirrors the API's `ConstraintType`), else "Forecast demand", else the engine name made readable.
+  - `diagnostics.ts` — diagnostics grouped by code, with the app's label and sentence for the engine's four codes
+    (`UNCOVERABLE_DEMAND`, `RULE_REFERENCES_MISSING_ENTITY`, `UNASSIGNABLE_EMPLOYEE`, `DEAD_SHIFT`) and a readable
+    fallback for any other.
+  - `rosterNotes.ts` — the roster notes on the days in view, by day and then by member.
+  - `findingsOnGrid.ts` — where the grid marks them: a member's day (`assignmentMessages`), a member's row (their
+    errors, their conflicts, `UNASSIGNABLE_EMPLOYEE`) or a day's header (the day's errors and conflicts). Setup
+    diagnostics and members who no longer resolve stay in the panel.
+  - `conflictTimes.ts` — a conflict's span as clock times (the engine writes datetimes).
 - `roster/generationFailure.ts` — a FAILED run's `errorCode` in the app's words (the closed set,
   `engine_http_<status>`, then a generic fallback), or INFEASIBLE.
 - `rosterLooks.ts` — the classes of a day off and of leave, and `shiftTileStyle` for a frozen shift's colour.
 - `periods.ts` `formatDay` — "Mon, 12 Oct" for a finding's day.
 - `RosterHeader` — department, period, status badge, time zone, requested by/at and finished at; `actions` at the right.
 - `GenerationFailurePanel` — a failed run's copy and code, the engine's reason quoted, and its errors by member.
-- `ReviewNotes` — a generated roster's conflicts and errors by member, quoted; shown in a `Dialog`.
-- `MemberNotes` — the engine's errors grouped by member, each message quoted.
-- `GeneratedRoster` — the roster's figures, review-notes callout, week bar, grid and chosen day's panel; owns only
-  the shown week, the chosen day and whether the notes are open.
+- `MemberNotes` — a failed run's errors grouped by member, each message quoted.
+- `FindingsSummary` — the warning callout: how many roster notes and setup issues, and the panel's toggle.
+- `FindingsPanel` — setup issues by code (fix in the setup), then roster notes by day and by member.
+- `FindingsMarker` — a 24 px mark on a cell, row or day header in its most serious tone, with a count from two; its
+  popover lists that place's findings and can open the panel.
+- `FindingList` — one list of findings, shared by the panel and the popover.
+- `GeneratedRoster` — the roster's figures, findings summary and panel, week bar, grid and chosen day's panel; owns
+  only the shown week, the chosen day and whether the findings panel is open.
+- `ScheduleCard` — shows "N setup issues" beside the status when its newest run's findings have diagnostics.
 
-Engine prose (failure reason, errors, conflicts) is shown quoted, never as the app's own copy (ADR-0003).
+Engine prose (failure reason, errors, conflicts, diagnostics) is shown quoted, never as the app's own copy
+(ADR-0003). The four known diagnostic codes also get the app's own sentence, with the engine's quoted beneath.
 
 ## Draft flow
 
