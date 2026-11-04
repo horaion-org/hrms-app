@@ -1314,12 +1314,13 @@
 			},
 			"schedule": {
 				"name": "Schedules",
-				"description": "Each department’s schedules: their week, settings and chosen shifts, and generating them.",
+				"description": "Each department’s schedules: their week, settings and chosen shifts, generating them and deleting them.",
 				"actions": {
 					"read": "View",
 					"create": "Create",
 					"update": "Edit",
-					"generate": "Generate"
+					"generate": "Generate",
+					"delete": "Delete"
 				}
 			},
 			"shift": {
