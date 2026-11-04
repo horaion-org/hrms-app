@@ -1,6 +1,9 @@
+import { useMutation } from "@tanstack/react-query";
 import { getRouteApi, useRouterState } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { ApiProblemError } from "@/common/problem";
+import { saveFile } from "@/common/saveFile";
 import type { FunctionComponent } from "@/common/types";
 import { BulkActionBar } from "@/components/ui/BulkActionBar";
 import { Button } from "@/components/ui/Button";
@@ -21,6 +24,7 @@ import {
 	MEMBER_STATUSES,
 	PEOPLE_PAGE_SIZE,
 } from "@/features/people/api";
+import { exportPeople } from "@/features/people/import/api";
 import { describePeople, peopleColumns } from "@/features/people/peopleColumns";
 import { PeopleNotice } from "@/features/people/PeopleNotice";
 import { peopleNoticeFrom } from "@/features/people/peopleNoticeState";
@@ -50,6 +54,10 @@ import { useAccess } from "@/features/workspace/useAccess";
 import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 
 const route = getRouteApi("/_authenticated/_app/people");
+
+/** The API's reason for refusing an export, when it gave one. */
+const exportRefusal = (error: unknown): string | undefined =>
+	error instanceof ApiProblemError ? error.errorCode : undefined;
 
 /**
  * The company's people, a page at a time, sorted, filtered and searched by
@@ -89,6 +97,12 @@ export const People = (): FunctionComponent => {
 	const access = useAccess();
 	const columns = useMemo(() => peopleColumns(t, access.can), [t, access.can]);
 	const canAdd = access.canAnywhere("member_profile:create");
+	const exporting = useMutation({
+		mutationFn: () => exportPeople(companyId, query),
+		onSuccess: ({ blob, fileName }) => {
+			saveFile(blob, fileName);
+		},
+	});
 	const notice = peopleNoticeFrom(
 		useRouterState({ select: (state) => state.location.state })
 	);
@@ -130,21 +144,26 @@ export const People = (): FunctionComponent => {
 				searchLabel={t("people.search")}
 				actions={
 					<>
+						{canAdd && (
+							<Button
+								leadingIcon={<UploadIcon />}
+								variant="secondary"
+								onClick={() => {
+									void navigate({ to: "/people/import" });
+								}}
+							>
+								{t("people.import")}
+							</Button>
+						)}
 						<Button
-							disabled
-							leadingIcon={<UploadIcon />}
-							title={t("people.bulk.unavailable")}
-							variant="secondary"
-						>
-							{t("people.import")}
-						</Button>
-						<Button
-							disabled
 							leadingIcon={<DownloadIcon />}
-							title={t("people.bulk.unavailable")}
+							loading={exporting.isPending}
 							variant="secondary"
+							onClick={() => {
+								exporting.mutate();
+							}}
 						>
-							{t("people.export")}
+							{exporting.isPending ? t("people.exporting") : t("people.export")}
 						</Button>
 					</>
 				}
@@ -182,6 +201,13 @@ export const People = (): FunctionComponent => {
 					if (search.page !== undefined) show({});
 				}}
 			/>
+			{exporting.isError && (
+				<p className="mt-4 text-sm text-error-700" role="alert">
+					{exportRefusal(exporting.error) === "EXPORT_TOO_LARGE"
+						? t("people.exportTooLarge")
+						: t("people.exportFailed")}
+				</p>
+			)}
 			{view.problem ? (
 				<p
 					className="mt-8 text-sm text-neutral-700 data-alert:text-error-700"
