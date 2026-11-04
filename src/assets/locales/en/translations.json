@@ -133,7 +133,9 @@
 		"appliedOwn": "Your leave request was submitted.",
 		"myEmpty": "You have no leave requests yet.",
 		"myFailed": "We couldn’t load your leave requests. Try again.",
-		"controls": "Leave list controls"
+		"controls": "Leave list controls",
+		"pendingCount_one": "{{count}} pending",
+		"pendingCount_other": "{{count}} pending"
 	},
 	"availability": {
 		"title": "Availability",

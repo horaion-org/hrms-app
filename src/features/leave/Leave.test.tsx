@@ -143,6 +143,16 @@ const routes = (
 const searchesOf = (calls: Array<Call>, path: string): Array<string> =>
 	calls.filter((call) => call.path === path).map((call) => call.search);
 
+/** The Team requests tab's count: one pending row, newest first, across everything in reach. */
+const PENDING_COUNT_SEARCH =
+	"page=0&size=1&sort=requestedAt%2Cdesc&status=PENDING";
+
+/** The lists and windows asked for, leaving out the tab's pending count. */
+const listSearchesOf = (calls: Array<Call>): Array<string> =>
+	searchesOf(calls, LEAVE_PATH).filter(
+		(search) => search !== PENDING_COUNT_SEARCH
+	);
+
 const sent = (calls: Array<Call>, route: string): Array<unknown> =>
 	calls
 		.filter((call) => `${call.method} ${call.path}` === route)
@@ -174,7 +184,7 @@ describe("Leave", () => {
 			});
 		});
 		// Naming the default Branch in the URL asks for nothing again.
-		expect(searchesOf(calls, LEAVE_PATH)).toEqual([
+		expect(listSearchesOf(calls)).toEqual([
 			"page=0&size=10&sort=requestedAt%2Cdesc&branchId=b-3",
 		]);
 		expect(
@@ -212,7 +222,7 @@ describe("Leave", () => {
 				page: 2,
 			});
 		});
-		const searches = searchesOf(calls, LEAVE_PATH);
+		const searches = listSearchesOf(calls);
 		expect(searches[searches.length - 1]).toBe(
 			"page=1&size=10&sort=displayName%2Casc&status=PENDING&branchId=b-2"
 		);
@@ -234,7 +244,7 @@ describe("Leave", () => {
 			});
 		});
 		expect(screen.getByRole("button", { name: "Department" })).toBeDisabled();
-		expect(searchesOf(calls, LEAVE_PATH)).toEqual([
+		expect(listSearchesOf(calls)).toEqual([
 			"page=0&size=10&sort=requestedAt%2Cdesc&branchId=b-1",
 			"page=0&size=10&sort=requestedAt%2Cdesc",
 		]);
@@ -258,12 +268,12 @@ describe("Leave", () => {
 			await screen.findByRole("tab", { name: "Team timeline" })
 		).toHaveAttribute("aria-selected", "true");
 		await screen.findByRole("button", { name: "Next period" });
-		const [first] = searchesOf(calls, LEAVE_PATH);
+		const [first] = listSearchesOf(calls);
 		expect(first).toContain("size=200");
 		expect(first).toMatch(/from=\d{4}-\d{2}-\d{2}&to=\d{4}-\d{2}-\d{2}/);
 		await user.click(screen.getByRole("button", { name: "Next period" }));
 		await waitFor(() => {
-			expect(searchesOf(calls, LEAVE_PATH)).toHaveLength(2);
+			expect(listSearchesOf(calls)).toHaveLength(2);
 		});
 	});
 
@@ -310,7 +320,7 @@ describe("Leave", () => {
 		]);
 		// Each decision reloads the list.
 		await waitFor(() => {
-			expect(searchesOf(calls, LEAVE_PATH)).toHaveLength(3);
+			expect(listSearchesOf(calls)).toHaveLength(3);
 		});
 	});
 
@@ -420,7 +430,7 @@ describe("Leave", () => {
 		expect(
 			screen.queryByRole("button", { name: "Branch" })
 		).not.toBeInTheDocument();
-		expect(searchesOf(calls, LEAVE_PATH)).toEqual([]);
+		expect(listSearchesOf(calls)).toEqual([]);
 	});
 
 	it("offers decisions only where the key is held", async () => {
@@ -435,9 +445,14 @@ describe("Leave", () => {
 		expect(screen.getByRole("button", { name: "Branch" })).toHaveTextContent(
 			"Main branch"
 		);
-		expect(searchesOf(calls, LEAVE_PATH)).toEqual([
+		expect(listSearchesOf(calls)).toEqual([
 			"page=0&size=10&sort=requestedAt%2Cdesc&branchId=b-1",
 		]);
+		// Nothing to decide anywhere, so no pending count is asked for or shown.
+		expect(searchesOf(calls, LEAVE_PATH)).not.toContain(PENDING_COUNT_SEARCH);
+		expect(
+			screen.getByRole("tab", { name: "Team requests" })
+		).not.toHaveAttribute("aria-describedby");
 
 		expect(
 			screen.queryByRole("button", { name: "Apply leave" })
@@ -467,7 +482,7 @@ describe("Leave", () => {
 		expect(searchesOf(calls, MY_LEAVE_PATH)).toEqual([
 			"page=0&size=10&sort=requestedAt%2Cdesc",
 		]);
-		expect(searchesOf(calls, LEAVE_PATH)).toEqual([]);
+		expect(listSearchesOf(calls)).toEqual([]);
 	});
 
 	it("applies for the member's own leave through the me route", async () => {
@@ -525,6 +540,18 @@ describe("Leave", () => {
 		).toBeInTheDocument();
 	});
 
+	it("shows how many requests wait for a decision on the Team requests tab, from any tab", async () => {
+		const calls = stubApi(routes());
+		await open("/leave");
+
+		const tab = await screen.findByRole("tab", { name: "Team requests" });
+		await waitFor(() => {
+			expect(tab).toHaveAccessibleDescription("24 pending");
+		});
+		expect(within(tab).getByText("24")).toBeVisible();
+		expect(searchesOf(calls, LEAVE_PATH)).toEqual([PENDING_COUNT_SEARCH]);
+	});
+
 	it("narrows the timeline's one Branch to a Department and clears it back", async () => {
 		const user = userEvent.setup();
 		const calls = stubApi(routes());
@@ -543,7 +570,7 @@ describe("Leave", () => {
 				department: "d-2",
 			});
 		});
-		expect(searchesOf(calls, LEAVE_PATH).slice(-1)[0]).toContain(
+		expect(listSearchesOf(calls).slice(-1)[0]).toContain(
 			"branchId=b-1&departmentId=d-2"
 		);
 
@@ -621,6 +648,6 @@ describe("Leave", () => {
 		expect(
 			screen.queryByRole("tab", { name: "Team requests" })
 		).not.toBeInTheDocument();
-		expect(searchesOf(calls, LEAVE_PATH)).toEqual([]);
+		expect(listSearchesOf(calls)).toEqual([]);
 	});
 });

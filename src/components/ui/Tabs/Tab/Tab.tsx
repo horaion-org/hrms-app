@@ -10,6 +10,12 @@ export type TabProps = Omit<ComponentPropsWithRef<"button">, "children"> & {
 	children?: ReactNode;
 	count?: number;
 	/**
+	 * What `count` counts, in words, e.g. "4 pending". Given, the badge is
+	 * hidden from assistive technology and this describes the tab instead,
+	 * so the tab's name stays its label.
+	 */
+	countLabel?: string;
+	/**
 	 * A short line about the view, such as "Core workspace preferences.". It is
 	 * the tab's accessible description, never part of its name. Vertical Tabs
 	 * show it under the label; horizontal Tabs keep their one-line height and
@@ -36,6 +42,7 @@ const badgeTone = (
 export const Tab = ({
 	children,
 	count,
+	countLabel,
 	description,
 	className,
 	"aria-describedby": ariaDescribedBy,
@@ -43,15 +50,21 @@ export const Tab = ({
 }: TabProps): FunctionComponent => {
 	const vertical = useTabsOrientation() === "vertical";
 	const descriptionId = useId();
+	const countLabelId = useId();
 	const hasDescription =
 		description !== undefined && description !== null && description !== "";
+	const describesCount =
+		Boolean(countLabel) && count !== undefined && count > 0;
+	const describedBy = [
+		hasDescription && descriptionId,
+		describesCount && countLabelId,
+		ariaDescribedBy,
+	]
+		.filter(Boolean)
+		.join(" ");
 	return (
 		<HeadlessTab
-			aria-describedby={
-				hasDescription
-					? [descriptionId, ariaDescribedBy].filter(Boolean).join(" ")
-					: ariaDescribedBy
-			}
+			aria-describedby={describedBy || undefined}
 			className={joinClassNames(
 				"cursor-pointer",
 				vertical ? verticalClasses : horizontalClasses,
@@ -61,7 +74,18 @@ export const Tab = ({
 		>
 			{({ selected, disabled }) => {
 				const badge = (
-					<CountBadge count={count} tone={badgeTone(selected, disabled)} />
+					<>
+						<CountBadge
+							aria-hidden={describesCount || undefined}
+							count={count}
+							tone={badgeTone(selected, disabled)}
+						/>
+						{describesCount && (
+							<span aria-hidden="true" className="sr-only" id={countLabelId}>
+								{countLabel}
+							</span>
+						)}
+					</>
 				);
 				// Hidden from the name; aria-describedby still reads hidden text.
 				const descriptionText = hasDescription && (

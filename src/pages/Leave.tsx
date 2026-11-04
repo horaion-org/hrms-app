@@ -36,6 +36,7 @@ import {
 	useLeaveActions,
 	useLeaveRequests,
 	useMyLeaveRequests,
+	usePendingLeaveCount,
 	type LeaveList,
 } from "@/features/leave/useLeaveRequests";
 import type { Refusal } from "@/features/organisation/refusal";
@@ -126,6 +127,7 @@ export const Leave = (): FunctionComponent => {
 	const shownUnits = selectedUnits(units);
 	const noBranches =
 		workspace.data !== undefined && units.branches.length === 0;
+	const pendingCount = usePendingLeaveCount(companyId);
 	const [range, setRange] = useState<DateRange>(defaultRange);
 	const mine = useMyLeaveRequests(
 		companyId,
@@ -285,7 +287,14 @@ export const Leave = (): FunctionComponent => {
 			>
 				<TabList aria-label={t("leave.views")} className="-ml-1">
 					<Tab>{t("leave.myLeave")}</Tab>
-					{canRead && <Tab>{t("leave.teamRequests")}</Tab>}
+					{canRead && (
+						<Tab
+							count={pendingCount}
+							countLabel={t("leave.pendingCount", { count: pendingCount })}
+						>
+							{t("leave.teamRequests")}
+						</Tab>
+					)}
 					{canRead && <Tab>{t("leave.teamTimeline")}</Tab>}
 				</TabList>
 				<PageToolbar

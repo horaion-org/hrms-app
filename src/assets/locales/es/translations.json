@@ -133,7 +133,9 @@
 		"appliedOwn": "Tu solicitud de permiso se ha enviado.",
 		"myEmpty": "Aún no tienes solicitudes de permiso.",
 		"myFailed": "No pudimos cargar tus solicitudes. Inténtalo de nuevo.",
-		"controls": "Controles de la lista de ausencias"
+		"controls": "Controles de la lista de ausencias",
+		"pendingCount_one": "{{count}} pendiente",
+		"pendingCount_other": "{{count}} pendientes"
 	},
 	"availability": {
 		"title": "Disponibilidad",

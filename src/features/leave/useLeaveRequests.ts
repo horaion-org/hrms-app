@@ -11,6 +11,7 @@ import {
 	createMyLeaveRequest,
 	leaveRequestsQuery,
 	myLeaveRequestsQuery,
+	pendingLeaveCountQuery,
 	rejectLeaveRequest,
 	type LeaveRequestBody,
 	type LeaveQuery,
@@ -72,6 +73,17 @@ export const useMyLeaveRequests = (
 	if (list.isError) return { status: "error" };
 	if (list.data === undefined) return { status: "pending" };
 	return { status: "ready", ...list.data };
+};
+
+/**
+ * How many requests wait for a decision, for the Team requests tab: only
+ * for someone who may decide somewhere, and unknown (no badge) while it
+ * loads or when it fails.
+ */
+export const usePendingLeaveCount = (companyId: string): number | undefined => {
+	const access = useAccess();
+	const reviews = access.canAnywhere("leave_request:review");
+	return useQuery(pendingLeaveCountQuery(companyId, reviews)).data;
 };
 
 export type LeaveActions = {

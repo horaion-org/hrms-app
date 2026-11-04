@@ -168,6 +168,45 @@ export const leaveRequestsQuery = (
 		retry,
 	});
 
+/** One pending request is enough to read the API's total of them. */
+const PENDING_COUNT_QUERY: LeaveQuery = {
+	page: 1,
+	size: 1,
+	sort: { field: "requestedAt", desc: true },
+	status: "PENDING",
+};
+
+/**
+ * How many requests wait for a decision across everything the person may
+ * read, whatever unit a page shows: the total of a one-row page of pending
+ * requests. Polled like the notification count, and under the `leave` key,
+ * so every decision or application refreshes it at once.
+ */
+export const pendingLeaveCountQuery = (
+	companyId: string,
+	allowed = true
+): UndefinedInitialDataOptions<
+	ListPage<LeaveRequest>,
+	Error,
+	number,
+	readonly ["leave", string, "pending-count"]
+> =>
+	queryOptions({
+		queryKey: ["leave", companyId, "pending-count"] as const,
+		queryFn: allowed
+			? ({ signal }): Promise<ListPage<LeaveRequest>> =>
+					fetchLeaveRequests(companyId, PENDING_COUNT_QUERY, signal)
+			: skipToken,
+		select: (page) => page.total,
+		meta: administrativeMeta(companyId),
+		staleTime: 30_000,
+		refetchInterval: 30_000,
+		refetchIntervalInBackground: false,
+		refetchOnWindowFocus: true,
+		refetchOnReconnect: true,
+		retry,
+	});
+
 /** The caller's own requests: the same page shape, keyed on their membership by the API. */
 export const myLeaveRequestsPath = (
 	companyId: string,
