@@ -132,7 +132,8 @@
 		"applyOwn": "Solicitar permiso",
 		"appliedOwn": "Tu solicitud de permiso se ha enviado.",
 		"myEmpty": "Aún no tienes solicitudes de permiso.",
-		"myFailed": "No pudimos cargar tus solicitudes. Inténtalo de nuevo."
+		"myFailed": "No pudimos cargar tus solicitudes. Inténtalo de nuevo.",
+		"controls": "Controles de la lista de ausencias"
 	},
 	"availability": {
 		"title": "Disponibilidad",

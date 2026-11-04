@@ -132,7 +132,8 @@
 		"applyOwn": "Apply for leave",
 		"appliedOwn": "Your leave request was submitted.",
 		"myEmpty": "You have no leave requests yet.",
-		"myFailed": "We couldn’t load your leave requests. Try again."
+		"myFailed": "We couldn’t load your leave requests. Try again.",
+		"controls": "Leave list controls"
 	},
 	"availability": {
 		"title": "Availability",

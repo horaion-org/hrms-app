@@ -218,6 +218,37 @@ describe("Leave", () => {
 		);
 	});
 
+	it("lists every Branch's requests once All branches is chosen, naming it in the URL", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi(routes());
+		const { router } = await open("/leave?view=requests&branch=b-1");
+		await screen.findByText("Aisha Rahman");
+
+		await user.click(screen.getByRole("button", { name: "Branch" }));
+		await user.click(screen.getByRole("option", { name: "All branches" }));
+
+		await waitFor(() => {
+			expect(router.state.location.search).toEqual({
+				view: "requests",
+				branch: "all",
+			});
+		});
+		expect(screen.getByRole("button", { name: "Department" })).toBeDisabled();
+		expect(searchesOf(calls, LEAVE_PATH)).toEqual([
+			"page=0&size=10&sort=requestedAt%2Cdesc&branchId=b-1",
+			"page=0&size=10&sort=requestedAt%2Cdesc",
+		]);
+
+		// Clearing goes back to the first Branch, the page's default.
+		await user.click(screen.getByRole("button", { name: "Clear filters" }));
+		await waitFor(() => {
+			expect(router.state.location.search).toEqual({
+				view: "requests",
+				branch: "b-3",
+			});
+		});
+	});
+
 	it("draws the timeline from one window of requests and moves the window on the server", async () => {
 		const user = userEvent.setup();
 		const calls = stubApi(routes());
@@ -476,9 +507,11 @@ describe("Leave", () => {
 		stubApi(routes());
 		const { router } = await open("/leave");
 
-		expect(
-			screen.getAllByRole("tab").map((tab) => tab.textContent?.trim())
-		).toEqual(["My leave", "Team requests", "Team timeline"]);
+		expect(screen.getAllByRole("tab")).toEqual([
+			screen.getByRole("tab", { name: "My leave" }),
+			screen.getByRole("tab", { name: "Team requests" }),
+			screen.getByRole("tab", { name: "Team timeline" }),
+		]);
 		await user.click(screen.getByRole("tab", { name: "Team requests" }));
 		await waitFor(() => {
 			expect(router.state.location.search).toEqual({
@@ -490,6 +523,37 @@ describe("Leave", () => {
 		expect(
 			screen.getByRole("button", { name: "Apply leave" })
 		).toBeInTheDocument();
+	});
+
+	it("narrows the timeline's one Branch to a Department and clears it back", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi(routes());
+		const { router } = await open("/leave?view=timeline&branch=b-1");
+		await screen.findByRole("button", { name: "Next period" });
+
+		expect(
+			screen.queryByRole("option", { name: "All branches" })
+		).not.toBeInTheDocument();
+		await user.click(screen.getByRole("button", { name: "Department" }));
+		await user.click(screen.getByRole("option", { name: "Kitchen" }));
+		await waitFor(() => {
+			expect(router.state.location.search).toEqual({
+				view: "timeline",
+				branch: "b-1",
+				department: "d-2",
+			});
+		});
+		expect(searchesOf(calls, LEAVE_PATH).slice(-1)[0]).toContain(
+			"branchId=b-1&departmentId=d-2"
+		);
+
+		await user.click(screen.getByRole("button", { name: "Clear filters" }));
+		await waitFor(() => {
+			expect(router.state.location.search).toEqual({
+				view: "timeline",
+				branch: "b-1",
+			});
+		});
 	});
 
 	it("never offers to decide the person's own request, whatever their roles (M06)", async () => {

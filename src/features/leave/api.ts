@@ -108,6 +108,8 @@ export type LeaveQuery = {
 	status?: LeaveStatus;
 	/** The Branch of the member's Department. */
 	branchId?: string;
+	/** The member's Department. */
+	departmentId?: string;
 	/** Keeps requests sharing a day with the `from`–`to` window; either alone is open-ended. */
 	from?: string;
 	to?: string;
@@ -115,7 +117,7 @@ export type LeaveQuery = {
 
 export const leaveRequestsPath = (
 	companyId: string,
-	{ page, size, sort, status, branchId, from, to }: LeaveQuery
+	{ page, size, sort, status, branchId, departmentId, from, to }: LeaveQuery
 ): string => {
 	const query = new URLSearchParams({
 		// The API counts pages from 0.
@@ -125,6 +127,7 @@ export const leaveRequestsPath = (
 	});
 	if (status) query.set("status", status);
 	if (branchId) query.set("branchId", branchId);
+	if (departmentId) query.set("departmentId", departmentId);
 	if (from) query.set("from", from);
 	if (to) query.set("to", to);
 	return `${companyPath(companyId)}/leave-requests?${query.toString()}`;

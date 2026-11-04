@@ -1,6 +1,14 @@
 import { z } from "zod";
 import type { DateRange } from "@/components/forms/Calendar";
 import {
+	unitSearchOf,
+	unitSearchSchema,
+} from "@/features/workspace/unitSearch";
+import type {
+	UnitSelection,
+	UnitSelectionRules,
+} from "@/features/workspace/unitSelection";
+import {
 	LEAVE_PAGE_SIZE,
 	LEAVE_SORT_FIELDS,
 	LEAVE_STATUSES,
@@ -25,7 +33,7 @@ const searchSchema = z.object({
 	requestId: z.string().min(1).optional().catch(undefined),
 	memberId: z.string().min(1).optional().catch(undefined),
 	view: z.enum(["requests", "timeline"]).optional().catch(undefined),
-	branch: z.string().min(1).optional().catch(undefined),
+	...unitSearchSchema.shape,
 	status: z.enum(LEAVE_STATUSES).optional().catch(undefined),
 	page: z.number().int().min(1).optional().catch(undefined),
 	sort: sortParameterSchema.optional().catch(undefined),
@@ -34,9 +42,10 @@ const searchSchema = z.object({
 /**
  * The Leave page's state that belongs in the URL, so it survives a reload
  * and can be shared: the view (the caller's own leave unless `requests` or
- * `timeline` names a team view), the Branch, and the table's status, page
- * and sort. Each part is left out at its default: own leave, the first
- * Branch, every status, the first page, newest first.
+ * `timeline` names a team view), the Branch and Department, and the
+ * table's status, page and sort. Each part is left out at its default: own
+ * leave, the first Branch (`all` names every Branch, on Team requests only),
+ * every Department, every status, the first page, newest first.
  */
 export type LeaveSearch = z.infer<typeof searchSchema>;
 
@@ -44,12 +53,12 @@ export type LeaveSearch = z.infer<typeof searchSchema>;
 export const parseLeaveSearch = (
 	search: Record<string, unknown>
 ): LeaveSearch => {
-	const { view, branch, status, page, sort, requestId, memberId } =
+	const { view, branch, department, status, page, sort, requestId, memberId } =
 		searchSchema.parse(search);
 	return {
 		...(requestId ? { requestId, ...(memberId ? { memberId } : {}) } : {}),
 		...(view === undefined ? {} : { view }),
-		...(branch === undefined ? {} : { branch }),
+		...unitSearchOf({ branch, department }),
 		...(status === undefined ? {} : { status }),
 		...(page === undefined || page === 1 ? {} : { page }),
 		...(sort === undefined || sort === DEFAULT_SORT_PARAMETER ? {} : { sort }),
@@ -76,15 +85,29 @@ export const sortParameter = ({
 export const pageParameter = (page: number): number | undefined =>
 	page > 1 ? page : undefined;
 
-/** The page of requests the table asks the API for, inside one Branch. */
+/** The team requests table opens on the first Branch, as it always has; "All branches" can be chosen. */
+export const REQUESTS_UNIT_RULES: UnitSelectionRules = {
+	allowAllBranches: true,
+	startOnFirstBranch: true,
+	withDepartment: true,
+};
+
+/** The timeline is a grid of people by day, so it always shows one Branch. */
+export const TIMELINE_UNIT_RULES: UnitSelectionRules = {
+	allowAllBranches: false,
+	withDepartment: true,
+};
+
+/** The page of requests the table asks the API for, inside the units shown. */
 export const leaveQueryOf = (
 	search: LeaveSearch,
-	branchId: string
+	{ branchId, departmentId }: UnitSelection = {}
 ): LeaveQuery => ({
 	page: search.page ?? 1,
 	size: LEAVE_PAGE_SIZE,
 	sort: sortOf(search),
-	branchId,
+	...(branchId ? { branchId } : {}),
+	...(departmentId ? { departmentId } : {}),
 	...(search.status ? { status: search.status } : {}),
 });
 
@@ -101,13 +124,14 @@ export const myLeaveQueryOf = (search: LeaveSearch): LeaveQuery => ({
  * in one page, earliest first. Rejected requests are left out when drawn.
  */
 export const timelineQueryOf = (
-	branchId: string,
+	{ branchId, departmentId }: UnitSelection,
 	range: DateRange
 ): LeaveQuery => ({
 	page: 1,
 	size: TIMELINE_PAGE_SIZE,
 	sort: { field: "startDate", desc: false },
-	branchId,
+	...(branchId ? { branchId } : {}),
+	...(departmentId ? { departmentId } : {}),
 	from: range.start,
 	to: range.end,
 });

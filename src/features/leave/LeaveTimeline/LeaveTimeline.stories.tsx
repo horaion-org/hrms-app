@@ -18,7 +18,6 @@ const meta = {
 	args: {
 		requests: LEAVE_FIXTURES,
 		range: FIXTURE_RANGE,
-		onRangeChange: (): void => {},
 		onOpen: (): void => {},
 	},
 } satisfies Meta<typeof LeaveTimeline>;
