@@ -577,8 +577,9 @@ describe("People", () => {
 		});
 		await user.click(screen.getByRole("button", { name: "Branch" }));
 		await user.click(screen.getByRole("option", { name: "All branches" }));
+		// Chosen, "All branches" is named so it follows the person to other pages.
 		await waitFor(() => {
-			expect(opened.router.state.location.search).toEqual({});
+			expect(opened.router.state.location.search).toEqual({ branch: "all" });
 		});
 		expect(peopleCalls(calls)).toEqual([
 			"page=1&size=10&sort=displayName%2Casc",

@@ -84,7 +84,7 @@ const Page = ({
 }: {
 	initial: UnitSelection;
 	rules: UnitSelectionRules;
-	onChange: (next: UnitSelection) => void;
+	onChange: (next: UnitSelection, cleanup: boolean) => void;
 }): ReactElement => {
 	const [requested, setRequested] = useState(initial);
 	const selection = useUnitSelection("c-1", [PEOPLE_READ], requested, rules);
@@ -92,8 +92,8 @@ const Page = ({
 		<UnitSelector
 			requested={requested}
 			selection={selection}
-			onChange={(next) => {
-				onChange(next);
+			onChange={(next, cleanup) => {
+				onChange(next, cleanup);
 				setRequested(next);
 			}}
 		/>
@@ -146,10 +146,10 @@ describe("UnitSelector", () => {
 		await user.click(screen.getByRole("button", { name: "Department" }));
 		await user.click(screen.getByRole("option", { name: "Bar" }));
 
-		expect(onChange).toHaveBeenLastCalledWith({
-			branchId: "b-1",
-			departmentId: "d-2",
-		});
+		expect(onChange).toHaveBeenLastCalledWith(
+			{ branchId: "b-1", departmentId: "d-2" },
+			false
+		);
 	});
 
 	it("given_aDepartmentIsChosen_when_theBranchChanges_then_clearsTheDepartment", async () => {
@@ -162,7 +162,7 @@ describe("UnitSelector", () => {
 		await user.click(screen.getByRole("button", { name: "Branch" }));
 		await user.click(screen.getByRole("option", { name: "Jurong" }));
 
-		expect(onChange).toHaveBeenLastCalledWith({ branchId: "b-2" });
+		expect(onChange).toHaveBeenLastCalledWith({ branchId: "b-2" }, false);
 	});
 
 	it("given_aCountryIsChosen_when_changed_then_showsItsFirstBranch", async () => {
@@ -172,17 +172,17 @@ describe("UnitSelector", () => {
 		await user.click(screen.getByRole("button", { name: "Country" }));
 		await user.click(screen.getByRole("option", { name: "Malaysia" }));
 
-		expect(onChange).toHaveBeenLastCalledWith({ branchId: "b-3" });
+		expect(onChange).toHaveBeenLastCalledWith({ branchId: "b-3" }, false);
 	});
 
-	it("given_allBranchesNotAllowed_when_nothingIsChosen_then_announcesTheFirstBranchOnce", () => {
+	it("given_allBranchesNotAllowed_when_nothingIsChosen_then_showsTheFirstBranchWithoutWritingIt", () => {
 		const { onChange } = renderWith(company, GRID);
 
-		expect(onChange).toHaveBeenCalledOnce();
-		expect(onChange).toHaveBeenCalledWith({
-			branchId: "b-3",
-			departmentId: undefined,
-		});
+		// A page's default never becomes the Branch every other page follows.
+		expect(onChange).not.toHaveBeenCalled();
+		expect(screen.getByRole("button", { name: "Branch" })).toHaveTextContent(
+			"Kuala Lumpur"
+		);
 		expect(
 			screen.queryByRole("option", { name: "All branches" })
 		).not.toBeInTheDocument();
@@ -192,29 +192,49 @@ describe("UnitSelector", () => {
 		const user = userEvent.setup();
 		const { onChange } = renderWith(company, FIRST_THEN_ALL);
 
-		expect(onChange).toHaveBeenCalledWith({
-			branchId: "b-3",
-			departmentId: undefined,
-		});
+		expect(onChange).not.toHaveBeenCalled();
 		await user.click(screen.getByRole("button", { name: "Branch" }));
 		await user.click(screen.getByRole("option", { name: "All branches" }));
 
-		expect(onChange).toHaveBeenLastCalledWith({ branchId: "all" });
+		expect(onChange).toHaveBeenLastCalledWith({ branchId: "all" }, false);
 		expect(screen.getByRole("button", { name: "Branch" })).toHaveTextContent(
 			"All branches"
 		);
 	});
 
-	it("given_aDepartmentOfAnotherBranch_when_rendered_then_announcesItCleared", () => {
+	it("given_aDepartmentOfAnotherBranch_when_rendered_then_takesOnlyTheDepartmentOut", () => {
 		const { onChange } = renderWith(company, TABLE, {
 			branchId: "b-1",
 			departmentId: "d-3",
 		});
 
-		expect(onChange).toHaveBeenCalledWith({
-			branchId: "b-1",
-			departmentId: undefined,
-		});
+		expect(onChange).toHaveBeenCalledOnce();
+		expect(onChange).toHaveBeenCalledWith({ branchId: "b-1" }, true);
+	});
+
+	it("given_aBranchThePageDoesNotOffer_when_rendered_then_goesBackToNoChoice", () => {
+		const { onChange } = renderWith(company, GRID, { branchId: "gone" });
+
+		expect(onChange).toHaveBeenCalledWith({ branchId: undefined }, true);
+	});
+
+	it("given_allBranchesNotAllowed_when_allIsInTheUrl_then_showsTheFirstBranchAndLeavesTheUrl", () => {
+		const { onChange } = renderWith(company, GRID, { branchId: "all" });
+
+		expect(onChange).not.toHaveBeenCalled();
+		expect(screen.getByRole("button", { name: "Branch" })).toHaveTextContent(
+			"Kuala Lumpur"
+		);
+	});
+
+	it("given_allBranchesAllowedByDefault_when_allIsChosen_then_writesItSoItFollowsThePerson", async () => {
+		const user = userEvent.setup();
+		const { onChange } = renderWith(company, TABLE, { branchId: "b-1" });
+
+		await user.click(screen.getByRole("button", { name: "Branch" }));
+		await user.click(screen.getByRole("option", { name: "All branches" }));
+
+		expect(onChange).toHaveBeenLastCalledWith({ branchId: "all" }, false);
 	});
 
 	it("given_oneBranchAndOneDepartmentInReach_when_allIsNotAllowed_then_showsBothAsText", () => {

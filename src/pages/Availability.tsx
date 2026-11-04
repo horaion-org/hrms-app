@@ -42,9 +42,7 @@ import {
 } from "@/features/workspace/unitSearch";
 import {
 	clearedUnits,
-	sameUnits,
 	unitsNarrowed,
-	urlUnitsOf,
 	type UnitSelection,
 } from "@/features/workspace/unitSelection";
 import { UnitSelector } from "@/features/workspace/UnitSelector";
@@ -116,9 +114,9 @@ export const Availability = (): FunctionComponent => {
 	const show = (next: AvailabilitySearch): void => {
 		void navigate({ search: (previous) => ({ ...previous, ...next }) });
 	};
-	const chooseUnits = (next: UnitSelection): void => {
-		// The selector naming the units already shown keeps the history entry and its state.
-		if (sameUnits(next, urlUnitsOf(units)))
+	const chooseUnits = (next: UnitSelection, cleanup = false): void => {
+		// Taking out a unit the page cannot show keeps the history entry and its state.
+		if (cleanup)
 			void navigate({
 				search: (previous) => ({ ...previous, ...unitSearchFor(next) }),
 				replace: true,
@@ -201,7 +199,7 @@ export const Availability = (): FunctionComponent => {
 					onClearFilters={
 						narrowed
 							? (): void => {
-									chooseUnits(clearedUnits(units));
+									chooseUnits(clearedUnits(units, requested));
 								}
 							: undefined
 					}

@@ -185,7 +185,8 @@ describe("Availability", () => {
 		).toEqual([`weekStartMonday=${mondayOf(new Date())}&branchId=b-1`]);
 		expect(calls.some((call) => call.path === MINE_PATH)).toBe(false);
 		await waitFor(() => {
-			expect(router.state.location.search).toEqual({ branch: "b-1" });
+			// The first Branch is shown, not written: no page's default becomes the shared Branch.
+			expect(router.state.location.search).toEqual({});
 		});
 		// Reading without the update key offers no editing.
 		expect(

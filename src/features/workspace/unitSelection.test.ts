@@ -10,7 +10,7 @@ import {
 	sameUnits,
 	selectedUnits,
 	unitsNarrowed,
-	urlUnitsOf,
+	staleUnits,
 	type UnitSelectionRules,
 } from "@/features/workspace/unitSelection";
 
@@ -188,7 +188,9 @@ describe("unitsNarrowed and clearedUnits", () => {
 		);
 
 		expect(unitsNarrowed(resolved)).toBe(true);
-		expect(clearedUnits(resolved)).toEqual({});
+		expect(
+			clearedUnits(resolved, { branchId: "b-1", departmentId: "d-1" })
+		).toEqual({});
 	});
 
 	it("given_thePinnedBranch_when_allIsNotAllowed_then_onlyTheDepartmentNarrowsAndClearingKeepsTheBranch", () => {
@@ -207,7 +209,13 @@ describe("unitsNarrowed and clearedUnits", () => {
 
 		expect(unitsNarrowed(pinned)).toBe(false);
 		expect(unitsNarrowed(narrowed)).toBe(true);
-		expect(clearedUnits(narrowed)).toEqual({ branchId: "b-1" });
+		expect(
+			clearedUnits(narrowed, { branchId: "b-1", departmentId: "d-1" })
+		).toEqual({ branchId: "b-1" });
+		// A pinned page keeps what the URL says, never writing its default.
+		expect(clearedUnits(narrowed, { departmentId: "d-1" })).toEqual({
+			branchId: undefined,
+		});
 	});
 });
 
@@ -234,7 +242,7 @@ describe("a page that starts on its first Branch but offers All branches", () =>
 		expect(unitsNarrowed(resolved)).toBe(false);
 	});
 
-	it("given_allBranchesRequested_when_resolved_then_showsEveryBranchAndNamesItInTheUrlOnly", () => {
+	it("given_allBranchesRequested_when_resolved_then_showsEveryBranchAndSendsNoBranch", () => {
 		const resolved = resolveUnitSelection(
 			[orchard, jurong],
 			[kitchen, bar, floor],
@@ -247,12 +255,8 @@ describe("a page that starts on its first Branch but offers All branches", () =>
 			branchId: undefined,
 			departmentId: undefined,
 		});
-		expect(urlUnitsOf(resolved)).toEqual({
-			branchId: ALL_BRANCHES,
-			departmentId: undefined,
-		});
 		expect(unitsNarrowed(resolved)).toBe(true);
-		expect(clearedUnits(resolved)).toEqual({});
+		expect(clearedUnits(resolved, { branchId: ALL_BRANCHES })).toEqual({});
 	});
 
 	it("given_allBranchesRequested_when_allIsNotAllowed_then_fallsBackToTheFirstBranch", () => {
@@ -277,5 +281,52 @@ describe("a page that starts on its first Branch but offers All branches", () =>
 				)
 			)
 		).toBe(true);
+	});
+});
+
+describe("staleUnits", () => {
+	const resolve = (
+		requested: { branchId?: string; departmentId?: string },
+		rules: UnitSelectionRules
+	): ReturnType<typeof resolveUnitSelection> =>
+		resolveUnitSelection(
+			[orchard, jurong],
+			[kitchen, bar, floor],
+			requested,
+			rules
+		);
+
+	it("given_nothingChosen_when_checked_then_writesNoDefault", () => {
+		expect(staleUnits(resolve({}, GRID), {})).toBeUndefined();
+		expect(staleUnits(resolve({}, FIRST_THEN_ALL), {})).toBeUndefined();
+	});
+
+	it("given_anOfferedBranchOrAll_when_checked_then_keepsIt", () => {
+		expect(
+			staleUnits(resolve({ branchId: "b-2" }, GRID), { branchId: "b-2" })
+		).toBeUndefined();
+		expect(
+			staleUnits(resolve({ branchId: ALL_BRANCHES }, GRID), {
+				branchId: ALL_BRANCHES,
+			})
+		).toBeUndefined();
+	});
+
+	it("given_aBranchThePageDoesNotOffer_when_checked_then_goesBackToNoChoice", () => {
+		expect(
+			staleUnits(resolve({ branchId: "gone", departmentId: "d-1" }, TABLE), {
+				branchId: "gone",
+				departmentId: "d-1",
+			})
+		).toEqual({ branchId: undefined });
+	});
+
+	it("given_aDepartmentOutsideTheBranchShown_when_checked_then_dropsOnlyTheDepartment", () => {
+		expect(
+			staleUnits(resolve({ branchId: "b-1", departmentId: "d-3" }, TABLE), {
+				branchId: "b-1",
+				departmentId: "d-3",
+			})
+		).toEqual({ branchId: "b-1" });
 	});
 });

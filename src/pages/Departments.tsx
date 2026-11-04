@@ -30,9 +30,7 @@ import {
 } from "@/features/workspace/unitSearch";
 import {
 	clearedUnits,
-	sameUnits,
 	unitsNarrowed,
-	urlUnitsOf,
 	type UnitSelection,
 } from "@/features/workspace/unitSelection";
 import { UnitSelector } from "@/features/workspace/UnitSelector";
@@ -99,16 +97,16 @@ export const Departments = (): FunctionComponent => {
 		t("organisation.departments.empty"),
 		t
 	);
-	const chooseUnits = (next: UnitSelection): void => {
-		// The selector naming the units already shown replaces the history entry instead of adding one.
+	const chooseUnits = (next: UnitSelection, cleanup = false): void => {
+		// Taking out a unit the page cannot show replaces the history entry instead of adding one.
 		void navigate({
 			search: (previous) => ({ ...previous, ...unitSearchFor(next) }),
-			replace: sameUnits(next, urlUnitsOf(units)),
+			replace: cleanup,
 		});
 	};
 	const clearFilters = (): void => {
 		setStatus("all");
-		chooseUnits(clearedUnits(units));
+		chooseUnits(clearedUnits(units, requested));
 	};
 	const columns = useMemo(
 		() => [
