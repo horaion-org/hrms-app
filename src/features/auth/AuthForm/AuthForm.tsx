@@ -5,7 +5,7 @@ import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { AuthField } from "@/features/auth/AuthField";
 import { AuthMessage } from "@/features/auth/AuthMessage";
-import { withEmail } from "@/features/auth/historyState";
+import { withEmailConfirmation } from "@/features/auth/historyState";
 import { registerCompany } from "@/features/auth/api";
 import {
 	passwordRequirements,
@@ -96,7 +96,7 @@ export const AuthForm = (): FunctionComponent => {
 			}
 			await navigate({
 				to: "/confirm-email",
-				state: withEmail(value("email").trim()),
+				state: withEmailConfirmation(value("email").trim(), "code-sent"),
 			});
 		} catch (cause) {
 			setError(

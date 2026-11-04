@@ -15,7 +15,11 @@ import { AuthField } from "@/features/auth/AuthField";
 import { AuthMessage } from "@/features/auth/AuthMessage";
 import { useRetryHold } from "@/features/auth/useRetryHold";
 import { failureMessage, retryHoldMessage } from "@/features/auth/errors";
-import { emailFromHistory, withEmail } from "@/features/auth/historyState";
+import {
+	emailFromHistory,
+	withEmail,
+	withEmailConfirmation,
+} from "@/features/auth/historyState";
 import { returnPath } from "@/features/auth/returnPath";
 import { logInSchema, type LogInValues } from "@/features/auth/schemas";
 import { challengePath } from "@/features/auth/challenge";
@@ -95,7 +99,7 @@ export const LogInForm = (): FunctionComponent => {
 			) {
 				await navigate({
 					to: "/confirm-email",
-					state: withEmail(values.email),
+					state: withEmailConfirmation(values.email, "log-in-required"),
 				});
 				return;
 			}
