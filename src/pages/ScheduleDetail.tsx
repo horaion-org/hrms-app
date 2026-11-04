@@ -149,15 +149,16 @@ const RosterBody = ({
 				{t(`${key}.${ROSTER_PROBLEMS[assignments.status]}`)}
 			</Problem>
 		);
-	const stale =
+	// Only a frozen context can go stale: members whose week before changed since generation.
+	const staleMemberCount =
 		startingContext?.frozen === true
 			? startingContext.staleMemberProfileIds.length
 			: 0;
 	return (
 		<>
-			{stale > 0 && (
+			{staleMemberCount > 0 && (
 				<Callout className="mt-8" tone="warning">
-					{t("scheduling.startingContext.stale", { count: stale })}
+					{t("scheduling.startingContext.stale", { count: staleMemberCount })}
 				</Callout>
 			)}
 			<GeneratedRoster
