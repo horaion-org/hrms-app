@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { Tabs, Tab, TabList, TabPanels, TabPanel } from "@/components/ui/Tabs";
 import { NotificationList } from "@/features/notifications/NotificationList";
+import { canSeeReviewNotifications } from "@/features/notifications/reviewAccess";
 import { useAccess } from "@/features/workspace/useAccess";
 
 /** The inbox and bell panel share the same audience selection and permission-withdrawal behaviour. */
@@ -16,7 +17,7 @@ export const NotificationViews = ({
 	const { t } = useTranslation();
 	const [selected, setSelected] = useState(0);
 	const access = useAccess();
-	const canReview = access.canAnywhere("leave_request:review");
+	const canReview = canSeeReviewNotifications(access.canAnywhere);
 	return (
 		<Tabs selectedIndex={canReview ? selected : 0} onChange={setSelected}>
 			<TabList aria-label={t("notifications.audiences")}>

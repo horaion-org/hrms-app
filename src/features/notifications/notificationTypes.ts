@@ -134,28 +134,40 @@ export const presentNotification = (
 	};
 };
 
+/** Where a notification opens: a leave request on `/leave`, a schedule's roster, or an import's result. */
+export type NotificationTarget =
+	| { kind: "leave"; requestId: string; memberId: string | undefined }
+	| { kind: "schedule"; scheduleId: string }
+	| { kind: "import"; importId: string };
+
 /**
- * The `/leave` search that opens a notification's leave request, or undefined when it does not point at one.
- * Reviewers also get the beneficiary, which the review dialog needs.
+ * The page a notification opens, or undefined when it names nothing this build can open. Reviewers of leave also
+ * get the beneficiary, which the review dialog needs.
  */
-export const leaveRequestTarget = (
-	notification: {
-		type: string;
-		leaveRequestId: string | null;
-		membershipId: string | null;
-	},
+export const notificationTarget = (
+	notification: Pick<
+		InboxNotification,
+		| "type"
+		| "leaveRequestId"
+		| "membershipId"
+		| "scheduleId"
+		| "memberImportJobId"
+	>,
 	audience: "PERSONAL" | "REVIEW"
-): { requestId: string; memberId: string | undefined } | undefined => {
-	if (
-		describeNotificationType(notification.type).category !== "leave" ||
-		!notification.leaveRequestId
-	)
-		return undefined;
-	return {
-		requestId: notification.leaveRequestId,
-		memberId:
-			audience === "REVIEW"
-				? (notification.membershipId ?? undefined)
-				: undefined,
-	};
+): NotificationTarget | undefined => {
+	const category = describeNotificationType(notification.type).category;
+	if (category === "leave" && notification.leaveRequestId)
+		return {
+			kind: "leave",
+			requestId: notification.leaveRequestId,
+			memberId:
+				audience === "REVIEW"
+					? (notification.membershipId ?? undefined)
+					: undefined,
+		};
+	if (category === "schedule" && notification.scheduleId)
+		return { kind: "schedule", scheduleId: notification.scheduleId };
+	if (category === "people" && notification.memberImportJobId)
+		return { kind: "import", importId: notification.memberImportJobId };
+	return undefined;
 };

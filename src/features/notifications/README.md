@@ -25,7 +25,10 @@ not presented as zero. Acknowledgement is explicit; opening a target alone does 
 Each entry shows its type's icon and colour, a category label ("Leave", "Schedule"), and when it happened: "Just now",
 then minutes, hours and days up to six days, then the date, with the exact time in the `title`. Times refresh every
 minute while the list is mounted. `notificationTypes.ts` is the one map from type code to icon, tone, category and
-copy; it already lists the schedule types that schedule publish (backlog T2-6) will send. The API's `type` is parsed as
+copy, and `presentNotification` adjusts it by payload (a finished import turns red and carries its counts).
+`notificationTarget` opens a leave request on `/leave`, a schedule at `/scheduling/{id}` or an import at
+`/people/import?import={id}`. **Needs review** shows for holders of `leave_request:review` or `schedule:publish`
+(`reviewAccess.ts`). The API's `type` is parsed as
 any string, so a code this build does not know renders plainly with a neutral icon instead of failing the page.
 
 The panel offers **Mark all as read** for the open tab when it has unread entries. **Delete** (always visible, no

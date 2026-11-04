@@ -15,6 +15,7 @@ import {
 	useCurrentCompanyId,
 	useCurrentMembershipId,
 } from "@/features/organisation/useCurrentCompanyId";
+import { canSeeReviewNotifications } from "@/features/notifications/reviewAccess";
 import { useAccess } from "@/features/workspace/useAccess";
 
 export const NotificationBell = (): FunctionComponent => {
@@ -24,7 +25,7 @@ export const NotificationBell = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
 	const membershipId = useCurrentMembershipId();
 	const access = useAccess();
-	const canReview = access.canAnywhere("leave_request:review");
+	const canReview = canSeeReviewNotifications(access.canAnywhere);
 	const personal = useQuery(
 		notificationCountQuery(companyId, membershipId, "PERSONAL")
 	);

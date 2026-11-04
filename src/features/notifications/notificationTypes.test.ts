@@ -4,7 +4,7 @@ import es from "@/assets/locales/es/translations.json";
 import {
 	describeNotificationType,
 	isKnownNotificationType,
-	leaveRequestTarget,
+	notificationTarget,
 	presentNotification,
 	UNKNOWN_NOTIFICATION_TYPE,
 } from "@/features/notifications/notificationTypes";
@@ -120,33 +120,74 @@ describe("presentNotification", () => {
 	});
 });
 
-describe("leaveRequestTarget", () => {
+describe("notificationTarget", () => {
 	const approved = {
 		type: "LEAVE_REQUEST_APPROVED",
 		leaveRequestId: "leave-1",
 		membershipId: "member-1",
+		scheduleId: null,
+		memberImportJobId: null,
+	};
+	const scheduleReady = {
+		...approved,
+		type: "SCHEDULE_READY",
+		leaveRequestId: null,
+		membershipId: null,
+		scheduleId: "schedule-1",
+	};
+	const importFinished = {
+		...approved,
+		type: "MEMBER_IMPORT_FINISHED",
+		leaveRequestId: null,
+		membershipId: null,
+		memberImportJobId: "import-1",
 	};
 
-	it("opens the request, adding the beneficiary only for reviewers", () => {
-		expect(leaveRequestTarget(approved, "PERSONAL")).toEqual({
+	it("opens a leave request, adding the beneficiary only for reviewers", () => {
+		expect(notificationTarget(approved, "PERSONAL")).toEqual({
+			kind: "leave",
 			requestId: "leave-1",
 			memberId: undefined,
 		});
-		expect(leaveRequestTarget(approved, "REVIEW")).toEqual({
+		expect(notificationTarget(approved, "REVIEW")).toEqual({
+			kind: "leave",
 			requestId: "leave-1",
 			memberId: "member-1",
 		});
 	});
 
-	it("has no leave target for other categories or a missing request", () => {
+	it("opens a schedule's roster and an import's result", () => {
+		expect(notificationTarget(scheduleReady, "REVIEW")).toEqual({
+			kind: "schedule",
+			scheduleId: "schedule-1",
+		});
 		expect(
-			leaveRequestTarget({ ...approved, type: "SHIFT_ASSIGNMENT" }, "PERSONAL")
+			notificationTarget(
+				{ ...scheduleReady, type: "SCHEDULE_REJECTED" },
+				"PERSONAL"
+			)
+		).toEqual({ kind: "schedule", scheduleId: "schedule-1" });
+		expect(notificationTarget(importFinished, "PERSONAL")).toEqual({
+			kind: "import",
+			importId: "import-1",
+		});
+	});
+
+	it("has no target for an unknown type or a missing id", () => {
+		expect(
+			notificationTarget({ ...approved, type: "SOMETHING_NEW" }, "PERSONAL")
 		).toBeUndefined();
 		expect(
-			leaveRequestTarget({ ...approved, type: "SOMETHING_NEW" }, "PERSONAL")
+			notificationTarget({ ...approved, leaveRequestId: null }, "PERSONAL")
 		).toBeUndefined();
 		expect(
-			leaveRequestTarget({ ...approved, leaveRequestId: null }, "PERSONAL")
+			notificationTarget({ ...scheduleReady, scheduleId: null }, "REVIEW")
+		).toBeUndefined();
+		expect(
+			notificationTarget(
+				{ ...importFinished, memberImportJobId: null },
+				"PERSONAL"
+			)
 		).toBeUndefined();
 	});
 });
