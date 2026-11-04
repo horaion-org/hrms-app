@@ -19,8 +19,9 @@ export type ScheduleCardProps = {
 const key = "scheduling.overview";
 
 /**
- * One department's schedule for a period: where it is filed, its status and
- * what it includes. View opens it by its status.
+ * One department's schedule for a period: where it is filed, its status
+ * (with how many setup issues its newest run found) and what it includes.
+ * View opens it by its status.
  */
 export const ScheduleCard = ({
 	schedule,
@@ -29,6 +30,7 @@ export const ScheduleCard = ({
 	const { t, i18n } = useTranslation();
 	const titleId = useId();
 	const language = i18n.resolvedLanguage ?? i18n.language;
+	const setupIssues = schedule.generation?.findings?.diagnostics.length ?? 0;
 
 	return (
 		<section
@@ -64,9 +66,16 @@ export const ScheduleCard = ({
 						language
 					)}
 				</span>
-				<Badge tone={scheduleStatusTones[schedule.status]}>
-					{t(`${key}.statuses.${schedule.status}`)}
-				</Badge>
+				<span className="flex flex-wrap items-center gap-2">
+					{setupIssues > 0 && (
+						<Badge tone="warning">
+							{t("scheduling.findings.setupIssues", { count: setupIssues })}
+						</Badge>
+					)}
+					<Badge tone={scheduleStatusTones[schedule.status]}>
+						{t(`${key}.statuses.${schedule.status}`)}
+					</Badge>
+				</span>
 			</div>
 			<ScheduleSummary schedule={schedule} />
 		</section>

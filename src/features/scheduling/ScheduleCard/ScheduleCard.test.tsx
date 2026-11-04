@@ -6,7 +6,9 @@ import en from "@/assets/locales/en/translations.json";
 import { MemoryRouterHarness } from "@/components/utils/MemoryRouterHarness";
 import { ScheduleCard } from "@/features/scheduling/ScheduleCard";
 import {
+	emptyFindingsFixture,
 	generatedScheduleFixture,
+	generationFixture,
 	scheduleFixture,
 } from "@/features/scheduling/schedules/fixtures";
 
@@ -52,9 +54,28 @@ describe("ScheduleCard", () => {
 			name: "Front Office - Week 42",
 		});
 		expect(within(card).getByText("Generated")).toBeInTheDocument();
+		expect(within(card).getByText("1 setup issue")).toBeInTheDocument();
 		expect(within(card).getByRole("link")).toHaveAttribute(
 			"href",
 			"/scheduling/s-1?branchId=b-1&departmentId=d-1"
 		);
+	});
+
+	it("given_aRunWithoutSetupIssues_when_rendered_then_showsNoSetupBadge", async () => {
+		render(
+			<MemoryRouterHarness>
+				<ScheduleCard
+					schedule={generatedScheduleFixture({
+						status: "GENERATED",
+						generation: generationFixture({ findings: emptyFindingsFixture() }),
+					})}
+				/>
+			</MemoryRouterHarness>
+		);
+
+		const card = await screen.findByRole("region", {
+			name: "Front Office - Week 42",
+		});
+		expect(within(card).queryByText(/setup issue/)).toBeNull();
 	});
 });
