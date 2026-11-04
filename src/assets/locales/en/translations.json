@@ -229,6 +229,12 @@
 		"searchCountries": "Search country or code",
 		"number": "Phone number"
 	},
+	"timeZoneSelect": {
+		"placeholder": "Select a time zone",
+		"search": "Search city, region or offset",
+		"empty": "No time zones found.",
+		"yourZone": "Your time zone"
+	},
 	"auth": {
 		"passwordReset": {
 			"title": "Reset your password",
@@ -834,6 +840,11 @@
 				"countryEmpty": "No countries found.",
 				"countryRequired": "Choose a country.",
 				"countryRejected": "Check the country and try again.",
+				"timeZone": "Time zone",
+				"timeZoneHint": "The branch's days, weeks and shift times use this zone.",
+				"timeZoneRequired": "Choose the branch's time zone.",
+				"timeZoneRejected": "Check the time zone and try again.",
+				"timeZoneChanged": "Changing the time zone changes when this branch's days start for new schedules and today's roster.",
 				"heads": "Branch heads",
 				"headsPlaceholder": "Select branch heads",
 				"searchPlaceholder": "Search people",

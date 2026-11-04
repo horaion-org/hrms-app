@@ -104,6 +104,7 @@ const branch = (branchId: string, name: string): Record<string, unknown> => ({
 	code: "SG-ORC-01",
 	city: "Singapore",
 	country: "SG",
+	timeZone: "Asia/Singapore",
 	status: "ACTIVE",
 	headMembershipIds: [],
 });

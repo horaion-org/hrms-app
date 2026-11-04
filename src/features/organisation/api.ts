@@ -79,6 +79,8 @@ const branchSchema = z.object({
 	code: z.string(),
 	city: z.string(),
 	country: z.string(),
+	/** The IANA zone the branch's days, weeks and shift times are in, such as "Asia/Singapore". */
+	timeZone: z.string(),
 	status: unitStatusSchema,
 });
 
@@ -89,6 +91,7 @@ export type CreateBranchBody = {
 	code: string;
 	city: string;
 	country: string;
+	timeZone: string;
 	initialHeadCompanyMembershipIds: Array<string>;
 };
 

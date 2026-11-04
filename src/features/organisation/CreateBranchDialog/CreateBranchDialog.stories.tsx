@@ -116,6 +116,7 @@ export const Editing: Story = {
 			code: "ORC",
 			city: "Singapore",
 			country: "SG",
+			timeZone: "Asia/Singapore",
 			status: "ACTIVE",
 		},
 	},

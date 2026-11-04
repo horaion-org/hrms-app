@@ -242,6 +242,12 @@
 		"noResults": "No hay resultados",
 		"create": "Crear \"{{query}}\""
 	},
+	"timeZoneSelect": {
+		"placeholder": "Seleccionar una zona horaria",
+		"search": "Busca ciudad, región o desfase",
+		"empty": "No se encontraron zonas horarias.",
+		"yourZone": "Tu zona horaria"
+	},
 	"calendar": {
 		"previousMonth": "Mes anterior",
 		"nextMonth": "Mes siguiente",
@@ -340,6 +346,11 @@
 				"countryEmpty": "No se encontraron países.",
 				"countryRequired": "Elige un país.",
 				"countryRejected": "Revisa el país e inténtalo de nuevo.",
+				"timeZone": "Zona horaria",
+				"timeZoneHint": "Los días, las semanas y los horarios de turno de la sucursal usan esta zona.",
+				"timeZoneRequired": "Elige la zona horaria de la sucursal.",
+				"timeZoneRejected": "Revisa la zona horaria e inténtalo de nuevo.",
+				"timeZoneChanged": "Cambiar la zona horaria cambia cuándo empiezan los días de esta sucursal en los nuevos horarios y en la planificación de hoy.",
 				"heads": "Responsables de la sucursal",
 				"headsPlaceholder": "Seleccionar responsables",
 				"searchPlaceholder": "Buscar personas",
