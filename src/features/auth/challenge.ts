@@ -1,5 +1,6 @@
 import type { TFunction } from "i18next";
 import { z } from "zod";
+import { meetsPasswordPolicy } from "@/features/auth/passwordRules";
 import { returnPath } from "@/features/auth/returnPath";
 import type { ChallengeKind } from "@/features/auth/session";
 
@@ -37,16 +38,7 @@ export function newPasswordFormSchema(
 		.object({
 			newPassword: z
 				.string()
-				.min(8, t("auth.challenge.passwordPolicy"))
-				.max(128, t("auth.challenge.passwordPolicy"))
-				.refine(
-					(value) =>
-						/[a-z]/.test(value) &&
-						/[A-Z]/.test(value) &&
-						/\d/.test(value) &&
-						/[^a-zA-Z0-9\s]/.test(value),
-					t("auth.challenge.passwordPolicy")
-				),
+				.refine(meetsPasswordPolicy, t("auth.challenge.passwordPolicy")),
 			confirmPassword: z.string(),
 		})
 		.refine((values) => values.newPassword === values.confirmPassword, {
