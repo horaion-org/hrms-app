@@ -27,6 +27,7 @@ import {
 import { canSeeReviewNotifications } from "@/features/notifications/reviewAccess";
 import { useAccess } from "@/features/workspace/useAccess";
 import { accessiblePreviousData } from "@/features/workspace/queryAccess";
+import { notificationLink } from "@/features/notifications/notificationLink";
 import { NotificationRow } from "@/features/notifications/NotificationRow";
 
 const ONE_MINUTE_MS = 60_000;
@@ -233,32 +234,10 @@ export const NotificationList = ({
 											read.mutate(notification.notificationId);
 										}}
 									>
-										{target?.kind === "leave" ? (
+										{target ? (
 											<Link
+												{...notificationLink(target)}
 												className={`${titleClasses} hover:underline`}
-												to="/leave"
-												search={{
-													requestId: target.requestId,
-													memberId: target.memberId,
-												}}
-												onClick={onNavigate}
-											>
-												{title}
-											</Link>
-										) : target?.kind === "schedule" ? (
-											<Link
-												className={`${titleClasses} hover:underline`}
-												params={{ scheduleId: target.scheduleId }}
-												to="/scheduling/$scheduleId"
-												onClick={onNavigate}
-											>
-												{title}
-											</Link>
-										) : target?.kind === "import" ? (
-											<Link
-												className={`${titleClasses} hover:underline`}
-												search={{ import: target.importId }}
-												to="/people/import"
 												onClick={onNavigate}
 											>
 												{title}

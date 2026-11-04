@@ -567,7 +567,10 @@ describe("Notifications", () => {
 		const link = await screen.findByRole("link", {
 			name: "Import finished: 45 added, 2 skipped, 3 failed.",
 		});
-		expect(link).toHaveAttribute("href", "/people/import?import=import-1");
+		expect(link).toHaveAttribute(
+			"href",
+			"/settings/data/import-people?import=import-1"
+		);
 		expect(screen.getByText("People")).toBeInTheDocument();
 	});
 
