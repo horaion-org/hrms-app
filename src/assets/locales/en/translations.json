@@ -1776,6 +1776,13 @@
 			"namePlaceholder": "e.g. Front Office - Week 16",
 			"period": "Schedule period",
 			"periodNote": "Select a period that aligns with your business operations.",
+			"relative": {
+				"last": "Last week",
+				"this": "This week",
+				"next": "Next week"
+			},
+			"periodWithRelative": "{{period}} · {{relative}}",
+			"periodStarted": "This week has already begun. The schedule still covers all of it, including days that have passed.",
 			"partTimeWithoutAvailability_one": "{{count}} part-time member has no availability and will be left off the roster:",
 			"partTimeWithoutAvailability_other": "{{count}} part-time members have no availability and will be left off the roster:",
 			"additional": "Additional settings",
@@ -2046,6 +2053,15 @@
 				"title": "Constraint preview",
 				"complete": "Complete",
 				"incomplete": "Incomplete"
+			},
+			"unticked": {
+				"title": "Continue without constraints?",
+				"none": "This department has no constraints yet.",
+				"noneTicked_one": "This department’s {{count}} constraint is not ticked.",
+				"noneTicked_other": "None of this department’s {{count}} constraints are ticked.",
+				"consequence": "The schedule will be generated without rules such as days off or maximum hours.",
+				"confirm": "Continue without constraints",
+				"cancel": "Back to constraints"
 			}
 		},
 		"forecast": {

@@ -1,5 +1,5 @@
-import { render, screen, within } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { fireEvent, render, screen, within } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 import { Stepper, StepperStep } from "@/components/ui/Stepper";
 
 describe("StepperStep in a Stepper", () => {
@@ -79,5 +79,45 @@ describe("StepperStep in a Stepper", () => {
 		expect(
 			screen.getByRole("listitem", { name: /Constraints/ })
 		).not.toHaveAttribute("aria-current");
+	});
+
+	it("given_aPassedStepNotCompleted_when_shown_then_keepsItsNumberAndStaysClickable", () => {
+		const onStepClick = vi.fn();
+		render(
+			<Stepper currentStep={2} onStepClick={onStepClick}>
+				<StepperStep completed label="Setup" />
+				<StepperStep completed={false} label="Shifts" />
+				<StepperStep label="Constraints" />
+			</Stepper>
+		);
+
+		const shifts = screen.getByRole("button", { name: "Step 2: Shifts" });
+		expect(within(shifts).getByText("2")).toBeInTheDocument();
+		fireEvent.click(shifts);
+		expect(onStepClick).toHaveBeenCalledWith(1);
+		expect(
+			screen.getByRole("button", { name: "Step 1: Setup, completed" })
+		).toBeVisible();
+	});
+
+	it("given_aLaterStepCompleted_when_shown_then_tickedButNotClickable", () => {
+		render(
+			<Stepper currentStep={0} onStepClick={vi.fn()}>
+				<StepperStep completed label="Setup" />
+				<StepperStep completed label="Shifts" />
+				<StepperStep completed={false} label="Constraints" />
+			</Stepper>
+		);
+
+		expect(
+			screen.getByRole("listitem", { name: "Step 2: Shifts, completed" })
+		).toBeVisible();
+		expect(screen.queryByText("2")).not.toBeInTheDocument();
+		expect(screen.getByText("3")).toBeVisible();
+		expect(screen.queryByRole("button")).not.toBeInTheDocument();
+		// The current step shows where the person is, never a tick.
+		expect(
+			screen.getByRole("listitem", { name: "Step 1: Setup", current: "step" })
+		).toBeVisible();
 	});
 });

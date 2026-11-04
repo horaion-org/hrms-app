@@ -5,9 +5,12 @@ import { StepContext } from "@/components/ui/Stepper/Stepper.context";
 import type { StepperStepProps } from "@/components/ui/Stepper/StepperStep";
 
 export type StepperProps = {
-	/** Zero-based current index; the step count marks the whole sequence completed. */
+	/**
+	 * Zero-based current index; the step count marks the whole sequence
+	 * passed. Steps before it are ticked unless they say otherwise.
+	 */
 	currentStep: number;
-	/** Allows a person to return to a completed step. */
+	/** Allows a person to return to a step before the current one. */
 	onStepClick?: (index: number) => void;
 	className?: string;
 	children:
@@ -34,12 +37,12 @@ export const Stepper = ({
 							index,
 							onStepClick,
 							isLast: index === count - 1,
-							status:
+							position:
 								index < currentStep
-									? "completed"
+									? "before"
 									: index === currentStep
 										? "current"
-										: "upcoming",
+										: "after",
 						}}
 					>
 						{step}

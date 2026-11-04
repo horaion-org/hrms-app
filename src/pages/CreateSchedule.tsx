@@ -19,14 +19,17 @@ import { ConstraintDialog } from "@/features/scheduling/constraints/ConstraintDi
 import { deleteConstraintRefusal } from "@/features/scheduling/constraints/constraintRefusal";
 import { ConstraintsStep } from "@/features/scheduling/constraints/ConstraintsStep";
 import { useConstraintActions } from "@/features/scheduling/constraints/useConstraintActions";
+import { NoConstraintsDialog } from "@/features/scheduling/constraints/NoConstraintsDialog";
 import { useConstraintOptions } from "@/features/scheduling/constraints/useConstraintOptions";
 import { departmentUnitOf } from "@/features/scheduling/departmentUnit";
 import { ForecastStep } from "@/features/scheduling/ForecastStep";
 import { GenerateStep } from "@/features/scheduling/GenerateStep";
 import {
+	defaultPeriod,
 	formatPeriod,
 	periodStartingOn,
-	upcomingPeriods,
+	selectablePeriods,
+	withPeriod,
 } from "@/features/scheduling/periods";
 import {
 	emptyScheduleDraft,
@@ -71,6 +74,7 @@ import { ShiftsStep } from "@/features/scheduling/shifts/ShiftsStep";
 import { useShiftActions } from "@/features/scheduling/shifts/useShiftActions";
 import { useShiftRoleOptions } from "@/features/scheduling/shifts/useShiftRoleOptions";
 import { StepActions } from "@/features/scheduling/StepActions";
+import { stepCompletion } from "@/features/scheduling/stepCompletion";
 import { SCHEDULE_STEPS } from "@/features/scheduling/steps";
 import { workspaceQuery } from "@/features/workspace/api";
 import type { PermissionKey } from "@/features/workspace/permissionKeys";
@@ -170,7 +174,8 @@ export const CreateSchedule = (): FunctionComponent => {
 		undefined,
 		emptyScheduleDraft
 	);
-	const [upcoming] = useState(() => upcomingPeriods(new Date()));
+	// Today is read once, so the offered weeks hold still while the page is open.
+	const [today] = useState(() => new Date());
 	// The draft the page holds, when it is the one the URL names.
 	const saved =
 		named !== undefined &&
@@ -257,6 +262,8 @@ export const CreateSchedule = (): FunctionComponent => {
 	const [problem, setProblem] = useState("");
 	// Set when Next is refused, so the reason shows only after a try.
 	const [blocked, setBlocked] = useState(false);
+	// Set while the person is asked whether to go on without constraints.
+	const [confirmingNoConstraints, setConfirmingNoConstraints] = useState(false);
 	const setupFormId = useId();
 
 	const notify = (message: string): void => {
@@ -448,30 +455,46 @@ export const CreateSchedule = (): FunctionComponent => {
 			? t("scheduling.shifts.required")
 			: undefined;
 	const shownProblem = blocked ? stepProblem : undefined;
+	// Only when the list is known: a hidden or failed list may have constraints ticked.
+	const leavesWithoutConstraints =
+		step === "constraints" &&
+		!frozen &&
+		constraints.status === "ready" &&
+		tickedConstraints.length === 0;
 	const next = (): void => {
 		if (stepProblem) setBlocked(true);
+		else if (leavesWithoutConstraints) setConfirmingNoConstraints(true);
 		else goTo(current + 1);
 	};
-	const firstPeriod = upcoming[0];
+	const firstPeriod = defaultPeriod(today);
 	const setupDefaults: ScheduleSetupValues = draft.setup ?? {
 		departmentId: "",
 		name: "",
-		periodStart: firstPeriod?.start ?? "",
+		periodStart: firstPeriod.start,
 		includeLeave: true,
 		allowOpenShifts: false,
 	};
 	const chosenStart = draft.setup?.periodStart;
-	// A reopened draft's week may have passed out of the upcoming ones.
+	// A reopened draft's week may lie outside the offered ones.
+	const offered = selectablePeriods(today);
 	const periods =
-		chosenStart === undefined ||
-		upcoming.some((period) => period.start === chosenStart)
-			? upcoming
-			: [periodStartingOn(chosenStart), ...upcoming];
+		chosenStart === undefined
+			? offered
+			: withPeriod(offered, chosenStart, today);
 	const period = chosenStart ? periodStartingOn(chosenStart) : firstPeriod;
-	const periodLabel = period
-		? formatPeriod(period, i18n.resolvedLanguage ?? i18n.language)
-		: "";
+	const periodLabel = formatPeriod(
+		period,
+		i18n.resolvedLanguage ?? i18n.language
+	);
 	const isLast = current === SCHEDULE_STEPS.length - 1;
+	// Each step is ticked for what the draft holds, not for being behind the current one.
+	const completion = stepCompletion({
+		saved: saved !== undefined,
+		frozen,
+		tickedShiftCount: ticked.length,
+		tickedConstraintCount: tickedConstraints.length,
+		currentIndex: current,
+	});
 	const busy =
 		scheduleActions.create.isPending ||
 		scheduleActions.update.isPending ||
@@ -538,6 +561,7 @@ export const CreateSchedule = (): FunctionComponent => {
 				{SCHEDULE_STEPS.map((name) => (
 					<StepperStep
 						key={name}
+						completed={completion[name]}
 						label={t(`scheduling.create.steps.${name}`)}
 					/>
 				))}
@@ -700,6 +724,18 @@ export const CreateSchedule = (): FunctionComponent => {
 									: "scheduling.constraints.added"
 							)
 						);
+					}}
+				/>
+			)}
+			{confirmingNoConstraints && (
+				<NoConstraintsDialog
+					constraintCount={constraintRows.length}
+					onClose={() => {
+						setConfirmingNoConstraints(false);
+					}}
+					onConfirm={() => {
+						setConfirmingNoConstraints(false);
+						goTo(current + 1);
 					}}
 				/>
 			)}

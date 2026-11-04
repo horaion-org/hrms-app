@@ -45,6 +45,25 @@ export const ClickableCompletedSteps: Story = {
 	args: { currentStep: 2, onStepClick: fn() },
 };
 
+/**
+ * Steps tick from their own data: Shifts was passed without its work done,
+ * and Forecast, still ahead, is already done.
+ */
+export const DataDrivenCompletion: Story = {
+	args: { currentStep: 2, onStepClick: fn() },
+	render: ({ labels, ...args }): ReactElement => (
+		<Stepper {...args}>
+			{labels.map((label, index) => (
+				<StepperStep
+					key={index}
+					completed={[true, false, false, true, false][index]}
+					label={label}
+				/>
+			))}
+		</Stepper>
+	),
+};
+
 const withNarrowContainer: Decorator<StoryArgs> = (Story): ReactElement => (
 	<div className="w-lg max-w-full">
 		<Story />

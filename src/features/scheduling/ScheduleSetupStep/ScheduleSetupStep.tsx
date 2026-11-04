@@ -41,6 +41,7 @@ export type ScheduleSetupStepProps = {
 	formId: string;
 	companyId: string;
 	defaultValues: ScheduleSetupValues;
+	/** The weeks offered, in date order; a started one gets a note while the setup can change. */
 	periods: Array<SchedulePeriod>;
 	/**
 	 * Set once the draft is saved: its department, shown and no longer
@@ -149,8 +150,17 @@ export const ScheduleSetupStep = ({
 	const language = i18n.resolvedLanguage ?? i18n.language;
 	const periodOptions = periods.map((period) => ({
 		value: period.start,
-		label: formatPeriod(period, language),
+		label: period.relative
+			? t("scheduling.setup.periodWithRelative", {
+					period: formatPeriod(period, language),
+					relative: t(`scheduling.setup.relative.${period.relative}`),
+				})
+			: formatPeriod(period, language),
 	}));
+	// A week whose Monday has passed is still scheduled whole; say so while it can change.
+	const periodStarted =
+		!readOnly &&
+		periods.some((period) => period.start === periodStart && period.started);
 	const save = async (values: ScheduleSetupValues): Promise<void> => {
 		const refused = await onSubmit(values);
 		const fields = Object.keys(refused ?? {}) as Array<
@@ -179,7 +189,7 @@ export const ScheduleSetupStep = ({
 					<div className="flex flex-col gap-8 sm:flex-row">
 						<FormRow
 							required
-							className="sm:w-57"
+							className="sm:w-72"
 							error={errors.departmentId?.message}
 							hint={departmentHint}
 							htmlFor={fieldId("departmentId")}
@@ -260,11 +270,14 @@ export const ScheduleSetupStep = ({
 					<div className="flex flex-col gap-8 sm:flex-row sm:items-end">
 						<FormRow
 							required
-							className="sm:w-57"
+							className="sm:w-72"
 							error={errors.periodStart?.message}
 							htmlFor={fieldId("periodStart")}
 							label={t("scheduling.setup.period")}
 							layout="stacked"
+							hint={
+								periodStarted ? t("scheduling.setup.periodStarted") : undefined
+							}
 						>
 							<Controller
 								control={control}
@@ -272,7 +285,7 @@ export const ScheduleSetupStep = ({
 								render={({ field }) => (
 									<Select
 										ref={field.ref}
-										aria-describedby={describedBy("periodStart")}
+										aria-describedby={describedBy("periodStart", periodStarted)}
 										aria-labelledby={formRowIds(fieldId("periodStart")).labelId}
 										className="w-full"
 										disabled={readOnly}
