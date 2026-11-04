@@ -1,9 +1,10 @@
 import { Link, type LinkProps } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import { timeAgo } from "@/common/relativeTime";
 import type { FunctionComponent } from "@/common/types";
 import { ActivityItem } from "@/components/ui/ActivityItem";
 import { StatCard } from "@/components/ui/StatCard";
-import { describeActivity, timeAgo } from "@/features/organisation/activity";
+import { describeActivity } from "@/features/organisation/activity";
 import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import {
 	useOrganisationOverview,

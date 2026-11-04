@@ -23,3 +23,4 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 export const Empty: Story = { args: { total: 0 } };
+export const ManyPages: Story = { args: { page: 4, total: 230 } };

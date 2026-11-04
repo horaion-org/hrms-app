@@ -1,16 +1,25 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { ApiProblemError } from "@/common/problem";
 import type { FunctionComponent } from "@/common/types";
+import { useNow } from "@/common/useNow";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Pagination } from "@/components/ui/Pagination";
 import {
+	deleteNotification,
 	markNotificationsRead,
+	notificationCountQuery,
 	notificationPageQuery,
+	type InboxNotification,
 	type NotificationAudience,
 } from "@/features/notifications/api";
+import {
+	describeNotificationType,
+	leaveRequestTarget,
+} from "@/features/notifications/notificationTypes";
 import {
 	useCurrentCompanyId,
 	useCurrentMembershipId,
@@ -18,6 +27,13 @@ import {
 import { useAccess } from "@/features/workspace/useAccess";
 import { accessiblePreviousData } from "@/features/workspace/queryAccess";
 import { NotificationRow } from "@/features/notifications/NotificationRow";
+
+const ONE_MINUTE_MS = 60_000;
+
+/** A notification that is already gone (deleted elsewhere, or no longer visible) needs no error. */
+const ignoreAlreadyGone = (error: unknown): void => {
+	if (!(error instanceof ApiProblemError && error.status === 404)) throw error;
+};
 
 export const NotificationList = ({
 	audience,
@@ -34,10 +50,14 @@ export const NotificationList = ({
 	const allowed =
 		audience === "PERSONAL" || access.canAnywhere("leave_request:review");
 	const { t } = useTranslation();
+	const now = useNow(ONE_MINUTE_MS);
 	const [page, setPage] = useState(1);
 	const [unreadOnly, setUnreadOnly] = useState(false);
 	const size = compact ? 5 : 20;
 	const client = useQueryClient();
+	const listRef = useRef<HTMLDivElement>(null);
+	const deleteButtons = useRef(new Map<string, HTMLButtonElement>());
+	const pendingFocus = useRef<{ deletedId: string; index: number }>(undefined);
 	const list = useQuery({
 		...notificationPageQuery(
 			companyId,
@@ -63,20 +83,81 @@ export const NotificationList = ({
 				: previous;
 		},
 	});
+	const unread = useQuery(
+		notificationCountQuery(
+			companyId,
+			membershipId,
+			audience,
+			allowed && compact
+		)
+	);
+	const refresh = (): Promise<void> =>
+		client.invalidateQueries({
+			queryKey: ["notifications", companyId, membershipId],
+		});
 	const read = useMutation({
 		meta: { successMessage: false },
 		mutationFn: (id: string | undefined) =>
 			markNotificationsRead(companyId, audience, id),
-		onSuccess: async () => {
-			await client.invalidateQueries({
-				queryKey: ["notifications", companyId, membershipId],
-			});
-		},
+		onSuccess: refresh,
 	});
+	const remove = useMutation({
+		meta: { successMessage: "notifications.deleted" },
+		mutationFn: (id: string) =>
+			deleteNotification(companyId, audience, id).catch(ignoreAlreadyGone),
+		onSuccess: refresh,
+	});
+	const rows = list.data?.content;
+
+	// After a delete, keep keyboard focus in the list: the entry that took its place, the one above, or the list.
+	useEffect(() => {
+		const pending = pendingFocus.current;
+		if (
+			!pending ||
+			!rows ||
+			rows.some((row) => row.notificationId === pending.deletedId)
+		)
+			return;
+		pendingFocus.current = undefined;
+		const next = rows[Math.min(pending.index, rows.length - 1)];
+		const button = next && deleteButtons.current.get(next.notificationId);
+		if (button) button.focus();
+		else listRef.current?.focus();
+	}, [rows]);
+
+	const deleteRow = (notification: InboxNotification, index: number): void => {
+		const emptiesPage = rows?.length === 1 && page > 1;
+		pendingFocus.current = { deletedId: notification.notificationId, index };
+		remove.mutate(notification.notificationId, {
+			onSuccess: () => {
+				if (emptiesPage) setPage(page - 1);
+			},
+			onError: () => {
+				pendingFocus.current = undefined;
+			},
+		});
+	};
+
 	if (!allowed) return <p>{t("notifications.reviewUnavailable")}</p>;
+	const busy = read.isPending || remove.isPending;
+	const markAllRead = (
+		<Button
+			disabled={busy || !list.isSuccess || list.isError}
+			variant={compact ? "textlink" : "secondary"}
+			onClick={() => {
+				read.mutate(undefined);
+			}}
+		>
+			{t("notifications.markAllRead")}
+		</Button>
+	);
 	return (
-		<div>
-			{!compact && (
+		<div ref={listRef} className="outline-none" tabIndex={-1}>
+			{compact ? (
+				(unread.data?.unreadCount ?? 0) > 0 && (
+					<div className="mt-3 flex justify-end">{markAllRead}</div>
+				)
+			) : (
 				<div className="my-6 flex flex-wrap items-center justify-between gap-4">
 					<Checkbox
 						checked={unreadOnly}
@@ -86,15 +167,7 @@ export const NotificationList = ({
 							setPage(1);
 						}}
 					/>
-					<Button
-						disabled={read.isPending || !list.isSuccess || list.isError}
-						variant="secondary"
-						onClick={() => {
-							read.mutate(undefined);
-						}}
-					>
-						{t("notifications.markAllRead")}
-					</Button>
+					{markAllRead}
 				</div>
 			)}
 			{read.isError && (
@@ -102,11 +175,16 @@ export const NotificationList = ({
 					{t("notifications.readFailed")}
 				</p>
 			)}
+			{remove.isError && (
+				<p className="text-error-700" role="alert">
+					{t("notifications.deleteFailed")}
+				</p>
+			)}
 			{list.isError ? (
 				<p role="alert">{t("notifications.failed")}</p>
-			) : !list.data ? (
+			) : !rows ? (
 				<p>{t("notifications.loading")}</p>
-			) : list.data.content.length === 0 ? (
+			) : rows.length === 0 ? (
 				<div className="px-4 py-10 text-center text-sm text-neutral-700">
 					<p>{t("notifications.empty")}</p>
 					{page > 1 && (
@@ -124,38 +202,59 @@ export const NotificationList = ({
 			) : (
 				<>
 					<ul className="divide-y divide-neutral-300">
-						{list.data.content.map((notification) => (
-							<li key={notification.notificationId}>
-								<NotificationRow
-									busy={read.isPending}
-									notification={notification}
-									onRead={() => {
-										read.mutate(notification.notificationId);
-									}}
-								>
-									<Link
-										className={`text-ink-blue-900 hover:underline ${notification.readAt ? "" : "font-semibold"}`}
-										to="/leave"
-										search={{
-											requestId: notification.leaveRequestId,
-											memberId:
-												audience === "REVIEW"
-													? notification.membershipId
-													: undefined,
+						{rows.map((notification, index) => {
+							const title = t(
+								describeNotificationType(notification.type).title
+							);
+							const target = leaveRequestTarget(notification, audience);
+							const titleClasses = `text-ink-blue-900 ${notification.readAt ? "" : "font-semibold"}`;
+							return (
+								<li key={notification.notificationId}>
+									<NotificationRow
+										busy={busy}
+										compact={compact}
+										notification={notification}
+										now={now}
+										deleteRef={(element) => {
+											if (element)
+												deleteButtons.current.set(
+													notification.notificationId,
+													element
+												);
+											else
+												deleteButtons.current.delete(
+													notification.notificationId
+												);
 										}}
-										onClick={onNavigate}
+										onDelete={() => {
+											deleteRow(notification, index);
+										}}
+										onRead={() => {
+											read.mutate(notification.notificationId);
+										}}
 									>
-										{t(`notifications.types.${notification.type}`)}
-									</Link>
-								</NotificationRow>
-							</li>
-						))}
+										{target ? (
+											<Link
+												className={`${titleClasses} hover:underline`}
+												search={target}
+												to="/leave"
+												onClick={onNavigate}
+											>
+												{title}
+											</Link>
+										) : (
+											<span className={titleClasses}>{title}</span>
+										)}
+									</NotificationRow>
+								</li>
+							);
+						})}
 					</ul>
 					{!compact && (
 						<Pagination
 							page={page}
 							pageSize={size}
-							total={list.data.page.totalElements}
+							total={list.data?.page.totalElements ?? 0}
 							onPageChange={setPage}
 						/>
 					)}

@@ -1,13 +1,16 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
+import { useNow } from "@/common/useNow";
 import { Tabs, Tab, TabList, TabPanels, TabPanel } from "@/components/ui/Tabs";
 import { notificationDemoFixtures } from "@/features/notifications/fixtures";
 import { NotificationRow } from "@/features/notifications/NotificationRow";
+import { describeNotificationType } from "@/features/notifications/notificationTypes";
 
 /** Development-only layout preview. Acknowledgements update local examples, never server data. */
 export const NotificationDemo = (): FunctionComponent => {
 	const { t } = useTranslation();
+	const now = useNow(60_000);
 	const [notifications, setNotifications] = useState(notificationDemoFixtures);
 	const personal = notifications.filter(
 		(item) => item.type !== "LEAVE_REQUEST_SUBMITTED"
@@ -39,7 +42,9 @@ export const NotificationDemo = (): FunctionComponent => {
 								{items.map((notification) => (
 									<li key={notification.notificationId}>
 										<NotificationRow
+											compact
 											notification={notification}
+											now={now}
 											onRead={() => {
 												const readAt = new Date().toISOString();
 												setNotifications((previous) =>
@@ -54,7 +59,7 @@ export const NotificationDemo = (): FunctionComponent => {
 											<span
 												className={`text-ink-blue-900 ${notification.readAt ? "" : "font-semibold"}`}
 											>
-												{t(`notifications.types.${notification.type}`)}
+												{t(describeNotificationType(notification.type).title)}
 											</span>
 										</NotificationRow>
 									</li>

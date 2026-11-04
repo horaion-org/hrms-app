@@ -8,6 +8,8 @@ The directory contains:
 - `createMemoryRouter.tsx`: the memory router used by tests and stories (below).
 - `joinClassNames.ts`: joins the class names that are set, for components that accept a `className`.
 - `countries.ts`: the ISO 3166-1 alpha-2 codes the API accepts and their names in the user's language.
+- `relativeTime.ts`: `timeAgo`, the localised "5 minutes ago" used by activity and notifications.
+- `useNow.ts`: the current time, renewed on an interval, for relative times that must stay current while shown.
 
 ## Memory router (tests and stories)
 

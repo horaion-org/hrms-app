@@ -3,7 +3,7 @@ import type { InboxNotification } from "@/features/notifications/api";
 /** Fictional, in-memory examples for development previews; these identifiers are never sent to the API. */
 export const notificationDemoFixtures = (): Array<InboxNotification> => {
 	const now = Date.now();
-	const types: Array<InboxNotification["type"]> = [
+	const types = [
 		"LEAVE_REQUEST_APPROVED",
 		"LEAVE_REQUEST_REJECTED",
 		"LEAVE_REQUEST_SUBMITTED",

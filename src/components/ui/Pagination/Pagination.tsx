@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
+import { Input } from "@/components/forms/Input";
 import { Button } from "@/components/ui/Button";
 import { ChevronLeftIcon, ChevronRightIcon } from "@/components/ui/Icon";
 
@@ -8,6 +9,14 @@ export type PaginationProps = {
 	pageSize: number;
 	total: number;
 	onPageChange: (page: number) => void;
+};
+
+/** The page typed into the jump box, or undefined when it is not a whole page between 1 and `lastPage`. */
+const typedPage = (text: string, lastPage: number): number | undefined => {
+	const page = Number(text.trim());
+	return Number.isInteger(page) && page >= 1 && page <= lastPage
+		? page
+		: undefined;
 };
 
 export const Pagination = ({
@@ -43,13 +52,43 @@ export const Pagination = ({
 				>
 					<ChevronLeftIcon />
 				</Button>
-				<span
-					aria-current="page"
-					aria-label={t("pagination.page", { page: current, total: lastPage })}
-					className="flex size-11 items-center justify-center rounded-lg border border-neutral-400 text-sm font-semibold"
-				>
-					{numbers.format(current)}
-				</span>
+				{lastPage > 1 ? (
+					<span className="flex items-center gap-2 text-sm">
+						<Input
+							key={current}
+							className="w-14 px-2 font-semibold [&>input]:text-center"
+							defaultValue={String(current)}
+							inputMode="numeric"
+							aria-label={t("pagination.goToPage", {
+								page: current,
+								total: lastPage,
+							})}
+							onBlur={(event) => {
+								const page = typedPage(event.currentTarget.value, lastPage);
+								if (page === undefined || page === current)
+									event.currentTarget.value = String(current);
+								else onPageChange(page);
+							}}
+							onKeyDown={(event) => {
+								if (event.key === "Enter") event.currentTarget.blur();
+							}}
+						/>
+						<span aria-hidden="true">
+							{t("pagination.ofPages", { total: numbers.format(lastPage) })}
+						</span>
+					</span>
+				) : (
+					<span
+						aria-current="page"
+						className="flex size-11 items-center justify-center rounded-lg border border-neutral-400 text-sm font-semibold"
+						aria-label={t("pagination.page", {
+							page: current,
+							total: lastPage,
+						})}
+					>
+						{numbers.format(current)}
+					</span>
+				)}
 				<Button
 					aria-label={t("pagination.nextPage")}
 					disabled={current >= lastPage}
