@@ -326,7 +326,7 @@ it("regenerates a generated roster after a danger confirm, then follows the new 
 	const confirm = within(dialog).getByRole("button", {
 		name: "Regenerate roster",
 	});
-	expect(confirm).toHaveClass("not-disabled:bg-error-600!");
+	expect(confirm).toHaveClass("bg-error-600");
 	await user.click(confirm);
 
 	expect(await screen.findByRole("note")).toHaveTextContent(
@@ -369,7 +369,7 @@ it("offers to generate a failed schedule again from its failure panel", async ()
 	const confirm = within(dialog).getByRole("button", {
 		name: "Generate again",
 	});
-	expect(confirm).not.toHaveClass("not-disabled:bg-error-600!");
+	expect(confirm).not.toHaveClass("bg-error-600");
 	await user.click(confirm);
 
 	await waitFor(() => {
@@ -506,7 +506,7 @@ it("asks for a reason before rejecting a roster, then shows the reason", async (
 	const confirm = within(dialog).getByRole("button", {
 		name: "Confirm rejection",
 	});
-	expect(confirm).toHaveClass("not-disabled:bg-error-600!");
+	expect(confirm).toHaveClass("bg-error-600");
 	await user.click(confirm);
 	expect(within(dialog).getByRole("alert")).toHaveTextContent(
 		"Enter a reason for rejection."

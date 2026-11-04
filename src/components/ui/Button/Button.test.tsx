@@ -92,6 +92,25 @@ describe("Button", () => {
 		expect(screen.getByRole("button")).toHaveClass("underline");
 	});
 
+	it("draws the danger variant as a red pill that turns grey when disabled", () => {
+		const { rerender } = render(<Button variant="danger">Reject</Button>);
+		const button = screen.getByRole("button", { name: "Reject" });
+		expect(button).toHaveClass(
+			"rounded-full",
+			"bg-error-600",
+			"text-white",
+			"not-disabled:hover:bg-error-700",
+			"disabled:bg-neutral-400"
+		);
+
+		rerender(
+			<Button disabled variant="danger">
+				Reject
+			</Button>
+		);
+		expect(button).toBeDisabled();
+	});
+
 	it("merges a custom className", () => {
 		render(<Button className="w-full">Save</Button>);
 

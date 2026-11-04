@@ -178,9 +178,7 @@ export const LeaveRequestDialog = ({
 							form={id}
 							leadingIcon={rejecting ? <CrossIcon /> : <TickIcon />}
 							type="submit"
-							className={
-								rejecting ? "bg-error-600! hover:bg-error-700!" : undefined
-							}
+							variant={rejecting ? "danger" : "primary"}
 						>
 							{t(
 								rejecting ? "leave.confirmRejection" : "leave.confirmApproval"
