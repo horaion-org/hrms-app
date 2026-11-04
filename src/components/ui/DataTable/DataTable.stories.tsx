@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Decorator, Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { fn, userEvent, within } from "storybook/test";
 import { Badge } from "@/components/ui/Badge";
@@ -142,5 +142,54 @@ export const SortMenuOpen: Story = {
 		await userEvent.click(
 			within(canvasElement).getByRole("button", { name: "Sort by Branch Name" })
 		);
+	},
+};
+
+const [nameColumn, codeColumn, cityColumn, statusColumn, actionsColumn] =
+	columns as [
+		DataTableColumn<Branch>,
+		DataTableColumn<Branch>,
+		DataTableColumn<Branch>,
+		DataTableColumn<Branch>,
+		DataTableColumn<Branch>,
+	];
+
+/** Wide enough to scroll inside a narrow frame, with the name and actions pinned. */
+const pinnedColumns: Array<DataTableColumn<Branch>> = [
+	{ ...nameColumn, pin: "start", headerClassName: "w-48" },
+	codeColumn,
+	cityColumn,
+	statusColumn,
+	{ id: "country", header: "Country", cell: () => "Singapore" },
+	{ id: "timeZone", header: "Time zone", cell: () => "Asia/Singapore" },
+	{ ...actionsColumn, pin: "end" },
+];
+
+/** A 600 px frame, narrower than the table. */
+const narrowFrame: Decorator = (Story) => (
+	<div className="w-150">
+		<Story />
+	</div>
+);
+
+/**
+ * From `md` up the name and actions stay in view while the rest scrolls; the
+ * shadows show only while content is hidden beneath them.
+ */
+export const Pinned: Story = {
+	args: {
+		columns: pinnedColumns,
+		className: "[&>table]:min-w-300",
+		selection: { rowLabel: (branch: Branch): string => branch.name },
+	},
+	decorators: [narrowFrame],
+};
+
+export const PinnedScrolled: Story = {
+	...Pinned,
+	play: ({ canvasElement }) => {
+		within(canvasElement)
+			.getByRole("table")
+			.parentElement?.scrollTo({ left: 200 });
 	},
 };

@@ -1,5 +1,6 @@
 import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import {
+	columnPinningFeature,
 	createSortedRowModel,
 	rowSelectionFeature,
 	rowSortingFeature,
@@ -11,12 +12,19 @@ import {
 	type SortingState,
 	type Updater,
 } from "@tanstack/react-table";
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
+import {
+	pinnedCellClasses,
+	pinningStateOf,
+	stickyStartClasses,
+	type ColumnPin,
+} from "@/components/ui/DataTable/columnPinning";
+import { useScrollEdges } from "@/components/ui/DataTable/useScrollEdges";
 import {
 	ArrowDownIcon,
 	ArrowUpIcon,
@@ -29,6 +37,7 @@ const features = tableFeatures({
 	sortedRowModel: createSortedRowModel(),
 	sortFns: { alphanumeric: sortAlphanumeric },
 	rowSelectionFeature,
+	columnPinningFeature,
 });
 
 /** One column: its header text, how a cell renders, and whether it sorts. */
@@ -43,6 +52,12 @@ export type DataTableColumn<TData extends object> = {
 	headerClassName?: string;
 	/** Classes for each body cell, e.g. `font-semibold` or `text-center`. */
 	cellClassName?: string;
+	/**
+	 * Keeps the column in view while the table scrolls sideways, from `md` up:
+	 * `start` for the column naming each row, `end` for its actions. At most
+	 * one column per side.
+	 */
+	pin?: ColumnPin;
 };
 
 /** The sorted column and its direction. */
@@ -208,6 +223,14 @@ export const DataTable = <TData extends object>({
 			})),
 		[columns]
 	);
+	const columnPinning = useMemo(() => pinningStateOf(columns), [columns]);
+	const pinned = columnPinning.start.length + columnPinning.end.length > 0;
+	// Leading cells stick along with a start-pinned column, so it never slides under them.
+	const leadingClasses = (index: number): string | undefined =>
+		columnPinning.start.length > 0 ? stickyStartClasses(index) : undefined;
+	const leadingCount = selection ? 1 : 0;
+	const frameRef = useRef<HTMLDivElement>(null);
+	const edges = useScrollEdges(frameRef, pinned);
 
 	const table = useTable({
 		features,
@@ -219,7 +242,7 @@ export const DataTable = <TData extends object>({
 		enableMultiSort: false,
 		sortDescFirst: false,
 		enableRowSelection: selection !== undefined,
-		state: { sorting, rowSelection },
+		state: { sorting, rowSelection, columnPinning },
 		onSortingChange: (updater) => {
 			const next = resolve(updater, sorting);
 			if (!sort) setOwnSorting(next);
@@ -240,8 +263,12 @@ export const DataTable = <TData extends object>({
 
 	return (
 		<div
+			ref={frameRef}
+			data-overflows-end={edges.overflowsEnd || undefined}
+			data-overflows-start={edges.overflowsStart || undefined}
 			className={joinClassNames(
 				"overflow-x-auto rounded-lg border border-neutral-400",
+				pinned && "group",
 				className
 			)}
 		>
@@ -256,7 +283,8 @@ export const DataTable = <TData extends object>({
 								scope="col"
 								className={joinClassNames(
 									headerCellClasses,
-									selectionCellClasses
+									selectionCellClasses,
+									leadingClasses(0)
 								)}
 							>
 								<Checkbox
@@ -281,7 +309,8 @@ export const DataTable = <TData extends object>({
 									scope="col"
 									className={joinClassNames(
 										headerCellClasses,
-										column?.headerClassName
+										column?.headerClassName,
+										pinnedCellClasses(header.column.getIsPinned(), leadingCount)
 									)}
 								>
 									<div className="flex items-center justify-between gap-2">
@@ -332,7 +361,8 @@ export const DataTable = <TData extends object>({
 								<td
 									className={joinClassNames(
 										bodyCellClasses,
-										selectionCellClasses
+										selectionCellClasses,
+										leadingClasses(0)
 									)}
 								>
 									<Checkbox
@@ -346,14 +376,19 @@ export const DataTable = <TData extends object>({
 									/>
 								</td>
 							)}
-							{row.getAllCells().map((cell) => {
+							{[
+								...row.getStartVisibleCells(),
+								...row.getCenterVisibleCells(),
+								...row.getEndVisibleCells(),
+							].map((cell) => {
 								const column = columnsById.get(cell.column.id);
 								return (
 									<td
 										key={cell.id}
 										className={joinClassNames(
 											bodyCellClasses,
-											column?.cellClassName
+											column?.cellClassName,
+											pinnedCellClasses(cell.column.getIsPinned(), leadingCount)
 										)}
 									>
 										{column?.cell(row.original)}

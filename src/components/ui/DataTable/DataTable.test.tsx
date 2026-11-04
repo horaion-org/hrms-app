@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createInstance } from "i18next";
 import { initReactI18next } from "react-i18next";
@@ -372,6 +372,101 @@ describe("DataTable", () => {
 		for (const cell of screen.getAllByRole("cell")) {
 			expect(cell).toHaveClass("border-t", "border-neutral-400");
 		}
+	});
+
+	it("keeps pinned columns at their edges, after the leading checkbox", () => {
+		const pinnedColumns: Array<DataTableColumn<Branch>> = [
+			{ id: "code", header: "Code", cell: (branch) => branch.code, pin: "end" },
+			{ id: "city", header: "City", cell: () => "Singapore" },
+			{
+				id: "name",
+				header: "Branch Name",
+				cell: (branch) => branch.name,
+				pin: "start",
+			},
+		];
+		render(
+			<DataTable
+				columns={pinnedColumns}
+				data={branches}
+				getRowId={getRowId}
+				label="Branches"
+				selection={{ rowLabel: (branch) => branch.name }}
+			/>
+		);
+
+		const headers = screen.getAllByRole("columnheader");
+		expect(headers.map((header) => header.textContent)).toEqual([
+			"Select all",
+			"Branch Name",
+			"City",
+			"Code",
+		]);
+		expect(headers[0]).toHaveClass("md:sticky", "md:start-0");
+		expect(headers[1]).toHaveClass("md:sticky", "md:start-12");
+		expect(headers[2]).not.toHaveClass("md:sticky");
+		expect(headers[3]).toHaveClass("md:sticky", "md:end-0");
+		expect(screen.getByRole("cell", { name: "Orchard" })).toHaveClass(
+			"md:sticky",
+			"md:start-12"
+		);
+		expect(
+			screen.getAllByRole("cell", { name: "Singapore" })[0]
+		).not.toHaveClass("md:sticky");
+		expect(screen.getByRole("cell", { name: "0002" })).toHaveClass(
+			"md:sticky",
+			"md:end-0"
+		);
+	});
+
+	it("pins nothing and watches no scrolling unless a column asks", () => {
+		render(
+			<DataTable
+				columns={columns}
+				data={branches}
+				getRowId={getRowId}
+				label="Branches"
+				selection={{ rowLabel: (branch) => branch.name }}
+			/>
+		);
+
+		const frame = screen.getByRole("table").parentElement;
+		expect(frame).not.toHaveClass("group");
+		for (const cell of [
+			...screen.getAllByRole("columnheader"),
+			...screen.getAllByRole("cell"),
+		]) {
+			expect(cell).not.toHaveClass("md:sticky");
+		}
+	});
+
+	it("marks which edges hide scrolled content, for the pinned columns' shadows", () => {
+		render(
+			<DataTable
+				data={branches}
+				getRowId={getRowId}
+				label="Branches"
+				columns={columns.map((column) =>
+					column.id === "name" ? { ...column, pin: "start" } : column
+				)}
+			/>
+		);
+		const frame = screen.getByRole("table").parentElement;
+		if (!frame) throw new Error("The table has no frame.");
+		expect(frame).toHaveClass("group");
+		// jsdom has no layout, so the frame's scroll metrics are set by hand.
+		Object.defineProperty(frame, "scrollWidth", { value: 1200 });
+		Object.defineProperty(frame, "clientWidth", { value: 600 });
+
+		frame.scrollLeft = 300;
+		fireEvent.scroll(frame);
+		expect(frame).toHaveAttribute("data-overflows-start");
+		expect(frame).toHaveAttribute("data-overflows-end");
+
+		frame.scrollLeft = 600;
+		fireEvent.scroll(frame);
+		expect(frame).toHaveAttribute("data-overflows-start");
+		expect(frame).not.toHaveAttribute("data-overflows-end");
 	});
 
 	it("merges caller classes onto its scrolling frame", () => {
