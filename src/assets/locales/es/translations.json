@@ -1522,6 +1522,7 @@
 			"close": "Cerrar"
 		},
 		"decision": {
+			"label": "Decisión del cuadrante",
 			"pending": "Este cuadrante aún no se ha publicado. Publícalo para que sea definitivo para su semana, o recházalo con un motivo.",
 			"pendingReadOnly": "Este cuadrante está pendiente de publicar o rechazar.",
 			"publish": "Publicar cuadrante",

@@ -2376,6 +2376,7 @@
 			"close": "Close"
 		},
 		"decision": {
+			"label": "Roster decision",
 			"pending": "This roster hasn’t been published yet. Publish it to make it final for its week, or reject it with a reason.",
 			"pendingReadOnly": "This roster is waiting to be published or rejected.",
 			"publish": "Publish roster",
