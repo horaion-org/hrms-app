@@ -22,6 +22,7 @@ const meta = {
 		now,
 		children: "Your leave request was approved.",
 		onRead: fn(),
+		onDelete: fn(),
 	},
 } satisfies Meta<typeof NotificationRow>;
 
@@ -31,6 +32,7 @@ export const Unread: Story = {};
 export const Read: Story = {
 	args: { notification: { ...notification, readAt: notification.createdAt } },
 };
+export const Compact: Story = { args: { compact: true } };
 export const Saving: Story = { args: { busy: true } };
 export const NeedsReview: Story = {
 	args: {

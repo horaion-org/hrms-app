@@ -1,7 +1,8 @@
-import type { ReactNode } from "react";
+import type { ReactNode, Ref } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
+import { DeleteIcon, TickIcon } from "@/components/ui/Icon";
 import type { InboxNotification } from "@/features/notifications/api";
 import {
 	notificationExactTime,
@@ -21,21 +22,29 @@ const toneClasses: Record<NotificationTone, string> = {
 };
 
 /**
- * One inbox entry: type icon and colour, category, time, the caller's title (a typed link or plain text) and Mark
- * as read.
+ * One inbox entry: type icon and colour, category, time, the caller's title (a typed link or plain text) and the
+ * entry's actions. Actions are always shown, never revealed on hover, so touch and keyboard users reach them.
  */
 export const NotificationRow = ({
 	notification,
 	now,
 	children,
+	compact = false,
 	busy = false,
 	onRead,
+	onDelete,
+	deleteRef,
 }: {
 	notification: InboxNotification;
 	now: Date;
 	children: ReactNode;
+	compact?: boolean;
 	busy?: boolean;
 	onRead: () => void;
+	/** Absent where entries cannot be deleted, such as the development demo. */
+	onDelete?: () => void;
+	/** Lets the list move focus here after a neighbouring entry is deleted. */
+	deleteRef?: Ref<HTMLButtonElement>;
 }): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const type = describeNotificationType(notification.type);
@@ -78,11 +87,36 @@ export const NotificationRow = ({
 				<div className="mt-1">{children}</div>
 				{unread && <span className="sr-only">{t("notifications.unread")}</span>}
 			</div>
-			{unread && (
-				<Button disabled={busy} variant="textlink" onClick={onRead}>
-					{t("notifications.markRead")}
-				</Button>
-			)}
+			<div className="flex items-center gap-1">
+				{unread &&
+					(compact ? (
+						<Button
+							aria-label={t("notifications.markRead")}
+							disabled={busy}
+							title={t("notifications.markRead")}
+							variant="icon"
+							onClick={onRead}
+						>
+							<TickIcon />
+						</Button>
+					) : (
+						<Button disabled={busy} variant="textlink" onClick={onRead}>
+							{t("notifications.markRead")}
+						</Button>
+					))}
+				{onDelete && (
+					<Button
+						ref={deleteRef}
+						aria-label={t("notifications.delete")}
+						disabled={busy}
+						title={t("notifications.delete")}
+						variant="icon"
+						onClick={onDelete}
+					>
+						<DeleteIcon />
+					</Button>
+				)}
+			</div>
 		</div>
 	);
 };

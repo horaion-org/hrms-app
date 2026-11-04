@@ -28,6 +28,11 @@ minute while the list is mounted. `notificationTypes.ts` is the one map from typ
 copy; it already lists the schedule types that schedule publish (backlog T2-6) will send. The API's `type` is parsed as
 any string, so a code this build does not know renders plainly with a neutral icon instead of failing the page.
 
+The panel offers **Mark all as read** for the open tab when it has unread entries. **Delete** (always visible, no
+confirmation, no undo) hides an entry for the caller only; the API soft-deletes that recipient's row. A 404 means it
+was already gone and is not shown as an error. Focus moves to the entry that took its place, and deleting the last
+entry on a later page steps back one page.
+
 Notifications carry only a type, identifiers and timestamps. Locales own the wording. A typed link selects a request
 on `/leave`; `LinkedLeaveRequest` fetches the individual owned/scoped detail endpoint, independent of list pagination,
 then reuses the existing dialog and guarded decision mutations. An unavailable target is explained in translated copy.

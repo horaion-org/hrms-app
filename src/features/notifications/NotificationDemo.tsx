@@ -42,6 +42,7 @@ export const NotificationDemo = (): FunctionComponent => {
 								{items.map((notification) => (
 									<li key={notification.notificationId}>
 										<NotificationRow
+											compact
 											notification={notification}
 											now={now}
 											onRead={() => {

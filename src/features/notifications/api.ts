@@ -3,7 +3,7 @@ import {
 	type UndefinedInitialDataOptions,
 } from "@tanstack/react-query";
 import { z } from "zod";
-import { apiRequest } from "@/common/api-client";
+import { apiRequest, apiRequestVoid } from "@/common/api-client";
 import { companyPath } from "@/features/organisation/api";
 import {
 	administrativeMeta,
@@ -151,4 +151,15 @@ export const markNotificationsRead = (
 		`${base(companyId)}/${notificationId ? `${encodeURIComponent(notificationId)}/read` : "read-all"}?audience=${audience}`,
 		readSchema,
 		{ method: "PUT", responseFormat: "record" }
+	);
+
+/** Hides one notification for the caller only; the API answers 204 with no body. */
+export const deleteNotification = (
+	companyId: string,
+	audience: NotificationAudience,
+	notificationId: string
+): Promise<void> =>
+	apiRequestVoid(
+		`${base(companyId)}/${encodeURIComponent(notificationId)}?audience=${audience}`,
+		{ method: "DELETE" }
 	);

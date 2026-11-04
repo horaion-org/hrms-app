@@ -353,4 +353,181 @@ describe("Notifications", () => {
 		const unknown = screen.getByText("You have a new notification.");
 		expect(unknown.closest("a")).toBeNull();
 	});
+
+	it("given_unreadInTab_when_markingAllReadFromBell_then_sendsThatTabsAudienceAndHidesAtZero", async () => {
+		let read = false;
+		const calls = stubApi({
+			"POST /api/v1/public/sessions/refreshes": accessPassReply(),
+			"GET /api/v1/me": currentUserReply(),
+			"GET /api/v1/me/workspace": {
+				status: 200,
+				body: envelope(companyWideWorkspace([])),
+			},
+			[`GET ${BASE}`]: () => ({
+				status: 200,
+				body: {
+					content: [{ ...own, readAt: read ? own.createdAt : null }],
+					page: { totalElements: 1 },
+				},
+			}),
+			[`GET ${BASE}/unread-count`]: () => ({
+				status: 200,
+				body: { unreadCount: read ? 0 : 1 },
+			}),
+			[`PUT ${BASE}/read-all`]: () => {
+				read = true;
+				return { status: 200, body: { updatedCount: 1 } };
+			},
+		});
+		await open("/leave");
+		const user = userEvent.setup();
+		await user.click(
+			await screen.findByRole("button", { name: "Notifications, 1 unread" })
+		);
+		const panel = await screen.findByRole("dialog", { name: "Notifications" });
+		await user.click(
+			await within(panel).findByRole("button", { name: "Mark all as read" })
+		);
+		await waitFor(() => {
+			expect(
+				within(panel).queryByRole("button", { name: "Mark all as read" })
+			).toBeNull();
+		});
+		expect(
+			calls.some(
+				(call) =>
+					call.method === "PUT" &&
+					call.path === `${BASE}/read-all` &&
+					call.search === "audience=PERSONAL"
+			)
+		).toBe(true);
+	});
+
+	it("given_notification_when_deleted_then_sendsDeleteConfirmsAndRemovesIt", async () => {
+		let deleted = false;
+		const calls = stubApi({
+			"POST /api/v1/public/sessions/refreshes": accessPassReply(),
+			"GET /api/v1/me": currentUserReply(),
+			"GET /api/v1/me/workspace": {
+				status: 200,
+				body: envelope(companyWideWorkspace([])),
+			},
+			[`GET ${BASE}`]: () => ({
+				status: 200,
+				body: {
+					content: deleted ? [] : [own],
+					page: { totalElements: deleted ? 0 : 1 },
+				},
+			}),
+			[`GET ${BASE}/unread-count`]: () => ({
+				status: 200,
+				body: { unreadCount: deleted ? 0 : 1 },
+			}),
+			[`DELETE ${BASE}/notification-1`]: () => {
+				deleted = true;
+				return { status: 204 };
+			},
+		});
+		await open();
+		await screen.findByText("Your leave request was approved.");
+		await userEvent
+			.setup()
+			.click(screen.getByRole("button", { name: "Delete notification" }));
+		expect(
+			await screen.findByText("You have no notifications in this view.")
+		).toBeInTheDocument();
+		// The app-level toast queue (not mounted in this harness) shows this key.
+		expect(
+			app?.queryClient.getMutationCache().getAll().slice(-1)[0]?.meta
+				?.successMessage
+		).toBe("notifications.deleted");
+		expect(
+			await screen.findByRole("button", { name: "Notifications, 0 unread" })
+		).toBeInTheDocument();
+		expect(
+			calls.some(
+				(call) =>
+					call.method === "DELETE" &&
+					call.path === `${BASE}/notification-1` &&
+					call.search === "audience=PERSONAL"
+			)
+		).toBe(true);
+	});
+
+	it("given_notificationAlreadyGone_when_deleted_then_noErrorIsShown", async () => {
+		stubApi({
+			"POST /api/v1/public/sessions/refreshes": accessPassReply(),
+			"GET /api/v1/me": currentUserReply(),
+			"GET /api/v1/me/workspace": {
+				status: 200,
+				body: envelope(companyWideWorkspace([])),
+			},
+			[`GET ${BASE}`]: {
+				status: 200,
+				body: { content: [own], page: { totalElements: 1 } },
+			},
+			[`GET ${BASE}/unread-count`]: { status: 200, body: { unreadCount: 1 } },
+			[`DELETE ${BASE}/notification-1`]: {
+				status: 404,
+				body: { status: 404, errorCode: "NOTIFICATION_NOT_FOUND" },
+			},
+		});
+		await open();
+		await screen.findByText("Your leave request was approved.");
+		await userEvent
+			.setup()
+			.click(screen.getByRole("button", { name: "Delete notification" }));
+		await waitFor(() => {
+			expect(
+				app?.queryClient.getMutationCache().getAll().slice(-1)[0]?.state.status
+			).toBe("success");
+		});
+		expect(
+			screen.queryByText("We couldn’t delete the notification. Try again.")
+		).toBeNull();
+	});
+
+	it("given_twoNotifications_when_firstIsDeleted_then_focusMovesToTheEntryThatTookItsPlace", async () => {
+		let deleted = false;
+		const second = {
+			...own,
+			notificationId: "notification-2",
+			type: "LEAVE_REQUEST_REJECTED",
+		};
+		stubApi({
+			"POST /api/v1/public/sessions/refreshes": accessPassReply(),
+			"GET /api/v1/me": currentUserReply(),
+			"GET /api/v1/me/workspace": {
+				status: 200,
+				body: envelope(companyWideWorkspace([])),
+			},
+			[`GET ${BASE}`]: () => ({
+				status: 200,
+				body: {
+					content: deleted ? [second] : [own, second],
+					page: { totalElements: deleted ? 1 : 2 },
+				},
+			}),
+			[`GET ${BASE}/unread-count`]: { status: 200, body: { unreadCount: 1 } },
+			[`DELETE ${BASE}/notification-1`]: () => {
+				deleted = true;
+				return { status: 204 };
+			},
+		});
+		await open();
+		await screen.findByText("Your leave request was approved.");
+		await userEvent
+			.setup()
+			.click(
+				screen.getAllByRole("button", { name: "Delete notification" })[0]!
+			);
+		await waitFor(() => {
+			expect(screen.queryByText("Your leave request was approved.")).toBeNull();
+		});
+		await waitFor(() => {
+			expect(
+				screen.getByRole("button", { name: "Delete notification" })
+			).toHaveFocus();
+		});
+	});
 });

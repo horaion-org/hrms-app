@@ -37,6 +37,9 @@
 		},
 		"operationSucceeded": "Operación completada correctamente.",
 		"justNow": "Ahora mismo",
+		"delete": "Eliminar notificación",
+		"deleted": "Notificación eliminada",
+		"deleteFailed": "No pudimos eliminar la notificación. Inténtalo de nuevo.",
 		"categories": {
 			"leave": "Permiso",
 			"schedule": "Horario",

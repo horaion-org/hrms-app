@@ -37,6 +37,9 @@
 		},
 		"operationSucceeded": "Operation completed successfully.",
 		"justNow": "Just now",
+		"delete": "Delete notification",
+		"deleted": "Notification deleted",
+		"deleteFailed": "We couldn’t delete the notification. Try again.",
 		"categories": {
 			"leave": "Leave",
 			"schedule": "Schedule",
