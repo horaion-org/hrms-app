@@ -1191,6 +1191,21 @@
 				"close": "Cerrar"
 			},
 			"showInFindings": "Ver en los hallazgos"
+		},
+		"delete": {
+			"menu": "Eliminar",
+			"moreActions": "Más acciones para {{name}}",
+			"title": "¿Eliminar {{name}}?",
+			"description": "Esto elimina el horario de {{department}} para {{period}}, con su cuadrante. No se puede deshacer.",
+			"runOpen": "Este horario se está generando. Podrás eliminarlo cuando termine la ejecución.",
+			"confirm": "Eliminar horario",
+			"cancel": "Cancelar",
+			"close": "Cerrar",
+			"done": "Horario eliminado.",
+			"inProgress": "Este horario se está generando. Inténtalo de nuevo cuando termine la ejecución.",
+			"gone": "Este horario ya no existe.",
+			"forbidden": "Ya no tienes permiso para eliminar este horario.",
+			"failed": "No pudimos eliminar el horario. Inténtalo de nuevo."
 		}
 	},
 	"workspace": {

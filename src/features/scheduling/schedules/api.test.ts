@@ -28,6 +28,7 @@ import {
 	frozenConstraintsFixture,
 } from "@/features/scheduling/constraints/fixtures";
 import {
+	deleteRefusal,
 	generationRefusal,
 	scheduleRefusal,
 	scheduleRefusalMessage,
@@ -519,6 +520,28 @@ describe("schedule refusals", () => {
 	it("falls back to a plain failure for generation", () => {
 		expect(generationRefusal(new Error("offline"), t)).toBe(
 			"We couldn’t generate the schedule. Try again."
+		);
+	});
+
+	it.each([
+		[
+			"SCHEDULE_GENERATION_IN_PROGRESS",
+			409,
+			"This schedule is being generated. Try again once the run finishes.",
+		],
+		["SCHEDULE_NOT_FOUND", 404, "This schedule no longer exists."],
+		[
+			"ACCESS_DENIED",
+			403,
+			"You no longer have permission to delete this schedule.",
+		],
+	])("explains a delete refused with %s", (code, status, copy) => {
+		expect(deleteRefusal(problem(status, code), t)).toBe(copy);
+	});
+
+	it("falls back to a plain failure for a delete", () => {
+		expect(deleteRefusal(new Error("offline"), t)).toBe(
+			"We couldn’t delete the schedule. Try again."
 		);
 	});
 });
