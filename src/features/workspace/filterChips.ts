@@ -26,7 +26,7 @@ export const departmentChips = (
 		? [
 				filterChip(
 					"department",
-					t("workspace.unitSelector.department"),
+					t("workspace.departmentFilter.department"),
 					placeOf(
 						{
 							branchName: selection.department.branchName,

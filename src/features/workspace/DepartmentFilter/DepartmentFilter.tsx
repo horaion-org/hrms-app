@@ -31,7 +31,7 @@ export const DepartmentFilter = ({
 	return (
 		<FormRow
 			htmlFor={id}
-			label={t("workspace.unitSelector.department")}
+			label={t("workspace.departmentFilter.department")}
 			layout="stacked"
 		>
 			<Select
@@ -39,7 +39,7 @@ export const DepartmentFilter = ({
 				className="w-full font-semibold"
 				value={selection.department?.departmentId ?? ALL}
 				options={[
-					{ value: ALL, label: t("workspace.unitSelector.allDepartments") },
+					{ value: ALL, label: t("workspace.departmentFilter.allDepartments") },
 					...selection.departments.map((choice) => ({
 						value: choice.departmentId,
 						label: choice.name,

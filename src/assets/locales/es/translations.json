@@ -1786,7 +1786,7 @@
 			"allBranches": "Todas las sucursales",
 			"allCountries": "Todos los países"
 		},
-		"unitSelector": {
+		"departmentFilter": {
 			"department": "Departamento",
 			"allDepartments": "Todos los departamentos"
 		}
@@ -1945,7 +1945,6 @@
 		}
 	},
 	"pageToolbar": {
-		"clearFilters": "Borrar filtros",
 		"listControls": "Controles de la lista"
 	},
 	"forbidden": {
@@ -1962,6 +1961,7 @@
 	"filterChips": {
 		"label": "Filtros activos",
 		"remove": "Quitar {{label}}",
-		"chip": "{{field}}: {{value}}"
+		"chip": "{{field}}: {{value}}",
+		"clearAll": "Borrar filtros"
 	}
 }
