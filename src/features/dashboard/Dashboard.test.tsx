@@ -233,5 +233,6 @@ describe("Recent Activity", () => {
 		)?.search;
 		expect(search).toContain("page=0&size=10");
 		expect(search).toContain("entityType=LeaveRequest");
+		expect(search).toContain("entityType=Schedule");
 	});
 });

@@ -11,11 +11,12 @@ import { retry } from "@/features/workspace/retry";
 import { COMPANY_SCOPE } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
 
-/** What the Dashboard's activity covers: the organisation, its people and their leave. */
+/** What the Dashboard's activity covers: the organisation, its people, their leave and the schedules. */
 export const DASHBOARD_ENTITY_TYPES = [
 	...ORGANISATION_ENTITY_TYPES,
 	"MemberProfile",
 	"LeaveRequest",
+	"Schedule",
 ] as const;
 
 export type ActivityPage =

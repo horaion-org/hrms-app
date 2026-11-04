@@ -20,8 +20,9 @@ export type AuditEvent = z.infer<typeof auditEventSchema>;
 
 const auditEventPageSchema = z.object({ content: z.array(auditEventSchema) });
 
-/** The audit entity types the Organisation Module reports on. */
+/** The audit entity types the Organisation Module reports on; `Company` carries a workspace rename. */
 export const ORGANISATION_ENTITY_TYPES = [
+	"Company",
 	"Branch",
 	"Department",
 	"AccessRole",
