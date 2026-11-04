@@ -104,6 +104,21 @@ const pageReply = (
 	body: envelope({ content, page: { totalElements } }),
 });
 
+/** 06:00 UTC: the local date is 4 Nov 2026 anywhere from UTC-6 to UTC+17, so the tests need no fixed zone. */
+const CREATED_AT = "2026-11-04T06:00:00Z";
+
+/** The Created cell's date, checked to be a `<time>` carrying the exact instant and its full text on hover. */
+const expectCreatedCell = (table: HTMLElement): void => {
+	const [created] = within(table).getAllByText("4 Nov 2026");
+	expect(created?.tagName).toBe("TIME");
+	expect(created).toHaveAttribute("datetime", CREATED_AT);
+	expect(created?.getAttribute("title")).toMatch(/2026/);
+	expect(created?.closest("td")).toHaveClass("hidden", "md:table-cell");
+	expect(
+		within(table).getByRole("columnheader", { name: /Created/ })
+	).toHaveClass("hidden", "md:table-cell");
+};
+
 const branch = (
 	branchId: string,
 	name: string,
@@ -118,6 +133,7 @@ const branch = (
 	timeZone: "Asia/Singapore",
 	status,
 	headMembershipIds: [],
+	createdAt: CREATED_AT,
 });
 
 const jobTitle = (
@@ -135,6 +151,7 @@ const jobTitle = (
 	description: null,
 	status: "ACTIVE",
 	holderCount: 0,
+	createdAt: CREATED_AT,
 	...overrides,
 });
 
@@ -150,6 +167,7 @@ const department = (
 	name,
 	status,
 	headMembershipIds: [],
+	createdAt: CREATED_AT,
 });
 
 const baseRoutes = (
@@ -229,6 +247,7 @@ describe("Branches", () => {
 			"City",
 			"Country",
 			"Status",
+			"Created",
 			"Actions",
 		]);
 		expect(
@@ -258,6 +277,26 @@ describe("Branches", () => {
 		expect(searchesOf(calls, "/api/v1/companies/c-1/branches")).toEqual([
 			"size=100&sort=name%2Casc",
 		]);
+	});
+
+	it("shows when each branch was created and sorts by it on the server", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...baseRoutes(),
+			[BRANCHES]: pageReply([branch("b-1", "Main Branch")]),
+		});
+		await open("/organisation/branches");
+		const table = await screen.findByRole("table", { name: "Branches" });
+		await within(table).findByText("Main Branch");
+
+		expectCreatedCell(table);
+		await user.click(screen.getByRole("button", { name: "Sort by Created" }));
+		await waitFor(() => {
+			expect(searchesOf(calls, "/api/v1/companies/c-1/branches")).toEqual([
+				"size=100&sort=name%2Casc",
+				"size=100&sort=createdAt%2Casc",
+			]);
+		});
 	});
 
 	it("sorts codes on the server and searches loaded rows by code without another request", async () => {
@@ -562,7 +601,33 @@ describe("Departments", () => {
 			within(screen.getByRole("table", { name: "Departments" }))
 				.getAllByRole("columnheader")
 				.map((header) => header.textContent)
-		).toEqual(["Select all", "Department name", "Status", "Actions"]);
+		).toEqual([
+			"Select all",
+			"Department name",
+			"Status",
+			"Created",
+			"Actions",
+		]);
+	});
+
+	it("shows when each department was created and sorts by it on the server", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...baseRoutes(),
+			[DEPARTMENTS]: pageReply([department("d-1", "Front Office")]),
+		});
+		await open("/organisation/departments");
+		const table = await screen.findByRole("table", { name: "Departments" });
+		await within(table).findByText("Front Office");
+
+		expectCreatedCell(table);
+		await user.click(screen.getByRole("button", { name: "Sort by Created" }));
+		await waitFor(() => {
+			expect(searchesOf(calls, "/api/v1/companies/c-1/departments")).toEqual([
+				"size=100&sort=name%2Casc",
+				"size=100&sort=createdAt%2Casc",
+			]);
+		});
 	});
 
 	it("lists the company's departments with the same toolbar and filter", async () => {
@@ -581,7 +646,14 @@ describe("Departments", () => {
 			within(table)
 				.getAllByRole("columnheader")
 				.map((header) => header.textContent)
-		).toEqual(["Select all", "Department name", "Branch", "Status", "Actions"]);
+		).toEqual([
+			"Select all",
+			"Department name",
+			"Branch",
+			"Status",
+			"Created",
+			"Actions",
+		]);
 		expect(
 			screen.getByRole("searchbox", { name: "Search department" })
 		).toBeVisible();
@@ -772,12 +844,39 @@ describe("Job titles", () => {
 			within(table)
 				.getAllByRole("columnheader")
 				.map((header) => header.textContent)
-		).toEqual(["Select all", "Job title", "People", "Status", "Actions"]);
+		).toEqual([
+			"Select all",
+			"Job title",
+			"People",
+			"Status",
+			"Created",
+			"Actions",
+		]);
 
 		await user.click(screen.getByRole("button", { name: "Clear filters" }));
 
 		await waitFor(() => {
 			expect(opened.router.state.location.search).toEqual({});
+		});
+	});
+
+	it("shows when each job title was created and sorts by it on the server", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...baseRoutes(),
+			[JOB_TITLES]: pageReply([jobTitle("j-1", "Shift supervisor")]),
+		});
+		await open("/organisation/job-titles");
+		const table = await screen.findByRole("table", { name: "Job titles" });
+		await within(table).findByText("Shift supervisor");
+
+		expectCreatedCell(table);
+		await user.click(screen.getByRole("button", { name: "Sort by Created" }));
+		await waitFor(() => {
+			expect(searchesOf(calls, "/api/v1/companies/c-1/job-titles")).toEqual([
+				"size=100&sort=name%2Casc",
+				"size=100&sort=createdAt%2Casc",
+			]);
 		});
 	});
 
@@ -808,6 +907,7 @@ describe("Job titles", () => {
 			"Department",
 			"People",
 			"Status",
+			"Created",
 			"Actions",
 		]);
 		expect(

@@ -12,6 +12,7 @@ import type { Branch } from "@/features/organisation/api";
 import { ListToolbar } from "@/features/organisation/ListToolbar";
 import {
 	actionsColumn,
+	createdColumn,
 	describeList,
 	isStatusFilter,
 	matchesSearch,
@@ -81,6 +82,7 @@ export const Branches = (): FunctionComponent => {
 					countryName(branch.country, i18n.language),
 			},
 			statusColumn<Branch>(t),
+			createdColumn<Branch>(t, i18n.language),
 			actionsColumn<Branch>(
 				t,
 				(branch) => (

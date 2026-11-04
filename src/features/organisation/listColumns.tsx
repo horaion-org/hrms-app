@@ -1,5 +1,6 @@
 import type { TFunction } from "i18next";
 import type { ReactNode } from "react";
+import { formatDate } from "@/components/forms/Calendar";
 import type { SelectOption } from "@/components/forms/Select";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -75,6 +76,37 @@ export const statusColumn = <T extends { status: UnitStatus }>(
 	),
 	sortValue: (row) => row.status,
 	headerClassName: "w-30",
+});
+
+/** Below `md` the column is left out, so phones keep the columns that identify a row. */
+const HIDDEN_BELOW_MD = "hidden md:table-cell";
+
+/**
+ * When each row was created, as a date in the viewer's own time zone ("4 Nov
+ * 2026"), with the exact time on hover. Its id is the API's sort field, so
+ * sorting by it asks the server.
+ */
+export const createdColumn = <T extends { createdAt?: string }>(
+	t: TFunction,
+	language: string
+): DataTableColumn<T> => ({
+	id: "createdAt",
+	header: t("organisation.list.created"),
+	cell: (row) =>
+		row.createdAt ? (
+			<time
+				dateTime={row.createdAt}
+				title={new Intl.DateTimeFormat(language, {
+					dateStyle: "medium",
+					timeStyle: "short",
+				}).format(new Date(row.createdAt))}
+			>
+				{formatDate(row.createdAt, language)}
+			</time>
+		) : null,
+	sortValue: (row) => row.createdAt ?? "",
+	headerClassName: `${HIDDEN_BELOW_MD} w-36`,
+	cellClassName: HIDDEN_BELOW_MD,
 });
 
 /**

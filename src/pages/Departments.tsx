@@ -11,6 +11,7 @@ import { ListToolbar } from "@/features/organisation/ListToolbar";
 import {
 	actionsColumn,
 	branchColumn,
+	createdColumn,
 	describeList,
 	isStatusFilter,
 	nameColumn,
@@ -49,7 +50,7 @@ const UNIT_RULES = { allowAllBranches: true, withDepartment: false };
  */
 export const Departments = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
-	const { t } = useTranslation();
+	const { t, i18n } = useTranslation();
 	const navigate = route.useNavigate();
 	const requested = unitSelectionOf(route.useSearch());
 	const units = useUnitSelection(
@@ -114,6 +115,7 @@ export const Departments = (): FunctionComponent => {
 			// A Branch already chosen is not repeated on every row.
 			...(branchShown ? [] : [branchColumn<Department>(t)]),
 			statusColumn<Department>(t),
+			createdColumn<Department>(t, i18n.language),
 			actionsColumn<Department>(
 				t,
 				(department) => (
@@ -145,7 +147,7 @@ export const Departments = (): FunctionComponent => {
 				setEditing
 			),
 		],
-		[t, canUpdate, branchShown]
+		[t, i18n.language, canUpdate, branchShown]
 	);
 
 	return (

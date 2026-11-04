@@ -586,7 +586,8 @@
 		},
 		"list": {
 			"showing": "Mostrar",
-			"branch": "Sucursal"
+			"branch": "Sucursal",
+			"created": "Creado"
 		}
 	},
 	"shell": {
