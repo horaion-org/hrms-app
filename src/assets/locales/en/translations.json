@@ -1442,6 +1442,9 @@
 			"department": "Department",
 			"allDepartments": "All departments",
 			"chooseBranchFirst": "Choose a Branch first"
+		},
+		"headerScope": {
+			"branchInCountry": "{{country}} › {{branch}}"
 		}
 	},
 	"numberStepper": {

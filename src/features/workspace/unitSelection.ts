@@ -179,6 +179,18 @@ export const staleUnits = (
 	return { branchId: branchKept ? branchId : undefined };
 };
 
+/**
+ * Whether the URL names a Branch this page does not offer; "All branches"
+ * and no choice are never stale. The header takes such a Branch out once.
+ */
+export const staleBranch = (
+	resolved: ResolvedUnitSelection,
+	requested: UnitSelection
+): boolean =>
+	requested.branchId !== undefined &&
+	requested.branchId !== ALL_BRANCHES &&
+	!resolved.branches.some((choice) => choice.branchId === requested.branchId);
+
 /** Whether two selections name the same units. */
 export const sameUnits = (
 	first: UnitSelection,

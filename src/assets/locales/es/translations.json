@@ -1283,6 +1283,9 @@
 			"department": "Departamento",
 			"allDepartments": "Todos los departamentos",
 			"chooseBranchFirst": "Elige primero una sucursal"
+		},
+		"headerScope": {
+			"branchInCountry": "{{country}} › {{branch}}"
 		}
 	},
 	"colourSwatchPicker": {

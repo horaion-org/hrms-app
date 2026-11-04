@@ -10,6 +10,7 @@ import {
 	sameUnits,
 	selectedUnits,
 	unitsNarrowed,
+	staleBranch,
 	staleUnits,
 	type UnitSelectionRules,
 } from "@/features/workspace/unitSelection";
@@ -328,5 +329,19 @@ describe("staleUnits", () => {
 				departmentId: "d-3",
 			})
 		).toEqual({ branchId: "b-1" });
+	});
+});
+
+describe("staleBranch", () => {
+	const resolved = resolveUnitSelection([orchard, jurong], [], {}, TABLE);
+
+	it("given_noChoiceAllOrAnOfferedBranch_when_checked_then_isNotStale", () => {
+		expect(staleBranch(resolved, {})).toBe(false);
+		expect(staleBranch(resolved, { branchId: ALL_BRANCHES })).toBe(false);
+		expect(staleBranch(resolved, { branchId: "b-2" })).toBe(false);
+	});
+
+	it("given_aBranchThePageDoesNotOffer_when_checked_then_isStale", () => {
+		expect(staleBranch(resolved, { branchId: "gone" })).toBe(true);
 	});
 });
