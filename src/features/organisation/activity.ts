@@ -27,6 +27,7 @@ type ActivityKey =
 	| "departmentUpdated"
 	| "jobTitleCreated"
 	| "jobTitleUpdated"
+	| "organisationImported"
 	| "roleCreated"
 	| "roleUpdated"
 	| "roleDeleted"
@@ -59,6 +60,11 @@ const ACTIVITIES: Record<string, { key: ActivityKey; icon: Heroicon }> = {
 	"department.update": { key: "departmentUpdated", icon: DepartmentIcon },
 	"job_title.create": { key: "jobTitleCreated", icon: RoleIcon },
 	"job_title.update": { key: "jobTitleUpdated", icon: RoleIcon },
+	// The import's own summary; each unit it created keeps its own item too.
+	"organisation_import.complete": {
+		key: "organisationImported",
+		icon: OrganisationIcon,
+	},
 	"access_role.create": { key: "roleCreated", icon: UserIcon },
 	"access_role.update": { key: "roleUpdated", icon: PermissionsIcon },
 	"access_role.delete": { key: "roleDeleted", icon: UserIcon },

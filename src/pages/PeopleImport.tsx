@@ -33,7 +33,7 @@ import {
 } from "@/features/people/import/importText";
 import { RecentImports } from "@/features/people/RecentImports";
 
-const route = getRouteApi("/_authenticated/_app/people_/import");
+const route = getRouteApi("/_authenticated/_app/settings_/data/import-people");
 
 const STEPS = ["template", "upload", "check", "import"] as const;
 const TEMPLATE_STEP = 0;

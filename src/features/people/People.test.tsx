@@ -380,7 +380,9 @@ describe("People", () => {
 
 		await user.click(screen.getByRole("button", { name: "Import" }));
 		await waitFor(() => {
-			expect(opened.router.state.location.pathname).toBe("/people/import");
+			expect(opened.router.state.location.pathname).toBe(
+				"/settings/data/import-people"
+			);
 		});
 	});
 

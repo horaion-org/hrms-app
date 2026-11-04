@@ -238,3 +238,135 @@ describe("Recent Activity", () => {
 		expect(search).toContain("entityType=Schedule");
 	});
 });
+
+describe("Set up your company", () => {
+	const COMPANY = "/api/v1/companies/c-1";
+	const SETUP_PERMISSIONS = [
+		"branch:create",
+		"branch:read",
+		"department:read",
+		"job_title:read",
+		"member_profile:read",
+		"member_profile:create",
+	];
+
+	const setupRoutes = (
+		counts: {
+			branches: number;
+			departments: number;
+			jobTitles: number;
+			members: number;
+		},
+		permissions = SETUP_PERMISSIONS
+	): ReturnType<typeof routes> => ({
+		...routes(permissions),
+		[`GET ${COMPANY}/branches`]: page([], counts.branches),
+		[`GET ${COMPANY}/departments`]: page([], counts.departments),
+		[`GET ${COMPANY}/job-titles`]: page([], counts.jobTitles),
+		[`GET ${COMPANY}/member-profiles`]: page([], counts.members),
+	});
+
+	it("shows both steps to a new company, each with its import and a way by hand", async () => {
+		stubApi(
+			setupRoutes({ branches: 0, departments: 0, jobTitles: 0, members: 1 })
+		);
+		await open();
+
+		const card = await screen.findByRole("region", {
+			name: "Set up your company",
+		});
+		expect(card).toHaveTextContent("0 of 2");
+		expect(
+			within(card).getByRole("link", { name: "Import organisation" })
+		).toHaveAttribute("href", "/settings/data/import-organisation");
+		expect(
+			within(card).getByRole("link", { name: "or add branches by hand" })
+		).toHaveAttribute("href", "/organisation/branches");
+		expect(
+			within(card).getByRole("link", { name: "Import people →" })
+		).toHaveAttribute("href", "/settings/data/import-people");
+		expect(
+			within(card).getByRole("link", { name: "or add people one by one" })
+		).toHaveAttribute("href", "/people");
+	});
+
+	it("ticks the organisation once its units exist", async () => {
+		stubApi(
+			setupRoutes({ branches: 4, departments: 18, jobTitles: 36, members: 1 })
+		);
+		await open();
+
+		const card = await screen.findByRole("region", {
+			name: "Set up your company",
+		});
+		expect(card).toHaveTextContent("1 of 2");
+		expect(card).toHaveTextContent(
+			"Import organisation(done)4 branches · 18 departments · 36 job titles"
+		);
+		expect(
+			within(card).queryByRole("link", { name: "Import organisation" })
+		).not.toBeInTheDocument();
+	});
+
+	it("hides once units exist and the company has more than one member", async () => {
+		stubApi(
+			setupRoutes({ branches: 1, departments: 1, jobTitles: 1, members: 2 })
+		);
+		const opened = await open();
+
+		// Every count has arrived, so the card has decided.
+		await waitFor(() => {
+			expect(
+				opened.queryClient.getQueryData([
+					"people",
+					"c-1",
+					"active-member-count",
+				])
+			).toBe(2);
+		});
+		expect(
+			screen.queryByRole("region", { name: "Set up your company" })
+		).not.toBeInTheDocument();
+	});
+
+	it("stays dismissed in this browser once dismissed", async () => {
+		const user = userEvent.setup();
+		stubApi(
+			setupRoutes({ branches: 0, departments: 0, jobTitles: 0, members: 1 })
+		);
+		await open();
+		const card = await screen.findByRole("region", {
+			name: "Set up your company",
+		});
+
+		await user.click(
+			within(card).getByRole("button", { name: "Dismiss set-up steps" })
+		);
+
+		expect(
+			screen.queryByRole("region", { name: "Set up your company" })
+		).not.toBeInTheDocument();
+		expect(localStorage.getItem("horaion.setupChecklistDismissed.c-1")).toBe(
+			"true"
+		);
+	});
+
+	it("is not offered to someone who can import neither", async () => {
+		const calls = stubApi(
+			setupRoutes({ branches: 0, departments: 0, jobTitles: 0, members: 1 }, [
+				"branch:read",
+				"member_profile:read",
+				"leave_request:read",
+			])
+		);
+		await open();
+
+		await screen.findByRole("region", { name: "Pending Approvals" });
+		expect(
+			screen.queryByRole("region", { name: "Set up your company" })
+		).not.toBeInTheDocument();
+		expect(
+			calls.some((call) => call.path === `${COMPANY}/member-profiles`)
+		).toBe(false);
+	});
+});

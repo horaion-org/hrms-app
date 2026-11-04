@@ -21,6 +21,7 @@ const LOCALES = { en, es };
 
 /** Spanish is partial elsewhere in the feed; these activities ship with both languages from the start. */
 const WORKSPACE_PROFILE_AND_SCHEDULE_KEYS = [
+	"organisationImported",
 	"workspaceCreated",
 	"workspaceRenamed",
 	"memberUpdated",
@@ -101,6 +102,7 @@ describe("describeActivity", () => {
 		],
 		["schedule.generated", "Schedule generated: Orchard", GenerateScheduleIcon],
 		["schedule.delete", "Schedule deleted: Orchard", SchedulingIcon],
+		["organisation_import.complete", "Organisation imported", OrganisationIcon],
 	])("words %s as %s", (action, title, icon) => {
 		expect(describeActivity(event({ action }), t)).toEqual({
 			id: "e-1",
@@ -123,6 +125,7 @@ describe("describeActivity", () => {
 		["schedule.delete", "Schedule deleted"],
 		["schedule.regenerate", "Schedule regeneration requested"],
 		["member_skill.replace", "Employee skills updated"],
+		["organisation_import.complete", "Organisation imported"],
 	])("words %s without a name as %s", (action, title) => {
 		expect(
 			describeActivity(event({ action, entityName: null }), t)?.title

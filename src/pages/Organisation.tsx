@@ -1,8 +1,9 @@
-import { Link, type LinkProps } from "@tanstack/react-router";
+import { Link, useNavigate, type LinkProps } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { timeAgo } from "@/common/relativeTime";
 import type { FunctionComponent } from "@/common/types";
 import { ActivityItem } from "@/components/ui/ActivityItem";
+import { OverflowMenu, OverflowMenuItem } from "@/components/ui/OverflowMenu";
 import { StatCard } from "@/components/ui/StatCard";
 import { describeActivity } from "@/features/organisation/activity";
 import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
@@ -10,11 +11,16 @@ import {
 	useOrganisationOverview,
 	type Visible,
 } from "@/features/organisation/useOrganisationOverview";
+import { COMPANY_SCOPE } from "@/features/workspace/scopes";
+import { useAccess } from "@/features/workspace/useAccess";
 
 export const Organisation = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
 	const { t, i18n } = useTranslation();
 	const overview = useOrganisationOverview(companyId);
+	const navigate = useNavigate();
+	// Importing creates branches, which needs the key company-wide.
+	const canImport = useAccess().can("branch:create", COMPANY_SCOPE);
 	const numbers = new Intl.NumberFormat(i18n.language);
 	const figure = (stat: Visible<{ count: number | undefined }>): string =>
 		!stat.hidden && stat.count !== undefined
@@ -32,9 +38,25 @@ export const Organisation = (): FunctionComponent => {
 
 	return (
 		<>
-			<h1 className="text-4xl font-medium text-neutral-900">
-				{t("organisation.title")}
-			</h1>
+			<div className="flex items-start justify-between gap-4">
+				<h1 className="text-4xl font-medium text-neutral-900">
+					{t("organisation.title")}
+				</h1>
+				{canImport && (
+					<OverflowMenu
+						label={t("organisation.import.moreActions")}
+						variant="icon"
+					>
+						<OverflowMenuItem
+							onClick={() => {
+								void navigate({ to: "/settings/data/import-organisation" });
+							}}
+						>
+							{t("organisation.import.menu")}
+						</OverflowMenuItem>
+					</OverflowMenu>
+				)}
+			</div>
 			<p className="mt-4 text-sm text-neutral-800">
 				{t("organisation.subtitle")}
 			</p>

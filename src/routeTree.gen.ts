@@ -42,6 +42,8 @@ import { Route as AuthenticatedAppSchedulingScheduleIdRouteImport } from './rout
 import { Route as AuthenticatedAppSchedulingNewRouteImport } from './routes/_authenticated._app.scheduling_.new'
 import { Route as AuthenticatedAppOrganisationSystemRolesAccessRoleIdRouteImport } from './routes/_authenticated._app.organisation.system-roles_.$accessRoleId'
 import { Route as AuthenticatedAppOrganisationSystemRolesNewRouteImport } from './routes/_authenticated._app.organisation.system-roles_.new'
+import { Route as AuthenticatedAppSettingsDataImportOrganisationRouteImport } from './routes/_authenticated._app.settings_.data.import-organisation'
+import { Route as AuthenticatedAppSettingsDataImportPeopleRouteImport } from './routes/_authenticated._app.settings_.data.import-people'
 
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
@@ -226,6 +228,18 @@ const AuthenticatedAppOrganisationSystemRolesNewRoute =
     path: '/organisation/system-roles/new',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppSettingsDataImportOrganisationRoute =
+  AuthenticatedAppSettingsDataImportOrganisationRouteImport.update({
+    id: '/settings_/data/import-organisation',
+    path: '/settings/data/import-organisation',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppSettingsDataImportPeopleRoute =
+  AuthenticatedAppSettingsDataImportPeopleRouteImport.update({
+    id: '/settings_/data/import-people',
+    path: '/settings/data/import-people',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedAppIndexRoute
@@ -259,6 +273,8 @@ export interface FileRoutesByFullPath {
   '/organisation/': typeof AuthenticatedAppOrganisationIndexRoute
   '/organisation/system-roles/$accessRoleId': typeof AuthenticatedAppOrganisationSystemRolesAccessRoleIdRoute
   '/organisation/system-roles/new': typeof AuthenticatedAppOrganisationSystemRolesNewRoute
+  '/settings/data/import-organisation': typeof AuthenticatedAppSettingsDataImportOrganisationRoute
+  '/settings/data/import-people': typeof AuthenticatedAppSettingsDataImportPeopleRoute
 }
 export interface FileRoutesByTo {
   '/': typeof AuthenticatedAppIndexRoute
@@ -292,6 +308,8 @@ export interface FileRoutesByTo {
   '/organisation': typeof AuthenticatedAppOrganisationIndexRoute
   '/organisation/system-roles/$accessRoleId': typeof AuthenticatedAppOrganisationSystemRolesAccessRoleIdRoute
   '/organisation/system-roles/new': typeof AuthenticatedAppOrganisationSystemRolesNewRoute
+  '/settings/data/import-organisation': typeof AuthenticatedAppSettingsDataImportOrganisationRoute
+  '/settings/data/import-people': typeof AuthenticatedAppSettingsDataImportPeopleRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -328,6 +346,8 @@ export interface FileRoutesById {
   '/_authenticated/_app/organisation/': typeof AuthenticatedAppOrganisationIndexRoute
   '/_authenticated/_app/organisation/system-roles_/$accessRoleId': typeof AuthenticatedAppOrganisationSystemRolesAccessRoleIdRoute
   '/_authenticated/_app/organisation/system-roles_/new': typeof AuthenticatedAppOrganisationSystemRolesNewRoute
+  '/_authenticated/_app/settings_/data/import-organisation': typeof AuthenticatedAppSettingsDataImportOrganisationRoute
+  '/_authenticated/_app/settings_/data/import-people': typeof AuthenticatedAppSettingsDataImportPeopleRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -363,6 +383,8 @@ export interface FileRouteTypes {
     | '/organisation/'
     | '/organisation/system-roles/$accessRoleId'
     | '/organisation/system-roles/new'
+    | '/settings/data/import-organisation'
+    | '/settings/data/import-people'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -396,6 +418,8 @@ export interface FileRouteTypes {
     | '/organisation'
     | '/organisation/system-roles/$accessRoleId'
     | '/organisation/system-roles/new'
+    | '/settings/data/import-organisation'
+    | '/settings/data/import-people'
   id:
     | '__root__'
     | '/_authenticated'
@@ -431,6 +455,8 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/organisation/'
     | '/_authenticated/_app/organisation/system-roles_/$accessRoleId'
     | '/_authenticated/_app/organisation/system-roles_/new'
+    | '/_authenticated/_app/settings_/data/import-organisation'
+    | '/_authenticated/_app/settings_/data/import-people'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -678,6 +704,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppOrganisationSystemRolesNewRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/_app/settings_/data/import-organisation': {
+      id: '/_authenticated/_app/settings_/data/import-organisation'
+      path: '/settings/data/import-organisation'
+      fullPath: '/settings/data/import-organisation'
+      preLoaderRoute: typeof AuthenticatedAppSettingsDataImportOrganisationRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/settings_/data/import-people': {
+      id: '/_authenticated/_app/settings_/data/import-people'
+      path: '/settings/data/import-people'
+      fullPath: '/settings/data/import-people'
+      preLoaderRoute: typeof AuthenticatedAppSettingsDataImportPeopleRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
   }
 }
 
@@ -705,6 +745,8 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppOrganisationIndexRoute: typeof AuthenticatedAppOrganisationIndexRoute
   AuthenticatedAppOrganisationSystemRolesAccessRoleIdRoute: typeof AuthenticatedAppOrganisationSystemRolesAccessRoleIdRoute
   AuthenticatedAppOrganisationSystemRolesNewRoute: typeof AuthenticatedAppOrganisationSystemRolesNewRoute
+  AuthenticatedAppSettingsDataImportOrganisationRoute: typeof AuthenticatedAppSettingsDataImportOrganisationRoute
+  AuthenticatedAppSettingsDataImportPeopleRoute: typeof AuthenticatedAppSettingsDataImportPeopleRoute
 }
 
 const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
@@ -740,6 +782,10 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
     AuthenticatedAppOrganisationSystemRolesAccessRoleIdRoute,
   AuthenticatedAppOrganisationSystemRolesNewRoute:
     AuthenticatedAppOrganisationSystemRolesNewRoute,
+  AuthenticatedAppSettingsDataImportOrganisationRoute:
+    AuthenticatedAppSettingsDataImportOrganisationRoute,
+  AuthenticatedAppSettingsDataImportPeopleRoute:
+    AuthenticatedAppSettingsDataImportPeopleRoute,
 }
 
 const AuthenticatedAppRouteWithChildren =

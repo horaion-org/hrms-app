@@ -1001,6 +1001,45 @@
 		"scheduling": {
 			"title": "Scheduling",
 			"description": "Configure approval workflows and hierarchies."
+		},
+		"data": {
+			"title": "Data",
+			"description": "Import and export in bulk.",
+			"subtitle": "Bring in or take out your company's data in bulk.",
+			"import": "Import",
+			"export": "Export",
+			"importOrganisation": {
+				"title": "Import organisation",
+				"body": "Branches, departments and job titles from one Excel file."
+			},
+			"importPeople": {
+				"title": "Import people",
+				"body": "Add up to 500 people from Excel or CSV."
+			},
+			"exportPeople": {
+				"title": "Export people",
+				"body": "Everyone you can see, as an Excel file.",
+				"exporting": "Exporting…",
+				"failed": "The export couldn't be downloaded. Try again.",
+				"tooLarge": "More than 5,000 people match. Export them from People, a Branch or Department at a time."
+			},
+			"history": {
+				"title": "Import history",
+				"empty": "No imports yet.",
+				"failed": "Some imports couldn't be loaded. Try again.",
+				"whenColumn": "When",
+				"kindColumn": "Kind",
+				"byColumn": "By",
+				"resultColumn": "Result",
+				"openColumn": "Details",
+				"open": "View",
+				"kinds": {
+					"ORGANISATION": "Organisation",
+					"PEOPLE": "People"
+				},
+				"organisationResult": "{{created}} created · {{skipped}} skipped",
+				"peopleResult": "{{added}} added · {{failed}} failed"
+			}
 		}
 	},
 	"organisation": {
@@ -1624,7 +1663,8 @@
 				"scheduleGenerationRequested": "Schedule generation requested: {{name}}",
 				"scheduleRegenerationRequested": "Schedule regeneration requested: {{name}}",
 				"scheduleGenerated": "Schedule generated: {{name}}",
-				"scheduleDeleted": "Schedule deleted: {{name}}"
+				"scheduleDeleted": "Schedule deleted: {{name}}",
+				"organisationImported": "Organisation imported"
 			},
 			"unnamed": {
 				"branchCreated": "Branch created",
@@ -1656,7 +1696,8 @@
 				"scheduleGenerationRequested": "Schedule generation requested",
 				"scheduleRegenerationRequested": "Schedule regeneration requested",
 				"scheduleGenerated": "Schedule generated",
-				"scheduleDeleted": "Schedule deleted"
+				"scheduleDeleted": "Schedule deleted",
+				"organisationImported": "Organisation imported"
 			}
 		},
 		"headsField": {
@@ -1668,6 +1709,154 @@
 			"membersFooter": "Showing active company members",
 			"membersTruncated": "Showing 20 of {{total}} active company members. Type to narrow.",
 			"counter": "{{count}}/20"
+		},
+		"import": {
+			"title": "Import organisation",
+			"subtitle": "Create branches, departments and job titles at once from one Excel file.",
+			"menu": "Import organisation",
+			"moreActions": "More organisation actions",
+			"steps": {
+				"template": "Template",
+				"upload": "Upload",
+				"check": "Check",
+				"import": "Import"
+			},
+			"template": {
+				"heading": "Start from our template",
+				"body": "It has a sheet each for Branches, Departments and Job titles, and a Lists sheet with your existing units, countries and time zones. Row 2 of each sheet is an example; it is skipped.",
+				"rules": "Fill in only the sheets you need. Leave Heads blank to be head yourself for now, and set the real heads after importing people.",
+				"download": "Download template (.xlsx)",
+				"downloading": "Downloading…",
+				"downloadFailed": "The template couldn't be downloaded. Try again.",
+				"next": "I have a file"
+			},
+			"upload": {
+				"prompt": "Drop your file here, or",
+				"choose": "choose a file",
+				"hint": ".xlsx only · up to 500 rows across the sheets · 2 MB",
+				"checking": "Checking your file…",
+				"helpHeading": "Sheet by sheet",
+				"back": "Back"
+			},
+			"help": {
+				"BRANCHES": "Branches: Code (1 to 10 letters, digits or -), Name, City, Country and Time zone are required. Heads are member emails separated by ; (up to 20).",
+				"DEPARTMENTS": "Departments: Branch (a code or name, existing or on the Branches sheet) and Name are required. Heads as for branches.",
+				"JOB_TITLES": "Job titles: Branch, Department (of that branch) and Name are required. Description is optional, up to 300 characters.",
+				"general": "Row 1 must keep the template's column names. Units that already exist are skipped, never changed."
+			},
+			"refusals": {
+				"UNSUPPORTED_FILE": "We can't read this file. Save it as an Excel workbook (.xlsx), then try again.",
+				"MISSING_COLUMNS": "A sheet is missing a required column. Row 1 of each sheet must hold the column names from the template.",
+				"EMPTY_FILE": "This file has no branches, departments or job titles in it.",
+				"TOO_MANY_ROWS": "One import takes up to 500 rows across the sheets. Split the file into smaller ones.",
+				"FILE_TOO_LARGE": "This file is larger than 2 MB. Remove other sheets or split it.",
+				"IMPORT_RUNNING": "A people import is still running for this company. Try again when it finishes.",
+				"IMPORT_HAS_ERRORS": "Some rows still need fixing. Check the file again.",
+				"RATE_LIMITED": "You've reached the import limit for now. Try again later.",
+				"UNKNOWN": "Something went wrong. Try again."
+			},
+			"check": {
+				"nothingSaved": "Nothing has been saved yet.",
+				"blocked_one": "{{count}} row needs fixing before anything is created.",
+				"blocked_other": "{{count}} rows need fixing before anything is created.",
+				"ready": "Your file is ready.",
+				"nothingToCreate": "Everything in this file already exists, so there is nothing to create.",
+				"willCreate": "Will create: {{units}}",
+				"alreadyExist": "Already exist (skipped): {{units}}",
+				"headedByYou": "You will be head of {{units}} (Heads left blank).",
+				"ignoredColumns": "Ignored columns: {{columns}}",
+				"ignoredSheets": "Ignored sheets: {{sheets}}",
+				"downloadErrors": "Download rows with errors",
+				"uploadFixed": "Upload a fixed file",
+				"sheetsLabel": "Sheets",
+				"sheetRows_one": "{{count}} row",
+				"sheetRows_other": "{{count}} rows",
+				"sheetErrors_one": "{{count}} to fix",
+				"sheetErrors_other": "{{count}} to fix",
+				"tableLabel": "Checked rows: {{sheet}}",
+				"emptySheet": "This sheet has no rows.",
+				"sheetColumn": "Sheet",
+				"rowColumn": "Row",
+				"problemColumn": "Problem",
+				"errorsColumn": "Errors",
+				"noProblem": "Ready",
+				"running": "A people import is still running. You can create the structure once it finishes.",
+				"viewRunning": "View the people import",
+				"create": "Create structure"
+			},
+			"confirm": {
+				"title": "Create {{units}}?",
+				"body": "Nothing existing is changed.",
+				"confirm": "Create structure",
+				"cancel": "Cancel"
+			},
+			"result": {
+				"heading": "Structure created",
+				"summary": "{{units}} created · {{skipped}} skipped",
+				"meta": "{{date}} · by {{name}}",
+				"toPeople": "Import people →",
+				"viewBranches": "View branches",
+				"download": "Download results",
+				"another": "Import another file",
+				"tableLabel": "Row results",
+				"sheetColumn": "Sheet",
+				"rowColumn": "Row",
+				"resultColumn": "Result",
+				"loadFailed": "This import couldn't be loaded. Try again."
+			},
+			"results": {
+				"CREATED": "Created",
+				"SKIPPED_EXISTS": "Already exists: skipped",
+				"SKIPPED_EXAMPLE": "The template's example row: skipped"
+			},
+			"sheets": {
+				"BRANCHES": "Branches",
+				"DEPARTMENTS": "Departments",
+				"JOB_TITLES": "Job titles"
+			},
+			"columns": {
+				"CODE": "Code",
+				"NAME": "Name",
+				"CITY": "City",
+				"COUNTRY": "Country",
+				"TIME_ZONE": "Time zone",
+				"HEADS": "Heads",
+				"BRANCH": "Branch",
+				"DEPARTMENT": "Department",
+				"DESCRIPTION": "Description"
+			},
+			"counts": {
+				"none": "nothing",
+				"branches_one": "{{count}} branch",
+				"branches_other": "{{count}} branches",
+				"departments_one": "{{count}} department",
+				"departments_other": "{{count}} departments",
+				"jobTitles_one": "{{count}} job title",
+				"jobTitles_other": "{{count}} job titles"
+			},
+			"problems": {
+				"REQUIRED": "{{column}} is required.",
+				"TOO_LONG": "{{column}} is too long.",
+				"INVALID_NAME": "Use 2 to 100 characters for the name.",
+				"INVALID_BRANCH_CODE": "Use 1 to 10 letters, digits or - for the code.",
+				"INVALID_CITY": "Use letters, spaces and . ' - for the city.",
+				"INVALID_COUNTRY": "Use a two-letter country code from the Lists sheet, e.g. SG.",
+				"INVALID_TIME_ZONE": "Use a time zone from the Lists sheet, e.g. Asia/Singapore.",
+				"INVALID_EMAIL": "One of the heads isn't an email address.",
+				"HEAD_NOT_MEMBER": "No one in this company has this email. Leave Heads blank to be head yourself for now.",
+				"TOO_MANY_HEADS": "A unit can have up to 20 heads.",
+				"BRANCH_NOT_FOUND": "No branch has this code or name, in Horaion or on the Branches sheet.",
+				"DEPARTMENT_NOT_FOUND": "This branch has no department of this name, in Horaion or on the Departments sheet.",
+				"UNIT_INACTIVE": "{{column}} is inactive.",
+				"BRANCH_CODE_TAKEN": "Another branch already has this code.",
+				"BRANCH_NAME_TAKEN": "Another branch already has this name.",
+				"DUPLICATE_IN_FILE": "Another row on this sheet is the same unit.",
+				"NOT_PERMITTED_HERE": "You can't create units here.",
+				"CELL_ERROR": "This cell shows an error (such as #REF!). Fix the formula in Excel and upload again.",
+				"FORMULA_WITHOUT_VALUE": "This cell has a formula without a stored value. Open the file in Excel, save it, and upload again.",
+				"ALREADY_EXISTS": "Already exists: this row will be skipped.",
+				"EXAMPLE_ROW": "The template's example row: skipped."
+			}
 		}
 	},
 	"workspace": {
@@ -2487,6 +2676,25 @@
 			"back": "Back to Overview",
 			"subtitle": "View recent schedule changes, approvals, and workforce updates.",
 			"hidden": "You don’t have access to this company’s activity."
+		},
+		"setup": {
+			"title": "Set up your company",
+			"progress": "{{done}} of {{total}}",
+			"dismiss": "Dismiss set-up steps",
+			"stepDone": "(done)",
+			"stepToDo": "(to do)",
+			"organisation": {
+				"title": "Import organisation",
+				"action": "Import organisation",
+				"byHand": "or add branches by hand"
+			},
+			"people": {
+				"title": "Import people",
+				"action": "Import people →",
+				"byHand": "or add people one by one",
+				"done_one": "{{count}} person",
+				"done_other": "{{count}} people"
+			}
 		}
 	},
 	"pageToolbar": {
