@@ -16,6 +16,7 @@ import { useSchedules } from "@/features/scheduling/schedules/useSchedules";
 import type { Schedule } from "@/features/scheduling/schedules/api";
 import { scheduleViewLink } from "@/features/scheduling/schedules/scheduleViewLink";
 import { ScheduleCard } from "@/features/scheduling/ScheduleCard";
+import { ScheduleMenu } from "@/features/scheduling/ScheduleMenu";
 import { scheduleStatusTones } from "@/features/scheduling/schedules";
 
 const key = "scheduling.overview";
@@ -37,7 +38,8 @@ export const Scheduling = (): FunctionComponent => {
 	);
 	const [dismissed, setDismissed] = useState(false);
 	const language = i18n.resolvedLanguage ?? i18n.language;
-	const list = useSchedules(useCurrentCompanyId());
+	const companyId = useCurrentCompanyId();
+	const list = useSchedules(companyId);
 	const [search, setSearch] = useState("");
 	const history =
 		list.status === "ready"
@@ -107,11 +109,12 @@ export const Scheduling = (): FunctionComponent => {
 						>
 							<ViewIcon />
 						</Button>
+						<ScheduleMenu companyId={companyId} schedule={schedule} />
 					</div>
 				),
 			},
 		];
-	}, [t, language]);
+	}, [t, language, companyId]);
 	const periods = new Map<string, Array<Schedule>>();
 	for (const schedule of history) {
 		const periodKey = `${schedule.periodStart}/${schedule.periodEnd}`;

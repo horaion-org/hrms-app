@@ -1,4 +1,5 @@
 import { screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, expect, it, vi } from "vitest";
 import { resetApiClient } from "@/common/api-client";
 import {
@@ -6,9 +7,16 @@ import {
 	openApp,
 	type OpenedApp,
 } from "@/common/testing/openApp";
-import { accessPassReply, envelope, stubApi } from "@/common/testing/stubApi";
+import {
+	accessPassReply,
+	envelope,
+	problemReply,
+	stubApi,
+	type StubReply,
+} from "@/common/testing/stubApi";
 import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
+import type { Schedule } from "@/features/scheduling/schedules/api";
 import {
 	generatedScheduleFixture,
 	scheduleFixture,
@@ -180,4 +188,146 @@ it("opens a draft in the wizard and any other schedule's roster, from its card a
 			href
 		);
 	}
+});
+
+const SCHEDULE_PATH =
+	"/api/v1/companies/c-1/branches/b-1/departments/d-1/schedules/s-1";
+
+const listOf = (schedules: Array<Schedule>): StubReply => ({
+	status: 200,
+	body: envelope({ content: schedules, page: { hasNext: false } }),
+});
+
+/** The history's "More actions" menu for schedule s-1, opened. */
+const openRowMenu = async (): Promise<void> => {
+	const history = await screen.findByRole("table", {
+		name: "Schedule history",
+	});
+	await userEvent.click(
+		within(history).getByRole("button", {
+			name: "More actions for Front Office - Week 42",
+		})
+	);
+};
+
+const openHistory = async (
+	permissions: Array<string>,
+	routes: Parameters<typeof stubApi>[0]
+): Promise<ReturnType<typeof stubApi>> => {
+	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+	const calls = stubApi({
+		"POST /api/v1/public/sessions/refreshes": accessPassReply(),
+		"GET /api/v1/me": currentUserReply(),
+		"GET /api/v1/me/workspace": {
+			status: 200,
+			body: envelope(schedulingWorkspace(permissions)),
+		},
+		...routes,
+	});
+	app = await openApp("/scheduling");
+	renderAuthApp(app);
+	return calls;
+};
+
+it("offers no row menu without schedule:delete", async () => {
+	await openHistory(["schedule:read"], {
+		"GET /api/v1/companies/c-1/schedules": listOf([
+			generatedScheduleFixture({ status: "GENERATED" }),
+		]),
+	});
+
+	await screen.findByRole("table", { name: "Schedule history" });
+	expect(
+		screen.queryByRole("button", {
+			name: "More actions for Front Office - Week 42",
+		})
+	).toBeNull();
+});
+
+it("deletes a schedule from its history row after a danger confirm naming its department and week", async () => {
+	const calls = await openHistory(["schedule:read", "schedule:delete"], {
+		"GET /api/v1/companies/c-1/schedules": [
+			listOf([generatedScheduleFixture({ status: "GENERATED" })]),
+			listOf([]),
+		],
+		[`DELETE ${SCHEDULE_PATH}`]: { status: 204 },
+	});
+	const user = userEvent.setup();
+
+	await openRowMenu();
+	await user.click(screen.getByRole("menuitem", { name: "Delete" }));
+	const dialog = screen.getByRole("dialog", {
+		name: "Delete Front Office - Week 42?",
+	});
+	expect(dialog).toHaveTextContent(
+		/This removes the Front Office schedule for .+, with its roster\. This can’t be undone\./
+	);
+	const confirm = within(dialog).getByRole("button", {
+		name: "Delete schedule",
+	});
+	expect(confirm).toHaveClass("not-disabled:bg-error-600!");
+	await user.click(confirm);
+
+	expect(await screen.findByText("No schedules yet.")).toBeInTheDocument();
+	expect(screen.queryByRole("dialog")).toBeNull();
+	expect(
+		calls.filter(
+			(call) => call.method === "DELETE" && call.path === SCHEDULE_PATH
+		)
+	).toHaveLength(1);
+});
+
+it("explains why a schedule being generated can't be deleted yet", async () => {
+	const calls = await openHistory(["schedule:read", "schedule:delete"], {
+		"GET /api/v1/companies/c-1/schedules": listOf([
+			generatedScheduleFixture({ status: "GENERATION_REQUESTED" }),
+		]),
+	});
+	const user = userEvent.setup();
+
+	await openRowMenu();
+	await user.click(screen.getByRole("menuitem", { name: "Delete" }));
+	const dialog = screen.getByRole("dialog", {
+		name: "Delete Front Office - Week 42?",
+	});
+	expect(dialog).toHaveTextContent(
+		"This schedule is being generated. You can delete it once the run finishes."
+	);
+	expect(
+		within(dialog).getByRole("button", { name: "Delete schedule" })
+	).toBeDisabled();
+	const footerClose = within(dialog)
+		.getAllByRole("button", { name: "Close" })
+		.find((button) => button.textContent === "Close");
+	await user.click(footerClose!);
+
+	expect(screen.queryByRole("dialog")).toBeNull();
+	expect(calls.some((call) => call.method === "DELETE")).toBe(false);
+});
+
+it("shows a refused delete inside the dialog and keeps it open", async () => {
+	await openHistory(["schedule:read", "schedule:delete"], {
+		"GET /api/v1/companies/c-1/schedules": listOf([
+			generatedScheduleFixture({ status: "GENERATED" }),
+		]),
+		[`DELETE ${SCHEDULE_PATH}`]: problemReply(
+			409,
+			"SCHEDULE_GENERATION_IN_PROGRESS"
+		),
+	});
+	const user = userEvent.setup();
+
+	await openRowMenu();
+	await user.click(screen.getByRole("menuitem", { name: "Delete" }));
+	const dialog = screen.getByRole("dialog", {
+		name: "Delete Front Office - Week 42?",
+	});
+	await user.click(
+		within(dialog).getByRole("button", { name: "Delete schedule" })
+	);
+
+	expect(await within(dialog).findByRole("alert")).toHaveTextContent(
+		"This schedule is being generated. Try again once the run finishes."
+	);
+	expect(screen.getByRole("dialog")).toBeInTheDocument();
 });
