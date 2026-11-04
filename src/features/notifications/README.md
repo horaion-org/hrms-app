@@ -22,6 +22,12 @@ Counts and mounted inbox pages poll every 30 seconds while visible and refresh o
 invalidate lists and counts. Leave decisions also invalidate notification queries. Unknown/unavailable counts are
 not presented as zero. Acknowledgement is explicit; opening a target alone does not mark it read.
 
+Each entry shows its type's icon and colour, a category label ("Leave", "Schedule"), and when it happened: "Just now",
+then minutes, hours and days up to six days, then the date, with the exact time in the `title`. Times refresh every
+minute while the list is mounted. `notificationTypes.ts` is the one map from type code to icon, tone, category and
+copy; it already lists the schedule types that schedule publish (backlog T2-6) will send. The API's `type` is parsed as
+any string, so a code this build does not know renders plainly with a neutral icon instead of failing the page.
+
 Notifications carry only a type, identifiers and timestamps. Locales own the wording. A typed link selects a request
 on `/leave`; `LinkedLeaveRequest` fetches the individual owned/scoped detail endpoint, independent of list pagination,
 then reuses the existing dialog and guarded decision mutations. An unavailable target is explained in translated copy.

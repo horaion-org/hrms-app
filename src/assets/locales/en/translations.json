@@ -29,9 +29,19 @@
 		"types": {
 			"LEAVE_REQUEST_SUBMITTED": "A leave request needs review.",
 			"LEAVE_REQUEST_APPROVED": "Your leave request was approved.",
-			"LEAVE_REQUEST_REJECTED": "Your leave request was rejected."
+			"LEAVE_REQUEST_REJECTED": "Your leave request was rejected.",
+			"SCHEDULE_READY": "A schedule is ready for review.",
+			"SHIFT_ASSIGNMENT": "You have new shifts on a published schedule.",
+			"SCHEDULE_ASSIGNMENT_UPDATED": "Your shifts on a published schedule changed.",
+			"unknown": "You have a new notification."
 		},
-		"operationSucceeded": "Operation completed successfully."
+		"operationSucceeded": "Operation completed successfully.",
+		"justNow": "Just now",
+		"categories": {
+			"leave": "Leave",
+			"schedule": "Schedule",
+			"other": "Notification"
+		}
 	},
 	"pagination": {
 		"label": "Pagination",

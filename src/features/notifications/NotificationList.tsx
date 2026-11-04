@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
+import { useNow } from "@/common/useNow";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Pagination } from "@/components/ui/Pagination";
@@ -12,12 +13,18 @@ import {
 	type NotificationAudience,
 } from "@/features/notifications/api";
 import {
+	describeNotificationType,
+	leaveRequestTarget,
+} from "@/features/notifications/notificationTypes";
+import {
 	useCurrentCompanyId,
 	useCurrentMembershipId,
 } from "@/features/organisation/useCurrentCompanyId";
 import { useAccess } from "@/features/workspace/useAccess";
 import { accessiblePreviousData } from "@/features/workspace/queryAccess";
 import { NotificationRow } from "@/features/notifications/NotificationRow";
+
+const ONE_MINUTE_MS = 60_000;
 
 export const NotificationList = ({
 	audience,
@@ -34,6 +41,7 @@ export const NotificationList = ({
 	const allowed =
 		audience === "PERSONAL" || access.canAnywhere("leave_request:review");
 	const { t } = useTranslation();
+	const now = useNow(ONE_MINUTE_MS);
 	const [page, setPage] = useState(1);
 	const [unreadOnly, setUnreadOnly] = useState(false);
 	const size = compact ? 5 : 20;
@@ -124,32 +132,38 @@ export const NotificationList = ({
 			) : (
 				<>
 					<ul className="divide-y divide-neutral-300">
-						{list.data.content.map((notification) => (
-							<li key={notification.notificationId}>
-								<NotificationRow
-									busy={read.isPending}
-									notification={notification}
-									onRead={() => {
-										read.mutate(notification.notificationId);
-									}}
-								>
-									<Link
-										className={`text-ink-blue-900 hover:underline ${notification.readAt ? "" : "font-semibold"}`}
-										to="/leave"
-										search={{
-											requestId: notification.leaveRequestId,
-											memberId:
-												audience === "REVIEW"
-													? notification.membershipId
-													: undefined,
+						{list.data.content.map((notification) => {
+							const title = t(
+								describeNotificationType(notification.type).title
+							);
+							const target = leaveRequestTarget(notification, audience);
+							const titleClasses = `text-ink-blue-900 ${notification.readAt ? "" : "font-semibold"}`;
+							return (
+								<li key={notification.notificationId}>
+									<NotificationRow
+										busy={read.isPending}
+										notification={notification}
+										now={now}
+										onRead={() => {
+											read.mutate(notification.notificationId);
 										}}
-										onClick={onNavigate}
 									>
-										{t(`notifications.types.${notification.type}`)}
-									</Link>
-								</NotificationRow>
-							</li>
-						))}
+										{target ? (
+											<Link
+												className={`${titleClasses} hover:underline`}
+												search={target}
+												to="/leave"
+												onClick={onNavigate}
+											>
+												{title}
+											</Link>
+										) : (
+											<span className={titleClasses}>{title}</span>
+										)}
+									</NotificationRow>
+								</li>
+							);
+						})}
 					</ul>
 					{!compact && (
 						<Pagination

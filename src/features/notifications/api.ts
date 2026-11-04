@@ -14,15 +14,20 @@ import { retry } from "@/features/workspace/retry";
 
 export type NotificationAudience = "PERSONAL" | "REVIEW";
 
+const optionalId = z
+	.string()
+	.nullish()
+	.transform((value) => value ?? null);
+
+/**
+ * The type is any code, not an enum: a type added by a newer API must not fail the whole page, so unknown codes
+ * render plainly (see `notificationTypes.ts`). Target ids are optional for the same reason.
+ */
 export const notificationSchema = z.object({
 	notificationId: z.string(),
-	type: z.enum([
-		"LEAVE_REQUEST_SUBMITTED",
-		"LEAVE_REQUEST_APPROVED",
-		"LEAVE_REQUEST_REJECTED",
-	]),
-	leaveRequestId: z.string(),
-	membershipId: z.string(),
+	type: z.string(),
+	leaveRequestId: optionalId,
+	membershipId: optionalId,
 	occurredAt: z.iso.datetime({ offset: true }),
 	createdAt: z.iso.datetime({ offset: true }),
 	readAt: z.iso

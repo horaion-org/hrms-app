@@ -29,9 +29,19 @@
 		"types": {
 			"LEAVE_REQUEST_SUBMITTED": "Una solicitud de permiso necesita revisión.",
 			"LEAVE_REQUEST_APPROVED": "Tu solicitud de permiso fue aprobada.",
-			"LEAVE_REQUEST_REJECTED": "Tu solicitud de permiso fue rechazada."
+			"LEAVE_REQUEST_REJECTED": "Tu solicitud de permiso fue rechazada.",
+			"SCHEDULE_READY": "Un horario está listo para revisión.",
+			"SHIFT_ASSIGNMENT": "Tienes turnos nuevos en un horario publicado.",
+			"SCHEDULE_ASSIGNMENT_UPDATED": "Tus turnos en un horario publicado cambiaron.",
+			"unknown": "Tienes una notificación nueva."
 		},
-		"operationSucceeded": "Operación completada correctamente."
+		"operationSucceeded": "Operación completada correctamente.",
+		"justNow": "Ahora mismo",
+		"categories": {
+			"leave": "Permiso",
+			"schedule": "Horario",
+			"other": "Notificación"
+		}
 	},
 	"pagination": {
 		"label": "Paginación",

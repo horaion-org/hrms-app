@@ -320,4 +320,37 @@ describe("Notifications", () => {
 			await screen.findByText("Your leave request was approved.")
 		).toBeInTheDocument();
 	});
+
+	it("given_newTypeFromNewerApi_when_listing_then_rendersItPlainlyBesideKnownTypes", async () => {
+		stubApi({
+			"POST /api/v1/public/sessions/refreshes": accessPassReply(),
+			"GET /api/v1/me": currentUserReply(),
+			"GET /api/v1/me/workspace": {
+				status: 200,
+				body: envelope(companyWideWorkspace([])),
+			},
+			[`GET ${BASE}`]: {
+				status: 200,
+				body: {
+					content: [
+						{
+							...own,
+							notificationId: "future-1",
+							type: "SOMETHING_NEW",
+							leaveRequestId: null,
+						},
+						own,
+					],
+					page: { totalElements: 2 },
+				},
+			},
+			[`GET ${BASE}/unread-count`]: { status: 200, body: { unreadCount: 2 } },
+		});
+		await open();
+		expect(
+			await screen.findByText("Your leave request was approved.")
+		).toBeInTheDocument();
+		const unknown = screen.getByText("You have a new notification.");
+		expect(unknown.closest("a")).toBeNull();
+	});
 });
