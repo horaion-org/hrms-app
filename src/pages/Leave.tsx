@@ -409,6 +409,7 @@ export const Leave = (): FunctionComponent => {
 					busy={busy}
 					canReview={dialog.request ? canReview(dialog.request) : false}
 					leaveTypes={leaveTypes.data}
+					leaveTypesStatus={leaveTypes.status}
 					mode={dialog.mode === "applyOwn" ? "apply" : dialog.mode}
 					refusal={refusal}
 					request={dialog.request}
@@ -458,6 +459,9 @@ export const Leave = (): FunctionComponent => {
 								},
 							}
 						);
+					}}
+					onRetryLeaveTypes={() => {
+						void leaveTypes.refetch();
 					}}
 				/>
 			)}

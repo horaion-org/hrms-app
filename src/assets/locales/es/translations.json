@@ -178,7 +178,10 @@
 		"myFailed": "No pudimos cargar tus solicitudes. Inténtalo de nuevo.",
 		"controls": "Controles de la lista de ausencias",
 		"pendingCount_one": "{{count}} pendiente",
-		"pendingCount_other": "{{count}} pendientes"
+		"pendingCount_other": "{{count}} pendientes",
+		"typesLoading": "Cargando tipos de permiso…",
+		"typesFailed": "No pudimos cargar los tipos de permiso.",
+		"retry": "Reintentar"
 	},
 	"availability": {
 		"title": "Disponibilidad",

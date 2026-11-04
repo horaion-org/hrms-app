@@ -178,7 +178,10 @@
 		"myFailed": "We couldn’t load your leave requests. Try again.",
 		"controls": "Leave list controls",
 		"pendingCount_one": "{{count}} pending",
-		"pendingCount_other": "{{count}} pending"
+		"pendingCount_other": "{{count}} pending",
+		"typesLoading": "Loading leave types…",
+		"typesFailed": "We couldn’t load the leave types.",
+		"retry": "Try again"
 	},
 	"availability": {
 		"title": "Availability",

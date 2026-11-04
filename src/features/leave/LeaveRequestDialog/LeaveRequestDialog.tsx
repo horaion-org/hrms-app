@@ -10,6 +10,7 @@ import { Textarea } from "@/components/forms/Textarea";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { Callout } from "@/components/ui/Callout";
 import { CrossIcon, SearchIcon, TickIcon } from "@/components/ui/Icon";
 import { Modal } from "@/components/ui/Modal";
 import {
@@ -56,6 +57,12 @@ export type LeaveRequestDialogProps = {
 	 * not the scheduler's own are offered, grouped by how they are counted.
 	 */
 	leaveTypes?: ReadonlyArray<CompanyLeaveType>;
+	/**
+	 * How reading `leaveTypes` stands, in `apply` mode: the Type field says
+	 * it is loading while "pending", and offers `onRetryLeaveTypes` on "error".
+	 */
+	leaveTypesStatus?: "pending" | "error" | "success";
+	onRetryLeaveTypes?: () => void;
 	/** Whether the person may decide the shown request; Approve and Reject are offered only then. */
 	canReview?: boolean;
 	/** While a decision or an application is being sent. */
@@ -81,6 +88,8 @@ export const LeaveRequestDialog = ({
 	mode = "view",
 	employees,
 	leaveTypes = [],
+	leaveTypesStatus = "success",
+	onRetryLeaveTypes,
 	canReview = false,
 	busy = false,
 	refusal,
@@ -283,15 +292,30 @@ export const LeaveRequestDialog = ({
 						<p className="text-sm font-medium" id={`${id}-type`}>
 							{t("leave.type")}
 						</p>
-						<Select
-							aria-describedby={typeError}
-							aria-labelledby={`${id}-type`}
-							className="w-full"
-							options={typeOptions}
-							status={fields.type ? "error" : undefined}
-							value={typeCode}
-							onChange={setChosenType}
-						/>
+						{leaveTypesStatus === "error" ? (
+							<Callout role="alert" tone="warning">
+								{t("leave.typesFailed")}{" "}
+								<Button variant="textlink" onClick={onRetryLeaveTypes}>
+									{t("leave.retry")}
+								</Button>
+							</Callout>
+						) : (
+							<Select
+								aria-describedby={typeError}
+								aria-labelledby={`${id}-type`}
+								className="w-full"
+								disabled={leaveTypesStatus === "pending"}
+								options={typeOptions}
+								status={fields.type ? "error" : undefined}
+								value={typeCode}
+								placeholder={
+									leaveTypesStatus === "pending"
+										? t("leave.typesLoading")
+										: undefined
+								}
+								onChange={setChosenType}
+							/>
+						)}
 						{fields.type && (
 							<p
 								className="text-sm text-error-700"

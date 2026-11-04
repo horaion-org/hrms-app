@@ -609,6 +609,36 @@ describe("Leave", () => {
 		expect(searchesOf(calls, LEAVE_TYPES_PATH)).toEqual(["status=ACTIVE"]);
 	});
 
+	it("reads the leave types again from the dialog after they failed to load", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...routes(workspaceReply([])),
+			[`GET ${LEAVE_TYPES_PATH}`]: [
+				problemReply(400, "BAD_REQUEST"),
+				{ status: 200, body: envelope(LEAVE_TYPE_FIXTURES) },
+			],
+		});
+		await open("/leave");
+		await screen.findByRole("table", { name: "Requests" });
+
+		await user.click(screen.getByRole("button", { name: "Apply for leave" }));
+		const dialog = await screen.findByRole("dialog", {
+			name: "Apply for leave",
+		});
+		expect(await within(dialog).findByRole("alert")).toHaveTextContent(
+			"We couldn’t load the leave types."
+		);
+		await user.click(within(dialog).getByRole("button", { name: "Try again" }));
+
+		await waitFor(() => {
+			expect(
+				within(dialog).getByRole("button", { name: "Type" })
+			).toHaveTextContent("Annual leave");
+		});
+		expect(within(dialog).queryByRole("alert")).not.toBeInTheDocument();
+		expect(searchesOf(calls, LEAVE_TYPES_PATH)).toHaveLength(2);
+	});
+
 	it("keeps the team tabs for someone holding the read key, with their own leave first", async () => {
 		const user = userEvent.setup();
 		stubApi(routes());
