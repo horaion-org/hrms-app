@@ -3,6 +3,7 @@ import { z } from "zod";
 export type ProblemReason =
 	| "invalid-code"
 	| "password-policy-violation"
+	| "password-unchanged"
 	| "challenge-expired"
 	| "invalid-credentials"
 	| "email-not-confirmed"
@@ -68,6 +69,7 @@ function reasonOf(status: number, errorCode?: string): ProblemReason {
 	if (errorCode === "INVALID_CREDENTIALS") return "invalid-credentials";
 	if (errorCode === "PASSWORD_POLICY_VIOLATION")
 		return "password-policy-violation";
+	if (errorCode === "PASSWORD_UNCHANGED") return "password-unchanged";
 	switch (status) {
 		case 400:
 			return "validation";

@@ -13,6 +13,7 @@ import { AuthField } from "@/features/auth/AuthField";
 import { AuthMessage } from "@/features/auth/AuthMessage";
 import { failureMessage } from "@/features/auth/errors";
 import { emailFromHistory, withEmail } from "@/features/auth/historyState";
+import { meetsPasswordPolicy } from "@/features/auth/passwordRules";
 import { endSession } from "@/features/auth/session";
 import { useRetryHold } from "@/features/auth/useRetryHold";
 
@@ -48,14 +49,7 @@ const schemaFor = (
 					message: t("auth.passwordReset.codeFormat"),
 				});
 			const password = values.newPassword;
-			if (
-				password.length < 8 ||
-				password.length > 128 ||
-				!/[a-z]/.test(password) ||
-				!/[A-Z]/.test(password) ||
-				!/\d/.test(password) ||
-				!/[\^$*.[\]{}()?"!@#%&/\\,><':;|_~`=+\- ]/.test(password)
-			)
+			if (!meetsPasswordPolicy(password))
 				context.addIssue({
 					code: "custom",
 					path: ["newPassword"],

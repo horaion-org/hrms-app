@@ -1,3 +1,8 @@
+import {
+	unmetPasswordRules,
+	type PasswordRuleId,
+} from "@/features/auth/passwordRules";
+
 export const registrationFields = [
 	"companyName",
 	"registrationNumber",
@@ -38,13 +43,12 @@ const reservedWorkspaces = new Set([
 export const passwordRequirements =
 	"Use at least 8 characters, including an uppercase letter, a lowercase letter, a number and a symbol.";
 
-// Keep these rules aligned with the Cognito user pool's password policy. Cognito remains authoritative.
-const passwordRules = [
-	[/[A-Z]/, "an uppercase letter"],
-	[/[a-z]/, "a lowercase letter"],
-	[/\d/, "a number"],
-	[/[\^$*.[\]{}()?"!@#%&/\\,><':;|_~`=+\- ]/, "a symbol"],
-] as const;
+const characterRuleLabels: Record<Exclude<PasswordRuleId, "length">, string> = {
+	uppercase: "an uppercase letter",
+	lowercase: "a lowercase letter",
+	number: "a number",
+	symbol: "a symbol",
+};
 
 const listOf = (items: Array<string>): string =>
 	items.length > 1
@@ -83,14 +87,15 @@ export const validateRegistration = (data: FormData): RegistrationErrors => {
 		errors.email = "Enter a valid email address, such as name@company.com.";
 	}
 	const password = value("password");
+	const unmet = unmetPasswordRules(password);
 	if (!password.trim()) errors.password = "Password is required.";
-	else if (password.length < 8 || password.length > 128)
+	else if (unmet.includes("length"))
 		errors.password = "Use between 8 and 128 characters.";
-	else {
-		const missing = passwordRules
-			.filter(([rule]) => !rule.test(password))
-			.map(([, label]) => label);
-		if (missing.length > 0) errors.password = `Add ${listOf(missing)}.`;
+	else if (unmet.length > 0) {
+		const missing = unmet.flatMap((rule) =>
+			rule === "length" ? [] : [characterRuleLabels[rule]]
+		);
+		errors.password = `Add ${listOf(missing)}.`;
 	}
 	const confirmation = value("confirmPassword");
 	if (!confirmation) errors.confirmPassword = "Please confirm your password.";

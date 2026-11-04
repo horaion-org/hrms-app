@@ -27,6 +27,7 @@ import { Route as AuthenticatedAppNotificationsRouteImport } from './routes/_aut
 import { Route as AuthenticatedAppPeopleRouteImport } from './routes/_authenticated._app.people'
 import { Route as AuthenticatedAppSchedulingRouteImport } from './routes/_authenticated._app.scheduling'
 import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated._app.settings'
+import { Route as AuthenticatedAppMePasswordRouteImport } from './routes/_authenticated._app.me.password'
 import { Route as AuthenticatedAppMeProfileRouteImport } from './routes/_authenticated._app.me.profile'
 import { Route as AuthenticatedAppOrganisationIndexRouteImport } from './routes/_authenticated._app.organisation.index'
 import { Route as AuthenticatedAppOrganisationBranchesRouteImport } from './routes/_authenticated._app.organisation.branches'
@@ -133,6 +134,12 @@ const AuthenticatedAppSettingsRoute =
     path: '/settings',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppMePasswordRoute =
+  AuthenticatedAppMePasswordRouteImport.update({
+    id: '/me/password',
+    path: '/me/password',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppMeProfileRoute =
   AuthenticatedAppMeProfileRouteImport.update({
     id: '/me/profile',
@@ -223,6 +230,7 @@ export interface FileRoutesByFullPath {
   '/people': typeof AuthenticatedAppPeopleRoute
   '/scheduling': typeof AuthenticatedAppSchedulingRoute
   '/settings': typeof AuthenticatedAppSettingsRoute
+  '/me/password': typeof AuthenticatedAppMePasswordRoute
   '/me/profile': typeof AuthenticatedAppMeProfileRoute
   '/organisation/branches': typeof AuthenticatedAppOrganisationBranchesRoute
   '/organisation/departments': typeof AuthenticatedAppOrganisationDepartmentsRoute
@@ -253,6 +261,7 @@ export interface FileRoutesByTo {
   '/people': typeof AuthenticatedAppPeopleRoute
   '/scheduling': typeof AuthenticatedAppSchedulingRoute
   '/settings': typeof AuthenticatedAppSettingsRoute
+  '/me/password': typeof AuthenticatedAppMePasswordRoute
   '/me/profile': typeof AuthenticatedAppMeProfileRoute
   '/organisation/branches': typeof AuthenticatedAppOrganisationBranchesRoute
   '/organisation/departments': typeof AuthenticatedAppOrganisationDepartmentsRoute
@@ -286,6 +295,7 @@ export interface FileRoutesById {
   '/_authenticated/_app/scheduling': typeof AuthenticatedAppSchedulingRoute
   '/_authenticated/_app/settings': typeof AuthenticatedAppSettingsRoute
   '/_authenticated/_app/': typeof AuthenticatedAppIndexRoute
+  '/_authenticated/_app/me/password': typeof AuthenticatedAppMePasswordRoute
   '/_authenticated/_app/me/profile': typeof AuthenticatedAppMeProfileRoute
   '/_authenticated/_app/organisation/branches': typeof AuthenticatedAppOrganisationBranchesRoute
   '/_authenticated/_app/organisation/departments': typeof AuthenticatedAppOrganisationDepartmentsRoute
@@ -318,6 +328,7 @@ export interface FileRouteTypes {
     | '/people'
     | '/scheduling'
     | '/settings'
+    | '/me/password'
     | '/me/profile'
     | '/organisation/branches'
     | '/organisation/departments'
@@ -348,6 +359,7 @@ export interface FileRouteTypes {
     | '/people'
     | '/scheduling'
     | '/settings'
+    | '/me/password'
     | '/me/profile'
     | '/organisation/branches'
     | '/organisation/departments'
@@ -380,6 +392,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/scheduling'
     | '/_authenticated/_app/settings'
     | '/_authenticated/_app/'
+    | '/_authenticated/_app/me/password'
     | '/_authenticated/_app/me/profile'
     | '/_authenticated/_app/organisation/branches'
     | '/_authenticated/_app/organisation/departments'
@@ -534,6 +547,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppSettingsRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/_app/me/password': {
+      id: '/_authenticated/_app/me/password'
+      path: '/me/password'
+      fullPath: '/me/password'
+      preLoaderRoute: typeof AuthenticatedAppMePasswordRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/_app/me/profile': {
       id: '/_authenticated/_app/me/profile'
       path: '/me/profile'
@@ -630,6 +650,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppSchedulingRoute: typeof AuthenticatedAppSchedulingRoute
   AuthenticatedAppSettingsRoute: typeof AuthenticatedAppSettingsRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
+  AuthenticatedAppMePasswordRoute: typeof AuthenticatedAppMePasswordRoute
   AuthenticatedAppMeProfileRoute: typeof AuthenticatedAppMeProfileRoute
   AuthenticatedAppOrganisationBranchesRoute: typeof AuthenticatedAppOrganisationBranchesRoute
   AuthenticatedAppOrganisationDepartmentsRoute: typeof AuthenticatedAppOrganisationDepartmentsRoute
@@ -653,6 +674,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppSchedulingRoute: AuthenticatedAppSchedulingRoute,
   AuthenticatedAppSettingsRoute: AuthenticatedAppSettingsRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
+  AuthenticatedAppMePasswordRoute: AuthenticatedAppMePasswordRoute,
   AuthenticatedAppMeProfileRoute: AuthenticatedAppMeProfileRoute,
   AuthenticatedAppOrganisationBranchesRoute:
     AuthenticatedAppOrganisationBranchesRoute,
