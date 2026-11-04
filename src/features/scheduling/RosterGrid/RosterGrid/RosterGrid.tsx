@@ -4,14 +4,29 @@ import { useTranslation } from "react-i18next";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { Avatar } from "@/components/ui/Avatar";
+import { FindingsMarker } from "@/features/scheduling/FindingsMarker";
 import { formatTimeRange } from "@/features/scheduling/formatShift";
 import { RosterShift } from "@/features/scheduling/RosterGrid/RosterShift";
+import type { Finding } from "@/features/scheduling/roster/findings/finding";
+import type { FindingNames } from "@/features/scheduling/roster/findings/findingNames";
+import {
+	cellKey,
+	type GridFindings,
+} from "@/features/scheduling/roster/findings/findingsOnGrid";
 import {
 	hoursInDays,
 	type RosterRow,
 	type RosterShiftCell,
 } from "@/features/scheduling/roster/roster";
 import { rosterLooks } from "@/features/scheduling/rosterLooks";
+
+/** The engine's findings to mark on the week, and the names they are shown with. */
+export type RosterGridFindings = {
+	placed: GridFindings;
+	names: FindingNames;
+	/** Opens the findings panel from a marker's popover. */
+	onShowAll: () => void;
+};
 
 export type RosterGridProps = {
 	/** The seven ISO dates shown, Monday first. */
@@ -26,8 +41,12 @@ export type RosterGridProps = {
 		day: string,
 		shift: RosterShiftCell
 	) => void;
+	/** Marks findings on cells, rows and days; none without. */
+	findings?: RosterGridFindings;
 	className?: string;
 };
+
+const NO_FINDINGS: ReadonlyArray<Finding> = [];
 
 /**
  * Who works when in one week: a row per member and a column per day, each
@@ -38,6 +57,7 @@ export const RosterGrid = ({
 	rows,
 	selectedShiftId,
 	onAssignmentSelect,
+	findings,
 	className,
 }: RosterGridProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
@@ -47,6 +67,33 @@ export const RosterGrid = ({
 		day: "numeric",
 		month: "short",
 	});
+	const fullDay = new Intl.DateTimeFormat(language, {
+		weekday: "long",
+		day: "numeric",
+		month: "long",
+	});
+	const dayName = (date: string): string =>
+		fullDay.format(dayjs(date).toDate());
+	const cellFindings = (row: RosterRow, date: string): ReadonlyArray<Finding> =>
+		(row.membershipId !== null &&
+			findings?.placed.byCell.get(cellKey(row.membershipId, date))) ||
+		NO_FINDINGS;
+	/** A marker for `marked`, or nothing without findings to mark. */
+	const marker = (
+		marked: ReadonlyArray<Finding>,
+		label: string,
+		className?: string
+	): ReactNode =>
+		findings &&
+		marked.length > 0 && (
+			<FindingsMarker
+				className={className}
+				findings={marked}
+				label={label}
+				names={findings.names}
+				onShowAll={findings.onShowAll}
+			/>
+		);
 	/** A day's cell: the shift worked, a day off or leave, or nothing without a row for it. */
 	const dayContent = (
 		row: RosterRow,
@@ -70,16 +117,22 @@ export const RosterGrid = ({
 			{ startTime: cell.start, endTime: cell.end },
 			t
 		);
+		const label = t("scheduling.detail.shiftLabel", {
+			name,
+			day: weekday.format(dayjs(date).toDate()),
+			time,
+		});
+		const notes = cellFindings(row, date).length;
 		return (
 			<RosterShift
 				selected={cell.assignmentId === selectedShiftId}
 				shift={cell}
 				timeRange={time}
-				label={t("scheduling.detail.shiftLabel", {
-					name,
-					day: weekday.format(dayjs(date).toDate()),
-					time,
-				})}
+				label={
+					notes > 0
+						? t("scheduling.findings.marker.tileLabel", { label, count: notes })
+						: label
+				}
 				onSelect={() => {
 					onAssignmentSelect?.(row, date, cell);
 				}}
@@ -104,21 +157,36 @@ export const RosterGrid = ({
 						<th className="h-16 px-3 text-left text-sm font-bold" scope="col">
 							{t("scheduling.detail.staff")}
 						</th>
-						{days.map((date) => (
-							<th key={date} className="h-16 px-2 text-center" scope="col">
-								<span className="block text-sm font-bold">
-									{weekday.format(dayjs(date).toDate())}
-								</span>
-								<span className="mt-1 block text-xs font-normal">
-									{dayMonth.format(dayjs(date).toDate())}
-								</span>
-							</th>
-						))}
+						{days.map((date) => {
+							const dayFindings =
+								findings?.placed.byDate.get(date) ?? NO_FINDINGS;
+							return (
+								<th key={date} className="h-16 px-2 text-center" scope="col">
+									<span className="flex items-center justify-center gap-1 text-sm font-bold">
+										{weekday.format(dayjs(date).toDate())}
+										{marker(
+											dayFindings,
+											t("scheduling.findings.marker.date", {
+												count: dayFindings.length,
+												day: dayName(date),
+											})
+										)}
+									</span>
+									<span className="mt-1 block text-xs font-normal">
+										{dayMonth.format(dayjs(date).toDate())}
+									</span>
+								</th>
+							);
+						})}
 					</tr>
 				</thead>
 				<tbody>
 					{rows.map((row) => {
 						const name = row.name ?? t("scheduling.detail.formerMember");
+						const rowFindings =
+							(row.membershipId !== null &&
+								findings?.placed.byRow.get(row.membershipId)) ||
+							NO_FINDINGS;
 						return (
 							<tr key={row.key} className="border-t border-neutral-400">
 								<th
@@ -128,8 +196,17 @@ export const RosterGrid = ({
 									<span className="flex items-center gap-3">
 										<Avatar className="size-10! text-base!" name={name} />
 										<span className="min-w-0">
-											<span className="block truncate text-xs font-semibold">
-												{name}
+											<span className="flex items-center gap-1">
+												<span className="truncate text-xs font-semibold">
+													{name}
+												</span>
+												{marker(
+													rowFindings,
+													t("scheduling.findings.marker.row", {
+														count: rowFindings.length,
+														name,
+													})
+												)}
 											</span>
 											<span className="mt-0.5 block truncate text-[0.625rem]">
 												{row.jobTitle ?? row.employeeCode}
@@ -142,11 +219,23 @@ export const RosterGrid = ({
 										</span>
 									</span>
 								</th>
-								{days.map((date) => (
-									<td key={date} className="p-3 align-middle">
-										{dayContent(row, name, date)}
-									</td>
-								))}
+								{days.map((date) => {
+									const marked = cellFindings(row, date);
+									return (
+										<td key={date} className="relative p-3 align-middle">
+											{dayContent(row, name, date)}
+											{marker(
+												marked,
+												t("scheduling.findings.marker.cell", {
+													count: marked.length,
+													name,
+													day: dayName(date),
+												}),
+												"absolute top-0.5 right-0.5"
+											)}
+										</td>
+									);
+								})}
 							</tr>
 						);
 					})}
