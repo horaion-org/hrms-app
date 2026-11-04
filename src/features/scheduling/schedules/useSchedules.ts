@@ -1,8 +1,8 @@
 import { skipToken, useQuery } from "@tanstack/react-query";
 import { ApiProblemError } from "@/common/problem";
-import { SCHEDULING_QUERY_ROOT } from "@/features/scheduling/paths";
 import {
 	fetchSchedules,
+	schedulesKey,
 	type Schedule,
 } from "@/features/scheduling/schedules/api";
 import {
@@ -20,7 +20,7 @@ export const useSchedules = (companyId: string): SchedulesState => {
 	const access = useAccess();
 	const allowed = access.canAnywhere("schedule:read");
 	const list = useQuery({
-		queryKey: [SCHEDULING_QUERY_ROOT, companyId, "list"],
+		queryKey: schedulesKey(companyId),
 		queryFn: allowed
 			? ({ signal }): Promise<Array<Schedule>> =>
 					fetchSchedules(companyId, signal)

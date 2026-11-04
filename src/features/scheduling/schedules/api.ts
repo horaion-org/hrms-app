@@ -304,6 +304,19 @@ export const requestGeneration = (
 		method: "POST",
 	});
 
+/**
+ * Soft-deletes a schedule in any status but GENERATION_REQUESTED, which the
+ * API refuses with 409 SCHEDULE_GENERATION_IN_PROGRESS.
+ */
+export const deleteSchedule = (
+	companyId: string,
+	unit: DepartmentPath,
+	scheduleId: string
+): Promise<void> =>
+	apiRequestVoid(schedulePath(companyId, unit, scheduleId), {
+		method: "DELETE",
+	});
+
 const scheduleShiftSchema = z.object({
 	/** The live shift while DRAFT; once frozen, the copy's own id, which no shift route knows. */
 	shiftId: z.string(),
@@ -441,6 +454,12 @@ export const fetchScheduleAssignments = (
 		scheduleAssignmentsSchema,
 		{ signal }
 	);
+
+/** The key the company's whole list of schedules is cached under. */
+export const schedulesKey = (
+	companyId: string
+): readonly ["scheduling", string, "list"] =>
+	[SCHEDULING_QUERY_ROOT, companyId, "list"] as const;
 
 /** The key one schedule is cached under, whichever department it is reached through. */
 export const scheduleKey = (

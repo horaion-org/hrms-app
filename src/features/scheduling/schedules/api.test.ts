@@ -5,6 +5,7 @@ import { envelope, stubApi } from "@/common/testing/stubApi";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import {
 	createSchedule,
+	deleteSchedule,
 	fetchSchedule,
 	fetchScheduleAssignments,
 	fetchSchedules,
@@ -231,6 +232,17 @@ describe("schedules client", () => {
 				live.some((constraint) => constraint.constraintId === copy.constraintId)
 			)
 		).toBe(false);
+	});
+
+	it("deletes a schedule with no body and reads nothing back", async () => {
+		const calls = stubApi({
+			[`DELETE ${SCHEDULES}/s-1`]: { status: 204 },
+		});
+
+		await expect(deleteSchedule("c-1", UNIT, "s-1")).resolves.toBeUndefined();
+		expect(calls.map((call) => `${call.method} ${call.path}`)).toEqual([
+			`DELETE ${SCHEDULES}/s-1`,
+		]);
 	});
 
 	it("requests generation with no body and reads nothing back", async () => {
