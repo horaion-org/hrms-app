@@ -152,7 +152,7 @@ const SortDirectionIcon = ({
 };
 
 const sortMenuItemClasses =
-	"flex h-11 w-full items-center justify-between gap-3 bg-white px-4 text-left text-sm font-normal text-neutral-900 outline-none data-focus:bg-neutral-100";
+	"flex h-11 w-full cursor-pointer items-center justify-between gap-3 bg-white px-4 text-left text-sm font-normal text-neutral-900 outline-none data-focus:bg-neutral-100";
 
 const SortMenu = ({
 	label,
