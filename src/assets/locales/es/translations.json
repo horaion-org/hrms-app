@@ -289,6 +289,45 @@
 				"characters": "Usa solo letras, números, espacios y . ' & - en el nombre.",
 				"rejected": "Revisa el nombre del espacio de trabajo e inténtalo de nuevo."
 			}
+		},
+		"data": {
+			"title": "Datos",
+			"description": "Importa y exporta en bloque.",
+			"subtitle": "Trae o saca los datos de tu empresa en bloque.",
+			"import": "Importar",
+			"export": "Exportar",
+			"importOrganisation": {
+				"title": "Importar organización",
+				"body": "Sucursales, departamentos y puestos desde un archivo de Excel."
+			},
+			"importPeople": {
+				"title": "Importar personas",
+				"body": "Añade hasta 500 personas desde Excel o CSV."
+			},
+			"exportPeople": {
+				"title": "Exportar personas",
+				"body": "Todas las personas que puedes ver, en un archivo de Excel.",
+				"exporting": "Exportando…",
+				"failed": "No se pudo descargar la exportación. Inténtalo de nuevo.",
+				"tooLarge": "Coinciden más de 5.000 personas. Expórtalas desde Personas, por sucursal o departamento."
+			},
+			"history": {
+				"title": "Historial de importaciones",
+				"empty": "Todavía no hay importaciones.",
+				"failed": "No se pudieron cargar algunas importaciones. Inténtalo de nuevo.",
+				"whenColumn": "Cuándo",
+				"kindColumn": "Tipo",
+				"byColumn": "Por",
+				"resultColumn": "Resultado",
+				"openColumn": "Detalles",
+				"open": "Ver",
+				"kinds": {
+					"ORGANISATION": "Organización",
+					"PEOPLE": "Personas"
+				},
+				"organisationResult": "{{created}} creados · {{skipped}} omitidos",
+				"peopleResult": "{{added}} añadidos · {{failed}} fallidos"
+			}
 		}
 	},
 	"combobox": {
@@ -530,7 +569,8 @@
 				"scheduleGenerationRequested": "Generación de horario solicitada: {{name}}",
 				"scheduleRegenerationRequested": "Regeneración de horario solicitada: {{name}}",
 				"scheduleGenerated": "Horario generado: {{name}}",
-				"scheduleDeleted": "Horario eliminado: {{name}}"
+				"scheduleDeleted": "Horario eliminado: {{name}}",
+				"organisationImported": "Organización importada"
 			},
 			"unnamed": {
 				"jobTitleCreated": "Puesto creado",
@@ -555,7 +595,8 @@
 				"scheduleGenerationRequested": "Generación de horario solicitada",
 				"scheduleRegenerationRequested": "Regeneración de horario solicitada",
 				"scheduleGenerated": "Horario generado",
-				"scheduleDeleted": "Horario eliminado"
+				"scheduleDeleted": "Horario eliminado",
+				"organisationImported": "Organización importada"
 			}
 		},
 		"departments": {
@@ -664,6 +705,154 @@
 			"showing": "Mostrar",
 			"branch": "Sucursal",
 			"created": "Creado"
+		},
+		"import": {
+			"title": "Importar organización",
+			"subtitle": "Crea sucursales, departamentos y puestos de una vez desde un archivo de Excel.",
+			"menu": "Importar organización",
+			"moreActions": "Más acciones de la organización",
+			"steps": {
+				"template": "Plantilla",
+				"upload": "Subir",
+				"check": "Revisar",
+				"import": "Importar"
+			},
+			"template": {
+				"heading": "Empieza con nuestra plantilla",
+				"body": "Tiene una hoja para Sucursales, otra para Departamentos y otra para Puestos, y una hoja Listas con tus unidades, países y zonas horarias. La fila 2 de cada hoja es un ejemplo y se omite.",
+				"rules": "Rellena solo las hojas que necesites. Deja Responsables en blanco para ser tú el responsable por ahora, y asigna los responsables reales después de importar a las personas.",
+				"download": "Descargar plantilla (.xlsx)",
+				"downloading": "Descargando…",
+				"downloadFailed": "No se pudo descargar la plantilla. Inténtalo de nuevo.",
+				"next": "Ya tengo un archivo"
+			},
+			"upload": {
+				"prompt": "Suelta tu archivo aquí, o",
+				"choose": "elige un archivo",
+				"hint": "Solo .xlsx · hasta 500 filas entre todas las hojas · 2 MB",
+				"checking": "Revisando tu archivo…",
+				"helpHeading": "Hoja por hoja",
+				"back": "Atrás"
+			},
+			"help": {
+				"BRANCHES": "Sucursales: Código (de 1 a 10 letras, dígitos o -), Nombre, Ciudad, País y Zona horaria son obligatorios. Responsables son correos de miembros separados por ; (hasta 20).",
+				"DEPARTMENTS": "Departamentos: Sucursal (un código o nombre, existente o de la hoja Sucursales) y Nombre son obligatorios. Responsables como en las sucursales.",
+				"JOB_TITLES": "Puestos: Sucursal, Departamento (de esa sucursal) y Nombre son obligatorios. La descripción es opcional, hasta 300 caracteres.",
+				"general": "La fila 1 debe mantener los nombres de columna de la plantilla. Las unidades que ya existen se omiten y nunca se modifican."
+			},
+			"refusals": {
+				"UNSUPPORTED_FILE": "No podemos leer este archivo. Guárdalo como libro de Excel (.xlsx) e inténtalo de nuevo.",
+				"MISSING_COLUMNS": "A una hoja le falta una columna obligatoria. La fila 1 de cada hoja debe tener los nombres de columna de la plantilla.",
+				"EMPTY_FILE": "Este archivo no tiene sucursales, departamentos ni puestos.",
+				"TOO_MANY_ROWS": "Una importación admite hasta 500 filas entre todas las hojas. Divide el archivo en otros más pequeños.",
+				"FILE_TOO_LARGE": "Este archivo pesa más de 2 MB. Elimina otras hojas o divídelo.",
+				"IMPORT_RUNNING": "Todavía hay una importación de personas en curso en esta empresa. Inténtalo cuando termine.",
+				"IMPORT_HAS_ERRORS": "Todavía hay filas por corregir. Revisa el archivo de nuevo.",
+				"RATE_LIMITED": "Has alcanzado el límite de importaciones por ahora. Inténtalo más tarde.",
+				"UNKNOWN": "Algo salió mal. Inténtalo de nuevo."
+			},
+			"check": {
+				"nothingSaved": "Todavía no se ha guardado nada.",
+				"blocked_one": "{{count}} fila debe corregirse antes de crear nada.",
+				"blocked_other": "{{count}} filas deben corregirse antes de crear nada.",
+				"ready": "Tu archivo está listo.",
+				"nothingToCreate": "Todo lo que hay en este archivo ya existe, así que no hay nada que crear.",
+				"willCreate": "Se crearán: {{units}}",
+				"alreadyExist": "Ya existen (se omiten): {{units}}",
+				"headedByYou": "Serás responsable de {{units}} (Responsables en blanco).",
+				"ignoredColumns": "Columnas ignoradas: {{columns}}",
+				"ignoredSheets": "Hojas ignoradas: {{sheets}}",
+				"downloadErrors": "Descargar filas con errores",
+				"uploadFixed": "Subir un archivo corregido",
+				"sheetsLabel": "Hojas",
+				"sheetRows_one": "{{count}} fila",
+				"sheetRows_other": "{{count}} filas",
+				"sheetErrors_one": "{{count}} por corregir",
+				"sheetErrors_other": "{{count}} por corregir",
+				"tableLabel": "Filas revisadas: {{sheet}}",
+				"emptySheet": "Esta hoja no tiene filas.",
+				"sheetColumn": "Hoja",
+				"rowColumn": "Fila",
+				"problemColumn": "Problema",
+				"errorsColumn": "Errores",
+				"noProblem": "Lista",
+				"running": "Todavía hay una importación de personas en curso. Podrás crear la estructura cuando termine.",
+				"viewRunning": "Ver la importación de personas",
+				"create": "Crear estructura"
+			},
+			"confirm": {
+				"title": "¿Crear {{units}}?",
+				"body": "No se modifica nada de lo que ya existe.",
+				"confirm": "Crear estructura",
+				"cancel": "Cancelar"
+			},
+			"result": {
+				"heading": "Estructura creada",
+				"summary": "{{units}} creados · {{skipped}} omitidos",
+				"meta": "{{date}} · por {{name}}",
+				"toPeople": "Importar personas →",
+				"viewBranches": "Ver sucursales",
+				"download": "Descargar resultados",
+				"another": "Importar otro archivo",
+				"tableLabel": "Resultados por fila",
+				"sheetColumn": "Hoja",
+				"rowColumn": "Fila",
+				"resultColumn": "Resultado",
+				"loadFailed": "No se pudo cargar esta importación. Inténtalo de nuevo."
+			},
+			"results": {
+				"CREATED": "Creado",
+				"SKIPPED_EXISTS": "Ya existe: omitido",
+				"SKIPPED_EXAMPLE": "Fila de ejemplo de la plantilla: omitida"
+			},
+			"sheets": {
+				"BRANCHES": "Sucursales",
+				"DEPARTMENTS": "Departamentos",
+				"JOB_TITLES": "Puestos"
+			},
+			"columns": {
+				"CODE": "Código",
+				"NAME": "Nombre",
+				"CITY": "Ciudad",
+				"COUNTRY": "País",
+				"TIME_ZONE": "Zona horaria",
+				"HEADS": "Responsables",
+				"BRANCH": "Sucursal",
+				"DEPARTMENT": "Departamento",
+				"DESCRIPTION": "Descripción"
+			},
+			"counts": {
+				"none": "nada",
+				"branches_one": "{{count}} sucursal",
+				"branches_other": "{{count}} sucursales",
+				"departments_one": "{{count}} departamento",
+				"departments_other": "{{count}} departamentos",
+				"jobTitles_one": "{{count}} puesto",
+				"jobTitles_other": "{{count}} puestos"
+			},
+			"problems": {
+				"REQUIRED": "{{column}} es obligatorio.",
+				"TOO_LONG": "{{column}} es demasiado largo.",
+				"INVALID_NAME": "Usa de 2 a 100 caracteres para el nombre.",
+				"INVALID_BRANCH_CODE": "Usa de 1 a 10 letras, dígitos o - para el código.",
+				"INVALID_CITY": "Usa letras, espacios y . ' - para la ciudad.",
+				"INVALID_COUNTRY": "Usa un código de país de dos letras de la hoja Listas, p. ej. SG.",
+				"INVALID_TIME_ZONE": "Usa una zona horaria de la hoja Listas, p. ej. Asia/Singapore.",
+				"INVALID_EMAIL": "Uno de los responsables no es un correo electrónico.",
+				"HEAD_NOT_MEMBER": "Nadie en esta empresa tiene este correo. Deja Responsables en blanco para ser tú el responsable por ahora.",
+				"TOO_MANY_HEADS": "Una unidad puede tener hasta 20 responsables.",
+				"BRANCH_NOT_FOUND": "Ninguna sucursal tiene este código o nombre, ni en Horaion ni en la hoja Sucursales.",
+				"DEPARTMENT_NOT_FOUND": "Esta sucursal no tiene ningún departamento con este nombre, ni en Horaion ni en la hoja Departamentos.",
+				"UNIT_INACTIVE": "{{column}} está inactivo.",
+				"BRANCH_CODE_TAKEN": "Otra sucursal ya tiene este código.",
+				"BRANCH_NAME_TAKEN": "Otra sucursal ya tiene este nombre.",
+				"DUPLICATE_IN_FILE": "Otra fila de esta hoja es la misma unidad.",
+				"NOT_PERMITTED_HERE": "No puedes crear unidades aquí.",
+				"CELL_ERROR": "Esta celda muestra un error (como #REF!). Corrige la fórmula en Excel y vuelve a subirlo.",
+				"FORMULA_WITHOUT_VALUE": "Esta celda tiene una fórmula sin valor guardado. Abre el archivo en Excel, guárdalo y vuelve a subirlo.",
+				"ALREADY_EXISTS": "Ya existe: esta fila se omitirá.",
+				"EXAMPLE_ROW": "Fila de ejemplo de la plantilla: omitida."
+			}
 		}
 	},
 	"shell": {
@@ -1631,6 +1820,25 @@
 			"back": "Volver al resumen",
 			"subtitle": "Consulta los cambios recientes de horarios, aprobaciones y plantilla.",
 			"hidden": "No tienes acceso a la actividad de esta empresa."
+		},
+		"setup": {
+			"title": "Configura tu empresa",
+			"progress": "{{done}} de {{total}}",
+			"dismiss": "Ocultar los pasos de configuración",
+			"stepDone": "(hecho)",
+			"stepToDo": "(pendiente)",
+			"organisation": {
+				"title": "Importar organización",
+				"action": "Importar organización",
+				"byHand": "o añade sucursales a mano"
+			},
+			"people": {
+				"title": "Importar personas",
+				"action": "Importar personas →",
+				"byHand": "o añade personas una a una",
+				"done_one": "{{count}} persona",
+				"done_other": "{{count}} personas"
+			}
 		}
 	},
 	"auth": {
