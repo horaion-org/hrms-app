@@ -1401,6 +1401,11 @@
 			"branch": "Branch",
 			"allBranches": "All branches",
 			"allCountries": "All countries"
+		},
+		"unitSelector": {
+			"department": "Department",
+			"allDepartments": "All departments",
+			"chooseBranchFirst": "Choose a Branch first"
 		}
 	},
 	"numberStepper": {

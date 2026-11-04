@@ -1202,6 +1202,11 @@
 			"branch": "Sucursal",
 			"allBranches": "Todas las sucursales",
 			"allCountries": "Todos los países"
+		},
+		"unitSelector": {
+			"department": "Departamento",
+			"allDepartments": "Todos los departamentos",
+			"chooseBranchFirst": "Elige primero una sucursal"
 		}
 	},
 	"colourSwatchPicker": {
