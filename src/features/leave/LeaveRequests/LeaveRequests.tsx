@@ -13,6 +13,7 @@ import {
 	type LeaveSort,
 } from "@/features/leave/api";
 import { formatPeriod } from "@/features/leave/dates";
+import { leaveTypeLabel } from "@/features/leave/leaveTypeLabel";
 import { statusTone, type LeaveRequest } from "@/features/leave/types";
 
 export type LeaveRequestsProps = {
@@ -125,8 +126,8 @@ export const LeaveRequests = ({
 			id: "leaveType",
 			header: t("leave.type"),
 			headerClassName: "min-w-40",
-			sortValue: (row) => row.leaveType,
-			cell: (row) => t(`leave.types.${row.leaveType}`),
+			sortValue: (row) => leaveTypeLabel(row, t),
+			cell: (row) => leaveTypeLabel(row, t),
 		},
 		...remarks,
 		{

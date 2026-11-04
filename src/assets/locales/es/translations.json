@@ -95,7 +95,8 @@
 			"COMPASSIONATE": "Permiso por duelo",
 			"MATERNITY": "Permiso de maternidad",
 			"UNPAID": "Permiso sin sueldo",
-			"MARRIAGE": "Permiso por matrimonio"
+			"MARRIAGE": "Permiso por matrimonio",
+			"unknown": "Permiso"
 		},
 		"view": "Ver solicitud de {{name}}",
 		"approveFor": "Aprobar solicitud de {{name}}",

@@ -28,7 +28,7 @@ const leaveTypeSchema = z.enum([
 	"MARRIAGE",
 ]);
 
-/** The kinds of leave the API knows, a fixed list until leave schemes arrive. */
+/** The kinds of leave this app can apply for until it reads the company's catalogue. */
 export type LeaveType = z.infer<typeof leaveTypeSchema>;
 
 export const LEAVE_TYPES = leaveTypeSchema.options;
@@ -62,7 +62,15 @@ export const leaveRequestSchema = z.object({
 	branchCountry: z.string().nullable(),
 	departmentId: z.string().nullable(),
 	departmentName: z.string().nullable(),
-	leaveType: leaveTypeSchema,
+	/**
+	 * The leave type's code. Any string: a company names its own types, and a
+	 * code this app has never seen must not fail the whole page.
+	 */
+	leaveType: z.string(),
+	/** The company's leave type. Absent from an API older than the leave type catalogue. */
+	leaveTypeId: z.string().nullable().default(null),
+	/** What the company calls the leave type. Absent from an API older than the leave type catalogue. */
+	leaveTypeName: z.string().nullable().default(null),
 	startDate: z.iso.date(),
 	endDate: z.iso.date(),
 	/** Monday-to-Friday days in the period, as the API counts them. */

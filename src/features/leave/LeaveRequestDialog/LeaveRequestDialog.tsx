@@ -20,6 +20,7 @@ import {
 } from "@/features/leave/api";
 import { formatPeriod } from "@/features/leave/dates";
 import type { ApplyField, DecisionField } from "@/features/leave/leaveRefusal";
+import { leaveTypeLabel } from "@/features/leave/leaveTypeLabel";
 import {
 	statusTone,
 	type LeaveRequest,
@@ -355,9 +356,7 @@ export const LeaveRequestDialog = ({
 									{t("leave.days", { count: request.workingDays })}
 								</dd>
 								<dt className="text-neutral-800">{t("leave.type")}</dt>
-								<dd className="font-semibold">
-									{t(`leave.types.${request.leaveType}`)}
-								</dd>
+								<dd className="font-semibold">{leaveTypeLabel(request, t)}</dd>
 								{request.notes && (
 									<>
 										<dt className="text-neutral-800">{t("leave.remarks")}</dt>

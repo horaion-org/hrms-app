@@ -95,7 +95,8 @@
 			"COMPASSIONATE": "Compassionate leave",
 			"MATERNITY": "Maternity leave",
 			"UNPAID": "Unpaid leave",
-			"MARRIAGE": "Marriage leave"
+			"MARRIAGE": "Marriage leave",
+			"unknown": "Leave"
 		},
 		"view": "View request for {{name}}",
 		"approveFor": "Approve request for {{name}}",

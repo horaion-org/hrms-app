@@ -25,6 +25,7 @@ import { useActivityPage } from "@/features/dashboard/useActivityPage";
 import type { LeaveRequest } from "@/features/leave/api";
 import { formatPeriod } from "@/features/leave/dates";
 import { LeaveRequestDialog } from "@/features/leave/LeaveRequestDialog";
+import { leaveTypeLabel } from "@/features/leave/leaveTypeLabel";
 import {
 	decisionRefusal,
 	type DecisionField,
@@ -280,7 +281,7 @@ const Dashboard = (): FunctionComponent => {
 												},
 											}}
 											title={t(`${key}.notifications.leaveTitle`, {
-												type: t(`leave.types.${request.leaveType}`),
+												type: leaveTypeLabel(request, t),
 											})}
 											onOpen={() => {
 												setDecision({ request, mode: "view" });
