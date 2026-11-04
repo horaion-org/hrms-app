@@ -741,6 +741,46 @@ describe("System roles", () => {
 });
 
 describe("Job titles", () => {
+	it("narrows to a Branch, then a Department, kept in the URL, and drops the columns they fix", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...baseRoutes(),
+			[JOB_TITLES]: pageReply([jobTitle("j-1", "Shift supervisor")]),
+		});
+		const opened = await open("/organisation/job-titles");
+		await screen.findByRole("table", { name: "Job titles" });
+
+		expect(screen.getByRole("button", { name: "Department" })).toBeDisabled();
+		await user.click(screen.getByRole("button", { name: "Branch" }));
+		await user.click(screen.getByRole("option", { name: "Orchard" }));
+		await user.click(screen.getByRole("button", { name: "Department" }));
+		await user.click(screen.getByRole("option", { name: "Kitchen" }));
+
+		await waitFor(() => {
+			expect(searchesOf(calls, "/api/v1/companies/c-1/job-titles")).toEqual([
+				"size=100&sort=name%2Casc",
+				"size=100&sort=name%2Casc&branchId=b-1",
+				"size=100&sort=name%2Casc&branchId=b-1&departmentId=d-1",
+			]);
+		});
+		expect(opened.router.state.location.search).toEqual({
+			branch: "b-1",
+			department: "d-1",
+		});
+		const table = screen.getByRole("table", { name: "Job titles" });
+		expect(
+			within(table)
+				.getAllByRole("columnheader")
+				.map((header) => header.textContent)
+		).toEqual(["Select all", "Job title", "People", "Status", "Actions"]);
+
+		await user.click(screen.getByRole("button", { name: "Clear filters" }));
+
+		await waitFor(() => {
+			expect(opened.router.state.location.search).toEqual({});
+		});
+	});
+
 	it("lists the company's job titles with server sort and status filter", async () => {
 		const user = userEvent.setup();
 		const calls = stubApi({
@@ -764,6 +804,7 @@ describe("Job titles", () => {
 		).toEqual([
 			"Select all",
 			"Job title",
+			"Branch",
 			"Department",
 			"People",
 			"Status",
@@ -773,12 +814,12 @@ describe("Job titles", () => {
 			bodyRows(table).map((row) =>
 				within(row)
 					.getAllByRole("cell")
-					.slice(2, 5)
+					.slice(2, 6)
 					.map((cell) => cell.textContent)
 			)
 		).toEqual([
-			["Orchard › Kitchen", "3 people", "Active"],
-			["Orchard › Kitchen", "0 people", "Inactive"],
+			["Orchard", "Kitchen", "3 people", "Active"],
+			["Orchard", "Kitchen", "0 people", "Inactive"],
 		]);
 		// The count is not a sort the API offers.
 		expect(

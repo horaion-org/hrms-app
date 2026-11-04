@@ -54,6 +54,11 @@ export const DEPARTMENT_READ_KEYS: ReadonlyArray<PermissionKey> = [
 	"department:read",
 ];
 
+/** A Job title is listed where this is held at its Department: the Job titles list's unit choices. */
+export const JOB_TITLE_READ_KEYS: ReadonlyArray<PermissionKey> = [
+	"job_title:read",
+];
+
 /**
  * Holding this at any scope is what makes the People Module worth offering.
  * The API lists only the people in the units where it is held.
