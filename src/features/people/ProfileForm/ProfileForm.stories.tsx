@@ -70,6 +70,7 @@ const meta = {
 							departmentId: "d-1",
 							departmentName: "Kitchen",
 							name: "Chef",
+							description: null,
 							status: "ACTIVE",
 						},
 					],

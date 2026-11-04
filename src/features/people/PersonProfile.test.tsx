@@ -188,6 +188,7 @@ const routes = (
 				departmentId: "d-1",
 				departmentName: "Kitchen",
 				name: "Pastry chef",
+				description: null,
 				status: "ACTIVE",
 			},
 		]),

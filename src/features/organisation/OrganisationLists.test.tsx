@@ -122,7 +122,7 @@ const branch = (
 const jobTitle = (
 	jobTitleId: string,
 	name: string,
-	status = "ACTIVE"
+	overrides: Record<string, unknown> = {}
 ): Record<string, unknown> => ({
 	jobTitleId,
 	companyId: "c-1",
@@ -131,7 +131,9 @@ const jobTitle = (
 	departmentId: "d-1",
 	departmentName: "Kitchen",
 	name,
-	status,
+	description: null,
+	status: "ACTIVE",
+	...overrides,
 });
 
 const department = (
@@ -708,8 +710,8 @@ describe("Job titles", () => {
 		const calls = stubApi({
 			...baseRoutes(),
 			[JOB_TITLES]: pageReply([
-				jobTitle("j-1", "Shift supervisor", "ACTIVE"),
-				jobTitle("j-2", "Trainee", "INACTIVE"),
+				jobTitle("j-1", "Shift supervisor"),
+				jobTitle("j-2", "Trainee", { status: "INACTIVE" }),
 			]),
 		});
 		await open("/organisation/job-titles");
@@ -768,11 +770,18 @@ describe("Job titles", () => {
 			const next = status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
 			const calls = stubApi({
 				...baseRoutes([...EVERY_PERMISSION, "job_title:update"]),
-				[JOB_TITLES]: pageReply([jobTitle("j-1", "Shift supervisor", status)]),
+				[JOB_TITLES]: pageReply([
+					jobTitle("j-1", "Shift supervisor", {
+						status,
+						description: "Runs the floor.",
+					}),
+				]),
 				"PUT /api/v1/companies/c-1/branches/b-1/departments/d-1/job-titles/j-1":
 					{
 						status: 200,
-						body: envelope(jobTitle("j-1", "Shift supervisor", next)),
+						body: envelope(
+							jobTitle("j-1", "Shift supervisor", { status: next })
+						),
 					},
 			});
 			await open("/organisation/job-titles");
@@ -799,7 +808,13 @@ describe("Job titles", () => {
 			});
 			expect(
 				calls.filter((call) => call.method === "PUT").map((call) => call.body)
-			).toEqual([{ name: "Shift supervisor", status: next }]);
+			).toEqual([
+				{
+					name: "Shift supervisor",
+					description: "Runs the floor.",
+					status: next,
+				},
+			]);
 		}
 	);
 

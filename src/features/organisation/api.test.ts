@@ -209,6 +209,7 @@ describe("job title clients", () => {
 		departmentId: "d-1",
 		departmentName: "Kitchen",
 		name: "Shift supervisor",
+		description: "Runs the floor.",
 		status: "ACTIVE",
 	};
 	const parsed = {
@@ -218,6 +219,7 @@ describe("job title clients", () => {
 		departmentId: "d-1",
 		departmentName: "Kitchen",
 		name: "Shift supervisor",
+		description: "Runs the floor.",
 		status: "ACTIVE",
 	};
 	const TITLES =
@@ -231,7 +233,7 @@ describe("job title clients", () => {
 		).resolves.toEqual(parsed);
 		expect(calls[0]?.body).toEqual({ name: "Shift supervisor" });
 	});
-	it("puts the trimmed name and status under the department", async () => {
+	it("puts the trimmed name, description and status under the department", async () => {
 		const calls = stubApi({
 			[`PUT ${TITLES}/j-1`]: { status: 200, body: envelope(jobTitle) },
 		});
@@ -244,6 +246,7 @@ describe("job title clients", () => {
 		).resolves.toEqual(parsed);
 		expect(calls[0]?.body).toEqual({
 			name: "Shift supervisor",
+			description: "Runs the floor.",
 			status: "INACTIVE",
 		});
 	});

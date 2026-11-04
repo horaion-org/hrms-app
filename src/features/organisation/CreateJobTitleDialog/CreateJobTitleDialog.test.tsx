@@ -31,6 +31,7 @@ const jobTitle = {
 	departmentId: "d-1",
 	departmentName: "Kitchen",
 	name: "Shift supervisor",
+	description: null,
 	status: "ACTIVE",
 };
 const page = (content: Array<unknown>): StubReply => ({
@@ -359,7 +360,10 @@ describe("edit job title through the Job titles page", () => {
 				.filter((call) => call.method === "PUT")
 				.map((call) => [call.path, call.body])
 		).toEqual([
-			[`${TITLES}/j-1`, { name: "Senior supervisor", status: "ACTIVE" }],
+			[
+				`${TITLES}/j-1`,
+				{ name: "Senior supervisor", description: null, status: "ACTIVE" },
+			],
 		]);
 	});
 

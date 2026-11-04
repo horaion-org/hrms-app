@@ -36,6 +36,7 @@ const jobTitle = {
 	departmentId: "d-1",
 	departmentName: "Kitchen",
 	name: "Chef",
+	description: null,
 	status: "ACTIVE",
 };
 const role = {
