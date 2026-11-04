@@ -56,6 +56,20 @@ const confirm = async (): Promise<void> => {
 		.setup()
 		.click(screen.getByRole("button", { name: copy.submit }));
 };
+const resendWaiting = (time: string): string =>
+	copy.resendIn.replace("{{time}}", time);
+const arriveFromLogIn = async (): Promise<OpenedApp> => {
+	const opened = await open("/login");
+	const user = userEvent.setup();
+	await user.type(screen.getByLabelText("Email", { exact: true }), EMAIL);
+	await user.type(
+		screen.getByLabelText("Password", { exact: true }),
+		"Example123!"
+	);
+	await user.click(screen.getByRole("button", { name: "Log in" }));
+	await screen.findByRole("heading", { name: copy.title });
+	return opened;
+};
 const privateLocation = (opened: OpenedApp): void => {
 	expect(decodeURIComponent(opened.router.state.location.href)).not.toContain(
 		EMAIL
@@ -148,7 +162,9 @@ it("carries the email from Onboarding, confirms anonymously, and lands on prefil
 	expect(opened.router.state.location.pathname).toBe("/confirm-email");
 	expect(screen.getByLabelText(copy.email)).toBeDisabled();
 	expect(screen.getByRole("button", { name: copy.submit })).toBeDisabled();
-	expect(screen.getByRole("button", { name: copy.resend })).toBeDisabled();
+	expect(
+		screen.getByRole("button", { name: resendWaiting("1:00") })
+	).toBeDisabled();
 	await act(async () => {
 		fireEvent.submit(
 			screen.getByRole("button", { name: copy.submit }).closest("form")!
@@ -217,16 +233,8 @@ it("keeps the arrival status beside a refused code", async () => {
 		"POST /api/v1/public/sessions": problemReply(403, "EMAIL_NOT_VERIFIED"),
 		[`POST ${CONFIRM}`]: problemReply(400, "INVALID_CODE"),
 	});
-	await open("/login");
-	const user = userEvent.setup();
-	await user.type(screen.getByLabelText("Email", { exact: true }), EMAIL);
-	await user.type(
-		screen.getByLabelText("Password", { exact: true }),
-		"Example123!"
-	);
-	await user.click(screen.getByRole("button", { name: "Log in" }));
-	await screen.findByRole("heading", { name: copy.title });
-	await user.type(screen.getByLabelText(copy.code), "123456");
+	await arriveFromLogIn();
+	await userEvent.setup().type(screen.getByLabelText(copy.code), "123456");
 	await confirm();
 	expect(await screen.findByRole("alert")).toHaveTextContent(copy.invalidCode);
 	expect(screen.getByRole("status")).toHaveTextContent(copy.required);
@@ -414,3 +422,38 @@ it.each([CONFIRM, RESEND])(
 		expect(screen.getByRole("button", { name: copy.resend })).toBeEnabled();
 	}
 );
+
+it("offers a new code straight away to a person sent from Log in", async () => {
+	stubApi({
+		"POST /api/v1/public/sessions": problemReply(403, "EMAIL_NOT_VERIFIED"),
+	});
+	await arriveFromLogIn();
+	expect(screen.getByRole("button", { name: copy.resend })).toBeEnabled();
+});
+
+it("waits a minute after a new code before offering another", async () => {
+	const calls = stubApi({ [`POST ${RESEND}`]: { status: 202 } });
+	await open();
+	await userEvent.setup().type(screen.getByLabelText(copy.email), EMAIL);
+	vi.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
+	await act(async () => {
+		fireEvent.click(screen.getByRole("button", { name: copy.resend }));
+		await Promise.resolve();
+	});
+	await act(async () => {
+		await vi.advanceTimersByTimeAsync(0);
+	});
+	expect(screen.getByRole("status")).toHaveTextContent(copy.resent);
+	const waiting = screen.getByRole("button", { name: resendWaiting("1:00") });
+	expect(waiting).toBeDisabled();
+	await act(async () => {
+		await vi.advanceTimersByTimeAsync(18_000);
+	});
+	expect(waiting).toHaveAccessibleName(resendWaiting("0:42"));
+	await act(async () => {
+		fireEvent.click(waiting);
+		await vi.advanceTimersByTimeAsync(42_000);
+	});
+	expect(calls).toHaveLength(1);
+	expect(screen.getByRole("button", { name: copy.resend })).toBeEnabled();
+});

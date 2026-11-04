@@ -391,6 +391,7 @@
 			"pending": "Confirming email…",
 			"didNotReceive": "Didn’t receive a code?",
 			"resend": "Send a new code",
+			"resendIn": "Send a new code ({{time}})",
 			"resending": "Sending…",
 			"resent": "If that email needs confirming, we've sent a new code",
 			"redirecting": "Your email is confirmed. Redirecting to log in in 3 seconds.",

@@ -20,6 +20,10 @@ import {
 	emailConfirmationSchema,
 	type EmailConfirmationValues,
 } from "@/features/auth/schemas";
+import {
+	formatCooldown,
+	useResendCooldown,
+} from "@/features/auth/useResendCooldown";
 import { useRetryHold } from "@/features/auth/useRetryHold";
 
 type Message = { kind: "error" | "status"; text: string };
@@ -55,6 +59,9 @@ export const EmailConfirmationForm = (): FunctionComponent => {
 	const [message, setMessage] = useState<Message | null>(null);
 	const [failure, setFailure] = useState<unknown>(null);
 	const hold = useRetryHold(failure);
+	const cooldown = useResendCooldown({
+		startActive: arrivalReason === "code-sent",
+	});
 	const inFlight = useRef(false);
 	const refusedField = useRef<keyof EmailConfirmationValues | null>(null);
 	const messageContainer = useRef<HTMLDivElement>(null);
@@ -148,7 +155,13 @@ export const EmailConfirmationForm = (): FunctionComponent => {
 	};
 
 	const resend = async (): Promise<void> => {
-		if (inFlight.current || pending || hold.held || confirmedEmail !== null)
+		if (
+			inFlight.current ||
+			pending ||
+			hold.held ||
+			cooldown.active ||
+			confirmedEmail !== null
+		)
 			return;
 		inFlight.current = true;
 		try {
@@ -174,6 +187,7 @@ export const EmailConfirmationForm = (): FunctionComponent => {
 				}
 			}
 			setMessage({ kind: "status", text: t("auth.emailConfirmation.resent") });
+			cooldown.restart();
 		} finally {
 			releaseSubmission();
 			setResending(false);
@@ -246,16 +260,20 @@ export const EmailConfirmationForm = (): FunctionComponent => {
 				<p className="text-center text-base leading-6 text-neutral-800">
 					{t("auth.emailConfirmation.didNotReceive")}{" "}
 					<Button
-						disabled={pending || hold.held || confirmedEmail !== null}
 						type="button"
 						variant="hyperlink"
+						disabled={
+							pending || hold.held || cooldown.active || confirmedEmail !== null
+						}
 						onClick={resend}
 					>
-						{t(
-							resending
-								? "auth.emailConfirmation.resending"
-								: "auth.emailConfirmation.resend"
-						)}
+						{resending
+							? t("auth.emailConfirmation.resending")
+							: cooldown.active
+								? t("auth.emailConfirmation.resendIn", {
+										time: formatCooldown(cooldown.remainingSeconds),
+									})
+								: t("auth.emailConfirmation.resend")}
 					</Button>
 				</p>
 			</form>

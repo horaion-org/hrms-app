@@ -1569,6 +1569,7 @@
 			"pending": "Confirmando correo…",
 			"didNotReceive": "¿No has recibido el código?",
 			"resend": "Enviar un código nuevo",
+			"resendIn": "Enviar un código nuevo ({{time}})",
 			"resending": "Enviando…",
 			"resent": "Si ese correo necesita confirmación, te hemos enviado un código nuevo",
 			"redirecting": "Tu correo está confirmado. Te llevamos a iniciar sesión en 3 segundos.",
