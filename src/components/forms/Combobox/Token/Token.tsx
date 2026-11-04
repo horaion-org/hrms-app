@@ -27,7 +27,7 @@ export const Token = ({
 			{onRemove && (
 				<button
 					aria-label={t("combobox.remove", { label })}
-					className="rounded p-0.5 outline-offset-2 focus-visible:outline-2 focus-visible:outline-ink-blue-500 disabled:cursor-not-allowed disabled:text-neutral-500"
+					className="cursor-pointer rounded p-0.5 outline-offset-2 focus-visible:outline-2 focus-visible:outline-ink-blue-500 disabled:cursor-not-allowed disabled:text-neutral-500"
 					disabled={disabled}
 					type="button"
 					onClick={onRemove}

@@ -202,7 +202,7 @@ export const Combobox = <T,>(props: ComboboxProps<T>): FunctionComponent => {
 					aria-describedby={props["aria-describedby"]}
 					aria-label={props["aria-label"]}
 					aria-labelledby={props["aria-labelledby"]}
-					className="absolute inset-0 flex w-full items-center justify-between gap-3 px-4 text-left"
+					className="absolute inset-0 flex w-full cursor-pointer items-center justify-between gap-3 px-4 text-left data-disabled:cursor-not-allowed"
 					id={props.id}
 					type="button"
 					onKeyDown={(event) => {
