@@ -70,4 +70,18 @@ describe("PageToolbar", () => {
 
 		expect(onClearFilters).toHaveBeenCalledOnce();
 	});
+
+	it("given_chips_when_rendered_then_showsThemAfterTheControls", () => {
+		render(
+			<PageToolbar
+				actions={<button type="button">Add employee</button>}
+				chips={<p>Showing: Active</p>}
+				filters={<button type="button">Filters</button>}
+				label="People list controls"
+			/>
+		);
+
+		const group = screen.getByRole("group", { name: "People list controls" });
+		expect(group.lastElementChild).toHaveTextContent("Showing: Active");
+	});
 });

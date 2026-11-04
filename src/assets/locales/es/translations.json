@@ -1398,5 +1398,9 @@
 		"label": "Filtros",
 		"applied_one": "{{count}} aplicado",
 		"applied_other": "{{count}} aplicados"
+	},
+	"filterChips": {
+		"label": "Filtros activos",
+		"remove": "Quitar {{label}}"
 	}
 }

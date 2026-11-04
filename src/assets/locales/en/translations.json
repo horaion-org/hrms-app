@@ -2206,5 +2206,9 @@
 		"label": "Filters",
 		"applied_one": "{{count}} applied",
 		"applied_other": "{{count}} applied"
+	},
+	"filterChips": {
+		"label": "Active filters",
+		"remove": "Remove {{label}}"
 	}
 }

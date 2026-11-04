@@ -13,6 +13,8 @@ export type PageToolbarProps = {
 	filters?: ReactNode;
 	/** What can be done from the list, primary action last. */
 	actions?: ReactNode;
+	/** The filters that are set, on their own row beneath, e.g. `FilterChips`. */
+	chips?: ReactNode;
 	/** Offers "Clear filters" at the end of the filters; given only while a filter differs from its default. */
 	onClearFilters?: () => void;
 	className?: string;
@@ -33,6 +35,7 @@ export const PageToolbar = ({
 	scope,
 	filters,
 	actions,
+	chips,
 	onClearFilters,
 	className,
 }: PageToolbarProps): FunctionComponent => {
@@ -62,6 +65,7 @@ export const PageToolbar = ({
 				</div>
 			)}
 			{actions && <div className={actionZoneClasses}>{actions}</div>}
+			{chips && <div className="w-full">{chips}</div>}
 		</div>
 	);
 };
