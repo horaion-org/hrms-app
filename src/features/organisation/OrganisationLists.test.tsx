@@ -660,12 +660,69 @@ describe("Departments", () => {
 		expect(
 			screen.queryByRole("button", { name: "Create department" })
 		).not.toBeInTheDocument();
-		expect(screen.getByRole("button", { name: "Showing" })).toHaveTextContent(
-			"All departments"
-		);
 		expect(searchesOf(calls, "/api/v1/companies/c-1/departments")).toEqual([
 			"size=100&sort=name%2Casc",
 		]);
+	});
+
+	it("keeps the status filter behind Filters and lists it as a chip while set", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...baseRoutes(),
+			[DEPARTMENTS]: pageReply([department("d-1", "Front Office")]),
+		});
+		await open("/organisation/departments");
+		await screen.findByRole("table", { name: "Departments" });
+
+		expect(
+			screen.queryByRole("button", { name: "Showing" })
+		).not.toBeInTheDocument();
+		await user.click(screen.getByRole("button", { name: "Filters" }));
+		expect(screen.getByRole("button", { name: "Showing" })).toHaveTextContent(
+			"All departments"
+		);
+		await user.click(screen.getByRole("button", { name: "Showing" }));
+		await user.click(screen.getByRole("option", { name: "Inactive" }));
+
+		expect(
+			screen.getByRole("list", { name: "Active filters" })
+		).toHaveTextContent("Showing: Inactive");
+		await user.click(
+			screen.getByRole("button", { name: "Remove Showing: Inactive" })
+		);
+		await waitFor(() => {
+			expect(searchesOf(calls, "/api/v1/companies/c-1/departments")).toEqual([
+				"size=100&sort=name%2Casc",
+				"size=100&sort=name%2Casc&status=INACTIVE",
+				"size=100&sort=name%2Casc",
+			]);
+		});
+		expect(
+			screen.queryByRole("list", { name: "Active filters" })
+		).not.toBeInTheDocument();
+	});
+
+	it("never selects or asks for a Branch outside the person's scope, whatever the URL says", async () => {
+		const calls = stubApi({
+			...baseRoutes(),
+			// Read held only at Kitchen (d-1) of Orchard; Tampines (b-2) is out of scope.
+			[WORKSPACE]: departmentScopedWorkspaceReply(["department:read"]),
+			[DEPARTMENTS]: pageReply([department("d-1", "Kitchen")]),
+		});
+		const opened = await open("/organisation/departments?branch=b-2");
+		await screen.findByRole("table", { name: "Departments" });
+
+		expect(screen.getByRole("button", { name: "Branch" })).toHaveTextContent(
+			"All branches"
+		);
+		await waitFor(() => {
+			expect(opened.router.state.location.search).toEqual({});
+		});
+		expect(
+			searchesOf(calls, "/api/v1/companies/c-1/departments").every(
+				(search) => !search.includes("branchId")
+			)
+		).toBe(true);
 	});
 
 	it.each([

@@ -9,6 +9,8 @@ import { EditIcon } from "@/components/ui/Icon";
 import { OverflowMenu } from "@/components/ui/OverflowMenu";
 import type { UnitStatus } from "@/features/organisation/api";
 import type { OrganisationList } from "@/features/organisation/useOrganisationList";
+import type { FilterChip } from "@/components/ui/FilterChips";
+import { filterChip } from "@/features/workspace/filterChips";
 
 /** The "Showing:" filter's choice: every row, or one status. */
 export type StatusFilter = "all" | UnitStatus;
@@ -24,6 +26,24 @@ export const statusFilterOptions = (
 
 export const isStatusFilter = (value: string): value is StatusFilter =>
 	value === "all" || value === "ACTIVE" || value === "INACTIVE";
+
+/** The "Showing" chip while one status is chosen; none for every status. */
+export const statusFilterChips = (
+	t: TFunction,
+	status: StatusFilter,
+	onRemove: () => void
+): Array<FilterChip> =>
+	status === "all"
+		? []
+		: [
+				filterChip(
+					"status",
+					t("organisation.list.showing"),
+					t(`organisation.status.${status}`),
+					onRemove,
+					t
+				),
+			];
 
 /**
  * The bold, sortable first column naming each row. `detail` adds a muted
