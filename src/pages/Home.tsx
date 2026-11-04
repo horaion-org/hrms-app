@@ -1,4 +1,4 @@
-import { Link, useRouteContext } from "@tanstack/react-router";
+import { getRouteApi, Link, useRouteContext } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
@@ -17,6 +17,7 @@ import {
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { StatCard } from "@/components/ui/StatCard";
 import { Toast } from "@/components/ui/Toast";
+import { DASHBOARD_UNIT_RULES } from "@/features/dashboard/dashboardUnitRules";
 import { exampleWorkforce } from "@/features/dashboard/exampleDashboard";
 import { NotificationList } from "@/features/notifications/NotificationList";
 import { NotificationItem } from "@/features/dashboard/NotificationItem";
@@ -45,10 +46,13 @@ import {
 	useCurrentCompanyId,
 	useCurrentMembershipId,
 } from "@/features/organisation/useCurrentCompanyId";
-import { BranchSelector } from "@/features/workspace/BranchSelector";
 import { LEAVE_READ_KEYS } from "@/features/workspace/permissionKeys";
 import { recordScope } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
+import { unitSelectionOf } from "@/features/workspace/unitSearch";
+import { useUnitSelection } from "@/features/workspace/useUnitSelection";
+
+const route = getRouteApi("/_authenticated/_app/");
 
 const key = "dashboard";
 
@@ -67,7 +71,13 @@ const Dashboard = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
 	const ownMembershipId = useCurrentMembershipId();
 	const access = useAccess();
-	const [branchId, setBranchId] = useState<string>();
+	// The header's Branch, resolved as the header resolves it; every Branch in reach when "All branches" is chosen.
+	const branchId = useUnitSelection(
+		companyId,
+		LEAVE_READ_KEYS,
+		unitSelectionOf(route.useSearch()),
+		DASHBOARD_UNIT_RULES
+	).branch?.branchId;
 	const [decision, setDecision] = useState<Decision>();
 	const [refusal, setRefusal] = useState<Refusal<DecisionField>>();
 	const [toast, setToast] = useState<{ id: number; message: string }>();
@@ -160,13 +170,6 @@ const Dashboard = (): FunctionComponent => {
 				>
 					{t(`${key}.viewSchedule`)}
 				</Button>
-				<BranchSelector
-					allowAll
-					companyId={companyId}
-					keys={LEAVE_READ_KEYS}
-					value={branchId}
-					onChange={setBranchId}
-				/>
 			</div>
 			{setup.status === "shown" && (
 				<SetupChecklistCard
