@@ -290,7 +290,7 @@ it("says when the roster couldn't be downloaded and lets the person try again", 
 	await user.click(screen.getByRole("menuitem", { name: "Export roster" }));
 
 	const dialog = await screen.findByRole("dialog", {
-		name: "The roster couldn't be downloaded",
+		name: "The roster couldn’t be downloaded",
 	});
 	expect(
 		within(dialog).getByText("Check your connection and try again.")

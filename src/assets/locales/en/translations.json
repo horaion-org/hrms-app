@@ -2577,7 +2577,7 @@
 		"export": {
 			"menu": "Export roster",
 			"done": "Roster downloaded.",
-			"failedTitle": "The roster couldn't be downloaded",
+			"failedTitle": "The roster couldn’t be downloaded",
 			"failed": "Check your connection and try again.",
 			"draft": "This schedule has no roster yet.",
 			"retry": "Try again",
