@@ -139,6 +139,11 @@ export const LogInForm = (): FunctionComponent => {
 					{t("auth.passwordReset.success")}
 				</AuthMessage>
 			)}
+			{search.passwordChanged === true && (
+				<AuthMessage kind="status">
+					{t("auth.changePassword.success")}
+				</AuthMessage>
+			)}
 			{search.challengeExpired === true && (
 				<AuthMessage kind="status">{t("auth.challenge.expired")}</AuthMessage>
 			)}
