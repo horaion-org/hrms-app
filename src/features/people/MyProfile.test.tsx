@@ -1,4 +1,5 @@
-import { screen } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resetApiClient } from "@/common/api-client";
 import {
@@ -84,13 +85,19 @@ const routes = (own: StubReply): Record<string, StubReply> => ({
 });
 
 describe("My profile", () => {
-	it("opens from the avatar in the header and shows the member's own profile, with nothing granted", async () => {
+	it("opens from the account menu in the header and shows the member's own profile, with nothing granted", async () => {
 		stubApi(routes({ status: 200, body: envelope(profile) }));
 		const { router } = await open("/");
 
-		const link = await screen.findByRole("link", { name: "My profile" });
-		expect(link).toHaveAttribute("href", "/me/profile");
-		await router.navigate({ to: "/me/profile" });
+		await userEvent
+			.setup()
+			.click(await screen.findByRole("button", { name: "Account menu" }));
+		await userEvent
+			.setup()
+			.click(screen.getByRole("menuitem", { name: "My profile" }));
+		await waitFor(() => {
+			expect(router.state.location.pathname).toBe("/me/profile");
+		});
 
 		expect(
 			await screen.findByRole("heading", { level: 1, name: "Kent Chua" })

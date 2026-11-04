@@ -1,11 +1,10 @@
-import { Link, Outlet, useRouteContext } from "@tanstack/react-router";
+import { Outlet, useRouteContext } from "@tanstack/react-router";
 import { useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { AppShell } from "@/components/layout/AppShell";
 import { Sidebar, SidebarItem } from "@/components/layout/Sidebar";
-import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import {
 	DashboardFilledIcon,
@@ -21,6 +20,7 @@ import {
 	SettingsIcon,
 	TimeIcon,
 } from "@/components/ui/Icon";
+import { AccountMenu } from "@/features/auth/AccountMenu";
 import { usableCompanies } from "@/features/auth/currentCompany";
 import { logOut } from "@/features/auth/session";
 import { useAvailabilityViews } from "@/features/availability/useAvailability";
@@ -71,13 +71,7 @@ export const MainLayout = (): FunctionComponent => {
 							>
 								<SettingsIcon />
 							</Button>
-							<Link
-								aria-label={t("shell.myProfile")}
-								className="ml-3 inline-flex size-12 shrink-0 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-blue-500"
-								to="/me/profile"
-							>
-								<Avatar name={displayName} />
-							</Link>
+							<AccountMenu displayName={displayName} />
 						</>
 					}
 					title={

@@ -100,6 +100,37 @@ const submit = async (): Promise<void> => {
 };
 
 describe("Change password", () => {
+	it("opens from the account menu in the header, with nothing granted", async () => {
+		stubApi(routes({ status: 204 }));
+		const { router } = await open("/");
+
+		await userEvent
+			.setup()
+			.click(await screen.findByRole("button", { name: "Account menu" }));
+		expect(
+			screen.getByRole("menuitem", { name: "My profile" })
+		).toHaveAttribute("href", "/me/profile");
+		await userEvent
+			.setup()
+			.click(screen.getByRole("menuitem", { name: "Change password" }));
+
+		expect(
+			await screen.findByRole("heading", { level: 1, name: copy.title })
+		).toBeVisible();
+		expect(router.state.location.pathname).toBe("/me/password");
+		expect(screen.getByLabelText(copy.currentPassword)).toHaveAttribute(
+			"autocomplete",
+			"current-password"
+		);
+		expect(screen.getByLabelText(copy.newPassword)).toHaveAttribute(
+			"autocomplete",
+			"new-password"
+		);
+		expect(
+			screen.getByRole("button", { name: "Show current password" })
+		).toBeVisible();
+	});
+
 	it("ticks each rule as the new password is typed", async () => {
 		stubApi(routes({ status: 204 }));
 		await openForm();
