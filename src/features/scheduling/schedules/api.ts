@@ -355,7 +355,7 @@ export const requestGeneration = (
 	});
 
 /**
- * Generates a GENERATED or GENERATION_FAILED schedule again from its frozen
+ * Generates a GENERATED, GENERATION_FAILED or REJECTED schedule again from its frozen
  * shifts and constraints: its roster is removed and it is
  * GENERATION_REQUESTED until the new run ends. Whatever it answers is not
  * read: every scheduling query reloads.
@@ -368,6 +368,41 @@ export const requestRegeneration = (
 	apiRequestVoid(`${schedulePath(companyId, unit, scheduleId)}/regeneration`, {
 		method: "POST",
 	});
+
+/**
+ * Records a publish decision on a GENERATED schedule's roster. It answers
+ * the schedule: read its status from the answer (PUBLISHED today), never
+ * assume it.
+ */
+export const publishSchedule = (
+	companyId: string,
+	unit: DepartmentPath,
+	scheduleId: string
+): Promise<Schedule> =>
+	apiRequest(
+		`${schedulePath(companyId, unit, scheduleId)}/approval`,
+		scheduleSchema,
+		{ method: "POST" }
+	);
+
+/** The longest rejection reason the API keeps, in characters. */
+export const SCHEDULE_REJECTION_REASON_MAX_LENGTH = 2000;
+
+/**
+ * Rejects a GENERATED schedule's roster with a reason, after which it can be
+ * generated again or deleted. It answers the schedule, REJECTED.
+ */
+export const rejectSchedule = (
+	companyId: string,
+	unit: DepartmentPath,
+	scheduleId: string,
+	reason: string
+): Promise<Schedule> =>
+	apiRequest(
+		`${schedulePath(companyId, unit, scheduleId)}/rejection`,
+		scheduleSchema,
+		{ method: "POST", body: { reason: reason.trim() } }
+	);
 
 /**
  * Soft-deletes a schedule in any status but GENERATION_REQUESTED, which the

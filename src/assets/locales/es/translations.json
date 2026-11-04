@@ -1508,6 +1508,7 @@
 			"done": "Regeneración solicitada.",
 			"draft": "Este horario aún no se ha generado. Genéralo desde su configuración.",
 			"inProgress": "Este horario se está generando. Inténtalo de nuevo cuando termine la ejecución.",
+			"published": "Este cuadrante está publicado, así que no se puede regenerar. Aún se puede eliminar.",
 			"forbidden": "Ya no tienes permiso para regenerar este horario.",
 			"failed": "No pudimos regenerar el cuadrante. Inténtalo de nuevo."
 		},
@@ -1519,6 +1520,37 @@
 			"draft": "Este horario aún no tiene turnos.",
 			"retry": "Reintentar",
 			"close": "Cerrar"
+		},
+		"decision": {
+			"pending": "Este cuadrante aún no se ha publicado. Publícalo para que sea definitivo para su semana, o recházalo con un motivo.",
+			"pendingReadOnly": "Este cuadrante está pendiente de publicar o rechazar.",
+			"publish": "Publicar cuadrante",
+			"reject": "Rechazar",
+			"publishedBy": "Publicado por {{name}} · {{at}}",
+			"publishedAt": "Publicado · {{at}}",
+			"rejectedBy": "Rechazado por {{name}} · {{at}}",
+			"rejectedAt": "Rechazado · {{at}}",
+			"rejectedNext": "Regenera el cuadrante o elimina el horario.",
+			"reason": "Motivo del rechazo",
+			"publishTitle": "¿Publicar este cuadrante?",
+			"publishDescription": "Al publicarlo, este cuadrante pasa a ser definitivo para su semana. Después no se podrá regenerar, pero el horario aún se podrá eliminar.",
+			"publishConfirm": "Publicar cuadrante",
+			"rejectTitle": "¿Rechazar este cuadrante?",
+			"rejectDescription": "Indica qué hay que cambiar. El cuadrante sigue visible y después el horario se puede regenerar o eliminar.",
+			"rejectConfirm": "Confirmar rechazo",
+			"note": "Añade una nota",
+			"required": "Indica un motivo para el rechazo.",
+			"cancel": "Cancelar",
+			"published": "Cuadrante publicado.",
+			"rejected": "Cuadrante rechazado.",
+			"refusal": {
+				"inProgress": "Este horario se está generando. Inténtalo de nuevo cuando termine la ejecución.",
+				"notGenerated": "Este horario no tiene un cuadrante generado que publicar o rechazar.",
+				"alreadyDecided": "Este cuadrante ya se publicó o se rechazó. Recarga la página para verlo.",
+				"reasonRejected": "Indica un motivo de hasta 2000 caracteres.",
+				"forbidden": "Ya no tienes permiso para publicar o rechazar este cuadrante.",
+				"failed": "No pudimos guardar la decisión. Inténtalo de nuevo."
+			}
 		}
 	},
 	"workspace": {

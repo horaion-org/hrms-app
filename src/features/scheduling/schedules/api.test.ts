@@ -17,6 +17,8 @@ import {
 	hasRoster,
 	regenerable,
 	requestGeneration,
+	publishSchedule,
+	rejectSchedule,
 	requestRegeneration,
 	updateSchedule,
 	type ScheduleAssignment,
@@ -34,6 +36,7 @@ import {
 	frozenConstraintsFixture,
 } from "@/features/scheduling/constraints/fixtures";
 import {
+	decisionRefusal,
 	deleteRefusal,
 	generationRefusal,
 	regenerationRefusal,
@@ -272,6 +275,39 @@ describe("schedules client", () => {
 			`POST ${SCHEDULES}/s-1/regeneration`,
 		]);
 		expect(calls[0]?.body).toBeUndefined();
+	});
+
+	it("publishes a roster with no body and reads the schedule back", async () => {
+		const published = generatedScheduleFixture({ status: "PUBLISHED" });
+		const calls = stubApi({
+			[`POST ${SCHEDULES}/s-1/approval`]: {
+				status: 200,
+				body: envelope(published),
+			},
+		});
+
+		await expect(publishSchedule("c-1", UNIT, "s-1")).resolves.toEqual(
+			published
+		);
+		expect(calls.map((call) => `${call.method} ${call.path}`)).toEqual([
+			`POST ${SCHEDULES}/s-1/approval`,
+		]);
+		expect(calls[0]?.body).toBeUndefined();
+	});
+
+	it("rejects a roster with its trimmed reason and reads the schedule back", async () => {
+		const rejected = generatedScheduleFixture({ status: "REJECTED" });
+		const calls = stubApi({
+			[`POST ${SCHEDULES}/s-1/rejection`]: {
+				status: 200,
+				body: envelope(rejected),
+			},
+		});
+
+		await expect(
+			rejectSchedule("c-1", UNIT, "s-1", "  Nights have no supervisor.\n")
+		).resolves.toEqual(rejected);
+		expect(calls[0]?.body).toEqual({ reason: "Nights have no supervisor." });
 	});
 
 	it("deletes a schedule with no body and reads nothing back", async () => {
@@ -736,6 +772,11 @@ describe("schedule refusals", () => {
 			409,
 			"This department has no employees who can be scheduled. Give at least one active member of the department a job title, then try again.",
 		],
+		[
+			"SCHEDULE_PUBLISHED",
+			409,
+			"This roster is published, so it can’t be regenerated. It can still be deleted.",
+		],
 		["SCHEDULE_NOT_FOUND", 404, "This schedule no longer exists."],
 		[
 			"ACCESS_DENIED",
@@ -749,6 +790,44 @@ describe("schedule refusals", () => {
 	it("falls back to a plain failure for a regeneration", () => {
 		expect(regenerationRefusal(new Error("offline"), t)).toBe(
 			"We couldn’t regenerate the roster. Try again."
+		);
+	});
+
+	it.each([
+		[
+			"SCHEDULE_GENERATION_IN_PROGRESS",
+			409,
+			"This schedule is being generated. Try again once the run finishes.",
+		],
+		[
+			"SCHEDULE_NOT_GENERATED",
+			409,
+			"This schedule has no generated roster to publish or reject.",
+		],
+		[
+			"SCHEDULE_ALREADY_DECIDED",
+			409,
+			"This roster was already published or rejected. Reload the page to see it.",
+		],
+		["SCHEDULE_NOT_FOUND", 404, "This schedule no longer exists."],
+		[
+			"ACCESS_DENIED",
+			403,
+			"You no longer have permission to publish or reject this roster.",
+		],
+	])("explains a decision refused with %s", (code, status, copy) => {
+		expect(decisionRefusal(problem(status, code), t).message).toBe(copy);
+	});
+
+	it("puts a refused rejection reason on the reason field", () => {
+		expect(
+			decisionRefusal(problem(400, "INVALID_REJECTION_REASON"), t).fields
+		).toEqual({ reason: "Enter a reason of up to 2,000 characters." });
+	});
+
+	it("falls back to a plain failure for a decision", () => {
+		expect(decisionRefusal(new Error("offline"), t).message).toBe(
+			"We couldn’t save the decision. Try again."
 		);
 	});
 });
