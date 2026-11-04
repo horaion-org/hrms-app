@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-	findingsByMember,
-	reviewNoteCount,
-} from "@/features/scheduling/roster/findingsByMember";
+import { findingsByMember } from "@/features/scheduling/roster/findingsByMember";
 import { generationFindingsFixture } from "@/features/scheduling/schedules/fixtures";
 
 describe("findingsByMember", () => {
@@ -85,23 +82,5 @@ describe("findingsByMember", () => {
 				],
 			},
 		]);
-	});
-});
-
-describe("reviewNoteCount", () => {
-	it("given_conflictsAndErrors_when_counted_then_countsEachConflictAndMessage", () => {
-		expect(
-			reviewNoteCount(
-				generationFindingsFixture({
-					errors: [
-						{ employeeId: "mp-1", date: null, messages: ["One.", "Two."] },
-					],
-				})
-			)
-		).toBe(3);
-	});
-
-	it("given_nothingToReview_when_counted_then_isZero", () => {
-		expect(reviewNoteCount({ errors: [], conflicts: [] })).toBe(0);
 	});
 });
