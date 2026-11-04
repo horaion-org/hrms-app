@@ -1,6 +1,15 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { createInstance } from "i18next";
+import { initReactI18next } from "react-i18next";
+import { beforeAll, describe, expect, it, vi } from "vitest";
+import en from "@/assets/locales/en/translations.json";
 import { Stepper, StepperStep } from "@/components/ui/Stepper";
+
+beforeAll(async () => {
+	await createInstance()
+		.use(initReactI18next)
+		.init({ lng: "en", resources: { en: { translation: en } } });
+});
 
 describe("StepperStep in a Stepper", () => {
 	it("removes completed steps' displayed numbers while keeping their numbered accessible names", () => {

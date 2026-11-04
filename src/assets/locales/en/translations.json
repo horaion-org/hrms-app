@@ -477,6 +477,10 @@
 		"details": "Details",
 		"showDetails": "Show details for {{name}}"
 	},
+	"stepper": {
+		"step": "Step {{number}}: {{label}}",
+		"completedStep": "Step {{number}}: {{label}}, completed"
+	},
 	"weekNavigator": {
 		"label": "Week",
 		"thisWeek": "This week",

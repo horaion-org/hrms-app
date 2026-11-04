@@ -1,4 +1,5 @@
 import { useContext } from "react";
+import { useTranslation } from "react-i18next";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { TickIcon } from "@/components/ui/Icon";
@@ -31,6 +32,7 @@ export const StepperStep = ({
 	label,
 	completed,
 }: StepperStepProps): FunctionComponent => {
+	const { t } = useTranslation();
 	const step = useContext(StepContext);
 	if (!step) throw new Error("StepperStep must be rendered inside Stepper");
 	const isCurrent = step.position === "current";
@@ -39,7 +41,13 @@ export const StepperStep = ({
 	const isLabelVisibleInNarrow =
 		isCurrent || (step.position === "before" && step.isLast);
 	const Content = isClickable ? "button" : "span";
-	const accessibleName = `Step ${step.index + 1}: ${label}${isTicked ? ", completed" : ""}`;
+	const accessibleName = t(
+		isTicked ? "stepper.completedStep" : "stepper.step",
+		{
+			number: step.index + 1,
+			label,
+		}
+	);
 
 	return (
 		<li
