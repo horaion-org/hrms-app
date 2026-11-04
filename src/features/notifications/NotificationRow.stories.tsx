@@ -9,6 +9,9 @@ const notification = {
 	type: "LEAVE_REQUEST_APPROVED",
 	leaveRequestId: "leave-1",
 	membershipId: "member-1",
+	scheduleId: null,
+	memberImportJobId: null,
+	importCounts: null,
 	occurredAt: "2026-11-04T11:55:00Z",
 	createdAt: "2026-11-04T11:55:05Z",
 	readAt: null,
@@ -60,5 +63,40 @@ export const UnknownType: Story = {
 	args: {
 		notification: { ...notification, type: "SOMETHING_NEW" },
 		children: "You have a new notification.",
+	},
+};
+export const ScheduleRejected: Story = {
+	args: {
+		notification: {
+			...notification,
+			type: "SCHEDULE_REJECTED",
+			leaveRequestId: null,
+			scheduleId: "schedule-1",
+		},
+		children: "A schedule you generated was rejected.",
+	},
+};
+export const ImportFinished: Story = {
+	args: {
+		notification: {
+			...notification,
+			type: "MEMBER_IMPORT_FINISHED",
+			leaveRequestId: null,
+			memberImportJobId: "import-1",
+			importCounts: { added: 48, skipped: 2, failed: 0, status: "COMPLETED" },
+		},
+		children: "Import finished: 48 added, 2 skipped, 0 failed.",
+	},
+};
+export const ImportWithFailures: Story = {
+	args: {
+		notification: {
+			...notification,
+			type: "MEMBER_IMPORT_FINISHED",
+			leaveRequestId: null,
+			memberImportJobId: "import-1",
+			importCounts: { added: 45, skipped: 2, failed: 3, status: "COMPLETED" },
+		},
+		children: "Import finished: 45 added, 2 skipped, 3 failed.",
 	},
 };

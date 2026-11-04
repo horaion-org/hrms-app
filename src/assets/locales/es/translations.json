@@ -33,7 +33,9 @@
 			"SCHEDULE_READY": "Un horario está listo para revisión.",
 			"SHIFT_ASSIGNMENT": "Tienes turnos nuevos en un horario publicado.",
 			"SCHEDULE_ASSIGNMENT_UPDATED": "Tus turnos en un horario publicado cambiaron.",
-			"unknown": "Tienes una notificación nueva."
+			"unknown": "Tienes una notificación nueva.",
+			"SCHEDULE_REJECTED": "Se rechazó un horario que generaste.",
+			"MEMBER_IMPORT_FINISHED": "Tu importación terminó."
 		},
 		"operationSucceeded": "Operación completada correctamente.",
 		"justNow": "Ahora mismo",
@@ -43,7 +45,12 @@
 		"categories": {
 			"leave": "Permiso",
 			"schedule": "Horario",
-			"other": "Notificación"
+			"other": "Notificación",
+			"people": "Personas"
+		},
+		"importResult": {
+			"finished": "Importación terminada: {{added}} añadidas, {{skipped}} omitidas, {{failed}} con error.",
+			"stopped": "Importación detenida: {{added}} añadidas, {{skipped}} omitidas, {{failed}} con error."
 		}
 	},
 	"pagination": {

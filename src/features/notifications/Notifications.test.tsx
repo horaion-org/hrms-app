@@ -530,4 +530,84 @@ describe("Notifications", () => {
 			).toHaveFocus();
 		});
 	});
+
+	it("given_finishedImportWithFailures_when_listed_then_wordsItsCountsAndOpensItsResult", async () => {
+		stubApi({
+			"POST /api/v1/public/sessions/refreshes": accessPassReply(),
+			"GET /api/v1/me": currentUserReply(),
+			"GET /api/v1/me/workspace": {
+				status: 200,
+				body: envelope(companyWideWorkspace([])),
+			},
+			[`GET ${BASE}`]: {
+				status: 200,
+				body: {
+					content: [
+						{
+							...own,
+							notificationId: "import-notification",
+							type: "MEMBER_IMPORT_FINISHED",
+							leaveRequestId: null,
+							membershipId: null,
+							memberImportJobId: "import-1",
+							importCounts: {
+								added: 45,
+								skipped: 2,
+								failed: 3,
+								status: "COMPLETED",
+							},
+						},
+					],
+					page: { totalElements: 1 },
+				},
+			},
+			[`GET ${BASE}/unread-count`]: { status: 200, body: { unreadCount: 1 } },
+		});
+		await open();
+		const link = await screen.findByRole("link", {
+			name: "Import finished: 45 added, 2 skipped, 3 failed.",
+		});
+		expect(link).toHaveAttribute("href", "/people/import?import=import-1");
+		expect(screen.getByText("People")).toBeInTheDocument();
+	});
+
+	it("given_schedulePublisherWithoutLeaveReview_when_opening_then_needsReviewListsTheReadySchedule", async () => {
+		stubApi({
+			"POST /api/v1/public/sessions/refreshes": accessPassReply(),
+			"GET /api/v1/me": currentUserReply(),
+			"GET /api/v1/me/workspace": {
+				status: 200,
+				body: envelope(
+					companyWideWorkspace(["schedule:read", "schedule:publish"])
+				),
+			},
+			[`GET ${BASE}`]: ({ search }) => ({
+				status: 200,
+				body: {
+					content: search.includes("REVIEW")
+						? [
+								{
+									...own,
+									notificationId: "ready-1",
+									type: "SCHEDULE_READY",
+									leaveRequestId: null,
+									membershipId: null,
+									scheduleId: "schedule-1",
+								},
+							]
+						: [],
+					page: { totalElements: search.includes("REVIEW") ? 1 : 0 },
+				},
+			}),
+			[`GET ${BASE}/unread-count`]: { status: 200, body: { unreadCount: 1 } },
+		});
+		await open();
+		await userEvent
+			.setup()
+			.click(await screen.findByRole("tab", { name: "Needs review" }));
+		const link = await screen.findByRole("link", {
+			name: "A schedule is ready for review.",
+		});
+		expect(link).toHaveAttribute("href", "/scheduling/schedule-1");
+	});
 });

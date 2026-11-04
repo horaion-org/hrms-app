@@ -28,6 +28,18 @@ export const notificationSchema = z.object({
 	type: z.string(),
 	leaveRequestId: optionalId,
 	membershipId: optionalId,
+	scheduleId: optionalId,
+	memberImportJobId: optionalId,
+	/** How a finished import ended; counts and a status only. Absent for every other type. */
+	importCounts: z
+		.object({
+			added: z.number().int().nonnegative(),
+			skipped: z.number().int().nonnegative(),
+			failed: z.number().int().nonnegative(),
+			status: z.string(),
+		})
+		.nullish()
+		.transform((value) => value ?? null),
 	occurredAt: z.iso.datetime({ offset: true }),
 	createdAt: z.iso.datetime({ offset: true }),
 	readAt: z.iso

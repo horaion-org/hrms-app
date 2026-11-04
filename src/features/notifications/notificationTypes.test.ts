@@ -4,7 +4,8 @@ import es from "@/assets/locales/es/translations.json";
 import {
 	describeNotificationType,
 	isKnownNotificationType,
-	leaveRequestTarget,
+	notificationTarget,
+	presentNotification,
 	UNKNOWN_NOTIFICATION_TYPE,
 } from "@/features/notifications/notificationTypes";
 
@@ -15,6 +16,8 @@ const KNOWN = [
 	"SCHEDULE_READY",
 	"SHIFT_ASSIGNMENT",
 	"SCHEDULE_ASSIGNMENT_UPDATED",
+	"SCHEDULE_REJECTED",
+	"MEMBER_IMPORT_FINISHED",
 ];
 
 describe("describeNotificationType", () => {
@@ -47,33 +50,144 @@ describe("describeNotificationType", () => {
 	);
 });
 
-describe("leaveRequestTarget", () => {
+describe("presentNotification", () => {
+	const counts = (
+		failed: number,
+		status: string
+	): { added: number; skipped: number; failed: number; status: string } => ({
+		added: 45,
+		skipped: 2,
+		failed,
+		status,
+	});
+
+	it("follows the type alone for everything but a finished import", () => {
+		expect(
+			presentNotification({ type: "SCHEDULE_REJECTED", importCounts: null })
+		).toMatchObject({
+			tone: "error",
+			category: "schedule",
+			title: "notifications.types.SCHEDULE_REJECTED",
+			values: undefined,
+		});
+	});
+
+	it("words a clean import as finished, in green, with its counts", () => {
+		expect(
+			presentNotification({
+				type: "MEMBER_IMPORT_FINISHED",
+				importCounts: counts(0, "COMPLETED"),
+			})
+		).toMatchObject({
+			tone: "success",
+			category: "people",
+			title: "notifications.importResult.finished",
+			values: { added: 45, skipped: 2, failed: 0 },
+		});
+	});
+
+	it("turns red when rows failed, and says it stopped when the import failed", () => {
+		expect(
+			presentNotification({
+				type: "MEMBER_IMPORT_FINISHED",
+				importCounts: counts(3, "COMPLETED"),
+			})
+		).toMatchObject({
+			tone: "error",
+			title: "notifications.importResult.finished",
+		});
+		expect(
+			presentNotification({
+				type: "MEMBER_IMPORT_FINISHED",
+				importCounts: counts(0, "FAILED"),
+			})
+		).toMatchObject({
+			tone: "error",
+			title: "notifications.importResult.stopped",
+		});
+	});
+
+	it("keeps the plain import copy when the counts are missing", () => {
+		expect(
+			presentNotification({
+				type: "MEMBER_IMPORT_FINISHED",
+				importCounts: null,
+			})
+		).toMatchObject({
+			tone: "success",
+			title: "notifications.types.MEMBER_IMPORT_FINISHED",
+		});
+	});
+});
+
+describe("notificationTarget", () => {
 	const approved = {
 		type: "LEAVE_REQUEST_APPROVED",
 		leaveRequestId: "leave-1",
 		membershipId: "member-1",
+		scheduleId: null,
+		memberImportJobId: null,
+	};
+	const scheduleReady = {
+		...approved,
+		type: "SCHEDULE_READY",
+		leaveRequestId: null,
+		membershipId: null,
+		scheduleId: "schedule-1",
+	};
+	const importFinished = {
+		...approved,
+		type: "MEMBER_IMPORT_FINISHED",
+		leaveRequestId: null,
+		membershipId: null,
+		memberImportJobId: "import-1",
 	};
 
-	it("opens the request, adding the beneficiary only for reviewers", () => {
-		expect(leaveRequestTarget(approved, "PERSONAL")).toEqual({
+	it("opens a leave request, adding the beneficiary only for reviewers", () => {
+		expect(notificationTarget(approved, "PERSONAL")).toEqual({
+			kind: "leave",
 			requestId: "leave-1",
 			memberId: undefined,
 		});
-		expect(leaveRequestTarget(approved, "REVIEW")).toEqual({
+		expect(notificationTarget(approved, "REVIEW")).toEqual({
+			kind: "leave",
 			requestId: "leave-1",
 			memberId: "member-1",
 		});
 	});
 
-	it("has no leave target for other categories or a missing request", () => {
+	it("opens a schedule's roster and an import's result", () => {
+		expect(notificationTarget(scheduleReady, "REVIEW")).toEqual({
+			kind: "schedule",
+			scheduleId: "schedule-1",
+		});
 		expect(
-			leaveRequestTarget({ ...approved, type: "SHIFT_ASSIGNMENT" }, "PERSONAL")
+			notificationTarget(
+				{ ...scheduleReady, type: "SCHEDULE_REJECTED" },
+				"PERSONAL"
+			)
+		).toEqual({ kind: "schedule", scheduleId: "schedule-1" });
+		expect(notificationTarget(importFinished, "PERSONAL")).toEqual({
+			kind: "import",
+			importId: "import-1",
+		});
+	});
+
+	it("has no target for an unknown type or a missing id", () => {
+		expect(
+			notificationTarget({ ...approved, type: "SOMETHING_NEW" }, "PERSONAL")
 		).toBeUndefined();
 		expect(
-			leaveRequestTarget({ ...approved, type: "SOMETHING_NEW" }, "PERSONAL")
+			notificationTarget({ ...approved, leaveRequestId: null }, "PERSONAL")
 		).toBeUndefined();
 		expect(
-			leaveRequestTarget({ ...approved, leaveRequestId: null }, "PERSONAL")
+			notificationTarget({ ...scheduleReady, scheduleId: null }, "REVIEW")
+		).toBeUndefined();
+		expect(
+			notificationTarget(
+				{ ...importFinished, memberImportJobId: null },
+				"PERSONAL"
+			)
 		).toBeUndefined();
 	});
 });

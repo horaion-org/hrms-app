@@ -17,13 +17,14 @@ import {
 	type NotificationAudience,
 } from "@/features/notifications/api";
 import {
-	describeNotificationType,
-	leaveRequestTarget,
+	presentNotification,
+	notificationTarget,
 } from "@/features/notifications/notificationTypes";
 import {
 	useCurrentCompanyId,
 	useCurrentMembershipId,
 } from "@/features/organisation/useCurrentCompanyId";
+import { canSeeReviewNotifications } from "@/features/notifications/reviewAccess";
 import { useAccess } from "@/features/workspace/useAccess";
 import { accessiblePreviousData } from "@/features/workspace/queryAccess";
 import { NotificationRow } from "@/features/notifications/NotificationRow";
@@ -48,7 +49,7 @@ export const NotificationList = ({
 	const membershipId = useCurrentMembershipId();
 	const access = useAccess();
 	const allowed =
-		audience === "PERSONAL" || access.canAnywhere("leave_request:review");
+		audience === "PERSONAL" || canSeeReviewNotifications(access.canAnywhere);
 	const { t } = useTranslation();
 	const now = useNow(ONE_MINUTE_MS);
 	const [page, setPage] = useState(1);
@@ -203,10 +204,9 @@ export const NotificationList = ({
 				<>
 					<ul className="divide-y divide-neutral-300">
 						{rows.map((notification, index) => {
-							const title = t(
-								describeNotificationType(notification.type).title
-							);
-							const target = leaveRequestTarget(notification, audience);
+							const presentation = presentNotification(notification);
+							const title = t(presentation.title, presentation.values);
+							const target = notificationTarget(notification, audience);
 							const titleClasses = `text-ink-blue-900 ${notification.readAt ? "" : "font-semibold"}`;
 							return (
 								<li key={notification.notificationId}>
@@ -233,11 +233,32 @@ export const NotificationList = ({
 											read.mutate(notification.notificationId);
 										}}
 									>
-										{target ? (
+										{target?.kind === "leave" ? (
 											<Link
 												className={`${titleClasses} hover:underline`}
-												search={target}
 												to="/leave"
+												search={{
+													requestId: target.requestId,
+													memberId: target.memberId,
+												}}
+												onClick={onNavigate}
+											>
+												{title}
+											</Link>
+										) : target?.kind === "schedule" ? (
+											<Link
+												className={`${titleClasses} hover:underline`}
+												params={{ scheduleId: target.scheduleId }}
+												to="/scheduling/$scheduleId"
+												onClick={onNavigate}
+											>
+												{title}
+											</Link>
+										) : target?.kind === "import" ? (
+											<Link
+												className={`${titleClasses} hover:underline`}
+												search={{ import: target.importId }}
+												to="/people/import"
 												onClick={onNavigate}
 											>
 												{title}

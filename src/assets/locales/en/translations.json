@@ -33,7 +33,9 @@
 			"SCHEDULE_READY": "A schedule is ready for review.",
 			"SHIFT_ASSIGNMENT": "You have new shifts on a published schedule.",
 			"SCHEDULE_ASSIGNMENT_UPDATED": "Your shifts on a published schedule changed.",
-			"unknown": "You have a new notification."
+			"unknown": "You have a new notification.",
+			"SCHEDULE_REJECTED": "A schedule you generated was rejected.",
+			"MEMBER_IMPORT_FINISHED": "Your import finished."
 		},
 		"operationSucceeded": "Operation completed successfully.",
 		"justNow": "Just now",
@@ -43,7 +45,12 @@
 		"categories": {
 			"leave": "Leave",
 			"schedule": "Schedule",
-			"other": "Notification"
+			"other": "Notification",
+			"people": "People"
+		},
+		"importResult": {
+			"finished": "Import finished: {{added}} added, {{skipped}} skipped, {{failed}} failed.",
+			"stopped": "Import stopped: {{added}} added, {{skipped}} skipped, {{failed}} failed."
 		}
 	},
 	"pagination": {
