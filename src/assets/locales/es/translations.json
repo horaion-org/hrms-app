@@ -1552,6 +1552,35 @@
 				"forbidden": "Ya no tienes permiso para publicar o rechazar este cuadrante.",
 				"failed": "No pudimos guardar la decisión. Inténtalo de nuevo."
 			}
+		},
+		"startingContext": {
+			"title": "Antes de esta semana",
+			"explain": "Horaion usa estos días para respetar el descanso entre turnos y dar un día libre a quien ya está en su límite. Los días vacíos cuentan como desconocidos.",
+			"hint": "Empieza por el domingo. Los días anteriores solo importan para quien trabajó todos los días.",
+			"none": "No hay turnos antes de esta semana. Todos empiezan descansados.",
+			"noneWithEntries_one": "No hay turnos antes de esta semana. Hay días añadidos para {{count}} persona; las demás empiezan descansadas.",
+			"noneWithEntries_other": "No hay turnos antes de esta semana. Hay días añadidos para {{count}} personas; las demás empiezan descansadas.",
+			"carried": "Continúa desde la semana del {{week}}.",
+			"carriedWithNew_one": "Continúa desde la semana del {{week}}. {{count}} persona no figura en esos turnos y empieza descansada.",
+			"carriedWithNew_other": "Continúa desde la semana del {{week}}. {{count}} personas no figuran en esos turnos y empiezan descansadas.",
+			"add": "Añadir la semana pasada",
+			"edit": "Editar la semana pasada",
+			"notKnown": "Desconocido",
+			"worked": "Trabajó",
+			"cellLabel": "{{name}}, {{day}}",
+			"fillDay": "Día a rellenar",
+			"fillValue": "Rellenar con",
+			"fillEmpty": "Rellenar días vacíos",
+			"tableLabel": "La semana anterior",
+			"cancel": "Cancelar",
+			"save": "Guardar días",
+			"invalid": "No se pudo guardar un día. Comprueba que su turno sigue en uso e inténtalo de nuevo.",
+			"notDraft": "Este horario ya se generó, así que su punto de partida ya no puede cambiar.",
+			"failed": "No se pudieron guardar los días. Inténtalo de nuevo.",
+			"runBadge_one": "Día {{count}} seguido",
+			"runBadge_other": "Día {{count}} seguido",
+			"stale_one": "Los días antes de esta semana de {{count}} persona cambiaron después de generar este horario. Se planificó con lo que se sabía entonces.",
+			"stale_other": "Los días antes de esta semana de {{count}} personas cambiaron después de generar este horario. Se planificó con lo que se sabía entonces."
 		}
 	},
 	"workspace": {

@@ -24,6 +24,7 @@ import { useConstraintOptions } from "@/features/scheduling/constraints/useConst
 import { departmentUnitOf } from "@/features/scheduling/departmentUnit";
 import { ForecastStep } from "@/features/scheduling/ForecastStep";
 import { GenerateStep } from "@/features/scheduling/GenerateStep";
+import { StartingContextSection } from "@/features/scheduling/startingContext";
 import {
 	defaultPeriod,
 	formatPeriod,
@@ -627,7 +628,21 @@ export const CreateSchedule = (): FunctionComponent => {
 						}}
 					/>
 				)}
-				{step === "generate" && <GenerateStep summary={summary} />}
+				{step === "generate" && (
+					<GenerateStep
+						summary={summary}
+						startingPoint={
+							saved && (
+								<StartingContextSection
+									canEdit={canSave}
+									companyId={companyId}
+									scheduleId={saved.scheduleId}
+									unit={saved}
+								/>
+							)
+						}
+					/>
+				)}
 			</div>
 			{problem && (
 				<p className="mt-6 text-sm text-error-700" role="alert">
