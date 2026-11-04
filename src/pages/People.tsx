@@ -1,4 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
 import { getRouteApi, useRouterState } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -27,6 +26,7 @@ import { PeopleNotice } from "@/features/people/PeopleNotice";
 import { peopleNoticeFrom } from "@/features/people/peopleNoticeState";
 import {
 	pageParameter,
+	PEOPLE_UNIT_RULES,
 	peopleQueryOf,
 	sortParameter,
 	statusesOf,
@@ -34,19 +34,29 @@ import {
 	type PeopleSearch,
 } from "@/features/people/peopleSearch";
 import { usePeople, useSettledSearch } from "@/features/people/usePeople";
-import { workspaceQuery } from "@/features/workspace/api";
-import { BranchSelector } from "@/features/workspace/BranchSelector";
-import { branchChoices, chosenBranch } from "@/features/workspace/unitChoices";
 import { PEOPLE_READ_KEYS } from "@/features/workspace/permissionKeys";
-import { retry } from "@/features/workspace/retry";
+import {
+	unitSearchFor,
+	unitSelectionOf,
+} from "@/features/workspace/unitSearch";
+import {
+	clearedUnits,
+	sameUnits,
+	selectedUnits,
+	unitsNarrowed,
+	urlUnitsOf,
+	type UnitSelection,
+} from "@/features/workspace/unitSelection";
+import { UnitSelector } from "@/features/workspace/UnitSelector";
 import { useAccess } from "@/features/workspace/useAccess";
+import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 
 const route = getRouteApi("/_authenticated/_app/people");
 
 /**
  * The company's people, a page at a time, sorted, filtered and searched by
- * the server: everyone in reach unless one Branch is chosen. The Branch,
- * page, sort and status live in the URL; the search text
+ * the server: everyone in reach unless a Branch, and then a Department, is
+ * chosen. The units, page, sort and status live in the URL; the search text
  * stays on the page so names never reach browser history. Someone just
  * added on the Add employee page is confirmed above the list.
  */
@@ -57,16 +67,15 @@ export const People = (): FunctionComponent => {
 	const navigate = route.useNavigate();
 	const [text, setText] = useState("");
 	const settled = useSettledSearch(text);
-	const workspace = useQuery({ ...workspaceQuery, retry });
-	// The same Branch the selector shows, none for every Branch in reach.
-	const selected = chosenBranch(
-		workspace.data
-			? branchChoices(workspace.data, companyId, PEOPLE_READ_KEYS)
-			: [],
-		search.branch,
-		true
+	const requested = unitSelectionOf(search);
+	// The same units the selector shows, so the list asks for them before the URL names them.
+	const units = useUnitSelection(
+		companyId,
+		PEOPLE_READ_KEYS,
+		requested,
+		PEOPLE_UNIT_RULES
 	);
-	const query = peopleQueryOf(search, settled, selected?.branchId);
+	const query = peopleQueryOf(search, settled, selectedUnits(units));
 	const list = usePeople(companyId, query);
 	// Ticked rows belong to the list they were ticked in; another page or filter starts empty.
 	const listKey = JSON.stringify(query);
@@ -91,37 +100,27 @@ export const People = (): FunctionComponent => {
 			search: (previous) => ({ ...previous, page: undefined, ...next }),
 		});
 	};
-	const chooseBranch = (branch: string | undefined): void => {
-		// The selector naming the Branch already shown keeps the page, the history entry and its state.
-		if (branch === selected?.branchId)
+	const chooseUnits = (next: UnitSelection): void => {
+		// The selector naming the units already shown keeps the page, the history entry and its state.
+		if (sameUnits(next, urlUnitsOf(units)))
 			void navigate({
-				search: (previous) => ({ ...previous, branch }),
+				search: (previous) => ({ ...previous, ...unitSearchFor(next) }),
 				replace: true,
 				state: true,
 			});
-		else show({ branch });
+		else show(unitSearchFor(next));
+	};
+	const filtered = search.status !== undefined || unitsNarrowed(units);
+	const clearFilters = (): void => {
+		show({ status: undefined, ...unitSearchFor(clearedUnits(units)) });
 	};
 
 	return (
 		<>
-			<div className="flex flex-wrap items-start justify-between gap-6">
-				<div>
-					<h1 className="text-4xl font-medium text-neutral-900">
-						{t("people.title")}
-					</h1>
-					<p className="mt-4 text-sm text-neutral-800">
-						{t("people.subtitle")}
-					</p>
-				</div>
-				<BranchSelector
-					allowAll
-					className="pt-1"
-					companyId={companyId}
-					keys={PEOPLE_READ_KEYS}
-					value={search.branch}
-					onChange={chooseBranch}
-				/>
-			</div>
+			<h1 className="text-4xl font-medium text-neutral-900">
+				{t("people.title")}
+			</h1>
+			<p className="mt-4 text-sm text-neutral-800">{t("people.subtitle")}</p>
 			{notice && <PeopleNotice className="mt-6" notice={notice} />}
 			<ListToolbar
 				className="mt-10"
@@ -162,6 +161,14 @@ export const People = (): FunctionComponent => {
 						show({ status: statusParameter(values.filter(isMemberStatus)) });
 					},
 				}}
+				scope={
+					<UnitSelector
+						requested={requested}
+						selection={units}
+						onChange={chooseUnits}
+					/>
+				}
+				onClearFilters={filtered ? clearFilters : undefined}
 				onCreate={
 					canAdd
 						? (): void => {

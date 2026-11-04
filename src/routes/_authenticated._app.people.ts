@@ -2,12 +2,17 @@ import { createFileRoute } from "@tanstack/react-router";
 import { peopleQuery } from "@/features/people/api";
 import {
 	parsePeopleSearch,
+	PEOPLE_UNIT_RULES,
 	peopleQueryOf,
 } from "@/features/people/peopleSearch";
 import { workspaceQuery } from "@/features/workspace/api";
-import { branchChoices, chosenBranch } from "@/features/workspace/unitChoices";
 import { PEOPLE_READ_KEYS } from "@/features/workspace/permissionKeys";
 import { accessIndexOf, canAny } from "@/features/workspace/scopes";
+import { unitSelectionOf } from "@/features/workspace/unitSearch";
+import {
+	resolveWorkspaceUnits,
+	selectedUnits,
+} from "@/features/workspace/unitSelection";
 import { People } from "@/pages/People";
 
 export const Route = createFileRoute("/_authenticated/_app/people")({
@@ -28,14 +33,16 @@ export const Route = createFileRoute("/_authenticated/_app/people")({
 			canAny(accessIndexOf(workspace, companyId), PEOPLE_READ_KEYS, "anywhere")
 		) {
 			const search = parsePeopleSearch(location.search);
-			// The Branch the page will show, none for all, so its first list is the one fetched here.
-			const branch = chosenBranch(
-				workspace ? branchChoices(workspace, companyId, PEOPLE_READ_KEYS) : [],
-				search.branch,
-				true
+			// The units the page will show, so its first list is the one fetched here.
+			const units = resolveWorkspaceUnits(
+				workspace,
+				companyId,
+				PEOPLE_READ_KEYS,
+				unitSelectionOf(search),
+				PEOPLE_UNIT_RULES
 			);
 			await context.queryClient.prefetchQuery(
-				peopleQuery(companyId, peopleQueryOf(search, "", branch?.branchId))
+				peopleQuery(companyId, peopleQueryOf(search, "", selectedUnits(units)))
 			);
 		}
 	},
