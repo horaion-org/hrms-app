@@ -1352,5 +1352,11 @@
 	"pageToolbar": {
 		"clearFilters": "Borrar filtros",
 		"listControls": "Controles de la lista"
+	},
+	"forbidden": {
+		"title": "No tienes acceso a esta página",
+		"explanation": "Tus roles no incluyen esta página. Si la necesitas, pide a un administrador que cambie tus roles.",
+		"back": "Volver",
+		"home": "Ir al resumen"
 	}
 }

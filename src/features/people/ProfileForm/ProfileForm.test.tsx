@@ -386,13 +386,17 @@ describe("Add employee", () => {
 		).not.toBeInTheDocument();
 	});
 
-	it("explains, rather than shows the form, to someone without the key who opens the page", async () => {
+	it("sends someone without the key who opens the page to the Forbidden page", async () => {
 		stubApi(routes(workspaceReply(["member_profile:read"])));
-		await open();
+		const opened = await open();
 
 		expect(
-			await screen.findByText("You don’t have permission to add employees.")
+			await screen.findByRole("heading", {
+				level: 1,
+				name: "You don’t have access to this page",
+			})
 		).toBeVisible();
+		expect(opened.router.state.location.pathname).toBe("/forbidden");
 		expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
 		expect(
 			screen.queryByRole("button", { name: "Confirm" })

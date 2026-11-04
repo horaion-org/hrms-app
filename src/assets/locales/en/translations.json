@@ -2170,5 +2170,11 @@
 	"pageToolbar": {
 		"clearFilters": "Clear filters",
 		"listControls": "List controls"
+	},
+	"forbidden": {
+		"title": "You don’t have access to this page",
+		"explanation": "Your roles don’t include this page. If you need it, ask an administrator to change your roles.",
+		"back": "Go back",
+		"home": "Go to Overview"
 	}
 }
