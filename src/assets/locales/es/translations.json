@@ -120,6 +120,10 @@
 		"remarksPlaceholder": "Añade lo que deba saber quien revise la solicitud",
 		"remarksHint": "Hasta 1000 caracteres. Quien revise esta solicitud puede leerlas.",
 		"remarksCounter": "{{count}}/1000",
+		"leaveReason": "Motivo",
+		"leaveReasonPlaceholder": "¿Para qué es este permiso?",
+		"leaveReasonHint": "Indica para qué es este permiso. Quien revise esta solicitud puede leerlo.",
+		"leaveReasonRequired": "Indica para qué es este permiso.",
 		"noRemarks": "Sin observaciones",
 		"approve": "Aprobar",
 		"reject": "Rechazar",
@@ -154,7 +158,9 @@
 			"forbiddenDecide": "Ya no tienes permiso para decidir esta solicitud.",
 			"ownReview": "No puedes aprobar ni rechazar tu propia solicitud de permiso. Otra persona revisora debe decidirla.",
 			"applyFailed": "No pudimos enviar la solicitud. Inténtalo de nuevo.",
-			"decideFailed": "No pudimos guardar la decisión. Inténtalo de nuevo."
+			"decideFailed": "No pudimos guardar la decisión. Inténtalo de nuevo.",
+			"reasonRequired": "Indica para qué es este permiso.",
+			"typeNotAvailable": "Este tipo de permiso ya no está disponible. Elige otro."
 		},
 		"myLeave": "Mis ausencias",
 		"teamRequests": "Solicitudes del equipo",

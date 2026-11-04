@@ -4,7 +4,6 @@ export type {
 	LeaveRequest,
 	LeaveRequestBody,
 	LeaveStatus,
-	LeaveType,
 } from "@/features/leave/api";
 
 /** The Badge tone each status is drawn with. */

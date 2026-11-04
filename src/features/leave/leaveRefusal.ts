@@ -2,7 +2,7 @@ import type { TFunction } from "i18next";
 import { mapRefusal, type Refusal } from "@/features/organisation/refusal";
 
 /** The fields an application's refusal can land on. */
-export type ApplyField = "employee" | "endDate" | "notes";
+export type ApplyField = "employee" | "type" | "endDate" | "notes";
 
 /**
  * The refusals of applying for and deciding leave, as `"<status> <errorCode>"`.
@@ -27,6 +27,10 @@ export const LEAVE_REFUSAL_CODES = {
 	invalidComment: "400 INVALID_APPROVAL_COMMENT",
 	/** The remarks are over 1,000 characters or hold a control character. */
 	invalidNotes: "400 INVALID_LEAVE_NOTES",
+	/** The leave type asks for a reason and none was written. */
+	notesRequired: "400 LEAVE_NOTES_REQUIRED",
+	/** The leave type is unknown, no longer offered, or the scheduler's own. */
+	typeNotAvailable: "400 LEAVE_TYPE_NOT_AVAILABLE",
 	/** Nobody decides their own leave, whatever their roles; reloading roles cannot change it. */
 	ownReview: "403 OWN_LEAVE_REVIEW_DENIED",
 } as const;
@@ -34,8 +38,8 @@ export const LEAVE_REFUSAL_CODES = {
 const codes = LEAVE_REFUSAL_CODES;
 
 /**
- * Why applying on a person's behalf was refused: on the dates, the remarks
- * or the employee, or as the dialog's alert. Server codes select frontend-owned
+ * Why applying on a person's behalf was refused: on the type, the dates, the
+ * remarks or the employee, or as the dialog's alert. Server codes select frontend-owned
  * copy; untrusted server prose is never displayed.
  */
 export const applyRefusal = (
@@ -45,12 +49,21 @@ export const applyRefusal = (
 	const key = "leave.refusal";
 	const dates = (message: string) => ({ field: "endDate", message }) as const;
 	const notes = { field: "notes", message: t(`${key}.notesRejected`) } as const;
+	const type = {
+		field: "type",
+		message: t(`${key}.typeNotAvailable`),
+	} as const;
 	return mapRefusal<ApplyField>(error, {
 		codes: {
 			[codes.overlaps]: dates(t(`${key}.overlaps`)),
 			[codes.noWorkingDays]: dates(t(`${key}.noWorkingDays`)),
 			[codes.invalidPeriod]: dates(t(`${key}.invalidPeriod`)),
 			[codes.invalidNotes]: notes,
+			[codes.notesRequired]: {
+				field: "notes",
+				message: t(`${key}.reasonRequired`),
+			},
+			[codes.typeNotAvailable]: type,
 			[codes.profileNotFound]: {
 				field: "employee",
 				message: t(`${key}.profileMissing`),
@@ -60,6 +73,7 @@ export const applyRefusal = (
 		fieldErrors: {
 			startDate: dates(t(`${key}.invalidPeriod`)),
 			endDate: dates(t(`${key}.invalidPeriod`)),
+			leaveType: type,
 			notes,
 		},
 		forbidden: t(`${key}.forbiddenApply`),

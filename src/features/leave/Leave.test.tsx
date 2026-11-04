@@ -17,7 +17,11 @@ import {
 } from "@/common/testing/stubApi";
 import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
-import { LEAVE_FIXTURES, leaveFixture } from "@/features/leave/fixtures";
+import {
+	LEAVE_FIXTURES,
+	LEAVE_TYPE_FIXTURES,
+	leaveFixture,
+} from "@/features/leave/fixtures";
 
 const REFRESH = "POST /api/v1/public/sessions/refreshes";
 const ME = "GET /api/v1/me";
@@ -27,6 +31,7 @@ const LEAVE = `GET ${LEAVE_PATH}`;
 const MY_LEAVE_PATH = "/api/v1/companies/c-1/me/leave-requests";
 const MY_LEAVE = `GET ${MY_LEAVE_PATH}`;
 const PEOPLE = "GET /api/v1/companies/c-1/member-profiles";
+const LEAVE_TYPES_PATH = "/api/v1/companies/c-1/me/leave-types";
 const AISHA = "/api/v1/companies/c-1/member-profiles/m-aisha/leave-requests";
 const CHERYL = "/api/v1/companies/c-1/member-profiles/m-cheryl/leave-requests";
 const ALL = [
@@ -138,6 +143,10 @@ const routes = (
 	[WORKSPACE]: workspace,
 	[LEAVE]: pageReply(LEAVE_FIXTURES, 24),
 	[MY_LEAVE]: pageReply([LEAVE_FIXTURES[0], LEAVE_FIXTURES[3]], 2),
+	[`GET ${LEAVE_TYPES_PATH}`]: {
+		status: 200,
+		body: envelope(LEAVE_TYPE_FIXTURES),
+	},
 });
 
 const searchesOf = (calls: Array<Call>, path: string): Array<string> =>
@@ -400,6 +409,11 @@ describe("Leave", () => {
 		await user.click(
 			await screen.findByRole("option", { name: "Aisha Rahman · EMP-10517" })
 		);
+		await waitFor(() => {
+			expect(
+				within(dialog).getByRole("button", { name: "Type" })
+			).toHaveTextContent("Annual leave");
+		});
 		await user.click(
 			within(dialog).getByRole("button", { name: "Submit request" })
 		);
@@ -518,6 +532,12 @@ describe("Leave", () => {
 		expect(
 			within(dialog).queryByRole("searchbox", { name: "Search employees" })
 		).not.toBeInTheDocument();
+		// The company's leave types arrive once the dialog opens; the first is chosen.
+		await waitFor(() => {
+			expect(
+				within(dialog).getByRole("button", { name: "Type" })
+			).toHaveTextContent("Annual leave");
+		});
 		await user.click(within(dialog).getByRole("button", { name: "Type" }));
 		await user.click(screen.getByRole("option", { name: "Sick leave" }));
 		await user.click(
@@ -529,6 +549,7 @@ describe("Leave", () => {
 		expect(sent(calls, `POST ${MY_LEAVE_PATH}`)).toEqual([
 			expect.objectContaining({ leaveType: "SICK" }),
 		]);
+		expect(searchesOf(calls, LEAVE_TYPES_PATH)).toEqual(["status=ACTIVE"]);
 	});
 
 	it("keeps the team tabs for someone holding the read key, with their own leave first", async () => {

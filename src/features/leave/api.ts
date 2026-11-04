@@ -18,24 +18,6 @@ import {
 } from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";
 
-const leaveTypeSchema = z.enum([
-	"ANNUAL",
-	"SICK",
-	"HOSPITALISATION",
-	"COMPASSIONATE",
-	"MATERNITY",
-	"UNPAID",
-	"MARRIAGE",
-]);
-
-/** The kinds of leave this app can apply for until it reads the company's catalogue. */
-export type LeaveType = z.infer<typeof leaveTypeSchema>;
-
-export const LEAVE_TYPES = leaveTypeSchema.options;
-
-export const isLeaveType = (value: string): value is LeaveType =>
-	leaveTypeSchema.safeParse(value).success;
-
 /**
  * One leave type of the company's catalogue. `grantKind` is read as any
  * string so a kind added later (EARNED) cannot fail the catalogue; the app
@@ -72,9 +54,11 @@ export const fetchActiveLeaveTypes = (
  * The company's active leave types, for applying. Any active member may read
  * the catalogue, so it is the caller's own context, never withdrawn with
  * administrative grants. It changes rarely, so it stays fresh for minutes.
+ * `allowed` false asks for nothing, until someone opens an application.
  */
 export const activeLeaveTypesQuery = (
-	companyId: string
+	companyId: string,
+	allowed = true
 ): UndefinedInitialDataOptions<
 	Array<CompanyLeaveType>,
 	Error,
@@ -83,8 +67,10 @@ export const activeLeaveTypesQuery = (
 > =>
 	queryOptions({
 		queryKey: ["leave-types", companyId, "ACTIVE"] as const,
-		queryFn: ({ signal }): Promise<Array<CompanyLeaveType>> =>
-			fetchActiveLeaveTypes(companyId, signal),
+		queryFn: allowed
+			? ({ signal }): Promise<Array<CompanyLeaveType>> =>
+					fetchActiveLeaveTypes(companyId, signal)
+			: skipToken,
 		meta: selfMeta(companyId),
 		staleTime: 5 * 60_000,
 		retry,
@@ -316,7 +302,8 @@ export const LEAVE_NOTES_MAX_LENGTH = 1000;
 
 /** What applying for leave sends: inclusive ISO dates, and remarks only when some were written. */
 export type LeaveRequestBody = {
-	leaveType: LeaveType;
+	/** The code of one of the company's applicable leave types. */
+	leaveType: string;
 	startDate: string;
 	endDate: string;
 	notes?: string;

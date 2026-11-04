@@ -120,6 +120,10 @@
 		"remarksPlaceholder": "Add anything the reviewer should know",
 		"remarksHint": "Up to 1,000 characters. Reviewers of this request can read it.",
 		"remarksCounter": "{{count}}/1000",
+		"leaveReason": "Reason",
+		"leaveReasonPlaceholder": "What is this leave for?",
+		"leaveReasonHint": "Say what this leave is for. Reviewers of this request can read it.",
+		"leaveReasonRequired": "Enter what this leave is for.",
 		"noRemarks": "No remarks",
 		"approve": "Approve",
 		"reject": "Reject",
@@ -154,7 +158,9 @@
 			"forbiddenDecide": "You no longer have permission to decide this request.",
 			"ownReview": "You can’t approve or reject your own leave. Another reviewer needs to decide it.",
 			"applyFailed": "We couldn’t submit the request. Try again.",
-			"decideFailed": "We couldn’t save the decision. Try again."
+			"decideFailed": "We couldn’t save the decision. Try again.",
+			"reasonRequired": "Enter what this leave is for.",
+			"typeNotAvailable": "This leave type is no longer offered. Choose another."
 		},
 		"myLeave": "My leave",
 		"teamRequests": "Team requests",
