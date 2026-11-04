@@ -24,7 +24,7 @@ import { useConstraintOptions } from "@/features/scheduling/constraints/useConst
 import { departmentUnitOf } from "@/features/scheduling/departmentUnit";
 import { ForecastStep } from "@/features/scheduling/ForecastStep";
 import { GenerateStep } from "@/features/scheduling/GenerateStep";
-import { StartingContextSection } from "@/features/scheduling/startingContext";
+import { StartingContextSection } from "@/features/scheduling/startingContext/StartingContextSection";
 import {
 	defaultPeriod,
 	formatPeriod,
