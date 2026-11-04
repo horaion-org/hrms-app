@@ -1,9 +1,4 @@
-import {
-	getRouteApi,
-	SearchParamError,
-	useNavigate,
-	type ErrorComponentProps,
-} from "@tanstack/react-router";
+import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
@@ -23,7 +18,7 @@ import {
 	type Schedule,
 } from "@/features/scheduling/schedules/api";
 import { scheduleSetupLink } from "@/features/scheduling/schedules/scheduleViewLink";
-import { useSchedule } from "@/features/scheduling/schedules/useSchedule";
+import { useCompanySchedule } from "@/features/scheduling/schedules/useSchedule";
 import {
 	useScheduleAssignments,
 	type AssignmentList,
@@ -83,24 +78,13 @@ const Problem = ({
 	</p>
 );
 
-/**
- * Shown in place of the roster when its route fails: a URL that doesn't name
- * the schedule's Department reads as not found.
- */
-export const ScheduleDetailProblem = ({
-	error,
-}: ErrorComponentProps): FunctionComponent => {
+/** Shown in place of the roster when its route fails. */
+export const ScheduleDetailProblem = (): FunctionComponent => {
 	const { t } = useTranslation();
 	return (
 		<>
 			<BackLink />
-			<Problem alert>
-				{t(
-					error instanceof SearchParamError
-						? `${key}.notFound`
-						: `${key}.loadFailed`
-				)}
-			</Problem>
+			<Problem alert>{t(`${key}.loadFailed`)}</Problem>
 		</>
 	);
 };
@@ -162,7 +146,7 @@ const RosterBody = ({
 };
 
 /**
- * One schedule read at the Department its URL names. It is read again every
+ * One schedule read by its id alone. It is read again every
  * 15 seconds while its generation is in progress; its roster, and the frozen
  * shifts and constraints that name its findings, are read once it is GENERATED.
  * Where the person may, its header offers to regenerate an ended generation
@@ -170,20 +154,26 @@ const RosterBody = ({
  */
 const ApiSchedule = ({
 	companyId,
-	unit,
 	scheduleId,
 }: {
 	companyId: string;
-	unit: DepartmentPath;
 	scheduleId: string;
 }): FunctionComponent => {
 	const { t } = useTranslation();
 	const navigate = useNavigate();
 	const access = useAccess();
 	const [regenerating, setRegenerating] = useState(false);
-	const state = useSchedule(companyId, unit, scheduleId, {
+	const state = useCompanySchedule(companyId, scheduleId, {
 		pollWhileGenerating: true,
 	});
+	// Its roster is read at the Department the schedule names.
+	const unit: DepartmentPath | undefined =
+		state.status === "ready"
+			? {
+					branchId: state.schedule.branchId,
+					departmentId: state.schedule.departmentId,
+				}
+			: undefined;
 	const showsRoster =
 		state.status === "ready" &&
 		state.schedule.status === "GENERATED" &&
@@ -210,7 +200,10 @@ const ApiSchedule = ({
 		);
 	const openRegenerate =
 		regenerable(state.schedule) &&
-		access.can("schedule:generate", departmentScope(unit.departmentId))
+		access.can(
+			"schedule:generate",
+			departmentScope(state.schedule.departmentId)
+		)
 			? (): void => {
 					setRegenerating(true);
 				}
@@ -262,14 +255,12 @@ const ApiSchedule = ({
 };
 
 /**
- * One schedule's roster at `/scheduling/$scheduleId?branchId=…&departmentId=…`:
- * read from the API at that Department, with its generation's progress,
- * failure or roster.
+ * One schedule's roster at `/scheduling/$scheduleId`: read from the API by
+ * its id, with its generation's progress, failure or roster.
  */
 export const ScheduleDetailPage = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
 	const { scheduleId } = route.useParams();
-	const unit = route.useSearch();
 	return (
 		<>
 			<BackLink />
@@ -277,7 +268,6 @@ export const ScheduleDetailPage = (): FunctionComponent => {
 				key={`${companyId}/${scheduleId}`}
 				companyId={companyId}
 				scheduleId={scheduleId}
-				unit={unit}
 			/>
 		</>
 	);

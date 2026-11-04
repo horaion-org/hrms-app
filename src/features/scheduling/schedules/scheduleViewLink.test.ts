@@ -14,12 +14,11 @@ describe("scheduleViewLink", () => {
 	});
 
 	it.each(["GENERATION_REQUESTED", "GENERATED", "GENERATION_FAILED"] as const)(
-		"opens a %s schedule's roster at its department",
+		"opens a %s schedule's roster by its id alone",
 		(status) => {
 			expect(scheduleViewLink(generatedScheduleFixture({ status }))).toEqual({
 				to: "/scheduling/$scheduleId",
 				params: { scheduleId: "s-1" },
-				search: { branchId: "b-1", departmentId: "d-1" },
 			});
 		}
 	);

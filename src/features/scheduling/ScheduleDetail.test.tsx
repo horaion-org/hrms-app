@@ -41,10 +41,13 @@ afterEach(() => {
 	localStorage.clear();
 });
 
+/** The schedule's own routes, at its department: its roster, deletion and regeneration. */
 const SCHEDULE =
 	"/api/v1/companies/c-1/branches/b-1/departments/d-1/schedules/s-1";
+/** The schedule itself, read by its id alone. */
+const SCHEDULE_READ = "/api/v1/companies/c-1/schedules/s-1";
 const ASSIGNMENTS = `${SCHEDULE}/assignments`;
-const ROSTER_URL = "/scheduling/s-1?branchId=b-1&departmentId=d-1";
+const ROSTER_URL = "/scheduling/s-1";
 
 type Routes = Parameters<typeof stubApi>[0];
 type Calls = ReturnType<typeof stubApi>;
@@ -78,16 +81,20 @@ const openRoster = async (
 const readsOf = (calls: Calls, path: string): Calls =>
 	calls.filter((call) => call.method === "GET" && call.path === path);
 
-it.each([
-	["names no department", "/scheduling/s-1"],
-	["names only the department", "/scheduling/s-1?departmentId=d-1"],
-	["names a blank branch", "/scheduling/s-1?branchId=&departmentId=d-1"],
-])("says the schedule can't be found when its URL %s", async (_, entry) => {
-	await openRoster(signedIn(), entry);
-
-	expect(await screen.findByRole("alert")).toHaveTextContent(
-		"This schedule could not be found."
+it("opens an older link that also names the department, reading the schedule by its id", async () => {
+	const calls = await openRoster(
+		{
+			...signedIn(),
+			[`GET ${SCHEDULE_READ}`]: ok(scheduleFixture()),
+		},
+		"/scheduling/s-1?branchId=b-1&departmentId=d-1"
 	);
+
+	expect(await screen.findByRole("note")).toHaveTextContent(
+		"This schedule is still a draft, so it has no roster yet."
+	);
+	expect(readsOf(calls, SCHEDULE_READ)).toHaveLength(1);
+	expect(readsOf(calls, SCHEDULE)).toHaveLength(0);
 	expect(
 		screen.getByRole("link", { name: "Back to Overview" })
 	).toHaveAttribute("href", "/scheduling");
@@ -96,7 +103,9 @@ it.each([
 it("shows a generated schedule's header, figures and roster from the API", async () => {
 	const calls = await openRoster({
 		...signedIn(),
-		[`GET ${SCHEDULE}`]: ok(generatedScheduleFixture({ status: "GENERATED" })),
+		[`GET ${SCHEDULE_READ}`]: ok(
+			generatedScheduleFixture({ status: "GENERATED" })
+		),
 		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
 	});
 
@@ -139,7 +148,9 @@ it("shows a generated schedule's header, figures and roster from the API", async
 it("links a schedule to its setup in the wizard", async () => {
 	await openRoster({
 		...signedIn(),
-		[`GET ${SCHEDULE}`]: ok(generatedScheduleFixture({ status: "GENERATED" })),
+		[`GET ${SCHEDULE_READ}`]: ok(
+			generatedScheduleFixture({ status: "GENERATED" })
+		),
 		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
 	});
 
@@ -156,7 +167,9 @@ it("links a schedule to its setup in the wizard", async () => {
 it("deletes the schedule from the header's menu and goes back to the overview", async () => {
 	const calls = await openRoster({
 		...signedIn(["schedule:read", "schedule:delete"]),
-		[`GET ${SCHEDULE}`]: ok(generatedScheduleFixture({ status: "GENERATED" })),
+		[`GET ${SCHEDULE_READ}`]: ok(
+			generatedScheduleFixture({ status: "GENERATED" })
+		),
 		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
 		[`DELETE ${SCHEDULE}`]: { status: 204 },
 		"GET /api/v1/companies/c-1/schedules": ok({
@@ -190,7 +203,9 @@ it("deletes the schedule from the header's menu and goes back to the overview", 
 it("offers only Export roster in the header menu without schedule:delete", async () => {
 	await openRoster({
 		...signedIn(),
-		[`GET ${SCHEDULE}`]: ok(generatedScheduleFixture({ status: "GENERATED" })),
+		[`GET ${SCHEDULE_READ}`]: ok(
+			generatedScheduleFixture({ status: "GENERATED" })
+		),
 		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
 	});
 	const user = userEvent.setup();
@@ -283,7 +298,7 @@ it("says when the roster couldn't be downloaded and lets the person try again", 
 it("regenerates a generated roster after a danger confirm, then follows the new run", async () => {
 	const calls = await openRoster({
 		...signedIn(["schedule:read", "schedule:generate"]),
-		[`GET ${SCHEDULE}`]: [
+		[`GET ${SCHEDULE_READ}`]: [
 			ok(generatedScheduleFixture({ status: "GENERATED" })),
 			ok(generatedScheduleFixture({ status: "GENERATION_REQUESTED" })),
 		],
@@ -327,7 +342,7 @@ it("regenerates a generated roster after a danger confirm, then follows the new 
 it("offers to generate a failed schedule again from its failure panel", async () => {
 	const calls = await openRoster({
 		...signedIn(["schedule:read", "schedule:generate"]),
-		[`GET ${SCHEDULE}`]: ok(
+		[`GET ${SCHEDULE_READ}`]: ok(
 			generatedScheduleFixture({ status: "GENERATION_FAILED" })
 		),
 		[`POST ${SCHEDULE}/regeneration`]: ok(
@@ -365,7 +380,9 @@ it("offers to generate a failed schedule again from its failure panel", async ()
 it("shows a refused regeneration inside the dialog and keeps it open", async () => {
 	await openRoster({
 		...signedIn(["schedule:read", "schedule:generate"]),
-		[`GET ${SCHEDULE}`]: ok(generatedScheduleFixture({ status: "GENERATED" })),
+		[`GET ${SCHEDULE_READ}`]: ok(
+			generatedScheduleFixture({ status: "GENERATED" })
+		),
 		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
 		[`POST ${SCHEDULE}/regeneration`]: problemReply(
 			409,
@@ -409,7 +426,7 @@ it.each([
 ] as const)("offers no regeneration %s", async (_, permissions, schedule) => {
 	await openRoster({
 		...signedIn([...permissions]),
-		[`GET ${SCHEDULE}`]: ok(schedule),
+		[`GET ${SCHEDULE_READ}`]: ok(schedule),
 		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
 	});
 
@@ -427,7 +444,9 @@ it("shows a chosen day's shift read-only", async () => {
 			"shift:update",
 			"shift:delete",
 		]),
-		[`GET ${SCHEDULE}`]: ok(generatedScheduleFixture({ status: "GENERATED" })),
+		[`GET ${SCHEDULE_READ}`]: ok(
+			generatedScheduleFixture({ status: "GENERATED" })
+		),
 		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
 	});
 	const user = userEvent.setup();
@@ -466,7 +485,7 @@ it("summarises what the engine found and lists it in the findings panel", async 
 	const calls = await openRoster({
 		...signedIn(["schedule:read", "shift:read", "constraint:read"]),
 		...FROZEN_SETUP,
-		[`GET ${SCHEDULE}`]: generatedWith(),
+		[`GET ${SCHEDULE_READ}`]: generatedWith(),
 		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
 	});
 	const user = userEvent.setup();
@@ -510,7 +529,7 @@ it("summarises what the engine found and lists it in the findings panel", async 
 it("names findings without reading the setup it can't see", async () => {
 	const calls = await openRoster({
 		...signedIn(),
-		[`GET ${SCHEDULE}`]: generatedWith(),
+		[`GET ${SCHEDULE_READ}`]: generatedWith(),
 		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
 	});
 	const user = userEvent.setup();
@@ -530,7 +549,7 @@ it("names findings without reading the setup it can't see", async () => {
 it("marks findings on the roster and opens one in a popover", async () => {
 	await openRoster({
 		...signedIn(),
-		[`GET ${SCHEDULE}`]: generatedWith(),
+		[`GET ${SCHEDULE_READ}`]: generatedWith(),
 		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
 	});
 	const user = userEvent.setup();
@@ -577,7 +596,7 @@ it("marks findings on the roster and opens one in a popover", async () => {
 it("shows nothing about findings when the engine found nothing", async () => {
 	await openRoster({
 		...signedIn(),
-		[`GET ${SCHEDULE}`]: generatedWith(emptyFindingsFixture()),
+		[`GET ${SCHEDULE_READ}`]: generatedWith(emptyFindingsFixture()),
 		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
 	});
 
@@ -591,7 +610,7 @@ it("reads a schedule being generated every 15 seconds until its roster is ready"
 	vi.useFakeTimers({ shouldAdvanceTime: true });
 	const calls = await openRoster({
 		...signedIn(),
-		[`GET ${SCHEDULE}`]: [
+		[`GET ${SCHEDULE_READ}`]: [
 			ok(generatedScheduleFixture({ status: "GENERATION_REQUESTED" })),
 			ok(generatedScheduleFixture({ status: "GENERATION_REQUESTED" })),
 			ok(generatedScheduleFixture({ status: "GENERATED" })),
@@ -603,10 +622,10 @@ it("reads a schedule being generated every 15 seconds until its roster is ready"
 		"This schedule is being generated."
 	);
 	expect(screen.getByText("Generation requested")).toBeInTheDocument();
-	expect(readsOf(calls, SCHEDULE)).toHaveLength(1);
+	expect(readsOf(calls, SCHEDULE_READ)).toHaveLength(1);
 
 	await vi.advanceTimersByTimeAsync(15_000);
-	expect(readsOf(calls, SCHEDULE)).toHaveLength(2);
+	expect(readsOf(calls, SCHEDULE_READ)).toHaveLength(2);
 	expect(screen.getByRole("note")).toHaveTextContent(
 		"This schedule is being generated."
 	);
@@ -616,17 +635,17 @@ it("reads a schedule being generated every 15 seconds until its roster is ready"
 	expect(
 		await screen.findByRole("row", { name: /Aisha Rahman/ })
 	).toBeInTheDocument();
-	expect(readsOf(calls, SCHEDULE)).toHaveLength(3);
+	expect(readsOf(calls, SCHEDULE_READ)).toHaveLength(3);
 	expect(readsOf(calls, ASSIGNMENTS)).toHaveLength(1);
 
 	await vi.advanceTimersByTimeAsync(45_000);
-	expect(readsOf(calls, SCHEDULE)).toHaveLength(3);
+	expect(readsOf(calls, SCHEDULE_READ)).toHaveLength(3);
 });
 
 it("explains a failed run by its error code, without asking for a roster", async () => {
 	const calls = await openRoster({
 		...signedIn(),
-		[`GET ${SCHEDULE}`]: ok(
+		[`GET ${SCHEDULE_READ}`]: ok(
 			generatedScheduleFixture({ status: "GENERATION_FAILED" })
 		),
 	});
@@ -646,7 +665,7 @@ it("explains a failed run by its error code, without asking for a roster", async
 it("quotes the engine's reason and errors by member when no roster could meet the rules", async () => {
 	await openRoster({
 		...signedIn(),
-		[`GET ${SCHEDULE}`]: ok(
+		[`GET ${SCHEDULE_READ}`]: ok(
 			generatedScheduleFixture({
 				status: "GENERATION_FAILED",
 				generation: generationFixture({
@@ -713,7 +732,7 @@ it("quotes the engine's reason and errors by member when no roster could meet th
 it("shows a draft reached by its URL with a link to its setup", async () => {
 	const calls = await openRoster({
 		...signedIn(),
-		[`GET ${SCHEDULE}`]: ok(scheduleFixture()),
+		[`GET ${SCHEDULE_READ}`]: ok(scheduleFixture()),
 	});
 
 	expect(await screen.findByRole("note")).toHaveTextContent(
@@ -724,7 +743,7 @@ it("shows a draft reached by its URL with a link to its setup", async () => {
 });
 
 it.each([
-	["without schedule:read at its department", [], undefined],
+	["without schedule:read anywhere", [], undefined],
 	["the API doesn't know", ["schedule:read"], { status: 404 }],
 	["the API refuses", ["schedule:read"], { status: 403 }],
 ] as const)(
@@ -732,13 +751,13 @@ it.each([
 	async (_, permissions, reply) => {
 		const calls = await openRoster({
 			...signedIn([...permissions]),
-			...(reply && { [`GET ${SCHEDULE}`]: reply }),
+			...(reply && { [`GET ${SCHEDULE_READ}`]: reply }),
 		});
 
 		expect(await screen.findByRole("alert")).toHaveTextContent(
 			"This schedule doesn’t exist or you don’t have permission to see it."
 		);
 		expect(screen.queryByRole("link", { name: "View setup" })).toBeNull();
-		if (!reply) expect(readsOf(calls, SCHEDULE)).toHaveLength(0);
+		if (!reply) expect(readsOf(calls, SCHEDULE_READ)).toHaveLength(0);
 	}
 );

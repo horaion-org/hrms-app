@@ -137,15 +137,15 @@ it("opens a draft in the wizard and any other schedule's roster, from its card a
 		},
 		{
 			status: "GENERATION_REQUESTED",
-			href: "/scheduling/GENERATION_REQUESTED?branchId=b-1&departmentId=d-1",
+			href: "/scheduling/GENERATION_REQUESTED",
 		},
 		{
 			status: "GENERATED",
-			href: "/scheduling/GENERATED?branchId=b-1&departmentId=d-1",
+			href: "/scheduling/GENERATED",
 		},
 		{
 			status: "GENERATION_FAILED",
-			href: "/scheduling/GENERATION_FAILED?branchId=b-1&departmentId=d-1",
+			href: "/scheduling/GENERATION_FAILED",
 		},
 	] as const;
 	stubApi({

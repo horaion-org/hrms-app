@@ -2149,7 +2149,6 @@
 		"detail": {
 			"back": "Back to Overview",
 			"title": "{{department}} Schedule",
-			"notFound": "This schedule could not be found.",
 			"loadFailed": "This schedule could not be loaded. Please try again.",
 			"loading": "Loading the schedule…",
 			"unavailable": "This schedule doesn’t exist or you don’t have permission to see it.",
