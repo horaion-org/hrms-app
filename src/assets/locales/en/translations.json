@@ -229,6 +229,12 @@
 		"searchCountries": "Search country or code",
 		"number": "Phone number"
 	},
+	"timeZoneSelect": {
+		"placeholder": "Select a time zone",
+		"search": "Search city, region or offset",
+		"empty": "No time zones found.",
+		"yourZone": "Your time zone"
+	},
 	"auth": {
 		"passwordReset": {
 			"title": "Reset your password",

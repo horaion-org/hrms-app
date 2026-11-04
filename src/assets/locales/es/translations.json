@@ -242,6 +242,12 @@
 		"noResults": "No hay resultados",
 		"create": "Crear \"{{query}}\""
 	},
+	"timeZoneSelect": {
+		"placeholder": "Seleccionar una zona horaria",
+		"search": "Busca ciudad, región o desfase",
+		"empty": "No se encontraron zonas horarias.",
+		"yourZone": "Tu zona horaria"
+	},
 	"calendar": {
 		"previousMonth": "Mes anterior",
 		"nextMonth": "Mes siguiente",
