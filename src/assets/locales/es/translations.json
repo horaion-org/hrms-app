@@ -1206,6 +1206,22 @@
 			"gone": "Este horario ya no existe.",
 			"forbidden": "Ya no tienes permiso para eliminar este horario.",
 			"failed": "No pudimos eliminar el horario. Inténtalo de nuevo."
+		},
+		"regenerate": {
+			"button": "Regenerar cuadrante",
+			"retry": "Generar de nuevo",
+			"title": "¿Regenerar este cuadrante?",
+			"retryTitle": "¿Intentar generarlo de nuevo?",
+			"description": "Una nueva ejecución sustituye el cuadrante actual. Conserva la configuración, los turnos y las restricciones de este horario, y vuelve a leer su personal, las ausencias aprobadas y la disponibilidad.",
+			"retryDescription": "Una nueva ejecución conserva la configuración, los turnos y las restricciones de este horario, y vuelve a leer su personal, las ausencias aprobadas y la disponibilidad.",
+			"confirm": "Regenerar cuadrante",
+			"retryConfirm": "Generar de nuevo",
+			"cancel": "Cancelar",
+			"done": "Regeneración solicitada.",
+			"draft": "Este horario aún no se ha generado. Genéralo desde su configuración.",
+			"inProgress": "Este horario se está generando. Inténtalo de nuevo cuando termine la ejecución.",
+			"forbidden": "Ya no tienes permiso para regenerar este horario.",
+			"failed": "No pudimos regenerar el cuadrante. Inténtalo de nuevo."
 		}
 	},
 	"workspace": {

@@ -2067,6 +2067,22 @@
 			"gone": "This schedule no longer exists.",
 			"forbidden": "You no longer have permission to delete this schedule.",
 			"failed": "We couldn’t delete the schedule. Try again."
+		},
+		"regenerate": {
+			"button": "Regenerate roster",
+			"retry": "Generate again",
+			"title": "Regenerate this roster?",
+			"retryTitle": "Try generating again?",
+			"description": "A new run replaces the current roster. It keeps this schedule’s setup, shifts and constraints, and reads its staff, approved leave and availability again.",
+			"retryDescription": "A new run keeps this schedule’s setup, shifts and constraints, and reads its staff, approved leave and availability again.",
+			"confirm": "Regenerate roster",
+			"retryConfirm": "Generate again",
+			"cancel": "Cancel",
+			"done": "Regeneration requested.",
+			"draft": "This schedule hasn’t been generated yet. Generate it from its setup.",
+			"inProgress": "This schedule is being generated. Try again once the run finishes.",
+			"forbidden": "You no longer have permission to regenerate this schedule.",
+			"failed": "We couldn’t regenerate the roster. Try again."
 		}
 	},
 	"colourSwatchPicker": {

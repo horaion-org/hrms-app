@@ -10,6 +10,7 @@ export const SCHEDULE_REFUSAL_CODES = {
 	periodNotMonday: "400 SCHEDULE_PERIOD_NOT_MONDAY",
 	invalidName: "400 INVALID_SCHEDULE_NAME",
 	notDraft: "409 SCHEDULE_NOT_DRAFT",
+	isDraft: "409 SCHEDULE_IS_DRAFT",
 	generationInProgress: "409 SCHEDULE_GENERATION_IN_PROGRESS",
 	hasNoShifts: "409 SCHEDULE_HAS_NO_SHIFTS",
 	hasNoEmployees: "409 SCHEDULE_HAS_NO_EMPLOYEES",
@@ -104,6 +105,23 @@ export const deleteRefusal = (error: unknown, t: TFunction): string => {
 			alerts: {
 				[codes.generationInProgress]: t(`${key}.inProgress`),
 				[codes.scheduleNotFound]: t(`${key}.gone`),
+			},
+			forbidden: t(`${key}.forbidden`),
+			failed: t(`${key}.failed`),
+		}).message ?? t(`${key}.failed`)
+	);
+};
+
+/** Why regenerating a schedule was refused, as one message for its dialog. */
+export const regenerationRefusal = (error: unknown, t: TFunction): string => {
+	const key = "scheduling.regenerate";
+	return (
+		mapRefusal<never>(error, {
+			alerts: {
+				[codes.isDraft]: t(`${key}.draft`),
+				[codes.generationInProgress]: t(`${key}.inProgress`),
+				[codes.hasNoEmployees]: t("scheduling.generate.noEmployees"),
+				[codes.scheduleNotFound]: t("scheduling.delete.gone"),
 			},
 			forbidden: t(`${key}.forbidden`),
 			failed: t(`${key}.failed`),

@@ -33,6 +33,7 @@ import {
 	generationRefusal,
 	scheduleRefusal,
 	scheduleRefusalMessage,
+	regenerationRefusal,
 } from "@/features/scheduling/schedules/scheduleRefusal";
 import {
 	frozenShiftsFixture,
@@ -557,3 +558,35 @@ describe("schedule refusals", () => {
 		);
 	});
 });
+
+	it.each([
+		[
+			"SCHEDULE_IS_DRAFT",
+			409,
+			"This schedule hasn’t been generated yet. Generate it from its setup.",
+		],
+		[
+			"SCHEDULE_GENERATION_IN_PROGRESS",
+			409,
+			"This schedule is being generated. Try again once the run finishes.",
+		],
+		[
+			"SCHEDULE_HAS_NO_EMPLOYEES",
+			409,
+			"This department has no employees who can be scheduled. Give at least one active member of the department a job title, then try again.",
+		],
+		["SCHEDULE_NOT_FOUND", 404, "This schedule no longer exists."],
+		[
+			"ACCESS_DENIED",
+			403,
+			"You no longer have permission to regenerate this schedule.",
+		],
+	])("explains a regeneration refused with %s", (code, status, copy) => {
+		expect(regenerationRefusal(problem(status, code), t)).toBe(copy);
+	});
+
+	it("falls back to a plain failure for a regeneration", () => {
+		expect(regenerationRefusal(new Error("offline"), t)).toBe(
+			"We couldn’t regenerate the roster. Try again."
+		);
+	});
