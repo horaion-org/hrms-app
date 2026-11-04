@@ -13,7 +13,7 @@ import type { MemberWeek } from "@/features/availability/api";
 import { isPastWeek } from "@/features/availability/availabilityModel";
 import {
 	availabilityQueryOf,
-	TEAM_UNIT_RULES,
+	AVAILABILITY_TEAM_UNIT_RULES,
 	viewOf,
 	viewsOf,
 	weekOf,
@@ -93,7 +93,7 @@ export const Availability = (): FunctionComponent => {
 		companyId,
 		AVAILABILITY_READ_KEYS,
 		requested,
-		TEAM_UNIT_RULES
+		AVAILABILITY_TEAM_UNIT_RULES
 	);
 	const team = useAvailabilityList(
 		companyId,

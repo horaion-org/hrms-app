@@ -6,7 +6,10 @@ import {
 	unitSearchOf,
 	unitSearchSchema,
 } from "@/features/workspace/unitSearch";
-import type { UnitSelectionRules } from "@/features/workspace/unitSelection";
+import type {
+	UnitSelection,
+	UnitSelectionRules,
+} from "@/features/workspace/unitSelection";
 
 /** The page's two tabs: the caller's own availability, and their teams'. */
 export type AvailabilityView = "mine" | "team";
@@ -73,7 +76,7 @@ export const viewOf = (
 	requested && views.includes(requested) ? requested : views[0];
 
 /** The team tab lists part-timers by Branch, and by Department within it. */
-export const TEAM_UNIT_RULES: UnitSelectionRules = {
+export const AVAILABILITY_TEAM_UNIT_RULES: UnitSelectionRules = {
 	withDepartment: true,
 };
 
@@ -81,11 +84,11 @@ export const TEAM_UNIT_RULES: UnitSelectionRules = {
 export const availabilityUnitRulesOf = (
 	view: AvailabilitySearch["view"]
 ): UnitSelectionRules | undefined =>
-	view === "team" ? TEAM_UNIT_RULES : undefined;
+	view === "team" ? AVAILABILITY_TEAM_UNIT_RULES : undefined;
 
 /** The list the team tab asks the API for: the week's part-timers in the Branch and Department shown, if one is. */
 export const availabilityQueryOf = (
-	{ branchId, departmentId }: { branchId?: string; departmentId?: string },
+	{ branchId, departmentId }: UnitSelection,
 	weekStartMonday: string
 ): AvailabilityListQuery => ({
 	weekStartMonday,
