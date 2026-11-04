@@ -851,7 +851,9 @@
 				"DUPLICATE_IN_FILE": "Otra fila tiene el mismo correo.",
 				"ALREADY_MEMBER": "Ya está en la empresa: esta fila se omitirá.",
 				"EXAMPLE_ROW": "Fila de ejemplo de la plantilla: omitida.",
-				"POSSIBLE_DUPLICATE_PERSON": "Otra fila tiene el mismo nombre y fecha de nacimiento. ¿Es la misma persona?"
+				"POSSIBLE_DUPLICATE_PERSON": "Otra fila tiene el mismo nombre y fecha de nacimiento. ¿Es la misma persona?",
+				"FORMULA_WITHOUT_VALUE": "Esta celda tiene una fórmula sin valor guardado. Abre el archivo en Excel, guárdalo y vuelve a subirlo.",
+				"CELL_ERROR": "Esta celda muestra un error (como #REF!). Corrige la fórmula en Excel y vuelve a subirlo."
 			},
 			"history": "Historial de importaciones"
 		}
