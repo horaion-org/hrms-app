@@ -406,6 +406,9 @@
 			"name": "Puesto",
 			"label": "Puestos",
 			"empty": "Todavía no hay puestos.",
+			"people": "Personas",
+			"peopleCount_one": "{{count}} persona",
+			"peopleCount_other": "{{count}} personas",
 			"createDialog": {
 				"title": "Crear puesto",
 				"description": "Añade un puesto que las personas de toda la organización puedan ocupar.",

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { type ReactNode, useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -24,7 +24,7 @@ import { placeOf } from "@/features/organisation/assignmentTargets";
 import { departmentScope } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
 
-/** The company's Job titles: HR labels only, so no role or headcount columns yet. */
+/** The company's Job titles: HR labels with how many people hold each; holding grants nothing. */
 export const JobTitles = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
 	const { t } = useTranslation();
@@ -72,6 +72,22 @@ export const JobTitles = (): FunctionComponent => {
 				id: "department",
 				header: t("organisation.jobTitles.department"),
 				cell: (jobTitle: JobTitle): string => placeOf(jobTitle, t),
+			},
+			{
+				id: "people",
+				header: t("organisation.jobTitles.people"),
+				// Plain text until People can be filtered by job title; nobody holding it reads muted.
+				cell: (jobTitle: JobTitle): ReactNode => (
+					<span
+						className={
+							jobTitle.holderCount === 0 ? "text-neutral-700" : undefined
+						}
+					>
+						{t("organisation.jobTitles.peopleCount", {
+							count: jobTitle.holderCount,
+						})}
+					</span>
+				),
 			},
 			statusColumn<JobTitle>(t),
 			actionsColumn<JobTitle>(

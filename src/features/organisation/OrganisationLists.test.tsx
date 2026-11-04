@@ -711,7 +711,7 @@ describe("Job titles", () => {
 		const calls = stubApi({
 			...baseRoutes(),
 			[JOB_TITLES]: pageReply([
-				jobTitle("j-1", "Shift supervisor"),
+				jobTitle("j-1", "Shift supervisor", { holderCount: 3 }),
 				jobTitle("j-2", "Trainee", { status: "INACTIVE" }),
 			]),
 		});
@@ -726,18 +726,29 @@ describe("Job titles", () => {
 			within(table)
 				.getAllByRole("columnheader")
 				.map((header) => header.textContent)
-		).toEqual(["Select all", "Job title", "Department", "Status", "Actions"]);
+		).toEqual([
+			"Select all",
+			"Job title",
+			"Department",
+			"People",
+			"Status",
+			"Actions",
+		]);
 		expect(
 			bodyRows(table).map((row) =>
 				within(row)
 					.getAllByRole("cell")
-					.slice(2, 4)
+					.slice(2, 5)
 					.map((cell) => cell.textContent)
 			)
 		).toEqual([
-			["Orchard › Kitchen", "Active"],
-			["Orchard › Kitchen", "Inactive"],
+			["Orchard › Kitchen", "3 people", "Active"],
+			["Orchard › Kitchen", "0 people", "Inactive"],
 		]);
+		// The count is not a sort the API offers.
+		expect(
+			screen.queryByRole("button", { name: "Sort by People" })
+		).not.toBeInTheDocument();
 		expect(
 			screen.getByRole("searchbox", { name: "Search job title" })
 		).toBeVisible();

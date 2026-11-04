@@ -954,8 +954,10 @@
 				"failed": "We couldn’t change the job title. Try again."
 			},
 			"department": "Department",
-			"systemRole": "System Role",
-			"employeeCount": "Employee Count"
+			"people": "People",
+			"peopleCount_one": "{{count}} person",
+			"peopleCount_other": "{{count}} people",
+			"systemRole": "System Role"
 		},
 		"accessRoles": {
 			"title": "System roles",
