@@ -29,7 +29,7 @@ export const OverflowMenuItem = ({
 		disabled={disabled}
 		type="button"
 		className={joinClassNames(
-			"block h-11 w-full bg-white px-4 text-left text-sm font-normal outline-none data-disabled:cursor-not-allowed data-disabled:text-neutral-500 data-focus:not-data-disabled:bg-neutral-100",
+			"block h-11 w-full cursor-pointer bg-white px-4 text-left text-sm font-normal outline-none data-disabled:cursor-not-allowed data-disabled:text-neutral-500 data-focus:not-data-disabled:bg-neutral-100",
 			toneClasses[tone]
 		)}
 		onClick={onClick}

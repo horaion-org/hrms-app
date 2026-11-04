@@ -104,7 +104,7 @@ const CardOverflowMenu = ({
 		>
 			<MenuButton
 				ref={triggerRef}
-				className="flex h-12 w-full items-center gap-3 rounded-lg border border-neutral-400 bg-white px-4 text-left text-base font-semibold text-neutral-900 data-hover:bg-neutral-100 data-open:rounded-b-none data-open:data-[panel-anchor^=top]:rounded-b-lg data-open:bg-ink-blue-50 data-open:shadow-md data-open:data-hover:bg-ink-blue-50 data-disabled:cursor-not-allowed data-disabled:bg-neutral-200 data-disabled:text-neutral-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-blue-500"
+				className="flex h-12 w-full cursor-pointer items-center gap-3 rounded-lg border border-neutral-400 bg-white px-4 text-left text-base font-semibold text-neutral-900 data-hover:bg-neutral-100 data-open:rounded-b-none data-open:data-[panel-anchor^=top]:rounded-b-lg data-open:bg-ink-blue-50 data-open:shadow-md data-open:data-hover:bg-ink-blue-50 data-disabled:cursor-not-allowed data-disabled:bg-neutral-200 data-disabled:text-neutral-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-blue-500"
 				disabled={disabled}
 			>
 				<span className="min-w-0 flex-1">{label}</span>
