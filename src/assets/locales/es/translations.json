@@ -38,7 +38,9 @@
 		"entries": "{{start}}–{{end}} de {{total}} registros",
 		"previousPage": "Página anterior",
 		"nextPage": "Página siguiente",
-		"page": "Página {{page}} de {{total}}"
+		"page": "Página {{page}} de {{total}}",
+		"goToPage": "Página {{page}} de {{total}}, ir a la página",
+		"ofPages": "de {{total}}"
 	},
 	"modal": {
 		"close": "Cerrar diálogo"

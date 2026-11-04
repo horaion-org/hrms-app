@@ -38,7 +38,9 @@
 		"entries": "{{start}}–{{end}} of {{total}} entries",
 		"previousPage": "Previous page",
 		"nextPage": "Next page",
-		"page": "Page {{page}} of {{total}}"
+		"page": "Page {{page}} of {{total}}",
+		"goToPage": "Page {{page}} of {{total}}, go to page",
+		"ofPages": "of {{total}}"
 	},
 	"modal": {
 		"close": "Close dialog"
