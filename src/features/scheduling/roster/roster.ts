@@ -33,6 +33,8 @@ export type RosterRow = {
 	/** The membership, or the assignment's own id once the member no longer resolves. */
 	key: string;
 	membershipId: string | null;
+	/** The member's profile, which their starting context is keyed by; absent once they no longer resolve. */
+	memberProfileId?: string;
 	/** Null once the member, or their membership, is removed. */
 	name: string | null;
 	/** Their current home job title, which may differ from a shift's role. */
@@ -87,6 +89,7 @@ const rowOf = ({ assignmentId, member }: ScheduleAssignment): RosterRow =>
 		: {
 				key: member.membershipId,
 				membershipId: member.membershipId,
+				memberProfileId: member.memberProfileId,
 				name: member.displayName,
 				jobTitle: member.jobTitleName,
 				employeeCode: member.employeeCode,

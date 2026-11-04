@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -36,6 +37,11 @@ import {
 	useScheduleShifts,
 	type ShiftList,
 } from "@/features/scheduling/schedules/useScheduleShifts";
+import {
+	startingContextQuery,
+	type StartingContext,
+} from "@/features/scheduling/startingContext/api";
+import { runsByMember } from "@/features/scheduling/startingContext/startingGrid";
 import { departmentScope } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
 
@@ -108,12 +114,15 @@ const RosterBody = ({
 	assignments,
 	shifts,
 	constraints,
+	startingContext,
 	onRegenerate,
 }: {
 	schedule: Schedule;
 	assignments: AssignmentList;
 	shifts: ShiftList;
 	constraints: ConstraintList;
+	/** Where members started the week; undefined until read, or when it can't be. */
+	startingContext?: StartingContext;
 	/** Left out when the schedule can't be generated again by this person. */
 	onRegenerate?: () => void;
 }): FunctionComponent => {
@@ -140,13 +149,27 @@ const RosterBody = ({
 				{t(`${key}.${ROSTER_PROBLEMS[assignments.status]}`)}
 			</Problem>
 		);
+	const stale =
+		startingContext?.frozen === true
+			? startingContext.staleMemberProfileIds.length
+			: 0;
 	return (
-		<GeneratedRoster
-			assignments={assignments.items}
-			constraints={readyItems(constraints)}
-			schedule={schedule}
-			shifts={readyItems(shifts)}
-		/>
+		<>
+			{stale > 0 && (
+				<Callout className="mt-8" tone="warning">
+					{t("scheduling.startingContext.stale", { count: stale })}
+				</Callout>
+			)}
+			<GeneratedRoster
+				assignments={assignments.items}
+				constraints={readyItems(constraints)}
+				schedule={schedule}
+				shifts={readyItems(shifts)}
+				startingRuns={
+					startingContext ? runsByMember(startingContext) : undefined
+				}
+			/>
+		</>
 	);
 };
 
@@ -203,6 +226,16 @@ const ApiSchedule = ({
 		rosterSchedule?.scheduleId
 	);
 	const constraints = useScheduleConstraints(companyId, rosterSchedule);
+	const startingContext = useQuery(
+		startingContextQuery(
+			companyId,
+			unit,
+			scheduleId,
+			showsRoster &&
+				unit !== undefined &&
+				access.can("schedule:read", departmentScope(unit.departmentId))
+		)
+	);
 	if (state.status !== "ready")
 		return (
 			<Problem alert={state.status !== "pending"}>
@@ -275,6 +308,7 @@ const ApiSchedule = ({
 				constraints={constraints}
 				schedule={state.schedule}
 				shifts={shifts}
+				startingContext={startingContext.data}
 				onRegenerate={openRegenerate}
 			/>
 			{deciding === "publish" && (

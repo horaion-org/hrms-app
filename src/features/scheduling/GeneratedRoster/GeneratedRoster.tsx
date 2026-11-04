@@ -40,6 +40,8 @@ export type GeneratedRosterProps = {
 	shifts?: FindingNameSources["shifts"];
 	/** The schedule's frozen constraints, which name the findings' rules; empty when not readable. */
 	constraints?: FindingNameSources["constraints"];
+	/** The working days in a row each member brought into the period, by member profile; none when not readable. */
+	startingRuns?: ReadonlyMap<string, number>;
 };
 
 /** A worked day chosen on the roster. */
@@ -57,6 +59,7 @@ export const GeneratedRoster = ({
 	assignments,
 	shifts = [],
 	constraints = [],
+	startingRuns,
 }: GeneratedRosterProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const language = i18n.resolvedLanguage ?? i18n.language;
@@ -71,6 +74,23 @@ export const GeneratedRoster = ({
 	const period = { start: schedule.periodStart, end: schedule.periodEnd };
 	const rows = rosterFromAssignments(assignments, period);
 	const stats = rosterStats(rows);
+	// "Day 4 of a run": the day Monday would be for a member who brought a run in.
+	const rowNotes = new Map(
+		rows.flatMap((row) => {
+			const run =
+				row.memberProfileId === undefined
+					? undefined
+					: startingRuns?.get(row.memberProfileId);
+			return run === undefined
+				? []
+				: [
+						[
+							row.key,
+							t("scheduling.startingContext.runBadge", { count: run + 1 }),
+						] as const,
+					];
+		})
+	);
 	const days = weekDays(period, week);
 	const findings = schedule.generation?.findings ?? null;
 	const counts = findings ? findingCounts(findings) : null;
@@ -164,6 +184,7 @@ export const GeneratedRoster = ({
 						<RosterGrid
 							className="w-full lg:flex-1"
 							days={days}
+							rowNotes={rowNotes}
 							rows={rows}
 							selectedShiftId={chosen?.shift.assignmentId}
 							findings={
