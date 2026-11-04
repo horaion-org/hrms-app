@@ -73,6 +73,7 @@ import { ShiftsStep } from "@/features/scheduling/shifts/ShiftsStep";
 import { useShiftActions } from "@/features/scheduling/shifts/useShiftActions";
 import { useShiftRoleOptions } from "@/features/scheduling/shifts/useShiftRoleOptions";
 import { StepActions } from "@/features/scheduling/StepActions";
+import { stepCompletion } from "@/features/scheduling/stepCompletion";
 import { SCHEDULE_STEPS } from "@/features/scheduling/steps";
 import { workspaceQuery } from "@/features/workspace/api";
 import type { PermissionKey } from "@/features/workspace/permissionKeys";
@@ -476,6 +477,14 @@ export const CreateSchedule = (): FunctionComponent => {
 		i18n.resolvedLanguage ?? i18n.language
 	);
 	const isLast = current === SCHEDULE_STEPS.length - 1;
+	// Each step is ticked for what the draft holds, not for being behind the current one.
+	const completion = stepCompletion({
+		saved: saved !== undefined,
+		frozen,
+		tickedShiftCount: ticked.length,
+		tickedConstraintCount: tickedConstraints.length,
+		currentIndex: current,
+	});
 	const busy =
 		scheduleActions.create.isPending ||
 		scheduleActions.update.isPending ||
@@ -542,6 +551,7 @@ export const CreateSchedule = (): FunctionComponent => {
 				{SCHEDULE_STEPS.map((name) => (
 					<StepperStep
 						key={name}
+						completed={completion[name]}
 						label={t(`scheduling.create.steps.${name}`)}
 					/>
 				))}

@@ -392,6 +392,48 @@ describe("Create Schedule: a reopened draft", () => {
 		expect(department).toBeDisabled();
 	});
 
+	it("given_aDraftWithTicks_when_reopenedAtSetup_then_itsDoneStepsAreTickedAheadButNotJumpedTo", async () => {
+		await open("/scheduling/new?step=setup&scheduleId=s-1&departmentId=d-1");
+
+		expect(
+			await screen.findByRole("listitem", { name: "Step 2: Shifts, completed" })
+		).toBeVisible();
+		expect(
+			await screen.findByRole("listitem", {
+				name: "Step 3: Constraints, completed",
+			})
+		).toBeVisible();
+		expect(
+			screen.getByRole("listitem", { name: "Step 4: Forecast" })
+		).toBeVisible();
+		const steps = screen.getByRole("navigation", { name: "Steps" });
+		expect(within(steps).queryByRole("button")).not.toBeInTheDocument();
+	});
+
+	it("given_aDraftWithoutConstraintTicks_when_pastConstraints_then_itKeepsItsNumberAndCanBeReturnedTo", async () => {
+		const user = userEvent.setup();
+		await open(
+			"/scheduling/new?step=forecast&scheduleId=s-1&departmentId=d-1",
+			{
+				[`GET ${SCHEDULE}`]: reply(
+					scheduleFixture({ includedConstraintIds: [] })
+				),
+			}
+		);
+		await screen.findByRole("region", { name: "Staffing forecast" });
+
+		expect(
+			await screen.findByRole("button", { name: "Step 2: Shifts, completed" })
+		).toBeVisible();
+		await user.click(
+			screen.getByRole("button", { name: "Step 3: Constraints" })
+		);
+
+		expect(
+			await screen.findByRole("region", { name: "Scheduling constraints" })
+		).toBeVisible();
+	});
+
 	it("given_aDraftTheApiDoesNotHave_when_opened_then_saysSo", async () => {
 		await open("/scheduling/new?step=shifts&scheduleId=s-9&departmentId=d-1");
 
