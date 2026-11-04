@@ -28,9 +28,9 @@ export const pinningStateOf = (
 	return { start, end };
 };
 
-// Leading cells (the row checkbox, and later the row expander) are each `w-12`,
-// so the n-th sticky cell at the start sits n × 3rem in. Full class names keep
-// them visible to Tailwind.
+// Leading cells (the row expander, then the row checkbox) are each `w-12`, so
+// the n-th sticky cell at the start sits n × 3rem in: up to two leading cells,
+// then a start-pinned column. Full class names keep them visible to Tailwind.
 const START_OFFSETS = ["md:start-0", "md:start-12", "md:start-24"] as const;
 
 /** Keeps a cell at the start edge from `md` up, after `offset` leading cells. */

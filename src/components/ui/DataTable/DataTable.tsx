@@ -303,6 +303,7 @@ export const DataTable = <TData extends object>({
 	// Leading cells stick along with a start-pinned column, so it never slides under them.
 	const leadingClasses = (index: number): string | undefined =>
 		columnPinning.start.length > 0 ? stickyStartClasses(index) : undefined;
+	// Leading cells come in a fixed order: the row expander, then the row checkbox.
 	const selectionIndex = expansion ? 1 : 0;
 	const leadingCount = selectionIndex + (selection ? 1 : 0);
 	const frameRef = useRef<HTMLDivElement>(null);
