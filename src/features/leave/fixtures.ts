@@ -70,6 +70,7 @@ export const LEAVE_FIXTURES: Array<LeaveRequest> = [
 		requestedAt: "2026-05-10T03:12:00Z",
 		reviewedAt: "2026-05-10T08:00:00Z",
 		reviewedBy: { membershipId: "m-hr", displayName: "Priya Nair" },
+		approvalComment: "Enjoy the break.",
 	}),
 ];
 

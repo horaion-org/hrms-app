@@ -114,6 +114,23 @@ it("opens at the approval step and shows a refused comment on its field", () => 
 	).toHaveAccessibleDescription("Enter a comment of up to 2,000 characters.");
 });
 
+it("shows an approved request's comment", () => {
+	render(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveRequestDialog
+				request={LEAVE_FIXTURES[3]}
+				onApprove={vi.fn()}
+				onClose={vi.fn()}
+				onCreate={vi.fn()}
+				onReject={vi.fn()}
+			/>
+		</I18nextProvider>
+	);
+	expect(
+		screen.getByText("Approval comment").nextElementSibling
+	).toHaveTextContent("Enjoy the break.");
+});
+
 it("offers no decision to someone who may not decide, and shows a rejected request's reason and reviewer", () => {
 	render(
 		<I18nextProvider i18n={authTestI18n}>

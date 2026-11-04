@@ -111,6 +111,7 @@
 		"confirmRejection": "Confirm rejection",
 		"confirmApproval": "Confirm approval",
 		"comment": "Comment (optional)",
+		"approvalComment": "Approval comment",
 		"approved": "Request for {{name}} approved.",
 		"rejected": "Request for {{name}} rejected.",
 		"applied": "Leave request for {{name}} submitted.",

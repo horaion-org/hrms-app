@@ -380,6 +380,16 @@ export const LeaveRequestDialog = ({
 										</dd>
 									</>
 								)}
+								{request.approvalComment && (
+									<>
+										<dt className="text-neutral-800">
+											{t("leave.approvalComment")}
+										</dt>
+										<dd className="whitespace-pre-line break-words font-semibold">
+											{request.approvalComment}
+										</dd>
+									</>
+								)}
 							</dl>
 						</div>
 						{deciding && (
