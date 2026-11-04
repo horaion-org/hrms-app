@@ -88,6 +88,9 @@ const findingsDiagnosticSchema = z.object({
 	entities: z.record(z.string(), z.unknown()),
 });
 
+/** A finding about the schedule's input, made before the solve. */
+export type FindingsDiagnostic = z.infer<typeof findingsDiagnosticSchema>;
+
 const findingsConflictSchema = z.object({
 	kind: z.string(),
 	conflictId: z.string(),
@@ -108,6 +111,9 @@ const findingsConflictSchema = z.object({
 	/** The member an employee-scoped hole is about, otherwise null. */
 	employeeUuid: z.string().nullable(),
 });
+
+/** A staffing hole the solve left. */
+export type FindingsConflict = z.infer<typeof findingsConflictSchema>;
 
 const findingsAssignmentMessagesSchema = z.object({
 	employeeId: z.string(),
