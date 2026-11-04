@@ -7,7 +7,7 @@ import { useScheduleActions } from "@/features/scheduling/schedules/useSchedule"
 
 export type RegenerateDialogProps = {
 	companyId: string;
-	/** A GENERATED or GENERATION_FAILED schedule with no run open. */
+	/** A schedule `regenerable` allows: GENERATED, GENERATION_FAILED or REJECTED, with no run open. */
 	schedule: Schedule;
 	onClose: () => void;
 };
@@ -16,9 +16,9 @@ const key = "scheduling.regenerate";
 
 /**
  * Asks before generating a schedule again, saying what is kept and what is
- * read again. A generated roster is replaced, so that asks in red; after a
- * failed generation there is nothing to replace, so it asks to try again. A
- * refusal shows inside the dialog.
+ * read again. A generated or rejected roster is replaced, so that asks in
+ * red; after a failed generation there is nothing to replace, so it asks to
+ * try again. A refusal shows inside the dialog.
  */
 export const RegenerateDialog = ({
 	companyId,
