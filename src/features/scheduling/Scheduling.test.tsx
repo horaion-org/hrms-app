@@ -1,7 +1,8 @@
-import { screen, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, it, vi } from "vitest";
 import { resetApiClient } from "@/common/api-client";
+import { companyWideWorkspace } from "@/common/testing/effectiveWorkspace";
 import {
 	currentUserReply,
 	openApp,
@@ -332,4 +333,92 @@ it("shows a refused delete inside the dialog and keeps it open", async () => {
 		"This schedule is being generated. Try again once the run finishes."
 	);
 	expect(screen.getByRole("dialog")).toBeInTheDocument();
+});
+
+const SCHEDULES_PATH = "/api/v1/companies/c-1/schedules";
+const FIRST_PAGE = "page=0&size=100&sort=updatedAt%2Cdesc";
+
+const listSearchesOf = (calls: ReturnType<typeof stubApi>): Array<string> =>
+	calls
+		.filter((call) => call.path === SCHEDULES_PATH)
+		.map((call) => call.search);
+
+it("lists the header's one Branch and narrows it to a Department through Filters", async () => {
+	const calls = await openHistory(["schedule:read"], {
+		[`GET ${SCHEDULES_PATH}`]: listOf([scheduleFixture()]),
+	});
+	const user = userEvent.setup();
+	await screen.findByRole("table", { name: "Schedule history" });
+
+	// One Branch in reach: the header names it as text.
+	expect(
+		within(screen.getByRole("banner")).getByText("Main branch")
+	).toBeVisible();
+	await user.click(screen.getByRole("button", { name: "Filters" }));
+	await user.click(screen.getByRole("button", { name: "Department" }));
+	await user.click(screen.getByRole("option", { name: "Kitchen" }));
+
+	await waitFor(() => {
+		expect(app?.router.state.location.search).toEqual({ department: "d-2" });
+	});
+	expect(
+		screen.getByRole("list", { name: "Active filters" })
+	).toHaveTextContent("Department: Main branch › Kitchen");
+	expect(listSearchesOf(calls)).toEqual([
+		`${FIRST_PAGE}&branchId=b-1`,
+		`${FIRST_PAGE}&branchId=b-1&departmentId=d-2`,
+	]);
+
+	await user.click(screen.getByRole("button", { name: "Clear filters" }));
+	await waitFor(() => {
+		expect(app?.router.state.location.search).toEqual({});
+	});
+});
+
+it("lists every Branch once All branches is chosen, with every Department under its Branch", async () => {
+	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+	// Orchard (Kitchen d-1, Bar d-2) and Tampines (Front d-3).
+	const calls = stubApi({
+		"POST /api/v1/public/sessions/refreshes": accessPassReply(),
+		"GET /api/v1/me": currentUserReply(),
+		"GET /api/v1/me/workspace": {
+			status: 200,
+			body: envelope(companyWideWorkspace(["schedule:read"])),
+		},
+		[`GET ${SCHEDULES_PATH}`]: listOf([scheduleFixture()]),
+	});
+	app = await openApp("/scheduling");
+	renderAuthApp(app);
+	const user = userEvent.setup();
+	await screen.findByRole("table", { name: "Schedule history" });
+
+	expect(screen.getByRole("button", { name: "Branch" })).toHaveTextContent(
+		"Orchard"
+	);
+	await user.click(screen.getByRole("button", { name: "Branch" }));
+	await user.click(screen.getByRole("option", { name: "All branches" }));
+	await user.click(screen.getByRole("button", { name: "Filters" }));
+	await user.click(screen.getByRole("button", { name: "Department" }));
+	await user.click(
+		within(screen.getByRole("group", { name: "Tampines" })).getByRole(
+			"option",
+			{ name: "Front" }
+		)
+	);
+
+	await waitFor(() => {
+		expect(app?.router.state.location.search).toEqual({
+			branch: "all",
+			department: "d-3",
+		});
+	});
+	expect(
+		screen.getByRole("list", { name: "Active filters" })
+	).toHaveTextContent("Department: Tampines › Front");
+	// A Department alone is unambiguous: no Branch is sent with it.
+	expect(listSearchesOf(calls)).toEqual([
+		`${FIRST_PAGE}&branchId=b-1`,
+		FIRST_PAGE,
+		`${FIRST_PAGE}&departmentId=d-3`,
+	]);
 });

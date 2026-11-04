@@ -2,7 +2,7 @@ import { skipToken, useQuery } from "@tanstack/react-query";
 import { ApiProblemError } from "@/common/problem";
 import {
 	fetchSchedules,
-	schedulesKey,
+	schedulesInUnitsKey,
 	type Schedule,
 } from "@/features/scheduling/schedules/api";
 import {
@@ -11,19 +11,24 @@ import {
 } from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";
 import { useAccess } from "@/features/workspace/useAccess";
+import type { UnitSelection } from "@/features/workspace/unitSelection";
 
 type SchedulesState =
 	| { status: "pending" | "error" | "hidden" }
 	| { status: "ready"; schedules: Array<Schedule> };
 
-export const useSchedules = (companyId: string): SchedulesState => {
+/** The accessible schedules in the chosen units; every one in scope when none is chosen. */
+export const useSchedules = (
+	companyId: string,
+	units: UnitSelection
+): SchedulesState => {
 	const access = useAccess();
 	const allowed = access.canAnywhere("schedule:read");
 	const list = useQuery({
-		queryKey: schedulesKey(companyId),
+		queryKey: schedulesInUnitsKey(companyId, units),
 		queryFn: allowed
 			? ({ signal }): Promise<Array<Schedule>> =>
-					fetchSchedules(companyId, signal)
+					fetchSchedules(companyId, units, signal)
 			: skipToken,
 		placeholderData: accessiblePreviousData(),
 		meta: administrativeMeta(companyId),

@@ -89,10 +89,38 @@ describe("schedules client", () => {
 				},
 			],
 		});
-		await expect(fetchSchedules("c-1")).resolves.toEqual([draft, generated]);
+		await expect(fetchSchedules("c-1", {})).resolves.toEqual([
+			draft,
+			generated,
+		]);
 		expect(
 			calls.map((call) => new URLSearchParams(call.search).get("page"))
 		).toEqual(["0", "1"]);
+	});
+
+	it("sends the chosen Branch and Department, and neither for every one in scope", async () => {
+		const calls = stubApi({
+			"GET /api/v1/companies/c-1/schedules": [
+				{
+					status: 200,
+					body: envelope({ content: [], page: { hasNext: false } }),
+				},
+				{
+					status: 200,
+					body: envelope({ content: [], page: { hasNext: false } }),
+				},
+			],
+		});
+
+		await fetchSchedules("c-1", { branchId: "b-1", departmentId: "d-1" });
+		await fetchSchedules("c-1", {});
+
+		const sent = calls.map((call) => new URLSearchParams(call.search));
+		expect(sent.map((search) => search.get("branchId"))).toEqual(["b-1", null]);
+		expect(sent.map((search) => search.get("departmentId"))).toEqual([
+			"d-1",
+			null,
+		]);
 	});
 
 	it("does not return partial history when a later page fails", async () => {
@@ -108,7 +136,7 @@ describe("schedules client", () => {
 				{ status: 500 },
 			],
 		});
-		await expect(fetchSchedules("c-1")).rejects.toThrow();
+		await expect(fetchSchedules("c-1", {})).rejects.toThrow();
 	});
 
 	it("creates a draft for a department and parses it", async () => {
@@ -158,9 +186,7 @@ describe("schedules client", () => {
 			},
 		});
 
-		await expect(fetchCompanySchedule("c-1", "s-1")).resolves.toEqual(
-			schedule
-		);
+		await expect(fetchCompanySchedule("c-1", "s-1")).resolves.toEqual(schedule);
 		expect(calls.map((call) => `${call.method} ${call.path}`)).toEqual([
 			"GET /api/v1/companies/c-1/schedules/s-1",
 		]);
@@ -182,7 +208,7 @@ describe("schedules client", () => {
 			},
 		});
 
-		const schedules = await fetchSchedules("c-1");
+		const schedules = await fetchSchedules("c-1", {});
 		expect(schedules).toEqual([generated, failed]);
 		expect(schedules.map((schedule) => schedule.status)).toEqual([
 			"GENERATED",
