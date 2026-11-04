@@ -2,7 +2,6 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { fn } from "storybook/test";
 import type { FunctionComponent } from "@/common/types";
-import { Select } from "@/components/forms/Select";
 import { Button } from "@/components/ui/Button";
 import { ListToolbar } from "@/features/organisation/ListToolbar";
 import "@/common/i18n";
@@ -69,17 +68,10 @@ export const WithActions: Story = {
 	},
 };
 
-/** Departments, Job titles and People narrow to units first; "Clear filters" shows while one is chosen. */
-export const WithScope: Story = {
+/** A status is set: the Filters button counts it and its chip shows beneath. */
+export const WithAFilterSet: Story = {
 	args: {
-		scope: (
-			<Select
-				aria-label="Branch"
-				className="w-full sm:w-44"
-				options={[{ value: "b-1", label: "Orchard" }]}
-				value="b-1"
-			/>
-		),
+		chips: [{ key: "status", label: "Showing: Inactive", onRemove: fn() }],
 		onClearFilters: fn(),
 	},
 };

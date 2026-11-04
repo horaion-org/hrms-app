@@ -22,8 +22,6 @@ export type ListToolbarProps = {
 	actions?: ReactNode;
 	/** A second action beside the primary one, e.g. "Assign role"; left out when there is none. */
 	secondaryAction?: { label: string; onClick: () => void };
-	/** The units the list is narrowed to, e.g. a `UnitSelector`; left out when the list has none. */
-	scope?: ReactNode;
 	/** The "Showing" filter, labelled above its select; left out when the list has none. */
 	filter?: {
 		label: string;
@@ -44,11 +42,7 @@ export type ListToolbarProps = {
 		placeholder?: string;
 		formatSummary?: (selected: Array<SelectOption>) => string;
 	};
-	/**
-	 * The filters that are set. Given, the toolbar keeps its filters behind a
-	 * "Filters" button (with `filterFields` and the "Showing" filter inside)
-	 * and lists these as chips beneath; left out, "Showing" sits inline.
-	 */
+	/** The filters that are set, listed as chips beneath; none by default. */
 	chips?: ReadonlyArray<FilterChip>;
 	/** Further fields of the Filters panel, before "Showing", e.g. a `DepartmentFilter`. */
 	filterFields?: ReactNode;
@@ -58,10 +52,11 @@ export type ListToolbarProps = {
 };
 
 /**
- * A list's `PageToolbar`: search, its filters, then its actions with the
- * primary one last. With `chips`, the filters wait behind a "Filters"
- * button and the ones set are listed beneath; without, the "Showing"
- * filter sits inline. Every Organisation list and People use it.
+ * A list's `PageToolbar`: search, then a "Filters" button holding
+ * `filterFields` and the "Showing" filter (left out when the list has no
+ * filter), then its actions with the primary one last. The filters that
+ * are set are listed as chips beneath, with "Clear filters". Every
+ * Organisation list, People and Scheduling use it.
  */
 export const ListToolbar = ({
 	searchLabel,
@@ -71,10 +66,9 @@ export const ListToolbar = ({
 	onCreate,
 	actions,
 	secondaryAction,
-	scope,
 	filter,
 	multipleFilter,
-	chips,
+	chips = [],
 	filterFields,
 	onClearFilters,
 	className,
@@ -84,14 +78,8 @@ export const ListToolbar = ({
 	const filterLabel = (filter ?? multipleFilter)?.label;
 	const labelledBy = formRowIds(filterId).labelId;
 	const hasActions = Boolean(actions || secondaryAction || onCreate);
-	const behindButton = chips !== undefined;
 	const statusField = filterLabel !== undefined && (
-		<FormRow
-			className={behindButton ? undefined : "w-full sm:w-40"}
-			htmlFor={filterId}
-			label={filterLabel}
-			layout="stacked"
-		>
+		<FormRow htmlFor={filterId} label={filterLabel} layout="stacked">
 			{filter && (
 				<Select
 					aria-labelledby={labelledBy}
@@ -119,7 +107,7 @@ export const ListToolbar = ({
 		<Input
 			aria-label={searchLabel}
 			className="w-full min-w-0 sm:w-72 lg:w-auto lg:min-w-60 lg:flex-1"
-			inputSize={behindButton ? "lg" : undefined}
+			inputSize="lg"
 			leadingIcon={<SearchIcon />}
 			placeholder={searchLabel}
 			type="search"
@@ -134,7 +122,6 @@ export const ListToolbar = ({
 		<PageToolbar
 			className={className}
 			label={t("pageToolbar.listControls")}
-			scope={behindButton ? undefined : scope}
 			actions={
 				hasActions && (
 					<>
@@ -153,34 +140,24 @@ export const ListToolbar = ({
 				)
 			}
 			chips={
-				behindButton && (
-					<FilterChips
-						chips={chips}
-						onClearAll={() => {
-							onClearFilters?.();
-						}}
-					/>
-				)
+				<FilterChips
+					chips={chips}
+					onClearAll={() => {
+						onClearFilters?.();
+					}}
+				/>
 			}
 			filters={
-				behindButton ? (
-					<>
-						{searchBox}
-						{hasFilterFields && (
-							<FiltersPopover count={chips.length}>
-								{filterFields}
-								{statusField}
-							</FiltersPopover>
-						)}
-					</>
-				) : (
-					<>
-						{statusField}
-						{searchBox}
-					</>
-				)
+				<>
+					{searchBox}
+					{hasFilterFields && (
+						<FiltersPopover count={chips.length}>
+							{filterFields}
+							{statusField}
+						</FiltersPopover>
+					)}
+				</>
 			}
-			onClearFilters={behindButton ? undefined : onClearFilters}
 		/>
 	);
 };

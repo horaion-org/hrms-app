@@ -122,11 +122,15 @@ describe("ListToolbar", () => {
 		);
 	});
 
-	it("filters by status through the labelled Showing select", async () => {
+	it("filters by status through the labelled Showing select in the Filters panel", async () => {
 		const user = userEvent.setup();
 		const onStatus = vi.fn();
 		render(<Harness onStatus={onStatus} />);
 
+		expect(
+			screen.queryByRole("button", { name: "Showing:" })
+		).not.toBeInTheDocument();
+		await user.click(screen.getByRole("button", { name: "Filters" }));
 		const filter = screen.getByRole("button", { name: "Showing:" });
 		expect(filter).toHaveTextContent("All Branches");
 		await user.click(filter);
@@ -157,6 +161,7 @@ describe("ListToolbar", () => {
 			/>
 		);
 
+		await user.click(screen.getByRole("button", { name: "Filters" }));
 		const filter = screen.getByRole("button", { name: "Showing:" });
 		expect(filter).toHaveTextContent("All employees");
 		await user.click(filter);
@@ -168,37 +173,26 @@ describe("ListToolbar", () => {
 		).not.toBeInTheDocument();
 	});
 
-	it("lays out units, then the filter and search, then the actions, in one labelled group", () => {
-		render(
-			<Harness
-				scope={<button type="button">Branch</button>}
-				onCreate={vi.fn()}
-			/>
-		);
+	it("lays out search, then the Filters button, then the actions, in one labelled group", () => {
+		render(<Harness onCreate={vi.fn()} />);
 
 		const group = screen.getByRole("group", { name: "List controls" });
 		expect(
 			within(group)
 				.getAllByRole("button")
 				.map((button) => button.textContent)
-		).toEqual(["Branch", "All Branches", "Create Branch"]);
+		).toEqual(["Filters", "Create Branch"]);
 		expect(
 			within(group).getByRole("searchbox", { name: "Search Branch" })
 		).toBeVisible();
 	});
 
-	it("offers Clear filters only while the page says a filter is set", async () => {
-		const user = userEvent.setup();
-		const onClearFilters = vi.fn();
-		const { rerender } = render(<Harness />);
+	it("offers Clear filters only while a filter is set", () => {
+		render(<Harness onClearFilters={vi.fn()} />);
+
 		expect(
 			screen.queryByRole("button", { name: "Clear filters" })
 		).not.toBeInTheDocument();
-
-		rerender(<Harness onClearFilters={onClearFilters} />);
-		await user.click(screen.getByRole("button", { name: "Clear filters" }));
-
-		expect(onClearFilters).toHaveBeenCalledOnce();
 	});
 
 	it("leaves the filter out when the list has none", () => {
@@ -213,11 +207,14 @@ describe("ListToolbar", () => {
 
 		expect(screen.queryByText("Showing:")).not.toBeInTheDocument();
 		expect(
+			screen.queryByRole("button", { name: "Filters" })
+		).not.toBeInTheDocument();
+		expect(
 			screen.queryByRole("button", { name: "Create Role" })
 		).not.toBeInTheDocument();
 	});
 
-	it("given_chips_when_rendered_then_keepsTheFiltersBehindOneButtonAndListsWhatIsSet", async () => {
+	it("lists the filters that are set as chips and counts them on the Filters button", async () => {
 		const user = userEvent.setup();
 		const onClearFilters = vi.fn();
 		render(
@@ -230,9 +227,6 @@ describe("ListToolbar", () => {
 			/>
 		);
 
-		expect(
-			screen.queryByRole("button", { name: "Showing:" })
-		).not.toBeInTheDocument();
 		expect(
 			screen.getByRole("button", { name: "Filters" })
 		).toHaveAccessibleDescription("1 applied");

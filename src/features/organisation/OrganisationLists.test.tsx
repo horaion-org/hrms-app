@@ -387,6 +387,7 @@ describe("Branches", () => {
 			).toHaveAttribute("aria-sort", "descending")
 		);
 		await user.click(screen.getByRole("button", { name: "Sort by Status" }));
+		await user.click(screen.getByRole("button", { name: "Filters" }));
 		await user.click(screen.getByRole("button", { name: "Showing" }));
 		await user.click(screen.getByRole("option", { name: "Active" }));
 
@@ -849,9 +850,11 @@ describe("System roles", () => {
 			screen.getByRole("button", { name: "Edit Company Owner" })
 		).toBeDisabled();
 		expect(screen.getByRole("button", { name: "Edit Manager" })).toBeEnabled();
-		expect(screen.getByRole("button", { name: "Showing" })).toHaveTextContent(
-			"All roles"
-		);
+		// The status filter waits behind Filters; nothing is set.
+		expect(screen.getByRole("button", { name: "Filters" })).toBeVisible();
+		expect(
+			screen.queryByRole("list", { name: "Active filters" })
+		).not.toBeInTheDocument();
 		expect(
 			screen.queryByRole("button", { name: "Create system role" })
 		).not.toBeInTheDocument();
