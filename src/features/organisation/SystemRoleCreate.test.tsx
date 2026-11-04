@@ -234,15 +234,17 @@ describe("Create system role", () => {
 		expect(box("System roles", "Edit")).not.toBeChecked();
 	});
 
-	it("says so instead of showing the form without permission to create roles", async () => {
+	it("sends someone without permission to create roles to the Forbidden page", async () => {
 		stubApi(routes(["access_role:read"]));
-		await open(CREATOR);
+		const opened = await open(CREATOR);
 
 		expect(
-			await screen.findByText(
-				"You don’t have permission to create system roles."
-			)
+			await screen.findByRole("heading", {
+				level: 1,
+				name: "You don’t have access to this page",
+			})
 		).toBeVisible();
+		expect(opened.router.state.location.pathname).toBe("/forbidden");
 		expect(
 			screen.queryByRole("textbox", { name: /Role name/ })
 		).not.toBeInTheDocument();

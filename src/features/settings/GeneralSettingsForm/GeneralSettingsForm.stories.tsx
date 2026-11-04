@@ -19,6 +19,9 @@ const meta = {
 	args: {
 		className: "max-w-3xl",
 		defaultValues: { ...DEFAULT_PREFERENCES, workspaceName: "Horaion" },
+		canRename: true,
+		onSave: (workspaceName: string): Promise<string> =>
+			Promise.resolve(workspaceName.trim()),
 	},
 } satisfies Meta<typeof GeneralSettingsForm>;
 
@@ -32,4 +35,9 @@ export const MissingWorkspaceName: Story = {
 	args: {
 		defaultValues: { ...DEFAULT_PREFERENCES, workspaceName: "" },
 	},
+};
+
+/** Without `company:update`: the name is read-only and says why. */
+export const ReadOnly: Story = {
+	args: { canRename: false },
 };
