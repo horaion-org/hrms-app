@@ -82,6 +82,8 @@ const branchSchema = z.object({
 	/** The IANA zone the branch's days, weeks and shift times are in, such as "Asia/Singapore". */
 	timeZone: z.string(),
 	status: unitStatusSchema,
+	/** When the unit was created (an ISO instant); optional until every API the app talks to sends it. */
+	createdAt: z.string().optional(),
 });
 
 export type Branch = z.infer<typeof branchSchema>;
@@ -117,6 +119,8 @@ const departmentSchema = z.object({
 	branchName: z.string().optional(),
 	name: z.string(),
 	status: unitStatusSchema,
+	/** When the unit was created (an ISO instant); optional until every API the app talks to sends it. */
+	createdAt: z.string().optional(),
 });
 
 export type Department = z.infer<typeof departmentSchema>;
@@ -154,6 +158,8 @@ const jobTitleSchema = z.object({
 	status: unitStatusSchema,
 	/** How many people hold the title; they keep it while it is inactive. */
 	holderCount: z.number().int().nonnegative(),
+	/** When the unit was created (an ISO instant); optional until every API the app talks to sends it. */
+	createdAt: z.string().optional(),
 });
 
 export type JobTitle = z.infer<typeof jobTitleSchema>;
@@ -310,7 +316,7 @@ export const searchCompanyMembers = (
 	);
 };
 
-/** The company's branches; sortable by `name`, `code`, `city` or `status`. */
+/** The company's branches; sortable by `name`, `code`, `city`, `status` or `createdAt`. */
 export const fetchBranches = (
 	companyId: string,
 	query: ListQuery,
@@ -318,7 +324,7 @@ export const fetchBranches = (
 ): Promise<ListPage<Branch>> =>
 	fetchList(listPath(companyId, "branches", query), branchSchema, signal);
 
-/** The company's departments across every branch; sortable by `name` or `status`. */
+/** The company's departments across every branch; sortable by `name`, `status` or `createdAt`. */
 export const fetchDepartments = (
 	companyId: string,
 	query: ListQuery,
@@ -500,12 +506,13 @@ export const deleteAccessRole = (
 /** Replaces a Branch's details and status; the server owns uniqueness. */
 export const updateBranch = (
 	companyId: string,
-	{ branchId, ...body }: Branch
+	{ branchId, name, code, city, country, timeZone, status }: Branch
 ): Promise<Branch> =>
 	apiRequest(
 		`${companyPath(companyId)}/branches/${encodeURIComponent(branchId)}`,
 		branchSchema,
-		{ method: "PUT", body }
+		// Only what the API replaces: read-only fields such as createdAt never travel back.
+		{ method: "PUT", body: { name, code, city, country, timeZone, status } }
 	);
 
 /** Replaces a Department's name and status; the server owns uniqueness. */
@@ -539,7 +546,7 @@ export const updateJobTitle = (
 		}
 	);
 
-/** The company's job titles; sortable by `name` or `status`. */
+/** The company's job titles; sortable by `name`, `status` or `createdAt`. */
 export const fetchJobTitles = (
 	companyId: string,
 	query: ListQuery,

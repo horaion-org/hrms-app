@@ -792,7 +792,8 @@
 			"noMatches": "Nothing matches your search or filter.",
 			"truncated": "Showing the first {{shown}} of {{total}}. Use the status filter to narrow the list.",
 			"cancel": "Cancel",
-			"branch": "Branch"
+			"branch": "Branch",
+			"created": "Created"
 		},
 		"branches": {
 			"title": "Branches",

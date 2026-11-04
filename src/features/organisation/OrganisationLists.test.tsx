@@ -104,6 +104,9 @@ const pageReply = (
 	body: envelope({ content, page: { totalElements } }),
 });
 
+/** 06:00 UTC: the local date is 4 Nov 2026 anywhere from UTC-6 to UTC+17, so the tests need no fixed zone. */
+const CREATED_AT = "2026-11-04T06:00:00Z";
+
 const branch = (
 	branchId: string,
 	name: string,
@@ -118,6 +121,7 @@ const branch = (
 	timeZone: "Asia/Singapore",
 	status,
 	headMembershipIds: [],
+	createdAt: CREATED_AT,
 });
 
 const jobTitle = (
@@ -135,6 +139,7 @@ const jobTitle = (
 	description: null,
 	status: "ACTIVE",
 	holderCount: 0,
+	createdAt: CREATED_AT,
 	...overrides,
 });
 
@@ -150,6 +155,7 @@ const department = (
 	name,
 	status,
 	headMembershipIds: [],
+	createdAt: CREATED_AT,
 });
 
 const baseRoutes = (
