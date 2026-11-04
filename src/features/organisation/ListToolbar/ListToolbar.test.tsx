@@ -216,4 +216,36 @@ describe("ListToolbar", () => {
 			screen.queryByRole("button", { name: "Create Role" })
 		).not.toBeInTheDocument();
 	});
+
+	it("given_chips_when_rendered_then_keepsTheFiltersBehindOneButtonAndListsWhatIsSet", async () => {
+		const user = userEvent.setup();
+		const onClearFilters = vi.fn();
+		render(
+			<Harness
+				filterFields={<p>Department field</p>}
+				chips={[
+					{ key: "status", label: "Showing: Inactive", onRemove: vi.fn() },
+				]}
+				onClearFilters={onClearFilters}
+			/>
+		);
+
+		expect(
+			screen.queryByRole("button", { name: "Showing:" })
+		).not.toBeInTheDocument();
+		expect(
+			screen.getByRole("button", { name: "Filters" })
+		).toHaveAccessibleDescription("1 applied");
+		await user.click(screen.getByRole("button", { name: "Filters" }));
+		const panel = screen.getByRole("dialog", { name: "Filters" });
+		expect(within(panel).getByText("Department field")).toBeVisible();
+		expect(
+			within(panel).getByRole("button", { name: "Showing:" })
+		).toBeVisible();
+		expect(
+			screen.getByRole("list", { name: "Active filters" })
+		).toHaveTextContent("Showing: Inactive");
+		await user.click(screen.getByRole("button", { name: "Clear filters" }));
+		expect(onClearFilters).toHaveBeenCalledOnce();
+	});
 });

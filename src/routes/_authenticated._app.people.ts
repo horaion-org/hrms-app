@@ -17,6 +17,10 @@ import { People } from "@/pages/People";
 
 export const Route = createFileRoute("/_authenticated/_app/people")({
 	validateSearch: parsePeopleSearch,
+	// The header shows the Branch people are listed in.
+	staticData: {
+		branchScope: { keys: PEOPLE_READ_KEYS, rulesFor: () => PEOPLE_UNIT_RULES },
+	},
 	loader: async ({ context, location, cause }) => {
 		// Once on the page, the page asks for each change itself: only it knows the search text.
 		if (cause === "stay") return;

@@ -1401,6 +1401,7 @@
 	},
 	"filterChips": {
 		"label": "Filtros activos",
-		"remove": "Quitar {{label}}"
+		"remove": "Quitar {{label}}",
+		"chip": "{{field}}: {{value}}"
 	}
 }

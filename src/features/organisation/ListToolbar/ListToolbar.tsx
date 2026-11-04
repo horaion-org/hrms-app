@@ -5,6 +5,8 @@ import { FormRow, formRowIds } from "@/components/forms/FormRow";
 import { Input } from "@/components/forms/Input";
 import { Select, type SelectOption } from "@/components/forms/Select";
 import { Button } from "@/components/ui/Button";
+import { FilterChips, type FilterChip } from "@/components/ui/FilterChips";
+import { FiltersPopover } from "@/components/ui/FiltersPopover";
 import { PlusIcon, SearchIcon } from "@/components/ui/Icon";
 import { PageToolbar } from "@/components/ui/PageToolbar";
 
@@ -42,15 +44,24 @@ export type ListToolbarProps = {
 		placeholder?: string;
 		formatSummary?: (selected: Array<SelectOption>) => string;
 	};
-	/** Offers "Clear filters"; given only while a filter differs from its default. */
+	/**
+	 * The filters that are set. Given, the toolbar keeps its filters behind a
+	 * "Filters" button (with `filterFields` and the "Showing" filter inside)
+	 * and lists these as chips beneath; left out, "Showing" sits inline.
+	 */
+	chips?: ReadonlyArray<FilterChip>;
+	/** Further fields of the Filters panel, before "Showing", e.g. a `DepartmentFilter`. */
+	filterFields?: ReactNode;
+	/** Sets every filter back to its default ("Clear filters"). */
 	onClearFilters?: () => void;
 	className?: string;
 };
 
 /**
- * A list's `PageToolbar`: its units, then the "Showing" filter and search,
- * then its actions with the primary one last. Every Organisation list and
- * People use it.
+ * A list's `PageToolbar`: search, its filters, then its actions with the
+ * primary one last. With `chips`, the filters wait behind a "Filters"
+ * button and the ones set are listed beneath; without, the "Showing"
+ * filter sits inline. Every Organisation list and People use it.
  */
 export const ListToolbar = ({
 	searchLabel,
@@ -63,6 +74,8 @@ export const ListToolbar = ({
 	scope,
 	filter,
 	multipleFilter,
+	chips,
+	filterFields,
 	onClearFilters,
 	className,
 }: ListToolbarProps): FunctionComponent => {
@@ -71,11 +84,57 @@ export const ListToolbar = ({
 	const filterLabel = (filter ?? multipleFilter)?.label;
 	const labelledBy = formRowIds(filterId).labelId;
 	const hasActions = Boolean(actions || secondaryAction || onCreate);
+	const behindButton = chips !== undefined;
+	const statusField = filterLabel !== undefined && (
+		<FormRow
+			className={behindButton ? undefined : "w-full sm:w-40"}
+			htmlFor={filterId}
+			label={filterLabel}
+			layout="stacked"
+		>
+			{filter && (
+				<Select
+					aria-labelledby={labelledBy}
+					className="w-full font-semibold"
+					options={filter.options}
+					value={filter.value}
+					onChange={filter.onChange}
+				/>
+			)}
+			{!filter && multipleFilter && (
+				<Select
+					multiple
+					aria-labelledby={labelledBy}
+					className="w-full font-semibold"
+					formatSummary={multipleFilter.formatSummary}
+					options={multipleFilter.options}
+					placeholder={multipleFilter.placeholder}
+					value={multipleFilter.value}
+					onChange={multipleFilter.onChange}
+				/>
+			)}
+		</FormRow>
+	);
+	const searchBox = (
+		<Input
+			aria-label={searchLabel}
+			className="w-full min-w-0 sm:w-72 lg:w-auto lg:min-w-60 lg:flex-1"
+			inputSize={behindButton ? "lg" : undefined}
+			leadingIcon={<SearchIcon />}
+			placeholder={searchLabel}
+			type="search"
+			value={search}
+			onChange={(event) => {
+				onSearchChange(event.target.value);
+			}}
+		/>
+	);
+	const hasFilterFields = Boolean(filterFields) || Boolean(statusField);
 	return (
 		<PageToolbar
 			className={className}
 			label={t("pageToolbar.listControls")}
-			scope={scope}
+			scope={behindButton ? undefined : scope}
 			actions={
 				hasActions && (
 					<>
@@ -93,52 +152,35 @@ export const ListToolbar = ({
 					</>
 				)
 			}
-			filters={
-				<>
-					{filterLabel !== undefined && (
-						<FormRow
-							className="w-full sm:w-40"
-							htmlFor={filterId}
-							label={filterLabel}
-							layout="stacked"
-						>
-							{filter && (
-								<Select
-									aria-labelledby={labelledBy}
-									className="w-full font-semibold"
-									options={filter.options}
-									value={filter.value}
-									onChange={filter.onChange}
-								/>
-							)}
-							{!filter && multipleFilter && (
-								<Select
-									multiple
-									aria-labelledby={labelledBy}
-									className="w-full font-semibold"
-									formatSummary={multipleFilter.formatSummary}
-									options={multipleFilter.options}
-									placeholder={multipleFilter.placeholder}
-									value={multipleFilter.value}
-									onChange={multipleFilter.onChange}
-								/>
-							)}
-						</FormRow>
-					)}
-					<Input
-						aria-label={searchLabel}
-						className="w-full min-w-0 sm:w-72 lg:w-auto lg:min-w-60 lg:flex-1"
-						leadingIcon={<SearchIcon />}
-						placeholder={searchLabel}
-						type="search"
-						value={search}
-						onChange={(event) => {
-							onSearchChange(event.target.value);
+			chips={
+				behindButton && (
+					<FilterChips
+						chips={chips}
+						onClearAll={() => {
+							onClearFilters?.();
 						}}
 					/>
-				</>
+				)
 			}
-			onClearFilters={onClearFilters}
+			filters={
+				behindButton ? (
+					<>
+						{searchBox}
+						{hasFilterFields && (
+							<FiltersPopover count={chips.length}>
+								{filterFields}
+								{statusField}
+							</FiltersPopover>
+						)}
+					</>
+				) : (
+					<>
+						{statusField}
+						{searchBox}
+					</>
+				)
+			}
+			onClearFilters={behindButton ? undefined : onClearFilters}
 		/>
 	);
 };

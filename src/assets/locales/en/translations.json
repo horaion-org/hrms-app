@@ -2209,6 +2209,7 @@
 	},
 	"filterChips": {
 		"label": "Active filters",
-		"remove": "Remove {{label}}"
+		"remove": "Remove {{label}}",
+		"chip": "{{field}}: {{value}}"
 	}
 }
