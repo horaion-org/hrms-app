@@ -491,6 +491,21 @@
       "resourceName": "Schedule"
     },
     {
+      "action": "delete",
+      "actionName": "Delete",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
+      "key": "schedule:delete",
+      "prerequisites": [
+        "schedule:read"
+      ],
+      "resource": "schedule",
+      "resourceName": "Schedule"
+    },
+    {
       "action": "read",
       "actionName": "Read",
       "assignableScopes": [

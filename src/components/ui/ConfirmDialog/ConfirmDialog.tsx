@@ -3,6 +3,9 @@ import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
 
+/** `danger` draws the confirm button red, for an action that destroys or replaces something. */
+export type ConfirmTone = "default" | "danger";
+
 export type ConfirmDialogProps = {
 	title: string;
 	/** What will happen, in a sentence. */
@@ -16,11 +19,18 @@ export type ConfirmDialogProps = {
 	submitting?: boolean;
 	/** Why the last attempt failed. */
 	error?: string;
+	tone?: ConfirmTone;
 	onConfirm: () => void;
 	onClose: () => void;
 	/** Anything the person should see before deciding, such as who is affected. */
 	children?: ReactNode;
 	className?: string;
+};
+
+const confirmToneClasses: Record<ConfirmTone, string | undefined> = {
+	default: undefined,
+	danger:
+		"not-disabled:bg-error-600! not-disabled:hover:bg-error-700! not-disabled:active:bg-error-800!",
 };
 
 /**
@@ -35,6 +45,7 @@ export const ConfirmDialog = ({
 	confirmDisabled = false,
 	submitting = false,
 	error,
+	tone = "default",
 	onConfirm,
 	onClose,
 	children,
@@ -52,6 +63,7 @@ export const ConfirmDialog = ({
 					{cancelLabel}
 				</Button>
 				<Button
+					className={confirmToneClasses[tone]}
 					disabled={confirmDisabled}
 					loading={submitting}
 					onClick={onConfirm}

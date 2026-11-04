@@ -3,7 +3,7 @@
 
 /** SHA-256 of the contract file this module was generated from. */
 export const PERMISSION_CONTRACT_SHA256 =
-	"5e1848d53fae9b8248d5d057cf9d6425de543098bbed7a3847674b10fdf819cb";
+	"26fd2477e45509835c0d84ae87dca32d4ee225c2dfb42ca6f9bfeb4b480b26e8";
 
 /** The places a permission can be assigned at, widest first. */
 export const ASSIGNABLE_SCOPES = ["COMPANY", "BRANCH", "DEPARTMENT"] as const;
@@ -256,6 +256,13 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: ["schedule:read"],
 	},
 	{
+		key: "schedule:delete",
+		resource: "schedule",
+		action: "delete",
+		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
+		prerequisites: ["schedule:read"],
+	},
+	{
 		key: "shift:read",
 		resource: "shift",
 		action: "read",
@@ -398,6 +405,7 @@ export const PERMISSION_KEYS = [
 	"schedule:create",
 	"schedule:update",
 	"schedule:generate",
+	"schedule:delete",
 	"shift:read",
 	"shift:create",
 	"shift:update",

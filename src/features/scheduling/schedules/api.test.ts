@@ -5,13 +5,16 @@ import { envelope, stubApi } from "@/common/testing/stubApi";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import {
 	createSchedule,
+	deleteSchedule,
 	fetchSchedule,
 	fetchScheduleAssignments,
 	fetchSchedules,
 	fetchScheduleConstraints,
 	fetchScheduleShifts,
 	generationInProgress,
+	regenerable,
 	requestGeneration,
+	requestRegeneration,
 	updateSchedule,
 	type ScheduleAssignment,
 	type ScheduleBody,
@@ -28,7 +31,9 @@ import {
 	frozenConstraintsFixture,
 } from "@/features/scheduling/constraints/fixtures";
 import {
+	deleteRefusal,
 	generationRefusal,
+	regenerationRefusal,
 	scheduleRefusal,
 	scheduleRefusalMessage,
 } from "@/features/scheduling/schedules/scheduleRefusal";
@@ -232,6 +237,34 @@ describe("schedules client", () => {
 		).toBe(false);
 	});
 
+	it("requests a regeneration with no body and reads nothing back", async () => {
+		const calls = stubApi({
+			[`POST ${SCHEDULES}/s-1/regeneration`]: {
+				status: 200,
+				body: envelope(generatedScheduleFixture()),
+			},
+		});
+
+		await expect(
+			requestRegeneration("c-1", UNIT, "s-1")
+		).resolves.toBeUndefined();
+		expect(calls.map((call) => `${call.method} ${call.path}`)).toEqual([
+			`POST ${SCHEDULES}/s-1/regeneration`,
+		]);
+		expect(calls[0]?.body).toBeUndefined();
+	});
+
+	it("deletes a schedule with no body and reads nothing back", async () => {
+		const calls = stubApi({
+			[`DELETE ${SCHEDULES}/s-1`]: { status: 204 },
+		});
+
+		await expect(deleteSchedule("c-1", UNIT, "s-1")).resolves.toBeUndefined();
+		expect(calls.map((call) => `${call.method} ${call.path}`)).toEqual([
+			`DELETE ${SCHEDULES}/s-1`,
+		]);
+	});
+
 	it("requests generation with no body and reads nothing back", async () => {
 		const calls = stubApi({
 			[`POST ${SCHEDULES}/s-1/generation`]: {
@@ -351,6 +384,34 @@ describe("a schedule's generation", () => {
 		],
 	])("knows whether %s is still being generated", (_, schedule, expected) => {
 		expect(generationInProgress(schedule)).toBe(expected);
+	});
+
+	it.each([
+		["a draft", scheduleFixture(), false],
+		["a requested schedule", generatedScheduleFixture(), false],
+		[
+			"a generated schedule",
+			generatedScheduleFixture({ status: "GENERATED" }),
+			true,
+		],
+		[
+			"a generated schedule with a newer run still open",
+			generatedScheduleFixture({
+				status: "GENERATED",
+				generation: generationFixture({
+					status: "SUBMITTED",
+					finishedAt: null,
+				}),
+			}),
+			false,
+		],
+		[
+			"a schedule whose generation failed",
+			generatedScheduleFixture({ status: "GENERATION_FAILED" }),
+			true,
+		],
+	])("knows whether %s can be generated again", (_, schedule, expected) => {
+		expect(regenerable(schedule)).toBe(expected);
 	});
 });
 
@@ -519,6 +580,60 @@ describe("schedule refusals", () => {
 	it("falls back to a plain failure for generation", () => {
 		expect(generationRefusal(new Error("offline"), t)).toBe(
 			"We couldn’t generate the schedule. Try again."
+		);
+	});
+
+	it.each([
+		[
+			"SCHEDULE_GENERATION_IN_PROGRESS",
+			409,
+			"This schedule is being generated. Try again once the run finishes.",
+		],
+		["SCHEDULE_NOT_FOUND", 404, "This schedule no longer exists."],
+		[
+			"ACCESS_DENIED",
+			403,
+			"You no longer have permission to delete this schedule.",
+		],
+	])("explains a delete refused with %s", (code, status, copy) => {
+		expect(deleteRefusal(problem(status, code), t)).toBe(copy);
+	});
+
+	it("falls back to a plain failure for a delete", () => {
+		expect(deleteRefusal(new Error("offline"), t)).toBe(
+			"We couldn’t delete the schedule. Try again."
+		);
+	});
+
+	it.each([
+		[
+			"SCHEDULE_IS_DRAFT",
+			409,
+			"This schedule hasn’t been generated yet. Generate it from its setup.",
+		],
+		[
+			"SCHEDULE_GENERATION_IN_PROGRESS",
+			409,
+			"This schedule is being generated. Try again once the run finishes.",
+		],
+		[
+			"SCHEDULE_HAS_NO_EMPLOYEES",
+			409,
+			"This department has no employees who can be scheduled. Give at least one active member of the department a job title, then try again.",
+		],
+		["SCHEDULE_NOT_FOUND", 404, "This schedule no longer exists."],
+		[
+			"ACCESS_DENIED",
+			403,
+			"You no longer have permission to regenerate this schedule.",
+		],
+	])("explains a regeneration refused with %s", (code, status, copy) => {
+		expect(regenerationRefusal(problem(status, code), t)).toBe(copy);
+	});
+
+	it("falls back to a plain failure for a regeneration", () => {
+		expect(regenerationRefusal(new Error("offline"), t)).toBe(
+			"We couldn’t regenerate the roster. Try again."
 		);
 	});
 });

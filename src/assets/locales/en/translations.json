@@ -1317,12 +1317,13 @@
 			},
 			"schedule": {
 				"name": "Schedules",
-				"description": "Each department’s schedules: their week, settings and chosen shifts, and generating them.",
+				"description": "Each department’s schedules: their week, settings and chosen shifts, generating them and deleting them.",
 				"actions": {
 					"read": "View",
 					"create": "Create",
 					"update": "Edit",
-					"generate": "Generate"
+					"generate": "Generate",
+					"delete": "Delete"
 				}
 			},
 			"shift": {
@@ -2059,6 +2060,37 @@
 				"close": "Close"
 			},
 			"showInFindings": "Show in findings"
+		},
+		"delete": {
+			"menu": "Delete",
+			"moreActions": "More actions for {{name}}",
+			"title": "Delete {{name}}?",
+			"description": "This removes the {{department}} schedule for {{period}}, with its roster. This can’t be undone.",
+			"runOpen": "This schedule is being generated. You can delete it once the run finishes.",
+			"confirm": "Delete schedule",
+			"cancel": "Cancel",
+			"close": "Close",
+			"done": "Schedule deleted.",
+			"inProgress": "This schedule is being generated. Try again once the run finishes.",
+			"gone": "This schedule no longer exists.",
+			"forbidden": "You no longer have permission to delete this schedule.",
+			"failed": "We couldn’t delete the schedule. Try again."
+		},
+		"regenerate": {
+			"button": "Regenerate roster",
+			"retry": "Generate again",
+			"title": "Regenerate this roster?",
+			"retryTitle": "Try generating again?",
+			"description": "A new run replaces the current roster. It keeps this schedule’s setup, shifts and constraints, and reads its staff, approved leave and availability again.",
+			"retryDescription": "A new run keeps this schedule’s setup, shifts and constraints, and reads its staff, approved leave and availability again.",
+			"confirm": "Regenerate roster",
+			"retryConfirm": "Generate again",
+			"cancel": "Cancel",
+			"done": "Regeneration requested.",
+			"draft": "This schedule hasn’t been generated yet. Generate it from its setup.",
+			"inProgress": "This schedule is being generated. Try again once the run finishes.",
+			"forbidden": "You no longer have permission to regenerate this schedule.",
+			"failed": "We couldn’t regenerate the roster. Try again."
 		}
 	},
 	"colourSwatchPicker": {

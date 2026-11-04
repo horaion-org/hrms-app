@@ -10,6 +10,7 @@ import {
 import {
 	accessPassReply,
 	envelope,
+	problemReply,
 	stubApi,
 	type StubReply,
 } from "@/common/testing/stubApi";
@@ -150,6 +151,194 @@ it("links a schedule to its setup in the wizard", async () => {
 		scheduleId: "s-1",
 		departmentId: "d-1",
 	});
+});
+
+it("deletes the schedule from the header's menu and goes back to the overview", async () => {
+	const calls = await openRoster({
+		...signedIn(["schedule:read", "schedule:delete"]),
+		[`GET ${SCHEDULE}`]: ok(generatedScheduleFixture({ status: "GENERATED" })),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+		[`DELETE ${SCHEDULE}`]: { status: 204 },
+		"GET /api/v1/companies/c-1/schedules": ok({
+			content: [],
+			page: { hasNext: false },
+		}),
+	});
+	const user = userEvent.setup();
+
+	await user.click(
+		await screen.findByRole("button", {
+			name: "More actions for Front Office - Week 42",
+		})
+	);
+	await user.click(screen.getByRole("menuitem", { name: "Delete" }));
+	await user.click(
+		within(
+			screen.getByRole("dialog", { name: "Delete Front Office - Week 42?" })
+		).getByRole("button", { name: "Delete schedule" })
+	);
+
+	expect(
+		await screen.findByRole("heading", { level: 1, name: "Schedule overview" })
+	).toBeInTheDocument();
+	expect(app?.router.state.location.pathname).toBe("/scheduling");
+	expect(
+		calls.filter((call) => call.method === "DELETE" && call.path === SCHEDULE)
+	).toHaveLength(1);
+});
+
+it("offers no header menu without schedule:delete", async () => {
+	await openRoster({
+		...signedIn(),
+		[`GET ${SCHEDULE}`]: ok(generatedScheduleFixture({ status: "GENERATED" })),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+	});
+
+	await screen.findByRole("link", { name: "View setup" });
+	expect(
+		screen.queryByRole("button", {
+			name: "More actions for Front Office - Week 42",
+		})
+	).toBeNull();
+});
+
+it("regenerates a generated roster after a danger confirm, then follows the new run", async () => {
+	const calls = await openRoster({
+		...signedIn(["schedule:read", "schedule:generate"]),
+		[`GET ${SCHEDULE}`]: [
+			ok(generatedScheduleFixture({ status: "GENERATED" })),
+			ok(generatedScheduleFixture({ status: "GENERATION_REQUESTED" })),
+		],
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+		[`POST ${SCHEDULE}/regeneration`]: ok(
+			generatedScheduleFixture({ status: "GENERATION_REQUESTED" })
+		),
+	});
+	const user = userEvent.setup();
+
+	await user.click(
+		await screen.findByRole("button", { name: "Regenerate roster" })
+	);
+	const dialog = screen.getByRole("dialog", {
+		name: "Regenerate this roster?",
+	});
+	expect(dialog).toHaveTextContent(
+		"A new run replaces the current roster. It keeps this schedule’s setup, shifts and constraints, and reads its staff, approved leave and availability again."
+	);
+	const confirm = within(dialog).getByRole("button", {
+		name: "Regenerate roster",
+	});
+	expect(confirm).toHaveClass("not-disabled:bg-error-600!");
+	await user.click(confirm);
+
+	expect(await screen.findByRole("note")).toHaveTextContent(
+		"This schedule is being generated."
+	);
+	expect(screen.queryByRole("dialog")).toBeNull();
+	expect(
+		screen.queryByRole("button", { name: "Regenerate roster" })
+	).toBeNull();
+	expect(
+		calls.filter(
+			(call) =>
+				call.method === "POST" && call.path === `${SCHEDULE}/regeneration`
+		)
+	).toHaveLength(1);
+});
+
+it("offers to generate a failed schedule again from its failure panel", async () => {
+	const calls = await openRoster({
+		...signedIn(["schedule:read", "schedule:generate"]),
+		[`GET ${SCHEDULE}`]: ok(
+			generatedScheduleFixture({ status: "GENERATION_FAILED" })
+		),
+		[`POST ${SCHEDULE}/regeneration`]: ok(
+			generatedScheduleFixture({ status: "GENERATION_REQUESTED" })
+		),
+	});
+	const user = userEvent.setup();
+
+	const panel = await screen.findByRole("region", {
+		name: "Why it wasn’t generated",
+	});
+	await user.click(
+		within(panel).getByRole("button", { name: "Generate again" })
+	);
+	const dialog = screen.getByRole("dialog", {
+		name: "Try generating again?",
+	});
+	expect(dialog).not.toHaveTextContent("replaces the current roster");
+	const confirm = within(dialog).getByRole("button", {
+		name: "Generate again",
+	});
+	expect(confirm).not.toHaveClass("not-disabled:bg-error-600!");
+	await user.click(confirm);
+
+	await waitFor(() => {
+		expect(
+			calls.filter(
+				(call) =>
+					call.method === "POST" && call.path === `${SCHEDULE}/regeneration`
+			)
+		).toHaveLength(1);
+	});
+});
+
+it("shows a refused regeneration inside the dialog and keeps it open", async () => {
+	await openRoster({
+		...signedIn(["schedule:read", "schedule:generate"]),
+		[`GET ${SCHEDULE}`]: ok(generatedScheduleFixture({ status: "GENERATED" })),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+		[`POST ${SCHEDULE}/regeneration`]: problemReply(
+			409,
+			"SCHEDULE_GENERATION_IN_PROGRESS"
+		),
+	});
+	const user = userEvent.setup();
+
+	await user.click(
+		await screen.findByRole("button", { name: "Regenerate roster" })
+	);
+	const dialog = screen.getByRole("dialog", {
+		name: "Regenerate this roster?",
+	});
+	await user.click(
+		within(dialog).getByRole("button", { name: "Regenerate roster" })
+	);
+
+	expect(await within(dialog).findByRole("alert")).toHaveTextContent(
+		"This schedule is being generated. Try again once the run finishes."
+	);
+	expect(screen.getByRole("dialog")).toBeInTheDocument();
+});
+
+it.each([
+	[
+		"without schedule:generate",
+		["schedule:read"],
+		generatedScheduleFixture({ status: "GENERATED" }),
+	],
+	[
+		"while it is being generated",
+		["schedule:read", "schedule:generate"],
+		generatedScheduleFixture({ status: "GENERATION_REQUESTED" }),
+	],
+	[
+		"while it is a draft",
+		["schedule:read", "schedule:generate"],
+		scheduleFixture(),
+	],
+] as const)("offers no regeneration %s", async (_, permissions, schedule) => {
+	await openRoster({
+		...signedIn([...permissions]),
+		[`GET ${SCHEDULE}`]: ok(schedule),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+	});
+
+	await screen.findByRole("link", { name: "View setup" });
+	expect(
+		screen.queryByRole("button", { name: "Regenerate roster" })
+	).toBeNull();
 });
 
 it("shows a chosen day's shift read-only", async () => {

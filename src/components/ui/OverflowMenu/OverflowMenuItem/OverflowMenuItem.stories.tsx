@@ -7,7 +7,11 @@ const meta = {
 	title: "UI/OverflowMenu/OverflowMenuItem",
 	component: OverflowMenuItem,
 	parameters: { layout: "padded" },
-	argTypes: { children: { control: "text" }, disabled: { control: "boolean" } },
+	argTypes: {
+		children: { control: "text" },
+		disabled: { control: "boolean" },
+		tone: { control: "inline-radio", options: ["default", "danger"] },
+	},
 	args: { children: "Edit", onClick: fn() },
 	render: (args): NonNullable<FunctionComponent> => (
 		<OverflowMenu className="max-w-xs" label="Actions">
@@ -29,5 +33,10 @@ export const Default: Story = {
 
 export const Disabled: Story = {
 	args: { disabled: true },
+	play: Default.play,
+};
+
+export const Danger: Story = {
+	args: { children: "Delete", tone: "danger" },
 	play: Default.play,
 };
