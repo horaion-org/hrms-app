@@ -25,8 +25,11 @@ export type RosterShiftCell = {
 	role: string;
 };
 
+/** Approved leave, named by its leave type when the API names it. */
+export type RosterLeaveCell = { kind: "leave"; leaveTypeName?: string };
+
 /** One member's day: a shift, a plain day off, or approved leave. */
-export type RosterCell = RosterShiftCell | { kind: "off" } | { kind: "leave" };
+export type RosterCell = RosterShiftCell | { kind: "off" } | RosterLeaveCell;
 
 /** One member's week. */
 export type RosterRow = {
@@ -60,9 +63,16 @@ export type RosterStats = {
 	onLeave: number;
 };
 
+const offCellOf = ({
+	offReason,
+	leaveTypeName,
+}: ScheduleAssignment): RosterCell => {
+	if (offReason !== "LEAVE") return { kind: "off" };
+	return leaveTypeName ? { kind: "leave", leaveTypeName } : { kind: "leave" };
+};
+
 const cellOf = (assignment: ScheduleAssignment): RosterCell => {
-	if (assignment.shift === null)
-		return { kind: assignment.offReason === "LEAVE" ? "leave" : "off" };
+	if (assignment.shift === null) return offCellOf(assignment);
 	return {
 		kind: "shift",
 		assignmentId: assignment.assignmentId,

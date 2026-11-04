@@ -80,6 +80,22 @@ describe("rosterFromAssignments", () => {
 		expect(ben!.days["2026-10-18"]).toEqual({ kind: "off" });
 	});
 
+	it("given_leaveNamedByItsType_when_mapped_then_theLeaveCellCarriesTheName", () => {
+		const named = scheduleAssignmentsFixture().map((assignment) =>
+			assignment.offReason === "LEAVE"
+				? { ...assignment, leaveTypeName: "Sick leave" }
+				: assignment
+		);
+
+		const [, ben] = rosterFromAssignments(named, period);
+
+		expect(ben!.days["2026-10-14"]).toEqual({
+			kind: "leave",
+			leaveTypeName: "Sick leave",
+		});
+		expect(ben!.days["2026-10-18"]).toEqual({ kind: "off" });
+	});
+
 	it("given_rowsWhoseMemberIsGone_when_mapped_then_keysEachByItsAssignment", () => {
 		const [first, second] = scheduleAssignmentsFixture();
 		const gone: Array<ScheduleAssignment> = [

@@ -110,11 +110,12 @@ export const RosterGrid = ({
 			return (
 				<span
 					className={joinClassNames(
-						"flex h-14 items-center justify-center rounded border text-xs font-medium",
+						"flex h-14 items-center justify-center rounded border px-1 text-center text-xs font-medium",
 						rosterLooks[cell.kind]
 					)}
 				>
-					{t(`scheduling.detail.${cell.kind}`)}
+					{(cell.kind === "leave" && cell.leaveTypeName) ||
+						t(`scheduling.detail.${cell.kind}`)}
 				</span>
 			);
 		const time = formatTimeRange(

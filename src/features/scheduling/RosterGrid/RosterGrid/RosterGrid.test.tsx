@@ -45,6 +45,24 @@ describe("RosterGrid", () => {
 		expect(screen.getAllByRole("row")).toHaveLength(4);
 	});
 
+	it("given_leaveNamedByItsType_when_rendered_then_showsTheTypeInsteadOfLeave", () => {
+		const named = rosterFromAssignments(
+			scheduleAssignmentsFixture().map((assignment) =>
+				assignment.offReason === "LEAVE"
+					? { ...assignment, leaveTypeName: "Sick leave" }
+					: assignment
+			),
+			{ start: "2026-10-12", end: "2026-10-18" }
+		);
+
+		render(<RosterGrid days={week} rows={named} />);
+
+		const ben = screen.getByRole("row", { name: /Ben Ong/ });
+		expect(within(ben).getAllByText("Sick leave")).toHaveLength(2);
+		expect(within(ben).queryByText("LEAVE")).toBeNull();
+		expect(within(ben).getAllByText("OFF")).toHaveLength(1);
+	});
+
 	it("when_aTileIsChosen_then_reportsTheMemberDayAndShift", async () => {
 		const user = userEvent.setup();
 		const onAssignmentSelect = vi.fn();
