@@ -647,6 +647,183 @@
 			"exportSelected": "Exportar selección",
 			"setInactive": "Desactivar",
 			"unavailable": "Próximamente: requiere acciones masivas del servicio de personas."
+		},
+		"exporting": "Exportando…",
+		"exportFailed": "No se pudo descargar la exportación. Inténtalo de nuevo.",
+		"exportTooLarge": "Coinciden más de 5.000 personas. Elige primero una sucursal o un departamento.",
+		"importPage": {
+			"title": "Importar personas",
+			"subtitle": "Añade a muchas personas a la vez desde una hoja de cálculo.",
+			"steps": {
+				"template": "Plantilla",
+				"upload": "Subir",
+				"check": "Revisar",
+				"import": "Importar"
+			},
+			"template": {
+				"heading": "Empieza con nuestra plantilla",
+				"body": "Incluye tus sucursales, departamentos y puestos para que copies sus nombres exactos. Una fila de ejemplo muestra el formato; se omite al importar.",
+				"rules": "Obligatorios: Nombre y Correo. Sucursal y Departamento van juntos; un Puesto necesita un Departamento.",
+				"download": "Descargar plantilla (.xlsx)",
+				"downloading": "Descargando…",
+				"downloadFailed": "No se pudo descargar la plantilla. Inténtalo de nuevo.",
+				"next": "Ya tengo un archivo"
+			},
+			"upload": {
+				"prompt": "Suelta tu archivo aquí, o",
+				"choose": "elige un archivo",
+				"hint": ".xlsx o .csv · hasta 500 personas · 2 MB",
+				"checking": "Revisando tu archivo…",
+				"helpHeading": "Columna por columna",
+				"back": "Atrás"
+			},
+			"help": {
+				"NAME": "Nombre (obligatorio): como debe aparecer, hasta 255 caracteres.",
+				"EMAIL": "Correo (obligatorio): su correo de acceso. Las personas que ya están en la empresa se omiten, nunca se cambian.",
+				"BRANCH": "Sucursal: un código o nombre de la hoja Lists, con un Departamento.",
+				"DEPARTMENT": "Departamento: un departamento de esa sucursal.",
+				"JOB_TITLE": "Puesto: un puesto de ese departamento.",
+				"PHONE": "Teléfono: con el código de país, p. ej. +6591234567.",
+				"DATE_OF_BIRTH": "Fecha de nacimiento: una fecha, o AAAA-MM-DD.",
+				"EMPLOYMENT_TYPE": "Tipo de empleo: Full-time, Part-time, Contract o Intern.",
+				"HIRE_DATE": "Fecha de contratación: una fecha, o AAAA-MM-DD.",
+				"PROBATION_END_DATE": "Fin del periodo de prueba: no antes de la contratación.",
+				"general": "La fila 1 debe conservar los nombres de columna de la plantilla. No combines celdas."
+			},
+			"refusals": {
+				"UNSUPPORTED_FILE": "No podemos leer este archivo. Guárdalo como libro de Excel (.xlsx) o como CSV UTF-8 e inténtalo de nuevo.",
+				"MISSING_COLUMNS": "Falta la columna Name o Email. La fila 1 debe tener los nombres de columna de la plantilla.",
+				"EMPTY_FILE": "Este archivo no tiene personas.",
+				"TOO_MANY_ROWS": "Una importación admite hasta 500 personas. Divide el archivo.",
+				"FILE_TOO_LARGE": "Este archivo supera los 2 MB. Quita otras hojas o divídelo.",
+				"IMPORT_RUNNING": "Otra importación sigue en curso en esta empresa. Inténtalo cuando termine.",
+				"IMPORT_HAS_ERRORS": "Aún hay filas por corregir. Revisa el archivo de nuevo.",
+				"INVITATIONS_UNAVAILABLE": "Todavía no se pueden enviar invitaciones en bloque. Importa sin ellas.",
+				"RATE_LIMITED": "Has alcanzado el límite de importación por ahora. Inténtalo más tarde.",
+				"UNKNOWN": "Algo salió mal. Inténtalo de nuevo."
+			},
+			"check": {
+				"nothingSaved": "Todavía no se ha guardado nada.",
+				"summary": "Se añadirán {{ready}} · {{skipped}} omitidas (ya en la empresa) · {{errors}} por corregir",
+				"notices_one": "{{count}} fila tiene un aviso; se añadirá igualmente.",
+				"notices_other": "{{count}} filas tienen un aviso; se añadirán igualmente.",
+				"blocked_one": "{{count}} fila necesita corrección antes de importar.",
+				"blocked_other": "{{count}} filas necesitan corrección antes de importar.",
+				"ready": "Tu archivo está listo para importar.",
+				"ignoredColumns": "Columnas ignoradas: {{columns}}",
+				"groupsHeading": "Problemas",
+				"groupRows_one": "{{count}} fila",
+				"groupRows_other": "{{count}} filas",
+				"allRows": "Todas las filas",
+				"downloadErrors": "Descargar filas con errores",
+				"uploadFixed": "Subir un archivo corregido",
+				"tableLabel": "Filas revisadas",
+				"rowColumn": "Fila",
+				"problemColumn": "Problema",
+				"errorsColumn": "Errores",
+				"noProblem": "Lista",
+				"sendInvitations": "Enviar invitaciones ahora",
+				"invitationsOn": "Cada persona recibe un correo con una contraseña temporal válida durante 7 días.",
+				"invitationsOff": "Todavía no se pueden enviar invitaciones en bloque; envía cada una desde el perfil de la persona tras importar.",
+				"running": "Otra importación sigue en curso en esta empresa.",
+				"import_one": "Importar {{count}} persona",
+				"import_other": "Importar {{count}} personas"
+			},
+			"confirm": {
+				"title_one": "¿Importar {{count}} persona?",
+				"title_other": "¿Importar {{count}} personas?",
+				"body": "Se añadirán a la empresa. Las que ya estén se omiten, nunca se cambian.",
+				"invite": "Cada una recibe un correo de invitación.",
+				"noInvite": "No se envía ningún correo ahora; invita a cada persona desde su perfil.",
+				"confirm": "Importar personas",
+				"cancel": "Cancelar"
+			},
+			"progress": {
+				"heading": "Añadiendo personas…",
+				"label": "{{done}} de {{total}}",
+				"hint": "Puedes salir de esta página; la importación continúa. Las páginas pueden pausar un segundo mientras se actualizan los accesos."
+			},
+			"result": {
+				"heading": "Importación terminada",
+				"failed": "La importación se detuvo antes de añadir todas las filas",
+				"summary": "{{added}} añadidas · {{pending}} añadidas, invitación pendiente · {{skipped}} omitidas · {{failed}} fallidas",
+				"meta": "{{date}} · por {{name}}",
+				"download": "Descargar resultados",
+				"toPeople": "Ir a Personas",
+				"another": "Importar otro archivo",
+				"tableLabel": "Resultado por fila",
+				"rowColumn": "Fila",
+				"resultColumn": "Resultado",
+				"detailColumn": "Motivo",
+				"open": "Abrir perfil",
+				"loadFailed": "No se pudo cargar esta importación. Inténtalo de nuevo."
+			},
+			"results": {
+				"ADDED": "Añadida",
+				"ADDED_INVITE_PENDING": "Añadida; invitación no enviada",
+				"SKIPPED_EXISTS": "Ya está en la empresa: omitida",
+				"FAILED_ACCOUNT": "No se pudo crear su cuenta",
+				"FAILED_VALIDATION": "Ya no se puede añadir aquí"
+			},
+			"details": {
+				"EMAIL_ALREADY_REGISTERED": "Este correo ya tiene una cuenta de Horaion.",
+				"ACCOUNT_REJECTED": "El servicio de acceso rechazó este correo.",
+				"ACCOUNT_THROTTLED": "El servicio de acceso estaba ocupado. Importa el archivo más tarde; las personas ya añadidas se omiten.",
+				"ACCOUNT_ERROR": "No se pudo crear su cuenta.",
+				"SAVE_FAILED": "No se pudo guardar.",
+				"LOGIN_CLEANUP_FAILED": "No se pudo guardar y soporte debe eliminar un acceso sobrante.",
+				"PLACEMENT_REFUSED": "Su sucursal, departamento o puesto ya no está disponible.",
+				"NOT_PERMITTED_ANY_MORE": "Ya no puedes añadir personas ahí.",
+				"ALREADY_MEMBER": "Ya está en la empresa.",
+				"INVITATION_NOT_SENT": "Envía su invitación desde su perfil."
+			},
+			"recent": {
+				"heading": "Importaciones recientes",
+				"empty": "Aún no hay importaciones.",
+				"item": "{{date}} · {{name}} · {{added}} añadidas, {{failed}} fallidas",
+				"status": {
+					"QUEUED": "En espera",
+					"RUNNING": "En curso",
+					"COMPLETED": "Terminada",
+					"FAILED": "Detenida"
+				},
+				"open": "Ver"
+			},
+			"columns": {
+				"NAME": "Nombre",
+				"EMAIL": "Correo",
+				"BRANCH": "Sucursal",
+				"DEPARTMENT": "Departamento",
+				"JOB_TITLE": "Puesto",
+				"PHONE": "Teléfono",
+				"DATE_OF_BIRTH": "Fecha de nacimiento",
+				"EMPLOYMENT_TYPE": "Tipo de empleo",
+				"HIRE_DATE": "Fecha de contratación",
+				"PROBATION_END_DATE": "Fin del periodo de prueba"
+			},
+			"problems": {
+				"REQUIRED": "{{column}} es obligatorio.",
+				"TOO_LONG": "{{column}} es demasiado largo.",
+				"INVALID_EMAIL": "No es una dirección de correo.",
+				"INVALID_PHONE": "Añade el código de país, p. ej. +6591234567.",
+				"INVALID_DATE": "{{column}}: usa una celda de fecha o AAAA-MM-DD, p. ej. 2026-01-05.",
+				"DATE_NOT_PAST": "La fecha de nacimiento debe ser pasada.",
+				"PROBATION_BEFORE_HIRE": "El periodo de prueba no puede terminar antes de la contratación.",
+				"UNKNOWN_EMPLOYMENT_TYPE": "Usa Full-time, Part-time, Contract o Intern.",
+				"BRANCH_NOT_FOUND": "Ninguna sucursal tiene este nombre o código. Cópialo de la hoja Lists.",
+				"DEPARTMENT_NOT_FOUND": "Esta sucursal no tiene un departamento con este nombre.",
+				"JOB_TITLE_NOT_FOUND": "Este departamento no tiene un puesto con este nombre.",
+				"UNIT_INACTIVE": "{{column}} está inactivo.",
+				"DEPARTMENT_NEEDS_BRANCH": "Añade la sucursal del departamento.",
+				"BRANCH_NEEDS_DEPARTMENT": "Añade un departamento de esta sucursal.",
+				"JOB_TITLE_NEEDS_DEPARTMENT": "Un puesto necesita sucursal y departamento.",
+				"NOT_PERMITTED_HERE": "No puedes añadir personas aquí.",
+				"DUPLICATE_IN_FILE": "Otra fila tiene el mismo correo.",
+				"ALREADY_MEMBER": "Ya está en la empresa: esta fila se omitirá.",
+				"EXAMPLE_ROW": "Fila de ejemplo de la plantilla: omitida.",
+				"POSSIBLE_DUPLICATE_PERSON": "Otra fila tiene el mismo nombre y fecha de nacimiento. ¿Es la misma persona?"
+			},
+			"history": "Historial de importaciones"
 		}
 	},
 	"numberStepper": {

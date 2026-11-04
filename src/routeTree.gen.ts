@@ -36,6 +36,7 @@ import { Route as AuthenticatedAppOrganisationDepartmentsRouteImport } from './r
 import { Route as AuthenticatedAppOrganisationJobTitlesRouteImport } from './routes/_authenticated._app.organisation.job-titles'
 import { Route as AuthenticatedAppOrganisationSystemRolesRouteImport } from './routes/_authenticated._app.organisation.system-roles'
 import { Route as AuthenticatedAppPeopleMembershipIdRouteImport } from './routes/_authenticated._app.people_.$membershipId'
+import { Route as AuthenticatedAppPeopleImportRouteImport } from './routes/_authenticated._app.people_.import'
 import { Route as AuthenticatedAppPeopleNewRouteImport } from './routes/_authenticated._app.people_.new'
 import { Route as AuthenticatedAppSchedulingScheduleIdRouteImport } from './routes/_authenticated._app.scheduling_.$scheduleId'
 import { Route as AuthenticatedAppSchedulingNewRouteImport } from './routes/_authenticated._app.scheduling_.new'
@@ -189,6 +190,12 @@ const AuthenticatedAppPeopleMembershipIdRoute =
     path: '/people/$membershipId',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppPeopleImportRoute =
+  AuthenticatedAppPeopleImportRouteImport.update({
+    id: '/people_/import',
+    path: '/people/import',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppPeopleNewRoute =
   AuthenticatedAppPeopleNewRouteImport.update({
     id: '/people_/new',
@@ -245,6 +252,7 @@ export interface FileRoutesByFullPath {
   '/organisation/job-titles': typeof AuthenticatedAppOrganisationJobTitlesRoute
   '/organisation/system-roles': typeof AuthenticatedAppOrganisationSystemRolesRoute
   '/people/$membershipId': typeof AuthenticatedAppPeopleMembershipIdRoute
+  '/people/import': typeof AuthenticatedAppPeopleImportRoute
   '/people/new': typeof AuthenticatedAppPeopleNewRoute
   '/scheduling/$scheduleId': typeof AuthenticatedAppSchedulingScheduleIdRoute
   '/scheduling/new': typeof AuthenticatedAppSchedulingNewRoute
@@ -277,6 +285,7 @@ export interface FileRoutesByTo {
   '/organisation/job-titles': typeof AuthenticatedAppOrganisationJobTitlesRoute
   '/organisation/system-roles': typeof AuthenticatedAppOrganisationSystemRolesRoute
   '/people/$membershipId': typeof AuthenticatedAppPeopleMembershipIdRoute
+  '/people/import': typeof AuthenticatedAppPeopleImportRoute
   '/people/new': typeof AuthenticatedAppPeopleNewRoute
   '/scheduling/$scheduleId': typeof AuthenticatedAppSchedulingScheduleIdRoute
   '/scheduling/new': typeof AuthenticatedAppSchedulingNewRoute
@@ -312,6 +321,7 @@ export interface FileRoutesById {
   '/_authenticated/_app/organisation/job-titles': typeof AuthenticatedAppOrganisationJobTitlesRoute
   '/_authenticated/_app/organisation/system-roles': typeof AuthenticatedAppOrganisationSystemRolesRoute
   '/_authenticated/_app/people_/$membershipId': typeof AuthenticatedAppPeopleMembershipIdRoute
+  '/_authenticated/_app/people_/import': typeof AuthenticatedAppPeopleImportRoute
   '/_authenticated/_app/people_/new': typeof AuthenticatedAppPeopleNewRoute
   '/_authenticated/_app/scheduling_/$scheduleId': typeof AuthenticatedAppSchedulingScheduleIdRoute
   '/_authenticated/_app/scheduling_/new': typeof AuthenticatedAppSchedulingNewRoute
@@ -346,6 +356,7 @@ export interface FileRouteTypes {
     | '/organisation/job-titles'
     | '/organisation/system-roles'
     | '/people/$membershipId'
+    | '/people/import'
     | '/people/new'
     | '/scheduling/$scheduleId'
     | '/scheduling/new'
@@ -378,6 +389,7 @@ export interface FileRouteTypes {
     | '/organisation/job-titles'
     | '/organisation/system-roles'
     | '/people/$membershipId'
+    | '/people/import'
     | '/people/new'
     | '/scheduling/$scheduleId'
     | '/scheduling/new'
@@ -412,6 +424,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/organisation/job-titles'
     | '/_authenticated/_app/organisation/system-roles'
     | '/_authenticated/_app/people_/$membershipId'
+    | '/_authenticated/_app/people_/import'
     | '/_authenticated/_app/people_/new'
     | '/_authenticated/_app/scheduling_/$scheduleId'
     | '/_authenticated/_app/scheduling_/new'
@@ -623,6 +636,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppPeopleMembershipIdRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/_app/people_/import': {
+      id: '/_authenticated/_app/people_/import'
+      path: '/people/import'
+      fullPath: '/people/import'
+      preLoaderRoute: typeof AuthenticatedAppPeopleImportRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/_app/people_/new': {
       id: '/_authenticated/_app/people_/new'
       path: '/people/new'
@@ -678,6 +698,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppOrganisationJobTitlesRoute: typeof AuthenticatedAppOrganisationJobTitlesRoute
   AuthenticatedAppOrganisationSystemRolesRoute: typeof AuthenticatedAppOrganisationSystemRolesRoute
   AuthenticatedAppPeopleMembershipIdRoute: typeof AuthenticatedAppPeopleMembershipIdRoute
+  AuthenticatedAppPeopleImportRoute: typeof AuthenticatedAppPeopleImportRoute
   AuthenticatedAppPeopleNewRoute: typeof AuthenticatedAppPeopleNewRoute
   AuthenticatedAppSchedulingScheduleIdRoute: typeof AuthenticatedAppSchedulingScheduleIdRoute
   AuthenticatedAppSchedulingNewRoute: typeof AuthenticatedAppSchedulingNewRoute
@@ -708,6 +729,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
     AuthenticatedAppOrganisationSystemRolesRoute,
   AuthenticatedAppPeopleMembershipIdRoute:
     AuthenticatedAppPeopleMembershipIdRoute,
+  AuthenticatedAppPeopleImportRoute: AuthenticatedAppPeopleImportRoute,
   AuthenticatedAppPeopleNewRoute: AuthenticatedAppPeopleNewRoute,
   AuthenticatedAppSchedulingScheduleIdRoute:
     AuthenticatedAppSchedulingScheduleIdRoute,

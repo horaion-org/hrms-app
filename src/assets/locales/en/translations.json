@@ -718,6 +718,183 @@
 			"exportSelected": "Export Selected",
 			"setInactive": "Set Inactive",
 			"unavailable": "Coming soon: this needs bulk actions from the people service."
+		},
+		"exporting": "Exporting…",
+		"exportFailed": "The export couldn't be downloaded. Try again.",
+		"exportTooLarge": "More than 5,000 people match. Choose a Branch or Department first.",
+		"importPage": {
+			"title": "Import people",
+			"subtitle": "Add many people at once from a spreadsheet.",
+			"steps": {
+				"template": "Template",
+				"upload": "Upload",
+				"check": "Check",
+				"import": "Import"
+			},
+			"template": {
+				"heading": "Start from our template",
+				"body": "It lists your branches, departments and job titles, so you can copy their exact names. One example row shows the format; it is skipped on import.",
+				"rules": "Required: Name and Email. Branch and Department go together; a Job title needs a Department.",
+				"download": "Download template (.xlsx)",
+				"downloading": "Downloading…",
+				"downloadFailed": "The template couldn't be downloaded. Try again.",
+				"next": "I have a file"
+			},
+			"upload": {
+				"prompt": "Drop your file here, or",
+				"choose": "choose a file",
+				"hint": ".xlsx or .csv · up to 500 people · 2 MB",
+				"checking": "Checking your file…",
+				"helpHeading": "Column by column",
+				"back": "Back"
+			},
+			"help": {
+				"NAME": "Name (required): as it should appear, up to 255 characters.",
+				"EMAIL": "Email (required): their sign-in email. People already in the company are skipped, never changed.",
+				"BRANCH": "Branch: a code or name from the Lists sheet, with a Department.",
+				"DEPARTMENT": "Department: a department of that branch.",
+				"JOB_TITLE": "Job title: a job title of that department.",
+				"PHONE": "Phone: with the country code, e.g. +6591234567.",
+				"DATE_OF_BIRTH": "Date of birth: a date, or YYYY-MM-DD.",
+				"EMPLOYMENT_TYPE": "Employment type: Full-time, Part-time, Contract or Intern.",
+				"HIRE_DATE": "Hire date: a date, or YYYY-MM-DD.",
+				"PROBATION_END_DATE": "Probation end date: not before the hire date.",
+				"general": "Row 1 must keep the template's column names. Don't merge cells."
+			},
+			"refusals": {
+				"UNSUPPORTED_FILE": "We can't read this file. Save it as an Excel workbook (.xlsx) or as CSV UTF-8, then try again.",
+				"MISSING_COLUMNS": "Your file is missing the Name or Email column. Row 1 must hold the column names from the template.",
+				"EMPTY_FILE": "This file has no people in it.",
+				"TOO_MANY_ROWS": "One import takes up to 500 people. Split the file into smaller ones.",
+				"FILE_TOO_LARGE": "This file is larger than 2 MB. Remove other sheets or split it.",
+				"IMPORT_RUNNING": "Another import is still running for this company. Try again when it finishes.",
+				"IMPORT_HAS_ERRORS": "Some rows still need fixing. Check the file again.",
+				"INVITATIONS_UNAVAILABLE": "Invitations can't be sent in bulk yet. Import without them.",
+				"RATE_LIMITED": "You've reached the import limit for now. Try again later.",
+				"UNKNOWN": "Something went wrong. Try again."
+			},
+			"check": {
+				"nothingSaved": "Nothing has been saved yet.",
+				"summary": "{{ready}} will be added · {{skipped}} skipped (already in the company) · {{errors}} to fix",
+				"notices_one": "{{count}} row has a notice; it will still be added.",
+				"notices_other": "{{count}} rows have a notice; they will still be added.",
+				"blocked_one": "{{count}} row needs fixing before you can import.",
+				"blocked_other": "{{count}} rows need fixing before you can import.",
+				"ready": "Your file is ready to import.",
+				"ignoredColumns": "Ignored columns: {{columns}}",
+				"groupsHeading": "Problems",
+				"groupRows_one": "{{count}} row",
+				"groupRows_other": "{{count}} rows",
+				"allRows": "All rows",
+				"downloadErrors": "Download rows with errors",
+				"uploadFixed": "Upload a fixed file",
+				"tableLabel": "Checked rows",
+				"rowColumn": "Row",
+				"problemColumn": "Problem",
+				"errorsColumn": "Errors",
+				"noProblem": "Ready",
+				"sendInvitations": "Send invitations now",
+				"invitationsOn": "Each person gets an email with a temporary password, valid for 7 days.",
+				"invitationsOff": "Invitations can't be sent in bulk yet; send each one from the person's profile after the import.",
+				"running": "Another import is still running for this company.",
+				"import_one": "Import {{count}} person",
+				"import_other": "Import {{count}} people"
+			},
+			"confirm": {
+				"title_one": "Import {{count}} person?",
+				"title_other": "Import {{count}} people?",
+				"body": "They will be added to the company. People already in it are skipped, never changed.",
+				"invite": "Each one gets an invitation email.",
+				"noInvite": "Nobody is emailed now; invite people from their profile.",
+				"confirm": "Import people",
+				"cancel": "Cancel"
+			},
+			"progress": {
+				"heading": "Adding people…",
+				"label": "{{done}} of {{total}}",
+				"hint": "You can leave this page; the import continues. Pages may pause for a second while access updates."
+			},
+			"result": {
+				"heading": "Import finished",
+				"failed": "Import stopped before every row was added",
+				"summary": "{{added}} added · {{pending}} added, invite pending · {{skipped}} skipped · {{failed}} failed",
+				"meta": "{{date}} · by {{name}}",
+				"download": "Download results",
+				"toPeople": "Go to People",
+				"another": "Import another file",
+				"tableLabel": "Row results",
+				"rowColumn": "Row",
+				"resultColumn": "Result",
+				"detailColumn": "Reason",
+				"open": "Open profile",
+				"loadFailed": "This import couldn't be loaded. Try again."
+			},
+			"results": {
+				"ADDED": "Added",
+				"ADDED_INVITE_PENDING": "Added; invitation not sent",
+				"SKIPPED_EXISTS": "Already in this company: skipped",
+				"FAILED_ACCOUNT": "Couldn't create their account",
+				"FAILED_VALIDATION": "Couldn't be added here any more"
+			},
+			"details": {
+				"EMAIL_ALREADY_REGISTERED": "This email already has a Horaion account.",
+				"ACCOUNT_REJECTED": "The sign-in service refused this email.",
+				"ACCOUNT_THROTTLED": "The sign-in service was busy. Import the file again later; people already added are skipped.",
+				"ACCOUNT_ERROR": "Their account couldn't be created.",
+				"SAVE_FAILED": "Saving failed.",
+				"LOGIN_CLEANUP_FAILED": "Saving failed and a leftover sign-in needs removing by support.",
+				"PLACEMENT_REFUSED": "Their branch, department or job title is no longer available.",
+				"NOT_PERMITTED_ANY_MORE": "You can no longer add people there.",
+				"ALREADY_MEMBER": "Already in this company.",
+				"INVITATION_NOT_SENT": "Send their invitation from their profile."
+			},
+			"recent": {
+				"heading": "Recent imports",
+				"empty": "No imports yet.",
+				"item": "{{date}} · {{name}} · {{added}} added, {{failed}} failed",
+				"status": {
+					"QUEUED": "Waiting",
+					"RUNNING": "Running",
+					"COMPLETED": "Finished",
+					"FAILED": "Stopped"
+				},
+				"open": "View"
+			},
+			"columns": {
+				"NAME": "Name",
+				"EMAIL": "Email",
+				"BRANCH": "Branch",
+				"DEPARTMENT": "Department",
+				"JOB_TITLE": "Job title",
+				"PHONE": "Phone",
+				"DATE_OF_BIRTH": "Date of birth",
+				"EMPLOYMENT_TYPE": "Employment type",
+				"HIRE_DATE": "Hire date",
+				"PROBATION_END_DATE": "Probation end date"
+			},
+			"problems": {
+				"REQUIRED": "{{column}} is required.",
+				"TOO_LONG": "{{column}} is too long.",
+				"INVALID_EMAIL": "This isn't an email address.",
+				"INVALID_PHONE": "Add the country code, e.g. +6591234567.",
+				"INVALID_DATE": "{{column}}: use a date cell or YYYY-MM-DD, e.g. 2026-01-05.",
+				"DATE_NOT_PAST": "Date of birth must be in the past.",
+				"PROBATION_BEFORE_HIRE": "Probation can't end before the hire date.",
+				"UNKNOWN_EMPLOYMENT_TYPE": "Use Full-time, Part-time, Contract or Intern.",
+				"BRANCH_NOT_FOUND": "No branch has this name or code. Copy it from the Lists sheet.",
+				"DEPARTMENT_NOT_FOUND": "This branch has no department of this name.",
+				"JOB_TITLE_NOT_FOUND": "This department has no job title of this name.",
+				"UNIT_INACTIVE": "{{column}} is inactive.",
+				"DEPARTMENT_NEEDS_BRANCH": "Add the Department's Branch.",
+				"BRANCH_NEEDS_DEPARTMENT": "Add a Department of this Branch.",
+				"JOB_TITLE_NEEDS_DEPARTMENT": "A Job title needs a Branch and Department.",
+				"NOT_PERMITTED_HERE": "You can't add people here.",
+				"DUPLICATE_IN_FILE": "Another row has the same email.",
+				"ALREADY_MEMBER": "Already in this company: this row will be skipped.",
+				"EXAMPLE_ROW": "The template's example row: skipped.",
+				"POSSIBLE_DUPLICATE_PERSON": "Another row has the same name and date of birth. Is this the same person?"
+			},
+			"history": "Import history"
 		}
 	},
 	"settings": {
