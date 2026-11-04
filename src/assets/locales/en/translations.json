@@ -1440,8 +1440,7 @@
 		},
 		"unitSelector": {
 			"department": "Department",
-			"allDepartments": "All departments",
-			"chooseBranchFirst": "Choose a Branch first"
+			"allDepartments": "All departments"
 		},
 		"headerScope": {
 			"branchInCountry": "{{country}} › {{branch}}"

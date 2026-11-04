@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
 	parseBranchContext,
-	unitSearchFor,
 	unitSearchOf,
 	unitSearchSchema,
 	unitSelectionOf,
@@ -33,21 +32,11 @@ describe("unitSearchOf", () => {
 	});
 });
 
-describe("unitSelectionOf and unitSearchFor", () => {
-	it("given_theUrlUnits_when_converted_then_roundTrip", () => {
-		const selection = unitSelectionOf({ branch: "b-1", department: "d-1" });
-
-		expect(selection).toEqual({ branchId: "b-1", departmentId: "d-1" });
-		expect(unitSearchFor(selection)).toEqual({
-			branch: "b-1",
-			department: "d-1",
-		});
-	});
-
-	it("given_everyUnit_when_turnedIntoTheUrl_then_setsBothKeysSoTheyClear", () => {
-		expect(unitSearchFor({})).toEqual({
-			branch: undefined,
-			department: undefined,
+describe("unitSelectionOf", () => {
+	it("given_theUrlUnits_when_read_then_namesThemAsASelection", () => {
+		expect(unitSelectionOf({ branch: "b-1", department: "d-1" })).toEqual({
+			branchId: "b-1",
+			departmentId: "d-1",
 		});
 	});
 });

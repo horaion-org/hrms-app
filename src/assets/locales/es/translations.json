@@ -1281,8 +1281,7 @@
 		},
 		"unitSelector": {
 			"department": "Departamento",
-			"allDepartments": "Todos los departamentos",
-			"chooseBranchFirst": "Elige primero una sucursal"
+			"allDepartments": "Todos los departamentos"
 		},
 		"headerScope": {
 			"branchInCountry": "{{country}} › {{branch}}"
