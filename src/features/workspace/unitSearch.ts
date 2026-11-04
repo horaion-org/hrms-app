@@ -28,6 +28,17 @@ export const unitSearchOf = ({
 export const parseUnitSearch = (search: Record<string, unknown>): UnitSearch =>
 	unitSearchOf(unitSearchSchema.parse(search));
 
+/** The Branch every signed-in page carries: the person's choice, kept across pages. */
+export type BranchContext = Pick<UnitSearch, "branch">;
+
+/** Reads the shared Branch from any signed-in page's URL, dropping anything else. */
+export const parseBranchContext = (
+	search: Record<string, unknown>
+): BranchContext => {
+	const { branch } = unitSearchSchema.parse(search);
+	return branch === undefined ? {} : { branch };
+};
+
 /** The units the URL names. */
 export const unitSelectionOf = ({
 	branch,
