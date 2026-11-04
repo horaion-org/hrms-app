@@ -125,6 +125,8 @@ describe("Dashboard", () => {
 		await open();
 
 		await screen.findByRole("heading", { level: 1, name: "Dashboard" });
+		// The greeting lives on the dashboard only.
+		expect(screen.getByRole("banner")).toHaveTextContent("Welcome, José.");
 		const approvals = await screen.findByRole("region", {
 			name: "Pending Approvals",
 		});

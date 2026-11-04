@@ -1,4 +1,8 @@
-import { Outlet, useRouteContext } from "@tanstack/react-router";
+import {
+	Outlet,
+	useRouteContext,
+	useRouterState,
+} from "@tanstack/react-router";
 import { useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
@@ -44,6 +48,10 @@ export const MainLayout = (): FunctionComponent => {
 	const availability = useAvailabilityViews();
 	// The Branch the page lists, where it lists by Branch: the one scope shared by every list.
 	const branchScope = useHeaderBranchScope();
+	// The greeting belongs to the dashboard; other pages keep the header for their scope or nothing.
+	const onHome = useRouterState({
+		select: (state) => state.location.pathname === "/",
+	});
 	if (
 		!("currentUser" in context) ||
 		!context.currentUser ||
@@ -85,13 +93,15 @@ export const MainLayout = (): FunctionComponent => {
 								onChange={branchScope.choose}
 							/>
 						) : (
-							<Trans
-								i18nKey="shell.welcome"
-								values={{ name: displayName }}
-								components={{
-									name: <span className="font-medium text-ink-blue-900" />,
-								}}
-							/>
+							onHome && (
+								<Trans
+									i18nKey="shell.welcome"
+									values={{ name: displayName }}
+									components={{
+										name: <span className="font-medium text-ink-blue-900" />,
+									}}
+								/>
+							)
 						)
 					}
 				/>

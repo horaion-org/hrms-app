@@ -391,7 +391,8 @@ it("reaches the overview from the Sidebar and marks Organisation current", async
 		within(navigation).getByRole("link", { name: "Dashboard" })
 	).not.toHaveAttribute("aria-current");
 	const banner = screen.getByRole("banner");
-	expect(banner).toHaveTextContent("Welcome, José.");
+	// The greeting is the dashboard's alone.
+	expect(banner).not.toHaveTextContent("Welcome");
 	expect(within(banner).getByRole("img", { name: "José" })).toHaveTextContent(
 		"J"
 	);
