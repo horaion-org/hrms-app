@@ -1,6 +1,12 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { z } from "zod";
-import { apiRequest, apiRequestVoid } from "@/common/api-client";
+import {
+	apiDownload,
+	apiRequest,
+	apiRequestVoid,
+	configureApiClient,
+	resetApiClient,
+} from "@/common/api-client";
 import { stubApi, envelope, problemReply } from "@/common/testing/stubApi";
 
 const path = "/api/v1/public/example";
@@ -172,4 +178,53 @@ it("passes the caller's signal and rethrows its abort as itself, not as an outag
 	controller.abort(reason);
 	await expect(request).rejects.toBe(reason);
 	expect(received?.aborted).toBe(true);
+});
+it("sends FormData as multipart, leaving the Content-Type to the browser", async () => {
+	const fetch = vi.fn<(url: string, init: RequestInit) => Promise<Response>>(
+		() =>
+			Promise.resolve(
+				new Response(JSON.stringify(envelope({ id: "one" })), { status: 200 })
+			)
+	);
+	vi.stubGlobal("fetch", fetch);
+	const form = new FormData();
+	form.append("file", new Blob(["Name"]), "people.csv");
+
+	await apiRequest(path, schema, {
+		anonymous: true,
+		method: "POST",
+		body: form,
+	});
+
+	const init = fetch.mock.calls[0]?.[1];
+	expect(init?.body).toBe(form);
+	expect(new Headers(init?.headers).get("Content-Type")).toBeNull();
+});
+it("downloads a file with the name the API suggests", async () => {
+	const fetch = vi.fn<(url: string, init: RequestInit) => Promise<Response>>(
+		() =>
+			Promise.resolve(
+				new Response("xlsx-bytes", {
+					status: 200,
+					headers: {
+						"Content-Disposition": 'attachment; filename="people-acme.xlsx"',
+					},
+				})
+			)
+	);
+	vi.stubGlobal("fetch", fetch);
+	configureApiClient({
+		accessToken: () => Promise.resolve("token"),
+		renew: () => Promise.resolve({ kind: "expired" }),
+		onUnauthenticated: () => {},
+	});
+
+	const file = await apiDownload("/api/v1/companies/c-1/file", "fallback.xlsx");
+	resetApiClient();
+
+	expect(file.fileName).toBe("people-acme.xlsx");
+	await expect(file.blob.text()).resolves.toBe("xlsx-bytes");
+	expect(new Headers(fetch.mock.calls[0]?.[1].headers).get("Accept")).toBe(
+		"*/*"
+	);
 });

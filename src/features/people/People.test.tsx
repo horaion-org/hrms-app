@@ -338,6 +338,67 @@ describe("People", () => {
 		});
 	});
 
+	it("exports the list as filtered and opens the import page for someone who may add people", async () => {
+		const user = userEvent.setup();
+		const createObjectUrl = vi.fn(() => "blob:people");
+		// jsdom has no object URLs; a subclass stands in without changing the real URL.
+		class DownloadUrl extends URL {
+			public static override createObjectURL = createObjectUrl;
+			public static override revokeObjectURL = vi.fn();
+		}
+		vi.stubGlobal("URL", DownloadUrl);
+		const calls = stubApi({
+			...baseRoutes(["member_profile:read", "member_profile:create"]),
+			[PEOPLE]: pageReply([person("m-1", "Moses Lee")]),
+			[`GET ${PEOPLE_PATH}/export`]: {
+				status: 200,
+				body: "xlsx",
+				headers: {
+					"Content-Disposition":
+						'attachment; filename="people-c-1-2026-11-04.xlsx"',
+				},
+			},
+		});
+		const opened = await open("/people?status=ACTIVE");
+		await screen.findByText("Moses Lee");
+
+		await user.click(screen.getByRole("button", { name: "Export" }));
+
+		await waitFor(() => {
+			expect(createObjectUrl).toHaveBeenCalled();
+		});
+		expect(searchesOf(calls, `${PEOPLE_PATH}/export`)).toEqual([
+			"status=ACTIVE",
+		]);
+		expect(
+			calls
+				.find((call) => call.path === `${PEOPLE_PATH}/export`)
+				?.headers.get("Accept")
+		).toBe("*/*");
+
+		await user.click(screen.getByRole("button", { name: "Import" }));
+		await waitFor(() => {
+			expect(opened.router.state.location.pathname).toBe("/people/import");
+		});
+	});
+
+	it("says when the filtered list is too large to export", async () => {
+		const user = userEvent.setup();
+		stubApi({
+			...baseRoutes(),
+			[PEOPLE]: pageReply([person("m-1", "Moses Lee")]),
+			[`GET ${PEOPLE_PATH}/export`]: problemReply(400, "EXPORT_TOO_LARGE"),
+		});
+		await open("/people");
+		await screen.findByText("Moses Lee");
+
+		await user.click(screen.getByRole("button", { name: "Export" }));
+
+		expect(await screen.findByRole("alert")).toHaveTextContent(
+			"More than 5,000 people match. Choose a Branch or Department first."
+		);
+	});
+
 	it("ticks people for bulk actions and clears the selection on another page", async () => {
 		const user = userEvent.setup();
 		stubApi({
@@ -349,8 +410,9 @@ describe("People", () => {
 		});
 		await open("/people");
 		await screen.findByText("Moses Lee");
-		expect(screen.getByRole("button", { name: "Import" })).toBeDisabled();
-		expect(screen.getByRole("button", { name: "Export" })).toBeDisabled();
+		// Importing needs member_profile:create; exporting only the list's read.
+		expect(screen.queryByRole("button", { name: "Import" })).toBeNull();
+		expect(screen.getByRole("button", { name: "Export" })).toBeEnabled();
 		expect(screen.queryByText(/employees? selected/)).toBeNull();
 
 		await user.click(
