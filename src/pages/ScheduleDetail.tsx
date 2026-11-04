@@ -1,6 +1,7 @@
 import {
 	getRouteApi,
 	SearchParamError,
+	useNavigate,
 	type ErrorComponentProps,
 } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
@@ -13,6 +14,7 @@ import { GeneratedRoster } from "@/features/scheduling/GeneratedRoster";
 import { GenerationFailurePanel } from "@/features/scheduling/GenerationFailurePanel";
 import type { DepartmentPath } from "@/features/scheduling/paths";
 import { RosterHeader } from "@/features/scheduling/RosterHeader";
+import { ScheduleMenu } from "@/features/scheduling/ScheduleMenu";
 import {
 	generationInProgress,
 	type Schedule,
@@ -165,6 +167,7 @@ const ApiSchedule = ({
 	scheduleId: string;
 }): FunctionComponent => {
 	const { t } = useTranslation();
+	const navigate = useNavigate();
 	const state = useSchedule(companyId, unit, scheduleId, {
 		pollWhileGenerating: true,
 	});
@@ -198,9 +201,18 @@ const ApiSchedule = ({
 				className="mt-4"
 				schedule={state.schedule}
 				actions={
-					<Button {...scheduleSetupLink(state.schedule)} variant="textlink">
-						{t(`${key}.viewSetup`)}
-					</Button>
+					<div className="flex items-center gap-4">
+						<Button {...scheduleSetupLink(state.schedule)} variant="textlink">
+							{t(`${key}.viewSetup`)}
+						</Button>
+						<ScheduleMenu
+							companyId={companyId}
+							schedule={state.schedule}
+							onDeleted={() => {
+								void navigate({ to: "/scheduling" });
+							}}
+						/>
+					</div>
 				}
 			/>
 			<RosterBody

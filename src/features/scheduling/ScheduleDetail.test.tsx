@@ -152,6 +152,55 @@ it("links a schedule to its setup in the wizard", async () => {
 	});
 });
 
+it("deletes the schedule from the header's menu and goes back to the overview", async () => {
+	const calls = await openRoster({
+		...signedIn(["schedule:read", "schedule:delete"]),
+		[`GET ${SCHEDULE}`]: ok(generatedScheduleFixture({ status: "GENERATED" })),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+		[`DELETE ${SCHEDULE}`]: { status: 204 },
+		"GET /api/v1/companies/c-1/schedules": ok({
+			content: [],
+			page: { hasNext: false },
+		}),
+	});
+	const user = userEvent.setup();
+
+	await user.click(
+		await screen.findByRole("button", {
+			name: "More actions for Front Office - Week 42",
+		})
+	);
+	await user.click(screen.getByRole("menuitem", { name: "Delete" }));
+	await user.click(
+		within(
+			screen.getByRole("dialog", { name: "Delete Front Office - Week 42?" })
+		).getByRole("button", { name: "Delete schedule" })
+	);
+
+	expect(
+		await screen.findByRole("heading", { level: 1, name: "Schedule overview" })
+	).toBeInTheDocument();
+	expect(app?.router.state.location.pathname).toBe("/scheduling");
+	expect(
+		calls.filter((call) => call.method === "DELETE" && call.path === SCHEDULE)
+	).toHaveLength(1);
+});
+
+it("offers no header menu without schedule:delete", async () => {
+	await openRoster({
+		...signedIn(),
+		[`GET ${SCHEDULE}`]: ok(generatedScheduleFixture({ status: "GENERATED" })),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+	});
+
+	await screen.findByRole("link", { name: "View setup" });
+	expect(
+		screen.queryByRole("button", {
+			name: "More actions for Front Office - Week 42",
+		})
+	).toBeNull();
+});
+
 it("shows a chosen day's shift read-only", async () => {
 	await openRoster({
 		...signedIn([
