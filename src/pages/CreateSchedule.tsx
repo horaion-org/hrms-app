@@ -19,6 +19,7 @@ import { ConstraintDialog } from "@/features/scheduling/constraints/ConstraintDi
 import { deleteConstraintRefusal } from "@/features/scheduling/constraints/constraintRefusal";
 import { ConstraintsStep } from "@/features/scheduling/constraints/ConstraintsStep";
 import { useConstraintActions } from "@/features/scheduling/constraints/useConstraintActions";
+import { NoConstraintsDialog } from "@/features/scheduling/constraints/NoConstraintsDialog";
 import { useConstraintOptions } from "@/features/scheduling/constraints/useConstraintOptions";
 import { departmentUnitOf } from "@/features/scheduling/departmentUnit";
 import { ForecastStep } from "@/features/scheduling/ForecastStep";
@@ -261,6 +262,8 @@ export const CreateSchedule = (): FunctionComponent => {
 	const [problem, setProblem] = useState("");
 	// Set when Next is refused, so the reason shows only after a try.
 	const [blocked, setBlocked] = useState(false);
+	// Set while the person is asked whether to go on without constraints.
+	const [confirmingNoConstraints, setConfirmingNoConstraints] = useState(false);
 	const setupFormId = useId();
 
 	const notify = (message: string): void => {
@@ -452,8 +455,15 @@ export const CreateSchedule = (): FunctionComponent => {
 			? t("scheduling.shifts.required")
 			: undefined;
 	const shownProblem = blocked ? stepProblem : undefined;
+	// Only when the list is known: a hidden or failed list may have constraints ticked.
+	const leavesWithoutConstraints =
+		step === "constraints" &&
+		!frozen &&
+		constraints.status === "ready" &&
+		tickedConstraints.length === 0;
 	const next = (): void => {
 		if (stepProblem) setBlocked(true);
+		else if (leavesWithoutConstraints) setConfirmingNoConstraints(true);
 		else goTo(current + 1);
 	};
 	const firstPeriod = defaultPeriod(today);
@@ -714,6 +724,18 @@ export const CreateSchedule = (): FunctionComponent => {
 									: "scheduling.constraints.added"
 							)
 						);
+					}}
+				/>
+			)}
+			{confirmingNoConstraints && (
+				<NoConstraintsDialog
+					constraintCount={constraintRows.length}
+					onClose={() => {
+						setConfirmingNoConstraints(false);
+					}}
+					onConfirm={() => {
+						setConfirmingNoConstraints(false);
+						goTo(current + 1);
 					}}
 				/>
 			)}

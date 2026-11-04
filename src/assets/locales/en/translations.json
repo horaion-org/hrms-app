@@ -2009,6 +2009,15 @@
 				"title": "Constraint preview",
 				"complete": "Complete",
 				"incomplete": "Incomplete"
+			},
+			"unticked": {
+				"title": "Continue without constraints?",
+				"none": "This department has no constraints yet.",
+				"noneTicked_one": "This department’s {{count}} constraint is not ticked.",
+				"noneTicked_other": "None of this department’s {{count}} constraints are ticked.",
+				"consequence": "The schedule will be generated without rules such as days off or maximum hours.",
+				"confirm": "Continue without constraints",
+				"cancel": "Back to constraints"
 			}
 		},
 		"forecast": {

@@ -961,6 +961,102 @@ describe("Create Schedule: the department's constraints", () => {
 		);
 	});
 
+	describe("leaving without constraints", () => {
+		const NONE_TICKED = {
+			[`GET ${SCHEDULE}`]: reply(
+				scheduleFixture({ includedConstraintIds: [] })
+			),
+		};
+
+		it("given_noConstraintTicked_when_nextClicked_then_asksFirstAndStaysOnCancel", async () => {
+			const user = userEvent.setup();
+			await reopen(NONE_TICKED);
+			await toConstraints(user);
+
+			await user.click(next());
+
+			const dialog = await screen.findByRole("dialog", {
+				name: "Continue without constraints?",
+			});
+			expect(dialog).toHaveTextContent(
+				`None of this department’s ${CONSTRAINT_FIXTURES.length} constraints are ticked. The schedule will be generated without rules such as days off or maximum hours.`
+			);
+			await user.click(
+				within(dialog).getByRole("button", { name: "Back to constraints" })
+			);
+			await waitFor(() => {
+				expect(screen.queryByRole("dialog")).toBeNull();
+			});
+			expect(
+				screen.getByRole("region", { name: "Scheduling constraints" })
+			).toBeVisible();
+		});
+
+		it("given_noConstraintTicked_when_continuedWithout_then_opensTheForecast", async () => {
+			const user = userEvent.setup();
+			await reopen(NONE_TICKED);
+			await toConstraints(user);
+
+			await user.click(next());
+			await user.click(
+				await screen.findByRole("button", {
+					name: "Continue without constraints",
+				})
+			);
+
+			expect(
+				await screen.findByRole("region", { name: "Staffing forecast" })
+			).toBeVisible();
+		});
+
+		it("given_aDepartmentWithoutConstraints_when_nextClicked_then_saysItHasNone", async () => {
+			const user = userEvent.setup();
+			await reopen({ ...NONE_TICKED, [`GET ${LIVE_CONSTRAINTS}`]: reply([]) });
+			await toConstraints(user);
+
+			await user.click(next());
+
+			expect(
+				await screen.findByRole("dialog", {
+					name: "Continue without constraints?",
+				})
+			).toHaveTextContent("This department has no constraints yet.");
+		});
+
+		it("given_aConstraintTicked_when_nextClicked_then_goesOnWithoutAsking", async () => {
+			const user = userEvent.setup();
+			await reopen();
+			await toConstraints(user);
+
+			await user.click(next());
+
+			expect(
+				await screen.findByRole("region", { name: "Staffing forecast" })
+			).toBeVisible();
+			expect(screen.queryByRole("dialog")).toBeNull();
+		});
+
+		it("given_hiddenConstraints_when_nextClicked_then_goesOnWithoutAsking", async () => {
+			const user = userEvent.setup();
+			await reopen(NONE_TICKED, [
+				"schedule:read",
+				"schedule:update",
+				"shift:read",
+			]);
+			await toConstraints(user);
+			await screen.findByText(
+				"You don’t have permission to see this department’s constraints."
+			);
+
+			await user.click(next());
+
+			expect(
+				await screen.findByRole("region", { name: "Staffing forecast" })
+			).toBeVisible();
+			expect(screen.queryByRole("dialog")).toBeNull();
+		});
+	});
+
 	it("given_noConstraintReadKey_when_onConstraints_then_saysTheyAreHiddenAndKeepsTheTicks", async () => {
 		const user = userEvent.setup();
 		const { calls } = await reopen({ [`PUT ${SCHEDULE}`]: reply(DRAFT) }, [

@@ -1199,6 +1199,15 @@
 				"title": "Vista previa de la restricción",
 				"complete": "Completa",
 				"incomplete": "Incompleta"
+			},
+			"unticked": {
+				"title": "¿Continuar sin restricciones?",
+				"none": "Este departamento aún no tiene restricciones.",
+				"noneTicked_one": "La {{count}} restricción de este departamento no está marcada.",
+				"noneTicked_other": "Ninguna de las {{count}} restricciones de este departamento está marcada.",
+				"consequence": "El horario se generará sin reglas como días libres u horas máximas.",
+				"confirm": "Continuar sin restricciones",
+				"cancel": "Volver a las restricciones"
 			}
 		},
 		"forecast": {
