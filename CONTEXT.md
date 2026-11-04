@@ -125,8 +125,20 @@ The morning or the afternoon of one day; the smallest amount of leave a person c
 _Avoid_: Partial day, AM leave, PM leave
 
 **Leave type**:
-The kind of leave a Leave request is for. Every Company has the same fixed list: Annual, Sick, Hospitalisation, Compassionate, Maternity, Unpaid, and Marriage.
-_Avoid_: Leave category, leave code
+A kind of leave a Company offers and a Leave request is for. Every Company starts with the same default set (Annual, Sick, Hospitalisation, Childcare, Maternity, Paternity, Shared parental, Marriage, Compassionate, Off in lieu, Unpaid and Other); its admins will add, rename, reorder and deactivate them, and never delete one. Each has a Grant kind and may ask for a reason when someone applies. The app names a Leave type as the Company does, never in its own words.
+_Avoid_: Request type, leave code, absence type
+
+**Grant kind**:
+How a Leave type is counted: a Yearly allowance (an Allowance each Leave year), Per occasion (a set number of days each time it happens), or No allowance (not counted against anything). Chosen when the type is made, and fixed once the type is used. The apply form groups Leave types under these headings.
+_Avoid_: Leave category, grant type, entitlement type
+
+**Per occasion**:
+A Grant kind for leave given each time a life event happens, such as Marriage or Paternity leave. It has no Balance.
+_Avoid_: Event leave, one-off leave
+
+**Day off**:
+A day the scheduler leaves a person unassigned on the roster. It is the one system Leave type: nobody applies for it, it is never a Leave request, and the apply form never offers it.
+_Avoid_: Rest day (in interface copy), OFF (in prose)
 
 **Allowance**:
 The number of days of one Leave type a person may take in a Leave year. A Company sets one for each Leave type and can give a particular person a different one.
