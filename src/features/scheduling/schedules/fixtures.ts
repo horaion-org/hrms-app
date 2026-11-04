@@ -86,7 +86,12 @@ const ROSTER_MEMBERS = [
 	},
 ] as const;
 
-/** What the engine found for schedule s-1's roster: one of each kind of finding. */
+/**
+ * What the engine found for schedule s-1's roster, shaped as the API serves
+ * it (the engine's camelCase keys, entities included): an error about Ben, a
+ * shift nobody can take, Saturday morning one short, and a message on
+ * Chen's Sunday.
+ */
 export const generationFindingsFixture = (
 	overrides: Partial<GenerationFindings> = {}
 ): GenerationFindings => ({
@@ -96,17 +101,17 @@ export const generationFindingsFixture = (
 	errors: [
 		{
 			employeeId: "mp-2",
-			date: "2026-10-17",
+			date: null,
 			messages: ["Ben Ong works more than five days in a row."],
 		},
 	],
 	diagnostics: [
 		{
-			code: "role_without_staff",
+			code: "DEAD_SHIFT",
 			severity: "warning",
 			audience: "configuration",
-			message: "No one can work as Pastry Assistant.",
-			entities: { roleUuid: "pastry-assistant", shiftUuid: null },
+			message: "Shift Breakfast Prep: no employee holds an eligible role.",
+			entities: { shiftId: shiftCopyId("breakfast-prep") },
 		},
 	],
 	conflicts: [
@@ -115,13 +120,13 @@ export const generationFindingsFixture = (
 			conflictId: "cf-1",
 			date: "2026-10-17",
 			roleUuid: "front-desk-staff",
-			startBlock: 18,
-			endBlock: 30,
-			start: "09:00",
-			end: "15:00",
+			startBlock: 258,
+			endBlock: 270,
+			start: "2026-10-17T09:00:00",
+			end: "2026-10-17T15:00:00",
 			missing: 1,
 			message: "Front Desk AM is one Front Desk Staff short.",
-			sourceRule: "Morning cover",
+			sourceRule: "shift_demand_requirement",
 			sourceRuleId: constraintCopyId("morning-cover"),
 			shiftUuids: [shiftCopyId("front-desk-am")],
 			repairRungs: ["extend_shift"],
@@ -144,6 +149,116 @@ export const generationFindingsFixture = (
 	),
 	...overrides,
 });
+
+/** A setup diagnostic of schedule s-1, as the engine words and keys it. */
+const diagnosticFixture = (
+	code: string,
+	message: string,
+	entities: Record<string, unknown>,
+	severity = "warning"
+): GenerationFindings["diagnostics"][number] => ({
+	code,
+	severity,
+	audience: "configuration",
+	message,
+	entities,
+});
+
+/**
+ * Every kind of finding the roster page places: the four known diagnostic
+ * codes and one it doesn't know, a day's error, a conflict about one member,
+ * a conflict from the demand forecast, one whose constraint isn't listed, and
+ * an error about a member who no longer resolves (mp-9).
+ */
+export const findingsOfEveryKindFixture = (): GenerationFindings => {
+	const findings = generationFindingsFixture();
+	const [morningCover] = findings.conflicts;
+	return generationFindingsFixture({
+		errors: [
+			...findings.errors,
+			{
+				employeeId: null,
+				date: "2026-10-16",
+				messages: ["Friday is short of one Cashier."],
+			},
+			{
+				employeeId: "mp-9",
+				date: null,
+				messages: ["An unknown member is short of rest."],
+			},
+		],
+		diagnostics: [
+			diagnosticFixture(
+				"UNCOVERABLE_DEMAND",
+				"Role Front Desk Staff: no shift can cover 2026-10-17 06:00-08:00 - add a covering shift or adjust the demand forecast.",
+				{ roleId: "front-desk-staff", firstBlock: 252, lastBlock: 255 }
+			),
+			diagnosticFixture(
+				"RULE_REFERENCES_MISSING_ENTITY",
+				'Rule "Lunch cover with stand-ins": references 2 entities not present in this schedule\'s input.',
+				{
+					rule: "shift_demand_with_substitutes",
+					missing: ["service-staff", "supervisor"],
+				}
+			),
+			diagnosticFixture(
+				"UNASSIGNABLE_EMPLOYEE",
+				"Ben Ong (Front Desk Staff): no shift fits their role and availability this horizon - they can only be scheduled off.",
+				{ employeeId: "mp-2", roleId: "front-desk-staff" }
+			),
+			...findings.diagnostics,
+			diagnosticFixture(
+				"SHIFT_TOO_SHORT",
+				"Shift Lunch Rush is shorter than one block.",
+				{},
+				"info"
+			),
+		],
+		conflicts: [
+			...findings.conflicts,
+			{
+				...morningCover!,
+				conflictId: "cf-2",
+				date: "2026-10-16",
+				start: "2026-10-16T11:00:00",
+				end: "2026-10-16T13:00:00",
+				message: "Lunch is one Cashier short.",
+				sourceRule: "timeblock_demand_coverage",
+				sourceRuleId: null,
+			},
+			{
+				...morningCover!,
+				conflictId: "cf-3",
+				date: "2026-10-16",
+				start: "2026-10-16T07:00:00",
+				end: "2026-10-16T09:00:00",
+				missing: 2,
+				message: "Early desk is two short.",
+				sourceRule: "shift_presence_requirement",
+				sourceRuleId: "a-constraint-not-listed",
+			},
+			{
+				...morningCover!,
+				conflictId: "cf-4",
+				message: "Ben Ong is short of rest before Saturday.",
+				employeeUuid: "mp-2",
+			},
+		],
+		members: [
+			...findings.members,
+			{ memberProfileId: "mp-9", membershipId: null, displayName: null },
+		],
+	});
+};
+
+/** A generated roster the engine found nothing to say about. */
+export const emptyFindingsFixture = (): GenerationFindings =>
+	generationFindingsFixture({
+		errors: [],
+		diagnostics: [],
+		conflicts: [],
+		assignmentMessages: [],
+	});
 
 /** Run run-1 of schedule s-1, succeeded with a feasible roster. */
 export const generationFixture = (
