@@ -50,7 +50,10 @@ export const emailConfirmationSchema = (
 }> =>
 	z.object({
 		email: email(t),
-		code: z.string().regex(/^\d{6}$/, t("auth.emailConfirmation.codeFormat")),
+		code: z
+			.string()
+			.trim()
+			.regex(/^\d{6}$/, t("auth.emailConfirmation.codeFormat")),
 	});
 export type EmailConfirmationValues = z.infer<
 	ReturnType<typeof emailConfirmationSchema>

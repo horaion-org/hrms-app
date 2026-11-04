@@ -365,7 +365,9 @@
 			"trouble": "Having trouble logging in?",
 			"pending": "Logging in…",
 			"noAccount": "Don’t have an account?",
-			"signUp": "Sign up"
+			"signUp": "Sign up",
+			"haveCode": "Have a confirmation code?",
+			"confirmEmail": "Confirm your email"
 		},
 		"logOut": "Log out",
 		"errors": {
@@ -394,20 +396,26 @@
 		"emailConfirmation": {
 			"title": "Email confirmation",
 			"subtitle": "Enter the six-digit code sent to your email.",
+			"codeSent": "Your account is created. We sent a confirmation code to your email.",
 			"details": "Email confirmation details",
 			"email": "Email address",
 			"code": "Confirmation code",
+			"codeHint": "Codes last 24 hours. If yours is older, send a new one.",
 			"submit": "Confirm email",
 			"pending": "Confirming email…",
 			"didNotReceive": "Didn’t receive a code?",
-			"resend": "Resend",
+			"resend": "Send a new code",
+			"resendIn": "Send a new code ({{time}})",
 			"resending": "Sending…",
 			"resent": "If that email needs confirming, we've sent a new code",
 			"redirecting": "Your email is confirmed. Redirecting to log in in 3 seconds.",
 			"required": "Confirm your email before logging in.",
 			"invalidCode": "That code is incorrect or has expired. Try again or send a new code.",
 			"codeFormat": "Enter a six-digit code.",
-			"failed": "We couldn’t confirm your email. Please try again."
+			"failed": "We couldn’t confirm your email. Please try again.",
+			"wrongEmail": "Signed up with the wrong email?",
+			"signUpAgain": "Sign up again",
+			"removalNotice": "Sign-ups that are not confirmed are removed after 3 days."
 		}
 	},
 	"calendar": {

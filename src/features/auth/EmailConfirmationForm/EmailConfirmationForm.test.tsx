@@ -56,6 +56,20 @@ const confirm = async (): Promise<void> => {
 		.setup()
 		.click(screen.getByRole("button", { name: copy.submit }));
 };
+const resendWaiting = (time: string): string =>
+	copy.resendIn.replace("{{time}}", time);
+const arriveFromLogIn = async (): Promise<OpenedApp> => {
+	const opened = await open("/login");
+	const user = userEvent.setup();
+	await user.type(screen.getByLabelText("Email", { exact: true }), EMAIL);
+	await user.type(
+		screen.getByLabelText("Password", { exact: true }),
+		"Example123!"
+	);
+	await user.click(screen.getByRole("button", { name: "Log in" }));
+	await screen.findByRole("heading", { name: copy.title });
+	return opened;
+};
 const privateLocation = (opened: OpenedApp): void => {
 	expect(decodeURIComponent(opened.router.state.location.href)).not.toContain(
 		EMAIL
@@ -69,6 +83,10 @@ it("offers working empty fields on a direct visit, validates six digits, and ign
 	const calls = stubApi({});
 	await open("/confirm-email?email=untrusted%40example.test");
 	expect(screen.getByLabelText(copy.email)).toHaveValue("");
+	expect(screen.queryByRole("status")).not.toBeInTheDocument();
+	expect(screen.getByLabelText(copy.code)).toHaveAccessibleDescription(
+		copy.codeHint
+	);
 	expect(screen.getByLabelText(copy.code)).toHaveAttribute(
 		"inputmode",
 		"numeric"
@@ -132,6 +150,7 @@ it("carries the email from Onboarding, confirms anonymously, and lands on prefil
 	await user.click(screen.getByRole("button", { name: "Sign up" }));
 	await screen.findByRole("heading", { name: copy.title });
 	expect(screen.getByLabelText(copy.email)).toHaveValue(EMAIL);
+	expect(screen.getByRole("status")).toHaveTextContent(copy.codeSent);
 	privateLocation(opened);
 	await user.type(screen.getByLabelText(copy.code), "123456");
 	vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
@@ -143,7 +162,9 @@ it("carries the email from Onboarding, confirms anonymously, and lands on prefil
 	expect(opened.router.state.location.pathname).toBe("/confirm-email");
 	expect(screen.getByLabelText(copy.email)).toBeDisabled();
 	expect(screen.getByRole("button", { name: copy.submit })).toBeDisabled();
-	expect(screen.getByRole("button", { name: copy.resend })).toBeDisabled();
+	expect(
+		screen.getByRole("button", { name: resendWaiting("1:00") })
+	).toBeDisabled();
 	await act(async () => {
 		fireEvent.submit(
 			screen.getByRole("button", { name: copy.submit }).closest("form")!
@@ -188,7 +209,7 @@ it("cancels the delayed redirect when leaving confirmation", async () => {
 	expect(opened.router.state.location.pathname).toBe("/register");
 });
 
-it("carries the email from a 403 EMAIL_NOT_VERIFIED at Log in", async () => {
+it("brings a person who left after signing up back from a fresh Log in, with the email and the reason", async () => {
 	stubApi({
 		"POST /api/v1/public/sessions": problemReply(403, "EMAIL_NOT_VERIFIED"),
 	});
@@ -203,7 +224,31 @@ it("carries the email from a 403 EMAIL_NOT_VERIFIED at Log in", async () => {
 	await screen.findByRole("heading", { name: copy.title });
 	expect(opened.router.state.location.pathname).toBe("/confirm-email");
 	expect(screen.getByLabelText(copy.email)).toHaveValue(EMAIL);
+	expect(screen.getByRole("status")).toHaveTextContent(copy.required);
 	privateLocation(opened);
+});
+
+it("keeps the arrival status beside a refused code", async () => {
+	stubApi({
+		"POST /api/v1/public/sessions": problemReply(403, "EMAIL_NOT_VERIFIED"),
+		[`POST ${CONFIRM}`]: problemReply(400, "INVALID_CODE"),
+	});
+	await arriveFromLogIn();
+	await userEvent.setup().type(screen.getByLabelText(copy.code), "123456");
+	await confirm();
+	expect(await screen.findByRole("alert")).toHaveTextContent(copy.invalidCode);
+	expect(screen.getByRole("status")).toHaveTextContent(copy.required);
+});
+
+it("sends a person who used the wrong email back to sign up", async () => {
+	stubApi({});
+	const opened = await open();
+	expect(screen.getByText(copy.removalNotice)).toBeVisible();
+	await userEvent
+		.setup()
+		.click(screen.getByRole("link", { name: copy.signUpAgain }));
+	await screen.findByRole("heading", { name: "Sign up" });
+	expect(opened.router.state.location.pathname).toBe("/register");
 });
 
 it("prefills Log in from history", async () => {
@@ -377,3 +422,74 @@ it.each([CONFIRM, RESEND])(
 		expect(screen.getByRole("button", { name: copy.resend })).toBeEnabled();
 	}
 );
+
+it("offers a new code straight away to a person sent from Log in", async () => {
+	stubApi({
+		"POST /api/v1/public/sessions": problemReply(403, "EMAIL_NOT_VERIFIED"),
+	});
+	await arriveFromLogIn();
+	expect(screen.getByRole("button", { name: copy.resend })).toBeEnabled();
+});
+
+it("waits a minute after a new code before offering another", async () => {
+	const calls = stubApi({ [`POST ${RESEND}`]: { status: 202 } });
+	await open();
+	await userEvent.setup().type(screen.getByLabelText(copy.email), EMAIL);
+	vi.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
+	await act(async () => {
+		fireEvent.click(screen.getByRole("button", { name: copy.resend }));
+		await Promise.resolve();
+	});
+	await act(async () => {
+		await vi.advanceTimersByTimeAsync(0);
+	});
+	expect(screen.getByRole("status")).toHaveTextContent(copy.resent);
+	const waiting = screen.getByRole("button", { name: resendWaiting("1:00") });
+	expect(waiting).toBeDisabled();
+	await act(async () => {
+		await vi.advanceTimersByTimeAsync(18_000);
+	});
+	expect(waiting).toHaveAccessibleName(resendWaiting("0:42"));
+	await act(async () => {
+		fireEvent.click(waiting);
+		await vi.advanceTimersByTimeAsync(42_000);
+	});
+	expect(calls).toHaveLength(1);
+	expect(screen.getByRole("button", { name: copy.resend })).toBeEnabled();
+});
+
+it.each(["/login", "/register"])(
+	"links %s to email confirmation with empty fields and no status",
+	async (entry) => {
+		const calls = stubApi({});
+		const opened = await open(entry);
+		const user = userEvent.setup();
+		expect(screen.getByText(en.auth.logIn.haveCode)).toBeVisible();
+		await user.click(
+			screen.getByRole("link", { name: en.auth.logIn.confirmEmail })
+		);
+		await screen.findByRole("heading", { name: copy.title });
+		expect(opened.router.state.location.href).toBe("/confirm-email");
+		expect(screen.getByLabelText(copy.email)).toHaveValue("");
+		expect(screen.getByLabelText(copy.code)).toHaveValue("");
+		expect(screen.queryByRole("status")).not.toBeInTheDocument();
+		expect(screen.getByRole("button", { name: copy.resend })).toBeEnabled();
+		expect(calls).toHaveLength(0);
+	}
+);
+
+it("confirms a person who lands from the email link with no navigation state and pastes the code with spaces", async () => {
+	const calls = stubApi({ [`POST ${CONFIRM}`]: { status: 204 } });
+	const opened = await open();
+	expect(opened.router.state.location.href).toBe("/confirm-email");
+	expect(screen.queryByRole("status")).not.toBeInTheDocument();
+	expect(screen.getByRole("button", { name: copy.resend })).toBeEnabled();
+	const user = userEvent.setup();
+	await user.type(screen.getByLabelText(copy.email), EMAIL);
+	await user.click(screen.getByLabelText(copy.code));
+	await user.paste(" 123456 ");
+	await confirm();
+	expect(await screen.findByRole("status")).toHaveTextContent(copy.redirecting);
+	expect(calls[0]?.body).toEqual({ email: EMAIL, code: "123456" });
+	privateLocation(opened);
+});
