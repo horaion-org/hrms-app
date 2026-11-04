@@ -789,7 +789,8 @@
 			"forbidden": "You don’t have permission to view this list.",
 			"noMatches": "Nothing matches your search or filter.",
 			"truncated": "Showing the first {{shown}} of {{total}}. Use the status filter to narrow the list.",
-			"cancel": "Cancel"
+			"cancel": "Cancel",
+			"branch": "Branch"
 		},
 		"branches": {
 			"title": "Branches",

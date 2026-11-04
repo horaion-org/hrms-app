@@ -1,6 +1,5 @@
+import { getRouteApi } from "@tanstack/react-router";
 import { useCallback, useMemo, useState } from "react";
-import { departmentScope } from "@/features/workspace/scopes";
-import { useAccess } from "@/features/workspace/useAccess";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -11,6 +10,7 @@ import { CreateDepartmentDialog } from "@/features/organisation/CreateDepartment
 import { ListToolbar } from "@/features/organisation/ListToolbar";
 import {
 	actionsColumn,
+	branchColumn,
 	describeList,
 	isStatusFilter,
 	nameColumn,
@@ -22,10 +22,45 @@ import { mapRefusal } from "@/features/organisation/refusal";
 import { useSetDepartmentStatus } from "@/features/organisation/useChangeListRow";
 import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import { useDepartments } from "@/features/organisation/useOrganisationList";
+import { DEPARTMENT_READ_KEYS } from "@/features/workspace/permissionKeys";
+import { departmentScope } from "@/features/workspace/scopes";
+import {
+	unitSearchFor,
+	unitSelectionOf,
+} from "@/features/workspace/unitSearch";
+import {
+	clearedUnits,
+	sameUnits,
+	unitsNarrowed,
+	urlUnitsOf,
+	type UnitSelection,
+} from "@/features/workspace/unitSelection";
+import { UnitSelector } from "@/features/workspace/UnitSelector";
+import { useAccess } from "@/features/workspace/useAccess";
+import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 
+const route = getRouteApi("/_authenticated/_app/organisation/departments");
+
+/** Every Branch by default; the Departments list has no Department filter of its own. */
+const UNIT_RULES = { allowAllBranches: true, withDepartment: false };
+
+/**
+ * The company's Departments across the Branches in reach, one Branch at a
+ * time when one is chosen. The Branch lives in the URL; search, status and
+ * sort stay on the page.
+ */
 export const Departments = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
 	const { t } = useTranslation();
+	const navigate = route.useNavigate();
+	const requested = unitSelectionOf(route.useSearch());
+	const units = useUnitSelection(
+		companyId,
+		DEPARTMENT_READ_KEYS,
+		requested,
+		UNIT_RULES
+	);
+	const branchShown = units.branch !== undefined;
 	const [creating, setCreating] = useState(false);
 	const [editing, setEditing] = useState<Department>();
 	// The Department whose status the person asked to change, until they confirm or cancel.
@@ -54,17 +89,32 @@ export const Departments = (): FunctionComponent => {
 	const list = useDepartments(companyId, {
 		sort: { field: sort.id, desc: sort.desc },
 		status: status === "all" ? undefined : status,
+		...(units.branch ? { branchId: units.branch.branchId } : {}),
 	});
+	const filtered = status !== "all" || unitsNarrowed(units);
 	const view = describeList(
 		list,
 		search,
-		status !== "all",
+		filtered,
 		t("organisation.departments.empty"),
 		t
 	);
+	const chooseUnits = (next: UnitSelection): void => {
+		// The selector naming the units already shown replaces the history entry instead of adding one.
+		void navigate({
+			search: (previous) => ({ ...previous, ...unitSearchFor(next) }),
+			replace: sameUnits(next, urlUnitsOf(units)),
+		});
+	};
+	const clearFilters = (): void => {
+		setStatus("all");
+		chooseUnits(clearedUnits(units));
+	};
 	const columns = useMemo(
 		() => [
 			nameColumn<Department>(t("organisation.departments.name")),
+			// A Branch already chosen is not repeated on every row.
+			...(branchShown ? [] : [branchColumn<Department>(t)]),
 			statusColumn<Department>(t),
 			actionsColumn<Department>(
 				t,
@@ -97,7 +147,7 @@ export const Departments = (): FunctionComponent => {
 				setEditing
 			),
 		],
-		[t, canUpdate]
+		[t, canUpdate, branchShown]
 	);
 
 	return (
@@ -121,6 +171,14 @@ export const Departments = (): FunctionComponent => {
 						if (isStatusFilter(value)) setStatus(value);
 					},
 				}}
+				scope={
+					<UnitSelector
+						requested={requested}
+						selection={units}
+						onChange={chooseUnits}
+					/>
+				}
+				onClearFilters={filtered ? clearFilters : undefined}
 				onSearchChange={setSearch}
 				onCreate={
 					canCreate

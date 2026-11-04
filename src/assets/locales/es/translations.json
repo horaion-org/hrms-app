@@ -574,7 +574,8 @@
 			}
 		},
 		"list": {
-			"showing": "Mostrar"
+			"showing": "Mostrar",
+			"branch": "Sucursal"
 		}
 	},
 	"shell": {

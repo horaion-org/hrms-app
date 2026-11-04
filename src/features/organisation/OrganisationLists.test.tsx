@@ -145,6 +145,7 @@ const department = (
 ): Record<string, unknown> => ({
 	departmentId,
 	branchId: "b-1",
+	branchName: "Orchard",
 	companyId: "c-1",
 	name,
 	status,
@@ -532,6 +533,38 @@ describe("Branches", () => {
 });
 
 describe("Departments", () => {
+	it("narrows to the Branch chosen, kept in the URL, without a Branch column", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...baseRoutes(),
+			[DEPARTMENTS]: pageReply([department("d-1", "Front Office")]),
+		});
+		const opened = await open("/organisation/departments");
+		await screen.findByRole("table", { name: "Departments" });
+
+		expect(screen.getByRole("button", { name: "Branch" })).toHaveTextContent(
+			"All branches"
+		);
+		expect(
+			screen.queryByRole("button", { name: "Department" })
+		).not.toBeInTheDocument();
+		await user.click(screen.getByRole("button", { name: "Branch" }));
+		await user.click(screen.getByRole("option", { name: "Orchard" }));
+
+		await waitFor(() => {
+			expect(searchesOf(calls, "/api/v1/companies/c-1/departments")).toEqual([
+				"size=100&sort=name%2Casc",
+				"size=100&sort=name%2Casc&branchId=b-1",
+			]);
+		});
+		expect(opened.router.state.location.search).toEqual({ branch: "b-1" });
+		expect(
+			within(screen.getByRole("table", { name: "Departments" }))
+				.getAllByRole("columnheader")
+				.map((header) => header.textContent)
+		).toEqual(["Select all", "Department name", "Status", "Actions"]);
+	});
+
 	it("lists the company's departments with the same toolbar and filter", async () => {
 		const calls = stubApi({
 			...baseRoutes(),
@@ -548,7 +581,7 @@ describe("Departments", () => {
 			within(table)
 				.getAllByRole("columnheader")
 				.map((header) => header.textContent)
-		).toEqual(["Select all", "Department name", "Status", "Actions"]);
+		).toEqual(["Select all", "Department name", "Branch", "Status", "Actions"]);
 		expect(
 			screen.getByRole("searchbox", { name: "Search department" })
 		).toBeVisible();

@@ -49,6 +49,11 @@ export const ORGANISATION_READ_KEYS: ReadonlyArray<PermissionKey> = [
 	"audit_event:read",
 ];
 
+/** A Department is listed where this is held: the Departments list's Branch choices. */
+export const DEPARTMENT_READ_KEYS: ReadonlyArray<PermissionKey> = [
+	"department:read",
+];
+
 /**
  * Holding this at any scope is what makes the People Module worth offering.
  * The API lists only the people in the units where it is held.

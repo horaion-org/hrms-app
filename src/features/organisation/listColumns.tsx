@@ -54,6 +54,15 @@ export const nameColumn = <T extends { name: string }>(
 	cellClassName: "font-semibold",
 });
 
+/** The Branch each row belongs to, by name. */
+export const branchColumn = <T extends { branchName?: string }>(
+	t: TFunction
+): DataTableColumn<T> => ({
+	id: "branch",
+	header: t("organisation.list.branch"),
+	cell: (row) => row.branchName ?? "",
+});
+
 export const statusColumn = <T extends { status: UnitStatus }>(
 	t: TFunction
 ): DataTableColumn<T> => ({

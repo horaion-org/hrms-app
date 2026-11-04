@@ -113,6 +113,8 @@ export const createBranch = (
 const departmentSchema = z.object({
 	departmentId: z.string(),
 	branchId: z.string(),
+	/** Optional until every API the app talks to sends it. */
+	branchName: z.string().optional(),
 	name: z.string(),
 	status: unitStatusSchema,
 });
@@ -219,6 +221,8 @@ export type ListSort = { field: string; desc: boolean };
 export type ListQuery = {
 	sort: ListSort;
 	status?: UnitStatus;
+	/** Departments and Job titles only: those of one Branch. */
+	branchId?: string;
 	/** Job titles only: those of one Department. */
 	departmentId?: string;
 };
@@ -226,13 +230,14 @@ export type ListQuery = {
 const listPath = (
 	companyId: string,
 	resource: string,
-	{ sort, status, departmentId }: ListQuery
+	{ sort, status, branchId, departmentId }: ListQuery
 ): string => {
 	const search = new URLSearchParams({
 		size: String(LIST_PAGE_SIZE),
 		sort: `${sort.field},${sort.desc ? "desc" : "asc"}`,
 	});
 	if (status) search.set("status", status);
+	if (branchId) search.set("branchId", branchId);
 	if (departmentId) search.set("departmentId", departmentId);
 	return `${companyPath(companyId)}/${resource}?${search.toString()}`;
 };
@@ -506,12 +511,13 @@ export const updateBranch = (
 /** Replaces a Department's name and status; the server owns uniqueness. */
 export const updateDepartment = (
 	companyId: string,
-	{ departmentId, branchId, ...body }: Department
+	{ departmentId, branchId, name, status }: Department
 ): Promise<Department> =>
 	apiRequest(
 		`${companyPath(companyId)}/branches/${encodeURIComponent(branchId)}/departments/${encodeURIComponent(departmentId)}`,
 		departmentSchema,
-		{ method: "PUT", body }
+		// Only what the API replaces: read-only fields such as the Branch's name never travel back.
+		{ method: "PUT", body: { name, status } }
 	);
 
 /** Replaces a Job title's name, description and status; its Department never changes. */
