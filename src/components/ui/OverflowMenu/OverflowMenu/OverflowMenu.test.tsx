@@ -343,4 +343,21 @@ describe("OverflowMenu icon variant", () => {
 		expect(trigger).toBeDisabled();
 		expect(screen.queryByRole("menu")).not.toBeInTheDocument();
 	});
+
+	it("opens from a person's avatar, named by its label", async () => {
+		const user = userEvent.setup();
+		render(
+			<OverflowMenu label="Account menu" name="Kent Chua" variant="avatar">
+				<OverflowMenuItem>My profile</OverflowMenuItem>
+			</OverflowMenu>
+		);
+		const trigger = screen.getByRole("button", { name: "Account menu" });
+		expect(trigger).toHaveTextContent("KC");
+		await user.click(trigger);
+		expect(
+			within(screen.getByRole("menu")).getByRole("menuitem", {
+				name: "My profile",
+			})
+		).toBeVisible();
+	});
 });

@@ -2,6 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { OverflowMenu, OverflowMenuItem } from "@/components/ui/OverflowMenu";
+import { MemoryRouterHarness } from "@/components/utils/MemoryRouterHarness";
 
 describe("OverflowMenuItem", () => {
 	it("keeps a previously highlighted action white and inert when it becomes disabled", async () => {
@@ -199,5 +200,25 @@ describe("OverflowMenuItem", () => {
 		expect(edit).not.toHaveClass("text-error-700");
 		expect(remove).toHaveClass("text-error-700");
 		expect(remove).not.toHaveClass("text-neutral-900");
+	});
+
+	it("renders an item with `to` as a link that keeps the item's look and closes the menu when followed", async () => {
+		const user = userEvent.setup();
+		render(
+			<MemoryRouterHarness>
+				<OverflowMenu label="Actions">
+					<OverflowMenuItem to="/register">Register</OverflowMenuItem>
+				</OverflowMenu>
+			</MemoryRouterHarness>
+		);
+		await user.click(await screen.findByRole("button", { name: "Actions" }));
+		const link = screen.getByRole("menuitem", { name: "Register" });
+		expect(link.tagName).toBe("A");
+		expect(link).toHaveAttribute("href", "/register");
+		expect(link).toHaveClass("h-11", "text-neutral-900");
+		await user.click(link);
+		await waitFor(() => {
+			expect(screen.queryByRole("menu")).not.toBeInTheDocument();
+		});
 	});
 });

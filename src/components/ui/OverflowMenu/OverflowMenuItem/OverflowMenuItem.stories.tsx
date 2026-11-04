@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn, userEvent, within } from "storybook/test";
 import type { FunctionComponent } from "@/common/types";
 import { OverflowMenu, OverflowMenuItem } from "@/components/ui/OverflowMenu";
+import { withMemoryRouter } from "@/components/utils/MemoryRouterHarness";
 
 const meta = {
 	title: "UI/OverflowMenu/OverflowMenuItem",
@@ -38,5 +39,12 @@ export const Disabled: Story = {
 
 export const Danger: Story = {
 	args: { children: "Delete", tone: "danger" },
+	play: Default.play,
+};
+
+/** Given `to`, the item is a link to that page instead of an action. */
+export const Link: Story = {
+	decorators: [withMemoryRouter],
+	args: { children: "Change password", onClick: undefined, to: "/register" },
 	play: Default.play,
 };

@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn, userEvent, within } from "storybook/test";
 import { OverflowMenu, OverflowMenuItem } from "@/components/ui/OverflowMenu";
+import { withMemoryRouter } from "@/components/utils/MemoryRouterHarness";
 
 const meta = {
 	title: "UI/OverflowMenu/OverflowMenu",
@@ -45,5 +46,25 @@ export const Open: Story = {
 /** The compact trigger used in a table row's actions cell. */
 export const Icon: Story = {
 	args: { variant: "icon", label: "More actions", className: undefined },
+	play: Open.play,
+};
+
+/** A person's avatar as the trigger, with link items: the header's account menu. */
+export const Avatar: Story = {
+	decorators: [withMemoryRouter],
+	args: {
+		variant: "avatar",
+		label: "Account menu",
+		name: "Kent Chua",
+		className: undefined,
+		children: [
+			<OverflowMenuItem key="profile" to="/">
+				My profile
+			</OverflowMenuItem>,
+			<OverflowMenuItem key="password" to="/register">
+				Change password
+			</OverflowMenuItem>,
+		],
+	},
 	play: Open.play,
 };
