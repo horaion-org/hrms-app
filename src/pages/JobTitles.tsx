@@ -64,7 +64,10 @@ export const JobTitles = (): FunctionComponent => {
 	);
 	const columns = useMemo(
 		() => [
-			nameColumn<JobTitle>(t("organisation.jobTitles.name")),
+			nameColumn<JobTitle>(
+				t("organisation.jobTitles.name"),
+				(jobTitle) => jobTitle.description
+			),
 			{
 				id: "department",
 				header: t("organisation.jobTitles.department"),

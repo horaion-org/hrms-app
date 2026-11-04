@@ -24,13 +24,32 @@ export const statusFilterOptions = (
 export const isStatusFilter = (value: string): value is StatusFilter =>
 	value === "all" || value === "ACTIVE" || value === "INACTIVE";
 
-/** The bold, sortable first column naming each row. */
+/**
+ * The bold, sortable first column naming each row. `detail` adds a muted
+ * second line under the name, cut to one line with the full text on hover;
+ * rows without it stay one line.
+ */
 export const nameColumn = <T extends { name: string }>(
-	header: string
+	header: string,
+	detail?: (row: T) => string | null
 ): DataTableColumn<T> => ({
 	id: "name",
 	header,
-	cell: (row) => row.name,
+	cell: (row): ReactNode => {
+		const text = detail?.(row);
+		if (!text) return row.name;
+		return (
+			<>
+				<span className="block">{row.name}</span>
+				<span
+					className="block truncate font-normal text-neutral-700"
+					title={text}
+				>
+					{text}
+				</span>
+			</>
+		);
+	},
 	sortValue: (row) => row.name,
 	cellClassName: "font-semibold",
 });

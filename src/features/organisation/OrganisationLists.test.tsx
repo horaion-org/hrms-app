@@ -760,6 +760,34 @@ describe("Job titles", () => {
 		});
 	});
 
+	it("shows a description as a muted second line under the name, with the full text on hover", async () => {
+		stubApi({
+			...baseRoutes(),
+			[JOB_TITLES]: pageReply([
+				jobTitle("j-1", "Shift supervisor", {
+					description: "Runs the floor and opens the store.",
+				}),
+				jobTitle("j-2", "Trainee"),
+			]),
+		});
+		await open("/organisation/job-titles");
+
+		const table = await screen.findByRole("table", { name: "Job titles" });
+		await within(table).findByText("Trainee");
+		const [described, plain] = bodyRows(table).map(
+			(row) => within(row).getAllByRole("cell")[1]
+		);
+		expect(described).toHaveTextContent(
+			"Shift supervisorRuns the floor and opens the store."
+		);
+		expect(
+			within(described as HTMLElement).getByText(
+				"Runs the floor and opens the store."
+			)
+		).toHaveAttribute("title", "Runs the floor and opens the store.");
+		expect(plain).toHaveTextContent(/^Trainee$/);
+	});
+
 	it.each([
 		{ status: "ACTIVE", statusAction: "Deactivate" },
 		{ status: "INACTIVE", statusAction: "Activate" },
