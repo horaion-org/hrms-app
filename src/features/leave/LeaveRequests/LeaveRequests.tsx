@@ -23,8 +23,8 @@ export type LeaveRequestsProps = {
 	sort: LeaveSort;
 	onPageChange: (page: number) => void;
 	onSortChange: (sort: LeaveSort) => void;
-	onOpen: (request: LeaveRequest, rejecting?: boolean) => void;
-	onApprove: (request: LeaveRequest) => void;
+	/** Opens the request, straight at a decision's confirmation step when one is named. */
+	onOpen: (request: LeaveRequest, decision?: "reject" | "approve") => void;
 	/** Whether the person may decide this request, as the workspace says. */
 	canReview: (request: LeaveRequest) => boolean;
 	/** The caller's own requests: no employee column, no decisions, only viewing. */
@@ -35,7 +35,8 @@ export type LeaveRequestsProps = {
 /**
  * The requests table: one server page, sorted, filtered and paged by the
  * API. Approve and Reject are offered only on pending requests the person
- * may decide; the API still checks every decision.
+ * may decide, and each opens the request at its confirmation step; the API
+ * still checks every decision.
  */
 export const LeaveRequests = ({
 	rows,
@@ -45,7 +46,6 @@ export const LeaveRequests = ({
 	onPageChange,
 	onSortChange,
 	onOpen,
-	onApprove,
 	canReview,
 	own = false,
 	emptyState,
@@ -156,7 +156,7 @@ export const LeaveRequests = ({
 									disabled={!decidable}
 									variant="icon"
 									onClick={() => {
-										onOpen(row, true);
+										onOpen(row, "reject");
 									}}
 								>
 									<CrossIcon />
@@ -166,7 +166,7 @@ export const LeaveRequests = ({
 									disabled={!decidable}
 									variant="icon"
 									onClick={() => {
-										onApprove(row);
+										onOpen(row, "approve");
 									}}
 								>
 									<TickIcon />

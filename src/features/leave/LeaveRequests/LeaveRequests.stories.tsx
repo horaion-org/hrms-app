@@ -24,7 +24,6 @@ const meta = {
 		onPageChange: (): void => {},
 		onSortChange: (): void => {},
 		onOpen: (): void => {},
-		onApprove: (): void => {},
 	},
 } satisfies Meta<typeof LeaveRequests>;
 

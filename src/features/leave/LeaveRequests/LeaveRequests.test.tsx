@@ -10,7 +10,6 @@ const handlers = {
 	onPageChange: vi.fn(),
 	onSortChange: vi.fn(),
 	onOpen: vi.fn(),
-	onApprove: vi.fn(),
 };
 
 it("hands sorting and paging to the caller and offers decisions only where allowed", async () => {
@@ -48,11 +47,11 @@ it("hands sorting and paging to the caller and offers decisions only where allow
 	await user.click(
 		screen.getByRole("button", { name: "Reject request for Aisha Rahman" })
 	);
-	expect(handlers.onOpen).toHaveBeenCalledWith(LEAVE_FIXTURES[0], true);
+	expect(handlers.onOpen).toHaveBeenCalledWith(LEAVE_FIXTURES[0], "reject");
 	await user.click(
 		screen.getByRole("button", { name: "Approve request for Aisha Rahman" })
 	);
-	expect(handlers.onApprove).toHaveBeenCalledWith(LEAVE_FIXTURES[0]);
+	expect(handlers.onOpen).toHaveBeenCalledWith(LEAVE_FIXTURES[0], "approve");
 	expect(screen.getByText("2 days")).toBeInTheDocument();
 });
 

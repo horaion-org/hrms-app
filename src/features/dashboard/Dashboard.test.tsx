@@ -130,7 +130,9 @@ describe("Dashboard", () => {
 		});
 		await within(approvals).findByText("3");
 		expect(approvals).toHaveTextContent("70% Resolved");
-		const notifications = screen.getByRole("region", { name: "Pending leave requests" });
+		const notifications = screen.getByRole("region", {
+			name: "Pending leave requests",
+		});
 		expect(
 			await within(notifications).findByText("from Aisha Rahman", {
 				exact: false,
@@ -145,7 +147,7 @@ describe("Dashboard", () => {
 		).toBeInTheDocument();
 	});
 
-	it("given_aPendingRequest_when_approved_then_confirmsIt", async () => {
+	it("given_aPendingRequest_when_approvedAndConfirmed_then_sendsIt", async () => {
 		const user = userEvent.setup();
 		const calls = stubApi({
 			...routes(),
@@ -171,6 +173,14 @@ describe("Dashboard", () => {
 			expect(approve).toBeEnabled();
 		});
 		await user.click(approve);
+		// Approving asks for confirmation first, with an optional comment.
+		expect(
+			calls.filter((call) => `${call.method} ${call.path}` === APPROVE)
+		).toHaveLength(0);
+		const dialog = await screen.findByRole("dialog", { name: "Leave request" });
+		await user.click(
+			within(dialog).getByRole("button", { name: "Confirm approval" })
+		);
 
 		await waitFor(() => {
 			expect(screen.getByRole("status")).toHaveTextContent(

@@ -158,6 +158,26 @@ const sent = (calls: Array<Call>, route: string): Array<unknown> =>
 		.filter((call) => `${call.method} ${call.path}` === route)
 		.map((call) => call.body);
 
+/** Opens a row's approval step and confirms it, with a comment when one is given. */
+const approveFromRow = async (
+	user: ReturnType<typeof userEvent.setup>,
+	name: string,
+	comment = ""
+): Promise<void> => {
+	await user.click(
+		screen.getByRole("button", { name: `Approve request for ${name}` })
+	);
+	const dialog = await screen.findByRole("dialog", { name: "Leave request" });
+	if (comment)
+		await user.type(
+			within(dialog).getByRole("textbox", { name: "Comment (optional)" }),
+			comment
+		);
+	await user.click(
+		within(dialog).getByRole("button", { name: "Confirm approval" })
+	);
+};
+
 describe("Leave", () => {
 	it("lists the first Branch's requests a page at a time, as the API filters and sorts them", async () => {
 		const calls = stubApi(routes());
@@ -295,12 +315,13 @@ describe("Leave", () => {
 		await open("/leave?view=requests");
 		await screen.findByText("Aisha Rahman");
 
-		await user.click(
-			screen.getByRole("button", { name: "Approve request for Aisha Rahman" })
-		);
+		await approveFromRow(user, "Aisha Rahman", "Enjoy the break.");
 		expect(
 			await screen.findByText("Request for Aisha Rahman approved.")
 		).toBeVisible();
+		expect(sent(calls, `POST ${AISHA}/leave-aisha/approval`)).toEqual([
+			{ comment: "Enjoy the break." },
+		]);
 		await user.click(
 			screen.getByRole("button", { name: "Reject request for Cheryl Ng" })
 		);
@@ -336,9 +357,7 @@ describe("Leave", () => {
 		await open("/leave?view=requests");
 		await screen.findByText("Aisha Rahman");
 
-		await user.click(
-			screen.getByRole("button", { name: "Approve request for Aisha Rahman" })
-		);
+		await approveFromRow(user, "Aisha Rahman");
 		expect(await screen.findByRole("alert")).toHaveTextContent(
 			"This request was already decided. Reload the page to see it."
 		);
@@ -620,9 +639,7 @@ describe("Leave", () => {
 			(call) => `${call.method} ${call.path}` === WORKSPACE
 		).length;
 
-		await user.click(
-			screen.getByRole("button", { name: "Approve request for Aisha Rahman" })
-		);
+		await approveFromRow(user, "Aisha Rahman");
 		expect(await screen.findByRole("alert")).toHaveTextContent(
 			"You can’t approve or reject your own leave. Another reviewer needs to decide it."
 		);

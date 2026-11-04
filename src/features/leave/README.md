@@ -9,8 +9,8 @@ is sampled or kept in page state beyond the timeline's window.
 ## Shape
 
 - `api.ts` — the zod schemas, `leaveRequestsQuery` (one entry per page, sort, filter and window), the
-  active-Branches query that drives the country and Branch filters, and the three writes: apply on behalf,
-  approve, reject.
+  active-Branches query that drives the country and Branch filters, and the writes: apply (own or on behalf,
+  with optional remarks), approve (with an optional comment) and reject (with a reason).
 - `leaveSearch.ts` — what belongs in the URL (`view`, `branch`, `status`, `sort`, `page`) and the API queries
   built from it; `timelineQueryOf` asks for one window of up to 200 rows.
 - `useLeaveRequests.ts` — the list hook (`hidden` when the key is held nowhere, or the API refuses) and the
@@ -19,7 +19,9 @@ is sampled or kept in page state beyond the timeline's window.
 - `LeaveRequests` — one server page: sorting, the status filter and paging are handed to the caller.
 - `LeaveTimeline` — rows per person, bars per pending or approved request clipped to the window, weekends
   hatched; the window is the caller's.
-- `LeaveRequestDialog` — review, reject with a reason, or apply for someone found through the People search.
+- `LeaveRequestDialog` — review a request with its remarks; approve with an optional comment or reject with a
+  reason, each confirmed in a second step; or apply, with optional remarks, for yourself or someone found through
+  the People search.
 - `fixtures.ts` — API-shaped rows for stories and component tests.
 
 `src/pages/Leave.tsx` composes them and owns the dialog, the decisions and the status line.

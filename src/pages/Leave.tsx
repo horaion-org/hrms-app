@@ -71,7 +71,7 @@ const route = getRouteApi("/_authenticated/_app/leave");
 
 type Dialog = {
 	request?: LeaveRequest;
-	mode: "view" | "reject" | "apply" | "applyOwn";
+	mode: "view" | "reject" | "approve" | "apply" | "applyOwn";
 };
 
 /** The three views, in tab order; the team views exist only with the read key held somewhere. */
@@ -151,7 +151,6 @@ export const Leave = (): FunctionComponent => {
 		Refusal<ApplyField | DecisionField> | undefined
 	>();
 	const [message, setMessage] = useState("");
-	const [problem, setProblem] = useState("");
 	const [employeeSearch, setEmployeeSearch] = useState("");
 	const settled = useSettledSearch(employeeSearch);
 	const people = useQuery(
@@ -178,14 +177,9 @@ export const Leave = (): FunctionComponent => {
 	};
 	const done = (text: string): void => {
 		close();
-		setProblem("");
 		setMessage(text);
 	};
-	const refused = (next: Refusal<ApplyField | DecisionField>): void => {
-		if (dialog) setRefusal(next);
-		else setProblem(next.message ?? t("leave.refusal.decideFailed"));
-	};
-	const approve = (request: LeaveRequest, comment = ""): void => {
+	const approve = (request: LeaveRequest, comment: string): void => {
 		actions.approve.mutate(
 			{ request, comment },
 			{
@@ -193,7 +187,7 @@ export const Leave = (): FunctionComponent => {
 					done(t("leave.approved", { name: request.displayName }));
 				},
 				onError: (error) => {
-					refused(decisionRefusal(error, t));
+					setRefusal(decisionRefusal(error, t));
 				},
 			}
 		);
@@ -347,7 +341,6 @@ export const Leave = (): FunctionComponent => {
 								rows={mine.status === "ready" ? mine.items : []}
 								sort={myLeaveQueryOf(search).sort}
 								total={mine.status === "ready" ? mine.total : 0}
-								onApprove={() => {}}
 								onPageChange={paging}
 								onOpen={(request) => {
 									setDialog({ request, mode: "view" });
@@ -365,13 +358,9 @@ export const Leave = (): FunctionComponent => {
 									rows={list.status === "ready" ? list.items : []}
 									sort={leaveQueryOf(search).sort}
 									total={list.status === "ready" ? list.total : 0}
-									onApprove={approve}
 									onPageChange={paging}
-									onOpen={(request, rejecting = false) => {
-										setDialog({
-											request,
-											mode: rejecting ? "reject" : "view",
-										});
+									onOpen={(request, decision) => {
+										setDialog({ request, mode: decision ?? "view" });
 									}}
 									onSortChange={(sort) => {
 										show({ sort: sortParameter(sort) });
@@ -400,11 +389,6 @@ export const Leave = (): FunctionComponent => {
 			>
 				{message}
 			</p>
-			{problem && (
-				<p className="mt-4 text-sm text-error-700" role="alert">
-					{problem}
-				</p>
-			)}
 			{dialog && (
 				<LeaveRequestDialog
 					key={`${dialog.request?.leaveRequestId ?? "new"}-${dialog.mode}`}
@@ -455,7 +439,7 @@ export const Leave = (): FunctionComponent => {
 									done(t("leave.rejected", { name: request.displayName }));
 								},
 								onError: (error) => {
-									refused(decisionRefusal(error, t));
+									setRefusal(decisionRefusal(error, t));
 								},
 							}
 						);
