@@ -5,6 +5,7 @@ import type { FunctionComponent } from "@/common/types";
 import { ActivityItem } from "@/components/ui/ActivityItem";
 import { StatCard } from "@/components/ui/StatCard";
 import { describeActivity } from "@/features/organisation/activity";
+import { ActivityTitle } from "@/features/organisation/ActivityTitle";
 import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import {
 	useOrganisationOverview,
@@ -102,12 +103,11 @@ export const Organisation = (): FunctionComponent => {
 									<ul className="mt-6 flex flex-col gap-7">
 										{overview.activity.events.map((event) => {
 											const activity = describeActivity(event, t);
-											if (!activity) return null;
 											return (
 												<li key={activity.id}>
 													<ActivityItem
 														icon={activity.icon}
-														title={activity.title}
+														title={<ActivityTitle activity={activity} />}
 														details={[
 															event.actorDisplayName &&
 																t("organisation.activity.by", {

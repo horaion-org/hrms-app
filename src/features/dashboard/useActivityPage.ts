@@ -2,7 +2,6 @@ import { skipToken, useQuery } from "@tanstack/react-query";
 import { ApiProblemError } from "@/common/problem";
 import {
 	fetchActivityPage,
-	ORGANISATION_ENTITY_TYPES,
 	type AuditEvent,
 	type ListPage,
 } from "@/features/organisation/api";
@@ -10,14 +9,6 @@ import { administrativeMeta } from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";
 import { COMPANY_SCOPE } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
-
-/** What the Dashboard's activity covers: the organisation, its people, their leave and the schedules. */
-export const DASHBOARD_ENTITY_TYPES = [
-	...ORGANISATION_ENTITY_TYPES,
-	"MemberProfile",
-	"LeaveRequest",
-	"Schedule",
-] as const;
 
 export type ActivityPage =
 	| { status: "pending" | "error" | "hidden" }
@@ -43,7 +34,9 @@ export const useActivityPage = (
 			? ({ signal }): Promise<ListPage<AuditEvent>> =>
 					fetchActivityPage(
 						companyId,
-						{ page, size, entityTypes: DASHBOARD_ENTITY_TYPES },
+						// Every entity type: the API already leaves out failures, refusals and
+						// audited reads, and actions without their own copy get a fallback title.
+						{ page, size },
 						signal
 					)
 			: skipToken,

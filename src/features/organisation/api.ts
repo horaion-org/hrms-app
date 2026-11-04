@@ -261,7 +261,8 @@ export const fetchList = async <T extends z.ZodType>(
 
 /**
  * One page of the company's activity, newest first, limited to
- * `entityTypes`; `page` counts from 1, as people do.
+ * `entityTypes` when given (every type otherwise); `page` counts from 1, as
+ * people do.
  */
 export const fetchActivityPage = (
 	companyId: string,
@@ -269,7 +270,7 @@ export const fetchActivityPage = (
 		page,
 		size,
 		entityTypes,
-	}: { page: number; size: number; entityTypes: ReadonlyArray<string> },
+	}: { page: number; size: number; entityTypes?: ReadonlyArray<string> },
 	signal?: AbortSignal
 ): Promise<ListPage<AuditEvent>> => {
 	// The API counts pages from 0.
@@ -277,7 +278,7 @@ export const fetchActivityPage = (
 		page: String(page - 1),
 		size: String(size),
 	});
-	for (const type of entityTypes) query.append("entityType", type);
+	for (const type of entityTypes ?? []) query.append("entityType", type);
 	return fetchList(
 		`${companyPath(companyId)}/audit-events?${query.toString()}`,
 		auditEventSchema,

@@ -542,6 +542,42 @@
 				"scheduleRegenerationRequested": "Regeneración de horario solicitada",
 				"scheduleGenerated": "Horario generado",
 				"scheduleDeleted": "Horario eliminado"
+			},
+			"fallback": {
+				"named": "{{verb}} de {{entity}}: {{name}}",
+				"unnamed": "{{verb}} de {{entity}}"
+			},
+			"verbs": {
+				"created": "Creación",
+				"updated": "Actualización",
+				"deleted": "Eliminación",
+				"added": "Incorporación",
+				"deactivated": "Desactivación",
+				"reactivated": "Reactivación",
+				"granted": "Asignación",
+				"revoked": "Retirada",
+				"approved": "Aprobación",
+				"rejected": "Rechazo",
+				"started": "Inicio",
+				"finished": "Finalización"
+			},
+			"entityTypes": {
+				"Company": "espacio de trabajo",
+				"Branch": "sucursal",
+				"Department": "departamento",
+				"AccessRole": "rol",
+				"AccessRoleAssignment": "asignación de rol",
+				"BranchMembership": "pertenencia a sucursal",
+				"DepartmentMembership": "pertenencia a departamento",
+				"JobTitle": "puesto",
+				"MemberProfile": "empleado",
+				"MemberNote": "nota",
+				"MemberImportJob": "importación de empleados",
+				"Skill": "habilidad",
+				"LeaveRequest": "solicitud de ausencia",
+				"Schedule": "horario",
+				"Shift": "turno",
+				"Constraint": "restricción"
 			}
 		},
 		"departments": {

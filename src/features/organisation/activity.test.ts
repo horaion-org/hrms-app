@@ -1,8 +1,10 @@
+import { createInstance } from "i18next";
 import { describe, expect, it } from "vitest";
 import {
 	DepartmentIcon,
 	EmailIcon,
 	GenerateScheduleIcon,
+	HistoryIcon,
 	OrganisationIcon,
 	PermissionsIcon,
 	RoleIcon,
@@ -140,11 +142,87 @@ describe("describeActivity", () => {
 		}
 	);
 
+	it("words an action without its own copy from its verb and entity type", () => {
+		expect(
+			describeActivity(
+				event({
+					action: "shift.create",
+					entityType: "Shift",
+					entityName: "Front desk",
+				}),
+				t
+			)
+		).toEqual({
+			id: "e-1",
+			icon: HistoryIcon,
+			title: "Shift created: Front desk",
+		});
+	});
+
 	it.each([
-		"branch_member.add",
-		"member_profile.read",
-		"schedule.generation.failed",
-	])("skips %s, which it does not describe", (action) => {
-		expect(describeActivity(event({ action }), t)).toBeUndefined();
+		["shift.delete", "Shift", "Shift deleted"],
+		["branch_member.add", "BranchMembership", "Branch membership added"],
+		[
+			"branch_member.ensure_active",
+			"BranchMembership",
+			"Branch membership ensure active",
+		],
+		["widget.frobnicate", "WidgetThing", "Widget thing frobnicate"],
+	])(
+		"falls back for %s on %s as %s, humanising what it does not know",
+		(action, entityType, title) => {
+			expect(
+				describeActivity(event({ action, entityType, entityName: null }), t)
+					.title
+			).toBe(title);
+		}
+	);
+
+	it("words the fallback in Spanish", () => {
+		const spanish = createInstance();
+		void spanish.init({
+			lng: "es",
+			fallbackLng: "en",
+			resources: { en: { translation: en }, es: { translation: es } },
+			interpolation: { escapeValue: false },
+		});
+		expect(
+			describeActivity(
+				event({
+					action: "shift.create",
+					entityType: "Shift",
+					entityName: "Front desk",
+				}),
+				spanish.t
+			).title
+		).toBe("Creación de turno: Front desk");
+	});
+
+	it.each([
+		[
+			"AccessRole",
+			"access_role.update",
+			{ kind: "accessRole", accessRoleId: "e-9" },
+		],
+		[
+			"MemberProfile",
+			"member_skill.replace",
+			{ kind: "member", membershipId: "e-9" },
+		],
+	])("links a live %s to its page", (entityType, action, link) => {
+		expect(
+			describeActivity(event({ action, entityType, entityId: "e-9" }), t).link
+		).toEqual(link);
+	});
+
+	it.each([
+		["a schedule, whose page also needs its department", "Schedule", "Week 45"],
+		["an entity that no longer resolves", "AccessRole", null],
+		["a branch, which has no page of its own", "Branch", "Orchard"],
+	])("leaves %s unlinked", (_, entityType, entityName) => {
+		expect(
+			describeActivity(event({ action: "x.update", entityType, entityName }), t)
+				.link
+		).toBeUndefined();
 	});
 });
