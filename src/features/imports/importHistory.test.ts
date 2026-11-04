@@ -6,7 +6,7 @@ import type { MemberImport } from "@/features/people/import/api";
 import {
 	historyResultText,
 	mergeImportHistory,
-} from "@/features/settings/importHistory";
+} from "@/features/imports/importHistory";
 
 const t = authTestI18n.t as TFunction;
 

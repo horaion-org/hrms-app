@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
-import { ImportHistory } from "@/features/settings/ImportHistory";
+import { ImportHistory } from "@/features/imports/ImportHistory";
 
 const meta = {
-	title: "Features/Settings/ImportHistory",
+	title: "Features/Imports/ImportHistory",
 	component: ImportHistory,
 	parameters: { layout: "padded" },
 	args: {

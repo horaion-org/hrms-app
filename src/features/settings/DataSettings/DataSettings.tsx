@@ -11,11 +11,11 @@ import { recentOrganisationImportsQuery } from "@/features/organisation/import/a
 import type { PeopleQuery } from "@/features/people/api";
 import { exportPeople, recentImportsQuery } from "@/features/people/import/api";
 import type { DataItems } from "@/features/settings/dataAccess";
-import { ImportHistory } from "@/features/settings/ImportHistory";
+import { ImportHistory } from "@/features/imports/ImportHistory";
 import {
 	mergeImportHistory,
 	type ImportHistoryEntry,
-} from "@/features/settings/importHistory";
+} from "@/features/imports/importHistory";
 
 export type DataSettingsProps = {
 	companyId: string;

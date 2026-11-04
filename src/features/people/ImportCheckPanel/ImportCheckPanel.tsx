@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { DownloadIcon, UploadIcon } from "@/components/ui/Icon";
+import { flaggedValueCell, problemsCell } from "@/features/imports/checkCells";
 import type { CheckedRow, ImportCheck } from "@/features/people/import/api";
 import {
 	problemGroups,
@@ -26,26 +26,6 @@ const SHOWN_COLUMNS = [
 	"DEPARTMENT",
 	"JOB_TITLE",
 ] as const;
-
-/** A cell the row's problem is about is outlined, so the person sees where to fix. */
-const valueCell = (
-	row: CheckedRow,
-	column: (typeof SHOWN_COLUMNS)[number]
-): FunctionComponent => {
-	const flagged = row.problems.some(
-		(problem) => problem.column === column && problem.severity === "ERROR"
-	);
-	return (
-		<span
-			data-flagged={flagged || undefined}
-			className={joinClassNames(
-				flagged && "rounded px-1 outline-2 outline-error-500"
-			)}
-		>
-			{row.values[column] ?? ""}
-		</span>
-	);
-};
 
 /**
  * The dry run of an import file: what would be added, skipped and fixed,
@@ -73,27 +53,16 @@ export const ImportCheckPanel = ({
 		...SHOWN_COLUMNS.map((column) => ({
 			id: column,
 			header: t(`people.importPage.columns.${column}`),
-			cell: (row: CheckedRow) => valueCell(row, column),
+			cell: (row: CheckedRow) => flaggedValueCell(row, column),
 		})),
 		{
 			id: "problem",
 			header: t("people.importPage.check.problemColumn"),
 			cell: (row) =>
-				row.problems.length === 0 ? (
+				problemsCell(
+					row.problems,
+					(problem) => problemText(problem, t),
 					t("people.importPage.check.noProblem")
-				) : (
-					<ul className="flex flex-col gap-1">
-						{row.problems.map((problem) => (
-							<li
-								key={`${problem.code}:${problem.column ?? ""}`}
-								className={joinClassNames(
-									problem.severity === "ERROR" && "text-error-700"
-								)}
-							>
-								{problemText(problem, t)}
-							</li>
-						))}
-					</ul>
 				),
 			headerClassName: "w-1/3",
 		},

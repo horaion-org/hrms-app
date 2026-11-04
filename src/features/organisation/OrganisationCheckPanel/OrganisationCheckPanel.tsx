@@ -1,17 +1,16 @@
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { DownloadIcon, UploadIcon } from "@/components/ui/Icon";
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from "@/components/ui/Tabs";
+import { flaggedValueCell, problemsCell } from "@/features/imports/checkCells";
 import {
 	SHEET_COLUMNS,
 	type OrganisationCheck,
 	type OrganisationCheckedRow,
-	type OrganisationColumn,
 	type OrganisationSheet,
 } from "@/features/organisation/import/api";
 import {
@@ -27,26 +26,6 @@ export type OrganisationCheckPanelProps = {
 	check: OrganisationCheck;
 	onDownloadErrors: () => void;
 	onUploadAgain: () => void;
-};
-
-/** A cell the row's problem is about is outlined, so the person sees where to fix. */
-const valueCell = (
-	row: OrganisationCheckedRow,
-	column: OrganisationColumn
-): FunctionComponent => {
-	const flagged = row.problems.some(
-		(problem) => problem.column === column && problem.severity === "ERROR"
-	);
-	return (
-		<span
-			data-flagged={flagged || undefined}
-			className={joinClassNames(
-				flagged && "rounded px-1 outline-2 outline-error-500"
-			)}
-		>
-			{row.values[column] ?? ""}
-		</span>
-	);
 };
 
 /**
@@ -82,27 +61,16 @@ export const OrganisationCheckPanel = ({
 		...SHEET_COLUMNS[sheet].map((column) => ({
 			id: column,
 			header: t(`organisation.import.columns.${column}`),
-			cell: (row: OrganisationCheckedRow) => valueCell(row, column),
+			cell: (row: OrganisationCheckedRow) => flaggedValueCell(row, column),
 		})),
 		{
 			id: "problem",
 			header: t("organisation.import.check.problemColumn"),
 			cell: (row) =>
-				row.problems.length === 0 ? (
+				problemsCell(
+					row.problems,
+					(problem) => problemText(problem, t),
 					t("organisation.import.check.noProblem")
-				) : (
-					<ul className="flex flex-col gap-1">
-						{row.problems.map((problem) => (
-							<li
-								key={`${problem.code}:${problem.column ?? ""}`}
-								className={joinClassNames(
-									problem.severity === "ERROR" && "text-error-700"
-								)}
-							>
-								{problemText(problem, t)}
-							</li>
-						))}
-					</ul>
 				),
 			headerClassName: "w-1/3",
 		},

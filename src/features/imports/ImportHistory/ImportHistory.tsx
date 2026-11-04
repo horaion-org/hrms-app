@@ -5,7 +5,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import {
 	historyResultText,
 	type ImportHistoryEntry,
-} from "@/features/settings/importHistory";
+} from "@/features/imports/importHistory";
 
 export type ImportHistoryProps = {
 	/** Imports of both kinds, newest first. */
@@ -13,6 +13,8 @@ export type ImportHistoryProps = {
 	/** Whether one of the lists could not be loaded; the other is still shown. */
 	failed?: boolean;
 	onOpen: (entry: ImportHistoryEntry) => void;
+	/** It sits under another section's h2 by default; use 2 directly under the page's h1. */
+	headingLevel?: 2 | 3;
 	className?: string;
 };
 
@@ -21,9 +23,11 @@ export const ImportHistory = ({
 	entries,
 	failed = false,
 	onOpen,
+	headingLevel = 3,
 	className,
 }: ImportHistoryProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
+	const Heading = headingLevel === 2 ? "h2" : "h3";
 	const columns: Array<DataTableColumn<ImportHistoryEntry>> = [
 		{
 			id: "when",
@@ -69,12 +73,12 @@ export const ImportHistory = ({
 
 	return (
 		<section aria-labelledby="import-history-heading" className={className}>
-			<h3
+			<Heading
 				className="text-base font-semibold text-neutral-900"
 				id="import-history-heading"
 			>
 				{t("settings.data.history.title")}
-			</h3>
+			</Heading>
 			{failed && (
 				<p className="mt-2 text-sm text-error-700" role="alert">
 					{t("settings.data.history.failed")}

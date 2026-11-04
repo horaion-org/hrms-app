@@ -1061,17 +1061,13 @@
 				"INVITATION_NOT_SENT": "Envía su invitación desde su perfil."
 			},
 			"recent": {
-				"heading": "Importaciones recientes",
-				"empty": "Aún no hay importaciones.",
-				"item": "{{date}} · {{name}} · {{added}} añadidas, {{failed}} fallidas",
 				"status": {
 					"QUEUED": "En espera",
 					"RUNNING": "En curso",
 					"COMPLETED": "Terminada",
 					"FAILED": "Detenida",
 					"UNKNOWN": "Desconocida"
-				},
-				"open": "Ver"
+				}
 			},
 			"columns": {
 				"NAME": "Nombre",

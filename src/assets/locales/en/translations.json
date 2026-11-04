@@ -885,17 +885,13 @@
 				"INVITATION_NOT_SENT": "Send their invitation from their profile."
 			},
 			"recent": {
-				"heading": "Recent imports",
-				"empty": "No imports yet.",
-				"item": "{{date}} · {{name}} · {{added}} added, {{failed}} failed",
 				"status": {
 					"QUEUED": "Waiting",
 					"RUNNING": "Running",
 					"COMPLETED": "Finished",
 					"FAILED": "Stopped",
 					"UNKNOWN": "Unknown"
-				},
-				"open": "View"
+				}
 			},
 			"columns": {
 				"NAME": "Name",
