@@ -58,6 +58,7 @@ export const LeaveRequests = ({
 					id: "displayName",
 					header: t("leave.employee"),
 					headerClassName: "min-w-51",
+					pin: "start",
 					sortValue: (row) => row.displayName,
 					cell: (row) => (
 						<div className="flex items-center gap-3">
@@ -144,6 +145,7 @@ export const LeaveRequests = ({
 			id: "actions",
 			header: t("leave.actions"),
 			headerClassName: "w-35",
+			pin: "end",
 			cell: (row): ReactNode => {
 				const decidable = !own && row.status === "PENDING" && canReview(row);
 				return (

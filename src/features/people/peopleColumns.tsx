@@ -34,6 +34,7 @@ export const peopleColumns = (
 		),
 		sortValue: (person) => person.displayName,
 		headerClassName: "w-1/4",
+		pin: "start",
 	},
 	{
 		id: "department",
@@ -86,6 +87,7 @@ export const peopleColumns = (
 			);
 		},
 		headerClassName: "w-30",
+		pin: "end",
 	},
 ];
 

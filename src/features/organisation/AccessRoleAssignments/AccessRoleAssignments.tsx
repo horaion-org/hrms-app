@@ -106,6 +106,7 @@ export const AccessRoleAssignments = ({
 				</span>
 			),
 			headerClassName: "w-80",
+			pin: "start",
 		},
 		{
 			id: "places",

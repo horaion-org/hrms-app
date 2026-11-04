@@ -60,6 +60,7 @@ export const Scheduling = (): FunctionComponent => {
 				header: t(`${key}.history.name`),
 				cell: (schedule) => schedule.name,
 				cellClassName: "font-semibold",
+				pin: "start",
 			},
 			{
 				id: "date",
@@ -100,6 +101,7 @@ export const Scheduling = (): FunctionComponent => {
 				id: "actions",
 				header: t(`${key}.history.actions`),
 				headerClassName: "w-30",
+				pin: "end",
 				cell: (schedule) => (
 					<div className="flex justify-center">
 						<Button
