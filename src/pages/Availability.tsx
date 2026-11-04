@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { Callout } from "@/components/ui/Callout";
+import { FilterChips } from "@/components/ui/FilterChips";
+import { FiltersPopover } from "@/components/ui/FiltersPopover";
 import { PageToolbar } from "@/components/ui/PageToolbar";
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from "@/components/ui/Tabs";
 import { WeekNavigator } from "@/components/ui/WeekNavigator";
@@ -36,16 +38,9 @@ import {
 } from "@/features/workspace/permissionKeys";
 import { retry } from "@/features/workspace/retry";
 import { recordScope } from "@/features/workspace/scopes";
-import {
-	unitSearchFor,
-	unitSelectionOf,
-} from "@/features/workspace/unitSearch";
-import {
-	clearedUnits,
-	unitsNarrowed,
-	type UnitSelection,
-} from "@/features/workspace/unitSelection";
-import { UnitSelector } from "@/features/workspace/UnitSelector";
+import { DepartmentFilter } from "@/features/workspace/DepartmentFilter";
+import { departmentChips } from "@/features/workspace/filterChips";
+import { unitSelectionOf } from "@/features/workspace/unitSearch";
 import { useAccess } from "@/features/workspace/useAccess";
 import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 
@@ -114,16 +109,6 @@ export const Availability = (): FunctionComponent => {
 	const show = (next: AvailabilitySearch): void => {
 		void navigate({ search: (previous) => ({ ...previous, ...next }) });
 	};
-	const chooseUnits = (next: UnitSelection, cleanup = false): void => {
-		// Taking out a unit the page cannot show keeps the history entry and its state.
-		if (cleanup)
-			void navigate({
-				search: (previous) => ({ ...previous, ...unitSearchFor(next) }),
-				replace: true,
-				state: true,
-			});
-		else show(unitSearchFor(next));
-	};
 	// A row is changed where its member is filed, and only in a week still to come.
 	const canEdit = (member: MemberWeek): boolean =>
 		!past &&
@@ -152,7 +137,17 @@ export const Availability = (): FunctionComponent => {
 		);
 
 	const teamProblem = problemKeyOf(team);
-	const narrowed = view === "team" && unitsNarrowed(units);
+	// The Branch is the header's scope; the team's Department is the only filter.
+	const chips =
+		view === "team"
+			? departmentChips(
+					units,
+					() => {
+						show({ department: undefined });
+					},
+					t
+				)
+			: [];
 	return (
 		<div>
 			{header}
@@ -178,30 +173,34 @@ export const Availability = (): FunctionComponent => {
 				<PageToolbar
 					className="mt-6 mb-8"
 					label={t("availability.controls")}
-					filters={
-						<WeekNavigator
-							currentWeek={mondayOf(today)}
-							week={week}
-							onWeekChange={(monday) => {
-								show({ week: weekParameter(monday, new Date()) });
+					chips={
+						<FilterChips
+							chips={chips}
+							onClearAll={() => {
+								show({ department: undefined });
 							}}
 						/>
 					}
-					scope={
-						view === "team" && (
-							<UnitSelector
-								requested={requested}
-								selection={units}
-								onChange={chooseUnits}
+					filters={
+						<>
+							{view === "team" && (
+								<FiltersPopover count={chips.length}>
+									<DepartmentFilter
+										selection={units}
+										onChange={(department) => {
+											show({ department });
+										}}
+									/>
+								</FiltersPopover>
+							)}
+							<WeekNavigator
+								currentWeek={mondayOf(today)}
+								week={week}
+								onWeekChange={(monday) => {
+									show({ week: weekParameter(monday, new Date()) });
+								}}
 							/>
-						)
-					}
-					onClearFilters={
-						narrowed
-							? (): void => {
-									chooseUnits(clearedUnits(units, requested));
-								}
-							: undefined
+						</>
 					}
 				/>
 				<TabPanels>

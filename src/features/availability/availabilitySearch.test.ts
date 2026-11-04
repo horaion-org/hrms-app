@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
 	availabilityQueryOf,
+	availabilityUnitRulesOf,
+	TEAM_UNIT_RULES,
 	parseAvailabilitySearch,
 	viewOf,
 	viewsOf,
@@ -88,5 +90,14 @@ describe("availabilityQueryOf", () => {
 			branchId: "b-1",
 			departmentId: "d-1",
 		});
+	});
+});
+
+describe("availabilityUnitRulesOf", () => {
+	it("given_aView_when_asked_then_onlyTheTeamListsByBranch", () => {
+		expect(availabilityUnitRulesOf("mine")).toBeUndefined();
+		expect(availabilityUnitRulesOf("team")).toBe(TEAM_UNIT_RULES);
+		// No view in the URL: the team rules, so a team-only reader sees the Branch.
+		expect(availabilityUnitRulesOf(undefined)).toBe(TEAM_UNIT_RULES);
 	});
 });

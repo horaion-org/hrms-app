@@ -194,6 +194,35 @@ describe("Availability", () => {
 		).not.toBeInTheDocument();
 	});
 
+	it("shows the team's one Branch in the header and narrows to a Department through Filters", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi(routes("FULL_TIME", workspaceReply([READ])));
+		const { router } = await open("/availability");
+		await screen.findByRole("table", { name: "Team availability" });
+
+		// One Branch the team must show: the header names it as text.
+		expect(screen.getByText("Main branch")).toBeVisible();
+		await user.click(screen.getByRole("button", { name: "Filters" }));
+		await user.click(screen.getByRole("button", { name: "Department" }));
+		await user.click(screen.getByRole("option", { name: "Kitchen" }));
+
+		await waitFor(() => {
+			expect(router.state.location.search).toEqual({ department: "d-2" });
+		});
+		expect(
+			calls.filter((call) => call.path === TEAM_PATH).map((call) => call.search)
+		).toContain(
+			`weekStartMonday=${mondayOf(new Date())}&branchId=b-1&departmentId=d-2`
+		);
+		expect(
+			screen.getByRole("list", { name: "Active filters" })
+		).toHaveTextContent("Department: Kitchen");
+		await user.click(screen.getByRole("button", { name: "Clear filters" }));
+		await waitFor(() => {
+			expect(router.state.location.search).toEqual({});
+		});
+	});
+
 	it("lists the Branch of a Department-only read grant from the company's list", async () => {
 		const calls = stubApi(routes("FULL_TIME", workspaceReply([], [READ])));
 		await open("/availability");
