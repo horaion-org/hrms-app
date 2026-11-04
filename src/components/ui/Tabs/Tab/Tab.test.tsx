@@ -331,3 +331,30 @@ it("keeps a horizontal tab one line high and exposes its description only to ass
 	const employment = screen.getByRole("tab", { name: "Employment" });
 	expect(employment).not.toHaveAttribute("aria-describedby");
 });
+
+it("names a counted tab by its label and describes the count in words when a count label is given", () => {
+	render(
+		<Tabs>
+			<TabList aria-label="Leave views">
+				<Tab count={4} countLabel="4 pending">
+					Team requests
+				</Tab>
+				<Tab count={0} countLabel="0 pending">
+					Team timeline
+				</Tab>
+			</TabList>
+			<TabPanels>
+				<TabPanel>Requests</TabPanel>
+				<TabPanel>Timeline</TabPanel>
+			</TabPanels>
+		</Tabs>
+	);
+
+	const counted = screen.getByRole("tab", { name: "Team requests" });
+	expect(counted).toHaveAccessibleDescription("4 pending");
+	expect(within(counted).getByText("4")).toBeVisible();
+	// No count, nothing to describe.
+	expect(
+		screen.getByRole("tab", { name: "Team timeline" })
+	).not.toHaveAttribute("aria-describedby");
+});

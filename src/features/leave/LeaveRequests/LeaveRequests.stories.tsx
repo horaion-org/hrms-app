@@ -23,7 +23,6 @@ const meta = {
 		canReview: (): boolean => true,
 		onPageChange: (): void => {},
 		onSortChange: (): void => {},
-		onStatusChange: (): void => {},
 		onOpen: (): void => {},
 		onApprove: (): void => {},
 	},

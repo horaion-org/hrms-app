@@ -132,7 +132,10 @@
 		"applyOwn": "Apply for leave",
 		"appliedOwn": "Your leave request was submitted.",
 		"myEmpty": "You have no leave requests yet.",
-		"myFailed": "We couldn’t load your leave requests. Try again."
+		"myFailed": "We couldn’t load your leave requests. Try again.",
+		"controls": "Leave list controls",
+		"pendingCount_one": "{{count}} pending",
+		"pendingCount_other": "{{count}} pending"
 	},
 	"availability": {
 		"title": "Availability",
@@ -156,8 +159,6 @@
 		"edit": "Edit availability",
 		"custom": "Custom",
 		"none": "Not available",
-		"department": "Department",
-		"allDepartments": "All departments",
 		"teamFailed": "We couldn’t load the team’s availability. Try again.",
 		"patternFailed": "We couldn’t load {{name}}’s default pattern. Try again.",
 		"hidden": "You don’t have access to anyone’s availability in this company.",
@@ -207,7 +208,8 @@
 			"resetCancel": "Keep this week",
 			"weekInPast": "This week has already ended, so its availability can’t be changed. Choose this week or a later one.",
 			"weekNotMonday": "That week couldn’t be found. Reload the page and choose the week again."
-		}
+		},
+		"controls": "Availability controls"
 	},
 	"dialog": {
 		"close": "Close"
@@ -773,7 +775,7 @@
 			"INACTIVE": "Inactive"
 		},
 		"list": {
-			"showing": "Showing:",
+			"showing": "Showing",
 			"status": "Status",
 			"actions": "Actions",
 			"edit": "Edit {{name}}",
@@ -789,7 +791,8 @@
 			"forbidden": "You don’t have permission to view this list.",
 			"noMatches": "Nothing matches your search or filter.",
 			"truncated": "Showing the first {{shown}} of {{total}}. Use the status filter to narrow the list.",
-			"cancel": "Cancel"
+			"cancel": "Cancel",
+			"branch": "Branch"
 		},
 		"branches": {
 			"title": "Branches",
@@ -1401,6 +1404,11 @@
 			"branch": "Branch",
 			"allBranches": "All branches",
 			"allCountries": "All countries"
+		},
+		"unitSelector": {
+			"department": "Department",
+			"allDepartments": "All departments",
+			"chooseBranchFirst": "Choose a Branch first"
 		}
 	},
 	"numberStepper": {
@@ -2116,5 +2124,9 @@
 			"subtitle": "View recent schedule changes, approvals, and workforce updates.",
 			"hidden": "You don’t have access to this company’s activity."
 		}
+	},
+	"pageToolbar": {
+		"clearFilters": "Clear filters",
+		"listControls": "List controls"
 	}
 }

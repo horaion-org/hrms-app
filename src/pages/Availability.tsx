@@ -4,12 +4,14 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { Callout } from "@/components/ui/Callout";
+import { PageToolbar } from "@/components/ui/PageToolbar";
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from "@/components/ui/Tabs";
 import { WeekNavigator } from "@/components/ui/WeekNavigator";
 import type { MemberWeek } from "@/features/availability/api";
 import { isPastWeek } from "@/features/availability/availabilityModel";
 import {
 	availabilityQueryOf,
+	TEAM_UNIT_RULES,
 	viewOf,
 	viewsOf,
 	weekOf,
@@ -28,16 +30,26 @@ import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId
 import { myProfileQuery } from "@/features/people/api";
 import { mondayOf } from "@/features/scheduling/schedules";
 import { workspaceQuery } from "@/features/workspace/api";
-import { BranchSelector } from "@/features/workspace/BranchSelector";
-import { DepartmentSelector } from "@/features/workspace/DepartmentSelector";
 import {
 	AVAILABILITY_READ_KEYS,
 	AVAILABILITY_UPDATE_KEY,
 } from "@/features/workspace/permissionKeys";
 import { retry } from "@/features/workspace/retry";
 import { recordScope } from "@/features/workspace/scopes";
-import { branchChoices, chosenBranch } from "@/features/workspace/unitChoices";
+import {
+	unitSearchFor,
+	unitSelectionOf,
+} from "@/features/workspace/unitSearch";
+import {
+	clearedUnits,
+	sameUnits,
+	unitsNarrowed,
+	urlUnitsOf,
+	type UnitSelection,
+} from "@/features/workspace/unitSelection";
+import { UnitSelector } from "@/features/workspace/UnitSelector";
 import { useAccess } from "@/features/workspace/useAccess";
+import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 
 const route = getRouteApi("/_authenticated/_app/availability");
 
@@ -58,7 +70,8 @@ const problemKeyOf = (
  * Work availability, in two tabs decided by data, never roles. "Mine" is a
  * part-timer's own week and pattern, changed with nothing granted. "Team"
  * is a Branch's part-timers for one week, read through the person's grants,
- * with editing on the rows they may change. The tab, Branch, Department and
+ * with editing on the rows they may change. Beneath the tabs, one toolbar
+ * holds the team's Branch and Department and the week. The tab, units and
  * week live in the URL; a week left out is this one, worked out on every
  * render. Any week can be read; only this week and later ones are edited. Page-level composition only: the parts live in
  * `features/availability`.
@@ -78,14 +91,24 @@ export const Availability = (): FunctionComponent => {
 	// A week that has ended is shown, never changed: the API refuses it too.
 	const past = isPastWeek(week, today);
 	const workspace = useQuery({ ...workspaceQuery, retry });
-	const branches = workspace.data
-		? branchChoices(workspace.data, companyId, AVAILABILITY_READ_KEYS)
-		: undefined;
-	// The same Branch the selector shows, so the list asks for it before the URL names it.
-	const selected = chosenBranch(branches ?? [], search.branch);
+	const requested = unitSelectionOf(search);
+	// The same units the selector shows, so the list asks for them before the URL names them.
+	const units = useUnitSelection(
+		companyId,
+		AVAILABILITY_READ_KEYS,
+		requested,
+		TEAM_UNIT_RULES
+	);
 	const team = useAvailabilityList(
 		companyId,
-		selected && availabilityQueryOf(search, selected.branchId, week),
+		units.branch &&
+			availabilityQueryOf(
+				{
+					branchId: units.branch.branchId,
+					departmentId: units.department?.departmentId,
+				},
+				week
+			),
 		view === "team"
 	);
 	const [editing, setEditing] = useState<MemberWeek | null>(null);
@@ -93,15 +116,15 @@ export const Availability = (): FunctionComponent => {
 	const show = (next: AvailabilitySearch): void => {
 		void navigate({ search: (previous) => ({ ...previous, ...next }) });
 	};
-	const chooseBranch = (branch: string | undefined): void => {
-		// The selector naming the Branch already shown keeps the history entry and its state.
-		if (branch === selected?.branchId)
+	const chooseUnits = (next: UnitSelection): void => {
+		// The selector naming the units already shown keeps the history entry and its state.
+		if (sameUnits(next, urlUnitsOf(units)))
 			void navigate({
-				search: (previous) => ({ ...previous, branch }),
+				search: (previous) => ({ ...previous, ...unitSearchFor(next) }),
 				replace: true,
 				state: true,
 			});
-		else show({ branch, department: undefined });
+		else show(unitSearchFor(next));
 	};
 	// A row is changed where its member is filed, and only in a week still to come.
 	const canEdit = (member: MemberWeek): boolean =>
@@ -131,41 +154,17 @@ export const Availability = (): FunctionComponent => {
 		);
 
 	const teamProblem = problemKeyOf(team);
+	const narrowed = view === "team" && unitsNarrowed(units);
 	return (
 		<div>
-			<div className="flex flex-wrap items-start justify-between gap-6">
-				{header}
-				{view === "team" && (
-					<div className="flex flex-wrap items-center gap-5 pt-1">
-						<BranchSelector
-							companyId={companyId}
-							keys={AVAILABILITY_READ_KEYS}
-							value={search.branch}
-							onChange={chooseBranch}
-						/>
-						{selected && (
-							<DepartmentSelector
-								aria-label={t("availability.department")}
-								branchId={selected.branchId}
-								className="w-52 font-semibold text-ink-blue-900"
-								companyId={companyId}
-								emptyLabel={t("availability.allDepartments")}
-								keys={AVAILABILITY_READ_KEYS}
-								placeholder={t("availability.allDepartments")}
-								value={search.department ?? ""}
-								onChange={(department) => {
-									show({ department: department || undefined });
-								}}
-							/>
-						)}
-					</div>
+			{header}
+			{view === "team" &&
+				workspace.data !== undefined &&
+				units.branches.length === 0 && (
+					<p className="mt-8 text-sm text-neutral-700">
+						{t("availability.noBranches")}
+					</p>
 				)}
-			</div>
-			{view === "team" && branches?.length === 0 && (
-				<p className="mt-8 text-sm text-neutral-700">
-					{t("availability.noBranches")}
-				</p>
-			)}
 			<Tabs
 				className="mt-10"
 				selectedIndex={views.indexOf(view)}
@@ -173,21 +172,40 @@ export const Availability = (): FunctionComponent => {
 					show({ view: views[index] });
 				}}
 			>
-				<div className="mb-10 flex min-h-14 flex-wrap items-center justify-between gap-4">
-					<TabList aria-label={t("availability.views")} className="-ml-1">
-						{views.map((each) => (
-							<Tab key={each}>{t(`availability.${each}.tab`)}</Tab>
-						))}
-					</TabList>
-					<WeekNavigator
-						className="ml-auto"
-						currentWeek={mondayOf(today)}
-						week={week}
-						onWeekChange={(monday) => {
-							show({ week: weekParameter(monday, new Date()) });
-						}}
-					/>
-				</div>
+				<TabList aria-label={t("availability.views")} className="-ml-1">
+					{views.map((each) => (
+						<Tab key={each}>{t(`availability.${each}.tab`)}</Tab>
+					))}
+				</TabList>
+				<PageToolbar
+					className="mt-6 mb-8"
+					label={t("availability.controls")}
+					filters={
+						<WeekNavigator
+							currentWeek={mondayOf(today)}
+							week={week}
+							onWeekChange={(monday) => {
+								show({ week: weekParameter(monday, new Date()) });
+							}}
+						/>
+					}
+					scope={
+						view === "team" && (
+							<UnitSelector
+								requested={requested}
+								selection={units}
+								onChange={chooseUnits}
+							/>
+						)
+					}
+					onClearFilters={
+						narrowed
+							? (): void => {
+									chooseUnits(clearedUnits(units));
+								}
+							: undefined
+					}
+				/>
 				<TabPanels>
 					{views.map((each) => (
 						<TabPanel key={each}>
@@ -216,7 +234,7 @@ export const Availability = (): FunctionComponent => {
 									<TeamAvailability
 										canEdit={canEdit}
 										members={team.status === "ready" ? team.members : []}
-										showDepartment={!search.department}
+										showDepartment={units.department === undefined}
 										weekStartMonday={week}
 										onEdit={setEditing}
 									/>

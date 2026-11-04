@@ -108,6 +108,8 @@ export type LeaveQuery = {
 	status?: LeaveStatus;
 	/** The Branch of the member's Department. */
 	branchId?: string;
+	/** The member's Department. */
+	departmentId?: string;
 	/** Keeps requests sharing a day with the `from`–`to` window; either alone is open-ended. */
 	from?: string;
 	to?: string;
@@ -115,7 +117,7 @@ export type LeaveQuery = {
 
 export const leaveRequestsPath = (
 	companyId: string,
-	{ page, size, sort, status, branchId, from, to }: LeaveQuery
+	{ page, size, sort, status, branchId, departmentId, from, to }: LeaveQuery
 ): string => {
 	const query = new URLSearchParams({
 		// The API counts pages from 0.
@@ -125,6 +127,7 @@ export const leaveRequestsPath = (
 	});
 	if (status) query.set("status", status);
 	if (branchId) query.set("branchId", branchId);
+	if (departmentId) query.set("departmentId", departmentId);
 	if (from) query.set("from", from);
 	if (to) query.set("to", to);
 	return `${companyPath(companyId)}/leave-requests?${query.toString()}`;
@@ -162,6 +165,45 @@ export const leaveRequestsQuery = (
 		placeholderData: accessiblePreviousData(),
 		meta: administrativeMeta(companyId),
 		staleTime: 30_000,
+		retry,
+	});
+
+/** One pending request is enough to read the API's total of them. */
+const PENDING_COUNT_QUERY: LeaveQuery = {
+	page: 1,
+	size: 1,
+	sort: { field: "requestedAt", desc: true },
+	status: "PENDING",
+};
+
+/**
+ * How many requests wait for a decision across everything the person may
+ * read, whatever unit a page shows: the total of a one-row page of pending
+ * requests. Polled like the notification count, and under the `leave` key,
+ * so every decision or application refreshes it at once.
+ */
+export const pendingLeaveCountQuery = (
+	companyId: string,
+	allowed = true
+): UndefinedInitialDataOptions<
+	ListPage<LeaveRequest>,
+	Error,
+	number,
+	readonly ["leave", string, "pending-count"]
+> =>
+	queryOptions({
+		queryKey: ["leave", companyId, "pending-count"] as const,
+		queryFn: allowed
+			? ({ signal }): Promise<ListPage<LeaveRequest>> =>
+					fetchLeaveRequests(companyId, PENDING_COUNT_QUERY, signal)
+			: skipToken,
+		select: (page) => page.total,
+		meta: administrativeMeta(companyId),
+		staleTime: 30_000,
+		refetchInterval: 30_000,
+		refetchIntervalInBackground: false,
+		refetchOnWindowFocus: true,
+		refetchOnReconnect: true,
 		retry,
 	});
 

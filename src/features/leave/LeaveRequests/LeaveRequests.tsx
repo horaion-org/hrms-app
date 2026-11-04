@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
-import { Select } from "@/components/forms/Select";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -10,11 +9,8 @@ import { CrossIcon, TickIcon, ViewIcon } from "@/components/ui/Icon";
 import { Pagination } from "@/components/ui/Pagination";
 import {
 	isLeaveSortField,
-	isLeaveStatus,
 	LEAVE_PAGE_SIZE,
-	LEAVE_STATUSES,
 	type LeaveSort,
-	type LeaveStatus,
 } from "@/features/leave/api";
 import { formatPeriod } from "@/features/leave/dates";
 import { statusTone, type LeaveRequest } from "@/features/leave/types";
@@ -25,11 +21,8 @@ export type LeaveRequestsProps = {
 	total: number;
 	page: number;
 	sort: LeaveSort;
-	/** The status shown, or every status. */
-	status?: LeaveStatus;
 	onPageChange: (page: number) => void;
 	onSortChange: (sort: LeaveSort) => void;
-	onStatusChange: (status: LeaveStatus | undefined) => void;
 	onOpen: (request: LeaveRequest, rejecting?: boolean) => void;
 	onApprove: (request: LeaveRequest) => void;
 	/** Whether the person may decide this request, as the workspace says. */
@@ -49,10 +42,8 @@ export const LeaveRequests = ({
 	total,
 	page,
 	sort,
-	status,
 	onPageChange,
 	onSortChange,
-	onStatusChange,
 	onOpen,
 	onApprove,
 	canReview,
@@ -175,26 +166,6 @@ export const LeaveRequests = ({
 	];
 	return (
 		<section aria-label={t("leave.requests")}>
-			<div className="mb-8 flex items-center gap-3">
-				<span className="min-w-15.5 text-sm font-medium text-neutral-800">
-					{t("leave.showing")}
-				</span>
-				<Select
-					aria-label={t("leave.showing")}
-					className="w-40 font-semibold"
-					value={status ?? "all"}
-					options={[
-						{ value: "all", label: t("leave.all") },
-						...LEAVE_STATUSES.map((value) => ({
-							value,
-							label: t(`leave.statuses.${value}`),
-						})),
-					]}
-					onChange={(value) => {
-						onStatusChange(isLeaveStatus(value) ? value : undefined);
-					}}
-				/>
-			</div>
 			<DataTable
 				manualSorting
 				className="[&>table]:min-w-250"

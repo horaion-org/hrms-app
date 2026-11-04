@@ -1,5 +1,13 @@
 import { z } from "zod";
 import {
+	unitSearchOf,
+	unitSearchSchema,
+} from "@/features/workspace/unitSearch";
+import type {
+	UnitSelection,
+	UnitSelectionRules,
+} from "@/features/workspace/unitSelection";
+import {
 	MEMBER_STATUSES,
 	PEOPLE_SORT_FIELDS,
 	type MemberStatus,
@@ -23,13 +31,13 @@ const searchSchema = z.object({
 	page: z.number().int().min(1).optional().catch(undefined),
 	sort: sortParameterSchema.optional().catch(undefined),
 	status: z.enum(MEMBER_STATUSES).optional().catch(undefined),
-	branch: z.string().min(1).optional().catch(undefined),
+	...unitSearchSchema.shape,
 });
 
 /**
  * The People table's state that belongs in the URL, so it survives a reload
  * and can be shared. Each part is left out at its default: the first page,
- * sorted by name, every status, every Branch. The search text is never here: names
+ * sorted by name, every status, every Branch and Department. The search text is never here: names
  * typed into it must not land in browser history or logs.
  */
 export type PeopleSearch = z.infer<typeof searchSchema>;
@@ -38,12 +46,12 @@ export type PeopleSearch = z.infer<typeof searchSchema>;
 export const parsePeopleSearch = (
 	search: Record<string, unknown>
 ): PeopleSearch => {
-	const { page, sort, status, branch } = searchSchema.parse(search);
+	const { page, sort, status, branch, department } = searchSchema.parse(search);
 	return {
 		...(page === undefined || page === 1 ? {} : { page }),
 		...(sort === undefined || sort === DEFAULT_SORT_PARAMETER ? {} : { sort }),
 		...(status === undefined ? {} : { status }),
-		...(branch === undefined ? {} : { branch }),
+		...unitSearchOf({ branch, department }),
 	};
 };
 
@@ -77,17 +85,24 @@ export const statusParameter = (
 ): MemberStatus | undefined =>
 	statuses.length === 1 ? statuses[0] : undefined;
 
-/** The page of people to ask the API for, inside the Branch shown, if any. */
+/** People are listed across every Branch in reach unless one is chosen, then by Department. */
+export const PEOPLE_UNIT_RULES: UnitSelectionRules = {
+	allowAllBranches: true,
+	withDepartment: true,
+};
+
+/** The page of people to ask the API for, inside the units shown, if any. */
 export const peopleQueryOf = (
 	search: PeopleSearch,
 	text: string,
-	branchId?: string
+	{ branchId, departmentId }: UnitSelection = {}
 ): PeopleQuery => ({
 	page: search.page ?? 1,
 	sort: sortOf(search),
 	...(search.status ? { status: search.status } : {}),
 	search: text.trim(),
 	...(branchId ? { branchId } : {}),
+	...(departmentId ? { departmentId } : {}),
 });
 
 /**

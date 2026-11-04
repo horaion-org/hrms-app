@@ -11,19 +11,21 @@ import {
 } from "@/features/people/peopleSearch";
 
 describe("People URL state", () => {
-	it("keeps a recognised page, sort, status and Branch", () => {
+	it("keeps a recognised page, sort, status, Branch and Department", () => {
 		expect(
 			parsePeopleSearch({
 				page: 3,
 				sort: "jobTitle,desc",
 				status: "INACTIVE",
 				branch: "b-1",
+				department: "d-1",
 			})
 		).toEqual({
 			page: 3,
 			sort: "jobTitle,desc",
 			status: "INACTIVE",
 			branch: "b-1",
+			department: "d-1",
 		});
 	});
 
@@ -88,11 +90,20 @@ describe("People URL state", () => {
 			sort: { field: "displayName", desc: false },
 			search: "",
 		});
-		expect(peopleQueryOf({ branch: "b-9" }, "", "b-1")).toEqual({
+		expect(peopleQueryOf({ branch: "b-9" }, "", { branchId: "b-1" })).toEqual({
 			page: 1,
 			sort: { field: "displayName", desc: false },
 			search: "",
 			branchId: "b-1",
+		});
+		expect(
+			peopleQueryOf({}, "", { branchId: "b-1", departmentId: "d-1" })
+		).toEqual({
+			page: 1,
+			sort: { field: "displayName", desc: false },
+			search: "",
+			branchId: "b-1",
+			departmentId: "d-1",
 		});
 	});
 });

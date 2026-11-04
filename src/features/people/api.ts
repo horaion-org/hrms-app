@@ -82,11 +82,13 @@ export type PeopleQuery = {
 	search: string;
 	/** The Branch of the member's home Department; left out lists every Branch in reach. */
 	branchId?: string;
+	/** The member's home Department; left out lists every Department in reach. */
+	departmentId?: string;
 };
 
 export const peoplePath = (
 	companyId: string,
-	{ page, sort, status, search, branchId }: PeopleQuery
+	{ page, sort, status, search, branchId, departmentId }: PeopleQuery
 ): string => {
 	const query = new URLSearchParams({
 		// The API counts pages from 0.
@@ -98,6 +100,7 @@ export const peoplePath = (
 	const text = search.trim().slice(0, PEOPLE_SEARCH_MAX_LENGTH);
 	if (text) query.set("search", text);
 	if (branchId) query.set("branchId", branchId);
+	if (departmentId) query.set("departmentId", departmentId);
 	return `${companyPath(companyId)}/member-profiles?${query.toString()}`;
 };
 

@@ -9,12 +9,11 @@ import { LeaveRequests } from "@/features/leave/LeaveRequests";
 const handlers = {
 	onPageChange: vi.fn(),
 	onSortChange: vi.fn(),
-	onStatusChange: vi.fn(),
 	onOpen: vi.fn(),
 	onApprove: vi.fn(),
 };
 
-it("hands sorting, filtering and paging to the caller and offers decisions only where allowed", async () => {
+it("hands sorting and paging to the caller and offers decisions only where allowed", async () => {
 	const user = userEvent.setup();
 	render(
 		<I18nextProvider i18n={authTestI18n}>
@@ -34,9 +33,6 @@ it("hands sorting, filtering and paging to the caller and offers decisions only 
 		field: "displayName",
 		desc: false,
 	});
-	await user.click(screen.getByRole("button", { name: "Showing" }));
-	await user.click(screen.getByRole("option", { name: "Rejected" }));
-	expect(handlers.onStatusChange).toHaveBeenCalledWith("REJECTED");
 	await user.click(screen.getByRole("button", { name: "Next page" }));
 	expect(handlers.onPageChange).toHaveBeenCalledWith(3);
 	// Pending and decidable: both decisions; pending but not decidable, or decided: neither.

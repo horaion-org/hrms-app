@@ -7,8 +7,10 @@ import type { DateRange } from "@/components/forms/Calendar";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { PlusIcon } from "@/components/ui/Icon";
+import { PageToolbar } from "@/components/ui/PageToolbar";
 import { Tabs, TabList, Tab, TabPanels, TabPanel } from "@/components/ui/Tabs";
 import { defaultRange } from "@/features/leave/dates";
+import { LeaveRangeNavigator } from "@/features/leave/LeaveRangeNavigator";
 import { LeaveRequestDialog } from "@/features/leave/LeaveRequestDialog";
 import { LinkedLeaveRequest } from "@/features/leave/LinkedLeaveRequest";
 import { LeaveRequests } from "@/features/leave/LeaveRequests";
@@ -21,16 +23,20 @@ import {
 	leaveQueryOf,
 	myLeaveQueryOf,
 	pageParameter,
+	REQUESTS_UNIT_RULES,
 	sortParameter,
+	TIMELINE_UNIT_RULES,
 	timelineQueryOf,
 	type LeaveSearch,
 } from "@/features/leave/leaveSearch";
+import { LeaveStatusFilter } from "@/features/leave/LeaveStatusFilter";
 import { LeaveTimeline } from "@/features/leave/LeaveTimeline";
 import type { LeaveRequest } from "@/features/leave/types";
 import {
 	useLeaveActions,
 	useLeaveRequests,
 	useMyLeaveRequests,
+	usePendingLeaveCount,
 	type LeaveList,
 } from "@/features/leave/useLeaveRequests";
 import type { Refusal } from "@/features/organisation/refusal";
@@ -41,12 +47,24 @@ import {
 import { peopleQuery } from "@/features/people/api";
 import { useSettledSearch } from "@/features/people/usePeople";
 import { workspaceQuery } from "@/features/workspace/api";
-import { BranchSelector } from "@/features/workspace/BranchSelector";
-import { branchChoices, chosenBranch } from "@/features/workspace/unitChoices";
 import { LEAVE_READ_KEYS } from "@/features/workspace/permissionKeys";
 import { retry } from "@/features/workspace/retry";
 import { recordScope } from "@/features/workspace/scopes";
+import {
+	unitSearchFor,
+	unitSelectionOf,
+} from "@/features/workspace/unitSearch";
+import {
+	clearedUnits,
+	sameUnits,
+	selectedUnits,
+	unitsNarrowed,
+	urlUnitsOf,
+	type UnitSelection,
+} from "@/features/workspace/unitSelection";
+import { UnitSelector } from "@/features/workspace/UnitSelector";
 import { useAccess } from "@/features/workspace/useAccess";
+import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 
 const route = getRouteApi("/_authenticated/_app/leave");
 
@@ -75,12 +93,15 @@ const problemOf = (
 
 /**
  * Leave, in three tabs. "My leave" is every member's own requests and their
- * own applications, with nothing to grant. "Team requests" and "Team
- * timeline" are the company's requests one Branch at a time, read through
- * the person's grants, with applying on behalf, approving and rejecting for
- * the people they may decide for. The view, Branch and table state live in
- * the URL; the timeline's window stays on the page. Page-level composition
- * only: the parts live in `features/leave`.
+ * own applications, with nothing to grant. "Team requests" is the
+ * company's requests in one Branch, the first by default, or every Branch
+ * in reach, and optionally one Department; "Team timeline" draws one
+ * Branch at a time. Both are read
+ * through the person's grants, with applying on behalf, approving and
+ * rejecting for the people they may decide for. Beneath the tabs, one
+ * toolbar holds the view's units, filter and action. The view, units and
+ * table state live in the URL; the timeline's window stays on the page.
+ * Page-level composition only: the parts live in `features/leave`.
  */
 export const Leave = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
@@ -95,11 +116,18 @@ export const Leave = (): FunctionComponent => {
 	const view: View = canRead && search.view ? search.view : "mine";
 	const team = view !== "mine";
 	const workspace = useQuery({ ...workspaceQuery, retry });
-	const branches = workspace.data
-		? branchChoices(workspace.data, companyId, LEAVE_READ_KEYS)
-		: undefined;
-	// The same Branch the selector shows, so the list asks for it before the URL names it.
-	const selected = chosenBranch(branches ?? [], search.branch);
+	const requested = unitSelectionOf(search);
+	// The same units the selector shows, so the lists ask for them before the URL names them.
+	const units = useUnitSelection(
+		companyId,
+		LEAVE_READ_KEYS,
+		requested,
+		view === "timeline" ? TIMELINE_UNIT_RULES : REQUESTS_UNIT_RULES
+	);
+	const shownUnits = selectedUnits(units);
+	const noBranches =
+		workspace.data !== undefined && units.branches.length === 0;
+	const pendingCount = usePendingLeaveCount(companyId);
 	const [range, setRange] = useState<DateRange>(defaultRange);
 	const mine = useMyLeaveRequests(
 		companyId,
@@ -108,12 +136,12 @@ export const Leave = (): FunctionComponent => {
 	);
 	const list = useLeaveRequests(
 		companyId,
-		selected && leaveQueryOf(search, selected.branchId),
+		units.branches.length > 0 ? leaveQueryOf(search, shownUnits) : undefined,
 		view === "requests"
 	);
 	const window = useLeaveRequests(
 		companyId,
-		selected && timelineQueryOf(selected.branchId, range),
+		units.branch && timelineQueryOf(shownUnits, range),
 		view === "timeline"
 	);
 	const actions = useLeaveActions(companyId);
@@ -177,16 +205,48 @@ export const Leave = (): FunctionComponent => {
 		actions.applyOwn.isPending;
 	const current = view === "mine" ? mine : view === "requests" ? list : window;
 	const listProblem = problemOf(current, t, view === "mine");
-	const chooseBranch = (branch: string | undefined): void => {
-		// The selector naming the Branch already shown keeps the page, the history entry and its state.
-		if (branch === selected?.branchId)
+	const chooseUnits = (next: UnitSelection): void => {
+		// The selector naming the units already shown keeps the page, the history entry and its state.
+		if (sameUnits(next, urlUnitsOf(units)))
 			void navigate({
-				search: (previous) => ({ ...previous, branch }),
+				search: (previous) => ({ ...previous, ...unitSearchFor(next) }),
 				replace: true,
 				state: true,
 			});
-		else show({ branch });
+		else show(unitSearchFor(next));
 	};
+	// The timeline has no status filter; My leave has no units.
+	const statusFiltered = view !== "timeline" && search.status !== undefined;
+	const filtered = statusFiltered || (team && unitsNarrowed(units));
+	const clearFilters = (): void => {
+		show({
+			status: undefined,
+			...(team ? unitSearchFor(clearedUnits(units)) : {}),
+		});
+	};
+	const applyAction =
+		view === "mine" ? (
+			<Button
+				leadingIcon={<PlusIcon />}
+				onClick={() => {
+					setDialog({ mode: "applyOwn" });
+				}}
+			>
+				{t("leave.applyOwn")}
+			</Button>
+		) : (
+			canApply &&
+			!noBranches && (
+				<Button
+					leadingIcon={<PlusIcon />}
+					onClick={() => {
+						setDialog({ mode: "apply" });
+					}}
+				>
+					{t("leave.apply")}
+				</Button>
+			)
+		);
 	const paging = (page: number): void => {
 		void navigate({
 			search: (previous) => ({ ...previous, page: pageParameter(page) }),
@@ -210,24 +270,11 @@ export const Leave = (): FunctionComponent => {
 					}}
 				/>
 			)}
-			<div className="flex flex-wrap items-start justify-between gap-6">
-				<div>
-					<h1 className="text-4xl font-medium text-neutral-900">
-						{t("leave.title")}
-					</h1>
-					<p className="mt-4 text-sm text-neutral-800">{t("leave.subtitle")}</p>
-				</div>
-				{team && (
-					<BranchSelector
-						className="pt-1"
-						companyId={companyId}
-						keys={LEAVE_READ_KEYS}
-						value={search.branch}
-						onChange={chooseBranch}
-					/>
-				)}
-			</div>
-			{team && branches?.length === 0 && (
+			<h1 className="text-4xl font-medium text-neutral-900">
+				{t("leave.title")}
+			</h1>
+			<p className="mt-4 text-sm text-neutral-800">{t("leave.subtitle")}</p>
+			{team && noBranches && (
 				<p className="mt-8 text-sm text-neutral-700">{t("leave.noBranches")}</p>
 			)}
 			<Tabs
@@ -238,37 +285,45 @@ export const Leave = (): FunctionComponent => {
 					show({ view: next === "mine" ? undefined : next });
 				}}
 			>
-				<div className="mb-10 flex min-h-14 flex-wrap items-center justify-between gap-4">
-					<TabList aria-label={t("leave.views")} className="-ml-1">
-						<Tab>{t("leave.myLeave")}</Tab>
-						{canRead && <Tab>{t("leave.teamRequests")}</Tab>}
-						{canRead && <Tab>{t("leave.teamTimeline")}</Tab>}
-					</TabList>
-					{view === "mine" ? (
-						<Button
-							className="ml-auto shrink-0"
-							leadingIcon={<PlusIcon />}
-							onClick={() => {
-								setDialog({ mode: "applyOwn" });
-							}}
+				<TabList aria-label={t("leave.views")} className="-ml-1">
+					<Tab>{t("leave.myLeave")}</Tab>
+					{canRead && (
+						<Tab
+							count={pendingCount}
+							countLabel={t("leave.pendingCount", { count: pendingCount })}
 						>
-							{t("leave.applyOwn")}
-						</Button>
-					) : (
-						canApply &&
-						selected && (
-							<Button
-								className="ml-auto shrink-0"
-								leadingIcon={<PlusIcon />}
-								onClick={() => {
-									setDialog({ mode: "apply" });
-								}}
-							>
-								{t("leave.apply")}
-							</Button>
-						)
+							{t("leave.teamRequests")}
+						</Tab>
 					)}
-				</div>
+					{canRead && <Tab>{t("leave.teamTimeline")}</Tab>}
+				</TabList>
+				<PageToolbar
+					actions={applyAction}
+					className="mt-6 mb-8"
+					label={t("leave.controls")}
+					filters={
+						view === "timeline" ? (
+							<LeaveRangeNavigator range={range} onRangeChange={setRange} />
+						) : (
+							<LeaveStatusFilter
+								status={search.status}
+								onChange={(status) => {
+									show({ status });
+								}}
+							/>
+						)
+					}
+					scope={
+						team && (
+							<UnitSelector
+								requested={requested}
+								selection={units}
+								onChange={chooseUnits}
+							/>
+						)
+					}
+					onClearFilters={filtered ? clearFilters : undefined}
+				/>
 				{listProblem ? (
 					<p
 						className="text-sm text-neutral-700 data-alert:text-error-700"
@@ -287,7 +342,6 @@ export const Leave = (): FunctionComponent => {
 								page={search.page ?? 1}
 								rows={mine.status === "ready" ? mine.items : []}
 								sort={myLeaveQueryOf(search).sort}
-								status={search.status}
 								total={mine.status === "ready" ? mine.total : 0}
 								onApprove={() => {}}
 								onPageChange={paging}
@@ -297,9 +351,6 @@ export const Leave = (): FunctionComponent => {
 								onSortChange={(sort) => {
 									show({ sort: sortParameter(sort) });
 								}}
-								onStatusChange={(status) => {
-									show({ status });
-								}}
 							/>
 						</TabPanel>
 						{canRead && (
@@ -308,8 +359,7 @@ export const Leave = (): FunctionComponent => {
 									canReview={canReview}
 									page={search.page ?? 1}
 									rows={list.status === "ready" ? list.items : []}
-									sort={leaveQueryOf(search, "").sort}
-									status={search.status}
+									sort={leaveQueryOf(search).sort}
 									total={list.status === "ready" ? list.total : 0}
 									onApprove={approve}
 									onPageChange={paging}
@@ -322,9 +372,6 @@ export const Leave = (): FunctionComponent => {
 									onSortChange={(sort) => {
 										show({ sort: sortParameter(sort) });
 									}}
-									onStatusChange={(status) => {
-										show({ status });
-									}}
 								/>
 							</TabPanel>
 						)}
@@ -333,7 +380,6 @@ export const Leave = (): FunctionComponent => {
 								<LeaveTimeline
 									range={range}
 									requests={window.status === "ready" ? window.items : []}
-									onRangeChange={setRange}
 									onOpen={(request) => {
 										setDialog({ request, mode: "view" });
 									}}

@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createInstance } from "i18next";
 import { useState } from "react";
@@ -166,6 +166,39 @@ describe("ListToolbar", () => {
 		expect(
 			screen.queryByRole("button", { name: "Create Branch" })
 		).not.toBeInTheDocument();
+	});
+
+	it("lays out units, then the filter and search, then the actions, in one labelled group", () => {
+		render(
+			<Harness
+				scope={<button type="button">Branch</button>}
+				onCreate={vi.fn()}
+			/>
+		);
+
+		const group = screen.getByRole("group", { name: "List controls" });
+		expect(
+			within(group)
+				.getAllByRole("button")
+				.map((button) => button.textContent)
+		).toEqual(["Branch", "All Branches", "Create Branch"]);
+		expect(
+			within(group).getByRole("searchbox", { name: "Search Branch" })
+		).toBeVisible();
+	});
+
+	it("offers Clear filters only while the page says a filter is set", async () => {
+		const user = userEvent.setup();
+		const onClearFilters = vi.fn();
+		const { rerender } = render(<Harness />);
+		expect(
+			screen.queryByRole("button", { name: "Clear filters" })
+		).not.toBeInTheDocument();
+
+		rerender(<Harness onClearFilters={onClearFilters} />);
+		await user.click(screen.getByRole("button", { name: "Clear filters" }));
+
+		expect(onClearFilters).toHaveBeenCalledOnce();
 	});
 
 	it("leaves the filter out when the list has none", () => {

@@ -2,24 +2,19 @@ import dayjs from "dayjs";
 import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
-import { DatePicker } from "@/components/forms/DatePicker";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
-import {
-	ChevronLeftIcon,
-	ChevronRightIcon,
-	SortIcon,
-} from "@/components/ui/Icon";
+import { SortIcon } from "@/components/ui/Icon";
 import { Pagination } from "@/components/ui/Pagination";
 import type { DateRange } from "@/components/forms/Calendar";
-import { formatPeriod, rangeDays, shiftRange } from "@/features/leave/dates";
+import { formatPeriod, rangeDays } from "@/features/leave/dates";
 import type { LeaveRequest } from "@/features/leave/types";
 
 export type LeaveTimelineProps = {
 	/** Every request sharing a day with `range`; rejected ones are not drawn. */
 	requests: Array<LeaveRequest>;
+	/** The window drawn; the page's toolbar moves it. */
 	range: DateRange;
-	onRangeChange: (range: DateRange) => void;
 	onOpen: (request: LeaveRequest) => void;
 };
 
@@ -35,12 +30,12 @@ const blockedStyle = {
 /**
  * One row per person with a request in the window, a bar per pending or
  * approved request clipped to it, weekends hatched as blocked. The window
- * is the caller's: moving it asks the API for that window.
+ * is the caller's: it is moved from the page's toolbar, which asks the API
+ * for that window.
  */
 export const LeaveTimeline = ({
 	requests,
 	range,
-	onRangeChange,
 	onOpen,
 }: LeaveTimelineProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
@@ -72,32 +67,7 @@ export const LeaveTimeline = ({
 	const month = new Intl.DateTimeFormat(i18n.language, { month: "short" });
 	return (
 		<section aria-label={t("leave.timeline")}>
-			<div className="mb-8 flex flex-wrap items-center justify-between gap-5">
-				<div className="flex min-w-0 items-center gap-2">
-					<Button
-						aria-label={t("leave.previousPeriod")}
-						variant="icon"
-						onClick={() => {
-							onRangeChange(shiftRange(range, -1));
-						}}
-					>
-						<ChevronLeftIcon />
-					</Button>
-					<DatePicker
-						label={t("leave.dateRange")}
-						value={range}
-						onChange={onRangeChange}
-					/>
-					<Button
-						aria-label={t("leave.nextPeriod")}
-						variant="icon"
-						onClick={() => {
-							onRangeChange(shiftRange(range, 1));
-						}}
-					>
-						<ChevronRightIcon />
-					</Button>
-				</div>
+			<div className="mb-6 flex flex-wrap items-center justify-end gap-5">
 				<ul
 					aria-label={t("leave.legend")}
 					className="flex flex-wrap gap-5 text-xs text-neutral-800"

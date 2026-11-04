@@ -1,7 +1,10 @@
 import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { effectiveWorkspace } from "@/common/testing/effectiveWorkspace";
+import {
+	companyWideWorkspace,
+	effectiveWorkspace,
+} from "@/common/testing/effectiveWorkspace";
 import { resetApiClient } from "@/common/api-client";
 import {
 	currentUserReply,
@@ -260,7 +263,7 @@ describe("People", () => {
 		expect(
 			screen.queryByRole("button", { name: "Branch" })
 		).not.toBeInTheDocument();
-		expect(screen.getByRole("button", { name: "Showing:" })).toHaveTextContent(
+		expect(screen.getByRole("button", { name: "Showing" })).toHaveTextContent(
 			"All employees"
 		);
 		expect(
@@ -396,7 +399,7 @@ describe("People", () => {
 		const opened = await open("/people?page=2");
 		await screen.findByText("Moses Lee");
 
-		await user.click(screen.getByRole("button", { name: "Showing:" }));
+		await user.click(screen.getByRole("button", { name: "Showing" }));
 		await user.click(screen.getByRole("option", { name: "Active" }));
 
 		await waitFor(() => {
@@ -408,7 +411,7 @@ describe("People", () => {
 		expect(opened.router.state.location.search).toEqual({
 			status: "INACTIVE",
 		});
-		expect(screen.getByRole("button", { name: "Showing:" })).toHaveTextContent(
+		expect(screen.getByRole("button", { name: "Showing" })).toHaveTextContent(
 			"Inactive"
 		);
 
@@ -416,7 +419,7 @@ describe("People", () => {
 		await waitFor(() => {
 			expect(opened.router.state.location.search).toEqual({});
 		});
-		expect(screen.getByRole("button", { name: "Showing:" })).toHaveTextContent(
+		expect(screen.getByRole("button", { name: "Showing" })).toHaveTextContent(
 			"All employees"
 		);
 	});
@@ -583,6 +586,43 @@ describe("People", () => {
 			`${FIRST_PAGE}&branchId=b-1`,
 			FIRST_PAGE,
 		]);
+	});
+
+	it("narrows a chosen Branch to one Department, and clears both with the status", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...baseRoutes(),
+			// Orchard (Kitchen d-1, Bar d-2) and Tampines (Front d-3).
+			[WORKSPACE]: {
+				status: 200,
+				body: envelope(companyWideWorkspace(["member_profile:read"])),
+			},
+			[PEOPLE]: pageReply([person("m-1", "Moses Lee")]),
+		});
+		const opened = await open("/people?branch=b-1&status=ACTIVE");
+		await screen.findByText("Moses Lee");
+
+		await user.click(screen.getByRole("button", { name: "Department" }));
+		await user.click(screen.getByRole("option", { name: "Bar" }));
+		await waitFor(() => {
+			expect(opened.router.state.location.search).toEqual({
+				branch: "b-1",
+				department: "d-2",
+				status: "ACTIVE",
+			});
+		});
+		await user.click(screen.getByRole("button", { name: "Clear filters" }));
+		await waitFor(() => {
+			expect(opened.router.state.location.search).toEqual({});
+		});
+		expect(peopleCalls(calls)).toEqual([
+			`${FIRST_PAGE}&status=ACTIVE&branchId=b-1`,
+			`${FIRST_PAGE}&status=ACTIVE&branchId=b-1&departmentId=d-2`,
+			FIRST_PAGE,
+		]);
+		expect(
+			screen.queryByRole("button", { name: "Clear filters" })
+		).not.toBeInTheDocument();
 	});
 
 	it("drops a Branch from the URL that is no longer offered, listing everyone", async () => {

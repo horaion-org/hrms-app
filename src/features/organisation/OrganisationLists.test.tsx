@@ -145,6 +145,7 @@ const department = (
 ): Record<string, unknown> => ({
 	departmentId,
 	branchId: "b-1",
+	branchName: "Orchard",
 	companyId: "c-1",
 	name,
 	status,
@@ -347,7 +348,7 @@ describe("Branches", () => {
 			).toHaveAttribute("aria-sort", "descending")
 		);
 		await user.click(screen.getByRole("button", { name: "Sort by Status" }));
-		await user.click(screen.getByRole("button", { name: "Showing:" }));
+		await user.click(screen.getByRole("button", { name: "Showing" }));
 		await user.click(screen.getByRole("option", { name: "Active" }));
 
 		await waitFor(() => {
@@ -358,7 +359,7 @@ describe("Branches", () => {
 				"size=100&sort=status%2Casc&status=ACTIVE",
 			]);
 		});
-		expect(screen.getByRole("button", { name: "Showing:" })).toHaveTextContent(
+		expect(screen.getByRole("button", { name: "Showing" })).toHaveTextContent(
 			"Active"
 		);
 	});
@@ -532,6 +533,38 @@ describe("Branches", () => {
 });
 
 describe("Departments", () => {
+	it("narrows to the Branch chosen, kept in the URL, without a Branch column", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...baseRoutes(),
+			[DEPARTMENTS]: pageReply([department("d-1", "Front Office")]),
+		});
+		const opened = await open("/organisation/departments");
+		await screen.findByRole("table", { name: "Departments" });
+
+		expect(screen.getByRole("button", { name: "Branch" })).toHaveTextContent(
+			"All branches"
+		);
+		expect(
+			screen.queryByRole("button", { name: "Department" })
+		).not.toBeInTheDocument();
+		await user.click(screen.getByRole("button", { name: "Branch" }));
+		await user.click(screen.getByRole("option", { name: "Orchard" }));
+
+		await waitFor(() => {
+			expect(searchesOf(calls, "/api/v1/companies/c-1/departments")).toEqual([
+				"size=100&sort=name%2Casc",
+				"size=100&sort=name%2Casc&branchId=b-1",
+			]);
+		});
+		expect(opened.router.state.location.search).toEqual({ branch: "b-1" });
+		expect(
+			within(screen.getByRole("table", { name: "Departments" }))
+				.getAllByRole("columnheader")
+				.map((header) => header.textContent)
+		).toEqual(["Select all", "Department name", "Status", "Actions"]);
+	});
+
 	it("lists the company's departments with the same toolbar and filter", async () => {
 		const calls = stubApi({
 			...baseRoutes(),
@@ -548,14 +581,14 @@ describe("Departments", () => {
 			within(table)
 				.getAllByRole("columnheader")
 				.map((header) => header.textContent)
-		).toEqual(["Select all", "Department name", "Status", "Actions"]);
+		).toEqual(["Select all", "Department name", "Branch", "Status", "Actions"]);
 		expect(
 			screen.getByRole("searchbox", { name: "Search department" })
 		).toBeVisible();
 		expect(
 			screen.queryByRole("button", { name: "Create department" })
 		).not.toBeInTheDocument();
-		expect(screen.getByRole("button", { name: "Showing:" })).toHaveTextContent(
+		expect(screen.getByRole("button", { name: "Showing" })).toHaveTextContent(
 			"All departments"
 		);
 		expect(searchesOf(calls, "/api/v1/companies/c-1/departments")).toEqual([
@@ -687,7 +720,7 @@ describe("System roles", () => {
 			screen.getByRole("button", { name: "Edit Company Owner" })
 		).toBeDisabled();
 		expect(screen.getByRole("button", { name: "Edit Manager" })).toBeEnabled();
-		expect(screen.getByRole("button", { name: "Showing:" })).toHaveTextContent(
+		expect(screen.getByRole("button", { name: "Showing" })).toHaveTextContent(
 			"All roles"
 		);
 		expect(
@@ -708,6 +741,46 @@ describe("System roles", () => {
 });
 
 describe("Job titles", () => {
+	it("narrows to a Branch, then a Department, kept in the URL, and drops the columns they fix", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...baseRoutes(),
+			[JOB_TITLES]: pageReply([jobTitle("j-1", "Shift supervisor")]),
+		});
+		const opened = await open("/organisation/job-titles");
+		await screen.findByRole("table", { name: "Job titles" });
+
+		expect(screen.getByRole("button", { name: "Department" })).toBeDisabled();
+		await user.click(screen.getByRole("button", { name: "Branch" }));
+		await user.click(screen.getByRole("option", { name: "Orchard" }));
+		await user.click(screen.getByRole("button", { name: "Department" }));
+		await user.click(screen.getByRole("option", { name: "Kitchen" }));
+
+		await waitFor(() => {
+			expect(searchesOf(calls, "/api/v1/companies/c-1/job-titles")).toEqual([
+				"size=100&sort=name%2Casc",
+				"size=100&sort=name%2Casc&branchId=b-1",
+				"size=100&sort=name%2Casc&branchId=b-1&departmentId=d-1",
+			]);
+		});
+		expect(opened.router.state.location.search).toEqual({
+			branch: "b-1",
+			department: "d-1",
+		});
+		const table = screen.getByRole("table", { name: "Job titles" });
+		expect(
+			within(table)
+				.getAllByRole("columnheader")
+				.map((header) => header.textContent)
+		).toEqual(["Select all", "Job title", "People", "Status", "Actions"]);
+
+		await user.click(screen.getByRole("button", { name: "Clear filters" }));
+
+		await waitFor(() => {
+			expect(opened.router.state.location.search).toEqual({});
+		});
+	});
+
 	it("lists the company's job titles with server sort and status filter", async () => {
 		const user = userEvent.setup();
 		const calls = stubApi({
@@ -731,6 +804,7 @@ describe("Job titles", () => {
 		).toEqual([
 			"Select all",
 			"Job title",
+			"Branch",
 			"Department",
 			"People",
 			"Status",
@@ -740,12 +814,12 @@ describe("Job titles", () => {
 			bodyRows(table).map((row) =>
 				within(row)
 					.getAllByRole("cell")
-					.slice(2, 5)
+					.slice(2, 6)
 					.map((cell) => cell.textContent)
 			)
 		).toEqual([
-			["Orchard › Kitchen", "3 people", "Active"],
-			["Orchard › Kitchen", "0 people", "Inactive"],
+			["Orchard", "Kitchen", "3 people", "Active"],
+			["Orchard", "Kitchen", "0 people", "Inactive"],
 		]);
 		// The count is not a sort the API offers.
 		expect(
@@ -757,11 +831,11 @@ describe("Job titles", () => {
 		expect(
 			screen.queryByRole("button", { name: "Create job title" })
 		).not.toBeInTheDocument();
-		expect(screen.getByRole("button", { name: "Showing:" })).toHaveTextContent(
+		expect(screen.getByRole("button", { name: "Showing" })).toHaveTextContent(
 			"All job titles"
 		);
 
-		await user.click(screen.getByRole("button", { name: "Showing:" }));
+		await user.click(screen.getByRole("button", { name: "Showing" }));
 		await user.click(screen.getByRole("option", { name: "Inactive" }));
 		await user.click(screen.getByRole("button", { name: "Sort by Status" }));
 

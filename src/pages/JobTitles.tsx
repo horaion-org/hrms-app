@@ -1,3 +1,4 @@
+import { getRouteApi } from "@tanstack/react-router";
 import type { TFunction } from "i18next";
 import { type ReactNode, useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -10,6 +11,7 @@ import { CreateJobTitleDialog } from "@/features/organisation/CreateJobTitleDial
 import { ListToolbar } from "@/features/organisation/ListToolbar";
 import {
 	actionsColumn,
+	branchColumn,
 	describeList,
 	isStatusFilter,
 	nameColumn,
@@ -21,9 +23,23 @@ import { mapRefusal } from "@/features/organisation/refusal";
 import { useSetJobTitleStatus } from "@/features/organisation/useChangeListRow";
 import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import { useJobTitles } from "@/features/organisation/useOrganisationList";
-import { placeOf } from "@/features/organisation/assignmentTargets";
+import { JOB_TITLE_READ_KEYS } from "@/features/workspace/permissionKeys";
 import { departmentScope } from "@/features/workspace/scopes";
+import {
+	unitSearchFor,
+	unitSelectionOf,
+} from "@/features/workspace/unitSearch";
+import {
+	clearedUnits,
+	sameUnits,
+	selectedUnits,
+	unitsNarrowed,
+	urlUnitsOf,
+	type UnitSelection,
+} from "@/features/workspace/unitSelection";
+import { UnitSelector } from "@/features/workspace/UnitSelector";
 import { useAccess } from "@/features/workspace/useAccess";
+import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 
 /** What the status confirm says; deactivating a title people hold names how many keep it. */
 const statusChangeCopy = (
@@ -51,10 +67,29 @@ const statusChangeCopy = (
 	};
 };
 
-/** The company's Job titles: HR labels with how many people hold each; holding grants nothing. */
+const route = getRouteApi("/_authenticated/_app/organisation/job-titles");
+
+/** Every Branch by default, and a Department once a Branch is chosen. */
+const UNIT_RULES = { allowAllBranches: true, withDepartment: true };
+
+/**
+ * The company's Job titles: HR labels with how many people hold each;
+ * holding grants nothing. Narrowed to a Branch and Department kept in the
+ * URL; search, status and sort stay on the page.
+ */
 export const JobTitles = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
 	const { t } = useTranslation();
+	const navigate = route.useNavigate();
+	const requested = unitSelectionOf(route.useSearch());
+	const units = useUnitSelection(
+		companyId,
+		JOB_TITLE_READ_KEYS,
+		requested,
+		UNIT_RULES
+	);
+	const branchShown = units.branch !== undefined;
+	const departmentShown = units.department !== undefined;
 	const [creating, setCreating] = useState(false);
 	// Creating needs the key at some department; editing a title needs it at that title's department.
 	const access = useAccess();
@@ -78,25 +113,44 @@ export const JobTitles = (): FunctionComponent => {
 	const list = useJobTitles(companyId, {
 		sort: { field: sort.id, desc: sort.desc },
 		status: status === "all" ? undefined : status,
+		...selectedUnits(units),
 	});
+	const filtered = status !== "all" || unitsNarrowed(units);
 	const view = describeList(
 		list,
 		search,
-		status !== "all",
+		filtered,
 		t("organisation.jobTitles.empty"),
 		t
 	);
+	const chooseUnits = (next: UnitSelection): void => {
+		// The selector naming the units already shown replaces the history entry instead of adding one.
+		void navigate({
+			search: (previous) => ({ ...previous, ...unitSearchFor(next) }),
+			replace: sameUnits(next, urlUnitsOf(units)),
+		});
+	};
+	const clearFilters = (): void => {
+		setStatus("all");
+		chooseUnits(clearedUnits(units));
+	};
 	const columns = useMemo(
 		() => [
 			nameColumn<JobTitle>(
 				t("organisation.jobTitles.name"),
 				(jobTitle) => jobTitle.description
 			),
-			{
-				id: "department",
-				header: t("organisation.jobTitles.department"),
-				cell: (jobTitle: JobTitle): string => placeOf(jobTitle, t),
-			},
+			// A unit already chosen is not repeated on every row.
+			...(branchShown ? [] : [branchColumn<JobTitle>(t)]),
+			...(departmentShown
+				? []
+				: [
+						{
+							id: "department",
+							header: t("organisation.jobTitles.department"),
+							cell: (jobTitle: JobTitle): string => jobTitle.departmentName,
+						},
+					]),
 			{
 				id: "people",
 				header: t("organisation.jobTitles.people"),
@@ -134,7 +188,7 @@ export const JobTitles = (): FunctionComponent => {
 				setEditing
 			),
 		],
-		[t, canEdit]
+		[t, canEdit, branchShown, departmentShown]
 	);
 
 	return (
@@ -158,6 +212,14 @@ export const JobTitles = (): FunctionComponent => {
 						if (isStatusFilter(value)) setStatus(value);
 					},
 				}}
+				scope={
+					<UnitSelector
+						requested={requested}
+						selection={units}
+						onChange={chooseUnits}
+					/>
+				}
+				onClearFilters={filtered ? clearFilters : undefined}
 				onSearchChange={setSearch}
 				onCreate={
 					canCreate
