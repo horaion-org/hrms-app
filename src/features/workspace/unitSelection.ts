@@ -18,16 +18,17 @@ export type { UnitSelection };
 export type UnitLevelMode = "select" | "static" | "disabled" | "hidden";
 
 /**
- * The URL's name for "All branches" on a page that starts on its first
- * Branch, where leaving `branch` out already means that first Branch.
- * Never sent to the API.
+ * The URL's name for "All branches", chosen. Leaving `branch` out means no
+ * choice, so each page shows its own default; naming "All" lets the choice
+ * follow the person to a page that would otherwise open on its first
+ * Branch. Never sent to the API.
  */
 export const ALL_BRANCHES = "all";
 
 export type UnitSelectionRules = {
 	/** Offers "All branches", the default unless `startOnFirstBranch`; otherwise the first Branch is shown. */
 	allowAllBranches: boolean;
-	/** With `allowAllBranches`: still opens on the first Branch, and names "All branches" in the URL as `ALL_BRANCHES`. */
+	/** With `allowAllBranches`: opens on the first Branch while nothing is chosen. */
 	startOnFirstBranch?: boolean;
 	/** Offers a Department level beneath the Branch. */
 	withDepartment: boolean;
@@ -155,14 +156,27 @@ export const selectedUnits = ({
 });
 
 /**
- * The units as the URL names them: the API's ids, except that "All
- * branches" on a page starting on its first Branch is `ALL_BRANCHES`.
+ * The URL's units with what this page cannot show taken out, or undefined
+ * when there is nothing to take out: a Branch it does not offer goes back
+ * to no choice, and a Department outside the Branch shown is dropped. A
+ * page's default is never written, so it never becomes everyone's Branch;
+ * "All branches" on a page without it is shown as the first Branch and
+ * left in the URL for the next page.
  */
-export const urlUnitsOf = (resolved: ResolvedUnitSelection): UnitSelection => {
-	const units = selectedUnits(resolved);
-	return units.branchId === undefined && resolved.rules.startOnFirstBranch
-		? { ...units, branchId: ALL_BRANCHES }
-		: units;
+export const staleUnits = (
+	resolved: ResolvedUnitSelection,
+	requested: UnitSelection
+): UnitSelection | undefined => {
+	const { branchId, departmentId } = requested;
+	const branchKept =
+		branchId === undefined ||
+		branchId === ALL_BRANCHES ||
+		resolved.branches.some((choice) => choice.branchId === branchId);
+	const departmentKept =
+		departmentId === undefined ||
+		resolved.department?.departmentId === departmentId;
+	if (branchKept && departmentKept) return undefined;
+	return { branchId: branchKept ? branchId : undefined };
 };
 
 /** Whether two selections name the same units. */
@@ -183,8 +197,13 @@ export const unitsNarrowed = (resolved: ResolvedUnitSelection): boolean => {
 		: branch !== undefined;
 };
 
-/** The units "Clear filters" goes back to: the page's default Branch, or the Branch the page must show. */
-export const clearedUnits = (resolved: ResolvedUnitSelection): UnitSelection =>
-	resolved.rules.allowAllBranches
-		? {}
-		: { branchId: resolved.branch?.branchId };
+/**
+ * The units "Clear filters" goes back to: no choice where the page offers
+ * "All branches", otherwise the URL's Branch with only its Department
+ * dropped.
+ */
+export const clearedUnits = (
+	resolved: ResolvedUnitSelection,
+	requested: UnitSelection
+): UnitSelection =>
+	resolved.rules.allowAllBranches ? {} : { branchId: requested.branchId };

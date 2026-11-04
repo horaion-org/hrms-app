@@ -197,13 +197,10 @@ describe("Leave", () => {
 		);
 		expect(screen.getByText("1–10 of 24 entries")).toBeVisible();
 		expect(within(table).getByText("Rejected")).toHaveClass("bg-error-100");
+		// The first Branch is shown, not written: the URL keeps only what the person chose.
 		await waitFor(() => {
-			expect(router.state.location.search).toEqual({
-				view: "requests",
-				branch: "b-3",
-			});
+			expect(router.state.location.search).toEqual({ view: "requests" });
 		});
-		// Naming the default Branch in the URL asks for nothing again.
 		expect(listSearchesOf(calls)).toEqual([
 			"page=0&size=10&sort=requestedAt%2Cdesc&branchId=b-3",
 		]);
@@ -269,13 +266,11 @@ describe("Leave", () => {
 			"page=0&size=10&sort=requestedAt%2Cdesc",
 		]);
 
-		// Clearing goes back to the first Branch, the page's default.
+		// Clearing goes back to no choice, which shows the first Branch.
 		await user.click(screen.getByRole("button", { name: "Clear filters" }));
+		// The first Branch is shown, not written: the URL keeps only what the person chose.
 		await waitFor(() => {
-			expect(router.state.location.search).toEqual({
-				view: "requests",
-				branch: "b-3",
-			});
+			expect(router.state.location.search).toEqual({ view: "requests" });
 		});
 	});
 
@@ -547,11 +542,9 @@ describe("Leave", () => {
 			screen.getByRole("tab", { name: "Team timeline" }),
 		]);
 		await user.click(screen.getByRole("tab", { name: "Team requests" }));
+		// The first Branch is shown, not written: the URL keeps only what the person chose.
 		await waitFor(() => {
-			expect(router.state.location.search).toEqual({
-				view: "requests",
-				branch: "b-3",
-			});
+			expect(router.state.location.search).toEqual({ view: "requests" });
 		});
 		await screen.findByText("Cheryl Ng");
 		expect(

@@ -577,8 +577,9 @@ describe("People", () => {
 		});
 		await user.click(screen.getByRole("button", { name: "Branch" }));
 		await user.click(screen.getByRole("option", { name: "All branches" }));
+		// Chosen, "All branches" is named so it follows the person to other pages.
 		await waitFor(() => {
-			expect(opened.router.state.location.search).toEqual({});
+			expect(opened.router.state.location.search).toEqual({ branch: "all" });
 		});
 		expect(peopleCalls(calls)).toEqual([
 			"page=1&size=10&sort=displayName%2Casc",
@@ -623,6 +624,37 @@ describe("People", () => {
 		expect(
 			screen.queryByRole("button", { name: "Clear filters" })
 		).not.toBeInTheDocument();
+	});
+
+	it("carries the chosen Branch to the next page and back, as the one shared Branch", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...baseRoutes(),
+			[WORKSPACE]: {
+				status: 200,
+				body: envelope(companyWideWorkspace(["member_profile:read"])),
+			},
+			[PEOPLE]: pageReply([person("m-1", "Moses Lee")]),
+		});
+		const opened = await open("/people?branch=b-1&department=d-2");
+		await screen.findByText("Moses Lee");
+
+		await user.click(screen.getByRole("link", { name: "Leave" }));
+		await waitFor(() => {
+			expect(opened.router.state.location.pathname).toBe("/leave");
+		});
+		// Only the Branch travels: a Department belongs to the page it was chosen on.
+		expect(opened.router.state.location.search).toEqual({ branch: "b-1" });
+
+		await user.click(screen.getByRole("link", { name: "People" }));
+		await screen.findByText("Moses Lee");
+		expect(opened.router.state.location.search).toEqual({ branch: "b-1" });
+		expect(screen.getByRole("button", { name: "Branch" })).toHaveTextContent(
+			"Orchard"
+		);
+		expect(peopleCalls(calls).slice(-1)).toEqual([
+			`${FIRST_PAGE}&branchId=b-1`,
+		]);
 	});
 
 	it("drops a Branch from the URL that is no longer offered, listing everyone", async () => {

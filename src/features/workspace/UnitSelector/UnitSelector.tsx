@@ -7,8 +7,7 @@ import { Select } from "@/components/forms/Select";
 import type { BranchChoice } from "@/features/workspace/unitChoices";
 import {
 	ALL_BRANCHES,
-	sameUnits,
-	urlUnitsOf,
+	staleUnits,
 	type ResolvedUnitSelection,
 	type UnitSelection,
 } from "@/features/workspace/unitSelection";
@@ -21,8 +20,12 @@ export type UnitSelectorProps = {
 	selection: ResolvedUnitSelection;
 	/** The units the URL names, so a resolved choice that differs is announced once. */
 	requested: UnitSelection;
-	/** Called with the next units; changing the Branch always clears the Department. */
-	onChange: (next: UnitSelection) => void;
+	/**
+	 * Called with the next units; changing the Branch always clears the
+	 * Department. `cleanup` is true when the selector only takes out a unit
+	 * the page cannot show, so the page can replace the history entry.
+	 */
+	onChange: (next: UnitSelection, cleanup: boolean) => void;
 };
 
 const fieldClasses = "w-full sm:w-44";
@@ -49,10 +52,11 @@ const UnitText = ({
  * above its control, for a `PageToolbar`'s scope zone. Country shows only
  * when the offered Branches span several; choosing one shows its first
  * Branch. A level with one unit in reach is shown as text, and Department
- * waits for one Branch. When what is shown differs from `requested` (a
- * default, or a unit no longer offered), it is announced through
- * `onChange` once, so the page's URL names what it shows. Nothing renders
- * while no Branch is offered: the page says why.
+ * waits for one Branch. "All branches" is written as `ALL_BRANCHES`, so
+ * the choice follows the person to other pages. A unit in the URL that the
+ * page cannot show is taken out once through `onChange` (see
+ * `staleUnits`); a page's default is never written. Nothing renders while
+ * no Branch is offered: the page says why.
  */
 export const UnitSelector = ({
 	selection,
@@ -61,14 +65,13 @@ export const UnitSelector = ({
 }: UnitSelectorProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const id = useId();
-	const shown = urlUnitsOf(selection);
 	const loaded = selection.branches.length > 0;
-	const announce = loaded && !sameUnits(shown, requested);
-	const { branchId: shownBranchId, departmentId: shownDepartmentId } = shown;
+	const stale = loaded ? staleUnits(selection, requested) : undefined;
+	const cleanUp = stale !== undefined;
+	const keptBranchId = stale?.branchId;
 	useEffect(() => {
-		if (announce)
-			onChange({ branchId: shownBranchId, departmentId: shownDepartmentId });
-	}, [announce, shownBranchId, shownDepartmentId, onChange]);
+		if (cleanUp) onChange({ branchId: keptBranchId }, true);
+	}, [cleanUp, keptBranchId, onChange]);
 	if (!loaded) return null;
 
 	const { rules, branch, department, branches, departments } = selection;
@@ -82,8 +85,7 @@ export const UnitSelector = ({
 		(choice) => !branch || choice.country === branch.country
 	);
 	const chooseBranch = (next: BranchChoice | undefined): void => {
-		const everyBranch = rules.startOnFirstBranch ? ALL_BRANCHES : undefined;
-		onChange({ branchId: next?.branchId ?? everyBranch });
+		onChange({ branchId: next?.branchId ?? ALL_BRANCHES }, false);
 	};
 	const ids = {
 		country: `${id}-country`,
@@ -170,10 +172,13 @@ export const UnitSelector = ({
 							})),
 						]}
 						onChange={(departmentId) => {
-							onChange({
-								branchId: branch?.branchId,
-								departmentId: departmentId || undefined,
-							});
+							onChange(
+								{
+									branchId: branch?.branchId,
+									departmentId: departmentId || undefined,
+								},
+								false
+							);
 						}}
 					/>
 				</FormRow>

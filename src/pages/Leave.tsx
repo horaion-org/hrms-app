@@ -57,10 +57,8 @@ import {
 } from "@/features/workspace/unitSearch";
 import {
 	clearedUnits,
-	sameUnits,
 	selectedUnits,
 	unitsNarrowed,
-	urlUnitsOf,
 	type UnitSelection,
 } from "@/features/workspace/unitSelection";
 import { UnitSelector } from "@/features/workspace/UnitSelector";
@@ -203,9 +201,9 @@ export const Leave = (): FunctionComponent => {
 		actions.applyOwn.isPending;
 	const current = view === "mine" ? mine : view === "requests" ? list : window;
 	const listProblem = problemOf(current, t, view === "mine");
-	const chooseUnits = (next: UnitSelection): void => {
-		// The selector naming the units already shown keeps the page, the history entry and its state.
-		if (sameUnits(next, urlUnitsOf(units)))
+	const chooseUnits = (next: UnitSelection, cleanup = false): void => {
+		// Taking out a unit the page cannot show keeps the page, the history entry and its state.
+		if (cleanup)
 			void navigate({
 				search: (previous) => ({ ...previous, ...unitSearchFor(next) }),
 				replace: true,
@@ -219,7 +217,7 @@ export const Leave = (): FunctionComponent => {
 	const clearFilters = (): void => {
 		show({
 			status: undefined,
-			...(team ? unitSearchFor(clearedUnits(units)) : {}),
+			...(team ? unitSearchFor(clearedUnits(units, requested)) : {}),
 		});
 	};
 	const applyAction =

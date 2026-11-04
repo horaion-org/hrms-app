@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+	parseBranchContext,
 	unitSearchFor,
 	unitSearchOf,
 	unitSearchSchema,
@@ -48,5 +49,14 @@ describe("unitSelectionOf and unitSearchFor", () => {
 			branch: undefined,
 			department: undefined,
 		});
+	});
+});
+
+describe("parseBranchContext", () => {
+	it("given_anySignedInUrl_when_parsed_then_keepsOnlyTheBranch", () => {
+		expect(
+			parseBranchContext({ branch: "b-1", department: "d-1", view: "team" })
+		).toEqual({ branch: "b-1" });
+		expect(parseBranchContext({ branch: "" })).toEqual({});
 	});
 });

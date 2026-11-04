@@ -41,10 +41,8 @@ import {
 } from "@/features/workspace/unitSearch";
 import {
 	clearedUnits,
-	sameUnits,
 	selectedUnits,
 	unitsNarrowed,
-	urlUnitsOf,
 	type UnitSelection,
 } from "@/features/workspace/unitSelection";
 import { UnitSelector } from "@/features/workspace/UnitSelector";
@@ -100,9 +98,9 @@ export const People = (): FunctionComponent => {
 			search: (previous) => ({ ...previous, page: undefined, ...next }),
 		});
 	};
-	const chooseUnits = (next: UnitSelection): void => {
-		// The selector naming the units already shown keeps the page, the history entry and its state.
-		if (sameUnits(next, urlUnitsOf(units)))
+	const chooseUnits = (next: UnitSelection, cleanup = false): void => {
+		// Taking out a unit the page cannot show keeps the page, the history entry and its state.
+		if (cleanup)
 			void navigate({
 				search: (previous) => ({ ...previous, ...unitSearchFor(next) }),
 				replace: true,
@@ -112,7 +110,10 @@ export const People = (): FunctionComponent => {
 	};
 	const filtered = search.status !== undefined || unitsNarrowed(units);
 	const clearFilters = (): void => {
-		show({ status: undefined, ...unitSearchFor(clearedUnits(units)) });
+		show({
+			status: undefined,
+			...unitSearchFor(clearedUnits(units, requested)),
+		});
 	};
 
 	return (
