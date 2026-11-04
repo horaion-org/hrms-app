@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { fn } from "storybook/test";
 import { GenerationFailurePanel } from "@/features/scheduling/GenerationFailurePanel";
 import {
 	generationFindingsFixture,
@@ -37,3 +38,6 @@ export const Infeasible: Story = {
 		}),
 	},
 };
+
+/** Someone who may generate it again is offered that as the next step. */
+export const WithRegenerate: Story = { args: { onRegenerate: fn() } };

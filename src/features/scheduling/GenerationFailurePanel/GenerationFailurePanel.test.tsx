@@ -1,8 +1,9 @@
 import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { createInstance } from "i18next";
 import { initReactI18next } from "react-i18next";
 import en from "@/assets/locales/en/translations.json";
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import { GenerationFailurePanel } from "@/features/scheduling/GenerationFailurePanel";
 import {
 	generationFindingsFixture,
@@ -63,5 +64,21 @@ describe("GenerationFailurePanel", () => {
 		expect(
 			within(panel).getByRole("region", { name: "Notes by member" })
 		).toHaveTextContent("Ben Ong");
+	});
+
+	it("given_aWayToRegenerate_when_rendered_then_offersToGenerateAgainAsTheNextStep", async () => {
+		const onRegenerate = vi.fn();
+		const failed = generationFixture({ status: "FAILED", findings: null });
+		const { rerender } = render(<GenerationFailurePanel generation={failed} />);
+		expect(screen.queryByRole("button", { name: "Generate again" })).toBeNull();
+
+		rerender(
+			<GenerationFailurePanel generation={failed} onRegenerate={onRegenerate} />
+		);
+		await userEvent.click(
+			screen.getByRole("button", { name: "Generate again" })
+		);
+
+		expect(onRegenerate).toHaveBeenCalledOnce();
 	});
 });
