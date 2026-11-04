@@ -262,6 +262,25 @@ describe("ConstraintDialog", () => {
 		});
 	});
 
+	it("given_aDaysOffConstraint_when_itsPeriodIsLongerThanAWeek_then_refusedWithTheDeclaredRange", async () => {
+		const user = userEvent.setup();
+		const { onSave } = renderDialog({ editing: constraint("two-days-off") });
+		await screen.findByRole("dialog", { name: "Edit constraint" });
+		const periodDays = screen.getByRole("spinbutton", {
+			name: /^Period in days/,
+		});
+
+		expect(screen.getByText("A whole number from 1 to 7.")).toBeVisible();
+
+		await user.clear(periodDays);
+		await user.type(periodDays, "8");
+		await user.click(screen.getByRole("button", { name: "Save" }));
+		expect(
+			await screen.findByText("Enter a whole number from 1 to 7.")
+		).toBeVisible();
+		expect(onSave).not.toHaveBeenCalled();
+	});
+
 	it.each([
 		[
 			"CONSTRAINT_TYPE_ALREADY_USED",
