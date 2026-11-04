@@ -1,18 +1,27 @@
-import { useRouteContext } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { getRouteApi, useRouteContext } from "@tanstack/react-router";
+import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { ArrowUpIcon } from "@/components/ui/Icon";
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from "@/components/ui/Tabs";
+import { dataItemsFor, offersData } from "@/features/settings/dataAccess";
+import { DataSettings } from "@/features/settings/DataSettings";
 import { GeneralSettingsForm } from "@/features/settings/GeneralSettingsForm";
 import { PlanSettings } from "@/features/settings/PlanSettings";
 import { useGeneralSettings } from "@/features/settings/useGeneralSettings";
+import {
+	searchForSection,
+	selectedSectionIndex,
+	visibleSections,
+	type SettingsSection,
+} from "@/features/settings/sections";
 import { useRenameWorkspace } from "@/features/settings/useRenameWorkspace";
 import { COMPANY_SCOPE } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
 
-const SECTIONS = ["general", "notifications", "scheduling", "plan"] as const;
+const route = getRouteApi("/_authenticated/_app/settings");
+
 const COMING_SOON_SECTIONS = ["notifications", "scheduling"] as const;
 
 const panelClasses =
@@ -29,8 +38,16 @@ export const Settings = (): FunctionComponent => {
 	const general = useGeneralSettings(companyId);
 	const access = useAccess();
 	const renameWorkspace = useRenameWorkspace(companyId);
-	const [selectedIndex, setSelectedIndex] = useState(0);
+	const navigate = route.useNavigate();
+	const search = route.useSearch();
+	const dataItems = dataItemsFor(access);
+	// The section lives in the URL, so a link such as `?section=data` opens it.
+	const sections = visibleSections(offersData(dataItems));
+	const selectedIndex = selectedSectionIndex(sections, search.section);
 	const planTabRef = useRef<HTMLButtonElement>(null);
+	const show = (next: SettingsSection): void => {
+		void navigate({ search: searchForSection(next), replace: true });
+	};
 
 	return (
 		<>
@@ -47,7 +64,7 @@ export const Settings = (): FunctionComponent => {
 					className="self-start sm:self-auto"
 					leadingIcon={<ArrowUpIcon />}
 					onClick={() => {
-						setSelectedIndex(SECTIONS.indexOf("plan"));
+						show("plan");
 						planTabRef.current?.focus();
 					}}
 				>
@@ -58,19 +75,21 @@ export const Settings = (): FunctionComponent => {
 				className="mt-10 flex flex-col overflow-hidden rounded-xl border border-neutral-400 sm:min-h-144 sm:flex-row"
 				orientation="vertical"
 				selectedIndex={selectedIndex}
-				onChange={setSelectedIndex}
+				onChange={(index) => {
+					show(sections[index] ?? "general");
+				}}
 			>
 				<TabList
 					aria-label={t("settings.sections")}
 					className="sm:w-63 sm:shrink-0 sm:border-r sm:border-neutral-400"
 				>
-					{SECTIONS.map((section) => (
+					{sections.map((shown) => (
 						<Tab
-							key={section}
-							ref={section === "plan" ? planTabRef : undefined}
-							description={t(`settings.${section}.description`)}
+							key={shown}
+							ref={shown === "plan" ? planTabRef : undefined}
+							description={t(`settings.${shown}.description`)}
 						>
-							{t(`settings.${section}.title`)}
+							{t(`settings.${shown}.title`)}
 						</Tab>
 					))}
 				</TabList>
@@ -112,6 +131,11 @@ export const Settings = (): FunctionComponent => {
 					<TabPanel className={panelClasses}>
 						<PlanSettings />
 					</TabPanel>
+					{sections.includes("data") && (
+						<TabPanel className={panelClasses}>
+							<DataSettings companyId={companyId} items={dataItems} />
+						</TabPanel>
+					)}
 				</TabPanels>
 			</Tabs>
 		</>
