@@ -84,17 +84,20 @@ their API exists.
   branch's `timeZone` and its newest `generation` run with the engine's findings) and its requests: create, read,
   replace (setup and ticks together), request generation, the schedule's shifts (a draft's live shifts with
   `included`, or the frozen copies), its constraints (a draft's live ACTIVE constraints with `included`, or the
-  frozen copies) and its roster (`GET …/assignments`).
+  frozen copies), its roster (`GET …/assignments`), regeneration, delete, publish (`…/approval`), reject
+  (`…/rejection` with a reason) and the roster export (`…/export`, an `.xlsx`).
 - `schedules/useSchedule.ts` — `useSchedule` (`hidden` without `schedule:read` at the department or on a 403,
-  `missing` on a 404) and `useScheduleActions` (create, update, generate).
+  `missing` on a 404), `useCompanySchedule` (the same by the schedule's id alone) and `useScheduleActions` (create,
+  update, generate, regenerate, remove, publish, reject).
 - `schedules/useScheduleShifts.ts` — the schedule's shifts as the steps show them (`hidden` without `shift:read` at
   the department or on a 403).
 - `schedules/useScheduleConstraints.ts` — the constraints the Constraints step lists: for a draft the department's
   live constraints, inactive ones included (`GET …/constraints`); once generated, the frozen copies
   (`GET …/schedules/{s}/constraints`). `hidden` without `constraint:read` at the department or on a 403.
-- `schedules/scheduleRefusal.ts` — the schedules API's codes to copy, for a save (`CONSTRAINT_NOT_FOUND`,
-  `CONSTRAINT_INACTIVE`, …) and for a generation (`SCHEDULE_HAS_NO_SHIFTS`, `SCHEDULE_CONSTRAINT_UNUSABLE`,
-  `SCHEDULE_NOT_DRAFT`).
+- `schedules/scheduleRefusal.ts` — the schedules API's codes to copy, every code named once in
+  `SCHEDULE_REFUSAL_CODES`: for a save (`CONSTRAINT_NOT_FOUND`, `CONSTRAINT_INACTIVE`, …), a generation
+  (`SCHEDULE_HAS_NO_SHIFTS`, `SCHEDULE_CONSTRAINT_UNUSABLE`, `SCHEDULE_NOT_DRAFT`), a delete, a regeneration and a
+  decision (`INVALID_REJECTION_REASON` lands on the reason field).
 - `schedules/fixtures.ts` — draft s-1 and its generated twin (with the run its status implies), the engine's
   findings as the API serves them (`generationFindingsFixture`, `findingsOfEveryKindFixture`,
   `emptyFindingsFixture`), the 21-row roster of its three members, and a workspace for company c-1.
@@ -106,7 +109,19 @@ their API exists.
   the one grain shift times and demand slots share.
 - `schedulingNotice.ts` — the confirmation the Scheduling page shows after a generation, carried in history state.
 - `ForecastStep`, `GenerateStep`, `ScheduleSetupStep`, `StepActions` — the other steps; `ShiftAllocationTable` and
-  `TimeBlockGrid` are the two forecast views.
+  `TimeBlockGrid` are the two forecast views. `GenerateStep` takes a `startingPoint` slot, filled with
+  `StartingContextSection`.
+- `periods.ts` — the weeks Setup offers (`selectablePeriods`: `PAST_WEEKS` back, this week, `FUTURE_WEEKS` ahead,
+  each told whether it is last, this or next week and whether it has started), `defaultPeriod` and `withPeriod` for a
+  reopened draft whose week has left the offered ones.
+- `stepCompletion.ts` — which steps the Stepper ticks, from the draft's data (saved, ticked shifts and constraints,
+  frozen) rather than from being behind the current step.
+- `constraints/NoConstraintsDialog` — asks before leaving Constraints with nothing ticked; a warning only.
+- `startingContext/` — the week before the period (T3-12, the API's ADR-0056). `api.ts` reads and replaces a draft's
+  `starting-days` and reads the `starting-context` frozen at generation; `startingGrid.ts` is the dialog's pure state
+  (entries by member and date, `shiftCellValue`, `fillEmpty`, the save body, `runsByMember` for the roster's badge).
+  `StartingContextSection` owns the query and the save; `StartingContextCallout` is its one line on the Generate
+  step and `StartingDaysDialog` the members-by-days grid. An empty day means "not known", never worked or off.
 
 `src/pages/CreateSchedule.tsx` composes the steps and owns the draft, the saves, generation and the shift and
 constraint dialogs.
@@ -125,6 +140,9 @@ constraint dialogs.
    `branchId`/`departmentId` then name the department routes. `useScheduleAssignments` once the schedule is GENERATED with no open run, and `useScheduleShifts` /
    `useScheduleConstraints` (frozen copies, only to name the findings; empty when not readable). Under `RosterHeader` it shows, by
    state: a generating note (read again every 15 s), `GenerationFailurePanel`, `GeneratedRoster`, or a draft's note.
+   Once there is a roster it also reads the `starting-context`, for the "Day N of a run" badges and a warning when
+   members' starting points changed since generation. The header's actions are View setup, Regenerate and
+   `ScheduleMenu`; `ScheduleDecisionPanel` sits under the header.
 3. Queries `schedules/api.ts` — `scheduleQuery` (`refetchInterval` while `generationInProgress`) and
    `scheduleAssignmentsQuery` → `fetchScheduleAssignments`.
 4. Pure mappers `roster/` — no I/O. They turn API rows into what the components draw.
@@ -134,7 +152,6 @@ constraint dialogs.
 
 - `schedules/scheduleViewLink.ts` — View on a card or history row: a DRAFT reopens at the wizard's Setup, any other
   status opens the roster; `scheduleSetupLink` is the roster's "View setup".
-- `roster/rosterSearch.ts` — the roster URL's branch and department, both required.
 - `schedules/useScheduleAssignments.ts` — the roster rows, asked for only when enabled (`hidden` without
   `schedule:read` at the department or on a 403).
 - `roster/roster.ts` — `rosterFromAssignments` (one row per member, each day a shift, off or leave; a row whose
@@ -172,6 +189,13 @@ constraint dialogs.
 - `GeneratedRoster` — the roster's figures, findings summary and panel, week bar, grid and chosen day's panel; owns
   only the shown week, the chosen day and whether the findings panel is open.
 - `ScheduleCard` — shows "N setup issues" beside the status when its newest run's findings have diagnostics.
+- `ScheduleMenu` — the "More actions" menu on a history row and the roster header: Export roster (header only, once
+  there is a roster) and Delete. It owns the export mutation and opens `DeleteScheduleDialog`.
+- `DeleteScheduleDialog`, `RegenerateDialog` — `ConfirmDialog`s in the `danger` tone (a failed run's retry is not,
+  as there is nothing to replace); each refusal shows inside the dialog.
+- `ScheduleDecisionPanel` — a GENERATED roster waits for Publish or Reject; a decided one says who decided, when and,
+  for a rejection, why. `scheduleDecision.ts` reads that off the status alone. `PublishScheduleDialog` and
+  `RejectScheduleDialog` (reason required, as rejecting leave) make the decision.
 
 Engine prose (failure reason, errors, conflicts, diagnostics) is shown quoted, never as the app's own copy
 (ADR-0003). The four known diagnostic codes also get the app's own sentence, with the engine's quoted beneath.
@@ -208,11 +232,12 @@ Engine prose (failure reason, errors, conflicts, diagnostics) is shown quoted, n
 
 Every check goes through `useAccess` at the schedule's department (`departmentScope`): `schedule:read` reads a draft;
 `schedule:create` decides which departments Setup offers; `schedule:update` saves (without it the setup is read-only
-and Save draft is not offered); `schedule:generate` offers Generate. `shift:read` lists the shifts and the role
-options; `shift:create` offers Add, `shift:update` Edit and `shift:delete` Delete. `constraint:read` lists the
-constraints (a draft's and a generated schedule's) and the constraint options; `constraint:create` offers Add
-constraint, `constraint:update` Edit and `constraint:delete` Delete. Ticking a constraint needs only
-`schedule:update`, as ticking a shift does. The Scheduling page offers Create schedule when `schedule:create` is held
+and Save draft is not offered); `schedule:generate` offers Generate and Regenerate; `schedule:publish` offers Publish
+and Reject on a GENERATED roster; `schedule:delete` offers Delete in `ScheduleMenu`, and Export roster needs only
+`schedule:read`. `shift:read` lists the shifts and the role options; `shift:create` offers Add, `shift:update`
+Edit and `shift:delete` Delete. `constraint:read` lists the constraints (a draft's and a generated schedule's) and the
+constraint options; `constraint:create` offers Add constraint, `constraint:update` Edit and `constraint:delete`
+Delete. Ticking a constraint, and adding last week's days, needs only `schedule:update`, as ticking a shift does. The Scheduling page offers Create schedule when `schedule:create` is held
 anywhere. The API checks every request regardless.
 
 ## Verification
