@@ -1174,6 +1174,53 @@ describe("Select", () => {
 		);
 	});
 
+	it("lists grouped options under labelled headings that the keyboard skips", async () => {
+		const user = userEvent.setup();
+		const onChange = vi.fn();
+		render(
+			<Select
+				aria-label="Leave type"
+				defaultValue="sick"
+				options={[
+					{ value: "annual", label: "Annual leave", group: "Yearly allowance" },
+					{ value: "sick", label: "Sick leave", group: "Yearly allowance" },
+					{ value: "marriage", label: "Marriage leave", group: "Per occasion" },
+				]}
+				onChange={onChange}
+			/>
+		);
+		const trigger = screen.getByRole("button", { name: "Leave type" });
+		expect(trigger).toHaveTextContent("Sick leave");
+		await user.click(trigger);
+		const groups = screen.getAllByRole("group");
+		expect(
+			groups.map((group) => group.getAttribute("aria-labelledby"))
+		).toEqual(groups.map((group) => group.firstElementChild?.id));
+		expect(
+			screen.getByRole("group", { name: "Yearly allowance" })
+		).toContainElement(screen.getByRole("option", { name: "Sick leave" }));
+		expect(
+			screen.getByRole("group", { name: "Per occasion" })
+		).toContainElement(screen.getByRole("option", { name: "Marriage leave" }));
+		await user.keyboard("{ArrowDown}");
+		expect(screen.getByRole("listbox")).toHaveAttribute(
+			"aria-activedescendant",
+			screen.getByRole("option", { name: "Marriage leave" }).id
+		);
+		await user.keyboard("{Enter}");
+		expect(onChange).toHaveBeenCalledWith("marriage");
+	});
+
+	it("renders no group or heading when no option names a group", async () => {
+		const user = userEvent.setup();
+		render(<Select aria-label="Department" options={options} />);
+		await user.click(screen.getByRole("button", { name: "Department" }));
+		expect(screen.queryByRole("group")).not.toBeInTheDocument();
+		expect(
+			screen.getAllByRole("option").map((option) => option.textContent)
+		).toEqual(["People", "Finance", "Operations"]);
+	});
+
 	it("shows a placeholder with a caller-supplied accessible name", () => {
 		render(
 			<Select
