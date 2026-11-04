@@ -82,12 +82,12 @@ export const availabilityUnitRulesOf = (
 ): UnitSelectionRules | undefined =>
 	view === "team" ? TEAM_UNIT_RULES : undefined;
 
-/** The list the team tab asks the API for: the week's part-timers inside one Branch, and one Department if chosen. */
+/** The list the team tab asks the API for: the week's part-timers in the Branch and Department shown, if one is. */
 export const availabilityQueryOf = (
-	{ branchId, departmentId }: { branchId: string; departmentId?: string },
+	{ branchId, departmentId }: { branchId?: string; departmentId?: string },
 	weekStartMonday: string
 ): AvailabilityListQuery => ({
 	weekStartMonday,
-	branchId,
+	...(branchId ? { branchId } : {}),
 	...(departmentId ? { departmentId } : {}),
 });

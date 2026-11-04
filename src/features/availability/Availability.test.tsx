@@ -3,7 +3,10 @@ import dayjs from "dayjs";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resetApiClient } from "@/common/api-client";
-import { effectiveWorkspace } from "@/common/testing/effectiveWorkspace";
+import {
+	companyWideWorkspace,
+	effectiveWorkspace,
+} from "@/common/testing/effectiveWorkspace";
 import {
 	currentUserReply,
 	openApp,
@@ -223,6 +226,42 @@ describe("Availability", () => {
 		await user.click(screen.getByRole("button", { name: "Clear filters" }));
 		await waitFor(() => {
 			expect(router.state.location.search).toEqual({ view: "team" });
+		});
+	});
+
+	it("starts the team on the person's home Branch and lists every Branch once All branches is chosen", async () => {
+		const user = userEvent.setup();
+		// Orchard (b-1, the person's home Branch) and Tampines (b-2).
+		const calls = stubApi(
+			routes("FULL_TIME", {
+				status: 200,
+				body: envelope(companyWideWorkspace([READ])),
+			})
+		);
+		const { router } = await open("/availability");
+		await screen.findByRole("table", { name: "Team availability" });
+
+		expect(screen.getByRole("button", { name: "Branch" })).toHaveTextContent(
+			"Orchard"
+		);
+		await user.click(screen.getByRole("button", { name: "Branch" }));
+		await user.click(screen.getByRole("option", { name: "All branches" }));
+		await waitFor(() => {
+			expect(router.state.location.search).toEqual({
+				view: "team",
+				branch: "all",
+			});
+		});
+		// Every Branch in scope: no Branch is sent, and the API applies the scope.
+		await waitFor(() => {
+			expect(
+				calls
+					.filter((call) => call.path === TEAM_PATH)
+					.map((call) => call.search)
+			).toEqual([
+				`weekStartMonday=${mondayOf(new Date())}&branchId=b-1`,
+				`weekStartMonday=${mondayOf(new Date())}`,
+			]);
 		});
 	});
 

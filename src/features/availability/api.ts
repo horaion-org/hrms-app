@@ -208,8 +208,9 @@ export const deleteWeekAvailability = async (
 export type AvailabilityListQuery = {
 	/** "YYYY-MM-DD", a Monday. */
 	weekStartMonday: string;
-	branchId: string;
-	/** Narrows the members to one Department of the Branch. */
+	/** Narrows the members to one Branch; left out lists every Branch in reach. */
+	branchId?: string;
+	/** Narrows the members to one Department. */
 	departmentId?: string;
 };
 
@@ -217,7 +218,8 @@ export const availabilityListPath = (
 	companyId: string,
 	{ weekStartMonday, branchId, departmentId }: AvailabilityListQuery
 ): string => {
-	const query = new URLSearchParams({ weekStartMonday, branchId });
+	const query = new URLSearchParams({ weekStartMonday });
+	if (branchId) query.set("branchId", branchId);
 	if (departmentId) query.set("departmentId", departmentId);
 	return `${companyPath(companyId)}/availability?${query.toString()}`;
 };
