@@ -241,7 +241,7 @@ export const EmailConfirmationForm = (): FunctionComponent => {
 						id="code"
 						inputMode="numeric"
 						label={t("auth.emailConfirmation.code")}
-						maxLength={6}
+						maxLength={16}
 						{...register("code")}
 					/>
 				</fieldset>

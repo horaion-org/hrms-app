@@ -477,3 +477,19 @@ it.each(["/login", "/register"])(
 		expect(calls).toHaveLength(0);
 	}
 );
+
+it("confirms a person who lands from the email link with no navigation state and pastes the code with spaces", async () => {
+	const calls = stubApi({ [`POST ${CONFIRM}`]: { status: 204 } });
+	const opened = await open();
+	expect(opened.router.state.location.href).toBe("/confirm-email");
+	expect(screen.queryByRole("status")).not.toBeInTheDocument();
+	expect(screen.getByRole("button", { name: copy.resend })).toBeEnabled();
+	const user = userEvent.setup();
+	await user.type(screen.getByLabelText(copy.email), EMAIL);
+	await user.click(screen.getByLabelText(copy.code));
+	await user.paste(" 123456 ");
+	await confirm();
+	expect(await screen.findByRole("status")).toHaveTextContent(copy.redirecting);
+	expect(calls[0]?.body).toEqual({ email: EMAIL, code: "123456" });
+	privateLocation(opened);
+});
