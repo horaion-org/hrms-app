@@ -85,4 +85,15 @@ describe("forbiddenRedirect", () => {
 			})
 		).toBeUndefined();
 	});
+
+	it("judges nothing before a company is chosen", () => {
+		expect(
+			forbiddenRedirect({
+				workspace: companyWideWorkspace([]),
+				companyId: undefined,
+				permission: "access_role:create",
+				target: COMPANY_SCOPE,
+			})
+		).toBeUndefined();
+	});
 });

@@ -10,9 +10,13 @@ import {
 /**
  * For a route loader to return: a redirect to the Forbidden page when the
  * loaded workspace does not grant the page's key where the page needs it,
- * otherwise `undefined`. Without a workspace there is no redirect: a loader
- * that catches the workspace failure (as `/activity` does) lets the page
- * explain it, and one that does not shows the route's error. `replace` keeps
+ * otherwise `undefined`. Nothing is judged before the company is chosen:
+ * with no `companyId` (someone with several companies has not picked one
+ * yet) there is no redirect, because the picker shows first and the loader
+ * runs again once a company is settled. Without a workspace there is no
+ * redirect either: a loader that catches the workspace failure (as
+ * `/activity` does) lets the page explain it, and one that does not shows
+ * the route's error. `replace` keeps
  * the refused URL out of history, so Go back returns to where the person
  * came from.
  *
@@ -26,11 +30,12 @@ export const forbiddenRedirect = ({
 	target,
 }: {
 	workspace: Workspace | undefined;
-	companyId: string;
+	/** The settled company; undefined while the person is still choosing one. */
+	companyId: string | undefined;
 	permission: PermissionKey;
 	target: AccessTarget;
 }): AnyRedirect | undefined => {
-	if (!workspace) return undefined;
+	if (companyId === undefined || !workspace) return undefined;
 	return canAny(accessIndexOf(workspace, companyId), [permission], target)
 		? undefined
 		: redirect({ to: "/forbidden", replace: true });
