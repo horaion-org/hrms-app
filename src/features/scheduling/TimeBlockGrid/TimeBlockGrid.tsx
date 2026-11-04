@@ -140,7 +140,7 @@ export const TimeBlockGrid = ({
 									>
 										<button
 											aria-expanded={open}
-											className="flex items-center gap-3 rounded text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-blue-500"
+											className="flex cursor-pointer items-center gap-3 rounded text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-blue-500"
 											type="button"
 											onClick={() => {
 												toggle(group.groupId);
