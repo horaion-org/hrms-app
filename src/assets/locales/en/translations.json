@@ -1400,7 +1400,22 @@
 				"memberReactivated": "{{name}} reactivated",
 				"leaveRequested": "Leave requested: {{name}}",
 				"leaveApproved": "Leave approved: {{name}}",
-				"leaveRejected": "Leave rejected: {{name}}"
+				"leaveRejected": "Leave rejected: {{name}}",
+				"workspaceCreated": "Workspace created: {{name}}",
+				"workspaceRenamed": "Workspace renamed: {{name}}",
+				"memberUpdated": "{{name}}’s profile updated",
+				"memberEmailChanged": "{{name}}’s email changed",
+				"memberInvitationResent": "Invitation resent to {{name}}",
+				"memberSkillsUpdated": "{{name}}’s skills updated",
+				"memberAvailabilityUpdated": "{{name}}’s availability updated",
+				"memberWeekAvailabilityUpdated": "{{name}}’s availability for a week updated",
+				"memberWeekAvailabilityCleared": "{{name}}’s availability for a week cleared",
+				"scheduleCreated": "Schedule created: {{name}}",
+				"scheduleUpdated": "Schedule updated: {{name}}",
+				"scheduleGenerationRequested": "Schedule generation requested: {{name}}",
+				"scheduleRegenerationRequested": "Schedule regeneration requested: {{name}}",
+				"scheduleGenerated": "Schedule generated: {{name}}",
+				"scheduleDeleted": "Schedule deleted: {{name}}"
 			},
 			"unnamed": {
 				"branchCreated": "Branch created",
@@ -1417,7 +1432,22 @@
 				"memberReactivated": "Employee reactivated",
 				"leaveRequested": "Leave requested",
 				"leaveApproved": "Leave request approved",
-				"leaveRejected": "Leave request rejected"
+				"leaveRejected": "Leave request rejected",
+				"workspaceCreated": "Workspace created",
+				"workspaceRenamed": "Workspace renamed",
+				"memberUpdated": "Employee profile updated",
+				"memberEmailChanged": "Employee email changed",
+				"memberInvitationResent": "Invitation resent",
+				"memberSkillsUpdated": "Employee skills updated",
+				"memberAvailabilityUpdated": "Employee availability updated",
+				"memberWeekAvailabilityUpdated": "Employee availability for a week updated",
+				"memberWeekAvailabilityCleared": "Employee availability for a week cleared",
+				"scheduleCreated": "Schedule created",
+				"scheduleUpdated": "Schedule updated",
+				"scheduleGenerationRequested": "Schedule generation requested",
+				"scheduleRegenerationRequested": "Schedule regeneration requested",
+				"scheduleGenerated": "Schedule generated",
+				"scheduleDeleted": "Schedule deleted"
 			}
 		},
 		"headsField": {

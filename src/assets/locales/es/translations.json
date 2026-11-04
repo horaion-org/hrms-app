@@ -501,7 +501,22 @@
 				"memberReactivated": "{{name}} reactivado",
 				"leaveRequested": "Ausencia solicitada: {{name}}",
 				"leaveApproved": "Ausencia aprobada: {{name}}",
-				"leaveRejected": "Ausencia rechazada: {{name}}"
+				"leaveRejected": "Ausencia rechazada: {{name}}",
+				"workspaceCreated": "Espacio de trabajo creado: {{name}}",
+				"workspaceRenamed": "Espacio de trabajo renombrado: {{name}}",
+				"memberUpdated": "Perfil de {{name}} actualizado",
+				"memberEmailChanged": "Correo de {{name}} cambiado",
+				"memberInvitationResent": "Invitación reenviada a {{name}}",
+				"memberSkillsUpdated": "Habilidades de {{name}} actualizadas",
+				"memberAvailabilityUpdated": "Disponibilidad de {{name}} actualizada",
+				"memberWeekAvailabilityUpdated": "Disponibilidad de {{name}} para una semana actualizada",
+				"memberWeekAvailabilityCleared": "Disponibilidad de {{name}} para una semana eliminada",
+				"scheduleCreated": "Horario creado: {{name}}",
+				"scheduleUpdated": "Horario actualizado: {{name}}",
+				"scheduleGenerationRequested": "Generación de horario solicitada: {{name}}",
+				"scheduleRegenerationRequested": "Regeneración de horario solicitada: {{name}}",
+				"scheduleGenerated": "Horario generado: {{name}}",
+				"scheduleDeleted": "Horario eliminado: {{name}}"
 			},
 			"unnamed": {
 				"jobTitleCreated": "Puesto creado",
@@ -511,7 +526,22 @@
 				"memberReactivated": "Empleado reactivado",
 				"leaveRequested": "Ausencia solicitada",
 				"leaveApproved": "Solicitud de ausencia aprobada",
-				"leaveRejected": "Solicitud de ausencia rechazada"
+				"leaveRejected": "Solicitud de ausencia rechazada",
+				"workspaceCreated": "Espacio de trabajo creado",
+				"workspaceRenamed": "Espacio de trabajo renombrado",
+				"memberUpdated": "Perfil de empleado actualizado",
+				"memberEmailChanged": "Correo de empleado cambiado",
+				"memberInvitationResent": "Invitación reenviada",
+				"memberSkillsUpdated": "Habilidades de empleado actualizadas",
+				"memberAvailabilityUpdated": "Disponibilidad de empleado actualizada",
+				"memberWeekAvailabilityUpdated": "Disponibilidad de empleado para una semana actualizada",
+				"memberWeekAvailabilityCleared": "Disponibilidad de empleado para una semana eliminada",
+				"scheduleCreated": "Horario creado",
+				"scheduleUpdated": "Horario actualizado",
+				"scheduleGenerationRequested": "Generación de horario solicitada",
+				"scheduleRegenerationRequested": "Regeneración de horario solicitada",
+				"scheduleGenerated": "Horario generado",
+				"scheduleDeleted": "Horario eliminado"
 			}
 		},
 		"departments": {

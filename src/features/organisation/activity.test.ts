@@ -1,14 +1,42 @@
 import { describe, expect, it } from "vitest";
 import {
 	DepartmentIcon,
+	EmailIcon,
+	GenerateScheduleIcon,
 	OrganisationIcon,
 	PermissionsIcon,
 	RoleIcon,
+	SchedulingIcon,
+	SkillsIcon,
+	TimeIcon,
 	UserIcon,
 } from "@/components/ui/Icon";
+import en from "@/assets/locales/en/translations.json";
+import es from "@/assets/locales/es/translations.json";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import { describeActivity } from "@/features/organisation/activity";
 import type { AuditEvent } from "@/features/organisation/api";
+
+const LOCALES = { en, es };
+
+/** Spanish is partial elsewhere in the feed; these activities ship with both languages from the start. */
+const WORKSPACE_PROFILE_AND_SCHEDULE_KEYS = [
+	"workspaceCreated",
+	"workspaceRenamed",
+	"memberUpdated",
+	"memberEmailChanged",
+	"memberInvitationResent",
+	"memberSkillsUpdated",
+	"memberAvailabilityUpdated",
+	"memberWeekAvailabilityUpdated",
+	"memberWeekAvailabilityCleared",
+	"scheduleCreated",
+	"scheduleUpdated",
+	"scheduleGenerationRequested",
+	"scheduleRegenerationRequested",
+	"scheduleGenerated",
+	"scheduleDeleted",
+];
 
 const event = (overrides: Partial<AuditEvent>): AuditEvent => ({
 	auditEventId: "e-1",
@@ -38,6 +66,41 @@ describe("describeActivity", () => {
 			PermissionsIcon,
 		],
 		["access_role.delete", "Role deleted: Orchard", UserIcon],
+		["company.onboard", "Workspace created: Orchard", OrganisationIcon],
+		["company.update", "Workspace renamed: Orchard", OrganisationIcon],
+		["member_profile.update", "Orchard’s profile updated", UserIcon],
+		["member_profile.email_change", "Orchard’s email changed", EmailIcon],
+		[
+			"member_profile.invitation_resend",
+			"Invitation resent to Orchard",
+			EmailIcon,
+		],
+		["member_skill.replace", "Orchard’s skills updated", SkillsIcon],
+		["member_availability.replace", "Orchard’s availability updated", TimeIcon],
+		[
+			"member_availability.week_override.replace",
+			"Orchard’s availability for a week updated",
+			TimeIcon,
+		],
+		[
+			"member_availability.week_override.delete",
+			"Orchard’s availability for a week cleared",
+			TimeIcon,
+		],
+		["schedule.create", "Schedule created: Orchard", SchedulingIcon],
+		["schedule.update", "Schedule updated: Orchard", SchedulingIcon],
+		[
+			"schedule.generate",
+			"Schedule generation requested: Orchard",
+			GenerateScheduleIcon,
+		],
+		[
+			"schedule.regenerate",
+			"Schedule regeneration requested: Orchard",
+			GenerateScheduleIcon,
+		],
+		["schedule.generated", "Schedule generated: Orchard", GenerateScheduleIcon],
+		["schedule.delete", "Schedule deleted: Orchard", SchedulingIcon],
 	])("words %s as %s", (action, title, icon) => {
 		expect(describeActivity(event({ action }), t)).toEqual({
 			id: "e-1",
@@ -55,9 +118,33 @@ describe("describeActivity", () => {
 		).toBe("Role deleted");
 	});
 
-	it("skips actions it does not describe", () => {
+	it.each([
+		["company.update", "Workspace renamed"],
+		["schedule.delete", "Schedule deleted"],
+		["schedule.regenerate", "Schedule regeneration requested"],
+		["member_skill.replace", "Employee skills updated"],
+	])("words %s without a name as %s", (action, title) => {
 		expect(
-			describeActivity(event({ action: "branch_member.add" }), t)
-		).toBeUndefined();
+			describeActivity(event({ action, entityName: null }), t)?.title
+		).toBe(title);
+	});
+
+	it.each(["en", "es"] as const)(
+		"has %s copy, named and unnamed, for the workspace, profile and schedule activities",
+		(language) => {
+			const { named, unnamed } = LOCALES[language].organisation.activity;
+			for (const key of WORKSPACE_PROFILE_AND_SCHEDULE_KEYS) {
+				expect(named).toHaveProperty(key);
+				expect(unnamed).toHaveProperty(key);
+			}
+		}
+	);
+
+	it.each([
+		"branch_member.add",
+		"member_profile.read",
+		"schedule.generation.failed",
+	])("skips %s, which it does not describe", (action) => {
+		expect(describeActivity(event({ action }), t)).toBeUndefined();
 	});
 });

@@ -4,16 +4,23 @@ import type { Heroicon } from "@/common/types";
 import {
 	AddStaffIcon,
 	DepartmentIcon,
+	EmailIcon,
+	GenerateScheduleIcon,
 	LeaveIcon,
 	OrganisationIcon,
 	PermissionsIcon,
 	RemoveUserIcon,
 	RoleIcon,
+	SchedulingIcon,
+	SkillsIcon,
+	TimeIcon,
 	UserIcon,
 } from "@/components/ui/Icon";
 import type { AuditEvent } from "@/features/organisation/api";
 
 type ActivityKey =
+	| "workspaceCreated"
+	| "workspaceRenamed"
 	| "branchCreated"
 	| "branchUpdated"
 	| "departmentCreated"
@@ -26,11 +33,26 @@ type ActivityKey =
 	| "memberAdded"
 	| "memberDeactivated"
 	| "memberReactivated"
+	| "memberUpdated"
+	| "memberEmailChanged"
+	| "memberInvitationResent"
+	| "memberSkillsUpdated"
+	| "memberAvailabilityUpdated"
+	| "memberWeekAvailabilityUpdated"
+	| "memberWeekAvailabilityCleared"
+	| "scheduleCreated"
+	| "scheduleUpdated"
+	| "scheduleGenerationRequested"
+	| "scheduleRegenerationRequested"
+	| "scheduleGenerated"
+	| "scheduleDeleted"
 	| "leaveRequested"
 	| "leaveApproved"
 	| "leaveRejected";
 
 const ACTIVITIES: Record<string, { key: ActivityKey; icon: Heroicon }> = {
+	"company.onboard": { key: "workspaceCreated", icon: OrganisationIcon },
+	"company.update": { key: "workspaceRenamed", icon: OrganisationIcon },
 	"branch.create": { key: "branchCreated", icon: OrganisationIcon },
 	"branch.update": { key: "branchUpdated", icon: OrganisationIcon },
 	"department.create": { key: "departmentCreated", icon: DepartmentIcon },
@@ -46,9 +68,43 @@ const ACTIVITIES: Record<string, { key: ActivityKey; icon: Heroicon }> = {
 		icon: RemoveUserIcon,
 	},
 	"member_profile.reactivate": { key: "memberReactivated", icon: UserIcon },
+	"member_profile.update": { key: "memberUpdated", icon: UserIcon },
+	"member_profile.email_change": { key: "memberEmailChanged", icon: EmailIcon },
+	"member_profile.invitation_resend": {
+		key: "memberInvitationResent",
+		icon: EmailIcon,
+	},
+	"member_skill.replace": { key: "memberSkillsUpdated", icon: SkillsIcon },
+	"member_availability.replace": {
+		key: "memberAvailabilityUpdated",
+		icon: TimeIcon,
+	},
+	"member_availability.week_override.replace": {
+		key: "memberWeekAvailabilityUpdated",
+		icon: TimeIcon,
+	},
+	"member_availability.week_override.delete": {
+		key: "memberWeekAvailabilityCleared",
+		icon: TimeIcon,
+	},
 	"leave_request.create": { key: "leaveRequested", icon: LeaveIcon },
 	"leave_request.approve": { key: "leaveApproved", icon: LeaveIcon },
 	"leave_request.reject": { key: "leaveRejected", icon: LeaveIcon },
+	"schedule.create": { key: "scheduleCreated", icon: SchedulingIcon },
+	"schedule.update": { key: "scheduleUpdated", icon: SchedulingIcon },
+	"schedule.generate": {
+		key: "scheduleGenerationRequested",
+		icon: GenerateScheduleIcon,
+	},
+	"schedule.regenerate": {
+		key: "scheduleRegenerationRequested",
+		icon: GenerateScheduleIcon,
+	},
+	"schedule.generated": {
+		key: "scheduleGenerated",
+		icon: GenerateScheduleIcon,
+	},
+	"schedule.delete": { key: "scheduleDeleted", icon: SchedulingIcon },
 };
 
 export type Activity = { id: string; icon: Heroicon; title: string };
