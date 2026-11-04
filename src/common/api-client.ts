@@ -16,7 +16,10 @@ type ApiAuthentication = {
 };
 type RequestOptions = {
 	method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+	/** JSON-serialised, except `FormData`, which is sent as multipart as it is. */
 	body?: unknown;
+	/** The `Accept` header; JSON unless a route answers with a file. */
+	accept?: string;
 	anonymous?: boolean;
 	/** Aborts the request; an abort is rethrown as itself, never as an outage. */
 	signal?: AbortSignal;
@@ -34,6 +37,12 @@ export function resetApiClient(): void {
 	authentication = emptySession;
 }
 
+/** FormData goes as multipart; anything else as JSON. */
+const bodyOf = (body: unknown): BodyInit | undefined => {
+	if (body instanceof FormData) return body;
+	return body === undefined ? undefined : JSON.stringify(body);
+};
+
 async function send(
 	path: string,
 	options: RequestOptions,
@@ -42,8 +51,10 @@ async function send(
 	const sessionRoute =
 		path === "/api/v1/public/sessions" ||
 		path.startsWith("/api/v1/public/sessions/");
-	const headers = new Headers({ Accept: "application/json" });
-	if (sessionRoute || options.body !== undefined)
+	const multipart = options.body instanceof FormData;
+	const headers = new Headers({ Accept: options.accept ?? "application/json" });
+	// The browser sets a multipart body's Content-Type itself, with its boundary.
+	if (!multipart && (sessionRoute || options.body !== undefined))
 		headers.set("Content-Type", "application/json");
 	if (token !== null) headers.set("Authorization", `Bearer ${token}`);
 	const timeout = AbortSignal.timeout(20_000);
@@ -53,8 +64,7 @@ async function send(
 			{
 				method: options.method ?? "GET",
 				headers,
-				body:
-					options.body === undefined ? undefined : JSON.stringify(options.body),
+				body: bodyOf(options.body),
 				credentials: sessionRoute ? "include" : "same-origin",
 				signal: options.signal
 					? AbortSignal.any([options.signal, timeout])
@@ -164,4 +174,29 @@ export async function apiRequestVoid(
 	options: RequestOptions = {}
 ): Promise<void> {
 	await request(path, options);
+}
+
+/** A file the API answered with, and the name it suggests saving it under. */
+export type DownloadedFile = { blob: Blob; fileName: string };
+
+const fileNameOf = (disposition: string | null, fallback: string): string =>
+	/filename="([^"]+)"/.exec(disposition ?? "")?.[1] ?? fallback;
+
+/** A route that answers with a file (a spreadsheet), with the Session's token like any other call. */
+export async function apiDownload(
+	path: string,
+	fallbackFileName: string
+): Promise<DownloadedFile> {
+	const response = await request(path, { accept: "*/*" });
+	try {
+		return {
+			blob: await response.blob(),
+			fileName: fileNameOf(
+				response.headers.get("Content-Disposition"),
+				fallbackFileName
+			),
+		};
+	} catch {
+		throw new UnreachableError("API response was interrupted");
+	}
 }
