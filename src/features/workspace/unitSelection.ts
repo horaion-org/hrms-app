@@ -29,7 +29,6 @@ export type UnitSelectionRules = {
 
 /** What the header and a page's filters show, and what its list asks for, worked out from the offered units. */
 export type ResolvedUnitSelection = {
-	rules: UnitSelectionRules;
 	/** The Branch shown; undefined for every Branch (offered only beyond one) or none offered. */
 	branch: BranchChoice | undefined;
 	/** The Department shown; undefined for every Department in reach. */
@@ -106,7 +105,6 @@ export const resolveUnitSelection = (
 			)
 		: undefined;
 	return {
-		rules,
 		branch,
 		department,
 		branches,
