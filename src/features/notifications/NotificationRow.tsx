@@ -9,7 +9,7 @@ import {
 	notificationTimeLabel,
 } from "@/features/notifications/notificationTime";
 import {
-	describeNotificationType,
+	presentNotification,
 	type NotificationTone,
 } from "@/features/notifications/notificationTypes";
 
@@ -47,7 +47,7 @@ export const NotificationRow = ({
 	deleteRef?: Ref<HTMLButtonElement>;
 }): FunctionComponent => {
 	const { t, i18n } = useTranslation();
-	const type = describeNotificationType(notification.type);
+	const type = presentNotification(notification);
 	const Icon = type.icon;
 	const unread = !notification.readAt;
 	return (

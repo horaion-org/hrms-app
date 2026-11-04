@@ -5,6 +5,7 @@ import {
 	describeNotificationType,
 	isKnownNotificationType,
 	leaveRequestTarget,
+	presentNotification,
 	UNKNOWN_NOTIFICATION_TYPE,
 } from "@/features/notifications/notificationTypes";
 
@@ -15,6 +16,8 @@ const KNOWN = [
 	"SCHEDULE_READY",
 	"SHIFT_ASSIGNMENT",
 	"SCHEDULE_ASSIGNMENT_UPDATED",
+	"SCHEDULE_REJECTED",
+	"MEMBER_IMPORT_FINISHED",
 ];
 
 describe("describeNotificationType", () => {
@@ -45,6 +48,76 @@ describe("describeNotificationType", () => {
 			expect(describeNotificationType(type)).toBe(UNKNOWN_NOTIFICATION_TYPE);
 		}
 	);
+});
+
+describe("presentNotification", () => {
+	const counts = (
+		failed: number,
+		status: string
+	): { added: number; skipped: number; failed: number; status: string } => ({
+		added: 45,
+		skipped: 2,
+		failed,
+		status,
+	});
+
+	it("follows the type alone for everything but a finished import", () => {
+		expect(
+			presentNotification({ type: "SCHEDULE_REJECTED", importCounts: null })
+		).toMatchObject({
+			tone: "error",
+			category: "schedule",
+			title: "notifications.types.SCHEDULE_REJECTED",
+			values: undefined,
+		});
+	});
+
+	it("words a clean import as finished, in green, with its counts", () => {
+		expect(
+			presentNotification({
+				type: "MEMBER_IMPORT_FINISHED",
+				importCounts: counts(0, "COMPLETED"),
+			})
+		).toMatchObject({
+			tone: "success",
+			category: "people",
+			title: "notifications.importResult.finished",
+			values: { added: 45, skipped: 2, failed: 0 },
+		});
+	});
+
+	it("turns red when rows failed, and says it stopped when the import failed", () => {
+		expect(
+			presentNotification({
+				type: "MEMBER_IMPORT_FINISHED",
+				importCounts: counts(3, "COMPLETED"),
+			})
+		).toMatchObject({
+			tone: "error",
+			title: "notifications.importResult.finished",
+		});
+		expect(
+			presentNotification({
+				type: "MEMBER_IMPORT_FINISHED",
+				importCounts: counts(0, "FAILED"),
+			})
+		).toMatchObject({
+			tone: "error",
+			title: "notifications.importResult.stopped",
+		});
+	});
+
+	it("keeps the plain import copy when the counts are missing", () => {
+		expect(
+			presentNotification({
+				type: "MEMBER_IMPORT_FINISHED",
+				importCounts: null,
+			})
+		).toMatchObject({
+			tone: "success",
+			title: "notifications.types.MEMBER_IMPORT_FINISHED",
+		});
+	});
 });
 
 describe("leaveRequestTarget", () => {

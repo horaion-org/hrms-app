@@ -5,7 +5,7 @@ import { useNow } from "@/common/useNow";
 import { Tabs, Tab, TabList, TabPanels, TabPanel } from "@/components/ui/Tabs";
 import { notificationDemoFixtures } from "@/features/notifications/fixtures";
 import { NotificationRow } from "@/features/notifications/NotificationRow";
-import { describeNotificationType } from "@/features/notifications/notificationTypes";
+import { presentNotification } from "@/features/notifications/notificationTypes";
 
 /** Development-only layout preview. Acknowledgements update local examples, never server data. */
 export const NotificationDemo = (): FunctionComponent => {
@@ -59,7 +59,10 @@ export const NotificationDemo = (): FunctionComponent => {
 											<span
 												className={`text-ink-blue-900 ${notification.readAt ? "" : "font-semibold"}`}
 											>
-												{t(describeNotificationType(notification.type).title)}
+												{t(
+													presentNotification(notification).title,
+													presentNotification(notification).values
+												)}
 											</span>
 										</NotificationRow>
 									</li>

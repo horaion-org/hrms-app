@@ -17,7 +17,7 @@ import {
 	type NotificationAudience,
 } from "@/features/notifications/api";
 import {
-	describeNotificationType,
+	presentNotification,
 	leaveRequestTarget,
 } from "@/features/notifications/notificationTypes";
 import {
@@ -203,9 +203,8 @@ export const NotificationList = ({
 				<>
 					<ul className="divide-y divide-neutral-300">
 						{rows.map((notification, index) => {
-							const title = t(
-								describeNotificationType(notification.type).title
-							);
+							const presentation = presentNotification(notification);
+							const title = t(presentation.title, presentation.values);
 							const target = leaveRequestTarget(notification, audience);
 							const titleClasses = `text-ink-blue-900 ${notification.readAt ? "" : "font-semibold"}`;
 							return (
