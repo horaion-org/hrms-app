@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { Avatar } from "@/components/ui/Avatar";
+import { Badge } from "@/components/ui/Badge";
 import { FindingsMarker } from "@/features/scheduling/FindingsMarker";
 import { formatTimeRange } from "@/features/scheduling/formatShift";
 import { RosterShift } from "@/features/scheduling/RosterGrid/RosterShift";
@@ -43,6 +44,8 @@ export type RosterGridProps = {
 	) => void;
 	/** Marks findings on cells, rows and days; none without. */
 	findings?: RosterGridFindings;
+	/** A short note under a member's name, by row key: where they started the week. */
+	rowNotes?: ReadonlyMap<string, string>;
 	className?: string;
 };
 
@@ -58,6 +61,7 @@ export const RosterGrid = ({
 	selectedShiftId,
 	onAssignmentSelect,
 	findings,
+	rowNotes,
 	className,
 }: RosterGridProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
@@ -216,6 +220,11 @@ export const RosterGrid = ({
 													count: hoursInDays(row, days),
 												})}
 											</span>
+											{rowNotes?.has(row.key) && (
+												<Badge className="mt-1 text-[0.625rem]! leading-4!">
+													{rowNotes.get(row.key) ?? ""}
+												</Badge>
+											)}
 										</span>
 									</span>
 								</th>

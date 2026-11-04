@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { Callout } from "@/components/ui/Callout";
@@ -7,6 +8,8 @@ import { StepPanel } from "@/features/scheduling/StepPanel";
 
 export type GenerateStepProps = {
 	summary: ScheduleSummary;
+	/** Where everyone starts: the week before the period, above the summary. */
+	startingPoint?: ReactNode;
 	className?: string;
 };
 
@@ -16,9 +19,10 @@ const NEXT_KEYS = [
 	"scheduling.generate.nextReview",
 ] as const;
 
-/** What the schedule will be generated from, and what happens once it is. */
+/** What the schedule will be generated from, where everyone starts, and what happens once it is. */
 export const GenerateStep = ({
 	summary,
+	startingPoint,
 	className,
 }: GenerateStepProps): FunctionComponent => {
 	const { t } = useTranslation();
@@ -56,6 +60,7 @@ export const GenerateStep = ({
 				</span>
 			}
 		>
+			{startingPoint && <div className="mt-7">{startingPoint}</div>}
 			<dl
 				aria-label={t("scheduling.generate.summary")}
 				className="mt-7 grid grid-cols-2 gap-6 rounded-xl border border-neutral-400 p-6 lg:grid-cols-3 lg:gap-0 lg:divide-x lg:divide-neutral-400"

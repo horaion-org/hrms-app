@@ -126,6 +126,22 @@ describe("RosterGrid", () => {
 		).toHaveLength(4);
 	});
 
+	it("when_rowNotesAreGiven_then_showsTheNoteUnderThatMembersName", () => {
+		const ben = rows.find((row) => row.name === "Ben Ong");
+		render(
+			<RosterGrid
+				days={week}
+				rowNotes={new Map([[ben?.key ?? "", "Day 4 of a run"]])}
+				rows={rows}
+			/>
+		);
+
+		expect(screen.getByRole("row", { name: /Ben Ong/ })).toHaveTextContent(
+			"Day 4 of a run"
+		);
+		expect(screen.getAllByText("Day 4 of a run")).toHaveLength(1);
+	});
+
 	it("when_noFindingsAreGiven_then_marksNothing", () => {
 		render(<RosterGrid days={week} rows={rows} />);
 

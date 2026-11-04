@@ -2612,6 +2612,35 @@
 				"forbidden": "You no longer have permission to publish or reject this roster.",
 				"failed": "We couldn’t save the decision. Try again."
 			}
+		},
+		"startingContext": {
+			"title": "Before this week",
+			"explain": "Horaion uses these days to keep rest between shifts and to give a day off to anyone already at their limit. Empty days count as not known.",
+			"hint": "Start with Sunday. Earlier days only matter for people who worked every day.",
+			"none": "No roster before this week. Everyone starts rested.",
+			"noneWithEntries_one": "No roster before this week. Days are added for {{count}} person; everyone else starts rested.",
+			"noneWithEntries_other": "No roster before this week. Days are added for {{count}} people; everyone else starts rested.",
+			"carried": "Carried over from the week of {{week}}.",
+			"carriedWithNew_one": "Carried over from the week of {{week}}. {{count}} person isn’t on that roster and starts rested.",
+			"carriedWithNew_other": "Carried over from the week of {{week}}. {{count}} people aren’t on that roster and start rested.",
+			"add": "Add last week",
+			"edit": "Edit last week",
+			"notKnown": "Not known",
+			"worked": "Worked",
+			"cellLabel": "{{name}}, {{day}}",
+			"fillDay": "Day to fill",
+			"fillValue": "Fill with",
+			"fillEmpty": "Fill empty days",
+			"tableLabel": "The week before",
+			"cancel": "Cancel",
+			"save": "Save days",
+			"invalid": "A day couldn’t be saved. Check that its shift is still in use, then try again.",
+			"notDraft": "This schedule has already been generated, so its starting point can no longer change.",
+			"failed": "The days couldn’t be saved. Try again.",
+			"runBadge_one": "Day {{count}} of a run",
+			"runBadge_other": "Day {{count}} of a run",
+			"stale_one": "{{count}} person’s days before this week changed after this schedule was generated. It was planned from what was known then.",
+			"stale_other": "{{count}} people’s days before this week changed after this schedule was generated. It was planned from what was known then."
 		}
 	},
 	"colourSwatchPicker": {
