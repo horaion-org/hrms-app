@@ -185,8 +185,8 @@ describe("Availability", () => {
 		).toEqual([`weekStartMonday=${mondayOf(new Date())}&branchId=b-1`]);
 		expect(calls.some((call) => call.path === MINE_PATH)).toBe(false);
 		await waitFor(() => {
-			// The first Branch is shown, not written: no page's default becomes the shared Branch.
-			expect(router.state.location.search).toEqual({});
+			// The tab is written so the header knows it; the first Branch is shown, not written.
+			expect(router.state.location.search).toEqual({ view: "team" });
 		});
 		// Reading without the update key offers no editing.
 		expect(
@@ -207,7 +207,10 @@ describe("Availability", () => {
 		await user.click(screen.getByRole("option", { name: "Kitchen" }));
 
 		await waitFor(() => {
-			expect(router.state.location.search).toEqual({ department: "d-2" });
+			expect(router.state.location.search).toEqual({
+				view: "team",
+				department: "d-2",
+			});
 		});
 		expect(
 			calls.filter((call) => call.path === TEAM_PATH).map((call) => call.search)
@@ -219,7 +222,7 @@ describe("Availability", () => {
 		).toHaveTextContent("Department: Kitchen");
 		await user.click(screen.getByRole("button", { name: "Clear filters" }));
 		await waitFor(() => {
-			expect(router.state.location.search).toEqual({});
+			expect(router.state.location.search).toEqual({ view: "team" });
 		});
 	});
 
@@ -243,6 +246,13 @@ describe("Availability", () => {
 
 		await screen.findAllByText("09:00–13:00");
 		expect(tabNames()).toEqual(["My availability", "Team"]);
+		// Their own week lists nothing by Branch: the URL names the tab and the header shows no Branch.
+		await waitFor(() => {
+			expect(router.state.location.search).toMatchObject({ view: "mine" });
+		});
+		expect(
+			within(screen.getByRole("banner")).queryByText("Branch")
+		).not.toBeInTheDocument();
 
 		await user.click(screen.getByRole("tab", { name: "Team" }));
 		expect(
@@ -251,6 +261,9 @@ describe("Availability", () => {
 		await waitFor(() => {
 			expect(router.state.location.search).toMatchObject({ view: "team" });
 		});
+		expect(
+			within(screen.getByRole("banner")).getByText("Branch")
+		).toBeVisible();
 	});
 
 	it("offers nothing to someone neither part-time nor holding the read key", async () => {

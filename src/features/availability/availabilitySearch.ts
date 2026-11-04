@@ -81,7 +81,7 @@ export const TEAM_UNIT_RULES: UnitSelectionRules = {
 export const availabilityUnitRulesOf = (
 	view: AvailabilitySearch["view"]
 ): UnitSelectionRules | undefined =>
-	view === "mine" ? undefined : TEAM_UNIT_RULES;
+	view === "team" ? TEAM_UNIT_RULES : undefined;
 
 /** The list the team tab asks the API for: the week's part-timers inside one Branch, and one Department if chosen. */
 export const availabilityQueryOf = (

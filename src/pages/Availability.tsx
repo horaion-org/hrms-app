@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { Callout } from "@/components/ui/Callout";
@@ -64,8 +64,8 @@ const problemKeyOf = (
  * part-timer's own week and pattern, changed with nothing granted. "Team"
  * is a Branch's part-timers for one week, read through the person's grants,
  * with editing on the rows they may change. Beneath the tabs, one toolbar
- * holds the team's Branch and Department and the week. The tab, units and
- * week live in the URL; a week left out is this one, worked out on every
+ * holds the team's Department filter and the week; the Branch is the
+ * header's. The tab (written once it is known), units and week live in the URL; a week left out is this one, worked out on every
  * render. Any week can be read; only this week and later ones are edited. Page-level composition only: the parts live in
  * `features/availability`.
  */
@@ -109,6 +109,14 @@ export const Availability = (): FunctionComponent => {
 	const show = (next: AvailabilitySearch): void => {
 		void navigate({ search: (previous) => ({ ...previous, ...next }) });
 	};
+	// The URL names the tab shown, so the header knows whether this view lists by Branch.
+	useEffect(() => {
+		if (view && view !== search.view)
+			void navigate({
+				search: (previous) => ({ ...previous, view }),
+				replace: true,
+			});
+	}, [view, search.view, navigate]);
 	// A row is changed where its member is filed, and only in a week still to come.
 	const canEdit = (member: MemberWeek): boolean =>
 		!past &&
