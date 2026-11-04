@@ -98,6 +98,15 @@ export const TIMELINE_UNIT_RULES: UnitSelectionRules = {
 	withDepartment: true,
 };
 
+/** The unit rules of a view: the team views list by Branch; the person's own leave does not. */
+export const leaveUnitRulesOf = (
+	view: LeaveSearch["view"]
+): UnitSelectionRules | undefined => {
+	if (view === "requests") return REQUESTS_UNIT_RULES;
+	if (view === "timeline") return TIMELINE_UNIT_RULES;
+	return undefined;
+};
+
 /** The page of requests the table asks the API for, inside the units shown. */
 export const leaveQueryOf = (
 	search: LeaveSearch,

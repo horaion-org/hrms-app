@@ -18,6 +18,7 @@ import {
 	matchesSearch,
 	nameColumn,
 	statusColumn,
+	statusFilterChips,
 	statusFilterOptions,
 	type StatusFilter,
 } from "@/features/organisation/listColumns";
@@ -130,6 +131,9 @@ export const Branches = (): FunctionComponent => {
 				createLabel={t("organisation.branches.create")}
 				search={search}
 				searchLabel={t("organisation.branches.search")}
+				chips={statusFilterChips(t, status, () => {
+					setStatus("all");
+				})}
 				filter={{
 					label: t("organisation.list.showing"),
 					value: status,
@@ -139,6 +143,9 @@ export const Branches = (): FunctionComponent => {
 					},
 				}}
 				onSearchChange={setSearch}
+				onClearFilters={() => {
+					setStatus("all");
+				}}
 				onCreate={
 					canCreate
 						? (): void => {

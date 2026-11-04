@@ -387,6 +387,7 @@ describe("Branches", () => {
 			).toHaveAttribute("aria-sort", "descending")
 		);
 		await user.click(screen.getByRole("button", { name: "Sort by Status" }));
+		await user.click(screen.getByRole("button", { name: "Filters" }));
 		await user.click(screen.getByRole("button", { name: "Showing" }));
 		await user.click(screen.getByRole("option", { name: "Active" }));
 
@@ -660,12 +661,69 @@ describe("Departments", () => {
 		expect(
 			screen.queryByRole("button", { name: "Create department" })
 		).not.toBeInTheDocument();
-		expect(screen.getByRole("button", { name: "Showing" })).toHaveTextContent(
-			"All departments"
-		);
 		expect(searchesOf(calls, "/api/v1/companies/c-1/departments")).toEqual([
 			"size=100&sort=name%2Casc",
 		]);
+	});
+
+	it("keeps the status filter behind Filters and lists it as a chip while set", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...baseRoutes(),
+			[DEPARTMENTS]: pageReply([department("d-1", "Front Office")]),
+		});
+		await open("/organisation/departments");
+		await screen.findByRole("table", { name: "Departments" });
+
+		expect(
+			screen.queryByRole("button", { name: "Showing" })
+		).not.toBeInTheDocument();
+		await user.click(screen.getByRole("button", { name: "Filters" }));
+		expect(screen.getByRole("button", { name: "Showing" })).toHaveTextContent(
+			"All departments"
+		);
+		await user.click(screen.getByRole("button", { name: "Showing" }));
+		await user.click(screen.getByRole("option", { name: "Inactive" }));
+
+		expect(
+			screen.getByRole("list", { name: "Active filters" })
+		).toHaveTextContent("Showing: Inactive");
+		await user.click(
+			screen.getByRole("button", { name: "Remove Showing: Inactive" })
+		);
+		await waitFor(() => {
+			expect(searchesOf(calls, "/api/v1/companies/c-1/departments")).toEqual([
+				"size=100&sort=name%2Casc",
+				"size=100&sort=name%2Casc&status=INACTIVE",
+				"size=100&sort=name%2Casc",
+			]);
+		});
+		expect(
+			screen.queryByRole("list", { name: "Active filters" })
+		).not.toBeInTheDocument();
+	});
+
+	it("never selects or asks for a Branch outside the person's scope, whatever the URL says", async () => {
+		const calls = stubApi({
+			...baseRoutes(),
+			// Read held only at Kitchen (d-1) of Orchard; Tampines (b-2) is out of scope.
+			[WORKSPACE]: departmentScopedWorkspaceReply(["department:read"]),
+			[DEPARTMENTS]: pageReply([department("d-1", "Kitchen")]),
+		});
+		const opened = await open("/organisation/departments?branch=b-2");
+		await screen.findByRole("table", { name: "Departments" });
+
+		expect(screen.getByRole("button", { name: "Branch" })).toHaveTextContent(
+			"All branches"
+		);
+		await waitFor(() => {
+			expect(opened.router.state.location.search).toEqual({});
+		});
+		expect(
+			searchesOf(calls, "/api/v1/companies/c-1/departments").every(
+				(search) => !search.includes("branchId")
+			)
+		).toBe(true);
 	});
 
 	it.each([
@@ -792,9 +850,11 @@ describe("System roles", () => {
 			screen.getByRole("button", { name: "Edit Company Owner" })
 		).toBeDisabled();
 		expect(screen.getByRole("button", { name: "Edit Manager" })).toBeEnabled();
-		expect(screen.getByRole("button", { name: "Showing" })).toHaveTextContent(
-			"All roles"
-		);
+		// The status filter waits behind Filters; nothing is set.
+		expect(screen.getByRole("button", { name: "Filters" })).toBeVisible();
+		expect(
+			screen.queryByRole("list", { name: "Active filters" })
+		).not.toBeInTheDocument();
 		expect(
 			screen.queryByRole("button", { name: "Create system role" })
 		).not.toBeInTheDocument();
@@ -822,9 +882,15 @@ describe("Job titles", () => {
 		const opened = await open("/organisation/job-titles");
 		await screen.findByRole("table", { name: "Job titles" });
 
-		expect(screen.getByRole("button", { name: "Department" })).toBeDisabled();
+		await user.click(screen.getByRole("button", { name: "Filters" }));
+		// Department waits for one Branch, chosen in the header.
+		expect(
+			screen.queryByRole("button", { name: "Department" })
+		).not.toBeInTheDocument();
+		await user.keyboard("{Escape}");
 		await user.click(screen.getByRole("button", { name: "Branch" }));
 		await user.click(screen.getByRole("option", { name: "Orchard" }));
+		await user.click(screen.getByRole("button", { name: "Filters" }));
 		await user.click(screen.getByRole("button", { name: "Department" }));
 		await user.click(screen.getByRole("option", { name: "Kitchen" }));
 
@@ -852,12 +918,37 @@ describe("Job titles", () => {
 			"Created",
 			"Actions",
 		]);
+		expect(
+			screen.getByRole("list", { name: "Active filters" })
+		).toHaveTextContent("Department: Kitchen");
 
 		await user.click(screen.getByRole("button", { name: "Clear filters" }));
 
+		// The Branch is the header's scope, not a filter: clearing keeps it.
 		await waitFor(() => {
-			expect(opened.router.state.location.search).toEqual({});
+			expect(opened.router.state.location.search).toEqual({ branch: "b-1" });
 		});
+	});
+
+	it("never selects, shows or asks for a Department outside the person's scope, whatever the URL says", async () => {
+		const calls = stubApi({
+			...baseRoutes(),
+			// Read held only at Kitchen (d-1) of Orchard; d-9 is in no scope.
+			[WORKSPACE]: departmentScopedWorkspaceReply(["job_title:read"]),
+			[JOB_TITLES]: pageReply([jobTitle("j-1", "Shift supervisor")]),
+		});
+		await open("/organisation/job-titles?branch=b-1&department=d-9");
+		await screen.findByRole("table", { name: "Job titles" });
+
+		expect(screen.getByRole("button", { name: "Branch" })).toHaveTextContent(
+			"Orchard"
+		);
+		expect(
+			screen.queryByRole("list", { name: "Active filters" })
+		).not.toBeInTheDocument();
+		expect(searchesOf(calls, "/api/v1/companies/c-1/job-titles")).toEqual([
+			"size=100&sort=name%2Casc&branchId=b-1",
+		]);
 	});
 
 	it("shows when each job title was created and sorts by it on the server", async () => {
@@ -931,12 +1022,14 @@ describe("Job titles", () => {
 		expect(
 			screen.queryByRole("button", { name: "Create job title" })
 		).not.toBeInTheDocument();
+		await user.click(screen.getByRole("button", { name: "Filters" }));
 		expect(screen.getByRole("button", { name: "Showing" })).toHaveTextContent(
 			"All job titles"
 		);
 
 		await user.click(screen.getByRole("button", { name: "Showing" }));
 		await user.click(screen.getByRole("option", { name: "Inactive" }));
+		await user.keyboard("{Escape}");
 		await user.click(screen.getByRole("button", { name: "Sort by Status" }));
 
 		await waitFor(() => {

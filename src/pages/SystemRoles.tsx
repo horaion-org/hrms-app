@@ -20,6 +20,7 @@ import {
 	isStatusFilter,
 	nameColumn,
 	statusColumn,
+	statusFilterChips,
 	statusFilterOptions,
 	type StatusFilter,
 } from "@/features/organisation/listColumns";
@@ -186,6 +187,9 @@ export const SystemRoles = (): FunctionComponent => {
 				createLabel={t("organisation.accessRoles.create")}
 				search={search}
 				searchLabel={t("organisation.accessRoles.search")}
+				chips={statusFilterChips(t, status, () => {
+					setStatus("all");
+				})}
 				filter={{
 					label: t("organisation.list.showing"),
 					value: status,
@@ -205,6 +209,9 @@ export const SystemRoles = (): FunctionComponent => {
 						: undefined
 				}
 				onSearchChange={setSearch}
+				onClearFilters={() => {
+					setStatus("all");
+				}}
 				onCreate={
 					canCreate
 						? (): void => {

@@ -263,9 +263,11 @@ describe("People", () => {
 		expect(
 			screen.queryByRole("button", { name: "Branch" })
 		).not.toBeInTheDocument();
-		expect(screen.getByRole("button", { name: "Showing" })).toHaveTextContent(
-			"All employees"
-		);
+		// Nothing set: the filters wait behind one button, and no chips show.
+		expect(screen.getByRole("button", { name: "Filters" })).toBeVisible();
+		expect(
+			screen.queryByRole("list", { name: "Active filters" })
+		).not.toBeInTheDocument();
 		expect(
 			within(
 				screen.getByRole("navigation", { name: "Main navigation" })
@@ -461,6 +463,7 @@ describe("People", () => {
 		const opened = await open("/people?page=2");
 		await screen.findByText("Moses Lee");
 
+		await user.click(screen.getByRole("button", { name: "Filters" }));
 		await user.click(screen.getByRole("button", { name: "Showing" }));
 		await user.click(screen.getByRole("option", { name: "Active" }));
 
@@ -476,6 +479,12 @@ describe("People", () => {
 		expect(screen.getByRole("button", { name: "Showing" })).toHaveTextContent(
 			"Inactive"
 		);
+		expect(
+			screen.getByRole("list", { name: "Active filters" })
+		).toHaveTextContent("Showing: Inactive");
+		expect(
+			screen.getByRole("button", { name: "Filters" })
+		).toHaveAccessibleDescription("1 applied");
 
 		await user.click(screen.getByRole("option", { name: "Inactive" }));
 		await waitFor(() => {
@@ -619,21 +628,26 @@ describe("People", () => {
 		const opened = await open("/people?page=2");
 		await screen.findByText("Moses Lee");
 
-		expect(screen.getByRole("button", { name: "Country" })).toHaveTextContent(
-			"All countries"
-		);
+		// The header holds the Branch; Country is folded into its options.
+		expect(
+			screen.queryByRole("button", { name: "Country" })
+		).not.toBeInTheDocument();
 		expect(screen.getByRole("button", { name: "Branch" })).toHaveTextContent(
 			"All branches"
 		);
 		expect(opened.router.state.location.search).toEqual({ page: 2 });
 
-		await user.click(screen.getByRole("button", { name: "Country" }));
-		await user.click(screen.getByRole("option", { name: "Singapore" }));
+		await user.click(screen.getByRole("button", { name: "Branch" }));
+		await user.click(
+			screen.getByRole("option", { name: "Singapore › Jurong" })
+		);
 		await waitFor(() => {
 			expect(opened.router.state.location.search).toEqual({ branch: "b-2" });
 		});
 		await user.click(screen.getByRole("button", { name: "Branch" }));
-		await user.click(screen.getByRole("option", { name: "Orchard" }));
+		await user.click(
+			screen.getByRole("option", { name: "Singapore › Orchard" })
+		);
 		await waitFor(() => {
 			expect(opened.router.state.location.search).toEqual({ branch: "b-1" });
 		});
@@ -651,7 +665,7 @@ describe("People", () => {
 		]);
 	});
 
-	it("narrows a chosen Branch to one Department, and clears both with the status", async () => {
+	it("narrows a chosen Branch to one Department, and clears the filters but keeps the Branch", async () => {
 		const user = userEvent.setup();
 		const calls = stubApi({
 			...baseRoutes(),
@@ -665,6 +679,7 @@ describe("People", () => {
 		const opened = await open("/people?branch=b-1&status=ACTIVE");
 		await screen.findByText("Moses Lee");
 
+		await user.click(screen.getByRole("button", { name: "Filters" }));
 		await user.click(screen.getByRole("button", { name: "Department" }));
 		await user.click(screen.getByRole("option", { name: "Bar" }));
 		await waitFor(() => {
@@ -674,18 +689,79 @@ describe("People", () => {
 				status: "ACTIVE",
 			});
 		});
+		const chips = screen.getByRole("list", { name: "Active filters" });
+		expect(
+			within(chips)
+				.getAllByRole("listitem")
+				.map((chip) => chip.textContent)
+		).toEqual(["Department: Bar", "Showing: Active"]);
+
 		await user.click(screen.getByRole("button", { name: "Clear filters" }));
+		// The Branch is the header's scope, not a filter: clearing keeps it.
 		await waitFor(() => {
-			expect(opened.router.state.location.search).toEqual({});
+			expect(opened.router.state.location.search).toEqual({ branch: "b-1" });
 		});
 		expect(peopleCalls(calls)).toEqual([
 			`${FIRST_PAGE}&status=ACTIVE&branchId=b-1`,
 			`${FIRST_PAGE}&status=ACTIVE&branchId=b-1&departmentId=d-2`,
-			FIRST_PAGE,
+			`${FIRST_PAGE}&branchId=b-1`,
 		]);
 		expect(
 			screen.queryByRole("button", { name: "Clear filters" })
 		).not.toBeInTheDocument();
+	});
+
+	it("never selects, shows or asks for a Branch outside the person's scope, whatever the URL says", async () => {
+		const calls = stubApi({
+			...baseRoutes(),
+			[WORKSPACE]: departmentScopedWorkspaceReply(["member_profile:read"]),
+			[PEOPLE]: pageReply([person("m-1", "Moses Lee")]),
+		});
+		// Tampines (b-2) and its Front (d-3) are not in this person's workspace.
+		const opened = await open("/people?branch=b-2&department=d-3");
+		await screen.findByText("Moses Lee");
+
+		expect(screen.getByRole("button", { name: "Branch" })).toHaveTextContent(
+			"All branches"
+		);
+		await waitFor(() => {
+			expect(opened.router.state.location.search).not.toHaveProperty("branch");
+		});
+		expect(
+			screen.queryByRole("list", { name: "Active filters" })
+		).not.toBeInTheDocument();
+		expect(screen.getByRole("button", { name: "Filters" })).not.toHaveAttribute(
+			"aria-describedby"
+		);
+		// The list falls back to everything in scope; neither id is ever sent.
+		expect(peopleCalls(calls).every((call) => !call.includes("Id="))).toBe(
+			true
+		);
+	});
+
+	it("never selects, shows or asks for a Department outside the person's scope in a Branch they can see", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...baseRoutes(),
+			// Orchard offered for its Kitchen (d-1) only; Bar (d-2) exists but is out of scope.
+			[WORKSPACE]: departmentScopedWorkspaceReply(["member_profile:read"]),
+			[PEOPLE]: pageReply([person("m-1", "Moses Lee")]),
+		});
+		await open("/people?branch=b-1&department=d-2");
+		await screen.findByText("Moses Lee");
+
+		expect(screen.getByRole("button", { name: "Branch" })).toHaveTextContent(
+			"Orchard"
+		);
+		expect(
+			screen.queryByRole("list", { name: "Active filters" })
+		).not.toBeInTheDocument();
+		await user.click(screen.getByRole("button", { name: "Filters" }));
+		// One Department in reach: nothing to choose, so no Department field.
+		expect(
+			screen.queryByRole("button", { name: "Department" })
+		).not.toBeInTheDocument();
+		expect(peopleCalls(calls)).toEqual([`${FIRST_PAGE}&branchId=b-1`]);
 	});
 
 	it("carries the chosen Branch to the next page and back, as the one shared Branch", async () => {

@@ -5,6 +5,8 @@ import { FormRow, formRowIds } from "@/components/forms/FormRow";
 import { Input } from "@/components/forms/Input";
 import { Select, type SelectOption } from "@/components/forms/Select";
 import { Button } from "@/components/ui/Button";
+import { FilterChips, type FilterChip } from "@/components/ui/FilterChips";
+import { FiltersPopover } from "@/components/ui/FiltersPopover";
 import { PlusIcon, SearchIcon } from "@/components/ui/Icon";
 import { PageToolbar } from "@/components/ui/PageToolbar";
 
@@ -20,8 +22,6 @@ export type ListToolbarProps = {
 	actions?: ReactNode;
 	/** A second action beside the primary one, e.g. "Assign role"; left out when there is none. */
 	secondaryAction?: { label: string; onClick: () => void };
-	/** The units the list is narrowed to, e.g. a `UnitSelector`; left out when the list has none. */
-	scope?: ReactNode;
 	/** The "Showing" filter, labelled above its select; left out when the list has none. */
 	filter?: {
 		label: string;
@@ -42,15 +42,21 @@ export type ListToolbarProps = {
 		placeholder?: string;
 		formatSummary?: (selected: Array<SelectOption>) => string;
 	};
-	/** Offers "Clear filters"; given only while a filter differs from its default. */
+	/** The filters that are set, listed as chips beneath; none by default. */
+	chips?: ReadonlyArray<FilterChip>;
+	/** Further fields of the Filters panel, before "Showing", e.g. a `DepartmentFilter`. */
+	filterFields?: ReactNode;
+	/** Sets every filter back to its default ("Clear filters"). */
 	onClearFilters?: () => void;
 	className?: string;
 };
 
 /**
- * A list's `PageToolbar`: its units, then the "Showing" filter and search,
- * then its actions with the primary one last. Every Organisation list and
- * People use it.
+ * A list's `PageToolbar`: search, then a "Filters" button holding
+ * `filterFields` and the "Showing" filter (left out when the list has no
+ * filter), then its actions with the primary one last. The filters that
+ * are set are listed as chips beneath, with "Clear filters". Every
+ * Organisation list, People and Scheduling use it.
  */
 export const ListToolbar = ({
 	searchLabel,
@@ -60,9 +66,10 @@ export const ListToolbar = ({
 	onCreate,
 	actions,
 	secondaryAction,
-	scope,
 	filter,
 	multipleFilter,
+	chips = [],
+	filterFields,
 	onClearFilters,
 	className,
 }: ListToolbarProps): FunctionComponent => {
@@ -71,11 +78,50 @@ export const ListToolbar = ({
 	const filterLabel = (filter ?? multipleFilter)?.label;
 	const labelledBy = formRowIds(filterId).labelId;
 	const hasActions = Boolean(actions || secondaryAction || onCreate);
+	const statusField = filterLabel !== undefined && (
+		<FormRow htmlFor={filterId} label={filterLabel} layout="stacked">
+			{filter && (
+				<Select
+					aria-labelledby={labelledBy}
+					className="w-full font-semibold"
+					options={filter.options}
+					value={filter.value}
+					onChange={filter.onChange}
+				/>
+			)}
+			{!filter && multipleFilter && (
+				<Select
+					multiple
+					aria-labelledby={labelledBy}
+					className="w-full font-semibold"
+					formatSummary={multipleFilter.formatSummary}
+					options={multipleFilter.options}
+					placeholder={multipleFilter.placeholder}
+					value={multipleFilter.value}
+					onChange={multipleFilter.onChange}
+				/>
+			)}
+		</FormRow>
+	);
+	const searchBox = (
+		<Input
+			aria-label={searchLabel}
+			className="w-full min-w-0 sm:w-72 lg:w-auto lg:min-w-60 lg:flex-1"
+			inputSize="lg"
+			leadingIcon={<SearchIcon />}
+			placeholder={searchLabel}
+			type="search"
+			value={search}
+			onChange={(event) => {
+				onSearchChange(event.target.value);
+			}}
+		/>
+	);
+	const hasFilterFields = Boolean(filterFields) || Boolean(statusField);
 	return (
 		<PageToolbar
 			className={className}
 			label={t("pageToolbar.listControls")}
-			scope={scope}
 			actions={
 				hasActions && (
 					<>
@@ -93,52 +139,25 @@ export const ListToolbar = ({
 					</>
 				)
 			}
+			chips={
+				<FilterChips
+					chips={chips}
+					onClearAll={() => {
+						onClearFilters?.();
+					}}
+				/>
+			}
 			filters={
 				<>
-					{filterLabel !== undefined && (
-						<FormRow
-							className="w-full sm:w-40"
-							htmlFor={filterId}
-							label={filterLabel}
-							layout="stacked"
-						>
-							{filter && (
-								<Select
-									aria-labelledby={labelledBy}
-									className="w-full font-semibold"
-									options={filter.options}
-									value={filter.value}
-									onChange={filter.onChange}
-								/>
-							)}
-							{!filter && multipleFilter && (
-								<Select
-									multiple
-									aria-labelledby={labelledBy}
-									className="w-full font-semibold"
-									formatSummary={multipleFilter.formatSummary}
-									options={multipleFilter.options}
-									placeholder={multipleFilter.placeholder}
-									value={multipleFilter.value}
-									onChange={multipleFilter.onChange}
-								/>
-							)}
-						</FormRow>
+					{searchBox}
+					{hasFilterFields && (
+						<FiltersPopover count={chips.length}>
+							{filterFields}
+							{statusField}
+						</FiltersPopover>
 					)}
-					<Input
-						aria-label={searchLabel}
-						className="w-full min-w-0 sm:w-72 lg:w-auto lg:min-w-60 lg:flex-1"
-						leadingIcon={<SearchIcon />}
-						placeholder={searchLabel}
-						type="search"
-						value={search}
-						onChange={(event) => {
-							onSearchChange(event.target.value);
-						}}
-					/>
 				</>
 			}
-			onClearFilters={onClearFilters}
 		/>
 	);
 };

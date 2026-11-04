@@ -77,6 +77,12 @@ export const TEAM_UNIT_RULES: UnitSelectionRules = {
 	withDepartment: true,
 };
 
+/** The unit rules of a view: the team tab lists by Branch; the person's own week does not. */
+export const availabilityUnitRulesOf = (
+	view: AvailabilitySearch["view"]
+): UnitSelectionRules | undefined =>
+	view === "mine" ? undefined : TEAM_UNIT_RULES;
+
 /** The list the team tab asks the API for: the week's part-timers inside one Branch, and one Department if chosen. */
 export const availabilityQueryOf = (
 	{ branchId, departmentId }: { branchId: string; departmentId?: string },

@@ -1,4 +1,8 @@
-import { Outlet, useRouteContext } from "@tanstack/react-router";
+import {
+	Outlet,
+	useRouteContext,
+	useRouterState,
+} from "@tanstack/react-router";
 import { useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
@@ -29,6 +33,8 @@ import {
 	PEOPLE_READ_KEYS,
 } from "@/features/workspace/permissionKeys";
 import { Can } from "@/features/workspace/Can";
+import { HeaderBranchScope } from "@/features/workspace/HeaderBranchScope";
+import { useHeaderBranchScope } from "@/features/workspace/useHeaderBranchScope";
 import { CompanySelection } from "@/pages/CompanySelection";
 import { NotificationBell } from "@/features/notifications/NotificationBell";
 
@@ -40,6 +46,12 @@ export const MainLayout = (): FunctionComponent => {
 	const [switching, setSwitching] = useState(false);
 	const { t } = useTranslation();
 	const availability = useAvailabilityViews();
+	// The Branch the page lists, where it lists by Branch: the one scope shared by every list.
+	const branchScope = useHeaderBranchScope();
+	// The greeting belongs to the dashboard; other pages keep the header for their scope or nothing.
+	const onHome = useRouterState({
+		select: (state) => state.location.pathname === "/",
+	});
 	if (
 		!("currentUser" in context) ||
 		!context.currentUser ||
@@ -75,13 +87,22 @@ export const MainLayout = (): FunctionComponent => {
 						</>
 					}
 					title={
-						<Trans
-							i18nKey="shell.welcome"
-							values={{ name: displayName }}
-							components={{
-								name: <span className="font-medium text-ink-blue-900" />,
-							}}
-						/>
+						branchScope ? (
+							<HeaderBranchScope
+								selection={branchScope.selection}
+								onChange={branchScope.choose}
+							/>
+						) : (
+							onHome && (
+								<Trans
+									i18nKey="shell.welcome"
+									values={{ name: displayName }}
+									components={{
+										name: <span className="font-medium text-ink-blue-900" />,
+									}}
+								/>
+							)
+						)
 					}
 				/>
 			}

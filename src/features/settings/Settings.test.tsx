@@ -217,7 +217,11 @@ it("renders inside the app shell without adding a Sidebar entry", async () => {
 	expect(
 		within(navigation).queryByRole("link", { current: "page" })
 	).toBeNull();
-	expect(screen.getByRole("banner")).toHaveTextContent("Welcome, José.");
+	// The greeting is the dashboard's alone, and Settings lists nothing by Branch.
+	expect(screen.getByRole("banner")).not.toHaveTextContent("Welcome");
+	expect(
+		within(screen.getByRole("banner")).queryByText("Branch")
+	).not.toBeInTheDocument();
 	expect(screen.getByRole("main")).toContainElement(
 		screen.getByRole("heading", { level: 1, name: "Settings" })
 	);

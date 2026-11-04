@@ -39,17 +39,10 @@ import {
 } from "@/features/people/peopleSearch";
 import { usePeople, useSettledSearch } from "@/features/people/usePeople";
 import { PEOPLE_READ_KEYS } from "@/features/workspace/permissionKeys";
-import {
-	unitSearchFor,
-	unitSelectionOf,
-} from "@/features/workspace/unitSearch";
-import {
-	clearedUnits,
-	selectedUnits,
-	unitsNarrowed,
-	type UnitSelection,
-} from "@/features/workspace/unitSelection";
-import { UnitSelector } from "@/features/workspace/UnitSelector";
+import { DepartmentFilter } from "@/features/workspace/DepartmentFilter";
+import { departmentChips, filterChip } from "@/features/workspace/filterChips";
+import { unitSelectionOf } from "@/features/workspace/unitSearch";
+import { selectedUnits } from "@/features/workspace/unitSelection";
 import { useAccess } from "@/features/workspace/useAccess";
 import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 
@@ -112,22 +105,31 @@ export const People = (): FunctionComponent => {
 			search: (previous) => ({ ...previous, page: undefined, ...next }),
 		});
 	};
-	const chooseUnits = (next: UnitSelection, cleanup = false): void => {
-		// Taking out a unit the page cannot show keeps the page, the history entry and its state.
-		if (cleanup)
-			void navigate({
-				search: (previous) => ({ ...previous, ...unitSearchFor(next) }),
-				replace: true,
-				state: true,
-			});
-		else show(unitSearchFor(next));
-	};
-	const filtered = search.status !== undefined || unitsNarrowed(units);
+	// The Branch is the header's scope, not a filter: only Department and status are listed and cleared here.
+	const chips = [
+		...departmentChips(
+			units,
+			() => {
+				show({ department: undefined });
+			},
+			t
+		),
+		...(search.status
+			? [
+					filterChip(
+						"status",
+						t("organisation.list.showing"),
+						t(`organisation.status.${search.status}`),
+						() => {
+							show({ status: undefined });
+						},
+						t
+					),
+				]
+			: []),
+	];
 	const clearFilters = (): void => {
-		show({
-			status: undefined,
-			...unitSearchFor(clearedUnits(units, requested)),
-		});
+		show({ status: undefined, department: undefined });
 	};
 
 	return (
@@ -138,6 +140,7 @@ export const People = (): FunctionComponent => {
 			<p className="mt-4 text-sm text-neutral-800">{t("people.subtitle")}</p>
 			{notice && <PeopleNotice className="mt-6" notice={notice} />}
 			<ListToolbar
+				chips={chips}
 				className="mt-10"
 				createLabel={t("people.add")}
 				search={text}
@@ -167,6 +170,14 @@ export const People = (): FunctionComponent => {
 						</Button>
 					</>
 				}
+				filterFields={
+					<DepartmentFilter
+						selection={units}
+						onChange={(department) => {
+							show({ department });
+						}}
+					/>
+				}
 				multipleFilter={{
 					label: t("organisation.list.showing"),
 					value: statusesOf(search),
@@ -181,14 +192,7 @@ export const People = (): FunctionComponent => {
 						show({ status: statusParameter(values.filter(isMemberStatus)) });
 					},
 				}}
-				scope={
-					<UnitSelector
-						requested={requested}
-						selection={units}
-						onChange={chooseUnits}
-					/>
-				}
-				onClearFilters={filtered ? clearFilters : undefined}
+				onClearFilters={clearFilters}
 				onCreate={
 					canAdd
 						? (): void => {

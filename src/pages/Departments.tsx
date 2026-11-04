@@ -14,6 +14,7 @@ import {
 	createdColumn,
 	describeList,
 	isStatusFilter,
+	statusFilterChips,
 	nameColumn,
 	statusColumn,
 	statusFilterOptions,
@@ -25,39 +26,27 @@ import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId
 import { useDepartments } from "@/features/organisation/useOrganisationList";
 import { DEPARTMENT_READ_KEYS } from "@/features/workspace/permissionKeys";
 import { departmentScope } from "@/features/workspace/scopes";
-import {
-	unitSearchFor,
-	unitSelectionOf,
-} from "@/features/workspace/unitSearch";
-import {
-	clearedUnits,
-	unitsNarrowed,
-	type UnitSelection,
-} from "@/features/workspace/unitSelection";
-import { UnitSelector } from "@/features/workspace/UnitSelector";
+import { DEPARTMENTS_UNIT_RULES } from "@/features/organisation/listUnitRules";
+import { unitSelectionOf } from "@/features/workspace/unitSearch";
 import { useAccess } from "@/features/workspace/useAccess";
 import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 
 const route = getRouteApi("/_authenticated/_app/organisation/departments");
 
-/** Every Branch by default; the Departments list has no Department filter of its own. */
-const UNIT_RULES = { allowAllBranches: true, withDepartment: false };
-
 /**
  * The company's Departments across the Branches in reach, one Branch at a
- * time when one is chosen. The Branch lives in the URL; search, status and
+ * time when one is chosen in the header. The Branch lives in the URL; search, status and
  * sort stay on the page.
  */
 export const Departments = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
 	const { t, i18n } = useTranslation();
-	const navigate = route.useNavigate();
 	const requested = unitSelectionOf(route.useSearch());
 	const units = useUnitSelection(
 		companyId,
 		DEPARTMENT_READ_KEYS,
 		requested,
-		UNIT_RULES
+		DEPARTMENTS_UNIT_RULES
 	);
 	const branchShown = units.branch !== undefined;
 	const [creating, setCreating] = useState(false);
@@ -90,7 +79,11 @@ export const Departments = (): FunctionComponent => {
 		status: status === "all" ? undefined : status,
 		...(units.branch ? { branchId: units.branch.branchId } : {}),
 	});
-	const filtered = status !== "all" || unitsNarrowed(units);
+	const chips = statusFilterChips(t, status, () => {
+		setStatus("all");
+	});
+	// One Branch narrows what "no departments" means, so the empty copy says nothing matched.
+	const filtered = chips.length > 0 || units.branch !== undefined;
 	const view = describeList(
 		list,
 		search,
@@ -98,17 +91,6 @@ export const Departments = (): FunctionComponent => {
 		t("organisation.departments.empty"),
 		t
 	);
-	const chooseUnits = (next: UnitSelection, cleanup = false): void => {
-		// Taking out a unit the page cannot show replaces the history entry instead of adding one.
-		void navigate({
-			search: (previous) => ({ ...previous, ...unitSearchFor(next) }),
-			replace: cleanup,
-		});
-	};
-	const clearFilters = (): void => {
-		setStatus("all");
-		chooseUnits(clearedUnits(units, requested));
-	};
 	const columns = useMemo(
 		() => [
 			nameColumn<Department>(t("organisation.departments.name")),
@@ -159,6 +141,7 @@ export const Departments = (): FunctionComponent => {
 				{t("organisation.departments.subtitle")}
 			</p>
 			<ListToolbar
+				chips={chips}
 				className="mt-10"
 				createLabel={t("organisation.departments.create")}
 				search={search}
@@ -171,15 +154,10 @@ export const Departments = (): FunctionComponent => {
 						if (isStatusFilter(value)) setStatus(value);
 					},
 				}}
-				scope={
-					<UnitSelector
-						requested={requested}
-						selection={units}
-						onChange={chooseUnits}
-					/>
-				}
-				onClearFilters={filtered ? clearFilters : undefined}
 				onSearchChange={setSearch}
+				onClearFilters={() => {
+					setStatus("all");
+				}}
 				onCreate={
 					canCreate
 						? (): void => {

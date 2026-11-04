@@ -1563,8 +1563,10 @@
 		},
 		"unitSelector": {
 			"department": "Departamento",
-			"allDepartments": "Todos los departamentos",
-			"chooseBranchFirst": "Elige primero una sucursal"
+			"allDepartments": "Todos los departamentos"
+		},
+		"headerScope": {
+			"branchInCountry": "{{country}} › {{branch}}"
 		}
 	},
 	"colourSwatchPicker": {
@@ -1710,5 +1712,15 @@
 		"explanation": "Tus roles no incluyen esta página. Si la necesitas, pide a un administrador que cambie tus roles.",
 		"back": "Volver",
 		"home": "Ir al resumen"
+	},
+	"filtersPopover": {
+		"label": "Filtros",
+		"applied_one": "{{count}} aplicado",
+		"applied_other": "{{count}} aplicados"
+	},
+	"filterChips": {
+		"label": "Filtros activos",
+		"remove": "Quitar {{label}}",
+		"chip": "{{field}}: {{value}}"
 	}
 }

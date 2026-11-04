@@ -197,12 +197,9 @@ describe("Leave", () => {
 		).toBeVisible();
 		const table = await screen.findByRole("table", { name: "Requests" });
 		await within(table).findByText("Aisha Rahman");
-		// The workspace's Branches by country, then name: Malaysia comes first.
-		expect(screen.getByRole("button", { name: "Country" })).toHaveTextContent(
-			"Malaysia"
-		);
+		// The header holds the Branch; Branches by country, then name: Malaysia comes first.
 		expect(screen.getByRole("button", { name: "Branch" })).toHaveTextContent(
-			"Kuala Lumpur branch"
+			"Malaysia › Kuala Lumpur branch"
 		);
 		expect(screen.getByText("1–10 of 24 entries")).toBeVisible();
 		expect(within(table).getByText("Rejected")).toHaveClass("bg-error-100");
@@ -224,8 +221,10 @@ describe("Leave", () => {
 		const { router } = await open("/leave?view=requests");
 		await screen.findByText("Aisha Rahman");
 
-		await user.click(screen.getByRole("button", { name: "Country" }));
-		await user.click(screen.getByRole("option", { name: "Singapore" }));
+		await user.click(screen.getByRole("button", { name: "Branch" }));
+		await user.click(
+			screen.getByRole("option", { name: "Singapore › Jurong branch" })
+		);
 		await waitFor(() => {
 			expect(router.state.location.search).toEqual({
 				view: "requests",
@@ -233,8 +232,9 @@ describe("Leave", () => {
 			});
 		});
 		expect(screen.getByRole("button", { name: "Branch" })).toHaveTextContent(
-			"Jurong branch"
+			"Singapore › Jurong branch"
 		);
+		await user.click(screen.getByRole("button", { name: "Filters" }));
 		await user.click(screen.getByRole("button", { name: "Showing" }));
 		await user.click(screen.getByRole("option", { name: "Pending" }));
 		await user.click(screen.getByRole("button", { name: /Sort by Employee/i }));
@@ -269,18 +269,46 @@ describe("Leave", () => {
 				branch: "all",
 			});
 		});
-		expect(screen.getByRole("button", { name: "Department" })).toBeDisabled();
 		expect(listSearchesOf(calls)).toEqual([
 			"page=0&size=10&sort=requestedAt%2Cdesc&branchId=b-1",
 			"page=0&size=10&sort=requestedAt%2Cdesc",
 		]);
+		// The Branch is scope, not a filter: no chip, and Department waits for one Branch.
+		expect(
+			screen.queryByRole("list", { name: "Active filters" })
+		).not.toBeInTheDocument();
+		await user.click(screen.getByRole("button", { name: "Filters" }));
+		expect(
+			screen.queryByRole("button", { name: "Department" })
+		).not.toBeInTheDocument();
+	});
 
-		// Clearing goes back to no choice, which shows the first Branch.
-		await user.click(screen.getByRole("button", { name: "Clear filters" }));
-		// The first Branch is shown, not written: the URL keeps only what the person chose.
+	it("never selects, shows or asks for a Branch or Department outside the person's scope, whatever the URL says", async () => {
+		// Read held only at Sales (d-1) of Main branch; Jurong (b-2) and Kitchen (d-2) are out of scope.
+		const calls = stubApi(routes(workspaceReply(["leave_request:read"], true)));
+		const { router } = await open(
+			"/leave?view=requests&branch=b-2&department=d-2"
+		);
+		await screen.findByText("Aisha Rahman");
+
+		expect(screen.getByRole("button", { name: "Branch" })).toHaveTextContent(
+			"Main branch"
+		);
 		await waitFor(() => {
-			expect(router.state.location.search).toEqual({ view: "requests" });
+			expect(router.state.location.search).not.toHaveProperty("branch");
 		});
+		expect(
+			screen.queryByRole("list", { name: "Active filters" })
+		).not.toBeInTheDocument();
+		// The list falls back to the first Branch in scope, never naming the out-of-scope ids.
+		expect(
+			listSearchesOf(calls).every(
+				(search) => !search.includes("b-2") && !search.includes("d-2")
+			)
+		).toBe(true);
+		expect(listSearchesOf(calls).slice(-1)[0]).toBe(
+			"page=0&size=10&sort=requestedAt%2Cdesc&branchId=b-1"
+		);
 	});
 
 	it("draws the timeline from one window of requests and moves the window on the server", async () => {
@@ -591,8 +619,15 @@ describe("Leave", () => {
 		const { router } = await open("/leave?view=timeline&branch=b-1");
 		await screen.findByRole("button", { name: "Next period" });
 
+		await user.click(screen.getByRole("button", { name: "Branch" }));
 		expect(
 			screen.queryByRole("option", { name: "All branches" })
+		).not.toBeInTheDocument();
+		await user.keyboard("{Escape}");
+		await user.click(screen.getByRole("button", { name: "Filters" }));
+		// The timeline has no status filter.
+		expect(
+			screen.queryByRole("button", { name: "Showing" })
 		).not.toBeInTheDocument();
 		await user.click(screen.getByRole("button", { name: "Department" }));
 		await user.click(screen.getByRole("option", { name: "Kitchen" }));
@@ -606,6 +641,9 @@ describe("Leave", () => {
 		expect(listSearchesOf(calls).slice(-1)[0]).toContain(
 			"branchId=b-1&departmentId=d-2"
 		);
+		expect(
+			screen.getByRole("list", { name: "Active filters" })
+		).toHaveTextContent("Department: Kitchen");
 
 		await user.click(screen.getByRole("button", { name: "Clear filters" }));
 		await waitFor(() => {

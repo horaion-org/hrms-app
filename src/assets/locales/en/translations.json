@@ -1672,8 +1672,10 @@
 		},
 		"unitSelector": {
 			"department": "Department",
-			"allDepartments": "All departments",
-			"chooseBranchFirst": "Choose a Branch first"
+			"allDepartments": "All departments"
+		},
+		"headerScope": {
+			"branchInCountry": "{{country}} › {{branch}}"
 		}
 	},
 	"numberStepper": {
@@ -2489,5 +2491,15 @@
 		"explanation": "Your roles don’t include this page. If you need it, ask an administrator to change your roles.",
 		"back": "Go back",
 		"home": "Go to Overview"
+	},
+	"filtersPopover": {
+		"label": "Filters",
+		"applied_one": "{{count}} applied",
+		"applied_other": "{{count}} applied"
+	},
+	"filterChips": {
+		"label": "Active filters",
+		"remove": "Remove {{label}}",
+		"chip": "{{field}}: {{value}}"
 	}
 }

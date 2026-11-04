@@ -15,7 +15,7 @@ export type LeaveStatusFilterProps = {
 	onChange: (status: LeaveStatus | undefined) => void;
 };
 
-/** The requests tables' "Showing" filter: every status, or one, labelled above its select. */
+/** The requests tables' "Showing" filter in the Filters panel: every status, or one, labelled above its select. */
 export const LeaveStatusFilter = ({
 	status,
 	onChange,
@@ -23,12 +23,7 @@ export const LeaveStatusFilter = ({
 	const { t } = useTranslation();
 	const id = useId();
 	return (
-		<FormRow
-			className="w-full sm:w-40"
-			htmlFor={id}
-			label={t("leave.showing")}
-			layout="stacked"
-		>
+		<FormRow htmlFor={id} label={t("leave.showing")} layout="stacked">
 			<Select
 				aria-labelledby={formRowIds(id).labelId}
 				className="w-full font-semibold"

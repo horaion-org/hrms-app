@@ -12,7 +12,7 @@ import {
 /**
  * The units a list page shows, resolved against the Branches and
  * Departments the workspace offers for `keys`, so the page asks the API for
- * the same units its `UnitSelector` shows, before the URL names them.
+ * the same units the header and its filters show.
  */
 export const useUnitSelection = (
 	companyId: string,

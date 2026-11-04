@@ -156,54 +156,13 @@ export const selectedUnits = ({
 });
 
 /**
- * The URL's units with what this page cannot show taken out, or undefined
- * when there is nothing to take out: a Branch it does not offer goes back
- * to no choice, and a Department outside the Branch shown is dropped. A
- * page's default is never written, so it never becomes everyone's Branch;
- * "All branches" on a page without it is shown as the first Branch and
- * left in the URL for the next page.
+ * Whether the URL names a Branch this page does not offer; "All branches"
+ * and no choice are never stale. The header takes such a Branch out once.
  */
-export const staleUnits = (
+export const staleBranch = (
 	resolved: ResolvedUnitSelection,
 	requested: UnitSelection
-): UnitSelection | undefined => {
-	const { branchId, departmentId } = requested;
-	const branchKept =
-		branchId === undefined ||
-		branchId === ALL_BRANCHES ||
-		resolved.branches.some((choice) => choice.branchId === branchId);
-	const departmentKept =
-		departmentId === undefined ||
-		resolved.department?.departmentId === departmentId;
-	if (branchKept && departmentKept) return undefined;
-	return { branchId: branchKept ? branchId : undefined };
-};
-
-/** Whether two selections name the same units. */
-export const sameUnits = (
-	first: UnitSelection,
-	second: UnitSelection
 ): boolean =>
-	first.branchId === second.branchId &&
-	first.departmentId === second.departmentId;
-
-/** Whether the units differ from the page's default; a Branch the page must show is never a filter. */
-export const unitsNarrowed = (resolved: ResolvedUnitSelection): boolean => {
-	const { rules, branch, branches, department } = resolved;
-	if (department !== undefined) return true;
-	if (!rules.allowAllBranches) return false;
-	return rules.startOnFirstBranch
-		? branch?.branchId !== branches[0]?.branchId
-		: branch !== undefined;
-};
-
-/**
- * The units "Clear filters" goes back to: no choice where the page offers
- * "All branches", otherwise the URL's Branch with only its Department
- * dropped.
- */
-export const clearedUnits = (
-	resolved: ResolvedUnitSelection,
-	requested: UnitSelection
-): UnitSelection =>
-	resolved.rules.allowAllBranches ? {} : { branchId: requested.branchId };
+	requested.branchId !== undefined &&
+	requested.branchId !== ALL_BRANCHES &&
+	!resolved.branches.some((choice) => choice.branchId === requested.branchId);

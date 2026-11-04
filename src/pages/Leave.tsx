@@ -7,6 +7,8 @@ import type { DateRange } from "@/components/forms/Calendar";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { PlusIcon } from "@/components/ui/Icon";
+import { FilterChips } from "@/components/ui/FilterChips";
+import { FiltersPopover } from "@/components/ui/FiltersPopover";
 import { PageToolbar } from "@/components/ui/PageToolbar";
 import { Tabs, TabList, Tab, TabPanels, TabPanel } from "@/components/ui/Tabs";
 import { activeLeaveTypesQuery } from "@/features/leave/api";
@@ -52,17 +54,10 @@ import { workspaceQuery } from "@/features/workspace/api";
 import { LEAVE_READ_KEYS } from "@/features/workspace/permissionKeys";
 import { retry } from "@/features/workspace/retry";
 import { recordScope } from "@/features/workspace/scopes";
-import {
-	unitSearchFor,
-	unitSelectionOf,
-} from "@/features/workspace/unitSearch";
-import {
-	clearedUnits,
-	selectedUnits,
-	unitsNarrowed,
-	type UnitSelection,
-} from "@/features/workspace/unitSelection";
-import { UnitSelector } from "@/features/workspace/UnitSelector";
+import { DepartmentFilter } from "@/features/workspace/DepartmentFilter";
+import { departmentChips, filterChip } from "@/features/workspace/filterChips";
+import { unitSelectionOf } from "@/features/workspace/unitSearch";
+import { selectedUnits } from "@/features/workspace/unitSelection";
 import { useAccess } from "@/features/workspace/useAccess";
 import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 
@@ -204,24 +199,34 @@ export const Leave = (): FunctionComponent => {
 		actions.applyOwn.isPending;
 	const current = view === "mine" ? mine : view === "requests" ? list : window;
 	const listProblem = problemOf(current, t, view === "mine");
-	const chooseUnits = (next: UnitSelection, cleanup = false): void => {
-		// Taking out a unit the page cannot show keeps the page, the history entry and its state.
-		if (cleanup)
-			void navigate({
-				search: (previous) => ({ ...previous, ...unitSearchFor(next) }),
-				replace: true,
-				state: true,
-			});
-		else show(unitSearchFor(next));
-	};
-	// The timeline has no status filter; My leave has no units.
-	const statusFiltered = view !== "timeline" && search.status !== undefined;
-	const filtered = statusFiltered || (team && unitsNarrowed(units));
+	// The timeline has no status filter; My leave has no Department. The Branch is the header's scope.
+	const showsStatus = view !== "timeline";
+	const chips = [
+		...(team
+			? departmentChips(
+					units,
+					() => {
+						show({ department: undefined });
+					},
+					t
+				)
+			: []),
+		...(showsStatus && search.status
+			? [
+					filterChip(
+						"status",
+						t("leave.showing"),
+						t(`leave.statuses.${search.status}`),
+						() => {
+							show({ status: undefined });
+						},
+						t
+					),
+				]
+			: []),
+	];
 	const clearFilters = (): void => {
-		show({
-			status: undefined,
-			...(team ? unitSearchFor(clearedUnits(units, requested)) : {}),
-		});
+		show({ status: undefined, department: undefined });
 	};
 	const applyAction =
 		view === "mine" ? (
@@ -298,30 +303,34 @@ export const Leave = (): FunctionComponent => {
 				</TabList>
 				<PageToolbar
 					actions={applyAction}
+					chips={<FilterChips chips={chips} onClearAll={clearFilters} />}
 					className="mt-6 mb-8"
 					label={t("leave.controls")}
 					filters={
-						view === "timeline" ? (
-							<LeaveRangeNavigator range={range} onRangeChange={setRange} />
-						) : (
-							<LeaveStatusFilter
-								status={search.status}
-								onChange={(status) => {
-									show({ status });
-								}}
-							/>
-						)
+						<>
+							<FiltersPopover count={chips.length}>
+								{team && (
+									<DepartmentFilter
+										selection={units}
+										onChange={(department) => {
+											show({ department });
+										}}
+									/>
+								)}
+								{showsStatus && (
+									<LeaveStatusFilter
+										status={search.status}
+										onChange={(status) => {
+											show({ status });
+										}}
+									/>
+								)}
+							</FiltersPopover>
+							{view === "timeline" && (
+								<LeaveRangeNavigator range={range} onRangeChange={setRange} />
+							)}
+						</>
 					}
-					scope={
-						team && (
-							<UnitSelector
-								requested={requested}
-								selection={units}
-								onChange={chooseUnits}
-							/>
-						)
-					}
-					onClearFilters={filtered ? clearFilters : undefined}
 				/>
 				{listProblem ? (
 					<p

@@ -47,12 +47,3 @@ export const unitSelectionOf = ({
 	branchId: branch,
 	departmentId: department,
 });
-
-/** The URL's units for a selection; both keys are set so a navigation clears what is left out. */
-export const unitSearchFor = ({
-	branchId,
-	departmentId,
-}: UnitSelection): UnitSearch => ({
-	branch: branchId,
-	department: departmentId,
-});
