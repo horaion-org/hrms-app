@@ -1,36 +1,68 @@
+import { useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { ApiProblemError } from "@/common/problem";
+import { saveFile } from "@/common/saveFile";
 import type { FunctionComponent } from "@/common/types";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { OverflowMenu, OverflowMenuItem } from "@/components/ui/OverflowMenu";
 import { DeleteScheduleDialog } from "@/features/scheduling/DeleteScheduleDialog";
-import type { Schedule } from "@/features/scheduling/schedules/api";
+import {
+	exportRoster,
+	type Schedule,
+} from "@/features/scheduling/schedules/api";
 import { departmentScope } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
 
 export type ScheduleMenuProps = {
 	companyId: string;
 	schedule: Schedule;
+	/** Offers "Export roster" for a generated schedule; the roster header does, the history list does not. */
+	withExport?: boolean;
 	/** After the schedule is deleted; the list needs nothing, the roster leaves. */
 	onDeleted?: () => void;
 };
 
 /**
- * A schedule's "More actions" menu: delete it, where `schedule:delete` is
- * held at its Department. With nothing to offer there is no menu.
+ * A schedule's "More actions" menu: export its generated roster as a
+ * spreadsheet (where asked for and `schedule:read` is held at its
+ * Department) and delete it (where `schedule:delete` is). With nothing to
+ * offer there is no menu.
  */
 export const ScheduleMenu = ({
 	companyId,
 	schedule,
+	withExport = false,
 	onDeleted,
 }: ScheduleMenuProps): FunctionComponent => {
 	const { t } = useTranslation();
 	const access = useAccess();
 	const [deleting, setDeleting] = useState(false);
+	const exporting = useMutation({
+		mutationFn: () =>
+			exportRoster(
+				companyId,
+				{ branchId: schedule.branchId, departmentId: schedule.departmentId },
+				schedule.scheduleId
+			),
+		onSuccess: ({ blob, fileName }) => {
+			saveFile(blob, fileName);
+		},
+		meta: { successMessage: "scheduling.export.done" },
+	});
 	const close = (): void => {
 		setDeleting(false);
 	};
-	if (!access.can("schedule:delete", departmentScope(schedule.departmentId)))
-		return null;
+	const scope = departmentScope(schedule.departmentId);
+	const canDelete = access.can("schedule:delete", scope);
+	const canExport =
+		withExport &&
+		schedule.status === "GENERATED" &&
+		access.can("schedule:read", scope);
+	if (!canDelete && !canExport) return null;
+	const draft =
+		exporting.error instanceof ApiProblemError &&
+		exporting.error.errorCode === "SCHEDULE_IS_DRAFT";
 
 	return (
 		<>
@@ -38,15 +70,44 @@ export const ScheduleMenu = ({
 				label={t("scheduling.delete.moreActions", { name: schedule.name })}
 				variant="icon"
 			>
-				<OverflowMenuItem
-					tone="danger"
-					onClick={() => {
-						setDeleting(true);
-					}}
-				>
-					{t("scheduling.delete.menu")}
-				</OverflowMenuItem>
+				{canExport && (
+					<OverflowMenuItem
+						disabled={exporting.isPending}
+						onClick={() => {
+							exporting.mutate();
+						}}
+					>
+						{t("scheduling.export.menu")}
+					</OverflowMenuItem>
+				)}
+				{canDelete && (
+					<OverflowMenuItem
+						tone="danger"
+						onClick={() => {
+							setDeleting(true);
+						}}
+					>
+						{t("scheduling.delete.menu")}
+					</OverflowMenuItem>
+				)}
 			</OverflowMenu>
+			{exporting.isError && (
+				<ConfirmDialog
+					cancelLabel={t("scheduling.export.close")}
+					confirmDisabled={draft}
+					confirmLabel={t("scheduling.export.retry")}
+					title={t("scheduling.export.failedTitle")}
+					description={
+						draft ? t("scheduling.export.draft") : t("scheduling.export.failed")
+					}
+					onClose={() => {
+						exporting.reset();
+					}}
+					onConfirm={() => {
+						exporting.mutate();
+					}}
+				/>
+			)}
 			{deleting && (
 				<DeleteScheduleDialog
 					companyId={companyId}

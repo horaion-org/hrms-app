@@ -1447,6 +1447,15 @@
 			"inProgress": "Este horario se está generando. Inténtalo de nuevo cuando termine la ejecución.",
 			"forbidden": "Ya no tienes permiso para regenerar este horario.",
 			"failed": "No pudimos regenerar el cuadrante. Inténtalo de nuevo."
+		},
+		"export": {
+			"menu": "Exportar turnos",
+			"done": "Turnos descargados.",
+			"failedTitle": "No se pudieron descargar los turnos",
+			"failed": "Comprueba tu conexión e inténtalo de nuevo.",
+			"draft": "Este horario aún no tiene turnos.",
+			"retry": "Reintentar",
+			"close": "Cerrar"
 		}
 	},
 	"workspace": {

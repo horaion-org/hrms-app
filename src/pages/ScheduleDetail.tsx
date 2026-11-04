@@ -231,6 +231,7 @@ const ApiSchedule = ({
 							</Button>
 						)}
 						<ScheduleMenu
+							withExport
 							companyId={companyId}
 							schedule={state.schedule}
 							onDeleted={() => {

@@ -2300,6 +2300,15 @@
 			"inProgress": "This schedule is being generated. Try again once the run finishes.",
 			"forbidden": "You no longer have permission to regenerate this schedule.",
 			"failed": "We couldn’t regenerate the roster. Try again."
+		},
+		"export": {
+			"menu": "Export roster",
+			"done": "Roster downloaded.",
+			"failedTitle": "The roster couldn't be downloaded",
+			"failed": "Check your connection and try again.",
+			"draft": "This schedule has no roster yet.",
+			"retry": "Try again",
+			"close": "Close"
 		}
 	},
 	"colourSwatchPicker": {
