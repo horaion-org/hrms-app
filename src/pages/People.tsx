@@ -152,7 +152,7 @@ export const People = (): FunctionComponent => {
 								leadingIcon={<UploadIcon />}
 								variant="secondary"
 								onClick={() => {
-									void navigate({ to: "/people/import" });
+									void navigate({ to: "/settings/data/import-people" });
 								}}
 							>
 								{t("people.import")}

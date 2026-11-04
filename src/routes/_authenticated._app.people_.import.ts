@@ -1,28 +1,14 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { workspaceQuery } from "@/features/workspace/api";
-import { forbiddenRedirect } from "@/features/workspace/forbiddenRedirect";
-import { PeopleImport } from "@/pages/PeopleImport";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
-/** The import being followed, if any, so a refresh or a link from Recent imports reopens its result. */
-type PeopleImportSearch = { import?: string };
-
+/**
+ * The People import's old address: it now lives under Settings › Data. The
+ * import being followed is kept, so old links and bookmarks still open it.
+ */
 export const Route = createFileRoute("/_authenticated/_app/people_/import")({
-	validateSearch: (search: Record<string, unknown>): PeopleImportSearch =>
+	validateSearch: (search: Record<string, unknown>): { import?: string } =>
 		typeof search["import"] === "string" && search["import"] !== ""
 			? { import: search["import"] }
 			: {},
-	loader: async ({ context }) => {
-		const companyId =
-			"currentCompany" in context && context.currentCompany.kind === "settled"
-				? context.currentCompany.company.companyId
-				: "";
-		const workspace = await context.queryClient.ensureQueryData(workspaceQuery);
-		return forbiddenRedirect({
-			workspace,
-			companyId,
-			permission: "member_profile:create",
-			target: "anywhere",
-		});
-	},
-	component: PeopleImport,
+	beforeLoad: ({ search }) =>
+		redirect({ to: "/settings/data/import-people", search, replace: true }),
 });

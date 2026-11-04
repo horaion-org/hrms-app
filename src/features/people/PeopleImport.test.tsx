@@ -175,7 +175,7 @@ describe("PeopleImport", () => {
 			...baseRoutes(),
 			[`POST ${IMPORTS}/checks`]: checkReply(1),
 		});
-		await open("/people/import");
+		await open("/settings/data/import-people");
 
 		await upload(user, "people.csv");
 
@@ -223,7 +223,7 @@ describe("PeopleImport", () => {
 			},
 			[`GET ${IMPORTS}/i-1`]: { status: 200, body: envelope(finishedImport) },
 		});
-		const opened = await open("/people/import");
+		const opened = await open("/settings/data/import-people");
 
 		await upload(user, "people.csv");
 		await user.click(
@@ -260,7 +260,7 @@ describe("PeopleImport", () => {
 	it("refuses another file type before uploading it", async () => {
 		const user = userEvent.setup({ applyAccept: false });
 		const calls = stubApi(baseRoutes());
-		await open("/people/import");
+		await open("/settings/data/import-people");
 
 		await upload(user, "people.xls");
 
@@ -276,7 +276,7 @@ describe("PeopleImport", () => {
 			...baseRoutes(),
 			[`POST ${IMPORTS}/checks`]: problemReply(400, "MISSING_COLUMNS"),
 		});
-		await open("/people/import");
+		await open("/settings/data/import-people");
 
 		await upload(user, "people.csv");
 
@@ -298,7 +298,7 @@ describe("PeopleImport", () => {
 				},
 			},
 		});
-		await open("/people/import");
+		await open("/settings/data/import-people");
 
 		await user.click(
 			await screen.findByRole("button", { name: "Download template (.xlsx)" })
@@ -307,5 +307,19 @@ describe("PeopleImport", () => {
 		await waitFor(() => {
 			expect(createObjectUrl).toHaveBeenCalled();
 		});
+	});
+
+	it("redirects the old /people/import address to Settings, keeping the import followed", async () => {
+		stubApi({
+			...baseRoutes(),
+			[`GET ${IMPORTS}/i-1`]: { status: 200, body: envelope(finishedImport) },
+		});
+		const opened = await open("/people/import?import=i-1");
+
+		expect(await screen.findByText("Import finished")).toBeVisible();
+		expect(opened.router.state.location.pathname).toBe(
+			"/settings/data/import-people"
+		);
+		expect(opened.router.state.location.search).toEqual({ import: "i-1" });
 	});
 });
