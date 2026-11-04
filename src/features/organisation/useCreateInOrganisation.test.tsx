@@ -38,6 +38,7 @@ const jobTitle = {
 	name: "Chef",
 	description: null,
 	status: "ACTIVE",
+	holderCount: 0,
 };
 const role = {
 	accessRoleId: "r-1",

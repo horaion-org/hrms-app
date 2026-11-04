@@ -211,6 +211,7 @@ describe("job title clients", () => {
 		name: "Shift supervisor",
 		description: "Runs the floor.",
 		status: "ACTIVE",
+		holderCount: 3,
 	};
 	const parsed = {
 		jobTitleId: "j-1",
@@ -221,6 +222,7 @@ describe("job title clients", () => {
 		name: "Shift supervisor",
 		description: "Runs the floor.",
 		status: "ACTIVE",
+		holderCount: 3,
 	};
 	const TITLES =
 		"/api/v1/companies/c-1/branches/b-1/departments/d-1/job-titles";

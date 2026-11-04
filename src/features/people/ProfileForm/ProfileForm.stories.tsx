@@ -72,6 +72,7 @@ const meta = {
 							name: "Chef",
 							description: null,
 							status: "ACTIVE",
+							holderCount: 0,
 						},
 					],
 				},

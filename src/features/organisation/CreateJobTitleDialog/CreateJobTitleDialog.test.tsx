@@ -33,6 +33,7 @@ const jobTitle = {
 	name: "Shift supervisor",
 	description: null,
 	status: "ACTIVE",
+	holderCount: 0,
 };
 const page = (content: Array<unknown>): StubReply => ({
 	status: 200,

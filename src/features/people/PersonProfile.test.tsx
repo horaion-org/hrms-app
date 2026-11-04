@@ -190,6 +190,7 @@ const routes = (
 				name: "Pastry chef",
 				description: null,
 				status: "ACTIVE",
+				holderCount: 1,
 			},
 		]),
 		[`GET ${COMPANY}/me/colleagues`]: page([

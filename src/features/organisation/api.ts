@@ -147,6 +147,8 @@ const jobTitleSchema = z.object({
 	/** What the title is for, in a sentence; `null` when it has none. */
 	description: z.string().nullable(),
 	status: unitStatusSchema,
+	/** How many people hold the title; they keep it while it is inactive. */
+	holderCount: z.number().int().nonnegative(),
 });
 
 export type JobTitle = z.infer<typeof jobTitleSchema>;

@@ -99,6 +99,7 @@ const jobTitle = (
 	name,
 	description: null,
 	status: "ACTIVE",
+	holderCount: 0,
 });
 const role = (
 	accessRoleId: string,
