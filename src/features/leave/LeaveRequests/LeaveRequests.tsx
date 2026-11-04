@@ -108,6 +108,20 @@ export const LeaveRequests = ({
 			cell: (row) => t(`leave.types.${row.leaveType}`),
 		},
 		{
+			id: "notes",
+			header: t("leave.remarks"),
+			headerClassName: "min-w-48",
+			cell: (row) =>
+				row.notes === null ? (
+					<>
+						<span aria-hidden="true">—</span>
+						<span className="sr-only">{t("leave.noRemarks")}</span>
+					</>
+				) : (
+					<p className="max-w-56 truncate">{row.notes}</p>
+				),
+		},
+		{
 			id: "status",
 			header: t("leave.status"),
 			headerClassName: "w-30",
@@ -168,7 +182,7 @@ export const LeaveRequests = ({
 		<section aria-label={t("leave.requests")}>
 			<DataTable
 				manualSorting
-				className="[&>table]:min-w-250"
+				className="[&>table]:min-w-300"
 				columns={columns}
 				data={rows}
 				emptyState={emptyState ?? t("leave.empty")}

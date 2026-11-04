@@ -56,6 +56,28 @@ it("hands sorting and paging to the caller and offers decisions only where allow
 	expect(screen.getByText("2 days")).toBeInTheDocument();
 });
 
+it("shows each request's remarks on one line, and says when there are none", () => {
+	render(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveRequests
+				{...handlers}
+				canReview={() => true}
+				page={1}
+				rows={LEAVE_FIXTURES.slice(0, 2)}
+				sort={{ field: "requestedAt", desc: true }}
+				total={2}
+			/>
+		</I18nextProvider>
+	);
+	expect(
+		screen.getAllByRole("columnheader").map((header) => header.textContent)
+	).toContain("Remarks");
+	expect(screen.getByText(/Handover notes are with Ben\./)).toHaveClass(
+		"truncate"
+	);
+	expect(screen.getByText("No remarks")).toHaveClass("sr-only");
+});
+
 it("in own mode shows no employee column and offers only viewing", async () => {
 	const user = userEvent.setup();
 	render(

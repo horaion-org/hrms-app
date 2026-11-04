@@ -100,6 +100,7 @@
 		"remarksPlaceholder": "Add anything the reviewer should know",
 		"remarksHint": "Up to 1,000 characters. Reviewers of this request can read it.",
 		"remarksCounter": "{{count}}/1000",
+		"noRemarks": "No remarks",
 		"approve": "Approve",
 		"reject": "Reject",
 		"reason": "Reason for rejection",

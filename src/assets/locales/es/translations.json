@@ -100,6 +100,7 @@
 		"remarksPlaceholder": "Añade lo que deba saber quien revise la solicitud",
 		"remarksHint": "Hasta 1000 caracteres. Quien revise esta solicitud puede leerlas.",
 		"remarksCounter": "{{count}}/1000",
+		"noRemarks": "Sin observaciones",
 		"approve": "Aprobar",
 		"reject": "Rechazar",
 		"reason": "Motivo del rechazo",
