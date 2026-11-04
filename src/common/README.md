@@ -10,6 +10,7 @@ The directory contains:
 - `countries.ts`: the ISO 3166-1 alpha-2 codes the API accepts and their names in the user's language.
 - `relativeTime.ts`: `timeAgo`, the localised "5 minutes ago" used by activity and notifications.
 - `useNow.ts`: the current time, renewed on an interval, for relative times that must stay current while shown.
+- `importRefusal.ts`: the file checks and refusal-code fallback that the people and organisation imports share.
 
 ## Memory router (tests and stories)
 

@@ -1,5 +1,5 @@
 import type { TFunction } from "i18next";
-import { ApiProblemError } from "@/common/problem";
+import { importFileProblem, importRefusalCode } from "@/common/importRefusal";
 import {
 	IMPORT_COLUMNS,
 	IMPORT_EXTENSIONS,
@@ -121,24 +121,13 @@ const REFUSAL_CODES = [
 /** Why a file or an import was refused; each has its own sentence. */
 export type RefusalCode = (typeof REFUSAL_CODES)[number];
 
-const isRefusalCode = (code: string | undefined): code is RefusalCode =>
-	(REFUSAL_CODES as ReadonlyArray<string | undefined>).includes(code);
-
 /** A file the browser can already tell the API would refuse. */
-export const clientFileProblem = (file: File): RefusalCode | undefined => {
-	const name = file.name.toLowerCase();
-	if (!IMPORT_EXTENSIONS.some((extension) => name.endsWith(extension)))
-		return "UNSUPPORTED_FILE";
-	if (file.size > IMPORT_MAX_BYTES) return "FILE_TOO_LARGE";
-	return undefined;
-};
+export const clientFileProblem = (file: File): RefusalCode | undefined =>
+	importFileProblem(file, {
+		extensions: IMPORT_EXTENSIONS,
+		maxBytes: IMPORT_MAX_BYTES,
+	});
 
 /** Why the API refused a file or an import, as the code the copy is keyed on. */
-export const refusalCode = (error: unknown): RefusalCode => {
-	if (error instanceof ApiProblemError) {
-		if (isRefusalCode(error.errorCode)) return error.errorCode;
-		if (error.status === 413) return "FILE_TOO_LARGE";
-		if (error.status === 429) return "RATE_LIMITED";
-	}
-	return "UNKNOWN";
-};
+export const refusalCode = (error: unknown): RefusalCode =>
+	importRefusalCode(error, REFUSAL_CODES);
