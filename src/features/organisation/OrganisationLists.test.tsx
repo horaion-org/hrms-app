@@ -844,12 +844,39 @@ describe("Job titles", () => {
 			within(table)
 				.getAllByRole("columnheader")
 				.map((header) => header.textContent)
-		).toEqual(["Select all", "Job title", "People", "Status", "Actions"]);
+		).toEqual([
+			"Select all",
+			"Job title",
+			"People",
+			"Status",
+			"Created",
+			"Actions",
+		]);
 
 		await user.click(screen.getByRole("button", { name: "Clear filters" }));
 
 		await waitFor(() => {
 			expect(opened.router.state.location.search).toEqual({});
+		});
+	});
+
+	it("shows when each job title was created and sorts by it on the server", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...baseRoutes(),
+			[JOB_TITLES]: pageReply([jobTitle("j-1", "Shift supervisor")]),
+		});
+		await open("/organisation/job-titles");
+		const table = await screen.findByRole("table", { name: "Job titles" });
+		await within(table).findByText("Shift supervisor");
+
+		expectCreatedCell(table);
+		await user.click(screen.getByRole("button", { name: "Sort by Created" }));
+		await waitFor(() => {
+			expect(searchesOf(calls, "/api/v1/companies/c-1/job-titles")).toEqual([
+				"size=100&sort=name%2Casc",
+				"size=100&sort=createdAt%2Casc",
+			]);
 		});
 	});
 
@@ -880,6 +907,7 @@ describe("Job titles", () => {
 			"Department",
 			"People",
 			"Status",
+			"Created",
 			"Actions",
 		]);
 		expect(

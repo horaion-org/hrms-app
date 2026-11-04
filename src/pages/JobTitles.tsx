@@ -12,6 +12,7 @@ import { ListToolbar } from "@/features/organisation/ListToolbar";
 import {
 	actionsColumn,
 	branchColumn,
+	createdColumn,
 	describeList,
 	isStatusFilter,
 	nameColumn,
@@ -79,7 +80,7 @@ const UNIT_RULES = { allowAllBranches: true, withDepartment: true };
  */
 export const JobTitles = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
-	const { t } = useTranslation();
+	const { t, i18n } = useTranslation();
 	const navigate = route.useNavigate();
 	const requested = unitSelectionOf(route.useSearch());
 	const units = useUnitSelection(
@@ -168,6 +169,7 @@ export const JobTitles = (): FunctionComponent => {
 				),
 			},
 			statusColumn<JobTitle>(t),
+			createdColumn<JobTitle>(t, i18n.language),
 			actionsColumn<JobTitle>(
 				t,
 				(jobTitle) => (
@@ -188,7 +190,7 @@ export const JobTitles = (): FunctionComponent => {
 				setEditing
 			),
 		],
-		[t, canEdit, branchShown, departmentShown]
+		[t, i18n.language, canEdit, branchShown, departmentShown]
 	);
 
 	return (
