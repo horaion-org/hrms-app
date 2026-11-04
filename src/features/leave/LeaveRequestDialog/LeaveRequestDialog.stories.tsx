@@ -44,6 +44,7 @@ type Story = StoryObj<typeof meta>;
 export const Pending: Story = {};
 export const ReadOnly: Story = { args: { canReview: false } };
 export const Rejection: Story = { args: { mode: "reject" } };
+export const Approval: Story = { args: { mode: "approve" } };
 export const Rejected: Story = { args: { request: LEAVE_FIXTURES[2] } };
 export const Approved: Story = { args: { request: LEAVE_FIXTURES[3] } };
 export const Apply: Story = { args: { mode: "apply" } };

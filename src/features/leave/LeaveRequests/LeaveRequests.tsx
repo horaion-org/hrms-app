@@ -23,8 +23,8 @@ export type LeaveRequestsProps = {
 	sort: LeaveSort;
 	onPageChange: (page: number) => void;
 	onSortChange: (sort: LeaveSort) => void;
-	onOpen: (request: LeaveRequest, rejecting?: boolean) => void;
-	onApprove: (request: LeaveRequest) => void;
+	/** Opens the request, straight at a decision's confirmation step when one is named. */
+	onOpen: (request: LeaveRequest, decision?: "reject" | "approve") => void;
 	/** Whether the person may decide this request, as the workspace says. */
 	canReview: (request: LeaveRequest) => boolean;
 	/** The caller's own requests: no employee column, no decisions, only viewing. */
@@ -35,7 +35,8 @@ export type LeaveRequestsProps = {
 /**
  * The requests table: one server page, sorted, filtered and paged by the
  * API. Approve and Reject are offered only on pending requests the person
- * may decide; the API still checks every decision.
+ * may decide, and each opens the request at its confirmation step; the API
+ * still checks every decision.
  */
 export const LeaveRequests = ({
 	rows,
@@ -45,7 +46,6 @@ export const LeaveRequests = ({
 	onPageChange,
 	onSortChange,
 	onOpen,
-	onApprove,
 	canReview,
 	own = false,
 	emptyState,
@@ -70,6 +70,27 @@ export const LeaveRequests = ({
 					),
 				},
 			];
+	// The API serves remarks only to people allowed to read them, so the column shows only when this page has some.
+	const remarks: Array<DataTableColumn<LeaveRequest>> = rows.some(
+		(row) => row.notes !== null
+	)
+		? [
+				{
+					id: "notes",
+					header: t("leave.remarks"),
+					headerClassName: "min-w-48",
+					cell: (row) =>
+						row.notes === null ? (
+							<>
+								<span aria-hidden="true">—</span>
+								<span className="sr-only">{t("leave.noRemarks")}</span>
+							</>
+						) : (
+							<p className="max-w-56 truncate">{row.notes}</p>
+						),
+				},
+			]
+		: [];
 	const columns: Array<DataTableColumn<LeaveRequest>> = [
 		...employee,
 		{
@@ -107,6 +128,7 @@ export const LeaveRequests = ({
 			sortValue: (row) => row.leaveType,
 			cell: (row) => t(`leave.types.${row.leaveType}`),
 		},
+		...remarks,
 		{
 			id: "status",
 			header: t("leave.status"),
@@ -142,7 +164,7 @@ export const LeaveRequests = ({
 									disabled={!decidable}
 									variant="icon"
 									onClick={() => {
-										onOpen(row, true);
+										onOpen(row, "reject");
 									}}
 								>
 									<CrossIcon />
@@ -152,7 +174,7 @@ export const LeaveRequests = ({
 									disabled={!decidable}
 									variant="icon"
 									onClick={() => {
-										onApprove(row);
+										onOpen(row, "approve");
 									}}
 								>
 									<TickIcon />
@@ -168,7 +190,7 @@ export const LeaveRequests = ({
 		<section aria-label={t("leave.requests")}>
 			<DataTable
 				manualSorting
-				className="[&>table]:min-w-250"
+				className="[&>table]:min-w-300"
 				columns={columns}
 				data={rows}
 				emptyState={emptyState ?? t("leave.empty")}

@@ -16,12 +16,14 @@ export const leaveFixture = (
 	startDate: "2026-05-22",
 	endDate: "2026-05-22",
 	workingDays: 1,
+	notes: null,
 	status: "PENDING",
 	requestedAt: "2026-05-02T08:00:00Z",
 	requestedBy: { membershipId: "m-owner", displayName: "Moses Lee" },
 	reviewedAt: null,
 	reviewedBy: null,
 	rejectionReason: null,
+	approvalComment: null,
 	...overrides,
 });
 
@@ -37,6 +39,7 @@ export const LEAVE_FIXTURES: Array<LeaveRequest> = [
 		startDate: "2026-05-20",
 		endDate: "2026-05-21",
 		workingDays: 2,
+		notes: "Handover notes are with Ben.\nBack on Friday.",
 		requestedAt: "2026-05-18T02:30:00Z",
 	}),
 	leaveFixture({
@@ -67,6 +70,7 @@ export const LEAVE_FIXTURES: Array<LeaveRequest> = [
 		requestedAt: "2026-05-10T03:12:00Z",
 		reviewedAt: "2026-05-10T08:00:00Z",
 		reviewedBy: { membershipId: "m-hr", displayName: "Priya Nair" },
+		approvalComment: "Enjoy the break.",
 	}),
 ];
 

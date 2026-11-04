@@ -4,7 +4,10 @@ import { expect, it, vi } from "vitest";
 import { I18nextProvider } from "react-i18next";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import { LEAVE_FIXTURES } from "@/features/leave/fixtures";
-import { LeaveRequestDialog } from "@/features/leave/LeaveRequestDialog";
+import {
+	LeaveRequestDialog,
+	type LeaveRequestDialogProps,
+} from "@/features/leave/LeaveRequestDialog";
 
 const pending = LEAVE_FIXTURES[1]!;
 const employees = {
@@ -49,6 +52,83 @@ it("requires a meaningful rejection reason and returns to review when cancelled"
 	await user.type(screen.getByRole("textbox"), "Coverage needed  ");
 	await user.click(screen.getByRole("button", { name: "Confirm rejection" }));
 	expect(onReject).toHaveBeenCalledWith(pending, "Coverage needed");
+});
+
+it("confirms an approval with an optional trimmed comment and returns to review when cancelled", async () => {
+	const user = userEvent.setup();
+	const onApprove = vi.fn<LeaveRequestDialogProps["onApprove"]>();
+	render(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveRequestDialog
+				canReview
+				request={pending}
+				onApprove={onApprove}
+				onClose={vi.fn()}
+				onCreate={vi.fn()}
+				onReject={vi.fn()}
+			/>
+		</I18nextProvider>
+	);
+	await user.click(screen.getByRole("button", { name: "Approve" }));
+	expect(onApprove).not.toHaveBeenCalled();
+	const comment = screen.getByRole("textbox", { name: "Comment (optional)" });
+	expect(comment).not.toBeRequired();
+	expect(comment).toHaveAttribute("maxLength", "2000");
+	await user.click(screen.getByRole("button", { name: "Cancel" }));
+	expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
+	expect(screen.getByRole("button", { name: "Approve" })).toBeInTheDocument();
+	await user.click(screen.getByRole("button", { name: "Approve" }));
+	await user.click(screen.getByRole("button", { name: "Confirm approval" }));
+	expect(onApprove).toHaveBeenLastCalledWith(pending, "");
+	await user.type(
+		screen.getByRole("textbox", { name: "Comment (optional)" }),
+		"  Enjoy the break. "
+	);
+	await user.click(screen.getByRole("button", { name: "Confirm approval" }));
+	expect(onApprove).toHaveBeenLastCalledWith(pending, "Enjoy the break.");
+});
+
+it("opens at the approval step and shows a refused comment on its field", () => {
+	render(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveRequestDialog
+				canReview
+				mode="approve"
+				request={pending}
+				refusal={{
+					fields: { comment: "Enter a comment of up to 2,000 characters." },
+					refreshMembers: false,
+				}}
+				onApprove={vi.fn()}
+				onClose={vi.fn()}
+				onCreate={vi.fn()}
+				onReject={vi.fn()}
+			/>
+		</I18nextProvider>
+	);
+	expect(
+		screen.getByRole("button", { name: "Confirm approval" })
+	).toBeInTheDocument();
+	expect(
+		screen.getByRole("textbox", { name: "Comment (optional)" })
+	).toHaveAccessibleDescription("Enter a comment of up to 2,000 characters.");
+});
+
+it("shows an approved request's comment", () => {
+	render(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveRequestDialog
+				request={LEAVE_FIXTURES[3]}
+				onApprove={vi.fn()}
+				onClose={vi.fn()}
+				onCreate={vi.fn()}
+				onReject={vi.fn()}
+			/>
+		</I18nextProvider>
+	);
+	expect(
+		screen.getByText("Approval comment").nextElementSibling
+	).toHaveTextContent("Enjoy the break.");
 });
 
 it("offers no decision to someone who may not decide, and shows a rejected request's reason and reviewer", () => {
@@ -166,4 +246,100 @@ it("applies for the caller themself when no employees are offered", async () => 
 		null,
 		expect.objectContaining({ leaveType: "ANNUAL" })
 	);
+});
+
+it("sends trimmed remarks, counts them as they are typed, and leaves them out when empty", async () => {
+	const user = userEvent.setup();
+	const onCreate = vi.fn<LeaveRequestDialogProps["onCreate"]>();
+	const view = render(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveRequestDialog
+				mode="apply"
+				onApprove={vi.fn()}
+				onClose={vi.fn()}
+				onCreate={onCreate}
+				onReject={vi.fn()}
+			/>
+		</I18nextProvider>
+	);
+	const remarks = screen.getByRole("textbox", { name: "Remarks (optional)" });
+	expect(remarks).toHaveAttribute("maxLength", "1000");
+	expect(screen.getByText("0/1000")).toBeInTheDocument();
+	await user.click(screen.getByRole("button", { name: "Submit request" }));
+	expect(onCreate.mock.lastCall?.[1]).not.toHaveProperty("notes");
+	await user.type(remarks, "  Back on Friday. ");
+	expect(screen.getByText("18/1000")).toBeInTheDocument();
+	await user.click(screen.getByRole("button", { name: "Submit request" }));
+	expect(onCreate).toHaveBeenLastCalledWith(
+		null,
+		expect.objectContaining({ notes: "Back on Friday." })
+	);
+	view.rerender(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveRequestDialog
+				mode="apply"
+				refusal={{
+					fields: { notes: "Use 1,000 characters or fewer." },
+					refreshMembers: false,
+				}}
+				onApprove={vi.fn()}
+				onClose={vi.fn()}
+				onCreate={onCreate}
+				onReject={vi.fn()}
+			/>
+		</I18nextProvider>
+	);
+	expect(screen.getByRole("alert")).toHaveTextContent(
+		"Use 1,000 characters or fewer."
+	);
+	expect(
+		screen.getByRole("textbox", { name: "Remarks (optional)" })
+	).toHaveAccessibleDescription("Use 1,000 characters or fewer.");
+});
+
+it("shows the request's remarks with their line breaks, and no Remarks row when the API sends none", () => {
+	const view = render(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveRequestDialog
+				request={pending}
+				onApprove={vi.fn()}
+				onClose={vi.fn()}
+				onCreate={vi.fn()}
+				onReject={vi.fn()}
+			/>
+		</I18nextProvider>
+	);
+	expect(screen.getByText("Remarks")).toBeInTheDocument();
+	expect(
+		screen.getByText(/Handover notes are with Ben\.\s+Back on Friday\./)
+	).toHaveClass("whitespace-pre-line");
+	view.rerender(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveRequestDialog
+				request={LEAVE_FIXTURES[0]}
+				onApprove={vi.fn()}
+				onClose={vi.fn()}
+				onCreate={vi.fn()}
+				onReject={vi.fn()}
+			/>
+		</I18nextProvider>
+	);
+	// Remarks are withheld from people who may not read them, so absent remarks leave no row behind.
+	expect(screen.queryByText("Remarks")).not.toBeInTheDocument();
+});
+
+it("shows no reason row for a rejected request whose reason the API withholds", () => {
+	render(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveRequestDialog
+				request={{ ...LEAVE_FIXTURES[2]!, rejectionReason: null }}
+				onApprove={vi.fn()}
+				onClose={vi.fn()}
+				onCreate={vi.fn()}
+				onReject={vi.fn()}
+			/>
+		</I18nextProvider>
+	);
+	expect(screen.getByText("Rejected")).toBeInTheDocument();
+	expect(screen.queryByText("Reason for rejection")).not.toBeInTheDocument();
 });

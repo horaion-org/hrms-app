@@ -25,7 +25,10 @@ import { useActivityPage } from "@/features/dashboard/useActivityPage";
 import type { LeaveRequest } from "@/features/leave/api";
 import { formatPeriod } from "@/features/leave/dates";
 import { LeaveRequestDialog } from "@/features/leave/LeaveRequestDialog";
-import { decisionRefusal } from "@/features/leave/leaveRefusal";
+import {
+	decisionRefusal,
+	type DecisionField,
+} from "@/features/leave/leaveRefusal";
 import {
 	useLeaveActions,
 	useLeaveRequests,
@@ -53,7 +56,7 @@ const sectionHeading = "text-base font-semibold text-ink-blue-600 uppercase";
 const viewAllLink =
 	"shrink-0 text-base font-semibold text-ink-blue-900 underline decoration-2 underline-offset-1 hover:text-ink-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-blue-500";
 
-type Decision = { request: LeaveRequest; mode: "view" | "reject" };
+type Decision = { request: LeaveRequest; mode: "view" | "reject" | "approve" };
 
 const Dashboard = (): FunctionComponent => {
 	const { t, i18n } = useTranslation();
@@ -63,8 +66,7 @@ const Dashboard = (): FunctionComponent => {
 	const access = useAccess();
 	const [branchId, setBranchId] = useState<string>();
 	const [decision, setDecision] = useState<Decision>();
-	const [refusal, setRefusal] = useState<Refusal<"reason">>();
-	const [problem, setProblem] = useState("");
+	const [refusal, setRefusal] = useState<Refusal<DecisionField>>();
 	const [toast, setToast] = useState<{ id: number; message: string }>();
 	const [workforce] = useState(exampleWorkforce);
 	const numbers = new Intl.NumberFormat(language, { maximumFractionDigits: 1 });
@@ -109,21 +111,21 @@ const Dashboard = (): FunctionComponent => {
 	};
 	const decided = (message: string): void => {
 		close();
-		setProblem("");
 		notify(message);
 	};
 	const refused = (error: Error): void => {
-		const next = decisionRefusal(error, t);
-		if (decision) setRefusal(next);
-		else setProblem(next.message ?? t("leave.refusal.decideFailed"));
+		setRefusal(decisionRefusal(error, t));
 	};
-	const approve = (request: LeaveRequest): void => {
-		actions.approve.mutate(request, {
-			onSuccess: () => {
-				decided(t("leave.approved", { name: request.displayName }));
-			},
-			onError: refused,
-		});
+	const approve = (request: LeaveRequest, comment: string): void => {
+		actions.approve.mutate(
+			{ request, comment },
+			{
+				onSuccess: () => {
+					decided(t("leave.approved", { name: request.displayName }));
+				},
+				onError: refused,
+			}
+		);
 	};
 	// Nobody decides their own leave, and each request is decided where its member is filed.
 	const canReview = (request: LeaveRequest): boolean =>
@@ -162,11 +164,6 @@ const Dashboard = (): FunctionComponent => {
 					onChange={setBranchId}
 				/>
 			</div>
-			{problem && (
-				<p className="mt-6 text-sm text-error-700" role="alert">
-					{problem}
-				</p>
-			)}
 			<div className="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,666fr)_minmax(0,390fr)]">
 				<div>
 					<StatCard
@@ -271,7 +268,7 @@ const Dashboard = (): FunctionComponent => {
 												icon: <TickIcon />,
 												disabled: !reviewable || busy,
 												onClick: () => {
-													approve(request);
+													setDecision({ request, mode: "approve" });
 												},
 											}}
 											secondaryAction={{

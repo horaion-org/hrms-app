@@ -10,7 +10,6 @@ const handlers = {
 	onPageChange: vi.fn(),
 	onSortChange: vi.fn(),
 	onOpen: vi.fn(),
-	onApprove: vi.fn(),
 };
 
 it("hands sorting and paging to the caller and offers decisions only where allowed", async () => {
@@ -48,12 +47,34 @@ it("hands sorting and paging to the caller and offers decisions only where allow
 	await user.click(
 		screen.getByRole("button", { name: "Reject request for Aisha Rahman" })
 	);
-	expect(handlers.onOpen).toHaveBeenCalledWith(LEAVE_FIXTURES[0], true);
+	expect(handlers.onOpen).toHaveBeenCalledWith(LEAVE_FIXTURES[0], "reject");
 	await user.click(
 		screen.getByRole("button", { name: "Approve request for Aisha Rahman" })
 	);
-	expect(handlers.onApprove).toHaveBeenCalledWith(LEAVE_FIXTURES[0]);
+	expect(handlers.onOpen).toHaveBeenCalledWith(LEAVE_FIXTURES[0], "approve");
 	expect(screen.getByText("2 days")).toBeInTheDocument();
+});
+
+it("shows each request's remarks on one line, and says when there are none", () => {
+	render(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveRequests
+				{...handlers}
+				canReview={() => true}
+				page={1}
+				rows={LEAVE_FIXTURES.slice(0, 2)}
+				sort={{ field: "requestedAt", desc: true }}
+				total={2}
+			/>
+		</I18nextProvider>
+	);
+	expect(
+		screen.getAllByRole("columnheader").map((header) => header.textContent)
+	).toContain("Remarks");
+	expect(screen.getByText(/Handover notes are with Ben\./)).toHaveClass(
+		"truncate"
+	);
+	expect(screen.getByText("No remarks")).toHaveClass("sr-only");
 });
 
 it("in own mode shows no employee column and offers only viewing", async () => {
@@ -82,4 +103,23 @@ it("in own mode shows no employee column and offers only viewing", async () => {
 		screen.getByRole("button", { name: "View request for Aisha Rahman" })
 	);
 	expect(handlers.onOpen).toHaveBeenCalledWith(LEAVE_FIXTURES[0]);
+});
+
+it("leaves the Remarks column out when no request on the page carries remarks", () => {
+	render(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveRequests
+				{...handlers}
+				canReview={() => true}
+				page={1}
+				rows={[LEAVE_FIXTURES[0]!, LEAVE_FIXTURES[2]!]}
+				sort={{ field: "requestedAt", desc: true }}
+				total={2}
+			/>
+		</I18nextProvider>
+	);
+	expect(
+		screen.getAllByRole("columnheader").map((header) => header.textContent)
+	).not.toContain("Remarks");
+	expect(screen.queryByText("No remarks")).not.toBeInTheDocument();
 });
