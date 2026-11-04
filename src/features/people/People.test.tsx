@@ -582,6 +582,28 @@ describe("People", () => {
 		).toBeVisible();
 	});
 
+	it("says nobody matches, not that there are no people yet, when a Department holds nobody", async () => {
+		stubApi({
+			...baseRoutes(),
+			// Orchard (Kitchen d-1, Bar d-2) and Tampines (Front d-3).
+			[WORKSPACE]: {
+				status: 200,
+				body: envelope(companyWideWorkspace(["member_profile:read"])),
+			},
+			[PEOPLE]: pageReply([]),
+		});
+		await open("/people?branch=b-1&department=d-2");
+
+		expect(
+			await screen.findByRole("cell", {
+				name: "Nothing matches your search or filter.",
+			})
+		).toBeVisible();
+		expect(
+			screen.queryByRole("cell", { name: "No people yet." })
+		).not.toBeInTheDocument();
+	});
+
 	it("shows the list to a person granted only at one department, since the API filters it", async () => {
 		const calls = stubApi({
 			...baseRoutes(),

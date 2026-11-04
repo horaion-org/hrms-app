@@ -83,11 +83,6 @@ export const People = (): FunctionComponent => {
 		{ listKey, ids: [] }
 	);
 	const selectedIds = ticked.listKey === listKey ? ticked.ids : [];
-	const view = describePeople(
-		list,
-		query.search !== "" || query.status !== undefined,
-		t
-	);
 	const access = useAccess();
 	const columns = useMemo(() => peopleColumns(t, access.can), [t, access.can]);
 	const canAdd = access.canAnywhere("member_profile:create");
@@ -132,6 +127,8 @@ export const People = (): FunctionComponent => {
 	const clearFilters = (): void => {
 		show({ status: undefined, department: undefined });
 	};
+	// The Branch is scope, so an empty Branch still reads "No people yet"; a search or a set filter reads "No matches".
+	const view = describePeople(list, query.search !== "" || chips.length > 0, t);
 
 	return (
 		<>
