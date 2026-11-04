@@ -151,7 +151,10 @@ const jobTitleSchema = z.object({
 
 export type JobTitle = z.infer<typeof jobTitleSchema>;
 
-export type CreateJobTitleBody = { name: string };
+/** The longest job title description the API keeps, after trimming. */
+export const JOB_TITLE_DESCRIPTION_MAX_LENGTH = 300;
+
+export type CreateJobTitleBody = { name: string; description: string };
 
 /** A blank description is sent as none, so the list never shows an empty line. */
 export const descriptionOrNull = (description: string | null): string | null =>
@@ -174,7 +177,10 @@ export const createJobTitle = (
 ): Promise<JobTitle> =>
 	apiRequest(jobTitlesPath(companyId, branchId, departmentId), jobTitleSchema, {
 		method: "POST",
-		body: { name: body.name.trim() },
+		body: {
+			name: body.name.trim(),
+			description: descriptionOrNull(body.description),
+		},
 	});
 
 const accessRoleSchema = z.object({

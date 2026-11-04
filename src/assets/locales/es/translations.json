@@ -420,8 +420,13 @@
 				"nameCharacters": "Usa solo letras, números, espacios y . ' & -.",
 				"nameConflict": "Ya existe un puesto llamado \"{{name}}\". Elige otro nombre.",
 				"nameRejected": "Revisa el nombre del puesto e inténtalo de nuevo.",
+				"descriptionLabel": "Descripción (opcional)",
+				"descriptionPlaceholder": "Qué hace este puesto, en una frase",
+				"descriptionCounter": "{{count}}/300",
+				"descriptionLength": "La descripción debe tener 300 caracteres como máximo.",
 				"forbidden": "Ya no tienes permiso para crear puestos.",
-				"failed": "No pudimos crear el puesto. Inténtalo de nuevo."
+				"failed": "No pudimos crear el puesto. Inténtalo de nuevo.",
+				"editDescription": "Cambia el nombre o la descripción del puesto. Sigue en {{department}}."
 			}
 		},
 		"activity": {

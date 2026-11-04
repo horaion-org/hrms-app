@@ -1,7 +1,7 @@
 import type { TFunction } from "i18next";
 import { mapRefusal, type Refusal } from "@/features/organisation/refusal";
 
-export type JobTitleField = "departmentId" | "name";
+export type JobTitleField = "departmentId" | "name" | "description";
 
 /** Server codes select frontend-owned copy; untrusted server prose is never displayed. */
 export const refusalFor = (
@@ -36,7 +36,13 @@ export const refusalFor = (
 			},
 		},
 		alerts: { "404 JOB_TITLE_NOT_FOUND": t(`${key}.gone`) },
-		fieldErrors: { name: { field: "name", message: t(`${key}.nameRejected`) } },
+		fieldErrors: {
+			name: { field: "name", message: t(`${key}.nameRejected`) },
+			description: {
+				field: "description",
+				message: t(`${key}.descriptionLength`),
+			},
+		},
 		forbidden: t(editing ? `${key}.editForbidden` : `${key}.forbidden`),
 		failed: t(editing ? `${key}.editFailed` : `${key}.failed`),
 	});

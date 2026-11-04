@@ -67,7 +67,7 @@ it.each([
 		{
 			branchId: "b-1",
 			departmentId: "d-1",
-			body: { name: "Chef" },
+			body: { name: "Chef", description: "" },
 		},
 	],
 	[
