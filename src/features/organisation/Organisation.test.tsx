@@ -176,7 +176,7 @@ it("shows the overview figures and recent activity for the current company", asy
 		"status=ACTIVE&size=1"
 	);
 	expect(searchOf("/api/v1/companies/c-1/audit-events")).toBe(
-		"size=4&entityType=Company&entityType=Branch&entityType=Department&entityType=AccessRole&entityType=JobTitle"
+		"size=4&entityType=Company&entityType=Branch&entityType=Department&entityType=AccessRole&entityType=JobTitle&entityType=OrganisationImportJob"
 	);
 });
 
@@ -396,4 +396,54 @@ it("reaches the overview from the Sidebar and marks Organisation current", async
 	expect(within(banner).getByRole("img", { name: "José" })).toHaveTextContent(
 		"J"
 	);
+});
+
+it("offers Import organisation from the title's menu only with branch:create company-wide", async () => {
+	const user = userEvent.setup();
+	stubApi({
+		[REFRESH]: accessPassReply(),
+		[ME]: currentUserReply(),
+		[WORKSPACE]: workspaceReply([...EVERY_PERMISSION, "branch:create"]),
+		[BRANCHES]: totalReply(0),
+		[DEPARTMENTS]: totalReply(0),
+		[ACCESS_ROLES]: totalReply(1),
+		[JOB_TITLES]: totalReply(0),
+		[AUDIT_EVENTS]: activityReply([]),
+	});
+	const opened = await open();
+
+	await user.click(
+		await screen.findByRole("button", { name: "More organisation actions" })
+	);
+	await user.click(
+		screen.getByRole("menuitem", { name: "Import organisation" })
+	);
+
+	await waitFor(() => {
+		expect(opened.router.state.location.pathname).toBe(
+			"/settings/data/import-organisation"
+		);
+	});
+});
+
+it("has no organisation menu without branch:create", async () => {
+	stubApi({
+		[REFRESH]: accessPassReply(),
+		[ME]: currentUserReply(),
+		[WORKSPACE]: workspaceReply(EVERY_PERMISSION),
+		[BRANCHES]: totalReply(0),
+		[DEPARTMENTS]: totalReply(0),
+		[ACCESS_ROLES]: totalReply(1),
+		[JOB_TITLES]: totalReply(0),
+		[AUDIT_EVENTS]: activityReply([]),
+	});
+	await open();
+
+	await screen.findByRole("heading", {
+		level: 1,
+		name: "Organisation Overview",
+	});
+	expect(
+		screen.queryByRole("button", { name: "More organisation actions" })
+	).not.toBeInTheDocument();
 });
