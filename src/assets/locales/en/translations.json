@@ -157,8 +157,6 @@
 		"edit": "Edit availability",
 		"custom": "Custom",
 		"none": "Not available",
-		"department": "Department",
-		"allDepartments": "All departments",
 		"teamFailed": "We couldn’t load the team’s availability. Try again.",
 		"patternFailed": "We couldn’t load {{name}}’s default pattern. Try again.",
 		"hidden": "You don’t have access to anyone’s availability in this company.",
@@ -208,7 +206,8 @@
 			"resetCancel": "Keep this week",
 			"weekInPast": "This week has already ended, so its availability can’t be changed. Choose this week or a later one.",
 			"weekNotMonday": "That week couldn’t be found. Reload the page and choose the week again."
-		}
+		},
+		"controls": "Availability controls"
 	},
 	"dialog": {
 		"close": "Close"

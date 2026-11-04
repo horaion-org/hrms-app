@@ -157,8 +157,6 @@
 		"edit": "Editar disponibilidad",
 		"custom": "Personalizada",
 		"none": "No disponible",
-		"department": "Departamento",
-		"allDepartments": "Todos los departamentos",
 		"teamFailed": "No pudimos cargar la disponibilidad del equipo. Inténtalo de nuevo.",
 		"patternFailed": "No pudimos cargar el patrón habitual de {{name}}. Inténtalo de nuevo.",
 		"hidden": "No tienes acceso a la disponibilidad de nadie en esta empresa.",
@@ -208,7 +206,8 @@
 			"resetCancel": "Mantener esta semana",
 			"weekInPast": "Esta semana ya terminó, así que su disponibilidad no se puede cambiar. Elige esta semana o una posterior.",
 			"weekNotMonday": "No encontramos esa semana. Recarga la página y vuelve a elegirla."
-		}
+		},
+		"controls": "Controles de disponibilidad"
 	},
 	"dialog": {
 		"close": "Cerrar"

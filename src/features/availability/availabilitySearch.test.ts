@@ -73,13 +73,16 @@ describe("viewsOf and viewOf", () => {
 });
 
 describe("availabilityQueryOf", () => {
-	it("given_aBranchAndWeek_when_built_then_addsTheUrlsDepartmentOnlyWhenNamed", () => {
-		expect(availabilityQueryOf({}, "b-1", "2026-11-09")).toEqual({
+	it("given_aBranchAndWeek_when_built_then_addsTheDepartmentOnlyWhenChosen", () => {
+		expect(availabilityQueryOf({ branchId: "b-1" }, "2026-11-09")).toEqual({
 			weekStartMonday: "2026-11-09",
 			branchId: "b-1",
 		});
 		expect(
-			availabilityQueryOf({ department: "d-1" }, "b-1", "2026-11-09")
+			availabilityQueryOf(
+				{ branchId: "b-1", departmentId: "d-1" },
+				"2026-11-09"
+			)
 		).toEqual({
 			weekStartMonday: "2026-11-09",
 			branchId: "b-1",
