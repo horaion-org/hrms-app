@@ -1,4 +1,4 @@
-import { screen, within } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, it, vi } from "vitest";
 import { resetApiClient } from "@/common/api-client";
@@ -15,7 +15,9 @@ import {
 } from "@/common/testing/stubApi";
 import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
+import { frozenConstraintsFixture } from "@/features/scheduling/constraints/fixtures";
 import {
+	emptyFindingsFixture,
 	generatedScheduleFixture,
 	generationFindingsFixture,
 	generationFixture,
@@ -23,6 +25,7 @@ import {
 	scheduleFixture,
 	schedulingWorkspace,
 } from "@/features/scheduling/schedules/fixtures";
+import { frozenShiftsFixture } from "@/features/scheduling/shifts/fixtures";
 
 let app: OpenedApp | undefined;
 afterEach(() => {
@@ -178,39 +181,143 @@ it("shows a chosen day's shift read-only", async () => {
 	expect(screen.queryByRole("button", { name: "Reassign Shift" })).toBeNull();
 });
 
-it("quotes the engine's conflicts and errors by member as review notes", async () => {
-	await openRoster({
-		...signedIn(),
-		[`GET ${SCHEDULE}`]: ok(generatedScheduleFixture({ status: "GENERATED" })),
+/** The frozen shifts and constraints that name the findings, readable with `shift:read` and `constraint:read`. */
+const FROZEN_SETUP: Routes = {
+	[`GET ${SCHEDULE}/shifts`]: ok(frozenShiftsFixture()),
+	[`GET ${SCHEDULE}/constraints`]: ok(frozenConstraintsFixture()),
+};
+
+const generatedWith = (findings = generationFindingsFixture()): StubReply =>
+	ok(
+		generatedScheduleFixture({
+			status: "GENERATED",
+			generation: generationFixture({ findings }),
+		})
+	);
+
+it("summarises what the engine found and lists it in the findings panel", async () => {
+	const calls = await openRoster({
+		...signedIn(["schedule:read", "shift:read", "constraint:read"]),
+		...FROZEN_SETUP,
+		[`GET ${SCHEDULE}`]: generatedWith(),
 		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
 	});
 	const user = userEvent.setup();
 
 	expect(
 		await screen.findByText(
-			"The scheduling engine left 2 notes to review on this roster."
+			"The scheduling engine left 3 roster notes and 1 setup issue."
 		)
 	).toBeInTheDocument();
-	await user.click(screen.getByRole("button", { name: "Review notes" }));
+	expect(screen.queryByRole("region", { name: /Setup issues/ })).toBeNull();
+	await user.click(screen.getByRole("button", { name: "Show details" }));
 
-	const notes = screen.getByRole("dialog", { name: "Review notes" });
-	const conflicts = within(notes).getByRole("region", { name: "Conflicts" });
-	expect(conflicts).toHaveTextContent(
-		"Sat, Oct 17, 09:00 – 15:00•1 person short"
+	const setup = screen.getByRole("region", { name: "Setup issues (1)" });
+	expect(setup).toHaveTextContent("Shifts nobody can take · 1");
+	expect(setup).toHaveTextContent(
+		"No one in this schedule can take Breakfast Prep."
 	);
-	expect(conflicts).toHaveTextContent("Rule: Morning cover");
 	expect(
-		within(conflicts).getByText("Front Desk AM is one Front Desk Staff short.")
-			.tagName
+		within(setup).getByText(
+			"Shift Breakfast Prep: no employee holds an eligible role."
+		).tagName
 	).toBe("Q");
-	const byMember = within(notes).getByRole("region", {
-		name: "Notes by member",
+	const roster = screen.getByRole("region", { name: "Roster notes (3)" });
+	expect(roster).toHaveTextContent("Sat, Oct 1709:00 – 15:00•1 person short");
+	expect(roster).toHaveTextContent("Rule: Morning cover");
+	expect(roster).toHaveTextContent(
+		"Ben OngBen Ong works more than five days in a row."
+	);
+	expect(roster).toHaveTextContent(
+		"Chen WeiSun, Oct 18Chen Wei covers the Sunday swing alone."
+	);
+	expect(screen.queryByRole("dialog")).toBeNull();
+	await waitFor(() => {
+		expect(readsOf(calls, `${SCHEDULE}/constraints`)).toHaveLength(1);
 	});
-	expect(byMember).toHaveTextContent("Ben Ong");
+
+	await user.click(screen.getByRole("button", { name: "Hide details" }));
+	expect(screen.queryByRole("region", { name: "Roster notes (3)" })).toBeNull();
+});
+
+it("names findings without reading the setup it can't see", async () => {
+	const calls = await openRoster({
+		...signedIn(),
+		[`GET ${SCHEDULE}`]: generatedWith(),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+	});
+	const user = userEvent.setup();
+
+	await user.click(await screen.findByRole("button", { name: "Show details" }));
+
 	expect(
-		within(byMember).getByText("Ben Ong works more than five days in a row.")
-			.tagName
+		screen.getByRole("region", { name: "Roster notes (3)" })
+	).toHaveTextContent("Rule: Shift staffing");
+	expect(
+		screen.getByRole("region", { name: "Setup issues (1)" })
+	).toHaveTextContent("No one in this schedule can take one of its shifts.");
+	expect(readsOf(calls, `${SCHEDULE}/shifts`)).toHaveLength(0);
+	expect(readsOf(calls, `${SCHEDULE}/constraints`)).toHaveLength(0);
+});
+
+it("marks findings on the roster and opens one in a popover", async () => {
+	await openRoster({
+		...signedIn(),
+		[`GET ${SCHEDULE}`]: generatedWith(),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+	});
+	const user = userEvent.setup();
+
+	const roster = await screen.findByRole("table", { name: "Roster" });
+	expect(
+		within(roster).getByRole("button", {
+			name: "1 note for Saturday, October 17",
+		})
+	).toBeInTheDocument();
+	expect(
+		within(roster).getByRole("button", { name: "1 note for Ben Ong" })
+	).toBeInTheDocument();
+	expect(
+		within(roster).getByRole("button", {
+			name: "Chen Wei, Sun 14:00 – 22:00, 1 note",
+		})
+	).toBeInTheDocument();
+	await user.click(
+		within(roster).getByRole("button", {
+			name: "1 note for Chen Wei on Sunday, October 18",
+		})
+	);
+
+	const popover = await screen.findByRole("dialog", {
+		name: "1 note for Chen Wei on Sunday, October 18",
+	});
+	expect(
+		within(popover).getByText("Chen Wei covers the Sunday swing alone.").tagName
 	).toBe("Q");
+	await user.click(
+		within(popover).getByRole("button", { name: "Show in findings" })
+	);
+
+	expect(screen.getByRole("button", { name: "Hide details" })).toHaveAttribute(
+		"aria-expanded",
+		"true"
+	);
+	expect(
+		screen.getByRole("region", { name: "Roster notes (3)" })
+	).toBeInTheDocument();
+});
+
+it("shows nothing about findings when the engine found nothing", async () => {
+	await openRoster({
+		...signedIn(),
+		[`GET ${SCHEDULE}`]: generatedWith(emptyFindingsFixture()),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+	});
+
+	const roster = await screen.findByRole("table", { name: "Roster" });
+	expect(screen.queryByText(/The scheduling engine left/)).toBeNull();
+	expect(screen.queryByRole("button", { name: "Show details" })).toBeNull();
+	expect(within(roster).queryByRole("button", { name: /note/ })).toBeNull();
 });
 
 it("reads a schedule being generated every 15 seconds until its roster is ready", async () => {

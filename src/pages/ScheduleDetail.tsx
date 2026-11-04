@@ -23,6 +23,14 @@ import {
 	useScheduleAssignments,
 	type AssignmentList,
 } from "@/features/scheduling/schedules/useScheduleAssignments";
+import {
+	useScheduleConstraints,
+	type ConstraintList,
+} from "@/features/scheduling/schedules/useScheduleConstraints";
+import {
+	useScheduleShifts,
+	type ShiftList,
+} from "@/features/scheduling/schedules/useScheduleShifts";
 
 const route = getRouteApi("/_authenticated/_app/scheduling_/$scheduleId");
 
@@ -90,6 +98,11 @@ export const ScheduleDetailProblem = ({
 	);
 };
 
+/** A list's items once read; empty while loading, failed or not readable, as only names come from it. */
+const readyItems = <Item,>(
+	list: { status: "ready"; items: Array<Item> } | { status: string }
+): Array<Item> => ("items" in list ? list.items : []);
+
 /**
  * Under the header, by where the schedule stands: being generated, failed,
  * generated with its roster, or still a draft reached by its URL.
@@ -97,9 +110,13 @@ export const ScheduleDetailProblem = ({
 const RosterBody = ({
 	schedule,
 	assignments,
+	shifts,
+	constraints,
 }: {
 	schedule: Schedule;
 	assignments: AssignmentList;
+	shifts: ShiftList;
+	constraints: ConstraintList;
 }): FunctionComponent => {
 	const { t } = useTranslation();
 	if (generationInProgress(schedule))
@@ -124,14 +141,19 @@ const RosterBody = ({
 			</Problem>
 		);
 	return (
-		<GeneratedRoster assignments={assignments.items} schedule={schedule} />
+		<GeneratedRoster
+			assignments={assignments.items}
+			constraints={readyItems(constraints)}
+			schedule={schedule}
+			shifts={readyItems(shifts)}
+		/>
 	);
 };
 
 /**
  * One schedule read at the Department its URL names. It is read again every
- * 15 seconds while its generation is in progress; its roster is read once it
- * is GENERATED.
+ * 15 seconds while its generation is in progress; its roster, and the frozen
+ * shifts and constraints that name its findings, are read once it is GENERATED.
  */
 const ApiSchedule = ({
 	companyId,
@@ -156,6 +178,14 @@ const ApiSchedule = ({
 		scheduleId,
 		showsRoster
 	);
+	// The frozen shifts and constraints only name what the findings refer to.
+	const rosterSchedule = showsRoster ? state.schedule : undefined;
+	const shifts = useScheduleShifts(
+		companyId,
+		rosterSchedule,
+		rosterSchedule?.scheduleId
+	);
+	const constraints = useScheduleConstraints(companyId, rosterSchedule);
 	if (state.status !== "ready")
 		return (
 			<Problem alert={state.status !== "pending"}>
@@ -173,7 +203,12 @@ const ApiSchedule = ({
 					</Button>
 				}
 			/>
-			<RosterBody assignments={assignments} schedule={state.schedule} />
+			<RosterBody
+				assignments={assignments}
+				constraints={constraints}
+				schedule={state.schedule}
+				shifts={shifts}
+			/>
 		</>
 	);
 };
