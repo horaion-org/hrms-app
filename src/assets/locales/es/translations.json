@@ -1556,6 +1556,29 @@
 			"pending": "Espera…",
 			"failed": "No pudimos cambiar tu contraseña. Inténtalo de nuevo.",
 			"success": "Tu contraseña se cambió y se cerró la sesión en todos los dispositivos. Inicia sesión con tu nueva contraseña."
+		},
+		"emailConfirmation": {
+			"title": "Confirmación de correo",
+			"subtitle": "Introduce el código de seis dígitos enviado a tu correo.",
+			"codeSent": "Tu cuenta está creada. Hemos enviado un código de confirmación a tu correo.",
+			"details": "Datos de confirmación del correo",
+			"email": "Correo electrónico",
+			"code": "Código de confirmación",
+			"codeHint": "Los códigos duran 24 horas. Si el tuyo es más antiguo, solicita uno nuevo.",
+			"submit": "Confirmar correo",
+			"pending": "Confirmando correo…",
+			"didNotReceive": "¿No has recibido el código?",
+			"resend": "Enviar un código nuevo",
+			"resending": "Enviando…",
+			"resent": "Si ese correo necesita confirmación, te hemos enviado un código nuevo",
+			"redirecting": "Tu correo está confirmado. Te llevamos a iniciar sesión en 3 segundos.",
+			"required": "Confirma tu correo antes de iniciar sesión.",
+			"invalidCode": "Ese código es incorrecto o ha caducado. Inténtalo de nuevo o solicita un código nuevo.",
+			"codeFormat": "Introduce un código de seis dígitos.",
+			"failed": "No hemos podido confirmar tu correo. Inténtalo de nuevo.",
+			"wrongEmail": "¿Te registraste con el correo equivocado?",
+			"signUpAgain": "Regístrate de nuevo",
+			"removalNotice": "Los registros sin confirmar se eliminan pasados 3 días."
 		}
 	},
 	"pageToolbar": {

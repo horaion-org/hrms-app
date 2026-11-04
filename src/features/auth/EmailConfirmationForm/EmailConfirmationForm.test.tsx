@@ -69,6 +69,10 @@ it("offers working empty fields on a direct visit, validates six digits, and ign
 	const calls = stubApi({});
 	await open("/confirm-email?email=untrusted%40example.test");
 	expect(screen.getByLabelText(copy.email)).toHaveValue("");
+	expect(screen.queryByRole("status")).not.toBeInTheDocument();
+	expect(screen.getByLabelText(copy.code)).toHaveAccessibleDescription(
+		copy.codeHint
+	);
 	expect(screen.getByLabelText(copy.code)).toHaveAttribute(
 		"inputmode",
 		"numeric"
@@ -132,6 +136,7 @@ it("carries the email from Onboarding, confirms anonymously, and lands on prefil
 	await user.click(screen.getByRole("button", { name: "Sign up" }));
 	await screen.findByRole("heading", { name: copy.title });
 	expect(screen.getByLabelText(copy.email)).toHaveValue(EMAIL);
+	expect(screen.getByRole("status")).toHaveTextContent(copy.codeSent);
 	privateLocation(opened);
 	await user.type(screen.getByLabelText(copy.code), "123456");
 	vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
@@ -188,7 +193,7 @@ it("cancels the delayed redirect when leaving confirmation", async () => {
 	expect(opened.router.state.location.pathname).toBe("/register");
 });
 
-it("carries the email from a 403 EMAIL_NOT_VERIFIED at Log in", async () => {
+it("brings a person who left after signing up back from a fresh Log in, with the email and the reason", async () => {
 	stubApi({
 		"POST /api/v1/public/sessions": problemReply(403, "EMAIL_NOT_VERIFIED"),
 	});
@@ -203,7 +208,39 @@ it("carries the email from a 403 EMAIL_NOT_VERIFIED at Log in", async () => {
 	await screen.findByRole("heading", { name: copy.title });
 	expect(opened.router.state.location.pathname).toBe("/confirm-email");
 	expect(screen.getByLabelText(copy.email)).toHaveValue(EMAIL);
+	expect(screen.getByRole("status")).toHaveTextContent(copy.required);
 	privateLocation(opened);
+});
+
+it("keeps the arrival status beside a refused code", async () => {
+	stubApi({
+		"POST /api/v1/public/sessions": problemReply(403, "EMAIL_NOT_VERIFIED"),
+		[`POST ${CONFIRM}`]: problemReply(400, "INVALID_CODE"),
+	});
+	await open("/login");
+	const user = userEvent.setup();
+	await user.type(screen.getByLabelText("Email", { exact: true }), EMAIL);
+	await user.type(
+		screen.getByLabelText("Password", { exact: true }),
+		"Example123!"
+	);
+	await user.click(screen.getByRole("button", { name: "Log in" }));
+	await screen.findByRole("heading", { name: copy.title });
+	await user.type(screen.getByLabelText(copy.code), "123456");
+	await confirm();
+	expect(await screen.findByRole("alert")).toHaveTextContent(copy.invalidCode);
+	expect(screen.getByRole("status")).toHaveTextContent(copy.required);
+});
+
+it("sends a person who used the wrong email back to sign up", async () => {
+	stubApi({});
+	const opened = await open();
+	expect(screen.getByText(copy.removalNotice)).toBeVisible();
+	await userEvent
+		.setup()
+		.click(screen.getByRole("link", { name: copy.signUpAgain }));
+	await screen.findByRole("heading", { name: "Sign up" });
+	expect(opened.router.state.location.pathname).toBe("/register");
 });
 
 it("prefills Log in from history", async () => {

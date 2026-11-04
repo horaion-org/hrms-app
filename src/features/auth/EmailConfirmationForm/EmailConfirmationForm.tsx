@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useNavigate, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -10,7 +10,12 @@ import { Button } from "@/components/ui/Button";
 import { AuthField } from "@/features/auth/AuthField";
 import { AuthMessage } from "@/features/auth/AuthMessage";
 import { failureMessage, retryHoldMessage } from "@/features/auth/errors";
-import { emailFromHistory, withEmail } from "@/features/auth/historyState";
+import {
+	emailConfirmationReasonFromHistory,
+	emailFromHistory,
+	withEmail,
+	type EmailConfirmationReason,
+} from "@/features/auth/historyState";
 import {
 	emailConfirmationSchema,
 	type EmailConfirmationValues,
@@ -19,12 +24,18 @@ import { useRetryHold } from "@/features/auth/useRetryHold";
 
 type Message = { kind: "error" | "status"; text: string };
 
+const arrivalMessageKeys = {
+	"code-sent": "auth.emailConfirmation.codeSent",
+	"log-in-required": "auth.emailConfirmation.required",
+} as const satisfies Record<EmailConfirmationReason, string>;
+
 export const EmailConfirmationForm = (): FunctionComponent => {
 	const { t } = useTranslation();
 	const navigate = useNavigate();
 	const historyState = useRouterState({
 		select: (state) => state.location.state,
 	});
+	const arrivalReason = emailConfirmationReasonFromHistory(historyState);
 	const schema = useMemo(() => emailConfirmationSchema(t), [t]);
 	const {
 		register,
@@ -48,10 +59,13 @@ export const EmailConfirmationForm = (): FunctionComponent => {
 	const refusedField = useRef<keyof EmailConfirmationValues | null>(null);
 	const messageContainer = useRef<HTMLDivElement>(null);
 	const pending = isSubmitting || resending;
+	const arrivalMessage: Message | null = arrivalReason
+		? { kind: "status", text: t(arrivalMessageKeys[arrivalReason]) }
+		: null;
 	const displayedMessage =
 		failure instanceof ApiProblemError && failure.status === 429
 			? { kind: "error" as const, text: retryHoldMessage(hold.message, t) }
-			: message;
+			: (message ?? arrivalMessage);
 
 	useEffect(() => {
 		if (confirmedEmail === null) return;
@@ -209,6 +223,7 @@ export const EmailConfirmationForm = (): FunctionComponent => {
 						required
 						autoComplete="one-time-code"
 						error={errors.code?.message}
+						hint={t("auth.emailConfirmation.codeHint")}
 						id="code"
 						inputMode="numeric"
 						label={t("auth.emailConfirmation.code")}
@@ -244,6 +259,20 @@ export const EmailConfirmationForm = (): FunctionComponent => {
 					</Button>
 				</p>
 			</form>
+			<div className="mt-7 space-y-2 text-center">
+				<p className="text-base leading-6 text-neutral-800 [&_a]:ml-2">
+					{t("auth.emailConfirmation.wrongEmail")}
+					<Link
+						className="text-ink-blue-900 underline underline-offset-2 hover:text-ink-blue-700"
+						to="/register"
+					>
+						{t("auth.emailConfirmation.signUpAgain")}
+					</Link>
+				</p>
+				<p className="text-sm text-slate-500">
+					{t("auth.emailConfirmation.removalNotice")}
+				</p>
+			</div>
 		</>
 	);
 };
