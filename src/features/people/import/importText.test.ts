@@ -1,11 +1,13 @@
-import type { TFunction } from "i18next";
+import i18next, { type TFunction } from "i18next";
 import { describe, expect, it } from "vitest";
+import "@/common/i18n";
 import { ApiProblemError } from "@/common/problem";
 import type { CheckedRow, MemberImport } from "@/features/people/import/api";
 import {
 	clientFileProblem,
 	errorRowsCsv,
 	problemGroups,
+	problemText,
 	refusalCode,
 	resultRowsCsv,
 } from "@/features/people/import/importText";
@@ -141,5 +143,29 @@ describe("refusalCode", () => {
 		expect(refusalCode(problem(429))).toBe("RATE_LIMITED");
 		expect(refusalCode(problem(413))).toBe("FILE_TOO_LARGE");
 		expect(refusalCode(new Error("x"))).toBe("UNKNOWN");
+	});
+});
+
+describe("problemText", () => {
+	it("words the formula problems in English and Spanish", () => {
+		const en = i18next.getFixedT("en");
+		const es = i18next.getFixedT("es");
+
+		expect(
+			problemText(
+				{ column: "NAME", code: "FORMULA_WITHOUT_VALUE", severity: "ERROR" },
+				en
+			)
+		).toBe(
+			"This cell has a formula without a stored value. Open the file in Excel, save it, and upload again."
+		);
+		expect(
+			problemText(
+				{ column: "DEPARTMENT", code: "CELL_ERROR", severity: "ERROR" },
+				es
+			)
+		).toBe(
+			"Esta celda muestra un error (como #REF!). Corrige la fórmula en Excel y vuelve a subirlo."
+		);
 	});
 });

@@ -892,7 +892,9 @@
 				"DUPLICATE_IN_FILE": "Another row has the same email.",
 				"ALREADY_MEMBER": "Already in this company: this row will be skipped.",
 				"EXAMPLE_ROW": "The template's example row: skipped.",
-				"POSSIBLE_DUPLICATE_PERSON": "Another row has the same name and date of birth. Is this the same person?"
+				"POSSIBLE_DUPLICATE_PERSON": "Another row has the same name and date of birth. Is this the same person?",
+				"FORMULA_WITHOUT_VALUE": "This cell has a formula without a stored value. Open the file in Excel, save it, and upload again.",
+				"CELL_ERROR": "This cell shows an error (such as #REF!). Fix the formula in Excel and upload again."
 			},
 			"history": "Import history"
 		}
