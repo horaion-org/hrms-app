@@ -43,6 +43,24 @@ describe("GeneratedRoster", () => {
 		expect(within(roster).getAllByRole("row")).toHaveLength(4);
 	});
 
+	it("given_aMembersOwnView_when_renderedWithoutTheSummary_then_onlyTheRoster", () => {
+		render(
+			<GeneratedRoster
+				assignments={scheduleAssignmentsFixture()}
+				withSummary={false}
+				schedule={{
+					periodStart: schedule.periodStart,
+					periodEnd: schedule.periodEnd,
+					timeZone: schedule.timeZone,
+				}}
+			/>
+		);
+
+		expect(screen.queryByRole("region", { name: "Staff Rostered" })).toBeNull();
+		const roster = screen.getByRole("table", { name: "Roster" });
+		expect(within(roster).getAllByRole("row")).toHaveLength(4);
+	});
+
 	it("given_aChosenDay_when_clicked_then_showsItsShiftReadOnly", async () => {
 		const user = userEvent.setup();
 		render(

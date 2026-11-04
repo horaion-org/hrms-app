@@ -1593,6 +1593,12 @@
 				"group": "Grupo"
 			}
 		},
+		"myRoster": {
+			"title": "Mi cuadrante · {{department}} · {{period}}",
+			"loading": "Cargando el cuadrante…",
+			"unavailable": "Este cuadrante no está disponible. Puede que aún no esté publicado o que no figures en él.",
+			"loadFailed": "No pudimos cargar este cuadrante. Inténtalo de nuevo."
+		},
 		"generation": {
 			"inProgress": "Se está generando este horario. Su cuadrante aparecerá aquí cuando esté listo; esta página vuelve a comprobarlo cada 15 segundos.",
 			"failedTitle": "Por qué no se generó",
