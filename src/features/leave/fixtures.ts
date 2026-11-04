@@ -23,6 +23,7 @@ export const leaveFixture = (
 	reviewedAt: null,
 	reviewedBy: null,
 	rejectionReason: null,
+	approvalComment: null,
 	...overrides,
 });
 

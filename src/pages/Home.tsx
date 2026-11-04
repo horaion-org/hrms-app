@@ -25,7 +25,10 @@ import { useActivityPage } from "@/features/dashboard/useActivityPage";
 import type { LeaveRequest } from "@/features/leave/api";
 import { formatPeriod } from "@/features/leave/dates";
 import { LeaveRequestDialog } from "@/features/leave/LeaveRequestDialog";
-import { decisionRefusal } from "@/features/leave/leaveRefusal";
+import {
+	decisionRefusal,
+	type DecisionField,
+} from "@/features/leave/leaveRefusal";
 import {
 	useLeaveActions,
 	useLeaveRequests,
@@ -63,7 +66,7 @@ const Dashboard = (): FunctionComponent => {
 	const access = useAccess();
 	const [branchId, setBranchId] = useState<string>();
 	const [decision, setDecision] = useState<Decision>();
-	const [refusal, setRefusal] = useState<Refusal<"reason">>();
+	const [refusal, setRefusal] = useState<Refusal<DecisionField>>();
 	const [problem, setProblem] = useState("");
 	const [toast, setToast] = useState<{ id: number; message: string }>();
 	const [workforce] = useState(exampleWorkforce);
@@ -117,13 +120,16 @@ const Dashboard = (): FunctionComponent => {
 		if (decision) setRefusal(next);
 		else setProblem(next.message ?? t("leave.refusal.decideFailed"));
 	};
-	const approve = (request: LeaveRequest): void => {
-		actions.approve.mutate(request, {
-			onSuccess: () => {
-				decided(t("leave.approved", { name: request.displayName }));
-			},
-			onError: refused,
-		});
+	const approve = (request: LeaveRequest, comment = ""): void => {
+		actions.approve.mutate(
+			{ request, comment },
+			{
+				onSuccess: () => {
+					decided(t("leave.approved", { name: request.displayName }));
+				},
+				onError: refused,
+			}
+		);
 	};
 	// Nobody decides their own leave, and each request is decided where its member is filed.
 	const canReview = (request: LeaveRequest): boolean =>

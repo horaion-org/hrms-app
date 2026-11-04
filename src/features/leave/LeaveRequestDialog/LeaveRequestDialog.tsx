@@ -13,12 +13,13 @@ import { Button } from "@/components/ui/Button";
 import { CrossIcon, SearchIcon, TickIcon } from "@/components/ui/Icon";
 import { Modal } from "@/components/ui/Modal";
 import {
+	APPROVAL_COMMENT_MAX_LENGTH,
 	isLeaveType,
 	LEAVE_NOTES_MAX_LENGTH,
 	LEAVE_TYPES,
 } from "@/features/leave/api";
 import { formatPeriod } from "@/features/leave/dates";
-import type { ApplyField } from "@/features/leave/leaveRefusal";
+import type { ApplyField, DecisionField } from "@/features/leave/leaveRefusal";
 import {
 	statusTone,
 	type LeaveRequest,
@@ -38,9 +39,16 @@ export type ApplyEmployees = {
 	}>;
 };
 
+/** The longest rejection reason the API keeps, in characters. */
+const REJECTION_REASON_MAX_LENGTH = 2000;
+
+/** Where a review stands: reading the request, or confirming a decision with its note. */
+type ReviewStep = "review" | "reject" | "approve";
+
 export type LeaveRequestDialogProps = {
 	request?: LeaveRequest;
-	mode?: "view" | "reject" | "apply";
+	/** `reject` and `approve` open straight at that decision's confirmation step. */
+	mode?: "view" | "reject" | "approve" | "apply";
 	/** Who leave may be applied for; left out in `apply` mode when the caller applies for themself. */
 	employees?: ApplyEmployees;
 	/** Whether the person may decide the shown request; Approve and Reject are offered only then. */
@@ -48,17 +56,19 @@ export type LeaveRequestDialogProps = {
 	/** While a decision or an application is being sent. */
 	busy?: boolean;
 	/** Why the last decision or application was refused: on a field, or as the dialog's alert. */
-	refusal?: Refusal<ApplyField | "reason">;
+	refusal?: Refusal<ApplyField | DecisionField>;
 	onClose: () => void;
-	onApprove: (request: LeaveRequest) => void;
+	/** `comment` is trimmed, and empty when the reviewer wrote none. */
+	onApprove: (request: LeaveRequest, comment: string) => void;
 	onReject: (request: LeaveRequest, reason: string) => void;
 	/** `membershipId` is null when the caller applies for themself. */
 	onCreate: (membershipId: string | null, body: LeaveRequestBody) => void;
 };
 
 /**
- * One request to review, reject with a reason, or a new application on a
- * person's behalf. The dialog only collects and shows; the caller sends and
+ * One request to review, approve with an optional comment, reject with a
+ * reason, or a new application on a person's behalf. Both decisions ask for
+ * confirmation in a second step. The dialog only collects and shows; the caller sends and
  * hands back what the API answered.
  */
 export const LeaveRequestDialog = ({
@@ -75,8 +85,11 @@ export const LeaveRequestDialog = ({
 }: LeaveRequestDialogProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const id = useId();
-	const [rejecting, setRejecting] = useState(mode === "reject");
+	const [step, setStep] = useState<ReviewStep>(
+		mode === "reject" || mode === "approve" ? mode : "review"
+	);
 	const [reason, setReason] = useState("");
+	const [comment, setComment] = useState("");
 	const [missingReason, setMissingReason] = useState(false);
 	const [membershipId, setMembershipId] = useState("");
 	const [type, setType] = useState<LeaveType>("ANNUAL");
@@ -90,7 +103,10 @@ export const LeaveRequestDialog = ({
 	);
 	const fields = refusal?.fields ?? {};
 	const employeeError = fields.employee ? `${id}-employee-error` : undefined;
+	const rejecting = step === "reject";
+	const deciding = step !== "review";
 	const reasonError = missingReason ? t("leave.required") : fields.reason;
+	const decisionError = rejecting ? reasonError : fields.comment;
 	const notesIds = formRowIds(`${id}-notes`);
 	if (!applying && !request) return null;
 	const alert = refusal?.message && (
@@ -115,25 +131,29 @@ export const LeaveRequestDialog = ({
 							{t("leave.submit")}
 						</Button>
 					</>
-				) : rejecting ? (
+				) : deciding ? (
 					<>
 						<Button
 							variant="cancel"
 							onClick={() => {
-								setRejecting(false);
+								setStep("review");
 								setMissingReason(false);
 							}}
 						>
 							{t("leave.cancel")}
 						</Button>
 						<Button
-							className="bg-error-600! hover:bg-error-700!"
 							disabled={busy}
 							form={id}
-							leadingIcon={<CrossIcon />}
+							leadingIcon={rejecting ? <CrossIcon /> : <TickIcon />}
 							type="submit"
+							className={
+								rejecting ? "bg-error-600! hover:bg-error-700!" : undefined
+							}
 						>
-							{t("leave.confirmRejection")}
+							{t(
+								rejecting ? "leave.confirmRejection" : "leave.confirmApproval"
+							)}
 						</Button>
 					</>
 				) : request?.status === "PENDING" && canReview ? (
@@ -144,7 +164,7 @@ export const LeaveRequestDialog = ({
 							leadingIcon={<CrossIcon />}
 							variant="secondary"
 							onClick={() => {
-								setRejecting(true);
+								setStep("reject");
 							}}
 						>
 							{t("leave.reject")}
@@ -153,7 +173,7 @@ export const LeaveRequestDialog = ({
 							disabled={busy}
 							leadingIcon={<TickIcon />}
 							onClick={() => {
-								onApprove(request);
+								setStep("approve");
 							}}
 						>
 							{t("leave.approve")}
@@ -355,19 +375,23 @@ export const LeaveRequestDialog = ({
 								{request.rejectionReason && (
 									<>
 										<dt className="text-neutral-800">{t("leave.reason")}</dt>
-										<dd className="break-words font-semibold">
+										<dd className="whitespace-pre-line break-words font-semibold">
 											{request.rejectionReason}
 										</dd>
 									</>
 								)}
 							</dl>
 						</div>
-						{rejecting && (
+						{deciding && (
 							<form
 								className="border-t border-neutral-400 px-6 py-8"
 								id={id}
 								onSubmit={(event) => {
 									event.preventDefault();
+									if (!rejecting) {
+										onApprove(request, comment.trim());
+										return;
+									}
 									if (!reason.trim()) {
 										setMissingReason(true);
 										return;
@@ -377,33 +401,44 @@ export const LeaveRequestDialog = ({
 							>
 								<label
 									className="mb-3 block text-sm font-medium text-neutral-800"
-									htmlFor={`${id}-reason`}
+									htmlFor={`${id}-decision-note`}
 								>
-									{t("leave.reason")}{" "}
-									<span aria-hidden="true" className="text-error-600">
-										*
-									</span>
+									{t(rejecting ? "leave.reason" : "leave.comment")}
+									{rejecting && (
+										<>
+											{" "}
+											<span aria-hidden="true" className="text-error-600">
+												*
+											</span>
+										</>
+									)}
 								</label>
 								<Textarea
-									required
-									aria-describedby={reasonError ? `${id}-error` : undefined}
-									id={`${id}-reason`}
-									maxLength={2000}
+									aria-describedby={decisionError ? `${id}-error` : undefined}
+									id={`${id}-decision-note`}
 									placeholder={t("leave.note")}
-									status={reasonError ? "error" : undefined}
-									value={reason}
+									required={rejecting}
+									status={decisionError ? "error" : undefined}
+									value={rejecting ? reason : comment}
+									maxLength={
+										rejecting
+											? REJECTION_REASON_MAX_LENGTH
+											: APPROVAL_COMMENT_MAX_LENGTH
+									}
 									onChange={(event) => {
-										setReason(event.target.value);
-										setMissingReason(false);
+										if (rejecting) {
+											setReason(event.target.value);
+											setMissingReason(false);
+										} else setComment(event.target.value);
 									}}
 								/>
-								{reasonError && (
+								{decisionError && (
 									<p
 										className="mt-2 text-sm text-error-700"
 										id={`${id}-error`}
 										role="alert"
 									>
-										{reasonError}
+										{decisionError}
 									</p>
 								)}
 							</form>

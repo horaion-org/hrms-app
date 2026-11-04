@@ -87,7 +87,11 @@ export const usePendingLeaveCount = (companyId: string): number | undefined => {
 };
 
 export type LeaveActions = {
-	approve: UseMutationResult<LeaveRequest, Error, LeaveRequest>;
+	approve: UseMutationResult<
+		LeaveRequest,
+		Error,
+		{ request: LeaveRequest; comment: string }
+	>;
 	reject: UseMutationResult<
 		LeaveRequest,
 		Error,
@@ -117,11 +121,18 @@ export const useLeaveActions = (
 	return {
 		approve: useMutation({
 			meta: { successMessage: ownConfirmation ? false : undefined },
-			mutationFn: (request: LeaveRequest) =>
+			mutationFn: ({
+				request,
+				comment,
+			}: {
+				request: LeaveRequest;
+				comment: string;
+			}) =>
 				approveLeaveRequest(
 					companyId,
 					request.membershipId,
-					request.leaveRequestId
+					request.leaveRequestId,
+					comment
 				),
 			onSuccess: reload,
 		}),

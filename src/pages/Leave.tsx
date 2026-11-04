@@ -18,6 +18,7 @@ import {
 	applyRefusal,
 	decisionRefusal,
 	type ApplyField,
+	type DecisionField,
 } from "@/features/leave/leaveRefusal";
 import {
 	leaveQueryOf,
@@ -147,7 +148,7 @@ export const Leave = (): FunctionComponent => {
 	const actions = useLeaveActions(companyId);
 	const [dialog, setDialog] = useState<Dialog | null>(null);
 	const [refusal, setRefusal] = useState<
-		Refusal<ApplyField | "reason"> | undefined
+		Refusal<ApplyField | DecisionField> | undefined
 	>();
 	const [message, setMessage] = useState("");
 	const [problem, setProblem] = useState("");
@@ -180,19 +181,22 @@ export const Leave = (): FunctionComponent => {
 		setProblem("");
 		setMessage(text);
 	};
-	const refused = (next: Refusal<ApplyField | "reason">): void => {
+	const refused = (next: Refusal<ApplyField | DecisionField>): void => {
 		if (dialog) setRefusal(next);
 		else setProblem(next.message ?? t("leave.refusal.decideFailed"));
 	};
-	const approve = (request: LeaveRequest): void => {
-		actions.approve.mutate(request, {
-			onSuccess: () => {
-				done(t("leave.approved", { name: request.displayName }));
-			},
-			onError: (error) => {
-				refused(decisionRefusal(error, t));
-			},
-		});
+	const approve = (request: LeaveRequest, comment = ""): void => {
+		actions.approve.mutate(
+			{ request, comment },
+			{
+				onSuccess: () => {
+					done(t("leave.approved", { name: request.displayName }));
+				},
+				onError: (error) => {
+					refused(decisionRefusal(error, t));
+				},
+			}
+		);
 	};
 	// Each request is decided where its member is filed; nobody decides their own, whatever their roles.
 	const canReview = (request: LeaveRequest): boolean =>

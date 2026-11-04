@@ -54,6 +54,66 @@ it("requires a meaningful rejection reason and returns to review when cancelled"
 	expect(onReject).toHaveBeenCalledWith(pending, "Coverage needed");
 });
 
+it("confirms an approval with an optional trimmed comment and returns to review when cancelled", async () => {
+	const user = userEvent.setup();
+	const onApprove = vi.fn<LeaveRequestDialogProps["onApprove"]>();
+	render(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveRequestDialog
+				canReview
+				request={pending}
+				onApprove={onApprove}
+				onClose={vi.fn()}
+				onCreate={vi.fn()}
+				onReject={vi.fn()}
+			/>
+		</I18nextProvider>
+	);
+	await user.click(screen.getByRole("button", { name: "Approve" }));
+	expect(onApprove).not.toHaveBeenCalled();
+	const comment = screen.getByRole("textbox", { name: "Comment (optional)" });
+	expect(comment).not.toBeRequired();
+	expect(comment).toHaveAttribute("maxLength", "2000");
+	await user.click(screen.getByRole("button", { name: "Cancel" }));
+	expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
+	expect(screen.getByRole("button", { name: "Approve" })).toBeInTheDocument();
+	await user.click(screen.getByRole("button", { name: "Approve" }));
+	await user.click(screen.getByRole("button", { name: "Confirm approval" }));
+	expect(onApprove).toHaveBeenLastCalledWith(pending, "");
+	await user.type(
+		screen.getByRole("textbox", { name: "Comment (optional)" }),
+		"  Enjoy the break. "
+	);
+	await user.click(screen.getByRole("button", { name: "Confirm approval" }));
+	expect(onApprove).toHaveBeenLastCalledWith(pending, "Enjoy the break.");
+});
+
+it("opens at the approval step and shows a refused comment on its field", () => {
+	render(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveRequestDialog
+				canReview
+				mode="approve"
+				request={pending}
+				refusal={{
+					fields: { comment: "Enter a comment of up to 2,000 characters." },
+					refreshMembers: false,
+				}}
+				onApprove={vi.fn()}
+				onClose={vi.fn()}
+				onCreate={vi.fn()}
+				onReject={vi.fn()}
+			/>
+		</I18nextProvider>
+	);
+	expect(
+		screen.getByRole("button", { name: "Confirm approval" })
+	).toBeInTheDocument();
+	expect(
+		screen.getByRole("textbox", { name: "Comment (optional)" })
+	).toHaveAccessibleDescription("Enter a comment of up to 2,000 characters.");
+});
+
 it("offers no decision to someone who may not decide, and shows a rejected request's reason and reviewer", () => {
 	render(
 		<I18nextProvider i18n={authTestI18n}>

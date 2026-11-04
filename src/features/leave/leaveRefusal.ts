@@ -23,6 +23,8 @@ export const LEAVE_REFUSAL_CODES = {
 	/** Nobody, or nobody the person may see. */
 	profileNotFound: "404 MEMBER_PROFILE_NOT_FOUND",
 	invalidReason: "400 INVALID_REJECTION_REASON",
+	/** The approval comment is over 2,000 characters or holds a control character. */
+	invalidComment: "400 INVALID_APPROVAL_COMMENT",
 	/** The remarks are over 1,000 characters or hold a control character. */
 	invalidNotes: "400 INVALID_LEAVE_NOTES",
 	/** Nobody decides their own leave, whatever their roles; reloading roles cannot change it. */
@@ -65,28 +67,38 @@ export const applyRefusal = (
 	});
 };
 
+/** The fields a decision's refusal can land on: the reject reason or the approval comment. */
+export type DecisionField = "reason" | "comment";
+
 /**
  * Why approving or rejecting was refused, for the dialog that asked. A
- * rejected reason lands on the reason field; everything else is the alert.
+ * refused reason or comment lands on its field; everything else is the alert.
  */
 export const decisionRefusal = (
 	error: unknown,
 	t: TFunction
-): Refusal<"reason"> => {
+): Refusal<DecisionField> => {
 	const key = "leave.refusal";
 	const reason = {
 		field: "reason",
 		message: t(`${key}.reasonRejected`),
 	} as const;
-	return mapRefusal<"reason">(error, {
-		codes: { [codes.invalidReason]: reason },
+	const comment = {
+		field: "comment",
+		message: t(`${key}.commentRejected`),
+	} as const;
+	return mapRefusal<DecisionField>(error, {
+		codes: {
+			[codes.invalidReason]: reason,
+			[codes.invalidComment]: comment,
+		},
 		alerts: {
 			[codes.notPending]: t(`${key}.notPending`),
 			[codes.requestNotFound]: t(`${key}.requestMissing`),
 			[codes.profileNotFound]: t(`${key}.profileMissing`),
 			[codes.ownReview]: t(`${key}.ownReview`),
 		},
-		fieldErrors: { reason },
+		fieldErrors: { reason, comment },
 		forbidden: t(`${key}.forbiddenDecide`),
 		failed: t(`${key}.decideFailed`),
 	});
