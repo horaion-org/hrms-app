@@ -82,9 +82,14 @@ const branchShown = (
 };
 
 /**
- * Resolves the requested units against the offered ones. A Branch not
- * offered falls back to the default; a Department not offered under the
- * Branch shown (or under any Branch while all are shown) is dropped.
+ * Resolves the requested units against the offered ones. The Branch shown is
+ * the first of these that applies:
+ * 1. every Branch, when "All branches" is requested and more than one is offered;
+ * 2. the requested Branch, when it is offered;
+ * 3. the default: the home Branch when offered, else the first by name.
+ * The scope is authoritative: a requested Branch that is not offered is never
+ * shown. A Department not offered under the Branch shown (or under any Branch
+ * while all are shown) is dropped.
  */
 export const resolveUnitSelection = (
 	branches: ReadonlyArray<BranchChoice>,
