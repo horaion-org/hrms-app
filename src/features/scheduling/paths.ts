@@ -41,6 +41,13 @@ export const schedulesPath = (
 	unit: DepartmentPath
 ): string => `${departmentPath(companyId, unit)}/schedules`;
 
+/** One schedule of the company by its id alone, wherever its department is. */
+export const companySchedulePath = (
+	companyId: string,
+	scheduleId: string
+): string =>
+	`${companyPath(companyId)}/schedules/${encodeURIComponent(scheduleId)}`;
+
 /** One schedule of a department; its shifts, its constraints and its generation sit under it. */
 export const schedulePath = (
 	companyId: string,

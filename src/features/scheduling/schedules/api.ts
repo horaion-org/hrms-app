@@ -12,6 +12,7 @@ import {
 	constraintValueSchema,
 } from "@/features/scheduling/constraints/api";
 import {
+	companySchedulePath,
 	SCHEDULING_QUERY_ROOT,
 	schedulePath,
 	schedulesPath,
@@ -287,6 +288,16 @@ export const fetchSchedule = (
 		signal,
 	});
 
+/** One schedule by its id alone; the API answers 404 when it is outside the caller's reach. */
+export const fetchCompanySchedule = (
+	companyId: string,
+	scheduleId: string,
+	signal?: AbortSignal
+): Promise<Schedule> =>
+	apiRequest(companySchedulePath(companyId, scheduleId), scheduleSchema, {
+		signal,
+	});
+
 /** Replaces a DRAFT schedule's setup and ticks; the ticks sent are the whole set. */
 export const updateSchedule = (
 	companyId: string,
@@ -495,30 +506,23 @@ export const scheduleKey = (
 /** Whether a schedule is read again every 15 seconds while it is being generated. */
 export type SchedulePolling = { pollWhileGenerating?: boolean };
 
-/**
- * One schedule; `unit` undefined, or `allowed` false, asks for nothing. With
- * `pollWhileGenerating`, it is read again every 15 seconds while its
- * generation is in progress, and no longer once it ends.
- */
-export const scheduleQuery = (
-	companyId: string,
-	unit: DepartmentPath | undefined,
-	scheduleId: string,
-	allowed = true,
-	{ pollWhileGenerating = false }: SchedulePolling = {}
-): UndefinedInitialDataOptions<
+type ScheduleQueryOptions = UndefinedInitialDataOptions<
 	Schedule,
 	Error,
 	Schedule,
 	ReturnType<typeof scheduleKey>
-> =>
+>;
+
+/** What both ways of reading one schedule share: its key, freshness and polling. */
+const oneScheduleQuery = (
+	companyId: string,
+	scheduleId: string,
+	queryFn: ScheduleQueryOptions["queryFn"],
+	{ pollWhileGenerating = false }: SchedulePolling
+): ScheduleQueryOptions =>
 	queryOptions({
 		queryKey: scheduleKey(companyId, scheduleId),
-		queryFn:
-			allowed && unit
-				? ({ signal }): Promise<Schedule> =>
-						fetchSchedule(companyId, unit, scheduleId, signal)
-				: skipToken,
+		queryFn,
 		// One record: a 404 may mean it moved out of reach.
 		meta: administrativeMeta(companyId, { record: true }),
 		staleTime: 30_000,
@@ -532,6 +536,48 @@ export const scheduleQuery = (
 		refetchIntervalInBackground: false,
 		retry,
 	});
+
+/**
+ * One schedule read at its Department; `unit` undefined, or `allowed` false,
+ * asks for nothing. With `pollWhileGenerating`, it is read again every 15
+ * seconds while its generation is in progress, and no longer once it ends.
+ */
+export const scheduleQuery = (
+	companyId: string,
+	unit: DepartmentPath | undefined,
+	scheduleId: string,
+	allowed = true,
+	polling: SchedulePolling = {}
+): ScheduleQueryOptions =>
+	oneScheduleQuery(
+		companyId,
+		scheduleId,
+		allowed && unit
+			? ({ signal }): Promise<Schedule> =>
+					fetchSchedule(companyId, unit, scheduleId, signal)
+			: skipToken,
+		polling
+	);
+
+/**
+ * One schedule read by its id alone, under the same key as `scheduleQuery`;
+ * `allowed` false asks for nothing. Polls as `scheduleQuery` does.
+ */
+export const companyScheduleQuery = (
+	companyId: string,
+	scheduleId: string,
+	allowed = true,
+	polling: SchedulePolling = {}
+): ScheduleQueryOptions =>
+	oneScheduleQuery(
+		companyId,
+		scheduleId,
+		allowed
+			? ({ signal }): Promise<Schedule> =>
+					fetchCompanySchedule(companyId, scheduleId, signal)
+			: skipToken,
+		polling
+	);
 
 /** The key a schedule's shifts are cached under, below the schedule's own. */
 export const scheduleShiftsKey = (

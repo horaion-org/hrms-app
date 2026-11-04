@@ -6,6 +6,7 @@ import { authTestI18n } from "@/features/auth/testingI18n";
 import {
 	createSchedule,
 	deleteSchedule,
+	fetchCompanySchedule,
 	fetchSchedule,
 	fetchScheduleAssignments,
 	fetchSchedules,
@@ -141,6 +142,23 @@ describe("schedules client", () => {
 		});
 
 		await expect(fetchSchedule("c-1", UNIT, "s-1")).resolves.toEqual(schedule);
+	});
+
+	it("reads one schedule by its id alone at the company", async () => {
+		const schedule = generatedScheduleFixture();
+		const calls = stubApi({
+			"GET /api/v1/companies/c-1/schedules/s-1": {
+				status: 200,
+				body: envelope(schedule),
+			},
+		});
+
+		await expect(fetchCompanySchedule("c-1", "s-1")).resolves.toEqual(
+			schedule
+		);
+		expect(calls.map((call) => `${call.method} ${call.path}`)).toEqual([
+			"GET /api/v1/companies/c-1/schedules/s-1",
+		]);
 	});
 
 	it("reads schedules whose generation ended, each keeping its status", async () => {

@@ -10,6 +10,7 @@ import {
 	type DepartmentPath,
 } from "@/features/scheduling/paths";
 import {
+	companyScheduleQuery,
 	createSchedule,
 	deleteSchedule,
 	requestGeneration,
@@ -64,6 +65,34 @@ export const useSchedule = (
 	if (access.status !== "ready") return { status: access.status };
 	if (unit === undefined || scheduleId === undefined)
 		return { status: "pending" };
+	if (!allowed) return { status: "hidden" };
+	if (schedule.data !== undefined)
+		return { status: "ready", schedule: schedule.data };
+	if (refused(schedule.error, 403)) return { status: "hidden" };
+	if (refused(schedule.error, 404)) return { status: "missing" };
+	if (schedule.isError) return { status: "error" };
+	return { status: "pending" };
+};
+
+/**
+ * One schedule read by its id alone, wherever its Department is. `hidden`
+ * when `schedule:read` is held nowhere in the company or the API refuses with
+ * a 403; `missing` when the API answers 404, which is also its answer for a
+ * schedule outside the Departments where the key is held. `polling` reads it
+ * again while its generation is in progress.
+ */
+export const useCompanySchedule = (
+	companyId: string,
+	scheduleId: string,
+	polling: SchedulePolling = {}
+): ScheduleState => {
+	const access = useAccess();
+	const allowed = access.canAnywhere("schedule:read");
+	const schedule = useQuery(
+		companyScheduleQuery(companyId, scheduleId, allowed, polling)
+	);
+
+	if (access.status !== "ready") return { status: access.status };
 	if (!allowed) return { status: "hidden" };
 	if (schedule.data !== undefined)
 		return { status: "ready", schedule: schedule.data };
