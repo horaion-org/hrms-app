@@ -355,6 +355,25 @@ describe("DataTable", () => {
 		expect(screen.getByRole("checkbox", { name: "Select all" })).toBeDisabled();
 	});
 
+	it("draws row lines on the cells, so a cell carries its own lines", () => {
+		render(
+			<DataTable
+				columns={columns}
+				data={branches}
+				getRowId={getRowId}
+				label="Branches"
+			/>
+		);
+
+		expect(screen.getByRole("table")).toHaveClass(
+			"border-separate",
+			"border-spacing-0"
+		);
+		for (const cell of screen.getAllByRole("cell")) {
+			expect(cell).toHaveClass("border-t", "border-neutral-400");
+		}
+	});
+
 	it("merges caller classes onto its scrolling frame", () => {
 		render(
 			<DataTable

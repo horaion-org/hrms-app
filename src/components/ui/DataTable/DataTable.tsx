@@ -84,8 +84,10 @@ const resolve = <T,>(updater: Updater<T>, current: T): T =>
 const headerCellClasses =
 	"h-11 border-l border-neutral-400 bg-neutral-200 px-3 text-left text-sm font-bold text-neutral-900 first:border-l-0";
 
+// Row borders sit on the cells: the table keeps separate borders so pinned
+// (sticky) cells carry their own lines while the rest scrolls beneath them.
 const bodyCellClasses =
-	"h-16 border-l border-neutral-400 bg-white px-3 py-2 text-xs break-words text-neutral-900 first:border-l-0";
+	"h-16 border-t border-l border-neutral-400 bg-white px-3 py-2 text-xs break-words text-neutral-900 first:border-l-0";
 
 const selectionCellClasses = "w-12 px-0";
 
@@ -245,7 +247,7 @@ export const DataTable = <TData extends object>({
 		>
 			<table
 				aria-label={label}
-				className="w-full min-w-xl table-fixed border-collapse"
+				className="w-full min-w-xl table-fixed border-separate border-spacing-0"
 			>
 				<thead>
 					<tr>
@@ -315,9 +317,9 @@ export const DataTable = <TData extends object>({
 				</thead>
 				<tbody>
 					{rows.length === 0 && (
-						<tr className="border-t border-neutral-400">
+						<tr>
 							<td
-								className="h-16 bg-white px-3 text-center text-sm text-neutral-700"
+								className="h-16 border-t border-neutral-400 bg-white px-3 text-center text-sm text-neutral-700"
 								colSpan={columnCount}
 							>
 								{emptyState}
@@ -325,10 +327,7 @@ export const DataTable = <TData extends object>({
 						</tr>
 					)}
 					{rows.map((row) => (
-						<tr
-							key={row.id}
-							className="border-t border-neutral-400 hover:[&>td]:bg-neutral-50"
-						>
+						<tr key={row.id} className="hover:[&>td]:bg-neutral-50">
 							{selection && (
 								<td
 									className={joinClassNames(
