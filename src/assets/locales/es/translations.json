@@ -1279,7 +1279,6 @@
 		"detail": {
 			"back": "Volver al resumen",
 			"title": "Horario de {{department}}",
-			"notFound": "No se ha encontrado este horario.",
 			"loadFailed": "No pudimos cargar este horario. Inténtalo de nuevo.",
 			"loading": "Cargando el horario…",
 			"unavailable": "Este horario no existe o no tienes permiso para verlo.",

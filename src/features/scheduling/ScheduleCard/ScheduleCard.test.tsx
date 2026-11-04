@@ -57,7 +57,7 @@ describe("ScheduleCard", () => {
 		expect(within(card).getByText("1 setup issue")).toBeInTheDocument();
 		expect(within(card).getByRole("link")).toHaveAttribute(
 			"href",
-			"/scheduling/s-1?branchId=b-1&departmentId=d-1"
+			"/scheduling/s-1"
 		);
 	});
 

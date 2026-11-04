@@ -1,13 +1,9 @@
 import { linkOptions } from "@tanstack/react-router";
-import type { RosterSearch } from "@/features/scheduling/roster/rosterSearch";
 import type { Schedule } from "@/features/scheduling/schedules/api";
 import type { ScheduleStep } from "@/features/scheduling/steps";
 
 /** What View needs of a schedule to know where to open it. */
-type ViewedSchedule = Pick<
-	Schedule,
-	"scheduleId" | "branchId" | "departmentId" | "status"
->;
+type ViewedSchedule = Pick<Schedule, "scheduleId" | "departmentId" | "status">;
 
 /** The wizard's Setup for one schedule, as a link's props. */
 export type ScheduleSetupLink = {
@@ -21,7 +17,6 @@ export type ScheduleViewLink =
 	| {
 			to: "/scheduling/$scheduleId";
 			params: { scheduleId: string };
-			search: RosterSearch;
 	  };
 
 /**
@@ -39,7 +34,7 @@ export const scheduleSetupLink = ({
 
 /**
  * A DRAFT reopens at the wizard's Setup to carry on; any other status opens
- * its roster, which reads the schedule at its Department.
+ * its roster, named by the schedule's id alone.
  */
 export const scheduleViewLink = (schedule: ViewedSchedule): ScheduleViewLink =>
 	schedule.status === "DRAFT"
@@ -47,8 +42,4 @@ export const scheduleViewLink = (schedule: ViewedSchedule): ScheduleViewLink =>
 		: linkOptions({
 				to: "/scheduling/$scheduleId",
 				params: { scheduleId: schedule.scheduleId },
-				search: {
-					branchId: schedule.branchId,
-					departmentId: schedule.departmentId,
-				},
 			});

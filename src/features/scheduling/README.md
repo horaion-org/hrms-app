@@ -113,14 +113,16 @@ constraint dialogs.
 
 ## Roster page
 
-`/scheduling/$scheduleId?branchId=…&departmentId=…` shows a schedule past DRAFT, read-only. The contract is the
-API's `docs/implementation/2026-10-27-roster-read-model.md`. Read it top to bottom:
+`/scheduling/$scheduleId` shows a schedule past DRAFT, read-only. The contract is the API's
+`docs/implementation/2026-10-27-roster-read-model.md`. Read it top to bottom:
 
-1. Route `src/routes/_authenticated._app.scheduling_.$scheduleId.ts` — `validateSearch: parseRosterSearch`; a URL
-   without both ids renders `ScheduleDetailProblem` ("not found"). The loader warms the workspace and, where
-   `schedule:read` holds at the department, `scheduleQuery`.
-2. Page `src/pages/ScheduleDetail.tsx` — hooks and composition only: `useSchedule(…, { pollWhileGenerating: true })`,
-   then `useScheduleAssignments` once the schedule is GENERATED with no open run, and `useScheduleShifts` /
+1. Route `src/routes/_authenticated._app.scheduling_.$scheduleId.ts` — the URL names the schedule only; older links
+   with `?branchId&departmentId` still open and the values are not used. The loader warms the workspace and, where
+   `schedule:read` is held anywhere, `companyScheduleQuery` (`GET /companies/{c}/schedules/{s}`, same cache key as
+   `scheduleQuery`).
+2. Page `src/pages/ScheduleDetail.tsx` — hooks and composition only:
+   `useCompanySchedule(…, { pollWhileGenerating: true })`, which reads the schedule by its id; the schedule's
+   `branchId`/`departmentId` then name the department routes. `useScheduleAssignments` once the schedule is GENERATED with no open run, and `useScheduleShifts` /
    `useScheduleConstraints` (frozen copies, only to name the findings; empty when not readable). Under `RosterHeader` it shows, by
    state: a generating note (read again every 15 s), `GenerationFailurePanel`, `GeneratedRoster`, or a draft's note.
 3. Queries `schedules/api.ts` — `scheduleQuery` (`refetchInterval` while `generationInProgress`) and
