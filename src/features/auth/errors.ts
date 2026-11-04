@@ -30,6 +30,7 @@ const messages = {
 	"challenge-expired": "auth.challenge.expired",
 	"invalid-credentials": "auth.errors.invalidCredentials",
 	"password-policy-violation": "auth.passwordReset.passwordPolicy",
+	"password-unchanged": "auth.changePassword.unchanged",
 	validation: "auth.errors.generic",
 	unauthenticated: "auth.errors.generic",
 	forbidden: "auth.errors.generic",
