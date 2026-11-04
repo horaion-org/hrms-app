@@ -703,6 +703,45 @@ describe("People", () => {
 		expect(peopleCalls(calls)).toEqual([`${FIRST_PAGE}&branchId=b-1`]);
 	});
 
+	it("offers every Department in reach under its Branch while All branches is chosen", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...baseRoutes(),
+			// Orchard (Kitchen d-1, Bar d-2) and Tampines (Front d-3).
+			[WORKSPACE]: {
+				status: 200,
+				body: envelope(companyWideWorkspace(["member_profile:read"])),
+			},
+			[PEOPLE]: pageReply([person("m-1", "Moses Lee")]),
+		});
+		const opened = await open("/people?branch=all");
+		await screen.findByText("Moses Lee");
+
+		await user.click(screen.getByRole("button", { name: "Filters" }));
+		await user.click(screen.getByRole("button", { name: "Department" }));
+		await user.click(
+			within(screen.getByRole("group", { name: "Tampines" })).getByRole(
+				"option",
+				{ name: "Front" }
+			)
+		);
+		await waitFor(() => {
+			expect(opened.router.state.location.search).toEqual({
+				branch: "all",
+				department: "d-3",
+			});
+		});
+		const chips = screen.getByRole("list", { name: "Active filters" });
+		expect(within(chips).getByRole("listitem")).toHaveTextContent(
+			"Department: Tampines › Front"
+		);
+		// The Department alone is unambiguous: no Branch is sent with it.
+		expect(peopleCalls(calls)).toEqual([
+			FIRST_PAGE,
+			`${FIRST_PAGE}&departmentId=d-3`,
+		]);
+	});
+
 	it("narrows a chosen Branch to one Department, and clears the filters but keeps the Branch", async () => {
 		const user = userEvent.setup();
 		const calls = stubApi({
@@ -732,7 +771,7 @@ describe("People", () => {
 			within(chips)
 				.getAllByRole("listitem")
 				.map((chip) => chip.textContent)
-		).toEqual(["Department: Bar", "Showing: Active"]);
+		).toEqual(["Department: Orchard › Bar", "Showing: Active"]);
 
 		await user.click(screen.getByRole("button", { name: "Clear filters" }));
 		// The Branch is the header's scope, not a filter: clearing keeps it.

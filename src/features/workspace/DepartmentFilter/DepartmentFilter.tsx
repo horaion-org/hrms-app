@@ -17,9 +17,9 @@ export type DepartmentFilterProps = {
 
 /**
  * The Department field of a list's Filters panel, labelled above its
- * select. It is offered only while one Branch is shown and that Branch has
- * several Departments in reach; otherwise there is nothing to choose and
- * it renders nothing.
+ * select. With one Branch shown it lists that Branch's Departments; with
+ * every Branch shown it lists every Department in reach, grouped under its
+ * Branch. With fewer than two to choose from it renders nothing.
  */
 export const DepartmentFilter = ({
 	selection,
@@ -43,6 +43,8 @@ export const DepartmentFilter = ({
 					...selection.departments.map((choice) => ({
 						value: choice.departmentId,
 						label: choice.name,
+						// Names repeat across Branches, so every Branch heads its own.
+						...(selection.branch ? {} : { group: choice.branchName }),
 					})),
 				]}
 				onChange={(departmentId) => {

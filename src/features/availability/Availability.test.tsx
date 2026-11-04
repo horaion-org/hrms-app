@@ -219,7 +219,7 @@ describe("Availability", () => {
 		);
 		expect(
 			screen.getByRole("list", { name: "Active filters" })
-		).toHaveTextContent("Department: Kitchen");
+		).toHaveTextContent("Department: Main branch › Kitchen");
 		await user.click(screen.getByRole("button", { name: "Clear filters" }));
 		await waitFor(() => {
 			expect(router.state.location.search).toEqual({ view: "team" });

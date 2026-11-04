@@ -273,10 +273,31 @@ describe("Leave", () => {
 			"page=0&size=10&sort=requestedAt%2Cdesc&branchId=b-1",
 			"page=0&size=10&sort=requestedAt%2Cdesc",
 		]);
-		// The Branch is scope, not a filter: no chip.
+		// The Branch is scope, not a filter: no chip. Every Department stays on offer under its Branch.
 		expect(
 			screen.queryByRole("list", { name: "Active filters" })
 		).not.toBeInTheDocument();
+		await user.click(screen.getByRole("button", { name: "Filters" }));
+		await user.click(screen.getByRole("button", { name: "Department" }));
+		await user.click(
+			within(screen.getByRole("group", { name: "Main branch" })).getByRole(
+				"option",
+				{ name: "Kitchen" }
+			)
+		);
+		await waitFor(() => {
+			expect(router.state.location.search).toEqual({
+				view: "requests",
+				branch: "all",
+				department: "d-2",
+			});
+		});
+		expect(
+			screen.getByRole("list", { name: "Active filters" })
+		).toHaveTextContent("Department: Main branch › Kitchen");
+		expect(listSearchesOf(calls).slice(-1)[0]).toBe(
+			"page=0&size=10&sort=requestedAt%2Cdesc&departmentId=d-2"
+		);
 	});
 
 	it("never selects, shows or asks for a Branch or Department outside the person's scope, whatever the URL says", async () => {
@@ -651,7 +672,7 @@ describe("Leave", () => {
 		);
 		expect(
 			screen.getByRole("list", { name: "Active filters" })
-		).toHaveTextContent("Department: Kitchen");
+		).toHaveTextContent("Department: Main branch › Kitchen");
 
 		await user.click(screen.getByRole("button", { name: "Clear filters" }));
 		await waitFor(() => {

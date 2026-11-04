@@ -44,6 +44,26 @@ const renderWith = (
 };
 
 describe("DepartmentFilter", () => {
+	it("given_allBranches_when_opened_then_offersEveryDepartmentUnderItsBranch", async () => {
+		const user = userEvent.setup();
+		const { onChange } = renderWith({ branchId: "all" });
+
+		await user.click(screen.getByRole("button", { name: "Department" }));
+
+		expect(
+			within(screen.getByRole("group", { name: "Orchard" }))
+				.getAllByRole("option")
+				.map((option) => option.textContent)
+		).toEqual(["Bar", "Kitchen"]);
+		await user.click(
+			within(screen.getByRole("group", { name: "Tampines" })).getByRole(
+				"option",
+				{ name: "Front" }
+			)
+		);
+		expect(onChange).toHaveBeenCalledWith("d-3");
+	});
+
 	it("given_oneBranch_when_opened_then_offersOnlyItsDepartmentsWithoutGroups", async () => {
 		const user = userEvent.setup();
 		renderWith({ branchId: "b-1" });

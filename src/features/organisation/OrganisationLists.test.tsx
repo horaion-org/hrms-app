@@ -922,7 +922,7 @@ describe("Job titles", () => {
 		]);
 		expect(
 			screen.getByRole("list", { name: "Active filters" })
-		).toHaveTextContent("Department: Kitchen");
+		).toHaveTextContent("Department: Orchard › Kitchen");
 
 		await user.click(screen.getByRole("button", { name: "Clear filters" }));
 
@@ -933,6 +933,39 @@ describe("Job titles", () => {
 		expect(screen.getByRole("button", { name: "Branch" })).toHaveTextContent(
 			"Orchard"
 		);
+	});
+
+	it("offers every Department under its Branch while All branches is chosen", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...baseRoutes(),
+			[JOB_TITLES]: pageReply([jobTitle("j-1", "Shift supervisor")]),
+		});
+		const opened = await open("/organisation/job-titles?branch=all");
+		await screen.findByRole("table", { name: "Job titles" });
+
+		await user.click(screen.getByRole("button", { name: "Filters" }));
+		await user.click(screen.getByRole("button", { name: "Department" }));
+		await user.click(
+			within(screen.getByRole("group", { name: "Tampines" })).getByRole(
+				"option",
+				{ name: "Front" }
+			)
+		);
+
+		await waitFor(() => {
+			expect(opened.router.state.location.search).toEqual({
+				branch: "all",
+				department: "d-3",
+			});
+		});
+		expect(
+			screen.getByRole("list", { name: "Active filters" })
+		).toHaveTextContent("Department: Tampines › Front");
+		expect(searchesOf(calls, "/api/v1/companies/c-1/job-titles")).toEqual([
+			"size=100&sort=name%2Casc",
+			"size=100&sort=name%2Casc&departmentId=d-3",
+		]);
 	});
 
 	it("never selects, shows or asks for a Department outside the person's scope, whatever the URL says", async () => {
