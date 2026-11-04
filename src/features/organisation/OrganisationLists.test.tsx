@@ -573,7 +573,7 @@ describe("Branches", () => {
 });
 
 describe("Departments", () => {
-	it("narrows to the Branch chosen, kept in the URL, without a Branch column", async () => {
+	it("starts on the first Branch by name without a Branch column, and offers All branches last", async () => {
 		const user = userEvent.setup();
 		const calls = stubApi({
 			...baseRoutes(),
@@ -583,32 +583,38 @@ describe("Departments", () => {
 		await screen.findByRole("table", { name: "Departments" });
 
 		expect(screen.getByRole("button", { name: "Branch" })).toHaveTextContent(
-			"All branches"
+			"Orchard"
 		);
-		expect(
-			screen.queryByRole("button", { name: "Department" })
-		).not.toBeInTheDocument();
-		await user.click(screen.getByRole("button", { name: "Branch" }));
-		await user.click(screen.getByRole("option", { name: "Orchard" }));
-
-		await waitFor(() => {
-			expect(searchesOf(calls, "/api/v1/companies/c-1/departments")).toEqual([
-				"size=100&sort=name%2Casc",
-				"size=100&sort=name%2Casc&branchId=b-1",
-			]);
-		});
-		expect(opened.router.state.location.search).toEqual({ branch: "b-1" });
-		expect(
+		const headers = (): Array<string | null> =>
 			within(screen.getByRole("table", { name: "Departments" }))
 				.getAllByRole("columnheader")
-				.map((header) => header.textContent)
-		).toEqual([
+				.map((header) => header.textContent);
+		expect(headers()).toEqual([
 			"Select all",
 			"Department name",
 			"Status",
 			"Created",
 			"Actions",
 		]);
+		// Departments are the list itself: their Filters hold no Department.
+		await user.click(screen.getByRole("button", { name: "Filters" }));
+		expect(
+			screen.queryByRole("button", { name: "Department" })
+		).not.toBeInTheDocument();
+		await user.keyboard("{Escape}");
+		await user.click(screen.getByRole("button", { name: "Branch" }));
+		await user.click(screen.getByRole("option", { name: "All branches" }));
+
+		await waitFor(() => {
+			expect(searchesOf(calls, "/api/v1/companies/c-1/departments")).toEqual([
+				"size=100&sort=name%2Casc&branchId=b-1",
+				"size=100&sort=name%2Casc",
+			]);
+		});
+		expect(opened.router.state.location.search).toEqual({ branch: "all" });
+		await waitFor(() => {
+			expect(headers()).toContain("Branch");
+		});
 	});
 
 	it("shows when each department was created and sorts by it on the server", async () => {
@@ -617,7 +623,7 @@ describe("Departments", () => {
 			...baseRoutes(),
 			[DEPARTMENTS]: pageReply([department("d-1", "Front Office")]),
 		});
-		await open("/organisation/departments");
+		await open("/organisation/departments?branch=all");
 		const table = await screen.findByRole("table", { name: "Departments" });
 		await within(table).findByText("Front Office");
 
@@ -636,7 +642,7 @@ describe("Departments", () => {
 			...baseRoutes(),
 			[DEPARTMENTS]: pageReply([department("d-1", "Front Office")]),
 		});
-		await open("/organisation/departments");
+		await open("/organisation/departments?branch=all");
 
 		expect(
 			await screen.findByRole("heading", { level: 1, name: "Departments" })
@@ -672,7 +678,7 @@ describe("Departments", () => {
 			...baseRoutes(),
 			[DEPARTMENTS]: pageReply([department("d-1", "Front Office")]),
 		});
-		await open("/organisation/departments");
+		await open("/organisation/departments?branch=all");
 		await screen.findByRole("table", { name: "Departments" });
 
 		expect(
@@ -713,15 +719,16 @@ describe("Departments", () => {
 		const opened = await open("/organisation/departments?branch=b-2");
 		await screen.findByRole("table", { name: "Departments" });
 
-		expect(screen.getByRole("button", { name: "Branch" })).toHaveTextContent(
-			"All branches"
-		);
+		// The one Branch in scope, named as text.
+		expect(
+			within(screen.getByRole("banner")).getByText("Orchard")
+		).toBeVisible();
 		await waitFor(() => {
 			expect(opened.router.state.location.search).toEqual({});
 		});
 		expect(
 			searchesOf(calls, "/api/v1/companies/c-1/departments").every(
-				(search) => !search.includes("branchId")
+				(search) => !search.includes("b-2")
 			)
 		).toBe(true);
 	});
@@ -873,7 +880,7 @@ describe("System roles", () => {
 });
 
 describe("Job titles", () => {
-	it("narrows to a Branch, then a Department, kept in the URL, and drops the columns they fix", async () => {
+	it("narrows the default Branch to a Department, kept in the URL, and drops the columns they fix", async () => {
 		const user = userEvent.setup();
 		const calls = stubApi({
 			...baseRoutes(),
@@ -882,29 +889,24 @@ describe("Job titles", () => {
 		const opened = await open("/organisation/job-titles");
 		await screen.findByRole("table", { name: "Job titles" });
 
-		await user.click(screen.getByRole("button", { name: "Filters" }));
-		// Department waits for one Branch, chosen in the header.
-		expect(
-			screen.queryByRole("button", { name: "Department" })
-		).not.toBeInTheDocument();
-		await user.keyboard("{Escape}");
-		await user.click(screen.getByRole("button", { name: "Branch" }));
-		await user.click(screen.getByRole("option", { name: "Orchard" }));
+		expect(screen.getByRole("button", { name: "Branch" })).toHaveTextContent(
+			"Orchard"
+		);
 		await user.click(screen.getByRole("button", { name: "Filters" }));
 		await user.click(screen.getByRole("button", { name: "Department" }));
+		// One Branch: only its Departments, with no Branch headings.
+		expect(
+			within(screen.getByRole("listbox")).queryByRole("group")
+		).not.toBeInTheDocument();
 		await user.click(screen.getByRole("option", { name: "Kitchen" }));
 
 		await waitFor(() => {
 			expect(searchesOf(calls, "/api/v1/companies/c-1/job-titles")).toEqual([
-				"size=100&sort=name%2Casc",
 				"size=100&sort=name%2Casc&branchId=b-1",
 				"size=100&sort=name%2Casc&branchId=b-1&departmentId=d-1",
 			]);
 		});
-		expect(opened.router.state.location.search).toEqual({
-			branch: "b-1",
-			department: "d-1",
-		});
+		expect(opened.router.state.location.search).toEqual({ department: "d-1" });
 		const table = screen.getByRole("table", { name: "Job titles" });
 		expect(
 			within(table)
@@ -926,8 +928,11 @@ describe("Job titles", () => {
 
 		// The Branch is the header's scope, not a filter: clearing keeps it.
 		await waitFor(() => {
-			expect(opened.router.state.location.search).toEqual({ branch: "b-1" });
+			expect(opened.router.state.location.search).toEqual({});
 		});
+		expect(screen.getByRole("button", { name: "Branch" })).toHaveTextContent(
+			"Orchard"
+		);
 	});
 
 	it("never selects, shows or asks for a Department outside the person's scope, whatever the URL says", async () => {
@@ -940,9 +945,9 @@ describe("Job titles", () => {
 		await open("/organisation/job-titles?branch=b-1&department=d-9");
 		await screen.findByRole("table", { name: "Job titles" });
 
-		expect(screen.getByRole("button", { name: "Branch" })).toHaveTextContent(
-			"Orchard"
-		);
+		expect(
+			within(screen.getByRole("banner")).getByText("Orchard")
+		).toBeVisible();
 		expect(
 			screen.queryByRole("list", { name: "Active filters" })
 		).not.toBeInTheDocument();
@@ -957,7 +962,7 @@ describe("Job titles", () => {
 			...baseRoutes(),
 			[JOB_TITLES]: pageReply([jobTitle("j-1", "Shift supervisor")]),
 		});
-		await open("/organisation/job-titles");
+		await open("/organisation/job-titles?branch=all");
 		const table = await screen.findByRole("table", { name: "Job titles" });
 		await within(table).findByText("Shift supervisor");
 
@@ -980,7 +985,7 @@ describe("Job titles", () => {
 				jobTitle("j-2", "Trainee", { status: "INACTIVE" }),
 			]),
 		});
-		await open("/organisation/job-titles");
+		await open("/organisation/job-titles?branch=all");
 
 		expect(
 			await screen.findByRole("heading", { level: 1, name: "Job titles" })
@@ -1222,6 +1227,27 @@ describe("Job titles", () => {
 });
 
 describe("Organisation navigation", () => {
+	it.each([
+		{ path: "/organisation/branches", table: "Branches" },
+		{ path: "/organisation/system-roles", table: "System roles" },
+	])(
+		"shows no Branch in the header on $table, which lists nothing by Branch",
+		async ({ path, table }) => {
+			stubApi({
+				...baseRoutes(),
+				[BRANCHES]: pageReply([branch("b-1", "Orchard")]),
+				[ACCESS_ROLES]: pageReply([]),
+			});
+			await open(path);
+			await screen.findByRole("table", { name: table });
+
+			// Orchard and Tampines are both in reach, yet the header's slot stays empty.
+			expect(
+				within(screen.getByRole("banner")).queryByText("Branch")
+			).not.toBeInTheDocument();
+		}
+	);
+
 	it("opens each list from its overview card and keeps Organisation current", async () => {
 		const user = userEvent.setup();
 		stubApi({

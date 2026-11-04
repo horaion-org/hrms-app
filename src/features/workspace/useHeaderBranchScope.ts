@@ -13,7 +13,6 @@ import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 /** Stands in while no route declares a scope, so the hooks below always run. */
 const NO_SCOPE: BranchScope = { keys: [], rulesFor: () => undefined };
 const NO_RULES: UnitSelectionRules = {
-	allowAllBranches: true,
 	withDepartment: false,
 };
 

@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactElement } from "react";
 import { I18nextProvider } from "react-i18next";
@@ -21,7 +21,6 @@ const Field = ({
 	onChange: (departmentId: string | undefined) => void;
 }): ReactElement => {
 	const selection = useUnitSelection("c-1", [READ], requested, {
-		allowAllBranches: true,
 		withDepartment: true,
 	});
 	return <DepartmentFilter selection={selection} onChange={onChange} />;
@@ -45,12 +44,18 @@ const renderWith = (
 };
 
 describe("DepartmentFilter", () => {
-	it("given_everyBranch_when_rendered_then_offersNothingToChoose", () => {
-		renderWith({});
+	it("given_oneBranch_when_opened_then_offersOnlyItsDepartmentsWithoutGroups", async () => {
+		const user = userEvent.setup();
+		renderWith({ branchId: "b-1" });
+
+		await user.click(screen.getByRole("button", { name: "Department" }));
 
 		expect(
-			screen.queryByRole("button", { name: "Department" })
+			within(screen.getByRole("listbox")).queryByRole("group")
 		).not.toBeInTheDocument();
+		expect(
+			screen.getAllByRole("option").map((option) => option.textContent)
+		).toEqual(["All departments", "Bar", "Kitchen"]);
 	});
 
 	it("given_oneBranchWithSeveralDepartments_when_oneIsChosen_then_reportsIt", async () => {

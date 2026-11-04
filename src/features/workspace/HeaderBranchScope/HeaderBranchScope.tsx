@@ -1,11 +1,10 @@
 import { useId } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
-import { FormRow, formRowIds } from "@/components/forms/FormRow";
 import { Select } from "@/components/forms/Select";
-import type { BranchChoice } from "@/features/workspace/unitChoices";
 import {
 	ALL_BRANCHES,
+	offersAllBranches,
 	type ResolvedUnitSelection,
 } from "@/features/workspace/unitSelection";
 
@@ -16,51 +15,54 @@ export type HeaderBranchScopeProps = {
 	onChange: (branchId: string) => void;
 };
 
+const labelClasses = "hidden text-sm text-neutral-800 sm:inline";
+
 /**
- * The Branch the page lists, in the app header: the one scope shared by
- * every list. "All branches" is offered where the page allows it. When the
- * offered Branches span several countries, each is named with its country
- * ("Singapore › Orchard"), so there is no separate Country control. A
- * single Branch the page must show reads as text.
+ * The Branch the page lists, at the right of the app header, in the same
+ * place on every page that lists by Branch: the one Branch control there
+ * is. One Branch in reach reads as text. Several are a choice, grouped by
+ * country when they span several, with "All branches" last. The label
+ * shows from `sm` up; below it, it still names the control for assistive
+ * technology.
  */
 export const HeaderBranchScope = ({
 	selection,
 	onChange,
 }: HeaderBranchScopeProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
-	const id = useId();
-	const { branch, branches, branchMode, rules } = selection;
+	const labelId = useId();
+	const { branch, branches, branchMode } = selection;
 	const label = t("workspace.branchSelector.branch");
 	if (branchMode === "static")
 		return (
-			<p className="flex items-center gap-6 text-base text-neutral-800">
-				{label}
+			<p className="flex items-center gap-3">
+				<span className={labelClasses}>{label}</span>
 				<span className="font-semibold text-ink-blue-900">{branch?.name}</span>
 			</p>
 		);
 	const severalCountries =
 		new Set(branches.map((each) => each.country)).size > 1;
-	const regionName = new Intl.DisplayNames([i18n.language], { type: "region" });
-	const nameOf = (choice: BranchChoice): string =>
-		severalCountries
-			? t("workspace.headerScope.branchInCountry", {
-					country: regionName.of(choice.country) ?? choice.country,
-					branch: choice.name,
-				})
-			: choice.name;
+	const regionName = new Intl.DisplayNames([i18n.language], {
+		type: "region",
+	});
 	return (
-		<FormRow
-			className="sm:[&>label]:self-center"
-			fieldWidth="sm:w-64"
-			htmlFor={id}
-			label={label}
-		>
+		<div className="flex items-center gap-3">
+			<span className={labelClasses} id={labelId}>
+				{label}
+			</span>
 			<Select
-				aria-labelledby={formRowIds(id).labelId}
-				className="w-full font-semibold text-ink-blue-900"
+				aria-labelledby={labelId}
+				className="w-40 font-semibold text-ink-blue-900 sm:w-56"
 				value={branch?.branchId ?? ALL_BRANCHES}
 				options={[
-					...(rules.allowAllBranches
+					...branches.map((choice) => ({
+						value: choice.branchId,
+						label: choice.name,
+						...(severalCountries
+							? { group: regionName.of(choice.country) ?? choice.country }
+							: {}),
+					})),
+					...(offersAllBranches(branches)
 						? [
 								{
 									value: ALL_BRANCHES,
@@ -68,13 +70,9 @@ export const HeaderBranchScope = ({
 								},
 							]
 						: []),
-					...branches.map((choice) => ({
-						value: choice.branchId,
-						label: nameOf(choice),
-					})),
 				]}
 				onChange={onChange}
 			/>
-		</FormRow>
+		</div>
 	);
 };

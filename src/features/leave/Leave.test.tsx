@@ -197,9 +197,9 @@ describe("Leave", () => {
 		).toBeVisible();
 		const table = await screen.findByRole("table", { name: "Requests" });
 		await within(table).findByText("Aisha Rahman");
-		// The header holds the Branch; Branches by country, then name: Malaysia comes first.
+		// The header holds the Branch: with no home Branch, the first in scope by name.
 		expect(screen.getByRole("button", { name: "Branch" })).toHaveTextContent(
-			"Malaysia › Kuala Lumpur branch"
+			"Jurong branch"
 		);
 		expect(screen.getByText("1–10 of 24 entries")).toBeVisible();
 		expect(within(table).getByText("Rejected")).toHaveClass("bg-error-100");
@@ -208,7 +208,7 @@ describe("Leave", () => {
 			expect(router.state.location.search).toEqual({ view: "requests" });
 		});
 		expect(listSearchesOf(calls)).toEqual([
-			"page=0&size=10&sort=requestedAt%2Cdesc&branchId=b-3",
+			"page=0&size=10&sort=requestedAt%2Cdesc&branchId=b-2",
 		]);
 		expect(
 			calls.filter((call) => call.path.endsWith("/branches"))
@@ -223,16 +223,16 @@ describe("Leave", () => {
 
 		await user.click(screen.getByRole("button", { name: "Branch" }));
 		await user.click(
-			screen.getByRole("option", { name: "Singapore › Jurong branch" })
+			screen.getByRole("option", { name: "Kuala Lumpur branch" })
 		);
 		await waitFor(() => {
 			expect(router.state.location.search).toEqual({
 				view: "requests",
-				branch: "b-2",
+				branch: "b-3",
 			});
 		});
 		expect(screen.getByRole("button", { name: "Branch" })).toHaveTextContent(
-			"Singapore › Jurong branch"
+			"Kuala Lumpur branch"
 		);
 		await user.click(screen.getByRole("button", { name: "Filters" }));
 		await user.click(screen.getByRole("button", { name: "Showing" }));
@@ -242,7 +242,7 @@ describe("Leave", () => {
 		await waitFor(() => {
 			expect(router.state.location.search).toEqual({
 				view: "requests",
-				branch: "b-2",
+				branch: "b-3",
 				status: "PENDING",
 				sort: "displayName,asc",
 				page: 2,
@@ -250,7 +250,7 @@ describe("Leave", () => {
 		});
 		const searches = listSearchesOf(calls);
 		expect(searches[searches.length - 1]).toBe(
-			"page=1&size=10&sort=displayName%2Casc&status=PENDING&branchId=b-2"
+			"page=1&size=10&sort=displayName%2Casc&status=PENDING&branchId=b-3"
 		);
 	});
 
@@ -273,13 +273,9 @@ describe("Leave", () => {
 			"page=0&size=10&sort=requestedAt%2Cdesc&branchId=b-1",
 			"page=0&size=10&sort=requestedAt%2Cdesc",
 		]);
-		// The Branch is scope, not a filter: no chip, and Department waits for one Branch.
+		// The Branch is scope, not a filter: no chip.
 		expect(
 			screen.queryByRole("list", { name: "Active filters" })
-		).not.toBeInTheDocument();
-		await user.click(screen.getByRole("button", { name: "Filters" }));
-		expect(
-			screen.queryByRole("button", { name: "Department" })
 		).not.toBeInTheDocument();
 	});
 
@@ -291,9 +287,10 @@ describe("Leave", () => {
 		);
 		await screen.findByText("Aisha Rahman");
 
-		expect(screen.getByRole("button", { name: "Branch" })).toHaveTextContent(
-			"Main branch"
-		);
+		// One Branch in scope: the header names it as text.
+		expect(
+			within(screen.getByRole("banner")).getByText("Main branch")
+		).toBeVisible();
 		await waitFor(() => {
 			expect(router.state.location.search).not.toHaveProperty("branch");
 		});
@@ -327,6 +324,17 @@ describe("Leave", () => {
 		await waitFor(() => {
 			expect(listSearchesOf(calls)).toHaveLength(2);
 		});
+	});
+
+	it("draws the timeline across every Branch once All branches is chosen", async () => {
+		const calls = stubApi(routes());
+		await open("/leave?view=timeline&branch=all");
+
+		await screen.findByRole("button", { name: "Next period" });
+		await waitFor(() => {
+			expect(listSearchesOf(calls)).toHaveLength(1);
+		});
+		expect(listSearchesOf(calls)[0]).not.toContain("branchId");
 	});
 
 	it("approves and rejects through the member's routes and reloads the list", async () => {
@@ -498,9 +506,9 @@ describe("Leave", () => {
 		expect(
 			screen.queryByRole("button", { name: "Country" })
 		).not.toBeInTheDocument();
-		expect(screen.getByRole("button", { name: "Branch" })).toHaveTextContent(
-			"Main branch"
-		);
+		expect(
+			within(screen.getByRole("banner")).getByText("Main branch")
+		).toBeVisible();
 		expect(listSearchesOf(calls)).toEqual([
 			"page=0&size=10&sort=requestedAt%2Cdesc&branchId=b-1",
 		]);
@@ -613,16 +621,16 @@ describe("Leave", () => {
 		expect(searchesOf(calls, LEAVE_PATH)).toEqual([PENDING_COUNT_SEARCH]);
 	});
 
-	it("narrows the timeline's one Branch to a Department and clears it back", async () => {
+	it("narrows the timeline's Branch to a Department and clears it back", async () => {
 		const user = userEvent.setup();
 		const calls = stubApi(routes());
 		const { router } = await open("/leave?view=timeline&branch=b-1");
 		await screen.findByRole("button", { name: "Next period" });
 
+		// The same header Branch as every page: "All branches" last.
 		await user.click(screen.getByRole("button", { name: "Branch" }));
-		expect(
-			screen.queryByRole("option", { name: "All branches" })
-		).not.toBeInTheDocument();
+		const options = screen.getAllByRole("option");
+		expect(options[options.length - 1]).toHaveTextContent("All branches");
 		await user.keyboard("{Escape}");
 		await user.click(screen.getByRole("button", { name: "Filters" }));
 		// The timeline has no status filter.

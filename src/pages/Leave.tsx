@@ -27,9 +27,8 @@ import {
 	leaveQueryOf,
 	myLeaveQueryOf,
 	pageParameter,
-	REQUESTS_UNIT_RULES,
+	LEAVE_TEAM_UNIT_RULES,
 	sortParameter,
-	TIMELINE_UNIT_RULES,
 	timelineQueryOf,
 	type LeaveSearch,
 } from "@/features/leave/leaveSearch";
@@ -117,7 +116,7 @@ export const Leave = (): FunctionComponent => {
 		companyId,
 		LEAVE_READ_KEYS,
 		requested,
-		view === "timeline" ? TIMELINE_UNIT_RULES : REQUESTS_UNIT_RULES
+		LEAVE_TEAM_UNIT_RULES
 	);
 	const shownUnits = selectedUnits(units);
 	const noBranches =
@@ -136,7 +135,7 @@ export const Leave = (): FunctionComponent => {
 	);
 	const window = useLeaveRequests(
 		companyId,
-		units.branch && timelineQueryOf(shownUnits, range),
+		units.branches.length > 0 ? timelineQueryOf(shownUnits, range) : undefined,
 		view === "timeline"
 	);
 	const actions = useLeaveActions(companyId);

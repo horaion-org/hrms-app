@@ -5,6 +5,7 @@ import type {
 } from "@/features/workspace/unitChoices";
 import {
 	ALL_BRANCHES,
+	offersAllBranches,
 	resolveUnitSelection,
 	selectedUnits,
 	staleBranch,
@@ -39,51 +40,104 @@ const kitchen = department("d-1", "Kitchen", orchard);
 const bar = department("d-2", "Bar", orchard);
 const floor = department("d-3", "Floor", jurong);
 
-const TABLE: UnitSelectionRules = {
-	allowAllBranches: true,
-	withDepartment: true,
-};
-const GRID: UnitSelectionRules = {
-	allowAllBranches: false,
-	withDepartment: true,
-};
-const FIRST_THEN_ALL: UnitSelectionRules = {
-	allowAllBranches: true,
-	startOnFirstBranch: true,
-	withDepartment: true,
-};
-const BRANCH_ONLY: UnitSelectionRules = {
-	allowAllBranches: true,
-	withDepartment: false,
-};
+const WITH_DEPARTMENT: UnitSelectionRules = { withDepartment: true };
+const BRANCH_ONLY: UnitSelectionRules = { withDepartment: false };
 
-describe("resolveUnitSelection", () => {
-	it("given_noUnitsRequested_when_allIsAllowed_then_showsEveryBranchAndWaitsForOneBeforeDepartments", () => {
+describe("resolveUnitSelection: the default Branch", () => {
+	it("given_noBranchRequested_when_thePersonHasAHomeBranch_then_showsIt", () => {
 		const resolved = resolveUnitSelection(
 			[orchard, jurong],
 			[kitchen, bar, floor],
 			{},
-			TABLE
-		);
-
-		expect(resolved.branch).toBeUndefined();
-		expect(resolved.department).toBeUndefined();
-		expect(resolved.branchMode).toBe("select");
-		expect(resolved.departmentMode).toBe("disabled");
-		expect(resolved.departments).toEqual([]);
-	});
-
-	it("given_noUnitsRequested_when_allIsNotAllowed_then_showsTheFirstBranch", () => {
-		const resolved = resolveUnitSelection(
-			[orchard, jurong],
-			[kitchen, bar, floor],
-			{},
-			GRID
+			WITH_DEPARTMENT,
+			"b-1"
 		);
 
 		expect(resolved.branch).toBe(orchard);
 		expect(resolved.departments).toEqual([kitchen, bar]);
+	});
+
+	it("given_noBranchRequested_when_thePersonHasNoHomeBranch_then_showsTheFirstByName", () => {
+		const resolved = resolveUnitSelection(
+			[orchard, jurong],
+			[kitchen, bar, floor],
+			{},
+			WITH_DEPARTMENT
+		);
+
+		expect(resolved.branch).toBe(jurong);
+		expect(resolved.departments).toEqual([floor]);
+	});
+
+	it("given_aHomeBranchOutOfReach_when_resolved_then_showsTheFirstByName", () => {
+		expect(
+			resolveUnitSelection([orchard, jurong], [], {}, BRANCH_ONLY, "b-9").branch
+		).toBe(jurong);
+	});
+
+	it("given_aBranchNoLongerOffered_when_resolved_then_fallsBackToTheDefault", () => {
+		expect(
+			resolveUnitSelection(
+				[orchard, jurong],
+				[],
+				{ branchId: "gone" },
+				BRANCH_ONLY,
+				"b-1"
+			).branch
+		).toBe(orchard);
+	});
+});
+
+describe("resolveUnitSelection: All branches", () => {
+	it("given_allRequested_when_severalBranchesAreInReach_then_showsEveryBranchAndSendsNoBranch", () => {
+		const resolved = resolveUnitSelection(
+			[orchard, jurong],
+			[kitchen, bar, floor],
+			{ branchId: ALL_BRANCHES },
+			WITH_DEPARTMENT,
+			"b-1"
+		);
+
+		expect(resolved.branch).toBeUndefined();
+		expect(selectedUnits(resolved)).toEqual({
+			branchId: undefined,
+			departmentId: undefined,
+		});
+	});
+
+	it("given_allRequested_when_oneBranchIsInReach_then_showsThatBranch", () => {
+		expect(
+			resolveUnitSelection(
+				[orchard],
+				[kitchen],
+				{ branchId: ALL_BRANCHES },
+				WITH_DEPARTMENT
+			).branch
+		).toBe(orchard);
+	});
+
+	it("given_severalBranches_when_offered_then_allIsOffered", () => {
+		expect(offersAllBranches([orchard, jurong])).toBe(true);
+		expect(offersAllBranches([orchard])).toBe(false);
+	});
+});
+
+describe("resolveUnitSelection: the Department", () => {
+	it("given_allBranches_when_resolved_then_offersEveryDepartmentInReach", () => {
+		const resolved = resolveUnitSelection(
+			[orchard, jurong],
+			[kitchen, bar, floor],
+			{ branchId: ALL_BRANCHES, departmentId: "d-3" },
+			WITH_DEPARTMENT
+		);
+
+		expect(resolved.departments).toEqual([kitchen, bar, floor]);
 		expect(resolved.departmentMode).toBe("select");
+		expect(resolved.department).toBe(floor);
+		expect(selectedUnits(resolved)).toEqual({
+			branchId: undefined,
+			departmentId: "d-3",
+		});
 	});
 
 	it("given_aBranchAndOneOfItsDepartments_when_resolved_then_showsBoth", () => {
@@ -91,7 +145,7 @@ describe("resolveUnitSelection", () => {
 			[orchard, jurong],
 			[kitchen, bar, floor],
 			{ branchId: "b-1", departmentId: "d-2" },
-			TABLE
+			WITH_DEPARTMENT
 		);
 
 		expect(resolved.branch).toBe(orchard);
@@ -103,57 +157,32 @@ describe("resolveUnitSelection", () => {
 	});
 
 	it("given_aDepartmentOfAnotherBranch_when_resolved_then_dropsIt", () => {
-		const resolved = resolveUnitSelection(
-			[orchard, jurong],
-			[kitchen, bar, floor],
-			{ branchId: "b-1", departmentId: "d-3" },
-			TABLE
-		);
-
-		expect(resolved.department).toBeUndefined();
-	});
-
-	it("given_aBranchNoLongerOffered_when_resolved_then_fallsBackToTheDefault", () => {
 		expect(
-			resolveUnitSelection([orchard], [], { branchId: "gone" }, TABLE).branch
+			resolveUnitSelection(
+				[orchard, jurong],
+				[kitchen, bar, floor],
+				{ branchId: "b-1", departmentId: "d-3" },
+				WITH_DEPARTMENT
+			).department
 		).toBeUndefined();
-		expect(
-			resolveUnitSelection([orchard, jurong], [], { branchId: "gone" }, GRID)
-				.branch
-		).toBe(orchard);
-	});
-
-	it("given_oneBranchInReach_when_allIsNotAllowed_then_showsItAsText", () => {
-		expect(
-			resolveUnitSelection([orchard], [kitchen, bar], {}, GRID).branchMode
-		).toBe("static");
-	});
-
-	it("given_oneBranchInReach_when_allIsAllowed_then_stillOffersAll", () => {
-		expect(
-			resolveUnitSelection([orchard], [kitchen, bar], {}, TABLE).branchMode
-		).toBe("select");
 	});
 
 	it("given_oneDepartmentInTheBranch_when_resolved_then_showsItAsText", () => {
 		expect(
-			resolveUnitSelection([jurong], [floor], { branchId: "b-2" }, TABLE)
-				.departmentMode
+			resolveUnitSelection(
+				[jurong],
+				[floor],
+				{ branchId: "b-2" },
+				WITH_DEPARTMENT
+			).departmentMode
 		).toBe("static");
 	});
 
 	it("given_noDepartmentInTheBranch_when_resolved_then_hidesTheDepartmentLevel", () => {
 		expect(
-			resolveUnitSelection([orchard], [], { branchId: "b-1" }, TABLE)
+			resolveUnitSelection([orchard], [], { branchId: "b-1" }, WITH_DEPARTMENT)
 				.departmentMode
 		).toBe("hidden");
-	});
-
-	it("given_noBranchInReach_when_resolved_then_hidesBothLevels", () => {
-		const resolved = resolveUnitSelection([], [], {}, TABLE);
-
-		expect(resolved.branchMode).toBe("hidden");
-		expect(resolved.departmentMode).toBe("hidden");
 	});
 
 	it("given_aBranchOnlyList_when_aDepartmentIsRequested_then_ignoresIt", () => {
@@ -169,48 +198,30 @@ describe("resolveUnitSelection", () => {
 	});
 });
 
-describe("a page that starts on its first Branch but offers All branches", () => {
-	it("given_noBranchRequested_when_resolved_then_showsTheFirstBranch", () => {
-		const resolved = resolveUnitSelection(
-			[orchard, jurong],
-			[kitchen, bar, floor],
-			{},
-			FIRST_THEN_ALL
-		);
-
-		expect(resolved.branch).toBe(orchard);
-		expect(resolved.branchMode).toBe("select");
-	});
-
-	it("given_allBranchesRequested_when_resolved_then_showsEveryBranchAndSendsNoBranch", () => {
-		const resolved = resolveUnitSelection(
-			[orchard, jurong],
-			[kitchen, bar, floor],
-			{ branchId: ALL_BRANCHES },
-			FIRST_THEN_ALL
-		);
-
-		expect(resolved.branch).toBeUndefined();
-		expect(selectedUnits(resolved)).toEqual({
-			branchId: undefined,
-			departmentId: undefined,
-		});
-	});
-
-	it("given_allBranchesRequested_when_allIsNotAllowed_then_fallsBackToTheFirstBranch", () => {
+describe("resolveUnitSelection: how the Branch is shown", () => {
+	it("given_oneBranchInReach_when_resolved_then_showsItAsText", () => {
 		expect(
-			resolveUnitSelection(
-				[orchard, jurong],
-				[],
-				{ branchId: ALL_BRANCHES },
-				GRID
-			).branch
-		).toBe(orchard);
+			resolveUnitSelection([orchard], [kitchen, bar], {}, WITH_DEPARTMENT)
+				.branchMode
+		).toBe("static");
+	});
+
+	it("given_severalBranches_when_resolved_then_offersAChoice", () => {
+		expect(
+			resolveUnitSelection([orchard, jurong], [], {}, BRANCH_ONLY).branchMode
+		).toBe("select");
+	});
+
+	it("given_noBranchInReach_when_resolved_then_hidesBothLevels", () => {
+		const resolved = resolveUnitSelection([], [], {}, WITH_DEPARTMENT);
+
+		expect(resolved.branchMode).toBe("hidden");
+		expect(resolved.departmentMode).toBe("hidden");
 	});
 });
 
 describe("staleBranch", () => {
-	const resolved = resolveUnitSelection([orchard, jurong], [], {}, TABLE);
+	const resolved = resolveUnitSelection([orchard, jurong], [], {}, BRANCH_ONLY);
 
 	it("given_noChoiceAllOrAnOfferedBranch_when_checked_then_isNotStale", () => {
 		expect(staleBranch(resolved, {})).toBe(false);

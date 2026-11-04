@@ -71,9 +71,8 @@ export const viewOf = (
 ): AvailabilityView | undefined =>
 	requested && views.includes(requested) ? requested : views[0];
 
-/** The team tab is a week grid of people, so it always shows one Branch, and every Department unless one is chosen. */
+/** The team tab lists part-timers by Branch, and by Department within it. */
 export const TEAM_UNIT_RULES: UnitSelectionRules = {
-	allowAllBranches: false,
 	withDepartment: true,
 };
 

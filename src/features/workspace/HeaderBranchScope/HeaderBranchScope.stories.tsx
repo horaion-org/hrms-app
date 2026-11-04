@@ -7,7 +7,6 @@ import { AppHeader } from "@/components/layout/AppHeader";
 import { storyProviders } from "@/features/organisation/storyApi";
 import { workspaceQuery, type Workspace } from "@/features/workspace/api";
 import { HeaderBranchScope } from "@/features/workspace/HeaderBranchScope";
-import type { UnitSelectionRules } from "@/features/workspace/unitSelection";
 import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 
 const branch = (
@@ -40,6 +39,12 @@ client.setQueryData(
 				],
 			},
 			{
+				uuid: "one-branch",
+				name: "One branch",
+				permissions: ["member_profile:read"],
+				branches: [branch("b-2", "Jurong", "SG")],
+			},
+			{
 				uuid: "several",
 				name: "Several countries",
 				permissions: ["member_profile:read"],
@@ -52,20 +57,23 @@ client.setQueryData(
 	})
 );
 
-type StoryArgs = { companyId: string; rules: UnitSelectionRules };
+type StoryArgs = { companyId: string };
 
-/** The control in the app header, holding its choice as the URL would. */
-const Harness = ({ companyId, rules }: StoryArgs): FunctionComponent => {
+/** The control at the right of the app header, holding its choice as the URL would. */
+const Harness = ({ companyId }: StoryArgs): FunctionComponent => {
 	const [branchId, setBranchId] = useState<string>();
 	const selection = useUnitSelection(
 		companyId,
 		["member_profile:read"],
 		{ branchId },
-		rules
+		{ withDepartment: false }
 	);
 	return (
 		<AppHeader
-			title={<HeaderBranchScope selection={selection} onChange={setBranchId} />}
+			title="Welcome, John."
+			actions={
+				<HeaderBranchScope selection={selection} onChange={setBranchId} />
+			}
 		/>
 	);
 };
@@ -74,10 +82,7 @@ const meta = {
 	title: "Features/Workspace/HeaderBranchScope",
 	component: Harness,
 	parameters: { layout: "fullscreen" },
-	args: {
-		companyId: "one-country",
-		rules: { allowAllBranches: true, withDepartment: false },
-	},
+	args: { companyId: "one-country" },
 	decorators: [storyProviders(client)],
 } satisfies Meta<typeof Harness>;
 
@@ -85,13 +90,11 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** A list page: "All branches" first and the default. */
-export const ListPage: Story = {};
+/** Several Branches: the first by name (or the home Branch) by default, "All branches" last. */
+export const SeveralBranches: Story = {};
 
-/** Branches in several countries, each named with its country. */
+/** Branches in several countries, grouped under each country's name. */
 export const SeveralCountries: Story = { args: { companyId: "several" } };
 
-/** A page that always shows one Branch, such as the leave timeline. */
-export const OneBranchPage: Story = {
-	args: { rules: { allowAllBranches: false, withDepartment: false } },
-};
+/** One Branch in reach reads as text, with no "All branches". */
+export const OneBranch: Story = { args: { companyId: "one-branch" } };

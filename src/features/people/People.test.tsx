@@ -25,6 +25,7 @@ const REFRESH = "POST /api/v1/public/sessions/refreshes";
 const ME = "GET /api/v1/me";
 const WORKSPACE = "GET /api/v1/me/workspace";
 const PEOPLE = "GET /api/v1/companies/c-1/member-profiles";
+const MY_PROFILE = "GET /api/v1/companies/c-1/me/profile";
 const PEOPLE_PATH = "/api/v1/companies/c-1/member-profiles";
 const FIRST_PAGE = "page=0&size=10&sort=displayName%2Casc";
 
@@ -156,6 +157,25 @@ const baseRoutes = (
 	[ME]: currentUserReply(),
 	[WORKSPACE]: workspaceReply(permissions),
 });
+
+/** The person's own profile, homed at `branchId`: the header's default Branch. */
+const ownProfileReply = (branchId: string): StubReply => ({
+	status: 200,
+	body: envelope({
+		...person("m-me", "Kent Chua", { branchId }),
+		dateOfBirth: "1990-05-01",
+		employmentType: "FULL_TIME",
+		hireDate: "2026-01-05",
+		probationEndDate: null,
+		endDate: null,
+		reportsTo: null,
+		invitationPending: false,
+	}),
+});
+
+/** The header's Branch when only one is in reach: text, not a control. */
+const headerBranchText = (): HTMLElement =>
+	within(screen.getByRole("banner")).getByText(/Orchard|Jurong|Tampines/u);
 
 const bodyRows = (table: HTMLElement): Array<HTMLElement> =>
 	within(table).getAllByRole("row").slice(1);
@@ -573,12 +593,13 @@ describe("People", () => {
 		const table = await screen.findByRole("table", { name: "People" });
 		expect(await within(table).findByText("Moses Lee")).toBeVisible();
 		expect(screen.getByRole("link", { name: "People" })).toBeVisible();
-		// Every Branch in reach by default, so the URL and the request name none.
-		expect(screen.getByRole("button", { name: "Branch" })).toHaveTextContent(
-			"All branches"
-		);
+		// One Branch in reach: the header names it as text, with no "All branches".
+		expect(
+			screen.queryByRole("button", { name: "Branch" })
+		).not.toBeInTheDocument();
+		expect(headerBranchText()).toHaveTextContent("Orchard");
 		expect(opened.router.state.location.search).toEqual({});
-		expect(peopleCalls(calls)).toEqual([FIRST_PAGE]);
+		expect(peopleCalls(calls)).toEqual([`${FIRST_PAGE}&branchId=b-1`]);
 	});
 
 	it("clears rows read under a grant that shrank, never showing them again (F07)", async () => {
@@ -616,11 +637,11 @@ describe("People", () => {
 			await screen.findByText("You don’t have permission to view this list.")
 		).toBeVisible();
 		// The read key is gone everywhere, so nothing is asked for again.
-		expect(peopleCalls(calls)).toEqual([FIRST_PAGE]);
+		expect(peopleCalls(calls)).toEqual([`${FIRST_PAGE}&branchId=b-1`]);
 		expect(cachedRows()).toEqual([]);
 	});
 
-	it("lists everyone in reach by default and one Branch once chosen", async () => {
+	it("starts on the first Branch by name, grouped by country, with All branches last", async () => {
 		const user = userEvent.setup();
 		const calls = stubApi({
 			...baseRoutes(),
@@ -630,25 +651,24 @@ describe("People", () => {
 		const opened = await open("/people?page=2");
 		await screen.findByText("Moses Lee");
 
-		// The header holds the Branch; Country is folded into its options.
+		// The header holds the Branch; Country groups its options.
 		expect(
 			screen.queryByRole("button", { name: "Country" })
 		).not.toBeInTheDocument();
 		expect(screen.getByRole("button", { name: "Branch" })).toHaveTextContent(
-			"All branches"
+			"Jurong"
 		);
 		expect(opened.router.state.location.search).toEqual({ page: 2 });
 
 		await user.click(screen.getByRole("button", { name: "Branch" }));
+		expect(
+			screen.getAllByRole("option").map((option) => option.textContent)
+		).toEqual(["Kuala Lumpur", "Jurong", "Orchard", "All branches"]);
 		await user.click(
-			screen.getByRole("option", { name: "Singapore › Jurong" })
-		);
-		await waitFor(() => {
-			expect(opened.router.state.location.search).toEqual({ branch: "b-2" });
-		});
-		await user.click(screen.getByRole("button", { name: "Branch" }));
-		await user.click(
-			screen.getByRole("option", { name: "Singapore › Orchard" })
+			within(screen.getByRole("group", { name: "Singapore" })).getByRole(
+				"option",
+				{ name: "Orchard" }
+			)
 		);
 		await waitFor(() => {
 			expect(opened.router.state.location.search).toEqual({ branch: "b-1" });
@@ -660,11 +680,27 @@ describe("People", () => {
 			expect(opened.router.state.location.search).toEqual({ branch: "all" });
 		});
 		expect(peopleCalls(calls)).toEqual([
-			"page=1&size=10&sort=displayName%2Casc",
-			`${FIRST_PAGE}&branchId=b-2`,
+			"page=1&size=10&sort=displayName%2Casc&branchId=b-2",
 			`${FIRST_PAGE}&branchId=b-1`,
 			FIRST_PAGE,
 		]);
+	});
+
+	it("starts on the person's home Branch when they have one", async () => {
+		const calls = stubApi({
+			...baseRoutes(),
+			[WORKSPACE]: branchesWorkspaceReply(["member_profile:read"]),
+			[MY_PROFILE]: ownProfileReply("b-1"),
+			[PEOPLE]: pageReply([person("m-1", "Moses Lee")]),
+		});
+		const opened = await open("/people");
+		await screen.findByText("Moses Lee");
+
+		expect(screen.getByRole("button", { name: "Branch" })).toHaveTextContent(
+			"Orchard"
+		);
+		expect(opened.router.state.location.search).toEqual({});
+		expect(peopleCalls(calls)).toEqual([`${FIRST_PAGE}&branchId=b-1`]);
 	});
 
 	it("narrows a chosen Branch to one Department, and clears the filters but keeps the Branch", async () => {
@@ -723,9 +759,7 @@ describe("People", () => {
 		const opened = await open("/people?branch=b-2&department=d-3");
 		await screen.findByText("Moses Lee");
 
-		expect(screen.getByRole("button", { name: "Branch" })).toHaveTextContent(
-			"All branches"
-		);
+		expect(headerBranchText()).toHaveTextContent("Orchard");
 		await waitFor(() => {
 			expect(opened.router.state.location.search).not.toHaveProperty("branch");
 		});
@@ -735,10 +769,12 @@ describe("People", () => {
 		expect(screen.getByRole("button", { name: "Filters" })).not.toHaveAttribute(
 			"aria-describedby"
 		);
-		// The list falls back to everything in scope; neither id is ever sent.
-		expect(peopleCalls(calls).every((call) => !call.includes("Id="))).toBe(
-			true
-		);
+		// The list falls back to the one Branch in scope; neither id is ever sent.
+		expect(
+			peopleCalls(calls).every(
+				(call) => !call.includes("b-2") && !call.includes("d-3")
+			)
+		).toBe(true);
 	});
 
 	it("never selects, shows or asks for a Department outside the person's scope in a Branch they can see", async () => {
@@ -752,9 +788,7 @@ describe("People", () => {
 		await open("/people?branch=b-1&department=d-2");
 		await screen.findByText("Moses Lee");
 
-		expect(screen.getByRole("button", { name: "Branch" })).toHaveTextContent(
-			"Orchard"
-		);
+		expect(headerBranchText()).toHaveTextContent("Orchard");
 		expect(
 			screen.queryByRole("list", { name: "Active filters" })
 		).not.toBeInTheDocument();
@@ -797,7 +831,7 @@ describe("People", () => {
 		]);
 	});
 
-	it("drops a Branch from the URL that is no longer offered, listing everyone", async () => {
+	it("drops a Branch from the URL that is no longer offered, falling back to the default", async () => {
 		const calls = stubApi({
 			...baseRoutes(),
 			[WORKSPACE]: branchesWorkspaceReply(["member_profile:read"]),
@@ -809,7 +843,7 @@ describe("People", () => {
 		await waitFor(() => {
 			expect(opened.router.state.location.search).toEqual({});
 		});
-		expect(peopleCalls(calls)).toEqual([FIRST_PAGE]);
+		expect(peopleCalls(calls)).toEqual([`${FIRST_PAGE}&branchId=b-2`]);
 	});
 
 	it("opens on the Branch the URL names", async () => {

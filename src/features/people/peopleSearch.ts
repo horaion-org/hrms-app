@@ -87,7 +87,6 @@ export const statusParameter = (
 
 /** People are listed across every Branch in reach unless one is chosen, then by Department. */
 export const PEOPLE_UNIT_RULES: UnitSelectionRules = {
-	allowAllBranches: true,
 	withDepartment: true,
 };
 

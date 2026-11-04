@@ -23,7 +23,7 @@ const Harness = (): FunctionComponent => {
 		"c-1",
 		["member_profile:read"],
 		{ branchId: "b-1", departmentId },
-		{ allowAllBranches: true, withDepartment: true }
+		{ withDepartment: true }
 	);
 	return <DepartmentFilter selection={selection} onChange={setDepartmentId} />;
 };
