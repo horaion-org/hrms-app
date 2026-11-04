@@ -353,7 +353,9 @@
 			"trouble": "Having trouble logging in?",
 			"pending": "Logging in…",
 			"noAccount": "Don’t have an account?",
-			"signUp": "Sign up"
+			"signUp": "Sign up",
+			"haveCode": "Have a confirmation code?",
+			"confirmEmail": "Confirm your email"
 		},
 		"logOut": "Log out",
 		"errors": {

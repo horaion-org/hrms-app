@@ -218,6 +218,15 @@ export const LogInForm = (): FunctionComponent => {
 					{t("auth.logIn.signUp")}
 				</Link>
 			</p>
+			<p className="mt-3 text-center text-base leading-6 text-neutral-800 [&_a]:ml-2">
+				{t("auth.logIn.haveCode")}
+				<Link
+					className="text-ink-blue-900 underline underline-offset-2 hover:text-ink-blue-700"
+					to="/confirm-email"
+				>
+					{t("auth.logIn.confirmEmail")}
+				</Link>
+			</p>
 		</>
 	);
 };

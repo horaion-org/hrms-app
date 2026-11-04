@@ -1580,6 +1580,20 @@
 			"wrongEmail": "¿Te registraste con el correo equivocado?",
 			"signUpAgain": "Regístrate de nuevo",
 			"removalNotice": "Los registros sin confirmar se eliminan pasados 3 días."
+		},
+		"logIn": {
+			"title": "Iniciar sesión",
+			"subtitle": "Inicia sesión con tu correo y contraseña.",
+			"details": "Datos de inicio de sesión",
+			"email": "Correo electrónico",
+			"emailPlaceholder": "Correo electrónico",
+			"password": "Contraseña",
+			"trouble": "¿Problemas para iniciar sesión?",
+			"pending": "Iniciando sesión…",
+			"noAccount": "¿No tienes una cuenta?",
+			"signUp": "Regístrate",
+			"haveCode": "¿Tienes un código de confirmación?",
+			"confirmEmail": "Confirma tu correo"
 		}
 	},
 	"pageToolbar": {

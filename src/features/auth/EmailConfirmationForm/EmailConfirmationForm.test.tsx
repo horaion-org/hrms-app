@@ -457,3 +457,23 @@ it("waits a minute after a new code before offering another", async () => {
 	expect(calls).toHaveLength(1);
 	expect(screen.getByRole("button", { name: copy.resend })).toBeEnabled();
 });
+
+it.each(["/login", "/register"])(
+	"links %s to email confirmation with empty fields and no status",
+	async (entry) => {
+		const calls = stubApi({});
+		const opened = await open(entry);
+		const user = userEvent.setup();
+		expect(screen.getByText(en.auth.logIn.haveCode)).toBeVisible();
+		await user.click(
+			screen.getByRole("link", { name: en.auth.logIn.confirmEmail })
+		);
+		await screen.findByRole("heading", { name: copy.title });
+		expect(opened.router.state.location.href).toBe("/confirm-email");
+		expect(screen.getByLabelText(copy.email)).toHaveValue("");
+		expect(screen.getByLabelText(copy.code)).toHaveValue("");
+		expect(screen.queryByRole("status")).not.toBeInTheDocument();
+		expect(screen.getByRole("button", { name: copy.resend })).toBeEnabled();
+		expect(calls).toHaveLength(0);
+	}
+);
