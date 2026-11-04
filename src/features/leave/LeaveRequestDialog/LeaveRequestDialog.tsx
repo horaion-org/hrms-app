@@ -3,6 +3,7 @@ import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { DatePicker } from "@/components/forms/DatePicker";
+import { FormRow, formRowIds } from "@/components/forms/FormRow";
 import { Input } from "@/components/forms/Input";
 import { Select } from "@/components/forms/Select";
 import { Textarea } from "@/components/forms/Textarea";
@@ -11,7 +12,11 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { CrossIcon, SearchIcon, TickIcon } from "@/components/ui/Icon";
 import { Modal } from "@/components/ui/Modal";
-import { isLeaveType, LEAVE_TYPES } from "@/features/leave/api";
+import {
+	isLeaveType,
+	LEAVE_NOTES_MAX_LENGTH,
+	LEAVE_TYPES,
+} from "@/features/leave/api";
 import { formatPeriod } from "@/features/leave/dates";
 import type { ApplyField } from "@/features/leave/leaveRefusal";
 import {
@@ -77,6 +82,7 @@ export const LeaveRequestDialog = ({
 	const [type, setType] = useState<LeaveType>("ANNUAL");
 	const today = dayjs().format("YYYY-MM-DD");
 	const [dates, setDates] = useState({ start: today, end: today });
+	const [notes, setNotes] = useState("");
 	const applying = mode === "apply";
 	const own = applying && employees === undefined;
 	const chosen = employees?.options.find(
@@ -85,6 +91,7 @@ export const LeaveRequestDialog = ({
 	const fields = refusal?.fields ?? {};
 	const employeeError = fields.employee ? `${id}-employee-error` : undefined;
 	const reasonError = missingReason ? t("leave.required") : fields.reason;
+	const notesIds = formRowIds(`${id}-notes`);
 	if (!applying && !request) return null;
 	const alert = refusal?.message && (
 		<p className="text-sm text-error-700" role="alert">
@@ -170,10 +177,12 @@ export const LeaveRequestDialog = ({
 					onSubmit={(event) => {
 						event.preventDefault();
 						if (!own && !chosen) return;
+						const remarks = notes.trim();
 						onCreate(own ? null : (chosen?.membershipId ?? null), {
 							leaveType: type,
 							startDate: dates.start,
 							endDate: dates.end,
+							...(remarks === "" ? {} : { notes: remarks }),
 						});
 					}}
 				>
@@ -254,6 +263,28 @@ export const LeaveRequestDialog = ({
 							</p>
 						)}
 					</div>
+					<FormRow
+						counter={t("leave.remarksCounter", { count: notes.length })}
+						error={fields.notes}
+						hint={t("leave.remarksHint")}
+						htmlFor={`${id}-notes`}
+						label={t("leave.remarksOptional")}
+						layout="stacked"
+					>
+						<Textarea
+							id={`${id}-notes`}
+							maxLength={LEAVE_NOTES_MAX_LENGTH}
+							placeholder={t("leave.remarksPlaceholder")}
+							status={fields.notes ? "error" : undefined}
+							value={notes}
+							aria-describedby={
+								fields.notes ? notesIds.errorId : notesIds.hintId
+							}
+							onChange={(event) => {
+								setNotes(event.target.value);
+							}}
+						/>
+					</FormRow>
 				</form>
 			) : (
 				request && (

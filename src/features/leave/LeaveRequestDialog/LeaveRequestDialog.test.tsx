@@ -4,7 +4,10 @@ import { expect, it, vi } from "vitest";
 import { I18nextProvider } from "react-i18next";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import { LEAVE_FIXTURES } from "@/features/leave/fixtures";
-import { LeaveRequestDialog } from "@/features/leave/LeaveRequestDialog";
+import {
+	LeaveRequestDialog,
+	type LeaveRequestDialogProps,
+} from "@/features/leave/LeaveRequestDialog";
 
 const pending = LEAVE_FIXTURES[1]!;
 const employees = {
@@ -166,4 +169,53 @@ it("applies for the caller themself when no employees are offered", async () => 
 		null,
 		expect.objectContaining({ leaveType: "ANNUAL" })
 	);
+});
+
+it("sends trimmed remarks, counts them as they are typed, and leaves them out when empty", async () => {
+	const user = userEvent.setup();
+	const onCreate = vi.fn<LeaveRequestDialogProps["onCreate"]>();
+	const view = render(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveRequestDialog
+				mode="apply"
+				onApprove={vi.fn()}
+				onClose={vi.fn()}
+				onCreate={onCreate}
+				onReject={vi.fn()}
+			/>
+		</I18nextProvider>
+	);
+	const remarks = screen.getByRole("textbox", { name: "Remarks (optional)" });
+	expect(remarks).toHaveAttribute("maxLength", "1000");
+	expect(screen.getByText("0/1000")).toBeInTheDocument();
+	await user.click(screen.getByRole("button", { name: "Submit request" }));
+	expect(onCreate.mock.lastCall?.[1]).not.toHaveProperty("notes");
+	await user.type(remarks, "  Back on Friday. ");
+	expect(screen.getByText("18/1000")).toBeInTheDocument();
+	await user.click(screen.getByRole("button", { name: "Submit request" }));
+	expect(onCreate).toHaveBeenLastCalledWith(
+		null,
+		expect.objectContaining({ notes: "Back on Friday." })
+	);
+	view.rerender(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveRequestDialog
+				mode="apply"
+				refusal={{
+					fields: { notes: "Use 1,000 characters or fewer." },
+					refreshMembers: false,
+				}}
+				onApprove={vi.fn()}
+				onClose={vi.fn()}
+				onCreate={onCreate}
+				onReject={vi.fn()}
+			/>
+		</I18nextProvider>
+	);
+	expect(screen.getByRole("alert")).toHaveTextContent(
+		"Use 1,000 characters or fewer."
+	);
+	expect(
+		screen.getByRole("textbox", { name: "Remarks (optional)" })
+	).toHaveAccessibleDescription("Use 1,000 characters or fewer.");
 });
