@@ -120,6 +120,7 @@
 			"requestMissing": "This request is no longer available.",
 			"profileMissing": "This person is no longer available.",
 			"reasonRejected": "Enter a reason of up to 2,000 characters.",
+			"notesRejected": "Use 1,000 characters or fewer, without special control characters.",
 			"forbiddenApply": "You no longer have permission to apply for this person.",
 			"forbiddenDecide": "You no longer have permission to decide this request.",
 			"ownReview": "You can’t approve or reject your own leave. Another reviewer needs to decide it.",

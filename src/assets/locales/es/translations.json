@@ -120,6 +120,7 @@
 			"requestMissing": "Esta solicitud ya no está disponible.",
 			"profileMissing": "Esta persona ya no está disponible.",
 			"reasonRejected": "Introduce un motivo de hasta 2.000 caracteres.",
+			"notesRejected": "Usa 1000 caracteres o menos, sin caracteres de control especiales.",
 			"forbiddenApply": "Ya no tienes permiso para solicitar en nombre de esta persona.",
 			"forbiddenDecide": "Ya no tienes permiso para decidir esta solicitud.",
 			"ownReview": "No puedes aprobar ni rechazar tu propia solicitud de permiso. Otra persona revisora debe decidirla.",

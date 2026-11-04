@@ -2,7 +2,7 @@ import type { TFunction } from "i18next";
 import { mapRefusal, type Refusal } from "@/features/organisation/refusal";
 
 /** The fields an application's refusal can land on. */
-export type ApplyField = "employee" | "endDate";
+export type ApplyField = "employee" | "endDate" | "notes";
 
 /**
  * The refusals of applying for and deciding leave, as `"<status> <errorCode>"`.
@@ -23,6 +23,8 @@ export const LEAVE_REFUSAL_CODES = {
 	/** Nobody, or nobody the person may see. */
 	profileNotFound: "404 MEMBER_PROFILE_NOT_FOUND",
 	invalidReason: "400 INVALID_REJECTION_REASON",
+	/** The remarks are over 1,000 characters or hold a control character. */
+	invalidNotes: "400 INVALID_LEAVE_NOTES",
 	/** Nobody decides their own leave, whatever their roles; reloading roles cannot change it. */
 	ownReview: "403 OWN_LEAVE_REVIEW_DENIED",
 } as const;
@@ -30,8 +32,8 @@ export const LEAVE_REFUSAL_CODES = {
 const codes = LEAVE_REFUSAL_CODES;
 
 /**
- * Why applying on a person's behalf was refused: on the dates or the
- * employee, or as the dialog's alert. Server codes select frontend-owned
+ * Why applying on a person's behalf was refused: on the dates, the remarks
+ * or the employee, or as the dialog's alert. Server codes select frontend-owned
  * copy; untrusted server prose is never displayed.
  */
 export const applyRefusal = (
@@ -40,11 +42,13 @@ export const applyRefusal = (
 ): Refusal<ApplyField> => {
 	const key = "leave.refusal";
 	const dates = (message: string) => ({ field: "endDate", message }) as const;
+	const notes = { field: "notes", message: t(`${key}.notesRejected`) } as const;
 	return mapRefusal<ApplyField>(error, {
 		codes: {
 			[codes.overlaps]: dates(t(`${key}.overlaps`)),
 			[codes.noWorkingDays]: dates(t(`${key}.noWorkingDays`)),
 			[codes.invalidPeriod]: dates(t(`${key}.invalidPeriod`)),
+			[codes.invalidNotes]: notes,
 			[codes.profileNotFound]: {
 				field: "employee",
 				message: t(`${key}.profileMissing`),
@@ -54,6 +58,7 @@ export const applyRefusal = (
 		fieldErrors: {
 			startDate: dates(t(`${key}.invalidPeriod`)),
 			endDate: dates(t(`${key}.invalidPeriod`)),
+			notes,
 		},
 		forbidden: t(`${key}.forbiddenApply`),
 		failed: t(`${key}.applyFailed`),

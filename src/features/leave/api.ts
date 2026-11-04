@@ -67,6 +67,8 @@ export const leaveRequestSchema = z.object({
 	endDate: z.iso.date(),
 	/** Monday-to-Friday days in the period, as the API counts them. */
 	workingDays: z.number().int().nonnegative(),
+	/** The applicant's remarks for the reviewer; null when none. Absent from an API older than remarks. */
+	notes: z.string().nullable().default(null),
 	status: leaveStatusSchema,
 	requestedAt: z.iso.datetime({ offset: true }),
 	requestedBy: participantSchema,
@@ -245,11 +247,15 @@ export const myLeaveRequestsQuery = (
 		retry,
 	});
 
-/** What applying for leave sends: inclusive ISO dates. */
+/** The longest remarks the API keeps, in characters. */
+export const LEAVE_NOTES_MAX_LENGTH = 1000;
+
+/** What applying for leave sends: inclusive ISO dates, and remarks only when some were written. */
 export type LeaveRequestBody = {
 	leaveType: LeaveType;
 	startDate: string;
 	endDate: string;
+	notes?: string;
 };
 
 const memberLeavePath = (companyId: string, membershipId: string): string =>
