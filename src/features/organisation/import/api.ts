@@ -109,7 +109,8 @@ export type OrganisationRowOutcome = z.infer<typeof rowOutcomeSchema>;
 
 const organisationImportSchema = z.object({
 	importId: z.string(),
-	status: z.literal("COMPLETED"),
+	// Only COMPLETED today; a status a newer API adds reads as UNKNOWN instead of failing the read.
+	status: z.enum(["COMPLETED", "UNKNOWN"]).catch("UNKNOWN"),
 	requestedBy: z.string(),
 	createdAt: z.string(),
 	finishedAt: z.string().nullable(),

@@ -73,6 +73,20 @@ describe("historyResultText", () => {
 		).toBe("58 created · 3 skipped");
 	});
 
+	it("counts a people import whose status this build does not know, like a finished one", () => {
+		expect(
+			historyResultText(
+				{ kind: "PEOPLE", importRecord: peopleImport({ status: "UNKNOWN" }) },
+				t
+			)
+		).toBe(
+			historyResultText(
+				{ kind: "PEOPLE", importRecord: peopleImport({ status: "COMPLETED" }) },
+				t
+			)
+		);
+	});
+
 	it("counts a finished people import, says a running one is running, and marks a stopped one", () => {
 		expect(
 			historyResultText({ kind: "PEOPLE", importRecord: peopleImport({}) }, t)

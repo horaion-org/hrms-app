@@ -1065,7 +1065,8 @@
 					"QUEUED": "En espera",
 					"RUNNING": "En curso",
 					"COMPLETED": "Terminada",
-					"FAILED": "Detenida"
+					"FAILED": "Detenida",
+					"UNKNOWN": "Desconocida"
 				},
 				"open": "Ver"
 			},
@@ -1129,7 +1130,8 @@
 				"GENERATED": "Generado",
 				"GENERATION_FAILED": "Generación fallida",
 				"PUBLISHED": "Publicado",
-				"REJECTED": "Rechazado"
+				"REJECTED": "Rechazado",
+				"UNKNOWN": "Desconocido"
 			},
 			"history": {
 				"title": "Historial de horarios",
@@ -1608,7 +1610,8 @@
 			"legend": "Leyenda",
 			"kinds": {
 				"off": "Día libre",
-				"leave": "De permiso"
+				"leave": "De permiso",
+				"unknown": "Desconocido"
 			},
 			"roster": "Cuadrante",
 			"staff": "Personal",

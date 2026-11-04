@@ -19,13 +19,16 @@ import { retry } from "@/features/workspace/retry";
  * when generation is requested and drives rest between shifts and days off.
  */
 
-const knownDayKindSchema = z.enum(["WORKED", "OFF", "LEAVE"]);
-const startingDaySourceSchema = z.enum([
-	"PUBLISHED",
-	"GENERATED",
-	"LEAVE",
-	"ENTERED",
-]);
+// A kind or source a newer API adds reads as UNKNOWN instead of failing the whole answer.
+const knownDayKindSchema = z
+	.enum(["WORKED", "OFF", "LEAVE", "UNKNOWN"])
+	.catch("UNKNOWN");
+const startingDaySourceSchema = z
+	.enum(["PUBLISHED", "GENERATED", "LEAVE", "ENTERED", "UNKNOWN"])
+	.catch("UNKNOWN");
+const memberContextSourceSchema = z
+	.enum(["PUBLISHED", "GENERATED", "ENTERED", "NONE", "UNKNOWN"])
+	.catch("UNKNOWN");
 
 const startingCellSchema = z.object({
 	date: z.string(),
@@ -97,7 +100,7 @@ const startingContextSchema = z.object({
 			displayName: z.string(),
 			consecutiveWorkingDays: z.number(),
 			trailingSevenDays: z.string(),
-			source: z.enum(["PUBLISHED", "GENERATED", "ENTERED", "NONE"]),
+			source: memberContextSourceSchema,
 		})
 	),
 });

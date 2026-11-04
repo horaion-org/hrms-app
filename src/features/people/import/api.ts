@@ -90,7 +90,10 @@ export type RowOutcome = z.infer<typeof rowOutcomeSchema>;
 
 const memberImportSchema = z.object({
 	importId: z.string(),
-	status: z.enum(["QUEUED", "RUNNING", "COMPLETED", "FAILED"]),
+	// A status a newer API adds reads as UNKNOWN (neither running nor failed) instead of failing the read.
+	status: z
+		.enum(["QUEUED", "RUNNING", "COMPLETED", "FAILED", "UNKNOWN"])
+		.catch("UNKNOWN"),
 	requestedBy: z.string(),
 	sendInvitations: z.boolean(),
 	totalRows: z.number(),

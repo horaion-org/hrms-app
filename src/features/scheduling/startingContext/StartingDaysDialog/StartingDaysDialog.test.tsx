@@ -3,16 +3,20 @@ import userEvent from "@testing-library/user-event";
 import { I18nextProvider } from "react-i18next";
 import { describe, expect, it, vi } from "vitest";
 import { authTestI18n } from "@/features/auth/testingI18n";
-import { firstWeek } from "@/features/scheduling/startingContext/fixtures";
+import {
+	carriedWeek,
+	firstWeek,
+	rosterOffCell,
+} from "@/features/scheduling/startingContext/fixtures";
 import { StartingDaysDialog } from "@/features/scheduling/startingContext/StartingDaysDialog";
 
-const show = (onSave = vi.fn()): void => {
+const show = (onSave = vi.fn(), week = firstWeek()): void => {
 	render(
 		<I18nextProvider i18n={authTestI18n}>
 			<StartingDaysDialog
 				open
 				saving={false}
-				week={firstWeek()}
+				week={week}
 				onClose={vi.fn()}
 				onSave={onSave}
 			/>
@@ -33,6 +37,20 @@ describe("StartingDaysDialog", () => {
 		expect(
 			within(tan).getByRole("button", { name: /Tan Wei Ming, 8 Sun/ })
 		).toHaveTextContent("Night 22:00–06:00");
+	});
+
+	it("given_aLockedDayOfAKindThisBuildDoesNotKnow_when_shown_then_readsUnknown", () => {
+		const week = carriedWeek();
+		week.members[0]!.cells[6] = {
+			...rosterOffCell("2026-11-08"),
+			kind: "UNKNOWN",
+		};
+		show(vi.fn(), week);
+
+		const tan = within(
+			screen.getByRole("table", { name: "The week before" })
+		).getByRole("row", { name: /Tan Wei Ming/ });
+		expect(within(tan).getByText("Unknown")).toBeInTheDocument();
 	});
 
 	it("given_sundayFilledWithADayOff_when_saved_then_onlyKnownDaysAreSent", async () => {

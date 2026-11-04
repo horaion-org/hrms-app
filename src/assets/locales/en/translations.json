@@ -889,7 +889,8 @@
 					"QUEUED": "Waiting",
 					"RUNNING": "Running",
 					"COMPLETED": "Finished",
-					"FAILED": "Stopped"
+					"FAILED": "Stopped",
+					"UNKNOWN": "Unknown"
 				},
 				"open": "View"
 			},
@@ -1946,7 +1947,8 @@
 				"GENERATED": "Generated",
 				"GENERATION_FAILED": "Generation failed",
 				"PUBLISHED": "Published",
-				"REJECTED": "Rejected"
+				"REJECTED": "Rejected",
+				"UNKNOWN": "Unknown"
 			},
 			"history": {
 				"title": "Schedule history",
@@ -2426,7 +2428,8 @@
 			"legend": "Legend",
 			"kinds": {
 				"off": "Day Off",
-				"leave": "On Leave"
+				"leave": "On Leave",
+				"unknown": "Unknown"
 			},
 			"roster": "Roster",
 			"staff": "Staff",

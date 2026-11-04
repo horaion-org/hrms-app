@@ -97,6 +97,8 @@ it("labels and tones every API status in the history", async () => {
 		},
 		{ status: "PUBLISHED", label: "Published", background: "bg-success-100" },
 		{ status: "REJECTED", label: "Rejected", background: "bg-error-100" },
+		// A status a newer API adds still lists, as a neutral "Unknown".
+		{ status: "ARCHIVED", label: "Unknown", background: "bg-neutral-400" },
 	] as const;
 	stubApi({
 		"POST /api/v1/public/sessions/refreshes": accessPassReply(),
@@ -110,9 +112,10 @@ it("labels and tones every API status in the history", async () => {
 			body: envelope({
 				content: statuses.map(({ status }) => {
 					const overrides = { scheduleId: status, name: `${status} schedule` };
-					return status === "DRAFT"
-						? scheduleFixture(overrides)
-						: generatedScheduleFixture({ ...overrides, status });
+					if (status === "DRAFT") return scheduleFixture(overrides);
+					if (status === "ARCHIVED")
+						return { ...generatedScheduleFixture(overrides), status };
+					return generatedScheduleFixture({ ...overrides, status });
 				}),
 				page: { hasNext: false },
 			}),
