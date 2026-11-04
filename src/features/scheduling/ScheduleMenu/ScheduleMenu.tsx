@@ -39,7 +39,7 @@ export const ScheduleMenu = ({
 	const { t } = useTranslation();
 	const access = useAccess();
 	const [deleting, setDeleting] = useState(false);
-	const exporting = useMutation({
+	const rosterExport = useMutation({
 		mutationFn: () =>
 			exportRoster(
 				companyId,
@@ -51,7 +51,7 @@ export const ScheduleMenu = ({
 		},
 		meta: { successMessage: "scheduling.export.done" },
 	});
-	const close = (): void => {
+	const closeDeleteDialog = (): void => {
 		setDeleting(false);
 	};
 	const scope = departmentScope(schedule.departmentId);
@@ -59,21 +59,22 @@ export const ScheduleMenu = ({
 	const canExport =
 		withExport && hasRoster(schedule) && access.can("schedule:read", scope);
 	if (!canDelete && !canExport) return null;
-	const draft =
-		exporting.error instanceof ApiProblemError &&
-		exporting.error.errorCode === "SCHEDULE_IS_DRAFT";
+	// A schedule with no roster yet can't be exported, so trying again can't help.
+	const exportRefusedAsDraft =
+		rosterExport.error instanceof ApiProblemError &&
+		rosterExport.error.errorCode === "SCHEDULE_IS_DRAFT";
 
 	return (
 		<>
 			<OverflowMenu
-				label={t("scheduling.delete.moreActions", { name: schedule.name })}
+				label={t("scheduling.scheduleMenu.label", { name: schedule.name })}
 				variant="icon"
 			>
 				{canExport && (
 					<OverflowMenuItem
-						disabled={exporting.isPending}
+						disabled={rosterExport.isPending}
 						onClick={() => {
-							exporting.mutate();
+							rosterExport.mutate();
 						}}
 					>
 						{t("scheduling.export.menu")}
@@ -90,20 +91,22 @@ export const ScheduleMenu = ({
 					</OverflowMenuItem>
 				)}
 			</OverflowMenu>
-			{exporting.isError && (
+			{rosterExport.isError && (
 				<ConfirmDialog
 					cancelLabel={t("scheduling.export.close")}
-					confirmDisabled={draft}
+					confirmDisabled={exportRefusedAsDraft}
 					confirmLabel={t("scheduling.export.retry")}
 					title={t("scheduling.export.failedTitle")}
 					description={
-						draft ? t("scheduling.export.draft") : t("scheduling.export.failed")
+						exportRefusedAsDraft
+							? t("scheduling.export.draft")
+							: t("scheduling.export.failed")
 					}
 					onClose={() => {
-						exporting.reset();
+						rosterExport.reset();
 					}}
 					onConfirm={() => {
-						exporting.mutate();
+						rosterExport.mutate();
 					}}
 				/>
 			)}
@@ -111,9 +114,9 @@ export const ScheduleMenu = ({
 				<DeleteScheduleDialog
 					companyId={companyId}
 					schedule={schedule}
-					onClose={close}
+					onClose={closeDeleteDialog}
 					onDeleted={() => {
-						close();
+						closeDeleteDialog();
 						onDeleted?.();
 					}}
 				/>

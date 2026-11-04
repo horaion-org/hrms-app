@@ -2540,9 +2540,11 @@
 			},
 			"showInFindings": "Show in findings"
 		},
+		"scheduleMenu": {
+			"label": "More actions for {{name}}"
+		},
 		"delete": {
 			"menu": "Delete",
-			"moreActions": "More actions for {{name}}",
 			"title": "Delete {{name}}?",
 			"description": "This removes the {{department}} schedule for {{period}}, with its roster. This can’t be undone.",
 			"runOpen": "This schedule is being generated. You can delete it once the run finishes.",
