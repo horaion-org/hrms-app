@@ -1393,5 +1393,10 @@
 		"explanation": "Tus roles no incluyen esta página. Si la necesitas, pide a un administrador que cambie tus roles.",
 		"back": "Volver",
 		"home": "Ir al resumen"
+	},
+	"filtersPopover": {
+		"label": "Filtros",
+		"applied_one": "{{count}} aplicado",
+		"applied_other": "{{count}} aplicados"
 	}
 }
