@@ -73,4 +73,22 @@ describe("ConfirmDialog", () => {
 			"We couldn’t deactivate the branch. Try again."
 		);
 	});
+
+	it("draws a danger confirm red, still disabled while held back", async () => {
+		show({ tone: "danger", confirmDisabled: true });
+
+		const confirm = await screen.findByRole("button", {
+			name: "Deactivate branch",
+		});
+		expect(confirm).toHaveClass("not-disabled:bg-error-600!");
+		expect(confirm).toBeDisabled();
+	});
+
+	it("keeps the default confirm in the primary colour", async () => {
+		show();
+
+		expect(
+			await screen.findByRole("button", { name: "Deactivate branch" })
+		).not.toHaveClass("not-disabled:bg-error-600!");
+	});
 });

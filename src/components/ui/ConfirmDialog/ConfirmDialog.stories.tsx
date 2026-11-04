@@ -27,3 +27,12 @@ export const Submitting: Story = { args: { submitting: true } };
 export const Failed: Story = {
 	args: { error: "We couldn’t deactivate the branch. Try again." },
 };
+
+export const Danger: Story = {
+	args: {
+		title: "Delete Week 46 Front?",
+		description: "This can’t be undone.",
+		confirmLabel: "Delete schedule",
+		tone: "danger",
+	},
+};
