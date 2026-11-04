@@ -1950,6 +1950,63 @@
 				"worker_failed": "The engine stopped while working on the roster.",
 				"worker_crashed": "The engine stopped while working on the roster."
 			}
+		},
+		"findings": {
+			"rosterNotes_one": "{{count}} roster note",
+			"rosterNotes_other": "{{count}} roster notes",
+			"setupIssues_one": "{{count}} setup issue",
+			"setupIssues_other": "{{count}} setup issues",
+			"summaryBoth": "The scheduling engine left {{rosterNotes}} and {{setupIssues}}.",
+			"summaryOne": "The scheduling engine left {{findings}}.",
+			"showDetails": "Show details",
+			"hideDetails": "Hide details",
+			"setupTitle": "Setup issues ({{count}})",
+			"setupHint": "Fix these in the schedule’s setup; generating again with the same setup won’t clear them.",
+			"rosterTitle": "Roster notes ({{count}})",
+			"groupTitle": "{{label}} · {{count}}",
+			"wholeRoster": "Whole roster",
+			"when": "{{day}}, {{time}}",
+			"missing_one": "{{count}} person short",
+			"missing_other": "{{count}} people short",
+			"rule": "Rule: {{rule}}",
+			"forecastDemand": "Forecast demand",
+			"unknownMember": "A former member",
+			"unknownShift": "one of its shifts",
+			"unknownJobTitle": "one job title",
+			"unknownRule": "One of its rules",
+			"codes": {
+				"UNCOVERABLE_DEMAND": {
+					"label": "Demand no shift can cover",
+					"sentence": "No shift can cover part of the demand for {{jobTitle}}."
+				},
+				"RULE_REFERENCES_MISSING_ENTITY": {
+					"label": "Rules naming missing items",
+					"sentence_one": "{{rule}} names {{count}} item that isn’t in this schedule.",
+					"sentence_other": "{{rule}} names {{count}} items that aren’t in this schedule."
+				},
+				"UNASSIGNABLE_EMPLOYEE": {
+					"label": "Members no shift fits",
+					"sentence": "{{member}} can only be scheduled off: no shift fits their job title and availability."
+				},
+				"DEAD_SHIFT": {
+					"label": "Shifts nobody can take",
+					"sentence": "No one in this schedule can take {{shift}}."
+				}
+			},
+			"marker": {
+				"row_one": "{{count}} note for {{name}}",
+				"row_other": "{{count}} notes for {{name}}",
+				"date_one": "{{count}} note for {{day}}",
+				"date_other": "{{count}} notes for {{day}}",
+				"cell_one": "{{count}} note for {{name}} on {{day}}",
+				"cell_other": "{{count}} notes for {{name}} on {{day}}",
+				"tileLabel_one": "{{label}}, {{count}} note",
+				"tileLabel_other": "{{label}}, {{count}} notes",
+				"roster": "Roster",
+				"setup": "Setup",
+				"close": "Close"
+			},
+			"showInFindings": "Show in findings"
 		}
 	},
 	"colourSwatchPicker": {
