@@ -601,7 +601,33 @@ describe("Departments", () => {
 			within(screen.getByRole("table", { name: "Departments" }))
 				.getAllByRole("columnheader")
 				.map((header) => header.textContent)
-		).toEqual(["Select all", "Department name", "Status", "Actions"]);
+		).toEqual([
+			"Select all",
+			"Department name",
+			"Status",
+			"Created",
+			"Actions",
+		]);
+	});
+
+	it("shows when each department was created and sorts by it on the server", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...baseRoutes(),
+			[DEPARTMENTS]: pageReply([department("d-1", "Front Office")]),
+		});
+		await open("/organisation/departments");
+		const table = await screen.findByRole("table", { name: "Departments" });
+		await within(table).findByText("Front Office");
+
+		expectCreatedCell(table);
+		await user.click(screen.getByRole("button", { name: "Sort by Created" }));
+		await waitFor(() => {
+			expect(searchesOf(calls, "/api/v1/companies/c-1/departments")).toEqual([
+				"size=100&sort=name%2Casc",
+				"size=100&sort=createdAt%2Casc",
+			]);
+		});
 	});
 
 	it("lists the company's departments with the same toolbar and filter", async () => {
@@ -620,7 +646,14 @@ describe("Departments", () => {
 			within(table)
 				.getAllByRole("columnheader")
 				.map((header) => header.textContent)
-		).toEqual(["Select all", "Department name", "Branch", "Status", "Actions"]);
+		).toEqual([
+			"Select all",
+			"Department name",
+			"Branch",
+			"Status",
+			"Created",
+			"Actions",
+		]);
 		expect(
 			screen.getByRole("searchbox", { name: "Search department" })
 		).toBeVisible();
