@@ -506,6 +506,21 @@
       "resourceName": "Schedule"
     },
     {
+      "action": "publish",
+      "actionName": "Publish",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
+      "key": "schedule:publish",
+      "prerequisites": [
+        "schedule:read"
+      ],
+      "resource": "schedule",
+      "resourceName": "Schedule"
+    },
+    {
       "action": "read",
       "actionName": "Read",
       "assignableScopes": [

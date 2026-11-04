@@ -1542,13 +1542,14 @@
 			},
 			"schedule": {
 				"name": "Schedules",
-				"description": "Each department’s schedules: their week, settings and chosen shifts, generating them and deleting them.",
+				"description": "Each department’s schedules: their week, settings and chosen shifts, generating them, publishing or rejecting their rosters, and deleting them.",
 				"actions": {
 					"read": "View",
 					"create": "Create",
 					"update": "Edit",
 					"generate": "Generate",
-					"delete": "Delete"
+					"delete": "Delete",
+					"publish": "Publish"
 				}
 			},
 			"shift": {
