@@ -23,6 +23,7 @@ export const SCHEDULE_REFUSAL_CODES = {
 	departmentNotFound: "404 DEPARTMENT_NOT_FOUND",
 	notGenerated: "409 SCHEDULE_NOT_GENERATED",
 	alreadyDecided: "409 SCHEDULE_ALREADY_DECIDED",
+	weekAlreadyPublished: "409 SCHEDULE_WEEK_ALREADY_PUBLISHED",
 	published: "409 SCHEDULE_PUBLISHED",
 	invalidRejectionReason: "400 INVALID_REJECTION_REASON",
 } as const;
@@ -156,6 +157,7 @@ export const decisionRefusal = (
 			[codes.generationInProgress]: t(`${key}.inProgress`),
 			[codes.notGenerated]: t(`${key}.notGenerated`),
 			[codes.alreadyDecided]: t(`${key}.alreadyDecided`),
+			[codes.weekAlreadyPublished]: t(`${key}.weekAlreadyPublished`),
 			[codes.scheduleNotFound]: t("scheduling.delete.gone"),
 		},
 		fieldErrors: { reason },

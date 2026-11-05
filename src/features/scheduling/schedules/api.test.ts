@@ -891,6 +891,11 @@ describe("schedule refusals", () => {
 			409,
 			"This roster was already published or rejected. Reload the page to see it.",
 		],
+		[
+			"SCHEDULE_WEEK_ALREADY_PUBLISHED",
+			409,
+			"This department already has a published roster for this week. Delete that schedule first, then publish this one.",
+		],
 		["SCHEDULE_NOT_FOUND", 404, "This schedule no longer exists."],
 		[
 			"ACCESS_DENIED",
