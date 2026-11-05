@@ -362,6 +362,45 @@
 				"deleteFailed": "No pudimos quitar la restricción. Inténtalo de nuevo.",
 				"deleteForbidden": "Ya no tienes permiso para cambiar la política de programación."
 			}
+		},
+		"leave": {
+			"dialog": {
+				"title": "Añadir tipo de permiso",
+				"editTitle": "Editar tipo de permiso",
+				"description": "Añade un tipo de permiso que se pueda solicitar.",
+				"editDescription": "Cambia el nombre de {{name}} y cómo se cuenta.",
+				"name": "Nombre",
+				"namePlaceholder": "p. ej. Permiso de estudios",
+				"nameHint": "De 2 a 100 caracteres: letras, números, espacios y . ' & -",
+				"nameCounter": "{{count}}/100",
+				"nameRequired": "Escribe un nombre.",
+				"nameLength": "Usa de 2 a 100 caracteres.",
+				"nameCharacters": "Usa solo letras, números, espacios y . ' & - en el nombre.",
+				"nameConflict": "Ya existe un tipo de permiso llamado «{{name}}».",
+				"nameRejected": "Revisa el nombre e inténtalo de nuevo.",
+				"kind": "Cómo se cuenta",
+				"kindDescription": {
+					"ALLOWANCE": "Un número fijo de días por año de permisos.",
+					"PER_OCCASION": "Un número fijo de días cada vez que ocurre.",
+					"UNTRACKED": "No se descuenta de nada."
+				},
+				"kindFixed_one": "Lo usa {{count}} solicitud, así que no se puede cambiar cómo se cuenta. Añade un tipo nuevo y desactiva este.",
+				"kindFixed_other": "Lo usan {{count}} solicitudes, así que no se puede cambiar cómo se cuenta. Añade un tipo nuevo y desactiva este.",
+				"paid": "Remunerado",
+				"paidDescription": "Para tus registros. Todavía no se calcula nada con este dato.",
+				"requiresReason": "Pedir un motivo",
+				"requiresReasonDescription": "Al solicitarlo hay que indicar para qué es el permiso. Quien revise la solicitud puede leerlo.",
+				"kindLocked": "Hay solicitudes que usan este tipo de permiso, así que no se puede cambiar cómo se cuenta.",
+				"system": "El día libre del planificador no se puede cambiar.",
+				"gone": "Este tipo de permiso ya no está disponible. Cierra y vuelve a cargar la página.",
+				"submit": "Añadir tipo de permiso",
+				"editSubmit": "Guardar",
+				"cancel": "Cancelar",
+				"forbidden": "Ya no tienes permiso para añadir tipos de permiso.",
+				"editForbidden": "Ya no tienes permiso para cambiar los tipos de permiso.",
+				"failed": "No pudimos añadir el tipo de permiso. Inténtalo de nuevo.",
+				"editFailed": "No pudimos guardar el tipo de permiso. Inténtalo de nuevo."
+			}
 		}
 	},
 	"combobox": {

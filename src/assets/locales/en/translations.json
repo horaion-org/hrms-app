@@ -1063,6 +1063,45 @@
 				"deleteForbidden": "You no longer have permission to change the Scheduling policy."
 			}
 		},
+		"leave": {
+			"dialog": {
+				"title": "Add leave type",
+				"editTitle": "Edit leave type",
+				"description": "Add a kind of leave people can apply for.",
+				"editDescription": "Change how {{name}} is named and counted.",
+				"name": "Name",
+				"namePlaceholder": "e.g. Study leave",
+				"nameHint": "2 to 100 characters: letters, numbers, spaces and . ' & -",
+				"nameCounter": "{{count}}/100",
+				"nameRequired": "Enter a name.",
+				"nameLength": "Use 2 to 100 characters.",
+				"nameCharacters": "Use only letters, numbers, spaces and . ' & - in the name.",
+				"nameConflict": "A leave type named “{{name}}” already exists.",
+				"nameRejected": "Check the name and try again.",
+				"kind": "How it is counted",
+				"kindDescription": {
+					"ALLOWANCE": "A set number of days each leave year.",
+					"PER_OCCASION": "A set number of days each time it happens.",
+					"UNTRACKED": "Not counted against anything."
+				},
+				"kindFixed_one": "Used by {{count}} request, so how it is counted can’t change. Add a new type and deactivate this one instead.",
+				"kindFixed_other": "Used by {{count}} requests, so how it is counted can’t change. Add a new type and deactivate this one instead.",
+				"paid": "Paid",
+				"paidDescription": "For your records. Nothing is worked out from it yet.",
+				"requiresReason": "Ask for a reason",
+				"requiresReasonDescription": "People must say what the leave is for when they apply. Reviewers of the request can read it.",
+				"kindLocked": "Requests use this leave type, so how it is counted can’t change.",
+				"system": "The scheduler’s day off can’t be changed.",
+				"gone": "This leave type is no longer available. Close and reload the page.",
+				"submit": "Add leave type",
+				"editSubmit": "Save",
+				"cancel": "Cancel",
+				"forbidden": "You no longer have permission to add leave types.",
+				"editForbidden": "You no longer have permission to change leave types.",
+				"failed": "We couldn’t add the leave type. Try again.",
+				"editFailed": "We couldn’t save the leave type. Try again."
+			}
+		},
 		"data": {
 			"title": "Data",
 			"description": "Import and export in bulk.",
