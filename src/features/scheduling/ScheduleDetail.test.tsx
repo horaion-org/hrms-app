@@ -769,6 +769,8 @@ it("names findings without reading the setup it can't see", async () => {
 		...signedIn(),
 		[`GET ${SCHEDULE_READ}`]: generatedWith(),
 		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+		// The frozen shifts are part of the schedule (schedule:read); refused here, the names still come.
+		[`GET ${SCHEDULE}/shifts`]: problemReply(403, "FORBIDDEN"),
 	});
 	const user = userEvent.setup();
 
@@ -780,7 +782,6 @@ it("names findings without reading the setup it can't see", async () => {
 	expect(
 		screen.getByRole("region", { name: "Setup issues (1)" })
 	).toHaveTextContent("No one in this schedule can take one of its shifts.");
-	expect(readsOf(calls, `${SCHEDULE}/shifts`)).toHaveLength(0);
 	expect(readsOf(calls, `${SCHEDULE}/constraints`)).toHaveLength(0);
 });
 
@@ -1483,4 +1484,19 @@ it("keeps a published roster read-only even for someone who may update it", asyn
 	expect(
 		screen.getByRole("complementary", { name: "Shift Details" })
 	).toBeVisible();
+});
+
+it("offers another shift to an editor without shift:read, as the schedule's own shifts need only schedule:read", async () => {
+	const { routes } = editableRoster();
+	await openRoster({
+		...routes,
+		...signedIn(["schedule:read", "schedule:update"]),
+	});
+	const user = userEvent.setup();
+
+	const panel = await openAishaMonday(user);
+
+	expect(
+		within(panel).getByRole("radio", { name: "Another shift" })
+	).toBeInTheDocument();
 });

@@ -9,24 +9,30 @@ import { departmentScope } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
 
 /**
- * A schedule's shifts as the steps show them. `hidden` when `shift:read`
- * isn't held at its Department, whether the workspace says so up front or
- * the API refuses with a 403.
+ * A schedule's shifts as the steps and the roster show them. `hidden` when
+ * `readKey` isn't held at its Department, whether the workspace says so up
+ * front or the API refuses with a 403.
  */
 export type ShiftList =
 	| { status: "pending" | "error" | "hidden" }
 	| { status: "ready"; items: Array<ScheduleShift> };
 
-/** `unit` or `scheduleId` undefined asks for nothing and stays pending. */
+/**
+ * `unit` or `scheduleId` undefined asks for nothing and stays pending.
+ * `readKey` is the key the view asks for: a draft's live shifts are the
+ * shifts catalogue (`shift:read`); a generated schedule's frozen copies are
+ * part of the schedule (`schedule:read`, the API's guard on that read).
+ */
 export const useScheduleShifts = (
 	companyId: string,
 	unit: DepartmentPath | undefined,
-	scheduleId: string | undefined
+	scheduleId: string | undefined,
+	readKey: "shift:read" | "schedule:read" = "shift:read"
 ): ShiftList => {
 	const access = useAccess();
 	const allowed =
 		unit !== undefined &&
-		access.can("shift:read", departmentScope(unit.departmentId));
+		access.can(readKey, departmentScope(unit.departmentId));
 	const list = useQuery(
 		scheduleShiftsQuery(
 			companyId,

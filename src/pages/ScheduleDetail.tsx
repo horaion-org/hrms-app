@@ -233,10 +233,12 @@ const ApiSchedule = ({
 	);
 	// The frozen shifts and constraints only name what the findings refer to.
 	const rosterSchedule = showsRoster ? state.schedule : undefined;
+	// A generated schedule's frozen shifts are part of it: read under schedule:read, as the API guards them.
 	const shifts = useScheduleShifts(
 		companyId,
 		rosterSchedule,
-		rosterSchedule?.scheduleId
+		rosterSchedule?.scheduleId,
+		"schedule:read"
 	);
 	const constraints = useScheduleConstraints(companyId, rosterSchedule);
 	const startingContext = useQuery(
