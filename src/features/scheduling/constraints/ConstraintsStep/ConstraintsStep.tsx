@@ -193,7 +193,7 @@ export const ConstraintsStep = ({
 							canSelect: (constraint) =>
 								tickable.includes(constraint.constraintId),
 							onChange: (constraintIds): void => {
-								// A locked constraint stays ticked, whatever select-all did.
+								// Locked constraints are always sent, whatever the table reports.
 								onIncludedChange([
 									...locked,
 									...constraintIds.filter((constraintId) =>

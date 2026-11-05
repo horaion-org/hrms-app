@@ -366,6 +366,70 @@ describe("DataTable", () => {
 		);
 	});
 
+	it("selects and clears all but a fixed row's box", async () => {
+		const user = userEvent.setup();
+		const onChange = vi.fn();
+		const props = {
+			columns,
+			data: branches,
+			getRowId,
+			label: "Branches",
+		};
+		const fixed = (branch: Branch): boolean => branch.id !== "b-1";
+		const { rerender } = render(
+			<DataTable
+				{...props}
+				selection={{
+					rowLabel: (branch) => branch.name,
+					selectedIds: [],
+					canSelect: fixed,
+					onChange,
+				}}
+			/>
+		);
+
+		await user.click(screen.getByRole("checkbox", { name: "Select all" }));
+
+		expect(onChange).toHaveBeenLastCalledWith(
+			expect.arrayContaining(["b-2", "b-3"])
+		);
+		expect(onChange.mock.lastCall?.[0]).not.toContain("b-1");
+
+		rerender(
+			<DataTable
+				{...props}
+				selection={{
+					rowLabel: (branch) => branch.name,
+					selectedIds: ["b-1", "b-2", "b-3"],
+					canSelect: fixed,
+					onChange,
+				}}
+			/>
+		);
+		await user.click(screen.getByRole("checkbox", { name: "Select all" }));
+
+		// Clearing all leaves a fixed row as it was, too.
+		expect(onChange).toHaveBeenLastCalledWith(["b-1"]);
+	});
+
+	it("disables select-all when no row's box can change", () => {
+		render(
+			<DataTable
+				columns={columns}
+				data={branches}
+				getRowId={getRowId}
+				label="Branches"
+				selection={{
+					rowLabel: (branch) => branch.name,
+					selectedIds: ["b-1"],
+					canSelect: () => false,
+				}}
+			/>
+		);
+
+		expect(screen.getByRole("checkbox", { name: "Select all" })).toBeDisabled();
+	});
+
 	it("shows the empty state across every column and disables select-all", () => {
 		render(
 			<DataTable
