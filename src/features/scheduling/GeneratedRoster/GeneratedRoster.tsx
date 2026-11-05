@@ -1,7 +1,8 @@
-import { useId, useRef, useState } from "react";
+import { useCallback, useId, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
+import { Callout } from "@/components/ui/Callout";
 import { StatCard } from "@/components/ui/StatCard";
 import { FindingsPanel } from "@/features/scheduling/FindingsPanel";
 import { FindingsSummary } from "@/features/scheduling/FindingsSummary";
@@ -23,12 +24,16 @@ import {
 	type RosterRow,
 	type RosterShiftCell,
 } from "@/features/scheduling/roster/roster";
+import { RosterCellPanel } from "@/features/scheduling/RosterCellPanel";
+import { rosterCellKey } from "@/features/scheduling/rosterChanges/rosterEdit";
+import type { RosterChangeTarget } from "@/features/scheduling/rosterChanges/useRosterChangeActions";
 import { RosterGrid } from "@/features/scheduling/RosterGrid";
 import { RosterWeekBar } from "@/features/scheduling/RosterWeekBar";
 import { mondayOf, weeksOf } from "@/features/scheduling/schedules";
 import type {
 	Schedule,
 	ScheduleAssignment,
+	ScheduleShift,
 } from "@/features/scheduling/schedules/api";
 import { ShiftDetailsPanel } from "@/features/scheduling/ShiftDetailsPanel";
 
@@ -38,6 +43,15 @@ export type RosterSchedule = Pick<
 	"periodStart" | "periodEnd" | "timeZone"
 > &
 	Partial<Pick<Schedule, "generation">>;
+
+/** What changing the roster by hand needs; given only to someone who may change it now. */
+export type RosterEditing = {
+	target: RosterChangeTarget;
+	/** The roster revision on screen. */
+	revision: number;
+	/** The schedule's frozen shifts, with their days and roles. */
+	shifts: ReadonlyArray<ScheduleShift>;
+};
 
 export type GeneratedRosterProps = {
 	schedule: RosterSchedule;
@@ -51,17 +65,22 @@ export type GeneratedRosterProps = {
 	startingRuns?: ReadonlyMap<string, number>;
 	/** Whether the figures above the roster are shown; a member's own view leaves them out. */
 	withSummary?: boolean;
+	/** Lets a day be changed by hand beside the grid; read-only without. */
+	editing?: RosterEditing;
 };
 
 /** A worked day chosen on the roster. */
 type ChosenDay = { row: RosterRow; day: string; shift: RosterShiftCell };
+
+const NO_DAYS: ReadonlySet<string> = new Set();
 
 const key = "scheduling.detail";
 
 /**
  * A generated schedule's roster, a week at a time: what it adds up to, what
  * the engine found (a summary, the findings panel and marks on the grid), and
- * a chosen day's shift beside it, read-only.
+ * a chosen day's shift beside it, read-only. With `editing`, any day opens
+ * the editor beside the grid instead, and days changed by hand carry a dot.
  */
 export const GeneratedRoster = ({
 	schedule,
@@ -70,6 +89,7 @@ export const GeneratedRoster = ({
 	constraints = [],
 	startingRuns,
 	withSummary = true,
+	editing,
 }: GeneratedRosterProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const language = i18n.resolvedLanguage ?? i18n.language;
@@ -78,6 +98,13 @@ export const GeneratedRoster = ({
 		mondayOf(isoDateIn(schedule.timeZone, new Date()));
 	const [week, setWeek] = useState(thisWeek);
 	const [chosen, setChosen] = useState<ChosenDay>();
+	const [editingKey, setEditingKey] = useState<string>();
+	const [previewDays, setPreviewDays] = useState<ReadonlySet<string>>(NO_DAYS);
+	// Where focus goes back to when the editor closes: the day that opened it.
+	const opener = useRef<HTMLElement | null>(null);
+	const onPreviewDays = useCallback((keys: ReadonlyArray<string>) => {
+		setPreviewDays(keys.length === 0 ? NO_DAYS : new Set(keys));
+	}, []);
 	const [findingsOpen, setFindingsOpen] = useState(false);
 	const findingsPanelId = useId();
 	const findingsPanel = useRef<HTMLDivElement>(null);
@@ -109,6 +136,31 @@ export const GeneratedRoster = ({
 			? findingNames(findings, { assignments, shifts, constraints })
 			: null;
 	const numbers = new Intl.NumberFormat(language);
+	const editedDays = new Set(
+		assignments.flatMap((row) =>
+			row.lastChange && row.member
+				? [rosterCellKey(row.member.membershipId, row.day)]
+				: []
+		)
+	);
+	const editingAssignment = assignments.find(
+		(row) =>
+			row.member !== null &&
+			rosterCellKey(row.member.membershipId, row.day) === editingKey
+	);
+	const openEditor = (row: RosterRow, day: string): void => {
+		if (row.membershipId === null) return;
+		opener.current =
+			document.activeElement instanceof HTMLElement
+				? document.activeElement
+				: null;
+		setEditingKey(rosterCellKey(row.membershipId, day));
+	};
+	const closeEditor = (): void => {
+		setEditingKey(undefined);
+		setPreviewDays(NO_DAYS);
+		opener.current?.focus();
+	};
 	// Opened from a marker's popover: open the panel now, then move to it.
 	const showAllFindings = (): void => {
 		flushSync(() => {
@@ -178,6 +230,11 @@ export const GeneratedRoster = ({
 					</div>
 				</>
 			)}
+			{findings && editedDays.size > 0 && (
+				<Callout className="mt-4">
+					{t("scheduling.rosterEdit.findingsOutOfDate")}
+				</Callout>
+			)}
 			{rows.length === 0 ? (
 				<p className="mt-8 text-sm text-neutral-800">{t(`${key}.noRows`)}</p>
 			) : (
@@ -196,9 +253,11 @@ export const GeneratedRoster = ({
 						<RosterGrid
 							className="w-full lg:flex-1"
 							days={days}
+							editedDays={editing ? editedDays : NO_DAYS}
+							previewDays={previewDays}
 							rowNotes={rowNotes}
 							rows={rows}
-							selectedShiftId={chosen?.shift.assignmentId}
+							selectedDayKey={editingKey}
 							findings={
 								findings && names
 									? {
@@ -208,11 +267,32 @@ export const GeneratedRoster = ({
 										}
 									: undefined
 							}
+							selectedShiftId={
+								editing
+									? editingAssignment?.assignmentId
+									: chosen?.shift.assignmentId
+							}
+							onDaySelect={editing ? openEditor : undefined}
 							onAssignmentSelect={(row, day, shift) => {
-								setChosen({ row, day, shift });
+								if (editing) openEditor(row, day);
+								else setChosen({ row, day, shift });
 							}}
 						/>
-						{chosen && (
+						{editing && editingAssignment && (
+							<RosterCellPanel
+								// Each day starts with nothing chosen.
+								key={editingAssignment.assignmentId}
+								assignment={editingAssignment}
+								assignments={assignments}
+								revision={editing.revision}
+								shifts={editing.shifts}
+								target={editing.target}
+								onClose={closeEditor}
+								onPreviewDays={onPreviewDays}
+								onApplied={closeEditor}
+							/>
+						)}
+						{!editing && chosen && (
 							<ShiftDetailsPanel
 								shift={{ ...chosen.shift, date: chosen.day }}
 								staffName={chosen.row.name ?? t(`${key}.formerMember`)}
