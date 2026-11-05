@@ -15,6 +15,7 @@ import {
 	enteredDays,
 	fillEmpty,
 	initialEntries,
+	shiftCellValue,
 	withCell,
 	type CellValue,
 	type Entries,
@@ -64,7 +65,7 @@ export const StartingDaysDialog = ({
 		{ value: "", label: t(`${key}.notKnown`) },
 		{ value: "OFF", label: t("scheduling.detail.kinds.off") },
 		...week.shifts.map((shift) => ({
-			value: `shift:${shift.shiftId}`,
+			value: shiftCellValue(shift.shiftId),
 			label: `${shift.name} ${shift.startTime}–${shift.endTime}`,
 		})),
 	];

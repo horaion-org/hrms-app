@@ -6,6 +6,7 @@ import {
 	StepperStep,
 	type StepperProps,
 } from "@/components/ui/Stepper";
+import "@/common/i18n";
 
 type StoryArgs = StepperProps & { labels: Array<string> };
 

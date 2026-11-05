@@ -38,6 +38,11 @@ import {
 	frozenShiftsFixture,
 	scheduleShiftsFixture,
 } from "@/features/scheduling/shifts/fixtures";
+import type { StartingDays } from "@/features/scheduling/startingContext/api";
+import {
+	firstWeek,
+	unknownCell,
+} from "@/features/scheduling/startingContext/fixtures";
 import type { Workspace } from "@/features/workspace/api";
 
 const REFRESH = "POST /api/v1/public/sessions/refreshes";
@@ -1315,5 +1320,137 @@ describe("Create Schedule: generating", () => {
 			"This schedule has already been generated."
 		);
 		expect(writes(calls)).toEqual([]);
+	});
+});
+
+describe("Create Schedule: where everyone starts", () => {
+	const STARTING_DAYS = `${SCHEDULE}/starting-days`;
+	/** Tan's entered Sunday night, and Siti's Sunday off as "Fill empty days" sets it. */
+	const SUNDAY_ENTRIES = [
+		{
+			memberProfileId: "p-tan",
+			date: "2026-11-08",
+			kind: "SHIFT",
+			shiftId: "s-night",
+		},
+		{
+			memberProfileId: "p-siti",
+			date: "2026-11-08",
+			kind: "OFF",
+			shiftId: null,
+		},
+	];
+
+	/** The week as the API answers the save: Siti's Sunday now an entered day off. */
+	const withSitisSundayOff = (): StartingDays => {
+		const week = firstWeek();
+		return {
+			...week,
+			members: week.members.map((member) =>
+				member.memberProfileId === "p-siti"
+					? {
+							...member,
+							cells: member.cells.map((cell) =>
+								cell.date === "2026-11-08"
+									? {
+											...unknownCell(cell.date),
+											kind: "OFF",
+											source: "ENTERED",
+										}
+									: cell
+							),
+						}
+					: member
+			),
+		};
+	};
+
+	it("given_noRosterBefore_when_lastWeeksDaysSaved_then_putsTheEnteredDaysAndSaysWhoHasThem", async () => {
+		const user = userEvent.setup();
+		const { calls } = await reopen({
+			[`GET ${STARTING_DAYS}`]: reply(firstWeek()),
+			[`PUT ${STARTING_DAYS}`]: reply(withSitisSundayOff()),
+		});
+		await screen.findByRole("row", { name: /Front Desk AM/ });
+		await toGenerate(user);
+
+		expect(
+			await screen.findByText(
+				"No roster before this week. Days are added for 1 person; everyone else starts rested."
+			)
+		).toBeInTheDocument();
+		await user.click(screen.getByRole("button", { name: "Edit last week" }));
+		const dialog = await screen.findByRole("dialog", {
+			name: "Before this week",
+		});
+		await user.click(
+			within(dialog).getByRole("button", { name: "Fill empty days" })
+		);
+		await user.click(within(dialog).getByRole("button", { name: "Save days" }));
+
+		await waitFor(() => {
+			expect(screen.queryByRole("dialog")).toBeNull();
+		});
+		expect(sent(calls, `PUT ${STARTING_DAYS}`)).toEqual([
+			{ days: SUNDAY_ENTRIES },
+		]);
+		expect(
+			screen.getByText(
+				"No roster before this week. Days are added for 2 people; everyone else starts rested."
+			)
+		).toBeInTheDocument();
+	});
+
+	it.each([
+		[
+			"INVALID_STARTING_DAY",
+			400,
+			"A day couldn’t be saved. Check that its shift is still in use, then try again.",
+		],
+		[
+			"SCHEDULE_NOT_DRAFT",
+			409,
+			"This schedule has already been generated, so its starting point can no longer change.",
+		],
+		["SOMETHING_ELSE", 500, "The days couldn’t be saved. Try again."],
+	])(
+		"given_aSaveRefusedWith_%s_when_lastWeeksDaysSaved_then_theDialogStaysAndSaysWhy",
+		async (code, status, copy) => {
+			const user = userEvent.setup();
+			await reopen({
+				[`GET ${STARTING_DAYS}`]: reply(firstWeek()),
+				[`PUT ${STARTING_DAYS}`]: problemReply(status, code),
+			});
+			await screen.findByRole("row", { name: /Front Desk AM/ });
+			await toGenerate(user);
+
+			await user.click(
+				await screen.findByRole("button", { name: "Edit last week" })
+			);
+			const dialog = await screen.findByRole("dialog", {
+				name: "Before this week",
+			});
+			await user.click(
+				within(dialog).getByRole("button", { name: "Save days" })
+			);
+
+			expect(await within(dialog).findByText(copy)).toBeInTheDocument();
+			expect(dialog).toBeInTheDocument();
+		}
+	);
+
+	it("given_noUpdateKey_when_onTheGenerateStep_then_showsWhereEveryoneStartsWithoutAnEdit", async () => {
+		const user = userEvent.setup();
+		await reopen(
+			{ [`GET ${STARTING_DAYS}`]: reply(firstWeek()) },
+			ALL.filter((key) => key !== "schedule:update")
+		);
+		await screen.findByRole("row", { name: /Front Desk AM/ });
+		await toGenerate(user);
+
+		expect(
+			await screen.findByText(/^No roster before this week\./)
+		).toBeInTheDocument();
+		expect(screen.queryByRole("button", { name: /last week/ })).toBeNull();
 	});
 });

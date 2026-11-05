@@ -477,6 +477,10 @@
 		"details": "Details",
 		"showDetails": "Show details for {{name}}"
 	},
+	"stepper": {
+		"step": "Step {{number}}: {{label}}",
+		"completedStep": "Step {{number}}: {{label}}, completed"
+	},
 	"weekNavigator": {
 		"label": "Week",
 		"thisWeek": "This week",
@@ -2537,9 +2541,11 @@
 			},
 			"showInFindings": "Show in findings"
 		},
+		"scheduleMenu": {
+			"label": "More actions for {{name}}"
+		},
 		"delete": {
 			"menu": "Delete",
-			"moreActions": "More actions for {{name}}",
 			"title": "Delete {{name}}?",
 			"description": "This removes the {{department}} schedule for {{period}}, with its roster. This can’t be undone.",
 			"runOpen": "This schedule is being generated. You can delete it once the run finishes.",
@@ -2572,7 +2578,7 @@
 		"export": {
 			"menu": "Export roster",
 			"done": "Roster downloaded.",
-			"failedTitle": "The roster couldn't be downloaded",
+			"failedTitle": "The roster couldn’t be downloaded",
 			"failed": "Check your connection and try again.",
 			"draft": "This schedule has no roster yet.",
 			"retry": "Try again",

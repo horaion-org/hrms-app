@@ -394,6 +394,10 @@
 		"details": "Detalles",
 		"showDetails": "Ver detalles de {{name}}"
 	},
+	"stepper": {
+		"step": "Paso {{number}}: {{label}}",
+		"completedStep": "Paso {{number}}: {{label}}, completado"
+	},
 	"weekNavigator": {
 		"label": "Semana",
 		"thisWeek": "Esta semana",
@@ -1676,9 +1680,11 @@
 			},
 			"showInFindings": "Ver en los hallazgos"
 		},
+		"scheduleMenu": {
+			"label": "Más acciones para {{name}}"
+		},
 		"delete": {
 			"menu": "Eliminar",
-			"moreActions": "Más acciones para {{name}}",
 			"title": "¿Eliminar {{name}}?",
 			"description": "Esto elimina el horario de {{department}} para {{period}}, con su cuadrante. No se puede deshacer.",
 			"runOpen": "Este horario se está generando. Podrás eliminarlo cuando termine la ejecución.",
@@ -1709,11 +1715,11 @@
 			"failed": "No pudimos regenerar el cuadrante. Inténtalo de nuevo."
 		},
 		"export": {
-			"menu": "Exportar turnos",
-			"done": "Turnos descargados.",
-			"failedTitle": "No se pudieron descargar los turnos",
+			"menu": "Exportar cuadrante",
+			"done": "Cuadrante descargado.",
+			"failedTitle": "No se pudo descargar el cuadrante",
 			"failed": "Comprueba tu conexión e inténtalo de nuevo.",
-			"draft": "Este horario aún no tiene turnos.",
+			"draft": "Este horario aún no tiene cuadrante.",
 			"retry": "Reintentar",
 			"close": "Cerrar"
 		},
@@ -1753,12 +1759,12 @@
 			"title": "Antes de esta semana",
 			"explain": "Horaion usa estos días para respetar el descanso entre turnos y dar un día libre a quien ya está en su límite. Los días vacíos cuentan como desconocidos.",
 			"hint": "Empieza por el domingo. Los días anteriores solo importan para quien trabajó todos los días.",
-			"none": "No hay turnos antes de esta semana. Todos empiezan descansados.",
-			"noneWithEntries_one": "No hay turnos antes de esta semana. Hay días añadidos para {{count}} persona; las demás empiezan descansadas.",
-			"noneWithEntries_other": "No hay turnos antes de esta semana. Hay días añadidos para {{count}} personas; las demás empiezan descansadas.",
+			"none": "No hay cuadrante antes de esta semana. Todos empiezan descansados.",
+			"noneWithEntries_one": "No hay cuadrante antes de esta semana. Hay días añadidos para {{count}} persona; las demás empiezan descansadas.",
+			"noneWithEntries_other": "No hay cuadrante antes de esta semana. Hay días añadidos para {{count}} personas; las demás empiezan descansadas.",
 			"carried": "Continúa desde la semana del {{week}}.",
-			"carriedWithNew_one": "Continúa desde la semana del {{week}}. {{count}} persona no figura en esos turnos y empieza descansada.",
-			"carriedWithNew_other": "Continúa desde la semana del {{week}}. {{count}} personas no figuran en esos turnos y empiezan descansadas.",
+			"carriedWithNew_one": "Continúa desde la semana del {{week}}. {{count}} persona no figura en ese cuadrante y empieza descansada.",
+			"carriedWithNew_other": "Continúa desde la semana del {{week}}. {{count}} personas no figuran en ese cuadrante y empiezan descansadas.",
 			"add": "Añadir la semana pasada",
 			"edit": "Editar la semana pasada",
 			"notKnown": "Desconocido",

@@ -290,7 +290,7 @@ it("says when the roster couldn't be downloaded and lets the person try again", 
 	await user.click(screen.getByRole("menuitem", { name: "Export roster" }));
 
 	const dialog = await screen.findByRole("dialog", {
-		name: "The roster couldn't be downloaded",
+		name: "The roster couldn’t be downloaded",
 	});
 	expect(
 		within(dialog).getByText("Check your connection and try again.")
@@ -752,6 +752,76 @@ it("shows nothing about findings when the engine found nothing", async () => {
 	expect(screen.queryByText(/The scheduling engine left/)).toBeNull();
 	expect(screen.queryByRole("button", { name: "Show details" })).toBeNull();
 	expect(within(roster).queryByRole("button", { name: /note/ })).toBeNull();
+});
+
+/** A starting context as `GET …/starting-context` answers it, frozen at generation. */
+const startingContextReply = (
+	staleMemberProfileIds: Array<string>
+): StubReply =>
+	ok({
+		frozen: true,
+		staleMemberProfileIds,
+		members: [
+			{
+				memberProfileId: "mp-1",
+				displayName: "Aisha Rahman",
+				consecutiveWorkingDays: 3,
+				trailingSevenDays: "OWWWOOW",
+				source: "PUBLISHED",
+			},
+			{
+				memberProfileId: "mp-2",
+				displayName: "Ben Ong",
+				consecutiveWorkingDays: 0,
+				trailingSevenDays: "OOOOOOO",
+				source: "PUBLISHED",
+			},
+		],
+	});
+
+it("badges a member who brought a run into the week and warns when starting points changed since", async () => {
+	const calls = await openRoster({
+		...signedIn(),
+		[`GET ${SCHEDULE_READ}`]: ok(
+			generatedScheduleFixture({ status: "GENERATED" })
+		),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+		[`GET ${SCHEDULE}/starting-context`]: startingContextReply(["mp-2"]),
+	});
+
+	const roster = await screen.findByRole("table", { name: "Roster" });
+	// Three days worked before Monday make Monday the fourth day of the run.
+	expect(await within(roster).findByText("Day 4 of a run")).toBeInTheDocument();
+	expect(
+		within(within(roster).getByRole("row", { name: /Aisha Rahman/ })).getByText(
+			"Day 4 of a run"
+		)
+	).toBeInTheDocument();
+	expect(within(roster).getAllByText(/of a run/)).toHaveLength(1);
+	expect(
+		screen.getByText(
+			/^1 person’s days before this week changed after this schedule was generated\./
+		)
+	).toBeInTheDocument();
+	expect(readsOf(calls, `${SCHEDULE}/starting-context`)).toHaveLength(1);
+});
+
+it("shows the roster without starting points when they can't be read", async () => {
+	await openRoster({
+		...signedIn(),
+		[`GET ${SCHEDULE_READ}`]: ok(
+			generatedScheduleFixture({ status: "GENERATED" })
+		),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+		// No starting-context route: the API answers 404.
+	});
+
+	const roster = await screen.findByRole("table", { name: "Roster" });
+	expect(within(roster).getAllByRole("row")).toHaveLength(4);
+	expect(within(roster).queryByText(/of a run/)).toBeNull();
+	expect(
+		screen.queryByText(/changed after this schedule was generated/)
+	).toBeNull();
 });
 
 it("reads a schedule being generated every 15 seconds until its roster is ready", async () => {
