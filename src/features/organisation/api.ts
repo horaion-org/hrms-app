@@ -22,8 +22,9 @@ const auditEventPageSchema = z.object({ content: z.array(auditEventSchema) });
 
 /**
  * The audit entity types the Organisation Module reports on; `Company`
- * carries a workspace rename and `OrganisationImportJob` an organisation
- * import's summary.
+ * carries a workspace rename, `Skill` a change to the skill catalogue or a
+ * bulk assignment, and `OrganisationImportJob` an organisation import's
+ * summary.
  */
 export const ORGANISATION_ENTITY_TYPES = [
 	"Company",
@@ -31,6 +32,7 @@ export const ORGANISATION_ENTITY_TYPES = [
 	"Department",
 	"AccessRole",
 	"JobTitle",
+	"Skill",
 	"OrganisationImportJob",
 ] as const;
 

@@ -1715,7 +1715,11 @@
 				"scheduleRegenerationRequested": "Schedule regeneration requested: {{name}}",
 				"scheduleGenerated": "Schedule generated: {{name}}",
 				"scheduleDeleted": "Schedule deleted: {{name}}",
-				"organisationImported": "Organisation imported"
+				"organisationImported": "Organisation imported",
+				"skillCreated": "Skill created: {{name}}",
+				"skillUpdated": "Skill updated: {{name}}",
+				"skillDeleted": "Skill deleted: {{name}}",
+				"skillAssigned": "Skill assigned to people: {{name}}"
 			},
 			"unnamed": {
 				"branchCreated": "Branch created",
@@ -1748,7 +1752,11 @@
 				"scheduleRegenerationRequested": "Schedule regeneration requested",
 				"scheduleGenerated": "Schedule generated",
 				"scheduleDeleted": "Schedule deleted",
-				"organisationImported": "Organisation imported"
+				"organisationImported": "Organisation imported",
+				"skillCreated": "Skill created",
+				"skillUpdated": "Skill updated",
+				"skillDeleted": "Skill deleted",
+				"skillAssigned": "Skill assigned to people"
 			},
 			"fallback": {
 				"named": "{{entity}} {{verb}}: {{name}}",

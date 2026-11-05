@@ -176,7 +176,7 @@ it("shows the overview figures and recent activity for the current company", asy
 		"status=ACTIVE&size=1"
 	);
 	expect(searchOf("/api/v1/companies/c-1/audit-events")).toBe(
-		"size=4&entityType=Company&entityType=Branch&entityType=Department&entityType=AccessRole&entityType=JobTitle&entityType=OrganisationImportJob"
+		"size=4&entityType=Company&entityType=Branch&entityType=Department&entityType=AccessRole&entityType=JobTitle&entityType=Skill&entityType=OrganisationImportJob"
 	);
 });
 

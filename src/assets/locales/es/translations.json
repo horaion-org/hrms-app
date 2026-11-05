@@ -597,7 +597,11 @@
 				"scheduleRegenerationRequested": "Regeneración de horario solicitada: {{name}}",
 				"scheduleGenerated": "Horario generado: {{name}}",
 				"scheduleDeleted": "Horario eliminado: {{name}}",
-				"organisationImported": "Organización importada"
+				"organisationImported": "Organización importada",
+				"skillCreated": "Habilidad creada: {{name}}",
+				"skillUpdated": "Habilidad actualizada: {{name}}",
+				"skillDeleted": "Habilidad eliminada: {{name}}",
+				"skillAssigned": "Habilidad asignada a personas: {{name}}"
 			},
 			"unnamed": {
 				"jobTitleCreated": "Puesto creado",
@@ -623,7 +627,11 @@
 				"scheduleRegenerationRequested": "Regeneración de horario solicitada",
 				"scheduleGenerated": "Horario generado",
 				"scheduleDeleted": "Horario eliminado",
-				"organisationImported": "Organización importada"
+				"organisationImported": "Organización importada",
+				"skillCreated": "Habilidad creada",
+				"skillUpdated": "Habilidad actualizada",
+				"skillDeleted": "Habilidad eliminada",
+				"skillAssigned": "Habilidad asignada a personas"
 			},
 			"fallback": {
 				"named": "{{verb}} de {{entity}}: {{name}}",
