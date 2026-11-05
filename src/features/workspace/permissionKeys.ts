@@ -83,6 +83,11 @@ export const AVAILABILITY_READ_KEYS: ReadonlyArray<PermissionKey> = [
 	"work_availability:read",
 ];
 
+/** A new schedule may be created where this is held at its Department: the wizard's unit choices. */
+export const SCHEDULE_CREATE_KEYS: ReadonlyArray<PermissionKey> = [
+	"schedule:create",
+];
+
 /** A schedule is listed where this is held at its Department: the Scheduling list's unit choices. */
 export const SCHEDULE_READ_KEYS: ReadonlyArray<PermissionKey> = [
 	"schedule:read",

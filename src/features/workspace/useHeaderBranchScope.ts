@@ -1,7 +1,11 @@
 import { useMatches, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
-import type { BranchScope } from "@/features/workspace/branchScope";
+import {
+	fixedBranchOf,
+	type BranchScope,
+	type FixedBranch,
+} from "@/features/workspace/branchScope";
 import { parseUnitSearch } from "@/features/workspace/unitSearch";
 import {
 	staleBranch,
@@ -32,11 +36,16 @@ const branchChange = (branchId: string | undefined, replace: boolean): never =>
 		replace,
 	}) as never;
 
-export type HeaderBranchScope = {
-	selection: ResolvedUnitSelection;
-	/** Writes the chosen Branch (`ALL_BRANCHES` for every Branch) and starts the list again. */
-	choose: (branchId: string) => void;
-};
+export type HeaderBranchScope =
+	| {
+			selection: ResolvedUnitSelection;
+			/** Writes the chosen Branch (`ALL_BRANCHES` for every Branch) and starts the list again. */
+			choose: (branchId: string) => void;
+	  }
+	| {
+			/** The page is about this one Branch: named, never chosen. */
+			fixed: FixedBranch;
+	  };
 
 /**
  * The Branch the current page lists, for the header: found on the deepest
@@ -44,7 +53,9 @@ export type HeaderBranchScope = {
  * keys, so it is the Branch the page resolves too. The route's rules only
  * say whether the current view lists by Branch: undefined (no header
  * control) where it does not. A Branch in the URL that the page does not
- * offer is taken out once.
+ * offer is taken out once. A page about one Branch (its loader returned
+ * `fixedBranch`, as a schedule's pages do) shows that Branch instead, and
+ * leaves the URL's Branch alone for the pages that list.
  */
 export const useHeaderBranchScope = (): HeaderBranchScope | undefined => {
 	const companyId = useCurrentCompanyId();
@@ -52,6 +63,9 @@ export const useHeaderBranchScope = (): HeaderBranchScope | undefined => {
 	const match = useMatches({
 		select: (matches) =>
 			[...matches].reverse().find((each) => each.staticData.branchScope),
+	});
+	const fixed = useMatches({
+		select: (matches) => fixedBranchOf(matches[matches.length - 1]?.loaderData),
 	});
 	const scope = match?.staticData.branchScope ?? NO_SCOPE;
 	const search = (match?.search ?? {}) as Record<string, unknown>;
@@ -64,10 +78,13 @@ export const useHeaderBranchScope = (): HeaderBranchScope | undefined => {
 		HEADER_RULES
 	);
 	const stale =
-		rules !== undefined && staleBranch(selection, { branchId: branch });
+		fixed === undefined &&
+		rules !== undefined &&
+		staleBranch(selection, { branchId: branch });
 	useEffect(() => {
 		if (stale) void navigate(branchChange(undefined, true));
 	}, [stale, navigate]);
+	if (fixed) return { fixed };
 	if (!rules || selection.branches.length === 0) return undefined;
 	return {
 		selection,

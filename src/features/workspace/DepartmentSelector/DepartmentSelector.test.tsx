@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { I18nextProvider } from "react-i18next";
 import { describe, expect, it, vi } from "vitest";
@@ -74,7 +74,8 @@ const renderWith = (
 	data?: Workspace,
 	value?: string,
 	activeOnly = false,
-	branchId?: string
+	branchId?: string,
+	branchHeadings = false
 ): { onChange: ReturnType<typeof vi.fn> } => {
 	const client = new QueryClient({
 		defaultOptions: { queries: { retry: false } },
@@ -91,6 +92,7 @@ const renderWith = (
 				<DepartmentSelector
 					activeOnly={activeOnly}
 					aria-label="Department"
+					branchHeadings={branchHeadings}
 					branchId={branchId}
 					companyId="c-1"
 					keys={[CREATE]}
@@ -210,5 +212,33 @@ describe("DepartmentSelector", () => {
 		expect(button).toBeEnabled();
 		await user.click(button);
 		expect(screen.queryAllByRole("option")).toEqual([]);
+	});
+
+	it("with branch headings, names each Department plainly under its Branch", async () => {
+		const user = userEvent.setup();
+		renderWith(workspace([], [CREATE]), undefined, false, undefined, true);
+
+		await user.click(screen.getByRole("button", { name: "Department" }));
+
+		expect(
+			within(screen.getByRole("group", { name: "Orchard" }))
+				.getAllByRole("option")
+				.map((option) => option.textContent)
+		).toEqual(["Bar", "Kitchen"]);
+		expect(
+			within(screen.getByRole("group", { name: "Bukit Bintang" }))
+				.getAllByRole("option")
+				.map((option) => option.textContent)
+		).toEqual(["Kitchen"]);
+	});
+
+	it("with branch headings and one Branch, names its Departments plainly without a heading", async () => {
+		const user = userEvent.setup();
+		renderWith(workspace([], [CREATE]), undefined, false, "b-1", true);
+
+		expect(await optionLabels(user)).toEqual(["Bar", "Kitchen"]);
+		expect(
+			within(screen.getByRole("listbox")).queryByRole("group")
+		).not.toBeInTheDocument();
 	});
 });

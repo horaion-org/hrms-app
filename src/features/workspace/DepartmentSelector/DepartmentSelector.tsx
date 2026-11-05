@@ -14,6 +14,12 @@ export type DepartmentSelectorProps = {
 	companyId: string;
 	/** Optionally restrict choices to the selected Branch. */
 	branchId?: string;
+	/**
+	 * Names each Department plainly, for a page whose header shows the
+	 * Branch: alone when `branchId` narrows to one Branch, else under its
+	 * Branch's heading. Otherwise each is named "Branch › Department".
+	 */
+	branchHeadings?: boolean;
 	/** A Department is offered when any of these is effective at it (its node already carries grants made above it). */
 	keys: ReadonlyArray<PermissionKey>;
 	/** The chosen Department's id; empty or undefined for none. */
@@ -52,6 +58,7 @@ export type DepartmentSelectorProps = {
 export const DepartmentSelector = ({
 	companyId,
 	branchId,
+	branchHeadings = false,
 	keys,
 	value,
 	onChange,
@@ -69,10 +76,15 @@ export const DepartmentSelector = ({
 				)
 				.map((choice) => ({
 					value: choice.departmentId,
-					label: placeOf(
-						{ branchName: choice.branchName, departmentName: choice.name },
-						t
-					),
+					label: branchHeadings
+						? choice.name
+						: placeOf(
+								{ branchName: choice.branchName, departmentName: choice.name },
+								t
+							),
+					...(branchHeadings && branchId === undefined
+						? { group: choice.branchName }
+						: {}),
 				}))
 		: [];
 	return (

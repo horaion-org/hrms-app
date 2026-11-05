@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { resetApiClient } from "@/common/api-client";
 import {
@@ -17,6 +17,7 @@ import { renderAuthApp } from "@/features/auth/testing";
 import {
 	scheduleAssignmentsFixture,
 	schedulingWorkspace,
+	twoBranchSchedulingWorkspace,
 } from "@/features/scheduling/schedules/fixtures";
 
 let app: OpenedApp | undefined;
@@ -95,4 +96,33 @@ it("says the roster isn't available when the API refuses it with a 404", async (
 		"This roster isn’t available. It may not be published yet, or you aren’t on it."
 	);
 	expect(screen.queryByRole("table")).toBeNull();
+});
+
+it("shows no Branch in the header: it is the member's own roster, like their leave", async () => {
+	await openMyRoster({
+		...signedInAsWorker(),
+		// Even someone who reads schedules across two Branches.
+		"GET /api/v1/me/workspace": {
+			status: 200,
+			body: envelope(twoBranchSchedulingWorkspace(["schedule:read"])),
+		},
+		[`GET ${MY_ROSTER}`]: {
+			status: 200,
+			body: envelope({
+				scheduleId: "s-1",
+				name: "Front Office - Week 42",
+				branchName: "North",
+				departmentName: "Front Office",
+				timeZone: "Asia/Singapore",
+				periodStart: "2026-10-12",
+				periodEnd: "2026-10-18",
+				assignments: scheduleAssignmentsFixture(),
+			}),
+		},
+	});
+	await screen.findByRole("row", { name: /Aisha Rahman/ });
+
+	expect(
+		within(screen.getByRole("banner")).queryByText("Branch")
+	).not.toBeInTheDocument();
 });

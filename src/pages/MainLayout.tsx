@@ -77,10 +77,14 @@ export const MainLayout = (): FunctionComponent => {
 							{/* The one Branch control, in the same place on every page that lists by Branch. */}
 							{branchScope && (
 								<div className="mr-2 sm:mr-4">
-									<HeaderBranchScope
-										selection={branchScope.selection}
-										onChange={branchScope.choose}
-									/>
+									{"fixed" in branchScope ? (
+										<HeaderBranchScope fixed={branchScope.fixed} />
+									) : (
+										<HeaderBranchScope
+											selection={branchScope.selection}
+											onChange={branchScope.choose}
+										/>
+									)}
 								</div>
 							)}
 							<NotificationBell />

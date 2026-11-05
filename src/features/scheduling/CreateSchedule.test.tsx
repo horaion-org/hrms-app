@@ -29,6 +29,7 @@ import {
 	generatedScheduleFixture,
 	scheduleFixture,
 	schedulingWorkspace,
+	twoBranchSchedulingWorkspace,
 } from "@/features/scheduling/schedules/fixtures";
 import {
 	INCLUDED_SHIFT_IDS,
@@ -210,9 +211,7 @@ const fillSetup = async (
 	user: ReturnType<typeof userEvent.setup>
 ): Promise<void> => {
 	await user.click(await screen.findByRole("button", { name: /Department/ }));
-	await user.click(
-		await screen.findByRole("option", { name: "Main branch › Front Office" })
-	);
+	await user.click(await screen.findByRole("option", { name: "Front Office" }));
 	await user.type(
 		screen.getByRole("textbox", { name: /Schedule name/ }),
 		"Front Office - Week 42"
@@ -1452,5 +1451,77 @@ describe("Create Schedule: where everyone starts", () => {
 			await screen.findByText(/^No roster before this week\./)
 		).toBeInTheDocument();
 		expect(screen.queryByRole("button", { name: /last week/ })).toBeNull();
+	});
+});
+
+describe("Create Schedule: the header's Branch", () => {
+	it("given_oneBranchToCreateIn_when_setupOpens_then_theHeaderNamesItAsText", async () => {
+		await open("/scheduling/new");
+		await screen.findByRole("textbox", { name: /Schedule name/ });
+
+		const header = screen.getByRole("banner");
+		expect(
+			within(header).queryByRole("button", { name: "Branch" })
+		).not.toBeInTheDocument();
+		expect(within(header).getByText("Main branch")).toBeVisible();
+	});
+
+	it("given_twoBranches_when_theHeaderBranchChanges_then_offersItsDepartmentsAndLetsTheChosenOneGo", async () => {
+		const user = userEvent.setup();
+		const { opened } = await open(
+			"/scheduling/new",
+			{},
+			twoBranchSchedulingWorkspace(ALL)
+		);
+		await screen.findByRole("textbox", { name: /Schedule name/ });
+		const header = screen.getByRole("banner");
+		const branch = within(header).getByRole("button", { name: "Branch" });
+		// The Scheduling list's rule: the first Branch by name, "All branches" last.
+		expect(branch).toHaveTextContent("Main branch");
+
+		await user.click(screen.getByRole("button", { name: /Department/ }));
+		expect(
+			screen.getAllByRole("option").map((option) => option.textContent)
+		).toEqual(["Front Office", "Kitchen"]);
+		await user.click(screen.getByRole("option", { name: "Kitchen" }));
+
+		await user.click(branch);
+		const options = screen.getAllByRole("option");
+		expect(options[options.length - 1]).toHaveTextContent("All branches");
+		await user.click(screen.getByRole("option", { name: "North" }));
+
+		await waitFor(() => {
+			expect(opened.router.state.location.search).toMatchObject({
+				branch: "b-2",
+			});
+		});
+		await waitFor(() => {
+			expect(
+				screen.getByRole("button", { name: /Department/ })
+			).toHaveTextContent("Select a department");
+		});
+		await user.click(screen.getByRole("button", { name: /Department/ }));
+		expect(
+			screen.getAllByRole("option").map((option) => option.textContent)
+		).toEqual(["Front Office"]);
+	});
+
+	it("given_aReopenedDraft_when_shown_then_theHeaderNamesItsBranchAndKeepsTheListsChoice", async () => {
+		const { opened } = await open(
+			`${REOPEN}&branch=all`,
+			{},
+			twoBranchSchedulingWorkspace(ALL)
+		);
+		await screen.findByRole("tablist", { name: "Shift types" });
+
+		const header = screen.getByRole("banner");
+		expect(
+			within(header).queryByRole("button", { name: "Branch" })
+		).not.toBeInTheDocument();
+		expect(within(header).getByText("Main branch")).toBeVisible();
+		// The draft fixes what the header shows, not what the list chose.
+		expect(opened.router.state.location.search).toMatchObject({
+			branch: "all",
+		});
 	});
 });
