@@ -9,8 +9,10 @@ export function formatCooldown(seconds: number): string {
 }
 
 /**
- * A short wait before another code can be requested, held in page state only: a reload starts without
- * it, and the API's own limits (ADR-0026) still apply. `restart()` begins a full wait.
+ * A short wait before another code can be requested, held in page state only, so a reload forgets how much
+ * was left: a page opened right after a code was sent (`startActive`, from history state that survives the
+ * reload) waits the full time again, any other page not at all. The API's own limits (its ADR-0026) still
+ * apply. `restart()` begins a full wait.
  */
 export function useResendCooldown({
 	seconds = RESEND_COOLDOWN_SECONDS,

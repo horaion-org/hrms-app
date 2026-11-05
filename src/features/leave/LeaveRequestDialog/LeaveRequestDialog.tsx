@@ -94,15 +94,17 @@ export const LeaveRequestDialog = ({
 	const [step, setStep] = useState<ReviewStep>(
 		mode === "reject" || mode === "approve" ? mode : "review"
 	);
-	const [reason, setReason] = useState("");
-	const [comment, setComment] = useState("");
-	const [missingReason, setMissingReason] = useState(false);
+	const [rejectionReason, setRejectionReason] = useState("");
+	const [approvalComment, setApprovalComment] = useState("");
+	const [missingRejectionReason, setMissingRejectionReason] = useState(false);
 	const [membershipId, setMembershipId] = useState("");
 	const [chosenType, setChosenType] = useState<string | null>(null);
-	const [missingNotes, setMissingNotes] = useState(false);
 	const today = dayjs().format("YYYY-MM-DD");
 	const [dates, setDates] = useState({ start: today, end: today });
-	const [notes, setNotes] = useState("");
+	// The applicant's remarks, sent as the API's `notes`. A leave type that asks for a reason makes them required
+	// and relabels them "Reason for leave"; that is not the reviewer's rejection reason above.
+	const [remarks, setRemarks] = useState("");
+	const [missingRemarks, setMissingRemarks] = useState(false);
 	const applying = mode === "apply";
 	const own = applying && employees === undefined;
 	const chosen = employees?.options.find(
@@ -112,17 +114,19 @@ export const LeaveRequestDialog = ({
 	const employeeError = fields.employee ? `${id}-employee-error` : undefined;
 	const rejecting = step === "reject";
 	const deciding = step !== "review";
-	const reasonError = missingReason ? t("leave.required") : fields.reason;
-	const decisionError = rejecting ? reasonError : fields.comment;
-	const notesIds = formRowIds(`${id}-notes`);
+	const rejectionReasonError = missingRejectionReason
+		? t("leave.required")
+		: fields.reason;
+	const decisionError = rejecting ? rejectionReasonError : fields.comment;
+	const remarksIds = formRowIds(`${id}-remarks`);
 	const typeOptions = leaveTypeOptions(leaveTypes, t);
 	// Until the person picks one, the first type offered is chosen, even if the catalogue arrives after opening.
 	const typeCode = chosenType ?? typeOptions[0]?.value ?? "";
-	const reasonRequired =
+	const remarksRequired =
 		leaveTypes.find((leaveType) => leaveType.code === typeCode)
 			?.requiresReason ?? false;
-	const notesError =
-		missingNotes && reasonRequired
+	const remarksError =
+		missingRemarks && remarksRequired
 			? t("leave.leaveReasonRequired")
 			: fields.notes;
 	const typeError = fields.type ? `${id}-type-error` : undefined;
@@ -155,7 +159,7 @@ export const LeaveRequestDialog = ({
 							variant="cancel"
 							onClick={() => {
 								setStep("review");
-								setMissingReason(false);
+								setMissingRejectionReason(false);
 							}}
 						>
 							{t("leave.cancel")}
@@ -215,16 +219,16 @@ export const LeaveRequestDialog = ({
 					onSubmit={(event) => {
 						event.preventDefault();
 						if ((!own && !chosen) || typeCode === "") return;
-						const remarks = notes.trim();
-						if (reasonRequired && remarks === "") {
-							setMissingNotes(true);
+						const trimmedRemarks = remarks.trim();
+						if (remarksRequired && trimmedRemarks === "") {
+							setMissingRemarks(true);
 							return;
 						}
 						onCreate(own ? null : (chosen?.membershipId ?? null), {
 							leaveType: typeCode,
 							startDate: dates.start,
 							endDate: dates.end,
-							...(remarks === "" ? {} : { notes: remarks }),
+							...(trimmedRemarks === "" ? {} : { notes: trimmedRemarks }),
 						});
 					}}
 				>
@@ -312,33 +316,35 @@ export const LeaveRequestDialog = ({
 						)}
 					</div>
 					<FormRow
-						counter={t("leave.remarksCounter", { count: notes.length })}
-						error={notesError}
-						htmlFor={`${id}-notes`}
+						counter={t("leave.remarksCounter", { count: remarks.length })}
+						error={remarksError}
+						htmlFor={`${id}-remarks`}
 						layout="stacked"
-						required={reasonRequired}
+						required={remarksRequired}
 						hint={t(
-							reasonRequired ? "leave.leaveReasonHint" : "leave.remarksHint"
+							remarksRequired ? "leave.leaveReasonHint" : "leave.remarksHint"
 						)}
 						label={t(
-							reasonRequired ? "leave.leaveReason" : "leave.remarksOptional"
+							remarksRequired ? "leave.leaveReason" : "leave.remarksOptional"
 						)}
 					>
 						<Textarea
-							aria-describedby={notesError ? notesIds.errorId : notesIds.hintId}
-							id={`${id}-notes`}
+							id={`${id}-remarks`}
 							maxLength={LEAVE_NOTES_MAX_LENGTH}
-							required={reasonRequired}
-							status={notesError ? "error" : undefined}
-							value={notes}
+							required={remarksRequired}
+							status={remarksError ? "error" : undefined}
+							value={remarks}
+							aria-describedby={
+								remarksError ? remarksIds.errorId : remarksIds.hintId
+							}
 							placeholder={t(
-								reasonRequired
+								remarksRequired
 									? "leave.leaveReasonPlaceholder"
 									: "leave.remarksPlaceholder"
 							)}
 							onChange={(event) => {
-								setNotes(event.target.value);
-								setMissingNotes(false);
+								setRemarks(event.target.value);
+								setMissingRemarks(false);
 							}}
 						/>
 					</FormRow>
@@ -438,14 +444,14 @@ export const LeaveRequestDialog = ({
 								onSubmit={(event) => {
 									event.preventDefault();
 									if (!rejecting) {
-										onApprove(request, comment.trim());
+										onApprove(request, approvalComment.trim());
 										return;
 									}
-									if (!reason.trim()) {
-										setMissingReason(true);
+									if (!rejectionReason.trim()) {
+										setMissingRejectionReason(true);
 										return;
 									}
-									onReject(request, reason.trim());
+									onReject(request, rejectionReason.trim());
 								}}
 							>
 								<label
@@ -463,12 +469,14 @@ export const LeaveRequestDialog = ({
 									)}
 								</label>
 								<Textarea
-									aria-describedby={decisionError ? `${id}-error` : undefined}
 									id={`${id}-decision-note`}
 									placeholder={t("leave.note")}
 									required={rejecting}
 									status={decisionError ? "error" : undefined}
-									value={rejecting ? reason : comment}
+									value={rejecting ? rejectionReason : approvalComment}
+									aria-describedby={
+										decisionError ? `${id}-decision-error` : undefined
+									}
 									maxLength={
 										rejecting
 											? REJECTION_REASON_MAX_LENGTH
@@ -476,15 +484,15 @@ export const LeaveRequestDialog = ({
 									}
 									onChange={(event) => {
 										if (rejecting) {
-											setReason(event.target.value);
-											setMissingReason(false);
-										} else setComment(event.target.value);
+											setRejectionReason(event.target.value);
+											setMissingRejectionReason(false);
+										} else setApprovalComment(event.target.value);
 									}}
 								/>
 								{decisionError && (
 									<p
 										className="mt-2 text-sm text-error-700"
-										id={`${id}-error`}
+										id={`${id}-decision-error`}
 										role="alert"
 									>
 										{decisionError}

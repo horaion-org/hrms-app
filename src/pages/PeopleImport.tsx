@@ -59,10 +59,10 @@ export const PeopleImport = (): FunctionComponent => {
 	const [refusal, setRefusal] = useState<RefusalCode | undefined>(undefined);
 	const [sendInvitations, setSendInvitations] = useState(false);
 	const [confirming, setConfirming] = useState(false);
-	const followed = search.import;
+	const openedImportId = search.import;
 	const current = useQuery({
-		...memberImportQuery(companyId, followed ?? ""),
-		enabled: followed !== undefined,
+		...memberImportQuery(companyId, openedImportId ?? ""),
+		enabled: openedImportId !== undefined,
 	});
 	const recent = useQuery(recentImportsQuery(companyId));
 	const template = useMutation({
@@ -115,7 +115,8 @@ export const PeopleImport = (): FunctionComponent => {
 		setRefusal(undefined);
 		void navigate({ search: {} });
 	};
-	const currentStep = followed === undefined ? step : IMPORT_STEP;
+	// An import named in the URL (just started, or opened from a list of imports) shows its result, whatever step the wizard was on.
+	const currentStep = openedImportId === undefined ? step : IMPORT_STEP;
 	const blocked =
 		!check ||
 		check.errorRows > 0 ||
@@ -134,7 +135,7 @@ export const PeopleImport = (): FunctionComponent => {
 				className="mt-10"
 				currentStep={currentStep}
 				onStepClick={(index) => {
-					if (followed === undefined) setStep(index);
+					if (openedImportId === undefined) setStep(index);
 				}}
 			>
 				{STEPS.map((name) => (

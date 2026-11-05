@@ -10,8 +10,9 @@ import {
 /**
  * For a route loader to return: a redirect to the Forbidden page when the
  * loaded workspace does not grant the page's key where the page needs it,
- * otherwise `undefined`. Without a workspace (it failed to load) there is
- * no redirect, so the page can explain the failure itself. `replace` keeps
+ * otherwise `undefined`. Without a workspace there is no redirect: a loader
+ * that catches the workspace failure (as `/activity` does) lets the page
+ * explain it, and one that does not shows the route's error. `replace` keeps
  * the refused URL out of history, so Go back returns to where the person
  * came from.
  *

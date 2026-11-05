@@ -27,7 +27,7 @@ then minutes, hours and days up to six days, then the date, with the exact time 
 minute while the list is mounted. `notificationTypes.ts` is the one map from type code to icon, tone, category and
 copy, and `presentNotification` adjusts it by payload (a finished import turns red and carries its counts).
 `notificationTarget` opens a leave request on `/leave`, a schedule at `/scheduling/{id}` or an import at
-`/people/import?import={id}`. **Needs review** shows for holders of `leave_request:review` or `schedule:publish`
+`/settings/data/import-people?import={id}`; `notificationLink` turns that target into the title link's props. **Needs review** shows for holders of `leave_request:review` or `schedule:publish`
 (`reviewAccess.ts`). The API's `type` is parsed as
 any string, so a code this build does not know renders plainly with a neutral icon instead of failing the page.
 
