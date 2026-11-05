@@ -219,7 +219,8 @@ const ApiSchedule = ({
 		companyId,
 		unit,
 		scheduleId,
-		runId
+		runId,
+		state.status === "ready" ? state.schedule.rosterRevision : 0
 	);
 	// The frozen shifts and constraints only name what the findings refer to.
 	const rosterSchedule = showsRoster ? state.schedule : undefined;

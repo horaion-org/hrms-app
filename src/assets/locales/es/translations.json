@@ -2166,6 +2166,23 @@
 				"published": "Este horario está publicado, así que las horas antes de esta semana ya no pueden cambiar aquí.",
 				"daysSavedHoursNot": "Los días de la semana pasada se guardaron, pero las horas de este mes no. {{reason}} Tus horas siguen aquí: corrígelas y vuelve a guardar."
 			}
+		},
+		"rosterEdit": {
+			"undone": "Cambio deshecho.",
+			"check": {
+				"CELL_ON_LEAVE": "{{name}} está de permiso el {{day}}.",
+				"NOT_AVAILABLE": "{{name}} no puede programarse el {{day}}.",
+				"LEAVE_APPROVED": "{{name}} tiene un permiso aprobado el {{day}}.",
+				"SHIFT_NOT_ON_DAY": "{{shift}} no se trabaja el {{day}}.",
+				"ROLE_NOT_HELD": "{{name}} no puede hacer {{shift}}: es para otros puestos.",
+				"MEMBER_GONE": "{{name}} ya no es miembro.",
+				"OUTSIDE_AVAILABILITY": "{{shift}} queda fuera de la disponibilidad de {{name}} el {{day}}.",
+				"ROSTERED_ELSEWHERE": "{{name}} también trabaja el {{day}} en otro cuadrante.",
+				"NOT_SCHEDULABLE_NOW": "{{name}} ya no puede programarse en este departamento.",
+				"WORKS_ON_DAY_OFF": "El {{day}} era el día libre de {{name}}.",
+				"COVERAGE_CHANGED": "{{shift}}, {{day}}: {{before}} → {{after}} personas.",
+				"UNKNOWN": "Otra comprobación se aplica a este cambio."
+			}
 		}
 	},
 	"workspace": {
