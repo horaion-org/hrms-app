@@ -1515,6 +1515,11 @@
 				"forbidden": "Ya no tiene permiso para cambiar las habilidades de esta persona.",
 				"failed": "No pudimos guardar las habilidades. Inténtelo de nuevo."
 			}
+		},
+		"termsNotSet": "No pudimos darle {{chosen}}, así que tiene {{kept}}. Cámbialo desde su perfil.",
+		"form": {
+			"employmentTerms": "Condiciones de empleo",
+			"employmentTermsHint": "Desde su fecha de contratación, o desde hoy si no tiene."
 		}
 	},
 	"numberStepper": {

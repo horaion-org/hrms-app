@@ -618,7 +618,9 @@
 			"discardTitle": "Discard your changes?",
 			"discardDescription": "Your changes to {{name}} won’t be saved.",
 			"discard": "Discard changes",
-			"keepEditing": "Keep editing"
+			"keepEditing": "Keep editing",
+			"employmentTerms": "Employment terms",
+			"employmentTermsHint": "From their hire date, or today without one."
 		},
 		"profile": {
 			"back": "Back to people overview",
@@ -967,7 +969,8 @@
 				"CELL_ERROR": "This cell shows an error (such as #REF!). Fix the formula in Excel and upload again."
 			},
 			"history": "Import history"
-		}
+		},
+		"termsNotSet": "We couldn’t give them {{chosen}}, so they’re on {{kept}}. Change it from their profile."
 	},
 	"settings": {
 		"title": "Settings",

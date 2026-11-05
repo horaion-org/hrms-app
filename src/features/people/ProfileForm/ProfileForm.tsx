@@ -96,6 +96,11 @@ export type ProfileFormProps = {
 	) => Promise<void>;
 	/** Leaves without saving; when editing, after asking if anything changed. */
 	onCancel: () => void;
+	/**
+	 * A further Employment card row, such as Add employee's employment terms,
+	 * given the Employment type chosen so far (empty when none).
+	 */
+	employmentTermsField?: (employmentType: string) => ReactNode;
 	className?: string;
 } & (
 	| {
@@ -128,7 +133,15 @@ const NOTHING = (): void => {};
  * yet to log in, and leaving with changes asks first.
  */
 export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
-	const { companyId, initial, onSubmit, onCancel, className, edit } = props;
+	const {
+		companyId,
+		initial,
+		onSubmit,
+		onCancel,
+		employmentTermsField,
+		className,
+		edit,
+	} = props;
 	const { t } = useTranslation();
 	const access = useAccess();
 	const client = useQueryClient();
@@ -166,9 +179,9 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 		PROFILE_FIELDS,
 		NOTHING
 	);
-	const [departmentId, hireDate] = useWatch({
+	const [departmentId, hireDate, employmentType] = useWatch({
 		control,
-		name: ["departmentId", "hireDate"],
+		name: ["departmentId", "hireDate", "employmentType"],
 	});
 
 	// The Departments the selector offers, to find the chosen one's Branch and country.
@@ -565,6 +578,7 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 								)}
 							/>
 						</FormRow>
+						{employmentTermsField?.(employmentType)}
 						{date("hireDate", t(`${key}.hireDate`), {})}
 						{date(
 							"probationEndDate",
