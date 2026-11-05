@@ -25,6 +25,7 @@ import {
 	scheduleAssignmentsFixture,
 	scheduleFixture,
 	schedulingWorkspace,
+	twoBranchSchedulingWorkspace,
 } from "@/features/scheduling/schedules/fixtures";
 import { frozenShiftsFixture } from "@/features/scheduling/shifts/fixtures";
 
@@ -979,3 +980,25 @@ it.each([
 		if (!reply) expect(readsOf(calls, SCHEDULE_READ)).toHaveLength(0);
 	}
 );
+
+it("names the schedule's Branch in the header as text, keeping the list's Branch for the way back", async () => {
+	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+	stubApi({
+		...signedIn(),
+		"GET /api/v1/me/workspace": {
+			status: 200,
+			body: envelope(twoBranchSchedulingWorkspace(["schedule:read"])),
+		},
+		[`GET ${SCHEDULE_READ}`]: ok(scheduleFixture()),
+	});
+	app = await openApp(`${ROSTER_URL}?branch=all`);
+	renderAuthApp(app);
+	await screen.findByRole("note");
+
+	const header = screen.getByRole("banner");
+	expect(
+		within(header).queryByRole("button", { name: "Branch" })
+	).not.toBeInTheDocument();
+	expect(within(header).getByText("Main branch")).toBeVisible();
+	expect(app.router.state.location.search).toMatchObject({ branch: "all" });
+});

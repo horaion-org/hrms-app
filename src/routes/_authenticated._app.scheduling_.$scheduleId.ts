@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { companyScheduleQuery } from "@/features/scheduling/schedules/api";
 import { workspaceQuery } from "@/features/workspace/api";
+import type { FixedBranchLoaderData } from "@/features/workspace/branchScope";
 import { accessIndexOf, canAnywhere } from "@/features/workspace/scopes";
 import {
 	ScheduleDetailPage,
@@ -16,7 +17,8 @@ export const Route = createFileRoute(
 	"/_authenticated/_app/scheduling_/$scheduleId"
 )({
 	// Warms what the page reads first; a failure stays in the cache for the page to explain.
-	loader: async ({ context, params }) => {
+	// The schedule's Branch is named in the header: the page is about that one Branch.
+	loader: async ({ context, params }): Promise<FixedBranchLoaderData> => {
 		const companyId =
 			"currentCompany" in context && context.currentCompany.kind === "settled"
 				? context.currentCompany.company.companyId
@@ -25,10 +27,19 @@ export const Route = createFileRoute(
 			.ensureQueryData(workspaceQuery)
 			.catch(() => undefined);
 		// Nothing is asked for where the workspace grants the read nowhere.
-		if (canAnywhere(accessIndexOf(workspace, companyId), "schedule:read"))
-			await context.queryClient.prefetchQuery(
-				companyScheduleQuery(companyId, params.scheduleId)
-			);
+		if (!canAnywhere(accessIndexOf(workspace, companyId), "schedule:read"))
+			return {};
+		const schedule = await context.queryClient
+			.ensureQueryData(companyScheduleQuery(companyId, params.scheduleId))
+			.catch(() => undefined);
+		return schedule
+			? {
+					fixedBranch: {
+						branchId: schedule.branchId,
+						name: schedule.branchName,
+					},
+				}
+			: {};
 	},
 	component: ScheduleDetailPage,
 	errorComponent: ScheduleDetailProblem,

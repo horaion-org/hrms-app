@@ -461,3 +461,23 @@ export const SCHEDULING_BRANCHES: Branches = [
 export const schedulingWorkspace = (
 	permissions: ReadonlyArray<string>
 ): Workspace => companyWideWorkspace(permissions, SCHEDULING_BRANCHES);
+
+/** "Main branch" as above, plus "North" (b-2) with its active Front Office (d-9). */
+export const TWO_SCHEDULING_BRANCHES: Branches = [
+	...SCHEDULING_BRANCHES,
+	{
+		uuid: "b-2",
+		name: "North",
+		status: "ACTIVE",
+		country: "SG",
+		permissions: [],
+		departments: [
+			{ uuid: "d-9", name: "Front Office", status: "ACTIVE", permissions: [] },
+		],
+	},
+];
+
+/** The scheduling workspace across both Branches, `permissions` held company-wide. */
+export const twoBranchSchedulingWorkspace = (
+	permissions: ReadonlyArray<string>
+): Workspace => companyWideWorkspace(permissions, TWO_SCHEDULING_BRANCHES);
