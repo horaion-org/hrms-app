@@ -84,7 +84,7 @@ export const DatePicker = (props: DatePickerProps): FunctionComponent => {
 				<PopoverButton
 					ref={trigger}
 					aria-label={`${label}: ${text}`}
-					className="flex min-h-11 w-full items-center justify-between gap-3 rounded-lg border border-neutral-400 bg-white px-4 text-sm font-semibold text-neutral-900 focus-visible:outline-2 focus-visible:outline-ink-blue-500"
+					className="flex min-h-11 w-full cursor-pointer items-center justify-between gap-3 rounded-lg border border-neutral-400 bg-white px-4 text-sm font-semibold text-neutral-900 focus-visible:outline-2 focus-visible:outline-ink-blue-500"
 				>
 					<SchedulingIcon className="size-5 shrink-0" />
 					<span>{text}</span>
@@ -159,7 +159,7 @@ export const DatePicker = (props: DatePickerProps): FunctionComponent => {
 					disabled
 						? "cursor-not-allowed border-neutral-400 bg-neutral-200 text-neutral-500"
 						: joinClassNames(
-								"bg-white text-ink-blue-900",
+								"cursor-pointer bg-white text-ink-blue-900",
 								status
 									? statusClasses[status]
 									: "border-neutral-400 focus:border-ink-blue-900"
@@ -181,7 +181,7 @@ export const DatePicker = (props: DatePickerProps): FunctionComponent => {
 			{cleared && (
 				<button
 					aria-label={t("datePicker.clear")}
-					className="absolute top-1/2 right-12 -translate-y-1/2 rounded p-0.5 outline-offset-2 focus-visible:outline-2 focus-visible:outline-ink-blue-500"
+					className="absolute top-1/2 right-12 -translate-y-1/2 cursor-pointer rounded p-0.5 outline-offset-2 focus-visible:outline-2 focus-visible:outline-ink-blue-500"
 					type="button"
 					onClick={() => {
 						onChange("");

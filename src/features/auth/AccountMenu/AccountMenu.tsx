@@ -21,7 +21,7 @@ export const AccountMenu = ({
 		<Menu as="div" className="ml-3 inline-flex">
 			<MenuButton
 				aria-label={t("shell.accountMenu")}
-				className="inline-flex size-12 shrink-0 items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-blue-500"
+				className="inline-flex size-12 shrink-0 cursor-pointer items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-blue-500"
 			>
 				<Avatar name={displayName} />
 			</MenuButton>

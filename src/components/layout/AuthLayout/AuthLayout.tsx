@@ -110,8 +110,8 @@ export const AuthLayout = ({
 										type="button"
 										className={
 											index === active
-												? "h-2 w-6 rounded-full bg-white"
-												: "size-2 rounded-full bg-ink-blue-300"
+												? "h-2 w-6 cursor-pointer rounded-full bg-white"
+												: "size-2 cursor-pointer rounded-full bg-ink-blue-300"
 										}
 										onClick={() => {
 											setActive(index);
