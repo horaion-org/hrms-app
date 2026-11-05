@@ -64,6 +64,8 @@ describe("PermissionChecklist", () => {
 			"People",
 			"Notes",
 			"Availability",
+			"Employment terms",
+			"People’s employment terms",
 			"Leave",
 			"Leave types",
 			"Schedules",
@@ -75,7 +77,7 @@ describe("PermissionChecklist", () => {
 		]);
 		// One box per key, plus each row's own.
 		expect(screen.getAllByRole("checkbox")).toHaveLength(
-			PERMISSION_KEYS.length + 18
+			PERMISSION_KEYS.length + 20
 		);
 		expect(within(row("Schedules")).getAllByRole("checkbox")).toHaveLength(7);
 		for (const action of [

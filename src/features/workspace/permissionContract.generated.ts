@@ -3,7 +3,7 @@
 
 /** SHA-256 of the contract file this module was generated from. */
 export const PERMISSION_CONTRACT_SHA256 =
-	"df0addb0f2973009444ad506394f9c6252a1a1556e439275c0b3268364f49b11";
+	"c775e1bcdee53e56ed4b4481b727fef117233b1113491e2856a3c0ab391d90e2";
 
 /** The places a permission can be assigned at, widest first. */
 export const ASSIGNABLE_SCOPES = ["COMPANY", "BRANCH", "DEPARTMENT"] as const;
@@ -233,6 +233,34 @@ export const PERMISSION_DEFINITIONS = [
 		action: "update",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: ["work_availability:read"],
+	},
+	{
+		key: "employment_terms:read",
+		resource: "employment_terms",
+		action: "read",
+		assignableScopes: ["COMPANY"],
+		prerequisites: [],
+	},
+	{
+		key: "employment_terms:update",
+		resource: "employment_terms",
+		action: "update",
+		assignableScopes: ["COMPANY"],
+		prerequisites: ["employment_terms:read"],
+	},
+	{
+		key: "member_employment_terms:read",
+		resource: "member_employment_terms",
+		action: "read",
+		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
+		prerequisites: [],
+	},
+	{
+		key: "member_employment_terms:update",
+		resource: "member_employment_terms",
+		action: "update",
+		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
+		prerequisites: ["member_employment_terms:read"],
 	},
 	{
 		key: "leave_request:read",
@@ -465,6 +493,10 @@ export const PERMISSION_KEYS = [
 	"member_note:delete",
 	"work_availability:read",
 	"work_availability:update",
+	"employment_terms:read",
+	"employment_terms:update",
+	"member_employment_terms:read",
+	"member_employment_terms:update",
 	"leave_request:read",
 	"leave_request:create",
 	"leave_request:review",

@@ -654,6 +654,22 @@
 					"read": "Ver",
 					"update": "Editar"
 				}
+			},
+			"employment_terms": {
+				"name": "Condiciones de empleo",
+				"description": "La semana laboral que fija cada tipo de contrato: días laborables, horas normales, día de descanso y si se aplican los límites de horas de la Ley.",
+				"actions": {
+					"read": "Ver",
+					"update": "Editar"
+				}
+			},
+			"member_employment_terms": {
+				"name": "Condiciones de empleo de las personas",
+				"description": "Qué condiciones de empleo tiene cada persona, desde qué fecha, y sus horas propias.",
+				"actions": {
+					"read": "Ver",
+					"update": "Cambiar"
+				}
 			}
 		},
 		"jobTitles": {

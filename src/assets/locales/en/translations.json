@@ -1798,6 +1798,22 @@
 					"read": "View",
 					"update": "Edit"
 				}
+			},
+			"employment_terms": {
+				"name": "Employment terms",
+				"description": "The working week each kind of contract sets: working days, normal hours, rest day and whether the Act’s hour limits apply.",
+				"actions": {
+					"read": "View",
+					"update": "Edit"
+				}
+			},
+			"member_employment_terms": {
+				"name": "People’s employment terms",
+				"description": "Which employment terms each person works on, from which date, and their own hours.",
+				"actions": {
+					"read": "View",
+					"update": "Change"
+				}
 			}
 		},
 		"activity": {
