@@ -1,21 +1,11 @@
-import { useMemo, type ReactElement } from "react";
-import { Trans, useTranslation } from "react-i18next";
+import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
-import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { DeleteIcon, EditIcon, PlusIcon } from "@/components/ui/Icon";
-import {
-	CONSTRAINT_STATUSES,
-	type ConstraintStatus,
-} from "@/features/scheduling/constraints/api";
-import {
-	constraintWords,
-	sentenceKey,
-	type ConstraintWords,
-} from "@/features/scheduling/constraints/constraintSentence";
+import { constraintColumns } from "@/features/scheduling/constraints/constraintColumns";
 import { ConstraintOrigin } from "@/features/scheduling/constraints/ConstraintOrigin";
-import { ConstraintTypeTag } from "@/features/scheduling/constraints/ConstraintTypeTag";
 import {
 	isTickable,
 	tickedConstraintsOf,
@@ -47,20 +37,6 @@ export type ConstraintsStepProps = {
 	listProblem?: ListProblem;
 	className?: string;
 };
-
-const statusTones: Record<ConstraintStatus, BadgeTone> = {
-	ACTIVE: "success",
-	INACTIVE: "neutral",
-};
-
-/** A sentence's slots in words, as the parts its tags are filled with. */
-const partsOf = (words: ConstraintWords): Record<string, ReactElement> =>
-	Object.fromEntries(
-		Object.entries(words).map(([slot, text]) => [
-			slot,
-			<span key={slot}>{text}</span>,
-		])
-	);
 
 /** A company constraint the department replaced is shown through its replacement, not twice. */
 const isShown = (constraint: Constraint): boolean =>
@@ -100,42 +76,15 @@ export const ConstraintsStep = ({
 	// The same rule the API applies: locked ones, and a replaced company tick as its replacement.
 	const ticked = tickedConstraintsOf({ includedConstraintIds }, constraints);
 	const columns = useMemo((): Array<DataTableColumn<Constraint>> => {
-		const typeLabelOf = (constraint: Constraint): string =>
-			`${t(`${key}.categories.${constraint.category}`)} ${t(`${key}.types.${constraint.type}`)}`;
+		const shared = constraintColumns<Constraint>(t);
 		const requirementOf = (constraint: Constraint): string =>
 			constraint.requirement
 				? t(`${key}.requirements.${constraint.requirement}`)
 				: t(`${key}.fixedRequirements.${constraint.type}`);
 		return [
-			{
-				id: "name",
-				header: t(`${key}.name`),
-				cell: (constraint) => constraint.name,
-				cellClassName: "font-semibold",
-				pin: "start",
-			},
-			{
-				id: "type",
-				header: t(`${key}.type`),
-				headerClassName: "w-44",
-				cell: (constraint) => (
-					<div className="flex flex-col gap-1">
-						<ConstraintTypeTag category={constraint.category} />
-						{t(`${key}.types.${constraint.type}`)}
-					</div>
-				),
-				sortValue: typeLabelOf,
-			},
-			{
-				id: "details",
-				header: t(`${key}.details`),
-				cell: (constraint) => (
-					<Trans
-						components={partsOf(constraintWords(constraint, t))}
-						i18nKey={sentenceKey(constraint.type)}
-					/>
-				),
-			},
+			shared.name,
+			shared.type,
+			shared.details,
 			{
 				id: "setBy",
 				header: t(`${key}.setBy`),
@@ -149,25 +98,7 @@ export const ConstraintsStep = ({
 				cell: requirementOf,
 				sortValue: requirementOf,
 			},
-			...(frozen
-				? []
-				: [
-						{
-							id: "status",
-							header: t(`${key}.status`),
-							headerClassName: "w-32",
-							cell: (constraint: Constraint) =>
-								constraint.status && (
-									<Badge tone={statusTones[constraint.status]}>
-										{t(`${key}.statuses.${constraint.status}`)}
-									</Badge>
-								),
-							sortValue: (constraint: Constraint) =>
-								constraint.status
-									? CONSTRAINT_STATUSES.indexOf(constraint.status)
-									: 0,
-						},
-					]),
+			...(frozen ? [] : [shared.status]),
 			...(onEdit || onDelete || onReplace
 				? [
 						{

@@ -1,9 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState, type ReactElement } from "react";
-import { Trans, useTranslation } from "react-i18next";
+import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ApiProblemError } from "@/common/problem";
 import type { FunctionComponent } from "@/common/types";
-import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
@@ -11,18 +10,12 @@ import { DeleteIcon, EditIcon, PlusIcon } from "@/components/ui/Icon";
 import { Toast } from "@/components/ui/Toast";
 import { mapRefusal } from "@/features/organisation/refusal";
 import type {
-	ConstraintStatus,
 	DepartmentConstraint,
 	PolicyLock,
 } from "@/features/scheduling/constraints/api";
+import { constraintColumns } from "@/features/scheduling/constraints/constraintColumns";
 import { ConstraintDialog } from "@/features/scheduling/constraints/ConstraintDialog";
 import { ConstraintOrigin } from "@/features/scheduling/constraints/ConstraintOrigin";
-import {
-	constraintWords,
-	sentenceKey,
-	type ConstraintWords,
-} from "@/features/scheduling/constraints/constraintSentence";
-import { ConstraintTypeTag } from "@/features/scheduling/constraints/ConstraintTypeTag";
 import type { ConstraintOptionsState } from "@/features/scheduling/constraints/useConstraintOptions";
 import {
 	policyConstraintsQuery,
@@ -35,20 +28,6 @@ import { useAccess } from "@/features/workspace/useAccess";
 export type SchedulingPolicySettingsProps = {
 	companyId: string;
 };
-
-const statusTones: Record<ConstraintStatus, BadgeTone> = {
-	ACTIVE: "success",
-	INACTIVE: "neutral",
-};
-
-/** A sentence's slots in words, as the parts its tags are filled with. */
-const partsOf = (words: ConstraintWords): Record<string, ReactElement> =>
-	Object.fromEntries(
-		Object.entries(words).map(([slot, text]) => [
-			slot,
-			<span key={slot}>{text}</span>,
-		])
-	);
 
 /**
  * Settings › Scheduling: the company's Scheduling policy (ADR-0058), the
@@ -83,38 +62,13 @@ export const SchedulingPolicySettings = ({
 	const notify = (message: string): void => {
 		setToast((previous) => ({ id: (previous?.id ?? 0) + 1, message }));
 	};
-	// The React compiler memoises this; the setters it calls are stable.
-	const columns = ((): Array<DataTableColumn<DepartmentConstraint>> => {
+	const columns = useMemo((): Array<DataTableColumn<DepartmentConstraint>> => {
 		const constraints = "scheduling.constraints";
+		const shared = constraintColumns<DepartmentConstraint>(t);
 		return [
-			{
-				id: "name",
-				header: t(`${constraints}.name`),
-				cell: (constraint) => constraint.name,
-				cellClassName: "font-semibold",
-				pin: "start",
-			},
-			{
-				id: "type",
-				header: t(`${constraints}.type`),
-				headerClassName: "w-44",
-				cell: (constraint) => (
-					<div className="flex flex-col gap-1">
-						<ConstraintTypeTag category={constraint.category} />
-						{t(`${constraints}.types.${constraint.type}`)}
-					</div>
-				),
-			},
-			{
-				id: "details",
-				header: t(`${constraints}.details`),
-				cell: (constraint) => (
-					<Trans
-						components={partsOf(constraintWords(constraint, t))}
-						i18nKey={sentenceKey(constraint.type)}
-					/>
-				),
-			},
+			shared.name,
+			shared.type,
+			shared.details,
 			{
 				id: "lock",
 				header: t(`${key}.lock`),
@@ -123,16 +77,7 @@ export const SchedulingPolicySettings = ({
 					<ConstraintOrigin constraint={constraint} showLevel={false} />
 				),
 			},
-			{
-				id: "status",
-				header: t(`${constraints}.status`),
-				headerClassName: "w-32",
-				cell: (constraint) => (
-					<Badge tone={statusTones[constraint.status]}>
-						{t(`${constraints}.statuses.${constraint.status}`)}
-					</Badge>
-				),
-			},
+			shared.status,
 			...(canUpdate
 				? [
 						{
@@ -171,7 +116,7 @@ export const SchedulingPolicySettings = ({
 					]
 				: []),
 		];
-	})();
+	}, [t, canUpdate, setDialog, setRemoving]);
 	const forbidden =
 		!canRead ||
 		(list.error instanceof ApiProblemError && list.error.status === 403);
