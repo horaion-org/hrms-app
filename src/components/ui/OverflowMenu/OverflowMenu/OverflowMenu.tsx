@@ -2,6 +2,7 @@ import { Menu, MenuButton, MenuItems } from "@headlessui/react";
 import { useCallback, useRef, type ReactNode } from "react";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
+import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { MoreVerticalIcon } from "@/components/ui/Icon";
 
@@ -21,7 +22,19 @@ export type OverflowMenuProps = {
 			/** The trigger's accessible name. */
 			label: string;
 	  }
+	| {
+			/** A person's avatar as the trigger, e.g. the header's account menu. */
+			variant: "avatar";
+			/** The trigger's accessible name, e.g. "Account menu". */
+			label: string;
+			/** Whose initials the avatar shows. */
+			name: string;
+	  }
 );
+
+/** The panel the compact triggers (icon and avatar) open, below and aligned to their end. */
+const compactPanelClasses =
+	"z-10 w-max divide-y divide-neutral-400 overflow-hidden rounded-lg border border-neutral-400 bg-white shadow-md outline-none [--anchor-gap:4px]";
 
 const IconOverflowMenu = ({
 	label,
@@ -50,7 +63,41 @@ const IconOverflowMenu = ({
 		</MenuButton>
 		<MenuItems
 			anchor="bottom end"
-			className="z-10 w-max min-w-40 divide-y divide-neutral-400 overflow-hidden rounded-lg border border-neutral-400 bg-white shadow-md outline-none [--anchor-gap:4px]"
+			className={joinClassNames(compactPanelClasses, "min-w-40")}
+		>
+			{children}
+		</MenuItems>
+	</Menu>
+);
+
+const AvatarOverflowMenu = ({
+	label,
+	name,
+	children,
+	disabled,
+	className,
+}: {
+	label: string;
+	name: string;
+	children: ReactNode;
+	disabled?: boolean;
+	className?: string;
+}): FunctionComponent => (
+	<Menu
+		key={disabled ? "disabled" : "enabled"}
+		as="div"
+		className={joinClassNames("inline-flex", className)}
+	>
+		<MenuButton
+			aria-label={label}
+			className="inline-flex size-12 shrink-0 cursor-pointer items-center justify-center rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-blue-500"
+			disabled={disabled}
+		>
+			<Avatar name={name} />
+		</MenuButton>
+		<MenuItems
+			anchor="bottom end"
+			className={joinClassNames(compactPanelClasses, "min-w-48")}
 		>
 			{children}
 		</MenuItems>
@@ -124,5 +171,6 @@ const CardOverflowMenu = ({
 
 export const OverflowMenu = (props: OverflowMenuProps): FunctionComponent => {
 	if (props.variant === "icon") return <IconOverflowMenu {...props} />;
+	if (props.variant === "avatar") return <AvatarOverflowMenu {...props} />;
 	return <CardOverflowMenu {...props} />;
 };

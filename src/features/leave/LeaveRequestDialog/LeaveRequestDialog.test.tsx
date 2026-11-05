@@ -43,6 +43,9 @@ it("requires a meaningful rejection reason and returns to review when cancelled"
 		screen.getByRole("textbox", { name: "Reason for rejection" }),
 		"   "
 	);
+	expect(screen.getByRole("button", { name: "Confirm rejection" })).toHaveClass(
+		"bg-error-600"
+	);
 	await user.click(screen.getByRole("button", { name: "Confirm rejection" }));
 	expect(screen.getByRole("alert")).toHaveTextContent("Enter a reason");
 	expect(onReject).not.toHaveBeenCalled();

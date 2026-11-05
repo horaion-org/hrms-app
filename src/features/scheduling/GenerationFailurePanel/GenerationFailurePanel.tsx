@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { Quote } from "@/components/ui/Quote";
 import { WarningIcon } from "@/components/ui/Icon";
 import { MemberNotes } from "@/features/scheduling/MemberNotes";
 import { findingsByMember } from "@/features/scheduling/roster/findingsByMember";
@@ -47,14 +48,7 @@ export const GenerationFailurePanel = ({
 				)}
 			</div>
 			{findings?.failureReason && (
-				<figure className="text-sm">
-					<figcaption className="font-semibold text-neutral-800">
-						{t(`${key}.engineSaid`)}
-					</figcaption>
-					<blockquote className="mt-2 border-l-4 border-neutral-400 pl-4 text-neutral-900">
-						{findings.failureReason}
-					</blockquote>
-				</figure>
+				<Quote caption={t(`${key}.engineSaid`)}>{findings.failureReason}</Quote>
 			)}
 			{groups.length > 0 && <MemberNotes groups={groups} />}
 			{onRegenerate && (

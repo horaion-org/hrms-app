@@ -48,12 +48,10 @@ const threeBranches = (held: ReadonlyArray<string>): Workspace =>
 /** Holds the chosen Branch as a page's URL would. */
 const Page = ({
 	initial,
-	allowAll,
 	activeOnly,
 	onChange,
 }: {
 	initial?: string;
-	allowAll?: boolean;
 	activeOnly?: boolean;
 	onChange: (branchId: string | undefined) => void;
 }): ReactElement => {
@@ -61,7 +59,6 @@ const Page = ({
 	return (
 		<BranchSelector
 			activeOnly={activeOnly}
-			allowAll={allowAll}
 			companyId="c-1"
 			keys={[LEAVE_READ]}
 			value={value}
@@ -76,7 +73,6 @@ const Page = ({
 const renderWith = (
 	data: Workspace,
 	initial?: string,
-	allowAll = false,
 	activeOnly = false
 ): { onChange: ReturnType<typeof vi.fn>; container: HTMLElement } => {
 	const client = new QueryClient();
@@ -85,12 +81,7 @@ const renderWith = (
 	const { container } = render(
 		<I18nextProvider i18n={authTestI18n}>
 			<QueryClientProvider client={client}>
-				<Page
-					activeOnly={activeOnly}
-					allowAll={allowAll}
-					initial={initial}
-					onChange={onChange}
-				/>
+				<Page activeOnly={activeOnly} initial={initial} onChange={onChange} />
 			</QueryClientProvider>
 		</I18nextProvider>
 	);
@@ -191,7 +182,6 @@ describe("BranchSelector", () => {
 				],
 			},
 			"b-2",
-			false,
 			true
 		);
 
@@ -200,69 +190,5 @@ describe("BranchSelector", () => {
 		expect(
 			screen.getAllByRole("option").map((option) => option.textContent)
 		).toEqual(["Orchard"]);
-	});
-
-	describe("with allowAll", () => {
-		it("defaults to every Branch without announcing it", () => {
-			const { onChange } = renderWith(
-				threeBranches(["b-1", "b-2", "b-3"]),
-				undefined,
-				true
-			);
-
-			expect(screen.getByRole("button", { name: "Country" })).toHaveTextContent(
-				"All countries"
-			);
-			expect(screen.getByRole("button", { name: "Branch" })).toHaveTextContent(
-				"All branches"
-			);
-			expect(onChange).not.toHaveBeenCalled();
-		});
-
-		it("offers every Branch under all countries, and announces all as undefined", async () => {
-			const user = userEvent.setup();
-			const { onChange } = renderWith(
-				threeBranches(["b-1", "b-2", "b-3"]),
-				undefined,
-				true
-			);
-
-			await user.click(screen.getByRole("button", { name: "Branch" }));
-			expect(
-				screen.getAllByRole("option").map((option) => option.textContent)
-			).toEqual(["All branches", "Kuala Lumpur", "Jurong", "Orchard"]);
-			await user.click(screen.getByRole("option", { name: "Orchard" }));
-			expect(onChange).toHaveBeenLastCalledWith("b-1");
-			expect(screen.getByRole("button", { name: "Country" })).toHaveTextContent(
-				"Singapore"
-			);
-
-			await user.click(screen.getByRole("button", { name: "Branch" }));
-			await user.click(screen.getByRole("option", { name: "All branches" }));
-			expect(onChange).toHaveBeenLastCalledWith(undefined);
-		});
-
-		it("chooses every Branch when all countries are chosen", async () => {
-			const user = userEvent.setup();
-			const { onChange } = renderWith(
-				threeBranches(["b-1", "b-2", "b-3"]),
-				"b-3",
-				true
-			);
-
-			await user.click(screen.getByRole("button", { name: "Country" }));
-			await user.click(screen.getByRole("option", { name: "All countries" }));
-
-			expect(onChange).toHaveBeenCalledExactlyOnceWith(undefined);
-			expect(screen.getByRole("button", { name: "Branch" })).toHaveTextContent(
-				"All branches"
-			);
-		});
-
-		it("clears a Branch no longer offered", () => {
-			const { onChange } = renderWith(threeBranches(["b-1"]), "b-2", true);
-
-			expect(onChange).toHaveBeenCalledExactlyOnceWith(undefined);
-		});
 	});
 });

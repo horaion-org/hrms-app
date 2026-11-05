@@ -57,6 +57,11 @@ export const CancelDisabled: Story = {
 	args: { ...Cancel.args, disabled: true },
 };
 
+/** Confirms an action that destroys or replaces something, e.g. "Reject request". */
+export const Danger: Story = {
+	args: { variant: "danger", children: "Reject request" },
+};
+
 export const PrimaryLoading: Story = { args: { loading: true } };
 
 export const SecondaryLoading: Story = {
@@ -121,11 +126,19 @@ const rows: Array<{
 		label: "Cancel, lg",
 		props: { variant: "cancel", size: "lg", children: "Cancel" },
 	},
+	{
+		label: "Danger, lg",
+		props: { variant: "danger", size: "lg", children: "Reject" },
+	},
 	{ label: "Primary, sm", props: { variant: "primary", size: "sm" } },
 	{ label: "Secondary, sm", props: { variant: "secondary", size: "sm" } },
 	{
 		label: "Cancel, sm",
 		props: { variant: "cancel", size: "sm", children: "Cancel" },
+	},
+	{
+		label: "Danger, sm",
+		props: { variant: "danger", size: "sm", children: "Reject" },
 	},
 	{ label: "Textlink", props: { variant: "textlink", children: "Textlink" } },
 	{

@@ -80,7 +80,7 @@ describe("ConfirmDialog", () => {
 		const confirm = await screen.findByRole("button", {
 			name: "Deactivate branch",
 		});
-		expect(confirm).toHaveClass("not-disabled:bg-error-600!");
+		expect(confirm).toHaveClass("bg-error-600");
 		expect(confirm).toBeDisabled();
 	});
 
@@ -89,6 +89,6 @@ describe("ConfirmDialog", () => {
 
 		expect(
 			await screen.findByRole("button", { name: "Deactivate branch" })
-		).not.toHaveClass("not-disabled:bg-error-600!");
+		).not.toHaveClass("bg-error-600");
 	});
 });

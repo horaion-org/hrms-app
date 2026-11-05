@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { FunctionComponent } from "@/common/types";
-import { Button } from "@/components/ui/Button";
+import { Button, type ButtonVariant } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
 
 /** `danger` draws the confirm button red, for an action that destroys or replaces something. */
@@ -27,11 +27,10 @@ export type ConfirmDialogProps = {
 	className?: string;
 };
 
-const confirmToneClasses: Record<ConfirmTone, string | undefined> = {
-	default: undefined,
-	danger:
-		"not-disabled:bg-error-600! not-disabled:hover:bg-error-700! not-disabled:active:bg-error-800!",
-};
+const confirmVariants = {
+	default: "primary",
+	danger: "danger",
+} as const satisfies Record<ConfirmTone, ButtonVariant>;
 
 /**
  * A Dialog that asks before an action takes effect. It is mounted only
@@ -63,9 +62,9 @@ export const ConfirmDialog = ({
 					{cancelLabel}
 				</Button>
 				<Button
-					className={confirmToneClasses[tone]}
 					disabled={confirmDisabled}
 					loading={submitting}
+					variant={confirmVariants[tone]}
 					onClick={onConfirm}
 				>
 					{confirmLabel}

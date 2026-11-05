@@ -271,7 +271,7 @@ it("deletes a schedule from its history row after a danger confirm naming its de
 	const confirm = within(dialog).getByRole("button", {
 		name: "Delete schedule",
 	});
-	expect(confirm).toHaveClass("not-disabled:bg-error-600!");
+	expect(confirm).toHaveClass("bg-error-600");
 	await user.click(confirm);
 
 	expect(await screen.findByText("No schedules yet.")).toBeInTheDocument();

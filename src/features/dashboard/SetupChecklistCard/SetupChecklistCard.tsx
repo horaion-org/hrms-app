@@ -1,9 +1,9 @@
 import { Link, type LinkProps } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
-import { CloseIcon, TickIcon } from "@/components/ui/Icon";
+import { Card } from "@/components/ui/Card";
+import { CloseIcon, SettingsIcon, TickIcon } from "@/components/ui/Icon";
 import {
 	SETUP_STEP_COUNT,
 	type SetupCounts,
@@ -93,20 +93,11 @@ export const SetupChecklistCard = ({
 }: SetupChecklistCardProps): FunctionComponent => {
 	const { t } = useTranslation();
 	return (
-		<section
-			aria-labelledby="setup-checklist-heading"
-			className={joinClassNames(
-				"rounded-xl border border-neutral-300 p-6",
-				className
-			)}
-		>
-			<div className="flex items-center justify-between gap-4">
-				<h2
-					className="text-base font-semibold text-ink-blue-600"
-					id="setup-checklist-heading"
-				>
-					{t("dashboard.setup.title")}
-				</h2>
+		<Card
+			className={className}
+			icon={SettingsIcon}
+			title={t("dashboard.setup.title")}
+			action={
 				<span className="flex items-center gap-2">
 					<span className="text-sm text-neutral-800">
 						{t("dashboard.setup.progress", {
@@ -122,8 +113,9 @@ export const SetupChecklistCard = ({
 						<CloseIcon />
 					</Button>
 				</span>
-			</div>
-			<ol className="mt-2 divide-y divide-neutral-300">
+			}
+		>
+			<ol className="divide-y divide-neutral-300">
 				<SetupStep
 					byHandLabel={t("dashboard.setup.organisation.byHand")}
 					byHandTo="/organisation/branches"
@@ -151,6 +143,6 @@ export const SetupChecklistCard = ({
 					}
 				/>
 			</ol>
-		</section>
+		</Card>
 	);
 };

@@ -71,6 +71,23 @@ describe("ListToolbar", () => {
 		expect(onSearchChange).toHaveBeenCalledWith("O");
 	});
 
+	it("adds no chips row while no filter is set, and one once a filter is", () => {
+		const { rerender } = render(<Harness />);
+		const toolbar = screen.getByRole("group", { name: "List controls" });
+		const rowCount = toolbar.children.length;
+
+		rerender(
+			<Harness
+				chips={[{ key: "status", label: "Showing: Active", onRemove: vi.fn() }]}
+			/>
+		);
+
+		expect(toolbar.children).toHaveLength(rowCount + 1);
+		expect(
+			within(toolbar).getByRole("list", { name: "Active filters" })
+		).toBeVisible();
+	});
+
 	it("keeps the typed search when controlled", async () => {
 		const user = userEvent.setup();
 		render(<Harness />);

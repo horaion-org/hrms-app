@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { Dialog } from "@/components/ui/Dialog";
+import { formatTimeRange } from "@/features/scheduling/formatShift";
+import { formatDay } from "@/features/scheduling/periods";
 import type {
 	EnteredDay,
 	StartingCell,
@@ -55,18 +57,13 @@ export const StartingDaysDialog = ({
 	const lastDay = week.days[week.days.length - 1] ?? "";
 	const [fillDay, setFillDay] = useState(lastDay);
 	const [fillValue, setFillValue] = useState<CellValue>("OFF");
-	const dayLabel = new Intl.DateTimeFormat(language, {
-		weekday: "short",
-		day: "numeric",
-	});
-	const labelOf = (date: string): string =>
-		dayLabel.format(new Date(`${date}T00:00:00`));
+	const labelOf = (date: string): string => formatDay(date, language);
 	const valueOptions = [
 		{ value: "", label: t(`${key}.notKnown`) },
 		{ value: "OFF", label: t("scheduling.detail.kinds.off") },
 		...week.shifts.map((shift) => ({
 			value: shiftCellValue(shift.shiftId),
-			label: `${shift.name} ${shift.startTime}–${shift.endTime}`,
+			label: `${shift.name} ${formatTimeRange(shift, t)}`,
 		})),
 	];
 	const lockedLabel = (cell: StartingCell): string => {

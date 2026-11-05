@@ -305,9 +305,13 @@ export const Leave = (): FunctionComponent => {
 				</TabList>
 				<PageToolbar
 					actions={applyAction}
-					chips={<FilterChips chips={chips} onClearAll={clearFilters} />}
 					className="mt-6 mb-8"
 					label={t("leave.controls")}
+					chips={
+						chips.length > 0 && (
+							<FilterChips chips={chips} onClearAll={clearFilters} />
+						)
+					}
 					filters={
 						<>
 							{(showsDepartment || showsStatus) && (

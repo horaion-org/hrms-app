@@ -309,6 +309,29 @@ describe("PeopleImport", () => {
 		});
 	});
 
+	it("lists earlier imports in Import history and opens one from it", async () => {
+		const user = userEvent.setup();
+		stubApi({
+			...baseRoutes(),
+			[`GET ${IMPORTS}`]: { status: 200, body: envelope([finishedImport]) },
+			[`GET ${IMPORTS}/i-1`]: { status: 200, body: envelope(finishedImport) },
+		});
+		const opened = await open("/settings/data/import-people");
+
+		const history = await screen.findByRole("table", {
+			name: "Import history",
+		});
+		expect(
+			screen.getByRole("heading", { level: 2, name: "Import history" })
+		).toBeVisible();
+		const row = within(history).getByRole("row", { name: /Moses Lee/ });
+		expect(row).toHaveTextContent("1 added · 1 failed");
+		await user.click(within(row).getByRole("button", { name: "View" }));
+
+		expect(await screen.findByText("Import finished")).toBeVisible();
+		expect(opened.router.state.location.search).toEqual({ import: "i-1" });
+	});
+
 	it("redirects the old /people/import address to Settings, keeping the import followed", async () => {
 		stubApi({
 			...baseRoutes(),

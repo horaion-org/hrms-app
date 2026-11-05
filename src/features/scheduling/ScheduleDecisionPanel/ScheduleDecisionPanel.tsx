@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
+import { Quote } from "@/components/ui/Quote";
 import { dateTimeFormatIn } from "@/features/scheduling/roster/roster";
 import type { Schedule } from "@/features/scheduling/schedules/api";
 import { scheduleDecision } from "./scheduleDecision";
@@ -79,14 +80,9 @@ export const ScheduleDecisionPanel = ({
 					: t(`${key}.${verb}At`, { at })}
 			</p>
 			{decision.reason !== null && (
-				<figure className="mt-3">
-					<figcaption className="font-semibold">
-						{t(`${key}.reason`)}
-					</figcaption>
-					<blockquote className="mt-2 border-l-4 border-neutral-400 pl-4 whitespace-pre-line text-neutral-900">
-						{decision.reason}
-					</blockquote>
-				</figure>
+				<Quote caption={t(`${key}.reason`)} className="mt-3">
+					{decision.reason}
+				</Quote>
 			)}
 			{decision.kind === "rejected" && showsNextStep && (
 				<p className="mt-3 text-neutral-700">{t(`${key}.rejectedNext`)}</p>

@@ -140,12 +140,14 @@ export const ListToolbar = ({
 				)
 			}
 			chips={
-				<FilterChips
-					chips={chips}
-					onClearAll={() => {
-						onClearFilters?.();
-					}}
-				/>
+				chips.length > 0 && (
+					<FilterChips
+						chips={chips}
+						onClearAll={() => {
+							onClearFilters?.();
+						}}
+					/>
+				)
 			}
 			filters={
 				<>
