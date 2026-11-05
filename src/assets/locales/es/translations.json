@@ -341,7 +341,7 @@
 		},
 		"scheduling": {
 			"title": "Programación",
-			"description": "Restricciones que siguen los horarios de todos los departamentos.",
+			"description": "Límites que respetan los horarios de todos los departamentos.",
 			"policy": {
 				"title": "Política de programación",
 				"subtitle": "Restricciones que siguen los horarios de todos los departamentos. Un departamento no puede quitar ni relajar una bloqueada; las predeterminadas empiezan marcadas y se pueden quitar.",
@@ -360,7 +360,8 @@
 				"deleteConfirm": "Quitar",
 				"cancel": "Cancelar",
 				"deleteFailed": "No pudimos quitar la restricción. Inténtalo de nuevo.",
-				"deleteForbidden": "Ya no tienes permiso para cambiar la política de programación."
+				"deleteForbidden": "Ya no tienes permiso para cambiar la política de programación.",
+				"termsLink": "Las horas normales salen de las condiciones de empleo de cada persona en <0>Empleo</0>."
 			}
 		},
 		"leave": {
@@ -448,6 +449,10 @@
 				"failed": "No pudimos añadir el tipo de permiso. Inténtalo de nuevo.",
 				"editFailed": "No pudimos guardar el tipo de permiso. Inténtalo de nuevo."
 			}
+		},
+		"employment": {
+			"title": "Empleo",
+			"description": "Días laborables, horas y día de descanso de cada tipo de contrato."
 		}
 	},
 	"combobox": {

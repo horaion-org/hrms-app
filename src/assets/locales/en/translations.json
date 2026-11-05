@@ -1041,7 +1041,7 @@
 		},
 		"scheduling": {
 			"title": "Scheduling",
-			"description": "Constraints every department’s schedules follow.",
+			"description": "Limits every department’s schedules keep.",
 			"policy": {
 				"title": "Scheduling policy",
 				"subtitle": "Constraints every department’s schedules follow. A department can’t remove or loosen a locked one; defaults start ticked and may be left out.",
@@ -1060,7 +1060,8 @@
 				"deleteConfirm": "Remove",
 				"cancel": "Cancel",
 				"deleteFailed": "We couldn’t remove the constraint. Try again.",
-				"deleteForbidden": "You no longer have permission to change the Scheduling policy."
+				"deleteForbidden": "You no longer have permission to change the Scheduling policy.",
+				"termsLink": "Normal hours come from each person’s employment terms in <0>Employment</0>."
 			}
 		},
 		"leave": {
@@ -1187,6 +1188,10 @@
 				"organisationResult": "{{created}} created · {{skipped}} skipped",
 				"peopleResult": "{{added}} added · {{failed}} failed"
 			}
+		},
+		"employment": {
+			"title": "Employment",
+			"description": "Working days, hours and rest day for each kind of contract."
 		}
 	},
 	"organisation": {

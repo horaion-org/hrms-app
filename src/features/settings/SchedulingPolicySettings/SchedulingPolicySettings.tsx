@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import { ApiProblemError } from "@/common/problem";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
@@ -137,6 +137,19 @@ export const SchedulingPolicySettings = ({
 					</h2>
 					<p className="mt-3 text-sm text-neutral-800">
 						{t(`${key}.subtitle`)}
+					</p>
+					<p className="mt-2 text-sm text-neutral-800">
+						<Trans
+							i18nKey={`${key}.termsLink`}
+							components={[
+								<Button
+									key="employment"
+									search={{ section: "employment" }}
+									to="/settings"
+									variant="textlink"
+								/>,
+							]}
+						/>
 					</p>
 				</div>
 				{canUpdate && (
