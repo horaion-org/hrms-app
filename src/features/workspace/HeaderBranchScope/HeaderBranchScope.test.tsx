@@ -159,4 +159,16 @@ describe("HeaderBranchScope", () => {
 		expect(screen.queryByRole("button")).not.toBeInTheDocument();
 		expect(screen.getByText("Jurong")).toBeVisible();
 	});
+
+	it("given_aPageAboutOneBranch_when_rendered_then_namesItAsTextWithNoChoice", () => {
+		render(
+			<I18nextProvider i18n={authTestI18n}>
+				<HeaderBranchScope fixed={{ branchId: "b-1", name: "Orchard" }} />
+			</I18nextProvider>
+		);
+
+		expect(screen.queryByRole("button")).not.toBeInTheDocument();
+		expect(screen.getByText("Branch")).toBeInTheDocument();
+		expect(screen.getByText("Orchard")).toBeVisible();
+	});
 });

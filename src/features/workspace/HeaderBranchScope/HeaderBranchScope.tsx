@@ -2,44 +2,57 @@ import { useId } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { Select } from "@/components/forms/Select";
+import type { FixedBranch } from "@/features/workspace/branchScope";
 import {
 	ALL_BRANCHES,
 	offersAllBranches,
 	type ResolvedUnitSelection,
 } from "@/features/workspace/unitSelection";
 
-export type HeaderBranchScopeProps = {
-	/** The page's Branch, resolved with its rules (see `useHeaderBranchScope`). */
-	selection: ResolvedUnitSelection;
-	/** Called with a Branch id, or `ALL_BRANCHES` for every Branch. */
-	onChange: (branchId: string) => void;
-};
+export type HeaderBranchScopeProps =
+	| {
+			/** The page's Branch, resolved with its rules (see `useHeaderBranchScope`). */
+			selection: ResolvedUnitSelection;
+			/** Called with a Branch id, or `ALL_BRANCHES` for every Branch. */
+			onChange: (branchId: string) => void;
+	  }
+	| {
+			/** The one Branch the page is about, such as a schedule's. */
+			fixed: FixedBranch;
+	  };
 
 const labelClasses = "hidden text-sm text-neutral-800 sm:inline";
 
-/**
- * The Branch the page lists, at the right of the app header, in the same
- * place on every page that lists by Branch: the one Branch control there
- * is. One Branch in reach reads as text. Several are a choice, grouped by
- * country when they span several, with "All branches" last. The label
- * shows from `sm` up; below it, it still names the control for assistive
- * technology.
- */
-export const HeaderBranchScope = ({
+/** A Branch that is not chosen here, named as text under the same label. */
+const BranchText = ({
+	name,
+}: {
+	name: string | undefined;
+}): FunctionComponent => {
+	const { t } = useTranslation();
+	return (
+		<p className="flex items-center gap-3">
+			<span className={labelClasses}>
+				{t("workspace.branchSelector.branch")}
+			</span>
+			<span className="font-semibold text-ink-blue-900">{name}</span>
+		</p>
+	);
+};
+
+/** The Branch the page lists: a choice when several are in reach, else the one as text. */
+const BranchChoice = ({
 	selection,
 	onChange,
-}: HeaderBranchScopeProps): FunctionComponent => {
+}: Extract<
+	HeaderBranchScopeProps,
+	{ selection: unknown }
+>): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const labelId = useId();
 	const { branch, branches, branchMode } = selection;
 	const label = t("workspace.branchSelector.branch");
-	if (branchMode === "static")
-		return (
-			<p className="flex items-center gap-3">
-				<span className={labelClasses}>{label}</span>
-				<span className="font-semibold text-ink-blue-900">{branch?.name}</span>
-			</p>
-		);
+	if (branchMode === "static") return <BranchText name={branch?.name} />;
 	const severalCountries =
 		new Set(branches.map((each) => each.country)).size > 1;
 	const regionName = new Intl.DisplayNames([i18n.language], {
@@ -75,4 +88,20 @@ export const HeaderBranchScope = ({
 			/>
 		</div>
 	);
+};
+
+/**
+ * The Branch the page lists, at the right of the app header, in the same
+ * place on every page that lists by Branch: the one Branch control there
+ * is. A page about one Branch, and one Branch in reach, read as text.
+ * Several are a choice, grouped by
+ * country when they span several, with "All branches" last. The label
+ * shows from `sm` up; below it, it still names the control for assistive
+ * technology.
+ */
+export const HeaderBranchScope = (
+	props: HeaderBranchScopeProps
+): FunctionComponent => {
+	if ("fixed" in props) return <BranchText name={props.fixed.name} />;
+	return <BranchChoice {...props} />;
 };
