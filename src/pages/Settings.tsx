@@ -8,6 +8,7 @@ import { Tab, TabList, TabPanel, TabPanels, Tabs } from "@/components/ui/Tabs";
 import { dataItemsFor, offersData } from "@/features/settings/dataAccess";
 import { DataSettings } from "@/features/settings/DataSettings";
 import { GeneralSettingsForm } from "@/features/settings/GeneralSettingsForm";
+import { LeaveTypesSettings } from "@/features/settings/LeaveTypesSettings";
 import { PlanSettings } from "@/features/settings/PlanSettings";
 import { SchedulingPolicySettings } from "@/features/settings/SchedulingPolicySettings";
 import { useGeneralSettings } from "@/features/settings/useGeneralSettings";
@@ -43,12 +44,16 @@ export const Settings = (): FunctionComponent => {
 	const search = route.useSearch();
 	const dataItems = dataItemsFor(access);
 	// The section lives in the URL, so a link such as `?section=data` opens it.
-	// Scheduling is offered with scheduling_policy:read; a link to it still opens
-	// it, to say the person may not see the policy.
+	// Scheduling is offered with scheduling_policy:read and Leave with
+	// leave_type:read; a link to either still opens it, to say the person may
+	// not see it.
 	const sections = visibleSections({
 		scheduling:
 			access.can("scheduling_policy:read", COMPANY_SCOPE) ||
 			search.section === "scheduling",
+		leave:
+			access.can("leave_type:read", COMPANY_SCOPE) ||
+			search.section === "leave",
 		data: offersData(dataItems),
 	});
 	const selectedIndex = selectedSectionIndex(sections, search.section);
@@ -139,6 +144,11 @@ export const Settings = (): FunctionComponent => {
 					{sections.includes("scheduling") && (
 						<TabPanel className={panelClasses}>
 							<SchedulingPolicySettings companyId={companyId} />
+						</TabPanel>
+					)}
+					{sections.includes("leave") && (
+						<TabPanel className={panelClasses}>
+							<LeaveTypesSettings companyId={companyId} />
 						</TabPanel>
 					)}
 					<TabPanel className={panelClasses}>

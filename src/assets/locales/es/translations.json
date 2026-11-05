@@ -362,6 +362,92 @@
 				"deleteFailed": "No pudimos quitar la restricción. Inténtalo de nuevo.",
 				"deleteForbidden": "Ya no tienes permiso para cambiar la política de programación."
 			}
+		},
+		"leave": {
+			"title": "Permisos",
+			"description": "Tipos de permiso que se pueden solicitar.",
+			"types": {
+				"title": "Tipos de permiso",
+				"subtitle": "Los tipos de permiso que se eligen al solicitar, agrupados según cómo se cuentan. Un tipo de permiso nunca se elimina: desactívalo para dejar de ofrecerlo.",
+				"add": "Añadir tipo de permiso",
+				"name": "Nombre",
+				"details": "Detalles",
+				"requests": "Solicitudes",
+				"order": "Orden",
+				"paid": "Remunerado",
+				"unpaid": "No remunerado",
+				"reasonRequired": "Motivo obligatorio",
+				"requestCount_one": "{{count}} solicitud",
+				"requestCount_other": "{{count}} solicitudes",
+				"moveUp": "Subir {{name}}",
+				"moveDown": "Bajar {{name}}",
+				"moved": "{{name}} se movió al puesto {{position}} en {{kind}}.",
+				"systemHeading": "Asignado por el planificador",
+				"systemDescription": "El planificador lo asigna en los días libres del turno. No se puede cambiar ni solicitar.",
+				"systemLock": "Tipo del sistema",
+				"inactiveHeading_one": "Inactivos ({{count}})",
+				"inactiveHeading_other": "Inactivos ({{count}})",
+				"inactiveLabel": "Tipos de permiso inactivos",
+				"empty": "No hay ningún tipo de permiso activo. Añade o activa uno para que se pueda solicitar permiso.",
+				"loading": "Cargando los tipos de permiso…",
+				"failed": "No pudimos cargar los tipos de permiso. Inténtalo de nuevo.",
+				"hidden": "No tienes permiso para ver los tipos de permiso.",
+				"added": "Tipo de permiso añadido",
+				"saved": "Tipo de permiso guardado",
+				"deactivated": "{{name}} desactivado",
+				"activated": "{{name}} activado",
+				"deactivateTitle": "¿Desactivar {{name}}?",
+				"deactivateDescription_zero": "Nadie podrá elegirlo en solicitudes nuevas. Puedes volver a activarlo más tarde.",
+				"deactivateDescription_one": "{{count}} solicitud lo usa. Lo conserva y se sigue mostrando en ella. Nadie podrá elegirlo en solicitudes nuevas. Puedes volver a activarlo más tarde.",
+				"deactivateDescription_other": "{{count}} solicitudes lo usan. Lo conservan y se sigue mostrando en ellas. Nadie podrá elegirlo en solicitudes nuevas. Puedes volver a activarlo más tarde.",
+				"deactivateConfirm": "Desactivar",
+				"activateTitle": "¿Activar {{name}}?",
+				"activateDescription": "Se podrá volver a elegir al solicitar permiso.",
+				"activateConfirm": "Activar",
+				"cancel": "Cancelar",
+				"lastActive": "Es el único tipo de permiso que se puede solicitar. Añade o activa otro primero.",
+				"changeForbidden": "Ya no tienes permiso para cambiar los tipos de permiso.",
+				"statusFailed": "No pudimos cambiar el tipo de permiso. Inténtalo de nuevo.",
+				"reorderFailed": "No pudimos cambiar el orden. Inténtalo de nuevo.",
+				"orderStale": "La lista había cambiado, así que se ha actualizado. Inténtalo de nuevo."
+			},
+			"dialog": {
+				"title": "Añadir tipo de permiso",
+				"editTitle": "Editar tipo de permiso",
+				"description": "Añade un tipo de permiso que se pueda solicitar.",
+				"editDescription": "Cambia el nombre de {{name}} y cómo se cuenta.",
+				"name": "Nombre",
+				"namePlaceholder": "p. ej. Permiso de estudios",
+				"nameHint": "De 2 a 100 caracteres: letras, números, espacios y . ' & -",
+				"nameCounter": "{{count}}/100",
+				"nameRequired": "Escribe un nombre.",
+				"nameLength": "Usa de 2 a 100 caracteres.",
+				"nameCharacters": "Usa solo letras, números, espacios y . ' & - en el nombre.",
+				"nameConflict": "Ya existe un tipo de permiso llamado «{{name}}».",
+				"nameRejected": "Revisa el nombre e inténtalo de nuevo.",
+				"kind": "Cómo se cuenta",
+				"kindDescription": {
+					"ALLOWANCE": "Un número fijo de días por año de permisos.",
+					"PER_OCCASION": "Un número fijo de días cada vez que ocurre.",
+					"UNTRACKED": "No se descuenta de nada."
+				},
+				"kindFixed_one": "Lo usa {{count}} solicitud, así que no se puede cambiar cómo se cuenta. Añade un tipo nuevo y desactiva este.",
+				"kindFixed_other": "Lo usan {{count}} solicitudes, así que no se puede cambiar cómo se cuenta. Añade un tipo nuevo y desactiva este.",
+				"paid": "Remunerado",
+				"paidDescription": "Para tus registros. Todavía no se calcula nada con este dato.",
+				"requiresReason": "Pedir un motivo",
+				"requiresReasonDescription": "Al solicitarlo hay que indicar para qué es el permiso. Quien revise la solicitud puede leerlo.",
+				"kindLocked": "Hay solicitudes que usan este tipo de permiso, así que no se puede cambiar cómo se cuenta.",
+				"system": "El día libre del planificador no se puede cambiar.",
+				"gone": "Este tipo de permiso ya no está disponible. Cierra y vuelve a cargar la página.",
+				"submit": "Añadir tipo de permiso",
+				"editSubmit": "Guardar",
+				"cancel": "Cancelar",
+				"forbidden": "Ya no tienes permiso para añadir tipos de permiso.",
+				"editForbidden": "Ya no tienes permiso para cambiar los tipos de permiso.",
+				"failed": "No pudimos añadir el tipo de permiso. Inténtalo de nuevo.",
+				"editFailed": "No pudimos guardar el tipo de permiso. Inténtalo de nuevo."
+			}
 		}
 	},
 	"combobox": {
@@ -560,6 +646,14 @@
 					"read": "Ver",
 					"update": "Editar"
 				}
+			},
+			"leave_type": {
+				"name": "Tipos de permiso",
+				"description": "Los tipos de permiso de la empresa y cuántas solicitudes usan cada uno, nunca quién los tomó.",
+				"actions": {
+					"read": "Ver",
+					"update": "Editar"
+				}
 			}
 		},
 		"jobTitles": {
@@ -636,7 +730,10 @@
 				"skillAssigned": "Habilidad asignada a personas: {{name}}",
 				"schedulingPolicyCreated": "Restricción añadida a la política de programación: {{name}}",
 				"schedulingPolicyUpdated": "Restricción de la política de programación cambiada: {{name}}",
-				"schedulingPolicyDeleted": "Restricción quitada de la política de programación: {{name}}"
+				"schedulingPolicyDeleted": "Restricción quitada de la política de programación: {{name}}",
+				"leaveTypeCreated": "Tipo de permiso añadido: {{name}}",
+				"leaveTypeUpdated": "Tipo de permiso cambiado: {{name}}",
+				"leaveTypesReordered": "Tipos de permiso reordenados"
 			},
 			"unnamed": {
 				"jobTitleCreated": "Puesto creado",
@@ -669,7 +766,10 @@
 				"skillAssigned": "Habilidad asignada a personas",
 				"schedulingPolicyCreated": "Restricción añadida a la política de programación",
 				"schedulingPolicyUpdated": "Restricción de la política de programación cambiada",
-				"schedulingPolicyDeleted": "Restricción quitada de la política de programación"
+				"schedulingPolicyDeleted": "Restricción quitada de la política de programación",
+				"leaveTypeCreated": "Tipo de permiso añadido",
+				"leaveTypeUpdated": "Tipo de permiso cambiado",
+				"leaveTypesReordered": "Tipos de permiso reordenados"
 			},
 			"fallback": {
 				"named": "{{verb}} de {{entity}}: {{name}}",

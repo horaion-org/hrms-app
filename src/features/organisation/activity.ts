@@ -55,6 +55,9 @@ type ActivityKey =
 	| "schedulingPolicyCreated"
 	| "schedulingPolicyUpdated"
 	| "schedulingPolicyDeleted"
+	| "leaveTypeCreated"
+	| "leaveTypeUpdated"
+	| "leaveTypesReordered"
 	| "leaveRequested"
 	| "leaveApproved"
 	| "leaveRejected";
@@ -137,6 +140,10 @@ const ACTIVITIES: Record<string, { key: ActivityKey; icon: Heroicon }> = {
 		key: "schedulingPolicyDeleted",
 		icon: SchedulingIcon,
 	},
+	// The company's leave type catalogue (ADR-0055); a reorder moves several types, so it names none.
+	"leave_type.create": { key: "leaveTypeCreated", icon: LeaveIcon },
+	"leave_type.update": { key: "leaveTypeUpdated", icon: LeaveIcon },
+	"leave_type.reorder": { key: "leaveTypesReordered", icon: LeaveIcon },
 };
 
 type VerbKey =

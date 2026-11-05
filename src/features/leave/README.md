@@ -12,7 +12,9 @@ is sampled or kept in page state beyond the timeline's window.
   active-Branches query that drives the country and Branch filters, `activeLeaveTypesQuery` (the company's
   active leave types, asked for once an application opens), and the writes: apply (own or on behalf, with
   remarks, required when the leave type asks for a reason), approve (with an optional comment) and reject (with
-  a reason). A request's `leaveType` is any code: a company names its own types.
+  a reason). A request's `leaveType` is any code: a company names its own types. Its admins manage them under
+  Settings › Leave (`features/leaveTypes`, `features/settings/LeaveTypesSettings`); every change there reloads
+  the `leave-types` and `leave` queries.
 - `leaveTypeLabel.ts` — what a request's leave type is called: the company's name, or the app's words for a code
   of the old fixed list when an older API sends no name, or "Leave".
 - `leaveTypeOptions.ts` — the applicable leave types (active, never the scheduler's day off) as Select options,

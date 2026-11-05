@@ -5,6 +5,7 @@ import {
 	EmailIcon,
 	GenerateScheduleIcon,
 	HistoryIcon,
+	LeaveIcon,
 	OrganisationIcon,
 	PermissionsIcon,
 	RoleIcon,
@@ -46,6 +47,9 @@ const WORKSPACE_PROFILE_AND_SCHEDULE_KEYS = [
 	"schedulingPolicyCreated",
 	"schedulingPolicyUpdated",
 	"schedulingPolicyDeleted",
+	"leaveTypeCreated",
+	"leaveTypeUpdated",
+	"leaveTypesReordered",
 ];
 
 const event = (overrides: Partial<AuditEvent>): AuditEvent => ({
@@ -130,6 +134,8 @@ describe("describeActivity", () => {
 		["schedule.generated", "Schedule generated: Orchard", GenerateScheduleIcon],
 		["schedule.delete", "Schedule deleted: Orchard", SchedulingIcon],
 		["organisation_import.complete", "Organisation imported", OrganisationIcon],
+		["leave_type.create", "Leave type added: Orchard", LeaveIcon],
+		["leave_type.update", "Leave type changed: Orchard", LeaveIcon],
 	])("words %s as %s", (action, title, icon) => {
 		expect(describeActivity(event({ action }), t)).toEqual({
 			id: "e-1",
@@ -156,6 +162,8 @@ describe("describeActivity", () => {
 		["scheduling_policy.update", "Scheduling policy constraint changed"],
 		["member_skill.bulk_assign", "Skill assigned to people"],
 		["organisation_import.complete", "Organisation imported"],
+		["leave_type.update", "Leave type changed"],
+		["leave_type.reorder", "Leave types reordered"],
 	])("words %s without a name as %s", (action, title) => {
 		expect(
 			describeActivity(event({ action, entityName: null }), t)?.title

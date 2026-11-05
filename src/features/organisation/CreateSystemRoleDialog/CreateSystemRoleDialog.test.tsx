@@ -102,7 +102,7 @@ describe("create system role through the System roles page", () => {
 		const list = within(dialog).getByRole("group", { name: "Permissions" });
 		// One box per key, plus each resource's own.
 		expect(within(list).getAllByRole("checkbox")).toHaveLength(
-			PERMISSION_KEYS.length + 17
+			PERMISSION_KEYS.length + 18
 		);
 		for (const item of within(list).getAllByRole("checkbox"))
 			expect(item).toBeEnabled();
