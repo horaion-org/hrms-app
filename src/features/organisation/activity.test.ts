@@ -108,6 +108,23 @@ describe("describeActivity", () => {
 			"Skill assigned to people: Orchard",
 			SkillsIcon,
 		],
+		["employment_terms.create", "Employment terms added: Orchard", TimeIcon],
+		[
+			"employment_terms.change_from_date",
+			"Employment terms changed from a date: Orchard",
+			TimeIcon,
+		],
+		["employment_terms.default", "Default employment terms: Orchard", TimeIcon],
+		[
+			"member_employment_terms.change",
+			"Orchard’s employment terms changed",
+			TimeIcon,
+		],
+		[
+			"member_employment_terms.bulk_assign",
+			"Employment terms given to several people: Orchard",
+			TimeIcon,
+		],
 		["member_availability.replace", "Orchard’s availability updated", TimeIcon],
 		[
 			"member_availability.week_override.replace",
@@ -161,6 +178,11 @@ describe("describeActivity", () => {
 		["skill.delete", "Skill deleted"],
 		["scheduling_policy.update", "Scheduling policy constraint changed"],
 		["member_skill.bulk_assign", "Skill assigned to people"],
+		["employment_terms.status", "Employment terms status changed"],
+		[
+			"member_employment_terms.cancel",
+			"Employment terms change cancelled for someone",
+		],
 		["organisation_import.complete", "Organisation imported"],
 		["leave_type.update", "Leave type changed"],
 		["leave_type.reorder", "Leave types reordered"],

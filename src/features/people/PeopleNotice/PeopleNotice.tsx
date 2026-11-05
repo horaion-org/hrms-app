@@ -29,14 +29,17 @@ export const PeopleNotice = ({
 	const { t } = useTranslation();
 	return (
 		<p
-			data-warning={notice.roleNotAssigned || undefined}
 			role="status"
 			className={joinClassNames(
 				"text-sm font-semibold text-success-700 data-warning:text-warning-700",
 				className
 			)}
+			data-warning={
+				notice.roleNotAssigned || notice.termsNotSet !== undefined || undefined
+			}
 		>
 			{t(messageKey(notice), { name: notice.name })}
+			{notice.termsNotSet && ` ${t("people.termsNotSet", notice.termsNotSet)}`}
 		</p>
 	);
 };

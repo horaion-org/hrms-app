@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
@@ -21,6 +22,8 @@ export type ProfileDetailsProps = {
 	profile: MemberProfileDetail;
 	/** The system roles they hold, in words; the row is left out when not given. */
 	systemRoles?: string;
+	/** Their employment terms (`EmploymentTermsRow`); the row is left out when not given. */
+	employmentTerms?: ReactNode;
 	className?: string;
 };
 
@@ -33,6 +36,7 @@ const key = "people.form";
 export const ProfileDetails = ({
 	profile,
 	systemRoles,
+	employmentTerms,
 	className,
 }: ProfileDetailsProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
@@ -84,6 +88,11 @@ export const ProfileDetails = ({
 						? t(`${key}.employmentTypes.${profile.employmentType}`)
 						: notSet,
 				},
+				...(employmentTerms === undefined
+					? []
+					: [
+							{ label: t("employmentTerms.row.label"), value: employmentTerms },
+						]),
 				{ label: t(`${key}.hireDate`), value: date(profile.hireDate) },
 				{
 					label: t(`${key}.probationEndDate`),

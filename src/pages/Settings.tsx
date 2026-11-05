@@ -7,6 +7,7 @@ import { ArrowUpIcon } from "@/components/ui/Icon";
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from "@/components/ui/Tabs";
 import { dataItemsFor, offersData } from "@/features/settings/dataAccess";
 import { DataSettings } from "@/features/settings/DataSettings";
+import { EmploymentTermsSettings } from "@/features/settings/EmploymentTermsSettings";
 import { GeneralSettingsForm } from "@/features/settings/GeneralSettingsForm";
 import { LeaveTypesSettings } from "@/features/settings/LeaveTypesSettings";
 import { PlanSettings } from "@/features/settings/PlanSettings";
@@ -44,10 +45,13 @@ export const Settings = (): FunctionComponent => {
 	const search = route.useSearch();
 	const dataItems = dataItemsFor(access);
 	// The section lives in the URL, so a link such as `?section=data` opens it.
-	// Scheduling is offered with scheduling_policy:read and Leave with
-	// leave_type:read; a link to either still opens it, to say the person may
-	// not see it.
+	// Employment, Scheduling and Leave are offered with their read keys
+	// (employment_terms, scheduling_policy, leave_type); a link to any of them
+	// still opens it, to say the person may not see it.
 	const sections = visibleSections({
+		employment:
+			access.can("employment_terms:read", COMPANY_SCOPE) ||
+			search.section === "employment",
 		scheduling:
 			access.can("scheduling_policy:read", COMPANY_SCOPE) ||
 			search.section === "scheduling",
@@ -141,6 +145,17 @@ export const Settings = (): FunctionComponent => {
 							</p>
 						</TabPanel>
 					))}
+					{sections.includes("employment") && (
+						<TabPanel className={panelClasses}>
+							<EmploymentTermsSettings
+								companyId={companyId}
+								openTermsId={search.terms}
+								onTermsClosed={() => {
+									show("employment");
+								}}
+							/>
+						</TabPanel>
+					)}
 					{sections.includes("scheduling") && (
 						<TabPanel className={panelClasses}>
 							<SchedulingPolicySettings companyId={companyId} />

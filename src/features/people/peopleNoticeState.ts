@@ -8,6 +8,8 @@ const noticeSchema = z.object({
 		name: z.string().min(1),
 		/** Set when the person was added or saved but their system role was not changed. */
 		roleNotAssigned: z.boolean(),
+		/** Set when the person was added but the terms chosen couldn't be given: they kept the Default. */
+		termsNotSet: z.object({ chosen: z.string(), kept: z.string() }).optional(),
 	}),
 });
 

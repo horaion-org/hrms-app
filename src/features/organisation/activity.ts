@@ -58,6 +58,16 @@ type ActivityKey =
 	| "leaveTypeCreated"
 	| "leaveTypeUpdated"
 	| "leaveTypesReordered"
+	| "employmentTermsCreated"
+	| "employmentTermsUpdated"
+	| "employmentTermsChangedFromDate"
+	| "employmentTermsStatusChanged"
+	| "employmentTermsDefaultChanged"
+	| "employmentTermsDeleted"
+	| "employmentTermsAssigned"
+	| "memberTermsChanged"
+	| "memberTermsCorrected"
+	| "memberTermsCancelled"
 	| "leaveRequested"
 	| "leaveApproved"
 	| "leaveRejected";
@@ -144,6 +154,39 @@ const ACTIVITIES: Record<string, { key: ActivityKey; icon: Heroicon }> = {
 	"leave_type.create": { key: "leaveTypeCreated", icon: LeaveIcon },
 	"leave_type.update": { key: "leaveTypeUpdated", icon: LeaveIcon },
 	"leave_type.reorder": { key: "leaveTypesReordered", icon: LeaveIcon },
+	// Employment terms (Settings › Employment) and who works on which, from when.
+	"employment_terms.create": { key: "employmentTermsCreated", icon: TimeIcon },
+	"employment_terms.update": { key: "employmentTermsUpdated", icon: TimeIcon },
+	"employment_terms.change_from_date": {
+		key: "employmentTermsChangedFromDate",
+		icon: TimeIcon,
+	},
+	"employment_terms.status": {
+		key: "employmentTermsStatusChanged",
+		icon: TimeIcon,
+	},
+	"employment_terms.default": {
+		key: "employmentTermsDefaultChanged",
+		icon: TimeIcon,
+	},
+	"employment_terms.delete": { key: "employmentTermsDeleted", icon: TimeIcon },
+	// Terms given to many people at once; who received them is not in the feed.
+	"member_employment_terms.bulk_assign": {
+		key: "employmentTermsAssigned",
+		icon: TimeIcon,
+	},
+	"member_employment_terms.change": {
+		key: "memberTermsChanged",
+		icon: TimeIcon,
+	},
+	"member_employment_terms.correct": {
+		key: "memberTermsCorrected",
+		icon: TimeIcon,
+	},
+	"member_employment_terms.cancel": {
+		key: "memberTermsCancelled",
+		icon: TimeIcon,
+	},
 };
 
 type VerbKey =

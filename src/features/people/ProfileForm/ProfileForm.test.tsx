@@ -16,6 +16,13 @@ import {
 	type StubReply,
 } from "@/common/testing/stubApi";
 import { endSession } from "@/features/auth/session";
+import {
+	FIVE_DAY_WEEK,
+	MEMBER_TERMS,
+	PART_TIME_20,
+	STANDARD_WEEK,
+	termsListResponse,
+} from "@/features/employmentTerms/fixtures";
 import { renderAuthApp } from "@/features/auth/testing";
 
 const COMPANY = "/api/v1/companies/c-1";
@@ -837,5 +844,142 @@ describe("Add employee", () => {
 		});
 		expect(screen.queryByText(/was added/)).not.toBeInTheDocument();
 		expect(sent(calls, CREATE)).toEqual([]);
+	});
+});
+
+describe("Add employee's employment terms", () => {
+	const TERMS_LIST = `GET ${COMPANY}/employment-terms`;
+	const MEMBER = `${COMPANY}/member-profiles/m-new/employment-terms`;
+	const HIRE_ENTRY = {
+		...MEMBER_TERMS.history[1]!,
+		id: "entry-hire",
+		effectiveFrom: "2026-10-01",
+		termsId: STANDARD_WEEK.id,
+		termsName: STANDARD_WEEK.name,
+		source: "HIRE",
+	};
+	const CORRECT_HIRE = `PUT ${MEMBER}/entry-hire`;
+	const withTerms = (): ReturnType<typeof routes> => ({
+		...routes(workspaceReply([...ALL, "member_employment_terms:update"])),
+		[TERMS_LIST]: {
+			status: 200,
+			body: envelope(termsListResponse([STANDARD_WEEK, FIVE_DAY_WEEK])),
+		},
+		// The API gave the new person a first entry on the Default from their hire date.
+		[`GET ${MEMBER}`]: {
+			status: 200,
+			body: envelope({ ...MEMBER_TERMS, history: [HIRE_ENTRY] }),
+		},
+		[CORRECT_HIRE]: { status: 200, body: envelope(MEMBER_TERMS) },
+	});
+
+	it("correct the automatic first entry to the terms chosen", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi(withTerms());
+		await open();
+
+		await fillRequired(user);
+		expect(button(/^Employment terms/)).toHaveTextContent("Standard week");
+		await choose(user, /^Employment terms/, "Five-day week, 44 h");
+		expect(
+			screen.getByText(/^Works 5 days a week, 8\.8 hours a day\./)
+		).toBeVisible();
+		await pickDate(user, /^Hire date/, "1 October 2026");
+		await user.click(confirm());
+
+		await screen.findByText(/Priya Nair was added\. /);
+		expect(sent(calls, CORRECT_HIRE).map((call) => call.body)).toEqual([
+			{
+				employmentTermsId: FIVE_DAY_WEEK.id,
+				effectiveFrom: "2026-10-01",
+				contractedWeekMinutes: null,
+				contractedDayMinutes: null,
+			},
+		]);
+		expect(
+			calls.some((call) => call.method === "POST" && call.path === MEMBER)
+		).toBe(false);
+	});
+
+	it("leave the automatic first entry alone when the Default is kept", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi(withTerms());
+		await open();
+
+		await fillRequired(user);
+		await user.click(confirm());
+
+		await screen.findByText(/Priya Nair was added/);
+		expect(calls.some((call) => call.path.startsWith(MEMBER))).toBe(false);
+	});
+
+	it("warn when the terms disagree with the Employment type chosen", async () => {
+		const user = userEvent.setup();
+		stubApi({
+			...withTerms(),
+			[TERMS_LIST]: {
+				status: 200,
+				body: envelope(
+					termsListResponse([
+						STANDARD_WEEK,
+						{ ...PART_TIME_20, status: "ACTIVE" },
+					])
+				),
+			},
+		});
+		await open();
+
+		await fillRequired(user);
+		await choose(user, /^Employment type/, "Full-time");
+		await choose(user, /^Employment terms/, "Part-time, 20 h");
+
+		expect(
+			await screen.findByText(
+				"Their employment type is Full-time, but these terms are part-time (20 h a week). Check one of them."
+			)
+		).toBeVisible();
+	});
+
+	it("are not offered, nor sent, without member_employment_terms:update", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...routes(),
+			[TERMS_LIST]: {
+				status: 200,
+				body: envelope(termsListResponse([STANDARD_WEEK])),
+			},
+		});
+		await open();
+
+		await fillRequired(user);
+		expect(
+			screen.queryByRole("button", { name: /^Employment terms/ })
+		).toBeNull();
+		await user.click(confirm());
+
+		await screen.findByText(/Priya Nair was added/);
+		expect(calls.some((call) => call.path.includes("/employment-terms"))).toBe(
+			false
+		);
+	});
+
+	it("say plainly which terms they kept when the chosen ones couldn't be given", async () => {
+		const user = userEvent.setup();
+		stubApi({
+			...withTerms(),
+			[CORRECT_HIRE]: problemReply(403, "FORBIDDEN"),
+		});
+		const opened = await open();
+
+		await fillRequired(user);
+		await choose(user, /^Employment terms/, "Five-day week, 44 h");
+		await user.click(confirm());
+
+		expect(
+			await screen.findByText(
+				"Priya Nair was added. We’ve emailed them an invitation to log in. We couldn’t give them Five-day week, 44 h, so they’re on Standard week. Change it from their profile."
+			)
+		).toHaveAttribute("data-warning");
+		expect(opened.router.state.location.pathname).toBe("/people");
 	});
 });

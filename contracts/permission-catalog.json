@@ -443,6 +443,58 @@
       "action": "read",
       "actionName": "Read",
       "assignableScopes": [
+        "COMPANY"
+      ],
+      "key": "employment_terms:read",
+      "prerequisites": [],
+      "resource": "employment_terms",
+      "resourceName": "Employment Terms"
+    },
+    {
+      "action": "update",
+      "actionName": "Update",
+      "assignableScopes": [
+        "COMPANY"
+      ],
+      "key": "employment_terms:update",
+      "prerequisites": [
+        "employment_terms:read"
+      ],
+      "resource": "employment_terms",
+      "resourceName": "Employment Terms"
+    },
+    {
+      "action": "read",
+      "actionName": "Read",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
+      "key": "member_employment_terms:read",
+      "prerequisites": [],
+      "resource": "member_employment_terms",
+      "resourceName": "Member Employment Terms"
+    },
+    {
+      "action": "update",
+      "actionName": "Update",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
+      "key": "member_employment_terms:update",
+      "prerequisites": [
+        "member_employment_terms:read"
+      ],
+      "resource": "member_employment_terms",
+      "resourceName": "Member Employment Terms"
+    },
+    {
+      "action": "read",
+      "actionName": "Read",
+      "assignableScopes": [
         "COMPANY",
         "BRANCH",
         "DEPARTMENT"

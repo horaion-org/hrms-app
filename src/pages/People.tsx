@@ -13,9 +13,12 @@ import {
 	DepartmentIcon,
 	DownloadIcon,
 	RoleIcon,
+	TimeIcon,
 	UploadIcon,
 } from "@/components/ui/Icon";
 import { Pagination } from "@/components/ui/Pagination";
+import { Toast } from "@/components/ui/Toast";
+import { BulkChangeEmploymentTermsDialog } from "@/features/employmentTerms/BulkChangeEmploymentTermsDialog";
 import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import { ListToolbar } from "@/features/organisation/ListToolbar";
 import {
@@ -86,6 +89,10 @@ export const People = (): FunctionComponent => {
 	const access = useAccess();
 	const columns = useMemo(() => peopleColumns(t, access.can), [t, access.can]);
 	const canAdd = access.canAnywhere("member_profile:create");
+	// The API checks each person's Department and skips anyone out of reach.
+	const canChangeTerms = access.canAnywhere("member_employment_terms:update");
+	const [changingTerms, setChangingTerms] = useState(false);
+	const [termsToast, setTermsToast] = useState<{ id: number; text: string }>();
 	const exporting = useMutation({
 		mutationFn: () => exportPeople(companyId, query),
 		onSuccess: ({ blob, fileName }) => {
@@ -246,6 +253,18 @@ export const People = (): FunctionComponent => {
 									{t(`people.bulk.${action}`)}
 								</Button>
 							))}
+							{canChangeTerms && (
+								<Button
+									leadingIcon={<TimeIcon />}
+									size="sm"
+									variant="secondary"
+									onClick={() => {
+										setChangingTerms(true);
+									}}
+								>
+									{t("employmentTerms.bulk.action")}
+								</Button>
+							)}
 							<Button
 								disabled
 								className="border-error-200! bg-error-50! text-error-600! disabled:opacity-60"
@@ -296,6 +315,29 @@ export const People = (): FunctionComponent => {
 						/>
 					)}
 				</>
+			)}
+			{changingTerms && (
+				<BulkChangeEmploymentTermsDialog
+					companyId={companyId}
+					membershipIds={selectedIds}
+					onClose={() => {
+						setChangingTerms(false);
+					}}
+					onDone={(text) => {
+						setTermsToast({ id: Date.now(), text });
+						setTicked({ listKey, ids: [] });
+					}}
+				/>
+			)}
+			{termsToast && (
+				<Toast
+					key={termsToast.id}
+					onDismiss={() => {
+						setTermsToast(undefined);
+					}}
+				>
+					{termsToast.text}
+				</Toast>
 			)}
 		</>
 	);

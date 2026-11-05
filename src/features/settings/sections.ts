@@ -1,10 +1,11 @@
 /**
- * Settings' sections, in tab order; `scheduling`, `leave` and `data` are
- * offered only to people who may use them.
+ * Settings' sections, in tab order; `employment`, `scheduling`, `leave` and
+ * `data` are offered only to people who may use them.
  */
 export const SETTINGS_SECTIONS = [
 	"general",
 	"notifications",
+	"employment",
 	"scheduling",
 	"leave",
 	"plan",
@@ -13,18 +14,25 @@ export const SETTINGS_SECTIONS = [
 
 export type SettingsSection = (typeof SETTINGS_SECTIONS)[number];
 
-/** The section in the URL; General, the first, is left out. */
-export type SettingsSearch = { section?: SettingsSection };
+/**
+ * The section in the URL; General, the first, is left out. `terms` opens
+ * one employment terms in Settings › Employment (a deep link from a profile).
+ */
+export type SettingsSearch = { section?: SettingsSection; terms?: string };
 
 const isSettingsSection = (value: unknown): value is SettingsSection =>
 	(SETTINGS_SECTIONS as ReadonlyArray<unknown>).includes(value);
 
-/** Reads `?section=`; an unknown section, or General, is no section. */
+/** Reads `?section=` (an unknown section, or General, is no section) and, with Employment, `terms`. */
 export const parseSettingsSearch = (
 	search: Record<string, unknown>
 ): SettingsSearch => {
 	const section = search["section"];
-	return isSettingsSection(section) && section !== "general" ? { section } : {};
+	if (!isSettingsSection(section) || section === "general") return {};
+	const terms = search["terms"];
+	return section === "employment" && typeof terms === "string" && terms !== ""
+		? { section, terms }
+		: { section };
 };
 
 /** The search that opens a section, keeping General's address bare. */
@@ -33,17 +41,19 @@ export const searchForSection = (section: SettingsSection): SettingsSearch =>
 
 /** Which of the sections offered only to some people to show. */
 export type OptionalSections = {
+	employment: boolean;
 	scheduling: boolean;
 	leave: boolean;
 	data: boolean;
 };
 
-/** The sections shown, in order: Scheduling, Leave and Data only when offered. */
+/** The sections shown, in order: Employment, Scheduling, Leave and Data only when offered. */
 export const visibleSections = (
 	shown: OptionalSections
 ): Array<SettingsSection> =>
 	SETTINGS_SECTIONS.filter(
 		(section) =>
+			(section !== "employment" || shown.employment) &&
 			(section !== "scheduling" || shown.scheduling) &&
 			(section !== "leave" || shown.leave) &&
 			(section !== "data" || shown.data)

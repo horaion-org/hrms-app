@@ -22,6 +22,18 @@ describe("parseSettingsSearch", () => {
 		expect(parseSettingsSearch({ section: 3 })).toEqual({});
 		expect(parseSettingsSearch({})).toEqual({});
 	});
+
+	it("keeps `terms` only with Employment, for a link to one terms", () => {
+		expect(
+			parseSettingsSearch({ section: "employment", terms: "t-1" })
+		).toEqual({ section: "employment", terms: "t-1" });
+		expect(parseSettingsSearch({ section: "data", terms: "t-1" })).toEqual({
+			section: "data",
+		});
+		expect(parseSettingsSearch({ section: "employment", terms: "" })).toEqual({
+			section: "employment",
+		});
+	});
 });
 
 describe("searchForSection", () => {
@@ -32,24 +44,53 @@ describe("searchForSection", () => {
 });
 
 describe("visibleSections and selectedSectionIndex", () => {
-	const everything = { scheduling: true, leave: true, data: true };
-	const neither = { scheduling: false, leave: false, data: false };
+	const everything = {
+		employment: true,
+		scheduling: true,
+		leave: true,
+		data: true,
+	};
+	const neither = {
+		employment: false,
+		scheduling: false,
+		leave: false,
+		data: false,
+	};
 
-	it("adds Scheduling, Leave and Data only when they have something to offer", () => {
+	it("adds Employment, Scheduling, Leave and Data only when they have something to offer", () => {
 		expect(visibleSections(neither)).toEqual([
 			"general",
 			"notifications",
 			"plan",
 		]);
 		expect(
-			visibleSections({ scheduling: true, leave: false, data: false })
+			visibleSections({
+				employment: false,
+				scheduling: true,
+				leave: false,
+				data: false,
+			})
 		).toEqual(["general", "notifications", "scheduling", "plan"]);
 		expect(
-			visibleSections({ scheduling: false, leave: true, data: false })
+			visibleSections({
+				employment: false,
+				scheduling: false,
+				leave: true,
+				data: false,
+			})
 		).toEqual(["general", "notifications", "leave", "plan"]);
+		expect(
+			visibleSections({
+				employment: true,
+				scheduling: false,
+				leave: false,
+				data: false,
+			})
+		).toEqual(["general", "notifications", "employment", "plan"]);
 		expect(visibleSections(everything)).toEqual([
 			"general",
 			"notifications",
+			"employment",
 			"scheduling",
 			"leave",
 			"plan",
@@ -58,8 +99,8 @@ describe("visibleSections and selectedSectionIndex", () => {
 	});
 
 	it("selects the asked-for section, or General when it is not shown", () => {
-		expect(selectedSectionIndex(visibleSections(everything), "data")).toBe(5);
-		expect(selectedSectionIndex(visibleSections(everything), "leave")).toBe(3);
+		expect(selectedSectionIndex(visibleSections(everything), "data")).toBe(6);
+		expect(selectedSectionIndex(visibleSections(everything), "leave")).toBe(4);
 		expect(selectedSectionIndex(visibleSections(neither), "data")).toBe(0);
 		expect(selectedSectionIndex(visibleSections(neither), "scheduling")).toBe(
 			0

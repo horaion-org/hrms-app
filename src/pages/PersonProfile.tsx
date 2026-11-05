@@ -18,12 +18,16 @@ import { describeMemberRoles } from "@/features/people/memberRoles";
 import { PeopleNotice } from "@/features/people/PeopleNotice";
 import { peopleNoticeFrom } from "@/features/people/peopleNoticeState";
 import { ProfileDetails } from "@/features/people/ProfileDetails";
-import { profileEditAccess } from "@/features/people/profileEditAccess";
+import {
+	personScope,
+	profileEditAccess,
+} from "@/features/people/profileEditAccess";
 import { ProfileHeader } from "@/features/people/ProfileHeader";
 import { ProfileMenu } from "@/features/people/ProfileMenu";
 import { ProfileNotesAndSkills } from "@/features/people/ProfileNotesAndSkills";
 import { useMemberRoles } from "@/features/people/useMemberRoles";
 import { useAccess } from "@/features/workspace/useAccess";
+import { EmploymentTermsRow } from "@/features/employmentTerms/EmploymentTermsRow";
 import { PersonProfileEdit } from "@/pages/PersonProfileEdit";
 
 const route = getRouteApi("/_authenticated/_app/people_/$membershipId");
@@ -97,6 +101,11 @@ export const PersonProfile = (): FunctionComponent => {
 							className="mt-10"
 							profile={profile}
 							systemRoles={describeMemberRoles(roles, t)}
+							employmentTerms={
+								can("member_employment_terms:read", personScope(profile)) ? (
+									<EmploymentTermsRow companyId={companyId} profile={profile} />
+								) : undefined
+							}
 						/>
 						<ProfileNotesAndSkills
 							className="mt-6"
