@@ -754,7 +754,17 @@
 				"schedulingPolicyDeleted": "Restricción quitada de la política de programación: {{name}}",
 				"leaveTypeCreated": "Tipo de permiso añadido: {{name}}",
 				"leaveTypeUpdated": "Tipo de permiso cambiado: {{name}}",
-				"leaveTypesReordered": "Tipos de permiso reordenados"
+				"leaveTypesReordered": "Tipos de permiso reordenados",
+				"employmentTermsCreated": "Condiciones de empleo añadidas: {{name}}",
+				"employmentTermsUpdated": "Condiciones de empleo actualizadas: {{name}}",
+				"employmentTermsChangedFromDate": "Condiciones de empleo cambiadas desde una fecha: {{name}}",
+				"employmentTermsStatusChanged": "Estado de condiciones de empleo cambiado: {{name}}",
+				"employmentTermsDefaultChanged": "Condiciones de empleo predeterminadas: {{name}}",
+				"employmentTermsDeleted": "Condiciones de empleo eliminadas: {{name}}",
+				"memberTermsChanged": "Condiciones de empleo de {{name}} cambiadas",
+				"memberTermsCorrected": "Condiciones de empleo de {{name}} corregidas",
+				"memberTermsCancelled": "Cambio de condiciones de empleo de {{name}} cancelado",
+				"employmentTermsAssigned": "Condiciones de empleo asignadas a varias personas: {{name}}"
 			},
 			"unnamed": {
 				"jobTitleCreated": "Puesto creado",
@@ -790,7 +800,17 @@
 				"schedulingPolicyDeleted": "Restricción quitada de la política de programación",
 				"leaveTypeCreated": "Tipo de permiso añadido",
 				"leaveTypeUpdated": "Tipo de permiso cambiado",
-				"leaveTypesReordered": "Tipos de permiso reordenados"
+				"leaveTypesReordered": "Tipos de permiso reordenados",
+				"employmentTermsCreated": "Condiciones de empleo añadidas",
+				"employmentTermsUpdated": "Condiciones de empleo actualizadas",
+				"employmentTermsChangedFromDate": "Condiciones de empleo cambiadas desde una fecha",
+				"employmentTermsStatusChanged": "Estado de condiciones de empleo cambiado",
+				"employmentTermsDefaultChanged": "Condiciones de empleo predeterminadas cambiadas",
+				"employmentTermsDeleted": "Condiciones de empleo eliminadas",
+				"memberTermsChanged": "Condiciones de empleo cambiadas a una persona",
+				"memberTermsCorrected": "Condiciones de empleo corregidas a una persona",
+				"memberTermsCancelled": "Cambio de condiciones de empleo cancelado a una persona",
+				"employmentTermsAssigned": "Condiciones de empleo asignadas a varias personas"
 			},
 			"fallback": {
 				"named": "{{verb}} de {{entity}}: {{name}}",

@@ -1871,7 +1871,17 @@
 				"schedulingPolicyDeleted": "Scheduling policy constraint removed: {{name}}",
 				"leaveTypeCreated": "Leave type added: {{name}}",
 				"leaveTypeUpdated": "Leave type changed: {{name}}",
-				"leaveTypesReordered": "Leave types reordered"
+				"leaveTypesReordered": "Leave types reordered",
+				"employmentTermsCreated": "Employment terms added: {{name}}",
+				"employmentTermsUpdated": "Employment terms updated: {{name}}",
+				"employmentTermsChangedFromDate": "Employment terms changed from a date: {{name}}",
+				"employmentTermsStatusChanged": "Employment terms status changed: {{name}}",
+				"employmentTermsDefaultChanged": "Default employment terms: {{name}}",
+				"employmentTermsDeleted": "Employment terms deleted: {{name}}",
+				"memberTermsChanged": "{{name}}’s employment terms changed",
+				"memberTermsCorrected": "{{name}}’s employment terms corrected",
+				"memberTermsCancelled": "{{name}}’s employment terms change cancelled",
+				"employmentTermsAssigned": "Employment terms given to several people: {{name}}"
 			},
 			"unnamed": {
 				"branchCreated": "Branch created",
@@ -1914,7 +1924,17 @@
 				"schedulingPolicyDeleted": "Scheduling policy constraint removed",
 				"leaveTypeCreated": "Leave type added",
 				"leaveTypeUpdated": "Leave type changed",
-				"leaveTypesReordered": "Leave types reordered"
+				"leaveTypesReordered": "Leave types reordered",
+				"employmentTermsCreated": "Employment terms added",
+				"employmentTermsUpdated": "Employment terms updated",
+				"employmentTermsChangedFromDate": "Employment terms changed from a date",
+				"employmentTermsStatusChanged": "Employment terms status changed",
+				"employmentTermsDefaultChanged": "Default employment terms changed",
+				"employmentTermsDeleted": "Employment terms deleted",
+				"memberTermsChanged": "Employment terms changed for someone",
+				"memberTermsCorrected": "Employment terms corrected for someone",
+				"memberTermsCancelled": "Employment terms change cancelled for someone",
+				"employmentTermsAssigned": "Employment terms given to several people"
 			},
 			"fallback": {
 				"named": "{{entity}} {{verb}}: {{name}}",
