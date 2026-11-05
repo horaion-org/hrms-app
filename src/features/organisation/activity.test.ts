@@ -43,6 +43,9 @@ const WORKSPACE_PROFILE_AND_SCHEDULE_KEYS = [
 	"scheduleRegenerationRequested",
 	"scheduleGenerated",
 	"scheduleDeleted",
+	"schedulingPolicyCreated",
+	"schedulingPolicyUpdated",
+	"schedulingPolicyDeleted",
 ];
 
 const event = (overrides: Partial<AuditEvent>): AuditEvent => ({
@@ -86,6 +89,16 @@ describe("describeActivity", () => {
 		["skill.create", "Skill created: Orchard", SkillsIcon],
 		["skill.update", "Skill updated: Orchard", SkillsIcon],
 		["skill.delete", "Skill deleted: Orchard", SkillsIcon],
+		[
+			"scheduling_policy.create",
+			"Scheduling policy constraint added: Orchard",
+			SchedulingIcon,
+		],
+		[
+			"scheduling_policy.delete",
+			"Scheduling policy constraint removed: Orchard",
+			SchedulingIcon,
+		],
 		[
 			"member_skill.bulk_assign",
 			"Skill assigned to people: Orchard",
@@ -140,6 +153,7 @@ describe("describeActivity", () => {
 		["schedule.regenerate", "Schedule regeneration requested"],
 		["member_skill.replace", "Employee skills updated"],
 		["skill.delete", "Skill deleted"],
+		["scheduling_policy.update", "Scheduling policy constraint changed"],
 		["member_skill.bulk_assign", "Skill assigned to people"],
 		["organisation_import.complete", "Organisation imported"],
 	])("words %s without a name as %s", (action, title) => {

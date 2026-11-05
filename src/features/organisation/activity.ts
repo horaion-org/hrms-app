@@ -52,6 +52,9 @@ type ActivityKey =
 	| "scheduleRegenerationRequested"
 	| "scheduleGenerated"
 	| "scheduleDeleted"
+	| "schedulingPolicyCreated"
+	| "schedulingPolicyUpdated"
+	| "schedulingPolicyDeleted"
 	| "leaveRequested"
 	| "leaveApproved"
 	| "leaveRejected";
@@ -121,6 +124,19 @@ const ACTIVITIES: Record<string, { key: ActivityKey; icon: Heroicon }> = {
 		icon: GenerateScheduleIcon,
 	},
 	"schedule.delete": { key: "scheduleDeleted", icon: SchedulingIcon },
+	// The company's Scheduling policy (ADR-0058): constraints set for every department.
+	"scheduling_policy.create": {
+		key: "schedulingPolicyCreated",
+		icon: SchedulingIcon,
+	},
+	"scheduling_policy.update": {
+		key: "schedulingPolicyUpdated",
+		icon: SchedulingIcon,
+	},
+	"scheduling_policy.delete": {
+		key: "schedulingPolicyDeleted",
+		icon: SchedulingIcon,
+	},
 };
 
 type VerbKey =

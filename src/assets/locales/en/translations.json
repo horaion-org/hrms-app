@@ -1747,7 +1747,10 @@
 				"skillCreated": "Skill created: {{name}}",
 				"skillUpdated": "Skill updated: {{name}}",
 				"skillDeleted": "Skill deleted: {{name}}",
-				"skillAssigned": "Skill assigned to people: {{name}}"
+				"skillAssigned": "Skill assigned to people: {{name}}",
+				"schedulingPolicyCreated": "Scheduling policy constraint added: {{name}}",
+				"schedulingPolicyUpdated": "Scheduling policy constraint changed: {{name}}",
+				"schedulingPolicyDeleted": "Scheduling policy constraint removed: {{name}}"
 			},
 			"unnamed": {
 				"branchCreated": "Branch created",
@@ -1784,7 +1787,10 @@
 				"skillCreated": "Skill created",
 				"skillUpdated": "Skill updated",
 				"skillDeleted": "Skill deleted",
-				"skillAssigned": "Skill assigned to people"
+				"skillAssigned": "Skill assigned to people",
+				"schedulingPolicyCreated": "Scheduling policy constraint added",
+				"schedulingPolicyUpdated": "Scheduling policy constraint changed",
+				"schedulingPolicyDeleted": "Scheduling policy constraint removed"
 			},
 			"fallback": {
 				"named": "{{entity}} {{verb}}: {{name}}",
@@ -2559,10 +2565,6 @@
 				"confirm": "Continue without constraints",
 				"cancel": "Back to constraints"
 			},
-			"locks": {
-				"LOCKED": "Locked",
-				"DEFAULT": "Default"
-			},
 			"setBy": "Set by",
 			"levels": {
 				"COMPANY": "Company",
@@ -2574,7 +2576,11 @@
 			"stricterHere": "Stricter here",
 			"changedHere": "Changed here",
 			"makeStricter": "Make {{name}} stricter here",
-			"changeHere": "Change {{name}} for this department"
+			"changeHere": "Change {{name}} for this department",
+			"locks": {
+				"LOCKED": "Locked",
+				"DEFAULT": "Default"
+			}
 		},
 		"forecast": {
 			"title": "Staffing forecast",

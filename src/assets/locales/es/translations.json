@@ -625,7 +625,10 @@
 				"skillCreated": "Habilidad creada: {{name}}",
 				"skillUpdated": "Habilidad actualizada: {{name}}",
 				"skillDeleted": "Habilidad eliminada: {{name}}",
-				"skillAssigned": "Habilidad asignada a personas: {{name}}"
+				"skillAssigned": "Habilidad asignada a personas: {{name}}",
+				"schedulingPolicyCreated": "Restricción añadida a la política de programación: {{name}}",
+				"schedulingPolicyUpdated": "Restricción de la política de programación cambiada: {{name}}",
+				"schedulingPolicyDeleted": "Restricción quitada de la política de programación: {{name}}"
 			},
 			"unnamed": {
 				"jobTitleCreated": "Puesto creado",
@@ -655,7 +658,10 @@
 				"skillCreated": "Habilidad creada",
 				"skillUpdated": "Habilidad actualizada",
 				"skillDeleted": "Habilidad eliminada",
-				"skillAssigned": "Habilidad asignada a personas"
+				"skillAssigned": "Habilidad asignada a personas",
+				"schedulingPolicyCreated": "Restricción añadida a la política de programación",
+				"schedulingPolicyUpdated": "Restricción de la política de programación cambiada",
+				"schedulingPolicyDeleted": "Restricción quitada de la política de programación"
 			},
 			"fallback": {
 				"named": "{{verb}} de {{entity}}: {{name}}",
@@ -1782,10 +1788,6 @@
 				"confirm": "Continuar sin restricciones",
 				"cancel": "Volver a las restricciones"
 			},
-			"locks": {
-				"LOCKED": "Bloqueada",
-				"DEFAULT": "Predeterminada"
-			},
 			"setBy": "Definida por",
 			"levels": {
 				"COMPANY": "Empresa",
@@ -1797,7 +1799,11 @@
 			"stricterHere": "Más estricta aquí",
 			"changedHere": "Cambiada aquí",
 			"makeStricter": "Hacer {{name}} más estricta aquí",
-			"changeHere": "Cambiar {{name}} para este departamento"
+			"changeHere": "Cambiar {{name}} para este departamento",
+			"locks": {
+				"LOCKED": "Bloqueada",
+				"DEFAULT": "Predeterminada"
+			}
 		},
 		"forecast": {
 			"title": "Previsión de personal",
