@@ -18,6 +18,13 @@ describe("notificationLink", () => {
 		});
 	});
 
+	it("opens a rostered member's own view of a roster by its id", () => {
+		expect(notificationLink({ kind: "myRoster", scheduleId: "s-1" })).toEqual({
+			to: "/me/schedules/$scheduleId",
+			params: { scheduleId: "s-1" },
+		});
+	});
+
 	it("opens a people import's result on its Settings › Data page", () => {
 		expect(notificationLink({ kind: "import", importId: "import-1" })).toEqual({
 			to: "/settings/data/import-people",
