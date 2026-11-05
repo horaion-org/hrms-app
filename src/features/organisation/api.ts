@@ -22,8 +22,9 @@ const auditEventPageSchema = z.object({ content: z.array(auditEventSchema) });
 
 /**
  * The audit entity types the Organisation Module reports on; `Company`
- * carries a workspace rename and `OrganisationImportJob` an organisation
- * import's summary.
+ * carries a workspace rename, `Skill` a change to the skill catalogue or a
+ * bulk assignment, and `OrganisationImportJob` an organisation import's
+ * summary.
  */
 export const ORGANISATION_ENTITY_TYPES = [
 	"Company",
@@ -31,6 +32,7 @@ export const ORGANISATION_ENTITY_TYPES = [
 	"Department",
 	"AccessRole",
 	"JobTitle",
+	"Skill",
 	"OrganisationImportJob",
 ] as const;
 
@@ -54,6 +56,10 @@ export const fetchAccessRoleCount = (companyId: string): Promise<number> =>
 
 export const fetchActiveJobTitleCount = (companyId: string): Promise<number> =>
 	countOf(`${companyPath(companyId)}/job-titles?status=ACTIVE&size=1`);
+
+/** Active skills of the company's catalogue; read under `skill:read`, company-wide. */
+export const fetchActiveSkillCount = (companyId: string): Promise<number> =>
+	countOf(`${companyPath(companyId)}/skill-overview?status=ACTIVE&size=1`);
 
 /** The newest successful Organisation changes, newest first. */
 export const fetchRecentActivity = async (

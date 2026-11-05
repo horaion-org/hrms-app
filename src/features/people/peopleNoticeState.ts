@@ -8,8 +8,6 @@ const noticeSchema = z.object({
 		name: z.string().min(1),
 		/** Set when the person was added or saved but their system role was not changed. */
 		roleNotAssigned: z.boolean(),
-		/** Set when the person was saved but the changes to their skills were not. */
-		skillsNotSaved: z.boolean().optional(),
 	}),
 });
 

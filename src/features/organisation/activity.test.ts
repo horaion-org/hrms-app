@@ -30,6 +30,10 @@ const WORKSPACE_PROFILE_AND_SCHEDULE_KEYS = [
 	"memberEmailChanged",
 	"memberInvitationResent",
 	"memberSkillsUpdated",
+	"skillCreated",
+	"skillUpdated",
+	"skillDeleted",
+	"skillAssigned",
 	"memberAvailabilityUpdated",
 	"memberWeekAvailabilityUpdated",
 	"memberWeekAvailabilityCleared",
@@ -79,6 +83,14 @@ describe("describeActivity", () => {
 			EmailIcon,
 		],
 		["member_skill.replace", "Orchard’s skills updated", SkillsIcon],
+		["skill.create", "Skill created: Orchard", SkillsIcon],
+		["skill.update", "Skill updated: Orchard", SkillsIcon],
+		["skill.delete", "Skill deleted: Orchard", SkillsIcon],
+		[
+			"member_skill.bulk_assign",
+			"Skill assigned to people: Orchard",
+			SkillsIcon,
+		],
 		["member_availability.replace", "Orchard’s availability updated", TimeIcon],
 		[
 			"member_availability.week_override.replace",
@@ -127,6 +139,8 @@ describe("describeActivity", () => {
 		["schedule.delete", "Schedule deleted"],
 		["schedule.regenerate", "Schedule regeneration requested"],
 		["member_skill.replace", "Employee skills updated"],
+		["skill.delete", "Skill deleted"],
+		["member_skill.bulk_assign", "Skill assigned to people"],
 		["organisation_import.complete", "Organisation imported"],
 	])("words %s without a name as %s", (action, title) => {
 		expect(

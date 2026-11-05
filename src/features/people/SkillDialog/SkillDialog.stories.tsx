@@ -3,6 +3,12 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
 import { storyProviders, stubStoryApi } from "@/features/organisation/storyApi";
 import { SkillDialog } from "@/features/people/SkillDialog";
+import {
+	heldLicenceFixture,
+	heldSkillFixture,
+	licenceFixture,
+	skillFixture,
+} from "@/features/skills/fixtures";
 
 const client = new QueryClient({
 	defaultOptions: { queries: { retry: false } },
@@ -13,7 +19,8 @@ const meta = {
 	args: {
 		companyId: "story-company",
 		name: "Kent Chua",
-		skills: [{ name: "Baking", proficiency: 8 }],
+		held: [heldSkillFixture({ skillId: "s-baking", name: "Baking" })],
+		canCreateSkills: true,
 		onSubmit: fn(() => Promise.resolve()),
 		onClose: fn(),
 	},
@@ -24,9 +31,9 @@ const meta = {
 				{
 					path: "/skills",
 					content: [
-						{ skillId: "s-1", name: "Baking" },
-						{ skillId: "s-2", name: "Customer service" },
-						{ skillId: "s-3", name: "Pastry art" },
+						skillFixture(),
+						licenceFixture(),
+						skillFixture({ skillId: "s-pastry", name: "Pastry art" }),
 					],
 				},
 			],
@@ -39,9 +46,23 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+/** Giving a skill: pick one of the catalogue's active skills. */
+export const Add: Story = {};
+
+/** Changing a rated skill: the slider and notes. */
+export const EditRated: Story = {
+	args: { editing: heldSkillFixture({ notes: "Trains new starters" }) },
+};
+
+/** Changing a licence: its dates instead of a rating. */
+export const EditLicence: Story = {
+	args: { editing: heldLicenceFixture() },
+};
 
 /** Saving fails, so the dialog's alert shows. */
 export const Refused: Story = {
-	args: { onSubmit: fn(() => Promise.reject(new Error("offline"))) },
+	args: {
+		editing: heldSkillFixture(),
+		onSubmit: fn(() => Promise.reject(new Error("offline"))),
+	},
 };

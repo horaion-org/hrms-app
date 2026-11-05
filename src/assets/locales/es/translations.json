@@ -518,6 +518,16 @@
 					"read": "Ver",
 					"update": "Editar"
 				}
+			},
+			"skill": {
+				"name": "Habilidades",
+				"description": "El catálogo de habilidades de la empresa: las habilidades y licencias que las personas pueden tener, y cuántas tienen cada una.",
+				"actions": {
+					"read": "Ver",
+					"create": "Crear",
+					"update": "Editar",
+					"delete": "Eliminar"
+				}
 			}
 		},
 		"jobTitles": {
@@ -587,7 +597,11 @@
 				"scheduleRegenerationRequested": "Regeneración de horario solicitada: {{name}}",
 				"scheduleGenerated": "Horario generado: {{name}}",
 				"scheduleDeleted": "Horario eliminado: {{name}}",
-				"organisationImported": "Organización importada"
+				"organisationImported": "Organización importada",
+				"skillCreated": "Habilidad creada: {{name}}",
+				"skillUpdated": "Habilidad actualizada: {{name}}",
+				"skillDeleted": "Habilidad eliminada: {{name}}",
+				"skillAssigned": "Habilidad asignada a personas: {{name}}"
 			},
 			"unnamed": {
 				"jobTitleCreated": "Puesto creado",
@@ -613,7 +627,11 @@
 				"scheduleRegenerationRequested": "Regeneración de horario solicitada",
 				"scheduleGenerated": "Horario generado",
 				"scheduleDeleted": "Horario eliminado",
-				"organisationImported": "Organización importada"
+				"organisationImported": "Organización importada",
+				"skillCreated": "Habilidad creada",
+				"skillUpdated": "Habilidad actualizada",
+				"skillDeleted": "Habilidad eliminada",
+				"skillAssigned": "Habilidad asignada a personas"
 			},
 			"fallback": {
 				"named": "{{verb}} de {{entity}}: {{name}}",
@@ -906,6 +924,157 @@
 				"ALREADY_EXISTS": "Ya existe: esta fila se omitirá.",
 				"EXAMPLE_ROW": "Fila de ejemplo de la plantilla: omitida."
 			}
+		},
+		"skills": {
+			"assign": {
+				"result": {
+					"assigned_one": "Asignada a {{count}} persona",
+					"assigned_other": "Asignada a {{count}} personas",
+					"updated_one": "{{count}} actualizada",
+					"updated_other": "{{count}} actualizadas",
+					"skipped_one": "{{count}} omitida porque ya la tenía",
+					"skipped_other": "{{count}} omitidas porque ya la tenían",
+					"full_one": "{{count}} ya tiene 50 habilidades",
+					"full_other": "{{count}} ya tienen 50 habilidades",
+					"separator": ", ",
+					"sentence": "{{parts}}."
+				},
+				"menuItem": "Asignar a personas",
+				"title": "Asignar {{name}}",
+				"description": "Asigne {{name}} a las personas que elija, todas a la vez.",
+				"search": "Buscar",
+				"searchPlaceholder": "Buscar por nombre o ID de empleado",
+				"department": "Departamento",
+				"allDepartments": "Todos los departamentos",
+				"people": "Personas",
+				"person": "Nombre",
+				"held": "La tiene",
+				"hasLevel": "Tiene {{value}}/10",
+				"hasIt": "La tiene",
+				"loading": "Cargando personas…",
+				"noPeople": "Nadie coincide.",
+				"peopleFailed": "No pudimos cargar las personas. Inténtelo de nuevo.",
+				"selected_one": "{{count}} persona seleccionada",
+				"selected_other": "{{count}} personas seleccionadas",
+				"capped": "Se muestran las primeras {{count}} de {{total}}. Busque o elija un departamento para llegar a las demás.",
+				"notesHint": "Opcional. Se asigna a todas las personas seleccionadas.",
+				"overwrite": "Sobrescribir para quienes ya la tienen",
+				"overwriteDescription": "Si no, conservan su propia calificación, notas y fechas.",
+				"expiresOnRequired": "Introduzca el último día en que es válida.",
+				"submit_one": "Asignar ({{count}})",
+				"submit_other": "Asignar ({{count}})",
+				"cancel": "Cancelar",
+				"rateLimited": "Ha asignado habilidades muchas veces en la última hora. Espere un poco e inténtelo de nuevo.",
+				"inactive": "Esta habilidad se desactivó, así que no se puede asignar a nadie más.",
+				"personGone": "Ya no puede asignar habilidades a una de las personas elegidas. Vuelva a cargar la página e inténtelo de nuevo.",
+				"forbidden": "Ya no tiene permiso para cambiar las habilidades de estas personas.",
+				"failed": "No pudimos asignar la habilidad. Inténtelo de nuevo."
+			},
+			"title": "Habilidades",
+			"caption": "Habilidades y licencias que las personas pueden tener",
+			"subtitle": "Las habilidades y licencias de las personas. Califique una habilidad del 1 al 10 o controle cuándo vence una licencia.",
+			"label": "Habilidades",
+			"search": "Buscar habilidades",
+			"create": "Crear habilidad",
+			"all": "Todas las habilidades",
+			"empty": "Aún no hay habilidades. Cree las habilidades y licencias que tienen sus personas.",
+			"name": "Habilidad",
+			"category": "Categoría",
+			"allCategories": "Todas las categorías",
+			"measuredBy": "Medida",
+			"expiry": "Vencimiento",
+			"holders": "Personas",
+			"none": "—",
+			"statusUnknown": "Desconocido",
+			"measure": {
+				"ONE_TO_TEN": "Calificada 1–10",
+				"NONE": "Se tiene o no",
+				"UNKNOWN": "—"
+			},
+			"expiryTracked": "Controlado",
+			"expiryTrackedFor_one": "Controlado · {{count}} mes",
+			"expiryTrackedFor_other": "Controlado · {{count}} meses",
+			"holdersCount_one": "{{count}} persona",
+			"holdersCount_other": "{{count}} personas",
+			"expiringSoon_one": "{{count}} pronto",
+			"expiringSoon_other": "{{count}} pronto",
+			"expired_one": "{{count}} vencida",
+			"expired_other": "{{count}} vencidas",
+			"toast": {
+				"created": "Habilidad creada",
+				"updated": "Habilidad guardada",
+				"deleted": "Habilidad eliminada"
+			},
+			"status": {
+				"activateTitle": "¿Activar {{name}}?",
+				"activateDescription": "Se podrá volver a asignar a las personas.",
+				"activateConfirm": "Activar habilidad",
+				"deactivateTitle": "¿Desactivar {{name}}?",
+				"deactivateDescription_one": "No se podrá asignar a nadie más. La {{count}} persona que la tiene la conserva.",
+				"deactivateDescription_other": "No se podrá asignar a nadie más. Las {{count}} personas que la tienen la conservan.",
+				"deactivateConfirm": "Desactivar habilidad",
+				"forbidden": "Ya no tiene permiso para cambiar habilidades.",
+				"failed": "No pudimos cambiar la habilidad. Inténtelo de nuevo."
+			},
+			"delete": {
+				"title": "¿Eliminar {{name}}?",
+				"description": "Nadie la tiene. Al eliminarla, sale del catálogo. No se puede deshacer.",
+				"descriptionHeld_one": "{{count}} persona tiene {{name}}. Al eliminarla, también se le quita, con su calificación, notas y fechas. No se puede deshacer.",
+				"descriptionHeld_other": "{{count}} personas tienen {{name}}. Al eliminarla, también se les quita, con sus calificaciones, notas y fechas. No se puede deshacer.",
+				"confirm": "Eliminar habilidad",
+				"forbidden": "Ya no tiene permiso para eliminar habilidades.",
+				"failed": "No pudimos eliminar la habilidad. Inténtelo de nuevo."
+			},
+			"dialog": {
+				"title": "Crear habilidad",
+				"editTitle": "Editar habilidad",
+				"description": "Añada una habilidad o licencia que las personas puedan tener.",
+				"editDescription": "Cambie el nombre de {{name}} y cómo se mide.",
+				"name": "Nombre",
+				"namePlaceholder": "p. ej. Montacargas",
+				"nameHint": "De 2 a 100 caracteres: letras, números, espacios y . ' & -",
+				"nameCounter": "{{count}}/100",
+				"nameRequired": "Introduzca un nombre.",
+				"nameLength": "Use de 2 a 100 caracteres.",
+				"nameCharacters": "Use solo letras, números, espacios y . ' & - en el nombre.",
+				"nameConflict": "Ya existe una habilidad llamada «{{name}}».",
+				"nameRejected": "Revise el nombre e inténtelo de nuevo.",
+				"category": "Categoría",
+				"categoryPlaceholder": "p. ej. Licencia",
+				"categoryHint": "Opcional. Agrupa las habilidades en esta página.",
+				"categoryCounter": "{{count}}/64",
+				"categoryLength": "Use de 2 a 64 caracteres, o déjela vacía.",
+				"categoryCharacters": "Use solo letras, números, espacios y . ' & - en la categoría.",
+				"categoryRejected": "Revise la categoría e inténtelo de nuevo.",
+				"descriptionLabel": "Descripción",
+				"descriptionPlaceholder": "Qué abarca la habilidad",
+				"descriptionCounter": "{{count}}/2000",
+				"descriptionLength": "Use 2000 caracteres o menos.",
+				"measure": "Medida",
+				"measureLabel": {
+					"ONE_TO_TEN": "Calificada del 1 al 10",
+					"NONE": "Se tiene o no"
+				},
+				"measureDescription": {
+					"ONE_TO_TEN": "Cada persona se califica del 1, principiante, al 10, experta.",
+					"NONE": "Una persona la tiene o no, como una licencia."
+				},
+				"fixedWhileHeld": "No se puede cambiar mientras haya personas que la tengan.",
+				"tracksExpiry": "Controlar vencimiento",
+				"tracksExpiryDescription": "Cada persona registra el último día en que es válida.",
+				"validity": "Válida durante (meses)",
+				"validityHint": "Opcional. Rellena la fecha de vencimiento a partir de la de emisión.",
+				"validityRange": "Introduzca meses enteros del 1 al 120, o déjelo vacío.",
+				"measureInUse": "Hay personas con esta habilidad, así que no se puede cambiar cómo se mide ni si controla el vencimiento.",
+				"gone": "Esta habilidad se eliminó. Cierre y vuelva a cargar la página.",
+				"submit": "Crear habilidad",
+				"editSubmit": "Guardar",
+				"cancel": "Cancelar",
+				"forbidden": "Ya no tiene permiso para crear habilidades.",
+				"editForbidden": "Ya no tiene permiso para cambiar habilidades.",
+				"failed": "No pudimos crear la habilidad. Inténtelo de nuevo.",
+				"editFailed": "No pudimos guardar la habilidad. Inténtelo de nuevo."
+			}
 		}
 	},
 	"shell": {
@@ -1109,6 +1278,84 @@
 				"CELL_ERROR": "Esta celda muestra un error (como #REF!). Corrige la fórmula en Excel y vuelve a subirlo."
 			},
 			"history": "Historial de importaciones"
+		},
+		"skills": {
+			"expiry": {
+				"valid": "Vigente",
+				"expiring_one": "Vence en {{count}} día",
+				"expiring_other": "Vence en {{count}} días",
+				"expired": "Vencida",
+				"missing": "Falta la fecha de vencimiento"
+			},
+			"title": "Habilidades y dominio",
+			"titleCount": "Habilidades y dominio ({{count}})",
+			"add": "Añadir habilidad",
+			"loading": "Cargando habilidades…",
+			"failed": "No pudimos cargar las habilidades. Inténtelo de nuevo.",
+			"empty": "Aún no hay habilidades.",
+			"skill": "Habilidad",
+			"proficiency": "Dominio",
+			"level": "{{value}}/10",
+			"levelText": "{{name}}: {{value}} de 10",
+			"valueText": "{{value}} de 10",
+			"notRated": "Sin calificar",
+			"expiresOn": "Válida hasta",
+			"actions": "Acciones",
+			"edit": "Editar {{name}}",
+			"remove": "Quitar {{name}}",
+			"toast": {
+				"added": "Habilidad añadida",
+				"updated": "Habilidad actualizada",
+				"removed": "Habilidad quitada"
+			},
+			"confirmRemove": {
+				"title": "¿Quitar {{skill}} a {{name}}?",
+				"description": "Se eliminan la calificación, las notas y las fechas de {{name}} para ella. Se puede volver a asignar más tarde.",
+				"confirm": "Quitar habilidad",
+				"cancel": "Cancelar"
+			},
+			"dialog": {
+				"title": "Añadir habilidad",
+				"editTitle": "Editar habilidad",
+				"description": "Asigne a {{name}} una de las habilidades de la empresa.",
+				"editDescription": "Cambie cómo tiene {{name}} la habilidad {{skill}}.",
+				"name": "Habilidad",
+				"namePlaceholder": "Seleccione una habilidad",
+				"searchPlaceholder": "Buscar habilidades",
+				"nameHint": "Solo se pueden asignar las habilidades activas de la empresa.",
+				"createInSkills": "Crearla en Habilidades",
+				"loading": "Cargando habilidades…",
+				"noResults": "Ninguna habilidad activa coincide.",
+				"suggestionsFailed": "No pudimos cargar las habilidades de la empresa. Inténtelo de nuevo.",
+				"nameRequired": "Elija una habilidad.",
+				"nameTaken": "Ya tiene esta habilidad.",
+				"nameRejected": "Revise la habilidad e inténtelo de nuevo.",
+				"tooMany": "Ya tiene 50 habilidades, el máximo permitido. Quite una primero.",
+				"unknown": "Esta habilidad ya no está en el catálogo. Elija otra.",
+				"inactive": "Esta habilidad está inactiva y no se puede asignar a nadie más.",
+				"proficiency": "Dominio",
+				"proficiencyHint": "Del 1, principiante, al 10, experto.",
+				"proficiencyRejected": "Elija un dominio del 1 al 10.",
+				"issuedOn": "Emitida el",
+				"expiresOn": "Válida hasta",
+				"expiresOnHint": "El último día en que es válida.",
+				"expiresOnRequired": "Introduzca el último día en que es válida.",
+				"datesInvalid": "No puede dejar de ser válida antes de emitirse.",
+				"datePlaceholder": "Seleccione una fecha",
+				"notes": "Notas",
+				"notesHint": "Opcional. Hasta 500 caracteres.",
+				"notesPlaceholder": "p. ej. Forma a las personas nuevas",
+				"notesCounter": "{{count}}/500",
+				"notesLength": "Use 500 caracteres o menos.",
+				"measureChanged": "Acaba de cambiar cómo se mide esta habilidad. Cierre e inténtelo de nuevo.",
+				"submit": "Añadir habilidad",
+				"editSubmit": "Guardar",
+				"cancel": "Cancelar",
+				"conflict": "Otra persona acaba de cambiar sus habilidades. Vuelva a cargar la página e inténtelo de nuevo.",
+				"otherRejected": "Se rechazó una de sus habilidades guardadas. Vuelva a cargar la página e inténtelo de nuevo.",
+				"forbidden": "Ya no tiene permiso para cambiar las habilidades de esta persona.",
+				"failed": "No pudimos guardar las habilidades. Inténtelo de nuevo."
+			}
 		}
 	},
 	"numberStepper": {

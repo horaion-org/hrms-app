@@ -30,7 +30,7 @@ export type OrganisationList<T> =
 	| { status: "pending" | "error" | "hidden" }
 	| ({ status: "ready" } & ListPage<T>);
 
-const useOrganisationList = <T>(
+export const useOrganisationList = <T>(
 	companyId: string,
 	permission: PermissionKey,
 	key: QueryKey,

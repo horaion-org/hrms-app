@@ -28,6 +28,10 @@ type ActivityKey =
 	| "departmentUpdated"
 	| "jobTitleCreated"
 	| "jobTitleUpdated"
+	| "skillCreated"
+	| "skillUpdated"
+	| "skillDeleted"
+	| "skillAssigned"
 	| "organisationImported"
 	| "roleCreated"
 	| "roleUpdated"
@@ -61,6 +65,11 @@ const ACTIVITIES: Record<string, { key: ActivityKey; icon: Heroicon }> = {
 	"department.update": { key: "departmentUpdated", icon: DepartmentIcon },
 	"job_title.create": { key: "jobTitleCreated", icon: RoleIcon },
 	"job_title.update": { key: "jobTitleUpdated", icon: RoleIcon },
+	"skill.create": { key: "skillCreated", icon: SkillsIcon },
+	"skill.update": { key: "skillUpdated", icon: SkillsIcon },
+	"skill.delete": { key: "skillDeleted", icon: SkillsIcon },
+	// One skill given to many people at once; who received it is not in the feed.
+	"member_skill.bulk_assign": { key: "skillAssigned", icon: SkillsIcon },
 	// The import's own summary; each unit it created keeps its own item too.
 	"organisation_import.complete": {
 		key: "organisationImported",

@@ -12,6 +12,7 @@ import {
 	fetchActiveBranchCount,
 	fetchActiveDepartmentCount,
 	fetchActiveJobTitleCount,
+	fetchActiveSkillCount,
 	fetchRecentActivity,
 	type AuditEvent,
 } from "@/features/organisation/api";
@@ -30,6 +31,7 @@ export type OrganisationOverview =
 			branches: Visible<Count>;
 			departments: Visible<Count>;
 			jobTitles: Visible<Count>;
+			skills: Visible<Count>;
 			accessRoles: Visible<Count>;
 			activity: Visible<{
 				events: Array<AuditEvent> | undefined;
@@ -59,8 +61,9 @@ export const useOrganisationOverview = (
 	const canReadBranches = access.canAnywhere("branch:read");
 	const canReadDepartments = access.canAnywhere("department:read");
 	const canReadJobTitles = access.canAnywhere("job_title:read");
-	// Roles and the activity feed have no unit, so they still need the key at the company.
+	// Roles, skills and the activity feed have no unit, so they still need the key at the company.
 	const canReadAccessRoles = access.can("access_role:read", COMPANY_SCOPE);
+	const canReadSkills = access.can("skill:read", COMPANY_SCOPE);
 	const canReadActivity = access.can("audit_event:read", COMPANY_SCOPE);
 
 	const branches = useQuery({
@@ -87,6 +90,14 @@ export const useOrganisationOverview = (
 			? (): Promise<number> => fetchActiveJobTitleCount(companyId)
 			: skipToken,
 	});
+	const skills = useQuery({
+		queryKey: ["organisation", companyId, "active-skill-count"],
+		retry,
+		meta,
+		queryFn: canReadSkills
+			? (): Promise<number> => fetchActiveSkillCount(companyId)
+			: skipToken,
+	});
 	const accessRoles = useQuery({
 		queryKey: ["organisation", companyId, "access-role-count"],
 		retry,
@@ -111,6 +122,7 @@ export const useOrganisationOverview = (
 		branches: visibleCount(canReadBranches, branches),
 		departments: visibleCount(canReadDepartments, departments),
 		jobTitles: visibleCount(canReadJobTitles, jobTitles),
+		skills: visibleCount(canReadSkills, skills),
 		accessRoles: visibleCount(canReadAccessRoles, accessRoles),
 		activity: canReadActivity
 			? { hidden: false, events: activity.data, failed: activity.isError }

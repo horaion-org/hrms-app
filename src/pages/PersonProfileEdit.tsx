@@ -13,7 +13,6 @@ import { ProfileForm } from "@/features/people/ProfileForm";
 import { ProfileHeader } from "@/features/people/ProfileHeader";
 import { ProfileNotesAndSkills } from "@/features/people/ProfileNotesAndSkills";
 import { useEditProfile } from "@/features/people/useEditProfile";
-import { useMemberSkills, useSkillsDraft } from "@/features/people/useSkills";
 import { scopeOfPlace } from "@/features/organisation/assignmentTargets";
 import { useAccess } from "@/features/workspace/useAccess";
 
@@ -26,8 +25,8 @@ export type PersonProfileEditProps = {
  * A person's profile, ready to change, under the same header as when read;
  * shown only to someone who may change it (see `profileEditAccess`). The
  * system role edits one assignment with its own target; other assignments
- * are listed but left alone. Changes to their skills are held
- * until the profile is saved.
+ * are listed but left alone. Their skills are changed in their own
+ * card, each change saved at once.
  */
 export const PersonProfileEdit = ({
 	profile,
@@ -55,14 +54,10 @@ export const PersonProfileEdit = ({
 		: undefined;
 	const heldChangeable =
 		!rolePlace || access.can("access_role:assign", scopeOfPlace(rolePlace));
-	const skillsDraft = useSkillsDraft(
-		useMemberSkills(companyId, profile.membershipId).data
-	);
 	const save = useEditProfile(
 		companyId,
 		profile,
-		manageRole && ready ? { held: selected } : undefined,
-		skillsDraft.changed ? skillsDraft.skills : undefined
+		manageRole && ready ? { held: selected } : undefined
 	);
 
 	// The form starts from the role they hold, so it waits for it.
@@ -84,7 +79,6 @@ export const PersonProfileEdit = ({
 					roleEditable: ready && heldChangeable,
 					rolePlace,
 					otherRoles: roleNames(elsewhere),
-					unsaved: skillsDraft.changed,
 					header: (actions) => (
 						<ProfileHeader actions={actions} profile={profile} />
 					),
@@ -105,7 +99,6 @@ export const PersonProfileEdit = ({
 				companyId={companyId}
 				noteActions="buttons"
 				profile={profile}
-				skillsDraft={skillsDraft}
 			/>
 		</>
 	);

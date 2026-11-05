@@ -3,12 +3,19 @@ import { ApiProblemError } from "@/common/problem";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import {
 	MAX_SKILLS,
-	sameSkills,
-	skillChoices,
+	measureOf,
 	skillFormSchema,
 	skillsRefusal,
-	withSkill,
+	skillValueOf,
+	valueOf,
+	withChangedHolding,
+	withHolding,
+	withoutHolding,
 } from "@/features/people/skills";
+import {
+	heldLicenceFixture,
+	heldSkillFixture,
+} from "@/features/skills/fixtures";
 
 const t = authTestI18n.t;
 const problem = (
@@ -23,131 +30,162 @@ const problem = (
 		fieldErrors: fields.map((field) => ({ field, message: "API says no" })),
 		reason: "http",
 	});
-const baking = { name: "Baking", proficiency: 8 };
-const safety = { name: "Food safety", proficiency: 7 };
+const forklift = heldSkillFixture({ notes: "Trains new starters" });
+const licence = heldLicenceFixture();
+const form = {
+	name: "Forklift",
+	proficiency: 6,
+	notes: "  ",
+	issuedOn: "2026-03-01",
+	expiresOn: "2027-02-28",
+};
 
-describe("skills", () => {
-	it("are the same set in any order and any letter case", () => {
+describe("a held skill sent back", () => {
+	it("carries a rating only when rated and dates only when tracking expiry", () => {
+		expect(valueOf(forklift)).toEqual({
+			name: "Forklift",
+			proficiency: 8,
+			notes: "Trains new starters",
+			issuedOn: null,
+			expiresOn: null,
+		});
+		expect(valueOf(licence)).toEqual({
+			name: "Security Officer Licence",
+			proficiency: null,
+			notes: null,
+			issuedOn: "2026-03-01",
+			expiresOn: "2027-02-28",
+		});
+		// A scale newer than the app is never sent a rating.
 		expect(
-			sameSkills([baking, safety], [safety, { ...baking, name: "baking" }])
-		).toBe(true);
-		expect(sameSkills([baking], [{ ...baking, proficiency: 9 }])).toBe(false);
-		expect(sameSkills([baking], [baking, safety])).toBe(false);
+			valueOf(heldSkillFixture({ proficiencyScale: "UNKNOWN" })).proficiency
+		).toBeNull();
 	});
 
-	it("take a new skill in name order", () => {
+	it("builds the complete set for an add, a change and a removal", () => {
+		const added = skillValueOf(form, { rated: true, tracksExpiry: false });
 		expect(
-			withSkill([baking, safety], { name: "coffee", proficiency: 5 })
-		).toEqual([baking, { name: "coffee", proficiency: 5 }, safety]);
-	});
-
-	it("offer what was typed as a new name unless the company already uses it", () => {
-		const suggestions = [{ skillId: "s-1", name: "Pastry art" }];
-		expect(skillChoices(suggestions, " latte ")).toEqual([
-			{ name: "latte", isNew: true },
-			{ name: "Pastry art", isNew: false },
-		]);
-		expect(skillChoices(suggestions, "PASTRY ART")).toEqual([
-			{ name: "Pastry art", isNew: false },
-		]);
-		expect(skillChoices(suggestions, "  ")).toEqual([
-			{ name: "Pastry art", isNew: false },
+			withHolding([forklift, licence], { ...added, name: "Mandarin" })
+		).toHaveLength(3);
+		expect(
+			withChangedHolding([forklift, licence], { ...added, name: "forklift" })
+		).toEqual([{ ...added, name: "forklift" }, valueOf(licence)]);
+		expect(withoutHolding([forklift, licence], "FORKLIFT")).toEqual([
+			valueOf(licence),
 		]);
 	});
 });
 
-describe("skill form", () => {
-	const message = (
-		taken: Array<string>,
-		value: { name: string; proficiency: number }
-	): string | undefined =>
-		skillFormSchema(t, taken).safeParse(value).error?.issues[0]?.message;
-
-	it("takes a valid new name and a proficiency from 1 to 10", () => {
+describe("the skill form", () => {
+	it("sends empty notes as null and only what the skill is measured by", () => {
+		expect(skillValueOf(form, { rated: true, tracksExpiry: false })).toEqual({
+			name: "Forklift",
+			proficiency: 6,
+			notes: null,
+			issuedOn: null,
+			expiresOn: null,
+		});
 		expect(
-			skillFormSchema(t, ["Baking"]).parse({
-				name: " Latte art ",
-				proficiency: 10,
-			})
-		).toEqual({ name: "Latte art", proficiency: 10 });
+			skillValueOf({ ...form, issuedOn: "" }, measureOf(heldLicenceFixture()))
+		).toEqual({
+			name: "Forklift",
+			proficiency: null,
+			notes: null,
+			issuedOn: null,
+			expiresOn: "2027-02-28",
+		});
 	});
 
-	it.each([
-		[{ name: "", proficiency: 5 }, "Choose or type a skill."],
-		[{ name: "A", proficiency: 5 }, "Use 2 to 100 characters."],
-		[
-			{ name: "C++", proficiency: 5 },
-			"Use only letters, numbers, spaces and . ' & - in the name.",
-		],
-		[{ name: "baking", proficiency: 5 }, "They already have this skill."],
-		[{ name: "Latte", proficiency: 0 }, "Choose a proficiency from 1 to 10."],
-		[{ name: "Latte", proficiency: 11 }, "Choose a proficiency from 1 to 10."],
-	])("refuses %j", (value, text) => {
-		expect(message(["Baking"], value)).toBe(text);
+	it("needs an expiry on or after the issue date for a skill tracking expiry", () => {
+		const schema = skillFormSchema(t, {
+			measure: { rated: false, tracksExpiry: true },
+			taken: [],
+			editing: false,
+		});
+		expect(schema.safeParse({ ...form, expiresOn: "" }).success).toBe(false);
+		expect(schema.safeParse({ ...form, expiresOn: "2026-02-28" }).success).toBe(
+			false
+		);
+		expect(schema.safeParse(form).success).toBe(true);
 	});
 
-	it("refuses another skill once they have the most allowed", () => {
-		const full = Array.from(
-			{ length: MAX_SKILLS },
-			(_, index) => `Skill ${index}`
-		);
-		expect(message(full, { name: "Latte", proficiency: 5 })).toBe(
-			"They already have 50 skills, the most allowed. Remove one first."
-		);
+	it("never gives a skill twice, nor past the limit, but lets a held one change", () => {
+		const adding = skillFormSchema(t, {
+			measure: { rated: true, tracksExpiry: false },
+			taken: ["forklift"],
+			editing: false,
+		});
+		expect(adding.safeParse(form).success).toBe(false);
+		const full = skillFormSchema(t, {
+			measure: { rated: true, tracksExpiry: false },
+			taken: Array.from({ length: MAX_SKILLS }, (_, index) => `S${index}`),
+			editing: false,
+		});
+		expect(full.safeParse({ ...form, name: "New" }).success).toBe(false);
+		const editing = skillFormSchema(t, {
+			measure: { rated: true, tracksExpiry: false },
+			taken: ["Forklift"],
+			editing: true,
+		});
+		expect(editing.safeParse(form).success).toBe(true);
 	});
 });
 
-describe("skill refusals", () => {
-	it("places the new skill's own field errors on its fields", () => {
+describe("skillsRefusal", () => {
+	it("asks to reload on any 409", () => {
+		expect(skillsRefusal(problem(409), t, 0).message).toBe(
+			"Someone else changed their skills just now. Reload the page and try again."
+		);
+	});
+
+	it("puts a refusal of the edited entry on its field", () => {
 		expect(
 			skillsRefusal(
-				problem(400, undefined, ["skills[2].name", "skills[2].proficiency"]),
+				problem(400, "MEMBER_SKILL_EXPIRY_REQUIRED", ["skills[1].expiresOn"]),
+				t,
+				1
+			).fields
+		).toEqual({ expiresOn: "Enter the last day it is valid." });
+		expect(
+			skillsRefusal(
+				problem(400, "MEMBER_SKILL_INACTIVE", ["skills[2].name"]),
 				t,
 				2
 			).fields
 		).toEqual({
-			name: "Check the skill’s name and try again.",
-			proficiency: "Choose a proficiency from 1 to 10.",
-		});
-		expect(
-			skillsRefusal(problem(400, "DUPLICATE_SKILL_NAME"), t, 2).fields
-		).toEqual({
-			name: "They already have this skill.",
-		});
-		expect(
-			skillsRefusal(problem(400, "INVALID_SKILL_NAME"), t, 2).fields
-		).toEqual({
-			name: "Check the skill’s name and try again.",
+			name: "This skill is inactive and can’t be given to anyone new.",
 		});
 	});
 
-	it.each([
-		[
-			problem(400, undefined, ["skills[0].name"]),
-			"One of their saved skills was refused. Reload the page and try again.",
-		],
-		[
-			problem(409, "SKILL_NAME_CONFLICT"),
-			"Someone else changed their skills just now. Reload the page and try again.",
-		],
-		[
-			problem(409),
-			"Someone else changed their skills just now. Reload the page and try again.",
-		],
-		[
-			problem(404, "MEMBER_PROFILE_NOT_FOUND"),
-			"This person is no longer available.",
-		],
-		[
-			problem(403, "AUTHORIZATION_DENIED"),
-			"You no longer have permission to change this person’s skills.",
-		],
-		[new Error("offline"), "We couldn’t save the skills. Try again."],
-	])("explains %s as the dialog's alert", (error, text) => {
-		expect(skillsRefusal(error, t, 2)).toEqual({
+	it("says another entry was refused when the code names one they already had", () => {
+		expect(
+			skillsRefusal(
+				problem(400, "MEMBER_SKILL_EXPIRY_REQUIRED", ["skills[0].expiresOn"]),
+				t,
+				2
+			)
+		).toMatchObject({
 			fields: {},
-			message: text,
-			refreshMembers: false,
+			message:
+				"One of their saved skills was refused. Reload the page and try again.",
 		});
+	});
+
+	it("explains a measure that changed in the catalogue", () => {
+		expect(
+			skillsRefusal(
+				problem(400, "MEMBER_SKILL_PROFICIENCY_NOT_ALLOWED", [
+					"skills[0].proficiency",
+				]),
+				t,
+				0
+			).message
+		).toBe("How this skill is measured changed just now. Close and try again.");
+	});
+
+	it("words a refusal of authority as permission", () => {
+		expect(skillsRefusal(problem(403), t, 0).message).toBe(
+			"You no longer have permission to change this person’s skills."
+		);
 	});
 });

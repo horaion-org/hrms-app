@@ -10,22 +10,12 @@ type NoticeKey =
 	| "people.roleNotAssigned"
 	| "people.saved"
 	| "people.roleNotChanged"
-	| "people.skillsNotSaved"
-	| "people.roleAndSkillsNotChanged"
 	| `people.${Exclude<Notice["kind"], "added" | "saved">}`;
 
-/** The copy for each notice: a role or skills left unchanged are said, and warned about. */
-const messageKey = ({
-	kind,
-	roleNotAssigned,
-	skillsNotSaved,
-}: Notice): NoticeKey => {
+/** The copy for each notice: a role left unchanged is said, and warned about. */
+const messageKey = ({ kind, roleNotAssigned }: Notice): NoticeKey => {
 	if (kind === "added")
 		return roleNotAssigned ? "people.roleNotAssigned" : "people.added";
-	if (kind === "saved" && skillsNotSaved)
-		return roleNotAssigned
-			? "people.roleAndSkillsNotChanged"
-			: "people.skillsNotSaved";
 	if (kind === "saved")
 		return roleNotAssigned ? "people.roleNotChanged" : "people.saved";
 	return `people.${kind}`;
@@ -39,14 +29,12 @@ export const PeopleNotice = ({
 	const { t } = useTranslation();
 	return (
 		<p
+			data-warning={notice.roleNotAssigned || undefined}
 			role="status"
 			className={joinClassNames(
 				"text-sm font-semibold text-success-700 data-warning:text-warning-700",
 				className
 			)}
-			data-warning={
-				notice.roleNotAssigned || notice.skillsNotSaved || undefined
-			}
 		>
 			{t(messageKey(notice), { name: notice.name })}
 		</p>

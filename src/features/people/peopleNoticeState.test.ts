@@ -26,16 +26,6 @@ describe("people notice", () => {
 		});
 	});
 
-	it("carries skills that weren't saved", () => {
-		const notice = {
-			kind: "saved",
-			name: "Priya Nair",
-			roleNotAssigned: false,
-			skillsNotSaved: true,
-		} as const;
-		expect(peopleNoticeFrom(withPeopleNotice(notice)({}))).toEqual(notice);
-	});
-
 	it.each([
 		undefined,
 		null,
