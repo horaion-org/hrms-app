@@ -21,6 +21,8 @@ import {
 	rejectSchedule,
 	requestRegeneration,
 	rosterRunId,
+	scheduleAssignmentsKey,
+	scheduleAssignmentsQuery,
 	updateSchedule,
 	type ScheduleAssignment,
 	type ScheduleBody,
@@ -916,5 +918,27 @@ describe("schedule refusals", () => {
 		expect(decisionRefusal(new Error("offline"), t).message).toBe(
 			"We couldn’t save the decision. Try again."
 		);
+	});
+});
+
+describe("scheduleAssignmentsQuery", () => {
+	it("keeps the same run's older revision on screen while a newer one loads, never another run's rows", () => {
+		const rows = scheduleAssignmentsFixture();
+		const placeholder = scheduleAssignmentsQuery("c-1", UNIT, "s-1", "r-1", 3)
+			.placeholderData as (
+			previous: unknown,
+			previousQuery: { queryKey: ReadonlyArray<unknown> } | undefined
+		) => unknown;
+
+		expect(
+			placeholder(rows, {
+				queryKey: scheduleAssignmentsKey("c-1", "s-1", "r-1", 2),
+			})
+		).toBe(rows);
+		expect(
+			placeholder(rows, {
+				queryKey: scheduleAssignmentsKey("c-1", "s-1", "r-0", 2),
+			})
+		).toBeUndefined();
 	});
 });

@@ -18,16 +18,18 @@ export type AssignmentList =
 	| { status: "ready"; items: Array<ScheduleAssignment> };
 
 /**
- * The roster of run `runId`, as `rosterRunId` names it. `runId` undefined
- * (the schedule has no roster to show yet), or `unit` or `scheduleId`
- * undefined, asks for nothing and stays pending. A new run id reads the new
- * run's rows.
+ * The roster of run `runId` at `revision`, as `rosterRunId` and the
+ * schedule's `rosterRevision` name it. `runId` undefined (the schedule has no
+ * roster to show yet), or `unit` or `scheduleId` undefined, asks for nothing
+ * and stays pending. A new run id, or a new revision after a hand change,
+ * reads the new rows.
  */
 export const useScheduleAssignments = (
 	companyId: string,
 	unit: DepartmentPath | undefined,
 	scheduleId: string | undefined,
-	runId: string | null | undefined
+	runId: string | null | undefined,
+	revision = 0
 ): AssignmentList => {
 	const access = useAccess();
 	const allowed =
@@ -39,6 +41,7 @@ export const useScheduleAssignments = (
 			unit,
 			scheduleId ?? "",
 			runId ?? null,
+			revision,
 			allowed && runId !== undefined && scheduleId !== undefined
 		)
 	);

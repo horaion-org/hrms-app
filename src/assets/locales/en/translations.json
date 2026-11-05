@@ -3079,6 +3079,23 @@
 				"published": "This schedule is published, so the hours before this week can no longer change here.",
 				"daysSavedHoursNot": "Last week’s days were saved, but the hours this month weren’t. {{reason}} Your hours are still here: fix them and save again."
 			}
+		},
+		"rosterEdit": {
+			"undone": "Change undone.",
+			"check": {
+				"CELL_ON_LEAVE": "{{name}} is on leave on {{day}}.",
+				"NOT_AVAILABLE": "{{name}} can’t be rostered on {{day}}.",
+				"LEAVE_APPROVED": "{{name}} has approved leave on {{day}}.",
+				"SHIFT_NOT_ON_DAY": "{{shift}} doesn’t run on {{day}}.",
+				"ROLE_NOT_HELD": "{{name}} can’t work {{shift}}: it’s for other job titles.",
+				"MEMBER_GONE": "{{name}} is no longer a member.",
+				"OUTSIDE_AVAILABILITY": "{{shift}} is outside {{name}}’s availability on {{day}}.",
+				"ROSTERED_ELSEWHERE": "{{name}} also works on {{day}} in another roster.",
+				"NOT_SCHEDULABLE_NOW": "{{name}} can no longer be rostered in this department.",
+				"WORKS_ON_DAY_OFF": "{{day}} was {{name}}’s day off.",
+				"COVERAGE_CHANGED": "{{shift}}, {{day}}: {{before}} → {{after}} people.",
+				"UNKNOWN": "Another check applies to this change."
+			}
 		}
 	},
 	"colourSwatchPicker": {

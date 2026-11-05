@@ -221,6 +221,12 @@ const scheduleSchema = z.object({
 	rejectionReason: z.string().nullable().default(null),
 	/** The newest generation run, or null for a schedule that has none. */
 	generation: generationSchema.nullable(),
+	/**
+	 * How many times the roster was written: by a generation, a hand change or
+	 * an undo. A change names it, and the roster is cached under it. 0 from an
+	 * API without roster changes.
+	 */
+	rosterRevision: z.number().int().default(0),
 	createdAt: z.string(),
 	updatedAt: z.string(),
 });
@@ -530,6 +536,52 @@ const assignmentOffReasonSchema = z.enum(["OFF", "LEAVE"]);
 /** Why a member is off on a day: a plain day off, or approved leave. */
 export type AssignmentOffReason = z.infer<typeof assignmentOffReasonSchema>;
 
+/** A frozen shift as a roster day names it. */
+const rosterShiftSchema = z.object({
+	/** The frozen copy's own id, as the schedule's shifts list it. */
+	shiftId: z.string(),
+	name: z.string(),
+	group: z.string(),
+	colour: z.string().regex(SHIFT_COLOUR_PATTERN),
+	/** "HH:mm"; an end at or before the start runs past midnight. */
+	startTime: z.string(),
+	endTime: z.string(),
+});
+
+const rosterJobTitleSchema = z.object({
+	jobTitleId: z.string(),
+	name: z.string(),
+});
+
+// A kind a newer API adds reads as OFF: the day shows as a plain day off.
+const rosterCellKindSchema = z.enum(["WORK", "OFF", "LEAVE"]).catch("OFF");
+
+/**
+ * What a roster day holds before or after a hand change: a shift worked as a
+ * job title, a day off, or leave (only for someone who may read leave).
+ */
+export const rosterCellSchema = z.object({
+	kind: rosterCellKindSchema,
+	shift: rosterShiftSchema.nullable(),
+	jobTitle: rosterJobTitleSchema.nullable(),
+});
+
+export type RosterCellValue = z.infer<typeof rosterCellSchema>;
+
+/**
+ * The hand change that last touched a roster day (hrms-backend-v2 docs/adr/0062): who changed it,
+ * when, why, and what the day held before.
+ */
+const rosterLastChangeSchema = z.object({
+	changeId: z.string(),
+	appliedAt: z.string(),
+	appliedBy: participantSchema,
+	remark: z.string().nullable(),
+	before: rosterCellSchema,
+});
+
+export type RosterLastChange = z.infer<typeof rosterLastChangeSchema>;
+
 export const scheduleAssignmentSchema = z.object({
 	/** The row's own id: a stable key even when its member no longer resolves. */
 	assignmentId: z.string(),
@@ -560,20 +612,14 @@ export const scheduleAssignmentSchema = z.object({
 	 */
 	leaveTypeName: z.string().nullish(),
 	/** The frozen shift worked, or null when off. */
-	shift: z
-		.object({
-			/** The frozen copy's own id, as the schedule's shifts list it. */
-			shiftId: z.string(),
-			name: z.string(),
-			group: z.string(),
-			colour: z.string().regex(SHIFT_COLOUR_PATTERN),
-			/** "HH:mm"; an end at or before the start runs past midnight. */
-			startTime: z.string(),
-			endTime: z.string(),
-		})
-		.nullable(),
+	shift: rosterShiftSchema.nullable(),
 	/** The job title the shift is worked as, named as frozen with it; null when off. */
-	jobTitle: z.object({ jobTitleId: z.string(), name: z.string() }).nullable(),
+	jobTitle: rosterJobTitleSchema.nullable(),
+	/**
+	 * The hand change that last touched the day, or null for a day as
+	 * generated. Only the manager's roster carries it; absent from an older API.
+	 */
+	lastChange: rosterLastChangeSchema.nullish(),
 });
 
 /** One member's day in a generated schedule: a frozen shift, or off with its reason. */
@@ -768,13 +814,14 @@ export const rosterRunId = (schedule: Schedule): string | null | undefined =>
 
 /**
  * The key a schedule's roster is cached under, below the schedule's own and
- * named by the run it comes from: rows of an earlier run are never shown as
- * a later run's.
+ * named by the run it comes from and the roster's revision: rows of an
+ * earlier run, or from before a hand change, are never shown as later ones.
  */
 export const scheduleAssignmentsKey = (
 	companyId: string,
 	scheduleId: string,
-	runId: string | null
+	runId: string | null,
+	revision: number
 ): readonly [
 	"scheduling",
 	string,
@@ -782,17 +829,26 @@ export const scheduleAssignmentsKey = (
 	string,
 	"assignments",
 	string | null,
-] => [...scheduleKey(companyId, scheduleId), "assignments", runId] as const;
+	number,
+] =>
+	[
+		...scheduleKey(companyId, scheduleId),
+		"assignments",
+		runId,
+		revision,
+	] as const;
 
 /**
- * A schedule's roster from run `runId`; `unit` undefined, or `allowed`
- * false, asks for nothing.
+ * A schedule's roster from run `runId` at `revision`; `unit` undefined, or
+ * `allowed` false, asks for nothing. While a newer revision of the same run
+ * loads, the previous revision's rows stay on screen.
  */
 export const scheduleAssignmentsQuery = (
 	companyId: string,
 	unit: DepartmentPath | undefined,
 	scheduleId: string,
 	runId: string | null,
+	revision: number,
 	allowed = true
 ): UndefinedInitialDataOptions<
 	Array<ScheduleAssignment>,
@@ -801,12 +857,16 @@ export const scheduleAssignmentsQuery = (
 	ReturnType<typeof scheduleAssignmentsKey>
 > =>
 	queryOptions({
-		queryKey: scheduleAssignmentsKey(companyId, scheduleId, runId),
+		queryKey: scheduleAssignmentsKey(companyId, scheduleId, runId, revision),
 		queryFn:
 			allowed && unit
 				? ({ signal }): Promise<Array<ScheduleAssignment>> =>
 						fetchScheduleAssignments(companyId, unit, scheduleId, signal)
 				: skipToken,
+		// A newer revision of the same run keeps showing the rows it replaces while it loads (someone else's change),
+		// so the grid, its week and an open editor stay put; another run's rows are never shown (PR #85's rule).
+		placeholderData: (previous, previousQuery) =>
+			previousQuery?.queryKey[5] === runId ? previous : undefined,
 		meta: administrativeMeta(companyId),
 		staleTime: 30_000,
 		retry,
