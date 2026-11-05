@@ -245,9 +245,10 @@ export const Select = (props: SelectProps): FunctionComponent => {
 								)}
 							</button>
 						</ListboxButton>
+						{/* Above every floating panel (z-60: Filters, date pickers, notifications), which can hold a Select. */}
 						<ListboxOptions
 							anchor={{ to: "bottom start", gap: 4 }}
-							className="z-50 w-max min-w-(--button-width) overflow-y-auto rounded-lg border border-neutral-400 bg-white py-1 shadow-sm outline-hidden [--anchor-max-height:15.5rem]"
+							className="z-70 w-max min-w-(--button-width) overflow-y-auto rounded-lg border border-neutral-400 bg-white py-1 shadow-sm outline-hidden [--anchor-max-height:15.5rem]"
 							onKeyDown={(event) => {
 								if (event.key !== "Enter" && event.key !== " ") return;
 								// Opening can activate a selected disabled option. Block only

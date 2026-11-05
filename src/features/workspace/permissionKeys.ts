@@ -83,6 +83,11 @@ export const AVAILABILITY_READ_KEYS: ReadonlyArray<PermissionKey> = [
 	"work_availability:read",
 ];
 
+/** A schedule is listed where this is held at its Department: the Scheduling list's unit choices. */
+export const SCHEDULE_READ_KEYS: ReadonlyArray<PermissionKey> = [
+	"schedule:read",
+];
+
 /**
  * Holding this at a member's Department is what lets a person change that
  * member's work availability. A member's own needs nothing granted.

@@ -16,14 +16,19 @@ client.setQueryData(
 	companyWideWorkspace(["member_profile:read"])
 );
 
-/** Orchard's Departments, held as a page's URL would. */
-const Harness = (): FunctionComponent => {
+type StoryArgs = {
+	/** The header's Branch: an id, or "all" for every Branch. */
+	branchId: string;
+};
+
+/** The Departments of the header's Branch, held as a page's URL would. */
+const Harness = ({ branchId }: StoryArgs): FunctionComponent => {
 	const [departmentId, setDepartmentId] = useState<string>();
 	const selection = useUnitSelection(
 		"c-1",
 		["member_profile:read"],
-		{ branchId: "b-1", departmentId },
-		{ allowAllBranches: true, withDepartment: true }
+		{ branchId, departmentId },
+		{ withDepartment: true }
 	);
 	return <DepartmentFilter selection={selection} onChange={setDepartmentId} />;
 };
@@ -32,6 +37,7 @@ const meta = {
 	title: "Features/Workspace/DepartmentFilter",
 	component: Harness,
 	parameters: { layout: "padded" },
+	args: { branchId: "b-1" },
 	decorators: [storyProviders(client)],
 } satisfies Meta<typeof Harness>;
 
@@ -39,4 +45,8 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+/** One Branch: only its Departments, without headings. */
 export const InOneBranch: Story = {};
+
+/** All branches: every Department in reach, under its Branch's name. */
+export const InAllBranches: Story = { args: { branchId: "all" } };

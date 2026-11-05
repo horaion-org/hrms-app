@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { peopleQuery } from "@/features/people/api";
+import { myProfileQuery, peopleQuery } from "@/features/people/api";
 import {
 	parsePeopleSearch,
 	PEOPLE_UNIT_RULES,
@@ -37,13 +37,18 @@ export const Route = createFileRoute("/_authenticated/_app/people")({
 			canAny(accessIndexOf(workspace, companyId), PEOPLE_READ_KEYS, "anywhere")
 		) {
 			const search = parsePeopleSearch(location.search);
+			// The person's home Branch is the default; a failure (no profile of their own) leaves it out.
+			const home = await context.queryClient
+				.ensureQueryData(myProfileQuery(companyId))
+				.catch(() => undefined);
 			// The units the page will show, so its first list is the one fetched here.
 			const units = resolveWorkspaceUnits(
 				workspace,
 				companyId,
 				PEOPLE_READ_KEYS,
 				unitSelectionOf(search),
-				PEOPLE_UNIT_RULES
+				PEOPLE_UNIT_RULES,
+				home?.branchId ?? undefined
 			);
 			await context.queryClient.prefetchQuery(
 				peopleQuery(companyId, peopleQueryOf(search, "", selectedUnits(units)))

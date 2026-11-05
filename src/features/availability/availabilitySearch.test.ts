@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
 	availabilityQueryOf,
 	availabilityUnitRulesOf,
-	TEAM_UNIT_RULES,
+	AVAILABILITY_TEAM_UNIT_RULES,
 	parseAvailabilitySearch,
 	viewOf,
 	viewsOf,
@@ -96,8 +96,8 @@ describe("availabilityQueryOf", () => {
 describe("availabilityUnitRulesOf", () => {
 	it("given_aView_when_asked_then_onlyTheTeamListsByBranch", () => {
 		expect(availabilityUnitRulesOf("mine")).toBeUndefined();
-		expect(availabilityUnitRulesOf("team")).toBe(TEAM_UNIT_RULES);
-		// No view in the URL: the team rules, so a team-only reader sees the Branch.
-		expect(availabilityUnitRulesOf(undefined)).toBe(TEAM_UNIT_RULES);
+		expect(availabilityUnitRulesOf("team")).toBe(AVAILABILITY_TEAM_UNIT_RULES);
+		// No view in the URL yet: nothing until the page names its tab.
+		expect(availabilityUnitRulesOf(undefined)).toBeUndefined();
 	});
 });

@@ -3,7 +3,6 @@ import type { UnitSelection } from "@/features/workspace/unitSearch";
 import type { PermissionKey } from "@/features/workspace/permissionKeys";
 import {
 	branchChoices,
-	chosenBranch,
 	departmentChoices,
 	type BranchChoice,
 	type DepartmentChoice,
@@ -12,122 +11,122 @@ import {
 export type { UnitSelection };
 
 /**
- * How one level of a unit selector shows: a choice, the one unit in reach
- * as text, a choice that waits for a Branch, or nothing.
+ * How one level of the unit controls shows: a choice, the one unit in
+ * reach as text, or nothing.
  */
-export type UnitLevelMode = "select" | "static" | "disabled" | "hidden";
+export type UnitLevelMode = "select" | "static" | "hidden";
 
 /**
  * The URL's name for "All branches", chosen. Leaving `branch` out means no
- * choice, so each page shows its own default; naming "All" lets the choice
- * follow the person to a page that would otherwise open on its first
- * Branch. Never sent to the API.
+ * choice, so the person's default Branch shows. Never sent to the API.
  */
 export const ALL_BRANCHES = "all";
 
 export type UnitSelectionRules = {
-	/** Offers "All branches", the default unless `startOnFirstBranch`; otherwise the first Branch is shown. */
-	allowAllBranches: boolean;
-	/** With `allowAllBranches`: opens on the first Branch while nothing is chosen. */
-	startOnFirstBranch?: boolean;
-	/** Offers a Department level beneath the Branch. */
+	/** Offers a Department filter: the page lists people or what is filed by Department. */
 	withDepartment: boolean;
 };
 
-/** What a unit selector shows and what its list asks for, worked out from the offered units. */
+/** What the header and a page's filters show, and what its list asks for, worked out from the offered units. */
 export type ResolvedUnitSelection = {
-	rules: UnitSelectionRules;
-	/** The Branch shown; undefined for every Branch (only with `allowAllBranches`) or none offered. */
+	/** The Branch shown; undefined for every Branch (offered only beyond one) or none offered. */
 	branch: BranchChoice | undefined;
-	/** The Department shown; undefined for every Department of the Branch. */
+	/** The Department shown; undefined for every Department in reach. */
 	department: DepartmentChoice | undefined;
 	branches: ReadonlyArray<BranchChoice>;
-	/** The offered Departments of the Branch shown; none while every Branch is shown. */
+	/** The offered Departments: of the Branch shown, or of every Branch while all are shown. */
 	departments: ReadonlyArray<DepartmentChoice>;
 	branchMode: UnitLevelMode;
 	departmentMode: UnitLevelMode;
 };
 
+/** One Branch in reach is text; several are a choice, with "All branches" last. */
+const modeOf = (count: number): UnitLevelMode => {
+	if (count === 0) return "hidden";
+	return count === 1 ? "static" : "select";
+};
+
+/** Whether "All branches" is offered: only to someone whose grants span more than one Branch. */
+export const offersAllBranches = (
+	branches: ReadonlyArray<BranchChoice>
+): boolean => branches.length > 1;
+
 /**
- * A single Branch is text only where there is no "All" to choose: "All
- * branches" also lists members filed under no Department, so it is not the
- * same as the one Branch.
+ * Whether a Department is left to choose: two or more in reach. A
+ * `DepartmentFilter` renders nothing otherwise, so a Filters panel that
+ * would hold only that field is left out rather than opening empty.
  */
-const branchModeOf = (
-	branches: ReadonlyArray<BranchChoice>,
-	{ allowAllBranches }: UnitSelectionRules
-): UnitLevelMode => {
-	if (branches.length === 0) return "hidden";
-	if (branches.length === 1 && !allowAllBranches) return "static";
-	return "select";
-};
-
-/** Inside one Branch, every offered Department is what "All departments" lists, so one is text. */
-const departmentModeOf = (
-	branch: BranchChoice | undefined,
-	branches: ReadonlyArray<BranchChoice>,
-	departments: ReadonlyArray<DepartmentChoice>,
-	{ withDepartment }: UnitSelectionRules
-): UnitLevelMode => {
-	if (!withDepartment || branches.length === 0) return "hidden";
-	if (!branch) return "disabled";
-	if (departments.length === 0) return "hidden";
-	return departments.length === 1 ? "static" : "select";
-};
-
-/** Whether the page shows every Branch when the URL names none it offers. */
-const defaultsToAllBranches = (rules: UnitSelectionRules): boolean =>
-	rules.allowAllBranches && !rules.startOnFirstBranch;
+export const offersDepartmentChoice = ({
+	departmentMode,
+}: ResolvedUnitSelection): boolean => departmentMode === "select";
 
 /**
- * The Branch shown: the requested one when offered, every Branch when
- * "All branches" is requested and allowed, else the page's default (every
- * Branch, or the first).
+ * The Branch shown while nothing is chosen: the person's home Branch when
+ * it is offered, else the first offered Branch by name.
+ */
+export const defaultBranch = (
+	branches: ReadonlyArray<BranchChoice>,
+	homeBranchId: string | undefined
+): BranchChoice | undefined =>
+	branches.find((choice) => choice.branchId === homeBranchId) ??
+	[...branches].sort((first, second) =>
+		first.name.localeCompare(second.name)
+	)[0];
+
+/**
+ * The Branch shown: every Branch when "All branches" is chosen and
+ * offered, the requested Branch when offered, else the default.
  */
 const branchShown = (
 	branches: ReadonlyArray<BranchChoice>,
 	requestedBranchId: string | undefined,
-	rules: UnitSelectionRules
-): BranchChoice | undefined =>
-	rules.allowAllBranches && requestedBranchId === ALL_BRANCHES
-		? undefined
-		: chosenBranch(branches, requestedBranchId, defaultsToAllBranches(rules));
+	homeBranchId: string | undefined
+): BranchChoice | undefined => {
+	if (requestedBranchId === ALL_BRANCHES && offersAllBranches(branches))
+		return undefined;
+	return (
+		branches.find((choice) => choice.branchId === requestedBranchId) ??
+		defaultBranch(branches, homeBranchId)
+	);
+};
 
 /**
- * Resolves the requested units against the offered ones: a Branch no longer
- * offered falls back to the default (every Branch, or the first), and a
- * Department outside the Branch shown is dropped.
+ * Resolves the requested units against the offered ones. The Branch shown is
+ * the first of these that applies:
+ * 1. every Branch, when "All branches" is requested and more than one is offered;
+ * 2. the requested Branch, when it is offered;
+ * 3. the default: the home Branch when offered, else the first by name.
+ * The scope is authoritative: a requested Branch that is not offered is never
+ * shown. A Department not offered under the Branch shown (or under any Branch
+ * while all are shown) is dropped.
  */
 export const resolveUnitSelection = (
 	branches: ReadonlyArray<BranchChoice>,
 	departments: ReadonlyArray<DepartmentChoice>,
 	requested: UnitSelection,
-	rules: UnitSelectionRules
+	rules: UnitSelectionRules,
+	homeBranchId?: string
 ): ResolvedUnitSelection => {
-	const branch = branchShown(branches, requested.branchId, rules);
-	const departmentsOfBranch = branch
+	const branch = branchShown(branches, requested.branchId, homeBranchId);
+	const departmentsShown = branch
 		? departments.filter(
 				(department) => department.branchId === branch.branchId
 			)
-		: [];
+		: departments;
 	const department = rules.withDepartment
-		? departmentsOfBranch.find(
+		? departmentsShown.find(
 				(choice) => choice.departmentId === requested.departmentId
 			)
 		: undefined;
 	return {
-		rules,
 		branch,
 		department,
 		branches,
-		departments: departmentsOfBranch,
-		branchMode: branchModeOf(branches, rules),
-		departmentMode: departmentModeOf(
-			branch,
-			branches,
-			departmentsOfBranch,
-			rules
-		),
+		departments: departmentsShown,
+		branchMode: modeOf(branches.length),
+		departmentMode: rules.withDepartment
+			? modeOf(departmentsShown.length)
+			: "hidden",
 	};
 };
 
@@ -137,13 +136,15 @@ export const resolveWorkspaceUnits = (
 	companyId: string,
 	keys: ReadonlyArray<PermissionKey>,
 	requested: UnitSelection,
-	rules: UnitSelectionRules
+	rules: UnitSelectionRules,
+	homeBranchId?: string
 ): ResolvedUnitSelection =>
 	resolveUnitSelection(
 		workspace ? branchChoices(workspace, companyId, keys) : [],
 		workspace ? departmentChoices(workspace, companyId, keys) : [],
 		requested,
-		rules
+		rules,
+		homeBranchId
 	);
 
 /** The units the list asks the API for: the resolved Branch and Department ids, none for every one. */
@@ -156,7 +157,7 @@ export const selectedUnits = ({
 });
 
 /**
- * Whether the URL names a Branch this page does not offer; "All branches"
+ * Whether the URL names a Branch the person is not offered; "All branches"
  * and no choice are never stale. The header takes such a Branch out once.
  */
 export const staleBranch = (

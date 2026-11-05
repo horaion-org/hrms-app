@@ -40,6 +40,10 @@ const Page = ({
 	);
 };
 
+/** The Tailwind stacking layer (`z-<n>`) an element is given. */
+const layerOf = (element: HTMLElement): number =>
+	Number(/(?:^|\s)z-(\d+)(?:\s|$)/.exec(element.className)?.[1] ?? 0);
+
 describe("FiltersPopover", () => {
 	it("given_noFilterSet_when_rendered_then_offersOnlyAFiltersButton", () => {
 		render(<Page onChange={vi.fn()} />);
@@ -88,5 +92,20 @@ describe("FiltersPopover", () => {
 
 		expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 		expect(screen.getByRole("button", { name: "Filters" })).toHaveFocus();
+	});
+
+	it("given_aSelectOpenedInThePanel_when_itsOptionsShow_then_theyLayerAboveThePanel", async () => {
+		const user = userEvent.setup();
+		render(<Page onChange={vi.fn()} />);
+
+		await user.click(screen.getByRole("button", { name: "Filters" }));
+		const panel = screen.getByRole("dialog", { name: "Filters" });
+		await user.click(within(panel).getByRole("button", { name: "Showing" }));
+		const options = screen.getByRole("listbox");
+
+		// Both float in their own portal; the options must stack above the panel that holds their Select.
+		expect(options).not.toBe(panel);
+		expect(panel.contains(options)).toBe(false);
+		expect(layerOf(options)).toBeGreaterThan(layerOf(panel));
 	});
 });

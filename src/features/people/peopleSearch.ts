@@ -37,8 +37,9 @@ const searchSchema = z.object({
 /**
  * The People table's state that belongs in the URL, so it survives a reload
  * and can be shared. Each part is left out at its default: the first page,
- * sorted by name, every status, every Branch and Department. The search text is never here: names
- * typed into it must not land in browser history or logs.
+ * sorted by name, every status, the default Branch (see
+ * `resolveUnitSelection`), every Department. The search text is never here:
+ * names typed into it must not land in browser history or logs.
  */
 export type PeopleSearch = z.infer<typeof searchSchema>;
 
@@ -85,9 +86,8 @@ export const statusParameter = (
 ): MemberStatus | undefined =>
 	statuses.length === 1 ? statuses[0] : undefined;
 
-/** People are listed across every Branch in reach unless one is chosen, then by Department. */
+/** People are listed by the header's Branch, and by Department within it. */
 export const PEOPLE_UNIT_RULES: UnitSelectionRules = {
-	allowAllBranches: true,
 	withDepartment: true,
 };
 

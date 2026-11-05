@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { Callout } from "@/components/ui/Callout";
@@ -13,7 +13,7 @@ import type { MemberWeek } from "@/features/availability/api";
 import { isPastWeek } from "@/features/availability/availabilityModel";
 import {
 	availabilityQueryOf,
-	TEAM_UNIT_RULES,
+	AVAILABILITY_TEAM_UNIT_RULES,
 	viewOf,
 	viewsOf,
 	weekOf,
@@ -41,6 +41,10 @@ import { recordScope } from "@/features/workspace/scopes";
 import { DepartmentFilter } from "@/features/workspace/DepartmentFilter";
 import { departmentChips } from "@/features/workspace/filterChips";
 import { unitSelectionOf } from "@/features/workspace/unitSearch";
+import {
+	offersDepartmentChoice,
+	selectedUnits,
+} from "@/features/workspace/unitSelection";
 import { useAccess } from "@/features/workspace/useAccess";
 import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 
@@ -62,11 +66,13 @@ const problemKeyOf = (
 /**
  * Work availability, in two tabs decided by data, never roles. "Mine" is a
  * part-timer's own week and pattern, changed with nothing granted. "Team"
- * is a Branch's part-timers for one week, read through the person's grants,
- * with editing on the rows they may change. Beneath the tabs, one toolbar
- * holds the team's Branch and Department and the week. The tab, units and
- * week live in the URL; a week left out is this one, worked out on every
- * render. Any week can be read; only this week and later ones are edited. Page-level composition only: the parts live in
+ * is the part-timers of the header's Branch (every Branch in reach under
+ * "All branches") for one week, read through the person's grants, with
+ * editing on the rows they may change. Beneath the tabs, one toolbar holds
+ * the team's Department filter and the week. The tab (written once it is
+ * known), units and week live in the URL; a week left out is this one,
+ * worked out on every render. Any week can be read; only this week and
+ * later ones are edited. Page-level composition only: the parts live in
  * `features/availability`.
  */
 export const Availability = (): FunctionComponent => {
@@ -85,23 +91,18 @@ export const Availability = (): FunctionComponent => {
 	const past = isPastWeek(week, today);
 	const workspace = useQuery({ ...workspaceQuery, retry });
 	const requested = unitSelectionOf(search);
-	// The same units the selector shows, so the list asks for them before the URL names them.
+	// Resolved as the header resolves them, so the list asks for the default Branch before the URL names one.
 	const units = useUnitSelection(
 		companyId,
 		AVAILABILITY_READ_KEYS,
 		requested,
-		TEAM_UNIT_RULES
+		AVAILABILITY_TEAM_UNIT_RULES
 	);
 	const team = useAvailabilityList(
 		companyId,
-		units.branch &&
-			availabilityQueryOf(
-				{
-					branchId: units.branch.branchId,
-					departmentId: units.department?.departmentId,
-				},
-				week
-			),
+		units.branches.length > 0
+			? availabilityQueryOf(selectedUnits(units), week)
+			: undefined,
 		view === "team"
 	);
 	const [editing, setEditing] = useState<MemberWeek | null>(null);
@@ -109,6 +110,14 @@ export const Availability = (): FunctionComponent => {
 	const show = (next: AvailabilitySearch): void => {
 		void navigate({ search: (previous) => ({ ...previous, ...next }) });
 	};
+	// The URL names the tab shown, so the header knows whether this view lists by Branch.
+	useEffect(() => {
+		if (view && view !== search.view)
+			void navigate({
+				search: (previous) => ({ ...previous, view }),
+				replace: true,
+			});
+	}, [view, search.view, navigate]);
 	// A row is changed where its member is filed, and only in a week still to come.
 	const canEdit = (member: MemberWeek): boolean =>
 		!past &&
@@ -183,7 +192,7 @@ export const Availability = (): FunctionComponent => {
 					}
 					filters={
 						<>
-							{view === "team" && (
+							{view === "team" && offersDepartmentChoice(units) && (
 								<FiltersPopover count={chips.length}>
 									<DepartmentFilter
 										selection={units}

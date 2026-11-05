@@ -3,7 +3,10 @@ import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { FormRow, formRowIds } from "@/components/forms/FormRow";
 import { Select } from "@/components/forms/Select";
-import type { ResolvedUnitSelection } from "@/features/workspace/unitSelection";
+import {
+	offersDepartmentChoice,
+	type ResolvedUnitSelection,
+} from "@/features/workspace/unitSelection";
 
 /** The option value standing for every Department; never a real id. */
 const ALL = "";
@@ -17,9 +20,9 @@ export type DepartmentFilterProps = {
 
 /**
  * The Department field of a list's Filters panel, labelled above its
- * select. It is offered only while one Branch is shown and that Branch has
- * several Departments in reach; otherwise there is nothing to choose and
- * it renders nothing.
+ * select. With one Branch shown it lists that Branch's Departments; with
+ * every Branch shown it lists every Department in reach, grouped under its
+ * Branch. With fewer than two to choose from it renders nothing.
  */
 export const DepartmentFilter = ({
 	selection,
@@ -27,11 +30,11 @@ export const DepartmentFilter = ({
 }: DepartmentFilterProps): FunctionComponent => {
 	const { t } = useTranslation();
 	const id = useId();
-	if (selection.departmentMode !== "select") return null;
+	if (!offersDepartmentChoice(selection)) return null;
 	return (
 		<FormRow
 			htmlFor={id}
-			label={t("workspace.unitSelector.department")}
+			label={t("workspace.departmentFilter.department")}
 			layout="stacked"
 		>
 			<Select
@@ -39,10 +42,12 @@ export const DepartmentFilter = ({
 				className="w-full font-semibold"
 				value={selection.department?.departmentId ?? ALL}
 				options={[
-					{ value: ALL, label: t("workspace.unitSelector.allDepartments") },
+					{ value: ALL, label: t("workspace.departmentFilter.allDepartments") },
 					...selection.departments.map((choice) => ({
 						value: choice.departmentId,
 						label: choice.name,
+						// Names repeat across Branches, so every Branch heads its own.
+						...(selection.branch ? {} : { group: choice.branchName }),
 					})),
 				]}
 				onChange={(departmentId) => {

@@ -6,7 +6,10 @@ import {
 	unitSearchOf,
 	unitSearchSchema,
 } from "@/features/workspace/unitSearch";
-import type { UnitSelectionRules } from "@/features/workspace/unitSelection";
+import type {
+	UnitSelection,
+	UnitSelectionRules,
+} from "@/features/workspace/unitSelection";
 
 /** The page's two tabs: the caller's own availability, and their teams'. */
 export type AvailabilityView = "mine" | "team";
@@ -21,7 +24,8 @@ const searchSchema = z.object({
  * The Availability page's state that belongs in the URL, so it survives a
  * reload and can be shared: the tab, the Branch and Department of the team
  * view, and the week, as its Monday. Each part is left out at its default:
- * the person's first tab, the first Branch, every Department, this week.
+ * the person's first tab, the default Branch (see `resolveUnitSelection`),
+ * every Department, this week.
  */
 export type AvailabilitySearch = z.infer<typeof searchSchema>;
 
@@ -71,9 +75,8 @@ export const viewOf = (
 ): AvailabilityView | undefined =>
 	requested && views.includes(requested) ? requested : views[0];
 
-/** The team tab is a week grid of people, so it always shows one Branch, and every Department unless one is chosen. */
-export const TEAM_UNIT_RULES: UnitSelectionRules = {
-	allowAllBranches: false,
+/** The team tab lists part-timers by Branch, and by Department within it. */
+export const AVAILABILITY_TEAM_UNIT_RULES: UnitSelectionRules = {
 	withDepartment: true,
 };
 
@@ -81,14 +84,14 @@ export const TEAM_UNIT_RULES: UnitSelectionRules = {
 export const availabilityUnitRulesOf = (
 	view: AvailabilitySearch["view"]
 ): UnitSelectionRules | undefined =>
-	view === "mine" ? undefined : TEAM_UNIT_RULES;
+	view === "team" ? AVAILABILITY_TEAM_UNIT_RULES : undefined;
 
-/** The list the team tab asks the API for: the week's part-timers inside one Branch, and one Department if chosen. */
+/** The list the team tab asks the API for: the week's part-timers in the Branch and Department shown, if one is. */
 export const availabilityQueryOf = (
-	{ branchId, departmentId }: { branchId: string; departmentId?: string },
+	{ branchId, departmentId }: UnitSelection,
 	weekStartMonday: string
 ): AvailabilityListQuery => ({
 	weekStartMonday,
-	branchId,
+	...(branchId ? { branchId } : {}),
 	...(departmentId ? { departmentId } : {}),
 });

@@ -44,8 +44,8 @@ const searchSchema = z.object({
  * and can be shared: the view (the caller's own leave unless `requests` or
  * `timeline` names a team view), the Branch and Department, and the
  * table's status, page and sort. Each part is left out at its default: own
- * leave, the first Branch (`all` names every Branch, on Team requests only),
- * every Department, every status, the first page, newest first.
+ * leave, the default Branch (see `resolveUnitSelection`; `all` names every
+ * Branch), every Department, every status, the first page, newest first.
  */
 export type LeaveSearch = z.infer<typeof searchSchema>;
 
@@ -85,16 +85,8 @@ export const sortParameter = ({
 export const pageParameter = (page: number): number | undefined =>
 	page > 1 ? page : undefined;
 
-/** The team requests table opens on the first Branch, as it always has; "All branches" can be chosen. */
-export const REQUESTS_UNIT_RULES: UnitSelectionRules = {
-	allowAllBranches: true,
-	startOnFirstBranch: true,
-	withDepartment: true,
-};
-
-/** The timeline is a grid of people by day, so it always shows one Branch. */
-export const TIMELINE_UNIT_RULES: UnitSelectionRules = {
-	allowAllBranches: false,
+/** The team views list by Branch, and by Department within it. */
+export const LEAVE_TEAM_UNIT_RULES: UnitSelectionRules = {
 	withDepartment: true,
 };
 
@@ -102,9 +94,9 @@ export const TIMELINE_UNIT_RULES: UnitSelectionRules = {
 export const leaveUnitRulesOf = (
 	view: LeaveSearch["view"]
 ): UnitSelectionRules | undefined => {
-	if (view === "requests") return REQUESTS_UNIT_RULES;
-	if (view === "timeline") return TIMELINE_UNIT_RULES;
-	return undefined;
+	return view === "requests" || view === "timeline"
+		? LEAVE_TEAM_UNIT_RULES
+		: undefined;
 };
 
 /** The page of requests the table asks the API for, inside the units shown. */

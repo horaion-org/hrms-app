@@ -2,8 +2,9 @@ import { z } from "zod";
 
 /**
  * The URL fragment every list page names its units with, under the same
- * keys everywhere, so a later shared Branch context can carry `branch`
- * between pages. Spread into a page's search schema.
+ * keys everywhere, so the shared Branch context (the `_authenticated/_app`
+ * route retains `branch`) carries it between pages. Spread into a page's
+ * search schema.
  */
 export const unitSearchSchema = z.object({
 	branch: z.string().min(1).optional().catch(undefined),

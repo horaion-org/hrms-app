@@ -12,10 +12,8 @@ import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 
 /** Stands in while no route declares a scope, so the hooks below always run. */
 const NO_SCOPE: BranchScope = { keys: [], rulesFor: () => undefined };
-const NO_RULES: UnitSelectionRules = {
-	allowAllBranches: true,
-	withDepartment: false,
-};
+/** The header resolves the Branch only; a page's Department is its own Filters field. */
+const HEADER_RULES: UnitSelectionRules = { withDepartment: false };
 
 /**
  * The navigation for a new Branch on the current page: it drops the
@@ -42,10 +40,11 @@ export type HeaderBranchScope = {
 
 /**
  * The Branch the current page lists, for the header: found on the deepest
- * route declaring `staticData.branchScope`, resolved with that route's keys
- * and rules, exactly as the page resolves it. Undefined where the page (or
- * its current view) does not list by Branch. A Branch in the URL that the
- * page does not offer is taken out once.
+ * route declaring `staticData.branchScope` and resolved with that route's
+ * keys, so it is the Branch the page resolves too. The route's rules only
+ * say whether the current view lists by Branch: undefined (no header
+ * control) where it does not. A Branch in the URL that the page does not
+ * offer is taken out once.
  */
 export const useHeaderBranchScope = (): HeaderBranchScope | undefined => {
 	const companyId = useCurrentCompanyId();
@@ -62,7 +61,7 @@ export const useHeaderBranchScope = (): HeaderBranchScope | undefined => {
 		companyId,
 		scope.keys,
 		{ branchId: branch },
-		{ ...(rules ?? NO_RULES), withDepartment: false }
+		HEADER_RULES
 	);
 	const stale =
 		rules !== undefined && staleBranch(selection, { branchId: branch });

@@ -1,13 +1,11 @@
 import type { UnitSelectionRules } from "@/features/workspace/unitSelection";
 
-/** Departments are listed across every Branch in reach unless one is chosen; Department is the row itself. */
+/** Departments are listed by Branch; Department is the row itself, so it is no filter. */
 export const DEPARTMENTS_UNIT_RULES: UnitSelectionRules = {
-	allowAllBranches: true,
 	withDepartment: false,
 };
 
-/** Job titles are listed across every Branch in reach, then by Department once a Branch is chosen. */
+/** Job titles are listed by Branch and filtered by Department. */
 export const JOB_TITLES_UNIT_RULES: UnitSelectionRules = {
-	allowAllBranches: true,
 	withDepartment: true,
 };

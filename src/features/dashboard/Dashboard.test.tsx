@@ -2,7 +2,10 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resetApiClient } from "@/common/api-client";
-import { effectiveWorkspace } from "@/common/testing/effectiveWorkspace";
+import {
+	companyWideWorkspace,
+	effectiveWorkspace,
+} from "@/common/testing/effectiveWorkspace";
 import {
 	currentUserReply,
 	openApp,
@@ -21,7 +24,8 @@ import { leaveFixture } from "@/features/leave/fixtures";
 const REFRESH = "POST /api/v1/public/sessions/refreshes";
 const ME = "GET /api/v1/me";
 const WORKSPACE = "GET /api/v1/me/workspace";
-const LEAVE = "GET /api/v1/companies/c-1/leave-requests";
+const LEAVE_PATH = "/api/v1/companies/c-1/leave-requests";
+const LEAVE = `GET ${LEAVE_PATH}`;
 const AUDIT_EVENTS = "GET /api/v1/companies/c-1/audit-events";
 const APPROVE =
 	"POST /api/v1/companies/c-1/member-profiles/m-aisha/leave-requests/leave-aisha/approval";
@@ -147,6 +151,43 @@ describe("Dashboard", () => {
 		expect(
 			screen.getByRole("list", { name: "Quick Actions" })
 		).toBeInTheDocument();
+	});
+
+	it("given_severalBranches_when_theHeaderBranchChanges_then_theFiguresFollowIt", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...routes(),
+			// Orchard (b-1) and Tampines (b-2), company-wide.
+			[WORKSPACE]: {
+				status: 200,
+				body: envelope(
+					companyWideWorkspace(["leave_request:read", "audit_event:read"])
+				),
+			},
+		});
+		const opened = await open();
+		await screen.findByRole("heading", { level: 1, name: "Dashboard" });
+
+		// The header holds the one Branch control: the dashboard has none of its own.
+		const header = screen.getByRole("banner");
+		expect(
+			within(header).getByRole("button", { name: "Branch" })
+		).toHaveTextContent("Orchard");
+		expect(screen.getAllByRole("button", { name: "Branch" })).toHaveLength(1);
+		await user.click(within(header).getByRole("button", { name: "Branch" }));
+		await user.click(screen.getByRole("option", { name: "All branches" }));
+
+		await waitFor(() => {
+			expect(opened.router.state.location.search).toEqual({ branch: "all" });
+		});
+		const branchesAsked = (): Array<string | null> =>
+			calls
+				.filter((call) => call.path === LEAVE_PATH)
+				.map((call) => new URLSearchParams(call.search).get("branchId"));
+		await waitFor(() => {
+			expect(branchesAsked()).toContain(null);
+		});
+		expect(branchesAsked()).toContain("b-1");
 	});
 
 	it("given_aPendingRequest_when_approvedAndConfirmed_then_sendsIt", async () => {

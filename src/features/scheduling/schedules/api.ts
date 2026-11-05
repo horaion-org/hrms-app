@@ -28,6 +28,7 @@ import {
 	shiftRoleSchema,
 	weekdaySchema,
 } from "@/features/scheduling/shifts/api";
+import type { UnitSelection } from "@/features/workspace/unitSelection";
 import { administrativeMeta } from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";
 
@@ -263,9 +264,13 @@ const schedulePageSchema = z.object({
 	page: z.object({ hasNext: z.boolean() }),
 });
 
-/** Read every page so history and its search include all accessible schedules. */
+/**
+ * Read every page of the accessible schedules in the chosen units (every
+ * one in scope when none is chosen), so history and its search include them all.
+ */
 export const fetchSchedules = async (
 	companyId: string,
+	units: UnitSelection,
 	signal?: AbortSignal
 ): Promise<Array<Schedule>> => {
 	const schedules: Array<Schedule> = [];
@@ -275,6 +280,8 @@ export const fetchSchedules = async (
 			size: "100",
 			sort: "updatedAt,desc",
 		});
+		if (units.branchId) search.set("branchId", units.branchId);
+		if (units.departmentId) search.set("departmentId", units.departmentId);
 		// The next page is requested only when this page reports one exists.
 		// eslint-disable-next-line no-await-in-loop
 		const result = await apiRequest(
@@ -566,11 +573,18 @@ export const fetchScheduleAssignments = (
 		{ signal }
 	);
 
-/** The key the company's whole list of schedules is cached under. */
+/** The key every list of the company's schedules is cached under; invalidating it refreshes them all. */
 export const schedulesKey = (
 	companyId: string
 ): readonly ["scheduling", string, "list"] =>
 	[SCHEDULING_QUERY_ROOT, companyId, "list"] as const;
+
+/** The key the list of schedules in the chosen units is cached under. */
+export const schedulesInUnitsKey = (
+	companyId: string,
+	units: UnitSelection
+): readonly ["scheduling", string, "list", UnitSelection] =>
+	[...schedulesKey(companyId), units] as const;
 
 /** The key one schedule is cached under, whichever department it is reached through. */
 export const scheduleKey = (

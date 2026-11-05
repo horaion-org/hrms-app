@@ -1,4 +1,4 @@
-import { useRouterState } from "@tanstack/react-router";
+import { getRouteApi, useRouterState } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
@@ -18,8 +18,20 @@ import { scheduleViewLink } from "@/features/scheduling/schedules/scheduleViewLi
 import { ScheduleCard } from "@/features/scheduling/ScheduleCard";
 import { ScheduleMenu } from "@/features/scheduling/ScheduleMenu";
 import { scheduleStatusTones } from "@/features/scheduling/schedules";
+import { SCHEDULING_UNIT_RULES } from "@/features/scheduling/schedules/schedulesUnitRules";
+import { DepartmentFilter } from "@/features/workspace/DepartmentFilter";
+import { departmentChips } from "@/features/workspace/filterChips";
+import { SCHEDULE_READ_KEYS } from "@/features/workspace/permissionKeys";
+import { unitSelectionOf } from "@/features/workspace/unitSearch";
+import {
+	offersDepartmentChoice,
+	selectedUnits,
+} from "@/features/workspace/unitSelection";
+import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 
 const key = "scheduling.overview";
+
+const route = getRouteApi("/_authenticated/_app/scheduling");
 
 const matches = (schedule: Schedule, search: string): boolean => {
 	const text = search.trim().toLocaleLowerCase();
@@ -30,7 +42,11 @@ const matches = (schedule: Schedule, search: string): boolean => {
 	);
 };
 
-/** Dashboard cards and history from the company's accessible schedules. */
+/**
+ * Dashboard cards and history from the accessible schedules in the
+ * header's Branch, narrowed to a Department from the Filters; both are
+ * kept in the URL, the search stays on the page.
+ */
 export const Scheduling = (): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const notice = schedulingNoticeFrom(
@@ -39,8 +55,26 @@ export const Scheduling = (): FunctionComponent => {
 	const [dismissed, setDismissed] = useState(false);
 	const language = i18n.resolvedLanguage ?? i18n.language;
 	const companyId = useCurrentCompanyId();
-	const list = useSchedules(companyId);
+	const navigate = route.useNavigate();
+	const units = useUnitSelection(
+		companyId,
+		SCHEDULE_READ_KEYS,
+		unitSelectionOf(route.useSearch()),
+		SCHEDULING_UNIT_RULES
+	);
+	const list = useSchedules(companyId, selectedUnits(units));
 	const [search, setSearch] = useState("");
+	const chooseDepartment = (department: string | undefined): void => {
+		void navigate({ search: (previous) => ({ ...previous, department }) });
+	};
+	// The Branch is the header's scope; the Department is the one filter.
+	const chips = departmentChips(
+		units,
+		() => {
+			chooseDepartment(undefined);
+		},
+		t
+	);
 	const history =
 		list.status === "ready"
 			? list.schedules.filter((schedule) => matches(schedule, search))
@@ -133,6 +167,7 @@ export const Scheduling = (): FunctionComponent => {
 			</h1>
 			<p className="mt-3 text-sm text-neutral-800">{t(`${key}.subtitle`)}</p>
 			<ListToolbar
+				chips={chips}
 				className="mt-10"
 				search={search}
 				searchLabel={t(`${key}.search`)}
@@ -143,7 +178,16 @@ export const Scheduling = (): FunctionComponent => {
 						</Button>
 					</Can>
 				}
+				filterFields={
+					// Scheduling has no status filter: with no Department to choose, no Filters.
+					offersDepartmentChoice(units) && (
+						<DepartmentFilter selection={units} onChange={chooseDepartment} />
+					)
+				}
 				onSearchChange={setSearch}
+				onClearFilters={() => {
+					chooseDepartment(undefined);
+				}}
 			/>
 			{groups.map(([periodKey, schedules]) => (
 				<section
@@ -192,9 +236,11 @@ export const Scheduling = (): FunctionComponent => {
 						className="mt-8"
 						columns={columns}
 						data={history}
-						emptyState={t(`${key}.${search.trim() ? "noMatch" : "empty"}`)}
 						getRowId={(schedule) => schedule.scheduleId}
 						label={t(`${key}.history.title`)}
+						emptyState={t(
+							`${key}.${search.trim() || chips.length > 0 ? "noMatch" : "empty"}`
+						)}
 					/>
 				)}
 			</section>

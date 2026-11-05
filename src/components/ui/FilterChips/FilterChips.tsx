@@ -54,7 +54,7 @@ export const FilterChips = ({
 				))}
 			</ul>
 			<Button variant="textlink" onClick={onClearAll}>
-				{t("pageToolbar.clearFilters")}
+				{t("filterChips.clearAll")}
 			</Button>
 		</div>
 	);

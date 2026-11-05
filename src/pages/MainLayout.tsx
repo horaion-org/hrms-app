@@ -74,6 +74,15 @@ export const MainLayout = (): FunctionComponent => {
 				<AppHeader
 					actions={
 						<>
+							{/* The one Branch control, in the same place on every page that lists by Branch. */}
+							{branchScope && (
+								<div className="mr-2 sm:mr-4">
+									<HeaderBranchScope
+										selection={branchScope.selection}
+										onChange={branchScope.choose}
+									/>
+								</div>
+							)}
 							<NotificationBell />
 							<Button
 								aria-label={t("shell.settings")}
@@ -87,21 +96,14 @@ export const MainLayout = (): FunctionComponent => {
 						</>
 					}
 					title={
-						branchScope ? (
-							<HeaderBranchScope
-								selection={branchScope.selection}
-								onChange={branchScope.choose}
+						onHome && (
+							<Trans
+								i18nKey="shell.welcome"
+								values={{ name: displayName }}
+								components={{
+									name: <span className="font-medium text-ink-blue-900" />,
+								}}
 							/>
-						) : (
-							onHome && (
-								<Trans
-									i18nKey="shell.welcome"
-									values={{ name: displayName }}
-									components={{
-										name: <span className="font-medium text-ink-blue-900" />,
-									}}
-								/>
-							)
 						)
 					}
 				/>

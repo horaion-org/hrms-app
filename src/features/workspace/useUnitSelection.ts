@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { myProfileQuery } from "@/features/people/api";
 import { workspaceQuery } from "@/features/workspace/api";
 import type { PermissionKey } from "@/features/workspace/permissionKeys";
 import { retry } from "@/features/workspace/retry";
@@ -11,8 +12,9 @@ import {
 
 /**
  * The units a list page shows, resolved against the Branches and
- * Departments the workspace offers for `keys`, so the page asks the API for
- * the same units the header and its filters show.
+ * Departments the workspace offers for `keys`, with the person's home
+ * Branch (from their own profile, when they have one) as the default, so
+ * the page asks the API for the same units the header and its filters show.
  */
 export const useUnitSelection = (
 	companyId: string,
@@ -21,5 +23,13 @@ export const useUnitSelection = (
 	rules: UnitSelectionRules
 ): ResolvedUnitSelection => {
 	const { data } = useQuery({ ...workspaceQuery, retry });
-	return resolveWorkspaceUnits(data, companyId, keys, requested, rules);
+	const homeBranchId = useQuery(myProfileQuery(companyId)).data?.branchId;
+	return resolveWorkspaceUnits(
+		data,
+		companyId,
+		keys,
+		requested,
+		rules,
+		homeBranchId ?? undefined
+	);
 };

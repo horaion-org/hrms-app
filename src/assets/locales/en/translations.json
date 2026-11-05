@@ -1866,12 +1866,9 @@
 			"allBranches": "All branches",
 			"allCountries": "All countries"
 		},
-		"unitSelector": {
+		"departmentFilter": {
 			"department": "Department",
 			"allDepartments": "All departments"
-		},
-		"headerScope": {
-			"branchInCountry": "{{country}} › {{branch}}"
 		}
 	},
 	"numberStepper": {
@@ -2727,7 +2724,6 @@
 		}
 	},
 	"pageToolbar": {
-		"clearFilters": "Clear filters",
 		"listControls": "List controls"
 	},
 	"forbidden": {
@@ -2744,6 +2740,7 @@
 	"filterChips": {
 		"label": "Active filters",
 		"remove": "Remove {{label}}",
-		"chip": "{{field}}: {{value}}"
+		"chip": "{{field}}: {{value}}",
+		"clearAll": "Clear filters"
 	}
 }

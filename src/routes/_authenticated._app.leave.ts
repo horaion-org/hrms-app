@@ -16,7 +16,7 @@ export const Route = createFileRoute("/_authenticated/_app/leave")({
 			rulesFor: (search) => leaveUnitRulesOf(parseLeaveSearch(search).view),
 		},
 	},
-	// The selector's Branches come from the workspace; a failure stays in the cache for the page to explain.
+	// The unit choices come from the workspace; a failure stays in the cache for the page to explain.
 	loader: async ({ context }) => {
 		await context.queryClient
 			.ensureQueryData(workspaceQuery)
