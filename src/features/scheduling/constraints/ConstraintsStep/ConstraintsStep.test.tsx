@@ -355,5 +355,43 @@ describe("ConstraintsStep", () => {
 				screen.getByRole("checkbox", { name: "Select Front rest" })
 			).toBeChecked();
 		});
+
+		it("given_aTickedCompanyDefaultReplacedSinceTheDraftWasSaved_when_rendered_then_itsReplacementIsTickedAndStaysSoWhenAnotherTickChanges", async () => {
+			const user = userEvent.setup();
+			const onIncludedChange = vi.fn();
+			const changedHere = constraintFixture({
+				constraintId: "front-weekends",
+				name: "Front weekends",
+				type: "AVOID_DAYS_OFF_ON",
+				category: "SHIFT_PATTERN",
+				requirement: null,
+				values: [{ field: "WEEKDAY", value: "SUN", name: null }],
+				overridesConstraintId: "company-weekends",
+				replacementStatus: "STANDS_IN",
+			});
+			render(
+				<ConstraintsStep
+					// The draft still holds the company default's tick, as the API keeps it.
+					includedConstraintIds={["company-weekends", "morning-cover"]}
+					constraints={[
+						{ ...companyWeekends, overriddenByConstraintId: "front-weekends" },
+						changedHere,
+						...CONSTRAINT_FIXTURES,
+					]}
+					onIncludedChange={onIncludedChange}
+				/>
+			);
+
+			expect(row("Front weekends")).toHaveTextContent("Changed here");
+			expect(
+				screen.getByRole("checkbox", { name: "Select Front weekends" })
+			).toBeChecked();
+
+			await user.click(
+				screen.getByRole("checkbox", { name: "Select Morning cover" })
+			);
+
+			expect(onIncludedChange).toHaveBeenLastCalledWith(["front-weekends"]);
+		});
 	});
 });

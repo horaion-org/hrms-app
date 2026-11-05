@@ -44,7 +44,7 @@ export { TIME_STEP_MINUTES, timeSteps, WEEKDAYS, type ShiftRole, type Weekday };
  */
 export type Constraint = Omit<
 	ScheduleConstraint,
-	"included" | "frozen" | "setBy"
+	"included" | "frozen" | "setBy" | "replacesCompanyConstraint"
 > & {
 	/** A live constraint's; a frozen copy has none. */
 	status?: ConstraintStatus;
@@ -52,8 +52,12 @@ export type Constraint = Omit<
 	setBy?: string | null;
 	/** A company constraint's lock, as the Department's list gives it. */
 	lock?: DepartmentConstraint["lock"];
-	/** On the Department's list, the Department constraint replacing this company one there. */
+	/** On the Department's list, the Department constraint standing in for this company one there. */
 	overriddenByConstraintId?: string | null;
+	/** On the Department's list, where a replacement stands against its company constraint now. */
+	replacementStatus?: DepartmentConstraint["replacementStatus"];
+	/** A schedule's read: a Department's replacement standing in for a company constraint. */
+	replacesCompanyConstraint?: boolean;
 };
 
 /** Only an ACTIVE constraint can be ticked; the API refuses an inactive one. */
@@ -307,22 +311,43 @@ export const tickedOf = (
 			);
 
 /**
- * The constraint ticks that still name a listed ACTIVE constraint. A constraint
- * deleted or deactivated since it was ticked drops out once the constraints
- * reload, so it is never sent again.
+ * The constraints a draft applies, as the API's one rule decides them
+ * (`EffectiveConstraint.appliedWith`): every listed locked one, and every tick
+ * that still names a listed ACTIVE constraint, where a tick of a company
+ * constraint the Department has since replaced counts as a tick of its
+ * replacement. The API already returns a draft's ticks this way; this keeps a
+ * draft's local ticks agreeing with it when the list reloads first, and drops
+ * a constraint deleted or deactivated since, so it is never sent again.
  */
 export const tickedConstraintsOf = (
 	draft: Pick<ScheduleDraft, "includedConstraintIds">,
-	constraints: Array<Pick<Constraint, "constraintId" | "status">> | undefined
-): Array<string> =>
-	constraints === undefined
-		? draft.includedConstraintIds
-		: draft.includedConstraintIds.filter((constraintId) =>
-				constraints.some(
-					(constraint) =>
-						constraint.constraintId === constraintId && isTickable(constraint)
-				)
-			);
+	constraints:
+		| Array<
+				Pick<
+					Constraint,
+					"constraintId" | "status" | "locked" | "overriddenByConstraintId"
+				>
+		  >
+		| undefined
+): Array<string> => {
+	if (constraints === undefined) return draft.includedConstraintIds;
+	const applies = (constraintId: string): boolean =>
+		constraints.some(
+			(constraint) =>
+				constraint.constraintId === constraintId &&
+				isTickable(constraint) &&
+				!constraint.overriddenByConstraintId
+		);
+	const standingIn = (constraintId: string): string =>
+		constraints.find((constraint) => constraint.constraintId === constraintId)
+			?.overriddenByConstraintId ?? constraintId;
+	const locked = constraints
+		.filter((constraint) => constraint.locked)
+		.map((constraint) => constraint.constraintId);
+	return [
+		...new Set([...locked, ...draft.includedConstraintIds.map(standingIn)]),
+	].filter(applies);
+};
 
 /** The ids of the shifts the API keeps as included. */
 export const includedIdsOf = (shifts: Array<ScheduleShift>): Array<string> =>

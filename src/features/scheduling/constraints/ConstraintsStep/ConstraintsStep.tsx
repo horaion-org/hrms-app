@@ -18,6 +18,7 @@ import { ConstraintOrigin } from "@/features/scheduling/constraints/ConstraintOr
 import { ConstraintTypeTag } from "@/features/scheduling/constraints/ConstraintTypeTag";
 import {
 	isTickable,
+	tickedConstraintsOf,
 	type Constraint,
 	type ListProblem,
 } from "@/features/scheduling/scheduleDraft";
@@ -96,10 +97,8 @@ export const ConstraintsStep = ({
 	const tickable = shown
 		.filter((constraint) => isTickable(constraint) && !constraint.locked)
 		.map((constraint) => constraint.constraintId);
-	const ticked = [
-		...locked,
-		...includedConstraintIds.filter((id) => !locked.includes(id)),
-	];
+	// The same rule the API applies: locked ones, and a replaced company tick as its replacement.
+	const ticked = tickedConstraintsOf({ includedConstraintIds }, constraints);
 	const columns = useMemo((): Array<DataTableColumn<Constraint>> => {
 		const typeLabelOf = (constraint: Constraint): string =>
 			`${t(`${key}.categories.${constraint.category}`)} ${t(`${key}.types.${constraint.type}`)}`;
