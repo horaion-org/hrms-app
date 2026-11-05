@@ -745,6 +745,13 @@
 				"otherRejected": "One of their saved skills was refused. Reload the page and try again.",
 				"forbidden": "You no longer have permission to change this person’s skills.",
 				"failed": "We couldn’t save the skills. Try again."
+			},
+			"expiry": {
+				"valid": "Valid",
+				"expiring_one": "Expires in {{count}} day",
+				"expiring_other": "Expires in {{count}} days",
+				"expired": "Expired",
+				"missing": "Expiry date missing"
 			}
 		},
 		"import": "Import",
@@ -1490,6 +1497,16 @@
 					"update": "Edit"
 				}
 			},
+			"skill": {
+				"name": "Skills",
+				"description": "The company’s skill catalogue: the skills and licences people can hold, and how many hold each.",
+				"actions": {
+					"read": "View",
+					"create": "Create",
+					"update": "Edit",
+					"delete": "Delete"
+				}
+			},
 			"member_profile": {
 				"name": "People",
 				"description": "Each person’s employee ID, department, job title and contact details.",
@@ -1899,6 +1916,22 @@
 				"FORMULA_WITHOUT_VALUE": "This cell has a formula without a stored value. Open the file in Excel, save it, and upload again.",
 				"ALREADY_EXISTS": "Already exists: this row will be skipped.",
 				"EXAMPLE_ROW": "The template's example row: skipped."
+			}
+		},
+		"skills": {
+			"assign": {
+				"result": {
+					"assigned_one": "Assigned to {{count}} person",
+					"assigned_other": "Assigned to {{count}} people",
+					"updated_one": "updated {{count}}",
+					"updated_other": "updated {{count}}",
+					"skipped_one": "skipped {{count}} who already had it",
+					"skipped_other": "skipped {{count}} who already had it",
+					"full_one": "{{count}} already has 50 skills",
+					"full_other": "{{count}} already have 50 skills",
+					"separator": ", ",
+					"sentence": "{{parts}}."
+				}
 			}
 		}
 	},

@@ -3,7 +3,7 @@
 
 /** SHA-256 of the contract file this module was generated from. */
 export const PERMISSION_CONTRACT_SHA256 =
-	"954eff0c22c9e76b8d0e992b02df81b5e3f599f351189e165be1ce00cae89dee";
+	"cebbd3ba7295fc9de9de4b9f9312b890e89e4ec7e89dcc6809cd1bad00dc9e16";
 
 /** The places a permission can be assigned at, widest first. */
 export const ASSIGNABLE_SCOPES = ["COMPANY", "BRANCH", "DEPARTMENT"] as const;
@@ -142,6 +142,34 @@ export const PERMISSION_DEFINITIONS = [
 		action: "update",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: ["job_title:read"],
+	},
+	{
+		key: "skill:read",
+		resource: "skill",
+		action: "read",
+		assignableScopes: ["COMPANY"],
+		prerequisites: [],
+	},
+	{
+		key: "skill:create",
+		resource: "skill",
+		action: "create",
+		assignableScopes: ["COMPANY"],
+		prerequisites: ["skill:read"],
+	},
+	{
+		key: "skill:update",
+		resource: "skill",
+		action: "update",
+		assignableScopes: ["COMPANY"],
+		prerequisites: ["skill:read"],
+	},
+	{
+		key: "skill:delete",
+		resource: "skill",
+		action: "delete",
+		assignableScopes: ["COMPANY"],
+		prerequisites: ["skill:read"],
 	},
 	{
 		key: "member_profile:read",
@@ -396,6 +424,10 @@ export const PERMISSION_KEYS = [
 	"job_title:read",
 	"job_title:create",
 	"job_title:update",
+	"skill:read",
+	"skill:create",
+	"skill:update",
+	"skill:delete",
 	"member_profile:read",
 	"member_profile:create",
 	"member_profile:update",

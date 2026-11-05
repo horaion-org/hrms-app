@@ -264,6 +264,56 @@
       "action": "read",
       "actionName": "Read",
       "assignableScopes": [
+        "COMPANY"
+      ],
+      "key": "skill:read",
+      "prerequisites": [],
+      "resource": "skill",
+      "resourceName": "Skill"
+    },
+    {
+      "action": "create",
+      "actionName": "Create",
+      "assignableScopes": [
+        "COMPANY"
+      ],
+      "key": "skill:create",
+      "prerequisites": [
+        "skill:read"
+      ],
+      "resource": "skill",
+      "resourceName": "Skill"
+    },
+    {
+      "action": "update",
+      "actionName": "Update",
+      "assignableScopes": [
+        "COMPANY"
+      ],
+      "key": "skill:update",
+      "prerequisites": [
+        "skill:read"
+      ],
+      "resource": "skill",
+      "resourceName": "Skill"
+    },
+    {
+      "action": "delete",
+      "actionName": "Delete",
+      "assignableScopes": [
+        "COMPANY"
+      ],
+      "key": "skill:delete",
+      "prerequisites": [
+        "skill:read"
+      ],
+      "resource": "skill",
+      "resourceName": "Skill"
+    },
+    {
+      "action": "read",
+      "actionName": "Read",
+      "assignableScopes": [
         "COMPANY",
         "BRANCH",
         "DEPARTMENT"

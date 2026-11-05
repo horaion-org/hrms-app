@@ -518,6 +518,16 @@
 					"read": "Ver",
 					"update": "Editar"
 				}
+			},
+			"skill": {
+				"name": "Habilidades",
+				"description": "El catálogo de habilidades de la empresa: las habilidades y licencias que las personas pueden tener, y cuántas tienen cada una.",
+				"actions": {
+					"read": "Ver",
+					"create": "Crear",
+					"update": "Editar",
+					"delete": "Eliminar"
+				}
 			}
 		},
 		"jobTitles": {
@@ -906,6 +916,22 @@
 				"ALREADY_EXISTS": "Ya existe: esta fila se omitirá.",
 				"EXAMPLE_ROW": "Fila de ejemplo de la plantilla: omitida."
 			}
+		},
+		"skills": {
+			"assign": {
+				"result": {
+					"assigned_one": "Asignada a {{count}} persona",
+					"assigned_other": "Asignada a {{count}} personas",
+					"updated_one": "{{count}} actualizada",
+					"updated_other": "{{count}} actualizadas",
+					"skipped_one": "{{count}} omitida porque ya la tenía",
+					"skipped_other": "{{count}} omitidas porque ya la tenían",
+					"full_one": "{{count}} ya tiene 50 habilidades",
+					"full_other": "{{count}} ya tienen 50 habilidades",
+					"separator": ", ",
+					"sentence": "{{parts}}."
+				}
+			}
 		}
 	},
 	"shell": {
@@ -1109,6 +1135,15 @@
 				"CELL_ERROR": "Esta celda muestra un error (como #REF!). Corrige la fórmula en Excel y vuelve a subirlo."
 			},
 			"history": "Historial de importaciones"
+		},
+		"skills": {
+			"expiry": {
+				"valid": "Vigente",
+				"expiring_one": "Vence en {{count}} día",
+				"expiring_other": "Vence en {{count}} días",
+				"expired": "Vencida",
+				"missing": "Falta la fecha de vencimiento"
+			}
 		}
 	},
 	"numberStepper": {
