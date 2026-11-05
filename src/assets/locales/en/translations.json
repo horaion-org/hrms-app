@@ -2719,7 +2719,8 @@
 				"role": "Role",
 				"shift": "Shift",
 				"group": "Group"
-			}
+			},
+			"dayLabel": "{{name}}, {{day}}: {{kind}}"
 		},
 		"myRoster": {
 			"title": "My roster · {{department}} · {{period}}",
@@ -2937,7 +2938,11 @@
 			}
 		},
 		"rosterEdit": {
+			"dayOff": "Day off",
+			"onLeave": "On leave",
 			"undone": "Change undone.",
+			"edited": "{{label}}, changed",
+			"editedCell": "Changed",
 			"check": {
 				"CELL_ON_LEAVE": "{{name}} is on leave on {{day}}.",
 				"NOT_AVAILABLE": "{{name}} can’t be rostered on {{day}}.",
