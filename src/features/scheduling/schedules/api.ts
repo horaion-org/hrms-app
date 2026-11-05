@@ -755,18 +755,44 @@ export const scheduleConstraintsQuery = (
 		retry,
 	});
 
-/** The key a schedule's roster is cached under, below the schedule's own. */
+/**
+ * Which run a schedule's shown roster comes from: its newest run's id once
+ * the schedule has a roster and no run is open (null for a roster with no
+ * run on record), otherwise undefined, as there is no roster to read. A new
+ * finished run gives a new id, so the roster is read again.
+ */
+export const rosterRunId = (schedule: Schedule): string | null | undefined =>
+	hasRoster(schedule) && !generationInProgress(schedule)
+		? (schedule.generation?.runId ?? null)
+		: undefined;
+
+/**
+ * The key a schedule's roster is cached under, below the schedule's own and
+ * named by the run it comes from: rows of an earlier run are never shown as
+ * a later run's.
+ */
 export const scheduleAssignmentsKey = (
 	companyId: string,
-	scheduleId: string
-): readonly ["scheduling", string, "schedules", string, "assignments"] =>
-	[...scheduleKey(companyId, scheduleId), "assignments"] as const;
+	scheduleId: string,
+	runId: string | null
+): readonly [
+	"scheduling",
+	string,
+	"schedules",
+	string,
+	"assignments",
+	string | null,
+] => [...scheduleKey(companyId, scheduleId), "assignments", runId] as const;
 
-/** A schedule's roster; `unit` undefined, or `allowed` false, asks for nothing. */
+/**
+ * A schedule's roster from run `runId`; `unit` undefined, or `allowed`
+ * false, asks for nothing.
+ */
 export const scheduleAssignmentsQuery = (
 	companyId: string,
 	unit: DepartmentPath | undefined,
 	scheduleId: string,
+	runId: string | null,
 	allowed = true
 ): UndefinedInitialDataOptions<
 	Array<ScheduleAssignment>,
@@ -775,7 +801,7 @@ export const scheduleAssignmentsQuery = (
 	ReturnType<typeof scheduleAssignmentsKey>
 > =>
 	queryOptions({
-		queryKey: scheduleAssignmentsKey(companyId, scheduleId),
+		queryKey: scheduleAssignmentsKey(companyId, scheduleId, runId),
 		queryFn:
 			allowed && unit
 				? ({ signal }): Promise<Array<ScheduleAssignment>> =>

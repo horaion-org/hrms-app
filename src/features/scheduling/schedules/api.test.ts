@@ -20,6 +20,7 @@ import {
 	publishSchedule,
 	rejectSchedule,
 	requestRegeneration,
+	rosterRunId,
 	updateSchedule,
 	type ScheduleAssignment,
 	type ScheduleBody,
@@ -520,6 +521,45 @@ describe("a schedule's generation", () => {
 		],
 	])("knows whether %s can be generated again", (_, schedule, expected) => {
 		expect(regenerable(schedule)).toBe(expected);
+	});
+
+	it.each([
+		["a draft", scheduleFixture(), undefined],
+		["a requested schedule", generatedScheduleFixture(), undefined],
+		[
+			"a generated schedule",
+			generatedScheduleFixture({ status: "GENERATED" }),
+			"run-1",
+		],
+		[
+			"a generated schedule with a newer run still open",
+			generatedScheduleFixture({
+				status: "GENERATED",
+				generation: generationFixture({
+					runId: "run-2",
+					status: "SUBMITTED",
+					finishedAt: null,
+				}),
+			}),
+			undefined,
+		],
+		[
+			"a schedule whose generation failed",
+			generatedScheduleFixture({ status: "GENERATION_FAILED" }),
+			undefined,
+		],
+		[
+			"a published schedule",
+			generatedScheduleFixture({ status: "PUBLISHED" }),
+			"run-1",
+		],
+		[
+			"a generated schedule with no run on record",
+			generatedScheduleFixture({ status: "GENERATED", generation: null }),
+			null,
+		],
+	])("names the run %s shows its roster from", (_, schedule, expected) => {
+		expect(rosterRunId(schedule)).toBe(expected);
 	});
 });
 

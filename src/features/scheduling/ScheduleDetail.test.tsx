@@ -345,6 +345,88 @@ it("regenerates a generated roster after a danger confirm, then follows the new 
 	).toHaveLength(1);
 });
 
+/** A run's roster in which only Ben and Chen are rostered: Aisha's rows are gone. */
+const rosterWithoutAisha = (): ReturnType<typeof scheduleAssignmentsFixture> =>
+	scheduleAssignmentsFixture().filter(
+		(row) => row.member?.displayName !== "Aisha Rahman"
+	);
+
+/** Schedule s-1 with run `runId` in the state `status` implies. */
+const scheduleAtRun = (
+	status: "GENERATED" | "GENERATION_REQUESTED",
+	runId: string
+): ReturnType<typeof generatedScheduleFixture> => {
+	const schedule = generatedScheduleFixture({ status });
+	return { ...schedule, generation: { ...schedule.generation!, runId } };
+};
+
+it("shows the new run's roster once the poll reports it finished, without a reload", async () => {
+	vi.useFakeTimers({ shouldAdvanceTime: true });
+	// What the API answers now: the run-1 roster, none while run-2 is open, then run-2's.
+	let roster = scheduleAssignmentsFixture();
+	const calls = await openRoster({
+		...signedIn(["schedule:read", "schedule:generate"]),
+		[`GET ${SCHEDULE_READ}`]: [
+			ok(scheduleAtRun("GENERATED", "run-1")),
+			ok(scheduleAtRun("GENERATION_REQUESTED", "run-2")),
+			ok(scheduleAtRun("GENERATED", "run-2")),
+		],
+		[`GET ${ASSIGNMENTS}`]: () => ok(roster),
+		[`POST ${SCHEDULE}/regeneration`]: { status: 204 },
+	});
+	const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+
+	expect(
+		await screen.findByRole("row", { name: /Aisha Rahman/ })
+	).toBeInTheDocument();
+	await user.click(screen.getByRole("button", { name: "Regenerate roster" }));
+	roster = [];
+	await user.click(
+		within(screen.getByRole("dialog")).getByRole("button", {
+			name: "Regenerate roster",
+		})
+	);
+	expect(await screen.findByRole("note")).toHaveTextContent(
+		"This schedule is being generated."
+	);
+
+	roster = rosterWithoutAisha();
+	await vi.advanceTimersByTimeAsync(15_000);
+
+	expect(
+		await screen.findByRole("row", { name: /Ben Ong/ })
+	).toBeInTheDocument();
+	expect(screen.queryByRole("row", { name: /Aisha Rahman/ })).toBeNull();
+	expect(readsOf(calls, SCHEDULE_READ)).toHaveLength(3);
+});
+
+it("shows the generating state, not the old roster, while a new run is open", async () => {
+	await openRoster({
+		...signedIn(["schedule:read", "schedule:generate"]),
+		[`GET ${SCHEDULE_READ}`]: [
+			ok(scheduleAtRun("GENERATED", "run-1")),
+			ok(scheduleAtRun("GENERATION_REQUESTED", "run-2")),
+		],
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+		[`POST ${SCHEDULE}/regeneration`]: { status: 204 },
+	});
+	const user = userEvent.setup();
+
+	await screen.findByRole("table", { name: "Roster" });
+	await user.click(screen.getByRole("button", { name: "Regenerate roster" }));
+	await user.click(
+		within(screen.getByRole("dialog")).getByRole("button", {
+			name: "Regenerate roster",
+		})
+	);
+
+	expect(await screen.findByRole("note")).toHaveTextContent(
+		"This schedule is being generated."
+	);
+	expect(screen.queryByRole("table", { name: "Roster" })).toBeNull();
+	expect(screen.queryByRole("region", { name: "Staff Rostered" })).toBeNull();
+});
+
 it("offers to generate a failed schedule again from its failure panel", async () => {
 	const calls = await openRoster({
 		...signedIn(["schedule:read", "schedule:generate"]),
