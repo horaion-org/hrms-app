@@ -89,7 +89,6 @@ it("shows the General settings prefilled with the current company's name", async
 	).toEqual([
 		["true", "General Core workspace preferences."],
 		["false", "Notifications Control what you are notified about and how."],
-		["false", "Scheduling Constraints every department’s schedules follow."],
 		[
 			"false",
 			"Plan and billing View your plan, upgrade options and billing details.",
@@ -155,13 +154,8 @@ it("switches through the settings sections with the arrow keys", async () => {
 		screen.queryByRole("textbox", { name: "Workspace Name" })
 	).not.toBeInTheDocument();
 
-	await user.keyboard("{ArrowDown}");
-	// Without scheduling_policy:read the Scheduling policy is named but not listed.
-	expect(
-		screen.getByRole("tabpanel", { name: "Scheduling" })
-	).toHaveTextContent(
-		"You don’t have permission to see the Scheduling policy."
-	);
+	// Without scheduling_policy:read the Scheduling tab is not offered.
+	expect(screen.queryByRole("tab", { name: "Scheduling" })).toBeNull();
 
 	await user.keyboard("{ArrowDown}");
 	const plan = screen.getByRole("tabpanel", { name: "Plan and billing" });

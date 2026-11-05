@@ -43,7 +43,14 @@ export const Settings = (): FunctionComponent => {
 	const search = route.useSearch();
 	const dataItems = dataItemsFor(access);
 	// The section lives in the URL, so a link such as `?section=data` opens it.
-	const sections = visibleSections(offersData(dataItems));
+	// Scheduling is offered with scheduling_policy:read; a link to it still opens
+	// it, to say the person may not see the policy.
+	const sections = visibleSections({
+		scheduling:
+			access.can("scheduling_policy:read", COMPANY_SCOPE) ||
+			search.section === "scheduling",
+		data: offersData(dataItems),
+	});
 	const selectedIndex = selectedSectionIndex(sections, search.section);
 	const planTabRef = useRef<HTMLButtonElement>(null);
 	const show = (next: SettingsSection): void => {
@@ -129,9 +136,11 @@ export const Settings = (): FunctionComponent => {
 							</p>
 						</TabPanel>
 					))}
-					<TabPanel className={panelClasses}>
-						<SchedulingPolicySettings companyId={companyId} />
-					</TabPanel>
+					{sections.includes("scheduling") && (
+						<TabPanel className={panelClasses}>
+							<SchedulingPolicySettings companyId={companyId} />
+						</TabPanel>
+					)}
 					<TabPanel className={panelClasses}>
 						<PlanSettings />
 					</TabPanel>
