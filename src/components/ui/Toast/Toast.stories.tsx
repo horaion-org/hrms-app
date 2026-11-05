@@ -23,3 +23,10 @@ export const Default: Story = {};
 export const AutoDismiss: Story = {
 	args: { duration: 4000 },
 };
+
+export const WithAction: Story = {
+	args: {
+		children: "Roster changed.",
+		action: { label: "Undo", onClick: fn() },
+	},
+};

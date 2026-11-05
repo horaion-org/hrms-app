@@ -73,4 +73,49 @@ describe("Toast", () => {
 
 		expect(onDismiss).not.toHaveBeenCalled();
 	});
+
+	it("given_anAction_when_itsButtonIsPressed_then_runsItBesideTheMessage", () => {
+		const onUndo = vi.fn();
+		render(
+			<Toast action={{ label: "Undo", onClick: onUndo }} onDismiss={vi.fn()}>
+				Roster changed.
+			</Toast>
+		);
+
+		act(() => {
+			screen.getByRole("button", { name: "Undo" }).click();
+		});
+
+		expect(onUndo).toHaveBeenCalledOnce();
+		expect(screen.getByRole("status")).toHaveTextContent("Roster changed.");
+	});
+
+	it("given_focusOnTheAction_when_theDurationPasses_then_staysUntilFocusLeaves", () => {
+		const onDismiss = vi.fn();
+		render(
+			<Toast
+				action={{ label: "Undo", onClick: vi.fn() }}
+				duration={2000}
+				onDismiss={onDismiss}
+			>
+				Roster changed.
+			</Toast>
+		);
+
+		act(() => {
+			screen.getByRole("button", { name: "Undo" }).focus();
+		});
+		act(() => {
+			vi.advanceTimersByTime(5000);
+		});
+		expect(onDismiss).not.toHaveBeenCalled();
+
+		act(() => {
+			screen.getByRole("button", { name: "Undo" }).blur();
+		});
+		act(() => {
+			vi.advanceTimersByTime(2000);
+		});
+		expect(onDismiss).toHaveBeenCalledOnce();
+	});
 });
