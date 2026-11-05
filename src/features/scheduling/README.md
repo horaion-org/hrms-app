@@ -141,12 +141,20 @@ constraint dialogs.
 4. Pure mappers `roster/` — no I/O. They turn API rows into what the components draw.
 5. Components, plain props only — `RosterHeader`, `GenerationFailurePanel` (with `MemberNotes`), `GeneratedRoster`
    (stat cards, `FindingsSummary` and `FindingsPanel`, `RosterWeekBar`, `RosterGrid` → `RosterShift` and
-   `FindingsMarker`, and `ShiftDetailsPanel` read-only for a chosen day).
+   `FindingsMarker`, and `ShiftDetailsPanel` read-only for a chosen day). Someone holding `schedule:update` on a
+   GENERATED roster awaiting its decision gets `editing`: any day opens `RosterCellPanel` beside the grid instead
+   (another shift, a day off, or a same-day swap; a preview with `RosterChangeChecks`; Apply), days changed by hand
+   carry a dot, and `LastRosterChange` offers Undo in a toast and above the grid (hrms-backend-v2 docs/adr/0062).
 
 - `schedules/scheduleViewLink.ts` — View on a card or history row: a DRAFT reopens at the wizard's Setup, any other
   status opens the roster; `scheduleSetupLink` is the roster's "View setup".
-- `schedules/useScheduleAssignments.ts` — the roster rows, asked for only when enabled (`hidden` without
-  `schedule:read` at the department or on a 403).
+- `schedules/useScheduleAssignments.ts` — the roster rows of one run at one revision, asked for only when enabled
+  (`hidden` without `schedule:read` at the department or on a 403). A hand change moves the revision, so the rows
+  are read again; a change made here seeds the new revision's rows at once.
+- `rosterChanges/` — hand changes to a generated roster: `api.ts` (preview, apply, undo, latest; the API checks
+  plain facts and never re-checks scheduling rules), `rosterEdit.ts` (pure: the cells a choice sends, shift and
+  swap choices, what the checks ask before Apply, the roster with changed rows in place), `checkSentence.ts`,
+  `rosterChangeRefusal.ts` and `useRosterChangeActions.ts` (apply and undo, caching the landed change).
 - `roster/roster.ts` — `rosterFromAssignments` (one row per member, each day a shift, off or leave; a row whose
   member is gone keyed by its assignment), `hoursOf`/`hoursInDays` (via `shiftHours`), `weekDays`, `legendOf`,
   `rosterStats`, and `isoDateIn`/`dateTimeFormatIn` for the branch's time zone.

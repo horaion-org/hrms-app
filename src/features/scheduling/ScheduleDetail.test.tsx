@@ -27,6 +27,13 @@ import {
 	schedulingWorkspace,
 	twoBranchSchedulingWorkspace,
 } from "@/features/scheduling/schedules/fixtures";
+import {
+	editedAssignmentFixture,
+	rosterChangeFixture,
+	rosterChangePreviewFixture,
+	rosterCheckFixture,
+} from "@/features/scheduling/rosterChanges/fixtures";
+import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 import { frozenShiftsFixture } from "@/features/scheduling/shifts/fixtures";
 
 let app: OpenedApp | undefined;
@@ -1083,4 +1090,397 @@ it("names the schedule's Branch in the header as text, keeping the list's Branch
 	).not.toBeInTheDocument();
 	expect(within(header).getByText("Main branch")).toBeVisible();
 	expect(app.router.state.location.search).toMatchObject({ branch: "all" });
+});
+
+/** The roster's hand-change routes (hrms-backend-v2 docs/adr/0062). */
+const ROSTER_CHANGES = `${SCHEDULE}/roster-changes`;
+
+/** Aisha's Monday as the roster names it. */
+const aishaMonday = (): ScheduleAssignment =>
+	scheduleAssignmentsFixture().find(
+		(row) => row.member?.membershipId === "m-1" && row.day === "2026-10-12"
+	)!;
+
+/**
+ * A generated roster that someone holding `schedule:update` changes by hand:
+ * the schedule, its roster and its latest change follow what was applied.
+ */
+const editableRoster = (
+	routes: Routes = {}
+): {
+	routes: Routes;
+	landed: { revision: number; rows: Array<ScheduleAssignment> };
+} => {
+	const landed = { revision: 1, rows: scheduleAssignmentsFixture() };
+	return {
+		landed,
+		routes: {
+			...signedIn(["schedule:read", "schedule:update", "shift:read"]),
+			[`GET ${SCHEDULE_READ}`]: () =>
+				ok(
+					generatedScheduleFixture({
+						status: "GENERATED",
+						rosterRevision: landed.revision,
+					})
+				),
+			[`GET ${ASSIGNMENTS}`]: () => ok(landed.rows),
+			[`GET ${SCHEDULE}/shifts`]: ok(frozenShiftsFixture()),
+			[`GET ${ROSTER_CHANGES}/latest`]: () =>
+				ok({
+					change:
+						landed.revision === 2
+							? rosterChangeFixture({
+									assignments: [],
+								})
+							: null,
+				}),
+			[`POST ${ROSTER_CHANGES}/preview`]: ok(rosterChangePreviewFixture()),
+			...routes,
+		},
+	};
+};
+
+const openAishaMonday = async (
+	user: ReturnType<typeof userEvent.setup>
+): Promise<HTMLElement> => {
+	await user.click(
+		await screen.findByRole("button", {
+			name: "Aisha Rahman, Mon 09:00 – 15:00",
+		})
+	);
+	return screen.getByRole("complementary", {
+		name: "Aisha Rahman · Mon, Oct 12",
+	});
+};
+
+it("changes a generated roster's day by hand: preview, apply, mark, then undo", async () => {
+	const edited = editedAssignmentFixture(aishaMonday());
+	const { routes, landed } = editableRoster({
+		[`POST ${ROSTER_CHANGES}`]: () => {
+			landed.revision = 2;
+			landed.rows = landed.rows.map((row) =>
+				row.assignmentId === edited.assignmentId ? edited : row
+			);
+			return {
+				status: 201,
+				body: envelope(rosterChangeFixture({ assignments: [edited] })),
+			};
+		},
+		[`POST ${ROSTER_CHANGES}/rc-1/undo/preview`]: ok(
+			rosterChangePreviewFixture({ expectedRevision: 2, checks: [] })
+		),
+		[`POST ${ROSTER_CHANGES}/rc-1/undo`]: () => {
+			landed.revision = 3;
+			landed.rows = scheduleAssignmentsFixture();
+			return {
+				status: 201,
+				body: envelope(
+					rosterChangeFixture({
+						kind: "UNDO",
+						fromRevision: 2,
+						toRevision: 3,
+						undoable: false,
+						assignments: [aishaMonday()],
+					})
+				),
+			};
+		},
+	});
+	const calls = await openRoster(routes);
+	const user = userEvent.setup();
+
+	const panel = await openAishaMonday(user);
+	expect(panel).toHaveTextContent(
+		"NowFront Desk AM · 09:00 – 15:00 · Front Desk Lead"
+	);
+	await user.click(within(panel).getByRole("radio", { name: "Day off" }));
+
+	expect(
+		await within(panel).findByText("Front Desk AM, Mon, Oct 12: 2 → 1 people.")
+	).toBeVisible();
+	expect(panel).toHaveTextContent(
+		"Scheduling rules aren’t checked again for changes made by hand."
+	);
+	expect(panel).toHaveTextContent(
+		"Aisha Rahman Front Desk AM · 09:00 – 15:00 → Day off"
+	);
+	await user.click(within(panel).getByRole("button", { name: "Apply change" }));
+
+	expect(await screen.findByRole("status", { name: "" })).toHaveTextContent(
+		"Roster changed."
+	);
+	expect(
+		await screen.findByRole("button", {
+			name: "Aisha Rahman, Mon: Day off, changed",
+		})
+	).toBeVisible();
+	expect(
+		screen.queryByRole("complementary", { name: /Aisha Rahman ·/ })
+	).toBeNull();
+	const applied = calls.find(
+		(call) => call.method === "POST" && call.path === ROSTER_CHANGES
+	);
+	expect(applied?.body).toEqual({
+		expectedRevision: 1,
+		cells: [{ membershipId: "m-1", day: "2026-10-12", kind: "OFF" }],
+	});
+	expect(
+		await screen.findByText("Last change: Aisha Rahman, Mon, Oct 12")
+	).toBeVisible();
+
+	await user.click(screen.getAllByRole("button", { name: "Undo" })[0]!);
+
+	expect(
+		await screen.findByRole("button", {
+			name: "Aisha Rahman, Mon 09:00 – 15:00",
+		})
+	).toBeVisible();
+	expect(
+		calls.find((call) => call.path === `${ROSTER_CHANGES}/rc-1/undo`)?.body
+	).toEqual({ expectedRevision: 2 });
+});
+
+it("asks before an undo that needs a tick and a remark, as an edit would", async () => {
+	const edited = editedAssignmentFixture(aishaMonday());
+	const { routes, landed } = editableRoster({
+		[`POST ${ROSTER_CHANGES}`]: () => {
+			landed.revision = 2;
+			landed.rows = landed.rows.map((row) =>
+				row.assignmentId === edited.assignmentId ? edited : row
+			);
+			return {
+				status: 201,
+				body: envelope(rosterChangeFixture({ assignments: [edited] })),
+			};
+		},
+		[`POST ${ROSTER_CHANGES}/rc-1/undo/preview`]: ok(
+			rosterChangePreviewFixture({
+				expectedRevision: 2,
+				checks: [
+					rosterCheckFixture({
+						code: "LEAVE_APPROVED",
+						severity: "NEEDS_REMARK",
+						membershipId: "m-1",
+						countBefore: null,
+						countAfter: null,
+					}),
+				],
+				needsAcknowledgement: true,
+				needsRemark: true,
+				checksFingerprint: "e".repeat(64),
+			})
+		),
+		[`POST ${ROSTER_CHANGES}/rc-1/undo`]: {
+			status: 201,
+			body: envelope(
+				rosterChangeFixture({
+					kind: "UNDO",
+					fromRevision: 2,
+					toRevision: 3,
+					undoable: false,
+				})
+			),
+		},
+	});
+	const calls = await openRoster(routes);
+	const user = userEvent.setup();
+
+	const panel = await openAishaMonday(user);
+	await user.click(within(panel).getByRole("radio", { name: "Day off" }));
+	await within(panel).findByText("Front Desk AM, Mon, Oct 12: 2 → 1 people.");
+	await user.click(within(panel).getByRole("button", { name: "Apply change" }));
+	await screen.findByText("Last change: Aisha Rahman, Mon, Oct 12");
+	await user.click(screen.getAllByRole("button", { name: "Undo" })[0]!);
+
+	const dialog = await screen.findByRole("dialog", {
+		name: "Undo this change?",
+	});
+	expect(dialog).toHaveTextContent(
+		"Aisha Rahman has approved leave on Mon, Oct 12."
+	);
+	const confirm = within(dialog).getByRole("button", { name: "Undo anyway" });
+	expect(confirm).toBeDisabled();
+	await user.click(
+		within(dialog).getByRole("checkbox", { name: "I’ve read these checks" })
+	);
+	await user.type(
+		within(dialog).getByRole("textbox", { name: /Remark \(required\)/ }),
+		"Leave was cancelled by phone"
+	);
+	await user.click(confirm);
+
+	await waitFor(() => {
+		expect(
+			calls.find((call) => call.path === `${ROSTER_CHANGES}/rc-1/undo`)?.body
+		).toEqual({
+			expectedRevision: 2,
+			remark: "Leave was cancelled by phone",
+			checksFingerprint: "e".repeat(64),
+		});
+	});
+});
+
+it("keeps the grid, its week and the open editor while a stale roster reloads", async () => {
+	const { routes, landed } = editableRoster({
+		[`POST ${ROSTER_CHANGES}/preview`]: (call) =>
+			(call.body as { expectedRevision: number }).expectedRevision ===
+			landed.revision
+				? ok(rosterChangePreviewFixture({ expectedRevision: landed.revision }))
+				: problemReply(409, "ROSTER_REVISION_CONFLICT"),
+	});
+	await openRoster(routes);
+	const user = userEvent.setup();
+	const panel = await openAishaMonday(user);
+	// Someone else changed the roster meanwhile.
+	landed.revision = 2;
+	landed.rows = landed.rows.map((row) =>
+		row.assignmentId === aishaMonday().assignmentId
+			? editedAssignmentFixture(row)
+			: row
+	);
+
+	await user.click(within(panel).getByRole("radio", { name: "Day off" }));
+	expect(await within(panel).findByRole("alert")).toHaveTextContent(
+		"Someone changed this roster since you opened it. Check your change again."
+	);
+	await user.click(
+		within(panel).getByRole("button", { name: "Reload roster" })
+	);
+
+	expect(screen.getByRole("table", { name: "Roster" })).toBeInTheDocument();
+	expect(
+		screen.getByRole("complementary", { name: "Aisha Rahman · Mon, Oct 12" })
+	).toBeInTheDocument();
+	expect(
+		await screen.findByRole("button", {
+			name: "Aisha Rahman, Mon: Day off, changed",
+		})
+	).toBeVisible();
+	expect(screen.getByRole("table", { name: "Roster" })).toBeInTheDocument();
+});
+
+it("says the roster changed when someone else got there first, and reads it again", async () => {
+	const { routes } = editableRoster({
+		[`POST ${ROSTER_CHANGES}`]: problemReply(409, "ROSTER_REVISION_CONFLICT"),
+	});
+	const calls = await openRoster(routes);
+	const user = userEvent.setup();
+
+	const panel = await openAishaMonday(user);
+	await user.click(within(panel).getByRole("radio", { name: "Day off" }));
+	await within(panel).findByText("Front Desk AM, Mon, Oct 12: 2 → 1 people.");
+	const readsBefore = readsOf(calls, SCHEDULE_READ).length;
+	await user.click(within(panel).getByRole("button", { name: "Apply change" }));
+
+	expect(await within(panel).findByRole("alert")).toHaveTextContent(
+		"Someone changed this roster since you opened it. Check your change again."
+	);
+	await waitFor(() => {
+		expect(readsOf(calls, SCHEDULE_READ).length).toBeGreaterThan(readsBefore);
+	});
+});
+
+it("holds Apply on a check that needs a remark until it is ticked and a remark is written", async () => {
+	const { routes } = editableRoster({
+		[`POST ${ROSTER_CHANGES}/preview`]: ok(
+			rosterChangePreviewFixture({
+				checks: [
+					rosterCheckFixture({
+						code: "OUTSIDE_AVAILABILITY",
+						severity: "NEEDS_REMARK",
+						membershipId: "m-1",
+						countBefore: null,
+						countAfter: null,
+					}),
+				],
+				needsAcknowledgement: true,
+				needsRemark: true,
+				checksFingerprint: "f".repeat(64),
+			})
+		),
+		[`POST ${ROSTER_CHANGES}`]: {
+			status: 201,
+			body: envelope(rosterChangeFixture()),
+		},
+	});
+	const calls = await openRoster(routes);
+	const user = userEvent.setup();
+
+	const panel = await openAishaMonday(user);
+	await user.click(within(panel).getByRole("radio", { name: "Day off" }));
+	expect(
+		await within(panel).findByText(
+			"Front Desk AM is outside Aisha Rahman’s availability on Mon, Oct 12."
+		)
+	).toBeVisible();
+	const apply = within(panel).getByRole("button", { name: "Apply anyway" });
+	expect(apply).toBeDisabled();
+
+	await user.click(
+		within(panel).getByRole("checkbox", { name: "I’ve read these checks" })
+	);
+	expect(apply).toBeDisabled();
+	await user.type(
+		within(panel).getByRole("textbox", { name: /Remark \(required\)/ }),
+		"Asked to cover"
+	);
+	expect(apply).toBeEnabled();
+	await user.click(apply);
+
+	await waitFor(() => {
+		expect(
+			calls.find(
+				(call) => call.method === "POST" && call.path === ROSTER_CHANGES
+			)?.body
+		).toEqual({
+			expectedRevision: 1,
+			cells: [{ membershipId: "m-1", day: "2026-10-12", kind: "OFF" }],
+			remark: "Asked to cover",
+			checksFingerprint: "f".repeat(64),
+		});
+	});
+});
+
+it("keeps the roster read-only for someone who may only read it", async () => {
+	await openRoster({
+		...signedIn(["schedule:read"]),
+		[`GET ${SCHEDULE_READ}`]: ok(
+			generatedScheduleFixture({ status: "GENERATED" })
+		),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+	});
+	const user = userEvent.setup();
+
+	await user.click(
+		await screen.findByRole("button", {
+			name: "Aisha Rahman, Mon 09:00 – 15:00",
+		})
+	);
+
+	expect(
+		screen.getByRole("complementary", { name: "Shift Details" })
+	).toBeVisible();
+	expect(screen.queryByRole("radio", { name: "Day off" })).toBeNull();
+	expect(screen.queryByRole("button", { name: /Day off$/ })).toBeNull();
+});
+
+it("keeps a published roster read-only even for someone who may update it", async () => {
+	await openRoster({
+		...signedIn(["schedule:read", "schedule:update"]),
+		[`GET ${SCHEDULE_READ}`]: ok(
+			generatedScheduleFixture({ status: "PUBLISHED" })
+		),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+	});
+	const user = userEvent.setup();
+
+	await user.click(
+		await screen.findByRole("button", {
+			name: "Aisha Rahman, Mon 09:00 – 15:00",
+		})
+	);
+
+	expect(
+		screen.getByRole("complementary", { name: "Shift Details" })
+	).toBeVisible();
 });

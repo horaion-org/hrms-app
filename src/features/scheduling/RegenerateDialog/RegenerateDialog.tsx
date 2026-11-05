@@ -16,8 +16,8 @@ const key = "scheduling.regenerate";
 
 /**
  * Asks before generating a schedule again, saying what is kept and what is
- * read again. A generated or rejected roster is replaced, so that asks in
- * red; after a failed generation there is nothing to replace, so it asks to
+ * read again. A generated or rejected roster is replaced, with every change
+ * made to it by hand, so that asks in red and says so; after a failed generation there is nothing to replace, so it asks to
  * try again. A refusal shows inside the dialog.
  */
 export const RegenerateDialog = ({
@@ -54,6 +54,10 @@ export const RegenerateDialog = ({
 					{ onSuccess: onClose }
 				);
 			}}
-		/>
+		>
+			{!retrying && (
+				<p className="mb-6 text-sm text-neutral-700">{t(`${key}.editsLost`)}</p>
+			)}
+		</ConfirmDialog>
 	);
 };

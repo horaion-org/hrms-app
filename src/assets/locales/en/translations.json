@@ -1881,7 +1881,9 @@
 				"memberTermsChanged": "{{name}}’s employment terms changed",
 				"memberTermsCorrected": "{{name}}’s employment terms corrected",
 				"memberTermsCancelled": "{{name}}’s employment terms change cancelled",
-				"employmentTermsAssigned": "Employment terms given to several people: {{name}}"
+				"employmentTermsAssigned": "Employment terms given to several people: {{name}}",
+				"rosterChanged": "Roster changed: {{name}}",
+				"rosterChangeUndone": "Roster change undone: {{name}}"
 			},
 			"unnamed": {
 				"branchCreated": "Branch created",
@@ -1934,7 +1936,9 @@
 				"memberTermsChanged": "Employment terms changed for someone",
 				"memberTermsCorrected": "Employment terms corrected for someone",
 				"memberTermsCancelled": "Employment terms change cancelled for someone",
-				"employmentTermsAssigned": "Employment terms given to several people"
+				"employmentTermsAssigned": "Employment terms given to several people",
+				"rosterChanged": "Roster changed",
+				"rosterChangeUndone": "Roster change undone"
 			},
 			"fallback": {
 				"named": "{{entity}} {{verb}}: {{name}}",
@@ -2991,7 +2995,8 @@
 			"inProgress": "This schedule is being generated. Try again once the run finishes.",
 			"published": "This roster is published, so it can’t be regenerated. It can still be deleted.",
 			"forbidden": "You no longer have permission to regenerate this schedule.",
-			"failed": "We couldn’t regenerate the roster. Try again."
+			"failed": "We couldn’t regenerate the roster. Try again.",
+			"editsLost": "Changes made by hand will be lost: a new run replaces the roster and every change made to it."
 		},
 		"export": {
 			"menu": "Export roster",
@@ -3117,7 +3122,12 @@
 			"apply": "Apply change",
 			"applyAnyway": "Apply anyway",
 			"cancel": "Cancel",
+			"applied": "Roster changed.",
+			"undo": "Undo",
 			"undone": "Change undone.",
+			"lastChange": "Last change: {{summary}}",
+			"summaryOne": "{{name}}, {{date}}",
+			"summarySwap": "{{first}} ⇄ {{second}}, {{date}}",
 			"findingsOutOfDate": "These notes are from generation. Changes made by hand since aren’t reflected.",
 			"edited": "{{label}}, changed",
 			"editedCell": "Changed",
@@ -3152,7 +3162,11 @@
 				"undoBlocked": "This change can’t be undone any more.",
 				"forbidden": "You no longer have permission to change this roster.",
 				"failed": "We couldn’t apply the change. Try again."
-			}
+			},
+			"undoTitle": "Undo this change?",
+			"undoDescription": "An undo is a change back: it is checked the same way, and leave or availability may have changed since.",
+			"undoChange": "Undo change",
+			"undoAnyway": "Undo anyway"
 		}
 	},
 	"colourSwatchPicker": {

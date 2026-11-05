@@ -764,7 +764,9 @@
 				"memberTermsChanged": "Condiciones de empleo de {{name}} cambiadas",
 				"memberTermsCorrected": "Condiciones de empleo de {{name}} corregidas",
 				"memberTermsCancelled": "Cambio de condiciones de empleo de {{name}} cancelado",
-				"employmentTermsAssigned": "Condiciones de empleo asignadas a varias personas: {{name}}"
+				"employmentTermsAssigned": "Condiciones de empleo asignadas a varias personas: {{name}}",
+				"rosterChanged": "Cuadrante cambiado: {{name}}",
+				"rosterChangeUndone": "Cambio de cuadrante deshecho: {{name}}"
 			},
 			"unnamed": {
 				"jobTitleCreated": "Puesto creado",
@@ -810,7 +812,9 @@
 				"memberTermsChanged": "Condiciones de empleo cambiadas a una persona",
 				"memberTermsCorrected": "Condiciones de empleo corregidas a una persona",
 				"memberTermsCancelled": "Cambio de condiciones de empleo cancelado a una persona",
-				"employmentTermsAssigned": "Condiciones de empleo asignadas a varias personas"
+				"employmentTermsAssigned": "Condiciones de empleo asignadas a varias personas",
+				"rosterChanged": "Cuadrante cambiado",
+				"rosterChangeUndone": "Cambio de cuadrante deshecho"
 			},
 			"fallback": {
 				"named": "{{verb}} de {{entity}}: {{name}}",
@@ -2224,7 +2228,8 @@
 			"inProgress": "Este horario se está generando. Inténtalo de nuevo cuando termine la ejecución.",
 			"published": "Este cuadrante está publicado, así que no se puede regenerar. Aún se puede eliminar.",
 			"forbidden": "Ya no tienes permiso para regenerar este horario.",
-			"failed": "No pudimos regenerar el cuadrante. Inténtalo de nuevo."
+			"failed": "No pudimos regenerar el cuadrante. Inténtalo de nuevo.",
+			"editsLost": "Se perderán los cambios hechos a mano: una nueva ejecución reemplaza el cuadrante y todos sus cambios."
 		},
 		"export": {
 			"menu": "Exportar cuadrante",
@@ -2350,7 +2355,12 @@
 			"apply": "Aplicar cambio",
 			"applyAnyway": "Aplicar de todos modos",
 			"cancel": "Cancelar",
+			"applied": "Cuadrante cambiado.",
+			"undo": "Deshacer",
 			"undone": "Cambio deshecho.",
+			"lastChange": "Último cambio: {{summary}}",
+			"summaryOne": "{{name}}, {{date}}",
+			"summarySwap": "{{first}} ⇄ {{second}}, {{date}}",
 			"findingsOutOfDate": "Estas notas son de la generación. No reflejan los cambios hechos a mano después.",
 			"edited": "{{label}}, cambiado",
 			"editedCell": "Cambiado",
@@ -2385,7 +2395,11 @@
 				"undoBlocked": "Este cambio ya no se puede deshacer.",
 				"forbidden": "Ya no tienes permiso para cambiar este cuadrante.",
 				"failed": "No pudimos aplicar el cambio. Inténtalo de nuevo."
-			}
+			},
+			"undoTitle": "¿Deshacer este cambio?",
+			"undoDescription": "Deshacer es un cambio de vuelta: se comprueba igual, y los permisos o la disponibilidad pueden haber cambiado desde entonces.",
+			"undoChange": "Deshacer cambio",
+			"undoAnyway": "Deshacer de todos modos"
 		}
 	},
 	"workspace": {
