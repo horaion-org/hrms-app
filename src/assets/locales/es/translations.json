@@ -552,6 +552,14 @@
 					"update": "Editar",
 					"delete": "Eliminar"
 				}
+			},
+			"scheduling_policy": {
+				"name": "Política de planificación",
+				"description": "Las restricciones propias de la empresa, definidas una vez para todos los departamentos: las bloqueadas, que cada departamento debe mantener y solo puede hacer más estrictas, y las predeterminadas, que puede omitir.",
+				"actions": {
+					"read": "Ver",
+					"update": "Editar"
+				}
 			}
 		},
 		"jobTitles": {
