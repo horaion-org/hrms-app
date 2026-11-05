@@ -1590,6 +1590,14 @@
 					"review": "Approve or reject"
 				}
 			},
+			"leave_type": {
+				"name": "Leave types",
+				"description": "The company’s kinds of leave and how many requests use each, never who took them.",
+				"actions": {
+					"read": "View",
+					"update": "Edit"
+				}
+			},
 			"none": "No permissions yet.",
 			"company": {
 				"name": "Company",

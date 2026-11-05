@@ -486,6 +486,30 @@
       "action": "read",
       "actionName": "Read",
       "assignableScopes": [
+        "COMPANY"
+      ],
+      "key": "leave_type:read",
+      "prerequisites": [],
+      "resource": "leave_type",
+      "resourceName": "Leave Type"
+    },
+    {
+      "action": "update",
+      "actionName": "Update",
+      "assignableScopes": [
+        "COMPANY"
+      ],
+      "key": "leave_type:update",
+      "prerequisites": [
+        "leave_type:read"
+      ],
+      "resource": "leave_type",
+      "resourceName": "Leave Type"
+    },
+    {
+      "action": "read",
+      "actionName": "Read",
+      "assignableScopes": [
         "COMPANY",
         "BRANCH",
         "DEPARTMENT"

@@ -560,6 +560,14 @@
 					"read": "Ver",
 					"update": "Editar"
 				}
+			},
+			"leave_type": {
+				"name": "Tipos de permiso",
+				"description": "Los tipos de permiso de la empresa y cuántas solicitudes usan cada uno, nunca quién los tomó.",
+				"actions": {
+					"read": "Ver",
+					"update": "Editar"
+				}
 			}
 		},
 		"jobTitles": {
