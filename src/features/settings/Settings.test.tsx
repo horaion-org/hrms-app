@@ -154,8 +154,9 @@ it("switches through the settings sections with the arrow keys", async () => {
 		screen.queryByRole("textbox", { name: "Workspace Name" })
 	).not.toBeInTheDocument();
 
-	// Without scheduling_policy:read the Scheduling tab is not offered.
+	// Without scheduling_policy:read or leave_type:read neither tab is offered.
 	expect(screen.queryByRole("tab", { name: "Scheduling" })).toBeNull();
+	expect(screen.queryByRole("tab", { name: "Leave" })).toBeNull();
 
 	await user.keyboard("{ArrowDown}");
 	const plan = screen.getByRole("tabpanel", { name: "Plan and billing" });

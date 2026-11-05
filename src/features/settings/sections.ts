@@ -1,11 +1,12 @@
 /**
- * Settings' sections, in tab order; `scheduling` and `data` are offered only
- * to people who may use them.
+ * Settings' sections, in tab order; `scheduling`, `leave` and `data` are
+ * offered only to people who may use them.
  */
 export const SETTINGS_SECTIONS = [
 	"general",
 	"notifications",
 	"scheduling",
+	"leave",
 	"plan",
 	"data",
 ] as const;
@@ -31,15 +32,20 @@ export const searchForSection = (section: SettingsSection): SettingsSearch =>
 	section === "general" ? {} : { section };
 
 /** Which of the sections offered only to some people to show. */
-export type OptionalSections = { scheduling: boolean; data: boolean };
+export type OptionalSections = {
+	scheduling: boolean;
+	leave: boolean;
+	data: boolean;
+};
 
-/** The sections shown, in order: Scheduling and Data only when offered. */
+/** The sections shown, in order: Scheduling, Leave and Data only when offered. */
 export const visibleSections = (
 	shown: OptionalSections
 ): Array<SettingsSection> =>
 	SETTINGS_SECTIONS.filter(
 		(section) =>
 			(section !== "scheduling" || shown.scheduling) &&
+			(section !== "leave" || shown.leave) &&
 			(section !== "data" || shown.data)
 	);
 
