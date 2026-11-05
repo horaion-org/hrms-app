@@ -8,6 +8,7 @@ import { Select } from "@/components/forms/Select";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { DataTable } from "@/components/ui/DataTable";
 import { OverflowMenuItem } from "@/components/ui/OverflowMenu";
+import { Toast } from "@/components/ui/Toast";
 import { ListToolbar } from "@/features/organisation/ListToolbar";
 import {
 	describeList,
@@ -19,6 +20,8 @@ import {
 import { mapRefusal } from "@/features/organisation/refusal";
 import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import type { SkillOverview } from "@/features/skills/api";
+import { BulkAssignSkillDialog } from "@/features/skills/BulkAssignSkillDialog";
+import { bulkAssignSummary } from "@/features/skills/skillRules";
 import { skillColumns } from "@/features/skills/skillColumns";
 import { SkillSettingsDialog } from "@/features/skills/SkillSettingsDialog";
 import {
@@ -82,10 +85,15 @@ export const Skills = (): FunctionComponent => {
 	const canCreate = access.can("skill:create", COMPANY_SCOPE);
 	const canUpdate = access.can("skill:update", COMPANY_SCOPE);
 	const canDelete = access.can("skill:delete", COMPANY_SCOPE);
+	// Giving a skill changes people's profiles: the API checks each person against where this is held.
+	const canAssign = access.canAnywhere("member_profile:update");
 	const canEdit = useCallback(() => canUpdate, [canUpdate]);
 	const [creating, setCreating] = useState(false);
 	const [editing, setEditing] = useState<SkillOverview>();
 	const [action, setAction] = useState<RowAction>();
+	const [assigning, setAssigning] = useState<SkillOverview>();
+	// What the last bulk assignment did, until its toast is dismissed.
+	const [assigned, setAssigned] = useState<{ id: number; text: string }>();
 	const [search, setSearch] = useState("");
 	const [status, setStatus] = useState<StatusFilter>("all");
 	const [category, setCategory] = useState(ALL_CATEGORIES);
@@ -136,6 +144,15 @@ export const Skills = (): FunctionComponent => {
 				i18n.language,
 				(skill) => (
 					<>
+						{canAssign && skill.status === "ACTIVE" && (
+							<OverflowMenuItem
+								onClick={() => {
+									setAssigning(skill);
+								}}
+							>
+								{t("organisation.skills.assign.menuItem")}
+							</OverflowMenuItem>
+						)}
 						<OverflowMenuItem
 							disabled={!canUpdate || skill.status === "UNKNOWN"}
 							onClick={() => {
@@ -161,7 +178,7 @@ export const Skills = (): FunctionComponent => {
 				canEdit,
 				setEditing
 			),
-		[t, i18n.language, canUpdate, canDelete, canEdit]
+		[t, i18n.language, canUpdate, canDelete, canEdit, canAssign]
 	);
 	const pending = update.isPending || remove.isPending;
 	const failure = update.error ?? remove.error;
@@ -245,6 +262,29 @@ export const Skills = (): FunctionComponent => {
 						setEditing(undefined);
 					}}
 				/>
+			)}
+			{assigning && (
+				<BulkAssignSkillDialog
+					key={assigning.skillId}
+					companyId={companyId}
+					skill={assigning}
+					onAssigned={(result) => {
+						setAssigned({ id: Date.now(), text: bulkAssignSummary(result, t) });
+					}}
+					onClose={() => {
+						setAssigning(undefined);
+					}}
+				/>
+			)}
+			{assigned && (
+				<Toast
+					key={assigned.id}
+					onDismiss={() => {
+						setAssigned(undefined);
+					}}
+				>
+					{assigned.text}
+				</Toast>
 			)}
 			{action && (
 				<ConfirmDialog
