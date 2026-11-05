@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
-import { useId, useMemo } from "react";
+import { useEffect, useId, useMemo } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
@@ -26,10 +26,11 @@ import { workspaceQuery } from "@/features/workspace/api";
 import { DepartmentSelector } from "@/features/workspace/DepartmentSelector";
 import {
 	AVAILABILITY_READ_KEYS,
-	type PermissionKey,
+	SCHEDULE_CREATE_KEYS,
 } from "@/features/workspace/permissionKeys";
 import { retry } from "@/features/workspace/retry";
 import { departmentChoices } from "@/features/workspace/unitChoices";
+import { chosenOutsideOffered } from "@/features/scheduling/ScheduleSetupStep/chosenDepartment";
 
 /** Why the API refused a setup field, per field. */
 export type SetupFieldErrors = Partial<
@@ -48,6 +49,11 @@ export type ScheduleSetupStepProps = {
 	 * chosen, since a draft's department never changes.
 	 */
 	lockedDepartment?: { departmentId: string; label: string };
+	/**
+	 * The header's Branch while a new draft's department is chosen: only its
+	 * Departments are offered. Undefined offers every one, under its Branch.
+	 */
+	branchId?: string;
 	/** Shows the setup without letting it change: a generated schedule, or one the person may not change. */
 	readOnly?: boolean;
 	/** Saves the setup; what it answers lands on the refused fields. */
@@ -70,9 +76,6 @@ const SETTINGS = [
 	},
 ] as const;
 
-/** A new draft's department is one where the person may create schedules. */
-const CREATE_KEYS: ReadonlyArray<PermissionKey> = ["schedule:create"];
-
 /**
  * Which department and week the schedule is for, and how leave and open
  * shifts count. A new draft's department is chosen from the active ones
@@ -87,6 +90,7 @@ export const ScheduleSetupStep = ({
 	defaultValues,
 	periods,
 	lockedDepartment,
+	branchId,
 	readOnly = false,
 	onSubmit,
 	className,
@@ -100,6 +104,7 @@ export const ScheduleSetupStep = ({
 		handleSubmit,
 		setError,
 		setFocus,
+		setValue,
 		formState: { errors },
 	} = useForm<ScheduleSetupValues>({
 		resolver: zodResolver(schema),
@@ -134,12 +139,23 @@ export const ScheduleSetupStep = ({
 		if (errors[name]) return ids.errorId;
 		return hint ? ids.hintId : undefined;
 	};
+	// A new draft goes to an active department of the header's Branch where schedules may be created.
+	const offered = workspace.data
+		? departmentChoices(workspace.data, companyId, SCHEDULE_CREATE_KEYS, {
+				activeOnly: true,
+			}).filter(
+				(choice) => branchId === undefined || choice.branchId === branchId
+			)
+		: undefined;
+	// Nothing is saved yet, so a department the new Branch doesn't hold is simply let go.
+	const outside =
+		lockedDepartment === undefined &&
+		chosenOutsideOffered(offered, departmentId);
+	useEffect(() => {
+		if (outside) setValue("departmentId", "");
+	}, [outside, setValue]);
 	// The selector offers nothing without a workspace or a department to create in; say why.
-	const noDepartments =
-		workspace.data !== undefined &&
-		departmentChoices(workspace.data, companyId, CREATE_KEYS, {
-			activeOnly: true,
-		}).length === 0;
+	const noDepartments = offered !== undefined && offered.length === 0;
 	const departmentHint = lockedDepartment
 		? t("scheduling.setup.departmentLocked")
 		: workspace.data === undefined && workspace.isError
@@ -230,9 +246,11 @@ export const ScheduleSetupStep = ({
 										<DepartmentSelector
 											ref={field.ref}
 											activeOnly
+											branchHeadings
+											branchId={branchId}
 											companyId={companyId}
 											disabled={readOnly}
-											keys={CREATE_KEYS}
+											keys={SCHEDULE_CREATE_KEYS}
 											{...shared}
 										/>
 									);

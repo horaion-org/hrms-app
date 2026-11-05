@@ -1,9 +1,10 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { I18nextProvider } from "react-i18next";
 import { describe, expect, it, vi } from "vitest";
 import type { FunctionComponent } from "@/common/types";
+import { companyWideWorkspace } from "@/common/testing/effectiveWorkspace";
 import { MemoryRouterHarness } from "@/components/utils/MemoryRouterHarness";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import { partTimeReadinessQuery } from "@/features/availability/api";
@@ -80,9 +81,7 @@ describe("ScheduleSetupStep", () => {
 		render(<Harness onSubmit={onSubmit} />);
 
 		await user.click(screen.getByRole("button", { name: /Department/ }));
-		await user.click(
-			await screen.findByRole("option", { name: "Main branch › Kitchen" })
-		);
+		await user.click(await screen.findByRole("option", { name: "Kitchen" }));
 		await user.type(
 			screen.getByRole("textbox", { name: /Schedule name/ }),
 			"  Kitchen - Week 42 "
@@ -117,7 +116,7 @@ describe("ScheduleSetupStep", () => {
 
 		expect(
 			(await screen.findAllByRole("option")).map((option) => option.textContent)
-		).toEqual(["Main branch › Kitchen"]);
+		).toEqual(["Kitchen"]);
 	});
 
 	it("given_noDepartmentToCreateIn_when_rendered_then_saysWhy", () => {
@@ -386,6 +385,87 @@ describe("ScheduleSetupStep", () => {
 			);
 
 			expect(screen.queryByText(/already begun/)).not.toBeInTheDocument();
+		});
+	});
+
+	describe("the header's Branch", () => {
+		// Orchard (Kitchen d-1, Bar d-2) and Tampines (Front d-3), created in anywhere.
+		const twoBranches = companyWideWorkspace([
+			"schedule:read",
+			"schedule:create",
+		]);
+
+		it("given_oneBranch_when_departmentsListed_then_offersOnlyItsOwnByName", async () => {
+			const user = userEvent.setup();
+			render(<Harness branchId="b-2" workspace={twoBranches} />);
+
+			await user.click(screen.getByRole("button", { name: "Department" }));
+
+			expect(
+				screen.getAllByRole("option").map((option) => option.textContent)
+			).toEqual(["Front"]);
+		});
+
+		it("given_allBranches_when_departmentsListed_then_offersEachUnderItsBranch", async () => {
+			const user = userEvent.setup();
+			render(<Harness workspace={twoBranches} />);
+
+			await user.click(screen.getByRole("button", { name: "Department" }));
+
+			expect(
+				within(screen.getByRole("group", { name: "Orchard" }))
+					.getAllByRole("option")
+					.map((option) => option.textContent)
+			).toEqual(["Bar", "Kitchen"]);
+			expect(
+				within(screen.getByRole("group", { name: "Tampines" })).getByRole(
+					"option",
+					{ name: "Front" }
+				)
+			).toBeVisible();
+		});
+
+		it("given_aChosenDepartment_when_theBranchChangesAwayFromIt_then_letsItGo", async () => {
+			const user = userEvent.setup();
+			const client = clientWith(twoBranches);
+			const { rerender } = render(
+				<Harness branchId="b-1" client={client} workspace={twoBranches} />
+			);
+			await user.click(screen.getByRole("button", { name: "Department" }));
+			await user.click(screen.getByRole("option", { name: "Kitchen" }));
+			expect(
+				screen.getByRole("button", { name: "Department" })
+			).toHaveTextContent("Kitchen");
+
+			// "All branches" still holds it.
+			rerender(<Harness client={client} workspace={twoBranches} />);
+			expect(
+				screen.getByRole("button", { name: "Department" })
+			).toHaveTextContent("Kitchen");
+
+			rerender(
+				<Harness branchId="b-2" client={client} workspace={twoBranches} />
+			);
+			await waitFor(() => {
+				expect(
+					screen.getByRole("button", { name: "Department" })
+				).toHaveTextContent("Select a department");
+			});
+		});
+
+		it("given_aSavedDraft_when_theBranchDiffers_then_keepsItsLockedDepartment", () => {
+			render(
+				<Harness
+					branchId="b-2"
+					defaultValues={{ ...DEFAULTS, departmentId: "d-1" }}
+					lockedDepartment={{ departmentId: "d-1", label: "Orchard › Kitchen" }}
+					workspace={twoBranches}
+				/>
+			);
+
+			expect(
+				screen.getByRole("button", { name: "Department" })
+			).toHaveTextContent("Orchard › Kitchen");
 		});
 	});
 });

@@ -210,9 +210,7 @@ const fillSetup = async (
 	user: ReturnType<typeof userEvent.setup>
 ): Promise<void> => {
 	await user.click(await screen.findByRole("button", { name: /Department/ }));
-	await user.click(
-		await screen.findByRole("option", { name: "Main branch › Front Office" })
-	);
+	await user.click(await screen.findByRole("option", { name: "Front Office" }));
 	await user.type(
 		screen.getByRole("textbox", { name: /Schedule name/ }),
 		"Front Office - Week 42"
