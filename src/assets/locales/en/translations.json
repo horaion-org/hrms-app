@@ -1844,7 +1844,10 @@
 				"skillAssigned": "Skill assigned to people: {{name}}",
 				"schedulingPolicyCreated": "Scheduling policy constraint added: {{name}}",
 				"schedulingPolicyUpdated": "Scheduling policy constraint changed: {{name}}",
-				"schedulingPolicyDeleted": "Scheduling policy constraint removed: {{name}}"
+				"schedulingPolicyDeleted": "Scheduling policy constraint removed: {{name}}",
+				"leaveTypeCreated": "Leave type added: {{name}}",
+				"leaveTypeUpdated": "Leave type changed: {{name}}",
+				"leaveTypesReordered": "Leave types reordered"
 			},
 			"unnamed": {
 				"branchCreated": "Branch created",
@@ -1884,7 +1887,10 @@
 				"skillAssigned": "Skill assigned to people",
 				"schedulingPolicyCreated": "Scheduling policy constraint added",
 				"schedulingPolicyUpdated": "Scheduling policy constraint changed",
-				"schedulingPolicyDeleted": "Scheduling policy constraint removed"
+				"schedulingPolicyDeleted": "Scheduling policy constraint removed",
+				"leaveTypeCreated": "Leave type added",
+				"leaveTypeUpdated": "Leave type changed",
+				"leaveTypesReordered": "Leave types reordered"
 			},
 			"fallback": {
 				"named": "{{entity}} {{verb}}: {{name}}",

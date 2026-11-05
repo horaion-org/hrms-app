@@ -730,7 +730,10 @@
 				"skillAssigned": "Habilidad asignada a personas: {{name}}",
 				"schedulingPolicyCreated": "Restricción añadida a la política de programación: {{name}}",
 				"schedulingPolicyUpdated": "Restricción de la política de programación cambiada: {{name}}",
-				"schedulingPolicyDeleted": "Restricción quitada de la política de programación: {{name}}"
+				"schedulingPolicyDeleted": "Restricción quitada de la política de programación: {{name}}",
+				"leaveTypeCreated": "Tipo de permiso añadido: {{name}}",
+				"leaveTypeUpdated": "Tipo de permiso cambiado: {{name}}",
+				"leaveTypesReordered": "Tipos de permiso reordenados"
 			},
 			"unnamed": {
 				"jobTitleCreated": "Puesto creado",
@@ -763,7 +766,10 @@
 				"skillAssigned": "Habilidad asignada a personas",
 				"schedulingPolicyCreated": "Restricción añadida a la política de programación",
 				"schedulingPolicyUpdated": "Restricción de la política de programación cambiada",
-				"schedulingPolicyDeleted": "Restricción quitada de la política de programación"
+				"schedulingPolicyDeleted": "Restricción quitada de la política de programación",
+				"leaveTypeCreated": "Tipo de permiso añadido",
+				"leaveTypeUpdated": "Tipo de permiso cambiado",
+				"leaveTypesReordered": "Tipos de permiso reordenados"
 			},
 			"fallback": {
 				"named": "{{verb}} de {{entity}}: {{name}}",
