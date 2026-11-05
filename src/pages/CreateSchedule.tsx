@@ -258,6 +258,8 @@ export const CreateSchedule = (): FunctionComponent => {
 	const roles = useShiftRoleOptions(companyId, saved, shiftDialog !== null);
 	const [constraintDialog, setConstraintDialog] = useState<{
 		editing?: Constraint;
+		/** The company constraint being replaced for this department (ADR-0058). */
+		replacing?: Constraint;
 	} | null>(null);
 	const constraintOptions = useConstraintOptions(
 		companyId,
@@ -324,7 +326,16 @@ export const CreateSchedule = (): FunctionComponent => {
 		setShiftDialog({ editing });
 	};
 	const openConstraintDialog = (editing?: Constraint): void => {
-		setConstraintDialog({ editing });
+		// A replacement is edited against the company constraint it replaces.
+		const replacing = editing?.overridesConstraintId
+			? constraintRows.find(
+					(row) => row.constraintId === editing.overridesConstraintId
+				)
+			: undefined;
+		setConstraintDialog({ editing, replacing });
+	};
+	const openReplaceDialog = (replacing: Constraint): void => {
+		setConstraintDialog({ replacing });
 	};
 
 	const current = SCHEDULE_STEPS.indexOf(step);
@@ -615,6 +626,7 @@ export const CreateSchedule = (): FunctionComponent => {
 						onDelete={canDeleteConstraint ? deleteConstraint : undefined}
 						onEdit={canEditConstraint ? openConstraintDialog : undefined}
 						onIncludedChange={onConstraintsIncluded}
+						onReplace={canAddConstraint ? openReplaceDialog : undefined}
 					/>
 				)}
 				{step === "forecast" && (
@@ -717,6 +729,7 @@ export const CreateSchedule = (): FunctionComponent => {
 				<ConstraintDialog
 					editing={constraintDialog.editing}
 					options={constraintOptions}
+					replacing={constraintDialog.replacing}
 					onClose={() => {
 						setConstraintDialog(null);
 					}}
@@ -732,12 +745,15 @@ export const CreateSchedule = (): FunctionComponent => {
 									unit: saved,
 									body,
 								});
-						// A constraint added here is ticked for this draft, when it can be, until it is saved or unticked.
+						// A constraint added here is ticked for this draft, when it can be, until it is saved or unticked;
+						// a replacement takes its company constraint's place.
 						if (!editing && isTickable(constraint))
 							dispatch({
 								type: "constraintsIncluded",
 								constraintIds: [
-									...draft.includedConstraintIds,
+									...draft.includedConstraintIds.filter(
+										(id) => id !== constraint.overridesConstraintId
+									),
 									constraint.constraintId,
 								],
 							});

@@ -14,6 +14,7 @@ import {
 	sentenceKey,
 	type ConstraintWords,
 } from "@/features/scheduling/constraints/constraintSentence";
+import { ConstraintOrigin } from "@/features/scheduling/constraints/ConstraintOrigin";
 import { ConstraintTypeTag } from "@/features/scheduling/constraints/ConstraintTypeTag";
 import {
 	isTickable,
@@ -35,6 +36,12 @@ export type ConstraintsStepProps = {
 	/** Offered on each row only when the person may change constraints here. */
 	onEdit?: (constraint: Constraint) => void;
 	onDelete?: (constraint: Constraint) => void;
+	/**
+	 * Offered on a company constraint the department has not replaced yet, when
+	 * the person may add constraints here: make it stricter (or change a
+	 * default) for this department (ADR-0058).
+	 */
+	onReplace?: (constraint: Constraint) => void;
 	/** Why the list is not available, e.g. not permitted or failed to load. */
 	listProblem?: ListProblem;
 	className?: string;
@@ -54,12 +61,19 @@ const partsOf = (words: ConstraintWords): Record<string, ReactElement> =>
 		])
 	);
 
+/** A company constraint the department replaced is shown through its replacement, not twice. */
+const isShown = (constraint: Constraint): boolean =>
+	!constraint.overriddenByConstraintId;
+
 /**
  * The department's constraints, ticking the ones this schedule applies, with
  * adding, editing and deleting for those allowed; once the schedule is
  * generated, the frozen copies it was generated with. Each constraint reads as
  * its type's sentence. An inactive constraint is listed but never ticked: the
- * API refuses it.
+ * API refuses it. The company's Scheduling policy comes first (ADR-0058): a
+ * locked constraint is always ticked and cannot be unticked, a company
+ * constraint is changed only by replacing it for the department, and one the
+ * department replaced shows as its replacement ("Stricter here").
  */
 export const ConstraintsStep = ({
 	constraints,
@@ -69,14 +83,23 @@ export const ConstraintsStep = ({
 	onAdd,
 	onEdit,
 	onDelete,
+	onReplace,
 	listProblem,
 	className,
 }: ConstraintsStepProps): FunctionComponent => {
 	const { t } = useTranslation();
 	const key = "scheduling.constraints";
-	const tickable = constraints
-		.filter(isTickable)
+	const shown = constraints.filter(isShown);
+	const locked = shown
+		.filter((constraint) => constraint.locked && isTickable(constraint))
 		.map((constraint) => constraint.constraintId);
+	const tickable = shown
+		.filter((constraint) => isTickable(constraint) && !constraint.locked)
+		.map((constraint) => constraint.constraintId);
+	const ticked = [
+		...locked,
+		...includedConstraintIds.filter((id) => !locked.includes(id)),
+	];
 	const columns = useMemo((): Array<DataTableColumn<Constraint>> => {
 		const typeLabelOf = (constraint: Constraint): string =>
 			`${t(`${key}.categories.${constraint.category}`)} ${t(`${key}.types.${constraint.type}`)}`;
@@ -115,6 +138,12 @@ export const ConstraintsStep = ({
 				),
 			},
 			{
+				id: "setBy",
+				header: t(`${key}.setBy`),
+				headerClassName: "w-44",
+				cell: (constraint) => <ConstraintOrigin constraint={constraint} />,
+			},
+			{
 				id: "requirement",
 				header: t(`${key}.requirement`),
 				headerClassName: "w-36",
@@ -140,7 +169,7 @@ export const ConstraintsStep = ({
 									: 0,
 						},
 					]),
-			...(onEdit || onDelete
+			...(onEdit || onDelete || onReplace
 				? [
 						{
 							id: "actions",
@@ -149,7 +178,23 @@ export const ConstraintsStep = ({
 							pin: "end" as const,
 							cell: (constraint: Constraint) => (
 								<div className="flex justify-center gap-2">
-									{onEdit && (
+									{onReplace && constraint.level === "COMPANY" && (
+										<Button
+											variant="icon"
+											aria-label={t(
+												constraint.locked
+													? `${key}.makeStricter`
+													: `${key}.changeHere`,
+												{ name: constraint.name }
+											)}
+											onClick={() => {
+												onReplace(constraint);
+											}}
+										>
+											<EditIcon />
+										</Button>
+									)}
+									{onEdit && constraint.level !== "COMPANY" && (
 										<Button
 											aria-label={t(`${key}.edit`, { name: constraint.name })}
 											variant="icon"
@@ -160,7 +205,7 @@ export const ConstraintsStep = ({
 											<EditIcon />
 										</Button>
 									)}
-									{onDelete && (
+									{onDelete && constraint.level !== "COMPANY" && (
 										<Button
 											aria-label={t(`${key}.delete`, { name: constraint.name })}
 											className="text-error-700"
@@ -178,7 +223,7 @@ export const ConstraintsStep = ({
 					]
 				: []),
 		];
-	}, [t, frozen, onEdit, onDelete]);
+	}, [t, frozen, onEdit, onDelete, onReplace]);
 
 	return (
 		<StepPanel
@@ -207,20 +252,24 @@ export const ConstraintsStep = ({
 				<DataTable
 					className="mt-10"
 					columns={columns}
-					data={constraints}
+					data={shown}
 					emptyState={t(`${key}.empty`)}
 					getRowId={(constraint) => constraint.constraintId}
 					label={t(`${key}.label`)}
 					selection={
 						onIncludedChange && {
 							rowLabel: (constraint) => constraint.name,
-							selectedIds: includedConstraintIds,
+							selectedIds: ticked,
+							canSelect: (constraint) =>
+								tickable.includes(constraint.constraintId),
 							onChange: (constraintIds): void => {
-								onIncludedChange(
-									constraintIds.filter((constraintId) =>
+								// A locked constraint stays ticked, whatever select-all did.
+								onIncludedChange([
+									...locked,
+									...constraintIds.filter((constraintId) =>
 										tickable.includes(constraintId)
-									)
-								);
+									),
+								]);
 							},
 						}
 					}

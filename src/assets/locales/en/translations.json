@@ -2368,7 +2368,7 @@
 		},
 		"constraints": {
 			"title": "Scheduling constraints",
-			"description": "Choose which of the department’s constraints this schedule applies. A change to a constraint applies to every draft of the department.",
+			"description": "Choose which constraints this schedule applies. The company’s come first; locked ones always apply. A change to a constraint applies to every draft of the department.",
 			"frozenDescription": "The constraints this schedule was generated with, as they were then.",
 			"add": "Add constraint",
 			"label": "Constraints",
@@ -2542,7 +2542,19 @@
 			"locks": {
 				"LOCKED": "Locked",
 				"DEFAULT": "Default"
-			}
+			},
+			"setBy": "Set by",
+			"levels": {
+				"COMPANY": "Company",
+				"DEPARTMENT": "This department",
+				"UNKNOWN": "This department"
+			},
+			"setByCompany": "Set by company",
+			"alwaysApplied": "Set by company, always applied",
+			"stricterHere": "Stricter here",
+			"changedHere": "Changed here",
+			"makeStricter": "Make {{name}} stricter here",
+			"changeHere": "Change {{name}} for this department"
 		},
 		"forecast": {
 			"title": "Staffing forecast",

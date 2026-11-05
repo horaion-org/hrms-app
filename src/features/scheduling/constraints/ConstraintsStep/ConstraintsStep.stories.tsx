@@ -4,6 +4,7 @@ import { fn } from "storybook/test";
 import type { FunctionComponent } from "@/common/types";
 import { ConstraintsStep } from "@/features/scheduling/constraints/ConstraintsStep";
 import {
+	COMPANY_CONSTRAINT_FIXTURES,
 	CONSTRAINT_FIXTURES,
 	INCLUDED_CONSTRAINT_IDS,
 	frozenConstraintsFixture,
@@ -85,5 +86,13 @@ export const Generated: Story = {
 		onAdd: undefined,
 		onEdit: undefined,
 		onDelete: undefined,
+	},
+};
+
+/** The company's Scheduling policy first: a locked rest, ticked for good, and a default on weekends. */
+export const WithSchedulingPolicy: Story = {
+	args: {
+		constraints: [...COMPANY_CONSTRAINT_FIXTURES, ...constraints],
+		onReplace: fn(),
 	},
 };

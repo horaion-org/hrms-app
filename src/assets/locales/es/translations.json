@@ -1587,7 +1587,7 @@
 		},
 		"constraints": {
 			"title": "Restricciones del horario",
-			"description": "Elige qué restricciones del departamento aplica este horario. Un cambio en una restricción se aplica a todos los borradores del departamento.",
+			"description": "Elige qué restricciones aplica este horario. Las de la empresa van primero; las bloqueadas se aplican siempre. Un cambio en una restricción se aplica a todos los borradores del departamento.",
 			"frozenDescription": "Las restricciones con las que se generó este horario, tal como eran entonces.",
 			"add": "Añadir restricción",
 			"label": "Restricciones",
@@ -1761,7 +1761,19 @@
 			"locks": {
 				"LOCKED": "Bloqueada",
 				"DEFAULT": "Predeterminada"
-			}
+			},
+			"setBy": "Definida por",
+			"levels": {
+				"COMPANY": "Empresa",
+				"DEPARTMENT": "Este departamento",
+				"UNKNOWN": "Este departamento"
+			},
+			"setByCompany": "Definida por la empresa",
+			"alwaysApplied": "Definida por la empresa, se aplica siempre",
+			"stricterHere": "Más estricta aquí",
+			"changedHere": "Cambiada aquí",
+			"makeStricter": "Hacer {{name}} más estricta aquí",
+			"changeHere": "Cambiar {{name}} para este departamento"
 		},
 		"forecast": {
 			"title": "Previsión de personal",
