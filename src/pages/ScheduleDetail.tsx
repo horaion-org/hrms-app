@@ -21,6 +21,7 @@ import {
 	generationInProgress,
 	hasRoster,
 	regenerable,
+	rosterRunId,
 	type Schedule,
 } from "@/features/scheduling/schedules/api";
 import { scheduleSetupLink } from "@/features/scheduling/schedules/scheduleViewLink";
@@ -181,8 +182,9 @@ type Deciding = "publish" | "reject" | undefined;
  * One schedule read by its id alone. It is read again every
  * 15 seconds while its generation is in progress; its roster, and the frozen
  * shifts and constraints that name its findings, are read once it has one
- * (generated, published or rejected). Where the person may, its header
- * offers to regenerate a generation that ended and wasn't published (as does
+ * (generated, published or rejected). The roster is read per run, so the
+ * poll seeing a new run finish brings its rows without a reload. Where the
+ * person may, its header offers to regenerate a generation that ended and wasn't published (as does
  * the failure panel) and to delete it, and the decision panel under the
  * header offers to publish or reject a generated roster.
  */
@@ -209,15 +211,15 @@ const ApiSchedule = ({
 					departmentId: state.schedule.departmentId,
 				}
 			: undefined;
-	const showsRoster =
-		state.status === "ready" &&
-		hasRoster(state.schedule) &&
-		!generationInProgress(state.schedule);
+	// The run its roster comes from: a new finished run reads the new rows.
+	const runId =
+		state.status === "ready" ? rosterRunId(state.schedule) : undefined;
+	const showsRoster = state.status === "ready" && runId !== undefined;
 	const assignments = useScheduleAssignments(
 		companyId,
 		unit,
 		scheduleId,
-		showsRoster
+		runId
 	);
 	// The frozen shifts and constraints only name what the findings refer to.
 	const rosterSchedule = showsRoster ? state.schedule : undefined;

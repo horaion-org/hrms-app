@@ -18,14 +18,16 @@ export type AssignmentList =
 	| { status: "ready"; items: Array<ScheduleAssignment> };
 
 /**
- * `enabled` false (the schedule isn't GENERATED, so it has no roster yet), or
- * `unit` or `scheduleId` undefined, asks for nothing and stays pending.
+ * The roster of run `runId`, as `rosterRunId` names it. `runId` undefined
+ * (the schedule has no roster to show yet), or `unit` or `scheduleId`
+ * undefined, asks for nothing and stays pending. A new run id reads the new
+ * run's rows.
  */
 export const useScheduleAssignments = (
 	companyId: string,
 	unit: DepartmentPath | undefined,
 	scheduleId: string | undefined,
-	enabled: boolean
+	runId: string | null | undefined
 ): AssignmentList => {
 	const access = useAccess();
 	const allowed =
@@ -36,12 +38,13 @@ export const useScheduleAssignments = (
 			companyId,
 			unit,
 			scheduleId ?? "",
-			allowed && enabled && scheduleId !== undefined
+			runId ?? null,
+			allowed && runId !== undefined && scheduleId !== undefined
 		)
 	);
 
 	if (access.status !== "ready") return { status: access.status };
-	if (unit === undefined || scheduleId === undefined || !enabled)
+	if (unit === undefined || scheduleId === undefined || runId === undefined)
 		return { status: "pending" };
 	if (!allowed) return { status: "hidden" };
 	if (list.error instanceof ApiProblemError && list.error.status === 403)
