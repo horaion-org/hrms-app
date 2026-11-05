@@ -1794,11 +1794,9 @@
 			"setBy": "Definida por",
 			"levels": {
 				"COMPANY": "Empresa",
-				"DEPARTMENT": "Este departamento",
-				"UNKNOWN": "Este departamento"
+				"DEPARTMENT": "Este departamento"
 			},
 			"setByCompany": "Definida por la empresa",
-			"alwaysApplied": "Definida por la empresa, se aplica siempre",
 			"stricterHere": "Más estricta aquí",
 			"changedHere": "Cambiada aquí",
 			"makeStricter": "Hacer {{name}} más estricta aquí",
@@ -1806,7 +1804,9 @@
 			"locks": {
 				"LOCKED": "Bloqueada",
 				"DEFAULT": "Predeterminada"
-			}
+			},
+			"companyRuleApplies": "Se aplica la regla de la empresa",
+			"companyRuleAppliesHint": "La restricción de la empresa ahora es más estricta que esta, así que se aplican ambas."
 		},
 		"forecast": {
 			"title": "Previsión de personal",

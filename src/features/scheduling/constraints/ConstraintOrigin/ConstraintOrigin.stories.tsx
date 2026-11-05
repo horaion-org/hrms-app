@@ -42,6 +42,18 @@ export const StricterHere: Story = {
 		},
 	},
 };
+/** The company has since tightened its constraint past the department's: both apply. */
+export const CompanyRuleApplies: Story = {
+	args: {
+		constraint: {
+			level: "DEPARTMENT",
+			lock: null,
+			locked: true,
+			overridesConstraintId: "company-rest",
+			replacementStatus: "NO_LONGER_STRICTER",
+		},
+	},
+};
 /** The department's own constraint. */
 export const Department: Story = {
 	args: {

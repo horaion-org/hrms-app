@@ -393,5 +393,42 @@ describe("ConstraintsStep", () => {
 
 			expect(onIncludedChange).toHaveBeenLastCalledWith(["front-weekends"]);
 		});
+
+		it("given_aReplacementTheCompanyTightenedPast_when_rendered_then_bothAreTickedAndItSaysTheCompanyRuleApplies", () => {
+			const stale = constraintFixture({
+				constraintId: "front-rest",
+				name: "Front rest",
+				type: "REST_BETWEEN_SHIFTS",
+				category: "WORKING_HOURS",
+				requirement: null,
+				values: [{ field: "REST_HOURS", value: "12", name: null }],
+				locked: true,
+				overridesConstraintId: "company-rest",
+				replacementStatus: "NO_LONGER_STRICTER",
+			});
+			render(
+				<ConstraintsStep
+					includedConstraintIds={[]}
+					constraints={[
+						{
+							...companyRest,
+							values: [{ field: "REST_HOURS", value: "13", name: null }],
+						},
+						stale,
+					]}
+					onIncludedChange={vi.fn()}
+				/>
+			);
+
+			for (const name of ["Company rest", "Front rest"]) {
+				const box = screen.getByRole("checkbox", { name: `Select ${name}` });
+				expect(box).toBeChecked();
+				expect(box).toBeDisabled();
+			}
+			expect(row("Front rest")).toHaveTextContent("Company rule applies");
+			expect(
+				within(row("Front rest")).queryByRole("img", { name: "Set by company" })
+			).toBeNull();
+		});
 	});
 });

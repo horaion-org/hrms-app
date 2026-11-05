@@ -2571,11 +2571,9 @@
 			"setBy": "Set by",
 			"levels": {
 				"COMPANY": "Company",
-				"DEPARTMENT": "This department",
-				"UNKNOWN": "This department"
+				"DEPARTMENT": "This department"
 			},
 			"setByCompany": "Set by company",
-			"alwaysApplied": "Set by company, always applied",
 			"stricterHere": "Stricter here",
 			"changedHere": "Changed here",
 			"makeStricter": "Make {{name}} stricter here",
@@ -2583,7 +2581,9 @@
 			"locks": {
 				"LOCKED": "Locked",
 				"DEFAULT": "Default"
-			}
+			},
+			"companyRuleApplies": "Company rule applies",
+			"companyRuleAppliesHint": "The company’s constraint is now stricter than this one, so both apply."
 		},
 		"forecast": {
 			"title": "Staffing forecast",
