@@ -7,6 +7,7 @@ import { FormRow, formRowIds } from "@/components/forms/FormRow";
 import { Input } from "@/components/forms/Input";
 import { Select, type SelectOption } from "@/components/forms/Select";
 import { Button } from "@/components/ui/Button";
+import { Callout } from "@/components/ui/Callout";
 import { Dialog } from "@/components/ui/Dialog";
 import { SaveIcon, SwapIcon } from "@/components/ui/Icon";
 import { UnitNameField } from "@/features/organisation/UnitNameField";
@@ -16,7 +17,7 @@ import {
 	CONSTRAINT_COMPARISONS,
 	CONSTRAINT_REQUIREMENTS,
 	CONSTRAINT_STATUSES,
-	type ConstraintBody,
+	POLICY_LOCKS,
 	type ConstraintField,
 	type ConstraintFieldKind,
 	type ConstraintFieldSpec,
@@ -25,9 +26,14 @@ import {
 import { constraintRefusal } from "@/features/scheduling/constraints/constraintRefusal";
 import {
 	constraintSchema,
+	type ConstraintDialogBody,
 	type ConstraintFieldValues,
 	type ConstraintFormValues,
 } from "@/features/scheduling/constraints/ConstraintDialog/schema";
+import {
+	allowsReplacement,
+	compareStrictness,
+} from "@/features/scheduling/constraints/constraintStrictness";
 import {
 	constraintWords,
 	sentenceSlotsOf,
@@ -42,8 +48,16 @@ export type ConstraintDialogProps = {
 	editing?: Constraint;
 	/** The constraint types with the fields each takes, and the department's shifts and active job titles. */
 	options: ConstraintOptionsState;
+	/**
+	 * The company constraint this one replaces in the department: its type is
+	 * kept, its values are the starting point, and a locked one must not be
+	 * loosened (ADR-0058).
+	 */
+	replacing?: Constraint;
+	/** Offers the lock, for a constraint of the company's Scheduling policy. */
+	withLock?: boolean;
 	/** Sends the constraint; a rejection is explained on its field or as the alert. */
-	onSave: (body: ConstraintBody) => Promise<unknown>;
+	onSave: (body: ConstraintDialogBody) => Promise<unknown>;
 	onClose: () => void;
 };
 
@@ -71,6 +85,8 @@ const valuesByField = (values: Constraint["values"]): ConstraintFieldValues => {
 export const ConstraintDialog = ({
 	editing,
 	options,
+	replacing,
+	withLock = false,
 	onSave,
 	onClose,
 }: ConstraintDialogProps): FunctionComponent => {
@@ -81,20 +97,23 @@ export const ConstraintDialog = ({
 	const offered = options.status === "ready" ? options.options : undefined;
 	const typeOf = (type: string): ConstraintTypeOption | undefined =>
 		offered?.types.find((option) => option.type === type);
-	const form = useForm<ConstraintFormValues, unknown, ConstraintBody>({
+	// A replacement starts from the company's values, under the company's type.
+	const startingPoint = editing ?? replacing;
+	const form = useForm<ConstraintFormValues, unknown, ConstraintDialogBody>({
 		// The fields to check depend on the type chosen, so the schema is built per check.
 		resolver: (values, context, resolverOptions) =>
-			zodResolver(constraintSchema(typeOf(values.type), t))(
+			zodResolver(constraintSchema(typeOf(values.type), t, withLock))(
 				values,
 				context,
 				resolverOptions
 			),
 		defaultValues: {
 			name: editing?.name ?? "",
-			type: editing?.type ?? "",
-			requirement: editing?.requirement ?? "",
+			type: startingPoint?.type ?? "",
+			requirement: startingPoint?.requirement ?? "",
 			status: editing?.status ?? "ACTIVE",
-			values: editing ? valuesByField(editing.values) : {},
+			lock: withLock ? (editing?.lock ?? "LOCKED") : "",
+			values: startingPoint ? valuesByField(startingPoint.values) : {},
 		},
 		mode: "onSubmit",
 		reValidateMode: "onChange",
@@ -156,6 +175,20 @@ export const ConstraintDialog = ({
 			label: t(`scheduling.constraints.statuses.${status}`),
 		})
 	);
+	const lockOptions: Array<SelectOption> = POLICY_LOCKS.map((lock) => ({
+		value: lock,
+		label: t(`scheduling.constraints.locks.${lock}`),
+	}));
+	const [lock] = useWatch({ control, name: ["lock"] });
+	// A locked company constraint is a floor: refuse a looser replacement before the API does.
+	const tooLoose = (body: ConstraintDialogBody): boolean => {
+		const parentType = replacing && typeOf(replacing.type);
+		if (!replacing?.locked || !parentType) return false;
+		return !allowsReplacement(
+			"LOCKED",
+			compareStrictness(parentType, replacing, body)
+		);
+	};
 	// What a field of each kind but a number is chosen from.
 	const choices: Record<
 		Exclude<ConstraintFieldKind, "NUMBER">,
@@ -208,7 +241,7 @@ export const ConstraintDialog = ({
 			t
 		);
 	const selectRow = (
-		field: "type" | "requirement" | "status",
+		field: "type" | "requirement" | "status" | "lock",
 		choiceOptions: Array<SelectOption>,
 		hint: string,
 		disabled = false
@@ -327,7 +360,6 @@ export const ConstraintDialog = ({
 		<Dialog
 			open
 			preventClose={isSubmitting}
-			title={t(editing ? `${key}.editTitle` : `${key}.title`)}
 			footer={
 				<div className="grid gap-6 sm:grid-cols-2">
 					<Button
@@ -351,6 +383,13 @@ export const ConstraintDialog = ({
 					</Button>
 				</div>
 			}
+			title={t(
+				replacing
+					? `${key}.replaceTitle`
+					: editing
+						? `${key}.editTitle`
+						: `${key}.title`
+			)}
 			onClose={close}
 		>
 			<form
@@ -360,23 +399,47 @@ export const ConstraintDialog = ({
 				id={formId}
 				onSubmit={(event) =>
 					handleSubmit(async (body) => {
+						if (tooLoose(body)) {
+							form.setError("root", {
+								message: t(`${key}.notStricter`),
+							});
+							return;
+						}
+						const sent = replacing
+							? { ...body, overridesConstraintId: replacing.constraintId }
+							: editing?.overridesConstraintId
+								? {
+										...body,
+										overridesConstraintId: editing.overridesConstraintId,
+									}
+								: body;
 						await run(
-							() => onSave(body),
+							() => onSave(sent),
 							(error) =>
 								constraintRefusal(error, body.name, editing !== undefined, t)
 						);
 					})(event)
 				}
 			>
-				{message && (
+				{(message ?? errors.root?.message) && (
 					<p
 						ref={alertRef}
 						className="text-sm text-error-700"
 						role="alert"
 						tabIndex={-1}
 					>
-						{message}
+						{message ?? errors.root?.message}
 					</p>
+				)}
+				{replacing && (
+					<Callout>
+						{t(
+							replacing.locked
+								? `${key}.replacingLocked`
+								: `${key}.replacingDefault`,
+							{ name: replacing.name }
+						)}
+					</Callout>
 				)}
 				<UnitNameField
 					autoFocus
@@ -388,7 +451,20 @@ export const ConstraintDialog = ({
 					placeholder={t(`${key}.namePlaceholder`)}
 					registration={register("name")}
 				/>
-				{selectRow("type", typeOptions, typeHint, offered === undefined)}
+				{selectRow(
+					"type",
+					typeOptions,
+					typeHint,
+					offered === undefined ||
+						replacing !== undefined ||
+						editing?.overridesConstraintId != null
+				)}
+				{withLock &&
+					selectRow(
+						"lock",
+						lockOptions,
+						t(`${key}.lockHints.${lock === "DEFAULT" ? "DEFAULT" : "LOCKED"}`)
+					)}
 				{chosen && (
 					<>
 						<ConstraintPreview

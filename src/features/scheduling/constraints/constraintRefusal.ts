@@ -16,6 +16,11 @@ export const CONSTRAINT_REFUSAL_CODES = {
 	shiftNotFound: "404 SHIFT_NOT_FOUND",
 	departmentInactive: "409 DEPARTMENT_INACTIVE",
 	departmentNotFound: "404 DEPARTMENT_NOT_FOUND",
+	overrideNotStricter: "409 CONSTRAINT_OVERRIDE_NOT_STRICTER",
+	overrideInvalid: "400 INVALID_CONSTRAINT_OVERRIDE",
+	alreadyOverridden: "409 CONSTRAINT_ALREADY_OVERRIDDEN",
+	typeSetByCompany: "409 CONSTRAINT_TYPE_SET_BY_COMPANY",
+	levelNotAllowed: "400 CONSTRAINT_LEVEL_NOT_ALLOWED",
 } as const;
 
 const codes = CONSTRAINT_REFUSAL_CODES;
@@ -44,6 +49,8 @@ export const constraintRefusal = (
 				"type",
 				t(`${key}.typeAlreadyUsed`)
 			),
+			[codes.typeSetByCompany]: field("type", t(`${key}.typeSetByCompany`)),
+			[codes.levelNotAllowed]: field("type", t(`${key}.levelNotAllowed`)),
 		},
 		alerts: {
 			[codes.invalidConstraint]: t(`${key}.invalid`),
@@ -52,6 +59,9 @@ export const constraintRefusal = (
 			[codes.departmentInactive]: t(`${key}.departmentInactive`),
 			[codes.departmentNotFound]: t(`${key}.departmentGone`),
 			[codes.constraintNotFound]: t(`${key}.gone`),
+			[codes.overrideNotStricter]: t(`${key}.notStricter`),
+			[codes.overrideInvalid]: t(`${key}.overrideInvalid`),
+			[codes.alreadyOverridden]: t(`${key}.alreadyOverridden`),
 		},
 		fieldErrors: {
 			name: field("name", t(`${key}.nameRejected`)),

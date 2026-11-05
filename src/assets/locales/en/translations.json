@@ -2509,7 +2509,21 @@
 				"failed": "We couldn’t add the constraint. Try again.",
 				"editForbidden": "You no longer have permission to change this constraint.",
 				"editFailed": "We couldn’t save the constraint. Try again.",
-				"gone": "This constraint no longer exists."
+				"gone": "This constraint no longer exists.",
+				"lock": "Lock",
+				"lockHints": {
+					"LOCKED": "Every department keeps it and can only make it stricter.",
+					"DEFAULT": "Ticked on every new schedule; a department may leave it out."
+				},
+				"lockRequired": "Choose how it binds departments.",
+				"replaceTitle": "Set for this department",
+				"replacingLocked": "{{name}} is set by the company and locked. You can only make it stricter here.",
+				"replacingDefault": "{{name}} is a company default. Your version replaces it for this department.",
+				"notStricter": "These values would loosen the company’s locked constraint. Make it stricter, or keep the company’s.",
+				"overrideInvalid": "This can’t replace that company constraint any more. Reload and try again.",
+				"alreadyOverridden": "This department already has its own version of that company constraint. Edit that one.",
+				"typeSetByCompany": "The company already sets this. Make the company’s stricter here instead.",
+				"levelNotAllowed": "This kind of constraint names a department’s shifts or job titles, so only a department can set it."
 			},
 			"preview": {
 				"title": "Constraint preview",
@@ -2524,6 +2538,10 @@
 				"consequence": "The schedule will be generated without rules such as days off or maximum hours.",
 				"confirm": "Continue without constraints",
 				"cancel": "Back to constraints"
+			},
+			"locks": {
+				"LOCKED": "Locked",
+				"DEFAULT": "Default"
 			}
 		},
 		"forecast": {

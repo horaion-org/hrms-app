@@ -1728,7 +1728,21 @@
 				"failed": "No pudimos añadir la restricción. Inténtalo de nuevo.",
 				"editForbidden": "Ya no tienes permiso para cambiar esta restricción.",
 				"editFailed": "No pudimos guardar la restricción. Inténtalo de nuevo.",
-				"gone": "Esta restricción ya no existe."
+				"gone": "Esta restricción ya no existe.",
+				"lock": "Bloqueo",
+				"lockHints": {
+					"LOCKED": "Todos los departamentos la mantienen y solo pueden hacerla más estricta.",
+					"DEFAULT": "Marcada en cada horario nuevo; un departamento puede quitarla."
+				},
+				"lockRequired": "Elige cómo se aplica a los departamentos.",
+				"replaceTitle": "Definir para este departamento",
+				"replacingLocked": "{{name}} la define la empresa y está bloqueada. Aquí solo puedes hacerla más estricta.",
+				"replacingDefault": "{{name}} es una restricción predeterminada de la empresa. Tu versión la sustituye en este departamento.",
+				"notStricter": "Estos valores relajarían la restricción bloqueada de la empresa. Hazla más estricta o mantén la de la empresa.",
+				"overrideInvalid": "Esto ya no puede sustituir esa restricción de la empresa. Recarga e inténtalo de nuevo.",
+				"alreadyOverridden": "Este departamento ya tiene su propia versión de esa restricción de la empresa. Edita esa.",
+				"typeSetByCompany": "La empresa ya define esto. Haz aquí más estricta la de la empresa.",
+				"levelNotAllowed": "Este tipo de restricción nombra turnos o puestos de un departamento, así que solo un departamento puede definirla."
 			},
 			"preview": {
 				"title": "Vista previa de la restricción",
@@ -1743,6 +1757,10 @@
 				"consequence": "El horario se generará sin reglas como días libres u horas máximas.",
 				"confirm": "Continuar sin restricciones",
 				"cancel": "Volver a las restricciones"
+			},
+			"locks": {
+				"LOCKED": "Bloqueada",
+				"DEFAULT": "Predeterminada"
 			}
 		},
 		"forecast": {
