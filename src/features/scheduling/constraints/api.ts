@@ -115,6 +115,24 @@ const policyLevelSchema = z
 /** Where a constraint is set: the company's Scheduling policy, or one Department. */
 export type PolicyLevel = z.infer<typeof policyLevelSchema>;
 
+const replacementStatusSchema = z
+	.enum([
+		"STANDS_IN",
+		"NO_LONGER_STRICTER",
+		"COMPANY_CONSTRAINT_GONE",
+		"UNKNOWN",
+	])
+	.nullable()
+	.catch(null);
+
+/**
+ * Where a Department's replacement of a company constraint stands now:
+ * STANDS_IN applies in its place; NO_LONGER_STRICTER means the company
+ * tightened or locked its constraint past it, so the company's applies too;
+ * COMPANY_CONSTRAINT_GONE means it applies on its own.
+ */
+export type ReplacementStatus = z.infer<typeof replacementStatusSchema>;
+
 /** How a company constraint binds Departments, in the order the dialog offers them. */
 export const POLICY_LOCKS = ["LOCKED", "DEFAULT"] as const;
 
@@ -172,8 +190,10 @@ export const departmentConstraintSchema = z.object({
 	locked: z.boolean().catch(false),
 	/** The company constraint a Department constraint replaces. */
 	overridesConstraintId: z.string().nullable().catch(null),
-	/** On a Department's list, the Department constraint that replaces this company constraint there. */
+	/** On a Department's list, the Department constraint standing in for this company constraint there. */
 	overriddenByConstraintId: z.string().nullable().catch(null),
+	/** A replacement's standing against its company constraint now; null on any other row. */
+	replacementStatus: replacementStatusSchema,
 });
 
 /** One of a Department's live constraints, as the constraint routes answer it. */

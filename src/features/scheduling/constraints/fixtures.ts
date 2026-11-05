@@ -203,6 +203,7 @@ export const constraintFixture = (
 	locked: false,
 	overridesConstraintId: null,
 	overriddenByConstraintId: null,
+	replacementStatus: null,
 	...overrides,
 });
 
@@ -351,4 +352,5 @@ export const frozenConstraintsFixture = (): Array<ScheduleConstraint> =>
 		setBy: "Front Office",
 		locked: false,
 		overridesConstraintId: null,
+		replacesCompanyConstraint: false,
 	}));

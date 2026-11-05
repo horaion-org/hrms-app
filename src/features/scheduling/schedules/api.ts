@@ -499,6 +499,8 @@ const scheduleConstraintSchema = z.object({
 	locked: z.boolean().catch(false),
 	/** The company constraint a live Department constraint replaces; null once frozen. */
 	overridesConstraintId: z.string().nullable().catch(null),
+	/** A Department's replacement standing in for a company constraint; its value is the Department's. */
+	replacesCompanyConstraint: z.boolean().catch(false),
 });
 
 /**

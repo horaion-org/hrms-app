@@ -277,6 +277,7 @@ describe("schedules client", () => {
 			setBy: "Front Office",
 			locked: false,
 			overridesConstraintId: null,
+			replacesCompanyConstraint: false,
 		}));
 		const frozen = frozenConstraintsFixture();
 		stubApi({
