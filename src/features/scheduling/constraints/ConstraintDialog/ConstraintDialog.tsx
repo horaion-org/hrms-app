@@ -399,12 +399,9 @@ export const ConstraintDialog = ({
 				id={formId}
 				onSubmit={(event) =>
 					handleSubmit(async (body) => {
-						if (tooLoose(body)) {
-							form.setError("root", {
-								message: t(`${key}.notStricter`),
-							});
-							return;
-						}
+						// Refused here as the API would, through the same path, so the alert
+						// replaces an earlier refusal and takes focus.
+						const looser = tooLoose(body);
 						const sent = replacing
 							? { ...body, overridesConstraintId: replacing.constraintId }
 							: editing?.overridesConstraintId
@@ -414,21 +411,38 @@ export const ConstraintDialog = ({
 									}
 								: body;
 						await run(
-							() => onSave(sent),
+							async () => {
+								if (looser) throw new Error("Looser than the company's");
+								await onSave(sent);
+							},
 							(error) =>
-								constraintRefusal(error, body.name, editing !== undefined, t)
+								looser
+									? {
+											fields: {},
+											message: t(`${key}.notStricter`),
+											refreshMembers: false,
+										}
+									: constraintRefusal(
+											error,
+											{
+												name: body.name,
+												editing: editing !== undefined,
+												company: withLock,
+											},
+											t
+										)
 						);
 					})(event)
 				}
 			>
-				{(message ?? errors.root?.message) && (
+				{message && (
 					<p
 						ref={alertRef}
 						className="text-sm text-error-700"
 						role="alert"
 						tabIndex={-1}
 					>
-						{message ?? errors.root?.message}
+						{message}
 					</p>
 				)}
 				{replacing && (

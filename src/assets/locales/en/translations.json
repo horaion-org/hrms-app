@@ -2545,11 +2545,14 @@
 				"replaceTitle": "Set for this department",
 				"replacingLocked": "{{name}} is set by the company and locked. You can only make it stricter here.",
 				"replacingDefault": "{{name}} is a company default. Your version replaces it for this department.",
-				"notStricter": "These values would loosen the company’s locked constraint. Make it stricter, or keep the company’s.",
+				"notStricter": "These values wouldn’t be at least as strict as the company’s locked constraint in every part. Make them stricter, or keep the company’s.",
 				"overrideInvalid": "This can’t replace that company constraint any more. Reload and try again.",
 				"alreadyOverridden": "This department already has its own version of that company constraint. Edit that one.",
 				"typeSetByCompany": "The company already sets this. Make the company’s stricter here instead.",
-				"levelNotAllowed": "This kind of constraint names a department’s shifts or job titles, so only a department can set it."
+				"levelNotAllowed": "This kind of constraint names a department’s shifts or job titles, so only a department can set it.",
+				"nameConflictCompany": "The company already has a constraint named \"{{name}}\". Choose a different name.",
+				"typeAlreadyUsedCompany": "The company already has a constraint of this type. Edit that one instead.",
+				"typeFixed": "A company constraint’s type can’t be changed. Add a new constraint instead."
 			},
 			"preview": {
 				"title": "Constraint preview",

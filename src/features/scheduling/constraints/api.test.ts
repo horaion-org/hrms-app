@@ -242,31 +242,59 @@ describe("constraint refusals", () => {
 			message: errorCode,
 		});
 
+	const department = { name: "Rest", editing: false, company: false };
+	const company = { ...department, company: true };
+
 	it("puts a taken name on the name, naming it, and a second once-only type on the type", () => {
 		expect(
-			constraintRefusal(
-				problem(409, "CONSTRAINT_NAME_CONFLICT"),
-				"Rest",
-				false,
-				t
-			).fields
+			constraintRefusal(problem(409, "CONSTRAINT_NAME_CONFLICT"), department, t)
+				.fields
 		).toEqual({
 			name: 'A constraint named "Rest" already exists in this department. Choose a different name.',
 		});
 		expect(
 			constraintRefusal(
 				problem(409, "CONSTRAINT_TYPE_ALREADY_USED"),
-				"Rest",
-				false,
+				department,
 				t
 			).fields
 		).toEqual({
 			type: "This department already has a constraint of this type. Edit that one instead.",
 		});
 		expect(
-			constraintRefusal(problem(400, "INVALID_CONSTRAINT_NAME"), "R", false, t)
-				.fields
+			constraintRefusal(
+				problem(400, "INVALID_CONSTRAINT_NAME"),
+				{ ...department, name: "R" },
+				t
+			).fields
 		).toEqual({ name: "Check the constraint name and try again." });
+	});
+
+	it("words a taken name, a second type and a changed type as the company's on the policy", () => {
+		expect(
+			constraintRefusal(problem(409, "CONSTRAINT_NAME_CONFLICT"), company, t)
+				.fields
+		).toEqual({
+			name: 'The company already has a constraint named "Rest". Choose a different name.',
+		});
+		expect(
+			constraintRefusal(
+				problem(409, "CONSTRAINT_TYPE_ALREADY_USED"),
+				company,
+				t
+			).fields
+		).toEqual({
+			type: "The company already has a constraint of this type. Edit that one instead.",
+		});
+		expect(
+			constraintRefusal(
+				problem(400, "CONSTRAINT_TYPE_FIXED"),
+				{ ...company, editing: true },
+				t
+			).fields
+		).toEqual({
+			type: "A company constraint’s type can’t be changed. Add a new constraint instead.",
+		});
 	});
 
 	it.each([
@@ -295,7 +323,11 @@ describe("constraint refusals", () => {
 		],
 	])("explains %s %s as one message", (status, code, copy) => {
 		expect(
-			constraintRefusal(problem(status, code), "Rest", true, t).message
+			constraintRefusal(
+				problem(status, code),
+				{ ...department, editing: true },
+				t
+			).message
 		).toBe(copy);
 	});
 

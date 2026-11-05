@@ -1768,11 +1768,14 @@
 				"replaceTitle": "Definir para este departamento",
 				"replacingLocked": "{{name}} la define la empresa y está bloqueada. Aquí solo puedes hacerla más estricta.",
 				"replacingDefault": "{{name}} es una restricción predeterminada de la empresa. Tu versión la sustituye en este departamento.",
-				"notStricter": "Estos valores relajarían la restricción bloqueada de la empresa. Hazla más estricta o mantén la de la empresa.",
+				"notStricter": "Estos valores no serían, en todos sus aspectos, al menos tan estrictos como la restricción bloqueada de la empresa. Hazlos más estrictos o mantén la de la empresa.",
 				"overrideInvalid": "Esto ya no puede sustituir esa restricción de la empresa. Recarga e inténtalo de nuevo.",
 				"alreadyOverridden": "Este departamento ya tiene su propia versión de esa restricción de la empresa. Edita esa.",
 				"typeSetByCompany": "La empresa ya define esto. Haz aquí más estricta la de la empresa.",
-				"levelNotAllowed": "Este tipo de restricción nombra turnos o puestos de un departamento, así que solo un departamento puede definirla."
+				"levelNotAllowed": "Este tipo de restricción nombra turnos o puestos de un departamento, así que solo un departamento puede definirla.",
+				"nameConflictCompany": "La empresa ya tiene una restricción llamada \"{{name}}\". Elige otro nombre.",
+				"typeAlreadyUsedCompany": "La empresa ya tiene una restricción de este tipo. Edita esa.",
+				"typeFixed": "El tipo de una restricción de la empresa no se puede cambiar. Añade una restricción nueva."
 			},
 			"preview": {
 				"title": "Vista previa de la restricción",

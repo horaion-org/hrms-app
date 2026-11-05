@@ -131,10 +131,37 @@ describe("ConstraintDialog for the Scheduling policy (ADR-0058)", () => {
 
 		expect(
 			await screen.findByText(
-				"These values would loosen the company’s locked constraint. Make it stricter, or keep the company’s."
+				"These values wouldn’t be at least as strict as the company’s locked constraint in every part. Make them stricter, or keep the company’s."
 			)
 		).toBeVisible();
 		expect(onSave).not.toHaveBeenCalled();
+	});
+
+	it("given_anEarlierRefusal_when_replacedLooser_then_theLooserRefusalReplacesItAndTakesFocus", async () => {
+		const user = userEvent.setup();
+		const onSave = vi.fn().mockRejectedValue(problem(500, "INTERNAL_ERROR"));
+		renderDialog({ replacing: companyRest, onSave });
+		await screen.findByRole("dialog", { name: "Set for this department" });
+		await user.type(screen.getByLabelText("Constraint name"), "Front rest");
+		const hours = screen.getByRole("spinbutton", { name: /Rest/ });
+		await user.clear(hours);
+		await user.type(hours, "12");
+		await user.click(screen.getByRole("button", { name: "Save" }));
+		expect(await screen.findByRole("alert")).toHaveTextContent(
+			"We couldn’t add the constraint. Try again."
+		);
+
+		await user.clear(hours);
+		await user.type(hours, "10");
+		await user.click(screen.getByRole("button", { name: "Save" }));
+
+		await waitFor(() => {
+			expect(screen.getByRole("alert")).toHaveTextContent(
+				"These values wouldn’t be at least as strict as the company’s locked constraint in every part."
+			);
+		});
+		expect(screen.getByRole("alert")).toHaveFocus();
+		expect(onSave).toHaveBeenCalledTimes(1);
 	});
 
 	it("given_aLockedCompanyConstraint_when_replacedStricter_then_sendsItAsItsReplacement", async () => {
@@ -187,7 +214,7 @@ describe("ConstraintDialog for the Scheduling policy (ADR-0058)", () => {
 
 		expect(
 			await screen.findByText(
-				"These values would loosen the company’s locked constraint. Make it stricter, or keep the company’s."
+				"These values wouldn’t be at least as strict as the company’s locked constraint in every part. Make them stricter, or keep the company’s."
 			)
 		).toBeVisible();
 	});
