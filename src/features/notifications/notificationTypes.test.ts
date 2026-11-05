@@ -173,6 +173,25 @@ describe("notificationTarget", () => {
 		});
 	});
 
+	it("opens a rostered member's own view of the roster, and the scheduling page for the rest", () => {
+		expect(
+			notificationTarget(
+				{ ...scheduleReady, type: "SHIFT_ASSIGNMENT" },
+				"PERSONAL"
+			)
+		).toEqual({ kind: "myRoster", scheduleId: "schedule-1" });
+		expect(
+			notificationTarget(
+				{ ...scheduleReady, type: "SCHEDULE_ASSIGNMENT_UPDATED" },
+				"PERSONAL"
+			)
+		).toEqual({ kind: "myRoster", scheduleId: "schedule-1" });
+		expect(notificationTarget(scheduleReady, "REVIEW")).toEqual({
+			kind: "schedule",
+			scheduleId: "schedule-1",
+		});
+	});
+
 	it("has no target for an unknown type or a missing id", () => {
 		expect(
 			notificationTarget({ ...approved, type: "SOMETHING_NEW" }, "PERSONAL")

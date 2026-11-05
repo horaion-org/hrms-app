@@ -574,6 +574,39 @@ describe("Notifications", () => {
 		expect(screen.getByText("People")).toBeInTheDocument();
 	});
 
+	it("given_shiftAssignmentForAMemberWithoutScheduleRead_when_listed_then_opensTheirOwnRoster", async () => {
+		stubApi({
+			"POST /api/v1/public/sessions/refreshes": accessPassReply(),
+			"GET /api/v1/me": currentUserReply(),
+			"GET /api/v1/me/workspace": {
+				status: 200,
+				body: envelope(companyWideWorkspace([])),
+			},
+			[`GET ${BASE}`]: {
+				status: 200,
+				body: {
+					content: [
+						{
+							...own,
+							notificationId: "assignment-1",
+							type: "SHIFT_ASSIGNMENT",
+							leaveRequestId: null,
+							membershipId: null,
+							scheduleId: "schedule-1",
+						},
+					],
+					page: { totalElements: 1 },
+				},
+			},
+			[`GET ${BASE}/unread-count`]: { status: 200, body: { unreadCount: 1 } },
+		});
+		await open();
+		const link = await screen.findByRole("link", {
+			name: "You have new shifts on a published schedule.",
+		});
+		expect(link).toHaveAttribute("href", "/me/schedules/schedule-1");
+	});
+
 	it("given_schedulePublisherWithoutLeaveReview_when_opening_then_needsReviewListsTheReadySchedule", async () => {
 		stubApi({
 			"POST /api/v1/public/sessions/refreshes": accessPassReply(),

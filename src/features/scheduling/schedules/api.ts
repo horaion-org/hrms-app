@@ -514,7 +514,7 @@ const assignmentOffReasonSchema = z.enum(["OFF", "LEAVE"]);
 /** Why a member is off on a day: a plain day off, or approved leave. */
 export type AssignmentOffReason = z.infer<typeof assignmentOffReasonSchema>;
 
-const scheduleAssignmentSchema = z.object({
+export const scheduleAssignmentSchema = z.object({
 	/** The row's own id: a stable key even when its member no longer resolves. */
 	assignmentId: z.string(),
 	/** Null once the member's profile is no longer live in the company. */
@@ -533,8 +533,16 @@ const scheduleAssignmentSchema = z.object({
 	/** A day of the schedule's week, as an ISO date. */
 	day: z.string(),
 	off: z.boolean(),
-	/** Why they are off, or null on a working day. */
+	/**
+	 * Why they are off, or null on a working day. Leave reads LEAVE only for
+	 * someone who may read leave at the Department; anyone else gets OFF.
+	 */
 	offReason: assignmentOffReasonSchema.nullable(),
+	/**
+	 * On a LEAVE day, the approved request's leave type ("Sick leave"); null
+	 * when none covers the day any more. Absent from an older API.
+	 */
+	leaveTypeName: z.string().nullish(),
 	/** The frozen shift worked, or null when off. */
 	shift: z
 		.object({

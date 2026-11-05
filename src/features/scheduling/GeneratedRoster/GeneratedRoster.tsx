@@ -32,8 +32,15 @@ import type {
 } from "@/features/scheduling/schedules/api";
 import { ShiftDetailsPanel } from "@/features/scheduling/ShiftDetailsPanel";
 
+/** What the roster reads of its schedule: its week, the zone its days are in and, for the findings, its generation. */
+export type RosterSchedule = Pick<
+	Schedule,
+	"periodStart" | "periodEnd" | "timeZone"
+> &
+	Partial<Pick<Schedule, "generation">>;
+
 export type GeneratedRosterProps = {
-	schedule: Schedule;
+	schedule: RosterSchedule;
 	/** The schedule's roster rows, as `GET …/assignments` answers them. */
 	assignments: Array<ScheduleAssignment>;
 	/** The schedule's frozen shifts, which name the findings' shifts; empty when not readable. */
@@ -42,6 +49,8 @@ export type GeneratedRosterProps = {
 	constraints?: FindingNameSources["constraints"];
 	/** The working days in a row each member brought into the period, by member profile; none when not readable. */
 	startingRuns?: ReadonlyMap<string, number>;
+	/** Whether the figures above the roster are shown; a member's own view leaves them out. */
+	withSummary?: boolean;
 };
 
 /** A worked day chosen on the roster. */
@@ -60,6 +69,7 @@ export const GeneratedRoster = ({
 	shifts = [],
 	constraints = [],
 	startingRuns,
+	withSummary = true,
 }: GeneratedRosterProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const language = i18n.resolvedLanguage ?? i18n.language;
@@ -109,35 +119,37 @@ export const GeneratedRoster = ({
 
 	return (
 		<>
-			<div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
-				<StatCard
-					title={t(`${key}.staffRostered`)}
-					value={numbers.format(stats.staffRostered)}
-					caption={t(`${key}.staffRosteredCaption`, {
-						total: numbers.format(stats.staffTotal),
-					})}
-				/>
-				<StatCard
-					caption={t(`${key}.shiftsAssignedCaption`)}
-					title={t(`${key}.shiftsAssigned`)}
-					value={numbers.format(stats.shifts)}
-				/>
-				<StatCard
-					caption={t(`${key}.daysOffCaption`)}
-					title={t(`${key}.daysOff`)}
-					value={numbers.format(stats.daysOff)}
-				/>
-				<StatCard
-					caption={t(`${key}.onLeaveCaption`)}
-					title={t(`${key}.onLeave`)}
-					value={numbers.format(stats.onLeave)}
-				/>
-				<StatCard
-					caption={t(`${key}.conflictsCaption`)}
-					title={t(`${key}.conflicts`)}
-					value={numbers.format(findings?.conflicts.length ?? 0)}
-				/>
-			</div>
+			{withSummary && (
+				<div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
+					<StatCard
+						title={t(`${key}.staffRostered`)}
+						value={numbers.format(stats.staffRostered)}
+						caption={t(`${key}.staffRosteredCaption`, {
+							total: numbers.format(stats.staffTotal),
+						})}
+					/>
+					<StatCard
+						caption={t(`${key}.shiftsAssignedCaption`)}
+						title={t(`${key}.shiftsAssigned`)}
+						value={numbers.format(stats.shifts)}
+					/>
+					<StatCard
+						caption={t(`${key}.daysOffCaption`)}
+						title={t(`${key}.daysOff`)}
+						value={numbers.format(stats.daysOff)}
+					/>
+					<StatCard
+						caption={t(`${key}.onLeaveCaption`)}
+						title={t(`${key}.onLeave`)}
+						value={numbers.format(stats.onLeave)}
+					/>
+					<StatCard
+						caption={t(`${key}.conflictsCaption`)}
+						title={t(`${key}.conflicts`)}
+						value={numbers.format(findings?.conflicts.length ?? 0)}
+					/>
+				</div>
+			)}
 			{findings && counts && names && (
 				<>
 					<FindingsSummary

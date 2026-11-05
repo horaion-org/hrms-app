@@ -8,11 +8,13 @@ export type NotificationLink =
 			search: { requestId: string; memberId: string | undefined };
 	  }
 	| { to: "/scheduling/$scheduleId"; params: { scheduleId: string } }
+	| { to: "/me/schedules/$scheduleId"; params: { scheduleId: string } }
 	| { to: "/settings/data/import-people"; search: { import: string } };
 
 /**
  * The page a notification target opens: the leave request on `/leave`, the
- * schedule's roster, or the people import's result under Settings › Data.
+ * schedule's roster on the scheduling page, a rostered member's own view of
+ * that roster, or the people import's result under Settings › Data.
  */
 export const notificationLink = (
 	target: NotificationTarget
@@ -26,6 +28,11 @@ export const notificationLink = (
 		case "schedule":
 			return linkOptions({
 				to: "/scheduling/$scheduleId",
+				params: { scheduleId: target.scheduleId },
+			});
+		case "myRoster":
+			return linkOptions({
+				to: "/me/schedules/$scheduleId",
 				params: { scheduleId: target.scheduleId },
 			});
 		case "import":

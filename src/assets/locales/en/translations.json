@@ -2454,6 +2454,12 @@
 				"group": "Group"
 			}
 		},
+		"myRoster": {
+			"title": "My roster · {{department}} · {{period}}",
+			"loading": "Loading the roster…",
+			"unavailable": "This roster isn’t available. It may not be published yet, or you aren’t on it.",
+			"loadFailed": "This roster could not be loaded. Please try again."
+		},
 		"generation": {
 			"inProgress": "This schedule is being generated. Its roster shows here once it’s ready; this page checks again every 15 seconds.",
 			"failedTitle": "Why it wasn’t generated",

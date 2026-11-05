@@ -134,11 +134,24 @@ export const presentNotification = (
 	};
 };
 
-/** Where a notification opens: a leave request on `/leave`, a schedule's roster, or an import's result. */
+/**
+ * Where a notification opens: a leave request on `/leave`, a schedule's roster on the scheduling page, the member's
+ * own view of a roster they are on, or an import's result.
+ */
 export type NotificationTarget =
 	| { kind: "leave"; requestId: string; memberId: string | undefined }
 	| { kind: "schedule"; scheduleId: string }
+	| { kind: "myRoster"; scheduleId: string }
 	| { kind: "import"; importId: string };
+
+/**
+ * Schedule notifications sent to the members a roster names, who may not hold `schedule:read`: they open the
+ * member's own view of the roster. The deciders' and requesters' schedule notifications keep the scheduling page.
+ */
+const ROSTERED_MEMBER_TYPES: ReadonlyArray<string> = [
+	"SHIFT_ASSIGNMENT",
+	"SCHEDULE_ASSIGNMENT_UPDATED",
+];
 
 /**
  * The page a notification opens, or undefined when it names nothing this build can open. Reviewers of leave also
@@ -166,7 +179,12 @@ export const notificationTarget = (
 					: undefined,
 		};
 	if (category === "schedule" && notification.scheduleId)
-		return { kind: "schedule", scheduleId: notification.scheduleId };
+		return {
+			kind: ROSTERED_MEMBER_TYPES.includes(notification.type)
+				? "myRoster"
+				: "schedule",
+			scheduleId: notification.scheduleId,
+		};
 	if (category === "people" && notification.memberImportJobId)
 		return { kind: "import", importId: notification.memberImportJobId };
 	return undefined;
