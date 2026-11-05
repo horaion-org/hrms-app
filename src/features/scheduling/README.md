@@ -12,19 +12,12 @@ their API exists.
 
 ## Shape
 
-- `ShiftDetailsPanel/RosterShiftDialog.tsx`, `ApiRosterShiftDialog.tsx`, `ReassignRosterShiftDialog.tsx` (with
-  `useReassignmentStaff.ts` and `rosterPreviewAccess.ts`) — edit, duplicate and reassign dialogs for one shift, with
-  workspace units, API shift roles and API members as choices. They change only the in-memory `RosterShift` they are
-  given and are not wired to any page: a generated roster is read-only until assignments can be changed through the
-  API.
-
 - `schedules/useSchedules.ts` — the overview's permission-aware company-wide history. Reads every page of
   `GET /api/v1/companies/{companyId}/schedules`, with API names, dates, departments and statuses; search covers
   every returned row.
 - `ScheduleCard` — one API schedule on the overview, grouped by period: branch and department, status, what it
   includes (`ScheduleSummary`) and View.
-- `schedules.ts` — each status's badge tone, the period's weeks and days (`mondayOf`, `weeksOf`, `daysOf`), and the
-  dialogs' in-memory `RosterShift` and `RosterStaff`.
+- `schedules.ts` — each status's badge tone and the period's weeks and days (`mondayOf`, `weeksOf`, `daysOf`).
 
 - `paths.ts` — the department, shift, constraint and schedule paths every scheduling request is built from, and the
   query root (`["scheduling", companyId, …]`).

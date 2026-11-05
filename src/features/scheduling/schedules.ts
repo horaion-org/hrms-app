@@ -18,41 +18,6 @@ export const scheduleStatusTones: Record<ScheduleStatus, BadgeTone> = {
 	UNKNOWN: "neutral",
 };
 
-/*
- * The in-memory shift the roster's shift-action dialogs (edit, reassign,
- * duplicate) work on. Not yet wired to a roster: generated rosters are
- * read-only until assignments can be changed through the API.
- */
-
-/** A filled shift is "full" or "half"; an "open" one has nobody yet. */
-export type RosterShiftKind = "full" | "half" | "open";
-
-export type RosterShift = {
-	shiftId: string;
-	branchId?: string;
-	departmentId?: string;
-	jobTitleId?: string;
-	/** ISO date. */
-	date: string;
-	/** "HH:mm" */
-	start: string;
-	end: string;
-	role: string;
-	kind: RosterShiftKind;
-	breakMinutes: number;
-	location: string;
-	notes?: string;
-};
-
-export type RosterStaff = {
-	staffId: string;
-	departmentName?: string;
-	name: string;
-	jobTitle: string;
-	/** At most one shift a day; a day without one is a day off. */
-	shifts: Array<RosterShift>;
-};
-
 const iso = (day: Dayjs): string => day.format("YYYY-MM-DD");
 
 /** The Monday on or before `date`. */
