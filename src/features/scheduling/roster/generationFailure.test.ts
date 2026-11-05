@@ -33,6 +33,10 @@ describe("generationFailure", () => {
 			"engine_unreachable",
 			"The scheduling engine couldn’t be reached in time, so nothing was generated.",
 		],
+		[
+			"history_invalid",
+			"The scheduling engine couldn’t read the days before this week. Contact support: the schedule can be generated again once they’re cleared.",
+		],
 		["CANCELLED", "The engine’s job was cancelled before it finished."],
 		[
 			"engine_http_503",

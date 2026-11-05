@@ -7,6 +7,7 @@ import {
 import {
 	emptyFindingsFixture,
 	findingsOfEveryKindFixture,
+	priorRestDiagnosticFixture,
 } from "@/features/scheduling/schedules/fixtures";
 
 const WEEK = [
@@ -84,6 +85,18 @@ describe("placeFindings", () => {
 		expect(everything).not.toContain("DEAD_SHIFT");
 		expect(everything).not.toContain("RULE_REFERENCES_MISSING_ENTITY");
 		expect(everything).not.toContain("An unknown member is short of rest.");
+	});
+
+	it("given_restAfterLastWeek_when_placed_then_marksTheMembersRow", () => {
+		const findings = {
+			...emptyFindingsFixture(),
+			members: findingsOfEveryKindFixture().members,
+			diagnostics: [priorRestDiagnosticFixture()],
+		};
+
+		expect(summaries(placeFindings(findings, WEEK).byRow)).toEqual({
+			"m-2": ["PRIOR_REST_BLOCKS_SHIFTS"],
+		});
 	});
 
 	it("given_nothingFound_when_placed_then_marksNothing", () => {

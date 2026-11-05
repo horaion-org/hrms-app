@@ -22,8 +22,14 @@ export type GridFindings = {
 export const cellKey = (membershipId: string, date: string): string =>
 	`${membershipId}|${date}`;
 
-/** The one diagnostic about a member rather than the setup: no shift fits them. */
-const MEMBER_DIAGNOSTIC = "UNASSIGNABLE_EMPLOYEE";
+/**
+ * The diagnostics about a member rather than the setup: no shift fits them,
+ * or the rest after their last shift before the period rules out early shifts.
+ */
+const MEMBER_DIAGNOSTICS: ReadonlySet<string> = new Set([
+	"UNASSIGNABLE_EMPLOYEE",
+	"PRIOR_REST_BLOCKS_SHIFTS",
+]);
 
 const append = (
 	map: Map<string, Array<Finding>>,
@@ -86,7 +92,10 @@ export const placeFindings = (
 	}
 	for (const diagnostic of findings.diagnostics) {
 		const employeeId = diagnostic.entities["employeeId"];
-		if (diagnostic.code !== MEMBER_DIAGNOSTIC || typeof employeeId !== "string")
+		if (
+			!MEMBER_DIAGNOSTICS.has(diagnostic.code) ||
+			typeof employeeId !== "string"
+		)
 			continue;
 		const membershipId = membershipOf(employeeId);
 		if (membershipId !== null)

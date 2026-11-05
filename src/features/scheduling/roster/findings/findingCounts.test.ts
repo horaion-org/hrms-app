@@ -7,6 +7,7 @@ import {
 	emptyFindingsFixture,
 	findingsOfEveryKindFixture,
 	generationFindingsFixture,
+	priorRestDiagnosticFixture,
 } from "@/features/scheduling/schedules/fixtures";
 
 describe("findingCounts", () => {
@@ -19,6 +20,15 @@ describe("findingCounts", () => {
 			roster: 8,
 			setup: 5,
 		});
+	});
+
+	it("given_aDiagnosticAboutTheRoster_when_counted_then_isARosterNoteNotASetupIssue", () => {
+		const findings = {
+			...emptyFindingsFixture(),
+			diagnostics: [priorRestDiagnosticFixture()],
+		};
+
+		expect(findingCounts(findings)).toEqual({ roster: 1, setup: 0 });
 	});
 
 	it("given_errorsWithSeveralMessages_when_counted_then_countsEachMessage", () => {

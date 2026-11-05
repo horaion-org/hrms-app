@@ -6,7 +6,10 @@ import {
 	strongestTone,
 	type Finding,
 } from "@/features/scheduling/roster/findings/finding";
-import { findingsOfEveryKindFixture } from "@/features/scheduling/schedules/fixtures";
+import {
+	findingsOfEveryKindFixture,
+	priorRestDiagnosticFixture,
+} from "@/features/scheduling/schedules/fixtures";
 
 const findings = findingsOfEveryKindFixture();
 const diagnostic = (severity: string): Finding => ({
@@ -18,6 +21,10 @@ const conflict: Finding = {
 	conflict: findings.conflicts[0]!,
 };
 const message: Finding = { kind: "message", date: null, message: "Short." };
+const rosterDiagnostic: Finding = {
+	kind: "diagnostic",
+	diagnostic: priorRestDiagnosticFixture(),
+};
 
 describe("findingFamily", () => {
 	it("given_aDiagnostic_when_classed_then_isASetupIssue", () => {
@@ -27,6 +34,7 @@ describe("findingFamily", () => {
 	it.each([
 		["conflict", conflict],
 		["message", message],
+		["diagnostic about the roster", rosterDiagnostic],
 	])("given_a_%s_when_classed_then_isARosterNote", (_, finding) => {
 		expect(findingFamily(finding)).toBe("roster");
 	});

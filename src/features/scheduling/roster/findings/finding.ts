@@ -25,8 +25,11 @@ export const messageFindings = (
 /** Roster notes are reviewed on the roster; setup issues are fixed in the setup. */
 export type FindingFamily = "roster" | "setup";
 
+/** A diagnostic is a setup issue unless the engine says it is about the roster. */
 export const findingFamily = (finding: Finding): FindingFamily =>
-	finding.kind === "diagnostic" ? "setup" : "roster";
+	finding.kind === "diagnostic" && finding.diagnostic.audience !== "roster"
+		? "setup"
+		: "roster";
 
 export type FindingTone = "error" | "warning" | "info";
 

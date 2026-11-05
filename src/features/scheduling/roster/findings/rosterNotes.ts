@@ -1,3 +1,4 @@
+import { isRosterDiagnostic } from "@/features/scheduling/roster/findings/diagnostics";
 import {
 	messageFindings,
 	type Finding,
@@ -50,11 +51,12 @@ const dateNotes = (
 
 /**
  * The roster notes on the days in view: each day's own notes by date, and
- * the notes about one member (their conflicts, their errors and their days'
- * messages) by member, each member where they first appear in that order.
+ * the notes about one member (their conflicts, their errors, their days'
+ * messages and the diagnostics about their roster) by member, each member
+ * where they first appear in that order.
  */
 export const rosterNotes = (
-	{ conflicts, errors, assignmentMessages }: GenerationFindings,
+	{ conflicts, errors, assignmentMessages, diagnostics }: GenerationFindings,
 	visibleDays: ReadonlyArray<string>
 ): RosterNotes => {
 	const shownDays = new Set(visibleDays);
@@ -95,6 +97,14 @@ export const rosterNotes = (
 	for (const { employeeId, day, messages } of assignmentMessages) {
 		if (isOnShownDays(day, shownDays))
 			addForMember(employeeId, messageFindings(day, messages));
+	}
+	for (const diagnostic of diagnostics.filter(isRosterDiagnostic)) {
+		const employeeId = diagnostic.entities["employeeId"];
+		const date = diagnostic.entities["date"];
+		if (typeof date === "string" && !isOnShownDays(date, shownDays)) continue;
+		addForMember(typeof employeeId === "string" ? employeeId : null, [
+			{ kind: "diagnostic", diagnostic },
+		]);
 	}
 
 	const dates = [...new Set([...dayConflicts.keys(), ...dayMessages.keys()])];

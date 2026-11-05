@@ -2869,7 +2869,8 @@
 				"shift": "Shift",
 				"group": "Group"
 			},
-			"dayLabel": "{{name}}, {{day}}: {{kind}}"
+			"dayLabel": "{{name}}, {{day}}: {{kind}}",
+			"priorContextNotChecked": "Last week wasn’t checked: the scheduling engine couldn’t read it, so rest after last week’s shifts isn’t guaranteed on the first day."
 		},
 		"myRoster": {
 			"title": "My roster · {{department}} · {{period}}",
@@ -2899,6 +2900,7 @@
 				"idempotency_conflict": "The request to the engine clashed with an earlier one. Please contact support.",
 				"payload_too_large": "This schedule is too large for the engine to generate.",
 				"snapshot_invalid": "The engine couldn’t use this schedule’s shifts and constraints.",
+				"history_invalid": "The scheduling engine couldn’t read the days before this week. Contact support: the schedule can be generated again once they’re cleared.",
 				"too_many_jobs": "The engine was too busy to take the job.",
 				"job_not_found": "The engine no longer knew about the job.",
 				"unauthorized": "The engine refused the request. Please contact support.",
@@ -2947,6 +2949,11 @@
 				"DEAD_SHIFT": {
 					"label": "Shifts nobody can take",
 					"sentence": "No one in this schedule can take {{shift}}."
+				},
+				"PRIOR_REST_BLOCKS_SHIFTS": {
+					"label": "Rest after last week",
+					"sentence": "{{member}} can’t start before {{restedAt}} on the first day: their last shift before this schedule ended at {{endedAt}}, and {{hours}} h of rest follow it.",
+					"sentenceWholeDay": "{{member}} can’t work on the first day: their last shift before this schedule ended at {{endedAt}}, and {{hours}} h of rest follow it."
 				}
 			},
 			"marker": {
@@ -3043,8 +3050,8 @@
 		},
 		"startingContext": {
 			"title": "Before this week",
-			"explain": "Horaion uses these days to keep rest between shifts and to give a day off to anyone already at their limit. Empty days count as not known.",
-			"hint": "Start with Sunday. Earlier days only matter for people who worked every day.",
+			"explain": "Horaion uses the last day before this week to keep rest between shifts across the start of the schedule. Empty days count as not known and don’t restrict anyone.",
+			"hint": "Only the day before this week (Sunday) is used for now.",
 			"none": "No roster before this week. Everyone starts rested.",
 			"noneWithEntries_one": "No roster before this week. Days are added for {{count}} person; everyone else starts rested.",
 			"noneWithEntries_other": "No roster before this week. Days are added for {{count}} people; everyone else starts rested.",

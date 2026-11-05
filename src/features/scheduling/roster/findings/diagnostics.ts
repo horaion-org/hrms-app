@@ -7,7 +7,7 @@ import {
 import type { FindingsDiagnostic } from "@/features/scheduling/schedules/api";
 
 /*
- * The engine's diagnostics in the app's words. The four codes are those of the
+ * The engine's diagnostics in the app's words. The codes are those of the
  * engine's `scheduling_core/diagnostics/checks.py`; the set is open, so a code
  * added later reads by its code and the engine's own sentence.
  */
@@ -17,6 +17,7 @@ export const KNOWN_DIAGNOSTIC_CODES = [
 	"RULE_REFERENCES_MISSING_ENTITY",
 	"UNASSIGNABLE_EMPLOYEE",
 	"DEAD_SHIFT",
+	"PRIOR_REST_BLOCKS_SHIFTS",
 ] as const;
 
 type KnownDiagnosticCode = (typeof KNOWN_DIAGNOSTIC_CODES)[number];
@@ -25,6 +26,20 @@ const isKnownCode = (code: string): code is KnownDiagnosticCode =>
 	(KNOWN_DIAGNOSTIC_CODES as ReadonlyArray<string>).includes(code);
 
 const key = "scheduling.findings.codes";
+
+/**
+ * Whether a diagnostic is information about the roster rather than a setup
+ * issue: the engine says so with its audience ("roster"), as for the rest
+ * after last week's shifts.
+ */
+export const isRosterDiagnostic = (diagnostic: FindingsDiagnostic): boolean =>
+	diagnostic.audience === "roster";
+
+/** The diagnostics to fix in the setup: every one not about the roster. */
+export const setupDiagnostics = (
+	diagnostics: ReadonlyArray<FindingsDiagnostic>
+): Array<FindingsDiagnostic> =>
+	diagnostics.filter((diagnostic) => !isRosterDiagnostic(diagnostic));
 
 /** One code's diagnostics, in the order the engine reported them. */
 export type DiagnosticGroup = {
@@ -60,6 +75,17 @@ const entityText = (
 	const value = diagnostic.entities[entity];
 	return typeof value === "string" ? value : null;
 };
+
+/** Whether the rest after last week ends on the period's first day, not after it. */
+const restEndsOnTheFirstDay = (diagnostic: FindingsDiagnostic): boolean =>
+	entityText(diagnostic, "restedAt")?.slice(0, 10) ===
+	entityText(diagnostic, "date");
+
+/** The clock time of a local `yyyy-MM-ddTHH:mm` the engine sent, or null. */
+const entityClockTime = (
+	diagnostic: FindingsDiagnostic,
+	entity: string
+): string | null => entityText(diagnostic, entity)?.slice(11, 16) ?? null;
 
 /** The name `id` stands for in `names`, or `fallback` when it doesn't resolve. */
 const nameOf = (
@@ -115,5 +141,19 @@ export const diagnosticSentence = (
 					t("scheduling.findings.unknownShift")
 				),
 			});
+		case "PRIOR_REST_BLOCKS_SHIFTS":
+			return t(
+				`${key}.${code}.${restEndsOnTheFirstDay(diagnostic) ? "sentence" : "sentenceWholeDay"}`,
+				{
+					member: nameOf(
+						names.members,
+						entityText(diagnostic, "employeeId"),
+						t("scheduling.findings.unknownMember")
+					),
+					endedAt: entityClockTime(diagnostic, "previousShiftEnd") ?? "",
+					restedAt: entityClockTime(diagnostic, "restedAt") ?? "",
+					hours: diagnostic.entities["minimumRestHours"],
+				}
+			);
 	}
 };
