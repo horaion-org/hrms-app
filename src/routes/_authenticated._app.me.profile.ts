@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { myTermsQuery } from "@/features/employmentTerms/api";
 import { myProfileQuery } from "@/features/people/api";
 import { MyProfile, MyProfileProblem } from "@/pages/MyProfile";
 
@@ -8,6 +9,8 @@ export const Route = createFileRoute("/_authenticated/_app/me/profile")({
 			"currentCompany" in context && context.currentCompany.kind === "settled"
 				? context.currentCompany.company.companyId
 				: "";
+		// Their own employment terms start loading beside the profile.
+		void context.queryClient.prefetchQuery(myTermsQuery(companyId));
 		return context.queryClient.ensureQueryData(myProfileQuery(companyId));
 	},
 	component: MyProfile,
