@@ -2927,6 +2927,7 @@
 				"inProgress": "This schedule is being generated. Try again once the run finishes.",
 				"notGenerated": "This schedule has no generated roster to publish or reject.",
 				"alreadyDecided": "This roster was already published or rejected. Reload the page to see it.",
+				"weekAlreadyPublished": "This department already has a published roster for this week. Delete that schedule first, then publish this one.",
 				"reasonRejected": "Enter a reason of up to 2,000 characters.",
 				"forbidden": "You no longer have permission to publish or reject this roster.",
 				"failed": "We couldn’t save the decision. Try again."
