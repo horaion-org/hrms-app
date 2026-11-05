@@ -7,6 +7,7 @@ import { resetApiClient } from "@/common/api-client";
 import { SuccessNotifications } from "@/common/SuccessNotifications";
 import {
 	currentUserReply,
+	membership,
 	openApp,
 	type OpenedApp,
 } from "@/common/testing/openApp";
@@ -17,6 +18,7 @@ import {
 	stubApi,
 	type StubReply,
 } from "@/common/testing/stubApi";
+import { CURRENT_COMPANY_KEY } from "@/features/auth/currentCompany";
 import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
 import { authTestI18n } from "@/features/auth/testingI18n";
@@ -305,6 +307,55 @@ describe("workspace name", () => {
 				calls.filter((call) => call.path === "/api/v1/me/workspace")
 			).toHaveLength(2);
 		});
+	});
+
+	it("shows the new name in the company switcher without a reload", async () => {
+		const user = userEvent.setup();
+		// The picker's AuthLayout asks whether motion is reduced.
+		vi.stubGlobal("matchMedia", () => ({ matches: true }));
+		const otherCompany = membership("c-2");
+		const calls = stubApi({
+			[REFRESH]: accessPassReply(),
+			[ME]: [
+				currentUserReply([
+					{ ...membership("c-1"), companyName: "Horaion" },
+					otherCompany,
+				]),
+				currentUserReply([
+					{ ...membership("c-1"), companyName: "Prospect Protection" },
+					otherCompany,
+				]),
+			],
+			[WORKSPACE]: workspaceReply([
+				{ uuid: "c-1", name: "Horaion", permissions: ["company:update"] },
+				{ uuid: "c-2", name: "Company c-2" },
+			]),
+			[RENAME]: {
+				status: 200,
+				body: envelope({ companyId: "c-1", name: "Prospect Protection" }),
+			},
+		});
+		localStorage.setItem(CURRENT_COMPANY_KEY, "c-1");
+		await open();
+		const name = await screen.findByRole("textbox", { name: "Workspace Name" });
+
+		await user.clear(name);
+		await user.type(name, "Prospect Protection");
+		await user.click(screen.getByRole("button", { name: "Save Changes" }));
+		// The name lives in /me too, which is read once per session: it is read again.
+		await waitFor(() => {
+			expect(calls.filter((call) => call.path === "/api/v1/me")).toHaveLength(
+				2
+			);
+		});
+		await user.click(screen.getByRole("button", { name: "Switch company" }));
+
+		expect(
+			await screen.findByRole("button", { name: "Prospect Protection c-1" })
+		).toBeVisible();
+		expect(
+			screen.queryByRole("button", { name: "Horaion c-1" })
+		).not.toBeInTheDocument();
 	});
 
 	it("shows the name read-only, with the reason, without permission to update the company", async () => {

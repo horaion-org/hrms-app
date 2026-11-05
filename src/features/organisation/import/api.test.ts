@@ -94,4 +94,20 @@ describe("organisation import client", () => {
 			unitId: "b-9",
 		});
 	});
+
+	it("reads an import status this build does not know as UNKNOWN instead of failing the read", async () => {
+		stubApi({
+			[`POST ${IMPORTS}`]: {
+				status: 201,
+				body: envelope({
+					...organisationImportFixture(),
+					status: "ROLLED_BACK",
+				}),
+			},
+		});
+
+		const finished = await startOrganisationImport("c-1", file);
+
+		expect(finished.status).toBe("UNKNOWN");
+	});
 });

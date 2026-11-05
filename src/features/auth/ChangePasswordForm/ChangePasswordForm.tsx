@@ -51,10 +51,16 @@ export const ChangePasswordForm = (): FunctionComponent => {
 	const [failure, setFailure] = useState<unknown>(null);
 	const [message, setMessage] = useState<string | null>(null);
 	const hold = useRetryHold(failure);
+	// A refusal arrives while the fieldset is still disabled, so its field is focused once the form is released.
+	const refusedField = useRef<keyof ChangePasswordValues | null>(null);
 	const messageContainer = useRef<HTMLDivElement>(null);
 	useEffect(() => {
-		if (message) messageContainer.current?.focus();
-	}, [message]);
+		if (isSubmitting) return;
+		if (refusedField.current) {
+			setFocus(refusedField.current);
+			refusedField.current = null;
+		} else if (message) messageContainer.current?.focus();
+	}, [isSubmitting, message, setFocus]);
 
 	const showFailure = (cause: unknown): void => {
 		setFailure(cause);
@@ -64,7 +70,7 @@ export const ChangePasswordForm = (): FunctionComponent => {
 				type: "server",
 				message: t(refusal.messageKey),
 			});
-			setFocus(refusal.field);
+			refusedField.current = refusal.field;
 			return;
 		}
 		setMessage(
@@ -94,7 +100,11 @@ export const ChangePasswordForm = (): FunctionComponent => {
 	const newPasswordError = errors.newPassword?.message;
 
 	return (
-		<form noValidate className="space-y-8" onSubmit={handleSubmit(submit)}>
+		<form
+			noValidate
+			className="space-y-8"
+			onSubmit={(event) => handleSubmit(submit)(event)}
+		>
 			<fieldset className="flex flex-col gap-6" disabled={isSubmitting}>
 				<legend className="sr-only">{t("auth.changePassword.details")}</legend>
 				<AuthField

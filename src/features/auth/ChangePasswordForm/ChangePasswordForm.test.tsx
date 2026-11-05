@@ -212,6 +212,36 @@ describe("Change password", () => {
 		).toBe(false);
 	});
 
+	it("focuses a refused field only once the form is enabled again", async () => {
+		stubApi(routes(problemReply(400, "INVALID_CREDENTIALS")));
+		// Answer a task later, as a network does, so the form renders as submitting first.
+		const answerNow = globalThis.fetch;
+		vi.stubGlobal(
+			"fetch",
+			async (...request: Parameters<typeof fetch>): Promise<Response> => {
+				await new Promise((resolve) => {
+					setTimeout(resolve, 0);
+				});
+				return answerNow(...request);
+			}
+		);
+		await openForm();
+		await fill();
+		// A browser ignores focus() on a field inside a disabled fieldset; jsdom does not, so record the state.
+		const focusedWhileDisabled: Array<boolean> = [];
+		const field = screen.getByLabelText(copy.currentPassword);
+		const focus = vi.spyOn(field, "focus");
+		focus.mockImplementation(() => {
+			focusedWhileDisabled.push(field.closest("fieldset")?.disabled ?? false);
+		});
+
+		await submit();
+
+		await waitFor(() => {
+			expect(focusedWhileDisabled).toEqual([false]);
+		});
+	});
+
 	it.each([
 		["PASSWORD_POLICY_VIOLATION", copy.passwordPolicy],
 		["PASSWORD_UNCHANGED", copy.unchanged],

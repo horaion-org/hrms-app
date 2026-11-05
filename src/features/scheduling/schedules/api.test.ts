@@ -216,17 +216,26 @@ describe("schedules client", () => {
 		]);
 	});
 
-	it("rejects a schedule with an unknown status instead of trusting its type", async () => {
+	it("reads a schedule and run status this build does not know as UNKNOWN instead of failing the read", async () => {
+		const generated = generatedScheduleFixture({ status: "GENERATED" });
 		stubApi({
 			[`GET ${SCHEDULES}/s-1`]: {
 				status: 200,
-				body: envelope(scheduleFixture({ status: "ARCHIVED" as "DRAFT" })),
+				body: envelope({
+					...generated,
+					status: "ARCHIVED",
+					generation: { ...generated.generation, status: "CANCELLED" },
+				}),
 			},
 		});
 
-		await expect(fetchSchedule("c-1", UNIT, "s-1")).rejects.toBeInstanceOf(
-			UnexpectedResponseError
-		);
+		const schedule = await fetchSchedule("c-1", UNIT, "s-1");
+
+		expect(schedule.status).toBe("UNKNOWN");
+		expect(schedule.generation?.status).toBe("UNKNOWN");
+		// Unknown is neither in progress nor something to generate again.
+		expect(generationInProgress(schedule)).toBe(false);
+		expect(regenerable(schedule)).toBe(false);
 	});
 
 	it("lists a draft's live shifts and a generated schedule's frozen copies", async () => {
@@ -421,12 +430,13 @@ describe("a schedule's generation", () => {
 		);
 	});
 
-	it("rejects a run whose status it doesn't know instead of trusting its type", async () => {
+	it("reads a run status it doesn't know as UNKNOWN, which is not an open run", async () => {
 		stubApi({
 			[`GET ${SCHEDULES}/s-1`]: {
 				status: 200,
 				body: envelope(
 					generatedScheduleFixture({
+						status: "GENERATED",
 						generation: generationFixture({
 							status: "RETRYING" as "SUBMITTED",
 						}),
@@ -435,9 +445,10 @@ describe("a schedule's generation", () => {
 			},
 		});
 
-		await expect(fetchSchedule("c-1", UNIT, "s-1")).rejects.toBeInstanceOf(
-			UnexpectedResponseError
-		);
+		const schedule = await fetchSchedule("c-1", UNIT, "s-1");
+
+		expect(schedule.generation?.status).toBe("UNKNOWN");
+		expect(generationInProgress(schedule)).toBe(false);
 	});
 
 	it.each([

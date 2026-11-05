@@ -178,7 +178,10 @@
 		"myFailed": "We couldn’t load your leave requests. Try again.",
 		"controls": "Leave list controls",
 		"pendingCount_one": "{{count}} pending",
-		"pendingCount_other": "{{count}} pending"
+		"pendingCount_other": "{{count}} pending",
+		"typesLoading": "Loading leave types…",
+		"typesFailed": "We couldn’t load the leave types.",
+		"retry": "Try again"
 	},
 	"availability": {
 		"title": "Availability",
@@ -889,7 +892,8 @@
 					"QUEUED": "Waiting",
 					"RUNNING": "Running",
 					"COMPLETED": "Finished",
-					"FAILED": "Stopped"
+					"FAILED": "Stopped",
+					"UNKNOWN": "Unknown"
 				},
 				"open": "View"
 			},
@@ -1702,6 +1706,42 @@
 				"scheduleGenerated": "Schedule generated",
 				"scheduleDeleted": "Schedule deleted",
 				"organisationImported": "Organisation imported"
+			},
+			"fallback": {
+				"named": "{{entity}} {{verb}}: {{name}}",
+				"unnamed": "{{entity}} {{verb}}"
+			},
+			"verbs": {
+				"created": "created",
+				"updated": "updated",
+				"deleted": "deleted",
+				"added": "added",
+				"deactivated": "deactivated",
+				"reactivated": "reactivated",
+				"granted": "granted",
+				"revoked": "revoked",
+				"approved": "approved",
+				"rejected": "rejected",
+				"started": "started",
+				"finished": "finished"
+			},
+			"entityTypes": {
+				"Company": "Workspace",
+				"Branch": "Branch",
+				"Department": "Department",
+				"AccessRole": "Role",
+				"AccessRoleAssignment": "Role assignment",
+				"BranchMembership": "Branch membership",
+				"DepartmentMembership": "Department membership",
+				"JobTitle": "Job title",
+				"MemberProfile": "Employee",
+				"MemberNote": "Note",
+				"MemberImportJob": "Employee import",
+				"Skill": "Skill",
+				"LeaveRequest": "Leave request",
+				"Schedule": "Schedule",
+				"Shift": "Shift",
+				"Constraint": "Constraint"
 			}
 		},
 		"headsField": {
@@ -1910,7 +1950,8 @@
 				"GENERATED": "Generated",
 				"GENERATION_FAILED": "Generation failed",
 				"PUBLISHED": "Published",
-				"REJECTED": "Rejected"
+				"REJECTED": "Rejected",
+				"UNKNOWN": "Unknown"
 			},
 			"history": {
 				"title": "Schedule history",
@@ -2390,7 +2431,8 @@
 			"legend": "Legend",
 			"kinds": {
 				"off": "Day Off",
-				"leave": "On Leave"
+				"leave": "On Leave",
+				"unknown": "Unknown"
 			},
 			"roster": "Roster",
 			"staff": "Staff",

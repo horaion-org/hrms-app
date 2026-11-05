@@ -69,12 +69,12 @@ export const StartingDaysDialog = ({
 			label: `${shift.name} ${shift.startTime}–${shift.endTime}`,
 		})),
 	];
-	const lockedLabel = (cell: StartingCell): string =>
-		cell.kind === "LEAVE"
-			? t("scheduling.detail.kinds.leave")
-			: cell.kind === "OFF"
-				? t("scheduling.detail.kinds.off")
-				: (cell.shiftName ?? t(`${key}.worked`));
+	const lockedLabel = (cell: StartingCell): string => {
+		if (cell.kind === "LEAVE") return t("scheduling.detail.kinds.leave");
+		if (cell.kind === "OFF") return t("scheduling.detail.kinds.off");
+		if (cell.kind === "UNKNOWN") return t("scheduling.detail.kinds.unknown");
+		return cell.shiftName ?? t(`${key}.worked`);
+	};
 	const dayColumn = (
 		date: string,
 		index: number

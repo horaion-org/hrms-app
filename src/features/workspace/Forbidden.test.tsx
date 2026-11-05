@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resetApiClient } from "@/common/api-client";
 import {
 	currentUserReply,
+	membership,
 	openApp,
 	type OpenedApp,
 } from "@/common/testing/openApp";
@@ -120,6 +121,41 @@ describe("Forbidden page", () => {
 	it("leaves the page to explain a workspace that failed to load", async () => {
 		stubApi(routes(problemReply(500, "INTERNAL_ERROR")));
 		const opened = await open("/activity");
+
+		expect(
+			await screen.findByRole("heading", { level: 1, name: "Recent Activity" })
+		).toBeVisible();
+		expect(opened.router.state.location.pathname).toBe("/activity");
+	});
+
+	it("lets someone with several companies choose one before judging the deep link", async () => {
+		// The picker's AuthLayout asks whether motion is reduced.
+		vi.stubGlobal("matchMedia", () => ({ matches: true }));
+		const user = userEvent.setup();
+		stubApi({
+			...routes(),
+			"GET /api/v1/me": currentUserReply([
+				membership("c-1"),
+				membership("c-2"),
+			]),
+			"GET /api/v1/me/workspace": {
+				status: 200,
+				body: envelope({
+					companies: ["c-1", "c-2"].map((uuid) => ({
+						uuid,
+						name: `Company ${uuid}`,
+						permissions: ["audit_event:read"],
+						branches: [],
+					})),
+				}),
+			},
+		});
+		const opened = await open("/activity");
+
+		// No company is chosen yet: the picker shows, and the link is kept.
+		await user.click(
+			await screen.findByRole("button", { name: "Company c-2 c-2" })
+		);
 
 		expect(
 			await screen.findByRole("heading", { level: 1, name: "Recent Activity" })

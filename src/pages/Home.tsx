@@ -41,6 +41,7 @@ import {
 	activityDetails,
 	describeActivity,
 } from "@/features/organisation/activity";
+import { ActivityTitle } from "@/features/organisation/ActivityTitle";
 import type { Refusal } from "@/features/organisation/refusal";
 import {
 	useCurrentCompanyId,
@@ -354,13 +355,12 @@ const Dashboard = (): FunctionComponent => {
 							<ul className="mt-6 flex flex-col gap-7">
 								{activity.items.map((event) => {
 									const described = describeActivity(event, t);
-									if (!described) return null;
 									return (
 										<li key={described.id}>
 											<ActivityItem
 												details={activityDetails(event, t, now, language)}
 												icon={described.icon}
-												title={described.title}
+												title={<ActivityTitle activity={described} />}
 											/>
 										</li>
 									);

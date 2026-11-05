@@ -15,6 +15,7 @@ export const scheduleStatusTones: Record<ScheduleStatus, BadgeTone> = {
 	GENERATION_FAILED: "error",
 	PUBLISHED: "success",
 	REJECTED: "error",
+	UNKNOWN: "neutral",
 };
 
 /*

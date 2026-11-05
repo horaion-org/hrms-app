@@ -43,31 +43,37 @@ import { retry } from "@/features/workspace/retry";
  * `docs/implementation/2026-10-27-roster-read-model.md`.
  */
 
-const scheduleStatusSchema = z.enum([
-	"DRAFT",
-	"GENERATION_REQUESTED",
-	"GENERATED",
-	"GENERATION_FAILED",
-	"PUBLISHED",
-	"REJECTED",
-]);
+// A status a newer API adds reads as UNKNOWN instead of failing the whole answer.
+const scheduleStatusSchema = z
+	.enum([
+		"DRAFT",
+		"GENERATION_REQUESTED",
+		"GENERATED",
+		"GENERATION_FAILED",
+		"PUBLISHED",
+		"REJECTED",
+		"UNKNOWN",
+	])
+	.catch("UNKNOWN");
 
 /**
  * A DRAFT can be changed; once generation is requested it is frozen, and its
  * generation run ends as GENERATED or GENERATION_FAILED. A GENERATED roster
  * is then decided once: PUBLISHED (final for its week) or REJECTED with a
- * reason (it can be generated again).
+ * reason (it can be generated again). UNKNOWN stands for a status this
+ * build does not know yet: it is shown as "Unknown" and offers no action.
  */
 export type ScheduleStatus = z.infer<typeof scheduleStatusSchema>;
 
-const generationRunStatusSchema = z.enum([
-	"PENDING_SUBMIT",
-	"SUBMITTED",
-	"SUCCEEDED",
-	"FAILED",
-]);
+const generationRunStatusSchema = z
+	.enum(["PENDING_SUBMIT", "SUBMITTED", "SUCCEEDED", "FAILED", "UNKNOWN"])
+	.catch("UNKNOWN");
 
-/** A generation run is open while PENDING_SUBMIT or SUBMITTED, then ends as SUCCEEDED or FAILED. */
+/**
+ * A generation run is open while PENDING_SUBMIT or SUBMITTED, then ends as
+ * SUCCEEDED or FAILED. UNKNOWN is a status this build does not know yet,
+ * read as neither open nor failed.
+ */
 export type GenerationRunStatus = z.infer<typeof generationRunStatusSchema>;
 
 const OPEN_RUN_STATUSES: ReadonlyArray<GenerationRunStatus> = [

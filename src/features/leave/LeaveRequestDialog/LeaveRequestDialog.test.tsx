@@ -463,3 +463,51 @@ it("cannot submit before the company's leave types arrive", () => {
 	);
 	expect(screen.getByRole("button", { name: "Submit request" })).toBeDisabled();
 });
+
+it("says the leave types are loading, and holds Submit, while they are read", () => {
+	render(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveRequestDialog
+				leaveTypesStatus="pending"
+				mode="apply"
+				onApprove={vi.fn()}
+				onClose={vi.fn()}
+				onCreate={vi.fn()}
+				onReject={vi.fn()}
+			/>
+		</I18nextProvider>
+	);
+
+	const type = screen.getByRole("button", { name: "Type" });
+	expect(type).toHaveTextContent("Loading leave types…");
+	expect(type).toBeDisabled();
+	expect(screen.getByRole("button", { name: "Submit request" })).toBeDisabled();
+});
+
+it("explains leave types that failed to load and offers to read them again", async () => {
+	const user = userEvent.setup();
+	const onRetryLeaveTypes = vi.fn();
+	render(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveRequestDialog
+				leaveTypesStatus="error"
+				mode="apply"
+				onApprove={vi.fn()}
+				onClose={vi.fn()}
+				onCreate={vi.fn()}
+				onReject={vi.fn()}
+				onRetryLeaveTypes={onRetryLeaveTypes}
+			/>
+		</I18nextProvider>
+	);
+
+	expect(screen.getByRole("alert")).toHaveTextContent(
+		"We couldn’t load the leave types."
+	);
+	expect(
+		screen.queryByRole("button", { name: "Type" })
+	).not.toBeInTheDocument();
+	expect(screen.getByRole("button", { name: "Submit request" })).toBeDisabled();
+	await user.click(screen.getByRole("button", { name: "Try again" }));
+	expect(onRetryLeaveTypes).toHaveBeenCalledTimes(1);
+});

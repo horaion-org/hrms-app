@@ -299,6 +299,8 @@ const RUN_FOR_STATUS: Record<
 		}),
 	PUBLISHED: () => generationFixture(),
 	REJECTED: () => generationFixture(),
+	// A status this build does not know yet: its run is as unknown to it.
+	UNKNOWN: () => generationFixture({ status: "UNKNOWN" }),
 };
 
 /** The decision a PUBLISHED or REJECTED schedule carries: José decided the roster he asked for. */
