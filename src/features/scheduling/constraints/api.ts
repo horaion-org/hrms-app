@@ -24,6 +24,11 @@ import { retry } from "@/features/workspace/retry";
  * many values of each and their ranges, and the constraint dialog builds its
  * form from that. Paths, fields and codes follow the API's
  * `docs/implementation/2026-10-12-scheduling-constraints.md` and ADR-0050.
+ *
+ * A Department also sees its company's Scheduling policy (ADR-0058): the
+ * company's constraints come first in its list, each with its lock, and a
+ * Department may replace one for itself (`overridesConstraintId`), never less
+ * strictly than a locked one.
  */
 
 export const constraintTypeSchema = z.enum([
@@ -102,6 +107,39 @@ export const CONSTRAINT_COMPARISONS = [
 
 export type ConstraintComparison = (typeof CONSTRAINT_COMPARISONS)[number];
 
+// A level, lock or direction a newer API adds reads as UNKNOWN instead of failing the whole answer.
+const policyLevelSchema = z
+	.enum(["COMPANY", "DEPARTMENT", "UNKNOWN"])
+	.catch("UNKNOWN");
+
+/** Where a constraint is set: the company's Scheduling policy, or one Department. */
+export type PolicyLevel = z.infer<typeof policyLevelSchema>;
+
+/** How a company constraint binds Departments, in the order the dialog offers them. */
+export const POLICY_LOCKS = ["LOCKED", "DEFAULT"] as const;
+
+/** LOCKED: always applied, only made stricter; DEFAULT: ticked on new drafts, may be left out. */
+export type PolicyLock = (typeof POLICY_LOCKS)[number];
+
+const policyLockSchema = z
+	.enum(["LOCKED", "DEFAULT", "UNKNOWN"])
+	.nullable()
+	.catch(null);
+
+const fieldStrictnessSchema = z
+	.enum([
+		"HIGHER_IS_STRICTER",
+		"FOLLOWS_COMPARISON",
+		"AGAINST_COMPARISON",
+		"SUPERSET_IS_STRICTER",
+		"MUST_MATCH",
+		"UNKNOWN",
+	])
+	.catch("UNKNOWN");
+
+/** Which way a field's values protect people more, as the API declares it per field. */
+export type FieldStrictness = z.infer<typeof fieldStrictnessSchema>;
+
 export const constraintValueSchema = z.object({
 	field: constraintFieldSchema,
 	/** As the API takes it: a number, a comparison or weekday name, or a job title's or shift's id. */
@@ -113,9 +151,10 @@ export const constraintValueSchema = z.object({
 /** One value of a constraint; a list field has one per item. */
 export type ConstraintValue = z.infer<typeof constraintValueSchema>;
 
-const departmentConstraintSchema = z.object({
+export const departmentConstraintSchema = z.object({
 	constraintId: z.string(),
-	departmentId: z.string(),
+	/** Null for a company constraint, which belongs to no Department. */
+	departmentId: z.string().nullable(),
 	name: z.string(),
 	type: constraintTypeSchema,
 	category: constraintCategorySchema,
@@ -126,6 +165,15 @@ const departmentConstraintSchema = z.object({
 	values: z.array(constraintValueSchema),
 	createdAt: z.string(),
 	updatedAt: z.string(),
+	level: policyLevelSchema,
+	/** A company constraint's lock; null for a Department's own. */
+	lock: policyLockSchema,
+	/** Whether the Department's schedules must apply it: a locked company constraint, or its replacement here. */
+	locked: z.boolean().catch(false),
+	/** The company constraint a Department constraint replaces. */
+	overridesConstraintId: z.string().nullable().catch(null),
+	/** On a Department's list, the Department constraint that replaces this company constraint there. */
+	overriddenByConstraintId: z.string().nullable().catch(null),
 });
 
 /** One of a Department's live constraints, as the constraint routes answer it. */
@@ -140,6 +188,8 @@ export type ConstraintBody = {
 	status: ConstraintStatus;
 	/** One entry per value, a list field one per item. */
 	values: Array<Pick<ConstraintValue, "field" | "value">>;
+	/** The company constraint this one replaces in the Department; fixed once created. */
+	overridesConstraintId?: string | null;
 };
 
 const constraintPath = (
@@ -243,6 +293,7 @@ const constraintFieldSpecSchema = z.object({
 	/** A number field's range; null for any other kind. */
 	min: z.number().nullable(),
 	max: z.number().nullable(),
+	strictness: fieldStrictnessSchema,
 });
 
 /** One field a constraint type takes, as the API declares it. */
@@ -255,6 +306,8 @@ const constraintTypeOptionSchema = z.object({
 	hasRequirement: z.boolean(),
 	/** Whether a Department may hold only one constraint of the type. */
 	onePerDepartment: z.boolean(),
+	/** The levels it may be set at; only types that link to nothing reach COMPANY. */
+	levels: z.array(policyLevelSchema).catch([]),
 	/** The fields it takes, in the order the dialog shows them. */
 	fields: z.array(constraintFieldSpecSchema),
 });
@@ -268,7 +321,7 @@ const constraintLinkOptionSchema = z.object({
 });
 
 /** The API groups generic { id, name } choices by link kind (ADR-0050). */
-const constraintOptionsSchema = z
+export const constraintOptionsSchema = z
 	.object({
 		types: z.array(constraintTypeOptionSchema),
 		links: z.object({

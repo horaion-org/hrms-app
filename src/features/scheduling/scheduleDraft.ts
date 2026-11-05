@@ -5,7 +5,10 @@ import {
 	timeOfDay,
 	timeSteps,
 } from "@/common/timeOfDay";
-import type { ConstraintStatus } from "@/features/scheduling/constraints/api";
+import type {
+	ConstraintStatus,
+	DepartmentConstraint,
+} from "@/features/scheduling/constraints/api";
 import type { DepartmentPath } from "@/features/scheduling/paths";
 import type {
 	Schedule,
@@ -39,9 +42,18 @@ export { TIME_STEP_MINUTES, timeSteps, WEEKDAYS, type ShiftRole, type Weekday };
  * never sent to a constraint route, since a generated schedule is never
  * changed again.
  */
-export type Constraint = Omit<ScheduleConstraint, "included" | "frozen"> & {
+export type Constraint = Omit<
+	ScheduleConstraint,
+	"included" | "frozen" | "setBy"
+> & {
 	/** A live constraint's; a frozen copy has none. */
 	status?: ConstraintStatus;
+	/** The company's or Department's name, as a schedule's read gives it. */
+	setBy?: string | null;
+	/** A company constraint's lock, as the Department's list gives it. */
+	lock?: DepartmentConstraint["lock"];
+	/** On the Department's list, the Department constraint replacing this company one there. */
+	overriddenByConstraintId?: string | null;
 };
 
 /** Only an ACTIVE constraint can be ticked; the API refuses an inactive one. */

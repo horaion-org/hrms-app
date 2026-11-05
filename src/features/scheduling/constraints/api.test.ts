@@ -149,6 +149,7 @@ describe("constraints client", () => {
 			category: "WORKING_HOURS",
 			hasRequirement: false,
 			onePerDepartment: true,
+			levels: ["COMPANY", "DEPARTMENT"],
 			fields: [
 				{
 					field: "REST_HOURS",
@@ -157,6 +158,7 @@ describe("constraints client", () => {
 					maxCount: 1,
 					min: 1,
 					max: 24,
+					strictness: "HIGHER_IS_STRICTER",
 				},
 			],
 		});

@@ -491,6 +491,14 @@ const scheduleConstraintSchema = z.object({
 	included: z.boolean(),
 	/** A copy made at generation, never changed again. */
 	frozen: z.boolean(),
+	/** Where it is set (ADR-0058); for a frozen copy, where it was set then. */
+	level: z.enum(["COMPANY", "DEPARTMENT", "UNKNOWN"]).catch("UNKNOWN"),
+	/** The company's or Department's name; for a frozen copy, its name at generation. */
+	setBy: z.string().nullable().catch(null),
+	/** Whether the schedule must apply it: a locked company constraint, or a Department's replacement of one. */
+	locked: z.boolean().catch(false),
+	/** The company constraint a live Department constraint replaces; null once frozen. */
+	overridesConstraintId: z.string().nullable().catch(null),
 });
 
 /**
