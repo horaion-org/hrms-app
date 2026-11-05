@@ -1102,8 +1102,9 @@ const aishaMonday = (): ScheduleAssignment =>
 	)!;
 
 /**
- * A generated roster that someone holding `schedule:update` changes by hand:
- * the schedule, its roster and its latest change follow what was applied.
+ * A generated roster that someone holding `schedule:edit_shift` (and neither
+ * `schedule:update` nor `shift:read`) changes by hand: the schedule, its
+ * roster and its latest change follow what was applied.
  */
 const editableRoster = (
 	routes: Routes = {}
@@ -1115,7 +1116,7 @@ const editableRoster = (
 	return {
 		landed,
 		routes: {
-			...signedIn(["schedule:read", "schedule:update", "shift:read"]),
+			...signedIn(["schedule:read", "schedule:edit_shift"]),
 			[`GET ${SCHEDULE_READ}`]: () =>
 				ok(
 					generatedScheduleFixture({
@@ -1124,7 +1125,7 @@ const editableRoster = (
 					})
 				),
 			[`GET ${ASSIGNMENTS}`]: () => ok(landed.rows),
-			[`GET ${SCHEDULE}/shifts`]: ok(frozenShiftsFixture()),
+			[`GET ${ROSTER_CHANGES}/shifts`]: ok(frozenShiftsFixture()),
 			[`GET ${ROSTER_CHANGES}/latest`]: () =>
 				ok({
 					change:
@@ -1464,9 +1465,48 @@ it("keeps the roster read-only for someone who may only read it", async () => {
 	expect(screen.queryByRole("button", { name: /Day off$/ })).toBeNull();
 });
 
-it("keeps a published roster read-only even for someone who may update it", async () => {
+it("keeps the roster read-only for someone who may change a draft but not edit shifts", async () => {
+	const calls = await openRoster({
+		...signedIn(["schedule:read", "schedule:update", "shift:read"]),
+		[`GET ${SCHEDULE_READ}`]: ok(
+			generatedScheduleFixture({ status: "GENERATED" })
+		),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+		[`GET ${SCHEDULE}/shifts`]: ok(frozenShiftsFixture()),
+	});
+	const user = userEvent.setup();
+
+	await user.click(
+		await screen.findByRole("button", {
+			name: "Aisha Rahman, Mon 09:00 – 15:00",
+		})
+	);
+
+	expect(
+		screen.getByRole("complementary", { name: "Shift Details" })
+	).toBeVisible();
+	expect(screen.queryByRole("radio", { name: "Day off" })).toBeNull();
+	expect(readsOf(calls, `${ROSTER_CHANGES}/shifts`)).toHaveLength(0);
+	expect(readsOf(calls, `${ROSTER_CHANGES}/latest`)).toHaveLength(0);
+});
+
+it("offers another shift to an editor without shift:read, from the frozen shifts the editor reads", async () => {
+	const { routes } = editableRoster();
+	const calls = await openRoster(routes);
+	const user = userEvent.setup();
+
+	const panel = await openAishaMonday(user);
+
+	expect(
+		await within(panel).findByRole("radio", { name: "Another shift" })
+	).toBeVisible();
+	expect(readsOf(calls, `${ROSTER_CHANGES}/shifts`)).toHaveLength(1);
+	expect(readsOf(calls, `${SCHEDULE}/shifts`)).toHaveLength(0);
+});
+
+it("keeps a published roster read-only even for someone who may edit shifts", async () => {
 	await openRoster({
-		...signedIn(["schedule:read", "schedule:update"]),
+		...signedIn(["schedule:read", "schedule:edit_shift"]),
 		[`GET ${SCHEDULE_READ}`]: ok(
 			generatedScheduleFixture({ status: "PUBLISHED" })
 		),

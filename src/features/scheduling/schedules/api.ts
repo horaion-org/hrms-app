@@ -469,7 +469,7 @@ const scheduleShiftSchema = z.object({
  */
 export type ScheduleShift = z.infer<typeof scheduleShiftSchema>;
 
-const scheduleShiftsSchema = z.array(scheduleShiftSchema);
+export const scheduleShiftsSchema = z.array(scheduleShiftSchema);
 
 /** A schedule's shifts, ordered by group then name. */
 export const fetchScheduleShifts = (

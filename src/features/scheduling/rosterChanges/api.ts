@@ -10,12 +10,15 @@ import {
 	rosterCellSchema,
 	scheduleAssignmentSchema,
 	scheduleKey,
+	scheduleShiftsSchema,
+	type ScheduleShift,
 } from "@/features/scheduling/schedules/api";
 import { administrativeMeta } from "@/features/workspace/queryAccess";
 
 /*
  * Hand changes to a generated roster (hrms-backend-v2 docs/adr/0062): preview a
- * change, apply it, undo the latest one, read the latest one. The API checks
+ * change, apply it, undo the latest one, read the latest one and the frozen
+ * shifts a change may name, all under `schedule:edit_shift`. The API checks
  * plain facts about the data (leave, roles, availability, coverage) and
  * never re-checks the scheduling rules; that is the engine's job, so every
  * preview says the rules weren't checked again.
@@ -216,6 +219,23 @@ export const fetchLatestRosterChange = (
 		}
 	);
 
+/**
+ * The schedule's frozen shifts a change may name, read under
+ * `schedule:edit_shift` so an editor needs no `shift:read`. Frozen copies
+ * only: a draft answers none.
+ */
+export const fetchRosterChangeShifts = (
+	companyId: string,
+	unit: DepartmentPath,
+	scheduleId: string,
+	signal?: AbortSignal
+): Promise<Array<ScheduleShift>> =>
+	apiRequest(
+		`${rosterChangesPath(companyId, unit, scheduleId)}/shifts`,
+		scheduleShiftsSchema,
+		{ signal }
+	);
+
 /** The key a roster's change reads are cached under, below the schedule's own. */
 export const rosterChangesKey = (
 	companyId: string,
@@ -237,6 +257,19 @@ export const latestRosterChangeKey = (
 	"latest",
 	number,
 ] => [...rosterChangesKey(companyId, scheduleId), "latest", revision] as const;
+
+/** The key the editor's frozen shifts are cached under. */
+export const rosterChangeShiftsKey = (
+	companyId: string,
+	scheduleId: string
+): readonly [
+	"scheduling",
+	string,
+	"schedules",
+	string,
+	"rosterChanges",
+	"shifts",
+] => [...rosterChangesKey(companyId, scheduleId), "shifts"] as const;
 
 /** The key a preview of `body` is cached under. */
 const rosterChangePreviewKey = (
@@ -279,6 +312,30 @@ export const latestRosterChangeQuery = (
 			allowed && unit
 				? ({ signal }): Promise<RosterChange | null> =>
 						fetchLatestRosterChange(companyId, unit, scheduleId, signal)
+				: skipToken,
+		meta: administrativeMeta(companyId),
+		staleTime: 30_000,
+		retry: false,
+	});
+
+/** The editor's frozen shifts; `unit` undefined, or `allowed` false, asks for nothing. */
+export const rosterChangeShiftsQuery = (
+	companyId: string,
+	unit: DepartmentPath | undefined,
+	scheduleId: string,
+	allowed: boolean
+): UndefinedInitialDataOptions<
+	Array<ScheduleShift>,
+	Error,
+	Array<ScheduleShift>,
+	ReturnType<typeof rosterChangeShiftsKey>
+> =>
+	queryOptions({
+		queryKey: rosterChangeShiftsKey(companyId, scheduleId),
+		queryFn:
+			allowed && unit
+				? ({ signal }): Promise<Array<ScheduleShift>> =>
+						fetchRosterChangeShifts(companyId, unit, scheduleId, signal)
 				: skipToken,
 		meta: administrativeMeta(companyId),
 		staleTime: 30_000,

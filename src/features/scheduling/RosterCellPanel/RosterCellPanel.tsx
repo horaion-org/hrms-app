@@ -175,7 +175,7 @@ export const RosterCellPanel = ({
 		? rosterChangeRefusal(preview.error)
 		: undefined;
 	const onLeave = assignment.offReason === "LEAVE";
-	// Another shift needs the schedule's frozen shifts; without them only Day off and Swap are offered.
+	// Another shift needs the schedule's frozen shifts; until they load only Day off and Swap are offered.
 	const modes: Array<{ value: Mode; label: string }> = onLeave
 		? []
 		: [

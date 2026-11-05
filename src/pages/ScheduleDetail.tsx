@@ -17,6 +17,7 @@ import { PublishScheduleDialog } from "@/features/scheduling/PublishScheduleDial
 import { RegenerateDialog } from "@/features/scheduling/RegenerateDialog";
 import { RejectScheduleDialog } from "@/features/scheduling/RejectScheduleDialog";
 import { RosterHeader } from "@/features/scheduling/RosterHeader";
+import { rosterChangeShiftsQuery } from "@/features/scheduling/rosterChanges/api";
 import { ScheduleDecisionPanel } from "@/features/scheduling/ScheduleDecisionPanel";
 import { ScheduleMenu } from "@/features/scheduling/ScheduleMenu";
 import {
@@ -239,6 +240,20 @@ const ApiSchedule = ({
 		rosterSchedule?.scheduleId
 	);
 	const constraints = useScheduleConstraints(companyId, rosterSchedule);
+	// A generated roster awaiting its decision may be changed by hand under its
+	// own key (hrms-backend-v2 docs/adr/0062); the editor reads the frozen shifts
+	// it offers through that key, so it needs no shift:read.
+	const mayEditShifts =
+		state.status === "ready" &&
+		runId !== undefined &&
+		decidable(state.schedule) &&
+		access.can(
+			"schedule:edit_shift",
+			departmentScope(state.schedule.departmentId)
+		);
+	const editorShifts = useQuery(
+		rosterChangeShiftsQuery(companyId, unit, scheduleId, mayEditShifts)
+	);
 	const startingContext = useQuery(
 		startingContextQuery(
 			companyId,
@@ -265,16 +280,12 @@ const ApiSchedule = ({
 					setRegenerating(true);
 				}
 			: undefined;
-	// A generated roster awaiting its decision may be changed by hand (hrms-backend-v2 docs/adr/0062).
 	const editing: RosterEditing | undefined =
-		decidable(state.schedule) &&
-		runId !== undefined &&
-		unit !== undefined &&
-		access.can("schedule:update", departmentScope(state.schedule.departmentId))
+		mayEditShifts && runId !== undefined && unit !== undefined
 			? {
 					target: { companyId, unit, scheduleId, runId },
 					revision: state.schedule.rosterRevision,
-					shifts: readyItems(shifts),
+					shifts: editorShifts.data ?? [],
 				}
 			: undefined;
 	const canDecide =

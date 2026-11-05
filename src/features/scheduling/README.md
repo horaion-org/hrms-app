@@ -141,10 +141,12 @@ constraint dialogs.
 4. Pure mappers `roster/` — no I/O. They turn API rows into what the components draw.
 5. Components, plain props only — `RosterHeader`, `GenerationFailurePanel` (with `MemberNotes`), `GeneratedRoster`
    (stat cards, `FindingsSummary` and `FindingsPanel`, `RosterWeekBar`, `RosterGrid` → `RosterShift` and
-   `FindingsMarker`, and `ShiftDetailsPanel` read-only for a chosen day). Someone holding `schedule:update` on a
+   `FindingsMarker`, and `ShiftDetailsPanel` read-only for a chosen day). Someone holding `schedule:edit_shift` on a
    GENERATED roster awaiting its decision gets `editing`: any day opens `RosterCellPanel` beside the grid instead
    (another shift, a day off, or a same-day swap; a preview with `RosterChangeChecks`; Apply), days changed by hand
    carry a dot, and `LastRosterChange` offers Undo in a toast and above the grid (hrms-backend-v2 docs/adr/0062).
+   The editor reads the frozen shifts it offers from `…/roster-changes/shifts` (`rosterChangeShiftsQuery`) under
+   the same key, so it needs neither `schedule:update` nor `shift:read`.
 
 - `schedules/scheduleViewLink.ts` — View on a card or history row: a DRAFT reopens at the wizard's Setup, any other
   status opens the roster; `scheduleSetupLink` is the roster's "View setup".
