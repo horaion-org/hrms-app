@@ -20,6 +20,11 @@ import {
 } from "@/common/testing/stubApi";
 import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
+import {
+	FIVE_DAY_WEEK,
+	STANDARD_WEEK,
+	termsListResponse,
+} from "@/features/employmentTerms/fixtures";
 
 const REFRESH = "POST /api/v1/public/sessions/refreshes";
 const ME = "GET /api/v1/me";
@@ -967,5 +972,89 @@ describe("People", () => {
 		expect(
 			await screen.findByText("We couldn’t load this list. Please try again.")
 		).toHaveAttribute("role", "alert");
+	});
+});
+
+describe("Changing employment terms in bulk", () => {
+	const TERMS_LIST = "GET /api/v1/companies/c-1/employment-terms";
+	const ASSIGN =
+		"POST /api/v1/companies/c-1/employment-terms/terms-five-day/assignments";
+	const twoPeople = pageReply([
+		person("m-1", "Moses Lee"),
+		person("m-2", "Aisha Rahman"),
+	]);
+
+	it("moves the people ticked to other terms from a Monday, and says what it did", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...baseRoutes(["member_profile:read", "member_employment_terms:update"]),
+			[PEOPLE]: twoPeople,
+			[TERMS_LIST]: {
+				status: 200,
+				body: envelope(termsListResponse([STANDARD_WEEK, FIVE_DAY_WEEK])),
+			},
+			[ASSIGN]: {
+				status: 200,
+				body: envelope({
+					moved: 1,
+					unchanged: 0,
+					skipped: [{ membershipId: "m-2", reason: "CHANGE_EXISTS" }],
+					skippedByReason: { CHANGE_EXISTS: 1 },
+				}),
+			},
+		});
+		await open("/people");
+		await user.click(
+			await screen.findByRole("checkbox", { name: "Select Moses Lee" })
+		);
+		await user.click(
+			screen.getByRole("checkbox", { name: "Select Aisha Rahman" })
+		);
+
+		await user.click(
+			screen.getByRole("button", { name: "Change employment terms" })
+		);
+		const dialog = await screen.findByRole("dialog", {
+			name: "Change employment terms",
+		});
+		expect(dialog).toHaveTextContent(
+			"Move 2 people to other terms from a date."
+		);
+		await user.click(within(dialog).getByRole("button", { name: /^Terms/ }));
+		await user.click(
+			await screen.findByRole("option", { name: "Five-day week, 44 h" })
+		);
+		await user.click(
+			within(dialog).getByRole("button", { name: "Move 2 people" })
+		);
+
+		expect(
+			await screen.findByText(
+				/^Moved 1 person to Five-day week, 44 h from .+, 1 skipped because they already have a change on that date\.$/
+			)
+		).toBeVisible();
+		const body = calls.find((call) => `${call.method} ${call.path}` === ASSIGN)
+			?.body as {
+			membershipIds: Array<string>;
+			effectiveFrom: string;
+			fromHireDate: boolean;
+		};
+		expect(body.membershipIds).toEqual(["m-1", "m-2"]);
+		expect(body.fromHireDate).toBe(false);
+		expect(new Date(`${body.effectiveFrom}T00:00:00`).getDay()).toBe(1);
+	});
+
+	it("is not offered without member_employment_terms:update", async () => {
+		const user = userEvent.setup();
+		stubApi({ ...baseRoutes(), [PEOPLE]: twoPeople });
+		await open("/people");
+		await user.click(
+			await screen.findByRole("checkbox", { name: "Select Moses Lee" })
+		);
+
+		expect(screen.getByText("1 employee selected")).toBeVisible();
+		expect(
+			screen.queryByRole("button", { name: "Change employment terms" })
+		).toBeNull();
 	});
 });
