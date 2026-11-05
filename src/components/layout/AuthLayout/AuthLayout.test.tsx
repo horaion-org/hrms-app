@@ -1,6 +1,29 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import {
+	act,
+	fireEvent,
+	render as renderUnwrapped,
+	screen,
+	type RenderResult,
+} from "@testing-library/react";
+import { createInstance } from "i18next";
+import type { ReactElement, ReactNode } from "react";
+import { I18nextProvider, initReactI18next } from "react-i18next";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import en from "@/assets/locales/en/translations.json";
 import { AuthLayout } from "@/components/layout/AuthLayout";
+
+const i18n = createInstance();
+void i18n.use(initReactI18next).init({
+	lng: "en",
+	resources: { en: { translation: en } },
+});
+
+const render = (ui: ReactElement): RenderResult =>
+	renderUnwrapped(ui, {
+		wrapper: ({ children }: { children: ReactNode }) => (
+			<I18nextProvider i18n={i18n}>{children}</I18nextProvider>
+		),
+	});
 
 beforeEach(() => {
 	vi.stubGlobal("matchMedia", (query: string) => ({

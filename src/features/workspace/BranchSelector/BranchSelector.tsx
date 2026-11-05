@@ -10,19 +10,13 @@ import { branchChoices, chosenBranch } from "@/features/workspace/unitChoices";
 import type { PermissionKey } from "@/features/workspace/permissionKeys";
 import { retry } from "@/features/workspace/retry";
 
-/** The option value standing for every Branch, or every country; never a real id or code. */
-const ALL = "";
-
 export type BranchSelectorProps = {
 	companyId: string;
 	/** A Branch is offered when any of these is effective at it or at a Department beneath it (navigation only, not Branch authority). */
 	keys: ReadonlyArray<PermissionKey>;
 	/** The chosen Branch's id; undefined, or one no longer offered, means the default. */
 	value?: string;
-	/** Undefined only with `allowAll`, for every Branch. */
 	onChange: (branchId: string | undefined) => void;
-	/** Offers "All branches" and "All countries", and makes "all" the default. */
-	allowAll?: boolean;
 	/** Offers only ACTIVE Branches. */
 	activeOnly?: boolean;
 	className?: string;
@@ -37,10 +31,9 @@ export type BranchSelectorProps = {
  * select is left out when every offered Branch shares one country, and
  * choosing a country chooses its first Branch.
  *
- * Without `allowAll`, when `value` is undefined or not offered, the first
- * offered Branch is announced through `onChange` once, so the page's state
- * names the Branch it shows. With `allowAll`, "all" is the default and is
- * announced (as undefined) only to clear a `value` no longer offered.
+ * When `value` is undefined or not offered, the first offered Branch is
+ * announced through `onChange` once, so the page's state names the Branch it
+ * shows.
  * Nothing is rendered until the workspace has loaded or when no Branch is
  * offered: the page decides what to say then.
  *
@@ -52,7 +45,6 @@ export const BranchSelector = ({
 	keys,
 	value,
 	onChange,
-	allowAll = false,
 	activeOnly = false,
 	className,
 	label,
@@ -63,7 +55,7 @@ export const BranchSelector = ({
 	const choices = data
 		? branchChoices(data, companyId, keys, { activeOnly })
 		: [];
-	const selected = chosenBranch(choices, value, allowAll);
+	const selected = chosenBranch(choices, value);
 	const selectedId = selected?.branchId;
 	const loaded = choices.length > 0;
 	useEffect(() => {
@@ -75,33 +67,16 @@ export const BranchSelector = ({
 	const regionName = new Intl.DisplayNames([i18n.language], {
 		type: "region",
 	});
-	const countryOptions = [
-		...(allowAll
-			? [{ value: ALL, label: t("workspace.branchSelector.allCountries") }]
-			: []),
-		...countries.map((country) => ({
-			value: country,
-			label: regionName.of(country) ?? country,
-		})),
-	];
-	const branchOptions = [
-		...(allowAll
-			? [{ value: ALL, label: t("workspace.branchSelector.allBranches") }]
-			: []),
-		...choices
-			.filter((choice) => !selected || choice.country === selected.country)
-			.map((choice) => ({ value: choice.branchId, label: choice.name })),
-	];
+	const countryOptions = countries.map((country) => ({
+		value: country,
+		label: regionName.of(country) ?? country,
+	}));
+	const branchOptions = choices
+		.filter((choice) => !selected || choice.country === selected.country)
+		.map((choice) => ({ value: choice.branchId, label: choice.name }));
 	const chooseCountry = (country: string): void => {
-		if (country === ALL) {
-			onChange(undefined);
-			return;
-		}
 		const first = choices.find((choice) => choice.country === country);
 		if (first) onChange(first.branchId);
-	};
-	const chooseBranch = (branch: string): void => {
-		onChange(branch === ALL ? undefined : branch);
 	};
 	const countryId = `${id}-country`;
 	const branchId = `${id}-branch`;
@@ -120,7 +95,7 @@ export const BranchSelector = ({
 						aria-labelledby={formRowIds(countryId).labelId}
 						className="w-full font-semibold text-ink-blue-900"
 						options={countryOptions}
-						value={selected?.country ?? ALL}
+						value={selected?.country ?? ""}
 						onChange={chooseCountry}
 					/>
 				</FormRow>
@@ -135,8 +110,8 @@ export const BranchSelector = ({
 					aria-labelledby={formRowIds(branchId).labelId}
 					className="w-full font-semibold text-ink-blue-900"
 					options={branchOptions}
-					value={selectedId ?? ALL}
-					onChange={chooseBranch}
+					value={selectedId ?? ""}
+					onChange={onChange}
 				/>
 			</FormRow>
 		</div>

@@ -428,6 +428,9 @@
 			"removalNotice": "Sign-ups that are not confirmed are removed after 3 days."
 		}
 	},
+	"authLayout": {
+		"goToSlide": "Go to slide {{number}}"
+	},
 	"calendar": {
 		"previousMonth": "Previous month",
 		"nextMonth": "Next month",
@@ -1903,8 +1906,7 @@
 		"branchSelector": {
 			"country": "Country",
 			"branch": "Branch",
-			"allBranches": "All branches",
-			"allCountries": "All countries"
+			"allBranches": "All branches"
 		},
 		"departmentFilter": {
 			"department": "Department",

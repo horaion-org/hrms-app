@@ -4,7 +4,9 @@ import type { Workspace } from "@/features/workspace/api";
 import {
 	branchChoices,
 	chosenBranch,
+	branchGroupLabel,
 	departmentChoices,
+	type DepartmentChoice,
 } from "@/features/workspace/unitChoices";
 
 const KEYS = ["leave_request:read"] as const;
@@ -129,12 +131,6 @@ describe("chosenBranch", () => {
 		expect(chosenBranch(choices, "b-1")?.branchId).toBe("b-1");
 		expect(chosenBranch(choices, "b-3")?.branchId).toBe("b-2");
 		expect(chosenBranch(choices, undefined)?.branchId).toBe("b-2");
-	});
-
-	it("chooses none, for every Branch, with allowAll unless an offered one is named", () => {
-		expect(chosenBranch(choices, undefined, true)).toBeUndefined();
-		expect(chosenBranch(choices, "b-3", true)).toBeUndefined();
-		expect(chosenBranch(choices, "b-1", true)?.branchId).toBe("b-1");
 	});
 
 	it("chooses nothing when nothing is offered", () => {
@@ -288,5 +284,43 @@ describe("departmentChoices", () => {
 			)
 		).toEqual([]);
 		expect(departmentChoices(departments(["b-2"]), "c-9", KEYS)).toEqual([]);
+	});
+});
+
+describe("branchGroupLabel", () => {
+	const choice = (
+		departmentId: string,
+		branchId: string,
+		branchName: string,
+		country: string
+	): DepartmentChoice => ({
+		departmentId,
+		name: "Kitchen",
+		branchId,
+		branchName,
+		country,
+		status: "ACTIVE",
+	});
+	const nameOfCountry = (code: string): string =>
+		({ MY: "Malaysia", SG: "Singapore" })[code] ?? code;
+
+	it("names a Branch alone while no other Branch in the list shares its name", () => {
+		const orchard = choice("d-1", "b-1", "Orchard", "SG");
+		const choices = [orchard, choice("d-2", "b-1", "Orchard", "SG")];
+
+		expect(branchGroupLabel(orchard, choices, nameOfCountry)).toBe("Orchard");
+	});
+
+	it("adds the country when another Branch has the same name", () => {
+		const singapore = choice("d-1", "b-1", "Central", "SG");
+		const malaysia = choice("d-2", "b-2", "Central", "MY");
+		const choices = [malaysia, singapore];
+
+		expect(branchGroupLabel(singapore, choices, nameOfCountry)).toBe(
+			"Central (Singapore)"
+		);
+		expect(branchGroupLabel(malaysia, choices, nameOfCountry)).toBe(
+			"Central (Malaysia)"
+		);
 	});
 });

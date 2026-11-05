@@ -1,11 +1,28 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-
+import { createInstance } from "i18next";
+import { I18nextProvider } from "react-i18next";
+import en from "@/assets/locales/en/translations.json";
+import type { FunctionComponent } from "@/common/types";
 import { AuthLayout } from "@/components/layout/AuthLayout";
+
+const english = createInstance();
+void english.init({
+	lng: "en",
+	resources: { en: { translation: en } },
+	initAsync: false,
+});
 
 const meta = {
 	title: "Layout/AuthLayout",
 	component: AuthLayout,
 	parameters: { layout: "fullscreen" },
+	decorators: [
+		(Story): NonNullable<FunctionComponent> => (
+			<I18nextProvider i18n={english}>
+				<Story />
+			</I18nextProvider>
+		),
+	],
 	args: {
 		children: (
 			<div className="space-y-4">

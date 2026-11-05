@@ -352,6 +352,9 @@
 		"empty": "No se encontraron zonas horarias.",
 		"yourZone": "Tu zona horaria"
 	},
+	"authLayout": {
+		"goToSlide": "Ir a la diapositiva {{number}}"
+	},
 	"calendar": {
 		"previousMonth": "Mes anterior",
 		"nextMonth": "Mes siguiente",
@@ -1833,8 +1836,7 @@
 		"branchSelector": {
 			"country": "País",
 			"branch": "Sucursal",
-			"allBranches": "Todas las sucursales",
-			"allCountries": "Todos los países"
+			"allBranches": "Todas las sucursales"
 		},
 		"departmentFilter": {
 			"department": "Departamento",

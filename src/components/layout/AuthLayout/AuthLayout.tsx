@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import slideMobile from "@/assets/images/png/auth-slide-1.png";
 import slideSchedule from "@/assets/images/png/auth-slide-2.png";
 import slideLeave from "@/assets/images/png/auth-slide-3.png";
@@ -36,6 +37,7 @@ export const AuthLayout = ({
 	children,
 	variant = "split",
 }: AuthLayoutProps): FunctionComponent => {
+	const { t } = useTranslation();
 	const [active, setActive] = useState(INITIAL_SLIDE);
 	const [paused, setPaused] = useState(false);
 
@@ -106,8 +108,10 @@ export const AuthLayout = ({
 									<button
 										key={slide}
 										aria-current={index === active}
-										aria-label={`Go to slide ${index + 1}`}
 										type="button"
+										aria-label={t("authLayout.goToSlide", {
+											number: index + 1,
+										})}
 										className={
 											index === active
 												? "h-2 w-6 cursor-pointer rounded-full bg-white"

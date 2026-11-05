@@ -62,17 +62,12 @@ export const branchChoices = (
 		);
 };
 
-/**
- * The offered Branch named by `branchId`. Otherwise the first offered, or
- * with `allowAll` none, which stands for every Branch in reach.
- */
+/** The offered Branch named by `branchId`, otherwise the first offered. */
 export const chosenBranch = (
 	choices: ReadonlyArray<BranchChoice>,
-	branchId: string | undefined,
-	allowAll = false
+	branchId: string | undefined
 ): BranchChoice | undefined =>
-	choices.find((choice) => choice.branchId === branchId) ??
-	(allowAll ? undefined : choices[0]);
+	choices.find((choice) => choice.branchId === branchId) ?? choices[0];
 
 /** A Department a form may place something in, with its Branch, as a selector offers it. */
 export type DepartmentChoice = {
@@ -127,3 +122,21 @@ export const departmentChoices = (
 				first.name.localeCompare(second.name)
 		);
 };
+
+/**
+ * The heading a Department's Branch takes in a grouped list: its name, and
+ * its country too when another Branch in the list has the same name, so two
+ * same-named Branches never read as one.
+ */
+export const branchGroupLabel = (
+	choice: DepartmentChoice,
+	choices: ReadonlyArray<DepartmentChoice>,
+	nameOfCountry: (code: string) => string
+): string =>
+	choices.some(
+		(other) =>
+			other.branchId !== choice.branchId &&
+			other.branchName === choice.branchName
+	)
+		? `${choice.branchName} (${nameOfCountry(choice.country)})`
+		: choice.branchName;

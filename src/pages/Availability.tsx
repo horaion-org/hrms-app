@@ -183,12 +183,14 @@ export const Availability = (): FunctionComponent => {
 					className="mt-6 mb-8"
 					label={t("availability.controls")}
 					chips={
-						<FilterChips
-							chips={chips}
-							onClearAll={() => {
-								show({ department: undefined });
-							}}
-						/>
+						chips.length > 0 && (
+							<FilterChips
+								chips={chips}
+								onClearAll={() => {
+									show({ department: undefined });
+								}}
+							/>
+						)
 					}
 					filters={
 						<>

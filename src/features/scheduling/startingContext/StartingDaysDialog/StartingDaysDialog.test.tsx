@@ -32,11 +32,11 @@ describe("StartingDaysDialog", () => {
 		const tan = within(table).getByRole("row", { name: /Tan Wei Ming/ });
 		expect(within(tan).getByText("On Leave")).toBeInTheDocument();
 		expect(
-			within(tan).queryByRole("button", { name: /Tan Wei Ming, 7 Sat/ })
+			within(tan).queryByRole("button", { name: /Tan Wei Ming, Sat, Nov 7/ })
 		).not.toBeInTheDocument();
 		expect(
-			within(tan).getByRole("button", { name: /Tan Wei Ming, 8 Sun/ })
-		).toHaveTextContent("Night 22:00–06:00");
+			within(tan).getByRole("button", { name: /Tan Wei Ming, Sun, Nov 8/ })
+		).toHaveTextContent("Night 22:00 – 06:00");
 	});
 
 	it("given_aLockedDayOfAKindThisBuildDoesNotKnow_when_shown_then_readsUnknown", () => {

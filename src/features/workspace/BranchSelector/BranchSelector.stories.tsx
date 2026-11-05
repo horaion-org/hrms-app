@@ -80,7 +80,6 @@ export const SeveralCountries: Story = {};
 export const OneCountry: Story = { args: { companyId: "one" } };
 
 /** "All branches" and "All countries" offered first, and the default. */
-export const AllowAll: Story = { args: { allowAll: true } };
 
 /** No Branch offered: nothing is rendered, the page explains. */
 export const NoBranches: Story = { args: { companyId: "none" } };
