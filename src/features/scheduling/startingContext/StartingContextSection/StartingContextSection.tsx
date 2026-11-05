@@ -3,6 +3,13 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ApiProblemError } from "@/common/problem";
 import type { FunctionComponent } from "@/common/types";
+import {
+	openingBalancesKey,
+	openingBalancesQuery,
+	saveOpeningBalances,
+	type OpeningBalances,
+	type OpeningEntry,
+} from "@/features/scheduling/hours/api";
 import type { DepartmentPath } from "@/features/scheduling/paths";
 import {
 	saveStartingDays,
@@ -30,25 +37,49 @@ export type StartingContextSectionProps = {
 const PROBLEMS = {
 	INVALID_STARTING_DAY: "scheduling.startingContext.invalid",
 	SCHEDULE_NOT_DRAFT: "scheduling.startingContext.notDraft",
+	INVALID_OPENING_BALANCE: "scheduling.startingContext.opening.invalid",
+	OPENING_BALANCE_LOCKED: "scheduling.startingContext.opening.locked",
+	OPENING_BALANCES_PUBLISHED: "scheduling.startingContext.opening.published",
 } as const;
 
-type ProblemKey = (typeof PROBLEMS)[keyof typeof PROBLEMS];
+type ProblemCode = keyof typeof PROBLEMS;
+type ProblemKey = (typeof PROBLEMS)[ProblemCode];
 
-/** The words for a refused save: a known refusal's own, or the plain failure. */
+const isProblemCode = (code: string | undefined): code is ProblemCode =>
+	code !== undefined && code in PROBLEMS;
+
+/** The words for a refused request: a known refusal's own, or the plain failure. */
 const problemKeyOf = (
 	error: unknown
 ): ProblemKey | "scheduling.startingContext.failed" => {
 	const code = error instanceof ApiProblemError ? error.errorCode : undefined;
-	return code === "INVALID_STARTING_DAY" || code === "SCHEDULE_NOT_DRAFT"
+	return isProblemCode(code)
 		? PROBLEMS[code]
 		: "scheduling.startingContext.failed";
 };
 
 /**
+ * What one save answered: the days always went through by then; the openings
+ * may have been refused, which the dialog shows while keeping the typed hours
+ * (the two are separate requests).
+ */
+type Saved = { openingsRefusal?: unknown };
+
+/** What one save sends: the week's entered days and, when any changed, the openings. */
+type Entered = {
+	days: Array<EnteredDay>;
+	openings: Array<OpeningEntry> | undefined;
+};
+
+/**
  * The week before the period on the Generate step: the calm line saying where
  * everyone starts, and, where the draft may change, the grid to add last
- * week's days. Saving replaces the entered set and the grid answers as it now
- * stands. Nothing is shown until the week is read, or when it can't be.
+ * week's days and, for a roster starting mid-month, each member's hours and
+ * overtime so far this month. The grid opens only once the openings have been
+ * read (or failed to read), so it never saves over figures it did not see.
+ * Saving puts the days, then only the openings that changed; the days' answer
+ * is kept even when the openings are refused, and the dialog stays open with
+ * the typed hours so the person can fix them and save again.
  */
 export const StartingContextSection = ({
 	companyId,
@@ -61,19 +92,49 @@ export const StartingContextSection = ({
 	const queryClient = useQueryClient();
 	const [open, setOpen] = useState(false);
 	const week = useQuery(startingDaysQuery(companyId, unit, scheduleId));
+	const openings = useQuery(openingBalancesQuery(companyId, unit, scheduleId));
 	const saving = useMutation({
-		mutationFn: (days: Array<EnteredDay>) =>
-			saveStartingDays(companyId, unit, scheduleId, days),
-		onSuccess: (answered) => {
+		mutationFn: async (entered: Entered): Promise<Saved> => {
+			const answeredWeek = await saveStartingDays(
+				companyId,
+				unit,
+				scheduleId,
+				entered.days
+			);
 			queryClient.setQueryData(
 				startingDaysKey(companyId, scheduleId),
-				answered
+				answeredWeek
 			);
-			setOpen(false);
+			if (entered.openings === undefined) return {};
+			try {
+				const answeredOpenings: OpeningBalances = await saveOpeningBalances(
+					companyId,
+					unit,
+					scheduleId,
+					entered.openings
+				);
+				queryClient.setQueryData(
+					openingBalancesKey(companyId, scheduleId),
+					answeredOpenings
+				);
+				return {};
+			} catch (refusal) {
+				return { openingsRefusal: refusal };
+			}
+		},
+		onSuccess: (saved) => {
+			if (saved.openingsRefusal === undefined) setOpen(false);
 		},
 	});
 	if (week.data === undefined) return null;
-	const problem = saving.isError ? t(problemKeyOf(saving.error)) : undefined;
+	const openingsRefusal = saving.data?.openingsRefusal;
+	const problem = saving.isError
+		? t(problemKeyOf(saving.error))
+		: openingsRefusal === undefined
+			? undefined
+			: t("scheduling.startingContext.opening.daysSavedHoursNot", {
+					reason: t(problemKeyOf(openingsRefusal)),
+				});
 	return (
 		<>
 			<StartingContextCallout
@@ -81,7 +142,7 @@ export const StartingContextSection = ({
 				enteredCount={enteredMemberCount(initialEntries(week.data))}
 				week={week.data}
 				onAdd={
-					canEdit
+					canEdit && !openings.isPending
 						? (): void => {
 								saving.reset();
 								setOpen(true);
@@ -92,14 +153,15 @@ export const StartingContextSection = ({
 			{open && (
 				<StartingDaysDialog
 					open
+					openings={openings.data}
 					problem={problem}
 					saving={saving.isPending}
 					week={week.data}
 					onClose={() => {
 						setOpen(false);
 					}}
-					onSave={(days) => {
-						saving.mutate(days);
+					onSave={(days, changedOpenings) => {
+						saving.mutate({ days, openings: changedOpenings });
 					}}
 				/>
 			)}

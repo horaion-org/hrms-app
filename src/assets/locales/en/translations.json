@@ -2960,7 +2960,24 @@
 			"runBadge_one": "Day {{count}} of a run",
 			"runBadge_other": "Day {{count}} of a run",
 			"stale_one": "{{count}} person’s days before this week changed after this schedule was generated. It was planned from what was known then.",
-			"stale_other": "{{count}} people’s days before this week changed after this schedule was generated. It was planned from what was known then."
+			"stale_other": "{{count}} people’s days before this week changed after this schedule was generated. It was planned from what was known then.",
+			"opening": {
+				"hint": "Overtime limits count from the 1st. For anyone without a roster earlier this month, add the hours and overtime they already worked before {{day}}.",
+				"worked": "Hours before {{day}}",
+				"overtime": "Overtime before {{day}}",
+				"workedLabel": "{{name}}, hours worked this month before {{day}}",
+				"overtimeLabel": "{{name}}, overtime this month before {{day}}",
+				"fromRosters": "From rosters",
+				"none": "None entered",
+				"hours": "{{hours}} h",
+				"invalidHours": "Enter hours as a number, such as 72 or 7.5.",
+				"overtimeAboveWorked": "Overtime is part of the hours worked, so it can’t be more than them.",
+				"invalid": "Some hours couldn’t be saved. Check that each person is still in this department, that overtime isn’t more than their hours, and that the hours fit in the days before this week.",
+				"locked": "Some hours this month can no longer change here: rosters now cover those days, an opening entered on another week stands, or a published roster relies on it. Close and reopen to see the latest.",
+				"moreThanTheDaysHold": "That’s more hours than the days of the month before this week hold.",
+				"published": "This schedule is published, so the hours before this week can no longer change here.",
+				"daysSavedHoursNot": "Last week’s days were saved, but the hours this month weren’t. {{reason}} Your hours are still here: fix them and save again."
+			}
 		}
 	},
 	"colourSwatchPicker": {
