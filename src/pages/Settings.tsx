@@ -9,6 +9,7 @@ import { dataItemsFor, offersData } from "@/features/settings/dataAccess";
 import { DataSettings } from "@/features/settings/DataSettings";
 import { GeneralSettingsForm } from "@/features/settings/GeneralSettingsForm";
 import { PlanSettings } from "@/features/settings/PlanSettings";
+import { SchedulingPolicySettings } from "@/features/settings/SchedulingPolicySettings";
 import { useGeneralSettings } from "@/features/settings/useGeneralSettings";
 import {
 	searchForSection,
@@ -22,7 +23,7 @@ import { useAccess } from "@/features/workspace/useAccess";
 
 const route = getRouteApi("/_authenticated/_app/settings");
 
-const COMING_SOON_SECTIONS = ["notifications", "scheduling"] as const;
+const COMING_SOON_SECTIONS = ["notifications"] as const;
 
 const panelClasses =
 	"p-6 outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink-blue-500";
@@ -128,6 +129,9 @@ export const Settings = (): FunctionComponent => {
 							</p>
 						</TabPanel>
 					))}
+					<TabPanel className={panelClasses}>
+						<SchedulingPolicySettings companyId={companyId} />
+					</TabPanel>
 					<TabPanel className={panelClasses}>
 						<PlanSettings />
 					</TabPanel>

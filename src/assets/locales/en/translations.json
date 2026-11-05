@@ -1041,7 +1041,27 @@
 		},
 		"scheduling": {
 			"title": "Scheduling",
-			"description": "Configure approval workflows and hierarchies."
+			"description": "Constraints every department’s schedules follow.",
+			"policy": {
+				"title": "Scheduling policy",
+				"subtitle": "Constraints every department’s schedules follow. A department can’t remove or loosen a locked one; defaults start ticked and may be left out.",
+				"add": "Add constraint",
+				"label": "Scheduling policy constraints",
+				"empty": "No company-wide constraints yet. Each department sets its own.",
+				"loading": "Loading the Scheduling policy…",
+				"failed": "We couldn’t load the Scheduling policy. Try again.",
+				"hidden": "You don’t have permission to see the Scheduling policy.",
+				"lock": "Lock",
+				"added": "Constraint added to the Scheduling policy",
+				"saved": "Scheduling policy constraint saved",
+				"deleted": "Constraint removed from the Scheduling policy",
+				"deleteTitle": "Remove {{name}}?",
+				"deleteDescription": "It stops applying to every department’s draft schedules. Generated schedules keep it, and a department’s own version stays as theirs.",
+				"deleteConfirm": "Remove",
+				"cancel": "Cancel",
+				"deleteFailed": "We couldn’t remove the constraint. Try again.",
+				"deleteForbidden": "You no longer have permission to change the Scheduling policy."
+			}
 		},
 		"data": {
 			"title": "Data",
