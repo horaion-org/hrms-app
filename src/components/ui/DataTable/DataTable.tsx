@@ -96,6 +96,13 @@ export type DataTableProps<TData extends object> = {
 		/** The selected row ids when the caller owns them; otherwise the table keeps its own. */
 		selectedIds?: Array<string>;
 		onChange?: (selectedIds: Array<string>) => void;
+		/**
+		 * Rows whose box can change; every row when left out. A row that can't
+		 * keeps its box as the selection says and shows it disabled, and
+		 * select-all passes it by (clearing all still reports it unselected, so
+		 * a caller that must keep it selected adds it back).
+		 */
+		canSelect?: (row: TData) => boolean;
 	};
 	/**
 	 * Adds a leading button per row, named by `rowLabel`, that shows
@@ -318,7 +325,9 @@ export const DataTable = <TData extends object>({
 		enableSortingRemoval: false,
 		enableMultiSort: false,
 		sortDescFirst: false,
-		enableRowSelection: selection !== undefined,
+		enableRowSelection: selection?.canSelect
+			? (row): boolean => selection.canSelect?.(row.original) ?? true
+			: selection !== undefined,
 		enableExpanding: expansion !== undefined,
 		getRowCanExpand: (row) =>
 			expansion?.canExpand?.(row.original) ?? expansion !== undefined,
@@ -500,6 +509,7 @@ export const DataTable = <TData extends object>({
 												hideLabel
 												checked={row.getIsSelected()}
 												className="justify-center"
+												disabled={!row.getCanSelect()}
 												label={t("dataTable.selectRow", {
 													name: selection.rowLabel(row.original),
 												})}

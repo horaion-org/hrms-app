@@ -338,6 +338,34 @@ describe("DataTable", () => {
 		expect(orchard).not.toBeChecked();
 	});
 
+	it("keeps a row that can't be selected as the selection says, disabled", async () => {
+		const user = userEvent.setup();
+		const onChange = vi.fn();
+		render(
+			<DataTable
+				columns={columns}
+				data={branches}
+				getRowId={getRowId}
+				label="Branches"
+				selection={{
+					rowLabel: (branch) => branch.name,
+					selectedIds: ["b-1"],
+					canSelect: (branch) => branch.id !== "b-1",
+					onChange,
+				}}
+			/>
+		);
+		const main = screen.getByRole("checkbox", { name: "Select Main Branch" });
+		expect(main).toBeChecked();
+		expect(main).toBeDisabled();
+
+		await user.click(screen.getByRole("checkbox", { name: "Select Orchard" }));
+
+		expect(onChange).toHaveBeenLastCalledWith(
+			expect.arrayContaining(["b-1", "b-2"])
+		);
+	});
+
 	it("shows the empty state across every column and disables select-all", () => {
 		render(
 			<DataTable
