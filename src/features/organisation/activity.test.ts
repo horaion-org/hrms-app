@@ -129,6 +129,12 @@ describe("describeActivity", () => {
 		],
 		["schedule.generated", "Schedule generated: Orchard", GenerateScheduleIcon],
 		["schedule.delete", "Schedule deleted: Orchard", SchedulingIcon],
+		["schedule.roster_change.apply", "Roster changed: Orchard", SchedulingIcon],
+		[
+			"schedule.roster_change.undo",
+			"Roster change undone: Orchard",
+			SchedulingIcon,
+		],
 		["organisation_import.complete", "Organisation imported", OrganisationIcon],
 	])("words %s as %s", (action, title, icon) => {
 		expect(describeActivity(event({ action }), t)).toEqual({
@@ -151,6 +157,7 @@ describe("describeActivity", () => {
 		["company.update", "Workspace renamed"],
 		["schedule.delete", "Schedule deleted"],
 		["schedule.regenerate", "Schedule regeneration requested"],
+		["schedule.roster_change.apply", "Roster changed"],
 		["member_skill.replace", "Employee skills updated"],
 		["skill.delete", "Skill deleted"],
 		["scheduling_policy.update", "Scheduling policy constraint changed"],

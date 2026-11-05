@@ -52,6 +52,8 @@ type ActivityKey =
 	| "scheduleRegenerationRequested"
 	| "scheduleGenerated"
 	| "scheduleDeleted"
+	| "rosterChanged"
+	| "rosterChangeUndone"
 	| "schedulingPolicyCreated"
 	| "schedulingPolicyUpdated"
 	| "schedulingPolicyDeleted"
@@ -124,6 +126,15 @@ const ACTIVITIES: Record<string, { key: ActivityKey; icon: Heroicon }> = {
 		icon: GenerateScheduleIcon,
 	},
 	"schedule.delete": { key: "scheduleDeleted", icon: SchedulingIcon },
+	// A hand change to a generated roster, and its undo (hrms-backend-v2 docs/adr/0062).
+	"schedule.roster_change.apply": {
+		key: "rosterChanged",
+		icon: SchedulingIcon,
+	},
+	"schedule.roster_change.undo": {
+		key: "rosterChangeUndone",
+		icon: SchedulingIcon,
+	},
 	// The company's Scheduling policy (ADR-0058): constraints set for every department.
 	"scheduling_policy.create": {
 		key: "schedulingPolicyCreated",

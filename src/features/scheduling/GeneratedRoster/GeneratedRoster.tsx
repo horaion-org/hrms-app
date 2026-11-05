@@ -6,6 +6,7 @@ import { Callout } from "@/components/ui/Callout";
 import { StatCard } from "@/components/ui/StatCard";
 import { FindingsPanel } from "@/features/scheduling/FindingsPanel";
 import { FindingsSummary } from "@/features/scheduling/FindingsSummary";
+import { LastRosterChange } from "@/features/scheduling/LastRosterChange";
 import {
 	findingCounts,
 	hasFindings,
@@ -25,6 +26,7 @@ import {
 	type RosterShiftCell,
 } from "@/features/scheduling/roster/roster";
 import { RosterCellPanel } from "@/features/scheduling/RosterCellPanel";
+import type { RosterChange } from "@/features/scheduling/rosterChanges/api";
 import { rosterCellKey } from "@/features/scheduling/rosterChanges/rosterEdit";
 import type { RosterChangeTarget } from "@/features/scheduling/rosterChanges/useRosterChangeActions";
 import { RosterGrid } from "@/features/scheduling/RosterGrid";
@@ -80,7 +82,8 @@ const key = "scheduling.detail";
  * A generated schedule's roster, a week at a time: what it adds up to, what
  * the engine found (a summary, the findings panel and marks on the grid), and
  * a chosen day's shift beside it, read-only. With `editing`, any day opens
- * the editor beside the grid instead, and days changed by hand carry a dot.
+ * the editor beside the grid instead, days changed by hand carry a dot, and
+ * the latest change can be undone from a toast or the line above the grid.
  */
 export const GeneratedRoster = ({
 	schedule,
@@ -100,6 +103,7 @@ export const GeneratedRoster = ({
 	const [chosen, setChosen] = useState<ChosenDay>();
 	const [editingKey, setEditingKey] = useState<string>();
 	const [previewDays, setPreviewDays] = useState<ReadonlySet<string>>(NO_DAYS);
+	const [applied, setApplied] = useState<RosterChange>();
 	// Where focus goes back to when the editor closes: the day that opened it.
 	const opener = useRef<HTMLElement | null>(null);
 	const onPreviewDays = useCallback((keys: ReadonlyArray<string>) => {
@@ -235,6 +239,17 @@ export const GeneratedRoster = ({
 					{t("scheduling.rosterEdit.findingsOutOfDate")}
 				</Callout>
 			)}
+			{editing && (
+				<LastRosterChange
+					applied={applied}
+					className="mt-6"
+					revision={editing.revision}
+					target={editing.target}
+					onAppliedDismissed={() => {
+						setApplied(undefined);
+					}}
+				/>
+			)}
 			{rows.length === 0 ? (
 				<p className="mt-8 text-sm text-neutral-800">{t(`${key}.noRows`)}</p>
 			) : (
@@ -289,7 +304,10 @@ export const GeneratedRoster = ({
 								target={editing.target}
 								onClose={closeEditor}
 								onPreviewDays={onPreviewDays}
-								onApplied={closeEditor}
+								onApplied={(change) => {
+									setApplied(change);
+									closeEditor();
+								}}
 							/>
 						)}
 						{!editing && chosen && (
