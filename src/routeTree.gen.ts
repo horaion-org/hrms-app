@@ -34,6 +34,7 @@ import { Route as AuthenticatedAppOrganisationIndexRouteImport } from './routes/
 import { Route as AuthenticatedAppOrganisationBranchesRouteImport } from './routes/_authenticated._app.organisation.branches'
 import { Route as AuthenticatedAppOrganisationDepartmentsRouteImport } from './routes/_authenticated._app.organisation.departments'
 import { Route as AuthenticatedAppOrganisationJobTitlesRouteImport } from './routes/_authenticated._app.organisation.job-titles'
+import { Route as AuthenticatedAppOrganisationSkillsRouteImport } from './routes/_authenticated._app.organisation.skills'
 import { Route as AuthenticatedAppOrganisationSystemRolesRouteImport } from './routes/_authenticated._app.organisation.system-roles'
 import { Route as AuthenticatedAppPeopleMembershipIdRouteImport } from './routes/_authenticated._app.people_.$membershipId'
 import { Route as AuthenticatedAppPeopleImportRouteImport } from './routes/_authenticated._app.people_.import'
@@ -181,6 +182,12 @@ const AuthenticatedAppOrganisationJobTitlesRoute =
     path: '/organisation/job-titles',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppOrganisationSkillsRoute =
+  AuthenticatedAppOrganisationSkillsRouteImport.update({
+    id: '/organisation/skills',
+    path: '/organisation/skills',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppOrganisationSystemRolesRoute =
   AuthenticatedAppOrganisationSystemRolesRouteImport.update({
     id: '/organisation/system-roles',
@@ -271,6 +278,7 @@ export interface FileRoutesByFullPath {
   '/organisation/branches': typeof AuthenticatedAppOrganisationBranchesRoute
   '/organisation/departments': typeof AuthenticatedAppOrganisationDepartmentsRoute
   '/organisation/job-titles': typeof AuthenticatedAppOrganisationJobTitlesRoute
+  '/organisation/skills': typeof AuthenticatedAppOrganisationSkillsRoute
   '/organisation/system-roles': typeof AuthenticatedAppOrganisationSystemRolesRoute
   '/people/$membershipId': typeof AuthenticatedAppPeopleMembershipIdRoute
   '/people/import': typeof AuthenticatedAppPeopleImportRoute
@@ -307,6 +315,7 @@ export interface FileRoutesByTo {
   '/organisation/branches': typeof AuthenticatedAppOrganisationBranchesRoute
   '/organisation/departments': typeof AuthenticatedAppOrganisationDepartmentsRoute
   '/organisation/job-titles': typeof AuthenticatedAppOrganisationJobTitlesRoute
+  '/organisation/skills': typeof AuthenticatedAppOrganisationSkillsRoute
   '/organisation/system-roles': typeof AuthenticatedAppOrganisationSystemRolesRoute
   '/people/$membershipId': typeof AuthenticatedAppPeopleMembershipIdRoute
   '/people/import': typeof AuthenticatedAppPeopleImportRoute
@@ -346,6 +355,7 @@ export interface FileRoutesById {
   '/_authenticated/_app/organisation/branches': typeof AuthenticatedAppOrganisationBranchesRoute
   '/_authenticated/_app/organisation/departments': typeof AuthenticatedAppOrganisationDepartmentsRoute
   '/_authenticated/_app/organisation/job-titles': typeof AuthenticatedAppOrganisationJobTitlesRoute
+  '/_authenticated/_app/organisation/skills': typeof AuthenticatedAppOrganisationSkillsRoute
   '/_authenticated/_app/organisation/system-roles': typeof AuthenticatedAppOrganisationSystemRolesRoute
   '/_authenticated/_app/people_/$membershipId': typeof AuthenticatedAppPeopleMembershipIdRoute
   '/_authenticated/_app/people_/import': typeof AuthenticatedAppPeopleImportRoute
@@ -384,6 +394,7 @@ export interface FileRouteTypes {
     | '/organisation/branches'
     | '/organisation/departments'
     | '/organisation/job-titles'
+    | '/organisation/skills'
     | '/organisation/system-roles'
     | '/people/$membershipId'
     | '/people/import'
@@ -420,6 +431,7 @@ export interface FileRouteTypes {
     | '/organisation/branches'
     | '/organisation/departments'
     | '/organisation/job-titles'
+    | '/organisation/skills'
     | '/organisation/system-roles'
     | '/people/$membershipId'
     | '/people/import'
@@ -458,6 +470,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/organisation/branches'
     | '/_authenticated/_app/organisation/departments'
     | '/_authenticated/_app/organisation/job-titles'
+    | '/_authenticated/_app/organisation/skills'
     | '/_authenticated/_app/organisation/system-roles'
     | '/_authenticated/_app/people_/$membershipId'
     | '/_authenticated/_app/people_/import'
@@ -661,6 +674,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppOrganisationJobTitlesRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/_app/organisation/skills': {
+      id: '/_authenticated/_app/organisation/skills'
+      path: '/organisation/skills'
+      fullPath: '/organisation/skills'
+      preLoaderRoute: typeof AuthenticatedAppOrganisationSkillsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/_app/organisation/system-roles': {
       id: '/_authenticated/_app/organisation/system-roles'
       path: '/organisation/system-roles'
@@ -756,6 +776,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppOrganisationBranchesRoute: typeof AuthenticatedAppOrganisationBranchesRoute
   AuthenticatedAppOrganisationDepartmentsRoute: typeof AuthenticatedAppOrganisationDepartmentsRoute
   AuthenticatedAppOrganisationJobTitlesRoute: typeof AuthenticatedAppOrganisationJobTitlesRoute
+  AuthenticatedAppOrganisationSkillsRoute: typeof AuthenticatedAppOrganisationSkillsRoute
   AuthenticatedAppOrganisationSystemRolesRoute: typeof AuthenticatedAppOrganisationSystemRolesRoute
   AuthenticatedAppPeopleMembershipIdRoute: typeof AuthenticatedAppPeopleMembershipIdRoute
   AuthenticatedAppPeopleImportRoute: typeof AuthenticatedAppPeopleImportRoute
@@ -788,6 +809,8 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
     AuthenticatedAppOrganisationDepartmentsRoute,
   AuthenticatedAppOrganisationJobTitlesRoute:
     AuthenticatedAppOrganisationJobTitlesRoute,
+  AuthenticatedAppOrganisationSkillsRoute:
+    AuthenticatedAppOrganisationSkillsRoute,
   AuthenticatedAppOrganisationSystemRolesRoute:
     AuthenticatedAppOrganisationSystemRolesRoute,
   AuthenticatedAppPeopleMembershipIdRoute:

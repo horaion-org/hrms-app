@@ -55,6 +55,10 @@ export const fetchAccessRoleCount = (companyId: string): Promise<number> =>
 export const fetchActiveJobTitleCount = (companyId: string): Promise<number> =>
 	countOf(`${companyPath(companyId)}/job-titles?status=ACTIVE&size=1`);
 
+/** Active skills of the company's catalogue; read under `skill:read`, company-wide. */
+export const fetchActiveSkillCount = (companyId: string): Promise<number> =>
+	countOf(`${companyPath(companyId)}/skill-overview?status=ACTIVE&size=1`);
+
 /** The newest successful Organisation changes, newest first. */
 export const fetchRecentActivity = async (
 	companyId: string,

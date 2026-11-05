@@ -93,6 +93,14 @@ export const Organisation = (): FunctionComponent => {
 								value={figure(overview.jobTitles)}
 							/>
 						)}
+						{!overview.skills.hidden && (
+							<StatCard
+								action={viewAll("/organisation/skills")}
+								caption={t("organisation.skills.caption")}
+								title={t("organisation.skills.title")}
+								value={figure(overview.skills)}
+							/>
+						)}
 						{!overview.accessRoles.hidden && (
 							<StatCard
 								action={viewAll("/organisation/system-roles")}

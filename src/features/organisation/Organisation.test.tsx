@@ -192,7 +192,7 @@ it("hides what the workspace does not grant and never asks for it", async () => 
 	expect(
 		await within(await findCard("Branches")).findByText("3")
 	).toBeVisible();
-	for (const name of ["Departments", "Job titles", "System roles"])
+	for (const name of ["Departments", "Job titles", "Skills", "System roles"])
 		expect(screen.queryByRole("region", { name })).not.toBeInTheDocument();
 	expect(
 		screen.queryByRole("region", { name: "Recent Activity" })
@@ -207,6 +207,27 @@ it("hides what the workspace does not grant and never asks for it", async () => 
 					!path.endsWith("/me/profile")
 			)
 	).toEqual(["/api/v1/companies/c-1/branches"]);
+});
+
+it("counts active skills for a person holding skill:read company-wide", async () => {
+	const calls = stubApi({
+		[REFRESH]: accessPassReply(),
+		[ME]: currentUserReply(),
+		[WORKSPACE]: workspaceReply(["skill:read"]),
+		"GET /api/v1/companies/c-1/skill-overview": totalReply(7),
+	});
+	await open();
+
+	const skills = await findCard("Skills");
+	expect(await within(skills).findByText("7")).toBeVisible();
+	expect(
+		within(skills).getByText("Skills and licences people can hold")
+	).toBeVisible();
+	expect(
+		within(skills).getByRole("link", { name: "View All" })
+	).toHaveAttribute("href", "/organisation/skills");
+	const overview = calls.find((call) => call.path.endsWith("/skill-overview"));
+	expect(new URLSearchParams(overview?.search).get("status")).toBe("ACTIVE");
 });
 
 it("shows the unit counts to a person granted only at one branch", async () => {
