@@ -7,6 +7,7 @@ import { authTestI18n } from "@/features/auth/testingI18n";
 import { ConstraintDialog } from "@/features/scheduling/constraints/ConstraintDialog";
 import { constraintSchema } from "@/features/scheduling/constraints/ConstraintDialog/schema";
 import {
+	COMPANY_CONSTRAINT_FIXTURES,
 	CONSTRAINT_FIXTURES,
 	CONSTRAINT_OPTIONS,
 	CONSTRAINT_TYPE_OPTIONS,
@@ -80,6 +81,144 @@ const constraint = (
 ): (typeof CONSTRAINT_FIXTURES)[number] =>
 	CONSTRAINT_FIXTURES.find((item) => item.constraintId === constraintId) ??
 	CONSTRAINT_FIXTURES[0]!;
+
+describe("ConstraintDialog for the Scheduling policy (ADR-0058)", () => {
+	const companyRest = COMPANY_CONSTRAINT_FIXTURES[0]!;
+	const companyWeekends = COMPANY_CONSTRAINT_FIXTURES[1]!;
+
+	it("given_withLock_when_saved_then_sendsTheLockChosen", async () => {
+		const user = userEvent.setup();
+		const { onSave } = renderDialog({ withLock: true });
+		await start(user, "Working hours: Rest between shifts");
+		expect(trigger(/^Lock/)).toHaveTextContent("Locked");
+		expect(
+			screen.getByText(
+				"Every department keeps it and can only make it stricter."
+			)
+		).toBeVisible();
+
+		await pick(user, /^Lock/, "Default");
+		await user.type(screen.getByRole("spinbutton", { name: /Rest/ }), "11");
+		await user.click(screen.getByRole("button", { name: "Save" }));
+
+		await waitFor(() => {
+			expect(onSave).toHaveBeenCalledWith(
+				expect.objectContaining({
+					type: "REST_BETWEEN_SHIFTS",
+					lock: "DEFAULT",
+					values: [{ field: "REST_HOURS", value: "11" }],
+				})
+			);
+		});
+	});
+
+	it("given_aLockedCompanyConstraint_when_replacedLooser_then_refusedBeforeSending", async () => {
+		const user = userEvent.setup();
+		const { onSave } = renderDialog({ replacing: companyRest });
+		await screen.findByRole("dialog", { name: "Set for this department" });
+		expect(
+			screen.getByText(
+				"Company rest is set by the company and locked. You can only make it stricter here."
+			)
+		).toBeVisible();
+		expect(trigger(/^Constraint type/)).toBeDisabled();
+
+		await user.type(screen.getByLabelText("Constraint name"), "Front rest");
+		const hours = screen.getByRole("spinbutton", { name: /Rest/ });
+		await user.clear(hours);
+		await user.type(hours, "10");
+		await user.click(screen.getByRole("button", { name: "Save" }));
+
+		expect(
+			await screen.findByText(
+				"These values wouldn’t be at least as strict as the company’s locked constraint in every part. Make them stricter, or keep the company’s."
+			)
+		).toBeVisible();
+		expect(onSave).not.toHaveBeenCalled();
+	});
+
+	it("given_anEarlierRefusal_when_replacedLooser_then_theLooserRefusalReplacesItAndTakesFocus", async () => {
+		const user = userEvent.setup();
+		const onSave = vi.fn().mockRejectedValue(problem(500, "INTERNAL_ERROR"));
+		renderDialog({ replacing: companyRest, onSave });
+		await screen.findByRole("dialog", { name: "Set for this department" });
+		await user.type(screen.getByLabelText("Constraint name"), "Front rest");
+		const hours = screen.getByRole("spinbutton", { name: /Rest/ });
+		await user.clear(hours);
+		await user.type(hours, "12");
+		await user.click(screen.getByRole("button", { name: "Save" }));
+		expect(await screen.findByRole("alert")).toHaveTextContent(
+			"We couldn’t add the constraint. Try again."
+		);
+
+		await user.clear(hours);
+		await user.type(hours, "10");
+		await user.click(screen.getByRole("button", { name: "Save" }));
+
+		await waitFor(() => {
+			expect(screen.getByRole("alert")).toHaveTextContent(
+				"These values wouldn’t be at least as strict as the company’s locked constraint in every part."
+			);
+		});
+		expect(screen.getByRole("alert")).toHaveFocus();
+		expect(onSave).toHaveBeenCalledTimes(1);
+	});
+
+	it("given_aLockedCompanyConstraint_when_replacedStricter_then_sendsItAsItsReplacement", async () => {
+		const user = userEvent.setup();
+		const { onSave } = renderDialog({ replacing: companyRest });
+		await screen.findByRole("dialog", { name: "Set for this department" });
+
+		await user.type(screen.getByLabelText("Constraint name"), "Front rest");
+		const hours = screen.getByRole("spinbutton", { name: /Rest/ });
+		await user.clear(hours);
+		await user.type(hours, "12");
+		await user.click(screen.getByRole("button", { name: "Save" }));
+
+		await waitFor(() => {
+			expect(onSave).toHaveBeenCalledWith(
+				expect.objectContaining({
+					type: "REST_BETWEEN_SHIFTS",
+					overridesConstraintId: "company-rest",
+					values: [{ field: "REST_HOURS", value: "12" }],
+				})
+			);
+		});
+	});
+
+	it("given_aDefault_when_replacedLooser_then_sent", async () => {
+		const user = userEvent.setup();
+		const { onSave } = renderDialog({ replacing: companyWeekends });
+		await screen.findByRole("dialog", { name: "Set for this department" });
+
+		await user.type(screen.getByLabelText("Constraint name"), "No weekends");
+		await user.click(screen.getByRole("button", { name: "Save" }));
+
+		await waitFor(() => {
+			expect(onSave).toHaveBeenCalledWith(
+				expect.objectContaining({ overridesConstraintId: "company-weekends" })
+			);
+		});
+	});
+
+	it("given_theApiRefusesAsNotStricter_when_saved_then_explainsIt", async () => {
+		const user = userEvent.setup();
+		const onSave = vi
+			.fn()
+			.mockRejectedValue(problem(409, "CONSTRAINT_OVERRIDE_NOT_STRICTER"));
+		renderDialog({ replacing: companyWeekends, onSave });
+		await screen.findByRole("dialog", { name: "Set for this department" });
+
+		await user.type(screen.getByLabelText("Constraint name"), "No weekends");
+		await user.click(screen.getByRole("button", { name: "Save" }));
+
+		expect(
+			await screen.findByText(
+				"These values wouldn’t be at least as strict as the company’s locked constraint in every part. Make them stricter, or keep the company’s."
+			)
+		).toBeVisible();
+	});
+});
 
 describe("ConstraintDialog", () => {
 	it("given_noTypeYet_when_rendered_then_offersEveryTypeLabelledByItsCategory", async () => {

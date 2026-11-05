@@ -338,6 +338,30 @@
 				"organisationResult": "{{created}} creados · {{skipped}} omitidos",
 				"peopleResult": "{{added}} añadidos · {{failed}} fallidos"
 			}
+		},
+		"scheduling": {
+			"title": "Programación",
+			"description": "Restricciones que siguen los horarios de todos los departamentos.",
+			"policy": {
+				"title": "Política de programación",
+				"subtitle": "Restricciones que siguen los horarios de todos los departamentos. Un departamento no puede quitar ni relajar una bloqueada; las predeterminadas empiezan marcadas y se pueden quitar.",
+				"add": "Añadir restricción",
+				"label": "Restricciones de la política de programación",
+				"empty": "Aún no hay restricciones para toda la empresa. Cada departamento define las suyas.",
+				"loading": "Cargando la política de programación…",
+				"failed": "No pudimos cargar la política de programación. Inténtalo de nuevo.",
+				"hidden": "No tienes permiso para ver la política de programación.",
+				"lock": "Bloqueo",
+				"added": "Restricción añadida a la política de programación",
+				"saved": "Restricción de la política de programación guardada",
+				"deleted": "Restricción quitada de la política de programación",
+				"deleteTitle": "¿Quitar {{name}}?",
+				"deleteDescription": "Deja de aplicarse a los borradores de todos los departamentos. Los horarios generados la conservan, y la versión propia de un departamento sigue siendo suya.",
+				"deleteConfirm": "Quitar",
+				"cancel": "Cancelar",
+				"deleteFailed": "No pudimos quitar la restricción. Inténtalo de nuevo.",
+				"deleteForbidden": "Ya no tienes permiso para cambiar la política de programación."
+			}
 		}
 	},
 	"combobox": {
@@ -528,6 +552,14 @@
 					"update": "Editar",
 					"delete": "Eliminar"
 				}
+			},
+			"scheduling_policy": {
+				"name": "Política de planificación",
+				"description": "Las restricciones propias de la empresa, definidas una vez para todos los departamentos: las bloqueadas, que cada departamento debe mantener y solo puede hacer más estrictas, y las predeterminadas, que puede omitir.",
+				"actions": {
+					"read": "Ver",
+					"update": "Editar"
+				}
 			}
 		},
 		"jobTitles": {
@@ -601,7 +633,10 @@
 				"skillCreated": "Habilidad creada: {{name}}",
 				"skillUpdated": "Habilidad actualizada: {{name}}",
 				"skillDeleted": "Habilidad eliminada: {{name}}",
-				"skillAssigned": "Habilidad asignada a personas: {{name}}"
+				"skillAssigned": "Habilidad asignada a personas: {{name}}",
+				"schedulingPolicyCreated": "Restricción añadida a la política de programación: {{name}}",
+				"schedulingPolicyUpdated": "Restricción de la política de programación cambiada: {{name}}",
+				"schedulingPolicyDeleted": "Restricción quitada de la política de programación: {{name}}"
 			},
 			"unnamed": {
 				"jobTitleCreated": "Puesto creado",
@@ -631,7 +666,10 @@
 				"skillCreated": "Habilidad creada",
 				"skillUpdated": "Habilidad actualizada",
 				"skillDeleted": "Habilidad eliminada",
-				"skillAssigned": "Habilidad asignada a personas"
+				"skillAssigned": "Habilidad asignada a personas",
+				"schedulingPolicyCreated": "Restricción añadida a la política de programación",
+				"schedulingPolicyUpdated": "Restricción de la política de programación cambiada",
+				"schedulingPolicyDeleted": "Restricción quitada de la política de programación"
 			},
 			"fallback": {
 				"named": "{{verb}} de {{entity}}: {{name}}",
@@ -1587,7 +1625,7 @@
 		},
 		"constraints": {
 			"title": "Restricciones del horario",
-			"description": "Elige qué restricciones del departamento aplica este horario. Un cambio en una restricción se aplica a todos los borradores del departamento.",
+			"description": "Elige qué restricciones aplica este horario. Las de la empresa van primero; las bloqueadas se aplican siempre. Un cambio en una restricción se aplica a todos los borradores del departamento.",
 			"frozenDescription": "Las restricciones con las que se generó este horario, tal como eran entonces.",
 			"add": "Añadir restricción",
 			"label": "Restricciones",
@@ -1728,7 +1766,24 @@
 				"failed": "No pudimos añadir la restricción. Inténtalo de nuevo.",
 				"editForbidden": "Ya no tienes permiso para cambiar esta restricción.",
 				"editFailed": "No pudimos guardar la restricción. Inténtalo de nuevo.",
-				"gone": "Esta restricción ya no existe."
+				"gone": "Esta restricción ya no existe.",
+				"lock": "Bloqueo",
+				"lockHints": {
+					"LOCKED": "Todos los departamentos la mantienen y solo pueden hacerla más estricta.",
+					"DEFAULT": "Marcada en cada horario nuevo; un departamento puede quitarla."
+				},
+				"lockRequired": "Elige cómo se aplica a los departamentos.",
+				"replaceTitle": "Definir para este departamento",
+				"replacingLocked": "{{name}} la define la empresa y está bloqueada. Aquí solo puedes hacerla más estricta.",
+				"replacingDefault": "{{name}} es una restricción predeterminada de la empresa. Tu versión la sustituye en este departamento.",
+				"notStricter": "Estos valores no serían, en todos sus aspectos, al menos tan estrictos como la restricción bloqueada de la empresa. Hazlos más estrictos o mantén la de la empresa.",
+				"overrideInvalid": "Esto ya no puede sustituir esa restricción de la empresa. Recarga e inténtalo de nuevo.",
+				"alreadyOverridden": "Este departamento ya tiene su propia versión de esa restricción de la empresa. Edita esa.",
+				"typeSetByCompany": "La empresa ya define esto. Haz aquí más estricta la de la empresa.",
+				"levelNotAllowed": "Este tipo de restricción nombra turnos o puestos de un departamento, así que solo un departamento puede definirla.",
+				"nameConflictCompany": "La empresa ya tiene una restricción llamada \"{{name}}\". Elige otro nombre.",
+				"typeAlreadyUsedCompany": "La empresa ya tiene una restricción de este tipo. Edita esa.",
+				"typeFixed": "El tipo de una restricción de la empresa no se puede cambiar. Añade una restricción nueva."
 			},
 			"preview": {
 				"title": "Vista previa de la restricción",
@@ -1743,7 +1798,23 @@
 				"consequence": "El horario se generará sin reglas como días libres u horas máximas.",
 				"confirm": "Continuar sin restricciones",
 				"cancel": "Volver a las restricciones"
-			}
+			},
+			"setBy": "Definida por",
+			"levels": {
+				"COMPANY": "Empresa",
+				"DEPARTMENT": "Este departamento"
+			},
+			"setByCompany": "Definida por la empresa",
+			"stricterHere": "Más estricta aquí",
+			"changedHere": "Cambiada aquí",
+			"makeStricter": "Hacer {{name}} más estricta aquí",
+			"changeHere": "Cambiar {{name}} para este departamento",
+			"locks": {
+				"LOCKED": "Bloqueada",
+				"DEFAULT": "Predeterminada"
+			},
+			"companyRuleApplies": "Se aplica la regla de la empresa",
+			"companyRuleAppliesHint": "La restricción de la empresa ahora es más estricta que esta, así que se aplican ambas."
 		},
 		"forecast": {
 			"title": "Previsión de personal",

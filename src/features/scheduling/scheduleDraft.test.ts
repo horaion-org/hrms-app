@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { CONSTRAINT_FIXTURES } from "@/features/scheduling/constraints/fixtures";
+import {
+	COMPANY_CONSTRAINT_FIXTURES,
+	CONSTRAINT_FIXTURES,
+	constraintFixture,
+} from "@/features/scheduling/constraints/fixtures";
 import {
 	generatedScheduleFixture,
 	scheduleFixture,
@@ -366,5 +370,44 @@ describe("frozen schedules and ticks", () => {
 		expect(tickedConstraintsOf(draft, undefined)).toEqual(
 			draft.includedConstraintIds
 		);
+	});
+
+	it("given_aLockedCompanyConstraint_when_notTicked_then_itIsTickedAnyway", () => {
+		expect(
+			tickedConstraintsOf({ includedConstraintIds: ["morning-cover"] }, [
+				...COMPANY_CONSTRAINT_FIXTURES,
+				...CONSTRAINT_FIXTURES,
+			])
+		).toEqual(["company-rest", "morning-cover"]);
+	});
+
+	it("given_aTickedDefaultReplacedSince_when_read_then_itsReplacementIsTicked", () => {
+		const [, weekends] = COMPANY_CONSTRAINT_FIXTURES;
+		const replaced = {
+			...weekends!,
+			overriddenByConstraintId: "front-weekends",
+		};
+		const replacement = constraintFixture({
+			constraintId: "front-weekends",
+			name: "Front weekends",
+			type: "AVOID_DAYS_OFF_ON",
+			values: [],
+			overridesConstraintId: "company-weekends",
+			replacementStatus: "STANDS_IN",
+		});
+
+		// The company id the draft ticked moves to the replacement; an unrelated tick change keeps it.
+		expect(
+			tickedConstraintsOf(
+				{ includedConstraintIds: ["company-weekends", "morning-cover"] },
+				[replaced, replacement, ...CONSTRAINT_FIXTURES]
+			)
+		).toEqual(["front-weekends", "morning-cover"]);
+		expect(
+			tickedConstraintsOf(
+				{ includedConstraintIds: ["company-weekends", "two-days-off"] },
+				[replaced, replacement, ...CONSTRAINT_FIXTURES]
+			)
+		).toEqual(["front-weekends", "two-days-off"]);
 	});
 });

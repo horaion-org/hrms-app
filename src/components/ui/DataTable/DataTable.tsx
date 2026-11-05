@@ -96,6 +96,13 @@ export type DataTableProps<TData extends object> = {
 		/** The selected row ids when the caller owns them; otherwise the table keeps its own. */
 		selectedIds?: Array<string>;
 		onChange?: (selectedIds: Array<string>) => void;
+		/**
+		 * Rows whose box can change; every row when left out. A row that can't
+		 * keeps its box as the selection says and shows it disabled, and
+		 * select-all, ticking or clearing, passes it by. Select-all is disabled
+		 * when no row's box can change.
+		 */
+		canSelect?: (row: TData) => boolean;
 	};
 	/**
 	 * Adds a leading button per row, named by `rowLabel`, that shows
@@ -318,7 +325,9 @@ export const DataTable = <TData extends object>({
 		enableSortingRemoval: false,
 		enableMultiSort: false,
 		sortDescFirst: false,
-		enableRowSelection: selection !== undefined,
+		enableRowSelection: selection?.canSelect
+			? (row): boolean => selection.canSelect?.(row.original) ?? true
+			: selection !== undefined,
 		enableExpanding: expansion !== undefined,
 		getRowCanExpand: (row) =>
 			expansion?.canExpand?.(row.original) ?? expansion !== undefined,
@@ -350,6 +359,8 @@ export const DataTable = <TData extends object>({
 	const headers = table.getHeaderGroups()[0]?.headers ?? [];
 	const columnCount = headers.length + leadingCount;
 	const allSelected = rows.length > 0 && table.getIsAllRowsSelected();
+	// Select-all does nothing when no row's box can change.
+	const noneSelectable = !rows.some((row) => row.getCanSelect());
 
 	return (
 		<div
@@ -395,7 +406,7 @@ export const DataTable = <TData extends object>({
 									hideLabel
 									checked={allSelected}
 									className="justify-center"
-									disabled={rows.length === 0}
+									disabled={noneSelectable}
 									indeterminate={!allSelected && table.getIsSomeRowsSelected()}
 									label={t("dataTable.selectAll")}
 									onChange={table.getToggleAllRowsSelectedHandler()}
@@ -500,6 +511,7 @@ export const DataTable = <TData extends object>({
 												hideLabel
 												checked={row.getIsSelected()}
 												className="justify-center"
+												disabled={!row.getCanSelect()}
 												label={t("dataTable.selectRow", {
 													name: selection.rowLabel(row.original),
 												})}

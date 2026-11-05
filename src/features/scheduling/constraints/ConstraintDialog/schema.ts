@@ -5,11 +5,13 @@ import {
 	CONSTRAINT_REQUIREMENTS,
 	CONSTRAINT_STATUSES,
 	CONSTRAINT_TYPES,
+	POLICY_LOCKS,
 	type ConstraintBody,
 	type ConstraintField,
 	type ConstraintFieldSpec,
 	type ConstraintStatus,
 	type ConstraintTypeOption,
+	type PolicyLock,
 } from "@/features/scheduling/constraints/api";
 
 /** Each field's values as the form holds them: as text, a field of one value as a list of one. */
@@ -25,9 +27,14 @@ export type ConstraintFormValues = {
 	/** "" until chosen; left out for a type that takes none. */
 	requirement: string;
 	status: ConstraintStatus;
+	/** A company constraint's lock; empty or absent when the dialog does not offer one. */
+	lock?: string;
 	/** Every field filled in so far, kept across a change of type; only the chosen type's are sent. */
 	values: ConstraintFieldValues;
 };
+
+/** What the dialog sends: a constraint body, with a lock when it edits the company's Scheduling policy. */
+export type ConstraintDialogBody = ConstraintBody & { lock?: PolicyLock };
 
 const key = "scheduling.constraints.dialog";
 
@@ -93,12 +100,13 @@ const checkConsistent = (
  * when the type takes one, and the two checks that tie fields together.
  * Name uniqueness, and whether the job titles and shifts are still live,
  * remain server decisions. Yields the API's body: the type's fields only,
- * one entry per value.
+ * one entry per value, and with `withLock` the company constraint's lock.
  */
 export const constraintSchema = (
 	type: ConstraintTypeOption | undefined,
-	t: TFunction
-): z.ZodType<ConstraintBody, ConstraintFormValues> => {
+	t: TFunction,
+	withLock = false
+): z.ZodType<ConstraintDialogBody, ConstraintFormValues> => {
 	const fields = type?.fields ?? [];
 	return z
 		.object({
@@ -114,6 +122,12 @@ export const constraintSchema = (
 					})
 				: z.string().transform(() => null),
 			status: z.enum(CONSTRAINT_STATUSES),
+			lock: withLock
+				? z.enum(POLICY_LOCKS, { error: t(`${key}.lockRequired`) })
+				: z
+						.string()
+						.optional()
+						.transform(() => undefined),
 			values: z.object(
 				Object.fromEntries(
 					fields.map((spec) => [spec.field, fieldSchema(spec, t)])
@@ -123,8 +137,9 @@ export const constraintSchema = (
 		.superRefine(({ values }, context) => {
 			checkConsistent(values, context, t);
 		})
-		.transform(({ values, ...constraint }) => ({
+		.transform(({ values, lock, ...constraint }) => ({
 			...constraint,
+			...(lock === undefined ? {} : { lock }),
 			values: fields.flatMap(({ field }) =>
 				(values[field] ?? []).map((value) => ({ field, value }))
 			),

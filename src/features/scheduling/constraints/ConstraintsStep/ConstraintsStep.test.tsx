@@ -6,8 +6,10 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 import en from "@/assets/locales/en/translations.json";
 import { ConstraintsStep } from "@/features/scheduling/constraints/ConstraintsStep";
 import {
+	COMPANY_CONSTRAINT_FIXTURES,
 	CONSTRAINT_FIXTURES,
 	INCLUDED_CONSTRAINT_IDS,
+	constraintFixture,
 	frozenConstraintsFixture,
 } from "@/features/scheduling/constraints/fixtures";
 
@@ -87,6 +89,7 @@ describe("ConstraintsStep", () => {
 				name,
 				`${category}${type}`,
 				sentence,
+				"This department",
 				requirement,
 				name === "Weekend days on" ? "Inactive" : "Active",
 			]);
@@ -141,12 +144,11 @@ describe("ConstraintsStep", () => {
 			/>
 		);
 
-		await user.click(
+		expect(
 			screen.getByRole("checkbox", { name: "Select Weekend days on" })
-		);
+		).toBeDisabled();
 		await user.click(screen.getByRole("checkbox", { name: "Select all" }));
 
-		expect(onIncludedChange).toHaveBeenNthCalledWith(1, ["morning-cover"]);
 		// Select all ticks every active constraint and still leaves the inactive one out.
 		const ticked = onIncludedChange.mock.lastCall?.[0] as Array<string>;
 		expect([...ticked].sort()).toEqual(
@@ -259,5 +261,174 @@ describe("ConstraintsStep", () => {
 		expect(
 			screen.queryByRole("button", { name: /^(Edit|Delete) / })
 		).toBeNull();
+	});
+	describe("with the company's Scheduling policy (ADR-0058)", () => {
+		const [companyRest, companyWeekends] = COMPANY_CONSTRAINT_FIXTURES as [
+			(typeof COMPANY_CONSTRAINT_FIXTURES)[number],
+			(typeof COMPANY_CONSTRAINT_FIXTURES)[number],
+		];
+		const withPolicy = [...COMPANY_CONSTRAINT_FIXTURES, ...CONSTRAINT_FIXTURES];
+
+		it("given_aLockedCompanyConstraint_when_rendered_then_itIsTickedAndCannotBeUnticked", async () => {
+			const user = userEvent.setup();
+			const onIncludedChange = vi.fn();
+			render(
+				<ConstraintsStep
+					constraints={withPolicy}
+					includedConstraintIds={["morning-cover"]}
+					onIncludedChange={onIncludedChange}
+				/>
+			);
+
+			const locked = screen.getByRole("checkbox", {
+				name: "Select Company rest",
+			});
+			expect(locked).toBeChecked();
+			expect(locked).toBeDisabled();
+			expect(row("Company rest")).toHaveTextContent("Company · Locked");
+			expect(row("Company weekends")).toHaveTextContent("Company · Default");
+
+			await user.click(
+				screen.getByRole("checkbox", { name: "Select Morning cover" })
+			);
+
+			// Unticking the rest still leaves the locked constraint ticked.
+			expect(onIncludedChange).toHaveBeenLastCalledWith(["company-rest"]);
+		});
+
+		it("given_companyConstraints_when_changeable_then_offeredOnlyAsAReplacementForTheDepartment", async () => {
+			const user = userEvent.setup();
+			const onReplace = vi.fn();
+			render(
+				<ConstraintsStep
+					constraints={withPolicy}
+					includedConstraintIds={[]}
+					onDelete={vi.fn()}
+					onEdit={vi.fn()}
+					onReplace={onReplace}
+				/>
+			);
+
+			expect(
+				within(row("Company rest")).queryByRole("button", {
+					name: /^(Edit|Delete) /,
+				})
+			).toBeNull();
+			await user.click(
+				screen.getByRole("button", { name: "Make Company rest stricter here" })
+			);
+			await user.click(
+				screen.getByRole("button", {
+					name: "Change Company weekends for this department",
+				})
+			);
+
+			expect(onReplace).toHaveBeenNthCalledWith(1, companyRest);
+			expect(onReplace).toHaveBeenNthCalledWith(2, companyWeekends);
+		});
+
+		it("given_aCompanyConstraintReplacedHere_when_rendered_then_onlyItsReplacementShowsAsStricterHere", () => {
+			const stricter = constraintFixture({
+				constraintId: "front-rest",
+				name: "Front rest",
+				type: "REST_BETWEEN_SHIFTS",
+				category: "WORKING_HOURS",
+				requirement: null,
+				values: [{ field: "REST_HOURS", value: "12", name: null }],
+				locked: true,
+				overridesConstraintId: "company-rest",
+			});
+			render(
+				<ConstraintsStep
+					includedConstraintIds={[]}
+					constraints={[
+						{ ...companyRest, overriddenByConstraintId: "front-rest" },
+						stricter,
+					]}
+					onIncludedChange={vi.fn()}
+				/>
+			);
+
+			expect(screen.queryByRole("row", { name: /Company rest/ })).toBeNull();
+			expect(row("Front rest")).toHaveTextContent("Stricter here");
+			expect(
+				screen.getByRole("checkbox", { name: "Select Front rest" })
+			).toBeChecked();
+		});
+
+		it("given_aTickedCompanyDefaultReplacedSinceTheDraftWasSaved_when_rendered_then_itsReplacementIsTickedAndStaysSoWhenAnotherTickChanges", async () => {
+			const user = userEvent.setup();
+			const onIncludedChange = vi.fn();
+			const changedHere = constraintFixture({
+				constraintId: "front-weekends",
+				name: "Front weekends",
+				type: "AVOID_DAYS_OFF_ON",
+				category: "SHIFT_PATTERN",
+				requirement: null,
+				values: [{ field: "WEEKDAY", value: "SUN", name: null }],
+				overridesConstraintId: "company-weekends",
+				replacementStatus: "STANDS_IN",
+			});
+			render(
+				<ConstraintsStep
+					// The draft still holds the company default's tick, as the API keeps it.
+					includedConstraintIds={["company-weekends", "morning-cover"]}
+					constraints={[
+						{ ...companyWeekends, overriddenByConstraintId: "front-weekends" },
+						changedHere,
+						...CONSTRAINT_FIXTURES,
+					]}
+					onIncludedChange={onIncludedChange}
+				/>
+			);
+
+			expect(row("Front weekends")).toHaveTextContent("Changed here");
+			expect(
+				screen.getByRole("checkbox", { name: "Select Front weekends" })
+			).toBeChecked();
+
+			await user.click(
+				screen.getByRole("checkbox", { name: "Select Morning cover" })
+			);
+
+			expect(onIncludedChange).toHaveBeenLastCalledWith(["front-weekends"]);
+		});
+
+		it("given_aReplacementTheCompanyTightenedPast_when_rendered_then_bothAreTickedAndItSaysTheCompanyRuleApplies", () => {
+			const stale = constraintFixture({
+				constraintId: "front-rest",
+				name: "Front rest",
+				type: "REST_BETWEEN_SHIFTS",
+				category: "WORKING_HOURS",
+				requirement: null,
+				values: [{ field: "REST_HOURS", value: "12", name: null }],
+				locked: true,
+				overridesConstraintId: "company-rest",
+				replacementStatus: "NO_LONGER_STRICTER",
+			});
+			render(
+				<ConstraintsStep
+					includedConstraintIds={[]}
+					constraints={[
+						{
+							...companyRest,
+							values: [{ field: "REST_HOURS", value: "13", name: null }],
+						},
+						stale,
+					]}
+					onIncludedChange={vi.fn()}
+				/>
+			);
+
+			for (const name of ["Company rest", "Front rest"]) {
+				const box = screen.getByRole("checkbox", { name: `Select ${name}` });
+				expect(box).toBeChecked();
+				expect(box).toBeDisabled();
+			}
+			expect(row("Front rest")).toHaveTextContent("Company rule applies");
+			expect(
+				within(row("Front rest")).queryByRole("img", { name: "Set by company" })
+			).toBeNull();
+		});
 	});
 });

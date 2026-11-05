@@ -16,6 +16,12 @@ export const CONSTRAINT_REFUSAL_CODES = {
 	shiftNotFound: "404 SHIFT_NOT_FOUND",
 	departmentInactive: "409 DEPARTMENT_INACTIVE",
 	departmentNotFound: "404 DEPARTMENT_NOT_FOUND",
+	overrideNotStricter: "409 CONSTRAINT_OVERRIDE_NOT_STRICTER",
+	overrideInvalid: "400 INVALID_CONSTRAINT_OVERRIDE",
+	alreadyOverridden: "409 CONSTRAINT_ALREADY_OVERRIDDEN",
+	typeSetByCompany: "409 CONSTRAINT_TYPE_SET_BY_COMPANY",
+	levelNotAllowed: "400 CONSTRAINT_LEVEL_NOT_ALLOWED",
+	typeFixed: "400 CONSTRAINT_TYPE_FIXED",
 } as const;
 
 const codes = CONSTRAINT_REFUSAL_CODES;
@@ -23,11 +29,18 @@ const codes = CONSTRAINT_REFUSAL_CODES;
 /** The fields a refused constraint can land on; the rest is explained as the dialog's alert. */
 export type ConstraintRefusalField = "name" | "type";
 
+/** What was being saved when a constraint was refused. */
+export type ConstraintRefusalContext = {
+	name: string;
+	editing: boolean;
+	/** The company's Scheduling policy, not a department's constraints, so the copy names the company. */
+	company: boolean;
+};
+
 /** Why adding or editing a constraint was refused: on a field, or as the dialog's alert. */
 export const constraintRefusal = (
 	error: unknown,
-	name: string,
-	editing: boolean,
+	{ name, editing, company }: ConstraintRefusalContext,
 	t: TFunction
 ): Refusal<ConstraintRefusalField> => {
 	const key = "scheduling.constraints.dialog";
@@ -37,13 +50,18 @@ export const constraintRefusal = (
 		codes: {
 			[codes.constraintNameConflict]: field(
 				"name",
-				t(`${key}.nameConflict`, { name })
+				t(company ? `${key}.nameConflictCompany` : `${key}.nameConflict`, {
+					name,
+				})
 			),
 			[codes.invalidConstraintName]: field("name", t(`${key}.nameRejected`)),
 			[codes.constraintTypeAlreadyUsed]: field(
 				"type",
-				t(`${key}.typeAlreadyUsed`)
+				t(company ? `${key}.typeAlreadyUsedCompany` : `${key}.typeAlreadyUsed`)
 			),
+			[codes.typeSetByCompany]: field("type", t(`${key}.typeSetByCompany`)),
+			[codes.levelNotAllowed]: field("type", t(`${key}.levelNotAllowed`)),
+			[codes.typeFixed]: field("type", t(`${key}.typeFixed`)),
 		},
 		alerts: {
 			[codes.invalidConstraint]: t(`${key}.invalid`),
@@ -52,6 +70,9 @@ export const constraintRefusal = (
 			[codes.departmentInactive]: t(`${key}.departmentInactive`),
 			[codes.departmentNotFound]: t(`${key}.departmentGone`),
 			[codes.constraintNotFound]: t(`${key}.gone`),
+			[codes.overrideNotStricter]: t(`${key}.notStricter`),
+			[codes.overrideInvalid]: t(`${key}.overrideInvalid`),
+			[codes.alreadyOverridden]: t(`${key}.alreadyOverridden`),
 		},
 		fieldErrors: {
 			name: field("name", t(`${key}.nameRejected`)),

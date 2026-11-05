@@ -18,6 +18,7 @@ import {
 import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
 import {
+	COMPANY_CONSTRAINT_FIXTURES,
 	CONSTRAINT_FIXTURES,
 	CONSTRAINT_OPTIONS_RESPONSE,
 	INCLUDED_CONSTRAINT_IDS,
@@ -917,6 +918,81 @@ describe("Create Schedule: the department's constraints", () => {
 				values: morning.values.map(({ field, value }) => ({ field, value })),
 			},
 		]);
+	});
+
+	it("given_aLockedCompanyConstraint_when_madeStricterHere_then_itsReplacementTakesItsPlaceTickedAndIsSaved", async () => {
+		const user = userEvent.setup();
+		const [companyRest, companyWeekends] = COMPANY_CONSTRAINT_FIXTURES;
+		// The department has no rest of its own, so the company's applies.
+		const departmentOwn = CONSTRAINT_FIXTURES.filter(
+			(constraint) => constraint.type !== "REST_BETWEEN_SHIFTS"
+		);
+		const frontRest = constraintFixture({
+			constraintId: "front-rest",
+			name: "Front rest",
+			type: "REST_BETWEEN_SHIFTS",
+			category: "WORKING_HOURS",
+			requirement: null,
+			values: [{ field: "REST_HOURS", value: "12", name: null }],
+			locked: true,
+			overridesConstraintId: "company-rest",
+			replacementStatus: "STANDS_IN",
+		});
+		const { calls } = await reopen({
+			[`POST ${LIVE_CONSTRAINTS}`]: reply(frontRest, 201),
+			[`GET ${LIVE_CONSTRAINTS}`]: [
+				reply([companyRest, companyWeekends, ...departmentOwn]),
+				reply([
+					{ ...companyRest, overriddenByConstraintId: "front-rest" },
+					companyWeekends,
+					...departmentOwn,
+					frontRest,
+				]),
+			],
+			[`PUT ${SCHEDULE}`]: reply(DRAFT),
+		});
+		await toConstraints(user);
+		expect(checkbox("Company rest")).toBeChecked();
+
+		await user.click(
+			screen.getByRole("button", { name: "Make Company rest stricter here" })
+		);
+		const dialog = await screen.findByRole("dialog", {
+			name: "Set for this department",
+		});
+		await user.type(
+			within(dialog).getByLabelText("Constraint name"),
+			"Front rest"
+		);
+		const hours = within(dialog).getByRole("spinbutton", { name: /Rest/ });
+		await user.clear(hours);
+		await user.type(hours, "12");
+		await user.click(within(dialog).getByRole("button", { name: "Save" }));
+
+		await screen.findByRole("row", { name: /Front rest/ });
+		expect(screen.queryByRole("row", { name: /Company rest/ })).toBeNull();
+		expect(screen.getByRole("row", { name: /Front rest/ })).toHaveTextContent(
+			"Stricter here"
+		);
+		expect(checkbox("Front rest")).toBeChecked();
+		expect(checkbox("Front rest")).toBeDisabled();
+		expect(sent(calls, `POST ${LIVE_CONSTRAINTS}`)).toEqual([
+			expect.objectContaining({
+				type: "REST_BETWEEN_SHIFTS",
+				overridesConstraintId: "company-rest",
+				values: [{ field: "REST_HOURS", value: "12" }],
+			}),
+		]);
+
+		await user.click(screen.getByRole("button", { name: "Save draft" }));
+		await waitFor(() => {
+			expect(sent(calls, `PUT ${SCHEDULE}`)).toHaveLength(1);
+		});
+		const saved = sent(calls, `PUT ${SCHEDULE}`)[0] as {
+			includedConstraintIds: Array<string>;
+		};
+		expect(saved.includedConstraintIds).toContain("front-rest");
+		expect(saved.includedConstraintIds).not.toContain("company-rest");
 	});
 
 	it("given_aConstraint_when_deleted_then_deletesItAtTheDepartmentAndUnticksIt", async () => {

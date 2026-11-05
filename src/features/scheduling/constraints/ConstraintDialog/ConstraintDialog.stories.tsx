@@ -4,6 +4,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import { ConstraintDialog } from "@/features/scheduling/constraints/ConstraintDialog";
 import {
+	COMPANY_CONSTRAINT_FIXTURES,
 	CONSTRAINT_FIXTURES,
 	CONSTRAINT_OPTIONS,
 } from "@/features/scheduling/constraints/fixtures";
@@ -42,3 +43,9 @@ export const OptionsLoading: Story = {
 	args: { options: { status: "pending" } },
 };
 export const OptionsHidden: Story = { args: { options: { status: "hidden" } } };
+/** A company constraint of the Scheduling policy: the lock is offered. */
+export const SchedulingPolicy: Story = { args: { withLock: true } };
+/** Making a locked company constraint stricter for one department. */
+export const ReplacingALockedConstraint: Story = {
+	args: { replacing: COMPANY_CONSTRAINT_FIXTURES[0] },
+};

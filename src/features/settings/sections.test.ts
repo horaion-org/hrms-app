@@ -29,14 +29,22 @@ describe("searchForSection", () => {
 });
 
 describe("visibleSections and selectedSectionIndex", () => {
-	it("adds Data last only when it has something to offer", () => {
-		expect(visibleSections(false)).toEqual([
+	const everything = { scheduling: true, data: true };
+	const neither = { scheduling: false, data: false };
+
+	it("adds Scheduling and Data only when they have something to offer", () => {
+		expect(visibleSections(neither)).toEqual([
+			"general",
+			"notifications",
+			"plan",
+		]);
+		expect(visibleSections({ scheduling: true, data: false })).toEqual([
 			"general",
 			"notifications",
 			"scheduling",
 			"plan",
 		]);
-		expect(visibleSections(true)).toEqual([
+		expect(visibleSections(everything)).toEqual([
 			"general",
 			"notifications",
 			"scheduling",
@@ -46,9 +54,12 @@ describe("visibleSections and selectedSectionIndex", () => {
 	});
 
 	it("selects the asked-for section, or General when it is not shown", () => {
-		expect(selectedSectionIndex(visibleSections(true), "data")).toBe(4);
-		expect(selectedSectionIndex(visibleSections(false), "data")).toBe(0);
-		expect(selectedSectionIndex(visibleSections(false), "plan")).toBe(3);
-		expect(selectedSectionIndex(visibleSections(false), undefined)).toBe(0);
+		expect(selectedSectionIndex(visibleSections(everything), "data")).toBe(4);
+		expect(selectedSectionIndex(visibleSections(neither), "data")).toBe(0);
+		expect(selectedSectionIndex(visibleSections(neither), "scheduling")).toBe(
+			0
+		);
+		expect(selectedSectionIndex(visibleSections(neither), "plan")).toBe(2);
+		expect(selectedSectionIndex(visibleSections(neither), undefined)).toBe(0);
 	});
 });

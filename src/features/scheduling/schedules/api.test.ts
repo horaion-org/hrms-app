@@ -273,6 +273,11 @@ describe("schedules client", () => {
 			values: constraint.values,
 			included: constraint.constraintId === "morning-cover",
 			frozen: false,
+			level: "DEPARTMENT" as const,
+			setBy: "Front Office",
+			locked: false,
+			overridesConstraintId: null,
+			replacesCompanyConstraint: false,
 		}));
 		const frozen = frozenConstraintsFixture();
 		stubApi({

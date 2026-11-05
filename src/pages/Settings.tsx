@@ -9,6 +9,7 @@ import { dataItemsFor, offersData } from "@/features/settings/dataAccess";
 import { DataSettings } from "@/features/settings/DataSettings";
 import { GeneralSettingsForm } from "@/features/settings/GeneralSettingsForm";
 import { PlanSettings } from "@/features/settings/PlanSettings";
+import { SchedulingPolicySettings } from "@/features/settings/SchedulingPolicySettings";
 import { useGeneralSettings } from "@/features/settings/useGeneralSettings";
 import {
 	searchForSection,
@@ -22,7 +23,7 @@ import { useAccess } from "@/features/workspace/useAccess";
 
 const route = getRouteApi("/_authenticated/_app/settings");
 
-const COMING_SOON_SECTIONS = ["notifications", "scheduling"] as const;
+const COMING_SOON_SECTIONS = ["notifications"] as const;
 
 const panelClasses =
 	"p-6 outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink-blue-500";
@@ -42,7 +43,14 @@ export const Settings = (): FunctionComponent => {
 	const search = route.useSearch();
 	const dataItems = dataItemsFor(access);
 	// The section lives in the URL, so a link such as `?section=data` opens it.
-	const sections = visibleSections(offersData(dataItems));
+	// Scheduling is offered with scheduling_policy:read; a link to it still opens
+	// it, to say the person may not see the policy.
+	const sections = visibleSections({
+		scheduling:
+			access.can("scheduling_policy:read", COMPANY_SCOPE) ||
+			search.section === "scheduling",
+		data: offersData(dataItems),
+	});
 	const selectedIndex = selectedSectionIndex(sections, search.section);
 	const planTabRef = useRef<HTMLButtonElement>(null);
 	const show = (next: SettingsSection): void => {
@@ -128,6 +136,11 @@ export const Settings = (): FunctionComponent => {
 							</p>
 						</TabPanel>
 					))}
+					{sections.includes("scheduling") && (
+						<TabPanel className={panelClasses}>
+							<SchedulingPolicySettings companyId={companyId} />
+						</TabPanel>
+					)}
 					<TabPanel className={panelClasses}>
 						<PlanSettings />
 					</TabPanel>

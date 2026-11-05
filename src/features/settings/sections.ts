@@ -1,4 +1,7 @@
-/** Settings' sections, in tab order; `data` is offered only to people who may use one of its items. */
+/**
+ * Settings' sections, in tab order; `scheduling` and `data` are offered only
+ * to people who may use them.
+ */
 export const SETTINGS_SECTIONS = [
 	"general",
 	"notifications",
@@ -27,9 +30,18 @@ export const parseSettingsSearch = (
 export const searchForSection = (section: SettingsSection): SettingsSearch =>
 	section === "general" ? {} : { section };
 
-/** The sections shown, in order: Data only when one of its items is offered. */
-export const visibleSections = (showData: boolean): Array<SettingsSection> =>
-	SETTINGS_SECTIONS.filter((section) => section !== "data" || showData);
+/** Which of the sections offered only to some people to show. */
+export type OptionalSections = { scheduling: boolean; data: boolean };
+
+/** The sections shown, in order: Scheduling and Data only when offered. */
+export const visibleSections = (
+	shown: OptionalSections
+): Array<SettingsSection> =>
+	SETTINGS_SECTIONS.filter(
+		(section) =>
+			(section !== "scheduling" || shown.scheduling) &&
+			(section !== "data" || shown.data)
+	);
 
 /** The tab to select: the asked-for section when shown, otherwise General. */
 export const selectedSectionIndex = (

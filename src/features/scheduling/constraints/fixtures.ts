@@ -2,6 +2,7 @@ import type {
 	ConstraintField,
 	ConstraintFieldKind,
 	ConstraintFieldSpec,
+	FieldStrictness,
 	ConstraintOptions,
 	ConstraintTypeOption,
 	ConstraintValue,
@@ -19,6 +20,24 @@ import {
  * `shifts/fixtures.ts`; draft s-1 ticks `INCLUDED_CONSTRAINT_IDS`.
  */
 
+/** Which way each field protects people more, as the API's `ConstraintField` declares it. */
+const STRICTNESS: Record<ConstraintField, FieldStrictness> = {
+	COMPARISON: "MUST_MATCH",
+	HEADCOUNT: "FOLLOWS_COMPARISON",
+	STAND_INS_PER_PERSON: "HIGHER_IS_STRICTER",
+	DAYS_OFF: "FOLLOWS_COMPARISON",
+	PERIOD_DAYS: "AGAINST_COMPARISON",
+	REST_HOURS: "HIGHER_IS_STRICTER",
+	JOB_TITLE: "MUST_MATCH",
+	STAND_IN_JOB_TITLE: "MUST_MATCH",
+	SHIFT: "MUST_MATCH",
+	WEEKDAY: "SUPERSET_IS_STRICTER",
+};
+
+/** Types that link to nothing may be set for the whole company; the rest by a Department only. */
+const DEPARTMENT_ONLY = ["DEPARTMENT"] as const;
+const ANY_LEVEL = ["COMPANY", "DEPARTMENT"] as const;
+
 /** A field chosen from a list; one value unless the counts say otherwise. */
 const choice = (
 	field: ConstraintField,
@@ -32,6 +51,7 @@ const choice = (
 	maxCount,
 	min: null,
 	max: null,
+	strictness: STRICTNESS[field],
 });
 
 /** A number field in its range. */
@@ -46,6 +66,7 @@ const number = (
 	maxCount: 1,
 	min,
 	max,
+	strictness: STRICTNESS[field],
 });
 
 /** Every constraint type as `constraint-options` answers it, declared as the API's `ConstraintType` does. */
@@ -55,6 +76,7 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 		category: "STAFFING",
 		hasRequirement: true,
 		onePerDepartment: false,
+		levels: [...DEPARTMENT_ONLY],
 		fields: [
 			choice("COMPARISON", "COMPARISON"),
 			number("HEADCOUNT", 0, 999),
@@ -67,6 +89,7 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 		category: "STAFFING",
 		hasRequirement: true,
 		onePerDepartment: false,
+		levels: [...DEPARTMENT_ONLY],
 		fields: [
 			number("HEADCOUNT", 0, 999),
 			number("STAND_INS_PER_PERSON", 1, 10),
@@ -80,6 +103,7 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 		category: "ROLE_COVERAGE",
 		hasRequirement: true,
 		onePerDepartment: false,
+		levels: [...DEPARTMENT_ONLY],
 		fields: [
 			choice("COMPARISON", "COMPARISON"),
 			number("HEADCOUNT", 0, 999),
@@ -92,6 +116,7 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 		category: "SHIFT_PATTERN",
 		hasRequirement: true,
 		onePerDepartment: false,
+		levels: [...ANY_LEVEL],
 		fields: [
 			choice("COMPARISON", "COMPARISON"),
 			number("DAYS_OFF", 0, 31),
@@ -103,6 +128,7 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 		category: "SHIFT_PATTERN",
 		hasRequirement: false,
 		onePerDepartment: false,
+		levels: [...ANY_LEVEL],
 		fields: [choice("WEEKDAY", "WEEKDAY", 1, 7)],
 	},
 	{
@@ -110,6 +136,7 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 		category: "WORKING_HOURS",
 		hasRequirement: false,
 		onePerDepartment: true,
+		levels: [...ANY_LEVEL],
 		fields: [number("REST_HOURS", 1, 24)],
 	},
 ];
@@ -171,8 +198,51 @@ export const constraintFixture = (
 	status: "ACTIVE",
 	createdAt: "2026-10-08T09:00:00Z",
 	updatedAt: "2026-10-08T09:00:00Z",
+	level: "DEPARTMENT",
+	lock: null,
+	locked: false,
+	overridesConstraintId: null,
+	overriddenByConstraintId: null,
+	replacementStatus: null,
 	...overrides,
 });
+
+/** A company constraint of the Scheduling policy, as a Department's list or the policy's own list answers it. */
+export const companyConstraintFixture = (
+	overrides: Partial<DepartmentConstraint> &
+		Pick<
+			DepartmentConstraint,
+			"constraintId" | "name" | "type" | "values" | "lock"
+		>
+): DepartmentConstraint =>
+	constraintFixture({
+		departmentId: null,
+		level: "COMPANY",
+		locked: overrides.lock === "LOCKED",
+		...overrides,
+	});
+
+/** The company's Scheduling policy: eleven hours of rest, locked, and a default on weekends. */
+export const COMPANY_CONSTRAINT_FIXTURES: Array<DepartmentConstraint> = [
+	companyConstraintFixture({
+		constraintId: "company-rest",
+		name: "Company rest",
+		type: "REST_BETWEEN_SHIFTS",
+		category: "WORKING_HOURS",
+		requirement: null,
+		lock: "LOCKED",
+		values: [plain("REST_HOURS", "11")],
+	}),
+	companyConstraintFixture({
+		constraintId: "company-weekends",
+		name: "Company weekends",
+		type: "AVOID_DAYS_OFF_ON",
+		category: "SHIFT_PATTERN",
+		requirement: null,
+		lock: "DEFAULT",
+		values: [plain("WEEKDAY", "SAT")],
+	}),
+];
 
 /** Front Office's live constraints, by name, as the list answers them; Weekend days on is inactive. */
 export const CONSTRAINT_FIXTURES: Array<DepartmentConstraint> = [
@@ -278,4 +348,9 @@ export const frozenConstraintsFixture = (): Array<ScheduleConstraint> =>
 		),
 		included: true,
 		frozen: true,
+		level: "DEPARTMENT",
+		setBy: "Front Office",
+		locked: false,
+		overridesConstraintId: null,
+		replacesCompanyConstraint: false,
 	}));

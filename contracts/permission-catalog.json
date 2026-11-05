@@ -690,6 +690,30 @@
       "action": "read",
       "actionName": "Read",
       "assignableScopes": [
+        "COMPANY"
+      ],
+      "key": "scheduling_policy:read",
+      "prerequisites": [],
+      "resource": "scheduling_policy",
+      "resourceName": "Scheduling Policy"
+    },
+    {
+      "action": "update",
+      "actionName": "Update",
+      "assignableScopes": [
+        "COMPANY"
+      ],
+      "key": "scheduling_policy:update",
+      "prerequisites": [
+        "scheduling_policy:read"
+      ],
+      "resource": "scheduling_policy",
+      "resourceName": "Scheduling Policy"
+    },
+    {
+      "action": "read",
+      "actionName": "Read",
+      "assignableScopes": [
         "COMPANY",
         "BRANCH",
         "DEPARTMENT"
