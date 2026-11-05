@@ -2854,49 +2854,6 @@
 			"off": "OFF",
 			"leave": "LEAVE",
 			"shiftLabel": "{{name}}, {{day}} {{time}}",
-			"shiftAction": {
-				"apiChoices": "Choose an active branch for the location, then a department and one of its existing job titles for the role.",
-				"department": "Department",
-				"optionsError": "Locations could not be loaded. Please try again.",
-				"optionsLoading": "Loading locations…",
-				"noLocations": "No active locations are available with your shift permissions.",
-				"roles": {
-					"pending": "Loading roles…",
-					"error": "Roles could not be loaded. Please try again.",
-					"hidden": "You do not have permission to view roles in this department.",
-					"empty": "This department has no active job titles."
-				},
-				"edit": "Edit shift",
-				"reassign": "Reassign shift",
-				"branchDepartment": "Branch and department",
-				"reassignUnitHelp": "Choose an active member of the shift’s branch and department. For a sample shift, choose its unit first.",
-				"staff": {
-					"pending": "Loading staff…",
-					"hidden": "You do not have access to staff in this branch and department.",
-					"error": "Staff could not be loaded. Please try again.",
-					"empty": "No other active staff belong to this branch and department."
-				},
-				"duplicate": "Duplicate shift",
-				"preview": "Design preview. Changes apply to this demo only and reset when you reload.",
-				"staffId": "Assign to",
-				"date": "Date",
-				"start": "Start time",
-				"end": "End time",
-				"breakMinutes": "Break (minutes)",
-				"role": "Role",
-				"location": "Location",
-				"notes": "Notes",
-				"choose": "Please select",
-				"cancel": "Cancel",
-				"required": "Choose a value.",
-				"invalid": "Enter a valid value.",
-				"occupied": "This person already has a shift on that date. Choose another person or date.",
-				"confirm": {
-					"edit": "Save changes",
-					"reassign": "Reassign",
-					"duplicate": "Duplicate"
-				}
-			},
 			"shiftDetails": {
 				"title": "Shift Details",
 				"close": "Close shift details",
