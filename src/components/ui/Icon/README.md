@@ -41,3 +41,10 @@ inspect the gallery.
 Generated components, `index.ts` and `catalogue.json` must be checked in with the source sheet.
 Do not edit them by hand. Regenerating unchanged inputs must be byte-identical.
 Run `pnpm lint`, `pnpm test:unit --run` and `pnpm build` after regeneration.
+
+## Hand-made exception
+
+`LockIcon` (`@/components/ui/LockIcon`) is drawn by hand because the design
+sheet has no lock. It follows the same contract (24×24 viewBox, `currentColor`,
+`title` for a name) but lives outside this generated module. Replace it with the
+sheet's icon once the design adds one.
