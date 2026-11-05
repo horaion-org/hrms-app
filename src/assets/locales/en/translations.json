@@ -806,7 +806,7 @@
 			},
 			"template": {
 				"heading": "Start from our template",
-				"body": "It opens on an Instructions sheet that explains every column, and offers your branches, departments and job titles as dropdowns, so names match exactly. One example row shows the format; it is skipped on import.",
+				"body": "It opens on an Instructions sheet that explains every column. Branch, Department and Job title are dropdowns, each listing only what belongs to the cell before it, and a Row check column flags rows to fix before you upload. One example row shows the format; it is skipped on import.",
 				"rules": "Required: Name and Email. Branch and Department go together; a Job title needs a Department.",
 				"download": "Download template (.xlsx)",
 				"downloading": "Downloading…",
@@ -1852,7 +1852,7 @@
 			},
 			"template": {
 				"heading": "Start from our template",
-				"body": "It opens on an Instructions sheet, then has a sheet each for Branches, Departments and Job titles, and a Lists sheet with your existing units, countries and time zones. Row 2 of each sheet is an example; it is skipped.",
+				"body": "It opens on an Instructions sheet, then has a sheet each for Branches, Departments and Job titles. Fill in Branches first: the Branch and Department dropdowns of the later sheets pick up what you add, and a Row check column flags rows to fix. Row 2 of each sheet is an example; it is skipped.",
 				"rules": "Fill in only the sheets you need. Leave Heads blank to be head yourself for now, and set the real heads after importing people.",
 				"download": "Download template (.xlsx)",
 				"downloading": "Downloading…",
