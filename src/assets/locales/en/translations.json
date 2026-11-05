@@ -1676,6 +1676,14 @@
 					"update": "Edit",
 					"delete": "Delete"
 				}
+			},
+			"scheduling_policy": {
+				"name": "Scheduling policy",
+				"description": "The company’s own constraints, set once for every department: locked ones each department must keep and can only make stricter, and defaults it may leave out.",
+				"actions": {
+					"read": "View",
+					"update": "Edit"
+				}
 			}
 		},
 		"activity": {
