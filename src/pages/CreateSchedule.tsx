@@ -78,16 +78,16 @@ import { StepActions } from "@/features/scheduling/StepActions";
 import { stepCompletion } from "@/features/scheduling/stepCompletion";
 import { SCHEDULE_STEPS } from "@/features/scheduling/steps";
 import { workspaceQuery } from "@/features/workspace/api";
-import type { PermissionKey } from "@/features/workspace/permissionKeys";
+import {
+	SCHEDULE_CREATE_KEYS,
+	SCHEDULE_READ_KEYS,
+	type PermissionKey,
+} from "@/features/workspace/permissionKeys";
 import { retry } from "@/features/workspace/retry";
+import { SCHEDULING_UNIT_RULES } from "@/features/scheduling/schedules/schedulesUnitRules";
+import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 import { departmentScope } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
-
-/** A new draft goes to a Department where schedules may be created. */
-const CREATE_KEYS: ReadonlyArray<PermissionKey> = ["schedule:create"];
-
-/** A draft the URL names is reached through a Department where schedules may be read. */
-const READ_KEYS: ReadonlyArray<PermissionKey> = ["schedule:read"];
 
 /** What saving a schedule sends: its setup and the ticked shifts and constraints, each the whole set. */
 const bodyOf = (
@@ -166,6 +166,13 @@ export const CreateSchedule = (): FunctionComponent => {
 	const workspace = useQuery({ ...workspaceQuery, retry });
 	const search = useSearch({ from: "/_authenticated/_app/scheduling_/new" });
 	const step = search.step ?? "setup";
+	// The header's Branch, resolved as the header resolves it: a new draft's departments are its own.
+	const headerBranchId = useUnitSelection(
+		companyId,
+		SCHEDULE_CREATE_KEYS,
+		{ branchId: search.branch },
+		SCHEDULING_UNIT_RULES
+	).branch?.branchId;
 	// The two ids name a draft only together.
 	const named =
 		search.scheduleId !== undefined && search.departmentId !== undefined
@@ -191,7 +198,7 @@ export const CreateSchedule = (): FunctionComponent => {
 			? departmentUnitOf(
 					workspace.data,
 					companyId,
-					READ_KEYS,
+					SCHEDULE_READ_KEYS,
 					named.departmentId
 				)
 			: undefined;
@@ -388,7 +395,7 @@ export const CreateSchedule = (): FunctionComponent => {
 				departmentUnitOf(
 					workspace.data,
 					companyId,
-					CREATE_KEYS,
+					SCHEDULE_CREATE_KEYS,
 					setup.departmentId,
 					{ activeOnly: true }
 				);
@@ -571,6 +578,7 @@ export const CreateSchedule = (): FunctionComponent => {
 			<div className="mt-12">
 				{step === "setup" && (
 					<ScheduleSetupStep
+						branchId={headerBranchId}
 						companyId={companyId}
 						defaultValues={setupDefaults}
 						formId={setupFormId}
