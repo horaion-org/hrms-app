@@ -2096,7 +2096,8 @@
 				"role": "Rol",
 				"shift": "Turno",
 				"group": "Grupo"
-			}
+			},
+			"dayLabel": "{{name}}, {{day}}: {{kind}}"
 		},
 		"myRoster": {
 			"title": "Mi cuadrante · {{department}} · {{period}}",
@@ -2314,7 +2315,11 @@
 			}
 		},
 		"rosterEdit": {
+			"dayOff": "Día libre",
+			"onLeave": "De permiso",
 			"undone": "Cambio deshecho.",
+			"edited": "{{label}}, cambiado",
+			"editedCell": "Cambiado",
 			"check": {
 				"CELL_ON_LEAVE": "{{name}} está de permiso el {{day}}.",
 				"NOT_AVAILABLE": "{{name}} no puede programarse el {{day}}.",
