@@ -28,6 +28,9 @@ is sampled or kept in page state beyond the timeline's window.
 - `LeaveRequestDialog` — review a request with its remarks; approve with an optional comment or reject with a
   reason, each confirmed in a second step; or apply for yourself or someone found through the People search,
   choosing from the grouped leave types, with remarks that become a required Reason when the type asks for one.
+  The shell holds the review (its step and both notes) and the footer; its parts are `LeaveRequestDetails`
+  (what the request says), `LeaveDecisionStep` (the reason or comment being confirmed) and `LeaveApplyForm`
+  (a new application, with its own state and footer).
 - `fixtures.ts` — API-shaped rows for stories and component tests.
 
 `src/pages/Leave.tsx` composes them and owns the dialog, the decisions and the status line.
