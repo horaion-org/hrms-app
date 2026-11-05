@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import type { ConstraintTypeOption } from "@/features/scheduling/constraints/api";
+import type {
+	ConstraintTypeOption,
+	FieldStrictness,
+} from "@/features/scheduling/constraints/api";
 import {
 	allowsReplacement,
 	combine,
@@ -103,6 +106,66 @@ describe("compareStrictness", () => {
 		expect(compareStrictness(type, avoid("FRI"), avoid("SAT"))).toBe(
 			"INCOMPARABLE"
 		);
+	});
+
+	describe("by a field's declared direction", () => {
+		// Days off per period, with its days-off field declared as `strictness`.
+		const declaring = (strictness: FieldStrictness): ConstraintTypeOption => {
+			const type = typeOf("DAYS_OFF_PER_PERIOD");
+			return {
+				...type,
+				fields: type.fields.map((spec) =>
+					spec.field === "DAYS_OFF" ? { ...spec, strictness } : spec
+				),
+			};
+		};
+
+		it("takes an exact count only as the same count", () => {
+			const type = declaring("FOLLOWS_COMPARISON");
+			expect(
+				compareStrictness(
+					type,
+					daysOff("EXACTLY", "2", "7"),
+					daysOff("EXACTLY", "2", "7")
+				)
+			).toBe("SAME");
+			expect(
+				compareStrictness(
+					type,
+					daysOff("EXACTLY", "2", "7"),
+					daysOff("EXACTLY", "3", "7")
+				)
+			).toBe("INCOMPARABLE");
+		});
+
+		it("takes a must-match field only unchanged", () => {
+			const type = declaring("MUST_MATCH");
+			expect(
+				compareStrictness(
+					type,
+					daysOff("AT_LEAST", "2", "7"),
+					daysOff("AT_LEAST", "2", "7")
+				)
+			).toBe("SAME");
+			expect(
+				compareStrictness(
+					type,
+					daysOff("AT_LEAST", "2", "7"),
+					daysOff("AT_LEAST", "3", "7")
+				)
+			).toBe("INCOMPARABLE");
+		});
+
+		it("leaves a direction it does not know to the API", () => {
+			const type = declaring("UNKNOWN");
+			expect(
+				compareStrictness(
+					type,
+					daysOff("AT_LEAST", "2", "7"),
+					daysOff("AT_LEAST", "1", "7")
+				)
+			).toBe("SAME");
+		});
 	});
 });
 
