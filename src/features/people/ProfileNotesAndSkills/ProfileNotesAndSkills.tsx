@@ -3,7 +3,6 @@ import type { FunctionComponent } from "@/common/types";
 import type { MemberProfileDetail } from "@/features/people/api";
 import { NotesCard, type NotesCardProps } from "@/features/people/NotesCard";
 import { SkillsCard } from "@/features/people/SkillsCard";
-import type { SkillsDraft } from "@/features/people/useSkills";
 
 export type ProfileNotesAndSkillsProps = {
 	companyId: string;
@@ -12,8 +11,6 @@ export type ProfileNotesAndSkillsProps = {
 	skillsChangeable: boolean;
 	/** Read mode keeps each note's actions in a menu; edit mode shows buttons. */
 	noteActions: NotesCardProps["actions"];
-	/** Given while the page is being edited; see `SkillsCard`. */
-	skillsDraft?: SkillsDraft;
 	className?: string;
 };
 
@@ -26,7 +23,6 @@ export const ProfileNotesAndSkills = ({
 	profile,
 	skillsChangeable,
 	noteActions,
-	skillsDraft,
 	className,
 }: ProfileNotesAndSkillsProps): FunctionComponent => (
 	<div className={joinClassNames("grid gap-6 xl:grid-cols-2", className)}>
@@ -34,7 +30,6 @@ export const ProfileNotesAndSkills = ({
 		<SkillsCard
 			changeable={skillsChangeable}
 			companyId={companyId}
-			draft={skillsDraft}
 			profile={profile}
 		/>
 	</div>

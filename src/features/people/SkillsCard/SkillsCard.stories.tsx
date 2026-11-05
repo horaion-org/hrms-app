@@ -1,11 +1,13 @@
 import { QueryClient } from "@tanstack/react-query";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { useState } from "react";
-import type { FunctionComponent } from "@/common/types";
 import { storyProviders } from "@/features/organisation/storyApi";
 import { SkillsCard } from "@/features/people/SkillsCard";
 import { storyCompany } from "@/features/people/storyCompany";
-import { memberSkillsQuery, type SkillValue } from "@/features/people/api";
+import { memberSkillsQuery } from "@/features/people/api";
+import {
+	heldLicenceFixture,
+	heldSkillFixture,
+} from "@/features/skills/fixtures";
 
 const COMPANY = "story-company";
 const client = new QueryClient({
@@ -18,11 +20,24 @@ const SKILLS = [
 	["Time management", 5],
 	["Inventory management", 9],
 	["Adaptability", 7],
-].map(([name, proficiency], index) => ({
-	skillId: `s-${index}`,
-	name: String(name),
-	proficiency: Number(proficiency),
-}));
+].map(([name, proficiency], index) =>
+	heldSkillFixture({
+		skillId: `s-${index}`,
+		name: String(name),
+		proficiency: Number(proficiency),
+		notes: index === 0 ? "Trains new starters" : null,
+	})
+);
+// A licence held with dates, and one whose holder has not given its expiry yet.
+SKILLS.push(
+	heldLicenceFixture(),
+	heldLicenceFixture({
+		skillId: "s-first-aid",
+		name: "First Aid",
+		issuedOn: null,
+		expiresOn: null,
+	})
+);
 client.setQueryData(memberSkillsQuery(COMPANY, "m-1").queryKey, SKILLS);
 
 const meta = {
@@ -62,24 +77,10 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Read-only: ten-segment meters. */
+/** Read-only: best first, meters for rated skills, expiry Badges for licences. */
 export const Default: Story = {};
 
-/** For someone who may change them, "Add skill" is offered. */
-export const CanAdd: Story = {
+/** For someone who may change them: "Add skill", and Edit and Remove on each row. */
+export const Changeable: Story = {
 	args: { changeable: true },
-};
-
-/** While the profile is edited: sliders and remove buttons, held locally. */
-export const Editing: Story = {
-	args: { changeable: true },
-	render: function Render(args): NonNullable<FunctionComponent> {
-		const [skills, setSkills] = useState<Array<SkillValue>>(SKILLS);
-		return (
-			<SkillsCard
-				{...args}
-				draft={{ skills, onChange: setSkills, changed: false }}
-			/>
-		);
-	},
 };

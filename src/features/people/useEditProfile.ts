@@ -8,7 +8,6 @@ import {
 	updateMemberProfile,
 	type MemberProfileDetail,
 	type MemberProfilePlace,
-	type SkillValue,
 	type UpdateMemberProfileBody,
 } from "@/features/people/api";
 import {
@@ -18,24 +17,20 @@ import {
 import { withPeopleNotice } from "@/features/people/peopleNoticeState";
 import type { ProfileFormValues } from "@/features/people/profileFormSchema";
 import { profileUpdateRequest } from "@/features/people/profileRequest";
-import { useReplaceSkills } from "@/features/people/useSkills";
 
 /**
  * Saves a person's profile. Then, when `role` is given, it changes the
  * selected assignment at its independently chosen target, then
  * shows their profile again with a notice saying so. A refused save rejects
  * for the form to explain. A refused role does not: the profile is saved, so
- * the notice says so and that the role still needs changing. Given
- * `skills`, the complete new set is then sent, and a refusal of it is said
- * in the notice the same way.
+ * the notice says so and that the role still needs changing. Skills are not
+ * part of it: their card saves each change at once.
  */
 export const useEditProfile = (
 	companyId: string,
 	profile: MemberProfileDetail,
 	/** The selected assignment before saving; omitted when roles can't be changed here. */
-	role: { held: MemberRole | undefined } | undefined,
-	/** Their skills as changed on the page; left out when unchanged or not changeable here. */
-	skills?: ReadonlyArray<SkillValue>
+	role: { held: MemberRole | undefined } | undefined
 ): ((
 	values: ProfileFormValues,
 	place: MemberProfilePlace | undefined,
@@ -61,7 +56,6 @@ export const useEditProfile = (
 		},
 	});
 	const assign = useChangeAccessRoleHolders(companyId);
-	const replaceSkills = useReplaceSkills(companyId, membershipId);
 	return async (values, _place, roleField) => {
 		const saved = await save.mutateAsync(
 			profileUpdateRequest({
@@ -88,13 +82,6 @@ export const useEditProfile = (
 			} catch {
 				roleNotAssigned = true;
 			}
-		let skillsNotSaved = false;
-		if (skills)
-			try {
-				await replaceSkills.mutateAsync(skills);
-			} catch {
-				skillsNotSaved = true;
-			}
 		await navigate({
 			to: "/people/$membershipId",
 			params: { membershipId },
@@ -104,7 +91,6 @@ export const useEditProfile = (
 				kind: "saved",
 				name: saved.displayName,
 				roleNotAssigned,
-				...(skillsNotSaved && { skillsNotSaved }),
 			}),
 		});
 	};

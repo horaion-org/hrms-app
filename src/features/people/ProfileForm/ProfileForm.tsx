@@ -76,8 +76,6 @@ export type ProfileFormEdit = {
 	otherRoles: ReadonlyArray<string>;
 	/** The page's header, given the form's Cancel and Save changes buttons to place. */
 	header: (actions: ReactNode) => ReactNode;
-	/** Changes held outside the form, such as skills, which leaving also asks about. */
-	unsaved?: boolean;
 };
 
 export type ProfileFormProps = {
@@ -322,7 +320,6 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 		if (
 			edit &&
 			(isDirty ||
-				edit.unsaved ||
 				rolePlaceKey !==
 					(edit.rolePlace ? placeKey(edit.rolePlace) : undefined))
 		)

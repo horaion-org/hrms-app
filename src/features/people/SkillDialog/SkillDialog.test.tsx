@@ -1,5 +1,11 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+	fireEvent,
+	render,
+	screen,
+	waitFor,
+	within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { I18nextProvider } from "react-i18next";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -7,8 +13,17 @@ import { configureApiClient, resetApiClient } from "@/common/api-client";
 import { ApiProblemError } from "@/common/problem";
 import { envelope, stubApi } from "@/common/testing/stubApi";
 import { authTestI18n } from "@/features/auth/testingI18n";
-import type { SkillValue } from "@/features/people/api";
+import type { MemberSkill, SkillValue } from "@/features/people/api";
 import { SkillDialog } from "@/features/people/SkillDialog";
+import {
+	heldLicenceFixture,
+	heldSkillFixture,
+	licenceFixture,
+	skillFixture,
+} from "@/features/skills/fixtures";
+
+const baking = heldSkillFixture({ skillId: "s-baking", name: "Baking" });
+let calls: Array<{ path: string; search: string }> = [];
 
 beforeEach(() => {
 	configureApiClient({
@@ -16,15 +31,16 @@ beforeEach(() => {
 		renew: () => Promise.resolve({ kind: "expired" }),
 		onUnauthenticated: () => {},
 	});
-	stubApi({
+	calls = stubApi({
 		"GET /api/v1/companies/c-1/skills": {
 			status: 200,
 			body: envelope({
 				content: [
-					{ skillId: "s-1", name: "Baking" },
-					{ skillId: "s-3", name: "Pastry art" },
+					skillFixture({ skillId: "s-baking", name: "Baking" }),
+					skillFixture({ skillId: "s-pastry", name: "Pastry art" }),
+					licenceFixture(),
 				],
-				page: { totalElements: 2 },
+				page: { totalElements: 3 },
 			}),
 		},
 	});
@@ -34,99 +50,137 @@ afterEach(() => {
 	vi.unstubAllGlobals();
 });
 
-const show = (onSubmit: (skill: SkillValue) => Promise<void>): (() => void) => {
-	const onClose = vi.fn();
+const show = (
+	onSubmit: (skill: SkillValue) => Promise<void>,
+	{ editing }: { editing?: MemberSkill } = {}
+): void => {
 	render(
 		<I18nextProvider i18n={authTestI18n}>
 			<QueryClientProvider client={new QueryClient()}>
 				<SkillDialog
+					canCreateSkills={false}
 					companyId="c-1"
+					editing={editing}
+					held={[baking, ...(editing ? [editing] : [])]}
 					name="Kent Chua"
-					skills={[{ name: "Baking", proficiency: 8 }]}
-					onClose={onClose}
+					onClose={vi.fn()}
 					onSubmit={onSubmit}
 				/>
 			</QueryClientProvider>
 		</I18nextProvider>
 	);
-	return onClose;
 };
 const choose = async (
 	user: ReturnType<typeof userEvent.setup>,
-	typed: string,
 	option: string
 ): Promise<void> => {
 	await user.click(screen.getByRole("button", { name: /^Skill/ }));
-	await user.type(
-		await screen.findByRole("combobox", { name: "Search or type a skill" }),
-		typed
-	);
 	await user.click(await screen.findByRole("option", { name: option }));
 };
 
 describe("SkillDialog", () => {
-	it("adds a name as typed with the chosen proficiency, and closes", async () => {
+	it("offers only active catalogue skills they don't hold", async () => {
 		const user = userEvent.setup();
-		const onSubmit = vi.fn(() => Promise.resolve());
-		const onClose = show(onSubmit);
+		show(vi.fn());
 
-		expect(screen.getByRole("button", { name: "Add skill" })).toBeDisabled();
-		await choose(user, "Latte art", "Add “Latte art”");
-		const slider = screen.getByRole("slider", { name: "Proficiency" });
-		expect(slider).toHaveValue("5");
-		fireEvent.change(slider, { target: { value: "9" } });
-		await user.click(screen.getByRole("button", { name: "Add skill" }));
-
-		await waitFor(() => {
-			expect(onClose).toHaveBeenCalledOnce();
-		});
-		expect(onSubmit).toHaveBeenCalledWith({
-			name: "Latte art",
-			proficiency: 9,
-		});
+		await user.click(screen.getByRole("button", { name: /^Skill/ }));
+		expect(
+			await screen.findByRole("option", { name: "Pastry art" })
+		).toBeVisible();
+		expect(screen.queryByRole("option", { name: "Baking" })).toBeNull();
+		expect(
+			new URLSearchParams(
+				calls.find((call) => call.path.endsWith("/skills"))?.search
+			).get("status")
+		).toBe("ACTIVE");
+		// The catalogue link needs skill:create and a router (see PersonNotesAndSkills).
+		expect(screen.queryByRole("link")).toBeNull();
 	});
 
-	it("offers the company's names and refuses one they already have", async () => {
+	it("rates a rated skill and keeps notes", async () => {
 		const user = userEvent.setup();
 		const onSubmit = vi.fn(() => Promise.resolve());
 		show(onSubmit);
 
-		await user.click(screen.getByRole("button", { name: /^Skill/ }));
-		expect(
-			(await screen.findAllByRole("option")).map((option) => option.textContent)
-		).toEqual(["Baking", "Pastry art"]);
-		await user.click(screen.getByRole("option", { name: "Baking" }));
+		await choose(user, "Pastry art");
+		fireEvent.change(screen.getByRole("slider", { name: "Proficiency" }), {
+			target: { value: "7" },
+		});
+		await user.type(
+			screen.getByRole("textbox", { name: "Notes" }),
+			"Trains new starters"
+		);
 		await user.click(screen.getByRole("button", { name: "Add skill" }));
 
 		await waitFor(() => {
-			expect(
-				screen.getByRole("button", { name: /^Skill/ })
-			).toHaveAccessibleDescription("They already have this skill.");
+			expect(onSubmit).toHaveBeenCalledWith({
+				name: "Pastry art",
+				proficiency: 7,
+				notes: "Trains new starters",
+				issuedOn: null,
+				expiresOn: null,
+			});
 		});
-		expect(onSubmit).not.toHaveBeenCalled();
+		expect(screen.queryByLabelText("Valid until")).toBeNull();
 	});
 
-	it("reads a refusal as one of the whole set, with the new skill last", async () => {
+	it("asks a licence for its dates instead of a rating, and needs the expiry", async () => {
 		const user = userEvent.setup();
-		show(() =>
-			Promise.reject(
-				new ApiProblemError({
-					message: "API says no",
-					status: 400,
-					fieldErrors: [{ field: "skills[1].proficiency", message: "no" }],
-					reason: "http",
-				})
-			)
-		);
+		const onSubmit = vi.fn(() => Promise.resolve());
+		show(onSubmit);
 
-		await choose(user, "past", "Pastry art");
+		await choose(user, "Security Officer Licence");
+		expect(screen.queryByRole("slider")).toBeNull();
 		await user.click(screen.getByRole("button", { name: "Add skill" }));
 
 		expect(
-			await screen.findByText("Choose a proficiency from 1 to 10.")
+			await screen.findByText("Enter the last day it is valid.")
 		).toBeVisible();
-		expect(screen.getByRole("slider")).toHaveAccessibleDescription(
-			"Choose a proficiency from 1 to 10."
+		expect(onSubmit).not.toHaveBeenCalled();
+	});
+
+	it("changes a held licence, keeping the skill itself", async () => {
+		const user = userEvent.setup();
+		const onSubmit = vi.fn(() => Promise.resolve());
+		show(onSubmit, { editing: heldLicenceFixture() });
+
+		const dialog = screen.getByRole("dialog", { name: "Edit skill" });
+		expect(
+			within(dialog).getByDisplayValue("Security Officer Licence")
+		).toBeDisabled();
+		await user.click(within(dialog).getByRole("button", { name: "Save" }));
+
+		await waitFor(() => {
+			expect(onSubmit).toHaveBeenCalledWith({
+				name: "Security Officer Licence",
+				proficiency: null,
+				notes: null,
+				issuedOn: "2026-03-01",
+				expiresOn: "2027-02-28",
+			});
+		});
+	});
+
+	it("explains a refusal of the edited holding on its field", async () => {
+		const user = userEvent.setup();
+		show(
+			() =>
+				Promise.reject(
+					new ApiProblemError({
+						message: "API says no",
+						status: 400,
+						errorCode: "MEMBER_SKILL_DATES_INVALID",
+						fieldErrors: [{ field: "skills[1].expiresOn", message: "no" }],
+						reason: "http",
+					})
+				),
+			{ editing: heldLicenceFixture() }
 		);
+
+		await user.click(screen.getByRole("button", { name: "Save" }));
+
+		expect(
+			await screen.findByText("It can’t stop being valid before it was issued.")
+		).toBeVisible();
 	});
 });

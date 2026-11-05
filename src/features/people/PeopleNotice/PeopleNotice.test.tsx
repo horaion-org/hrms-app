@@ -49,28 +49,4 @@ describe("PeopleNotice", () => {
 			else expect(line).not.toHaveAttribute("data-warning");
 		}
 	);
-
-	it.each([
-		[
-			false,
-			"Changes to Priya Nair were saved, but their skills weren’t. Edit their profile to try again.",
-		],
-		[
-			true,
-			"Changes to Priya Nair were saved, but their system role and skills weren’t. Change the role from Organisation, under System roles, and edit their profile to try the skills again.",
-		],
-	])(
-		"warns when the skills weren't saved (role not changed: %s)",
-		(roleNotAssigned, text) => {
-			const line = show({
-				kind: "saved",
-				name: "Priya Nair",
-				roleNotAssigned,
-				skillsNotSaved: true,
-			});
-
-			expect(line).toHaveTextContent(text);
-			expect(line).toHaveAttribute("data-warning");
-		}
-	);
 });

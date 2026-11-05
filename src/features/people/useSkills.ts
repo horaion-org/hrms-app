@@ -5,17 +5,14 @@ import {
 	type UseMutationResult,
 	type UseQueryResult,
 } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
 import type { ListPage } from "@/features/organisation/api";
 import {
 	memberSkillsQuery,
 	replaceMemberSkills,
-	searchCompanySkills,
-	type CompanySkill,
 	type MemberSkill,
 	type SkillValue,
 } from "@/features/people/api";
-import { sameSkills } from "@/features/people/skills";
+import { searchActiveSkills, type Skill } from "@/features/skills/api";
 import {
 	accessiblePreviousData,
 	administrativeMeta,
@@ -30,64 +27,50 @@ export const useMemberSkills = (
 ): UseQueryResult<Array<MemberSkill>> =>
 	useQuery(memberSkillsQuery(companyId, membershipId));
 
-/** Replaces a person's skills with the complete new set, and keeps what the API saved. */
+/** What one change to a person's skills confirms when it is saved. */
+export type SkillsChange = "added" | "updated" | "removed";
+
+/**
+ * Replaces a person's skills with the complete new set, keeps what the API
+ * saved, refreshes the catalogue's holder counts, and confirms the change
+ * with its own toast.
+ */
 export const useReplaceSkills = (
 	companyId: string,
-	membershipId: string
+	membershipId: string,
+	change: SkillsChange
 ): UseMutationResult<Array<MemberSkill>, Error, ReadonlyArray<SkillValue>> => {
 	const client = useQueryClient();
 	return useMutation({
 		mutationFn: (skills) =>
 			replaceMemberSkills(companyId, membershipId, skills),
+		meta: { successMessage: `people.skills.toast.${change}` },
 		onSuccess: (saved) => {
 			client.setQueryData(
 				memberSkillsQuery(companyId, membershipId).queryKey,
 				saved
 			);
+			return client.invalidateQueries({
+				queryKey: ["organisation", companyId, "skill-overview"],
+			});
 		},
 	});
 };
 
 /**
- * The company's skill names matching what is typed, asked for once typing
- * pauses, keeping the current names on screen while the next ones load.
+ * The catalogue's active skills matching what is typed, asked for once
+ * typing pauses, keeping the current ones on screen while the next load.
  */
 export const useSkillSuggestions = (
 	companyId: string,
 	query: string
-): UseQueryResult<ListPage<CompanySkill>> => {
+): UseQueryResult<ListPage<Skill>> => {
 	const search = useDebouncedValue(query.trim(), 250);
 	return useQuery({
 		queryKey: ["people", companyId, "skills", search] as const,
-		queryFn: () => searchCompanySkills(companyId, search),
+		queryFn: ({ signal }) => searchActiveSkills(companyId, search, signal),
 		placeholderData: accessiblePreviousData(),
 		meta: administrativeMeta(companyId),
 		retry,
 	});
-};
-
-/** A person's skills as changed on the page, held until the page saves them. */
-export type SkillsDraft = {
-	skills: ReadonlyArray<SkillValue>;
-	onChange: (skills: Array<SkillValue>) => void;
-	/** Whether they differ from the skills as loaded. */
-	changed: boolean;
-};
-
-/** Holds changes to `loaded`, the skills as the API has them, until saved or discarded. */
-export const useSkillsDraft = (
-	loaded: ReadonlyArray<MemberSkill> | undefined
-): SkillsDraft => {
-	const [edited, setEdited] = useState<Array<SkillValue>>();
-	const initial = useMemo(
-		() =>
-			(loaded ?? []).map(({ name, proficiency }) => ({ name, proficiency })),
-		[loaded]
-	);
-	const skills = edited ?? initial;
-	return {
-		skills,
-		onChange: setEdited,
-		changed: edited !== undefined && !sameSkills(edited, loaded ?? []),
-	};
 };

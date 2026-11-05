@@ -465,15 +465,38 @@ export const deleteMemberNote = (
 const memberSkillSchema = z.object({
 	skillId: z.string(),
 	name: z.string(),
-	/** 1 to 10. */
-	proficiency: z.number().int(),
+	category: z.string().nullable(),
+	/** How the skill is measured: rated 1 to 10, or simply held. */
+	proficiencyScale: z.enum(["ONE_TO_TEN", "NONE", "UNKNOWN"]).catch("UNKNOWN"),
+	/** Whether the skill asks holders for the last day their credential is valid. */
+	tracksExpiry: z.boolean(),
+	/** How long a new credential usually lasts; prefills an expiry date. */
+	validityMonths: z.number().int().nullable(),
+	/** The skill's own status; an inactive skill stays with those who hold it. */
+	skillStatus: z.enum(["ACTIVE", "INACTIVE", "UNKNOWN"]).catch("UNKNOWN"),
+	/** 1 to 10 for a rated skill; null for one that is simply held. */
+	proficiency: z.number().int().nullable(),
+	notes: z.string().nullable(),
+	issuedOn: z.string().nullable(),
+	/** The last day the credential is valid. */
+	expiresOn: z.string().nullable(),
 });
 
-/** One of a person's skills and how well they do it. */
+/** One of a person's skills: how well they do it, notes, and a credential's dates. */
 export type MemberSkill = z.infer<typeof memberSkillSchema>;
 
-/** A skill as a change sends it: the name finds or creates the company's skill. */
-export type SkillValue = { name: string; proficiency: number };
+/**
+ * One holding as replacing a person's skills sends it. The name finds the
+ * catalogue's skill; the API refuses an unknown one. A rating is sent only
+ * for a skill rated 1 to 10, and dates only for one that tracks expiry.
+ */
+export type SkillValue = {
+	name: string;
+	proficiency: number | null;
+	notes: string | null;
+	issuedOn: string | null;
+	expiresOn: string | null;
+};
 
 /** A person's skills, ordered by name; not paged. */
 export const fetchMemberSkills = (
@@ -515,28 +538,3 @@ export const replaceMemberSkills = (
 		z.array(memberSkillSchema),
 		{ method: "PUT", body: { skills } }
 	);
-
-const companySkillSchema = z.object({ skillId: z.string(), name: z.string() });
-
-/** A skill name the company already uses. */
-export type CompanySkill = z.infer<typeof companySkillSchema>;
-
-/** How many suggestions one search brings. */
-export const SKILL_SUGGESTIONS_SIZE = 20;
-
-/** The company's skill names containing `search`, ignoring case, sorted by name. */
-export const searchCompanySkills = (
-	companyId: string,
-	search: string
-): Promise<ListPage<CompanySkill>> => {
-	const query = new URLSearchParams({
-		page: "0",
-		size: String(SKILL_SUGGESTIONS_SIZE),
-	});
-	const text = search.trim().slice(0, PEOPLE_SEARCH_MAX_LENGTH);
-	if (text) query.set("search", text);
-	return fetchList(
-		`${companyPath(companyId)}/skills?${query.toString()}`,
-		companySkillSchema
-	);
-};

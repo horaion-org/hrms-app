@@ -133,10 +133,38 @@ const page = (content: Array<unknown>, total = content.length): StubReply => ({
 	status: 200,
 	body: envelope({ content, page: { totalElements: total } }),
 });
-const SKILL_SET = [
-	{ skillId: "s-1", name: "Baking", proficiency: 8 },
-	{ skillId: "s-2", name: "Food safety", proficiency: 7 },
-];
+const held = (
+	skillId: string,
+	name: string,
+	proficiency: number | null
+): Record<string, unknown> => ({
+	skillId,
+	name,
+	category: null,
+	proficiencyScale: proficiency === null ? "NONE" : "ONE_TO_TEN",
+	tracksExpiry: proficiency === null,
+	validityMonths: proficiency === null ? 12 : null,
+	skillStatus: "ACTIVE",
+	proficiency,
+	notes: null,
+	issuedOn: null,
+	expiresOn: null,
+});
+const SKILL_SET = [held("s-1", "Baking", 8), held("s-2", "Food safety", 7)];
+const catalogueSkill = (
+	skillId: string,
+	name: string,
+	rated = true
+): Record<string, unknown> => ({
+	skillId,
+	name,
+	category: null,
+	description: null,
+	proficiencyScale: rated ? "ONE_TO_TEN" : "NONE",
+	tracksExpiry: !rated,
+	validityMonths: rated ? null : 12,
+	status: "ACTIVE",
+});
 
 type Route =
 	| StubReply
@@ -163,18 +191,26 @@ const routes = (
 	[SAVE_SKILLS]: (call) => ({
 		status: 200,
 		body: envelope(
-			(call.body as { skills: Array<{ name: string }> }).skills.map(
-				(skill, index) => ({ skillId: `s-${index}`, ...skill })
-			)
+			(
+				call.body as {
+					skills: Array<{ name: string; proficiency: number | null }>;
+				}
+			).skills.map((skill, index) => ({
+				...held(`s-${index}`, skill.name, skill.proficiency),
+				...skill,
+			}))
 		),
 	}),
 	[SUGGESTIONS]: (call): StubReply => {
 		const search = new URLSearchParams(call.search).get("search") ?? "";
 		return page(
 			[
-				{ skillId: "s-1", name: "Baking" },
-				{ skillId: "s-3", name: "Pastry art" },
-			].filter(({ name }) => name.toLowerCase().includes(search.toLowerCase()))
+				catalogueSkill("s-1", "Baking"),
+				catalogueSkill("s-3", "Pastry art"),
+				catalogueSkill("s-4", "Food hygiene licence", false),
+			].filter(({ name }) =>
+				String(name).toLowerCase().includes(search.toLowerCase())
+			)
 		);
 	},
 	[`GET ${COMPANY}/job-titles`]: page([]),
@@ -213,8 +249,6 @@ const sent = (calls: Array<Call>, route: string): Array<unknown> =>
 	calls
 		.filter((call) => `${call.method} ${call.path}` === route)
 		.map((call) => call.body);
-const card = (name: RegExp): HTMLElement =>
-	screen.getByRole("region", { name });
 const findCard = (name: RegExp): Promise<HTMLElement> =>
 	screen.findByRole("region", { name });
 const WHEN_1 = "16 May 2026, 22:36";
@@ -488,7 +522,7 @@ describe("A person's notes", () => {
 });
 
 describe("A person's skills", () => {
-	it("are shown to anyone who can see the profile, each as a meter with a text alternative, read-only without the update key", async () => {
+	it("are shown to anyone who can see the profile, best first, each as a meter with a text alternative, read-only without the update key", async () => {
 		await open(routes(reader()));
 
 		const skills = await findCard(/^Skills & proficiency \(2\)$/);
@@ -503,7 +537,9 @@ describe("A person's skills", () => {
 				.getAllByRole("columnheader")
 				.map((cell) => cell.textContent)
 		).toEqual(["Skill", "Proficiency"]);
-		expect(within(skills).queryByRole("button")).toBeNull();
+		expect(
+			within(skills).queryByRole("button", { name: /Add|Edit|Remove/ })
+		).toBeNull();
 	});
 
 	it("says when there are none", async () => {
@@ -531,23 +567,24 @@ describe("A person's skills", () => {
 	): Promise<void> => {
 		await user.click(within(dialog).getByRole("button", { name: /^Skill/ }));
 		await user.type(
-			await screen.findByRole("combobox", { name: "Search or type a skill" }),
+			await screen.findByRole("combobox", { name: "Search skills" }),
 			typed
 		);
-		// The company's names are searched once typing pauses.
+		// The catalogue's active skills are searched once typing pauses.
 		await waitFor(() => {
 			expect(
 				received.some(
 					(call) =>
 						call.path === `${COMPANY}/skills` &&
-						new URLSearchParams(call.search).get("search") === typed
+						new URLSearchParams(call.search).get("search") === typed &&
+						new URLSearchParams(call.search).get("status") === "ACTIVE"
 				)
 			).toBe(true);
 		});
 		await user.click(await screen.findByRole("option", { name: option }));
 	};
 
-	it("adds one of the company's skills, sending the complete set", async () => {
+	it("adds one of the catalogue's skills at once, sending the complete set", async () => {
 		const user = userEvent.setup();
 		const calls = await open(routes(editor()));
 
@@ -568,56 +605,62 @@ describe("A person's skills", () => {
 		await waitFor(() => {
 			expect(screen.queryByRole("dialog")).toBeNull();
 		});
+		const unchanged = { notes: null, issuedOn: null, expiresOn: null };
 		expect(sent(calls, SAVE_SKILLS)).toEqual([
 			{
 				skills: [
-					{ name: "Baking", proficiency: 8 },
-					{ name: "Food safety", proficiency: 7 },
-					{ name: "Pastry art", proficiency: 7 },
+					{ name: "Baking", proficiency: 8, ...unchanged },
+					{ name: "Food safety", proficiency: 7, ...unchanged },
+					{ name: "Pastry art", proficiency: 7, ...unchanged },
 				],
 			},
 		]);
 		expect(await findCard(/^Skills & proficiency \(3\)$/)).toBeVisible();
 	});
 
-	it("adds a brand-new name as typed", async () => {
+	it("gives a licence its dates instead of a rating", async () => {
 		const user = userEvent.setup();
 		const calls = await open(routes(editor()));
 
 		const dialog = await openAddSkill(user);
-		await pick(user, dialog, "Latte art", "Add “Latte art”");
-		expect(
-			within(dialog).getByRole("button", { name: /^Skill/ })
-		).toHaveTextContent("Latte art");
+		await pick(user, dialog, "hyg", "Food hygiene licence");
+		expect(within(dialog).queryByRole("slider")).toBeNull();
 		await user.click(within(dialog).getByRole("button", { name: "Add skill" }));
 
-		await waitFor(() => {
-			expect(sent(calls, SAVE_SKILLS)).toEqual([
-				{
-					skills: [
-						{ name: "Baking", proficiency: 8 },
-						{ name: "Food safety", proficiency: 7 },
-						{ name: "Latte art", proficiency: 5 },
-					],
-				},
-			]);
-		});
+		expect(
+			await within(dialog).findByText("Enter the last day it is valid.")
+		).toBeVisible();
+		expect(sent(calls, SAVE_SKILLS)).toEqual([]);
 	});
 
-	it("never adds a skill they already have", async () => {
+	it("never offers a skill they already have", async () => {
 		const user = userEvent.setup();
-		const calls = await open(routes(editor()));
+		await open(routes(editor()));
 
 		const dialog = await openAddSkill(user);
-		await pick(user, dialog, "bak", "Baking");
-		await user.click(within(dialog).getByRole("button", { name: "Add skill" }));
+		await user.click(within(dialog).getByRole("button", { name: /^Skill/ }));
+		await user.type(
+			await screen.findByRole("combobox", { name: "Search skills" }),
+			"bak"
+		);
+		expect(await screen.findByText("No active skill matches.")).toBeVisible();
+	});
 
-		await waitFor(() => {
-			expect(
-				within(dialog).getByRole("button", { name: /^Skill/ })
-			).toHaveAccessibleDescription("They already have this skill.");
-		});
-		expect(sent(calls, SAVE_SKILLS)).toEqual([]);
+	it("links to the catalogue only for someone who may add skills to it", async () => {
+		const user = userEvent.setup();
+		await open(
+			routes(
+				workspaceReply(
+					["member_profile:read", "job_title:read", "skill:create"],
+					["member_profile:update"]
+				)
+			)
+		);
+
+		const dialog = await openAddSkill(user);
+		expect(
+			within(dialog).getByRole("link", { name: "Create it in Skills" })
+		).toHaveAttribute("href", "/organisation/skills");
 	});
 
 	it.each([
@@ -653,6 +696,7 @@ describe("A person's skills", () => {
 					status: 400,
 					title: "Refused",
 					detail: "API says no",
+					errorCode: "MEMBER_SKILL_INACTIVE",
 					errors: [{ field: "skills[2].name", message: "API says no" }],
 				},
 			},
@@ -665,7 +709,68 @@ describe("A person's skills", () => {
 		await waitFor(() => {
 			expect(
 				within(dialog).getByRole("button", { name: /^Skill/ })
-			).toHaveAccessibleDescription("Check the skill’s name and try again.");
+			).toHaveAccessibleDescription(
+				"This skill is inactive and can’t be given to anyone new."
+			);
+		});
+	});
+
+	it("changes a held skill from its row", async () => {
+		const user = userEvent.setup();
+		const calls = await open(routes(editor()));
+
+		const skills = await findCard(/^Skills & proficiency \(2\)$/);
+		await user.click(
+			within(skills).getByRole("button", { name: "Edit Baking" })
+		);
+		const dialog = await screen.findByRole("dialog", { name: "Edit skill" });
+		fireEvent.change(
+			within(dialog).getByRole("slider", { name: "Proficiency" }),
+			{ target: { value: "9" } }
+		);
+		await user.click(within(dialog).getByRole("button", { name: "Save" }));
+
+		await waitFor(() => {
+			expect(sent(calls, SAVE_SKILLS)).toHaveLength(1);
+		});
+		expect(sent(calls, SAVE_SKILLS)[0]).toMatchObject({
+			skills: [
+				{ name: "Baking", proficiency: 9 },
+				{ name: "Food safety", proficiency: 7 },
+			],
+		});
+	});
+
+	it("removes a held skill only after asking", async () => {
+		const user = userEvent.setup();
+		const calls = await open(routes(editor()));
+
+		const skills = await findCard(/^Skills & proficiency \(2\)$/);
+		await user.click(
+			within(skills).getByRole("button", { name: "Remove Food safety" })
+		);
+		const confirm = await screen.findByRole("dialog", {
+			name: "Remove Food safety from Kent Chua?",
+		});
+		expect(sent(calls, SAVE_SKILLS)).toEqual([]);
+		await user.click(
+			within(confirm).getByRole("button", { name: "Remove skill" })
+		);
+
+		await waitFor(() => {
+			expect(sent(calls, SAVE_SKILLS)).toEqual([
+				{
+					skills: [
+						{
+							name: "Baking",
+							proficiency: 8,
+							notes: null,
+							issuedOn: null,
+							expiresOn: null,
+						},
+					],
+				},
+			]);
 		});
 	});
 
@@ -691,7 +796,9 @@ describe("A person's skills", () => {
 		await open(routes(editor(), unfiled));
 
 		const skills = await findCard(/^Skills & proficiency \(2\)$/);
-		expect(within(skills).queryByRole("button")).toBeNull();
+		expect(
+			within(skills).queryByRole("button", { name: /Add|Edit|Remove/ })
+		).toBeNull();
 		expect(within(skills).getAllByRole("img")).toHaveLength(2);
 	});
 
@@ -715,113 +822,24 @@ describe("A person's skills", () => {
 	});
 });
 
-describe("Changing a person's skills while editing the profile", () => {
-	const editing = async (
-		reply: Record<string, Route> = routes(editor())
-	): Promise<Array<Call>> => {
-		const calls = await open(reply, "/people/m-1?edit=true");
-		await findCard(/^Skills & proficiency \(2\)$/);
-		return calls;
-	};
-	const slider = (name: string): HTMLElement =>
-		screen.getByRole("slider", { name: `Proficiency in ${name}` });
-
-	it("holds slider and remove changes until the profile is saved, then sends the complete set after it", async () => {
+describe("A person's skills while their profile is edited", () => {
+	it("save each change at once and are not part of saving the profile", async () => {
 		const user = userEvent.setup();
-		const calls = await editing();
+		const calls = await open(routes(editor()), "/people/m-1?edit=true");
 
-		expect(slider("Baking")).toHaveValue("8");
-		fireEvent.change(slider("Baking"), { target: { value: "9" } });
-		expect(slider("Baking")).toHaveAttribute("aria-valuetext", "9 out of 10");
-		await user.click(
-			screen.getByRole("button", { name: "Remove Food safety" })
-		);
-		expect(card(/^Skills & proficiency \(1\)$/)).toBeVisible();
-		expect(sent(calls, SAVE_SKILLS)).toEqual([]);
-
+		const skills = await findCard(/^Skills & proficiency \(2\)$/);
+		expect(within(skills).queryByRole("slider")).toBeNull();
 		await user.click(screen.getByRole("button", { name: "Save changes" }));
 
 		await screen.findByText("Changes to Kent Chua were saved.");
+		expect(sent(calls, SAVE_SKILLS)).toEqual([]);
 		expect(
 			calls
 				.filter(
 					(call) => call.method !== "GET" && call.path.startsWith(COMPANY)
 				)
 				.map((call) => `${call.method} ${call.path}`)
-		).toEqual([`PUT ${PROFILE}`, SAVE_SKILLS]);
-		expect(sent(calls, SAVE_SKILLS)).toEqual([
-			{ skills: [{ name: "Baking", proficiency: 9 }] },
-		]);
-	});
-
-	it("adds a skill to the held set without sending it", async () => {
-		const user = userEvent.setup();
-		const calls = await editing();
-
-		await user.click(screen.getByRole("button", { name: "Add skill" }));
-		const dialog = await screen.findByRole("dialog", { name: "Add skill" });
-		await user.click(within(dialog).getByRole("button", { name: /^Skill/ }));
-		await user.type(
-			await screen.findByRole("combobox", { name: "Search or type a skill" }),
-			"Coffee"
-		);
-		await user.click(
-			await screen.findByRole("option", { name: "Add “Coffee”" })
-		);
-		await user.click(within(dialog).getByRole("button", { name: "Add skill" }));
-
-		expect(await findCard(/^Skills & proficiency \(3\)$/)).toBeVisible();
-		expect(slider("Coffee")).toHaveValue("5");
-		expect(sent(calls, SAVE_SKILLS)).toEqual([]);
-	});
-
-	it("sends nothing for skills when they are unchanged, even after a change was undone", async () => {
-		const user = userEvent.setup();
-		const calls = await editing();
-
-		fireEvent.change(slider("Baking"), { target: { value: "3" } });
-		fireEvent.change(slider("Baking"), { target: { value: "8" } });
-		await user.click(screen.getByRole("button", { name: "Save changes" }));
-
-		await screen.findByText("Changes to Kent Chua were saved.");
-		expect(sent(calls, SAVE_SKILLS)).toEqual([]);
-	});
-
-	it("counts skill changes as unsaved, and discards them on cancel", async () => {
-		const user = userEvent.setup();
-		const calls = await editing();
-
-		fireEvent.change(slider("Baking"), { target: { value: "2" } });
-		await user.click(screen.getByRole("button", { name: "Cancel" }));
-		const dialog = await screen.findByRole("dialog", {
-			name: "Discard your changes?",
-		});
-		await user.click(
-			within(dialog).getByRole("button", { name: "Discard changes" })
-		);
-
-		const skills = await findCard(/^Skills & proficiency \(2\)$/);
-		expect(
-			within(skills).getByRole("img", { name: "Baking: 8 out of 10" })
-		).toBeVisible();
-		expect(sent(calls, SAVE_SKILLS)).toEqual([]);
-	});
-
-	it("says the profile was saved when only the skills weren't", async () => {
-		const user = userEvent.setup();
-		await editing({
-			...routes(editor()),
-			[SAVE_SKILLS]: problemReply(409, "SKILL_NAME_CONFLICT"),
-		});
-
-		fireEvent.change(slider("Baking"), { target: { value: "9" } });
-		await user.click(screen.getByRole("button", { name: "Save changes" }));
-
-		expect(
-			await screen.findByText(
-				"Changes to Kent Chua were saved, but their skills weren’t. Edit their profile to try again."
-			)
-		).toHaveAttribute("role", "status");
+		).toEqual([`PUT ${PROFILE}`]);
 	});
 
 	it("can be changed for a person without a department, by someone granted company-wide", async () => {
@@ -839,7 +857,9 @@ describe("Changing a person's skills while editing the profile", () => {
 			"/people/m-1?edit=true"
 		);
 
-		await findCard(/^Skills & proficiency \(2\)$/);
-		expect(slider("Baking")).toHaveValue("8");
+		const skills = await findCard(/^Skills & proficiency \(2\)$/);
+		expect(
+			within(skills).getByRole("button", { name: "Edit Baking" })
+		).toBeVisible();
 	});
 });

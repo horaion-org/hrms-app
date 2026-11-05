@@ -1,3 +1,4 @@
+import type { MemberSkill } from "@/features/people/api";
 import type { Skill, SkillOverview } from "@/features/skills/api";
 
 /** A rated skill as the API sends it, for tests and stories. */
@@ -40,3 +41,38 @@ export const overviewFixture = (
 	expired: 0,
 	...counts,
 });
+
+/** A holding as a person's skills list it: rated 1 to 10, without notes or dates, unless overridden. */
+export const heldSkillFixture = (
+	overrides: Partial<MemberSkill> = {}
+): MemberSkill => ({
+	skillId: "skill-forklift",
+	name: "Forklift",
+	category: "Equipment",
+	proficiencyScale: "ONE_TO_TEN",
+	tracksExpiry: false,
+	validityMonths: null,
+	skillStatus: "ACTIVE",
+	proficiency: 8,
+	notes: null,
+	issuedOn: null,
+	expiresOn: null,
+	...overrides,
+});
+
+/** A held licence: not rated, valid until `expiresOn`. */
+export const heldLicenceFixture = (
+	overrides: Partial<MemberSkill> = {}
+): MemberSkill =>
+	heldSkillFixture({
+		skillId: "skill-licence",
+		name: "Security Officer Licence",
+		category: "Licence",
+		proficiencyScale: "NONE",
+		tracksExpiry: true,
+		validityMonths: 12,
+		proficiency: null,
+		issuedOn: "2026-03-01",
+		expiresOn: "2027-02-28",
+		...overrides,
+	});
