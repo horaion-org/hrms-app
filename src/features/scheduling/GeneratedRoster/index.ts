@@ -1,1 +1,5 @@
-export { GeneratedRoster, type GeneratedRosterProps } from "./GeneratedRoster";
+export {
+	GeneratedRoster,
+	type GeneratedRosterProps,
+	type RosterEditing,
+} from "./GeneratedRoster";

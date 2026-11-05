@@ -7,7 +7,10 @@ import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import { ArrowLeftIcon } from "@/components/ui/Icon";
 import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
-import { GeneratedRoster } from "@/features/scheduling/GeneratedRoster";
+import {
+	GeneratedRoster,
+	type RosterEditing,
+} from "@/features/scheduling/GeneratedRoster";
 import { GenerationFailurePanel } from "@/features/scheduling/GenerationFailurePanel";
 import type { DepartmentPath } from "@/features/scheduling/paths";
 import { PublishScheduleDialog } from "@/features/scheduling/PublishScheduleDialog";
@@ -116,6 +119,7 @@ const RosterBody = ({
 	shifts,
 	constraints,
 	startingContext,
+	editing,
 	onRegenerate,
 }: {
 	schedule: Schedule;
@@ -124,6 +128,8 @@ const RosterBody = ({
 	constraints: ConstraintList;
 	/** Where members started the week; undefined until read, or when it can't be. */
 	startingContext?: StartingContext;
+	/** Given only when this person may change the roster by hand now. */
+	editing?: RosterEditing;
 	/** Left out when the schedule can't be generated again by this person. */
 	onRegenerate?: () => void;
 }): FunctionComponent => {
@@ -165,6 +171,7 @@ const RosterBody = ({
 			<GeneratedRoster
 				assignments={assignments.items}
 				constraints={readyItems(constraints)}
+				editing={editing}
 				schedule={schedule}
 				shifts={readyItems(shifts)}
 				startingRuns={
@@ -182,8 +189,10 @@ type Deciding = "publish" | "reject" | undefined;
  * One schedule read by its id alone. It is read again every
  * 15 seconds while its generation is in progress; its roster, and the frozen
  * shifts and constraints that name its findings, are read once it has one
- * (generated, published or rejected). The roster is read per run, so the
- * poll seeing a new run finish brings its rows without a reload. Where the
+ * (generated, published or rejected). The roster is read per run and per
+ * revision, so the poll seeing a new run finish, or a hand change landing,
+ * brings its rows without a reload. Someone who may update the schedule can
+ * change a generated roster's days by hand before it is decided. Where the
  * person may, its header offers to regenerate a generation that ended and wasn't published (as does
  * the failure panel) and to delete it, and the decision panel under the
  * header offers to publish or reject a generated roster.
@@ -256,6 +265,18 @@ const ApiSchedule = ({
 					setRegenerating(true);
 				}
 			: undefined;
+	// A generated roster awaiting its decision may be changed by hand (hrms-backend-v2 docs/adr/0062).
+	const editing: RosterEditing | undefined =
+		decidable(state.schedule) &&
+		runId !== undefined &&
+		unit !== undefined &&
+		access.can("schedule:update", departmentScope(state.schedule.departmentId))
+			? {
+					target: { companyId, unit, scheduleId, runId },
+					revision: state.schedule.rosterRevision,
+					shifts: readyItems(shifts),
+				}
+			: undefined;
 	const canDecide =
 		decidable(state.schedule) &&
 		access.can(
@@ -310,6 +331,7 @@ const ApiSchedule = ({
 			<RosterBody
 				assignments={assignments}
 				constraints={constraints}
+				editing={editing}
 				schedule={state.schedule}
 				shifts={shifts}
 				startingContext={startingContext.data}
