@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { Quote } from "@/components/ui/Quote";
 import { dateTimeFormatIn } from "@/features/scheduling/roster/roster";
 import type { Schedule } from "@/features/scheduling/schedules/api";
-import { scheduleDecision } from "./scheduleDecision";
+import { scheduleDecision } from "@/features/scheduling/schedules/scheduleDecision";
 
 export type ScheduleDecisionPanelProps = {
 	schedule: Schedule;
