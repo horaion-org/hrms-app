@@ -42,6 +42,7 @@ import {
 	decisionRefusal,
 	deleteRefusal,
 	generationRefusal,
+	isPriorWeekIncomplete,
 	regenerationRefusal,
 	scheduleRefusal,
 	scheduleRefusalMessage,
@@ -817,6 +818,11 @@ describe("schedule refusals", () => {
 		],
 		["SCHEDULE_NOT_DRAFT", 409, "This schedule has already been generated."],
 		[
+			"PRIOR_WEEK_INCOMPLETE",
+			409,
+			"Last week has days missing. Fill them in, then generate.",
+		],
+		[
 			"SCHEDULE_CONSTRAINT_UNUSABLE",
 			409,
 			"A chosen constraint names a shift this schedule doesn’t include or a job title that’s no longer active. Tick that shift, edit the constraint or untick it, then try again.",
@@ -829,6 +835,16 @@ describe("schedule refusals", () => {
 		],
 	])("explains a generation refused with %s", (code, status, copy) => {
 		expect(generationRefusal(problem(status, code), t)).toBe(copy);
+	});
+
+	it("tells a refusal for missing days of last week from any other", () => {
+		expect(isPriorWeekIncomplete(problem(409, "PRIOR_WEEK_INCOMPLETE"))).toBe(
+			true
+		);
+		expect(isPriorWeekIncomplete(problem(409, "SCHEDULE_NOT_DRAFT"))).toBe(
+			false
+		);
+		expect(isPriorWeekIncomplete(new Error("offline"))).toBe(false);
 	});
 
 	it("falls back to a plain failure for generation", () => {
@@ -885,6 +901,16 @@ describe("schedule refusals", () => {
 			"ACCESS_DENIED",
 			403,
 			"You no longer have permission to regenerate this schedule.",
+		],
+		[
+			"PRIOR_WEEK_INCOMPLETE",
+			409,
+			"Last week has days missing, so this schedule can’t be regenerated yet. Someone who can edit it needs to add them.",
+		],
+		[
+			"PRIOR_WEEK_INCOMPLETE",
+			409,
+			"Last week has days missing, so this schedule can’t be regenerated yet. Someone who can edit it needs to add them.",
 		],
 	])("explains a regeneration refused with %s", (code, status, copy) => {
 		expect(regenerationRefusal(problem(status, code), t)).toBe(copy);

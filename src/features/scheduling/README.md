@@ -114,7 +114,9 @@ their API exists.
   `starting-days` and reads the `starting-context` frozen at generation; `startingGrid.ts` is the dialog's pure state
   (entries by member and date, `shiftCellValue`, `fillEmpty`, the save body, `runsByMember` for the roster's badge).
   `StartingContextSection` owns the query and the save; `StartingContextCallout` is its one line on the Generate
-  step and `StartingDaysDialog` the members-by-days grid. An empty day means "not known", never worked or off.
+  step and `StartingDaysDialog` the members-by-days grid. An empty day means "not known", never worked or off, and
+  Generate waits until no day is `missing`: `CreateSchedule` reads the same query, and a `PRIOR_WEEK_INCOMPLETE`
+  refusal opens the grid. An empty cell that isn't missing falls before the member started.
 
 `src/pages/CreateSchedule.tsx` composes the steps and owns the draft, the saves, generation and the shift and
 constraint dialogs.

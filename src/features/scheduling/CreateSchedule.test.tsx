@@ -42,6 +42,7 @@ import {
 } from "@/features/scheduling/shifts/fixtures";
 import type { StartingDays } from "@/features/scheduling/startingContext/api";
 import {
+	answeredWeek,
 	firstWeek,
 	unknownCell,
 } from "@/features/scheduling/startingContext/fixtures";
@@ -1431,6 +1432,7 @@ describe("Create Schedule: where everyone starts", () => {
 											...unknownCell(cell.date),
 											kind: "OFF",
 											source: "ENTERED",
+											missing: false,
 										}
 									: cell
 							),
@@ -1450,9 +1452,7 @@ describe("Create Schedule: where everyone starts", () => {
 		await toGenerate(user);
 
 		expect(
-			await screen.findByText(
-				"No roster before this week. Days are added for 1 person; everyone else starts rested."
-			)
+			await screen.findByText("Last week is missing 12 days for 2 people.")
 		).toBeInTheDocument();
 		await user.click(screen.getByRole("button", { name: "Edit last week" }));
 		const dialog = await screen.findByRole("dialog", {
@@ -1470,8 +1470,76 @@ describe("Create Schedule: where everyone starts", () => {
 			{ days: SUNDAY_ENTRIES },
 		]);
 		expect(
+			screen.getByText("Last week is missing 11 days for 2 people.")
+		).toBeInTheDocument();
+	});
+
+	it("given_daysMissing_when_onTheGenerateStep_then_generateWaitsAndSaysWhy", async () => {
+		const user = userEvent.setup();
+		const { calls } = await reopen({
+			[`GET ${STARTING_DAYS}`]: reply(firstWeek()),
+		});
+		await screen.findByRole("row", { name: /Front Desk AM/ });
+		await toGenerate(user);
+
+		const generate = await screen.findByRole("button", { name: "Generate" });
+		await waitFor(() => {
+			expect(generate).toBeDisabled();
+		});
+		expect(generate).toHaveAccessibleDescription(
+			"Add last week’s missing days before you generate."
+		);
+		expect(sent(calls, `POST ${GENERATION}`)).toEqual([]);
+	});
+
+	it("given_everyDaySaved_when_onTheGenerateStep_then_generateIsOpenAgain", async () => {
+		const user = userEvent.setup();
+		await reopen({
+			[`GET ${STARTING_DAYS}`]: [reply(firstWeek()), reply(answeredWeek())],
+			[`PUT ${STARTING_DAYS}`]: reply(answeredWeek()),
+		});
+		await screen.findByRole("row", { name: /Front Desk AM/ });
+		await toGenerate(user);
+
+		await user.click(
+			await screen.findByRole("button", { name: "Edit last week" })
+		);
+		const dialog = await screen.findByRole("dialog", {
+			name: "Before this week",
+		});
+		await user.click(
+			within(dialog).getByRole("button", { name: "Mark everyone off" })
+		);
+		await user.click(within(dialog).getByRole("button", { name: "Mark off" }));
+		await user.click(within(dialog).getByRole("button", { name: "Save days" }));
+
+		await waitFor(() => {
+			expect(screen.getByRole("button", { name: "Generate" })).toBeEnabled();
+		});
+	});
+
+	it("given_aGenerationRefusedForMissingDays_when_generated_then_theGridOpensOnTheLatestWeek", async () => {
+		const user = userEvent.setup();
+		await reopen({
+			[`PUT ${SCHEDULE}`]: reply(DRAFT),
+			[`GET ${STARTING_DAYS}`]: [reply(answeredWeek()), reply(firstWeek())],
+			[`POST ${GENERATION}`]: problemReply(409, "PRIOR_WEEK_INCOMPLETE"),
+		});
+		await screen.findByRole("row", { name: /Front Desk AM/ });
+		await toGenerate(user);
+		await screen.findByText(/No roster before this week/);
+
+		await user.click(screen.getByRole("button", { name: "Generate" }));
+
+		const dialog = await screen.findByRole("dialog", {
+			name: "Before this week",
+		});
+		expect(
+			within(dialog).getByText("12 days still need an answer.")
+		).toBeInTheDocument();
+		expect(
 			screen.getByText(
-				"No roster before this week. Days are added for 2 people; everyone else starts rested."
+				"Last week has days missing. Fill them in, then generate."
 			)
 		).toBeInTheDocument();
 	});
@@ -1524,7 +1592,7 @@ describe("Create Schedule: where everyone starts", () => {
 		await toGenerate(user);
 
 		expect(
-			await screen.findByText(/^No roster before this week\./)
+			await screen.findByText(/Someone who can edit this schedule/)
 		).toBeInTheDocument();
 		expect(screen.queryByRole("button", { name: /last week/ })).toBeNull();
 	});
