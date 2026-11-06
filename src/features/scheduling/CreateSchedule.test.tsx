@@ -1307,6 +1307,33 @@ describe("Create Schedule: generating", () => {
 		);
 	});
 
+	it("given_theWeekAlreadyPublished_when_onTheGenerateStep_then_generateIsDisabledAndTheRosterLinked", async () => {
+		const user = userEvent.setup();
+		const { calls } = await reopen({
+			[`GET ${SCHEDULES}/published-week`]: reply({
+				periodStart: DRAFT_SETUP.periodStart,
+				scheduleId: "s-9",
+			}),
+		});
+		await screen.findByRole("row", { name: /Front Desk AM/ });
+		await toGenerate(user);
+
+		const generate = screen.getByRole("button", { name: "Generate" });
+		await waitFor(() => {
+			expect(generate).toBeDisabled();
+		});
+		expect(generate).toHaveAccessibleDescription(
+			"This week already has a published roster."
+		);
+		expect(
+			screen.getByRole("link", { name: "Open the published roster" })
+		).toHaveAttribute("href", "/scheduling/s-9");
+		expect(
+			calls.find((call) => call.path === `${SCHEDULES}/published-week`)?.search
+		).toBe(`periodStart=${DRAFT_SETUP.periodStart}`);
+		expect(writes(calls)).toEqual([]);
+	});
+
 	it.each([
 		[
 			"GENERATION_REQUESTED",

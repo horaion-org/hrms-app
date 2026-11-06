@@ -16,6 +16,11 @@ import type { DepartmentPath } from "@/features/scheduling/paths";
 import { PublishScheduleDialog } from "@/features/scheduling/PublishScheduleDialog";
 import { RegenerateDialog } from "@/features/scheduling/RegenerateDialog";
 import { RejectScheduleDialog } from "@/features/scheduling/RejectScheduleDialog";
+import {
+	publishedRosterOtherThan,
+	publishedWeekQuery,
+} from "@/features/scheduling/publishedWeek/api";
+import { PublishedWeekCallout } from "@/features/scheduling/publishedWeek/PublishedWeekCallout";
 import { RosterHeader } from "@/features/scheduling/RosterHeader";
 import { rosterChangeShiftsQuery } from "@/features/scheduling/rosterChanges/api";
 import { ScheduleDecisionPanel } from "@/features/scheduling/ScheduleDecisionPanel";
@@ -264,6 +269,24 @@ const ApiSchedule = ({
 				access.can("schedule:read", departmentScope(unit.departmentId))
 		)
 	);
+	// Another schedule already published for the week means this one can't be generated again or published.
+	const awaitingPublication =
+		state.status === "ready" && state.schedule.status !== "PUBLISHED"
+			? state.schedule
+			: undefined;
+	const publishedWeek = useQuery(
+		publishedWeekQuery(
+			companyId,
+			unit && access.can("schedule:read", departmentScope(unit.departmentId))
+				? unit
+				: undefined,
+			awaitingPublication?.periodStart
+		)
+	);
+	const weekPublishedBy = publishedRosterOtherThan(
+		publishedWeek.data,
+		scheduleId
+	);
 	if (state.status !== "ready")
 		return (
 			<Problem alert={state.status !== "pending"}>
@@ -272,6 +295,7 @@ const ApiSchedule = ({
 		);
 	const openRegenerate =
 		regenerable(state.schedule) &&
+		weekPublishedBy === undefined &&
 		access.can(
 			"schedule:generate",
 			departmentScope(state.schedule.departmentId)
@@ -320,12 +344,19 @@ const ApiSchedule = ({
 					</div>
 				}
 			/>
+			{weekPublishedBy && (
+				<PublishedWeekCallout
+					className="mt-6"
+					publishedScheduleId={weekPublishedBy}
+					stage="blocked"
+				/>
+			)}
 			<ScheduleDecisionPanel
 				className="mt-6"
 				schedule={state.schedule}
 				showsNextStep={regenerable(state.schedule)}
 				onPublish={
-					canDecide
+					canDecide && weekPublishedBy === undefined
 						? (): void => {
 								setDeciding("publish");
 							}

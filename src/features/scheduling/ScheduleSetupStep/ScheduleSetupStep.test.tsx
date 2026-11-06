@@ -9,6 +9,7 @@ import { MemoryRouterHarness } from "@/components/utils/MemoryRouterHarness";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import { partTimeReadinessQuery } from "@/features/availability/api";
 import { periodStartingOn } from "@/features/scheduling/periods";
+import { publishedWeekQuery } from "@/features/scheduling/publishedWeek/api";
 import { schedulingWorkspace } from "@/features/scheduling/schedules/fixtures";
 import {
 	ScheduleSetupStep,
@@ -310,6 +311,97 @@ describe("ScheduleSetupStep", () => {
 				await screen.findByRole("textbox", { name: /Schedule name/ })
 			).toBeVisible();
 			expect(screen.queryByText(/part-time/)).not.toBeInTheDocument();
+		});
+	});
+
+	describe("a week already published", () => {
+		/** Kitchen's week of 12 Oct answered as published by s-9, under a workspace holding `permissions`. */
+		const kitchenPublished = (permissions: Array<string>): QueryClient => {
+			const client = clientWith(schedulingWorkspace(permissions));
+			client.setQueryData(
+				publishedWeekQuery(
+					"c-1",
+					{ branchId: "b-1", departmentId: "d-2" },
+					"2026-10-12"
+				).queryKey,
+				{ periodStart: "2026-10-12", scheduleId: "s-9" }
+			);
+			return client;
+		};
+		const kitchenDraft = { ...DEFAULTS, departmentId: "d-2", name: "Week 42" };
+		const warning =
+			/already has a published roster for this department. Only one roster can be published per week, so pick another week/;
+
+		it("given_scheduleRead_when_thePublishedWeekIsChosen_then_warnsLinksTheRosterAndStillGoesAhead", async () => {
+			const user = userEvent.setup();
+			const onSubmit = vi.fn().mockResolvedValue(undefined);
+			render(
+				<MemoryRouterHarness>
+					<Harness
+						client={kitchenPublished(["schedule:read", "schedule:create"])}
+						defaultValues={kitchenDraft}
+						onSubmit={onSubmit}
+					/>
+				</MemoryRouterHarness>
+			);
+
+			const note = await screen.findByText(warning);
+			expect(
+				within(note.closest("[role=note]") as HTMLElement).getByRole("link", {
+					name: "Open the published roster",
+				})
+			).toHaveAttribute("href", "/scheduling/s-9");
+			await user.click(screen.getByRole("button", { name: "Next" }));
+			await vi.waitFor(() => {
+				expect(onSubmit).toHaveBeenCalledOnce();
+			});
+		});
+
+		it("given_anotherWeekChosen_when_rendered_then_saysNothing", async () => {
+			render(
+				<MemoryRouterHarness>
+					<Harness
+						client={kitchenPublished(["schedule:read", "schedule:create"])}
+						defaultValues={{ ...kitchenDraft, periodStart: "2026-10-19" }}
+					/>
+				</MemoryRouterHarness>
+			);
+
+			expect(
+				await screen.findByRole("textbox", { name: /Schedule name/ })
+			).toBeVisible();
+			expect(screen.queryByText(warning)).not.toBeInTheDocument();
+		});
+
+		it("given_noScheduleRead_when_thePublishedWeekIsChosen_then_asksNothingAndSaysNothing", async () => {
+			const client = kitchenPublished(["schedule:create"]);
+			render(
+				<MemoryRouterHarness>
+					<Harness client={client} defaultValues={kitchenDraft} />
+				</MemoryRouterHarness>
+			);
+
+			expect(
+				await screen.findByRole("textbox", { name: /Schedule name/ })
+			).toBeVisible();
+			expect(screen.queryByText(warning)).not.toBeInTheDocument();
+		});
+
+		it("given_readOnly_when_rendered_then_saysNothing", async () => {
+			render(
+				<MemoryRouterHarness>
+					<Harness
+						readOnly
+						client={kitchenPublished(["schedule:read", "schedule:create"])}
+						defaultValues={kitchenDraft}
+					/>
+				</MemoryRouterHarness>
+			);
+
+			expect(
+				await screen.findByRole("textbox", { name: /Schedule name/ })
+			).toBeVisible();
+			expect(screen.queryByText(warning)).not.toBeInTheDocument();
 		});
 	});
 

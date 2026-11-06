@@ -8,6 +8,8 @@ import { StepPanel } from "@/features/scheduling/StepPanel";
 
 export type GenerateStepProps = {
 	summary: ScheduleSummary;
+	/** Why this schedule can't be generated, above everything else. */
+	notice?: ReactNode;
 	/** Where everyone starts: the week before the period, above the summary. */
 	startingPoint?: ReactNode;
 	className?: string;
@@ -22,6 +24,7 @@ const NEXT_KEYS = [
 /** What the schedule will be generated from, where everyone starts, and what happens once it is. */
 export const GenerateStep = ({
 	summary,
+	notice,
 	startingPoint,
 	className,
 }: GenerateStepProps): FunctionComponent => {
@@ -60,6 +63,7 @@ export const GenerateStep = ({
 				</span>
 			}
 		>
+			{notice && <div className="mt-7">{notice}</div>}
 			{startingPoint && <div className="mt-7">{startingPoint}</div>}
 			<dl
 				aria-label={t("scheduling.generate.summary")}
