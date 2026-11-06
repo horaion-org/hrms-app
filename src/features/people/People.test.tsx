@@ -22,6 +22,8 @@ import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
 import {
 	FIVE_DAY_WEEK,
+	PART_TIME_20,
+	SIX_DAY_SHIFT,
 	STANDARD_WEEK,
 	termsListResponse,
 } from "@/features/employmentTerms/fixtures";
@@ -1074,5 +1076,159 @@ describe("Changing employment terms in bulk", () => {
 		expect(
 			screen.queryByRole("button", { name: "Change employment terms" })
 		).toBeNull();
+	});
+});
+
+describe("Filtering by employment terms", () => {
+	const TERMS_LIST = "GET /api/v1/companies/c-1/employment-terms";
+	const TERMS_PATH = "/api/v1/companies/c-1/employment-terms";
+	const READS_TERMS = ["member_profile:read", "member_employment_terms:read"];
+	const termsList: StubReply = {
+		status: 200,
+		body: envelope(
+			termsListResponse([
+				STANDARD_WEEK,
+				FIVE_DAY_WEEK,
+				SIX_DAY_SHIFT,
+				PART_TIME_20,
+			])
+		),
+	};
+
+	it("lists the holders of the chosen terms, keeps them in the URL, and clears them", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...baseRoutes(READS_TERMS),
+			[PEOPLE]: pageReply([person("m-1", "Moses Lee")]),
+			[TERMS_LIST]: termsList,
+		});
+		const opened = await open("/people?status=ACTIVE");
+		await screen.findByText("Moses Lee");
+
+		await user.click(screen.getByRole("button", { name: "Filters" }));
+		await user.click(screen.getByRole("button", { name: "Employment terms" }));
+		// Active terms only: Part-time, 20 h is inactive and not chosen.
+		expect(
+			screen.getAllByRole("option").map((option) => option.textContent)
+		).toEqual([
+			"All terms",
+			"Standard week",
+			"Five-day week, 44 h",
+			"Six-day shift, 12 h",
+		]);
+		await user.click(
+			screen.getByRole("option", { name: "Six-day shift, 12 h" })
+		);
+		await waitFor(() => {
+			expect(opened.router.state.location.search).toEqual({
+				status: "ACTIVE",
+				terms: SIX_DAY_SHIFT.id,
+			});
+		});
+		const chips = screen.getByRole("list", { name: "Active filters" });
+		expect(
+			within(chips)
+				.getAllByRole("listitem")
+				.map((chip) => chip.textContent)
+		).toEqual(["Employment terms: Six-day shift, 12 h", "Showing: Active"]);
+		// Every terms is asked for, not only the active ones, so an inactive one can be named.
+		expect(searchesOf(calls, TERMS_PATH)).toEqual([""]);
+
+		await user.click(screen.getByRole("button", { name: "Clear filters" }));
+		await waitFor(() => {
+			expect(opened.router.state.location.search).toEqual({});
+		});
+		expect(peopleCalls(calls)).toEqual([
+			`${FIRST_PAGE}&status=ACTIVE`,
+			`${FIRST_PAGE}&status=ACTIVE&employmentTermsId=${SIX_DAY_SHIFT.id}`,
+			FIRST_PAGE,
+		]);
+	});
+
+	it("opens filtered from a link under All branches, naming inactive terms that are still held", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...baseRoutes(),
+			// Orchard (Kitchen d-1, Bar d-2) and Tampines (Front d-3).
+			[WORKSPACE]: {
+				status: 200,
+				body: envelope(companyWideWorkspace(READS_TERMS)),
+			},
+			[PEOPLE]: pageReply([person("m-1", "Moses Lee")]),
+			[TERMS_LIST]: termsList,
+		});
+		const opened = await open(`/people?branch=all&terms=${PART_TIME_20.id}`);
+		await screen.findByText("Moses Lee");
+
+		expect(peopleCalls(calls)).toEqual([
+			`${FIRST_PAGE}&employmentTermsId=${PART_TIME_20.id}`,
+		]);
+		expect(
+			await within(
+				screen.getByRole("list", { name: "Active filters" })
+			).findByText("Employment terms: Part-time, 20 h")
+		).toBeVisible();
+		await user.click(screen.getByRole("button", { name: "Filters" }));
+		expect(
+			screen.getByRole("button", { name: "Employment terms" })
+		).toHaveTextContent("Part-time, 20 h (inactive)");
+
+		// The Branch is the header's scope: removing the terms chip keeps it.
+		await user.click(
+			screen.getByRole("button", {
+				name: "Remove Employment terms: Part-time, 20 h",
+			})
+		);
+		await waitFor(() => {
+			expect(opened.router.state.location.search).toEqual({ branch: "all" });
+		});
+	});
+
+	it("rests the field and ignores ?terms= while only inactive people are shown", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...baseRoutes(READS_TERMS),
+			[PEOPLE]: pageReply([person("m-1", "Moses Lee", { status: "INACTIVE" })]),
+			[TERMS_LIST]: termsList,
+		});
+		await open(`/people?status=INACTIVE&terms=${SIX_DAY_SHIFT.id}`);
+		await screen.findByText("Moses Lee");
+
+		// Inactive people hold no terms, so the terms would only ever empty the list.
+		expect(peopleCalls(calls)).toEqual([`${FIRST_PAGE}&status=INACTIVE`]);
+		const chips = screen.getByRole("list", { name: "Active filters" });
+		expect(
+			within(chips)
+				.getAllByRole("listitem")
+				.map((chip) => chip.textContent)
+		).toEqual(["Showing: Inactive"]);
+		await user.click(screen.getByRole("button", { name: "Filters" }));
+		const field = screen.getByRole("button", { name: "Employment terms" });
+		expect(field).toBeDisabled();
+		expect(field).toHaveTextContent("All terms");
+		expect(field).toHaveAccessibleDescription(
+			"Inactive people hold no terms. Show active people to filter by terms."
+		);
+	});
+
+	it("is neither offered nor applied without member_employment_terms:read", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...baseRoutes(),
+			[PEOPLE]: pageReply([person("m-1", "Moses Lee")]),
+		});
+		await open(`/people?terms=${SIX_DAY_SHIFT.id}`);
+		await screen.findByText("Moses Lee");
+
+		// The URL's terms are ignored, so the list is everyone the person may see.
+		expect(peopleCalls(calls)).toEqual([FIRST_PAGE]);
+		expect(searchesOf(calls, TERMS_PATH)).toEqual([]);
+		expect(
+			screen.queryByRole("list", { name: "Active filters" })
+		).not.toBeInTheDocument();
+		await user.click(screen.getByRole("button", { name: "Filters" }));
+		expect(
+			screen.queryByRole("button", { name: "Employment terms" })
+		).not.toBeInTheDocument();
 	});
 });

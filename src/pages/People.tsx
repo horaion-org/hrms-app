@@ -1,4 +1,4 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { getRouteApi, useRouterState } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -19,7 +19,13 @@ import {
 } from "@/components/ui/Icon";
 import { Pagination } from "@/components/ui/Pagination";
 import { Toast } from "@/components/ui/Toast";
+import { allTermsQuery } from "@/features/employmentTerms/api";
 import { BulkChangeEmploymentTermsDialog } from "@/features/employmentTerms/BulkChangeEmploymentTermsDialog";
+import { EmploymentTermsFilter } from "@/features/employmentTerms/EmploymentTermsFilter";
+import {
+	chosenTermsName,
+	termsChoices,
+} from "@/features/employmentTerms/termsFilter";
 import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import { ListToolbar } from "@/features/organisation/ListToolbar";
 import {
@@ -38,6 +44,7 @@ import {
 	peopleQueryOf,
 	sortParameter,
 	statusesOf,
+	termsFilterApplies,
 	statusParameter,
 	type PeopleSearch,
 } from "@/features/people/peopleSearch";
@@ -59,10 +66,11 @@ const exportRefusal = (error: unknown): string | undefined =>
 /**
  * The company's people, a page at a time, sorted, filtered and searched by
  * the server: the people of the header's Branch (every Branch in reach under
- * "All branches"), narrowed to a Department from the Filters. The units,
- * page, sort and status live in the URL; the search text stays on the page
- * so names never reach browser history. Someone just added on the Add
- * employee page is confirmed above the list.
+ * "All branches"), narrowed to a Department, and to the holders of one
+ * employment terms for whoever may read people's terms, from the Filters.
+ * The units, page, sort, status and terms live in the URL; the search text
+ * stays on the page so names never reach browser history. Someone just
+ * added on the Add employee page is confirmed above the list.
  */
 export const People = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
@@ -79,7 +87,19 @@ export const People = (): FunctionComponent => {
 		requested,
 		PEOPLE_UNIT_RULES
 	);
-	const query = peopleQueryOf(search, settled, selectedUnits(units));
+	const access = useAccess();
+	// Who holds which terms is its own key; without it the filter is not offered and `?terms=` is ignored.
+	const canFilterByTerms = access.canAnywhere("member_employment_terms:read");
+	const allTerms = useQuery(allTermsQuery(companyId, canFilterByTerms));
+	const query = peopleQueryOf(
+		search,
+		settled,
+		selectedUnits(units),
+		canFilterByTerms
+	);
+	// Only active people hold terms, so the field rests while only inactive people are shown.
+	const termsFieldDisabled =
+		canFilterByTerms && !termsFilterApplies(search, canFilterByTerms);
 	const list = usePeople(companyId, query);
 	// Ticked rows belong to the list they were ticked in; another page or filter starts empty.
 	const listKey = JSON.stringify(query);
@@ -87,7 +107,6 @@ export const People = (): FunctionComponent => {
 		{ listKey, ids: [] }
 	);
 	const selectedIds = ticked.listKey === listKey ? ticked.ids : [];
-	const access = useAccess();
 	const columns = useMemo(() => peopleColumns(t, access.can), [t, access.can]);
 	const canAdd = access.canAnywhere("member_profile:create");
 	// The API checks each person's Department and skips anyone out of reach.
@@ -109,7 +128,7 @@ export const People = (): FunctionComponent => {
 			search: (previous) => ({ ...previous, page: undefined, ...next }),
 		});
 	};
-	// The Branch is the header's scope, not a filter: only Department and status are listed and cleared here.
+	// The Branch is the header's scope, not a filter: only Department, terms and status are listed and cleared here.
 	const chips = [
 		...departmentChips(
 			units,
@@ -118,6 +137,20 @@ export const People = (): FunctionComponent => {
 			},
 			t
 		),
+		...(query.employmentTermsId
+			? [
+					filterChip(
+						"terms",
+						t("employmentTerms.filter.label"),
+						chosenTermsName(allTerms.data?.terms, query.employmentTermsId) ??
+							t("employmentTerms.filter.unknown"),
+						() => {
+							show({ terms: undefined });
+						},
+						t
+					),
+				]
+			: []),
 		...(search.status
 			? [
 					filterChip(
@@ -133,7 +166,7 @@ export const People = (): FunctionComponent => {
 			: []),
 	];
 	const clearFilters = (): void => {
-		show({ status: undefined, department: undefined });
+		show({ status: undefined, department: undefined, terms: undefined });
 	};
 	// The Branch is scope, so an empty Branch still reads "No people yet"; a search or a set filter reads "No matches".
 	const view = describePeople(list, query.search !== "" || chips.length > 0, t);
@@ -191,12 +224,31 @@ export const People = (): FunctionComponent => {
 					</>
 				}
 				filterFields={
-					<DepartmentFilter
-						selection={units}
-						onChange={(department) => {
-							show({ department });
-						}}
-					/>
+					<>
+						<DepartmentFilter
+							selection={units}
+							onChange={(department) => {
+								show({ department });
+							}}
+						/>
+						{canFilterByTerms && (
+							<EmploymentTermsFilter
+								value={query.employmentTermsId}
+								choices={termsChoices(
+									allTerms.data?.terms ?? [],
+									query.employmentTermsId
+								)}
+								disabledReason={
+									termsFieldDisabled
+										? t("employmentTerms.filter.inactiveShown")
+										: undefined
+								}
+								onChange={(terms) => {
+									show({ terms });
+								}}
+							/>
+						)}
+					</>
 				}
 				multipleFilter={{
 					label: t("organisation.list.showing"),

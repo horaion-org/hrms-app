@@ -25,6 +25,7 @@ import { restShort, weekShort } from "@/features/employmentTerms/summary";
 import { useEmploymentTermsActions } from "@/features/employmentTerms/useEmploymentTermsActions";
 import { actionsColumn, nameColumn } from "@/features/organisation/listColumns";
 import { COMPANY_SCOPE } from "@/features/workspace/scopes";
+import { ALL_BRANCHES } from "@/features/workspace/unitSelection";
 import { useAccess } from "@/features/workspace/useAccess";
 
 export type EmploymentTermsSettingsProps = {
@@ -97,7 +98,9 @@ const confirmCopy = (
  * each kind of contract sets, with how many people are on each. Read under
  * `employment_terms:read` and changed under `employment_terms:update`, both
  * held company-wide. People are given terms from their profile or the
- * People list, never here.
+ * People list, never here. Each count links to the People list filtered to
+ * those terms across every Branch, only for whoever reads people and their
+ * terms company-wide, so the list they land on matches the count.
  */
 export const EmploymentTermsSettings = ({
 	companyId,
@@ -109,6 +112,9 @@ export const EmploymentTermsSettings = ({
 	const access = useAccess();
 	const canRead = access.can("employment_terms:read", COMPANY_SCOPE);
 	const canUpdate = access.can("employment_terms:update", COMPANY_SCOPE);
+	const canListHolders =
+		access.can("member_profile:read", COMPANY_SCOPE) &&
+		access.can("member_employment_terms:read", COMPANY_SCOPE);
 	const overview = useQuery(termsOverviewQuery(companyId, canRead));
 	const actions = useEmploymentTermsActions(companyId);
 	const [editing, setEditing] = useState<Editing | null>(null);
@@ -150,13 +156,26 @@ export const EmploymentTermsSettings = ({
 				sortValue: (terms) => terms.holderCount,
 				cell: (terms) => (
 					<>
-						<span
-							className={
-								terms.holderCount === 0 ? "block text-neutral-700" : "block"
-							}
-						>
-							{t(`${key}.peopleCount`, { count: terms.holderCount })}
-						</span>
+						{canListHolders && terms.holderCount > 0 ? (
+							<span className="block">
+								<Button
+									aria-label={t(`${key}.peopleLink`, { name: terms.name })}
+									search={{ branch: ALL_BRANCHES, terms: terms.id }}
+									to="/people"
+									variant="textlink"
+								>
+									{t(`${key}.peopleCount`, { count: terms.holderCount })}
+								</Button>
+							</span>
+						) : (
+							<span
+								className={
+									terms.holderCount === 0 ? "block text-neutral-700" : "block"
+								}
+							>
+								{t(`${key}.peopleCount`, { count: terms.holderCount })}
+							</span>
+						)}
 						{terms.scheduledCount > 0 && (
 							<span className="block text-neutral-700">
 								{t(`${key}.scheduledCount`, { count: terms.scheduledCount })}
@@ -226,7 +245,7 @@ export const EmploymentTermsSettings = ({
 					]
 				: []),
 		],
-		[t, language, canUpdate]
+		[t, language, canUpdate, canListHolders]
 	);
 	const forbidden =
 		!canRead ||

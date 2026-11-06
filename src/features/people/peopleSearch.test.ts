@@ -7,16 +7,18 @@ import {
 	sortOf,
 	sortParameter,
 	statusesOf,
+	termsFilterApplies,
 	statusParameter,
 } from "@/features/people/peopleSearch";
 
 describe("People URL state", () => {
-	it("keeps a recognised page, sort, status, Branch and Department", () => {
+	it("keeps a recognised page, sort, status, Branch, Department and terms", () => {
 		expect(
 			parsePeopleSearch({
 				page: 3,
 				sort: "jobTitle,desc",
 				status: "INACTIVE",
+				terms: "terms-1",
 				branch: "b-1",
 				department: "d-1",
 			})
@@ -24,9 +26,40 @@ describe("People URL state", () => {
 			page: 3,
 			sort: "jobTitle,desc",
 			status: "INACTIVE",
+			terms: "terms-1",
 			branch: "b-1",
 			department: "d-1",
 		});
+	});
+
+	it("drops terms that are not an id", () => {
+		expect(parsePeopleSearch({ terms: "" })).toEqual({});
+		expect(parsePeopleSearch({ terms: 7 })).toEqual({});
+	});
+
+	it("applies terms only for someone who may read them, and never while only inactive people are shown", () => {
+		expect(termsFilterApplies({}, true)).toBe(true);
+		expect(termsFilterApplies({ status: "ACTIVE" }, true)).toBe(true);
+		expect(termsFilterApplies({ status: "INACTIVE" }, true)).toBe(false);
+		expect(termsFilterApplies({}, false)).toBe(false);
+		expect(
+			peopleQueryOf({ status: "INACTIVE", terms: "terms-1" }, "", {}, true)
+		).not.toHaveProperty("employmentTermsId");
+	});
+
+	it("asks for the URL's terms only for someone who may filter by them", () => {
+		const search = { terms: "terms-1" };
+
+		expect(peopleQueryOf(search, "", {}, true)).toEqual({
+			page: 1,
+			sort: { field: "displayName", desc: false },
+			search: "",
+			employmentTermsId: "terms-1",
+		});
+		expect(peopleQueryOf(search, "", {}, false)).not.toHaveProperty(
+			"employmentTermsId"
+		);
+		expect(peopleQueryOf(search, "")).not.toHaveProperty("employmentTermsId");
 	});
 
 	it.each([

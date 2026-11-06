@@ -91,6 +91,36 @@ describe("EmploymentTermsSettings", () => {
 		).toHaveAttribute("href", "/settings?section=scheduling");
 	});
 
+	it("links each count to the People list filtered to those terms, across every Branch", async () => {
+		stubApi(
+			routes([
+				"employment_terms:read",
+				"member_profile:read",
+				"member_employment_terms:read",
+			])
+		);
+		const panel = await open();
+
+		const rows = await table(panel);
+		const sixDay = within(rows).getByRole("row", { name: /Six-day shift/ });
+		expect(
+			within(sixDay).getByRole("link", {
+				name: "Show the people on Six-day shift, 12 h",
+			})
+		).toHaveAttribute("href", `/people?branch=all&terms=${SIX_DAY_SHIFT.id}`);
+		expect(within(sixDay).getByRole("link")).toHaveTextContent("41 people");
+	});
+
+	it("shows the counts as plain text to someone who cannot list people's terms company-wide", async () => {
+		stubApi(routes(["employment_terms:read", "member_profile:read"]));
+		const panel = await open();
+
+		const rows = await table(panel);
+		const sixDay = within(rows).getByRole("row", { name: /Six-day shift/ });
+		expect(sixDay).toHaveTextContent("41 people");
+		expect(within(sixDay).queryByRole("link")).toBeNull();
+	});
+
 	it("offers no changes without employment_terms:update", async () => {
 		stubApi(routes(["employment_terms:read"]));
 		const panel = await open();

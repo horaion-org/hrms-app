@@ -31,6 +31,8 @@ const searchSchema = z.object({
 	page: z.number().int().min(1).optional().catch(undefined),
 	sort: sortParameterSchema.optional().catch(undefined),
 	status: z.enum(MEMBER_STATUSES).optional().catch(undefined),
+	/** The employment terms whose holders are listed, by id. */
+	terms: z.string().min(1).optional().catch(undefined),
 	...unitSearchSchema.shape,
 });
 
@@ -38,8 +40,9 @@ const searchSchema = z.object({
  * The People table's state that belongs in the URL, so it survives a reload
  * and can be shared. Each part is left out at its default: the first page,
  * sorted by name, every status, the default Branch (see
- * `resolveUnitSelection`), every Department. The search text is never here:
- * names typed into it must not land in browser history or logs.
+ * `resolveUnitSelection`), every Department, any employment terms. The
+ * search text is never here: names typed into it must not land in browser
+ * history or logs.
  */
 export type PeopleSearch = z.infer<typeof searchSchema>;
 
@@ -47,11 +50,13 @@ export type PeopleSearch = z.infer<typeof searchSchema>;
 export const parsePeopleSearch = (
 	search: Record<string, unknown>
 ): PeopleSearch => {
-	const { page, sort, status, branch, department } = searchSchema.parse(search);
+	const { page, sort, status, terms, branch, department } =
+		searchSchema.parse(search);
 	return {
 		...(page === undefined || page === 1 ? {} : { page }),
 		...(sort === undefined || sort === DEFAULT_SORT_PARAMETER ? {} : { sort }),
 		...(status === undefined ? {} : { status }),
+		...(terms === undefined ? {} : { terms }),
 		...unitSearchOf({ branch, department }),
 	};
 };
@@ -91,11 +96,27 @@ export const PEOPLE_UNIT_RULES: UnitSelectionRules = {
 	withDepartment: true,
 };
 
-/** The page of people to ask the API for, inside the units shown, if any. */
+/**
+ * Whether the URL's employment terms narrow the list: only for someone who
+ * may read people's terms (`member_employment_terms:read`), and not while
+ * only inactive people are shown, since only active people hold terms.
+ * Otherwise `?terms=` is ignored rather than producing a list that is
+ * always empty.
+ */
+export const termsFilterApplies = (
+	{ status }: PeopleSearch,
+	canFilterByTerms: boolean
+): boolean => canFilterByTerms && status !== "INACTIVE";
+
+/**
+ * The page of people to ask the API for, inside the units shown, if any,
+ * narrowed to the URL's employment terms when `termsFilterApplies`.
+ */
 export const peopleQueryOf = (
 	search: PeopleSearch,
 	text: string,
-	{ branchId, departmentId }: UnitSelection = {}
+	{ branchId, departmentId }: UnitSelection = {},
+	canFilterByTerms = false
 ): PeopleQuery => ({
 	page: search.page ?? 1,
 	sort: sortOf(search),
@@ -103,6 +124,9 @@ export const peopleQueryOf = (
 	search: text.trim(),
 	...(branchId ? { branchId } : {}),
 	...(departmentId ? { departmentId } : {}),
+	...(search.terms && termsFilterApplies(search, canFilterByTerms)
+		? { employmentTermsId: search.terms }
+		: {}),
 });
 
 /**

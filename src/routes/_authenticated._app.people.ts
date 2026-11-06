@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { allTermsQuery } from "@/features/employmentTerms/api";
 import { myProfileQuery, peopleQuery } from "@/features/people/api";
 import {
 	parsePeopleSearch,
@@ -32,10 +33,9 @@ export const Route = createFileRoute("/_authenticated/_app/people")({
 		const workspace = await context.queryClient
 			.ensureQueryData(workspaceQuery)
 			.catch(() => undefined);
+		const access = accessIndexOf(workspace, companyId);
 		// Nothing is asked for when the workspace does not grant the list anywhere.
-		if (
-			canAny(accessIndexOf(workspace, companyId), PEOPLE_READ_KEYS, "anywhere")
-		) {
+		if (canAny(access, PEOPLE_READ_KEYS, "anywhere")) {
 			const search = parsePeopleSearch(location.search);
 			// The person's home Branch is the default; a failure (no profile of their own) leaves it out.
 			const home = await context.queryClient
@@ -50,9 +50,22 @@ export const Route = createFileRoute("/_authenticated/_app/people")({
 				PEOPLE_UNIT_RULES,
 				home?.branchId ?? undefined
 			);
-			await context.queryClient.prefetchQuery(
-				peopleQuery(companyId, peopleQueryOf(search, "", selectedUnits(units)))
+			// The terms filter, and the terms it offers, only for whoever may read people's terms.
+			const canFilterByTerms = canAny(
+				access,
+				["member_employment_terms:read"],
+				"anywhere"
 			);
+			await Promise.all([
+				context.queryClient.prefetchQuery(
+					peopleQuery(
+						companyId,
+						peopleQueryOf(search, "", selectedUnits(units), canFilterByTerms)
+					)
+				),
+				canFilterByTerms &&
+					context.queryClient.prefetchQuery(allTermsQuery(companyId)),
+			]);
 		}
 	},
 	component: People,

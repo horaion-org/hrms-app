@@ -3377,7 +3377,8 @@
 				"isDefault": "The default can’t be deactivated or deleted. Make other terms the default first.",
 				"held": "People have had these terms, so they can’t be deleted. Deactivate them instead.",
 				"inactive": "These terms are inactive. Activate them first."
-			}
+			},
+			"peopleLink": "Show the people on {{name}}"
 		},
 		"summary": {
 			"title": "Summary",
@@ -3620,6 +3621,13 @@
 			"skippedNotFoundOrNoPermission_other": "{{count}} skipped because they’re no longer here or you can’t change their terms",
 			"skippedBeforeFirst_one": "{{count}} skipped because that date is before their first terms",
 			"skippedBeforeFirst_other": "{{count}} skipped because that date is before their first terms"
+		},
+		"filter": {
+			"label": "Employment terms",
+			"all": "All terms",
+			"inactive": "{{name}} (inactive)",
+			"unknown": "Selected terms",
+			"inactiveShown": "Inactive people hold no terms. Show active people to filter by terms."
 		}
 	}
 }
