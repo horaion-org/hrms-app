@@ -104,6 +104,40 @@ describe("LastRosterChange", () => {
 		expect(screen.queryByRole("button", { name: "Undo" })).toBeNull();
 	});
 
+	it("given_aChangeThatCannotBeUndone_when_justApplied_then_theToastOffersNoUndo", async () => {
+		stubApi({
+			[`GET ${CHANGES}/latest`]: {
+				status: 200,
+				body: envelope({ change: null }),
+			},
+		});
+
+		show(rosterChangeFixture({ undoable: false }));
+
+		expect(await screen.findByText("Roster changed.")).toBeVisible();
+		expect(screen.queryByRole("button", { name: "Undo" })).toBeNull();
+	});
+
+	it("given_theLatestChangeIsALeaveMove_when_shown_then_noLineOffersUndo", async () => {
+		const calls = stubApi({
+			[`GET ${CHANGES}/latest`]: {
+				status: 200,
+				body: envelope({ change: rosterChangeFixture({ undoable: false }) }),
+			},
+		});
+
+		show();
+
+		await waitFor(() => {
+			expect(calls).toHaveLength(1);
+		});
+		await new Promise((settled) => {
+			setTimeout(settled, 20);
+		});
+		expect(screen.queryByText(/Last change:/)).toBeNull();
+		expect(screen.queryByRole("button", { name: "Undo" })).toBeNull();
+	});
+
 	it("given_aChangeJustApplied_when_shown_then_aToastOffersUndo", async () => {
 		stubApi({
 			[`GET ${CHANGES}/latest`]: {

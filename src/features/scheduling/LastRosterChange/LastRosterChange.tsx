@@ -164,12 +164,16 @@ export const LastRosterChange = ({
 				<Toast
 					key={applied.changeId}
 					duration={UNDO_TOAST_MS}
-					action={{
-						label: t(`${key}.undo`),
-						onClick: () => {
-							undoChange(applied);
-						},
-					}}
+					action={
+						applied.undoable
+							? {
+									label: t(`${key}.undo`),
+									onClick: (): void => {
+										undoChange(applied);
+									},
+								}
+							: undefined
+					}
 					onDismiss={onAppliedDismissed}
 				>
 					{t(`${key}.applied`)}
