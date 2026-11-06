@@ -817,6 +817,11 @@ describe("schedule refusals", () => {
 		],
 		["SCHEDULE_NOT_DRAFT", 409, "This schedule has already been generated."],
 		[
+			"SCHEDULE_WEEK_ALREADY_PUBLISHED",
+			409,
+			"This department already has a published roster for this week. Only one roster can be published per week, so schedule a different week instead.",
+		],
+		[
 			"SCHEDULE_CONSTRAINT_UNUSABLE",
 			409,
 			"A chosen constraint names a shift this schedule doesn’t include or a job title that’s no longer active. Tick that shift, edit the constraint or untick it, then try again.",
@@ -884,6 +889,11 @@ describe("schedule refusals", () => {
 			"SCHEDULE_PUBLISHED",
 			409,
 			"This roster is published, so it can’t be regenerated or deleted. Change its days on the roster instead.",
+		],
+		[
+			"SCHEDULE_WEEK_ALREADY_PUBLISHED",
+			409,
+			"This department already has a published roster for this week. Only one roster can be published per week, so schedule a different week instead.",
 		],
 		["SCHEDULE_NOT_FOUND", 404, "This schedule no longer exists."],
 		[

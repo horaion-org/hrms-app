@@ -2815,7 +2815,8 @@
 			"constraintUnusable": "A chosen constraint names a shift this schedule doesn’t include or a job title that’s no longer active. Tick that shift, edit the constraint or untick it, then try again.",
 			"notDraft": "This schedule has already been generated.",
 			"forbidden": "You no longer have permission to generate this schedule.",
-			"failed": "We couldn’t generate the schedule. Try again."
+			"failed": "We couldn’t generate the schedule. Try again.",
+			"weekAlreadyPublished": "This department already has a published roster for this week. Only one roster can be published per week, so schedule a different week instead."
 		},
 		"draft": {
 			"loading": "Loading the draft…",
@@ -3025,7 +3026,8 @@
 			"published": "This roster is published, so it can’t be regenerated or deleted. Change its days on the roster instead.",
 			"forbidden": "You no longer have permission to regenerate this schedule.",
 			"failed": "We couldn’t regenerate the roster. Try again.",
-			"editsLost": "Changes made by hand will be lost: a new run replaces the roster and every change made to it."
+			"editsLost": "Changes made by hand will be lost: a new run replaces the roster and every change made to it.",
+			"weekAlreadyPublished": "This department already has a published roster for this week. Only one roster can be published per week, so schedule a different week instead."
 		},
 		"export": {
 			"menu": "Export roster",
@@ -3201,6 +3203,12 @@
 			"undoDescription": "An undo is a change back: it is checked the same way, and leave or availability may have changed since.",
 			"undoChange": "Undo change",
 			"undoAnyway": "Undo anyway"
+		},
+		"publishedWeek": {
+			"setup": "This week already has a published roster for this department. Only one roster can be published per week, so pick another week to make a new one.",
+			"blocked": "This week already has a published roster for this department. Only one roster can be published per week, so this schedule can’t be generated or published.",
+			"open": "Open the published roster",
+			"generateUnavailable": "This week already has a published roster."
 		}
 	},
 	"colourSwatchPicker": {

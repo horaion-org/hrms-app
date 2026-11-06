@@ -24,6 +24,11 @@ import { useConstraintOptions } from "@/features/scheduling/constraints/useConst
 import { departmentUnitOf } from "@/features/scheduling/departmentUnit";
 import { ForecastStep } from "@/features/scheduling/ForecastStep";
 import { GenerateStep } from "@/features/scheduling/GenerateStep";
+import {
+	publishedRosterOtherThan,
+	publishedWeekQuery,
+} from "@/features/scheduling/publishedWeek/api";
+import { PublishedWeekCallout } from "@/features/scheduling/publishedWeek/PublishedWeekCallout";
 import { StartingContextSection } from "@/features/scheduling/startingContext/StartingContextSection";
 import {
 	defaultPeriod,
@@ -229,7 +234,20 @@ export const CreateSchedule = (): FunctionComponent => {
 	const allowed = (key: PermissionKey): boolean =>
 		saved !== undefined && access.can(key, departmentScope(saved.departmentId));
 	const canSave = !frozen && allowed("schedule:update");
-	const canGenerate = !frozen && allowed("schedule:generate");
+	// A draft for a week whose roster is already published can never be published, so it isn't generated.
+	const publishedWeek = useQuery(
+		publishedWeekQuery(
+			companyId,
+			!frozen && allowed("schedule:read") ? saved : undefined,
+			draft.setup?.periodStart
+		)
+	);
+	const weekPublishedBy = publishedRosterOtherThan(
+		publishedWeek.data,
+		saved?.scheduleId
+	);
+	const canGenerate =
+		!frozen && allowed("schedule:generate") && weekPublishedBy === undefined;
 	const canAddShift = !frozen && allowed("shift:create");
 	const canEditShift = !frozen && allowed("shift:update");
 	const canDeleteShift = !frozen && allowed("shift:delete");
@@ -560,7 +578,9 @@ export const CreateSchedule = (): FunctionComponent => {
 	const unavailableNote = t(
 		frozen
 			? "scheduling.create.generated"
-			: "scheduling.create.generateForbidden"
+			: weekPublishedBy
+				? "scheduling.publishedWeek.generateUnavailable"
+				: "scheduling.create.generateForbidden"
 	);
 	const onShiftsIncluded = frozen
 		? undefined
@@ -651,6 +671,14 @@ export const CreateSchedule = (): FunctionComponent => {
 				{step === "generate" && (
 					<GenerateStep
 						summary={summary}
+						notice={
+							weekPublishedBy && (
+								<PublishedWeekCallout
+									publishedScheduleId={weekPublishedBy}
+									stage="blocked"
+								/>
+							)
+						}
 						startingPoint={
 							saved && (
 								<StartingContextSection

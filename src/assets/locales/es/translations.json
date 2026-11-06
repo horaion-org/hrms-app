@@ -2047,7 +2047,8 @@
 			"constraintUnusable": "Una restricción elegida nombra un turno que este horario no incluye o un puesto que ya no está activo. Marca ese turno, edita la restricción o desmárcala e inténtalo de nuevo.",
 			"notDraft": "Este horario ya se generó.",
 			"forbidden": "Ya no tienes permiso para generar este horario.",
-			"failed": "No pudimos generar el horario. Inténtalo de nuevo."
+			"failed": "No pudimos generar el horario. Inténtalo de nuevo.",
+			"weekAlreadyPublished": "Este departamento ya tiene un cuadrante publicado para esta semana. Solo se puede publicar un cuadrante por semana, así que programa otra semana."
 		},
 		"draft": {
 			"loading": "Cargando el borrador…",
@@ -2257,7 +2258,8 @@
 			"published": "Este cuadrante está publicado, así que no se puede regenerar ni eliminar. Cambia sus días en el cuadrante.",
 			"forbidden": "Ya no tienes permiso para regenerar este horario.",
 			"failed": "No pudimos regenerar el cuadrante. Inténtalo de nuevo.",
-			"editsLost": "Se perderán los cambios hechos a mano: una nueva ejecución reemplaza el cuadrante y todos sus cambios."
+			"editsLost": "Se perderán los cambios hechos a mano: una nueva ejecución reemplaza el cuadrante y todos sus cambios.",
+			"weekAlreadyPublished": "Este departamento ya tiene un cuadrante publicado para esta semana. Solo se puede publicar un cuadrante por semana, así que programa otra semana."
 		},
 		"export": {
 			"menu": "Exportar cuadrante",
@@ -2433,6 +2435,12 @@
 			"undoDescription": "Deshacer es un cambio de vuelta: se comprueba igual, y los permisos o la disponibilidad pueden haber cambiado desde entonces.",
 			"undoChange": "Deshacer cambio",
 			"undoAnyway": "Deshacer de todos modos"
+		},
+		"publishedWeek": {
+			"setup": "Esta semana ya tiene un cuadrante publicado para este departamento. Solo se puede publicar un cuadrante por semana, así que elige otra semana para crear uno nuevo.",
+			"blocked": "Esta semana ya tiene un cuadrante publicado para este departamento. Solo se puede publicar un cuadrante por semana, así que este horario no se puede generar ni publicar.",
+			"open": "Abrir el cuadrante publicado",
+			"generateUnavailable": "Esta semana ya tiene un cuadrante publicado."
 		}
 	},
 	"workspace": {

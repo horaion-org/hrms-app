@@ -13,6 +13,11 @@ import { partTimeReadinessQuery } from "@/features/availability/api";
 import { departmentUnitOf } from "@/features/scheduling/departmentUnit";
 import { PartTimeReadinessCallout } from "@/features/scheduling/PartTimeReadinessCallout";
 import {
+	publishedRosterOtherThan,
+	publishedWeekQuery,
+} from "@/features/scheduling/publishedWeek/api";
+import { PublishedWeekCallout } from "@/features/scheduling/publishedWeek/PublishedWeekCallout";
+import {
 	formatPeriod,
 	type SchedulePeriod,
 } from "@/features/scheduling/periods";
@@ -27,6 +32,7 @@ import { DepartmentSelector } from "@/features/workspace/DepartmentSelector";
 import {
 	AVAILABILITY_READ_KEYS,
 	SCHEDULE_CREATE_KEYS,
+	SCHEDULE_READ_KEYS,
 } from "@/features/workspace/permissionKeys";
 import { retry } from "@/features/workspace/retry";
 import { departmentChoices } from "@/features/workspace/unitChoices";
@@ -128,6 +134,20 @@ export const ScheduleSetupStep = ({
 	const readiness = useQuery(
 		partTimeReadinessQuery(companyId, readinessUnit, periodStart || undefined)
 	);
+	// Only where schedules may be read, so the published roster it names can be opened.
+	const publishedWeekUnit =
+		!readOnly && workspace.data && departmentId
+			? departmentUnitOf(
+					workspace.data,
+					companyId,
+					SCHEDULE_READ_KEYS,
+					departmentId
+				)
+			: undefined;
+	const publishedWeek = useQuery(
+		publishedWeekQuery(companyId, publishedWeekUnit, periodStart || undefined)
+	);
+	const publishedScheduleId = publishedRosterOtherThan(publishedWeek.data);
 	const idPrefix = useId();
 	const fieldId = (name: keyof ScheduleSetupValues): string =>
 		`${idPrefix}-${name}`;
@@ -320,6 +340,12 @@ export const ScheduleSetupStep = ({
 							{t("scheduling.setup.periodNote")}
 						</Callout>
 					</div>
+					{publishedScheduleId && (
+						<PublishedWeekCallout
+							publishedScheduleId={publishedScheduleId}
+							stage="setup"
+						/>
+					)}
 				</div>
 				<hr className="my-10 border-neutral-400" />
 				<h3 className="text-xl font-semibold text-neutral-900">

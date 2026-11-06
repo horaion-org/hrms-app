@@ -9,7 +9,7 @@ import { scheduleDecision } from "./scheduleDecision";
 
 export type ScheduleDecisionPanelProps = {
 	schedule: Schedule;
-	/** Offers to publish the roster; left out when this person can't decide it now. */
+	/** Offers to publish the roster; left out when this person can't decide it now, or its week is already published. */
 	onPublish?: () => void;
 	/** Offers to reject the roster; left out when this person can't decide it now. */
 	onReject?: () => void;
@@ -22,7 +22,8 @@ const key = "scheduling.decision";
 
 /**
  * Under the roster header: a generated roster waits to be published or
- * rejected (with both buttons for someone who may decide it); a decided
+ * rejected (with both buttons for someone who may decide it, Reject alone
+ * when its week already has a published roster); a decided
  * one says who decided and when, and why when it was rejected. Renders
  * nothing for a schedule without a roster.
  */
@@ -41,7 +42,7 @@ export const ScheduleDecisionPanel = ({
 		className
 	);
 	if (decision.kind === "pending") {
-		const canDecide = onPublish !== undefined && onReject !== undefined;
+		const canDecide = onReject !== undefined;
 		return (
 			<section
 				aria-label={t(`${key}.label`)}
@@ -56,9 +57,11 @@ export const ScheduleDecisionPanel = ({
 						<Button size="sm" variant="secondary" onClick={onReject}>
 							{t(`${key}.reject`)}
 						</Button>
-						<Button size="sm" onClick={onPublish}>
-							{t(`${key}.publish`)}
-						</Button>
+						{onPublish && (
+							<Button size="sm" onClick={onPublish}>
+								{t(`${key}.publish`)}
+							</Button>
+						)}
 					</div>
 				)}
 			</section>

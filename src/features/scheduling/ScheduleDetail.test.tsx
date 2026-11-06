@@ -55,6 +55,9 @@ const SCHEDULE =
 /** The schedule itself, read by its id alone. */
 const SCHEDULE_READ = "/api/v1/companies/c-1/schedules/s-1";
 const ASSIGNMENTS = `${SCHEDULE}/assignments`;
+/** Whether the schedule's week already has its published roster, asked at its department. */
+const PUBLISHED_WEEK =
+	"/api/v1/companies/c-1/branches/b-1/departments/d-1/schedules/published-week";
 const ROSTER_URL = "/scheduling/s-1";
 
 type Routes = Parameters<typeof stubApi>[0];
@@ -576,6 +579,57 @@ it("publishes a generated roster after a confirm, then says who published it", a
 	);
 	expect(decisions.map((call) => call.path)).toEqual([`${SCHEDULE}/approval`]);
 	expect(decisions[0]?.body).toBeUndefined();
+});
+
+it("withholds Publish and Regenerate when another schedule is already the week's published roster, and links it", async () => {
+	const calls = await openRoster({
+		...signedIn(["schedule:read", "schedule:generate", "schedule:publish"]),
+		[`GET ${SCHEDULE_READ}`]: ok(
+			generatedScheduleFixture({ status: "GENERATED" })
+		),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+		[`GET ${PUBLISHED_WEEK}`]: ok({
+			periodStart: generatedScheduleFixture().periodStart,
+			scheduleId: "s-9",
+		}),
+	});
+
+	const link = await screen.findByRole("link", {
+		name: "Open the published roster",
+	});
+	expect(link).toHaveAttribute("href", "/scheduling/s-9");
+	expect(link.closest("[role=note]")).toHaveTextContent(
+		"This week already has a published roster for this department. Only one roster can be published per week, so this schedule can’t be generated or published."
+	);
+	const panel = screen.getByRole("region", { name: "Roster decision" });
+	expect(
+		within(panel).queryByRole("button", { name: "Publish roster" })
+	).toBeNull();
+	expect(within(panel).getByRole("button", { name: "Reject" })).toBeEnabled();
+	expect(
+		screen.queryByRole("button", { name: "Regenerate roster" })
+	).toBeNull();
+	expect(readsOf(calls, PUBLISHED_WEEK)[0]?.search).toBe(
+		`periodStart=${generatedScheduleFixture().periodStart}`
+	);
+});
+
+it("never asks about the week of a published roster itself", async () => {
+	const calls = await openRoster({
+		...signedIn(["schedule:read", "schedule:generate", "schedule:publish"]),
+		[`GET ${SCHEDULE_READ}`]: ok(
+			generatedScheduleFixture({ status: "PUBLISHED" })
+		),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+	});
+
+	expect(
+		await screen.findByRole("row", { name: /Aisha Rahman/ })
+	).toBeInTheDocument();
+	expect(readsOf(calls, PUBLISHED_WEEK)).toHaveLength(0);
+	expect(
+		screen.queryByRole("link", { name: "Open the published roster" })
+	).toBeNull();
 });
 
 it("asks for a reason before rejecting a roster, then shows the reason", async () => {
