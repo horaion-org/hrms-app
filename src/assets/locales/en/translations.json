@@ -990,7 +990,8 @@
 			},
 			"history": "Import history"
 		},
-		"termsNotSet": "We couldn’t give them {{chosen}}, so they’re on {{kept}}. Change it from their profile."
+		"termsNotSet": "We couldn’t give them {{chosen}}, so they’re on {{kept}}. Change it from their profile.",
+		"imports": "Imports"
 	},
 	"settings": {
 		"title": "Settings",

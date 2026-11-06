@@ -1566,7 +1566,8 @@
 		"form": {
 			"employmentTerms": "Condiciones de empleo",
 			"employmentTermsHint": "Desde su fecha de contratación, o desde hoy si no tiene."
-		}
+		},
+		"imports": "Importaciones"
 	},
 	"numberStepper": {
 		"decrease": "Menos {{label}}",

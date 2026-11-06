@@ -411,6 +411,23 @@ describe("People", () => {
 		});
 	});
 
+	it("opens Import history in Settings › Data from the Imports button", async () => {
+		const user = userEvent.setup();
+		stubApi({
+			...baseRoutes(["member_profile:read", "member_profile:create"]),
+			[PEOPLE]: pageReply([person("m-1", "Moses Lee")]),
+		});
+		const opened = await open("/people");
+		await screen.findByText("Moses Lee");
+
+		await user.click(screen.getByRole("button", { name: "Imports" }));
+
+		await waitFor(() => {
+			expect(opened.router.state.location.pathname).toBe("/settings");
+		});
+		expect(opened.router.state.location.search).toEqual({ section: "data" });
+	});
+
 	it("says when the filtered list is too large to export", async () => {
 		const user = userEvent.setup();
 		stubApi({
@@ -441,6 +458,7 @@ describe("People", () => {
 		await screen.findByText("Moses Lee");
 		// Importing needs member_profile:create; exporting only the list's read.
 		expect(screen.queryByRole("button", { name: "Import" })).toBeNull();
+		expect(screen.queryByRole("button", { name: "Imports" })).toBeNull();
 		expect(screen.getByRole("button", { name: "Export" })).toBeEnabled();
 		expect(screen.queryByText(/employees? selected/)).toBeNull();
 
