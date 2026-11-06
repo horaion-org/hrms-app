@@ -3620,6 +3620,13 @@
 			"skippedNotFoundOrNoPermission_other": "{{count}} skipped because they’re no longer here or you can’t change their terms",
 			"skippedBeforeFirst_one": "{{count}} skipped because that date is before their first terms",
 			"skippedBeforeFirst_other": "{{count}} skipped because that date is before their first terms"
+		},
+		"filter": {
+			"label": "Employment terms",
+			"all": "All terms",
+			"inactive": "{{name}} (inactive)",
+			"unknown": "Selected terms",
+			"inactiveShown": "Inactive people hold no terms. Show active people to filter by terms."
 		}
 	}
 }

@@ -2933,6 +2933,13 @@
 			"skippedNotFoundOrNoPermission_other": "{{count}} omitidas porque ya no están o no puedes cambiar sus condiciones",
 			"skippedBeforeFirst_one": "{{count}} omitida porque esa fecha es anterior a sus primeras condiciones",
 			"skippedBeforeFirst_other": "{{count}} omitidas porque esa fecha es anterior a sus primeras condiciones"
+		},
+		"filter": {
+			"label": "Condiciones de empleo",
+			"all": "Todas las condiciones",
+			"inactive": "{{name}} (inactivas)",
+			"unknown": "Condiciones seleccionadas",
+			"inactiveShown": "Las personas inactivas no tienen condiciones. Muestra las personas activas para filtrar por condiciones."
 		}
 	}
 }
