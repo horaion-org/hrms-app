@@ -254,3 +254,56 @@ describe("rosterStats", () => {
 		});
 	});
 });
+
+describe("day notes", () => {
+	const shift = {
+		shiftId: "s1",
+		name: "Morning",
+		group: "Day",
+		colour: "#112233",
+		startTime: "09:00",
+		endTime: "17:00",
+	};
+	const assignment = {
+		assignmentId: "a1",
+		member: {
+			membershipId: "m1",
+			memberProfileId: "p1",
+			displayName: "Alex Tan",
+			employeeCode: "E1",
+			jobTitleName: null,
+		},
+		day: "2026-11-02",
+		off: false,
+		offReason: null,
+		shift,
+		jobTitle: { jobTitleId: "j1", name: "Clerk" },
+	} as const;
+	const period = { start: "2026-11-02", end: "2026-11-08" };
+
+	it("leaves a day with nothing to add without a note", () => {
+		const [row] = rosterFromAssignments([assignment], period);
+		expect(row?.days["2026-11-02"]).not.toHaveProperty("note");
+	});
+
+	it("carries the flag, the request and the short shift", () => {
+		const [row] = rosterFromAssignments(
+			[
+				{
+					...assignment,
+					flag: "ON_LEAVE_WHILE_ROSTERED",
+					leaveRequestId: "r1",
+					leaveTypeName: "Annual leave",
+					uncoveredShift: shift,
+				},
+			],
+			period
+		);
+		expect(row?.days["2026-11-02"]?.note).toEqual({
+			flag: "ON_LEAVE_WHILE_ROSTERED",
+			leaveRequestId: "r1",
+			leaveTypeName: "Annual leave",
+			uncoveredShiftName: "Morning",
+		});
+	});
+});
