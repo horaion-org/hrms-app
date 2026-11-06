@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { parseRosterSearch } from "@/features/scheduling/roster/rosterSearch";
 import { companyScheduleQuery } from "@/features/scheduling/schedules/api";
 import { workspaceQuery } from "@/features/workspace/api";
 import type { FixedBranchLoaderData } from "@/features/workspace/branchScope";
@@ -16,6 +17,8 @@ import {
 export const Route = createFileRoute(
 	"/_authenticated/_app/scheduling_/$scheduleId"
 )({
+	// The week and the side panel shown, so a reload or a link keeps them.
+	validateSearch: parseRosterSearch,
 	// Warms what the page reads first; a failure stays in the cache for the page to explain.
 	// The schedule's Branch is named in the header: the page is about that one Branch.
 	loader: async ({ context, params }): Promise<FixedBranchLoaderData> => {

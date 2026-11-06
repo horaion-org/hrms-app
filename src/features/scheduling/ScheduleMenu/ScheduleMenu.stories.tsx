@@ -1,6 +1,7 @@
 import { QueryClient } from "@tanstack/react-query";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, within } from "storybook/test";
+import { OverflowMenuItem } from "@/components/ui/OverflowMenu";
 import { storyProviders } from "@/features/organisation/storyApi";
 import { storyCompany } from "@/features/people/storyCompany";
 import { ScheduleMenu } from "@/features/scheduling/ScheduleMenu";
@@ -44,6 +45,20 @@ export const Default: Story = {};
 
 /** On the roster header the menu also downloads the roster as a spreadsheet. */
 export const WithExport: Story = { args: { withExport: true } };
+
+/** On the roster header: the page's own items first, then Export and Delete. */
+export const WithRosterItems: Story = {
+	args: {
+		withExport: true,
+		children: (
+			<>
+				<OverflowMenuItem>Reject</OverflowMenuItem>
+				<OverflowMenuItem>View setup</OverflowMenuItem>
+				<OverflowMenuItem>Details</OverflowMenuItem>
+			</>
+		),
+	},
+};
 
 /** Deleting asks first, in red, naming the department and week. */
 export const ConfirmDelete: Story = {

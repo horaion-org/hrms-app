@@ -117,4 +117,32 @@ describe("LastRosterChange", () => {
 			"Roster changed.Undo"
 		);
 	});
+
+	it("given_theLatestLineHidden_when_aChangeIsApplied_then_onlyTheToastShowsAndNothingIsRead", async () => {
+		const calls = stubApi({});
+		render(
+			<I18nextProvider i18n={authTestI18n}>
+				<QueryClientProvider client={new QueryClient()}>
+					<LastRosterChange
+						applied={rosterChangeFixture()}
+						revision={2}
+						showsLatest={false}
+						target={{
+							companyId: "c-1",
+							unit: { branchId: "b-1", departmentId: "d-1" },
+							scheduleId: "s-1",
+							runId: "r-1",
+						}}
+						onAppliedDismissed={vi.fn()}
+					/>
+				</QueryClientProvider>
+			</I18nextProvider>
+		);
+
+		expect(await screen.findByRole("status")).toHaveTextContent(
+			"Roster changed.Undo"
+		);
+		expect(screen.queryByText(/^Last change/)).toBeNull();
+		expect(calls).toHaveLength(0);
+	});
 });

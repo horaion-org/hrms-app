@@ -31,6 +31,8 @@ export type LastRosterChangeProps = {
 	onAppliedDismissed: () => void;
 	/** The roster is published: an undo tells the people whose days it changes back, so it always asks first. */
 	notifiesMembers?: boolean;
+	/** Shows the "Last change … Undo" line; the roster shows it only in its Changed panel. The toast always shows. */
+	showsLatest?: boolean;
 	className?: string;
 };
 
@@ -41,7 +43,7 @@ const key = "scheduling.rosterEdit";
 
 /**
  * The way back from the roster's latest hand change: a toast right after
- * applying ("Roster changed. Undo"), then a line above the grid until the
+ * applying ("Roster changed. Undo"), then a line in the Changed panel until the
  * next change ("Last change: Ben Tan, Sat 17 Oct · Undo"). A swap names both
  * people. An undo is an edit back: it is previewed first, applied at once
  * when nothing stands against it, and otherwise asked about with the same
@@ -54,6 +56,7 @@ export const LastRosterChange = ({
 	applied,
 	onAppliedDismissed,
 	notifiesMembers = false,
+	showsLatest = true,
 	className,
 }: LastRosterChangeProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
@@ -64,7 +67,7 @@ export const LastRosterChange = ({
 			target.unit,
 			target.scheduleId,
 			revision,
-			true
+			showsLatest
 		)
 	);
 	const { previewUndo, undo } = useRosterChangeActions(target);
@@ -114,7 +117,7 @@ export const LastRosterChange = ({
 	};
 	return (
 		<>
-			{edit && (
+			{showsLatest && edit && (
 				<div
 					className={joinClassNames(
 						"flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-neutral-800",

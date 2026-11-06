@@ -133,18 +133,24 @@ constraint dialogs.
    `branchId`/`departmentId` then name the department routes. `useScheduleAssignments` once the schedule is GENERATED with no open run, and `useScheduleShifts` /
    `useScheduleConstraints` (frozen copies, only to name the findings; empty when not readable). Under `RosterHeader` it shows, by
    state: a generating note (read again every 15 s), `GenerationFailurePanel`, `GeneratedRoster`, or a draft's note.
-   Once there is a roster it also reads the `starting-context`, for the "Day N of a run" badges and a warning when
-   members' starting points changed since generation. The header's actions are View setup, Regenerate and
-   `ScheduleMenu`; `ScheduleDecisionPanel` sits under the header.
+   Once there is a roster it also reads the `starting-context`, for where members started the week and a notice when
+   their starting points changed since generation (both in the Issues panel). Three tables decide the page, each a
+   pure module with its own table test: `schedules/scheduleActions.ts` (`SCHEDULE_ACTIONS`: the one primary action
+   per status and the "More actions" items, each with its permission fact), `schedules/scheduleNotices.ts`
+   (`SCHEDULE_NOTICES`: the notices shown only when someone must act, or why there is no roster) and
+   `roster/rosterSummary.ts` (`SUMMARY_SEGMENTS` for the summary line, `ISSUE_SOURCES` for the one Issues count).
+   The route's search (`roster/rosterSearch.ts`, `validateSearch`) holds the week and the side panel (`panel` =
+   issues | changes | details, or `cell` for a chosen day), so a reload or a link keeps them.
 3. Queries `schedules/api.ts` — `scheduleQuery` (`refetchInterval` while `generationInProgress`) and
    `scheduleAssignmentsQuery` → `fetchScheduleAssignments`.
 4. Pure mappers `roster/` — no I/O. They turn API rows into what the components draw.
 5. Components, plain props only — `RosterHeader`, `GenerationFailurePanel` (with `MemberNotes`), `GeneratedRoster`
-   (stat cards, `FindingsSummary` and `FindingsPanel`, `RosterWeekBar`, `RosterGrid` → `RosterShift` and
-   `FindingsMarker`, and `ShiftDetailsPanel` read-only for a chosen day). Someone holding `schedule:edit_shift` on a
+   (one summary line, `RosterWeekBar` with the Issues and Changed buttons, `RosterGrid` → `RosterShift` and
+   `FindingsMarker`, and one panel beside the grid: `RosterSidePanel` for the Issues, Changed and Details lists, or
+   `ShiftDetailsPanel` read-only for a chosen day). Someone holding `schedule:edit_shift` on a
    GENERATED roster awaiting its decision, or a PUBLISHED one (`rosterEditable`), gets `editing`: any day opens
    `RosterCellPanel` beside the grid instead (another shift, a day off, or a same-day swap; a preview with
-   `RosterChangeChecks`; Apply), and `LastRosterChange` offers Undo in a toast and above the grid (hrms-backend-v2
+   `RosterChangeChecks`; Apply), and `LastRosterChange` offers Undo in a toast and in the Changed panel (hrms-backend-v2
    docs/adr/0062). On a PUBLISHED roster (`editing.notifiesMembers`, docs/adr/0063) Apply and Undo first ask in a
    `ConfirmDialog` how many people will be told (`peopleTold`), and the remark hint says those people see it. Days
    changed by hand carry a dot wherever the rows carry a `lastChange`. A published schedule is never deleted
@@ -166,7 +172,7 @@ constraint dialogs.
   member is gone keyed by its assignment), `hoursOf`/`hoursInDays` (via `shiftHours`), `weekDays`, `legendOf`,
   `rosterStats`, and `isoDateIn`/`dateTimeFormatIn` for the branch's time zone.
 - `roster/findingsByMember.ts` — a failed run's errors grouped by member, named through `findings.members`.
-- `roster/findings/` — the engine's findings on a generated roster, in three levels (summary, panel, grid markers):
+- `roster/findings/` — the engine's findings on a generated roster, in three levels (Issues count, panel, grid markers):
   - `finding.ts` — `Finding`, the one unit the panel and the markers list (a conflict, a message, a diagnostic); its
     family (roster note or setup issue) and tone (roster notes error; a diagnostic by `severity`, unknown → warning).
   - `findingCounts.ts` — roster notes (each conflict and each message) and setup issues (each diagnostic).
@@ -186,25 +192,30 @@ constraint dialogs.
   `engine_http_<status>`, then a generic fallback), or INFEASIBLE.
 - `rosterLooks.ts` — the classes of a day off and of leave, and `shiftTileStyle` for a frozen shift's colour.
 - `periods.ts` `formatDay` — "Mon, 12 Oct" for a finding's day.
-- `RosterHeader` — department, period, status badge, time zone, requested by/at and finished at; `actions` at the right.
+- `RosterHeader` — department, then period, status badge and time zone; `actions` (primary action and menu) at the right.
+- `schedules/scheduleDetails.ts` — the Details list: requested, finished, decided and time zone.
 - `GenerationFailurePanel` — a failed run's copy and code, the engine's reason quoted, and its errors by member.
 - `MemberNotes` — a failed run's errors grouped by member, each message quoted.
-- `FindingsSummary` — the warning callout: how many roster notes and setup issues, and the panel's toggle.
 - `FindingsPanel` — setup issues by code (fix in the setup), then roster notes by day and by member.
 - `FindingsMarker` — a 24 px mark on a cell, row or day header: the outline `AlertIcon` in `warning-900` for
   anything to look at (never red; red is for errors and refusals), `InfoIcon` in `ink-blue-700` for information
   only, then the count; its popover lists that place's findings and can open the panel.
 - `FindingList` — one list of findings, shared by the panel and the popover.
-- `GeneratedRoster` — the roster's figures, findings summary and panel, week bar, grid and chosen day's panel; owns
-  only the shown week, the chosen day and whether the findings panel is open.
+- `GeneratedRoster` — the summary line, the week bar with one button per list in `rosterSideLists.ts`, the grid and
+  one side panel; the view (week, list, chosen day) comes from and goes back to the route's search, so it keeps only
+  the previewed days and the change just applied.
+- `RosterSidePanel` — the side panel's frame (title, close, Escape, focus) drawing every list from sections: a heading,
+  `PanelItem`s (`roster/rosterPanels.ts`: starting points, changed days) and other content (`FindingsPanel`, the
+  latest change, `DescriptionList`).
 - `ScheduleCard` — shows "N setup issues" beside the status when its newest run's findings have diagnostics.
-- `ScheduleMenu` — the "More actions" menu on a history row and the roster header: Export roster (header only, once
-  there is a roster) and Delete. It owns the export mutation and opens `DeleteScheduleDialog`.
+- `ScheduleMenu` — the "More actions" menu on a history row and the roster header: the caller's own items first
+  (`children`), then Export roster (header only, once there is a roster) and Delete. It owns the export mutation and
+  opens `DeleteScheduleDialog`.
 - `DeleteScheduleDialog`, `RegenerateDialog` — `ConfirmDialog`s in the `danger` tone (a failed run's retry is not,
   as there is nothing to replace); each refusal shows inside the dialog.
-- `ScheduleDecisionPanel` — a GENERATED roster waits for Publish or Reject; a decided one says who decided, when and,
-  for a rejection, why. `scheduleDecision.ts` reads that off the status alone. `PublishScheduleDialog` and
-  `RejectScheduleDialog` (reason required, as rejecting leave) make the decision.
+- `RejectedRosterCallout` — a rejected roster says who rejected it, when, why and what next.
+  `schedules/scheduleDecision.ts` reads the decision off the status alone. `PublishScheduleDialog` (from the header's
+  Publish) and `RejectScheduleDialog` (from the menu; reason required, as rejecting leave) make the decision.
 
 Engine prose (failure reason, errors, conflicts, diagnostics) is shown quoted, never as the app's own copy
 (ADR-0003). The four known diagnostic codes also get the app's own sentence, with the engine's quoted beneath.

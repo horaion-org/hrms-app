@@ -1,29 +1,33 @@
 import { useQuery } from "@tanstack/react-query";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import { ArrowLeftIcon } from "@/components/ui/Icon";
+import { OverflowMenuItem } from "@/components/ui/OverflowMenu";
 import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import {
 	GeneratedRoster,
+	type GeneratedRosterProps,
 	type RosterEditing,
 } from "@/features/scheduling/GeneratedRoster";
 import { GenerationFailurePanel } from "@/features/scheduling/GenerationFailurePanel";
 import type { DepartmentPath } from "@/features/scheduling/paths";
 import { PublishScheduleDialog } from "@/features/scheduling/PublishScheduleDialog";
 import { RegenerateDialog } from "@/features/scheduling/RegenerateDialog";
+import { RejectedRosterCallout } from "@/features/scheduling/RejectedRosterCallout";
 import { RejectScheduleDialog } from "@/features/scheduling/RejectScheduleDialog";
 import {
 	publishedRosterOtherThan,
 	publishedWeekQuery,
 } from "@/features/scheduling/publishedWeek/api";
 import { PublishedWeekCallout } from "@/features/scheduling/publishedWeek/PublishedWeekCallout";
+import { dateTimeFormatIn } from "@/features/scheduling/roster/roster";
+import type { RosterSearch } from "@/features/scheduling/roster/rosterSearch";
 import { RosterHeader } from "@/features/scheduling/RosterHeader";
 import { rosterChangeShiftsQuery } from "@/features/scheduling/rosterChanges/api";
-import { ScheduleDecisionPanel } from "@/features/scheduling/ScheduleDecisionPanel";
 import { ScheduleMenu } from "@/features/scheduling/ScheduleMenu";
 import {
 	decidable,
@@ -32,22 +36,26 @@ import {
 	regenerable,
 	rosterEditable,
 	rosterRunId,
-	type Schedule,
 } from "@/features/scheduling/schedules/api";
+import {
+	scheduleActions,
+	type ScheduleActionId,
+} from "@/features/scheduling/schedules/scheduleActions";
+import { scheduleDetailItems } from "@/features/scheduling/schedules/scheduleDetails";
+import {
+	rosterShown,
+	scheduleNotices,
+	type ScheduleNoticeFacts,
+	type ScheduleNoticeId,
+} from "@/features/scheduling/schedules/scheduleNotices";
 import { scheduleSetupLink } from "@/features/scheduling/schedules/scheduleViewLink";
 import { useCompanySchedule } from "@/features/scheduling/schedules/useSchedule";
 import {
 	useScheduleAssignments,
 	type AssignmentList,
 } from "@/features/scheduling/schedules/useScheduleAssignments";
-import {
-	useScheduleConstraints,
-	type ConstraintList,
-} from "@/features/scheduling/schedules/useScheduleConstraints";
-import {
-	useScheduleShifts,
-	type ShiftList,
-} from "@/features/scheduling/schedules/useScheduleShifts";
+import { useScheduleConstraints } from "@/features/scheduling/schedules/useScheduleConstraints";
+import { useScheduleShifts } from "@/features/scheduling/schedules/useScheduleShifts";
 import {
 	startingContextQuery,
 	type StartingContext,
@@ -116,81 +124,43 @@ const readyItems = <Item,>(
 	list: { status: "ready"; items: Array<Item> } | { status: string }
 ): Array<Item> => ("items" in list ? list.items : []);
 
-/**
- * Under the header, by where the schedule stands: being generated, failed,
- * generated with its roster, or still a draft reached by its URL.
- */
+/** The roster itself, once the schedule has one: its rows, or why they aren't shown yet. */
 const RosterBody = ({
-	schedule,
 	assignments,
-	shifts,
-	constraints,
 	startingContext,
-	editing,
-	onRegenerate,
-}: {
-	schedule: Schedule;
+	...roster
+}: Omit<
+	GeneratedRosterProps,
+	"assignments" | "membersWithChangedStart" | "startingRuns"
+> & {
 	assignments: AssignmentList;
-	shifts: ShiftList;
-	constraints: ConstraintList;
 	/** Where members started the week; undefined until read, or when it can't be. */
 	startingContext?: StartingContext;
-	/** Given only when this person may change the roster by hand now. */
-	editing?: RosterEditing;
-	/** Left out when the schedule can't be generated again by this person. */
-	onRegenerate?: () => void;
 }): FunctionComponent => {
 	const { t } = useTranslation();
-	if (generationInProgress(schedule))
-		return (
-			<Callout className="mt-8">
-				{t("scheduling.generation.inProgress")}
-			</Callout>
-		);
-	if (schedule.status === "GENERATION_FAILED")
-		return (
-			<GenerationFailurePanel
-				className="mt-8"
-				generation={schedule.generation}
-				onRegenerate={onRegenerate}
-			/>
-		);
-	if (!hasRoster(schedule))
-		return <Callout className="mt-8">{t(`${key}.draft`)}</Callout>;
 	if (assignments.status !== "ready")
 		return (
 			<Problem alert={assignments.status !== "pending"}>
 				{t(`${key}.${ROSTER_PROBLEMS[assignments.status]}`)}
 			</Problem>
 		);
-	// Only a frozen context can go stale: members whose week before changed since generation.
-	const staleMemberCount =
-		startingContext?.frozen === true
-			? startingContext.staleMemberProfileIds.length
-			: 0;
 	return (
-		<>
-			{staleMemberCount > 0 && (
-				<Callout className="mt-8" tone="warning">
-					{t("scheduling.startingContext.stale", { count: staleMemberCount })}
-				</Callout>
-			)}
-			<GeneratedRoster
-				assignments={assignments.items}
-				constraints={readyItems(constraints)}
-				editing={editing}
-				schedule={schedule}
-				shifts={readyItems(shifts)}
-				startingRuns={
-					startingContext ? runsByMember(startingContext) : undefined
-				}
-			/>
-		</>
+		<GeneratedRoster
+			{...roster}
+			assignments={assignments.items}
+			startingRuns={startingContext ? runsByMember(startingContext) : undefined}
+			// Only a frozen context can go stale: members whose week before changed since generation.
+			membersWithChangedStart={
+				startingContext?.frozen === true
+					? startingContext.staleMemberProfileIds.length
+					: 0
+			}
+		/>
 	);
 };
 
-/** The decision dialog open on the roster, if any. */
-type Deciding = "publish" | "reject" | undefined;
+/** The dialog open over the roster, if any. */
+type OpenDialog = "publish" | "reject" | "regenerate" | undefined;
 
 /**
  * One schedule read by its id alone. It is read again every
@@ -200,10 +170,12 @@ type Deciding = "publish" | "reject" | undefined;
  * revision, so the poll seeing a new run finish, or a hand change landing,
  * brings its rows without a reload. Someone who may edit its shifts can
  * change a generated roster's days by hand before it is decided, and a
- * published roster's days, telling the people whose days change. Where the
- * person may, its header offers to regenerate a generation that ended and wasn't published (as does
- * the failure panel) and to delete it, and the decision panel under the
- * header offers to publish or reject a generated roster.
+ * published roster's days, telling the people whose days change. The
+ * header shows at most one primary action, each only where the person may
+ * use it: Publish a generated roster, Regenerate a rejected one, View setup
+ * of a draft. Its "More actions" menu holds the rest: Reject, Regenerate,
+ * View setup, Details, Export and Delete. A callout stays only when someone
+ * must act: the week already published elsewhere, or a rejection.
  */
 const ApiSchedule = ({
 	companyId,
@@ -212,11 +184,18 @@ const ApiSchedule = ({
 	companyId: string;
 	scheduleId: string;
 }): FunctionComponent => {
-	const { t } = useTranslation();
+	const { t, i18n } = useTranslation();
 	const navigate = useNavigate();
+	const navigateHere = route.useNavigate();
+	const view = route.useSearch();
+	const onViewChange = (next: RosterSearch): void => {
+		void navigateHere({ search: next, replace: true });
+	};
 	const access = useAccess();
-	const [regenerating, setRegenerating] = useState(false);
-	const [deciding, setDeciding] = useState<Deciding>();
+	const [openDialog, setOpenDialog] = useState<OpenDialog>();
+	const closeDialog = (): void => {
+		setOpenDialog(undefined);
+	};
 	const state = useCompanySchedule(companyId, scheduleId, {
 		pollWhileGenerating: true,
 	});
@@ -304,7 +283,7 @@ const ApiSchedule = ({
 			departmentScope(state.schedule.departmentId)
 		)
 			? (): void => {
-					setRegenerating(true);
+					setOpenDialog("regenerate");
 				}
 			: undefined;
 	const editing: RosterEditing | undefined =
@@ -316,98 +295,141 @@ const ApiSchedule = ({
 					notifiesMembers: state.schedule.status === "PUBLISHED",
 				}
 			: undefined;
-	const canDecide =
-		decidable(state.schedule) &&
-		access.can(
-			"schedule:publish",
-			departmentScope(state.schedule.departmentId)
-		);
+	const schedule = state.schedule;
+	const noticeFacts: ScheduleNoticeFacts = {
+		status: schedule.status,
+		generating: generationInProgress(schedule),
+		hasRoster: hasRoster(schedule),
+		weekPublishedElsewhere: weekPublishedBy !== undefined,
+	};
+	const moment = dateTimeFormatIn(
+		i18n.resolvedLanguage ?? i18n.language,
+		schedule.timeZone,
+		{ dateStyle: "medium", timeStyle: "short" }
+	);
+	const mayReject =
+		decidable(schedule) &&
+		access.can("schedule:publish", departmentScope(schedule.departmentId));
+	const { primary, menu } = scheduleActions({
+		status: schedule.status,
+		mayPublish: mayReject && weekPublishedBy === undefined,
+		mayReject,
+		mayRegenerate: openRegenerate !== undefined,
+		hasRoster: rosterShown(noticeFacts),
+	});
+	const runAction: Record<ScheduleActionId, () => void> = {
+		publish: () => {
+			setOpenDialog("publish");
+		},
+		reject: () => {
+			setOpenDialog("reject");
+		},
+		regenerate: () => {
+			openRegenerate?.();
+		},
+		viewSetup: () => {
+			void navigate(scheduleSetupLink(schedule));
+		},
+		details: () => {
+			onViewChange({ panel: "details" });
+		},
+	};
+	const notices: Record<ScheduleNoticeId, ReactNode> = {
+		weekPublished: weekPublishedBy && (
+			<PublishedWeekCallout
+				publishedScheduleId={weekPublishedBy}
+				stage="blocked"
+			/>
+		),
+		rejected: (
+			<RejectedRosterCallout
+				schedule={schedule}
+				showsNextStep={regenerable(schedule)}
+			/>
+		),
+		generating: <Callout>{t("scheduling.generation.inProgress")}</Callout>,
+		failed: (
+			<GenerationFailurePanel
+				generation={schedule.generation}
+				onRegenerate={openRegenerate}
+			/>
+		),
+		draft: <Callout>{t(`${key}.draft`)}</Callout>,
+	};
 	return (
 		<>
 			<RosterHeader
 				className="mt-4"
-				schedule={state.schedule}
+				schedule={schedule}
 				actions={
-					<div className="flex items-center gap-4">
-						<Button {...scheduleSetupLink(state.schedule)} variant="textlink">
-							{t(`${key}.viewSetup`)}
-						</Button>
-						{openRegenerate && (
-							<Button size="sm" variant="secondary" onClick={openRegenerate}>
-								{t("scheduling.regenerate.button")}
+					<div className="flex items-center gap-3">
+						{primary && (
+							<Button onClick={runAction[primary.id]}>
+								{t(primary.labelKey)}
 							</Button>
 						)}
 						<ScheduleMenu
 							withExport
 							companyId={companyId}
-							schedule={state.schedule}
+							schedule={schedule}
 							onDeleted={() => {
 								void navigate({ to: "/scheduling" });
 							}}
-						/>
+						>
+							{menu.length > 0 &&
+								menu.map((action) => (
+									<OverflowMenuItem
+										key={action.id}
+										onClick={runAction[action.id]}
+									>
+										{t(action.labelKey)}
+									</OverflowMenuItem>
+								))}
+						</ScheduleMenu>
 					</div>
 				}
 			/>
-			{weekPublishedBy && (
-				<PublishedWeekCallout
-					className="mt-6"
-					publishedScheduleId={weekPublishedBy}
-					stage="blocked"
+			{scheduleNotices(noticeFacts).map((notice) => (
+				<div key={notice} className="mt-6">
+					{notices[notice]}
+				</div>
+			))}
+			{rosterShown(noticeFacts) && (
+				<RosterBody
+					assignments={assignments}
+					constraints={readyItems(constraints)}
+					editing={editing}
+					schedule={schedule}
+					shifts={readyItems(shifts)}
+					startingContext={startingContext.data}
+					view={view}
+					details={scheduleDetailItems(
+						schedule,
+						(instant) => moment.format(new Date(instant)),
+						t
+					)}
+					onViewChange={onViewChange}
 				/>
 			)}
-			<ScheduleDecisionPanel
-				className="mt-6"
-				schedule={state.schedule}
-				showsNextStep={regenerable(state.schedule)}
-				onPublish={
-					canDecide && weekPublishedBy === undefined
-						? (): void => {
-								setDeciding("publish");
-							}
-						: undefined
-				}
-				onReject={
-					canDecide
-						? (): void => {
-								setDeciding("reject");
-							}
-						: undefined
-				}
-			/>
-			<RosterBody
-				assignments={assignments}
-				constraints={constraints}
-				editing={editing}
-				schedule={state.schedule}
-				shifts={shifts}
-				startingContext={startingContext.data}
-				onRegenerate={openRegenerate}
-			/>
-			{deciding === "publish" && (
+			{openDialog === "publish" && (
 				<PublishScheduleDialog
 					companyId={companyId}
-					schedule={state.schedule}
-					onClose={() => {
-						setDeciding(undefined);
-					}}
+					schedule={schedule}
+					onClose={closeDialog}
 				/>
 			)}
-			{deciding === "reject" && (
+			{openDialog === "reject" && (
 				<RejectScheduleDialog
 					companyId={companyId}
-					schedule={state.schedule}
-					onClose={() => {
-						setDeciding(undefined);
-					}}
+					schedule={schedule}
+					onClose={closeDialog}
 				/>
 			)}
-			{regenerating && (
+			{openDialog === "regenerate" && (
 				<RegenerateDialog
 					companyId={companyId}
-					schedule={state.schedule}
-					onClose={() => {
-						setRegenerating(false);
-					}}
+					schedule={schedule}
+					onClose={closeDialog}
 				/>
 			)}
 		</>
