@@ -140,6 +140,9 @@ describe("refusalCode", () => {
 			});
 
 		expect(refusalCode(problem(409, "IMPORT_RUNNING"))).toBe("IMPORT_RUNNING");
+		expect(refusalCode(problem(422, "IMPORT_MOSTLY_INVALID"))).toBe(
+			"IMPORT_MOSTLY_INVALID"
+		);
 		expect(refusalCode(problem(429))).toBe("RATE_LIMITED");
 		expect(refusalCode(problem(413))).toBe("FILE_TOO_LARGE");
 		expect(refusalCode(new Error("x"))).toBe("UNKNOWN");

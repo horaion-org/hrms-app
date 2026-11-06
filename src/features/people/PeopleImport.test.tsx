@@ -203,8 +203,16 @@ describe("PeopleImport", () => {
 			"true"
 		);
 		expect(
-			screen.getByRole("button", { name: "Import 1 person" })
-		).toBeDisabled();
+			screen.queryByRole("button", { name: "Import 1 person" })
+		).not.toBeInTheDocument();
+		expect(
+			screen.getByRole("button", { name: "Fix and re-upload" })
+		).toBeVisible();
+		expect(
+			screen.getByRole("button", { name: "Import 1 valid row only" })
+		).toHaveAccessibleDescription(
+			"Rows with problems are left out. Fix them in the file and import it again later: people already added are skipped."
+		);
 		expect(
 			screen.getByRole("checkbox", { name: "Send invitations now" })
 		).toBeDisabled();
@@ -260,7 +268,59 @@ describe("PeopleImport", () => {
 		expect(
 			calls.find((call) => call.method === "POST" && call.path === IMPORTS)
 				?.search
-		).toBe("sendInvitations=false");
+		).toBe("sendInvitations=false&skipInvalid=false");
+	});
+
+	it("imports the valid rows only when asked, saying in the confirmation what is left out", async () => {
+		const user = userEvent.setup({ applyAccept: false });
+		const calls = stubApi({
+			...baseRoutes(),
+			[`POST ${IMPORTS}/checks`]: checkReply(1),
+			[`POST ${IMPORTS}`]: {
+				status: 202,
+				body: envelope({ ...finishedImport, status: "QUEUED", rows: [] }),
+			},
+			[`GET ${IMPORTS}/i-1`]: { status: 200, body: envelope(finishedImport) },
+		});
+		await open("/settings/data/import-people");
+
+		await upload(user, "people.csv");
+		await user.click(
+			await screen.findByRole("button", { name: "Import 1 valid row only" })
+		);
+		const dialog = await screen.findByRole("dialog");
+		expect(dialog).toHaveTextContent(
+			"1 row with problems won't be imported. You can fix it and import it later."
+		);
+		await user.click(
+			within(dialog).getByRole("button", { name: "Import people" })
+		);
+
+		expect(await screen.findByText("Import finished")).toBeVisible();
+		expect(
+			calls.find((call) => call.method === "POST" && call.path === IMPORTS)
+				?.search
+		).toBe("sendInvitations=false&skipInvalid=true");
+	});
+
+	it("offers no partial import when most rows have problems", async () => {
+		const user = userEvent.setup({ applyAccept: false });
+		stubApi({
+			...baseRoutes(),
+			[`POST ${IMPORTS}/checks`]: checkReply(1, false),
+		});
+		await open("/settings/data/import-people");
+
+		await upload(user, "people.csv");
+
+		expect(
+			await screen.findByText(
+				"Most rows have problems, so this looks like the wrong file or columns. Fix the file first."
+			)
+		).toBeVisible();
+		expect(
+			screen.queryByRole("button", { name: /valid row/ })
+		).not.toBeInTheDocument();
 	});
 
 	it("refuses another file type before uploading it", async () => {

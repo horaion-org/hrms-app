@@ -154,14 +154,23 @@ export const checkImportFile = (
 		body: formWith(file),
 	});
 
-/** Checks the file again and, with no errors, starts adding its people in the background. */
+/** How an import starts: whether it invites, and whether rows with errors are left out. */
+export type StartImportOptions = {
+	sendInvitations: boolean;
+	skipInvalid: boolean;
+};
+
+/**
+ * Checks the file again and starts adding its people in the background:
+ * with no errors, or, with `skipInvalid`, without the rows that have them.
+ */
 export const startImport = (
 	companyId: string,
 	file: File,
-	sendInvitations: boolean
+	{ sendInvitations, skipInvalid }: StartImportOptions
 ): Promise<MemberImport> =>
 	apiRequest(
-		`${importsPath(companyId)}?sendInvitations=${String(sendInvitations)}`,
+		`${importsPath(companyId)}?sendInvitations=${String(sendInvitations)}&skipInvalid=${String(skipInvalid)}`,
 		memberImportSchema,
 		{ method: "POST", body: formWith(file) }
 	);

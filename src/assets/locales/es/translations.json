@@ -1338,7 +1338,8 @@
 				"IMPORT_HAS_ERRORS": "Aún hay filas por corregir. Revisa el archivo de nuevo.",
 				"INVITATIONS_UNAVAILABLE": "Todavía no se pueden enviar invitaciones en bloque. Importa sin ellas.",
 				"RATE_LIMITED": "Has alcanzado el límite de importación por ahora. Inténtalo más tarde.",
-				"UNKNOWN": "Algo salió mal. Inténtalo de nuevo."
+				"UNKNOWN": "Algo salió mal. Inténtalo de nuevo.",
+				"IMPORT_MOSTLY_INVALID": "La mayoría de las filas tienen problemas, así que parece el archivo o las columnas equivocados. Corrige el archivo primero."
 			},
 			"check": {
 				"nothingSaved": "Todavía no se ha guardado nada.",
@@ -1365,7 +1366,12 @@
 				"invitationsOff": "Todavía no se pueden enviar invitaciones en bloque; envía cada una desde el perfil de la persona tras importar.",
 				"running": "Otra importación sigue en curso en esta empresa.",
 				"import_one": "Importar {{count}} persona",
-				"import_other": "Importar {{count}} personas"
+				"import_other": "Importar {{count}} personas",
+				"fixAndReupload": "Corregir y volver a subir",
+				"importValidOnly_one": "Importar solo {{count}} fila válida",
+				"importValidOnly_other": "Importar solo {{count}} filas válidas",
+				"validOnlyHint": "Las filas con problemas se omiten. Corrígelas en el archivo e impórtalo de nuevo más tarde: las personas ya añadidas se omiten.",
+				"mostlyInvalid": "La mayoría de las filas tienen problemas, así que parece el archivo o las columnas equivocados. Corrige el archivo primero."
 			},
 			"confirm": {
 				"title_one": "¿Importar {{count}} persona?",
@@ -1374,7 +1380,9 @@
 				"invite": "Cada una recibe un correo de invitación.",
 				"noInvite": "No se envía ningún correo ahora; invita a cada persona desde su perfil.",
 				"confirm": "Importar personas",
-				"cancel": "Cancelar"
+				"cancel": "Cancelar",
+				"leftOut_one": "{{count}} fila con problemas no se importará. Puedes corregirla e importarla más tarde.",
+				"leftOut_other": "{{count}} filas con problemas no se importarán. Puedes corregirlas e importarlas más tarde."
 			},
 			"progress": {
 				"heading": "Añadiendo personas…",
