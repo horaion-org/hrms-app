@@ -909,7 +909,9 @@
 				"ADDED_INVITE_PENDING": "Added; invitation not sent",
 				"SKIPPED_EXISTS": "Already in this company: skipped",
 				"FAILED_ACCOUNT": "Couldn't create their account",
-				"FAILED_VALIDATION": "Couldn't be added here any more"
+				"FAILED_VALIDATION": "Couldn't be added here any more",
+				"SKIPPED_INVALID": "Left out: it had problems",
+				"UNKNOWN": "Unknown result"
 			},
 			"details": {
 				"EMAIL_ALREADY_REGISTERED": "This email already has a Horaion account.",

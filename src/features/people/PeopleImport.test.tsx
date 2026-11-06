@@ -90,13 +90,17 @@ const values = (
 	PROBATION_END_DATE: "",
 });
 
-const checkReply = (errorRows: number): StubReply => ({
+const checkReply = (
+	errorRows: number,
+	partialImportAllowed = errorRows > 0
+): StubReply => ({
 	status: 200,
 	body: envelope({
 		totalRows: 2,
 		readyRows: 2 - errorRows,
 		skippedRows: 0,
 		errorRows,
+		partialImportAllowed,
 		noticeRows: 0,
 		unknownColumns: ["Salary"],
 		invitationsAvailable: false,
@@ -141,7 +145,9 @@ const finishedImport = {
 	addedRows: 1,
 	invitePendingRows: 0,
 	skippedRows: 0,
+	skippedInvalidRows: 0,
 	failedRows: 1,
+	resolvedRows: 0,
 	createdAt: "2026-11-04T08:00:00Z",
 	finishedAt: "2026-11-04T08:01:00Z",
 	rows: [

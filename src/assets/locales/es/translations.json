@@ -1401,7 +1401,9 @@
 				"ADDED_INVITE_PENDING": "Añadida; invitación no enviada",
 				"SKIPPED_EXISTS": "Ya está en la empresa: omitida",
 				"FAILED_ACCOUNT": "No se pudo crear su cuenta",
-				"FAILED_VALIDATION": "Ya no se puede añadir aquí"
+				"FAILED_VALIDATION": "Ya no se puede añadir aquí",
+				"SKIPPED_INVALID": "Omitida: tenía problemas",
+				"UNKNOWN": "Resultado desconocido"
 			},
 			"details": {
 				"EMAIL_ALREADY_REGISTERED": "Este correo ya tiene una cuenta de Horaion.",
