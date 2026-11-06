@@ -150,7 +150,8 @@ it("shows a generated schedule's header, figures and roster from the API", async
 	expect(within(roster).getAllByRole("row")).toHaveLength(4);
 	const ben = within(roster).getByRole("row", { name: /Ben Ong/ });
 	expect(within(ben).getAllByText("LEAVE")).toHaveLength(2);
-	expect(screen.getByRole("list", { name: "Legend" })).toHaveTextContent(
+	await userEvent.click(screen.getByRole("button", { name: "Legend" }));
+	expect(await screen.findByRole("list", { name: "Legend" })).toHaveTextContent(
 		"Day OffOn LeaveFront Desk AMLunch RushSwing Shift"
 	);
 	expect(readsOf(calls, ASSIGNMENTS)).toHaveLength(1);
