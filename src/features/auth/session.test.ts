@@ -3,6 +3,7 @@ import { z } from "zod";
 import { apiRequest, resetApiClient } from "@/common/api-client";
 import {
 	openApp,
+	signedInShellRoutes,
 	currentUserReply,
 	settled,
 	type OpenedApp,
@@ -213,6 +214,7 @@ describe("real route Session wiring", () => {
 		const calls = stubApi({
 			[REFRESH]: accessPassReply(),
 			"GET /api/v1/me": currentUserReply(),
+			...signedInShellRoutes(),
 		});
 		app = await openApp("/");
 		expect(app.router.state.location.pathname).toBe("/");
@@ -220,9 +222,12 @@ describe("real route Session wiring", () => {
 			displayName: "José",
 		});
 		await app.router.invalidate();
+		// The shell's workspace and own-profile reads are cached too: one call each.
 		expect(calls.map((call) => call.path)).toEqual([
 			`${SESSIONS}/refreshes`,
 			"/api/v1/me",
+			"/api/v1/me/workspace",
+			"/api/v1/companies/c-1/me/profile",
 		]);
 	});
 	it.each([

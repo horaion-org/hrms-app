@@ -1,0 +1,96 @@
+name: CI
+
+# Type check, lint (with the permission contract check) and the Vitest suite on every pull request to development
+# and every push to it. The Playwright suites are not run here. Guide: README.md, "Checks".
+on:
+  pull_request:
+    branches: [ development ]
+  push:
+    branches: [ development ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A newer push to the same branch or pull request supersedes the run in progress.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "24"
+  PNPM_VERSION: "12.10.1"
+
+jobs:
+  checks:
+    name: Type check & lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: pnpm exec tsc
+
+      # check:contract (the permission contract is not stale), check:quarantine (every skipped test is listed in
+      # test-quarantine.json with its reason, and nothing else is skipped), then eslint with zero warnings.
+      - name: Lint
+        run: pnpm lint
+
+      # The quarantine is visible on every run, green or not.
+      - name: Quarantined tests to the job summary
+        if: always()
+        run: node scripts/check-test-quarantine.mjs --summary >> "$GITHUB_STEP_SUMMARY"
+
+  unit-tests:
+    name: Unit tests (${{ matrix.shard }}/3)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [ 1, 2, 3 ]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # One worker per runner core. The 5 s default per-test timeout is too tight on a shared runner: page-level
+      # suites that pass alone in about 1 s have timed out under load. 15 s still catches a hung test.
+      - name: Vitest
+        run: >-
+          pnpm exec vitest run src/
+          --shard=${{ matrix.shard }}/3
+          --maxWorkers=100%
+          --testTimeout=15000

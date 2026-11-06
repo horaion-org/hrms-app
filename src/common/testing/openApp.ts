@@ -5,6 +5,7 @@ import {
 	type AnyRouter,
 } from "@tanstack/react-router";
 import { expect, vi } from "vitest";
+import { companyWideWorkspace } from "@/common/testing/effectiveWorkspace";
 import { envelope, type StubReply } from "@/common/testing/stubApi";
 import { connectSession } from "@/features/auth/connectSession";
 import { connectAccess } from "@/features/workspace/connectAccess";
@@ -70,4 +71,49 @@ export const currentUserReply = (
 		status: "ACTIVE",
 		memberships,
 	}),
+});
+
+/**
+ * The reads the signed-in shell and Dashboard make after `GET /api/v1/me` for
+ * company `c-1`: the workspace (no grants), the person's own profile and an
+ * empty notifications list. Spread them into a `stubApi` table so the shell
+ * settles instead of retrying 404s.
+ */
+export const signedInShellRoutes = (): Record<string, StubReply> => ({
+	"GET /api/v1/me/workspace": {
+		status: 200,
+		body: envelope(companyWideWorkspace([])),
+	},
+	"GET /api/v1/companies/c-1/me/profile": {
+		status: 200,
+		body: envelope({
+			membershipId: "m-c-1",
+			employeeCode: "EMP-1",
+			displayName: "José",
+			email: "jose@acme.test",
+			phone: null,
+			branchId: "b-1",
+			branchName: "Orchard",
+			departmentId: null,
+			departmentName: null,
+			jobTitleId: null,
+			jobTitleName: null,
+			status: "ACTIVE",
+			dateOfBirth: null,
+			employmentType: "FULL_TIME",
+			hireDate: "2026-01-05",
+			probationEndDate: null,
+			endDate: null,
+			reportsTo: null,
+			invitationPending: false,
+		}),
+	},
+	"GET /api/v1/companies/c-1/me/notifications": {
+		status: 200,
+		body: { content: [], page: { totalElements: 0 } },
+	},
+	"GET /api/v1/companies/c-1/me/notifications/unread-count": {
+		status: 200,
+		body: { unreadCount: 0 },
+	},
 });
