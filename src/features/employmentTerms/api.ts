@@ -280,6 +280,13 @@ export const fetchActiveTerms = (
 		signal,
 	});
 
+/** Every live terms of the company, active or not, as the People filter names them. */
+export const fetchAllTerms = (
+	companyId: string,
+	signal?: AbortSignal
+): Promise<TermsList> =>
+	apiRequest(termsPath(companyId), termsListSchema, { signal });
+
 /** The country's figures and the common weeks new terms may start from. */
 export const fetchTermsPresets = (
 	companyId: string,
@@ -476,6 +483,21 @@ export const activeTermsQuery = (
 		queryKey: [...termsRoot(companyId), "active"] as const,
 		queryFn: allowed
 			? ({ signal }): Promise<TermsList> => fetchActiveTerms(companyId, signal)
+			: skipToken,
+		meta: administrativeMeta(companyId),
+		staleTime: 60_000,
+		retry,
+	});
+
+/** Every live terms, for the People filter; `allowed` false asks for nothing. */
+export const allTermsQuery = (
+	companyId: string,
+	allowed = true
+): TermsQuery<TermsList, readonly [string, string, "all"]> =>
+	queryOptions({
+		queryKey: [...termsRoot(companyId), "all"] as const,
+		queryFn: allowed
+			? ({ signal }): Promise<TermsList> => fetchAllTerms(companyId, signal)
 			: skipToken,
 		meta: administrativeMeta(companyId),
 		staleTime: 60_000,

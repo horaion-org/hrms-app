@@ -94,6 +94,19 @@ describe("people list client", () => {
 		);
 	});
 
+	it("adds the employment terms whose holders are listed", () => {
+		const path = peoplePath("c-1", {
+			page: 1,
+			sort: { field: "displayName", desc: false },
+			search: "",
+			employmentTermsId: "terms-1",
+		});
+
+		expect(
+			new URLSearchParams(path.split("?")[1]).get("employmentTermsId")
+		).toBe("terms-1");
+	});
+
 	it("adds the status, a trimmed search cut to 100 characters and the Branch", () => {
 		const path = peoplePath("c-1", {
 			page: 3,
