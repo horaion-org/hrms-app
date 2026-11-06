@@ -973,7 +973,7 @@
 			},
 			"template": {
 				"heading": "Empieza con nuestra plantilla",
-				"body": "Tiene una hoja para Sucursales, otra para Departamentos y otra para Puestos, y una hoja Listas con tus unidades, países y zonas horarias. La fila 2 de cada hoja es un ejemplo y se omite.",
+				"body": "Se abre en una hoja Instructions y luego tiene una hoja para Sucursales, otra para Departamentos y otra para Puestos. Rellena primero Sucursales: las listas de Sucursal y Departamento de las hojas siguientes recogen lo que añadas, y una columna Row check señala las filas que corregir. La fila 2 de cada hoja es un ejemplo y se omite.",
 				"rules": "Rellena solo las hojas que necesites. Deja Responsables en blanco para ser tú el responsable por ahora, y asigna los responsables reales después de importar a las personas.",
 				"download": "Descargar plantilla (.xlsx)",
 				"downloading": "Descargando…",
@@ -1300,7 +1300,7 @@
 			},
 			"template": {
 				"heading": "Empieza con nuestra plantilla",
-				"body": "Incluye tus sucursales, departamentos y puestos para que copies sus nombres exactos. Una fila de ejemplo muestra el formato; se omite al importar.",
+				"body": "Se abre en una hoja Instructions que explica cada columna. Sucursal, Departamento y Puesto son listas desplegables que muestran solo lo que corresponde a la celda anterior, y una columna Row check señala las filas que corregir antes de subir el archivo. Una fila de ejemplo muestra el formato; se omite al importar.",
 				"rules": "Obligatorios: Nombre y Correo. Sucursal y Departamento van juntos; un Puesto necesita un Departamento.",
 				"download": "Descargar plantilla (.xlsx)",
 				"downloading": "Descargando…",
