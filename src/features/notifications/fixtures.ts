@@ -21,6 +21,7 @@ export const notificationDemoFixtures = (): Array<InboxNotification> => {
 			memberImportJobId: null,
 			importCounts: null,
 			remark: null,
+			rosterDay: null,
 			occurredAt,
 			createdAt: occurredAt,
 			readAt: index >= 42 ? occurredAt : null,

@@ -3262,6 +3262,7 @@
 				"notEditable": "This roster can’t be changed now.",
 				"refused": "This change can’t be applied. Review the checks.",
 				"undoBlocked": "This change can’t be undone any more.",
+				"fromLeave": "Made by a leave decision. Cancel the leave in Leave instead.",
 				"forbidden": "You no longer have permission to change this roster.",
 				"failed": "We couldn’t apply the change. Try again."
 			},

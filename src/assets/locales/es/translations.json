@@ -2494,6 +2494,7 @@
 				"notEditable": "Este cuadrante no se puede cambiar ahora.",
 				"refused": "Este cambio no se puede aplicar. Revisa las comprobaciones.",
 				"undoBlocked": "Este cambio ya no se puede deshacer.",
+				"fromLeave": "Lo hizo una decisión de permiso. Cancela el permiso en Permisos.",
 				"forbidden": "Ya no tienes permiso para cambiar este cuadrante.",
 				"failed": "No pudimos aplicar el cambio. Inténtalo de nuevo."
 			},
