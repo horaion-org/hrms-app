@@ -121,10 +121,11 @@ it.each([
 		expect(hasAccessPass()).toBe(false);
 	}
 );
-// Quarantined (test-quarantine.json): Log out clears the cache, then the still-mounted shell re-creates its workspace,
-// profile and notification-count queries before /login replaces it.
-it.skip("leaves nothing cached after Log out", async () => {
-	stubApi({
+const signInToDashboard = async (): Promise<{
+	opened: OpenedApp;
+	calls: Array<{ method: string; path: string }>;
+}> => {
+	const calls = stubApi({
 		[`POST ${SESSIONS}`]: accessPassReply("form-pass"),
 		"GET /api/v1/me": currentUserReply(),
 		...signedInShellRoutes(),
@@ -133,11 +134,51 @@ it.skip("leaves nothing cached after Log out", async () => {
 	const opened = await open();
 	await submit();
 	await screen.findByRole("heading", { name: "Dashboard" }, { timeout: 5000 });
+	return { opened, calls };
+};
+const requestsSince = (
+	calls: Array<{ method: string; path: string }>,
+	start: number
+): Array<string> =>
+	calls.slice(start).map((call) => `${call.method} ${call.path}`);
+it("leaves nothing cached after Log out", async () => {
+	const { opened } = await signInToDashboard();
 	const user = userEvent.setup();
 	await user.click(screen.getByRole("button", { name: "Log out" }));
 	await screen.findByRole("heading", { name: "Log in" });
-	expect(opened.queryClient.getQueryCache().getAll()).toHaveLength(0);
+	await waitFor(() => {
+		expect(opened.queryClient.getQueryCache().getAll()).toHaveLength(0);
+	});
 });
+it("sends no Session renewal after Log out", async () => {
+	const { opened, calls } = await signInToDashboard();
+	const start = calls.length;
+	const user = userEvent.setup();
+	await user.click(screen.getByRole("button", { name: "Log out" }));
+	await screen.findByRole("heading", { name: "Log in" });
+	await waitFor(() => {
+		expect(opened.queryClient.getQueryCache().getAll()).toHaveLength(0);
+	});
+	expect(requestsSince(calls, start)).toEqual([`DELETE ${SESSIONS}`]);
+});
+it.each([
+	["another tab logs out", "logged-out-elsewhere"],
+	["the Session expires", "expired"],
+] as const)(
+	"leaves nothing cached and sends no request when %s",
+	async (_label, reason) => {
+		const { opened, calls } = await signInToDashboard();
+		const start = calls.length;
+		act(() => {
+			endSession(reason);
+		});
+		await screen.findByRole("heading", { name: "Log in" });
+		await waitFor(() => {
+			expect(opened.queryClient.getQueryCache().getAll()).toHaveLength(0);
+		});
+		expect(requestsSince(calls, start)).toEqual([]);
+	}
+);
 const refusals: Array<[string, StubReply, string]> = [
 	[
 		"invalid credentials",

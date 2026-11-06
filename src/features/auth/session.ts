@@ -22,7 +22,8 @@ export type ChallengeAnswer =
 	{ code: string; newPassword?: never } | { newPassword: string; code?: never };
 
 const SESSIONS = "/api/v1/public/sessions";
-type SessionEndReason = "logged-out" | "logged-out-elsewhere" | "expired";
+export type SessionEndReason =
+	"logged-out" | "logged-out-elsewhere" | "expired";
 type Listener = (reason: SessionEndReason) => void;
 type State =
 	| { kind: "empty" }

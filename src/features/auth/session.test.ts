@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import type { RouterHistory } from "@tanstack/react-router";
 import { z } from "zod";
 import { apiRequest, resetApiClient } from "@/common/api-client";
 import {
@@ -334,6 +335,44 @@ describe("real route Session wiring", () => {
 			).not.toContain("clear-me");
 		}
 	);
+	it("leaves for Log in and clears the cache past a navigation blocker", async () => {
+		stubApi({
+			[REFRESH]: accessPassReply(),
+			"GET /api/v1/me": currentUserReply(),
+			[`DELETE ${SESSIONS}`]: { status: 204 },
+		});
+		app = await openApp("/");
+		app.queryClient.setQueryData(["private"], "cached");
+		// The opened router is untyped (AnyRouter); its history is a RouterHistory.
+		const history = app.router.history as RouterHistory;
+		const unblock = history.block({ blockerFn: () => true });
+		await logOut();
+		await vi.waitFor(() => {
+			expect(app?.queryClient.getQueryCache().getAll()).toHaveLength(0);
+		});
+		unblock();
+		expect(app.router.state.location.pathname).toBe("/login");
+	});
+	it("clears the cache when a later navigation supersedes the one to Log in", async () => {
+		stubApi({
+			[REFRESH]: accessPassReply(),
+			"GET /api/v1/me": currentUserReply(),
+			[`DELETE ${SESSIONS}`]: { status: 204 },
+		});
+		app = await openApp("/");
+		app.queryClient.setQueryData(["private"], "cached");
+		// As Change password does: Log out, then its own navigation to Log in.
+		await logOut();
+		void app.router.navigate({
+			to: "/login",
+			search: { passwordChanged: true },
+			replace: true,
+		});
+		await vi.waitFor(() => {
+			expect(app?.queryClient.getQueryCache().getAll()).toHaveLength(0);
+		});
+		expect(app.router.state.location.search).toEqual({ passwordChanged: true });
+	});
 	it("clears this tab and navigates to Log in when another tab broadcasts", async () => {
 		stubApi({
 			[REFRESH]: accessPassReply(),
