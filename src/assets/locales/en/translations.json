@@ -2977,6 +2977,7 @@
 			"close": "Close",
 			"done": "Schedule deleted.",
 			"inProgress": "This schedule is being generated. Try again once the run finishes.",
+			"published": "This schedule is published, so it can’t be deleted. Change its days on the roster instead.",
 			"gone": "This schedule no longer exists.",
 			"forbidden": "You no longer have permission to delete this schedule.",
 			"failed": "We couldn’t delete the schedule. Try again."
@@ -2994,7 +2995,7 @@
 			"done": "Regeneration requested.",
 			"draft": "This schedule hasn’t been generated yet. Generate it from its setup.",
 			"inProgress": "This schedule is being generated. Try again once the run finishes.",
-			"published": "This roster is published, so it can’t be regenerated. It can still be deleted.",
+			"published": "This roster is published, so it can’t be regenerated or deleted. Change its days on the roster instead.",
 			"forbidden": "You no longer have permission to regenerate this schedule.",
 			"failed": "We couldn’t regenerate the roster. Try again.",
 			"editsLost": "Changes made by hand will be lost: a new run replaces the roster and every change made to it."
@@ -3021,7 +3022,7 @@
 			"rejectedNext": "Regenerate the roster, or delete the schedule.",
 			"reason": "Reason for rejection",
 			"publishTitle": "Publish this roster?",
-			"publishDescription": "Publishing makes this roster final for its week. It can’t be regenerated afterwards, but the schedule can still be deleted.",
+			"publishDescription": "Publishing makes this roster final for its week. It can’t be regenerated or deleted afterwards; its days can still be changed, and the people whose days change are told.",
 			"publishConfirm": "Publish roster",
 			"rejectTitle": "Reject this roster?",
 			"rejectDescription": "Say what needs to change. The roster stays visible, and the schedule can then be regenerated or deleted.",
@@ -3035,7 +3036,7 @@
 				"inProgress": "This schedule is being generated. Try again once the run finishes.",
 				"notGenerated": "This schedule has no generated roster to publish or reject.",
 				"alreadyDecided": "This roster was already published or rejected. Reload the page to see it.",
-				"weekAlreadyPublished": "This department already has a published roster for this week. Delete that schedule first, then publish this one.",
+				"weekAlreadyPublished": "This department already has a published roster for this week. Only one roster can be published per week, so schedule a different week instead.",
 				"reasonRejected": "Enter a reason of up to 2,000 characters.",
 				"forbidden": "You no longer have permission to publish or reject this roster.",
 				"failed": "We couldn’t save the decision. Try again."

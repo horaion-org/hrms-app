@@ -2209,6 +2209,7 @@
 			"close": "Cerrar",
 			"done": "Horario eliminado.",
 			"inProgress": "Este horario se está generando. Inténtalo de nuevo cuando termine la ejecución.",
+			"published": "Este horario está publicado, así que no se puede eliminar. Cambia sus días en el cuadrante.",
 			"gone": "Este horario ya no existe.",
 			"forbidden": "Ya no tienes permiso para eliminar este horario.",
 			"failed": "No pudimos eliminar el horario. Inténtalo de nuevo."
@@ -2226,7 +2227,7 @@
 			"done": "Regeneración solicitada.",
 			"draft": "Este horario aún no se ha generado. Genéralo desde su configuración.",
 			"inProgress": "Este horario se está generando. Inténtalo de nuevo cuando termine la ejecución.",
-			"published": "Este cuadrante está publicado, así que no se puede regenerar. Aún se puede eliminar.",
+			"published": "Este cuadrante está publicado, así que no se puede regenerar ni eliminar. Cambia sus días en el cuadrante.",
 			"forbidden": "Ya no tienes permiso para regenerar este horario.",
 			"failed": "No pudimos regenerar el cuadrante. Inténtalo de nuevo.",
 			"editsLost": "Se perderán los cambios hechos a mano: una nueva ejecución reemplaza el cuadrante y todos sus cambios."
@@ -2253,7 +2254,7 @@
 			"rejectedNext": "Regenera el cuadrante o elimina el horario.",
 			"reason": "Motivo del rechazo",
 			"publishTitle": "¿Publicar este cuadrante?",
-			"publishDescription": "Al publicarlo, este cuadrante pasa a ser definitivo para su semana. Después no se podrá regenerar, pero el horario aún se podrá eliminar.",
+			"publishDescription": "Al publicarlo, este cuadrante pasa a ser definitivo para su semana. Después no se podrá regenerar ni eliminar; sus días aún se pueden cambiar y se avisa a las personas cuyos días cambian.",
 			"publishConfirm": "Publicar cuadrante",
 			"rejectTitle": "¿Rechazar este cuadrante?",
 			"rejectDescription": "Indica qué hay que cambiar. El cuadrante sigue visible y después el horario se puede regenerar o eliminar.",
@@ -2267,7 +2268,7 @@
 				"inProgress": "Este horario se está generando. Inténtalo de nuevo cuando termine la ejecución.",
 				"notGenerated": "Este horario no tiene un cuadrante generado que publicar o rechazar.",
 				"alreadyDecided": "Este cuadrante ya se publicó o se rechazó. Recarga la página para verlo.",
-				"weekAlreadyPublished": "Este departamento ya tiene un cuadrante publicado para esta semana. Elimina primero ese horario y después publica este.",
+				"weekAlreadyPublished": "Este departamento ya tiene un cuadrante publicado para esta semana. Solo se puede publicar un cuadrante por semana, así que programa otra semana.",
 				"reasonRejected": "Indica un motivo de hasta 2000 caracteres.",
 				"forbidden": "Ya no tienes permiso para publicar o rechazar este cuadrante.",
 				"failed": "No pudimos guardar la decisión. Inténtalo de nuevo."

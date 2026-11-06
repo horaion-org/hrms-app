@@ -556,7 +556,9 @@ it("publishes a generated roster after a confirm, then says who published it", a
 		within(panel).getByRole("button", { name: "Publish roster" })
 	);
 	const dialog = screen.getByRole("dialog", { name: "Publish this roster?" });
-	expect(dialog).toHaveTextContent("It can’t be regenerated afterwards");
+	expect(dialog).toHaveTextContent(
+		"It can’t be regenerated or deleted afterwards"
+	);
 	await user.click(
 		within(dialog).getByRole("button", { name: "Publish roster" })
 	);
@@ -1523,4 +1525,25 @@ it("keeps a published roster read-only even for someone who may edit shifts", as
 	expect(
 		screen.getByRole("complementary", { name: "Shift Details" })
 	).toBeVisible();
+});
+
+it("never offers to delete a published schedule, even to someone who may delete schedules", async () => {
+	await openRoster({
+		...signedIn(["schedule:read", "schedule:delete"]),
+		[`GET ${SCHEDULE_READ}`]: ok(
+			generatedScheduleFixture({ status: "PUBLISHED" })
+		),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+	});
+	const user = userEvent.setup();
+
+	await user.click(
+		await screen.findByRole("button", {
+			name: "More actions for Front Office - Week 42",
+		})
+	);
+
+	expect(
+		screen.getAllByRole("menuitem").map((item) => item.textContent)
+	).toEqual(["Export roster"]);
 });

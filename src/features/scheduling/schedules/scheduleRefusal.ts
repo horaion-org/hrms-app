@@ -25,6 +25,7 @@ export const SCHEDULE_REFUSAL_CODES = {
 	alreadyDecided: "409 SCHEDULE_ALREADY_DECIDED",
 	weekAlreadyPublished: "409 SCHEDULE_WEEK_ALREADY_PUBLISHED",
 	published: "409 SCHEDULE_PUBLISHED",
+	publishedNotDeletable: "409 PUBLISHED_SCHEDULE_NOT_DELETABLE",
 	invalidRejectionReason: "400 INVALID_REJECTION_REASON",
 } as const;
 
@@ -109,6 +110,7 @@ export const deleteRefusal = (error: unknown, t: TFunction): string => {
 		mapRefusal<never>(error, {
 			alerts: {
 				[codes.generationInProgress]: t(`${key}.inProgress`),
+				[codes.publishedNotDeletable]: t(`${key}.published`),
 				[codes.scheduleNotFound]: t(`${key}.gone`),
 			},
 			forbidden: t(`${key}.forbidden`),
