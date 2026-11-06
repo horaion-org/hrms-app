@@ -1,10 +1,4 @@
-import {
-	act,
-	fireEvent,
-	screen,
-	waitFor,
-	within,
-} from "@testing-library/react";
+import { act, screen, waitFor, within } from "@testing-library/react";
 import { companyWideWorkspace } from "@/common/testing/effectiveWorkspace";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -114,6 +108,11 @@ const fill = async (
 	await user.click(within(dialog).getByLabelText("Branch heads"));
 	await user.click(await screen.findByRole("option", { name: "Marcus Lim" }));
 	await user.keyboard("{Escape}");
+	// Closing a Combobox puts focus back on the next animation frame. Let that land
+	// here, or it moves focus off a field the test has just focused.
+	await new Promise((resolve) => {
+		requestAnimationFrame(resolve);
+	});
 };
 
 describe("create branch through the Branches page", () => {
@@ -285,8 +284,8 @@ describe("create branch through the Branches page", () => {
 		const dialog = await openDialog();
 		await fill(dialog);
 		const timeZone = within(dialog).getByLabelText("Time zone");
-		// Straight to the field: focus is still settling after the pick in fill().
-		fireEvent.keyDown(timeZone, { key: "Backspace" });
+		timeZone.focus();
+		await userEvent.keyboard("{Backspace}");
 		expect(timeZone).toHaveTextContent("Select a time zone");
 		await userEvent.click(
 			within(dialog).getByRole("button", { name: "Create branch" })
