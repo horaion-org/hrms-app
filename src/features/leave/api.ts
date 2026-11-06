@@ -76,9 +76,14 @@ export const activeLeaveTypesQuery = (
 		retry,
 	});
 
-const leaveStatusSchema = z.enum(["PENDING", "APPROVED", "REJECTED"]);
+const leaveStatusSchema = z.enum([
+	"PENDING",
+	"APPROVED",
+	"REJECTED",
+	"CANCELLED",
+]);
 
-/** Where a request stands; a decision is final. */
+/** Where a request stands; members withdraw pending ones, reviewers change or cancel approved ones. */
 export type LeaveStatus = z.infer<typeof leaveStatusSchema>;
 
 export const LEAVE_STATUSES = leaveStatusSchema.options;
@@ -113,7 +118,7 @@ export const leaveRequestSchema = z.object({
 	leaveTypeName: z.string().nullable().default(null),
 	startDate: z.iso.date(),
 	endDate: z.iso.date(),
-	/** Monday-to-Friday days in the period, as the API counts them. */
+	/** The days of the period that use leave, as the API counts them from rosters. */
 	workingDays: z.number().int().nonnegative(),
 	/** The applicant's remarks for the reviewer; null when none. Absent from an API older than remarks. */
 	notes: z.string().nullable().default(null),
@@ -307,6 +312,8 @@ export type LeaveRequestBody = {
 	startDate: string;
 	endDate: string;
 	notes?: string;
+	/** Only when recording: the reviewer confirmed taking the person off their shifts. */
+	takeOffRosteredDays?: boolean;
 };
 
 const memberLeavePath = (companyId: string, membershipId: string): string =>
@@ -378,14 +385,21 @@ export const approveLeaveRequest = (
 	companyId: string,
 	membershipId: string,
 	leaveRequestId: string,
-	comment = ""
+	comment = "",
+	takeOffRosteredDays = false
 ): Promise<LeaveRequest> =>
 	apiRequest(
 		`${memberLeavePath(companyId, membershipId)}/${encodeURIComponent(leaveRequestId)}/approval`,
 		leaveRequestSchema,
-		comment.trim() === ""
+		comment.trim() === "" && !takeOffRosteredDays
 			? { method: "POST" }
-			: { method: "POST", body: { comment: comment.trim() } }
+			: {
+					method: "POST",
+					body: {
+						...(comment.trim() === "" ? {} : { comment: comment.trim() }),
+						...(takeOffRosteredDays ? { takeOffRosteredDays } : {}),
+					},
+				}
 	);
 
 /** Refuses a pending request with a reason for the member. */
@@ -399,4 +413,181 @@ export const rejectLeaveRequest = (
 		`${memberLeavePath(companyId, membershipId)}/${encodeURIComponent(leaveRequestId)}/rejection`,
 		leaveRequestSchema,
 		{ method: "POST", body: { reason: reason.trim() } }
+	);
+
+const leaveRequestPath = (
+	companyId: string,
+	membershipId: string,
+	leaveRequestId: string
+): string =>
+	`${memberLeavePath(companyId, membershipId)}/${encodeURIComponent(leaveRequestId)}`;
+
+/** The longest remark on recorded, changed or cancelled leave, in characters. */
+export const LEAVE_REMARK_MAX_LENGTH = 500;
+
+const rosteredDaySchema = z.object({
+	day: z.iso.date(),
+	minutes: z.number().int().nonnegative(),
+});
+
+/** A day of a period the person holds a shift on. */
+export type RosteredDay = z.infer<typeof rosteredDaySchema>;
+
+/** Every rostered-days answer of a company, for refreshing them after a refusal. */
+export const rosteredDaysKey = (
+	companyId: string
+): readonly ["leave", string, "rostered-days"] =>
+	["leave", companyId, "rostered-days"] as const;
+
+/**
+ * The days of a period the person holds a shift on: the caller's own without
+ * `memberId`. `allowed` false asks for nothing.
+ */
+export const rosteredDaysQuery = (
+	companyId: string,
+	period: { start: string; end: string },
+	memberId?: string,
+	allowed = true
+): UndefinedInitialDataOptions<
+	Array<RosteredDay>,
+	Error,
+	Array<RosteredDay>,
+	readonly ["leave", string, "rostered-days", string, string, string]
+> =>
+	queryOptions({
+		queryKey: [
+			...rosteredDaysKey(companyId),
+			memberId ?? "me",
+			period.start,
+			period.end,
+		] as const,
+		queryFn: allowed
+			? ({ signal }): Promise<Array<RosteredDay>> =>
+					apiRequest(
+						`${memberId ? memberLeavePath(companyId, memberId) : `${companyPath(companyId)}/me/leave-requests`}/rostered-days?${new URLSearchParams({ startDate: period.start, endDate: period.end }).toString()}`,
+						z.array(rosteredDaySchema),
+						{ signal, responseFormat: "record" }
+					)
+			: skipToken,
+		meta: memberId
+			? administrativeMeta(companyId, { record: true })
+			: selfMeta(companyId),
+		staleTime: 30_000,
+		retry,
+	});
+
+const leaveChangeSchema = z.object({
+	/** Any string: a kind added later must not fail the history. */
+	kind: z.string(),
+	affectedDay: z.iso.date().nullable(),
+	beforeLeaveTypeName: z.string().nullable(),
+	afterLeaveTypeName: z.string().nullable(),
+	beforeStartDate: z.iso.date().nullable(),
+	beforeEndDate: z.iso.date().nullable(),
+	afterStartDate: z.iso.date().nullable(),
+	afterEndDate: z.iso.date().nullable(),
+	/** Null when the caller may not read the request's remarks. */
+	remark: z.string().nullable(),
+	changedByMembershipId: z.string(),
+	changedByName: z.string(),
+	changedAt: z.iso.datetime({ offset: true }),
+});
+
+/** One line of a request's history. */
+export type LeaveChange = z.infer<typeof leaveChangeSchema>;
+
+/** One request's history, oldest first: the caller's own without `memberId`. */
+export const leaveHistoryQuery = (
+	companyId: string,
+	requestId: string,
+	memberId?: string
+): UndefinedInitialDataOptions<
+	Array<LeaveChange>,
+	Error,
+	Array<LeaveChange>,
+	readonly ["leave", string, "history", string, string]
+> =>
+	queryOptions({
+		queryKey: [
+			"leave",
+			companyId,
+			"history",
+			memberId ?? "me",
+			requestId,
+		] as const,
+		queryFn: ({ signal }) =>
+			apiRequest(
+				`${memberId ? memberLeavePath(companyId, memberId) : `${companyPath(companyId)}/me/leave-requests`}/${encodeURIComponent(requestId)}/changes`,
+				z.array(leaveChangeSchema),
+				{ signal, responseFormat: "record" }
+			),
+		meta: memberId
+			? administrativeMeta(companyId, { record: true })
+			: selfMeta(companyId),
+		retry,
+	});
+
+/** What recording approved leave sends. */
+export type RecordLeaveBody = {
+	leaveType: string;
+	startDate: string;
+	endDate: string;
+	remark: string;
+	takeOffRosteredDays: boolean;
+};
+
+/** Records approved leave on a member's behalf. */
+export const recordLeave = (
+	companyId: string,
+	membershipId: string,
+	body: RecordLeaveBody
+): Promise<LeaveRequest> =>
+	apiRequest(
+		`${memberLeavePath(companyId, membershipId)}/approved`,
+		leaveRequestSchema,
+		{ method: "POST", body }
+	);
+
+/** What changing approved leave sends; a left-out field keeps what the request holds. */
+export type ChangeLeaveBody = {
+	leaveType?: string;
+	startDate?: string;
+	endDate?: string;
+	remark: string;
+	takeOffRosteredDays: boolean;
+};
+
+/** Changes an approved request's type or dates. */
+export const changeLeave = (
+	companyId: string,
+	request: LeaveRequest,
+	body: ChangeLeaveBody
+): Promise<LeaveRequest> =>
+	apiRequest(
+		leaveRequestPath(companyId, request.membershipId, request.leaveRequestId),
+		leaveRequestSchema,
+		{ method: "PATCH", body }
+	);
+
+/** Cancels an approved request. */
+export const cancelLeave = (
+	companyId: string,
+	request: LeaveRequest,
+	remark: string
+): Promise<LeaveRequest> =>
+	apiRequest(
+		`${leaveRequestPath(companyId, request.membershipId, request.leaveRequestId)}/cancellation`,
+		leaveRequestSchema,
+		{ method: "POST", body: { remark } }
+	);
+
+/** Withdraws the caller's own pending request. */
+export const withdrawLeave = (
+	companyId: string,
+	leaveRequestId: string
+): Promise<LeaveRequest> =>
+	apiRequest(
+		`${companyPath(companyId)}/me/leave-requests/${encodeURIComponent(leaveRequestId)}/withdrawal`,
+		leaveRequestSchema,
+		{ method: "POST" }
 	);
