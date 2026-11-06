@@ -35,6 +35,8 @@ import {
 } from "@/features/scheduling/rosterChanges/fixtures";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 import { frozenShiftsFixture } from "@/features/scheduling/shifts/fixtures";
+import { midMonthOpenings } from "@/features/scheduling/hours/fixtures";
+import { firstWeek } from "@/features/scheduling/startingContext/fixtures";
 
 let app: OpenedApp | undefined;
 afterEach(() => {
@@ -470,6 +472,69 @@ it("offers to generate a failed schedule again from its failure panel", async ()
 			)
 		).toHaveLength(1);
 	});
+});
+
+it("opens last week's grid when a schedule with nothing frozen is refused for missing days", async () => {
+	await openRoster({
+		...signedIn(["schedule:read", "schedule:generate", "schedule:update"]),
+		[`GET ${SCHEDULE_READ}`]: ok(
+			generatedScheduleFixture({ status: "GENERATED" })
+		),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+		[`GET ${SCHEDULE}/starting-days`]: ok(firstWeek()),
+		[`GET ${SCHEDULE}/opening-balances`]: ok(midMonthOpenings([])),
+		[`POST ${SCHEDULE}/regeneration`]: problemReply(
+			409,
+			"PRIOR_WEEK_INCOMPLETE"
+		),
+	});
+	const user = userEvent.setup();
+
+	await user.click(
+		await screen.findByRole("button", { name: "Regenerate roster" })
+	);
+	await user.click(
+		within(
+			screen.getByRole("dialog", { name: "Regenerate this roster?" })
+		).getByRole("button", { name: "Regenerate roster" })
+	);
+
+	const grid = await screen.findByRole("dialog", { name: "Before this week" });
+	expect(
+		within(grid).getByText("12 days still need an answer.")
+	).toBeInTheDocument();
+	expect(
+		screen.queryByRole("dialog", { name: "Regenerate this roster?" })
+	).toBeNull();
+});
+
+it("says who can add the days when someone who can't edit is refused for missing days", async () => {
+	await openRoster({
+		...signedIn(["schedule:read", "schedule:generate"]),
+		[`GET ${SCHEDULE_READ}`]: ok(
+			generatedScheduleFixture({ status: "GENERATED" })
+		),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+		[`POST ${SCHEDULE}/regeneration`]: problemReply(
+			409,
+			"PRIOR_WEEK_INCOMPLETE"
+		),
+	});
+	const user = userEvent.setup();
+
+	await user.click(
+		await screen.findByRole("button", { name: "Regenerate roster" })
+	);
+	const dialog = screen.getByRole("dialog", {
+		name: "Regenerate this roster?",
+	});
+	await user.click(
+		within(dialog).getByRole("button", { name: "Regenerate roster" })
+	);
+
+	expect(await within(dialog).findByRole("alert")).toHaveTextContent(
+		"Someone who can edit it needs to add them."
+	);
 });
 
 it("shows a refused regeneration inside the dialog and keeps it open", async () => {
