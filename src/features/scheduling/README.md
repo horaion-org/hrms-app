@@ -12,19 +12,12 @@ their API exists.
 
 ## Shape
 
-- `ShiftDetailsPanel/RosterShiftDialog.tsx`, `ApiRosterShiftDialog.tsx`, `ReassignRosterShiftDialog.tsx` (with
-  `useReassignmentStaff.ts` and `rosterPreviewAccess.ts`) — edit, duplicate and reassign dialogs for one shift, with
-  workspace units, API shift roles and API members as choices. They change only the in-memory `RosterShift` they are
-  given and are not wired to any page: a generated roster is read-only until assignments can be changed through the
-  API.
-
 - `schedules/useSchedules.ts` — the overview's permission-aware company-wide history. Reads every page of
   `GET /api/v1/companies/{companyId}/schedules`, with API names, dates, departments and statuses; search covers
   every returned row.
 - `ScheduleCard` — one API schedule on the overview, grouped by period: branch and department, status, what it
   includes (`ScheduleSummary`) and View.
-- `schedules.ts` — each status's badge tone, the period's weeks and days (`mondayOf`, `weeksOf`, `daysOf`), and the
-  dialogs' in-memory `RosterShift` and `RosterStaff`.
+- `schedules.ts` — each status's badge tone and the period's weeks and days (`mondayOf`, `weeksOf`, `daysOf`).
 
 - `paths.ts` — the department, shift, constraint and schedule paths every scheduling request is built from, and the
   query root (`["scheduling", companyId, …]`).
@@ -148,12 +141,22 @@ constraint dialogs.
 4. Pure mappers `roster/` — no I/O. They turn API rows into what the components draw.
 5. Components, plain props only — `RosterHeader`, `GenerationFailurePanel` (with `MemberNotes`), `GeneratedRoster`
    (stat cards, `FindingsSummary` and `FindingsPanel`, `RosterWeekBar`, `RosterGrid` → `RosterShift` and
-   `FindingsMarker`, and `ShiftDetailsPanel` read-only for a chosen day).
+   `FindingsMarker`, and `ShiftDetailsPanel` read-only for a chosen day). Someone holding `schedule:edit_shift` on a
+   GENERATED roster awaiting its decision gets `editing`: any day opens `RosterCellPanel` beside the grid instead
+   (another shift, a day off, or a same-day swap; a preview with `RosterChangeChecks`; Apply), days changed by hand
+   carry a dot, and `LastRosterChange` offers Undo in a toast and above the grid (hrms-backend-v2 docs/adr/0062).
+   The editor reads the frozen shifts it offers from `…/roster-changes/shifts` (`rosterChangeShiftsQuery`) under
+   the same key, so it needs neither `schedule:update` nor `shift:read`.
 
 - `schedules/scheduleViewLink.ts` — View on a card or history row: a DRAFT reopens at the wizard's Setup, any other
   status opens the roster; `scheduleSetupLink` is the roster's "View setup".
-- `schedules/useScheduleAssignments.ts` — the roster rows, asked for only when enabled (`hidden` without
-  `schedule:read` at the department or on a 403).
+- `schedules/useScheduleAssignments.ts` — the roster rows of one run at one revision, asked for only when enabled
+  (`hidden` without `schedule:read` at the department or on a 403). A hand change moves the revision, so the rows
+  are read again; a change made here seeds the new revision's rows at once.
+- `rosterChanges/` — hand changes to a generated roster: `api.ts` (preview, apply, undo, latest; the API checks
+  plain facts and never re-checks scheduling rules), `rosterEdit.ts` (pure: the cells a choice sends, shift and
+  swap choices, what the checks ask before Apply, the roster with changed rows in place), `checkSentence.ts`,
+  `rosterChangeRefusal.ts` and `useRosterChangeActions.ts` (apply and undo, caching the landed change).
 - `roster/roster.ts` — `rosterFromAssignments` (one row per member, each day a shift, off or leave; a row whose
   member is gone keyed by its assignment), `hoursOf`/`hoursInDays` (via `shiftHours`), `weekDays`, `legendOf`,
   `rosterStats`, and `isoDateIn`/`dateTimeFormatIn` for the branch's time zone.

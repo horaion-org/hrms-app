@@ -764,7 +764,9 @@
 				"memberTermsChanged": "Condiciones de empleo de {{name}} cambiadas",
 				"memberTermsCorrected": "Condiciones de empleo de {{name}} corregidas",
 				"memberTermsCancelled": "Cambio de condiciones de empleo de {{name}} cancelado",
-				"employmentTermsAssigned": "Condiciones de empleo asignadas a varias personas: {{name}}"
+				"employmentTermsAssigned": "Condiciones de empleo asignadas a varias personas: {{name}}",
+				"rosterChanged": "Cuadrante cambiado: {{name}}",
+				"rosterChangeUndone": "Cambio de cuadrante deshecho: {{name}}"
 			},
 			"unnamed": {
 				"jobTitleCreated": "Puesto creado",
@@ -810,7 +812,9 @@
 				"memberTermsChanged": "Condiciones de empleo cambiadas a una persona",
 				"memberTermsCorrected": "Condiciones de empleo corregidas a una persona",
 				"memberTermsCancelled": "Cambio de condiciones de empleo cancelado a una persona",
-				"employmentTermsAssigned": "Condiciones de empleo asignadas a varias personas"
+				"employmentTermsAssigned": "Condiciones de empleo asignadas a varias personas",
+				"rosterChanged": "Cuadrante cambiado",
+				"rosterChangeUndone": "Cambio de cuadrante deshecho"
 			},
 			"fallback": {
 				"named": "{{verb}} de {{entity}}: {{name}}",
@@ -2096,7 +2100,8 @@
 				"role": "Rol",
 				"shift": "Turno",
 				"group": "Grupo"
-			}
+			},
+			"dayLabel": "{{name}}, {{day}}: {{kind}}"
 		},
 		"myRoster": {
 			"title": "Mi cuadrante · {{department}} · {{period}}",
@@ -2223,7 +2228,8 @@
 			"inProgress": "Este horario se está generando. Inténtalo de nuevo cuando termine la ejecución.",
 			"published": "Este cuadrante está publicado, así que no se puede regenerar. Aún se puede eliminar.",
 			"forbidden": "Ya no tienes permiso para regenerar este horario.",
-			"failed": "No pudimos regenerar el cuadrante. Inténtalo de nuevo."
+			"failed": "No pudimos regenerar el cuadrante. Inténtalo de nuevo.",
+			"editsLost": "Se perderán los cambios hechos a mano: una nueva ejecución reemplaza el cuadrante y todos sus cambios."
 		},
 		"export": {
 			"menu": "Exportar cuadrante",
@@ -2312,6 +2318,88 @@
 				"published": "Este horario está publicado, así que las horas antes de esta semana ya no pueden cambiar aquí.",
 				"daysSavedHoursNot": "Los días de la semana pasada se guardaron, pero las horas de este mes no. {{reason}} Tus horas siguen aquí: corrígelas y vuelve a guardar."
 			}
+		},
+		"rosterEdit": {
+			"title": "{{name}} · {{date}}",
+			"close": "Cerrar",
+			"now": "Ahora",
+			"dayOff": "Día libre",
+			"onLeave": "De permiso",
+			"leaveReadOnly": "El permiso no se cambia en el cuadrante. Cámbialo en Permisos.",
+			"changedBy": "Cambiado {{time}} por {{name}}",
+			"changedAt": "Cambiado {{time}}",
+			"was": "Antes: {{cell}}",
+			"changeTo": "Cambiar a",
+			"anotherShift": "Otro turno",
+			"aShift": "Un turno",
+			"makeDayOff": "Día libre",
+			"swap": "Intercambiar con alguien",
+			"shift": "Turno",
+			"chooseShift": "Elige un turno",
+			"noShift": "Ningún otro turno del {{weekday}} está abierto a {{name}}.",
+			"swapWith": "Intercambiar con",
+			"choosePerson": "Elige a alguien",
+			"notAvailable_one": "No disponible: {{names}}",
+			"notAvailable_other": "No disponibles ({{count}}): {{names}}",
+			"beforeAfter": "Antes → después",
+			"checks": "Comprobaciones",
+			"checking": "Comprobando…",
+			"noProblems": "No se encontraron problemas.",
+			"rulesNotChecked": "Las reglas de programación no se vuelven a comprobar en los cambios hechos a mano.",
+			"previewFailed": "No pudimos comprobar este cambio.",
+			"tryAgain": "Reintentar",
+			"tick": "He leído estas comprobaciones",
+			"remark": "Observación (opcional)",
+			"remarkRequired": "Observación (obligatoria)",
+			"remarkHint": "La ven quienes programan en este departamento.",
+			"apply": "Aplicar cambio",
+			"applyAnyway": "Aplicar de todos modos",
+			"cancel": "Cancelar",
+			"applied": "Cuadrante cambiado.",
+			"undo": "Deshacer",
+			"undone": "Cambio deshecho.",
+			"lastChange": "Último cambio: {{summary}}",
+			"summaryOne": "{{name}}, {{date}}",
+			"summarySwap": "{{first}} ⇄ {{second}}, {{date}}",
+			"findingsOutOfDate": "Estas notas son de la generación. No reflejan los cambios hechos a mano después.",
+			"edited": "{{label}}, cambiado",
+			"editedCell": "Cambiado",
+			"previewing_one": "Vista previa: cambia {{count}} día",
+			"previewing_other": "Vista previa: cambian {{count}} días",
+			"severity": {
+				"REFUSED": "No se puede",
+				"NEEDS_REMARK": "Requiere observación",
+				"NEEDS_ACKNOWLEDGEMENT": "Revisar",
+				"INFO": "Nota"
+			},
+			"check": {
+				"CELL_ON_LEAVE": "{{name}} está de permiso el {{day}}.",
+				"NOT_AVAILABLE": "{{name}} no puede programarse el {{day}}.",
+				"LEAVE_APPROVED": "{{name}} tiene un permiso aprobado el {{day}}.",
+				"SHIFT_NOT_ON_DAY": "{{shift}} no se trabaja el {{day}}.",
+				"ROLE_NOT_HELD": "{{name}} no puede hacer {{shift}}: es para otros puestos.",
+				"MEMBER_GONE": "{{name}} ya no es miembro.",
+				"OUTSIDE_AVAILABILITY": "{{shift}} queda fuera de la disponibilidad de {{name}} el {{day}}.",
+				"ROSTERED_ELSEWHERE": "{{name}} también trabaja el {{day}} en otro cuadrante.",
+				"NOT_SCHEDULABLE_NOW": "{{name}} ya no puede programarse en este departamento.",
+				"WORKS_ON_DAY_OFF": "El {{day}} era el día libre de {{name}}.",
+				"COVERAGE_CHANGED": "{{shift}}, {{day}}: {{before}} → {{after}} personas.",
+				"UNKNOWN": "Otra comprobación se aplica a este cambio."
+			},
+			"error": {
+				"revision": "Alguien cambió este cuadrante después de que lo abrieras. Revisa tu cambio de nuevo.",
+				"reload": "Volver a cargar",
+				"checksChanged": "Algo cambió desde la comprobación (permisos, disponibilidad o el equipo). Revisa las comprobaciones.",
+				"notEditable": "Este cuadrante no se puede cambiar ahora.",
+				"refused": "Este cambio no se puede aplicar. Revisa las comprobaciones.",
+				"undoBlocked": "Este cambio ya no se puede deshacer.",
+				"forbidden": "Ya no tienes permiso para cambiar este cuadrante.",
+				"failed": "No pudimos aplicar el cambio. Inténtalo de nuevo."
+			},
+			"undoTitle": "¿Deshacer este cambio?",
+			"undoDescription": "Deshacer es un cambio de vuelta: se comprueba igual, y los permisos o la disponibilidad pueden haber cambiado desde entonces.",
+			"undoChange": "Deshacer cambio",
+			"undoAnyway": "Deshacer de todos modos"
 		}
 	},
 	"workspace": {

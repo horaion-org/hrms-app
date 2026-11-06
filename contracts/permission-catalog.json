@@ -647,6 +647,21 @@
       "resourceName": "Schedule"
     },
     {
+      "action": "edit_shift",
+      "actionName": "Edit Shifts",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
+      "key": "schedule:edit_shift",
+      "prerequisites": [
+        "schedule:read"
+      ],
+      "resource": "schedule",
+      "resourceName": "Schedule"
+    },
+    {
       "action": "read",
       "actionName": "Read",
       "assignableScopes": [

@@ -1769,14 +1769,15 @@
 			},
 			"schedule": {
 				"name": "Schedules",
-				"description": "Each department’s schedules: their week, settings and chosen shifts, generating them, publishing or rejecting their rosters, and deleting them.",
+				"description": "Each department’s schedules: their week, settings and chosen shifts, generating them, changing who works which shift on a generated roster, publishing or rejecting their rosters, and deleting them.",
 				"actions": {
 					"read": "View",
 					"create": "Create",
 					"update": "Edit",
 					"generate": "Generate",
 					"delete": "Delete",
-					"publish": "Publish"
+					"publish": "Publish",
+					"edit_shift": "Edit shifts"
 				}
 			},
 			"shift": {
@@ -1881,7 +1882,9 @@
 				"memberTermsChanged": "{{name}}’s employment terms changed",
 				"memberTermsCorrected": "{{name}}’s employment terms corrected",
 				"memberTermsCancelled": "{{name}}’s employment terms change cancelled",
-				"employmentTermsAssigned": "Employment terms given to several people: {{name}}"
+				"employmentTermsAssigned": "Employment terms given to several people: {{name}}",
+				"rosterChanged": "Roster changed: {{name}}",
+				"rosterChangeUndone": "Roster change undone: {{name}}"
 			},
 			"unnamed": {
 				"branchCreated": "Branch created",
@@ -1934,7 +1937,9 @@
 				"memberTermsChanged": "Employment terms changed for someone",
 				"memberTermsCorrected": "Employment terms corrected for someone",
 				"memberTermsCancelled": "Employment terms change cancelled for someone",
-				"employmentTermsAssigned": "Employment terms given to several people"
+				"employmentTermsAssigned": "Employment terms given to several people",
+				"rosterChanged": "Roster changed",
+				"rosterChangeUndone": "Roster change undone"
 			},
 			"fallback": {
 				"named": "{{entity}} {{verb}}: {{name}}",
@@ -2854,49 +2859,6 @@
 			"off": "OFF",
 			"leave": "LEAVE",
 			"shiftLabel": "{{name}}, {{day}} {{time}}",
-			"shiftAction": {
-				"apiChoices": "Choose an active branch for the location, then a department and one of its existing job titles for the role.",
-				"department": "Department",
-				"optionsError": "Locations could not be loaded. Please try again.",
-				"optionsLoading": "Loading locations…",
-				"noLocations": "No active locations are available with your shift permissions.",
-				"roles": {
-					"pending": "Loading roles…",
-					"error": "Roles could not be loaded. Please try again.",
-					"hidden": "You do not have permission to view roles in this department.",
-					"empty": "This department has no active job titles."
-				},
-				"edit": "Edit shift",
-				"reassign": "Reassign shift",
-				"branchDepartment": "Branch and department",
-				"reassignUnitHelp": "Choose an active member of the shift’s branch and department. For a sample shift, choose its unit first.",
-				"staff": {
-					"pending": "Loading staff…",
-					"hidden": "You do not have access to staff in this branch and department.",
-					"error": "Staff could not be loaded. Please try again.",
-					"empty": "No other active staff belong to this branch and department."
-				},
-				"duplicate": "Duplicate shift",
-				"preview": "Design preview. Changes apply to this demo only and reset when you reload.",
-				"staffId": "Assign to",
-				"date": "Date",
-				"start": "Start time",
-				"end": "End time",
-				"breakMinutes": "Break (minutes)",
-				"role": "Role",
-				"location": "Location",
-				"notes": "Notes",
-				"choose": "Please select",
-				"cancel": "Cancel",
-				"required": "Choose a value.",
-				"invalid": "Enter a valid value.",
-				"occupied": "This person already has a shift on that date. Choose another person or date.",
-				"confirm": {
-					"edit": "Save changes",
-					"reassign": "Reassign",
-					"duplicate": "Duplicate"
-				}
-			},
 			"shiftDetails": {
 				"title": "Shift Details",
 				"close": "Close shift details",
@@ -2906,7 +2868,8 @@
 				"role": "Role",
 				"shift": "Shift",
 				"group": "Group"
-			}
+			},
+			"dayLabel": "{{name}}, {{day}}: {{kind}}"
 		},
 		"myRoster": {
 			"title": "My roster · {{department}} · {{period}}",
@@ -3033,7 +2996,8 @@
 			"inProgress": "This schedule is being generated. Try again once the run finishes.",
 			"published": "This roster is published, so it can’t be regenerated. It can still be deleted.",
 			"forbidden": "You no longer have permission to regenerate this schedule.",
-			"failed": "We couldn’t regenerate the roster. Try again."
+			"failed": "We couldn’t regenerate the roster. Try again.",
+			"editsLost": "Changes made by hand will be lost: a new run replaces the roster and every change made to it."
 		},
 		"export": {
 			"menu": "Export roster",
@@ -3122,6 +3086,88 @@
 				"published": "This schedule is published, so the hours before this week can no longer change here.",
 				"daysSavedHoursNot": "Last week’s days were saved, but the hours this month weren’t. {{reason}} Your hours are still here: fix them and save again."
 			}
+		},
+		"rosterEdit": {
+			"title": "{{name}} · {{date}}",
+			"close": "Close",
+			"now": "Now",
+			"dayOff": "Day off",
+			"onLeave": "On leave",
+			"leaveReadOnly": "Leave can’t be changed on the roster. Change it in Leave.",
+			"changedBy": "Changed {{time}} by {{name}}",
+			"changedAt": "Changed {{time}}",
+			"was": "Was: {{cell}}",
+			"changeTo": "Change to",
+			"anotherShift": "Another shift",
+			"aShift": "A shift",
+			"makeDayOff": "Day off",
+			"swap": "Swap with someone",
+			"shift": "Shift",
+			"chooseShift": "Choose a shift",
+			"noShift": "No other shift on {{weekday}} is open to {{name}}.",
+			"swapWith": "Swap with",
+			"choosePerson": "Choose someone",
+			"notAvailable_one": "Not available: {{names}}",
+			"notAvailable_other": "Not available ({{count}}): {{names}}",
+			"beforeAfter": "Before → after",
+			"checks": "Checks",
+			"checking": "Checking…",
+			"noProblems": "No problems found.",
+			"rulesNotChecked": "Scheduling rules aren’t checked again for changes made by hand.",
+			"previewFailed": "We couldn’t check this change.",
+			"tryAgain": "Try again",
+			"tick": "I’ve read these checks",
+			"remark": "Remark (optional)",
+			"remarkRequired": "Remark (required)",
+			"remarkHint": "Seen by schedulers of this department.",
+			"apply": "Apply change",
+			"applyAnyway": "Apply anyway",
+			"cancel": "Cancel",
+			"applied": "Roster changed.",
+			"undo": "Undo",
+			"undone": "Change undone.",
+			"lastChange": "Last change: {{summary}}",
+			"summaryOne": "{{name}}, {{date}}",
+			"summarySwap": "{{first}} ⇄ {{second}}, {{date}}",
+			"findingsOutOfDate": "These notes are from generation. Changes made by hand since aren’t reflected.",
+			"edited": "{{label}}, changed",
+			"editedCell": "Changed",
+			"previewing_one": "Previewing: {{count}} day changes",
+			"previewing_other": "Previewing: {{count}} days change",
+			"severity": {
+				"REFUSED": "Can’t",
+				"NEEDS_REMARK": "Needs a remark",
+				"NEEDS_ACKNOWLEDGEMENT": "Check",
+				"INFO": "Note"
+			},
+			"check": {
+				"CELL_ON_LEAVE": "{{name}} is on leave on {{day}}.",
+				"NOT_AVAILABLE": "{{name}} can’t be rostered on {{day}}.",
+				"LEAVE_APPROVED": "{{name}} has approved leave on {{day}}.",
+				"SHIFT_NOT_ON_DAY": "{{shift}} doesn’t run on {{day}}.",
+				"ROLE_NOT_HELD": "{{name}} can’t work {{shift}}: it’s for other job titles.",
+				"MEMBER_GONE": "{{name}} is no longer a member.",
+				"OUTSIDE_AVAILABILITY": "{{shift}} is outside {{name}}’s availability on {{day}}.",
+				"ROSTERED_ELSEWHERE": "{{name}} also works on {{day}} in another roster.",
+				"NOT_SCHEDULABLE_NOW": "{{name}} can no longer be rostered in this department.",
+				"WORKS_ON_DAY_OFF": "{{day}} was {{name}}’s day off.",
+				"COVERAGE_CHANGED": "{{shift}}, {{day}}: {{before}} → {{after}} people.",
+				"UNKNOWN": "Another check applies to this change."
+			},
+			"error": {
+				"revision": "Someone changed this roster since you opened it. Check your change again.",
+				"reload": "Reload roster",
+				"checksChanged": "Something changed since the check (leave, availability or the team). Review the checks again.",
+				"notEditable": "This roster can’t be changed now.",
+				"refused": "This change can’t be applied. Review the checks.",
+				"undoBlocked": "This change can’t be undone any more.",
+				"forbidden": "You no longer have permission to change this roster.",
+				"failed": "We couldn’t apply the change. Try again."
+			},
+			"undoTitle": "Undo this change?",
+			"undoDescription": "An undo is a change back: it is checked the same way, and leave or availability may have changed since.",
+			"undoChange": "Undo change",
+			"undoAnyway": "Undo anyway"
 		}
 	},
 	"colourSwatchPicker": {

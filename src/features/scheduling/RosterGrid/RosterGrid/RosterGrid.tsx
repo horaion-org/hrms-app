@@ -19,6 +19,7 @@ import {
 	type RosterRow,
 	type RosterShiftCell,
 } from "@/features/scheduling/roster/roster";
+import { rosterCellKey } from "@/features/scheduling/rosterChanges/rosterEdit";
 import { rosterLooks } from "@/features/scheduling/rosterLooks";
 
 /** The engine's findings to mark on the week, and the names they are shown with. */
@@ -46,10 +47,25 @@ export type RosterGridProps = {
 	findings?: RosterGridFindings;
 	/** A short note under a member's name, by row key: where they started the week. */
 	rowNotes?: ReadonlyMap<string, string>;
+	/**
+	 * A day off or leave was chosen; without it those days aren't buttons.
+	 * Only someone who may change the roster gets it.
+	 */
+	onDaySelect?: (row: RosterRow, day: string) => void;
+	/** The chosen day off or leave, as `rosterCellKey` names it. */
+	selectedDayKey?: string;
+	/** Days changed by hand since generation, as `rosterCellKey` names them: marked with a dot. */
+	editedDays?: ReadonlySet<string>;
+	/** Days a change being previewed would touch: outlined, dashed. */
+	previewDays?: ReadonlySet<string>;
 	className?: string;
 };
 
 const NO_FINDINGS: ReadonlyArray<Finding> = [];
+
+/** A member's day as `rosterCellKey` names it; none once the member no longer resolves. */
+const dayKey = (row: RosterRow, date: string): string | undefined =>
+	row.membershipId === null ? undefined : rosterCellKey(row.membershipId, date);
 
 /**
  * Who works when in one week: a row per member and a column per day, each
@@ -62,6 +78,10 @@ export const RosterGrid = ({
 	onAssignmentSelect,
 	findings,
 	rowNotes,
+	onDaySelect,
+	selectedDayKey,
+	editedDays,
+	previewDays,
 	className,
 }: RosterGridProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
@@ -106,27 +126,59 @@ export const RosterGrid = ({
 	): ReactNode => {
 		const cell = row.days[date];
 		if (cell === undefined) return null;
-		if (cell.kind !== "shift")
-			return (
-				<span
-					className={joinClassNames(
-						"flex h-14 items-center justify-center rounded border px-1 text-center text-xs font-medium",
-						rosterLooks[cell.kind]
-					)}
-				>
-					{(cell.kind === "leave" && cell.leaveTypeName) ||
-						t(`scheduling.detail.${cell.kind}`)}
-				</span>
+		const key = dayKey(row, date);
+		const edited = key !== undefined && editedDays?.has(key) === true;
+		if (cell.kind !== "shift") {
+			const text =
+				(cell.kind === "leave" && cell.leaveTypeName) ||
+				t(`scheduling.detail.${cell.kind}`);
+			const looks = joinClassNames(
+				"flex h-14 w-full items-center justify-center rounded border px-1 text-center text-xs font-medium",
+				rosterLooks[cell.kind]
 			);
+			if (!onDaySelect || row.membershipId === null)
+				return <span className={looks}>{text}</span>;
+			// Read in words, not the tile's capitals: "Aisha Rahman, Sat: Day off".
+			const label = t("scheduling.detail.dayLabel", {
+				name,
+				day: weekday.format(dayjs(date).toDate()),
+				kind:
+					cell.kind === "leave"
+						? (cell.leaveTypeName ?? t("scheduling.rosterEdit.onLeave"))
+						: t("scheduling.rosterEdit.dayOff"),
+			});
+			return (
+				<button
+					aria-pressed={key === selectedDayKey}
+					type="button"
+					aria-label={
+						edited ? t("scheduling.rosterEdit.edited", { label }) : label
+					}
+					className={joinClassNames(
+						looks,
+						"cursor-pointer hover:brightness-98 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-blue-500",
+						key === selectedDayKey && "ring-2 ring-success-600 ring-inset"
+					)}
+					onClick={() => {
+						onDaySelect(row, date);
+					}}
+				>
+					{text}
+				</button>
+			);
+		}
 		const time = formatTimeRange(
 			{ startTime: cell.start, endTime: cell.end },
 			t
 		);
-		const label = t("scheduling.detail.shiftLabel", {
+		const shiftLabel = t("scheduling.detail.shiftLabel", {
 			name,
 			day: weekday.format(dayjs(date).toDate()),
 			time,
 		});
+		const label = edited
+			? t("scheduling.rosterEdit.edited", { label: shiftLabel })
+			: shiftLabel;
 		const notes = cellFindings(row, date).length;
 		return (
 			<RosterShift
@@ -231,8 +283,24 @@ export const RosterGrid = ({
 								</th>
 								{days.map((date) => {
 									const marked = cellFindings(row, date);
+									const key = dayKey(row, date);
 									return (
-										<td key={date} className="relative p-3 align-middle">
+										<td
+											key={date}
+											className={joinClassNames(
+												"relative p-3 align-middle",
+												key !== undefined &&
+													previewDays?.has(key) &&
+													"outline-2 -outline-offset-4 outline-dashed outline-ink-blue-500"
+											)}
+										>
+											{key !== undefined && editedDays?.has(key) && (
+												<span
+													aria-hidden="true"
+													className="absolute top-1 left-1 size-2 rounded-full bg-ink-blue-500"
+													title={t("scheduling.rosterEdit.editedCell")}
+												/>
+											)}
 											{dayContent(row, name, date)}
 											{marker(
 												marked,
