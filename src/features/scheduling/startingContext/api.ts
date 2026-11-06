@@ -15,8 +15,10 @@ import { retry } from "@/features/workspace/retry";
  * was doing in the 7 days before the period. Days a roster (the published
  * one, else the newest generated) or approved leave covers come filled and
  * locked; the rest may be entered on a draft as a shift or a day off, and an
- * empty day is not known, never read as worked or off. The context is frozen
- * when generation is requested and drives rest between shifts and days off.
+ * empty day is not known, never read as worked or off. Generation is refused
+ * while a day is missing; a day before a member started isn't asked for. The
+ * context is frozen when generation is requested and drives rest between
+ * shifts and days off.
  */
 
 // A kind or source a newer API adds reads as UNKNOWN instead of failing the whole answer.
@@ -42,6 +44,11 @@ const startingCellSchema = z.object({
 	shiftName: z.string().nullable(),
 	startTime: z.string().nullable(),
 	endTime: z.string().nullable(),
+	/**
+	 * Generation needs this day first. An empty cell that isn't missing falls
+	 * before the member started, so nobody is asked for it.
+	 */
+	missing: z.boolean().default(false),
 });
 
 /** One member's day before the period. */

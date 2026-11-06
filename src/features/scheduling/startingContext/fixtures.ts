@@ -14,8 +14,8 @@ export const WEEK_BEFORE = [
 	"2026-11-08",
 ];
 
-/** A day nobody knows anything about. */
-export const unknownCell = (date: string): StartingCell => ({
+/** A day before the member started: empty, and nobody asks for it. */
+export const notAskedCell = (date: string): StartingCell => ({
 	date,
 	kind: null,
 	source: null,
@@ -24,11 +24,18 @@ export const unknownCell = (date: string): StartingCell => ({
 	shiftName: null,
 	startTime: null,
 	endTime: null,
+	missing: false,
+});
+
+/** A day nobody knows anything about, which generation needs first. */
+export const unknownCell = (date: string): StartingCell => ({
+	...notAskedCell(date),
+	missing: true,
 });
 
 /** A day a published roster covers: locked. */
 export const rosterOffCell = (date: string): StartingCell => ({
-	...unknownCell(date),
+	...notAskedCell(date),
 	kind: "OFF",
 	source: "PUBLISHED",
 	locked: true,
@@ -36,7 +43,7 @@ export const rosterOffCell = (date: string): StartingCell => ({
 
 /** A day approved leave covers: locked. */
 export const leaveCell = (date: string): StartingCell => ({
-	...unknownCell(date),
+	...notAskedCell(date),
 	kind: "LEAVE",
 	source: "LEAVE",
 	locked: true,
@@ -44,13 +51,20 @@ export const leaveCell = (date: string): StartingCell => ({
 
 /** A Night shift a scheduler entered. */
 export const enteredNightCell = (date: string): StartingCell => ({
-	...unknownCell(date),
+	...notAskedCell(date),
 	kind: "WORKED",
 	source: "ENTERED",
 	shiftId: "s-night",
 	shiftName: "Night",
 	startTime: "22:00",
 	endTime: "06:00",
+});
+
+/** A day off a scheduler entered. */
+export const enteredOffCell = (date: string): StartingCell => ({
+	...notAskedCell(date),
+	kind: "OFF",
+	source: "ENTERED",
 });
 
 /** A first roster: no previous roster, Tan with an entered Sunday night and leave on Saturday, Siti unknown. */
@@ -107,3 +121,29 @@ export const carriedWeek = (): StartingDays => ({
 		},
 	],
 });
+
+/** A first roster with every day answered: Tan's as `firstWeek`, Siti's all entered off. */
+export const answeredWeek = (): StartingDays => {
+	const week = firstWeek();
+	return {
+		...week,
+		members: week.members.map((member) => ({
+			...member,
+			cells: member.cells.map((cell) =>
+				cell.missing ? enteredOffCell(cell.date) : cell
+			),
+		})),
+	};
+};
+
+/** A first roster where nobody is asked for anything: everyone started after those days. */
+export const nothingAskedWeek = (): StartingDays => {
+	const week = firstWeek();
+	return {
+		...week,
+		members: week.members.map((member) => ({
+			...member,
+			cells: WEEK_BEFORE.map(notAskedCell),
+		})),
+	};
+};

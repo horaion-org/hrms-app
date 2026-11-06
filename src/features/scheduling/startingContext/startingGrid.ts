@@ -29,14 +29,18 @@ const valueOf = (cell: StartingCell): CellValue => {
 	return cell.shiftId === null ? "" : shiftCellValue(cell.shiftId);
 };
 
-/** The grid's entered values as the API answered them. */
+/** An empty day nobody asks for: it falls before the member started. */
+export const isNotAsked = (cell: StartingCell): boolean =>
+	cell.kind === null && !cell.locked && !cell.missing;
+
+/** The grid's entered values as the API answered them; a day not asked for is not held. */
 export const initialEntries = (week: StartingDays): Entries =>
 	Object.fromEntries(
 		week.members.map((member) => [
 			member.memberProfileId,
 			Object.fromEntries(
 				member.cells
-					.filter((cell) => !cell.locked)
+					.filter((cell) => !cell.locked && !isNotAsked(cell))
 					.map((cell) => [cell.date, valueOf(cell)])
 			),
 		])
@@ -64,6 +68,61 @@ export const fillEmpty = (
 			member,
 			date in days && days[date] === "" ? { ...days, [date]: value } : days,
 		])
+	);
+
+/** The days and people the API says generation still needs. */
+export const missingDayCounts = (
+	week: StartingDays
+): { days: number; people: number } => {
+	const perMember = week.members.map(
+		(member) => member.cells.filter((cell) => cell.missing).length
+	);
+	return {
+		days: perMember.reduce((total, days) => total + days, 0),
+		people: perMember.filter((days) => days > 0).length,
+	};
+};
+
+/** Whether a missing day is still blank in the grid, where it may already be chosen. */
+export const isUnanswered = (
+	cell: StartingCell,
+	memberProfileId: string,
+	entries: Entries
+): boolean => cell.missing && !entries[memberProfileId]?.[cell.date];
+
+/** How many of one member's missing days are still blank in the grid. */
+const unansweredCount = (
+	member: StartingDays["members"][number],
+	entries: Entries
+): number =>
+	member.cells.filter((cell) =>
+		isUnanswered(cell, member.memberProfileId, entries)
+	).length;
+
+/** How many missing days are still blank, for each member with any. */
+export const unansweredByMember = (
+	week: StartingDays,
+	entries: Entries
+): Map<string, number> =>
+	new Map(
+		week.members.flatMap((member) => {
+			const count = unansweredCount(member, entries);
+			return count > 0 ? [[member.memberProfileId, count] as const] : [];
+		})
+	);
+
+/** Marks every blank missing day as off; a day already chosen is never overwritten. */
+export const markMissingOff = (week: StartingDays, entries: Entries): Entries =>
+	week.members.reduce(
+		(marked, member) =>
+			member.cells
+				.filter((cell) => isUnanswered(cell, member.memberProfileId, marked))
+				.reduce(
+					(current, cell) =>
+						withCell(current, member.memberProfileId, cell.date, "OFF"),
+					marked
+				),
+		entries
 	);
 
 /** The save body: one day per entered cell; an empty cell is left out (not known). */
