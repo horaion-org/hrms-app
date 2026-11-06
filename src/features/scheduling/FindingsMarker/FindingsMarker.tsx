@@ -4,12 +4,7 @@ import { useTranslation } from "react-i18next";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent, Heroicon } from "@/common/types";
 import { Button } from "@/components/ui/Button";
-import {
-	AlertFilledIcon,
-	CloseIcon,
-	InfoIcon,
-	WarningIcon,
-} from "@/components/ui/Icon";
+import { AlertIcon, CloseIcon, InfoIcon } from "@/components/ui/Icon";
 import { FindingList } from "@/features/scheduling/FindingList";
 import {
 	findingFamily,
@@ -32,16 +27,22 @@ export type FindingsMarkerProps = {
 
 const key = "scheduling.findings";
 
+/**
+ * The outline icons of the app's set, in the warning tone: a triangle for
+ * anything to look at (roster notes and setup warnings alike, never red, as
+ * red is kept for errors and refusals), the info circle for what is only
+ * information. Both tones keep 3:1 against the header and every shift tint.
+ */
 const TONE_ICONS: Record<FindingTone, { icon: Heroicon; colour: string }> = {
-	error: { icon: AlertFilledIcon, colour: "text-error-600" },
-	warning: { icon: WarningIcon, colour: "text-warning-700" },
-	info: { icon: InfoIcon, colour: "text-ink-blue-600" },
+	error: { icon: AlertIcon, colour: "text-warning-900" },
+	warning: { icon: AlertIcon, colour: "text-warning-900" },
+	info: { icon: InfoIcon, colour: "text-ink-blue-700" },
 };
 
 /**
- * A small mark on a roster cell, row or day, in the tone of its most serious
- * finding and with a count from two up. It opens a popover listing just
- * those findings, roster notes first, then setup issues.
+ * A small mark on a roster cell, row or day: an outline icon in the tone of
+ * its most serious finding, then how many there are. It opens a popover
+ * listing just those findings, roster notes first, then setup issues.
  */
 export const FindingsMarker = ({
 	findings,
@@ -69,17 +70,15 @@ export const FindingsMarker = ({
 		<Popover className={joinClassNames("inline-flex", className)}>
 			<PopoverButton
 				aria-label={label}
-				className="inline-flex h-6 min-w-6 cursor-pointer items-center justify-center gap-0.5 rounded bg-white/80 px-0.5 hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ink-blue-500"
+				className="inline-flex h-6 min-w-6 cursor-pointer items-center justify-center gap-0.5 rounded px-0.5 hover:bg-neutral-100 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ink-blue-500"
 			>
 				<Icon aria-hidden="true" className={joinClassNames("size-4", colour)} />
-				{findings.length > 1 && (
-					<span
-						aria-hidden="true"
-						className="text-[0.625rem] font-semibold text-neutral-900"
-					>
-						{findings.length > 99 ? "99+" : findings.length}
-					</span>
-				)}
+				<span
+					aria-hidden="true"
+					className="text-xs font-semibold text-neutral-800 tabular-nums"
+				>
+					{findings.length > 99 ? "99+" : findings.length}
+				</span>
 			</PopoverButton>
 			<PopoverPanel
 				focus

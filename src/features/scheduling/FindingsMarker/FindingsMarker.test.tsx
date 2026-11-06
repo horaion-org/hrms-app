@@ -79,7 +79,6 @@ describe("FindingsMarker", () => {
 		);
 
 		const marker = screen.getByRole("button", { name: "1 note for Ben Ong" });
-		expect(marker).not.toHaveTextContent("1");
 		await user.click(marker);
 		await user.click(
 			await screen.findByRole("button", { name: "Show in findings" })
@@ -87,6 +86,42 @@ describe("FindingsMarker", () => {
 
 		expect(onShowAll).toHaveBeenCalledOnce();
 		expect(screen.queryByRole("dialog")).toBeNull();
+	});
+
+	it("given_aRosterNote_when_rendered_then_marksItWithTheOutlineTriangleInTheWarningToneAndItsCount", () => {
+		render(
+			<FindingsMarker
+				findings={[restNote]}
+				label="1 note for Ben Ong"
+				names={names}
+				onShowAll={vi.fn()}
+			/>
+		);
+
+		const marker = screen.getByRole("button", { name: "1 note for Ben Ong" });
+		expect(marker).toHaveTextContent("1");
+		expect(marker).not.toHaveClass("bg-white/80");
+		expect(marker.querySelector("svg")).toHaveClass("text-warning-900");
+	});
+
+	it("given_onlyInformation_when_rendered_then_marksItWithTheInfoCircleInInkBlue", () => {
+		const information: Finding = {
+			kind: "diagnostic",
+			diagnostic: findings.diagnostics.find(
+				({ severity }) => severity === "info"
+			)!,
+		};
+		render(
+			<FindingsMarker
+				findings={[information]}
+				label="1 note for the setup"
+				names={names}
+				onShowAll={vi.fn()}
+			/>
+		);
+
+		const marker = screen.getByRole("button", { name: "1 note for the setup" });
+		expect(marker.querySelector("svg")).toHaveClass("text-ink-blue-700");
 	});
 
 	it("given_noFindings_when_rendered_then_showsNothing", () => {

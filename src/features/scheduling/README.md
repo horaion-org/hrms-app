@@ -191,8 +191,9 @@ constraint dialogs.
 - `MemberNotes` — a failed run's errors grouped by member, each message quoted.
 - `FindingsSummary` — the warning callout: how many roster notes and setup issues, and the panel's toggle.
 - `FindingsPanel` — setup issues by code (fix in the setup), then roster notes by day and by member.
-- `FindingsMarker` — a 24 px mark on a cell, row or day header in its most serious tone, with a count from two; its
-  popover lists that place's findings and can open the panel.
+- `FindingsMarker` — a 24 px mark on a cell, row or day header: the outline `AlertIcon` in `warning-900` for
+  anything to look at (never red; red is for errors and refusals), `InfoIcon` in `ink-blue-700` for information
+  only, then the count; its popover lists that place's findings and can open the panel.
 - `FindingList` — one list of findings, shared by the panel and the popover.
 - `GeneratedRoster` — the roster's figures, findings summary and panel, week bar, grid and chosen day's panel; owns
   only the shown week, the chosen day and whether the findings panel is open.
