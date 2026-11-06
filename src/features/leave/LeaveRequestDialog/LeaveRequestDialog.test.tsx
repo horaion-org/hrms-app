@@ -1,4 +1,10 @@
-import { render, screen } from "@testing-library/react";
+import type { ReactElement } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import {
+	type RenderResult,
+	render as renderPlain,
+	screen,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { expect, it, vi } from "vitest";
 import { I18nextProvider } from "react-i18next";
@@ -8,6 +14,16 @@ import {
 	LeaveRequestDialog,
 	type LeaveRequestDialogProps,
 } from "@/features/leave/LeaveRequestDialog";
+
+/** The dialog reads rostered days through the query cache. */
+const render = (ui: ReactElement): RenderResult => {
+	const client = new QueryClient();
+	return renderPlain(ui, {
+		wrapper: ({ children }) => (
+			<QueryClientProvider client={client}>{children}</QueryClientProvider>
+		),
+	});
+};
 
 const pending = LEAVE_FIXTURES[1]!;
 const employees = {
@@ -82,13 +98,17 @@ it("confirms an approval with an optional trimmed comment and returns to review 
 	expect(screen.getByRole("button", { name: "Approve" })).toBeInTheDocument();
 	await user.click(screen.getByRole("button", { name: "Approve" }));
 	await user.click(screen.getByRole("button", { name: "Confirm approval" }));
-	expect(onApprove).toHaveBeenLastCalledWith(pending, "");
+	expect(onApprove).toHaveBeenLastCalledWith(pending, "", false);
 	await user.type(
 		screen.getByRole("textbox", { name: "Comment (optional)" }),
 		"  Enjoy the break. "
 	);
 	await user.click(screen.getByRole("button", { name: "Confirm approval" }));
-	expect(onApprove).toHaveBeenLastCalledWith(pending, "Enjoy the break.");
+	expect(onApprove).toHaveBeenLastCalledWith(
+		pending,
+		"Enjoy the break.",
+		false
+	);
 });
 
 it("opens at the approval step and shows a refused comment on its field", () => {

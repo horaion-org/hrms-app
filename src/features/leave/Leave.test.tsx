@@ -147,6 +147,7 @@ const routes = (
 		status: 200,
 		body: envelope(LEAVE_TYPE_FIXTURES),
 	},
+	[`GET ${AISHA}/rostered-days`]: { status: 200, body: [] },
 });
 
 const searchesOf = (calls: Array<Call>, path: string): Array<string> =>
@@ -733,6 +734,109 @@ describe("Leave", () => {
 		expect(
 			screen.getByRole("button", { name: "Approve request for José" })
 		).toBeDisabled();
+	});
+
+	it("given_rosteredDays_when_approving_then_holdsApproveUntilTheReviewerConfirms", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...routes(),
+			[`GET ${AISHA}/rostered-days`]: {
+				status: 200,
+				body: [{ day: "2026-07-06", minutes: 480 }],
+			},
+			[`POST ${AISHA}/leave-aisha/approval`]: {
+				status: 200,
+				body: envelope(LEAVE_FIXTURES[0]),
+			},
+		});
+		await open("/leave?view=requests");
+		await screen.findByText("Aisha Rahman");
+		await user.click(
+			screen.getByRole("button", { name: "Approve request for Aisha Rahman" })
+		);
+		const dialog = await screen.findByRole("dialog");
+		const confirm = within(dialog).getByRole("button", {
+			name: "Confirm approval",
+		});
+		await within(dialog).findByText(/is rostered on/);
+		expect(confirm).toBeDisabled();
+
+		await user.click(within(dialog).getByRole("checkbox"));
+		await user.click(confirm);
+
+		await waitFor(() => {
+			expect(
+				calls.find((call) => call.path.endsWith("/approval"))?.body
+			).toEqual({ takeOffRosteredDays: true });
+		});
+	});
+
+	it("given_aClashTheScreenDidNotKnowOf_when_approvalIsRefused_then_rereadsTheDaysAndAsksForTheConfirmation", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...routes(),
+			[`GET ${AISHA}/rostered-days`]: [
+				{ status: 200, body: [] },
+				{ status: 200, body: [{ day: "2026-07-06", minutes: 480 }] },
+			],
+			[`POST ${AISHA}/leave-aisha/approval`]: [
+				problemReply(409, "LEAVE_CLASHES_WITH_ROSTER"),
+				{ status: 200, body: envelope(LEAVE_FIXTURES[0]) },
+			],
+		});
+		await open("/leave?view=requests");
+		await screen.findByText("Aisha Rahman");
+		await user.click(
+			screen.getByRole("button", { name: "Approve request for Aisha Rahman" })
+		);
+		const dialog = await screen.findByRole("dialog");
+		const confirm = within(dialog).getByRole("button", {
+			name: "Confirm approval",
+		});
+		await waitFor(() => {
+			expect(confirm).toBeEnabled();
+		});
+
+		await user.click(confirm);
+
+		const takeOff = await within(dialog).findByRole("checkbox");
+		expect(confirm).toBeDisabled();
+		await user.click(takeOff);
+		await user.click(confirm);
+		await waitFor(() => {
+			expect(
+				calls.filter((call) => call.path.endsWith("/approval")).pop()?.body
+			).toEqual({ takeOffRosteredDays: true });
+		});
+	});
+
+	it("given_theRosterCouldNotBeRead_when_approving_then_holdsApproveUntilARetryReadsIt", async () => {
+		const user = userEvent.setup();
+		stubApi({
+			...routes(),
+			[`GET ${AISHA}/rostered-days`]: [
+				problemReply(404, "SOMETHING_ELSE"),
+				{ status: 200, body: [{ day: "2026-07-06", minutes: 480 }] },
+			],
+		});
+		await open("/leave?view=requests");
+		await screen.findByText("Aisha Rahman");
+		await user.click(
+			screen.getByRole("button", { name: "Approve request for Aisha Rahman" })
+		);
+		const dialog = await screen.findByRole("dialog");
+		const confirm = within(dialog).getByRole("button", {
+			name: "Confirm approval",
+		});
+
+		await within(dialog).findByText(/couldn’t check the roster/);
+		expect(confirm).toBeDisabled();
+
+		await user.click(within(dialog).getByRole("button", { name: "Try again" }));
+
+		await within(dialog).findByText(/is rostered on/);
+		expect(within(dialog).getByRole("checkbox")).toBeInTheDocument();
+		expect(confirm).toBeDisabled();
 	});
 
 	it("explains the server's own-review refusal in its own words, without reloading the workspace", async () => {

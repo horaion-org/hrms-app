@@ -131,9 +131,13 @@ const Dashboard = (): FunctionComponent => {
 	const refused = (error: Error): void => {
 		setRefusal(decisionRefusal(error, t));
 	};
-	const approve = (request: LeaveRequest, comment: string): void => {
+	const approve = (
+		request: LeaveRequest,
+		comment: string,
+		takeOffRosteredDays: boolean
+	): void => {
 		actions.approve.mutate(
-			{ request, comment },
+			{ request, comment, takeOffRosteredDays },
 			{
 				onSuccess: () => {
 					decided(t("leave.approved", { name: request.displayName }));
@@ -406,6 +410,7 @@ const Dashboard = (): FunctionComponent => {
 					key={`${decision.request.leaveRequestId}-${decision.mode}`}
 					busy={busy}
 					canReview={canReview(decision.request)}
+					lifecycle={{ companyId, own: false, onDone: decided }}
 					mode={decision.mode}
 					refusal={refusal}
 					request={decision.request}

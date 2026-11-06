@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -13,12 +14,15 @@ import { SearchIcon } from "@/components/ui/Icon";
 import { Modal } from "@/components/ui/Modal";
 import {
 	LEAVE_NOTES_MAX_LENGTH,
+	LEAVE_REMARK_MAX_LENGTH,
+	rosteredDaysQuery,
 	type CompanyLeaveType,
 } from "@/features/leave/api";
 import type { ApplyField } from "@/features/leave/leaveRefusal";
 import { leaveTypeOptions } from "@/features/leave/leaveTypeOptions";
 import type { LeaveRequestBody } from "@/features/leave/types";
 import type { Refusal } from "@/features/organisation/refusal";
+import { RosteredDaysNotice } from "../RosteredDaysNotice";
 
 /** The people offered when applying: a search the caller owns and its current answer. */
 export type ApplyEmployees = {
@@ -35,6 +39,10 @@ export type ApplyEmployees = {
 export type LeaveTypesStatus = "pending" | "error" | "success";
 
 export type LeaveApplyFormProps = {
+	/** With it, the form tells which chosen days hold a shift. */
+	companyId?: string;
+	/** A reviewer records approved leave: a required remark, and rostered days must be confirmed. */
+	recording?: boolean;
 	/** Who leave may be applied for; left out when the caller applies for themself. */
 	employees?: ApplyEmployees;
 	/**
@@ -60,6 +68,8 @@ export type LeaveApplyFormProps = {
  * `requiresReason` asks for as a reason. It only collects; the caller sends.
  */
 export const LeaveApplyForm = ({
+	companyId,
+	recording = false,
 	employees,
 	leaveTypes,
 	leaveTypesStatus = "success",
@@ -79,6 +89,7 @@ export const LeaveApplyForm = ({
 	// and relabels them "Reason for leave"; that is not the reviewer's rejection reason.
 	const [remarks, setRemarks] = useState("");
 	const [missingRemarks, setMissingRemarks] = useState(false);
+	const [takeOffConfirmed, setTakeOffConfirmed] = useState(false);
 	const own = employees === undefined;
 	const chosen = employees?.options.find(
 		(person) => person.membershipId === membershipId
@@ -90,28 +101,55 @@ export const LeaveApplyForm = ({
 	// Until the person picks one, the first type offered is chosen, even if the catalogue arrives after opening.
 	const typeCode = chosenType ?? typeOptions[0]?.value ?? "";
 	const remarksRequired =
-		leaveTypes.find((leaveType) => leaveType.code === typeCode)
-			?.requiresReason ?? false;
+		recording ||
+		(leaveTypes.find((leaveType) => leaveType.code === typeCode)
+			?.requiresReason ??
+			false);
 	const remarksError =
 		missingRemarks && remarksRequired
 			? t("leave.leaveReasonRequired")
 			: fields.notes;
 	const typeError = fields.type ? `${id}-type-error` : undefined;
-	const incomplete = (!own && !chosen) || typeCode === "";
+	const rosterReadable =
+		companyId !== undefined && (own || chosen !== undefined);
+	const rostered = useQuery(
+		rosteredDaysQuery(
+			companyId ?? "",
+			dates,
+			chosen?.membershipId,
+			rosterReadable
+		)
+	);
+	// Before a person is chosen the key falls back to the reader's own days: never show those.
+	const rosteredDays = rosterReadable ? (rostered.data ?? []) : [];
+	// Recording on days not read yet is how a 409 comes back with nothing to confirm.
+	const rosterUnknown =
+		recording && rosterReadable && (rostered.isFetching || rostered.isError);
+	const incomplete =
+		(!own && !chosen) ||
+		typeCode === "" ||
+		rosterUnknown ||
+		(recording && rosteredDays.length > 0 && !takeOffConfirmed);
 	return (
 		<Modal
 			open
-			title={t(own ? "leave.applyOwn" : "leave.apply")}
 			footer={
 				<>
 					<Button variant="cancel" onClick={onClose}>
 						{t("leave.cancel")}
 					</Button>
 					<Button disabled={incomplete || busy} form={id} type="submit">
-						{t("leave.submit")}
+						{t(recording ? "leave.recordConfirm" : "leave.submit")}
 					</Button>
 				</>
 			}
+			title={t(
+				recording
+					? "leave.recordAction"
+					: own
+						? "leave.applyOwn"
+						: "leave.apply"
+			)}
 			onClose={onClose}
 		>
 			<form
@@ -121,7 +159,7 @@ export const LeaveApplyForm = ({
 					event.preventDefault();
 					if (incomplete) return;
 					const trimmedRemarks = remarks.trim();
-					if (remarksRequired && trimmedRemarks === "") {
+					if ((remarksRequired || recording) && trimmedRemarks === "") {
 						setMissingRemarks(true);
 						return;
 					}
@@ -130,6 +168,9 @@ export const LeaveApplyForm = ({
 						startDate: dates.start,
 						endDate: dates.end,
 						...(trimmedRemarks === "" ? {} : { notes: trimmedRemarks }),
+						...(recording
+							? { takeOffRosteredDays: rosteredDays.length > 0 }
+							: {}),
 					});
 				}}
 			>
@@ -234,27 +275,58 @@ export const LeaveApplyForm = ({
 						</p>
 					)}
 				</div>
+				<RosteredDaysNotice
+					confirmed={recording ? takeOffConfirmed : undefined}
+					days={rosteredDays}
+					name={chosen?.displayName}
+					onConfirmedChange={setTakeOffConfirmed}
+					onRetry={
+						recording && rostered.isError
+							? (): void => {
+									void rostered.refetch();
+								}
+							: undefined
+					}
+				/>
 				<FormRow
-					counter={t("leave.remarksCounter", { count: remarks.length })}
 					error={remarksError}
 					htmlFor={`${id}-remarks`}
 					layout="stacked"
 					required={remarksRequired}
-					hint={t(
-						remarksRequired ? "leave.leaveReasonHint" : "leave.remarksHint"
-					)}
-					label={t(
-						remarksRequired ? "leave.leaveReason" : "leave.remarksOptional"
-					)}
+					counter={
+						recording
+							? undefined
+							: t("leave.remarksCounter", { count: remarks.length })
+					}
+					hint={
+						recording
+							? t("leave.remarkHintEmployee")
+							: t(
+									remarksRequired
+										? "leave.leaveReasonHint"
+										: "leave.remarksHint"
+								)
+					}
+					label={
+						recording
+							? t("leave.remark")
+							: t(
+									remarksRequired
+										? "leave.leaveReason"
+										: "leave.remarksOptional"
+								)
+					}
 				>
 					<Textarea
 						id={`${id}-remarks`}
-						maxLength={LEAVE_NOTES_MAX_LENGTH}
 						required={remarksRequired}
 						status={remarksError ? "error" : undefined}
 						value={remarks}
 						aria-describedby={
 							remarksError ? remarksIds.errorId : remarksIds.hintId
+						}
+						maxLength={
+							recording ? LEAVE_REMARK_MAX_LENGTH : LEAVE_NOTES_MAX_LENGTH
 						}
 						placeholder={t(
 							remarksRequired

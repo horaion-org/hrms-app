@@ -1,10 +1,11 @@
+import { useQuery } from "@tanstack/react-query";
 import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { CrossIcon, TickIcon } from "@/components/ui/Icon";
 import { Modal } from "@/components/ui/Modal";
-import type { CompanyLeaveType } from "@/features/leave/api";
+import { rosteredDaysQuery, type CompanyLeaveType } from "@/features/leave/api";
 import type { ApplyField, DecisionField } from "@/features/leave/leaveRefusal";
 import type { LeaveRequest, LeaveRequestBody } from "@/features/leave/types";
 import type { Refusal } from "@/features/organisation/refusal";
@@ -15,6 +16,8 @@ import {
 } from "./LeaveApplyForm";
 import { LeaveDecisionStep } from "./LeaveDecisionStep";
 import { LeaveRequestDetails } from "./LeaveRequestDetails";
+import { LeaveRequestLifecycle } from "./LeaveRequestLifecycle";
+import { RosteredDaysNotice } from "./RosteredDaysNotice";
 
 export type { ApplyEmployees } from "./LeaveApplyForm";
 
@@ -24,7 +27,16 @@ type ReviewStep = "review" | "reject" | "approve";
 export type LeaveRequestDialogProps = {
 	request?: LeaveRequest;
 	/** `reject` and `approve` open straight at that decision's confirmation step. */
-	mode?: "view" | "reject" | "approve" | "apply";
+	mode?: "view" | "reject" | "approve" | "apply" | "record";
+	/**
+	 * With it, the dialog reads rostered days and the history, and offers
+	 * withdrawing, changing and cancelling. `own` says the request is the reader's.
+	 */
+	lifecycle?: {
+		companyId: string;
+		own: boolean;
+		onDone: (message: string) => void;
+	};
 	/** Who leave may be applied for; left out in `apply` mode when the caller applies for themself. */
 	employees?: ApplyEmployees;
 	/**
@@ -46,7 +58,11 @@ export type LeaveRequestDialogProps = {
 	refusal?: Refusal<ApplyField | DecisionField>;
 	onClose: () => void;
 	/** `comment` is trimmed, and empty when the reviewer wrote none. */
-	onApprove: (request: LeaveRequest, comment: string) => void;
+	onApprove: (
+		request: LeaveRequest,
+		comment: string,
+		takeOffRosteredDays: boolean
+	) => void;
 	onReject: (request: LeaveRequest, reason: string) => void;
 	/** `membershipId` is null when the caller applies for themself. */
 	onCreate: (membershipId: string | null, body: LeaveRequestBody) => void;
@@ -65,6 +81,7 @@ export type LeaveRequestDialogProps = {
 export const LeaveRequestDialog = ({
 	request,
 	mode = "view",
+	lifecycle,
 	employees,
 	leaveTypes = [],
 	leaveTypesStatus = "success",
@@ -86,13 +103,31 @@ export const LeaveRequestDialog = ({
 	const [rejectionReason, setRejectionReason] = useState("");
 	const [approvalComment, setApprovalComment] = useState("");
 	const [missingRejectionReason, setMissingRejectionReason] = useState(false);
-	if (mode === "apply")
+	const [takeOffConfirmed, setTakeOffConfirmed] = useState(false);
+	const rostered = useQuery(
+		rosteredDaysQuery(
+			lifecycle?.companyId ?? "",
+			{ start: request?.startDate ?? "", end: request?.endDate ?? "" },
+			request?.membershipId,
+			lifecycle !== undefined && request !== undefined && step === "approve"
+		)
+	);
+	const rosteredDays = rostered.data ?? [];
+	const unconfirmedClash = rosteredDays.length > 0 && !takeOffConfirmed;
+	// Approving on days not read yet is how a 409 comes back with nothing to confirm.
+	const rosterUnknown =
+		lifecycle !== undefined &&
+		step === "approve" &&
+		(rostered.isFetching || rostered.isError);
+	if (mode === "apply" || mode === "record")
 		return (
 			<LeaveApplyForm
 				busy={busy}
+				companyId={lifecycle?.companyId}
 				employees={employees}
 				leaveTypes={leaveTypes}
 				leaveTypesStatus={leaveTypesStatus}
+				recording={mode === "record"}
 				refusal={refusal}
 				onClose={onClose}
 				onCreate={onCreate}
@@ -107,7 +142,7 @@ export const LeaveRequestDialog = ({
 		: fields.reason;
 	const decide = (): void => {
 		if (!rejecting) {
-			onApprove(request, approvalComment.trim());
+			onApprove(request, approvalComment.trim(), rosteredDays.length > 0);
 			return;
 		}
 		if (!rejectionReason.trim()) {
@@ -133,11 +168,13 @@ export const LeaveRequestDialog = ({
 							{t("leave.cancel")}
 						</Button>
 						<Button
-							disabled={busy}
 							form={id}
 							leadingIcon={rejecting ? <CrossIcon /> : <TickIcon />}
 							type="submit"
 							variant={rejecting ? "danger" : "primary"}
+							disabled={
+								busy || (!rejecting && (unconfirmedClash || rosterUnknown))
+							}
 						>
 							{t(
 								rejecting ? "leave.confirmRejection" : "leave.confirmApproval"
@@ -182,7 +219,33 @@ export const LeaveRequestDialog = ({
 					</p>
 				)}
 				<LeaveRequestDetails request={request} />
+				{lifecycle && step === "review" && (
+					<LeaveRequestLifecycle
+						canChange={canReview}
+						companyId={lifecycle.companyId}
+						own={lifecycle.own}
+						request={request}
+						onDone={lifecycle.onDone}
+					/>
+				)}
 			</div>
+			{step === "approve" && (rosteredDays.length > 0 || rostered.isError) && (
+				<div className="border-t border-neutral-400 px-6 pt-6">
+					<RosteredDaysNotice
+						confirmed={takeOffConfirmed}
+						days={rosteredDays}
+						name={request.displayName}
+						onConfirmedChange={setTakeOffConfirmed}
+						onRetry={
+							rostered.isError
+								? (): void => {
+										void rostered.refetch();
+									}
+								: undefined
+						}
+					/>
+				</div>
+			)}
 			{step !== "review" && (
 				<LeaveDecisionStep
 					decision={step}
