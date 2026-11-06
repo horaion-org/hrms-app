@@ -2126,7 +2126,8 @@
 				"shift": "Turno",
 				"group": "Grupo"
 			},
-			"dayLabel": "{{name}}, {{day}}: {{kind}}"
+			"dayLabel": "{{name}}, {{day}}: {{kind}}",
+			"closePanel": "Cerrar {{title}}"
 		},
 		"myRoster": {
 			"title": "Mi cuadrante · {{department}} · {{period}}",

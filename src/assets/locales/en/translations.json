@@ -2894,7 +2894,8 @@
 				"shift": "Shift",
 				"group": "Group"
 			},
-			"dayLabel": "{{name}}, {{day}}: {{kind}}"
+			"dayLabel": "{{name}}, {{day}}: {{kind}}",
+			"closePanel": "Close {{title}}"
 		},
 		"myRoster": {
 			"title": "My roster · {{department}} · {{period}}",
