@@ -910,7 +910,17 @@
 				"resultColumn": "Result",
 				"detailColumn": "Reason",
 				"open": "Open profile",
-				"loadFailed": "This import couldn't be loaded. Try again."
+				"loadFailed": "This import couldn't be loaded. Try again.",
+				"someColumn": "A value",
+				"nameColumn": "Person",
+				"emailColumn": "Email",
+				"resolved": "Added since, on {{date}}",
+				"resolvedUndated": "Added since",
+				"leftOut_one": "{{count}} with problems left out",
+				"leftOut_other": "{{count}} with problems left out",
+				"resolvedSummary_one": "{{count}} row not added then has been added since.",
+				"resolvedSummary_other": "{{count}} rows not added then have been added since.",
+				"stoppedHint": "{{processed}} of {{total}} rows were processed before it stopped. Import the same file again to add the rest: people already added are skipped."
 			},
 			"results": {
 				"ADDED": "Added",
@@ -1199,7 +1209,9 @@
 					"PEOPLE": "People"
 				},
 				"organisationResult": "{{created}} created · {{skipped}} skipped",
-				"peopleResult": "{{added}} added · {{failed}} failed"
+				"peopleResult": "{{added}} added · {{failed}} failed",
+				"addedSince_one": "{{count}} added since",
+				"addedSince_other": "{{count}} added since"
 			}
 		},
 		"employment": {

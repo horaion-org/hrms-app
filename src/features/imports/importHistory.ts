@@ -37,13 +37,18 @@ export const historyResultText = (
 			created: entry.importRecord.createdRows,
 			skipped: entry.importRecord.skippedRows,
 		});
-	const { status, addedRows, failedRows } = entry.importRecord;
+	const { status, addedRows, failedRows, resolvedRows } = entry.importRecord;
 	if (status === "QUEUED" || status === "RUNNING")
 		return t(`people.importPage.recent.status.${status}`);
-	const counts = t("settings.data.history.peopleResult", {
-		added: addedRows,
-		failed: failedRows,
-	});
+	const counts = [
+		t("settings.data.history.peopleResult", {
+			added: addedRows,
+			failed: failedRows,
+		}),
+		...(resolvedRows > 0
+			? [t("settings.data.history.addedSince", { count: resolvedRows })]
+			: []),
+	].join(" · ");
 	return status === "FAILED"
 		? `${t("people.importPage.recent.status.FAILED")} · ${counts}`
 		: counts;

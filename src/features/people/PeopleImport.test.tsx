@@ -323,6 +323,63 @@ describe("PeopleImport", () => {
 		).not.toBeInTheDocument();
 	});
 
+	it("shows a failed row whose person was added since as solved, with a link to them", async () => {
+		const resolvedImport = {
+			...finishedImport,
+			resolvedRows: 1,
+			rows: [
+				{
+					...finishedImport.rows[0],
+					name: null,
+					email: null,
+					resolved: false,
+					resolvedMembershipId: null,
+					resolvedAt: null,
+				},
+				{
+					...finishedImport.rows[1],
+					name: "Tan Wei Ming",
+					email: "wm@acme.sg",
+					resolved: true,
+					resolvedMembershipId: "m-12",
+					resolvedAt: "2026-11-05T09:00:00Z",
+				},
+			],
+		};
+		stubApi({
+			...baseRoutes(),
+			[`GET ${IMPORTS}/i-1`]: { status: 200, body: envelope(resolvedImport) },
+		});
+		await open("/settings/data/import-people?import=i-1");
+
+		const table = await screen.findByRole("table", { name: "Row results" });
+		const row = within(table).getByRole("row", { name: /Tan Wei Ming/ });
+		expect(row).toHaveTextContent(/Added since, on/);
+		expect(
+			within(row).getByRole("link", { name: "Open profile" })
+		).toHaveAttribute("href", "/people/m-12");
+		expect(
+			screen.getByText("1 row not added then has been added since.")
+		).toBeVisible();
+	});
+
+	it("tells the person how to finish an import that stopped part-way", async () => {
+		stubApi({
+			...baseRoutes(),
+			[`GET ${IMPORTS}/i-1`]: {
+				status: 200,
+				body: envelope({ ...finishedImport, status: "FAILED", totalRows: 5 }),
+			},
+		});
+		await open("/settings/data/import-people?import=i-1");
+
+		expect(
+			await screen.findByText(
+				"2 of 5 rows were processed before it stopped. Import the same file again to add the rest: people already added are skipped."
+			)
+		).toBeVisible();
+	});
+
 	it("refuses another file type before uploading it", async () => {
 		const user = userEvent.setup({ applyAccept: false });
 		const calls = stubApi(baseRoutes());

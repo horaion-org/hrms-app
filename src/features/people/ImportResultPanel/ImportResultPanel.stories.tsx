@@ -56,6 +56,35 @@ type Story = StoryObj<typeof meta>;
 
 export const Finished: Story = {};
 
+export const AddedSince: Story = {
+	args: {
+		memberImport: {
+			...finished,
+			resolvedRows: 1,
+			rows: finished.rows.map((row) =>
+				row.result === "FAILED_ACCOUNT"
+					? {
+							...row,
+							resolved: true,
+							resolvedMembershipId: "m-9",
+							resolvedAt: "2026-11-05T09:00:00Z",
+						}
+					: row
+			),
+		},
+	},
+};
+
+export const Stopped: Story = {
+	args: {
+		memberImport: {
+			...finished,
+			status: "FAILED",
+			totalRows: 5,
+		},
+	},
+};
+
 export const Running: Story = {
 	args: {
 		memberImport: {

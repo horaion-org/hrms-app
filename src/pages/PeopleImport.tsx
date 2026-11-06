@@ -53,7 +53,7 @@ const route = getRouteApi("/_authenticated/_app/settings_/data/import-people");
  */
 export const PeopleImport = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
-	const { t } = useTranslation();
+	const { t, i18n } = useTranslation();
 	const navigate = route.useNavigate();
 	const search = route.useSearch();
 	const client = useQueryClient();
@@ -287,7 +287,9 @@ export const PeopleImport = (): FunctionComponent => {
 										variant="secondary"
 										onClick={() => {
 											saveFile(
-												toCsvBlob(resultRowsCsv(current.data, t)),
+												toCsvBlob(
+													resultRowsCsv(current.data, t, i18n.language)
+												),
 												"people-import-results.csv"
 											);
 										}}

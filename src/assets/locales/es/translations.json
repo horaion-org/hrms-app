@@ -336,7 +336,9 @@
 					"PEOPLE": "Personas"
 				},
 				"organisationResult": "{{created}} creados · {{skipped}} omitidos",
-				"peopleResult": "{{added}} añadidos · {{failed}} fallidos"
+				"peopleResult": "{{added}} añadidos · {{failed}} fallidos",
+				"addedSince_one": "{{count}} añadida después",
+				"addedSince_other": "{{count}} añadidas después"
 			}
 		},
 		"scheduling": {
@@ -1402,7 +1404,17 @@
 				"resultColumn": "Resultado",
 				"detailColumn": "Motivo",
 				"open": "Abrir perfil",
-				"loadFailed": "No se pudo cargar esta importación. Inténtalo de nuevo."
+				"loadFailed": "No se pudo cargar esta importación. Inténtalo de nuevo.",
+				"someColumn": "Un valor",
+				"nameColumn": "Persona",
+				"emailColumn": "Correo electrónico",
+				"resolved": "Añadida después, el {{date}}",
+				"resolvedUndated": "Añadida después",
+				"leftOut_one": "{{count}} con problemas omitida",
+				"leftOut_other": "{{count}} con problemas omitidas",
+				"resolvedSummary_one": "{{count}} fila que no se añadió se ha añadido después.",
+				"resolvedSummary_other": "{{count}} filas que no se añadieron se han añadido después.",
+				"stoppedHint": "Se procesaron {{processed}} de {{total}} filas antes de que se detuviera. Importa el mismo archivo de nuevo para añadir el resto: las personas ya añadidas se omiten."
 			},
 			"results": {
 				"ADDED": "Añadida",
