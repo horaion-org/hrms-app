@@ -3377,7 +3377,8 @@
 				"isDefault": "The default can’t be deactivated or deleted. Make other terms the default first.",
 				"held": "People have had these terms, so they can’t be deleted. Deactivate them instead.",
 				"inactive": "These terms are inactive. Activate them first."
-			}
+			},
+			"peopleLink": "Show the people on {{name}}"
 		},
 		"summary": {
 			"title": "Summary",

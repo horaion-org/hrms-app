@@ -2690,7 +2690,8 @@
 				"isDefault": "Las predeterminadas no se pueden desactivar ni eliminar. Haz predeterminadas otras condiciones primero.",
 				"held": "Hay personas que han tenido estas condiciones, así que no se pueden eliminar. Desactívalas.",
 				"inactive": "Estas condiciones están inactivas. Actívalas primero."
-			}
+			},
+			"peopleLink": "Ver las personas con {{name}}"
 		},
 		"summary": {
 			"title": "Resumen",
