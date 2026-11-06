@@ -83,9 +83,11 @@ const key = "scheduling.detail";
 /**
  * A generated schedule's roster, a week at a time: what it adds up to, what
  * the engine found (a summary, the findings panel and marks on the grid), and
- * a chosen day's shift beside it, read-only. With `editing`, any day opens
- * the editor beside the grid instead, days changed by hand carry a dot, and
- * the latest change can be undone from a toast or the line above the grid.
+ * a chosen day's shift beside it, read-only. Days changed by hand carry a
+ * dot wherever the rows say so (a member's own roster: only their own days
+ * changed after publication). With `editing`, any day opens the editor
+ * beside the grid instead, and the latest change can be undone from a toast
+ * or the line above the grid.
  */
 export const GeneratedRoster = ({
 	schedule,
@@ -271,7 +273,7 @@ export const GeneratedRoster = ({
 						<RosterGrid
 							className="w-full lg:flex-1"
 							days={days}
-							editedDays={editing ? editedDays : NO_DAYS}
+							editedDays={editedDays}
 							previewDays={previewDays}
 							rowNotes={rowNotes}
 							rows={rows}

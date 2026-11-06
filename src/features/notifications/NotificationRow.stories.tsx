@@ -12,6 +12,7 @@ const notification = {
 	scheduleId: null,
 	memberImportJobId: null,
 	importCounts: null,
+	remark: null,
 	occurredAt: "2026-11-04T11:55:00Z",
 	createdAt: "2026-11-04T11:55:05Z",
 	readAt: null,
@@ -98,5 +99,18 @@ export const ImportWithFailures: Story = {
 			importCounts: { added: 45, skipped: 2, failed: 3, status: "COMPLETED" },
 		},
 		children: "Import finished: 45 added, 2 skipped, 3 failed.",
+	},
+};
+export const RosterChangedWithRemark: Story = {
+	args: {
+		notification: {
+			...notification,
+			type: "SCHEDULE_ASSIGNMENT_UPDATED",
+			leaveRequestId: null,
+			membershipId: null,
+			scheduleId: "schedule-1",
+			remark: "Covering the airport desk on Monday.",
+		},
+		children: "Your shifts on a published schedule changed.",
 	},
 };

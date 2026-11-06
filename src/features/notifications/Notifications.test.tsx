@@ -607,6 +607,52 @@ describe("Notifications", () => {
 		expect(link).toHaveAttribute("href", "/me/schedules/schedule-1");
 	});
 
+	it("given_aChangeToTheirDaysOnAPublishedRoster_when_listed_then_showsTheRemarkAndOpensTheirOwnRoster", async () => {
+		stubApi({
+			"POST /api/v1/public/sessions/refreshes": accessPassReply(),
+			"GET /api/v1/me": currentUserReply(),
+			"GET /api/v1/me/workspace": {
+				status: 200,
+				body: envelope(companyWideWorkspace([])),
+			},
+			[`GET ${BASE}`]: {
+				status: 200,
+				body: {
+					content: [
+						{
+							...own,
+							notificationId: "updated-1",
+							type: "SCHEDULE_ASSIGNMENT_UPDATED",
+							leaveRequestId: null,
+							membershipId: null,
+							scheduleId: "schedule-1",
+							remark: "Covering the airport desk on Monday.",
+						},
+						{
+							...own,
+							notificationId: "updated-2",
+							type: "SCHEDULE_ASSIGNMENT_UPDATED",
+							leaveRequestId: null,
+							membershipId: null,
+							scheduleId: "schedule-1",
+						},
+					],
+					page: { totalElements: 2 },
+				},
+			},
+			[`GET ${BASE}/unread-count`]: { status: 200, body: { unreadCount: 2 } },
+		});
+		await open();
+		const links = await screen.findAllByRole("link", {
+			name: "Your shifts on a published schedule changed.",
+		});
+		expect(links).toHaveLength(2);
+		expect(links[0]).toHaveAttribute("href", "/me/schedules/schedule-1");
+		expect(
+			screen.getAllByText("Covering the airport desk on Monday.")
+		).toHaveLength(1);
+	});
+
 	it("given_schedulePublisherWithoutLeaveReview_when_opening_then_needsReviewListsTheReadySchedule", async () => {
 		stubApi({
 			"POST /api/v1/public/sessions/refreshes": accessPassReply(),

@@ -263,7 +263,7 @@ export const RosterCellPanel = ({
 						</dd>
 						{assignment.lastChange && (
 							<dd className="text-neutral-800">
-								{assignment.lastChange.appliedBy.displayName
+								{assignment.lastChange.appliedBy?.displayName
 									? t(`${key}.changedBy`, {
 											time: formatDay(
 												assignment.lastChange.appliedAt,

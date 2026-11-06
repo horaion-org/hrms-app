@@ -40,6 +40,14 @@ export const notificationSchema = z.object({
 		})
 		.nullish()
 		.transform((value) => value ?? null),
+	/**
+	 * The manager's remark on a change to the recipient's days of a published
+	 * roster (SCHEDULE_ASSIGNMENT_UPDATED); null for every other type.
+	 */
+	remark: z
+		.string()
+		.nullish()
+		.transform((value) => value ?? null),
 	occurredAt: z.iso.datetime({ offset: true }),
 	createdAt: z.iso.datetime({ offset: true }),
 	readAt: z.iso
