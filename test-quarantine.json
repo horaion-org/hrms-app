@@ -1,0 +1,10 @@
+{
+	"about": "Unit tests skipped because they fail on development, each with its reason. A test is quarantined by marking it it.skip AND listing it here; scripts/check-test-quarantine.mjs (part of pnpm lint) fails if the two disagree. Remove the entry and the .skip once the test passes. README.md, 'Checks'.",
+	"tests": [
+		{
+			"file": "src/features/auth/LogInForm/LogInForm.test.tsx",
+			"test": "leaves nothing cached after Log out",
+			"reason": "App behaviour, not the test: Log out clears the query cache, then the still-mounted shell re-creates its workspace, own-profile and notification-count queries (and asks for a session renewal) before /login replaces it, so 4 empty queries remain."
+		}
+	]
+}

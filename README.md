@@ -53,4 +53,23 @@ pnpm test:e2e
 pnpm build
 ```
 
+CI (`.github/workflows/ci.yml`) runs on every pull request to `development` and every push to it. It has two
+jobs:
+
+- **Type check & lint:** `pnpm exec tsc`, then `pnpm lint` (the permission contract check, then eslint).
+- **Unit tests:** `vitest run src/` in three shards, with one worker per core and a 15 s per-test timeout. The
+  5 s default is too tight on a shared runner.
+
+The Playwright suites are not run in CI. To reproduce a CI shard locally:
+
+```sh
+pnpm exec vitest run src/ --shard=1/3 --testTimeout=15000
+```
+
+**The quarantine.** A test that fails on `development` and cannot be fixed at once is marked `it.skip` and listed
+in `test-quarantine.json` with its reason. `pnpm lint` runs `check:quarantine`, which fails when a skipped test is
+not listed, a listed test is not skipped, an entry has no reason, or a test file holds a `.only`. CI writes the list
+to each run's job summary. Quarantine single tests, never whole files, and remove the entry and the `.skip` once the
+test passes.
+
 The browser suite mocks the API at the network boundary with Playwright's `context.route` and `page.route`. `e2e/session.ts` models a shared Session across pages and returns access passes from Log in and refresh, clears it on Log out, and supplies `/me`; individual specs mock Onboarding, confirmation, Challenges, reset and failures. Tests check reloads, two-tab Log out, Company switching, and the absence of credentials in web storage and emails in URLs. They use no real accounts or Session cookies, so they do not test cookie acceptance or API revocation. The pre-existing Onboarding issue 01 test still expects the omitted Registration number. Shared UI components can be explored using `pnpm storybook`.
