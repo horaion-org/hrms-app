@@ -33,6 +33,8 @@ const BODY: ShiftBody = {
 	endTime: "15:00",
 	days: ["MON", "TUE"],
 	jobTitleIds: ["front-desk-staff"],
+	unpaidBreakMinutes: 60,
+	carriesOvertime: true,
 };
 
 const LIVE = departmentShiftFixture();

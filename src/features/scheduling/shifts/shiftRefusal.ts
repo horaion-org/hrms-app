@@ -10,6 +10,7 @@ export const SHIFT_REFUSAL_CODES = {
 	shiftNameConflict: "409 SHIFT_NAME_CONFLICT",
 	shiftRoleNotInDepartment: "400 SHIFT_ROLE_NOT_IN_DEPARTMENT",
 	shiftNotFound: "404 SHIFT_NOT_FOUND",
+	shiftBreakTooLong: "400 INVALID_SHIFT_BREAK",
 	departmentInactive: "409 DEPARTMENT_INACTIVE",
 	departmentNotFound: "404 DEPARTMENT_NOT_FOUND",
 } as const;
@@ -24,7 +25,8 @@ export type ShiftField =
 	| "startTime"
 	| "endTime"
 	| "days"
-	| "jobTitleIds";
+	| "jobTitleIds"
+	| "unpaidBreakMinutes";
 
 /** Why adding or editing a shift was refused: on a field, or as the dialog's alert. */
 export const shiftRefusal = (
@@ -46,6 +48,10 @@ export const shiftRefusal = (
 				"jobTitleIds",
 				t(`${key}.roleRejected`)
 			),
+			[codes.shiftBreakTooLong]: field(
+				"unpaidBreakMinutes",
+				t(`${key}.breakTooLong`)
+			),
 		},
 		alerts: {
 			[codes.departmentInactive]: t(`${key}.departmentInactive`),
@@ -60,6 +66,10 @@ export const shiftRefusal = (
 			endTime: field("endTime", t(`${key}.timeRejected`)),
 			days: field("days", t(`${key}.daysRequired`)),
 			jobTitleIds: field("jobTitleIds", t(`${key}.roleRejected`)),
+			unpaidBreakMinutes: field(
+				"unpaidBreakMinutes",
+				t(`${key}.breakRejected`)
+			),
 		},
 		forbidden: t(editing ? `${key}.editForbidden` : `${key}.forbidden`),
 		failed: t(editing ? `${key}.editFailed` : `${key}.failed`),

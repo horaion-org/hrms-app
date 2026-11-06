@@ -4,6 +4,7 @@ import {
 	UNIT_NAME_PATTERN,
 	unitNameSchema,
 } from "@/features/organisation/createSchemas";
+import { shiftMinutes } from "@/features/scheduling/scheduleDraft";
 import {
 	SHIFT_COLOUR_PATTERN,
 	WEEKDAYS,
@@ -25,12 +26,15 @@ type ShiftSchema = z.ZodObject<{
 	endTime: z.ZodString;
 	days: z.ZodArray<z.ZodEnum<{ [K in (typeof WEEKDAYS)[number]]: K }>>;
 	jobTitleIds: z.ZodArray<z.ZodString>;
+	unpaidBreakMinutes: z.ZodNumber;
+	carriesOvertime: z.ZodBoolean;
 }>;
 
 /** Mirrors the API's rules for a shift; name uniqueness remains a server decision. */
 export const shiftSchema = (t: TFunction): ShiftSchema => {
 	const key = "scheduling.shifts.dialog";
-	return z.object({
+	const breakWhole = t(`${key}.breakWhole`);
+	const shape = z.object({
 		name: unitNameSchema({
 			required: t(`${key}.nameRequired`),
 			length: t(`${key}.nameLength`),
@@ -51,7 +55,19 @@ export const shiftSchema = (t: TFunction): ShiftSchema => {
 			.array(z.string())
 			.min(1, t(`${key}.rolesRequired`))
 			.max(MAX_ROLES, t(`${key}.rolesMax`, { max: MAX_ROLES })),
+		unpaidBreakMinutes: z
+			.number({ error: breakWhole })
+			.int(breakWhole)
+			.min(0, breakWhole),
+		carriesOvertime: z.boolean(),
 	});
+	return shape.refine(
+		(shift) => shift.unpaidBreakMinutes < shiftMinutes(shift),
+		{
+			error: t(`${key}.breakTooLong`),
+			path: ["unpaidBreakMinutes"],
+		}
+	);
 };
 
 /** What the form holds while being filled in. */

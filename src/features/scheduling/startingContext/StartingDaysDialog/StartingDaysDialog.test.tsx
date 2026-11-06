@@ -107,7 +107,7 @@ describe("StartingDaysDialog", () => {
 		const siti = within(table).getByRole("row", { name: /Siti/ });
 		expect(within(siti).getAllByText("From rosters")).toHaveLength(2);
 		await userEvent.type(
-			screen.getByRole("spinbutton", { name: /Tan Wei Ming, hours worked/ }),
+			screen.getByRole("spinbutton", { name: /Tan Wei Ming, paid hours worked/ }),
 			"72"
 		);
 		await userEvent.type(
@@ -166,7 +166,7 @@ describe("StartingDaysDialog", () => {
 		);
 
 		expect(
-			screen.getByRole("spinbutton", { name: /Tan Wei Ming, hours worked/ })
+			screen.getByRole("spinbutton", { name: /Tan Wei Ming, paid hours worked/ })
 		).toHaveValue(72);
 		await userEvent.click(screen.getByRole("button", { name: "Save days" }));
 		expect(onSave).toHaveBeenCalledWith(expect.any(Array), undefined);
@@ -187,7 +187,7 @@ describe("StartingDaysDialog", () => {
 		);
 
 		await userEvent.clear(
-			screen.getByRole("spinbutton", { name: /Tan Wei Ming, hours worked/ })
+			screen.getByRole("spinbutton", { name: /Tan Wei Ming, paid hours worked/ })
 		);
 		await userEvent.clear(
 			screen.getByRole("spinbutton", { name: /Tan Wei Ming, overtime/ })

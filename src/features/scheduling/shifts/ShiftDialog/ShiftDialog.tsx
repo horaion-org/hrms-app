@@ -6,14 +6,20 @@ import type { FunctionComponent } from "@/common/types";
 import { Combobox } from "@/components/forms/Combobox";
 import { DaysMultiSelect } from "@/components/forms/DaysMultiSelect";
 import { FormRow, formRowIds } from "@/components/forms/FormRow";
+import { Input } from "@/components/forms/Input";
 import { Select, type SelectOption } from "@/components/forms/Select";
 import { SwatchPicker } from "@/components/forms/SwatchPicker";
 import { TimeSelect } from "@/components/forms/TimeSelect";
 import { Button } from "@/components/ui/Button";
+import { Checkbox } from "@/components/ui/Checkbox";
 import { Dialog } from "@/components/ui/Dialog";
 import { SaveIcon, SwapIcon } from "@/components/ui/Icon";
 import { UnitNameField } from "@/features/organisation/UnitNameField";
 import { useCreateFormSubmit } from "@/features/organisation/useCreateFormSubmit";
+import {
+	paidShiftHours,
+	shiftMinutes,
+} from "@/features/scheduling/scheduleDraft";
 import type { ScheduleShift } from "@/features/scheduling/schedules/api";
 import type { ShiftBody } from "@/features/scheduling/shifts/api";
 import {
@@ -45,6 +51,7 @@ const FIELDS = [
 	"endTime",
 	"days",
 	"jobTitleIds",
+	"unpaidBreakMinutes",
 ] as const;
 
 const same = (a: string): string => a;
@@ -76,6 +83,8 @@ export const ShiftDialog = ({
 			endTime: editing?.endTime ?? "",
 			days: editing?.days ?? [],
 			jobTitleIds: editing?.roles.map((role) => role.jobTitleId) ?? [],
+			unpaidBreakMinutes: editing?.unpaidBreakMinutes ?? 0,
+			carriesOvertime: editing?.carriesOvertime ?? false,
 		},
 		mode: "onSubmit",
 		reValidateMode: "onChange",
@@ -85,9 +94,13 @@ export const ShiftDialog = ({
 		control,
 		handleSubmit,
 		reset,
+		trigger,
 		formState: { errors, isSubmitting },
 	} = form;
 	const name = useWatch({ control, name: "name" });
+	const startTime = useWatch({ control, name: "startTime" });
+	const endTime = useWatch({ control, name: "endTime" });
+	const unpaidBreakMinutes = useWatch({ control, name: "unpaidBreakMinutes" });
 	// Groups created here exist only in this dialog until a shift is saved with them.
 	const [created, setCreated] = useState<Array<string>>([]);
 	const [groupQuery, setGroupQuery] = useState("");
@@ -130,6 +143,16 @@ export const ShiftDialog = ({
 					: roleOptions.length === 0
 						? t(`${key}.rolesEmpty`)
 						: t(`${key}.rolesHint`);
+	const shiftIsTimed = startTime !== "" && endTime !== "";
+	const breakFits =
+		shiftIsTimed &&
+		unpaidBreakMinutes >= 0 &&
+		unpaidBreakMinutes < shiftMinutes({ startTime, endTime });
+	const breakHint = breakFits
+		? t(`${key}.paidHours`, {
+				count: paidShiftHours({ startTime, endTime, unpaidBreakMinutes }),
+			})
+		: t(`${key}.unpaidBreakHint`);
 	const timeField = (field: "startTime" | "endTime"): FunctionComponent => (
 		<FormRow
 			required
@@ -152,7 +175,13 @@ export const ShiftDialog = ({
 						placeholder={t(`${key}.pleaseSelect`)}
 						status={errors[field] ? "error" : undefined}
 						value={control.value}
-						onChange={control.onChange}
+						onChange={(value) => {
+							control.onChange(value);
+							// The form re-checks only the field that changed, and the break's error depends on the times.
+							if (errors.unpaidBreakMinutes) {
+								void trigger("unpaidBreakMinutes");
+							}
+						}}
 					/>
 				)}
 			/>
@@ -291,6 +320,40 @@ export const ShiftDialog = ({
 					{timeField("startTime")}
 					{timeField("endTime")}
 				</div>
+				<FormRow
+					error={errors.unpaidBreakMinutes?.message}
+					hint={breakHint}
+					htmlFor={fieldId("unpaidBreakMinutes")}
+					label={t(`${key}.unpaidBreak`)}
+					layout="stacked"
+				>
+					<Input
+						aria-describedby={describedBy("unpaidBreakMinutes", true)}
+						aria-invalid={Boolean(errors.unpaidBreakMinutes)}
+						id={fieldId("unpaidBreakMinutes")}
+						inputMode="numeric"
+						min={0}
+						status={errors.unpaidBreakMinutes ? "error" : undefined}
+						type="number"
+						{...register("unpaidBreakMinutes", { valueAsNumber: true })}
+					/>
+				</FormRow>
+				<Controller
+					control={control}
+					name="carriesOvertime"
+					render={({ field }) => (
+						<Checkbox
+							checked={field.value}
+							description={t(`${key}.carriesOvertimeDescription`)}
+							label={t(`${key}.carriesOvertime`)}
+							name={field.name}
+							onBlur={field.onBlur}
+							onChange={(event) => {
+								field.onChange(event.target.checked);
+							}}
+						/>
+					)}
+				/>
 				<div className="flex flex-col gap-6 sm:flex-row">
 					<FormRow
 						className="sm:flex-1"

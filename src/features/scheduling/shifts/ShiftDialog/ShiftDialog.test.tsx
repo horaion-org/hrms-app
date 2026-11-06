@@ -4,6 +4,7 @@ import { I18nextProvider } from "react-i18next";
 import { describe, expect, it, vi } from "vitest";
 import { ApiProblemError } from "@/common/problem";
 import { authTestI18n } from "@/features/auth/testingI18n";
+import type { ScheduleShift } from "@/features/scheduling/schedules/api";
 import {
 	SHIFT_FIXTURES,
 	SHIFT_ROLE_OPTIONS,
@@ -40,6 +41,14 @@ const renderDialog = (
 	);
 	return { onSave, onClose };
 };
+
+/** A 07:00 to 19:00 shift, to edit. */
+const longShift = (overrides: Partial<ScheduleShift> = {}): ScheduleShift => ({
+	...(SHIFT_FIXTURES[0] as ScheduleShift),
+	startTime: "07:00",
+	endTime: "19:00",
+	...overrides,
+});
 
 const trigger = (name: RegExp): HTMLElement =>
 	screen.getByRole("button", { name });
@@ -122,9 +131,135 @@ describe("ShiftDialog", () => {
 				endTime: "15:00",
 				days: ["MON", "FRI"],
 				jobTitleIds: ["front-desk-lead"],
+				unpaidBreakMinutes: 0,
+				carriesOvertime: false,
 			});
 		});
 		expect(onClose).toHaveBeenCalledOnce();
+	});
+
+	it("given_aBreakAndTheTick_when_saved_then_sendsBothAndShowsThePaidHours", async () => {
+		const user = userEvent.setup();
+		const { onSave } = renderDialog({
+			editing: longShift({ unpaidBreakMinutes: 0 }),
+		});
+		await screen.findByRole("dialog", { name: "Edit shift" });
+		expect(screen.getByText("12 paid hours")).toBeVisible();
+
+		const field = screen.getByLabelText("Unpaid break (minutes)");
+		await user.clear(field);
+		await user.type(field, "60");
+		await user.click(screen.getByLabelText("Carries built-in overtime"));
+		expect(screen.getByText("11 paid hours")).toBeVisible();
+		await user.click(screen.getByRole("button", { name: "Save" }));
+
+		await waitFor(() => {
+			expect(onSave).toHaveBeenCalledWith(
+				expect.objectContaining({
+					unpaidBreakMinutes: 60,
+					carriesOvertime: true,
+				})
+			);
+		});
+	});
+
+	it("given_aShiftWithABreakAndTick_when_editing_then_startsFromThemAndResetReturnsToThem", async () => {
+		const user = userEvent.setup();
+		renderDialog({
+			editing: longShift({ unpaidBreakMinutes: 60, carriesOvertime: true }),
+		});
+		await screen.findByRole("dialog", { name: "Edit shift" });
+		const field = screen.getByLabelText("Unpaid break (minutes)");
+		const tick = screen.getByLabelText("Carries built-in overtime");
+		expect(field).toHaveValue(60);
+		expect(tick).toBeChecked();
+
+		await user.clear(field);
+		await user.type(field, "30");
+		await user.click(tick);
+		await user.click(screen.getByRole("button", { name: "Reset" }));
+
+		expect(field).toHaveValue(60);
+		expect(tick).toBeChecked();
+	});
+
+	it("given_aBreakAsLongAsTheShift_when_saved_then_saysSoOnTheBreakAndSendsNothing", async () => {
+		const user = userEvent.setup();
+		const { onSave } = renderDialog({ editing: longShift() });
+		await screen.findByRole("dialog", { name: "Edit shift" });
+
+		const field = screen.getByLabelText("Unpaid break (minutes)");
+		await user.clear(field);
+		await user.type(field, "720");
+		expect(
+			screen.getByText("Leave at 0 if the shift has no unpaid break.")
+		).toBeVisible();
+		await user.click(screen.getByRole("button", { name: "Save" }));
+
+		expect(
+			await screen.findByText("The break must be shorter than the shift.")
+		).toBeVisible();
+		expect(field).toHaveAttribute("aria-invalid", "true");
+		expect(onSave).not.toHaveBeenCalled();
+	});
+
+	it("given_oneHourLeftAfterTheBreak_when_shown_then_saysOnePaidHour", async () => {
+		renderDialog({
+			editing: longShift({ endTime: "09:00", unpaidBreakMinutes: 60 }),
+		});
+		await screen.findByRole("dialog", { name: "Edit shift" });
+
+		expect(screen.getByText("1 paid hour")).toBeVisible();
+	});
+
+	it("given_aBreakTooLongError_when_theShiftIsMadeLonger_then_theErrorClears", async () => {
+		const user = userEvent.setup();
+		renderDialog({ editing: longShift() });
+		await screen.findByRole("dialog", { name: "Edit shift" });
+		const field = screen.getByLabelText("Unpaid break (minutes)");
+		await user.clear(field);
+		await user.type(field, "720");
+		await user.click(screen.getByRole("button", { name: "Save" }));
+		await screen.findByText("The break must be shorter than the shift.");
+
+		await pick(user, /End time/, "20:00");
+
+		await waitFor(() => {
+			expect(
+				screen.queryByText("The break must be shorter than the shift.")
+			).not.toBeInTheDocument();
+		});
+		expect(field).not.toHaveAttribute("aria-invalid", "true");
+	});
+
+	it("given_anEmptyBreak_when_saved_then_asksForMinutesAndSendsNothing", async () => {
+		const user = userEvent.setup();
+		const { onSave } = renderDialog({ editing: longShift() });
+		await screen.findByRole("dialog", { name: "Edit shift" });
+
+		await user.clear(screen.getByLabelText("Unpaid break (minutes)"));
+		await user.click(screen.getByRole("button", { name: "Save" }));
+
+		expect(
+			await screen.findByText("Enter the break in whole minutes, or 0.")
+		).toBeVisible();
+		expect(onSave).not.toHaveBeenCalled();
+	});
+
+	it("given_theApiRefusesTheBreak_when_saved_then_putsItOnTheBreakAndStaysOpen", async () => {
+		const user = userEvent.setup();
+		const { onClose } = renderDialog({
+			editing: longShift(),
+			onSave: vi.fn().mockRejectedValue(problem(400, "INVALID_SHIFT_BREAK")),
+		});
+		await screen.findByRole("dialog", { name: "Edit shift" });
+
+		await user.click(screen.getByRole("button", { name: "Save" }));
+
+		expect(
+			await screen.findByText("The break must be shorter than the shift.")
+		).toBeVisible();
+		expect(onClose).not.toHaveBeenCalled();
 	});
 
 	it("given_aGroupNobodyHas_when_typed_then_itCanBeCreatedChosenAndSent", async () => {

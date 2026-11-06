@@ -76,6 +76,8 @@ export type ShiftBody = {
 	endTime: string;
 	days: Array<Weekday>;
 	jobTitleIds: Array<string>;
+	unpaidBreakMinutes: number;
+	carriesOvertime: boolean;
 };
 
 const shiftPath = (

@@ -35,10 +35,12 @@ their API exists.
 - `shifts/fixtures.ts` — API-shaped rows for stories and tests: draft s-1's shifts (`INCLUDED_SHIFT_IDS` ticked),
   a generated schedule's frozen copies, a live shift and the role options.
 - `shifts/ShiftDialog` — add or change one of the department's shifts: name, group (`Combobox` with its create row;
-  a group is a plain name), colour (`SwatchPicker`), start and end time on the 30-minute grid, days and roles
-  (`Select` with its select-all row), Reset and Save.
+  a group is a plain name), colour (`SwatchPicker`), start and end time on the 30-minute grid, the unpaid break in minutes with the
+  paid hours worked out beneath it, the built-in overtime tick, days and roles (`Select` with its select-all row),
+  Reset and Save. The tick only labels: each person's employment terms say how much of the shift is overtime.
 - `shifts/ShiftsStep` — the schedule's shifts under a tab per group ("All" plus one per group, with counts) above
-  the table, ticking what the schedule includes; a generated schedule's frozen copies are listed read-only.
+  the table, ticking what the schedule includes, with each shift's paid hours and any built-in overtime; a generated
+  schedule's frozen copies are listed read-only, with their own values.
 - `constraints/api.ts` — the live constraint schema and requests at the department's routes (list, create, replace,
   delete) and the constraint options (`constraint-options`, read under `constraint:read`: every constraint type with
   its category, whether it takes a requirement (Must or Should), whether a department holds only one, and its fields,
@@ -179,7 +181,7 @@ constraint dialogs.
   panel; a day to decide reads "Needs attention" to a roster editor who can't see leave, with no leave detail. A
   notification about such a day opens its week with the Issues panel (`?week=…&panel=issues`).
 - `roster/roster.ts` — `rosterFromAssignments` (one row per member, each day a shift, off or leave; a row whose
-  member is gone keyed by its assignment), `hoursOf`/`hoursInDays` (via `shiftHours`), `weekDays`, `legendOf`,
+  member is gone keyed by its assignment), `hoursOf`/`hoursInDays` (paid minutes summed first, rounded once, via `paidShiftMinutes`), `weekDays`, `legendOf`,
   `rosterStats`, and `isoDateIn`/`dateTimeFormatIn` for the branch's time zone.
 - `roster/findingsByMember.ts` — a failed run's errors grouped by member, named through `findings.members`.
 - `roster/findings/` — the engine's findings on a generated roster, in three levels (Issues count, panel, grid markers):
