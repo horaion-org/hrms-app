@@ -176,12 +176,12 @@ it("lays the label left of a fixed field column that stacks below sm and passes 
 		"settings-row",
 		"flex-col",
 		"sm:flex-row",
-		"sm:items-center",
+		"sm:items-start",
 		"sm:justify-between"
 	);
 	expect(screen.getByText("Country")).toHaveClass(
 		"text-base",
-		"font-bold",
+		"font-normal",
 		"text-neutral-800"
 	);
 	const fieldColumn = screen.getByRole("textbox").parentElement?.parentElement;

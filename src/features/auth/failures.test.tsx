@@ -6,6 +6,7 @@ import { apiRequest, resetApiClient } from "@/common/api-client";
 import {
 	currentUserReply,
 	openApp,
+	signedInShellRoutes,
 	type OpenedApp,
 } from "@/common/testing/openApp";
 import {
@@ -96,7 +97,12 @@ it.each(outages)(
 				.setup()
 				.click(screen.getByRole("button", { name: "Try again" }));
 			expect(
-				await screen.findByRole("heading", { name: "Dashboard" })
+				// The first sign-in of a run also loads the Dashboard's modules.
+				await screen.findByRole(
+					"heading",
+					{ name: "Dashboard" },
+					{ timeout: 10_000 }
+				)
 			).toBeVisible();
 			expect(
 				calls.filter((call) => call.path.endsWith("refreshes"))
@@ -210,6 +216,7 @@ it.each([undefined, "/?tab=2", "//evil.test", "https://evil.test"])(
 		const calls = stubApi({
 			[REFRESH]: accessPassReply(),
 			"GET /api/v1/me": currentUserReply(),
+			...signedInShellRoutes(),
 		});
 		app = await openApp("/");
 		renderAuthApp(app);
