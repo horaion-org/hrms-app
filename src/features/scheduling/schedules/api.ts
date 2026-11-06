@@ -267,6 +267,15 @@ export const hasRoster = (schedule: Schedule): boolean =>
 	schedule.status === "PUBLISHED" ||
 	schedule.status === "REJECTED";
 
+/**
+ * Whether a schedule's roster may be changed by hand now (hrms-backend-v2
+ * docs/adr/0062 and 0063): GENERATED and awaiting its decision, or
+ * PUBLISHED, which is corrected by changes its members are told about.
+ */
+export const rosterEditable = (schedule: Schedule): boolean =>
+	(schedule.status === "GENERATED" || schedule.status === "PUBLISHED") &&
+	!generationInProgress(schedule);
+
 /** Whether a schedule may be deleted: a published one never is (hrms-backend-v2 docs/adr/0063). */
 export const deletable = (schedule: Schedule): boolean =>
 	schedule.status !== "PUBLISHED";

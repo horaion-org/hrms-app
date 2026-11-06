@@ -53,6 +53,8 @@ export type RosterEditing = {
 	revision: number;
 	/** The schedule's frozen shifts, with their days and roles. */
 	shifts: ReadonlyArray<ScheduleShift>;
+	/** The roster is published: each change tells the people whose days it changes, so it asks first. */
+	notifiesMembers: boolean;
 };
 
 export type GeneratedRosterProps = {
@@ -243,6 +245,7 @@ export const GeneratedRoster = ({
 				<LastRosterChange
 					applied={applied}
 					className="mt-6"
+					notifiesMembers={editing.notifiesMembers}
 					revision={editing.revision}
 					target={editing.target}
 					onAppliedDismissed={() => {
@@ -299,6 +302,7 @@ export const GeneratedRoster = ({
 								key={editingAssignment.assignmentId}
 								assignment={editingAssignment}
 								assignments={assignments}
+								notifiesMembers={editing.notifiesMembers}
 								revision={editing.revision}
 								shifts={editing.shifts}
 								target={editing.target}

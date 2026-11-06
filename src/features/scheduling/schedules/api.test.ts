@@ -21,6 +21,7 @@ import {
 	publishSchedule,
 	rejectSchedule,
 	requestRegeneration,
+	rosterEditable,
 	rosterRunId,
 	scheduleAssignmentsKey,
 	scheduleAssignmentsQuery,
@@ -653,15 +654,16 @@ describe("a schedule's decision", () => {
 
 describe("what a schedule's status allows by hand", () => {
 	it.each([
-		["DRAFT", true],
-		["GENERATION_FAILED", true],
-		["GENERATED", true],
-		["PUBLISHED", false],
-		["REJECTED", true],
+		["DRAFT", false, true],
+		["GENERATION_FAILED", false, true],
+		["GENERATED", true, true],
+		["PUBLISHED", true, false],
+		["REJECTED", false, true],
 	] as const)(
-		"given_a%sSchedule_when_asked_then_deletable%s",
-		(status, removable) => {
+		"given_a%sSchedule_when_asked_then_editable%sAndDeletable%s",
+		(status, editable, removable) => {
 			const schedule = generatedScheduleFixture({ status });
+			expect(rosterEditable(schedule)).toBe(editable);
 			expect(deletable(schedule)).toBe(removable);
 		}
 	);

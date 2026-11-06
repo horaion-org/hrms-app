@@ -96,6 +96,7 @@ export const rosterChangeFixture = (
 	appliedBy: { membershipId: "m-c-1", displayName: "José" },
 	remark: null,
 	undoable: true,
+	onPublishedRoster: false,
 	cells: rosterChangePreviewFixture().cells,
 	assignments: [],
 	...overrides,

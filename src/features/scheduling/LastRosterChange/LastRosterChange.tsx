@@ -29,6 +29,8 @@ export type LastRosterChangeProps = {
 	applied?: RosterChange;
 	/** The toast went away, by itself or after Undo. */
 	onAppliedDismissed: () => void;
+	/** The roster is published: an undo tells the people whose days it changes back, so it always asks first. */
+	notifiesMembers?: boolean;
 	className?: string;
 };
 
@@ -43,13 +45,15 @@ const key = "scheduling.rosterEdit";
  * next change ("Last change: Ben Tan, Sat 17 Oct · Undo"). A swap names both
  * people. An undo is an edit back: it is previewed first, applied at once
  * when nothing stands against it, and otherwise asked about with the same
- * checks, tick and remark as an edit. Undoing lands like any change.
+ * checks, tick and remark as an edit. On a published roster it is always
+ * asked about, since people are told. Undoing lands like any change.
  */
 export const LastRosterChange = ({
 	target,
 	revision,
 	applied,
 	onAppliedDismissed,
+	notifiesMembers = false,
 	className,
 }: LastRosterChangeProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
@@ -86,7 +90,8 @@ export const LastRosterChange = ({
 			{
 				onSuccess: (preview) => {
 					const gate = applyGate(preview.checks);
-					if (gate.refused || gate.needsTick) setAsking({ change, preview });
+					if (notifiesMembers || gate.refused || gate.needsTick)
+						setAsking({ change, preview });
 					else runUndo(change, { expectedRevision: change.toRevision });
 				},
 			}
@@ -135,6 +140,7 @@ export const LastRosterChange = ({
 			)}
 			{asking && (
 				<UndoRosterChangeDialog
+					notifiesMembers={notifiesMembers}
 					preview={asking.preview}
 					submitting={undo.isPending}
 					error={

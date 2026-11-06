@@ -12,6 +12,7 @@ import type { CheckNames } from "@/features/scheduling/rosterChanges/checkSenten
 import {
 	applyGate,
 	canApply,
+	peopleTold,
 } from "@/features/scheduling/rosterChanges/rosterEdit";
 
 export type UndoRosterChangeDialogProps = {
@@ -23,6 +24,8 @@ export type UndoRosterChangeDialogProps = {
 	error?: string;
 	onConfirm: (body: RosterUndoBody) => void;
 	onClose: () => void;
+	/** The roster is published: the people whose days the undo changes back are told. */
+	notifiesMembers?: boolean;
 };
 
 const key = "scheduling.rosterEdit";
@@ -30,8 +33,9 @@ const key = "scheduling.rosterEdit";
 /**
  * Asks before undoing the latest change when the undo itself needs a tick, or
  * a tick and a remark, or can't be done: an undo is an edit back, and leave
- * or availability may have changed since. An undo nothing stands against is
- * applied without this question.
+ * or availability may have changed since. On a published roster it always
+ * asks, and says how many people will be told. Otherwise an undo nothing
+ * stands against is applied without this question.
  */
 export const UndoRosterChangeDialog = ({
 	preview,
@@ -39,6 +43,7 @@ export const UndoRosterChangeDialog = ({
 	error,
 	onConfirm,
 	onClose,
+	notifiesMembers = false,
 }: UndoRosterChangeDialogProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const language = i18n.resolvedLanguage ?? i18n.language;
@@ -60,13 +65,19 @@ export const UndoRosterChangeDialog = ({
 		<ConfirmDialog
 			cancelLabel={t(`${key}.cancel`)}
 			confirmDisabled={!canApply(gate, ticked, remark)}
-			description={t(`${key}.undoDescription`)}
 			error={error}
 			submitting={submitting}
 			title={t(`${key}.undoTitle`)}
 			confirmLabel={t(
 				gate.needsRemark ? `${key}.undoAnyway` : `${key}.undoChange`
 			)}
+			description={
+				notifiesMembers
+					? `${t(`${key}.undoDescription`)} ${t(`${key}.notifyCount`, {
+							count: peopleTold(preview.cells),
+						})}`
+					: t(`${key}.undoDescription`)
+			}
 			onClose={onClose}
 			onConfirm={() => {
 				onConfirm({
@@ -78,6 +89,7 @@ export const UndoRosterChangeDialog = ({
 		>
 			<RosterChangeReview
 				names={names}
+				notifiesMembers={notifiesMembers}
 				preview={preview}
 				remark={remark}
 				ticked={ticked}
