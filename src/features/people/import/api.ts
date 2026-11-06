@@ -58,6 +58,8 @@ const importCheckSchema = z.object({
 	readyRows: z.number(),
 	skippedRows: z.number(),
 	errorRows: z.number(),
+	/** Whether the valid rows may be imported without the rows with errors (no more than half are invalid). */
+	partialImportAllowed: z.boolean().catch(false),
 	noticeRows: z.number(),
 	unknownColumns: z.array(z.string()),
 	invitationsAvailable: z.boolean(),
@@ -68,13 +70,17 @@ const importCheckSchema = z.object({
 /** The dry run of a file: nothing has been saved. */
 export type ImportCheck = z.infer<typeof importCheckSchema>;
 
-const rowResultSchema = z.enum([
-	"ADDED",
-	"ADDED_INVITE_PENDING",
-	"SKIPPED_EXISTS",
-	"FAILED_ACCOUNT",
-	"FAILED_VALIDATION",
-]);
+const rowResultSchema = z
+	.enum([
+		"ADDED",
+		"ADDED_INVITE_PENDING",
+		"SKIPPED_EXISTS",
+		"SKIPPED_INVALID",
+		"FAILED_ACCOUNT",
+		"FAILED_VALIDATION",
+		"UNKNOWN",
+	])
+	.catch("UNKNOWN");
 
 /** What happened to one row of an import. */
 export type RowResult = z.infer<typeof rowResultSchema>;
@@ -84,6 +90,14 @@ const rowOutcomeSchema = z.object({
 	result: rowResultSchema,
 	code: z.string().nullable(),
 	membershipId: z.string().nullable(),
+	// A row not added keeps its name and email for seven days after the import ends.
+	name: z.string().nullable().catch(null),
+	email: z.string().nullable().catch(null),
+	// Whether that person has been added to the company since the import started (worked out when read);
+	// who and when come only to a reader who may open that member.
+	resolved: z.boolean().catch(false),
+	resolvedMembershipId: z.string().nullable().catch(null),
+	resolvedAt: z.string().nullable().catch(null),
 });
 
 export type RowOutcome = z.infer<typeof rowOutcomeSchema>;
@@ -101,7 +115,9 @@ const memberImportSchema = z.object({
 	addedRows: z.number(),
 	invitePendingRows: z.number(),
 	skippedRows: z.number(),
+	skippedInvalidRows: z.number().catch(0),
 	failedRows: z.number(),
+	resolvedRows: z.number().catch(0),
 	createdAt: z.string(),
 	finishedAt: z.string().nullable(),
 	rows: z.array(rowOutcomeSchema),
@@ -138,14 +154,23 @@ export const checkImportFile = (
 		body: formWith(file),
 	});
 
-/** Checks the file again and, with no errors, starts adding its people in the background. */
+/** How an import starts: whether it invites, and whether rows with errors are left out. */
+export type StartImportOptions = {
+	sendInvitations: boolean;
+	skipInvalid: boolean;
+};
+
+/**
+ * Checks the file again and starts adding its people in the background:
+ * with no errors, or, with `skipInvalid`, without the rows that have them.
+ */
 export const startImport = (
 	companyId: string,
 	file: File,
-	sendInvitations: boolean
+	{ sendInvitations, skipInvalid }: StartImportOptions
 ): Promise<MemberImport> =>
 	apiRequest(
-		`${importsPath(companyId)}?sendInvitations=${String(sendInvitations)}`,
+		`${importsPath(companyId)}?sendInvitations=${String(sendInvitations)}&skipInvalid=${String(skipInvalid)}`,
 		memberImportSchema,
 		{ method: "POST", body: formWith(file) }
 	);

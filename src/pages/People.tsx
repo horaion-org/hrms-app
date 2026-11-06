@@ -12,6 +12,7 @@ import {
 	DeleteIcon,
 	DepartmentIcon,
 	DownloadIcon,
+	HistoryIcon,
 	RoleIcon,
 	TimeIcon,
 	UploadIcon,
@@ -161,6 +162,20 @@ export const People = (): FunctionComponent => {
 								}}
 							>
 								{t("people.import")}
+							</Button>
+						)}
+						{canAdd && (
+							<Button
+								leadingIcon={<HistoryIcon />}
+								variant="secondary"
+								onClick={() => {
+									void navigate({
+										to: "/settings",
+										search: { section: "data" },
+									});
+								}}
+							>
+								{t("people.imports")}
 							</Button>
 						)}
 						<Button

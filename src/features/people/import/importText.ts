@@ -7,6 +7,7 @@ import {
 	type CheckedRow,
 	type ImportProblem,
 	type MemberImport,
+	type RowOutcome,
 } from "@/features/people/import/api";
 
 /**
@@ -86,22 +87,57 @@ export const errorRowsCsv = (
 		]),
 ];
 
-/** One line per processed row: its number, result and the reason behind it. */
+/**
+ * Why a row ended as it did, in a sentence. A row left out for its errors
+ * keeps only its first problem's code, not the column, so a column-specific
+ * sentence names "A value" instead.
+ */
+export const outcomeDetail = (outcome: RowOutcome, t: TFunction): string => {
+	if (outcome.code === null) return "";
+	if (outcome.result === "SKIPPED_INVALID")
+		return t(`people.importPage.problems.${outcome.code}`, outcome.code, {
+			column: t("people.importPage.result.someColumn"),
+		});
+	return t(`people.importPage.details.${outcome.code}`, outcome.code);
+};
+
+/**
+ * That a row not added was added since, by a later import or by hand: with
+ * the day when the reader may open that member, without it otherwise.
+ */
+export const resolvedText = (
+	outcome: RowOutcome,
+	t: TFunction,
+	language: string
+): string | undefined => {
+	if (!outcome.resolved) return undefined;
+	return outcome.resolvedAt
+		? t("people.importPage.result.resolved", {
+				date: new Date(outcome.resolvedAt).toLocaleDateString(language),
+			})
+		: t("people.importPage.result.resolvedUndated");
+};
+
+/** One line per processed row: its number, who it was (when kept), result and the reason behind it. */
 export const resultRowsCsv = (
 	memberImport: MemberImport,
-	t: TFunction
+	t: TFunction,
+	language: string
 ): Array<Array<string>> => [
 	[
 		t("people.importPage.result.rowColumn"),
+		t("people.importPage.result.nameColumn"),
+		t("people.importPage.result.emailColumn"),
 		t("people.importPage.result.resultColumn"),
 		t("people.importPage.result.detailColumn"),
 	],
 	...memberImport.rows.map((outcome) => [
 		String(outcome.rowNumber),
-		t(`people.importPage.results.${outcome.result}`),
-		outcome.code === null
-			? ""
-			: t(`people.importPage.details.${outcome.code}`, outcome.code),
+		outcome.name ?? "",
+		outcome.email ?? "",
+		resolvedText(outcome, t, language) ??
+			t(`people.importPage.results.${outcome.result}`),
+		outcomeDetail(outcome, t),
 	]),
 ];
 
@@ -113,6 +149,7 @@ const REFUSAL_CODES = [
 	"FILE_TOO_LARGE",
 	"IMPORT_RUNNING",
 	"IMPORT_HAS_ERRORS",
+	"IMPORT_MOSTLY_INVALID",
 	"INVITATIONS_UNAVAILABLE",
 	"RATE_LIMITED",
 	"UNKNOWN",

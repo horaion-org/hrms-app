@@ -20,7 +20,9 @@ const peopleImport = (overrides: Partial<MemberImport>): MemberImport => ({
 	addedRows: 45,
 	invitePendingRows: 0,
 	skippedRows: 0,
+	skippedInvalidRows: 0,
 	failedRows: 3,
+	resolvedRows: 0,
 	createdAt: "2026-11-04T03:05:00Z",
 	finishedAt: "2026-11-04T03:07:00Z",
 	rows: [],
@@ -103,5 +105,14 @@ describe("historyResultText", () => {
 				t
 			)
 		).toBe("Stopped · 45 added · 3 failed");
+	});
+
+	it("says how many rows not added have been added since, so solved rows stop counting against it", () => {
+		expect(
+			historyResultText(
+				{ kind: "PEOPLE", importRecord: peopleImport({ resolvedRows: 2 }) },
+				t
+			)
+		).toBe("45 added · 3 failed · 2 added since");
 	});
 });

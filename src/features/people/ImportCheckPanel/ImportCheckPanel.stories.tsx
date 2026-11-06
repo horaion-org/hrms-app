@@ -20,6 +20,7 @@ const check: ImportCheck = {
 	readyRows: 1,
 	skippedRows: 1,
 	errorRows: 2,
+	partialImportAllowed: true,
 	noticeRows: 0,
 	unknownColumns: ["Salary"],
 	invitationsAvailable: false,

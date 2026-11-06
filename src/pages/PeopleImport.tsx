@@ -53,11 +53,13 @@ const route = getRouteApi("/_authenticated/_app/settings_/data/import-people");
  */
 export const PeopleImport = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
-	const { t } = useTranslation();
+	const { t, i18n } = useTranslation();
 	const navigate = route.useNavigate();
 	const search = route.useSearch();
 	const client = useQueryClient();
 	const [sendInvitations, setSendInvitations] = useState(false);
+	// Set when the person chose to import the valid rows only.
+	const [skipInvalid, setSkipInvalid] = useState(false);
 	const openedImportId = search.import;
 	const wizard = useImportWizard<ImportCheck, RefusalCode>({
 		openedImportId,
@@ -79,7 +81,7 @@ export const PeopleImport = (): FunctionComponent => {
 	const recent = useQuery(recentImportsQuery(companyId));
 	const starting = useMutation({
 		mutationFn: (chosen: File) =>
-			startImport(companyId, chosen, sendInvitations),
+			startImport(companyId, chosen, { sendInvitations, skipInvalid }),
 		onSuccess: (started) => {
 			wizard.closeConfirm();
 			void navigate({ search: { import: started.importId } });
@@ -104,6 +106,16 @@ export const PeopleImport = (): FunctionComponent => {
 		check.errorRows > 0 ||
 		check.readyRows === 0 ||
 		check.runningImportId !== null;
+	const hasErrors = check !== undefined && check.errorRows > 0;
+	const canImportValidRowsOnly =
+		hasErrors && check.partialImportAllowed && check.runningImportId === null;
+	// Some rows are ready, but more than half have errors: likely the wrong file or columns.
+	const mostlyInvalid =
+		hasErrors && !check.partialImportAllowed && check.readyRows > 0;
+	const openConfirm = (validRowsOnly: boolean): void => {
+		setSkipInvalid(validRowsOnly);
+		wizard.openConfirm();
+	};
 
 	return (
 		<>
@@ -188,23 +200,71 @@ export const PeopleImport = (): FunctionComponent => {
 								setSendInvitations(event.target.checked);
 							}}
 						/>
-						<Button
-							className="mt-6"
-							disabled={blocked}
-							onClick={wizard.openConfirm}
-						>
-							{t("people.importPage.check.import", { count: check.readyRows })}
-						</Button>
+						{hasErrors ? (
+							<>
+								<div className="mt-6 flex flex-wrap gap-3">
+									<Button onClick={wizard.startOver}>
+										{t("people.importPage.check.fixAndReupload")}
+									</Button>
+									{canImportValidRowsOnly && (
+										<Button
+											aria-describedby="import-valid-rows-hint"
+											variant="secondary"
+											onClick={() => {
+												openConfirm(true);
+											}}
+										>
+											{t("people.importPage.check.importValidOnly", {
+												count: check.readyRows,
+											})}
+										</Button>
+									)}
+								</div>
+								{canImportValidRowsOnly && (
+									<p
+										className="mt-2 text-sm text-neutral-700"
+										id="import-valid-rows-hint"
+									>
+										{t("people.importPage.check.validOnlyHint")}
+									</p>
+								)}
+								{mostlyInvalid && (
+									<p className="mt-2 text-sm text-neutral-700">
+										{t("people.importPage.check.mostlyInvalid")}
+									</p>
+								)}
+							</>
+						) : (
+							<Button
+								className="mt-6"
+								disabled={blocked}
+								onClick={() => {
+									openConfirm(false);
+								}}
+							>
+								{t("people.importPage.check.import", {
+									count: check.readyRows,
+								})}
+							</Button>
+						)}
 						{wizard.confirming && file && (
 							<ConfirmDialog
 								cancelLabel={t("people.importPage.confirm.cancel")}
 								confirmLabel={t("people.importPage.confirm.confirm")}
 								submitting={starting.isPending}
-								description={`${t("people.importPage.confirm.body")} ${
+								description={[
+									t("people.importPage.confirm.body"),
 									sendInvitations
 										? t("people.importPage.confirm.invite")
-										: t("people.importPage.confirm.noInvite")
-								}`}
+										: t("people.importPage.confirm.noInvite"),
+									...(skipInvalid
+										? [
+												t("people.importPage.confirm.leftOut", {
+													count: check.errorRows,
+												}),
+											]
+										: []),
+								].join(" ")}
 								title={t("people.importPage.confirm.title", {
 									count: check.readyRows,
 								})}
@@ -227,7 +287,9 @@ export const PeopleImport = (): FunctionComponent => {
 										variant="secondary"
 										onClick={() => {
 											saveFile(
-												toCsvBlob(resultRowsCsv(current.data, t)),
+												toCsvBlob(
+													resultRowsCsv(current.data, t, i18n.language)
+												),
 												"people-import-results.csv"
 											);
 										}}

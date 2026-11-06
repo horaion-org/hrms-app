@@ -2,13 +2,18 @@ import i18next, { type TFunction } from "i18next";
 import { describe, expect, it } from "vitest";
 import "@/common/i18n";
 import { ApiProblemError } from "@/common/problem";
-import type { CheckedRow, MemberImport } from "@/features/people/import/api";
+import type {
+	CheckedRow,
+	MemberImport,
+	RowOutcome,
+} from "@/features/people/import/api";
 import {
 	clientFileProblem,
 	errorRowsCsv,
 	problemGroups,
 	problemText,
 	refusalCode,
+	resolvedText,
 	resultRowsCsv,
 } from "@/features/people/import/importText";
 
@@ -103,14 +108,68 @@ describe("resultRowsCsv", () => {
 			],
 		} as unknown as MemberImport;
 
-		expect(resultRowsCsv(memberImport, t).slice(1)).toEqual([
-			["2", "people.importPage.results.ADDED", ""],
+		expect(resultRowsCsv(memberImport, t, "en").slice(1)).toEqual([
+			["2", "", "", "people.importPage.results.ADDED", ""],
 			[
 				"3",
+				"",
+				"",
 				"people.importPage.results.FAILED_ACCOUNT",
 				"people.importPage.details.EMAIL_ALREADY_REGISTERED",
 			],
 		]);
+	});
+
+	it("names a row not added and says when its person was added since", () => {
+		const memberImport = {
+			rows: [
+				{
+					rowNumber: 4,
+					result: "SKIPPED_INVALID",
+					code: "INVALID_PHONE",
+					membershipId: null,
+					name: "Siti",
+					email: "siti@acme.sg",
+					resolved: true,
+					resolvedMembershipId: "m-4",
+					resolvedAt: "2026-11-05T09:00:00Z",
+				},
+			],
+		} as unknown as MemberImport;
+
+		expect(resultRowsCsv(memberImport, t, "en")[1]).toEqual([
+			"4",
+			"Siti",
+			"siti@acme.sg",
+			"people.importPage.result.resolved",
+			"people.importPage.problems.INVALID_PHONE(people.importPage.result.someColumn)",
+		]);
+	});
+});
+
+describe("resolvedText", () => {
+	it("dates a row added since only when the reader may open that member", () => {
+		const row = (resolvedAt: string | null): RowOutcome => ({
+			rowNumber: 4,
+			result: "FAILED_ACCOUNT",
+			code: null,
+			membershipId: null,
+			name: "Siti",
+			email: "siti@acme.sg",
+			resolved: true,
+			resolvedMembershipId: null,
+			resolvedAt,
+		});
+
+		expect(resolvedText(row("2026-11-05T09:00:00Z"), t, "en")).toBe(
+			"people.importPage.result.resolved"
+		);
+		expect(resolvedText(row(null), t, "en")).toBe(
+			"people.importPage.result.resolvedUndated"
+		);
+		expect(
+			resolvedText({ ...row(null), resolved: false }, t, "en")
+		).toBeUndefined();
 	});
 });
 
@@ -140,6 +199,9 @@ describe("refusalCode", () => {
 			});
 
 		expect(refusalCode(problem(409, "IMPORT_RUNNING"))).toBe("IMPORT_RUNNING");
+		expect(refusalCode(problem(422, "IMPORT_MOSTLY_INVALID"))).toBe(
+			"IMPORT_MOSTLY_INVALID"
+		);
 		expect(refusalCode(problem(429))).toBe("RATE_LIMITED");
 		expect(refusalCode(problem(413))).toBe("FILE_TOO_LARGE");
 		expect(refusalCode(new Error("x"))).toBe("UNKNOWN");

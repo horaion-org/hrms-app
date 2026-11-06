@@ -846,7 +846,8 @@
 				"IMPORT_HAS_ERRORS": "Some rows still need fixing. Check the file again.",
 				"INVITATIONS_UNAVAILABLE": "Invitations can't be sent in bulk yet. Import without them.",
 				"RATE_LIMITED": "You've reached the import limit for now. Try again later.",
-				"UNKNOWN": "Something went wrong. Try again."
+				"UNKNOWN": "Something went wrong. Try again.",
+				"IMPORT_MOSTLY_INVALID": "Most rows have problems, so this looks like the wrong file or columns. Fix the file first."
 			},
 			"check": {
 				"nothingSaved": "Nothing has been saved yet.",
@@ -873,7 +874,12 @@
 				"invitationsOff": "Invitations can't be sent in bulk yet; send each one from the person's profile after the import.",
 				"running": "Another import is still running for this company.",
 				"import_one": "Import {{count}} person",
-				"import_other": "Import {{count}} people"
+				"import_other": "Import {{count}} people",
+				"fixAndReupload": "Fix and re-upload",
+				"importValidOnly_one": "Import {{count}} valid row only",
+				"importValidOnly_other": "Import {{count}} valid rows only",
+				"validOnlyHint": "Rows with problems are left out. Fix them in the file and import it again later: people already added are skipped.",
+				"mostlyInvalid": "Most rows have problems, so this looks like the wrong file or columns. Fix the file first."
 			},
 			"confirm": {
 				"title_one": "Import {{count}} person?",
@@ -882,7 +888,9 @@
 				"invite": "Each one gets an invitation email.",
 				"noInvite": "Nobody is emailed now; invite people from their profile.",
 				"confirm": "Import people",
-				"cancel": "Cancel"
+				"cancel": "Cancel",
+				"leftOut_one": "{{count}} row with problems won't be imported. You can fix it and import it later.",
+				"leftOut_other": "{{count}} rows with problems won't be imported. You can fix them and import them later."
 			},
 			"progress": {
 				"heading": "Adding people…",
@@ -902,14 +910,26 @@
 				"resultColumn": "Result",
 				"detailColumn": "Reason",
 				"open": "Open profile",
-				"loadFailed": "This import couldn't be loaded. Try again."
+				"loadFailed": "This import couldn't be loaded. Try again.",
+				"someColumn": "A value",
+				"nameColumn": "Person",
+				"emailColumn": "Email",
+				"resolved": "Added since, on {{date}}",
+				"resolvedUndated": "Added since",
+				"leftOut_one": "{{count}} with problems left out",
+				"leftOut_other": "{{count}} with problems left out",
+				"resolvedSummary_one": "{{count}} row not added then has been added since.",
+				"resolvedSummary_other": "{{count}} rows not added then have been added since.",
+				"stoppedHint": "{{processed}} of {{total}} rows were processed before it stopped. Import the same file again to add the rest: people already added are skipped."
 			},
 			"results": {
 				"ADDED": "Added",
 				"ADDED_INVITE_PENDING": "Added; invitation not sent",
 				"SKIPPED_EXISTS": "Already in this company: skipped",
 				"FAILED_ACCOUNT": "Couldn't create their account",
-				"FAILED_VALIDATION": "Couldn't be added here any more"
+				"FAILED_VALIDATION": "Couldn't be added here any more",
+				"SKIPPED_INVALID": "Left out: it had problems",
+				"UNKNOWN": "Unknown result"
 			},
 			"details": {
 				"EMAIL_ALREADY_REGISTERED": "This email already has a Horaion account.",
@@ -970,7 +990,8 @@
 			},
 			"history": "Import history"
 		},
-		"termsNotSet": "We couldn’t give them {{chosen}}, so they’re on {{kept}}. Change it from their profile."
+		"termsNotSet": "We couldn’t give them {{chosen}}, so they’re on {{kept}}. Change it from their profile.",
+		"imports": "Imports"
 	},
 	"settings": {
 		"title": "Settings",
@@ -1189,7 +1210,9 @@
 					"PEOPLE": "People"
 				},
 				"organisationResult": "{{created}} created · {{skipped}} skipped",
-				"peopleResult": "{{added}} added · {{failed}} failed"
+				"peopleResult": "{{added}} added · {{failed}} failed",
+				"addedSince_one": "{{count}} added since",
+				"addedSince_other": "{{count}} added since"
 			}
 		},
 		"employment": {
