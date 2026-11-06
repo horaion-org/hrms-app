@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Navigate, useNavigate, useSearch } from "@tanstack/react-router";
 import { useId, useReducer, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -24,7 +24,12 @@ import { useConstraintOptions } from "@/features/scheduling/constraints/useConst
 import { departmentUnitOf } from "@/features/scheduling/departmentUnit";
 import { ForecastStep } from "@/features/scheduling/ForecastStep";
 import { GenerateStep } from "@/features/scheduling/GenerateStep";
+import {
+	startingDaysKey,
+	startingDaysQuery,
+} from "@/features/scheduling/startingContext/api";
 import { StartingContextSection } from "@/features/scheduling/startingContext/StartingContextSection";
+import { missingDayCounts } from "@/features/scheduling/startingContext/startingGrid";
 import {
 	defaultPeriod,
 	formatPeriod,
@@ -52,6 +57,7 @@ import type {
 } from "@/features/scheduling/schedules/api";
 import {
 	generationRefusal,
+	isPriorWeekIncomplete,
 	scheduleRefusal,
 	scheduleRefusalMessage,
 } from "@/features/scheduling/schedules/scheduleRefusal";
@@ -162,6 +168,7 @@ export const CreateSchedule = (): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const companyId = useCurrentCompanyId();
 	const navigate = useNavigate();
+	const queryClient = useQueryClient();
 	const access = useAccess();
 	const workspace = useQuery({ ...workspaceQuery, retry });
 	const search = useSearch({ from: "/_authenticated/_app/scheduling_/new" });
@@ -236,6 +243,17 @@ export const CreateSchedule = (): FunctionComponent => {
 	const canAddConstraint = !frozen && allowed("constraint:create");
 	const canEditConstraint = !frozen && allowed("constraint:update");
 	const canDeleteConstraint = !frozen && allowed("constraint:delete");
+	// Generate waits on the same answer the Generate step's section reads.
+	const lastWeek = useQuery(
+		startingDaysQuery(
+			companyId,
+			saved,
+			saved?.scheduleId ?? "",
+			step === "generate" && !frozen
+		)
+	);
+	const lastWeekMissing =
+		lastWeek.data !== undefined && missingDayCounts(lastWeek.data).days > 0;
 	const shifts = useScheduleShifts(companyId, saved, saved?.scheduleId);
 	// The first answer after a load ticks what the schedule includes.
 	if (saved && shifts.status === "ready" && !draft.shiftsSeeded)
@@ -271,6 +289,7 @@ export const CreateSchedule = (): FunctionComponent => {
 	const constraintActions = useConstraintActions(companyId);
 	const [toast, setToast] = useState<{ id: number; message: string }>();
 	const [problem, setProblem] = useState("");
+	const [lastWeekOpen, setLastWeekOpen] = useState(false);
 	// Set when Next is refused, so the reason shows only after a try.
 	const [blocked, setBlocked] = useState(false);
 	// Set while the person is asked whether to go on without constraints.
@@ -458,6 +477,12 @@ export const CreateSchedule = (): FunctionComponent => {
 			});
 		} catch (error) {
 			setProblem(generationRefusal(error, t));
+			if (isPriorWeekIncomplete(error)) {
+				await queryClient.invalidateQueries({
+					queryKey: startingDaysKey(companyId, saved.scheduleId),
+				});
+				setLastWeekOpen(true);
+			}
 			return;
 		}
 		await navigate({
@@ -560,7 +585,9 @@ export const CreateSchedule = (): FunctionComponent => {
 	const unavailableNote = t(
 		frozen
 			? "scheduling.create.generated"
-			: "scheduling.create.generateForbidden"
+			: canGenerate && lastWeekMissing
+				? "scheduling.startingContext.generateBlocked"
+				: "scheduling.create.generateForbidden"
 	);
 	const onShiftsIncluded = frozen
 		? undefined
@@ -656,8 +683,10 @@ export const CreateSchedule = (): FunctionComponent => {
 								<StartingContextSection
 									canEdit={canSave}
 									companyId={companyId}
+									gridOpen={lastWeekOpen}
 									scheduleId={saved.scheduleId}
 									unit={saved}
+									onGridOpenChange={setLastWeekOpen}
 								/>
 							)
 						}
@@ -673,7 +702,7 @@ export const CreateSchedule = (): FunctionComponent => {
 				busy={busy}
 				className="mt-12"
 				form={step === "setup" ? setupFormId : undefined}
-				nextDisabled={isLast && !canGenerate}
+				nextDisabled={isLast && (!canGenerate || lastWeekMissing)}
 				nextIcon={isLast ? <GenerateScheduleIcon /> : <ArrowRightIcon />}
 				unavailableNote={unavailableNote}
 				nextLabel={

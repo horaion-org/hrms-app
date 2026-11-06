@@ -1,4 +1,5 @@
 import type { TFunction } from "i18next";
+import { ApiProblemError } from "@/common/problem";
 import { mapRefusal, type Refusal } from "@/features/organisation/refusal";
 
 /**
@@ -26,9 +27,15 @@ export const SCHEDULE_REFUSAL_CODES = {
 	weekAlreadyPublished: "409 SCHEDULE_WEEK_ALREADY_PUBLISHED",
 	published: "409 SCHEDULE_PUBLISHED",
 	invalidRejectionReason: "400 INVALID_REJECTION_REASON",
+	priorWeekIncomplete: "409 PRIOR_WEEK_INCOMPLETE",
 } as const;
 
 const codes = SCHEDULE_REFUSAL_CODES;
+
+/** Whether generation was refused for days missing from the week before. */
+export const isPriorWeekIncomplete = (error: unknown): boolean =>
+	error instanceof ApiProblemError &&
+	`${error.status} ${error.errorCode}` === codes.priorWeekIncomplete;
 
 /** The setup fields a refused save can land on. */
 export type ScheduleField = "name" | "periodStart";
@@ -92,6 +99,7 @@ export const generationRefusal = (error: unknown, t: TFunction): string => {
 			alerts: {
 				[codes.hasNoShifts]: t(`${key}.noShifts`),
 				[codes.hasNoEmployees]: t(`${key}.noEmployees`),
+				[codes.priorWeekIncomplete]: t(`${key}.priorWeekIncomplete`),
 				[codes.constraintUnusable]: t(`${key}.constraintUnusable`),
 				[codes.notDraft]: t(`${key}.notDraft`),
 				[codes.scheduleNotFound]: t("scheduling.draft.gone"),
@@ -127,6 +135,7 @@ export const regenerationRefusal = (error: unknown, t: TFunction): string => {
 				[codes.generationInProgress]: t(`${key}.inProgress`),
 				[codes.published]: t(`${key}.published`),
 				[codes.hasNoEmployees]: t("scheduling.generate.noEmployees"),
+				[codes.priorWeekIncomplete]: t(`${key}.priorWeekIncomplete`),
 				[codes.scheduleNotFound]: t("scheduling.delete.gone"),
 			},
 			forbidden: t(`${key}.forbidden`),

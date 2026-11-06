@@ -1,10 +1,12 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useState } from "react";
 import { I18nextProvider } from "react-i18next";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { configureApiClient, resetApiClient } from "@/common/api-client";
 import { envelope, problemReply, stubApi } from "@/common/testing/stubApi";
+import type { FunctionComponent } from "@/common/types";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import {
 	editableMember,
@@ -29,19 +31,35 @@ afterEach(() => {
 	vi.unstubAllGlobals();
 });
 
-const show = (): void => {
+/** The section as a page holds it, with the grid's open state beside it. */
+const Page = ({
+	canEdit,
+	gridInitiallyOpen,
+}: {
+	canEdit: boolean;
+	gridInitiallyOpen: boolean;
+}): FunctionComponent => {
+	const [gridOpen, setGridOpen] = useState(gridInitiallyOpen);
+	return (
+		<StartingContextSection
+			canEdit={canEdit}
+			companyId="c-1"
+			gridOpen={gridOpen}
+			scheduleId="s-1"
+			unit={UNIT}
+			onGridOpenChange={setGridOpen}
+		/>
+	);
+};
+
+const show = ({ canEdit = true, gridInitiallyOpen = false } = {}): void => {
 	const client = new QueryClient({
 		defaultOptions: { queries: { retry: false } },
 	});
 	render(
 		<I18nextProvider i18n={authTestI18n}>
 			<QueryClientProvider client={client}>
-				<StartingContextSection
-					canEdit
-					companyId="c-1"
-					scheduleId="s-1"
-					unit={UNIT}
-				/>
+				<Page canEdit={canEdit} gridInitiallyOpen={gridInitiallyOpen} />
 			</QueryClientProvider>
 		</I18nextProvider>
 	);
@@ -68,10 +86,52 @@ describe("StartingContextSection", () => {
 		holdOpenings();
 		show();
 
-		expect(await screen.findByText(/No roster before this week/)).toBeVisible();
+		expect(await screen.findByText(/Last week is missing/)).toBeVisible();
 		expect(
 			screen.queryByRole("button", { name: /last week/ })
 		).not.toBeInTheDocument();
+	});
+
+	it("given_thePageOpensTheGrid_when_thePersonMayEdit_then_itShowsAndCloses", async () => {
+		stubApi({
+			[`GET ${SCHEDULE}/starting-days`]: {
+				status: 200,
+				body: envelope(firstWeek()),
+			},
+			[`GET ${SCHEDULE}/opening-balances`]: {
+				status: 200,
+				body: envelope(midMonthOpenings([])),
+			},
+		});
+		show({ gridInitiallyOpen: true });
+
+		expect(
+			await screen.findByRole("dialog", { name: "Before this week" })
+		).toBeVisible();
+		await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
+
+		await vi.waitFor(() => {
+			expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+		});
+	});
+
+	it("given_thePageOpensTheGrid_when_thePersonMayNotEdit_then_onlyTheNoteShows", async () => {
+		stubApi({
+			[`GET ${SCHEDULE}/starting-days`]: {
+				status: 200,
+				body: envelope(firstWeek()),
+			},
+			[`GET ${SCHEDULE}/opening-balances`]: {
+				status: 200,
+				body: envelope(midMonthOpenings([])),
+			},
+		});
+		show({ canEdit: false, gridInitiallyOpen: true });
+
+		expect(
+			await screen.findByText(/Someone who can edit this schedule/)
+		).toBeVisible();
+		expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 	});
 
 	it("given_theOpeningsAreRefusedAfterTheDays_when_saved_then_saysTheDaysWentThroughAndKeepsTheDialog", async () => {

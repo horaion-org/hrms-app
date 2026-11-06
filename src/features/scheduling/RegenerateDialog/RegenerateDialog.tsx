@@ -2,7 +2,10 @@ import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import type { Schedule } from "@/features/scheduling/schedules/api";
-import { regenerationRefusal } from "@/features/scheduling/schedules/scheduleRefusal";
+import {
+	isPriorWeekIncomplete,
+	regenerationRefusal,
+} from "@/features/scheduling/schedules/scheduleRefusal";
 import { useScheduleActions } from "@/features/scheduling/schedules/useSchedule";
 
 export type RegenerateDialogProps = {
@@ -10,6 +13,8 @@ export type RegenerateDialogProps = {
 	/** A schedule `regenerable` allows: GENERATED, GENERATION_FAILED or REJECTED, with no run open. */
 	schedule: Schedule;
 	onClose: () => void;
+	/** Takes over a refusal for days missing from last week; left out, the dialog says so itself. */
+	onPriorWeekIncomplete?: () => void;
 };
 
 const key = "scheduling.regenerate";
@@ -24,6 +29,7 @@ export const RegenerateDialog = ({
 	companyId,
 	schedule,
 	onClose,
+	onPriorWeekIncomplete,
 }: RegenerateDialogProps): FunctionComponent => {
 	const { t } = useTranslation();
 	const { regenerate } = useScheduleActions(companyId);
@@ -51,7 +57,12 @@ export const RegenerateDialog = ({
 						},
 						scheduleId: schedule.scheduleId,
 					},
-					{ onSuccess: onClose }
+					{
+						onSuccess: onClose,
+						onError: (error) => {
+							if (isPriorWeekIncomplete(error)) onPriorWeekIncomplete?.();
+						},
+					}
 				);
 			}}
 		>

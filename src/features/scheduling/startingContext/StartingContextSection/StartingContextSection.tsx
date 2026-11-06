@@ -1,5 +1,4 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ApiProblemError } from "@/common/problem";
 import type { FunctionComponent } from "@/common/types";
@@ -30,6 +29,9 @@ export type StartingContextSectionProps = {
 	scheduleId: string;
 	/** Whether the person may change the draft (`schedule:update`, still a draft). */
 	canEdit: boolean;
+	/** Whether the grid is open; the page holds it so a refused generation can open it. */
+	gridOpen: boolean;
+	onGridOpenChange: (open: boolean) => void;
 	className?: string;
 };
 
@@ -86,11 +88,12 @@ export const StartingContextSection = ({
 	unit,
 	scheduleId,
 	canEdit,
+	gridOpen,
+	onGridOpenChange,
 	className,
 }: StartingContextSectionProps): FunctionComponent => {
 	const { t } = useTranslation();
 	const queryClient = useQueryClient();
-	const [open, setOpen] = useState(false);
 	const week = useQuery(startingDaysQuery(companyId, unit, scheduleId));
 	const openings = useQuery(openingBalancesQuery(companyId, unit, scheduleId));
 	const saving = useMutation({
@@ -123,7 +126,7 @@ export const StartingContextSection = ({
 			}
 		},
 		onSuccess: (saved) => {
-			if (saved.openingsRefusal === undefined) setOpen(false);
+			if (saved.openingsRefusal === undefined) onGridOpenChange(false);
 		},
 	});
 	if (week.data === undefined) return null;
@@ -140,17 +143,18 @@ export const StartingContextSection = ({
 			<StartingContextCallout
 				className={className}
 				enteredCount={enteredMemberCount(initialEntries(week.data))}
+				readOnly={!canEdit}
 				week={week.data}
 				onAdd={
 					canEdit && !openings.isPending
 						? (): void => {
 								saving.reset();
-								setOpen(true);
+								onGridOpenChange(true);
 							}
 						: undefined
 				}
 			/>
-			{open && (
+			{gridOpen && canEdit && !openings.isPending && (
 				<StartingDaysDialog
 					open
 					openings={openings.data}
@@ -158,7 +162,7 @@ export const StartingContextSection = ({
 					saving={saving.isPending}
 					week={week.data}
 					onClose={() => {
-						setOpen(false);
+						onGridOpenChange(false);
 					}}
 					onSave={(days, changedOpenings) => {
 						saving.mutate({ days, openings: changedOpenings });

@@ -46,6 +46,7 @@ import {
 	startingContextQuery,
 	type StartingContext,
 } from "@/features/scheduling/startingContext/api";
+import { StartingContextSection } from "@/features/scheduling/startingContext/StartingContextSection";
 import { runsByMember } from "@/features/scheduling/startingContext/startingGrid";
 import { departmentScope } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
@@ -209,6 +210,9 @@ const ApiSchedule = ({
 	const navigate = useNavigate();
 	const access = useAccess();
 	const [regenerating, setRegenerating] = useState(false);
+	// Only a schedule generated before starting contexts existed can be asked for last week here.
+	const [askedForLastWeek, setAskedForLastWeek] = useState(false);
+	const [lastWeekOpen, setLastWeekOpen] = useState(false);
 	const [deciding, setDeciding] = useState<Deciding>();
 	const state = useCompanySchedule(companyId, scheduleId, {
 		pollWhileGenerating: true,
@@ -288,6 +292,10 @@ const ApiSchedule = ({
 					shifts: editorShifts.data ?? [],
 				}
 			: undefined;
+	const canEditLastWeek = access.can(
+		"schedule:update",
+		departmentScope(state.schedule.departmentId)
+	);
 	const canDecide =
 		decidable(state.schedule) &&
 		access.can(
@@ -339,6 +347,17 @@ const ApiSchedule = ({
 						: undefined
 				}
 			/>
+			{askedForLastWeek && unit !== undefined && (
+				<StartingContextSection
+					canEdit={canEditLastWeek}
+					className="mt-6"
+					companyId={companyId}
+					gridOpen={lastWeekOpen}
+					scheduleId={scheduleId}
+					unit={unit}
+					onGridOpenChange={setLastWeekOpen}
+				/>
+			)}
 			<RosterBody
 				assignments={assignments}
 				constraints={constraints}
@@ -373,6 +392,15 @@ const ApiSchedule = ({
 					onClose={() => {
 						setRegenerating(false);
 					}}
+					onPriorWeekIncomplete={
+						canEditLastWeek
+							? (): void => {
+									setRegenerating(false);
+									setAskedForLastWeek(true);
+									setLastWeekOpen(true);
+								}
+							: undefined
+					}
 				/>
 			)}
 		</>
