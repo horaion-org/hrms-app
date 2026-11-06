@@ -7,7 +7,14 @@ import {
 	hasAccessPass,
 	onSessionEnded,
 	renewSession,
+	type SessionEndReason,
 } from "@/features/auth/session";
+
+/** Whether a signed-in page is showing, which ending the Session must leave. */
+const onSignedInPage = (router: AnyRouter): boolean =>
+	router.state.matches.some((match) =>
+		match.routeId.startsWith("/_authenticated")
+	);
 
 /** The company a refused company path named, if any. */
 const companyOfPath = (path: string): string | undefined => {
@@ -46,17 +53,24 @@ export function connectSession(
 			if (hasAccessPass()) endSession("expired");
 		},
 	});
+	const leaveForLogIn = async (reason: SessionEndReason): Promise<void> => {
+		try {
+			if (!onSignedInPage(router) && reason === "expired") return;
+			// Past any blocker: a blocked navigation never settles, and the cache would never be cleared.
+			await router.navigate({
+				to: "/login",
+				replace: true,
+				ignoreBlocker: true,
+				search:
+					reason === "expired" ? { redirect: router.state.location.href } : {},
+			});
+		} finally {
+			// Only once Log in has replaced the signed-in page: its queries are still observed until then, and a
+			// cleared cache lets them re-create themselves empty and fetch, which asks for a Session renewal.
+			queryClient.clear();
+		}
+	};
 	return onSessionEnded((reason) => {
-		queryClient.clear();
-		const guarded = router.state.matches.some((match) =>
-			match.routeId.startsWith("/_authenticated")
-		);
-		if (!guarded && reason === "expired") return;
-		void router.navigate({
-			to: "/login",
-			replace: true,
-			search:
-				reason === "expired" ? { redirect: router.state.location.href } : {},
-		});
+		void leaveForLogIn(reason);
 	});
 }
