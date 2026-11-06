@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { SchedulingIcon } from "@/components/ui/Icon";
 import { formatPeriod } from "@/features/scheduling/periods";
+import { setupDiagnostics } from "@/features/scheduling/roster/findings/diagnostics";
 import { scheduleStatusTones } from "@/features/scheduling/schedules";
 import type { Schedule } from "@/features/scheduling/schedules/api";
 import { scheduleViewLink } from "@/features/scheduling/schedules/scheduleViewLink";
@@ -30,7 +31,9 @@ export const ScheduleCard = ({
 	const { t, i18n } = useTranslation();
 	const titleId = useId();
 	const language = i18n.resolvedLanguage ?? i18n.language;
-	const setupIssues = schedule.generation?.findings?.diagnostics.length ?? 0;
+	const setupIssues = setupDiagnostics(
+		schedule.generation?.findings?.diagnostics ?? []
+	).length;
 
 	return (
 		<section

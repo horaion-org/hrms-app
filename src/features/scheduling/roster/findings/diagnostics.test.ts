@@ -13,6 +13,7 @@ import {
 import type { FindingsDiagnostic } from "@/features/scheduling/schedules/api";
 import {
 	findingsOfEveryKindFixture,
+	priorRestDiagnosticFixture,
 	scheduleAssignmentsFixture,
 } from "@/features/scheduling/schedules/fixtures";
 import { frozenShiftsFixture } from "@/features/scheduling/shifts/fixtures";
@@ -62,6 +63,7 @@ describe("diagnosticLabel", () => {
 		["RULE_REFERENCES_MISSING_ENTITY", "Rules naming missing items"],
 		["UNASSIGNABLE_EMPLOYEE", "Members no shift fits"],
 		["DEAD_SHIFT", "Shifts nobody can take"],
+		["PRIOR_REST_BLOCKS_SHIFTS", "Rest after last week"],
 		["SHIFT_TOO_SHORT", "Shift too short"],
 	])("given_%s_when_labelled_then_reads_%s", (code, label) => {
 		expect(diagnosticLabel(code, t)).toBe(label);
@@ -115,6 +117,21 @@ describe("diagnosticSentence", () => {
 
 		expect(diagnosticSentence(diagnostic, unnamed, t)).toBe(
 			"One of its rules names 1 item that isn’t in this schedule."
+		);
+	});
+
+	it("given_restAfterLastWeek_when_worded_then_namesTheMemberAndTheTimes", () => {
+		expect(diagnosticSentence(priorRestDiagnosticFixture(), named, t)).toBe(
+			"Ben Ong can’t start before 16:00 on the first day: their last shift before this schedule ended at 06:00, and 10 h of rest follow it."
+		);
+	});
+
+	it("given_restRunningPastTheFirstDay_when_worded_then_saysTheMemberCantWorkThatDay", () => {
+		const diagnostic = priorRestDiagnosticFixture();
+		diagnostic.entities["restedAt"] = "2026-10-13T01:00";
+
+		expect(diagnosticSentence(diagnostic, named, t)).toBe(
+			"Ben Ong can’t work on the first day: their last shift before this schedule ended at 06:00, and 10 h of rest follow it."
 		);
 	});
 

@@ -206,6 +206,9 @@ export const GeneratedRoster = ({
 					/>
 				</div>
 			)}
+			{schedule.generation?.priorContextChecked === false && (
+				<Callout className="mt-6">{t(`${key}.priorContextNotChecked`)}</Callout>
+			)}
 			{findings && counts && names && (
 				<>
 					<FindingsSummary

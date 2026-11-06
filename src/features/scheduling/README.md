@@ -169,13 +169,15 @@ constraint dialogs.
     constraints, from the findings, the roster and the schedule's setup.
   - `ruleLabel.ts` — a rule's name: its frozen constraint's (`sourceRuleId`), else its type's via the engine rule
     name (mirrors the API's `ConstraintType`), else "Forecast demand", else the engine name made readable.
-  - `diagnostics.ts` — diagnostics grouped by code, with the app's label and sentence for the engine's four codes
-    (`UNCOVERABLE_DEMAND`, `RULE_REFERENCES_MISSING_ENTITY`, `UNASSIGNABLE_EMPLOYEE`, `DEAD_SHIFT`) and a readable
-    fallback for any other.
+  - `diagnostics.ts` — diagnostics grouped by code, with the app's label and sentence for the engine's five codes
+    (`UNCOVERABLE_DEMAND`, `RULE_REFERENCES_MISSING_ENTITY`, `UNASSIGNABLE_EMPLOYEE`, `DEAD_SHIFT`,
+    `PRIOR_REST_BLOCKS_SHIFTS`) and a readable fallback for any other. A diagnostic whose `audience` is `roster`
+    (the rest after last week) is a roster note, counted and listed with the roster's; every other one is a setup
+    issue.
   - `rosterNotes.ts` — the roster notes on the days in view, by day and then by member.
   - `findingsOnGrid.ts` — where the grid marks them: a member's day (`assignmentMessages`), a member's row (their
-    errors, their conflicts, `UNASSIGNABLE_EMPLOYEE`) or a day's header (the day's errors and conflicts). Setup
-    diagnostics and members who no longer resolve stay in the panel.
+    errors, their conflicts, `UNASSIGNABLE_EMPLOYEE`, `PRIOR_REST_BLOCKS_SHIFTS`) or a day's header (the day's errors
+    and conflicts). Setup diagnostics and members who no longer resolve stay in the panel.
   - `conflictTimes.ts` — a conflict's span as clock times (the engine writes datetimes).
 - `roster/generationFailure.ts` — a FAILED run's `errorCode` in the app's words (the closed set,
   `engine_http_<status>`, then a generic fallback), or INFEASIBLE.

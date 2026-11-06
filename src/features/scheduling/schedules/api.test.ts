@@ -438,6 +438,25 @@ describe("a schedule's generation", () => {
 		);
 	});
 
+	it("reads a run from a backend that doesn't say whether last week was checked as null", async () => {
+		const schedule = generatedScheduleFixture({ status: "GENERATED" });
+		stubApi({
+			[`GET ${SCHEDULES}/s-1`]: {
+				status: 200,
+				body: envelope({
+					...schedule,
+					generation: {
+						...generationFixture(),
+						priorContextChecked: undefined,
+					},
+				}),
+			},
+		});
+
+		const parsed = await fetchSchedule("c-1", UNIT, "s-1");
+		expect(parsed.generation?.priorContextChecked).toBeNull();
+	});
+
 	it("reads a run status it doesn't know as UNKNOWN, which is not an open run", async () => {
 		stubApi({
 			[`GET ${SCHEDULES}/s-1`]: {

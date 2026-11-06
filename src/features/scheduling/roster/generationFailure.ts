@@ -20,6 +20,8 @@ const KNOWN_CODES = [
 	"idempotency_conflict",
 	"payload_too_large",
 	"snapshot_invalid",
+	"history_invalid",
+	"engine_outdated",
 	"too_many_jobs",
 	"job_not_found",
 	"unauthorized",

@@ -178,6 +178,12 @@ const generationSchema = z.object({
 	finishedAt: z.string().nullable(),
 	/** Null until a result is applied. */
 	findings: generationFindingsSchema.nullable(),
+	/**
+	 * Whether the engine was given the week before and checked rest across the
+	 * start of the period: false when the engine couldn't read it, null for a
+	 * run recorded before the backend tracked it.
+	 */
+	priorContextChecked: z.boolean().nullable().default(null),
 });
 
 /** A schedule's newest generation run and what it found. */

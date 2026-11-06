@@ -9,6 +9,7 @@ import { formatDay } from "@/features/scheduling/periods";
 import {
 	diagnosticLabel,
 	groupDiagnostics,
+	setupDiagnostics,
 } from "@/features/scheduling/roster/findings/diagnostics";
 import type { FindingNames } from "@/features/scheduling/roster/findings/findingNames";
 import { rosterNotes } from "@/features/scheduling/roster/findings/rosterNotes";
@@ -51,7 +52,8 @@ export const FindingsPanel = ({
 }: FindingsPanelProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const language = i18n.resolvedLanguage ?? i18n.language;
-	const setupGroups = groupDiagnostics(findings.diagnostics);
+	const setupIssues = setupDiagnostics(findings.diagnostics);
+	const setupGroups = groupDiagnostics(setupIssues);
 	const notes = rosterNotes(findings, visibleDays);
 	const rosterCount = [...notes.byDate, ...notes.byMember].reduce(
 		(total, group) => total + group.findings.length,
@@ -67,7 +69,7 @@ export const FindingsPanel = ({
 			{setupGroups.length > 0 && (
 				<Card
 					icon={WarningIcon}
-					title={t(`${key}.setupTitle`, { count: findings.diagnostics.length })}
+					title={t(`${key}.setupTitle`, { count: setupIssues.length })}
 				>
 					<p className="text-sm text-neutral-700">{t(`${key}.setupHint`)}</p>
 					{setupGroups.map(({ code, diagnostics }) => (

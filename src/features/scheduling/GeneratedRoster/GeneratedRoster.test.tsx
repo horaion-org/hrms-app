@@ -143,4 +143,30 @@ describe("GeneratedRoster", () => {
 		expect(screen.queryByRole("note")).toBeNull();
 		expect(screen.queryByRole("button", { name: /note/ })).toBeNull();
 	});
+
+	it.each([
+		[false, true],
+		[true, false],
+		[null, false],
+	])(
+		"given_priorContextChecked_%s_when_rendered_then_saysLastWeekWasNotChecked_%s",
+		(priorContextChecked, shown) => {
+			render(
+				<GeneratedRoster
+					assignments={scheduleAssignmentsFixture()}
+					schedule={generatedScheduleFixture({
+						status: "GENERATED",
+						generation: generationFixture({
+							findings: emptyFindingsFixture(),
+							priorContextChecked,
+						}),
+					})}
+				/>
+			);
+
+			expect(screen.queryByText(/Last week wasn’t checked/) !== null).toBe(
+				shown
+			);
+		}
+	);
 });

@@ -2101,7 +2101,8 @@
 				"shift": "Turno",
 				"group": "Grupo"
 			},
-			"dayLabel": "{{name}}, {{day}}: {{kind}}"
+			"dayLabel": "{{name}}, {{day}}: {{kind}}",
+			"priorContextNotChecked": "No se revisó la semana anterior: el motor de planificación no pudo leerla, así que el descanso tras sus turnos no está garantizado el primer día."
 		},
 		"myRoster": {
 			"title": "Mi cuadrante · {{department}} · {{period}}",
@@ -2131,6 +2132,8 @@
 				"idempotency_conflict": "La solicitud al motor chocaba con una anterior. Ponte en contacto con soporte.",
 				"payload_too_large": "Este horario es demasiado grande para que el motor lo genere.",
 				"snapshot_invalid": "El motor no pudo usar los turnos y restricciones de este horario.",
+				"history_invalid": "El motor de planificación no pudo leer los días anteriores a esta semana. Contacta con soporte: el horario se podrá generar de nuevo cuando se hayan borrado.",
+				"engine_outdated": "El motor de planificación necesita una actualización antes de poder usar los días anteriores a esta semana. Vuelve a generar cuando esté actualizado.",
 				"too_many_jobs": "El motor estaba demasiado ocupado para aceptar el trabajo.",
 				"job_not_found": "El motor ya no conocía el trabajo.",
 				"unauthorized": "El motor rechazó la solicitud. Ponte en contacto con soporte.",
@@ -2179,6 +2182,11 @@
 				"DEAD_SHIFT": {
 					"label": "Turnos que nadie puede cubrir",
 					"sentence": "Nadie en este horario puede cubrir {{shift}}."
+				},
+				"PRIOR_REST_BLOCKS_SHIFTS": {
+					"label": "Descanso tras la semana anterior",
+					"sentence": "{{member}} no puede empezar antes de las {{restedAt}} el primer día: su último turno antes de este horario terminó a las {{endedAt}} y le siguen {{hours}} h de descanso.",
+					"sentenceWholeDay": "{{member}} no puede trabajar el primer día: su último turno antes de este horario terminó a las {{endedAt}} y le siguen {{hours}} h de descanso."
 				}
 			},
 			"marker": {
@@ -2275,8 +2283,8 @@
 		},
 		"startingContext": {
 			"title": "Antes de esta semana",
-			"explain": "Horaion usa estos días para respetar el descanso entre turnos y dar un día libre a quien ya está en su límite. Los días vacíos cuentan como desconocidos.",
-			"hint": "Empieza por el domingo. Los días anteriores solo importan para quien trabajó todos los días.",
+			"explain": "Horaion usa el último día antes de esta semana para respetar el descanso entre turnos al empezar el horario. Los días vacíos cuentan como desconocidos y no restringen a nadie.",
+			"hint": "Por ahora solo se usa el día anterior a esta semana (domingo).",
 			"none": "No hay cuadrante antes de esta semana. Todos empiezan descansados.",
 			"noneWithEntries_one": "No hay cuadrante antes de esta semana. Hay días añadidos para {{count}} persona; las demás empiezan descansadas.",
 			"noneWithEntries_other": "No hay cuadrante antes de esta semana. Hay días añadidos para {{count}} personas; las demás empiezan descansadas.",

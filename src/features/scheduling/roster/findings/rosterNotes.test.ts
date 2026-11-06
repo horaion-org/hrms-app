@@ -7,6 +7,7 @@ import {
 import {
 	emptyFindingsFixture,
 	findingsOfEveryKindFixture,
+	priorRestDiagnosticFixture,
 } from "@/features/scheduling/schedules/fixtures";
 
 const WEEK = [
@@ -78,6 +79,23 @@ describe("rosterNotes", () => {
 				findings: [{ kind: "message", date: null, message: "Odd." }],
 			},
 		]);
+	});
+
+	it("given_aDiagnosticAboutTheRoster_when_grouped_then_listedUnderItsMemberOnItsDay", () => {
+		const findings = {
+			...emptyFindingsFixture(),
+			diagnostics: [priorRestDiagnosticFixture()],
+		};
+
+		expect(
+			rosterNotes(findings, WEEK).byMember.map(
+				({ memberProfileId, findings: notes }) => [
+					memberProfileId,
+					notes.map(summary),
+				]
+			)
+		).toEqual([["mp-2", ["PRIOR_REST_BLOCKS_SHIFTS"]]]);
+		expect(rosterNotes(findings, WEEK.slice(1)).byMember).toEqual([]);
 	});
 
 	it("given_nothingFound_when_grouped_then_isEmpty", () => {

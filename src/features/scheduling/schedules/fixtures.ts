@@ -168,6 +168,24 @@ const diagnosticFixture = (
 	entities,
 });
 
+/** Ben Ong's first-day shifts before 16:00 ruled out by the rest after his Sunday night shift. */
+export const priorRestDiagnosticFixture =
+	(): GenerationFindings["diagnostics"][number] => ({
+		code: "PRIOR_REST_BLOCKS_SHIFTS",
+		severity: "info",
+		audience: "roster",
+		message:
+			"Ben Ong: no shift starting before 2026-10-12 16:00; the last shift before this schedule ended 2026-10-12 06:00 and 10 h rest follow it.",
+		entities: {
+			employeeId: "mp-2",
+			date: "2026-10-12",
+			shiftIds: ["shift-1"],
+			previousShiftEnd: "2026-10-12T06:00",
+			restedAt: "2026-10-12T16:00",
+			minimumRestHours: 10,
+		},
+	});
+
 /**
  * Every kind of finding the roster page places: the four known diagnostic
  * codes and one it doesn't know, a day's error, a conflict about one member,
@@ -275,6 +293,7 @@ export const generationFixture = (
 	requestedAt: "2026-10-09T10:00:00Z",
 	finishedAt: "2026-10-09T10:02:00Z",
 	findings: generationFindingsFixture(),
+	priorContextChecked: true,
 	...overrides,
 });
 
