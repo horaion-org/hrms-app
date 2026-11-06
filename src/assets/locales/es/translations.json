@@ -36,6 +36,7 @@
 			"SCHEDULE_ASSIGNMENT_UPDATED": "Tus turnos en un horario publicado cambiaron.",
 			"unknown": "Tienes una notificación nueva.",
 			"SCHEDULE_REJECTED": "Se rechazó un horario que generaste.",
+			"ROSTER_DAY_NEEDS_DECISION": "Un día de este cuadrante necesita atención.",
 			"MEMBER_IMPORT_FINISHED": "Tu importación terminó.",
 			"LEAVE_REQUEST_RECORDED": "Se registró un permiso para ti. Ábrelo para ver el motivo.",
 			"LEAVE_REQUEST_CHANGED": "Tu permiso cambió. Ábrelo para ver el motivo.",
@@ -2189,6 +2190,7 @@
 			"closePanel": "Cerrar {{title}}",
 			"startingPoints": "Cómo empezó cada persona la semana",
 			"leaveAndCover": "Permisos y cobertura",
+			"daysToDecide": "Días por decidir",
 			"details": {
 				"title": "Detalles",
 				"requested": "Solicitado",
@@ -2413,6 +2415,8 @@
 			"leaveRequested": "Permiso solicitado",
 			"onLeave": "De permiso",
 			"needsCover": "Necesita cobertura: {{shift}}",
+			"needsDecision": "Necesita una decisión",
+			"needsAttention": "Necesita atención",
 			"openInLeave": "{{status}}: {{type}}. Abrir en Permisos"
 		},
 		"rosterEdit": {

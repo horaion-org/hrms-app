@@ -85,6 +85,12 @@ const NOTIFICATION_TYPES = {
 		category: "schedule",
 		title: "notifications.types.SCHEDULE_ASSIGNMENT_UPDATED",
 	},
+	ROSTER_DAY_NEEDS_DECISION: {
+		icon: SchedulingIcon,
+		tone: "warning",
+		category: "schedule",
+		title: "notifications.types.ROSTER_DAY_NEEDS_DECISION",
+	},
 	SCHEDULE_REJECTED: {
 		icon: CrossIcon,
 		tone: "error",
@@ -158,7 +164,7 @@ export const presentNotification = (
  */
 export type NotificationTarget =
 	| { kind: "leave"; requestId: string; memberId: string | undefined }
-	| { kind: "schedule"; scheduleId: string }
+	| { kind: "schedule"; scheduleId: string; day: string | undefined }
 	| { kind: "myRoster"; scheduleId: string }
 	| { kind: "import"; importId: string };
 
@@ -183,6 +189,7 @@ export const notificationTarget = (
 		| "membershipId"
 		| "scheduleId"
 		| "memberImportJobId"
+		| "rosterDay"
 	>,
 	audience: "PERSONAL" | "REVIEW"
 ): NotificationTarget | undefined => {
@@ -197,12 +204,13 @@ export const notificationTarget = (
 					: undefined,
 		};
 	if (category === "schedule" && notification.scheduleId)
-		return {
-			kind: ROSTERED_MEMBER_TYPES.includes(notification.type)
-				? "myRoster"
-				: "schedule",
-			scheduleId: notification.scheduleId,
-		};
+		return ROSTERED_MEMBER_TYPES.includes(notification.type)
+			? { kind: "myRoster", scheduleId: notification.scheduleId }
+			: {
+					kind: "schedule",
+					scheduleId: notification.scheduleId,
+					day: notification.rosterDay ?? undefined,
+				};
 	if (category === "people" && notification.memberImportJobId)
 		return { kind: "import", importId: notification.memberImportJobId };
 	return undefined;

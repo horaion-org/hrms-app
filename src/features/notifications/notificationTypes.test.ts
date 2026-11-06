@@ -125,6 +125,7 @@ describe("presentNotification", () => {
 
 describe("notificationTarget", () => {
 	const approved = {
+		rosterDay: null,
 		type: "LEAVE_REQUEST_APPROVED",
 		leaveRequestId: "leave-1",
 		membershipId: "member-1",
@@ -163,13 +164,14 @@ describe("notificationTarget", () => {
 		expect(notificationTarget(scheduleReady, "REVIEW")).toEqual({
 			kind: "schedule",
 			scheduleId: "schedule-1",
+			day: undefined,
 		});
 		expect(
 			notificationTarget(
 				{ ...scheduleReady, type: "SCHEDULE_REJECTED" },
 				"PERSONAL"
 			)
-		).toEqual({ kind: "schedule", scheduleId: "schedule-1" });
+		).toEqual({ kind: "schedule", scheduleId: "schedule-1", day: undefined });
 		expect(notificationTarget(importFinished, "PERSONAL")).toEqual({
 			kind: "import",
 			importId: "import-1",
@@ -192,6 +194,24 @@ describe("notificationTarget", () => {
 		expect(notificationTarget(scheduleReady, "REVIEW")).toEqual({
 			kind: "schedule",
 			scheduleId: "schedule-1",
+			day: undefined,
+		});
+	});
+
+	it("opens a roster day to decide on its roster, at that day", () => {
+		expect(
+			notificationTarget(
+				{
+					...scheduleReady,
+					type: "ROSTER_DAY_NEEDS_DECISION",
+					rosterDay: "2026-10-14",
+				},
+				"PERSONAL"
+			)
+		).toEqual({
+			kind: "schedule",
+			scheduleId: "schedule-1",
+			day: "2026-10-14",
 		});
 	});
 

@@ -4,6 +4,7 @@ import { rosterFromAssignments } from "@/features/scheduling/roster/roster";
 import { scheduleAssignmentsFixture } from "@/features/scheduling/schedules/fixtures";
 import {
 	changedDayItems,
+	daysToDecideItems,
 	leaveAndCoverItems,
 	startingPointItems,
 } from "./rosterPanels";
@@ -48,6 +49,27 @@ describe("leaveAndCoverItems", () => {
 		expect(item?.lines).toEqual([
 			"scheduling.rosterMarkers.onLeave: Annual leave",
 			`scheduling.rosterMarkers.needsCover(${first.shift?.name ?? ""})`,
+		]);
+	});
+});
+
+describe("daysToDecideItems", () => {
+	it("says only that a day needs attention to someone who can't see why", () => {
+		const [first] = scheduleAssignmentsFixture();
+		if (!first) throw new Error("fixture has a day");
+
+		expect(
+			daysToDecideItems(
+				[
+					{ ...first, flag: "NEEDS_ATTENTION" },
+					{ ...first, assignmentId: "a-2", flag: "NEEDS_DECISION" },
+				],
+				t,
+				"en"
+			).map((item) => item.lines)
+		).toEqual([
+			["scheduling.rosterMarkers.needsAttention"],
+			["scheduling.rosterMarkers.needsDecision"],
 		]);
 	});
 });

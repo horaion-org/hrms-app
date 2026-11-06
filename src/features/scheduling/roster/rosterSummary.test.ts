@@ -3,6 +3,7 @@ import { rosterFromAssignments } from "@/features/scheduling/roster/roster";
 import { scheduleAssignmentsFixture } from "@/features/scheduling/schedules/fixtures";
 import {
 	changedDays,
+	daysToDecide,
 	issueCount,
 	leaveAndCoverDays,
 	rosterSummarySegments,
@@ -58,7 +59,12 @@ describe("issueCount", () => {
 	it.each<[string, IssueFacts, number]>([
 		[
 			"nothing found",
-			{ findings: null, membersWithChangedStart: 0, leaveAndCoverDays: 0 },
+			{
+				findings: null,
+				membersWithChangedStart: 0,
+				leaveAndCoverDays: 0,
+				daysToDecide: 0,
+			},
 			0,
 		],
 		[
@@ -67,6 +73,7 @@ describe("issueCount", () => {
 				findings: { roster: 11, setup: 3 },
 				membersWithChangedStart: 0,
 				leaveAndCoverDays: 0,
+				daysToDecide: 0,
 			},
 			14,
 		],
@@ -76,6 +83,7 @@ describe("issueCount", () => {
 				findings: { roster: 11, setup: 3 },
 				membersWithChangedStart: 2,
 				leaveAndCoverDays: 0,
+				daysToDecide: 0,
 			},
 			15,
 		],
@@ -85,8 +93,19 @@ describe("issueCount", () => {
 				findings: null,
 				membersWithChangedStart: 0,
 				leaveAndCoverDays: 2,
+				daysToDecide: 0,
 			},
 			2,
+		],
+		[
+			"and each day to decide",
+			{
+				findings: null,
+				membersWithChangedStart: 0,
+				leaveAndCoverDays: 0,
+				daysToDecide: 3,
+			},
+			3,
 		],
 	])("counts %s", (_, facts, count) => {
 		expect(issueCount(facts)).toBe(count);
@@ -105,6 +124,24 @@ describe("leaveAndCoverDays", () => {
 				{ ...third, day: "2026-10-13", flag: "UNKNOWN", uncoveredShift: null },
 			]).map((row) => row.day)
 		).toEqual(["2026-10-14"]);
+	});
+});
+
+describe("daysToDecide", () => {
+	it("keeps the days to decide, whichever way the viewer reads them, apart from leave and cover", () => {
+		const [first, second, third] = scheduleAssignmentsFixture();
+		if (!first || !second || !third) throw new Error("fixture has three days");
+		const days = [
+			{ ...first, day: "2026-10-14", flag: "NEEDS_ATTENTION" as const },
+			{ ...second, day: "2026-10-13", flag: "NEEDS_DECISION" as const },
+			{ ...third, flag: "LEAVE_REQUESTED" as const, uncoveredShift: null },
+		];
+
+		expect(daysToDecide(days).map((row) => row.day)).toEqual([
+			"2026-10-13",
+			"2026-10-14",
+		]);
+		expect(leaveAndCoverDays(days)).toEqual([days[2]]);
 	});
 });
 

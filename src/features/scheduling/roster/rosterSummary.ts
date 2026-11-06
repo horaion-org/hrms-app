@@ -86,10 +86,17 @@ export type IssueFacts = {
 	membersWithChangedStart: number;
 	/** Days whose leave or cover the roster marks (`leaveAndCoverDays`). */
 	leaveAndCoverDays: number;
+	/** Days a manager must decide (`daysToDecide`). */
+	daysToDecide: number;
 };
 
 type IssueSource = {
-	key: "rosterNotes" | "setupIssues" | "changedStarts" | "leaveAndCover";
+	key:
+		| "rosterNotes"
+		| "setupIssues"
+		| "changedStarts"
+		| "leaveAndCover"
+		| "daysToDecide";
 	count: (facts: IssueFacts) => number;
 };
 
@@ -97,8 +104,8 @@ type IssueSource = {
  * What "Issues n" counts, the one definition of that number: every roster
  * note the engine left (each conflict, each error message and each day's
  * message), every setup issue (each diagnostic), and one for starting
- * points that changed since generation, and each day whose leave or cover
- * the roster marks. A note that only qualifies the
+ * points that changed since generation, each day whose leave or cover the
+ * roster marks, and each day a manager must decide. A note that only qualifies the
  * others ("these notes are from generation") is shown but not counted.
  */
 export const ISSUE_SOURCES: ReadonlyArray<IssueSource> = [
@@ -113,11 +120,31 @@ export const ISSUE_SOURCES: ReadonlyArray<IssueSource> = [
 		key: "leaveAndCover",
 		count: ({ leaveAndCoverDays }) => leaveAndCoverDays,
 	},
+	{ key: "daysToDecide", count: ({ daysToDecide }) => daysToDecide },
 ];
 
 /** The Issues count: the sum of `ISSUE_SOURCES`. */
 export const issueCount = (facts: IssueFacts): number =>
 	ISSUE_SOURCES.reduce((total, source) => total + source.count(facts), 0);
+
+/** The flags that ask a manager to decide the day, listed apart from leave and cover. */
+const DECISION_FLAGS: ReadonlySet<ScheduleAssignment["flag"]> = new Set<
+	ScheduleAssignment["flag"]
+>(["NEEDS_DECISION", "NEEDS_ATTENTION"]);
+
+/** The days a manager must decide (a shift or the day off), by day and then by name. */
+export const daysToDecide = (
+	assignments: ReadonlyArray<ScheduleAssignment>
+): Array<ScheduleAssignment> =>
+	assignments
+		.filter((row) => row.member && DECISION_FLAGS.has(row.flag))
+		.sort(
+			(first, second) =>
+				first.day.localeCompare(second.day) ||
+				(first.member?.displayName ?? "").localeCompare(
+					second.member?.displayName ?? ""
+				)
+		);
 
 /** The days the roster marks for leave or a shift left short, by day and then by name. */
 export const leaveAndCoverDays = (
@@ -127,7 +154,10 @@ export const leaveAndCoverDays = (
 		.filter(
 			(row) =>
 				row.member &&
-				((row.flag && row.flag !== "UNKNOWN") || row.uncoveredShift)
+				((row.flag &&
+					row.flag !== "UNKNOWN" &&
+					!DECISION_FLAGS.has(row.flag)) ||
+					row.uncoveredShift)
 		)
 		.sort(
 			(first, second) =>

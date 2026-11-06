@@ -55,6 +55,27 @@ export const leaveAndCoverItems = (
 		};
 	});
 
+/**
+ * Each day a manager must decide: whose and which day, and its marker. A
+ * day read without leave access says only that it needs attention.
+ */
+export const daysToDecideItems = (
+	days: ReadonlyArray<ScheduleAssignment>,
+	t: TFunction,
+	language: string
+): Array<PanelItem> =>
+	days.map((row) => ({
+		key: row.assignmentId,
+		title: `${row.member?.displayName ?? t("scheduling.detail.formerMember")} · ${formatDay(row.day, language)}`,
+		lines: [
+			t(
+				row.flag === "NEEDS_ATTENTION"
+					? "scheduling.rosterMarkers.needsAttention"
+					: "scheduling.rosterMarkers.needsDecision"
+			),
+		],
+	}));
+
 /** "Aisha Rahman: Day 4 of a run" for each member who brought working days into the period. */
 export const startingPointItems = (
 	rows: ReadonlyArray<RosterRow>,

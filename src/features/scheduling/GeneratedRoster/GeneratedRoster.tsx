@@ -27,6 +27,7 @@ import {
 } from "@/features/scheduling/roster/roster";
 import {
 	changedDayItems,
+	daysToDecideItems,
 	leaveAndCoverItems,
 	startingPointItems,
 } from "@/features/scheduling/roster/rosterPanels";
@@ -36,6 +37,7 @@ import type {
 } from "@/features/scheduling/roster/rosterSearch";
 import {
 	changedDays,
+	daysToDecide,
 	issueCount,
 	leaveAndCoverDays,
 	rosterSummarySegments,
@@ -168,6 +170,7 @@ export const GeneratedRoster = ({
 			: null;
 	const changed = changedDays(assignments);
 	const markedDays = leaveAndCoverDays(assignments);
+	const toDecide = daysToDecide(assignments);
 	const editedDays = new Set(
 		changed.flatMap((row) =>
 			row.member ? [rosterCellKey(row.member.membershipId, row.day)] : []
@@ -178,6 +181,7 @@ export const GeneratedRoster = ({
 			findings: counts,
 			membersWithChangedStart,
 			leaveAndCoverDays: markedDays.length,
+			daysToDecide: toDecide.length,
 		}),
 		changes: changed.length,
 		details: details ? 1 : 0,
@@ -275,6 +279,11 @@ export const GeneratedRoster = ({
 				content: findings && names && (
 					<FindingsPanel findings={findings} names={names} visibleDays={days} />
 				),
+			},
+			{
+				key: "daysToDecide",
+				title: t(`${key}.daysToDecide`),
+				items: daysToDecideItems(toDecide, t, language),
 			},
 			{
 				key: "leaveAndCover",

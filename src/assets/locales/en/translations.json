@@ -36,6 +36,7 @@
 			"SCHEDULE_ASSIGNMENT_UPDATED": "Your shifts on a published schedule changed.",
 			"unknown": "You have a new notification.",
 			"SCHEDULE_REJECTED": "A schedule you generated was rejected.",
+			"ROSTER_DAY_NEEDS_DECISION": "A day on this roster needs attention.",
 			"MEMBER_IMPORT_FINISHED": "Your import finished.",
 			"LEAVE_REQUEST_RECORDED": "Leave was recorded for you. Open it to see why.",
 			"LEAVE_REQUEST_CHANGED": "Your leave was changed. Open it to see why.",
@@ -2957,6 +2958,7 @@
 			"closePanel": "Close {{title}}",
 			"startingPoints": "Where people started the week",
 			"leaveAndCover": "Leave and cover",
+			"daysToDecide": "Days to decide",
 			"details": {
 				"title": "Details",
 				"requested": "Requested",
@@ -3181,6 +3183,8 @@
 			"leaveRequested": "Leave requested",
 			"onLeave": "On leave",
 			"needsCover": "Needs cover: {{shift}}",
+			"needsDecision": "Needs a decision",
+			"needsAttention": "Needs attention",
 			"openInLeave": "{{status}}: {{type}}. Open in Leave"
 		},
 		"rosterEdit": {
