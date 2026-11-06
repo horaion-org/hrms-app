@@ -27,6 +27,7 @@ import {
 } from "@/features/scheduling/roster/roster";
 import {
 	changedDayItems,
+	leaveAndCoverItems,
 	startingPointItems,
 } from "@/features/scheduling/roster/rosterPanels";
 import type {
@@ -36,6 +37,7 @@ import type {
 import {
 	changedDays,
 	issueCount,
+	leaveAndCoverDays,
 	rosterSummarySegments,
 	type SummarySegment,
 } from "@/features/scheduling/roster/rosterSummary";
@@ -101,6 +103,8 @@ export type GeneratedRosterProps = {
 	withSummary?: boolean;
 	/** Lets a day be changed by hand beside the grid; read-only without. */
 	editing?: RosterEditing;
+	/** The viewer's own membership, which decides where a day's leave request opens. */
+	viewerMembershipId?: string;
 };
 
 const NO_DAYS: ReadonlySet<string> = new Set();
@@ -138,6 +142,7 @@ export const GeneratedRoster = ({
 	details,
 	withSummary = true,
 	editing,
+	viewerMembershipId,
 }: GeneratedRosterProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const language = i18n.resolvedLanguage ?? i18n.language;
@@ -162,13 +167,18 @@ export const GeneratedRoster = ({
 			? findingNames(findings, { assignments, shifts, constraints })
 			: null;
 	const changed = changedDays(assignments);
+	const markedDays = leaveAndCoverDays(assignments);
 	const editedDays = new Set(
 		changed.flatMap((row) =>
 			row.member ? [rosterCellKey(row.member.membershipId, row.day)] : []
 		)
 	);
 	const listCounts: Record<RosterPanel, number> = {
-		issues: issueCount({ findings: counts, membersWithChangedStart }),
+		issues: issueCount({
+			findings: counts,
+			membersWithChangedStart,
+			leaveAndCoverDays: markedDays.length,
+		}),
 		changes: changed.length,
 		details: details ? 1 : 0,
 	};
@@ -265,6 +275,11 @@ export const GeneratedRoster = ({
 				content: findings && names && (
 					<FindingsPanel findings={findings} names={names} visibleDays={days} />
 				),
+			},
+			{
+				key: "leaveAndCover",
+				title: t(`${key}.leaveAndCover`),
+				items: leaveAndCoverItems(markedDays, t, language),
 			},
 			{
 				key: "startingPoints",
@@ -378,6 +393,7 @@ export const GeneratedRoster = ({
 							rows={rows}
 							selectedDayKey={editing ? view.cell : undefined}
 							selectedShiftId={chosenRow?.assignmentId}
+							viewerMembershipId={viewerMembershipId}
 							findings={
 								findings && names
 									? {

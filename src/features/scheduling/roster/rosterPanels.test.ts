@@ -2,7 +2,11 @@ import type { TFunction } from "i18next";
 import { describe, expect, it } from "vitest";
 import { rosterFromAssignments } from "@/features/scheduling/roster/roster";
 import { scheduleAssignmentsFixture } from "@/features/scheduling/schedules/fixtures";
-import { changedDayItems, startingPointItems } from "./rosterPanels";
+import {
+	changedDayItems,
+	leaveAndCoverItems,
+	startingPointItems,
+} from "./rosterPanels";
 
 /** Echoes the key and its values, so items can be read without copy. */
 const t = ((key: string, values?: Record<string, unknown>) =>
@@ -20,6 +24,31 @@ describe("startingPointItems", () => {
 				(item) => item.lines
 			)
 		).toEqual([["Aisha Rahman: scheduling.startingContext.runBadge(4)"]]);
+	});
+});
+
+describe("leaveAndCoverItems", () => {
+	it("says whose day, then the leave marker with its type and any shift left short", () => {
+		const [first] = scheduleAssignmentsFixture();
+		if (!first) throw new Error("fixture has a day");
+
+		const [item] = leaveAndCoverItems(
+			[
+				{
+					...first,
+					flag: "ON_LEAVE_WHILE_ROSTERED",
+					leaveTypeName: "Annual leave",
+					uncoveredShift: first.shift,
+				},
+			],
+			t,
+			"en"
+		);
+
+		expect(item?.lines).toEqual([
+			"scheduling.rosterMarkers.onLeave: Annual leave",
+			`scheduling.rosterMarkers.needsCover(${first.shift?.name ?? ""})`,
+		]);
 	});
 });
 

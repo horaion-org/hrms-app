@@ -2956,6 +2956,7 @@
 			"changesCount_other": "Changed by hand: {{count}} days",
 			"closePanel": "Close {{title}}",
 			"startingPoints": "Where people started the week",
+			"leaveAndCover": "Leave and cover",
 			"details": {
 				"title": "Details",
 				"requested": "Requested",
@@ -3175,6 +3176,12 @@
 				"published": "This schedule is published, so the hours before this week can no longer change here.",
 				"daysSavedHoursNot": "Last week’s days were saved, but the hours this month weren’t. {{reason}} Your hours are still here: fix them and save again."
 			}
+		},
+		"rosterMarkers": {
+			"leaveRequested": "Leave requested",
+			"onLeave": "On leave",
+			"needsCover": "Needs cover: {{shift}}",
+			"openInLeave": "{{status}}: {{type}}. Open in Leave"
 		},
 		"rosterEdit": {
 			"title": "{{name}} · {{date}}",

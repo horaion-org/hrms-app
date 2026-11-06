@@ -1,10 +1,11 @@
+import type * as Router from "@tanstack/react-router";
 import { render, screen, within } from "@testing-library/react";
 import { useState, type ReactElement } from "react";
 import userEvent from "@testing-library/user-event";
 import { createInstance } from "i18next";
 import { initReactI18next } from "react-i18next";
 import en from "@/assets/locales/en/translations.json";
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import {
 	GeneratedRoster,
 	type GeneratedRosterProps,
@@ -26,6 +27,19 @@ beforeAll(async () => {
 			interpolation: { escapeValue: false },
 		});
 });
+
+vi.mock("@tanstack/react-router", async (importOriginal) => ({
+	...(await importOriginal<typeof Router>()),
+	Link: ({
+		search,
+		children,
+	}: {
+		search: Record<string, string>;
+		children: React.ReactNode;
+	}): React.JSX.Element => (
+		<a href={`/leave?${new URLSearchParams(search).toString()}`}>{children}</a>
+	),
+}));
 
 const schedule = generatedScheduleFixture({ status: "GENERATED" });
 
@@ -51,6 +65,29 @@ describe("GeneratedRoster", () => {
 		expect(screen.queryByRole("region")).toBeNull();
 		const roster = screen.getByRole("table", { name: "Roster" });
 		expect(within(roster).getAllByRole("row")).toHaveLength(4);
+	});
+
+	it("given_aColleaguesLeaveNote_when_rendered_then_itOpensTheirRequestAsAReviewer", () => {
+		const [first, ...rest] = scheduleAssignmentsFixture();
+		if (!first?.member) throw new Error("fixture has a member");
+
+		render(
+			<Roster
+				schedule={schedule}
+				viewerMembershipId="someone-else"
+				assignments={[
+					{ ...first, flag: "LEAVE_REQUESTED", leaveRequestId: "r1" },
+					...rest,
+				]}
+			/>
+		);
+
+		expect(
+			screen.getByRole("link", { name: "Leave requested" })
+		).toHaveAttribute(
+			"href",
+			`/leave?requestId=r1&memberId=${first.member.membershipId}&view=requests`
+		);
 	});
 
 	it("given_aMembersOwnView_when_renderedWithoutTheSummary_then_onlyTheRoster", () => {
@@ -94,6 +131,31 @@ describe("GeneratedRoster", () => {
 		expect(
 			screen.getByText("No one is rostered in this schedule.")
 		).toBeInTheDocument();
+	});
+
+	it("given_aDayMarkedForLeave_when_issuesOpen_then_itIsListedUnderLeaveAndCover", async () => {
+		const [first, ...rest] = scheduleAssignmentsFixture();
+		if (!first) throw new Error("fixture has a day");
+		render(
+			<Roster
+				schedule={schedule}
+				assignments={[
+					{ ...first, flag: "LEAVE_REQUESTED", leaveTypeName: "Annual leave" },
+					...rest,
+				]}
+			/>
+		);
+		const user = userEvent.setup();
+
+		await user.click(screen.getByRole("button", { name: /^Issues/ }));
+
+		const panel = screen.getByRole("complementary", { name: "Issues" });
+		expect(
+			within(panel).getByRole("heading", { name: "Leave and cover" })
+		).toBeVisible();
+		expect(
+			within(panel).getByText("Leave requested: Annual leave")
+		).toBeVisible();
 	});
 
 	it("given_findings_when_issuesIsToggled_then_opensAndClosesThemBesideTheGrid", async () => {

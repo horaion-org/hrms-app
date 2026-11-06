@@ -7,7 +7,10 @@ import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import { ArrowLeftIcon } from "@/components/ui/Icon";
 import { OverflowMenuItem } from "@/components/ui/OverflowMenu";
-import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
+import {
+	useCurrentCompanyId,
+	useCurrentMembershipId,
+} from "@/features/organisation/useCurrentCompanyId";
 import {
 	GeneratedRoster,
 	type GeneratedRosterProps,
@@ -138,6 +141,7 @@ const RosterBody = ({
 	startingContext?: StartingContext;
 }): FunctionComponent => {
 	const { t } = useTranslation();
+	const viewerMembershipId = useCurrentMembershipId();
 	if (assignments.status !== "ready")
 		return (
 			<Problem alert={assignments.status !== "pending"}>
@@ -149,6 +153,7 @@ const RosterBody = ({
 			{...roster}
 			assignments={assignments.items}
 			startingRuns={startingContext ? runsByMember(startingContext) : undefined}
+			viewerMembershipId={viewerMembershipId}
 			// Only a frozen context can go stale: members whose week before changed since generation.
 			membersWithChangedStart={
 				startingContext?.frozen === true

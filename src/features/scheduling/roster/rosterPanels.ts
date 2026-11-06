@@ -14,6 +14,47 @@ export type PanelItem = {
 	lines: ReadonlyArray<string>;
 };
 
+/** Each leave marker's copy under `scheduling.rosterMarkers`; a flag left out has no line. */
+const LEAVE_MARKERS: Partial<
+	Record<NonNullable<ScheduleAssignment["flag"]>, "leaveRequested" | "onLeave">
+> = {
+	LEAVE_REQUESTED: "leaveRequested",
+	ON_LEAVE_WHILE_ROSTERED: "onLeave",
+};
+
+/**
+ * Each day the roster marks for leave or cover: whose and which day, then
+ * what is marked ("Leave requested: Annual leave", "Needs cover: Morning").
+ */
+export const leaveAndCoverItems = (
+	days: ReadonlyArray<ScheduleAssignment>,
+	t: TFunction,
+	language: string
+): Array<PanelItem> =>
+	days.map((row) => {
+		const markerKey = row.flag ? LEAVE_MARKERS[row.flag] : undefined;
+		const marker = markerKey
+			? t(`scheduling.rosterMarkers.${markerKey}`)
+			: undefined;
+		const name = row.member?.displayName ?? t("scheduling.detail.formerMember");
+		return {
+			key: row.assignmentId,
+			title: `${name} · ${formatDay(row.day, language)}`,
+			lines: [
+				...(marker
+					? [row.leaveTypeName ? `${marker}: ${row.leaveTypeName}` : marker]
+					: []),
+				...(row.uncoveredShift
+					? [
+							t("scheduling.rosterMarkers.needsCover", {
+								shift: row.uncoveredShift.name,
+							}),
+						]
+					: []),
+			],
+		};
+	});
+
 /** "Aisha Rahman: Day 4 of a run" for each member who brought working days into the period. */
 export const startingPointItems = (
 	rows: ReadonlyArray<RosterRow>,

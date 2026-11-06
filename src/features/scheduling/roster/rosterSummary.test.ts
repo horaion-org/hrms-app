@@ -4,6 +4,7 @@ import { scheduleAssignmentsFixture } from "@/features/scheduling/schedules/fixt
 import {
 	changedDays,
 	issueCount,
+	leaveAndCoverDays,
 	rosterSummarySegments,
 	type IssueFacts,
 } from "./rosterSummary";
@@ -55,19 +56,55 @@ describe("rosterSummarySegments", () => {
 
 describe("issueCount", () => {
 	it.each<[string, IssueFacts, number]>([
-		["nothing found", { findings: null, membersWithChangedStart: 0 }, 0],
+		[
+			"nothing found",
+			{ findings: null, membersWithChangedStart: 0, leaveAndCoverDays: 0 },
+			0,
+		],
 		[
 			"roster notes and setup issues",
-			{ findings: { roster: 11, setup: 3 }, membersWithChangedStart: 0 },
+			{
+				findings: { roster: 11, setup: 3 },
+				membersWithChangedStart: 0,
+				leaveAndCoverDays: 0,
+			},
 			14,
 		],
 		[
 			"and changed starting points, once however many members",
-			{ findings: { roster: 11, setup: 3 }, membersWithChangedStart: 2 },
+			{
+				findings: { roster: 11, setup: 3 },
+				membersWithChangedStart: 2,
+				leaveAndCoverDays: 0,
+			},
 			15,
+		],
+		[
+			"and each day marked for leave or cover",
+			{
+				findings: null,
+				membersWithChangedStart: 0,
+				leaveAndCoverDays: 2,
+			},
+			2,
 		],
 	])("counts %s", (_, facts, count) => {
 		expect(issueCount(facts)).toBe(count);
+	});
+});
+
+describe("leaveAndCoverDays", () => {
+	it("keeps the days marked for leave or cover, by day and then by name", () => {
+		const [first, second, third] = scheduleAssignmentsFixture();
+		if (!first || !second || !third) throw new Error("fixture has three days");
+
+		expect(
+			leaveAndCoverDays([
+				{ ...first, day: "2026-10-14", flag: "LEAVE_REQUESTED" },
+				{ ...second, flag: null, uncoveredShift: null },
+				{ ...third, day: "2026-10-13", flag: "UNKNOWN", uncoveredShift: null },
+			]).map((row) => row.day)
+		).toEqual(["2026-10-14"]);
 	});
 });
 
