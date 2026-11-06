@@ -8,6 +8,7 @@ import {
 	rosterStats,
 	weekDays,
 	type RosterCell,
+	type RosterRow,
 } from "@/features/scheduling/roster/roster";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 import { scheduleAssignmentsFixture } from "@/features/scheduling/schedules/fixtures";
@@ -24,7 +25,11 @@ const week = [
 	"2026-10-18",
 ];
 
-const shiftCell = (start: string, end: string): RosterCell => ({
+const shiftCell = (
+	start: string,
+	end: string,
+	unpaidBreakMinutes = 0
+): RosterCell => ({
 	kind: "shift",
 	assignmentId: "a-1",
 	shiftId: "sh-1",
@@ -33,6 +38,8 @@ const shiftCell = (start: string, end: string): RosterCell => ({
 	colour: "#E9A55A",
 	start,
 	end,
+	unpaidBreakMinutes,
+	carriesOvertime: false,
 	role: "Front Desk Staff",
 });
 
@@ -68,6 +75,8 @@ describe("rosterFromAssignments", () => {
 			colour: "#E9A55A",
 			start: "09:00",
 			end: "15:00",
+			unpaidBreakMinutes: 0,
+			carriesOvertime: false,
 			role: "Front Desk Lead",
 		});
 	});
@@ -142,6 +151,7 @@ describe("hoursOf", () => {
 		["a shift ending on the half hour", shiftCell("09:00", "13:30"), 4.5],
 		["a shift past midnight", shiftCell("23:00", "07:00"), 8],
 		["a shift ending at midnight", shiftCell("16:00", "00:00"), 8],
+		["only the paid part of a shift", shiftCell("07:00", "19:00", 60), 11],
 		["a day off", { kind: "off" } as const, 0],
 		["leave", { kind: "leave" } as const, 0],
 		["no row for the day", undefined, 0],
@@ -154,6 +164,24 @@ describe("hoursOf", () => {
 
 		expect(rows.map((row) => hoursInDays(row, week))).toEqual([30, 16, 48]);
 	});
+
+	it.each([
+		["three 8 h shifts with a 20-minute break", "09:00", "17:00", 20, 3, 23],
+		["six 12 h shifts with a 50-minute break", "07:00", "19:00", 50, 6, 67],
+		["five 8 h shifts with a 20-minute break", "09:00", "17:00", 20, 5, 38.33],
+	])(
+		"given_%s_when_summed_then_roundsOnceLikeTheExport",
+		(_, start, end, unpaidBreakMinutes, shifts, hours) => {
+			const days = week.slice(0, shifts);
+			const row = {
+				days: Object.fromEntries(
+					days.map((day) => [day, shiftCell(start, end, unpaidBreakMinutes)])
+				),
+			} as RosterRow;
+
+			expect(hoursInDays(row, days)).toBe(hours);
+		}
+	);
 });
 
 describe("isoDateIn", () => {
@@ -263,6 +291,8 @@ describe("day notes", () => {
 		colour: "#112233",
 		startTime: "09:00",
 		endTime: "17:00",
+		unpaidBreakMinutes: 0,
+		carriesOvertime: false,
 	};
 	const assignment = {
 		assignmentId: "a1",

@@ -16,6 +16,8 @@ const meta = {
 			colour: "#E9A55A",
 			start: "09:00",
 			end: "15:00",
+			unpaidBreakMinutes: 0,
+			carriesOvertime: false,
 			role: "Front Desk Lead",
 		},
 		label: "Aisha Rahman, Mon 09:00 – 15:00",

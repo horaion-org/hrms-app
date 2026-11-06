@@ -38,6 +38,17 @@ export const shiftRoleSchema = z.object({
 /** A job title a shift needs people in, or one the shift dialog offers. */
 export type ShiftRole = z.infer<typeof shiftRoleSchema>;
 
+/**
+ * What a shift says about its pay, as every shift shape carries it. An API
+ * that predates them sends neither, which reads as no break and not marked.
+ */
+export const shiftPayFields = {
+	/** Unpaid minutes inside the shift; its paid hours are its length less these. */
+	unpaidBreakMinutes: z.number().catch(0),
+	/** Longer than a normal day on purpose; each person's employment terms say how much is overtime. */
+	carriesOvertime: z.boolean().catch(false),
+};
+
 const departmentShiftSchema = z.object({
 	shiftId: z.string(),
 	departmentId: z.string(),
@@ -50,6 +61,7 @@ const departmentShiftSchema = z.object({
 	endTime: z.string(),
 	days: z.array(weekdaySchema),
 	roles: z.array(shiftRoleSchema),
+	...shiftPayFields,
 });
 
 /** One of a Department's live shifts, as the shift routes answer it. */

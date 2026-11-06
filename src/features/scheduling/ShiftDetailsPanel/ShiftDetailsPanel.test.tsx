@@ -21,6 +21,8 @@ const shift = {
 	colour: "#E9A55A",
 	start: "09:00",
 	end: "15:00",
+	unpaidBreakMinutes: 0,
+	carriesOvertime: false,
 	role: "Front Desk Lead",
 	date: "2026-10-13",
 } as const;

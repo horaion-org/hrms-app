@@ -431,6 +431,8 @@ export const scheduleAssignmentsFixture = (): Array<ScheduleAssignment> => {
 					name: copy.name,
 					group: copy.group,
 					colour: copy.colour,
+					unpaidBreakMinutes: copy.unpaidBreakMinutes,
+					carriesOvertime: copy.carriesOvertime,
 					startTime: copy.startTime,
 					endTime: copy.endTime,
 				},

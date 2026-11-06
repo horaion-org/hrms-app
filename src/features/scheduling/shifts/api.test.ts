@@ -80,6 +80,19 @@ describe("shifts client", () => {
 		}
 	);
 
+	it("reads a shift from an API that predates breaks as no break and not marked", async () => {
+		const { unpaidBreakMinutes, carriesOvertime, ...older } = LIVE;
+		stubApi({
+			[`POST ${SHIFTS}`]: { status: 201, body: envelope(older) },
+		});
+
+		await expect(createShift("c-1", UNIT, BODY)).resolves.toMatchObject({
+			unpaidBreakMinutes: 0,
+			carriesOvertime: false,
+		});
+		expect([unpaidBreakMinutes, carriesOvertime]).toEqual([0, false]);
+	});
+
 	it("replaces and deletes a live shift at its department", async () => {
 		const calls = stubApi({
 			[`PUT ${SHIFTS}/front-desk-am`]: { status: 200, body: envelope(LIVE) },

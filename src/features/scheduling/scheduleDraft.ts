@@ -122,8 +122,8 @@ export const emptyScheduleDraft = (): ScheduleDraft => ({
 	demand: {},
 });
 
-/** How long a shift lasts in hours, counting past midnight. */
-export const shiftHours = (
+/** How long a shift lasts in minutes, counting past midnight. */
+export const shiftMinutes = (
 	shift: Pick<ScheduleShift, "startTime" | "endTime">
 ): number => {
 	const length =
@@ -131,8 +131,31 @@ export const shiftHours = (
 			minutesOfDay(shift.startTime) +
 			MINUTES_PER_DAY) %
 		MINUTES_PER_DAY;
-	return (length === 0 ? MINUTES_PER_DAY : length) / 60;
+	return length === 0 ? MINUTES_PER_DAY : length;
 };
+
+/** How long a shift lasts in hours, counting past midnight. */
+export const shiftHours = (
+	shift: Pick<ScheduleShift, "startTime" | "endTime">
+): number => shiftMinutes(shift) / 60;
+
+/** A shift's length less its unpaid break, in minutes. */
+export const paidShiftMinutes = (
+	shift: Pick<ScheduleShift, "startTime" | "endTime" | "unpaidBreakMinutes">
+): number => shiftMinutes(shift) - shift.unpaidBreakMinutes;
+
+/**
+ * Minutes as hours to two places, as the roster export shows them. Sum the
+ * minutes first and round the total once, so totals match the export and the
+ * hours ledger.
+ */
+export const hoursFromMinutes = (minutes: number): number =>
+	Math.round((minutes * 100) / 60) / 100;
+
+/** A shift's paid hours, to two places. */
+export const paidShiftHours = (
+	shift: Pick<ScheduleShift, "startTime" | "endTime" | "unpaidBreakMinutes">
+): number => hoursFromMinutes(paidShiftMinutes(shift));
 
 /** How many people a shift's role is allocated; none until set. */
 export const allocatedTo = (
@@ -214,7 +237,7 @@ const covers = (shift: ScheduleShift, slotStart: string): boolean => {
 			minutesOfDay(shift.startTime) +
 			MINUTES_PER_DAY) %
 		MINUTES_PER_DAY;
-	return offset < shiftHours(shift) * 60;
+	return offset < shiftMinutes(shift);
 };
 
 /** Demand for every slot from the staff each shift allocates while it runs. */

@@ -1,5 +1,8 @@
 import type { SchedulePeriod } from "@/features/scheduling/periods";
-import { shiftHours } from "@/features/scheduling/scheduleDraft";
+import {
+	hoursFromMinutes,
+	paidShiftMinutes,
+} from "@/features/scheduling/scheduleDraft";
 import { daysOf, weeksOf } from "@/features/scheduling/schedules";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 
@@ -21,6 +24,9 @@ export type RosterShiftCell = {
 	/** "HH:mm"; an end at or before the start runs past midnight. */
 	start: string;
 	end: string;
+	/** As frozen with the shift. */
+	unpaidBreakMinutes: number;
+	carriesOvertime: boolean;
 	/** The job title's name, as frozen with the shift. */
 	role: string;
 	note?: RosterDayNote;
@@ -117,6 +123,8 @@ const cellOf = (assignment: ScheduleAssignment): RosterCell => {
 		colour: assignment.shift.colour,
 		start: assignment.shift.startTime,
 		end: assignment.shift.endTime,
+		unpaidBreakMinutes: assignment.shift.unpaidBreakMinutes,
+		carriesOvertime: assignment.shift.carriesOvertime,
 		role: assignment.jobTitle?.name ?? "",
 		...(note ? { note } : {}),
 	};
@@ -166,17 +174,28 @@ export const rosterFromAssignments = (
 	return [...rows.values()];
 };
 
-/** Hours a day adds up to: a shift's length (past midnight when it ends at or before its start); 0 off. */
-export const hoursOf = (cell: RosterCell | undefined): number =>
+/** Paid minutes of a day: a shift's (past midnight when it ends at or before its start); 0 off. */
+const paidMinutesOf = (cell: RosterCell | undefined): number =>
 	cell?.kind === "shift"
-		? shiftHours({ startTime: cell.start, endTime: cell.end })
+		? paidShiftMinutes({
+				startTime: cell.start,
+				endTime: cell.end,
+				unpaidBreakMinutes: cell.unpaidBreakMinutes,
+			})
 		: 0;
 
-/** Hours a row adds up to over `days`. */
+/** Paid hours of a day. */
+export const hoursOf = (cell: RosterCell | undefined): number =>
+	hoursFromMinutes(paidMinutesOf(cell));
+
+/** Paid hours a row adds up to over `days`: minutes summed first, rounded once, as the export and ledger total them. */
 export const hoursInDays = (
 	row: RosterRow,
 	days: ReadonlyArray<string>
-): number => days.reduce((total, day) => total + hoursOf(row.days[day]), 0);
+): number =>
+	hoursFromMinutes(
+		days.reduce((total, day) => total + paidMinutesOf(row.days[day]), 0)
+	);
 
 /** A date format in `timeZone` (an IANA name); the browser's own zone when the name is unknown. */
 export const dateTimeFormatIn = (

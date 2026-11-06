@@ -21,6 +21,8 @@ const FRONT_DESK_AM: RosterCellValue = {
 		name: "Front Desk AM",
 		group: "Front Desk",
 		colour: "#E9A55A",
+		unpaidBreakMinutes: 0,
+		carriesOvertime: false,
 		startTime: "09:00",
 		endTime: "15:00",
 	},
