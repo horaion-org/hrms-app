@@ -78,6 +78,8 @@ export type RosterEditing = {
 	shifts: ReadonlyArray<ScheduleShift>;
 	/** The roster is published: each change tells the people whose days it changes, so it asks first. */
 	notifiesMembers: boolean;
+	/** Given to someone who may change leave here too: the leave choices beside the roster's own. */
+	leave?: { viewerMembershipId: string };
 };
 
 export type GeneratedRosterProps = {
@@ -319,11 +321,13 @@ export const GeneratedRoster = ({
 					key={chosenRow.assignmentId}
 					assignment={chosenRow}
 					assignments={assignments}
+					leaveEditing={editing.leave}
 					notifiesMembers={editing.notifiesMembers}
 					revision={editing.revision}
 					shifts={editing.shifts}
 					target={editing.target}
 					onClose={close}
+					onLeaveChanged={close}
 					onPreviewDays={onPreviewDays}
 					onApplied={(change) => {
 						setApplied(change);

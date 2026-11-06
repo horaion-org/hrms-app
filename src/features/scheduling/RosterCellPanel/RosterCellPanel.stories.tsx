@@ -55,6 +55,25 @@ export const DayOff: Story = {
 	},
 };
 
+/** Someone who may change leave: another type, a shift or a day off, each with a required remark. */
+export const LeaveWithLeaveChoices: Story = {
+	args: {
+		assignment: roster.find((row) => row.offReason === "LEAVE")!,
+		leaveEditing: { viewerMembershipId: "manager-1" },
+	},
+};
+
+/** Cancelled leave left this day: give a shift or confirm the day off. */
+export const DayToDecide: Story = {
+	args: {
+		assignment: {
+			...roster.find((row) => row.offReason === "LEAVE")!,
+			offReason: "OFF",
+			flag: "NEEDS_DECISION",
+		},
+	},
+};
+
 /** Leave is changed in Leave, never here. */
 export const Leave: Story = {
 	args: {

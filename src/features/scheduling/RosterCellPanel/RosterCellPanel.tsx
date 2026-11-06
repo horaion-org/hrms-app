@@ -7,14 +7,21 @@ import { RadioCard } from "@/components/forms/RadioCard";
 import { Select } from "@/components/forms/Select";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { Callout } from "@/components/ui/Callout";
 import { CloseIcon } from "@/components/ui/Icon";
+import { activeLeaveTypesQuery, leaveRequestQuery } from "@/features/leave/api";
+import { rangeDays } from "@/features/leave/dates";
+import { leaveTypeOptions } from "@/features/leave/leaveTypeOptions";
 import { formatTimeRange } from "@/features/scheduling/formatShift";
 import { formatDay } from "@/features/scheduling/periods";
 import { RosterChangeReview } from "@/features/scheduling/RosterChangeReview";
+import { leaveLinkSearch } from "@/features/scheduling/RosterGrid/RosterDayNotes/leaveLinkSearch";
+import { RosterLeaveReview } from "@/features/scheduling/RosterLeaveReview";
 import {
 	rosterChangePreviewQuery,
 	type RosterChange,
 	type RosterChangeBody,
+	type RosterChangeCell,
 } from "@/features/scheduling/rosterChanges/api";
 import {
 	assignmentCell,
@@ -34,9 +41,21 @@ import {
 	type RosterEditChoice,
 } from "@/features/scheduling/rosterChanges/rosterEdit";
 import {
+	isLeaveDay,
+	leaveMoveOf,
+	leaveTookTheShift,
+	moveChangesRoster,
+	needsDecision,
+	panelModes,
+	rosterChoiceOfLeaveMove,
+	rosterLeaveRefusal,
+	type RosterPanelMode,
+} from "@/features/scheduling/rosterChanges/rosterLeave";
+import {
 	useRosterChangeActions,
 	type RosterChangeTarget,
 } from "@/features/scheduling/rosterChanges/useRosterChangeActions";
+import { useRosterLeaveActions } from "@/features/scheduling/rosterChanges/useRosterLeaveActions";
 import {
 	scheduleKey,
 	type RosterCellValue,
@@ -60,6 +79,13 @@ export type RosterCellPanelProps = {
 	onPreviewDays: (keys: ReadonlyArray<string>) => void;
 	/** A change landed; the roster already shows it. */
 	onApplied: (change: RosterChange) => void;
+	/** A leave move landed with no roster change to confirm; the roster refreshes by itself. */
+	onLeaveChanged?: () => void;
+	/**
+	 * Given to someone who may change leave at this department too. Their own
+	 * membership: nobody changes their own leave.
+	 */
+	leaveEditing?: { viewerMembershipId: string };
 	/**
 	 * The roster is published: applying tells each person whose days change,
 	 * with the remark, so Apply asks first how many will be told.
@@ -68,18 +94,18 @@ export type RosterCellPanelProps = {
 	className?: string;
 };
 
-/** What the person is about to do with the day, before choosing the shift or person. */
-type Mode = "shift" | "dayOff" | "swap";
-
 const key = "scheduling.rosterEdit";
 
 /**
  * One roster day beside the grid, for someone who may change the roster: what
  * it holds now (and who changed it last), a choice of another shift, a day
- * off or a same-day swap, a preview with the API's checks, and Apply. Leave
- * is never changed here. Checks that need a tick, or a tick and a remark,
- * hold Apply until given; scheduling rules aren't checked again. On a
- * published roster Apply asks first, saying how many people will be told.
+ * off or a same-day swap, a preview with the API's checks, and Apply. With
+ * `leaveEditing`, leave choices too: each calls Leave with a required remark,
+ * and taking someone off leave then edits the roster in a second step. Leave
+ * moves offer no Undo: they are reversed in Leave. Checks that need a tick, or
+ * a tick and a remark, hold Apply until given; scheduling rules aren't checked
+ * again. On a published roster Apply asks first, saying how many people will
+ * be told.
  */
 export const RosterCellPanel = ({
 	target,
@@ -90,6 +116,8 @@ export const RosterCellPanel = ({
 	onClose,
 	onPreviewDays,
 	onApplied,
+	onLeaveChanged,
+	leaveEditing,
 	notifiesMembers = false,
 	className,
 }: RosterCellPanelProps): FunctionComponent => {
@@ -99,15 +127,22 @@ export const RosterCellPanel = ({
 	const titleId = useId();
 	const heading = useRef<HTMLHeadingElement>(null);
 	const choicesId = useId();
-	const [mode, setMode] = useState<Mode>();
+	const [mode, setMode] = useState<RosterPanelMode>();
 	const [shiftId, setShiftId] = useState<string>();
 	const [partnerId, setPartnerId] = useState<string>();
+	const [leaveType, setLeaveType] = useState<string>();
+	// The leave was cancelled but the roster edit after it was refused: why, and whether the day now reads as flagged.
+	const [stranded, setStranded] = useState<{
+		reason: string;
+		flagged: boolean;
+	}>();
 	const [remark, setRemark] = useState("");
 	// The fingerprint of the checks the person ticked: new checks need a new tick.
 	const [tickedFor, setTickedFor] = useState<string | null>(null);
 	// On a published roster, Apply first asks whether to tell the people whose days change.
 	const [confirming, setConfirming] = useState(false);
 	const { apply } = useRosterChangeActions(target);
+	const leaveActions = useRosterLeaveActions(target);
 
 	const name =
 		assignment.member?.displayName ?? t("scheduling.detail.formerMember");
@@ -125,17 +160,53 @@ export const RosterCellPanel = ({
 	const partner = partners.available.find(
 		(row) => row.assignmentId === partnerId
 	);
+	const ownDay =
+		leaveEditing !== undefined &&
+		membershipId === leaveEditing.viewerMembershipId;
+	const mayChangeLeave =
+		leaveEditing !== undefined && membershipId !== null && !ownDay;
+	const leaveDay = isLeaveDay(assignment);
+	const leaveMove = mayChangeLeave
+		? leaveMoveOf(assignment, mode, { leaveType, shiftId })
+		: undefined;
+	const leaveTypes = useQuery(
+		activeLeaveTypesQuery(target.companyId, mayChangeLeave)
+	);
+	const request = useQuery({
+		...leaveRequestQuery(
+			target.companyId,
+			leaveEditing?.viewerMembershipId ?? "",
+			assignment.leaveRequestId ?? "",
+			ownDay ? undefined : (membershipId ?? undefined)
+		),
+		enabled: leaveEditing !== undefined && Boolean(assignment.leaveRequestId),
+	});
+	const leaveOptions = leaveTypeOptions(leaveTypes.data ?? [], t).filter(
+		(option) =>
+			mode !== "anotherType" || option.label !== assignment.leaveTypeName
+	);
 	const choice: RosterEditChoice | undefined =
-		mode === "dayOff"
-			? { kind: "dayOff" }
-			: mode === "shift" && shiftId !== undefined
-				? { kind: "shift", shiftId }
-				: mode === "swap" && partner !== undefined
-					? { kind: "swap", partner }
-					: undefined;
+		mayChangeLeave && leaveDay
+			? rosterChoiceOfLeaveMove(leaveMove)
+			: mode === "dayOff"
+				? { kind: "dayOff" }
+				: mode === "shift" && shiftId !== undefined
+					? { kind: "shift", shiftId }
+					: mode === "swap" && partner !== undefined
+						? { kind: "swap", partner }
+						: undefined;
 	const cells = cellsForChoice(assignment, choice);
 	const body: RosterChangeBody | undefined =
-		cells.length > 0 ? { expectedRevision: revision, cells } : undefined;
+		cells.length > 0
+			? {
+					expectedRevision: revision,
+					cells,
+					// The leave goes first, so the checks read the day as it will then be.
+					...(leaveMove?.kind === "backToShift"
+						? { assumeLeaveCancelledOn: [assignment.day] }
+						: {}),
+				}
+			: undefined;
 	const preview = useQuery(
 		rosterChangePreviewQuery(
 			target.companyId,
@@ -179,28 +250,42 @@ export const RosterCellPanel = ({
 	const previewRefusal = preview.error
 		? rosterChangeRefusal(preview.error)
 		: undefined;
-	const onLeave = assignment.offReason === "LEAVE";
-	// Another shift needs the schedule's frozen shifts; until they load only Day off and Swap are offered.
-	const modes: Array<{ value: Mode; label: string }> = onLeave
-		? []
-		: [
-				...(shifts.length === 0
-					? []
-					: [
-							{
-								value: "shift" as const,
-								label: t(
-									assignment.shift === null
-										? `${key}.aShift`
-										: `${key}.anotherShift`
-								),
-							},
-						]),
-				...(assignment.shift === null
-					? []
-					: [{ value: "dayOff" as const, label: t(`${key}.makeDayOff`) }]),
-				{ value: "swap", label: t(`${key}.swap`) },
-			];
+	const remarkGiven = remark.trim().length > 0;
+	const leaveFailure =
+		leaveActions.putOnLeave.error ??
+		leaveActions.changeType.error ??
+		leaveActions.cancelDay.error ??
+		leaveActions.cancelDayFirst.error;
+	const leavePending =
+		leaveActions.putOnLeave.isPending ||
+		leaveActions.changeType.isPending ||
+		leaveActions.cancelDay.isPending ||
+		leaveActions.cancelDayFirst.isPending;
+	const modeLabels: Record<RosterPanelMode, string> = {
+		shift: t(
+			assignment.shift === null ? `${key}.aShift` : `${key}.anotherShift`
+		),
+		dayOff: t(
+			needsDecision(assignment) ? `${key}.confirmDayOff` : `${key}.makeDayOff`
+		),
+		swap: t(`${key}.swap`),
+		leave: t(`${key}.leave`),
+		anotherType: t(`${key}.anotherLeaveType`),
+	};
+	// Another shift needs the schedule's frozen shifts; until they load it isn't offered.
+	const modes = panelModes({
+		assignment,
+		hasShifts: shifts.length > 0,
+		mayChangeLeave,
+	});
+
+	/** A failure belongs to the choice that caused it. */
+	const clearFailures = (): void => {
+		apply.reset();
+		Object.values(leaveActions).forEach((action) => {
+			action.reset();
+		});
+	};
 
 	const submit = (): void => {
 		if (!body || !preview.data) return;
@@ -223,6 +308,140 @@ export const RosterCellPanel = ({
 			}
 		);
 	};
+
+	/**
+	 * Step two of taking someone off leave, marked as such so the API never
+	 * undoes half of the move. Refused, the day is left as the cancelled leave
+	 * left it: `assignment` here is still the day before that refresh, which
+	 * says whether it is flagged.
+	 */
+	const editRoster = async (
+		rosterCells: Array<RosterChangeCell>,
+		checksFingerprint: string | undefined
+	): Promise<void> => {
+		try {
+			onApplied(
+				await apply.mutateAsync({
+					expectedRevision: revision,
+					cells: rosterCells,
+					remark: remark.trim(),
+					checksFingerprint,
+					leaveMove: true,
+				})
+			);
+		} catch (error) {
+			setStranded({
+				reason: t(`${key}.error.${rosterChangeRefusal(error)}`),
+				flagged: leaveTookTheShift(assignment),
+			});
+		}
+	};
+
+	const runLeaveMove = async (): Promise<void> => {
+		setConfirming(false);
+		if (!leaveMove || membershipId === null) return;
+		const leaveOf = {
+			membershipId,
+			day: assignment.day,
+			remark: remark.trim(),
+		};
+		const dayOfRequest = {
+			...leaveOf,
+			leaveRequestId: assignment.leaveRequestId ?? "",
+		};
+		try {
+			switch (leaveMove.kind) {
+				case "putOnLeave":
+					await leaveActions.putOnLeave.mutateAsync({
+						...leaveOf,
+						leaveType: leaveMove.leaveType,
+					});
+					onLeaveChanged?.();
+					return;
+				case "changeType":
+					await leaveActions.changeType.mutateAsync({
+						...dayOfRequest,
+						leaveType: leaveMove.leaveType,
+					});
+					onLeaveChanged?.();
+					return;
+				case "backToDayOff":
+					if (leaveTookTheShift(assignment)) {
+						await leaveActions.cancelDayFirst.mutateAsync(dayOfRequest);
+						await editRoster(
+							cellsForChoice(assignment, { kind: "dayOff" }),
+							undefined
+						);
+						return;
+					}
+					await leaveActions.cancelDay.mutateAsync(dayOfRequest);
+					onLeaveChanged?.();
+					return;
+				case "backToShift":
+					await leaveActions.cancelDayFirst.mutateAsync(dayOfRequest);
+					await editRoster(cells, fingerprint ?? undefined);
+					return;
+			}
+		} catch {
+			// The mutation keeps the error, which the panel shows.
+		}
+	};
+
+	const confirmLeaveMove = (): void => {
+		void runLeaveMove();
+	};
+
+	const askOrRunLeaveMove = (): void => {
+		if (!leaveMove) return;
+		if (notifiesMembers && moveChangesRoster(assignment, leaveMove))
+			setConfirming(true);
+		else confirmLeaveMove();
+	};
+
+	const leaveTypeLabel = (code: string): string =>
+		leaveOptions.find((option) => option.value === code)?.label ?? "";
+
+	const leaveChange = (): { before: string; after: string } => ({
+		before: cellText(nowCell),
+		after:
+			leaveMove?.kind === "putOnLeave" || leaveMove?.kind === "changeType"
+				? leaveTypeLabel(leaveMove.leaveType)
+				: t(`${key}.dayOff`),
+	});
+
+	const leaveNotes = (): Array<string> => {
+		const facts = { name, day };
+		switch (leaveMove?.kind) {
+			case "putOnLeave":
+				return [
+					t(`${key}.leaveNote.putOnLeave`, facts),
+					t(
+						assignment.shift === null
+							? `${key}.leaveNote.usesNoLeave`
+							: `${key}.leaveNote.needsCover`,
+						facts
+					),
+				];
+			case "changeType":
+				return [t(`${key}.leaveNote.oneDayOnly`, facts)];
+			case "backToDayOff":
+				return [t(`${key}.leaveNote.backToDayOff`, facts)];
+			default:
+				return [];
+		}
+	};
+
+	const requestDays = request.data
+		? rangeDays({ start: request.data.startDate, end: request.data.endDate })
+				.length
+		: 1;
+	const requestLink = assignment.leaveRequestId
+		? leaveLinkSearch(
+				assignment.leaveRequestId,
+				membershipId,
+				leaveEditing?.viewerMembershipId
+			)
+		: undefined;
 
 	const section = (children: ReactNode): ReactNode => (
 		<div className="flex flex-col gap-3 px-4 py-4">{children}</div>
@@ -260,7 +479,26 @@ export const RosterCellPanel = ({
 						<dd className="font-semibold text-neutral-900">
 							{cellText(nowCell)}
 							{assignment.jobTitle && ` · ${assignment.jobTitle.name}`}
+							{assignment.offReason === "LEAVE" &&
+								assignment.leaveTypeName &&
+								` · ${assignment.leaveTypeName}`}
 						</dd>
+						{leaveDay &&
+							assignment.offReason === "OFF" &&
+							assignment.leaveTypeName && (
+								<dd className="text-neutral-800">
+									{t(`${key}.leaveCoversDay`, {
+										type: assignment.leaveTypeName,
+									})}
+								</dd>
+							)}
+						{leaveDay && leaveEditing && requestLink && (
+							<dd>
+								<Button search={requestLink} to="/leave" variant="textlink">
+									{t(`${key}.changeAllDays`, { count: requestDays })}
+								</Button>
+							</dd>
+						)}
 						{assignment.lastChange && (
 							<dd className="text-neutral-800">
 								{assignment.lastChange.appliedBy?.displayName
@@ -282,6 +520,9 @@ export const RosterCellPanel = ({
 										cell: cellText(assignment.lastChange.before),
 									})}
 								</span>
+								{leaveTookTheShift(assignment) && (
+									<span className="block">{t(`${key}.takenOffForLeave`)}</span>
+								)}
 								{assignment.lastChange.remark && (
 									<q className="block">{assignment.lastChange.remark}</q>
 								)}
@@ -289,10 +530,49 @@ export const RosterCellPanel = ({
 						)}
 					</dl>
 				)}
-				{onLeave
+				{needsDecision(assignment) &&
+					section(
+						<Callout tone="warning">
+							{t(
+								assignment.flag === "NEEDS_ATTENTION"
+									? `${key}.needsAttention`
+									: `${key}.needsDecision`,
+								{ name }
+							)}
+						</Callout>
+					)}
+				{leaveEditing &&
+					assignment.flag === "LEAVE_REQUESTED" &&
+					assignment.leaveTypeName &&
+					requestLink &&
+					section(
+						<>
+							<p className="text-sm text-neutral-800">
+								{t(`${key}.leaveRequested`, {
+									name,
+									type: assignment.leaveTypeName,
+								})}
+							</p>
+							<Button search={requestLink} to="/leave" variant="textlink">
+								{t(`${key}.reviewInLeave`)}
+							</Button>
+						</>
+					)}
+				{stranded &&
+					section(
+						<p className="text-sm text-error-700" role="alert">
+							{t(
+								stranded.flagged
+									? `${key}.strandedNeedsDecision`
+									: `${key}.strandedDayOff`,
+								{ day, reason: stranded.reason }
+							)}
+						</p>
+					)}
+				{modes.length === 0
 					? section(
 							<p className="text-sm text-neutral-800">
-								{t(`${key}.leaveReadOnly`)}
+								{t(ownDay ? `${key}.ownLeave` : `${key}.leaveReadOnly`)}
 							</p>
 						)
 					: section(
@@ -308,19 +588,29 @@ export const RosterCellPanel = ({
 									className="flex flex-col gap-2"
 									role="radiogroup"
 								>
-									{modes.map(({ value, label }) => (
+									{modes.map((value) => (
 										<RadioCard
 											key={value}
 											checked={mode === value}
-											label={label}
+											label={modeLabels[value]}
 											name={`${titleId}-mode`}
 											value={value}
 											onChange={() => {
 												setMode(value);
+												clearFailures();
 											}}
 										/>
 									))}
 								</div>
+								{(mode === "leave" || mode === "anotherType") && (
+									<Select
+										aria-label={t(`${key}.leaveType`)}
+										options={leaveOptions}
+										placeholder={t(`${key}.chooseLeaveType`)}
+										value={leaveType}
+										onChange={setLeaveType}
+									/>
+								)}
 								{mode === "shift" &&
 									(choices.length === 0 ? (
 										<p className="text-sm text-neutral-800">
@@ -380,7 +670,11 @@ export const RosterCellPanel = ({
 								notifiesMembers={notifiesMembers}
 								preview={preview.data}
 								remark={remark}
+								remarkRequired={leaveMove !== undefined}
 								ticked={ticked}
+								remarkHint={
+									leaveMove ? t(`${key}.leaveRemarkHint`, { name }) : undefined
+								}
 								onRemarkChange={setRemark}
 								onTickedChange={(checked) => {
 									setTickedFor(checked ? fingerprint : null);
@@ -412,9 +706,16 @@ export const RosterCellPanel = ({
 									</Button>
 								</div>
 							)}
-							{applyRefusal && (
+							{applyRefusal && !stranded && (
 								<p className="text-sm text-error-700" role="alert">
 									{t(`${key}.error.${applyRefusal}`)}
+								</p>
+							)}
+							{leaveFailure && (
+								<p className="text-sm text-error-700" role="alert">
+									{t(`${key}.leaveFailed.${rosterLeaveRefusal(leaveFailure)}`, {
+										name,
+									})}
 								</p>
 							)}
 							<div className="flex justify-end gap-3">
@@ -422,11 +723,16 @@ export const RosterCellPanel = ({
 									{t(`${key}.cancel`)}
 								</Button>
 								<Button
-									disabled={!preview.data || !canApply(gate, ticked, remark)}
-									loading={apply.isPending}
+									loading={apply.isPending || leavePending}
 									size="sm"
+									disabled={
+										!preview.data ||
+										!canApply(gate, ticked, remark) ||
+										(leaveMove !== undefined && !remarkGiven)
+									}
 									onClick={() => {
-										if (notifiesMembers) setConfirming(true);
+										if (leaveMove) askOrRunLeaveMove();
+										else if (notifiesMembers) setConfirming(true);
 										else submit();
 									}}
 								>
@@ -435,17 +741,50 @@ export const RosterCellPanel = ({
 							</div>
 						</>
 					)}
+				{leaveMove &&
+					!body &&
+					section(
+						<>
+							<RosterLeaveReview
+								change={leaveChange()}
+								name={name}
+								notes={leaveNotes()}
+								remark={remark}
+								onRemarkChange={setRemark}
+							/>
+							{leaveFailure && (
+								<p className="text-sm text-error-700" role="alert">
+									{t(`${key}.leaveFailed.${rosterLeaveRefusal(leaveFailure)}`, {
+										name,
+									})}
+								</p>
+							)}
+							<div className="flex justify-end gap-3">
+								<Button size="sm" variant="secondary" onClick={onClose}>
+									{t(`${key}.cancel`)}
+								</Button>
+								<Button
+									disabled={!remarkGiven}
+									loading={leavePending}
+									size="sm"
+									onClick={askOrRunLeaveMove}
+								>
+									{t(`${key}.applyLeave`)}
+								</Button>
+							</div>
+						</>
+					)}
 			</div>
-			{confirming && preview.data && (
+			{confirming && (leaveMove || preview.data) && (
 				<ConfirmDialog
 					cancelLabel={t(`${key}.cancel`)}
 					confirmLabel={t(`${key}.applyAndNotify`)}
-					submitting={apply.isPending}
+					submitting={apply.isPending || leavePending}
 					title={t(`${key}.publishedTitle`)}
 					description={t(`${key}.notifyCount`, {
-						count: peopleTold(preview.data.cells),
+						count: leaveMove ? 1 : peopleTold(preview.data?.cells ?? []),
 					})}
-					onConfirm={submit}
+					onConfirm={leaveMove ? confirmLeaveMove : submit}
 					onClose={() => {
 						setConfirming(false);
 					}}

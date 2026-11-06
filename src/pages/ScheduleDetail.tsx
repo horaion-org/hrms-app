@@ -192,6 +192,7 @@ const ApiSchedule = ({
 	const { t, i18n } = useTranslation();
 	const navigate = useNavigate();
 	const navigateHere = route.useNavigate();
+	const viewerMembershipId = useCurrentMembershipId();
 	const view = route.useSearch();
 	const onViewChange = (next: RosterSearch): void => {
 		void navigateHere({ search: next, replace: true });
@@ -298,6 +299,13 @@ const ApiSchedule = ({
 					revision: state.schedule.rosterRevision,
 					shifts: editorShifts.data ?? [],
 					notifiesMembers: state.schedule.status === "PUBLISHED",
+					// Leave choices need the leave keys as well, here at the schedule's Department.
+					...(access.canAll(
+						["leave_request:read", "leave_request:review"],
+						departmentScope(state.schedule.departmentId)
+					)
+						? { leave: { viewerMembershipId } }
+						: {}),
 				}
 			: undefined;
 	const schedule = state.schedule;
