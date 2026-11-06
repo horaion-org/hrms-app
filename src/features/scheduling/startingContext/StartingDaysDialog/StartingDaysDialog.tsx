@@ -25,6 +25,7 @@ import {
 	type OpeningValues,
 } from "@/features/scheduling/hours/openingGrid";
 import { formatDay } from "@/features/scheduling/periods";
+import { MissingDaysNotice } from "@/features/scheduling/startingContext/StartingDaysDialog/MissingDaysNotice";
 import type {
 	EnteredDay,
 	StartingCell,
@@ -34,7 +35,11 @@ import {
 	enteredDays,
 	fillEmpty,
 	initialEntries,
+	isNotAsked,
+	isUnanswered,
+	markMissingOff,
 	shiftCellValue,
+	unansweredByMember,
 	withCell,
 	type CellValue,
 	type Entries,
@@ -67,7 +72,9 @@ const key = "scheduling.startingContext";
  * The 7 days before the period, laid out like the roster: members down, days
  * across. A day a roster or approved leave covers shows what it was, locked;
  * any other day is a department shift, a day off, or not known (left empty).
- * "Fill empty" sets one day for everyone not entered yet. When the roster
+ * Missing days stay highlighted until answered; a day before a member started
+ * isn't asked for. "Fill empty" sets one day for everyone not entered yet, and
+ * "Mark everyone off" answers every missing day at once. When the roster
  * starts mid-month, two more cells take the hours and overtime each member
  * already worked this month, so monthly overtime limits count from the 1st.
  */
@@ -83,6 +90,11 @@ export const StartingDaysDialog = ({
 	const { t, i18n } = useTranslation();
 	const language = i18n.resolvedLanguage ?? i18n.language;
 	const [entries, setEntries] = useState<Entries>(() => initialEntries(week));
+	const unanswered = unansweredByMember(week, entries);
+	const unansweredDays = [...unanswered.values()].reduce(
+		(total, count) => total + count,
+		0
+	);
 	const lastDay = week.days[week.days.length - 1] ?? "";
 	const [fillDay, setFillDay] = useState(lastDay);
 	const [fillValue, setFillValue] = useState<CellValue>("OFF");
@@ -136,6 +148,12 @@ export const StartingDaysDialog = ({
 						{lockedLabel(cell)}
 					</span>
 				);
+			if (isNotAsked(cell))
+				return (
+					<span className="block truncate text-sm text-neutral-600">
+						{t(`${key}.beforeStart`)}
+					</span>
+				);
 			return (
 				<Select
 					className="w-full"
@@ -145,6 +163,11 @@ export const StartingDaysDialog = ({
 						name: member.displayName,
 						day: labelOf(date),
 					})}
+					status={
+						isUnanswered(cell, member.memberProfileId, entries)
+							? "error"
+							: undefined
+					}
 					onChange={(value) => {
 						setEntries((current) =>
 							withCell(
@@ -236,6 +259,13 @@ export const StartingDaysDialog = ({
 							{member.jobTitleName}
 						</span>
 					)}
+					{unanswered.has(member.memberProfileId) && (
+						<span className="block truncate text-xs text-error-700">
+							{t(`${key}.memberMissing`, {
+								count: unanswered.get(member.memberProfileId),
+							})}
+						</span>
+					)}
 				</span>
 			),
 		},
@@ -306,6 +336,15 @@ export const StartingDaysDialog = ({
 					{t(`${key}.fillEmpty`)}
 				</Button>
 			</div>
+			{unansweredDays > 0 && (
+				<MissingDaysNotice
+					className="mt-4"
+					count={unansweredDays}
+					onMarkOff={() => {
+						setEntries((current) => markMissingOff(week, current));
+					}}
+				/>
+			)}
 			{problem && (
 				<Callout className="mt-4" tone="warning">
 					{problem}

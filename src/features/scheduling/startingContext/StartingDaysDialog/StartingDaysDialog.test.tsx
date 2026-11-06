@@ -10,9 +10,12 @@ import {
 	midMonthOpenings,
 } from "@/features/scheduling/hours/fixtures";
 import {
+	answeredWeek,
 	carriedWeek,
 	firstWeek,
+	notAskedCell,
 	rosterOffCell,
+	unknownCell,
 } from "@/features/scheduling/startingContext/fixtures";
 import { StartingDaysDialog } from "@/features/scheduling/startingContext/StartingDaysDialog";
 
@@ -36,6 +39,102 @@ const show = (
 };
 
 describe("StartingDaysDialog", () => {
+	it("given_missingDays_when_shown_then_theyAreHighlightedAndCountedPerPersonAndInAll", () => {
+		show();
+
+		expect(
+			screen.getByRole("button", { name: "Siti Rahmah, Sun, Nov 8" })
+		).toHaveAttribute("aria-invalid", "true");
+		expect(
+			screen.getByRole("button", { name: "Tan Wei Ming, Sun, Nov 8" })
+		).not.toHaveAttribute("aria-invalid");
+		expect(screen.getByText("5 days missing")).toBeInTheDocument();
+		expect(screen.getByText("7 days missing")).toBeInTheDocument();
+		expect(
+			screen.getByText("12 days still need an answer.")
+		).toBeInTheDocument();
+	});
+
+	it("given_aDayBeforeSomeoneStarted_when_shown_then_itIsTextAndNeverCountedOrSent", async () => {
+		const onSave = vi.fn();
+		const week = firstWeek();
+		show(onSave, {
+			...week,
+			members: [
+				{
+					...week.members[1]!,
+					cells: [notAskedCell("2026-11-07"), unknownCell("2026-11-08")],
+				},
+			],
+		});
+
+		expect(screen.getByText("Before they started")).toBeInTheDocument();
+		expect(screen.getByText("1 day missing")).toBeInTheDocument();
+		await userEvent.click(
+			screen.getByRole("button", { name: "Mark everyone off" })
+		);
+		await userEvent.click(screen.getByRole("button", { name: "Mark off" }));
+		await userEvent.click(screen.getByRole("button", { name: "Save days" }));
+
+		expect(onSave).toHaveBeenCalledWith(
+			[
+				{
+					memberProfileId: "p-siti",
+					date: "2026-11-08",
+					kind: "OFF",
+					shiftId: null,
+				},
+			],
+			undefined
+		);
+	});
+
+	it("given_markEveryoneOff_when_confirmed_then_blanksAreFilledAndChosenDaysStay", async () => {
+		const onSave = vi.fn();
+		show(onSave);
+
+		await userEvent.click(
+			screen.getByRole("button", { name: "Mark everyone off" })
+		);
+		expect(
+			screen.getByText(
+				"Mark 12 empty days as Off? Filled days stay as they are."
+			)
+		).toBeInTheDocument();
+		await userEvent.click(screen.getByRole("button", { name: "Mark off" }));
+
+		expect(screen.queryByText(/still need/)).not.toBeInTheDocument();
+		expect(screen.queryByText(/days? missing/)).not.toBeInTheDocument();
+		await userEvent.click(screen.getByRole("button", { name: "Save days" }));
+		const [days] = onSave.mock.calls[0] as [Array<{ kind: string }>];
+		expect(days).toHaveLength(13);
+		expect(days.filter((day) => day.kind === "SHIFT")).toHaveLength(1);
+	});
+
+	it("given_markEveryoneOff_when_cancelled_then_nothingChanges", async () => {
+		show();
+
+		await userEvent.click(
+			screen.getByRole("button", { name: "Mark everyone off" })
+		);
+		await userEvent.click(
+			screen.getByRole("button", { name: "Keep them blank" })
+		);
+
+		expect(
+			screen.getByText("12 days still need an answer.")
+		).toBeInTheDocument();
+	});
+
+	it("given_nothingMissing_when_shown_then_noNoticeAndNoHighlight", () => {
+		show(vi.fn(), answeredWeek());
+
+		expect(
+			screen.queryByRole("button", { name: "Mark everyone off" })
+		).not.toBeInTheDocument();
+		expect(screen.queryByText(/days? missing/)).not.toBeInTheDocument();
+	});
+
 	it("given_aFirstWeek_when_shown_then_membersDownDaysAcrossWithLeaveLocked", () => {
 		show();
 
