@@ -35,7 +35,7 @@ describe("RosterShift", () => {
 		});
 		expect(button).toHaveAttribute("aria-pressed", "true");
 		expect(button).toHaveTextContent(
-			"Front Desk AMFront Desk Lead09:00 – 15:00"
+			"09:00 – 15:00Front Desk AMFront Desk Lead"
 		);
 		expect(button).toHaveStyle({
 			borderColor: "#E9A55A",
@@ -43,5 +43,24 @@ describe("RosterShift", () => {
 		});
 		await user.click(button);
 		expect(onSelect).toHaveBeenCalled();
+	});
+
+	it("given_aNarrowCell_when_rendered_then_showsTheTimeFirstAndNeverCutsItShort", () => {
+		render(
+			<RosterShift
+				label="Aisha Rahman, Mon 09:00 – 15:00"
+				selected={false}
+				shift={assignment}
+				timeRange="09:00 – 15:00"
+				onSelect={vi.fn()}
+			/>
+		);
+
+		const [time, name, role] = Array.from(screen.getByRole("button").children);
+		expect(time).toHaveTextContent("09:00 – 15:00");
+		expect(time).not.toHaveClass("truncate");
+		expect(name).toHaveTextContent("Front Desk AM");
+		expect(name).toHaveClass("truncate");
+		expect(role).toHaveTextContent("Front Desk Lead");
 	});
 });

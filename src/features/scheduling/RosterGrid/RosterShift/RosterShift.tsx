@@ -15,8 +15,10 @@ export type RosterShiftProps = {
 };
 
 /**
- * One shift in a roster cell, on its shift's colour: its name, role and
- * time. Choosing it shows its details.
+ * One shift in a roster cell, on its shift's colour: its time first and in
+ * full, as a manager reads it first, then its name and role, which may be
+ * cut short in a narrow cell (the label names them in full). Choosing it
+ * shows its details.
  */
 export const RosterShift = ({
 	shift,
@@ -31,13 +33,15 @@ export const RosterShift = ({
 		style={shiftTileStyle(shift.colour)}
 		type="button"
 		className={joinClassNames(
-			"block w-full min-w-0 cursor-pointer rounded border px-3 py-2 text-left text-xs font-medium text-neutral-900 hover:brightness-98 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-blue-500",
+			"block w-full min-w-0 cursor-pointer rounded border px-2 py-2 text-left text-xs font-medium text-neutral-900 hover:brightness-98 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-blue-500",
 			selected && "ring-2 ring-success-600 ring-inset"
 		)}
 		onClick={onSelect}
 	>
-		<span className="block truncate font-semibold">{shift.name}</span>
-		<span className="mt-1 block truncate">{shift.role}</span>
-		<span className="block truncate">{timeRange}</span>
+		<span className="block font-semibold text-balance tabular-nums">
+			{timeRange}
+		</span>
+		<span className="mt-1 block truncate">{shift.name}</span>
+		<span className="block truncate">{shift.role}</span>
 	</button>
 );
