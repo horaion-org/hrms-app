@@ -24,6 +24,8 @@ export type RosterChangeReviewProps = {
 	/** Whether the person ticked these very checks. */
 	ticked: boolean;
 	onTickedChange: (ticked: boolean) => void;
+	/** The roster is published: the people whose days change are told, and see the remark. */
+	notifiesMembers?: boolean;
 };
 
 const key = "scheduling.rosterEdit";
@@ -41,6 +43,7 @@ export const RosterChangeReview = ({
 	onRemarkChange,
 	ticked,
 	onTickedChange,
+	notifiesMembers = false,
 }: RosterChangeReviewProps): FunctionComponent => {
 	const { t } = useTranslation();
 	const remarkId = useId();
@@ -81,10 +84,12 @@ export const RosterChangeReview = ({
 			{preview && !gate.refused && (
 				<FormRow
 					counter={`${remark.length}/${ROSTER_CHANGE_REMARK_MAX_LENGTH}`}
-					hint={t(`${key}.remarkHint`)}
 					htmlFor={remarkId}
 					layout="stacked"
 					required={gate.needsRemark}
+					hint={t(
+						notifiesMembers ? `${key}.remarkHintPublished` : `${key}.remarkHint`
+					)}
 					label={t(
 						gate.needsRemark ? `${key}.remarkRequired` : `${key}.remark`
 					)}

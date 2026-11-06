@@ -8,6 +8,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { OverflowMenu, OverflowMenuItem } from "@/components/ui/OverflowMenu";
 import { DeleteScheduleDialog } from "@/features/scheduling/DeleteScheduleDialog";
 import {
+	deletable,
 	exportRoster,
 	hasRoster,
 	type Schedule,
@@ -27,8 +28,9 @@ export type ScheduleMenuProps = {
 /**
  * A schedule's "More actions" menu: export its generated roster as a
  * spreadsheet (where asked for and `schedule:read` is held at its
- * Department) and delete it (where `schedule:delete` is). With nothing to
- * offer there is no menu.
+ * Department) and delete it (where `schedule:delete` is, and it isn't
+ * published: a published roster is changed instead). With nothing to offer
+ * there is no menu.
  */
 export const ScheduleMenu = ({
 	companyId,
@@ -55,7 +57,8 @@ export const ScheduleMenu = ({
 		setDeleting(false);
 	};
 	const scope = departmentScope(schedule.departmentId);
-	const canDelete = access.can("schedule:delete", scope);
+	// A published roster is changed, never deleted.
+	const canDelete = deletable(schedule) && access.can("schedule:delete", scope);
 	const canExport =
 		withExport && hasRoster(schedule) && access.can("schedule:read", scope);
 	if (!canDelete && !canExport) return null;

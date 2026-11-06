@@ -25,6 +25,7 @@ import {
 	generationInProgress,
 	hasRoster,
 	regenerable,
+	rosterEditable,
 	rosterRunId,
 	type Schedule,
 } from "@/features/scheduling/schedules/api";
@@ -192,8 +193,9 @@ type Deciding = "publish" | "reject" | undefined;
  * shifts and constraints that name its findings, are read once it has one
  * (generated, published or rejected). The roster is read per run and per
  * revision, so the poll seeing a new run finish, or a hand change landing,
- * brings its rows without a reload. Someone who may update the schedule can
- * change a generated roster's days by hand before it is decided. Where the
+ * brings its rows without a reload. Someone who may edit its shifts can
+ * change a generated roster's days by hand before it is decided, and a
+ * published roster's days, telling the people whose days change. Where the
  * person may, its header offers to regenerate a generation that ended and wasn't published (as does
  * the failure panel) and to delete it, and the decision panel under the
  * header offers to publish or reject a generated roster.
@@ -240,13 +242,14 @@ const ApiSchedule = ({
 		rosterSchedule?.scheduleId
 	);
 	const constraints = useScheduleConstraints(companyId, rosterSchedule);
-	// A generated roster awaiting its decision may be changed by hand under its
-	// own key (hrms-backend-v2 docs/adr/0062); the editor reads the frozen shifts
-	// it offers through that key, so it needs no shift:read.
+	// A generated roster awaiting its decision, or a published one, may be
+	// changed by hand under its own key (hrms-backend-v2 docs/adr/0062, 0063);
+	// the editor reads the frozen shifts it offers through that key, so it
+	// needs no shift:read.
 	const mayEditShifts =
 		state.status === "ready" &&
 		runId !== undefined &&
-		decidable(state.schedule) &&
+		rosterEditable(state.schedule) &&
 		access.can(
 			"schedule:edit_shift",
 			departmentScope(state.schedule.departmentId)
@@ -286,6 +289,7 @@ const ApiSchedule = ({
 					target: { companyId, unit, scheduleId, runId },
 					revision: state.schedule.rosterRevision,
 					shifts: editorShifts.data ?? [],
+					notifiesMembers: state.schedule.status === "PUBLISHED",
 				}
 			: undefined;
 	const canDecide =

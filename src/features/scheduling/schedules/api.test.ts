@@ -13,6 +13,7 @@ import {
 	fetchScheduleConstraints,
 	fetchScheduleShifts,
 	decidable,
+	deletable,
 	generationInProgress,
 	hasRoster,
 	regenerable,
@@ -20,6 +21,7 @@ import {
 	publishSchedule,
 	rejectSchedule,
 	requestRegeneration,
+	rosterEditable,
 	rosterRunId,
 	scheduleAssignmentsKey,
 	scheduleAssignmentsQuery,
@@ -650,6 +652,23 @@ describe("a schedule's decision", () => {
 	);
 });
 
+describe("what a schedule's status allows by hand", () => {
+	it.each([
+		["DRAFT", false, true],
+		["GENERATION_FAILED", false, true],
+		["GENERATED", true, true],
+		["PUBLISHED", true, false],
+		["REJECTED", false, true],
+	] as const)(
+		"given_a%sSchedule_when_asked_then_editable%sAndDeletable%s",
+		(status, editable, removable) => {
+			const schedule = generatedScheduleFixture({ status });
+			expect(rosterEditable(schedule)).toBe(editable);
+			expect(deletable(schedule)).toBe(removable);
+		}
+	);
+});
+
 describe("a schedule's roster", () => {
 	it("reads a generated schedule's rows: shifts worked, days off and leave", async () => {
 		const rows = scheduleAssignmentsFixture();
@@ -824,6 +843,11 @@ describe("schedule refusals", () => {
 			409,
 			"This schedule is being generated. Try again once the run finishes.",
 		],
+		[
+			"PUBLISHED_SCHEDULE_NOT_DELETABLE",
+			409,
+			"This schedule is published, so it can’t be deleted. Change its days on the roster instead.",
+		],
 		["SCHEDULE_NOT_FOUND", 404, "This schedule no longer exists."],
 		[
 			"ACCESS_DENIED",
@@ -859,7 +883,7 @@ describe("schedule refusals", () => {
 		[
 			"SCHEDULE_PUBLISHED",
 			409,
-			"This roster is published, so it can’t be regenerated. It can still be deleted.",
+			"This roster is published, so it can’t be regenerated or deleted. Change its days on the roster instead.",
 		],
 		["SCHEDULE_NOT_FOUND", 404, "This schedule no longer exists."],
 		[
@@ -896,7 +920,7 @@ describe("schedule refusals", () => {
 		[
 			"SCHEDULE_WEEK_ALREADY_PUBLISHED",
 			409,
-			"This department already has a published roster for this week. Delete that schedule first, then publish this one.",
+			"This department already has a published roster for this week. Only one roster can be published per week, so schedule a different week instead.",
 		],
 		["SCHEDULE_NOT_FOUND", 404, "This schedule no longer exists."],
 		[

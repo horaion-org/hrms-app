@@ -12,6 +12,7 @@
 		"countUnavailable": "Notifications, unread count unavailable",
 		"markRead": "Mark as read",
 		"markAllRead": "Mark all as read",
+		"remark": "Remark:",
 		"readFailed": "We couldn’t mark notifications as read. Try again.",
 		"failed": "We couldn’t load notifications. Try again.",
 		"loading": "Loading notifications…",
@@ -2898,7 +2899,10 @@
 			"title": "My roster · {{department}} · {{period}}",
 			"loading": "Loading the roster…",
 			"unavailable": "This roster isn’t available. It may not be published yet, or you aren’t on it.",
-			"loadFailed": "This roster could not be loaded. Please try again."
+			"loadFailed": "This roster could not be loaded. Please try again.",
+			"changesTitle": "Your days changed since this roster was published",
+			"changeLine": "{{day}}: was {{before}}, now {{now}}.",
+			"changeRemark": "Remark:"
 		},
 		"generation": {
 			"inProgress": "This schedule is being generated. Its roster shows here once it’s ready; this page checks again every 15 seconds.",
@@ -3000,6 +3004,7 @@
 			"close": "Close",
 			"done": "Schedule deleted.",
 			"inProgress": "This schedule is being generated. Try again once the run finishes.",
+			"published": "This schedule is published, so it can’t be deleted. Change its days on the roster instead.",
 			"gone": "This schedule no longer exists.",
 			"forbidden": "You no longer have permission to delete this schedule.",
 			"failed": "We couldn’t delete the schedule. Try again."
@@ -3017,7 +3022,7 @@
 			"done": "Regeneration requested.",
 			"draft": "This schedule hasn’t been generated yet. Generate it from its setup.",
 			"inProgress": "This schedule is being generated. Try again once the run finishes.",
-			"published": "This roster is published, so it can’t be regenerated. It can still be deleted.",
+			"published": "This roster is published, so it can’t be regenerated or deleted. Change its days on the roster instead.",
 			"forbidden": "You no longer have permission to regenerate this schedule.",
 			"failed": "We couldn’t regenerate the roster. Try again.",
 			"editsLost": "Changes made by hand will be lost: a new run replaces the roster and every change made to it."
@@ -3044,7 +3049,7 @@
 			"rejectedNext": "Regenerate the roster, or delete the schedule.",
 			"reason": "Reason for rejection",
 			"publishTitle": "Publish this roster?",
-			"publishDescription": "Publishing makes this roster final for its week. It can’t be regenerated afterwards, but the schedule can still be deleted.",
+			"publishDescription": "Publishing makes this roster final for its week. It can’t be regenerated or deleted afterwards; its days can still be changed, and the people whose days change are told.",
 			"publishConfirm": "Publish roster",
 			"rejectTitle": "Reject this roster?",
 			"rejectDescription": "Say what needs to change. The roster stays visible, and the schedule can then be regenerated or deleted.",
@@ -3058,7 +3063,7 @@
 				"inProgress": "This schedule is being generated. Try again once the run finishes.",
 				"notGenerated": "This schedule has no generated roster to publish or reject.",
 				"alreadyDecided": "This roster was already published or rejected. Reload the page to see it.",
-				"weekAlreadyPublished": "This department already has a published roster for this week. Delete that schedule first, then publish this one.",
+				"weekAlreadyPublished": "This department already has a published roster for this week. Only one roster can be published per week, so schedule a different week instead.",
 				"reasonRejected": "Enter a reason of up to 2,000 characters.",
 				"forbidden": "You no longer have permission to publish or reject this roster.",
 				"failed": "We couldn’t save the decision. Try again."
@@ -3143,8 +3148,13 @@
 			"remark": "Remark (optional)",
 			"remarkRequired": "Remark (required)",
 			"remarkHint": "Seen by schedulers of this department.",
+			"remarkHintPublished": "Seen by schedulers of this department and by everyone whose day changes, both people in a swap included.",
 			"apply": "Apply change",
 			"applyAnyway": "Apply anyway",
+			"applyAndNotify": "Apply and notify",
+			"publishedTitle": "Change the published roster?",
+			"notifyCount_one": "{{count}} person will be told about this change.",
+			"notifyCount_other": "{{count}} people will be told about this change.",
 			"cancel": "Cancel",
 			"applied": "Roster changed.",
 			"undo": "Undo",

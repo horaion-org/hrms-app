@@ -6,6 +6,7 @@ import type { FunctionComponent } from "@/common/types";
 import { RadioCard } from "@/components/forms/RadioCard";
 import { Select } from "@/components/forms/Select";
 import { Button } from "@/components/ui/Button";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { CloseIcon } from "@/components/ui/Icon";
 import { formatTimeRange } from "@/features/scheduling/formatShift";
 import { formatDay } from "@/features/scheduling/periods";
@@ -15,13 +16,17 @@ import {
 	type RosterChange,
 	type RosterChangeBody,
 } from "@/features/scheduling/rosterChanges/api";
-import { rosterCellText } from "@/features/scheduling/rosterChanges/cellText";
+import {
+	assignmentCell,
+	rosterCellText,
+} from "@/features/scheduling/rosterChanges/cellText";
 import type { CheckNames } from "@/features/scheduling/rosterChanges/checkSentence";
 import { rosterChangeRefusal } from "@/features/scheduling/rosterChanges/rosterChangeRefusal";
 import {
 	applyGate,
 	canApply,
 	cellsForChoice,
+	peopleTold,
 	rosterCellKey,
 	rosteredJobTitleId,
 	shiftChoices,
@@ -55,6 +60,11 @@ export type RosterCellPanelProps = {
 	onPreviewDays: (keys: ReadonlyArray<string>) => void;
 	/** A change landed; the roster already shows it. */
 	onApplied: (change: RosterChange) => void;
+	/**
+	 * The roster is published: applying tells each person whose days change,
+	 * with the remark, so Apply asks first how many will be told.
+	 */
+	notifiesMembers?: boolean;
 	className?: string;
 };
 
@@ -68,7 +78,8 @@ const key = "scheduling.rosterEdit";
  * it holds now (and who changed it last), a choice of another shift, a day
  * off or a same-day swap, a preview with the API's checks, and Apply. Leave
  * is never changed here. Checks that need a tick, or a tick and a remark,
- * hold Apply until given; scheduling rules aren't checked again.
+ * hold Apply until given; scheduling rules aren't checked again. On a
+ * published roster Apply asks first, saying how many people will be told.
  */
 export const RosterCellPanel = ({
 	target,
@@ -79,6 +90,7 @@ export const RosterCellPanel = ({
 	onClose,
 	onPreviewDays,
 	onApplied,
+	notifiesMembers = false,
 	className,
 }: RosterCellPanelProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
@@ -93,6 +105,8 @@ export const RosterCellPanel = ({
 	const [remark, setRemark] = useState("");
 	// The fingerprint of the checks the person ticked: new checks need a new tick.
 	const [tickedFor, setTickedFor] = useState<string | null>(null);
+	// On a published roster, Apply first asks whether to tell the people whose days change.
+	const [confirming, setConfirming] = useState(false);
 	const { apply } = useRosterChangeActions(target);
 
 	const name =
@@ -145,16 +159,7 @@ export const RosterCellPanel = ({
 	}, [assignment.assignmentId]);
 
 	const cellText = (cell: RosterCellValue): string => rosterCellText(cell, t);
-	const nowCell: RosterCellValue = {
-		kind:
-			assignment.offReason === "LEAVE"
-				? "LEAVE"
-				: assignment.shift === null
-					? "OFF"
-					: "WORK",
-		shift: assignment.shift,
-		jobTitle: assignment.jobTitle,
-	};
+	const nowCell = assignmentCell(assignment);
 	const names: CheckNames = {
 		member: (id) =>
 			assignments.find((row) => row.member?.membershipId === id)?.member
@@ -206,8 +211,12 @@ export const RosterCellPanel = ({
 				checksFingerprint: preview.data.checksFingerprint ?? undefined,
 			},
 			{
-				onSuccess: onApplied,
+				onSuccess: (change) => {
+					setConfirming(false);
+					onApplied(change);
+				},
 				onError: (error) => {
+					setConfirming(false);
 					if (rosterChangeRefusal(error) === "checksChanged")
 						void preview.refetch();
 				},
@@ -254,7 +263,7 @@ export const RosterCellPanel = ({
 						</dd>
 						{assignment.lastChange && (
 							<dd className="text-neutral-800">
-								{assignment.lastChange.appliedBy.displayName
+								{assignment.lastChange.appliedBy?.displayName
 									? t(`${key}.changedBy`, {
 											time: formatDay(
 												assignment.lastChange.appliedAt,
@@ -368,6 +377,7 @@ export const RosterCellPanel = ({
 						<>
 							<RosterChangeReview
 								names={names}
+								notifiesMembers={notifiesMembers}
 								preview={preview.data}
 								remark={remark}
 								ticked={ticked}
@@ -415,7 +425,10 @@ export const RosterCellPanel = ({
 									disabled={!preview.data || !canApply(gate, ticked, remark)}
 									loading={apply.isPending}
 									size="sm"
-									onClick={submit}
+									onClick={() => {
+										if (notifiesMembers) setConfirming(true);
+										else submit();
+									}}
 								>
 									{t(gate.needsRemark ? `${key}.applyAnyway` : `${key}.apply`)}
 								</Button>
@@ -423,6 +436,21 @@ export const RosterCellPanel = ({
 						</>
 					)}
 			</div>
+			{confirming && preview.data && (
+				<ConfirmDialog
+					cancelLabel={t(`${key}.cancel`)}
+					confirmLabel={t(`${key}.applyAndNotify`)}
+					submitting={apply.isPending}
+					title={t(`${key}.publishedTitle`)}
+					description={t(`${key}.notifyCount`, {
+						count: peopleTold(preview.data.cells),
+					})}
+					onConfirm={submit}
+					onClose={() => {
+						setConfirming(false);
+					}}
+				/>
+			)}
 		</aside>
 	);
 };

@@ -152,6 +152,19 @@ export const canApply = (
 	(!gate.needsTick || ticked) &&
 	(!gate.needsRemark || remark.trim().length > 0);
 
+/**
+ * How many people a change to a published roster tells: each member whose
+ * days it changes, once, however many of their days it touches.
+ */
+export const peopleTold = (
+	cells: ReadonlyArray<{ membershipId: string | null }>
+): number =>
+	new Set(
+		cells.flatMap((cell) =>
+			cell.membershipId === null ? [] : [cell.membershipId]
+		)
+	).size;
+
 /** The roster with the changed rows in place of their old selves, in the same order. */
 export const patchRoster = (
 	rows: ReadonlyArray<ScheduleAssignment>,

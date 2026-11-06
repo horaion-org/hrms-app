@@ -5,6 +5,7 @@ import { ApiProblemError } from "@/common/problem";
 import type { FunctionComponent } from "@/common/types";
 import { GeneratedRoster } from "@/features/scheduling/GeneratedRoster";
 import { myRosterQuery } from "@/features/scheduling/myRoster/api";
+import { MyRosterChanges } from "@/features/scheduling/MyRosterChanges";
 import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import { formatPeriod } from "@/features/scheduling/periods";
 
@@ -33,10 +34,12 @@ export const MyRosterProblem = (): FunctionComponent => {
 
 /**
  * A published roster the person is on, at `/me/schedules/$scheduleId`:
- * where a shift-assignment notification leads. The same week-by-week grid
- * as the scheduling page, read-only, without the figures, findings or any
- * action. The API decides access: a schedule that isn't published, or
- * doesn't roster them, is a 404 like one that doesn't exist.
+ * where a shift-assignment or changed-assignment notification leads. The
+ * same week-by-week grid as the scheduling page, read-only, without the
+ * figures, findings or any action; the member's own days changed after
+ * publication are listed above it with the manager's remark, and dotted.
+ * The API decides access: a schedule that isn't published, or doesn't
+ * roster them, is a 404 like one that doesn't exist.
  */
 export const MyRosterPage = (): FunctionComponent => {
 	const { t, i18n } = useTranslation();
@@ -74,6 +77,7 @@ export const MyRosterPage = (): FunctionComponent => {
 					{t("scheduling.detail.timeZone", { timeZone: data.timeZone })}
 				</span>
 			</p>
+			<MyRosterChanges assignments={data.assignments} className="mt-6" />
 			<GeneratedRoster
 				assignments={data.assignments}
 				schedule={data}

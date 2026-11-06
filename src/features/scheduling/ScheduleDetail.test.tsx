@@ -556,7 +556,9 @@ it("publishes a generated roster after a confirm, then says who published it", a
 		within(panel).getByRole("button", { name: "Publish roster" })
 	);
 	const dialog = screen.getByRole("dialog", { name: "Publish this roster?" });
-	expect(dialog).toHaveTextContent("It can’t be regenerated afterwards");
+	expect(dialog).toHaveTextContent(
+		"It can’t be regenerated or deleted afterwards"
+	);
 	await user.click(
 		within(dialog).getByRole("button", { name: "Publish roster" })
 	);
@@ -1102,12 +1104,14 @@ const aishaMonday = (): ScheduleAssignment =>
 	)!;
 
 /**
- * A generated roster that someone holding `schedule:edit_shift` (and neither
- * `schedule:update` nor `shift:read`) changes by hand: the schedule, its
- * roster and its latest change follow what was applied.
+ * A generated (or, with `status`, published) roster that someone holding
+ * `schedule:edit_shift` (and neither `schedule:update` nor `shift:read`)
+ * changes by hand: the schedule, its roster and its latest change follow
+ * what was applied.
  */
 const editableRoster = (
-	routes: Routes = {}
+	routes: Routes = {},
+	status: "GENERATED" | "PUBLISHED" = "GENERATED"
 ): {
 	routes: Routes;
 	landed: { revision: number; rows: Array<ScheduleAssignment> };
@@ -1120,7 +1124,7 @@ const editableRoster = (
 			[`GET ${SCHEDULE_READ}`]: () =>
 				ok(
 					generatedScheduleFixture({
-						status: "GENERATED",
+						status,
 						rosterRevision: landed.revision,
 					})
 				),
@@ -1504,11 +1508,157 @@ it("offers another shift to an editor without shift:read, from the frozen shifts
 	expect(readsOf(calls, `${SCHEDULE}/shifts`)).toHaveLength(0);
 });
 
-it("keeps a published roster read-only even for someone who may edit shifts", async () => {
+it("changes a published roster's day only after saying how many people will be told", async () => {
+	const edited = editedAssignmentFixture(aishaMonday());
+	const { routes, landed } = editableRoster(
+		{
+			[`POST ${ROSTER_CHANGES}`]: () => {
+				landed.revision = 2;
+				landed.rows = landed.rows.map((row) =>
+					row.assignmentId === edited.assignmentId ? edited : row
+				);
+				return {
+					status: 201,
+					body: envelope(
+						rosterChangeFixture({
+							assignments: [edited],
+							onPublishedRoster: true,
+						})
+					),
+				};
+			},
+		},
+		"PUBLISHED"
+	);
+	const calls = await openRoster(routes);
+	const user = userEvent.setup();
+
+	const panel = await openAishaMonday(user);
+	await user.click(within(panel).getByRole("radio", { name: "Day off" }));
+	expect(
+		await within(panel).findByText(
+			"Seen by schedulers of this department and by everyone whose day changes, both people in a swap included."
+		)
+	).toBeVisible();
+	await user.click(within(panel).getByRole("button", { name: "Apply change" }));
+
+	const confirm = screen.getByRole("dialog", {
+		name: "Change the published roster?",
+	});
+	expect(confirm).toHaveTextContent("1 person will be told about this change.");
+	expect(
+		calls.filter(
+			(call) => call.method === "POST" && call.path === ROSTER_CHANGES
+		)
+	).toHaveLength(0);
+	await user.click(
+		within(confirm).getByRole("button", { name: "Apply and notify" })
+	);
+
+	expect(
+		await screen.findByRole("button", {
+			name: "Aisha Rahman, Mon: Day off, changed",
+		})
+	).toBeVisible();
+	expect(
+		calls.filter(
+			(call) => call.method === "POST" && call.path === ROSTER_CHANGES
+		)
+	).toHaveLength(1);
+	expect(
+		screen.queryByRole("dialog", { name: "Change the published roster?" })
+	).toBeNull();
+});
+
+it("sends nothing when the person cancels a change to a published roster", async () => {
+	const { routes } = editableRoster({}, "PUBLISHED");
+	const calls = await openRoster(routes);
+	const user = userEvent.setup();
+
+	const panel = await openAishaMonday(user);
+	await user.click(within(panel).getByRole("radio", { name: "Day off" }));
+	await within(panel).findByText("Front Desk AM, Mon, Oct 12: 2 → 1 people.");
+	await user.click(within(panel).getByRole("button", { name: "Apply change" }));
+	await user.click(
+		within(
+			screen.getByRole("dialog", { name: "Change the published roster?" })
+		).getByRole("button", { name: "Cancel" })
+	);
+
+	expect(
+		calls.filter(
+			(call) => call.method === "POST" && call.path === ROSTER_CHANGES
+		)
+	).toHaveLength(0);
+	expect(panel).toBeVisible();
+});
+
+it("asks before undoing a change to a published roster, even when nothing stands against it", async () => {
+	const edited = editedAssignmentFixture(aishaMonday());
+	const { routes, landed } = editableRoster(
+		{
+			[`GET ${ROSTER_CHANGES}/latest`]: () =>
+				ok({
+					change: rosterChangeFixture({ onPublishedRoster: true }),
+				}),
+			[`POST ${ROSTER_CHANGES}/rc-1/undo/preview`]: ok(
+				rosterChangePreviewFixture({ expectedRevision: 2, checks: [] })
+			),
+			[`POST ${ROSTER_CHANGES}/rc-1/undo`]: () => {
+				landed.revision = 3;
+				landed.rows = scheduleAssignmentsFixture();
+				return {
+					status: 201,
+					body: envelope(
+						rosterChangeFixture({
+							kind: "UNDO",
+							fromRevision: 2,
+							toRevision: 3,
+							undoable: false,
+							onPublishedRoster: true,
+							assignments: [aishaMonday()],
+						})
+					),
+				};
+			},
+		},
+		"PUBLISHED"
+	);
+	landed.revision = 2;
+	landed.rows = landed.rows.map((row) =>
+		row.assignmentId === edited.assignmentId ? edited : row
+	);
+	const calls = await openRoster(routes);
+	const user = userEvent.setup();
+
+	await user.click(await screen.findByRole("button", { name: "Undo" }));
+
+	const confirm = await screen.findByRole("dialog", {
+		name: "Undo this change?",
+	});
+	expect(confirm).toHaveTextContent("1 person will be told about this change.");
+	expect(
+		calls.filter((call) => call.path === `${ROSTER_CHANGES}/rc-1/undo`)
+	).toHaveLength(0);
+	await user.click(
+		within(confirm).getByRole("button", { name: "Undo change" })
+	);
+
+	expect(
+		await screen.findByRole("button", {
+			name: "Aisha Rahman, Mon 09:00 – 15:00",
+		})
+	).toBeVisible();
+	expect(
+		calls.filter((call) => call.path === `${ROSTER_CHANGES}/rc-1/undo`)
+	).toHaveLength(1);
+});
+
+it("keeps a rejected roster read-only even for someone who may edit shifts", async () => {
 	await openRoster({
 		...signedIn(["schedule:read", "schedule:edit_shift"]),
 		[`GET ${SCHEDULE_READ}`]: ok(
-			generatedScheduleFixture({ status: "PUBLISHED" })
+			generatedScheduleFixture({ status: "REJECTED" })
 		),
 		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
 	});
@@ -1523,4 +1673,25 @@ it("keeps a published roster read-only even for someone who may edit shifts", as
 	expect(
 		screen.getByRole("complementary", { name: "Shift Details" })
 	).toBeVisible();
+});
+
+it("never offers to delete a published schedule, even to someone who may delete schedules", async () => {
+	await openRoster({
+		...signedIn(["schedule:read", "schedule:delete"]),
+		[`GET ${SCHEDULE_READ}`]: ok(
+			generatedScheduleFixture({ status: "PUBLISHED" })
+		),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+	});
+	const user = userEvent.setup();
+
+	await user.click(
+		await screen.findByRole("button", {
+			name: "More actions for Front Office - Week 42",
+		})
+	);
+
+	expect(
+		screen.getAllByRole("menuitem").map((item) => item.textContent)
+	).toEqual(["Export roster"]);
 });

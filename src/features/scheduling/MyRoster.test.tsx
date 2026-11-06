@@ -14,6 +14,7 @@ import {
 } from "@/common/testing/stubApi";
 import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
+import { editedAssignmentFixture } from "@/features/scheduling/rosterChanges/fixtures";
 import {
 	scheduleAssignmentsFixture,
 	schedulingWorkspace,
@@ -84,6 +85,45 @@ it("shows a published roster the member is on, read-only and without the figures
 	expect(screen.getByText("Times in Asia/Singapore")).toBeInTheDocument();
 	expect(screen.queryByText("Staff Rostered")).toBeNull();
 	expect(screen.queryByRole("button", { name: /Publish/ })).toBeNull();
+});
+
+it("lists the member's own days changed after publication, with the manager's remark, and dots them", async () => {
+	const aishaMonday = editedAssignmentFixture(scheduleAssignmentsFixture()[0]!);
+	await openMyRoster({
+		...signedInAsWorker(),
+		[`GET ${MY_ROSTER}`]: {
+			status: 200,
+			body: envelope({
+				scheduleId: "s-1",
+				name: "Front Office - Week 42",
+				branchName: "North",
+				departmentName: "Front Office",
+				timeZone: "Asia/Singapore",
+				periodStart: "2026-10-12",
+				periodEnd: "2026-10-18",
+				// The member's own read names nobody as the one who changed it.
+				assignments: [
+					{
+						...aishaMonday,
+						lastChange: {
+							...aishaMonday.lastChange,
+							appliedBy: null,
+							remark: "Covering the airport desk on Monday.",
+						},
+					},
+					...scheduleAssignmentsFixture().slice(1),
+				],
+			}),
+		},
+	});
+
+	const note = await screen.findByRole("note");
+	expect(note).toHaveTextContent(
+		"Your days changed since this roster was published"
+	);
+	expect(note).toHaveTextContent("Covering the airport desk on Monday.");
+	expect(screen.getAllByTitle("Changed")).toHaveLength(1);
+	expect(screen.queryByText(/José/)).toBeNull();
 });
 
 it("says the roster isn't available when the API refuses it with a 404", async () => {

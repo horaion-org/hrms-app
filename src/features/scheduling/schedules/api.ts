@@ -267,6 +267,19 @@ export const hasRoster = (schedule: Schedule): boolean =>
 	schedule.status === "PUBLISHED" ||
 	schedule.status === "REJECTED";
 
+/**
+ * Whether a schedule's roster may be changed by hand now (hrms-backend-v2
+ * docs/adr/0062 and 0063): GENERATED and awaiting its decision, or
+ * PUBLISHED, which is corrected by changes its members are told about.
+ */
+export const rosterEditable = (schedule: Schedule): boolean =>
+	(schedule.status === "GENERATED" || schedule.status === "PUBLISHED") &&
+	!generationInProgress(schedule);
+
+/** Whether a schedule may be deleted: a published one never is (hrms-backend-v2 docs/adr/0063). */
+export const deletable = (schedule: Schedule): boolean =>
+	schedule.status !== "PUBLISHED";
+
 /** Whether a schedule's roster awaits a decision: GENERATED with no run open. */
 export const decidable = (schedule: Schedule): boolean =>
 	schedule.status === "GENERATED" && !generationInProgress(schedule);
@@ -570,12 +583,14 @@ export type RosterCellValue = z.infer<typeof rosterCellSchema>;
 
 /**
  * The hand change that last touched a roster day (hrms-backend-v2 docs/adr/0062): who changed it,
- * when, why, and what the day held before.
+ * when, why, and what the day held before. A member's own roster carries it only on their own days
+ * changed after publication, without who changed it (docs/adr/0063).
  */
 const rosterLastChangeSchema = z.object({
 	changeId: z.string(),
 	appliedAt: z.string(),
-	appliedBy: participantSchema,
+	/** Null on a member's own roster, which never names who made the change. */
+	appliedBy: participantSchema.nullish().transform((value) => value ?? null),
 	remark: z.string().nullable(),
 	before: rosterCellSchema,
 });
@@ -617,7 +632,8 @@ export const scheduleAssignmentSchema = z.object({
 	jobTitle: rosterJobTitleSchema.nullable(),
 	/**
 	 * The hand change that last touched the day, or null for a day as
-	 * generated. Only the manager's roster carries it; absent from an older API.
+	 * generated. The manager's roster carries every one; a member's own roster
+	 * only their own days changed after publication. Absent from an older API.
 	 */
 	lastChange: rosterLastChangeSchema.nullish(),
 });

@@ -119,6 +119,11 @@ const changeSchema = z.object({
 	}),
 	remark: z.string().nullable(),
 	undoable: z.boolean(),
+	/** Made on the published roster, so the people whose days it changed were told; absent from an older API. */
+	onPublishedRoster: z
+		.boolean()
+		.nullish()
+		.transform((value) => value ?? false),
 	cells: z.array(changeCellSchema),
 	/** The changed roster rows as the roster now reads them; empty on the latest-change read. */
 	assignments: z.array(scheduleAssignmentSchema),

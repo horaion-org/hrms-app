@@ -22,8 +22,9 @@ const toneClasses: Record<NotificationTone, string> = {
 };
 
 /**
- * One inbox entry: type icon and colour, category, time, the caller's title (a typed link or plain text) and the
- * entry's actions. Actions are always shown, never revealed on hover, so touch and keyboard users reach them.
+ * One inbox entry: type icon and colour, category, time, the caller's title (a typed link or plain text), the
+ * manager's remark when a change to the reader's roster carries one, and the entry's actions. Actions are always
+ * shown, never revealed on hover, so touch and keyboard users reach them.
  */
 export const NotificationRow = ({
 	notification,
@@ -85,6 +86,12 @@ export const NotificationRow = ({
 					</time>
 				</p>
 				<div className="mt-1">{children}</div>
+				{notification.remark && (
+					<p className="mt-1 text-sm text-neutral-800">
+						{t("notifications.remark")}{" "}
+						<q className="break-words">{notification.remark}</q>
+					</p>
+				)}
 				{unread && <span className="sr-only">{t("notifications.unread")}</span>}
 			</div>
 			<div className="flex items-center gap-1">

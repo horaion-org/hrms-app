@@ -8,6 +8,7 @@ import {
 	canApply,
 	cellsForChoice,
 	patchRoster,
+	peopleTold,
 	rosterCellKey,
 	rosteredJobTitleId,
 	shiftChoices,
@@ -180,5 +181,18 @@ describe("patchRoster", () => {
 describe("rosterCellKey", () => {
 	it("given_aMemberAndDay_when_keyed_then_oneStableKey", () => {
 		expect(rosterCellKey("m-1", MONDAY)).toBe("m-1|2026-10-12");
+	});
+});
+
+describe("peopleTold", () => {
+	it("given_aSwapAndADayOfAFormerMember_when_counted_then_eachMemberOnceAndNoFormerMember", () => {
+		expect(
+			peopleTold([
+				{ membershipId: "m-1" },
+				{ membershipId: "m-2" },
+				{ membershipId: "m-1" },
+				{ membershipId: null },
+			])
+		).toBe(2);
 	});
 });
