@@ -34,6 +34,10 @@ describe("generationFailure", () => {
 			"The scheduling engine couldn’t be reached in time, so nothing was generated.",
 		],
 		[
+			"engine_outdated",
+			"The scheduling engine needs an update before it can use the days before this week. Generate again once it’s updated.",
+		],
+		[
 			"history_invalid",
 			"The scheduling engine couldn’t read the days before this week. Contact support: the schedule can be generated again once they’re cleared.",
 		],

@@ -2901,6 +2901,7 @@
 				"payload_too_large": "This schedule is too large for the engine to generate.",
 				"snapshot_invalid": "The engine couldn’t use this schedule’s shifts and constraints.",
 				"history_invalid": "The scheduling engine couldn’t read the days before this week. Contact support: the schedule can be generated again once they’re cleared.",
+				"engine_outdated": "The scheduling engine needs an update before it can use the days before this week. Generate again once it’s updated.",
 				"too_many_jobs": "The engine was too busy to take the job.",
 				"job_not_found": "The engine no longer knew about the job.",
 				"unauthorized": "The engine refused the request. Please contact support.",

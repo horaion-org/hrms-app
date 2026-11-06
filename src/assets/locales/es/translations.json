@@ -2133,6 +2133,7 @@
 				"payload_too_large": "Este horario es demasiado grande para que el motor lo genere.",
 				"snapshot_invalid": "El motor no pudo usar los turnos y restricciones de este horario.",
 				"history_invalid": "El motor de planificación no pudo leer los días anteriores a esta semana. Contacta con soporte: el horario se podrá generar de nuevo cuando se hayan borrado.",
+				"engine_outdated": "El motor de planificación necesita una actualización antes de poder usar los días anteriores a esta semana. Vuelve a generar cuando esté actualizado.",
 				"too_many_jobs": "El motor estaba demasiado ocupado para aceptar el trabajo.",
 				"job_not_found": "El motor ya no conocía el trabajo.",
 				"unauthorized": "El motor rechazó la solicitud. Ponte en contacto con soporte.",
