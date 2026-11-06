@@ -92,6 +92,23 @@ const openRoster = async (
 const readsOf = (calls: Calls, path: string): Calls =>
 	calls.filter((call) => call.method === "GET" && call.path === path);
 
+/** The header's "More actions" menu of schedule s-1. */
+const MENU = "More actions for Front Office - Week 42";
+
+type User = ReturnType<typeof userEvent.setup>;
+
+/** Opens the header's "More actions" menu and names what it offers. */
+const menuItemsOf = async (user: User): Promise<Array<string | null>> => {
+	await user.click(await screen.findByRole("button", { name: MENU }));
+	return screen.getAllByRole("menuitem").map((item) => item.textContent);
+};
+
+/** Opens the header's "More actions" menu and chooses `item`. */
+const chooseFromMenu = async (user: User, item: string): Promise<void> => {
+	await user.click(await screen.findByRole("button", { name: MENU }));
+	await user.click(screen.getByRole("menuitem", { name: item }));
+};
+
 it("opens an older link that also names the department, reading the schedule by its id", async () => {
 	const calls = await openRoster(
 		{
@@ -128,29 +145,21 @@ it("shows a generated schedule's header, figures and roster from the API", async
 	).toBeInTheDocument();
 	expect(screen.getByText("Generated")).toBeInTheDocument();
 	expect(screen.getByText("Times in Asia/Singapore")).toBeInTheDocument();
+	expect(screen.queryByText(/Requested by/)).toBeNull();
 	expect(
-		screen.getByText(/Requested by José on Oct 9, 2026, 6:00/)
-	).toHaveTextContent(/Finished on Oct 9, 2026, 6:02/);
-
-	const figures = {
-		"Staff Rostered": "3of 3 staff",
-		"Shifts Assigned": "15",
-		"Days Off": "4",
-		"On Leave": "2",
-		Conflicts: "1",
-	};
-	for (const [title, figure] of Object.entries(figures))
-		expect(screen.getByRole("region", { name: title })).toHaveTextContent(
-			figure
-		);
-	expect(screen.queryByRole("region", { name: "Coverage" })).toBeNull();
-	expect(screen.queryByRole("region", { name: "Open Shifts" })).toBeNull();
+		screen.getByText(
+			"3 people · 15 shifts · 4 days off · 2 days on leave · 94 h"
+		)
+	).toBeInTheDocument();
+	expect(screen.queryByRole("region", { name: "Conflicts" })).toBeNull();
+	expect(screen.queryByRole("note")).toBeNull();
 
 	const roster = screen.getByRole("table", { name: "Roster" });
 	expect(within(roster).getAllByRole("row")).toHaveLength(4);
 	const ben = within(roster).getByRole("row", { name: /Ben Ong/ });
 	expect(within(ben).getAllByText("LEAVE")).toHaveLength(2);
-	expect(screen.getByRole("list", { name: "Legend" })).toHaveTextContent(
+	await userEvent.click(screen.getByRole("button", { name: "Legend" }));
+	expect(await screen.findByRole("list", { name: "Legend" })).toHaveTextContent(
 		"Day OffOn LeaveFront Desk AMLunch RushSwing Shift"
 	);
 	expect(readsOf(calls, ASSIGNMENTS)).toHaveLength(1);
@@ -165,14 +174,34 @@ it("links a schedule to its setup in the wizard", async () => {
 		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
 	});
 
-	const link = await screen.findByRole("link", { name: "View setup" });
-	const target = new URL(link.getAttribute("href")!, "http://localhost");
-	expect(target.pathname).toBe("/scheduling/new");
-	expect(Object.fromEntries(target.searchParams)).toEqual({
+	await chooseFromMenu(userEvent.setup(), "View setup");
+
+	await waitFor(() => {
+		expect(app?.router.state.location.pathname).toBe("/scheduling/new");
+	});
+	expect(app?.router.state.location.search).toEqual({
 		step: "setup",
 		scheduleId: "s-1",
 		departmentId: "d-1",
 	});
+});
+
+it("tells who requested and finished the run in the menu's Details", async () => {
+	await openRoster({
+		...signedIn(),
+		[`GET ${SCHEDULE_READ}`]: ok(
+			generatedScheduleFixture({ status: "GENERATED" })
+		),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+	});
+
+	await chooseFromMenu(userEvent.setup(), "Details");
+
+	const panel = screen.getByRole("complementary", { name: "Details" });
+	expect(panel).toHaveTextContent(/RequestedJosé · Oct 9, 2026, 6:00/);
+	expect(panel).toHaveTextContent(/FinishedOct 9, 2026, 6:02/);
+	expect(panel).toHaveTextContent("Time zoneAsia/Singapore");
+	expect(app?.router.state.location.search).toEqual({ panel: "details" });
 });
 
 it("deletes the schedule from the header's menu and goes back to the overview", async () => {
@@ -212,7 +241,7 @@ it("deletes the schedule from the header's menu and goes back to the overview", 
 });
 
 it.each(["GENERATED", "PUBLISHED", "REJECTED"] as const)(
-	"offers only Export roster in the header menu of a %s roster without schedule:delete",
+	"offers only View setup, Details and Export roster, and no primary action, on a %s roster to someone who may only read it",
 	async (status) => {
 		await openRoster({
 			...signedIn(),
@@ -221,15 +250,63 @@ it.each(["GENERATED", "PUBLISHED", "REJECTED"] as const)(
 		});
 		const user = userEvent.setup();
 
-		await user.click(
-			await screen.findByRole("button", {
-				name: "More actions for Front Office - Week 42",
-			})
-		);
-
+		expect(await menuItemsOf(user)).toEqual([
+			"View setup",
+			"Details",
+			"Export roster",
+		]);
+		expect(screen.queryByRole("button", { name: "Publish roster" })).toBeNull();
 		expect(
-			screen.getAllByRole("menuitem").map((item) => item.textContent)
-		).toEqual(["Export roster"]);
+			screen.queryByRole("button", { name: "Regenerate roster" })
+		).toBeNull();
+	}
+);
+
+it.each([
+	[
+		"GENERATED",
+		"Publish roster",
+		[
+			"Reject",
+			"Regenerate roster",
+			"View setup",
+			"Details",
+			"Export roster",
+			"Delete",
+		],
+	],
+	[
+		"REJECTED",
+		"Regenerate roster",
+		["View setup", "Details", "Export roster", "Delete"],
+	],
+	["PUBLISHED", undefined, ["View setup", "Details", "Export roster"]],
+] as const)(
+	"shows a %s roster's one primary action, %s, and the rest in the menu, to someone who may do it all",
+	async (status, primary, items) => {
+		await openRoster({
+			...signedIn([
+				"schedule:read",
+				"schedule:generate",
+				"schedule:publish",
+				"schedule:delete",
+			]),
+			[`GET ${SCHEDULE_READ}`]: ok(generatedScheduleFixture({ status })),
+			[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+		});
+		const user = userEvent.setup();
+
+		await screen.findByRole("table", { name: "Roster" });
+		const header = screen.getByRole("heading", { level: 1 }).parentElement!
+			.parentElement!;
+		expect(
+			within(header)
+				.getAllByRole("button")
+				.map(
+					(button) => button.textContent || button.getAttribute("aria-label")
+				)
+		).toEqual(primary ? [primary, MENU] : [MENU]);
+		expect(await menuItemsOf(user)).toEqual(items);
 	}
 );
 
@@ -325,9 +402,7 @@ it("regenerates a generated roster after a danger confirm, then follows the new 
 	});
 	const user = userEvent.setup();
 
-	await user.click(
-		await screen.findByRole("button", { name: "Regenerate roster" })
-	);
+	await chooseFromMenu(user, "Regenerate roster");
 	const dialog = screen.getByRole("dialog", {
 		name: "Regenerate this roster?",
 	});
@@ -389,7 +464,7 @@ it("shows the new run's roster once the poll reports it finished, without a relo
 	expect(
 		await screen.findByRole("row", { name: /Aisha Rahman/ })
 	).toBeInTheDocument();
-	await user.click(screen.getByRole("button", { name: "Regenerate roster" }));
+	await chooseFromMenu(user, "Regenerate roster");
 	roster = [];
 	await user.click(
 		within(screen.getByRole("dialog")).getByRole("button", {
@@ -423,7 +498,7 @@ it("shows the generating state, not the old roster, while a new run is open", as
 	const user = userEvent.setup();
 
 	await screen.findByRole("table", { name: "Roster" });
-	await user.click(screen.getByRole("button", { name: "Regenerate roster" }));
+	await chooseFromMenu(user, "Regenerate roster");
 	await user.click(
 		within(screen.getByRole("dialog")).getByRole("button", {
 			name: "Regenerate roster",
@@ -434,7 +509,7 @@ it("shows the generating state, not the old roster, while a new run is open", as
 		"This schedule is being generated."
 	);
 	expect(screen.queryByRole("table", { name: "Roster" })).toBeNull();
-	expect(screen.queryByRole("region", { name: "Staff Rostered" })).toBeNull();
+	expect(screen.queryByText(/ shifts · /)).toBeNull();
 });
 
 it("offers to generate a failed schedule again from its failure panel", async () => {
@@ -489,9 +564,7 @@ it("shows a refused regeneration inside the dialog and keeps it open", async () 
 	});
 	const user = userEvent.setup();
 
-	await user.click(
-		await screen.findByRole("button", { name: "Regenerate roster" })
-	);
+	await chooseFromMenu(user, "Regenerate roster");
 	const dialog = screen.getByRole("dialog", {
 		name: "Regenerate this roster?",
 	});
@@ -533,7 +606,11 @@ it.each([
 		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
 	});
 
-	await screen.findByRole("link", { name: "View setup" });
+	await screen.findByText("Front Office Schedule");
+	if (screen.queryByRole("button", { name: MENU }))
+		expect(await menuItemsOf(userEvent.setup())).not.toContain(
+			"Regenerate roster"
+		);
 	expect(
 		screen.queryByRole("button", { name: "Regenerate roster" })
 	).toBeNull();
@@ -553,10 +630,8 @@ it("publishes a generated roster after a confirm, then says who published it", a
 	});
 	const user = userEvent.setup();
 
-	const panel = await screen.findByRole("region", { name: "Roster decision" });
-	expect(panel).toHaveTextContent("This roster hasn’t been published yet.");
 	await user.click(
-		within(panel).getByRole("button", { name: "Publish roster" })
+		await screen.findByRole("button", { name: "Publish roster" })
 	);
 	const dialog = screen.getByRole("dialog", { name: "Publish this roster?" });
 	expect(dialog).toHaveTextContent(
@@ -566,14 +641,13 @@ it("publishes a generated roster after a confirm, then says who published it", a
 		within(dialog).getByRole("button", { name: "Publish roster" })
 	);
 
-	expect(
-		await within(panel).findByText(/^Published by José · /)
-	).toBeInTheDocument();
+	expect(await screen.findByText("Published")).toBeInTheDocument();
 	expect(screen.queryByRole("dialog")).toBeNull();
-	expect(within(panel).queryByRole("button")).toBeNull();
+	expect(screen.queryByRole("button", { name: "Publish roster" })).toBeNull();
+	await chooseFromMenu(user, "Details");
 	expect(
-		screen.queryByRole("button", { name: "Regenerate roster" })
-	).toBeNull();
+		screen.getByRole("complementary", { name: "Details" })
+	).toHaveTextContent(/PublishedJosé · /);
 	const decisions = calls.filter(
 		(call) => call.method === "POST" && call.path.startsWith(SCHEDULE)
 	);
@@ -601,14 +675,10 @@ it("withholds Publish and Regenerate when another schedule is already the week's
 	expect(link.closest("[role=note]")).toHaveTextContent(
 		"This week already has a published roster for this department. Only one roster can be published per week, so this schedule can’t be generated or published."
 	);
-	const panel = screen.getByRole("region", { name: "Roster decision" });
-	expect(
-		within(panel).queryByRole("button", { name: "Publish roster" })
-	).toBeNull();
-	expect(within(panel).getByRole("button", { name: "Reject" })).toBeEnabled();
-	expect(
-		screen.queryByRole("button", { name: "Regenerate roster" })
-	).toBeNull();
+	expect(screen.queryByRole("button", { name: "Publish roster" })).toBeNull();
+	const items = await menuItemsOf(userEvent.setup());
+	expect(items).toContain("Reject");
+	expect(items).not.toContain("Regenerate roster");
 	expect(readsOf(calls, PUBLISHED_WEEK)[0]?.search).toBe(
 		`periodStart=${generatedScheduleFixture().periodStart}`
 	);
@@ -646,8 +716,7 @@ it("asks for a reason before rejecting a roster, then shows the reason", async (
 	});
 	const user = userEvent.setup();
 
-	const panel = await screen.findByRole("region", { name: "Roster decision" });
-	await user.click(within(panel).getByRole("button", { name: "Reject" }));
+	await chooseFromMenu(user, "Reject");
 	const dialog = screen.getByRole("dialog", { name: "Reject this roster?" });
 	const confirm = within(dialog).getByRole("button", {
 		name: "Confirm rejection",
@@ -669,13 +738,13 @@ it("asks for a reason before rejecting a roster, then shows the reason", async (
 	);
 	await user.click(confirm);
 
-	expect(
-		await within(panel).findByText(/^Rejected by José · /)
-	).toBeInTheDocument();
-	expect(panel).toHaveTextContent(
+	const callout = (await screen.findByText(/^Rejected by José · /)).closest(
+		"[role=note]"
+	);
+	expect(callout).toHaveTextContent(
 		"Two nights have no supervisor. Regenerate once Siti is back."
 	);
-	expect(panel).toHaveTextContent(
+	expect(callout).toHaveTextContent(
 		"Regenerate the roster, or delete the schedule."
 	);
 	expect(
@@ -714,7 +783,7 @@ it("shows a refused decision inside the dialog and keeps it open", async () => {
 	expect(screen.getByRole("dialog")).toBeInTheDocument();
 });
 
-it("shows a generated roster as waiting, without buttons, to someone without schedule:publish", async () => {
+it("offers neither Publish nor Reject to someone without schedule:publish", async () => {
 	await openRoster({
 		...signedIn(["schedule:read"]),
 		[`GET ${SCHEDULE_READ}`]: ok(
@@ -723,11 +792,9 @@ it("shows a generated roster as waiting, without buttons, to someone without sch
 		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
 	});
 
-	const panel = await screen.findByRole("region", { name: "Roster decision" });
-	expect(panel).toHaveTextContent(
-		"This roster is waiting to be published or rejected."
-	);
-	expect(within(panel).queryByRole("button")).toBeNull();
+	expect(await screen.findByText("Generated")).toBeInTheDocument();
+	expect(screen.queryByRole("button", { name: "Publish roster" })).toBeNull();
+	expect(await menuItemsOf(userEvent.setup())).not.toContain("Reject");
 });
 
 it("shows a chosen day's shift read-only", async () => {
@@ -775,7 +842,7 @@ const generatedWith = (findings = generationFindingsFixture()): StubReply =>
 		})
 	);
 
-it("summarises what the engine found and lists it in the findings panel", async () => {
+it("counts what the engine found on one Issues button and lists it in the side panel", async () => {
 	const calls = await openRoster({
 		...signedIn(["schedule:read", "shift:read", "constraint:read"]),
 		...FROZEN_SETUP,
@@ -784,13 +851,15 @@ it("summarises what the engine found and lists it in the findings panel", async 
 	});
 	const user = userEvent.setup();
 
-	expect(
-		await screen.findByText(
-			"The scheduling engine left 3 roster notes and 1 setup issue."
-		)
-	).toBeInTheDocument();
+	const issues = await screen.findByRole("button", { name: "Issues: 4" });
+	expect(issues).toHaveAttribute("aria-expanded", "false");
+	expect(screen.queryByRole("note")).toBeNull();
 	expect(screen.queryByRole("region", { name: /Setup issues/ })).toBeNull();
-	await user.click(screen.getByRole("button", { name: "Show details" }));
+	await user.click(issues);
+
+	const panel = screen.getByRole("complementary", { name: "Issues" });
+	expect(issues).toHaveAttribute("aria-expanded", "true");
+	expect(issues).toHaveAttribute("aria-controls", panel.id);
 
 	const setup = screen.getByRole("region", { name: "Setup issues (1)" });
 	expect(setup).toHaveTextContent("Shifts nobody can take · 1");
@@ -816,8 +885,28 @@ it("summarises what the engine found and lists it in the findings panel", async 
 		expect(readsOf(calls, `${SCHEDULE}/constraints`)).toHaveLength(1);
 	});
 
-	await user.click(screen.getByRole("button", { name: "Hide details" }));
-	expect(screen.queryByRole("region", { name: "Roster notes (3)" })).toBeNull();
+	await user.click(issues);
+	expect(screen.queryByRole("complementary", { name: "Issues" })).toBeNull();
+});
+
+it("opens on the side panel its link names, and keeps what is opened in the URL", async () => {
+	await openRoster(
+		{
+			...signedIn(),
+			[`GET ${SCHEDULE_READ}`]: generatedWith(),
+			[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+		},
+		`${ROSTER_URL}?panel=issues&week=2026-10-12`
+	);
+	const user = userEvent.setup();
+
+	expect(
+		await screen.findByRole("complementary", { name: "Issues" })
+	).toBeInTheDocument();
+	await user.click(screen.getByRole("button", { name: "Issues: 4" }));
+
+	expect(screen.queryByRole("complementary", { name: "Issues" })).toBeNull();
+	expect(app?.router.state.location.search).toEqual({ week: "2026-10-12" });
 });
 
 it("names findings without reading the setup it can't see", async () => {
@@ -828,7 +917,7 @@ it("names findings without reading the setup it can't see", async () => {
 	});
 	const user = userEvent.setup();
 
-	await user.click(await screen.findByRole("button", { name: "Show details" }));
+	await user.click(await screen.findByRole("button", { name: "Issues: 4" }));
 
 	expect(
 		screen.getByRole("region", { name: "Roster notes (3)" })
@@ -878,10 +967,13 @@ it("marks findings on the roster and opens one in a popover", async () => {
 		within(popover).getByRole("button", { name: "Show in findings" })
 	);
 
-	expect(screen.getByRole("button", { name: "Hide details" })).toHaveAttribute(
+	expect(screen.getByRole("button", { name: "Issues: 4" })).toHaveAttribute(
 		"aria-expanded",
 		"true"
 	);
+	expect(
+		screen.getByRole("heading", { level: 2, name: "Issues" })
+	).toHaveFocus();
 	expect(
 		screen.getByRole("region", { name: "Roster notes (3)" })
 	).toBeInTheDocument();
@@ -895,8 +987,7 @@ it("shows nothing about findings when the engine found nothing", async () => {
 	});
 
 	const roster = await screen.findByRole("table", { name: "Roster" });
-	expect(screen.queryByText(/The scheduling engine left/)).toBeNull();
-	expect(screen.queryByRole("button", { name: "Show details" })).toBeNull();
+	expect(screen.queryByRole("button", { name: /^Issues/ })).toBeNull();
 	expect(within(roster).queryByRole("button", { name: /note/ })).toBeNull();
 });
 
@@ -925,7 +1016,7 @@ const startingContextReply = (
 		],
 	});
 
-it("badges a member who brought a run into the week and warns when starting points changed since", async () => {
+it("lists where members started the week, and that it changed since, under Issues rather than on the roster", async () => {
 	const calls = await openRoster({
 		...signedIn(),
 		[`GET ${SCHEDULE_READ}`]: ok(
@@ -936,19 +1027,21 @@ it("badges a member who brought a run into the week and warns when starting poin
 	});
 
 	const roster = await screen.findByRole("table", { name: "Roster" });
+	await userEvent.click(
+		await screen.findByRole("button", { name: "Issues: 5" })
+	);
+
+	const panel = screen.getByRole("complementary", { name: "Issues" });
 	// Three days worked before Monday make Monday the fourth day of the run.
-	expect(await within(roster).findByText("Day 4 of a run")).toBeInTheDocument();
+	expect(panel).toHaveTextContent("Aisha Rahman: Day 4 of a run");
+	expect(within(panel).getAllByText(/of a run/)).toHaveLength(1);
 	expect(
-		within(within(roster).getByRole("row", { name: /Aisha Rahman/ })).getByText(
-			"Day 4 of a run"
-		)
-	).toBeInTheDocument();
-	expect(within(roster).getAllByText(/of a run/)).toHaveLength(1);
-	expect(
-		screen.getByText(
+		within(panel).getByText(
 			/^1 person’s days before this week changed after this schedule was generated\./
 		)
 	).toBeInTheDocument();
+	expect(within(roster).queryByText(/of a run/)).toBeNull();
+	expect(screen.queryByRole("note")).toBeNull();
 	expect(readsOf(calls, `${SCHEDULE}/starting-context`)).toHaveLength(1);
 });
 
@@ -1102,7 +1195,11 @@ it("shows a draft reached by its URL with a link to its setup", async () => {
 	expect(await screen.findByRole("note")).toHaveTextContent(
 		"This schedule is still a draft, so it has no roster yet."
 	);
-	expect(screen.getByRole("link", { name: "View setup" })).toBeInTheDocument();
+	expect(screen.queryByRole("button", { name: MENU })).toBeNull();
+	await userEvent.click(screen.getByRole("button", { name: "View setup" }));
+	await waitFor(() => {
+		expect(app?.router.state.location.pathname).toBe("/scheduling/new");
+	});
 	expect(readsOf(calls, ASSIGNMENTS)).toHaveLength(0);
 });
 
@@ -1283,9 +1380,15 @@ it("changes a generated roster's day by hand: preview, apply, mark, then undo", 
 		expectedRevision: 1,
 		cells: [{ membershipId: "m-1", day: "2026-10-12", kind: "OFF" }],
 	});
+	await user.click(
+		await screen.findByRole("button", { name: "Changed by hand: 1 day" })
+	);
 	expect(
 		await screen.findByText("Last change: Aisha Rahman, Mon, Oct 12")
 	).toBeVisible();
+	expect(
+		screen.getByRole("complementary", { name: "Changed" })
+	).toHaveTextContent("Aisha Rahman · Mon, Oct 12Front Desk AM");
 
 	await user.click(screen.getAllByRole("button", { name: "Undo" })[0]!);
 
@@ -1348,6 +1451,9 @@ it("asks before an undo that needs a tick and a remark, as an edit would", async
 	await user.click(within(panel).getByRole("radio", { name: "Day off" }));
 	await within(panel).findByText("Front Desk AM, Mon, Oct 12: 2 → 1 people.");
 	await user.click(within(panel).getByRole("button", { name: "Apply change" }));
+	await user.click(
+		await screen.findByRole("button", { name: "Changed by hand: 1 day" })
+	);
 	await screen.findByText("Last change: Aisha Rahman, Mon, Oct 12");
 	await user.click(screen.getAllByRole("button", { name: "Undo" })[0]!);
 
@@ -1685,6 +1791,9 @@ it("asks before undoing a change to a published roster, even when nothing stands
 	const calls = await openRoster(routes);
 	const user = userEvent.setup();
 
+	await user.click(
+		await screen.findByRole("button", { name: "Changed by hand: 1 day" })
+	);
 	await user.click(await screen.findByRole("button", { name: "Undo" }));
 
 	const confirm = await screen.findByRole("dialog", {
@@ -1739,13 +1848,9 @@ it("never offers to delete a published schedule, even to someone who may delete 
 	});
 	const user = userEvent.setup();
 
-	await user.click(
-		await screen.findByRole("button", {
-			name: "More actions for Front Office - Week 42",
-		})
-	);
-
-	expect(
-		screen.getAllByRole("menuitem").map((item) => item.textContent)
-	).toEqual(["Export roster"]);
+	expect(await menuItemsOf(user)).toEqual([
+		"View setup",
+		"Details",
+		"Export roster",
+	]);
 });

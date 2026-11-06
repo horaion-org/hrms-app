@@ -10,7 +10,7 @@ const meta = {
 	parameters: { layout: "padded" },
 	args: {
 		schedule: generatedScheduleFixture({ status: "GENERATED" }),
-		actions: <Button variant="textlink">View setup</Button>,
+		actions: <Button>Publish roster</Button>,
 	},
 } satisfies Meta<typeof RosterHeader>;
 
@@ -20,7 +20,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Generated: Story = {};
 
-/** Requested, so it has not finished yet. */
+/** Being generated: no primary action yet. */
 export const Generating: Story = {
-	args: { schedule: generatedScheduleFixture() },
+	args: { schedule: generatedScheduleFixture(), actions: undefined },
 };

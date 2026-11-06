@@ -54,7 +54,40 @@ describe("RosterWeekBar", () => {
 		expect(onToday).toHaveBeenCalled();
 	});
 
-	it("given_aGeneratedLegend_when_rendered_then_namesOffLeaveAndEachShiftInItsColour", () => {
+	it("given_aGeneratedLegend_when_rendered_then_keepsItBehindTheLegendButton", () => {
+		render(
+			<RosterWeekBar
+				legend={[{ kind: "off" }, { kind: "leave" }]}
+				week="2026-04-13"
+				weeks={weeks}
+				onToday={vi.fn()}
+				onWeekChange={vi.fn()}
+			/>
+		);
+
+		expect(screen.getByRole("button", { name: "Legend" })).toHaveAttribute(
+			"aria-expanded",
+			"false"
+		);
+		expect(screen.queryByRole("list", { name: "Legend" })).toBeNull();
+	});
+
+	it("given_noLegend_when_rendered_then_offersNoLegendButton", () => {
+		render(
+			<RosterWeekBar
+				legend={[]}
+				week="2026-04-13"
+				weeks={weeks}
+				onToday={vi.fn()}
+				onWeekChange={vi.fn()}
+			/>
+		);
+
+		expect(screen.queryByRole("button", { name: "Legend" })).toBeNull();
+	});
+
+	it("given_theLegendButton_when_chosen_then_namesOffLeaveAndEachShiftInItsColour", async () => {
+		const user = userEvent.setup();
 		render(
 			<RosterWeekBar
 				week="2026-04-13"
@@ -74,7 +107,9 @@ describe("RosterWeekBar", () => {
 			/>
 		);
 
-		const legend = screen.getByRole("list", { name: "Legend" });
+		await user.click(screen.getByRole("button", { name: "Legend" }));
+
+		const legend = await screen.findByRole("list", { name: "Legend" });
 		expect(legend).toHaveTextContent("Day OffOn LeaveFront Desk AM");
 		const [, leave, shift] = within(legend).getAllByRole("listitem");
 		expect(leave!.firstElementChild).toHaveClass("bg-ink-blue-50");

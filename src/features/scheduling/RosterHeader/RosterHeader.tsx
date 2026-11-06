@@ -4,13 +4,12 @@ import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { Badge } from "@/components/ui/Badge";
 import { formatPeriod } from "@/features/scheduling/periods";
-import { dateTimeFormatIn } from "@/features/scheduling/roster/roster";
 import { scheduleStatusTones } from "@/features/scheduling/schedules";
 import type { Schedule } from "@/features/scheduling/schedules/api";
 
 export type RosterHeaderProps = {
 	schedule: Schedule;
-	/** Placed at the right, e.g. "View setup". */
+	/** Placed at the right: the state's one primary action and the "More actions" menu. */
 	actions?: ReactNode;
 	className?: string;
 };
@@ -18,8 +17,9 @@ export type RosterHeaderProps = {
 const key = "scheduling.detail";
 
 /**
- * The top of a schedule's roster: its department, period, status and time
- * zone, who requested its generation and when it finished.
+ * The top of a schedule's roster, kept to two lines: its department, then
+ * its period, status and time zone. Who requested and decided it, and
+ * when, are in the "More actions" menu's Details.
  */
 export const RosterHeader = ({
 	schedule,
@@ -28,24 +28,10 @@ export const RosterHeader = ({
 }: RosterHeaderProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const language = i18n.resolvedLanguage ?? i18n.language;
-	const moment = dateTimeFormatIn(language, schedule.timeZone, {
-		dateStyle: "medium",
-		timeStyle: "short",
-	});
-	const requestedAt =
-		schedule.generationRequestedAt === null
-			? undefined
-			: moment.format(new Date(schedule.generationRequestedAt));
-	const finishedAt = schedule.generation?.finishedAt
-		? moment.format(new Date(schedule.generation.finishedAt))
-		: undefined;
-	const requester = schedule.generationRequestedBy
-		? (schedule.generationRequestedBy.displayName ?? t(`${key}.formerMember`))
-		: undefined;
 	return (
 		<div
 			className={joinClassNames(
-				"flex flex-wrap items-start justify-between gap-6",
+				"flex flex-wrap items-start justify-between gap-x-6 gap-y-4",
 				className
 			)}
 		>
@@ -68,21 +54,6 @@ export const RosterHeader = ({
 						{t(`${key}.timeZone`, { timeZone: schedule.timeZone })}
 					</span>
 				</p>
-				{requestedAt && (
-					<p className="mt-2 text-sm text-neutral-700">
-						{requester
-							? t(`${key}.requested`, { name: requester, at: requestedAt })
-							: t(`${key}.requestedAt`, { at: requestedAt })}
-						{finishedAt && (
-							<>
-								<span aria-hidden="true" className="mx-2">
-									•
-								</span>
-								{t(`${key}.finished`, { at: finishedAt })}
-							</>
-						)}
-					</p>
-				)}
 			</div>
 			{actions}
 		</div>

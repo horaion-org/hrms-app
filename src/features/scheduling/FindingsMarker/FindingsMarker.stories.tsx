@@ -35,10 +35,10 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** A roster note and a setup issue on one row: marked in the roster tone with a count. */
+/** A roster note and a setup issue on one row: the outline triangle in the warning tone, with a count. */
 export const RosterAndSetup: Story = {};
 
-/** One setup issue alone: marked in the setup tone. */
+/** One setup issue alone: the same triangle, as it is something to look at too. */
 export const SetupOnly: Story = {
 	args: {
 		label: "1 note for Ben Ong",

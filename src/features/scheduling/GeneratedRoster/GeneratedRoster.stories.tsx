@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { fn } from "storybook/test";
 import { GeneratedRoster } from "@/features/scheduling/GeneratedRoster";
 import { frozenConstraintsFixture } from "@/features/scheduling/constraints/fixtures";
 import {
@@ -20,6 +21,8 @@ const meta = {
 		assignments: scheduleAssignmentsFixture(),
 		shifts: frozenShiftsFixture(),
 		constraints: frozenConstraintsFixture(),
+		view: { week: "2026-10-12" },
+		onViewChange: fn(),
 	},
 } satisfies Meta<typeof GeneratedRoster>;
 
@@ -47,4 +50,9 @@ export const NothingFound: Story = {
 			generation: generationFixture({ findings: emptyFindingsFixture() }),
 		}),
 	},
+};
+
+/** The Issues list open beside the grid. */
+export const IssuesOpen: Story = {
+	args: { view: { week: "2026-10-12", panel: "issues" } },
 };

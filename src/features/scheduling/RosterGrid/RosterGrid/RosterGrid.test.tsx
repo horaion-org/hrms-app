@@ -41,7 +41,7 @@ describe("RosterGrid", () => {
 			within(ben).getByRole("button", {
 				name: "Ben Ong, Fri 11:00 – 13:00",
 			})
-		).toHaveTextContent("Lunch RushCashier11:00 – 13:00");
+		).toHaveTextContent("11:00 – 13:00Lunch RushCashier");
 		expect(screen.getAllByRole("row")).toHaveLength(4);
 	});
 

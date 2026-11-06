@@ -46,6 +46,8 @@ export const MyRosterPage = (): FunctionComponent => {
 	const language = i18n.resolvedLanguage ?? i18n.language;
 	const companyId = useCurrentCompanyId();
 	const { scheduleId } = route.useParams();
+	const view = route.useSearch();
+	const navigate = route.useNavigate();
 	const roster = useQuery(myRosterQuery(companyId, scheduleId));
 	if (roster.isPending)
 		return <Problem alert={false}>{t(`${key}.loading`)}</Problem>;
@@ -81,7 +83,11 @@ export const MyRosterPage = (): FunctionComponent => {
 			<GeneratedRoster
 				assignments={data.assignments}
 				schedule={data}
+				view={view}
 				withSummary={false}
+				onViewChange={(next) => {
+					void navigate({ search: next, replace: true });
+				}}
 			/>
 		</>
 	);

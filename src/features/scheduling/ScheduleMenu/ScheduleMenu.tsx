@@ -1,5 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { ApiProblemError } from "@/common/problem";
 import { saveFile } from "@/common/saveFile";
@@ -23,20 +23,27 @@ export type ScheduleMenuProps = {
 	withExport?: boolean;
 	/** After the schedule is deleted; the list needs nothing, the roster leaves. */
 	onDeleted?: () => void;
+	/**
+	 * The roster page's own items (`OverflowMenuItem`s), listed before Export
+	 * and Delete: Reject, Regenerate, View setup and Details. Each is given
+	 * only where the person may use it.
+	 */
+	children?: ReactNode;
 };
 
 /**
- * A schedule's "More actions" menu: export its generated roster as a
- * spreadsheet (where asked for and `schedule:read` is held at its
- * Department) and delete it (where `schedule:delete` is, and it isn't
- * published: a published roster is changed instead). With nothing to offer
- * there is no menu.
+ * A schedule's "More actions" menu: the caller's own items first, then
+ * export its generated roster as a spreadsheet (where asked for and
+ * `schedule:read` is held at its Department) and delete it (where
+ * `schedule:delete` is, and it isn't published: a published roster is
+ * changed instead). With nothing to offer there is no menu.
  */
 export const ScheduleMenu = ({
 	companyId,
 	schedule,
 	withExport = false,
 	onDeleted,
+	children,
 }: ScheduleMenuProps): FunctionComponent => {
 	const { t } = useTranslation();
 	const access = useAccess();
@@ -61,7 +68,7 @@ export const ScheduleMenu = ({
 	const canDelete = deletable(schedule) && access.can("schedule:delete", scope);
 	const canExport =
 		withExport && hasRoster(schedule) && access.can("schedule:read", scope);
-	if (!canDelete && !canExport) return null;
+	if (!children && !canDelete && !canExport) return null;
 	// A schedule with no roster yet can't be exported, so trying again can't help.
 	const exportRefusedAsDraft =
 		rosterExport.error instanceof ApiProblemError &&
@@ -73,6 +80,7 @@ export const ScheduleMenu = ({
 				label={t("scheduling.scheduleMenu.label", { name: schedule.name })}
 				variant="icon"
 			>
+				{children}
 				{canExport && (
 					<OverflowMenuItem
 						disabled={rosterExport.isPending}

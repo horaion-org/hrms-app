@@ -17,10 +17,10 @@ beforeAll(async () => {
 });
 
 describe("RosterHeader", () => {
-	it("given_aGeneratedSchedule_when_rendered_then_showsItsDepartmentStatusZoneAndRun", () => {
+	it("given_aGeneratedSchedule_when_rendered_then_showsItsDepartmentStatusAndZoneOnly", () => {
 		render(
 			<RosterHeader
-				actions={<button type="button">View setup</button>}
+				actions={<button type="button">Publish roster</button>}
 				schedule={generatedScheduleFixture({ status: "GENERATED" })}
 			/>
 		);
@@ -30,24 +30,9 @@ describe("RosterHeader", () => {
 		).toBeInTheDocument();
 		expect(screen.getByText("Generated")).toBeInTheDocument();
 		expect(screen.getByText("Times in Asia/Singapore")).toBeInTheDocument();
+		expect(screen.queryByText(/Requested by/)).toBeNull();
 		expect(
-			screen.getByText(/Requested by José on Oct 9, 2026, 6:00/)
-		).toHaveTextContent(/Finished on Oct 9, 2026, 6:02/);
-		expect(
-			screen.getByRole("button", { name: "View setup" })
+			screen.getByRole("button", { name: "Publish roster" })
 		).toBeInTheDocument();
-	});
-
-	it("given_aRequesterWhoIsGone_when_rendered_then_namesThemAFormerMember", () => {
-		render(
-			<RosterHeader
-				schedule={generatedScheduleFixture({
-					generationRequestedBy: { membershipId: "m-x", displayName: null },
-				})}
-			/>
-		);
-
-		expect(screen.getByText(/Requested by Former member/)).toBeInTheDocument();
-		expect(screen.queryByText(/Finished on/)).toBeNull();
 	});
 });
