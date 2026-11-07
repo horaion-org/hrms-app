@@ -1,9 +1,23 @@
 import type { CSSProperties } from "react";
+import type { CellMark } from "@/features/scheduling/roster/rosterMarks";
 
 /** A roster day's colours when no shift is worked: a day off, or leave. */
 export const rosterLooks: Record<"off" | "leave", string> = {
 	off: "border-neutral-400 bg-neutral-100 text-neutral-600",
 	leave: "border-ink-blue-200 bg-ink-blue-50 text-ink-blue-900",
+};
+
+/**
+ * A cell's one mark, in the tile's top-right corner (the tile is
+ * `relative`): a filled dot to look at, a hollow ring for a day changed by
+ * hand. Shape tells them apart as well as colour, and both tones keep 3:1
+ * on every shift tint, the Off and Leave tiles and the header.
+ */
+export const cellMarkLooks: Record<CellMark, string> = {
+	issue:
+		"pointer-events-none absolute top-1.5 right-1.5 size-2 rounded-full bg-warning-900",
+	changed:
+		"pointer-events-none absolute top-1.5 right-1.5 size-2 rounded-full ring-[1.5px] ring-ink-blue-700 ring-inset",
 };
 
 /** How much of a shift's colour tints its tile; the rest is white, so dark text stays readable. */
