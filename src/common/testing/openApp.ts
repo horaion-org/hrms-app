@@ -25,6 +25,9 @@ export const openApp = async (entry: string): Promise<OpenedApp> => {
 		routeTree,
 		context: { queryClient },
 		defaultPendingMinMs: 0,
+		// The same link preloading as `main.tsx`.
+		defaultPreload: "intent",
+		defaultPreloadStaleTime: 0,
 		history: createMemoryHistory({ initialEntries: [entry] }),
 	});
 	const disconnectSession = connectSession(router, queryClient);
