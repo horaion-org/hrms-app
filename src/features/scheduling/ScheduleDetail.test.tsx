@@ -909,6 +909,28 @@ it("opens on the side panel its link names, and keeps what is opened in the URL"
 	expect(app?.router.state.location.search).toEqual({ week: "2026-10-12" });
 });
 
+it("opens Issues narrowed to the member its link names", async () => {
+	await openRoster(
+		{
+			...signedIn(),
+			[`GET ${SCHEDULE_READ}`]: generatedWith(),
+			[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+		},
+		`${ROSTER_URL}?panel=issues&member=m-2&week=2026-10-12`
+	);
+
+	const panel = await screen.findByRole("complementary", { name: "Issues" });
+	expect(
+		within(panel).getByRole("list", { name: "Active filters" })
+	).toHaveTextContent("Ben Ong");
+	expect(panel).toHaveTextContent(
+		"Ben Ong works more than five days in a row."
+	);
+	expect(panel).not.toHaveTextContent(
+		"Chen Wei covers the Sunday swing alone."
+	);
+});
+
 it("names findings without reading the setup it can't see", async () => {
 	const calls = await openRoster({
 		...signedIn(),
@@ -929,7 +951,7 @@ it("names findings without reading the setup it can't see", async () => {
 	expect(readsOf(calls, `${SCHEDULE}/constraints`)).toHaveLength(0);
 });
 
-it("marks findings on the roster and says a day's in the panel its tile opens", async () => {
+it("counts findings in the row and day headers, opens them in Issues, and says a day's in the panel its tile opens", async () => {
 	await openRoster({
 		...signedIn(),
 		[`GET ${SCHEDULE_READ}`]: generatedWith(),
@@ -940,15 +962,10 @@ it("marks findings on the roster and says a day's in the panel its tile opens", 
 	const roster = await screen.findByRole("table", { name: "Roster" });
 	expect(
 		within(roster).getByRole("button", {
-			name: "1 note for Saturday, October 17",
+			name: "Saturday, October 17: 1 to look at. Show in Issues",
 		})
 	).toBeInTheDocument();
-	expect(
-		within(roster).getByRole("button", { name: "1 note for Ben Ong" })
-	).toBeInTheDocument();
-	expect(
-		within(roster).queryByRole("button", { name: /on Sunday/ })
-	).toBeNull();
+	expect(within(roster).queryByRole("button", { name: /^Sunday/ })).toBeNull();
 	await user.click(
 		within(roster).getByRole("button", {
 			name: "Chen Wei, Sun 14:00 – 22:00, needs a look: 1",
@@ -960,10 +977,9 @@ it("marks findings on the roster and says a day's in the panel its tile opens", 
 		within(notes).getByText("Chen Wei covers the Sunday swing alone.").tagName
 	).toBe("Q");
 	await user.click(
-		within(roster).getByRole("button", { name: "1 note for Ben Ong" })
-	);
-	await user.click(
-		await screen.findByRole("button", { name: "Show in findings" })
+		within(roster).getByRole("button", {
+			name: "Ben Ong: 1 to look at. Show in Issues",
+		})
 	);
 
 	expect(screen.getByRole("button", { name: "Issues: 4" })).toHaveAttribute(
@@ -973,9 +989,13 @@ it("marks findings on the roster and says a day's in the panel its tile opens", 
 	expect(
 		screen.getByRole("heading", { level: 2, name: "Issues" })
 	).toHaveFocus();
+	expect(app?.router.state.location.search).toMatchObject({
+		panel: "issues",
+		member: "m-2",
+	});
 	expect(
-		screen.getByRole("region", { name: "Roster notes (3)" })
-	).toBeInTheDocument();
+		screen.getByRole("complementary", { name: "Issues" })
+	).toHaveTextContent("Ben Ong works more than five days in a row.");
 });
 
 it("shows nothing about findings when the engine found nothing", async () => {
@@ -987,7 +1007,9 @@ it("shows nothing about findings when the engine found nothing", async () => {
 
 	const roster = await screen.findByRole("table", { name: "Roster" });
 	expect(screen.queryByRole("button", { name: /^Issues/ })).toBeNull();
-	expect(within(roster).queryByRole("button", { name: /note/ })).toBeNull();
+	expect(
+		within(roster).queryByRole("button", { name: /to look at/ })
+	).toBeNull();
 });
 
 /** A starting context as `GET …/starting-context` answers it, frozen at generation. */

@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
 import { RosterGrid } from "@/features/scheduling/RosterGrid";
-import { findingNames } from "@/features/scheduling/roster/findings/findingNames";
 import { placeFindings } from "@/features/scheduling/roster/findings/findingsOnGrid";
 import { rosterFromAssignments } from "@/features/scheduling/roster/roster";
 import { daysOf } from "@/features/scheduling/schedules";
@@ -51,15 +50,8 @@ const LONG_SHIFT = {
 /** The engine's findings counted on Ben's row, Friday and Saturday, and a dot in Chen's Sunday tile. */
 export const WithFindings: Story = {
 	args: {
-		findings: {
-			placed: placeFindings(findings, daysOf("2026-10-12")),
-			names: findingNames(findings, {
-				assignments: scheduleAssignmentsFixture(),
-				shifts: [],
-				constraints: [],
-			}),
-			onShowAll: fn(),
-		},
+		findings: placeFindings(findings, daysOf("2026-10-12")),
+		onShowIssues: fn(),
 	},
 };
 
@@ -90,7 +82,7 @@ const notedRows = rosterFromAssignments(notedWeek, {
 
 /** Days the leave records mark (leave requested, on leave, a shift left short): one dot each, the words in the day's panel. */
 export const WithDayNotes: Story = {
-	args: { rows: notedRows },
+	args: { rows: notedRows, onShowIssues: fn() },
 };
 
 /** Days changed by hand get a hollow ring; on Aisha's Tuesday the dot of the leave requested wins. */

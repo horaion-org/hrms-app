@@ -7,7 +7,6 @@ import en from "@/assets/locales/en/translations.json";
 import { RosterGrid } from "@/features/scheduling/RosterGrid";
 import { rosterFromAssignments } from "@/features/scheduling/roster/roster";
 import { daysOf } from "@/features/scheduling/schedules";
-import { findingNames } from "@/features/scheduling/roster/findings/findingNames";
 import { placeFindings } from "@/features/scheduling/roster/findings/findingsOnGrid";
 import {
 	findingsOfEveryKindFixture,
@@ -112,44 +111,53 @@ describe("RosterGrid", () => {
 		expect(row).toHaveTextContent("EMP-001");
 	});
 
-	it("when_findingsAreGiven_then_marksEachRowAndDayAndDotsTheCellInItsTile", () => {
-		const findings = findingsOfEveryKindFixture();
+	it("when_findingsAreGiven_then_countsEachRowAndDayAndDotsTheCellInItsTile", async () => {
+		const user = userEvent.setup();
+		const onShowIssues = vi.fn();
 		render(
 			<RosterGrid
 				days={week}
+				findings={placeFindings(findingsOfEveryKindFixture(), week)}
 				rows={rows}
-				findings={{
-					placed: placeFindings(findings, week),
-					names: findingNames(findings, {
-						assignments: scheduleAssignmentsFixture(),
-						shifts: [],
-						constraints: [],
-					}),
-					onShowAll: vi.fn(),
-				}}
+				onShowIssues={onShowIssues}
 			/>
 		);
 
 		const ben = screen.getByRole("row", { name: /Ben Ong/ });
 		expect(
-			within(ben).getByRole("button", { name: "3 notes for Ben Ong" })
+			within(ben).getByRole("button", {
+				name: "Ben Ong: 3 to look at. Show in Issues",
+			})
 		).toHaveTextContent("3");
+		// Chen's row counts the issue on his Sunday.
 		expect(
-			screen.getByRole("button", { name: "3 notes for Friday, October 16" })
+			screen.getByRole("button", {
+				name: "Chen Wei: 1 to look at. Show in Issues",
+			})
 		).toBeInTheDocument();
 		expect(
-			screen.getByRole("button", { name: "1 note for Saturday, October 17" })
+			screen.getByRole("button", {
+				name: "Friday, October 16: 3 to look at. Show in Issues",
+			})
 		).toBeInTheDocument();
+		const saturday = screen.getByRole("button", {
+			name: "Saturday, October 17: 1 to look at. Show in Issues",
+		});
+		await user.click(saturday);
+		expect(onShowIssues).toHaveBeenCalledWith(
+			{ kind: "date", date: "2026-10-17" },
+			saturday
+		);
 		const chensSunday = screen.getByRole("button", {
 			name: "Chen Wei, Sun 14:00 – 22:00, needs a look: 1",
 		});
 		expect(chensSunday.querySelector("[aria-hidden='true']")).toHaveClass(
 			"bg-warning-900"
 		);
-		// The cell's words open with the tile; it has no marker of its own.
-		expect(
-			screen.getAllByRole("button", { name: /\bnotes? for\b/ })
-		).toHaveLength(3);
+		// The cell's words open with the tile; it has no count of its own.
+		expect(screen.getAllByRole("button", { name: /to look at/ })).toHaveLength(
+			4
+		);
 	});
 
 	it("given_aDayChangedByHand_when_rendered_then_ringsItUnlessAnIssuesDotWins", () => {
@@ -158,16 +166,8 @@ describe("RosterGrid", () => {
 			<RosterGrid
 				days={week}
 				editedDays={new Set(["m-1|2026-10-12", "m-3|2026-10-18"])}
+				findings={placeFindings(findings, week)}
 				rows={rows}
-				findings={{
-					placed: placeFindings(findings, week),
-					names: findingNames(findings, {
-						assignments: scheduleAssignmentsFixture(),
-						shifts: [],
-						constraints: [],
-					}),
-					onShowAll: vi.fn(),
-				}}
 			/>
 		);
 
@@ -206,9 +206,26 @@ describe("RosterGrid", () => {
 	});
 
 	it("when_noFindingsAreGiven_then_marksNothing", () => {
-		render(<RosterGrid days={week} rows={rows} />);
+		render(<RosterGrid days={week} rows={rows} onShowIssues={vi.fn()} />);
 
-		expect(screen.queryByRole("button", { name: /\bnotes? for\b/ })).toBeNull();
+		expect(screen.queryByRole("button", { name: /to look at/ })).toBeNull();
+	});
+
+	it("given_aMembersOwnRoster_when_findingsAreGiven_then_countsNothing", () => {
+		render(
+			<RosterGrid
+				days={week}
+				findings={placeFindings(findingsOfEveryKindFixture(), week)}
+				rows={rows}
+				showsIssues={false}
+				onShowIssues={vi.fn()}
+			/>
+		);
+
+		expect(screen.queryByRole("button", { name: /to look at/ })).toBeNull();
+		expect(
+			screen.getByRole("button", { name: "Chen Wei, Sun 14:00 – 22:00" })
+		).toBeInTheDocument();
 	});
 
 	it("given_aDayNote_when_rendered_then_dotsTheTileAndLeavesTheWordsToItsPanel", () => {

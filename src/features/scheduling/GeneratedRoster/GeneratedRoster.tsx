@@ -7,6 +7,8 @@ import {
 	DescriptionList,
 	type DescriptionListItem,
 } from "@/components/ui/DescriptionList";
+import { FilterChips } from "@/components/ui/FilterChips";
+import { FindingList } from "@/features/scheduling/FindingList";
 import { FindingsPanel } from "@/features/scheduling/FindingsPanel";
 import { LastRosterChange } from "@/features/scheduling/LastRosterChange";
 import {
@@ -17,7 +19,9 @@ import {
 	findingNames,
 	type FindingNameSources,
 } from "@/features/scheduling/roster/findings/findingNames";
+import { findingFamily } from "@/features/scheduling/roster/findings/finding";
 import { placeFindings } from "@/features/scheduling/roster/findings/findingsOnGrid";
+import { formatDay } from "@/features/scheduling/periods";
 import { RosterDayNotes } from "@/features/scheduling/RosterDayNotes";
 import {
 	isoDateIn,
@@ -29,7 +33,9 @@ import {
 import {
 	cellFindings,
 	dayNoteLines,
+	issuesOfHeader,
 	saidApartBy,
+	type IssuesAbout,
 } from "@/features/scheduling/roster/rosterMarks";
 import {
 	changedDayItems,
@@ -37,9 +43,10 @@ import {
 	leaveAndCoverItems,
 	startingPointItems,
 } from "@/features/scheduling/roster/rosterPanels";
-import type {
-	RosterPanel,
-	RosterSearch,
+import {
+	issuesAboutOf,
+	type RosterPanel,
+	type RosterSearch,
 } from "@/features/scheduling/roster/rosterSearch";
 import {
 	changedDays,
@@ -210,6 +217,8 @@ export const GeneratedRoster = ({
 	);
 	const chosenCell = chosenMemberRow?.days[chosenRow?.day ?? ""];
 	const placed = findings && names ? placeFindings(findings, days) : undefined;
+	// The header the Issues list was opened from, if any: it lists only what that header counted.
+	const issuesAbout = openList === "issues" ? issuesAboutOf(view) : undefined;
 
 	const showView = (next: Omit<RosterSearch, "week">): void => {
 		onViewChange({ ...(view.week ? { week: view.week } : {}), ...next });
@@ -228,9 +237,14 @@ export const GeneratedRoster = ({
 		showView({});
 		opener.current?.focus();
 	};
+	/** Closes the open list, or opens `panel`; Issues opened from a header shows all of Issues instead. */
 	const toggleList = (panel: RosterPanel, from: HTMLElement): void => {
-		if (openList === panel) close();
+		if (openList === panel && !issuesAbout) close();
 		else open({ panel }, from);
+	};
+	/** Shows every issue again, keeping where focus goes back to. */
+	const showAllIssues = (): void => {
+		showView({ panel: "issues" });
 	};
 	/** The week bar's buttons: each list that has one, while it has something to show. */
 	const toolbarLists = withSummary
@@ -278,35 +292,105 @@ export const GeneratedRoster = ({
 			}}
 		/>
 	);
-	const listSections: Record<RosterPanel, Array<RosterSidePanelSection>> = {
-		issues: [
-			// Each note is a section of its own, spaced like the sections around it.
-			...issueNotes.map((line) => ({
-				key: line,
-				items: [{ key: line, lines: [line] }],
-			})),
+	/** The Issues list for one header: its filter as a chip, then exactly what that header counted. */
+	const headerIssueSections = (
+		about: IssuesAbout
+	): Array<RosterSidePanelSection> => {
+		const listed = issuesOfHeader(about, {
+			placed,
+			days,
+			daysToDecide: toDecide,
+			leaveAndCover: markedDays,
+		});
+		const chipLabel =
+			about.kind === "date"
+				? formatDay(about.date, language)
+				: (rows.find((row) => row.membershipId === about.membershipId)?.name ??
+					t(`${key}.formerMember`));
+		const findingPart = (family: "roster" | "setup"): ReactNode => {
+			const part = listed.findings.filter(
+				(finding) => findingFamily(finding) === family
+			);
+			return (
+				names &&
+				part.length > 0 && (
+					<FindingList
+						findings={part}
+						names={names}
+						showDates={about.kind === "member"}
+					/>
+				)
+			);
+		};
+		return [
 			{
-				key: "findings",
-				content: findings && names && (
-					<FindingsPanel findings={findings} names={names} visibleDays={days} />
+				key: "about",
+				content: (
+					<FilterChips
+						chips={[
+							{ key: about.kind, label: chipLabel, onRemove: showAllIssues },
+						]}
+						onClearAll={showAllIssues}
+					/>
 				),
+			},
+			{
+				key: "roster",
+				title: t("scheduling.findings.marker.roster"),
+				content: findingPart("roster"),
+			},
+			{
+				key: "setup",
+				title: t("scheduling.findings.marker.setup"),
+				content: findingPart("setup"),
 			},
 			{
 				key: "daysToDecide",
 				title: t(`${key}.daysToDecide`),
-				items: daysToDecideItems(toDecide, t, language),
+				items: daysToDecideItems(listed.daysToDecide, t, language),
 			},
 			{
 				key: "leaveAndCover",
 				title: t(`${key}.leaveAndCover`),
-				items: leaveAndCoverItems(markedDays, t, language),
+				items: leaveAndCoverItems(listed.leaveAndCover, t, language),
 			},
-			{
-				key: "startingPoints",
-				title: t(`${key}.startingPoints`),
-				items: startingPointItems(rows, startingRuns, t),
-			},
-		],
+		];
+	};
+	const listSections: Record<RosterPanel, Array<RosterSidePanelSection>> = {
+		issues: issuesAbout
+			? headerIssueSections(issuesAbout)
+			: [
+					// Each note is a section of its own, spaced like the sections around it.
+					...issueNotes.map((line) => ({
+						key: line,
+						items: [{ key: line, lines: [line] }],
+					})),
+					{
+						key: "findings",
+						content: findings && names && (
+							<FindingsPanel
+								findings={findings}
+								names={names}
+								visibleDays={days}
+							/>
+						),
+					},
+					{
+						key: "daysToDecide",
+						title: t(`${key}.daysToDecide`),
+						items: daysToDecideItems(toDecide, t, language),
+					},
+					{
+						key: "leaveAndCover",
+						title: t(`${key}.leaveAndCover`),
+						items: leaveAndCoverItems(markedDays, t, language),
+					},
+					{
+						key: "startingPoints",
+						title: t(`${key}.startingPoints`),
+						items: startingPointItems(rows, startingRuns, t),
+					},
+				],
 		changes: [
 			{ key: "latest", content: latestChange },
 			{ key: "days", items: changedDayItems(changed, t, language) },
@@ -384,6 +468,8 @@ export const GeneratedRoster = ({
 		if (openList)
 			return (
 				<RosterSidePanel
+					// A new list or filter starts afresh, its heading taking focus.
+					key={`${openList}|${view.member ?? view.date ?? ""}`}
 					id={sidePanelId}
 					sections={listSections[openList]}
 					title={t(ROSTER_SIDE_LISTS[openList].titleKey)}
@@ -440,22 +526,12 @@ export const GeneratedRoster = ({
 							className="w-full lg:flex-1"
 							days={days}
 							editedDays={editedDays}
+							findings={placed}
 							previewDays={previewDays}
 							rows={rows}
 							selectedDayKey={editing ? view.cell : undefined}
 							selectedShiftId={chosenRow?.assignmentId}
 							showsIssues={withSummary}
-							findings={
-								placed && names
-									? {
-											placed,
-											names,
-											onShowAll: (): void => {
-												open({ panel: "issues" });
-											},
-										}
-									: undefined
-							}
 							onAssignmentSelect={(row, day) => {
 								const cell = cellOf(row, day);
 								if (cell) open({ cell });
@@ -468,6 +544,14 @@ export const GeneratedRoster = ({
 										}
 									: undefined
 							}
+							onShowIssues={(about, from) => {
+								open(
+									about.kind === "member"
+										? { panel: "issues", member: about.membershipId }
+										: { panel: "issues", date: about.date },
+									from
+								);
+							}}
 						/>
 						{sidePanel()}
 					</div>

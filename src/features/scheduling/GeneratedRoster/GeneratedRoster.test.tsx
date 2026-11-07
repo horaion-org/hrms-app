@@ -276,25 +276,97 @@ describe("GeneratedRoster", () => {
 		);
 	});
 
-	it("given_aMarkersShowAll_when_chosen_then_opensAndFocusesTheIssuesPanel", async () => {
+	it("given_aRowsCount_when_chosen_then_listsOnlyThatMembersIssuesAndClearsBackToAll", async () => {
+		const user = userEvent.setup();
+		render(
+			<Roster assignments={scheduleAssignmentsFixture()} schedule={schedule} />
+		);
+
+		const count = screen.getByRole("button", {
+			name: "Ben Ong: 1 to look at. Show in Issues",
+		});
+		await user.click(count);
+
+		const panel = screen.getByRole("complementary", { name: "Issues" });
+		expect(
+			within(panel).getByRole("heading", { level: 2, name: "Issues" })
+		).toHaveFocus();
+		expect(within(panel).getByText("Ben Ong")).toBeVisible();
+		expect(
+			within(panel).getByRole("heading", { name: "Roster" })
+		).toBeVisible();
+		expect(panel).toHaveTextContent(
+			"Ben Ong works more than five days in a row."
+		);
+		expect(panel).not.toHaveTextContent(
+			"Chen Wei covers the Sunday swing alone."
+		);
+		expect(
+			within(panel).queryByRole("region", { name: /Roster notes/ })
+		).toBeNull();
+
+		await user.click(
+			within(panel).getByRole("button", { name: "Clear filters" })
+		);
+		// The whole list opens afresh, its heading taking focus.
+		const all = screen.getByRole("complementary", { name: "Issues" });
+		expect(
+			within(all).getByRole("region", { name: "Roster notes (3)" })
+		).toBeInTheDocument();
+		expect(
+			within(all).getByRole("heading", { level: 2, name: "Issues" })
+		).toHaveFocus();
+		await user.keyboard("{Escape}");
+		expect(count).toHaveFocus();
+	});
+
+	it("given_aDaysCount_when_chosen_then_listsWhatTheEngineLeftAboutThatDay", async () => {
 		const user = userEvent.setup();
 		render(
 			<Roster assignments={scheduleAssignmentsFixture()} schedule={schedule} />
 		);
 
 		await user.click(
-			screen.getByRole("button", { name: "1 note for Ben Ong" })
-		);
-		await user.click(
-			await screen.findByRole("button", { name: "Show in findings" })
+			screen.getByRole("button", {
+				name: "Saturday, October 17: 1 to look at. Show in Issues",
+			})
 		);
 
+		const panel = screen.getByRole("complementary", { name: "Issues" });
+		expect(within(panel).getByText("Sat, Oct 17")).toBeVisible();
+		expect(panel).toHaveTextContent("1 person short");
+		expect(panel).not.toHaveTextContent(
+			"Ben Ong works more than five days in a row."
+		);
+	});
+
+	it("given_aColleaguesDayNote_when_theirRowIsCounted_then_itsListNamesTheLeave", async () => {
+		const user = userEvent.setup();
+		const [first, ...rest] = scheduleAssignmentsFixture();
+		if (!first) throw new Error("fixture has a day");
+		render(
+			<Roster
+				schedule={schedule}
+				assignments={[
+					{ ...first, flag: "LEAVE_REQUESTED", leaveTypeName: "Annual leave" },
+					...rest,
+				]}
+			/>
+		);
+
+		await user.click(
+			screen.getByRole("button", {
+				name: "Aisha Rahman: 1 to look at. Show in Issues",
+			})
+		);
+
+		const panel = screen.getByRole("complementary", { name: "Issues" });
 		expect(
-			screen.getByRole("heading", { level: 2, name: "Issues" })
-		).toHaveFocus();
+			within(panel).getByRole("heading", { name: "Leave and cover" })
+		).toBeVisible();
 		expect(
-			screen.getByRole("region", { name: "Roster notes (3)" })
-		).toBeInTheDocument();
+			within(panel).getByText("Leave requested: Annual leave")
+		).toBeVisible();
 	});
 
 	it("given_nothingFound_when_rendered_then_saysNothingAboutFindings", () => {
@@ -309,6 +381,6 @@ describe("GeneratedRoster", () => {
 		);
 
 		expect(screen.queryByRole("button", { name: /^Issues/ })).toBeNull();
-		expect(screen.queryByRole("button", { name: /note/ })).toBeNull();
+		expect(screen.queryByRole("button", { name: /to look at/ })).toBeNull();
 	});
 });

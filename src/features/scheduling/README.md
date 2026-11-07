@@ -142,13 +142,14 @@ constraint dialogs.
    (`SCHEDULE_NOTICES`: the notices shown only when someone must act, or why there is no roster) and
    `roster/rosterSummary.ts` (`SUMMARY_SEGMENTS` for the summary line, `ISSUE_SOURCES` for the one Issues count).
    The route's search (`roster/rosterSearch.ts`, `validateSearch`) holds the week and the side panel (`panel` =
-   issues | changes | details, or `cell` for a chosen day), so a reload or a link keeps them.
+   issues | changes | details, or `cell` for a chosen day; Issues opened from a header adds `member` or `date`), so a
+   reload or a link keeps them.
 3. Queries `schedules/api.ts` — `scheduleQuery` (`refetchInterval` while `generationInProgress`) and
    `scheduleAssignmentsQuery` → `fetchScheduleAssignments`.
 4. Pure mappers `roster/` — no I/O. They turn API rows into what the components draw.
 5. Components, plain props only — `RosterHeader`, `GenerationFailurePanel` (with `MemberNotes`), `GeneratedRoster`
    (one summary line, `RosterWeekBar` with the Issues and Changed buttons, `RosterGrid` → `RosterShift` and
-   `FindingsMarker`, and one panel beside the grid: `RosterSidePanel` for the Issues, Changed and Details lists, or
+   `RosterHeaderCount`, and one panel beside the grid: `RosterSidePanel` for the Issues, Changed and Details lists, or
    `ShiftDetailsPanel` read-only for a chosen day). Someone holding `schedule:edit_shift` on a
    GENERATED roster awaiting its decision, or a PUBLISHED one (`rosterEditable`), gets `editing`: any day opens
    `RosterCellPanel` beside the grid instead (another shift, a day off, or a same-day swap; a preview with
@@ -220,9 +221,11 @@ constraint dialogs.
 - `MemberNotes` — a failed run's errors grouped by member, each message quoted.
 - `FindingsPanel` — setup issues by code (fix in the setup), then roster notes by day and by member, each part
   titled in plain text like the side panel's sections.
-- `FindingsMarker` — a 24 px mark on a cell, row or day header: the outline `AlertIcon` in `warning-900` for
-  anything to look at (never red; red is for errors and refusals), `InfoIcon` in `ink-blue-700` for information
-  only, then the count; its popover lists that place's findings and can open the panel.
+- `RosterGrid/RosterHeaderCount` — a 24 px count in a row's or day's header: the outline `AlertIcon` in
+  `warning-900` for anything to look at (never red; red is for errors and refusals), `InfoIcon` in `ink-blue-700`
+  for information only, then the number, on no background. It opens Issues narrowed to that row (`rowIssueCount`:
+  the member's findings and every issue on their days in view) or that day (`dayIssueCount`: the day's own
+  findings), with a `FilterChips` chip that clears back to all of Issues (`issuesOfHeader`).
 - `FindingList` — one list of findings, each led by its tone's outline icon (`FindingList/findingToneIcons.ts`:
   `AlertIcon` in `warning-900` to look at, `InfoIcon` in `ink-blue-700` for information only).
 - `GeneratedRoster` — the summary line, the week bar with one button per list in `rosterSideLists.ts`, the grid and

@@ -4,11 +4,9 @@ import { useTranslation } from "react-i18next";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { Avatar } from "@/components/ui/Avatar";
-import { FindingsMarker } from "@/features/scheduling/FindingsMarker";
 import { formatTimeRange } from "@/features/scheduling/formatShift";
+import { RosterHeaderCount } from "@/features/scheduling/RosterGrid/RosterHeaderCount";
 import { RosterShift } from "@/features/scheduling/RosterGrid/RosterShift";
-import type { Finding } from "@/features/scheduling/roster/findings/finding";
-import type { FindingNames } from "@/features/scheduling/roster/findings/findingNames";
 import type { GridFindings } from "@/features/scheduling/roster/findings/findingsOnGrid";
 import {
 	hoursInDays,
@@ -19,20 +17,16 @@ import {
 	CELL_MARK_TITLE_KEYS,
 	cellIssues,
 	cellMark,
+	dayIssueCount,
+	rowIssueCount,
 	showsRole,
 	tileStatusKey,
 	type CellMark,
+	type HeaderCount,
+	type IssuesAbout,
 } from "@/features/scheduling/roster/rosterMarks";
 import { rosterCellKey } from "@/features/scheduling/rosterChanges/rosterEdit";
 import { cellMarkLooks, rosterLooks } from "@/features/scheduling/rosterLooks";
-
-/** The engine's findings to mark on the week, and the names they are shown with. */
-export type RosterGridFindings = {
-	placed: GridFindings;
-	names: FindingNames;
-	/** Opens the findings panel from a marker's popover. */
-	onShowAll: () => void;
-};
 
 export type RosterGridProps = {
 	/** The seven ISO dates shown, Monday first. */
@@ -47,14 +41,19 @@ export type RosterGridProps = {
 		day: string,
 		shift: RosterShiftCell
 	) => void;
-	/** Marks findings on cells, rows and days; none without. */
-	findings?: RosterGridFindings;
+	/** The engine's findings on the days shown, by where they are marked (`placeFindings`); none without. */
+	findings?: GridFindings;
 	/**
 	 * Whether a cell's findings and day notes mark it (a dot in the tile);
 	 * false on a member's own roster, which marks only their changed days
 	 * and reads their own leave in the tile's words.
 	 */
 	showsIssues?: boolean;
+	/**
+	 * A row's or day's header count was chosen: opens the Issues list for it,
+	 * giving focus back to `from` when it closes. No header counts without it.
+	 */
+	onShowIssues?: (about: IssuesAbout, from: HTMLElement) => void;
 	/**
 	 * A day off or leave was chosen; without it those days aren't buttons.
 	 * Only someone who may change the roster gets it.
@@ -68,8 +67,6 @@ export type RosterGridProps = {
 	previewDays?: ReadonlySet<string>;
 	className?: string;
 };
-
-const NO_FINDINGS: ReadonlyArray<Finding> = [];
 
 /** A member's day as `rosterCellKey` names it; none once the member no longer resolves. */
 const dayKey = (row: RosterRow, date: string): string | undefined =>
@@ -89,6 +86,7 @@ export const RosterGrid = ({
 	onAssignmentSelect,
 	findings,
 	showsIssues = true,
+	onShowIssues,
 	onDaySelect,
 	selectedDayKey,
 	editedDays,
@@ -109,20 +107,21 @@ export const RosterGrid = ({
 	});
 	const dayName = (date: string): string =>
 		fullDay.format(dayjs(date).toDate());
-	/** A marker for `marked`, or nothing without findings to mark. */
-	const marker = (
-		marked: ReadonlyArray<Finding>,
-		label: string,
-		className?: string
+	/** A header's count, or nothing when there is nothing to count or nowhere to show it. */
+	const headerCount = (
+		count: HeaderCount | undefined,
+		about: IssuesAbout,
+		label: string
 	): ReactNode =>
-		findings &&
-		marked.length > 0 && (
-			<FindingsMarker
-				className={className}
-				findings={marked}
+		showsIssues &&
+		onShowIssues &&
+		count && (
+			<RosterHeaderCount
+				count={count}
 				label={label}
-				names={findings.names}
-				onShowAll={findings.onShowAll}
+				onSelect={(from) => {
+					onShowIssues(about, from);
+				}}
 			/>
 		);
 	/** A day's one mark and what its tile's label adds for it: "…, changed, needs a look: 2". */
@@ -133,7 +132,7 @@ export const RosterGrid = ({
 	): { mark: CellMark | undefined; label: string } => {
 		const key = dayKey(row, date);
 		const changed = key !== undefined && editedDays?.has(key) === true;
-		const issues = cellIssues(findings?.placed, row, date);
+		const issues = cellIssues(findings, row, date);
 		const named = changed
 			? t("scheduling.rosterEdit.edited", { label })
 			: label;
@@ -268,16 +267,16 @@ export const RosterGrid = ({
 							{t("scheduling.detail.staff")}
 						</th>
 						{days.map((date) => {
-							const dayFindings =
-								findings?.placed.byDate.get(date) ?? NO_FINDINGS;
+							const count = dayIssueCount(findings, date);
 							return (
 								<th key={date} className="h-16 px-2 text-center" scope="col">
 									<span className="flex items-center justify-center gap-1 text-sm font-bold">
 										{weekday.format(dayjs(date).toDate())}
-										{marker(
-											dayFindings,
+										{headerCount(
+											count,
+											{ kind: "date", date },
 											t("scheduling.findings.marker.date", {
-												count: dayFindings.length,
+												count: count?.count,
 												day: dayName(date),
 											})
 										)}
@@ -293,10 +292,7 @@ export const RosterGrid = ({
 				<tbody>
 					{rows.map((row) => {
 						const name = row.name ?? t("scheduling.detail.formerMember");
-						const rowFindings =
-							(row.membershipId !== null &&
-								findings?.placed.byRow.get(row.membershipId)) ||
-							NO_FINDINGS;
+						const count = rowIssueCount(findings, row, days);
 						return (
 							<tr key={row.key} className="border-t border-neutral-400">
 								<th
@@ -310,13 +306,15 @@ export const RosterGrid = ({
 												<span className="truncate text-xs font-semibold">
 													{name}
 												</span>
-												{marker(
-													rowFindings,
-													t("scheduling.findings.marker.row", {
-														count: rowFindings.length,
-														name,
-													})
-												)}
+												{row.membershipId !== null &&
+													headerCount(
+														count,
+														{ kind: "member", membershipId: row.membershipId },
+														t("scheduling.findings.marker.row", {
+															count: count?.count,
+															name,
+														})
+													)}
 											</span>
 											<span className="mt-0.5 block truncate text-[0.625rem]">
 												{row.jobTitle ?? row.employeeCode}
