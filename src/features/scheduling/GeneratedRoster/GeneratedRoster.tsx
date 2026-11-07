@@ -479,6 +479,8 @@ export const GeneratedRoster = ({
 		return null;
 	};
 
+	const panel = sidePanel();
+
 	return (
 		<>
 			{withSummary && (
@@ -524,6 +526,7 @@ export const GeneratedRoster = ({
 					<div className="mt-4 flex flex-col items-start gap-6 lg:flex-row">
 						<RosterGrid
 							className="w-full lg:flex-1"
+							compact={panel !== null}
 							days={days}
 							editedDays={editedDays}
 							findings={placed}
@@ -553,7 +556,7 @@ export const GeneratedRoster = ({
 								);
 							}}
 						/>
-						{sidePanel()}
+						{panel}
 					</div>
 				</>
 			)}

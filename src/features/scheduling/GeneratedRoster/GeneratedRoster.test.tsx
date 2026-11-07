@@ -136,6 +136,23 @@ describe("GeneratedRoster", () => {
 		expect(screen.queryByRole("button", { name: "Edit Shift" })).toBeNull();
 	});
 
+	it("given_aPanelOpensBesideTheGrid_when_shown_then_tilesShowTheirTimeOnly", async () => {
+		const user = userEvent.setup();
+		render(
+			<Roster assignments={scheduleAssignmentsFixture()} schedule={schedule} />
+		);
+		const aisha = screen.getByRole("button", {
+			name: "Aisha Rahman, Mon 09:00 – 15:00",
+		});
+		expect(aisha).toHaveTextContent(/^09:00 – 15:00Front Desk AM$/);
+
+		await user.click(
+			screen.getByRole("button", { name: "Ben Ong, Fri 11:00 – 13:00" })
+		);
+
+		expect(aisha).toHaveTextContent(/^09:00 – 15:00$/);
+	});
+
 	it("given_noRows_when_rendered_then_saysNoOneIsRostered", () => {
 		render(<Roster assignments={[]} schedule={schedule} />);
 

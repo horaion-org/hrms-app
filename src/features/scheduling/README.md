@@ -221,6 +221,10 @@ constraint dialogs.
 - `MemberNotes` — a failed run's errors grouped by member, each message quoted.
 - `FindingsPanel` — setup issues by code (fix in the setup), then roster notes by day and by member, each part
   titled in plain text like the side panel's sections.
+- `RosterGrid` layout — the staff column stays pinned while the days scroll (`sticky left-0`, as in the availability
+  `WeekGrid`); on a phone its row header keeps the name, count and hours, dropping the avatar and job title. While a
+  panel is open beside it (`compact`), the row header drops the avatar and tiles show their time only, at one 40 px
+  height, so the week stays in view.
 - `RosterGrid/RosterHeaderCount` — a 24 px count in a row's or day's header: the outline `AlertIcon` in
   `warning-900` for anything to look at (never red; red is for errors and refusals), `InfoIcon` in `ink-blue-700`
   for information only, then the number, on no background. It opens Issues narrowed to that row (`rowIssueCount`:

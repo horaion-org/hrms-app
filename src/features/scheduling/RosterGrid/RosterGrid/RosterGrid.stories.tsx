@@ -101,3 +101,8 @@ export const MembersOwnRoster: Story = {
 		editedDays: new Set(["m-1|2026-10-12"]),
 	},
 };
+
+/** Beside an open panel: tiles show their time only, in tighter cells, so the week stays in view. */
+export const Compact: Story = {
+	args: { compact: true, selectedShiftId: "a-mp-1-2026-10-13" },
+};

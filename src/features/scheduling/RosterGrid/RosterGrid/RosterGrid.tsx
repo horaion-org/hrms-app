@@ -65,6 +65,11 @@ export type RosterGridProps = {
 	editedDays?: ReadonlySet<string>;
 	/** Days a change being previewed would touch: outlined, dashed. */
 	previewDays?: ReadonlySet<string>;
+	/**
+	 * A panel is open beside the grid: tiles show their time only, in tighter
+	 * cells, so the week stays in view; the panel names the rest.
+	 */
+	compact?: boolean;
 	className?: string;
 };
 
@@ -91,6 +96,7 @@ export const RosterGrid = ({
 	selectedDayKey,
 	editedDays,
 	previewDays,
+	compact = false,
 	className,
 }: RosterGridProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
@@ -174,7 +180,11 @@ export const RosterGrid = ({
 				})
 			);
 			const looks = joinClassNames(
-				"relative flex h-14 w-full items-center justify-center rounded border px-1 text-center text-xs font-medium",
+				"relative flex w-full items-center justify-center rounded border text-center text-xs font-medium",
+				// Beside an open panel, as tall as a compact shift tile, so a row keeps one height.
+				compact ? "h-10 px-2.5" : "h-14 px-1",
+				// Words kept clear of the mark in the corner, as on a shift tile.
+				mark && "pr-3.5",
 				rosterLooks[cell.kind]
 			);
 			const markSpot = mark && (
@@ -235,6 +245,7 @@ export const RosterGrid = ({
 		);
 		return (
 			<RosterShift
+				compact={compact}
 				label={label}
 				mark={mark}
 				selected={cell.assignmentId === selectedShiftId}
@@ -256,14 +267,23 @@ export const RosterGrid = ({
 				className
 			)}
 		>
-			<table className="w-full min-w-200 table-fixed border-collapse text-neutral-900">
+			<table
+				className={joinClassNames(
+					"w-full table-fixed border-collapse text-neutral-900",
+					compact ? "min-w-160" : "min-w-200"
+				)}
+			>
 				<caption className="sr-only">{t("scheduling.detail.roster")}</caption>
 				<colgroup>
-					<col className="w-50" />
+					<col className={compact ? "w-28 sm:w-32" : "w-28 sm:w-50"} />
 				</colgroup>
 				<thead>
 					<tr className="bg-neutral-200">
-						<th className="h-16 px-3 text-left text-sm font-bold" scope="col">
+						{/* The staff column stays in view while the days scroll, as in the availability grid. */}
+						<th
+							className="sticky left-0 z-10 h-16 bg-neutral-200 px-3 text-left text-sm font-bold"
+							scope="col"
+						>
 							{t("scheduling.detail.staff")}
 						</th>
 						{days.map((date) => {
@@ -296,11 +316,18 @@ export const RosterGrid = ({
 						return (
 							<tr key={row.key} className="border-t border-neutral-400">
 								<th
-									className="bg-neutral-50 px-3 py-3 text-left font-normal"
+									className="sticky left-0 z-10 bg-neutral-50 px-3 py-3 text-left font-normal"
 									scope="row"
 								>
+									{/* On a phone, or beside an open panel, the row header drops the avatar (and on a phone the job title too); the panel says the rest. */}
 									<span className="flex items-center gap-3">
-										<Avatar className="size-10! text-base!" name={name} />
+										<Avatar
+											name={name}
+											className={joinClassNames(
+												"size-10! text-base!",
+												compact ? "hidden!" : "max-sm:hidden"
+											)}
+										/>
 										<span className="min-w-0">
 											<span className="flex items-center gap-1">
 												<span className="truncate text-xs font-semibold">
@@ -316,7 +343,7 @@ export const RosterGrid = ({
 														})
 													)}
 											</span>
-											<span className="mt-0.5 block truncate text-[0.625rem]">
+											<span className="mt-0.5 block truncate text-[0.625rem] max-sm:hidden">
 												{row.jobTitle ?? row.employeeCode}
 											</span>
 											<span className="block text-[0.625rem]">
@@ -333,7 +360,8 @@ export const RosterGrid = ({
 										<td
 											key={date}
 											className={joinClassNames(
-												"p-3 align-middle",
+												"align-middle",
+												compact ? "p-1" : "p-3",
 												key !== undefined &&
 													previewDays?.has(key) &&
 													"outline-2 -outline-offset-4 outline-dashed outline-ink-blue-500"

@@ -265,4 +265,28 @@ describe("RosterGrid", () => {
 			})
 		).toBeInTheDocument();
 	});
+
+	it("given_anOpenPanel_when_compact_then_tilesShowTheTimeOnlyAtOneHeight", () => {
+		render(<RosterGrid compact days={week} rows={rows} />);
+
+		const ben = screen.getByRole("row", { name: /Ben Ong/ });
+		expect(
+			within(ben).getByRole("button", { name: "Ben Ong, Fri 11:00 – 13:00" })
+		).toHaveTextContent(/^11:00 – 13:00$/);
+		for (const tile of within(ben).getAllByText(/^(OFF|LEAVE)$/))
+			expect(tile).toHaveClass("h-10");
+	});
+
+	it("when_theDaysScroll_then_theStaffColumnStaysPinned", () => {
+		render(<RosterGrid days={week} rows={rows} />);
+
+		expect(screen.getByRole("columnheader", { name: "Staff" })).toHaveClass(
+			"sticky",
+			"left-0"
+		);
+		expect(screen.getByRole("rowheader", { name: /Ben Ong/ })).toHaveClass(
+			"sticky",
+			"left-0"
+		);
+	});
 });

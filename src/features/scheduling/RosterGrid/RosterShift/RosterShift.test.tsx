@@ -110,4 +110,28 @@ describe("RosterShift", () => {
 			screen.getByRole("button").querySelector("[aria-hidden]")
 		).toBeNull();
 	});
+
+	it("given_anOpenPanel_when_compact_then_showsTheTimeOnlyAndKeepsTheFullLabel", () => {
+		render(
+			<RosterShift
+				compact
+				label="Aisha Rahman, Mon 09:00 – 15:00, Leave requested"
+				mark="issue"
+				selected={false}
+				shift={assignment}
+				status="Leave requested"
+				timeRange="09:00 – 15:00"
+				onSelect={vi.fn()}
+			/>
+		);
+
+		const button = screen.getByRole("button", {
+			name: "Aisha Rahman, Mon 09:00 – 15:00, Leave requested",
+		});
+		expect(button).toHaveTextContent(/^09:00 – 15:00$/);
+		expect(button).toHaveClass("h-10");
+		expect(button.querySelector("[aria-hidden='true']")).toHaveClass(
+			"bg-warning-900"
+		);
+	});
 });

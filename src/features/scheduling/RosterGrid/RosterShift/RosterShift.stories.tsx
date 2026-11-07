@@ -63,3 +63,6 @@ export const OwnLeaveRequested: Story = {
 		label: "Aisha Rahman, Mon 09:00 – 15:00, Leave requested",
 	},
 };
+
+/** Beside an open panel: the time alone, at the height of an Off or Leave tile. */
+export const Compact: Story = { args: { compact: true, mark: "issue" } };

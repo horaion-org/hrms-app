@@ -26,14 +26,17 @@ export type RosterShiftProps = {
 	showsRole?: boolean;
 	/** A line of the member's own, e.g. "Leave requested" (`tileStatusKey`). */
 	status?: string;
+	/** Beside an open panel: the time only; the label and the panel name the rest. */
+	compact?: boolean;
 };
 
 /**
  * One shift in a roster cell, on its shift's colour: its time first and in
  * full, as a manager reads it first, then its name and, when it says
  * something the row header doesn't, its role; both may be cut short in a
- * narrow cell (the label names the day in full). Its one mark sits in its
- * top-right corner. Choosing it shows its details.
+ * narrow cell (the label names the day in full). Beside an open panel it
+ * shows its time only. Its one mark sits in its top-right corner. Choosing
+ * it shows its details.
  */
 export const RosterShift = ({
 	shift,
@@ -44,6 +47,7 @@ export const RosterShift = ({
 	mark,
 	showsRole = true,
 	status,
+	compact = false,
 }: RosterShiftProps): FunctionComponent => {
 	const { t } = useTranslation();
 	return (
@@ -53,8 +57,10 @@ export const RosterShift = ({
 			style={shiftTileStyle(shift.colour)}
 			type="button"
 			className={joinClassNames(
-				"relative block w-full min-w-0 cursor-pointer rounded border px-2 py-2 text-left text-xs font-medium text-neutral-900 hover:brightness-98 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-blue-500",
-				mark && "pr-4",
+				"relative w-full min-w-0 cursor-pointer rounded border text-left text-xs font-medium text-neutral-900 hover:brightness-98 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-blue-500",
+				// Beside an open panel, the time alone on up to two lines, as tall as an Off or Leave tile.
+				compact ? "flex h-10 items-center px-1.5" : "block px-2 py-2",
+				mark && (compact ? "pr-3.5" : "pr-4"),
 				selected && "ring-2 ring-success-600 ring-inset"
 			)}
 			onClick={onSelect}
@@ -69,9 +75,13 @@ export const RosterShift = ({
 			<span className="block font-semibold text-balance tabular-nums">
 				{timeRange}
 			</span>
-			<span className="mt-1 block truncate">{shift.name}</span>
-			{showsRole && <span className="block truncate">{shift.role}</span>}
-			{status && <span className="block truncate">{status}</span>}
+			{!compact && (
+				<>
+					<span className="mt-1 block truncate">{shift.name}</span>
+					{showsRole && <span className="block truncate">{shift.role}</span>}
+					{status && <span className="block truncate">{status}</span>}
+				</>
+			)}
 		</button>
 	);
 };
