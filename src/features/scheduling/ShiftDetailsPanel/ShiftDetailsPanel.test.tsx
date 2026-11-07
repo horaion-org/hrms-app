@@ -21,11 +21,43 @@ const shift = {
 	colour: "#E9A55A",
 	start: "09:00",
 	end: "15:00",
+	unpaidBreakMinutes: 0,
+	carriesOvertime: false,
 	role: "Front Desk Lead",
 	date: "2026-10-13",
 } as const;
 
 describe("ShiftDetailsPanel", () => {
+	it("given_aShiftWithNoBreakOrMarker_when_rendered_then_showsNeither", () => {
+		render(
+			<ShiftDetailsPanel shift={shift} staffName="Aisha" onClose={vi.fn()} />
+		);
+
+		expect(screen.queryByText("Unpaid break")).not.toBeInTheDocument();
+		expect(screen.queryByText("Paid hours")).not.toBeInTheDocument();
+		expect(screen.queryByText("Built-in overtime")).not.toBeInTheDocument();
+	});
+
+	it("given_aFrozenShiftWithABreakAndMarker_when_rendered_then_showsThemWithThePaidHours", () => {
+		render(
+			<ShiftDetailsPanel
+				staffName="Aisha"
+				shift={{
+					...shift,
+					start: "07:00",
+					end: "19:00",
+					unpaidBreakMinutes: 60,
+					carriesOvertime: true,
+				}}
+				onClose={vi.fn()}
+			/>
+		);
+
+		expect(screen.getByText("60 min")).toBeVisible();
+		expect(screen.getByText("11 h")).toBeVisible();
+		expect(screen.getByText("Built-in overtime")).toBeVisible();
+	});
+
 	it("given_aWorkedDay_when_rendered_then_describesItsFrozenShiftWithoutActions", () => {
 		render(
 			<ShiftDetailsPanel

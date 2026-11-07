@@ -25,6 +25,7 @@ import {
 } from "@/features/scheduling/paths";
 import {
 	SHIFT_COLOUR_PATTERN,
+	shiftPayFields,
 	shiftRoleSchema,
 	weekdaySchema,
 } from "@/features/scheduling/shifts/api";
@@ -474,6 +475,7 @@ const scheduleShiftSchema = z.object({
 	included: z.boolean(),
 	/** A copy made at generation, never changed again. */
 	frozen: z.boolean(),
+	...shiftPayFields,
 });
 
 /**
@@ -568,6 +570,7 @@ const rosterShiftSchema = z.object({
 	/** "HH:mm"; an end at or before the start runs past midnight. */
 	startTime: z.string(),
 	endTime: z.string(),
+	...shiftPayFields,
 });
 
 const rosterJobTitleSchema = z.object({

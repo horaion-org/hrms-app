@@ -601,6 +601,8 @@ describe("Create Schedule: the department's shifts", () => {
 				endTime: "23:00",
 				days: ["MON"],
 				jobTitleIds: ["front-desk-staff"],
+				unpaidBreakMinutes: 0,
+				carriesOvertime: false,
 			},
 		]);
 		expect(writes(calls)).toEqual([`POST ${LIVE_SHIFTS}`]);

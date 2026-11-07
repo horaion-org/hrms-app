@@ -8,6 +8,7 @@ import {
 	INCLUDED_SHIFT_IDS,
 	SHIFT_FIXTURES,
 	frozenShiftsFixture,
+	shiftFixture,
 } from "@/features/scheduling/shifts/fixtures";
 import { groupsOf } from "@/features/scheduling/shifts/api";
 import { ShiftsStep } from "@/features/scheduling/shifts/ShiftsStep";
@@ -38,6 +39,46 @@ describe("ShiftsStep", () => {
 		expect(row).toHaveTextContent("Mon, Tue, Wed, Thu, Fri");
 		expect(row).toHaveTextContent("2 roles");
 		expect(screen.getByRole("tab", { name: /Front Desk/ })).toBeVisible();
+	});
+
+	it("given_shiftsWithAndWithoutABreak_when_rendered_then_showsPaidHoursAndMarksBuiltInOvertime", () => {
+		render(
+			<ShiftsStep
+				includedShiftIds={[]}
+				shifts={[
+					shiftFixture({ shiftId: "desk", name: "Desk" }),
+					shiftFixture({
+						shiftId: "long-day",
+						name: "Long Day",
+						startTime: "07:00",
+						endTime: "19:00",
+						unpaidBreakMinutes: 60,
+						carriesOvertime: true,
+					}),
+				]}
+			/>
+		);
+
+		const desk = screen.getByRole("row", { name: /Desk/ });
+		expect(desk).toHaveTextContent("6 h");
+		expect(desk).not.toHaveTextContent("break");
+		expect(desk).not.toHaveTextContent("Built-in overtime");
+		const longDay = screen.getByRole("row", { name: /Long Day/ });
+		expect(longDay).toHaveTextContent("11 h (60 min break)");
+		expect(longDay).toHaveTextContent("Built-in overtime");
+	});
+
+	it("given_frozenCopies_when_rendered_then_showTheirOwnBreakAndMarker", () => {
+		const copies = frozenShiftsFixture().map((copy) => ({
+			...copy,
+			unpaidBreakMinutes: 30,
+			carriesOvertime: true,
+		}));
+		render(<ShiftsStep frozen includedShiftIds={[]} shifts={copies} />);
+
+		const row = screen.getByRole("row", { name: /Lunch Rush/ });
+		expect(row).toHaveTextContent("1.5 h (30 min break)");
+		expect(row).toHaveTextContent("Built-in overtime");
 	});
 
 	it("given_aGroupTab_when_chosen_then_showsOnlyThatGroupAndKeepsTheSelection", async () => {
@@ -223,7 +264,7 @@ describe("ShiftsStep", () => {
 
 		expect(
 			screen.getByText(
-				"The shifts this schedule was generated with, as they were then."
+				"The shifts this schedule was generated with, as they were then. Regenerating keeps them; a later change to a shift reaches only a new schedule."
 			)
 		).toBeVisible();
 		const table = screen.getByRole("table", { name: "Shifts" });

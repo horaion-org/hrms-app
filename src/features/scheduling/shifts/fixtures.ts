@@ -29,6 +29,8 @@ export const shiftFixture = (
 	endTime: "15:00",
 	days: ["MON", "TUE", "WED", "THU", "FRI"],
 	roles: [role("front-desk-staff", "Front Desk Staff")],
+	unpaidBreakMinutes: 0,
+	carriesOvertime: false,
 	...overrides,
 });
 
@@ -160,6 +162,8 @@ export const departmentShiftFixture = (
 	endTime: shift.endTime,
 	days: shift.days,
 	roles: shift.roles,
+	unpaidBreakMinutes: shift.unpaidBreakMinutes,
+	carriesOvertime: shift.carriesOvertime,
 });
 
 /** Front Office's active job titles, as the shift dialog offers them. */

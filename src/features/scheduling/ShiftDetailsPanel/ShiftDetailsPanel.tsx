@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { CloseIcon } from "@/components/ui/Icon";
 import { formatTimeRange } from "@/features/scheduling/formatShift";
 import type { RosterShiftCell } from "@/features/scheduling/roster/roster";
+import { paidShiftHours } from "@/features/scheduling/scheduleDraft";
 
 export type ShiftDetailsPanelProps = {
 	staffName: string;
@@ -45,6 +46,34 @@ export const ShiftDetailsPanel = ({
 		{ label: t(`${key}.shift`), value: shift.name },
 		{ label: t(`${key}.group`), value: shift.group },
 		{ label: t(`${key}.role`), value: shift.role },
+		...(shift.unpaidBreakMinutes > 0
+			? [
+					{
+						label: t(`${key}.unpaidBreak`),
+						value: t(`${key}.unpaidBreakValue`, {
+							minutes: shift.unpaidBreakMinutes,
+						}),
+					},
+					{
+						label: t(`${key}.paidHours`),
+						value: t("scheduling.shifts.paidHoursValue", {
+							hours: paidShiftHours({
+								startTime: shift.start,
+								endTime: shift.end,
+								unpaidBreakMinutes: shift.unpaidBreakMinutes,
+							}),
+						}),
+					},
+				]
+			: []),
+		...(shift.carriesOvertime
+			? [
+					{
+						label: t(`${key}.carriesOvertime`),
+						value: t(`${key}.carriesOvertimeValue`),
+					},
+				]
+			: []),
 	];
 
 	return (

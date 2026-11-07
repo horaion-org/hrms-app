@@ -50,6 +50,8 @@ const LONG_SHIFT = {
 	colour: "#DC6B47",
 	startTime: "14:00",
 	endTime: "22:00",
+	unpaidBreakMinutes: 0,
+	carriesOvertime: false,
 };
 
 /** The engine's findings marked on Ben's row, Friday and Saturday, and Chen's Sunday. */

@@ -24,6 +24,7 @@ import {
 	isWeekdays,
 	rolesOf,
 	scheduleDraftReducer,
+	paidShiftHours,
 	shiftHours,
 	slotsOf,
 	summarise,
@@ -72,6 +73,20 @@ describe("shift calculations", () => {
 		"given_%s_to_%s_when_measured_then_lasts_%i_hours",
 		(startTime, endTime, hours) => {
 			expect(shiftHours({ startTime, endTime })).toBe(hours);
+		}
+	);
+
+	it.each([
+		["a shift with no break", "09:00", "15:00", 0, 6],
+		["a 12-hour shift with a 1-hour break", "07:00", "19:00", 60, 11],
+		["a night shift with a break", "19:00", "07:00", 45, 11.25],
+		["a break that does not divide evenly", "09:00", "15:00", 20, 5.67],
+	])(
+		"given_%s_when_measured_then_paysItsLengthLessTheBreak",
+		(_, startTime, endTime, unpaidBreakMinutes, hours) => {
+			expect(paidShiftHours({ startTime, endTime, unpaidBreakMinutes })).toBe(
+				hours
+			);
 		}
 	);
 

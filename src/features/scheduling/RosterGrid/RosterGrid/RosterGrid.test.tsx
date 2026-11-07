@@ -178,6 +178,8 @@ describe("RosterGrid", () => {
 							colour: "#112233",
 							startTime: "09:00",
 							endTime: "17:00",
+							unpaidBreakMinutes: 0,
+							carriesOvertime: false,
 						},
 					}
 				: assignment

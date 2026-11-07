@@ -1,11 +1,15 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { DeleteIcon, EditIcon, PlusIcon } from "@/components/ui/Icon";
 import { Tab, TabList, Tabs } from "@/components/ui/Tabs";
-import { formatTimeRange } from "@/features/scheduling/formatShift";
+import {
+	formatPaidHours,
+	formatTimeRange,
+} from "@/features/scheduling/formatShift";
 import type { ListProblem } from "@/features/scheduling/scheduleDraft";
 import type { ScheduleShift } from "@/features/scheduling/schedules/api";
 import { groupsOf } from "@/features/scheduling/shifts/api";
@@ -77,6 +81,18 @@ export const ShiftsStep = ({
 				id: "timeRange",
 				header: t("scheduling.shifts.timeRange"),
 				cell: (shift) => formatTimeRange(shift, t),
+			},
+			{
+				id: "paidHours",
+				header: t("scheduling.shifts.paidHours"),
+				cell: (shift) => (
+					<div className="flex flex-col items-start gap-1">
+						<span>{formatPaidHours(shift, t)}</span>
+						{shift.carriesOvertime && (
+							<Badge>{t("scheduling.shifts.carriesOvertime")}</Badge>
+						)}
+					</div>
+				),
 			},
 			{
 				id: "days",
