@@ -434,6 +434,28 @@
 			"haveCode": "Have a confirmation code?",
 			"confirmEmail": "Confirm your email"
 		},
+		"register": {
+			"title": "Sign up",
+			"subtitle": "Set up your company account.",
+			"details": "Account details",
+			"companyName": "Company name",
+			"registrationNumber": "Registration number",
+			"firstName": "First name",
+			"lastName": "Last name",
+			"workspaceName": "Workspace name",
+			"workspacePlaceholder": "your-company",
+			"workspaceHint": "A unique name for your workspace, such as acme-team.",
+			"workspaceFormat": "3–30 lowercase letters, numbers, or hyphens. Start and end with a letter or number.",
+			"email": "Email address",
+			"password": "Password",
+			"passwordHint": "Use at least 8 characters, including an uppercase letter, a lowercase letter, a number and a symbol.",
+			"confirmPassword": "Confirm password",
+			"submit": "Sign up",
+			"pending": "Creating account…",
+			"failed": "Something went wrong. Please try again.",
+			"haveAccount": "Already have an account?",
+			"logIn": "Log in"
+		},
 		"logOut": "Log out",
 		"errors": {
 			"invalidCredentials": "Your email or password is incorrect.",

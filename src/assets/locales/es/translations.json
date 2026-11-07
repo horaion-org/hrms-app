@@ -2725,6 +2725,28 @@
 			"signUp": "Regístrate",
 			"haveCode": "¿Tienes un código de confirmación?",
 			"confirmEmail": "Confirma tu correo"
+		},
+		"register": {
+			"title": "Regístrate",
+			"subtitle": "Configura la cuenta de tu empresa.",
+			"details": "Datos de la cuenta",
+			"companyName": "Nombre de la empresa",
+			"registrationNumber": "Número de registro",
+			"firstName": "Nombre",
+			"lastName": "Apellidos",
+			"workspaceName": "Nombre del espacio de trabajo",
+			"workspacePlaceholder": "tu-empresa",
+			"workspaceHint": "Un nombre único para tu espacio de trabajo, como equipo-acme.",
+			"workspaceFormat": "Entre 3 y 30 letras minúsculas, números o guiones. Empieza y termina con una letra o un número.",
+			"email": "Correo electrónico",
+			"password": "Contraseña",
+			"passwordHint": "Usa al menos 8 caracteres, con una mayúscula, una minúscula, un número y un símbolo.",
+			"confirmPassword": "Confirmar contraseña",
+			"submit": "Regístrate",
+			"pending": "Creando la cuenta…",
+			"failed": "Algo salió mal. Inténtalo de nuevo.",
+			"haveAccount": "¿Ya tienes una cuenta?",
+			"logIn": "Inicia sesión"
 		}
 	},
 	"pageToolbar": {

@@ -8,7 +8,6 @@ import { AuthMessage } from "@/features/auth/AuthMessage";
 import { withEmailConfirmation } from "@/features/auth/historyState";
 import { registerCompany } from "@/features/auth/api";
 import {
-	passwordRequirements,
 	registrationFields,
 	validateRegistration,
 	type RegistrationErrors,
@@ -100,9 +99,7 @@ export const AuthForm = (): FunctionComponent => {
 			});
 		} catch (cause) {
 			setError(
-				cause instanceof Error
-					? cause.message
-					: "Something went wrong. Please try again."
+				cause instanceof Error ? cause.message : t("auth.register.failed")
 			);
 		} finally {
 			releaseSubmission();
@@ -113,10 +110,10 @@ export const AuthForm = (): FunctionComponent => {
 		<>
 			<div className="space-y-3">
 				<h1 className="text-[32px] leading-12 font-medium text-ink-blue-900">
-					Sign up
+					{t("auth.register.title")}
 				</h1>
 				<p className="text-base leading-6 text-neutral-800">
-					Set up your company account.
+					{t("auth.register.subtitle")}
 				</p>
 			</div>
 			<form
@@ -137,7 +134,7 @@ export const AuthForm = (): FunctionComponent => {
 				}}
 			>
 				<fieldset className="flex flex-col gap-6" disabled={pending}>
-					<legend className="sr-only">Account details</legend>
+					<legend className="sr-only">{t("auth.register.details")}</legend>
 					{
 						<>
 							<div className="grid grid-cols-1 gap-6 min-[480px]:grid-cols-2 min-[480px]:gap-5">
@@ -146,21 +143,21 @@ export const AuthForm = (): FunctionComponent => {
 									autoComplete="organization"
 									error={fieldErrors.companyName}
 									id="companyName"
-									label="Company name"
+									label={t("auth.register.companyName")}
 									maxLength={255}
 									name="companyName"
 									pattern=".*\S.*"
-									placeholder="Company name"
+									placeholder={t("auth.register.companyName")}
 								/>
 								<AuthField
 									required
 									error={fieldErrors.registrationNumber}
 									id="registrationNumber"
-									label="Registration number"
+									label={t("auth.register.registrationNumber")}
 									maxLength={64}
 									name="registrationNumber"
 									pattern=".*\S.*"
-									placeholder="Registration number"
+									placeholder={t("auth.register.registrationNumber")}
 								/>
 							</div>
 							<div className="grid grid-cols-1 gap-6 min-[480px]:grid-cols-2 min-[480px]:gap-5">
@@ -169,38 +166,38 @@ export const AuthForm = (): FunctionComponent => {
 									autoComplete="given-name"
 									error={fieldErrors.firstName}
 									id="firstName"
-									label="First name"
+									label={t("auth.register.firstName")}
 									maxLength={127}
 									name="firstName"
 									pattern=".*\S.*"
-									placeholder="First name"
+									placeholder={t("auth.register.firstName")}
 								/>
 								<AuthField
 									required
 									autoComplete="family-name"
 									error={fieldErrors.lastName}
 									id="lastName"
-									label="Last name"
+									label={t("auth.register.lastName")}
 									maxLength={127}
 									name="lastName"
 									pattern=".*\S.*"
-									placeholder="Last name"
+									placeholder={t("auth.register.lastName")}
 								/>
 							</div>
 							<AuthField
 								required
 								autoCapitalize="none"
 								error={fieldErrors.subdomain}
-								hint="A unique name for your workspace, such as acme-team."
+								hint={t("auth.register.workspaceHint")}
 								id="subdomain"
-								label="Workspace name"
+								label={t("auth.register.workspaceName")}
 								maxLength={30}
 								minLength={3}
 								name="subdomain"
 								pattern="[a-z0-9][a-z0-9\-]{1,28}[a-z0-9]"
-								placeholder="your-company"
+								placeholder={t("auth.register.workspacePlaceholder")}
 								spellCheck={false}
-								title="3–30 lowercase letters, numbers, or hyphens. Start and end with a letter or number."
+								title={t("auth.register.workspaceFormat")}
 							/>
 						</>
 					}
@@ -211,24 +208,24 @@ export const AuthForm = (): FunctionComponent => {
 						autoComplete="email"
 						error={fieldErrors.email}
 						id="email"
-						label="Email address"
+						label={t("auth.register.email")}
 						maxLength={320}
 						name="email"
-						placeholder="Email address"
+						placeholder={t("auth.register.email")}
 						type="email"
 					/>
 					<AuthField
 						required
 						autoComplete="new-password"
 						error={fieldErrors.password}
-						hint={passwordRequirements}
+						hint={t("auth.register.passwordHint")}
 						id="password"
-						label="Password"
+						label={t("auth.register.password")}
 						maxLength={128}
 						minLength={8}
 						name="password"
-						placeholder="Password"
-						title={passwordRequirements}
+						placeholder={t("auth.register.password")}
+						title={t("auth.register.passwordHint")}
 						type="password"
 					/>
 					{
@@ -237,10 +234,10 @@ export const AuthForm = (): FunctionComponent => {
 							autoComplete="new-password"
 							error={fieldErrors.confirmPassword}
 							id="confirmPassword"
-							label="Confirm password"
+							label={t("auth.register.confirmPassword")}
 							maxLength={128}
 							name="confirmPassword"
-							placeholder="Confirm password"
+							placeholder={t("auth.register.confirmPassword")}
 							type="password"
 							toggleLabels={{
 								show: t("auth.showConfirmedPassword"),
@@ -251,16 +248,16 @@ export const AuthForm = (): FunctionComponent => {
 				</fieldset>
 				{error && <AuthMessage kind="error">{error}</AuthMessage>}
 				<Button className="w-full" disabled={pending} size="lg" type="submit">
-					{pending ? "Creating account…" : "Sign up"}
+					{pending ? t("auth.register.pending") : t("auth.register.submit")}
 				</Button>
 			</form>
 			<p className="mt-7 text-center text-base leading-6 text-neutral-800 [&_a]:ml-2">
-				Already have an account?
+				{t("auth.register.haveAccount")}
 				<Link
 					className="text-ink-blue-900 underline underline-offset-2 hover:text-ink-blue-700"
 					to="/login"
 				>
-					Log in
+					{t("auth.register.logIn")}
 				</Link>
 			</p>
 			<p className="mt-3 text-center text-base leading-6 text-neutral-800 [&_a]:ml-2">
