@@ -9,7 +9,14 @@ import { routeTree } from "@/routeTree.gen";
 import "@/styles/tailwind.css";
 import "@/common/i18n";
 
-const router = createRouter({ routeTree, context: { queryClient } });
+const router = createRouter({
+	routeTree,
+	context: { queryClient },
+	// Hovering or focusing a link runs its loader, which warms the query cache.
+	defaultPreload: "intent",
+	// TanStack Query owns freshness, so the router always calls the loader and lets the cache decide.
+	defaultPreloadStaleTime: 0,
+});
 
 connectSession(router, queryClient);
 connectAccess(queryClient);

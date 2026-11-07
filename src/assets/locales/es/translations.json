@@ -316,6 +316,10 @@
 		"close": "Cerrar"
 	},
 	"settings": {
+		"title": "Configuración",
+		"subtitle": "Gestiona las preferencias de tu espacio de trabajo.",
+		"sections": "Secciones de configuración",
+		"comingSoon": "Esta configuración estará disponible pronto.",
 		"plan": {
 			"title": "Plan y facturación",
 			"description": "Consulta tu plan, las opciones de mejora y los datos de facturación.",
@@ -339,9 +343,31 @@
 			"dismiss": "Entendido"
 		},
 		"general": {
+			"title": "General",
+			"description": "Preferencias básicas del espacio de trabajo.",
+			"subtitle": "Gestiona las preferencias de tu espacio de trabajo.",
 			"workspaceName": "Nombre del espacio de trabajo",
+			"defaultLanguage": "Idioma predeterminado",
+			"timeZone": "Zona horaria",
+			"dateFormat": "Formato de fecha",
+			"country": "País",
+			"languages": {
+				"en": "Inglés"
+			},
+			"timeZones": {
+				"asiaSingapore": "Singapur (GMT +8)"
+			},
+			"dateFormats": {
+				"dayMonthYear": "DD MM AAAA",
+				"monthDayYear": "MM DD AAAA",
+				"yearMonthDay": "AAAA MM DD"
+			},
+			"countries": {
+				"sg": "Singapur"
+			},
 			"cancel": "Cancelar",
 			"save": "Guardar cambios",
+			"failed": "No pudimos cargar los datos de tu espacio de trabajo. Inténtalo de nuevo.",
 			"saving": "Guardando…",
 			"saved": "Nombre del espacio de trabajo guardado.",
 			"preferencesUnavailable": "El idioma, la zona horaria, el formato de fecha y el país aún no se pueden cambiar.",
@@ -354,6 +380,10 @@
 				"characters": "Usa solo letras, números, espacios y . ' & - en el nombre.",
 				"rejected": "Revisa el nombre del espacio de trabajo e inténtalo de nuevo."
 			}
+		},
+		"notifications": {
+			"title": "Notificaciones",
+			"description": "Controla sobre qué se te notifica y cómo."
 		},
 		"data": {
 			"title": "Datos",
@@ -518,6 +548,17 @@
 		"noResults": "No hay resultados",
 		"create": "Crear \"{{query}}\""
 	},
+	"passwordInput": {
+		"show": "Mostrar contraseña",
+		"hide": "Ocultar contraseña"
+	},
+	"phoneInput": {
+		"countryCode": "Código de país",
+		"countryCodeValue": "Código de país: {{country}}",
+		"countryPlaceholder": "Código",
+		"searchCountries": "Buscar país o código",
+		"number": "Número de teléfono"
+	},
 	"timeZoneSelect": {
 		"placeholder": "Seleccionar una zona horaria",
 		"search": "Busca ciudad, región o desfase",
@@ -549,6 +590,9 @@
 			}
 		}
 	},
+	"datePicker": {
+		"clear": "Borrar fecha"
+	},
 	"select": {
 		"noOptions": "No hay opciones",
 		"selectedCount_one": "{{count}} seleccionado",
@@ -562,6 +606,10 @@
 		"FRI": "Viernes",
 		"SAT": "Sábado",
 		"SUN": "Domingo"
+	},
+	"copyButton": {
+		"copied": "Copiado",
+		"failed": "No se pudo copiar"
 	},
 	"dataTable": {
 		"selectAll": "Seleccionar todo",
@@ -583,8 +631,18 @@
 		"next": "Semana siguiente"
 	},
 	"organisation": {
+		"title": "Resumen de la organización",
+		"subtitle": "Gestiona la estructura de tu organización y la configuración de la plantilla.",
+		"unknownCount": "—",
+		"failed": "No pudimos cargar los datos de tu organización. Inténtalo de nuevo.",
+		"viewAll": "Ver todo",
+		"status": {
+			"ACTIVE": "Activo",
+			"INACTIVE": "Inactivo"
+		},
 		"branches": {
 			"title": "Sucursales",
+			"caption": "Sucursales activas",
 			"subtitle": "Crea y administra las sucursales de la organización.",
 			"search": "Buscar sucursal",
 			"create": "Crear sucursal",
@@ -661,6 +719,16 @@
 				"headsRejected": "Revisa las personas elegidas e inténtalo de nuevo.",
 				"forbidden": "Ya no tienes permiso para crear sucursales.",
 				"failed": "No pudimos crear la sucursal. Inténtalo de nuevo."
+			},
+			"status": {
+				"deactivateTitle": "Desactivar {{name}}",
+				"deactivateDescription": "La sucursal sigue en tus listas como inactiva y se puede volver a activar.",
+				"deactivateConfirm": "Desactivar sucursal",
+				"activateTitle": "Activar {{name}}",
+				"activateDescription": "La sucursal vuelve a estar activa.",
+				"activateConfirm": "Activar sucursal",
+				"forbidden": "No tienes permiso para cambiar esta sucursal.",
+				"failed": "No pudimos cambiar la sucursal. Inténtalo de nuevo."
 			}
 		},
 		"headsField": {
@@ -674,6 +742,16 @@
 			"counter": "{{count}}/20"
 		},
 		"permissions": {
+			"groupCount": "{{count}} de {{total}}",
+			"job_title": {
+				"name": "Puestos",
+				"description": "Los puestos de la empresa.",
+				"actions": {
+					"read": "Ver",
+					"create": "Crear",
+					"update": "Editar"
+				}
+			},
 			"qualified": "{{resource}}: {{permission}}",
 			"needs_one": "{{permissions}} requiere {{prerequisites}}.",
 			"needs_other": "{{permissions}} requieren {{prerequisites}}.",
@@ -683,6 +761,39 @@
 				"name": "No reconocidos",
 				"description": "Esta versión de la aplicación no conoce estos permisos. Se mantienen en el rol al guardar."
 			},
+			"schedule": {
+				"name": "Horarios",
+				"description": "Los horarios de cada departamento: su semana, su configuración y los turnos elegidos, generarlos, cambiar quién trabaja cada turno en un cuadrante generado, publicar o rechazar sus cuadrantes y eliminarlos.",
+				"actions": {
+					"read": "Ver",
+					"create": "Crear",
+					"update": "Editar",
+					"generate": "Generar",
+					"delete": "Eliminar",
+					"publish": "Publicar",
+					"edit_shift": "Editar turnos"
+				}
+			},
+			"shift": {
+				"name": "Turnos",
+				"description": "Los turnos de cada departamento: sus horas, días, grupo, color y roles.",
+				"actions": {
+					"read": "Ver",
+					"create": "Añadir",
+					"update": "Editar",
+					"delete": "Eliminar"
+				}
+			},
+			"constraint": {
+				"name": "Restricciones",
+				"description": "Las restricciones de programación de cada departamento: qué dicen, si deben o deberían cumplirse y si los horarios pueden usarlas.",
+				"actions": {
+					"read": "Ver",
+					"create": "Añadir",
+					"update": "Editar",
+					"delete": "Eliminar"
+				}
+			},
 			"work_availability": {
 				"name": "Disponibilidad",
 				"description": "Las horas en que cada persona a tiempo parcial puede trabajar en una semana, y quién no tiene ninguna.",
@@ -691,12 +802,40 @@
 					"update": "Editar"
 				}
 			},
+			"leave_request": {
+				"name": "Permisos",
+				"description": "Las solicitudes de permiso de cada persona, incluido el tipo de permiso y el motivo por el que se rechazó una solicitud.",
+				"actions": {
+					"read": "Ver",
+					"create": "Solicitar",
+					"review": "Aprobar o rechazar"
+				}
+			},
 			"skill": {
 				"name": "Habilidades",
 				"description": "El catálogo de habilidades de la empresa: las habilidades y licencias que las personas pueden tener, y cuántas tienen cada una.",
 				"actions": {
 					"read": "Ver",
 					"create": "Crear",
+					"update": "Editar",
+					"delete": "Eliminar"
+				}
+			},
+			"member_profile": {
+				"name": "Personas",
+				"description": "El ID de empleado, el departamento, el puesto y los datos de contacto de cada persona.",
+				"actions": {
+					"read": "Ver",
+					"create": "Crear",
+					"update": "Editar"
+				}
+			},
+			"member_note": {
+				"name": "Notas",
+				"description": "Notas sobre cada persona, como comentarios sobre su trabajo.",
+				"actions": {
+					"read": "Ver",
+					"create": "Añadir",
 					"update": "Editar",
 					"delete": "Eliminar"
 				}
@@ -717,6 +856,72 @@
 					"update": "Editar"
 				}
 			},
+			"none": "Todavía no hay permisos.",
+			"company": {
+				"name": "Empresa",
+				"description": "Los datos propios de la empresa.",
+				"actions": {
+					"read": "Ver",
+					"update": "Editar"
+				}
+			},
+			"branch": {
+				"name": "Sucursales",
+				"description": "Las sucursales de la empresa y sus datos.",
+				"actions": {
+					"read": "Ver",
+					"create": "Crear",
+					"update": "Editar"
+				}
+			},
+			"branch_member": {
+				"name": "Miembros de sucursal",
+				"description": "Quién pertenece a una sucursal y quién es su responsable.",
+				"actions": {
+					"read": "Ver",
+					"create": "Añadir",
+					"update": "Editar",
+					"deactivate": "Desactivar"
+				}
+			},
+			"department": {
+				"name": "Departamentos",
+				"description": "Los departamentos de cada sucursal.",
+				"actions": {
+					"read": "Ver",
+					"create": "Crear",
+					"update": "Editar"
+				}
+			},
+			"department_member": {
+				"name": "Miembros de departamento",
+				"description": "Quién pertenece a un departamento y quién es su responsable.",
+				"actions": {
+					"read": "Ver",
+					"create": "Añadir",
+					"update": "Editar",
+					"deactivate": "Desactivar"
+				}
+			},
+			"access_role": {
+				"name": "Roles del sistema",
+				"description": "Roles como este y a quién se asignan.",
+				"actions": {
+					"read": "Ver",
+					"create": "Crear",
+					"update": "Editar",
+					"delete": "Eliminar",
+					"assign": "Asignar"
+				}
+			},
+			"audit_event": {
+				"name": "Actividad",
+				"description": "El registro de quién cambió qué en la empresa.",
+				"actions": {
+					"read": "Ver"
+				}
+			},
+			"empty": "Todavía no hay roles del sistema.",
 			"employment_terms": {
 				"name": "Condiciones de empleo",
 				"description": "La semana laboral que fija cada tipo de contrato: días laborables, horas normales, día de descanso y si se aplican los límites de horas de la Ley.",
@@ -747,6 +952,7 @@
 			"people": "Personas",
 			"peopleCount_one": "{{count}} persona",
 			"peopleCount_other": "{{count}} personas",
+			"systemRole": "Rol del sistema",
 			"createDialog": {
 				"title": "Crear puesto",
 				"description": "Añade un puesto que las personas de toda la organización puedan ocupar.",
@@ -767,17 +973,50 @@
 				"descriptionLength": "La descripción debe tener 300 caracteres como máximo.",
 				"forbidden": "Ya no tienes permiso para crear puestos.",
 				"failed": "No pudimos crear el puesto. Inténtalo de nuevo.",
-				"editDescription": "Cambia el nombre o la descripción del puesto. Sigue en {{department}}."
+				"department": "Departamento",
+				"departmentPlaceholder": "Selecciona un departamento",
+				"departmentHint": "El departamento activo al que pertenece el puesto.",
+				"departmentsEmpty": "No hay ningún departamento activo al que puedas añadir puestos. Crea primero un departamento.",
+				"departmentRequired": "Elige un departamento.",
+				"departmentUnavailable": "Este departamento ya no está disponible. Elige otro departamento.",
+				"departmentInactive": "Este departamento está inactivo. Actívalo primero o elige otro departamento.",
+				"editTitle": "Editar puesto",
+				"editDescription": "Cambia el nombre o la descripción del puesto. Sigue en {{department}}.",
+				"editSubmit": "Guardar cambios",
+				"editForbidden": "Ya no tienes permiso para cambiar este puesto.",
+				"editFailed": "No pudimos guardar el puesto. Inténtalo de nuevo.",
+				"gone": "Este puesto ya no existe."
 			},
 			"status": {
+				"deactivateTitle": "Desactivar {{name}}",
+				"deactivateDescription": "El puesto sigue en tus listas como inactivo y se puede volver a activar.",
 				"deactivateDescriptionHeld_one": "{{count}} persona tiene este puesto. Lo conserva, pero no se puede asignar a nadie más ni añadir a turnos mientras esté inactivo. El puesto sigue en tus listas y se puede volver a activar.",
 				"deactivateDescriptionHeld_other": "{{count}} personas tienen este puesto. Lo conservan, pero no se puede asignar a nadie más ni añadir a turnos mientras esté inactivo. El puesto sigue en tus listas y se puede volver a activar.",
+				"deactivateConfirm": "Desactivar puesto",
 				"deactivateConfirmHeld_one": "Desactivar para {{count}} persona",
-				"deactivateConfirmHeld_other": "Desactivar para {{count}} personas"
-			}
+				"deactivateConfirmHeld_other": "Desactivar para {{count}} personas",
+				"activateTitle": "Activar {{name}}",
+				"activateDescription": "El puesto vuelve a estar activo.",
+				"activateConfirm": "Activar puesto",
+				"forbidden": "No tienes permiso para cambiar este puesto.",
+				"failed": "No pudimos cambiar el puesto. Inténtalo de nuevo."
+			},
+			"department": "Departamento"
 		},
 		"activity": {
+			"title": "Actividad reciente",
+			"empty": "Todavía no hay actividad reciente.",
+			"failed": "No pudimos cargar la actividad reciente.",
+			"by": "por {{name}}",
+			"justNow": "Justo ahora",
 			"named": {
+				"branchCreated": "Sucursal creada: {{name}}",
+				"branchUpdated": "Sucursal actualizada: {{name}}",
+				"departmentCreated": "Departamento creado: {{name}}",
+				"departmentUpdated": "Departamento actualizado: {{name}}",
+				"roleCreated": "Rol creado: {{name}}",
+				"roleUpdated": "Permisos actualizados del rol {{name}}",
+				"roleDeleted": "Rol eliminado: {{name}}",
 				"jobTitleCreated": "Puesto creado: {{name}}",
 				"jobTitleUpdated": "Puesto actualizado: {{name}}",
 				"memberAdded": "{{name}} añadido a Personas",
@@ -826,6 +1065,13 @@
 				"rosterChangeUndone": "Cambio de cuadrante deshecho: {{name}}"
 			},
 			"unnamed": {
+				"branchCreated": "Sucursal creada",
+				"branchUpdated": "Sucursal actualizada",
+				"departmentCreated": "Departamento creado",
+				"departmentUpdated": "Departamento actualizado",
+				"roleCreated": "Rol creado",
+				"roleUpdated": "Permisos del rol actualizados",
+				"roleDeleted": "Rol eliminado",
 				"jobTitleCreated": "Puesto creado",
 				"jobTitleUpdated": "Puesto actualizado",
 				"memberAdded": "Empleado añadido",
@@ -958,6 +1204,16 @@
 				"headsRejected": "Revisa las personas elegidas e inténtalo de nuevo.",
 				"forbidden": "Ya no tienes permiso para crear departamentos.",
 				"failed": "No pudimos crear el departamento. Inténtalo de nuevo."
+			},
+			"status": {
+				"deactivateTitle": "Desactivar {{name}}",
+				"deactivateDescription": "El departamento sigue en tus listas como inactivo y se puede volver a activar.",
+				"deactivateConfirm": "Desactivar departamento",
+				"activateTitle": "Activar {{name}}",
+				"activateDescription": "El departamento vuelve a estar activo.",
+				"activateConfirm": "Activar departamento",
+				"forbidden": "No tienes permiso para cambiar este departamento.",
+				"failed": "No pudimos cambiar el departamento. Inténtalo de nuevo."
 			}
 		},
 		"accessRoles": {
@@ -968,6 +1224,11 @@
 			"create": "Crear rol del sistema",
 			"name": "Rol del sistema",
 			"permissions": "Permisos clave",
+			"people": "Personas",
+			"peopleCount_one": "{{count}} persona",
+			"peopleCount_other": "{{count}} personas",
+			"viewPeople": "{{count}} personas con el rol {{name}}",
+			"assign": "Asignar rol",
 			"fullAccess": "Acceso total al sistema",
 			"permissionCount_one": "{{count}} permiso",
 			"permissionCount_other": "{{count}} permisos",
@@ -997,23 +1258,166 @@
 				"failed": "No pudimos crear el rol del sistema. Inténtalo de nuevo."
 			},
 			"assignments": {
+				"tab": "Personas",
+				"permissionsTab": "Permisos",
+				"tabs": "Secciones del rol",
+				"allows": "Este rol permite",
+				"title": "Quién tiene este rol",
+				"label": "Personas con este rol",
+				"count_one": "{{count}} persona",
+				"count_other": "{{count}} personas",
+				"placesOf": "Dónde tiene {{name}} este rol",
+				"assign": "Asignar rol",
+				"person": "Persona",
+				"appliesTo": "Se aplica a",
+				"wholeCompany": "Toda la empresa",
+				"department": "{{branch}} › {{department}}",
+				"empty": "Todavía nadie tiene este rol.",
 				"dialog": {
+					"title": "Asignar rol",
+					"description": "Da un rol a una persona y elige dónde puede usarlo.",
+					"role": "Rol",
+					"rolePlaceholder": "Selecciona un rol",
+					"person": "Persona",
+					"personPlaceholder": "Selecciona una persona",
+					"searchPlaceholder": "Buscar personas",
+					"noResults": "No se encontraron miembros activos.",
+					"places": "Se aplica a",
+					"placesPlaceholder": "Selecciona dónde se aplica",
+					"placesSearch": "Buscar sucursales y departamentos",
+					"placesEmpty": "Nada coincide.",
+					"placesHint": "Elige uno o varios. Una sucursal incluye sus departamentos; toda la empresa lo incluye todo.",
+					"allows": "Allí podrá",
+					"cancel": "Cancelar",
+					"submit": "Asignar rol",
+					"conflict": "Esta persona ya tiene el rol en uno de esos lugares.",
 					"fixedPlaces": "{{name}} también tiene este rol en {{places}}. No puedes cambiar esos lugares, así que se quedan como están.",
 					"notMember": "No se puede dar este rol a esta persona en uno de esos lugares. Puede que ya no sea miembro activo o que el rol no encaje en ese lugar.",
+					"forbidden": "Solo puedes asignar un rol cuyos permisos tienes allí.",
+					"failed": "No pudimos asignar el rol. Inténtalo de nuevo.",
+					"editTitle": "Editar asignación",
+					"editDescription": "Cambia dónde puede usar esta persona el rol.",
+					"editSubmit": "Guardar cambios",
+					"removesAll": "Si guardas sin ningún lugar, se le quita este rol a {{name}}.",
 					"noFit": "Este rol no se puede asignar en ningún lugar donde puedes asignarlo: {{permissions}} solo se puede otorgar a un nivel más amplio."
 				},
+				"loadFailed": "No pudimos cargar quién tiene este rol.",
+				"inactive": "Este rol está inactivo, así que las personas de abajo no tienen sus permisos hasta que se vuelva a activar.",
+				"removeFailed": "No pudimos quitarle el rol a esa persona. Inténtalo de nuevo.",
 				"partial": "No se pudieron hacer {{failed}} de {{total}} cambios; los demás se guardaron. {{reason}}",
+				"remove": {
+					"title": "Quitar a {{name}} de este rol",
+					"description": "{{name}} dejará de tener el rol {{role}} en todos los lugares. El cambio es inmediato.",
+					"confirm": "Quitar del rol"
+				},
 				"status": {
-					"notMember": "Este rol no puede estar activo para esta persona en uno de esos lugares. Puede que ya no sea miembro activo o que el rol no encaje en ese lugar."
+					"deactivateTitle": "Desactivar el rol para {{name}}",
+					"deactivateDescription": "{{name}} perderá el acceso que le da el rol {{role}}. El cambio es inmediato, y volver a activarlo le devuelve el acceso.",
+					"deactivateConfirm": "Desactivar para {{name}}",
+					"activateTitle": "Activar el rol para {{name}}",
+					"activateDescription": "{{name}} recuperará el acceso que le da el rol {{role}}. El cambio es inmediato.",
+					"activateConfirm": "Activar para {{name}}",
+					"roleInactive": "El rol en sí está inactivo. Activa primero el rol.",
+					"notMember": "Este rol no puede estar activo para esta persona en uno de esos lugares. Puede que ya no sea miembro activo o que el rol no encaje en ese lugar.",
+					"forbidden": "Solo puedes activar un rol cuyos permisos tienes allí.",
+					"failed": "No pudimos cambiarlo. Inténtalo de nuevo."
 				}
 			},
 			"editor": {
+				"back": "Roles del sistema",
+				"createTitle": "Crear rol del sistema",
+				"create": "Crear rol",
+				"createForbidden": "No tienes permiso para crear roles del sistema.",
+				"unavailable": "Solo puedes dar a un rol los permisos que tienes tú, así que los demás no están disponibles.",
+				"scope": "Dónde se aplica este rol se elige al asignarlo a una persona.",
+				"fullAccess": "Acceso completo",
+				"protected": "El rol Propietario de la empresa siempre tiene todos los permisos y no se puede cambiar.",
+				"viewOnly": "No tienes permiso para cambiar los roles del sistema.",
+				"locked": "Este rol incluye permisos que no tienes, así que no puedes cambiarlo.",
+				"name": "Nombre del rol",
+				"nameHint": "Entre 2 y 100 caracteres. Solo letras, números, espacios y . ' & -.",
+				"nameCounter": "{{count}}/100",
+				"nameRequired": "Introduce un nombre para el rol.",
+				"nameLength": "Usa entre 2 y 100 caracteres.",
+				"nameCharacters": "Usa solo letras, números, espacios y . ' & - en el nombre.",
+				"nameConflict": "Ya existe un rol llamado \"{{name}}\". Elige otro nombre.",
+				"nameRejected": "Revisa el nombre del rol e inténtalo de nuevo.",
+				"permissions": "Permisos",
+				"selected": "{{count}} de {{total}} seleccionados",
+				"permissionsRequired": "Elige al menos un permiso.",
+				"added": "{{count}} añadidos",
+				"removed": "{{count}} quitados",
+				"discard": "Descartar cambios",
+				"save": "Guardar cambios",
+				"forbidden": "Este rol incluye permisos que no tienes, o ya no puedes cambiar los roles del sistema.",
+				"gone": "Este rol ya no existe.",
+				"protectedRefused": "El rol Propietario de la empresa no se puede cambiar.",
+				"failed": "No pudimos guardar el rol. Inténtalo de nuevo.",
+				"loadForbidden": "No tienes permiso para ver este rol.",
+				"loadMissing": "Este rol no existe o se ha eliminado.",
+				"loadFailed": "No pudimos cargar este rol. Inténtalo de nuevo.",
 				"unknownKeys_one": "Este rol tiene un permiso que esta versión de la aplicación no reconoce. Se mantiene tal cual al guardar. Recarga la página para actualizar la aplicación y cambiarlo.",
 				"unknownKeys_other": "Este rol tiene {{count}} permisos que esta versión de la aplicación no reconoce. Se mantienen tal cual al guardar. Recarga la página para actualizar la aplicación y cambiarlos."
+			},
+			"all": "Todos los roles",
+			"copyName": "Copia de {{name}}",
+			"status": {
+				"loading": "Comprobando quién tiene este rol…",
+				"loadFailed": "No pudimos comprobar quién tiene este rol, así que ahora no se puede cambiar. Inténtalo de nuevo.",
+				"forbidden": "Solo puedes cambiar un rol cuyos permisos tienes tú.",
+				"failed": "No pudimos cambiar el rol. Inténtalo de nuevo.",
+				"deactivate": {
+					"title": "Desactivar {{name}}",
+					"description_one": "Al desactivar este rol se quita el acceso que da a {{count}} persona.",
+					"description_other": "Al desactivar este rol se quita el acceso que da a {{count}} personas.",
+					"none": "Nadie tiene este rol, así que nadie pierde acceso.",
+					"self": "Tienes este rol. También perderás estos permisos.",
+					"allows": "Ya no podrán",
+					"timing": "El cambio es inmediato. Volver a activar el rol devuelve el acceso a las mismas personas.",
+					"confirm_one": "Desactivar y quitar el acceso a {{count}} persona",
+					"confirm_other": "Desactivar y quitar el acceso a {{count}} personas",
+					"confirmNone": "Desactivar rol"
+				},
+				"activate": {
+					"title": "Activar {{name}}",
+					"description_one": "Al activar este rol, {{count}} persona recupera su acceso.",
+					"description_other": "Al activar este rol, {{count}} personas recuperan su acceso.",
+					"none": "Nadie tiene este rol, así que nada cambia hasta que se asigne.",
+					"self": "Tienes este rol. Recuperarás estos permisos.",
+					"allows": "Podrán",
+					"timing": "El cambio es inmediato.",
+					"confirm_one": "Activar y dar acceso a {{count}} persona",
+					"confirm_other": "Activar y dar acceso a {{count}} personas",
+					"confirmNone": "Activar rol"
+				}
+			},
+			"delete": {
+				"title": "Eliminar {{name}}",
+				"description": "Nadie tiene este rol. Eliminarlo no se puede deshacer.",
+				"confirm": "Eliminar rol",
+				"inUse": "Este rol sigue asignado a alguien. Quítaselo primero a todas las personas.",
+				"forbidden": "No tienes permiso para eliminar este rol.",
+				"failed": "No pudimos eliminar el rol. Inténtalo de nuevo."
 			}
 		},
 		"list": {
 			"showing": "Mostrar",
+			"status": "Estado",
+			"actions": "Acciones",
+			"edit": "Editar {{name}}",
+			"moreActions": "Más acciones para {{name}}",
+			"editItem": "Editar",
+			"viewItem": "Ver",
+			"duplicateItem": "Duplicar",
+			"activateItem": "Activar",
+			"deactivateItem": "Desactivar",
+			"deleteItem": "Eliminar",
+			"loading": "Cargando…",
+			"failed": "No pudimos cargar esta lista. Inténtalo de nuevo.",
+			"forbidden": "No tienes permiso para ver esta lista.",
+			"noMatches": "Nada coincide con tu búsqueda o filtro.",
+			"truncated": "Se muestran los primeros {{shown}} de {{total}}. Usa el filtro de estado para acotar la lista.",
+			"cancel": "Cancelar",
 			"branch": "Sucursal",
 			"created": "Creado"
 		},
@@ -1318,19 +1722,125 @@
 		}
 	},
 	"shell": {
+		"welcome": "Te damos la bienvenida, <name>{{name}}</name>.",
 		"notifications": "Notificaciones",
+		"settings": "Configuración",
 		"myProfile": "Mi perfil",
 		"accountMenu": "Menú de la cuenta",
 		"changePassword": "Cambiar contraseña",
 		"navigation": {
-			"availability": "Disponibilidad"
-		}
+			"dashboard": "Panel",
+			"scheduling": "Programación",
+			"leave": "Permisos",
+			"availability": "Disponibilidad",
+			"people": "Personas",
+			"organisation": "Organización"
+		},
+		"comingSoon": "Este módulo estará disponible pronto."
 	},
 	"people": {
+		"title": "Resumen de personas",
+		"subtitle": "Gestiona los registros de empleados, los roles y la información de la plantilla de toda tu organización.",
+		"search": "Buscar empleado",
+		"all": "Todos los empleados",
+		"label": "Personas",
+		"employee": "Empleado",
+		"department": "Departamento",
+		"jobTitle": "Puesto",
+		"contact": "Contacto",
+		"notSet": "—",
+		"empty": "Todavía no hay personas.",
+		"add": "Añadir empleado",
+		"added": "Se añadió a {{name}}. Le hemos enviado por correo una invitación para iniciar sesión.",
+		"roleNotAssigned": "Se añadió a {{name}}, pero no se le asignó su rol del sistema. Asígnalo desde Organización, en Roles del sistema.",
+		"saved": "Se guardaron los cambios de {{name}}.",
+		"roleNotChanged": "Se guardaron los cambios de {{name}}, pero su rol del sistema no se cambió. Cámbialo desde Organización, en Roles del sistema.",
+		"deactivated": "Se desactivó a {{name}} y ya no puede iniciar sesión.",
+		"reactivated": "Se reactivó a {{name}} y puede volver a iniciar sesión.",
+		"invited": "Hemos enviado a {{name}} una nueva invitación por correo para iniciar sesión.",
+		"view": "Ver a {{name}}",
 		"profile": {
+			"back": "Volver al resumen de personas",
+			"edit": "Editar perfil",
+			"invited": "Invitado",
+			"moreActions": "Más acciones para {{name}}",
+			"copyPhone": "Copiar número de teléfono",
+			"copyEmail": "Copiar correo electrónico",
+			"missing": "Esta persona no está disponible. Puede que no exista o que no tengas acceso a ella.",
+			"loadFailed": "No pudimos cargar a esta persona. Inténtalo de nuevo.",
+			"rolesFailed": "No pudimos cargar sus roles del sistema.",
+			"deactivate": {
+				"item": "Desactivar",
+				"title": "¿Desactivar a {{name}}?",
+				"description": "{{name}} perderá el acceso a Horaion de inmediato y no podrá iniciar sesión hasta que se le reactive.",
+				"confirm": "Desactivar"
+			},
+			"reactivate": {
+				"item": "Reactivar",
+				"title": "¿Reactivar a {{name}}?",
+				"description": "{{name}} podrá volver a iniciar sesión en Horaion.",
+				"confirm": "Reactivar"
+			},
+			"resend": {
+				"item": "Reenviar invitación",
+				"title": "¿Reenviar la invitación a {{name}}?",
+				"description": "Enviaremos a {{email}} una nueva invitación para iniciar sesión.",
+				"confirm": "Reenviar invitación"
+			},
+			"invitationNotPending": "Ya ha iniciado sesión, así que no hay ninguna invitación que reenviar.",
+			"actionForbidden": "Ya no tienes permiso para cambiar a esta persona.",
+			"actionFailed": "No pudimos hacer este cambio. Inténtalo de nuevo.",
 			"mine": "Mi perfil",
 			"mineSubtitle": "Tus datos tal como los tiene tu empresa. Pide a tu administrador que corrija lo que esté desactualizado.",
 			"mineFailed": "No pudimos cargar tu perfil. Inténtalo de nuevo."
+		},
+		"notes": {
+			"title": "Notas",
+			"titleCount": "Notas ({{count}})",
+			"add": "Añadir nota",
+			"loading": "Cargando notas…",
+			"failed": "No pudimos cargar las notas. Inténtalo de nuevo.",
+			"empty": "Todavía no hay notas.",
+			"showMore": "Mostrar más",
+			"loadingMore": "Cargando más notas…",
+			"addedBy": "Añadida por {{name}}",
+			"addedByUnknown": "Añadida por una persona desconocida",
+			"when": "{{date}}, {{time}}",
+			"edited": "Editada",
+			"moreActions": "Más acciones para la nota del {{when}}",
+			"editItem": "Editar",
+			"deleteItem": "Eliminar",
+			"editNote": "Editar la nota del {{when}}",
+			"deleteNote": "Eliminar la nota del {{when}}",
+			"dialog": {
+				"addTitle": "Añadir nota",
+				"addDescription": "Añade una nota sobre {{name}}.",
+				"editTitle": "Editar nota",
+				"editDescription": "Cambia esta nota sobre {{name}}.",
+				"body": "Nota",
+				"bodyPlaceholder": "Escribe una nota",
+				"bodyHint": "Hasta 1.000 caracteres. Se conservan los saltos de línea.",
+				"bodyCounter": "{{count}}/1000",
+				"bodyRequired": "Escribe una nota.",
+				"bodyLength": "Usa 1.000 caracteres o menos.",
+				"bodyRejected": "Revisa la nota e inténtalo de nuevo.",
+				"addSubmit": "Añadir nota",
+				"editSubmit": "Guardar cambios",
+				"cancel": "Cancelar",
+				"addForbidden": "Ya no tienes permiso para añadir notas sobre esta persona.",
+				"editForbidden": "Ya no tienes permiso para editar esta nota.",
+				"addFailed": "No pudimos añadir la nota. Inténtalo de nuevo.",
+				"editFailed": "No pudimos guardar la nota. Inténtalo de nuevo.",
+				"gone": "Esta nota ya no existe."
+			},
+			"delete": {
+				"title": "¿Eliminar esta nota?",
+				"description": "La nota se quitará del perfil de {{name}}. No se puede deshacer.",
+				"confirm": "Eliminar nota",
+				"forbidden": "Ya no tienes permiso para eliminar esta nota.",
+				"failed": "No pudimos eliminar la nota. Inténtalo de nuevo.",
+				"gone": "Esta nota ya se había eliminado."
+			}
 		},
 		"import": "Importar",
 		"export": "Exportar",
@@ -1619,6 +2129,93 @@
 		},
 		"termsNotSet": "No pudimos darle {{chosen}}, así que tiene {{kept}}. Cámbialo desde su perfil.",
 		"form": {
+			"title": "Añadir empleado",
+			"subtitle": "Configura los datos del empleado para gestionar sus roles, turnos y disponibilidad.",
+			"forbidden": "No tienes permiso para añadir empleados.",
+			"confirm": "Confirmar",
+			"none": "Ninguno",
+			"datePlaceholder": "Seleccionar fecha",
+			"personal": "Información personal",
+			"contact": "Información de contacto",
+			"employment": "Información laboral",
+			"placement": "Departamento y rol",
+			"fullName": "Nombre completo",
+			"fullNamePlaceholder": "Introduce el nombre completo",
+			"fullNameRequired": "Introduce el nombre completo del empleado.",
+			"fullNameLength": "Usa 255 caracteres o menos.",
+			"employeeId": "ID de empleado",
+			"dateOfBirth": "Fecha de nacimiento",
+			"dateOfBirthPast": "Elige una fecha del pasado.",
+			"phone": "Número de teléfono",
+			"phonePlaceholder": "8123 4567",
+			"phoneCountry": "Elige el código de país.",
+			"phoneInvalid": "Introduce un número de teléfono válido.",
+			"email": "Correo electrónico",
+			"emailPlaceholder": "Introduce el correo electrónico",
+			"emailHint": "Enviaremos a esta dirección una invitación para iniciar sesión.",
+			"emailRequired": "Introduce el correo electrónico del empleado.",
+			"emailLength": "Usa 320 caracteres o menos.",
+			"emailInvalid": "Introduce un correo electrónico válido.",
+			"emailLocked": "Ya ha iniciado sesión, así que su correo electrónico no se puede cambiar.",
+			"employmentType": "Tipo de empleo",
+			"employmentTypePlaceholder": "Seleccionar tipo",
+			"employmentTypes": {
+				"FULL_TIME": "Jornada completa",
+				"PART_TIME": "Tiempo parcial",
+				"CONTRACT": "Contrato temporal",
+				"INTERN": "Becario"
+			},
+			"hireDate": "Fecha de contratación",
+			"probationEndDate": "Fin del periodo de prueba",
+			"probationBeforeHire": "Elige una fecha igual o posterior a la fecha de contratación.",
+			"employmentStatus": "Situación laboral",
+			"jobTitle": "Puesto",
+			"jobTitlePlaceholder": "Seleccionar puesto",
+			"jobTitleNeedsDepartment": "Elige primero un departamento.",
+			"jobTitlesLoading": "Cargando puestos…",
+			"jobTitlesFailed": "No pudimos cargar los puestos. Inténtalo de nuevo.",
+			"jobTitlesEmpty": "Este departamento no tiene puestos activos.",
+			"department": "Departamento",
+			"departmentPlaceholder": "Seleccionar departamento",
+			"departmentsEmpty": "No hay ningún departamento activo al que puedas añadir empleados.",
+			"departmentOptional": "Opcional. Puedes asignar un departamento más tarde.",
+			"departmentNone": "Aún sin departamento",
+			"departmentRequired": "Elige un departamento.",
+			"manager": "Responsable",
+			"managerPlaceholder": "Seleccionar responsable",
+			"managerHint": "Una persona activa de la empresa.",
+			"systemRole": "Rol del sistema",
+			"systemRolePlaceholder": "Seleccionar rol del sistema",
+			"systemRoleHint": "Se aplica en el ámbito del rol seleccionado.",
+			"otherRoles": "También tiene en otros lugares: {{roles}}.",
+			"roleScope": "Ámbito del rol",
+			"roleScopeHint": "Elige dónde se aplica el rol del sistema, con independencia del departamento al que pertenezca.",
+			"roleScopePlaceholder": "Seleccionar empresa, sucursal o departamento",
+			"roleScopeRequired": "Elige dónde se aplica el rol del sistema.",
+			"departmentUnavailable": "Este departamento ya no está disponible. Elige otro departamento.",
+			"jobTitleUnavailable": "Este puesto ya no está disponible. Elige otro puesto.",
+			"managerUnavailable": "Esta persona ya no está disponible. Elige otro responsable.",
+			"managerSelf": "No puede ser su propio responsable. Elige a otra persona.",
+			"emailTaken": "Este correo electrónico ya tiene una cuenta. Usa otro correo electrónico.",
+			"identityRejected": "No pudimos configurar el inicio de sesión para este correo electrónico. Revísalo o inténtalo de nuevo más tarde.",
+			"forbiddenSubmit": "Ya no tienes permiso para añadir empleados a este departamento.",
+			"rejected": "Revisa este campo e inténtalo de nuevo.",
+			"failed": "No pudimos añadir al empleado. Inténtalo de nuevo.",
+			"save": "Guardar cambios",
+			"identityShared": "Este nombre no se puede cambiar aquí porque también pertenece a otra empresa.",
+			"selfDeactivation": "No puedes desactivarte a ti mismo.",
+			"ownerDeactivation": "No se puede desactivar al propietario de la empresa.",
+			"lastDepartmentHead": "Es el único responsable de su departamento. Añade primero otro responsable allí.",
+			"departmentForbidden": "No tienes permiso para mover personas a este departamento.",
+			"inactiveMove": "Está inactivo. Reactívalo antes de moverlo a otro departamento.",
+			"forbiddenSave": "Ya no tienes permiso para editar a esta persona.",
+			"profileMissing": "Esta persona ya no está disponible.",
+			"invitationNotDelivered": "No pudimos enviar el correo de invitación. Inténtalo de nuevo.",
+			"saveFailed": "No pudimos guardar los cambios. Inténtalo de nuevo.",
+			"discardTitle": "¿Descartar los cambios?",
+			"discardDescription": "Tus cambios en {{name}} no se guardarán.",
+			"discard": "Descartar cambios",
+			"keepEditing": "Seguir editando",
 			"employmentTerms": "Condiciones de empleo",
 			"employmentTermsHint": "Desde su fecha de contratación, o desde hoy si no tiene."
 		},
@@ -1632,6 +2229,16 @@
 		"overview": {
 			"createSchedule": "Crear horario",
 			"generated": "Se solicitó la generación de {{name}}.",
+			"includedShifts": "Turnos incluidos",
+			"appliedConstraints": "Restricciones aplicadas",
+			"includeLeave": "Incluir permisos",
+			"allowOpenShifts": "Permitir turnos abiertos",
+			"updatedAt": "Última actualización",
+			"generationRequestedAt": "Generación solicitada",
+			"requestedBy": "Solicitado por",
+			"formerMember": "Antiguo miembro de la empresa",
+			"yes": "Sí",
+			"no": "No",
 			"title": "Resumen de horarios",
 			"subtitle": "Consulta y gestiona los horarios por departamento.",
 			"search": "Buscar departamento",
@@ -1639,6 +2246,10 @@
 			"viewNamed": "Ver horario {{code}}",
 			"percent": "{{value}} %",
 			"noMatch": "Ningún horario coincide con tu búsqueda.",
+			"empty": "Todavía no hay horarios.",
+			"pending": "Cargando horarios…",
+			"error": "No se pudieron cargar los horarios. Inténtalo de nuevo.",
+			"hidden": "No tienes permiso para ver los horarios.",
 			"statuses": {
 				"DRAFT": "Borrador",
 				"GENERATION_REQUESTED": "Generación solicitada",
@@ -1787,6 +2398,7 @@
 				"group": "Grupo de turno",
 				"groupPlaceholder": "Selecciona o crea un grupo",
 				"groupSearch": "Buscar grupos",
+				"groupEmpty": "No hay tipos de turno disponibles. Escribe un nombre arriba para crear uno.",
 				"colour": "Color del turno",
 				"startTime": "Hora de inicio",
 				"endTime": "Hora de fin",
@@ -2655,6 +3267,28 @@
 		}
 	},
 	"auth": {
+		"passwordReset": {
+			"title": "Restablece tu contraseña",
+			"requestSubtitle": "Introduce tu correo para solicitar un código de restablecimiento.",
+			"completeSubtitle": "Introduce el código de tu correo y elige una nueva contraseña.",
+			"details": "Datos para restablecer la contraseña",
+			"email": "Correo electrónico",
+			"code": "Código",
+			"newPassword": "Nueva contraseña",
+			"confirmPassword": "Confirmar contraseña",
+			"request": "Enviar código",
+			"complete": "Restablecer contraseña",
+			"resend": "Enviar un código nuevo",
+			"pending": "Espera…",
+			"back": "Volver a Iniciar sesión",
+			"sent": "Si ese correo tiene una cuenta, te hemos enviado un código",
+			"success": "Tu contraseña se restableció y se cerró la sesión en todos los dispositivos. Inicia sesión con tu nueva contraseña.",
+			"invalidCode": "Este código no es correcto o ha caducado. Inténtalo de nuevo o solicita un código nuevo.",
+			"codeFormat": "Introduce el código de seis dígitos de tu correo.",
+			"passwordPolicy": "Usa entre 8 y 128 caracteres, con una minúscula, una mayúscula, un número y un símbolo.",
+			"passwordMismatch": "Las contraseñas no coinciden. Escribe la misma contraseña en ambos campos.",
+			"failed": "No pudimos restablecer tu contraseña. Inténtalo de nuevo."
+		},
 		"changePassword": {
 			"title": "Cambiar contraseña",
 			"subtitle": "Al cambiar tu contraseña se cerrará la sesión en todos tus dispositivos, incluido este.",
@@ -2685,6 +3319,35 @@
 			"failed": "No pudimos cambiar tu contraseña. Inténtalo de nuevo.",
 			"success": "Tu contraseña se cambió y se cerró la sesión en todos los dispositivos. Inicia sesión con tu nueva contraseña."
 		},
+		"company": {
+			"title": "Elige una empresa",
+			"description": "Elige la empresa en la que quieres trabajar.",
+			"current": "Empresa actual",
+			"switch": "Cambiar de empresa",
+			"noneTitle": "Ya no tienes acceso a ninguna empresa",
+			"noneDescription": "Si necesitas acceso, contacta con el administrador de tu empresa."
+		},
+		"challenge": {
+			"newPasswordTitle": "Elige una nueva contraseña",
+			"newPasswordSubtitle": "Elige tu propia contraseña para terminar de iniciar sesión.",
+			"newPassword": "Nueva contraseña",
+			"confirmPassword": "Confirmar contraseña",
+			"passwordPolicy": "Usa entre 8 y 128 caracteres, con una minúscula, una mayúscula, un número y un símbolo.",
+			"passwordMismatch": "Las contraseñas no coinciden. Escribe la misma contraseña en ambos campos.",
+			"passwordRejected": "Esta contraseña no cumple los requisitos. Elige otra contraseña.",
+			"codeTitle": "Introduce el código de tu autenticador",
+			"codeSubtitle": "Introduce el código de seis dígitos de tu aplicación de autenticación para terminar de iniciar sesión.",
+			"code": "Código del autenticador",
+			"codeFormat": "Introduce un código de seis dígitos.",
+			"invalidCode": "Ese código no coincide. Introduce un código nuevo de tu aplicación de autenticación.",
+			"expired": "Este paso ha caducado. Vuelve a iniciar sesión para continuar.",
+			"continue": "Continuar",
+			"pending": "Continuando…"
+		},
+		"showConfirmedPassword": "Mostrar la contraseña confirmada",
+		"hideConfirmedPassword": "Ocultar la contraseña confirmada",
+		"showPassword": "Mostrar contraseña",
+		"hidePassword": "Ocultar contraseña",
 		"emailConfirmation": {
 			"title": "Confirmación de correo",
 			"subtitle": "Introduce el código de seis dígitos enviado a tu correo.",
@@ -2722,6 +3385,52 @@
 			"signUp": "Regístrate",
 			"haveCode": "¿Tienes un código de confirmación?",
 			"confirmEmail": "Confirma tu correo"
+		},
+		"register": {
+			"title": "Regístrate",
+			"subtitle": "Configura la cuenta de tu empresa.",
+			"details": "Datos de la cuenta",
+			"companyName": "Nombre de la empresa",
+			"registrationNumber": "Número de registro",
+			"firstName": "Nombre",
+			"lastName": "Apellidos",
+			"workspaceName": "Nombre del espacio de trabajo",
+			"workspacePlaceholder": "tu-empresa",
+			"workspaceHint": "Un nombre único para tu espacio de trabajo, como equipo-acme.",
+			"workspaceFormat": "Entre 3 y 30 letras minúsculas, números o guiones. Empieza y termina con una letra o un número.",
+			"email": "Correo electrónico",
+			"password": "Contraseña",
+			"passwordHint": "Usa al menos 8 caracteres, con una mayúscula, una minúscula, un número y un símbolo.",
+			"confirmPassword": "Confirmar contraseña",
+			"submit": "Regístrate",
+			"pending": "Creando la cuenta…",
+			"failed": "Algo salió mal. Inténtalo de nuevo.",
+			"haveAccount": "¿Ya tienes una cuenta?",
+			"logIn": "Inicia sesión"
+		},
+		"logOut": "Cerrar sesión",
+		"errors": {
+			"invalidCredentials": "Tu correo o tu contraseña no son correctos.",
+			"generic": "Todavía no podemos iniciar tu sesión. Inténtalo de nuevo.",
+			"unreachable": "No pudimos conectar con Horaion. Inténtalo de nuevo en breve.",
+			"invalidCode": "Ese código no es correcto o ha caducado. Inténtalo de nuevo o solicita un código nuevo."
+		},
+		"validation": {
+			"required": "Este campo es obligatorio.",
+			"tooLong": "Usa como máximo {{max}} caracteres.",
+			"email": "Introduce un correo válido, como nombre@empresa.com.",
+			"passwordRejected": "Revisa tu contraseña e inténtalo de nuevo."
+		},
+		"unreachable": {
+			"title": "No podemos conectar con Horaion",
+			"explanation": "Revisa tu conexión e inténtalo de nuevo. Puede que Horaion no esté disponible temporalmente.",
+			"tryAgain": "Reintentar"
+		},
+		"retryHold": {
+			"later": "Demasiados intentos. Inténtalo de nuevo más tarde.",
+			"aboutAMinute": "Demasiados intentos. Inténtalo de nuevo en un minuto aproximadamente.",
+			"minutes_one": "Demasiados intentos. Inténtalo de nuevo en unos {{count}} minuto.",
+			"minutes_other": "Demasiados intentos. Inténtalo de nuevo en unos {{count}} minutos."
 		}
 	},
 	"pageToolbar": {

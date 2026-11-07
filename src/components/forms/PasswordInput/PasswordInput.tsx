@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 import type { FunctionComponent } from "@/common/types";
 import { Input, type InputProps } from "@/components/forms/Input";
 import { Button } from "@/components/ui/Button";
+import { ViewIcon } from "@/components/ui/Icon";
 
 export type PasswordInputProps = Omit<InputProps, "trailingIcon" | "type"> & {
 	toggleLabels?: { show: string; hide: string };
@@ -36,11 +36,8 @@ export const PasswordInput = ({
 						setVisible((current) => !current);
 					}}
 				>
-					{visible ? (
-						<EyeSlashIcon aria-hidden="true" />
-					) : (
-						<EyeIcon aria-hidden="true" />
-					)}
+					{/* The icon set has no "hide" eye, so the pressed state and label carry the toggle. */}
+					<ViewIcon aria-hidden="true" />
 				</Button>
 			}
 		/>

@@ -99,8 +99,8 @@ src/components/ui/Badge/
 ## Stack
 
 Vite · React 19 · TypeScript (strict) · TanStack Router/Query/Table · React Hook
-Form + Zod · Zustand · Tailwind 4 · i18next · Nivo · Storybook · Vitest +
-Testing Library · Playwright.
+Form + Zod · Tailwind 4 · i18next · Storybook · Vitest + Testing Library ·
+Playwright.
 
 Routes are file-based under `src/routes`; `src/routeTree.gen.ts` is generated —
 never edit it by hand.
@@ -132,7 +132,7 @@ Single-context: one `CONTEXT.md` plus `docs/adr/` at the repo root. See `docs/ag
 
 ## Security, Data Protection And Compliance
 
-Security, data protection and auditability are first-class requirements for every change. The app targets ISO 27001:2022 and SOC 2 Type II as one programme with `hrms-backend-v2`, `engine` and `horaion-infra`. The canonical, audit-facing statement of these rules is `docs/security/secure-development-policy.md`: cite that document (never this file) in ADRs and security docs, and keep the two in sync when either changes.
+Security, data protection and auditability are first-class requirements for every change. The app targets ISO 27001:2022 and SOC 2 Type II as one programme with `hrms-backend-v2`, `engine` and `horaion-infra`. The canonical, audit-facing statement of these rules is `docs/security/secure-development-policy.md`: cite that document (never this file) in ADRs and security docs, and keep the two in sync when either changes. The `docs/security/` set is pending: it is not on `development` yet, so the links below name the documents it will hold. Until it lands, these rules apply as written here.
 
 - **Security Considerations everywhere.** Every spec under `.scratch/` and every PR description has a Security Considerations paragraph: the data shown or entered and its class (`docs/security/data-classification.md`), the permission keys that gate it, anything kept in the browser, and the abuse case considered.
 - **ADRs for security-relevant decisions.** Session or token handling, browser storage, response headers or CSP, new third-party scripts, fonts or services, and telemetry get an ADR in `docs/adr/` in the same PR.
@@ -142,4 +142,4 @@ Security, data protection and auditability are first-class requirements for ever
 - **Content Security Policy.** No inline scripts, `eval`, `dangerouslySetInnerHTML`, or third-party script, style or font origins. The app must run under the CSP and headers recorded in `docs/security/frontend-security.md`.
 - **Dependencies** are added only with a justification in the PR body and the `pnpm-lock.yaml` update in the same PR. Reject packages with known high or critical advisories or without maintenance.
 - **Keep `docs/security/` complete.** The `docs/security/` set must stay complete as listed in `docs/security/README.md`. Register every new security document or runbook in that README and in `docs/security/controls-matrix.md` in the same PR.
-- **Suggest missing controls; do not stay silent.** If a standard control is absent but relevant to the change, flag it in the spec or PR with a short rationale and a proposed approach, and let Moses decide. Known gaps to keep flagging until resolved: no CI runs on pull requests; no CSP or security headers are configured for the deployed app; both `package-lock.json` and `pnpm-lock.yaml` are committed; the language detector caches a locale in `localStorage` (ADR-0004). The full list is `docs/security/accepted-risks.md`.
+- **Suggest missing controls; do not stay silent.** If a standard control is absent but relevant to the change, flag it in the spec or PR with a short rationale and a proposed approach, and let Moses decide. Known gaps to keep flagging until resolved: no CSP or security headers are configured for the deployed app; both `package-lock.json` and `pnpm-lock.yaml` are committed; the language detector caches a locale in `localStorage` (ADR-0004). The full list is `docs/security/accepted-risks.md`.

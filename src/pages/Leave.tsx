@@ -136,7 +136,7 @@ export const Leave = (): FunctionComponent => {
 		units.branches.length > 0 ? leaveQueryOf(search, shownUnits) : undefined,
 		view === "requests"
 	);
-	const window = useLeaveRequests(
+	const timeline = useLeaveRequests(
 		companyId,
 		units.branches.length > 0 ? timelineQueryOf(shownUnits, range) : undefined,
 		view === "timeline"
@@ -208,7 +208,7 @@ export const Leave = (): FunctionComponent => {
 		actions.apply.isPending ||
 		actions.applyOwn.isPending ||
 		actions.record.isPending;
-	const current = view === "mine" ? mine : view === "requests" ? list : window;
+	const current = view === "mine" ? mine : view === "requests" ? list : timeline;
 	const listProblem = problemOf(current, t, view === "mine");
 	// The timeline has no status filter; My leave has no Department. The Branch is the header's scope.
 	const showsStatus = view !== "timeline";
@@ -413,7 +413,7 @@ export const Leave = (): FunctionComponent => {
 							<TabPanel>
 								<LeaveTimeline
 									range={range}
-									requests={window.status === "ready" ? window.items : []}
+									requests={timeline.status === "ready" ? timeline.items : []}
 									onOpen={(request) => {
 										setDialog({ request, mode: "view" });
 									}}

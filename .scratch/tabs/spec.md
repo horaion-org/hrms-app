@@ -15,7 +15,7 @@ Two new shared UI primitives, usable from Storybook and ready for any page:
 1. **Count badge.** A small pill showing a number beside a label. It hides itself when the count is zero, caps large numbers at `99+`, and has a tone for active, inactive and disabled use.
 2. **Tabs.** A compound component made of Tabs, Tab list, Tab, Tab panels and Tab panel. It follows the WAI-ARIA tabs pattern: clicking a tab or pressing the arrow keys switches the view, screen readers announce the tab list and the selected tab, and only the active tab's panel is on the page. A tab can show a Count badge and can be disabled. When there are more tabs than fit, the row scrolls sideways.
 
-Tabs is a thin, styled wrapper around Headless UI's Tabs, which is already a project dependency (see ADR 0001).
+Tabs is a thin, styled wrapper around Headless UI's Tabs, which is already a project dependency (see ADR 0007).
 
 ## User Stories
 
@@ -93,7 +93,7 @@ Tabs is a thin, styled wrapper around Headless UI's Tabs, which is already a pro
 ### Tabs module
 
 - **Location and structure.** It's a UI primitive in the shared UI components area, built as nested component folders following the layout README's nesting convention. There are five parts, Tabs, Tab list, Tab, Tab panels and Tab panel, each with the full component file set, plus one barrel that exports all of them. Named exports only.
-- **Built on Headless UI, per ADR 0001.** Each part is a thin, Tailwind-styled wrapper around the matching `@headlessui/react` component: Tabs wraps `TabGroup`, Tab list wraps `TabList`, Tab wraps `Tab`, Tab panels wraps `TabPanels` and Tab panel wraps `TabPanel`. The library supplies the ARIA roles and attributes, the id wiring, the roving tabindex, keyboard handling and panel unmounting. The wrappers add our looks, our required props and the Count badge. Nothing hand-rolls behaviour the library already provides.
+- **Built on Headless UI, per ADR 0007.** Each part is a thin, Tailwind-styled wrapper around the matching `@headlessui/react` component: Tabs wraps `TabGroup`, Tab list wraps `TabList`, Tab wraps `Tab`, Tab panels wraps `TabPanels` and Tab panel wraps `TabPanel`. The library supplies the ARIA roles and attributes, the id wiring, the roving tabindex, keyboard handling and panel unmounting. The wrappers add our looks, our required props and the Count badge. Nothing hand-rolls behaviour the library already provides.
 - **The dependency.** `@headlessui/react` is already installed but sits in the development dependencies. Tabs ships it at runtime, so it moves to the runtime dependencies.
 - **Tabs (root).**
   - `selectedIndex?: number` and `onChange?: (index: number) => void` make it controlled.
@@ -182,7 +182,7 @@ Tabs is a thin, styled wrapper around Headless UI's Tabs, which is already a pro
 
 ## Further Notes
 
-- ADR 0001 (Headless UI for accessible primitives) was recorded during this design. Tabs is the first component built under it. An earlier draft chose hand-rolling because `@headlessui/react` was missed in the development dependencies. That was corrected before any code was written.
+- ADR 0007 (Headless UI for accessible primitives) was recorded during this design. Tabs is the first component built under it. An earlier draft chose hand-rolling because `@headlessui/react` was missed in the development dependencies. That was corrected before any code was written.
 - A value-based selection API (`value` and `onValueChange` instead of an index) is out of scope. It was dropped so the wrappers stay thin over the library's index-based API.
 - The glossary gained the **Tab** and **Count badge** terms during this design.
 - The Count badge colours and all tab sizes were measured or agreed without a full design file. If a design file arrives with different values, the design wins.

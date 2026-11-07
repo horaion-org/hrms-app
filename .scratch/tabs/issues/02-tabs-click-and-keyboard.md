@@ -1,6 +1,6 @@
 # 02: Tabs on Headless UI: click and keyboard switching
 
-**What to build:** An HR user sees a row of Tabs. The active tab has an Ink Blue 900 label with a 2px underline. Clicking another tab, or moving with the arrow keys, Home or End, swaps the view below without leaving the page. Screen readers announce a named tab list, the tabs and the panel. This slice builds all five parts (Tabs, Tab list, Tab, Tab panels and Tab panel) as thin Tailwind-styled wrappers around `@headlessui/react`'s Tabs (ADR 0001), with uncontrolled index-based selection. Parent spec: `.scratch/tabs/spec.md` (Tabs module).
+**What to build:** An HR user sees a row of Tabs. The active tab has an Ink Blue 900 label with a 2px underline. Clicking another tab, or moving with the arrow keys, Home or End, swaps the view below without leaving the page. Screen readers announce a named tab list, the tabs and the panel. This slice builds all five parts (Tabs, Tab list, Tab, Tab panels and Tab panel) as thin Tailwind-styled wrappers around `@headlessui/react`'s Tabs (ADR 0007), with uncontrolled index-based selection. Parent spec: `.scratch/tabs/spec.md` (Tabs module).
 
 **Blocked by:** None (can start immediately)
 
