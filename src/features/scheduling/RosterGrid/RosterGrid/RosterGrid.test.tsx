@@ -165,4 +165,35 @@ describe("RosterGrid", () => {
 
 		expect(screen.queryByRole("button", { name: /\bnotes? for\b/ })).toBeNull();
 	});
+
+	it("given_aDayNote_when_rendered_then_showsItUnderTheTileNamingTheShortShift", () => {
+		const noted = scheduleAssignmentsFixture().map((assignment, index) =>
+			index === 0
+				? {
+						...assignment,
+						uncoveredShift: {
+							shiftId: "s1",
+							name: "Morning",
+							group: "Day",
+							colour: "#112233",
+							startTime: "09:00",
+							endTime: "17:00",
+						},
+					}
+				: assignment
+		);
+
+		render(
+			<RosterGrid
+				days={daysOf("2026-10-12")}
+				rows={rosterFromAssignments(noted, {
+					start: "2026-10-12",
+					end: "2026-10-18",
+				})}
+				onAssignmentSelect={vi.fn()}
+			/>
+		);
+
+		expect(screen.getByText("Needs cover: Morning")).toBeInTheDocument();
+	});
 });

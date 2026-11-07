@@ -84,10 +84,12 @@ export type IssueFacts = {
 	findings: FindingCounts | null;
 	/** Members whose week before changed since generation. */
 	membersWithChangedStart: number;
+	/** Days whose leave or cover the roster marks (`leaveAndCoverDays`). */
+	leaveAndCoverDays: number;
 };
 
 type IssueSource = {
-	key: "rosterNotes" | "setupIssues" | "changedStarts";
+	key: "rosterNotes" | "setupIssues" | "changedStarts" | "leaveAndCover";
 	count: (facts: IssueFacts) => number;
 };
 
@@ -95,7 +97,8 @@ type IssueSource = {
  * What "Issues n" counts, the one definition of that number: every roster
  * note the engine left (each conflict, each error message and each day's
  * message), every setup issue (each diagnostic), and one for starting
- * points that changed since generation. A note that only qualifies the
+ * points that changed since generation, and each day whose leave or cover
+ * the roster marks. A note that only qualifies the
  * others ("these notes are from generation") is shown but not counted.
  */
 export const ISSUE_SOURCES: ReadonlyArray<IssueSource> = [
@@ -106,11 +109,33 @@ export const ISSUE_SOURCES: ReadonlyArray<IssueSource> = [
 		count: ({ membersWithChangedStart }) =>
 			membersWithChangedStart > 0 ? 1 : 0,
 	},
+	{
+		key: "leaveAndCover",
+		count: ({ leaveAndCoverDays }) => leaveAndCoverDays,
+	},
 ];
 
 /** The Issues count: the sum of `ISSUE_SOURCES`. */
 export const issueCount = (facts: IssueFacts): number =>
 	ISSUE_SOURCES.reduce((total, source) => total + source.count(facts), 0);
+
+/** The days the roster marks for leave or a shift left short, by day and then by name. */
+export const leaveAndCoverDays = (
+	assignments: ReadonlyArray<ScheduleAssignment>
+): Array<ScheduleAssignment> =>
+	assignments
+		.filter(
+			(row) =>
+				row.member &&
+				((row.flag && row.flag !== "UNKNOWN") || row.uncoveredShift)
+		)
+		.sort(
+			(first, second) =>
+				first.day.localeCompare(second.day) ||
+				(first.member?.displayName ?? "").localeCompare(
+					second.member?.displayName ?? ""
+				)
+		);
 
 /** The days changed by hand since generation, by day and then by name. */
 export const changedDays = (

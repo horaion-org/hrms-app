@@ -7,6 +7,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { FindingsMarker } from "@/features/scheduling/FindingsMarker";
 import { formatTimeRange } from "@/features/scheduling/formatShift";
+import { RosterDayNotes } from "@/features/scheduling/RosterGrid/RosterDayNotes";
 import { RosterShift } from "@/features/scheduling/RosterGrid/RosterShift";
 import type { Finding } from "@/features/scheduling/roster/findings/finding";
 import type { FindingNames } from "@/features/scheduling/roster/findings/findingNames";
@@ -58,6 +59,8 @@ export type RosterGridProps = {
 	editedDays?: ReadonlySet<string>;
 	/** Days a change being previewed would touch: outlined, dashed. */
 	previewDays?: ReadonlySet<string>;
+	/** The viewer's own membership, so their own leave opens in My leave and anyone else's in Team requests. */
+	viewerMembershipId?: string;
 	className?: string;
 };
 
@@ -81,6 +84,7 @@ export const RosterGrid = ({
 	onDaySelect,
 	selectedDayKey,
 	editedDays,
+	viewerMembershipId,
 	previewDays,
 	className,
 }: RosterGridProps): FunctionComponent => {
@@ -119,7 +123,7 @@ export const RosterGrid = ({
 			/>
 		);
 	/** A day's cell: the shift worked, a day off or leave, or nothing without a row for it. */
-	const dayContent = (
+	const cellContent = (
 		row: RosterRow,
 		name: string,
 		date: string
@@ -194,6 +198,26 @@ export const RosterGrid = ({
 					onAssignmentSelect?.(row, date, cell);
 				}}
 			/>
+		);
+	};
+	/** A day's cell with what the leave records add under it. */
+	const dayContent = (
+		row: RosterRow,
+		name: string,
+		date: string
+	): ReactNode => {
+		const note = row.days[date]?.note;
+		const content = cellContent(row, name, date);
+		if (!note) return content;
+		return (
+			<>
+				{content}
+				<RosterDayNotes
+					membershipId={row.membershipId}
+					note={note}
+					viewerMembershipId={viewerMembershipId}
+				/>
+			</>
 		);
 	};
 

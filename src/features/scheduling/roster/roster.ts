@@ -23,13 +23,28 @@ export type RosterShiftCell = {
 	end: string;
 	/** The job title's name, as frozen with the shift. */
 	role: string;
+	note?: RosterDayNote;
+};
+
+/** What the leave records add to a day the roster alone cannot say. */
+export type RosterDayNote = {
+	flag?: NonNullable<ScheduleAssignment["flag"]>;
+	leaveRequestId?: string;
+	leaveTypeName?: string;
+	/** The shift this day's absence leaves short, by name; absent when none is. */
+	uncoveredShiftName?: string;
 };
 
 /** Approved leave, named by its leave type when the API names it. */
-export type RosterLeaveCell = { kind: "leave"; leaveTypeName?: string };
+export type RosterLeaveCell = {
+	kind: "leave";
+	leaveTypeName?: string;
+	note?: RosterDayNote;
+};
 
 /** One member's day: a shift, a plain day off, or approved leave. */
-export type RosterCell = RosterShiftCell | { kind: "off" } | RosterLeaveCell;
+export type RosterCell =
+	RosterShiftCell | { kind: "off"; note?: RosterDayNote } | RosterLeaveCell;
 
 /** One member's week. */
 export type RosterRow = {
@@ -71,8 +86,28 @@ const offCellOf = ({
 	return leaveTypeName ? { kind: "leave", leaveTypeName } : { kind: "leave" };
 };
 
+/** The day's note, or nothing on a day with nothing to add. */
+const noteOf = ({
+	flag,
+	leaveRequestId,
+	leaveTypeName,
+	uncoveredShift,
+}: ScheduleAssignment): RosterDayNote | undefined => {
+	if (!flag && !uncoveredShift) return undefined;
+	return {
+		...(flag ? { flag } : {}),
+		...(leaveRequestId ? { leaveRequestId } : {}),
+		...(leaveTypeName ? { leaveTypeName } : {}),
+		...(uncoveredShift ? { uncoveredShiftName: uncoveredShift.name } : {}),
+	};
+};
+
 const cellOf = (assignment: ScheduleAssignment): RosterCell => {
-	if (assignment.shift === null) return offCellOf(assignment);
+	const note = noteOf(assignment);
+	if (assignment.shift === null) {
+		const cell = offCellOf(assignment);
+		return note ? { ...cell, note } : cell;
+	}
 	return {
 		kind: "shift",
 		assignmentId: assignment.assignmentId,
@@ -83,6 +118,7 @@ const cellOf = (assignment: ScheduleAssignment): RosterCell => {
 		start: assignment.shift.startTime,
 		end: assignment.shift.endTime,
 		role: assignment.jobTitle?.name ?? "",
+		...(note ? { note } : {}),
 	};
 };
 

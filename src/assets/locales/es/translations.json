@@ -2188,6 +2188,7 @@
 			"changesCount_other": "Cambiados a mano: {{count}} días",
 			"closePanel": "Cerrar {{title}}",
 			"startingPoints": "Cómo empezó cada persona la semana",
+			"leaveAndCover": "Permisos y cobertura",
 			"details": {
 				"title": "Detalles",
 				"requested": "Solicitado",
@@ -2407,6 +2408,12 @@
 				"published": "Este horario está publicado, así que las horas antes de esta semana ya no pueden cambiar aquí.",
 				"daysSavedHoursNot": "Los días de la semana pasada se guardaron, pero las horas de este mes no. {{reason}} Tus horas siguen aquí: corrígelas y vuelve a guardar."
 			}
+		},
+		"rosterMarkers": {
+			"leaveRequested": "Permiso solicitado",
+			"onLeave": "De permiso",
+			"needsCover": "Necesita cobertura: {{shift}}",
+			"openInLeave": "{{status}}: {{type}}. Abrir en Permisos"
 		},
 		"rosterEdit": {
 			"title": "{{name}} · {{date}}",

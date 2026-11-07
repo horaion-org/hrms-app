@@ -545,6 +545,14 @@ export const fetchScheduleConstraints = (
 	);
 
 const assignmentOffReasonSchema = z.enum(["OFF", "LEAVE"]);
+const rosterDayFlagSchema = z
+	.enum([
+		"LEAVE_REQUESTED",
+		"ON_LEAVE_WHILE_ROSTERED",
+		"NEEDS_DECISION",
+		"UNKNOWN",
+	])
+	.catch("UNKNOWN");
 
 /** Why a member is off on a day: a plain day off, or approved leave. */
 export type AssignmentOffReason = z.infer<typeof assignmentOffReasonSchema>;
@@ -636,6 +644,15 @@ export const scheduleAssignmentSchema = z.object({
 	 * only their own days changed after publication. Absent from an older API.
 	 */
 	lastChange: rosterLastChangeSchema.nullish(),
+	/**
+	 * What the leave records add to the day, only for a viewer who may see this
+	 * member's leave. Absent from an older API.
+	 */
+	flag: rosterDayFlagSchema.nullish(),
+	/** The leave request behind the leave or flag shown. */
+	leaveRequestId: z.string().nullish(),
+	/** The frozen shift this absence leaves short; only on the manager's roster. */
+	uncoveredShift: rosterShiftSchema.nullish(),
 });
 
 /** One member's day in a generated schedule: a frozen shift, or off with its reason. */

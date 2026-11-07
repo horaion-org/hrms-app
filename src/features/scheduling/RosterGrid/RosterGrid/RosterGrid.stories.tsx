@@ -1,4 +1,10 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Decorator, Meta, StoryObj } from "@storybook/react-vite";
+import {
+	createMemoryHistory,
+	createRootRoute,
+	createRouter,
+	RouterProvider,
+} from "@tanstack/react-router";
 import { fn } from "storybook/test";
 import { RosterGrid } from "@/features/scheduling/RosterGrid";
 import { findingNames } from "@/features/scheduling/roster/findings/findingNames";
@@ -37,6 +43,14 @@ export const ShiftSelected: Story = {
 };
 
 const findings = findingsOfEveryKindFixture();
+const LONG_SHIFT = {
+	shiftId: "s-long",
+	name: "Front Desk Afternoon",
+	group: "Morning",
+	colour: "#DC6B47",
+	startTime: "14:00",
+	endTime: "22:00",
+};
 
 /** The engine's findings marked on Ben's row, Friday and Saturday, and Chen's Sunday. */
 export const WithFindings: Story = {
@@ -50,5 +64,46 @@ export const WithFindings: Story = {
 			}),
 			onShowAll: fn(),
 		},
+	},
+};
+
+const notedWeek = scheduleAssignmentsFixture().map((assignment, index) => {
+	if (index === 1)
+		return {
+			...assignment,
+			flag: "LEAVE_REQUESTED" as const,
+			leaveRequestId: "r1",
+			leaveTypeName: "Annual leave",
+		};
+	if (index === 2)
+		return {
+			...assignment,
+			flag: "ON_LEAVE_WHILE_ROSTERED" as const,
+			leaveRequestId: "r2",
+			leaveTypeName: "Medical",
+			uncoveredShift: assignment.shift,
+		};
+	if (index === 5) return { ...assignment, uncoveredShift: LONG_SHIFT };
+	return assignment;
+});
+
+/** A leave note is a router link, so its story needs a router. */
+const withRouter: Decorator = (Story) => {
+	const router = createRouter({
+		routeTree: createRootRoute({ component: () => <Story /> }),
+		history: createMemoryHistory(),
+	});
+	return <RouterProvider router={router} />;
+};
+
+/** What the leave records add under a tile: leave requested, on leave, and a shift left short. */
+export const WithDayNotes: Story = {
+	decorators: [withRouter],
+	args: {
+		rows: rosterFromAssignments(notedWeek, {
+			start: "2026-10-12",
+			end: "2026-10-18",
+		}),
+		viewerMembershipId: "someone-else",
 	},
 };

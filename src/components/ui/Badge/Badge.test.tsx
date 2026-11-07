@@ -109,6 +109,14 @@ describe("Badge", () => {
 		expect(badge).not.toHaveClass("uppercase", "capitalize");
 	});
 
+	it("wraps rather than truncates when compact, for a narrow cell", () => {
+		render(<Badge compact>Needs cover: Front Desk Afternoon</Badge>);
+
+		const badge = screen.getByText("Needs cover: Front Desk Afternoon");
+		expect(badge).toHaveClass("max-w-full", "text-xs", "wrap-anywhere");
+		expect(badge).not.toHaveClass("truncate", "rounded-full");
+	});
+
 	it("merges caller classes and passes span attributes and ref through", () => {
 		const ref = createRef<HTMLSpanElement>();
 		render(

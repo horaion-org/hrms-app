@@ -6,7 +6,10 @@ import type { FunctionComponent } from "@/common/types";
 import { GeneratedRoster } from "@/features/scheduling/GeneratedRoster";
 import { myRosterQuery } from "@/features/scheduling/myRoster/api";
 import { MyRosterChanges } from "@/features/scheduling/MyRosterChanges";
-import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
+import {
+	useCurrentCompanyId,
+	useCurrentMembershipId,
+} from "@/features/organisation/useCurrentCompanyId";
 import { formatPeriod } from "@/features/scheduling/periods";
 
 const route = getRouteApi("/_authenticated/_app/me/schedules/$scheduleId");
@@ -45,6 +48,7 @@ export const MyRosterPage = (): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const language = i18n.resolvedLanguage ?? i18n.language;
 	const companyId = useCurrentCompanyId();
+	const viewerMembershipId = useCurrentMembershipId();
 	const { scheduleId } = route.useParams();
 	const view = route.useSearch();
 	const navigate = route.useNavigate();
@@ -84,6 +88,7 @@ export const MyRosterPage = (): FunctionComponent => {
 				assignments={data.assignments}
 				schedule={data}
 				view={view}
+				viewerMembershipId={viewerMembershipId}
 				withSummary={false}
 				onViewChange={(next) => {
 					void navigate({ search: next, replace: true });
