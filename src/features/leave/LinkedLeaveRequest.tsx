@@ -58,6 +58,7 @@ export const LinkedLeaveRequest = ({
 	return (
 		<LeaveRequestDialog
 			busy={actions.approve.isPending || actions.reject.isPending}
+			lifecycle={{ companyId, own: memberId === undefined, onDone: onClose }}
 			refusal={refusal}
 			request={request}
 			canReview={
@@ -66,9 +67,9 @@ export const LinkedLeaveRequest = ({
 			}
 			onClose={onClose}
 			onCreate={() => {}}
-			onApprove={(record, comment) => {
+			onApprove={(record, comment, takeOffRosteredDays) => {
 				actions.approve.mutate(
-					{ request: record, comment },
+					{ request: record, comment, takeOffRosteredDays },
 					{ onSuccess: onClose, onError: failed }
 				);
 			}}

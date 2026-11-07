@@ -67,7 +67,7 @@ const route = getRouteApi("/_authenticated/_app/leave");
 
 type Dialog = {
 	request?: LeaveRequest;
-	mode: "view" | "reject" | "approve" | "apply" | "applyOwn";
+	mode: "view" | "reject" | "approve" | "apply" | "applyOwn" | "record";
 };
 
 /** The three views, in tab order; the team views exist only with the read key held somewhere. */
@@ -109,6 +109,7 @@ export const Leave = (): FunctionComponent => {
 	// "My leave" asks nothing of the workspace: it stays usable when the workspace is empty or failing.
 	const canRead = access.canAny(LEAVE_READ_KEYS, "anywhere");
 	const canApply = access.canAnywhere("leave_request:create");
+	const canRecord = access.canAnywhere("leave_request:review");
 	const view: View = canRead && search.view ? search.view : "mine";
 	const team = view !== "mine";
 	const workspace = useQuery({ ...workspaceQuery, retry });
@@ -157,10 +158,14 @@ export const Leave = (): FunctionComponent => {
 				status: "ACTIVE",
 				search: settled,
 			},
-			canApply && dialog?.mode === "apply"
+			(canApply && dialog?.mode === "apply") ||
+				(canRecord && dialog?.mode === "record")
 		)
 	);
-	const applying = dialog?.mode === "apply" || dialog?.mode === "applyOwn";
+	const applying =
+		dialog?.mode === "apply" ||
+		dialog?.mode === "applyOwn" ||
+		dialog?.mode === "record";
 	const leaveTypes = useQuery(activeLeaveTypesQuery(companyId, applying));
 	// Anything that changes which requests are listed starts again from the first page.
 	const show = (next: LeaveSearch): void => {
@@ -176,9 +181,13 @@ export const Leave = (): FunctionComponent => {
 		close();
 		setMessage(text);
 	};
-	const approve = (request: LeaveRequest, comment: string): void => {
+	const approve = (
+		request: LeaveRequest,
+		comment: string,
+		takeOffRosteredDays: boolean
+	): void => {
 		actions.approve.mutate(
-			{ request, comment },
+			{ request, comment, takeOffRosteredDays },
 			{
 				onSuccess: () => {
 					done(t("leave.approved", { name: request.displayName }));
@@ -197,7 +206,8 @@ export const Leave = (): FunctionComponent => {
 		actions.approve.isPending ||
 		actions.reject.isPending ||
 		actions.apply.isPending ||
-		actions.applyOwn.isPending;
+		actions.applyOwn.isPending ||
+		actions.record.isPending;
 	const current = view === "mine" ? mine : view === "requests" ? list : window;
 	const listProblem = problemOf(current, t, view === "mine");
 	// The timeline has no status filter; My leave has no Department. The Branch is the header's scope.
@@ -241,16 +251,29 @@ export const Leave = (): FunctionComponent => {
 				{t("leave.applyOwn")}
 			</Button>
 		) : (
-			canApply &&
 			!noBranches && (
-				<Button
-					leadingIcon={<PlusIcon />}
-					onClick={() => {
-						setDialog({ mode: "apply" });
-					}}
-				>
-					{t("leave.apply")}
-				</Button>
+				<>
+					{canRecord && (
+						<Button
+							variant="secondary"
+							onClick={() => {
+								setDialog({ mode: "record" });
+							}}
+						>
+							{t("leave.recordAction")}
+						</Button>
+					)}
+					{canApply && (
+						<Button
+							leadingIcon={<PlusIcon />}
+							onClick={() => {
+								setDialog({ mode: "apply" });
+							}}
+						>
+							{t("leave.apply")}
+						</Button>
+					)}
+				</>
 			)
 		);
 	const paging = (page: number): void => {
@@ -418,19 +441,26 @@ export const Leave = (): FunctionComponent => {
 					refusal={refusal}
 					request={dialog.request}
 					employees={
-						dialog.mode === "apply"
+						dialog.mode === "apply" || dialog.mode === "record"
 							? {
 									search: employeeSearch,
 									onSearch: setEmployeeSearch,
 									options: (people.data?.items ?? []).filter((person) =>
 										access.can(
-											"leave_request:create",
+											dialog.mode === "record"
+												? "leave_request:review"
+												: "leave_request:create",
 											recordScope(person.departmentId)
 										)
 									),
 								}
 							: undefined
 					}
+					lifecycle={{
+						companyId,
+						own: dialog.request?.membershipId === ownMembershipId,
+						onDone: done,
+					}}
 					onApprove={approve}
 					onClose={close}
 					onCreate={(membershipId, body) => {
@@ -448,7 +478,27 @@ export const Leave = (): FunctionComponent => {
 								if (next.refreshMembers) void people.refetch();
 							},
 						};
-						if (membershipId === null) actions.applyOwn.mutate(body, handlers);
+						if (dialog.mode === "record" && membershipId !== null) {
+							actions.record.mutate(
+								{
+									membershipId,
+									body: {
+										leaveType: body.leaveType,
+										startDate: body.startDate,
+										endDate: body.endDate,
+										remark: body.notes ?? "",
+										takeOffRosteredDays: body.takeOffRosteredDays ?? false,
+									},
+								},
+								{
+									...handlers,
+									onSuccess: (created) => {
+										done(t("leave.recorded", { name: created.displayName }));
+									},
+								}
+							);
+						} else if (membershipId === null)
+							actions.applyOwn.mutate(body, handlers);
 						else actions.apply.mutate({ membershipId, body }, handlers);
 					}}
 					onReject={(request, reason) => {

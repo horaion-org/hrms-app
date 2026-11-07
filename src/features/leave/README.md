@@ -3,7 +3,7 @@
 The authenticated `/leave` route, in three tabs. **My leave** is every member's own requests and their own
 applications (`/companies/{c}/me/leave-requests`), with nothing to grant. **Team requests** and **Team
 timeline** are the company's requests one Branch at a time, read through the person's grants, with applying
-on a member's behalf, approving and rejecting. Everything comes from the API (`features/leave/api.ts`); nothing
+on a member's behalf, recording approved leave, approving, rejecting, changing and cancelling. Everything comes from the API (`features/leave/api.ts`); nothing
 is sampled or kept in page state beyond the timeline's window.
 
 ## Shape
@@ -12,7 +12,7 @@ is sampled or kept in page state beyond the timeline's window.
   active-Branches query that drives the country and Branch filters, `activeLeaveTypesQuery` (the company's
   active leave types, asked for once an application opens), and the writes: apply (own or on behalf, with
   remarks, required when the leave type asks for a reason), approve (with an optional comment) and reject (with
-  a reason). A request's `leaveType` is any code: a company names its own types. Its admins manage them under
+  a reason), plus withdraw, record, change and cancel, the history and the rostered days. A request's `leaveType` is any code: a company names its own types. Its admins manage them under
   Settings › Leave (`features/leaveTypes`, `features/settings/LeaveTypesSettings`); every change there reloads
   the `leave-types` and `leave` queries.
 - `leaveTypeLabel.ts` — what a request's leave type is called: the company's name, or the app's words for a code
@@ -32,7 +32,9 @@ is sampled or kept in page state beyond the timeline's window.
   choosing from the grouped leave types, with remarks that become a required Reason when the type asks for one.
   The shell holds the review (its step and both notes) and the footer; its parts are `LeaveRequestDetails`
   (what the request says), `LeaveDecisionStep` (the reason or comment being confirmed) and `LeaveApplyForm`
-  (a new application, with its own state and footer).
+  (a new application, with its own state and footer). `RosteredDaysNotice` names the days that hold a shift;
+  a reviewer must tick it, and nothing can be confirmed until those days are read. `LeaveRequestLifecycle` is
+  the history, Withdraw on one's own pending request, and Change and Cancel on approved leave.
 - `fixtures.ts` — API-shaped rows for stories and component tests.
 
 `src/pages/Leave.tsx` composes them and owns the dialog, the decisions and the status line.
@@ -41,8 +43,9 @@ is sampled or kept in page state beyond the timeline's window.
 
 The Module is offered to everyone, for their own leave. The team tabs appear for anyone holding
 `leave_request:read` anywhere; the API lists only the requests of people in the units where it is held. Apply appears with `leave_request:create` held anywhere and offers only
-the people it is held for; Approve and Reject appear on a pending request only with `leave_request:review` at
-that person's Department. The API checks every request regardless.
+the people it is held for; Approve and Reject appear on a pending request, and Change and Cancel on approved leave, only with
+`leave_request:review` at that person's Department. Record appears with that key held anywhere. Withdraw needs no
+key: it is the member's own pending request. The API checks every request regardless.
 
 ## Verification
 

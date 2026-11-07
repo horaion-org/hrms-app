@@ -7,16 +7,24 @@ import {
 import { ApiProblemError } from "@/common/problem";
 import {
 	approveLeaveRequest,
+	cancelLeave,
+	changeLeave,
 	createLeaveRequest,
 	createMyLeaveRequest,
 	leaveRequestsQuery,
 	myLeaveRequestsQuery,
 	pendingLeaveCountQuery,
+	recordLeave,
 	rejectLeaveRequest,
+	rosteredDaysKey,
+	withdrawLeave,
+	type ChangeLeaveBody,
+	type RecordLeaveBody,
 	type LeaveRequestBody,
 	type LeaveQuery,
 	type LeaveRequest,
 } from "@/features/leave/api";
+import { isRosterClash } from "@/features/leave/leaveRefusal";
 import type { ListPage } from "@/features/organisation/api";
 import { LEAVE_READ_KEYS } from "@/features/workspace/permissionKeys";
 import { useAccess } from "@/features/workspace/useAccess";
@@ -90,7 +98,11 @@ export type LeaveActions = {
 	approve: UseMutationResult<
 		LeaveRequest,
 		Error,
-		{ request: LeaveRequest; comment: string }
+		{
+			request: LeaveRequest;
+			comment: string;
+			takeOffRosteredDays?: boolean;
+		}
 	>;
 	reject: UseMutationResult<
 		LeaveRequest,
@@ -104,6 +116,23 @@ export type LeaveActions = {
 	>;
 	/** The caller's own application. */
 	applyOwn: UseMutationResult<LeaveRequest, Error, LeaveRequestBody>;
+	/** A reviewer records approved leave on a member's behalf. */
+	record: UseMutationResult<
+		LeaveRequest,
+		Error,
+		{ membershipId: string; body: RecordLeaveBody }
+	>;
+	change: UseMutationResult<
+		LeaveRequest,
+		Error,
+		{ request: LeaveRequest; body: ChangeLeaveBody }
+	>;
+	cancel: UseMutationResult<
+		LeaveRequest,
+		Error,
+		{ request: LeaveRequest; remark: string }
+	>;
+	withdraw: UseMutationResult<LeaveRequest, Error, LeaveRequest>;
 };
 
 /** Deciding and applying; each success reloads every list and window of the company's requests. */
@@ -118,23 +147,33 @@ export const useLeaveActions = (
 			client.invalidateQueries({ queryKey: ["notifications", companyId] }),
 		]);
 	};
+	// A clash the screen did not know of means its rostered days are stale: read
+	// them again, so the confirmation appears instead of the same refusal forever.
+	const refreshRosteredDays = (error: Error): void => {
+		if (isRosterClash(error))
+			void client.invalidateQueries({ queryKey: rosteredDaysKey(companyId) });
+	};
 	return {
 		approve: useMutation({
 			meta: { successMessage: ownConfirmation ? false : undefined },
 			mutationFn: ({
 				request,
 				comment,
+				takeOffRosteredDays,
 			}: {
 				request: LeaveRequest;
 				comment: string;
+				takeOffRosteredDays?: boolean;
 			}) =>
 				approveLeaveRequest(
 					companyId,
 					request.membershipId,
 					request.leaveRequestId,
-					comment
+					comment,
+					takeOffRosteredDays
 				),
 			onSuccess: reload,
+			onError: refreshRosteredDays,
 		}),
 		reject: useMutation({
 			meta: { successMessage: ownConfirmation ? false : undefined },
@@ -166,6 +205,43 @@ export const useLeaveActions = (
 		applyOwn: useMutation({
 			mutationFn: (body: LeaveRequestBody) =>
 				createMyLeaveRequest(companyId, body),
+			onSuccess: reload,
+		}),
+		record: useMutation({
+			mutationFn: ({
+				membershipId,
+				body,
+			}: {
+				membershipId: string;
+				body: RecordLeaveBody;
+			}) => recordLeave(companyId, membershipId, body),
+			onSuccess: reload,
+			onError: refreshRosteredDays,
+		}),
+		change: useMutation({
+			mutationFn: ({
+				request,
+				body,
+			}: {
+				request: LeaveRequest;
+				body: ChangeLeaveBody;
+			}) => changeLeave(companyId, request, body),
+			onSuccess: reload,
+			onError: refreshRosteredDays,
+		}),
+		cancel: useMutation({
+			mutationFn: ({
+				request,
+				remark,
+			}: {
+				request: LeaveRequest;
+				remark: string;
+			}) => cancelLeave(companyId, request, remark),
+			onSuccess: reload,
+		}),
+		withdraw: useMutation({
+			mutationFn: (request: LeaveRequest) =>
+				withdrawLeave(companyId, request.leaveRequestId),
 			onSuccess: reload,
 		}),
 	};

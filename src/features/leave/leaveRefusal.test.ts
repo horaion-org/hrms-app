@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ApiProblemError } from "@/common/problem";
 import { authTestI18n } from "@/features/auth/testingI18n";
-import { applyRefusal } from "@/features/leave/leaveRefusal";
+import { applyRefusal, isRosterClash } from "@/features/leave/leaveRefusal";
 
 const t = authTestI18n.t;
 const problem = (
@@ -38,5 +38,13 @@ describe("applyRefusal", () => {
 		).toEqual({
 			type: "This leave type is no longer offered. Choose another.",
 		});
+	});
+});
+
+describe("isRosterClash", () => {
+	it("recognises only the roster clash", () => {
+		expect(isRosterClash(problem(409, "LEAVE_CLASHES_WITH_ROSTER"))).toBe(true);
+		expect(isRosterClash(problem(409, "LEAVE_REQUEST_OVERLAPS"))).toBe(false);
+		expect(isRosterClash(new Error("offline"))).toBe(false);
 	});
 });

@@ -7,9 +7,12 @@ export type {
 } from "@/features/leave/api";
 
 /** The Badge tone each status is drawn with. */
-export const statusTone: Record<LeaveStatus, "success" | "warning" | "error"> =
-	{
-		APPROVED: "success",
-		PENDING: "warning",
-		REJECTED: "error",
-	};
+export const statusTone: Record<
+	LeaveStatus,
+	"success" | "warning" | "error" | "neutral"
+> = {
+	APPROVED: "success",
+	PENDING: "warning",
+	REJECTED: "error",
+	CANCELLED: "neutral",
+};

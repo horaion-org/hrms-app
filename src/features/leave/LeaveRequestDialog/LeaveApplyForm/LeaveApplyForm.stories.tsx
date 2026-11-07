@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactElement } from "react";
 import { I18nextProvider } from "react-i18next";
 import type { Meta, StoryObj } from "@storybook/react-vite";
@@ -11,9 +12,11 @@ const meta = {
 	component: LeaveApplyForm,
 	decorators: [
 		(Story): ReactElement => (
-			<I18nextProvider i18n={authTestI18n}>
-				<Story />
-			</I18nextProvider>
+			<QueryClientProvider client={new QueryClient()}>
+				<I18nextProvider i18n={authTestI18n}>
+					<Story />
+				</I18nextProvider>
+			</QueryClientProvider>
 		),
 	],
 	args: {

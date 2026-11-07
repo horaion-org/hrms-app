@@ -49,6 +49,24 @@ const NOTIFICATION_TYPES = {
 		category: "leave",
 		title: "notifications.types.LEAVE_REQUEST_REJECTED",
 	},
+	LEAVE_REQUEST_RECORDED: {
+		icon: TickIcon,
+		tone: "success",
+		category: "leave",
+		title: "notifications.types.LEAVE_REQUEST_RECORDED",
+	},
+	LEAVE_REQUEST_CHANGED: {
+		icon: TickIcon,
+		tone: "warning",
+		category: "leave",
+		title: "notifications.types.LEAVE_REQUEST_CHANGED",
+	},
+	LEAVE_REQUEST_CANCELLED: {
+		icon: CrossIcon,
+		tone: "warning",
+		category: "leave",
+		title: "notifications.types.LEAVE_REQUEST_CANCELLED",
+	},
 	SCHEDULE_READY: {
 		icon: PublishIcon,
 		tone: "warning",

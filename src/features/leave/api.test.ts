@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { leaveRequestSchema } from "@/features/leave/api";
+import { leaveRequestSchema, rosteredDaysQuery } from "@/features/leave/api";
 import { leaveFixture } from "@/features/leave/fixtures";
 
 describe("leaveRequestSchema", () => {
@@ -19,5 +19,21 @@ describe("leaveRequestSchema", () => {
 		const parsed = leaveRequestSchema.parse(older);
 		expect(parsed.leaveTypeId).toBeNull();
 		expect(parsed.leaveTypeName).toBeNull();
+	});
+});
+
+describe("leave lifecycle paths", () => {
+	it("given_noMember_when_rosteredDaysAreAsked_then_keyedOnTheCaller", () => {
+		expect(
+			rosteredDaysQuery("c1", { start: "2026-06-01", end: "2026-06-02" })
+				.queryKey
+		).toEqual([
+			"leave",
+			"c1",
+			"rostered-days",
+			"me",
+			"2026-06-01",
+			"2026-06-02",
+		]);
 	});
 });

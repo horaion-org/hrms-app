@@ -29,6 +29,9 @@ const LEAVE = `GET ${LEAVE_PATH}`;
 const AUDIT_EVENTS = "GET /api/v1/companies/c-1/audit-events";
 const APPROVE =
 	"POST /api/v1/companies/c-1/member-profiles/m-aisha/leave-requests/leave-aisha/approval";
+// Approving reads the member's rostered days first, to ask about any clash.
+const ROSTERED_DAYS =
+	"GET /api/v1/companies/c-1/member-profiles/m-aisha/leave-requests/rostered-days";
 
 let app: OpenedApp | undefined;
 beforeEach(() => {
@@ -101,6 +104,7 @@ const routes = (
 	[ME]: currentUserReply(),
 	[WORKSPACE]: workspaceReply(permissions),
 	[LEAVE]: leaveByStatus,
+	[ROSTERED_DAYS]: { status: 200, body: [] },
 	[AUDIT_EVENTS]: page(
 		[
 			{

@@ -47,7 +47,9 @@ export const LeaveTimeline = ({
 	const weeks = Array.from({ length: Math.ceil(days.length / 7) }, (_, index) =>
 		days.slice(index * 7, index * 7 + 7)
 	);
-	const drawn = requests.filter((request) => request.status !== "REJECTED");
+	const drawn = requests.filter(
+		(request) => request.status === "PENDING" || request.status === "APPROVED"
+	);
 	const employees = [
 		...new Map(
 			drawn.map((request) => [request.membershipId, request])
