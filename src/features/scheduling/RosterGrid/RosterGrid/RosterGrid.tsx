@@ -4,32 +4,29 @@ import { useTranslation } from "react-i18next";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { Avatar } from "@/components/ui/Avatar";
-import { Badge } from "@/components/ui/Badge";
-import { FindingsMarker } from "@/features/scheduling/FindingsMarker";
 import { formatTimeRange } from "@/features/scheduling/formatShift";
-import { RosterDayNotes } from "@/features/scheduling/RosterGrid/RosterDayNotes";
+import { RosterHeaderCount } from "@/features/scheduling/RosterGrid/RosterHeaderCount";
 import { RosterShift } from "@/features/scheduling/RosterGrid/RosterShift";
-import type { Finding } from "@/features/scheduling/roster/findings/finding";
-import type { FindingNames } from "@/features/scheduling/roster/findings/findingNames";
-import {
-	cellKey,
-	type GridFindings,
-} from "@/features/scheduling/roster/findings/findingsOnGrid";
+import type { GridFindings } from "@/features/scheduling/roster/findings/findingsOnGrid";
 import {
 	hoursInDays,
 	type RosterRow,
 	type RosterShiftCell,
 } from "@/features/scheduling/roster/roster";
+import {
+	CELL_MARK_TITLE_KEYS,
+	cellIssues,
+	cellMark,
+	dayIssueCount,
+	rowIssueCount,
+	showsRole,
+	tileStatusKey,
+	type CellMark,
+	type HeaderCount,
+	type IssuesAbout,
+} from "@/features/scheduling/roster/rosterMarks";
 import { rosterCellKey } from "@/features/scheduling/rosterChanges/rosterEdit";
-import { rosterLooks } from "@/features/scheduling/rosterLooks";
-
-/** The engine's findings to mark on the week, and the names they are shown with. */
-export type RosterGridFindings = {
-	placed: GridFindings;
-	names: FindingNames;
-	/** Opens the findings panel from a marker's popover. */
-	onShowAll: () => void;
-};
+import { cellMarkLooks, rosterLooks } from "@/features/scheduling/rosterLooks";
 
 export type RosterGridProps = {
 	/** The seven ISO dates shown, Monday first. */
@@ -44,10 +41,19 @@ export type RosterGridProps = {
 		day: string,
 		shift: RosterShiftCell
 	) => void;
-	/** Marks findings on cells, rows and days; none without. */
-	findings?: RosterGridFindings;
-	/** A short note under a member's name, by row key: where they started the week. */
-	rowNotes?: ReadonlyMap<string, string>;
+	/** The engine's findings on the days shown, by where they are marked (`placeFindings`); none without. */
+	findings?: GridFindings;
+	/**
+	 * Whether a cell's findings and day notes mark it (a dot in the tile);
+	 * false on a member's own roster, which marks only their changed days
+	 * and reads their own leave in the tile's words.
+	 */
+	showsIssues?: boolean;
+	/**
+	 * A row's or day's header count was chosen: opens the Issues list for it,
+	 * giving focus back to `from` when it closes. No header counts without it.
+	 */
+	onShowIssues?: (about: IssuesAbout, from: HTMLElement) => void;
 	/**
 	 * A day off or leave was chosen; without it those days aren't buttons.
 	 * Only someone who may change the roster gets it.
@@ -55,16 +61,17 @@ export type RosterGridProps = {
 	onDaySelect?: (row: RosterRow, day: string) => void;
 	/** The chosen day off or leave, as `rosterCellKey` names it. */
 	selectedDayKey?: string;
-	/** Days changed by hand since generation, as `rosterCellKey` names them: marked with a dot. */
+	/** Days changed by hand since generation, as `rosterCellKey` names them: marked with a ring unless an issue's dot wins. */
 	editedDays?: ReadonlySet<string>;
 	/** Days a change being previewed would touch: outlined, dashed. */
 	previewDays?: ReadonlySet<string>;
-	/** The viewer's own membership, so their own leave opens in My leave and anyone else's in Team requests. */
-	viewerMembershipId?: string;
+	/**
+	 * A panel is open beside the grid: tiles show their time only, in tighter
+	 * cells, so the week stays in view; the panel names the rest.
+	 */
+	compact?: boolean;
 	className?: string;
 };
-
-const NO_FINDINGS: ReadonlyArray<Finding> = [];
 
 /** A member's day as `rosterCellKey` names it; none once the member no longer resolves. */
 const dayKey = (row: RosterRow, date: string): string | undefined =>
@@ -72,7 +79,10 @@ const dayKey = (row: RosterRow, date: string): string | undefined =>
 
 /**
  * Who works when in one week: a row per member and a column per day, each
- * day a shift, a day off or leave.
+ * day a shift, a day off or leave. A cell carries its content plus at most
+ * one mark in its tile's corner (`cellMark`): a dot when it needs a look,
+ * else a ring when it was changed by hand; its words are in the panel the
+ * tile opens.
  */
 export const RosterGrid = ({
 	days,
@@ -80,12 +90,13 @@ export const RosterGrid = ({
 	selectedShiftId,
 	onAssignmentSelect,
 	findings,
-	rowNotes,
+	showsIssues = true,
+	onShowIssues,
 	onDaySelect,
 	selectedDayKey,
 	editedDays,
-	viewerMembershipId,
 	previewDays,
+	compact = false,
 	className,
 }: RosterGridProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
@@ -102,26 +113,46 @@ export const RosterGrid = ({
 	});
 	const dayName = (date: string): string =>
 		fullDay.format(dayjs(date).toDate());
-	const cellFindings = (row: RosterRow, date: string): ReadonlyArray<Finding> =>
-		(row.membershipId !== null &&
-			findings?.placed.byCell.get(cellKey(row.membershipId, date))) ||
-		NO_FINDINGS;
-	/** A marker for `marked`, or nothing without findings to mark. */
-	const marker = (
-		marked: ReadonlyArray<Finding>,
-		label: string,
-		className?: string
+	/** A header's count, or nothing when there is nothing to count or nowhere to show it. */
+	const headerCount = (
+		count: HeaderCount | undefined,
+		about: IssuesAbout,
+		label: string
 	): ReactNode =>
-		findings &&
-		marked.length > 0 && (
-			<FindingsMarker
-				className={className}
-				findings={marked}
+		showsIssues &&
+		onShowIssues &&
+		count && (
+			<RosterHeaderCount
+				count={count}
 				label={label}
-				names={findings.names}
-				onShowAll={findings.onShowAll}
+				onSelect={(from) => {
+					onShowIssues(about, from);
+				}}
 			/>
 		);
+	/** A day's one mark and what its tile's label adds for it: "…, changed, needs a look: 2". */
+	const cellMarking = (
+		row: RosterRow,
+		date: string,
+		label: string
+	): { mark: CellMark | undefined; label: string } => {
+		const key = dayKey(row, date);
+		const changed = key !== undefined && editedDays?.has(key) === true;
+		const issues = cellIssues(findings, row, date);
+		const named = changed
+			? t("scheduling.rosterEdit.edited", { label })
+			: label;
+		return {
+			mark: cellMark({ issues, changed, showsIssues }),
+			label:
+				showsIssues && issues > 0
+					? t("scheduling.findings.marker.tileLabel", {
+							label: named,
+							count: issues,
+						})
+					: named,
+		};
+	};
 	/** A day's cell: the shift worked, a day off or leave, or nothing without a row for it. */
 	const cellContent = (
 		row: RosterRow,
@@ -131,33 +162,52 @@ export const RosterGrid = ({
 		const cell = row.days[date];
 		if (cell === undefined) return null;
 		const key = dayKey(row, date);
-		const edited = key !== undefined && editedDays?.has(key) === true;
 		if (cell.kind !== "shift") {
 			const text =
 				(cell.kind === "leave" && cell.leaveTypeName) ||
 				t(`scheduling.detail.${cell.kind}`);
+			// Read in words, not the tile's capitals: "Aisha Rahman, Sat: Day off".
+			const { mark, label } = cellMarking(
+				row,
+				date,
+				t("scheduling.detail.dayLabel", {
+					name,
+					day: weekday.format(dayjs(date).toDate()),
+					kind:
+						cell.kind === "leave"
+							? (cell.leaveTypeName ?? t("scheduling.rosterEdit.onLeave"))
+							: t("scheduling.rosterEdit.dayOff"),
+				})
+			);
 			const looks = joinClassNames(
-				"flex h-14 w-full items-center justify-center rounded border px-1 text-center text-xs font-medium",
+				"relative flex w-full items-center justify-center rounded border text-center text-xs font-medium",
+				// Beside an open panel, as tall as a compact shift tile, so a row keeps one height.
+				compact ? "h-10 px-2.5" : "h-14 px-1",
+				// Words kept clear of the mark in the corner, as on a shift tile.
+				mark && "pr-3.5",
 				rosterLooks[cell.kind]
 			);
+			const markSpot = mark && (
+				<span
+					aria-hidden="true"
+					className={cellMarkLooks[mark]}
+					title={t(CELL_MARK_TITLE_KEYS[mark])}
+				/>
+			);
 			if (!onDaySelect || row.membershipId === null)
-				return <span className={looks}>{text}</span>;
-			// Read in words, not the tile's capitals: "Aisha Rahman, Sat: Day off".
-			const label = t("scheduling.detail.dayLabel", {
-				name,
-				day: weekday.format(dayjs(date).toDate()),
-				kind:
-					cell.kind === "leave"
-						? (cell.leaveTypeName ?? t("scheduling.rosterEdit.onLeave"))
-						: t("scheduling.rosterEdit.dayOff"),
-			});
+				return (
+					<span className={looks}>
+						{markSpot}
+						{text}
+						{/* The tile is not a button here, so its mark is said in hidden text. */}
+						{mark && <span className="sr-only">{label}</span>}
+					</span>
+				);
 			return (
 				<button
+					aria-label={label}
 					aria-pressed={key === selectedDayKey}
 					type="button"
-					aria-label={
-						edited ? t("scheduling.rosterEdit.edited", { label }) : label
-					}
 					className={joinClassNames(
 						looks,
 						"cursor-pointer hover:brightness-98 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-blue-500",
@@ -167,6 +217,7 @@ export const RosterGrid = ({
 						onDaySelect(row, date);
 					}}
 				>
+					{markSpot}
 					{text}
 				</button>
 			);
@@ -175,49 +226,37 @@ export const RosterGrid = ({
 			{ startTime: cell.start, endTime: cell.end },
 			t
 		);
+		const statusKey = tileStatusKey(cell.note, showsIssues);
+		const status = statusKey && t(`scheduling.rosterMarkers.${statusKey}`);
 		const shiftLabel = t("scheduling.detail.shiftLabel", {
 			name,
 			day: weekday.format(dayjs(date).toDate()),
 			time,
 		});
-		const label = edited
-			? t("scheduling.rosterEdit.edited", { label: shiftLabel })
-			: shiftLabel;
-		const notes = cellFindings(row, date).length;
+		const { mark, label } = cellMarking(
+			row,
+			date,
+			status
+				? t("scheduling.rosterMarkers.tileStatus", {
+						label: shiftLabel,
+						status,
+					})
+				: shiftLabel
+		);
 		return (
 			<RosterShift
+				compact={compact}
+				label={label}
+				mark={mark}
 				selected={cell.assignmentId === selectedShiftId}
 				shift={cell}
+				showsRole={showsRole(cell.role, row.jobTitle)}
+				status={status}
 				timeRange={time}
-				label={
-					notes > 0
-						? t("scheduling.findings.marker.tileLabel", { label, count: notes })
-						: label
-				}
 				onSelect={() => {
 					onAssignmentSelect?.(row, date, cell);
 				}}
 			/>
-		);
-	};
-	/** A day's cell with what the leave records add under it. */
-	const dayContent = (
-		row: RosterRow,
-		name: string,
-		date: string
-	): ReactNode => {
-		const note = row.days[date]?.note;
-		const content = cellContent(row, name, date);
-		if (!note) return content;
-		return (
-			<>
-				{content}
-				<RosterDayNotes
-					membershipId={row.membershipId}
-					note={note}
-					viewerMembershipId={viewerMembershipId}
-				/>
-			</>
 		);
 	};
 
@@ -228,27 +267,36 @@ export const RosterGrid = ({
 				className
 			)}
 		>
-			<table className="w-full min-w-200 table-fixed border-collapse text-neutral-900">
+			<table
+				className={joinClassNames(
+					"w-full table-fixed border-collapse text-neutral-900",
+					compact ? "min-w-160" : "min-w-200"
+				)}
+			>
 				<caption className="sr-only">{t("scheduling.detail.roster")}</caption>
 				<colgroup>
-					<col className="w-50" />
+					<col className={compact ? "w-28 sm:w-32" : "w-28 sm:w-50"} />
 				</colgroup>
 				<thead>
 					<tr className="bg-neutral-200">
-						<th className="h-16 px-3 text-left text-sm font-bold" scope="col">
+						{/* The staff column stays in view while the days scroll, as in the availability grid. */}
+						<th
+							className="sticky left-0 z-10 h-16 bg-neutral-200 px-3 text-left text-sm font-bold"
+							scope="col"
+						>
 							{t("scheduling.detail.staff")}
 						</th>
 						{days.map((date) => {
-							const dayFindings =
-								findings?.placed.byDate.get(date) ?? NO_FINDINGS;
+							const count = dayIssueCount(findings, date);
 							return (
 								<th key={date} className="h-16 px-2 text-center" scope="col">
 									<span className="flex items-center justify-center gap-1 text-sm font-bold">
 										{weekday.format(dayjs(date).toDate())}
-										{marker(
-											dayFindings,
+										{headerCount(
+											count,
+											{ kind: "date", date },
 											t("scheduling.findings.marker.date", {
-												count: dayFindings.length,
+												count: count?.count,
 												day: dayName(date),
 											})
 										)}
@@ -264,32 +312,38 @@ export const RosterGrid = ({
 				<tbody>
 					{rows.map((row) => {
 						const name = row.name ?? t("scheduling.detail.formerMember");
-						const rowFindings =
-							(row.membershipId !== null &&
-								findings?.placed.byRow.get(row.membershipId)) ||
-							NO_FINDINGS;
+						const count = rowIssueCount(findings, row, days);
 						return (
 							<tr key={row.key} className="border-t border-neutral-400">
 								<th
-									className="bg-neutral-50 px-3 py-3 text-left font-normal"
+									className="sticky left-0 z-10 bg-neutral-50 px-3 py-3 text-left font-normal"
 									scope="row"
 								>
+									{/* On a phone, or beside an open panel, the row header drops the avatar (and on a phone the job title too); the panel says the rest. */}
 									<span className="flex items-center gap-3">
-										<Avatar className="size-10! text-base!" name={name} />
+										<Avatar
+											name={name}
+											className={joinClassNames(
+												"size-10! text-base!",
+												compact ? "hidden!" : "max-sm:hidden"
+											)}
+										/>
 										<span className="min-w-0">
 											<span className="flex items-center gap-1">
 												<span className="truncate text-xs font-semibold">
 													{name}
 												</span>
-												{marker(
-													rowFindings,
-													t("scheduling.findings.marker.row", {
-														count: rowFindings.length,
-														name,
-													})
-												)}
+												{row.membershipId !== null &&
+													headerCount(
+														count,
+														{ kind: "member", membershipId: row.membershipId },
+														t("scheduling.findings.marker.row", {
+															count: count?.count,
+															name,
+														})
+													)}
 											</span>
-											<span className="mt-0.5 block truncate text-[0.625rem]">
+											<span className="mt-0.5 block truncate text-[0.625rem] max-sm:hidden">
 												{row.jobTitle ?? row.employeeCode}
 											</span>
 											<span className="block text-[0.625rem]">
@@ -297,44 +351,23 @@ export const RosterGrid = ({
 													count: hoursInDays(row, days),
 												})}
 											</span>
-											{rowNotes?.has(row.key) && (
-												<Badge className="mt-1 text-[0.625rem]! leading-4!">
-													{rowNotes.get(row.key) ?? ""}
-												</Badge>
-											)}
 										</span>
 									</span>
 								</th>
 								{days.map((date) => {
-									const marked = cellFindings(row, date);
 									const key = dayKey(row, date);
 									return (
 										<td
 											key={date}
 											className={joinClassNames(
-												"relative p-3 align-middle",
+												"align-middle",
+												compact ? "p-1" : "p-3",
 												key !== undefined &&
 													previewDays?.has(key) &&
 													"outline-2 -outline-offset-4 outline-dashed outline-ink-blue-500"
 											)}
 										>
-											{key !== undefined && editedDays?.has(key) && (
-												<span
-													aria-hidden="true"
-													className="absolute top-1 left-1 size-2 rounded-full bg-ink-blue-500"
-													title={t("scheduling.rosterEdit.editedCell")}
-												/>
-											)}
-											{dayContent(row, name, date)}
-											{marker(
-												marked,
-												t("scheduling.findings.marker.cell", {
-													count: marked.length,
-													name,
-													day: dayName(date),
-												}),
-												"absolute top-0.5 right-0.5"
-											)}
+											{cellContent(row, name, date)}
 										</td>
 									);
 								})}

@@ -94,4 +94,23 @@ describe("FindingList", () => {
 			screen.getByText("Shift Lunch Rush is shorter than one block.").tagName
 		).toBe("Q");
 	});
+
+	it("given_findingsOfEachTone_when_listed_then_eachLeadsWithItsOutlineIcon", () => {
+		const info = findings.diagnostics.find(
+			({ code }) => code === "SHIFT_TOO_SHORT"
+		)!;
+		render(
+			<FindingList
+				findings={[morningCover, { kind: "diagnostic", diagnostic: info }]}
+				names={names}
+			/>
+		);
+
+		const [note, information] = screen
+			.getAllByRole("listitem")
+			.map((item) => item.querySelector("svg"));
+		expect(note).toHaveAttribute("aria-hidden", "true");
+		expect(note).toHaveClass("text-warning-900");
+		expect(information).toHaveClass("text-ink-blue-700");
+	});
 });

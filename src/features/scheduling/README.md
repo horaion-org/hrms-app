@@ -142,20 +142,22 @@ constraint dialogs.
    (`SCHEDULE_NOTICES`: the notices shown only when someone must act, or why there is no roster) and
    `roster/rosterSummary.ts` (`SUMMARY_SEGMENTS` for the summary line, `ISSUE_SOURCES` for the one Issues count).
    The route's search (`roster/rosterSearch.ts`, `validateSearch`) holds the week and the side panel (`panel` =
-   issues | changes | details, or `cell` for a chosen day), so a reload or a link keeps them.
+   issues | changes | details, or `cell` for a chosen day; Issues opened from a header adds `member` or `date`), so a
+   reload or a link keeps them.
 3. Queries `schedules/api.ts` — `scheduleQuery` (`refetchInterval` while `generationInProgress`) and
    `scheduleAssignmentsQuery` → `fetchScheduleAssignments`.
 4. Pure mappers `roster/` — no I/O. They turn API rows into what the components draw.
 5. Components, plain props only — `RosterHeader`, `GenerationFailurePanel` (with `MemberNotes`), `GeneratedRoster`
    (one summary line, `RosterWeekBar` with the Issues and Changed buttons, `RosterGrid` → `RosterShift` and
-   `FindingsMarker`, and one panel beside the grid: `RosterSidePanel` for the Issues, Changed and Details lists, or
+   `RosterHeaderCount`, and one panel beside the grid: `RosterSidePanel` for the Issues, Changed and Details lists, or
    `ShiftDetailsPanel` read-only for a chosen day). Someone holding `schedule:edit_shift` on a
    GENERATED roster awaiting its decision, or a PUBLISHED one (`rosterEditable`), gets `editing`: any day opens
    `RosterCellPanel` beside the grid instead (another shift, a day off, or a same-day swap; a preview with
    `RosterChangeChecks`; Apply), and `LastRosterChange` offers Undo in a toast and in the Changed panel (hrms-backend-v2
    docs/adr/0062). On a PUBLISHED roster (`editing.notifiesMembers`, docs/adr/0063) Apply and Undo first ask in a
    `ConfirmDialog` how many people will be told (`peopleTold`), and the remark hint says those people see it. Days
-   changed by hand carry a dot wherever the rows carry a `lastChange`. A published schedule is never deleted
+   changed by hand carry a hollow ring wherever the rows carry a `lastChange` (a day to look at shows its dot
+   instead). A published schedule is never deleted
    (`deletable`): `ScheduleMenu` leaves Delete out. The member's own roster (`pages/MyRoster.tsx`) lists their days
    changed after publication with the remark (`MyRosterChanges`); the API sends no other change to a member.
    The editor reads the frozen shifts it offers from `…/roster-changes/shifts` (`rosterChangeShiftsQuery`) under
@@ -202,17 +204,34 @@ constraint dialogs.
   - `conflictTimes.ts` — a conflict's span as clock times (the engine writes datetimes).
 - `roster/generationFailure.ts` — a FAILED run's `errorCode` in the app's words (the closed set,
   `engine_http_<status>`, then a generic fallback), or INFEASIBLE.
-- `rosterLooks.ts` — the classes of a day off and of leave, and `shiftTileStyle` for a frozen shift's colour.
+- `rosterLooks.ts` — the classes of a day off and of leave, `shiftTileStyle` for a frozen shift's colour, and
+  `cellMarkLooks`: a cell's one mark in its tile's corner (an 8 px `warning-900` dot, or a hollow `ink-blue-700` ring).
+- `roster/rosterMarks.ts` — what the grid marks, pure and table-tested: `CELL_MARKS` (a cell's one mark, the issue's
+  dot winning over the changed ring; none of the issue dots on a member's own roster), `cellIssues` (a day's findings
+  plus what its note adds, as `ISSUE_SOURCES` counts it), `showsRole` (a tile drops the role that repeats the row's
+  job title), `tileStatusKey` (a member's own leave read in their tile), `dayNoteLines` and `saidApartBy` (the
+  chosen day's lines, less what the day editor says itself).
+- `RosterDayNotes` — what needs a look on a chosen day, first in its panel (`ShiftDetailsPanel` or `RosterCellPanel`,
+  `issues`): the engine's findings on the day, then a day to decide, leave requested or taken (with "Review in Leave",
+  `leaveLinkSearch.ts`) and a shift left short. The grid shows only the tile's dot for them.
 - `periods.ts` `formatDay` — "Mon, 12 Oct" for a finding's day.
 - `RosterHeader` — department, then period, status badge and time zone; `actions` (primary action and menu) at the right.
 - `schedules/scheduleDetails.ts` — the Details list: requested, finished, decided and time zone.
 - `GenerationFailurePanel` — a failed run's copy and code, the engine's reason quoted, and its errors by member.
 - `MemberNotes` — a failed run's errors grouped by member, each message quoted.
-- `FindingsPanel` — setup issues by code (fix in the setup), then roster notes by day and by member.
-- `FindingsMarker` — a 24 px mark on a cell, row or day header: the outline `AlertIcon` in `warning-900` for
-  anything to look at (never red; red is for errors and refusals), `InfoIcon` in `ink-blue-700` for information
-  only, then the count; its popover lists that place's findings and can open the panel.
-- `FindingList` — one list of findings, shared by the panel and the popover.
+- `FindingsPanel` — setup issues by code (fix in the setup), then roster notes by day and by member, each part
+  titled in plain text like the side panel's sections.
+- `RosterGrid` layout — the staff column stays pinned while the days scroll (`sticky left-0`, as in the availability
+  `WeekGrid`); on a phone its row header keeps the name, count and hours, dropping the avatar and job title. While a
+  panel is open beside it (`compact`), the row header drops the avatar and tiles show their time only, at one 40 px
+  height, so the week stays in view.
+- `RosterGrid/RosterHeaderCount` — a 24 px count in a row's or day's header: the outline `AlertIcon` in
+  `warning-900` for anything to look at (never red; red is for errors and refusals), `InfoIcon` in `ink-blue-700`
+  for information only, then the number, on no background. It opens Issues narrowed to that row (`rowIssueCount`:
+  the member's findings and every issue on their days in view) or that day (`dayIssueCount`: the day's own
+  findings), with a `FilterChips` chip that clears back to all of Issues (`issuesOfHeader`).
+- `FindingList` — one list of findings, each led by its tone's outline icon (`FindingList/findingToneIcons.ts`:
+  `AlertIcon` in `warning-900` to look at, `InfoIcon` in `ink-blue-700` for information only).
 - `GeneratedRoster` — the summary line, the week bar with one button per list in `rosterSideLists.ts`, the grid and
   one side panel; the view (week, list, chosen day) comes from and goes back to the route's search, so it keeps only
   the previewed days and the change just applied.

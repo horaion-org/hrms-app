@@ -1,9 +1,7 @@
-import type { ReactNode } from "react";
+import { useId, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
-import { Card } from "@/components/ui/Card";
-import { AlertFilledIcon, WarningIcon } from "@/components/ui/Icon";
 import { FindingList } from "@/features/scheduling/FindingList";
 import { formatDay } from "@/features/scheduling/periods";
 import {
@@ -24,6 +22,25 @@ export type FindingsPanelProps = {
 
 const key = "scheduling.findings";
 
+/** One part of the panel, titled in plain text as the side panel's sections are: setup issues, or roster notes. */
+const FindingPart = ({
+	title,
+	children,
+}: {
+	title: string;
+	children: ReactNode;
+}): FunctionComponent => {
+	const titleId = useId();
+	return (
+		<section aria-labelledby={titleId} className="flex flex-col gap-4">
+			<h3 className="font-semibold text-neutral-800" id={titleId}>
+				{title}
+			</h3>
+			{children}
+		</section>
+	);
+};
+
 /** One group within a part: a code, a day or a member. */
 const FindingGroup = ({
 	title,
@@ -33,15 +50,16 @@ const FindingGroup = ({
 	children: ReactNode;
 }): FunctionComponent => (
 	<div>
-		<h3 className="mb-2 text-sm font-semibold text-neutral-800">{title}</h3>
+		<h4 className="mb-2 text-sm font-semibold text-neutral-800">{title}</h4>
 		{children}
 	</div>
 );
 
 /**
- * What the engine found, in full, as two cards: setup issues grouped by code,
- * to be fixed in the setup, then the roster notes on the days in view, by day
- * and then by member. A card with nothing in it is left out.
+ * What the engine found, in full, in two parts: setup issues grouped by
+ * code, to be fixed in the setup, then the roster notes on the days in
+ * view, by day and then by member. A part with nothing in it is left out.
+ * Each finding is led by its tone's outline icon (`FindingList`).
  */
 export const FindingsPanel = ({
 	findings,
@@ -65,8 +83,7 @@ export const FindingsPanel = ({
 	return (
 		<div className={joinClassNames("flex flex-col gap-6", className)}>
 			{setupGroups.length > 0 && (
-				<Card
-					icon={WarningIcon}
+				<FindingPart
 					title={t(`${key}.setupTitle`, { count: findings.diagnostics.length })}
 				>
 					<p className="text-sm text-neutral-700">{t(`${key}.setupHint`)}</p>
@@ -87,13 +104,10 @@ export const FindingsPanel = ({
 							/>
 						</FindingGroup>
 					))}
-				</Card>
+				</FindingPart>
 			)}
 			{rosterCount > 0 && (
-				<Card
-					icon={AlertFilledIcon}
-					title={t(`${key}.rosterTitle`, { count: rosterCount })}
-				>
+				<FindingPart title={t(`${key}.rosterTitle`, { count: rosterCount })}>
 					{notes.byDate.map(({ date, findings: dayFindings }) => (
 						<FindingGroup key={date} title={formatDay(date, language)}>
 							<FindingList findings={dayFindings} names={names} />
@@ -113,7 +127,7 @@ export const FindingsPanel = ({
 							</FindingGroup>
 						)
 					)}
-				</Card>
+				</FindingPart>
 			)}
 		</div>
 	);

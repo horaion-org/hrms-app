@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { useId } from "react";
+import { useId, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
@@ -16,16 +16,19 @@ export type ShiftDetailsPanelProps = {
 	/** A worked day: its frozen shift on `date` (ISO). */
 	shift: RosterShiftCell & { date: string };
 	onClose: () => void;
+	/** What needs a look on the day (`RosterDayNotes`), shown first; nothing without. */
+	issues?: ReactNode;
 	className?: string;
 };
 
 const key = "scheduling.detail.shiftDetails";
 
-/** One worked day beside the roster, read-only: its date, time, shift, group and role. */
+/** One worked day beside the roster, read-only: what needs a look on it, then its date, time, shift, group and role. */
 export const ShiftDetailsPanel = ({
 	staffName,
 	shift,
 	onClose,
+	issues,
 	className,
 }: ShiftDetailsPanelProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
@@ -94,6 +97,7 @@ export const ShiftDetailsPanel = ({
 						<CloseIcon />
 					</Button>
 				</div>
+				{issues && <div className="px-4 py-4">{issues}</div>}
 				<div className="px-4 py-4">
 					<div className="flex items-center gap-3">
 						<Avatar className="size-10! text-base!" name={staffName} />

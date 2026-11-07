@@ -1,13 +1,6 @@
-import type { Decorator, Meta, StoryObj } from "@storybook/react-vite";
-import {
-	createMemoryHistory,
-	createRootRoute,
-	createRouter,
-	RouterProvider,
-} from "@tanstack/react-router";
+import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
 import { RosterGrid } from "@/features/scheduling/RosterGrid";
-import { findingNames } from "@/features/scheduling/roster/findings/findingNames";
 import { placeFindings } from "@/features/scheduling/roster/findings/findingsOnGrid";
 import { rosterFromAssignments } from "@/features/scheduling/roster/roster";
 import { daysOf } from "@/features/scheduling/schedules";
@@ -54,18 +47,11 @@ const LONG_SHIFT = {
 	carriesOvertime: false,
 };
 
-/** The engine's findings marked on Ben's row, Friday and Saturday, and Chen's Sunday. */
+/** The engine's findings counted on Ben's row, Friday and Saturday, and a dot in Chen's Sunday tile. */
 export const WithFindings: Story = {
 	args: {
-		findings: {
-			placed: placeFindings(findings, daysOf("2026-10-12")),
-			names: findingNames(findings, {
-				assignments: scheduleAssignmentsFixture(),
-				shifts: [],
-				constraints: [],
-			}),
-			onShowAll: fn(),
-		},
+		findings: placeFindings(findings, daysOf("2026-10-12")),
+		onShowIssues: fn(),
 	},
 };
 
@@ -89,23 +75,34 @@ const notedWeek = scheduleAssignmentsFixture().map((assignment, index) => {
 	return assignment;
 });
 
-/** A leave note is a router link, so its story needs a router. */
-const withRouter: Decorator = (Story) => {
-	const router = createRouter({
-		routeTree: createRootRoute({ component: () => <Story /> }),
-		history: createMemoryHistory(),
-	});
-	return <RouterProvider router={router} />;
+const notedRows = rosterFromAssignments(notedWeek, {
+	start: "2026-10-12",
+	end: "2026-10-18",
+});
+
+/** Days the leave records mark (leave requested, on leave, a shift left short): one dot each, the words in the day's panel. */
+export const WithDayNotes: Story = {
+	args: { rows: notedRows, onShowIssues: fn() },
 };
 
-/** What the leave records add under a tile: leave requested, on leave, and a shift left short. */
-export const WithDayNotes: Story = {
-	decorators: [withRouter],
+/** Days changed by hand get a hollow ring; on Aisha's Tuesday the dot of the leave requested wins. */
+export const WithChangedDays: Story = {
 	args: {
-		rows: rosterFromAssignments(notedWeek, {
-			start: "2026-10-12",
-			end: "2026-10-18",
-		}),
-		viewerMembershipId: "someone-else",
+		rows: notedRows,
+		editedDays: new Set(["m-1|2026-10-12", "m-1|2026-10-13"]),
 	},
+};
+
+/** A member's own roster: no issue dots, the changed ring, and their own leave in the tile's words. */
+export const MembersOwnRoster: Story = {
+	args: {
+		rows: notedRows,
+		showsIssues: false,
+		editedDays: new Set(["m-1|2026-10-12"]),
+	},
+};
+
+/** Beside an open panel: tiles show their time only, in tighter cells, so the week stays in view. */
+export const Compact: Story = {
+	args: { compact: true, selectedShiftId: "a-mp-1-2026-10-13" },
 };

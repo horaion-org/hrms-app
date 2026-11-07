@@ -41,3 +41,28 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const Selected: Story = { args: { selected: true } };
+
+/** A day that needs a look: the filled dot in the corner; its words are in the day's panel. */
+export const NeedsALook: Story = {
+	args: {
+		mark: "issue",
+		label: "Aisha Rahman, Mon 09:00 – 15:00, needs a look: 1",
+	},
+};
+
+/** A day changed by hand: the hollow ring in the same corner. */
+export const Changed: Story = {
+	args: { mark: "changed", label: "Aisha Rahman, Mon 09:00 – 15:00, changed" },
+};
+
+/** The role left out, as it repeats the member's job title, and a member's own leave in words. */
+export const OwnLeaveRequested: Story = {
+	args: {
+		showsRole: false,
+		status: "Leave requested",
+		label: "Aisha Rahman, Mon 09:00 – 15:00, Leave requested",
+	},
+};
+
+/** Beside an open panel: the time alone, at the height of an Off or Leave tile. */
+export const Compact: Story = { args: { compact: true, mark: "issue" } };

@@ -132,12 +132,36 @@ const DECISION_FLAGS: ReadonlySet<ScheduleAssignment["flag"]> = new Set<
 	ScheduleAssignment["flag"]
 >(["NEEDS_DECISION", "NEEDS_ATTENTION"]);
 
+/** What a day's flag and short shift say, wherever the roster reads them. */
+export type DayFlags = {
+	flag?: ScheduleAssignment["flag"];
+	/** Whether the day's absence leaves a shift short. */
+	leavesShiftShort: boolean;
+};
+
+/** Whether the day asks a manager to decide it. */
+export const asksForDecision = ({ flag }: DayFlags): boolean =>
+	DECISION_FLAGS.has(flag);
+
+/** Whether the day is marked for leave (requested, or taken while rostered) or for a shift left short. */
+export const marksLeaveOrCover = ({
+	flag,
+	leavesShiftShort,
+}: DayFlags): boolean =>
+	Boolean(flag && flag !== "UNKNOWN" && !DECISION_FLAGS.has(flag)) ||
+	leavesShiftShort;
+
+const flagsOf = (row: ScheduleAssignment): DayFlags => ({
+	flag: row.flag,
+	leavesShiftShort: Boolean(row.uncoveredShift),
+});
+
 /** The days a manager must decide (a shift or the day off), by day and then by name. */
 export const daysToDecide = (
 	assignments: ReadonlyArray<ScheduleAssignment>
 ): Array<ScheduleAssignment> =>
 	assignments
-		.filter((row) => row.member && DECISION_FLAGS.has(row.flag))
+		.filter((row) => row.member && asksForDecision(flagsOf(row)))
 		.sort(
 			(first, second) =>
 				first.day.localeCompare(second.day) ||
@@ -151,14 +175,7 @@ export const leaveAndCoverDays = (
 	assignments: ReadonlyArray<ScheduleAssignment>
 ): Array<ScheduleAssignment> =>
 	assignments
-		.filter(
-			(row) =>
-				row.member &&
-				((row.flag &&
-					row.flag !== "UNKNOWN" &&
-					!DECISION_FLAGS.has(row.flag)) ||
-					row.uncoveredShift)
-		)
+		.filter((row) => row.member && marksLeaveOrCover(flagsOf(row)))
 		.sort(
 			(first, second) =>
 				first.day.localeCompare(second.day) ||

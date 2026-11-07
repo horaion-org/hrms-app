@@ -1,6 +1,7 @@
 import type { TFunction } from "i18next";
 import { formatDay } from "@/features/scheduling/periods";
 import type { RosterRow } from "@/features/scheduling/roster/roster";
+import { LEAVE_MARKER_KEYS } from "@/features/scheduling/roster/rosterMarks";
 import {
 	assignmentCell,
 	rosterCellText,
@@ -14,14 +15,6 @@ export type PanelItem = {
 	lines: ReadonlyArray<string>;
 };
 
-/** Each leave marker's copy under `scheduling.rosterMarkers`; a flag left out has no line. */
-const LEAVE_MARKERS: Partial<
-	Record<NonNullable<ScheduleAssignment["flag"]>, "leaveRequested" | "onLeave">
-> = {
-	LEAVE_REQUESTED: "leaveRequested",
-	ON_LEAVE_WHILE_ROSTERED: "onLeave",
-};
-
 /**
  * Each day the roster marks for leave or cover: whose and which day, then
  * what is marked ("Leave requested: Annual leave", "Needs cover: Morning").
@@ -32,7 +25,8 @@ export const leaveAndCoverItems = (
 	language: string
 ): Array<PanelItem> =>
 	days.map((row) => {
-		const markerKey = row.flag ? LEAVE_MARKERS[row.flag] : undefined;
+		// A flag without a leave marker has no line.
+		const markerKey = row.flag ? LEAVE_MARKER_KEYS[row.flag] : undefined;
 		const marker = markerKey
 			? t(`scheduling.rosterMarkers.${markerKey}`)
 			: undefined;

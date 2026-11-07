@@ -2295,19 +2295,15 @@
 				}
 			},
 			"marker": {
-				"row_one": "{{count}} nota para {{name}}",
-				"row_other": "{{count}} notas para {{name}}",
-				"date_one": "{{count}} nota para el {{day}}",
-				"date_other": "{{count}} notas para el {{day}}",
-				"cell_one": "{{count}} nota para {{name}} el {{day}}",
-				"cell_other": "{{count}} notas para {{name}} el {{day}}",
-				"tileLabel_one": "{{label}}, {{count}} nota",
-				"tileLabel_other": "{{label}}, {{count}} notas",
+				"row_one": "{{name}}: {{count}} por revisar. Ver en Avisos",
+				"row_other": "{{name}}: {{count}} por revisar. Ver en Avisos",
+				"date_one": "{{day}}: {{count}} por revisar. Ver en Avisos",
+				"date_other": "{{day}}: {{count}} por revisar. Ver en Avisos",
+				"tileLabel_one": "{{label}}, por revisar: {{count}}",
+				"tileLabel_other": "{{label}}, por revisar: {{count}}",
 				"roster": "Cuadrante",
-				"setup": "Configuración",
-				"close": "Cerrar"
-			},
-			"showInFindings": "Ver en los hallazgos"
+				"setup": "Configuración"
+			}
 		},
 		"scheduleMenu": {
 			"label": "Más acciones para {{name}}"
@@ -2435,7 +2431,8 @@
 			"needsCover": "Necesita cobertura: {{shift}}",
 			"needsDecision": "Necesita una decisión",
 			"needsAttention": "Necesita atención",
-			"openInLeave": "{{status}}: {{type}}. Abrir en Permisos"
+			"needsALook": "Por revisar",
+			"tileStatus": "{{label}}, {{status}}"
 		},
 		"rosterEdit": {
 			"title": "{{name}} · {{date}}",

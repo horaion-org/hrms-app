@@ -94,4 +94,21 @@ describe("ShiftDetailsPanel", () => {
 		);
 		expect(onClose).toHaveBeenCalled();
 	});
+
+	it("given_issues_when_rendered_then_showsThemBeforeTheShift", () => {
+		render(
+			<ShiftDetailsPanel
+				issues={<p>Needs cover: Front Desk PM</p>}
+				shift={shift}
+				staffName="Aisha Rahman"
+				onClose={vi.fn()}
+			/>
+		);
+
+		expect(
+			screen.getByRole("complementary", { name: "Shift Details" })
+		).toHaveTextContent(
+			/^Shift DetailsNeeds cover: Front Desk PMARAisha Rahman/
+		);
+	});
 });

@@ -3063,19 +3063,15 @@
 				}
 			},
 			"marker": {
-				"row_one": "{{count}} note for {{name}}",
-				"row_other": "{{count}} notes for {{name}}",
-				"date_one": "{{count}} note for {{day}}",
-				"date_other": "{{count}} notes for {{day}}",
-				"cell_one": "{{count}} note for {{name}} on {{day}}",
-				"cell_other": "{{count}} notes for {{name}} on {{day}}",
-				"tileLabel_one": "{{label}}, {{count}} note",
-				"tileLabel_other": "{{label}}, {{count}} notes",
+				"row_one": "{{name}}: {{count}} to look at. Show in Issues",
+				"row_other": "{{name}}: {{count}} to look at. Show in Issues",
+				"date_one": "{{day}}: {{count}} to look at. Show in Issues",
+				"date_other": "{{day}}: {{count}} to look at. Show in Issues",
+				"tileLabel_one": "{{label}}, needs a look: {{count}}",
+				"tileLabel_other": "{{label}}, needs a look: {{count}}",
 				"roster": "Roster",
-				"setup": "Setup",
-				"close": "Close"
-			},
-			"showInFindings": "Show in findings"
+				"setup": "Setup"
+			}
 		},
 		"scheduleMenu": {
 			"label": "More actions for {{name}}"
@@ -3203,7 +3199,8 @@
 			"needsCover": "Needs cover: {{shift}}",
 			"needsDecision": "Needs a decision",
 			"needsAttention": "Needs attention",
-			"openInLeave": "{{status}}: {{type}}. Open in Leave"
+			"needsALook": "Needs a look",
+			"tileStatus": "{{label}}, {{status}}"
 		},
 		"rosterEdit": {
 			"title": "{{name}} · {{date}}",

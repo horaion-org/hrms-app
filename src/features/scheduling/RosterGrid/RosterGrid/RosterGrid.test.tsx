@@ -7,7 +7,6 @@ import en from "@/assets/locales/en/translations.json";
 import { RosterGrid } from "@/features/scheduling/RosterGrid";
 import { rosterFromAssignments } from "@/features/scheduling/roster/roster";
 import { daysOf } from "@/features/scheduling/schedules";
-import { findingNames } from "@/features/scheduling/roster/findings/findingNames";
 import { placeFindings } from "@/features/scheduling/roster/findings/findingsOnGrid";
 import {
 	findingsOfEveryKindFixture,
@@ -43,6 +42,17 @@ describe("RosterGrid", () => {
 			})
 		).toHaveTextContent("11:00 – 13:00Lunch RushCashier");
 		expect(screen.getAllByRole("row")).toHaveLength(4);
+	});
+
+	it("given_aShiftWorkedAsTheMembersOwnJobTitle_when_rendered_then_leavesOutTheRepeatedRole", () => {
+		render(<RosterGrid days={week} rows={rows} />);
+
+		expect(
+			screen.getByRole("button", { name: "Aisha Rahman, Mon 09:00 – 15:00" })
+		).toHaveTextContent(/^09:00 – 15:00Front Desk AM$/);
+		expect(
+			screen.getByRole("button", { name: "Ben Ong, Fri 11:00 – 13:00" })
+		).toHaveTextContent(/Cashier$/);
 	});
 
 	it("given_leaveNamedByItsType_when_rendered_then_showsTheTypeInsteadOfLeave", () => {
@@ -101,72 +111,124 @@ describe("RosterGrid", () => {
 		expect(row).toHaveTextContent("EMP-001");
 	});
 
-	it("when_findingsAreGiven_then_marksEachCellRowAndDayThatHasAny", () => {
-		const findings = findingsOfEveryKindFixture();
+	it("when_findingsAreGiven_then_countsEachRowAndDayAndDotsTheCellInItsTile", async () => {
+		const user = userEvent.setup();
+		const onShowIssues = vi.fn();
 		render(
 			<RosterGrid
 				days={week}
+				findings={placeFindings(findingsOfEveryKindFixture(), week)}
 				rows={rows}
-				findings={{
-					placed: placeFindings(findings, week),
-					names: findingNames(findings, {
-						assignments: scheduleAssignmentsFixture(),
-						shifts: [],
-						constraints: [],
-					}),
-					onShowAll: vi.fn(),
-				}}
+				onShowIssues={onShowIssues}
 			/>
 		);
 
 		const ben = screen.getByRole("row", { name: /Ben Ong/ });
 		expect(
-			within(ben).getByRole("button", { name: "3 notes for Ben Ong" })
+			within(ben).getByRole("button", {
+				name: "Ben Ong: 3 to look at. Show in Issues",
+			})
 		).toHaveTextContent("3");
-		expect(
-			screen.getByRole("button", { name: "3 notes for Friday, October 16" })
-		).toBeInTheDocument();
-		expect(
-			screen.getByRole("button", { name: "1 note for Saturday, October 17" })
-		).toBeInTheDocument();
+		// Chen's row counts the issue on his Sunday.
 		expect(
 			screen.getByRole("button", {
-				name: "1 note for Chen Wei on Sunday, October 18",
+				name: "Chen Wei: 1 to look at. Show in Issues",
 			})
 		).toBeInTheDocument();
 		expect(
 			screen.getByRole("button", {
-				name: "Chen Wei, Sun 14:00 – 22:00, 1 note",
+				name: "Friday, October 16: 3 to look at. Show in Issues",
 			})
 		).toBeInTheDocument();
-		expect(
-			screen.getAllByRole("button", { name: /\bnotes? for\b/ })
-		).toHaveLength(4);
+		const saturday = screen.getByRole("button", {
+			name: "Saturday, October 17: 1 to look at. Show in Issues",
+		});
+		await user.click(saturday);
+		expect(onShowIssues).toHaveBeenCalledWith(
+			{ kind: "date", date: "2026-10-17" },
+			saturday
+		);
+		const chensSunday = screen.getByRole("button", {
+			name: "Chen Wei, Sun 14:00 – 22:00, needs a look: 1",
+		});
+		expect(chensSunday.querySelector("[aria-hidden='true']")).toHaveClass(
+			"bg-warning-900"
+		);
+		// The cell's words open with the tile; it has no count of its own.
+		expect(screen.getAllByRole("button", { name: /to look at/ })).toHaveLength(
+			4
+		);
 	});
 
-	it("when_rowNotesAreGiven_then_showsTheNoteUnderThatMembersName", () => {
-		const ben = rows.find((row) => row.name === "Ben Ong");
+	it("given_aDayChangedByHand_when_rendered_then_ringsItUnlessAnIssuesDotWins", () => {
+		const findings = findingsOfEveryKindFixture();
 		render(
 			<RosterGrid
 				days={week}
-				rowNotes={new Map([[ben?.key ?? "", "Day 4 of a run"]])}
+				editedDays={new Set(["m-1|2026-10-12", "m-3|2026-10-18"])}
+				findings={placeFindings(findings, week)}
 				rows={rows}
 			/>
 		);
 
-		expect(screen.getByRole("row", { name: /Ben Ong/ })).toHaveTextContent(
-			"Day 4 of a run"
+		const changed = screen.getByRole("button", {
+			name: "Aisha Rahman, Mon 09:00 – 15:00, changed",
+		});
+		expect(changed.querySelector("[aria-hidden='true']")).toHaveClass(
+			"ring-ink-blue-700"
 		);
-		expect(screen.getAllByText("Day 4 of a run")).toHaveLength(1);
+		const both = screen.getByRole("button", {
+			name: "Chen Wei, Sun 14:00 – 22:00, changed, needs a look: 1",
+		});
+		expect(both.querySelectorAll("[aria-hidden='true']")).toHaveLength(1);
+		expect(both.querySelector("[aria-hidden='true']")).toHaveClass(
+			"bg-warning-900"
+		);
+	});
+
+	it("given_aMembersOwnRoster_when_theirLeaveIsRequested_then_saysItInTheTileWithNoDot", () => {
+		const own = rosterFromAssignments(
+			scheduleAssignmentsFixture().map((assignment) =>
+				assignment.assignmentId === "a-mp-1-2026-10-13"
+					? { ...assignment, flag: "LEAVE_REQUESTED" as const }
+					: assignment
+			),
+			{ start: "2026-10-12", end: "2026-10-18" }
+		);
+
+		render(<RosterGrid days={week} rows={own} showsIssues={false} />);
+
+		const tile = screen.getByRole("button", {
+			name: "Aisha Rahman, Tue 09:00 – 15:00, Leave requested",
+		});
+		expect(tile).toHaveTextContent(/Leave requested$/);
+		expect(tile.querySelector("[aria-hidden='true']")).toBeNull();
 	});
 
 	it("when_noFindingsAreGiven_then_marksNothing", () => {
-		render(<RosterGrid days={week} rows={rows} />);
+		render(<RosterGrid days={week} rows={rows} onShowIssues={vi.fn()} />);
 
-		expect(screen.queryByRole("button", { name: /\bnotes? for\b/ })).toBeNull();
+		expect(screen.queryByRole("button", { name: /to look at/ })).toBeNull();
 	});
 
-	it("given_aDayNote_when_rendered_then_showsItUnderTheTileNamingTheShortShift", () => {
+	it("given_aMembersOwnRoster_when_findingsAreGiven_then_countsNothing", () => {
+		render(
+			<RosterGrid
+				days={week}
+				findings={placeFindings(findingsOfEveryKindFixture(), week)}
+				rows={rows}
+				showsIssues={false}
+				onShowIssues={vi.fn()}
+			/>
+		);
+
+		expect(screen.queryByRole("button", { name: /to look at/ })).toBeNull();
+		expect(
+			screen.getByRole("button", { name: "Chen Wei, Sun 14:00 – 22:00" })
+		).toBeInTheDocument();
+	});
+
+	it("given_aDayNote_when_rendered_then_dotsTheTileAndLeavesTheWordsToItsPanel", () => {
 		const noted = scheduleAssignmentsFixture().map((assignment, index) =>
 			index === 0
 				? {
@@ -196,6 +258,35 @@ describe("RosterGrid", () => {
 			/>
 		);
 
-		expect(screen.getByText("Needs cover: Morning")).toBeInTheDocument();
+		expect(screen.queryByText("Needs cover: Morning")).toBeNull();
+		expect(
+			screen.getByRole("button", {
+				name: "Aisha Rahman, Mon 09:00 – 15:00, needs a look: 1",
+			})
+		).toBeInTheDocument();
+	});
+
+	it("given_anOpenPanel_when_compact_then_tilesShowTheTimeOnlyAtOneHeight", () => {
+		render(<RosterGrid compact days={week} rows={rows} />);
+
+		const ben = screen.getByRole("row", { name: /Ben Ong/ });
+		expect(
+			within(ben).getByRole("button", { name: "Ben Ong, Fri 11:00 – 13:00" })
+		).toHaveTextContent(/^11:00 – 13:00$/);
+		for (const tile of within(ben).getAllByText(/^(OFF|LEAVE)$/))
+			expect(tile).toHaveClass("h-10");
+	});
+
+	it("when_theDaysScroll_then_theStaffColumnStaysPinned", () => {
+		render(<RosterGrid days={week} rows={rows} />);
+
+		expect(screen.getByRole("columnheader", { name: "Staff" })).toHaveClass(
+			"sticky",
+			"left-0"
+		);
+		expect(screen.getByRole("rowheader", { name: /Ben Ong/ })).toHaveClass(
+			"sticky",
+			"left-0"
+		);
 	});
 });
