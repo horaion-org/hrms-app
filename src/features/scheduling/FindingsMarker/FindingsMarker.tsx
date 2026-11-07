@@ -2,15 +2,15 @@ import { Popover, PopoverButton, PopoverPanel } from "@headlessui/react";
 import { useId } from "react";
 import { useTranslation } from "react-i18next";
 import { joinClassNames } from "@/common/joinClassNames";
-import type { FunctionComponent, Heroicon } from "@/common/types";
+import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
-import { AlertIcon, CloseIcon, InfoIcon } from "@/components/ui/Icon";
+import { CloseIcon } from "@/components/ui/Icon";
 import { FindingList } from "@/features/scheduling/FindingList";
+import { FINDING_TONE_ICONS } from "@/features/scheduling/FindingList/findingToneIcons";
 import {
 	findingFamily,
 	strongestTone,
 	type Finding,
-	type FindingTone,
 } from "@/features/scheduling/roster/findings/finding";
 import type { FindingNames } from "@/features/scheduling/roster/findings/findingNames";
 
@@ -28,18 +28,6 @@ export type FindingsMarkerProps = {
 const key = "scheduling.findings";
 
 /**
- * The outline icons of the app's set, in the warning tone: a triangle for
- * anything to look at (roster notes and setup warnings alike, never red, as
- * red is kept for errors and refusals), the info circle for what is only
- * information. Both tones keep 3:1 against the header and every shift tint.
- */
-const TONE_ICONS: Record<FindingTone, { icon: Heroicon; colour: string }> = {
-	error: { icon: AlertIcon, colour: "text-warning-900" },
-	warning: { icon: AlertIcon, colour: "text-warning-900" },
-	info: { icon: InfoIcon, colour: "text-ink-blue-700" },
-};
-
-/**
  * A small mark on a roster cell, row or day: an outline icon in the tone of
  * its most serious finding, then how many there are. It opens a popover
  * listing just those findings, roster notes first, then setup issues.
@@ -54,7 +42,7 @@ export const FindingsMarker = ({
 	const { t } = useTranslation();
 	const titleId = useId();
 	if (findings.length === 0) return null;
-	const { icon: Icon, colour } = TONE_ICONS[strongestTone(findings)];
+	const { icon: Icon, colour } = FINDING_TONE_ICONS[strongestTone(findings)];
 	const roster = findings.filter(
 		(finding) => findingFamily(finding) === "roster"
 	);

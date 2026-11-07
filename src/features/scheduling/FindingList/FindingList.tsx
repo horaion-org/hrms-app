@@ -1,13 +1,18 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { formatTimeRange } from "@/features/scheduling/formatShift";
 import { formatDay } from "@/features/scheduling/periods";
 import { conflictClockTimes } from "@/features/scheduling/roster/findings/conflictTimes";
 import { diagnosticSentence } from "@/features/scheduling/roster/findings/diagnostics";
-import type { Finding } from "@/features/scheduling/roster/findings/finding";
+import {
+	findingTone,
+	type Finding,
+} from "@/features/scheduling/roster/findings/finding";
 import type { FindingNames } from "@/features/scheduling/roster/findings/findingNames";
 import { ruleLabel } from "@/features/scheduling/roster/findings/ruleLabel";
+import { FINDING_TONE_ICONS } from "./findingToneIcons";
 
 export type FindingListProps = {
 	findings: ReadonlyArray<Finding>;
@@ -19,8 +24,9 @@ export type FindingListProps = {
 const key = "scheduling.findings";
 
 /**
- * Findings as the findings panel and a grid marker's popover both list them.
- * The engine's own words are quoted, never shown as the app's copy (ADR-0003).
+ * Findings as the Issues panel lists them, each led by its tone's outline
+ * icon (`FINDING_TONE_ICONS`). The engine's own words are quoted, never
+ * shown as the app's copy (ADR-0003).
  */
 export const FindingList = ({
 	findings,
@@ -94,10 +100,19 @@ export const FindingList = ({
 
 	return (
 		<ul className="flex flex-col gap-3 text-sm">
-			{findings.map((finding, index) => (
-				// The engine may repeat a finding word for word; the list never reorders.
-				<li key={index}>{item(finding)}</li>
-			))}
+			{findings.map((finding, index) => {
+				const { icon: Icon, colour } = FINDING_TONE_ICONS[findingTone(finding)];
+				return (
+					// The engine may repeat a finding word for word; the list never reorders.
+					<li key={index} className="flex gap-2">
+						<Icon
+							aria-hidden="true"
+							className={joinClassNames("mt-0.5 size-4 shrink-0", colour)}
+						/>
+						<div className="min-w-0">{item(finding)}</div>
+					</li>
+				);
+			})}
 		</ul>
 	);
 };

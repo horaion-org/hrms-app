@@ -44,7 +44,7 @@ describe("FindingsPanel", () => {
 		);
 		expect(
 			within(setup)
-				.getAllByRole("heading", { level: 3 })
+				.getAllByRole("heading", { level: 4 })
 				.map((heading) => heading.textContent)
 		).toEqual([
 			"Demand no shift can cover · 1",
@@ -63,7 +63,7 @@ describe("FindingsPanel", () => {
 		const roster = screen.getByRole("region", { name: "Roster notes (8)" });
 		expect(
 			within(roster)
-				.getAllByRole("heading", { level: 3 })
+				.getAllByRole("heading", { level: 4 })
 				.map((heading) => heading.textContent)
 		).toEqual([
 			"Fri, Oct 16",

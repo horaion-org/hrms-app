@@ -208,11 +208,13 @@ constraint dialogs.
 - `schedules/scheduleDetails.ts` — the Details list: requested, finished, decided and time zone.
 - `GenerationFailurePanel` — a failed run's copy and code, the engine's reason quoted, and its errors by member.
 - `MemberNotes` — a failed run's errors grouped by member, each message quoted.
-- `FindingsPanel` — setup issues by code (fix in the setup), then roster notes by day and by member.
+- `FindingsPanel` — setup issues by code (fix in the setup), then roster notes by day and by member, each part
+  titled in plain text like the side panel's sections.
 - `FindingsMarker` — a 24 px mark on a cell, row or day header: the outline `AlertIcon` in `warning-900` for
   anything to look at (never red; red is for errors and refusals), `InfoIcon` in `ink-blue-700` for information
   only, then the count; its popover lists that place's findings and can open the panel.
-- `FindingList` — one list of findings, shared by the panel and the popover.
+- `FindingList` — one list of findings, each led by its tone's outline icon (`FindingList/findingToneIcons.ts`:
+  `AlertIcon` in `warning-900` to look at, `InfoIcon` in `ink-blue-700` for information only).
 - `GeneratedRoster` — the summary line, the week bar with one button per list in `rosterSideLists.ts`, the grid and
   one side panel; the view (week, list, chosen day) comes from and goes back to the route's search, so it keeps only
   the previewed days and the change just applied.
