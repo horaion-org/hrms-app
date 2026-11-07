@@ -35,3 +35,7 @@ storybook-static
 
 # read-only agent handoff snapshots
 codex-handoff/
+
+# generated tool output
+repomix-output.xml
+*.tsbuildinfo
