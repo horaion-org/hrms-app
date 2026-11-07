@@ -581,6 +581,43 @@ export const cancelLeave = (
 		{ method: "POST", body: { remark } }
 	);
 
+/** Where one day of a member's approved request is changed or cancelled. */
+const leaveDayPath = (
+	companyId: string,
+	membershipId: string,
+	leaveRequestId: string,
+	day: string
+): string =>
+	`${leaveRequestPath(companyId, membershipId, leaveRequestId)}/days/${encodeURIComponent(day)}`;
+
+/** Changes one day's leave type, splitting the request around it. */
+export const changeLeaveDay = (
+	companyId: string,
+	membershipId: string,
+	leaveRequestId: string,
+	day: string,
+	body: { leaveType: string; remark: string }
+): Promise<LeaveRequest> =>
+	apiRequest(
+		`${leaveDayPath(companyId, membershipId, leaveRequestId, day)}/change`,
+		leaveRequestSchema,
+		{ method: "POST", body }
+	);
+
+/** Cancels one day of an approved request, splitting the request around it. */
+export const cancelLeaveDay = (
+	companyId: string,
+	membershipId: string,
+	leaveRequestId: string,
+	day: string,
+	remark: string
+): Promise<LeaveRequest> =>
+	apiRequest(
+		`${leaveDayPath(companyId, membershipId, leaveRequestId, day)}/cancellation`,
+		leaveRequestSchema,
+		{ method: "POST", body: { remark } }
+	);
+
 /** Withdraws the caller's own pending request. */
 export const withdrawLeave = (
 	companyId: string,

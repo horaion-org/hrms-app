@@ -26,6 +26,10 @@ export type RosterChangeReviewProps = {
 	onTickedChange: (ticked: boolean) => void;
 	/** The roster is published: the people whose days change are told, and see the remark. */
 	notifiesMembers?: boolean;
+	/** The remark is asked for whatever the checks say, as every leave move is. */
+	remarkRequired?: boolean;
+	/** Who reads the remark, where it isn't the roster's own readers: a leave move's remark reaches the employee. */
+	remarkHint?: string;
 };
 
 const key = "scheduling.rosterEdit";
@@ -44,11 +48,14 @@ export const RosterChangeReview = ({
 	ticked,
 	onTickedChange,
 	notifiesMembers = false,
+	remarkRequired = false,
+	remarkHint,
 }: RosterChangeReviewProps): FunctionComponent => {
 	const { t } = useTranslation();
 	const remarkId = useId();
 	const remarkIds = formRowIds(remarkId);
 	const gate = applyGate(preview?.checks ?? []);
+	const needsRemark = gate.needsRemark || remarkRequired;
 	return (
 		<div className="flex flex-col gap-3">
 			<h3 className="text-sm font-semibold text-neutral-800">
@@ -85,18 +92,21 @@ export const RosterChangeReview = ({
 				<FormRow
 					counter={`${remark.length}/${ROSTER_CHANGE_REMARK_MAX_LENGTH}`}
 					htmlFor={remarkId}
+					label={t(needsRemark ? `${key}.remarkRequired` : `${key}.remark`)}
 					layout="stacked"
-					required={gate.needsRemark}
-					hint={t(
-						notifiesMembers ? `${key}.remarkHintPublished` : `${key}.remarkHint`
-					)}
-					label={t(
-						gate.needsRemark ? `${key}.remarkRequired` : `${key}.remark`
-					)}
+					required={needsRemark}
+					hint={
+						remarkHint ??
+						t(
+							notifiesMembers
+								? `${key}.remarkHintPublished`
+								: `${key}.remarkHint`
+						)
+					}
 				>
 					<Textarea
 						aria-describedby={remarkIds.hintId}
-						aria-required={gate.needsRemark}
+						aria-required={needsRemark}
 						className="w-full"
 						id={remarkId}
 						maxLength={ROSTER_CHANGE_REMARK_MAX_LENGTH}

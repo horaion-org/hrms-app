@@ -27,6 +27,7 @@ import {
 } from "@/features/scheduling/roster/roster";
 import {
 	changedDayItems,
+	daysToDecideItems,
 	leaveAndCoverItems,
 	startingPointItems,
 } from "@/features/scheduling/roster/rosterPanels";
@@ -36,6 +37,7 @@ import type {
 } from "@/features/scheduling/roster/rosterSearch";
 import {
 	changedDays,
+	daysToDecide,
 	issueCount,
 	leaveAndCoverDays,
 	rosterSummarySegments,
@@ -76,6 +78,8 @@ export type RosterEditing = {
 	shifts: ReadonlyArray<ScheduleShift>;
 	/** The roster is published: each change tells the people whose days it changes, so it asks first. */
 	notifiesMembers: boolean;
+	/** Given to someone who may change leave here too: the leave choices beside the roster's own. */
+	leave?: { viewerMembershipId: string };
 };
 
 export type GeneratedRosterProps = {
@@ -168,6 +172,7 @@ export const GeneratedRoster = ({
 			: null;
 	const changed = changedDays(assignments);
 	const markedDays = leaveAndCoverDays(assignments);
+	const toDecide = daysToDecide(assignments);
 	const editedDays = new Set(
 		changed.flatMap((row) =>
 			row.member ? [rosterCellKey(row.member.membershipId, row.day)] : []
@@ -178,6 +183,7 @@ export const GeneratedRoster = ({
 			findings: counts,
 			membersWithChangedStart,
 			leaveAndCoverDays: markedDays.length,
+			daysToDecide: toDecide.length,
 		}),
 		changes: changed.length,
 		details: details ? 1 : 0,
@@ -277,6 +283,11 @@ export const GeneratedRoster = ({
 				),
 			},
 			{
+				key: "daysToDecide",
+				title: t(`${key}.daysToDecide`),
+				items: daysToDecideItems(toDecide, t, language),
+			},
+			{
 				key: "leaveAndCover",
 				title: t(`${key}.leaveAndCover`),
 				items: leaveAndCoverItems(markedDays, t, language),
@@ -310,11 +321,13 @@ export const GeneratedRoster = ({
 					key={chosenRow.assignmentId}
 					assignment={chosenRow}
 					assignments={assignments}
+					leaveEditing={editing.leave}
 					notifiesMembers={editing.notifiesMembers}
 					revision={editing.revision}
 					shifts={editing.shifts}
 					target={editing.target}
 					onClose={close}
+					onLeaveChanged={close}
 					onPreviewDays={onPreviewDays}
 					onApplied={(change) => {
 						setApplied(change);

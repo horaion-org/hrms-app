@@ -550,6 +550,7 @@ const rosterDayFlagSchema = z
 		"LEAVE_REQUESTED",
 		"ON_LEAVE_WHILE_ROSTERED",
 		"NEEDS_DECISION",
+		"NEEDS_ATTENTION",
 		"UNKNOWN",
 	])
 	.catch("UNKNOWN");
@@ -594,12 +595,18 @@ export type RosterCellValue = z.infer<typeof rosterCellSchema>;
  * when, why, and what the day held before. A member's own roster carries it only on their own days
  * changed after publication, without who changed it (docs/adr/0063).
  */
+const rosterChangeReasonSchema = z
+	.enum(["MANUAL", "LEAVE_APPROVED", "LEAVE_RECORDED", "LEAVE_MOVE", "UNKNOWN"])
+	.catch("UNKNOWN");
+
 const rosterLastChangeSchema = z.object({
 	changeId: z.string(),
 	appliedAt: z.string(),
 	/** Null on a member's own roster, which never names who made the change. */
 	appliedBy: participantSchema.nullish().transform((value) => value ?? null),
 	remark: z.string().nullable(),
+	/** Who made it: a hand edit, or a leave decision; absent from an older API. */
+	reason: rosterChangeReasonSchema.nullish(),
 	before: rosterCellSchema,
 });
 

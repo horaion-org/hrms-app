@@ -44,6 +44,35 @@ describe("leaveLinkSearch", () => {
 });
 
 describe("RosterDayNotes", () => {
+	it("marks a day cancelled leave left to decide", () => {
+		render(
+			<RosterDayNotes
+				membershipId={MEMBER}
+				note={{ flag: "NEEDS_DECISION" }}
+				viewerMembershipId={VIEWER}
+			/>
+		);
+
+		expect(
+			screen.getByText("scheduling.rosterMarkers.needsDecision")
+		).toBeVisible();
+	});
+
+	it("shows a day needing attention with no link and nothing of leave", () => {
+		render(
+			<RosterDayNotes
+				membershipId={MEMBER}
+				note={{ flag: "NEEDS_ATTENTION" }}
+				viewerMembershipId={VIEWER}
+			/>
+		);
+
+		expect(
+			screen.getByText("scheduling.rosterMarkers.needsAttention")
+		).toBeVisible();
+		expect(screen.queryByRole("link")).toBeNull();
+	});
+
 	it("links a colleague's pending request to the reviewer's view of it", () => {
 		render(
 			<RosterDayNotes
@@ -109,7 +138,7 @@ describe("RosterDayNotes", () => {
 		expect(screen.queryByRole("link")).not.toBeInTheDocument();
 	});
 
-	it.each(["NEEDS_DECISION", "UNKNOWN"] as const)(
+	it.each(["UNKNOWN"] as const)(
 		"renders nothing at all for %s alone",
 		(flag) => {
 			const { container } = render(

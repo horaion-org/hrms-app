@@ -7,6 +7,7 @@ export type RosterChangeRefusal =
 	| "notEditable"
 	| "refused"
 	| "undoBlocked"
+	| "fromLeave"
 	| "forbidden"
 	| "failed";
 
@@ -23,6 +24,7 @@ const REFUSALS: Readonly<Record<string, RosterChangeRefusal>> = {
 	"409 SCHEDULE_ROSTER_NOT_EDITABLE": "notEditable",
 	"422 ROSTER_CHANGE_REFUSED": "refused",
 	"409 ROSTER_CHANGE_NOT_UNDOABLE": "undoBlocked",
+	"409 ROSTER_CHANGE_FROM_LEAVE": "fromLeave",
 	"404 ROSTER_CHANGE_NOT_FOUND": "undoBlocked",
 };
 

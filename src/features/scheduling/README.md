@@ -168,6 +168,16 @@ constraint dialogs.
   plain facts and never re-checks scheduling rules), `rosterEdit.ts` (pure: the cells a choice sends, shift and
   swap choices, what the checks ask before Apply, the roster with changed rows in place), `checkSentence.ts`,
   `rosterChangeRefusal.ts` and `useRosterChangeActions.ts` (apply and undo, caching the landed change).
+- `rosterChanges/rosterLeave.ts` — what the editor can do with a day's leave, pure: `panelModes`, `leaveMoveOf`,
+  `moveChangesRoster`. `useRosterLeaveActions` calls Leave's routes; the roster re-reads. `RosterCellPanel` shows these
+  choices only with `RosterEditing.leave` (`schedule:edit_shift` plus `leave_request:read` and `leave_request:review` at
+  the schedule's Department). Taking someone off leave cancels the day first, then edits the roster; a refusal of that
+  second step leaves the panel open and says what the day now reads as: needing a decision if leave took its shift,
+  otherwise Day off. Leave moves offer no Undo, in the toast or the Changed panel: the roster half is sent with
+  `leaveMove`, the API refuses to undo it, and a change leave made is reversed by cancelling the leave (hrms-backend-v2
+  docs/adr/0065). Days to decide, and days marked for leave or cover, are `ISSUE_SOURCES` rows listed in the Issues
+  panel; a day to decide reads "Needs attention" to a roster editor who can't see leave, with no leave detail. A
+  notification about such a day opens its week with the Issues panel (`?week=…&panel=issues`).
 - `roster/roster.ts` — `rosterFromAssignments` (one row per member, each day a shift, off or leave; a row whose
   member is gone keyed by its assignment), `hoursOf`/`hoursInDays` (via `shiftHours`), `weekDays`, `legendOf`,
   `rosterStats`, and `isoDateIn`/`dateTimeFormatIn` for the branch's time zone.

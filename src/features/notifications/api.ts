@@ -48,6 +48,11 @@ export const notificationSchema = z.object({
 		.string()
 		.nullish()
 		.transform((value) => value ?? null),
+	/** The roster day a ROSTER_DAY_NEEDS_DECISION opens; null for every other type. */
+	rosterDay: z.iso
+		.date()
+		.nullish()
+		.transform((value) => value ?? null),
 	occurredAt: z.iso.datetime({ offset: true }),
 	createdAt: z.iso.datetime({ offset: true }),
 	readAt: z.iso

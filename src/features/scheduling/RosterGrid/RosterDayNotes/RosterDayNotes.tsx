@@ -15,7 +15,7 @@ export type RosterDayNotesProps = {
 
 const key = "scheduling.rosterMarkers";
 
-/** What the leave records add to a roster day: leave requested or approved, and a shift left short. */
+/** What the leave records add to a roster day: leave requested or approved, a day to decide, and a shift left short. */
 export const RosterDayNotes = ({
 	note,
 	membershipId,
@@ -27,7 +27,11 @@ export const RosterDayNotes = ({
 			? t(`${key}.leaveRequested`)
 			: note.flag === "ON_LEAVE_WHILE_ROSTERED"
 				? t(`${key}.onLeave`)
-				: undefined;
+				: note.flag === "NEEDS_DECISION"
+					? t(`${key}.needsDecision`)
+					: note.flag === "NEEDS_ATTENTION"
+						? t(`${key}.needsAttention`)
+						: undefined;
 	const coverText =
 		note.uncoveredShiftName === undefined
 			? undefined

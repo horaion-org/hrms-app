@@ -38,6 +38,10 @@ export type RosterChangeBody = {
 	remark?: string;
 	/** The preview's `checksFingerprint`, once the person ticked the checks. */
 	checksFingerprint?: string;
+	/** Preview only: days read as if their leave were already cancelled, for a shift given back right after. */
+	assumeLeaveCancelledOn?: Array<string>;
+	/** Apply only: this edit is the roster half of a leave move, so the API never undoes it alone. */
+	leaveMove?: boolean;
 };
 
 // A code or severity a newer API adds still shows, as a plain note.
@@ -290,12 +294,14 @@ const rosterChangePreviewKey = (
 	"preview",
 	number | null,
 	Array<RosterChangeCell> | null,
+	Array<string> | null,
 ] =>
 	[
 		...rosterChangesKey(companyId, scheduleId),
 		"preview",
 		body?.expectedRevision ?? null,
 		body?.cells ?? null,
+		body?.assumeLeaveCancelledOn ?? null,
 	] as const;
 
 /** The latest change at `revision`; `unit` undefined, or `allowed` false, asks for nothing. */

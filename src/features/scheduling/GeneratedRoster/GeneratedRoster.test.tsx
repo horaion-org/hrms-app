@@ -158,6 +158,37 @@ describe("GeneratedRoster", () => {
 		).toBeVisible();
 	});
 
+	it("given_aDayNeedingAttention_when_issuesOpen_then_listedToDecideWithNoWordOfLeave", async () => {
+		const [first, ...rest] = scheduleAssignmentsFixture();
+		if (!first) throw new Error("fixture has a day");
+		render(
+			<Roster
+				schedule={schedule}
+				assignments={[
+					{
+						...first,
+						off: true,
+						offReason: "OFF",
+						shift: null,
+						jobTitle: null,
+						flag: "NEEDS_ATTENTION",
+					},
+					...rest,
+				]}
+			/>
+		);
+		const user = userEvent.setup();
+
+		await user.click(screen.getByRole("button", { name: /^Issues/ }));
+
+		const toDecide = screen
+			.getByRole("heading", { name: "Days to decide" })
+			.closest("section");
+		expect(toDecide).not.toBeNull();
+		expect(within(toDecide!).getByText("Needs attention")).toBeVisible();
+		expect(toDecide).not.toHaveTextContent(/leave/i);
+	});
+
 	it("given_findings_when_issuesIsToggled_then_opensAndClosesThemBesideTheGrid", async () => {
 		const user = userEvent.setup();
 		render(

@@ -12,10 +12,23 @@ describe("notificationLink", () => {
 	});
 
 	it("opens a schedule's roster by its id", () => {
-		expect(notificationLink({ kind: "schedule", scheduleId: "s-1" })).toEqual({
+		expect(
+			notificationLink({ kind: "schedule", scheduleId: "s-1", day: undefined })
+		).toEqual({
 			to: "/scheduling/$scheduleId",
 			params: { scheduleId: "s-1" },
+			search: {},
 		});
+	});
+
+	it("opens a roster on the week of the day a notification is about, with its Issues beside it", () => {
+		expect(
+			notificationLink({
+				kind: "schedule",
+				scheduleId: "s-1",
+				day: "2026-10-14",
+			})
+		).toMatchObject({ search: { week: "2026-10-12", panel: "issues" } });
 	});
 
 	it("opens a rostered member's own view of a roster by its id", () => {
