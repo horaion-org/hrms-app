@@ -15,7 +15,7 @@ import { leaveTypeOptions } from "@/features/leave/leaveTypeOptions";
 import { formatTimeRange } from "@/features/scheduling/formatShift";
 import { formatDay } from "@/features/scheduling/periods";
 import { RosterChangeReview } from "@/features/scheduling/RosterChangeReview";
-import { leaveLinkSearch } from "@/features/scheduling/RosterGrid/RosterDayNotes/leaveLinkSearch";
+import { leaveLinkSearch } from "@/features/scheduling/RosterDayNotes/leaveLinkSearch";
 import { RosterLeaveReview } from "@/features/scheduling/RosterLeaveReview";
 import {
 	rosterChangePreviewQuery,
@@ -91,6 +91,8 @@ export type RosterCellPanelProps = {
 	 * with the remark, so Apply asks first how many will be told.
 	 */
 	notifiesMembers?: boolean;
+	/** What needs a look on the day (`RosterDayNotes`), shown first; nothing without. */
+	issues?: ReactNode;
 	className?: string;
 };
 
@@ -119,6 +121,7 @@ export const RosterCellPanel = ({
 	onLeaveChanged,
 	leaveEditing,
 	notifiesMembers = false,
+	issues,
 	className,
 }: RosterCellPanelProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
@@ -473,6 +476,7 @@ export const RosterCellPanel = ({
 						<CloseIcon />
 					</Button>
 				</div>
+				{issues && section(issues)}
 				{section(
 					<dl className="flex flex-col gap-1 text-sm">
 						<dt className="font-medium text-neutral-800">{t(`${key}.now`)}</dt>

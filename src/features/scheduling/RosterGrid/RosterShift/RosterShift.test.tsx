@@ -65,4 +65,49 @@ describe("RosterShift", () => {
 		expect(name).toHaveClass("truncate");
 		expect(role).toHaveTextContent("Front Desk Lead");
 	});
+
+	it.each([
+		["needs a look", "issue", "bg-warning-900"],
+		["was changed by hand", "changed", "ring-ink-blue-700"],
+	] as const)(
+		"given_aDayThat%s_when_rendered_then_marksItInTheTilesCorner",
+		(_, mark, looks) => {
+			render(
+				<RosterShift
+					label="Aisha Rahman, Mon 09:00 – 15:00"
+					mark={mark}
+					selected={false}
+					shift={assignment}
+					timeRange="09:00 – 15:00"
+					onSelect={vi.fn()}
+				/>
+			);
+
+			const button = screen.getByRole("button");
+			expect(button).toHaveClass("relative");
+			const spot = button.querySelector("[aria-hidden='true']");
+			expect(spot).toHaveClass("absolute", "top-1.5", "right-1.5", looks);
+		}
+	);
+
+	it("given_aRoleThatRepeatsTheJobTitle_when_rendered_then_leavesItOutAndAddsTheStatus", () => {
+		render(
+			<RosterShift
+				label="Aisha Rahman, Mon 09:00 – 15:00, Leave requested"
+				selected={false}
+				shift={assignment}
+				showsRole={false}
+				status="Leave requested"
+				timeRange="09:00 – 15:00"
+				onSelect={vi.fn()}
+			/>
+		);
+
+		expect(screen.getByRole("button")).toHaveTextContent(
+			/^09:00 – 15:00Front Desk AMLeave requested$/
+		);
+		expect(
+			screen.getByRole("button").querySelector("[aria-hidden]")
+		).toBeNull();
+	});
 });

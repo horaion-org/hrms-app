@@ -50,6 +50,15 @@ export const CELL_MARKS: ReadonlyArray<{
 	{ mark: "changed", shownWhen: ({ changed }) => changed },
 ];
 
+/** Each mark's hover text, by its copy key; what it means is said in the tile's label too. */
+export const CELL_MARK_TITLE_KEYS: Record<
+	CellMark,
+	"scheduling.rosterMarkers.needsALook" | "scheduling.rosterEdit.editedCell"
+> = {
+	issue: "scheduling.rosterMarkers.needsALook",
+	changed: "scheduling.rosterEdit.editedCell",
+};
+
 /** The cell's one mark, or none. */
 export const cellMark = (facts: CellFacts): CellMark | undefined =>
 	CELL_MARKS.find(({ shownWhen }) => shownWhen(facts))?.mark;
@@ -73,6 +82,83 @@ export const dayNoteIssues = (note: RosterDayNote | undefined): number => {
 		leavesShiftShort: note.uncoveredShiftName !== undefined,
 	};
 	return (asksForDecision(flags) ? 1 : 0) + (marksLeaveOrCover(flags) ? 1 : 0);
+};
+
+/** One line a chosen day's panel reads for its note, each with its copy under `scheduling.rosterMarkers`. */
+export type DayNoteLine =
+	| { kind: "decision"; key: "needsDecision" | "needsAttention" }
+	| {
+			kind: "leave";
+			key: "leaveRequested" | "onLeave";
+			leaveTypeName?: string;
+			leaveRequestId?: string;
+	  }
+	| { kind: "cover"; shiftName: string };
+
+/** What the day editor already says in its own words, so its panel leaves that line out. */
+export type SaidApart = ReadonlySet<"decision" | "leaveRequested">;
+
+const NOTHING_SAID_APART: SaidApart = new Set();
+
+/**
+ * What the day editor (`RosterCellPanel`) says in its own words: a day to
+ * decide always, and requested leave too when it may change leave. A
+ * read-only panel says neither.
+ */
+export const saidApartBy = (
+	editor: { changesLeave: boolean } | undefined
+): SaidApart =>
+	editor === undefined
+		? NOTHING_SAID_APART
+		: new Set(
+				editor.changesLeave ? ["decision", "leaveRequested"] : ["decision"]
+			);
+
+/**
+ * A day note's lines, in order: a day to decide, then leave, then a shift
+ * left short. A line `saidApart` names is left out.
+ */
+export const dayNoteLines = (
+	note: RosterDayNote | undefined,
+	saidApart: SaidApart = NOTHING_SAID_APART
+): Array<DayNoteLine> => {
+	if (!note) return [];
+	const leaveKey = note.flag ? LEAVE_MARKER_KEYS[note.flag] : undefined;
+	const decision = asksForDecision({
+		flag: note.flag,
+		leavesShiftShort: false,
+	});
+	return [
+		...(decision && !saidApart.has("decision")
+			? [
+					{
+						kind: "decision" as const,
+						key:
+							note.flag === "NEEDS_ATTENTION"
+								? ("needsAttention" as const)
+								: ("needsDecision" as const),
+					},
+				]
+			: []),
+		...(leaveKey &&
+		!(leaveKey === "leaveRequested" && saidApart.has("leaveRequested"))
+			? [
+					{
+						kind: "leave" as const,
+						key: leaveKey,
+						...(note.leaveTypeName
+							? { leaveTypeName: note.leaveTypeName }
+							: {}),
+						...(note.leaveRequestId
+							? { leaveRequestId: note.leaveRequestId }
+							: {}),
+					},
+				]
+			: []),
+		...(note.uncoveredShiftName === undefined
+			? []
+			: [{ kind: "cover" as const, shiftName: note.uncoveredShiftName }]),
+	];
 };
 
 const NO_FINDINGS: ReadonlyArray<Finding> = [];

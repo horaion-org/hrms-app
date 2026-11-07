@@ -67,7 +67,8 @@ describe("GeneratedRoster", () => {
 		expect(within(roster).getAllByRole("row")).toHaveLength(4);
 	});
 
-	it("given_aColleaguesLeaveNote_when_rendered_then_itOpensTheirRequestAsAReviewer", () => {
+	it("given_aColleaguesLeaveNote_when_theirDayIsChosen_then_itsPanelSaysItAndOpensTheirRequestAsAReviewer", async () => {
+		const user = userEvent.setup();
 		const [first, ...rest] = scheduleAssignmentsFixture();
 		if (!first?.member) throw new Error("fixture has a member");
 
@@ -82,8 +83,18 @@ describe("GeneratedRoster", () => {
 			/>
 		);
 
+		expect(screen.queryByText("Leave requested")).toBeNull();
+		await user.click(
+			screen.getByRole("button", {
+				name: "Aisha Rahman, Mon 09:00 – 15:00, needs a look: 1",
+			})
+		);
+
+		const panel = screen.getByRole("complementary", { name: "Shift Details" });
+		const notes = within(panel).getByRole("region", { name: "Needs a look" });
+		expect(notes).toHaveTextContent("Leave requested");
 		expect(
-			screen.getByRole("link", { name: "Leave requested" })
+			within(notes).getByRole("link", { name: "Review in Leave" })
 		).toHaveAttribute(
 			"href",
 			`/leave?requestId=r1&memberId=${first.member.membershipId}&view=requests`

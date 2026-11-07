@@ -929,7 +929,7 @@ it("names findings without reading the setup it can't see", async () => {
 	expect(readsOf(calls, `${SCHEDULE}/constraints`)).toHaveLength(0);
 });
 
-it("marks findings on the roster and opens one in a popover", async () => {
+it("marks findings on the roster and says a day's in the panel its tile opens", async () => {
 	await openRoster({
 		...signedIn(),
 		[`GET ${SCHEDULE_READ}`]: generatedWith(),
@@ -947,24 +947,23 @@ it("marks findings on the roster and opens one in a popover", async () => {
 		within(roster).getByRole("button", { name: "1 note for Ben Ong" })
 	).toBeInTheDocument();
 	expect(
-		within(roster).getByRole("button", {
-			name: "Chen Wei, Sun 14:00 – 22:00, 1 note",
-		})
-	).toBeInTheDocument();
+		within(roster).queryByRole("button", { name: /on Sunday/ })
+	).toBeNull();
 	await user.click(
 		within(roster).getByRole("button", {
-			name: "1 note for Chen Wei on Sunday, October 18",
+			name: "Chen Wei, Sun 14:00 – 22:00, needs a look: 1",
 		})
 	);
 
-	const popover = await screen.findByRole("dialog", {
-		name: "1 note for Chen Wei on Sunday, October 18",
-	});
+	const notes = screen.getByRole("region", { name: "Needs a look" });
 	expect(
-		within(popover).getByText("Chen Wei covers the Sunday swing alone.").tagName
+		within(notes).getByText("Chen Wei covers the Sunday swing alone.").tagName
 	).toBe("Q");
 	await user.click(
-		within(popover).getByRole("button", { name: "Show in findings" })
+		within(roster).getByRole("button", { name: "1 note for Ben Ong" })
+	);
+	await user.click(
+		await screen.findByRole("button", { name: "Show in findings" })
 	);
 
 	expect(screen.getByRole("button", { name: "Issues: 4" })).toHaveAttribute(

@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
+import { RosterDayNotes } from "@/features/scheduling/RosterDayNotes";
 import { ShiftDetailsPanel } from "@/features/scheduling/ShiftDetailsPanel";
 import "@/common/i18n";
 
@@ -32,3 +33,15 @@ type Story = StoryObj<typeof meta>;
 
 /** A generated roster's day: its frozen shift, read-only. */
 export const Default: Story = {};
+
+/** A day that needs a look: its notes come first, above the shift. */
+export const WithIssues: Story = {
+	args: {
+		issues: (
+			<RosterDayNotes
+				membershipId="m-1"
+				note={{ uncoveredShiftName: "Front Desk PM" }}
+			/>
+		),
+	},
+};

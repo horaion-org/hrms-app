@@ -18,6 +18,7 @@ import {
 	type FindingNameSources,
 } from "@/features/scheduling/roster/findings/findingNames";
 import { placeFindings } from "@/features/scheduling/roster/findings/findingsOnGrid";
+import { RosterDayNotes } from "@/features/scheduling/RosterDayNotes";
 import {
 	isoDateIn,
 	legendOf,
@@ -25,6 +26,11 @@ import {
 	weekDays,
 	type RosterRow,
 } from "@/features/scheduling/roster/roster";
+import {
+	cellFindings,
+	dayNoteLines,
+	saidApartBy,
+} from "@/features/scheduling/roster/rosterMarks";
 import {
 	changedDayItems,
 	daysToDecideItems,
@@ -101,13 +107,14 @@ export type GeneratedRosterProps = {
 	/** The schedule's history for the Details panel; none, and no Details, without. */
 	details?: ReadonlyArray<DescriptionListItem>;
 	/**
-	 * Whether the manager's tools are shown: the summary line and the Issues
-	 * and Changed buttons. A member's own view leaves them out.
+	 * Whether the manager's tools are shown: the summary line, the Issues
+	 * and Changed buttons and the issue marks on the grid. A member's own
+	 * view leaves them out, and marks only their changed days.
 	 */
 	withSummary?: boolean;
 	/** Lets a day be changed by hand beside the grid; read-only without. */
 	editing?: RosterEditing;
-	/** The viewer's own membership, which decides where a day's leave request opens. */
+	/** The viewer's own membership, which decides where a chosen day's leave request opens. */
 	viewerMembershipId?: string;
 };
 
@@ -198,9 +205,11 @@ export const GeneratedRoster = ({
 		view.panel && !chosenRow && listCounts[view.panel] > 0
 			? view.panel
 			: undefined;
-	const chosenCell = rows.find(
+	const chosenMemberRow = rows.find(
 		(row) => row.membershipId === chosenRow?.member?.membershipId
-	)?.days[chosenRow?.day ?? ""];
+	);
+	const chosenCell = chosenMemberRow?.days[chosenRow?.day ?? ""];
+	const placed = findings && names ? placeFindings(findings, days) : undefined;
 
 	const showView = (next: Omit<RosterSearch, "week">): void => {
 		onViewChange({ ...(view.week ? { week: view.week } : {}), ...next });
@@ -312,6 +321,33 @@ export const GeneratedRoster = ({
 		],
 	};
 
+	/**
+	 * What needs a look on the chosen day, first in its panel: none on a
+	 * member's own roster, which marks no issues, or on a day with nothing
+	 * to say beyond what the editor says itself.
+	 */
+	const chosenDayIssues = (): ReactNode => {
+		if (!withSummary || !chosenRow || !chosenMemberRow) return undefined;
+		const dayFindings = cellFindings(placed, chosenMemberRow, chosenRow.day);
+		const saidApart = saidApartBy(
+			editing && { changesLeave: editing.leave !== undefined }
+		);
+		if (
+			dayFindings.length === 0 &&
+			dayNoteLines(chosenCell?.note, saidApart).length === 0
+		)
+			return undefined;
+		return (
+			<RosterDayNotes
+				findings={names ? { list: dayFindings, names } : undefined}
+				membershipId={chosenMemberRow.membershipId}
+				note={chosenCell?.note}
+				saidApart={saidApart}
+				viewerMembershipId={viewerMembershipId}
+			/>
+		);
+	};
+
 	/** The panel beside the grid: a chosen day first, else the open list. */
 	const sidePanel = (): ReactNode => {
 		if (editing && chosenRow)
@@ -321,6 +357,7 @@ export const GeneratedRoster = ({
 					key={chosenRow.assignmentId}
 					assignment={chosenRow}
 					assignments={assignments}
+					issues={chosenDayIssues()}
 					leaveEditing={editing.leave}
 					notifiesMembers={editing.notifiesMembers}
 					revision={editing.revision}
@@ -338,6 +375,7 @@ export const GeneratedRoster = ({
 		if (!editing && chosenCell?.kind === "shift" && chosenRow)
 			return (
 				<ShiftDetailsPanel
+					issues={chosenDayIssues()}
 					shift={{ ...chosenCell, date: chosenRow.day }}
 					staffName={chosenRow.member?.displayName ?? t(`${key}.formerMember`)}
 					onClose={close}
@@ -406,11 +444,11 @@ export const GeneratedRoster = ({
 							rows={rows}
 							selectedDayKey={editing ? view.cell : undefined}
 							selectedShiftId={chosenRow?.assignmentId}
-							viewerMembershipId={viewerMembershipId}
+							showsIssues={withSummary}
 							findings={
-								findings && names
+								placed && names
 									? {
-											placed: placeFindings(findings, days),
+											placed,
 											names,
 											onShowAll: (): void => {
 												open({ panel: "issues" });

@@ -155,7 +155,8 @@ constraint dialogs.
    `RosterChangeChecks`; Apply), and `LastRosterChange` offers Undo in a toast and in the Changed panel (hrms-backend-v2
    docs/adr/0062). On a PUBLISHED roster (`editing.notifiesMembers`, docs/adr/0063) Apply and Undo first ask in a
    `ConfirmDialog` how many people will be told (`peopleTold`), and the remark hint says those people see it. Days
-   changed by hand carry a dot wherever the rows carry a `lastChange`. A published schedule is never deleted
+   changed by hand carry a hollow ring wherever the rows carry a `lastChange` (a day to look at shows its dot
+   instead). A published schedule is never deleted
    (`deletable`): `ScheduleMenu` leaves Delete out. The member's own roster (`pages/MyRoster.tsx`) lists their days
    changed after publication with the remark (`MyRosterChanges`); the API sends no other change to a member.
    The editor reads the frozen shifts it offers from `…/roster-changes/shifts` (`rosterChangeShiftsQuery`) under
@@ -202,7 +203,16 @@ constraint dialogs.
   - `conflictTimes.ts` — a conflict's span as clock times (the engine writes datetimes).
 - `roster/generationFailure.ts` — a FAILED run's `errorCode` in the app's words (the closed set,
   `engine_http_<status>`, then a generic fallback), or INFEASIBLE.
-- `rosterLooks.ts` — the classes of a day off and of leave, and `shiftTileStyle` for a frozen shift's colour.
+- `rosterLooks.ts` — the classes of a day off and of leave, `shiftTileStyle` for a frozen shift's colour, and
+  `cellMarkLooks`: a cell's one mark in its tile's corner (an 8 px `warning-900` dot, or a hollow `ink-blue-700` ring).
+- `roster/rosterMarks.ts` — what the grid marks, pure and table-tested: `CELL_MARKS` (a cell's one mark, the issue's
+  dot winning over the changed ring; none of the issue dots on a member's own roster), `cellIssues` (a day's findings
+  plus what its note adds, as `ISSUE_SOURCES` counts it), `showsRole` (a tile drops the role that repeats the row's
+  job title), `tileStatusKey` (a member's own leave read in their tile), `dayNoteLines` and `saidApartBy` (the
+  chosen day's lines, less what the day editor says itself).
+- `RosterDayNotes` — what needs a look on a chosen day, first in its panel (`ShiftDetailsPanel` or `RosterCellPanel`,
+  `issues`): the engine's findings on the day, then a day to decide, leave requested or taken (with "Review in Leave",
+  `leaveLinkSearch.ts`) and a shift left short. The grid shows only the tile's dot for them.
 - `periods.ts` `formatDay` — "Mon, 12 Oct" for a finding's day.
 - `RosterHeader` — department, then period, status badge and time zone; `actions` (primary action and menu) at the right.
 - `schedules/scheduleDetails.ts` — the Details list: requested, finished, decided and time zone.

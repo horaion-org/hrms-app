@@ -20,11 +20,15 @@ import {
 	cellMark,
 	dayIssueCount,
 	dayNoteIssues,
+	dayNoteLines,
 	issuesOfHeader,
 	rowIssueCount,
+	saidApartBy,
 	showsRole,
 	tileStatusKey,
 	type CellFacts,
+	type DayNoteLine,
+	type SaidApart,
 } from "./rosterMarks";
 
 const WEEK = daysOf("2026-10-12");
@@ -109,6 +113,85 @@ describe("dayNoteIssues", () => {
 		["a flag the app does not know", { flag: "UNKNOWN" }, 0],
 	])("given_%s_then_countsIt", (_, note, count) => {
 		expect(dayNoteIssues(note)).toBe(count);
+	});
+});
+
+describe("dayNoteLines", () => {
+	it.each<
+		[
+			string,
+			RosterDayNote | undefined,
+			SaidApart | undefined,
+			Array<DayNoteLine>,
+		]
+	>([
+		["no note", undefined, undefined, []],
+		[
+			"leave requested, named and linked",
+			{
+				flag: "LEAVE_REQUESTED",
+				leaveTypeName: "Annual",
+				leaveRequestId: "r1",
+			},
+			undefined,
+			[
+				{
+					kind: "leave",
+					key: "leaveRequested",
+					leaveTypeName: "Annual",
+					leaveRequestId: "r1",
+				},
+			],
+		],
+		[
+			"leave taken that leaves a shift short",
+			{ flag: "ON_LEAVE_WHILE_ROSTERED", uncoveredShiftName: "Morning" },
+			undefined,
+			[
+				{ kind: "leave", key: "onLeave" },
+				{ kind: "cover", shiftName: "Morning" },
+			],
+		],
+		[
+			"a day needing attention",
+			{ flag: "NEEDS_ATTENTION" },
+			undefined,
+			[{ kind: "decision", key: "needsAttention" }],
+		],
+		[
+			"a day to decide the editor says apart",
+			{ flag: "NEEDS_DECISION", uncoveredShiftName: "Morning" },
+			new Set(["decision"] as const),
+			[{ kind: "cover", shiftName: "Morning" }],
+		],
+		[
+			"leave requested the editor says apart",
+			{ flag: "LEAVE_REQUESTED" },
+			new Set(["decision", "leaveRequested"] as const),
+			[],
+		],
+		[
+			"leave taken, which the editor never says apart",
+			{ flag: "ON_LEAVE_WHILE_ROSTERED" },
+			new Set(["decision", "leaveRequested"] as const),
+			[{ kind: "leave", key: "onLeave" }],
+		],
+	])("given_%s_then_readsItsLines", (_, note, saidApart, lines) => {
+		expect(dayNoteLines(note, saidApart)).toEqual(lines);
+	});
+});
+
+describe("saidApartBy", () => {
+	it.each<[string, { changesLeave: boolean } | undefined, Array<string>]>([
+		["a read-only panel", undefined, []],
+		["the day editor", { changesLeave: false }, ["decision"]],
+		[
+			"the day editor that may change leave",
+			{ changesLeave: true },
+			["decision", "leaveRequested"],
+		],
+	])("given_%s_then_leavesOutWhatItSays", (_, editor, lines) => {
+		expect([...saidApartBy(editor)]).toEqual(lines);
 	});
 });
 

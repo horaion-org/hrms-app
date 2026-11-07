@@ -3069,8 +3069,8 @@
 				"date_other": "{{count}} notes for {{day}}",
 				"cell_one": "{{count}} note for {{name}} on {{day}}",
 				"cell_other": "{{count}} notes for {{name}} on {{day}}",
-				"tileLabel_one": "{{label}}, {{count}} note",
-				"tileLabel_other": "{{label}}, {{count}} notes",
+				"tileLabel_one": "{{label}}, needs a look: {{count}}",
+				"tileLabel_other": "{{label}}, needs a look: {{count}}",
 				"roster": "Roster",
 				"setup": "Setup",
 				"close": "Close"
@@ -3203,7 +3203,8 @@
 			"needsCover": "Needs cover: {{shift}}",
 			"needsDecision": "Needs a decision",
 			"needsAttention": "Needs attention",
-			"openInLeave": "{{status}}: {{type}}. Open in Leave"
+			"needsALook": "Needs a look",
+			"tileStatus": "{{label}}, {{status}}"
 		},
 		"rosterEdit": {
 			"title": "{{name}} · {{date}}",

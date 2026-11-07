@@ -1,5 +1,6 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
+import type { FindingNames } from "@/features/scheduling/roster/findings/findingNames";
 import { leaveLinkSearch } from "./leaveLinkSearch";
 import { RosterDayNotes } from "./RosterDayNotes";
 
@@ -24,6 +25,12 @@ vi.mock("@tanstack/react-router", () => ({
 
 const MEMBER = "member-1";
 const VIEWER = "viewer-1";
+const NO_NAMES: FindingNames = {
+	members: new Map(),
+	shifts: new Map(),
+	jobTitles: new Map(),
+	rules: new Map(),
+};
 
 describe("leaveLinkSearch", () => {
 	it("opens someone else's request as a reviewer, by their membership", () => {
@@ -44,7 +51,7 @@ describe("leaveLinkSearch", () => {
 });
 
 describe("RosterDayNotes", () => {
-	it("marks a day cancelled leave left to decide", () => {
+	it("says a day cancelled leave left to decide, under one heading", () => {
 		render(
 			<RosterDayNotes
 				membershipId={MEMBER}
@@ -53,12 +60,15 @@ describe("RosterDayNotes", () => {
 			/>
 		);
 
+		const section = screen.getByRole("region", {
+			name: "scheduling.rosterMarkers.needsALook",
+		});
 		expect(
-			screen.getByText("scheduling.rosterMarkers.needsDecision")
+			within(section).getByText("scheduling.rosterMarkers.needsDecision")
 		).toBeVisible();
 	});
 
-	it("shows a day needing attention with no link and nothing of leave", () => {
+	it("says a day needing attention with no link and nothing of leave", () => {
 		render(
 			<RosterDayNotes
 				membershipId={MEMBER}
@@ -85,9 +95,13 @@ describe("RosterDayNotes", () => {
 				}}
 			/>
 		);
+
+		expect(
+			screen.getByText("scheduling.rosterMarkers.leaveRequested: Annual leave")
+		).toBeVisible();
 		expect(
 			screen.getByRole("link", {
-				name: "scheduling.rosterMarkers.openInLeave",
+				name: "scheduling.rosterEdit.reviewInLeave",
 			})
 		).toHaveAttribute(
 			"href",
@@ -103,26 +117,11 @@ describe("RosterDayNotes", () => {
 				viewerMembershipId={VIEWER}
 			/>
 		);
+
 		expect(screen.getByRole("link")).toHaveAttribute(
 			"href",
 			"/leave?requestId=r1"
 		);
-	});
-
-	it("says the leave type to sighted users as well", () => {
-		render(
-			<RosterDayNotes
-				membershipId={MEMBER}
-				note={{
-					flag: "ON_LEAVE_WHILE_ROSTERED",
-					leaveRequestId: "r1",
-					leaveTypeName: "Medical",
-				}}
-			/>
-		);
-		expect(
-			screen.getByText("scheduling.rosterMarkers.onLeave")
-		).toHaveAttribute("title", "scheduling.rosterMarkers.onLeave: Medical");
 	});
 
 	it("names the short shift without a leave link", () => {
@@ -132,19 +131,58 @@ describe("RosterDayNotes", () => {
 				note={{ uncoveredShiftName: "Morning" }}
 			/>
 		);
+
 		expect(
 			screen.getByText("scheduling.rosterMarkers.needsCover")
 		).toBeInTheDocument();
 		expect(screen.queryByRole("link")).not.toBeInTheDocument();
 	});
 
-	it.each(["UNKNOWN"] as const)(
-		"renders nothing at all for %s alone",
-		(flag) => {
-			const { container } = render(
-				<RosterDayNotes membershipId={MEMBER} note={{ flag }} />
-			);
-			expect(container).toBeEmptyDOMElement();
-		}
-	);
+	it("leaves out what the day editor says in its own words", () => {
+		render(
+			<RosterDayNotes
+				membershipId={MEMBER}
+				note={{ flag: "NEEDS_DECISION", uncoveredShiftName: "Morning" }}
+				saidApart={new Set(["decision", "leaveRequested"])}
+			/>
+		);
+
+		expect(
+			screen.queryByText("scheduling.rosterMarkers.needsDecision")
+		).toBeNull();
+		expect(
+			screen.getByText("scheduling.rosterMarkers.needsCover")
+		).toBeInTheDocument();
+	});
+
+	it("lists what the engine left on the day before the leave lines", () => {
+		render(
+			<RosterDayNotes
+				membershipId={MEMBER}
+				note={{ uncoveredShiftName: "Morning" }}
+				findings={{
+					list: [
+						{ kind: "message", date: "2026-10-18", message: "Covers alone." },
+					],
+					names: NO_NAMES,
+				}}
+			/>
+		);
+
+		const items = screen.getAllByRole("listitem");
+		expect(items.map((item) => item.textContent)).toEqual([
+			"Covers alone.",
+			"scheduling.rosterMarkers.needsCover",
+		]);
+	});
+
+	it.each([
+		["a flag the app does not know", { flag: "UNKNOWN" as const }],
+		["no note", undefined],
+	])("renders nothing at all for %s", (_, note) => {
+		const { container } = render(
+			<RosterDayNotes membershipId={MEMBER} note={note} />
+		);
+		expect(container).toBeEmptyDOMElement();
+	});
 });
