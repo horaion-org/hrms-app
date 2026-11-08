@@ -2,6 +2,7 @@ import type {
 	ApprovalInstance,
 	ApprovalInstanceStep,
 } from "@/features/approvals/api";
+import type { PublicationSubmission } from "@/features/scheduling/schedules/api";
 
 /** What the page could read of a subject's submission. */
 export type ApprovalRead =
@@ -26,8 +27,9 @@ export type OpenStep = {
  * Where the viewer stands on a subject awaiting its decision:
  * - `direct`: no flow applies; Publish decides in one step, as before approvals;
  * - `toSubmit`: a flow applies and nothing waits; Publish submits it;
- * - `pending`: a submission waits on `step`, and the viewer is the one to
- *   decide it (`decider`), its submitter, or neither (`waiting`);
+ * - `pending`: the submission `instanceId` waits on `step`, and the viewer
+ *   is the one to decide it (`decider`), its submitter, or neither
+ *   (`waiting`);
  * - `unknown`: a flow applies but its submission is still loading, or failed
  *   to load; no decision button is offered rather than a guessed one.
  */
@@ -38,14 +40,23 @@ export type ApprovalStanding =
 			kind: "pending";
 			role: "decider" | "submitter" | "waiting";
 			step: OpenStep;
+			instanceId: string;
 	  }
 	| { kind: "unknown"; failed: boolean };
 
 export type ApprovalStandingFacts = {
 	/** The subject waits on a decision (a GENERATED roster with no run open). */
 	awaitingDecision: boolean;
-	/** How deciding goes at the subject's department now, from the subject's own read. */
-	publication: { requiresApproval: boolean; stepLabels: ReadonlyArray<string> };
+	/**
+	 * How deciding goes at the subject's department now, and the submission
+	 * waiting on it if any, from the subject's own read: what a viewer
+	 * without `approval:read` goes by.
+	 */
+	publication: {
+		requiresApproval: boolean;
+		stepLabels: ReadonlyArray<string>;
+		submission: PublicationSubmission | null;
+	};
 	read: ApprovalRead;
 	viewerMembershipId: string;
 };
@@ -67,6 +78,16 @@ export const openStepOf = (
 		isLast: step.stepOrder === lastOrder,
 	};
 };
+
+/** The step a waiting submission is at, as the subject's own read tells it. */
+export const openStepOfSubmission = (
+	submission: PublicationSubmission
+): OpenStep => ({
+	order: submission.currentStepOrder,
+	count: submission.stepCount,
+	label: submission.currentStepLabel,
+	isLast: submission.currentStepOrder === submission.stepCount,
+});
 
 /** The step that rejected a submission, if it was rejected. */
 export const rejectedStepOf = (
@@ -103,7 +124,25 @@ const roleOf = (
 		: "waiting";
 };
 
-/** Where the viewer stands; see `ApprovalStanding`. */
+/**
+ * Where the viewer stands on a submission they can't read, from the
+ * subject's own read: its submitter or someone waiting, never a decider
+ * (deciding needs the approval read for `canDecide`).
+ */
+const standingOfSubmission = (
+	submission: PublicationSubmission
+): ApprovalStanding => ({
+	kind: "pending",
+	role: submission.submittedByCaller ? "submitter" : "waiting",
+	step: openStepOfSubmission(submission),
+	instanceId: submission.approvalInstanceId,
+});
+
+/**
+ * Where the viewer stands; see `ApprovalStanding`. Someone who can read the
+ * approval goes by it; anyone else by the submission the subject's read
+ * reports.
+ */
 export const approvalStanding = ({
 	awaitingDecision,
 	publication,
@@ -116,7 +155,9 @@ export const approvalStanding = ({
 		: { kind: "direct" };
 	switch (read.status) {
 		case "unread":
-			return withoutSubmission;
+			return publication.submission
+				? standingOfSubmission(publication.submission)
+				: withoutSubmission;
 		case "loading":
 			return { kind: "unknown", failed: false };
 		case "failed":
@@ -130,6 +171,7 @@ export const approvalStanding = ({
 				kind: "pending",
 				role: roleOf(read.instance, viewerMembershipId),
 				step,
+				instanceId: read.instance.approvalInstanceId,
 			};
 		}
 	}
@@ -189,8 +231,8 @@ export const approvalMetaLine = (
 /**
  * A schedule card's approval line, from the caller's own waiting list:
  * "Waiting on you · step 2 of 2 (Publish)" when one of its steps waits on
- * them, else what publishing it goes through. None without a flow, or once
- * decided.
+ * them, "Waiting for approval · …" when it waits on someone else, else what
+ * publishing it goes through. None without a flow, or once decided.
  */
 export const scheduleCardApprovalLine = (
 	schedule: {
@@ -207,6 +249,12 @@ export const scheduleCardApprovalLine = (
 	const step = mine && openStepOf(mine);
 	if (step)
 		return { key: "approvals.meta.waitingOnYou", values: stepValues(step) };
+	const { submission } = schedule.publication;
+	if (submission)
+		return {
+			key: "approvals.meta.waiting",
+			values: stepValues(openStepOfSubmission(submission)),
+		};
 	return schedule.publication.requiresApproval
 		? {
 				key: "approvals.meta.needsApproval",

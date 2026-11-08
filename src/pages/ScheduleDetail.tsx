@@ -192,15 +192,14 @@ type OpenDialog =
 /** What the header's primary button confirms, by where the viewer stands on the roster's approval. */
 const publishModeOf = (
 	standing: ApprovalStanding,
-	instanceSteps: ReadonlyArray<{ stepOrder: number; label: string }>,
-	instanceId: string | undefined
+	instanceSteps: ReadonlyArray<{ stepOrder: number; label: string }>
 ): PublishMode => {
 	if (standing.kind === "toSubmit")
 		return { kind: "submit", stepLabels: standing.stepLabels };
-	if (standing.kind === "pending" && instanceId)
+	if (standing.kind === "pending")
 		return {
 			kind: "approve",
-			instanceId,
+			instanceId: standing.instanceId,
 			step: standing.step,
 			nextLabel: instanceSteps.find(
 				(step) => step.stepOrder === standing.step.order + 1
@@ -228,7 +227,8 @@ const publishModeOf = (
  * a submission waits, the person whose step it is gets Approve (Approve and
  * publish on the last step) and Reject, its submitter may withdraw it, and
  * the meta line says where it stands, with "Approval ›" opening its trail
- * beside the grid.
+ * beside the grid. A viewer without `approval:read` sees where it stands,
+ * and withdraws their own, through the schedule read's `submission`.
  */
 const ApiSchedule = ({
 	companyId,
@@ -591,12 +591,8 @@ const ApiSchedule = ({
 			{openDialog === "publish" && (
 				<PublishScheduleDialog
 					companyId={companyId}
+					mode={publishModeOf(standing, approval.instance?.steps ?? [])}
 					schedule={schedule}
-					mode={publishModeOf(
-						standing,
-						approval.instance?.steps ?? [],
-						approval.instance?.approvalInstanceId
-					)}
 					onClose={closeDialog}
 					onDone={decided}
 				/>
@@ -606,21 +602,18 @@ const ApiSchedule = ({
 					companyId={companyId}
 					schedule={schedule}
 					approvalStep={
-						standing.kind === "pending" && approval.instance
-							? {
-									instanceId: approval.instance.approvalInstanceId,
-									step: standing.step,
-								}
+						standing.kind === "pending"
+							? { instanceId: standing.instanceId, step: standing.step }
 							: undefined
 					}
 					onClose={closeDialog}
 					onDone={decided}
 				/>
 			)}
-			{openDialog === "withdraw" && approval.instance && (
+			{openDialog === "withdraw" && standing.kind === "pending" && (
 				<WithdrawApprovalDialog
 					companyId={companyId}
-					instanceId={approval.instance.approvalInstanceId}
+					instanceId={standing.instanceId}
 					onClose={closeDialog}
 					onDone={decided}
 				/>

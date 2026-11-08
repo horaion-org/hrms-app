@@ -594,6 +594,47 @@ describe("a schedule's decision", () => {
 		expect(parsed.rejectionReason).toMatch(/supervisor/);
 	});
 
+	it("parses the waiting submission on its publication, and none from an API before it (PR #164)", async () => {
+		const submission = {
+			approvalInstanceId: "ai-1",
+			currentStepOrder: 1,
+			currentStepLabel: "Endorse",
+			stepCount: 2,
+			submittedByCaller: true,
+		};
+		stubApi({
+			[`GET ${SCHEDULES}/s-1`]: {
+				status: 200,
+				body: envelope(
+					generatedScheduleFixture({
+						status: "GENERATED",
+						publication: {
+							requiresApproval: true,
+							stepLabels: ["Endorse", "Publish"],
+							submission,
+						},
+					})
+				),
+			},
+			[`GET ${SCHEDULES}/s-2`]: {
+				status: 200,
+				body: envelope({
+					...generatedScheduleFixture({ scheduleId: "s-2" }),
+					publication: { requiresApproval: true, stepLabels: ["Publish"] },
+				}),
+			},
+		});
+
+		expect((await fetchSchedule("c-1", UNIT, "s-1")).publication).toEqual({
+			requiresApproval: true,
+			stepLabels: ["Endorse", "Publish"],
+			submission,
+		});
+		expect(
+			(await fetchSchedule("c-1", UNIT, "s-2")).publication.submission
+		).toBeNull();
+	});
+
 	it("reads a schedule from an API without decisions as undecided", async () => {
 		const decisionFields = ["decidedAt", "decidedBy", "rejectionReason"];
 		const withoutDecision = Object.fromEntries(

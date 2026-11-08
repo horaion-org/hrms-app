@@ -190,6 +190,27 @@ const participantSchema = z.object({
 	displayName: z.string().nullable(),
 });
 
+/**
+ * The roster's submission waiting for approval, as the schedule read tells
+ * every schedule reader (hrms-backend-v2 PR #164): where it stands and
+ * whether the caller submitted it, so a submitter without `approval:read`
+ * sees it wait and may withdraw it. It names nobody.
+ */
+const submissionSchema = z.object({
+	/** The approval to withdraw it by (`POST /me/approval-instances/{id}/cancellation`). */
+	approvalInstanceId: z.string(),
+	/** The open step, from 1. */
+	currentStepOrder: z.number().int(),
+	/** The open step's name, as it was when submitted. */
+	currentStepLabel: z.string(),
+	/** How many steps the submission has. */
+	stepCount: z.number().int(),
+	submittedByCaller: z.boolean(),
+});
+
+/** A waiting submission as the schedule read tells it; null on `publication` when nothing waits. */
+export type PublicationSubmission = z.infer<typeof submissionSchema>;
+
 const scheduleSchema = z.object({
 	scheduleId: z.string(),
 	companyId: z.string(),
@@ -232,15 +253,22 @@ const scheduleSchema = z.object({
 	 * How deciding goes at the schedule's department now: whether Publish
 	 * submits it for approval, and the steps it would go through. Absent from
 	 * an API without approvals, which reads as one-step publishing. A roster
-	 * already submitted keeps its own steps; read them on its approval.
+	 * already submitted keeps its own steps; read them on its approval, or
+	 * where it stands on `submission`.
 	 */
 	publication: z
 		.object({
 			requiresApproval: z.boolean(),
 			stepLabels: z.array(z.string()),
+			submission: submissionSchema
+				.nullish()
+				.transform((value) => value ?? null),
 		})
 		.nullish()
-		.transform((value) => value ?? { requiresApproval: false, stepLabels: [] }),
+		.transform(
+			(value) =>
+				value ?? { requiresApproval: false, stepLabels: [], submission: null }
+		),
 	/**
 	 * When its publication was last withdrawn; null if never. Once set the
 	 * schedule is published once and never regenerated. Null from an older API.
