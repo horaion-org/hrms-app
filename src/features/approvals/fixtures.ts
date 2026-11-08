@@ -20,6 +20,8 @@ export const endorseStep = (
 	status: "OPEN",
 	members: [],
 	decisions: [],
+	skippedBy: null,
+	skippedAt: null,
 	...overrides,
 });
 
@@ -34,6 +36,8 @@ export const publishStep = (
 	status: "WAITING",
 	members: [],
 	decisions: [],
+	skippedBy: null,
+	skippedAt: null,
 	...overrides,
 });
 
@@ -144,5 +148,24 @@ export const companyFlowFixture = (): ApprovalFlow =>
 				quorum: "ANY",
 				members: [],
 			},
+		],
+	});
+
+/**
+ * Siti could decide both steps: her approval of Endorse carried on to
+ * Publish and decided it, so Endorse shows Skipped with her name.
+ */
+export const carriedForwardFixture = (): ApprovalInstance =>
+	approvalInstanceFixture({
+		status: "APPROVED",
+		currentStepOrder: null,
+		decidedAt: sitiApproved.decidedAt,
+		steps: [
+			endorseStep({
+				status: "SKIPPED",
+				skippedBy: SITI,
+				skippedAt: sitiApproved.decidedAt,
+			}),
+			publishStep({ status: "APPROVED", decisions: [sitiApproved] }),
 		],
 	});

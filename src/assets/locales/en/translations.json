@@ -271,6 +271,7 @@
 			"approved": "Approved",
 			"rejected": "Rejected",
 			"skipped": "Skipped",
+			"skippedBy": "{{name}} approved this with the next step · {{at}}",
 			"notReached": "Not reached",
 			"notYet": "Not yet",
 			"unknown": "Unknown",
