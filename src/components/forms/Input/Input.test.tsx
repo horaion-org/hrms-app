@@ -411,6 +411,22 @@ describe("Input", () => {
 		expect(input).toHaveClass("disabled:cursor-not-allowed");
 	});
 
+	it("shows a read-only field in the grey box, still focusable and unchanged by typing", async () => {
+		const user = userEvent.setup();
+		render(
+			<Input readOnly aria-label="Schedule name" defaultValue="Week 42" />
+		);
+		const input = screen.getByRole("textbox", { name: "Schedule name" });
+
+		await user.tab();
+		expect(input).toHaveFocus();
+		await user.type(input, " changed");
+		expect(input).toHaveValue("Week 42");
+		expect(input.parentElement).toHaveClass(
+			"has-[>input:read-only]:bg-neutral-200"
+		);
+	});
+
 	it("given_theLargeSize_when_rendered_then_matchesALargeButtonsHeight", () => {
 		render(<Input aria-label="Search" inputSize="lg" type="search" />);
 

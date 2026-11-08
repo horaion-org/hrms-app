@@ -38,6 +38,13 @@ const neutralClasses = "border-neutral-400 focus-within:border-ink-blue-900";
 const disabledClasses =
 	"has-[>input:disabled]:cursor-not-allowed has-[>input:disabled]:border-neutral-400 has-[>input:disabled]:bg-neutral-200 has-[>input:disabled]:text-neutral-500 has-[>input:disabled]:outline-none has-[>input:disabled]:[&_svg]:text-neutral-500";
 
+/*
+ * A read-only field keeps its text in full colour and stays focusable, but
+ * takes the disabled field's grey box so it does not look editable. A
+ * disabled input is read-only too and gets the same grey, so the two agree.
+ */
+const readOnlyClasses = "has-[>input:read-only]:bg-neutral-200";
+
 export const Input = ({
 	"aria-invalid": ariaInvalid,
 	className,
@@ -53,6 +60,7 @@ export const Input = ({
 			sizeClasses[inputSize],
 			status ? statusClasses[status] : neutralClasses,
 			disabledClasses,
+			readOnlyClasses,
 			className
 		)}
 	>

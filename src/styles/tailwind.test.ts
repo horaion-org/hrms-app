@@ -526,7 +526,12 @@ describe("compiled app stylesheet", () => {
 	it("compiles every colour the Input renders across its states", () => {
 		const colours = [
 			...new Set(
-				[{}, { disabled: true }, ...inputStatuses.map((status) => ({ status }))]
+				[
+					{},
+					{ disabled: true },
+					{ readOnly: true },
+					...inputStatuses.map((status) => ({ status })),
+				]
 					.flatMap((props) => collectMarkupClasses(createElement(Input, props)))
 					.filter(isColourUtility)
 			),
@@ -538,6 +543,7 @@ describe("compiled app stylesheet", () => {
 				"focus-within:outline-ink-blue-500",
 				"has-[>input:disabled]:bg-neutral-200",
 				"has-[>input:disabled]:[&_svg]:text-neutral-500",
+				"has-[>input:read-only]:bg-neutral-200",
 			])
 		);
 		for (const className of colours) {
