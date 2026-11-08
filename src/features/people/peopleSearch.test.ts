@@ -32,6 +32,22 @@ describe("People URL state", () => {
 		});
 	});
 
+	it("keeps whether people who have signed in or not are listed, and drops anything else there", () => {
+		expect(parsePeopleSearch({ invitation: "pending" })).toEqual({
+			invitation: "pending",
+		});
+		expect(parsePeopleSearch({ invitation: "maybe" })).toEqual({});
+		expect(peopleQueryOf({ invitation: "pending" }, "")).toHaveProperty(
+			"invitationPending",
+			true
+		);
+		expect(peopleQueryOf({ invitation: "accepted" }, "")).toHaveProperty(
+			"invitationPending",
+			false
+		);
+		expect(peopleQueryOf({}, "")).not.toHaveProperty("invitationPending");
+	});
+
 	it("drops terms that are not an id", () => {
 		expect(parsePeopleSearch({ terms: "" })).toEqual({});
 		expect(parsePeopleSearch({ terms: 7 })).toEqual({});

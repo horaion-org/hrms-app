@@ -542,6 +542,72 @@ describe("People", () => {
 		);
 	});
 
+	it("marks the people who have not signed in yet as Invited, as their profile does", async () => {
+		stubApi({
+			...baseRoutes(),
+			[PEOPLE]: pageReply([
+				person("m-1", "Moses Lee", { invitationPending: false }),
+				person("m-2", "Ada Tan", { invitationPending: true }),
+				person("m-3", "Grace Lim"),
+			]),
+		});
+		await open("/people");
+
+		const table = await screen.findByRole("table");
+		expect(
+			within(within(table).getByRole("row", { name: /Ada Tan/ })).getByText(
+				"Invited"
+			)
+		).toBeVisible();
+		expect(
+			within(within(table).getByRole("row", { name: /Moses Lee/ })).queryByText(
+				"Invited"
+			)
+		).toBeNull();
+		// An API that does not say yet marks no one.
+		expect(
+			within(within(table).getByRole("row", { name: /Grace Lim/ })).queryByText(
+				"Invited"
+			)
+		).toBeNull();
+	});
+
+	it("filters to the people who have not signed in yet, in the URL and as a chip", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...baseRoutes(),
+			[PEOPLE]: pageReply([
+				person("m-2", "Ada Tan", { invitationPending: true }),
+			]),
+		});
+		const opened = await open("/people");
+		await screen.findByText("Ada Tan");
+
+		await user.click(screen.getByRole("button", { name: "Filters" }));
+		await user.click(screen.getByRole("button", { name: "Signed in" }));
+		await user.click(screen.getByRole("option", { name: "Not yet (invited)" }));
+
+		await waitFor(() => {
+			expect(peopleCalls(calls)).toContain(
+				`${FIRST_PAGE}&invitationPending=true`
+			);
+		});
+		expect(opened.router.state.location.search).toEqual({
+			invitation: "pending",
+		});
+		expect(
+			screen.getByRole("list", { name: "Active filters" })
+		).toHaveTextContent("Signed in: Not yet (invited)");
+
+		await user.click(screen.getByRole("button", { name: "Signed in" }));
+		await user.click(screen.getByRole("option", { name: "Yes" }));
+		await waitFor(() => {
+			expect(peopleCalls(calls)).toContain(
+				`${FIRST_PAGE}&invitationPending=false`
+			);
+		});
+	});
+
 	it("searches on the server once typing pauses, from the first page, without the text in the URL", async () => {
 		const user = userEvent.setup();
 		const calls = stubApi({

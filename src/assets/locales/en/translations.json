@@ -1285,7 +1285,13 @@
 			"history": "Import history"
 		},
 		"termsNotSet": "We couldn’t give them {{chosen}}, so they’re on {{kept}}. Change it from their profile.",
-		"imports": "Imports"
+		"imports": "Imports",
+		"invitationFilter": {
+			"label": "Signed in",
+			"all": "Everyone",
+			"pending": "Not yet (invited)",
+			"accepted": "Yes"
+		}
 	},
 	"settings": {
 		"title": "Settings",

@@ -46,6 +46,8 @@ const memberProfileSchema = z.object({
 	jobTitleId: z.string().nullable(),
 	jobTitleName: z.string().nullable(),
 	status: memberStatusSchema,
+	/** True until the person first signs in; null from an API that does not say. */
+	invitationPending: z.boolean().nullable().catch(null),
 });
 
 /** One person in the company as the People list shows them. */
@@ -86,6 +88,8 @@ export type PeopleQuery = {
 	departmentId?: string;
 	/** The employment terms people hold today; left out lists everyone. */
 	employmentTermsId?: string;
+	/** True lists people who have not signed in yet, false those who have; left out lists everyone. */
+	invitationPending?: boolean;
 };
 
 export const peoplePath = (
@@ -98,6 +102,7 @@ export const peoplePath = (
 		branchId,
 		departmentId,
 		employmentTermsId,
+		invitationPending,
 	}: PeopleQuery
 ): string => {
 	const query = new URLSearchParams({
@@ -112,6 +117,8 @@ export const peoplePath = (
 	if (branchId) query.set("branchId", branchId);
 	if (departmentId) query.set("departmentId", departmentId);
 	if (employmentTermsId) query.set("employmentTermsId", employmentTermsId);
+	if (invitationPending !== undefined)
+		query.set("invitationPending", String(invitationPending));
 	return `${companyPath(companyId)}/member-profiles?${query.toString()}`;
 };
 

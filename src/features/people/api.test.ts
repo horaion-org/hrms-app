@@ -33,6 +33,7 @@ const person = {
 	jobTitleId: null,
 	jobTitleName: null,
 	status: "ACTIVE",
+	invitationPending: true,
 };
 
 describe("member creation client", () => {
@@ -107,6 +108,25 @@ describe("people list client", () => {
 		).toBe("terms-1");
 	});
 
+	it("adds whether the people listed have signed in yet, false included", () => {
+		const query = {
+			page: 1,
+			sort: { field: "displayName", desc: false },
+			search: "",
+		} as const;
+
+		expect(
+			new URLSearchParams(
+				peoplePath("c-1", { ...query, invitationPending: true }).split("?")[1]
+			).get("invitationPending")
+		).toBe("true");
+		expect(
+			new URLSearchParams(
+				peoplePath("c-1", { ...query, invitationPending: false }).split("?")[1]
+			).get("invitationPending")
+		).toBe("false");
+	});
+
 	it("adds the status, a trimmed search cut to 100 characters and the Branch", () => {
 		const path = peoplePath("c-1", {
 			page: 3,
@@ -147,6 +167,28 @@ describe("people list client", () => {
 		).resolves.toEqual({
 			items: [{ ...person, phone: "+6591234821" }],
 			total: 160,
+		});
+	});
+
+	it("reads a row from an API that does not say whether the person has signed in", async () => {
+		const older: Record<string, unknown> = { ...person };
+		delete older["invitationPending"];
+		stubApi({
+			"GET /api/v1/companies/c-1/member-profiles": {
+				status: 200,
+				body: envelope({ content: [older], page: { totalElements: 1 } }),
+			},
+		});
+
+		await expect(
+			fetchPeople("c-1", {
+				page: 1,
+				sort: { field: "displayName", desc: false },
+				search: "",
+			})
+		).resolves.toEqual({
+			items: [{ ...older, invitationPending: null }],
+			total: 1,
 		});
 	});
 

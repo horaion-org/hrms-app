@@ -261,7 +261,14 @@ export const recentImportsQuery = (
 /** The People list as filtered now, as a spreadsheet. */
 export const exportPeople = (
 	companyId: string,
-	{ status, search, branchId, departmentId, employmentTermsId }: PeopleQuery
+	{
+		status,
+		search,
+		branchId,
+		departmentId,
+		employmentTermsId,
+		invitationPending,
+	}: PeopleQuery
 ): Promise<DownloadedFile> => {
 	const query = new URLSearchParams();
 	if (status) query.set("status", status);
@@ -269,6 +276,8 @@ export const exportPeople = (
 	if (branchId) query.set("branchId", branchId);
 	if (departmentId) query.set("departmentId", departmentId);
 	if (employmentTermsId) query.set("employmentTermsId", employmentTermsId);
+	if (invitationPending !== undefined)
+		query.set("invitationPending", String(invitationPending));
 	const suffix = query.size > 0 ? `?${query.toString()}` : "";
 	return apiDownload(
 		`${companyPath(companyId)}/member-profiles/export${suffix}`,
