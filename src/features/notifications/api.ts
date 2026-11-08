@@ -41,8 +41,10 @@ export const notificationSchema = z.object({
 		.nullish()
 		.transform((value) => value ?? null),
 	/**
-	 * The manager's remark on a change to the recipient's days of a published
-	 * roster (SCHEDULE_ASSIGNMENT_UPDATED); null for every other type.
+	 * The words the recipient is meant to read on the notification itself:
+	 * the manager's remark on a change to their days of a published roster
+	 * (SCHEDULE_ASSIGNMENT_UPDATED), and the reviewer's remark on their
+	 * leave (approved, rejected, recorded, changed, cancelled); null otherwise.
 	 */
 	remark: z
 		.string()

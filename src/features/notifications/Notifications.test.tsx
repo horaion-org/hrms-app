@@ -653,6 +653,40 @@ describe("Notifications", () => {
 		).toHaveLength(1);
 	});
 
+	it("given_aReviewersRemarkOnTheirLeave_when_listed_then_showsItUnderTheTitle", async () => {
+		stubApi({
+			"POST /api/v1/public/sessions/refreshes": accessPassReply(),
+			"GET /api/v1/me": currentUserReply(),
+			"GET /api/v1/me/workspace": {
+				status: 200,
+				body: envelope(companyWideWorkspace([])),
+			},
+			[`GET ${BASE}`]: {
+				status: 200,
+				body: {
+					content: [
+						{
+							...own,
+							notificationId: "changed-1",
+							type: "LEAVE_REQUEST_CHANGED",
+							remark: "Moved to Friday, as agreed on the phone.",
+						},
+					],
+					page: { totalElements: 1 },
+				},
+			},
+			[`GET ${BASE}/unread-count`]: { status: 200, body: { unreadCount: 1 } },
+		});
+		await open();
+		const link = await screen.findByRole("link", {
+			name: "Your leave was changed.",
+		});
+		expect(link.getAttribute("href")).toContain("/leave");
+		expect(
+			screen.getByText("Moved to Friday, as agreed on the phone.")
+		).toBeInTheDocument();
+	});
+
 	it("given_schedulePublisherWithoutLeaveReview_when_opening_then_needsReviewListsTheReadySchedule", async () => {
 		stubApi({
 			"POST /api/v1/public/sessions/refreshes": accessPassReply(),

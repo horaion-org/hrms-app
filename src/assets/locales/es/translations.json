@@ -38,9 +38,9 @@
 			"SCHEDULE_REJECTED": "Se rechazó un horario que generaste.",
 			"ROSTER_DAY_NEEDS_DECISION": "Un día de este cuadrante necesita atención.",
 			"MEMBER_IMPORT_FINISHED": "Tu importación terminó.",
-			"LEAVE_REQUEST_RECORDED": "Se registró un permiso para ti. Ábrelo para ver el motivo.",
-			"LEAVE_REQUEST_CHANGED": "Tu permiso cambió. Ábrelo para ver el motivo.",
-			"LEAVE_REQUEST_CANCELLED": "Tu permiso se canceló. Ábrelo para ver el motivo.",
+			"LEAVE_REQUEST_RECORDED": "Se registró un permiso para ti.",
+			"LEAVE_REQUEST_CHANGED": "Tu permiso cambió.",
+			"LEAVE_REQUEST_CANCELLED": "Tu permiso se canceló.",
 			"COVER_OFFER_SENT": "Te ofrecen un turno.",
 			"COVER_OFFER_ANSWERED": "Han respondido a tu oferta de cobertura."
 		},
