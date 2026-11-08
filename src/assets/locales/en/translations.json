@@ -3550,6 +3550,103 @@
 			"blocked": "This week already has a published roster for this department. Only one roster can be published per week, so this schedule can’t be generated or published.",
 			"open": "Open the published roster",
 			"generateUnavailable": "This week already has a published roster."
+		},
+		"coverOffers": {
+			"card": {
+				"title": "Shift offered",
+				"was": "Was",
+				"pay": "Pay",
+				"askedBy": "Asked by",
+				"askedByValue": "{{name}}, for the company",
+				"answerBy": "Answer by",
+				"noteCaption": "{{name}}’s note",
+				"accept": "Accept",
+				"decline": "Decline",
+				"sendDecline": "Send decline",
+				"back": "Back",
+				"reason": "Want to tell {{name}} why? (optional)",
+				"accepted": "You’re on the roster for this shift.",
+				"declineSent": "Your answer was sent.",
+				"closed": {
+					"accepted": "You accepted at {{time}}. It’s on your roster.",
+					"acceptedNoTime": "You accepted. It’s on your roster.",
+					"declined": "You declined at {{time}}.",
+					"declinedNoTime": "You declined.",
+					"expired": "Time ran out at {{time}}. {{name}} will find someone else.",
+					"withdrawn": "This offer is no longer open: someone else took the shift, or it was withdrawn.",
+					"unavailable": "This offer isn’t available."
+				},
+				"error": {
+					"stale": "Your roster changed since this offer was made, so it can’t be accepted as it is. {{name}} can send a new one.",
+					"notOpen": "This offer is no longer open.",
+					"failed": "Your answer didn’t go through. Try again."
+				},
+				"loadFailed": "Couldn’t load your offers.",
+				"tryAgain": "Try again",
+				"loading": "Loading your offers…",
+				"formerManager": "Your manager"
+			},
+			"pay": {
+				"sameHours": "Same hours, different shift",
+				"longer": "Longer shift",
+				"overtime": "Overtime · {{hours}} h",
+				"restDay": "Rest day work, at the company’s request",
+				"unknown": "As set by the company"
+			},
+			"tileOffered": "{{label}}, shift offered, answer by {{time}}",
+			"actions": {
+				"mustAgree": "The roster is published, so {{name}} must agree.",
+				"sendOffer": "Send offer",
+				"theyAgreed": "They agreed",
+				"rivals_one": "1 offer out for this shift: {{names}}. Sending this one too means the first yes wins.",
+				"rivals_other": "{{count}} offers out for this shift: {{names}}. Sending this one too means the first yes wins.",
+				"groupFull": "{{count}} offers are already out for this shift.",
+				"sent": "Offer sent to {{name}} · answer by {{time}}",
+				"withdraw": "Withdraw offer",
+				"recordTitle": "Record {{name}}’s yes",
+				"how": "How",
+				"when": "When",
+				"whenHint": "Today, no later than now.",
+				"whenFuture": "Choose a time that has already passed.",
+				"recordHint": "The change applies at once, and {{name}} is told as for any change.",
+				"back": "Back",
+				"recordAndApply": "Record and apply",
+				"howOptions": {
+					"PHONE": "Phone call",
+					"IN_PERSON": "In person",
+					"MESSAGE": "Message"
+				},
+				"offerSent": "Offer sent.",
+				"withdrawn": "Offer withdrawn.",
+				"error": {
+					"stale": "The roster changed since you looked. Reload.",
+					"notOpen": "This offer is no longer open.",
+					"alreadyOpen": "{{name}} already has an offer for this day.",
+					"groupFull": "Three offers are already out for this shift.",
+					"ownOffer": "You can’t offer a shift to yourself.",
+					"notPublished": "The roster isn’t published any more, so no offer is needed.",
+					"revision": "The roster changed since you looked. Reload.",
+					"checksChanged": "The checks changed. Look at them again.",
+					"refused": "The roster can’t take this change.",
+					"notFound": "This offer no longer exists.",
+					"failed": "That didn’t go through. Try again."
+				},
+				"howRequired": "Choose how they agreed."
+			},
+			"offersOut": {
+				"title": "Offers out",
+				"gap": "{{day}} · {{shift}} {{time}}",
+				"summary_one": "1 offer out",
+				"summary_other": "{{count}} offers out · first yes wins",
+				"waiting": "waiting, answer by {{time}}",
+				"declined": "declined {{time}}",
+				"expired": "ran out {{time}}",
+				"line": "{{name}} · {{pay}} · {{standing}}",
+				"withdraw": "Withdraw",
+				"withdrawLabel": "Withdraw the offer to {{name}}",
+				"loadFailed": "Couldn’t load offers.",
+				"tryAgain": "Try again"
+			}
 		}
 	},
 	"colourSwatchPicker": {

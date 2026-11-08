@@ -3372,6 +3372,103 @@
 			"blocked": "Esta semana ya tiene un cuadrante publicado para este departamento. Solo se puede publicar un cuadrante por semana, así que este horario no se puede generar ni publicar.",
 			"open": "Abrir el cuadrante publicado",
 			"generateUnavailable": "Esta semana ya tiene un cuadrante publicado."
+		},
+		"coverOffers": {
+			"card": {
+				"title": "Turno ofrecido",
+				"was": "Antes",
+				"pay": "Pago",
+				"askedBy": "Pedido por",
+				"askedByValue": "{{name}}, en nombre de la empresa",
+				"answerBy": "Responde antes de",
+				"noteCaption": "Nota de {{name}}",
+				"accept": "Aceptar",
+				"decline": "Rechazar",
+				"sendDecline": "Enviar rechazo",
+				"back": "Volver",
+				"reason": "¿Quieres decirle a {{name}} por qué? (opcional)",
+				"accepted": "Ya estás en el cuadrante para este turno.",
+				"declineSent": "Tu respuesta se ha enviado.",
+				"closed": {
+					"accepted": "Aceptaste a las {{time}}. Ya está en tu cuadrante.",
+					"acceptedNoTime": "Aceptaste. Ya está en tu cuadrante.",
+					"declined": "Rechazaste a las {{time}}.",
+					"declinedNoTime": "Rechazaste.",
+					"expired": "Se acabó el plazo a las {{time}}. {{name}} buscará a otra persona.",
+					"withdrawn": "Esta oferta ya no está abierta: otra persona cogió el turno o se retiró.",
+					"unavailable": "Esta oferta no está disponible."
+				},
+				"error": {
+					"stale": "Tu cuadrante cambió desde que se hizo esta oferta, así que no se puede aceptar tal cual. {{name}} puede enviar otra.",
+					"notOpen": "Esta oferta ya no está abierta.",
+					"failed": "Tu respuesta no se envió. Inténtalo de nuevo."
+				},
+				"loadFailed": "No se pudieron cargar tus ofertas.",
+				"tryAgain": "Reintentar",
+				"loading": "Cargando tus ofertas…",
+				"formerManager": "Tu responsable"
+			},
+			"pay": {
+				"sameHours": "Mismas horas, otro turno",
+				"longer": "Turno más largo",
+				"overtime": "Horas extra · {{hours}} h",
+				"restDay": "Trabajo en día de descanso, a petición de la empresa",
+				"unknown": "Según lo fije la empresa"
+			},
+			"tileOffered": "{{label}}, turno ofrecido, responde antes de las {{time}}",
+			"actions": {
+				"mustAgree": "El cuadrante está publicado: {{name}} tiene que aceptar.",
+				"sendOffer": "Enviar oferta",
+				"theyAgreed": "Ya ha aceptado",
+				"rivals_one": "1 oferta enviada para este turno: {{names}}. Si envías esta también, gana el primer sí.",
+				"rivals_other": "{{count}} ofertas enviadas para este turno: {{names}}. Si envías esta también, gana el primer sí.",
+				"groupFull": "Ya hay {{count}} ofertas enviadas para este turno.",
+				"sent": "Oferta enviada a {{name}} · responde antes de las {{time}}",
+				"withdraw": "Retirar oferta",
+				"recordTitle": "Registrar el sí de {{name}}",
+				"how": "Cómo",
+				"when": "Cuándo",
+				"whenHint": "Hoy, no más tarde que ahora.",
+				"whenFuture": "Elige una hora que ya haya pasado.",
+				"recordHint": "El cambio se aplica al momento y se avisa a {{name}} como en cualquier cambio.",
+				"back": "Volver",
+				"recordAndApply": "Registrar y aplicar",
+				"howOptions": {
+					"PHONE": "Llamada",
+					"IN_PERSON": "En persona",
+					"MESSAGE": "Mensaje"
+				},
+				"offerSent": "Oferta enviada.",
+				"withdrawn": "Oferta retirada.",
+				"error": {
+					"stale": "El cuadrante cambió desde que lo miraste. Recarga.",
+					"notOpen": "Esta oferta ya no está abierta.",
+					"alreadyOpen": "{{name}} ya tiene una oferta para este día.",
+					"groupFull": "Ya hay tres ofertas enviadas para este turno.",
+					"ownOffer": "No puedes ofrecerte un turno a ti.",
+					"notPublished": "El cuadrante ya no está publicado, así que no hace falta oferta.",
+					"revision": "El cuadrante cambió desde que lo miraste. Recarga.",
+					"checksChanged": "Las comprobaciones cambiaron. Revísalas de nuevo.",
+					"refused": "El cuadrante no admite este cambio.",
+					"notFound": "Esta oferta ya no existe.",
+					"failed": "No se pudo hacer. Inténtalo de nuevo."
+				},
+				"howRequired": "Elige cómo aceptó."
+			},
+			"offersOut": {
+				"title": "Ofertas enviadas",
+				"gap": "{{day}} · {{shift}} {{time}}",
+				"summary_one": "1 oferta enviada",
+				"summary_other": "{{count}} ofertas enviadas · gana el primer sí",
+				"waiting": "en espera, responde antes de las {{time}}",
+				"declined": "rechazada {{time}}",
+				"expired": "caducada {{time}}",
+				"line": "{{name}} · {{pay}} · {{standing}}",
+				"withdraw": "Retirar",
+				"withdrawLabel": "Retirar la oferta a {{name}}",
+				"loadFailed": "No se pudieron cargar las ofertas.",
+				"tryAgain": "Reintentar"
+			}
 		}
 	},
 	"workspace": {
