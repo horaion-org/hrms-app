@@ -11,6 +11,8 @@ export type RosterHeaderProps = {
 	schedule: Schedule;
 	/** Placed at the right: the state's one primary action and the "More actions" menu. */
 	actions?: ReactNode;
+	/** Said after the status, e.g. where the roster's approval stands. */
+	meta?: ReactNode;
 	className?: string;
 };
 
@@ -18,12 +20,14 @@ const key = "scheduling.detail";
 
 /**
  * The top of a schedule's roster, kept to two lines: its department, then
- * its period, status and time zone. Who requested and decided it, and
- * when, are in the "More actions" menu's Details.
+ * its period, status (with any approval line `meta` says) and time zone.
+ * Who requested and decided it, and when, are in the "More actions" menu's
+ * Details.
  */
 export const RosterHeader = ({
 	schedule,
 	actions,
+	meta,
 	className,
 }: RosterHeaderProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
@@ -50,6 +54,7 @@ export const RosterHeader = ({
 					>
 						{t(`scheduling.overview.statuses.${schedule.status}`)}
 					</Badge>
+					{meta}
 					<span className="text-xs font-normal text-neutral-700">
 						{t(`${key}.timeZone`, { timeZone: schedule.timeZone })}
 					</span>

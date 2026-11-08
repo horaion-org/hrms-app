@@ -78,4 +78,22 @@ describe("ScheduleCard", () => {
 		});
 		expect(within(card).queryByText(/setup issue/)).toBeNull();
 	});
+
+	it("given_anApprovalLine_when_rendered_then_saysWhereItsApprovalStands", async () => {
+		render(
+			<MemoryRouterHarness>
+				<ScheduleCard
+					schedule={generatedScheduleFixture({ status: "GENERATED" })}
+					approvalLine={{
+						key: "approvals.meta.waitingOnYou",
+						values: { step: 2, total: 2, label: "Publish" },
+					}}
+				/>
+			</MemoryRouterHarness>
+		);
+
+		expect(
+			await screen.findByText("Waiting on you · step 2 of 2 (Publish)")
+		).toHaveClass("font-medium");
+	});
 });

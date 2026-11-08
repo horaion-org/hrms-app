@@ -7,12 +7,15 @@ import { Button } from "@/components/ui/Button";
 import { SchedulingIcon } from "@/components/ui/Icon";
 import { formatPeriod } from "@/features/scheduling/periods";
 import { scheduleStatusTones } from "@/features/scheduling/schedules";
+import type { ApprovalLine } from "@/features/approvals/approvalStanding";
 import type { Schedule } from "@/features/scheduling/schedules/api";
 import { scheduleViewLink } from "@/features/scheduling/schedules/scheduleViewLink";
 import { ScheduleSummary } from "@/features/scheduling/ScheduleCard/ScheduleSummary";
 
 export type ScheduleCardProps = {
 	schedule: Schedule;
+	/** Where its approval stands, said as one line under the status; none without a flow. */
+	approvalLine?: ApprovalLine;
 	className?: string;
 };
 
@@ -20,11 +23,13 @@ const key = "scheduling.overview";
 
 /**
  * One department's schedule for a period: where it is filed, its status
- * (with how many setup issues its newest run found) and what it includes.
+ * (with how many setup issues its newest run found, and any approval line)
+ * and what it includes.
  * View opens it by its status.
  */
 export const ScheduleCard = ({
 	schedule,
+	approvalLine,
 	className,
 }: ScheduleCardProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
@@ -77,6 +82,16 @@ export const ScheduleCard = ({
 					</Badge>
 				</span>
 			</div>
+			{approvalLine && (
+				<p
+					className={joinClassNames(
+						"mt-2 text-sm text-neutral-800",
+						approvalLine.key === "approvals.meta.waitingOnYou" && "font-medium"
+					)}
+				>
+					{t(approvalLine.key, approvalLine.values)}
+				</p>
+			)}
 			<ScheduleSummary schedule={schedule} />
 		</section>
 	);

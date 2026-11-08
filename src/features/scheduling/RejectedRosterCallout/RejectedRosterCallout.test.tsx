@@ -45,4 +45,17 @@ describe("RejectedRosterCallout", () => {
 			expect(container).toBeEmptyDOMElement();
 		}
 	);
+
+	it("given_aRejectionAtAnApprovalStep_when_rendered_then_namesTheStep", () => {
+		render(
+			<RejectedRosterCallout
+				rejectedStep="Endorse"
+				schedule={generatedScheduleFixture({ status: "REJECTED" })}
+			/>
+		);
+
+		expect(screen.getByRole("note")).toHaveTextContent(
+			/^Rejected at Endorse by José · /
+		);
+	});
 });

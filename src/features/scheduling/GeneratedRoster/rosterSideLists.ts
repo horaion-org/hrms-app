@@ -9,7 +9,8 @@ export const ROSTER_SIDE_LISTS: Record<
 		titleKey:
 			| "scheduling.detail.issues"
 			| "scheduling.detail.changes"
-			| "scheduling.detail.details.title";
+			| "scheduling.detail.details.title"
+			| "approvals.panel.title";
 		button?: {
 			/** The button's name with its count, e.g. "Issues: 11". */
 			labelKey:
@@ -37,4 +38,6 @@ export const ROSTER_SIDE_LISTS: Record<
 	},
 	// Opened from the page's "More actions" menu.
 	details: { titleKey: "scheduling.detail.details.title" },
+	// Opened from the header's approval line.
+	approval: { titleKey: "approvals.panel.title" },
 };

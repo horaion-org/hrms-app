@@ -228,6 +228,19 @@ const scheduleSchema = z.object({
 	 * API without roster changes.
 	 */
 	rosterRevision: z.number().int().default(0),
+	/**
+	 * How deciding goes at the schedule's department now: whether Publish
+	 * submits it for approval, and the steps it would go through. Absent from
+	 * an API without approvals, which reads as one-step publishing. A roster
+	 * already submitted keeps its own steps; read them on its approval.
+	 */
+	publication: z
+		.object({
+			requiresApproval: z.boolean(),
+			stepLabels: z.array(z.string()),
+		})
+		.nullish()
+		.transform((value) => value ?? { requiresApproval: false, stepLabels: [] }),
 	createdAt: z.string(),
 	updatedAt: z.string(),
 });
@@ -404,8 +417,9 @@ export const requestRegeneration = (
 
 /**
  * Records a publish decision on a GENERATED schedule's roster. It answers
- * the schedule: read its status from the answer (PUBLISHED today), never
- * assume it.
+ * the schedule: read its status from the answer, never assume it. Where an
+ * approval flow applies (`publication.requiresApproval`) it submits the
+ * roster instead and answers it still GENERATED.
  */
 export const publishSchedule = (
 	companyId: string,

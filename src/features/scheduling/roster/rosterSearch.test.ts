@@ -28,6 +28,17 @@ describe("parseRosterSearch", () => {
 	});
 });
 
+describe("parseRosterSearch: the approval panel", () => {
+	it("opens the Approval list its link names", () => {
+		expect(parseRosterSearch({ panel: "approval" })).toEqual({
+			panel: "approval",
+		});
+		expect(parseRosterSearch({ panel: "approval", member: "m-1" })).toEqual({
+			panel: "approval",
+		});
+	});
+});
+
 describe("issuesAboutOf", () => {
 	it.each([
 		[{}, undefined],

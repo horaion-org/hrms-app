@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import { getRouteApi, useRouterState } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -7,13 +8,15 @@ import { Button } from "@/components/ui/Button";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { PlusIcon, ViewIcon } from "@/components/ui/Icon";
 import { Toast } from "@/components/ui/Toast";
+import { myPendingApprovalsQuery } from "@/features/approvals/api";
+import { scheduleCardApprovalLine } from "@/features/approvals/approvalStanding";
 import { schedulingNoticeFrom } from "@/features/scheduling/schedulingNotice";
 import { Can } from "@/features/workspace/Can";
 import { ListToolbar } from "@/features/organisation/ListToolbar";
 import { formatPeriod } from "@/features/scheduling/periods";
 import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import { useSchedules } from "@/features/scheduling/schedules/useSchedules";
-import type { Schedule } from "@/features/scheduling/schedules/api";
+import { decidable, type Schedule } from "@/features/scheduling/schedules/api";
 import { scheduleViewLink } from "@/features/scheduling/schedules/scheduleViewLink";
 import { ScheduleCard } from "@/features/scheduling/ScheduleCard";
 import { ScheduleMenu } from "@/features/scheduling/ScheduleMenu";
@@ -27,6 +30,7 @@ import {
 	offersDepartmentChoice,
 	selectedUnits,
 } from "@/features/workspace/unitSelection";
+import { useAccess } from "@/features/workspace/useAccess";
 import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 
 const key = "scheduling.overview";
@@ -63,6 +67,13 @@ export const Scheduling = (): FunctionComponent => {
 		SCHEDULING_UNIT_RULES
 	);
 	const list = useSchedules(companyId, selectedUnits(units));
+	// What waits on the caller, so a card can say "Waiting on you"; asked only of possible approvers.
+	const waitingOnMe = useQuery(
+		myPendingApprovalsQuery(
+			companyId,
+			useAccess().canAnywhere("approval:decide")
+		)
+	).data;
 	const [search, setSearch] = useState("");
 	const chooseDepartment = (department: string | undefined): void => {
 		void navigate({ search: (previous) => ({ ...previous, department }) });
@@ -209,7 +220,18 @@ export const Scheduling = (): FunctionComponent => {
 					</h2>
 					<div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
 						{schedules.map((schedule) => (
-							<ScheduleCard key={schedule.scheduleId} schedule={schedule} />
+							<ScheduleCard
+								key={schedule.scheduleId}
+								schedule={schedule}
+								approvalLine={scheduleCardApprovalLine(
+									{
+										scheduleId: schedule.scheduleId,
+										awaitingDecision: decidable(schedule),
+										publication: schedule.publication,
+									},
+									waitingOnMe ?? []
+								)}
+							/>
 						))}
 					</div>
 				</section>

@@ -10,6 +10,8 @@ export type RejectedRosterCalloutProps = {
 	schedule: Schedule;
 	/** Says what to do next; left out when the schedule can't be generated again. */
 	showsNextStep?: boolean;
+	/** The approval step that rejected it, when a submission was rejected rather than the roster directly. */
+	rejectedStep?: string;
 	className?: string;
 };
 
@@ -17,12 +19,14 @@ const key = "scheduling.decision";
 
 /**
  * Under the roster header of a rejected roster, because someone has to act
- * on it: who rejected it and when, their reason, and what to do next.
+ * on it: who rejected it (and at which approval step) and when, their
+ * reason, and what to do next.
  * Renders nothing for any other status.
  */
 export const RejectedRosterCallout = ({
 	schedule,
 	showsNextStep = false,
+	rejectedStep,
 	className,
 }: RejectedRosterCalloutProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
@@ -35,14 +39,23 @@ export const RejectedRosterCallout = ({
 				timeStyle: "short",
 			}).format(new Date(decision.decidedAt))
 		: "";
+	const rejectedLine = (): string => {
+		if (rejectedStep)
+			return decision.decidedBy
+				? t("approvals.rejectedAt", {
+						label: rejectedStep,
+						name: decision.decidedBy,
+						at,
+					})
+				: t("approvals.rejectedAtStep", { label: rejectedStep, at });
+		return decision.decidedBy
+			? t(`${key}.rejectedBy`, { name: decision.decidedBy, at })
+			: t(`${key}.rejectedAt`, { at });
+	};
 	return (
 		<Callout className={className} tone="warning">
 			<span className="flex flex-col gap-3">
-				<span>
-					{decision.decidedBy
-						? t(`${key}.rejectedBy`, { name: decision.decidedBy, at })
-						: t(`${key}.rejectedAt`, { at })}
-				</span>
+				<span>{rejectedLine()}</span>
 				{decision.reason !== null && (
 					<Quote caption={t(`${key}.reason`)}>{decision.reason}</Quote>
 				)}

@@ -26,3 +26,31 @@ type Story = StoryObj<typeof meta>;
 
 /** Publishing makes the roster final for its week, so the dialog says so. */
 export const Default: Story = {};
+
+/** Where a flow applies, Publish submits the roster to its steps. */
+export const SubmitForApproval: Story = {
+	args: { mode: { kind: "submit", stepLabels: ["Endorse", "Publish"] } },
+};
+
+/** A middle step: the approver's comment is optional, and the next step is named. */
+export const ApproveMiddleStep: Story = {
+	args: {
+		mode: {
+			kind: "approve",
+			instanceId: "ai-1",
+			step: { order: 1, count: 2, label: "Endorse", isLast: false },
+			nextLabel: "Publish",
+		},
+	},
+};
+
+/** The last step: approving publishes the roster. */
+export const ApproveAndPublish: Story = {
+	args: {
+		mode: {
+			kind: "approve",
+			instanceId: "ai-1",
+			step: { order: 2, count: 2, label: "Publish", isLast: true },
+		},
+	},
+};
