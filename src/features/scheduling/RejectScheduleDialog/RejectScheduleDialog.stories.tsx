@@ -26,3 +26,11 @@ type Story = StoryObj<typeof meta>;
 
 /** The reason is required; confirming without one says so on the field. */
 export const Default: Story = {};
+
+/** Withdrawing a published roster's publication: the remark everyone on it reads is required. */
+export const WithdrawPublication: Story = {
+	args: {
+		decision: "withdraw",
+		schedule: generatedScheduleFixture({ status: "PUBLISHED" }),
+	},
+};

@@ -26,6 +26,10 @@ const render = (ui: ReactElement): RenderResult => {
 };
 
 const pending = LEAVE_FIXTURES[1]!;
+/** Before the pending request's first day, so approving it needs no comment. */
+const BEFORE_THE_LEAVE = "2026-05-01";
+/** After the pending request's first day: approving it corrects history, so it needs a comment. */
+const AFTER_THE_LEAVE_STARTED = "2026-06-01";
 const employees = {
 	search: "",
 	onSearch: vi.fn(),
@@ -81,6 +85,7 @@ it("confirms an approval with an optional trimmed comment and returns to review 
 			<LeaveRequestDialog
 				canReview
 				request={pending}
+				today={BEFORE_THE_LEAVE}
 				onApprove={onApprove}
 				onClose={vi.fn()}
 				onCreate={vi.fn()}
@@ -111,6 +116,47 @@ it("confirms an approval with an optional trimmed comment and returns to review 
 	);
 });
 
+it("asks for a comment before approving leave that started before today, then sends it", async () => {
+	const user = userEvent.setup();
+	const onApprove = vi.fn<LeaveRequestDialogProps["onApprove"]>();
+	render(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveRequestDialog
+				canReview
+				mode="approve"
+				request={pending}
+				today={AFTER_THE_LEAVE_STARTED}
+				onApprove={onApprove}
+				onClose={vi.fn()}
+				onCreate={vi.fn()}
+				onReject={vi.fn()}
+			/>
+		</I18nextProvider>
+	);
+	const comment = screen.getByRole("textbox", { name: "Comment" });
+	expect(comment).toBeRequired();
+	expect(
+		screen.getByText(
+			"This leave includes days before today, so say why. The employee will see this."
+		)
+	).toBeInTheDocument();
+	// Blank passes the browser's required check; the dialog's own check catches it.
+	await user.type(comment, "   ");
+	await user.click(screen.getByRole("button", { name: "Confirm approval" }));
+	expect(onApprove).not.toHaveBeenCalled();
+	expect(comment).toHaveAccessibleDescription(
+		"Enter a comment: this leave includes days before today."
+	);
+	await user.clear(comment);
+	await user.type(comment, " Approved after the fact. ");
+	await user.click(screen.getByRole("button", { name: "Confirm approval" }));
+	expect(onApprove).toHaveBeenLastCalledWith(
+		pending,
+		"Approved after the fact.",
+		false
+	);
+});
+
 it("opens at the approval step and shows a refused comment on its field", () => {
 	render(
 		<I18nextProvider i18n={authTestI18n}>
@@ -118,6 +164,7 @@ it("opens at the approval step and shows a refused comment on its field", () => 
 				canReview
 				mode="approve"
 				request={pending}
+				today={BEFORE_THE_LEAVE}
 				refusal={{
 					fields: { comment: "Enter a comment of up to 2,000 characters." },
 					refreshMembers: false,

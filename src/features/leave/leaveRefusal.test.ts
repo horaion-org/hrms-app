@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { ApiProblemError } from "@/common/problem";
 import { authTestI18n } from "@/features/auth/testingI18n";
-import { applyRefusal, isRosterClash } from "@/features/leave/leaveRefusal";
+import {
+	applyRefusal,
+	decisionRefusal,
+	isRosterClash,
+} from "@/features/leave/leaveRefusal";
 
 const t = authTestI18n.t;
 const problem = (
@@ -16,6 +20,17 @@ const problem = (
 		fieldErrors: fields.map((field) => ({ field, message: "API says no" })),
 		reason: "http",
 	});
+
+describe("decisionRefusal", () => {
+	it("puts a missing comment on approving past leave on the comment field", () => {
+		expect(
+			decisionRefusal(problem(400, "LEAVE_COMMENT_REQUIRED_FOR_PAST_DAYS"), t)
+				.fields
+		).toEqual({
+			comment: "Enter a comment: this leave includes days before today.",
+		});
+	});
+});
 
 describe("applyRefusal", () => {
 	it("puts a missing reason on the remarks field", () => {

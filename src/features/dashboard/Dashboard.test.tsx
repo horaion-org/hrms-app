@@ -34,6 +34,8 @@ const ROSTERED_DAYS =
 	"GET /api/v1/companies/c-1/member-profiles/m-aisha/leave-requests/rostered-days";
 
 let app: OpenedApp | undefined;
+/** Approving leave before today needs a comment; the fixtures' leave is in May 2026. */
+const BEFORE_THE_FIXTURES_LEAVE = Date.parse("2026-05-01T08:00:00Z");
 beforeEach(() => {
 	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
 });
@@ -195,6 +197,8 @@ describe("Dashboard", () => {
 	});
 
 	it("given_aPendingRequest_when_approvedAndConfirmed_then_sendsIt", async () => {
+		// Before the fixture's leave starts, so the optional comment stays optional.
+		vi.spyOn(Date, "now").mockReturnValue(BEFORE_THE_FIXTURES_LEAVE);
 		const user = userEvent.setup();
 		const calls = stubApi({
 			...routes(),

@@ -16,6 +16,7 @@ import {
 	deleteSchedule,
 	publishSchedule,
 	rejectSchedule,
+	withdrawPublication,
 	requestGeneration,
 	requestRegeneration,
 	scheduleKey,
@@ -111,6 +112,7 @@ type Generated = { unit: DepartmentPath; scheduleId: string };
 type Removed = { unit: DepartmentPath; scheduleId: string };
 type Decided = { unit: DepartmentPath; scheduleId: string };
 type Rejected = Decided & { reason: string };
+type Withdrawn = Decided & { remark: string };
 
 export type ScheduleActions = {
 	create: UseMutationResult<Schedule, Error, Created>;
@@ -122,6 +124,7 @@ export type ScheduleActions = {
 	/** Publish where an approval flow applies: the same route, which submits the roster instead. */
 	submit: UseMutationResult<Schedule, Error, Decided>;
 	reject: UseMutationResult<Schedule, Error, Rejected>;
+	withdraw: UseMutationResult<Schedule, Error, Withdrawn>;
 };
 
 /**
@@ -145,7 +148,8 @@ export const useReloadScheduling = (
 
 /**
  * Creating, replacing, generating, regenerating, deleting, publishing (or
- * submitting for approval) and rejecting a schedule. A saved or decided schedule is cached at once from
+ * submitting for approval), rejecting and withdrawing the publication of a
+ * schedule. A saved or decided schedule is cached at once from
  * the answer, so the page shows it without waiting, and every scheduling
  * query of the company reloads after each. Deleting reloads only the list,
  * so a roster still on screen isn't read again and found missing; a refused
@@ -211,6 +215,13 @@ export const useScheduleActions = (companyId: string): ScheduleActions => {
 			meta: { successMessage: "scheduling.decision.rejected" },
 			mutationFn: ({ unit, scheduleId, reason }: Rejected) =>
 				rejectSchedule(companyId, unit, scheduleId, reason),
+			onSuccess: saved,
+			onError: reload,
+		}),
+		withdraw: useMutation({
+			meta: { successMessage: "scheduling.decision.withdrawn" },
+			mutationFn: ({ unit, scheduleId, remark }: Withdrawn) =>
+				withdrawPublication(companyId, unit, scheduleId, remark),
 			onSuccess: saved,
 			onError: reload,
 		}),

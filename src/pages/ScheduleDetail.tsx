@@ -50,6 +50,7 @@ import {
 	regenerable,
 	rosterEditable,
 	rosterRunId,
+	withdrawable,
 } from "@/features/scheduling/schedules/api";
 import {
 	approvalActionFacts,
@@ -179,7 +180,13 @@ const RosterBody = ({
 };
 
 /** The dialog open over the roster, if any. */
-type OpenDialog = "publish" | "reject" | "withdraw" | "regenerate" | undefined;
+type OpenDialog =
+	| "publish"
+	| "reject"
+	| "withdraw"
+	| "withdrawPublication"
+	| "regenerate"
+	| undefined;
 
 /** What the header's primary button confirms, by where the viewer stands on the roster's approval. */
 const publishModeOf = (
@@ -409,6 +416,9 @@ const ApiSchedule = ({
 		status: schedule.status,
 		mayPublish: mayReject && weekPublishedBy === undefined,
 		mayReject,
+		mayWithdraw:
+			withdrawable(schedule) &&
+			access.can("schedule:publish", departmentScope(schedule.departmentId)),
 		mayRegenerate: openRegenerate !== undefined,
 		hasRoster: rosterShown(noticeFacts),
 		...approvalActionFacts(standing),
@@ -434,6 +444,9 @@ const ApiSchedule = ({
 		},
 		withdrawApproval: () => {
 			setOpenDialog("withdraw");
+		},
+		withdraw: () => {
+			setOpenDialog("withdrawPublication");
 		},
 		regenerate: () => {
 			openRegenerate?.();
@@ -610,6 +623,14 @@ const ApiSchedule = ({
 					instanceId={approval.instance.approvalInstanceId}
 					onClose={closeDialog}
 					onDone={decided}
+				/>
+			)}
+			{openDialog === "withdrawPublication" && (
+				<RejectScheduleDialog
+					companyId={companyId}
+					decision="withdraw"
+					schedule={schedule}
+					onClose={closeDialog}
 				/>
 			)}
 			{openDialog === "regenerate" && (

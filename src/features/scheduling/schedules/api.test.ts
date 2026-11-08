@@ -17,6 +17,7 @@ import {
 	generationInProgress,
 	hasRoster,
 	regenerable,
+	withdrawable,
 	requestGeneration,
 	publishSchedule,
 	rejectSchedule,
@@ -45,6 +46,7 @@ import {
 	deleteRefusal,
 	generationRefusal,
 	regenerationRefusal,
+	withdrawalRefusal,
 	scheduleRefusal,
 	scheduleRefusalMessage,
 } from "@/features/scheduling/schedules/scheduleRefusal";
@@ -523,6 +525,14 @@ describe("a schedule's generation", () => {
 			generatedScheduleFixture({ status: "PUBLISHED" }),
 			false,
 		],
+		[
+			"a schedule whose publication was withdrawn",
+			generatedScheduleFixture({
+				status: "GENERATED",
+				publicationWithdrawnAt: "2026-10-13T09:00:00Z",
+			}),
+			false,
+		],
 	])("knows whether %s can be generated again", (_, schedule, expected) => {
 		expect(regenerable(schedule)).toBe(expected);
 	});
@@ -946,6 +956,48 @@ describe("schedule refusals", () => {
 		expect(
 			decisionRefusal(problem(400, "INVALID_REJECTION_REASON"), t).fields
 		).toEqual({ reason: "Enter a reason of up to 2,000 characters." });
+	});
+
+	it.each([
+		[
+			"SCHEDULE_NOT_PUBLISHED",
+			409,
+			"This roster isn’t published any more. Reload the page to see it.",
+		],
+		["SCHEDULE_NOT_FOUND", 404, "This schedule no longer exists."],
+		[
+			"ACCESS_DENIED",
+			403,
+			"You no longer have permission to withdraw this roster’s publication.",
+		],
+	])("explains a withdrawal refused with %s", (code, status, copy) => {
+		expect(withdrawalRefusal(problem(status, code), t).message).toBe(copy);
+	});
+
+	it("puts a refused withdrawal remark on the remark field", () => {
+		expect(
+			withdrawalRefusal(
+				problem(400, "INVALID_PUBLICATION_WITHDRAWAL_REMARK"),
+				t
+			).fields
+		).toEqual({ remark: "Enter a remark of up to 500 characters." });
+	});
+
+	it("explains a regeneration of a once-published roster", () => {
+		expect(
+			regenerationRefusal(problem(409, "SCHEDULE_ONCE_PUBLISHED"), t)
+		).toBe(
+			"This roster was published once, so it can’t be regenerated. Change its days on the roster instead."
+		);
+	});
+
+	it("knows only a published roster with no run open can have its publication withdrawn", () => {
+		expect(
+			withdrawable(generatedScheduleFixture({ status: "PUBLISHED" }))
+		).toBe(true);
+		expect(
+			withdrawable(generatedScheduleFixture({ status: "GENERATED" }))
+		).toBe(false);
 	});
 
 	it("falls back to a plain failure for a decision", () => {

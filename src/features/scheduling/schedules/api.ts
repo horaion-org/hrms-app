@@ -241,6 +241,11 @@ const scheduleSchema = z.object({
 		})
 		.nullish()
 		.transform((value) => value ?? { requiresApproval: false, stepLabels: [] }),
+	/**
+	 * When its publication was last withdrawn; null if never. Once set the
+	 * schedule is published once and never regenerated. Null from an older API.
+	 */
+	publicationWithdrawnAt: z.string().nullable().default(null),
 	createdAt: z.string(),
 	updatedAt: z.string(),
 });
@@ -266,14 +271,20 @@ export const generationInProgress = ({
 
 /**
  * Whether a schedule can be generated again: its last generation ended and
- * wasn't published (GENERATED, GENERATION_FAILED or REJECTED), and no newer
- * run is open.
+ * wasn't published (GENERATED, GENERATION_FAILED or REJECTED), no newer run
+ * is open, and it was never published (a withdrawn publication keeps its
+ * history for good).
  */
 export const regenerable = (schedule: Schedule): boolean =>
 	(schedule.status === "GENERATED" ||
 		schedule.status === "GENERATION_FAILED" ||
 		schedule.status === "REJECTED") &&
+	schedule.publicationWithdrawnAt === null &&
 	!generationInProgress(schedule);
+
+/** Whether a schedule's publication can be withdrawn: PUBLISHED, with no run open. */
+export const withdrawable = (schedule: Schedule): boolean =>
+	schedule.status === "PUBLISHED" && !generationInProgress(schedule);
 
 /** Whether a schedule has a roster to show: generated, then published or rejected. */
 export const hasRoster = (schedule: Schedule): boolean =>
@@ -449,6 +460,25 @@ export const rejectSchedule = (
 		`${schedulePath(companyId, unit, scheduleId)}/rejection`,
 		scheduleSchema,
 		{ method: "POST", body: { reason: reason.trim() } }
+	);
+
+/** The longest remark on a withdrawn publication the API keeps, in characters. */
+export const PUBLICATION_WITHDRAWAL_REMARK_MAX_LENGTH = 500;
+
+/**
+ * Withdraws a PUBLISHED roster's publication with a remark for everyone on
+ * it: GENERATED again, every hand change kept. It answers the schedule.
+ */
+export const withdrawPublication = (
+	companyId: string,
+	unit: DepartmentPath,
+	scheduleId: string,
+	remark: string
+): Promise<Schedule> =>
+	apiRequest(
+		`${schedulePath(companyId, unit, scheduleId)}/publication-withdrawal`,
+		scheduleSchema,
+		{ method: "POST", body: { remark: remark.trim() } }
 	);
 
 /**
