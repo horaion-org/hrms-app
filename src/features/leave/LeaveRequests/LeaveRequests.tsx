@@ -13,7 +13,7 @@ import {
 	LEAVE_PAGE_SIZE,
 	type LeaveSort,
 } from "@/features/leave/api";
-import { formatPeriod } from "@/features/leave/dates";
+import { calendarDayOf, formatPeriod } from "@/features/leave/dates";
 import { leaveTypeLabel } from "@/features/leave/leaveTypeLabel";
 import { statusTone, type LeaveRequest } from "@/features/leave/types";
 
@@ -109,8 +109,8 @@ export const LeaveRequests = ({
 					<p className="mt-1">
 						{t("leave.requestedOn", {
 							date: formatPeriod(
-								row.requestedAt.slice(0, 10),
-								row.requestedAt.slice(0, 10),
+								calendarDayOf(row.requestedAt),
+								calendarDayOf(row.requestedAt),
 								formattingLocale(i18n)
 							),
 						})}

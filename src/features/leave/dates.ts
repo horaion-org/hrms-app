@@ -39,3 +39,21 @@ export const defaultRange = (today = dayjs()): DateRange => {
 		end: monday.add(27, "day").format("YYYY-MM-DD"),
 	};
 };
+
+/**
+ * The calendar day `instant` falls on in `timeZone`, as YYYY-MM-DD; the
+ * browser's own zone when none is given. A request made at 07:30 in
+ * Singapore is that day, not the UTC day before that the instant's first
+ * ten characters name.
+ */
+export const calendarDayOf = (instant: string, timeZone?: string): string => {
+	const parts = new Intl.DateTimeFormat("en-US", {
+		timeZone,
+		year: "numeric",
+		month: "2-digit",
+		day: "2-digit",
+	}).formatToParts(new Date(instant));
+	const part = (type: Intl.DateTimeFormatPartTypes): string =>
+		parts.find((item) => item.type === type)?.value ?? "";
+	return `${part("year")}-${part("month")}-${part("day")}`;
+};
