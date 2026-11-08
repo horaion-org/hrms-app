@@ -1,0 +1,54 @@
+name: Playwright nightly
+
+# The mocked-API browser suite (e2e/, three browsers) once a night and on demand. It is not run on pull requests
+# yet; the CI workflow runs type check, lint and Vitest. Guide: README.md, "Checks".
+on:
+  schedule:
+    - cron: "0 19 * * *" # 19:00 UTC, 03:00 in Singapore
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: "24"
+  PNPM_VERSION: "12.10.1"
+
+jobs:
+  browser-suite:
+    name: Playwright (mocked API)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install browsers
+        run: pnpm exec playwright install --with-deps
+
+      # playwright.config.ts starts Vite itself and retries twice when CI is set.
+      - name: Run the browser suite
+        run: pnpm exec playwright test
+
+      - name: Upload the HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14
