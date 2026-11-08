@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/DescriptionList";
 import { FilterChips } from "@/components/ui/FilterChips";
 import type { CoverOffer } from "@/features/scheduling/coverOffers/api";
+import { OffersOutSection } from "@/features/scheduling/coverOffers/OffersOutSection";
 import { FindingList } from "@/features/scheduling/FindingList";
 import { FindingsPanel } from "@/features/scheduling/FindingsPanel";
 import { LastRosterChange } from "@/features/scheduling/LastRosterChange";
@@ -402,6 +403,21 @@ export const GeneratedRoster = ({
 						key: "leaveAndCover",
 						title: t(`${key}.leaveAndCover`),
 						items: leaveAndCoverItems(markedDays, t, language),
+					},
+					{
+						key: "offersOut",
+						content: editing?.coverOffers &&
+							(editing.coverOffers.failed ||
+								editing.coverOffers.offers.length > 0) && (
+								<OffersOutSection
+									assignments={assignments}
+									failed={editing.coverOffers.failed}
+									offers={editing.coverOffers.offers}
+									target={editing.target}
+									timeZone={schedule.timeZone}
+									onRetry={editing.coverOffers.retry}
+								/>
+							),
 					},
 					{
 						key: "startingPoints",
