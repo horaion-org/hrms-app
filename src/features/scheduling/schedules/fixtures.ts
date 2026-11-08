@@ -60,6 +60,7 @@ export const scheduleFixture = (
 	rejectionReason: null,
 	rosterRevision: 0,
 	publication: { requiresApproval: false, stepLabels: [] },
+	publicationWithdrawnAt: null,
 	generation: null,
 	createdAt: "2026-10-08T09:00:00Z",
 	updatedAt: "2026-10-08T09:00:00Z",

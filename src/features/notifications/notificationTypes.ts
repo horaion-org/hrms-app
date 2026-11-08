@@ -89,6 +89,12 @@ const NOTIFICATION_TYPES = {
 		category: "schedule",
 		title: "notifications.types.SCHEDULE_ASSIGNMENT_UPDATED",
 	},
+	SCHEDULE_PUBLICATION_WITHDRAWN: {
+		icon: SchedulingIcon,
+		tone: "warning",
+		category: "schedule",
+		title: "notifications.types.SCHEDULE_PUBLICATION_WITHDRAWN",
+	},
 	ROSTER_DAY_NEEDS_DECISION: {
 		icon: SchedulingIcon,
 		tone: "warning",
@@ -281,6 +287,7 @@ export type NotificationTarget =
 const ROSTERED_MEMBER_TYPES: ReadonlyArray<string> = [
 	"SHIFT_ASSIGNMENT",
 	"SCHEDULE_ASSIGNMENT_UPDATED",
+	"SCHEDULE_PUBLICATION_WITHDRAWN",
 ];
 
 /**

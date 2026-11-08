@@ -10,6 +10,7 @@ const NOTHING: ScheduleActionFacts = {
 	status: "GENERATED",
 	mayPublish: false,
 	mayReject: false,
+	mayWithdraw: false,
 	mayRegenerate: false,
 	hasRoster: true,
 	approvalStanding: "none",
@@ -99,6 +100,12 @@ describe("scheduleActions", () => {
 			{ ...ALL, flowRequired: true, approvalStanding: "unknown" },
 			undefined,
 			["regenerate", "viewSetup", "details"],
+		],
+		[
+			"a decider of a published roster",
+			{ status: "PUBLISHED", mayWithdraw: true },
+			undefined,
+			["withdraw", "viewSetup", "details"],
 		],
 		[
 			"anyone on a draft",

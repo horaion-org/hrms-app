@@ -19,6 +19,7 @@ const KNOWN = [
 	"SCHEDULE_READY",
 	"SHIFT_ASSIGNMENT",
 	"SCHEDULE_ASSIGNMENT_UPDATED",
+	"SCHEDULE_PUBLICATION_WITHDRAWN",
 	"SCHEDULE_REJECTED",
 	"MEMBER_IMPORT_FINISHED",
 	"COVER_OFFER_SENT",
@@ -190,6 +191,12 @@ describe("notificationTarget", () => {
 		expect(
 			notificationTarget(
 				{ ...scheduleReady, type: "SCHEDULE_ASSIGNMENT_UPDATED" },
+				"PERSONAL"
+			)
+		).toEqual({ kind: "myRoster", scheduleId: "schedule-1" });
+		expect(
+			notificationTarget(
+				{ ...scheduleReady, type: "SCHEDULE_PUBLICATION_WITHDRAWN" },
 				"PERSONAL"
 			)
 		).toEqual({ kind: "myRoster", scheduleId: "schedule-1" });

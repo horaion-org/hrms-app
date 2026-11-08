@@ -29,6 +29,9 @@ export const SCHEDULE_REFUSAL_CODES = {
 	invalidRejectionReason: "400 INVALID_REJECTION_REASON",
 	approvalPending: "409 SCHEDULE_APPROVAL_PENDING",
 	stepHasNoApprover: "400 APPROVAL_STEP_HAS_NO_APPROVER",
+	notPublished: "409 SCHEDULE_NOT_PUBLISHED",
+	oncePublished: "409 SCHEDULE_ONCE_PUBLISHED",
+	invalidWithdrawalRemark: "400 INVALID_PUBLICATION_WITHDRAWAL_REMARK",
 } as const;
 
 const codes = SCHEDULE_REFUSAL_CODES;
@@ -131,6 +134,7 @@ export const regenerationRefusal = (error: unknown, t: TFunction): string => {
 				[codes.isDraft]: t(`${key}.draft`),
 				[codes.generationInProgress]: t(`${key}.inProgress`),
 				[codes.published]: t(`${key}.published`),
+				[codes.oncePublished]: t(`${key}.oncePublished`),
 				[codes.weekAlreadyPublished]: t(`${key}.weekAlreadyPublished`),
 				[codes.hasNoEmployees]: t("scheduling.generate.noEmployees"),
 				[codes.scheduleNotFound]: t("scheduling.delete.gone"),
@@ -171,6 +175,35 @@ export const decisionRefusal = (
 		},
 		fieldErrors: { reason },
 		forbidden: t(`${key}.forbidden`),
+		failed: t(`${key}.failed`),
+	});
+};
+
+/** The field a refused withdrawal can land on. */
+export type WithdrawalField = "remark";
+
+/**
+ * Why withdrawing a roster's publication was refused: an invalid remark on
+ * the remark field, otherwise one message for the dialog.
+ */
+export const withdrawalRefusal = (
+	error: unknown,
+	t: TFunction
+): Refusal<WithdrawalField> => {
+	const key = "scheduling.decision.refusal";
+	const remark = {
+		field: "remark",
+		message: t(`${key}.remarkRejected`),
+	} as const;
+	return mapRefusal<WithdrawalField>(error, {
+		codes: { [codes.invalidWithdrawalRemark]: remark },
+		alerts: {
+			[codes.notPublished]: t(`${key}.notPublished`),
+			[codes.generationInProgress]: t(`${key}.inProgress`),
+			[codes.scheduleNotFound]: t("scheduling.delete.gone"),
+		},
+		fieldErrors: { remark },
+		forbidden: t(`${key}.withdrawForbidden`),
 		failed: t(`${key}.failed`),
 	});
 };

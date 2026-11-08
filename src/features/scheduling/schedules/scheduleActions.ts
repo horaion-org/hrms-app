@@ -9,6 +9,7 @@ export type ScheduleActionId =
 	| "submit"
 	| "reject"
 	| "withdrawApproval"
+	| "withdraw"
 	| "regenerate"
 	| "viewSetup"
 	| "details";
@@ -28,6 +29,8 @@ export type ScheduleActionFacts = {
 	mayPublish: boolean;
 	/** Holds `schedule:publish` and the roster is decidable. */
 	mayReject: boolean;
+	/** Holds `schedule:publish` and the roster is published. */
+	mayWithdraw: boolean;
 	/** Holds `schedule:generate`, it is regenerable and its week is not published elsewhere. */
 	mayRegenerate: boolean;
 	/** Has a roster, so its history has something to tell. */
@@ -48,6 +51,7 @@ export type ScheduleAction = {
 		| "approvals.actions.withdraw"
 		| "scheduling.decision.publish"
 		| "scheduling.decision.reject"
+		| "scheduling.decision.withdraw"
 		| "scheduling.regenerate.button"
 		| "scheduling.detail.viewSetup"
 		| "scheduling.detail.details.title";
@@ -106,6 +110,11 @@ export const SCHEDULE_ACTIONS: ReadonlyArray<ScheduleAction> = [
 		id: "withdrawApproval",
 		labelKey: "approvals.actions.withdraw",
 		offered: ({ approvalStanding }) => approvalStanding === "mineAsSubmitter",
+	},
+	{
+		id: "withdraw",
+		labelKey: "scheduling.decision.withdraw",
+		offered: ({ mayWithdraw }) => mayWithdraw,
 	},
 	{
 		id: "regenerate",

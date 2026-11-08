@@ -280,7 +280,11 @@ it.each([
 		"Regenerate roster",
 		["View setup", "Details", "Export roster", "Delete"],
 	],
-	["PUBLISHED", undefined, ["View setup", "Details", "Export roster"]],
+	[
+		"PUBLISHED",
+		undefined,
+		["Withdraw publication", "View setup", "Details", "Export roster"],
+	],
 ] as const)(
 	"shows a %s roster's one primary action, %s, and the rest in the menu, to someone who may do it all",
 	async (status, primary, items) => {
@@ -795,6 +799,110 @@ it("offers neither Publish nor Reject to someone without schedule:publish", asyn
 	expect(await screen.findByText("Generated")).toBeInTheDocument();
 	expect(screen.queryByRole("button", { name: "Publish roster" })).toBeNull();
 	expect(await menuItemsOf(userEvent.setup())).not.toContain("Reject");
+});
+
+it("withdraws a published roster's publication with a remark, back to Generated", async () => {
+	const calls = await openRoster({
+		...signedIn(["schedule:read", "schedule:publish"]),
+		[`GET ${SCHEDULE_READ}`]: [
+			ok(generatedScheduleFixture({ status: "PUBLISHED" })),
+			ok(
+				generatedScheduleFixture({
+					status: "GENERATED",
+					publicationWithdrawnAt: "2026-10-13T09:00:00Z",
+				})
+			),
+		],
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+		[`POST ${SCHEDULE}/publication-withdrawal`]: ok(
+			generatedScheduleFixture({
+				status: "GENERATED",
+				publicationWithdrawnAt: "2026-10-13T09:00:00Z",
+			})
+		),
+	});
+	const user = userEvent.setup();
+
+	await chooseFromMenu(user, "Withdraw publication");
+	const dialog = screen.getByRole("dialog", {
+		name: "Withdraw this roster’s publication?",
+	});
+	const confirm = within(dialog).getByRole("button", {
+		name: "Withdraw publication",
+	});
+	await user.click(confirm);
+	expect(within(dialog).getByRole("alert")).toHaveTextContent(
+		"Enter a remark: everyone on this roster will read it."
+	);
+	expect(
+		calls.filter(
+			(call) => call.method === "POST" && call.path.startsWith(SCHEDULE)
+		)
+	).toHaveLength(0);
+
+	await user.type(
+		within(dialog).getByRole("textbox", {
+			name: "Remark for the people on this roster",
+		}),
+		"  Wrong week went out.  "
+	);
+	await user.click(confirm);
+
+	expect(await screen.findByText("Generated")).toBeInTheDocument();
+	expect(
+		calls.find((call) => call.path === `${SCHEDULE}/publication-withdrawal`)
+			?.body
+	).toEqual({ remark: "Wrong week went out." });
+	expect(await menuItemsOf(user)).not.toContain("Regenerate roster");
+});
+
+it("shows a refused withdrawal remark on its field and keeps the dialog open", async () => {
+	await openRoster({
+		...signedIn(["schedule:read", "schedule:publish"]),
+		[`GET ${SCHEDULE_READ}`]: ok(
+			generatedScheduleFixture({ status: "PUBLISHED" })
+		),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+		[`POST ${SCHEDULE}/publication-withdrawal`]: problemReply(
+			400,
+			"INVALID_PUBLICATION_WITHDRAWAL_REMARK"
+		),
+	});
+	const user = userEvent.setup();
+
+	await chooseFromMenu(user, "Withdraw publication");
+	const dialog = screen.getByRole("dialog", {
+		name: "Withdraw this roster’s publication?",
+	});
+	await user.type(
+		within(dialog).getByRole("textbox", {
+			name: "Remark for the people on this roster",
+		}),
+		"Wrong week"
+	);
+	await user.click(
+		within(dialog).getByRole("button", { name: "Withdraw publication" })
+	);
+
+	expect(await within(dialog).findByRole("alert")).toHaveTextContent(
+		"Enter a remark of up to 500 characters."
+	);
+	expect(screen.getByRole("dialog")).toBeInTheDocument();
+});
+
+it("offers Withdraw publication only on a published roster to someone with schedule:publish", async () => {
+	await openRoster({
+		...signedIn(["schedule:read"]),
+		[`GET ${SCHEDULE_READ}`]: ok(
+			generatedScheduleFixture({ status: "PUBLISHED" })
+		),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+	});
+
+	expect(await screen.findByText("Published")).toBeInTheDocument();
+	expect(await menuItemsOf(userEvent.setup())).not.toContain(
+		"Withdraw publication"
+	);
 });
 
 it("shows a chosen day's shift read-only", async () => {

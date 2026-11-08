@@ -23,7 +23,7 @@ const toneClasses: Record<NotificationTone, string> = {
 
 /**
  * One inbox entry: type icon and colour, category, time, the caller's title (a typed link or plain text), the
- * remark when the notification carries one (a roster change, a leave decision or change), and the
+ * remark when the notification carries one (a roster change or withdrawal, a leave decision or change), and the
  * entry's actions. Actions are always
  * shown, never revealed on hover, so touch and keyboard users reach them.
  */

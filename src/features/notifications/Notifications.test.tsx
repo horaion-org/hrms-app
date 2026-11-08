@@ -653,6 +653,43 @@ describe("Notifications", () => {
 		).toHaveLength(1);
 	});
 
+	it("given_aWithdrawnPublication_when_listed_then_showsTheRemarkAndOpensTheirOwnRoster", async () => {
+		stubApi({
+			"POST /api/v1/public/sessions/refreshes": accessPassReply(),
+			"GET /api/v1/me": currentUserReply(),
+			"GET /api/v1/me/workspace": {
+				status: 200,
+				body: envelope(companyWideWorkspace([])),
+			},
+			[`GET ${BASE}`]: {
+				status: 200,
+				body: {
+					content: [
+						{
+							...own,
+							notificationId: "withdrawn-1",
+							type: "SCHEDULE_PUBLICATION_WITHDRAWN",
+							leaveRequestId: null,
+							membershipId: null,
+							scheduleId: "schedule-1",
+							remark: "Wrong week went out. The corrected roster follows.",
+						},
+					],
+					page: { totalElements: 1 },
+				},
+			},
+			[`GET ${BASE}/unread-count`]: { status: 200, body: { unreadCount: 1 } },
+		});
+		await open();
+		const link = await screen.findByRole("link", {
+			name: "A published schedule you’re on was withdrawn.",
+		});
+		expect(link).toHaveAttribute("href", "/me/schedules/schedule-1");
+		expect(
+			screen.getByText("Wrong week went out. The corrected roster follows.")
+		).toBeInTheDocument();
+	});
+
 	it("given_aReviewersRemarkOnTheirLeave_when_listed_then_showsItUnderTheTitle", async () => {
 		stubApi({
 			"POST /api/v1/public/sessions/refreshes": accessPassReply(),

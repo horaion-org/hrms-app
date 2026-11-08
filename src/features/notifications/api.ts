@@ -43,7 +43,8 @@ export const notificationSchema = z.object({
 	/**
 	 * The words the recipient is meant to read on the notification itself:
 	 * the manager's remark on a change to their days of a published roster
-	 * (SCHEDULE_ASSIGNMENT_UPDATED), and the reviewer's remark on their
+	 * (SCHEDULE_ASSIGNMENT_UPDATED) or on withdrawing its publication
+	 * (SCHEDULE_PUBLICATION_WITHDRAWN), and the reviewer's remark on their
 	 * leave (approved, rejected, recorded, changed, cancelled); null otherwise.
 	 */
 	remark: z
