@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import type {
@@ -25,7 +26,7 @@ export const TermsSummary = ({
 	className,
 }: TermsSummaryProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
-	const language = i18n.resolvedLanguage ?? i18n.language ?? "en";
+	const language = formattingLocale(i18n);
 	return (
 		<section
 			aria-live="polite"

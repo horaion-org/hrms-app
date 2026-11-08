@@ -356,7 +356,8 @@ describe("PeopleImport", () => {
 		).not.toBeInTheDocument();
 	});
 
-	it("shows a failed row whose person was added since as solved, with a link to them", async () => {
+	it("shows a failed row whose person was added since as solved, dated day first in a British browser, with a link to them", async () => {
+		vi.spyOn(navigator, "languages", "get").mockReturnValue(["en-GB"]);
 		const resolvedImport = {
 			...finishedImport,
 			resolvedRows: 1,
@@ -387,7 +388,7 @@ describe("PeopleImport", () => {
 
 		const table = await screen.findByRole("table", { name: "Row results" });
 		const row = within(table).getByRole("row", { name: /Tan Wei Ming/ });
-		expect(row).toHaveTextContent(/Added since, on/);
+		expect(row).toHaveTextContent("Added since, on 05/11/2026");
 		expect(
 			within(row).getByRole("link", { name: "Open profile" })
 		).toHaveAttribute("href", "/people/m-12");

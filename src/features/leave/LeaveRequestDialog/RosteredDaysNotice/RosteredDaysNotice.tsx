@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
@@ -42,7 +43,7 @@ export const RosteredDaysNotice = ({
 			</Callout>
 		);
 	if (days.length === 0) return null;
-	const format = dayFormat(i18n.language);
+	const format = dayFormat(formattingLocale(i18n));
 	const list = new Intl.ListFormat(i18n.language).format(
 		days.map(({ day }) => format.format(new Date(`${day}T12:00:00`)))
 	);

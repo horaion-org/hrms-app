@@ -1,6 +1,7 @@
 import dayjs from "dayjs";
 import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
@@ -67,7 +68,9 @@ export const LeaveTimeline = ({
 	);
 	const today = dayjs().format("YYYY-MM-DD");
 	const grid = { gridTemplateColumns: `repeat(${days.length}, 40px)` };
-	const month = new Intl.DateTimeFormat(i18n.language, { month: "short" });
+	const month = new Intl.DateTimeFormat(formattingLocale(i18n), {
+		month: "short",
+	});
 	return (
 		<section aria-label={t("leave.timeline")}>
 			<div className="mb-6 flex flex-wrap items-center justify-end gap-5">
@@ -151,7 +154,7 @@ export const LeaveTimeline = ({
 								>
 									<time
 										dateTime={date}
-										title={`${formatPeriod(date, date, i18n.language)}${dayjs(date).day() === 0 || dayjs(date).day() === 6 ? ` · ${t("leave.weekend")}` : ""}`}
+										title={`${formatPeriod(date, date, formattingLocale(i18n))}${dayjs(date).day() === 0 || dayjs(date).day() === 6 ? ` · ${t("leave.weekend")}` : ""}`}
 									>
 										{date.slice(-2)}
 									</time>
@@ -230,7 +233,7 @@ export const LeaveTimeline = ({
 													const period = formatPeriod(
 														request.startDate,
 														request.endDate,
-														i18n.language
+														formattingLocale(i18n)
 													);
 													return (
 														<div

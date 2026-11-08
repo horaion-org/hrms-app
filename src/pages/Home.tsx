@@ -1,6 +1,7 @@
 import { getRouteApi, Link, useRouteContext } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { ActivityItem } from "@/components/ui/ActivityItem";
 import { Button } from "@/components/ui/Button";
@@ -68,7 +69,7 @@ type Decision = { request: LeaveRequest; mode: "view" | "reject" | "approve" };
 
 const Dashboard = (): FunctionComponent => {
 	const { t, i18n } = useTranslation();
-	const language = i18n.resolvedLanguage ?? i18n.language;
+	const language = formattingLocale(i18n);
 	const companyId = useCurrentCompanyId();
 	const ownMembershipId = useCurrentMembershipId();
 	const access = useAccess();

@@ -8,6 +8,7 @@ import {
 	type Ref,
 } from "react";
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import {
@@ -75,7 +76,7 @@ export const DatePicker = (props: DatePickerProps): FunctionComponent => {
 	const trigger = useRef<HTMLButtonElement>(null);
 	const textId = useId();
 	const [today] = useState(() => todayDate(Date.now()));
-	const language = i18n.resolvedLanguage ?? i18n.language ?? "en";
+	const language = formattingLocale(i18n);
 	if (props.mode !== "single") {
 		const { value, onChange } = props;
 		const text = `${formatDate(value.start, language)} – ${formatDate(value.end, language)}`;

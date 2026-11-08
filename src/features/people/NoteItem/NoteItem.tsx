@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
@@ -31,11 +32,7 @@ export const NoteItem = ({
 }: NoteItemProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const key = "people.notes";
-	const when = noteWhen(
-		note.createdAt,
-		i18n.resolvedLanguage ?? i18n.language ?? "en",
-		t
-	);
+	const when = noteWhen(note.createdAt, formattingLocale(i18n), t);
 	const author = note.author.displayName;
 	return (
 		<div

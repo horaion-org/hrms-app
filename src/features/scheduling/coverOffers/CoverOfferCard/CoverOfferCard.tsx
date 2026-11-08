@@ -1,5 +1,6 @@
 import { useId, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { FormRow } from "@/components/forms/FormRow";
 import { Textarea } from "@/components/forms/Textarea";
@@ -59,7 +60,7 @@ export const CoverOfferCard = ({
 	onDecline,
 }: CoverOfferCardProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
-	const language = i18n.resolvedLanguage ?? i18n.language;
+	const language = formattingLocale(i18n);
 	const [declining, setDeclining] = useState(false);
 	const [reason, setReason] = useState("");
 	const reasonId = useId();

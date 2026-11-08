@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { formatPeriod } from "@/features/scheduling/periods";
@@ -35,7 +36,7 @@ export const DeleteScheduleDialog = ({
 	const running = generationInProgress(schedule);
 	const period = formatPeriod(
 		{ start: schedule.periodStart, end: schedule.periodEnd },
-		i18n.resolvedLanguage ?? i18n.language
+		formattingLocale(i18n)
 	);
 	return (
 		<ConfirmDialog

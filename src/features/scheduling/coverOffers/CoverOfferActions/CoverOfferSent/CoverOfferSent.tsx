@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { TimeIcon } from "@/components/ui/Icon";
@@ -36,7 +37,7 @@ export const CoverOfferSent = ({
 	now = (): Date => new Date(),
 }: CoverOfferSentProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
-	const language = i18n.resolvedLanguage ?? i18n.language;
+	const language = formattingLocale(i18n);
 	return (
 		<div className="flex flex-col items-start gap-2 text-sm">
 			<p className="flex items-center gap-2 text-neutral-900">

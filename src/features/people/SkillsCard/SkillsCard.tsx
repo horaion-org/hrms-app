@@ -1,5 +1,6 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { formatDate, todayDate } from "@/components/forms/Calendar";
 import { Badge } from "@/components/ui/Badge";
@@ -58,6 +59,8 @@ export const SkillsCard = ({
 	className,
 }: SkillsCardProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
+	// Dates follow the browser's region of the app's language (en-GB: day first).
+	const locale = formattingLocale(i18n);
 	const { membershipId } = profile;
 	const loaded = useMemberSkills(companyId, membershipId);
 	const add = useReplaceSkills(companyId, membershipId, "added");
@@ -85,7 +88,7 @@ export const SkillsCard = ({
 				<span className="flex flex-wrap items-center gap-2">
 					{skill.expiresOn && (
 						<time dateTime={skill.expiresOn}>
-							{formatDate(skill.expiresOn, i18n.language)}
+							{formatDate(skill.expiresOn, locale)}
 						</time>
 					)}
 					<Badge tone={badge.tone}>{badge.label}</Badge>
@@ -172,7 +175,7 @@ export const SkillsCard = ({
 					]
 				: []),
 		];
-	}, [t, i18n.language, today, showsExpiry, changeable]);
+	}, [t, locale, today, showsExpiry, changeable]);
 	if (isRefused(loaded.error)) return null;
 
 	return (

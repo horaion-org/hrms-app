@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { Callout } from "@/components/ui/Callout";
 import { formatDay } from "@/features/scheduling/periods";
@@ -28,7 +29,7 @@ export const MyRosterChanges = ({
 	className,
 }: MyRosterChangesProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
-	const language = i18n.resolvedLanguage ?? i18n.language;
+	const language = formattingLocale(i18n);
 	const changed = assignments.flatMap((row) =>
 		row.lastChange ? [{ row, change: row.lastChange }] : []
 	);

@@ -188,6 +188,25 @@ it("submits where a flow applies, then says it waits and lets the submitter see 
 	]);
 });
 
+it("writes the trail's times day first on a 24-hour clock, in the roster's zone, in a British browser", async () => {
+	vi.spyOn(navigator, "languages", "get").mockReturnValue(["en-GB"]);
+	const world: World = {
+		schedule: withFlow(),
+		instance: approvalInstanceFixture({ canDecide: false }),
+	};
+	await openRoster(world, APPROVER_KEYS);
+	const user = userEvent.setup();
+
+	await user.click(
+		await screen.findByRole("button", { name: "Open the approval" })
+	);
+
+	// Submitted at 10:02 UTC: 18:02 on the Singapore roster's clock.
+	expect(
+		screen.getByRole("complementary", { name: "Approval" })
+	).toHaveTextContent("9 Oct 2026, 18:02");
+});
+
 it("lets the approver approve step 1 with a comment, then approve and publish step 2", async () => {
 	const world: World = {
 		schedule: withFlow(),

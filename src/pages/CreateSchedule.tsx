@@ -3,6 +3,7 @@ import { Navigate, useNavigate, useSearch } from "@tanstack/react-router";
 import { useId, useReducer, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
@@ -520,10 +521,7 @@ export const CreateSchedule = (): FunctionComponent => {
 			? offered
 			: withPeriod(offered, chosenStart, today);
 	const period = chosenStart ? periodStartingOn(chosenStart) : firstPeriod;
-	const periodLabel = formatPeriod(
-		period,
-		i18n.resolvedLanguage ?? i18n.language
-	);
+	const periodLabel = formatPeriod(period, formattingLocale(i18n));
 	const isLast = current === SCHEDULE_STEPS.length - 1;
 	// Each step is ticked for what the draft holds, not for being behind the current one.
 	const completion = stepCompletion({

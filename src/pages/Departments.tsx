@@ -1,6 +1,7 @@
 import { getRouteApi } from "@tanstack/react-router";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { DataTable, type DataTableSort } from "@/components/ui/DataTable";
@@ -41,6 +42,8 @@ const route = getRouteApi("/_authenticated/_app/organisation/departments");
 export const Departments = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
 	const { t, i18n } = useTranslation();
+	// Dates follow the browser's region of the app's language (en-GB: day first).
+	const locale = formattingLocale(i18n);
 	const requested = unitSelectionOf(route.useSearch());
 	const units = useUnitSelection(
 		companyId,
@@ -97,7 +100,7 @@ export const Departments = (): FunctionComponent => {
 			// A Branch already chosen is not repeated on every row.
 			...(branchShown ? [] : [branchColumn<Department>(t)]),
 			statusColumn<Department>(t),
-			createdColumn<Department>(t, i18n.language),
+			createdColumn<Department>(t, locale),
 			actionsColumn<Department>(
 				t,
 				(department) => (
@@ -129,7 +132,7 @@ export const Departments = (): FunctionComponent => {
 				setEditing
 			),
 		],
-		[t, i18n.language, canUpdate, branchShown]
+		[t, locale, canUpdate, branchShown]
 	);
 
 	return (

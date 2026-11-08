@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { useNow } from "@/common/useNow";
 import { Button } from "@/components/ui/Button";
@@ -57,7 +58,7 @@ export const OffersOutSection = ({
 	now: givenNow,
 }: OffersOutSectionProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
-	const language = i18n.resolvedLanguage ?? i18n.language;
+	const language = formattingLocale(i18n);
 	const clock = useNow(CLOCK_INTERVAL_MS);
 	const now = givenNow ?? clock;
 	const { withdraw } = useCoverOfferActions(target);

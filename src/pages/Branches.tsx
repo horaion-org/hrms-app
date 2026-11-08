@@ -1,3 +1,4 @@
+import { formattingLocale } from "@/common/formattingLocale";
 import { countryName } from "@/common/countries";
 import { useMemo, useState } from "react";
 import { useAccess } from "@/features/workspace/useAccess";
@@ -31,6 +32,8 @@ export const Branches = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
 	const access = useAccess();
 	const { t, i18n } = useTranslation();
+	// Dates follow the browser's region of the app's language (en-GB: day first).
+	const locale = formattingLocale(i18n);
 	const [creating, setCreating] = useState(false);
 	const [editing, setEditing] = useState<Branch>();
 	// The Branch whose status the person asked to change, until they confirm or cancel.
@@ -83,7 +86,7 @@ export const Branches = (): FunctionComponent => {
 					countryName(branch.country, i18n.language),
 			},
 			statusColumn<Branch>(t),
-			createdColumn<Branch>(t, i18n.language),
+			createdColumn<Branch>(t, locale),
 			actionsColumn<Branch>(
 				t,
 				(branch) => (
@@ -115,7 +118,7 @@ export const Branches = (): FunctionComponent => {
 				setEditing
 			),
 		],
-		[t, i18n.language, access]
+		[t, i18n.language, locale, access]
 	);
 
 	return (

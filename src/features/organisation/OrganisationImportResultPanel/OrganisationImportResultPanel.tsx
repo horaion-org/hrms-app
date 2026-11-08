@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { Callout } from "@/components/ui/Callout";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
@@ -57,7 +58,7 @@ export const OrganisationImportResultPanel = ({
 				<span className="block font-normal">
 					{t("organisation.import.result.meta", {
 						date: new Date(organisationImport.createdAt).toLocaleString(
-							i18n.language
+							formattingLocale(i18n)
 						),
 						name: organisationImport.requestedBy,
 					})}

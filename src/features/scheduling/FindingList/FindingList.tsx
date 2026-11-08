@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { formatTimeRange } from "@/features/scheduling/formatShift";
@@ -34,7 +35,7 @@ export const FindingList = ({
 	showDates = false,
 }: FindingListProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
-	const language = i18n.resolvedLanguage ?? i18n.language;
+	const language = formattingLocale(i18n);
 	const dayOf = (date: string | null): string | null =>
 		showDates && date !== null ? formatDay(date, language) : null;
 

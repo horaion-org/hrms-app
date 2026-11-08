@@ -1,5 +1,6 @@
 import { useId } from "react";
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { FormRow, formRowIds } from "@/components/forms/FormRow";
 import { Select } from "@/components/forms/Select";
@@ -41,7 +42,7 @@ export const EmploymentTermsField = ({
 	disabled = false,
 }: EmploymentTermsFieldProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
-	const language = i18n.resolvedLanguage ?? i18n.language ?? "en";
+	const language = formattingLocale(i18n);
 	const id = useId();
 	const ids = formRowIds(id);
 	const chosen = terms.find((each) => each.id === value);

@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import { toCsvBlob } from "@/common/csv";
 import { saveFile } from "@/common/saveFile";
 import type { FunctionComponent } from "@/common/types";
@@ -303,7 +304,7 @@ export const PeopleImport = (): FunctionComponent => {
 										onClick={() => {
 											saveFile(
 												toCsvBlob(
-													resultRowsCsv(current.data, t, i18n.language)
+													resultRowsCsv(current.data, t, formattingLocale(i18n))
 												),
 												"people-import-results.csv"
 											);

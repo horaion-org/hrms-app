@@ -1,5 +1,6 @@
 import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import {
 	formatDate,
@@ -62,7 +63,7 @@ export const ApplyChangeStep = ({
 	onClose,
 }: ApplyChangeStepProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
-	const language = i18n.resolvedLanguage ?? i18n.language ?? "en";
+	const language = formattingLocale(i18n);
 	const formId = useId();
 	const fromId = `${formId}-from`;
 	const successorId = `${formId}-successor`;

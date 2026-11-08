@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
@@ -28,7 +29,7 @@ export const StartingContextCallout = ({
 	className,
 }: StartingContextCalloutProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
-	const language = i18n.resolvedLanguage ?? i18n.language;
+	const language = formattingLocale(i18n);
 	const previous = previousWeekOf(week);
 	const weekOf = (periodStart: string): string =>
 		new Intl.DateTimeFormat(language, {

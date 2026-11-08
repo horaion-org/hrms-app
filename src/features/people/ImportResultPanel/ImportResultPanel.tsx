@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { Callout } from "@/components/ui/Callout";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
@@ -73,7 +74,7 @@ export const ImportResultPanel = ({
 			id: "result",
 			header: t("people.importPage.result.resultColumn"),
 			cell: (outcome) =>
-				resolvedText(outcome, t, i18n.language) ??
+				resolvedText(outcome, t, formattingLocale(i18n)) ??
 				t(`people.importPage.results.${outcome.result}`),
 		},
 		{
@@ -182,7 +183,7 @@ export const ImportResultPanel = ({
 				<span className="block font-normal">
 					{t("people.importPage.result.meta", {
 						date: new Date(memberImport.createdAt).toLocaleString(
-							i18n.language
+							formattingLocale(i18n)
 						),
 						name: memberImport.requestedBy,
 					})}

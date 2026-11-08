@@ -1,6 +1,7 @@
 import dayjs from "dayjs";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { Avatar } from "@/components/ui/Avatar";
@@ -106,7 +107,7 @@ export const RosterGrid = ({
 	className,
 }: RosterGridProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
-	const language = i18n.resolvedLanguage ?? i18n.language;
+	const language = formattingLocale(i18n);
 	const weekday = new Intl.DateTimeFormat(language, { weekday: "short" });
 	const dayMonth = new Intl.DateTimeFormat(language, {
 		day: "numeric",

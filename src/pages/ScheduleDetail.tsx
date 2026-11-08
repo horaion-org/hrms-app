@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
@@ -398,11 +399,10 @@ const ApiSchedule = ({
 		hasRoster: hasRoster(schedule),
 		weekPublishedElsewhere: weekPublishedBy !== undefined,
 	};
-	const moment = dateTimeFormatIn(
-		i18n.resolvedLanguage ?? i18n.language,
-		schedule.timeZone,
-		{ dateStyle: "medium", timeStyle: "short" }
-	);
+	const moment = dateTimeFormatIn(formattingLocale(i18n), schedule.timeZone, {
+		dateStyle: "medium",
+		timeStyle: "short",
+	});
 	const mayReject =
 		decidable(schedule) &&
 		access.can("schedule:publish", departmentScope(schedule.departmentId));

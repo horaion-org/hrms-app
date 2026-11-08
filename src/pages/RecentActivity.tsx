@@ -1,5 +1,6 @@
 import { getRouteApi } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { ActivityItem } from "@/components/ui/ActivityItem";
 import { Button } from "@/components/ui/Button";
@@ -20,7 +21,7 @@ const ACTIVITY_PAGE_SIZE = 10;
 /** Everything that changed in the company, newest first, a page at a time. */
 export const RecentActivity = (): FunctionComponent => {
 	const { t, i18n } = useTranslation();
-	const language = i18n.resolvedLanguage ?? i18n.language;
+	const language = formattingLocale(i18n);
 	const companyId = useCurrentCompanyId();
 	const { page = 1 } = route.useSearch();
 	const navigate = route.useNavigate();

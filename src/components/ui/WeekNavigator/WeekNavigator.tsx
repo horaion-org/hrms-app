@@ -1,5 +1,6 @@
 import dayjs from "dayjs";
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
@@ -51,7 +52,7 @@ export const WeekNavigator = ({
 	className,
 }: WeekNavigatorProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
-	const language = i18n.resolvedLanguage ?? i18n.language;
+	const language = formattingLocale(i18n);
 	const atEarliest = earliestWeek !== undefined && week <= earliestWeek;
 	return (
 		<div
