@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import { ApiProblemError } from "@/common/problem";
 import type { FunctionComponent } from "@/common/types";
 import { useNow } from "@/common/useNow";
@@ -58,7 +59,7 @@ export const MyRosterProblem = (): FunctionComponent => {
  */
 export const MyRosterPage = (): FunctionComponent => {
 	const { t, i18n } = useTranslation();
-	const language = i18n.resolvedLanguage ?? i18n.language;
+	const language = formattingLocale(i18n);
 	const companyId = useCurrentCompanyId();
 	const viewerMembershipId = useCurrentMembershipId();
 	const { scheduleId } = route.useParams();

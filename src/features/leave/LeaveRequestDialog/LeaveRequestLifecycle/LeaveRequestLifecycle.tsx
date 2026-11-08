@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { DatePicker } from "@/components/forms/DatePicker";
 import { FormRow } from "@/components/forms/FormRow";
@@ -58,7 +59,11 @@ const HistoryLine = ({
 }): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const day = change.affectedDay
-		? formatPeriod(change.affectedDay, change.affectedDay, i18n.language)
+		? formatPeriod(
+				change.affectedDay,
+				change.affectedDay,
+				formattingLocale(i18n)
+			)
 		: "";
 	const typeChanged = change.beforeLeaveTypeName !== change.afterLeaveTypeName;
 	const datesChanged =
@@ -74,7 +79,7 @@ const HistoryLine = ({
 					day,
 				})}
 				{" · "}
-				{formatPeriod(changedOn, changedOn, i18n.language)}
+				{formatPeriod(changedOn, changedOn, formattingLocale(i18n))}
 			</p>
 			{typeChanged && (
 				<p>
@@ -94,12 +99,12 @@ const HistoryLine = ({
 							before: formatPeriod(
 								change.beforeStartDate,
 								change.beforeEndDate,
-								i18n.language
+								formattingLocale(i18n)
 							),
 							after: formatPeriod(
 								change.afterStartDate,
 								change.afterEndDate,
-								i18n.language
+								formattingLocale(i18n)
 							),
 						})}
 					</p>
@@ -284,7 +289,7 @@ export const LeaveRequestLifecycle = ({
 	const period = formatPeriod(
 		request.startDate,
 		request.endDate,
-		i18n.language
+		formattingLocale(i18n)
 	);
 	const close = (): void => {
 		setAsking(null);

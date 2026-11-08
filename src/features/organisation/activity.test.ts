@@ -1,4 +1,4 @@
-import { createInstance } from "i18next";
+import { createInstance, type TFunction } from "i18next";
 import { describe, expect, it } from "vitest";
 import {
 	DepartmentIcon,
@@ -233,8 +233,11 @@ describe("describeActivity", () => {
 		[
 			"branch_member.ensure_active",
 			"BranchMembership",
-			"Branch membership ensure active",
+			"Branch membership activated",
 		],
+		["approval.start", "ApprovalInstance", "Approval started"],
+		["approval_flow.update", "ApprovalFlow", "Approval flow updated"],
+		["schedule.publish", "Schedule", "Schedule published"],
 		["widget.frobnicate", "WidgetThing", "Widget thing frobnicate"],
 	])(
 		"falls back for %s on %s as %s, humanising what it does not know",
@@ -264,7 +267,91 @@ describe("describeActivity", () => {
 				spanish.t
 			).title
 		).toBe("Creación de turno: Front desk");
+		expect(
+			describeActivity(
+				event({
+					action: "schedule.publish",
+					entityType: "Schedule",
+					entityName: "Ops approvals week",
+				}),
+				spanish.t
+			).title
+		).toBe("Publicación de horario: Ops approvals week");
+		expect(
+			describeActivity(
+				event({
+					action: "approval.start",
+					entityType: "ApprovalInstance",
+					entityName: "Ops approvals week",
+				}),
+				spanish.t
+			).title
+		).toBe("Inicio de aprobación: Ops approvals week");
 	});
+
+	/** The API's audited actions that have no copy of their own, so the fallback words them. */
+	const FALLBACK_ACTIONS = [
+		["approval.cancel", "ApprovalInstance"],
+		["approval.decide", "ApprovalInstance"],
+		["approval.start", "ApprovalInstance"],
+		["approval_flow.create", "ApprovalFlow"],
+		["approval_flow.delete", "ApprovalFlow"],
+		["approval_flow.update", "ApprovalFlow"],
+		["branch_member.add", "BranchMembership"],
+		["branch_member.deactivate", "BranchMembership"],
+		["branch_member.ensure_active", "BranchMembership"],
+		["branch_member.update", "BranchMembership"],
+		["constraint.create", "Constraint"],
+		["constraint.delete", "Constraint"],
+		["constraint.update", "Constraint"],
+		["department_member.deactivate", "DepartmentMembership"],
+		["leave_request.cancel", "LeaveRequest"],
+		["leave_request.change", "LeaveRequest"],
+		["leave_request.record", "LeaveRequest"],
+		["leave_request.withdraw", "LeaveRequest"],
+		["member_note.create", "MemberNote"],
+		["member_note.delete", "MemberNote"],
+		["member_note.update", "MemberNote"],
+		["schedule.cover_offer.accept", "CoverOffer"],
+		["schedule.cover_offer.decline", "CoverOffer"],
+		["schedule.cover_offer.record", "CoverOffer"],
+		["schedule.cover_offer.send", "CoverOffer"],
+		["schedule.cover_offer.withdraw", "CoverOffer"],
+		["schedule.opening_balances.update", "Schedule"],
+		["schedule.publication_withdraw", "Schedule"],
+		["schedule.publish", "Schedule"],
+		["schedule.reject", "Schedule"],
+		["schedule.roster_change.cover_option", "ScheduleRosterChange"],
+		["schedule.roster_change.leave_removal", "ScheduleRosterChange"],
+		["schedule.starting_days.update", "Schedule"],
+		["shift.create", "Shift"],
+		["shift.delete", "Shift"],
+		["shift.update", "Shift"],
+	] as const;
+
+	it.each(FALLBACK_ACTIONS)(
+		"words %s on %s from the app's own verb and entity copy, in both languages",
+		(action, entityType) => {
+			const asked: Array<string> = [];
+			const recording = ((key: string) => {
+				asked.push(key);
+				return key;
+			}) as unknown as TFunction;
+			describeActivity(event({ action, entityType }), recording);
+
+			const verb = asked.find((key) => key.includes(".activity.verbs."));
+			const entity = asked.find((key) =>
+				key.includes(".activity.entityTypes.")
+			);
+			expect(verb, "verb copy").toBeDefined();
+			expect(entity, "entity copy").toBeDefined();
+			for (const language of ["en", "es"] as const) {
+				const { verbs, entityTypes } = LOCALES[language].organisation.activity;
+				expect(verbs).toHaveProperty(verb!.split(".").pop()!);
+				expect(entityTypes).toHaveProperty(entity!.split(".").pop()!);
+			}
+		}
+	);
 
 	it.each([
 		[

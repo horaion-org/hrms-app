@@ -2,6 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useId, useMemo, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { RadioCard } from "@/components/forms/RadioCard";
 import { Button } from "@/components/ui/Button";
@@ -86,10 +87,7 @@ export const AvailabilityDialog = ({
 	);
 	const [confirmingReset, setConfirmingReset] = useState(false);
 	const [resetting, setResetting] = useState(false);
-	const date = formatWeekStart(
-		weekStartMonday,
-		i18n.resolvedLanguage ?? i18n.language
-	);
+	const date = formatWeekStart(weekStartMonday, formattingLocale(i18n));
 	const windowsFor = (next: EditTarget): ReadonlyArray<WeeklyWindow> =>
 		next === "week" ? weekWindows : (patternWindows ?? []);
 	const scope: AvailabilityScope =

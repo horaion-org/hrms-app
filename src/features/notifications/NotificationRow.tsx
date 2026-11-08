@@ -1,5 +1,6 @@
 import type { ReactNode, Ref } from "react";
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { DeleteIcon, TickIcon } from "@/components/ui/Icon";
@@ -76,13 +77,13 @@ export const NotificationRow = ({
 						dateTime={notification.occurredAt}
 						title={notificationExactTime(
 							notification.occurredAt,
-							i18n.language
+							formattingLocale(i18n)
 						)}
 					>
 						{notificationTimeLabel(
 							notification.occurredAt,
 							now,
-							i18n.language
+							formattingLocale(i18n)
 						) ?? t("notifications.justNow")}
 					</time>
 				</p>

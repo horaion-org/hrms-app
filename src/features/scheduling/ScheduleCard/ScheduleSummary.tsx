@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import type { Schedule } from "@/features/scheduling/schedules/api";
 
@@ -11,7 +12,7 @@ export const ScheduleSummary = ({
 	schedule: Schedule;
 }): FunctionComponent => {
 	const { t, i18n } = useTranslation();
-	const date = new Intl.DateTimeFormat(i18n.resolvedLanguage ?? i18n.language, {
+	const date = new Intl.DateTimeFormat(formattingLocale(i18n), {
 		dateStyle: "medium",
 		timeStyle: "short",
 	});

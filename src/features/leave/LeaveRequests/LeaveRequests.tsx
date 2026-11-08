@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
@@ -12,7 +13,7 @@ import {
 	LEAVE_PAGE_SIZE,
 	type LeaveSort,
 } from "@/features/leave/api";
-import { formatPeriod } from "@/features/leave/dates";
+import { calendarDayOf, formatPeriod } from "@/features/leave/dates";
 import { leaveTypeLabel } from "@/features/leave/leaveTypeLabel";
 import { statusTone, type LeaveRequest } from "@/features/leave/types";
 
@@ -103,14 +104,14 @@ export const LeaveRequests = ({
 			cell: (row) => (
 				<div>
 					<p className="font-semibold">
-						{formatPeriod(row.startDate, row.endDate, i18n.language)}
+						{formatPeriod(row.startDate, row.endDate, formattingLocale(i18n))}
 					</p>
 					<p className="mt-1">
 						{t("leave.requestedOn", {
 							date: formatPeriod(
-								row.requestedAt.slice(0, 10),
-								row.requestedAt.slice(0, 10),
-								i18n.language
+								calendarDayOf(row.requestedAt),
+								calendarDayOf(row.requestedAt),
+								formattingLocale(i18n)
 							),
 						})}
 					</p>

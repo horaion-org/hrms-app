@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
@@ -33,10 +34,13 @@ export const ImportHistory = ({
 			id: "when",
 			header: t("settings.data.history.whenColumn"),
 			cell: (entry) =>
-				new Date(entry.importRecord.createdAt).toLocaleString(i18n.language, {
-					dateStyle: "medium",
-					timeStyle: "short",
-				}),
+				new Date(entry.importRecord.createdAt).toLocaleString(
+					formattingLocale(i18n),
+					{
+						dateStyle: "medium",
+						timeStyle: "short",
+					}
+				),
 		},
 		{
 			id: "kind",

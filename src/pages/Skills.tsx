@@ -1,6 +1,7 @@
 import type { TFunction } from "i18next";
 import { useCallback, useId, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { todayDate } from "@/components/forms/Calendar";
 import { FormRow, formRowIds } from "@/components/forms/FormRow";
@@ -81,6 +82,8 @@ const confirmCopy = (
 export const Skills = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
 	const { t, i18n } = useTranslation();
+	// Dates follow the browser's region of the app's language (en-GB: day first).
+	const locale = formattingLocale(i18n);
 	const access = useAccess();
 	const canCreate = access.can("skill:create", COMPANY_SCOPE);
 	const canUpdate = access.can("skill:update", COMPANY_SCOPE);
@@ -141,7 +144,7 @@ export const Skills = (): FunctionComponent => {
 		() =>
 			skillColumns(
 				t,
-				i18n.language,
+				locale,
 				(skill) => (
 					<>
 						{canAssign && skill.status === "ACTIVE" && (
@@ -178,7 +181,7 @@ export const Skills = (): FunctionComponent => {
 				canEdit,
 				setEditing
 			),
-		[t, i18n.language, canUpdate, canDelete, canEdit, canAssign]
+		[t, locale, canUpdate, canDelete, canEdit, canAssign]
 	);
 	const pending = update.isPending || remove.isPending;
 	const failure = update.error ?? remove.error;

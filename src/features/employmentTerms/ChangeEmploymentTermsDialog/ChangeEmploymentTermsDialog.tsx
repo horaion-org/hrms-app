@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useId, useMemo, useState, type ReactNode } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { formatDate, todayDate } from "@/components/forms/Calendar";
 import { DatePicker } from "@/components/forms/DatePicker";
@@ -77,7 +78,7 @@ export const ChangeEmploymentTermsDialog = ({
 	onClose,
 }: ChangeEmploymentTermsDialogProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
-	const language = i18n.resolvedLanguage ?? i18n.language ?? "en";
+	const language = formattingLocale(i18n);
 	const formId = useId();
 	const idOf = (field: string): string => `${formId}-${field}`;
 	const [today] = useState(() => todayDate(Date.now()));

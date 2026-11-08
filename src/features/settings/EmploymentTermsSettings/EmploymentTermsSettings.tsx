@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { TFunction } from "i18next";
 import { useMemo, useState, type ReactNode } from "react";
 import { Trans, useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import { ApiProblemError } from "@/common/problem";
 import type { FunctionComponent } from "@/common/types";
 import { formatDate } from "@/components/forms/Calendar";
@@ -108,7 +109,7 @@ export const EmploymentTermsSettings = ({
 	onTermsClosed,
 }: EmploymentTermsSettingsProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
-	const language = i18n.resolvedLanguage ?? i18n.language ?? "en";
+	const language = formattingLocale(i18n);
 	const access = useAccess();
 	const canRead = access.can("employment_terms:read", COMPANY_SCOPE);
 	const canUpdate = access.can("employment_terms:update", COMPANY_SCOPE);

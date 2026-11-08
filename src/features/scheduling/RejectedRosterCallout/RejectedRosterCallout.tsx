@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { Callout } from "@/components/ui/Callout";
 import { Quote } from "@/components/ui/Quote";
@@ -32,7 +33,7 @@ export const RejectedRosterCallout = ({
 	const { t, i18n } = useTranslation();
 	const decision = scheduleDecision(schedule);
 	if (decision?.kind !== "rejected") return null;
-	const language = i18n.resolvedLanguage ?? i18n.language;
+	const language = formattingLocale(i18n);
 	const at = decision.decidedAt
 		? dateTimeFormatIn(language, schedule.timeZone, {
 				dateStyle: "medium",

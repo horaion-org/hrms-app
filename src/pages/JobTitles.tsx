@@ -2,6 +2,7 @@ import { getRouteApi } from "@tanstack/react-router";
 import type { TFunction } from "i18next";
 import { type ReactNode, useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { DataTable, type DataTableSort } from "@/components/ui/DataTable";
@@ -71,6 +72,8 @@ const route = getRouteApi("/_authenticated/_app/organisation/job-titles");
 export const JobTitles = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
 	const { t, i18n } = useTranslation();
+	// Dates follow the browser's region of the app's language (en-GB: day first).
+	const locale = formattingLocale(i18n);
 	const navigate = route.useNavigate();
 	const requested = unitSelectionOf(route.useSearch());
 	const units = useUnitSelection(
@@ -168,7 +171,7 @@ export const JobTitles = (): FunctionComponent => {
 				),
 			},
 			statusColumn<JobTitle>(t),
-			createdColumn<JobTitle>(t, i18n.language),
+			createdColumn<JobTitle>(t, locale),
 			actionsColumn<JobTitle>(
 				t,
 				(jobTitle) => (
@@ -189,7 +192,7 @@ export const JobTitles = (): FunctionComponent => {
 				setEditing
 			),
 		],
-		[t, i18n.language, canEdit, branchShown, departmentShown]
+		[t, locale, canEdit, branchShown, departmentShown]
 	);
 
 	return (

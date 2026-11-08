@@ -11,9 +11,7 @@ describe("i18n", () => {
 	it("serves the bundled translations without fetching them", () => {
 		expect(i18n.hasResourceBundle("en", "translations")).toBe(true);
 		expect(i18n.hasResourceBundle("es", "translations")).toBe(true);
-		expect(i18n.t("notifications.title", { lng: "en" })).toBe(
-			"Notifications"
-		);
+		expect(i18n.t("notifications.title", { lng: "en" })).toBe("Notifications");
 	});
 
 	it("resolves a regional browser language to its base language", async () => {
@@ -28,5 +26,16 @@ describe("i18n", () => {
 
 		expect(i18n.resolvedLanguage).toBe("en");
 		expect(i18n.t("notifications.title")).toBe("Notifications");
+	});
+
+	it("sets <html lang> to the language the app shows, on every change", async () => {
+		await i18n.changeLanguage("es-ES");
+		expect(document.documentElement.lang).toBe("es");
+
+		await i18n.changeLanguage("fr-FR");
+		expect(document.documentElement.lang).toBe("en");
+
+		await i18n.changeLanguage("en-GB");
+		expect(document.documentElement.lang).toBe("en");
 	});
 });

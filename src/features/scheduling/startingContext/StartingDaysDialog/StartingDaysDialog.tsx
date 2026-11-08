@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { Input } from "@/components/forms/Input";
 import { Select } from "@/components/forms/Select";
@@ -81,7 +82,7 @@ export const StartingDaysDialog = ({
 	onClose,
 }: StartingDaysDialogProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
-	const language = i18n.resolvedLanguage ?? i18n.language;
+	const language = formattingLocale(i18n);
 	const [entries, setEntries] = useState<Entries>(() => initialEntries(week));
 	const lastDay = week.days[week.days.length - 1] ?? "";
 	const [fillDay, setFillDay] = useState(lastDay);

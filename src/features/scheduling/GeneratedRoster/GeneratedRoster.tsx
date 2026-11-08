@@ -1,5 +1,6 @@
 import { useCallback, useId, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { CountBadge } from "@/components/ui/CountBadge";
@@ -181,7 +182,7 @@ export const GeneratedRoster = ({
 	offeredDays,
 }: GeneratedRosterProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
-	const language = i18n.resolvedLanguage ?? i18n.language;
+	const language = formattingLocale(i18n);
 	const [previewDays, setPreviewDays] = useState<ReadonlySet<string>>(NO_DAYS);
 	const [applied, setApplied] = useState<RosterChange>();
 	const sidePanelId = useId();

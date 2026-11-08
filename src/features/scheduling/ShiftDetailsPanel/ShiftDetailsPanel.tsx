@@ -1,6 +1,7 @@
 import dayjs from "dayjs";
 import { useId, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { Avatar } from "@/components/ui/Avatar";
@@ -33,7 +34,7 @@ export const ShiftDetailsPanel = ({
 }: ShiftDetailsPanelProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const titleId = useId();
-	const language = i18n.resolvedLanguage ?? i18n.language;
+	const language = formattingLocale(i18n);
 	const date = new Intl.DateTimeFormat(language, {
 		weekday: "short",
 		day: "numeric",

@@ -1,6 +1,7 @@
 import { Popover, PopoverButton, PopoverPanel } from "@headlessui/react";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { Select } from "@/components/forms/Select";
@@ -47,7 +48,7 @@ export const RosterWeekBar = ({
 	className,
 }: RosterWeekBarProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
-	const language = i18n.resolvedLanguage ?? i18n.language;
+	const language = formattingLocale(i18n);
 	const index = weeks.findIndex((item) => item.start === week);
 	const swatches = legend.map((entry): Swatch =>
 		entry.kind === "shift"

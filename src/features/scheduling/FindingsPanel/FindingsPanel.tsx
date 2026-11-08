@@ -1,5 +1,6 @@
 import { useId, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { FindingList } from "@/features/scheduling/FindingList";
@@ -68,7 +69,7 @@ export const FindingsPanel = ({
 	className,
 }: FindingsPanelProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
-	const language = i18n.resolvedLanguage ?? i18n.language;
+	const language = formattingLocale(i18n);
 	const setupGroups = groupDiagnostics(findings.diagnostics);
 	const notes = rosterNotes(findings, visibleDays);
 	const rosterCount = [...notes.byDate, ...notes.byMember].reduce(

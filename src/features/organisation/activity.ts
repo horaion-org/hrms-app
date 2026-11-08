@@ -212,24 +212,51 @@ type VerbKey =
 	| "approved"
 	| "rejected"
 	| "started"
-	| "finished";
+	| "finished"
+	| "published"
+	| "publicationWithdrawn"
+	| "withdrawn"
+	| "cancelled"
+	| "decided"
+	| "recorded"
+	| "changed"
+	| "accepted"
+	| "declined"
+	| "sent"
+	| "activated"
+	| "applied";
 
 /** The verb part of an action (`shift.create` → `create`) worded for the fallback title. */
-const VERBS: Record<string, VerbKey> = {
-	create: "created",
-	update: "updated",
-	replace: "updated",
-	delete: "deleted",
-	add: "added",
-	deactivate: "deactivated",
-	reactivate: "reactivated",
-	grant: "granted",
-	revoke: "revoked",
-	approve: "approved",
-	reject: "rejected",
-	start: "started",
-	finish: "finished",
-};
+const VERBS: ReadonlyMap<string, VerbKey> = new Map<string, VerbKey>([
+	["create", "created"],
+	["update", "updated"],
+	["replace", "updated"],
+	["delete", "deleted"],
+	["add", "added"],
+	["deactivate", "deactivated"],
+	["reactivate", "reactivated"],
+	["grant", "granted"],
+	["revoke", "revoked"],
+	["approve", "approved"],
+	["reject", "rejected"],
+	["start", "started"],
+	["finish", "finished"],
+	["publish", "published"],
+	["publication_withdraw", "publicationWithdrawn"],
+	["withdraw", "withdrawn"],
+	["cancel", "cancelled"],
+	["decide", "decided"],
+	["record", "recorded"],
+	["change", "changed"],
+	["accept", "accepted"],
+	["decline", "declined"],
+	["send", "sent"],
+	["ensure_active", "activated"],
+	// A roster change made from a cover option or a leave removal is applied like any other.
+	["apply", "applied"],
+	["cover_option", "applied"],
+	["leave_removal", "applied"],
+]);
 
 type EntityTypeKey =
 	| "Company"
@@ -247,7 +274,13 @@ type EntityTypeKey =
 	| "LeaveRequest"
 	| "Schedule"
 	| "Shift"
-	| "Constraint";
+	| "Constraint"
+	| "ApprovalFlow"
+	| "ApprovalInstance"
+	| "CoverOffer"
+	| "EmploymentTerms"
+	| "LeaveType"
+	| "ScheduleRosterChange";
 
 const ENTITY_TYPES: ReadonlySet<string> = new Set<EntityTypeKey>([
 	"Company",
@@ -266,6 +299,12 @@ const ENTITY_TYPES: ReadonlySet<string> = new Set<EntityTypeKey>([
 	"Schedule",
 	"Shift",
 	"Constraint",
+	"ApprovalFlow",
+	"ApprovalInstance",
+	"CoverOffer",
+	"EmploymentTerms",
+	"LeaveType",
+	"ScheduleRosterChange",
 ]);
 
 /** Where an activity's entity opens, when the app has a page for it by id alone. */
@@ -299,7 +338,7 @@ const humanise = (code: string): string => {
  */
 const fallbackTitle = (event: AuditEvent, t: TFunction): string => {
 	const rawVerb = event.action.slice(event.action.lastIndexOf(".") + 1);
-	const verbKey = VERBS[rawVerb];
+	const verbKey = VERBS.get(rawVerb);
 	const verb = verbKey
 		? t(`organisation.activity.verbs.${verbKey}`)
 		: humanise(rawVerb).toLowerCase();

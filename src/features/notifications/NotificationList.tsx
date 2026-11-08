@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import { ApiProblemError } from "@/common/problem";
 import type { FunctionComponent } from "@/common/types";
 import { useNow } from "@/common/useNow";
@@ -206,7 +207,7 @@ export const NotificationList = ({
 					<ul className="divide-y divide-neutral-300">
 						{rows.map((notification, index) => {
 							const presentation = presentNotification(notification, {
-								language: i18n.language,
+								language: formattingLocale(i18n),
 								now,
 							});
 							const title = t(presentation.title, presentation.values);

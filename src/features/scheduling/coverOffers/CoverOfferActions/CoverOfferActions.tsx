@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { FormRow, formRowIds } from "@/components/forms/FormRow";
 import { Select } from "@/components/forms/Select";
@@ -62,7 +63,7 @@ export const CoverOfferActions = ({
 	now = (): Date => new Date(),
 }: CoverOfferActionsProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
-	const language = i18n.resolvedLanguage ?? i18n.language;
+	const language = formattingLocale(i18n);
 	const [recording, setRecording] = useState(false);
 	const [how, setHow] = useState<CoverOfferRecordedHow>();
 	const [time, setTime] = useState(() => latestTimeStep(now(), timeZone));

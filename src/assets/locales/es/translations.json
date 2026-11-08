@@ -1347,7 +1347,19 @@
 				"approved": "Aprobación",
 				"rejected": "Rechazo",
 				"started": "Inicio",
-				"finished": "Finalización"
+				"finished": "Finalización",
+				"published": "Publicación",
+				"publicationWithdrawn": "Retirada de la publicación",
+				"withdrawn": "Retirada",
+				"cancelled": "Cancelación",
+				"decided": "Decisión",
+				"recorded": "Registro",
+				"changed": "Cambio",
+				"accepted": "Aceptación",
+				"declined": "Rechazo",
+				"sent": "Envío",
+				"activated": "Activación",
+				"applied": "Aplicación"
 			},
 			"entityTypes": {
 				"Company": "espacio de trabajo",
@@ -1365,7 +1377,13 @@
 				"LeaveRequest": "solicitud de ausencia",
 				"Schedule": "horario",
 				"Shift": "turno",
-				"Constraint": "restricción"
+				"Constraint": "restricción",
+				"ApprovalFlow": "flujo de aprobación",
+				"ApprovalInstance": "aprobación",
+				"CoverOffer": "oferta de cobertura",
+				"EmploymentTerms": "condiciones de empleo",
+				"LeaveType": "tipo de permiso",
+				"ScheduleRosterChange": "cambio de cuadrante"
 			}
 		},
 		"departments": {

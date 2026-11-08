@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { formatDay } from "@/features/scheduling/periods";
@@ -46,7 +47,7 @@ export const UndoRosterChangeDialog = ({
 	notifiesMembers = false,
 }: UndoRosterChangeDialogProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
-	const language = i18n.resolvedLanguage ?? i18n.language;
+	const language = formattingLocale(i18n);
 	const [remark, setRemark] = useState("");
 	const [ticked, setTicked] = useState(false);
 	const gate = applyGate(preview.checks);
