@@ -44,8 +44,12 @@ type Call = { method: string; path: string; search: string; body: unknown };
 
 let app: OpenedApp | undefined;
 
+/** Before every fixture's leave starts, so approving it needs no comment (approving leave before today does). */
+const BEFORE_THE_FIXTURES_LEAVE = Date.parse("2026-05-01T08:00:00Z");
+
 beforeEach(() => {
 	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+	vi.spyOn(Date, "now").mockReturnValue(BEFORE_THE_FIXTURES_LEAVE);
 });
 
 afterEach(() => {

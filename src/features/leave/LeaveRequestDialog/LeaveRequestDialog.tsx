@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
+import { todayDate, type IsoDate } from "@/components/forms/Calendar";
 import { Button } from "@/components/ui/Button";
 import { CrossIcon, TickIcon } from "@/components/ui/Icon";
 import { Modal } from "@/components/ui/Modal";
@@ -66,6 +67,8 @@ export type LeaveRequestDialogProps = {
 	onReject: (request: LeaveRequest, reason: string) => void;
 	/** `membershipId` is null when the caller applies for themself. */
 	onCreate: (membershipId: string | null, body: LeaveRequestBody) => void;
+	/** Today; the reviewer's device's by default. Approving leave before it needs a comment. */
+	today?: IsoDate;
 };
 
 /**
@@ -93,8 +96,12 @@ export const LeaveRequestDialog = ({
 	onApprove,
 	onReject,
 	onCreate,
+	today: todayOverride,
 }: LeaveRequestDialogProps): FunctionComponent => {
 	const { t } = useTranslation();
+	// Read once when the dialog opens, outside render.
+	const [deviceToday] = useState(() => todayDate(Date.now()));
+	const today = todayOverride ?? deviceToday;
 	const id = useId();
 	const [step, setStep] = useState<ReviewStep>(
 		mode === "reject" || mode === "approve" ? mode : "review"
@@ -103,6 +110,7 @@ export const LeaveRequestDialog = ({
 	const [rejectionReason, setRejectionReason] = useState("");
 	const [approvalComment, setApprovalComment] = useState("");
 	const [missingRejectionReason, setMissingRejectionReason] = useState(false);
+	const [missingApprovalComment, setMissingApprovalComment] = useState(false);
 	const [takeOffConfirmed, setTakeOffConfirmed] = useState(false);
 	const rostered = useQuery(
 		rosteredDaysQuery(
@@ -140,8 +148,17 @@ export const LeaveRequestDialog = ({
 	const rejectionReasonError = missingRejectionReason
 		? t("leave.required")
 		: fields.reason;
+	// The API asks for a comment on leave before today; its own refusal lands on the field too.
+	const commentRequired = request.startDate < today;
+	const approvalCommentError = missingApprovalComment
+		? t("leave.commentMissing")
+		: fields.comment;
 	const decide = (): void => {
 		if (!rejecting) {
+			if (commentRequired && !approvalComment.trim()) {
+				setMissingApprovalComment(true);
+				return;
+			}
 			onApprove(request, approvalComment.trim(), rosteredDays.length > 0);
 			return;
 		}
@@ -248,8 +265,9 @@ export const LeaveRequestDialog = ({
 			)}
 			{step !== "review" && (
 				<LeaveDecisionStep
+					commentRequired={commentRequired}
 					decision={step}
-					error={rejecting ? rejectionReasonError : fields.comment}
+					error={rejecting ? rejectionReasonError : approvalCommentError}
 					id={id}
 					note={rejecting ? rejectionReason : approvalComment}
 					onSubmit={decide}
@@ -257,7 +275,10 @@ export const LeaveRequestDialog = ({
 						if (rejecting) {
 							setRejectionReason(note);
 							setMissingRejectionReason(false);
-						} else setApprovalComment(note);
+						} else {
+							setApprovalComment(note);
+							setMissingApprovalComment(false);
+						}
 					}}
 				/>
 			)}

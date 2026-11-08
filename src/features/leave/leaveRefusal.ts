@@ -26,6 +26,8 @@ export const LEAVE_REFUSAL_CODES = {
 	invalidReason: "400 INVALID_REJECTION_REASON",
 	/** The approval comment is over 2,000 characters or holds a control character. */
 	invalidComment: "400 INVALID_APPROVAL_COMMENT",
+	/** The leave reaches back before the member's today and no approval comment says why. */
+	commentRequiredForPastDays: "400 LEAVE_COMMENT_REQUIRED_FOR_PAST_DAYS",
 	/** The remarks are over 1,000 characters or hold a control character. */
 	invalidNotes: "400 INVALID_LEAVE_NOTES",
 	/** The leave type asks for a reason and none was written. */
@@ -125,6 +127,10 @@ export const decisionRefusal = (
 		codes: {
 			[codes.invalidReason]: reason,
 			[codes.invalidComment]: comment,
+			[codes.commentRequiredForPastDays]: {
+				field: "comment",
+				message: t("leave.commentMissing"),
+			},
 		},
 		alerts: {
 			[codes.notPending]: t(`${key}.notPending`),
