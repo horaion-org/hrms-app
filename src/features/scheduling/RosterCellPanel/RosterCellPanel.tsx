@@ -12,6 +12,10 @@ import { CloseIcon } from "@/components/ui/Icon";
 import { activeLeaveTypesQuery, leaveRequestQuery } from "@/features/leave/api";
 import { rangeDays } from "@/features/leave/dates";
 import { leaveTypeOptions } from "@/features/leave/leaveTypeOptions";
+import type { CoverOffer } from "@/features/scheduling/coverOffers/api";
+import { CoverOfferActions } from "@/features/scheduling/coverOffers/CoverOfferActions";
+import { CoverOfferSent } from "@/features/scheduling/coverOffers/CoverOfferActions/CoverOfferSent";
+import { useCellCoverOffer } from "@/features/scheduling/coverOffers/useCellCoverOffer";
 import { formatTimeRange } from "@/features/scheduling/formatShift";
 import { formatDay } from "@/features/scheduling/periods";
 import { RosterChangeReview } from "@/features/scheduling/RosterChangeReview";
@@ -93,6 +97,14 @@ export type RosterCellPanelProps = {
 	notifiesMembers?: boolean;
 	/** What needs a look on the day (`RosterDayNotes`), shown first; nothing without. */
 	issues?: ReactNode;
+	/**
+	 * On a published roster: the schedule's cover offers and its time zone.
+	 * A change that adds or moves work then goes out as an offer (or a
+	 * recorded yes) instead of Apply, and an open offer for the day shows.
+	 */
+	coverOffers?: { offers: ReadonlyArray<CoverOffer>; timeZone: string };
+	/** A recorded yes landed and applied; the roster refreshes by itself. */
+	onCoverRecorded?: () => void;
 	className?: string;
 };
 
@@ -107,7 +119,8 @@ const key = "scheduling.rosterEdit";
  * moves offer no Undo: they are reversed in Leave. Checks that need a tick, or
  * a tick and a remark, hold Apply until given; scheduling rules aren't checked
  * again. On a published roster Apply asks first, saying how many people will
- * be told.
+ * be told; with `coverOffers`, a change that adds or moves work asks the
+ * member instead (`CoverOfferActions`).
  */
 export const RosterCellPanel = ({
 	target,
@@ -122,6 +135,8 @@ export const RosterCellPanel = ({
 	leaveEditing,
 	notifiesMembers = false,
 	issues,
+	coverOffers,
+	onCoverRecorded,
 	className,
 }: RosterCellPanelProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
@@ -254,6 +269,21 @@ export const RosterCellPanel = ({
 		? rosterChangeRefusal(preview.error)
 		: undefined;
 	const remarkGiven = remark.trim().length > 0;
+	const offer = useCellCoverOffer({
+		target,
+		offers: coverOffers?.offers,
+		published: notifiesMembers && coverOffers !== undefined,
+		assignment,
+		choice,
+		leaveMove: leaveMove !== undefined,
+		body,
+		checksFingerprint: preview.data?.checksFingerprint ?? null,
+		remark,
+		onChecksChanged: () => {
+			void preview.refetch();
+		},
+		onRecorded: onCoverRecorded,
+	});
 	const leaveFailure =
 		leaveActions.putOnLeave.error ??
 		leaveActions.changeType.error ??
@@ -285,6 +315,7 @@ export const RosterCellPanel = ({
 	/** A failure belongs to the choice that caused it. */
 	const clearFailures = (): void => {
 		apply.reset();
+		offer.reset();
 		Object.values(leaveActions).forEach((action) => {
 			action.reset();
 		});
@@ -562,6 +593,19 @@ export const RosterCellPanel = ({
 							</Button>
 						</>
 					)}
+				{coverOffers &&
+					offer.openOffer &&
+					!offer.justSent &&
+					section(
+						<CoverOfferSent
+							name={name}
+							offer={offer.openOffer}
+							refusal={offer.withdrawRefusal}
+							timeZone={coverOffers.timeZone}
+							withdrawing={offer.withdrawing}
+							onWithdraw={offer.withdraw}
+						/>
+					)}
 				{stranded &&
 					section(
 						<p className="text-sm text-error-700" role="alert">
@@ -667,6 +711,20 @@ export const RosterCellPanel = ({
 							</>
 						)}
 				{body &&
+					coverOffers &&
+					offer.justSent &&
+					section(
+						<CoverOfferSent
+							name={name}
+							offer={offer.justSent}
+							refusal={offer.withdrawRefusal}
+							timeZone={coverOffers.timeZone}
+							withdrawing={offer.withdrawing}
+							onWithdraw={offer.withdraw}
+						/>
+					)}
+				{body &&
+					!offer.justSent &&
 					section(
 						<>
 							<RosterChangeReview
@@ -722,27 +780,45 @@ export const RosterCellPanel = ({
 									})}
 								</p>
 							)}
-							<div className="flex justify-end gap-3">
-								<Button size="sm" variant="secondary" onClick={onClose}>
-									{t(`${key}.cancel`)}
-								</Button>
-								<Button
-									loading={apply.isPending || leavePending}
-									size="sm"
-									disabled={
-										!preview.data ||
-										!canApply(gate, ticked, remark) ||
-										(leaveMove !== undefined && !remarkGiven)
+							{coverOffers && offer.consentKind ? (
+								<CoverOfferActions
+									name={name}
+									pending={offer.createPending}
+									refusal={offer.createRefusal}
+									rivals={offer.rivals}
+									sendBlocked={offer.openOffer !== undefined}
+									timeZone={coverOffers.timeZone}
+									ready={
+										Boolean(preview.data) && canApply(gate, ticked, remark)
 									}
-									onClick={() => {
-										if (leaveMove) askOrRunLeaveMove();
-										else if (notifiesMembers) setConfirming(true);
-										else submit();
-									}}
-								>
-									{t(gate.needsRemark ? `${key}.applyAnyway` : `${key}.apply`)}
-								</Button>
-							</div>
+									onRecord={offer.record}
+									onSend={offer.send}
+								/>
+							) : (
+								<div className="flex justify-end gap-3">
+									<Button size="sm" variant="secondary" onClick={onClose}>
+										{t(`${key}.cancel`)}
+									</Button>
+									<Button
+										loading={apply.isPending || leavePending}
+										size="sm"
+										disabled={
+											!preview.data ||
+											!canApply(gate, ticked, remark) ||
+											(leaveMove !== undefined && !remarkGiven)
+										}
+										onClick={() => {
+											if (leaveMove) askOrRunLeaveMove();
+											else if (notifiesMembers) setConfirming(true);
+											else submit();
+										}}
+									>
+										{t(
+											gate.needsRemark ? `${key}.applyAnyway` : `${key}.apply`
+										)}
+									</Button>
+								</div>
+							)}
 						</>
 					)}
 				{leaveMove &&

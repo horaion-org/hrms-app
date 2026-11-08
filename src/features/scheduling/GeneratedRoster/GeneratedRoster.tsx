@@ -8,6 +8,7 @@ import {
 	type DescriptionListItem,
 } from "@/components/ui/DescriptionList";
 import { FilterChips } from "@/components/ui/FilterChips";
+import type { CoverOffer } from "@/features/scheduling/coverOffers/api";
 import { FindingList } from "@/features/scheduling/FindingList";
 import { FindingsPanel } from "@/features/scheduling/FindingsPanel";
 import { LastRosterChange } from "@/features/scheduling/LastRosterChange";
@@ -93,6 +94,16 @@ export type RosterEditing = {
 	notifiesMembers: boolean;
 	/** Given to someone who may change leave here too: the leave choices beside the roster's own. */
 	leave?: { viewerMembershipId: string };
+	/**
+	 * On a published roster: its cover offers, read by the page. A change that
+	 * adds or moves work then goes out as an offer, and Issues lists them.
+	 */
+	coverOffers?: {
+		offers: ReadonlyArray<CoverOffer>;
+		/** They couldn't be read: Issues says so, with Try again. */
+		failed: boolean;
+		retry: () => void;
+	};
 };
 
 export type GeneratedRosterProps = {
@@ -455,7 +466,14 @@ export const GeneratedRoster = ({
 					revision={editing.revision}
 					shifts={editing.shifts}
 					target={editing.target}
+					coverOffers={
+						editing.coverOffers && {
+							offers: editing.coverOffers.offers,
+							timeZone: schedule.timeZone,
+						}
+					}
 					onClose={close}
+					onCoverRecorded={close}
 					onLeaveChanged={close}
 					onPreviewDays={onPreviewDays}
 					onApplied={(change) => {
