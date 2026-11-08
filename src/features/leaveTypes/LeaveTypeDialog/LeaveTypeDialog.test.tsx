@@ -28,6 +28,9 @@ import {
 	leaveTypeSchema,
 } from "@/features/leaveTypes/LeaveTypeDialog/schema";
 
+// Under load (Maven build alongside, shared CI runner) this file timed out at the 5 s default.
+vi.setConfig({ testTimeout: 15_000 });
+
 const LEAVE_TYPES = "/api/v1/companies/c-1/leave-types";
 
 const routes = (
