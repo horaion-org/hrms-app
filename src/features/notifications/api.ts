@@ -51,7 +51,7 @@ export const notificationSchema = z.object({
 		.string()
 		.nullish()
 		.transform((value) => value ?? null),
-	/** The approval an APPROVAL_REQUESTED or APPROVAL_DECIDED is about; absent for every other type. */
+	/** The approval an `APPROVAL_*` notification is about (requested, decided, cancelled, stalled); absent otherwise. */
 	approvalInstanceId: z.string().nullish(),
 	/** What that approval decides; `SCHEDULE_PUBLICATION` is a schedule's publication. */
 	approvalSubjectType: z.string().nullish(),

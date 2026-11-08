@@ -337,7 +337,9 @@
 		},
 		"notifications": {
 			"requested": "A roster needs your approval.",
-			"decided": "A roster you submitted for approval was decided. Open it to see the outcome."
+			"decided": "A roster you submitted for approval was decided. Open it to see the outcome.",
+			"cancelled": "The approval of a roster you submitted was cancelled before anyone decided it. Submit it again.",
+			"stalled": "A step of a roster’s approval has nobody left who can decide it. Check who can approve, or withdraw the submission."
 		},
 		"flows": {
 			"title": "Approvals",
