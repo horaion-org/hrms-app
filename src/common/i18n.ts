@@ -26,4 +26,10 @@ const i18nOptions: InitOptions = {
 	},
 };
 
+// Keeps `<html lang>` on the language the app shows (`en` or `es`), so screen readers and
+// hyphenation follow it. Registered before init, so the first language is applied too.
+i18n.on("languageChanged", () => {
+	document.documentElement.lang = i18n.resolvedLanguage ?? "en";
+});
+
 void i18n.use(initReactI18next).use(LanguageDetector).init(i18nOptions);
