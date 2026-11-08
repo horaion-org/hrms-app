@@ -1,5 +1,6 @@
 import type { TFunction } from "i18next";
 import type { FunctionComponent } from "@/common/types";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import type { DataTableColumn } from "@/components/ui/DataTable";
 import { EditIcon, ViewIcon } from "@/components/ui/Icon";
@@ -21,75 +22,91 @@ import type { CanAt } from "@/features/workspace/scopes";
 export const peopleColumns = (
 	t: TFunction,
 	can: CanAt
-): Array<DataTableColumn<MemberProfile>> => [
-	{
-		id: "displayName",
-		header: t("people.employee"),
-		cell: (person) => (
-			<PersonCell
-				employeeCode={person.employeeCode}
-				membershipId={person.membershipId}
-				name={person.displayName}
-			/>
-		),
-		sortValue: (person) => person.displayName,
-		headerClassName: "w-1/4",
-		pin: "start",
-	},
-	{
-		id: "department",
-		header: t("people.department"),
-		cell: (person) => person.departmentName ?? t("people.notSet"),
-		sortValue: (person) => person.departmentName ?? "",
-	},
-	{
-		id: "jobTitle",
-		header: t("people.jobTitle"),
-		cell: (person) => person.jobTitleName ?? t("people.notSet"),
-		sortValue: (person) => person.jobTitleName ?? "",
-	},
-	{
-		id: "contact",
-		header: t("people.contact"),
-		cell: (person) => <ContactCell email={person.email} phone={person.phone} />,
-		headerClassName: "w-1/4",
-	},
-	statusColumn<MemberProfile>(t),
-	{
-		id: "actions",
-		header: t("organisation.list.actions"),
-		cell: (person): FunctionComponent => {
-			const profile = { membershipId: person.membershipId };
-			return (
-				<div className="flex items-center gap-2">
-					<Button
-						aria-label={t("people.view", { name: person.displayName })}
-						params={profile}
-						to="/people/$membershipId"
-						variant="icon"
-					>
-						<ViewIcon />
-					</Button>
-					{profileEditAccess(person, can) && (
-						<Button
-							params={profile}
-							search={{ edit: true }}
-							to="/people/$membershipId"
-							variant="icon"
-							aria-label={t("organisation.list.edit", {
-								name: person.displayName,
-							})}
-						>
-							<EditIcon />
-						</Button>
+): Array<DataTableColumn<MemberProfile>> => {
+	const status = statusColumn<MemberProfile>(t);
+	return [
+		{
+			id: "displayName",
+			header: t("people.employee"),
+			cell: (person) => (
+				<PersonCell
+					employeeCode={person.employeeCode}
+					membershipId={person.membershipId}
+					name={person.displayName}
+				/>
+			),
+			sortValue: (person) => person.displayName,
+			headerClassName: "w-1/4",
+			pin: "start",
+		},
+		{
+			id: "department",
+			header: t("people.department"),
+			cell: (person) => person.departmentName ?? t("people.notSet"),
+			sortValue: (person) => person.departmentName ?? "",
+		},
+		{
+			id: "jobTitle",
+			header: t("people.jobTitle"),
+			cell: (person) => person.jobTitleName ?? t("people.notSet"),
+			sortValue: (person) => person.jobTitleName ?? "",
+		},
+		{
+			id: "contact",
+			header: t("people.contact"),
+			cell: (person) => (
+				<ContactCell email={person.email} phone={person.phone} />
+			),
+			headerClassName: "w-1/4",
+		},
+		{
+			...status,
+			// The status, and whether the person has yet to sign in, as their profile's header shows both.
+			cell: (person) => (
+				<div className="flex flex-wrap items-center gap-2">
+					{status.cell(person)}
+					{person.invitationPending === true && (
+						<Badge tone="warning">{t("people.profile.invited")}</Badge>
 					)}
 				</div>
-			);
+			),
 		},
-		headerClassName: "w-30",
-		pin: "end",
-	},
-];
+		{
+			id: "actions",
+			header: t("organisation.list.actions"),
+			cell: (person): FunctionComponent => {
+				const profile = { membershipId: person.membershipId };
+				return (
+					<div className="flex items-center gap-2">
+						<Button
+							aria-label={t("people.view", { name: person.displayName })}
+							params={profile}
+							to="/people/$membershipId"
+							variant="icon"
+						>
+							<ViewIcon />
+						</Button>
+						{profileEditAccess(person, can) && (
+							<Button
+								params={profile}
+								search={{ edit: true }}
+								to="/people/$membershipId"
+								variant="icon"
+								aria-label={t("organisation.list.edit", {
+									name: person.displayName,
+								})}
+							>
+								<EditIcon />
+							</Button>
+						)}
+					</div>
+				);
+			},
+			headerClassName: "w-30",
+			pin: "end",
+		},
+	];
+};
 
 /** What the People page shows for the list's state. */
 export type PeopleView = {

@@ -2101,7 +2101,9 @@
 				"EMPLOYMENT_TYPE": "Tipo de empleo: Full-time, Part-time, Contract o Intern.",
 				"HIRE_DATE": "Fecha de contratación: una fecha, o AAAA-MM-DD.",
 				"PROBATION_END_DATE": "Fin del periodo de prueba: no antes de la contratación.",
-				"general": "La fila 1 debe conservar los nombres de columna de la plantilla. No combines celdas."
+				"general": "La fila 1 debe conservar los nombres de columna de la plantilla. No combines celdas.",
+				"EMPLOYMENT_TERMS": "Condiciones de empleo: elígelas de la lista; en blanco se aplican las predeterminadas de la empresa.",
+				"EMPLOYEE_CODE": "Código de empleado: en blanco para alguien nuevo. Con el código de alguien, un Email distinto corrige su correo de acceso en vez de añadirlo otra vez."
 			},
 			"refusals": {
 				"UNSUPPORTED_FILE": "No podemos leer este archivo. Guárdalo como libro de Excel (.xlsx) o como CSV UTF-8 e inténtalo de nuevo.",
@@ -2114,7 +2116,8 @@
 				"INVITATIONS_UNAVAILABLE": "Todavía no se pueden enviar invitaciones en bloque. Importa sin ellas.",
 				"RATE_LIMITED": "Has alcanzado el límite de importación por ahora. Inténtalo más tarde.",
 				"UNKNOWN": "Algo salió mal. Inténtalo de nuevo.",
-				"IMPORT_MOSTLY_INVALID": "La mayoría de las filas tienen problemas, así que parece el archivo o las columnas equivocados. Corrige el archivo primero."
+				"IMPORT_MOSTLY_INVALID": "La mayoría de las filas tienen problemas, así que parece el archivo o las columnas equivocados. Corrige el archivo primero.",
+				"INVITATION_LIMIT_EXCEEDED": "Son más correos de invitación de los que se pueden enviar hoy. Inténtalo mañana."
 			},
 			"check": {
 				"nothingSaved": "Todavía no se ha guardado nada.",
@@ -2138,7 +2141,7 @@
 				"noProblem": "Lista",
 				"sendInvitations": "Enviar invitaciones ahora",
 				"invitationsOn": "Cada persona recibe un correo con una contraseña temporal válida durante 7 días.",
-				"invitationsOff": "Todavía no se pueden enviar invitaciones en bloque; envía cada una desde el perfil de la persona tras importar.",
+				"invitationsOff": "Las invitaciones no se envían durante la importación. Después, invita a todos desde el resultado de la importación.",
 				"running": "Otra importación sigue en curso en esta empresa.",
 				"import_one": "Importar {{count}} persona",
 				"import_other": "Importar {{count}} personas",
@@ -2146,7 +2149,10 @@
 				"importValidOnly_one": "Importar solo {{count}} fila válida",
 				"importValidOnly_other": "Importar solo {{count}} filas válidas",
 				"validOnlyHint": "Las filas con problemas se omiten. Corrígelas en el archivo e impórtalo de nuevo más tarde: las personas ya añadidas se omiten.",
-				"mostlyInvalid": "La mayoría de las filas tienen problemas, así que parece el archivo o las columnas equivocados. Corrige el archivo primero."
+				"mostlyInvalid": "La mayoría de las filas tienen problemas, así que parece el archivo o las columnas equivocados. Corrige el archivo primero.",
+				"correctsEmail": "Corrige su correo",
+				"corrections_one": "{{count}} fila corrige el correo de alguien que ya está en la empresa.",
+				"corrections_other": "{{count}} filas corrigen el correo de alguien que ya está en la empresa."
 			},
 			"confirm": {
 				"title_one": "¿Importar {{count}} persona?",
@@ -2187,7 +2193,21 @@
 				"leftOut_other": "{{count}} con problemas omitidas",
 				"resolvedSummary_one": "{{count}} fila que no se añadió se ha añadido después.",
 				"resolvedSummary_other": "{{count}} filas que no se añadieron se han añadido después.",
-				"stoppedHint": "Se procesaron {{processed}} de {{total}} filas antes de que se detuviera. Importa el mismo archivo de nuevo para añadir el resto: las personas ya añadidas se omiten."
+				"stoppedHint": "Se procesaron {{processed}} de {{total}} filas antes de que se detuviera. Importa el mismo archivo de nuevo para añadir el resto: las personas ya añadidas se omiten.",
+				"corrected_one": "{{count}} correo corregido",
+				"corrected_other": "{{count}} correos corregidos",
+				"invite_one": "Invitar a {{count}} persona",
+				"invite_other": "Invitar a todos ({{count}})",
+				"invited": "Invitaciones enviadas: {{sent}} · {{skipped}} omitidas (ya iniciaron sesión) · {{failed}} fallidas",
+				"inviteConfirm": {
+					"title_one": "¿Invitar a {{count}} persona?",
+					"title_other": "¿Invitar a {{count}} personas?",
+					"body": "Cada persona que añadió esta importación y aún no ha iniciado sesión recibe un correo con una contraseña temporal válida durante 7 días.",
+					"left": "Hoy todavía se pueden enviar {{count}} correos de invitación.",
+					"overLimit": "Hoy solo se pueden enviar {{left}} correos de invitación. Inténtalo mañana o invita a las personas desde sus perfiles.",
+					"confirm": "Enviar invitaciones",
+					"cancel": "Cancelar"
+				}
 			},
 			"results": {
 				"ADDED": "Añadida",
@@ -2196,7 +2216,8 @@
 				"FAILED_ACCOUNT": "No se pudo crear su cuenta",
 				"FAILED_VALIDATION": "Ya no se puede añadir aquí",
 				"SKIPPED_INVALID": "Omitida: tenía problemas",
-				"UNKNOWN": "Resultado desconocido"
+				"UNKNOWN": "Resultado desconocido",
+				"EMAIL_CORRECTED": "Correo corregido"
 			},
 			"details": {
 				"EMAIL_ALREADY_REGISTERED": "Este correo ya tiene una cuenta de Horaion.",
@@ -2208,7 +2229,8 @@
 				"PLACEMENT_REFUSED": "Su sucursal, departamento o puesto ya no está disponible.",
 				"NOT_PERMITTED_ANY_MORE": "Ya no puedes añadir personas ahí.",
 				"ALREADY_MEMBER": "Ya está en la empresa.",
-				"INVITATION_NOT_SENT": "Envía su invitación desde su perfil."
+				"INVITATION_NOT_SENT": "Envía su invitación desde su perfil.",
+				"EMAIL_CHANGE_NOT_ALLOWED": "Ya ha iniciado sesión, así que solo esa persona puede cambiar su correo."
 			},
 			"recent": {
 				"status": {
@@ -2229,7 +2251,9 @@
 				"DATE_OF_BIRTH": "Fecha de nacimiento",
 				"EMPLOYMENT_TYPE": "Tipo de empleo",
 				"HIRE_DATE": "Fecha de contratación",
-				"PROBATION_END_DATE": "Fin del periodo de prueba"
+				"PROBATION_END_DATE": "Fin del periodo de prueba",
+				"EMPLOYMENT_TERMS": "Condiciones de empleo",
+				"EMPLOYEE_CODE": "Código de empleado"
 			},
 			"problems": {
 				"REQUIRED": "{{column}} es obligatorio.",
@@ -2248,12 +2272,17 @@
 				"BRANCH_NEEDS_DEPARTMENT": "Añade un departamento de esta sucursal.",
 				"JOB_TITLE_NEEDS_DEPARTMENT": "Un puesto necesita sucursal y departamento.",
 				"NOT_PERMITTED_HERE": "No puedes añadir personas aquí.",
-				"DUPLICATE_IN_FILE": "Otra fila tiene el mismo correo.",
+				"DUPLICATE_IN_FILE": "Otra fila tiene el mismo valor en {{column}}.",
 				"ALREADY_MEMBER": "Ya está en la empresa: esta fila se omitirá.",
 				"EXAMPLE_ROW": "Fila de ejemplo de la plantilla: omitida.",
 				"POSSIBLE_DUPLICATE_PERSON": "Otra fila tiene el mismo nombre y fecha de nacimiento. ¿Es la misma persona?",
 				"FORMULA_WITHOUT_VALUE": "Esta celda tiene una fórmula sin valor guardado. Abre el archivo en Excel, guárdalo y vuelve a subirlo.",
-				"CELL_ERROR": "Esta celda muestra un error (como #REF!). Corrige la fórmula en Excel y vuelve a subirlo."
+				"CELL_ERROR": "Esta celda muestra un error (como #REF!). Corrige la fórmula en Excel y vuelve a subirlo.",
+				"EMPLOYEE_CODE_NOT_FOUND": "Nadie en esta empresa tiene este código de empleado. Déjalo en blanco para alguien nuevo.",
+				"EMAIL_OF_ANOTHER_MEMBER": "Este correo pertenece a otra persona de la empresa, no a quien tiene este código de empleado.",
+				"POSSIBLE_EXISTING_MEMBER": "Alguien de la empresa ya tiene este nombre con otro correo. Si es esa persona, añade su código de empleado para corregir su correo.",
+				"EMPLOYMENT_TERMS_NOT_FOUND": "La empresa no tiene condiciones de empleo con este nombre. Elígelas de la lista.",
+				"EMPLOYMENT_TERMS_INACTIVE": "Estas condiciones de empleo están inactivas; no se pueden asignar a nadie nuevo."
 			},
 			"history": "Historial de importaciones"
 		},
@@ -2427,7 +2456,13 @@
 			"employmentTerms": "Condiciones de empleo",
 			"employmentTermsHint": "Desde su fecha de contratación, o desde hoy si no tiene."
 		},
-		"imports": "Importaciones"
+		"imports": "Importaciones",
+		"invitationFilter": {
+			"label": "Ha iniciado sesión",
+			"all": "Todos",
+			"pending": "Aún no (invitado)",
+			"accepted": "Sí"
+		}
 	},
 	"numberStepper": {
 		"decrease": "Menos {{label}}",

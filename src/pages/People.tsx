@@ -35,6 +35,7 @@ import {
 	PEOPLE_PAGE_SIZE,
 } from "@/features/people/api";
 import { exportPeople } from "@/features/people/import/api";
+import { InvitationFilter } from "@/features/people/InvitationFilter";
 import { describePeople, peopleColumns } from "@/features/people/peopleColumns";
 import { PeopleNotice } from "@/features/people/PeopleNotice";
 import { peopleNoticeFrom } from "@/features/people/peopleNoticeState";
@@ -67,7 +68,8 @@ const exportRefusal = (error: unknown): string | undefined =>
  * The company's people, a page at a time, sorted, filtered and searched by
  * the server: the people of the header's Branch (every Branch in reach under
  * "All branches"), narrowed to a Department, and to the holders of one
- * employment terms for whoever may read people's terms, from the Filters.
+ * employment terms for whoever may read people's terms, and to the people
+ * who have, or have not, signed in yet (marked Invited), from the Filters.
  * The units, page, sort, status and terms live in the URL; the search text
  * stays on the page so names never reach browser history. Someone just
  * added on the Add employee page is confirmed above the list.
@@ -151,6 +153,19 @@ export const People = (): FunctionComponent => {
 					),
 				]
 			: []),
+		...(search.invitation
+			? [
+					filterChip(
+						"invitation",
+						t("people.invitationFilter.label"),
+						t(`people.invitationFilter.${search.invitation}`),
+						() => {
+							show({ invitation: undefined });
+						},
+						t
+					),
+				]
+			: []),
 		...(search.status
 			? [
 					filterChip(
@@ -166,7 +181,12 @@ export const People = (): FunctionComponent => {
 			: []),
 	];
 	const clearFilters = (): void => {
-		show({ status: undefined, department: undefined, terms: undefined });
+		show({
+			status: undefined,
+			department: undefined,
+			terms: undefined,
+			invitation: undefined,
+		});
 	};
 	// The Branch is scope, so an empty Branch still reads "No people yet"; a search or a set filter reads "No matches".
 	const view = describePeople(list, query.search !== "" || chips.length > 0, t);
@@ -248,6 +268,12 @@ export const People = (): FunctionComponent => {
 								}}
 							/>
 						)}
+						<InvitationFilter
+							value={search.invitation}
+							onChange={(invitation) => {
+								show({ invitation });
+							}}
+						/>
 					</>
 				}
 				multipleFilter={{

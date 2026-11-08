@@ -27,12 +27,22 @@ export type PeopleSortParameter = z.infer<typeof sortParameterSchema>;
 /** People are listed by name, A to Z, unless the URL says otherwise. */
 const DEFAULT_SORT_PARAMETER: PeopleSortParameter = "displayName,asc";
 
+/** The sign-in filter's choices: invited but not signed in yet, or signed in. */
+export const INVITATION_STATES = ["pending", "accepted"] as const;
+
+export type InvitationState = (typeof INVITATION_STATES)[number];
+
+export const isInvitationState = (value: string): value is InvitationState =>
+	(INVITATION_STATES as ReadonlyArray<string>).includes(value);
+
 const searchSchema = z.object({
 	page: z.number().int().min(1).optional().catch(undefined),
 	sort: sortParameterSchema.optional().catch(undefined),
 	status: z.enum(MEMBER_STATUSES).optional().catch(undefined),
 	/** The employment terms whose holders are listed, by id. */
 	terms: z.string().min(1).optional().catch(undefined),
+	/** Whether people who have not signed in yet are listed, or those who have. */
+	invitation: z.enum(INVITATION_STATES).optional().catch(undefined),
 	...unitSearchSchema.shape,
 });
 
@@ -40,7 +50,8 @@ const searchSchema = z.object({
  * The People table's state that belongs in the URL, so it survives a reload
  * and can be shared. Each part is left out at its default: the first page,
  * sorted by name, every status, the default Branch (see
- * `resolveUnitSelection`), every Department, any employment terms. The
+ * `resolveUnitSelection`), every Department, any employment terms, signed
+ * in or not. The
  * search text is never here: names typed into it must not land in browser
  * history or logs.
  */
@@ -50,13 +61,14 @@ export type PeopleSearch = z.infer<typeof searchSchema>;
 export const parsePeopleSearch = (
 	search: Record<string, unknown>
 ): PeopleSearch => {
-	const { page, sort, status, terms, branch, department } =
+	const { page, sort, status, terms, invitation, branch, department } =
 		searchSchema.parse(search);
 	return {
 		...(page === undefined || page === 1 ? {} : { page }),
 		...(sort === undefined || sort === DEFAULT_SORT_PARAMETER ? {} : { sort }),
 		...(status === undefined ? {} : { status }),
 		...(terms === undefined ? {} : { terms }),
+		...(invitation === undefined ? {} : { invitation }),
 		...unitSearchOf({ branch, department }),
 	};
 };
@@ -110,7 +122,8 @@ export const termsFilterApplies = (
 
 /**
  * The page of people to ask the API for, inside the units shown, if any,
- * narrowed to the URL's employment terms when `termsFilterApplies`.
+ * narrowed to the URL's employment terms when `termsFilterApplies`, and to
+ * people who have, or have not, signed in yet.
  */
 export const peopleQueryOf = (
 	search: PeopleSearch,
@@ -126,6 +139,9 @@ export const peopleQueryOf = (
 	...(departmentId ? { departmentId } : {}),
 	...(search.terms && termsFilterApplies(search, canFilterByTerms)
 		? { employmentTermsId: search.terms }
+		: {}),
+	...(search.invitation
+		? { invitationPending: search.invitation === "pending" }
 		: {}),
 });
 

@@ -10,6 +10,7 @@ import type {
 import {
 	clientFileProblem,
 	errorRowsCsv,
+	importInvitations,
 	problemGroups,
 	problemText,
 	refusalCode,
@@ -75,6 +76,35 @@ describe("problemGroups", () => {
 	});
 });
 
+describe("importInvitations", () => {
+	const ended = {
+		status: "COMPLETED",
+		invitablePeople: 3,
+		invitationsLeftToday: 2,
+	} as MemberImport;
+
+	it("offers the invite once the import ended, saying whether today's limit fits everyone", () => {
+		expect(importInvitations(ended)).toEqual({
+			count: 3,
+			left: 2,
+			fits: false,
+		});
+		expect(importInvitations({ ...ended, invitationsLeftToday: 3 })).toEqual({
+			count: 3,
+			left: 3,
+			fits: true,
+		});
+	});
+
+	it("offers nothing while it runs, with no one left, or from an API that does not say", () => {
+		expect(importInvitations({ ...ended, status: "RUNNING" })).toBeUndefined();
+		expect(importInvitations({ ...ended, invitablePeople: 0 })).toBeUndefined();
+		expect(
+			importInvitations({ ...ended, invitablePeople: null })
+		).toBeUndefined();
+	});
+});
+
 describe("errorRowsCsv", () => {
 	it("keeps the template's English headers and only the rows to fix, with their problems last", () => {
 		const csv = errorRowsCsv(
@@ -88,6 +118,8 @@ describe("errorRowsCsv", () => {
 		);
 
 		expect(csv[0]?.slice(0, 2)).toEqual(["Name", "Email"]);
+		expect(csv[0]).toContain("Employment terms");
+		expect(csv[0]).toContain("Employee code");
 		expect(csv).toHaveLength(2);
 		expect(csv[1]?.[0]).toBe("Person 3");
 		expect(csv[1]?.[csv[1].length - 1]).toContain("INVALID_PHONE");

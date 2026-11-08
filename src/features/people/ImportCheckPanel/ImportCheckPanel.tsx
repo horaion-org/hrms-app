@@ -62,7 +62,9 @@ export const ImportCheckPanel = ({
 				problemsCell(
 					row.problems,
 					(problem) => problemText(problem, t),
-					t("people.importPage.check.noProblem")
+					row.status === "CORRECT_EMAIL"
+						? t("people.importPage.check.correctsEmail")
+						: t("people.importPage.check.noProblem")
 				),
 			headerClassName: "w-1/3",
 		},
@@ -91,6 +93,13 @@ export const ImportCheckPanel = ({
 						errors: check.errorRows,
 					})}
 				</span>
+				{check.correctionRows > 0 && (
+					<span className="block font-normal">
+						{t("people.importPage.check.corrections", {
+							count: check.correctionRows,
+						})}
+					</span>
+				)}
 				{check.noticeRows > 0 && (
 					<span className="block font-normal">
 						{t("people.importPage.check.notices", { count: check.noticeRows })}
