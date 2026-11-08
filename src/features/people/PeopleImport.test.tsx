@@ -226,6 +226,39 @@ describe("PeopleImport", () => {
 		expect(createObjectUrl).toHaveBeenCalled();
 	});
 
+	it("marks the rows whose employee code corrects someone's email", async () => {
+		const user = userEvent.setup({ applyAccept: false });
+		const reply = checkReply(0) as {
+			status: number;
+			body: { data: Record<string, unknown> };
+		};
+		const data = reply.body.data as { rows: Array<Record<string, unknown>> };
+		stubApi({
+			...baseRoutes(),
+			[`POST ${IMPORTS}/checks`]: {
+				status: 200,
+				body: envelope({
+					...data,
+					correctionRows: 1,
+					rows: [{ ...data.rows[0], status: "CORRECT_EMAIL" }, data.rows[1]],
+				}),
+			},
+		});
+		await open("/settings/data/import-people");
+
+		await upload(user, "people.csv");
+
+		expect(
+			await screen.findByText(
+				"1 row corrects the email of someone already in the company."
+			)
+		).toBeVisible();
+		const table = screen.getByRole("table", { name: "Checked rows" });
+		expect(
+			within(table).getByRole("row", { name: /Ada Tan/ })
+		).toHaveTextContent("Corrects their email");
+	});
+
 	it("imports a clean file after confirming and follows it to its result", async () => {
 		const user = userEvent.setup({ applyAccept: false });
 		const calls = stubApi({
@@ -361,6 +394,32 @@ describe("PeopleImport", () => {
 		expect(
 			screen.getByText("1 row not added then has been added since.")
 		).toBeVisible();
+	});
+
+	it("says how many emails a re-upload corrected and marks the rows that will correct one", async () => {
+		stubApi({
+			...baseRoutes(),
+			[`GET ${IMPORTS}/i-1`]: {
+				status: 200,
+				body: envelope({
+					...finishedImport,
+					correctedRows: 1,
+					rows: [
+						{
+							rowNumber: 2,
+							result: "EMAIL_CORRECTED",
+							code: null,
+							membershipId: "m-9",
+						},
+					],
+				}),
+			},
+		});
+		await open("/settings/data/import-people?import=i-1");
+
+		const table = await screen.findByRole("table", { name: "Row results" });
+		expect(table).toHaveTextContent("Email corrected");
+		expect(screen.getByText(/1 email corrected/)).toBeVisible();
 	});
 
 	it("tells the person how to finish an import that stopped part-way", async () => {

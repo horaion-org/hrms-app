@@ -159,6 +159,10 @@ export const ImportResultPanel = ({
 						` · ${t("people.importPage.result.leftOut", {
 							count: memberImport.skippedInvalidRows,
 						})}`}
+					{memberImport.correctedRows > 0 &&
+						` · ${t("people.importPage.result.corrected", {
+							count: memberImport.correctedRows,
+						})}`}
 				</span>
 				{memberImport.resolvedRows > 0 && (
 					<span className="block font-normal">

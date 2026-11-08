@@ -27,6 +27,8 @@ export const TEMPLATE_HEADERS: Record<(typeof IMPORT_COLUMNS)[number], string> =
 		EMPLOYMENT_TYPE: "Employment type",
 		HIRE_DATE: "Hire date",
 		PROBATION_END_DATE: "Probation end date",
+		EMPLOYMENT_TERMS: "Employment terms",
+		EMPLOYEE_CODE: "Employee code",
 	};
 
 const SEVERITY_ORDER = { ERROR: 0, SKIP: 1, NOTICE: 2 } as const;

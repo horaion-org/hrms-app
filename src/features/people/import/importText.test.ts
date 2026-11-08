@@ -88,6 +88,8 @@ describe("errorRowsCsv", () => {
 		);
 
 		expect(csv[0]?.slice(0, 2)).toEqual(["Name", "Email"]);
+		expect(csv[0]).toContain("Employment terms");
+		expect(csv[0]).toContain("Employee code");
 		expect(csv).toHaveLength(2);
 		expect(csv[1]?.[0]).toBe("Person 3");
 		expect(csv[1]?.[csv[1].length - 1]).toContain("INVALID_PHONE");

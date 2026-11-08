@@ -18,6 +18,7 @@ const values = (
 const check: ImportCheck = {
 	totalRows: 4,
 	readyRows: 1,
+	correctionRows: 0,
 	skippedRows: 1,
 	errorRows: 2,
 	partialImportAllowed: true,

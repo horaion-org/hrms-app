@@ -25,6 +25,8 @@ export const IMPORT_COLUMNS = [
 	"EMPLOYMENT_TYPE",
 	"HIRE_DATE",
 	"PROBATION_END_DATE",
+	"EMPLOYMENT_TERMS",
+	"EMPLOYEE_CODE",
 ] as const;
 
 export type ImportColumn = (typeof IMPORT_COLUMNS)[number];
@@ -45,7 +47,8 @@ export type ImportProblem = z.infer<typeof problemSchema>;
 
 const checkedRowSchema = z.object({
 	row: z.number(),
-	status: z.enum(["READY", "SKIP", "ERROR"]),
+	// CORRECT_EMAIL: ready, and corrects the email of the person its employee code names.
+	status: z.enum(["READY", "CORRECT_EMAIL", "SKIP", "ERROR"]),
 	values: z.record(z.string(), z.string()),
 	problems: z.array(problemSchema),
 });
@@ -56,6 +59,8 @@ export type CheckedRow = z.infer<typeof checkedRowSchema>;
 const importCheckSchema = z.object({
 	totalRows: z.number(),
 	readyRows: z.number(),
+	/** Of the ready rows, those correcting the email of someone already in the company. */
+	correctionRows: z.number().catch(0),
 	skippedRows: z.number(),
 	errorRows: z.number(),
 	/** Whether the valid rows may be imported without the rows with errors (no more than half are invalid). */
@@ -74,6 +79,7 @@ const rowResultSchema = z
 	.enum([
 		"ADDED",
 		"ADDED_INVITE_PENDING",
+		"EMAIL_CORRECTED",
 		"SKIPPED_EXISTS",
 		"SKIPPED_INVALID",
 		"FAILED_ACCOUNT",
@@ -114,6 +120,8 @@ const memberImportSchema = z.object({
 	processedRows: z.number(),
 	addedRows: z.number(),
 	invitePendingRows: z.number(),
+	/** Rows that corrected someone's email; in none of the added, skipped or failed counts. */
+	correctedRows: z.number().catch(0),
 	skippedRows: z.number(),
 	skippedInvalidRows: z.number().catch(0),
 	failedRows: z.number(),
@@ -121,6 +129,10 @@ const memberImportSchema = z.object({
 	createdAt: z.string(),
 	finishedAt: z.string().nullable(),
 	rows: z.array(rowOutcomeSchema),
+	/** Whom "Invite everyone" would reach: added or corrected, active, not signed in yet. Null in a list. */
+	invitablePeople: z.number().nullable().catch(null),
+	/** Invitation emails today's limit still allows. Null in a list. */
+	invitationsLeftToday: z.number().nullable().catch(null),
 });
 
 /** One import: its progress, counts and (when read alone) its row outcomes. */

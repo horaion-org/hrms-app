@@ -15,6 +15,9 @@ const finished: MemberImport = {
 	skippedInvalidRows: 0,
 	failedRows: 1,
 	resolvedRows: 0,
+	correctedRows: 0,
+	invitablePeople: null,
+	invitationsLeftToday: null,
 	createdAt: "2026-11-04T08:00:00Z",
 	finishedAt: "2026-11-04T08:01:00Z",
 	rows: [

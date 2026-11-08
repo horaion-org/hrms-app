@@ -1099,7 +1099,9 @@
 				"EMPLOYMENT_TYPE": "Employment type: Full-time, Part-time, Contract or Intern.",
 				"HIRE_DATE": "Hire date: a date, or YYYY-MM-DD.",
 				"PROBATION_END_DATE": "Probation end date: not before the hire date.",
-				"general": "Row 1 must keep the template's column names. Don't merge cells."
+				"general": "Row 1 must keep the template's column names. Don't merge cells.",
+				"EMPLOYMENT_TERMS": "Employment terms: pick from the list; blank gives the company's Default.",
+				"EMPLOYEE_CODE": "Employee code: blank for someone new. With someone's code, a changed Email corrects their sign-in email instead of adding them again."
 			},
 			"refusals": {
 				"UNSUPPORTED_FILE": "We can't read this file. Save it as an Excel workbook (.xlsx) or as CSV UTF-8, then try again.",
@@ -1144,7 +1146,10 @@
 				"importValidOnly_one": "Import {{count}} valid row only",
 				"importValidOnly_other": "Import {{count}} valid rows only",
 				"validOnlyHint": "Rows with problems are left out. Fix them in the file and import it again later: people already added are skipped.",
-				"mostlyInvalid": "Most rows have problems, so this looks like the wrong file or columns. Fix the file first."
+				"mostlyInvalid": "Most rows have problems, so this looks like the wrong file or columns. Fix the file first.",
+				"correctsEmail": "Corrects their email",
+				"corrections_one": "{{count}} row corrects the email of someone already in the company.",
+				"corrections_other": "{{count}} rows correct the email of someone already in the company."
 			},
 			"confirm": {
 				"title_one": "Import {{count}} person?",
@@ -1185,7 +1190,9 @@
 				"leftOut_other": "{{count}} with problems left out",
 				"resolvedSummary_one": "{{count}} row not added then has been added since.",
 				"resolvedSummary_other": "{{count}} rows not added then have been added since.",
-				"stoppedHint": "{{processed}} of {{total}} rows were processed before it stopped. Import the same file again to add the rest: people already added are skipped."
+				"stoppedHint": "{{processed}} of {{total}} rows were processed before it stopped. Import the same file again to add the rest: people already added are skipped.",
+				"corrected_one": "{{count}} email corrected",
+				"corrected_other": "{{count}} emails corrected"
 			},
 			"results": {
 				"ADDED": "Added",
@@ -1194,7 +1201,8 @@
 				"FAILED_ACCOUNT": "Couldn't create their account",
 				"FAILED_VALIDATION": "Couldn't be added here any more",
 				"SKIPPED_INVALID": "Left out: it had problems",
-				"UNKNOWN": "Unknown result"
+				"UNKNOWN": "Unknown result",
+				"EMAIL_CORRECTED": "Email corrected"
 			},
 			"details": {
 				"EMAIL_ALREADY_REGISTERED": "This email already has a Horaion account.",
@@ -1206,7 +1214,8 @@
 				"PLACEMENT_REFUSED": "Their branch, department or job title is no longer available.",
 				"NOT_PERMITTED_ANY_MORE": "You can no longer add people there.",
 				"ALREADY_MEMBER": "Already in this company.",
-				"INVITATION_NOT_SENT": "Send their invitation from their profile."
+				"INVITATION_NOT_SENT": "Send their invitation from their profile.",
+				"EMAIL_CHANGE_NOT_ALLOWED": "They have already signed in, so only they can change their email."
 			},
 			"recent": {
 				"status": {
@@ -1227,7 +1236,9 @@
 				"DATE_OF_BIRTH": "Date of birth",
 				"EMPLOYMENT_TYPE": "Employment type",
 				"HIRE_DATE": "Hire date",
-				"PROBATION_END_DATE": "Probation end date"
+				"PROBATION_END_DATE": "Probation end date",
+				"EMPLOYMENT_TERMS": "Employment terms",
+				"EMPLOYEE_CODE": "Employee code"
 			},
 			"problems": {
 				"REQUIRED": "{{column}} is required.",
@@ -1246,12 +1257,17 @@
 				"BRANCH_NEEDS_DEPARTMENT": "Add a Department of this Branch.",
 				"JOB_TITLE_NEEDS_DEPARTMENT": "A Job title needs a Branch and Department.",
 				"NOT_PERMITTED_HERE": "You can't add people here.",
-				"DUPLICATE_IN_FILE": "Another row has the same email.",
+				"DUPLICATE_IN_FILE": "Another row has the same {{column}}.",
 				"ALREADY_MEMBER": "Already in this company: this row will be skipped.",
 				"EXAMPLE_ROW": "The template's example row: skipped.",
 				"POSSIBLE_DUPLICATE_PERSON": "Another row has the same name and date of birth. Is this the same person?",
 				"FORMULA_WITHOUT_VALUE": "This cell has a formula without a stored value. Open the file in Excel, save it, and upload again.",
-				"CELL_ERROR": "This cell shows an error (such as #REF!). Fix the formula in Excel and upload again."
+				"CELL_ERROR": "This cell shows an error (such as #REF!). Fix the formula in Excel and upload again.",
+				"EMPLOYEE_CODE_NOT_FOUND": "No one in this company has this employee code. Leave it blank for someone new.",
+				"EMAIL_OF_ANOTHER_MEMBER": "This email belongs to someone else in the company, not to the person with this employee code.",
+				"POSSIBLE_EXISTING_MEMBER": "Someone already in the company has this name with another email. If it's them, add their employee code to correct their email instead.",
+				"EMPLOYMENT_TERMS_NOT_FOUND": "The company has no employment terms of this name. Pick them from the list.",
+				"EMPLOYMENT_TERMS_INACTIVE": "These employment terms are inactive, so no one new can be given them."
 			},
 			"history": "Import history"
 		},
