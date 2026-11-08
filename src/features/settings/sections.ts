@@ -1,6 +1,6 @@
 /**
- * Settings' sections, in tab order; `employment`, `scheduling`, `leave` and
- * `data` are offered only to people who may use them.
+ * Settings' sections, in tab order; `employment`, `scheduling`, `leave`,
+ * `approvals` and `data` are offered only to people who may use them.
  */
 export const SETTINGS_SECTIONS = [
 	"general",
@@ -8,6 +8,7 @@ export const SETTINGS_SECTIONS = [
 	"employment",
 	"scheduling",
 	"leave",
+	"approvals",
 	"plan",
 	"data",
 ] as const;
@@ -44,10 +45,11 @@ export type OptionalSections = {
 	employment: boolean;
 	scheduling: boolean;
 	leave: boolean;
+	approvals: boolean;
 	data: boolean;
 };
 
-/** The sections shown, in order: Employment, Scheduling, Leave and Data only when offered. */
+/** The sections shown, in order: Employment, Scheduling, Leave, Approvals and Data only when offered. */
 export const visibleSections = (
 	shown: OptionalSections
 ): Array<SettingsSection> =>
@@ -56,6 +58,7 @@ export const visibleSections = (
 			(section !== "employment" || shown.employment) &&
 			(section !== "scheduling" || shown.scheduling) &&
 			(section !== "leave" || shown.leave) &&
+			(section !== "approvals" || shown.approvals) &&
 			(section !== "data" || shown.data)
 	);
 
