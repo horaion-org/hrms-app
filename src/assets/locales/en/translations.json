@@ -2304,7 +2304,19 @@
 				"approved": "approved",
 				"rejected": "rejected",
 				"started": "started",
-				"finished": "finished"
+				"finished": "finished",
+				"published": "published",
+				"publicationWithdrawn": "publication withdrawn",
+				"withdrawn": "withdrawn",
+				"cancelled": "cancelled",
+				"decided": "decided",
+				"recorded": "recorded",
+				"changed": "changed",
+				"accepted": "accepted",
+				"declined": "declined",
+				"sent": "sent",
+				"activated": "activated",
+				"applied": "applied"
 			},
 			"entityTypes": {
 				"Company": "Workspace",
@@ -2322,7 +2334,13 @@
 				"LeaveRequest": "Leave request",
 				"Schedule": "Schedule",
 				"Shift": "Shift",
-				"Constraint": "Constraint"
+				"Constraint": "Constraint",
+				"ApprovalFlow": "Approval flow",
+				"ApprovalInstance": "Approval",
+				"CoverOffer": "Cover offer",
+				"EmploymentTerms": "Employment terms",
+				"LeaveType": "Leave type",
+				"ScheduleRosterChange": "Roster change"
 			}
 		},
 		"headsField": {
