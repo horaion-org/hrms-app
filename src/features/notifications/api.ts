@@ -48,6 +48,12 @@ export const notificationSchema = z.object({
 		.string()
 		.nullish()
 		.transform((value) => value ?? null),
+	/** The approval an APPROVAL_REQUESTED or APPROVAL_DECIDED is about; absent for every other type. */
+	approvalInstanceId: z.string().nullish(),
+	/** What that approval decides; `SCHEDULE_PUBLICATION` is a schedule's publication. */
+	approvalSubjectType: z.string().nullish(),
+	/** The approval's subject: the schedule, for a publication. */
+	approvalSubjectId: z.string().nullish(),
 	/** The roster day a ROSTER_DAY_NEEDS_DECISION opens; null for every other type. */
 	rosterDay: z.iso
 		.date()

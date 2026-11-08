@@ -113,6 +113,8 @@ export type GeneratedRosterProps = {
 	membersWithChangedStart?: number;
 	/** The schedule's history for the Details panel; none, and no Details, without. */
 	details?: ReadonlyArray<DescriptionListItem>;
+	/** The roster's approval trail for the Approval panel; none, and no Approval panel, without. */
+	approval?: ReactNode;
 	/**
 	 * Whether the manager's tools are shown: the summary line, the Issues
 	 * and Changed buttons and the issue marks on the grid. A member's own
@@ -145,7 +147,7 @@ const cellOf = (row: RosterRow, day: string): string | undefined =>
  * summary line, the week bar with the Issues and Changed buttons, and the
  * grid. Everything else opens in the one panel beside the grid, named by
  * the view in the URL: a chosen day's shift (read-only) or editor, or one
- * list (Issues, Changed, Details). Findings are also marked on the grid.
+ * list (Issues, Changed, Details, Approval). Findings are also marked on the grid.
  * A member's own roster shows only the grid, with their changed days marked.
  */
 export const GeneratedRoster = ({
@@ -158,6 +160,7 @@ export const GeneratedRoster = ({
 	startingRuns,
 	membersWithChangedStart = 0,
 	details,
+	approval,
 	withSummary = true,
 	editing,
 	viewerMembershipId,
@@ -201,6 +204,7 @@ export const GeneratedRoster = ({
 		}),
 		changes: changed.length,
 		details: details ? 1 : 0,
+		approval: approval ? 1 : 0,
 	};
 	const chosenRow = assignments.find(
 		(row) =>
@@ -403,6 +407,7 @@ export const GeneratedRoster = ({
 				),
 			},
 		],
+		approval: [{ key: "trail", content: approval }],
 	};
 
 	/**

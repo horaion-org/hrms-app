@@ -97,6 +97,19 @@ const NOTIFICATION_TYPES = {
 		category: "schedule",
 		title: "notifications.types.SCHEDULE_REJECTED",
 	},
+	// The row names no step or outcome: the API sends only the approval's ids (see approvals P2 handover).
+	APPROVAL_REQUESTED: {
+		icon: ApproveRequestsIcon,
+		tone: "warning",
+		category: "schedule",
+		title: "approvals.notifications.requested",
+	},
+	APPROVAL_DECIDED: {
+		icon: PublishIcon,
+		tone: "info",
+		category: "schedule",
+		title: "approvals.notifications.decided",
+	},
 	MEMBER_IMPORT_FINISHED: {
 		icon: UploadIcon,
 		tone: "success",
@@ -159,13 +172,14 @@ export const presentNotification = (
 };
 
 /**
- * Where a notification opens: a leave request on `/leave`, a schedule's roster on the scheduling page, the member's
- * own view of a roster they are on, or an import's result.
+ * Where a notification opens: a leave request on `/leave`, a schedule's roster on the scheduling page (with its
+ * approval open, for an approval), the member's own view of a roster they are on, or an import's result.
  */
 export type NotificationTarget =
 	| { kind: "leave"; requestId: string; memberId: string | undefined }
 	| { kind: "schedule"; scheduleId: string; day: string | undefined }
 	| { kind: "myRoster"; scheduleId: string }
+	| { kind: "approval"; scheduleId: string }
 	| { kind: "import"; importId: string };
 
 /**
@@ -190,10 +204,18 @@ export const notificationTarget = (
 		| "scheduleId"
 		| "memberImportJobId"
 		| "rosterDay"
+		| "approvalSubjectType"
+		| "approvalSubjectId"
 	>,
 	audience: "PERSONAL" | "REVIEW"
 ): NotificationTarget | undefined => {
 	const category = describeNotificationType(notification.type).category;
+	// An approval of a schedule's publication opens that roster with its trail beside it.
+	if (
+		notification.approvalSubjectType === "SCHEDULE_PUBLICATION" &&
+		notification.approvalSubjectId
+	)
+		return { kind: "approval", scheduleId: notification.approvalSubjectId };
 	if (category === "leave" && notification.leaveRequestId)
 		return {
 			kind: "leave",

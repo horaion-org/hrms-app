@@ -5,6 +5,7 @@ import {
 	type UseMutationResult,
 } from "@tanstack/react-query";
 import { ApiProblemError } from "@/common/problem";
+import { approvalKeys } from "@/features/approvals/api";
 import {
 	SCHEDULING_QUERY_ROOT,
 	type DepartmentPath,
@@ -118,12 +119,33 @@ export type ScheduleActions = {
 	regenerate: UseMutationResult<void, Error, Generated>;
 	remove: UseMutationResult<void, Error, Removed>;
 	publish: UseMutationResult<Schedule, Error, Decided>;
+	/** Publish where an approval flow applies: the same route, which submits the roster instead. */
+	submit: UseMutationResult<Schedule, Error, Decided>;
 	reject: UseMutationResult<Schedule, Error, Rejected>;
 };
 
 /**
- * Creating, replacing, generating, regenerating, deleting, publishing and
- * rejecting a schedule. A saved or decided schedule is cached at once from
+ * Reloads every scheduling query of the company, and its approvals: a
+ * decision, a submission or a refusal of either may change where a roster's
+ * approval stands.
+ */
+export const useReloadScheduling = (
+	companyId: string
+): (() => Promise<void>) => {
+	const client = useQueryClient();
+	return async (): Promise<void> => {
+		await Promise.all([
+			client.invalidateQueries({
+				queryKey: [SCHEDULING_QUERY_ROOT, companyId],
+			}),
+			client.invalidateQueries({ queryKey: approvalKeys.all(companyId) }),
+		]);
+	};
+};
+
+/**
+ * Creating, replacing, generating, regenerating, deleting, publishing (or
+ * submitting for approval) and rejecting a schedule. A saved or decided schedule is cached at once from
  * the answer, so the page shows it without waiting, and every scheduling
  * query of the company reloads after each. Deleting reloads only the list,
  * so a roster still on screen isn't read again and found missing; a refused
@@ -132,10 +154,7 @@ export type ScheduleActions = {
  */
 export const useScheduleActions = (companyId: string): ScheduleActions => {
 	const client = useQueryClient();
-	const reload = (): Promise<void> =>
-		client.invalidateQueries({
-			queryKey: [SCHEDULING_QUERY_ROOT, companyId],
-		});
+	const reload = useReloadScheduling(companyId);
 	const saved = async (schedule: Schedule): Promise<void> => {
 		client.setQueryData(scheduleKey(companyId, schedule.scheduleId), schedule);
 		await reload();
@@ -175,6 +194,14 @@ export const useScheduleActions = (companyId: string): ScheduleActions => {
 		}),
 		publish: useMutation({
 			meta: { successMessage: "scheduling.decision.published" },
+			mutationFn: ({ unit, scheduleId }: Decided) =>
+				publishSchedule(companyId, unit, scheduleId),
+			onSuccess: saved,
+			onError: reload,
+		}),
+		submit: useMutation({
+			// The page announces the submission itself (approvals addendum C5).
+			meta: { successMessage: false },
 			mutationFn: ({ unit, scheduleId }: Decided) =>
 				publishSchedule(companyId, unit, scheduleId),
 			onSuccess: saved,

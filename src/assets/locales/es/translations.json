@@ -238,6 +238,186 @@
 		"historyDates": "{{before}} → {{after}}",
 		"historyType": "{{before}} → {{after}}"
 	},
+	"approvals": {
+		"panel": {
+			"title": "Aprobación"
+		},
+		"meta": {
+			"waitingOnYou": "Pendiente de ti · paso {{step}} de {{total}} ({{label}})",
+			"waiting": "Pendiente de aprobación · paso {{step}} de {{total}} ({{label}})",
+			"needsApproval": "Necesita aprobación: {{steps}}",
+			"failed": "No se pudo cargar la aprobación.",
+			"retry": "Reintentar",
+			"open": "Aprobación ›",
+			"openLabel": "Abrir la aprobación"
+		},
+		"trail": {
+			"submittedBy": "Enviado por {{name}} · {{at}}",
+			"submittedAt": "Enviado · {{at}}",
+			"withdrawn": "Retirado · {{at}}",
+			"stepOf": "Paso {{step}} de {{total}}, ",
+			"approved": "Aprobado",
+			"rejected": "Rechazado",
+			"skipped": "Omitido",
+			"notReached": "No alcanzado",
+			"notYet": "Aún no",
+			"unknown": "Desconocido",
+			"waiting": "En espera",
+			"waitingOnYou": "Pendiente de ti",
+			"waitingOnName": "Pendiente de {{name}}",
+			"waitingOnPeople_one": "Pendiente de {{count}} persona",
+			"waitingOnPeople_other": "Pendiente de {{count}} personas",
+			"anyoneWhoCanPublish": "Cualquiera que pueda publicar {{department}}",
+			"decidedBy": "{{name}} · {{at}}",
+			"comment": "Comentario",
+			"reason": "Motivo del rechazo",
+			"formerMember": "Antiguo miembro",
+			"approvedOf": "{{count}} de {{total}} han aprobado",
+			"since": "{{who}} · desde {{at}}",
+			"sinceOnly": "Desde {{at}}",
+			"personApproved": "{{name}} · Aprobado {{at}}",
+			"personRejected": "{{name}} · Rechazado {{at}}",
+			"personWaiting": "{{name}} · En espera",
+			"waitingFolded": "Pendiente de {{count}}: {{names}} y {{more}} más"
+		},
+		"actions": {
+			"submit": "Enviar a aprobación",
+			"approve": "Aprobar",
+			"approveAndPublish": "Aprobar y publicar",
+			"withdraw": "Retirar de la aprobación"
+		},
+		"submitDialog": {
+			"title": "¿Enviar este cuadrante a aprobación?",
+			"description": "Pasa por {{steps}}, en ese orden, y la última aprobación lo publica. Hasta entonces no se puede publicar ni rechazar directamente.",
+			"confirm": "Enviar a aprobación"
+		},
+		"approveDialog": {
+			"title": "¿Aprobar el cuadrante de {{department}}?",
+			"lastTitle": "¿Aprobar y publicar el cuadrante de {{department}}?",
+			"description": "Paso {{step}} de {{total}}. Cuando apruebes, se pedirá {{next}} (paso {{nextStep}}).",
+			"lastDescription": "Pasa a ser definitivo para su semana y se avisa a todas las personas del cuadrante.",
+			"comment": "Comentario (opcional)",
+			"note": "Añade una nota",
+			"confirm": "Confirmar aprobación",
+			"lastConfirm": "Aprobar y publicar"
+		},
+		"rejectDialog": {
+			"title": "¿Rechazar en {{label}}?",
+			"description": "Indica qué debe cambiar. Se avisa a quien lo envió, y después el cuadrante se puede volver a generar o eliminar.",
+			"confirm": "Confirmar rechazo"
+		},
+		"withdrawDialog": {
+			"title": "¿Retirar este cuadrante de la aprobación?",
+			"description": "Ya no se pedirá a los aprobadores que lo decidan. Puedes enviarlo de nuevo más tarde.",
+			"confirm": "Retirar"
+		},
+		"rejectedAt": "Rechazado en {{label}} por {{name}} · {{at}}",
+		"rejectedAtStep": "Rechazado en {{label}} · {{at}}",
+		"refusal": {
+			"invalidComment": "Escribe un comentario de hasta 500 caracteres.",
+			"decidedFirst": "Otra persona decidió este paso antes. La página ya muestra en qué punto está.",
+			"notAnApprover": "No puedes decidir este paso.",
+			"ownApproval": "Enviaste tú este cuadrante, así que lo decide otra persona.",
+			"gone": "Esta aprobación ya no está disponible. Vuelve a cargar la página para ver el cuadrante.",
+			"forbidden": "Ya no tienes permiso para decidir esta aprobación.",
+			"failed": "No pudimos guardar la decisión. Inténtalo de nuevo.",
+			"withdrawFailed": "No pudimos retirarlo. Inténtalo de nuevo."
+		},
+		"notifications": {
+			"requested": "Un cuadrante necesita tu aprobación.",
+			"decided": "Se ha decidido un cuadrante que enviaste a aprobación. Ábrelo para ver el resultado."
+		},
+		"flows": {
+			"title": "Aprobaciones",
+			"subtitle": "Quién aprueba un cuadrante antes de publicarlo. Los departamentos sin flujo publican en un paso, por cualquiera que pueda publicar su cuadrante.",
+			"schedulePublishing": "Publicación de cuadrantes",
+			"add": "Añadir flujo",
+			"appliesTo": "Se aplica a",
+			"steps": "Pasos",
+			"status": "Estado",
+			"on": "Activado",
+			"off": "Desactivado",
+			"wholeCompany": "Toda la empresa",
+			"unknownDepartment": "Un departamento que no puedes ver",
+			"allOf": "todos los {{count}}",
+			"empty": "No hay flujos de aprobación. Los cuadrantes se publican en un paso, por cualquiera que pueda publicarlos.",
+			"loading": "Cargando flujos de aprobación…",
+			"failed": "No pudimos cargar los flujos de aprobación. Inténtalo de nuevo.",
+			"hidden": "No tienes permiso para ver los flujos de aprobación.",
+			"turnOff": "Desactivar",
+			"turnOn": "Activar",
+			"delete": "Eliminar",
+			"turnOffTitle": "¿Desactivar {{name}}?",
+			"turnOffDescription": "Los cuadrantes que ya esperan conservan este flujo. Los que se envíen a partir de ahora se publican sin él.",
+			"turnOffConfirm": "Desactivar",
+			"turnOnTitle": "¿Activar {{name}}?",
+			"turnOnDescription": "Los cuadrantes que se envíen a partir de ahora pasan por sus pasos.",
+			"turnOnConfirm": "Activar",
+			"deleteTitle": "¿Eliminar {{name}}?",
+			"deleteDescription": "Los cuadrantes que ya esperan conservan este flujo. No se puede deshacer.",
+			"deleteConfirm": "Eliminar flujo",
+			"cancel": "Cancelar",
+			"added": "Flujo de aprobación añadido.",
+			"saved": "Flujo de aprobación guardado.",
+			"toggled": "Flujo de aprobación actualizado.",
+			"deleted": "Flujo de aprobación eliminado.",
+			"refusal": {
+				"exists": "Ya tiene un flujo de aprobación. Edita ese.",
+				"existsOnTurnOn": "Ya hay otro flujo activado aquí. Desactívalo primero.",
+				"invalid": "No se aceptó el flujo. Revisa sus pasos e inténtalo de nuevo.",
+				"noApprover": "Un paso no tiene a nadie que pueda aprobarlo. Indica personas que puedan publicar este cuadrante.",
+				"gone": "Este flujo ya no existe. Se ha actualizado la lista.",
+				"forbidden": "Ya no tienes permiso para cambiar los flujos de aprobación.",
+				"failed": "No pudimos guardar el flujo. Inténtalo de nuevo."
+			},
+			"dialog": {
+				"title": "Añadir flujo de aprobación",
+				"editTitle": "Editar flujo de aprobación",
+				"description": "Quién aprueba un cuadrante antes de publicarlo, paso a paso.",
+				"appliesTo": "Se aplica a",
+				"appliesToHint": "Toda la empresa o un departamento. No se puede cambiar después.",
+				"name": "Nombre",
+				"nameRequired": "Escribe un nombre.",
+				"nameTooLong": "Usa hasta 100 caracteres.",
+				"defaultName": "Publicación de {{unit}}",
+				"step": "Paso {{step}}",
+				"stepLabel": "Nombre del paso {{step}}",
+				"labelPlaceholder": "p. ej., Visto bueno",
+				"labelRequired": "Ponle nombre a este paso.",
+				"labelTooLong": "Usa hasta 24 caracteres.",
+				"whoDecides": "Quién decide",
+				"anyone": "Cualquiera que pueda publicar el cuadrante de {{department}}",
+				"anyoneCompany": "Cualquiera que pueda publicar el cuadrante",
+				"anyoneDescription": "Basta con una aprobación.",
+				"onlyThese": "Solo estas personas",
+				"onlyTheseDescription": "Indica hasta 10 personas.",
+				"people": "Personas",
+				"peoplePlaceholder": "Elige personas",
+				"peopleHint": "Solo se pregunta a quienes pueden publicar este cuadrante.",
+				"peopleRequired": "Elige al menos una persona.",
+				"how": "Cuántas de ellas",
+				"any": "Cualquiera de ellas",
+				"all": "Todas ellas",
+				"moveUp": "Subir el paso {{step}}",
+				"moveDown": "Bajar el paso {{step}}",
+				"remove": "Quitar el paso {{step}}",
+				"moved": "El paso {{from}} se ha movido; ahora es el paso {{to}}.",
+				"addStep": "Añadir paso",
+				"maxSteps": "Hasta 3 pasos.",
+				"info": "Solo pueden aprobarlo quienes pueden publicar este cuadrante. Quien envía un cuadrante nunca lo aprueba.",
+				"submit": "Guardar flujo",
+				"cancel": "Cancelar",
+				"labelHint": "1–2 palabras, visibles para los aprobadores (p. ej., Visto bueno)"
+			}
+		},
+		"announce": {
+			"submitted": "Enviado a aprobación. Primero se pide {{label}} (paso 1 de {{total}}).",
+			"approved": "Has aprobado {{label}}. Ahora toca {{next}} (paso {{step}}).",
+			"published": "Has aprobado y publicado el cuadrante de {{department}}.",
+			"rejected": "Has rechazado el cuadrante en {{label}}.",
+			"withdrawn": "Cuadrante retirado de la aprobación."
+		}
+	},
 	"availability": {
 		"title": "Disponibilidad",
 		"subtitle": "Las horas en que las personas a tiempo parcial pueden trabajar, semana a semana.",
@@ -537,6 +717,10 @@
 				"editFailed": "No pudimos guardar el tipo de permiso. Inténtalo de nuevo."
 			}
 		},
+		"approvals": {
+			"title": "Aprobaciones",
+			"description": "Quién aprueba los cuadrantes antes de publicarlos."
+		},
 		"employment": {
 			"title": "Empleo",
 			"description": "Días laborables, horas y día de descanso de cada tipo de contrato."
@@ -739,7 +923,7 @@
 			"membersFailed": "No pudimos cargar las personas. Inténtalo de nuevo.",
 			"membersFooter": "Mostrando miembros activos de la empresa",
 			"membersTruncated": "Mostrando 20 de {{total}} miembros activos de la empresa. Escribe para acotar la búsqueda.",
-			"counter": "{{count}}/20"
+			"counter": "{{count}}/{{max}}"
 		},
 		"permissions": {
 			"groupCount": "{{count}} de {{total}}",
@@ -772,6 +956,22 @@
 					"delete": "Eliminar",
 					"publish": "Publicar",
 					"edit_shift": "Editar turnos"
+				}
+			},
+			"approval_flow": {
+				"name": "Flujos de aprobación",
+				"description": "Quién aprueba un cuadrante antes de publicarlo, por departamento: los flujos de Ajustes › Aprobaciones.",
+				"actions": {
+					"read": "Ver",
+					"manage": "Gestionar"
+				}
+			},
+			"approval": {
+				"name": "Aprobaciones",
+				"description": "Cuadrantes enviados a aprobación: ver en qué punto están y decidir un paso donde la persona puede publicar el cuadrante.",
+				"actions": {
+					"read": "Ver",
+					"decide": "Decidir"
 				}
 			},
 			"shift": {
@@ -2988,7 +3188,9 @@
 				"weekAlreadyPublished": "Este departamento ya tiene un cuadrante publicado para esta semana. Solo se puede publicar un cuadrante por semana, así que programa otra semana.",
 				"reasonRejected": "Indica un motivo de hasta 2000 caracteres.",
 				"forbidden": "Ya no tienes permiso para publicar o rechazar este cuadrante.",
-				"failed": "No pudimos guardar la decisión. Inténtalo de nuevo."
+				"failed": "No pudimos guardar la decisión. Inténtalo de nuevo.",
+				"approvalPending": "Este cuadrante ya está pendiente de aprobación. Vuelve a cargar la página para ver en qué punto está.",
+				"noApprover": "Un paso del flujo de aprobación de este departamento no tiene a nadie que pueda aprobarlo. Pide a un administrador que lo cambie en Ajustes › Aprobaciones."
 			}
 		},
 		"startingContext": {

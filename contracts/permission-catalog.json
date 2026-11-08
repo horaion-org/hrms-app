@@ -805,6 +805,58 @@
       "action": "read",
       "actionName": "Read",
       "assignableScopes": [
+        "COMPANY"
+      ],
+      "key": "approval_flow:read",
+      "prerequisites": [],
+      "resource": "approval_flow",
+      "resourceName": "Approval Flow"
+    },
+    {
+      "action": "manage",
+      "actionName": "Manage",
+      "assignableScopes": [
+        "COMPANY"
+      ],
+      "key": "approval_flow:manage",
+      "prerequisites": [
+        "approval_flow:read"
+      ],
+      "resource": "approval_flow",
+      "resourceName": "Approval Flow"
+    },
+    {
+      "action": "read",
+      "actionName": "Read",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
+      "key": "approval:read",
+      "prerequisites": [],
+      "resource": "approval",
+      "resourceName": "Approval"
+    },
+    {
+      "action": "decide",
+      "actionName": "Decide",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
+      "key": "approval:decide",
+      "prerequisites": [
+        "approval:read"
+      ],
+      "resource": "approval",
+      "resourceName": "Approval"
+    },
+    {
+      "action": "read",
+      "actionName": "Read",
+      "assignableScopes": [
         "COMPANY",
         "BRANCH",
         "DEPARTMENT"

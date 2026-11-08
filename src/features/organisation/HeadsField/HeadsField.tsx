@@ -23,6 +23,8 @@ export type HeadsFieldProps = {
 	disabled?: boolean;
 	/** Heads are required; another use of the picker, such as a manager, may not be. */
 	required?: boolean;
+	/** The most people chosen at once; twenty heads unless a use keeps fewer. */
+	max?: number;
 	layout?: FormRowProps["layout"];
 	/** The inline field column's width; see `FormRow`. */
 	fieldWidth?: FormRowProps["fieldWidth"];
@@ -42,7 +44,7 @@ export type HeadsFieldProps = {
 );
 
 /**
- * Chooses one to twenty heads by searching the company's active people, or
+ * Chooses one to twenty heads (or up to `max` people) by searching the company's active people, or
  * one person with `multiple={false}`. Invalidate
  * `["organisation", companyId, "members"]` to reload the options.
  */
@@ -55,6 +57,7 @@ export const HeadsField = ({
 	error,
 	disabled = false,
 	required = true,
+	max = MAX_HEADS,
 	layout = "stacked",
 	fieldWidth,
 	ref,
@@ -77,14 +80,14 @@ export const HeadsField = ({
 			counter={
 				selection.multiple === false
 					? undefined
-					: t(`${key}.counter`, { count: selection.value.length })
+					: t(`${key}.counter`, { count: selection.value.length, max })
 			}
 		>
 			<Combobox
 				ref={ref}
 				{...(selection.multiple === false
 					? selection
-					: { ...selection, maxSelected: MAX_HEADS })}
+					: { ...selection, maxSelected: max })}
 				aria-describedby={error ? ids.errorId : ids.hintId}
 				aria-invalid={Boolean(error)}
 				aria-label={label}

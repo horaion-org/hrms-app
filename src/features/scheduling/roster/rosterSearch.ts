@@ -5,7 +5,12 @@ import { mondayOf } from "@/features/scheduling/schedules";
 const isMonday = (date: string): boolean => mondayOf(date) === date;
 
 /** The lists the roster's side panel opens on its own, without a chosen day. */
-export const ROSTER_PANELS = ["issues", "changes", "details"] as const;
+export const ROSTER_PANELS = [
+	"issues",
+	"changes",
+	"details",
+	"approval",
+] as const;
 
 export type RosterPanel = (typeof ROSTER_PANELS)[number];
 

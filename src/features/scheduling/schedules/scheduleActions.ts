@@ -1,8 +1,25 @@
+import type { ApprovalStanding } from "@/features/approvals/approvalStanding";
 import type { Schedule } from "@/features/scheduling/schedules/api";
 
 /** The roster page's own actions; Export and Delete stay with `ScheduleMenu`. */
 export type ScheduleActionId =
-	"publish" | "reject" | "regenerate" | "viewSetup" | "details";
+	| "approve"
+	| "approveAndPublish"
+	| "publish"
+	| "submit"
+	| "reject"
+	| "withdrawApproval"
+	| "regenerate"
+	| "viewSetup"
+	| "details";
+
+/**
+ * Where the viewer stands on the roster's approval: no submission waits
+ * (`none`), its open step is theirs to decide, they submitted it, it waits
+ * on someone else, or it could not be told yet (`unknown`).
+ */
+export type ApprovalActionStanding =
+	"none" | "mineToDecide" | "mineAsSubmitter" | "waiting" | "unknown";
 
 /** What decides which actions a person is offered on one schedule. */
 export type ScheduleActionFacts = {
@@ -15,11 +32,20 @@ export type ScheduleActionFacts = {
 	mayRegenerate: boolean;
 	/** Has a roster, so its history has something to tell. */
 	hasRoster: boolean;
+	approvalStanding: ApprovalActionStanding;
+	/** The step the viewer decides is the last: their approval publishes. */
+	isLastStep: boolean;
+	/** A flow applies at the department, so Publish submits the roster. */
+	flowRequired: boolean;
 };
 
 export type ScheduleAction = {
 	id: ScheduleActionId;
 	labelKey:
+		| "approvals.actions.approve"
+		| "approvals.actions.approveAndPublish"
+		| "approvals.actions.submit"
+		| "approvals.actions.withdraw"
 		| "scheduling.decision.publish"
 		| "scheduling.decision.reject"
 		| "scheduling.regenerate.button"
@@ -34,19 +60,52 @@ export type ScheduleAction = {
  * Every action the roster page offers, in menu order. Each is the one
  * primary button in the status `primaryWhen` names (the first offered one
  * wins) and a "More actions" item otherwise, and is offered only where
- * `offered` says.
+ * `offered` says. While a submission waits, only the person whose step it
+ * is gets a decision (Approve, or Approve and publish on the last step, and
+ * Reject); its submitter may withdraw it; nobody publishes or rejects
+ * directly, which the API refuses.
  */
 export const SCHEDULE_ACTIONS: ReadonlyArray<ScheduleAction> = [
+	{
+		id: "approve",
+		labelKey: "approvals.actions.approve",
+		primaryWhen: "GENERATED",
+		offered: ({ approvalStanding, isLastStep }) =>
+			approvalStanding === "mineToDecide" && !isLastStep,
+	},
+	{
+		id: "approveAndPublish",
+		labelKey: "approvals.actions.approveAndPublish",
+		primaryWhen: "GENERATED",
+		offered: ({ approvalStanding, isLastStep }) =>
+			approvalStanding === "mineToDecide" && isLastStep,
+	},
 	{
 		id: "publish",
 		labelKey: "scheduling.decision.publish",
 		primaryWhen: "GENERATED",
-		offered: ({ mayPublish }) => mayPublish,
+		offered: ({ mayPublish, approvalStanding, flowRequired }) =>
+			mayPublish && approvalStanding === "none" && !flowRequired,
 	},
 	{
+		id: "submit",
+		labelKey: "approvals.actions.submit",
+		primaryWhen: "GENERATED",
+		offered: ({ mayPublish, approvalStanding, flowRequired }) =>
+			mayPublish && approvalStanding === "none" && flowRequired,
+	},
+	{
+		// Rejects directly with no submission waiting, or rejects the step that is the viewer's to decide.
 		id: "reject",
 		labelKey: "scheduling.decision.reject",
-		offered: ({ mayReject }) => mayReject,
+		offered: ({ mayReject, approvalStanding }) =>
+			approvalStanding === "mineToDecide" ||
+			(mayReject && approvalStanding === "none"),
+	},
+	{
+		id: "withdrawApproval",
+		labelKey: "approvals.actions.withdraw",
+		offered: ({ approvalStanding }) => approvalStanding === "mineAsSubmitter",
 	},
 	{
 		id: "regenerate",
@@ -77,4 +136,45 @@ export const scheduleActions = (
 		...(primary ? { primary } : {}),
 		menu: offered.filter((action) => action !== primary),
 	};
+};
+
+const STANDING_OF_ROLE = {
+	decider: "mineToDecide",
+	submitter: "mineAsSubmitter",
+	waiting: "waiting",
+} as const satisfies Record<string, ApprovalActionStanding>;
+
+/** The action facts an approval standing gives: whose turn it is, whether it is the last step, whether Publish submits. */
+export const approvalActionFacts = (
+	standing: ApprovalStanding
+): Pick<
+	ScheduleActionFacts,
+	"approvalStanding" | "isLastStep" | "flowRequired"
+> => {
+	switch (standing.kind) {
+		case "direct":
+			return {
+				approvalStanding: "none",
+				isLastStep: false,
+				flowRequired: false,
+			};
+		case "toSubmit":
+			return {
+				approvalStanding: "none",
+				isLastStep: false,
+				flowRequired: true,
+			};
+		case "unknown":
+			return {
+				approvalStanding: "unknown",
+				isLastStep: false,
+				flowRequired: true,
+			};
+		case "pending":
+			return {
+				approvalStanding: STANDING_OF_ROLE[standing.role],
+				isLastStep: standing.step.isLast,
+				flowRequired: true,
+			};
+	}
 };

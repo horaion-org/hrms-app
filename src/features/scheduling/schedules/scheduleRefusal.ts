@@ -27,6 +27,8 @@ export const SCHEDULE_REFUSAL_CODES = {
 	published: "409 SCHEDULE_PUBLISHED",
 	publishedNotDeletable: "409 PUBLISHED_SCHEDULE_NOT_DELETABLE",
 	invalidRejectionReason: "400 INVALID_REJECTION_REASON",
+	approvalPending: "409 SCHEDULE_APPROVAL_PENDING",
+	stepHasNoApprover: "400 APPROVAL_STEP_HAS_NO_APPROVER",
 } as const;
 
 const codes = SCHEDULE_REFUSAL_CODES;
@@ -143,8 +145,9 @@ export const regenerationRefusal = (error: unknown, t: TFunction): string => {
 export type RejectionField = "reason";
 
 /**
- * Why publishing or rejecting a schedule was refused: an invalid reason on
- * the reason field, otherwise one message for the dialog.
+ * Why publishing, submitting or rejecting a schedule was refused: an invalid
+ * reason on the reason field, otherwise one message for the dialog. While a
+ * submission waits, publishing or rejecting directly is refused.
  */
 export const decisionRefusal = (
 	error: unknown,
@@ -163,6 +166,8 @@ export const decisionRefusal = (
 			[codes.alreadyDecided]: t(`${key}.alreadyDecided`),
 			[codes.weekAlreadyPublished]: t(`${key}.weekAlreadyPublished`),
 			[codes.scheduleNotFound]: t("scheduling.delete.gone"),
+			[codes.approvalPending]: t(`${key}.approvalPending`),
+			[codes.stepHasNoApprover]: t(`${key}.noApprover`),
 		},
 		fieldErrors: { reason },
 		forbidden: t(`${key}.forbidden`),

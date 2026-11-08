@@ -48,16 +48,18 @@ describe("visibleSections and selectedSectionIndex", () => {
 		employment: true,
 		scheduling: true,
 		leave: true,
+		approvals: true,
 		data: true,
 	};
 	const neither = {
 		employment: false,
 		scheduling: false,
 		leave: false,
+		approvals: false,
 		data: false,
 	};
 
-	it("adds Employment, Scheduling, Leave and Data only when they have something to offer", () => {
+	it("adds Employment, Scheduling, Leave, Approvals and Data only when they have something to offer", () => {
 		expect(visibleSections(neither)).toEqual([
 			"general",
 			"notifications",
@@ -68,6 +70,7 @@ describe("visibleSections and selectedSectionIndex", () => {
 				employment: false,
 				scheduling: true,
 				leave: false,
+				approvals: false,
 				data: false,
 			})
 		).toEqual(["general", "notifications", "scheduling", "plan"]);
@@ -76,6 +79,7 @@ describe("visibleSections and selectedSectionIndex", () => {
 				employment: false,
 				scheduling: false,
 				leave: true,
+				approvals: false,
 				data: false,
 			})
 		).toEqual(["general", "notifications", "leave", "plan"]);
@@ -84,22 +88,33 @@ describe("visibleSections and selectedSectionIndex", () => {
 				employment: true,
 				scheduling: false,
 				leave: false,
+				approvals: false,
 				data: false,
 			})
 		).toEqual(["general", "notifications", "employment", "plan"]);
+		expect(
+			visibleSections({
+				employment: false,
+				scheduling: false,
+				leave: false,
+				approvals: true,
+				data: false,
+			})
+		).toEqual(["general", "notifications", "approvals", "plan"]);
 		expect(visibleSections(everything)).toEqual([
 			"general",
 			"notifications",
 			"employment",
 			"scheduling",
 			"leave",
+			"approvals",
 			"plan",
 			"data",
 		]);
 	});
 
 	it("selects the asked-for section, or General when it is not shown", () => {
-		expect(selectedSectionIndex(visibleSections(everything), "data")).toBe(6);
+		expect(selectedSectionIndex(visibleSections(everything), "data")).toBe(7);
 		expect(selectedSectionIndex(visibleSections(everything), "leave")).toBe(4);
 		expect(selectedSectionIndex(visibleSections(neither), "data")).toBe(0);
 		expect(selectedSectionIndex(visibleSections(neither), "scheduling")).toBe(

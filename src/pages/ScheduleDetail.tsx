@@ -1,12 +1,19 @@
 import { useQuery } from "@tanstack/react-query";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import { ArrowLeftIcon } from "@/components/ui/Icon";
 import { OverflowMenuItem } from "@/components/ui/OverflowMenu";
+import { ApprovalTrail } from "@/features/approvals/ApprovalTrail";
+import {
+	approvalMetaLine,
+	approvalStanding,
+	rejectedStepOf,
+	type ApprovalStanding,
+} from "@/features/approvals/approvalStanding";
 import {
 	useCurrentCompanyId,
 	useCurrentMembershipId,
@@ -18,7 +25,10 @@ import {
 } from "@/features/scheduling/GeneratedRoster";
 import { GenerationFailurePanel } from "@/features/scheduling/GenerationFailurePanel";
 import type { DepartmentPath } from "@/features/scheduling/paths";
-import { PublishScheduleDialog } from "@/features/scheduling/PublishScheduleDialog";
+import {
+	PublishScheduleDialog,
+	type PublishMode,
+} from "@/features/scheduling/PublishScheduleDialog";
 import { RegenerateDialog } from "@/features/scheduling/RegenerateDialog";
 import { RejectedRosterCallout } from "@/features/scheduling/RejectedRosterCallout";
 import { RejectScheduleDialog } from "@/features/scheduling/RejectScheduleDialog";
@@ -41,6 +51,7 @@ import {
 	rosterRunId,
 } from "@/features/scheduling/schedules/api";
 import {
+	approvalActionFacts,
 	scheduleActions,
 	type ScheduleActionId,
 } from "@/features/scheduling/schedules/scheduleActions";
@@ -53,12 +64,14 @@ import {
 } from "@/features/scheduling/schedules/scheduleNotices";
 import { scheduleSetupLink } from "@/features/scheduling/schedules/scheduleViewLink";
 import { useCompanySchedule } from "@/features/scheduling/schedules/useSchedule";
+import { useScheduleApproval } from "@/features/scheduling/schedules/useScheduleApproval";
 import {
 	useScheduleAssignments,
 	type AssignmentList,
 } from "@/features/scheduling/schedules/useScheduleAssignments";
 import { useScheduleConstraints } from "@/features/scheduling/schedules/useScheduleConstraints";
 import { useScheduleShifts } from "@/features/scheduling/schedules/useScheduleShifts";
+import { WithdrawApprovalDialog } from "@/features/scheduling/WithdrawApprovalDialog";
 import {
 	startingContextQuery,
 	type StartingContext,
@@ -165,7 +178,27 @@ const RosterBody = ({
 };
 
 /** The dialog open over the roster, if any. */
-type OpenDialog = "publish" | "reject" | "regenerate" | undefined;
+type OpenDialog = "publish" | "reject" | "withdraw" | "regenerate" | undefined;
+
+/** What the header's primary button confirms, by where the viewer stands on the roster's approval. */
+const publishModeOf = (
+	standing: ApprovalStanding,
+	instanceSteps: ReadonlyArray<{ stepOrder: number; label: string }>,
+	instanceId: string | undefined
+): PublishMode => {
+	if (standing.kind === "toSubmit")
+		return { kind: "submit", stepLabels: standing.stepLabels };
+	if (standing.kind === "pending" && instanceId)
+		return {
+			kind: "approve",
+			instanceId,
+			step: standing.step,
+			nextLabel: instanceSteps.find(
+				(step) => step.stepOrder === standing.step.order + 1
+			)?.label,
+		};
+	return { kind: "publish" };
+};
 
 /**
  * One schedule read by its id alone. It is read again every
@@ -181,6 +214,12 @@ type OpenDialog = "publish" | "reject" | "regenerate" | undefined;
  * of a draft. Its "More actions" menu holds the rest: Reject, Regenerate,
  * View setup, Details, Export and Delete. A callout stays only when someone
  * must act: the week already published elsewhere, or a rejection.
+ *
+ * Where an approval flow applies, Publish reads "Submit for approval"; while
+ * a submission waits, the person whose step it is gets Approve (Approve and
+ * publish on the last step) and Reject, its submitter may withdraw it, and
+ * the meta line says where it stands, with "Approval ›" opening its trail
+ * beside the grid.
  */
 const ApiSchedule = ({
 	companyId,
@@ -201,6 +240,21 @@ const ApiSchedule = ({
 	const [openDialog, setOpenDialog] = useState<OpenDialog>();
 	const closeDialog = (): void => {
 		setOpenDialog(undefined);
+	};
+	// After an approval decision the header's button is gone, so focus moves to
+	// the approval line and one status message is announced (approvals UI
+	// research addendum C5); the region is rendered before any message.
+	const [announcement, setAnnouncement] = useState("");
+	const approvalLineRef = useRef<HTMLSpanElement>(null);
+	const focusApprovalLine = useRef(false);
+	useEffect(() => {
+		if (!focusApprovalLine.current || !approvalLineRef.current) return;
+		focusApprovalLine.current = false;
+		approvalLineRef.current.focus();
+	});
+	const decided = (message: string): void => {
+		setAnnouncement(message);
+		focusApprovalLine.current = true;
 	};
 	const state = useCompanySchedule(companyId, scheduleId, {
 		pollWhileGenerating: true,
@@ -232,6 +286,10 @@ const ApiSchedule = ({
 		rosterSchedule?.scheduleId
 	);
 	const constraints = useScheduleConstraints(companyId, rosterSchedule);
+	const approval = useScheduleApproval(
+		companyId,
+		state.status === "ready" ? state.schedule : undefined
+	);
 	// A generated roster awaiting its decision, or a published one, may be
 	// changed by hand under its own key (hrms-backend-v2 docs/adr/0062, 0063);
 	// the editor reads the frozen shifts it offers through that key, so it
@@ -323,19 +381,41 @@ const ApiSchedule = ({
 	const mayReject =
 		decidable(schedule) &&
 		access.can("schedule:publish", departmentScope(schedule.departmentId));
+	const standing = approvalStanding({
+		awaitingDecision: decidable(schedule),
+		publication: schedule.publication,
+		read: approval.read,
+		viewerMembershipId,
+	});
 	const { primary, menu } = scheduleActions({
 		status: schedule.status,
 		mayPublish: mayReject && weekPublishedBy === undefined,
 		mayReject,
 		mayRegenerate: openRegenerate !== undefined,
 		hasRoster: rosterShown(noticeFacts),
+		...approvalActionFacts(standing),
 	});
+	const openPublish = (): void => {
+		setOpenDialog("publish");
+	};
+	const metaLine = approvalMetaLine(standing);
+	const trail = approval.instance && (
+		<ApprovalTrail
+			departmentName={schedule.departmentName}
+			formatMoment={(instant) => moment.format(new Date(instant))}
+			instance={approval.instance}
+		/>
+	);
 	const runAction: Record<ScheduleActionId, () => void> = {
-		publish: () => {
-			setOpenDialog("publish");
-		},
+		approve: openPublish,
+		approveAndPublish: openPublish,
+		publish: openPublish,
+		submit: openPublish,
 		reject: () => {
 			setOpenDialog("reject");
+		},
+		withdrawApproval: () => {
+			setOpenDialog("withdraw");
 		},
 		regenerate: () => {
 			openRegenerate?.();
@@ -356,6 +436,7 @@ const ApiSchedule = ({
 		),
 		rejected: (
 			<RejectedRosterCallout
+				rejectedStep={rejectedStepOf(approval.instance)?.label}
 				schedule={schedule}
 				showsNextStep={regenerable(schedule)}
 			/>
@@ -371,6 +452,12 @@ const ApiSchedule = ({
 	};
 	return (
 		<>
+			{/* Only where an approval is involved: without a flow the page is as before. */}
+			{(standing.kind !== "direct" || approval.instance) && (
+				<p className="sr-only" role="status">
+					{announcement}
+				</p>
+			)}
 			<RosterHeader
 				className="mt-4"
 				schedule={schedule}
@@ -401,6 +488,51 @@ const ApiSchedule = ({
 						</ScheduleMenu>
 					</div>
 				}
+				meta={
+					(metaLine || trail) && (
+						<span
+							ref={approvalLineRef}
+							className="flex flex-wrap items-center gap-x-2 font-normal outline-none"
+							tabIndex={-1}
+						>
+							{metaLine && (
+								<span
+									className={
+										metaLine.key === "approvals.meta.waitingOnYou"
+											? "font-medium"
+											: undefined
+									}
+									role={
+										metaLine.key === "approvals.meta.failed"
+											? "alert"
+											: undefined
+									}
+								>
+									{t(metaLine.key, metaLine.values)}
+								</span>
+							)}
+							{metaLine?.key === "approvals.meta.failed" && (
+								<Button variant="textlink" onClick={approval.retry}>
+									{t("approvals.meta.retry")}
+								</Button>
+							)}
+							{trail && (
+								<Button
+									aria-label={t("approvals.meta.openLabel")}
+									variant="textlink"
+									onClick={() => {
+										onViewChange({
+											...(view.week ? { week: view.week } : {}),
+											panel: "approval",
+										});
+									}}
+								>
+									{t("approvals.meta.open")}
+								</Button>
+							)}
+						</span>
+					)
+				}
 			/>
 			{scheduleNotices(noticeFacts).map((notice) => (
 				<div key={notice} className="mt-6">
@@ -409,6 +541,7 @@ const ApiSchedule = ({
 			))}
 			{rosterShown(noticeFacts) && (
 				<RosterBody
+					approval={trail}
 					assignments={assignments}
 					constraints={readyItems(constraints)}
 					editing={editing}
@@ -428,14 +561,37 @@ const ApiSchedule = ({
 				<PublishScheduleDialog
 					companyId={companyId}
 					schedule={schedule}
+					mode={publishModeOf(
+						standing,
+						approval.instance?.steps ?? [],
+						approval.instance?.approvalInstanceId
+					)}
 					onClose={closeDialog}
+					onDone={decided}
 				/>
 			)}
 			{openDialog === "reject" && (
 				<RejectScheduleDialog
 					companyId={companyId}
 					schedule={schedule}
+					approvalStep={
+						standing.kind === "pending" && approval.instance
+							? {
+									instanceId: approval.instance.approvalInstanceId,
+									step: standing.step,
+								}
+							: undefined
+					}
 					onClose={closeDialog}
+					onDone={decided}
+				/>
+			)}
+			{openDialog === "withdraw" && approval.instance && (
+				<WithdrawApprovalDialog
+					companyId={companyId}
+					instanceId={approval.instance.approvalInstanceId}
+					onClose={closeDialog}
+					onDone={decided}
 				/>
 			)}
 			{openDialog === "regenerate" && (

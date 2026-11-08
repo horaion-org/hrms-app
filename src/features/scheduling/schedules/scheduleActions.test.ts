@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+	approvalActionFacts,
 	scheduleActions,
 	type ScheduleActionFacts,
 	type ScheduleActionId,
@@ -11,6 +12,9 @@ const NOTHING: ScheduleActionFacts = {
 	mayReject: false,
 	mayRegenerate: false,
 	hasRoster: true,
+	approvalStanding: "none",
+	isLastStep: false,
+	flowRequired: false,
 };
 
 const ALL = { mayPublish: true, mayReject: true, mayRegenerate: true };
@@ -50,6 +54,53 @@ describe("scheduleActions", () => {
 			["viewSetup", "details"],
 		],
 		[
+			"a decider where a flow applies and nothing is submitted",
+			{ ...ALL, flowRequired: true },
+			"submit",
+			["reject", "regenerate", "viewSetup", "details"],
+		],
+		[
+			"the approver of a middle step",
+			{ ...ALL, flowRequired: true, approvalStanding: "mineToDecide" },
+			"approve",
+			["reject", "regenerate", "viewSetup", "details"],
+		],
+		[
+			"the approver of the last step",
+			{
+				...ALL,
+				flowRequired: true,
+				approvalStanding: "mineToDecide",
+				isLastStep: true,
+			},
+			"approveAndPublish",
+			["reject", "regenerate", "viewSetup", "details"],
+		],
+		[
+			"an approver whose key is held elsewhere (canDecide alone)",
+			{ approvalStanding: "mineToDecide" },
+			"approve",
+			["reject", "viewSetup", "details"],
+		],
+		[
+			"the submitter while it waits",
+			{ ...ALL, flowRequired: true, approvalStanding: "mineAsSubmitter" },
+			undefined,
+			["withdrawApproval", "regenerate", "viewSetup", "details"],
+		],
+		[
+			"a decider while it waits on someone else",
+			{ ...ALL, flowRequired: true, approvalStanding: "waiting" },
+			undefined,
+			["regenerate", "viewSetup", "details"],
+		],
+		[
+			"a decider while the approval is still unknown",
+			{ ...ALL, flowRequired: true, approvalStanding: "unknown" },
+			undefined,
+			["regenerate", "viewSetup", "details"],
+		],
+		[
 			"anyone on a draft",
 			{ status: "DRAFT", hasRoster: false },
 			"viewSetup",
@@ -64,4 +115,45 @@ describe("scheduleActions", () => {
 			expect(actions.menu.map((action) => action.id)).toEqual(menu);
 		}
 	);
+});
+
+describe("approvalActionFacts", () => {
+	const step = { order: 2, count: 2, label: "Publish", isLast: true };
+
+	it.each([
+		[
+			{ kind: "direct" } as const,
+			{ approvalStanding: "none", isLastStep: false, flowRequired: false },
+		],
+		[
+			{ kind: "toSubmit", stepLabels: ["Endorse"] } as const,
+			{ approvalStanding: "none", isLastStep: false, flowRequired: true },
+		],
+		[
+			{ kind: "unknown", failed: false } as const,
+			{ approvalStanding: "unknown", isLastStep: false, flowRequired: true },
+		],
+		[
+			{ kind: "pending", role: "decider", step } as const,
+			{
+				approvalStanding: "mineToDecide",
+				isLastStep: true,
+				flowRequired: true,
+			},
+		],
+		[
+			{ kind: "pending", role: "submitter", step } as const,
+			{
+				approvalStanding: "mineAsSubmitter",
+				isLastStep: true,
+				flowRequired: true,
+			},
+		],
+		[
+			{ kind: "pending", role: "waiting", step } as const,
+			{ approvalStanding: "waiting", isLastStep: true, flowRequired: true },
+		],
+	])("maps %o", (standing, facts) => {
+		expect(approvalActionFacts(standing)).toEqual(facts);
+	});
 });

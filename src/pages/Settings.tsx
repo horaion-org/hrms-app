@@ -5,6 +5,7 @@ import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { ArrowUpIcon } from "@/components/ui/Icon";
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from "@/components/ui/Tabs";
+import { ApprovalsSettings } from "@/features/settings/ApprovalsSettings";
 import { dataItemsFor, offersData } from "@/features/settings/dataAccess";
 import { DataSettings } from "@/features/settings/DataSettings";
 import { EmploymentTermsSettings } from "@/features/settings/EmploymentTermsSettings";
@@ -45,9 +46,9 @@ export const Settings = (): FunctionComponent => {
 	const search = route.useSearch();
 	const dataItems = dataItemsFor(access);
 	// The section lives in the URL, so a link such as `?section=data` opens it.
-	// Employment, Scheduling and Leave are offered with their read keys
-	// (employment_terms, scheduling_policy, leave_type); a link to any of them
-	// still opens it, to say the person may not see it.
+	// Employment, Scheduling, Leave and Approvals are offered with their read
+	// keys (employment_terms, scheduling_policy, leave_type, approval_flow); a
+	// link to any of them still opens it, to say the person may not see it.
 	const sections = visibleSections({
 		employment:
 			access.can("employment_terms:read", COMPANY_SCOPE) ||
@@ -58,6 +59,9 @@ export const Settings = (): FunctionComponent => {
 		leave:
 			access.can("leave_type:read", COMPANY_SCOPE) ||
 			search.section === "leave",
+		approvals:
+			access.can("approval_flow:read", COMPANY_SCOPE) ||
+			search.section === "approvals",
 		data: offersData(dataItems),
 	});
 	const selectedIndex = selectedSectionIndex(sections, search.section);
@@ -164,6 +168,15 @@ export const Settings = (): FunctionComponent => {
 					{sections.includes("leave") && (
 						<TabPanel className={panelClasses}>
 							<LeaveTypesSettings companyId={companyId} />
+						</TabPanel>
+					)}
+					{sections.includes("approvals") && (
+						<TabPanel className={panelClasses}>
+							<ApprovalsSettings
+								canManage={access.can("approval_flow:manage", COMPANY_SCOPE)}
+								canRead={access.can("approval_flow:read", COMPANY_SCOPE)}
+								companyId={companyId}
+							/>
 						</TabPanel>
 					)}
 					<TabPanel className={panelClasses}>
