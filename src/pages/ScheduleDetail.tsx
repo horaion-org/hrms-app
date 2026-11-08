@@ -40,6 +40,7 @@ import { PublishedWeekCallout } from "@/features/scheduling/publishedWeek/Publis
 import { dateTimeFormatIn } from "@/features/scheduling/roster/roster";
 import type { RosterSearch } from "@/features/scheduling/roster/rosterSearch";
 import { RosterHeader } from "@/features/scheduling/RosterHeader";
+import { coverOffersQuery } from "@/features/scheduling/coverOffers/api";
 import { rosterChangeShiftsQuery } from "@/features/scheduling/rosterChanges/api";
 import { ScheduleMenu } from "@/features/scheduling/ScheduleMenu";
 import {
@@ -305,6 +306,12 @@ const ApiSchedule = ({
 	const editorShifts = useQuery(
 		rosterChangeShiftsQuery(companyId, unit, scheduleId, mayEditShifts)
 	);
+	// A published roster asks the member before adding or moving their work.
+	const publishedForEditing =
+		mayEditShifts && state.schedule.status === "PUBLISHED";
+	const coverOffers = useQuery(
+		coverOffersQuery(companyId, unit, scheduleId, publishedForEditing)
+	);
 	const startingContext = useQuery(
 		startingContextQuery(
 			companyId,
@@ -357,6 +364,17 @@ const ApiSchedule = ({
 					revision: state.schedule.rosterRevision,
 					shifts: editorShifts.data ?? [],
 					notifiesMembers: state.schedule.status === "PUBLISHED",
+					...(publishedForEditing
+						? {
+								coverOffers: {
+									offers: coverOffers.data ?? [],
+									failed: coverOffers.isError,
+									retry: (): void => {
+										void coverOffers.refetch();
+									},
+								},
+							}
+						: {}),
 					// Leave choices need the leave keys as well, here at the schedule's Department.
 					...(access.canAll(
 						["leave_request:read", "leave_request:review"],

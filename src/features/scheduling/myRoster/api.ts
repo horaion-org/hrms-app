@@ -44,6 +44,13 @@ export const fetchMyRoster = (
 ): Promise<MyRoster> =>
 	apiRequest(myRosterPath(companyId, scheduleId), myRosterSchema, { signal });
 
+/** The key the caller's own view of one roster is cached under. */
+export const myRosterKey = (
+	companyId: string,
+	scheduleId: string
+): readonly ["scheduling", string, "me", string] =>
+	[SCHEDULING_QUERY_ROOT, companyId, "me", scheduleId] as const;
+
 /** One published roster the caller is on; a 404 is final and not retried. */
 export const myRosterQuery = (
 	companyId: string,
@@ -52,10 +59,10 @@ export const myRosterQuery = (
 	MyRoster,
 	Error,
 	MyRoster,
-	readonly ["scheduling", string, "me", string]
+	ReturnType<typeof myRosterKey>
 > =>
 	queryOptions({
-		queryKey: [SCHEDULING_QUERY_ROOT, companyId, "me", scheduleId] as const,
+		queryKey: myRosterKey(companyId, scheduleId),
 		queryFn: ({ signal }) => fetchMyRoster(companyId, scheduleId, signal),
 		// Own read: never gated by, or withdrawn for, administrative grants.
 		meta: selfMeta(companyId),

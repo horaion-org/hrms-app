@@ -21,6 +21,8 @@ const KNOWN = [
 	"SCHEDULE_ASSIGNMENT_UPDATED",
 	"SCHEDULE_REJECTED",
 	"MEMBER_IMPORT_FINISHED",
+	"COVER_OFFER_SENT",
+	"COVER_OFFER_ANSWERED",
 ];
 
 describe("describeNotificationType", () => {
@@ -231,5 +233,74 @@ describe("notificationTarget", () => {
 				"PERSONAL"
 			)
 		).toBeUndefined();
+	});
+});
+
+describe("cover offer notifications", () => {
+	const wording = { language: "en-GB", now: new Date("2026-10-16T05:18:00Z") };
+	const notice = (
+		outcome: "ACCEPTED" | "DECLINED" | "EXPIRED" | null
+	): {
+		rosterDate: string;
+		expiresAt: string | null;
+		outcome: typeof outcome;
+	} => ({
+		rosterDate: "2026-10-17",
+		expiresAt: "2026-10-16T07:30:00Z",
+		outcome,
+	});
+	const sent = {
+		type: "COVER_OFFER_SENT",
+		importCounts: null,
+		coverOffer: notice(null),
+	};
+
+	it("words a sent offer with its day and deadline, asking the member to act", () => {
+		const presentation = presentNotification(sent, wording);
+		expect(presentation.tone).toBe("warning");
+		expect(presentation.title).toBe("notifications.coverOffer.sent");
+		expect(presentation.values?.["day"]).toBe("Sat 17 Oct");
+		// On the browser's clock: the inbox doesn't know the roster's zone.
+		expect(String(presentation.values?.["time"])).toMatch(/\d{2}:30/);
+	});
+
+	it.each([
+		["ACCEPTED", "success", "notifications.coverOffer.accepted"],
+		["DECLINED", "warning", "notifications.coverOffer.declined"],
+		["EXPIRED", "warning", "notifications.coverOffer.expired"],
+	] as const)("looks an answer %s as %s", (outcome, tone, title) => {
+		const presentation = presentNotification(
+			{ ...sent, type: "COVER_OFFER_ANSWERED", coverOffer: notice(outcome) },
+			wording
+		);
+		expect(presentation.tone).toBe(tone);
+		expect(presentation.title).toBe(title);
+		expect(presentation.values).toEqual({ day: "Sat 17 Oct" });
+	});
+
+	it("reads as its type alone without the offer's facts", () => {
+		expect(
+			presentNotification({ ...sent, coverOffer: null }, wording)
+		).toMatchObject({
+			title: "notifications.types.COVER_OFFER_SENT",
+			values: undefined,
+		});
+	});
+
+	it("opens a sent offer on the member's roster and an answer on the manager's Issues", () => {
+		const ids = {
+			leaveRequestId: null,
+			membershipId: null,
+			memberImportJobId: null,
+			scheduleId: "s-1",
+			rosterDay: "2026-10-17",
+			coverOfferId: "o-1",
+		};
+		expect(
+			notificationTarget({ ...ids, type: "COVER_OFFER_SENT" }, "PERSONAL")
+		).toEqual({ kind: "offer", scheduleId: "s-1", offerId: "o-1" });
+		expect(
+			notificationTarget({ ...ids, type: "COVER_OFFER_ANSWERED" }, "PERSONAL")
+		).toEqual({ kind: "schedule", scheduleId: "s-1", day: "2026-10-17" });
 	});
 });

@@ -289,4 +289,22 @@ describe("RosterGrid", () => {
 			"left-0"
 		);
 	});
+
+	it("given_anOfferedDayOff_when_rendered_then_itsLabelSaysTheOfferButTheTileIsUnmarked", () => {
+		render(
+			<RosterGrid
+				days={week}
+				offeredDays={new Map([["m-1|2026-10-17", "15:30"]])}
+				rows={rows}
+				showsIssues={false}
+			/>
+		);
+
+		const aisha = screen.getByRole("row", { name: /Aisha Rahman/ });
+		expect(
+			within(aisha).getByText(
+				"Aisha Rahman, Sat: Day off, shift offered, answer by 15:30"
+			)
+		).toHaveClass("sr-only");
+	});
 });

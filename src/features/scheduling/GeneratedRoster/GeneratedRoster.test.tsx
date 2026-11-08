@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type * as Router from "@tanstack/react-router";
 import { render, screen, within } from "@testing-library/react";
 import { useState, type ReactElement } from "react";
@@ -5,7 +6,9 @@ import userEvent from "@testing-library/user-event";
 import { createInstance } from "i18next";
 import { initReactI18next } from "react-i18next";
 import en from "@/assets/locales/en/translations.json";
-import { beforeAll, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { stubApi } from "@/common/testing/stubApi";
+import { coverOfferFixture } from "@/features/scheduling/coverOffers/fixtures";
 import {
 	GeneratedRoster,
 	type GeneratedRosterProps,
@@ -399,5 +402,54 @@ describe("GeneratedRoster", () => {
 
 		expect(screen.queryByRole("button", { name: /^Issues/ })).toBeNull();
 		expect(screen.queryByRole("button", { name: /to look at/ })).toBeNull();
+	});
+
+	describe("on a published roster with offers out", () => {
+		afterEach(() => {
+			vi.unstubAllGlobals();
+		});
+
+		it("given_anOfferOut_when_issuesOpens_then_listsItWithoutAddingToTheCount", async () => {
+			stubApi({});
+			const user = userEvent.setup();
+			render(
+				<QueryClientProvider client={new QueryClient()}>
+					<Roster
+						assignments={scheduleAssignmentsFixture()}
+						schedule={schedule}
+						editing={{
+							target: {
+								companyId: "c-1",
+								unit: { branchId: "b-1", departmentId: "d-1" },
+								scheduleId: "s-1",
+								runId: "r-1",
+							},
+							revision: 1,
+							shifts: [],
+							notifiesMembers: true,
+							coverOffers: {
+								offers: [
+									// Still waiting whenever the test runs.
+									coverOfferFixture({ expiresAt: "2099-01-01T00:00:00Z" }),
+								],
+								failed: false,
+								retry: vi.fn(),
+							},
+						}}
+					/>
+				</QueryClientProvider>
+			);
+
+			// The same count as without the offer: the gap is counted once.
+			await user.click(screen.getByRole("button", { name: "Issues: 4" }));
+
+			const panel = screen.getByRole("complementary", { name: "Issues" });
+			expect(
+				within(panel).getByRole("heading", { name: "Offers out" })
+			).toBeVisible();
+			expect(panel).toHaveTextContent(
+				/Aisha Rahman · Overtime · 6 h · waiting/
+			);
+		});
 	});
 });

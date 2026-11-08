@@ -8,6 +8,8 @@ import {
 	type DescriptionListItem,
 } from "@/components/ui/DescriptionList";
 import { FilterChips } from "@/components/ui/FilterChips";
+import type { CoverOffer } from "@/features/scheduling/coverOffers/api";
+import { OffersOutSection } from "@/features/scheduling/coverOffers/OffersOutSection";
 import { FindingList } from "@/features/scheduling/FindingList";
 import { FindingsPanel } from "@/features/scheduling/FindingsPanel";
 import { LastRosterChange } from "@/features/scheduling/LastRosterChange";
@@ -93,6 +95,16 @@ export type RosterEditing = {
 	notifiesMembers: boolean;
 	/** Given to someone who may change leave here too: the leave choices beside the roster's own. */
 	leave?: { viewerMembershipId: string };
+	/**
+	 * On a published roster: its cover offers, read by the page. A change that
+	 * adds or moves work then goes out as an offer, and Issues lists them.
+	 */
+	coverOffers?: {
+		offers: ReadonlyArray<CoverOffer>;
+		/** They couldn't be read: Issues says so, with Try again. */
+		failed: boolean;
+		retry: () => void;
+	};
 };
 
 export type GeneratedRosterProps = {
@@ -125,6 +137,8 @@ export type GeneratedRosterProps = {
 	editing?: RosterEditing;
 	/** The viewer's own membership, which decides where a chosen day's leave request opens. */
 	viewerMembershipId?: string;
+	/** On a member's own roster: their days with an open offer, and its deadline, said in the tile's label. */
+	offeredDays?: ReadonlyMap<string, string>;
 };
 
 const NO_DAYS: ReadonlySet<string> = new Set();
@@ -164,6 +178,7 @@ export const GeneratedRoster = ({
 	withSummary = true,
 	editing,
 	viewerMembershipId,
+	offeredDays,
 }: GeneratedRosterProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const language = i18n.resolvedLanguage ?? i18n.language;
@@ -390,6 +405,21 @@ export const GeneratedRoster = ({
 						items: leaveAndCoverItems(markedDays, t, language),
 					},
 					{
+						key: "offersOut",
+						content: editing?.coverOffers &&
+							(editing.coverOffers.failed ||
+								editing.coverOffers.offers.length > 0) && (
+								<OffersOutSection
+									assignments={assignments}
+									failed={editing.coverOffers.failed}
+									offers={editing.coverOffers.offers}
+									target={editing.target}
+									timeZone={schedule.timeZone}
+									onRetry={editing.coverOffers.retry}
+								/>
+							),
+					},
+					{
 						key: "startingPoints",
 						title: t(`${key}.startingPoints`),
 						items: startingPointItems(rows, startingRuns, t),
@@ -452,7 +482,14 @@ export const GeneratedRoster = ({
 					revision={editing.revision}
 					shifts={editing.shifts}
 					target={editing.target}
+					coverOffers={
+						editing.coverOffers && {
+							offers: editing.coverOffers.offers,
+							timeZone: schedule.timeZone,
+						}
+					}
 					onClose={close}
+					onCoverRecorded={close}
 					onLeaveChanged={close}
 					onPreviewDays={onPreviewDays}
 					onApplied={(change) => {
@@ -535,6 +572,7 @@ export const GeneratedRoster = ({
 							days={days}
 							editedDays={editedDays}
 							findings={placed}
+							offeredDays={offeredDays}
 							previewDays={previewDays}
 							rows={rows}
 							selectedDayKey={editing ? view.cell : undefined}

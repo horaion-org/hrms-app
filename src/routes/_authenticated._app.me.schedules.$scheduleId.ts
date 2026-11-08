@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { parseOfferSearch } from "@/features/scheduling/coverOffers/offerSearch";
 import { parseRosterSearch } from "@/features/scheduling/roster/rosterSearch";
 import { myRosterQuery } from "@/features/scheduling/myRoster/api";
 import { MyRosterPage, MyRosterProblem } from "@/pages/MyRoster";
@@ -10,8 +11,11 @@ import { MyRosterPage, MyRosterProblem } from "@/pages/MyRoster";
 export const Route = createFileRoute(
 	"/_authenticated/_app/me/schedules/$scheduleId"
 )({
-	// The week and the side panel shown, so a reload or a link keeps them.
-	validateSearch: parseRosterSearch,
+	// The week and the side panel shown, and the offer a link opened, so a reload or a link keeps them.
+	validateSearch: (search: Record<string, unknown>) => ({
+		...parseRosterSearch(search),
+		...parseOfferSearch(search),
+	}),
 	// Warms the roster; a failure stays in the cache for the page to explain.
 	loader: async ({ context, params }) => {
 		const companyId =

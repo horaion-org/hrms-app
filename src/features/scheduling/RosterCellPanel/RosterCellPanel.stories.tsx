@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { ReactElement } from "react";
 import { fn } from "storybook/test";
+import { coverOfferFixture } from "@/features/scheduling/coverOffers/fixtures";
 import { RosterCellPanel } from "@/features/scheduling/RosterCellPanel";
 import { scheduleAssignmentsFixture } from "@/features/scheduling/schedules/fixtures";
 import { frozenShiftsFixture } from "@/features/scheduling/shifts/fixtures";
@@ -78,5 +79,16 @@ export const DayToDecide: Story = {
 export const Leave: Story = {
 	args: {
 		assignment: roster.find((row) => row.offReason === "LEAVE")!,
+	},
+};
+
+/** A published roster with an offer out for this day: who, by when, and Withdraw. */
+export const PublishedWithOfferOut: Story = {
+	args: {
+		assignment: roster.find(
+			(row) => row.member?.membershipId === "m-1" && row.day === "2026-10-17"
+		)!,
+		notifiesMembers: true,
+		coverOffers: { offers: [coverOfferFixture()], timeZone: "Asia/Singapore" },
 	},
 };
