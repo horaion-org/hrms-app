@@ -30,6 +30,7 @@ test("log in and create a branch with an active head, then see the refreshed lis
 		code: "ORC",
 		city: "Singapore",
 		country: "SG",
+		timeZone: "Asia/Singapore",
 		status: "ACTIVE",
 	};
 	await context.route("**/api/v1/me/workspace", (route) =>
@@ -54,6 +55,7 @@ test("log in and create a branch with an active head, then see the refreshed lis
 				code: "ORC",
 				city: "Singapore",
 				country: "SG",
+				timeZone: "Asia/Singapore",
 				initialHeadCompanyMembershipIds: ["marcus-membership"],
 			});
 			created = true;
@@ -127,6 +129,11 @@ test("log in and create a branch with an active head, then see the refreshed lis
 		"Select a country"
 	);
 	await page.keyboard.press("Tab");
+	await expect(dialog.getByLabel("Time zone", { exact: true })).toBeFocused();
+	await expect(dialog.getByLabel("Time zone", { exact: true })).toHaveText(
+		"Select a time zone"
+	);
+	await page.keyboard.press("Tab");
 	await expect(
 		dialog.getByLabel("Branch heads", { exact: true })
 	).toBeFocused();
@@ -150,6 +157,11 @@ test("log in and create a branch with an active head, then see the refreshed lis
 	await dialog.getByLabel("Country", { exact: true }).click();
 	await page.getByRole("combobox", { name: "Search countries" }).fill("singap");
 	await page.getByRole("option", { name: "Singapore", exact: true }).click();
+	await dialog.getByLabel("Time zone", { exact: true }).click();
+	await page
+		.getByRole("combobox", { name: "Search city, region or offset" })
+		.fill("singapore");
+	await page.getByRole("option", { name: /Asia\/Singapore/ }).click();
 	await dialog.getByLabel("Branch heads", { exact: true }).click();
 	await page.getByRole("option", { name: /Marcus Lim/ }).click();
 	await page.keyboard.press("Escape");

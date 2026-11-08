@@ -56,7 +56,29 @@ const mockOrganisation = async (context: BrowserContext): Promise<void> => {
 	await context.route("**/api/v1/me/workspace", (route) =>
 		reply(route, {
 			companies: [
-				{ uuid: "acme", name: "Acme", permissions: OWNER, branches: [] },
+				{
+					uuid: "acme",
+					name: "Acme",
+					permissions: OWNER,
+					// Each unit lists the permissions already effective there.
+					branches: [
+						{
+							uuid: "orchard",
+							name: "Orchard Road",
+							status: "ACTIVE",
+							country: "SG",
+							permissions: OWNER,
+							departments: [
+								{
+									uuid: "foh",
+									name: "Front of house",
+									status: "ACTIVE",
+									permissions: OWNER,
+								},
+							],
+						},
+					],
+				},
 			],
 		})
 	);
@@ -71,6 +93,7 @@ const mockOrganisation = async (context: BrowserContext): Promise<void> => {
 					code: "ORC",
 					city: "Singapore",
 					country: "SG",
+					timeZone: "Asia/Singapore",
 				},
 			])
 		)
@@ -153,20 +176,31 @@ test("create a job title and see it listed", async ({ page: tab, context }) => {
 	let created = false;
 	const jobTitle = {
 		jobTitleId: "supervisor",
-		companyId: "acme",
+		branchId: "orchard",
+		branchName: "Orchard Road",
+		departmentId: "foh",
+		departmentName: "Front of house",
 		name: "Shift supervisor",
+		description: null,
 		status: "ACTIVE",
+		holderCount: 0,
 	};
-	await context.route("**/api/v1/companies/acme/job-titles**", (route) => {
-		if (route.request().method() === "POST") {
+	await context.route("**/api/v1/companies/acme/job-titles**", (route) =>
+		reply(route, page(created ? [jobTitle] : []))
+	);
+	// Job titles are created under their Department; it is preselected, being the only one.
+	await context.route(
+		"**/api/v1/companies/acme/branches/orchard/departments/foh/job-titles",
+		(route) => {
+			expect(route.request().method()).toBe("POST");
 			expect(route.request().postDataJSON()).toEqual({
 				name: "Shift supervisor",
+				description: null,
 			});
 			created = true;
 			return reply(route, jobTitle, 201);
 		}
-		return reply(route, page(created ? [jobTitle] : []));
-	});
+	);
 	await tab.goto("/login");
 	await logIn(tab);
 	await tab.getByRole("link", { name: "Organisation", exact: true }).click();
@@ -202,6 +236,7 @@ test("create a system role from the permissions grid", async ({
 		companyId: "acme",
 		name: "Auditor",
 		protectedRole: false,
+		status: "ACTIVE",
 		holderCount: 0,
 		permissions: ["branch:read", "audit_event:read"],
 	};
@@ -229,8 +264,13 @@ test("create a system role from the permissions grid", async ({
 		.click();
 	const dialog = tab.getByRole("dialog", { name: "Create system role" });
 	await dialog.getByLabel("Role name", { exact: true }).fill("Auditor");
-	await dialog.getByRole("checkbox", { name: "Activity log: read" }).check();
-	await dialog.getByRole("checkbox", { name: "Branch: read" }).check();
+	// Each resource is a named group whose permissions are labelled by action ("View", "Create", …).
+	for (const resource of ["Activity", "Branches"]) {
+		await dialog
+			.getByRole("group", { name: resource, exact: true })
+			.getByRole("checkbox", { name: "View", exact: true })
+			.check();
+	}
 	await dialog
 		.getByRole("button", { name: "Create system role", exact: true })
 		.click();
