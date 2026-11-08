@@ -66,6 +66,11 @@ export type RosterGridProps = {
 	/** Days a change being previewed would touch: outlined, dashed. */
 	previewDays?: ReadonlySet<string>;
 	/**
+	 * Days the member is offered a shift on, as `rosterCellKey` names them,
+	 * with the deadline's time: said in the tile's label only, never marked.
+	 */
+	offeredDays?: ReadonlyMap<string, string>;
+	/**
 	 * A panel is open beside the grid: tiles show their time only, in tighter
 	 * cells, so the week stays in view; the panel names the rest.
 	 */
@@ -96,6 +101,7 @@ export const RosterGrid = ({
 	selectedDayKey,
 	editedDays,
 	previewDays,
+	offeredDays,
 	compact = false,
 	className,
 }: RosterGridProps): FunctionComponent => {
@@ -139,9 +145,17 @@ export const RosterGrid = ({
 		const key = dayKey(row, date);
 		const changed = key !== undefined && editedDays?.has(key) === true;
 		const issues = cellIssues(findings, row, date);
-		const named = changed
+		const offeredBy = key === undefined ? undefined : offeredDays?.get(key);
+		const edited = changed
 			? t("scheduling.rosterEdit.edited", { label })
 			: label;
+		const named =
+			offeredBy === undefined
+				? edited
+				: t("scheduling.coverOffers.tileOffered", {
+						label: edited,
+						time: offeredBy,
+					});
 		return {
 			mark: cellMark({ issues, changed, showsIssues }),
 			label:
@@ -167,18 +181,15 @@ export const RosterGrid = ({
 				(cell.kind === "leave" && cell.leaveTypeName) ||
 				t(`scheduling.detail.${cell.kind}`);
 			// Read in words, not the tile's capitals: "Aisha Rahman, Sat: Day off".
-			const { mark, label } = cellMarking(
-				row,
-				date,
-				t("scheduling.detail.dayLabel", {
-					name,
-					day: weekday.format(dayjs(date).toDate()),
-					kind:
-						cell.kind === "leave"
-							? (cell.leaveTypeName ?? t("scheduling.rosterEdit.onLeave"))
-							: t("scheduling.rosterEdit.dayOff"),
-				})
-			);
+			const plainLabel = t("scheduling.detail.dayLabel", {
+				name,
+				day: weekday.format(dayjs(date).toDate()),
+				kind:
+					cell.kind === "leave"
+						? (cell.leaveTypeName ?? t("scheduling.rosterEdit.onLeave"))
+						: t("scheduling.rosterEdit.dayOff"),
+			});
+			const { mark, label } = cellMarking(row, date, plainLabel);
 			const looks = joinClassNames(
 				"relative flex w-full items-center justify-center rounded border text-center text-xs font-medium",
 				// Beside an open panel, as tall as a compact shift tile, so a row keeps one height.
@@ -200,7 +211,9 @@ export const RosterGrid = ({
 						{markSpot}
 						{text}
 						{/* The tile is not a button here, so its mark is said in hidden text. */}
-						{mark && <span className="sr-only">{label}</span>}
+						{(mark || label !== plainLabel) && (
+							<span className="sr-only">{label}</span>
+						)}
 					</span>
 				);
 			return (

@@ -125,6 +125,8 @@ export type GeneratedRosterProps = {
 	editing?: RosterEditing;
 	/** The viewer's own membership, which decides where a chosen day's leave request opens. */
 	viewerMembershipId?: string;
+	/** On a member's own roster: their days with an open offer, and its deadline, said in the tile's label. */
+	offeredDays?: ReadonlyMap<string, string>;
 };
 
 const NO_DAYS: ReadonlySet<string> = new Set();
@@ -164,6 +166,7 @@ export const GeneratedRoster = ({
 	withSummary = true,
 	editing,
 	viewerMembershipId,
+	offeredDays,
 }: GeneratedRosterProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const language = i18n.resolvedLanguage ?? i18n.language;
@@ -535,6 +538,7 @@ export const GeneratedRoster = ({
 							days={days}
 							editedDays={editedDays}
 							findings={placed}
+							offeredDays={offeredDays}
 							previewDays={previewDays}
 							rows={rows}
 							selectedDayKey={editing ? view.cell : undefined}
