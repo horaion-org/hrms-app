@@ -234,6 +234,8 @@ export const CreateSchedule = (): FunctionComponent => {
 	const allowed = (key: PermissionKey): boolean =>
 		saved !== undefined && access.can(key, departmentScope(saved.departmentId));
 	const canSave = !frozen && allowed("schedule:update");
+	// A generated schedule, or a draft the person may not change, opens from "View setup" to be looked at.
+	const readOnly = saved !== undefined && !canSave;
 	// A draft for a week whose roster is already published can never be published, so it isn't generated.
 	const publishedWeek = useQuery(
 		publishedWeekQuery(
@@ -370,10 +372,16 @@ export const CreateSchedule = (): FunctionComponent => {
 				{t("scheduling.create.back")}
 			</Button>
 			<h1 className="mt-4 text-4xl font-medium text-neutral-900">
-				{t("scheduling.create.title")}
+				{readOnly && draft.setup
+					? draft.setup.name
+					: t("scheduling.create.title")}
 			</h1>
 			<p className="mt-3 text-sm text-neutral-800">
-				{t("scheduling.create.subtitle")}
+				{t(
+					readOnly
+						? "scheduling.create.viewSubtitle"
+						: "scheduling.create.subtitle"
+				)}
 			</p>
 		</>
 	);
@@ -615,7 +623,7 @@ export const CreateSchedule = (): FunctionComponent => {
 						formId={setupFormId}
 						lockedDepartment={lockedDepartment}
 						periods={periods}
-						readOnly={saved !== undefined && !canSave}
+						readOnly={readOnly}
 						onSubmit={submitSetup}
 					/>
 				)}

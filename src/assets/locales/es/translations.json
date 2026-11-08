@@ -2522,6 +2522,7 @@
 			"back": "Volver al resumen",
 			"title": "Crear horario",
 			"subtitle": "Configura la generación de tu horario en unos pocos pasos.",
+			"viewSubtitle": "Cómo se configuró este horario: su departamento, periodo, turnos y restricciones.",
 			"steps": {
 				"setup": "Configuración",
 				"shifts": "Turnos",
@@ -2574,6 +2575,7 @@
 		"setup": {
 			"title": "Configuración del horario",
 			"description": "Selecciona el departamento y el periodo de tu nuevo horario.",
+			"readOnlyDescription": "El departamento y el periodo de programación para los que se configuró este horario.",
 			"department": "Departamento",
 			"departmentPlaceholder": "Selecciona un departamento",
 			"departmentsNone": "No tienes permiso para crear horarios en ningún departamento activo.",

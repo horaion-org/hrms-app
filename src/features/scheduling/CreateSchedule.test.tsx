@@ -371,6 +371,66 @@ describe("Create Schedule: opening and setup", () => {
 });
 
 describe("Create Schedule: a reopened draft", () => {
+	const SETUP_OF_S1 =
+		"/scheduling/new?step=setup&scheduleId=s-1&departmentId=d-1";
+
+	it("given_aGeneratedSchedule_when_itsSetupIsViewed_then_itIsTitledByItsNameAndReadsAsSetUp", async () => {
+		await open(SETUP_OF_S1, {
+			[`GET ${SCHEDULE}`]: reply(
+				generatedScheduleFixture({ status: "GENERATED" })
+			),
+			[`GET ${SCHEDULE_SHIFTS}`]: reply(frozenShiftsFixture()),
+			[`GET ${SCHEDULE_CONSTRAINTS}`]: reply(frozenConstraintsFixture()),
+		});
+
+		expect(
+			await screen.findByRole("heading", {
+				level: 1,
+				name: DRAFT_SETUP.name,
+			})
+		).toBeVisible();
+		expect(
+			screen.queryByRole("heading", { level: 1, name: "Create schedule" })
+		).toBeNull();
+		expect(
+			screen.getByText(
+				"How this schedule was set up: its department, period, shifts and constraints."
+			)
+		).toBeVisible();
+		expect(
+			screen.getByText(
+				"The department and scheduling period this schedule was set up for."
+			)
+		).toBeVisible();
+		expect(
+			screen.queryByText(
+				"Select the department and scheduling period for your new schedule."
+			)
+		).toBeNull();
+		expect(
+			screen.getByRole("textbox", { name: /Schedule name/ })
+		).toHaveAttribute("readonly");
+	});
+
+	it("given_aDraftThePersonMayChange_when_itsSetupIsOpened_then_itStaysTheCreateWizard", async () => {
+		await open(SETUP_OF_S1);
+
+		expect(
+			await screen.findByRole("heading", {
+				level: 1,
+				name: "Create schedule",
+			})
+		).toBeVisible();
+		expect(
+			await screen.findByText(
+				"Select the department and scheduling period for your new schedule."
+			)
+		).toBeVisible();
+		expect(
+			screen.getByRole("textbox", { name: /Schedule name/ })
+		).not.toHaveAttribute("readonly");
+	});
+
 	it("given_aDraftsUrl_when_reopened_then_listsItsShiftsTickedAsTheApiKeepsThem", async () => {
 		const user = userEvent.setup();
 		const { calls } = await reopen();

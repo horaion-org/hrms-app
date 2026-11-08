@@ -211,8 +211,12 @@ export const ScheduleSetupStep = ({
 	return (
 		<StepPanel
 			className={className}
-			description={t("scheduling.setup.description")}
 			title={t("scheduling.setup.title")}
+			description={t(
+				readOnly
+					? "scheduling.setup.readOnlyDescription"
+					: "scheduling.setup.description"
+			)}
 		>
 			<form
 				noValidate
