@@ -1948,7 +1948,8 @@
 			"people": "Personas",
 			"organisation": "Organización"
 		},
-		"comingSoon": "Este módulo estará disponible pronto."
+		"comingSoon": "Este módulo estará disponible pronto.",
+		"menu": "Menú"
 	},
 	"people": {
 		"title": "Resumen de personas",

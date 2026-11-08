@@ -777,7 +777,8 @@
 		"settings": "Settings",
 		"myProfile": "My profile",
 		"accountMenu": "Account menu",
-		"changePassword": "Change password"
+		"changePassword": "Change password",
+		"menu": "Menu"
 	},
 	"people": {
 		"title": "People overview",

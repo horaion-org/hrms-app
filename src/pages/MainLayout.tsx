@@ -115,7 +115,7 @@ export const MainLayout = (): FunctionComponent => {
 			}
 			sidebar={
 				<Sidebar
-					className="static h-auto w-full sm:sticky sm:h-dvh sm:w-70"
+					menuLabel={t("shell.menu")}
 					footer={
 						<div className="flex flex-col gap-3">
 							{usableCompanies(context.currentUser).length > 1 && (

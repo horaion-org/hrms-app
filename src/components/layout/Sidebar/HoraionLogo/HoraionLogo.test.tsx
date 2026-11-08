@@ -15,7 +15,7 @@ describe("HoraionLogo", () => {
 	it("decorates the named home link without a duplicate image announcement", async () => {
 		render(
 			<MemoryRouterHarness>
-				<Sidebar>{null}</Sidebar>
+				<Sidebar menuLabel="Menu">{null}</Sidebar>
 			</MemoryRouterHarness>
 		);
 		const home = await screen.findByRole("link", { name: "Horaion home" });

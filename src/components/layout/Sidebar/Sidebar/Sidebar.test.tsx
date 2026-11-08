@@ -25,7 +25,7 @@ describe("Sidebar", () => {
 	it("navigates between Modules and home, moving the current announcement and filled icon", async () => {
 		const user = userEvent.setup();
 		const router = createMemoryRouter(
-			<Sidebar>
+			<Sidebar menuLabel="Menu">
 				<SidebarItem
 					activeIcon={DashboardFilledIcon}
 					activeOptions={{ exact: true }}
@@ -70,7 +70,7 @@ describe("Sidebar", () => {
 		const user = userEvent.setup();
 		render(
 			<MemoryRouterHarness>
-				<Sidebar>
+				<Sidebar menuLabel="Menu">
 					{["Dashboard", "Scheduling", "Leave", "People", "Organisation"].map(
 						(label) => (
 							<SidebarItem
@@ -90,18 +90,19 @@ describe("Sidebar", () => {
 			</MemoryRouterHarness>
 		);
 		await screen.findByRole("navigation", { name: "Main navigation" });
-		await [
-			"Horaion home",
-			"Dashboard",
-			"Scheduling",
-			"Leave",
-			"People",
-			"Organisation",
-		].reduce(async (previous, name) => {
-			await previous;
-			await user.tab();
-			expect(screen.getByRole("link", { name })).toHaveFocus();
-		}, Promise.resolve());
+		await user.tab();
+		expect(screen.getByRole("link", { name: "Horaion home" })).toHaveFocus();
+		// The small-screen Menu button: CSS hides it from `sm`, which jsdom does not apply.
+		await user.tab();
+		expect(screen.getByRole("button", { name: "Menu" })).toHaveFocus();
+		await ["Dashboard", "Scheduling", "Leave", "People", "Organisation"].reduce(
+			async (previous, name) => {
+				await previous;
+				await user.tab();
+				expect(screen.getByRole("link", { name })).toHaveFocus();
+			},
+			Promise.resolve()
+		);
 		await user.keyboard("{Enter}");
 		expect(screen.getByRole("link", { name: "Organisation" })).toHaveAttribute(
 			"aria-current",
@@ -115,7 +116,7 @@ describe("Sidebar", () => {
 	it("exposes supplied items as a labelled navigation list", async () => {
 		render(
 			<MemoryRouterHarness>
-				<Sidebar className="consumer-layout">
+				<Sidebar className="consumer-layout" menuLabel="Menu">
 					<SidebarItem
 						activeIcon={DashboardFilledIcon}
 						icon={DashboardIcon}
@@ -136,11 +137,16 @@ describe("Sidebar", () => {
 		expect(
 			screen.queryByRole("link", { name: "Dashboard" })
 		).not.toBeInTheDocument();
-		expect(navigation.parentElement).toHaveClass(
-			"consumer-layout",
-			"sticky",
-			"top-0",
-			"h-dvh",
+		expect(
+			screen
+				.getByRole("link", { name: "Horaion home" })
+				.closest(".consumer-layout")
+		).toHaveClass(
+			"w-full",
+			"sm:sticky",
+			"sm:top-0",
+			"sm:h-dvh",
+			"sm:w-70",
 			"overflow-y-auto"
 		);
 	});
@@ -151,7 +157,10 @@ it("renders a usable footer after navigation", async () => {
 	const logOut = vi.fn();
 	render(
 		<MemoryRouterHarness>
-			<Sidebar footer={<Button onClick={logOut}>Log out</Button>}>
+			<Sidebar
+				footer={<Button onClick={logOut}>Log out</Button>}
+				menuLabel="Menu"
+			>
 				{null}
 			</Sidebar>
 		</MemoryRouterHarness>
@@ -161,7 +170,84 @@ it("renders a usable footer after navigation", async () => {
 	await user.tab();
 	expect(screen.getByRole("link", { name: "Horaion home" })).toHaveFocus();
 	await user.tab();
+	expect(screen.getByRole("button", { name: "Menu" })).toHaveFocus();
+	await user.tab();
 	expect(button).toHaveFocus();
 	await user.keyboard("{Enter}");
 	expect(logOut).toHaveBeenCalledOnce();
+});
+
+describe("Sidebar below sm", () => {
+	const renderWithTwoModules = async (): Promise<
+		ReturnType<typeof createMemoryRouter>
+	> => {
+		const router = createMemoryRouter(
+			<Sidebar footer={<Button>Log out</Button>} menuLabel="Menu">
+				<SidebarItem
+					activeIcon={DashboardFilledIcon}
+					activeOptions={{ exact: true }}
+					icon={DashboardIcon}
+					label="Dashboard"
+					to="/"
+				/>
+				<SidebarItem
+					activeIcon={SchedulingFilledIcon}
+					icon={SchedulingIcon}
+					label="Scheduling"
+					search={{ module: "scheduling" }}
+					to="/register"
+				/>
+			</Sidebar>
+		);
+		await router.load();
+		render(<RouterProvider router={router} />);
+		return router;
+	};
+	const menuPanel = (menu: HTMLElement): HTMLElement | null =>
+		document.getElementById(menu.getAttribute("aria-controls") ?? "");
+
+	it("starts as a bar with a closed Menu, so the page follows the bar", async () => {
+		await renderWithTwoModules();
+		const menu = screen.getByRole("button", { name: "Menu" });
+		const panel = menuPanel(menu);
+
+		expect(menu).toHaveAttribute("aria-expanded", "false");
+		expect(menu).toHaveClass("sm:hidden");
+		expect(panel).toContainElement(
+			screen.getByRole("navigation", { name: "Main navigation" })
+		);
+		expect(panel).toContainElement(
+			screen.getByRole("button", { name: "Log out" })
+		);
+		// Hidden below sm, always shown from sm.
+		expect(panel).toHaveClass("hidden", "sm:flex");
+	});
+
+	it("opens the navigation from Menu and closes it again after a link is followed", async () => {
+		const user = userEvent.setup();
+		const router = await renderWithTwoModules();
+		const menu = screen.getByRole("button", { name: "Menu" });
+		const panel = menuPanel(menu);
+
+		await user.click(menu);
+		expect(menu).toHaveAttribute("aria-expanded", "true");
+		expect(panel).toHaveClass("flex");
+		expect(panel).not.toHaveClass("hidden");
+
+		await user.click(screen.getByRole("link", { name: "Scheduling" }));
+		expect(router.state.location.href).toBe("/register?module=scheduling");
+		expect(menu).toHaveAttribute("aria-expanded", "false");
+		expect(panel).toHaveClass("hidden");
+	});
+
+	it("closes from Menu without navigating", async () => {
+		const user = userEvent.setup();
+		await renderWithTwoModules();
+		const menu = screen.getByRole("button", { name: "Menu" });
+
+		await user.click(menu);
+		await user.click(menu);
+		expect(menu).toHaveAttribute("aria-expanded", "false");
+		expect(menuPanel(menu)).toHaveClass("hidden");
+	});
 });

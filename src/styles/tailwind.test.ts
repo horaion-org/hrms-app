@@ -455,7 +455,7 @@ describe("compiled app stylesheet", () => {
 
 	it("compiles every colour the Sidebar rail and logo render", async () => {
 		const colours = await routedColourClasses(
-			createElement(Sidebar, { children: null })
+			createElement(Sidebar, { children: null, menuLabel: "Menu" })
 		);
 		expect(colours).toEqual(
 			expect.arrayContaining([
