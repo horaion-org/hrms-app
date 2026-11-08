@@ -10,6 +10,7 @@ import type {
 import {
 	clientFileProblem,
 	errorRowsCsv,
+	importInvitations,
 	problemGroups,
 	problemText,
 	refusalCode,
@@ -72,6 +73,35 @@ describe("problemGroups", () => {
 			["INVALID_PHONE", [3]],
 			["ALREADY_MEMBER", [2]],
 		]);
+	});
+});
+
+describe("importInvitations", () => {
+	const ended = {
+		status: "COMPLETED",
+		invitablePeople: 3,
+		invitationsLeftToday: 2,
+	} as MemberImport;
+
+	it("offers the invite once the import ended, saying whether today's limit fits everyone", () => {
+		expect(importInvitations(ended)).toEqual({
+			count: 3,
+			left: 2,
+			fits: false,
+		});
+		expect(importInvitations({ ...ended, invitationsLeftToday: 3 })).toEqual({
+			count: 3,
+			left: 3,
+			fits: true,
+		});
+	});
+
+	it("offers nothing while it runs, with no one left, or from an API that does not say", () => {
+		expect(importInvitations({ ...ended, status: "RUNNING" })).toBeUndefined();
+		expect(importInvitations({ ...ended, invitablePeople: 0 })).toBeUndefined();
+		expect(
+			importInvitations({ ...ended, invitablePeople: null })
+		).toBeUndefined();
 	});
 });
 

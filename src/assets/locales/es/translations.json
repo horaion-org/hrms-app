@@ -2116,7 +2116,8 @@
 				"INVITATIONS_UNAVAILABLE": "Todavía no se pueden enviar invitaciones en bloque. Importa sin ellas.",
 				"RATE_LIMITED": "Has alcanzado el límite de importación por ahora. Inténtalo más tarde.",
 				"UNKNOWN": "Algo salió mal. Inténtalo de nuevo.",
-				"IMPORT_MOSTLY_INVALID": "La mayoría de las filas tienen problemas, así que parece el archivo o las columnas equivocados. Corrige el archivo primero."
+				"IMPORT_MOSTLY_INVALID": "La mayoría de las filas tienen problemas, así que parece el archivo o las columnas equivocados. Corrige el archivo primero.",
+				"INVITATION_LIMIT_EXCEEDED": "Son más correos de invitación de los que se pueden enviar hoy. Inténtalo mañana."
 			},
 			"check": {
 				"nothingSaved": "Todavía no se ha guardado nada.",
@@ -2140,7 +2141,7 @@
 				"noProblem": "Lista",
 				"sendInvitations": "Enviar invitaciones ahora",
 				"invitationsOn": "Cada persona recibe un correo con una contraseña temporal válida durante 7 días.",
-				"invitationsOff": "Todavía no se pueden enviar invitaciones en bloque; envía cada una desde el perfil de la persona tras importar.",
+				"invitationsOff": "Las invitaciones no se envían durante la importación. Después, invita a todos desde el resultado de la importación.",
 				"running": "Otra importación sigue en curso en esta empresa.",
 				"import_one": "Importar {{count}} persona",
 				"import_other": "Importar {{count}} personas",
@@ -2194,7 +2195,19 @@
 				"resolvedSummary_other": "{{count}} filas que no se añadieron se han añadido después.",
 				"stoppedHint": "Se procesaron {{processed}} de {{total}} filas antes de que se detuviera. Importa el mismo archivo de nuevo para añadir el resto: las personas ya añadidas se omiten.",
 				"corrected_one": "{{count}} correo corregido",
-				"corrected_other": "{{count}} correos corregidos"
+				"corrected_other": "{{count}} correos corregidos",
+				"invite_one": "Invitar a {{count}} persona",
+				"invite_other": "Invitar a todos ({{count}})",
+				"invited": "Invitaciones enviadas: {{sent}} · {{skipped}} omitidas (ya iniciaron sesión) · {{failed}} fallidas",
+				"inviteConfirm": {
+					"title_one": "¿Invitar a {{count}} persona?",
+					"title_other": "¿Invitar a {{count}} personas?",
+					"body": "Cada persona que añadió esta importación y aún no ha iniciado sesión recibe un correo con una contraseña temporal válida durante 7 días.",
+					"left": "Hoy todavía se pueden enviar {{count}} correos de invitación.",
+					"overLimit": "Hoy solo se pueden enviar {{left}} correos de invitación. Inténtalo mañana o invita a las personas desde sus perfiles.",
+					"confirm": "Enviar invitaciones",
+					"cancel": "Cancelar"
+				}
 			},
 			"results": {
 				"ADDED": "Añadida",

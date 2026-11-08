@@ -1114,7 +1114,8 @@
 				"INVITATIONS_UNAVAILABLE": "Invitations can't be sent in bulk yet. Import without them.",
 				"RATE_LIMITED": "You've reached the import limit for now. Try again later.",
 				"UNKNOWN": "Something went wrong. Try again.",
-				"IMPORT_MOSTLY_INVALID": "Most rows have problems, so this looks like the wrong file or columns. Fix the file first."
+				"IMPORT_MOSTLY_INVALID": "Most rows have problems, so this looks like the wrong file or columns. Fix the file first.",
+				"INVITATION_LIMIT_EXCEEDED": "That's more invitation emails than can be sent today. Try again tomorrow."
 			},
 			"check": {
 				"nothingSaved": "Nothing has been saved yet.",
@@ -1138,7 +1139,7 @@
 				"noProblem": "Ready",
 				"sendInvitations": "Send invitations now",
 				"invitationsOn": "Each person gets an email with a temporary password, valid for 7 days.",
-				"invitationsOff": "Invitations can't be sent in bulk yet; send each one from the person's profile after the import.",
+				"invitationsOff": "Invitations aren't sent during the import. Afterwards, invite everyone from the import's result.",
 				"running": "Another import is still running for this company.",
 				"import_one": "Import {{count}} person",
 				"import_other": "Import {{count}} people",
@@ -1192,7 +1193,19 @@
 				"resolvedSummary_other": "{{count}} rows not added then have been added since.",
 				"stoppedHint": "{{processed}} of {{total}} rows were processed before it stopped. Import the same file again to add the rest: people already added are skipped.",
 				"corrected_one": "{{count}} email corrected",
-				"corrected_other": "{{count}} emails corrected"
+				"corrected_other": "{{count}} emails corrected",
+				"invite_one": "Invite {{count}} person",
+				"invite_other": "Invite everyone ({{count}})",
+				"invited": "Invitations sent: {{sent}} · {{skipped}} skipped (already signed in) · {{failed}} failed",
+				"inviteConfirm": {
+					"title_one": "Invite {{count}} person?",
+					"title_other": "Invite {{count}} people?",
+					"body": "Each person this import added who hasn't signed in yet gets an email with a temporary password, valid for 7 days.",
+					"left": "{{count}} invitation emails can still be sent today.",
+					"overLimit": "Only {{left}} invitation emails can be sent today. Try again tomorrow, or invite people from their profiles.",
+					"confirm": "Send invitations",
+					"cancel": "Cancel"
+				}
 			},
 			"results": {
 				"ADDED": "Added",

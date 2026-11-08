@@ -215,6 +215,30 @@ export const memberImportQuery = (
 		retry,
 	});
 
+const invitationsSentSchema = z.object({
+	sent: z.number(),
+	skipped: z.number(),
+	failed: z.number(),
+});
+
+/** What "Invite everyone from this import" did, counted by person. */
+export type InvitationsSent = z.infer<typeof invitationsSentSchema>;
+
+/**
+ * Sends the invitation email to everyone the import added or corrected who
+ * has not signed in yet. Refused as a whole (429 INVITATION_LIMIT_EXCEEDED)
+ * when they are more than today's limit allows.
+ */
+export const inviteImportMembers = (
+	companyId: string,
+	importId: string
+): Promise<InvitationsSent> =>
+	apiRequest(
+		`${importsPath(companyId)}/${encodeURIComponent(importId)}/invitations`,
+		invitationsSentSchema,
+		{ method: "POST" }
+	);
+
 /** The company's recent imports the person may read, newest first. */
 export const recentImportsQuery = (
 	companyId: string

@@ -143,6 +143,22 @@ export const resultRowsCsv = (
 	]),
 ];
 
+/**
+ * Whom "Invite everyone from this import" would reach once the import has
+ * ended, and whether today's limit has room for them all: nothing to offer
+ * while it runs, from an API that does not say, or when no one is left.
+ */
+export const importInvitations = (
+	memberImport: MemberImport
+): { count: number; left: number; fits: boolean } | undefined => {
+	const ended =
+		memberImport.status === "COMPLETED" || memberImport.status === "FAILED";
+	const count = memberImport.invitablePeople ?? 0;
+	if (!ended || count === 0) return undefined;
+	const left = memberImport.invitationsLeftToday ?? count;
+	return { count, left, fits: count <= left };
+};
+
 const REFUSAL_CODES = [
 	"UNSUPPORTED_FILE",
 	"MISSING_COLUMNS",
@@ -153,6 +169,7 @@ const REFUSAL_CODES = [
 	"IMPORT_HAS_ERRORS",
 	"IMPORT_MOSTLY_INVALID",
 	"INVITATIONS_UNAVAILABLE",
+	"INVITATION_LIMIT_EXCEEDED",
 	"RATE_LIMITED",
 	"UNKNOWN",
 ] as const;

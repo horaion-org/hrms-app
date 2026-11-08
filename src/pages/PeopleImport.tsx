@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/Checkbox";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { DownloadIcon } from "@/components/ui/Icon";
 import { Stepper, StepperStep } from "@/components/ui/Stepper";
+import { Toast } from "@/components/ui/Toast";
 import { ImportHistory } from "@/features/imports/ImportHistory";
 import { mergeImportHistory } from "@/features/imports/importHistory";
 import { ImportTemplateStep } from "@/features/imports/ImportTemplateStep";
@@ -38,10 +39,13 @@ import {
 import {
 	clientFileProblem,
 	errorRowsCsv,
+	importInvitations,
 	refusalCode,
 	resultRowsCsv,
 	type RefusalCode,
 } from "@/features/people/import/importText";
+import { useImportInvitations } from "@/features/people/import/useImportInvitations";
+import { useAccess } from "@/features/workspace/useAccess";
 
 const route = getRouteApi("/_authenticated/_app/settings_/data/import-people");
 
@@ -50,6 +54,8 @@ const route = getRouteApi("/_authenticated/_app/settings_/data/import-people");
  * upload a file, read its check (nothing saved yet) and import it, then follow
  * the import in the background. The import being followed lives in the URL,
  * so leaving and coming back, or a link from Import history, reopens it.
+ * Once it ends, everyone it added who has not signed in yet can be invited in
+ * one go, within the day's invitation limit.
  */
 export const PeopleImport = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
@@ -79,6 +85,15 @@ export const PeopleImport = (): FunctionComponent => {
 		enabled: openedImportId !== undefined,
 	});
 	const recent = useQuery(recentImportsQuery(companyId));
+	// Whoever may add people may invite the ones an import added.
+	const canInvite = useAccess().canAnywhere("member_profile:create");
+	const invitations = current.data && importInvitations(current.data);
+	const inviting = useImportInvitations(companyId, openedImportId ?? "");
+	const [confirmingInvite, setConfirmingInvite] = useState(false);
+	const [inviteToast, setInviteToast] = useState<{
+		id: number;
+		text: string;
+	}>();
 	const starting = useMutation({
 		mutationFn: (chosen: File) =>
 			startImport(companyId, chosen, { sendInvitations, skipInvalid }),
@@ -304,6 +319,19 @@ export const PeopleImport = (): FunctionComponent => {
 									>
 										{t("people.importPage.result.toPeople")}
 									</Button>
+									{canInvite && invitations && (
+										<Button
+											variant="secondary"
+											onClick={() => {
+												inviting.reset();
+												setConfirmingInvite(true);
+											}}
+										>
+											{t("people.importPage.result.invite", {
+												count: invitations.count,
+											})}
+										</Button>
+									)}
 									<Button onClick={wizard.startOver}>
 										{t("people.importPage.result.another")}
 									</Button>
@@ -318,6 +346,57 @@ export const PeopleImport = (): FunctionComponent => {
 						)
 					))}
 			</div>
+			{confirmingInvite && invitations && (
+				<ConfirmDialog
+					cancelLabel={t("people.importPage.result.inviteConfirm.cancel")}
+					confirmDisabled={!invitations.fits}
+					confirmLabel={t("people.importPage.result.inviteConfirm.confirm")}
+					description={t("people.importPage.result.inviteConfirm.body")}
+					submitting={inviting.isPending}
+					error={
+						inviting.isError
+							? t(`people.importPage.refusals.${refusalCode(inviting.error)}`)
+							: undefined
+					}
+					title={t("people.importPage.result.inviteConfirm.title", {
+						count: invitations.count,
+					})}
+					onClose={() => {
+						setConfirmingInvite(false);
+					}}
+					onConfirm={() => {
+						inviting.mutate(undefined, {
+							onSuccess: (sent) => {
+								setConfirmingInvite(false);
+								setInviteToast({
+									id: Date.now(),
+									text: t("people.importPage.result.invited", sent),
+								});
+							},
+						});
+					}}
+				>
+					<p className="text-sm text-neutral-800">
+						{invitations.fits
+							? t("people.importPage.result.inviteConfirm.left", {
+									count: invitations.left,
+								})
+							: t("people.importPage.result.inviteConfirm.overLimit", {
+									left: invitations.left,
+								})}
+					</p>
+				</ConfirmDialog>
+			)}
+			{inviteToast && (
+				<Toast
+					key={inviteToast.id}
+					onDismiss={() => {
+						setInviteToast(undefined);
+					}}
+				>
+					{inviteToast.text}
+				</Toast>
+			)}
 			{(currentStep === TEMPLATE_STEP || currentStep === IMPORT_STEP) &&
 				recent.data && (
 					<ImportHistory
