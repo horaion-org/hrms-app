@@ -1,6 +1,6 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { resetApiClient } from "@/common/api-client";
 import { companyWideWorkspace } from "@/common/testing/effectiveWorkspace";
 import {
@@ -18,6 +18,7 @@ import {
 import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
 import type { Schedule } from "@/features/scheduling/schedules/api";
+import type { Workspace } from "@/features/workspace/api";
 import {
 	generatedScheduleFixture,
 	scheduleFixture,
@@ -452,5 +453,45 @@ it("offers no Filters while the header Branch has only one Department to choose"
 		expect(
 			screen.queryByRole("button", { name: "Filters" })
 		).not.toBeInTheDocument();
+	});
+});
+
+describe("the Scheduling link in the main navigation", () => {
+	const openSchedulingAs = async (workspace: Workspace): Promise<void> => {
+		vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+		stubApi({
+			"POST /api/v1/public/sessions/refreshes": accessPassReply(),
+			"GET /api/v1/me": currentUserReply(),
+			"GET /api/v1/me/workspace": { status: 200, body: envelope(workspace) },
+			"GET /api/v1/companies/c-1/schedules": {
+				status: 200,
+				body: envelope({ content: [], page: { hasNext: false } }),
+			},
+		});
+		app = await openApp("/scheduling");
+		renderAuthApp(app);
+	};
+	const schedulingLink = async (): Promise<HTMLElement | null> =>
+		within(
+			await screen.findByRole("navigation", { name: "Main navigation" })
+		).queryByRole("link", { name: "Scheduling" });
+
+	it("is not offered to someone who may read no schedule anywhere", async () => {
+		await openSchedulingAs(schedulingWorkspace(["leave_request:read"]));
+
+		expect(
+			await screen.findByText("You do not have permission to view schedules.")
+		).toBeVisible();
+		expect(await schedulingLink()).not.toBeInTheDocument();
+	});
+
+	it("is offered when schedule:read is held at one Department only", async () => {
+		const workspace = schedulingWorkspace([]);
+		workspace.companies[0]?.branches[0]?.departments[0]?.permissions.push(
+			"schedule:read"
+		);
+		await openSchedulingAs(workspace);
+
+		expect(await schedulingLink()).toBeVisible();
 	});
 });
