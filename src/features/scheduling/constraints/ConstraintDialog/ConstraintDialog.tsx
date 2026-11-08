@@ -155,8 +155,11 @@ export const ConstraintDialog = ({
 			}),
 		})
 	);
-	const typeHint =
-		options.status === "pending"
+	// A saved company rule keeps its type (the API answers CONSTRAINT_TYPE_FIXED); a new rule is added instead.
+	const typeFixed = withLock && editing !== undefined;
+	const typeHint = typeFixed
+		? t(`${key}.typeFixed`)
+		: options.status === "pending"
 			? t(`${key}.optionsLoading`)
 			: options.status === "hidden"
 				? t(`${key}.optionsHidden`)
@@ -470,6 +473,7 @@ export const ConstraintDialog = ({
 					typeOptions,
 					typeHint,
 					offered === undefined ||
+						typeFixed ||
 						replacing !== undefined ||
 						editing?.overridesConstraintId != null
 				)}
