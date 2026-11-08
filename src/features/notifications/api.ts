@@ -54,6 +54,24 @@ export const notificationSchema = z.object({
 	approvalSubjectType: z.string().nullish(),
 	/** The approval's subject: the schedule, for a publication. */
 	approvalSubjectId: z.string().nullish(),
+	/** The cover offer a COVER_OFFER_SENT or COVER_OFFER_ANSWERED is about; null for every other type. */
+	// Optional rather than defaulted, so rows built in fixtures need not name them.
+	coverOfferId: z.string().nullish(),
+	/**
+	 * What a cover offer row reads without another request: the day, the
+	 * deadline (null for a recorded yes) and, on COVER_OFFER_ANSWERED only,
+	 * how it ended. Dates and a code only.
+	 */
+	coverOffer: z
+		.object({
+			rosterDate: z.iso.date(),
+			expiresAt: z.iso.datetime({ offset: true }).nullable(),
+			outcome: z
+				.enum(["ACCEPTED", "DECLINED", "EXPIRED"])
+				.nullable()
+				.catch(null),
+		})
+		.nullish(),
 	/** The roster day a ROSTER_DAY_NEEDS_DECISION opens; null for every other type. */
 	rosterDay: z.iso
 		.date()

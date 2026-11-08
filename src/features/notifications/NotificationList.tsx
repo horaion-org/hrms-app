@@ -51,7 +51,7 @@ export const NotificationList = ({
 	const access = useAccess();
 	const allowed =
 		audience === "PERSONAL" || canSeeReviewNotifications(access.canAnywhere);
-	const { t } = useTranslation();
+	const { t, i18n } = useTranslation();
 	const now = useNow(ONE_MINUTE_MS);
 	const [page, setPage] = useState(1);
 	const [unreadOnly, setUnreadOnly] = useState(false);
@@ -205,7 +205,10 @@ export const NotificationList = ({
 				<>
 					<ul className="divide-y divide-neutral-300">
 						{rows.map((notification, index) => {
-							const presentation = presentNotification(notification);
+							const presentation = presentNotification(notification, {
+								language: i18n.language,
+								now,
+							});
 							const title = t(presentation.title, presentation.values);
 							const target = notificationTarget(notification, audience);
 							const titleClasses = `text-ink-blue-900 ${notification.readAt ? "" : "font-semibold"}`;

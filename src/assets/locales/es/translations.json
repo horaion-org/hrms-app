@@ -40,7 +40,9 @@
 			"MEMBER_IMPORT_FINISHED": "Tu importación terminó.",
 			"LEAVE_REQUEST_RECORDED": "Se registró un permiso para ti. Ábrelo para ver el motivo.",
 			"LEAVE_REQUEST_CHANGED": "Tu permiso cambió. Ábrelo para ver el motivo.",
-			"LEAVE_REQUEST_CANCELLED": "Tu permiso se canceló. Ábrelo para ver el motivo."
+			"LEAVE_REQUEST_CANCELLED": "Tu permiso se canceló. Ábrelo para ver el motivo.",
+			"COVER_OFFER_SENT": "Te ofrecen un turno.",
+			"COVER_OFFER_ANSWERED": "Han respondido a tu oferta de cobertura."
 		},
 		"operationSucceeded": "Operación completada correctamente.",
 		"justNow": "Ahora mismo",
@@ -56,6 +58,12 @@
 		"importResult": {
 			"finished": "Importación terminada: {{added}} añadidas, {{skipped}} omitidas, {{failed}} con error.",
 			"stopped": "Importación detenida: {{added}} añadidas, {{skipped}} omitidas, {{failed}} con error."
+		},
+		"coverOffer": {
+			"sent": "Te ofrecen un turno: {{day}}, responde antes de las {{time}}",
+			"accepted": "Aceptaron tu oferta para el {{day}}.",
+			"declined": "Rechazaron tu oferta para el {{day}}.",
+			"expired": "Nadie respondió a tu oferta para el {{day}}."
 		}
 	},
 	"pagination": {

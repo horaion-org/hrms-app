@@ -40,7 +40,9 @@
 			"MEMBER_IMPORT_FINISHED": "Your import finished.",
 			"LEAVE_REQUEST_RECORDED": "Leave was recorded for you. Open it to see why.",
 			"LEAVE_REQUEST_CHANGED": "Your leave was changed. Open it to see why.",
-			"LEAVE_REQUEST_CANCELLED": "Your leave was cancelled. Open it to see why."
+			"LEAVE_REQUEST_CANCELLED": "Your leave was cancelled. Open it to see why.",
+			"COVER_OFFER_SENT": "You’re offered a shift.",
+			"COVER_OFFER_ANSWERED": "Your cover offer was answered."
 		},
 		"operationSucceeded": "Operation completed successfully.",
 		"justNow": "Just now",
@@ -56,6 +58,12 @@
 		"importResult": {
 			"finished": "Import finished: {{added}} added, {{skipped}} skipped, {{failed}} failed.",
 			"stopped": "Import stopped: {{added}} added, {{skipped}} skipped, {{failed}} failed."
+		},
+		"coverOffer": {
+			"sent": "You’re offered a shift: {{day}}, answer by {{time}}",
+			"accepted": "Your offer for {{day}} was accepted.",
+			"declined": "Your offer for {{day}} was declined.",
+			"expired": "Nobody answered your offer for {{day}}."
 		}
 	},
 	"pagination": {

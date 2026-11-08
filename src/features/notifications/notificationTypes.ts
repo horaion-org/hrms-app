@@ -3,14 +3,18 @@ import type { Heroicon } from "@/common/types";
 import {
 	ApproveRequestsIcon,
 	CrossIcon,
+	FillShiftsIcon,
 	InfoIcon,
 	PublishIcon,
 	SchedulingIcon,
 	SwapIcon,
 	TickIcon,
+	TimeIcon,
 	UploadIcon,
 } from "@/components/ui/Icon";
 import type { InboxNotification } from "@/features/notifications/api";
+import { formatOfferTime } from "@/features/scheduling/coverOffers/coverOfferRules";
+import { formatDay } from "@/features/scheduling/periods";
 
 /** Warning asks the reader to act, success and error are outcomes, info is a fact, neutral is unrecognised. */
 export type NotificationTone =
@@ -110,6 +114,18 @@ const NOTIFICATION_TYPES = {
 		category: "schedule",
 		title: "approvals.notifications.decided",
 	},
+	COVER_OFFER_SENT: {
+		icon: FillShiftsIcon,
+		tone: "warning",
+		category: "schedule",
+		title: "notifications.types.COVER_OFFER_SENT",
+	},
+	COVER_OFFER_ANSWERED: {
+		icon: FillShiftsIcon,
+		tone: "info",
+		category: "schedule",
+		title: "notifications.types.COVER_OFFER_ANSWERED",
+	},
 	MEMBER_IMPORT_FINISHED: {
 		icon: UploadIcon,
 		tone: "success",
@@ -142,17 +158,92 @@ export const describeNotificationType = (
 
 /** How one notification reads: its type's look, adjusted by its payload, and the values its copy needs. */
 export type NotificationPresentation = NotificationTypeDescriptor & {
-	values: Record<string, number> | undefined;
+	values: Record<string, number | string> | undefined;
+};
+
+/** What a row's copy needs to word dates and times: the person's language and the clock. */
+export type NotificationWording = { language: string; now: Date };
+
+/** How an answered cover offer reads: an accepted one is good news; a decline or no answer leaves the gap. */
+const COVER_OFFER_OUTCOMES = {
+	ACCEPTED: {
+		icon: TickIcon,
+		tone: "success",
+		title: "notifications.coverOffer.accepted",
+	},
+	DECLINED: {
+		icon: CrossIcon,
+		tone: "warning",
+		title: "notifications.coverOffer.declined",
+	},
+	EXPIRED: {
+		icon: TimeIcon,
+		tone: "warning",
+		title: "notifications.coverOffer.expired",
+	},
+} as const satisfies Record<
+	string,
+	Pick<NotificationTypeDescriptor, "icon" | "tone" | "title">
+>;
+
+/**
+ * A cover offer row: the offer's day and, while it is sent, its deadline;
+ * an answer takes its look from the outcome. Without the offer's facts (or
+ * the wording) it reads as its type alone.
+ */
+const presentCoverOffer = (
+	descriptor: NotificationTypeDescriptor,
+	notification: Pick<InboxNotification, "type" | "coverOffer">,
+	wording: NotificationWording | undefined
+): NotificationPresentation => {
+	const offer = notification.coverOffer;
+	if (!offer) return { ...descriptor, values: undefined };
+	const day = wording ? formatDay(offer.rosterDate, wording.language) : "";
+	if (notification.type === "COVER_OFFER_SENT")
+		return wording && offer.expiresAt
+			? {
+					...descriptor,
+					title: "notifications.coverOffer.sent",
+					values: {
+						day,
+						time: formatOfferTime(
+							offer.expiresAt,
+							wording.language,
+							undefined,
+							wording.now
+						),
+					},
+				}
+			: { ...descriptor, values: undefined };
+	const outcome = offer.outcome
+		? COVER_OFFER_OUTCOMES[offer.outcome]
+		: undefined;
+	if (!outcome) return { ...descriptor, values: undefined };
+	return wording
+		? { ...descriptor, ...outcome, values: { day } }
+		: {
+				...descriptor,
+				icon: outcome.icon,
+				tone: outcome.tone,
+				values: undefined,
+			};
 };
 
 /**
  * A notification's look and copy. Most follow their type alone; a finished import turns red, and says it stopped,
- * when rows failed or the import itself failed, and its copy carries the counts.
+ * when rows failed or the import itself failed, and its copy carries the counts. A cover offer's copy names its day
+ * and deadline, worded with `wording`, and an answer's look follows its outcome.
  */
 export const presentNotification = (
-	notification: Pick<InboxNotification, "type" | "importCounts">
+	notification: Pick<InboxNotification, "type" | "importCounts" | "coverOffer">,
+	wording?: NotificationWording
 ): NotificationPresentation => {
 	const descriptor = describeNotificationType(notification.type);
+	if (
+		notification.type === "COVER_OFFER_SENT" ||
+		notification.type === "COVER_OFFER_ANSWERED"
+	)
+		return presentCoverOffer(descriptor, notification, wording);
 	const counts = notification.importCounts;
 	if (notification.type !== "MEMBER_IMPORT_FINISHED" || !counts)
 		return { ...descriptor, values: undefined };
@@ -180,6 +271,7 @@ export type NotificationTarget =
 	| { kind: "schedule"; scheduleId: string; day: string | undefined }
 	| { kind: "myRoster"; scheduleId: string }
 	| { kind: "approval"; scheduleId: string }
+	| { kind: "offer"; scheduleId: string; offerId: string }
 	| { kind: "import"; importId: string };
 
 /**
@@ -206,6 +298,7 @@ export const notificationTarget = (
 		| "rosterDay"
 		| "approvalSubjectType"
 		| "approvalSubjectId"
+		| "coverOfferId"
 	>,
 	audience: "PERSONAL" | "REVIEW"
 ): NotificationTarget | undefined => {
@@ -216,6 +309,17 @@ export const notificationTarget = (
 		notification.approvalSubjectId
 	)
 		return { kind: "approval", scheduleId: notification.approvalSubjectId };
+	// An offer opens the member's roster with its card, whatever has happened to it since.
+	if (
+		notification.type === "COVER_OFFER_SENT" &&
+		notification.scheduleId &&
+		notification.coverOfferId
+	)
+		return {
+			kind: "offer",
+			scheduleId: notification.scheduleId,
+			offerId: notification.coverOfferId,
+		};
 	if (category === "leave" && notification.leaveRequestId)
 		return {
 			kind: "leave",

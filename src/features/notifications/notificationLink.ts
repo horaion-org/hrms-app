@@ -15,14 +15,19 @@ export type NotificationLink =
 			search: RosterSearch;
 	  }
 	| { to: "/me/schedules/$scheduleId"; params: { scheduleId: string } }
+	| {
+			to: "/me/schedules/$scheduleId";
+			params: { scheduleId: string };
+			search: { offer: string };
+	  }
 	| { to: "/settings/data/import-people"; search: { import: string } };
 
 /**
  * The page a notification target opens: the leave request on `/leave`, the
  * schedule's roster on the scheduling page (a day to decide opens its week
  * with the Issues list beside it, an approval with its trail), a
- * rostered member's own view of
- * that roster, or the people import's result under Settings › Data.
+ * rostered member's own view of that roster (with an offer's card when
+ * it is about one), or the people import's result under Settings › Data.
  */
 export const notificationLink = (
 	target: NotificationTarget
@@ -51,6 +56,12 @@ export const notificationLink = (
 			return linkOptions({
 				to: "/me/schedules/$scheduleId",
 				params: { scheduleId: target.scheduleId },
+			});
+		case "offer":
+			return linkOptions({
+				to: "/me/schedules/$scheduleId",
+				params: { scheduleId: target.scheduleId },
+				search: { offer: target.offerId },
 			});
 		case "import":
 			return linkOptions({

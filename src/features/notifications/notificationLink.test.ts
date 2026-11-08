@@ -44,4 +44,14 @@ describe("notificationLink", () => {
 			search: { import: "import-1" },
 		});
 	});
+
+	it("opens the member's own roster with the offer's card", () => {
+		expect(
+			notificationLink({ kind: "offer", scheduleId: "s-1", offerId: "o-1" })
+		).toEqual({
+			to: "/me/schedules/$scheduleId",
+			params: { scheduleId: "s-1" },
+			search: { offer: "o-1" },
+		});
+	});
 });
