@@ -401,7 +401,7 @@
 				"labelRequired": "Name this step.",
 				"labelTooLong": "Use up to 24 characters.",
 				"whoDecides": "Who decides",
-				"anyone": "Anyone who can publish {{department}}’s roster",
+				"anyone": "Anyone who can publish the {{department}} roster",
 				"anyoneCompany": "Anyone who can publish the roster",
 				"anyoneDescription": "One approval is enough.",
 				"onlyThese": "Only these people",

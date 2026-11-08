@@ -231,6 +231,26 @@ describe("ApprovalsSettings", () => {
 		]);
 	});
 
+	it("names a department's roster without a possessive in Who decides", async () => {
+		stubApi(routes(READ_AND_MANAGE, [KITCHEN_FLOW]));
+		const user = userEvent.setup();
+
+		const panel = await open();
+		await user.click(
+			await within(panel).findByRole("button", {
+				name: "Edit Kitchen publishing",
+			})
+		);
+		const dialog = screen.getByRole("dialog", { name: "Edit approval flow" });
+
+		expect(
+			within(dialog).getAllByRole("radio", {
+				name: /^Anyone who can publish the Kitchen roster/,
+			})
+		).not.toHaveLength(0);
+		expect(within(dialog).queryByText(/Kitchen’s roster/)).toBeNull();
+	});
+
 	it("puts a unit that already has a flow on its field", async () => {
 		stubApi(
 			routes(READ_AND_MANAGE, [], {
