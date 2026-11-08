@@ -12,6 +12,16 @@ test("lands in the last company, switches, and reloads into that company", async
 	context,
 }) => {
 	await mockSessionRoutes(context);
+	// The shell no longer names the company, so the test follows the company id in the API paths the pages call.
+	const requestedCompanyIds: Array<string> = [];
+	page.on("request", (request) => {
+		const match = new URL(request.url()).pathname.match(
+			/^\/api\/v1\/companies\/([^/]+)/
+		);
+		if (match?.[1]) requestedCompanyIds.push(match[1]);
+	});
+	const latestRequestedCompanyId = (): string | undefined =>
+		requestedCompanyIds[requestedCompanyIds.length - 1];
 	await context.route("**/api/v1/me", (route) => {
 		expect(route.request().headers()["authorization"]).toBe(
 			`Bearer ${E2E_ACCESS_PASS}`
@@ -46,18 +56,14 @@ test("lands in the last company, switches, and reloads into that company", async
 		localStorage.setItem("horaion.currentCompanyId", "North");
 	});
 	await logIn(page);
-	await expect(
-		page.getByRole("heading", { name: "North", exact: true })
-	).toBeVisible();
+	await expect.poll(latestRequestedCompanyId).toBe("North");
 	await page.getByRole("button", { name: "Switch company" }).click();
 	await page.getByRole("button", { name: "Acme acme" }).click();
-	await expect(
-		page.getByRole("heading", { name: "Acme", exact: true })
-	).toBeVisible();
+	await expect.poll(latestRequestedCompanyId).toBe("Acme");
+	requestedCompanyIds.length = 0;
 	await page.reload();
-	await expect(
-		page.getByRole("heading", { name: "Acme", exact: true })
-	).toBeVisible();
+	await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
+	await expect.poll(latestRequestedCompanyId).toBe("Acme");
 	expect(await webStorage(page)).not.toContain(E2E_ACCESS_PASS);
 	expect(await webStorage(page)).not.toContain(E2E_EMAIL);
 	expect(page.url()).not.toContain(E2E_EMAIL);

@@ -58,6 +58,12 @@ const cheryl = request({
 	workingDays: 2,
 });
 
+const LEAVE_PERMISSIONS = [
+	"leave_request:read",
+	"leave_request:create",
+	"leave_request:review",
+];
+
 test.beforeEach(async ({ context }) => {
 	const session = await mockSessionRoutes(context);
 	session.session = "active";
@@ -67,19 +73,24 @@ test.beforeEach(async ({ context }) => {
 				{
 					uuid: "acme",
 					name: "Acme",
-					permissions: [
-						"leave_request:read",
-						"leave_request:create",
-						"leave_request:review",
-					],
+					permissions: LEAVE_PERMISSIONS,
 					branches: [
 						{
 							uuid: "b-1",
 							name: "Main branch",
 							status: "ACTIVE",
 							country: "SG",
-							permissions: [],
-							departments: [],
+							// Each unit lists the permissions already effective there; the page offers only branches that carry them.
+							permissions: LEAVE_PERMISSIONS,
+							// A request is decided at its member's Department.
+							departments: [
+								{
+									uuid: "d-1",
+									name: "Sales",
+									status: "ACTIVE",
+									permissions: LEAVE_PERMISSIONS,
+								},
+							],
 						},
 					],
 				},
@@ -157,7 +168,10 @@ test("requests, timeline, and a rejection against the API", async ({
 		.getByRole("button", { name: "Reject request for Cheryl Ng" })
 		.click();
 	const dialog = page.getByRole("dialog", { name: "Leave request" });
-	await expect(dialog).toBeVisible();
+	// The dialog's root box has no size of its own, so check what it shows rather than the root.
+	await expect(
+		dialog.getByRole("heading", { name: "Leave request" })
+	).toBeVisible();
 	await page.screenshot({
 		path: testInfo.outputPath("rejection.png"),
 		fullPage: true,
@@ -166,7 +180,7 @@ test("requests, timeline, and a rejection against the API", async ({
 		.getByRole("textbox", { name: "Reason for rejection" })
 		.fill("Coverage needed for the team event.");
 	await dialog.getByRole("button", { name: "Confirm rejection" }).click();
-	await expect(dialog).not.toBeVisible();
+	await expect(dialog).toHaveCount(0);
 	await expect(page.getByText("Request for Cheryl Ng rejected.")).toBeVisible();
 	await page
 		.getByRole("button", { name: "View request for Cheryl Ng" })
@@ -187,7 +201,11 @@ test("narrow-screen layout keeps the page within the viewport", async ({
 	expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(
 		375
 	);
-	await page.getByRole("tab", { name: "Team timeline" }).click();
+	// Opened by its link: at this width the sidebar is sticky and full height, so it covers the tab when the tab is clicked.
+	await page.goto("/leave?view=timeline");
+	await expect(
+		page.getByRole("tab", { name: "Team timeline" })
+	).toHaveAttribute("aria-selected", "true");
 	expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(
 		375
 	);

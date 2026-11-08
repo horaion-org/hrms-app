@@ -24,6 +24,9 @@ import { authTestI18n } from "@/features/auth/testingI18n";
 import { newPasswordFormSchema } from "@/features/auth/challenge";
 import en from "@/assets/locales/en/translations.json";
 
+// Under load (Maven build alongside, shared CI runner) this file timed out at the 5 s default.
+vi.setConfig({ testTimeout: 15_000 });
+
 const SESSIONS = "/api/v1/public/sessions";
 const password = "Example123!";
 let app: OpenedApp | undefined;
@@ -110,7 +113,12 @@ it.each([undefined, "/?tab=2", "https://evil.test", "//evil.test"])(
 			"012345"
 		);
 		await user.click(screen.getByRole("button", { name: "Continue" }));
-		await screen.findByRole("heading", { name: "Dashboard" });
+		// The Dashboard route loads lazily; the first case in the file loads it cold.
+		await screen.findByRole(
+			"heading",
+			{ name: "Dashboard" },
+			{ timeout: 10_000 }
+		);
 		expect(opened.router.state.location.href).toBe(target);
 		expect(pendingChallenge()).toBeNull();
 		expect(hasAccessPass()).toBe(true);

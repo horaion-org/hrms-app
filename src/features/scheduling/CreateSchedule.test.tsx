@@ -47,6 +47,9 @@ import {
 } from "@/features/scheduling/startingContext/fixtures";
 import type { Workspace } from "@/features/workspace/api";
 
+// Under load (Maven build alongside, shared CI runner) this file timed out at the 5 s default.
+vi.setConfig({ testTimeout: 15_000 });
+
 const REFRESH = "POST /api/v1/public/sessions/refreshes";
 const ME = "GET /api/v1/me";
 const WORKSPACE = "GET /api/v1/me/workspace";

@@ -60,7 +60,9 @@ jobs:
 - **Unit tests:** `vitest run src/` in three shards, with one worker per core and a 15 s per-test timeout. The
   5 s default is too tight on a shared runner.
 
-The Playwright suites are not run in CI. To reproduce a CI shard locally:
+The Playwright suites are not run on pull requests. `.github/workflows/playwright-nightly.yml` runs the mocked browser
+suite in all three browsers every night (and on demand from the Actions tab) and uploads the HTML report as an
+artifact. To reproduce a CI shard locally:
 
 ```sh
 pnpm exec vitest run src/ --shard=1/3 --testTimeout=15000
