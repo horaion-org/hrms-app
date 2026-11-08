@@ -238,6 +238,186 @@
 		"historyDates": "{{before}} → {{after}}",
 		"historyType": "{{before}} → {{after}}"
 	},
+	"approvals": {
+		"panel": {
+			"title": "Approval"
+		},
+		"meta": {
+			"waitingOnYou": "Waiting on you · step {{step}} of {{total}} ({{label}})",
+			"waiting": "Waiting for approval · step {{step}} of {{total}} ({{label}})",
+			"needsApproval": "Needs approval: {{steps}}",
+			"failed": "Couldn’t load the approval.",
+			"retry": "Try again",
+			"open": "Approval ›",
+			"openLabel": "Open the approval"
+		},
+		"trail": {
+			"submittedBy": "Submitted by {{name}} · {{at}}",
+			"submittedAt": "Submitted · {{at}}",
+			"withdrawn": "Withdrawn · {{at}}",
+			"stepOf": "Step {{step}} of {{total}}, ",
+			"approved": "Approved",
+			"rejected": "Rejected",
+			"skipped": "Skipped",
+			"notReached": "Not reached",
+			"notYet": "Not yet",
+			"unknown": "Unknown",
+			"waiting": "Waiting",
+			"waitingOnYou": "Waiting on you",
+			"waitingOnName": "Waiting on {{name}}",
+			"waitingOnPeople_one": "Waiting on {{count}} person",
+			"waitingOnPeople_other": "Waiting on {{count}} people",
+			"anyoneWhoCanPublish": "Anyone who can publish {{department}}",
+			"decidedBy": "{{name}} · {{at}}",
+			"comment": "Comment",
+			"reason": "Reason for rejection",
+			"formerMember": "Former member",
+			"approvedOf": "{{count}} of {{total}} approved",
+			"since": "{{who}} · since {{at}}",
+			"sinceOnly": "Since {{at}}",
+			"personApproved": "{{name}} · Approved {{at}}",
+			"personRejected": "{{name}} · Rejected {{at}}",
+			"personWaiting": "{{name}} · Waiting",
+			"waitingFolded": "Waiting on {{count}}: {{names}} and {{more}} more"
+		},
+		"actions": {
+			"submit": "Submit for approval",
+			"approve": "Approve",
+			"approveAndPublish": "Approve and publish",
+			"withdraw": "Withdraw from approval"
+		},
+		"submitDialog": {
+			"title": "Submit this roster for approval?",
+			"description": "It goes through {{steps}}, in that order, and the last approval publishes it. Until then it can’t be published or rejected directly.",
+			"confirm": "Submit for approval"
+		},
+		"approveDialog": {
+			"title": "Approve the {{department}} roster?",
+			"lastTitle": "Approve and publish the {{department}} roster?",
+			"description": "Step {{step}} of {{total}}. After you approve, {{next}} (step {{nextStep}}) is asked next.",
+			"lastDescription": "It becomes final for its week and everyone rostered is told.",
+			"comment": "Comment (optional)",
+			"note": "Add a note",
+			"confirm": "Confirm approval",
+			"lastConfirm": "Approve and publish"
+		},
+		"rejectDialog": {
+			"title": "Reject at {{label}}?",
+			"description": "Say what needs to change. The submitter is told, and the roster can then be regenerated or deleted.",
+			"confirm": "Confirm rejection"
+		},
+		"withdrawDialog": {
+			"title": "Withdraw this roster from approval?",
+			"description": "Approvers are no longer asked to decide it. You can submit it again later.",
+			"confirm": "Withdraw"
+		},
+		"rejectedAt": "Rejected at {{label}} by {{name}} · {{at}}",
+		"rejectedAtStep": "Rejected at {{label}} · {{at}}",
+		"refusal": {
+			"invalidComment": "Enter a comment of up to 500 characters.",
+			"decidedFirst": "Someone else decided this step first. The page now shows where it stands.",
+			"notAnApprover": "You can’t decide this step.",
+			"ownApproval": "You submitted this roster, so someone else decides it.",
+			"gone": "This approval is no longer available. Reload the page to see the roster.",
+			"forbidden": "You no longer have permission to decide this approval.",
+			"failed": "We couldn’t save the decision. Try again.",
+			"withdrawFailed": "We couldn’t withdraw it. Try again."
+		},
+		"notifications": {
+			"requested": "A roster needs your approval.",
+			"decided": "A roster you submitted for approval was decided. Open it to see the outcome."
+		},
+		"flows": {
+			"title": "Approvals",
+			"subtitle": "Who approves a roster before it is published. Departments without a flow publish in one step, by anyone who can publish their roster.",
+			"schedulePublishing": "Schedule publishing",
+			"add": "Add flow",
+			"appliesTo": "Applies to",
+			"steps": "Steps",
+			"status": "Status",
+			"on": "On",
+			"off": "Off",
+			"wholeCompany": "Whole company",
+			"unknownDepartment": "A department you can’t see",
+			"allOf": "all of {{count}}",
+			"empty": "No approval flows. Rosters publish in one step, by anyone who can publish.",
+			"loading": "Loading approval flows…",
+			"failed": "We couldn’t load the approval flows. Try again.",
+			"hidden": "You don’t have permission to see approval flows.",
+			"turnOff": "Turn off",
+			"turnOn": "Turn on",
+			"delete": "Delete",
+			"turnOffTitle": "Turn off {{name}}?",
+			"turnOffDescription": "Rosters already waiting keep this flow. Rosters submitted from now on publish without it.",
+			"turnOffConfirm": "Turn off",
+			"turnOnTitle": "Turn on {{name}}?",
+			"turnOnDescription": "Rosters submitted from now on go through its steps.",
+			"turnOnConfirm": "Turn on",
+			"deleteTitle": "Delete {{name}}?",
+			"deleteDescription": "Rosters already waiting keep this flow. Deleting it can’t be undone.",
+			"deleteConfirm": "Delete flow",
+			"cancel": "Cancel",
+			"added": "Approval flow added.",
+			"saved": "Approval flow saved.",
+			"toggled": "Approval flow updated.",
+			"deleted": "Approval flow deleted.",
+			"refusal": {
+				"exists": "This already has an approval flow. Edit that one instead.",
+				"existsOnTurnOn": "Another flow is already on here. Turn that one off first.",
+				"invalid": "The flow wasn’t accepted. Check its steps and try again.",
+				"noApprover": "A step has nobody who can approve it. Name people who can publish this roster.",
+				"gone": "This flow no longer exists. The list has been refreshed.",
+				"forbidden": "You no longer have permission to change approval flows.",
+				"failed": "We couldn’t save the flow. Try again."
+			},
+			"dialog": {
+				"title": "Add approval flow",
+				"editTitle": "Edit approval flow",
+				"description": "Who approves a roster before it is published, step by step.",
+				"appliesTo": "Applies to",
+				"appliesToHint": "The whole company, or one department. It can’t be changed later.",
+				"name": "Name",
+				"nameRequired": "Enter a name.",
+				"nameTooLong": "Use up to 100 characters.",
+				"defaultName": "{{unit}} publishing",
+				"step": "Step {{step}}",
+				"stepLabel": "Name of step {{step}}",
+				"labelPlaceholder": "e.g. Endorse",
+				"labelRequired": "Name this step.",
+				"labelTooLong": "Use up to 24 characters.",
+				"whoDecides": "Who decides",
+				"anyone": "Anyone who can publish {{department}}’s roster",
+				"anyoneCompany": "Anyone who can publish the roster",
+				"anyoneDescription": "One approval is enough.",
+				"onlyThese": "Only these people",
+				"onlyTheseDescription": "Name up to 10 people.",
+				"people": "People",
+				"peoplePlaceholder": "Choose people",
+				"peopleHint": "Only people who can publish this roster are asked.",
+				"peopleRequired": "Choose at least one person.",
+				"how": "How many of them",
+				"any": "Any one of them",
+				"all": "All of them",
+				"moveUp": "Move step {{step}} up",
+				"moveDown": "Move step {{step}} down",
+				"remove": "Remove step {{step}}",
+				"moved": "Step {{from}} moved, now step {{to}}.",
+				"addStep": "Add step",
+				"maxSteps": "Up to 3 steps.",
+				"info": "Only people who can publish this roster can approve it. The person who submits a roster never approves it.",
+				"submit": "Save flow",
+				"cancel": "Cancel",
+				"labelHint": "1–2 words, shown to approvers (e.g. Endorse)"
+			}
+		},
+		"announce": {
+			"submitted": "Sent for approval. {{label}} (step 1 of {{total}}) is asked first.",
+			"approved": "You approved {{label}}. {{next}} (step {{step}}) is next.",
+			"published": "You approved and published the {{department}} roster.",
+			"rejected": "You rejected the roster at {{label}}.",
+			"withdrawn": "Roster withdrawn from approval."
+		}
+	},
 	"availability": {
 		"title": "Availability",
 		"subtitle": "The hours part-time people can work, week by week.",
@@ -1251,6 +1431,10 @@
 				"editFailed": "We couldn’t save the leave type. Try again."
 			}
 		},
+		"approvals": {
+			"title": "Approvals",
+			"description": "Who approves rosters before they are published."
+		},
 		"data": {
 			"title": "Data",
 			"description": "Import and export in bulk.",
@@ -1880,6 +2064,22 @@
 					"edit_shift": "Edit shifts"
 				}
 			},
+			"approval_flow": {
+				"name": "Approval flows",
+				"description": "Who approves a roster before it is published, per department: the flows in Settings › Approvals.",
+				"actions": {
+					"read": "View",
+					"manage": "Manage"
+				}
+			},
+			"approval": {
+				"name": "Approvals",
+				"description": "Rosters submitted for approval: seeing where they stand, and deciding a step where the person may publish the roster.",
+				"actions": {
+					"read": "View",
+					"decide": "Decide"
+				}
+			},
 			"shift": {
 				"name": "Shifts",
 				"description": "Each department’s shifts: their times, days, group, colour and roles.",
@@ -2086,7 +2286,7 @@
 			"membersFailed": "We couldn’t load people. Try again.",
 			"membersFooter": "Showing active company members",
 			"membersTruncated": "Showing 20 of {{total}} active company members. Type to narrow.",
-			"counter": "{{count}}/20"
+			"counter": "{{count}}/{{max}}"
 		},
 		"import": {
 			"title": "Import organisation",
@@ -3166,7 +3366,9 @@
 				"weekAlreadyPublished": "This department already has a published roster for this week. Only one roster can be published per week, so schedule a different week instead.",
 				"reasonRejected": "Enter a reason of up to 2,000 characters.",
 				"forbidden": "You no longer have permission to publish or reject this roster.",
-				"failed": "We couldn’t save the decision. Try again."
+				"failed": "We couldn’t save the decision. Try again.",
+				"approvalPending": "This roster is already waiting for approval. Reload the page to see where it stands.",
+				"noApprover": "A step of this department’s approval flow has nobody who can approve it. Ask an admin to change it in Settings › Approvals."
 			}
 		},
 		"startingContext": {

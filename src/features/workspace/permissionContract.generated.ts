@@ -3,7 +3,7 @@
 
 /** SHA-256 of the contract file this module was generated from. */
 export const PERMISSION_CONTRACT_SHA256 =
-	"5fd3c1850415f38094b337a4d1123f1176cc55d294f2ac33a6476be2fec4d7fd";
+	"8edf2b5057b5abd789d767039d63ac0f2ba6b8acf535a9e22d380d46d83dc754";
 
 /** The places a permission can be assigned at, widest first. */
 export const ASSIGNABLE_SCOPES = ["COMPANY", "BRANCH", "DEPARTMENT"] as const;
@@ -417,6 +417,34 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: ["scheduling_policy:read"],
 	},
 	{
+		key: "approval_flow:read",
+		resource: "approval_flow",
+		action: "read",
+		assignableScopes: ["COMPANY"],
+		prerequisites: [],
+	},
+	{
+		key: "approval_flow:manage",
+		resource: "approval_flow",
+		action: "manage",
+		assignableScopes: ["COMPANY"],
+		prerequisites: ["approval_flow:read"],
+	},
+	{
+		key: "approval:read",
+		resource: "approval",
+		action: "read",
+		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
+		prerequisites: [],
+	},
+	{
+		key: "approval:decide",
+		resource: "approval",
+		action: "decide",
+		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
+		prerequisites: ["approval:read"],
+	},
+	{
 		key: "access_role:read",
 		resource: "access_role",
 		action: "read",
@@ -526,6 +554,10 @@ export const PERMISSION_KEYS = [
 	"constraint:delete",
 	"scheduling_policy:read",
 	"scheduling_policy:update",
+	"approval_flow:read",
+	"approval_flow:manage",
+	"approval:read",
+	"approval:decide",
 	"access_role:read",
 	"access_role:create",
 	"access_role:update",
