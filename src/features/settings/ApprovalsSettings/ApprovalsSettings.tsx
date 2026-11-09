@@ -182,7 +182,7 @@ export const ApprovalsSettings = ({
 					const addId = `${idPrefix}-${group}-add`;
 					return (
 						<section key={group} className="mt-8 flex flex-col gap-3">
-							<div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+							<div className="flex items-start justify-between gap-3">
 								<div>
 									<h3
 										ref={(heading) => {
@@ -215,6 +215,8 @@ export const ApprovalsSettings = ({
 							</div>
 							{groupFlows.length > 0 && (
 								<DataTable
+									// Fits beside Settings' tabs (360–520 px from md to xl), with the steps and status on the name's line.
+									className="[&>table]:min-w-0"
 									columns={columnsBySubject.get(group) ?? []}
 									data={groupFlows}
 									emptyState=""

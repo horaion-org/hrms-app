@@ -103,14 +103,19 @@ describe("ApprovalsSettings", () => {
 			"1 Endorse (all of 2) → 2 Publish",
 			"Off",
 		]);
-		// Phones keep where it applies, whether it is on and the actions; the steps move to the first cell's line.
-		const steps = within(rosters).getByRole("columnheader", { name: "Steps" });
-		expect(steps).toHaveClass("hidden", "md:table-cell");
+		// Below xl (phones, and tablets beside Settings' tabs) the table keeps where it applies and the actions;
+		// the steps and whether it is on move to the first cell's line.
+		for (const name of ["Steps", "Status"])
+			expect(within(rosters).getByRole("columnheader", { name })).toHaveClass(
+				"hidden",
+				"xl:table-cell"
+			);
 		const [stepsOnLine, stepsCell] = within(
 			kitchen as HTMLElement
 		).getAllByText(/Endorse/);
-		expect(stepsCell).toHaveClass("hidden", "md:table-cell");
-		expect(stepsOnLine).toHaveClass("md:hidden");
+		expect(stepsCell).toHaveClass("hidden", "xl:table-cell");
+		expect(stepsOnLine).toHaveClass("xl:hidden");
+		expect(within(kitchen as HTMLElement).getAllByText("Off")).toHaveLength(2);
 		expect(
 			within(rosters).getByRole("columnheader", { name: "Applies to" })
 		).not.toHaveClass("hidden");
