@@ -201,6 +201,33 @@ describe("ConstraintDialog for the Scheduling policy (ADR-0058)", () => {
 		});
 	});
 
+	it("given_aSavedCompanyRule_when_edited_then_itsTypeIsFixedAndSentUnchanged", async () => {
+		const user = userEvent.setup();
+		const { onSave } = renderDialog({ editing: companyRest, withLock: true });
+		await screen.findByRole("dialog", { name: "Edit constraint" });
+
+		expect(trigger(/^Constraint type/)).toBeDisabled();
+		expect(
+			screen.getByText(
+				"A company constraint’s type can’t be changed. Add a new constraint instead."
+			)
+		).toBeVisible();
+
+		await user.click(screen.getByRole("button", { name: "Save" }));
+		await waitFor(() => {
+			expect(onSave).toHaveBeenCalledWith(
+				expect.objectContaining({ type: companyRest.type })
+			);
+		});
+	});
+
+	it("given_aNewCompanyRule_when_added_then_itsTypeCanBeChosen", async () => {
+		renderDialog({ withLock: true });
+		await screen.findByRole("dialog", { name: "Add constraint" });
+
+		expect(trigger(/^Constraint type/)).toBeEnabled();
+	});
+
 	it("given_theApiRefusesAsNotStricter_when_saved_then_explainsIt", async () => {
 		const user = userEvent.setup();
 		const onSave = vi

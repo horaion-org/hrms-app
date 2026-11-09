@@ -777,7 +777,8 @@
 		"settings": "Settings",
 		"myProfile": "My profile",
 		"accountMenu": "Account menu",
-		"changePassword": "Change password"
+		"changePassword": "Change password",
+		"menu": "Menu"
 	},
 	"people": {
 		"title": "People overview",
@@ -2717,6 +2718,7 @@
 			"back": "Back to overview",
 			"title": "Create schedule",
 			"subtitle": "Set up your schedule generation in a few simple steps.",
+			"viewSubtitle": "How this schedule was set up: its department, period, shifts and constraints.",
 			"steps": {
 				"setup": "Setup",
 				"shifts": "Shifts",
@@ -2769,6 +2771,7 @@
 		"setup": {
 			"title": "Schedule setup",
 			"description": "Select the department and scheduling period for your new schedule.",
+			"readOnlyDescription": "The department and scheduling period this schedule was set up for.",
 			"department": "Department",
 			"departmentPlaceholder": "Select a department",
 			"departmentsNone": "You don’t have permission to create schedules in any active department.",

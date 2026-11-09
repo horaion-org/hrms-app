@@ -31,6 +31,7 @@ import { useAvailabilityViews } from "@/features/availability/useAvailability";
 import {
 	ORGANISATION_READ_KEYS,
 	PEOPLE_READ_KEYS,
+	SCHEDULE_READ_KEYS,
 } from "@/features/workspace/permissionKeys";
 import { Can } from "@/features/workspace/Can";
 import { HeaderBranchScope } from "@/features/workspace/HeaderBranchScope";
@@ -114,7 +115,7 @@ export const MainLayout = (): FunctionComponent => {
 			}
 			sidebar={
 				<Sidebar
-					className="static h-auto w-full sm:sticky sm:h-dvh sm:w-70"
+					menuLabel={t("shell.menu")}
 					footer={
 						<div className="flex flex-col gap-3">
 							{usableCompanies(context.currentUser).length > 1 && (
@@ -141,12 +142,16 @@ export const MainLayout = (): FunctionComponent => {
 						label={t("shell.navigation.dashboard")}
 						to="/"
 					/>
-					<SidebarItem
-						activeIcon={SchedulingFilledIcon}
-						icon={SchedulingIcon}
-						label={t("shell.navigation.scheduling")}
-						to="/scheduling"
-					/>
+					{/* Scheduling is offered where schedules may be read, at any scope. A member's own
+					    roster needs nothing granted: it opens from its notice, under /me. */}
+					<Can anyOf={SCHEDULE_READ_KEYS} at="anywhere">
+						<SidebarItem
+							activeIcon={SchedulingFilledIcon}
+							icon={SchedulingIcon}
+							label={t("shell.navigation.scheduling")}
+							to="/scheduling"
+						/>
+					</Can>
 					{/* Leave is for everyone: a member's own leave needs nothing granted. */}
 					<SidebarItem
 						activeIcon={LeaveFilledIcon}

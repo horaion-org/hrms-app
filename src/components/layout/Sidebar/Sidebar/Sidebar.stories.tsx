@@ -22,6 +22,7 @@ const meta = {
 	parameters: { layout: "fullscreen", initialEntry: "/" },
 	argTypes: { children: { control: false } },
 	args: {
+		menuLabel: en.shell.menu,
 		children: [
 			<SidebarItem
 				key="dashboard"
@@ -88,4 +89,10 @@ export const Organisation: Story = {
 
 export const WithFooter: Story = {
 	args: { footer: <Button>{en.auth.logOut}</Button> },
+};
+
+/** Below `sm`: the bar with the logo and Menu; Menu shows the navigation and footer under it. */
+export const SmallScreen: Story = {
+	args: { footer: <Button>{en.auth.logOut}</Button> },
+	parameters: { viewport: { defaultViewport: "mobile1" } },
 };

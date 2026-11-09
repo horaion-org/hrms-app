@@ -191,6 +191,11 @@ describe("ScheduleSetupStep", () => {
 		);
 
 		expect(
+			screen.getByText(
+				"The department and scheduling period this schedule was set up for."
+			)
+		).toBeVisible();
+		expect(
 			screen.getByRole("textbox", { name: /Schedule name/ })
 		).toHaveAttribute("readonly");
 		expect(
