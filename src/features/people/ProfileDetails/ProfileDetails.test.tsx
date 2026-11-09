@@ -79,6 +79,18 @@ describe("ProfileDetails", () => {
 		]);
 	});
 
+	it("calls the phone number and writes to the email address when tapped", () => {
+		show(kent);
+
+		expect(screen.getByRole("link", { name: "+6583247931" })).toHaveAttribute(
+			"href",
+			"tel:+6583247931"
+		);
+		expect(
+			screen.getByRole("link", { name: "kent.chua@company.com" })
+		).toHaveAttribute("href", "mailto:kent.chua@company.com");
+	});
+
 	it("offers to copy the phone number and email address", () => {
 		show(kent);
 
@@ -119,6 +131,7 @@ describe("ProfileDetails", () => {
 		expect(
 			screen.queryByRole("button", { name: "Copy phone number" })
 		).not.toBeInTheDocument();
+		expect(screen.queryByRole("link", { name: /^\+/ })).not.toBeInTheDocument();
 	});
 
 	it("shows where their roles give them permissions, one row per place, noting only visible places count", () => {
