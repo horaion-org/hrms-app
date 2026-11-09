@@ -14,7 +14,8 @@ export type LeaveRequestDetailsProps = {
 /**
  * One leave request as it stands: who it is for and its status, then the
  * period, who asked and when, its length and type, and whatever the API sent
- * of the remarks, the reviewer, the rejection reason and the approval comment.
+ * of the remarks, the reviewer, the approval step that rejected it, the
+ * rejection reason and the approval comment.
  */
 export const LeaveRequestDetails = ({
 	request,
@@ -71,6 +72,16 @@ export const LeaveRequestDetails = ({
 					<>
 						<dt className="text-neutral-800">{t("leave.reviewedBy")}</dt>
 						<dd className="font-semibold">{request.reviewedBy.displayName}</dd>
+					</>
+				)}
+				{request.rejectedAtStep && (
+					<>
+						<dt className="text-neutral-800">
+							{t("leave.approval.rejectedAt")}
+						</dt>
+						<dd className="font-semibold">
+							{request.rejectedAtStep.stepLabel}
+						</dd>
 					</>
 				)}
 				{request.rejectionReason && (

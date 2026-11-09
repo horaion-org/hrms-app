@@ -1,15 +1,27 @@
 import { useQuery } from "@tanstack/react-query";
 import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { todayDate, type IsoDate } from "@/components/forms/Calendar";
 import { Button } from "@/components/ui/Button";
+import { Dialog } from "@/components/ui/Dialog";
 import { CrossIcon, TickIcon } from "@/components/ui/Icon";
-import { Modal } from "@/components/ui/Modal";
+import {
+	APPROVAL_COMMENT_MAX_LENGTH,
+	approvalInstanceQuery,
+} from "@/features/approvals/api";
+import { ApprovalTrail } from "@/features/approvals/ApprovalTrail";
 import { rosteredDaysQuery, type CompanyLeaveType } from "@/features/leave/api";
+import {
+	approvesLeave,
+	leaveApprovalLine,
+	leaveDecisionStage,
+} from "@/features/leave/leaveApproval";
 import type { ApplyField, DecisionField } from "@/features/leave/leaveRefusal";
 import type { LeaveRequest, LeaveRequestBody } from "@/features/leave/types";
 import type { Refusal } from "@/features/organisation/refusal";
+import { dateTimeFormatIn } from "@/features/scheduling/roster/roster";
 import {
 	LeaveApplyForm,
 	type ApplyEmployees,
@@ -51,8 +63,18 @@ export type LeaveRequestDialogProps = {
 	 */
 	leaveTypesStatus?: LeaveTypesStatus;
 	onRetryLeaveTypes?: () => void;
-	/** Whether the person may decide the shown request; Approve and Reject are offered only then. */
+	/**
+	 * Whether the person may decide the shown request now; Approve and Reject
+	 * are offered only then. Under an approval flow, whether its open step
+	 * waits on them.
+	 */
 	canReview?: boolean;
+	/**
+	 * Whether the person reads approvals where the request's member is filed:
+	 * a request under a flow then shows its steps and who decided them;
+	 * otherwise only the step it waits on.
+	 */
+	readsApprovalSteps?: boolean;
 	/** While a decision or an application is being sent. */
 	busy?: boolean;
 	/** Why the last decision or application was refused: on a field, or as the dialog's alert. */
@@ -78,8 +100,11 @@ export type LeaveRequestDialogProps = {
  * caller sends and hands back what the API answered.
  *
  * This file is the review: the request's details (`LeaveRequestDetails`),
- * the decision being confirmed (`LeaveDecisionStep`) and the footer that
- * moves between them. An application is `LeaveApplyForm`.
+ * where its approval flow stands, the decision being confirmed
+ * (`LeaveDecisionStep`) and the footer that moves between them. Under a
+ * flow, a step before the last only moves the request on: the roster check
+ * and the comment on past leave apply at the last step, which approves the
+ * leave. An application is `LeaveApplyForm`.
  */
 export const LeaveRequestDialog = ({
 	request,
@@ -90,6 +115,7 @@ export const LeaveRequestDialog = ({
 	leaveTypesStatus = "success",
 	onRetryLeaveTypes,
 	canReview = false,
+	readsApprovalSteps = false,
 	busy = false,
 	refusal,
 	onClose,
@@ -98,7 +124,7 @@ export const LeaveRequestDialog = ({
 	onCreate,
 	today: todayOverride,
 }: LeaveRequestDialogProps): FunctionComponent => {
-	const { t } = useTranslation();
+	const { t, i18n } = useTranslation();
 	// Read once when the dialog opens, outside render.
 	const [deviceToday] = useState(() => todayDate(Date.now()));
 	const today = todayOverride ?? deviceToday;
@@ -112,21 +138,39 @@ export const LeaveRequestDialog = ({
 	const [missingRejectionReason, setMissingRejectionReason] = useState(false);
 	const [missingApprovalComment, setMissingApprovalComment] = useState(false);
 	const [takeOffConfirmed, setTakeOffConfirmed] = useState(false);
+	// Only the decision that approves the leave takes the person off their shifts.
+	const checksRoster =
+		lifecycle !== undefined &&
+		request !== undefined &&
+		step === "approve" &&
+		approvesLeave(request);
 	const rostered = useQuery(
 		rosteredDaysQuery(
 			lifecycle?.companyId ?? "",
 			{ start: request?.startDate ?? "", end: request?.endDate ?? "" },
 			request?.membershipId,
-			lifecycle !== undefined && request !== undefined && step === "approve"
+			checksRoster
 		)
 	);
 	const rosteredDays = rostered.data ?? [];
 	const unconfirmedClash = rosteredDays.length > 0 && !takeOffConfirmed;
 	// Approving on days not read yet is how a 409 comes back with nothing to confirm.
 	const rosterUnknown =
+		checksRoster && (rostered.isFetching || rostered.isError);
+	const approval =
+		request?.status === "PENDING" ? (request.approval ?? null) : null;
+	// The steps and who decided them, for someone who reads approvals there; never on the member's own request.
+	const readsTrail =
+		approval !== null &&
 		lifecycle !== undefined &&
-		step === "approve" &&
-		(rostered.isFetching || rostered.isError);
+		!lifecycle.own &&
+		readsApprovalSteps;
+	const trail = useQuery(
+		approvalInstanceQuery(
+			lifecycle?.companyId ?? "",
+			readsTrail ? approval.approvalInstanceId : undefined
+		)
+	);
 	if (mode === "apply" || mode === "record")
 		return (
 			<LeaveApplyForm
@@ -145,11 +189,12 @@ export const LeaveRequestDialog = ({
 	if (!request) return null;
 	const fields = refusal?.fields ?? {};
 	const rejecting = step === "reject";
+	const stage = leaveDecisionStage(request);
 	const rejectionReasonError = missingRejectionReason
 		? t("leave.required")
 		: fields.reason;
 	// The API asks for a comment on leave before today; its own refusal lands on the field too.
-	const commentRequired = request.startDate < today;
+	const commentRequired = approvesLeave(request) && request.startDate < today;
 	const approvalCommentError = missingApprovalComment
 		? t("leave.commentMissing")
 		: fields.comment;
@@ -168,13 +213,37 @@ export const LeaveRequestDialog = ({
 		}
 		onReject(request, rejectionReason.trim());
 	};
+	const approvalLine = leaveApprovalLine(request, canReview);
+	const moment = dateTimeFormatIn(
+		formattingLocale(i18n),
+		request.branchTimeZone ?? "",
+		{ dateStyle: "medium", timeStyle: "short" }
+	);
+	const stepNote =
+		!approval || step === "review"
+			? undefined
+			: rejecting
+				? t("leave.approval.rejectNote", {
+						label: approval.currentStepLabel,
+						name: request.displayName,
+					})
+				: stage === "middle"
+					? t("leave.approval.middleNote", {
+							step: approval.currentStepOrder,
+							total: approval.stepCount,
+							label: approval.currentStepLabel,
+						})
+					: t("leave.approval.lastNote", {
+							label: approval.currentStepLabel,
+							name: request.displayName,
+						});
 	return (
-		<Modal
+		<Dialog
 			open
 			title={t("leave.requestTitle")}
 			footer={
 				step !== "review" ? (
-					<>
+					<div className="flex justify-end gap-3">
 						<Button
 							variant="cancel"
 							onClick={() => {
@@ -197,9 +266,9 @@ export const LeaveRequestDialog = ({
 								rejecting ? "leave.confirmRejection" : "leave.confirmApproval"
 							)}
 						</Button>
-					</>
+					</div>
 				) : request.status === "PENDING" && canReview ? (
-					<>
+					<div className="flex justify-end gap-3">
 						<Button
 							className="border-error-300! bg-error-50! text-error-600!"
 							disabled={busy}
@@ -220,34 +289,65 @@ export const LeaveRequestDialog = ({
 						>
 							{t("leave.approve")}
 						</Button>
-					</>
-				) : (
-					<Button variant="secondary" onClick={onClose}>
-						{t("leave.close")}
-					</Button>
-				)
+					</div>
+				) : undefined
 			}
 			onClose={onClose}
 		>
-			<div className="px-6 py-8">
-				{refusal?.message && (
-					<p className="mb-6 text-sm text-error-700" role="alert">
-						{refusal.message}
-					</p>
-				)}
-				<LeaveRequestDetails request={request} />
-				{lifecycle && step === "review" && (
-					<LeaveRequestLifecycle
-						canChange={canReview}
-						companyId={lifecycle.companyId}
-						own={lifecycle.own}
-						request={request}
-						onDone={lifecycle.onDone}
-					/>
-				)}
-			</div>
-			{step === "approve" && (rosteredDays.length > 0 || rostered.isError) && (
-				<div className="border-t border-neutral-400 px-6 pt-6">
+			{refusal?.message && (
+				<p className="mb-6 text-sm text-error-700" role="alert">
+					{refusal.message}
+				</p>
+			)}
+			<LeaveRequestDetails request={request} />
+			{approval && (
+				<section aria-labelledby={`${id}-approval`} className="mt-8">
+					<h3
+						className="text-sm font-semibold text-neutral-900"
+						id={`${id}-approval`}
+					>
+						{t("leave.approval.title")}
+					</h3>
+					{trail.data ? (
+						<ApprovalTrail
+							className="mt-3"
+							departmentName={request.departmentName ?? ""}
+							formatMoment={(instant) => moment.format(new Date(instant))}
+							instance={trail.data}
+						/>
+					) : (
+						approvalLine && (
+							<p className="mt-3 text-sm text-neutral-800">
+								{t(approvalLine.key, approvalLine.values)}
+							</p>
+						)
+					)}
+					{trail.isError && (
+						<p className="mt-2 text-sm text-neutral-700">
+							{t("leave.approval.trailFailed")}{" "}
+							<Button
+								variant="textlink"
+								onClick={() => {
+									void trail.refetch();
+								}}
+							>
+								{t("leave.approval.retry")}
+							</Button>
+						</p>
+					)}
+				</section>
+			)}
+			{lifecycle && step === "review" && (
+				<LeaveRequestLifecycle
+					canChange={canReview}
+					companyId={lifecycle.companyId}
+					own={lifecycle.own}
+					request={request}
+					onDone={lifecycle.onDone}
+				/>
+			)}
+			{checksRoster && (rosteredDays.length > 0 || rostered.isError) && (
+				<div className="mt-8 border-t border-neutral-400 pt-6">
 					<RosteredDaysNotice
 						confirmed={takeOffConfirmed}
 						days={rosteredDays}
@@ -270,6 +370,8 @@ export const LeaveRequestDialog = ({
 					error={rejecting ? rejectionReasonError : approvalCommentError}
 					id={id}
 					note={rejecting ? rejectionReason : approvalComment}
+					noteMaxLength={approval ? APPROVAL_COMMENT_MAX_LENGTH : undefined}
+					stepNote={stepNote}
 					onSubmit={decide}
 					onNoteChange={(note) => {
 						if (rejecting) {
@@ -282,6 +384,6 @@ export const LeaveRequestDialog = ({
 					}}
 				/>
 			)}
-		</Modal>
+		</Dialog>
 	);
 };

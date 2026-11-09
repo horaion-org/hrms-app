@@ -22,6 +22,14 @@ export type LeaveDecisionStepProps = {
 	commentRequired?: boolean;
 	/** Why the note was refused or is missing. */
 	error?: string;
+	/**
+	 * Under an approval flow: which step is being decided and what the
+	 * decision does, e.g. "Step 1 of 2 (Manager). After you approve, the
+	 * next step is asked."
+	 */
+	stepNote?: string;
+	/** The longest note the route that decides keeps; the leave routes' limits by default. */
+	noteMaxLength?: number;
 	onNoteChange: (note: string) => void;
 	onSubmit: () => void;
 };
@@ -38,6 +46,8 @@ export const LeaveDecisionStep = ({
 	note,
 	commentRequired = false,
 	error,
+	stepNote,
+	noteMaxLength,
 	onNoteChange,
 	onSubmit,
 }: LeaveDecisionStepProps): FunctionComponent => {
@@ -46,13 +56,14 @@ export const LeaveDecisionStep = ({
 	const required = rejecting || commentRequired;
 	return (
 		<form
-			className="border-t border-neutral-400 px-6 py-8"
+			className="mt-8 border-t border-neutral-400 pt-8"
 			id={id}
 			onSubmit={(event) => {
 				event.preventDefault();
 				onSubmit();
 			}}
 		>
+			{stepNote && <p className="mb-4 text-sm text-neutral-800">{stepNote}</p>}
 			<label
 				className="mb-3 block text-sm font-medium text-neutral-800"
 				htmlFor={`${id}-decision-note`}
@@ -81,7 +92,10 @@ export const LeaveDecisionStep = ({
 				status={error ? "error" : undefined}
 				value={note}
 				maxLength={
-					rejecting ? REJECTION_REASON_MAX_LENGTH : APPROVAL_COMMENT_MAX_LENGTH
+					noteMaxLength ??
+					(rejecting
+						? REJECTION_REASON_MAX_LENGTH
+						: APPROVAL_COMMENT_MAX_LENGTH)
 				}
 				onChange={(event) => {
 					onNoteChange(event.target.value);

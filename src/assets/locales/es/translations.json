@@ -255,7 +255,14 @@
 		"historyDates": "{{before}} → {{after}}",
 		"historyType": "{{before}} → {{after}}",
 		"approval": {
-			"stepApproved": "Aprobaste {{label}} para {{name}}. Ahora se consulta el siguiente paso."
+			"title": "Aprobación",
+			"stepApproved": "Aprobaste {{label}} para {{name}}. Ahora se consulta el siguiente paso.",
+			"middleNote": "Paso {{step}} de {{total}} ({{label}}). Cuando apruebes, se consulta el siguiente paso.",
+			"lastNote": "Último paso ({{label}}). Al aprobarlo se aprueba el permiso de {{name}}, y se le avisa.",
+			"rejectNote": "Rechazar en {{label}} rechaza el permiso, y se avisa a {{name}}.",
+			"rejectedAt": "Rechazado en",
+			"trailFailed": "No pudimos cargar los pasos de aprobación.",
+			"retry": "Intentar de nuevo"
 		}
 	},
 	"approvals": {

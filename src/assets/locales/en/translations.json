@@ -255,7 +255,14 @@
 		"historyDates": "{{before}} → {{after}}",
 		"historyType": "{{before}} → {{after}}",
 		"approval": {
-			"stepApproved": "You approved {{label}} for {{name}}. The next step is asked now."
+			"title": "Approval",
+			"stepApproved": "You approved {{label}} for {{name}}. The next step is asked now.",
+			"middleNote": "Step {{step}} of {{total}} ({{label}}). After you approve, the next step is asked.",
+			"lastNote": "Last step ({{label}}). Approving it approves {{name}}’s leave, and they are told.",
+			"rejectNote": "Rejecting at {{label}} rejects the leave, and {{name}} is told.",
+			"rejectedAt": "Rejected at",
+			"trailFailed": "We couldn’t load the approval steps.",
+			"retry": "Try again"
 		}
 	},
 	"approvals": {
