@@ -1,0 +1,80 @@
+import { expect, test, type BrowserContext, type Page } from "@playwright/test";
+import { mockDemoCompany } from "./demoCompany";
+import { mockSessionRoutes } from "./session";
+
+/** The narrowest phone the app supports, and a tablet in portrait, where the rail gives way to the Menu bar. */
+const SCREENS = [
+	{ name: "a phone", viewport: { width: 360, height: 740 } },
+	{ name: "a tablet", viewport: { width: 768, height: 1024 } },
+];
+
+/** Every signed-in page, with the ids `mockDemoCompany` answers for. */
+const SIGNED_IN_ROUTES = [
+	"/",
+	"/scheduling",
+	"/scheduling/new",
+	"/scheduling/s-1",
+	"/me/schedules/s-1",
+	"/leave",
+	"/availability",
+	"/notifications",
+	"/people",
+	"/people/m-2",
+	"/people/new",
+	"/organisation",
+	"/organisation/branches",
+	"/organisation/departments",
+	"/organisation/job-titles",
+	"/organisation/skills",
+	"/organisation/system-roles",
+	"/organisation/system-roles/new",
+	"/organisation/system-roles/r-1",
+	"/activity",
+	"/settings",
+	"/settings/data/import-organisation",
+	"/settings/data/import-people",
+	"/me/profile",
+	"/me/password",
+	"/forbidden",
+];
+
+const SIGNED_OUT_ROUTES = [
+	"/login",
+	"/register",
+	"/forgot-password",
+	"/confirm-email",
+];
+
+/** How far the page itself scrolls sideways; content in its own scroll frame does not count. */
+const sidewaysScroll = (page: Page): Promise<number> =>
+	page.evaluate(
+		() =>
+			document.documentElement.scrollWidth -
+			document.documentElement.clientWidth
+	);
+
+/** Each route with the API it needs: a populated company when signed in, only the Session routes when not. */
+const ROUTES: Array<{
+	path: string;
+	mockApi: (context: BrowserContext) => Promise<unknown>;
+}> = [
+	...SIGNED_IN_ROUTES.map((path) => ({ path, mockApi: mockDemoCompany })),
+	...SIGNED_OUT_ROUTES.map((path) => ({ path, mockApi: mockSessionRoutes })),
+];
+
+for (const screen of SCREENS) {
+	test.describe(`on ${screen.name}`, () => {
+		test.use({ viewport: screen.viewport, hasTouch: true });
+
+		for (const { path, mockApi } of ROUTES) {
+			test(`${path} does not scroll sideways`, async ({ context, page }) => {
+				await mockApi(context);
+				await page.goto(path);
+				await expect(page.getByRole("main")).toBeVisible();
+				await page.waitForLoadState("networkidle");
+
+				expect(await sidewaysScroll(page)).toBe(0);
+			});
+		}
+	});
+}
