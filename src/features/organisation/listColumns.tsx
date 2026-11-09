@@ -76,13 +76,14 @@ export const nameColumn = <T extends { name: string }>(
 	pin: "start",
 });
 
-/** The Branch each row belongs to, by name. */
+/** The Branch each row belongs to, by name; left out below `md`, like every column but name, status and actions. */
 export const branchColumn = <T extends { branchName?: string }>(
 	t: TFunction
 ): DataTableColumn<T> => ({
 	id: "branch",
 	header: t("organisation.list.branch"),
 	cell: (row) => row.branchName ?? "",
+	hideBelow: "md",
 });
 
 export const statusColumn = <T extends { status: UnitStatus }>(
@@ -122,8 +123,16 @@ export const createdColumn = <T extends { createdAt?: string }>(
 				{formatDate(row.createdAt, language)}
 			</time>
 		) : null,
+	// Named on the line for the eye; screen readers already hear the header.
+	summary: (row) =>
+		row.createdAt ? (
+			<span>
+				<span aria-hidden="true">{t("organisation.list.created")} </span>
+				{formatDate(row.createdAt, language)}
+			</span>
+		) : null,
 	sortValue: (row) => row.createdAt ?? "",
-	// Left out on phones, which keep the columns that identify a row.
+	// Left out on phones, which keep the columns that identify a row; the date joins the name's line.
 	hideBelow: "md",
 	headerClassName: "w-36",
 });

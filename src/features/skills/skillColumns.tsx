@@ -59,7 +59,8 @@ const holdersCell = (skill: SkillOverview, t: TFunction): ReactNode => (
 /**
  * The catalogue's columns: the skill with its description, category, how
  * it is measured, expiry, holders, status, when created, and the row's
- * actions (Edit and a menu of `menu`).
+ * actions (Edit and a menu of `menu`). Phones keep the skill and the
+ * actions; its status joins from `sm` and the rest from `md`.
  */
 export const skillColumns = (
 	t: TFunction,
@@ -73,23 +74,33 @@ export const skillColumns = (
 		id: "category",
 		header: t(`${key}.category`),
 		cell: (skill) => skill.category ?? t(`${key}.none`),
+		summary: (skill) => skill.category,
 		sortValue: (skill) => skill.category ?? "",
+		hideBelow: "md",
 	},
 	{
 		id: "measure",
 		header: t(`${key}.measuredBy`),
 		cell: (skill) => measureLabel(skill, t),
+		hideBelow: "md",
 	},
 	{
 		id: "expiry",
 		header: t(`${key}.expiry`),
 		cell: (skill) => expiryLabel(skill, t),
+		// On the name's line "—" would say nothing, so an untracked expiry is said in words.
+		summary: (skill) =>
+			skill.tracksExpiry
+				? expiryLabel(skill, t)
+				: t(`${key}.expiryNotTracked`),
+		hideBelow: "md",
 	},
 	{
 		id: "holders",
 		header: t(`${key}.holders`),
 		cell: (skill) => holdersCell(skill, t),
 		sortValue: (skill) => skill.holders,
+		hideBelow: "md",
 	},
 	{
 		id: "status",
@@ -97,6 +108,7 @@ export const skillColumns = (
 		cell: (skill) => skillStatusBadge(skill.status, t),
 		sortValue: (skill) => skill.status,
 		headerClassName: "w-30",
+		hideBelow: "sm",
 	},
 	createdColumn<SkillOverview>(t, language),
 	actionsColumn<SkillOverview>(t, menu, canEdit, onEdit),

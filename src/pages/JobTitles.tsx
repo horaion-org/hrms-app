@@ -5,7 +5,11 @@ import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { DataTable, type DataTableSort } from "@/components/ui/DataTable";
+import {
+	DataTable,
+	type DataTableColumn,
+	type DataTableSort,
+} from "@/components/ui/DataTable";
 import { OverflowMenuItem } from "@/components/ui/OverflowMenu";
 import type { JobTitle } from "@/features/organisation/api";
 import { CreateJobTitleDialog } from "@/features/organisation/CreateJobTitleDialog";
@@ -138,7 +142,7 @@ export const JobTitles = (): FunctionComponent => {
 		chooseDepartment(undefined);
 	};
 	const columns = useMemo(
-		() => [
+		(): Array<DataTableColumn<JobTitle>> => [
 			nameColumn<JobTitle>(
 				t("organisation.jobTitles.name"),
 				(jobTitle) => jobTitle.description
@@ -152,7 +156,8 @@ export const JobTitles = (): FunctionComponent => {
 							id: "department",
 							header: t("organisation.jobTitles.department"),
 							cell: (jobTitle: JobTitle): string => jobTitle.departmentName,
-						},
+							hideBelow: "md",
+						} satisfies DataTableColumn<JobTitle>,
 					]),
 			{
 				id: "people",
@@ -169,8 +174,10 @@ export const JobTitles = (): FunctionComponent => {
 						})}
 					</span>
 				),
+				hideBelow: "md",
 			},
-			statusColumn<JobTitle>(t),
+			// Phones keep the name and the actions; Status joins from `sm`, as on People.
+			{ ...statusColumn<JobTitle>(t), hideBelow: "sm" },
 			createdColumn<JobTitle>(t, locale),
 			actionsColumn<JobTitle>(
 				t,

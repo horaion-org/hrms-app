@@ -2131,6 +2131,7 @@
 				"UNKNOWN": "—"
 			},
 			"expiryTracked": "Controlado",
+			"expiryNotTracked": "Sin control de caducidad",
 			"expiryTrackedFor_one": "Controlado · {{count}} mes",
 			"expiryTrackedFor_other": "Controlado · {{count}} meses",
 			"holdersCount_one": "{{count}} persona",

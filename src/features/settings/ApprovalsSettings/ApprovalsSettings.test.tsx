@@ -86,10 +86,32 @@ describe("ApprovalsSettings", () => {
 			name: "Schedule publishing",
 		});
 		const [, company, kitchen] = within(table).getAllByRole("row");
-		expect(company).toHaveTextContent("Whole company1 PublishOn");
-		expect(kitchen).toHaveTextContent(
-			"Kitchen1 Endorse (all of 2) → 2 PublishOff"
-		);
+		// Each cell's own content: on phones the first cell adds a line with the steps after it.
+		const cellsOf = (row: HTMLElement | undefined): Array<string | undefined> =>
+			within(row!)
+				.getAllByRole("cell")
+				.map((cell) => cell.firstChild?.textContent ?? undefined);
+		expect(cellsOf(company).slice(0, 3)).toEqual([
+			"Whole company",
+			"1 Publish",
+			"On",
+		]);
+		expect(cellsOf(kitchen).slice(0, 3)).toEqual([
+			"Kitchen",
+			"1 Endorse (all of 2) → 2 Publish",
+			"Off",
+		]);
+		// Phones keep where it applies, whether it is on and the actions; the steps move to the first cell's line.
+		const steps = within(table).getByRole("columnheader", { name: "Steps" });
+		expect(steps).toHaveClass("hidden", "md:table-cell");
+		const [stepsOnLine, stepsCell] = within(
+			kitchen as HTMLElement
+		).getAllByText(/Endorse/);
+		expect(stepsCell).toHaveClass("hidden", "md:table-cell");
+		expect(stepsOnLine).toHaveClass("md:hidden");
+		expect(
+			within(table).getByRole("columnheader", { name: "Applies to" })
+		).not.toHaveClass("hidden");
 		expect(
 			within(panel).getByRole("button", { name: "Add flow" })
 		).toBeInTheDocument();

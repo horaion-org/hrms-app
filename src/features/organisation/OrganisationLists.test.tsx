@@ -183,6 +183,21 @@ const baseRoutes = (
 const bodyRows = (table: HTMLElement): Array<HTMLElement> =>
 	within(table).getAllByRole("row").slice(1);
 
+/** Phones keep the selection, the name and the actions; Status joins from `sm` and every other column from `md`. */
+const expectPhoneColumns = (table: HTMLElement, name: string): void => {
+	const kept = ["Select all", name, "Actions"];
+	const headers = within(table).getAllByRole("columnheader");
+	const cells = within(bodyRows(table)[0] as HTMLElement).getAllByRole("cell");
+	headers.forEach((header, index) => {
+		const breakpoint = header.textContent === "Status" ? "sm" : "md";
+		for (const cell of [header, cells[index]]) {
+			if (kept.includes(header.textContent ?? ""))
+				expect(cell).not.toHaveClass("hidden");
+			else expect(cell).toHaveClass("hidden", `${breakpoint}:table-cell`);
+		}
+	});
+};
+
 const searchesOf = (
 	calls: Array<{ path: string; search: string }>,
 	path: string
@@ -208,8 +223,10 @@ describe("Branches", () => {
 				});
 				await open("/organisation/branches");
 				const table = await screen.findByRole("table");
-				expect(await within(table).findByText(label)).toBeVisible();
-				expect(within(table).getByText("QQ")).toBeVisible();
+				expect(
+					await within(table).findByRole("cell", { name: label })
+				).toBeVisible();
+				expect(within(table).getByRole("cell", { name: "QQ" })).toBeVisible();
 				expect(
 					within(
 						within(table).getByRole("columnheader", { name: header })
@@ -252,8 +269,11 @@ describe("Branches", () => {
 			"Created",
 			"Actions",
 		]);
+		expectPhoneColumns(table, "Branch name");
 		expect(
-			within(bodyRows(table)[0] as HTMLElement).getByText("SG-ORC-01")
+			within(bodyRows(table)[0] as HTMLElement).getByRole("cell", {
+				name: "SG-ORC-01",
+			})
 		).toBeVisible();
 		// The name leads its cell; the hidden columns' line follows it.
 		expect(
@@ -261,11 +281,15 @@ describe("Branches", () => {
 				(row) => within(row).getAllByRole("cell")[1]?.firstChild?.textContent
 			)
 		).toEqual(["Main Branch", "Orchard"]);
+		const statusCell = (row: number, status: string): HTMLElement =>
+			within(bodyRows(table)[row] as HTMLElement).getByRole("cell", {
+				name: status,
+			});
+		expect(within(statusCell(0, "Active")).getByText("Active")).toHaveClass(
+			"bg-success-100"
+		);
 		expect(
-			within(bodyRows(table)[0] as HTMLElement).getByText("Active")
-		).toHaveClass("bg-success-100");
-		expect(
-			within(bodyRows(table)[1] as HTMLElement).getByText("Inactive")
+			within(statusCell(1, "Inactive")).getByText("Inactive")
 		).toHaveClass("bg-neutral-400");
 		expect(
 			screen.getByRole("checkbox", { name: "Select Orchard" })
@@ -348,7 +372,9 @@ describe("Branches", () => {
 		});
 		await open("/organisation/branches");
 		const table = await screen.findByRole("table", { name: "Branches" });
-		expect(await within(table).findAllByText("Singapore")).toHaveLength(2);
+		expect(
+			await within(table).findAllByRole("cell", { name: "Singapore" })
+		).toHaveLength(2);
 		await user.click(screen.getByRole("button", { name: "Sort by City" }));
 		await waitFor(() => {
 			expect(searchesOf(calls, "/api/v1/companies/c-1/branches")).toContain(
@@ -664,6 +690,7 @@ describe("Departments", () => {
 			"Created",
 			"Actions",
 		]);
+		expectPhoneColumns(table, "Department name");
 		expect(
 			screen.getByRole("searchbox", { name: "Search department" })
 		).toBeVisible();
@@ -1058,6 +1085,7 @@ describe("Job titles", () => {
 			["Orchard", "Kitchen", "3 people", "Active"],
 			["Orchard", "Kitchen", "0 people", "Inactive"],
 		]);
+		expectPhoneColumns(table, "Job title");
 		// The count is not a sort the API offers.
 		expect(
 			screen.queryByRole("button", { name: "Sort by People" })

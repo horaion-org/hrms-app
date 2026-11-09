@@ -2835,6 +2835,7 @@
 				"UNKNOWN": "—"
 			},
 			"expiryTracked": "Tracked",
+			"expiryNotTracked": "Expiry not tracked",
 			"expiryTrackedFor_one": "Tracked · {{count}} month",
 			"expiryTrackedFor_other": "Tracked · {{count}} months",
 			"holdersCount_one": "{{count}} person",
