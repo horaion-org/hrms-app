@@ -20,14 +20,19 @@ export type NotificationLink =
 			params: { scheduleId: string };
 			search: { offer: string };
 	  }
-	| { to: "/settings/data/import-people"; search: { import: string } };
+	| { to: "/settings/data/import-people"; search: { import: string } }
+	| {
+			to: "/settings";
+			search: { section: "approvals"; subject: "leave" };
+	  };
 
 /**
  * The page a notification target opens: the leave request on `/leave`, the
  * schedule's roster on the scheduling page (a day to decide opens its week
  * with the Issues list beside it, an approval with its trail), a
  * rostered member's own view of that roster (with an offer's card when
- * it is about one), or the people import's result under Settings › Data.
+ * it is about one), the people import's result under Settings › Data, or
+ * the leave requests' approval flows under Settings › Approvals.
  */
 export const notificationLink = (
 	target: NotificationTarget
@@ -67,6 +72,11 @@ export const notificationLink = (
 			return linkOptions({
 				to: "/settings/data/import-people",
 				search: { import: target.importId },
+			});
+		case "leaveApprovalFlows":
+			return linkOptions({
+				to: "/settings",
+				search: { section: "approvals", subject: "leave" },
 			});
 	}
 };

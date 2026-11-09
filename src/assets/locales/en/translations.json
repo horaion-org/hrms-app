@@ -357,7 +357,13 @@
 			"requested": "A roster needs your approval.",
 			"decided": "A roster you submitted for approval was decided. Open it to see the outcome.",
 			"cancelled": "The approval of a roster you submitted was cancelled before anyone decided it. Submit it again.",
-			"stalled": "A step of a roster’s approval has nobody left who can decide it. Check who can approve, or withdraw the submission."
+			"stalled": "A step of a roster’s approval has nobody left who can decide it. Check who can approve, or withdraw the submission.",
+			"leave": {
+				"requested": "A leave request needs your approval.",
+				"decided": "A leave request was decided. Open it to see the outcome.",
+				"cancelled": "The approval of a leave request was restarted, so it goes through its steps again.",
+				"stalled": "A step of a leave request’s approval has nobody left who can decide it. Check who can approve leave."
+			}
 		},
 		"flows": {
 			"title": "Approvals",

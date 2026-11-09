@@ -357,7 +357,13 @@
 			"requested": "Un cuadrante necesita tu aprobación.",
 			"decided": "Se ha decidido un cuadrante que enviaste a aprobación. Ábrelo para ver el resultado.",
 			"cancelled": "Se canceló la aprobación de un cuadrante que enviaste antes de que nadie lo decidiera. Vuelve a enviarlo.",
-			"stalled": "Un paso de la aprobación de un cuadrante ya no tiene a nadie que pueda decidirlo. Revisa quién puede aprobar o retira el envío."
+			"stalled": "Un paso de la aprobación de un cuadrante ya no tiene a nadie que pueda decidirlo. Revisa quién puede aprobar o retira el envío.",
+			"leave": {
+				"requested": "Una solicitud de permiso necesita tu aprobación.",
+				"decided": "Se decidió una solicitud de permiso. Ábrela para ver el resultado.",
+				"cancelled": "La aprobación de una solicitud de permiso se reinició, así que vuelve a pasar por sus pasos.",
+				"stalled": "Un paso de la aprobación de una solicitud de permiso no tiene a nadie que pueda decidirlo. Revisa quién puede aprobar permisos."
+			}
 		},
 		"flows": {
 			"title": "Aprobaciones",
