@@ -3,7 +3,6 @@ import {
 	approvalMetaLine,
 	approvalStanding,
 	currentInstanceOf,
-	rejectedStepOf,
 	scheduleCardApprovalLine,
 	type ApprovalStanding,
 	type ApprovalStandingFacts,
@@ -216,14 +215,6 @@ describe("currentInstanceOf", () => {
 		expect(currentInstanceOf([older], "2026-10-11T00:00:00Z")).toBeNull();
 		expect(currentInstanceOf([older], null)).toBe(older);
 		expect(currentInstanceOf([], null)).toBeNull();
-	});
-});
-
-describe("rejectedStepOf", () => {
-	it("names the step that rejected, and nothing otherwise", () => {
-		expect(rejectedStepOf(rejectedAtEndorseFixture())?.label).toBe("Endorse");
-		expect(rejectedStepOf(approvalInstanceFixture())).toBeUndefined();
-		expect(rejectedStepOf(null)).toBeUndefined();
 	});
 });
 

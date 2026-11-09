@@ -75,6 +75,7 @@ const FLOW: Schedule["publication"] = {
 	requiresApproval: true,
 	stepLabels: ["Endorse", "Publish"],
 	submission: null,
+	rejectedAtStep: null,
 };
 
 /** Front Office's schedule s-1, generated, where Endorse → Publish applies. */
@@ -418,6 +419,10 @@ it("rejects at the open step with a required reason, and the callout names the s
 				decidedAt: "2026-10-10T01:10:00Z",
 				decidedBy: SITI,
 				rejectionReason: "Two nights have no supervisor.",
+				publication: {
+					...FLOW,
+					rejectedAtStep: { stepOrder: 1, stepLabel: "Endorse" },
+				},
 			});
 			return ok(world.instance);
 		},
@@ -454,6 +459,28 @@ it("rejects at the open step with a required reason, and the callout names the s
 			},
 		},
 	]);
+});
+
+it("tells a submitter without approval:read which step rejected their roster", async () => {
+	const world: World = {
+		schedule: withFlow({
+			status: "REJECTED",
+			decidedAt: "2026-10-10T01:10:00Z",
+			decidedBy: SITI,
+			rejectionReason: "Two nights have no supervisor.",
+			publication: {
+				...FLOW,
+				rejectedAtStep: { stepOrder: 2, stepLabel: "Publish" },
+			},
+		}),
+		instance: null,
+	};
+	const calls = await openRoster(world, ["schedule:read", "schedule:publish"]);
+
+	expect(
+		await screen.findByText(/^Rejected at Publish by Siti Rahman · /)
+	).toBeInTheDocument();
+	expect(calls.some((call) => call.path.startsWith(INSTANCES))).toBe(false);
 });
 
 it("says someone else decided first when the step closed meanwhile", async () => {

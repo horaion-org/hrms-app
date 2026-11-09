@@ -12,7 +12,6 @@ import { ApprovalTrail } from "@/features/approvals/ApprovalTrail";
 import {
 	approvalMetaLine,
 	approvalStanding,
-	rejectedStepOf,
 	type ApprovalStanding,
 } from "@/features/approvals/approvalStanding";
 import {
@@ -467,7 +466,7 @@ const ApiSchedule = ({
 		),
 		rejected: (
 			<RejectedRosterCallout
-				rejectedStep={rejectedStepOf(approval.instance)?.label}
+				rejectedStep={schedule.publication.rejectedAtStep?.stepLabel}
 				schedule={schedule}
 				showsNextStep={regenerable(schedule)}
 			/>

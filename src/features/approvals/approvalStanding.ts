@@ -1,7 +1,4 @@
-import type {
-	ApprovalInstance,
-	ApprovalInstanceStep,
-} from "@/features/approvals/api";
+import type { ApprovalInstance } from "@/features/approvals/api";
 import type { PublicationSubmission } from "@/features/scheduling/schedules/api";
 
 /** What the page could read of a subject's submission. */
@@ -88,14 +85,6 @@ export const openStepOfSubmission = (
 	label: submission.currentStepLabel,
 	isLast: submission.currentStepOrder === submission.stepCount,
 });
-
-/** The step that rejected a submission, if it was rejected. */
-export const rejectedStepOf = (
-	instance: ApprovalInstance | null | undefined
-): ApprovalInstanceStep | undefined =>
-	instance?.status === "REJECTED"
-		? instance.steps.find((step) => step.status === "REJECTED")
-		: undefined;
 
 const time = (instant: string): number => new Date(instant).getTime();
 
