@@ -378,10 +378,13 @@
 				"exists": "This already has an approval flow. Edit that one instead.",
 				"existsOnTurnOn": "Another flow is already on here. Turn that one off first.",
 				"invalid": "The flow wasn’t accepted. Check its steps and try again.",
-				"noApprover": "A step has nobody who can approve it. Name people who can publish this roster.",
+				"noApprover": "A step has nobody who can approve it. Name people who may decide it.",
 				"gone": "This flow no longer exists. The list has been refreshed.",
 				"forbidden": "You no longer have permission to change approval flows.",
-				"failed": "We couldn’t save the flow. Try again."
+				"failed": "We couldn’t save the flow. Try again.",
+				"noApproverIn_one": "Nobody can approve step {{steps}} in {{department}}.",
+				"noApproverIn_other": "Nobody can approve steps {{steps}} in {{department}}.",
+				"noApproverFix": "Give people “Decide approvals” there in Access roles, or change the step."
 			},
 			"dialog": {
 				"appliesTo": "Applies to",

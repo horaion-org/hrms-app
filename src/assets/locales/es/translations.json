@@ -378,10 +378,13 @@
 				"exists": "Ya tiene un flujo de aprobación. Edita ese.",
 				"existsOnTurnOn": "Ya hay otro flujo activado aquí. Desactívalo primero.",
 				"invalid": "No se aceptó el flujo. Revisa sus pasos e inténtalo de nuevo.",
-				"noApprover": "Un paso no tiene a nadie que pueda aprobarlo. Indica personas que puedan publicar este cuadrante.",
+				"noApprover": "Un paso no tiene a nadie que pueda aprobarlo. Indica personas que puedan decidirlo.",
 				"gone": "Este flujo ya no existe. Se ha actualizado la lista.",
 				"forbidden": "Ya no tienes permiso para cambiar los flujos de aprobación.",
-				"failed": "No pudimos guardar el flujo. Inténtalo de nuevo."
+				"failed": "No pudimos guardar el flujo. Inténtalo de nuevo.",
+				"noApproverIn_one": "Nadie puede aprobar el paso {{steps}} en {{department}}.",
+				"noApproverIn_other": "Nadie puede aprobar los pasos {{steps}} en {{department}}.",
+				"noApproverFix": "Da «Decidir aprobaciones» a personas de allí en Roles de acceso, o cambia el paso."
 			},
 			"dialog": {
 				"appliesTo": "Se aplica a",

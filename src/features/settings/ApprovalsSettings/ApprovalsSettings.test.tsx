@@ -454,4 +454,45 @@ describe("ApprovalsSettings", () => {
 			"Requests already waiting keep this flow. Leave applied for from now on doesn’t go through it."
 		);
 	});
+
+	it("names the departments and steps nobody can approve when a flow is saved", async () => {
+		stubApi(
+			routes(READ_AND_MANAGE, [], {
+				[`POST ${FLOWS}`]: {
+					status: 400,
+					body: {
+						status: 400,
+						title: "Refused",
+						errorCode: "APPROVAL_FLOW_HAS_NO_APPROVER",
+						departments: [
+							{
+								departmentId: "d-1",
+								departmentName: "Kitchen",
+								stepOrders: [1],
+							},
+						],
+					},
+				},
+			})
+		);
+		const user = userEvent.setup();
+
+		const panel = await open();
+		await user.click(
+			await within(panel).findByRole("button", {
+				name: "Add flow Leave requests",
+			})
+		);
+		const dialog = screen.getByRole("dialog", {
+			name: "Add leave approval flow",
+		});
+		await user.type(within(dialog).getByLabelText(/Name of step 1/), "Manager");
+		await user.click(within(dialog).getByRole("button", { name: "Save flow" }));
+
+		expect(
+			await within(dialog).findByText(
+				"Nobody can approve step 1 in Kitchen. Give people “Decide approvals” there in Access roles, or change the step."
+			)
+		).toBeInTheDocument();
+	});
 });
