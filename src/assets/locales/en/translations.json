@@ -271,6 +271,7 @@
 			"approved": "Approved",
 			"rejected": "Rejected",
 			"skipped": "Skipped",
+			"skippedBy": "{{name}} approved this with the next step · {{at}}",
 			"notReached": "Not reached",
 			"notYet": "Not yet",
 			"unknown": "Unknown",
@@ -337,7 +338,9 @@
 		},
 		"notifications": {
 			"requested": "A roster needs your approval.",
-			"decided": "A roster you submitted for approval was decided. Open it to see the outcome."
+			"decided": "A roster you submitted for approval was decided. Open it to see the outcome.",
+			"cancelled": "The approval of a roster you submitted was cancelled before anyone decided it. Submit it again.",
+			"stalled": "A step of a roster’s approval has nobody left who can decide it. Check who can approve, or withdraw the submission."
 		},
 		"flows": {
 			"title": "Approvals",
@@ -398,7 +401,7 @@
 				"labelRequired": "Name this step.",
 				"labelTooLong": "Use up to 24 characters.",
 				"whoDecides": "Who decides",
-				"anyone": "Anyone who can publish {{department}}’s roster",
+				"anyone": "Anyone who can publish the {{department}} roster",
 				"anyoneCompany": "Anyone who can publish the roster",
 				"anyoneDescription": "One approval is enough.",
 				"onlyThese": "Only these people",

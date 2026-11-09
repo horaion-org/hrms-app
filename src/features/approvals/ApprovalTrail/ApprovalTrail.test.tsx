@@ -8,6 +8,7 @@ import {
 	AHMAD,
 	approvalInstanceFixture,
 	atStepTwoFixture,
+	carriedForwardFixture,
 	endorseStep,
 	publishStep,
 	rejectedAtEndorseFixture,
@@ -188,5 +189,16 @@ describe("ApprovalTrail", () => {
 
 		expect(screen.getByText(/Withdrawn · at 2026-10-11/)).toBeInTheDocument();
 		expect(steps()[0]).toHaveTextContent("Not reached");
+	});
+
+	it("given_aStepCarriedForward_when_rendered_then_namesWhoApprovedItWithTheNextStep", () => {
+		renderTrail(carriedForwardFixture());
+
+		expect(steps()[0]).toHaveTextContent("Endorse · Skipped");
+		expect(steps()[0]).toHaveTextContent(
+			"Siti Rahman approved this with the next step · at 2026-10-10"
+		);
+		expect(steps()[0]).not.toHaveTextContent("Anyone who can publish");
+		expect(steps()[1]).toHaveTextContent("Publish · Approved");
 	});
 });

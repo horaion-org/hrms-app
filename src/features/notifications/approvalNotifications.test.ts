@@ -39,6 +39,37 @@ describe("approval notifications", () => {
 		expect(es.approvals.notifications).toHaveProperty("decided");
 	});
 
+	it("words a cancelled submission and a stalled step as asks to act, in both locales", () => {
+		expect(describeNotificationType("APPROVAL_CANCELLED")).toMatchObject({
+			tone: "warning",
+			category: "schedule",
+			title: "approvals.notifications.cancelled",
+		});
+		expect(describeNotificationType("APPROVAL_STEP_STALLED")).toMatchObject({
+			tone: "warning",
+			category: "schedule",
+			title: "approvals.notifications.stalled",
+		});
+		expect(en.approvals.notifications.cancelled).toBe(
+			"The approval of a roster you submitted was cancelled before anyone decided it. Submit it again."
+		);
+		expect(en.approvals.notifications.stalled).toBe(
+			"A step of a roster’s approval has nobody left who can decide it. Check who can approve, or withdraw the submission."
+		);
+		expect(es.approvals.notifications).toHaveProperty("cancelled");
+		expect(es.approvals.notifications).toHaveProperty("stalled");
+	});
+
+	it.each(["APPROVAL_CANCELLED", "APPROVAL_STEP_STALLED"])(
+		"opens the roster with its approval beside it for %s",
+		(type) => {
+			expect(notificationTarget({ ...requested, type }, "PERSONAL")).toEqual({
+				kind: "approval",
+				scheduleId: "s-1",
+			});
+		}
+	);
+
 	it("opens the roster with its approval beside it, for the approver and the submitter", () => {
 		expect(notificationTarget(requested, "REVIEW")).toEqual({
 			kind: "approval",

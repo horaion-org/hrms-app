@@ -88,6 +88,17 @@ const instanceStepSchema = z.object({
 	/** The named people of a MEMBERS step, by name; empty for KEY_HOLDERS. */
 	members: z.array(participantSchema).default([]),
 	decisions: z.array(decisionSchema).default([]),
+	/**
+	 * Who approved this step together with the next one, which they could
+	 * decide too (ADR-0067 §11): it closed SKIPPED and their approval moved
+	 * on. Null unless skipped that way.
+	 */
+	skippedBy: participantSchema.nullish().transform((value) => value ?? null),
+	/** When it was skipped that way; null otherwise. */
+	skippedAt: z
+		.string()
+		.nullish()
+		.transform((value) => value ?? null),
 });
 
 export type ApprovalInstanceStep = z.infer<typeof instanceStepSchema>;

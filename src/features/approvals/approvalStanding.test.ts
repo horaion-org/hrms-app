@@ -5,6 +5,7 @@ import {
 	currentInstanceOf,
 	rejectedStepOf,
 	scheduleCardApprovalLine,
+	type ApprovalStanding,
 	type ApprovalStandingFacts,
 } from "@/features/approvals/approvalStanding";
 import {
@@ -14,8 +15,25 @@ import {
 	rejectedAtEndorseFixture,
 } from "@/features/approvals/fixtures";
 
-const NO_FLOW = { requiresApproval: false, stepLabels: [] };
-const FLOW = { requiresApproval: true, stepLabels: ["Endorse", "Publish"] };
+const NO_FLOW = { requiresApproval: false, stepLabels: [], submission: null };
+const FLOW = {
+	requiresApproval: true,
+	stepLabels: ["Endorse", "Publish"],
+	submission: null,
+};
+/** Step 1 of 2 waiting, as the schedule read reports it to every reader. */
+const SUBMITTED = (
+	submittedByCaller: boolean
+): ApprovalStandingFacts["publication"] => ({
+	...FLOW,
+	submission: {
+		approvalInstanceId: "ai-1",
+		currentStepOrder: 1,
+		currentStepLabel: "Endorse",
+		stepCount: 2,
+		submittedByCaller,
+	},
+});
 
 const facts = (
 	overrides: Partial<ApprovalStandingFacts> = {}
@@ -29,6 +47,11 @@ const facts = (
 
 const STEP_ONE = { order: 1, count: 2, label: "Endorse", isLast: false };
 const STEP_TWO = { order: 2, count: 2, label: "Publish", isLast: true };
+
+const pending = (
+	role: "decider" | "submitter" | "waiting",
+	step: typeof STEP_ONE
+): ApprovalStanding => ({ kind: "pending", role, step, instanceId: "ai-1" });
 
 describe("approvalStanding", () => {
 	it.each([
@@ -50,7 +73,7 @@ describe("approvalStanding", () => {
 					instance: approvalInstanceFixture({ canDecide: true }),
 				},
 			}),
-			expected: { kind: "pending", role: "decider", step: STEP_ONE },
+			expected: pending("decider", STEP_ONE),
 		},
 		{
 			name: "pending step 1, the viewer may not decide it",
@@ -60,7 +83,7 @@ describe("approvalStanding", () => {
 					instance: approvalInstanceFixture({ canDecide: false }),
 				},
 			}),
-			expected: { kind: "pending", role: "waiting", step: STEP_ONE },
+			expected: pending("waiting", STEP_ONE),
 		},
 		{
 			name: "pending step 1, the viewer submitted it",
@@ -71,7 +94,7 @@ describe("approvalStanding", () => {
 					instance: approvalInstanceFixture({ canDecide: false }),
 				},
 			}),
-			expected: { kind: "pending", role: "submitter", step: STEP_ONE },
+			expected: pending("submitter", STEP_ONE),
 		},
 		{
 			name: "the last step is open",
@@ -81,7 +104,7 @@ describe("approvalStanding", () => {
 					instance: atStepTwoFixture({ canDecide: true }),
 				},
 			}),
-			expected: { kind: "pending", role: "decider", step: STEP_TWO },
+			expected: pending("decider", STEP_TWO),
 		},
 		{
 			name: "a rejected submission waits on nothing (the roster is no longer awaiting)",
@@ -97,12 +120,36 @@ describe("approvalStanding", () => {
 				publication: NO_FLOW,
 				read: { status: "ready", instance: approvalInstanceFixture() },
 			}),
-			expected: { kind: "pending", role: "waiting", step: STEP_ONE },
+			expected: pending("waiting", STEP_ONE),
 		},
 		{
 			name: "approvals not readable here: the flow alone decides",
 			given: facts({ read: { status: "unread" } }),
 			expected: { kind: "toSubmit", stepLabels: ["Endorse", "Publish"] },
+		},
+		{
+			name: "approvals not readable here, the viewer submitted it: the schedule read says where it waits",
+			given: facts({
+				publication: SUBMITTED(true),
+				read: { status: "unread" },
+			}),
+			expected: pending("submitter", STEP_ONE),
+		},
+		{
+			name: "approvals not readable here, someone else submitted it: it waits, never the viewer's to decide",
+			given: facts({
+				publication: SUBMITTED(false),
+				read: { status: "unread" },
+			}),
+			expected: pending("waiting", STEP_ONE),
+		},
+		{
+			name: "approvals not readable here, the flow removed after submission: it still waits",
+			given: facts({
+				publication: { ...SUBMITTED(true), requiresApproval: false },
+				read: { status: "unread" },
+			}),
+			expected: pending("submitter", STEP_ONE),
 		},
 		{
 			name: "still loading: no guess",
@@ -126,15 +173,11 @@ describe("approvalStanding", () => {
 
 describe("approvalMetaLine", () => {
 	it("says whose turn it is, with the step", () => {
-		expect(
-			approvalMetaLine({ kind: "pending", role: "decider", step: STEP_ONE })
-		).toEqual({
+		expect(approvalMetaLine(pending("decider", STEP_ONE))).toEqual({
 			key: "approvals.meta.waitingOnYou",
 			values: { step: 1, total: 2, label: "Endorse" },
 		});
-		expect(
-			approvalMetaLine({ kind: "pending", role: "submitter", step: STEP_TWO })
-		).toEqual({
+		expect(approvalMetaLine(pending("submitter", STEP_TWO))).toEqual({
 			key: "approvals.meta.waiting",
 			values: { step: 2, total: 2, label: "Publish" },
 		});
@@ -195,6 +238,18 @@ describe("scheduleCardApprovalLine", () => {
 		expect(scheduleCardApprovalLine(schedule, [atStepTwoFixture()])).toEqual({
 			key: "approvals.meta.waitingOnYou",
 			values: { step: 2, total: 2, label: "Publish" },
+		});
+	});
+
+	it("says it waits for approval when someone else's step is open", () => {
+		expect(
+			scheduleCardApprovalLine(
+				{ ...schedule, publication: SUBMITTED(true) },
+				[]
+			)
+		).toEqual({
+			key: "approvals.meta.waiting",
+			values: { step: 1, total: 2, label: "Endorse" },
 		});
 	});
 

@@ -5,6 +5,7 @@ import {
 	AHMAD,
 	approvalInstanceFixture,
 	atStepTwoFixture,
+	carriedForwardFixture,
 	endorseStep,
 	publishStep,
 	rejectedAtEndorseFixture,
@@ -69,4 +70,9 @@ export const AllOfThem: Story = {
 			],
 		}),
 	},
+};
+
+/** One approver for both steps: Endorse is skipped and names who approved it with Publish. */
+export const CarriedForward: Story = {
+	args: { instance: carriedForwardFixture() },
 };

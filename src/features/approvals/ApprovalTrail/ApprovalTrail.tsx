@@ -71,7 +71,7 @@ const openSince = (
 /**
  * A submission's steps, first to last, with the open one after the decided
  * ones: each step's number, name and status in words, who decided and when,
- * and their comment. The open step says whose turn it is and since when; an "all of
+ * and their comment; a skipped step names who approved it with the next one. The open step says whose turn it is and since when; an "all of
  * them" step counts its approvals and lists each named person.
  */
 export const ApprovalTrail = ({
@@ -145,6 +145,14 @@ export const ApprovalTrail = ({
 				})
 			: who;
 	};
+	/** The line under a step nobody decided: who approved it with the next step, or who may decide it. */
+	const stepNote = (step: ApprovalInstanceStep, open: boolean): string =>
+		step.status === "SKIPPED" && step.skippedBy && step.skippedAt
+			? t(`${key}.skippedBy`, {
+					name: nameOf(step.skippedBy),
+					at: formatMoment(step.skippedAt),
+				})
+			: whoDecides(step, open);
 	/** An "all of them" step's people: decided ones each on a row, the waiting ones folded once there are many. */
 	const people = (step: ApprovalInstanceStep): FunctionComponent => {
 		const waiting = waitingOn(step);
@@ -229,7 +237,7 @@ export const ApprovalTrail = ({
 								</p>
 								{listsPeople && people(step)}
 								{!listsPeople && step.decisions.length === 0 && (
-									<p className="text-neutral-700">{whoDecides(step, open)}</p>
+									<p className="text-neutral-700">{stepNote(step, open)}</p>
 								)}
 								{listsPeople && open && (
 									<p className="text-neutral-700">

@@ -56,6 +56,8 @@ const INSTANCE = `${INSTANCES}/ai-1`;
 /** The viewer of every test: membership m-c-1. */
 const VIEWER = { membershipId: "m-c-1", displayName: "José" };
 const MENU = "More actions for Front Office - Week 42";
+/** The one status message after a withdrawal. */
+const WITHDRAWN = "Roster withdrawn from approval.";
 
 const ok = (data: unknown): StubReply => ({
 	status: 200,
@@ -69,12 +71,33 @@ const APPROVER_KEYS = [
 	"approval:decide",
 ];
 
+const FLOW: Schedule["publication"] = {
+	requiresApproval: true,
+	stepLabels: ["Endorse", "Publish"],
+	submission: null,
+};
+
 /** Front Office's schedule s-1, generated, where Endorse → Publish applies. */
 const withFlow = (overrides: Partial<Schedule> = {}): Schedule =>
 	generatedScheduleFixture({
 		status: "GENERATED",
-		publication: { requiresApproval: true, stepLabels: ["Endorse", "Publish"] },
+		publication: FLOW,
 		...overrides,
+	});
+
+/** The same schedule once the viewer submitted it: the schedule read says it waits at step 1 of 2. */
+const submittedByViewer = (): Schedule =>
+	withFlow({
+		publication: {
+			...FLOW,
+			submission: {
+				approvalInstanceId: "ai-1",
+				currentStepOrder: 1,
+				currentStepLabel: "Endorse",
+				stepCount: 2,
+				submittedByCaller: true,
+			},
+		},
 	});
 
 /** What the stubbed API holds now; each test moves it on. */
@@ -205,6 +228,94 @@ it("writes the trail's times day first on a 24-hour clock, in the roster's zone,
 	expect(
 		screen.getByRole("complementary", { name: "Approval" })
 	).toHaveTextContent("9 Oct 2026, 18:02");
+});
+
+it("lets a submitter without approval:read see where their submission waits, and withdraw it", async () => {
+	const world: World = { schedule: withFlow(), instance: null };
+	const calls = await openRoster(world, ["schedule:read", "schedule:publish"], {
+		[`POST ${SCHEDULE}/approval`]: () => {
+			world.schedule = submittedByViewer();
+			return ok(world.schedule);
+		},
+		"POST /api/v1/companies/c-1/me/approval-instances/ai-1/cancellation":
+			() => {
+				world.schedule = withFlow();
+				return ok(approvalInstanceFixture({ status: "CANCELLED" }));
+			},
+	});
+	const user = userEvent.setup();
+
+	await user.click(
+		await screen.findByRole("button", { name: "Submit for approval" })
+	);
+	await user.click(
+		within(
+			screen.getByRole("dialog", { name: "Submit this roster for approval?" })
+		).getByRole("button", { name: "Submit for approval" })
+	);
+
+	expect(
+		await screen.findByText("Waiting for approval · step 1 of 2 (Endorse)")
+	).toBeInTheDocument();
+	expect(screen.queryByText("Needs approval: Endorse → Publish")).toBeNull();
+	expect(
+		screen.queryByRole("button", { name: "Submit for approval" })
+	).toBeNull();
+	await user.click(screen.getByRole("button", { name: MENU }));
+	const items = screen.getAllByRole("menuitem").map((item) => item.textContent);
+	expect(items).toContain("Withdraw from approval");
+	expect(items).not.toContain("Reject");
+	await user.click(
+		screen.getByRole("menuitem", { name: "Withdraw from approval" })
+	);
+	await user.click(
+		within(
+			screen.getByRole("dialog", {
+				name: "Withdraw this roster from approval?",
+			})
+		).getByRole("button", { name: "Withdraw" })
+	);
+
+	expect(
+		await screen.findByRole("button", { name: "Submit for approval" })
+	).toBeInTheDocument();
+	expect(await screen.findByText(WITHDRAWN)).toHaveAttribute("role", "status");
+	expect(posts(calls).map((call) => call.path)).toEqual([
+		`${SCHEDULE}/approval`,
+		"/api/v1/companies/c-1/me/approval-instances/ai-1/cancellation",
+	]);
+	// Nothing of the approval itself is read without approval:read.
+	expect(calls.some((call) => call.path.startsWith(INSTANCES))).toBe(false);
+});
+
+it("shows someone else's waiting submission to a publisher without approval:read, with nothing to decide", async () => {
+	const submitted = submittedByViewer();
+	const world: World = {
+		schedule: {
+			...submitted,
+			publication: {
+				...submitted.publication,
+				submission: submitted.publication.submission && {
+					...submitted.publication.submission,
+					submittedByCaller: false,
+				},
+			},
+		},
+		instance: null,
+	};
+	await openRoster(world, ["schedule:read", "schedule:publish"]);
+	const user = userEvent.setup();
+
+	expect(
+		await screen.findByText("Waiting for approval · step 1 of 2 (Endorse)")
+	).toBeInTheDocument();
+	expect(
+		screen.queryByRole("button", { name: "Submit for approval" })
+	).toBeNull();
+	await user.click(screen.getByRole("button", { name: MENU }));
+	const items = screen.getAllByRole("menuitem").map((item) => item.textContent);
+	expect(items).not.toContain("Withdraw from approval");
+	expect(items).not.toContain("Reject");
 });
 
 it("lets the approver approve step 1 with a comment, then approve and publish step 2", async () => {
@@ -370,7 +481,7 @@ it("says someone else decided first when the step closed meanwhile", async () =>
 });
 
 it("shows the waiting submission's message when publishing directly is refused", async () => {
-	// Without approval:read the page cannot see the submission, so it offers Publish and the API says why not.
+	// A read that reports no submission (an older API) offers Publish, and the API says why not.
 	const world: World = {
 		schedule: generatedScheduleFixture({ status: "GENERATED" }),
 		instance: null,

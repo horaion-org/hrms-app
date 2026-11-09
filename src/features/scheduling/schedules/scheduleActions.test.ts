@@ -141,7 +141,7 @@ describe("approvalActionFacts", () => {
 			{ approvalStanding: "unknown", isLastStep: false, flowRequired: true },
 		],
 		[
-			{ kind: "pending", role: "decider", step } as const,
+			{ kind: "pending", role: "decider", step, instanceId: "ai-1" } as const,
 			{
 				approvalStanding: "mineToDecide",
 				isLastStep: true,
@@ -149,7 +149,7 @@ describe("approvalActionFacts", () => {
 			},
 		],
 		[
-			{ kind: "pending", role: "submitter", step } as const,
+			{ kind: "pending", role: "submitter", step, instanceId: "ai-1" } as const,
 			{
 				approvalStanding: "mineAsSubmitter",
 				isLastStep: true,
@@ -157,7 +157,7 @@ describe("approvalActionFacts", () => {
 			},
 		],
 		[
-			{ kind: "pending", role: "waiting", step } as const,
+			{ kind: "pending", role: "waiting", step, instanceId: "ai-1" } as const,
 			{ approvalStanding: "waiting", isLastStep: true, flowRequired: true },
 		],
 	])("maps %o", (standing, facts) => {

@@ -120,6 +120,20 @@ const NOTIFICATION_TYPES = {
 		category: "schedule",
 		title: "approvals.notifications.decided",
 	},
+	// To the submitter: a roster edit or a flow manager ended their submission undecided; they submit again.
+	APPROVAL_CANCELLED: {
+		icon: CrossIcon,
+		tone: "warning",
+		category: "schedule",
+		title: "approvals.notifications.cancelled",
+	},
+	// To the flow managers: the open step has nobody left who may decide it; they fix grants or the flow.
+	APPROVAL_STEP_STALLED: {
+		icon: TimeIcon,
+		tone: "warning",
+		category: "schedule",
+		title: "approvals.notifications.stalled",
+	},
 	COVER_OFFER_SENT: {
 		icon: FillShiftsIcon,
 		tone: "warning",

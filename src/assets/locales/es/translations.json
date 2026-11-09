@@ -271,6 +271,7 @@
 			"approved": "Aprobado",
 			"rejected": "Rechazado",
 			"skipped": "Omitido",
+			"skippedBy": "{{name}} lo aprobó junto con el paso siguiente · {{at}}",
 			"notReached": "No alcanzado",
 			"notYet": "Aún no",
 			"unknown": "Desconocido",
@@ -337,7 +338,9 @@
 		},
 		"notifications": {
 			"requested": "Un cuadrante necesita tu aprobación.",
-			"decided": "Se ha decidido un cuadrante que enviaste a aprobación. Ábrelo para ver el resultado."
+			"decided": "Se ha decidido un cuadrante que enviaste a aprobación. Ábrelo para ver el resultado.",
+			"cancelled": "Se canceló la aprobación de un cuadrante que enviaste antes de que nadie lo decidiera. Vuelve a enviarlo.",
+			"stalled": "Un paso de la aprobación de un cuadrante ya no tiene a nadie que pueda decidirlo. Revisa quién puede aprobar o retira el envío."
 		},
 		"flows": {
 			"title": "Aprobaciones",
