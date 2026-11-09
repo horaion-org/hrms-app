@@ -207,7 +207,8 @@ describe("Leave", () => {
 			"Jurong branch"
 		);
 		expect(screen.getByText("1–10 of 24 entries")).toBeVisible();
-		expect(within(table).getByText("Rejected")).toHaveClass("bg-error-100");
+		const rejected = within(table).getByRole("cell", { name: "Rejected" });
+		expect(within(rejected).getByText("Rejected")).toHaveClass("bg-error-100");
 		// The first Branch is shown, not written: the URL keeps only what the person chose.
 		await waitFor(() => {
 			expect(router.state.location.search).toEqual({ view: "requests" });

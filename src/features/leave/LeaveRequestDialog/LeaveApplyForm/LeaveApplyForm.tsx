@@ -184,8 +184,11 @@ export const LeaveApplyForm = ({
 						<p className="text-sm font-medium" id={`${id}-employee`}>
 							{t("leave.employee")}
 						</p>
+						{/* A name lookup: no saved entries over the list, and a Search key on a phone's keyboard. */}
 						<Input
 							aria-label={t("leave.searchEmployee")}
+							autoComplete="off"
+							enterKeyHint="search"
 							leadingIcon={<SearchIcon />}
 							placeholder={t("leave.searchEmployee")}
 							type="search"

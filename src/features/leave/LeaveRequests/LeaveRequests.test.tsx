@@ -52,7 +52,7 @@ it("hands sorting and paging to the caller and offers decisions only where allow
 		screen.getByRole("button", { name: "Approve request for Aisha Rahman" })
 	);
 	expect(handlers.onOpen).toHaveBeenCalledWith(LEAVE_FIXTURES[0], "approve");
-	expect(screen.getByText("2 days")).toBeInTheDocument();
+	expect(screen.getByRole("cell", { name: "2 days" })).toBeInTheDocument();
 });
 
 it("shows each request's remarks on one line, and says when there are none", () => {
@@ -165,5 +165,6 @@ it("reads each request's day in its member's Branch zone", () => {
 		</I18nextProvider>
 	);
 
+	// In the Period column only: the name's line shows the period alone, View the request day.
 	expect(screen.getByText("Requested Nov 08, 2026")).toBeInTheDocument();
 });
