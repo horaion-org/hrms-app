@@ -15,6 +15,7 @@ import {
 	stubApi,
 	type StubReply,
 } from "@/common/testing/stubApi";
+import { approvalInstanceFixture } from "@/features/approvals/fixtures";
 import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
 import {
@@ -886,5 +887,187 @@ describe("Leave", () => {
 			screen.queryByRole("tab", { name: "Team requests" })
 		).not.toBeInTheDocument();
 		expect(listSearchesOf(calls)).toEqual([]);
+	});
+
+	describe("under an approval flow", () => {
+		const PENDING_APPROVALS =
+			"GET /api/v1/companies/c-1/me/approval-instances/pending";
+		const DECISIONS =
+			"POST /api/v1/companies/c-1/approval-instances/ai-leave/decisions";
+		/** Aisha's request waits on step `step` of Manager → HR; Cheryl's waits on HR, someone else's turn. */
+		const flowRoutes = (step: 1 | 2): Record<string, StubReply> => ({
+			...routes(),
+			[LEAVE]: pageReply([
+				leaveFixture({
+					leaveRequestId: "leave-aisha",
+					approval: {
+						approvalInstanceId: "ai-leave",
+						currentStepOrder: step,
+						currentStepLabel: step === 1 ? "Manager" : "HR",
+						stepCount: 2,
+					},
+				}),
+				{
+					...LEAVE_FIXTURES[1],
+					approval: {
+						approvalInstanceId: "ai-cheryl",
+						currentStepOrder: 2,
+						currentStepLabel: "HR",
+						stepCount: 2,
+					},
+				},
+			]),
+			[PENDING_APPROVALS]: {
+				status: 200,
+				body: envelope([
+					approvalInstanceFixture({
+						approvalInstanceId: "ai-leave",
+						subjectType: "LEAVE_REQUEST",
+						subjectId: "leave-aisha",
+					}),
+				]),
+			},
+			[DECISIONS]: {
+				status: 200,
+				body: envelope(approvalInstanceFixture()),
+			},
+		});
+
+		it("says which step each request waits on, and offers a decision only on the reader's turn", async () => {
+			stubApi(flowRoutes(1));
+			await open("/leave?view=requests");
+
+			expect(
+				await screen.findByText("Waiting on you · step 1 of 2 (Manager)")
+			).toBeVisible();
+			expect(
+				screen.getByText("Waiting for approval · step 2 of 2 (HR)")
+			).toBeVisible();
+			expect(
+				screen.getByRole("button", { name: "Approve request for Aisha Rahman" })
+			).toBeEnabled();
+			expect(
+				screen.getByRole("button", { name: "Approve request for Cheryl Ng" })
+			).toBeDisabled();
+		});
+
+		it("approves a step before the last on the approvals route, without the roster check", async () => {
+			const user = userEvent.setup();
+			const calls = stubApi(flowRoutes(1));
+			await open("/leave?view=requests");
+			await screen.findByText("Waiting on you · step 1 of 2 (Manager)");
+
+			await user.click(
+				screen.getByRole("button", { name: "Approve request for Aisha Rahman" })
+			);
+			const dialog = await screen.findByRole("dialog", {
+				name: "Leave request",
+			});
+			expect(dialog).toHaveTextContent(
+				"Step 1 of 2 (Manager). After you approve, the next step is asked."
+			);
+			await user.click(
+				within(dialog).getByRole("button", { name: "Confirm approval" })
+			);
+
+			expect(
+				await screen.findByText(
+					"You approved Manager for Aisha Rahman. The next step is asked now."
+				)
+			).toBeVisible();
+			expect(sent(calls, DECISIONS)).toEqual([
+				{ stepOrder: 1, decision: "APPROVE", comment: null },
+			]);
+			expect(calls.some((call) => call.path.endsWith("/rostered-days"))).toBe(
+				false
+			);
+		});
+
+		it("approves the last step with the roster confirmation, and rejects with a reason on the same route", async () => {
+			const user = userEvent.setup();
+			const calls = stubApi({
+				...flowRoutes(2),
+				[`GET ${AISHA}/rostered-days`]: {
+					status: 200,
+					body: envelope([{ day: "2026-05-22", minutes: 480 }]),
+				},
+			});
+			await open("/leave?view=requests");
+			await screen.findByText("Waiting on you · step 2 of 2 (HR)");
+
+			await user.click(
+				screen.getByRole("button", { name: "Approve request for Aisha Rahman" })
+			);
+			const dialog = await screen.findByRole("dialog", {
+				name: "Leave request",
+			});
+			expect(dialog).toHaveTextContent(
+				"Last step (HR). Approving it approves Aisha Rahman’s leave, and they are told."
+			);
+			await within(dialog).findByText(/is rostered on/);
+			await user.click(within(dialog).getByRole("checkbox"));
+			await user.click(
+				within(dialog).getByRole("button", { name: "Confirm approval" })
+			);
+			expect(
+				await screen.findByText("Request for Aisha Rahman approved.")
+			).toBeVisible();
+			expect(sent(calls, DECISIONS)).toEqual([
+				{
+					stepOrder: 2,
+					decision: "APPROVE",
+					comment: null,
+					takeOffRosteredDays: true,
+				},
+			]);
+
+			await user.click(
+				screen.getByRole("button", { name: "Reject request for Aisha Rahman" })
+			);
+			const rejecting = await screen.findByRole("dialog", {
+				name: "Leave request",
+			});
+			expect(rejecting).toHaveTextContent(
+				"Rejecting at HR rejects the leave, and Aisha Rahman is told."
+			);
+			await user.type(
+				within(rejecting).getByRole("textbox", {
+					name: "Reason for rejection",
+				}),
+				"Peak week"
+			);
+			await user.click(
+				within(rejecting).getByRole("button", { name: "Confirm rejection" })
+			);
+			await waitFor(() => {
+				expect(sent(calls, DECISIONS)).toHaveLength(2);
+			});
+			expect(sent(calls, DECISIONS)[1]).toEqual({
+				stepOrder: 2,
+				decision: "REJECT",
+				comment: "Peak week",
+			});
+		});
+
+		it("rereads the list when another approver decided the step first", async () => {
+			const user = userEvent.setup();
+			const calls = stubApi({
+				...flowRoutes(1),
+				[DECISIONS]: problemReply(409, "APPROVAL_STEP_ALREADY_DECIDED"),
+			});
+			await open("/leave?view=requests");
+			await screen.findByText("Waiting on you · step 1 of 2 (Manager)");
+
+			await approveFromRow(user, "Aisha Rahman");
+			const dialog = screen.getByRole("dialog", { name: "Leave request" });
+			expect(
+				await within(dialog).findByText(
+					"Someone else decided this step first. Reload the page to see where it stands."
+				)
+			).toBeVisible();
+			await waitFor(() => {
+				expect(listSearchesOf(calls)).toHaveLength(2);
+			});
+		});
 	});
 });
