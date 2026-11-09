@@ -2,6 +2,7 @@ import {
 	type ASSIGNABLE_SCOPES,
 	PERMISSION_DEFINITIONS,
 	PERMISSION_KEYS,
+	PERMISSION_MODULES,
 	type PermissionKey,
 } from "@/features/workspace/permissionContract.generated";
 
@@ -10,7 +11,12 @@ import {
  * contract (`contracts/permission-catalog.json`). Every editor, summary, type
  * guard and gate goes through here; nothing else lists permissions.
  */
-export { PERMISSION_DEFINITIONS, PERMISSION_KEYS, type PermissionKey };
+export {
+	PERMISSION_DEFINITIONS,
+	PERMISSION_KEYS,
+	PERMISSION_MODULES,
+	type PermissionKey,
+};
 
 /** A level a System role can be assigned at. */
 export type AssignableScope = (typeof ASSIGNABLE_SCOPES)[number];
@@ -19,11 +25,16 @@ export type AssignableScope = (typeof ASSIGNABLE_SCOPES)[number];
 export type PermissionResource =
 	(typeof PERMISSION_DEFINITIONS)[number]["resource"];
 
+/** A section of the role editor, e.g. `scheduling`, as the contract names it. */
+export type PermissionModule = (typeof PERMISSION_MODULES)[number];
+
 /** One permission as the contract defines it, widened for lookups. */
 export type PermissionDefinition = {
 	key: PermissionKey;
 	resource: PermissionResource;
 	action: string;
+	/** The section of the role editor its resource sits in. */
+	module: PermissionModule;
 	/** The levels an assignment of a role holding it may be made at. */
 	assignableScopes: ReadonlyArray<AssignableScope>;
 	/** Keys a role must also hold to hold this one. */
@@ -119,6 +130,10 @@ export const definitionOf = (key: PermissionKey): PermissionDefinition =>
 /** The resource half of a permission key, e.g. `branch`. */
 export const resourceOf = (key: PermissionKey): PermissionResource =>
 	definitionOf(key).resource;
+
+/** The section of the role editor a key's resource sits in, e.g. `scheduling`. */
+export const moduleOf = (key: PermissionKey): PermissionModule =>
+	definitionOf(key).module;
 
 /** `key` and every key it needs, directly or through another, in catalogue order. */
 export const requiredFor = (key: PermissionKey): Array<PermissionKey> => {

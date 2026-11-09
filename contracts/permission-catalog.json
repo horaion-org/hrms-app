@@ -1,4 +1,13 @@
 {
+  "modules": [
+    "people",
+    "leave",
+    "scheduling",
+    "approvals",
+    "organisation",
+    "company_settings",
+    "access_and_activity"
+  ],
   "permissions": [
     {
       "action": "read",
@@ -7,6 +16,7 @@
         "COMPANY"
       ],
       "key": "company:read",
+      "module": "company_settings",
       "prerequisites": [],
       "resource": "company",
       "resourceName": "Company"
@@ -18,6 +28,7 @@
         "COMPANY"
       ],
       "key": "company:update",
+      "module": "company_settings",
       "prerequisites": [
         "company:read"
       ],
@@ -32,6 +43,7 @@
         "BRANCH"
       ],
       "key": "branch:read",
+      "module": "organisation",
       "prerequisites": [],
       "resource": "branch",
       "resourceName": "Branch"
@@ -43,6 +55,7 @@
         "COMPANY"
       ],
       "key": "branch:create",
+      "module": "organisation",
       "prerequisites": [
         "branch:read"
       ],
@@ -57,6 +70,7 @@
         "BRANCH"
       ],
       "key": "branch:update",
+      "module": "organisation",
       "prerequisites": [
         "branch:read"
       ],
@@ -71,6 +85,7 @@
         "BRANCH"
       ],
       "key": "branch_member:read",
+      "module": "organisation",
       "prerequisites": [],
       "resource": "branch_member",
       "resourceName": "Branch Member"
@@ -83,6 +98,7 @@
         "BRANCH"
       ],
       "key": "branch_member:create",
+      "module": "organisation",
       "prerequisites": [
         "branch_member:read"
       ],
@@ -97,6 +113,7 @@
         "BRANCH"
       ],
       "key": "branch_member:update",
+      "module": "organisation",
       "prerequisites": [
         "branch_member:read"
       ],
@@ -111,6 +128,7 @@
         "BRANCH"
       ],
       "key": "branch_member:deactivate",
+      "module": "organisation",
       "prerequisites": [
         "branch_member:read"
       ],
@@ -126,6 +144,7 @@
         "DEPARTMENT"
       ],
       "key": "department:read",
+      "module": "organisation",
       "prerequisites": [],
       "resource": "department",
       "resourceName": "Department"
@@ -138,6 +157,7 @@
         "BRANCH"
       ],
       "key": "department:create",
+      "module": "organisation",
       "prerequisites": [
         "department:read"
       ],
@@ -153,6 +173,7 @@
         "DEPARTMENT"
       ],
       "key": "department:update",
+      "module": "organisation",
       "prerequisites": [
         "department:read"
       ],
@@ -168,6 +189,7 @@
         "DEPARTMENT"
       ],
       "key": "department_member:read",
+      "module": "organisation",
       "prerequisites": [],
       "resource": "department_member",
       "resourceName": "Department Member"
@@ -181,6 +203,7 @@
         "DEPARTMENT"
       ],
       "key": "department_member:create",
+      "module": "organisation",
       "prerequisites": [
         "department_member:read"
       ],
@@ -196,6 +219,7 @@
         "DEPARTMENT"
       ],
       "key": "department_member:update",
+      "module": "organisation",
       "prerequisites": [
         "department_member:read"
       ],
@@ -211,6 +235,7 @@
         "DEPARTMENT"
       ],
       "key": "department_member:deactivate",
+      "module": "organisation",
       "prerequisites": [
         "department_member:read"
       ],
@@ -226,6 +251,7 @@
         "DEPARTMENT"
       ],
       "key": "job_title:read",
+      "module": "organisation",
       "prerequisites": [],
       "resource": "job_title",
       "resourceName": "Job Title"
@@ -239,6 +265,7 @@
         "DEPARTMENT"
       ],
       "key": "job_title:create",
+      "module": "organisation",
       "prerequisites": [
         "job_title:read"
       ],
@@ -254,6 +281,7 @@
         "DEPARTMENT"
       ],
       "key": "job_title:update",
+      "module": "organisation",
       "prerequisites": [
         "job_title:read"
       ],
@@ -267,6 +295,7 @@
         "COMPANY"
       ],
       "key": "skill:read",
+      "module": "company_settings",
       "prerequisites": [],
       "resource": "skill",
       "resourceName": "Skill"
@@ -278,6 +307,7 @@
         "COMPANY"
       ],
       "key": "skill:create",
+      "module": "company_settings",
       "prerequisites": [
         "skill:read"
       ],
@@ -291,6 +321,7 @@
         "COMPANY"
       ],
       "key": "skill:update",
+      "module": "company_settings",
       "prerequisites": [
         "skill:read"
       ],
@@ -304,6 +335,7 @@
         "COMPANY"
       ],
       "key": "skill:delete",
+      "module": "company_settings",
       "prerequisites": [
         "skill:read"
       ],
@@ -319,6 +351,7 @@
         "DEPARTMENT"
       ],
       "key": "member_profile:read",
+      "module": "people",
       "prerequisites": [],
       "resource": "member_profile",
       "resourceName": "Member Profile"
@@ -332,6 +365,7 @@
         "DEPARTMENT"
       ],
       "key": "member_profile:create",
+      "module": "people",
       "prerequisites": [
         "member_profile:read"
       ],
@@ -347,6 +381,7 @@
         "DEPARTMENT"
       ],
       "key": "member_profile:update",
+      "module": "people",
       "prerequisites": [
         "member_profile:read"
       ],
@@ -362,6 +397,7 @@
         "DEPARTMENT"
       ],
       "key": "member_note:read",
+      "module": "people",
       "prerequisites": [],
       "resource": "member_note",
       "resourceName": "Member Note"
@@ -375,6 +411,7 @@
         "DEPARTMENT"
       ],
       "key": "member_note:create",
+      "module": "people",
       "prerequisites": [
         "member_note:read"
       ],
@@ -390,6 +427,7 @@
         "DEPARTMENT"
       ],
       "key": "member_note:update",
+      "module": "people",
       "prerequisites": [
         "member_note:read"
       ],
@@ -405,6 +443,7 @@
         "DEPARTMENT"
       ],
       "key": "member_note:delete",
+      "module": "people",
       "prerequisites": [
         "member_note:read"
       ],
@@ -420,6 +459,7 @@
         "DEPARTMENT"
       ],
       "key": "work_availability:read",
+      "module": "people",
       "prerequisites": [],
       "resource": "work_availability",
       "resourceName": "Work Availability"
@@ -433,6 +473,7 @@
         "DEPARTMENT"
       ],
       "key": "work_availability:update",
+      "module": "people",
       "prerequisites": [
         "work_availability:read"
       ],
@@ -446,6 +487,7 @@
         "COMPANY"
       ],
       "key": "employment_terms:read",
+      "module": "company_settings",
       "prerequisites": [],
       "resource": "employment_terms",
       "resourceName": "Employment Terms"
@@ -457,6 +499,7 @@
         "COMPANY"
       ],
       "key": "employment_terms:update",
+      "module": "company_settings",
       "prerequisites": [
         "employment_terms:read"
       ],
@@ -472,6 +515,7 @@
         "DEPARTMENT"
       ],
       "key": "member_employment_terms:read",
+      "module": "people",
       "prerequisites": [],
       "resource": "member_employment_terms",
       "resourceName": "Member Employment Terms"
@@ -485,6 +529,7 @@
         "DEPARTMENT"
       ],
       "key": "member_employment_terms:update",
+      "module": "people",
       "prerequisites": [
         "member_employment_terms:read"
       ],
@@ -500,6 +545,7 @@
         "DEPARTMENT"
       ],
       "key": "leave_request:read",
+      "module": "leave",
       "prerequisites": [],
       "resource": "leave_request",
       "resourceName": "Leave Request"
@@ -513,6 +559,7 @@
         "DEPARTMENT"
       ],
       "key": "leave_request:create",
+      "module": "leave",
       "prerequisites": [
         "leave_request:read"
       ],
@@ -528,6 +575,7 @@
         "DEPARTMENT"
       ],
       "key": "leave_request:review",
+      "module": "leave",
       "prerequisites": [
         "leave_request:read"
       ],
@@ -541,6 +589,7 @@
         "COMPANY"
       ],
       "key": "leave_type:read",
+      "module": "company_settings",
       "prerequisites": [],
       "resource": "leave_type",
       "resourceName": "Leave Type"
@@ -552,6 +601,7 @@
         "COMPANY"
       ],
       "key": "leave_type:update",
+      "module": "company_settings",
       "prerequisites": [
         "leave_type:read"
       ],
@@ -567,6 +617,7 @@
         "DEPARTMENT"
       ],
       "key": "schedule:read",
+      "module": "scheduling",
       "prerequisites": [],
       "resource": "schedule",
       "resourceName": "Schedule"
@@ -580,6 +631,7 @@
         "DEPARTMENT"
       ],
       "key": "schedule:create",
+      "module": "scheduling",
       "prerequisites": [
         "schedule:read"
       ],
@@ -595,6 +647,7 @@
         "DEPARTMENT"
       ],
       "key": "schedule:update",
+      "module": "scheduling",
       "prerequisites": [
         "schedule:read"
       ],
@@ -610,6 +663,7 @@
         "DEPARTMENT"
       ],
       "key": "schedule:generate",
+      "module": "scheduling",
       "prerequisites": [
         "schedule:read"
       ],
@@ -625,6 +679,7 @@
         "DEPARTMENT"
       ],
       "key": "schedule:delete",
+      "module": "scheduling",
       "prerequisites": [
         "schedule:read"
       ],
@@ -640,6 +695,7 @@
         "DEPARTMENT"
       ],
       "key": "schedule:publish",
+      "module": "scheduling",
       "prerequisites": [
         "schedule:read"
       ],
@@ -655,6 +711,7 @@
         "DEPARTMENT"
       ],
       "key": "schedule:edit_shift",
+      "module": "scheduling",
       "prerequisites": [
         "schedule:read"
       ],
@@ -670,6 +727,7 @@
         "DEPARTMENT"
       ],
       "key": "shift:read",
+      "module": "scheduling",
       "prerequisites": [],
       "resource": "shift",
       "resourceName": "Shift"
@@ -683,6 +741,7 @@
         "DEPARTMENT"
       ],
       "key": "shift:create",
+      "module": "scheduling",
       "prerequisites": [
         "shift:read"
       ],
@@ -698,6 +757,7 @@
         "DEPARTMENT"
       ],
       "key": "shift:update",
+      "module": "scheduling",
       "prerequisites": [
         "shift:read"
       ],
@@ -713,6 +773,7 @@
         "DEPARTMENT"
       ],
       "key": "shift:delete",
+      "module": "scheduling",
       "prerequisites": [
         "shift:read"
       ],
@@ -728,6 +789,7 @@
         "DEPARTMENT"
       ],
       "key": "constraint:read",
+      "module": "scheduling",
       "prerequisites": [],
       "resource": "constraint",
       "resourceName": "Constraint"
@@ -741,6 +803,7 @@
         "DEPARTMENT"
       ],
       "key": "constraint:create",
+      "module": "scheduling",
       "prerequisites": [
         "constraint:read"
       ],
@@ -756,6 +819,7 @@
         "DEPARTMENT"
       ],
       "key": "constraint:update",
+      "module": "scheduling",
       "prerequisites": [
         "constraint:read"
       ],
@@ -771,6 +835,7 @@
         "DEPARTMENT"
       ],
       "key": "constraint:delete",
+      "module": "scheduling",
       "prerequisites": [
         "constraint:read"
       ],
@@ -784,6 +849,7 @@
         "COMPANY"
       ],
       "key": "scheduling_policy:read",
+      "module": "company_settings",
       "prerequisites": [],
       "resource": "scheduling_policy",
       "resourceName": "Scheduling Policy"
@@ -795,6 +861,7 @@
         "COMPANY"
       ],
       "key": "scheduling_policy:update",
+      "module": "company_settings",
       "prerequisites": [
         "scheduling_policy:read"
       ],
@@ -808,6 +875,7 @@
         "COMPANY"
       ],
       "key": "approval_flow:read",
+      "module": "approvals",
       "prerequisites": [],
       "resource": "approval_flow",
       "resourceName": "Approval Flow"
@@ -819,6 +887,7 @@
         "COMPANY"
       ],
       "key": "approval_flow:manage",
+      "module": "approvals",
       "prerequisites": [
         "approval_flow:read"
       ],
@@ -834,6 +903,7 @@
         "DEPARTMENT"
       ],
       "key": "approval:read",
+      "module": "approvals",
       "prerequisites": [],
       "resource": "approval",
       "resourceName": "Approval"
@@ -847,6 +917,7 @@
         "DEPARTMENT"
       ],
       "key": "approval:decide",
+      "module": "approvals",
       "prerequisites": [
         "approval:read"
       ],
@@ -862,6 +933,7 @@
         "DEPARTMENT"
       ],
       "key": "access_role:read",
+      "module": "access_and_activity",
       "prerequisites": [],
       "resource": "access_role",
       "resourceName": "Access Role"
@@ -873,6 +945,7 @@
         "COMPANY"
       ],
       "key": "access_role:create",
+      "module": "access_and_activity",
       "prerequisites": [
         "access_role:read"
       ],
@@ -886,6 +959,7 @@
         "COMPANY"
       ],
       "key": "access_role:update",
+      "module": "access_and_activity",
       "prerequisites": [
         "access_role:read"
       ],
@@ -899,6 +973,7 @@
         "COMPANY"
       ],
       "key": "access_role:delete",
+      "module": "access_and_activity",
       "prerequisites": [
         "access_role:read"
       ],
@@ -914,6 +989,7 @@
         "DEPARTMENT"
       ],
       "key": "access_role:assign",
+      "module": "access_and_activity",
       "prerequisites": [
         "access_role:read"
       ],
@@ -927,6 +1003,7 @@
         "COMPANY"
       ],
       "key": "audit_event:read",
+      "module": "access_and_activity",
       "prerequisites": [],
       "resource": "audit_event",
       "resourceName": "Audit Event"

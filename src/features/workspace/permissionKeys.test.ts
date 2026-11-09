@@ -10,7 +10,9 @@ import {
 	isAboveDepartments,
 	isCompanyOnly,
 	isPermissionKey,
+	moduleOf,
 	PERMISSION_KEYS,
+	PERMISSION_MODULES,
 	unknownKeys,
 } from "@/features/workspace/permissionKeys";
 
@@ -40,6 +42,16 @@ describe("the permission catalogue generated from the API's contract", () => {
 			}))
 		);
 		expect(PERMISSION_CONTRACT_SHA256).toMatch(/^[\da-f]{64}$/);
+	});
+
+	it("carries the contract's modules, in its order, with each key's module", () => {
+		expect(PERMISSION_MODULES).toEqual(contract.modules);
+		expect(PERMISSION_KEYS.map(moduleOf)).toEqual(
+			contract.permissions.map(({ module }) => module)
+		);
+		expect(moduleOf("schedule:publish")).toBe("scheduling");
+		expect(moduleOf("approval_flow:manage")).toBe("approvals");
+		expect(moduleOf("audit_event:read")).toBe("access_and_activity");
 	});
 
 	it("tells known keys from keys newer than the app", () => {
