@@ -1,6 +1,7 @@
 import type { Decorator, Meta, StoryObj } from "@storybook/react-vite";
 import { useState, type ReactNode } from "react";
 import { fn, userEvent, within } from "storybook/test";
+import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
@@ -248,6 +249,67 @@ export const Phone: Story = {
 			column.id === "city" ? { ...column, hideBelow: "md" } : column
 		),
 		selection: { rowLabel: (branch: Branch): string => branch.name },
+	},
+	parameters: { viewport: { defaultViewport: "mobile1" } },
+};
+
+/**
+ * A list cut down to the column naming each row and its actions, as People
+ * and the organisation lists show on a phone: both fit a 360 px screen, a
+ * long name truncating and the actions held at the end edge.
+ */
+export const PhoneNameAndActions: Story = {
+	args: {
+		label: "People",
+		data: [
+			...branches,
+			{
+				id: "b-4",
+				name: "Muhammad Iskandar bin Abdullah",
+				code: "EMP-10488",
+				city: "Singapore",
+				active: true,
+			},
+		],
+		selection: { rowLabel: (branch: Branch): string => branch.name },
+		columns: [
+			{
+				id: "name",
+				header: "Employee",
+				headerClassName: "w-1/4",
+				pin: "start",
+				cell: (branch) => (
+					<div className="flex min-w-0 items-center gap-3">
+						<Avatar className="size-10 text-base" name={branch.name} />
+						<div className="min-w-0">
+							<p className="truncate text-sm">{branch.name}</p>
+							<p className="truncate text-xs">{branch.code}</p>
+						</div>
+					</div>
+				),
+			},
+			{ ...columns[2]!, hideBelow: "md" },
+			{ ...columns[3]!, hideBelow: "sm" },
+			{
+				id: "actions",
+				header: "Actions",
+				headerClassName: "w-30",
+				pin: "end",
+				cell: (branch) => (
+					<div className="flex items-center gap-1">
+						<Button aria-label={`Edit ${branch.name}`} variant="icon">
+							<EditIcon />
+						</Button>
+						<OverflowMenu
+							label={`More actions for ${branch.name}`}
+							variant="icon"
+						>
+							<OverflowMenuItem>Deactivate</OverflowMenuItem>
+						</OverflowMenu>
+					</div>
+				),
+			},
+		],
 	},
 	parameters: { viewport: { defaultViewport: "mobile1" } },
 };

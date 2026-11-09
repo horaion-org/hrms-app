@@ -806,6 +806,42 @@ describe("DataTable", () => {
 		);
 	});
 
+	it("keeps its 576 px floor from sm only, so a phone's priority columns fit", () => {
+		render(
+			<DataTable
+				columns={columns}
+				data={branches}
+				getRowId={getRowId}
+				label="Branches"
+			/>
+		);
+
+		expect(screen.getByRole("table")).toHaveClass("sm:min-w-xl");
+		expect(screen.getByRole("table")).not.toHaveClass("min-w-xl");
+	});
+
+	it("lets the column naming each row take the room left on a phone, so it truncates", () => {
+		render(
+			<DataTable
+				columns={[{ ...columns[0]!, pin: "start" }, columns[1]!]}
+				data={branches}
+				getRowId={getRowId}
+				label="Branches"
+			/>
+		);
+
+		const naming = ["max-sm:w-full", "max-sm:max-w-0", "max-sm:min-w-36"];
+		expect(
+			screen.getByRole("columnheader", { name: /Branch Name/ })
+		).toHaveClass(...naming);
+		expect(screen.getByRole("cell", { name: "Orchard" })).toHaveClass(
+			...naming
+		);
+		expect(screen.getByRole("columnheader", { name: /Code/ })).not.toHaveClass(
+			"max-sm:max-w-0"
+		);
+	});
+
 	it("leaves a column out below its breakpoint, header and cells alike", () => {
 		render(
 			<DataTable

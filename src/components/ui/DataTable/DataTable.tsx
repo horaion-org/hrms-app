@@ -71,7 +71,8 @@ export type DataTableColumn<TData extends object> = {
 	/**
 	 * Keeps the column in view while the table scrolls sideways, from `md` up:
 	 * `start` for the column naming each row, `end` for its actions. At most
-	 * one column per side.
+	 * one column per side. Below `sm` the `start` column takes the room the
+	 * other columns leave (at least 9rem), its content truncating.
 	 */
 	pin?: ColumnPin;
 };
@@ -150,6 +151,15 @@ const headerCellClasses =
 // (sticky) cells carry their own lines while the rest scrolls beneath them.
 const bodyCellClasses =
 	"h-16 border-t border-l border-neutral-400 bg-white px-3 py-2 text-xs break-words text-neutral-900 first:border-l-0";
+
+/*
+ * On a phone the column naming each row (the start pin) takes the room the
+ * other columns leave instead of its content's width, so a long name
+ * truncates and the actions stay on screen. It keeps 9rem, what a checkbox
+ * and two actions leave on a 360 px phone, so a table still showing many
+ * columns scrolls in its frame rather than losing the name.
+ */
+const namingColumnPhoneClasses = "max-sm:w-full max-sm:max-w-0 max-sm:min-w-36";
 
 // The leading cells (row expander, row checkbox) are each 3rem wide.
 const selectionCellClasses = "w-12 px-0";
@@ -396,7 +406,8 @@ export const DataTable = <TData extends object>({
 				aria-label={label}
 				// Fixed widths from `xl`; below it the browser sizes columns to their content, so a
 				// column without a width never collapses to nothing and the frame scrolls instead.
-				className="w-full min-w-xl table-auto border-separate border-spacing-0 xl:table-fixed"
+				// The 576 px floor starts at `sm`: a phone's priority columns fit its screen.
+				className="w-full table-auto border-separate border-spacing-0 sm:min-w-xl xl:table-fixed"
 			>
 				<thead>
 					<tr>
@@ -445,6 +456,7 @@ export const DataTable = <TData extends object>({
 										headerCellClasses,
 										column?.hideBelow && hiddenBelowClasses[column.hideBelow],
 										column?.headerClassName,
+										column?.pin === "start" && namingColumnPhoneClasses,
 										pinnedCellClasses(header.column.getIsPinned(), leadingCount)
 									)}
 								>
@@ -553,6 +565,7 @@ export const DataTable = <TData extends object>({
 													column?.hideBelow &&
 														hiddenBelowClasses[column.hideBelow],
 													column?.cellClassName,
+													column?.pin === "start" && namingColumnPhoneClasses,
 													pinnedCellClasses(
 														cell.column.getIsPinned(),
 														leadingCount
