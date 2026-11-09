@@ -3,16 +3,17 @@ import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { CrossIcon, TickIcon } from "@/components/ui/Icon";
 import { Quote } from "@/components/ui/Quote";
-import type {
-	ApprovalDecision,
-	ApprovalInstance,
-	ApprovalInstanceStep,
-	ApprovalParticipant,
+import {
+	LEAVE_REQUEST,
+	type ApprovalDecision,
+	type ApprovalInstance,
+	type ApprovalInstanceStep,
+	type ApprovalParticipant,
 } from "@/features/approvals/api";
 
 export type ApprovalTrailProps = {
 	instance: ApprovalInstance;
-	/** The department its "anyone who can publish" steps name. */
+	/** The department its "anyone who can publish" (or review leave) steps name. */
 	departmentName: string;
 	/** Says an instant as the subject shows its times, e.g. in the branch's time zone. */
 	formatMoment: (instant: string) => string;
@@ -136,7 +137,12 @@ export const ApprovalTrail = ({
 	const whoDecides = (step: ApprovalInstanceStep, open: boolean): string => {
 		const who =
 			step.rule === "KEY_HOLDERS"
-				? t(`${key}.anyoneWhoCanPublish`, { department: departmentName })
+				? t(
+						instance.subjectType === LEAVE_REQUEST
+							? `${key}.anyoneWhoCanReviewLeave`
+							: `${key}.anyoneWhoCanPublish`,
+						{ department: departmentName }
+					)
 				: step.members.map(nameOf).join(", ");
 		return open
 			? t(`${key}.since`, {

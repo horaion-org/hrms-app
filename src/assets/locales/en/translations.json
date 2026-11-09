@@ -299,7 +299,8 @@
 			"personApproved": "{{name}} · Approved {{at}}",
 			"personRejected": "{{name}} · Rejected {{at}}",
 			"personWaiting": "{{name}} · Waiting",
-			"waitingFolded": "Waiting on {{count}}: {{names}} and {{more}} more"
+			"waitingFolded": "Waiting on {{count}}: {{names}} and {{more}} more",
+			"anyoneWhoCanReviewLeave": "Anyone who can review {{department}}’s leave"
 		},
 		"actions": {
 			"submit": "Submit for approval",

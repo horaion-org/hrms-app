@@ -299,7 +299,8 @@
 			"personApproved": "{{name}} · Aprobado {{at}}",
 			"personRejected": "{{name}} · Rechazado {{at}}",
 			"personWaiting": "{{name}} · En espera",
-			"waitingFolded": "Pendiente de {{count}}: {{names}} y {{more}} más"
+			"waitingFolded": "Pendiente de {{count}}: {{names}} y {{more}} más",
+			"anyoneWhoCanReviewLeave": "Cualquiera que pueda revisar los permisos de {{department}}"
 		},
 		"actions": {
 			"submit": "Enviar a aprobación",
