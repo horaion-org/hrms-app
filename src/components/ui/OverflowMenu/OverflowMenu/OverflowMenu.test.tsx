@@ -360,4 +360,15 @@ describe("OverflowMenu icon variant", () => {
 			})
 		).toBeVisible();
 	});
+
+	it("draws a framed icon trigger as a secondary button, for a toolbar of framed buttons", () => {
+		render(
+			<OverflowMenu framed label="More people actions" variant="icon">
+				<OverflowMenuItem>Import</OverflowMenuItem>
+			</OverflowMenu>
+		);
+
+		const trigger = screen.getByRole("button", { name: "More people actions" });
+		expect(trigger).toHaveClass("rounded-full", "border", "px-3.5");
+	});
 });

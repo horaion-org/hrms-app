@@ -21,6 +21,8 @@ export type OverflowMenuProps = {
 			variant: "icon";
 			/** The trigger's accessible name. */
 			label: string;
+			/** Draws the trigger as a secondary button, for a toolbar of framed buttons (as `FiltersPopover` is). */
+			framed?: boolean;
 	  }
 	| {
 			/** A person's avatar as the trigger, e.g. the header's account menu. */
@@ -40,11 +42,13 @@ const IconOverflowMenu = ({
 	label,
 	children,
 	disabled,
+	framed,
 	className,
 }: {
 	label: string;
 	children: ReactNode;
 	disabled?: boolean;
+	framed?: boolean;
 	className?: string;
 }): FunctionComponent => (
 	<Menu
@@ -55,9 +59,9 @@ const IconOverflowMenu = ({
 		<MenuButton
 			aria-label={label}
 			as={Button}
-			className="data-open:text-ink-blue-700"
+			className={framed ? "px-3.5" : "data-open:text-ink-blue-700"}
 			disabled={disabled}
-			variant="icon"
+			variant={framed ? "secondary" : "icon"}
 		>
 			<MoreVerticalIcon />
 		</MenuButton>
