@@ -12,6 +12,14 @@ import { CloseIcon } from "@/components/ui/Icon";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 
+/*
+ * The panel's height cap: the visible height (`dvh`, which leaves out the
+ * mobile browser's own bars) less the gap above it, with `vh` for browsers
+ * without `dvh`.
+ */
+const fitsVisibleHeightClasses =
+	"max-h-[calc(100vh-1rem)] supports-[height:100dvh]:max-h-[calc(100dvh-1rem)] sm:max-h-[calc(100vh-2rem)] sm:supports-[height:100dvh]:max-h-[calc(100dvh-2rem)]";
+
 export type DialogProps = {
 	open: boolean;
 	onClose: () => void;
@@ -23,7 +31,12 @@ export type DialogProps = {
 	className?: string;
 };
 
-/** A focused task with Headless UI managing dismissal, focus and ARIA wiring. */
+/**
+ * A focused task with Headless UI managing dismissal, focus and ARIA wiring.
+ * Below `sm` it rises from the bottom edge as a sheet, so its actions sit in
+ * thumb reach; from `sm` it is centred. Either way it fits the visible
+ * height and its body scrolls inside.
+ */
 export const Dialog = ({
 	open,
 	onClose,
@@ -41,14 +54,15 @@ export const Dialog = ({
 	return (
 		<HeadlessDialog className="fixed inset-0 z-50" open={open} onClose={close}>
 			<DialogBackdrop className="fixed inset-0 bg-black/40" />
-			<div className="fixed inset-0 flex items-center justify-center p-4">
+			<div className="fixed inset-0 flex items-end justify-center pt-4 sm:items-center sm:p-4">
 				<DialogPanel
 					className={joinClassNames(
-						"flex max-h-[calc(100dvh-2rem)] w-full max-w-140 flex-col overflow-hidden rounded-2xl bg-white shadow-xl",
+						"flex w-full max-w-140 flex-col overflow-hidden rounded-t-2xl bg-white shadow-xl sm:rounded-2xl",
+						fitsVisibleHeightClasses,
 						className
 					)}
 				>
-					<header className="shrink-0 border-b border-neutral-200 p-6">
+					<header className="shrink-0 border-b border-neutral-200 p-4 sm:p-6">
 						<div className="flex items-start justify-between gap-4">
 							<DialogTitle className="text-xl font-semibold text-neutral-900">
 								{title}
@@ -68,9 +82,9 @@ export const Dialog = ({
 							</Description>
 						)}
 					</header>
-					<div className="min-h-0 overflow-y-auto p-6">{children}</div>
+					<div className="min-h-0 overflow-y-auto p-4 sm:p-6">{children}</div>
 					{footer && (
-						<footer className="shrink-0 border-t border-neutral-200 p-6">
+						<footer className="shrink-0 border-t border-neutral-200 p-4 sm:p-6">
 							{footer}
 						</footer>
 					)}
