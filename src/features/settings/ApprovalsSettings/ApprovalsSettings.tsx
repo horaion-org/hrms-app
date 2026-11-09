@@ -10,6 +10,7 @@ import { PlusIcon } from "@/components/ui/Icon";
 import { OverflowMenuItem } from "@/components/ui/OverflowMenu";
 import {
 	approvalFlowsQuery,
+	SCHEDULE_PUBLICATION,
 	type ApprovalFlow,
 } from "@/features/approvals/api";
 import { ApprovalFlowDialog } from "@/features/approvals/ApprovalFlowDialog";
@@ -165,6 +166,7 @@ export const ApprovalsSettings = ({
 			{dialog && (
 				<ApprovalFlowDialog
 					companyId={companyId}
+					subjectType={SCHEDULE_PUBLICATION}
 					departmentName={(departmentId) => departmentNames.get(departmentId)}
 					editing={dialog.editing}
 					onClose={() => {
@@ -177,7 +179,9 @@ export const ApprovalsSettings = ({
 									flowId: editing.approvalFlowId,
 									body: updateFlowBodyOf(values, editing.active),
 								})
-							: actions.create.mutateAsync(createFlowBodyOf(values));
+							: actions.create.mutateAsync(
+									createFlowBodyOf(values, SCHEDULE_PUBLICATION)
+								);
 					}}
 				/>
 			)}

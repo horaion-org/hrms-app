@@ -5,11 +5,11 @@ import {
 	APPROVAL_FLOW_NAME_MAX_LENGTH,
 	APPROVAL_STEP_LABEL_INPUT_MAX_LENGTH,
 	APPROVAL_STEP_MAX_MEMBERS,
-	SCHEDULE_PUBLICATION,
 	type ApprovalFlow,
 	type ApprovalFlowStepBody,
 	type ApprovalQuorum,
 	type ApprovalStepRule,
+	type ApprovalSubject,
 	type CreateApprovalFlowBody,
 	type UpdateApprovalFlowBody,
 } from "@/features/approvals/api";
@@ -30,6 +30,8 @@ export type FlowValues = {
 	departmentId: string;
 	name: string;
 	steps: Array<FlowStepValues>;
+	/** Each step needs someone who approved no earlier step; offered with two steps or more. */
+	distinctApprovers: boolean;
 };
 
 /** A new step: anyone who can publish, any one of them. */
@@ -86,6 +88,7 @@ export const flowSchema = (t: TFunction): z.ZodType<FlowValues, FlowValues> =>
 			)
 			.min(1)
 			.max(APPROVAL_FLOW_MAX_STEPS),
+		distinctApprovers: z.boolean(),
 	});
 
 /** Where the dialog starts: the flow being edited, or one step for the whole company named `newName`. */
@@ -109,8 +112,14 @@ export const initialFlowValues = (
 						status: "ACTIVE",
 					})),
 				})),
+				distinctApprovers: editing.distinctApprovers,
 			}
-		: { departmentId: "", name: newName, steps: [newStep()] };
+		: {
+				departmentId: "",
+				name: newName,
+				steps: [newStep()],
+				distinctApprovers: false,
+			};
 
 /** One step as the API takes it; a "anyone who can publish" step names nobody and needs any one of them. */
 const stepBodyOf = (step: FlowStepValues): ApprovalFlowStepBody =>
@@ -130,14 +139,20 @@ const stepBodyOf = (step: FlowStepValues): ApprovalFlowStepBody =>
 				memberIds: [],
 			};
 
-/** What adding the flow sends. */
+/** "A different person approves each step" means nothing with one step, so it is sent off then. */
+const distinctApproversOf = (values: FlowValues): boolean =>
+	values.steps.length > 1 && values.distinctApprovers;
+
+/** What adding the flow for `subjectType` sends. */
 export const createFlowBodyOf = (
-	values: FlowValues
+	values: FlowValues,
+	subjectType: ApprovalSubject
 ): CreateApprovalFlowBody => ({
-	subjectType: SCHEDULE_PUBLICATION,
+	subjectType,
 	departmentId: values.departmentId === "" ? null : values.departmentId,
 	name: values.name.trim(),
 	steps: values.steps.map(stepBodyOf),
+	distinctApprovers: distinctApproversOf(values),
 });
 
 /** What replacing the flow sends; whether it is on is kept as it is. */
@@ -148,6 +163,7 @@ export const updateFlowBodyOf = (
 	name: values.name.trim(),
 	active,
 	steps: values.steps.map(stepBodyOf),
+	distinctApprovers: distinctApproversOf(values),
 });
 
 /** A flow sent back whole with only `active` changed, for turning it on or off from its row. */
@@ -162,4 +178,5 @@ export const toggledFlowBodyOf = (
 		quorum: step.rule === "MEMBERS" && step.quorum === "ALL" ? "ALL" : "ANY",
 		memberIds: step.members.map((member) => member.membershipId),
 	})),
+	distinctApprovers: flow.distinctApprovers,
 });

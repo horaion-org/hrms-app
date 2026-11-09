@@ -183,10 +183,11 @@ export type ApprovalFlowStepBody = {
 
 /** What adding a flow sends; where it applies is fixed once added. */
 export type CreateApprovalFlowBody = {
-	subjectType: typeof SCHEDULE_PUBLICATION;
+	subjectType: ApprovalSubject;
 	departmentId: string | null;
 	name: string;
 	steps: Array<ApprovalFlowStepBody>;
+	distinctApprovers: boolean;
 };
 
 /** What replacing a flow sends. */
@@ -194,6 +195,7 @@ export type UpdateApprovalFlowBody = {
 	name: string;
 	active: boolean;
 	steps: Array<ApprovalFlowStepBody>;
+	distinctApprovers: boolean;
 };
 
 /** One decision on the step `stepOrder`; a step that closed meanwhile is refused, never decided by accident. */

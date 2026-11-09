@@ -27,6 +27,7 @@ const values = (overrides: Partial<FlowValues> = {}): FlowValues => ({
 	departmentId: "",
 	name: "Company publishing",
 	steps: [{ ...newStep(), label: "Publish" }],
+	distinctApprovers: false,
 	...overrides,
 });
 
@@ -81,7 +82,8 @@ describe("ApprovalFlowDialog bodies", () => {
 						members: [SITI],
 					},
 				],
-			})
+			}),
+			"SCHEDULE_PUBLICATION"
 		);
 		expect(body).toEqual({
 			subjectType: "SCHEDULE_PUBLICATION",
@@ -90,8 +92,35 @@ describe("ApprovalFlowDialog bodies", () => {
 			steps: [
 				{ label: "Publish", rule: "KEY_HOLDERS", quorum: "ANY", memberIds: [] },
 			],
+			distinctApprovers: false,
 		});
-		expect(createFlowBodyOf(values()).departmentId).toBeNull();
+		expect(
+			createFlowBodyOf(values(), "SCHEDULE_PUBLICATION").departmentId
+		).toBeNull();
+	});
+
+	it("sends the subject the dialog was opened for", () => {
+		expect(createFlowBodyOf(values(), "LEAVE_REQUEST").subjectType).toBe(
+			"LEAVE_REQUEST"
+		);
+	});
+
+	it("sends a different person per step only with two steps or more", () => {
+		const step = { ...newStep(), label: "Step" };
+		expect(
+			createFlowBodyOf(values({ distinctApprovers: true }), "LEAVE_REQUEST")
+				.distinctApprovers
+		).toBe(false);
+		expect(
+			updateFlowBodyOf(
+				values({ distinctApprovers: true, steps: [step, step] }),
+				true
+			).distinctApprovers
+		).toBe(true);
+		expect(
+			toggledFlowBodyOf(approvalFlowFixture({ distinctApprovers: true }))
+				.distinctApprovers
+		).toBe(true);
 	});
 
 	it("starts an edit from the flow, keeps whether it is on, and toggles only that", () => {
@@ -111,6 +140,11 @@ describe("ApprovalFlowDialog bodies", () => {
 		});
 		expect(
 			initialFlowValues(undefined, { formerMember: "Former", newName: "New" })
-		).toEqual({ departmentId: "", name: "New", steps: [newStep()] });
+		).toEqual({
+			departmentId: "",
+			name: "New",
+			steps: [newStep()],
+			distinctApprovers: false,
+		});
 	});
 });
