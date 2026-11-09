@@ -288,9 +288,9 @@ describe("Branches", () => {
 		expect(within(statusCell(0, "Active")).getByText("Active")).toHaveClass(
 			"bg-success-100"
 		);
-		expect(
-			within(statusCell(1, "Inactive")).getByText("Inactive")
-		).toHaveClass("bg-neutral-400");
+		expect(within(statusCell(1, "Inactive")).getByText("Inactive")).toHaveClass(
+			"bg-neutral-400"
+		);
 		expect(
 			screen.getByRole("checkbox", { name: "Select Orchard" })
 		).toBeInTheDocument();
@@ -875,12 +875,14 @@ describe("Access roles", () => {
 			"Status",
 			"Actions",
 		]);
+		expectPhoneColumns(table, "Access role");
+		// Each cell's own content: on phones the name's cell adds a line of the hidden columns after it.
 		expect(
 			bodyRows(table).map((row) =>
 				within(row)
 					.getAllByRole("cell")
 					.slice(1, 5)
-					.map((cell) => cell.textContent)
+					.map((cell) => cell.firstChild?.textContent)
 			)
 		).toEqual([
 			["Company Owner", "Whole company", "Full system access", "1 person"],
