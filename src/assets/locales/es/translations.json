@@ -193,7 +193,11 @@
 			"remarkRejected": "Escribe un comentario de hasta 500 caracteres.",
 			"ownChange": "No puedes cambiar tu propio permiso. Debe hacerlo otra persona revisora.",
 			"forbiddenChange": "Ya no tienes permiso para cambiar este permiso.",
-			"changeFailed": "No pudimos guardarlo. Inténtalo de nuevo."
+			"changeFailed": "No pudimos guardarlo. Inténtalo de nuevo.",
+			"approvalPending": "Esta solicitud ahora pasa por pasos de aprobación. Recarga la página para ver en qué punto está.",
+			"noApprover": "Aún nadie puede aprobar permisos en este departamento. Pide a una persona de RR. HH. que revise quién aprueba los permisos.",
+			"stepDecided": "Otra persona decidió este paso antes. Recarga la página para ver en qué punto está.",
+			"notAnApprover": "No puedes decidir este paso."
 		},
 		"myLeave": "Mis ausencias",
 		"teamRequests": "Solicitudes del equipo",

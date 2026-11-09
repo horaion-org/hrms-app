@@ -6,6 +6,11 @@ import {
 } from "@tanstack/react-query";
 import { ApiProblemError } from "@/common/problem";
 import {
+	approvalKeys,
+	decideApproval,
+	myPendingApprovalsQuery,
+} from "@/features/approvals/api";
+import {
 	approveLeaveRequest,
 	cancelLeave,
 	changeLeave,
@@ -24,9 +29,15 @@ import {
 	type LeaveQuery,
 	type LeaveRequest,
 } from "@/features/leave/api";
-import { isRosterClash } from "@/features/leave/leaveRefusal";
+import {
+	canDecideLeave,
+	leaveApprovalsWaitingOn,
+} from "@/features/leave/leaveApproval";
+import { isRosterClash, isStaleDecision } from "@/features/leave/leaveRefusal";
 import type { ListPage } from "@/features/organisation/api";
+import { useCurrentMembershipId } from "@/features/organisation/useCurrentCompanyId";
 import { LEAVE_READ_KEYS } from "@/features/workspace/permissionKeys";
+import { recordScope } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
 
 /**
@@ -94,9 +105,66 @@ export const usePendingLeaveCount = (companyId: string): number | undefined => {
 	return useQuery(pendingLeaveCountQuery(companyId, reviews)).data;
 };
 
+/** Who decides which request now: what the review list, the dashboard and the dialog offer Approve and Reject on. */
+export type LeaveTurns = {
+	/** The leave approvals whose open step waits on the caller. */
+	waitingOnCaller: ReadonlySet<string>;
+	/** Whether the caller may approve or reject the request now; see `canDecideLeave`. */
+	canDecide: (request: LeaveRequest) => boolean;
+	/** Whether the caller reads approvals (`approval:read`) where the request's member is filed. */
+	readsApprovalSteps: (request: LeaveRequest) => boolean;
+};
+
+/**
+ * The caller's turns on leave: their own waiting list of approvals, asked
+ * only of someone who reviews leave somewhere (every approver of a leave
+ * step does), and their review key per department for requests without a
+ * flow.
+ */
+export const useLeaveTurns = (companyId: string): LeaveTurns => {
+	const access = useAccess();
+	const ownMembershipId = useCurrentMembershipId();
+	const reviewsSomewhere = access.canAnywhere("leave_request:review");
+	const waiting = useQuery(
+		myPendingApprovalsQuery(companyId, reviewsSomewhere)
+	);
+	const waitingOnCaller = leaveApprovalsWaitingOn(waiting.data);
+	return {
+		waitingOnCaller,
+		canDecide: (request) =>
+			canDecideLeave(request, {
+				ownMembershipId,
+				reviewsHere: access.can(
+					"leave_request:review",
+					recordScope(request.departmentId)
+				),
+				waitingOnCaller,
+			}),
+		readsApprovalSteps: (request) =>
+			access.can("approval:read", recordScope(request.departmentId)),
+	};
+};
+
+/** A request under a flow is decided on its open step, which the decision names so a step that moved on is refused. */
+const decideStep = (
+	companyId: string,
+	approval: NonNullable<LeaveRequest["approval"]>,
+	decision: "APPROVE" | "REJECT",
+	comment: string,
+	takeOffRosteredDays?: boolean
+): Promise<unknown> =>
+	decideApproval(companyId, approval.approvalInstanceId, {
+		stepOrder: approval.currentStepOrder,
+		decision,
+		comment: comment === "" ? null : comment,
+		// Sent only when confirmed, as the single-step route does.
+		...(takeOffRosteredDays ? { takeOffRosteredDays: true } : {}),
+	});
+
 export type LeaveActions = {
+	/** Answers the request, or the approval, as the API answered it. */
 	approve: UseMutationResult<
-		LeaveRequest,
+		unknown,
 		Error,
 		{
 			request: LeaveRequest;
@@ -105,7 +173,7 @@ export type LeaveActions = {
 		}
 	>;
 	reject: UseMutationResult<
-		LeaveRequest,
+		unknown,
 		Error,
 		{ request: LeaveRequest; reason: string }
 	>;
@@ -135,7 +203,11 @@ export type LeaveActions = {
 	withdraw: UseMutationResult<LeaveRequest, Error, LeaveRequest>;
 };
 
-/** Deciding and applying; each success reloads every list and window of the company's requests. */
+/**
+ * Deciding and applying; each success reloads every list and window of the
+ * company's requests, and the approvals. A request under a flow is approved
+ * or rejected on its open step; one without is decided in one review.
+ */
 export const useLeaveActions = (
 	companyId: string,
 	{ ownConfirmation = false }: { ownConfirmation?: boolean } = {}
@@ -145,6 +217,7 @@ export const useLeaveActions = (
 		await Promise.all([
 			client.invalidateQueries({ queryKey: ["leave", companyId] }),
 			client.invalidateQueries({ queryKey: ["notifications", companyId] }),
+			client.invalidateQueries({ queryKey: approvalKeys.all(companyId) }),
 		]);
 	};
 	// A clash the screen did not know of means its rostered days are stale: read
@@ -152,6 +225,11 @@ export const useLeaveActions = (
 	const refreshRosteredDays = (error: Error): void => {
 		if (isRosterClash(error))
 			void client.invalidateQueries({ queryKey: rosteredDaysKey(companyId) });
+	};
+	// A request that moved on (a flow started, another approver decided) is read again, so the screen shows where it stands.
+	const refreshDecided = (error: Error): void => {
+		refreshRosteredDays(error);
+		if (isStaleDecision(error)) void reload();
 	};
 	return {
 		approve: useMutation({
@@ -165,15 +243,23 @@ export const useLeaveActions = (
 				comment: string;
 				takeOffRosteredDays?: boolean;
 			}) =>
-				approveLeaveRequest(
-					companyId,
-					request.membershipId,
-					request.leaveRequestId,
-					comment,
-					takeOffRosteredDays
-				),
+				request.approval
+					? decideStep(
+							companyId,
+							request.approval,
+							"APPROVE",
+							comment,
+							takeOffRosteredDays
+						)
+					: approveLeaveRequest(
+							companyId,
+							request.membershipId,
+							request.leaveRequestId,
+							comment,
+							takeOffRosteredDays
+						),
 			onSuccess: reload,
-			onError: refreshRosteredDays,
+			onError: refreshDecided,
 		}),
 		reject: useMutation({
 			meta: { successMessage: ownConfirmation ? false : undefined },
@@ -184,13 +270,16 @@ export const useLeaveActions = (
 				request: LeaveRequest;
 				reason: string;
 			}) =>
-				rejectLeaveRequest(
-					companyId,
-					request.membershipId,
-					request.leaveRequestId,
-					reason
-				),
+				request.approval
+					? decideStep(companyId, request.approval, "REJECT", reason)
+					: rejectLeaveRequest(
+							companyId,
+							request.membershipId,
+							request.leaveRequestId,
+							reason
+						),
 			onSuccess: reload,
+			onError: refreshDecided,
 		}),
 		apply: useMutation({
 			mutationFn: ({

@@ -204,6 +204,8 @@ export type ApprovalDecisionBody = {
 	decision: "APPROVE" | "REJECT";
 	/** Optional to approve; required to reject. */
 	comment: string | null;
+	/** Leave's last step only: the approver confirmed taking the person off shifts on the leave days. */
+	takeOffRosteredDays?: boolean;
 };
 
 const flowsPath = (companyId: string): string =>

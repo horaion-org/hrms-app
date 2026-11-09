@@ -193,7 +193,11 @@
 			"remarkRejected": "Enter a remark of up to 500 characters.",
 			"ownChange": "You can’t change your own leave. Another reviewer needs to do it.",
 			"forbiddenChange": "You no longer have permission to change this leave.",
-			"changeFailed": "We couldn’t save this. Try again."
+			"changeFailed": "We couldn’t save this. Try again.",
+			"approvalPending": "This request now goes through approval steps. Reload the page to see where it stands.",
+			"noApprover": "Nobody can approve leave in this department yet. Ask an HR admin to check who approves leave.",
+			"stepDecided": "Someone else decided this step first. Reload the page to see where it stands.",
+			"notAnApprover": "You can’t decide this step."
 		},
 		"myLeave": "My leave",
 		"teamRequests": "Team requests",
