@@ -1,5 +1,8 @@
 import type { ReactNode } from "react";
+import { dayColumnClasses } from "@/common/dayView";
+import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
+import type { Weekday } from "@/common/weekdays";
 import type { AvailabilityDay } from "@/features/availability/availabilityModel";
 import { AvailabilityCell } from "@/features/availability/WeekGrid/AvailabilityCell";
 
@@ -14,6 +17,8 @@ export type WeekGridRowProps = {
 	withActions?: boolean;
 	/** The row's action, e.g. editing it. */
 	action?: ReactNode;
+	/** The one weekday shown below `md`, as the grid's `shownDay` falls; every day when left out. */
+	shownWeekday?: Weekday;
 };
 
 /** One row of a week grid: an optional heading, a cell per day and an optional action. */
@@ -23,6 +28,7 @@ export const WeekGridRow = ({
 	heading,
 	withActions = false,
 	action,
+	shownWeekday,
 }: WeekGridRowProps): FunctionComponent => (
 	<tr className="border-t border-neutral-400">
 		{withHeading && (
@@ -34,7 +40,13 @@ export const WeekGridRow = ({
 			</th>
 		)}
 		{days.map(({ day, windows }) => (
-			<td key={day} className="px-2 py-3 align-top">
+			<td
+				key={day}
+				className={joinClassNames(
+					"px-2 py-3 align-top",
+					dayColumnClasses(day, shownWeekday)
+				)}
+			>
 				<AvailabilityCell windows={windows} />
 			</td>
 		))}

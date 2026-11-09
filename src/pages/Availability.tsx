@@ -1,11 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
+import dayjs from "dayjs";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { dayParameter, shownDayOf } from "@/common/dayView";
 import type { FunctionComponent } from "@/common/types";
 import { Callout } from "@/components/ui/Callout";
 import { FilterChips } from "@/components/ui/FilterChips";
 import { FiltersPopover } from "@/components/ui/FiltersPopover";
+import { DaySwitcher } from "@/components/ui/DaySwitcher";
 import { PageToolbar } from "@/components/ui/PageToolbar";
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from "@/components/ui/Tabs";
 import { WeekNavigator } from "@/components/ui/WeekNavigator";
@@ -30,7 +33,7 @@ import {
 } from "@/features/availability/useAvailability";
 import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import { myProfileQuery } from "@/features/people/api";
-import { mondayOf } from "@/features/scheduling/schedules";
+import { daysOf, mondayOf } from "@/features/scheduling/schedules";
 import { workspaceQuery } from "@/features/workspace/api";
 import {
 	AVAILABILITY_READ_KEYS,
@@ -87,6 +90,10 @@ export const Availability = (): FunctionComponent => {
 	const view = viewOf(search.view, views);
 	const today = new Date();
 	const week = weekOf(search, today);
+	// A phone shows the team's week one day at a time; the grid hides the others' columns.
+	const todayDate = dayjs(today).format("YYYY-MM-DD");
+	const weekDates = daysOf(week);
+	const shownDay = shownDayOf(weekDates, search.day, todayDate);
 	// A week that has ended is shown, never changed: the API refuses it too.
 	const past = isPastWeek(week, today);
 	const workspace = useQuery({ ...workspaceQuery, retry });
@@ -146,6 +153,17 @@ export const Availability = (): FunctionComponent => {
 		);
 
 	const teamProblem = problemKeyOf(team);
+	// Both tabs' grids show the week one day at a time on a phone; one tab is mounted at a time.
+	const daySwitcher = shownDay && (
+		<DaySwitcher
+			className="mb-4"
+			day={shownDay}
+			days={weekDates}
+			onDayChange={(day) => {
+				show({ day: dayParameter(weekDates, day, todayDate) });
+			}}
+		/>
+	);
 	// The Branch is the header's scope; the team's Department is the only filter.
 	const chips =
 		view === "team"
@@ -208,7 +226,10 @@ export const Availability = (): FunctionComponent => {
 								currentWeek={mondayOf(today)}
 								week={week}
 								onWeekChange={(monday) => {
-									show({ week: weekParameter(monday, new Date()) });
+									show({
+										week: weekParameter(monday, new Date()),
+										day: undefined,
+									});
 								}}
 							/>
 						</>
@@ -218,12 +239,16 @@ export const Availability = (): FunctionComponent => {
 					{views.map((each) => (
 						<TabPanel key={each}>
 							{each === "mine" ? (
-								<MyAvailability
-									companyId={companyId}
-									editable={!past}
-									name={profile.data?.displayName ?? ""}
-									weekStartMonday={week}
-								/>
+								<>
+									{daySwitcher}
+									<MyAvailability
+										companyId={companyId}
+										editable={!past}
+										name={profile.data?.displayName ?? ""}
+										shownDay={shownDay}
+										weekStartMonday={week}
+									/>
+								</>
 							) : teamProblem ? (
 								<p
 									className="text-sm text-neutral-700 data-alert:text-error-700"
@@ -239,10 +264,12 @@ export const Availability = (): FunctionComponent => {
 											{t("availability.pastWeek")}
 										</Callout>
 									)}
+									{daySwitcher}
 									<TeamAvailability
 										canEdit={canEdit}
 										members={team.status === "ready" ? team.members : []}
 										showDepartment={units.department === undefined}
+										shownDay={shownDay}
 										weekStartMonday={week}
 										onEdit={setEditing}
 									/>

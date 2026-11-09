@@ -18,14 +18,16 @@ const searchSchema = z.object({
 	view: z.enum(["mine", "team"]).optional().catch(undefined),
 	...unitSearchSchema.shape,
 	week: z.iso.date().refine(isMonday).optional().catch(undefined),
+	/** The one day the team grid shows below `md`; today, else the week's first day, when left out (`shownDayOf`). */
+	day: z.iso.date().optional().catch(undefined),
 });
 
 /**
  * The Availability page's state that belongs in the URL, so it survives a
  * reload and can be shared: the tab, the Branch and Department of the team
- * view, and the week, as its Monday. Each part is left out at its default:
- * the person's first tab, the default Branch (see `resolveUnitSelection`),
- * every Department, this week.
+ * view, the week, as its Monday, and the one day a phone shows of it. Each
+ * part is left out at its default: the person's first tab, the default
+ * Branch (see `resolveUnitSelection`), every Department, this week, today.
  */
 export type AvailabilitySearch = z.infer<typeof searchSchema>;
 
@@ -33,11 +35,12 @@ export type AvailabilitySearch = z.infer<typeof searchSchema>;
 export const parseAvailabilitySearch = (
 	search: Record<string, unknown>
 ): AvailabilitySearch => {
-	const { view, branch, department, week } = searchSchema.parse(search);
+	const { view, branch, department, week, day } = searchSchema.parse(search);
 	return {
 		...(view === undefined ? {} : { view }),
 		...unitSearchOf({ branch, department }),
 		...(week === undefined ? {} : { week }),
+		...(day === undefined ? {} : { day }),
 	};
 };
 

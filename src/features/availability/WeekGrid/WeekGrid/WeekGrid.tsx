@@ -1,10 +1,14 @@
 import dayjs from "dayjs";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { dayColumnClasses } from "@/common/dayView";
 import { formattingLocale } from "@/common/formattingLocale";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
-import type { AvailabilityDay } from "@/features/availability/availabilityModel";
+import {
+	weekdayOf,
+	type AvailabilityDay,
+} from "@/features/availability/availabilityModel";
 import { WeekGridRow } from "@/features/availability/WeekGrid/WeekGridRow";
 import { daysOf } from "@/features/scheduling/schedules";
 
@@ -29,7 +33,21 @@ export type WeekGridProps = {
 	actionsLabel?: string;
 	/** Shown across the body when there are no rows. */
 	emptyState?: ReactNode;
+	/**
+	 * The one day shown below `md`, where every other day's column hides
+	 * (the page's `DaySwitcher` picks it); every day shows when left out.
+	 */
+	shownDay?: string;
 	className?: string;
+};
+
+/**
+ * The table's least width, so seven days stay readable; from `md` only when
+ * a phone shows one day, so that day fits the screen.
+ */
+const weekWidthClasses = (withHeading: boolean, oneDay: boolean): string => {
+	if (withHeading) return oneDay ? "md:min-w-254" : "min-w-254";
+	return oneDay ? "md:min-w-182" : "min-w-182";
 };
 
 /**
@@ -45,6 +63,7 @@ export const WeekGrid = ({
 	headingLabel,
 	actionsLabel,
 	emptyState,
+	shownDay,
 	className,
 }: WeekGridProps): FunctionComponent => {
 	const { i18n } = useTranslation();
@@ -70,17 +89,20 @@ export const WeekGrid = ({
 			<table
 				className={joinClassNames(
 					"w-full table-fixed border-collapse text-neutral-900",
-					withHeading ? "min-w-254" : "min-w-182"
+					weekWidthClasses(withHeading, shownDay !== undefined)
 				)}
 			>
 				<caption className="sr-only">{label}</caption>
-				<colgroup>
-					{withHeading && <col className="w-40 sm:w-56" />}
-					{dates.map((date) => (
-						<col key={date} />
-					))}
-					{withActions && <col className="w-16" />}
-				</colgroup>
+				{/*
+				 * Only the heading column is sized here; the actions column by
+				 * its header. A column per day would leave the day hidden on a
+				 * phone holding a slot the next cell slides into.
+				 */}
+				{withHeading && (
+					<colgroup>
+						<col className="w-32 sm:w-56" />
+					</colgroup>
+				)}
 				<thead>
 					<tr className="bg-neutral-200">
 						{withHeading && (
@@ -92,7 +114,14 @@ export const WeekGrid = ({
 							</th>
 						)}
 						{dates.map((date) => (
-							<th key={date} className="h-16 px-2 text-center" scope="col">
+							<th
+								key={date}
+								scope="col"
+								className={joinClassNames(
+									"h-16 px-2 text-center",
+									dayColumnClasses(date, shownDay)
+								)}
+							>
 								<span className="block text-sm font-bold">
 									{weekday.format(dayjs(date).toDate())}
 								</span>
@@ -102,7 +131,7 @@ export const WeekGrid = ({
 							</th>
 						))}
 						{withActions && (
-							<th className="h-16" scope="col">
+							<th className="h-16 w-16" scope="col">
 								<span className="sr-only">{actionsLabel}</span>
 							</th>
 						)}
@@ -125,6 +154,7 @@ export const WeekGrid = ({
 							action={row.action}
 							days={row.days}
 							heading={row.heading}
+							shownWeekday={shownDay ? weekdayOf(shownDay) : undefined}
 							withActions={withActions}
 							withHeading={withHeading}
 						/>

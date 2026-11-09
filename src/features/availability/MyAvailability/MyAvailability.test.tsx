@@ -36,7 +36,7 @@ const patternReply = (overrideWeeks: Array<string> = []): StubReply => ({
 	),
 });
 
-const show = (editable = true): void => {
+const show = (editable = true, shownDay?: string): void => {
 	const client = new QueryClient({
 		defaultOptions: { queries: { retry: false } },
 	});
@@ -47,6 +47,7 @@ const show = (editable = true): void => {
 					companyId="c-1"
 					editable={editable}
 					name="Aisha Rahman"
+					shownDay={shownDay}
 					weekStartMonday={FIXTURE_WEEK}
 				/>
 			</QueryClientProvider>
@@ -65,6 +66,17 @@ describe("MyAvailability", () => {
 		).toBeVisible();
 		expect(screen.queryByText("Custom")).not.toBeInTheDocument();
 		expect(calls.map((call) => call.path)).toEqual([MINE]);
+	});
+
+	it("given_aShownDay_when_shown_then_onlyThatDaysColumnShowsBelowMd", async () => {
+		stubApi({ [`GET ${MINE}`]: patternReply() });
+		show(true, "2026-11-11");
+
+		await screen.findAllByText("09:00–13:00");
+		const visible = screen
+			.getAllByRole("columnheader")
+			.filter((header) => !header.classList.contains("hidden"));
+		expect(visible.map((header) => header.textContent)).toEqual(["WedNov 11"]);
 	});
 
 	it("given_aWeekWithItsOwnHours_when_shown_then_marksItCustomAndListsThem", async () => {

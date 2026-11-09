@@ -20,12 +20,14 @@ describe("parseAvailabilitySearch", () => {
 				branch: "b-1",
 				department: "d-1",
 				week: "2026-11-09",
+				day: "2026-11-11",
 			})
 		).toEqual({
 			view: "team",
 			branch: "b-1",
 			department: "d-1",
 			week: "2026-11-09",
+			day: "2026-11-11",
 		});
 	});
 
@@ -43,6 +45,7 @@ describe("parseAvailabilitySearch", () => {
 			})
 		).toEqual({});
 		expect(parseAvailabilitySearch({ week: "next week" })).toEqual({});
+		expect(parseAvailabilitySearch({ day: "Wednesday" })).toEqual({});
 	});
 });
 
