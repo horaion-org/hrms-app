@@ -18,7 +18,7 @@ export const ActivityTitle = ({
 				<Link
 					className={linkClassName}
 					params={{ accessRoleId: link.accessRoleId }}
-					to="/organisation/system-roles/$accessRoleId"
+					to="/settings/access-roles/$accessRoleId"
 				>
 					{title}
 				</Link>

@@ -21,7 +21,7 @@ import {
 import { SystemRoleHolders } from "@/pages/SystemRoleHolders";
 
 const route = getRouteApi(
-	"/_authenticated/_app/organisation/system-roles_/$accessRoleId"
+	"/_authenticated/_app/settings_/access-roles_/$accessRoleId"
 );
 const key = "organisation.accessRoles.editor";
 const holdersKey = "organisation.accessRoles.assignments";
@@ -108,11 +108,13 @@ export const SystemRoleEditor = (): FunctionComponent => {
 							readOnly={reason !== undefined}
 							unknown={unknown}
 							initial={{
+								kind: role.kind,
 								name: role.name,
 								permissions: role.permissions.filter(isPermissionKey),
 							}}
 							onSubmit={async (values) => {
 								await update.mutateAsync({
+									kind: values.kind,
 									name: values.name,
 									permissions: [...values.permissions, ...unknown],
 									status: role.status,

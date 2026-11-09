@@ -93,6 +93,7 @@ const meta = {
 							accessRoleId: "r-1",
 							name: "Supervisor",
 							protectedRole: false,
+							kind: "LOCAL",
 							status: "ACTIVE",
 							permissions: ["member_profile:read"],
 							holderCount: 0,

@@ -1,4 +1,4 @@
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import {
 	getRouteApi,
 	useRouterState,
@@ -9,12 +9,16 @@ import { ApiProblemError } from "@/common/problem";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { ArrowLeftIcon, EditIcon } from "@/components/ui/Icon";
+import { placeLabels } from "@/features/organisation/accessSummary";
 import {
 	useCurrentCompanyId,
 	useCurrentMembershipId,
 } from "@/features/organisation/useCurrentCompanyId";
 import { memberProfileQuery } from "@/features/people/api";
-import { describeMemberRoles } from "@/features/people/memberRoles";
+import {
+	describeMemberAccess,
+	describeMemberRoles,
+} from "@/features/people/memberRoles";
 import { PeopleNotice } from "@/features/people/PeopleNotice";
 import { peopleNoticeFrom } from "@/features/people/peopleNoticeState";
 import { ProfileDetails } from "@/features/people/ProfileDetails";
@@ -26,6 +30,8 @@ import { ProfileHeader } from "@/features/people/ProfileHeader";
 import { ProfileMenu } from "@/features/people/ProfileMenu";
 import { ProfileNotesAndSkills } from "@/features/people/ProfileNotesAndSkills";
 import { useMemberRoles } from "@/features/people/useMemberRoles";
+import { workspaceQuery } from "@/features/workspace/api";
+import { retry } from "@/features/workspace/retry";
 import { useAccess } from "@/features/workspace/useAccess";
 import { EmploymentTermsRow } from "@/features/employmentTerms/EmploymentTermsRow";
 import { PersonProfileEdit } from "@/pages/PersonProfileEdit";
@@ -45,7 +51,8 @@ const BackToPeople = (): FunctionComponent => {
  * One person's profile, read-only, or ready to change with `?edit=true` for
  * someone who may. Who may change it comes from where the profile is
  * filed: see `profileEditAccess`. A change just made is confirmed above the
- * profile.
+ * profile. Read-only, it ends with what their system roles give them at
+ * each place the reader can see, named from the workspace.
  */
 export const PersonProfile = (): FunctionComponent => {
 	const { membershipId } = route.useParams();
@@ -59,6 +66,7 @@ export const PersonProfile = (): FunctionComponent => {
 	);
 	const access = profileEditAccess(profile, can);
 	const roles = useMemberRoles(companyId, membershipId);
+	const { data: workspace } = useQuery({ ...workspaceQuery, retry });
 	const notice = peopleNoticeFrom(
 		useRouterState({ select: (state) => state.location.state })
 	);
@@ -101,6 +109,11 @@ export const PersonProfile = (): FunctionComponent => {
 							className="mt-10"
 							profile={profile}
 							systemRoles={describeMemberRoles(roles, t)}
+							access={describeMemberAccess(
+								roles,
+								placeLabels(workspace, companyId, t),
+								t
+							)}
 							employmentTerms={
 								can("member_employment_terms:read", personScope(profile)) ? (
 									<EmploymentTermsRow companyId={companyId} profile={profile} />

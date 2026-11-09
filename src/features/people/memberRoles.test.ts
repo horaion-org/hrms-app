@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { AccessRole } from "@/features/organisation/api";
 import type { TFunction } from "i18next";
+import { authTestI18n } from "@/features/auth/testingI18n";
 import {
 	memberRoleChange,
+	describeMemberAccess,
 	describeMemberRoles,
 	memberRoles,
 	roleNames,
@@ -14,6 +16,7 @@ const role = (accessRoleId: string, name: string): AccessRole => ({
 	accessRoleId,
 	name,
 	protectedRole: false,
+	kind: "LOCAL",
 	status: "ACTIVE",
 	permissions: [],
 	holderCount: 1,
@@ -157,6 +160,8 @@ describe("member roles in words", () => {
 			describeMemberRoles(
 				{
 					status: "ready",
+					assignments: [],
+					accessRoles: [],
 					roles: [
 						{ ...held("a-1", "r-1", "d-1"), name: "Supervisor" },
 						{ ...held("a-2", "r-2", null), name: "Admin" },
@@ -166,12 +171,94 @@ describe("member roles in words", () => {
 				t
 			)
 		).toBe("Supervisor, Admin");
-		expect(describeMemberRoles({ status: "ready", roles: [] }, t)).toBe(
-			"people.notSet"
-		);
+		expect(
+			describeMemberRoles(
+				{ status: "ready", roles: [], assignments: [], accessRoles: [] },
+				t
+			)
+		).toBe("people.notSet");
 		expect(describeMemberRoles({ status: "hidden" }, t)).toBeUndefined();
 		expect(describeMemberRoles({ status: "error" }, t)).toBe(
 			"people.profile.rolesFailed"
 		);
+	});
+});
+
+describe("member access", () => {
+	const english = authTestI18n.t.bind(authTestI18n);
+	const label = (place: {
+		branchId?: string | null;
+		departmentId?: string | null;
+	}): string | undefined =>
+		place.departmentId
+			? undefined
+			: place.branchId
+				? "Orchard"
+				: "Whole company";
+
+	it("words what the person's roles give at each place the reader can see", () => {
+		expect(
+			describeMemberAccess(
+				{
+					status: "ready",
+					roles: [],
+					accessRoles: [
+						{ ...role("r-1", "Supervisor"), permissions: ["department:read"] },
+						{
+							...role("r-2", "Approver"),
+							permissions: ["leave_request:read"],
+						},
+					],
+					assignments: [
+						{
+							accessRoleAssignmentId: "a-1",
+							accessRoleId: "r-2",
+							status: "ACTIVE",
+							branchId: "b-1",
+							departmentId: null,
+						},
+						{
+							accessRoleAssignmentId: "a-2",
+							accessRoleId: "r-1",
+							status: "ACTIVE",
+							branchId: null,
+							departmentId: null,
+						},
+						// A place the reader can't name is left out.
+						{
+							accessRoleAssignmentId: "a-3",
+							accessRoleId: "r-1",
+							status: "ACTIVE",
+							branchId: null,
+							departmentId: "d-9",
+						},
+					],
+				},
+				label,
+				english
+			)
+		).toEqual([
+			{ place: "Whole company", lines: ["Organisation: View"] },
+			{ place: "Orchard", lines: ["Leave: View"] },
+		]);
+	});
+
+	it("says why access isn't shown, and leaves it out when roles may not be read", () => {
+		expect(describeMemberAccess({ status: "hidden" }, label, english)).toBe(
+			undefined
+		);
+		expect(describeMemberAccess({ status: "pending" }, label, english)).toBe(
+			"Loading…"
+		);
+		expect(describeMemberAccess({ status: "error" }, label, english)).toBe(
+			"We couldn’t load their access roles."
+		);
+		expect(
+			describeMemberAccess(
+				{ status: "ready", roles: [], assignments: [], accessRoles: [] },
+				label,
+				english
+			)
+		).toEqual([]);
 	});
 });

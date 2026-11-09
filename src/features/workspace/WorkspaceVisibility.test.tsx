@@ -281,6 +281,7 @@ describe("Edit on the System Roles list", () => {
 		name,
 		protectedRole,
 		status: "ACTIVE",
+		kind: protectedRole ? "COMPANY" : "LOCAL",
 		holderCount: 0,
 		permissions: [],
 	});
@@ -293,7 +294,7 @@ describe("Edit on the System Roles list", () => {
 				role("r-2", "Manager"),
 			]),
 		});
-		await open("/organisation/system-roles");
+		await open("/settings/access-roles");
 		const table = await screen.findByRole("table");
 
 		expect(
@@ -309,7 +310,7 @@ describe("Edit on the System Roles list", () => {
 			...routes(workspaceReply(["access_role:read"])),
 			[ACCESS_ROLES]: pageReply([role("r-2", "Manager")]),
 		});
-		await open("/organisation/system-roles");
+		await open("/settings/access-roles");
 		const table = await screen.findByRole("table");
 
 		expect(

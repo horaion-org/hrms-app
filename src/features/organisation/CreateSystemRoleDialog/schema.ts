@@ -1,5 +1,7 @@
 import type { TFunction } from "i18next";
 import { z } from "zod";
+import { roleKindSchema } from "@/features/organisation/accessRoleFormSchema";
+import type { AccessRoleKind } from "@/features/organisation/api";
 import { unitNameSchema } from "@/features/organisation/createSchemas";
 import {
 	PERMISSION_KEYS,
@@ -9,11 +11,13 @@ import {
 export const createSystemRoleSchema = (
 	t: TFunction
 ): z.ZodObject<{
+	kind: z.ZodType<AccessRoleKind, AccessRoleKind | "">;
 	name: z.ZodString;
 	permissions: z.ZodArray<z.ZodType<PermissionKey, PermissionKey>>;
 }> => {
 	const key = "organisation.accessRoles.createDialog";
 	return z.object({
+		kind: roleKindSchema(t("organisation.accessRoles.kind.required")),
 		name: unitNameSchema({
 			required: t(`${key}.nameRequired`),
 			length: t(`${key}.nameLength`),
@@ -25,6 +29,12 @@ export const createSystemRoleSchema = (
 	});
 };
 
-export type CreateSystemRoleValues = z.infer<
+/** What the dialog holds while it is filled in: the kind may still be unchosen (""). */
+export type CreateSystemRoleInput = z.input<
+	ReturnType<typeof createSystemRoleSchema>
+>;
+
+/** What the dialog creates: a role with its kind chosen. */
+export type CreateSystemRoleValues = z.output<
 	ReturnType<typeof createSystemRoleSchema>
 >;

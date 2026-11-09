@@ -16,6 +16,7 @@ import {
 	RoleIcon,
 	UserIcon,
 } from "@/components/ui/Icon";
+import type { PlaceAccessText } from "@/features/organisation/accessSummary";
 import type { MemberProfileDetail } from "@/features/people/api";
 import { PROFILE_FIELD_WIDTH } from "@/features/people/profileLayout";
 
@@ -25,6 +26,12 @@ export type ProfileDetailsProps = {
 	systemRoles?: string;
 	/** Their employment terms (`EmploymentTermsRow`); the row is left out when not given. */
 	employmentTerms?: ReactNode;
+	/**
+	 * Where their system roles give them permissions, one row per place the
+	 * reader can see, or why that isn't shown (loading, failed). The Access
+	 * card is left out when not given.
+	 */
+	access?: ReadonlyArray<PlaceAccessText> | string;
 	className?: string;
 };
 
@@ -32,12 +39,14 @@ const key = "people.form";
 
 /**
  * A person's profile, read-only, in the same four cards and rows as the
- * form that edits it. Anything not set reads as a dash.
+ * form that edits it, then what their system roles give them where.
+ * Anything not set reads as a dash.
  */
 export const ProfileDetails = ({
 	profile,
 	systemRoles,
 	employmentTerms,
+	access,
 	className,
 }: ProfileDetailsProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
@@ -121,6 +130,38 @@ export const ProfileDetails = ({
 					? []
 					: [{ label: t(`${key}.systemRole`), value: systemRoles }]),
 			])}
+			{access !== undefined && (
+				<Card
+					className="xl:col-span-2"
+					icon={RoleIcon}
+					title={t("organisation.accessRoles.access.title")}
+				>
+					<div className="flex flex-col gap-4">
+						<p className="text-sm text-neutral-700">
+							{t("organisation.accessRoles.access.note")}
+						</p>
+						{typeof access === "string" || access.length === 0 ? (
+							<p className="text-base text-neutral-900">
+								{typeof access === "string"
+									? access
+									: t("organisation.accessRoles.access.none")}
+							</p>
+						) : (
+							<DescriptionList
+								valueWidth={PROFILE_FIELD_WIDTH}
+								items={access.map(({ place, lines }) => ({
+									label: place,
+									value: lines.map((line) => (
+										<span key={line} className="block">
+											{line}
+										</span>
+									)),
+								}))}
+							/>
+						)}
+					</div>
+				</Card>
+			)}
 		</div>
 	);
 };

@@ -68,3 +68,23 @@ export const Sparse: Story = {
 		systemRoles: "—",
 	},
 };
+
+/** What their system roles give them at each place the reader can see. */
+export const WithAccess: Story = {
+	args: {
+		access: [
+			{ place: "Whole company", lines: ["Departments: View"] },
+			{
+				place: "Orchard",
+				lines: ["Branches: View", "Leave: View, Approve or reject"],
+			},
+			{
+				place: "Orchard › Food & Beverage",
+				lines: ["People: View, Edit", "Notes: View, Add"],
+			},
+		],
+	},
+};
+
+/** Their roles give nothing at the places the reader can see. */
+export const WithoutAccess: Story = { args: { access: [] } };

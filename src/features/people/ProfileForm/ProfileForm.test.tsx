@@ -116,6 +116,7 @@ const role = (
 	accessRoleId,
 	name,
 	protectedRole: false,
+	kind: "LOCAL",
 	status: "ACTIVE",
 	permissions: ["member_profile:read"],
 	holderCount: 0,
@@ -151,9 +152,13 @@ const routes = (
 		{ membershipId: "m-9", displayName: "Marcus Lim", status: "ACTIVE" },
 	]),
 	[`GET ${COMPANY}/access-roles`]: page([
-		role("r-0", "Company owner", { protectedRole: true }),
+		role("r-0", "Company owner", { protectedRole: true, kind: "COMPANY" }),
 		role("r-1", "Supervisor"),
 		role("r-2", "Retired", { status: "INACTIVE" }),
+		role("r-3", "Branch creator", {
+			kind: "COMPANY",
+			permissions: ["branch:read", "branch:create"],
+		}),
 	]),
 	[CREATE]: { status: 201, body: envelope(created) },
 	[ASSIGN]: { status: 201 },
@@ -266,7 +271,7 @@ describe("Add employee", () => {
 		).toBeVisible();
 		expect(button(/^Job title/)).toBeDisabled();
 		expect(
-			screen.queryByRole("button", { name: /^System role/ })
+			screen.queryByRole("button", { name: /^Access role/ })
 		).toBeVisible();
 		await user.click(confirm());
 		await screen.findByText(/Priya Nair was added/);
@@ -297,7 +302,7 @@ describe("Add employee", () => {
 		await fillRequired(user);
 		await choose(user, /^Job title/, "Chef");
 		await choose(user, /^Role scope/, "Orchard › Kitchen");
-		await choose(user, /^System role/, "Supervisor");
+		await choose(user, /^Access role/, "Supervisor");
 		await chooseDepartment(user, "No department yet");
 		expect(button(/^Job title/)).toBeDisabled();
 		await user.click(confirm());
@@ -446,15 +451,15 @@ describe("Add employee", () => {
 		]);
 	});
 
-	it("assigns the chosen system role in the person's department once they are added", async () => {
+	it("assigns the chosen access role in the person's department once they are added", async () => {
 		const user = userEvent.setup();
 		const calls = stubApi(routes());
 		await open();
 
 		await fillRequired(user);
 		await choose(user, /^Role scope/, "Orchard › Kitchen");
-		await user.click(button(/^System role/));
-		// The owner's role and inactive roles are never offered.
+		await user.click(button(/^Access role/));
+		// The owner's role, inactive roles and company roles, which can't be given at a department, are never offered.
 		expect(
 			screen.getAllByRole("option").map((option) => option.textContent)
 		).toEqual(["Supervisor"]);
@@ -493,12 +498,12 @@ describe("Add employee", () => {
 
 		await fillRequired(user);
 		await choose(user, /^Role scope/, "Orchard › Kitchen");
-		await choose(user, /^System role/, "Supervisor");
+		await choose(user, /^Access role/, "Supervisor");
 		await user.click(confirm());
 
 		expect(
 			await screen.findByText(
-				"Priya Nair was added, but their system role wasn’t assigned. Assign it from Organisation, under System roles."
+				"Priya Nair was added, but their access role wasn’t assigned. Assign it from Settings, under Access roles."
 			)
 		).toHaveAttribute("role", "status");
 		expect(opened.router.state.location.pathname).toBe("/people");
@@ -608,22 +613,22 @@ describe("Add employee", () => {
 		await open();
 
 		await screen.findByRole("button", { name: /^Department/ });
-		expect(screen.getByText("System role")).toBeVisible();
+		expect(screen.getByText("Access role")).toBeVisible();
 		await chooseDepartment(user, "Bukit Bintang › Kitchen");
-		expect(screen.getByText("System role")).toBeVisible();
+		expect(screen.getByText("Access role")).toBeVisible();
 		await chooseDepartment(user, "Orchard › Kitchen");
-		expect(await screen.findByText("System role")).toBeVisible();
+		expect(await screen.findByText("Access role")).toBeVisible();
 
 		await user.click(button(/^Role scope/));
 		expect(
 			(await screen.findAllByRole("option")).map((option) => option.textContent)
 		).toEqual(["Orchard › Kitchen"]);
 		await user.click(screen.getByRole("option", { name: "Orchard › Kitchen" }));
-		await choose(user, /^System role/, "Supervisor");
+		await choose(user, /^Access role/, "Supervisor");
 		await user.type(textbox("Full name"), "Priya Nair");
 		await user.type(textbox("Email address"), "priya@company.com");
 		await chooseDepartment(user, "Bukit Bintang › Kitchen");
-		expect(screen.getByText("System role")).toBeVisible();
+		expect(screen.getByText("Access role")).toBeVisible();
 		await user.click(confirm());
 		await screen.findByText(/Priya Nair was added\./);
 		expect(
@@ -631,7 +636,7 @@ describe("Add employee", () => {
 		).toHaveLength(1);
 	});
 
-	it("always offers the manager, and leaves out the system role without the keys it needs", async () => {
+	it("always offers the manager, and leaves out the access role without the keys it needs", async () => {
 		stubApi(
 			routes(
 				workspaceReply([
@@ -645,7 +650,7 @@ describe("Add employee", () => {
 
 		await screen.findByRole("button", { name: /^Department/ });
 		expect(screen.getByText("Manager")).toBeInTheDocument();
-		expect(screen.queryByText("System role")).not.toBeInTheDocument();
+		expect(screen.queryByText("Access role")).not.toBeInTheDocument();
 	});
 
 	it.each([

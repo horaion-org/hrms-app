@@ -13,8 +13,9 @@ const meta = {
 	args: {
 		mode: "edit",
 		initial: {
+			kind: "LOCAL",
 			name: "Manager",
-			permissions: ["branch:read", "branch:create", "department:read"],
+			permissions: ["branch:read", "branch:update", "department:read"],
 		},
 		onSubmit: fn(() => Promise.resolve()),
 	},
@@ -31,13 +32,25 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+/** A local role: company-only permissions aren't offered. */
 export const Edit: Story = {};
 
-/** A new role, by someone who holds only some permissions. */
+/** A company role: every permission is offered, with no place hints. */
+export const EditCompanyRole: Story = {
+	args: {
+		initial: {
+			kind: "COMPANY",
+			name: "Branch creator",
+			permissions: ["branch:read", "branch:create", "audit_event:read"],
+		},
+	},
+};
+
+/** A new role, by someone who holds only some permissions: no type is chosen yet. */
 export const Create: Story = {
 	args: {
 		mode: "create",
-		initial: { name: "", permissions: [] },
+		initial: { kind: "", name: "", permissions: [] },
 		unavailable: PERMISSION_KEYS.filter((key) => key.startsWith("access_role")),
 	},
 };
@@ -46,6 +59,10 @@ export const Create: Story = {
 export const ReadOnly: Story = {
 	args: {
 		readOnly: true,
-		initial: { name: "Company Owner", permissions: [...PERMISSION_KEYS] },
+		initial: {
+			kind: "COMPANY",
+			name: "Company Owner",
+			permissions: [...PERMISSION_KEYS],
+		},
 	},
 };

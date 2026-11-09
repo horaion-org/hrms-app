@@ -11,6 +11,8 @@ export const ASSIGNMENT_ERROR = {
 	conflict: "ACCESS_ROLE_ASSIGNMENT_CONFLICT",
 	invalid: "INVALID_ACCESS_ROLE_ASSIGNMENT",
 	roleInactive: "ACCESS_ROLE_INACTIVE",
+	/** A company role given, or switched on, at a Branch or Department. */
+	kindConflict: "ACCESS_ROLE_KIND_CONFLICT",
 } as const;
 
 /**
@@ -40,6 +42,11 @@ export const assignmentRefusal = (error: unknown, t: TFunction): string => {
 			cause.errorCode === ASSIGNMENT_ERROR.invalid
 		)
 			reason = t(`${key}.notMember`);
+		else if (
+			cause.status === 400 &&
+			cause.errorCode === ASSIGNMENT_ERROR.kindConflict
+		)
+			reason = t(`${key}.kindConflict`);
 		else if (cause.status === 403) reason = t(`${key}.forbidden`);
 	}
 	return withOutcome(error, reason, t);
@@ -56,6 +63,7 @@ export const assignmentStatusRefusal = (
 			alerts: {
 				[`409 ${ASSIGNMENT_ERROR.roleInactive}`]: t(`${key}.roleInactive`),
 				[`400 ${ASSIGNMENT_ERROR.invalid}`]: t(`${key}.notMember`),
+				[`400 ${ASSIGNMENT_ERROR.kindConflict}`]: t(`${key}.kindConflict`),
 			},
 			forbidden: t(`${key}.forbidden`),
 			failed: t(`${key}.failed`),

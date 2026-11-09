@@ -145,7 +145,10 @@ it("shows the overview figures and recent activity for the current company", asy
 	).toBeVisible();
 	expect(within(card("Branches")).getByText("Active Branches")).toBeVisible();
 	expect(await within(card("Departments")).findByText("1,234")).toBeVisible();
-	expect(await within(card("System roles")).findByText("4")).toBeVisible();
+	// Access roles moved to Settings › Access roles: no card here any more.
+	expect(
+		screen.queryByRole("region", { name: "Access roles" })
+	).not.toBeInTheDocument();
 	expect(await within(card("Job titles")).findByText("12")).toBeVisible();
 	expect(
 		within(card("Job titles")).getByText("Active job titles")
@@ -171,7 +174,8 @@ it("shows the overview figures and recent activity for the current company", asy
 	expect(searchOf("/api/v1/companies/c-1/departments")).toBe(
 		"status=ACTIVE&size=1"
 	);
-	expect(searchOf("/api/v1/companies/c-1/access-roles")).toBe("size=1");
+	// No access roles count: that card left the overview.
+	expect(searchOf("/api/v1/companies/c-1/access-roles")).toBeUndefined();
 	expect(searchOf("/api/v1/companies/c-1/job-titles")).toBe(
 		"status=ACTIVE&size=1"
 	);
@@ -192,7 +196,7 @@ it("hides what the workspace does not grant and never asks for it", async () => 
 	expect(
 		await within(await findCard("Branches")).findByText("3")
 	).toBeVisible();
-	for (const name of ["Departments", "Job titles", "Skills", "System roles"])
+	for (const name of ["Departments", "Job titles", "Skills", "Access roles"])
 		expect(screen.queryByRole("region", { name })).not.toBeInTheDocument();
 	expect(
 		screen.queryByRole("region", { name: "Recent Activity" })
@@ -268,7 +272,7 @@ it("shows the unit counts to a person granted only at one branch", async () => {
 		await within(await findCard("Departments")).findByText("2")
 	).toBeVisible();
 	// Roles and the activity feed have no unit, so a branch grant doesn't reach them.
-	for (const name of ["System roles", "Recent Activity"])
+	for (const name of ["Access roles", "Recent Activity"])
 		expect(screen.queryByRole("region", { name })).not.toBeInTheDocument();
 	expect(
 		calls

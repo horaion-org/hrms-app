@@ -83,7 +83,7 @@ describe("Forbidden page", () => {
 
 	it.each([
 		["/people/new", "member_profile:create"],
-		["/organisation/system-roles/new", "access_role:create"],
+		["/settings/access-roles/new", "access_role:create"],
 		["/activity", "audit_event:read"],
 	])("replaces %s with the Forbidden page without %s", async (entry) => {
 		stubApi(routes(workspaceReply(["member_profile:read"])));

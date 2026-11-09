@@ -353,6 +353,7 @@ describe("create access role client", () => {
 					companyId: "c-1",
 					name: "Branch manager",
 					protectedRole: false,
+					kind: "LOCAL",
 					status: "ACTIVE",
 					holderCount: 0,
 					permissions: ["branch:read", "branch:update"],
@@ -361,11 +362,17 @@ describe("create access role client", () => {
 		});
 		await expect(
 			createAccessRole("c-1", {
+				kind: "LOCAL",
 				name: " Branch manager ",
 				permissions: ["branch:read", "branch:update"],
 			})
-		).resolves.toMatchObject({ accessRoleId: "r-1", protectedRole: false });
+		).resolves.toMatchObject({
+			accessRoleId: "r-1",
+			protectedRole: false,
+			kind: "LOCAL",
+		});
 		expect(calls[0]?.body).toEqual({
+			kind: "LOCAL",
 			name: "Branch manager",
 			permissions: ["branch:read", "branch:update"],
 		});

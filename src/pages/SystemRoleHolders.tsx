@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { placeLabels } from "@/features/organisation/accessSummary";
 import {
 	AccessRoleAssignments,
 	type AccessRoleAssignmentRow,
@@ -28,6 +29,7 @@ import {
 } from "@/features/organisation/useAccessRoleHolders";
 import { useCompanyMemberSearch } from "@/features/organisation/useCompanyMemberSearch";
 import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
+import { useMemberRoles } from "@/features/people/useMemberRoles";
 import { workspaceQuery } from "@/features/workspace/api";
 import { isPermissionKey } from "@/features/workspace/permissionKeys";
 import { retry } from "@/features/workspace/retry";
@@ -68,7 +70,9 @@ const changeablePart = (
  * Given `editing`, it changes where that person already has the role,
  * starting from their current assignments as last loaded: places newly
  * chosen are granted, places cleared are removed, and places the person may
- * not change are shown but never touched.
+ * not change are shown but never touched. Once a person is chosen, what
+ * they hold at the places the reader can see is loaded to preview their
+ * access after the change.
  */
 export const AssignSystemRole = ({
 	roles,
@@ -83,6 +87,8 @@ export const AssignSystemRole = ({
 	const { t } = useTranslation();
 	const access = useAccess();
 	const [query, setQuery] = useState("");
+	const [recipient, setRecipient] = useState(editing?.membershipId ?? "");
+	const held = useMemberRoles(companyId, recipient);
 	const people = useCompanyMemberSearch(companyId, query);
 	const { data: workspace } = useQuery({ ...workspaceQuery, retry });
 	const change = useChangeAccessRoleHolders(companyId);
@@ -99,11 +105,20 @@ export const AssignSystemRole = ({
 		: [];
 	const changeable = current.filter(changeableAt(access.can));
 	const fixed = current.filter((place) => !changeableAt(access.can)(place));
+	const preview =
+		held.status === "ready"
+			? {
+					assignments: held.assignments,
+					roles: held.accessRoles,
+					placeLabel: placeLabels(workspace, companyId, t),
+				}
+			: undefined;
 
 	return (
 		<AssignAccessRoleDialog
 			error={change.error ? assignmentRefusal(change.error, t) : undefined}
 			people={people.data?.items ?? []}
+			preview={preview}
 			query={query}
 			roles={roles}
 			submitting={change.isPending}
@@ -144,6 +159,9 @@ export const AssignSystemRole = ({
 					},
 					{ onSuccess: onClose }
 				);
+			}}
+			onPersonChange={(person) => {
+				setRecipient(person?.membershipId ?? "");
 			}}
 		/>
 	);

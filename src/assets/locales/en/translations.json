@@ -797,9 +797,9 @@
 		"empty": "No people yet.",
 		"add": "Add employee",
 		"added": "{{name}} was added. We’ve emailed them an invitation to log in.",
-		"roleNotAssigned": "{{name}} was added, but their system role wasn’t assigned. Assign it from Organisation, under System roles.",
+		"roleNotAssigned": "{{name}} was added, but their access role wasn’t assigned. Assign it from Settings, under Access roles.",
 		"saved": "Changes to {{name}} were saved.",
-		"roleNotChanged": "Changes to {{name}} were saved, but their system role wasn’t changed. Change it from Organisation, under System roles.",
+		"roleNotChanged": "Changes to {{name}} were saved, but their access role wasn’t changed. Change it from Settings, under Access roles.",
 		"deactivated": "{{name}} was deactivated and can no longer log in.",
 		"reactivated": "{{name}} was reactivated and can log in again.",
 		"invited": "We’ve emailed {{name}} a new invitation to log in.",
@@ -860,14 +860,14 @@
 			"manager": "Manager",
 			"managerPlaceholder": "Select manager",
 			"managerHint": "An active member of the company.",
-			"systemRole": "System role",
-			"systemRolePlaceholder": "Select system role",
+			"systemRole": "Access role",
+			"systemRolePlaceholder": "Select access role",
 			"systemRoleHint": "Applies at the selected role scope.",
 			"otherRoles": "Also holds elsewhere: {{roles}}.",
 			"roleScope": "Role scope",
-			"roleScopeHint": "Choose where the system role applies, independently of department membership.",
+			"roleScopeHint": "Choose where the access role applies, independently of department membership.",
 			"roleScopePlaceholder": "Select company, branch or department",
-			"roleScopeRequired": "Choose where the system role applies.",
+			"roleScopeRequired": "Choose where the access role applies.",
 			"departmentUnavailable": "This department is no longer available. Choose another department.",
 			"jobTitleUnavailable": "This job title is no longer available. Choose another job title.",
 			"managerUnavailable": "This person is no longer available. Choose another manager.",
@@ -904,7 +904,7 @@
 			"copyEmail": "Copy email address",
 			"missing": "This person isn’t available. They may not exist, or you may not have access to them.",
 			"loadFailed": "We couldn’t load this person. Try again.",
-			"rolesFailed": "We couldn’t load their system roles.",
+			"rolesFailed": "We couldn’t load their access roles.",
 			"deactivate": {
 				"item": "Deactivate",
 				"title": "Deactivate {{name}}?",
@@ -1530,6 +1530,11 @@
 		"employment": {
 			"title": "Employment",
 			"description": "Working days, hours and rest day for each kind of contract."
+		},
+		"access": {
+			"title": "Access roles",
+			"description": "Decide what people can manage, and where.",
+			"open": "Open access roles"
 		}
 	},
 	"organisation": {
@@ -1779,13 +1784,13 @@
 			"systemRole": "System Role"
 		},
 		"accessRoles": {
-			"title": "System roles",
+			"title": "Access roles",
 			"caption": "Configured roles",
-			"subtitle": "Create and manage system roles and access permissions.",
-			"search": "Search system role",
-			"create": "Create system role",
-			"name": "System role",
-			"permissions": "Key permissions",
+			"subtitle": "Decide what people can manage, and where.",
+			"search": "Search access role",
+			"create": "Create access role",
+			"name": "Access role",
+			"permissions": "What it allows",
 			"people": "People",
 			"peopleCount_one": "{{count}} person",
 			"peopleCount_other": "{{count}} people",
@@ -1794,8 +1799,8 @@
 			"fullAccess": "Full system access",
 			"permissionCount_one": "{{count}} permission",
 			"permissionCount_other": "{{count}} permissions",
-			"label": "System roles",
-			"empty": "No system roles yet.",
+			"label": "Access roles",
+			"empty": "No access roles yet.",
 			"assignments": {
 				"tab": "People",
 				"permissionsTab": "Permissions",
@@ -1838,7 +1843,9 @@
 					"editSubmit": "Save changes",
 					"removesAll": "Saving with no places removes this role from {{name}}.",
 					"fixedPlaces": "{{name}} also has this role at {{places}}. You can’t change those places, so they stay as they are.",
-					"noFit": "This role can’t be given at any place you may assign it: {{permissions}} can only be given more widely."
+					"noFit": "This role can’t be given at any place you may assign it: {{permissions}} can only be given more widely.",
+					"companyRoleOutOfReach": "A company role can only be given at the whole company, and you can’t assign roles there.",
+					"kindConflict": "A company role can only be given at the whole company."
 				},
 				"loadFailed": "We couldn’t load who holds this role.",
 				"inactive": "This role is inactive, so the people below don’t have its permissions until it is activated again.",
@@ -1859,11 +1866,12 @@
 					"roleInactive": "The role itself is inactive. Activate the role first.",
 					"notMember": "This role can’t be active for this person at one of those places. They may no longer be an active member, or the role may not fit that place.",
 					"forbidden": "You can only activate a role whose permissions you hold there.",
-					"failed": "We couldn’t change this. Try again."
+					"failed": "We couldn’t change this. Try again.",
+					"kindConflict": "A company role can only be active at the whole company. Remove it from this place instead."
 				}
 			},
 			"createDialog": {
-				"title": "Create system role",
+				"title": "Create access role",
 				"description": "Name the role and choose what people who hold it can do.",
 				"name": "Role name",
 				"namePlaceholder": "e.g. Branch manager",
@@ -1874,27 +1882,27 @@
 				"permissionsHeld": "Choose at least 1 permission. You can only grant permissions you hold.",
 				"permissionsCounter": "{{count}} selected",
 				"cancel": "Cancel",
-				"submit": "Create system role",
+				"submit": "Create access role",
 				"nameRequired": "Enter a role name.",
 				"nameLength": "Use 2 to 100 characters.",
 				"nameCharacters": "Use only letters, numbers, spaces and . ' & - in the name.",
 				"permissionsRequired": "Choose at least one permission.",
-				"nameConflict": "A system role named \"{{name}}\" already exists. Choose a different name.",
+				"nameConflict": "An access role named \"{{name}}\" already exists. Choose a different name.",
 				"nameRejected": "Check the role name and try again.",
 				"permissionsRejected": "Some permissions are no longer available. Reload the page and try again.",
-				"forbidden": "You can’t create this role. You may no longer hold some of the chosen permissions, or permission to create system roles.",
-				"failed": "We couldn’t create the system role. Try again."
+				"forbidden": "You can’t create this role. You may no longer hold some of the chosen permissions, or permission to create access roles.",
+				"failed": "We couldn’t create the access role. Try again."
 			},
 			"editor": {
-				"back": "System roles",
-				"createTitle": "Create system role",
+				"back": "Access roles",
+				"createTitle": "Create access role",
 				"create": "Create role",
-				"createForbidden": "You don’t have permission to create system roles.",
+				"createForbidden": "You don’t have permission to create access roles.",
 				"unavailable": "You can only give a role permissions you hold yourself, so the others are unavailable.",
 				"scope": "Where this role applies is chosen when you assign it to a person.",
 				"fullAccess": "Full access",
 				"protected": "The Company Owner role always has every permission and can’t be changed.",
-				"viewOnly": "You don’t have permission to change system roles.",
+				"viewOnly": "You don’t have permission to change access roles.",
 				"locked": "This role includes permissions you don’t hold, so you can’t change it.",
 				"name": "Role name",
 				"nameHint": "2–100 characters. Letters, numbers, spaces and . ' & - only.",
@@ -1911,7 +1919,7 @@
 				"removed": "{{count}} removed",
 				"discard": "Discard changes",
 				"save": "Save changes",
-				"forbidden": "This role includes permissions you don’t hold, or you can no longer change system roles.",
+				"forbidden": "This role includes permissions you don’t hold, or you can no longer change access roles.",
 				"gone": "This role no longer exists.",
 				"protectedRefused": "The Company Owner role can’t be changed.",
 				"failed": "We couldn’t save the role. Try again.",
@@ -1919,7 +1927,8 @@
 				"loadMissing": "This role doesn’t exist or has been deleted.",
 				"loadFailed": "We couldn’t load this role. Please try again.",
 				"unknownKeys_one": "This role has a permission this version of the app doesn’t recognise. It is kept as it is when you save. Reload the page to update the app and change it.",
-				"unknownKeys_other": "This role has {{count}} permissions this version of the app doesn’t recognise. They are kept as they are when you save. Reload the page to update the app and change them."
+				"unknownKeys_other": "This role has {{count}} permissions this version of the app doesn’t recognise. They are kept as they are when you save. Reload the page to update the app and change them.",
+				"typeChanged": "Where it can be used changed"
 			},
 			"all": "All roles",
 			"copyName": "{{name}} copy",
@@ -1960,71 +1969,175 @@
 				"inUse": "This role is still assigned to someone. Remove it from everyone first.",
 				"forbidden": "You don’t have permission to delete this role.",
 				"failed": "We couldn’t delete the role. Try again."
+			},
+			"kind": {
+				"label": "Where can this role be used?",
+				"required": "Choose where this role can be used.",
+				"COMPANY": "Across the whole company",
+				"LOCAL": "In the branches or departments you choose",
+				"hints": {
+					"COMPANY": "Can include company settings, branches and access roles. It can only be given at the whole company.",
+					"LOCAL": "You pick the places when you give someone the role."
+				},
+				"choose": "Choose where this role can be used to see the permissions it can hold.",
+				"removed_one": "A role for chosen places can’t hold company-wide permissions, so {{permissions}} was removed.",
+				"removed_other": "A role for chosen places can’t hold company-wide permissions, so {{permissions}} were removed.",
+				"conflictLocal": "A role for chosen places can’t hold company-wide permissions. Choose “Across the whole company”, or remove those permissions.",
+				"conflictCompany": "This role is given at branches or departments, so it can’t become a whole-company role. Remove those assignments first, or keep it for chosen places."
+			},
+			"access": {
+				"title": "Access",
+				"note": "Only places you can see are shown.",
+				"none": "No permissions at the places you can see.",
+				"after": "{{name}}’s access after this change"
+			},
+			"where": "Where",
+			"baseline": "Everyone can already see their own roster, apply for their own leave and set their own availability. Roles are for managing other people.",
+			"whereLabels": {
+				"COMPANY": "Whole company",
+				"LOCAL": "Branches or departments"
+			},
+			"templates": {
+				"administrator": {
+					"name": "Administrator",
+					"description": "Manages everything in the company except deleting access roles."
+				},
+				"hr_manager": {
+					"name": "HR manager",
+					"description": "Manages people’s profiles, notes, availability, employment terms and leave where given."
+				},
+				"roster_planner": {
+					"name": "Roster planner",
+					"description": "Builds, changes and publishes rosters; sees people, availability and leave."
+				},
+				"department_manager": {
+					"name": "Department manager",
+					"description": "Runs a department: its rosters, leave decisions and availability."
+				},
+				"leave_approver": {
+					"name": "Leave approver",
+					"description": "Approves or rejects leave for the people where given."
+				},
+				"viewer": {
+					"name": "Viewer",
+					"description": "Sees what happens where given, except HR notes and leave reasons, and changes nothing."
+				},
+				"scratch": {
+					"name": "Start from scratch",
+					"description": "Choose every permission yourself."
+				},
+				"label": "Start from",
+				"copyNote": "A copy: later changes to the template don’t change it.",
+				"where": "Can be given at {{places}}.",
+				"shortfall_one": "Includes {{count}} permission you can’t give.",
+				"shortfall_other": "Includes {{count}} permissions you can’t give.",
+				"leftOut_one": "{{count}} permission of this template wasn’t added because you can’t give it.",
+				"leftOut_other": "{{count}} permissions of this template weren’t added because you can’t give them.",
+				"places": {
+					"COMPANY": "the whole company",
+					"BRANCH": "a branch",
+					"DEPARTMENT": "a department"
+				}
 			}
 		},
 		"permissions": {
 			"groupCount": "{{count}} of {{total}}",
 			"job_title": {
 				"name": "Job titles",
-				"description": "The company’s job titles.",
+				"description": "Each department’s job titles.",
 				"actions": {
-					"read": "View",
-					"create": "Create",
-					"update": "Edit"
+					"read": "See job titles",
+					"create": "Add job titles",
+					"update": "Edit job titles"
+				},
+				"actionHints": {
+					"read": "Each department’s job titles",
+					"create": "To a department",
+					"update": "Rename a job title, and deactivate or reactivate it"
 				}
 			},
 			"skill": {
 				"name": "Skills",
 				"description": "The company’s skill catalogue: the skills and licences people can hold, and how many hold each.",
 				"actions": {
-					"read": "View",
-					"create": "Create",
-					"update": "Edit",
-					"delete": "Delete"
+					"read": "See skills",
+					"create": "Add skills",
+					"update": "Edit skills",
+					"delete": "Delete skills"
+				},
+				"actionHints": {
+					"read": "The skill catalogue, with how many people hold each",
+					"create": "To the company’s skill catalogue",
+					"update": "Rename a skill or change how it is rated",
+					"delete": "Also removes the skill from everyone who holds it"
 				}
 			},
 			"member_profile": {
 				"name": "People",
 				"description": "Each person’s employee ID, department, job title and contact details.",
 				"actions": {
-					"read": "View",
-					"create": "Create",
-					"update": "Edit"
+					"read": "See people and their profiles",
+					"create": "Add people (sends them an invitation)",
+					"update": "Edit profiles, status and department"
+				},
+				"actionHints": {
+					"read": "The People list and each profile, including contact details, date of birth and skills",
+					"create": "Creates their login and emails them an invitation",
+					"update": "Also skills, and resending an unused invitation"
 				}
 			},
 			"member_note": {
 				"name": "Notes",
 				"description": "Notes about each person, such as feedback on their work.",
 				"actions": {
-					"read": "View",
-					"create": "Add",
-					"update": "Edit",
-					"delete": "Delete"
+					"read": "Read notes about people",
+					"create": "Add notes",
+					"update": "Edit any note",
+					"delete": "Delete any note"
+				},
+				"actionHints": {
+					"read": "With who wrote them",
+					"create": "About a person",
+					"update": "Not only the holder’s own",
+					"delete": "Not only the holder’s own"
 				}
 			},
 			"work_availability": {
 				"name": "Availability",
 				"description": "The hours each part-time person can work in a week, and who has none set.",
 				"actions": {
-					"read": "View",
-					"update": "Edit"
+					"read": "See part-timers’ availability",
+					"update": "Set someone’s availability"
+				},
+				"actionHints": {
+					"read": "Their weekly hours, and who has none set",
+					"update": "Their weekly pattern and changes for a week"
 				}
 			},
 			"leave_request": {
 				"name": "Leave",
 				"description": "Each person’s leave requests, including the kind of leave and why a request was refused.",
 				"actions": {
-					"read": "View",
-					"create": "Apply",
-					"review": "Approve or reject"
+					"read": "See leave requests, including the reason",
+					"create": "Apply for leave for someone else",
+					"review": "Approve or reject leave"
+				},
+				"actionHints": {
+					"read": "The kind of leave and why one was rejected",
+					"create": "Applying for oneself needs nothing",
+					"review": "Never the holder’s own"
 				}
 			},
 			"leave_type": {
 				"name": "Leave types",
 				"description": "The company’s kinds of leave and how many requests use each, never who took them.",
 				"actions": {
-					"read": "View",
-					"update": "Edit"
+					"read": "See leave types",
+					"update": "Manage leave types"
+				},
+				"actionHints": {
+					"read": "With how many requests use each, never who took them",
+					"update": "Add, rename, reorder, deactivate and reactivate them"
 				}
 			},
 			"none": "No permissions yet.",
@@ -2032,72 +2145,107 @@
 				"name": "Company",
 				"description": "The company’s own details.",
 				"actions": {
-					"read": "View",
-					"update": "Edit"
+					"read": "See the workspace",
+					"update": "Rename the workspace"
+				},
+				"actionHints": {
+					"read": "Meant for the company’s own details; nothing uses it yet",
+					"update": "Change the workspace name on Settings › General"
 				}
 			},
 			"branch": {
 				"name": "Branches",
 				"description": "The company’s branches and their details.",
 				"actions": {
-					"read": "View",
-					"create": "Create",
-					"update": "Edit"
+					"read": "See branches",
+					"create": "Create branches",
+					"update": "Edit branches"
+				},
+				"actionHints": {
+					"read": "Their code, city, country, status and heads",
+					"create": "Choosing their first heads",
+					"update": "Rename a branch, change its code, city or country, and deactivate or reactivate it"
 				}
 			},
 			"branch_member": {
 				"name": "Branch members",
 				"description": "Who belongs to a branch and who heads it.",
 				"actions": {
-					"read": "View",
-					"create": "Add",
-					"update": "Edit",
-					"deactivate": "Deactivate"
+					"read": "See who belongs to a branch",
+					"create": "Add people to a branch",
+					"update": "Change positions in a branch",
+					"deactivate": "Remove people from a branch"
+				},
+				"actionHints": {
+					"read": "Past members included, and who heads it",
+					"create": "As a head or an employee, or bring back a past member",
+					"update": "A member’s position or status, keeping at least one head",
+					"deactivate": "Their history is kept; the last head can’t be removed"
 				}
 			},
 			"department": {
 				"name": "Departments",
 				"description": "The departments inside each branch.",
 				"actions": {
-					"read": "View",
-					"create": "Create",
-					"update": "Edit"
+					"read": "See departments",
+					"create": "Create departments",
+					"update": "Edit departments"
+				},
+				"actionHints": {
+					"read": "With their branch, status and heads",
+					"create": "In a branch, choosing their first heads, who also join the branch",
+					"update": "Rename a department, and deactivate or reactivate it"
 				}
 			},
 			"department_member": {
 				"name": "Department members",
 				"description": "Who belongs to a department and who heads it.",
 				"actions": {
-					"read": "View",
-					"create": "Add",
-					"update": "Edit",
-					"deactivate": "Deactivate"
+					"read": "See who belongs to a department",
+					"create": "Add people to a department",
+					"update": "Change positions in a department",
+					"deactivate": "Remove people from a department"
+				},
+				"actionHints": {
+					"read": "Past members included, and who heads it",
+					"create": "As a head or an employee; they also join its branch",
+					"update": "A member’s position or status, keeping at least one head",
+					"deactivate": "Their history is kept; the last head can’t be removed"
 				}
 			},
 			"access_role": {
-				"name": "System roles",
-				"description": "Roles like this one, and who they are assigned to.",
+				"name": "Access roles",
+				"description": "Roles like this one, and who they are given to.",
 				"actions": {
-					"read": "View",
-					"create": "Create",
-					"update": "Edit",
-					"delete": "Delete",
-					"assign": "Assign"
+					"read": "See access roles and who holds them",
+					"create": "Create access roles",
+					"update": "Edit access roles",
+					"delete": "Delete access roles",
+					"assign": "Give access roles to people"
+				},
+				"actionHints": {
+					"read": "With their permissions, and where each person holds them",
+					"create": "Only with permissions the holder has company-wide",
+					"update": "Rename, change permissions or switch off, within the holder’s own permissions",
+					"delete": "Only roles nobody holds",
+					"assign": "Or switch them off or remove them, where the holder has all the role’s permissions"
 				}
 			},
 			"audit_event": {
 				"name": "Activity",
 				"description": "The record of who changed what in the company.",
 				"actions": {
-					"read": "View"
+					"read": "See the activity record"
+				},
+				"actionHints": {
+					"read": "Who changed what, and when"
 				}
 			},
-			"empty": "No system roles yet.",
-			"qualified": "{{resource}}: {{permission}}",
+			"empty": "No access roles yet.",
 			"needs_one": "{{permissions}} needs {{prerequisites}}.",
 			"needs_other": "{{permissions}} need {{prerequisites}}.",
 			"blockedBy": "Needs {{prerequisites}}, which you can’t give",
-			"companyOnly": "Company only",
+			"companyOnly": "Only for whole-company roles",
 			"unknown": {
 				"name": "Not recognised",
 				"description": "This version of the app doesn’t know these permissions. They stay on the role when you save."
@@ -2106,75 +2254,184 @@
 				"name": "Schedules",
 				"description": "Each department’s schedules: their week, settings and chosen shifts, generating them, changing who works which shift on a generated roster, publishing or rejecting their rosters, and deleting them.",
 				"actions": {
-					"read": "View",
-					"create": "Create",
-					"update": "Edit",
-					"generate": "Generate",
-					"delete": "Delete",
-					"publish": "Publish",
-					"edit_shift": "Edit shifts"
+					"read": "See schedules and rosters",
+					"create": "Start a schedule",
+					"update": "Set up a draft: its week, settings and shifts",
+					"generate": "Generate rosters",
+					"delete": "Delete schedules",
+					"publish": "Publish or reject rosters",
+					"edit_shift": "Change who works which shift"
+				},
+				"actionHints": {
+					"read": "Their settings; their shifts need “See shifts”",
+					"create": "A draft for a department",
+					"update": "Which shifts it includes",
+					"generate": "Fixes the draft’s shifts for good",
+					"edit_shift": "By hand, on a generated roster",
+					"publish": "Members are told when their roster is published",
+					"delete": "Not while one is being generated"
 				}
 			},
 			"approval_flow": {
 				"name": "Approval flows",
 				"description": "Who approves a roster before it is published, per department: the flows in Settings › Approvals.",
 				"actions": {
-					"read": "View",
-					"manage": "Manage"
+					"read": "See approval flows",
+					"manage": "Manage approval flows"
+				},
+				"actionHints": {
+					"read": "Who approves a roster before it is published",
+					"manage": "Their steps and approvers in Settings › Approvals"
 				}
 			},
 			"approval": {
 				"name": "Approvals",
 				"description": "Rosters submitted for approval: seeing where they stand, and deciding a step where the person may publish the roster.",
 				"actions": {
-					"read": "View",
-					"decide": "Decide"
+					"read": "See where approvals stand",
+					"decide": "Approve or reject a step"
+				},
+				"actionHints": {
+					"read": "Rosters sent for approval and their steps",
+					"decide": "Where the holder may publish the roster"
 				}
 			},
 			"shift": {
 				"name": "Shifts",
 				"description": "Each department’s shifts: their times, days, group, colour and roles.",
 				"actions": {
-					"read": "View",
-					"create": "Add",
-					"update": "Edit",
-					"delete": "Delete"
+					"read": "See shifts",
+					"create": "Add shifts",
+					"update": "Edit shifts",
+					"delete": "Delete shifts"
+				},
+				"actionHints": {
+					"read": "A department’s shifts and the job titles they can use",
+					"create": "To a department",
+					"update": "The change reaches every draft that includes them",
+					"delete": "They leave drafts; generated schedules keep their copy"
 				}
 			},
 			"constraint": {
 				"name": "Constraints",
 				"description": "Each department’s scheduling constraints: what they say, whether they must or should be kept, and whether schedules can use them.",
 				"actions": {
-					"read": "View",
-					"create": "Add",
-					"update": "Edit",
-					"delete": "Delete"
+					"read": "See constraints",
+					"create": "Add constraints",
+					"update": "Edit constraints",
+					"delete": "Delete constraints"
+				},
+				"actionHints": {
+					"read": "A department’s scheduling constraints",
+					"create": "To a department",
+					"update": "What they say, and whether they must or should be kept",
+					"delete": "From a department"
 				}
 			},
 			"scheduling_policy": {
 				"name": "Scheduling policy",
 				"description": "The company’s own constraints, set once for every department: locked ones each department must keep and can only make stricter, and defaults it may leave out.",
 				"actions": {
-					"read": "View",
-					"update": "Edit"
+					"read": "See the scheduling policy",
+					"update": "Change the scheduling policy"
+				},
+				"actionHints": {
+					"read": "The constraints set once for every department",
+					"update": "Locked constraints every department keeps, and defaults"
 				}
 			},
 			"employment_terms": {
 				"name": "Employment terms",
 				"description": "The working week each kind of contract sets: working days, normal hours, rest day and whether the Act’s hour limits apply.",
 				"actions": {
-					"read": "View",
-					"update": "Edit"
+					"read": "See employment terms",
+					"update": "Manage employment terms"
+				},
+				"actionHints": {
+					"read": "With how many people hold each",
+					"update": "Create, edit, set the default and deactivate them"
 				}
 			},
 			"member_employment_terms": {
 				"name": "People’s employment terms",
 				"description": "Which employment terms each person works on, from which date, and their own hours.",
 				"actions": {
-					"read": "View",
-					"update": "Change"
+					"read": "See who works on which terms",
+					"update": "Change someone’s terms"
+				},
+				"actionHints": {
+					"read": "From which date, and their own hours",
+					"update": "From a date, for one person or many at once"
 				}
-			}
+			},
+			"notAtDepartments": "Not at departments",
+			"quoted": "“{{permission}}”",
+			"sectionCount": "{{count}} of {{total}} selected",
+			"alsoTicked": "Also ticked {{permission}}: {{reason}}.",
+			"missingUse": "Without {{permission}}, {{consequence}}.",
+			"summaryLine": "{{section}}: {{level}}",
+			"levels": {
+				"VIEW": "View",
+				"MANAGE": "Manage",
+				"FULL": "Full"
+			},
+			"sections": {
+				"people": {
+					"name": "People",
+					"description": "Profiles, notes, availability and each person’s employment terms."
+				},
+				"leave": {
+					"name": "Leave",
+					"description": "Other people’s leave requests and decisions."
+				},
+				"scheduling": {
+					"name": "Scheduling",
+					"description": "Build, change and publish departments’ rosters."
+				},
+				"approvals": {
+					"name": "Approvals",
+					"description": "Approval flows, and decisions on rosters sent for approval."
+				},
+				"organisation": {
+					"name": "Organisation",
+					"description": "Branches, departments, who belongs where, and job titles."
+				},
+				"company_settings": {
+					"name": "Company settings",
+					"description": "The workspace, skills, employment terms, leave types and the scheduling policy."
+				},
+				"access_and_activity": {
+					"name": "Access and activity",
+					"description": "Access roles, who holds them, and the activity record."
+				}
+			},
+			"uses": {
+				"scheduleShifts": {
+					"why": "the schedule wizard lists the department’s shifts",
+					"without": "holders can’t see the shifts step of the schedule wizard"
+				},
+				"shiftsInWizard": {
+					"why": "the app changes shifts only in the schedule wizard, which opens a schedule",
+					"without": "holders can’t reach shifts, which the app shows only in the schedule wizard"
+				},
+				"leaveForSomeone": {
+					"why": "applying for someone searches the People list",
+					"without": "holders can’t find the person to apply for"
+				},
+				"personJobTitles": {
+					"why": "the person form lists the department’s job titles",
+					"without": "holders can’t choose a job title in the person form"
+				},
+				"notesOnProfile": {
+					"why": "notes are shown on each person’s page in People",
+					"without": "holders can’t open the page that shows notes"
+				},
+				"departmentBranches": {
+					"why": "creating a department lists the branches to choose from",
+					"without": "holders aren’t offered creating a department"
+				}
+			},
+			"needsAll": "Everything else here needs {{prerequisites}}."
 		},
 		"activity": {
 			"title": "Recent Activity",

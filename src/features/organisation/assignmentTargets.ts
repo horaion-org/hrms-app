@@ -22,11 +22,18 @@ export type AssignmentTarget = {
 	departmentId?: string;
 };
 
+/**
+ * A place by id, as assignments name it: a Department, else a Branch, else
+ * (neither) the whole company. The API sends a missing id as null.
+ */
+export type PlaceRef = {
+	branchId?: string | null;
+	departmentId?: string | null;
+};
+
 /** Identifies a place: its Department, else its Branch, else the whole company. */
-export const placeKey = (place: {
-	branchId?: string;
-	departmentId?: string;
-}): string => place.departmentId ?? place.branchId ?? "";
+export const placeKey = (place: PlaceRef): string =>
+	place.departmentId ?? place.branchId ?? "";
 
 /** A place in words: the whole company, a Branch, or a Branch and its Department. */
 export const placeOf = (
@@ -43,10 +50,7 @@ export const placeOf = (
 };
 
 /** The target a place stands for: its Department, else its Branch, else the company. */
-export const scopeOfPlace = (place: {
-	branchId?: string;
-	departmentId?: string;
-}): ScopeRef => {
+export const scopeOfPlace = (place: PlaceRef): ScopeRef => {
 	if (place.departmentId) return departmentScope(place.departmentId);
 	if (place.branchId) return branchScope(place.branchId);
 	return COMPANY_SCOPE;
@@ -63,24 +67,41 @@ export const levelOf = (target: ScopeRef): AssignableScope =>
 	LEVELS[target.kind];
 
 /**
- * Whether a role can be assigned at a target: every key it holds is
- * assignable at the target's level (the contract's `assignableScopes`).
- * Keys this app doesn't know are left to the API, which names them if it
- * refuses.
+ * Whether a role can be assigned at a target. A company role fits only the
+ * whole company. A local role fits where every key it holds is assignable
+ * at the target's level (the contract's `assignableScopes`). Keys this app
+ * doesn't know are left to the API, which names them if it refuses.
  */
 export const roleFitsScope = (
-	role: Pick<AccessRole, "permissions">,
+	role: Pick<AccessRole, "kind" | "permissions">,
 	target: ScopeRef
-): boolean => incompatibleKeys(role.permissions, levelOf(target)).length === 0;
+): boolean =>
+	role.kind === "COMPANY"
+		? target.kind === "company"
+		: incompatibleKeys(role.permissions, levelOf(target)).length === 0;
 
 /**
- * The keys that keep `role` from fitting any of `targets`, in catalogue
- * order: empty when it fits at least one, or when there is no target.
+ * Whether `role` is a company role and the whole company, the only place
+ * it can be given, is not among `targets`: the person can't give it at all.
+ */
+export const companyRoleOutOfReach = (
+	role: Pick<AccessRole, "kind">,
+	targets: ReadonlyArray<PlaceRef>
+): boolean =>
+	role.kind === "COMPANY" &&
+	!targets.some((target) => scopeOfPlace(target).kind === "company");
+
+/**
+ * The keys that keep a local `role` from fitting any of `targets`, in
+ * catalogue order: empty when it fits at least one, or when there is no
+ * target. A company role is placed by its kind, not its keys, so nothing
+ * is named for it (see `companyRoleOutOfReach`).
  */
 export const keysThatFitNowhere = (
-	role: Pick<AccessRole, "permissions">,
-	targets: ReadonlyArray<{ branchId?: string; departmentId?: string }>
+	role: Pick<AccessRole, "kind" | "permissions">,
+	targets: ReadonlyArray<PlaceRef>
 ): Array<PermissionKey> => {
+	if (role.kind === "COMPANY") return [];
 	const scopes = targets.map(scopeOfPlace);
 	if (scopes.some((target) => roleFitsScope(role, target))) return [];
 	const misfits = new Set(

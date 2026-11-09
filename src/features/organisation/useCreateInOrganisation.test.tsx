@@ -44,6 +44,7 @@ const role = {
 	accessRoleId: "r-1",
 	name: "Auditor",
 	protectedRole: false,
+	kind: "COMPANY",
 	status: "ACTIVE",
 	holderCount: 0,
 	permissions: ["audit_event:read"],
@@ -72,7 +73,7 @@ it.each([
 		},
 	],
 	[
-		"system role",
+		"access role",
 		"POST /api/v1/companies/c-1/access-roles",
 		role,
 		(): unknown => useCreateAccessRole("c-1"),

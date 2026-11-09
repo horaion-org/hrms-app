@@ -9,6 +9,7 @@ const role = {
 	accessRoleId: "r-1",
 	name: "Manager",
 	protectedRole: false,
+	kind: "LOCAL" as const,
 	status: "ACTIVE" as const,
 	permissions: ["branch:read", "department:read", "department:update"],
 	holderCount: 2,

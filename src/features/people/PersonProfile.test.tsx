@@ -127,6 +127,7 @@ const role = (
 	accessRoleId,
 	name,
 	protectedRole: false,
+	kind: "LOCAL",
 	status: "ACTIVE",
 	permissions: ["member_profile:read"],
 	holderCount: 1,
@@ -197,8 +198,10 @@ const routes = (
 			{ membershipId: "m-9", displayName: "Faris Ahmad", status: "ACTIVE" },
 		]),
 		[`GET ${COMPANY}/access-roles`]: page([
-			role("r-0", "Company owner", { protectedRole: true }),
-			role("r-1", "Supervisor"),
+			role("r-0", "Company owner", { protectedRole: true, kind: "COMPANY" }),
+			role("r-1", "Supervisor", {
+				permissions: ["member_profile:read", "leave_request:read"],
+			}),
 			role("r-2", "Manager"),
 			role("r-3", "Admin"),
 		]),
@@ -331,9 +334,27 @@ describe("A person's profile", () => {
 				"Job title: Pastry chef",
 				"Department: Kitchen",
 				"Manager: Faris Ahmad",
-				"System role: Supervisor, Admin",
+				"Access role: Supervisor, Admin",
 			]);
 		});
+		// What those roles give, place by place: Admin company-wide, Supervisor at Kitchen.
+		const access = screen.getByRole("region", { name: "Access" });
+		expect(access).toHaveTextContent("Only places you can see are shown.");
+		expect(
+			within(access)
+				.getAllByRole("term")
+				.map(
+					(term) =>
+						`${term.textContent}: ${[
+							...(term.nextElementSibling?.children ?? []),
+						]
+							.map((line) => line.textContent)
+							.join(" / ")}`
+				)
+		).toEqual([
+			"Whole company: People: View",
+			"Orchard › Kitchen: People: View / Leave: View",
+		]);
 		expect(button("Copy phone number")).toBeVisible();
 		expect(button("Copy email address")).toBeVisible();
 		// Notes need their own key, which this person lacks; a photo is not part of this page yet.
@@ -347,12 +368,13 @@ describe("A person's profile", () => {
 				"Contact information",
 				"Employment information",
 				"Department & role information",
+				"Access",
 				"Skills & proficiency (0)",
 			]);
 		});
 	});
 
-	it("leaves out the system role for someone who may not read roles, and shows a pending invitation", async () => {
+	it("leaves out the access role for someone who may not read roles, and shows a pending invitation", async () => {
 		stubApi(
 			routes(
 				workspaceReply(["member_profile:read"]),
@@ -368,6 +390,9 @@ describe("A person's profile", () => {
 			"Department: Kitchen",
 			"Manager: Faris Ahmad",
 		]);
+		expect(
+			screen.queryByRole("region", { name: "Access" })
+		).not.toBeInTheDocument();
 	});
 
 	it.each([
@@ -563,7 +588,7 @@ describe("Editing a person", () => {
 			expect(button(/^Job title/)).toHaveTextContent("Pastry chef");
 		});
 		expect(button(/^Manager/)).toHaveTextContent("Faris Ahmad");
-		expect(button(/^System role/)).toHaveTextContent("Supervisor");
+		expect(button(/^Access role/)).toHaveTextContent("Supervisor");
 		expect(screen.getByText("Also holds elsewhere: Admin.")).toBeVisible();
 	});
 
@@ -686,7 +711,7 @@ describe("Editing a person", () => {
 		).toEqual(["Orchard › Kitchen"]);
 		await user.keyboard("{Escape}");
 		// Without the keys for them, the manager and system role are left out.
-		expect(screen.queryByText("System role")).not.toBeInTheDocument();
+		expect(screen.queryByText("Access role")).not.toBeInTheDocument();
 		await choose(user, /^Employment type/, "Contract");
 		await save(user);
 
@@ -881,7 +906,7 @@ describe("Editing a person", () => {
 	});
 });
 
-describe("Changing a person's system role", () => {
+describe("Changing a person's access role", () => {
 	it.each([
 		["Orchard", `${COMPANY}/branches/b-1/access-role-assignments`],
 		["Whole company", `${COMPANY}/access-role-assignments`],
@@ -906,7 +931,7 @@ describe("Changing a person's system role", () => {
 			[`POST ${path}`]: { status: 201 },
 		});
 		await choose(user, /^Role scope/, target);
-		await choose(user, /^System role/, "Manager");
+		await choose(user, /^Access role/, "Manager");
 		await save(user);
 		await screen.findByText("Changes to Kent Chua were saved.");
 		expect(sent(calls, `PUT ${PROFILE}`)).toEqual([
@@ -946,7 +971,7 @@ describe("Changing a person's system role", () => {
 			},
 		});
 		expect(button(/^Role scope/)).toHaveTextContent("Orchard");
-		expect(button(/^System role/)).toHaveTextContent("Manager");
+		expect(button(/^Access role/)).toHaveTextContent("Manager");
 		await save(user);
 		await screen.findByText("Changes to Kent Chua were saved.");
 		expect(
@@ -961,7 +986,7 @@ describe("Changing a person's system role", () => {
 		const user = userEvent.setup();
 		const { calls } = await openEditing();
 
-		await choose(user, /^System role/, "Manager");
+		await choose(user, /^Access role/, "Manager");
 		await save(user);
 
 		await screen.findByText("Changes to Kent Chua were saved.");
@@ -999,12 +1024,12 @@ describe("Changing a person's system role", () => {
 			[ASSIGN]: problemReply(409, "ACCESS_ROLE_INACTIVE"),
 		});
 
-		await choose(user, /^System role/, "Manager");
+		await choose(user, /^Access role/, "Manager");
 		await save(user);
 
 		expect(
 			await screen.findByText(
-				"Changes to Kent Chua were saved, but their system role wasn’t changed. Change it from Organisation, under System roles."
+				"Changes to Kent Chua were saved, but their access role wasn’t changed. Change it from Settings, under Access roles."
 			)
 		).toHaveAttribute("role", "status");
 		expect(sent(calls, REVOKE)).toEqual([]);

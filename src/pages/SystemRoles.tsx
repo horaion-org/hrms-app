@@ -10,6 +10,7 @@ import {
 	type DataTableSort,
 } from "@/components/ui/DataTable";
 import { Button } from "@/components/ui/Button";
+import { Callout } from "@/components/ui/Callout";
 import { OverflowMenuItem } from "@/components/ui/OverflowMenu";
 import type { AccessRole } from "@/features/organisation/api";
 import { CreateSystemRoleDialog } from "@/features/organisation/CreateSystemRoleDialog";
@@ -26,13 +27,15 @@ import {
 } from "@/features/organisation/listColumns";
 import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import { useAccessRoles } from "@/features/organisation/useOrganisationList";
+import { roleSummaryText } from "@/features/organisation/sectionLevels";
+import { isPermissionKey } from "@/features/workspace/permissionKeys";
 import {
 	SystemRoleActionDialog,
 	type SystemRoleAction,
 } from "@/pages/SystemRoleActions";
 import { AssignSystemRole } from "@/pages/SystemRoleHolders";
 
-/** Access roles, shown as "System roles". */
+/** Access roles: who may manage what, and where (Settings › Access roles). */
 export const SystemRoles = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
 	const { t } = useTranslation();
@@ -67,7 +70,7 @@ export const SystemRoles = (): FunctionComponent => {
 	const open = useCallback(
 		(role: AccessRole): void => {
 			void navigate({
-				to: "/organisation/system-roles/$accessRoleId",
+				to: "/settings/access-roles/$accessRoleId",
 				params: { accessRoleId: role.accessRoleId },
 				search: { tab: "permissions" },
 			});
@@ -85,17 +88,29 @@ export const SystemRoles = (): FunctionComponent => {
 				)
 			: [];
 	const columns = useMemo(
+		// What it allows is the one flexible column, so a role's summary fits in a line or two;
+		// the others are sized to their content.
 		(): Array<DataTableColumn<AccessRole>> => [
-			nameColumn<AccessRole>(t("organisation.accessRoles.name")),
+			{
+				...nameColumn<AccessRole>(t("organisation.accessRoles.name")),
+				headerClassName: "w-40",
+			},
+			{
+				// Where the role can be used: its kind, in the words of the editor's question.
+				id: "kind",
+				header: t("organisation.accessRoles.where"),
+				cell: (role) => t(`organisation.accessRoles.whereLabels.${role.kind}`),
+				headerClassName: "w-32",
+			},
 			{
 				id: "permissions",
 				header: t("organisation.accessRoles.permissions"),
+				// What the role allows, section by section; the owner role holds everything.
 				cell: (role) =>
 					role.protectedRole
 						? t("organisation.accessRoles.fullAccess")
-						: t("organisation.accessRoles.permissionCount", {
-								count: role.permissions.length,
-							}),
+						: roleSummaryText(role.permissions.filter(isPermissionKey), t) ||
+							t("organisation.permissions.none"),
 			},
 			{
 				id: "people",
@@ -104,7 +119,7 @@ export const SystemRoles = (): FunctionComponent => {
 				cell: (role) => (
 					<Button
 						params={{ accessRoleId: role.accessRoleId }}
-						to="/organisation/system-roles/$accessRoleId"
+						to="/settings/access-roles/$accessRoleId"
 						variant="textlink"
 						aria-label={t("organisation.accessRoles.viewPeople", {
 							count: role.holderCount,
@@ -116,60 +131,65 @@ export const SystemRoles = (): FunctionComponent => {
 						})}
 					</Button>
 				),
+				headerClassName: "w-24",
 			},
-			statusColumn<AccessRole>(t),
-			actionsColumn<AccessRole>(
-				t,
-				(role) => (
-					<>
-						<OverflowMenuItem
-							onClick={() => {
-								void navigate({
-									to: "/organisation/system-roles/$accessRoleId",
-									params: { accessRoleId: role.accessRoleId },
-								});
-							}}
-						>
-							{t("organisation.list.viewItem")}
-						</OverflowMenuItem>
-						<OverflowMenuItem
-							disabled={!canCreate}
-							onClick={() => {
-								setAction({ kind: "duplicate", role });
-							}}
-						>
-							{t("organisation.list.duplicateItem")}
-						</OverflowMenuItem>
-						<OverflowMenuItem
-							disabled={!canEdit(role)}
-							onClick={() => {
-								setAction({ kind: "status", role });
-							}}
-						>
-							{t(
-								role.status === "ACTIVE"
-									? "organisation.list.deactivateItem"
-									: "organisation.list.activateItem"
-							)}
-						</OverflowMenuItem>
-						<OverflowMenuItem
-							// Only a role nobody holds can be deleted.
-							disabled={
-								role.protectedRole ||
-								role.holderCount > 0 ||
-								!access.can("access_role:delete", COMPANY_SCOPE)
-							}
-							onClick={() => {
-								setAction({ kind: "delete", role });
-							}}
-						>
-							{t("organisation.list.deleteItem")}
-						</OverflowMenuItem>
-					</>
+			{ ...statusColumn<AccessRole>(t), headerClassName: "w-28" },
+			{
+				...actionsColumn<AccessRole>(
+					t,
+					(role) => (
+						<>
+							<OverflowMenuItem
+								onClick={() => {
+									void navigate({
+										to: "/settings/access-roles/$accessRoleId",
+										params: { accessRoleId: role.accessRoleId },
+									});
+								}}
+							>
+								{t("organisation.list.viewItem")}
+							</OverflowMenuItem>
+							<OverflowMenuItem
+								disabled={!canCreate}
+								onClick={() => {
+									setAction({ kind: "duplicate", role });
+								}}
+							>
+								{t("organisation.list.duplicateItem")}
+							</OverflowMenuItem>
+							<OverflowMenuItem
+								disabled={!canEdit(role)}
+								onClick={() => {
+									setAction({ kind: "status", role });
+								}}
+							>
+								{t(
+									role.status === "ACTIVE"
+										? "organisation.list.deactivateItem"
+										: "organisation.list.activateItem"
+								)}
+							</OverflowMenuItem>
+							<OverflowMenuItem
+								// Only a role nobody holds can be deleted.
+								disabled={
+									role.protectedRole ||
+									role.holderCount > 0 ||
+									!access.can("access_role:delete", COMPANY_SCOPE)
+								}
+								onClick={() => {
+									setAction({ kind: "delete", role });
+								}}
+							>
+								{t("organisation.list.deleteItem")}
+							</OverflowMenuItem>
+						</>
+					),
+					canEdit,
+					open
 				),
-				canEdit,
-				open
-			),
+				// Two icon buttons: narrower than the shared default.
+				headerClassName: "w-24",
+			},
 		],
 		[t, access, canCreate, canEdit, navigate, open]
 	);
@@ -182,6 +202,9 @@ export const SystemRoles = (): FunctionComponent => {
 			<p className="mt-4 text-sm text-neutral-800">
 				{t("organisation.accessRoles.subtitle")}
 			</p>
+			<Callout className="mt-6">
+				{t("organisation.accessRoles.baseline")}
+			</Callout>
 			<ListToolbar
 				className="mt-10"
 				createLabel={t("organisation.accessRoles.create")}

@@ -51,3 +51,13 @@ export const PrerequisiteUnavailable: Story = {
 export const UnknownKeys: Story = {
 	args: { unknown: ["leave:approve"] },
 };
+
+/** A local role: company-only permissions and the rows they leave empty are left out. */
+export const LocalRole: Story = {
+	args: { kind: "LOCAL", value: ["branch:read", "department:read"] },
+};
+
+/** A company role: every permission, with no hint about where it applies. */
+export const CompanyRole: Story = {
+	args: { kind: "COMPANY" },
+};

@@ -2,10 +2,7 @@ import { useTranslation } from "react-i18next";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { Badge } from "@/components/ui/Badge";
-import {
-	labelKeyOf,
-	PERMISSION_GROUPS,
-} from "@/features/organisation/PermissionChecklist/groups";
+import { sectionLevels } from "@/features/organisation/sectionLevels";
 import type { PermissionKey } from "@/features/workspace/permissionKeys";
 
 export type PermissionSummaryProps = {
@@ -16,19 +13,20 @@ export type PermissionSummaryProps = {
 };
 
 /**
- * What a set of permissions allows, read at a glance: action badges grouped
- * by resource. Resources with nothing allowed are left out.
+ * What a set of permissions allows, read at a glance: one line per section
+ * of the role editor with how much of it is held (View, Manage or Full) and
+ * which of its resources. Sections with nothing allowed are left out.
  */
 export const PermissionSummary = ({
 	title,
 	permissions,
 	className,
 }: PermissionSummaryProps): FunctionComponent => {
-	const { t } = useTranslation();
-	const groups = PERMISSION_GROUPS.map((group) => ({
-		resource: group.resource,
-		keys: group.keys.filter((key) => permissions.includes(key)),
-	})).filter((group) => group.keys.length > 0);
+	const { t, i18n } = useTranslation();
+	const sections = sectionLevels(permissions);
+	const list = new Intl.ListFormat(i18n.resolvedLanguage ?? i18n.language, {
+		type: "conjunction",
+	});
 
 	return (
 		<div
@@ -38,21 +36,28 @@ export const PermissionSummary = ({
 			)}
 		>
 			<h3 className="text-lg font-semibold text-neutral-900">{title}</h3>
-			{groups.length === 0 ? (
+			{sections.length === 0 ? (
 				<p className="mt-2 text-sm text-neutral-700">
 					{t("organisation.permissions.none")}
 				</p>
 			) : (
 				<dl className="mt-4 grid gap-x-8 gap-y-5 text-sm sm:grid-cols-2">
-					{groups.map((group) => (
-						<div key={group.resource} className="flex min-w-0 flex-col gap-2">
+					{sections.map((section) => (
+						<div key={section.module} className="flex min-w-0 flex-col gap-2">
 							<dt className="font-semibold text-neutral-900">
-								{t(`organisation.permissions.${group.resource}.name`)}
+								{t(`organisation.permissions.sections.${section.module}.name`)}
 							</dt>
-							<dd className="flex flex-wrap gap-2">
-								{group.keys.map((key) => (
-									<Badge key={key}>{t(labelKeyOf(key))}</Badge>
-								))}
+							<dd className="flex flex-wrap items-center gap-2">
+								<Badge>
+									{t(`organisation.permissions.levels.${section.level}`)}
+								</Badge>
+								<span className="text-neutral-700">
+									{list.format(
+										section.resources.map((resource) =>
+											t(`organisation.permissions.${resource}.name`)
+										)
+									)}
+								</span>
 							</dd>
 						</div>
 					))}

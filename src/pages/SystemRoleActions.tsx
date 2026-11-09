@@ -89,7 +89,7 @@ const DeleteRole = ({ role, onClose }: Props): FunctionComponent => {
 
 /**
  * The dialog for one action on a system role's list row. A duplicate starts
- * from the role's name and the permissions the person may grant.
+ * from the role's kind, its name and the permissions the person may grant.
  */
 export const SystemRoleActionDialog = ({
 	action,
@@ -110,6 +110,7 @@ export const SystemRoleActionDialog = ({
 			companyId={companyId}
 			heldPermissions={heldPermissions}
 			initial={{
+				kind: role.kind,
 				name: t("organisation.accessRoles.copyName", { name: role.name }),
 				// A copy starts from what the person may grant and this app knows.
 				permissions: role.permissions
