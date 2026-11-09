@@ -937,12 +937,13 @@ describe("Leave", () => {
 			stubApi(flowRoutes(1));
 			await open("/leave?view=requests");
 
+			// Twice in the row: in the Status cell and on the name's line, where phones read it.
 			expect(
-				await screen.findByText("Waiting on you · step 1 of 2 (Manager)")
-			).toBeVisible();
+				await screen.findAllByText("Waiting on you · step 1 of 2 (Manager)")
+			).toHaveLength(2);
 			expect(
-				screen.getByText("Waiting for approval · step 2 of 2 (HR)")
-			).toBeVisible();
+				screen.getAllByText("Waiting for approval · step 2 of 2 (HR)")
+			).toHaveLength(2);
 			expect(
 				screen.getByRole("button", { name: "Approve request for Aisha Rahman" })
 			).toBeEnabled();
@@ -955,7 +956,7 @@ describe("Leave", () => {
 			const user = userEvent.setup();
 			const calls = stubApi(flowRoutes(1));
 			await open("/leave?view=requests");
-			await screen.findByText("Waiting on you · step 1 of 2 (Manager)");
+			await screen.findAllByText("Waiting on you · step 1 of 2 (Manager)");
 
 			await user.click(
 				screen.getByRole("button", { name: "Approve request for Aisha Rahman" })
@@ -993,7 +994,7 @@ describe("Leave", () => {
 				},
 			});
 			await open("/leave?view=requests");
-			await screen.findByText("Waiting on you · step 2 of 2 (HR)");
+			await screen.findAllByText("Waiting on you · step 2 of 2 (HR)");
 
 			await user.click(
 				screen.getByRole("button", { name: "Approve request for Aisha Rahman" })
@@ -1056,7 +1057,7 @@ describe("Leave", () => {
 				[DECISIONS]: problemReply(409, "APPROVAL_STEP_ALREADY_DECIDED"),
 			});
 			await open("/leave?view=requests");
-			await screen.findByText("Waiting on you · step 1 of 2 (Manager)");
+			await screen.findAllByText("Waiting on you · step 1 of 2 (Manager)");
 
 			await approveFromRow(user, "Aisha Rahman");
 			const dialog = screen.getByRole("dialog", { name: "Leave request" });

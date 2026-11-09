@@ -57,6 +57,29 @@ export const LeaveRequests = ({
 	emptyState,
 }: LeaveRequestsProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
+	const statusBadge = (row: LeaveRequest): ReactNode => (
+		<Badge className="shrink-0 text-xs!" tone={statusTone[row.status]}>
+			{t(`leave.statuses.${row.status}`)}
+		</Badge>
+	);
+	// Under an approval flow, the step it waits on; in bold when it waits on the reader.
+	const approvalNote = (row: LeaveRequest, className?: string): ReactNode => {
+		const callersTurn = !own && canReview(row);
+		const line = leaveApprovalLine(row, callersTurn);
+		return (
+			line && (
+				<span
+					className={joinClassNames(
+						"text-xs text-neutral-800",
+						callersTurn && "font-semibold",
+						className
+					)}
+				>
+					{t(line.key, line.values)}
+				</span>
+			)
+		);
+	};
 	const employee: Array<DataTableColumn<LeaveRequest>> = own
 		? []
 		: [
@@ -156,28 +179,19 @@ export const LeaveRequests = ({
 			headerClassName: "w-30",
 			hideBelow: own ? undefined : "sm",
 			sortValue: (row) => row.status,
-			cell: (row): ReactNode => {
-				// Under an approval flow, the step it waits on; in bold when it waits on the reader.
-				const callersTurn = !own && canReview(row);
-				const line = leaveApprovalLine(row, callersTurn);
-				return (
-					<>
-						<Badge className="text-xs!" tone={statusTone[row.status]}>
-							{t(`leave.statuses.${row.status}`)}
-						</Badge>
-						{line && (
-							<span
-								className={joinClassNames(
-									"mt-1 block text-xs text-neutral-800",
-									callersTurn && "font-semibold"
-								)}
-							>
-								{t(line.key, line.values)}
-							</span>
-						)}
-					</>
-				);
-			},
+			cell: (row): ReactNode => (
+				<>
+					{statusBadge(row)}
+					{approvalNote(row, "mt-1 block")}
+				</>
+			),
+			// On a phone's name line the badge stays whole and the step wraps after it.
+			summary: (row): ReactNode => (
+				<span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+					{statusBadge(row)}
+					{approvalNote(row)}
+				</span>
+			),
 		},
 		{
 			id: "actions",
