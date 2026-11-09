@@ -24,13 +24,38 @@ describe("AppHeader", () => {
 		expect(screen.getByText("Welcome, John.").nextSibling).toBeNull();
 	});
 
-	it("draws the design's bottom rule", () => {
+	it("draws the design's bottom rule, compact on phones", () => {
 		render(<AppHeader title="Welcome, John." />);
 
 		expect(screen.getByRole("banner")).toHaveClass(
 			"border-b",
 			"border-neutral-400",
-			"min-h-22.5"
+			"min-h-16",
+			"sm:min-h-22.5"
+		);
+	});
+
+	it("leaves out the title when there is none, so the controls take the whole bar", () => {
+		render(<AppHeader actions={<Avatar name="John Doe" />} title={false} />);
+
+		expect(screen.getByRole("img", { name: "John Doe" }).parentElement).toBe(
+			screen.getByRole("banner").firstElementChild
+		);
+	});
+
+	it("puts the scope before the actions and lets it shrink on a phone", () => {
+		render(
+			<AppHeader
+				actions={<Avatar name="John Doe" />}
+				scope={<span>Orchard</span>}
+				title={false}
+			/>
+		);
+
+		const scope = screen.getByText("Orchard").parentElement;
+		expect(scope).toHaveClass("min-w-0", "flex-1", "sm:flex-none");
+		expect(scope?.nextElementSibling).toBe(
+			screen.getByRole("img", { name: "John Doe" })
 		);
 	});
 

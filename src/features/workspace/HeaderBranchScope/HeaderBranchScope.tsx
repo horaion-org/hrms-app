@@ -31,11 +31,11 @@ const BranchText = ({
 }): FunctionComponent => {
 	const { t } = useTranslation();
 	return (
-		<p className="flex items-center gap-3">
+		<p className="flex min-w-0 items-center gap-3">
 			<span className={labelClasses}>
 				{t("workspace.branchSelector.branch")}
 			</span>
-			<span className="font-semibold text-ink-blue-900">{name}</span>
+			<span className="truncate font-semibold text-ink-blue-900">{name}</span>
 		</p>
 	);
 };
@@ -59,13 +59,14 @@ const BranchChoice = ({
 		type: "region",
 	});
 	return (
-		<div className="flex items-center gap-3">
+		<div className="flex min-w-0 items-center gap-3">
 			<span className={labelClasses} id={labelId}>
 				{label}
 			</span>
 			<Select
 				aria-labelledby={labelId}
-				className="w-40 font-semibold text-ink-blue-900 sm:w-56"
+				// Fills the room the header's actions leave on a phone; a fixed width from `sm`.
+				className="w-full min-w-0 font-semibold text-ink-blue-900 sm:w-56"
 				value={branch?.branchId ?? ALL_BRANCHES}
 				options={[
 					...branches.map((choice) => ({

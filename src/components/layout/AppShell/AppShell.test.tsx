@@ -41,7 +41,7 @@ describe("AppShell", () => {
 		expect(screen.getByRole("main")).toBeVisible();
 	});
 
-	it("stacks the rail on top on narrow screens and beside the page from sm", () => {
+	it("stacks the rail on top below lg and beside the page from lg", () => {
 		const { container } = render(
 			<AppShell sidebar={<nav aria-label="Main navigation" />}>
 				<h1>Dashboard</h1>
@@ -52,7 +52,7 @@ describe("AppShell", () => {
 			"flex",
 			"min-h-dvh",
 			"flex-col",
-			"sm:flex-row"
+			"lg:flex-row"
 		);
 	});
 });

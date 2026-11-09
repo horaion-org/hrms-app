@@ -143,10 +143,10 @@ describe("Sidebar", () => {
 				.closest(".consumer-layout")
 		).toHaveClass(
 			"w-full",
-			"sm:sticky",
-			"sm:top-0",
-			"sm:h-dvh",
-			"sm:w-70",
+			"lg:sticky",
+			"lg:top-0",
+			"lg:h-dvh",
+			"lg:w-70",
 			"overflow-y-auto"
 		);
 	});
@@ -212,15 +212,15 @@ describe("Sidebar below sm", () => {
 		const panel = menuPanel(menu);
 
 		expect(menu).toHaveAttribute("aria-expanded", "false");
-		expect(menu).toHaveClass("sm:hidden");
+		expect(menu).toHaveClass("lg:hidden");
 		expect(panel).toContainElement(
 			screen.getByRole("navigation", { name: "Main navigation" })
 		);
 		expect(panel).toContainElement(
 			screen.getByRole("button", { name: "Log out" })
 		);
-		// Hidden below sm, always shown from sm.
-		expect(panel).toHaveClass("hidden", "sm:flex");
+		// Hidden below lg, always shown from lg.
+		expect(panel).toHaveClass("hidden", "lg:flex");
 	});
 
 	it("opens the navigation from Menu and closes it again after a link is followed", async () => {

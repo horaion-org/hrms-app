@@ -167,7 +167,8 @@ const Dashboard = (): FunctionComponent => {
 	return (
 		<>
 			<h1 className="sr-only">{t("shell.navigation.dashboard")}</h1>
-			<div className="-mx-4 -mt-7 flex flex-wrap items-start justify-between gap-4 border-b border-neutral-400 px-4 pt-5 pb-5 sm:-mx-10 sm:-mt-10 sm:px-10">
+			{/* Full bleed: the negative margins undo `AppShell`'s page padding at each breakpoint. */}
+			<div className="-mx-4 -mt-6 flex flex-wrap items-start justify-between gap-4 border-b border-neutral-400 px-4 pt-5 pb-5 sm:-mx-6 sm:-mt-8 sm:px-6 lg:-mx-10 lg:-mt-10 lg:px-10">
 				<Button
 					leadingIcon={<SchedulingIcon />}
 					size="sm"

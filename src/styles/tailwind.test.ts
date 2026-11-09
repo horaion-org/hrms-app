@@ -593,7 +593,8 @@ describe("compiled app stylesheet", () => {
 		expect(colourDeclarationOf("text-ink-blue-600")?.toUpperCase()).toBe(
 			"#378BE3"
 		);
-		for (const className of ["min-h-22.5", "size-13"]) {
+		// The header is 90px tall from `sm`, compact on phones.
+		for (const className of ["sm:min-h-22.5", "size-13"]) {
 			expect(rendered).toContain(className);
 			expect(compileCss([className]), className).toContain(
 				selectorOf(className)

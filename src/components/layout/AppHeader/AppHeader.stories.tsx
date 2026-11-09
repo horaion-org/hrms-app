@@ -28,6 +28,27 @@ export const Default: Story = {};
 
 export const WithoutActions: Story = { args: { actions: undefined } };
 
+/** A page's Branch beside the actions; on a phone it takes the room they leave. */
+export const WithScope: Story = {
+	args: {
+		title: false,
+		scope: (
+			<span className="block truncate font-semibold text-ink-blue-900">
+				Orchard
+			</span>
+		),
+	},
+};
+
+export const Phone: Story = {
+	args: WithScope.args,
+	parameters: { viewport: { defaultViewport: "mobile1" } },
+};
+
+export const PhoneWithTitle: Story = {
+	parameters: { viewport: { defaultViewport: "mobile1" } },
+};
+
 export const LongTitle: Story = {
 	args: {
 		title:

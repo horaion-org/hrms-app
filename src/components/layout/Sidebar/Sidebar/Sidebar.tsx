@@ -15,8 +15,8 @@ export type SidebarProps = {
 };
 
 /**
- * The navigation rail: a full-height column beside the page from `sm`, and
- * below it a bar with the logo and a Menu button that shows the navigation
+ * The navigation rail: a full-height column beside the page from `lg`, and
+ * below it (phones and tablets) a bar with the logo and a Menu button that shows the navigation
  * and footer under it, so the page starts right after the bar.
  */
 export const Sidebar = ({
@@ -34,7 +34,7 @@ export const Sidebar = ({
 		<div
 			className={joinClassNames(
 				"flex w-full shrink-0 flex-col items-start gap-6 overflow-y-auto bg-ink-blue-900 p-4",
-				"sm:sticky sm:top-0 sm:h-dvh sm:w-70 sm:gap-10 sm:p-7",
+				"lg:sticky lg:top-0 lg:h-dvh lg:w-70 lg:gap-10 lg:p-7",
 				className
 			)}
 		>
@@ -51,7 +51,7 @@ export const Sidebar = ({
 					aria-controls={panelId}
 					aria-expanded={menuOpen}
 					aria-label={menuLabel}
-					className="h-11 w-11 sm:hidden [&>svg]:size-6 [&>svg]:text-white hover:[&>svg]:text-ink-blue-100"
+					className="h-11 w-11 lg:hidden [&>svg]:size-6 [&>svg]:text-white hover:[&>svg]:text-ink-blue-100"
 					variant="icon"
 					onClick={() => {
 						setOpenAt(menuOpen ? undefined : location);
@@ -63,7 +63,7 @@ export const Sidebar = ({
 			<div
 				id={panelId}
 				className={joinClassNames(
-					"w-full flex-1 flex-col gap-6 sm:flex sm:gap-10",
+					"w-full flex-1 flex-col gap-6 lg:flex lg:gap-10",
 					menuOpen ? "flex" : "hidden"
 				)}
 			>
