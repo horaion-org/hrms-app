@@ -69,6 +69,17 @@ export type DataTableColumn<TData extends object> = {
 	 */
 	hideBelow?: ColumnBreakpoint;
 	/**
+	 * How the value reads on the naming column's summary line while the column
+	 * is hidden by `hideBelow`; `cell` when left out. Return nothing to leave
+	 * an unset value off the line.
+	 */
+	summary?: (row: TData) => ReactNode;
+	/**
+	 * Keeps the value off the summary line while the column is hidden. Only for
+	 * a value every reader can open in one tap from the row: say where, beside it.
+	 */
+	omitFromSummary?: boolean;
+	/**
 	 * Keeps the column in view while the table scrolls sideways, from `md` up:
 	 * `start` for the column naming each row, `end` for its actions. At most
 	 * one column per side. Below `sm` the `start` column takes the room the
@@ -86,6 +97,42 @@ const hiddenBelowClasses: Record<ColumnBreakpoint, string> = {
 	md: "hidden md:table-cell",
 	lg: "hidden lg:table-cell",
 };
+
+/** Shown only below the breakpoint: while a column hidden there is out of the table. */
+const shownBelowClasses: Record<ColumnBreakpoint, string> = {
+	sm: "sm:hidden",
+	md: "md:hidden",
+	lg: "lg:hidden",
+};
+
+const BREAKPOINT_ORDER: Array<ColumnBreakpoint> = ["sm", "md", "lg"];
+
+const widerOf = (
+	first: ColumnBreakpoint,
+	second: ColumnBreakpoint
+): ColumnBreakpoint =>
+	BREAKPOINT_ORDER.indexOf(first) >= BREAKPOINT_ORDER.indexOf(second)
+		? first
+		: second;
+
+/** A column `hideBelow` takes out of the table on smaller screens. */
+type HidingColumn<TData extends object> = DataTableColumn<TData> & {
+	hideBelow: ColumnBreakpoint;
+};
+
+const hides = <TData extends object>(
+	column: DataTableColumn<TData>
+): column is HidingColumn<TData> => column.hideBelow !== undefined;
+
+/**
+ * The column that names each row: the start-pinned one, else the first that
+ * is never hidden. It carries the summary line.
+ */
+const namingColumnOf = <TData extends object>(
+	columns: Array<DataTableColumn<TData>>
+): DataTableColumn<TData> | undefined =>
+	columns.find((column) => column.pin === "start") ??
+	columns.find((column) => !hides(column));
 
 /** The sorted column and its direction. */
 export type DataTableSort = { id: string; desc: boolean };
@@ -236,6 +283,56 @@ const SortMenu = ({
 	);
 };
 
+/**
+ * Under the naming cell's own content, the values of the columns hidden at
+ * this width, each showing exactly while its column is out of the table and
+ * named by its header for screen readers. Every value leads with a dot; the
+ * line sits one dot's width to the left inside a clipping box, so the dot
+ * that starts each wrapped line is cut off and no line starts or ends with one.
+ */
+const SummaryLine = <TData extends object>({
+	row,
+	columns,
+}: {
+	row: TData;
+	columns: Array<HidingColumn<TData>>;
+}): FunctionComponent => {
+	const items = columns
+		.map((column) => ({ column, value: (column.summary ?? column.cell)(row) }))
+		.filter(
+			({ value }) => value !== null && value !== undefined && value !== ""
+		);
+	if (items.length === 0) return null;
+	return (
+		<div
+			className={joinClassNames(
+				"mt-1 overflow-hidden font-normal text-neutral-800",
+				shownBelowClasses[
+					items.map(({ column }) => column.hideBelow).reduce(widerOf)
+				]
+			)}
+		>
+			<div className="-ml-3 flex flex-wrap items-center gap-y-1">
+				{items.map(({ column, value }) => (
+					<span
+						key={column.id}
+						className={joinClassNames(
+							"inline-flex min-w-0 items-center",
+							shownBelowClasses[column.hideBelow]
+						)}
+					>
+						<span aria-hidden="true" className="w-3 shrink-0 text-center">
+							·
+						</span>
+						<span className="sr-only">{column.header}: </span>
+						{value}
+					</span>
+				))}
+			</div>
+		</div>
+	);
+};
+
 // TanStack may set every row open at once as `true`; keep the per-row record.
 const expandedRecordOf = (
 	state: ExpandedState,
@@ -317,6 +414,11 @@ export const DataTable = <TData extends object>({
 	const columnsById = useMemo(
 		() => new Map(columns.map((column) => [column.id, column])),
 		[columns]
+	);
+	const naming = namingColumnOf(columns);
+	const summaryColumns = columns.filter(
+		(column): column is HidingColumn<TData> =>
+			hides(column) && !column.omitFromSummary && column !== naming
 	);
 	const columnDefs = useMemo(
 		(): Array<ColumnDef<typeof features, TData>> =>
@@ -573,6 +675,12 @@ export const DataTable = <TData extends object>({
 												)}
 											>
 												{column?.cell(row.original)}
+												{column === naming && summaryColumns.length > 0 && (
+													<SummaryLine
+														columns={summaryColumns}
+														row={row.original}
+													/>
+												)}
 											</td>
 										);
 									})}

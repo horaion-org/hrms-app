@@ -868,4 +868,87 @@ describe("DataTable", () => {
 			screen.getByRole("columnheader", { name: /Branch Name/ })
 		).not.toHaveClass("hidden");
 	});
+
+	describe("a hidden column's value on the naming cell's line", () => {
+		type Place = Branch & { city: string | null; note: string };
+		const places: Array<Place> = [
+			{ ...branches[0]!, city: "Singapore", note: "Opens at nine" },
+			{ ...branches[1]!, city: null, note: "Closed on Sundays" },
+		];
+		const placeColumns: Array<DataTableColumn<Place>> = [
+			{ ...columns[0]!, pin: "start" },
+			{
+				id: "code",
+				header: "Code",
+				cell: (place) => place.code,
+				sortValue: (place) => place.code,
+				hideBelow: "md",
+			},
+			{
+				id: "city",
+				header: "City",
+				cell: (place) => place.city ?? "—",
+				summary: (place) => place.city && `In ${place.city}`,
+				hideBelow: "sm",
+			},
+			{
+				id: "note",
+				header: "Note",
+				cell: (place) => place.note,
+				hideBelow: "md",
+				omitFromSummary: true,
+			},
+		];
+		const renderPlaces = (): void => {
+			render(
+				<DataTable
+					columns={placeColumns}
+					data={places}
+					getRowId={getRowId}
+					label="Branches"
+				/>
+			);
+		};
+		const namingCellOf = (name: string): HTMLElement =>
+			screen
+				.getAllByRole("cell")
+				.find((cell) => cell.textContent?.startsWith(name))!;
+
+		it("shows each value only while its column is out of the table, named for screen readers", () => {
+			renderPlaces();
+
+			const naming = namingCellOf("Orchard");
+			const code = within(naming).getByText("0002");
+			expect(code).toHaveClass("md:hidden");
+			expect(code).toHaveTextContent("Code: 0002");
+			const city = within(naming).getByText("In Singapore");
+			expect(city).toHaveClass("sm:hidden");
+			// The line shows while any of its columns is hidden: below the widest breakpoint.
+			expect(code.parentElement?.parentElement).toHaveClass("md:hidden");
+		});
+
+		it("leads every value with a dot and clips the one that starts each line, so no line starts or ends with one", () => {
+			renderPlaces();
+
+			const naming = namingCellOf("Orchard");
+			for (const value of ["0002", "In Singapore"])
+				expect(
+					within(within(naming).getByText(value)).getByText("·")
+				).toHaveAttribute("aria-hidden", "true");
+			const line = within(naming).getByText("0002").parentElement!;
+			expect(line).toHaveClass("-ml-3", "flex-wrap");
+			expect(line.parentElement).toHaveClass("overflow-hidden");
+		});
+
+		it("leaves off a column that opts out and a value that is not set", () => {
+			renderPlaces();
+
+			expect(
+				within(namingCellOf("Orchard")).queryByText("Opens at nine")
+			).not.toBeInTheDocument();
+			expect(
+				within(namingCellOf("Main Branch")).queryByText(/^In /)
+			).not.toBeInTheDocument();
+		});
+	});
 });

@@ -109,7 +109,9 @@ const CREATED_AT = "2026-11-04T06:00:00Z";
 
 /** The Created cell's date, checked to be a `<time>` carrying the exact instant and its full text on hover. */
 const expectCreatedCell = (table: HTMLElement): void => {
-	const [created] = within(table).getAllByText("4 Nov 2026");
+	// The Created column's cell; on phones the name's line repeats the date as plain text.
+	const [onLine, created] = within(table).getAllByText("4 Nov 2026");
+	expect(onLine?.closest("td")).not.toHaveClass("hidden");
 	expect(created?.tagName).toBe("TIME");
 	expect(created).toHaveAttribute("datetime", CREATED_AT);
 	expect(created?.getAttribute("title")).toMatch(/2026/);
@@ -253,9 +255,10 @@ describe("Branches", () => {
 		expect(
 			within(bodyRows(table)[0] as HTMLElement).getByText("SG-ORC-01")
 		).toBeVisible();
+		// The name leads its cell; the hidden columns' line follows it.
 		expect(
 			bodyRows(table).map(
-				(row) => within(row).getAllByRole("cell")[1]?.textContent
+				(row) => within(row).getAllByRole("cell")[1]?.firstChild?.textContent
 			)
 		).toEqual(["Main Branch", "Orchard"]);
 		expect(
@@ -1109,7 +1112,9 @@ describe("Job titles", () => {
 				"Runs the floor and opens the store."
 			)
 		).toHaveAttribute("title", "Runs the floor and opens the store.");
-		expect(plain).toHaveTextContent(/^Trainee$/);
+		// The name stands alone, with no description line under it (the hidden columns' line may follow).
+		expect(plain?.firstChild?.textContent).toBe("Trainee");
+		expect(plain?.querySelectorAll("span.block")).toHaveLength(0);
 	});
 
 	it.each([
