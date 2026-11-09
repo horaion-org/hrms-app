@@ -3,7 +3,7 @@ import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
-import { calendarDayOf, formatPeriod } from "@/features/leave/dates";
+import { formatPeriod, requestedDayOf } from "@/features/leave/dates";
 import { leaveTypeLabel } from "@/features/leave/leaveTypeLabel";
 import { statusTone, type LeaveRequest } from "@/features/leave/types";
 
@@ -46,8 +46,8 @@ export const LeaveRequestDetails = ({
 				<dt className="text-neutral-800">{t("leave.requested")}</dt>
 				<dd className="font-semibold">
 					{formatPeriod(
-						calendarDayOf(request.requestedAt),
-						calendarDayOf(request.requestedAt),
+						requestedDayOf(request),
+						requestedDayOf(request),
 						formattingLocale(i18n)
 					)}
 				</dd>

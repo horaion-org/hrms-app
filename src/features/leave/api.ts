@@ -105,6 +105,11 @@ export const leaveRequestSchema = z.object({
 	branchId: z.string().nullable(),
 	branchName: z.string().nullable(),
 	branchCountry: z.string().nullable(),
+	/**
+	 * The Branch's IANA time zone, which `requestedAt` reads as a day in;
+	 * null for a member without one, and from an API before it.
+	 */
+	branchTimeZone: z.string().nullable().default(null),
 	departmentId: z.string().nullable(),
 	departmentName: z.string().nullable(),
 	/**

@@ -1,5 +1,10 @@
 import { expect, it } from "vitest";
-import { calendarDayOf, rangeDays, shiftRange } from "@/features/leave/dates";
+import {
+	calendarDayOf,
+	rangeDays,
+	requestedDayOf,
+	shiftRange,
+} from "@/features/leave/dates";
 
 it("navigates inclusive periods across a year boundary without gaps", () => {
 	const range = { start: "2026-12-20", end: "2027-01-02" };
@@ -16,4 +21,14 @@ it.each([
 	["2026-11-09T03:00:00Z", "America/New_York", "2026-11-08"],
 ])("puts %s on its %s calendar day, %s", (instant, timeZone, day) => {
 	expect(calendarDayOf(instant, timeZone)).toBe(day);
+});
+
+it("reads a request's day in its Branch's zone, and the browser's without one", () => {
+	const requestedAt = "2026-11-08T23:30:00Z";
+	expect(
+		requestedDayOf({ requestedAt, branchTimeZone: "Asia/Singapore" })
+	).toBe("2026-11-09");
+	expect(requestedDayOf({ requestedAt, branchTimeZone: null })).toBe(
+		calendarDayOf(requestedAt)
+	);
 });

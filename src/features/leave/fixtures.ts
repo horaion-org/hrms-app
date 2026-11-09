@@ -10,6 +10,7 @@ export const leaveFixture = (
 	branchId: "b-1",
 	branchName: "Main branch",
 	branchCountry: "SG",
+	branchTimeZone: "Asia/Singapore",
 	departmentId: "d-1",
 	departmentName: "Sales",
 	leaveType: "ANNUAL",
