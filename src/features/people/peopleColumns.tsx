@@ -17,7 +17,8 @@ import type { CanAt } from "@/features/workspace/scopes";
  * field, so a header's sort goes to the server as it is. Every row can be
  * viewed (the API lists only readable rows); `can` decides which can be
  * edited, each row by where it is filed, since read and update may be
- * granted at different places.
+ * granted at different places. Phones keep the person and the actions;
+ * Status joins from `sm` and the rest from `md`.
  */
 export const peopleColumns = (
 	t: TFunction,
@@ -43,13 +44,17 @@ export const peopleColumns = (
 			id: "department",
 			header: t("people.department"),
 			cell: (person) => person.departmentName ?? t("people.notSet"),
+			summary: (person) => person.departmentName,
 			sortValue: (person) => person.departmentName ?? "",
+			hideBelow: "md",
 		},
 		{
 			id: "jobTitle",
 			header: t("people.jobTitle"),
 			cell: (person) => person.jobTitleName ?? t("people.notSet"),
+			summary: (person) => person.jobTitleName,
 			sortValue: (person) => person.jobTitleName ?? "",
+			hideBelow: "md",
 		},
 		{
 			id: "contact",
@@ -58,6 +63,9 @@ export const peopleColumns = (
 				<ContactCell email={person.email} phone={person.phone} />
 			),
 			headerClassName: "w-1/4",
+			hideBelow: "md",
+			// One tap away for every reader: the name opens the profile, which calls and emails.
+			omitFromSummary: true,
 		},
 		{
 			...status,
@@ -70,6 +78,7 @@ export const peopleColumns = (
 					)}
 				</div>
 			),
+			hideBelow: "sm",
 		},
 		{
 			id: "actions",
