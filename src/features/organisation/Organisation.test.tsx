@@ -227,9 +227,10 @@ it("counts active skills for a person holding skill:read company-wide", async ()
 	expect(
 		within(skills).getByText("Skills and licences people can hold")
 	).toBeVisible();
-	expect(
-		within(skills).getByRole("link", { name: "View All" })
-	).toHaveAttribute("href", "/organisation/skills");
+	const viewAll = within(skills).getByRole("link", { name: "View All" });
+	expect(viewAll).toHaveAttribute("href", "/organisation/skills");
+	// A fingertip's 44 px on touch screens; as drawn with a mouse.
+	expect(viewAll).toHaveClass("pointer-coarse:min-h-11");
 	const overview = calls.find((call) => call.path.endsWith("/skill-overview"));
 	expect(new URLSearchParams(overview?.search).get("status")).toBe("ACTIVE");
 });

@@ -30,7 +30,8 @@ export const Organisation = (): FunctionComponent => {
 	const now = new Date();
 	const viewAll = (to: LinkProps["to"]): FunctionComponent => (
 		<Link
-			className="shrink-0 text-base font-semibold text-ink-blue-900 underline decoration-2 underline-offset-2 hover:text-ink-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-blue-500"
+			// 44 px tall on touch screens, a fingertip's target; as drawn with a mouse.
+			className="inline-flex shrink-0 items-center text-base font-semibold text-ink-blue-900 underline decoration-2 underline-offset-2 hover:text-ink-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-blue-500 pointer-coarse:min-h-11"
 			to={to}
 		>
 			{t("organisation.viewAll")}
