@@ -142,13 +142,14 @@ const JOB_TITLES = PEOPLE.map((person) => ({
 }));
 
 const ACCESS_ROLES = [
-	["r-1", "Company Owner", true, 1],
-	["r-2", "Branch Manager", false, 2],
-	["r-3", "Department Head", false, 4],
-].map(([accessRoleId, name, protectedRole, holderCount]) => ({
+	["r-1", "Company Owner", true, 1, "COMPANY"],
+	["r-2", "Branch Manager", false, 2, "LOCAL"],
+	["r-3", "Department Head", false, 4, "LOCAL"],
+].map(([accessRoleId, name, protectedRole, holderCount, kind]) => ({
 	accessRoleId,
 	name,
 	protectedRole,
+	kind,
 	status: "ACTIVE",
 	permissions: PERMISSION_KEYS.slice(0, 12),
 	holderCount,
@@ -193,6 +194,32 @@ const ANSWERS: Array<Answer> = [
 	{ path: /^\/departments$/, data: () => pageOf(DEPARTMENTS) },
 	{ path: /^\/job-titles$/, data: () => pageOf(JOB_TITLES) },
 	{ path: /^\/access-roles\/r-\d+$/, data: () => ACCESS_ROLES[1] },
+	// Who holds a role, and where: one at a Branch, one at a Department.
+	{
+		path: /^\/access-roles\/r-\d+\/access-role-assignments$/,
+		data: () => [
+			{
+				accessRoleAssignmentId: "ra-1",
+				companyMembershipId: "m-5",
+				displayName: "Siti Nurhaliza",
+				status: "ACTIVE",
+				branchId: "b-1",
+				branchName: "Orchard",
+				departmentId: null,
+				departmentName: null,
+			},
+			{
+				accessRoleAssignmentId: "ra-2",
+				companyMembershipId: "m-3",
+				displayName: "Cheryl Ng",
+				status: "ACTIVE",
+				branchId: "b-1",
+				branchName: "Orchard",
+				departmentId: "d-1",
+				departmentName: "Kitchen",
+			},
+		],
+	},
 	{ path: /^\/access-roles$/, data: () => pageOf(ACCESS_ROLES) },
 	{ path: /^\/audit-events$/, data: () => pageOf(AUDIT_EVENTS) },
 	{ path: /^\/skill-overview$/, data: () => pageOf(SKILLS) },
