@@ -759,6 +759,9 @@
 		"step": "Step {{number}}: {{label}}",
 		"completedStep": "Step {{number}}: {{label}}, completed"
 	},
+	"daySwitcher": {
+		"label": "Day"
+	},
 	"weekNavigator": {
 		"label": "Week",
 		"thisWeek": "This week",

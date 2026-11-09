@@ -828,6 +828,9 @@
 		"step": "Paso {{number}}: {{label}}",
 		"completedStep": "Paso {{number}}: {{label}}, completado"
 	},
+	"daySwitcher": {
+		"label": "Día"
+	},
 	"weekNavigator": {
 		"label": "Semana",
 		"thisWeek": "Esta semana",
