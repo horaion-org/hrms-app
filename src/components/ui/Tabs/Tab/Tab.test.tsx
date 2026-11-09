@@ -325,7 +325,11 @@ it("keeps a horizontal tab one line high and exposes its description only to ass
 		name: "Overview",
 		description: "Personal and job details Hint",
 	});
-	expect(overview).toHaveClass("h-10", "whitespace-nowrap");
+	expect(overview).toHaveClass(
+		"h-10",
+		"pointer-coarse:min-h-11",
+		"whitespace-nowrap"
+	);
 	expect(screen.getByText("Personal and job details")).toHaveClass("sr-only");
 	expect(overview.querySelector("svg")).toBeNull();
 	const employment = screen.getByRole("tab", { name: "Employment" });

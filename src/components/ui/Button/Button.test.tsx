@@ -332,6 +332,11 @@ describe("Button stories", () => {
 			render(<Story />);
 			const button = screen.getByRole("button", { name: "Previous month" });
 			expect(button).toHaveClass("size-9", "bg-transparent");
+			// A fingertip-sized target on touch screens, unchanged with a mouse.
+			expect(button).toHaveClass(
+				"pointer-coarse:min-h-11",
+				"pointer-coarse:min-w-11"
+			);
 			expect(button.children).toHaveLength(1);
 			if (disabled) {
 				expect(button).toBeDisabled();

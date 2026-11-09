@@ -25,7 +25,7 @@ export type TabProps = Omit<ComponentPropsWithRef<"button">, "children"> & {
 };
 
 const horizontalClasses =
-	"inline-flex h-10 shrink-0 flex-nowrap items-center justify-center gap-2 border-b-2 border-transparent px-1 text-base whitespace-nowrap text-neutral-600 outline-none not-data-disabled:data-selected:border-ink-blue-900 not-data-disabled:data-selected:text-ink-blue-900 not-data-disabled:not-data-selected:data-hover:text-ink-blue-700 data-disabled:text-neutral-400 data-disabled:cursor-not-allowed data-focus:outline-2 data-focus:outline-solid data-focus:outline-offset-2 data-focus:outline-ink-blue-500";
+	"inline-flex h-10 shrink-0 pointer-coarse:min-h-11 flex-nowrap items-center justify-center gap-2 border-b-2 border-transparent px-1 text-base whitespace-nowrap text-neutral-600 outline-none not-data-disabled:data-selected:border-ink-blue-900 not-data-disabled:data-selected:text-ink-blue-900 not-data-disabled:not-data-selected:data-hover:text-ink-blue-700 data-disabled:text-neutral-400 data-disabled:cursor-not-allowed data-focus:outline-2 data-focus:outline-solid data-focus:outline-offset-2 data-focus:outline-ink-blue-500";
 
 /* Rows sit flush inside a bordered card, so the focus ring is drawn inside. */
 const verticalClasses =

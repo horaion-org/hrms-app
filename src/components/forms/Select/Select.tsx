@@ -125,7 +125,7 @@ export const Select = (props: SelectProps): FunctionComponent => {
 			disabled={option.disabled}
 			value={option.value}
 			className={joinClassNames(
-				"flex h-10 items-center justify-between gap-3 px-4 text-sm select-none",
+				"flex h-10 items-center justify-between gap-3 px-4 text-sm select-none pointer-coarse:min-h-11",
 				option.disabled
 					? "cursor-not-allowed text-neutral-500"
 					: "cursor-pointer text-neutral-800 data-focus:bg-neutral-100"

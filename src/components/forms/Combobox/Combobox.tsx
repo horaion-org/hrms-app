@@ -258,7 +258,8 @@ export const Combobox = <T,>(props: ComboboxProps<T>): FunctionComponent => {
 								ref={focusSearch}
 								aria-controls={listId}
 								aria-label={props.searchPlaceholder}
-								className="h-11 w-full shrink-0 border-b border-neutral-300 px-4 outline-hidden"
+								// 16 px on touch screens, so iOS does not zoom into the search.
+								className="h-11 w-full shrink-0 border-b border-neutral-300 px-4 outline-hidden pointer-coarse:text-base"
 								listId={listId}
 								placeholder={props.searchPlaceholder}
 								value={query}

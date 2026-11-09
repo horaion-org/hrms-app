@@ -86,6 +86,14 @@ describe("Input", () => {
 		expect(input).not.toHaveAttribute("trailingIcon");
 	});
 
+	it("types at 16px on touch screens so iOS does not zoom into the field", () => {
+		render(<Input aria-label="Branch name" />);
+
+		expect(
+			screen.getByRole("textbox", { name: "Branch name" }).parentElement
+		).toHaveClass("text-sm", "pointer-coarse:text-base");
+	});
+
 	it("sizes real icons to 20px without shrinking and uses the field's Neutral colours", () => {
 		render(<Input leadingIcon={<SearchIcon />} trailingIcon={<ViewIcon />} />);
 		const box = screen.getByRole("textbox").parentElement;

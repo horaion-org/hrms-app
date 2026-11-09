@@ -16,7 +16,7 @@ export const Textarea = ({
 	<textarea
 		aria-invalid={ariaInvalid ?? (status === "error" ? true : undefined)}
 		className={joinClassNames(
-			"min-h-35 w-full resize-y rounded-lg border bg-white px-4 py-3 text-sm text-neutral-900 placeholder:text-neutral-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-blue-500 disabled:cursor-not-allowed disabled:bg-neutral-200 disabled:text-neutral-500",
+			"min-h-35 w-full resize-y rounded-lg border bg-white px-4 py-3 text-sm text-neutral-900 pointer-coarse:text-base placeholder:text-neutral-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-blue-500 disabled:cursor-not-allowed disabled:bg-neutral-200 disabled:text-neutral-500",
 			status === "error"
 				? "border-error-600"
 				: status === "success"
