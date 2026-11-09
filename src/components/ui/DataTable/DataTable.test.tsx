@@ -774,4 +774,62 @@ describe("DataTable", () => {
 			"border-neutral-400"
 		);
 	});
+
+	it("keeps positioned content in its cells inside the scrolling frame", () => {
+		render(
+			<DataTable
+				columns={columns}
+				data={branches}
+				getRowId={getRowId}
+				label="Branches"
+				selection={{ rowLabel: (branch) => branch.name }}
+			/>
+		);
+
+		// The row boxes' visually hidden labels are positioned; a relative frame contains them.
+		expect(screen.getByRole("table").parentElement).toHaveClass("relative");
+	});
+
+	it("sizes columns to their content below xl and fixes their widths from xl", () => {
+		render(
+			<DataTable
+				columns={columns}
+				data={branches}
+				getRowId={getRowId}
+				label="Branches"
+			/>
+		);
+
+		expect(screen.getByRole("table")).toHaveClass(
+			"table-auto",
+			"xl:table-fixed"
+		);
+	});
+
+	it("leaves a column out below its breakpoint, header and cells alike", () => {
+		render(
+			<DataTable
+				data={branches}
+				getRowId={getRowId}
+				label="Branches"
+				columns={[
+					columns[0]!,
+					{ ...columns[1]!, hideBelow: "md", headerClassName: "w-30" },
+				]}
+			/>
+		);
+
+		expect(screen.getByRole("columnheader", { name: "Code" })).toHaveClass(
+			"hidden",
+			"md:table-cell",
+			"w-30"
+		);
+		expect(screen.getByRole("cell", { name: "0002" })).toHaveClass(
+			"hidden",
+			"md:table-cell"
+		);
+		expect(
+			screen.getByRole("columnheader", { name: /Branch Name/ })
+		).not.toHaveClass("hidden");
+	});
 });

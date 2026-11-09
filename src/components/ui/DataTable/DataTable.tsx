@@ -64,11 +64,26 @@ export type DataTableColumn<TData extends object> = {
 	/** Classes for each body cell, e.g. `font-semibold` or `text-center`. */
 	cellClassName?: string;
 	/**
+	 * Leaves the column out below this breakpoint, so a phone keeps the
+	 * columns that identify a row and act on it. The data stays one table.
+	 */
+	hideBelow?: ColumnBreakpoint;
+	/**
 	 * Keeps the column in view while the table scrolls sideways, from `md` up:
 	 * `start` for the column naming each row, `end` for its actions. At most
 	 * one column per side.
 	 */
 	pin?: ColumnPin;
+};
+
+/** A breakpoint below which a column is left out. */
+export type ColumnBreakpoint = "sm" | "md" | "lg";
+
+// Full class names keep them visible to Tailwind.
+const hiddenBelowClasses: Record<ColumnBreakpoint, string> = {
+	sm: "hidden sm:table-cell",
+	md: "hidden md:table-cell",
+	lg: "hidden lg:table-cell",
 };
 
 /** The sorted column and its direction. */
@@ -368,7 +383,9 @@ export const DataTable = <TData extends object>({
 			data-overflows-end={edges.overflowsEnd || undefined}
 			data-overflows-start={edges.overflowsStart || undefined}
 			className={joinClassNames(
-				"overflow-x-auto rounded-lg border border-neutral-400",
+				// Relative, so positioned content in a cell (a visually hidden label) scrolls with the
+				// table instead of widening the page.
+				"relative overflow-x-auto rounded-lg border border-neutral-400",
 				pinned && "group",
 				// Open details measure the frame (100cqw) to stay in view while it scrolls.
 				expansion && "@container",
@@ -377,7 +394,9 @@ export const DataTable = <TData extends object>({
 		>
 			<table
 				aria-label={label}
-				className="w-full min-w-xl table-fixed border-separate border-spacing-0"
+				// Fixed widths from `xl`; below it the browser sizes columns to their content, so a
+				// column without a width never collapses to nothing and the frame scrolls instead.
+				className="w-full min-w-xl table-auto border-separate border-spacing-0 xl:table-fixed"
 			>
 				<thead>
 					<tr>
@@ -424,6 +443,7 @@ export const DataTable = <TData extends object>({
 									scope="col"
 									className={joinClassNames(
 										headerCellClasses,
+										column?.hideBelow && hiddenBelowClasses[column.hideBelow],
 										column?.headerClassName,
 										pinnedCellClasses(header.column.getIsPinned(), leadingCount)
 									)}
@@ -530,6 +550,8 @@ export const DataTable = <TData extends object>({
 												key={cell.id}
 												className={joinClassNames(
 													bodyCellClasses,
+													column?.hideBelow &&
+														hiddenBelowClasses[column.hideBelow],
 													column?.cellClassName,
 													pinnedCellClasses(
 														cell.column.getIsPinned(),

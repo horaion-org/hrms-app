@@ -237,3 +237,17 @@ export const ExpandablePinnedSelectable: Story = {
 	},
 	decorators: [narrowFrame],
 };
+
+/**
+ * A phone: City is left out below `md` (`hideBelow`), the columns take the
+ * width their content needs, and the frame scrolls sideways inside the page.
+ */
+export const Phone: Story = {
+	args: {
+		columns: columns.map((column) =>
+			column.id === "city" ? { ...column, hideBelow: "md" } : column
+		),
+		selection: { rowLabel: (branch: Branch): string => branch.name },
+	},
+	parameters: { viewport: { defaultViewport: "mobile1" } },
+};
