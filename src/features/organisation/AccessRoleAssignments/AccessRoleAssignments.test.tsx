@@ -129,8 +129,13 @@ describe("AccessRoleAssignments", () => {
 		});
 		const rows = screen.getAllByRole("row").slice(1);
 
-		expect(within(rows[0]!).getByText("Inactive")).toBeVisible();
-		expect(within(rows[1]!).getByText("Active")).toBeVisible();
+		// The Status column's own cell; on phones the name's line repeats it.
+		expect(
+			within(rows[0]!).getByRole("cell", { name: "Inactive" })
+		).toBeVisible();
+		expect(
+			within(rows[1]!).getByRole("cell", { name: "Active" })
+		).toBeVisible();
 		expect(
 			screen.getByRole("button", { name: "Edit Priya Nair" })
 		).toBeDisabled();
@@ -163,5 +168,23 @@ describe("AccessRoleAssignments", () => {
 
 		expect(screen.getByText("Nobody has this role yet.")).toBeVisible();
 		expect(screen.getByText("0 people")).toBeVisible();
+	});
+
+	it("keeps the person and the actions on a phone, with the places and status on the name's line", () => {
+		show();
+
+		const table = screen.getByRole("table", { name: "People with this role" });
+		expect(
+			within(table).getByRole("columnheader", { name: "Applies to" })
+		).toHaveClass("hidden", "md:table-cell");
+		expect(
+			within(table).getByRole("columnheader", { name: "Status" })
+		).toHaveClass("hidden", "sm:table-cell");
+		const daniel = within(table).getAllByRole("row")[3]!;
+		// The places as words on the name's line, shown while the column is hidden.
+		const nameCell = within(daniel).getAllByRole("cell")[0]!;
+		expect(within(nameCell).getByText("Orchard › Kitchen")).toHaveClass(
+			"md:hidden"
+		);
 	});
 });

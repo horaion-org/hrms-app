@@ -157,7 +157,14 @@ describe("Access role list actions", () => {
 			"You hold this role. You will lose these permissions too."
 		);
 		expect(within(dialog).getByText("Daniel Tan")).toBeVisible();
-		expect(within(dialog).getByText("Orchard › Kitchen")).toBeVisible();
+		// In the Applies to column's list; on phones the name's line repeats the place as words.
+		expect(
+			within(
+				within(dialog).getByRole("list", {
+					name: "Where Daniel Tan has this role",
+				})
+			).getByText("Orchard › Kitchen")
+		).toBeVisible();
 		expect(calls.some((call) => call.method === "PUT")).toBe(false);
 
 		await userEvent.click(
