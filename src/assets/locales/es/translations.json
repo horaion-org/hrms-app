@@ -276,7 +276,8 @@
 			"failed": "No se pudo cargar la aprobación.",
 			"retry": "Reintentar",
 			"open": "Aprobación ›",
-			"openLabel": "Abrir la aprobación"
+			"openLabel": "Abrir la aprobación",
+			"stepShort": "Paso {{step}} de {{total}}"
 		},
 		"trail": {
 			"submittedBy": "Enviado por {{name}} · {{at}}",

@@ -17,6 +17,7 @@ import { Tabs, TabList, Tab, TabPanels, TabPanel } from "@/components/ui/Tabs";
 import { activeLeaveTypesQuery } from "@/features/leave/api";
 import { defaultRange, rangeDays } from "@/features/leave/dates";
 import { LeaveRangeNavigator } from "@/features/leave/LeaveRangeNavigator";
+import { approvedMessage } from "@/features/leave/leaveApproval";
 import { LeaveRequestDialog } from "@/features/leave/LeaveRequestDialog";
 import { LinkedLeaveRequest } from "@/features/leave/LinkedLeaveRequest";
 import { LeaveRequests } from "@/features/leave/LeaveRequests";
@@ -41,6 +42,7 @@ import type { LeaveRequest } from "@/features/leave/types";
 import {
 	useLeaveActions,
 	useLeaveRequests,
+	useLeaveTurns,
 	useMyLeaveRequests,
 	usePendingLeaveCount,
 	type LeaveList,
@@ -149,6 +151,7 @@ export const Leave = (): FunctionComponent => {
 		view === "timeline"
 	);
 	const actions = useLeaveActions(companyId);
+	const turns = useLeaveTurns(companyId);
 	const [dialog, setDialog] = useState<Dialog | null>(null);
 	const [refusal, setRefusal] = useState<
 		Refusal<ApplyField | DecisionField> | undefined
@@ -197,7 +200,7 @@ export const Leave = (): FunctionComponent => {
 			{ request, comment, takeOffRosteredDays },
 			{
 				onSuccess: () => {
-					done(t("leave.approved", { name: request.displayName }));
+					done(approvedMessage(request, t));
 				},
 				onError: (error) => {
 					setRefusal(decisionRefusal(error, t));
@@ -205,10 +208,8 @@ export const Leave = (): FunctionComponent => {
 			}
 		);
 	};
-	// Each request is decided where its member is filed; nobody decides their own, whatever their roles.
-	const canReview = (request: LeaveRequest): boolean =>
-		request.membershipId !== ownMembershipId &&
-		access.can("leave_request:review", recordScope(request.departmentId));
+	// Each request is decided where its member is filed, or by its flow's open step; nobody decides their own.
+	const canReview = turns.canDecide;
 	const busy =
 		actions.approve.isPending ||
 		actions.reject.isPending ||
@@ -493,6 +494,9 @@ export const Leave = (): FunctionComponent => {
 						own: dialog.request?.membershipId === ownMembershipId,
 						onDone: done,
 					}}
+					readsApprovalSteps={
+						dialog.request ? turns.readsApprovalSteps(dialog.request) : false
+					}
 					onApprove={approve}
 					onClose={close}
 					onCreate={(membershipId, body) => {

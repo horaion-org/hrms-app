@@ -276,7 +276,8 @@
 			"failed": "Couldn’t load the approval.",
 			"retry": "Try again",
 			"open": "Approval ›",
-			"openLabel": "Open the approval"
+			"openLabel": "Open the approval",
+			"stepShort": "Step {{step}} of {{total}}"
 		},
 		"trail": {
 			"submittedBy": "Submitted by {{name}} · {{at}}",
@@ -4078,7 +4079,7 @@
 			"leaveTitle": "{{type}} request",
 			"leaveDetail": "from {{name}} ({{period}})",
 			"approve": "Approve",
-			"deny": "Deny with reason",
+			"deny": "Reject with reason",
 			"examples": {
 				"shiftSwap": {
 					"title": "Shift swap request",

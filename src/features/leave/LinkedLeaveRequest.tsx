@@ -10,13 +10,15 @@ import {
 	type ApplyField,
 	type DecisionField,
 } from "@/features/leave/leaveRefusal";
-import { useLeaveActions } from "@/features/leave/useLeaveRequests";
+import {
+	useLeaveActions,
+	useLeaveTurns,
+} from "@/features/leave/useLeaveRequests";
 import type { Refusal } from "@/features/organisation/refusal";
 import {
 	useCurrentCompanyId,
 	useCurrentMembershipId,
 } from "@/features/organisation/useCurrentCompanyId";
-import { recordScope } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
 
 export const LinkedLeaveRequest = ({
@@ -38,6 +40,7 @@ export const LinkedLeaveRequest = ({
 		enabled: allowed,
 	});
 	const actions = useLeaveActions(companyId);
+	const turns = useLeaveTurns(companyId);
 	const [refusal, setRefusal] = useState<Refusal<ApplyField | DecisionField>>();
 	const failed = (error: Error): void => {
 		setRefusal(decisionRefusal(error, t));
@@ -58,13 +61,11 @@ export const LinkedLeaveRequest = ({
 	return (
 		<LeaveRequestDialog
 			busy={actions.approve.isPending || actions.reject.isPending}
+			canReview={turns.canDecide(request)}
 			lifecycle={{ companyId, own: memberId === undefined, onDone: onClose }}
+			readsApprovalSteps={turns.readsApprovalSteps(request)}
 			refusal={refusal}
 			request={request}
-			canReview={
-				request.membershipId !== ownMembershipId &&
-				access.can("leave_request:review", recordScope(request.departmentId))
-			}
 			onClose={onClose}
 			onCreate={() => {}}
 			onApprove={(record, comment, takeOffRosteredDays) => {
