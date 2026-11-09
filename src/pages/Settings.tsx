@@ -95,8 +95,9 @@ export const Settings = (): FunctionComponent => {
 				</Button>
 			</div>
 			<Tabs
-				className="mt-10 flex flex-col overflow-hidden rounded-xl border border-neutral-400 sm:min-h-144 sm:flex-row"
-				orientation="vertical"
+				// On a phone the sections are one scrolling row of tabs above the section; from `md` a column beside it.
+				className="mt-10 flex flex-col overflow-hidden rounded-xl border border-neutral-400 md:min-h-144 md:flex-row"
+				orientation="verticalFromMd"
 				selectedIndex={selectedIndex}
 				onChange={(index) => {
 					show(sections[index] ?? "general");
@@ -104,7 +105,7 @@ export const Settings = (): FunctionComponent => {
 			>
 				<TabList
 					aria-label={t("settings.sections")}
-					className="sm:w-63 sm:shrink-0 sm:border-r sm:border-neutral-400"
+					className="max-md:border-b max-md:border-neutral-400 max-md:px-4 md:w-63 md:shrink-0 md:border-r md:border-neutral-400"
 				>
 					{sections.map((shown) => (
 						<Tab
