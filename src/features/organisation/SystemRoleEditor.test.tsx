@@ -34,6 +34,7 @@ const role = (
 	companyId: "c-1",
 	name: "Manager",
 	protectedRole: false,
+	kind: "COMPANY",
 	status: "ACTIVE",
 	permissions: ["branch:read", "branch:create", "department:read"],
 	holderCount: 0,
@@ -94,6 +95,15 @@ const box = (group: string, name: string): HTMLElement =>
 	});
 const save = (): HTMLElement =>
 	screen.getByRole("button", { name: "Save changes" });
+const typeField = (): HTMLElement =>
+	screen.getByRole("button", { name: "Role type" });
+const chooseType = async (
+	user: ReturnType<typeof userEvent.setup>,
+	type: "Company role" | "Local role"
+): Promise<void> => {
+	await user.click(typeField());
+	await user.click(await screen.findByRole("option", { name: type }));
+};
 
 describe("System role editor", () => {
 	it("opens on the role's permissions from the list's Edit button", async () => {
@@ -120,6 +130,7 @@ describe("System role editor", () => {
 		expect(screen.getByRole("textbox", { name: /Role name/ })).toHaveValue(
 			"Manager"
 		);
+		expect(typeField()).toHaveTextContent("Company role");
 		expect(box("Branches", "View")).toBeChecked();
 		expect(box("Branches", "Create")).toBeChecked();
 		expect(box("Branches", "Edit")).not.toBeChecked();
@@ -157,6 +168,7 @@ describe("System role editor", () => {
 			calls.filter((call) => call.method === "PUT").map((call) => call.body)
 		).toEqual([
 			{
+				kind: "COMPANY",
 				name: "Area manager",
 				permissions: ["branch:read", "department:read", "department:update"],
 				status: "ACTIVE",
@@ -200,6 +212,87 @@ describe("System role editor", () => {
 
 		await waitFor(() => expect(box("Departments", "Edit")).toBeChecked());
 		expect(save()).toBeDisabled();
+	});
+
+	it("makes a company role local, clearing its company-only permissions and naming them", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi(routes());
+		await open(EDITOR);
+		await screen.findByRole("textbox", { name: /Role name/ });
+
+		await chooseType(user, "Local role");
+
+		expect(
+			screen.getByText(
+				"A local role can’t hold company-only permissions, so Branches: Create was removed."
+			)
+		).toBeVisible();
+		expect(
+			within(screen.getByRole("group", { name: "Branches" })).queryByRole(
+				"checkbox",
+				{ name: "Create" }
+			)
+		).not.toBeInTheDocument();
+		expect(box("Branches", "View")).toHaveAccessibleDescription(
+			"Not at departments"
+		);
+		expect(screen.getByText("2 of 49 selected")).toBeVisible();
+		expect(screen.getByText("Role type changed, 1 removed")).toBeVisible();
+		await user.click(save());
+
+		await waitFor(() => {
+			expect(
+				calls.filter((call) => call.method === "PUT").map((call) => call.body)
+			).toEqual([
+				{
+					kind: "LOCAL",
+					name: "Manager",
+					permissions: ["branch:read", "department:read"],
+					status: "ACTIVE",
+				},
+			]);
+		});
+	});
+
+	it("puts the API's refusal to make a role given at branches a company role on the Role type field", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...routes(),
+			[ROLE]: roleReply({
+				kind: "LOCAL",
+				permissions: ["branch:read", "department:read"],
+			}),
+			[SAVE]: problemReply(400, "ACCESS_ROLE_KIND_CONFLICT"),
+		});
+		const opened = await open(EDITOR);
+		await screen.findByRole("textbox", { name: /Role name/ });
+		expect(typeField()).toHaveTextContent("Local role");
+
+		// Switching is allowed in the form; the API decides from where it is given.
+		await chooseType(user, "Company role");
+		expect(screen.getByText("Role type changed")).toBeVisible();
+		await user.click(save());
+
+		expect(
+			await screen.findByText(
+				"This role is given at branches or departments, so it can’t become a company role. Remove those assignments first, or keep it a local role."
+			)
+		).toBeVisible();
+		await waitFor(() => {
+			expect(typeField()).toHaveFocus();
+		});
+		expect(
+			calls.filter((call) => call.method === "PUT").map((call) => call.body)
+		).toEqual([
+			{
+				kind: "COMPANY",
+				name: "Manager",
+				permissions: ["branch:read", "department:read"],
+				status: "ACTIVE",
+			},
+		]);
+		expect(opened.router.state.location.pathname).toBe(ROLE_PAGE);
+		expect(screen.queryByText(/API says/)).not.toBeInTheDocument();
 	});
 
 	it("puts back what was loaded when changes are discarded", async () => {
@@ -311,6 +404,7 @@ describe("System role editor", () => {
 				calls.filter((call) => call.method === "PUT").map((call) => call.body)
 			).toEqual([
 				{
+					kind: "COMPANY",
 					name: "Manager",
 					permissions: ["branch:read", "branch:update", "leave:approve"],
 					status: "ACTIVE",
@@ -322,6 +416,7 @@ describe("System role editor", () => {
 
 describe("System role editor, read-only", () => {
 	const expectReadOnly = (): void => {
+		expect(typeField()).toBeDisabled();
 		expect(screen.getByRole("textbox", { name: /Role name/ })).toBeDisabled();
 		for (const item of screen.getAllByRole("checkbox"))
 			expect(item).toBeDisabled();

@@ -3,22 +3,26 @@ import { useTranslation } from "react-i18next";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { Checkbox } from "@/components/ui/Checkbox";
+import type { AccessRoleKind } from "@/features/organisation/api";
 import {
 	blockedBy,
 	canTick,
 	dependenciesOf,
+	groupsFor,
 	labelKeyOf,
-	PERMISSION_GROUPS,
 	permissionList,
+	scopeHintOf,
 	toggleGroup,
 	togglePermission,
 } from "@/features/organisation/PermissionChecklist/groups";
 import {
 	isCompanyOnly,
+	PERMISSION_KEYS,
 	type PermissionKey,
 } from "@/features/workspace/permissionKeys";
 
 const NONE: ReadonlyArray<never> = [];
+const COMPANY_ONLY = PERMISSION_KEYS.filter(isCompanyOnly);
 
 export type PermissionChecklistProps = {
 	/** Names the whole list for assistive technology. */
@@ -31,6 +35,14 @@ export type PermissionChecklistProps = {
 	disabled?: boolean;
 	/** Permissions that can't be ticked, e.g. ones the person may not grant. */
 	unavailable?: ReadonlyArray<PermissionKey>;
+	/**
+	 * The role's kind. A local role's list leaves out company-only keys, and
+	 * any row left without keys, and marks the keys that can't be given at
+	 * a Department; a company role's marks nothing, since every key applies
+	 * company-wide. Until a kind is chosen, every key is shown and
+	 * company-only keys are marked.
+	 */
+	kind?: AccessRoleKind;
 	/**
 	 * Keys the role holds that this app's catalog doesn't know. They are
 	 * shown ticked and locked: the caller keeps them in what it saves.
@@ -51,15 +63,16 @@ export type PermissionChecklistProps = {
  * Ticking a permission ticks what it needs and clearing one clears what
  * needs it, as the API's contract declares; each row says which of its
  * permissions need another, a permission whose prerequisite can't be given
- * is unavailable with the reason beside it, and company-only permissions
- * say so.
+ * is unavailable with the reason beside it, and where a permission can be
+ * given is said beside it as the role's `kind` needs.
  */
 export const PermissionChecklist = ({
 	label,
 	value,
 	onChange,
 	disabled = false,
-	unavailable = NONE,
+	unavailable: notGrantable = NONE,
+	kind,
 	unknown = NONE,
 	id,
 	describedBy,
@@ -76,6 +89,14 @@ export const PermissionChecklist = ({
 		},
 	}));
 	const language = i18n.resolvedLanguage ?? i18n.language;
+	// A local role can never hold a company-only key, whatever a tick implies.
+	const unavailable =
+		kind === "LOCAL"
+			? [
+					...notGrantable,
+					...COMPANY_ONLY.filter((key) => !notGrantable.includes(key)),
+				]
+			: notGrantable;
 	const tickable = (key: PermissionKey): boolean =>
 		canTick(key, value, unavailable);
 	// Whatever a tick implies, an unavailable permission is never added.
@@ -97,7 +118,7 @@ export const PermissionChecklist = ({
 				className
 			)}
 		>
-			{PERMISSION_GROUPS.map((group) => {
+			{groupsFor(kind).map((group) => {
 				const name = t(`organisation.permissions.${group.resource}.name`);
 				const total = group.keys.length;
 				const count = group.keys.filter((key) => value.includes(key)).length;
@@ -148,9 +169,9 @@ export const PermissionChecklist = ({
 								const missing = unavailable.includes(key)
 									? []
 									: blockedBy(key, value, unavailable);
+								const hint = scopeHintOf(key, kind);
 								const description = [
-									isCompanyOnly(key) &&
-										t("organisation.permissions.companyOnly"),
+									hint && t(`organisation.permissions.${hint}`),
 									missing.length > 0 &&
 										t("organisation.permissions.blockedBy", {
 											prerequisites: names(missing),

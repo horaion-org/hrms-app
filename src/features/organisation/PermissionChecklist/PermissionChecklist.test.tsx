@@ -4,8 +4,11 @@ import { useState, type ReactElement } from "react";
 import { I18nextProvider } from "react-i18next";
 import { describe, expect, it } from "vitest";
 import { authTestI18n } from "@/features/auth/testingI18n";
+import type { AccessRoleKind } from "@/features/organisation/api";
 import { PermissionChecklist } from "@/features/organisation/PermissionChecklist";
+import { PERMISSION_GROUPS } from "@/features/organisation/PermissionChecklist/groups";
 import {
+	isCompanyOnly,
 	PERMISSION_KEYS,
 	type PermissionKey,
 } from "@/features/workspace/permissionKeys";
@@ -17,17 +20,20 @@ const Harness = ({
 	disabled,
 	unavailable,
 	unknown,
+	kind,
 }: {
 	initial: Array<PermissionKey>;
 	disabled?: boolean;
 	unavailable?: Array<PermissionKey>;
 	unknown?: Array<string>;
+	kind?: AccessRoleKind;
 }): ReactElement => {
 	const [value, setValue] = useState(initial);
 	return (
 		<I18nextProvider i18n={authTestI18n}>
 			<PermissionChecklist
 				disabled={disabled}
+				kind={kind}
 				label="Permissions"
 				unavailable={unavailable}
 				unknown={unknown}
@@ -251,6 +257,86 @@ describe("PermissionChecklist", () => {
 		expect(
 			within(row("System roles")).getAllByText("Company only")
 		).toHaveLength(3);
+	});
+
+	it("leaves company-only permissions, and rows left without any, out of a local role", () => {
+		render(<Harness initial={[]} kind="LOCAL" />);
+
+		expect(
+			within(screen.getByRole("group", { name: "Permissions" }))
+				.getAllByRole("group")
+				.map((group) => group.getAttribute("aria-label"))
+		).toEqual([
+			"Branches",
+			"Branch members",
+			"Departments",
+			"Department members",
+			"Job titles",
+			"People",
+			"Notes",
+			"Availability",
+			"People’s employment terms",
+			"Leave",
+			"Schedules",
+			"Shifts",
+			"Constraints",
+			"Approvals",
+			"System roles",
+		]);
+		expect(screen.getAllByRole("checkbox")).toHaveLength(
+			PERMISSION_KEYS.filter((key) => !isCompanyOnly(key)).length + 15
+		);
+		expect(within(row("Branches")).getAllByRole("checkbox")).toHaveLength(3);
+		expect(
+			within(row("Branches")).queryByRole("checkbox", { name: "Create" })
+		).not.toBeInTheDocument();
+		expect(within(row("Branches")).getByText("0 of 2")).toBeVisible();
+		// The row's own box, View and Assign: creating, editing and deleting roles is company-only.
+		expect(within(row("System roles")).getAllByRole("checkbox")).toHaveLength(
+			3
+		);
+		expect(box("System roles", "View")).toBeVisible();
+		expect(box("System roles", "Assign")).toBeVisible();
+	});
+
+	it("marks a local role's permissions that can't be given at a department, and nothing company-only", () => {
+		render(<Harness initial={[]} kind="LOCAL" />);
+
+		expect(box("Branches", "View")).toHaveAccessibleDescription(
+			"Not at departments"
+		);
+		expect(box("Branch members", "Add")).toHaveAccessibleDescription(
+			"Not at departments"
+		);
+		expect(box("Departments", "Create")).toHaveAccessibleDescription(
+			"Not at departments"
+		);
+		expect(box("Departments", "View")).not.toHaveAccessibleDescription();
+		expect(box("People", "View")).not.toHaveAccessibleDescription();
+		expect(screen.queryByText("Company only")).not.toBeInTheDocument();
+	});
+
+	it("never adds a company-only permission to a local role, even from a row's own box", async () => {
+		const user = userEvent.setup();
+		render(<Harness initial={[]} kind="LOCAL" />);
+
+		await user.click(box("System roles", "System roles"));
+
+		expect(latest).toEqual(["access_role:read", "access_role:assign"]);
+		expect(box("System roles", "System roles")).toBeChecked();
+	});
+
+	it("shows a company role every permission, with no hint about where it applies", () => {
+		render(<Harness initial={[]} kind="COMPANY" />);
+
+		// One box per key, plus each resource row's own box.
+		expect(screen.getAllByRole("checkbox")).toHaveLength(
+			PERMISSION_KEYS.length + PERMISSION_GROUPS.length
+		);
+		expect(box("Branches", "Create")).not.toHaveAccessibleDescription();
+		expect(box("Branches", "View")).not.toHaveAccessibleDescription();
+		expect(screen.queryByText("Company only")).not.toBeInTheDocument();
+		expect(screen.queryByText("Not at departments")).not.toBeInTheDocument();
 	});
 
 	it("shows keys this app doesn't know as ticked and locked, and never hands them back", async () => {

@@ -208,10 +208,29 @@ export const createJobTitle = (
 		},
 	});
 
+/** The two kinds of access role, in the order a form offers them. */
+export const ACCESS_ROLE_KINDS = ["COMPANY", "LOCAL"] as const;
+
+const accessRoleKindSchema = z.enum(ACCESS_ROLE_KINDS);
+
+/**
+ * What a role is for, chosen when it is made. A `COMPANY` role may hold any
+ * key and is given only at the whole company; a `LOCAL` role holds no
+ * company-only key and is given at the whole company, a Branch or a
+ * Department. It decides what a role may hold and where it may be given,
+ * never what it allows: the API's authorization doesn't read it.
+ */
+export type AccessRoleKind = z.infer<typeof accessRoleKindSchema>;
+
+export const isAccessRoleKind = (value: string): value is AccessRoleKind =>
+	(ACCESS_ROLE_KINDS as ReadonlyArray<string>).includes(value);
+
 const accessRoleSchema = z.object({
 	accessRoleId: z.string(),
 	name: z.string(),
 	protectedRole: z.boolean(),
+	/** The Company Owner role is a company role, and its kind never changes. */
+	kind: accessRoleKindSchema,
 	/** An inactive role stays assigned but grants nothing until it is activated again. */
 	status: unitStatusSchema,
 	permissions: z.array(z.string()),
@@ -479,6 +498,8 @@ export const fetchAccessRole = (
 	apiRequest(accessRolePath(companyId, accessRoleId), accessRoleSchema);
 
 export type AccessRoleBody = {
+	/** Required on every create and update; an update replaces it like the name. */
+	kind: AccessRoleKind;
 	name: string;
 	/** The role's whole permission set; on an update, keys left out are removed. */
 	permissions: Array<string>;
@@ -496,7 +517,10 @@ export const createAccessRole = (
 
 export type UpdateAccessRoleBody = AccessRoleBody & { status: UnitStatus };
 
-/** Replaces a role's name, permissions and status; the server owns uniqueness and what the person may grant. */
+/**
+ * Replaces a role's kind, name, permissions and status; the server owns
+ * uniqueness, what the person may grant and whether the kind fits.
+ */
 export const updateAccessRole = (
 	companyId: string,
 	accessRoleId: string,

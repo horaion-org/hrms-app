@@ -116,6 +116,7 @@ const role = (
 	accessRoleId,
 	name,
 	protectedRole: false,
+	kind: "LOCAL",
 	status: "ACTIVE",
 	permissions: ["member_profile:read"],
 	holderCount: 0,
@@ -151,9 +152,13 @@ const routes = (
 		{ membershipId: "m-9", displayName: "Marcus Lim", status: "ACTIVE" },
 	]),
 	[`GET ${COMPANY}/access-roles`]: page([
-		role("r-0", "Company owner", { protectedRole: true }),
+		role("r-0", "Company owner", { protectedRole: true, kind: "COMPANY" }),
 		role("r-1", "Supervisor"),
 		role("r-2", "Retired", { status: "INACTIVE" }),
+		role("r-3", "Branch creator", {
+			kind: "COMPANY",
+			permissions: ["branch:read", "branch:create"],
+		}),
 	]),
 	[CREATE]: { status: 201, body: envelope(created) },
 	[ASSIGN]: { status: 201 },
@@ -454,7 +459,7 @@ describe("Add employee", () => {
 		await fillRequired(user);
 		await choose(user, /^Role scope/, "Orchard › Kitchen");
 		await user.click(button(/^System role/));
-		// The owner's role and inactive roles are never offered.
+		// The owner's role, inactive roles and company roles, which can't be given at a department, are never offered.
 		expect(
 			screen.getAllByRole("option").map((option) => option.textContent)
 		).toEqual(["Supervisor"]);

@@ -4,6 +4,7 @@ import { authTestI18n } from "@/features/auth/testingI18n";
 import { accessRoleRefusal } from "@/features/organisation/accessRoleRefusal";
 
 const t = authTestI18n.t.bind(authTestI18n);
+const MANAGER = { name: "Manager", kind: "LOCAL" } as const;
 const problem = (
 	status: number,
 	errorCode: string,
@@ -20,7 +21,7 @@ const problem = (
 describe("access role refusal mapping", () => {
 	it("quotes the submitted name for the name conflict code", () => {
 		expect(
-			accessRoleRefusal(problem(409, "ACCESS_ROLE_NAME_CONFLICT"), "Manager", t)
+			accessRoleRefusal(problem(409, "ACCESS_ROLE_NAME_CONFLICT"), MANAGER, t)
 		).toEqual({
 			name: 'A role named "Manager" already exists. Choose a different name.',
 		});
@@ -32,7 +33,7 @@ describe("access role refusal mapping", () => {
 				problem(400, "VALIDATION_ERROR", [
 					{ field: "name", message: "Private server wording" },
 				]),
-				"Manager",
+				MANAGER,
 				t
 			)
 		).toEqual({ name: "Check the role name and try again." });
@@ -52,15 +53,37 @@ describe("access role refusal mapping", () => {
 	])(
 		"maps %s %s to frontend copy for the whole form",
 		(status, code, message) => {
-			expect(accessRoleRefusal(problem(status, code), "Manager", t)).toEqual({
+			expect(accessRoleRefusal(problem(status, code), MANAGER, t)).toEqual({
 				message,
 			});
 		}
 	);
 
+	it.each([
+		[
+			"LOCAL" as const,
+			"A local role can’t hold permissions that only apply company-wide. Choose Company role, or remove those permissions.",
+		],
+		[
+			"COMPANY" as const,
+			"This role is given at branches or departments, so it can’t become a company role. Remove those assignments first, or keep it a local role.",
+		],
+	])(
+		"puts a kind conflict on the Role type field, worded for the %s kind sent",
+		(kind, message) => {
+			expect(
+				accessRoleRefusal(
+					problem(400, "ACCESS_ROLE_KIND_CONFLICT"),
+					{ ...MANAGER, kind },
+					t
+				)
+			).toEqual({ kind: message });
+		}
+	);
+
 	it("falls back to the generic failure when the API can't be reached", () => {
 		expect(
-			accessRoleRefusal(new UnreachableError("offline"), "Manager", t)
+			accessRoleRefusal(new UnreachableError("offline"), MANAGER, t)
 		).toEqual({ message: "We couldn’t save the role. Try again." });
 	});
 });

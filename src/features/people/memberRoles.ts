@@ -1,8 +1,14 @@
 import type { TFunction } from "i18next";
+import {
+	accessSummary,
+	describeAccess,
+	type PlaceAccessText,
+} from "@/features/organisation/accessSummary";
 import type {
 	AccessRole,
 	MemberAccessRoleAssignment,
 } from "@/features/organisation/api";
+import type { PlaceRef } from "@/features/organisation/assignmentTargets";
 import type { AccessRoleHoldersChange } from "@/features/organisation/useAccessRoleHolders";
 
 /** One system role a person holds, and where. */
@@ -16,10 +22,19 @@ export type MemberRole = {
 	protectedRole?: boolean;
 };
 
-/** A person's system roles as loaded, or why they aren't shown. */
+/**
+ * A person's system roles as loaded, or why they aren't shown. Once ready,
+ * it carries what they were read from: the person's assignments the reader
+ * may see, and the company's roles.
+ */
 export type MemberRoles =
 	| { status: "pending" | "error" | "hidden" }
-	| { status: "ready"; roles: Array<MemberRole> };
+	| {
+			status: "ready";
+			roles: Array<MemberRole>;
+			assignments: ReadonlyArray<MemberAccessRoleAssignment>;
+			accessRoles: ReadonlyArray<AccessRole>;
+	  };
 
 /**
  * The roles a person's active assignments give them, named. An inactive
@@ -130,6 +145,36 @@ export const describeMemberRoles = (
 			return t("people.profile.rolesFailed");
 		case "ready":
 			return roleNames(roles.roles).join(", ") || t("people.notSet");
+		default: {
+			const exhaustive: never = roles;
+			return exhaustive;
+		}
+	}
+};
+
+/**
+ * Where a person's system roles give them permissions, for their profile:
+ * each place the reader can see, or why that isn't shown. Undefined when
+ * the reader may not read roles, which leaves it out.
+ */
+export const describeMemberAccess = (
+	roles: MemberRoles,
+	placeLabel: (place: PlaceRef) => string | undefined,
+	t: TFunction
+): Array<PlaceAccessText> | string | undefined => {
+	switch (roles.status) {
+		case "hidden":
+			return undefined;
+		case "pending":
+			return t("organisation.list.loading");
+		case "error":
+			return t("people.profile.rolesFailed");
+		case "ready":
+			return describeAccess(
+				accessSummary(roles.assignments, roles.accessRoles),
+				placeLabel,
+				t
+			);
 		default: {
 			const exhaustive: never = roles;
 			return exhaustive;

@@ -2,6 +2,7 @@ import { render, screen, within } from "@testing-library/react";
 import { I18nextProvider } from "react-i18next";
 import { describe, expect, it } from "vitest";
 import { authTestI18n } from "@/features/auth/testingI18n";
+import type { PlaceAccessText } from "@/features/organisation/accessSummary";
 import type { MemberProfileDetail } from "@/features/people/api";
 import { ProfileDetails } from "@/features/people/ProfileDetails";
 
@@ -27,10 +28,18 @@ const kent: MemberProfileDetail = {
 	invitationPending: false,
 };
 
-const show = (profile: MemberProfileDetail, systemRoles?: string): void => {
+const show = (
+	profile: MemberProfileDetail,
+	systemRoles?: string,
+	access?: Array<PlaceAccessText> | string
+): void => {
 	render(
 		<I18nextProvider i18n={authTestI18n}>
-			<ProfileDetails profile={profile} systemRoles={systemRoles} />
+			<ProfileDetails
+				access={access}
+				profile={profile}
+				systemRoles={systemRoles}
+			/>
 		</I18nextProvider>
 	);
 };
@@ -109,6 +118,55 @@ describe("ProfileDetails", () => {
 		]);
 		expect(
 			screen.queryByRole("button", { name: "Copy phone number" })
+		).not.toBeInTheDocument();
+	});
+
+	it("shows where their roles give them permissions, one row per place, noting only visible places count", () => {
+		show(kent, "Supervisor", [
+			{ place: "Whole company", lines: ["Departments: View"] },
+			{
+				place: "Orchard",
+				lines: ["Branches: View", "Leave: View, Approve or reject"],
+			},
+		]);
+
+		const access = screen.getByRole("region", { name: "Access" });
+		expect(access).toHaveTextContent("Only places you can see are shown.");
+		expect(
+			within(access)
+				.getAllByRole("term")
+				.map(
+					(term) =>
+						`${term.textContent}: ${[
+							...(term.nextElementSibling?.children ?? []),
+						]
+							.map((line) => line.textContent)
+							.join(" / ")}`
+				)
+		).toEqual([
+			"Whole company: Departments: View",
+			"Orchard: Branches: View / Leave: View, Approve or reject",
+		]);
+	});
+
+	it("says when their roles give nothing at the places the reader can see", () => {
+		show(kent, "Supervisor", []);
+		expect(screen.getByRole("region", { name: "Access" })).toHaveTextContent(
+			"No permissions at the places you can see."
+		);
+	});
+
+	it("shows why access isn't listed in place of the rows", () => {
+		show(kent, "Supervisor", "We couldn’t load their system roles.");
+		const access = screen.getByRole("region", { name: "Access" });
+		expect(access).toHaveTextContent("We couldn’t load their system roles.");
+		expect(within(access).queryByRole("term")).not.toBeInTheDocument();
+	});
+
+	it("leaves out the Access card when not given", () => {
+		show(kent, "Supervisor");
+		expect(
+			screen.queryByRole("region", { name: "Access" })
 		).not.toBeInTheDocument();
 	});
 });

@@ -5,23 +5,33 @@ import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { FormRow, formRowIds } from "@/components/forms/FormRow";
 import { Input } from "@/components/forms/Input";
+import { Select } from "@/components/forms/Select";
 import { Button } from "@/components/ui/Button";
 import {
 	accessRoleFormSchema,
+	roleKindHints,
+	roleKindOptions,
+	type AccessRoleFormInput,
 	type AccessRoleFormValues,
 } from "@/features/organisation/accessRoleFormSchema";
 import { accessRoleRefusal } from "@/features/organisation/accessRoleRefusal";
+import { isAccessRoleKind } from "@/features/organisation/api";
 import { PermissionChecklist } from "@/features/organisation/PermissionChecklist";
 import {
-	PERMISSION_KEYS,
-	type PermissionKey,
-} from "@/features/workspace/permissionKeys";
+	keysFor,
+	permissionList,
+	selectionForKind,
+} from "@/features/organisation/PermissionChecklist/groups";
+import type { PermissionKey } from "@/features/workspace/permissionKeys";
 
 export type AccessRoleFormProps = {
 	/** A new role, or changes to one: decides the submit label and whether changes are counted. */
 	mode: "create" | "edit";
-	/** What the form starts from, and returns to when changes are discarded. */
-	initial: AccessRoleFormValues;
+	/**
+	 * What the form starts from, and returns to when changes are discarded.
+	 * A new role has no kind ("") until the person chooses one.
+	 */
+	initial: AccessRoleFormInput;
 	/** Shows the role without letting it be changed. */
 	readOnly?: boolean;
 	/** Permissions the person may not grant. */
@@ -31,17 +41,21 @@ export type AccessRoleFormProps = {
 	 * part of the values. The caller saves them back untouched.
 	 */
 	unknown?: ReadonlyArray<string>;
-	/** Saves the role. A rejection is explained on the name field or above the form. */
+	/** Saves the role. A rejection is explained on its field or above the form. */
 	onSubmit: (values: AccessRoleFormValues) => Promise<void>;
 	className?: string;
 };
 
 const key = "organisation.accessRoles.editor";
+const kindKey = "organisation.accessRoles.kind";
 
 /**
- * An access role's name and permissions. Nothing is saved until the form is
- * submitted, which needs at least one permission, and a name for a new role
- * or a change to an existing one.
+ * An access role's name, type and permissions. The type has no default:
+ * until it is chosen the permissions can't be changed, and it decides which
+ * ones are offered. Switching to a local role clears the
+ * company-only permissions and says which. Nothing is saved until the form
+ * is submitted, which needs at least one permission, and a type and a name
+ * for a new role or a change to an existing one.
  */
 export const AccessRoleForm = ({
 	mode,
@@ -52,21 +66,26 @@ export const AccessRoleForm = ({
 	onSubmit,
 	className,
 }: AccessRoleFormProps): FunctionComponent => {
-	const { t } = useTranslation();
+	const { t, i18n } = useTranslation();
+	const kindId = useId();
+	const kindIds = formRowIds(kindId);
 	const nameId = useId();
 	const nameIds = formRowIds(nameId);
 	const {
 		register,
 		control,
 		handleSubmit,
+		getValues,
+		setValue,
 		reset,
 		setError,
 		setFocus,
 		formState: { errors, isDirty, isSubmitting },
-	} = useForm<AccessRoleFormValues>({
+	} = useForm<AccessRoleFormInput, unknown, AccessRoleFormValues>({
 		resolver: zodResolver(accessRoleFormSchema(t)),
 		defaultValues: initial,
 	});
+	const kind = useWatch({ control, name: "kind" });
 	const name = useWatch({ control, name: "name" });
 	const permissions = useWatch({ control, name: "permissions" });
 	const [message, setMessage] = useState<string>();
@@ -78,7 +97,9 @@ export const AccessRoleForm = ({
 		const observer = new IntersectionObserver(
 			([entry]) => {
 				if (entry) {
-					setIsStuck(entry.boundingClientRect.top < (entry.rootBounds?.top ?? 0));
+					setIsStuck(
+						entry.boundingClientRect.top < (entry.rootBounds?.top ?? 0)
+					);
 				}
 			},
 			{ threshold: 1 }
@@ -88,6 +109,8 @@ export const AccessRoleForm = ({
 			observer.disconnect();
 		};
 	}, []);
+	// What the last switch to a local role cleared, named until the type changes again.
+	const [cleared, setCleared] = useState<Array<PermissionKey>>([]);
 	const added = permissions.filter(
 		(item) => !initial.permissions.includes(item)
 	).length;
@@ -95,6 +118,7 @@ export const AccessRoleForm = ({
 		(item) => !permissions.includes(item)
 	).length;
 	const changes = [
+		kind !== initial.kind && t(`${key}.typeChanged`),
 		added > 0 && t(`${key}.added`, { count: added }),
 		removed > 0 && t(`${key}.removed`, { count: removed }),
 	]
@@ -102,13 +126,23 @@ export const AccessRoleForm = ({
 		.join(", ");
 	const ready =
 		permissions.length + unknown.length > 0 &&
-		(mode === "create" ? name.trim() !== "" : isDirty);
+		(mode === "create" ? kind !== "" && name.trim() !== "" : isDirty);
+	const kindError = errors.kind?.message;
+	const kindHint = roleKindHints(kind, t).map((line) => (
+		<span key={line} className="block">
+			{line}
+		</span>
+	));
 	const submit = async (values: AccessRoleFormValues): Promise<void> => {
 		setMessage(undefined);
 		try {
 			await onSubmit(values);
 		} catch (error) {
-			const refusal = accessRoleRefusal(error, values.name, t);
+			const refusal = accessRoleRefusal(error, values, t);
+			if (refusal.kind) {
+				setError("kind", { type: "server", message: refusal.kind });
+				setFocus("kind");
+			}
 			if (refusal.name) {
 				setError("name", { type: "server", message: refusal.name });
 				setFocus("name");
@@ -163,6 +197,7 @@ export const AccessRoleForm = ({
 							variant="secondary"
 							onClick={() => {
 								setMessage(undefined);
+								setCleared([]);
 								reset();
 							}}
 						>
@@ -182,6 +217,62 @@ export const AccessRoleForm = ({
 					</div>
 				)}
 			</div>
+			<FormRow
+				className="mt-6 max-w-97.5"
+				error={kindError}
+				hint={kindHint}
+				htmlFor={kindId}
+				label={t(`${kindKey}.label`)}
+				layout="stacked"
+				required={!readOnly}
+			>
+				<Controller
+					control={control}
+					name="kind"
+					render={({ field }) => (
+						<Select
+							ref={field.ref}
+							aria-describedby={kindError ? kindIds.errorId : kindIds.hintId}
+							aria-invalid={Boolean(kindError)}
+							aria-labelledby={kindIds.labelId}
+							className="w-full"
+							disabled={readOnly || isSubmitting}
+							name={field.name}
+							options={roleKindOptions(t)}
+							placeholder={t(`${kindKey}.placeholder`)}
+							status={kindError ? "error" : undefined}
+							value={field.value}
+							onChange={(next) => {
+								if (!isAccessRoleKind(next)) return;
+								field.onChange(next);
+								const switched = selectionForKind(
+									getValues("permissions"),
+									next
+								);
+								if (switched.removed.length > 0)
+									setValue("permissions", switched.selected, {
+										shouldDirty: true,
+									});
+								setCleared(switched.removed);
+							}}
+						/>
+					)}
+				/>
+			</FormRow>
+			<div aria-live="polite" className="max-w-97.5">
+				{cleared.length > 0 && (
+					<p className="mt-2 text-sm text-neutral-700">
+						{t(`${kindKey}.removed`, {
+							count: cleared.length,
+							permissions: permissionList(
+								cleared,
+								t,
+								i18n.resolvedLanguage ?? i18n.language
+							),
+						})}
+					</p>
+				)}
+			</div>
 			<div className="mt-10 flex items-baseline justify-between gap-4">
 				<h2 className="text-xl font-medium text-neutral-900">
 					{t(`${key}.permissions`)}
@@ -189,17 +280,23 @@ export const AccessRoleForm = ({
 				<p className="text-sm text-neutral-700">
 					{t(`${key}.selected`, {
 						count: permissions.length,
-						total: PERMISSION_KEYS.length,
+						total: keysFor(kind || undefined).length,
 					})}
 				</p>
 			</div>
+			{!kind && (
+				<p className="mt-2 text-sm text-neutral-700">
+					{t(`${kindKey}.choose`)}
+				</p>
+			)}
 			<Controller
 				control={control}
 				name="permissions"
 				render={({ field }) => (
 					<PermissionChecklist
 						className="mt-4"
-						disabled={readOnly || isSubmitting}
+						disabled={readOnly || isSubmitting || !kind}
+						kind={kind || undefined}
 						label={t(`${key}.permissions`)}
 						unavailable={unavailable}
 						unknown={unknown}

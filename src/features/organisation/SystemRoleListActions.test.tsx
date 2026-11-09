@@ -35,6 +35,7 @@ const role = (
 	companyId: "c-1",
 	name: "Manager",
 	protectedRole: false,
+	kind: "LOCAL",
 	status: "ACTIVE",
 	permissions: ["branch:read", "department:read"],
 	holderCount: 2,
@@ -172,6 +173,7 @@ describe("System role list actions", () => {
 			calls.filter((call) => call.method === "PUT").map((call) => call.body)
 		).toEqual([
 			{
+				kind: "LOCAL",
 				name: "Manager",
 				permissions: ["branch:read", "department:read"],
 				status: "INACTIVE",
@@ -197,6 +199,7 @@ describe("System role list actions", () => {
 				calls.filter((call) => call.method === "PUT").map((call) => call.body)
 			).toEqual([
 				{
+					kind: "LOCAL",
 					name: "Manager",
 					permissions: ["branch:read", "department:read"],
 					status: "ACTIVE",
@@ -251,13 +254,16 @@ describe("System role list actions", () => {
 		expect(calls.filter((call) => call.method === "DELETE")).toHaveLength(2);
 	});
 
-	it("duplicates a role into the create dialog with its name and permissions filled in", async () => {
+	it("duplicates a role into the create dialog with its type, name and permissions filled in", async () => {
 		stubApi(routes());
 		await choose("Duplicate");
 		const dialog = await screen.findByRole("dialog", {
 			name: "Create system role",
 		});
 
+		expect(
+			within(dialog).getByRole("button", { name: "Role type" })
+		).toHaveTextContent("Local role");
 		expect(within(dialog).getByLabelText("Role name")).toHaveValue(
 			"Manager copy"
 		);
@@ -269,6 +275,50 @@ describe("System role list actions", () => {
 		expect(box("Branches", "View")).toBeChecked();
 		expect(box("Departments", "View")).toBeChecked();
 		expect(box("Branches", "Edit")).not.toBeChecked();
+	});
+
+	it("duplicates a company role as a company role, keeping its company-only permissions", async () => {
+		const calls = stubApi(
+			routes(
+				role({
+					kind: "COMPANY",
+					permissions: ["branch:read", "branch:create"],
+				})
+			)
+		);
+		await choose("Duplicate");
+		const dialog = await screen.findByRole("dialog", {
+			name: "Create system role",
+		});
+
+		expect(
+			within(dialog).getByRole("button", { name: "Role type" })
+		).toHaveTextContent("Company role");
+		expect(
+			within(within(dialog).getByRole("group", { name: "Branches" })).getByRole(
+				"checkbox",
+				{ name: "Create" }
+			)
+		).toBeChecked();
+		await userEvent.click(
+			within(dialog).getByRole("button", { name: "Create system role" })
+		);
+		await waitFor(() => {
+			expect(
+				calls
+					.filter(
+						(call) =>
+							call.method === "POST" && call.path.endsWith("/access-roles")
+					)
+					.map((call) => call.body)
+			).toEqual([
+				{
+					kind: "COMPANY",
+					name: "Manager copy",
+					permissions: ["branch:read", "branch:create"],
+				},
+			]);
+		});
 	});
 });
 
@@ -633,5 +683,178 @@ describe("System role people, checked at each assignment's own place", () => {
 				calls.filter((call) => `${call.method} ${call.path}` === HOLDERS).length
 			).toBeGreaterThan(1);
 		});
+	});
+});
+
+/** What a definition list says, as "term: line, line" for each row. */
+const describedRows = (container: HTMLElement): Array<string> =>
+	within(container)
+		.getAllByRole("term")
+		.map(
+			(term) =>
+				`${term.textContent}: ${[...(term.nextElementSibling?.children ?? [])]
+					.map((line) => line.textContent)
+					.join(" / ")}`
+		);
+
+describe("Company roles and access previews in the assign dialog", () => {
+	const companyRole = role({
+		kind: "COMPANY",
+		permissions: ["branch:read", "branch:create"],
+	});
+	const noColleagues = {
+		[COLLEAGUES]: {
+			status: 200,
+			body: envelope({ content: [], page: { totalElements: 0 } }),
+		},
+	};
+
+	it("offers a company role only at the whole company", async () => {
+		stubApi({ ...routes(companyRole), ...noColleagues });
+		app = await openApp("/organisation/system-roles/r-2");
+		renderAuthApp(app);
+
+		await userEvent.click(
+			await screen.findByRole("button", { name: "Assign role" })
+		);
+		const dialog = await screen.findByRole("dialog", { name: "Assign role" });
+		await userEvent.click(within(dialog).getByLabelText("Applies to"));
+
+		expect(
+			(await screen.findAllByRole("option")).map((option) => option.textContent)
+		).toEqual(["Whole company"]);
+	});
+
+	it("says a company role can't be given by someone who can't assign at the whole company", async () => {
+		stubApi({
+			...routes(companyRole),
+			...noColleagues,
+			"GET /api/v1/me/workspace": kitchenAssigner(),
+		});
+		app = await openApp("/organisation/system-roles/r-2");
+		renderAuthApp(app);
+
+		await userEvent.click(
+			await screen.findByRole("button", { name: "Assign role" })
+		);
+		const dialog = await screen.findByRole("dialog", { name: "Assign role" });
+
+		expect(dialog).toHaveTextContent(
+			"A company role can only be given at the whole company, and you can’t assign roles there."
+		);
+		// Its keys aren't what's in the way, so none are named.
+		expect(dialog).not.toHaveTextContent("can only be given more widely");
+		await userEvent.click(within(dialog).getByLabelText("Applies to"));
+		expect(screen.queryByRole("option")).not.toBeInTheDocument();
+	});
+
+	it("explains switching a company role back on at a branch or department in its own words", async () => {
+		stubApi({
+			...routes(companyRole),
+			[HOLDERS]: {
+				status: 200,
+				body: envelope([{ ...holders[1], status: "INACTIVE" }]),
+			},
+			[`PUT ${ASSIGNMENT_PATH}`]: problemReply(
+				400,
+				"ACCESS_ROLE_KIND_CONFLICT"
+			),
+		});
+		app = await openApp("/organisation/system-roles/r-2");
+		renderAuthApp(app);
+
+		await userEvent.click(
+			await screen.findByRole("button", { name: "More actions for Daniel Tan" })
+		);
+		await userEvent.click(screen.getByRole("menuitem", { name: "Activate" }));
+		const dialog = await screen.findByRole("dialog", {
+			name: "Activate the role for Daniel Tan",
+		});
+		await userEvent.click(
+			within(dialog).getByRole("button", { name: "Activate for Daniel Tan" })
+		);
+
+		expect(await within(dialog).findByRole("alert")).toHaveTextContent(
+			"A company role can only be active at the whole company. Remove it from this place instead."
+		);
+		expect(screen.queryByText(/API says/)).not.toBeInTheDocument();
+	});
+
+	it("previews the person's access after the change, from what they hold where the reader can see", async () => {
+		const leaveApprover = role({
+			accessRoleId: "r-9",
+			name: "Leave approver",
+			permissions: ["leave_request:read", "leave_request:review"],
+		});
+		const manager = role({
+			permissions: ["department:read", "department_member:read"],
+		});
+		const calls = stubApi({
+			...routes(manager),
+			...noColleagues,
+			[ROLES]: {
+				status: 200,
+				body: envelope({
+					content: [manager, leaveApprover],
+					page: { totalElements: 2 },
+				}),
+			},
+			"GET /api/v1/companies/c-1/access-role-assignments": {
+				status: 200,
+				body: envelope([
+					{
+						accessRoleAssignmentId: "a-2",
+						accessRoleId: "r-2",
+						status: "ACTIVE",
+						branchId: "b-1",
+						departmentId: "d-1",
+					},
+					{
+						accessRoleAssignmentId: "a-7",
+						accessRoleId: "r-9",
+						status: "ACTIVE",
+						branchId: "b-2",
+						departmentId: null,
+					},
+				]),
+			},
+		});
+		app = await openApp("/organisation/system-roles/r-2");
+		renderAuthApp(app);
+
+		await userEvent.click(
+			await screen.findByRole("button", { name: "Edit Daniel Tan" })
+		);
+		const dialog = await screen.findByRole("dialog", {
+			name: "Edit assignment",
+		});
+		const preview = await within(dialog).findByRole("region", {
+			name: "Daniel Tan’s access after this change",
+		});
+
+		expect(preview).toHaveTextContent("Only places you can see are shown.");
+		expect(describedRows(preview)).toEqual([
+			"Tampines: Leave: View, Approve or reject",
+			"Orchard › Kitchen: Departments: View / Department members: View",
+		]);
+		expect(
+			calls.find(
+				(call) => call.path === "/api/v1/companies/c-1/access-role-assignments"
+			)?.search
+		).toBe("companyMembershipId=m-9");
+
+		await userEvent.click(within(dialog).getByLabelText("Applies to"));
+		await userEvent.click(
+			await screen.findByRole("option", { name: "Whole company" })
+		);
+		await userEvent.keyboard("{Escape}");
+		await userEvent.click(
+			within(dialog).getByRole("button", { name: "Remove Orchard › Kitchen" })
+		);
+
+		expect(describedRows(preview)).toEqual([
+			"Whole company: Departments: View / Department members: View",
+			"Tampines: Leave: View, Approve or reject",
+		]);
 	});
 });

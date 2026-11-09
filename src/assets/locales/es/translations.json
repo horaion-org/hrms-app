@@ -1152,7 +1152,8 @@
 					"read": "Ver",
 					"update": "Cambiar"
 				}
-			}
+			},
+			"notAtDepartments": "No en departamentos"
 		},
 		"jobTitles": {
 			"title": "Puestos",
@@ -1532,7 +1533,9 @@
 					"editDescription": "Cambia dónde puede usar esta persona el rol.",
 					"editSubmit": "Guardar cambios",
 					"removesAll": "Si guardas sin ningún lugar, se le quita este rol a {{name}}.",
-					"noFit": "Este rol no se puede asignar en ningún lugar donde puedes asignarlo: {{permissions}} solo se puede otorgar a un nivel más amplio."
+					"noFit": "Este rol no se puede asignar en ningún lugar donde puedes asignarlo: {{permissions}} solo se puede otorgar a un nivel más amplio.",
+					"companyRoleOutOfReach": "Un rol de empresa solo se puede asignar a toda la empresa, y tú no puedes asignar roles allí.",
+					"kindConflict": "Un rol de empresa solo se puede asignar a toda la empresa."
 				},
 				"loadFailed": "No pudimos cargar quién tiene este rol.",
 				"inactive": "Este rol está inactivo, así que las personas de abajo no tienen sus permisos hasta que se vuelva a activar.",
@@ -1553,7 +1556,8 @@
 					"roleInactive": "El rol en sí está inactivo. Activa primero el rol.",
 					"notMember": "Este rol no puede estar activo para esta persona en uno de esos lugares. Puede que ya no sea miembro activo o que el rol no encaje en ese lugar.",
 					"forbidden": "Solo puedes activar un rol cuyos permisos tienes allí.",
-					"failed": "No pudimos cambiarlo. Inténtalo de nuevo."
+					"failed": "No pudimos cambiarlo. Inténtalo de nuevo.",
+					"kindConflict": "Un rol de empresa solo puede estar activo en toda la empresa. Quítalo de este lugar."
 				}
 			},
 			"editor": {
@@ -1590,7 +1594,8 @@
 				"loadMissing": "Este rol no existe o se ha eliminado.",
 				"loadFailed": "No pudimos cargar este rol. Inténtalo de nuevo.",
 				"unknownKeys_one": "Este rol tiene un permiso que esta versión de la aplicación no reconoce. Se mantiene tal cual al guardar. Recarga la página para actualizar la aplicación y cambiarlo.",
-				"unknownKeys_other": "Este rol tiene {{count}} permisos que esta versión de la aplicación no reconoce. Se mantienen tal cual al guardar. Recarga la página para actualizar la aplicación y cambiarlos."
+				"unknownKeys_other": "Este rol tiene {{count}} permisos que esta versión de la aplicación no reconoce. Se mantienen tal cual al guardar. Recarga la página para actualizar la aplicación y cambiarlos.",
+				"typeChanged": "Tipo de rol cambiado"
 			},
 			"all": "Todos los roles",
 			"copyName": "Copia de {{name}}",
@@ -1631,6 +1636,34 @@
 				"inUse": "Este rol sigue asignado a alguien. Quítaselo primero a todas las personas.",
 				"forbidden": "No tienes permiso para eliminar este rol.",
 				"failed": "No pudimos eliminar el rol. Inténtalo de nuevo."
+			},
+			"type": "Tipo",
+			"types": {
+				"COMPANY": "Empresa",
+				"LOCAL": "Local"
+			},
+			"kind": {
+				"label": "Tipo de rol",
+				"placeholder": "Selecciona un tipo de rol",
+				"required": "Elige un tipo de rol.",
+				"COMPANY": "Rol de empresa",
+				"LOCAL": "Rol local",
+				"hints": {
+					"COMPANY": "Para acciones que afectan a toda la empresa. Solo se puede asignar a toda la empresa.",
+					"LOCAL": "Para el trabajo dentro de sucursales y departamentos. Se puede asignar a toda la empresa, a una sucursal o a un departamento."
+				},
+				"choice": "{{kind}}: {{hint}}",
+				"choose": "Elige un tipo de rol para ver los permisos que puede tener.",
+				"removed_one": "Un rol local no puede tener permisos solo para toda la empresa, así que se quitó {{permissions}}.",
+				"removed_other": "Un rol local no puede tener permisos solo para toda la empresa, así que se quitaron {{permissions}}.",
+				"conflictLocal": "Un rol local no puede tener permisos que solo se aplican a toda la empresa. Elige Rol de empresa o quita esos permisos.",
+				"conflictCompany": "Este rol está asignado en sucursales o departamentos, así que no puede pasar a ser un rol de empresa. Quita primero esas asignaciones o mantenlo como rol local."
+			},
+			"access": {
+				"title": "Acceso",
+				"note": "Solo se muestran los lugares que puedes ver.",
+				"none": "Sin permisos en los lugares que puedes ver.",
+				"after": "Acceso de {{name}} después de este cambio"
 			}
 		},
 		"list": {

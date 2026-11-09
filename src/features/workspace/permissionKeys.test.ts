@@ -5,7 +5,9 @@ import {
 	PERMISSION_DEFINITIONS,
 } from "@/features/workspace/permissionContract.generated";
 import {
+	companyOnlyKeys,
 	incompatibleKeys,
+	isAboveDepartments,
 	isCompanyOnly,
 	isPermissionKey,
 	PERMISSION_KEYS,
@@ -63,5 +65,32 @@ describe("the permission catalogue generated from the API's contract", () => {
 		]);
 		expect(isCompanyOnly("branch:create")).toBe(true);
 		expect(isCompanyOnly("branch:update")).toBe(false);
+	});
+
+	it("names the keys only a company role may hold: those the contract allows at the company alone", () => {
+		expect(
+			companyOnlyKeys([
+				"leave:approve",
+				"branch:read",
+				"audit_event:read",
+				"branch:create",
+			])
+		).toEqual(["branch:create", "audit_event:read"]);
+		expect(companyOnlyKeys(PERMISSION_KEYS)).toEqual(
+			contract.permissions
+				.filter(
+					({ assignableScopes }) =>
+						assignableScopes.length === 1 && assignableScopes[0] === "COMPANY"
+				)
+				.map(({ key }) => key)
+		);
+	});
+
+	it("tells keys that stop above departments from the rest", () => {
+		expect(isAboveDepartments("branch:read")).toBe(true);
+		expect(isAboveDepartments("department:create")).toBe(true);
+		expect(isAboveDepartments("department:read")).toBe(false);
+		// Company-only keys stop higher still.
+		expect(isAboveDepartments("branch:create")).toBe(false);
 	});
 });

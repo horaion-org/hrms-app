@@ -108,11 +108,13 @@ export const SystemRoleEditor = (): FunctionComponent => {
 							readOnly={reason !== undefined}
 							unknown={unknown}
 							initial={{
+								kind: role.kind,
 								name: role.name,
 								permissions: role.permissions.filter(isPermissionKey),
 							}}
 							onSubmit={async (values) => {
 								await update.mutateAsync({
+									kind: values.kind,
 									name: values.name,
 									permissions: [...values.permissions, ...unknown],
 									status: role.status,

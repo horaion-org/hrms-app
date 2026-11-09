@@ -237,12 +237,14 @@ test("create a system role from the permissions grid", async ({
 		name: "Auditor",
 		protectedRole: false,
 		status: "ACTIVE",
+		kind: "COMPANY",
 		holderCount: 0,
 		permissions: ["branch:read", "audit_event:read"],
 	};
 	await context.route("**/api/v1/companies/acme/access-roles**", (route) => {
 		if (route.request().method() === "POST") {
 			expect(route.request().postDataJSON()).toEqual({
+				kind: "COMPANY",
 				name: "Auditor",
 				permissions: ["branch:read", "audit_event:read"],
 			});
@@ -263,6 +265,9 @@ test("create a system role from the permissions grid", async ({
 		.getByRole("button", { name: "Create system role", exact: true })
 		.click();
 	const dialog = tab.getByRole("dialog", { name: "Create system role" });
+	// Activity is company-only, so only a company role may hold it.
+	await dialog.getByRole("button", { name: "Role type" }).click();
+	await tab.getByRole("option", { name: "Company role" }).click();
 	await dialog.getByLabel("Role name", { exact: true }).fill("Auditor");
 	// Each resource is a named group whose permissions are labelled by action ("View", "Create", …).
 	for (const resource of ["Activity", "Branches"]) {

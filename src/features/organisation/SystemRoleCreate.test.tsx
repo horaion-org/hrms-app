@@ -30,6 +30,7 @@ const role = (
 	companyId: "c-1",
 	name: "Manager",
 	protectedRole: false,
+	kind: "LOCAL",
 	status: "ACTIVE",
 	holderCount: 0,
 	permissions: ["branch:read"],
@@ -90,10 +91,18 @@ const box = (group: string, name: string): HTMLElement =>
 	});
 const create = (): HTMLElement =>
 	screen.getByRole("button", { name: "Create role" });
+const chooseType = async (
+	type: "Company role" | "Local role"
+): Promise<void> => {
+	const user = userEvent.setup();
+	await user.click(await screen.findByRole("button", { name: "Role type" }));
+	await user.click(await screen.findByRole("option", { name: type }));
+};
 
-/** Names the role, gives it Branches > Edit and submits it. */
+/** Makes the role local, names it, gives it Branches > Edit and submits it. */
 const fillIn = async (name: string): Promise<void> => {
 	const user = userEvent.setup();
+	await chooseType("Local role");
 	await user.type(
 		await screen.findByRole("textbox", { name: /Role name/ }),
 		name
@@ -120,10 +129,17 @@ describe("Create system role", () => {
 		expect(
 			within(dialog).getByRole("textbox", { name: /Role name/ })
 		).toHaveValue("");
-		for (const item of within(dialog).getAllByRole("checkbox"))
-			expect(item).not.toBeChecked();
 		expect(
-			within(dialog).getByText("Choose at least 1 permission.")
+			within(dialog).getByRole("button", { name: "Role type" })
+		).toHaveTextContent("Select a role type");
+		for (const item of within(dialog).getAllByRole("checkbox")) {
+			expect(item).not.toBeChecked();
+			expect(item).toBeDisabled();
+		}
+		expect(
+			within(dialog).getByText(
+				"Choose a role type to see the permissions it can hold."
+			)
 		).toBeVisible();
 		expect(screen.queryByText(/unavailable/)).not.toBeInTheDocument();
 	});
@@ -161,9 +177,48 @@ describe("Create system role", () => {
 				.filter((call) => `${call.method} ${call.path}` === CREATE)
 				.map((call) => call.body)
 		).toEqual([
-			{ name: "Supervisor", permissions: ["branch:read", "branch:update"] },
+			{
+				kind: "LOCAL",
+				name: "Supervisor",
+				permissions: ["branch:read", "branch:update"],
+			},
 		]);
 		expect(await screen.findByText("Supervisor")).toBeVisible();
+	});
+
+	it("creates a company role, the only type that may hold company-only permissions", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi(routes());
+		await open(CREATOR);
+
+		expect(
+			await screen.findByText(
+				"Choose a role type to see the permissions it can hold."
+			)
+		).toBeVisible();
+		expect(box("Branches", "Create")).toBeDisabled();
+		await chooseType("Company role");
+		await user.type(
+			screen.getByRole("textbox", { name: /Role name/ }),
+			"Branch creator"
+		);
+		await user.click(box("Branches", "Create"));
+		await user.click(create());
+
+		expect(
+			await screen.findByRole("heading", { level: 1, name: "System roles" })
+		).toBeVisible();
+		expect(
+			calls
+				.filter((call) => `${call.method} ${call.path}` === CREATE)
+				.map((call) => call.body)
+		).toEqual([
+			{
+				kind: "COMPANY",
+				name: "Branch creator",
+				permissions: ["branch:read", "branch:create"],
+			},
+		]);
 	});
 
 	it("shows a taken name on the name field and stays on the page", async () => {
@@ -211,6 +266,7 @@ describe("Create system role", () => {
 		);
 		await open(CREATOR);
 		await screen.findByRole("textbox", { name: /Role name/ });
+		await chooseType("Company role");
 
 		expect(
 			screen.getByText(

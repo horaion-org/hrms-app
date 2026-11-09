@@ -23,8 +23,17 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+const chooseType = async (
+	body: HTMLElement,
+	type: "Company role" | "Local role"
+): Promise<void> => {
+	const page = within(body);
+	await userEvent.click(await page.findByRole("button", { name: "Role type" }));
+	await userEvent.click(await page.findByRole("option", { name: type }));
+};
 const fill = async (body: HTMLElement): Promise<void> => {
 	const page = within(body);
+	await chooseType(body, "Local role");
 	await userEvent.type(
 		await page.findByLabelText("Role name"),
 		"Branch manager"
@@ -43,8 +52,44 @@ const submit = async (body: HTMLElement): Promise<void> => {
 	);
 };
 
-/** The Company Owner holds every permission, so every box can be chosen. */
+/** Nothing can be ticked until the role's type is chosen. */
 export const Owner: Story = {};
+/** A company role: the Company Owner holds every permission, so every box can be chosen. */
+export const CompanyRole: Story = {
+	play: async ({ canvasElement }) => {
+		await chooseType(canvasElement.ownerDocument.body, "Company role");
+	},
+};
+/** A local role: company-only permissions aren't offered. */
+export const LocalRole: Story = {
+	play: async ({ canvasElement }) => {
+		await chooseType(canvasElement.ownerDocument.body, "Local role");
+	},
+};
+/** A company role switched to local: its company-only permissions are cleared and named. */
+export const SwitchedToLocal: Story = {
+	play: async ({ canvasElement }) => {
+		const body = canvasElement.ownerDocument.body;
+		await chooseType(body, "Company role");
+		await userEvent.click(
+			within(within(body).getByRole("group", { name: "Branches" })).getByRole(
+				"checkbox",
+				{ name: "Create" }
+			)
+		);
+		await chooseType(body, "Local role");
+	},
+};
+/** A duplicate starts from the copied role's type, name and permissions. */
+export const Duplicate: Story = {
+	args: {
+		initial: {
+			kind: "LOCAL",
+			name: "Manager copy",
+			permissions: ["branch:read", "department:read"],
+		},
+	},
+};
 /** Someone with a narrower role can only grant what they hold. */
 export const LimitedCreator: Story = {
 	args: {
@@ -55,6 +100,7 @@ export const LimitedCreator: Story = {
 			"access_role:create",
 		]),
 	},
+	play: CompanyRole.play,
 };
 export const Chosen: Story = {
 	play: async ({ canvasElement }) => {
@@ -64,6 +110,7 @@ export const Chosen: Story = {
 export const NoPermissionChosen: Story = {
 	play: async ({ canvasElement }) => {
 		const body = canvasElement.ownerDocument.body;
+		await chooseType(body, "Local role");
 		await userEvent.type(
 			await within(body).findByLabelText("Role name"),
 			"Auditor"
@@ -80,3 +127,14 @@ export const Submitting: Story = {
 	},
 };
 export const FormError: Story = { play: Submitting.play };
+/** Submitted without a type or permissions: both are asked for. */
+export const NothingChosen: Story = {
+	play: async ({ canvasElement }) => {
+		const body = canvasElement.ownerDocument.body;
+		await userEvent.type(
+			await within(body).findByLabelText("Role name"),
+			"Auditor"
+		);
+		await submit(body);
+	},
+};

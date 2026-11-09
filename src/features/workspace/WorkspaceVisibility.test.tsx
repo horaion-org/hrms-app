@@ -281,6 +281,7 @@ describe("Edit on the System Roles list", () => {
 		name,
 		protectedRole,
 		status: "ACTIVE",
+		kind: protectedRole ? "COMPANY" : "LOCAL",
 		holderCount: 0,
 		permissions: [],
 	});

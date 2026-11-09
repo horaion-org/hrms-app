@@ -23,6 +23,7 @@ const meta = {
 				accessRoleId: "r-1",
 				name: "Manager",
 				protectedRole: false,
+				kind: "LOCAL",
 				status: "ACTIVE",
 				permissions: ["branch:read", "department:read", "department:update"],
 				holderCount: 2,
@@ -31,9 +32,19 @@ const meta = {
 				accessRoleId: "r-2",
 				name: "Supervisor",
 				protectedRole: false,
+				kind: "LOCAL",
 				status: "ACTIVE",
 				permissions: ["department:read", "department_member:read"],
 				holderCount: 0,
+			},
+			{
+				accessRoleId: "r-3",
+				name: "Branch creator",
+				protectedRole: false,
+				kind: "COMPANY",
+				status: "ACTIVE",
+				permissions: ["branch:read", "branch:create"],
+				holderCount: 1,
 			},
 		],
 		people: everyone,
@@ -81,3 +92,79 @@ type Story = StoryObj<typeof meta>;
 
 /** Opened from the System Roles list: the person chooses the role. */
 export const Default: Story = { args: {} };
+
+const LABELS: Record<string, string> = {
+	"": "Whole company",
+	"b-1": "Orchard",
+	"d-1": "Orchard › Kitchen",
+	"d-2": "Orchard › Front of house",
+	"b-2": "Tampines",
+};
+
+/**
+ * With what the chosen person holds now, the dialog previews their access
+ * after the change: Marcus already approves leave at Tampines.
+ */
+export const AccessPreview: Story = {
+	args: {
+		preview: {
+			assignments: [
+				{
+					accessRoleAssignmentId: "a-1",
+					accessRoleId: "r-9",
+					status: "ACTIVE",
+					branchId: "b-2",
+					departmentId: null,
+				},
+			],
+			roles: [
+				{
+					accessRoleId: "r-9",
+					name: "Leave approver",
+					protectedRole: false,
+					kind: "LOCAL",
+					status: "ACTIVE",
+					permissions: ["leave_request:read", "leave_request:review"],
+					holderCount: 1,
+				},
+			],
+			placeLabel: (place) => LABELS[place.departmentId ?? place.branchId ?? ""],
+		},
+		roles: [
+			{
+				accessRoleId: "r-1",
+				name: "Manager",
+				protectedRole: false,
+				kind: "LOCAL",
+				status: "ACTIVE",
+				permissions: ["branch:read", "department:read", "department:update"],
+				holderCount: 2,
+			},
+		],
+		editing: {
+			person: everyone[0]!,
+			places: [{ label: "Orchard", branchId: "b-1" }],
+		},
+	},
+};
+
+/** A company role whose only place, the whole company, the person may not assign at. */
+export const CompanyRoleOutOfReach: Story = {
+	args: {
+		roles: [
+			{
+				accessRoleId: "r-3",
+				name: "Branch creator",
+				protectedRole: false,
+				kind: "COMPANY",
+				status: "ACTIVE",
+				permissions: ["branch:read", "branch:create"],
+				holderCount: 1,
+			},
+		],
+		targets: [
+			{ label: "Orchard", branchId: "b-1" },
+			{ label: "Tampines", branchId: "b-2" },
+		],
+	},
+};

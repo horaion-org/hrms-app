@@ -788,7 +788,7 @@ describe("Departments", () => {
 });
 
 describe("System roles", () => {
-	it("lists access roles with their permission reach, people and status", async () => {
+	it("lists access roles with their type, permission reach, people and status", async () => {
 		const user = userEvent.setup();
 		const calls = stubApi({
 			...baseRoutes(),
@@ -798,6 +798,7 @@ describe("System roles", () => {
 					companyId: "c-1",
 					name: "Company Owner",
 					protectedRole: true,
+					kind: "COMPANY",
 					status: "ACTIVE",
 					permissions: ["branch:read", "branch:create"],
 					holderCount: 1,
@@ -807,6 +808,7 @@ describe("System roles", () => {
 					companyId: "c-1",
 					name: "Manager",
 					protectedRole: false,
+					kind: "LOCAL",
 					status: "ACTIVE",
 					permissions: ["branch:read", "department:read", "leave:approve"],
 					holderCount: 3,
@@ -816,6 +818,7 @@ describe("System roles", () => {
 					companyId: "c-1",
 					name: "Staff",
 					protectedRole: false,
+					kind: "LOCAL",
 					status: "ACTIVE",
 					permissions: ["leave:create"],
 					holderCount: 0,
@@ -836,6 +839,7 @@ describe("System roles", () => {
 		).toEqual([
 			"Select all",
 			"System role",
+			"Type",
 			"Key permissions",
 			"People",
 			"Status",
@@ -845,13 +849,13 @@ describe("System roles", () => {
 			bodyRows(table).map((row) =>
 				within(row)
 					.getAllByRole("cell")
-					.slice(1, 4)
+					.slice(1, 5)
 					.map((cell) => cell.textContent)
 			)
 		).toEqual([
-			["Company Owner", "Full system access", "1 person"],
-			["Manager", "3 permissions", "3 people"],
-			["Staff", "1 permission", "0 people"],
+			["Company Owner", "Company", "Full system access", "1 person"],
+			["Manager", "Local", "3 permissions", "3 people"],
+			["Staff", "Local", "1 permission", "0 people"],
 		]);
 		expect(
 			screen.getByRole("button", { name: "Edit Company Owner" })

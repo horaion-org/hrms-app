@@ -216,7 +216,7 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 		targets.length > 0 &&
 		(edit?.roleEditable ?? true);
 	const roles = useAccessRoles(companyId, BY_NAME);
-	// The Company Owner role moves only through its own transfer.
+	// The Company Owner role moves only through its own transfer, and no company role is given at a Department.
 	const roleOptions: Array<SelectOption> =
 		roles.status === "ready"
 			? roles.items

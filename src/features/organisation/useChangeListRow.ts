@@ -85,12 +85,13 @@ export const useSetJobTitleStatus = (
 		updateJobTitle(companyId, { ...row, status })
 	);
 
-/** Activates or deactivates an access role, leaving its name and permissions as they are. */
+/** Activates or deactivates an access role, leaving its kind, name and permissions as they are. */
 export const useSetAccessRoleStatus = (
 	companyId: string
 ): UseMutationResult<AccessRole, Error, StatusChange<AccessRole>> =>
 	useRowChange(companyId, ({ row, status }: StatusChange<AccessRole>) =>
 		updateAccessRole(companyId, row.accessRoleId, {
+			kind: row.kind,
 			name: row.name,
 			permissions: row.permissions,
 			status,

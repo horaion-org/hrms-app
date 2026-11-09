@@ -5,7 +5,7 @@ import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { ArrowLeftIcon } from "@/components/ui/Icon";
 import { AccessRoleForm } from "@/features/organisation/AccessRoleForm";
-import type { AccessRoleFormValues } from "@/features/organisation/accessRoleFormSchema";
+import type { AccessRoleFormInput } from "@/features/organisation/accessRoleFormSchema";
 import { SYSTEM_ROLES_PATH } from "@/features/organisation/systemRolesPath";
 import { useCreateAccessRole } from "@/features/organisation/useCreateAccessRole";
 import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
@@ -13,7 +13,8 @@ import { companyPermissions, workspaceQuery } from "@/features/workspace/api";
 import { PERMISSION_KEYS } from "@/features/workspace/permissionKeys";
 
 const key = "organisation.accessRoles.editor";
-const EMPTY: AccessRoleFormValues = { name: "", permissions: [] };
+// A new role has no kind until the person chooses one.
+const EMPTY: AccessRoleFormInput = { kind: "", name: "", permissions: [] };
 
 /**
  * A new access role. The person can only give it permissions they hold

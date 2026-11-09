@@ -160,3 +160,21 @@ export const incompatibleKeys = (
 	PERMISSION_KEYS.filter(
 		(key) => permissions.includes(key) && !assignableAt(key, scope)
 	);
+
+/**
+ * The known keys of `permissions` that only a company role may hold (see
+ * `isCompanyOnly`), in catalogue order. A local role holds none of them.
+ */
+export const companyOnlyKeys = (
+	permissions: ReadonlyArray<string>
+): Array<PermissionKey> =>
+	PERMISSION_KEYS.filter(
+		(key) => permissions.includes(key) && isCompanyOnly(key)
+	);
+
+/**
+ * Whether `key` can be given at the whole company and at a Branch but not
+ * at a Department: a local role holding it can't be given at a Department.
+ */
+export const isAboveDepartments = (key: PermissionKey): boolean =>
+	assignableAt(key, "BRANCH") && !assignableAt(key, "DEPARTMENT");

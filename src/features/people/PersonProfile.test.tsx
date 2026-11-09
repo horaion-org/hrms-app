@@ -127,6 +127,7 @@ const role = (
 	accessRoleId,
 	name,
 	protectedRole: false,
+	kind: "LOCAL",
 	status: "ACTIVE",
 	permissions: ["member_profile:read"],
 	holderCount: 1,
@@ -197,8 +198,10 @@ const routes = (
 			{ membershipId: "m-9", displayName: "Faris Ahmad", status: "ACTIVE" },
 		]),
 		[`GET ${COMPANY}/access-roles`]: page([
-			role("r-0", "Company owner", { protectedRole: true }),
-			role("r-1", "Supervisor"),
+			role("r-0", "Company owner", { protectedRole: true, kind: "COMPANY" }),
+			role("r-1", "Supervisor", {
+				permissions: ["member_profile:read", "leave_request:read"],
+			}),
 			role("r-2", "Manager"),
 			role("r-3", "Admin"),
 		]),
@@ -334,6 +337,24 @@ describe("A person's profile", () => {
 				"System role: Supervisor, Admin",
 			]);
 		});
+		// What those roles give, place by place: Admin company-wide, Supervisor at Kitchen.
+		const access = screen.getByRole("region", { name: "Access" });
+		expect(access).toHaveTextContent("Only places you can see are shown.");
+		expect(
+			within(access)
+				.getAllByRole("term")
+				.map(
+					(term) =>
+						`${term.textContent}: ${[
+							...(term.nextElementSibling?.children ?? []),
+						]
+							.map((line) => line.textContent)
+							.join(" / ")}`
+				)
+		).toEqual([
+			"Whole company: People: View",
+			"Orchard › Kitchen: People: View / Leave: View",
+		]);
 		expect(button("Copy phone number")).toBeVisible();
 		expect(button("Copy email address")).toBeVisible();
 		// Notes need their own key, which this person lacks; a photo is not part of this page yet.
@@ -347,6 +368,7 @@ describe("A person's profile", () => {
 				"Contact information",
 				"Employment information",
 				"Department & role information",
+				"Access",
 				"Skills & proficiency (0)",
 			]);
 		});
@@ -368,6 +390,9 @@ describe("A person's profile", () => {
 			"Department: Kitchen",
 			"Manager: Faris Ahmad",
 		]);
+		expect(
+			screen.queryByRole("region", { name: "Access" })
+		).not.toBeInTheDocument();
 	});
 
 	it.each([

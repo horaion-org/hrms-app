@@ -1838,7 +1838,9 @@
 					"editSubmit": "Save changes",
 					"removesAll": "Saving with no places removes this role from {{name}}.",
 					"fixedPlaces": "{{name}} also has this role at {{places}}. You can’t change those places, so they stay as they are.",
-					"noFit": "This role can’t be given at any place you may assign it: {{permissions}} can only be given more widely."
+					"noFit": "This role can’t be given at any place you may assign it: {{permissions}} can only be given more widely.",
+					"companyRoleOutOfReach": "A company role can only be given at the whole company, and you can’t assign roles there.",
+					"kindConflict": "A company role can only be given at the whole company."
 				},
 				"loadFailed": "We couldn’t load who holds this role.",
 				"inactive": "This role is inactive, so the people below don’t have its permissions until it is activated again.",
@@ -1859,7 +1861,8 @@
 					"roleInactive": "The role itself is inactive. Activate the role first.",
 					"notMember": "This role can’t be active for this person at one of those places. They may no longer be an active member, or the role may not fit that place.",
 					"forbidden": "You can only activate a role whose permissions you hold there.",
-					"failed": "We couldn’t change this. Try again."
+					"failed": "We couldn’t change this. Try again.",
+					"kindConflict": "A company role can only be active at the whole company. Remove it from this place instead."
 				}
 			},
 			"createDialog": {
@@ -1919,7 +1922,8 @@
 				"loadMissing": "This role doesn’t exist or has been deleted.",
 				"loadFailed": "We couldn’t load this role. Please try again.",
 				"unknownKeys_one": "This role has a permission this version of the app doesn’t recognise. It is kept as it is when you save. Reload the page to update the app and change it.",
-				"unknownKeys_other": "This role has {{count}} permissions this version of the app doesn’t recognise. They are kept as they are when you save. Reload the page to update the app and change them."
+				"unknownKeys_other": "This role has {{count}} permissions this version of the app doesn’t recognise. They are kept as they are when you save. Reload the page to update the app and change them.",
+				"typeChanged": "Role type changed"
 			},
 			"all": "All roles",
 			"copyName": "{{name}} copy",
@@ -1960,6 +1964,34 @@
 				"inUse": "This role is still assigned to someone. Remove it from everyone first.",
 				"forbidden": "You don’t have permission to delete this role.",
 				"failed": "We couldn’t delete the role. Try again."
+			},
+			"type": "Type",
+			"types": {
+				"COMPANY": "Company",
+				"LOCAL": "Local"
+			},
+			"kind": {
+				"label": "Role type",
+				"placeholder": "Select a role type",
+				"required": "Choose a role type.",
+				"COMPANY": "Company role",
+				"LOCAL": "Local role",
+				"hints": {
+					"COMPANY": "For actions that affect the whole company. It can only be given at the whole company.",
+					"LOCAL": "For work inside branches and departments. It can be given at the whole company, a branch or a department."
+				},
+				"choice": "{{kind}}: {{hint}}",
+				"choose": "Choose a role type to see the permissions it can hold.",
+				"removed_one": "A local role can’t hold company-only permissions, so {{permissions}} was removed.",
+				"removed_other": "A local role can’t hold company-only permissions, so {{permissions}} were removed.",
+				"conflictLocal": "A local role can’t hold permissions that only apply company-wide. Choose Company role, or remove those permissions.",
+				"conflictCompany": "This role is given at branches or departments, so it can’t become a company role. Remove those assignments first, or keep it a local role."
+			},
+			"access": {
+				"title": "Access",
+				"note": "Only places you can see are shown.",
+				"none": "No permissions at the places you can see.",
+				"after": "{{name}}’s access after this change"
 			}
 		},
 		"permissions": {
@@ -2174,7 +2206,8 @@
 					"read": "View",
 					"update": "Change"
 				}
-			}
+			},
+			"notAtDepartments": "Not at departments"
 		},
 		"activity": {
 			"title": "Recent Activity",

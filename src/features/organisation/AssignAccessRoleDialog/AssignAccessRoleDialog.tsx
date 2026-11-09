@@ -5,14 +5,26 @@ import { Combobox } from "@/components/forms/Combobox";
 import { FormRow, formRowIds } from "@/components/forms/FormRow";
 import { Select } from "@/components/forms/Select";
 import { Button } from "@/components/ui/Button";
+import { DescriptionList } from "@/components/ui/DescriptionList";
 import { Dialog } from "@/components/ui/Dialog";
-import type { AccessRole, CompanyMember } from "@/features/organisation/api";
 import {
+	accessSummary,
+	assignmentsAfter,
+	describeAccess,
+} from "@/features/organisation/accessSummary";
+import type {
+	AccessRole,
+	CompanyMember,
+	MemberAccessRoleAssignment,
+} from "@/features/organisation/api";
+import {
+	companyRoleOutOfReach,
 	keysThatFitNowhere,
 	placeKey,
 	roleFitsScope,
 	scopeOfPlace,
 	type AssignmentTarget,
+	type PlaceRef,
 } from "@/features/organisation/assignmentTargets";
 import { permissionList } from "@/features/organisation/PermissionChecklist/groups";
 import { PermissionSummary } from "@/features/organisation/PermissionSummary";
@@ -27,8 +39,9 @@ export type AssignAccessRoleDialogProps = {
 	onQueryChange: (query: string) => void;
 	/**
 	 * The places the person may give a role at, widest first. Only those the
-	 * chosen role fits are offered; when it fits none, the keys in the way
-	 * are named.
+	 * chosen role fits are offered: the whole company alone for a company
+	 * role, which says so when that isn't among them. When a local role
+	 * fits none, the keys in the way are named.
 	 */
 	targets: Array<AssignmentTarget>;
 	/**
@@ -42,6 +55,19 @@ export type AssignAccessRoleDialogProps = {
 		places: Array<AssignmentTarget>;
 		fixedPlaces?: Array<string>;
 	};
+	/**
+	 * What the chosen person holds now, to preview their access after this
+	 * change; left out until it is known. `roles` is every role of the
+	 * company; `placeLabel` names a place, and leaves out one the person
+	 * can't see.
+	 */
+	preview?: {
+		assignments: ReadonlyArray<MemberAccessRoleAssignment>;
+		roles: ReadonlyArray<AccessRole>;
+		placeLabel: (place: PlaceRef) => string | undefined;
+	};
+	/** Told when the person is chosen or cleared, e.g. to load `preview`. */
+	onPersonChange?: (person: CompanyMember | null) => void;
 	/** Why the last attempt was refused. */
 	error?: string;
 	/** True while an attempt is being sent. */
@@ -55,11 +81,13 @@ export type AssignAccessRoleDialogProps = {
 };
 
 const key = "organisation.accessRoles.assignments.dialog";
+const accessKey = "organisation.accessRoles.access";
 
 /**
  * Gives one access role to one person at one or several places, or changes
- * the places a person already has it, showing what the role allows so it is
- * clear what is being given.
+ * the places a person already has it, showing what the role allows and,
+ * given `preview`, what the person will have where once it is saved, so it
+ * is clear what is being given.
  */
 export const AssignAccessRoleDialog = ({
 	roles,
@@ -68,6 +96,8 @@ export const AssignAccessRoleDialog = ({
 	onQueryChange,
 	targets,
 	editing,
+	preview,
+	onPersonChange,
 	error,
 	submitting = false,
 	onAssign,
@@ -77,6 +107,7 @@ export const AssignAccessRoleDialog = ({
 	const roleId = useId();
 	const personId = useId();
 	const placesId = useId();
+	const afterId = useId();
 	const onlyRole = roles.length === 1 ? roles[0] : undefined;
 	// Empty until a role is chosen, which keeps the Select controlled throughout.
 	const [chosenRoleId, setChosenRoleId] = useState(
@@ -94,6 +125,29 @@ export const AssignAccessRoleDialog = ({
 		? targets.filter((target) => roleFitsScope(role, scopeOfPlace(target)))
 		: targets;
 	const misfits = role ? keysThatFitNowhere(role, targets) : [];
+	const outOfReach = role ? companyRoleOutOfReach(role, targets) : false;
+	// The role being given counts even when the company's list doesn't hold it.
+	const after =
+		role && person && preview
+			? describeAccess(
+					accessSummary(
+						assignmentsAfter(
+							preview.assignments,
+							role.accessRoleId,
+							places,
+							editing?.places ?? []
+						),
+						[
+							role,
+							...preview.roles.filter(
+								(item) => item.accessRoleId !== role.accessRoleId
+							),
+						]
+					),
+					preview.placeLabel,
+					t
+				)
+			: undefined;
 
 	return (
 		<Dialog
@@ -166,8 +220,11 @@ export const AssignAccessRoleDialog = ({
 						query={query}
 						searchPlaceholder={t(`${key}.searchPlaceholder`)}
 						value={person}
-						onChange={setPerson}
 						onQueryChange={onQueryChange}
+						onChange={(next): void => {
+							setPerson(next);
+							onPersonChange?.(next);
+						}}
 					/>
 				</FormRow>
 				<FormRow
@@ -199,6 +256,11 @@ export const AssignAccessRoleDialog = ({
 						onQueryChange={setPlaceQuery}
 					/>
 				</FormRow>
+				{outOfReach && (
+					<p className="text-sm text-neutral-700">
+						{t(`${key}.companyRoleOutOfReach`)}
+					</p>
+				)}
 				{misfits.length > 0 && (
 					<p className="text-sm text-neutral-700">
 						{t(`${key}.noFit`, {
@@ -230,6 +292,36 @@ export const AssignAccessRoleDialog = ({
 						permissions={role.permissions.filter(isPermissionKey)}
 						title={t(`${key}.allows`)}
 					/>
+				)}
+				{after && person && (
+					<section
+						aria-labelledby={afterId}
+						className="rounded-lg border border-neutral-400 p-4"
+					>
+						<p className="text-sm font-bold text-neutral-800" id={afterId}>
+							{t(`${accessKey}.after`, { name: person.displayName })}
+						</p>
+						<p className="mt-1 text-sm text-neutral-700">
+							{t(`${accessKey}.note`)}
+						</p>
+						{after.length === 0 ? (
+							<p className="mt-3 text-sm text-neutral-700">
+								{t(`${accessKey}.none`)}
+							</p>
+						) : (
+							<DescriptionList
+								className="mt-3"
+								items={after.map(({ place, lines }) => ({
+									label: place,
+									value: lines.map((line) => (
+										<span key={line} className="block">
+											{line}
+										</span>
+									)),
+								}))}
+							/>
+						)}
+					</section>
 				)}
 			</div>
 		</Dialog>

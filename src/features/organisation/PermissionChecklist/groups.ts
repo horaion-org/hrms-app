@@ -1,7 +1,11 @@
 import type { TFunction } from "i18next";
+import type { AccessRoleKind } from "@/features/organisation/api";
 import {
+	companyOnlyKeys,
 	definitionOf,
 	dependingOn,
+	isAboveDepartments,
+	isCompanyOnly,
 	PERMISSION_KEYS,
 	type PermissionKey,
 	type PermissionResource,
@@ -28,6 +32,47 @@ export const PERMISSION_GROUPS: ReadonlyArray<PermissionGroup> = [
 	resource,
 	keys: PERMISSION_KEYS.filter((key) => resourceOf(key) === resource),
 }));
+
+const LOCAL_KEYS = PERMISSION_KEYS.filter((key) => !isCompanyOnly(key));
+
+const LOCAL_GROUPS = PERMISSION_GROUPS.map((group) => ({
+	...group,
+	keys: group.keys.filter((key) => !isCompanyOnly(key)),
+})).filter((group) => group.keys.length > 0);
+
+/**
+ * The keys a role of `kind` may hold, in the catalog's order: all of them,
+ * except the company-only ones for a local role. Every key until a kind is
+ * chosen.
+ */
+export const keysFor = (kind?: AccessRoleKind): ReadonlyArray<PermissionKey> =>
+	kind === "LOCAL" ? LOCAL_KEYS : PERMISSION_KEYS;
+
+/**
+ * The rows a role of `kind` is edited in: every resource, except that a
+ * local role's rows leave out company-only keys and a row left with none
+ * is not shown at all.
+ */
+export const groupsFor = (
+	kind?: AccessRoleKind
+): ReadonlyArray<PermissionGroup> =>
+	kind === "LOCAL" ? LOCAL_GROUPS : PERMISSION_GROUPS;
+
+/**
+ * Where a key can be given, as the hint beside it in a role of `kind`. In a
+ * local role, a key that can't be given at a Department says so. In a
+ * company role nothing is said, since every key applies company-wide. With
+ * no kind chosen yet, company-only keys say so.
+ */
+export const scopeHintOf = (
+	key: PermissionKey,
+	kind?: AccessRoleKind
+): "companyOnly" | "notAtDepartments" | undefined => {
+	if (kind === "COMPANY") return undefined;
+	if (kind === "LOCAL")
+		return isAboveDepartments(key) ? "notAtDepartments" : undefined;
+	return isCompanyOnly(key) ? "companyOnly" : undefined;
+};
 
 /** The translation key of a permission's label; a key without copy fails to compile. */
 export const labelKeyOf = (key: PermissionKey): LabelKeyOf<PermissionKey> =>
@@ -113,6 +158,29 @@ export const togglePermission = (
 	if (!checked) return withKeys(selected, dependingOn(key), false);
 	if (!canTick(key, selected, unavailable)) return [...selected];
 	return withKeys(selected, requiredFor(key), true);
+};
+
+/**
+ * The selection once the role becomes a role of `kind`. A local role can't
+ * hold company-only keys, so they are cleared, with whatever needs them;
+ * `removed` names what was cleared, in the catalog's order.
+ */
+export const selectionForKind = (
+	selected: ReadonlyArray<PermissionKey>,
+	kind: AccessRoleKind
+): { selected: Array<PermissionKey>; removed: Array<PermissionKey> } => {
+	if (kind !== "LOCAL") return { selected: [...selected], removed: [] };
+	const kept = withKeys(
+		selected,
+		companyOnlyKeys(selected).flatMap(dependingOn),
+		false
+	);
+	return {
+		selected: kept,
+		removed: PERMISSION_KEYS.filter(
+			(key) => selected.includes(key) && !kept.includes(key)
+		),
+	};
 };
 
 /**

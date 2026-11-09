@@ -88,6 +88,12 @@ export const SystemRoles = (): FunctionComponent => {
 		(): Array<DataTableColumn<AccessRole>> => [
 			nameColumn<AccessRole>(t("organisation.accessRoles.name")),
 			{
+				id: "kind",
+				header: t("organisation.accessRoles.type"),
+				cell: (role) => t(`organisation.accessRoles.types.${role.kind}`),
+				headerClassName: "w-30",
+			},
+			{
 				id: "permissions",
 				header: t("organisation.accessRoles.permissions"),
 				cell: (role) =>
