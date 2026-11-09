@@ -822,7 +822,9 @@
 		"sortAscending": "A – Z",
 		"sortDescending": "Z – A",
 		"details": "Detalles",
-		"showDetails": "Ver detalles de {{name}}"
+		"showDetails": "Ver detalles de {{name}}",
+		"sortColumn": "{{column}}: {{direction}}",
+		"sortRows": "Ordenar filas"
 	},
 	"stepper": {
 		"step": "Paso {{number}}: {{label}}",

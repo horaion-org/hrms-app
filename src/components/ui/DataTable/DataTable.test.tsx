@@ -950,5 +950,32 @@ describe("DataTable", () => {
 				within(namingCellOf("Main Branch")).queryByText(/^In /)
 			).not.toBeInTheDocument();
 		});
+
+		it("sorts by a hidden column from the naming header's menu, shown only while it hides", async () => {
+			const user = userEvent.setup();
+			renderPlaces();
+
+			const menuButton = screen.getByRole("button", { name: "Sort rows" });
+			expect(menuButton.closest("span.md\\:hidden")).toHaveClass("inline-flex");
+			expect(
+				screen.getByRole("button", { name: "Sort by Branch Name" })
+					.parentElement
+			).toHaveClass("hidden", "md:inline-flex");
+			await user.click(menuButton);
+			expect(
+				screen.getAllByRole("menuitem").map((item) => item.textContent)
+			).toEqual([
+				"Branch Name: A – Z",
+				"Branch Name: Z – A",
+				"Code: A – Z",
+				"Code: Z – A",
+			]);
+			await user.click(screen.getByRole("menuitem", { name: "Code: Z – A" }));
+
+			const firstRow = screen.getAllByRole("row")[1]!;
+			expect(within(firstRow).getAllByRole("cell")[0]).toHaveTextContent(
+				/^Main Branch/
+			);
+		});
 	});
 });

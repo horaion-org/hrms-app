@@ -105,6 +105,19 @@ const shownBelowClasses: Record<ColumnBreakpoint, string> = {
 	lg: "lg:hidden",
 };
 
+/** Shown from `from` up to (not including) `below`; `from` left out means from the smallest screen. */
+const shownBetweenClasses: Record<string, string> = {
+	"-sm": "inline-flex sm:hidden",
+	"-md": "inline-flex md:hidden",
+	"-lg": "inline-flex lg:hidden",
+	"sm-md": "hidden sm:inline-flex md:hidden",
+	"sm-lg": "hidden sm:inline-flex lg:hidden",
+	"md-lg": "hidden md:inline-flex lg:hidden",
+	"sm-": "hidden sm:inline-flex",
+	"md-": "hidden md:inline-flex",
+	"lg-": "hidden lg:inline-flex",
+};
+
 const BREAKPOINT_ORDER: Array<ColumnBreakpoint> = ["sm", "md", "lg"];
 
 const widerOf = (
@@ -126,7 +139,7 @@ const hides = <TData extends object>(
 
 /**
  * The column that names each row: the start-pinned one, else the first that
- * is never hidden. It carries the summary line.
+ * is never hidden. It carries the summary line and the hidden columns' sort.
  */
 const namingColumnOf = <TData extends object>(
 	columns: Array<DataTableColumn<TData>>
@@ -233,20 +246,25 @@ const SortDirectionIcon = ({
 const sortMenuItemClasses =
 	"flex h-11 w-full cursor-pointer items-center justify-between gap-3 bg-white px-4 text-left text-sm font-normal text-neutral-900 outline-none data-focus:bg-neutral-100";
 
+/** One choice in a sort menu: a column and a direction. */
+type SortOption = {
+	columnId: string;
+	desc: boolean;
+	label: string;
+	applied: boolean;
+};
+
 const SortMenu = ({
 	label,
-	direction,
+	options,
 	onSort,
 }: {
 	label: string;
-	direction: false | "asc" | "desc";
-	onSort: (desc: boolean) => void;
+	options: Array<SortOption>;
+	onSort: (option: SortOption) => void;
 }): FunctionComponent => {
-	const { t } = useTranslation();
-	const options = [
-		{ desc: false, label: t("dataTable.sortAscending") },
-		{ desc: true, label: t("dataTable.sortDescending") },
-	];
+	const applied = options.find((option) => option.applied);
+	const direction = applied ? (applied.desc ? "desc" : "asc") : false;
 	return (
 		<Menu as="div" className="-my-2 -mr-2 inline-flex">
 			<MenuButton aria-label={label} as={Button} variant="icon">
@@ -256,28 +274,27 @@ const SortMenu = ({
 				anchor="bottom end"
 				className="z-10 w-max min-w-40 divide-y divide-neutral-400 overflow-hidden rounded-lg border border-neutral-400 bg-white shadow-md outline-none [--anchor-gap:4px]"
 			>
-				{options.map((option) => {
-					const applied = direction === (option.desc ? "desc" : "asc");
-					return (
-						// Headless UI fixes the role to `menuitem`, so the applied
-						// direction is `aria-current` rather than `aria-checked`.
-						<MenuItem
-							key={option.label}
-							aria-current={applied ? "true" : undefined}
-							as="button"
-							className={sortMenuItemClasses}
-							type="button"
-							onClick={() => {
-								onSort(option.desc);
-							}}
-						>
-							<span>{option.label}</span>
-							<span className="size-5 shrink-0">
-								{applied && <TickIcon className="size-5 text-ink-blue-900" />}
-							</span>
-						</MenuItem>
-					);
-				})}
+				{options.map((option) => (
+					// Headless UI fixes the role to `menuitem`, so the applied
+					// choice is `aria-current` rather than `aria-checked`.
+					<MenuItem
+						key={option.label}
+						aria-current={option.applied ? "true" : undefined}
+						as="button"
+						className={sortMenuItemClasses}
+						type="button"
+						onClick={() => {
+							onSort(option);
+						}}
+					>
+						<span>{option.label}</span>
+						<span className="size-5 shrink-0">
+							{option.applied && (
+								<TickIcon className="size-5 text-ink-blue-900" />
+							)}
+						</span>
+					</MenuItem>
+				))}
 			</MenuItems>
 		</Menu>
 	);
@@ -332,6 +349,57 @@ const SummaryLine = <TData extends object>({
 		</div>
 	);
 };
+
+/** The sort menu shown while some sortable columns are hidden: where it shows and what it offers. */
+type HiddenSortBand<TData extends object> = {
+	shownClasses: string;
+	columns: Array<DataTableColumn<TData>>;
+};
+
+/**
+ * One band per breakpoint below which a sortable column hides: in each, the
+ * naming column's menu offers itself and every sortable column hidden there,
+ * so no menu ever holds a choice for a column on screen. `regularFrom` is
+ * where the naming column's own control takes over.
+ */
+const hiddenSortBandsOf = <TData extends object>(
+	columns: Array<DataTableColumn<TData>>,
+	naming: DataTableColumn<TData>
+): { bands: Array<HiddenSortBand<TData>>; regularFrom?: string } => {
+	const hidden = columns.filter(
+		(column): column is HidingColumn<TData> =>
+			hides(column) && column.sortValue !== undefined && column !== naming
+	);
+	const breakpoints = BREAKPOINT_ORDER.filter((breakpoint) =>
+		hidden.some((column) => column.hideBelow === breakpoint)
+	);
+	const own = naming.sortValue === undefined ? [] : [naming];
+	const bands = breakpoints.map((below, index) => ({
+		shownClasses:
+			shownBetweenClasses[`${breakpoints[index - 1] ?? ""}-${below}`] ?? "",
+		columns: [
+			...own,
+			...hidden.filter(
+				(column) => widerOf(column.hideBelow, below) === column.hideBelow
+			),
+		],
+	}));
+	const widest = breakpoints[breakpoints.length - 1];
+	return {
+		bands,
+		regularFrom: widest ? shownBetweenClasses[`${widest}-`] : undefined,
+	};
+};
+
+/** Shows a control only from a breakpoint; bare where it shows everywhere, so its layout stays as it was. */
+const ShownFrom = ({
+	classes,
+	children,
+}: {
+	classes: string | undefined;
+	children: ReactNode;
+}): FunctionComponent =>
+	classes ? <span className={classes}>{children}</span> : <>{children}</>;
 
 // TanStack may set every row open at once as `true`; keep the per-row record.
 const expandedRecordOf = (
@@ -420,6 +488,9 @@ export const DataTable = <TData extends object>({
 		(column): column is HidingColumn<TData> =>
 			hides(column) && !column.omitFromSummary && column !== naming
 	);
+	const hiddenSort = naming
+		? hiddenSortBandsOf(columns, naming)
+		: { bands: [], regularFrom: undefined };
 	const columnDefs = useMemo(
 		(): Array<ColumnDef<typeof features, TData>> =>
 			columns.map((column) => ({
@@ -481,6 +552,31 @@ export const DataTable = <TData extends object>({
 			expansion?.onChange?.(Object.keys(next).filter((rowId) => next[rowId]));
 		},
 	});
+
+	/** A column's two sort choices, named by the column too in a menu that holds others. */
+	const sortOptionsOf = (
+		column: DataTableColumn<TData> | undefined,
+		named = false
+	): Array<SortOption> => {
+		if (!column) return [];
+		const sorted = table.getColumn(column.id)?.getIsSorted();
+		return [false, true].map((desc) => {
+			const direction = t(
+				desc ? "dataTable.sortDescending" : "dataTable.sortAscending"
+			);
+			return {
+				columnId: column.id,
+				desc,
+				applied: sorted === (desc ? "desc" : "asc"),
+				label: named
+					? t("dataTable.sortColumn", { column: column.header, direction })
+					: direction,
+			};
+		});
+	};
+	const sortBy = (option: SortOption): void => {
+		table.getColumn(option.columnId)?.toggleSorting(option.desc);
+	};
 
 	const rows = table.getRowModel().rows;
 	const headers = table.getHeaderGroups()[0]?.headers ?? [];
@@ -564,28 +660,48 @@ export const DataTable = <TData extends object>({
 								>
 									<div className="flex items-center justify-between gap-2">
 										<span className="min-w-0 truncate">{column?.header}</span>
-										{sortable && sortControl === "menu" && (
-											<SortMenu
-												direction={direction}
-												label={t("dataTable.sortBy", {
-													column: column?.header,
-												})}
-												onSort={(desc) => {
-													header.column.toggleSorting(desc);
-												}}
-											/>
-										)}
-										{sortable && sortControl === "toggle" && (
-											<Button
-												className="-my-2 -mr-2"
-												variant="icon"
-												aria-label={t("dataTable.sortBy", {
-													column: column?.header,
-												})}
-												onClick={header.column.getToggleSortingHandler()}
+										{column === naming &&
+											hiddenSort.bands.map((band) => (
+												<span
+													key={band.shownClasses}
+													className={band.shownClasses}
+												>
+													<SortMenu
+														label={t("dataTable.sortRows")}
+														options={band.columns.flatMap((shown) =>
+															sortOptionsOf(shown, true)
+														)}
+														onSort={sortBy}
+													/>
+												</span>
+											))}
+										{sortable && (
+											<ShownFrom
+												classes={
+													column === naming ? hiddenSort.regularFrom : undefined
+												}
 											>
-												<SortDirectionIcon direction={direction} />
-											</Button>
+												{sortControl === "menu" ? (
+													<SortMenu
+														options={sortOptionsOf(column)}
+														label={t("dataTable.sortBy", {
+															column: column?.header,
+														})}
+														onSort={sortBy}
+													/>
+												) : (
+													<Button
+														className="-my-2 -mr-2"
+														variant="icon"
+														aria-label={t("dataTable.sortBy", {
+															column: column?.header,
+														})}
+														onClick={header.column.getToggleSortingHandler()}
+													>
+														<SortDirectionIcon direction={direction} />
+													</Button>
+												)}
+											</ShownFrom>
 										)}
 									</div>
 								</th>
