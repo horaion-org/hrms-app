@@ -16,6 +16,12 @@ import {
 } from "@/features/organisation/CreateSystemRoleDialog/schema";
 import { PermissionChecklist } from "@/features/organisation/PermissionChecklist";
 import {
+	ROLE_TEMPLATE_LIST,
+	type RoleTemplateKey,
+	startFrom,
+	templatePlaces,
+} from "@/features/organisation/roleTemplates";
+import {
 	permissionList,
 	selectionForKind,
 } from "@/features/organisation/PermissionChecklist/groups";
@@ -42,8 +48,13 @@ export type CreateSystemRoleDialogProps = {
 const FIELDS = ["kind", "name", "permissions"] as const;
 const EMPTY: CreateSystemRoleInput = { kind: "", name: "", permissions: [] };
 
+const SCRATCH = "scratch";
+
 /**
- * A new role's type, name and permissions. The type comes first and has no
+ * A new role's starting point, type, name and permissions. A fresh role can
+ * start from a template, which fills in its type, a name and the template's
+ * permissions the person can give, naming how many were left out; the
+ * result is an ordinary role, never linked to the template. The type has no
  * default: until it is chosen the permissions can't be changed, and it
  * decides which ones are offered. Switching to a local role clears the
  * company-only permissions and says which. Mount when opened and unmount
@@ -72,6 +83,7 @@ export const CreateSystemRoleDialog = ({
 		handleSubmit,
 		getValues,
 		setValue,
+		reset,
 		formState: { errors, isSubmitting },
 	} = form;
 	const [kind, name, permissions] = useWatch({
@@ -80,6 +92,14 @@ export const CreateSystemRoleDialog = ({
 	});
 	// What the last switch to a local role cleared, named until the type changes again.
 	const [cleared, setCleared] = useState<Array<PermissionKey>>([]);
+	// The template the role started from, and how many of its keys the person couldn't give.
+	const [template, setTemplate] = useState<RoleTemplateKey | typeof SCRATCH>(
+		SCRATCH
+	);
+	const [leftOut, setLeftOut] = useState(0);
+	const offersTemplates = initial === EMPTY;
+	const templatesKey = "organisation.accessRoles.templates";
+	const language = i18n.resolvedLanguage ?? i18n.language;
 	const unavailable = PERMISSION_KEYS.filter(
 		(permission) => !heldPermissions.has(permission)
 	);
@@ -95,6 +115,24 @@ export const CreateSystemRoleDialog = ({
 					: `${key}.permissionsHeld`
 			)
 		: t(`${kindKey}.choose`);
+	const chooseTemplate = (next: string): void => {
+		const chosen = ROLE_TEMPLATE_LIST.find((each) => each.key === next);
+		setCleared([]);
+		if (!chosen) {
+			setTemplate(SCRATCH);
+			setLeftOut(0);
+			reset(EMPTY);
+			return;
+		}
+		const start = startFrom(chosen, unavailable);
+		setTemplate(chosen.key);
+		setLeftOut(start.leftOut.length);
+		setValue("kind", start.kind, { shouldDirty: true });
+		setValue("permissions", start.permissions, { shouldDirty: true });
+		setValue("name", t(`${templatesKey}.${chosen.key}.name`), {
+			shouldDirty: true,
+		});
+	};
 	const create = useCreateAccessRole(companyId);
 	const submit = useCreateFormSubmit(form, FIELDS, onClose);
 	return (
@@ -124,6 +162,67 @@ export const CreateSystemRoleDialog = ({
 				)(event)
 			}
 		>
+			{offersTemplates && (
+				<fieldset>
+					<legend
+						className="text-sm text-neutral-800"
+						id={`${formId}-template-label`}
+					>
+						{t(`${templatesKey}.label`)}
+					</legend>
+					<p className="mt-1 text-sm text-neutral-700">
+						{t(`${templatesKey}.copyNote`)}
+					</p>
+					<div
+						aria-labelledby={`${formId}-template-label`}
+						className="mt-3 grid gap-3 sm:grid-cols-2"
+						role="radiogroup"
+					>
+						{ROLE_TEMPLATE_LIST.map((each) => {
+							const start = startFrom(each, unavailable);
+							return (
+								<RadioCard
+									key={each.key}
+									checked={template === each.key}
+									disabled={isSubmitting}
+									label={t(`${templatesKey}.${each.key}.name`)}
+									name={`${formId}-template`}
+									value={each.key}
+									description={[
+										t(`${templatesKey}.${each.key}.description`),
+										t(`${templatesKey}.where`, {
+											places: templatePlaces(each, t, language),
+										}),
+										start.leftOut.length > 0 &&
+											t(`${templatesKey}.shortfall`, {
+												count: start.leftOut.length,
+											}),
+									]
+										.filter(Boolean)
+										.join(" ")}
+									onChange={chooseTemplate}
+								/>
+							);
+						})}
+						<RadioCard
+							checked={template === SCRATCH}
+							description={t(`${templatesKey}.scratch.description`)}
+							disabled={isSubmitting}
+							label={t(`${templatesKey}.scratch.name`)}
+							name={`${formId}-template`}
+							value={SCRATCH}
+							onChange={chooseTemplate}
+						/>
+					</div>
+					<div aria-live="polite">
+						{leftOut > 0 && (
+							<p className="mt-2 text-sm text-neutral-700">
+								{t(`${templatesKey}.leftOut`, { count: leftOut })}
+							</p>
+						)}
+					</div>
+				</fieldset>
+			)}
 			<div>
 				<FormRow
 					required

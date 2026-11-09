@@ -1996,6 +1996,48 @@
 			"whereLabels": {
 				"COMPANY": "Whole company",
 				"LOCAL": "Branches or departments"
+			},
+			"templates": {
+				"administrator": {
+					"name": "Administrator",
+					"description": "Manages everything in the company except deleting access roles."
+				},
+				"hr_manager": {
+					"name": "HR manager",
+					"description": "Manages people’s profiles, notes, availability, employment terms and leave where given."
+				},
+				"roster_planner": {
+					"name": "Roster planner",
+					"description": "Builds, changes and publishes rosters; sees people, availability and leave."
+				},
+				"department_manager": {
+					"name": "Department manager",
+					"description": "Runs a department: its rosters, leave decisions and availability."
+				},
+				"leave_approver": {
+					"name": "Leave approver",
+					"description": "Approves or rejects leave for the people where given."
+				},
+				"viewer": {
+					"name": "Viewer",
+					"description": "Sees what happens where given, except HR notes and leave reasons, and changes nothing."
+				},
+				"scratch": {
+					"name": "Start from scratch",
+					"description": "Choose every permission yourself."
+				},
+				"label": "Start from",
+				"copyNote": "A copy: later changes to the template don’t change it.",
+				"where": "Can be given at {{places}}.",
+				"shortfall_one": "Includes {{count}} permission you can’t give.",
+				"shortfall_other": "Includes {{count}} permissions you can’t give.",
+				"leftOut_one": "{{count}} permission of this template wasn’t added because you can’t give it.",
+				"leftOut_other": "{{count}} permissions of this template weren’t added because you can’t give them.",
+				"places": {
+					"COMPANY": "the whole company",
+					"BRANCH": "a branch",
+					"DEPARTMENT": "a department"
+				}
 			}
 		},
 		"permissions": {

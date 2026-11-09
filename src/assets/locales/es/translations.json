@@ -1846,6 +1846,48 @@
 			"whereLabels": {
 				"COMPANY": "Toda la empresa",
 				"LOCAL": "Sucursales o departamentos"
+			},
+			"templates": {
+				"administrator": {
+					"name": "Administrador",
+					"description": "Gestiona todo en la empresa excepto eliminar roles de acceso."
+				},
+				"hr_manager": {
+					"name": "Responsable de RR. HH.",
+					"description": "Gestiona perfiles, notas, disponibilidad, condiciones de empleo y permisos de las personas donde se le asigne."
+				},
+				"roster_planner": {
+					"name": "Planificador de cuadrantes",
+					"description": "Crea, cambia y publica cuadrantes; ve personas, disponibilidad y permisos."
+				},
+				"department_manager": {
+					"name": "Responsable de departamento",
+					"description": "Dirige un departamento: sus cuadrantes, las decisiones de permisos y la disponibilidad."
+				},
+				"leave_approver": {
+					"name": "Aprobador de permisos",
+					"description": "Aprueba o rechaza permisos de las personas donde se le asigne."
+				},
+				"viewer": {
+					"name": "Solo lectura",
+					"description": "Ve lo que ocurre donde se le asigne, salvo las notas de RR. HH. y los motivos de permiso, y no cambia nada."
+				},
+				"scratch": {
+					"name": "Empezar desde cero",
+					"description": "Elige tú cada permiso."
+				},
+				"label": "Empezar desde",
+				"copyNote": "Es una copia: los cambios posteriores en la plantilla no la modifican.",
+				"where": "Se puede dar en {{places}}.",
+				"shortfall_one": "Incluye {{count}} permiso que no puedes dar.",
+				"shortfall_other": "Incluye {{count}} permisos que no puedes dar.",
+				"leftOut_one": "No se añadió {{count}} permiso de esta plantilla porque no puedes darlo.",
+				"leftOut_other": "No se añadieron {{count}} permisos de esta plantilla porque no puedes darlos.",
+				"places": {
+					"COMPANY": "toda la empresa",
+					"BRANCH": "una sucursal",
+					"DEPARTMENT": "un departamento"
+				}
 			}
 		},
 		"list": {

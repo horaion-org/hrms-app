@@ -269,6 +269,10 @@ describe("Access role list actions", () => {
 		expect(within(dialog).getByLabelText("Role name")).toHaveValue(
 			"Manager copy"
 		);
+		// A copy starts from the role, so no template is offered.
+		expect(
+			within(dialog).queryByRole("radiogroup", { name: "Start from" })
+		).not.toBeInTheDocument();
 		const box = (group: string, name: string): HTMLElement =>
 			within(within(dialog).getByRole("group", { name: group })).getByRole(
 				"checkbox",

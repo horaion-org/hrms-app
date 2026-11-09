@@ -211,6 +211,107 @@ describe("create access role through the Access roles page", () => {
 		});
 	});
 
+	it("starts a role from a template: its type, a name and its permissions, as an ordinary role", async () => {
+		const calls = stubApi({
+			...routes(owner),
+			[ACCESS_ROLES]: [page([]), page([role])],
+		});
+		await open();
+		const dialog = await openDialog();
+		const templates = within(dialog).getByRole("radiogroup", {
+			name: "Start from",
+		});
+		expect(
+			within(templates)
+				.getAllByRole("radio")
+				.map((card) => card.getAttribute("value"))
+		).toEqual([
+			"administrator",
+			"hr_manager",
+			"roster_planner",
+			"department_manager",
+			"leave_approver",
+			"viewer",
+			"scratch",
+		]);
+		const approver = within(templates).getByRole("radio", {
+			name: "Leave approver",
+		});
+		expect(approver).toHaveAccessibleDescription(
+			"Approves or rejects leave for the people where given. Can be given at the whole company, a branch, or a department."
+		);
+
+		await userEvent.click(approver);
+
+		expect(
+			within(dialog).getByRole("radio", {
+				name: "In the branches or departments you choose",
+			})
+		).toBeChecked();
+		expect(within(dialog).getByLabelText("Role name")).toHaveValue(
+			"Leave approver"
+		);
+		expect(box(dialog, "Leave", "Approve or reject leave")).toBeChecked();
+		await submit(dialog);
+		await waitFor(() => {
+			expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+		});
+		expect(
+			calls.find(
+				(call) => call.method === "POST" && call.path.endsWith("/access-roles")
+			)?.body
+		).toEqual({
+			kind: "LOCAL",
+			name: "Leave approver",
+			permissions: [
+				"member_profile:read",
+				"leave_request:read",
+				"leave_request:review",
+			],
+		});
+	});
+
+	it("leaves out a template's permissions the creator can't give, says so, and goes back to scratch", async () => {
+		stubApi(
+			routes(["access_role:read", "access_role:create", "member_profile:read"])
+		);
+		await open();
+		const dialog = await openDialog();
+		const templates = within(dialog).getByRole("radiogroup", {
+			name: "Start from",
+		});
+		const approver = within(templates).getByRole("radio", {
+			name: "Leave approver",
+		});
+		expect(approver).toHaveAccessibleDescription(
+			/Includes 2 permissions you can’t give\.$/
+		);
+
+		await userEvent.click(approver);
+
+		expect(
+			within(dialog).getByText(
+				"2 permissions of this template weren’t added because you can’t give them."
+			)
+		).toBeVisible();
+		expect(
+			box(dialog, "People", "See people and their profiles")
+		).toBeChecked();
+		expect(box(dialog, "Leave", "Approve or reject leave")).not.toBeChecked();
+
+		await userEvent.click(
+			within(templates).getByRole("radio", { name: "Start from scratch" })
+		);
+
+		expect(within(dialog).getByLabelText("Role name")).toHaveValue("");
+		expect(
+			box(dialog, "People", "See people and their profiles")
+		).not.toBeChecked();
+		expect(
+			within(dialog).queryByText(/weren’t added because/)
+		).not.toBeInTheDocument();
+	});
+
 	it("creates a trimmed role with its type and permissions in catalogue order and refetches the list", async () => {
 		const calls = stubApi({
 			...routes(owner),
