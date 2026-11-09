@@ -1,18 +1,21 @@
 import { useQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
+import dayjs from "dayjs";
 import type { TFunction } from "i18next";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { DateRange } from "@/components/forms/Calendar";
+import { dayParameter, shownDayOf } from "@/common/dayView";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
+import { DaySwitcher } from "@/components/ui/DaySwitcher";
 import { PlusIcon } from "@/components/ui/Icon";
 import { FilterChips } from "@/components/ui/FilterChips";
 import { FiltersPopover } from "@/components/ui/FiltersPopover";
 import { PageToolbar } from "@/components/ui/PageToolbar";
 import { Tabs, TabList, Tab, TabPanels, TabPanel } from "@/components/ui/Tabs";
 import { activeLeaveTypesQuery } from "@/features/leave/api";
-import { defaultRange } from "@/features/leave/dates";
+import { defaultRange, rangeDays } from "@/features/leave/dates";
 import { LeaveRangeNavigator } from "@/features/leave/LeaveRangeNavigator";
 import { LeaveRequestDialog } from "@/features/leave/LeaveRequestDialog";
 import { LinkedLeaveRequest } from "@/features/leave/LinkedLeaveRequest";
@@ -126,6 +129,10 @@ export const Leave = (): FunctionComponent => {
 		workspace.data !== undefined && units.branches.length === 0;
 	const pendingCount = usePendingLeaveCount(companyId);
 	const [range, setRange] = useState<DateRange>(defaultRange);
+	// A phone shows the timeline one day at a time; the timeline closes up the others' columns.
+	const today = dayjs().format("YYYY-MM-DD");
+	const timelineDays = rangeDays(range);
+	const shownDay = shownDayOf(timelineDays, search.day, today);
 	const mine = useMyLeaveRequests(
 		companyId,
 		myLeaveQueryOf(search),
@@ -208,7 +215,8 @@ export const Leave = (): FunctionComponent => {
 		actions.apply.isPending ||
 		actions.applyOwn.isPending ||
 		actions.record.isPending;
-	const current = view === "mine" ? mine : view === "requests" ? list : timeline;
+	const current =
+		view === "mine" ? mine : view === "requests" ? list : timeline;
 	const listProblem = problemOf(current, t, view === "mine");
 	// The timeline has no status filter; My leave has no Department. The Branch is the header's scope.
 	const showsStatus = view !== "timeline";
@@ -358,7 +366,15 @@ export const Leave = (): FunctionComponent => {
 								</FiltersPopover>
 							)}
 							{view === "timeline" && (
-								<LeaveRangeNavigator range={range} onRangeChange={setRange} />
+								<LeaveRangeNavigator
+									range={range}
+									onRangeChange={(next) => {
+										setRange(next);
+										void navigate({
+											search: (previous) => ({ ...previous, day: undefined }),
+										});
+									}}
+								/>
 							)}
 						</>
 					}
@@ -411,9 +427,25 @@ export const Leave = (): FunctionComponent => {
 						)}
 						{canRead && (
 							<TabPanel>
+								{shownDay && (
+									<DaySwitcher
+										className="mb-6"
+										day={shownDay}
+										days={timelineDays}
+										onDayChange={(day) => {
+											void navigate({
+												search: (previous) => ({
+													...previous,
+													day: dayParameter(timelineDays, day, today),
+												}),
+											});
+										}}
+									/>
+								)}
 								<LeaveTimeline
 									range={range}
 									requests={timeline.status === "ready" ? timeline.items : []}
+									shownDay={shownDay}
 									onOpen={(request) => {
 										setDialog({ request, mode: "view" });
 									}}
