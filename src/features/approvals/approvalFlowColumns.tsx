@@ -14,7 +14,7 @@ export const appliesToLabel = (
 	t: TFunction
 ): string =>
 	flow.departmentId === null
-		? t(`${key}.wholeCompany`)
+		? t(`${key}.companyDefault`)
 		: (departmentName(flow.departmentId) ?? t(`${key}.unknownDepartment`));
 
 /** The steps in order as one line: "1 Endorse (all of 2) → 2 Publish". */

@@ -345,7 +345,7 @@
 		},
 		"flows": {
 			"title": "Approvals",
-			"subtitle": "Who approves a roster before it is published. Departments without a flow publish in one step, by anyone who can publish their roster.",
+			"subtitle": "Who approves rosters and leave requests, step by step. Where nothing is set up, one person decides, as before.",
 			"add": "Add flow",
 			"appliesTo": "Applies to",
 			"steps": "Steps",
@@ -353,6 +353,8 @@
 			"on": "On",
 			"off": "Off",
 			"companyDefault": "Company default",
+			"usesCompanyDefault": "Other departments, and any whose flow is off, use the company default.",
+			"everyDepartmentUsesDefault": "Every department uses the company default.",
 			"unknownDepartment": "A department you can’t see",
 			"allOf": "all of {{count}}",
 			"loading": "Loading approval flows…",
@@ -416,6 +418,10 @@
 			},
 			"subjects": {
 				"roster": {
+					"title": "Roster publishing",
+					"description": "Before a roster is published.",
+					"none": "No approval flow. Rosters publish in one step, by anyone who can publish them.",
+					"oneStep": "Other departments, and any whose flow is off: one step, by anyone who can publish their roster.",
 					"dialogTitle": "Add roster approval flow",
 					"dialogEditTitle": "Edit roster approval flow",
 					"dialogDescription": "Who approves a roster before it is published, step by step.",
@@ -424,9 +430,16 @@
 					"anyone": "Anyone who can publish the {{department}} roster",
 					"anyoneCompany": "Anyone who can publish the roster",
 					"peopleHint": "Only people who can publish this roster are asked.",
-					"info": "Only people who can publish this roster can approve it. The person who submits a roster never approves it."
+					"info": "Only people who can publish this roster can approve it. The person who submits a roster never approves it.",
+					"turnOffDescription": "Rosters already waiting keep this flow. Rosters submitted from now on don’t go through it.",
+					"turnOnDescription": "Rosters submitted from now on go through its steps.",
+					"deleteDescription": "Rosters already waiting keep this flow. Deleting it can’t be undone."
 				},
 				"leave": {
+					"title": "Leave requests",
+					"description": "Before leave is approved.",
+					"none": "No approval flow. Leave is approved or rejected in one step, by anyone who can review it.",
+					"oneStep": "Other departments, and any whose flow is off: one step, by anyone who can review their leave.",
 					"dialogTitle": "Add leave approval flow",
 					"dialogEditTitle": "Edit leave approval flow",
 					"dialogDescription": "Who approves a leave request, step by step.",
@@ -435,15 +448,12 @@
 					"anyone": "Anyone who can review {{department}}’s leave",
 					"anyoneCompany": "Anyone who can review the leave",
 					"peopleHint": "Only people who can review this leave are asked.",
-					"info": "Approvers need “Review leave” and “Decide approvals” for the person’s department; without anyone who has both, nobody there can apply for leave. People never approve their own leave. Requests already waiting keep the steps they started with."
+					"info": "Approvers need “Review leave” and “Decide approvals” for the person’s department; without anyone who has both, nobody there can apply for leave. People never approve their own leave. Requests already waiting keep the steps they started with.",
+					"turnOffDescription": "Requests already waiting keep this flow. Leave applied for from now on doesn’t go through it.",
+					"turnOnDescription": "Leave applied for from now on goes through its steps.",
+					"deleteDescription": "Requests already waiting keep this flow. Deleting it can’t be undone."
 				}
-			},
-			"wholeCompany": "Whole company",
-			"schedulePublishing": "Schedule publishing",
-			"turnOffDescription": "Rosters already waiting keep this flow. Rosters submitted from now on publish without it.",
-			"turnOnDescription": "Rosters submitted from now on go through its steps.",
-			"empty": "No approval flows. Rosters publish in one step, by anyone who can publish.",
-			"deleteDescription": "Rosters already waiting keep this flow. Deleting it can’t be undone."
+			}
 		},
 		"announce": {
 			"submitted": "Sent for approval. {{label}} (step 1 of {{total}}) is asked first.",
@@ -1510,7 +1520,7 @@
 		},
 		"approvals": {
 			"title": "Approvals",
-			"description": "Who approves rosters before they are published."
+			"description": "Who approves rosters and leave requests."
 		},
 		"data": {
 			"title": "Data",
