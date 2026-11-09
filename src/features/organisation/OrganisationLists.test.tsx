@@ -787,7 +787,7 @@ describe("Departments", () => {
 	);
 });
 
-describe("System roles", () => {
+describe("Access roles", () => {
 	it("lists access roles with their type, permission reach, people and status", async () => {
 		const user = userEvent.setup();
 		const calls = stubApi({
@@ -828,9 +828,9 @@ describe("System roles", () => {
 		await open("/organisation/system-roles");
 
 		expect(
-			await screen.findByRole("heading", { level: 1, name: "System roles" })
+			await screen.findByRole("heading", { level: 1, name: "Access roles" })
 		).toBeVisible();
-		const table = await screen.findByRole("table", { name: "System roles" });
+		const table = await screen.findByRole("table", { name: "Access roles" });
 		await within(table).findByText("Manager");
 		expect(
 			within(table)
@@ -838,9 +838,9 @@ describe("System roles", () => {
 				.map((header) => header.textContent)
 		).toEqual([
 			"Select all",
-			"System role",
-			"Type",
-			"Key permissions",
+			"Access role",
+			"Where",
+			"What it allows",
 			"People",
 			"Status",
 			"Actions",
@@ -853,9 +853,10 @@ describe("System roles", () => {
 					.map((cell) => cell.textContent)
 			)
 		).toEqual([
-			["Company Owner", "Company", "Full system access", "1 person"],
-			["Manager", "Local", "3 permissions", "3 people"],
-			["Staff", "Local", "1 permission", "0 people"],
+			["Company Owner", "Whole company", "Full system access", "1 person"],
+			// Keys this app doesn't know (leave:approve, leave:create) aren't summarised.
+			["Manager", "Branches or departments", "Organisation: View", "3 people"],
+			["Staff", "Branches or departments", "No permissions yet.", "0 people"],
 		]);
 		expect(
 			screen.getByRole("button", { name: "Edit Company Owner" })
@@ -867,11 +868,11 @@ describe("System roles", () => {
 			screen.queryByRole("list", { name: "Active filters" })
 		).not.toBeInTheDocument();
 		expect(
-			screen.queryByRole("button", { name: "Create system role" })
+			screen.queryByRole("button", { name: "Create access role" })
 		).not.toBeInTheDocument();
 
 		await user.click(
-			screen.getByRole("button", { name: "Sort by System role" })
+			screen.getByRole("button", { name: "Sort by Access role" })
 		);
 
 		await waitFor(() => {
@@ -1266,7 +1267,7 @@ describe("Job titles", () => {
 describe("Organisation navigation", () => {
 	it.each([
 		{ path: "/organisation/branches", table: "Branches" },
-		{ path: "/organisation/system-roles", table: "System roles" },
+		{ path: "/organisation/system-roles", table: "Access roles" },
 	])(
 		"shows no Branch in the header on $table, which lists nothing by Branch",
 		async ({ path, table }) => {
@@ -1300,7 +1301,7 @@ describe("Organisation navigation", () => {
 		});
 
 		const hrefs = await Promise.all(
-			["Branches", "Departments", "Job titles", "System roles"].map(
+			["Branches", "Departments", "Job titles", "Access roles"].map(
 				async (name) =>
 					within(await screen.findByRole("region", { name }))
 						.getByRole("link", { name: "View All" })

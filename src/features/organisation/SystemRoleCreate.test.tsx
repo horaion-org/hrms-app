@@ -92,53 +92,61 @@ const box = (group: string, name: string): HTMLElement =>
 const create = (): HTMLElement =>
 	screen.getByRole("button", { name: "Create role" });
 const chooseType = async (
-	type: "Company role" | "Local role"
+	type: "Across the whole company" | "In the branches or departments you choose"
 ): Promise<void> => {
 	const user = userEvent.setup();
-	await user.click(await screen.findByRole("button", { name: "Role type" }));
-	await user.click(await screen.findByRole("option", { name: type }));
+	await user.click(
+		within(
+			await screen.findByRole("radiogroup", {
+				name: "Where can this role be used?",
+			})
+		).getByRole("radio", { name: type })
+	);
 };
 
 /** Makes the role local, names it, gives it Branches > Edit and submits it. */
 const fillIn = async (name: string): Promise<void> => {
 	const user = userEvent.setup();
-	await chooseType("Local role");
+	await chooseType("In the branches or departments you choose");
 	await user.type(
 		await screen.findByRole("textbox", { name: /Role name/ }),
 		name
 	);
-	await user.click(box("Branches", "Edit"));
+	await user.click(box("Branches", "Edit branches"));
 	await user.click(create());
 };
 
-describe("Create system role", () => {
+describe("Create access role", () => {
 	it("opens an empty creation dialog from the list", async () => {
 		const user = userEvent.setup();
 		stubApi(routes());
 		const opened = await open(LIST);
 
 		await user.click(
-			await screen.findByRole("button", { name: "Create system role" })
+			await screen.findByRole("button", { name: "Create access role" })
 		);
 
 		const dialog = await screen.findByRole("dialog", {
-			name: "Create system role",
+			name: "Create access role",
 		});
 		expect(dialog).toBeVisible();
 		expect(opened.router.state.location.pathname).toBe(LIST);
 		expect(
 			within(dialog).getByRole("textbox", { name: /Role name/ })
 		).toHaveValue("");
-		expect(
-			within(dialog).getByRole("button", { name: "Role type" })
-		).toHaveTextContent("Select a role type");
+		for (const choice of within(
+			within(dialog).getByRole("radiogroup", {
+				name: "Where can this role be used?",
+			})
+		).getAllByRole("radio"))
+			expect(choice).not.toBeChecked();
 		for (const item of within(dialog).getAllByRole("checkbox")) {
 			expect(item).not.toBeChecked();
 			expect(item).toBeDisabled();
 		}
 		expect(
 			within(dialog).getByText(
-				"Choose a role type to see the permissions it can hold."
+				"Choose where this role can be used to see the permissions it can hold."
 			)
 		).toBeVisible();
 		expect(screen.queryByText(/unavailable/)).not.toBeInTheDocument();
@@ -150,7 +158,7 @@ describe("Create system role", () => {
 
 		await screen.findByRole("button", { name: "Edit Manager" });
 		expect(
-			screen.queryByRole("button", { name: "Create system role" })
+			screen.queryByRole("button", { name: "Create access role" })
 		).not.toBeInTheDocument();
 	});
 
@@ -169,7 +177,7 @@ describe("Create system role", () => {
 		await fillIn("  Supervisor ");
 
 		expect(
-			await screen.findByRole("heading", { level: 1, name: "System roles" })
+			await screen.findByRole("heading", { level: 1, name: "Access roles" })
 		).toBeVisible();
 		expect(app?.router.state.location.pathname).toBe(LIST);
 		expect(
@@ -193,20 +201,20 @@ describe("Create system role", () => {
 
 		expect(
 			await screen.findByText(
-				"Choose a role type to see the permissions it can hold."
+				"Choose where this role can be used to see the permissions it can hold."
 			)
 		).toBeVisible();
-		expect(box("Branches", "Create")).toBeDisabled();
-		await chooseType("Company role");
+		expect(box("Branches", "Create branches")).toBeDisabled();
+		await chooseType("Across the whole company");
 		await user.type(
 			screen.getByRole("textbox", { name: /Role name/ }),
 			"Branch creator"
 		);
-		await user.click(box("Branches", "Create"));
+		await user.click(box("Branches", "Create branches"));
 		await user.click(create());
 
 		expect(
-			await screen.findByRole("heading", { level: 1, name: "System roles" })
+			await screen.findByRole("heading", { level: 1, name: "Access roles" })
 		).toBeVisible();
 		expect(
 			calls
@@ -252,10 +260,10 @@ describe("Create system role", () => {
 		await fillIn("Supervisor");
 
 		expect(await screen.findByRole("alert")).toHaveTextContent(
-			"This role includes permissions you don’t hold, or you can no longer change system roles."
+			"This role includes permissions you don’t hold, or you can no longer change access roles."
 		);
 		expect(screen.queryByText(/API says/)).not.toBeInTheDocument();
-		expect(box("Branches", "Edit")).toBeChecked();
+		expect(box("Branches", "Edit branches")).toBeChecked();
 		expect(app?.router.state.location.pathname).toBe(CREATOR);
 	});
 
@@ -266,28 +274,30 @@ describe("Create system role", () => {
 		);
 		await open(CREATOR);
 		await screen.findByRole("textbox", { name: /Role name/ });
-		await chooseType("Company role");
+		await chooseType("Across the whole company");
 
 		expect(
 			screen.getByText(
 				"You can only give a role permissions you hold yourself, so the others are unavailable."
 			)
 		).toBeVisible();
-		expect(box("Branches", "View")).toBeDisabled();
-		expect(box("Branches", "Create")).toBeDisabled();
-		// Edit is held, but it needs View, which isn't, so it can't be given either.
-		expect(box("Branches", "Edit")).toBeDisabled();
-		expect(box("Branches", "Edit")).toHaveAccessibleDescription(
-			"Needs View, which you can’t give"
+		expect(box("Branches", "See branches")).toBeDisabled();
+		expect(box("Branches", "Create branches")).toBeDisabled();
+		// Editing is held, but it needs the view, which isn't, so it can't be given either.
+		expect(box("Branches", "Edit branches")).toBeDisabled();
+		expect(box("Branches", "Edit branches")).toHaveAccessibleDescription(
+			"Rename a branch, change its code, city or country, and deactivate or reactivate it. Needs “See branches”, which you can’t give"
 		);
 		expect(box("Branches", "Branches")).toBeDisabled();
 		expect(box("Departments", "Departments")).toBeDisabled();
 
 		// The row's select-all for what is held adds it with what it needs.
-		await user.click(box("System roles", "System roles"));
-		expect(box("System roles", "View")).toBeChecked();
-		expect(box("System roles", "Create")).toBeChecked();
-		expect(box("System roles", "Edit")).not.toBeChecked();
+		await user.click(box("Access roles", "Access roles"));
+		expect(
+			box("Access roles", "See access roles and who holds them")
+		).toBeChecked();
+		expect(box("Access roles", "Create access roles")).toBeChecked();
+		expect(box("Access roles", "Edit access roles")).not.toBeChecked();
 	});
 
 	it("sends someone without permission to create roles to the Forbidden page", async () => {

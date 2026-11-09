@@ -225,7 +225,7 @@ test("create a job title and see it listed", async ({ page: tab, context }) => {
 	).toBeVisible();
 });
 
-test("create a system role from the permissions grid", async ({
+test("create an access role from the permissions grid", async ({
 	page: tab,
 	context,
 }) => {
@@ -257,27 +257,29 @@ test("create a system role from the permissions grid", async ({
 	await logIn(tab);
 	await tab.getByRole("link", { name: "Organisation", exact: true }).click();
 	await tab
-		.getByRole("region", { name: "System roles", exact: true })
+		.getByRole("region", { name: "Access roles", exact: true })
 		.getByRole("link", { name: "View all" })
 		.click();
 	await expect(tab).toHaveURL(/\/organisation\/system-roles$/);
 	await tab
-		.getByRole("button", { name: "Create system role", exact: true })
+		.getByRole("button", { name: "Create access role", exact: true })
 		.click();
-	const dialog = tab.getByRole("dialog", { name: "Create system role" });
-	// Activity is company-only, so only a company role may hold it.
-	await dialog.getByRole("button", { name: "Role type" }).click();
-	await tab.getByRole("option", { name: "Company role" }).click();
+	const dialog = tab.getByRole("dialog", { name: "Create access role" });
+	// The activity record is company-only, so only a whole-company role may hold it.
+	await dialog.getByRole("radio", { name: "Across the whole company" }).check();
 	await dialog.getByLabel("Role name", { exact: true }).fill("Auditor");
-	// Each resource is a named group whose permissions are labelled by action ("View", "Create", …).
-	for (const resource of ["Activity", "Branches"]) {
+	// Each resource is a named group whose permissions read as plain sentences.
+	for (const [resource, capability] of [
+		["Activity", "See the activity record"],
+		["Branches", "See branches"],
+	] as const) {
 		await dialog
 			.getByRole("group", { name: resource, exact: true })
-			.getByRole("checkbox", { name: "View", exact: true })
+			.getByRole("checkbox", { name: capability, exact: true })
 			.check();
 	}
 	await dialog
-		.getByRole("button", { name: "Create system role", exact: true })
+		.getByRole("button", { name: "Create access role", exact: true })
 		.click();
 	await expect(dialog).not.toBeVisible();
 	await expect(tab.getByRole("row", { name: /Auditor/ })).toBeVisible();

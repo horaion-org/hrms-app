@@ -145,7 +145,7 @@ it("shows the overview figures and recent activity for the current company", asy
 	).toBeVisible();
 	expect(within(card("Branches")).getByText("Active Branches")).toBeVisible();
 	expect(await within(card("Departments")).findByText("1,234")).toBeVisible();
-	expect(await within(card("System roles")).findByText("4")).toBeVisible();
+	expect(await within(card("Access roles")).findByText("4")).toBeVisible();
 	expect(await within(card("Job titles")).findByText("12")).toBeVisible();
 	expect(
 		within(card("Job titles")).getByText("Active job titles")
@@ -192,7 +192,7 @@ it("hides what the workspace does not grant and never asks for it", async () => 
 	expect(
 		await within(await findCard("Branches")).findByText("3")
 	).toBeVisible();
-	for (const name of ["Departments", "Job titles", "Skills", "System roles"])
+	for (const name of ["Departments", "Job titles", "Skills", "Access roles"])
 		expect(screen.queryByRole("region", { name })).not.toBeInTheDocument();
 	expect(
 		screen.queryByRole("region", { name: "Recent Activity" })
@@ -268,7 +268,7 @@ it("shows the unit counts to a person granted only at one branch", async () => {
 		await within(await findCard("Departments")).findByText("2")
 	).toBeVisible();
 	// Roles and the activity feed have no unit, so a branch grant doesn't reach them.
-	for (const name of ["System roles", "Recent Activity"])
+	for (const name of ["Access roles", "Recent Activity"])
 		expect(screen.queryByRole("region", { name })).not.toBeInTheDocument();
 	expect(
 		calls

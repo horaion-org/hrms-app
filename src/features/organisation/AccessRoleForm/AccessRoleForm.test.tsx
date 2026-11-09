@@ -39,18 +39,16 @@ const box = (group: string, name: string): HTMLElement =>
 const nameField = (): HTMLElement =>
 	screen.getByRole("textbox", { name: /Role name/ });
 const typeField = (): HTMLElement =>
-	screen.getByRole("button", { name: "Role type" });
+	screen.getByRole("radiogroup", { name: "Where can this role be used?" });
 const chooseType = async (
 	user: ReturnType<typeof userEvent.setup>,
-	type: "Company role" | "Local role"
+	type: "Across the whole company" | "In the branches or departments you choose"
 ): Promise<void> => {
-	await user.click(typeField());
-	await user.click(await screen.findByRole("option", { name: type }));
+	await user.click(within(typeField()).getByRole("radio", { name: type }));
 };
 const COMPANY_HINT =
-	"For actions that affect the whole company. It can only be given at the whole company.";
-const LOCAL_HINT =
-	"For work inside branches and departments. It can be given at the whole company, a branch or a department.";
+	"Can include company settings, branches and access roles. It can only be given at the whole company.";
+const LOCAL_HINT = "You pick the places when you give someone the role.";
 // A local role is offered every key that isn't company-only.
 const LOCAL_KEYS = PERMISSION_KEYS.filter((key) => !isCompanyOnly(key)).length;
 
@@ -59,34 +57,51 @@ describe("AccessRoleForm", () => {
 		const user = userEvent.setup();
 		show({ mode: "create", initial: { kind: "", name: "", permissions: [] } });
 
-		expect(typeField()).toHaveTextContent("Select a role type");
-		// Before a choice, both types are explained.
-		expect(typeField()).toHaveAccessibleDescription(
-			/^Company role: For actions that affect the whole company\..*Local role: For work inside branches and departments\./
-		);
+		for (const choice of within(typeField()).getAllByRole("radio"))
+			expect(choice).not.toBeChecked();
+		// Each answer explains itself, chosen or not.
 		expect(
-			screen.getByText("Choose a role type to see the permissions it can hold.")
+			within(typeField()).getByRole("radio", {
+				name: "Across the whole company",
+			})
+		).toHaveAccessibleDescription(COMPANY_HINT);
+		expect(
+			within(typeField()).getByRole("radio", {
+				name: "In the branches or departments you choose",
+			})
+		).toHaveAccessibleDescription(LOCAL_HINT);
+		expect(
+			screen.getByText(
+				"Choose where this role can be used to see the permissions it can hold."
+			)
 		).toBeVisible();
 		for (const item of screen.getAllByRole("checkbox"))
 			expect(item).toBeDisabled();
 
-		await chooseType(user, "Company role");
+		await chooseType(user, "Across the whole company");
 
-		expect(typeField()).toHaveTextContent("Company role");
-		expect(typeField()).toHaveAccessibleDescription(COMPANY_HINT);
+		expect(
+			within(typeField()).getByRole("radio", {
+				name: "Across the whole company",
+			})
+		).toBeChecked();
 		expect(
 			screen.queryByText(
-				"Choose a role type to see the permissions it can hold."
+				"Choose where this role can be used to see the permissions it can hold."
 			)
 		).not.toBeInTheDocument();
-		expect(box("Branches", "Create")).toBeEnabled();
+		expect(box("Branches", "Create branches")).toBeEnabled();
 		expect(
 			screen.getByText(`0 of ${PERMISSION_KEYS.length} selected`)
 		).toBeVisible();
 
-		await chooseType(user, "Local role");
+		await chooseType(user, "In the branches or departments you choose");
 
-		expect(typeField()).toHaveAccessibleDescription(LOCAL_HINT);
+		expect(
+			within(typeField()).getByRole("radio", {
+				name: "In the branches or departments you choose",
+			})
+		).toBeChecked();
 		// A local role offers no company-only permission, and counts what it may hold.
 		expect(screen.queryByRole("group", { name: "Company" })).toBeNull();
 		expect(screen.getByText(`0 of ${LOCAL_KEYS} selected`)).toBeVisible();
@@ -105,8 +120,8 @@ describe("AccessRoleForm", () => {
 		expect(submit).toBeDisabled();
 		expect(screen.getByText("Choose at least one permission.")).toBeVisible();
 
-		await chooseType(user, "Local role");
-		await user.click(box("Branches", "Edit"));
+		await chooseType(user, "In the branches or departments you choose");
+		await user.click(box("Branches", "Edit branches"));
 		expect(submit).toBeDisabled();
 		await user.type(nameField(), " Supervisor ");
 		expect(submit).toBeEnabled();
@@ -127,7 +142,7 @@ describe("AccessRoleForm", () => {
 		const submit = screen.getByRole("button", { name: "Save changes" });
 
 		expect(submit).toBeDisabled();
-		await user.click(box("Branches", "Edit"));
+		await user.click(box("Branches", "Edit branches"));
 
 		expect(screen.getByText("1 added")).toBeVisible();
 		expect(submit).toBeEnabled();
@@ -150,21 +165,23 @@ describe("AccessRoleForm", () => {
 			onSubmit,
 		});
 
-		await chooseType(user, "Local role");
+		await chooseType(user, "In the branches or departments you choose");
 
 		expect(
 			screen.getByText(
-				"A local role can’t hold company-only permissions, so Company: View, Branches: Create, and Activity: View were removed."
+				"A role for chosen places can’t hold company-wide permissions, so “See the workspace”, “Create branches”, and “See the activity record” were removed."
 			)
 		).toBeVisible();
-		expect(box("Branches", "View")).toBeChecked();
-		expect(screen.getByText("Role type changed, 3 removed")).toBeVisible();
+		expect(box("Branches", "See branches")).toBeChecked();
+		expect(
+			screen.getByText("Where it can be used changed, 3 removed")
+		).toBeVisible();
 
 		// Going back to a company role doesn't bring them back, and the notice goes.
-		await chooseType(user, "Company role");
+		await chooseType(user, "Across the whole company");
 		expect(screen.queryByText(/were removed/)).not.toBeInTheDocument();
-		expect(box("Branches", "Create")).not.toBeChecked();
-		await chooseType(user, "Local role");
+		expect(box("Branches", "Create branches")).not.toBeChecked();
+		await chooseType(user, "In the branches or departments you choose");
 		await user.click(screen.getByRole("button", { name: "Save changes" }));
 
 		expect(onSubmit).toHaveBeenCalledWith({
@@ -184,11 +201,15 @@ describe("AccessRoleForm", () => {
 			},
 		});
 
-		await chooseType(user, "Local role");
+		await chooseType(user, "In the branches or departments you choose");
 		await user.click(screen.getByRole("button", { name: "Discard changes" }));
 
-		expect(typeField()).toHaveTextContent("Company role");
-		expect(box("Branches", "Create")).toBeChecked();
+		expect(
+			within(typeField()).getByRole("radio", {
+				name: "Across the whole company",
+			})
+		).toBeChecked();
+		expect(box("Branches", "Create branches")).toBeChecked();
 		expect(screen.queryByText(/was removed/)).not.toBeInTheDocument();
 	});
 
@@ -207,12 +228,12 @@ describe("AccessRoleForm", () => {
 				),
 		});
 
-		await chooseType(user, "Company role");
+		await chooseType(user, "Across the whole company");
 		await user.click(screen.getByRole("button", { name: "Save changes" }));
 
 		expect(
 			await screen.findByText(
-				"This role is given at branches or departments, so it can’t become a company role. Remove those assignments first, or keep it a local role."
+				"This role is given at branches or departments, so it can’t become a whole-company role. Remove those assignments first, or keep it for chosen places."
 			)
 		).toBeVisible();
 		expect(typeField()).toHaveFocus();
@@ -255,9 +276,10 @@ describe("AccessRoleForm", () => {
 	it("offers no way to change a read-only role", () => {
 		show({ readOnly: true });
 
-		expect(typeField()).toBeDisabled();
+		for (const choice of within(typeField()).getAllByRole("radio"))
+			expect(choice).toBeDisabled();
 		expect(nameField()).toBeDisabled();
-		expect(box("Branches", "View")).toBeDisabled();
+		expect(box("Branches", "See branches")).toBeDisabled();
 		expect(
 			screen.queryByRole("button", { name: "Save changes" })
 		).not.toBeInTheDocument();

@@ -92,7 +92,7 @@ describe("AssignAccessRoleDialog", () => {
 
 		expect(dialog).toHaveTextContent("There, they will be able to");
 		expect(screen.getAllByRole("term").map((term) => term.textContent)).toEqual(
-			["Branches", "Departments"]
+			["Organisation"]
 		);
 		expect(submit).toBeDisabled();
 
@@ -156,7 +156,7 @@ describe("AssignAccessRoleDialog", () => {
 		const dialog = await screen.findByRole("dialog", { name: "Assign role" });
 
 		expect(dialog).toHaveTextContent(
-			"This role can’t be given at any place you may assign it: Branches: View can only be given more widely."
+			"This role can’t be given at any place you may assign it: “See branches” can only be given more widely."
 		);
 		await user.click(screen.getByLabelText("Applies to"));
 		expect(screen.queryByRole("option")).not.toBeInTheDocument();
@@ -263,9 +263,7 @@ describe("AssignAccessRoleDialog", () => {
 			name: "Priya Nair’s access after this change",
 		});
 		expect(preview).toHaveTextContent("Only places you can see are shown.");
-		expect(describedRows(preview)).toEqual([
-			"Orchard: Leave: View, Approve or reject",
-		]);
+		expect(describedRows(preview)).toEqual(["Orchard: Leave: Manage"]);
 
 		await user.click(screen.getByLabelText("Applies to"));
 		await user.click(
@@ -276,8 +274,8 @@ describe("AssignAccessRoleDialog", () => {
 
 		// The whole company first, then branches; what a place gives isn't repeated below it.
 		expect(describedRows(preview)).toEqual([
-			"Whole company: Branches: View / Departments: View",
-			"Orchard: Branches: View / Departments: View / Leave: View, Approve or reject",
+			"Whole company: Organisation: View",
+			"Orchard: Leave: Manage / Organisation: View",
 		]);
 	});
 
@@ -313,9 +311,7 @@ describe("AssignAccessRoleDialog", () => {
 		const preview = await screen.findByRole("region", {
 			name: "Priya Nair’s access after this change",
 		});
-		expect(describedRows(preview)).toEqual([
-			"Orchard: Branches: View / Departments: View",
-		]);
+		expect(describedRows(preview)).toEqual(["Orchard: Organisation: View"]);
 
 		await user.click(screen.getByRole("button", { name: "Remove Orchard" }));
 

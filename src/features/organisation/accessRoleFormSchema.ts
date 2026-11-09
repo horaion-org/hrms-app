@@ -1,6 +1,5 @@
 import type { TFunction } from "i18next";
 import { z } from "zod";
-import type { SelectOption } from "@/components/forms/Select";
 import {
 	ACCESS_ROLE_KINDS,
 	type AccessRoleKind,
@@ -24,29 +23,20 @@ export const roleKindSchema = (
 
 const kindKey = "organisation.accessRoles.kind";
 
-/** The Role type field's choices, company role first. */
-export const roleKindOptions = (t: TFunction): Array<SelectOption> =>
+/** One answer to "Where can this role be used?", as a card. */
+export type RoleKindChoice = {
+	value: AccessRoleKind;
+	label: string;
+	description: string;
+};
+
+/** The answers to "Where can this role be used?", the whole company first. */
+export const roleKindChoices = (t: TFunction): Array<RoleKindChoice> =>
 	ACCESS_ROLE_KINDS.map((kind) => ({
 		value: kind,
 		label: t(`${kindKey}.${kind}`),
+		description: t(`${kindKey}.hints.${kind}`),
 	}));
-
-/**
- * The Role type field's hint, one line each: what the chosen kind is for
- * and where it can be given, or, until one is chosen, that for both.
- */
-export const roleKindHints = (
-	kind: AccessRoleKind | "",
-	t: TFunction
-): Array<string> =>
-	kind
-		? [t(`${kindKey}.hints.${kind}`)]
-		: ACCESS_ROLE_KINDS.map((each) =>
-				t(`${kindKey}.choice`, {
-					kind: t(`${kindKey}.${each}`),
-					hint: t(`${kindKey}.hints.${each}`),
-				})
-			);
 
 /** The editor's fields. "At least one permission" is shown beside Save, not as a field error. */
 export const accessRoleFormSchema = (

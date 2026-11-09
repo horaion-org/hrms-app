@@ -45,7 +45,7 @@ describe("access role refusal mapping", () => {
 		[
 			403,
 			"AUTHORIZATION_DENIED",
-			"This role includes permissions you don’t hold, or you can no longer change system roles.",
+			"This role includes permissions you don’t hold, or you can no longer change access roles.",
 		],
 		[409, "SOMETHING_ELSE", "We couldn’t save the role. Try again."],
 		[400, "VALIDATION_ERROR", "We couldn’t save the role. Try again."],
@@ -62,11 +62,11 @@ describe("access role refusal mapping", () => {
 	it.each([
 		[
 			"LOCAL" as const,
-			"A local role can’t hold permissions that only apply company-wide. Choose Company role, or remove those permissions.",
+			"A role for chosen places can’t hold company-wide permissions. Choose “Across the whole company”, or remove those permissions.",
 		],
 		[
 			"COMPANY" as const,
-			"This role is given at branches or departments, so it can’t become a company role. Remove those assignments first, or keep it a local role.",
+			"This role is given at branches or departments, so it can’t become a whole-company role. Remove those assignments first, or keep it for chosen places.",
 		],
 	])(
 		"puts a kind conflict on the Role type field, worded for the %s kind sent",

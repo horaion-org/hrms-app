@@ -5,12 +5,12 @@ import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { FormRow, formRowIds } from "@/components/forms/FormRow";
 import { Input } from "@/components/forms/Input";
-import { Select } from "@/components/forms/Select";
+import { RadioCard } from "@/components/forms/RadioCard";
 import { Button } from "@/components/ui/Button";
+import { Callout } from "@/components/ui/Callout";
 import {
 	accessRoleFormSchema,
-	roleKindHints,
-	roleKindOptions,
+	roleKindChoices,
 	type AccessRoleFormInput,
 	type AccessRoleFormValues,
 } from "@/features/organisation/accessRoleFormSchema";
@@ -128,11 +128,6 @@ export const AccessRoleForm = ({
 		permissions.length + unknown.length > 0 &&
 		(mode === "create" ? kind !== "" && name.trim() !== "" : isDirty);
 	const kindError = errors.kind?.message;
-	const kindHint = roleKindHints(kind, t).map((line) => (
-		<span key={line} className="block">
-			{line}
-		</span>
-	));
 	const submit = async (values: AccessRoleFormValues): Promise<void> => {
 		setMessage(undefined);
 		try {
@@ -218,9 +213,8 @@ export const AccessRoleForm = ({
 				)}
 			</div>
 			<FormRow
-				className="mt-6 max-w-97.5"
+				className="mt-6 max-w-3xl"
 				error={kindError}
-				hint={kindHint}
 				htmlFor={kindId}
 				label={t(`${kindKey}.label`)}
 				layout="stacked"
@@ -230,36 +224,46 @@ export const AccessRoleForm = ({
 					control={control}
 					name="kind"
 					render={({ field }) => (
-						<Select
+						// The group takes focus when a refusal points at the field; the cards hold no ref.
+						<div
 							ref={field.ref}
-							aria-describedby={kindError ? kindIds.errorId : kindIds.hintId}
+							aria-describedby={kindError ? kindIds.errorId : undefined}
 							aria-invalid={Boolean(kindError)}
 							aria-labelledby={kindIds.labelId}
-							className="w-full"
-							disabled={readOnly || isSubmitting}
-							name={field.name}
-							options={roleKindOptions(t)}
-							placeholder={t(`${kindKey}.placeholder`)}
-							status={kindError ? "error" : undefined}
-							value={field.value}
-							onChange={(next) => {
-								if (!isAccessRoleKind(next)) return;
-								field.onChange(next);
-								const switched = selectionForKind(
-									getValues("permissions"),
-									next
-								);
-								if (switched.removed.length > 0)
-									setValue("permissions", switched.selected, {
-										shouldDirty: true,
-									});
-								setCleared(switched.removed);
-							}}
-						/>
+							className="grid gap-3 sm:grid-cols-2"
+							id={kindId}
+							role="radiogroup"
+							tabIndex={-1}
+						>
+							{roleKindChoices(t).map((choice) => (
+								<RadioCard
+									key={choice.value}
+									checked={field.value === choice.value}
+									description={choice.description}
+									disabled={readOnly || isSubmitting}
+									label={choice.label}
+									name={field.name}
+									value={choice.value}
+									onChange={(next) => {
+										if (!isAccessRoleKind(next)) return;
+										field.onChange(next);
+										const switched = selectionForKind(
+											getValues("permissions"),
+											next
+										);
+										if (switched.removed.length > 0)
+											setValue("permissions", switched.selected, {
+												shouldDirty: true,
+											});
+										setCleared(switched.removed);
+									}}
+								/>
+							))}
+						</div>
 					)}
 				/>
 			</FormRow>
-			<div aria-live="polite" className="max-w-97.5">
+			<div aria-live="polite" className="max-w-3xl">
 				{cleared.length > 0 && (
 					<p className="mt-2 text-sm text-neutral-700">
 						{t(`${kindKey}.removed`, {
@@ -284,6 +288,9 @@ export const AccessRoleForm = ({
 					})}
 				</p>
 			</div>
+			<Callout className="mt-4">
+				{t("organisation.accessRoles.baseline")}
+			</Callout>
 			{!kind && (
 				<p className="mt-2 text-sm text-neutral-700">
 					{t(`${kindKey}.choose`)}

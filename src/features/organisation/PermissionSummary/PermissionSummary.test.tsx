@@ -14,20 +14,26 @@ const show = (permissions: Array<PermissionKey>): void => {
 };
 
 describe("PermissionSummary", () => {
-	it("names each resource with its allowed actions and leaves the rest out", () => {
-		show(["branch:read", "branch:create", "department:read"]);
+	it("names each section with how much of it is allowed and which resources, leaving the rest out", () => {
+		show([
+			"branch:read",
+			"branch:create",
+			"department:read",
+			"leave_request:read",
+		]);
 
 		expect(screen.getByText("This role allows")).toBeVisible();
 		expect(screen.getAllByRole("term").map((term) => term.textContent)).toEqual(
-			["Branches", "Departments"]
+			["Leave", "Organisation"]
 		);
 		expect(
-			screen.getAllByRole("definition").map((item) =>
-				within(item)
-					.getAllByTitle(/./)
-					.map((badge) => badge.textContent)
+			screen.getAllByRole("definition").map((item) => item.textContent)
+		).toEqual(["ViewLeave", "ManageBranches and Departments"]);
+		expect(
+			within(screen.getAllByRole("definition")[1] as HTMLElement).getByText(
+				"Manage"
 			)
-		).toEqual([["View", "Create"], ["View"]]);
+		).toBeVisible();
 	});
 
 	it("says so when nothing is allowed", () => {

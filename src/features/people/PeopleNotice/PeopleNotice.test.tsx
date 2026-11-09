@@ -24,13 +24,13 @@ describe("PeopleNotice", () => {
 		[
 			"added",
 			true,
-			"Priya Nair was added, but their system role wasn’t assigned. Assign it from Organisation, under System roles.",
+			"Priya Nair was added, but their access role wasn’t assigned. Assign it from Organisation, under Access roles.",
 		],
 		["saved", false, "Changes to Priya Nair were saved."],
 		[
 			"saved",
 			true,
-			"Changes to Priya Nair were saved, but their system role wasn’t changed. Change it from Organisation, under System roles.",
+			"Changes to Priya Nair were saved, but their access role wasn’t changed. Change it from Organisation, under Access roles.",
 		],
 		[
 			"deactivated",

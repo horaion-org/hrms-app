@@ -73,7 +73,7 @@ it.each([
 		},
 	],
 	[
-		"system role",
+		"access role",
 		"POST /api/v1/companies/c-1/access-roles",
 		role,
 		(): unknown => useCreateAccessRole("c-1"),

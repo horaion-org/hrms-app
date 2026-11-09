@@ -75,7 +75,7 @@ describe("ProfileDetails", () => {
 			"Job title: Pastry chef",
 			"Department: Food & Beverage",
 			"Manager: Faris Ahmad",
-			"System role: Supervisor",
+			"Access role: Supervisor",
 		]);
 	});
 
@@ -90,7 +90,7 @@ describe("ProfileDetails", () => {
 		).toBeVisible();
 	});
 
-	it("reads anything not set as a dash, and leaves out the system role when not given", () => {
+	it("reads anything not set as a dash, and leaves out the access role when not given", () => {
 		show({
 			...kent,
 			phone: null,
@@ -157,9 +157,9 @@ describe("ProfileDetails", () => {
 	});
 
 	it("shows why access isn't listed in place of the rows", () => {
-		show(kent, "Supervisor", "We couldn’t load their system roles.");
+		show(kent, "Supervisor", "We couldn’t load their access roles.");
 		const access = screen.getByRole("region", { name: "Access" });
-		expect(access).toHaveTextContent("We couldn’t load their system roles.");
+		expect(access).toHaveTextContent("We couldn’t load their access roles.");
 		expect(within(access).queryByRole("term")).not.toBeInTheDocument();
 	});
 

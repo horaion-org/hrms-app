@@ -944,18 +944,22 @@
 			"groupCount": "{{count}} de {{total}}",
 			"job_title": {
 				"name": "Puestos",
-				"description": "Los puestos de la empresa.",
+				"description": "Los puestos de cada departamento.",
 				"actions": {
-					"read": "Ver",
-					"create": "Crear",
-					"update": "Editar"
+					"read": "Ver puestos",
+					"create": "Añadir puestos",
+					"update": "Editar puestos"
+				},
+				"actionHints": {
+					"read": "Los puestos de cada departamento",
+					"create": "A un departamento",
+					"update": "Renombrar un puesto, y desactivarlo o reactivarlo"
 				}
 			},
-			"qualified": "{{resource}}: {{permission}}",
 			"needs_one": "{{permissions}} requiere {{prerequisites}}.",
 			"needs_other": "{{permissions}} requieren {{prerequisites}}.",
 			"blockedBy": "Requiere {{prerequisites}}, que no puedes otorgar",
-			"companyOnly": "Solo para toda la empresa",
+			"companyOnly": "Solo para roles de toda la empresa",
 			"unknown": {
 				"name": "No reconocidos",
 				"description": "Esta versión de la aplicación no conoce estos permisos. Se mantienen en el rol al guardar."
@@ -964,111 +968,174 @@
 				"name": "Horarios",
 				"description": "Los horarios de cada departamento: su semana, su configuración y los turnos elegidos, generarlos, cambiar quién trabaja cada turno en un cuadrante generado, publicar o rechazar sus cuadrantes y eliminarlos.",
 				"actions": {
-					"read": "Ver",
-					"create": "Crear",
-					"update": "Editar",
-					"generate": "Generar",
-					"delete": "Eliminar",
-					"publish": "Publicar",
-					"edit_shift": "Editar turnos"
+					"read": "Ver horarios y cuadrantes",
+					"create": "Crear un horario",
+					"update": "Configurar un borrador: su semana, ajustes y turnos",
+					"generate": "Generar cuadrantes",
+					"delete": "Eliminar horarios",
+					"publish": "Publicar o rechazar cuadrantes",
+					"edit_shift": "Cambiar quién trabaja cada turno"
+				},
+				"actionHints": {
+					"read": "Sus ajustes; sus turnos necesitan «Ver turnos»",
+					"create": "Un borrador para un departamento",
+					"update": "Qué turnos incluye",
+					"generate": "Fija para siempre los turnos del borrador",
+					"edit_shift": "A mano, en un cuadrante generado",
+					"publish": "Se avisa a las personas cuando se publica su cuadrante",
+					"delete": "No mientras se está generando"
 				}
 			},
 			"approval_flow": {
 				"name": "Flujos de aprobación",
 				"description": "Quién aprueba un cuadrante antes de publicarlo, por departamento: los flujos de Ajustes › Aprobaciones.",
 				"actions": {
-					"read": "Ver",
-					"manage": "Gestionar"
+					"read": "Ver los flujos de aprobación",
+					"manage": "Gestionar los flujos de aprobación"
+				},
+				"actionHints": {
+					"read": "Quién aprueba un cuadrante antes de publicarlo",
+					"manage": "Sus pasos y aprobadores en Ajustes › Aprobaciones"
 				}
 			},
 			"approval": {
 				"name": "Aprobaciones",
 				"description": "Cuadrantes enviados a aprobación: ver en qué punto están y decidir un paso donde la persona puede publicar el cuadrante.",
 				"actions": {
-					"read": "Ver",
-					"decide": "Decidir"
+					"read": "Ver cómo van las aprobaciones",
+					"decide": "Aprobar o rechazar un paso"
+				},
+				"actionHints": {
+					"read": "Los cuadrantes enviados para aprobación y sus pasos",
+					"decide": "Donde quien lo tiene puede publicar el cuadrante"
 				}
 			},
 			"shift": {
 				"name": "Turnos",
 				"description": "Los turnos de cada departamento: sus horas, días, grupo, color y roles.",
 				"actions": {
-					"read": "Ver",
-					"create": "Añadir",
-					"update": "Editar",
-					"delete": "Eliminar"
+					"read": "Ver turnos",
+					"create": "Añadir turnos",
+					"update": "Editar turnos",
+					"delete": "Eliminar turnos"
+				},
+				"actionHints": {
+					"read": "Los turnos de un departamento y los puestos que pueden usar",
+					"create": "A un departamento",
+					"update": "El cambio llega a todos los borradores que los incluyen",
+					"delete": "Salen de los borradores; los horarios generados conservan su copia"
 				}
 			},
 			"constraint": {
 				"name": "Restricciones",
 				"description": "Las restricciones de programación de cada departamento: qué dicen, si deben o deberían cumplirse y si los horarios pueden usarlas.",
 				"actions": {
-					"read": "Ver",
-					"create": "Añadir",
-					"update": "Editar",
-					"delete": "Eliminar"
+					"read": "Ver restricciones",
+					"create": "Añadir restricciones",
+					"update": "Editar restricciones",
+					"delete": "Eliminar restricciones"
+				},
+				"actionHints": {
+					"read": "Las restricciones de planificación de un departamento",
+					"create": "A un departamento",
+					"update": "Qué dicen, y si deben o deberían cumplirse",
+					"delete": "De un departamento"
 				}
 			},
 			"work_availability": {
 				"name": "Disponibilidad",
 				"description": "Las horas en que cada persona a tiempo parcial puede trabajar en una semana, y quién no tiene ninguna.",
 				"actions": {
-					"read": "Ver",
-					"update": "Editar"
+					"read": "Ver la disponibilidad de las personas a tiempo parcial",
+					"update": "Definir la disponibilidad de alguien"
+				},
+				"actionHints": {
+					"read": "Sus horas semanales, y quién no tiene ninguna",
+					"update": "Su patrón semanal y los cambios de una semana"
 				}
 			},
 			"leave_request": {
 				"name": "Permisos",
 				"description": "Las solicitudes de permiso de cada persona, incluido el tipo de permiso y el motivo por el que se rechazó una solicitud.",
 				"actions": {
-					"read": "Ver",
-					"create": "Solicitar",
-					"review": "Aprobar o rechazar"
+					"read": "Ver las solicitudes de permiso, con su motivo",
+					"create": "Solicitar un permiso en nombre de otra persona",
+					"review": "Aprobar o rechazar permisos"
+				},
+				"actionHints": {
+					"read": "El tipo de permiso y por qué se rechazó una solicitud",
+					"create": "Solicitarlo para uno mismo no necesita nada",
+					"review": "Nunca los propios"
 				}
 			},
 			"skill": {
 				"name": "Habilidades",
 				"description": "El catálogo de habilidades de la empresa: las habilidades y licencias que las personas pueden tener, y cuántas tienen cada una.",
 				"actions": {
-					"read": "Ver",
-					"create": "Crear",
-					"update": "Editar",
-					"delete": "Eliminar"
+					"read": "Ver habilidades",
+					"create": "Añadir habilidades",
+					"update": "Editar habilidades",
+					"delete": "Eliminar habilidades"
+				},
+				"actionHints": {
+					"read": "El catálogo de habilidades, con cuántas personas tienen cada una",
+					"create": "Al catálogo de habilidades de la empresa",
+					"update": "Renombrar una habilidad o cambiar cómo se valora",
+					"delete": "También quita la habilidad a todas las personas que la tienen"
 				}
 			},
 			"member_profile": {
 				"name": "Personas",
 				"description": "El ID de empleado, el departamento, el puesto y los datos de contacto de cada persona.",
 				"actions": {
-					"read": "Ver",
-					"create": "Crear",
-					"update": "Editar"
+					"read": "Ver a las personas y sus perfiles",
+					"create": "Añadir personas (se les envía una invitación)",
+					"update": "Editar perfiles, estado y departamento"
+				},
+				"actionHints": {
+					"read": "La lista de Personas y cada perfil, con datos de contacto, fecha de nacimiento y habilidades",
+					"create": "Crea su acceso y les envía una invitación por correo",
+					"update": "También las habilidades, y reenviar una invitación sin usar"
 				}
 			},
 			"member_note": {
 				"name": "Notas",
 				"description": "Notas sobre cada persona, como comentarios sobre su trabajo.",
 				"actions": {
-					"read": "Ver",
-					"create": "Añadir",
-					"update": "Editar",
-					"delete": "Eliminar"
+					"read": "Leer notas sobre las personas",
+					"create": "Añadir notas",
+					"update": "Editar cualquier nota",
+					"delete": "Eliminar cualquier nota"
+				},
+				"actionHints": {
+					"read": "Con quién las escribió",
+					"create": "Sobre una persona",
+					"update": "No solo las propias",
+					"delete": "No solo las propias"
 				}
 			},
 			"scheduling_policy": {
 				"name": "Política de planificación",
 				"description": "Las restricciones propias de la empresa, definidas una vez para todos los departamentos: las bloqueadas, que cada departamento debe mantener y solo puede hacer más estrictas, y las predeterminadas, que puede omitir.",
 				"actions": {
-					"read": "Ver",
-					"update": "Editar"
+					"read": "Ver la política de planificación",
+					"update": "Cambiar la política de planificación"
+				},
+				"actionHints": {
+					"read": "Las restricciones definidas una vez para todos los departamentos",
+					"update": "Las restricciones bloqueadas que todos los departamentos mantienen, y las predeterminadas"
 				}
 			},
 			"leave_type": {
 				"name": "Tipos de permiso",
 				"description": "Los tipos de permiso de la empresa y cuántas solicitudes usan cada uno, nunca quién los tomó.",
 				"actions": {
-					"read": "Ver",
-					"update": "Editar"
+					"read": "Ver los tipos de permiso",
+					"update": "Gestionar los tipos de permiso"
+				},
+				"actionHints": {
+					"read": "Con cuántas solicitudes usan cada uno, nunca quién los tomó",
+					"update": "Añadirlos, renombrarlos, ordenarlos, desactivarlos y reactivarlos"
 				}
 			},
 			"none": "Todavía no hay permisos.",
@@ -1076,84 +1143,195 @@
 				"name": "Empresa",
 				"description": "Los datos propios de la empresa.",
 				"actions": {
-					"read": "Ver",
-					"update": "Editar"
+					"read": "Ver el espacio de trabajo",
+					"update": "Renombrar el espacio de trabajo"
+				},
+				"actionHints": {
+					"read": "Pensado para los datos propios de la empresa; todavía no se usa",
+					"update": "Cambiar el nombre del espacio de trabajo en Ajustes › General"
 				}
 			},
 			"branch": {
 				"name": "Sucursales",
 				"description": "Las sucursales de la empresa y sus datos.",
 				"actions": {
-					"read": "Ver",
-					"create": "Crear",
-					"update": "Editar"
+					"read": "Ver sucursales",
+					"create": "Crear sucursales",
+					"update": "Editar sucursales"
+				},
+				"actionHints": {
+					"read": "Su código, ciudad, país, estado y responsables",
+					"create": "Eligiendo a sus primeros responsables",
+					"update": "Renombrar una sucursal, cambiar su código, ciudad o país, y desactivarla o reactivarla"
 				}
 			},
 			"branch_member": {
 				"name": "Miembros de sucursal",
 				"description": "Quién pertenece a una sucursal y quién es su responsable.",
 				"actions": {
-					"read": "Ver",
-					"create": "Añadir",
-					"update": "Editar",
-					"deactivate": "Desactivar"
+					"read": "Ver quién pertenece a una sucursal",
+					"create": "Añadir personas a una sucursal",
+					"update": "Cambiar puestos en una sucursal",
+					"deactivate": "Retirar personas de una sucursal"
+				},
+				"actionHints": {
+					"read": "Incluidos los antiguos miembros, y quién la dirige",
+					"create": "Como responsable o empleado, o recuperar a un antiguo miembro",
+					"update": "El puesto o el estado de un miembro, manteniendo al menos un responsable",
+					"deactivate": "Se conserva su historial; no se puede retirar al último responsable"
 				}
 			},
 			"department": {
 				"name": "Departamentos",
 				"description": "Los departamentos de cada sucursal.",
 				"actions": {
-					"read": "Ver",
-					"create": "Crear",
-					"update": "Editar"
+					"read": "Ver departamentos",
+					"create": "Crear departamentos",
+					"update": "Editar departamentos"
+				},
+				"actionHints": {
+					"read": "Con su sucursal, estado y responsables",
+					"create": "En una sucursal, eligiendo a sus primeros responsables, que también se unen a la sucursal",
+					"update": "Renombrar un departamento, y desactivarlo o reactivarlo"
 				}
 			},
 			"department_member": {
 				"name": "Miembros de departamento",
 				"description": "Quién pertenece a un departamento y quién es su responsable.",
 				"actions": {
-					"read": "Ver",
-					"create": "Añadir",
-					"update": "Editar",
-					"deactivate": "Desactivar"
+					"read": "Ver quién pertenece a un departamento",
+					"create": "Añadir personas a un departamento",
+					"update": "Cambiar puestos en un departamento",
+					"deactivate": "Retirar personas de un departamento"
+				},
+				"actionHints": {
+					"read": "Incluidos los antiguos miembros, y quién lo dirige",
+					"create": "Como responsable o empleado; también se unen a su sucursal",
+					"update": "El puesto o el estado de un miembro, manteniendo al menos un responsable",
+					"deactivate": "Se conserva su historial; no se puede retirar al último responsable"
 				}
 			},
 			"access_role": {
-				"name": "Roles del sistema",
-				"description": "Roles como este y a quién se asignan.",
+				"name": "Roles de acceso",
+				"description": "Roles como este, y a quién se dan.",
 				"actions": {
-					"read": "Ver",
-					"create": "Crear",
-					"update": "Editar",
-					"delete": "Eliminar",
-					"assign": "Asignar"
+					"read": "Ver los roles de acceso y quién los tiene",
+					"create": "Crear roles de acceso",
+					"update": "Editar roles de acceso",
+					"delete": "Eliminar roles de acceso",
+					"assign": "Dar roles de acceso a personas"
+				},
+				"actionHints": {
+					"read": "Con sus permisos, y dónde los tiene cada persona",
+					"create": "Solo con permisos que quien lo tiene posee en toda la empresa",
+					"update": "Renombrar, cambiar permisos o desactivar, dentro de los permisos propios",
+					"delete": "Solo roles que nadie tiene",
+					"assign": "O desactivarlos o quitarlos, donde quien lo tiene posee todos los permisos del rol"
 				}
 			},
 			"audit_event": {
 				"name": "Actividad",
 				"description": "El registro de quién cambió qué en la empresa.",
 				"actions": {
-					"read": "Ver"
+					"read": "Ver el registro de actividad"
+				},
+				"actionHints": {
+					"read": "Quién cambió qué, y cuándo"
 				}
 			},
-			"empty": "Todavía no hay roles del sistema.",
+			"empty": "Todavía no hay roles de acceso.",
 			"employment_terms": {
 				"name": "Condiciones de empleo",
 				"description": "La semana laboral que fija cada tipo de contrato: días laborables, horas normales, día de descanso y si se aplican los límites de horas de la Ley.",
 				"actions": {
-					"read": "Ver",
-					"update": "Editar"
+					"read": "Ver las condiciones de empleo",
+					"update": "Gestionar las condiciones de empleo"
+				},
+				"actionHints": {
+					"read": "Con cuántas personas tienen cada una",
+					"update": "Crearlas, editarlas, elegir la predeterminada y desactivarlas"
 				}
 			},
 			"member_employment_terms": {
 				"name": "Condiciones de empleo de las personas",
 				"description": "Qué condiciones de empleo tiene cada persona, desde qué fecha, y sus horas propias.",
 				"actions": {
-					"read": "Ver",
-					"update": "Cambiar"
+					"read": "Ver qué condiciones de empleo tiene cada persona",
+					"update": "Cambiar las condiciones de alguien"
+				},
+				"actionHints": {
+					"read": "Desde qué fecha, y sus horas propias",
+					"update": "Desde una fecha, para una persona o para varias a la vez"
 				}
 			},
-			"notAtDepartments": "No en departamentos"
+			"notAtDepartments": "No en departamentos",
+			"quoted": "«{{permission}}»",
+			"sectionCount": "{{count}} de {{total}} seleccionados",
+			"alsoTicked": "También se marcó {{permission}}: {{reason}}.",
+			"missingUse": "Sin {{permission}}, {{consequence}}.",
+			"summaryLine": "{{section}}: {{level}}",
+			"levels": {
+				"VIEW": "Ver",
+				"MANAGE": "Gestionar",
+				"FULL": "Completo"
+			},
+			"sections": {
+				"people": {
+					"name": "Personas",
+					"description": "Perfiles, notas, disponibilidad y las condiciones de empleo de cada persona."
+				},
+				"leave": {
+					"name": "Permisos",
+					"description": "Las solicitudes de permiso de otras personas y su resolución."
+				},
+				"scheduling": {
+					"name": "Programación",
+					"description": "Crear, cambiar y publicar los cuadrantes de los departamentos."
+				},
+				"approvals": {
+					"name": "Aprobaciones",
+					"description": "Los flujos de aprobación y las decisiones sobre los cuadrantes enviados para aprobación."
+				},
+				"organisation": {
+					"name": "Organización",
+					"description": "Sucursales, departamentos, quién pertenece a cada uno y puestos."
+				},
+				"company_settings": {
+					"name": "Ajustes de la empresa",
+					"description": "El espacio de trabajo, las habilidades, las condiciones de empleo, los tipos de permiso y la política de planificación."
+				},
+				"access_and_activity": {
+					"name": "Acceso y actividad",
+					"description": "Los roles de acceso, quién los tiene y el registro de actividad."
+				}
+			},
+			"uses": {
+				"scheduleShifts": {
+					"why": "el asistente de horarios muestra los turnos del departamento",
+					"without": "quien lo tenga no verá el paso de turnos del asistente de horarios"
+				},
+				"shiftsInWizard": {
+					"why": "la aplicación cambia los turnos solo en el asistente de horarios, que abre un horario",
+					"without": "quien lo tenga no llegará a los turnos, que la aplicación muestra solo en el asistente de horarios"
+				},
+				"leaveForSomeone": {
+					"why": "solicitar para otra persona busca en la lista de Personas",
+					"without": "quien lo tenga no encontrará a la persona para quien solicita"
+				},
+				"personJobTitles": {
+					"why": "el formulario de la persona muestra los puestos del departamento",
+					"without": "quien lo tenga no podrá elegir un puesto en el formulario de la persona"
+				},
+				"notesOnProfile": {
+					"why": "las notas se muestran en la página de cada persona en Personas",
+					"without": "quien lo tenga no podrá abrir la página que muestra las notas"
+				},
+				"departmentBranches": {
+					"why": "crear un departamento muestra las sucursales para elegir",
+					"without": "a quien lo tenga no se le ofrecerá crear un departamento"
+				}
+			},
+			"needsAll": "Todo lo demás aquí requiere {{prerequisites}}."
 		},
 		"jobTitles": {
 			"title": "Puestos",
@@ -1168,7 +1346,7 @@
 			"people": "Personas",
 			"peopleCount_one": "{{count}} persona",
 			"peopleCount_other": "{{count}} personas",
-			"systemRole": "Rol del sistema",
+			"systemRole": "Rol de acceso",
 			"createDialog": {
 				"title": "Crear puesto",
 				"description": "Añade un puesto que las personas de toda la organización puedan ocupar.",
@@ -1451,13 +1629,13 @@
 			}
 		},
 		"accessRoles": {
-			"title": "Roles del sistema",
+			"title": "Roles de acceso",
 			"caption": "Roles configurados",
-			"subtitle": "Crea y administra los roles del sistema y sus permisos de acceso.",
-			"search": "Buscar rol del sistema",
-			"create": "Crear rol del sistema",
-			"name": "Rol del sistema",
-			"permissions": "Permisos clave",
+			"subtitle": "Decide qué puede gestionar cada persona y dónde.",
+			"search": "Buscar rol de acceso",
+			"create": "Crear rol de acceso",
+			"name": "Rol de acceso",
+			"permissions": "Qué permite",
 			"people": "Personas",
 			"peopleCount_one": "{{count}} persona",
 			"peopleCount_other": "{{count}} personas",
@@ -1466,10 +1644,10 @@
 			"fullAccess": "Acceso total al sistema",
 			"permissionCount_one": "{{count}} permiso",
 			"permissionCount_other": "{{count}} permisos",
-			"label": "Roles del sistema",
-			"empty": "Todavía no hay roles del sistema.",
+			"label": "Roles de acceso",
+			"empty": "Todavía no hay roles de acceso.",
 			"createDialog": {
-				"title": "Crear rol del sistema",
+				"title": "Crear rol de acceso",
 				"description": "Pon nombre al rol y elige qué pueden hacer las personas que lo tengan.",
 				"name": "Nombre del rol",
 				"namePlaceholder": "p. ej., Gerente de sucursal",
@@ -1480,16 +1658,16 @@
 				"permissionsHeld": "Elige al menos 1 permiso. Solo puedes conceder los permisos que tienes.",
 				"permissionsCounter": "{{count}} seleccionados",
 				"cancel": "Cancelar",
-				"submit": "Crear rol del sistema",
+				"submit": "Crear rol de acceso",
 				"nameRequired": "Introduce un nombre para el rol.",
 				"nameLength": "Usa entre 2 y 100 caracteres.",
 				"nameCharacters": "Usa solo letras, números, espacios y . ' & -.",
 				"permissionsRequired": "Elige al menos un permiso.",
-				"nameConflict": "Ya existe un rol del sistema llamado \"{{name}}\". Elige otro nombre.",
+				"nameConflict": "Ya existe un rol de acceso llamado \"{{name}}\". Elige otro nombre.",
 				"nameRejected": "Revisa el nombre del rol e inténtalo de nuevo.",
 				"permissionsRejected": "Algunos permisos ya no están disponibles. Recarga la página e inténtalo de nuevo.",
-				"forbidden": "No puedes crear este rol. Es posible que ya no tengas algunos de los permisos elegidos o el permiso para crear roles del sistema.",
-				"failed": "No pudimos crear el rol del sistema. Inténtalo de nuevo."
+				"forbidden": "No puedes crear este rol. Es posible que ya no tengas algunos de los permisos elegidos o el permiso para crear roles de acceso.",
+				"failed": "No pudimos crear el rol de acceso. Inténtalo de nuevo."
 			},
 			"assignments": {
 				"tab": "Personas",
@@ -1561,15 +1739,15 @@
 				}
 			},
 			"editor": {
-				"back": "Roles del sistema",
-				"createTitle": "Crear rol del sistema",
+				"back": "Roles de acceso",
+				"createTitle": "Crear rol de acceso",
 				"create": "Crear rol",
-				"createForbidden": "No tienes permiso para crear roles del sistema.",
+				"createForbidden": "No tienes permiso para crear roles de acceso.",
 				"unavailable": "Solo puedes dar a un rol los permisos que tienes tú, así que los demás no están disponibles.",
 				"scope": "Dónde se aplica este rol se elige al asignarlo a una persona.",
 				"fullAccess": "Acceso completo",
 				"protected": "El rol Propietario de la empresa siempre tiene todos los permisos y no se puede cambiar.",
-				"viewOnly": "No tienes permiso para cambiar los roles del sistema.",
+				"viewOnly": "No tienes permiso para cambiar los roles de acceso.",
 				"locked": "Este rol incluye permisos que no tienes, así que no puedes cambiarlo.",
 				"name": "Nombre del rol",
 				"nameHint": "Entre 2 y 100 caracteres. Solo letras, números, espacios y . ' & -.",
@@ -1586,7 +1764,7 @@
 				"removed": "{{count}} quitados",
 				"discard": "Descartar cambios",
 				"save": "Guardar cambios",
-				"forbidden": "Este rol incluye permisos que no tienes, o ya no puedes cambiar los roles del sistema.",
+				"forbidden": "Este rol incluye permisos que no tienes, o ya no puedes cambiar los roles de acceso.",
 				"gone": "Este rol ya no existe.",
 				"protectedRefused": "El rol Propietario de la empresa no se puede cambiar.",
 				"failed": "No pudimos guardar el rol. Inténtalo de nuevo.",
@@ -1595,7 +1773,7 @@
 				"loadFailed": "No pudimos cargar este rol. Inténtalo de nuevo.",
 				"unknownKeys_one": "Este rol tiene un permiso que esta versión de la aplicación no reconoce. Se mantiene tal cual al guardar. Recarga la página para actualizar la aplicación y cambiarlo.",
 				"unknownKeys_other": "Este rol tiene {{count}} permisos que esta versión de la aplicación no reconoce. Se mantienen tal cual al guardar. Recarga la página para actualizar la aplicación y cambiarlos.",
-				"typeChanged": "Tipo de rol cambiado"
+				"typeChanged": "Cambió dónde se puede usar"
 			},
 			"all": "Todos los roles",
 			"copyName": "Copia de {{name}}",
@@ -1637,33 +1815,32 @@
 				"forbidden": "No tienes permiso para eliminar este rol.",
 				"failed": "No pudimos eliminar el rol. Inténtalo de nuevo."
 			},
-			"type": "Tipo",
-			"types": {
-				"COMPANY": "Empresa",
-				"LOCAL": "Local"
-			},
 			"kind": {
-				"label": "Tipo de rol",
-				"placeholder": "Selecciona un tipo de rol",
-				"required": "Elige un tipo de rol.",
-				"COMPANY": "Rol de empresa",
-				"LOCAL": "Rol local",
+				"label": "¿Dónde se puede usar este rol?",
+				"required": "Elige dónde se puede usar este rol.",
+				"COMPANY": "En toda la empresa",
+				"LOCAL": "En las sucursales o departamentos que elijas",
 				"hints": {
-					"COMPANY": "Para acciones que afectan a toda la empresa. Solo se puede asignar a toda la empresa.",
-					"LOCAL": "Para el trabajo dentro de sucursales y departamentos. Se puede asignar a toda la empresa, a una sucursal o a un departamento."
+					"COMPANY": "Puede incluir los ajustes de la empresa, las sucursales y los roles de acceso. Solo se puede dar en toda la empresa.",
+					"LOCAL": "Eliges los lugares al dar el rol a alguien."
 				},
-				"choice": "{{kind}}: {{hint}}",
-				"choose": "Elige un tipo de rol para ver los permisos que puede tener.",
-				"removed_one": "Un rol local no puede tener permisos solo para toda la empresa, así que se quitó {{permissions}}.",
-				"removed_other": "Un rol local no puede tener permisos solo para toda la empresa, así que se quitaron {{permissions}}.",
-				"conflictLocal": "Un rol local no puede tener permisos que solo se aplican a toda la empresa. Elige Rol de empresa o quita esos permisos.",
-				"conflictCompany": "Este rol está asignado en sucursales o departamentos, así que no puede pasar a ser un rol de empresa. Quita primero esas asignaciones o mantenlo como rol local."
+				"choose": "Elige dónde se puede usar este rol para ver los permisos que puede tener.",
+				"removed_one": "Un rol para lugares elegidos no puede tener permisos de toda la empresa, así que se quitó {{permissions}}.",
+				"removed_other": "Un rol para lugares elegidos no puede tener permisos de toda la empresa, así que se quitaron {{permissions}}.",
+				"conflictLocal": "Un rol para lugares elegidos no puede tener permisos de toda la empresa. Elige «En toda la empresa», o quita esos permisos.",
+				"conflictCompany": "Este rol se da en sucursales o departamentos, así que no puede pasar a ser de toda la empresa. Quita antes esas asignaciones, o mantenlo para lugares elegidos."
 			},
 			"access": {
 				"title": "Acceso",
 				"note": "Solo se muestran los lugares que puedes ver.",
 				"none": "Sin permisos en los lugares que puedes ver.",
 				"after": "Acceso de {{name}} después de este cambio"
+			},
+			"where": "Dónde",
+			"baseline": "Todas las personas ya pueden ver su propio cuadrante, solicitar su propio permiso y definir su propia disponibilidad. Los roles sirven para gestionar a otras personas.",
+			"whereLabels": {
+				"COMPANY": "Toda la empresa",
+				"LOCAL": "Sucursales o departamentos"
 			}
 		},
 		"list": {
@@ -2019,9 +2196,9 @@
 		"empty": "Todavía no hay personas.",
 		"add": "Añadir empleado",
 		"added": "Se añadió a {{name}}. Le hemos enviado por correo una invitación para iniciar sesión.",
-		"roleNotAssigned": "Se añadió a {{name}}, pero no se le asignó su rol del sistema. Asígnalo desde Organización, en Roles del sistema.",
+		"roleNotAssigned": "Se añadió a {{name}}, pero no se le asignó su rol de acceso. Asígnalo desde Organización, en Roles de acceso.",
 		"saved": "Se guardaron los cambios de {{name}}.",
-		"roleNotChanged": "Se guardaron los cambios de {{name}}, pero su rol del sistema no se cambió. Cámbialo desde Organización, en Roles del sistema.",
+		"roleNotChanged": "Se guardaron los cambios de {{name}}, pero su rol de acceso no se cambió. Cámbialo desde Organización, en Roles de acceso.",
 		"deactivated": "Se desactivó a {{name}} y ya no puede iniciar sesión.",
 		"reactivated": "Se reactivó a {{name}} y puede volver a iniciar sesión.",
 		"invited": "Hemos enviado a {{name}} una nueva invitación por correo para iniciar sesión.",
@@ -2035,7 +2212,7 @@
 			"copyEmail": "Copiar correo electrónico",
 			"missing": "Esta persona no está disponible. Puede que no exista o que no tengas acceso a ella.",
 			"loadFailed": "No pudimos cargar a esta persona. Inténtalo de nuevo.",
-			"rolesFailed": "No pudimos cargar sus roles del sistema.",
+			"rolesFailed": "No pudimos cargar sus roles de acceso.",
 			"deactivate": {
 				"item": "Desactivar",
 				"title": "¿Desactivar a {{name}}?",
@@ -2480,14 +2657,14 @@
 			"manager": "Responsable",
 			"managerPlaceholder": "Seleccionar responsable",
 			"managerHint": "Una persona activa de la empresa.",
-			"systemRole": "Rol del sistema",
-			"systemRolePlaceholder": "Seleccionar rol del sistema",
+			"systemRole": "Rol de acceso",
+			"systemRolePlaceholder": "Seleccionar rol de acceso",
 			"systemRoleHint": "Se aplica en el ámbito del rol seleccionado.",
 			"otherRoles": "También tiene en otros lugares: {{roles}}.",
 			"roleScope": "Ámbito del rol",
-			"roleScopeHint": "Elige dónde se aplica el rol del sistema, con independencia del departamento al que pertenezca.",
+			"roleScopeHint": "Elige dónde se aplica el rol de acceso, con independencia del departamento al que pertenezca.",
 			"roleScopePlaceholder": "Seleccionar empresa, sucursal o departamento",
-			"roleScopeRequired": "Elige dónde se aplica el rol del sistema.",
+			"roleScopeRequired": "Elige dónde se aplica el rol de acceso.",
 			"departmentUnavailable": "Este departamento ya no está disponible. Elige otro departamento.",
 			"jobTitleUnavailable": "Este puesto ya no está disponible. Elige otro puesto.",
 			"managerUnavailable": "Esta persona ya no está disponible. Elige otro responsable.",

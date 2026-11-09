@@ -1,17 +1,23 @@
 import { describe, expect, it } from "vitest";
 import {
+	dependenciesOf,
 	groupsFor,
 	keysFor,
+	missingUses,
 	PERMISSION_GROUPS,
 	scopeHintOf,
+	sectionsFor,
 	selectionForKind,
+	tickUses,
 	toggleGroup,
 	togglePermission,
 } from "@/features/organisation/PermissionChecklist/groups";
 import {
 	definitionOf,
 	isCompanyOnly,
+	moduleOf,
 	PERMISSION_KEYS,
+	PERMISSION_MODULES,
 	type PermissionKey,
 } from "@/features/workspace/permissionKeys";
 
@@ -132,5 +138,122 @@ describe("what a role's kind lets it hold", () => {
 			selected: ["branch:read"],
 			removed: [],
 		});
+	});
+});
+
+describe("the role editor's sections", () => {
+	it("holds every row exactly once, each in its module's section, in the contract's order", () => {
+		const sections = sectionsFor();
+		expect(sections.map((section) => section.module)).toEqual(
+			PERMISSION_MODULES
+		);
+		const rows = sections.flatMap((section) => section.groups);
+		expect(rows.map((group) => group.resource).sort()).toEqual(
+			PERMISSION_GROUPS.map((group) => group.resource).sort()
+		);
+		for (const section of sections)
+			for (const group of section.groups)
+				for (const key of group.keys)
+					expect(moduleOf(key)).toBe(section.module);
+	});
+
+	it("leaves a local role's sections that would be empty out", () => {
+		const local = sectionsFor("LOCAL");
+		expect(local.map((section) => section.module)).not.toContain(
+			"company_settings"
+		);
+		// The same rows as the local role's list, only regrouped.
+		expect(
+			local
+				.flatMap((section) => section.groups)
+				.map((group) => group.resource)
+				.sort()
+		).toEqual(
+			groupsFor("LOCAL")
+				.map((group) => group.resource)
+				.sort()
+		);
+	});
+});
+
+describe("what a permission's screens use", () => {
+	it("ticks what an added key uses, with its prerequisites, and names why", () => {
+		const result = tickUses([], ["member_note:read"]);
+		expect(result.selected).toEqual([
+			"member_profile:read",
+			"member_note:read",
+		]);
+		expect(result.alsoTicked).toEqual([
+			{
+				key: "member_profile:read",
+				reason: "notesOnProfile",
+				by: "member_note:read",
+			},
+		]);
+	});
+
+	it("ticks nothing for keys that were already selected or can't be given", () => {
+		expect(
+			tickUses(
+				["schedule:read", "schedule:create"],
+				["schedule:read", "schedule:create"]
+			).alsoTicked
+		).toEqual([]);
+		expect(
+			tickUses([], ["schedule:read", "schedule:create"], ["shift:read"])
+		).toEqual({
+			selected: ["schedule:read", "schedule:create"],
+			alsoTicked: [],
+		});
+	});
+
+	it("never clears what uses a cleared key", () => {
+		const before: Array<PermissionKey> = [
+			"schedule:read",
+			"schedule:create",
+			"shift:read",
+		];
+		expect(
+			tickUses(before, ["schedule:read", "schedule:create"]).selected
+		).toEqual(["schedule:read", "schedule:create"]);
+	});
+
+	it("names what selected keys use but miss, once per key and reason", () => {
+		expect(
+			missingUses(
+				["schedule:read", "schedule:create", "schedule:update"],
+				["schedule:read", "schedule:create", "schedule:update"]
+			)
+		).toEqual([{ key: "shift:read", reason: "scheduleShifts" }]);
+		expect(
+			missingUses(["schedule:create"], ["schedule:create", "shift:read"])
+		).toEqual([]);
+		expect(missingUses(["schedule:create"], [])).toEqual([]);
+	});
+});
+
+describe("a row's dependencies, for its small print", () => {
+	it("marks a prerequisite every other key of the row needs, so it is said once", () => {
+		expect(
+			dependenciesOf(["shift:read", "shift:create", "shift:update"])
+		).toEqual([
+			{
+				keys: ["shift:create", "shift:update"],
+				prerequisites: ["shift:read"],
+				everyOther: true,
+			},
+		]);
+	});
+
+	it("keeps the explicit list when only some of the keys need it", () => {
+		expect(
+			dependenciesOf(["schedule:read", "schedule:create", "shift:read"])
+		).toEqual([
+			{
+				keys: ["schedule:create"],
+				prerequisites: ["schedule:read"],
+				everyOther: false,
+			},
+		]);
 	});
 });

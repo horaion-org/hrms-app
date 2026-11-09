@@ -117,7 +117,7 @@ const choose = async (item: string): Promise<void> => {
 	);
 };
 
-describe("System role list actions", () => {
+describe("Access role list actions", () => {
 	it("offers each action once, leaving Edit to the pencil", async () => {
 		stubApi(routes());
 		app = await openApp("/organisation/system-roles");
@@ -258,12 +258,14 @@ describe("System role list actions", () => {
 		stubApi(routes());
 		await choose("Duplicate");
 		const dialog = await screen.findByRole("dialog", {
-			name: "Create system role",
+			name: "Create access role",
 		});
 
 		expect(
-			within(dialog).getByRole("button", { name: "Role type" })
-		).toHaveTextContent("Local role");
+			within(dialog).getByRole("radio", {
+				name: "In the branches or departments you choose",
+			})
+		).toBeChecked();
 		expect(within(dialog).getByLabelText("Role name")).toHaveValue(
 			"Manager copy"
 		);
@@ -272,9 +274,9 @@ describe("System role list actions", () => {
 				"checkbox",
 				{ name }
 			);
-		expect(box("Branches", "View")).toBeChecked();
-		expect(box("Departments", "View")).toBeChecked();
-		expect(box("Branches", "Edit")).not.toBeChecked();
+		expect(box("Branches", "See branches")).toBeChecked();
+		expect(box("Departments", "See departments")).toBeChecked();
+		expect(box("Branches", "Edit branches")).not.toBeChecked();
 	});
 
 	it("duplicates a company role as a company role, keeping its company-only permissions", async () => {
@@ -288,20 +290,20 @@ describe("System role list actions", () => {
 		);
 		await choose("Duplicate");
 		const dialog = await screen.findByRole("dialog", {
-			name: "Create system role",
+			name: "Create access role",
 		});
 
 		expect(
-			within(dialog).getByRole("button", { name: "Role type" })
-		).toHaveTextContent("Company role");
+			within(dialog).getByRole("radio", { name: "Across the whole company" })
+		).toBeChecked();
 		expect(
 			within(within(dialog).getByRole("group", { name: "Branches" })).getByRole(
 				"checkbox",
-				{ name: "Create" }
+				{ name: "Create branches" }
 			)
 		).toBeChecked();
 		await userEvent.click(
-			within(dialog).getByRole("button", { name: "Create system role" })
+			within(dialog).getByRole("button", { name: "Create access role" })
 		);
 		await waitFor(() => {
 			expect(
@@ -322,7 +324,7 @@ describe("System role list actions", () => {
 	});
 });
 
-describe("System role people", () => {
+describe("Access role people", () => {
 	it("edits where a person has the role from their pencil, removing a place they no longer need", async () => {
 		const calls = stubApi({
 			...routes(),
@@ -495,7 +497,7 @@ const spreadHolders = [
 const COLLEAGUES = "GET /api/v1/companies/c-1/me/colleagues";
 const ASSIGNMENTS = "/access-role-assignments";
 
-describe("System role people, checked at each assignment's own place", () => {
+describe("Access role people, checked at each assignment's own place", () => {
 	it("names what keeps a role from fitting the only places the person may assign at", async () => {
 		stubApi({
 			...routes(),
@@ -513,9 +515,9 @@ describe("System role people, checked at each assignment's own place", () => {
 		);
 		const dialog = await screen.findByRole("dialog", { name: "Assign role" });
 
-		// Branches: View can't be given at a Department, the only place in reach.
+		// “See branches” can't be given at a Department, the only place in reach.
 		expect(dialog).toHaveTextContent(
-			"This role can’t be given at any place you may assign it: Branches: View can only be given more widely."
+			"This role can’t be given at any place you may assign it: “See branches” can only be given more widely."
 		);
 	});
 
@@ -834,8 +836,8 @@ describe("Company roles and access previews in the assign dialog", () => {
 
 		expect(preview).toHaveTextContent("Only places you can see are shown.");
 		expect(describedRows(preview)).toEqual([
-			"Tampines: Leave: View, Approve or reject",
-			"Orchard › Kitchen: Departments: View / Department members: View",
+			"Tampines: Leave: Manage",
+			"Orchard › Kitchen: Organisation: View",
 		]);
 		expect(
 			calls.find(
@@ -853,8 +855,8 @@ describe("Company roles and access previews in the assign dialog", () => {
 		);
 
 		expect(describedRows(preview)).toEqual([
-			"Whole company: Departments: View / Department members: View",
-			"Tampines: Leave: View, Approve or reject",
+			"Whole company: Organisation: View",
+			"Tampines: Leave: Manage",
 		]);
 	});
 });

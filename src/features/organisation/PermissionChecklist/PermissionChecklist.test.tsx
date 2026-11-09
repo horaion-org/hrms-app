@@ -47,93 +47,137 @@ const Harness = ({
 	);
 };
 
+const list = (): HTMLElement =>
+	screen.getByRole("group", { name: "Permissions" });
 const row = (name: string): HTMLElement => screen.getByRole("group", { name });
+const section = (name: string): HTMLElement =>
+	screen.getByRole("region", { name });
 const box = (group: string, name: string): HTMLElement =>
 	within(row(group)).getByRole("checkbox", { name });
+const rowNames = (): Array<string | null> =>
+	within(list())
+		.getAllByRole("group")
+		.map((group) => group.getAttribute("aria-label"));
 
 describe("PermissionChecklist", () => {
-	it("shows one row per resource with a box for every permission in the catalog", () => {
+	it("groups the resources into the role editor's sections, in the contract's order", () => {
 		render(<Harness initial={[]} />);
 
 		expect(
-			within(screen.getByRole("group", { name: "Permissions" }))
+			within(list())
+				.getAllByRole("region")
+				.map((region) => within(region).getByRole("heading").textContent)
+		).toEqual([
+			"People",
+			"Leave",
+			"Scheduling",
+			"Approvals",
+			"Organisation",
+			"Company settings",
+			"Access and activity",
+		]);
+		expect(
+			within(section("Scheduling"))
 				.getAllByRole("group")
 				.map((group) => group.getAttribute("aria-label"))
-		).toEqual([
-			"Company",
+		).toEqual(["Schedules", "Shifts", "Constraints"]);
+		expect(
+			within(section("Approvals"))
+				.getAllByRole("group")
+				.map((group) => group.getAttribute("aria-label"))
+		).toEqual(["Approval flows", "Approvals"]);
+		expect(
+			within(section("Scheduling")).getByText(
+				"Build, change and publish departments’ rosters."
+			)
+		).toBeVisible();
+	});
+
+	it("shows one row per resource with a box for every permission in the catalog", () => {
+		render(<Harness initial={[]} />);
+
+		expect(rowNames()).toEqual([
+			"People",
+			"Notes",
+			"Availability",
+			"People’s employment terms",
+			"Leave",
+			"Schedules",
+			"Shifts",
+			"Constraints",
+			"Approval flows",
+			"Approvals",
 			"Branches",
 			"Branch members",
 			"Departments",
 			"Department members",
 			"Job titles",
+			"Company",
 			"Skills",
-			"People",
-			"Notes",
-			"Availability",
 			"Employment terms",
-			"People’s employment terms",
-			"Leave",
 			"Leave types",
-			"Schedules",
-			"Shifts",
-			"Constraints",
 			"Scheduling policy",
-			"Approval flows",
-			"Approvals",
-			"System roles",
+			"Access roles",
 			"Activity",
 		]);
 		// One box per key, plus each row's own.
 		expect(screen.getAllByRole("checkbox")).toHaveLength(
-			PERMISSION_KEYS.length + 22
+			PERMISSION_KEYS.length + PERMISSION_GROUPS.length
 		);
 		expect(within(row("Schedules")).getAllByRole("checkbox")).toHaveLength(8);
-		for (const action of [
-			"View",
-			"Create",
-			"Edit",
-			"Generate",
-			"Delete",
-			"Publish",
-			"Edit shifts",
+		for (const capability of [
+			"See schedules and rosters",
+			"Start a schedule",
+			"Set up a draft: its week, settings and shifts",
+			"Generate rosters",
+			"Change who works which shift",
+			"Publish or reject rosters",
+			"Delete schedules",
 		])
-			expect(box("Schedules", action)).not.toBeChecked();
-		expect(within(row("Shifts")).getAllByRole("checkbox")).toHaveLength(5);
-		for (const action of ["View", "Add", "Edit", "Delete"])
-			expect(box("Shifts", action)).not.toBeChecked();
-		expect(within(row("Constraints")).getAllByRole("checkbox")).toHaveLength(5);
-		for (const action of ["View", "Add", "Edit", "Delete"])
-			expect(box("Constraints", action)).not.toBeChecked();
-		expect(within(row("System roles")).getAllByRole("checkbox")).toHaveLength(
+			expect(box("Schedules", capability)).not.toBeChecked();
+		expect(within(row("Access roles")).getAllByRole("checkbox")).toHaveLength(
 			6
 		);
 		expect(within(row("People")).getAllByRole("checkbox")).toHaveLength(4);
-		expect(box("People", "Create")).not.toBeChecked();
-		expect(box("People", "Edit")).not.toBeChecked();
-		expect(within(row("Notes")).getAllByRole("checkbox")).toHaveLength(5);
-		for (const action of ["View", "Add", "Edit", "Delete"])
-			expect(box("Notes", action)).not.toBeChecked();
+		expect(
+			box("People", "Add people (sends them an invitation)")
+		).not.toBeChecked();
 	});
 
-	it("ticks what the role holds and counts it per row", () => {
+	it("explains each permission in a line of its own", () => {
+		render(<Harness initial={[]} />);
+
+		expect(
+			box("Leave", "Apply for leave for someone else")
+		).toHaveAccessibleDescription("Applying for oneself needs nothing");
+		expect(box("Schedules", "Generate rosters")).toHaveAccessibleDescription(
+			"Fixes the draft’s shifts for good"
+		);
+	});
+
+	it("ticks what the role holds and counts it per row and per section", () => {
 		render(<Harness initial={["branch:read", "branch:create"]} />);
 
-		expect(box("Branches", "View")).toBeChecked();
-		expect(box("Branches", "Create")).toBeChecked();
-		expect(box("Branches", "Edit")).not.toBeChecked();
+		expect(box("Branches", "See branches")).toBeChecked();
+		expect(box("Branches", "Create branches")).toBeChecked();
+		expect(box("Branches", "Edit branches")).not.toBeChecked();
 		expect(box("Branches", "Branches")).toBePartiallyChecked();
 		expect(within(row("Branches")).getByText("2 of 3")).toBeVisible();
 		expect(within(row("Departments")).getByText("0 of 3")).toBeVisible();
+		expect(
+			within(section("Organisation")).getByText("2 of 17 selected")
+		).toBeVisible();
 	});
 
 	it("ticks a schedule's, a shift's or a constraint's view along with generating or changing", async () => {
 		const user = userEvent.setup();
 		render(<Harness initial={[]} />);
 
-		await user.click(box("Schedules", "Generate"));
-		await user.click(box("Shifts", "Delete"));
-		await user.click(box("Constraints", "Edit"));
+		await user.click(box("Schedules", "Generate rosters"));
+		await user.click(box("Shifts", "Delete shifts"));
+		await user.click(box("Constraints", "Edit constraints"));
 
+		// Generating also ticks Shifts' view, which the schedule wizard reads.
 		expect(latest).toEqual([
 			"schedule:read",
 			"schedule:generate",
@@ -144,14 +188,50 @@ describe("PermissionChecklist", () => {
 		]);
 	});
 
+	it("ticks what a permission's screens use along with it, and says why", async () => {
+		const user = userEvent.setup();
+		render(<Harness initial={[]} />);
+
+		await user.click(box("Schedules", "Start a schedule"));
+
+		expect(latest).toEqual(["schedule:read", "schedule:create", "shift:read"]);
+		// Said on the row that was ticked.
+		expect(
+			within(row("Schedules")).getByText(
+				"Also ticked “See shifts”: the schedule wizard lists the department’s shifts."
+			)
+		).toBeVisible();
+
+		// Clearing what is used leaves what uses it, and warns on its row.
+		await user.click(box("Shifts", "See shifts"));
+
+		expect(latest).toEqual(["schedule:read", "schedule:create"]);
+		expect(
+			within(row("Schedules")).getByText(
+				"Without “See shifts”, holders can’t see the shifts step of the schedule wizard."
+			)
+		).toBeVisible();
+		expect(screen.queryByText(/^Also ticked/)).not.toBeInTheDocument();
+	});
+
+	it("doesn't tick what a permission uses when it can't be given", async () => {
+		const user = userEvent.setup();
+		render(<Harness initial={[]} unavailable={["shift:read"]} />);
+
+		await user.click(box("Schedules", "Start a schedule"));
+
+		expect(latest).toEqual(["schedule:read", "schedule:create"]);
+		expect(screen.queryByText(/^Also ticked/)).not.toBeInTheDocument();
+	});
+
 	it("ticks view along with any other permission of the resource", async () => {
 		const user = userEvent.setup();
 		render(<Harness initial={[]} />);
 
-		await user.click(box("Branches", "Edit"));
+		await user.click(box("Branches", "Edit branches"));
 
 		expect(latest).toEqual(["branch:read", "branch:update"]);
-		expect(box("Branches", "View")).toBeChecked();
+		expect(box("Branches", "See branches")).toBeChecked();
 	});
 
 	it("clears the whole resource when view is cleared", async () => {
@@ -160,7 +240,7 @@ describe("PermissionChecklist", () => {
 			<Harness initial={["branch:read", "branch:update", "department:read"]} />
 		);
 
-		await user.click(box("Branches", "View"));
+		await user.click(box("Branches", "See branches"));
 
 		expect(latest).toEqual(["department:read"]);
 	});
@@ -169,7 +249,7 @@ describe("PermissionChecklist", () => {
 		const user = userEvent.setup();
 		render(<Harness initial={["branch:read", "branch:update"]} />);
 
-		await user.click(box("Branches", "Edit"));
+		await user.click(box("Branches", "Edit branches"));
 
 		expect(latest).toEqual(["branch:read"]);
 	});
@@ -202,7 +282,7 @@ describe("PermissionChecklist", () => {
 			/>
 		);
 
-		expect(box("Branches", "Edit")).toBeDisabled();
+		expect(box("Branches", "Edit branches")).toBeDisabled();
 		expect(box("Activity", "Activity")).toBeDisabled();
 
 		await user.click(box("Branches", "Branches"));
@@ -212,66 +292,67 @@ describe("PermissionChecklist", () => {
 		await user.click(box("Branches", "Branches"));
 		expect(latest).toEqual([]);
 
-		// Nothing in Departments can be ticked without View, which can't be given.
-		expect(box("Departments", "Edit")).toBeDisabled();
-		expect(box("Departments", "Create")).toBeDisabled();
+		// Nothing in Departments can be ticked without its view, which can't be given.
+		expect(box("Departments", "Edit departments")).toBeDisabled();
+		expect(box("Departments", "Create departments")).toBeDisabled();
 		expect(box("Departments", "Departments")).toBeDisabled();
 	});
 
 	it("explains a permission whose prerequisite can't be given", () => {
 		render(<Harness initial={[]} unavailable={["member_note:read"]} />);
 
-		for (const action of ["Add", "Edit", "Delete"])
-			expect(box("Notes", action)).toHaveAccessibleDescription(
-				"Needs View, which you can’t give"
-			);
+		expect(box("Notes", "Add notes")).toHaveAccessibleDescription(
+			"About a person. Needs “Read notes about people”, which you can’t give"
+		);
 		expect(
 			within(row("Notes")).getAllByText(/which you can’t give/)
 		).toHaveLength(3);
-		expect(box("Notes", "View")).not.toHaveAccessibleDescription();
+		expect(box("Notes", "Read notes about people")).toHaveAccessibleDescription(
+			"With who wrote them"
+		);
 		expect(
 			within(row("People")).queryByText(/which you can’t give/)
 		).not.toBeInTheDocument();
 	});
 
-	it("says which permissions need another, from the contract", () => {
+	it("says once what every other permission of a row needs, from the contract", () => {
 		render(<Harness initial={[]} />);
 
 		expect(
-			within(row("Notes")).getByText("Add, Edit, and Delete need View.")
+			within(row("Notes")).getByText(
+				"Everything else here needs “Read notes about people”."
+			)
 		).toBeVisible();
-		expect(within(row("Company")).getByText("Edit needs View.")).toBeVisible();
 		expect(
-			within(row("Activity")).queryByText(/needs? View/)
+			within(row("Schedules")).getByText(
+				"Everything else here needs “See schedules and rosters”."
+			)
+		).toBeVisible();
+		expect(
+			within(row("Activity")).queryByText(/needs “/)
 		).not.toBeInTheDocument();
 	});
 
 	it("marks permissions that can only be given company-wide", () => {
 		render(<Harness initial={[]} />);
 
-		expect(box("Branches", "Create")).toHaveAccessibleDescription(
-			"Company only"
+		expect(box("Branches", "Create branches")).toHaveAccessibleDescription(
+			"Choosing their first heads. Only for whole-company roles"
 		);
-		expect(box("Branches", "Edit")).not.toHaveAccessibleDescription();
-		expect(box("Activity", "View")).toHaveAccessibleDescription("Company only");
+		expect(box("Branches", "Edit branches")).toHaveAccessibleDescription(
+			"Rename a branch, change its code, city or country, and deactivate or reactivate it"
+		);
 		expect(
-			within(row("System roles")).getAllByText("Company only")
+			within(row("Access roles")).getAllByText("Only for whole-company roles", {
+				exact: false,
+			})
 		).toHaveLength(3);
 	});
 
-	it("leaves company-only permissions, and rows left without any, out of a local role", () => {
+	it("leaves company-only permissions, and rows and sections left without any, out of a local role", () => {
 		render(<Harness initial={[]} kind="LOCAL" />);
 
-		expect(
-			within(screen.getByRole("group", { name: "Permissions" }))
-				.getAllByRole("group")
-				.map((group) => group.getAttribute("aria-label"))
-		).toEqual([
-			"Branches",
-			"Branch members",
-			"Departments",
-			"Department members",
-			"Job titles",
+		expect(rowNames()).toEqual([
 			"People",
 			"Notes",
 			"Availability",
@@ -281,62 +362,79 @@ describe("PermissionChecklist", () => {
 			"Shifts",
 			"Constraints",
 			"Approvals",
-			"System roles",
+			"Branches",
+			"Branch members",
+			"Departments",
+			"Department members",
+			"Job titles",
+			"Access roles",
 		]);
+		expect(
+			screen.queryByRole("region", { name: "Company settings" })
+		).not.toBeInTheDocument();
 		expect(screen.getAllByRole("checkbox")).toHaveLength(
 			PERMISSION_KEYS.filter((key) => !isCompanyOnly(key)).length + 15
 		);
 		expect(within(row("Branches")).getAllByRole("checkbox")).toHaveLength(3);
 		expect(
-			within(row("Branches")).queryByRole("checkbox", { name: "Create" })
+			within(row("Branches")).queryByRole("checkbox", {
+				name: "Create branches",
+			})
 		).not.toBeInTheDocument();
 		expect(within(row("Branches")).getByText("0 of 2")).toBeVisible();
-		// The row's own box, View and Assign: creating, editing and deleting roles is company-only.
-		expect(within(row("System roles")).getAllByRole("checkbox")).toHaveLength(
+		// The row's own box, view and give: creating, editing and deleting roles is company-only.
+		expect(within(row("Access roles")).getAllByRole("checkbox")).toHaveLength(
 			3
 		);
-		expect(box("System roles", "View")).toBeVisible();
-		expect(box("System roles", "Assign")).toBeVisible();
+		expect(
+			box("Access roles", "See access roles and who holds them")
+		).toBeVisible();
+		expect(box("Access roles", "Give access roles to people")).toBeVisible();
 	});
 
 	it("marks a local role's permissions that can't be given at a department, and nothing company-only", () => {
 		render(<Harness initial={[]} kind="LOCAL" />);
 
-		expect(box("Branches", "View")).toHaveAccessibleDescription(
-			"Not at departments"
+		expect(box("Branches", "See branches")).toHaveAccessibleDescription(
+			"Their code, city, country, status and heads. Not at departments"
 		);
-		expect(box("Branch members", "Add")).toHaveAccessibleDescription(
-			"Not at departments"
+		expect(
+			box("Branch members", "Add people to a branch")
+		).toHaveAccessibleDescription(/Not at departments$/);
+		expect(
+			box("Departments", "Create departments")
+		).toHaveAccessibleDescription(/Not at departments$/);
+		expect(box("Departments", "See departments")).toHaveAccessibleDescription(
+			"With their branch, status and heads"
 		);
-		expect(box("Departments", "Create")).toHaveAccessibleDescription(
-			"Not at departments"
-		);
-		expect(box("Departments", "View")).not.toHaveAccessibleDescription();
-		expect(box("People", "View")).not.toHaveAccessibleDescription();
-		expect(screen.queryByText("Company only")).not.toBeInTheDocument();
+		expect(
+			screen.queryByText(/Only for whole-company roles/)
+		).not.toBeInTheDocument();
 	});
 
 	it("never adds a company-only permission to a local role, even from a row's own box", async () => {
 		const user = userEvent.setup();
 		render(<Harness initial={[]} kind="LOCAL" />);
 
-		await user.click(box("System roles", "System roles"));
+		await user.click(box("Access roles", "Access roles"));
 
 		expect(latest).toEqual(["access_role:read", "access_role:assign"]);
-		expect(box("System roles", "System roles")).toBeChecked();
+		expect(box("Access roles", "Access roles")).toBeChecked();
 	});
 
 	it("shows a company role every permission, with no hint about where it applies", () => {
 		render(<Harness initial={[]} kind="COMPANY" />);
 
-		// One box per key, plus each resource row's own box.
 		expect(screen.getAllByRole("checkbox")).toHaveLength(
 			PERMISSION_KEYS.length + PERMISSION_GROUPS.length
 		);
-		expect(box("Branches", "Create")).not.toHaveAccessibleDescription();
-		expect(box("Branches", "View")).not.toHaveAccessibleDescription();
-		expect(screen.queryByText("Company only")).not.toBeInTheDocument();
-		expect(screen.queryByText("Not at departments")).not.toBeInTheDocument();
+		expect(box("Branches", "Create branches")).toHaveAccessibleDescription(
+			"Choosing their first heads"
+		);
+		expect(
+			screen.queryByText(/Only for whole-company roles/)
+		).not.toBeInTheDocument();
+		expect(screen.queryByText(/Not at departments/)).not.toBeInTheDocument();
 	});
 
 	it("shows keys this app doesn't know as ticked and locked, and never hands them back", async () => {
@@ -356,7 +454,7 @@ describe("PermissionChecklist", () => {
 			)
 		).toBeVisible();
 
-		await user.click(box("Branches", "Edit"));
+		await user.click(box("Branches", "Edit branches"));
 		expect(latest).toEqual(["branch:read", "branch:update"]);
 	});
 
@@ -365,6 +463,6 @@ describe("PermissionChecklist", () => {
 
 		for (const item of screen.getAllByRole("checkbox"))
 			expect(item).toBeDisabled();
-		expect(box("Branches", "View")).toBeChecked();
+		expect(box("Branches", "See branches")).toBeChecked();
 	});
 });

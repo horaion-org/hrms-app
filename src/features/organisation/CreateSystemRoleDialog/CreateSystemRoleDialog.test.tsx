@@ -66,13 +66,13 @@ afterEach(() => {
 const open = async (): Promise<void> => {
 	app = await openApp("/organisation/system-roles");
 	renderAuthApp(app);
-	await screen.findByRole("heading", { name: "System roles", level: 1 });
+	await screen.findByRole("heading", { name: "Access roles", level: 1 });
 };
 const openDialog = async (): Promise<HTMLElement> => {
 	await userEvent.click(
-		await screen.findByRole("button", { name: "Create system role" })
+		await screen.findByRole("button", { name: "Create access role" })
 	);
-	return screen.findByRole("dialog", { name: "Create system role" });
+	return screen.findByRole("dialog", { name: "Create access role" });
 };
 const box = (dialog: HTMLElement, group: string, name: string): HTMLElement =>
 	within(within(dialog).getByRole("group", { name: group })).getByRole(
@@ -81,27 +81,30 @@ const box = (dialog: HTMLElement, group: string, name: string): HTMLElement =>
 	);
 const submit = (dialog: HTMLElement): Promise<void> =>
 	userEvent.click(
-		within(dialog).getByRole("button", { name: "Create system role" })
+		within(dialog).getByRole("button", { name: "Create access role" })
 	);
 const typeField = (dialog: HTMLElement): HTMLElement =>
-	within(dialog).getByRole("button", { name: "Role type" });
+	within(dialog).getByRole("radiogroup", {
+		name: "Where can this role be used?",
+	});
 const chooseType = async (
 	dialog: HTMLElement,
-	type: "Company role" | "Local role"
+	type: "Across the whole company" | "In the branches or departments you choose"
 ): Promise<void> => {
-	await userEvent.click(typeField(dialog));
-	await userEvent.click(await screen.findByRole("option", { name: type }));
+	await userEvent.click(
+		within(typeField(dialog)).getByRole("radio", { name: type })
+	);
 };
 
-describe("create system role through the System roles page", () => {
+describe("create access role through the Access roles page", () => {
 	it("hides create without access_role:create", async () => {
 		stubApi(routes(["access_role:read"]));
 		await open();
 		expect(
-			await screen.findByRole("table", { name: "System roles" })
+			await screen.findByRole("table", { name: "Access roles" })
 		).toBeVisible();
 		expect(
-			screen.queryByRole("button", { name: "Create system role" })
+			screen.queryByRole("button", { name: "Create access role" })
 		).not.toBeInTheDocument();
 	});
 
@@ -110,22 +113,27 @@ describe("create system role through the System roles page", () => {
 		await open();
 		const dialog = await openDialog();
 
-		expect(typeField(dialog)).toHaveTextContent("Select a role type");
+		for (const choice of within(typeField(dialog)).getAllByRole("radio"))
+			expect(choice).not.toBeChecked();
 		const list = within(dialog).getByRole("group", { name: "Permissions" });
 		for (const item of within(list).getAllByRole("checkbox"))
 			expect(item).toBeDisabled();
 		expect(
 			within(dialog).getByText(
-				"Choose a role type to see the permissions it can hold."
+				"Choose where this role can be used to see the permissions it can hold."
 			)
 		).toBeVisible();
 
-		await chooseType(dialog, "Local role");
+		await chooseType(dialog, "In the branches or departments you choose");
 
-		expect(typeField(dialog)).toHaveAccessibleDescription(
-			"For work inside branches and departments. It can be given at the whole company, a branch or a department."
+		expect(
+			within(typeField(dialog)).getByRole("radio", {
+				name: "In the branches or departments you choose",
+			})
+		).toHaveAccessibleDescription(
+			"You pick the places when you give someone the role."
 		);
-		expect(box(dialog, "Branches", "View")).toBeEnabled();
+		expect(box(dialog, "Branches", "See branches")).toBeEnabled();
 		expect(
 			within(dialog).queryByRole("group", { name: "Company" })
 		).not.toBeInTheDocument();
@@ -139,7 +147,7 @@ describe("create system role through the System roles page", () => {
 		await submit(dialog);
 
 		expect(
-			await within(dialog).findByText("Choose a role type.")
+			await within(dialog).findByText("Choose where this role can be used.")
 		).toBeVisible();
 		await waitFor(() => {
 			expect(typeField(dialog)).toHaveFocus();
@@ -153,7 +161,7 @@ describe("create system role through the System roles page", () => {
 		stubApi(routes(owner));
 		await open();
 		const dialog = await openDialog();
-		await chooseType(dialog, "Company role");
+		await chooseType(dialog, "Across the whole company");
 		const list = within(dialog).getByRole("group", { name: "Permissions" });
 		// One box per key, plus each resource's own.
 		expect(within(list).getAllByRole("checkbox")).toHaveLength(
@@ -170,10 +178,10 @@ describe("create system role through the System roles page", () => {
 		stubApi(routes(["access_role:read", "access_role:create", "branch:read"]));
 		await open();
 		const dialog = await openDialog();
-		await chooseType(dialog, "Company role");
-		expect(box(dialog, "Branches", "View")).toBeEnabled();
-		expect(box(dialog, "Branches", "Edit")).toBeDisabled();
-		expect(box(dialog, "System roles", "Create")).toBeEnabled();
+		await chooseType(dialog, "Across the whole company");
+		expect(box(dialog, "Branches", "See branches")).toBeEnabled();
+		expect(box(dialog, "Branches", "Edit branches")).toBeDisabled();
+		expect(box(dialog, "Access roles", "Create access roles")).toBeEnabled();
 		expect(
 			within(dialog).getByText(
 				"Choose at least 1 permission. You can only grant permissions you hold."
@@ -185,16 +193,17 @@ describe("create system role through the System roles page", () => {
 		stubApi(routes(owner));
 		await open();
 		const dialog = await openDialog();
-		await chooseType(dialog, "Company role");
+		await chooseType(dialog, "Across the whole company");
 		await userEvent.type(within(dialog).getByLabelText("Role name"), "Auditor");
 		await submit(dialog);
 		expect(
 			await within(dialog).findByText("Choose at least one permission.")
 		).toBeVisible();
 		await waitFor(() => {
-			expect(box(dialog, "Company", "Company")).toHaveFocus();
+			// The first box of the list: the People section comes first.
+			expect(box(dialog, "People", "People")).toHaveFocus();
 		});
-		await userEvent.click(box(dialog, "Activity", "View"));
+		await userEvent.click(box(dialog, "Activity", "See the activity record"));
 		await waitFor(() => {
 			expect(
 				within(dialog).queryByText("Choose at least one permission.")
@@ -209,14 +218,14 @@ describe("create system role through the System roles page", () => {
 		});
 		await open();
 		const dialog = await openDialog();
-		await chooseType(dialog, "Local role");
+		await chooseType(dialog, "In the branches or departments you choose");
 		await userEvent.type(
 			within(dialog).getByLabelText("Role name"),
 			"  Branch manager "
 		);
 		// Edit needs View, so ticking it ticks both.
-		await userEvent.click(box(dialog, "Branches", "Edit"));
-		expect(box(dialog, "Branches", "View")).toBeChecked();
+		await userEvent.click(box(dialog, "Branches", "Edit branches"));
+		expect(box(dialog, "Branches", "See branches")).toBeChecked();
 		expect(within(dialog).getByText("2 selected")).toBeVisible();
 		await submit(dialog);
 		await waitFor(() => {
@@ -238,19 +247,19 @@ describe("create system role through the System roles page", () => {
 		stubApi(routes(owner));
 		await open();
 		const dialog = await openDialog();
-		await chooseType(dialog, "Company role");
+		await chooseType(dialog, "Across the whole company");
 		// Create needs View, so both are chosen.
-		await userEvent.click(box(dialog, "Branches", "Create"));
-		await userEvent.click(box(dialog, "Activity", "View"));
+		await userEvent.click(box(dialog, "Branches", "Create branches"));
+		await userEvent.click(box(dialog, "Activity", "See the activity record"));
 
-		await chooseType(dialog, "Local role");
+		await chooseType(dialog, "In the branches or departments you choose");
 
 		expect(
 			within(dialog).getByText(
-				"A local role can’t hold company-only permissions, so Branches: Create and Activity: View were removed."
+				"A role for chosen places can’t hold company-wide permissions, so “Create branches” and “See the activity record” were removed."
 			)
 		).toBeVisible();
-		expect(box(dialog, "Branches", "View")).toBeChecked();
+		expect(box(dialog, "Branches", "See branches")).toBeChecked();
 		expect(within(dialog).getByText("1 selected")).toBeVisible();
 	});
 
@@ -261,14 +270,14 @@ describe("create system role through the System roles page", () => {
 		});
 		await open();
 		const dialog = await openDialog();
-		await chooseType(dialog, "Local role");
+		await chooseType(dialog, "In the branches or departments you choose");
 		await userEvent.type(within(dialog).getByLabelText("Role name"), "Manager");
-		await userEvent.click(box(dialog, "Branches", "View"));
+		await userEvent.click(box(dialog, "Branches", "See branches"));
 		await submit(dialog);
 
 		expect(
 			await within(dialog).findByText(
-				"A local role can’t hold permissions that only apply company-wide. Choose Company role, or remove those permissions."
+				"A role for chosen places can’t hold company-wide permissions. Choose “Across the whole company”, or remove those permissions."
 			)
 		).toBeVisible();
 		await waitFor(() => {
@@ -284,13 +293,13 @@ describe("create system role through the System roles page", () => {
 		});
 		await open();
 		const dialog = await openDialog();
-		await chooseType(dialog, "Local role");
+		await chooseType(dialog, "In the branches or departments you choose");
 		await userEvent.type(within(dialog).getByLabelText("Role name"), "Manager");
-		await userEvent.click(box(dialog, "Branches", "View"));
+		await userEvent.click(box(dialog, "Branches", "See branches"));
 		await submit(dialog);
 		expect(
 			await within(dialog).findByText(
-				'A system role named "Manager" already exists. Choose a different name.'
+				'An access role named "Manager" already exists. Choose a different name.'
 			)
 		).toBeVisible();
 		await waitFor(() => {
@@ -307,7 +316,7 @@ describe("create system role through the System roles page", () => {
 		[
 			403,
 			"AUTHORIZATION_DENIED",
-			"You can’t create this role. You may no longer hold some of the chosen permissions, or permission to create system roles.",
+			"You can’t create this role. You may no longer hold some of the chosen permissions, or permission to create access roles.",
 		],
 	])(
 		"shows %s %s as a focused form alert and keeps the choices",
@@ -318,19 +327,19 @@ describe("create system role through the System roles page", () => {
 			});
 			await open();
 			const dialog = await openDialog();
-			await chooseType(dialog, "Local role");
+			await chooseType(dialog, "In the branches or departments you choose");
 			await userEvent.type(
 				within(dialog).getByLabelText("Role name"),
 				"Manager"
 			);
-			await userEvent.click(box(dialog, "Branches", "View"));
+			await userEvent.click(box(dialog, "Branches", "See branches"));
 			await submit(dialog);
 			const alert = await within(dialog).findByText(String(message));
 			expect(alert).toHaveAttribute("role", "alert");
 			await waitFor(() => {
 				expect(alert).toHaveFocus();
 			});
-			expect(box(dialog, "Branches", "View")).toBeChecked();
+			expect(box(dialog, "Branches", "See branches")).toBeChecked();
 		}
 	);
 });

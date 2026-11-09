@@ -164,7 +164,7 @@ describe("a person's access summary", () => {
 		expect(placeLabels(undefined, "c-1", t)({})).toBe("Whole company");
 	});
 
-	it("words each place's access per resource with the checklist's copy, dropping places it can't name", () => {
+	it("words each place's access per section of the role editor, dropping places it can't name", () => {
 		expect(
 			describeAccess(
 				[
@@ -185,7 +185,8 @@ describe("a person's access summary", () => {
 		).toEqual([
 			{
 				place: "Whole company",
-				lines: ["Departments: View", "Leave: View, Approve or reject"],
+				// Section by section, in the role editor's order.
+				lines: ["Leave: Manage", "Organisation: View"],
 			},
 		]);
 	});

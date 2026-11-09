@@ -93,7 +93,7 @@ describe("create job title refusals", () => {
 	});
 });
 
-describe("create system role refusals", () => {
+describe("create access role refusals", () => {
 	it("shows a drifted catalogue as a form alert, not on a field", () => {
 		expect(
 			systemRoleRefusal(
@@ -118,7 +118,7 @@ describe("create system role refusals", () => {
 			systemRoleRefusal(problem(400, "ACCESS_ROLE_KIND_CONFLICT"), ROLE, t)
 		).toEqual({
 			fields: {
-				kind: "A local role can’t hold permissions that only apply company-wide. Choose Company role, or remove those permissions.",
+				kind: "A role for chosen places can’t hold company-wide permissions. Choose “Across the whole company”, or remove those permissions.",
 			},
 			refreshMembers: false,
 		});

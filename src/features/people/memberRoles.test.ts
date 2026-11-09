@@ -238,7 +238,7 @@ describe("member access", () => {
 				english
 			)
 		).toEqual([
-			{ place: "Whole company", lines: ["Departments: View"] },
+			{ place: "Whole company", lines: ["Organisation: View"] },
 			{ place: "Orchard", lines: ["Leave: View"] },
 		]);
 	});
@@ -251,7 +251,7 @@ describe("member access", () => {
 			"Loading…"
 		);
 		expect(describeMemberAccess({ status: "error" }, label, english)).toBe(
-			"We couldn’t load their system roles."
+			"We couldn’t load their access roles."
 		);
 		expect(
 			describeMemberAccess(

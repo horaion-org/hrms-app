@@ -6,17 +6,26 @@ import {
 	dependingOn,
 	isAboveDepartments,
 	isCompanyOnly,
+	moduleOf,
 	PERMISSION_KEYS,
+	PERMISSION_MODULES,
 	type PermissionKey,
+	type PermissionModule,
 	type PermissionResource,
+	type PermissionUse,
 	requiredFor,
 	resourceOf,
+	usesOf,
 } from "@/features/workspace/permissionKeys";
 
 export type { PermissionResource };
 
 type LabelKeyOf<K> = K extends `${infer R}:${infer A}`
 	? `organisation.permissions.${R}.actions.${A}`
+	: never;
+
+type HintKeyOf<K> = K extends `${infer R}:${infer A}`
+	? `organisation.permissions.${R}.actionHints.${A}`
 	: never;
 
 /** One resource's keys, in the catalog's order. */
@@ -58,6 +67,27 @@ export const groupsFor = (
 ): ReadonlyArray<PermissionGroup> =>
 	kind === "LOCAL" ? LOCAL_GROUPS : PERMISSION_GROUPS;
 
+/** One section of the role editor: a module's resources, in the catalog's order. */
+export type PermissionSection = {
+	module: PermissionModule;
+	groups: ReadonlyArray<PermissionGroup>;
+};
+
+/**
+ * The rows a role of `kind` is edited in, by module in the contract's
+ * order (see `groupsFor`); a module left without rows is not shown.
+ */
+export const sectionsFor = (
+	kind?: AccessRoleKind
+): ReadonlyArray<PermissionSection> =>
+	PERMISSION_MODULES.map((module) => ({
+		module,
+		// Every key of a resource shares its module, so any key tells it.
+		groups: groupsFor(kind).filter((group) =>
+			group.keys.some((key) => moduleOf(key) === module)
+		),
+	})).filter((section) => section.groups.length > 0);
+
 /**
  * Where a key can be given, as the hint beside it in a role of `kind`. In a
  * local role, a key that can't be given at a Department says so. In a
@@ -78,34 +108,25 @@ export const scopeHintOf = (
 export const labelKeyOf = (key: PermissionKey): LabelKeyOf<PermissionKey> =>
 	`organisation.permissions.${key.replace(":", ".actions.")}` as LabelKeyOf<PermissionKey>;
 
-/**
- * A permission named on its own, e.g. "View", or with its resource when it
- * belongs to another one than `within`, e.g. "Branches: View".
- */
-export const permissionLabel = (
-	key: PermissionKey,
-	t: TFunction,
-	within?: PermissionResource
-): string => {
-	const action = t(labelKeyOf(key));
-	const resource = resourceOf(key);
-	return resource === within
-		? action
-		: t("organisation.permissions.qualified", {
-				resource: t(`organisation.permissions.${resource}.name`),
-				permission: action,
-			});
-};
+/** The translation key of what a permission lets its holder do, in more words; a key without copy fails to compile. */
+export const hintKeyOf = (key: PermissionKey): HintKeyOf<PermissionKey> =>
+	`organisation.permissions.${key.replace(":", ".actionHints.")}` as HintKeyOf<PermissionKey>;
 
-/** Several permissions as one phrase, e.g. "Create, Edit, and Delete". */
+/**
+ * A permission named inside a sentence, quoted, e.g. “See shifts”. Its
+ * label already names what it is about, so no resource is added.
+ */
+export const permissionLabel = (key: PermissionKey, t: TFunction): string =>
+	t("organisation.permissions.quoted", { permission: t(labelKeyOf(key)) });
+
+/** Several permissions as one phrase, e.g. “Add shifts” and “Edit shifts”. */
 export const permissionList = (
 	keys: ReadonlyArray<PermissionKey>,
 	t: TFunction,
-	language: string,
-	within?: PermissionResource
+	language: string
 ): string =>
 	new Intl.ListFormat(language, { type: "conjunction" }).format(
-		keys.map((key) => permissionLabel(key, t, within))
+		keys.map((key) => permissionLabel(key, t))
 	);
 
 /** `selected` with `keys` added or removed, in the catalog's order. */
@@ -206,13 +227,16 @@ export const toggleGroup = (
 
 /**
  * A group's dependencies for display: each distinct set of prerequisites
- * with the keys of the group that need it, in catalog order.
+ * with the keys of the group that need it, in catalog order. `everyOther`
+ * is set when every key of the group but the prerequisites themselves needs
+ * it, so the row can say so once instead of listing them all.
  */
 export const dependenciesOf = (
 	keys: ReadonlyArray<PermissionKey>
 ): Array<{
 	keys: Array<PermissionKey>;
 	prerequisites: ReadonlyArray<PermissionKey>;
+	everyOther: boolean;
 }> => {
 	const byPrerequisites = new Map<
 		string,
@@ -226,5 +250,64 @@ export const dependenciesOf = (
 		entry.keys.push(key);
 		byPrerequisites.set(id, entry);
 	}
-	return [...byPrerequisites.values()];
+	return [...byPrerequisites.values()].map((entry) => ({
+		...entry,
+		everyOther:
+			entry.keys.length ===
+			keys.filter((key) => !entry.prerequisites.includes(key)).length,
+	}));
 };
+
+/** A key ticked along because another one's screens use it, and which key that was. */
+export type TickedAlong = PermissionUse & { by: PermissionKey };
+
+/**
+ * The selection a change turned `before` into `after`, with what the keys it
+ * added also use (see `PERMISSION_USES`) ticked along with their
+ * prerequisites, when they can be ticked; and those uses, with the key that
+ * caused each, to say why where it was ticked. Unlike a prerequisite it
+ * never works the other way: clearing a used key leaves whatever uses it
+ * alone.
+ */
+export const tickUses = (
+	before: ReadonlyArray<PermissionKey>,
+	after: ReadonlyArray<PermissionKey>,
+	unavailable: ReadonlyArray<PermissionKey> = []
+): { selected: Array<PermissionKey>; alsoTicked: Array<TickedAlong> } => {
+	let selected = [...after];
+	const alsoTicked: Array<TickedAlong> = [];
+	const added = after.filter((key) => !before.includes(key));
+	// Keys ticked along join `added`, so what they use is ticked too.
+	for (const key of added)
+		for (const use of usesOf(key)) {
+			if (
+				selected.includes(use.key) ||
+				!canTick(use.key, selected, unavailable)
+			)
+				continue;
+			const next = withKeys(selected, requiredFor(use.key), true);
+			added.push(...next.filter((item) => !selected.includes(item)));
+			selected = next;
+			alsoTicked.push({ ...use, by: key });
+		}
+	return { selected, alsoTicked };
+};
+
+/**
+ * What the selected keys among `keys` use that is not selected, once per key
+ * and reason, in the order of `keys`: their screens show less without it.
+ */
+export const missingUses = (
+	keys: ReadonlyArray<PermissionKey>,
+	selected: ReadonlyArray<PermissionKey>
+): Array<PermissionUse> =>
+	keys
+		.filter((key) => selected.includes(key))
+		.flatMap(usesOf)
+		.filter(
+			(use, index, all) =>
+				!selected.includes(use.key) &&
+				all.findIndex(
+					(other) => other.key === use.key && other.reason === use.reason
+				) === index
+		);

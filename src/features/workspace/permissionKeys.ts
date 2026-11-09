@@ -193,3 +193,54 @@ export const companyOnlyKeys = (
  */
 export const isAboveDepartments = (key: PermissionKey): boolean =>
 	assignableAt(key, "BRANCH") && !assignableAt(key, "DEPARTMENT");
+
+/**
+ * Keys a screen reads from another resource besides its own. The API never
+ * requires them (a prerequisite is always the same resource), but without
+ * one the screen shows less. Each names why, as its copy under
+ * `organisation.permissions.uses`. Only pairs this app's code makes; a
+ * role's editor ticks them along and warns when one is missing.
+ */
+export const PERMISSION_USES = {
+	// The schedule wizard's shifts step and summary (`useScheduleShifts`).
+	"schedule:create": [{ key: "shift:read", reason: "scheduleShifts" }],
+	"schedule:update": [{ key: "shift:read", reason: "scheduleShifts" }],
+	"schedule:generate": [{ key: "shift:read", reason: "scheduleShifts" }],
+	// Shifts are changed only inside the schedule wizard, on a saved draft (`useSchedule`).
+	"shift:create": [{ key: "schedule:read", reason: "shiftsInWizard" }],
+	"shift:update": [{ key: "schedule:read", reason: "shiftsInWizard" }],
+	"shift:delete": [{ key: "schedule:read", reason: "shiftsInWizard" }],
+	// Applying on someone's behalf searches the People list (`peopleQuery`).
+	"leave_request:create": [
+		{ key: "member_profile:read", reason: "leaveForSomeone" },
+	],
+	// The person form's job title choices (`useJobTitles`).
+	"member_profile:create": [
+		{ key: "job_title:read", reason: "personJobTitles" },
+	],
+	"member_profile:update": [
+		{ key: "job_title:read", reason: "personJobTitles" },
+	],
+	// Notes show only on a person's page, which loads their profile.
+	"member_note:read": [
+		{ key: "member_profile:read", reason: "notesOnProfile" },
+	],
+	// The create dialog's branch choices (`useBranches`).
+	"department:create": [{ key: "branch:read", reason: "departmentBranches" }],
+} as const satisfies Partial<
+	Record<PermissionKey, ReadonlyArray<{ key: PermissionKey; reason: string }>>
+>;
+
+/** Why a screen of one key reads another; see `PERMISSION_USES`. */
+export type PermissionUseReason =
+	(typeof PERMISSION_USES)[keyof typeof PERMISSION_USES][number]["reason"];
+
+/** A key another one's screens read, and why. */
+export type PermissionUse = { key: PermissionKey; reason: PermissionUseReason };
+
+const USES: Partial<Record<PermissionKey, ReadonlyArray<PermissionUse>>> =
+	PERMISSION_USES;
+
+/** What `key`'s screens read from other resources; see `PERMISSION_USES`. */
+export const usesOf = (key: PermissionKey): ReadonlyArray<PermissionUse> =>
+	USES[key] ?? [];

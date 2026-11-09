@@ -81,7 +81,7 @@ describe("AccessRoleStatusDialog", () => {
 		).toEqual([["Whole company"], ["Orchard › Kitchen", "Tampines"]]);
 		expect(dialog).toHaveTextContent("They will no longer be able to");
 		expect(screen.getAllByRole("term").map((term) => term.textContent)).toEqual(
-			["Branches", "Departments"]
+			["Organisation"]
 		);
 		expect(dialog).toHaveTextContent(
 			"Activating the role again gives the same people their access back."

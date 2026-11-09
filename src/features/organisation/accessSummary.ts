@@ -11,9 +11,9 @@ import {
 	type PlaceRef,
 } from "@/features/organisation/assignmentTargets";
 import {
-	labelKeyOf,
-	PERMISSION_GROUPS,
-} from "@/features/organisation/PermissionChecklist/groups";
+	sectionLevels,
+	sectionLevelText,
+} from "@/features/organisation/sectionLevels";
 import type { Workspace } from "@/features/workspace/api";
 import {
 	assignableAt,
@@ -144,12 +144,13 @@ export const placeLabels =
 		return undefined;
 	};
 
-/** One place's access in words: where, and one "Resource: Action, Action" line per resource. */
+/** One place's access in words: where, and one "Section: Level" line per section, e.g. "Scheduling: Manage". */
 export type PlaceAccessText = { place: string; lines: Array<string> };
 
 /**
- * A summary in words, for a `DescriptionList`, with the copy the
- * permission checklist uses. Places `placeLabel` can't name are left out.
+ * A summary in words, for a `DescriptionList`: per place, how much of each
+ * section of the role editor is given there (see `sectionLevels`). Places
+ * `placeLabel` can't name are left out.
  */
 export const describeAccess = (
 	summary: ReadonlyArray<PlaceAccess>,
@@ -159,16 +160,8 @@ export const describeAccess = (
 	summary.flatMap((entry) => {
 		const place = placeLabel(entry);
 		if (place === undefined) return [];
-		const lines = PERMISSION_GROUPS.flatMap((group) => {
-			const keys = group.keys.filter((key) => entry.permissions.includes(key));
-			return keys.length === 0
-				? []
-				: [
-						t("organisation.permissions.qualified", {
-							resource: t(`organisation.permissions.${group.resource}.name`),
-							permission: keys.map((key) => t(labelKeyOf(key))).join(", "),
-						}),
-					];
-		});
+		const lines = sectionLevels(entry.permissions).map((section) =>
+			sectionLevelText(section, t)
+		);
 		return [{ place, lines }];
 	});

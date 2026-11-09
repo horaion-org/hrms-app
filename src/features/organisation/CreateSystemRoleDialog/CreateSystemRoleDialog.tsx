@@ -4,11 +4,8 @@ import { Controller, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { FormRow, formRowIds } from "@/components/forms/FormRow";
-import { Select } from "@/components/forms/Select";
-import {
-	roleKindHints,
-	roleKindOptions,
-} from "@/features/organisation/accessRoleFormSchema";
+import { RadioCard } from "@/components/forms/RadioCard";
+import { roleKindChoices } from "@/features/organisation/accessRoleFormSchema";
 import { isAccessRoleKind } from "@/features/organisation/api";
 import { CreateFormDialog } from "@/features/organisation/CreateFormDialog";
 import { refusalFor } from "@/features/organisation/CreateSystemRoleDialog/refusalFor";
@@ -89,11 +86,6 @@ export const CreateSystemRoleDialog = ({
 	const kindId = `${formId}-kind`;
 	const kindIds = formRowIds(kindId);
 	const kindError = errors.kind?.message;
-	const kindHint = roleKindHints(kind, t).map((line) => (
-		<span key={line} className="block">
-			{line}
-		</span>
-	));
 	const permissionsId = `${formId}-permissions`;
 	const permissionsIds = formRowIds(permissionsId);
 	const permissionsHint = kind
@@ -136,7 +128,6 @@ export const CreateSystemRoleDialog = ({
 				<FormRow
 					required
 					error={kindError}
-					hint={kindHint}
 					htmlFor={kindId}
 					label={t(`${kindKey}.label`)}
 					layout="stacked"
@@ -145,32 +136,42 @@ export const CreateSystemRoleDialog = ({
 						control={control}
 						name="kind"
 						render={({ field }) => (
-							<Select
+							// The group takes focus when a refusal points at the field; the cards hold no ref.
+							<div
 								ref={field.ref}
-								aria-describedby={kindError ? kindIds.errorId : kindIds.hintId}
+								aria-describedby={kindError ? kindIds.errorId : undefined}
 								aria-invalid={Boolean(kindError)}
 								aria-labelledby={kindIds.labelId}
-								className="w-full"
-								disabled={isSubmitting}
-								name={field.name}
-								options={roleKindOptions(t)}
-								placeholder={t(`${kindKey}.placeholder`)}
-								status={kindError ? "error" : undefined}
-								value={field.value}
-								onChange={(next) => {
-									if (!isAccessRoleKind(next)) return;
-									field.onChange(next);
-									const switched = selectionForKind(
-										getValues("permissions"),
-										next
-									);
-									if (switched.removed.length > 0)
-										setValue("permissions", switched.selected, {
-											shouldDirty: true,
-										});
-									setCleared(switched.removed);
-								}}
-							/>
+								className="grid gap-3"
+								id={kindId}
+								role="radiogroup"
+								tabIndex={-1}
+							>
+								{roleKindChoices(t).map((choice) => (
+									<RadioCard
+										key={choice.value}
+										checked={field.value === choice.value}
+										description={choice.description}
+										disabled={isSubmitting}
+										label={choice.label}
+										name={field.name}
+										value={choice.value}
+										onChange={(next) => {
+											if (!isAccessRoleKind(next)) return;
+											field.onChange(next);
+											const switched = selectionForKind(
+												getValues("permissions"),
+												next
+											);
+											if (switched.removed.length > 0)
+												setValue("permissions", switched.selected, {
+													shouldDirty: true,
+												});
+											setCleared(switched.removed);
+										}}
+									/>
+								))}
+							</div>
 						)}
 					/>
 				</FormRow>

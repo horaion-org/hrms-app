@@ -96,16 +96,15 @@ const box = (group: string, name: string): HTMLElement =>
 const save = (): HTMLElement =>
 	screen.getByRole("button", { name: "Save changes" });
 const typeField = (): HTMLElement =>
-	screen.getByRole("button", { name: "Role type" });
+	screen.getByRole("radiogroup", { name: "Where can this role be used?" });
 const chooseType = async (
 	user: ReturnType<typeof userEvent.setup>,
-	type: "Company role" | "Local role"
+	type: "Across the whole company" | "In the branches or departments you choose"
 ): Promise<void> => {
-	await user.click(typeField());
-	await user.click(await screen.findByRole("option", { name: type }));
+	await user.click(within(typeField()).getByRole("radio", { name: type }));
 };
 
-describe("System role editor", () => {
+describe("Access role editor", () => {
 	it("opens on the role's permissions from the list's Edit button", async () => {
 		const user = userEvent.setup();
 		stubApi(routes());
@@ -130,11 +129,15 @@ describe("System role editor", () => {
 		expect(screen.getByRole("textbox", { name: /Role name/ })).toHaveValue(
 			"Manager"
 		);
-		expect(typeField()).toHaveTextContent("Company role");
-		expect(box("Branches", "View")).toBeChecked();
-		expect(box("Branches", "Create")).toBeChecked();
-		expect(box("Branches", "Edit")).not.toBeChecked();
-		expect(box("Departments", "View")).toBeChecked();
+		expect(
+			within(typeField()).getByRole("radio", {
+				name: "Across the whole company",
+			})
+		).toBeChecked();
+		expect(box("Branches", "See branches")).toBeChecked();
+		expect(box("Branches", "Create branches")).toBeChecked();
+		expect(box("Branches", "Edit branches")).not.toBeChecked();
+		expect(box("Departments", "See departments")).toBeChecked();
 		expect(
 			screen.getByText(`3 of ${PERMISSION_KEYS.length} selected`)
 		).toBeVisible();
@@ -152,14 +155,14 @@ describe("System role editor", () => {
 
 		await user.clear(name);
 		await user.type(name, "  Area manager ");
-		await user.click(box("Departments", "Edit"));
-		await user.click(box("Branches", "Create"));
+		await user.click(box("Departments", "Edit departments"));
+		await user.click(box("Branches", "Create branches"));
 
 		expect(screen.getByText("1 added, 1 removed")).toBeVisible();
 		await user.click(save());
 
 		expect(
-			await screen.findByRole("heading", { level: 1, name: "System roles" })
+			await screen.findByRole("heading", { level: 1, name: "Access roles" })
 		).toBeVisible();
 		expect(opened.router.state.location.pathname).toBe(
 			"/organisation/system-roles"
@@ -203,14 +206,16 @@ describe("System role editor", () => {
 		});
 		await open(EDITOR);
 		await screen.findByRole("textbox", { name: /Role name/ });
-		await user.click(box("Departments", "Edit"));
+		await user.click(box("Departments", "Edit departments"));
 		await user.click(save());
 		await user.click(
 			await screen.findByRole("button", { name: "Edit Manager" })
 		);
 		await screen.findByRole("textbox", { name: /Role name/ });
 
-		await waitFor(() => expect(box("Departments", "Edit")).toBeChecked());
+		await waitFor(() =>
+			expect(box("Departments", "Edit departments")).toBeChecked()
+		);
 		expect(save()).toBeDisabled();
 	});
 
@@ -220,24 +225,26 @@ describe("System role editor", () => {
 		await open(EDITOR);
 		await screen.findByRole("textbox", { name: /Role name/ });
 
-		await chooseType(user, "Local role");
+		await chooseType(user, "In the branches or departments you choose");
 
 		expect(
 			screen.getByText(
-				"A local role can’t hold company-only permissions, so Branches: Create was removed."
+				"A role for chosen places can’t hold company-wide permissions, so “Create branches” was removed."
 			)
 		).toBeVisible();
 		expect(
 			within(screen.getByRole("group", { name: "Branches" })).queryByRole(
 				"checkbox",
-				{ name: "Create" }
+				{ name: "Create branches" }
 			)
 		).not.toBeInTheDocument();
-		expect(box("Branches", "View")).toHaveAccessibleDescription(
-			"Not at departments"
+		expect(box("Branches", "See branches")).toHaveAccessibleDescription(
+			/Not at departments$/
 		);
 		expect(screen.getByText("2 of 49 selected")).toBeVisible();
-		expect(screen.getByText("Role type changed, 1 removed")).toBeVisible();
+		expect(
+			screen.getByText("Where it can be used changed, 1 removed")
+		).toBeVisible();
 		await user.click(save());
 
 		await waitFor(() => {
@@ -266,16 +273,20 @@ describe("System role editor", () => {
 		});
 		const opened = await open(EDITOR);
 		await screen.findByRole("textbox", { name: /Role name/ });
-		expect(typeField()).toHaveTextContent("Local role");
+		expect(
+			within(typeField()).getByRole("radio", {
+				name: "In the branches or departments you choose",
+			})
+		).toBeChecked();
 
 		// Switching is allowed in the form; the API decides from where it is given.
-		await chooseType(user, "Company role");
-		expect(screen.getByText("Role type changed")).toBeVisible();
+		await chooseType(user, "Across the whole company");
+		expect(screen.getByText("Where it can be used changed")).toBeVisible();
 		await user.click(save());
 
 		expect(
 			await screen.findByText(
-				"This role is given at branches or departments, so it can’t become a company role. Remove those assignments first, or keep it a local role."
+				"This role is given at branches or departments, so it can’t become a whole-company role. Remove those assignments first, or keep it for chosen places."
 			)
 		).toBeVisible();
 		await waitFor(() => {
@@ -302,12 +313,12 @@ describe("System role editor", () => {
 		const name = await screen.findByRole("textbox", { name: /Role name/ });
 
 		await user.type(name, " two");
-		await user.click(box("Branches", "View"));
+		await user.click(box("Branches", "See branches"));
 		expect(screen.getByText("2 removed")).toBeVisible();
 		await user.click(screen.getByRole("button", { name: "Discard changes" }));
 
 		expect(name).toHaveValue("Manager");
-		expect(box("Branches", "Create")).toBeChecked();
+		expect(box("Branches", "Create branches")).toBeChecked();
 		expect(save()).toBeDisabled();
 		expect(calls.some((call) => call.method === "PUT")).toBe(false);
 	});
@@ -318,8 +329,8 @@ describe("System role editor", () => {
 		await open(EDITOR);
 		await screen.findByRole("textbox", { name: /Role name/ });
 
-		await user.click(box("Branches", "View"));
-		await user.click(box("Departments", "View"));
+		await user.click(box("Branches", "See branches"));
+		await user.click(box("Departments", "See departments"));
 
 		expect(screen.getByText("Choose at least one permission.")).toBeVisible();
 		expect(save()).toBeDisabled();
@@ -369,13 +380,13 @@ describe("System role editor", () => {
 		await open(EDITOR);
 		await screen.findByRole("textbox", { name: /Role name/ });
 
-		await user.click(box("Branches", "Edit"));
+		await user.click(box("Branches", "Edit branches"));
 		await user.click(save());
 
 		expect(await screen.findByRole("alert")).toHaveTextContent(
-			"This role includes permissions you don’t hold, or you can no longer change system roles."
+			"This role includes permissions you don’t hold, or you can no longer change access roles."
 		);
-		expect(box("Branches", "Edit")).toBeChecked();
+		expect(box("Branches", "Edit branches")).toBeChecked();
 	});
 
 	it("shows a permission this app's catalog doesn't know as locked and saves it back untouched", async () => {
@@ -396,7 +407,7 @@ describe("System role editor", () => {
 		expect(unknown).toBeChecked();
 		expect(unknown).toBeDisabled();
 
-		await user.click(box("Branches", "Edit"));
+		await user.click(box("Branches", "Edit branches"));
 		await user.click(save());
 
 		await waitFor(() => {
@@ -414,9 +425,10 @@ describe("System role editor", () => {
 	});
 });
 
-describe("System role editor, read-only", () => {
+describe("Access role editor, read-only", () => {
 	const expectReadOnly = (): void => {
-		expect(typeField()).toBeDisabled();
+		for (const choice of within(typeField()).getAllByRole("radio"))
+			expect(choice).toBeDisabled();
 		expect(screen.getByRole("textbox", { name: /Role name/ })).toBeDisabled();
 		for (const item of screen.getAllByRole("checkbox"))
 			expect(item).toBeDisabled();
@@ -490,14 +502,14 @@ describe("System role editor, read-only", () => {
 
 		expect(
 			await screen.findByText(
-				"You don’t have permission to change system roles."
+				"You don’t have permission to change access roles."
 			)
 		).toBeVisible();
 		expectReadOnly();
 	});
 });
 
-describe("System role editor, role not loaded", () => {
+describe("Access role editor, role not loaded", () => {
 	it.each([
 		[
 			problemReply(404, "ACCESS_ROLE_NOT_FOUND"),
@@ -516,7 +528,7 @@ describe("System role editor, role not loaded", () => {
 		await open(EDITOR);
 
 		expect(await screen.findByRole("alert")).toHaveTextContent(message);
-		expect(screen.getByRole("link", { name: "System roles" })).toHaveAttribute(
+		expect(screen.getByRole("link", { name: "Access roles" })).toHaveAttribute(
 			"href",
 			"/organisation/system-roles"
 		);
