@@ -27,6 +27,7 @@ Backend settings some cases rely on:
 | `MEMBER_IMPORT_INVITATIONS_PER_DAY` | `3` | E2E-016 sends 2 invitations and E2E-017 is refused over the limit |
 | `APP_APPROVALS_STALLCHECKCRON` | `*/20 * * * * *` | E2E-146 waits up to 75 s for the stalled-step notice (default sweep: every 5 min) |
 | `ENGINE_POLL_INTERVAL` | `5s` | Generation results land within a case |
+| `STARTING_CONTEXT_SEND_REST_DAYS` | `true` | Generations send rest days (carry-over and the terms' fixed rest day); the engine on `development` accepts them (engine#68) |
 | Redis cache, rate limit | off | No shared state between runs |
 
 E2E-016 sends two real invitation emails (to `e2e+` addresses); everything else sends none. E2E-164 reads the
