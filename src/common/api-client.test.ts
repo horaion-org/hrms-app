@@ -5,6 +5,7 @@ import {
 	apiRequest,
 	apiRequestVoid,
 	configureApiClient,
+	configureApiLanguage,
 	resetApiClient,
 } from "@/common/api-client";
 import { stubApi, envelope, problemReply } from "@/common/testing/stubApi";
@@ -227,4 +228,20 @@ it("downloads a file with the name the API suggests", async () => {
 	expect(new Headers(fetch.mock.calls[0]?.[1].headers).get("Accept")).toBe(
 		"*/*"
 	);
+});
+
+it("names the app's UI language on every request, and no language before one is known", async () => {
+	const calls = stubApi({
+		[`GET ${path}`]: { status: 200, body: envelope({ id: "one" }) },
+	});
+	configureApiLanguage(() => undefined);
+	await apiRequest(path, schema, { anonymous: true });
+	configureApiLanguage(() => "es");
+	await apiRequest(path, schema, { anonymous: true });
+
+	expect(calls.map((call) => call.headers.get("Accept-Language"))).toEqual([
+		null,
+		"es",
+	]);
+	configureApiLanguage(() => undefined);
 });

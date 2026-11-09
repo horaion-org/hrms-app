@@ -37,6 +37,22 @@ export function resetApiClient(): void {
 	authentication = emptySession;
 }
 
+/** The language the app shows; unknown until i18n names it. */
+let uiLanguage: () => string | undefined = () => undefined;
+/**
+ * Names the app's UI language on every request as `Accept-Language`, so the
+ * API words and seeds what it can in the language the person chose, not the
+ * browser's. Called once by the i18n setup.
+ */
+export function configureApiLanguage(language: () => string | undefined): void {
+	uiLanguage = language;
+}
+/** The `Accept-Language` header for the UI language; none before it is known. */
+export const languageHeaders = (): Record<string, string> => {
+	const language = uiLanguage();
+	return language ? { "Accept-Language": language } : {};
+};
+
 /** FormData goes as multipart; anything else as JSON. */
 const bodyOf = (body: unknown): BodyInit | undefined => {
 	if (body instanceof FormData) return body;
@@ -52,7 +68,10 @@ async function send(
 		path === "/api/v1/public/sessions" ||
 		path.startsWith("/api/v1/public/sessions/");
 	const multipart = options.body instanceof FormData;
-	const headers = new Headers({ Accept: options.accept ?? "application/json" });
+	const headers = new Headers({
+		Accept: options.accept ?? "application/json",
+		...languageHeaders(),
+	});
 	// The browser sets a multipart body's Content-Type itself, with its boundary.
 	if (!multipart && (sessionRoute || options.body !== undefined))
 		headers.set("Content-Type", "application/json");

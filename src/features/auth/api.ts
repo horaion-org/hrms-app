@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { apiRequest } from "@/common/api-client";
+import { apiRequest, languageHeaders } from "@/common/api-client";
 import {
 	passwordRequirements,
 	type RegistrationErrors,
@@ -77,7 +77,8 @@ export const registerCompany = async (
 	try {
 		response = await fetch(`${base}/api/v1/public/onboardings`, {
 			method: "POST",
-			headers: { "Content-Type": "application/json" },
+			// The UI language also names the language its default leave types are created in.
+			headers: { "Content-Type": "application/json", ...languageHeaders() },
 			body: JSON.stringify({
 				email: registration.email,
 				password: registration.password,
