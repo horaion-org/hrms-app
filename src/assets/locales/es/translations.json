@@ -249,7 +249,10 @@
 			"other": "Cambiado por {{name}}"
 		},
 		"historyDates": "{{before}} → {{after}}",
-		"historyType": "{{before}} → {{after}}"
+		"historyType": "{{before}} → {{after}}",
+		"approval": {
+			"stepApproved": "Aprobaste {{label}} para {{name}}. Ahora se consulta el siguiente paso."
+		}
 	},
 	"approvals": {
 		"panel": {
