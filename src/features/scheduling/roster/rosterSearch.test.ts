@@ -23,6 +23,11 @@ describe("parseRosterSearch", () => {
 		[{ panel: "changes", member: "m-2" }, { panel: "changes" }],
 		[{ member: "m-2" }, {}],
 		[{ panel: "issues", date: "Saturday" }, { panel: "issues" }],
+		[
+			{ week: "2026-10-12", day: "2026-10-14", cell: "m-1|2026-10-14" },
+			{ week: "2026-10-12", day: "2026-10-14", cell: "m-1|2026-10-14" },
+		],
+		[{ day: "Wednesday" }, {}],
 	])("reads %j as %j", (search, view) => {
 		expect(parseRosterSearch(search)).toEqual(view);
 	});
