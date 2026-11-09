@@ -41,7 +41,7 @@ describe("AppShell", () => {
 		expect(screen.getByRole("main")).toBeVisible();
 	});
 
-	it("stacks the rail on top on narrow screens and beside the page from sm", () => {
+	it("stacks the rail on top below lg and beside the page from lg", () => {
 		const { container } = render(
 			<AppShell sidebar={<nav aria-label="Main navigation" />}>
 				<h1>Dashboard</h1>
@@ -52,7 +52,22 @@ describe("AppShell", () => {
 			"flex",
 			"min-h-dvh",
 			"flex-col",
-			"sm:flex-row"
+			"lg:flex-row"
+		);
+	});
+
+	it("places the header in the navigation bar's row below lg, one bar topping the page", () => {
+		render(
+			<AppShell header={<header>Bar</header>} sidebar={null}>
+				<h1>Dashboard</h1>
+			</AppShell>
+		);
+
+		expect(screen.getByRole("banner").parentElement).toHaveClass(
+			"max-lg:absolute",
+			"max-lg:top-0",
+			"max-lg:inset-x-17",
+			"max-lg:h-19"
 		);
 	});
 });

@@ -38,7 +38,9 @@ export type LeaveRequestsProps = {
  * The requests table: one server page, sorted, filtered and paged by the
  * API. Approve and Reject are offered only on pending requests the person
  * may decide, and each opens the request at its confirmation step; the API
- * still checks every decision.
+ * still checks every decision. On a phone it keeps who (or, for the
+ * caller's own, when), the status and the actions; the rest of a request
+ * is one tap away in View.
  */
 export const LeaveRequests = ({
 	rows,
@@ -59,12 +61,15 @@ export const LeaveRequests = ({
 				{
 					id: "displayName",
 					header: t("leave.employee"),
-					headerClassName: "min-w-51",
+					headerClassName: "sm:min-w-51",
 					pin: "start",
 					sortValue: (row) => row.displayName,
 					cell: (row) => (
 						<div className="flex items-center gap-3">
-							<Avatar className="size-10! text-base!" name={row.displayName} />
+							<Avatar
+								className="size-10! text-base! max-sm:hidden"
+								name={row.displayName}
+							/>
 							<div>
 								<p className="font-semibold">{row.displayName}</p>
 								<p className="mt-1">{row.employeeCode}</p>
@@ -82,6 +87,9 @@ export const LeaveRequests = ({
 					id: "notes",
 					header: t("leave.remarks"),
 					headerClassName: "min-w-48",
+					hideBelow: "md",
+					// One tap away for every reader: View shows the remarks in full.
+					omitFromSummary: true,
 					cell: (row) =>
 						row.notes === null ? (
 							<>
@@ -94,40 +102,48 @@ export const LeaveRequests = ({
 				},
 			]
 		: [];
+	const periodOf = (row: LeaveRequest): string =>
+		formatPeriod(row.startDate, row.endDate, formattingLocale(i18n));
+	const requestedOnOf = (row: LeaveRequest): string =>
+		t("leave.requestedOn", {
+			date: formatPeriod(
+				requestedDayOf(row),
+				requestedDayOf(row),
+				formattingLocale(i18n)
+			),
+		});
 	const columns: Array<DataTableColumn<LeaveRequest>> = [
 		...employee,
 		{
 			id: "startDate",
 			header: t("leave.period"),
-			headerClassName: "min-w-51",
+			headerClassName: "sm:min-w-51",
+			// The caller's own requests are told apart by their dates; a team's by who asked.
+			hideBelow: own ? undefined : "sm",
 			sortValue: (row) => row.startDate,
 			cell: (row) => (
 				<div>
-					<p className="font-semibold">
-						{formatPeriod(row.startDate, row.endDate, formattingLocale(i18n))}
-					</p>
-					<p className="mt-1">
-						{t("leave.requestedOn", {
-							date: formatPeriod(
-								requestedDayOf(row),
-								requestedDayOf(row),
-								formattingLocale(i18n)
-							),
-						})}
-					</p>
+					<p className="font-semibold">{periodOf(row)}</p>
+					<p className="mt-1">{requestedOnOf(row)}</p>
 				</div>
+			),
+			// On the name's line, the period alone on one line; the request day is in View, one tap away.
+			summary: (row) => (
+				<span className="font-semibold whitespace-nowrap">{periodOf(row)}</span>
 			),
 		},
 		{
 			id: "workingDays",
 			header: t("leave.duration"),
 			headerClassName: "min-w-28",
+			hideBelow: "md",
 			cell: (row) => t("leave.days", { count: row.workingDays }),
 		},
 		{
 			id: "leaveType",
 			header: t("leave.type"),
 			headerClassName: "min-w-40",
+			hideBelow: own ? "sm" : "md",
 			sortValue: (row) => leaveTypeLabel(row, t),
 			cell: (row) => leaveTypeLabel(row, t),
 		},
@@ -136,6 +152,7 @@ export const LeaveRequests = ({
 			id: "status",
 			header: t("leave.status"),
 			headerClassName: "w-30",
+			hideBelow: own ? undefined : "sm",
 			sortValue: (row) => row.status,
 			cell: (row) => (
 				<Badge className="text-xs!" tone={statusTone[row.status]}>
@@ -194,7 +211,8 @@ export const LeaveRequests = ({
 		<section aria-label={t("leave.requests")}>
 			<DataTable
 				manualSorting
-				className="[&>table]:min-w-300"
+				// Every column needs this width; below `md` the priority columns need less.
+				className="md:[&>table]:min-w-300"
 				columns={columns}
 				data={rows}
 				emptyState={emptyState ?? t("leave.empty")}

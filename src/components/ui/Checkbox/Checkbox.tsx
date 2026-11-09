@@ -59,7 +59,8 @@ export const Checkbox = ({
 				id={id}
 				type="checkbox"
 				className={joinClassNames(
-					"size-4 shrink-0 accent-ink-blue-900 disabled:opacity-50",
+					// 24 px on touch screens: the minimum target, with the row's spacing around it.
+					"size-4 shrink-0 accent-ink-blue-900 disabled:opacity-50 pointer-coarse:size-6",
 					description !== undefined && "mt-1"
 				)}
 				{...rest}

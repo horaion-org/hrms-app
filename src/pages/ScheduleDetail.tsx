@@ -492,9 +492,13 @@ const ApiSchedule = ({
 				className="mt-4"
 				schedule={schedule}
 				actions={
-					<div className="flex items-center gap-3">
+					// On a phone the menu sits beside the title and the primary action takes its own row.
+					<div className="flex items-center gap-3 max-sm:contents">
 						{primary && (
-							<Button onClick={runAction[primary.id]}>
+							<Button
+								className="max-sm:order-last max-sm:w-full"
+								onClick={runAction[primary.id]}
+							>
 								{t(primary.labelKey)}
 							</Button>
 						)}

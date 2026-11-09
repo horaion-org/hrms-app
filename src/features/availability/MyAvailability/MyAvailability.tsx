@@ -29,6 +29,8 @@ export type MyAvailabilityProps = {
 	weekStartMonday: string;
 	/** False for a week that has ended: it is shown, never changed. */
 	editable?: boolean;
+	/** The one day shown below `md`, as the page's `DaySwitcher` picks it. */
+	shownDay?: string;
 	className?: string;
 };
 
@@ -45,6 +47,7 @@ export const MyAvailability = ({
 	name,
 	weekStartMonday,
 	editable = true,
+	shownDay,
 	className,
 }: MyAvailabilityProps): FunctionComponent => {
 	const { t } = useTranslation();
@@ -112,6 +115,7 @@ export const MyAvailability = ({
 			<WeekGrid
 				label={t(`${key}.label`)}
 				rows={[{ id: "mine", days: byDay(week) }]}
+				shownDay={shownDay}
 				weekStartMonday={weekStartMonday}
 			/>
 			{editing && (

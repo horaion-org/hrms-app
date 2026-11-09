@@ -4,6 +4,7 @@ import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { DeleteIcon, TickIcon } from "@/components/ui/Icon";
+import { OverflowMenu, OverflowMenuItem } from "@/components/ui/OverflowMenu";
 import type { InboxNotification } from "@/features/notifications/api";
 import {
 	notificationExactTime,
@@ -26,7 +27,8 @@ const toneClasses: Record<NotificationTone, string> = {
  * One inbox entry: type icon and colour, category, time, the caller's title (a typed link or plain text), the
  * remark when the notification carries one (a roster change or withdrawal, a leave decision or change), and the
  * entry's actions. Actions are always
- * shown, never revealed on hover, so touch and keyboard users reach them.
+ * shown, never revealed on hover, so touch and keyboard users reach them;
+ * on a phone they sit in the row's menu, leaving the title the width.
  */
 export const NotificationRow = ({
 	notification,
@@ -96,7 +98,26 @@ export const NotificationRow = ({
 				)}
 				{unread && <span className="sr-only">{t("notifications.unread")}</span>}
 			</div>
-			<div className="flex items-center gap-1">
+			{(unread || onDelete) && (
+				<OverflowMenu
+					className="sm:hidden"
+					disabled={busy}
+					label={t("notifications.actions")}
+					variant="icon"
+				>
+					{unread && (
+						<OverflowMenuItem onClick={onRead}>
+							{t("notifications.markRead")}
+						</OverflowMenuItem>
+					)}
+					{onDelete && (
+						<OverflowMenuItem tone="danger" onClick={onDelete}>
+							{t("notifications.delete")}
+						</OverflowMenuItem>
+					)}
+				</OverflowMenu>
+			)}
+			<div className="hidden items-center gap-1 sm:flex">
 				{unread &&
 					(compact ? (
 						<Button

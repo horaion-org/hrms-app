@@ -24,13 +24,46 @@ describe("AppHeader", () => {
 		expect(screen.getByText("Welcome, John.").nextSibling).toBeNull();
 	});
 
-	it("draws the design's bottom rule", () => {
+	it("draws the design's bar with its bottom rule from lg only, where it stands alone", () => {
 		render(<AppHeader title="Welcome, John." />);
 
-		expect(screen.getByRole("banner")).toHaveClass(
-			"border-b",
-			"border-neutral-400",
-			"min-h-22.5"
+		const banner = screen.getByRole("banner");
+		expect(banner).toHaveClass(
+			"lg:border-b",
+			"lg:border-neutral-400",
+			"lg:bg-white",
+			"lg:min-h-22.5"
+		);
+		expect(banner).not.toHaveClass("border-b");
+	});
+
+	it("leaves the title to the page below lg, where the controls share the navigation bar", () => {
+		render(<AppHeader title="Welcome, John." />);
+
+		expect(screen.getByText("Welcome, John.")).toHaveClass("max-lg:hidden");
+	});
+
+	it("leaves out the title when there is none, so the controls take the whole bar", () => {
+		render(<AppHeader actions={<Avatar name="John Doe" />} title={false} />);
+
+		expect(screen.getByRole("img", { name: "John Doe" }).parentElement).toBe(
+			screen.getByRole("banner").firstElementChild
+		);
+	});
+
+	it("puts the scope before the actions and lets it shrink on a phone", () => {
+		render(
+			<AppHeader
+				actions={<Avatar name="John Doe" />}
+				scope={<span>Orchard</span>}
+				title={false}
+			/>
+		);
+
+		const scope = screen.getByText("Orchard").parentElement;
+		expect(scope).toHaveClass("min-w-0", "flex-1", "sm:flex-none");
+		expect(scope?.nextElementSibling).toBe(
+			screen.getByRole("img", { name: "John Doe" })
 		);
 	});
 
@@ -46,7 +79,7 @@ describe("AppHeader", () => {
 		);
 
 		const banner = screen.getByRole("banner");
-		expect(banner).toHaveClass("mt-2", "border-b");
+		expect(banner).toHaveClass("mt-2", "lg:border-b");
 		expect(banner).toHaveAttribute("data-area", "shell");
 		expect(ref.current).toBe(banner);
 	});

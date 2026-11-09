@@ -46,6 +46,14 @@ describe("Checkbox", () => {
 });
 
 describe("Checkbox labelling and mixed state", () => {
+	it("given_aTouchScreen_when_rendered_then_theBoxIsTheMinimumTargetSize", () => {
+		render(<Checkbox label="Select Orchard" />);
+
+		expect(
+			screen.getByRole("checkbox", { name: "Select Orchard" })
+		).toHaveClass("size-4", "pointer-coarse:size-6");
+	});
+
 	it("given_hideLabel_when_rendered_then_keepsTheNameButHidesTheText", () => {
 		render(<Checkbox hideLabel label="Select Orchard" />);
 

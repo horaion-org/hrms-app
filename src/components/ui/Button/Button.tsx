@@ -54,6 +54,13 @@ const baseClasses =
 
 const pillClasses = "rounded-full px-6 [&_svg]:shrink-0";
 
+/*
+ * On a touch screen (a coarse pointer) the compact variants grow to at least
+ * 44×44 px, the size a fingertip needs; with a mouse they stay as drawn.
+ * Minimums only, so a larger caller size is never shrunk.
+ */
+const touchTargetClasses = "pointer-coarse:min-h-11 pointer-coarse:min-w-11";
+
 const variantClasses: Record<ButtonVariant, string> = {
 	primary:
 		"bg-ink-blue-700 text-white not-disabled:hover:bg-ink-blue-500 not-disabled:active:bg-ink-blue-300 disabled:bg-neutral-400 disabled:text-neutral-500",
@@ -65,10 +72,10 @@ const variantClasses: Record<ButtonVariant, string> = {
 	danger:
 		"bg-error-600 text-white not-disabled:hover:bg-error-700 not-disabled:active:bg-error-800 disabled:bg-neutral-400 disabled:text-neutral-500",
 	textlink:
-		"gap-2 text-sm text-ink-blue-700 not-disabled:hover:text-ink-blue-500 not-disabled:active:text-ink-blue-300 disabled:text-neutral-400 [&_svg]:size-4 [&_svg]:shrink-0",
+		"gap-2 text-sm pointer-coarse:min-h-11 text-ink-blue-700 not-disabled:hover:text-ink-blue-500 not-disabled:active:text-ink-blue-300 disabled:text-neutral-400 [&_svg]:size-4 [&_svg]:shrink-0",
 	hyperlink:
-		"gap-2 text-base text-ink-blue-700 underline underline-offset-4 not-disabled:hover:text-ink-blue-500 not-disabled:active:text-ink-blue-300 disabled:text-neutral-400 [&_svg]:size-4 [&_svg]:shrink-0",
-	icon: "size-9 shrink-0 rounded bg-transparent text-neutral-900 not-disabled:hover:text-ink-blue-700 not-disabled:active:text-ink-blue-500 disabled:text-neutral-400 [&_svg]:size-4 [&_svg]:shrink-0",
+		"gap-2 text-base pointer-coarse:min-h-11 text-ink-blue-700 underline underline-offset-4 not-disabled:hover:text-ink-blue-500 not-disabled:active:text-ink-blue-300 disabled:text-neutral-400 [&_svg]:size-4 [&_svg]:shrink-0",
+	icon: `size-9 ${touchTargetClasses} shrink-0 rounded bg-transparent text-neutral-900 not-disabled:hover:text-ink-blue-700 not-disabled:active:text-ink-blue-500 disabled:text-neutral-400 [&_svg]:size-4 [&_svg]:shrink-0`,
 };
 
 const sizeClasses: Record<ButtonSize, string> = {

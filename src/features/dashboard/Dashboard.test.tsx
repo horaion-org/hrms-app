@@ -135,8 +135,13 @@ describe("Dashboard", () => {
 		await open();
 
 		await screen.findByRole("heading", { level: 1, name: "Dashboard" });
-		// The greeting lives on the dashboard only.
+		// The greeting lives on the dashboard only: in the header from lg, on the page below it.
 		expect(screen.getByRole("banner")).toHaveTextContent("Welcome, José.");
+		const pageGreeting = within(screen.getByRole("main")).getByText(
+			(_, element) =>
+				element?.tagName === "P" && element.textContent === "Welcome, José."
+		);
+		expect(pageGreeting).toHaveClass("lg:hidden");
 		const approvals = await screen.findByRole("region", {
 			name: "Pending Approvals",
 		});

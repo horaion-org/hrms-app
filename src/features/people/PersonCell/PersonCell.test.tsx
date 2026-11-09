@@ -24,6 +24,16 @@ describe("PersonCell", () => {
 		);
 	});
 
+	it("drops the avatar on a phone, as the roster and leave lists do, so the name has the room", () => {
+		const { container } = render(
+			<PersonCell employeeCode="EMP-10482" name="Moses Lee" />
+		);
+
+		expect(container.querySelector("[role='img']")).toHaveClass(
+			"max-sm:hidden"
+		);
+	});
+
 	it("links the name to the person's profile when told who they are", async () => {
 		render(
 			<MemoryRouterHarness>

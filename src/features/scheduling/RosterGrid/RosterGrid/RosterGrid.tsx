@@ -1,6 +1,7 @@
 import dayjs from "dayjs";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { dayColumnClasses } from "@/common/dayView";
 import { formattingLocale } from "@/common/formattingLocale";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
@@ -76,7 +77,21 @@ export type RosterGridProps = {
 	 * cells, so the week stays in view; the panel names the rest.
 	 */
 	compact?: boolean;
+	/**
+	 * The one day shown below `md`, where every other day's column hides
+	 * (the page's `DaySwitcher` picks it); every day shows when left out.
+	 */
+	shownDay?: string;
 	className?: string;
+};
+
+/**
+ * The table's least width, so seven days stay readable; from `md` only when
+ * a phone shows one day, so that day fits the screen.
+ */
+const weekWidthClasses = (compact: boolean, oneDay: boolean): string => {
+	if (compact) return oneDay ? "md:min-w-160" : "min-w-160";
+	return oneDay ? "md:min-w-200" : "min-w-200";
 };
 
 /** A member's day as `rosterCellKey` names it; none once the member no longer resolves. */
@@ -104,6 +119,7 @@ export const RosterGrid = ({
 	previewDays,
 	offeredDays,
 	compact = false,
+	shownDay,
 	className,
 }: RosterGridProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
@@ -284,7 +300,7 @@ export const RosterGrid = ({
 			<table
 				className={joinClassNames(
 					"w-full table-fixed border-collapse text-neutral-900",
-					compact ? "min-w-160" : "min-w-200"
+					weekWidthClasses(compact, shownDay !== undefined)
 				)}
 			>
 				<caption className="sr-only">{t("scheduling.detail.roster")}</caption>
@@ -292,10 +308,11 @@ export const RosterGrid = ({
 					<col className={compact ? "w-28 sm:w-32" : "w-28 sm:w-50"} />
 				</colgroup>
 				<thead>
+					{/* Below `md` one day shows and its header takes one line: weekday and date side by side. */}
 					<tr className="bg-neutral-200">
 						{/* The staff column stays in view while the days scroll, as in the availability grid. */}
 						<th
-							className="sticky left-0 z-10 h-16 bg-neutral-200 px-3 text-left text-sm font-bold"
+							className="sticky left-0 z-10 h-16 bg-neutral-200 px-3 text-left text-sm font-bold max-md:h-11"
 							scope="col"
 						>
 							{t("scheduling.detail.staff")}
@@ -303,8 +320,15 @@ export const RosterGrid = ({
 						{days.map((date) => {
 							const count = dayIssueCount(findings, date);
 							return (
-								<th key={date} className="h-16 px-2 text-center" scope="col">
-									<span className="flex items-center justify-center gap-1 text-sm font-bold">
+								<th
+									key={date}
+									scope="col"
+									className={joinClassNames(
+										"h-16 px-2 text-center max-md:h-11",
+										dayColumnClasses(date, shownDay)
+									)}
+								>
+									<span className="flex items-center justify-center gap-1 text-sm font-bold max-md:inline-flex">
 										{weekday.format(dayjs(date).toDate())}
 										{headerCount(
 											count,
@@ -315,7 +339,7 @@ export const RosterGrid = ({
 											})
 										)}
 									</span>
-									<span className="mt-1 block text-xs font-normal">
+									<span className="mt-1 block text-xs font-normal max-md:ml-1.5 max-md:inline">
 										{dayMonth.format(dayjs(date).toDate())}
 									</span>
 								</th>
@@ -333,7 +357,7 @@ export const RosterGrid = ({
 									className="sticky left-0 z-10 bg-neutral-50 px-3 py-3 text-left font-normal"
 									scope="row"
 								>
-									{/* On a phone, or beside an open panel, the row header drops the avatar (and on a phone the job title too); the panel says the rest. */}
+									{/* On a phone, or beside an open panel, the row header drops the avatar; the name, job title and hours stay. */}
 									<span className="flex items-center gap-3">
 										<Avatar
 											name={name}
@@ -357,7 +381,7 @@ export const RosterGrid = ({
 														})
 													)}
 											</span>
-											<span className="mt-0.5 block truncate text-[0.625rem] max-sm:hidden">
+											<span className="mt-0.5 block truncate text-[0.625rem]">
 												{row.jobTitle ?? row.employeeCode}
 											</span>
 											<span className="block text-[0.625rem]">
@@ -376,6 +400,7 @@ export const RosterGrid = ({
 											className={joinClassNames(
 												"align-middle",
 												compact ? "p-1" : "p-3",
+												dayColumnClasses(date, shownDay),
 												key !== undefined &&
 													previewDays?.has(key) &&
 													"outline-2 -outline-offset-4 outline-dashed outline-ink-blue-500"

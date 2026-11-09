@@ -16,6 +16,8 @@ export type RosterPanel = (typeof ROSTER_PANELS)[number];
 
 const searchSchema = z.object({
 	week: z.iso.date().refine(isMonday).optional().catch(undefined),
+	/** The one day shown below `md`; today, else the week's first day, when left out (`shownDayOf`). */
+	day: z.iso.date().optional().catch(undefined),
 	panel: z.enum(ROSTER_PANELS).optional().catch(undefined),
 	/** A chosen day, as `rosterCellKey` names it: "{membershipId}|{date}". */
 	cell: z
@@ -31,8 +33,9 @@ const searchSchema = z.object({
 
 /**
  * A roster's view that belongs in the URL, so it survives a reload and can
- * be linked: the week shown (its Monday; this week when left out) and what
- * the side panel shows, either one list (`panel`) or a chosen day (`cell`).
+ * be linked: the week shown (its Monday; this week when left out), the one
+ * day a phone shows (`day`), and what the side panel shows, either one list
+ * (`panel`) or a chosen day (`cell`).
  * A chosen day wins when both are given. The Issues list may be narrowed to
  * the header it was opened from: one member (`member`), else one day (`date`).
  */
@@ -53,9 +56,10 @@ const listOf = ({
 export const parseRosterSearch = (
 	search: Record<string, unknown>
 ): RosterSearch => {
-	const { week, cell, ...list } = searchSchema.parse(search);
+	const { week, day, cell, ...list } = searchSchema.parse(search);
 	return {
 		...(week === undefined ? {} : { week }),
+		...(day === undefined ? {} : { day }),
 		...(cell !== undefined ? { cell } : listOf(list)),
 	};
 };

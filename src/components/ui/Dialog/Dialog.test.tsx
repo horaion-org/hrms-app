@@ -107,4 +107,26 @@ describe("Dialog", () => {
 		expect(dialog).toHaveTextContent("Branch details");
 		expect(screen.getByRole("button", { name: "Cancel" })).toBeInTheDocument();
 	});
+
+	it("rises from the bottom edge as a sheet on phones and fits the visible height", () => {
+		render(
+			<I18nextProvider i18n={i18n}>
+				<Dialog open title="Create branch" onClose={vi.fn()}>
+					Branch details
+				</Dialog>
+			</I18nextProvider>
+		);
+		// The panel holds the header that holds the title.
+		const panel = screen
+			.getByRole("heading", { name: "Create branch" })
+			.closest("header")?.parentElement;
+
+		expect(panel?.parentElement).toHaveClass("items-end", "sm:items-center");
+		expect(panel).toHaveClass(
+			"rounded-t-2xl",
+			"sm:rounded-2xl",
+			"max-h-[calc(100vh-1rem)]",
+			"supports-[height:100dvh]:max-h-[calc(100dvh-1rem)]"
+		);
+	});
 });

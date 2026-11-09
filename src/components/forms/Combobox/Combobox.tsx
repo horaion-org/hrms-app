@@ -174,8 +174,9 @@ export const Combobox = <T,>(props: ComboboxProps<T>): FunctionComponent => {
 	}): NonNullable<FunctionComponent> => (
 		<>
 			<div
+				// The trigger fills the field inside its border: on touch the field is 46 px, so the trigger is 44.
 				className={joinClassNames(
-					"relative min-h-11 rounded-lg border px-4 py-2 text-sm focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-ink-blue-500",
+					"relative min-h-11 rounded-lg border px-4 py-2 text-sm focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-ink-blue-500 pointer-coarse:min-h-11.5",
 					disabled
 						? "cursor-not-allowed border-neutral-400 bg-neutral-200 text-neutral-500"
 						: joinClassNames(
@@ -258,7 +259,8 @@ export const Combobox = <T,>(props: ComboboxProps<T>): FunctionComponent => {
 								ref={focusSearch}
 								aria-controls={listId}
 								aria-label={props.searchPlaceholder}
-								className="h-11 w-full shrink-0 border-b border-neutral-300 px-4 outline-hidden"
+								// 16 px on touch screens, so iOS does not zoom into the search.
+								className="h-11 w-full shrink-0 border-b border-neutral-300 px-4 outline-hidden pointer-coarse:text-base"
 								listId={listId}
 								placeholder={props.searchPlaceholder}
 								value={query}

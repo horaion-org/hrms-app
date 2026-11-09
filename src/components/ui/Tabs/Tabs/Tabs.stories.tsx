@@ -159,3 +159,32 @@ export const Vertical: Story = {
 		</Tabs>
 	),
 };
+
+/** One scrolling row of tabs on a phone, the navigation column from `md`: Settings' sections. */
+export const VerticalFromMd: Story = {
+	args: {
+		orientation: "verticalFromMd",
+		className:
+			"flex flex-col overflow-hidden rounded-xl border border-neutral-400 md:min-h-144 md:flex-row",
+	},
+	parameters: { viewport: { defaultViewport: "mobile1" } },
+	render: (args): NonNullable<FunctionComponent> => (
+		<Tabs {...args}>
+			<TabList
+				aria-label="Settings"
+				className="max-md:border-b max-md:border-neutral-400 max-md:px-4 md:w-63 md:shrink-0 md:border-r md:border-neutral-400"
+			>
+				{settingsSections.map(({ label, description }) => (
+					<Tab key={label} description={description}>
+						{label}
+					</Tab>
+				))}
+			</TabList>
+			<TabPanels className="min-w-0 flex-1 p-6">
+				{settingsSections.map(({ label }) => (
+					<TabPanel key={label}>{label} content</TabPanel>
+				))}
+			</TabPanels>
+		</Tabs>
+	),
+};

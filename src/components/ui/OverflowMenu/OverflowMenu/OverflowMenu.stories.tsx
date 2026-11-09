@@ -49,6 +49,17 @@ export const Icon: Story = {
 	play: Open.play,
 };
 
+/** The icon trigger framed as a secondary button, beside a toolbar's other framed buttons (People's toolbar on a phone). */
+export const FramedIcon: Story = {
+	args: {
+		variant: "icon",
+		framed: true,
+		label: "More people actions",
+		className: undefined,
+	},
+	play: Open.play,
+};
+
 /** A person's avatar as the trigger, with link items: the header's account menu. */
 export const Avatar: Story = {
 	decorators: [withMemoryRouter],

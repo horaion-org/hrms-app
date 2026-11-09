@@ -259,4 +259,16 @@ describe("ListToolbar", () => {
 		await user.click(screen.getByRole("button", { name: "Clear filters" }));
 		expect(onClearFilters).toHaveBeenCalledOnce();
 	});
+
+	it("keeps the search and the Filters button on one row on a phone, stepping aside from sm", () => {
+		render(<Harness />);
+
+		const row = screen
+			.getByRole("searchbox", { name: "Search Branch" })
+			.closest("div.sm\\:contents");
+		expect(row).toHaveClass("flex", "w-full");
+		expect(
+			within(row as HTMLElement).getByRole("button", { name: "Filters" })
+		).toBeVisible();
+	});
 });

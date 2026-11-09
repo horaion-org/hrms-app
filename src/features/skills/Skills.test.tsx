@@ -105,14 +105,34 @@ describe("Skills", () => {
 		const table = await screen.findByRole("table", { name: "Skills" });
 		await within(table).findByText("Forklift");
 		const licenceRow = await rowOf(table, "Security Officer Licence");
-		expect(within(licenceRow).getByText("Held or not")).toBeVisible();
-		expect(within(licenceRow).getByText("Tracked · 12 months")).toBeVisible();
-		expect(within(licenceRow).getByText("30 people")).toBeVisible();
-		expect(within(licenceRow).getByText("3 soon")).toBeVisible();
-		expect(within(licenceRow).getByText("1 expired")).toBeVisible();
+		// Each value in its own column's cell (the name's line repeats them on phones).
+		const cellOf = (row: HTMLElement, name: string | RegExp): HTMLElement =>
+			within(row).getByRole("cell", { name });
+		expect(cellOf(licenceRow, "Held or not")).toBeVisible();
+		expect(cellOf(licenceRow, "Tracked · 12 months")).toBeVisible();
+		const holders = cellOf(licenceRow, /^30 people/);
+		expect(within(holders).getByText("3 soon")).toBeVisible();
+		expect(within(holders).getByText("1 expired")).toBeVisible();
 		const forkliftRow = await rowOf(table, "Forklift");
-		expect(within(forkliftRow).getByText("Rated 1–10")).toBeVisible();
-		expect(within(forkliftRow).getByText("Equipment")).toBeVisible();
+		expect(cellOf(forkliftRow, "Rated 1–10")).toBeVisible();
+		expect(cellOf(forkliftRow, "Equipment")).toBeVisible();
+		// Phones keep the skill and the actions; Status joins from sm and the rest from md.
+		const hiddenOnPhones = within(table)
+			.getAllByRole("columnheader")
+			.filter((header) => header.classList.contains("hidden"))
+			.map((header) => header.textContent);
+		expect(hiddenOnPhones).toEqual([
+			"Category",
+			"Measured by",
+			"Expiry",
+			"People",
+			"Status",
+			"Created",
+		]);
+		expect(cellOf(forkliftRow, "Equipment")).toHaveClass("md:table-cell");
+		expect(
+			within(table).getByRole("columnheader", { name: /Status/ })
+		).toHaveClass("sm:table-cell");
 		// Expiry counts are read on the viewer's own day.
 		const overview = calls.find(
 			(call) => call.path === "/api/v1/companies/c-1/skill-overview"

@@ -14,7 +14,8 @@ export const AccountMenu = ({
 	const { t } = useTranslation();
 	return (
 		<OverflowMenu
-			className="ml-3"
+			// Closer below `lg`, where the bar's room goes to the Branch.
+			className="ml-3 max-lg:ml-1"
 			label={t("shell.accountMenu")}
 			name={displayName}
 			variant="avatar"

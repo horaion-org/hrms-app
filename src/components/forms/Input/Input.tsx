@@ -14,8 +14,12 @@ export type InputProps = ComponentPropsWithRef<"input"> & {
 const baseClasses =
 	"flex items-center gap-3 rounded-lg border bg-white text-neutral-900 [&>:not(input)]:shrink-0 [&_svg]:size-5 [&_svg]:shrink-0 [&_svg]:text-neutral-900";
 
+/*
+ * Typed text is at least 16 px on touch screens: iOS Safari zooms into a
+ * smaller field on focus and does not zoom back out.
+ */
 const sizeClasses: Record<NonNullable<InputProps["inputSize"]>, string> = {
-	md: "h-11 px-4 text-sm",
+	md: "h-11 px-4 text-sm pointer-coarse:text-base",
 	lg: "h-14 px-5 text-base font-semibold",
 };
 

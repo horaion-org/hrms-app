@@ -29,3 +29,32 @@ it("draws pending and approved bars in the window, never rejected ones", async (
 		screen.queryByRole("button", { name: /^Moses Lee ·/ })
 	).not.toBeInTheDocument();
 });
+
+it("shown one day at a time, hides the other days and their bars below md", () => {
+	render(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveTimeline
+				range={FIXTURE_RANGE}
+				requests={LEAVE_FIXTURES}
+				shownDay="2026-05-21"
+				onOpen={vi.fn()}
+			/>
+		</I18nextProvider>
+	);
+	const dayHeaders = screen
+		.getAllByRole("columnheader")
+		.filter((header) => header.querySelector("time"));
+	const visible = dayHeaders.filter(
+		(header) => !header.classList.contains("hidden")
+	);
+	expect(visible.map((header) => header.textContent)).toEqual(["21"]);
+	// Cheryl's leave covers the 21st; Aisha's (the 22nd) shows from md only.
+	const bar = (name: RegExp): HTMLElement | null =>
+		screen.getByRole("button", { name }).parentElement;
+	expect(bar(/^Cheryl Ng ·/)).not.toHaveClass("max-md:hidden");
+	expect(bar(/^Aisha Rahman ·/)).toHaveClass("max-md:hidden");
+	expect(screen.getByRole("table")).toHaveClass(
+		"w-full",
+		"md:w-(--timeline-width)"
+	);
+});

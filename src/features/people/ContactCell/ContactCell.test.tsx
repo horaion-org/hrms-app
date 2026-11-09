@@ -27,4 +27,16 @@ describe("ContactCell", () => {
 		expect(screen.getByText("moses.lee@company.com")).toBeVisible();
 		expect(container.querySelectorAll("svg")).toHaveLength(1);
 	});
+
+	it("calls the phone number and writes to the email when tapped", () => {
+		render(<ContactCell email="moses.lee@company.com" phone="+6591234821" />);
+
+		expect(screen.getByRole("link", { name: "+6591234821" })).toHaveAttribute(
+			"href",
+			"tel:+6591234821"
+		);
+		expect(
+			screen.getByRole("link", { name: "moses.lee@company.com" })
+		).toHaveAttribute("href", "mailto:moses.lee@company.com");
+	});
 });

@@ -15,7 +15,7 @@ export type NumberStepperProps = {
 };
 
 const buttonClasses =
-	"flex size-10 items-center justify-center bg-white text-neutral-900 not-disabled:cursor-pointer not-disabled:hover:bg-neutral-100 focus-visible:z-10 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink-blue-500 disabled:text-neutral-400 [&_svg]:size-4";
+	"flex size-10 items-center justify-center bg-white pointer-coarse:size-11 text-neutral-900 not-disabled:cursor-pointer not-disabled:hover:bg-neutral-100 focus-visible:z-10 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink-blue-500 disabled:text-neutral-400 [&_svg]:size-4";
 
 /** A whole number changed one step at a time with minus and plus buttons. */
 export const NumberStepper = ({
@@ -34,7 +34,7 @@ export const NumberStepper = ({
 			aria-label={label}
 			role="group"
 			className={joinClassNames(
-				"inline-flex h-10 shrink-0 divide-x divide-neutral-400 overflow-hidden rounded-lg border border-neutral-400 bg-white",
+				"inline-flex h-10 shrink-0 pointer-coarse:h-11 divide-x divide-neutral-400 overflow-hidden rounded-lg border border-neutral-400 bg-white",
 				className
 			)}
 		>

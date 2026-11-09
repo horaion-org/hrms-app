@@ -56,6 +56,8 @@ export const approvalFlowColumns = (
 		id: "steps",
 		header: t(`${key}.steps`),
 		cell: (flow) => stepsSummary(flow, t),
+		// Phones keep where it applies, whether it is on and its actions; Edit shows the steps.
+		hideBelow: "md",
 	},
 	{
 		id: "status",

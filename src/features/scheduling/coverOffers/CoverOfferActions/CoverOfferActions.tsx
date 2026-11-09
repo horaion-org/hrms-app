@@ -140,7 +140,7 @@ export const CoverOfferActions = ({
 					{t(`${key}.recordHint`, { name })}
 				</p>
 				{refusalLine}
-				<div className="flex items-center justify-end gap-3">
+				<div className="flex flex-wrap items-center justify-end gap-3">
 					<Button
 						variant="textlink"
 						onClick={() => {
@@ -192,7 +192,7 @@ export const CoverOfferActions = ({
 				</p>
 			)}
 			{refusalLine}
-			<div className="flex justify-end gap-3">
+			<div className="flex flex-wrap justify-end gap-3">
 				<Button
 					ref={agreedButton}
 					disabled={!ready || pending !== undefined}

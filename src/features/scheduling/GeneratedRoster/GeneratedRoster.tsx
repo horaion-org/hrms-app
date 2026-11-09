@@ -1,9 +1,11 @@
 import { useCallback, useId, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { dayParameter, shownDayOf } from "@/common/dayView";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { CountBadge } from "@/components/ui/CountBadge";
+import { DaySwitcher } from "@/components/ui/DaySwitcher";
 import {
 	DescriptionList,
 	type DescriptionListItem,
@@ -112,7 +114,7 @@ export type GeneratedRosterProps = {
 	schedule: RosterSchedule;
 	/** The schedule's roster rows, as `GET …/assignments` answers them. */
 	assignments: Array<ScheduleAssignment>;
-	/** The week and side panel shown, as the route's search carries them. */
+	/** The week, the day a phone shows and the side panel, as the route's search carries them. */
 	view: RosterSearch;
 	/** Changes the view; the page writes it back to its URL. */
 	onViewChange: (view: RosterSearch) => void;
@@ -193,8 +195,9 @@ export const GeneratedRoster = ({
 	}, []);
 
 	const period = { start: schedule.periodStart, end: schedule.periodEnd };
-	// "This week" follows the branch's time zone, not the browser's.
-	const week = view.week ?? mondayOf(isoDateIn(schedule.timeZone, new Date()));
+	// "This week" and "today" follow the branch's time zone, not the browser's.
+	const today = isoDateIn(schedule.timeZone, new Date());
+	const week = view.week ?? mondayOf(today);
 	const days = weekDays(period, week);
 	const rows = rosterFromAssignments(assignments, period);
 	const findings = schedule.generation?.findings ?? null;
@@ -227,6 +230,12 @@ export const GeneratedRoster = ({
 			row.member !== null &&
 			rosterCellKey(row.member.membershipId, row.day) === view.cell
 	);
+	// A phone shows one of the week's days inside the period, the grid hiding the others'
+	// columns: a chosen day's, so its tile stays in view, else the URL's.
+	const periodDays = days.filter(
+		(day) => day >= period.start && day <= period.end
+	);
+	const shownDay = shownDayOf(periodDays, chosenRow?.day ?? view.day, today);
 	// The list shown beside the grid: the one the URL names, while no day is chosen and it has something in it.
 	const openList =
 		view.panel && !chosenRow && listCounts[view.panel] > 0
@@ -240,12 +249,17 @@ export const GeneratedRoster = ({
 	// The header the Issues list was opened from, if any: it lists only what that header counted.
 	const issuesAbout = openList === "issues" ? issuesAboutOf(view) : undefined;
 
-	const showView = (next: Omit<RosterSearch, "week">): void => {
-		onViewChange({ ...(view.week ? { week: view.week } : {}), ...next });
+	/** Shows `next` beside the grid, keeping the week and day shown. */
+	const showView = (next: Omit<RosterSearch, "week" | "day">): void => {
+		onViewChange({
+			...(view.week ? { week: view.week } : {}),
+			...(view.day ? { day: view.day } : {}),
+			...next,
+		});
 	};
 	/** Opens `next` beside the grid; focus goes back to `from` when it closes. */
 	const open = (
-		next: Omit<RosterSearch, "week">,
+		next: Omit<RosterSearch, "week" | "day">,
 		from: HTMLElement | null = focusedElement()
 	): void => {
 		opener.current = from;
@@ -542,10 +556,10 @@ export const GeneratedRoster = ({
 						week={days[0] ?? period.start}
 						weeks={weeksOf(period)}
 						onToday={() => {
-							onViewChange({ ...view, week: undefined });
+							onViewChange({ ...view, week: undefined, day: undefined });
 						}}
 						onWeekChange={(next) => {
-							onViewChange({ ...view, week: next });
+							onViewChange({ ...view, week: next, day: undefined });
 						}}
 					>
 						{toolbarLists.map(({ panel, button, count }) => (
@@ -566,6 +580,19 @@ export const GeneratedRoster = ({
 							</Button>
 						))}
 					</RosterWeekBar>
+					{shownDay && (
+						<DaySwitcher
+							className="mt-4"
+							day={shownDay}
+							days={periodDays}
+							onDayChange={(day) => {
+								onViewChange({
+									...view,
+									day: dayParameter(periodDays, day, today),
+								});
+							}}
+						/>
+					)}
 					<div className="mt-4 flex flex-col items-start gap-6 lg:flex-row">
 						<RosterGrid
 							className="w-full lg:flex-1"
@@ -578,6 +605,7 @@ export const GeneratedRoster = ({
 							rows={rows}
 							selectedDayKey={editing ? view.cell : undefined}
 							selectedShiftId={chosenRow?.assignmentId}
+							shownDay={shownDay}
 							showsIssues={withSummary}
 							onAssignmentSelect={(row, day) => {
 								const cell = cellOf(row, day);

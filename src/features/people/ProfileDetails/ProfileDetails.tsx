@@ -37,6 +37,10 @@ export type ProfileDetailsProps = {
 
 const key = "people.form";
 
+// Plain text until hovered, like the People list's Contact links; on touch screens as tall as the copy button beside it.
+const contactLinkClasses =
+	"min-w-0 break-all text-neutral-900 underline-offset-4 hover:text-ink-blue-700 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-blue-500 pointer-coarse:inline-flex pointer-coarse:min-h-11 pointer-coarse:items-center";
+
 /**
  * A person's profile, read-only, in the same four cards and rows as the
  * form that edits it, then what their system roles give them where.
@@ -54,11 +58,17 @@ export const ProfileDetails = ({
 	const notSet = t("people.notSet");
 	const date = (value: string | null): string =>
 		value ? formatDate(value, language) : notSet;
-	/** A value with a button that copies it, or a dash. */
-	const copyable = (value: string | null, label: string): FunctionComponent =>
+	/** A value that calls or writes when tapped (`scheme` is `tel:` or `mailto:`), with a button that copies it, or a dash. */
+	const contactValue = (
+		value: string | null,
+		scheme: "tel:" | "mailto:",
+		label: string
+	): FunctionComponent =>
 		value ? (
 			<span className="flex min-w-0 items-center gap-1">
-				<span className="min-w-0 break-all">{value}</span>
+				<a className={contactLinkClasses} href={`${scheme}${value}`}>
+					{value}
+				</a>
 				<CopyButton label={label} value={value} />
 			</span>
 		) : (
@@ -84,11 +94,19 @@ export const ProfileDetails = ({
 			{card(t(`${key}.contact`), PhoneIcon, [
 				{
 					label: t(`${key}.phone`),
-					value: copyable(profile.phone, t("people.profile.copyPhone")),
+					value: contactValue(
+						profile.phone,
+						"tel:",
+						t("people.profile.copyPhone")
+					),
 				},
 				{
 					label: t(`${key}.email`),
-					value: copyable(profile.email, t("people.profile.copyEmail")),
+					value: contactValue(
+						profile.email,
+						"mailto:",
+						t("people.profile.copyEmail")
+					),
 				},
 			])}
 			{card(t(`${key}.employment`), RoleIcon, [

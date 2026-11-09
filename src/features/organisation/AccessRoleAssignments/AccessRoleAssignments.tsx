@@ -101,7 +101,8 @@ export const AccessRoleAssignments = ({
 			header: t(`${key}.person`),
 			cell: (person) => (
 				<span className="flex items-center gap-3">
-					<Avatar className="size-9 text-sm" name={person.name} />
+					{/* The name beside it already says who this is; on a phone the name gets its room. */}
+					<Avatar className="size-9 text-sm max-sm:hidden" name={person.name} />
 					<span className="min-w-0 truncate font-semibold">{person.name}</span>
 				</span>
 			),
@@ -123,8 +124,13 @@ export const AccessRoleAssignments = ({
 					))}
 				</ul>
 			),
+			// On a phone the places join the name's line, as words.
+			summary: (person) =>
+				person.places.map((place) => placeOf(place, t)).join(", "),
+			hideBelow: "md",
 		},
-		statusColumn<AccessRolePerson>(t),
+		// Phones keep the person and the actions; Status joins from `sm`, as on People.
+		{ ...statusColumn<AccessRolePerson>(t), hideBelow: "sm" },
 	];
 	if (onEdit && onSetStatus && onRemove)
 		columns.push(

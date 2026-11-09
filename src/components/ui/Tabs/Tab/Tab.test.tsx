@@ -325,7 +325,11 @@ it("keeps a horizontal tab one line high and exposes its description only to ass
 		name: "Overview",
 		description: "Personal and job details Hint",
 	});
-	expect(overview).toHaveClass("h-10", "whitespace-nowrap");
+	expect(overview).toHaveClass(
+		"h-10",
+		"pointer-coarse:min-h-11",
+		"whitespace-nowrap"
+	);
 	expect(screen.getByText("Personal and job details")).toHaveClass("sr-only");
 	expect(overview.querySelector("svg")).toBeNull();
 	const employment = screen.getByRole("tab", { name: "Employment" });
@@ -357,4 +361,35 @@ it("names a counted tab by its label and describes the count in words when a cou
 	expect(
 		screen.getByRole("tab", { name: "Team timeline" })
 	).not.toHaveAttribute("aria-describedby");
+});
+
+it("lays out a verticalFromMd tab as one row below md and the vertical row from md, describing it either way", () => {
+	render(
+		<Tabs orientation="verticalFromMd">
+			<TabList aria-label="Sections">
+				<Tab description="Core workspace preferences.">General</Tab>
+			</TabList>
+			<TabPanels>
+				<TabPanel>General settings</TabPanel>
+			</TabPanels>
+		</Tabs>
+	);
+
+	const tab = screen.getByRole("tab", { name: "General" });
+	expect(tab).toHaveClass("max-md:inline-flex", "md:grid");
+	expect(tab).toHaveAccessibleDescription("Core workspace preferences.");
+	expect(screen.getByText("Core workspace preferences.")).toHaveClass(
+		"max-md:sr-only",
+		"md:block"
+	);
+	// Relative on a phone, so the hidden description scrolls with the row instead of widening the page.
+	expect(screen.getByRole("tablist")).toHaveClass(
+		"max-md:relative",
+		"overflow-x-auto",
+		"md:flex-col"
+	);
+	expect(screen.getByRole("tablist")).toHaveAttribute(
+		"aria-orientation",
+		"vertical"
+	);
 });

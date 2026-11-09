@@ -101,6 +101,7 @@ export const SystemRoles = (): FunctionComponent => {
 				header: t("organisation.accessRoles.where"),
 				cell: (role) => t(`organisation.accessRoles.whereLabels.${role.kind}`),
 				headerClassName: "w-32",
+				hideBelow: "md",
 			},
 			{
 				id: "permissions",
@@ -111,6 +112,7 @@ export const SystemRoles = (): FunctionComponent => {
 						? t("organisation.accessRoles.fullAccess")
 						: roleSummaryText(role.permissions.filter(isPermissionKey), t) ||
 							t("organisation.permissions.none"),
+				hideBelow: "md",
 			},
 			{
 				id: "people",
@@ -131,9 +133,16 @@ export const SystemRoles = (): FunctionComponent => {
 						})}
 					</Button>
 				),
+				// On a phone the link joins the name's line: one tap to the role, as here.
 				headerClassName: "w-24",
+				hideBelow: "md",
 			},
-			{ ...statusColumn<AccessRole>(t), headerClassName: "w-28" },
+			// Phones keep the role and the actions; Status joins from `sm`, as on the other lists.
+			{
+				...statusColumn<AccessRole>(t),
+				headerClassName: "w-28",
+				hideBelow: "sm",
+			},
 			{
 				...actionsColumn<AccessRole>(
 					t,

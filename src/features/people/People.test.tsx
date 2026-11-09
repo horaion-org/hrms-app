@@ -244,10 +244,11 @@ describe("People", () => {
 			"Actions",
 		]);
 		const [moses, daniel] = bodyRows(table) as [HTMLElement, HTMLElement];
+		// Each cell's own content: on phones the name's cell adds a line of the hidden columns after it.
 		expect(
 			within(moses)
 				.getAllByRole("cell")
-				.map((cell) => cell.textContent)
+				.map((cell) => cell.firstChild?.textContent)
 		).toEqual([
 			"Select Moses Lee",
 			"MLMoses LeeEMP-m-1",
@@ -257,11 +258,13 @@ describe("People", () => {
 			"Active",
 			"",
 		]);
-		expect(within(moses).getByText("Active")).toHaveClass("bg-success-100");
+		const statusOf = (row: HTMLElement, status: string): HTMLElement =>
+			within(within(row).getByRole("cell", { name: status })).getByText(status);
+		expect(statusOf(moses, "Active")).toHaveClass("bg-success-100");
 		expect(
 			within(daniel)
 				.getAllByRole("cell")
-				.map((cell) => cell.textContent)
+				.map((cell) => cell.firstChild?.textContent)
 		).toEqual([
 			"Select Daniel Koh",
 			"DKDaniel KohEMP-m-2",
@@ -271,7 +274,7 @@ describe("People", () => {
 			"Inactive",
 			"",
 		]);
-		expect(within(daniel).getByText("Inactive")).toHaveClass("bg-neutral-400");
+		expect(statusOf(daniel, "Inactive")).toHaveClass("bg-neutral-400");
 		// Rows can be ticked for the bulk bar; its actions wait for the API.
 		expect(
 			within(moses).getByRole("checkbox", { name: "Select Moses Lee" })
@@ -430,6 +433,88 @@ describe("People", () => {
 		expect(opened.router.state.location.search).toEqual({ section: "data" });
 	});
 
+	it("keeps the person and the actions on phones, Status from sm and the rest from md", async () => {
+		stubApi({
+			...baseRoutes(),
+			[PEOPLE]: pageReply([person("m-1", "Moses Lee")]),
+		});
+		await open("/people");
+		const table = await screen.findByRole("table", { name: "People" });
+		await within(table).findByText("Moses Lee");
+		const [moses] = bodyRows(table) as [HTMLElement];
+		const headers = within(table).getAllByRole("columnheader");
+		const cells = within(moses).getAllByRole("cell");
+		const hiddenBelow = {
+			Employee: undefined,
+			Department: "md",
+			"Job title": "md",
+			Contact: "md",
+			Status: "sm",
+			Actions: undefined,
+		} as const;
+
+		for (const [name, breakpoint] of Object.entries(hiddenBelow)) {
+			const index = headers.findIndex((header) => header.textContent === name);
+			for (const cell of [headers[index], cells[index]]) {
+				if (breakpoint)
+					expect(cell).toHaveClass("hidden", `${breakpoint}:table-cell`);
+				else expect(cell).not.toHaveClass("hidden");
+			}
+		}
+	});
+
+	it("offers Import, Imports and Export from one menu beside Add employee below md", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...baseRoutes(["member_profile:read", "member_profile:create"]),
+			[PEOPLE]: pageReply([person("m-1", "Moses Lee")]),
+			[`GET ${PEOPLE_PATH}/export`]: problemReply(400, "EXPORT_TOO_LARGE"),
+		});
+		const opened = await open("/people");
+		await screen.findByText("Moses Lee");
+		const menu = screen.getByRole("button", { name: "More people actions" });
+		// The buttons show from md and the menu below it, so a phone keeps the toolbar on one row.
+		expect(menu.parentElement).toHaveClass("md:hidden");
+		expect(
+			screen.getByRole("button", { name: "Export" }).parentElement
+		).toHaveClass("hidden", "md:contents");
+
+		await user.click(menu);
+		expect(
+			(await screen.findAllByRole("menuitem")).map((item) => item.textContent)
+		).toEqual(["Import", "Imports", "Export"]);
+		await user.click(screen.getByRole("menuitem", { name: "Export" }));
+		expect(await screen.findByRole("alert")).toHaveTextContent(
+			"More than 5,000 people match. Choose a Branch or Department first."
+		);
+		expect(searchesOf(calls, `${PEOPLE_PATH}/export`)).toEqual([""]);
+
+		await user.click(menu);
+		await user.click(await screen.findByRole("menuitem", { name: "Imports" }));
+		await waitFor(() => {
+			expect(opened.router.state.location.pathname).toBe("/settings");
+		});
+		expect(opened.router.state.location.search).toEqual({ section: "data" });
+	});
+
+	it("offers only Export from the menu to someone who may not add people", async () => {
+		const user = userEvent.setup();
+		stubApi({
+			...baseRoutes(),
+			[PEOPLE]: pageReply([person("m-1", "Moses Lee")]),
+		});
+		await open("/people");
+		await screen.findByText("Moses Lee");
+
+		await user.click(
+			screen.getByRole("button", { name: "More people actions" })
+		);
+
+		expect(
+			(await screen.findAllByRole("menuitem")).map((item) => item.textContent)
+		).toEqual(["Export"]);
+	});
+
 	it("says when the filtered list is too large to export", async () => {
 		const user = userEvent.setup();
 		stubApi({
@@ -554,22 +639,13 @@ describe("People", () => {
 		await open("/people");
 
 		const table = await screen.findByRole("table");
-		expect(
-			within(within(table).getByRole("row", { name: /Ada Tan/ })).getByText(
-				"Invited"
-			)
-		).toBeVisible();
-		expect(
-			within(within(table).getByRole("row", { name: /Moses Lee/ })).queryByText(
-				"Invited"
-			)
-		).toBeNull();
+		// The Status column's cell (the sixth); on phones the name's line repeats it.
+		const statusCellOf = (name: RegExp): HTMLElement =>
+			within(within(table).getByRole("row", { name })).getAllByRole("cell")[5]!;
+		expect(within(statusCellOf(/Ada Tan/)).getByText("Invited")).toBeVisible();
+		expect(within(statusCellOf(/Moses Lee/)).queryByText("Invited")).toBeNull();
 		// An API that does not say yet marks no one.
-		expect(
-			within(within(table).getByRole("row", { name: /Grace Lim/ })).queryByText(
-				"Invited"
-			)
-		).toBeNull();
+		expect(within(statusCellOf(/Grace Lim/)).queryByText("Invited")).toBeNull();
 	});
 
 	it("filters to the people who have not signed in yet, in the URL and as a chip", async () => {

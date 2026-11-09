@@ -44,6 +44,36 @@ describe("RosterGrid", () => {
 		expect(screen.getAllByRole("row")).toHaveLength(4);
 	});
 
+	it("given_aShownDay_when_rendered_then_hidesEveryOtherDaysColumnBelowMd", () => {
+		render(<RosterGrid days={week} rows={rows} shownDay="2026-10-14" />);
+
+		const headers = screen.getAllByRole("columnheader").slice(1);
+		expect(headers).toHaveLength(7);
+		headers.forEach((header, index) => {
+			if (week[index] === "2026-10-14")
+				expect(header).not.toHaveClass("hidden");
+			else expect(header).toHaveClass("hidden", "md:table-cell");
+		});
+		const ben = screen.getByRole("row", { name: /Ben Ong/ });
+		const cells = within(ben).getAllByRole("cell");
+		expect(
+			cells.filter((cell) => !cell.classList.contains("hidden"))
+		).toHaveLength(1);
+		expect(screen.getByRole("table")).toHaveClass("md:min-w-200");
+		expect(screen.getByRole("table")).not.toHaveClass("min-w-200");
+	});
+
+	it("given_noShownDay_when_rendered_then_showsTheWholeWeekAtEveryWidth", () => {
+		render(<RosterGrid days={week} rows={rows} />);
+
+		expect(
+			screen
+				.getAllByRole("columnheader")
+				.filter((header) => header.classList.contains("hidden"))
+		).toHaveLength(0);
+		expect(screen.getByRole("table")).toHaveClass("min-w-200");
+	});
+
 	it("given_aShiftWorkedAsTheMembersOwnJobTitle_when_rendered_then_leavesOutTheRepeatedRole", () => {
 		render(<RosterGrid days={week} rows={rows} />);
 

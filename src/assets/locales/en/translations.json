@@ -10,6 +10,7 @@
 		"unreadCount_one": "Notifications, {{count}} unread",
 		"unreadCount_other": "Notifications, {{count}} unread",
 		"countUnavailable": "Notifications, unread count unavailable",
+		"actions": "Notification actions",
 		"markRead": "Mark as read",
 		"markAllRead": "Mark all as read",
 		"remark": "Remark:",
@@ -753,11 +754,16 @@
 		"sortAscending": "A – Z",
 		"sortDescending": "Z – A",
 		"details": "Details",
-		"showDetails": "Show details for {{name}}"
+		"showDetails": "Show details for {{name}}",
+		"sortColumn": "{{column}}: {{direction}}",
+		"sortRows": "Sort rows"
 	},
 	"stepper": {
 		"step": "Step {{number}}: {{label}}",
 		"completedStep": "Step {{number}}: {{label}}, completed"
+	},
+	"daySwitcher": {
+		"label": "Day"
 	},
 	"weekNavigator": {
 		"label": "Week",
@@ -1294,6 +1300,7 @@
 		},
 		"termsNotSet": "We couldn’t give them {{chosen}}, so they’re on {{kept}}. Change it from their profile.",
 		"imports": "Imports",
+		"moreActions": "More people actions",
 		"invitationFilter": {
 			"label": "Signed in",
 			"all": "Everyone",
@@ -2829,6 +2836,7 @@
 				"UNKNOWN": "—"
 			},
 			"expiryTracked": "Tracked",
+			"expiryNotTracked": "Expiry not tracked",
 			"expiryTrackedFor_one": "Tracked · {{count}} month",
 			"expiryTrackedFor_other": "Tracked · {{count}} months",
 			"holdersCount_one": "{{count}} person",

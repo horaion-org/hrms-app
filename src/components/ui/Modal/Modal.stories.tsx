@@ -46,3 +46,8 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
+
+/** Below `sm`: a sheet from the bottom edge. */
+export const Phone: Story = {
+	parameters: { viewport: { defaultViewport: "mobile1" } },
+};

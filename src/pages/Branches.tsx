@@ -7,7 +7,11 @@ import { CreateBranchDialog } from "@/features/organisation/CreateBranchDialog";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { DataTable, type DataTableSort } from "@/components/ui/DataTable";
+import {
+	DataTable,
+	type DataTableColumn,
+	type DataTableSort,
+} from "@/components/ui/DataTable";
 import { OverflowMenuItem } from "@/components/ui/OverflowMenu";
 import type { Branch } from "@/features/organisation/api";
 import { ListToolbar } from "@/features/organisation/ListToolbar";
@@ -65,27 +69,31 @@ export const Branches = (): FunctionComponent => {
 			matchesSearch(branch.name, query) || matchesSearch(branch.code, query)
 	);
 	const columns = useMemo(
-		() => [
+		(): Array<DataTableColumn<Branch>> => [
 			nameColumn<Branch>(t("organisation.branches.name")),
 			{
 				id: "code",
 				header: t("organisation.branches.code"),
 				cell: (branch: Branch): string => branch.code,
 				sortValue: (branch: Branch): string => branch.code,
+				hideBelow: "md",
 			},
 			{
 				id: "city",
 				header: t("organisation.branches.city"),
 				cell: (branch: Branch): string => branch.city,
 				sortValue: (branch: Branch): string => branch.city,
+				hideBelow: "md",
 			},
 			{
 				id: "country",
 				header: t("organisation.branches.country"),
 				cell: (branch: Branch): string =>
 					countryName(branch.country, i18n.language),
+				hideBelow: "md",
 			},
-			statusColumn<Branch>(t),
+			// Phones keep the name and the actions; Status joins from `sm`, as on People.
+			{ ...statusColumn<Branch>(t), hideBelow: "sm" },
 			createdColumn<Branch>(t, locale),
 			actionsColumn<Branch>(
 				t,

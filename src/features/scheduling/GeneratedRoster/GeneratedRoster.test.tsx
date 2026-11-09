@@ -139,6 +139,65 @@ describe("GeneratedRoster", () => {
 		expect(screen.queryByRole("button", { name: "Edit Shift" })).toBeNull();
 	});
 
+	describe("on a phone, one day at a time", () => {
+		/** The day headers left visible below `md`, as their weekday. */
+		const shownDays = (): Array<string | null> =>
+			within(screen.getByRole("table", { name: "Roster" }))
+				.getAllByRole("columnheader")
+				.slice(1)
+				.filter((header) => !header.classList.contains("hidden"))
+				.map((header) => header.textContent);
+
+		it("given_noDayChosen_when_rendered_then_showsTheWeeksFirstDayWithItsSwitcher", () => {
+			render(
+				<Roster
+					assignments={scheduleAssignmentsFixture()}
+					schedule={schedule}
+				/>
+			);
+
+			expect(shownDays()).toEqual(["MonOct 12"]);
+			expect(
+				screen.getByRole("button", { name: "Monday, October 12" })
+			).toHaveAttribute("aria-pressed", "true");
+		});
+
+		it("given_theSwitcher_when_anotherDayIsChosen_then_showsThatDaysColumn", async () => {
+			const user = userEvent.setup();
+			render(
+				<Roster
+					assignments={scheduleAssignmentsFixture()}
+					schedule={schedule}
+				/>
+			);
+
+			await user.click(
+				screen.getByRole("button", { name: "Tuesday, October 13" })
+			);
+			expect(shownDays()).toEqual(["TueOct 13"]);
+			await user.click(
+				screen.getByRole("button", { name: "Friday, October 16" })
+			);
+			expect(shownDays()).toEqual(["FriOct 16"]);
+		});
+
+		it("given_aTileOnAnotherDay_when_chosen_then_showsThatDaySoTheTileStaysInView", async () => {
+			const user = userEvent.setup();
+			render(
+				<Roster
+					assignments={scheduleAssignmentsFixture()}
+					schedule={schedule}
+				/>
+			);
+
+			await user.click(
+				screen.getByRole("button", { name: "Ben Ong, Fri 11:00 – 13:00" })
+			);
+
+			expect(shownDays()).toEqual(["FriOct 16"]);
+		});
+	});
+
 	it("given_aPanelOpensBesideTheGrid_when_shown_then_tilesShowTheirTimeOnly", async () => {
 		const user = userEvent.setup();
 		render(

@@ -100,7 +100,8 @@ describe("Notifications", () => {
 		expect(
 			await within(panel).findByText("You have no notifications in this view.")
 		).toBeInTheDocument();
-	});
+		// The file's first test loads the app and renders forty demo rows, each with its phone row menu: 2 s warm, over 5 s cold.
+	}, 15_000);
 
 	it("given_bell_when_opened_then_showsRecentNotificationsWithoutNavigatingAndDismissesOnEscape", async () => {
 		const calls = stubApi({

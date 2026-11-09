@@ -36,3 +36,8 @@ export const Danger: Story = {
 		tone: "danger",
 	},
 };
+
+/** Below `sm`: a sheet from the bottom edge. */
+export const Phone: Story = {
+	parameters: { viewport: { defaultViewport: "mobile1" } },
+};

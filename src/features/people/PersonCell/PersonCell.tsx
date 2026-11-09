@@ -16,8 +16,12 @@ export const PersonCell = ({
 	membershipId,
 }: PersonCellProps): FunctionComponent => (
 	<div className="flex min-w-0 items-center gap-3">
-		{/* The name beside it already says who this is. */}
-		<Avatar aria-hidden className="size-10 text-base" name={name} />
+		{/* The name beside it already says who this is; on a phone the name gets its room. */}
+		<Avatar
+			aria-hidden
+			className="size-10 text-base max-sm:hidden"
+			name={name}
+		/>
 		<div className="min-w-0">
 			{membershipId ? (
 				<Link

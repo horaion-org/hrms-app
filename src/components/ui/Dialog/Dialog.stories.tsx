@@ -69,3 +69,9 @@ export const LongBody: Story = {
 	},
 };
 export const PreventClose: Story = { args: { preventClose: true } };
+
+/** Below `sm`: a sheet from the bottom edge, actions in thumb reach, the body scrolling inside. */
+export const Phone: Story = {
+	args: LongBody.args,
+	parameters: { viewport: { defaultViewport: "mobile1" } },
+};

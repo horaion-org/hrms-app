@@ -37,15 +37,18 @@ const searchSchema = z.object({
 	status: z.enum(LEAVE_STATUSES).optional().catch(undefined),
 	page: z.number().int().min(1).optional().catch(undefined),
 	sort: sortParameterSchema.optional().catch(undefined),
+	/** The one day the timeline shows below `md`; today, else the window's first day, when left out (`shownDayOf`). */
+	day: z.iso.date().optional().catch(undefined),
 });
 
 /**
  * The Leave page's state that belongs in the URL, so it survives a reload
  * and can be shared: the view (the caller's own leave unless `requests` or
- * `timeline` names a team view), the Branch and Department, and the
- * table's status, page and sort. Each part is left out at its default: own
- * leave, the default Branch (see `resolveUnitSelection`; `all` names every
- * Branch), every Department, every status, the first page, newest first.
+ * `timeline` names a team view), the Branch and Department, the table's
+ * status, page and sort, and the one day a phone shows of the timeline.
+ * Each part is left out at its default: own leave, the default Branch (see
+ * `resolveUnitSelection`; `all` names every Branch), every Department,
+ * every status, the first page, newest first, today.
  */
 export type LeaveSearch = z.infer<typeof searchSchema>;
 
@@ -53,8 +56,17 @@ export type LeaveSearch = z.infer<typeof searchSchema>;
 export const parseLeaveSearch = (
 	search: Record<string, unknown>
 ): LeaveSearch => {
-	const { view, branch, department, status, page, sort, requestId, memberId } =
-		searchSchema.parse(search);
+	const {
+		view,
+		branch,
+		department,
+		status,
+		page,
+		sort,
+		requestId,
+		memberId,
+		day,
+	} = searchSchema.parse(search);
 	return {
 		...(requestId ? { requestId, ...(memberId ? { memberId } : {}) } : {}),
 		...(view === undefined ? {} : { view }),
@@ -62,6 +74,7 @@ export const parseLeaveSearch = (
 		...(status === undefined ? {} : { status }),
 		...(page === undefined || page === 1 ? {} : { page }),
 		...(sort === undefined || sort === DEFAULT_SORT_PARAMETER ? {} : { sort }),
+		...(day === undefined ? {} : { day }),
 	};
 };
 

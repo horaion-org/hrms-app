@@ -10,6 +10,7 @@
 		"unreadCount_one": "Notificaciones, {{count}} sin leer",
 		"unreadCount_other": "Notificaciones, {{count}} sin leer",
 		"countUnavailable": "Notificaciones, recuento no disponible",
+		"actions": "Acciones de la notificación",
 		"markRead": "Marcar como leída",
 		"markAllRead": "Marcar todas como leídas",
 		"remark": "Comentario:",
@@ -822,11 +823,16 @@
 		"sortAscending": "A – Z",
 		"sortDescending": "Z – A",
 		"details": "Detalles",
-		"showDetails": "Ver detalles de {{name}}"
+		"showDetails": "Ver detalles de {{name}}",
+		"sortColumn": "{{column}}: {{direction}}",
+		"sortRows": "Ordenar filas"
 	},
 	"stepper": {
 		"step": "Paso {{number}}: {{label}}",
 		"completedStep": "Paso {{number}}: {{label}}, completado"
+	},
+	"daySwitcher": {
+		"label": "Día"
 	},
 	"weekNavigator": {
 		"label": "Semana",
@@ -2126,6 +2132,7 @@
 				"UNKNOWN": "—"
 			},
 			"expiryTracked": "Controlado",
+			"expiryNotTracked": "Sin control de caducidad",
 			"expiryTrackedFor_one": "Controlado · {{count}} mes",
 			"expiryTrackedFor_other": "Controlado · {{count}} meses",
 			"holdersCount_one": "{{count}} persona",
@@ -2740,6 +2747,7 @@
 			"employmentTermsHint": "Desde su fecha de contratación, o desde hoy si no tiene."
 		},
 		"imports": "Importaciones",
+		"moreActions": "Más acciones de personas",
 		"invitationFilter": {
 			"label": "Ha iniciado sesión",
 			"all": "Todos",

@@ -11,6 +11,8 @@ it("supports multiline form input and exposes validation state", async () => {
 	);
 	const field = screen.getByRole("textbox", { name: "Reason" });
 	expect(field).toHaveAttribute("aria-invalid", "true");
+	// 16px on touch screens, so iOS does not zoom into the field.
+	expect(field).toHaveClass("text-sm", "pointer-coarse:text-base");
 	expect(field).toBeInvalid();
 	await userEvent.type(field, "Team event{Enter}Coverage needed");
 	expect(new FormData(screen.getByRole("form")).get("reason")).toBe(

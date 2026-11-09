@@ -4,7 +4,11 @@ import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { DataTable, type DataTableSort } from "@/components/ui/DataTable";
+import {
+	DataTable,
+	type DataTableColumn,
+	type DataTableSort,
+} from "@/components/ui/DataTable";
 import { OverflowMenuItem } from "@/components/ui/OverflowMenu";
 import type { Department } from "@/features/organisation/api";
 import { CreateDepartmentDialog } from "@/features/organisation/CreateDepartmentDialog";
@@ -95,11 +99,12 @@ export const Departments = (): FunctionComponent => {
 		t
 	);
 	const columns = useMemo(
-		() => [
+		(): Array<DataTableColumn<Department>> => [
 			nameColumn<Department>(t("organisation.departments.name")),
 			// A Branch already chosen is not repeated on every row.
 			...(branchShown ? [] : [branchColumn<Department>(t)]),
-			statusColumn<Department>(t),
+			// Phones keep the name and the actions; Status joins from `sm`, as on People.
+			{ ...statusColumn<Department>(t), hideBelow: "sm" },
 			createdColumn<Department>(t, locale),
 			actionsColumn<Department>(
 				t,

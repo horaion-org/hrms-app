@@ -1,7 +1,9 @@
 import dayjs from "dayjs";
-import { useId, useState } from "react";
+import { useId, useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
+import { dayColumnClasses } from "@/common/dayView";
 import { formattingLocale } from "@/common/formattingLocale";
+import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
@@ -17,8 +19,21 @@ export type LeaveTimelineProps = {
 	requests: Array<LeaveRequest>;
 	/** The window drawn; the page's toolbar moves it. */
 	range: DateRange;
+	/**
+	 * The one day shown below `md` (the page's `DaySwitcher` picks it): the
+	 * other days' columns close up, and only that day's bars show.
+	 */
+	shownDay?: string;
 	onOpen: (request: LeaveRequest) => void;
 };
+
+/** The employee column's and each day's width from `md`, in px. */
+const EMPLOYEE_COLUMN_PX = 204;
+const DAY_COLUMN_PX = 40;
+
+/** A row's day tracks below `md`: the shown day takes the row, every other day none. */
+const oneDayTracks = (days: ReadonlyArray<string>, shownDay: string): string =>
+	days.map((date) => (date === shownDay ? "minmax(0, 1fr)" : "0px")).join(" ");
 
 const barClasses = {
 	APPROVED: "border-success-600 bg-success-200",
@@ -38,6 +53,7 @@ const blockedStyle = {
 export const LeaveTimeline = ({
 	requests,
 	range,
+	shownDay,
 	onOpen,
 }: LeaveTimelineProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
@@ -67,7 +83,18 @@ export const LeaveTimeline = ({
 		Math.max(1, Math.ceil(employees.length / 10))
 	);
 	const today = dayjs().format("YYYY-MM-DD");
-	const grid = { gridTemplateColumns: `repeat(${days.length}, 40px)` };
+	const oneDay = shownDay !== undefined;
+	// Read by the classes below: the week's widths from `md`, one day's below it.
+	const widths = {
+		"--timeline-width": `${EMPLOYEE_COLUMN_PX + days.length * DAY_COLUMN_PX}px`,
+	} as CSSProperties;
+	const tracks = {
+		"--week-tracks": `repeat(${days.length}, ${DAY_COLUMN_PX}px)`,
+		...(oneDay ? { "--day-tracks": oneDayTracks(days, shownDay) } : {}),
+	} as CSSProperties;
+	/** Hides a day's background, or a bar, below `md` unless it is on the shown day. */
+	const hiddenOffTheShownDay = (onShownDay: boolean): string | undefined =>
+		oneDay && !onShownDay ? "max-md:hidden" : undefined;
 	const month = new Intl.DateTimeFormat(formattingLocale(i18n), {
 		month: "short",
 	});
@@ -102,13 +129,33 @@ export const LeaveTimeline = ({
 				tabIndex={0}
 			>
 				<table
-					className="table-fixed border-separate border-spacing-0 text-xs"
-					style={{ width: 204 + days.length * 40 }}
+					style={widths}
+					className={joinClassNames(
+						"table-fixed border-separate border-spacing-0 text-xs",
+						oneDay ? "w-full md:w-(--timeline-width)" : "w-(--timeline-width)"
+					)}
 				>
+					{/*
+					 * Below `md` the other days' headers hide, so the shown day's
+					 * header takes the first day column: it fills the row, and the
+					 * rest close up under the bars' cell.
+					 */}
+					<colgroup>
+						<col className={oneDay ? "w-40 md:w-51" : "w-51"} />
+						{days.map((date, index) => (
+							<col
+								key={date}
+								className={joinClassNames(
+									"w-10",
+									oneDay && (index === 0 ? "max-md:w-auto" : "max-md:w-0")
+								)}
+							/>
+						))}
+					</colgroup>
 					<thead>
 						<tr>
 							<th
-								className="sticky left-0 z-20 w-51 border-r border-b border-neutral-400 bg-neutral-200 px-3 text-left text-sm"
+								className="sticky left-0 z-20 border-r border-b border-neutral-400 bg-neutral-200 px-3 text-left text-sm"
 								rowSpan={2}
 								scope="col"
 								aria-sort={
@@ -134,9 +181,12 @@ export const LeaveTimeline = ({
 							{weeks.map((week) => (
 								<th
 									key={week[0]}
-									className="h-9 border-r border-b border-neutral-400 bg-neutral-200 text-sm"
 									colSpan={week.length}
 									scope="colgroup"
+									className={joinClassNames(
+										"h-9 border-r border-b border-neutral-400 bg-neutral-200 text-sm",
+										oneDay && "hidden md:table-cell"
+									)}
 								>
 									{month.format(new Date(`${week[0]}T12:00:00`))}
 									{week[0]?.slice(0, 7) !==
@@ -149,8 +199,11 @@ export const LeaveTimeline = ({
 							{days.map((date) => (
 								<th
 									key={date}
-									className="h-9 min-w-10 border-r border-b border-neutral-400 bg-neutral-200 text-sm font-medium"
 									scope="col"
+									className={joinClassNames(
+										"h-9 min-w-10 border-r border-b border-neutral-400 bg-neutral-200 text-sm font-medium",
+										dayColumnClasses(date, shownDay)
+									)}
 								>
 									<time
 										dateTime={date}
@@ -173,7 +226,7 @@ export const LeaveTimeline = ({
 									>
 										<div className="flex items-center gap-3">
 											<Avatar
-												className="size-10! text-base!"
+												className="size-10! text-base! max-sm:hidden"
 												name={employee.displayName}
 											/>
 											<div>
@@ -186,12 +239,23 @@ export const LeaveTimeline = ({
 										className="relative border-b border-neutral-400 p-0"
 										colSpan={days.length}
 									>
-										<div className="relative grid h-16" style={grid}>
+										<div
+											style={tracks}
+											className={joinClassNames(
+												"relative grid h-16",
+												oneDay
+													? "grid-cols-(--day-tracks) md:grid-cols-(--week-tracks)"
+													: "grid-cols-(--week-tracks)"
+											)}
+										>
 											{days.map((date, index) => (
 												<div
 													key={date}
 													aria-hidden="true"
-													className="col-auto row-start-1 border-r border-neutral-400"
+													className={joinClassNames(
+														"col-auto row-start-1 border-r border-neutral-400",
+														hiddenOffTheShownDay(date === shownDay)
+													)}
 													style={{
 														gridColumn: index + 1,
 														...(dayjs(date).day() === 0 ||
@@ -238,7 +302,14 @@ export const LeaveTimeline = ({
 													return (
 														<div
 															key={request.leaveRequestId}
-															className="group relative z-10 row-start-1 mx-0.5 self-center"
+															className={joinClassNames(
+																"group relative z-10 row-start-1 mx-0.5 self-center",
+																hiddenOffTheShownDay(
+																	shownDay !== undefined &&
+																		request.startDate <= shownDay &&
+																		request.endDate >= shownDay
+																)
+															)}
 															style={{
 																gridColumn: `${start + 1} / ${end + 1}`,
 															}}

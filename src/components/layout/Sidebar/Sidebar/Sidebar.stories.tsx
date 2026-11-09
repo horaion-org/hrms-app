@@ -91,7 +91,7 @@ export const WithFooter: Story = {
 	args: { footer: <Button>{en.auth.logOut}</Button> },
 };
 
-/** Below `sm`: the bar with the logo and Menu; Menu shows the navigation and footer under it. */
+/** Below `lg` (phones and tablets): the bar with the logo and Menu; Menu shows the navigation and footer under it. */
 export const SmallScreen: Story = {
 	args: { footer: <Button>{en.auth.logOut}</Button> },
 	parameters: { viewport: { defaultViewport: "mobile1" } },

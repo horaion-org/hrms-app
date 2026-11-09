@@ -117,4 +117,28 @@ describe("RosterWeekBar", () => {
 			backgroundColor: "#E9A55A",
 		});
 	});
+
+	it("given_aPhone_when_rendered_then_putsTheWeekBetweenItsArrowsAndTodayWithTheExtras", () => {
+		render(
+			<RosterWeekBar
+				legend={[]}
+				week="2026-04-13"
+				weeks={weeks}
+				onToday={vi.fn()}
+				onWeekChange={vi.fn()}
+			/>
+		);
+
+		// DOM order stays Today, arrows, week; only the phone's visual order changes.
+		expect(screen.getByRole("button", { name: "Week" })).toHaveClass(
+			"max-sm:order-2",
+			"max-sm:grow"
+		);
+		expect(screen.getByRole("button", { name: "Next week" })).toHaveClass(
+			"max-sm:order-3"
+		);
+		expect(screen.getByRole("button", { name: "Today" })).toHaveClass(
+			"max-sm:order-4"
+		);
+	});
 });

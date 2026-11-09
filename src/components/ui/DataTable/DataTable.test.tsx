@@ -774,4 +774,208 @@ describe("DataTable", () => {
 			"border-neutral-400"
 		);
 	});
+
+	it("keeps positioned content in its cells inside the scrolling frame", () => {
+		render(
+			<DataTable
+				columns={columns}
+				data={branches}
+				getRowId={getRowId}
+				label="Branches"
+				selection={{ rowLabel: (branch) => branch.name }}
+			/>
+		);
+
+		// The row boxes' visually hidden labels are positioned; a relative frame contains them.
+		expect(screen.getByRole("table").parentElement).toHaveClass("relative");
+	});
+
+	it("sizes columns to their content below xl and fixes their widths from xl", () => {
+		render(
+			<DataTable
+				columns={columns}
+				data={branches}
+				getRowId={getRowId}
+				label="Branches"
+			/>
+		);
+
+		expect(screen.getByRole("table")).toHaveClass(
+			"table-auto",
+			"xl:table-fixed"
+		);
+	});
+
+	it("keeps its 576 px floor from sm only, so a phone's priority columns fit", () => {
+		render(
+			<DataTable
+				columns={columns}
+				data={branches}
+				getRowId={getRowId}
+				label="Branches"
+			/>
+		);
+
+		expect(screen.getByRole("table")).toHaveClass("sm:min-w-xl");
+		expect(screen.getByRole("table")).not.toHaveClass("min-w-xl");
+	});
+
+	it("lets the column naming each row take the room left on a phone, so it truncates", () => {
+		render(
+			<DataTable
+				columns={[{ ...columns[0]!, pin: "start" }, columns[1]!]}
+				data={branches}
+				getRowId={getRowId}
+				label="Branches"
+			/>
+		);
+
+		const naming = ["max-sm:w-full", "max-sm:max-w-0", "max-sm:min-w-36"];
+		expect(
+			screen.getByRole("columnheader", { name: /Branch Name/ })
+		).toHaveClass(...naming);
+		expect(screen.getByRole("cell", { name: "Orchard" })).toHaveClass(
+			...naming
+		);
+		expect(screen.getByRole("columnheader", { name: /Code/ })).not.toHaveClass(
+			"max-sm:max-w-0"
+		);
+	});
+
+	it("leaves a column out below its breakpoint, header and cells alike", () => {
+		render(
+			<DataTable
+				data={branches}
+				getRowId={getRowId}
+				label="Branches"
+				columns={[
+					columns[0]!,
+					{ ...columns[1]!, hideBelow: "md", headerClassName: "w-30" },
+				]}
+			/>
+		);
+
+		expect(screen.getByRole("columnheader", { name: "Code" })).toHaveClass(
+			"hidden",
+			"md:table-cell",
+			"w-30"
+		);
+		expect(screen.getByRole("cell", { name: "0002" })).toHaveClass(
+			"hidden",
+			"md:table-cell"
+		);
+		expect(
+			screen.getByRole("columnheader", { name: /Branch Name/ })
+		).not.toHaveClass("hidden");
+	});
+
+	describe("a hidden column's value on the naming cell's line", () => {
+		type Place = Branch & { city: string | null; note: string };
+		const places: Array<Place> = [
+			{ ...branches[0]!, city: "Singapore", note: "Opens at nine" },
+			{ ...branches[1]!, city: null, note: "Closed on Sundays" },
+		];
+		const placeColumns: Array<DataTableColumn<Place>> = [
+			{ ...columns[0]!, pin: "start" },
+			{
+				id: "code",
+				header: "Code",
+				cell: (place) => place.code,
+				sortValue: (place) => place.code,
+				hideBelow: "md",
+			},
+			{
+				id: "city",
+				header: "City",
+				cell: (place) => place.city ?? "—",
+				summary: (place) => place.city && `In ${place.city}`,
+				hideBelow: "sm",
+			},
+			{
+				id: "note",
+				header: "Note",
+				cell: (place) => place.note,
+				hideBelow: "md",
+				omitFromSummary: true,
+			},
+		];
+		const renderPlaces = (): void => {
+			render(
+				<DataTable
+					columns={placeColumns}
+					data={places}
+					getRowId={getRowId}
+					label="Branches"
+				/>
+			);
+		};
+		const namingCellOf = (name: string): HTMLElement =>
+			screen
+				.getAllByRole("cell")
+				.find((cell) => cell.textContent?.startsWith(name))!;
+
+		it("shows each value only while its column is out of the table, named for screen readers", () => {
+			renderPlaces();
+
+			const naming = namingCellOf("Orchard");
+			const code = within(naming).getByText("0002");
+			expect(code).toHaveClass("md:hidden");
+			expect(code).toHaveTextContent("Code: 0002");
+			const city = within(naming).getByText("In Singapore");
+			expect(city).toHaveClass("sm:hidden");
+			// The line shows while any of its columns is hidden: below the widest breakpoint.
+			expect(code.parentElement?.parentElement).toHaveClass("md:hidden");
+		});
+
+		it("leads every value with a dot and clips the one that starts each line, so no line starts or ends with one", () => {
+			renderPlaces();
+
+			const naming = namingCellOf("Orchard");
+			for (const value of ["0002", "In Singapore"])
+				expect(
+					within(within(naming).getByText(value)).getByText("·")
+				).toHaveAttribute("aria-hidden", "true");
+			const line = within(naming).getByText("0002").parentElement!;
+			expect(line).toHaveClass("-ml-3", "flex-wrap");
+			expect(line.parentElement).toHaveClass("overflow-hidden");
+		});
+
+		it("leaves off a column that opts out and a value that is not set", () => {
+			renderPlaces();
+
+			expect(
+				within(namingCellOf("Orchard")).queryByText("Opens at nine")
+			).not.toBeInTheDocument();
+			expect(
+				within(namingCellOf("Main Branch")).queryByText(/^In /)
+			).not.toBeInTheDocument();
+		});
+
+		it("sorts by a hidden column from the naming header's menu, shown only while it hides", async () => {
+			const user = userEvent.setup();
+			renderPlaces();
+
+			const menuButton = screen.getByRole("button", { name: "Sort rows" });
+			expect(menuButton.closest("span.md\\:hidden")).toHaveClass("inline-flex");
+			expect(
+				screen.getByRole("button", { name: "Sort by Branch Name" })
+					.parentElement
+			).toHaveClass("hidden", "md:inline-flex");
+			await user.click(menuButton);
+			expect(
+				screen.getAllByRole("menuitem").map((item) => item.textContent)
+			).toEqual([
+				"Branch Name: A – Z",
+				"Branch Name: Z – A",
+				"Code: A – Z",
+				"Code: Z – A",
+			]);
+			await user.click(screen.getByRole("menuitem", { name: "Code: Z – A" }));
+
+			const firstRow = screen.getAllByRole("row")[1]!;
+			expect(within(firstRow).getAllByRole("cell")[0]).toHaveTextContent(
+				/^Main Branch/
+			);
+		});
+	});
 });

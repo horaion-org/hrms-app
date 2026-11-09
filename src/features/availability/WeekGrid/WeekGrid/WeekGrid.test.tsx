@@ -81,6 +81,23 @@ describe("WeekGrid", () => {
 		expect(within(farisRow).queryByRole("button")).not.toBeInTheDocument();
 	});
 
+	it("given_aShownDay_when_shown_then_hidesEveryOtherDaysColumnBelowMd", () => {
+		show({ shownDay: "2026-11-11" });
+
+		const visible = (cells: Array<HTMLElement>): Array<HTMLElement> =>
+			cells.filter((cell) => !cell.classList.contains("hidden"));
+		const headers = screen.getAllByRole("columnheader");
+		expect(visible(headers).map((header) => header.textContent)).toEqual([
+			"WedNov 11",
+		]);
+		expect(headers[0]).toHaveClass("hidden", "md:table-cell");
+		const cells = screen.getAllByRole("cell");
+		expect(visible(cells)).toHaveLength(1);
+		expect(visible(cells)[0]).toHaveTextContent("09:00");
+		expect(screen.getByRole("table")).toHaveClass("md:min-w-182");
+		expect(screen.getByRole("table")).not.toHaveClass("min-w-182");
+	});
+
 	it("given_noRows_when_shown_then_saysSoAcrossTheBody", () => {
 		show({ rows: [], emptyState: "No part-time members here." });
 

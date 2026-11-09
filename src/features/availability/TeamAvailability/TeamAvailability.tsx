@@ -16,6 +16,8 @@ export type TeamAvailabilityProps = {
 	members: Array<MemberWeek>;
 	/** The week shown, as its Monday. */
 	weekStartMonday: string;
+	/** The one day shown below `md`, as the page's `DaySwitcher` picks it. */
+	shownDay?: string;
 	/** Names each member's Department, for a list not narrowed to one. */
 	showDepartment: boolean;
 	/** Whether the person may change this member's availability, as the workspace says. */
@@ -37,7 +39,11 @@ const MemberHeading = ({
 	const { t } = useTranslation();
 	return (
 		<span className="flex items-center gap-3">
-			<Avatar className="size-10! text-base!" name={member.displayName} />
+			{/* On a phone the row header drops the avatar, as the roster's does. */}
+			<Avatar
+				className="size-10! text-base! max-sm:hidden"
+				name={member.displayName}
+			/>
 			<span className="min-w-0">
 				<span className="block truncate text-xs font-semibold">
 					{member.displayName}
@@ -66,6 +72,7 @@ const MemberHeading = ({
 export const TeamAvailability = ({
 	members,
 	weekStartMonday,
+	shownDay,
 	showDepartment,
 	canEdit,
 	onEdit,
@@ -98,6 +105,7 @@ export const TeamAvailability = ({
 			headingLabel={t(`${key}.member`)}
 			label={t(`${key}.label`)}
 			rows={rows}
+			shownDay={shownDay}
 			weekStartMonday={weekStartMonday}
 		/>
 	);
