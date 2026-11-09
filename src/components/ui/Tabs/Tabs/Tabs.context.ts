@@ -1,6 +1,7 @@
 import { createContext, useContext } from "react";
 
-export type TabsOrientation = "horizontal" | "vertical";
+/** `verticalFromMd`: one horizontal row below `md`, the vertical column from it. */
+export type TabsOrientation = "horizontal" | "vertical" | "verticalFromMd";
 
 /** Lets TabList and Tab style themselves for the orientation Tabs was given. */
 export const TabsOrientationContext =

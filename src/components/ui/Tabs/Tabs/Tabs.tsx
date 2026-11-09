@@ -14,7 +14,9 @@ export type TabsProps = Omit<ComponentPropsWithRef<"div">, "onChange"> & {
 	 * `vertical` stacks the tabs as a navigation column, moves between them with
 	 * ArrowUp/ArrowDown instead of ArrowLeft/ArrowRight, and exposes
 	 * `aria-orientation="vertical"` on the TabList. Lay out the TabList and
-	 * TabPanels side by side with `className`. Defaults to `horizontal`.
+	 * TabPanels side by side with `className`. `verticalFromMd` is one
+	 * scrolling row below `md` and the vertical column from it, keeping the
+	 * vertical keys. Defaults to `horizontal`.
 	 */
 	orientation?: TabsOrientation;
 };
@@ -24,6 +26,6 @@ export const Tabs = ({
 	...props
 }: TabsProps): FunctionComponent => (
 	<TabsOrientationContext value={orientation}>
-		<TabGroup vertical={orientation === "vertical"} {...props} />
+		<TabGroup vertical={orientation !== "horizontal"} {...props} />
 	</TabsOrientationContext>
 );

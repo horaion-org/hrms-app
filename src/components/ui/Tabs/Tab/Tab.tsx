@@ -4,7 +4,10 @@ import type { FunctionComponent } from "@/common/types";
 import { joinClassNames } from "@/common/joinClassNames";
 import { CountBadge, type CountBadgeProps } from "@/components/ui/CountBadge";
 import { ChevronRightIcon } from "@/components/ui/Icon";
-import { useTabsOrientation } from "@/components/ui/Tabs/Tabs/Tabs.context";
+import {
+	useTabsOrientation,
+	type TabsOrientation,
+} from "@/components/ui/Tabs/Tabs/Tabs.context";
 
 export type TabProps = Omit<ComponentPropsWithRef<"button">, "children"> & {
 	children?: ReactNode;
@@ -31,6 +34,31 @@ const horizontalClasses =
 const verticalClasses =
 	"grid min-h-25 w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 border-b border-neutral-400 bg-white px-5 py-5 text-left text-neutral-900 outline-none not-data-disabled:data-selected:bg-neutral-100 not-data-disabled:not-data-selected:data-hover:bg-neutral-50 data-disabled:cursor-not-allowed data-disabled:text-neutral-400 data-focus:outline-2 data-focus:outline-solid data-focus:-outline-offset-2 data-focus:outline-ink-blue-500";
 
+/* Below `md` a horizontal tab, from `md` a vertical row: the two sets above, each behind its breakpoint. */
+const verticalFromMdClasses =
+	"max-md:inline-flex max-md:h-10 max-md:shrink-0 max-md:pointer-coarse:min-h-11 max-md:flex-nowrap max-md:items-center max-md:justify-center max-md:gap-2 max-md:border-b-2 max-md:border-transparent max-md:px-1 max-md:text-base max-md:whitespace-nowrap max-md:text-neutral-600 max-md:outline-none max-md:not-data-disabled:data-selected:border-ink-blue-900 max-md:not-data-disabled:data-selected:text-ink-blue-900 max-md:not-data-disabled:not-data-selected:data-hover:text-ink-blue-700 max-md:data-disabled:text-neutral-400 max-md:data-disabled:cursor-not-allowed max-md:data-focus:outline-2 max-md:data-focus:outline-solid max-md:data-focus:outline-offset-2 max-md:data-focus:outline-ink-blue-500 " +
+	"md:grid md:min-h-25 md:w-full md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:gap-x-4 md:border-b md:border-neutral-400 md:bg-white md:px-5 md:py-5 md:text-left md:text-neutral-900 md:outline-none md:not-data-disabled:data-selected:bg-neutral-100 md:not-data-disabled:not-data-selected:data-hover:bg-neutral-50 md:data-disabled:cursor-not-allowed md:data-disabled:text-neutral-400 md:data-focus:outline-2 md:data-focus:outline-solid md:data-focus:-outline-offset-2 md:data-focus:outline-ink-blue-500";
+
+const tabClasses: Record<TabsOrientation, string> = {
+	horizontal: horizontalClasses,
+	vertical: verticalClasses,
+	verticalFromMd: verticalFromMdClasses,
+};
+
+/** The vertical row's label, description and chevron; `md:` variants when it is vertical only from `md`. */
+const rowPartClasses = {
+	vertical: {
+		label: "flex items-center gap-2 text-sm font-bold",
+		description: "mt-2 block text-xs font-medium",
+		chevron: "size-6 shrink-0",
+	},
+	verticalFromMd: {
+		label: "flex items-center gap-2 md:text-sm md:font-bold",
+		description: "max-md:sr-only md:mt-2 md:block md:text-xs md:font-medium",
+		chevron: "size-6 shrink-0 max-md:hidden",
+	},
+};
+
 const badgeTone = (
 	selected: boolean,
 	disabled: boolean
@@ -48,7 +76,10 @@ export const Tab = ({
 	"aria-describedby": ariaDescribedBy,
 	...props
 }: TabProps): FunctionComponent => {
-	const vertical = useTabsOrientation() === "vertical";
+	const orientation = useTabsOrientation();
+	const vertical = orientation !== "horizontal";
+	const row =
+		rowPartClasses[orientation === "verticalFromMd" ? orientation : "vertical"];
 	const descriptionId = useId();
 	const countLabelId = useId();
 	const hasDescription =
@@ -67,7 +98,7 @@ export const Tab = ({
 			aria-describedby={describedBy || undefined}
 			className={joinClassNames(
 				"cursor-pointer",
-				vertical ? verticalClasses : horizontalClasses,
+				tabClasses[orientation],
 				className
 			)}
 			{...props}
@@ -95,7 +126,7 @@ export const Tab = ({
 						className={
 							vertical
 								? joinClassNames(
-										"mt-2 block text-xs font-medium",
+										row.description,
 										disabled ? "text-neutral-400" : "text-neutral-800"
 									)
 								: "sr-only"
@@ -107,14 +138,14 @@ export const Tab = ({
 				return vertical ? (
 					<>
 						<span className="min-w-0">
-							<span className="flex items-center gap-2 text-sm font-bold">
+							<span className={row.label}>
 								{children} {badge}
 							</span>
 							{descriptionText}
 						</span>
 						<ChevronRightIcon
 							className={joinClassNames(
-								"size-6 shrink-0",
+								row.chevron,
 								disabled ? "text-neutral-400" : "text-ink-blue-900"
 							)}
 						/>

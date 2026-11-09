@@ -7,13 +7,26 @@ import {
 } from "react";
 import type { FunctionComponent } from "@/common/types";
 import { joinClassNames } from "@/common/joinClassNames";
-import { useTabsOrientation } from "@/components/ui/Tabs/Tabs/Tabs.context";
+import {
+	useTabsOrientation,
+	type TabsOrientation,
+} from "@/components/ui/Tabs/Tabs/Tabs.context";
 
 export type TabListProps = ComponentPropsWithRef<"div"> &
 	(
 		| { "aria-label": string; "aria-labelledby"?: string }
 		| { "aria-label"?: string; "aria-labelledby": string }
 	);
+
+const horizontalListClasses =
+	"flex min-w-0 max-w-full flex-nowrap gap-6 overflow-x-auto p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
+
+const listClasses: Record<TabsOrientation, string> = {
+	horizontal: horizontalListClasses,
+	vertical: "flex min-w-0 flex-col",
+	// Relative on a phone, so each tab's visually hidden description scrolls with the row instead of widening the page.
+	verticalFromMd: `${horizontalListClasses} max-md:relative md:max-w-none md:flex-col md:gap-0 md:overflow-x-visible md:p-0`,
+};
 
 export const TabList = ({
 	ref,
@@ -90,12 +103,7 @@ export const TabList = ({
 	return (
 		<HeadlessTabList
 			ref={listRef}
-			className={joinClassNames(
-				orientation === "vertical"
-					? "flex min-w-0 flex-col"
-					: "flex min-w-0 max-w-full flex-nowrap gap-6 overflow-x-auto p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
-				className
-			)}
+			className={joinClassNames(listClasses[orientation], className)}
 			{...props}
 		/>
 	);

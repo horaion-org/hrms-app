@@ -298,7 +298,7 @@ describe("Tabs", () => {
 	it("accepts starting and controlled indexes but excludes alternative modes", () => {
 		expectTypeOf<{ defaultIndex: number }>().toExtend<TabsProps>();
 		expectTypeOf<TabsProps["orientation"]>().toEqualTypeOf<
-			"horizontal" | "vertical" | undefined
+			"horizontal" | "vertical" | "verticalFromMd" | undefined
 		>();
 		expectTypeOf<TabsProps["selectedIndex"]>().toEqualTypeOf<
 			number | undefined
