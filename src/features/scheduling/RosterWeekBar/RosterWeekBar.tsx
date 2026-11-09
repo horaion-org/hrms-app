@@ -64,11 +64,21 @@ export const RosterWeekBar = ({
 		if (next) onWeekChange(next.start);
 	};
 
+	// On a phone the week takes one row, the picker between its arrows, and Today
+	// joins the row of extras; the reading order stays Today, arrows, week.
 	return (
 		<div
-			className={joinClassNames("flex flex-wrap items-center gap-4", className)}
+			className={joinClassNames(
+				"flex flex-wrap items-center gap-4 max-sm:gap-y-3",
+				className
+			)}
 		>
-			<Button size="sm" variant="secondary" onClick={onToday}>
+			<Button
+				className="max-sm:order-4"
+				size="sm"
+				variant="secondary"
+				onClick={onToday}
+			>
 				{t("scheduling.detail.today")}
 			</Button>
 			<Button
@@ -84,7 +94,7 @@ export const RosterWeekBar = ({
 			</Button>
 			<Button
 				aria-label={t("scheduling.detail.nextWeek")}
-				className="size-12! rounded-full! border border-neutral-500"
+				className="size-12! rounded-full! border border-neutral-500 max-sm:order-3"
 				disabled={index === -1 || index >= weeks.length - 1}
 				variant="icon"
 				onClick={() => {
@@ -95,7 +105,7 @@ export const RosterWeekBar = ({
 			</Button>
 			<Select
 				aria-label={t("scheduling.detail.week")}
-				className="h-12! w-58 rounded-full!"
+				className="h-12! w-58 rounded-full! max-sm:order-2 max-sm:w-auto max-sm:min-w-0 max-sm:grow max-sm:basis-40"
 				value={week}
 				options={weeks.map((item) => ({
 					value: item.start,
@@ -103,7 +113,7 @@ export const RosterWeekBar = ({
 				}))}
 				onChange={onWeekChange}
 			/>
-			<div className="ml-auto flex flex-wrap items-center gap-3">
+			<div className="ml-auto flex flex-wrap items-center gap-3 max-sm:order-5">
 				{children}
 				{swatches.length > 0 && (
 					<Popover>

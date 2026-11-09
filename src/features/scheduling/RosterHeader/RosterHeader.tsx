@@ -10,7 +10,11 @@ import type { Schedule } from "@/features/scheduling/schedules/api";
 
 export type RosterHeaderProps = {
 	schedule: Schedule;
-	/** Placed at the right: the state's one primary action and the "More actions" menu. */
+	/**
+	 * Placed at the right: the state's one primary action and the "More
+	 * actions" menu. A caller may let them join this row's flex on a phone
+	 * (`max-sm:contents`), so the menu sits beside the title.
+	 */
 	actions?: ReactNode;
 	/** Said after the status, e.g. where the roster's approval stands. */
 	meta?: ReactNode;
@@ -40,7 +44,8 @@ export const RosterHeader = ({
 				className
 			)}
 		>
-			<div>
+			{/* On a phone the title takes the row beside the actions' menu (see `actions`). */}
+			<div className="min-w-0 max-sm:flex-1">
 				<h1 className="text-4xl font-medium text-neutral-900">
 					{t(`${key}.title`, { department: schedule.departmentName })}
 				</h1>
