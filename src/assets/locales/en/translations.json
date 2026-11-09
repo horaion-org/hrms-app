@@ -797,9 +797,9 @@
 		"empty": "No people yet.",
 		"add": "Add employee",
 		"added": "{{name}} was added. We’ve emailed them an invitation to log in.",
-		"roleNotAssigned": "{{name}} was added, but their access role wasn’t assigned. Assign it from Organisation, under Access roles.",
+		"roleNotAssigned": "{{name}} was added, but their access role wasn’t assigned. Assign it from Settings, under Access roles.",
 		"saved": "Changes to {{name}} were saved.",
-		"roleNotChanged": "Changes to {{name}} were saved, but their access role wasn’t changed. Change it from Organisation, under Access roles.",
+		"roleNotChanged": "Changes to {{name}} were saved, but their access role wasn’t changed. Change it from Settings, under Access roles.",
 		"deactivated": "{{name}} was deactivated and can no longer log in.",
 		"reactivated": "{{name}} was reactivated and can log in again.",
 		"invited": "We’ve emailed {{name}} a new invitation to log in.",
@@ -1530,6 +1530,11 @@
 		"employment": {
 			"title": "Employment",
 			"description": "Working days, hours and rest day for each kind of contract."
+		},
+		"access": {
+			"title": "Access roles",
+			"description": "Decide what people can manage, and where.",
+			"open": "Open access roles"
 		}
 	},
 	"organisation": {

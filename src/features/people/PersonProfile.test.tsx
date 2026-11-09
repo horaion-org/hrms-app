@@ -1029,7 +1029,7 @@ describe("Changing a person's access role", () => {
 
 		expect(
 			await screen.findByText(
-				"Changes to Kent Chua were saved, but their access role wasn’t changed. Change it from Organisation, under Access roles."
+				"Changes to Kent Chua were saved, but their access role wasn’t changed. Change it from Settings, under Access roles."
 			)
 		).toHaveAttribute("role", "status");
 		expect(sent(calls, REVOKE)).toEqual([]);

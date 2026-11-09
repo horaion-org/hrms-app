@@ -8,7 +8,6 @@ import { retry } from "@/features/workspace/retry";
 import { COMPANY_SCOPE } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
 import {
-	fetchAccessRoleCount,
 	fetchActiveBranchCount,
 	fetchActiveDepartmentCount,
 	fetchActiveJobTitleCount,
@@ -32,7 +31,6 @@ export type OrganisationOverview =
 			departments: Visible<Count>;
 			jobTitles: Visible<Count>;
 			skills: Visible<Count>;
-			accessRoles: Visible<Count>;
 			activity: Visible<{
 				events: Array<AuditEvent> | undefined;
 				failed: boolean;
@@ -61,8 +59,7 @@ export const useOrganisationOverview = (
 	const canReadBranches = access.canAnywhere("branch:read");
 	const canReadDepartments = access.canAnywhere("department:read");
 	const canReadJobTitles = access.canAnywhere("job_title:read");
-	// Roles, skills and the activity feed have no unit, so they still need the key at the company.
-	const canReadAccessRoles = access.can("access_role:read", COMPANY_SCOPE);
+	// Skills and the activity feed have no unit, so they still need the key at the company.
 	const canReadSkills = access.can("skill:read", COMPANY_SCOPE);
 	const canReadActivity = access.can("audit_event:read", COMPANY_SCOPE);
 
@@ -98,14 +95,6 @@ export const useOrganisationOverview = (
 			? (): Promise<number> => fetchActiveSkillCount(companyId)
 			: skipToken,
 	});
-	const accessRoles = useQuery({
-		queryKey: ["organisation", companyId, "access-role-count"],
-		retry,
-		meta,
-		queryFn: canReadAccessRoles
-			? (): Promise<number> => fetchAccessRoleCount(companyId)
-			: skipToken,
-	});
 	const activity = useQuery({
 		queryKey: ["organisation", companyId, "recent-activity"],
 		retry,
@@ -123,7 +112,6 @@ export const useOrganisationOverview = (
 		departments: visibleCount(canReadDepartments, departments),
 		jobTitles: visibleCount(canReadJobTitles, jobTitles),
 		skills: visibleCount(canReadSkills, skills),
-		accessRoles: visibleCount(canReadAccessRoles, accessRoles),
 		activity: canReadActivity
 			? { hidden: false, events: activity.data, failed: activity.isError }
 			: { hidden: true },

@@ -21,7 +21,7 @@ import {
 import { SystemRoleHolders } from "@/pages/SystemRoleHolders";
 
 const route = getRouteApi(
-	"/_authenticated/_app/organisation/system-roles_/$accessRoleId"
+	"/_authenticated/_app/settings_/access-roles_/$accessRoleId"
 );
 const key = "organisation.accessRoles.editor";
 const holdersKey = "organisation.accessRoles.assignments";

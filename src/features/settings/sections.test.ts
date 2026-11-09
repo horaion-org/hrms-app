@@ -49,6 +49,7 @@ describe("visibleSections and selectedSectionIndex", () => {
 		scheduling: true,
 		leave: true,
 		approvals: true,
+		access: true,
 		data: true,
 	};
 	const neither = {
@@ -56,10 +57,11 @@ describe("visibleSections and selectedSectionIndex", () => {
 		scheduling: false,
 		leave: false,
 		approvals: false,
+		access: false,
 		data: false,
 	};
 
-	it("adds Employment, Scheduling, Leave, Approvals and Data only when they have something to offer", () => {
+	it("adds Employment, Scheduling, Leave, Approvals, Access roles and Data only when they have something to offer", () => {
 		expect(visibleSections(neither)).toEqual([
 			"general",
 			"notifications",
@@ -71,6 +73,7 @@ describe("visibleSections and selectedSectionIndex", () => {
 				scheduling: true,
 				leave: false,
 				approvals: false,
+				access: false,
 				data: false,
 			})
 		).toEqual(["general", "notifications", "scheduling", "plan"]);
@@ -80,6 +83,7 @@ describe("visibleSections and selectedSectionIndex", () => {
 				scheduling: false,
 				leave: true,
 				approvals: false,
+				access: false,
 				data: false,
 			})
 		).toEqual(["general", "notifications", "leave", "plan"]);
@@ -89,6 +93,7 @@ describe("visibleSections and selectedSectionIndex", () => {
 				scheduling: false,
 				leave: false,
 				approvals: false,
+				access: false,
 				data: false,
 			})
 		).toEqual(["general", "notifications", "employment", "plan"]);
@@ -98,9 +103,16 @@ describe("visibleSections and selectedSectionIndex", () => {
 				scheduling: false,
 				leave: false,
 				approvals: true,
+				access: false,
 				data: false,
 			})
 		).toEqual(["general", "notifications", "approvals", "plan"]);
+		expect(visibleSections({ ...neither, access: true })).toEqual([
+			"general",
+			"notifications",
+			"access",
+			"plan",
+		]);
 		expect(visibleSections(everything)).toEqual([
 			"general",
 			"notifications",
@@ -108,13 +120,14 @@ describe("visibleSections and selectedSectionIndex", () => {
 			"scheduling",
 			"leave",
 			"approvals",
+			"access",
 			"plan",
 			"data",
 		]);
 	});
 
 	it("selects the asked-for section, or General when it is not shown", () => {
-		expect(selectedSectionIndex(visibleSections(everything), "data")).toBe(7);
+		expect(selectedSectionIndex(visibleSections(everything), "data")).toBe(8);
 		expect(selectedSectionIndex(visibleSections(everything), "leave")).toBe(4);
 		expect(selectedSectionIndex(visibleSections(neither), "data")).toBe(0);
 		expect(selectedSectionIndex(visibleSections(neither), "scheduling")).toBe(

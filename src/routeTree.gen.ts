@@ -41,9 +41,12 @@ import { Route as AuthenticatedAppPeopleImportRouteImport } from './routes/_auth
 import { Route as AuthenticatedAppPeopleNewRouteImport } from './routes/_authenticated._app.people_.new'
 import { Route as AuthenticatedAppSchedulingScheduleIdRouteImport } from './routes/_authenticated._app.scheduling_.$scheduleId'
 import { Route as AuthenticatedAppSchedulingNewRouteImport } from './routes/_authenticated._app.scheduling_.new'
+import { Route as AuthenticatedAppSettingsAccessRolesRouteImport } from './routes/_authenticated._app.settings_.access-roles'
 import { Route as AuthenticatedAppMeSchedulesScheduleIdRouteImport } from './routes/_authenticated._app.me.schedules.$scheduleId'
 import { Route as AuthenticatedAppOrganisationSystemRolesAccessRoleIdRouteImport } from './routes/_authenticated._app.organisation.system-roles_.$accessRoleId'
 import { Route as AuthenticatedAppOrganisationSystemRolesNewRouteImport } from './routes/_authenticated._app.organisation.system-roles_.new'
+import { Route as AuthenticatedAppSettingsAccessRolesAccessRoleIdRouteImport } from './routes/_authenticated._app.settings_.access-roles_.$accessRoleId'
+import { Route as AuthenticatedAppSettingsAccessRolesNewRouteImport } from './routes/_authenticated._app.settings_.access-roles_.new'
 import { Route as AuthenticatedAppSettingsDataImportOrganisationRouteImport } from './routes/_authenticated._app.settings_.data.import-organisation'
 import { Route as AuthenticatedAppSettingsDataImportPeopleRouteImport } from './routes/_authenticated._app.settings_.data.import-people'
 
@@ -224,6 +227,12 @@ const AuthenticatedAppSchedulingNewRoute =
     path: '/scheduling/new',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppSettingsAccessRolesRoute =
+  AuthenticatedAppSettingsAccessRolesRouteImport.update({
+    id: '/settings_/access-roles',
+    path: '/settings/access-roles',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppMeSchedulesScheduleIdRoute =
   AuthenticatedAppMeSchedulesScheduleIdRouteImport.update({
     id: '/me/schedules/$scheduleId',
@@ -240,6 +249,18 @@ const AuthenticatedAppOrganisationSystemRolesNewRoute =
   AuthenticatedAppOrganisationSystemRolesNewRouteImport.update({
     id: '/organisation/system-roles_/new',
     path: '/organisation/system-roles/new',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppSettingsAccessRolesAccessRoleIdRoute =
+  AuthenticatedAppSettingsAccessRolesAccessRoleIdRouteImport.update({
+    id: '/settings_/access-roles_/$accessRoleId',
+    path: '/settings/access-roles/$accessRoleId',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppSettingsAccessRolesNewRoute =
+  AuthenticatedAppSettingsAccessRolesNewRouteImport.update({
+    id: '/settings_/access-roles_/new',
+    path: '/settings/access-roles/new',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
 const AuthenticatedAppSettingsDataImportOrganisationRoute =
@@ -285,10 +306,13 @@ export interface FileRoutesByFullPath {
   '/people/new': typeof AuthenticatedAppPeopleNewRoute
   '/scheduling/$scheduleId': typeof AuthenticatedAppSchedulingScheduleIdRoute
   '/scheduling/new': typeof AuthenticatedAppSchedulingNewRoute
+  '/settings/access-roles': typeof AuthenticatedAppSettingsAccessRolesRoute
   '/organisation/': typeof AuthenticatedAppOrganisationIndexRoute
   '/me/schedules/$scheduleId': typeof AuthenticatedAppMeSchedulesScheduleIdRoute
   '/organisation/system-roles/$accessRoleId': typeof AuthenticatedAppOrganisationSystemRolesAccessRoleIdRoute
   '/organisation/system-roles/new': typeof AuthenticatedAppOrganisationSystemRolesNewRoute
+  '/settings/access-roles/$accessRoleId': typeof AuthenticatedAppSettingsAccessRolesAccessRoleIdRoute
+  '/settings/access-roles/new': typeof AuthenticatedAppSettingsAccessRolesNewRoute
   '/settings/data/import-organisation': typeof AuthenticatedAppSettingsDataImportOrganisationRoute
   '/settings/data/import-people': typeof AuthenticatedAppSettingsDataImportPeopleRoute
 }
@@ -322,10 +346,13 @@ export interface FileRoutesByTo {
   '/people/new': typeof AuthenticatedAppPeopleNewRoute
   '/scheduling/$scheduleId': typeof AuthenticatedAppSchedulingScheduleIdRoute
   '/scheduling/new': typeof AuthenticatedAppSchedulingNewRoute
+  '/settings/access-roles': typeof AuthenticatedAppSettingsAccessRolesRoute
   '/organisation': typeof AuthenticatedAppOrganisationIndexRoute
   '/me/schedules/$scheduleId': typeof AuthenticatedAppMeSchedulesScheduleIdRoute
   '/organisation/system-roles/$accessRoleId': typeof AuthenticatedAppOrganisationSystemRolesAccessRoleIdRoute
   '/organisation/system-roles/new': typeof AuthenticatedAppOrganisationSystemRolesNewRoute
+  '/settings/access-roles/$accessRoleId': typeof AuthenticatedAppSettingsAccessRolesAccessRoleIdRoute
+  '/settings/access-roles/new': typeof AuthenticatedAppSettingsAccessRolesNewRoute
   '/settings/data/import-organisation': typeof AuthenticatedAppSettingsDataImportOrganisationRoute
   '/settings/data/import-people': typeof AuthenticatedAppSettingsDataImportPeopleRoute
 }
@@ -362,10 +389,13 @@ export interface FileRoutesById {
   '/_authenticated/_app/people_/new': typeof AuthenticatedAppPeopleNewRoute
   '/_authenticated/_app/scheduling_/$scheduleId': typeof AuthenticatedAppSchedulingScheduleIdRoute
   '/_authenticated/_app/scheduling_/new': typeof AuthenticatedAppSchedulingNewRoute
+  '/_authenticated/_app/settings_/access-roles': typeof AuthenticatedAppSettingsAccessRolesRoute
   '/_authenticated/_app/organisation/': typeof AuthenticatedAppOrganisationIndexRoute
   '/_authenticated/_app/me/schedules/$scheduleId': typeof AuthenticatedAppMeSchedulesScheduleIdRoute
   '/_authenticated/_app/organisation/system-roles_/$accessRoleId': typeof AuthenticatedAppOrganisationSystemRolesAccessRoleIdRoute
   '/_authenticated/_app/organisation/system-roles_/new': typeof AuthenticatedAppOrganisationSystemRolesNewRoute
+  '/_authenticated/_app/settings_/access-roles_/$accessRoleId': typeof AuthenticatedAppSettingsAccessRolesAccessRoleIdRoute
+  '/_authenticated/_app/settings_/access-roles_/new': typeof AuthenticatedAppSettingsAccessRolesNewRoute
   '/_authenticated/_app/settings_/data/import-organisation': typeof AuthenticatedAppSettingsDataImportOrganisationRoute
   '/_authenticated/_app/settings_/data/import-people': typeof AuthenticatedAppSettingsDataImportPeopleRoute
 }
@@ -401,10 +431,13 @@ export interface FileRouteTypes {
     | '/people/new'
     | '/scheduling/$scheduleId'
     | '/scheduling/new'
+    | '/settings/access-roles'
     | '/organisation/'
     | '/me/schedules/$scheduleId'
     | '/organisation/system-roles/$accessRoleId'
     | '/organisation/system-roles/new'
+    | '/settings/access-roles/$accessRoleId'
+    | '/settings/access-roles/new'
     | '/settings/data/import-organisation'
     | '/settings/data/import-people'
   fileRoutesByTo: FileRoutesByTo
@@ -438,10 +471,13 @@ export interface FileRouteTypes {
     | '/people/new'
     | '/scheduling/$scheduleId'
     | '/scheduling/new'
+    | '/settings/access-roles'
     | '/organisation'
     | '/me/schedules/$scheduleId'
     | '/organisation/system-roles/$accessRoleId'
     | '/organisation/system-roles/new'
+    | '/settings/access-roles/$accessRoleId'
+    | '/settings/access-roles/new'
     | '/settings/data/import-organisation'
     | '/settings/data/import-people'
   id:
@@ -477,10 +513,13 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/people_/new'
     | '/_authenticated/_app/scheduling_/$scheduleId'
     | '/_authenticated/_app/scheduling_/new'
+    | '/_authenticated/_app/settings_/access-roles'
     | '/_authenticated/_app/organisation/'
     | '/_authenticated/_app/me/schedules/$scheduleId'
     | '/_authenticated/_app/organisation/system-roles_/$accessRoleId'
     | '/_authenticated/_app/organisation/system-roles_/new'
+    | '/_authenticated/_app/settings_/access-roles_/$accessRoleId'
+    | '/_authenticated/_app/settings_/access-roles_/new'
     | '/_authenticated/_app/settings_/data/import-organisation'
     | '/_authenticated/_app/settings_/data/import-people'
   fileRoutesById: FileRoutesById
@@ -723,6 +762,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppSchedulingNewRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/_app/settings_/access-roles': {
+      id: '/_authenticated/_app/settings_/access-roles'
+      path: '/settings/access-roles'
+      fullPath: '/settings/access-roles'
+      preLoaderRoute: typeof AuthenticatedAppSettingsAccessRolesRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/_app/me/schedules/$scheduleId': {
       id: '/_authenticated/_app/me/schedules/$scheduleId'
       path: '/me/schedules/$scheduleId'
@@ -742,6 +788,20 @@ declare module '@tanstack/react-router' {
       path: '/organisation/system-roles/new'
       fullPath: '/organisation/system-roles/new'
       preLoaderRoute: typeof AuthenticatedAppOrganisationSystemRolesNewRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/settings_/access-roles_/$accessRoleId': {
+      id: '/_authenticated/_app/settings_/access-roles_/$accessRoleId'
+      path: '/settings/access-roles/$accessRoleId'
+      fullPath: '/settings/access-roles/$accessRoleId'
+      preLoaderRoute: typeof AuthenticatedAppSettingsAccessRolesAccessRoleIdRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/settings_/access-roles_/new': {
+      id: '/_authenticated/_app/settings_/access-roles_/new'
+      path: '/settings/access-roles/new'
+      fullPath: '/settings/access-roles/new'
+      preLoaderRoute: typeof AuthenticatedAppSettingsAccessRolesNewRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/_app/settings_/data/import-organisation': {
@@ -783,10 +843,13 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppPeopleNewRoute: typeof AuthenticatedAppPeopleNewRoute
   AuthenticatedAppSchedulingScheduleIdRoute: typeof AuthenticatedAppSchedulingScheduleIdRoute
   AuthenticatedAppSchedulingNewRoute: typeof AuthenticatedAppSchedulingNewRoute
+  AuthenticatedAppSettingsAccessRolesRoute: typeof AuthenticatedAppSettingsAccessRolesRoute
   AuthenticatedAppOrganisationIndexRoute: typeof AuthenticatedAppOrganisationIndexRoute
   AuthenticatedAppMeSchedulesScheduleIdRoute: typeof AuthenticatedAppMeSchedulesScheduleIdRoute
   AuthenticatedAppOrganisationSystemRolesAccessRoleIdRoute: typeof AuthenticatedAppOrganisationSystemRolesAccessRoleIdRoute
   AuthenticatedAppOrganisationSystemRolesNewRoute: typeof AuthenticatedAppOrganisationSystemRolesNewRoute
+  AuthenticatedAppSettingsAccessRolesAccessRoleIdRoute: typeof AuthenticatedAppSettingsAccessRolesAccessRoleIdRoute
+  AuthenticatedAppSettingsAccessRolesNewRoute: typeof AuthenticatedAppSettingsAccessRolesNewRoute
   AuthenticatedAppSettingsDataImportOrganisationRoute: typeof AuthenticatedAppSettingsDataImportOrganisationRoute
   AuthenticatedAppSettingsDataImportPeopleRoute: typeof AuthenticatedAppSettingsDataImportPeopleRoute
 }
@@ -820,6 +883,8 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppSchedulingScheduleIdRoute:
     AuthenticatedAppSchedulingScheduleIdRoute,
   AuthenticatedAppSchedulingNewRoute: AuthenticatedAppSchedulingNewRoute,
+  AuthenticatedAppSettingsAccessRolesRoute:
+    AuthenticatedAppSettingsAccessRolesRoute,
   AuthenticatedAppOrganisationIndexRoute:
     AuthenticatedAppOrganisationIndexRoute,
   AuthenticatedAppMeSchedulesScheduleIdRoute:
@@ -828,6 +893,10 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
     AuthenticatedAppOrganisationSystemRolesAccessRoleIdRoute,
   AuthenticatedAppOrganisationSystemRolesNewRoute:
     AuthenticatedAppOrganisationSystemRolesNewRoute,
+  AuthenticatedAppSettingsAccessRolesAccessRoleIdRoute:
+    AuthenticatedAppSettingsAccessRolesAccessRoleIdRoute,
+  AuthenticatedAppSettingsAccessRolesNewRoute:
+    AuthenticatedAppSettingsAccessRolesNewRoute,
   AuthenticatedAppSettingsDataImportOrganisationRoute:
     AuthenticatedAppSettingsDataImportOrganisationRoute,
   AuthenticatedAppSettingsDataImportPeopleRoute:

@@ -825,7 +825,7 @@ describe("Access roles", () => {
 				},
 			]),
 		});
-		await open("/organisation/system-roles");
+		await open("/settings/access-roles");
 
 		expect(
 			await screen.findByRole("heading", { level: 1, name: "Access roles" })
@@ -1267,7 +1267,7 @@ describe("Job titles", () => {
 describe("Organisation navigation", () => {
 	it.each([
 		{ path: "/organisation/branches", table: "Branches" },
-		{ path: "/organisation/system-roles", table: "Access roles" },
+		{ path: "/settings/access-roles", table: "Access roles" },
 	])(
 		"shows no Branch in the header on $table, which lists nothing by Branch",
 		async ({ path, table }) => {
@@ -1301,19 +1301,21 @@ describe("Organisation navigation", () => {
 		});
 
 		const hrefs = await Promise.all(
-			["Branches", "Departments", "Job titles", "Access roles"].map(
-				async (name) =>
-					within(await screen.findByRole("region", { name }))
-						.getByRole("link", { name: "View All" })
-						.getAttribute("href")
+			["Branches", "Departments", "Job titles"].map(async (name) =>
+				within(await screen.findByRole("region", { name }))
+					.getByRole("link", { name: "View All" })
+					.getAttribute("href")
 			)
 		);
 		expect(hrefs).toEqual([
 			"/organisation/branches",
 			"/organisation/departments",
 			"/organisation/job-titles",
-			"/organisation/system-roles",
 		]);
+		// Access roles live in Settings now: no card here.
+		expect(
+			screen.queryByRole("region", { name: "Access roles" })
+		).not.toBeInTheDocument();
 
 		await user.click(
 			within(screen.getByRole("region", { name: "Branches" })).getByRole(

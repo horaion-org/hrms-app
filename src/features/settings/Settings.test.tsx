@@ -132,6 +132,49 @@ it("shows the General settings prefilled with the current company's name", async
 	).toHaveLength(1);
 });
 
+it("offers Access roles to people who may read roles, and opens the list from it", async () => {
+	stubApi({
+		[REFRESH]: accessPassReply(),
+		[ME]: currentUserReply(),
+		[WORKSPACE]: workspaceReply([
+			{ uuid: "c-1", name: "Horaion", permissions: ["access_role:read"] },
+		]),
+	});
+	await open("/settings?section=access");
+
+	const sections = await screen.findByRole("tablist", {
+		name: "Settings sections",
+	});
+	expect(
+		within(sections)
+			.getAllByRole("tab")
+			.map((tab) => tab.textContent)
+	).toContain("Access roles Decide what people can manage, and where.");
+	const panel = screen.getByRole("tabpanel", { name: "Access roles" });
+	expect(
+		within(panel).getByText(
+			"Everyone can already see their own roster, apply for their own leave and set their own availability. Roles are for managing other people."
+		)
+	).toBeVisible();
+	expect(
+		within(panel).getByRole("link", { name: "Open access roles" })
+	).toHaveAttribute("href", "/settings/access-roles");
+});
+
+it("leaves Access roles out without the key to read roles", async () => {
+	stubApi({
+		[REFRESH]: accessPassReply(),
+		[ME]: currentUserReply(),
+		[WORKSPACE]: workspaceReply([{ uuid: "c-1", name: "Horaion" }]),
+	});
+	await open("/settings?section=access");
+
+	await screen.findByRole("tablist", { name: "Settings sections" });
+	expect(
+		screen.queryByRole("tab", { name: /^Access roles/ })
+	).not.toBeInTheDocument();
+});
+
 it("switches through the settings sections with the arrow keys", async () => {
 	stubApi({
 		[REFRESH]: accessPassReply(),

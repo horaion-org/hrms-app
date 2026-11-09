@@ -20,8 +20,8 @@ import { PERMISSION_KEYS } from "@/features/workspace/permissionKeys";
 
 const ROLES = "GET /api/v1/companies/c-1/access-roles";
 const CREATE = "POST /api/v1/companies/c-1/access-roles";
-const LIST = "/organisation/system-roles";
-const CREATOR = "/organisation/system-roles/new";
+const LIST = "/settings/access-roles";
+const CREATOR = "/settings/access-roles/new";
 
 const role = (
 	overrides: Record<string, unknown> = {}

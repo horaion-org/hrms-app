@@ -739,6 +739,11 @@
 		"employment": {
 			"title": "Empleo",
 			"description": "Días laborables, horas y día de descanso de cada tipo de contrato."
+		},
+		"access": {
+			"title": "Roles de acceso",
+			"description": "Decide qué puede gestionar cada persona y dónde.",
+			"open": "Abrir roles de acceso"
 		}
 	},
 	"combobox": {
@@ -2196,9 +2201,9 @@
 		"empty": "Todavía no hay personas.",
 		"add": "Añadir empleado",
 		"added": "Se añadió a {{name}}. Le hemos enviado por correo una invitación para iniciar sesión.",
-		"roleNotAssigned": "Se añadió a {{name}}, pero no se le asignó su rol de acceso. Asígnalo desde Organización, en Roles de acceso.",
+		"roleNotAssigned": "Se añadió a {{name}}, pero no se le asignó su rol de acceso. Asígnalo desde Ajustes, en Roles de acceso.",
 		"saved": "Se guardaron los cambios de {{name}}.",
-		"roleNotChanged": "Se guardaron los cambios de {{name}}, pero su rol de acceso no se cambió. Cámbialo desde Organización, en Roles de acceso.",
+		"roleNotChanged": "Se guardaron los cambios de {{name}}, pero su rol de acceso no se cambió. Cámbialo desde Ajustes, en Roles de acceso.",
 		"deactivated": "Se desactivó a {{name}} y ya no puede iniciar sesión.",
 		"reactivated": "Se reactivó a {{name}} y puede volver a iniciar sesión.",
 		"invited": "Hemos enviado a {{name}} una nueva invitación por correo para iniciar sesión.",

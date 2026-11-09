@@ -255,12 +255,11 @@ test("create an access role from the permissions grid", async ({
 	});
 	await tab.goto("/login");
 	await logIn(tab);
-	await tab.getByRole("link", { name: "Organisation", exact: true }).click();
-	await tab
-		.getByRole("region", { name: "Access roles", exact: true })
-		.getByRole("link", { name: "View all" })
-		.click();
-	await expect(tab).toHaveURL(/\/organisation\/system-roles$/);
+	// Access roles live under Settings.
+	await tab.getByRole("link", { name: "Settings", exact: true }).click();
+	await tab.getByRole("tab", { name: /^Access roles/ }).click();
+	await tab.getByRole("link", { name: "Open access roles" }).click();
+	await expect(tab).toHaveURL(/\/settings\/access-roles$/);
 	await tab
 		.getByRole("button", { name: "Create access role", exact: true })
 		.click();

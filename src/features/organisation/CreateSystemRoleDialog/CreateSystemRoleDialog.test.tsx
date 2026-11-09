@@ -64,7 +64,7 @@ afterEach(() => {
 	localStorage.clear();
 });
 const open = async (): Promise<void> => {
-	app = await openApp("/organisation/system-roles");
+	app = await openApp("/settings/access-roles");
 	renderAuthApp(app);
 	await screen.findByRole("heading", { name: "Access roles", level: 1 });
 };

@@ -503,7 +503,7 @@ describe("Add employee", () => {
 
 		expect(
 			await screen.findByText(
-				"Priya Nair was added, but their access role wasn’t assigned. Assign it from Organisation, under Access roles."
+				"Priya Nair was added, but their access role wasn’t assigned. Assign it from Settings, under Access roles."
 			)
 		).toHaveAttribute("role", "status");
 		expect(opened.router.state.location.pathname).toBe("/people");

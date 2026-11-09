@@ -24,7 +24,7 @@ const ROLE = "GET /api/v1/companies/c-1/access-roles/r-2";
 const HOLDERS =
 	"GET /api/v1/companies/c-1/access-roles/r-2/access-role-assignments";
 const SAVE = "PUT /api/v1/companies/c-1/access-roles/r-2";
-const ROLE_PAGE = "/organisation/system-roles/r-2";
+const ROLE_PAGE = "/settings/access-roles/r-2";
 const EDITOR = `${ROLE_PAGE}?tab=permissions`;
 
 const role = (
@@ -108,7 +108,7 @@ describe("Access role editor", () => {
 	it("opens on the role's permissions from the list's Edit button", async () => {
 		const user = userEvent.setup();
 		stubApi(routes());
-		const opened = await open("/organisation/system-roles");
+		const opened = await open("/settings/access-roles");
 
 		await user.click(
 			await screen.findByRole("button", { name: "Edit Manager" })
@@ -165,7 +165,7 @@ describe("Access role editor", () => {
 			await screen.findByRole("heading", { level: 1, name: "Access roles" })
 		).toBeVisible();
 		expect(opened.router.state.location.pathname).toBe(
-			"/organisation/system-roles"
+			"/settings/access-roles"
 		);
 		expect(
 			calls.filter((call) => call.method === "PUT").map((call) => call.body)
@@ -462,7 +462,7 @@ describe("Access role editor, read-only", () => {
 				permissions: PERMISSION_KEYS,
 			}),
 		});
-		await open("/organisation/system-roles");
+		await open("/settings/access-roles");
 
 		await user.click(
 			await screen.findByRole("button", {
@@ -530,7 +530,30 @@ describe("Access role editor, role not loaded", () => {
 		expect(await screen.findByRole("alert")).toHaveTextContent(message);
 		expect(screen.getByRole("link", { name: "Access roles" })).toHaveAttribute(
 			"href",
-			"/organisation/system-roles"
+			"/settings/access-roles"
 		);
 	});
+});
+
+describe("Access roles moved to Settings", () => {
+	it.each([
+		["/organisation/system-roles", "/settings/access-roles", {}],
+		["/organisation/system-roles/new", "/settings/access-roles/new", {}],
+		[
+			"/organisation/system-roles/r-2?tab=permissions",
+			ROLE_PAGE,
+			{ tab: "permissions" },
+		],
+	])(
+		"opens %s at its new address, keeping the role and the tab",
+		async (old, current, search) => {
+			stubApi(routes());
+			const opened = await open(old);
+
+			await waitFor(() => {
+				expect(opened.router.state.location.pathname).toBe(current);
+			});
+			expect(opened.router.state.location.search).toEqual(search);
+		}
+	);
 });

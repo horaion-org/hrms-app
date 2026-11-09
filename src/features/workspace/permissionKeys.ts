@@ -56,7 +56,6 @@ export const ORGANISATION_READ_KEYS: ReadonlyArray<PermissionKey> = [
 	"branch:read",
 	"department:read",
 	"job_title:read",
-	"access_role:read",
 	"audit_event:read",
 ];
 

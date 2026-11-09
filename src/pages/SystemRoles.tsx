@@ -70,7 +70,7 @@ export const SystemRoles = (): FunctionComponent => {
 	const open = useCallback(
 		(role: AccessRole): void => {
 			void navigate({
-				to: "/organisation/system-roles/$accessRoleId",
+				to: "/settings/access-roles/$accessRoleId",
 				params: { accessRoleId: role.accessRoleId },
 				search: { tab: "permissions" },
 			});
@@ -119,7 +119,7 @@ export const SystemRoles = (): FunctionComponent => {
 				cell: (role) => (
 					<Button
 						params={{ accessRoleId: role.accessRoleId }}
-						to="/organisation/system-roles/$accessRoleId"
+						to="/settings/access-roles/$accessRoleId"
 						variant="textlink"
 						aria-label={t("organisation.accessRoles.viewPeople", {
 							count: role.holderCount,
@@ -142,7 +142,7 @@ export const SystemRoles = (): FunctionComponent => {
 							<OverflowMenuItem
 								onClick={() => {
 									void navigate({
-										to: "/organisation/system-roles/$accessRoleId",
+										to: "/settings/access-roles/$accessRoleId",
 										params: { accessRoleId: role.accessRoleId },
 									});
 								}}

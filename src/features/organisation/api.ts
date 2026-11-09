@@ -51,9 +51,6 @@ export const fetchActiveDepartmentCount = (
 ): Promise<number> =>
 	countOf(`${companyPath(companyId)}/departments?status=ACTIVE&size=1`);
 
-export const fetchAccessRoleCount = (companyId: string): Promise<number> =>
-	countOf(`${companyPath(companyId)}/access-roles?size=1`);
-
 export const fetchActiveJobTitleCount = (companyId: string): Promise<number> =>
 	countOf(`${companyPath(companyId)}/job-titles?status=ACTIVE&size=1`);
 

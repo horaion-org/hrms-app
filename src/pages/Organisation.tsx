@@ -101,14 +101,6 @@ export const Organisation = (): FunctionComponent => {
 								value={figure(overview.skills)}
 							/>
 						)}
-						{!overview.accessRoles.hidden && (
-							<StatCard
-								action={viewAll("/organisation/system-roles")}
-								caption={t("organisation.accessRoles.caption")}
-								title={t("organisation.accessRoles.title")}
-								value={figure(overview.accessRoles)}
-							/>
-						)}
 					</div>
 					{!overview.activity.hidden && (
 						<section aria-labelledby="recent-activity" className="mt-12">

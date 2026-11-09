@@ -62,6 +62,8 @@ export const Settings = (): FunctionComponent => {
 		approvals:
 			access.can("approval_flow:read", COMPANY_SCOPE) ||
 			search.section === "approvals",
+		// The roles list shows the roles where the key is held, so held anywhere is enough.
+		access: access.canAnywhere("access_role:read"),
 		data: offersData(dataItems),
 	});
 	const selectedIndex = selectedSectionIndex(sections, search.section);
@@ -177,6 +179,22 @@ export const Settings = (): FunctionComponent => {
 								canRead={access.can("approval_flow:read", COMPANY_SCOPE)}
 								companyId={companyId}
 							/>
+						</TabPanel>
+					)}
+					{sections.includes("access") && (
+						<TabPanel className={panelClasses}>
+							<h2 className="text-xl font-semibold text-neutral-900">
+								{t("settings.access.title")}
+							</h2>
+							<p className="mt-3 text-sm text-neutral-800">
+								{t("settings.access.description")}
+							</p>
+							<p className="mt-3 text-sm text-neutral-800">
+								{t("organisation.accessRoles.baseline")}
+							</p>
+							<Button className="mt-6" to="/settings/access-roles">
+								{t("settings.access.open")}
+							</Button>
 						</TabPanel>
 					)}
 					<TabPanel className={panelClasses}>
