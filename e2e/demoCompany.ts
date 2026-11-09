@@ -44,10 +44,20 @@ const envelope = (route: Route, data: unknown): Promise<void> =>
 		}),
 	});
 
+/** One page holding every row, as the API answers it: the last page, with no next one. */
 const pageOf = (content: Array<unknown>): unknown => ({
 	content,
-	page: { totalElements: content.length },
+	page: { totalElements: content.length, hasNext: false },
 });
+
+/** Open until the second midnight (UTC) from now, so the offer's card shows and its deadline reads the same all day. */
+const openCoverOffer = (): unknown => {
+	const day = 24 * 60 * 60 * 1000;
+	return coverOfferFixture({
+		expiresAt: new Date(Math.ceil(Date.now() / day) * day + day).toISOString(),
+	});
+};
+
 const emptyPage = pageOf([]);
 
 const PEOPLE = [
@@ -210,7 +220,13 @@ const ANSWERS: Array<Answer> = [
 		path: /^\/me\/approval-instances\/pending$/,
 		data: () => [approvalInstanceFixture()],
 	},
-	{ path: /^\/me\/cover-offers$/, data: () => [coverOfferFixture()] },
+	{ path: /^\/me\/cover-offers$/, data: () => [openCoverOffer()] },
+	// The roster's submission waits on step 1, which the owner may decide.
+	{
+		path: /^\/approval-instances\/ai-\d+$/,
+		data: () => approvalInstanceFixture({ canDecide: true }),
+	},
+	{ path: /^\/approval-instances$/, data: () => [approvalInstanceFixture()] },
 	{
 		path: /^\/employment-terms\/overview$/,
 		data: () => TERMS_OVERVIEW_RESPONSE,
