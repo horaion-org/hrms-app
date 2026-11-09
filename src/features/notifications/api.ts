@@ -144,7 +144,7 @@ export const notificationPageQuery = (
 			apiRequest(
 				`${base(companyId)}?${new URLSearchParams({ audience, page: String(page - 1), size: String(size), unreadOnly: String(unreadOnly) })}`,
 				pageSchema,
-				{ signal, responseFormat: "record" }
+				{ signal }
 			),
 		meta: meta(companyId, audience),
 		enabled: enabled && !!companyId && !!membershipId,
@@ -179,10 +179,7 @@ export const notificationCountQuery = (
 			apiRequest(
 				`${base(companyId)}/unread-count?audience=${audience}`,
 				countSchema,
-				{
-					signal,
-					responseFormat: "record",
-				}
+				{ signal }
 			),
 		meta: meta(companyId, audience),
 		enabled: enabled && !!companyId && !!membershipId,
@@ -202,7 +199,7 @@ export const markNotificationsRead = (
 	apiRequest(
 		`${base(companyId)}/${notificationId ? `${encodeURIComponent(notificationId)}/read` : "read-all"}?audience=${audience}`,
 		readSchema,
-		{ method: "PUT", responseFormat: "record" }
+		{ method: "PUT" }
 	);
 
 /** Hides one notification for the caller only; the API answers 204 with no body. */

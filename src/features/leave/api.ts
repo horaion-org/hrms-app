@@ -105,6 +105,11 @@ export const leaveRequestSchema = z.object({
 	branchId: z.string().nullable(),
 	branchName: z.string().nullable(),
 	branchCountry: z.string().nullable(),
+	/**
+	 * The Branch's IANA time zone, which `requestedAt` reads as a day in;
+	 * null for a member without one, and from an API before it.
+	 */
+	branchTimeZone: z.string().nullable().default(null),
 	departmentId: z.string().nullable(),
 	departmentName: z.string().nullable(),
 	/**
@@ -344,7 +349,7 @@ export const leaveRequestQuery = (
 			apiRequest(
 				`${memberId ? memberLeavePath(companyId, memberId) : `${companyPath(companyId)}/me/leave-requests`}/${encodeURIComponent(requestId)}`,
 				leaveRequestSchema,
-				{ signal, responseFormat: "record" }
+				{ signal }
 			),
 		meta: memberId
 			? administrativeMeta(companyId, { record: true })
@@ -466,7 +471,7 @@ export const rosteredDaysQuery = (
 					apiRequest(
 						`${memberId ? memberLeavePath(companyId, memberId) : `${companyPath(companyId)}/me/leave-requests`}/rostered-days?${new URLSearchParams({ startDate: period.start, endDate: period.end }).toString()}`,
 						z.array(rosteredDaySchema),
-						{ signal, responseFormat: "record" }
+						{ signal }
 					)
 			: skipToken,
 		meta: memberId
@@ -519,7 +524,7 @@ export const leaveHistoryQuery = (
 			apiRequest(
 				`${memberId ? memberLeavePath(companyId, memberId) : `${companyPath(companyId)}/me/leave-requests`}/${encodeURIComponent(requestId)}/changes`,
 				z.array(leaveChangeSchema),
-				{ signal, responseFormat: "record" }
+				{ signal }
 			),
 		meta: memberId
 			? administrativeMeta(companyId, { record: true })

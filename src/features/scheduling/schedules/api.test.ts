@@ -612,6 +612,7 @@ describe("a schedule's decision", () => {
 							requiresApproval: true,
 							stepLabels: ["Endorse", "Publish"],
 							submission,
+							rejectedAtStep: null,
 						},
 					})
 				),
@@ -629,9 +630,43 @@ describe("a schedule's decision", () => {
 			requiresApproval: true,
 			stepLabels: ["Endorse", "Publish"],
 			submission,
+			rejectedAtStep: null,
 		});
 		expect(
 			(await fetchSchedule("c-1", UNIT, "s-2")).publication.submission
+		).toBeNull();
+	});
+
+	it("parses the approval step that rejected a roster, and none from an API before it", async () => {
+		stubApi({
+			[`GET ${SCHEDULES}/s-1`]: {
+				status: 200,
+				body: envelope(
+					generatedScheduleFixture({
+						status: "REJECTED",
+						publication: {
+							requiresApproval: true,
+							stepLabels: ["Endorse", "Publish"],
+							submission: null,
+							rejectedAtStep: { stepOrder: 2, stepLabel: "Publish" },
+						},
+					})
+				),
+			},
+			[`GET ${SCHEDULES}/s-2`]: {
+				status: 200,
+				body: envelope({
+					...generatedScheduleFixture({ scheduleId: "s-2" }),
+					publication: { requiresApproval: true, stepLabels: ["Publish"] },
+				}),
+			},
+		});
+
+		expect(
+			(await fetchSchedule("c-1", UNIT, "s-1")).publication.rejectedAtStep
+		).toEqual({ stepOrder: 2, stepLabel: "Publish" });
+		expect(
+			(await fetchSchedule("c-1", UNIT, "s-2")).publication.rejectedAtStep
 		).toBeNull();
 	});
 

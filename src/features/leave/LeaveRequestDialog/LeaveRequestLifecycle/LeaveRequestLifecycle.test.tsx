@@ -76,7 +76,7 @@ const show = (
 describe("LeaveRequestLifecycle", () => {
 	it("given_noHistoryAndNothingToDo_when_shown_then_showsNothing", async () => {
 		const calls = stubApi({
-			[`GET ${MEMBER}/leave-1/changes`]: { status: 200, body: [] },
+			[`GET ${MEMBER}/leave-1/changes`]: { status: 200, body: envelope([]) },
 		});
 		show(approved);
 		await waitFor(() => {
@@ -90,7 +90,9 @@ describe("LeaveRequestLifecycle", () => {
 		stubApi({
 			[`GET ${MEMBER}/leave-1/changes`]: {
 				status: 200,
-				body: [{ ...line, afterEndDate: "2026-06-03", remark: "Back early" }],
+				body: envelope([
+					{ ...line, afterEndDate: "2026-06-03", remark: "Back early" },
+				]),
 			},
 		});
 		show(approved);
@@ -103,7 +105,7 @@ describe("LeaveRequestLifecycle", () => {
 		stubApi({
 			[`GET ${MEMBER}/leave-1/changes`]: {
 				status: 200,
-				body: [{ ...line, afterLeaveTypeName: "Unpaid leave" }],
+				body: envelope([{ ...line, afterLeaveTypeName: "Unpaid leave" }]),
 			},
 		});
 		show(approved);
@@ -118,7 +120,7 @@ describe("LeaveRequestLifecycle", () => {
 		stubApi({
 			[`GET ${MEMBER}/leave-1/changes`]: {
 				status: 200,
-				body: [{ ...line, changedAt: lateEvening.toISOString() }],
+				body: envelope([{ ...line, changedAt: lateEvening.toISOString() }]),
 			},
 		});
 		show(approved);
@@ -129,7 +131,7 @@ describe("LeaveRequestLifecycle", () => {
 		const user = userEvent.setup();
 		const onDone = vi.fn();
 		const calls = stubApi({
-			[`GET ${OWN}/leave-1/changes`]: { status: 200, body: [] },
+			[`GET ${OWN}/leave-1/changes`]: { status: 200, body: envelope([]) },
 			[`POST ${OWN}/leave-1/withdrawal`]: {
 				status: 200,
 				body: envelope({ ...pending, status: "CANCELLED" }),
@@ -152,7 +154,9 @@ describe("LeaveRequestLifecycle", () => {
 	});
 
 	it("given_anApprovedRequest_when_theReaderMayNotChangeIt_then_offersNothing", async () => {
-		stubApi({ [`GET ${MEMBER}/leave-1/changes`]: { status: 200, body: [] } });
+		stubApi({
+			[`GET ${MEMBER}/leave-1/changes`]: { status: 200, body: envelope([]) },
+		});
 		show(approved, { canChange: false });
 		await waitFor(() => {
 			expect(screen.queryByRole("button")).not.toBeInTheDocument();
@@ -163,7 +167,7 @@ describe("LeaveRequestLifecycle", () => {
 		const user = userEvent.setup();
 		const onDone = vi.fn();
 		const calls = stubApi({
-			[`GET ${MEMBER}/leave-1/changes`]: { status: 200, body: [] },
+			[`GET ${MEMBER}/leave-1/changes`]: { status: 200, body: envelope([]) },
 			[`POST ${MEMBER}/leave-1/cancellation`]: {
 				status: 200,
 				body: envelope({ ...approved, status: "CANCELLED" }),
@@ -193,7 +197,7 @@ describe("LeaveRequestLifecycle", () => {
 	it("given_datesThatDidNotMove_when_theRosterCannotBeRead_then_theChangeIsNotHeldBack", async () => {
 		const user = userEvent.setup();
 		stubApi({
-			[`GET ${MEMBER}/leave-1/changes`]: { status: 200, body: [] },
+			[`GET ${MEMBER}/leave-1/changes`]: { status: 200, body: envelope([]) },
 			[`GET ${MEMBER}/rostered-days`]: problemReply(404, "SOMETHING_ELSE"),
 			[LEAVE_TYPES]: { status: 200, body: envelope([]) },
 		});
@@ -218,10 +222,10 @@ describe("LeaveRequestLifecycle", () => {
 	it("given_movedDatesWhoseRosterCannotBeRead_when_changing_then_cannotConfirmAndCanRetry", async () => {
 		const user = userEvent.setup();
 		stubApi({
-			[`GET ${MEMBER}/leave-1/changes`]: { status: 200, body: [] },
+			[`GET ${MEMBER}/leave-1/changes`]: { status: 200, body: envelope([]) },
 			[`GET ${MEMBER}/rostered-days`]: (call) =>
 				call.search.includes("endDate=2026-06-05")
-					? { status: 200, body: [] }
+					? { status: 200, body: envelope([]) }
 					: problemReply(404, "SOMETHING_ELSE"),
 			[LEAVE_TYPES]: { status: 200, body: envelope([]) },
 		});

@@ -220,7 +220,7 @@ describe("RosterCellPanel", () => {
 			},
 			[`GET ${LEAVE}/r-1`]: {
 				status: 200,
-				body: leaveFixture({ leaveRequestId: "r-1" }),
+				body: envelope(leaveFixture({ leaveRequestId: "r-1" })),
 			},
 		};
 		const fillIn = async (
@@ -523,11 +523,13 @@ describe("RosterCellPanel", () => {
 				...routes,
 				[`GET ${LEAVE}/r-1`]: {
 					status: 200,
-					body: leaveFixture({
-						leaveRequestId: "r-1",
-						startDate: "2026-10-12",
-						endDate: "2026-10-16",
-					}),
+					body: envelope(
+						leaveFixture({
+							leaveRequestId: "r-1",
+							startDate: "2026-10-12",
+							endDate: "2026-10-16",
+						})
+					),
 				},
 			});
 			show({ assignment: onLeave, leaveEditing });

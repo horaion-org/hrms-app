@@ -13,7 +13,7 @@ read and unread entries. Example read actions are in-memory, detail links are ab
 represent real notifications. **Show live notifications** returns to the API-backed list. The toggle is gated by
 `import.meta.env.DEV` and does not appear in production builds.
 
-API calls use direct response records under `/companies/{companyId}/me/notifications`, validated with Zod. The
+API calls read the standard `{success, data}` envelope under `/companies/{companyId}/me/notifications`, validated with Zod. The
 caller never supplies a recipient. Keys include company, membership and audience; personal queries use `selfMeta`,
 review queries use `administrativeMeta`. Review data is withdrawn on permission shrink; membership revocation and
 logout clear both through the existing session coordinator. Previous-page data never crosses identity or audience.

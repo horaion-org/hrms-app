@@ -106,7 +106,7 @@ const routes = (
 	[ME]: currentUserReply(),
 	[WORKSPACE]: workspaceReply(permissions),
 	[LEAVE]: leaveByStatus,
-	[ROSTERED_DAYS]: { status: 200, body: [] },
+	[ROSTERED_DAYS]: { status: 200, body: envelope([]) },
 	[AUDIT_EVENTS]: page(
 		[
 			{

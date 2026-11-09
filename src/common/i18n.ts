@@ -3,6 +3,7 @@ import LanguageDetector from "i18next-browser-languagedetector";
 import { initReactI18next } from "react-i18next";
 import translationEN from "@/assets/locales/en/translations.json";
 import translationES from "@/assets/locales/es/translations.json";
+import { configureApiLanguage } from "@/common/api-client";
 import { isProduction } from "@/common/utils";
 
 export const defaultNS = "translations";
@@ -33,3 +34,6 @@ i18n.on("languageChanged", () => {
 });
 
 void i18n.use(initReactI18next).use(LanguageDetector).init(i18nOptions);
+
+// Every API request names the language the app shows, e.g. so a new company's default leave types are seeded in it.
+configureApiLanguage(() => i18n.resolvedLanguage);

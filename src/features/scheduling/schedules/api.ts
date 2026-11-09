@@ -211,6 +211,18 @@ const submissionSchema = z.object({
 /** A waiting submission as the schedule read tells it; null on `publication` when nothing waits. */
 export type PublicationSubmission = z.infer<typeof submissionSchema>;
 
+/**
+ * The approval step that rejected the roster, as the schedule read tells
+ * every reader, so a submitter without `approval:read` sees where it was
+ * rejected. `decidedBy` says who rejected it.
+ */
+const rejectedStepSchema = z.object({
+	/** The step's place in the approval, from 1. */
+	stepOrder: z.number().int(),
+	/** The step's name, as it was when submitted. */
+	stepLabel: z.string(),
+});
+
 const scheduleSchema = z.object({
 	scheduleId: z.string(),
 	companyId: z.string(),
@@ -263,11 +275,20 @@ const scheduleSchema = z.object({
 			submission: submissionSchema
 				.nullish()
 				.transform((value) => value ?? null),
+			/** The step that rejected the roster; null unless an approval step did. */
+			rejectedAtStep: rejectedStepSchema
+				.nullish()
+				.transform((value) => value ?? null),
 		})
 		.nullish()
 		.transform(
 			(value) =>
-				value ?? { requiresApproval: false, stepLabels: [], submission: null }
+				value ?? {
+					requiresApproval: false,
+					stepLabels: [],
+					submission: null,
+					rejectedAtStep: null,
+				}
 		),
 	/**
 	 * When its publication was last withdrawn; null if never. Once set the

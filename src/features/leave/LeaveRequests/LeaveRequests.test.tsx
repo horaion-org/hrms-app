@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { expect, it, vi } from "vitest";
 import { I18nextProvider } from "react-i18next";
 import { authTestI18n } from "@/features/auth/testingI18n";
-import { LEAVE_FIXTURES } from "@/features/leave/fixtures";
+import { LEAVE_FIXTURES, leaveFixture } from "@/features/leave/fixtures";
 import { LeaveRequests } from "@/features/leave/LeaveRequests";
 
 const handlers = {
@@ -143,4 +143,27 @@ it("keeps the employee and actions in view while the wide table scrolls", () => 
 	const actions = headers[headers.length - 1];
 	expect(actions).toHaveTextContent("Actions");
 	expect(actions).toHaveClass("md:sticky", "md:end-0");
+});
+
+it("reads each request's day in its member's Branch zone", () => {
+	render(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveRequests
+				{...handlers}
+				canReview={() => false}
+				page={1}
+				sort={{ field: "requestedAt", desc: true }}
+				total={1}
+				rows={[
+					leaveFixture({
+						leaveRequestId: "leave-early",
+						requestedAt: "2026-11-09T03:00:00Z",
+						branchTimeZone: "America/New_York",
+					}),
+				]}
+			/>
+		</I18nextProvider>
+	);
+
+	expect(screen.getByText("Requested Nov 08, 2026")).toBeInTheDocument();
 });

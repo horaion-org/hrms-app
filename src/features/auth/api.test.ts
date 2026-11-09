@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { configureApiLanguage } from "@/common/api-client";
 import { registerCompany, type Registration } from "@/features/auth/api";
 
 const registration: Registration = {
@@ -43,6 +44,20 @@ describe("registerCompany", () => {
 			subdomain: "acme",
 			displayName: "Alex Tan",
 		});
+	});
+
+	it("names the UI language, which the company's default leave types are created in", async () => {
+		const fetchMock = vi
+			.fn()
+			.mockResolvedValue(new Response(null, { status: 201 }));
+		vi.stubGlobal("fetch", fetchMock);
+		configureApiLanguage(() => "es");
+
+		await registerCompany(registration);
+
+		const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+		expect(new Headers(init.headers).get("Accept-Language")).toBe("es");
+		configureApiLanguage(() => undefined);
 	});
 
 	it("resolves with no refusals when the workspace is created", async () => {

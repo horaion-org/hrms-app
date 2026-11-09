@@ -57,3 +57,14 @@ export const calendarDayOf = (instant: string, timeZone?: string): string => {
 		parts.find((item) => item.type === type)?.value ?? "";
 	return `${part("year")}-${part("month")}-${part("day")}`;
 };
+
+/**
+ * The day a leave request was made, in its member's Branch's zone (the
+ * browser's when the member has none), so a request made at 07:30 in
+ * Singapore reads as that day wherever the reviewer sits.
+ */
+export const requestedDayOf = (request: {
+	requestedAt: string;
+	branchTimeZone: string | null;
+}): string =>
+	calendarDayOf(request.requestedAt, request.branchTimeZone ?? undefined);
