@@ -1,6 +1,6 @@
 import { getRouteApi, Link, useRouteContext } from "@tanstack/react-router";
 import { useState } from "react";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { ActivityItem } from "@/components/ui/ActivityItem";
@@ -67,7 +67,12 @@ const viewAllLink =
 
 type Decision = { request: LeaveRequest; mode: "view" | "reject" | "approve" };
 
-const Dashboard = (): FunctionComponent => {
+const Dashboard = ({
+	displayName,
+}: {
+	/** The signed-in person's name, for the greeting. */
+	displayName: string;
+}): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const language = formattingLocale(i18n);
 	const companyId = useCurrentCompanyId();
@@ -169,6 +174,16 @@ const Dashboard = (): FunctionComponent => {
 			<h1 className="sr-only">{t("shell.navigation.dashboard")}</h1>
 			{/* Full bleed: the negative margins undo `AppShell`'s page padding at each breakpoint. */}
 			<div className="-mx-4 -mt-6 flex flex-wrap items-start justify-between gap-4 border-b border-neutral-400 px-4 pt-5 pb-5 sm:-mx-6 sm:-mt-8 sm:px-6 lg:-mx-10 lg:-mt-10 lg:px-10">
+				{/* From `lg` the header carries the greeting; below it the page does. */}
+				<p className="w-full text-2xl text-neutral-900 lg:hidden">
+					<Trans
+						i18nKey="shell.welcome"
+						values={{ name: displayName }}
+						components={{
+							name: <span className="font-medium text-ink-blue-900" />,
+						}}
+					/>
+				</p>
 				<Button
 					leadingIcon={<SchedulingIcon />}
 					size="sm"
@@ -456,8 +471,9 @@ export const Home = (): FunctionComponent => {
 	const context = useRouteContext({ from: "/_authenticated" });
 	if (
 		!("currentCompany" in context) ||
-		context.currentCompany.kind !== "settled"
+		context.currentCompany.kind !== "settled" ||
+		!context.currentUser
 	)
 		return null;
-	return <Dashboard />;
+	return <Dashboard displayName={context.currentUser.displayName} />;
 };

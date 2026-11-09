@@ -21,7 +21,8 @@ export type HeaderBranchScopeProps =
 			fixed: FixedBranch;
 	  };
 
-const labelClasses = "hidden text-sm text-neutral-800 sm:inline";
+// Named in words from `lg`; below it the header shares the dark navigation bar (`AppShell`) and the field speaks for itself.
+const labelClasses = "hidden text-sm text-neutral-800 lg:inline";
 
 /** A Branch that is not chosen here, named as text under the same label. */
 const BranchText = ({
@@ -35,7 +36,9 @@ const BranchText = ({
 			<span className={labelClasses}>
 				{t("workspace.branchSelector.branch")}
 			</span>
-			<span className="truncate font-semibold text-ink-blue-900">{name}</span>
+			<span className="truncate font-semibold text-ink-blue-900 max-lg:text-white">
+				{name}
+			</span>
 		</p>
 	);
 };
@@ -65,8 +68,8 @@ const BranchChoice = ({
 			</span>
 			<Select
 				aria-labelledby={labelId}
-				// Fills the room the header's actions leave on a phone; a fixed width from `sm`.
-				className="w-full min-w-0 font-semibold text-ink-blue-900 sm:w-56"
+				// Fills the room the header's actions leave on a phone, its padding tighter in the navigation bar; a fixed width from `sm`.
+				className="w-full min-w-0 font-semibold text-ink-blue-900 max-lg:gap-2 max-lg:px-3 sm:w-56"
 				value={branch?.branchId ?? ALL_BRANCHES}
 				options={[
 					...branches.map((choice) => ({

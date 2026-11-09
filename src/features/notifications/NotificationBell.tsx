@@ -50,7 +50,8 @@ export const NotificationBell = (): FunctionComponent => {
 			<PopoverButton
 				aria-haspopup="dialog"
 				as={Button}
-				className="relative h-12 w-12 data-open:bg-ink-blue-50 [&>svg]:size-8 [&>svg]:text-ink-blue-900 hover:[&>svg]:text-ink-blue-700"
+				// Below `lg` the bell sits in the dark navigation bar (`AppShell`), so it turns white there.
+				className="relative h-12 w-12 max-lg:w-11 data-open:bg-ink-blue-50 [&>svg]:size-8 [&>svg]:text-ink-blue-900 hover:[&>svg]:text-ink-blue-700 max-lg:data-open:bg-ink-blue-800 max-lg:[&>svg]:text-white max-lg:hover:[&>svg]:text-ink-blue-100"
 				variant="icon"
 				aria-label={
 					count === undefined

@@ -76,9 +76,10 @@ export const MainLayout = (): FunctionComponent => {
 					actions={
 						<>
 							<NotificationBell />
+							{/* Below `lg` Settings is in the Menu, leaving the bar room for the Branch. */}
 							<Button
 								aria-label={t("shell.settings")}
-								className={headerIconClasses}
+								className={`${headerIconClasses} max-lg:hidden`}
 								to="/settings"
 								variant="icon"
 							>
@@ -117,6 +118,14 @@ export const MainLayout = (): FunctionComponent => {
 					menuLabel={t("shell.menu")}
 					footer={
 						<div className="flex flex-col gap-3">
+							{/* From `lg` Settings is the header's gear. */}
+							<SidebarItem
+								activeIcon={SettingsIcon}
+								className="lg:hidden"
+								icon={SettingsIcon}
+								label={t("shell.settings")}
+								to="/settings"
+							/>
 							{usableCompanies(context.currentUser).length > 1 && (
 								<Button
 									className="w-full"

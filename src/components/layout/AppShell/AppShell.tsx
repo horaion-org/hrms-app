@@ -20,10 +20,13 @@ export const AppShell = ({
 	header,
 	children,
 }: AppShellProps): FunctionComponent => (
-	<div className="flex min-h-dvh flex-col bg-white lg:flex-row">
+	<div className="relative flex min-h-dvh flex-col bg-white lg:flex-row">
 		{sidebar}
 		<div className="flex min-w-0 flex-1 flex-col">
-			{header}
+			{/* Below `lg` the header's controls share the navigation bar's row, between its logo and Menu button, so one bar tops the page. */}
+			<div className="max-lg:absolute max-lg:inset-x-17 max-lg:top-0 max-lg:flex max-lg:h-19 max-lg:items-center">
+				{header}
+			</div>
 			<main className="min-w-0 flex-1 px-4 py-6 sm:px-6 sm:py-8 lg:px-10 lg:py-10">
 				{children}
 			</main>

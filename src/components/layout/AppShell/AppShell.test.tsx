@@ -55,4 +55,19 @@ describe("AppShell", () => {
 			"lg:flex-row"
 		);
 	});
+
+	it("places the header in the navigation bar's row below lg, one bar topping the page", () => {
+		render(
+			<AppShell header={<header>Bar</header>} sidebar={null}>
+				<h1>Dashboard</h1>
+			</AppShell>
+		);
+
+		expect(screen.getByRole("banner").parentElement).toHaveClass(
+			"max-lg:absolute",
+			"max-lg:top-0",
+			"max-lg:inset-x-17",
+			"max-lg:h-19"
+		);
+	});
 });

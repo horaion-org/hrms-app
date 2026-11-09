@@ -24,15 +24,23 @@ describe("AppHeader", () => {
 		expect(screen.getByText("Welcome, John.").nextSibling).toBeNull();
 	});
 
-	it("draws the design's bottom rule, compact on phones", () => {
+	it("draws the design's bar with its bottom rule from lg only, where it stands alone", () => {
 		render(<AppHeader title="Welcome, John." />);
 
-		expect(screen.getByRole("banner")).toHaveClass(
-			"border-b",
-			"border-neutral-400",
-			"min-h-16",
-			"sm:min-h-22.5"
+		const banner = screen.getByRole("banner");
+		expect(banner).toHaveClass(
+			"lg:border-b",
+			"lg:border-neutral-400",
+			"lg:bg-white",
+			"lg:min-h-22.5"
 		);
+		expect(banner).not.toHaveClass("border-b");
+	});
+
+	it("leaves the title to the page below lg, where the controls share the navigation bar", () => {
+		render(<AppHeader title="Welcome, John." />);
+
+		expect(screen.getByText("Welcome, John.")).toHaveClass("max-lg:hidden");
 	});
 
 	it("leaves out the title when there is none, so the controls take the whole bar", () => {
@@ -71,7 +79,7 @@ describe("AppHeader", () => {
 		);
 
 		const banner = screen.getByRole("banner");
-		expect(banner).toHaveClass("mt-2", "border-b");
+		expect(banner).toHaveClass("mt-2", "lg:border-b");
 		expect(banner).toHaveAttribute("data-area", "shell");
 		expect(ref.current).toBe(banner);
 	});
