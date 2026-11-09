@@ -463,6 +463,58 @@ describe("People", () => {
 		}
 	});
 
+	it("offers Import, Imports and Export from one menu beside Add employee below md", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...baseRoutes(["member_profile:read", "member_profile:create"]),
+			[PEOPLE]: pageReply([person("m-1", "Moses Lee")]),
+			[`GET ${PEOPLE_PATH}/export`]: problemReply(400, "EXPORT_TOO_LARGE"),
+		});
+		const opened = await open("/people");
+		await screen.findByText("Moses Lee");
+		const menu = screen.getByRole("button", { name: "More people actions" });
+		// The buttons show from md and the menu below it, so a phone keeps the toolbar on one row.
+		expect(menu.parentElement).toHaveClass("md:hidden");
+		expect(
+			screen.getByRole("button", { name: "Export" }).parentElement
+		).toHaveClass("hidden", "md:contents");
+
+		await user.click(menu);
+		expect(
+			(await screen.findAllByRole("menuitem")).map((item) => item.textContent)
+		).toEqual(["Import", "Imports", "Export"]);
+		await user.click(screen.getByRole("menuitem", { name: "Export" }));
+		expect(await screen.findByRole("alert")).toHaveTextContent(
+			"More than 5,000 people match. Choose a Branch or Department first."
+		);
+		expect(searchesOf(calls, `${PEOPLE_PATH}/export`)).toEqual([""]);
+
+		await user.click(menu);
+		await user.click(await screen.findByRole("menuitem", { name: "Imports" }));
+		await waitFor(() => {
+			expect(opened.router.state.location.pathname).toBe("/settings");
+		});
+		expect(opened.router.state.location.search).toEqual({ section: "data" });
+	});
+
+	it("offers only Export from the menu to someone who may not add people", async () => {
+		const user = userEvent.setup();
+		stubApi({
+			...baseRoutes(),
+			[PEOPLE]: pageReply([person("m-1", "Moses Lee")]),
+		});
+		await open("/people");
+		await screen.findByText("Moses Lee");
+
+		await user.click(
+			screen.getByRole("button", { name: "More people actions" })
+		);
+
+		expect(
+			(await screen.findAllByRole("menuitem")).map((item) => item.textContent)
+		).toEqual(["Export"]);
+	});
+
 	it("says when the filtered list is too large to export", async () => {
 		const user = userEvent.setup();
 		stubApi({

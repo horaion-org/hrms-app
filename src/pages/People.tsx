@@ -1,6 +1,6 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { getRouteApi, useRouterState } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { ApiProblemError } from "@/common/problem";
 import { saveFile } from "@/common/saveFile";
@@ -17,6 +17,7 @@ import {
 	TimeIcon,
 	UploadIcon,
 } from "@/components/ui/Icon";
+import { OverflowMenu, OverflowMenuItem } from "@/components/ui/OverflowMenu";
 import { Pagination } from "@/components/ui/Pagination";
 import { Toast } from "@/components/ui/Toast";
 import { allTermsQuery } from "@/features/employmentTerms/api";
@@ -59,6 +60,16 @@ import { useAccess } from "@/features/workspace/useAccess";
 import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 
 const route = getRouteApi("/_authenticated/_app/people");
+
+/** A toolbar action beside Add employee: a button from `md`, an item of one menu below it. */
+type ToolbarAction = {
+	id: string;
+	label: string;
+	icon: ReactNode;
+	onSelect: () => void;
+	/** Running: the button shows its spinner and the menu item rests. */
+	busy?: boolean;
+};
 
 /** The API's reason for refusing an export, when it gave one. */
 const exportRefusal = (error: unknown): string | undefined =>
@@ -130,6 +141,37 @@ export const People = (): FunctionComponent => {
 			search: (previous) => ({ ...previous, page: undefined, ...next }),
 		});
 	};
+	const secondaryActions: Array<ToolbarAction> = [
+		...(canAdd
+			? [
+					{
+						id: "import",
+						label: t("people.import"),
+						icon: <UploadIcon />,
+						onSelect: (): void => {
+							void navigate({ to: "/settings/data/import-people" });
+						},
+					},
+					{
+						id: "imports",
+						label: t("people.imports"),
+						icon: <HistoryIcon />,
+						onSelect: (): void => {
+							void navigate({ to: "/settings", search: { section: "data" } });
+						},
+					},
+				]
+			: []),
+		{
+			id: "export",
+			label: exporting.isPending ? t("people.exporting") : t("people.export"),
+			icon: <DownloadIcon />,
+			busy: exporting.isPending,
+			onSelect: (): void => {
+				exporting.mutate();
+			},
+		},
+	];
 	// The Branch is the header's scope, not a filter: only Department, terms and status are listed and cleared here.
 	const chips = [
 		...departmentChips(
@@ -206,41 +248,36 @@ export const People = (): FunctionComponent => {
 				searchLabel={t("people.search")}
 				actions={
 					<>
-						{canAdd && (
-							<Button
-								leadingIcon={<UploadIcon />}
-								variant="secondary"
-								onClick={() => {
-									void navigate({ to: "/settings/data/import-people" });
-								}}
-							>
-								{t("people.import")}
-							</Button>
-						)}
-						{canAdd && (
-							<Button
-								leadingIcon={<HistoryIcon />}
-								variant="secondary"
-								onClick={() => {
-									void navigate({
-										to: "/settings",
-										search: { section: "data" },
-									});
-								}}
-							>
-								{t("people.imports")}
-							</Button>
-						)}
-						<Button
-							leadingIcon={<DownloadIcon />}
-							loading={exporting.isPending}
-							variant="secondary"
-							onClick={() => {
-								exporting.mutate();
-							}}
+						{/* From `md` each action is a button; below it they wait in one menu beside Add employee. */}
+						<div className="hidden md:contents">
+							{secondaryActions.map((action) => (
+								<Button
+									key={action.id}
+									leadingIcon={action.icon}
+									loading={action.busy}
+									variant="secondary"
+									onClick={action.onSelect}
+								>
+									{action.label}
+								</Button>
+							))}
+						</div>
+						<OverflowMenu
+							framed
+							className="md:hidden"
+							label={t("people.moreActions")}
+							variant="icon"
 						>
-							{exporting.isPending ? t("people.exporting") : t("people.export")}
-						</Button>
+							{secondaryActions.map((action) => (
+								<OverflowMenuItem
+									key={action.id}
+									disabled={action.busy}
+									onClick={action.onSelect}
+								>
+									{action.label}
+								</OverflowMenuItem>
+							))}
+						</OverflowMenu>
 					</>
 				}
 				filterFields={

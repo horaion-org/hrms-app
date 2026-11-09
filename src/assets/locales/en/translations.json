@@ -1299,6 +1299,7 @@
 		},
 		"termsNotSet": "We couldn’t give them {{chosen}}, so they’re on {{kept}}. Change it from their profile.",
 		"imports": "Imports",
+		"moreActions": "More people actions",
 		"invitationFilter": {
 			"label": "Signed in",
 			"all": "Everyone",

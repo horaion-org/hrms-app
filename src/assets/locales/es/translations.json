@@ -2745,6 +2745,7 @@
 			"employmentTermsHint": "Desde su fecha de contratación, o desde hoy si no tiene."
 		},
 		"imports": "Importaciones",
+		"moreActions": "Más acciones de personas",
 		"invitationFilter": {
 			"label": "Ha iniciado sesión",
 			"all": "Todos",
