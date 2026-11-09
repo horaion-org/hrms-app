@@ -89,7 +89,11 @@ describe("Button", () => {
 
 		rerender(<Button variant="hyperlink">Save</Button>);
 		expect(screen.getByRole("button")).not.toHaveClass("rounded-full");
-		expect(screen.getByRole("button")).toHaveClass("underline");
+		expect(screen.getByRole("button")).toHaveClass(
+			"underline",
+			// As tall as a fingertip on touch screens, as `textlink` is.
+			"pointer-coarse:min-h-11"
+		);
 	});
 
 	it("draws the danger variant as a red pill that turns grey when disabled", () => {

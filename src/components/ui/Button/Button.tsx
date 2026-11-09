@@ -74,7 +74,7 @@ const variantClasses: Record<ButtonVariant, string> = {
 	textlink:
 		"gap-2 text-sm pointer-coarse:min-h-11 text-ink-blue-700 not-disabled:hover:text-ink-blue-500 not-disabled:active:text-ink-blue-300 disabled:text-neutral-400 [&_svg]:size-4 [&_svg]:shrink-0",
 	hyperlink:
-		"gap-2 text-base text-ink-blue-700 underline underline-offset-4 not-disabled:hover:text-ink-blue-500 not-disabled:active:text-ink-blue-300 disabled:text-neutral-400 [&_svg]:size-4 [&_svg]:shrink-0",
+		"gap-2 text-base pointer-coarse:min-h-11 text-ink-blue-700 underline underline-offset-4 not-disabled:hover:text-ink-blue-500 not-disabled:active:text-ink-blue-300 disabled:text-neutral-400 [&_svg]:size-4 [&_svg]:shrink-0",
 	icon: `size-9 ${touchTargetClasses} shrink-0 rounded bg-transparent text-neutral-900 not-disabled:hover:text-ink-blue-700 not-disabled:active:text-ink-blue-500 disabled:text-neutral-400 [&_svg]:size-4 [&_svg]:shrink-0`,
 };
 

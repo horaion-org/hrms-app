@@ -27,7 +27,8 @@ export const Token = ({
 			{onRemove && (
 				<button
 					aria-label={t("combobox.remove", { label })}
-					className="cursor-pointer rounded p-0.5 outline-offset-2 focus-visible:outline-2 focus-visible:outline-ink-blue-500 disabled:cursor-not-allowed disabled:text-neutral-500"
+					// 16 px with a mouse; 24 px on touch (WCAG 2.5.8's minimum).
+					className="cursor-pointer rounded p-0.5 outline-offset-2 pointer-coarse:p-1.5 focus-visible:outline-2 focus-visible:outline-ink-blue-500 disabled:cursor-not-allowed disabled:text-neutral-500"
 					disabled={disabled}
 					type="button"
 					onClick={onRemove}

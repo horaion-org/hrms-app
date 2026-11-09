@@ -174,8 +174,9 @@ export const Combobox = <T,>(props: ComboboxProps<T>): FunctionComponent => {
 	}): NonNullable<FunctionComponent> => (
 		<>
 			<div
+				// The trigger fills the field inside its border: on touch the field is 46 px, so the trigger is 44.
 				className={joinClassNames(
-					"relative min-h-11 rounded-lg border px-4 py-2 text-sm focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-ink-blue-500",
+					"relative min-h-11 rounded-lg border px-4 py-2 text-sm focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-ink-blue-500 pointer-coarse:min-h-11.5",
 					disabled
 						? "cursor-not-allowed border-neutral-400 bg-neutral-200 text-neutral-500"
 						: joinClassNames(
