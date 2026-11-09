@@ -20,6 +20,7 @@ import { renderAuthApp } from "@/features/auth/testing";
 import {
 	approvalFlowFixture,
 	companyFlowFixture,
+	leaveFlowFixture,
 } from "@/features/approvals/fixtures";
 
 const COMPANY = "/api/v1/companies/c-1";
@@ -73,26 +74,27 @@ const open = async (): Promise<HTMLElement> => {
 };
 
 describe("ApprovalsSettings", () => {
-	it("lists each flow with where it applies, its steps and whether it is on", async () => {
+	it("lists each subject's flows in its own group, with where each applies, its steps and whether it is on", async () => {
 		stubApi(
 			routes(READ_AND_MANAGE, [
 				companyFlowFixture(),
 				{ ...KITCHEN_FLOW, active: false },
+				leaveFlowFixture(),
 			])
 		);
 
 		const panel = await open();
-		const table = await within(panel).findByRole("table", {
-			name: "Schedule publishing",
+		const rosters = await within(panel).findByRole("table", {
+			name: "Roster publishing",
 		});
-		const [, company, kitchen] = within(table).getAllByRole("row");
+		const [, company, kitchen] = within(rosters).getAllByRole("row");
 		// Each cell's own content: on phones the first cell adds a line with the steps after it.
 		const cellsOf = (row: HTMLElement | undefined): Array<string | undefined> =>
 			within(row!)
 				.getAllByRole("cell")
 				.map((cell) => cell.firstChild?.textContent ?? undefined);
 		expect(cellsOf(company).slice(0, 3)).toEqual([
-			"Whole company",
+			"Company default",
 			"1 Publish",
 			"On",
 		]);
@@ -102,7 +104,7 @@ describe("ApprovalsSettings", () => {
 			"Off",
 		]);
 		// Phones keep where it applies, whether it is on and the actions; the steps move to the first cell's line.
-		const steps = within(table).getByRole("columnheader", { name: "Steps" });
+		const steps = within(rosters).getByRole("columnheader", { name: "Steps" });
 		expect(steps).toHaveClass("hidden", "md:table-cell");
 		const [stepsOnLine, stepsCell] = within(
 			kitchen as HTMLElement
@@ -110,25 +112,62 @@ describe("ApprovalsSettings", () => {
 		expect(stepsCell).toHaveClass("hidden", "md:table-cell");
 		expect(stepsOnLine).toHaveClass("md:hidden");
 		expect(
-			within(table).getByRole("columnheader", { name: "Applies to" })
+			within(rosters).getByRole("columnheader", { name: "Applies to" })
 		).not.toHaveClass("hidden");
+		const leave = within(panel).getByRole("table", { name: "Leave requests" });
+		const leaveRows = within(leave).getAllByRole("row");
+		expect(leaveRows).toHaveLength(2);
+		expect(cellsOf(leaveRows[1]).slice(0, 3)).toEqual([
+			"Company default",
+			"1 Manager → 2 HR",
+			"On",
+		]);
+		// Rosters have a department flow beside the default; leave has only the default.
 		expect(
-			within(panel).getByRole("button", { name: "Add flow" })
+			within(panel).getByText(
+				"Other departments, and any whose flow is off, use the company default."
+			)
+		).toBeInTheDocument();
+		expect(
+			within(panel).getByText("Every department uses the company default.")
+		).toBeInTheDocument();
+		expect(
+			within(panel).getByRole("button", { name: "Add flow Roster publishing" })
+		).toBeInTheDocument();
+		expect(
+			within(panel).getByRole("button", { name: "Add flow Leave requests" })
 		).toBeInTheDocument();
 	});
 
-	it("says publishing stays one click without a flow, and offers no change to a reader", async () => {
+	it("says each subject is decided in one step without a flow, and offers no change to a reader", async () => {
 		stubApi(routes(["approval_flow:read"], []));
 
 		const panel = await open();
 		expect(
 			await within(panel).findByText(
-				"No approval flows. Rosters publish in one step, by anyone who can publish."
+				"No approval flow. Rosters publish in one step, by anyone who can publish them."
 			)
 		).toBeInTheDocument();
 		expect(
-			within(panel).queryByRole("button", { name: "Add flow" })
+			within(panel).getByText(
+				"No approval flow. Leave is approved or rejected in one step, by anyone who can review it."
+			)
+		).toBeInTheDocument();
+		expect(within(panel).queryByRole("table")).toBeNull();
+		expect(
+			within(panel).queryByRole("button", { name: /Add flow/ })
 		).toBeNull();
+	});
+
+	it("says departments outside a subject's flows decide in one step when no company default is on", async () => {
+		stubApi(routes(["approval_flow:read"], [KITCHEN_FLOW]));
+
+		const panel = await open();
+		expect(
+			await within(panel).findByText(
+				"Other departments, and any whose flow is off: one step, by anyone who can publish their roster."
+			)
+		).toBeInTheDocument();
 	});
 
 	it("hides the section from someone without approval_flow:read", async () => {
@@ -150,11 +189,15 @@ describe("ApprovalsSettings", () => {
 
 		const panel = await open();
 		await user.click(
-			await within(panel).findByRole("button", { name: "Add flow" })
+			await within(panel).findByRole("button", {
+				name: "Add flow Roster publishing",
+			})
 		);
-		const dialog = screen.getByRole("dialog", { name: "Add approval flow" });
+		const dialog = screen.getByRole("dialog", {
+			name: "Add roster approval flow",
+		});
 		expect(within(dialog).getByRole("textbox", { name: "Name" })).toHaveValue(
-			"Whole company publishing"
+			"Company roster approval"
 		);
 
 		await user.click(within(dialog).getByRole("button", { name: "Save flow" }));
@@ -178,8 +221,18 @@ describe("ApprovalsSettings", () => {
 		await user.click(
 			within(dialog).getByRole("radio", { name: "All of them" })
 		);
+		expect(
+			within(dialog).queryByRole("checkbox", {
+				name: "A different person approves each step",
+			})
+		).toBeNull();
 		await user.click(within(dialog).getByRole("button", { name: "Add step" }));
 		await user.type(within(dialog).getByLabelText(/Name of step 2/), "Publish");
+		await user.click(
+			within(dialog).getByRole("checkbox", {
+				name: "A different person approves each step",
+			})
+		);
 		await user.click(within(dialog).getByRole("button", { name: "Add step" }));
 		expect(within(dialog).getByText("Up to 3 steps.")).toBeInTheDocument();
 		expect(
@@ -198,7 +251,7 @@ describe("ApprovalsSettings", () => {
 		).toEqual({
 			subjectType: "SCHEDULE_PUBLICATION",
 			departmentId: null,
-			name: "Whole company publishing",
+			name: "Company roster approval",
 			steps: [
 				{
 					label: "Endorse",
@@ -208,7 +261,47 @@ describe("ApprovalsSettings", () => {
 				},
 				{ label: "Publish", rule: "KEY_HOLDERS", quorum: "ANY", memberIds: [] },
 			],
+			distinctApprovers: true,
 		});
+	});
+
+	it("adds a leave flow from the leave group, worded for reviewing leave", async () => {
+		const calls = stubApi(
+			routes(READ_AND_MANAGE, [], {
+				[`POST ${FLOWS}`]: ok(leaveFlowFixture(), 201),
+			})
+		);
+		const user = userEvent.setup();
+
+		const panel = await open();
+		await user.click(
+			await within(panel).findByRole("button", {
+				name: "Add flow Leave requests",
+			})
+		);
+		const dialog = screen.getByRole("dialog", {
+			name: "Add leave approval flow",
+		});
+		expect(within(dialog).getByRole("textbox", { name: "Name" })).toHaveValue(
+			"Company leave approval"
+		);
+		expect(
+			within(dialog).getByRole("radio", {
+				name: /^Anyone who can review the leave/,
+			})
+		).toBeChecked();
+		expect(dialog).toHaveTextContent(
+			"Approvers need “Review leave” and “Decide approvals”"
+		);
+		await user.type(within(dialog).getByLabelText(/Name of step 1/), "Manager");
+		await user.click(within(dialog).getByRole("button", { name: "Save flow" }));
+
+		await waitFor(() => {
+			expect(screen.queryByRole("dialog")).toBeNull();
+		});
+		expect(
+			calls.find((call) => call.method === "POST" && call.path === FLOWS)?.body
+		).toMatchObject({ subjectType: "LEAVE_REQUEST", distinctApprovers: false });
 	});
 
 	it("moves a step with its arrows and says so", async () => {
@@ -225,7 +318,9 @@ describe("ApprovalsSettings", () => {
 				name: "Edit Company publishing",
 			})
 		);
-		const dialog = screen.getByRole("dialog", { name: "Edit approval flow" });
+		const dialog = screen.getByRole("dialog", {
+			name: "Edit roster approval flow",
+		});
 		await user.click(within(dialog).getByRole("button", { name: "Add step" }));
 		await user.type(within(dialog).getByLabelText(/Name of step 2/), "Endorse");
 		await user.click(
@@ -263,7 +358,9 @@ describe("ApprovalsSettings", () => {
 				name: "Edit Kitchen publishing",
 			})
 		);
-		const dialog = screen.getByRole("dialog", { name: "Edit approval flow" });
+		const dialog = screen.getByRole("dialog", {
+			name: "Edit roster approval flow",
+		});
 
 		expect(
 			within(dialog).getAllByRole("radio", {
@@ -283,9 +380,13 @@ describe("ApprovalsSettings", () => {
 
 		const panel = await open();
 		await user.click(
-			await within(panel).findByRole("button", { name: "Add flow" })
+			await within(panel).findByRole("button", {
+				name: "Add flow Roster publishing",
+			})
 		);
-		const dialog = screen.getByRole("dialog", { name: "Add approval flow" });
+		const dialog = screen.getByRole("dialog", {
+			name: "Add roster approval flow",
+		});
 		await user.type(within(dialog).getByLabelText(/Name of step 1/), "Publish");
 		await user.click(within(dialog).getByRole("button", { name: "Save flow" }));
 
@@ -332,6 +433,25 @@ describe("ApprovalsSettings", () => {
 				},
 				{ label: "Publish", rule: "KEY_HOLDERS", quorum: "ANY", memberIds: [] },
 			],
+			distinctApprovers: false,
 		});
+	});
+
+	it("words a leave flow's turning off for leave requests", async () => {
+		stubApi(routes(READ_AND_MANAGE, [leaveFlowFixture()]));
+		const user = userEvent.setup();
+
+		const panel = await open();
+		await user.click(
+			await within(panel).findByRole("button", {
+				name: "More actions for Company leave approval",
+			})
+		);
+		await user.click(screen.getByRole("menuitem", { name: "Turn off" }));
+		expect(
+			screen.getByRole("dialog", { name: "Turn off Company leave approval?" })
+		).toHaveTextContent(
+			"Requests already waiting keep this flow. Leave applied for from now on doesn’t go through it."
+		);
 	});
 });
