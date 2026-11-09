@@ -344,7 +344,7 @@ export const leaveRequestQuery = (
 			apiRequest(
 				`${memberId ? memberLeavePath(companyId, memberId) : `${companyPath(companyId)}/me/leave-requests`}/${encodeURIComponent(requestId)}`,
 				leaveRequestSchema,
-				{ signal, responseFormat: "record" }
+				{ signal }
 			),
 		meta: memberId
 			? administrativeMeta(companyId, { record: true })
@@ -466,7 +466,7 @@ export const rosteredDaysQuery = (
 					apiRequest(
 						`${memberId ? memberLeavePath(companyId, memberId) : `${companyPath(companyId)}/me/leave-requests`}/rostered-days?${new URLSearchParams({ startDate: period.start, endDate: period.end }).toString()}`,
 						z.array(rosteredDaySchema),
-						{ signal, responseFormat: "record" }
+						{ signal }
 					)
 			: skipToken,
 		meta: memberId
@@ -519,7 +519,7 @@ export const leaveHistoryQuery = (
 			apiRequest(
 				`${memberId ? memberLeavePath(companyId, memberId) : `${companyPath(companyId)}/me/leave-requests`}/${encodeURIComponent(requestId)}/changes`,
 				z.array(leaveChangeSchema),
-				{ signal, responseFormat: "record" }
+				{ signal }
 			),
 		meta: memberId
 			? administrativeMeta(companyId, { record: true })

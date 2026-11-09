@@ -151,7 +151,7 @@ const routes = (
 		status: 200,
 		body: envelope(LEAVE_TYPE_FIXTURES),
 	},
-	[`GET ${AISHA}/rostered-days`]: { status: 200, body: [] },
+	[`GET ${AISHA}/rostered-days`]: { status: 200, body: envelope([]) },
 });
 
 const searchesOf = (calls: Array<Call>, path: string): Array<string> =>
@@ -746,7 +746,7 @@ describe("Leave", () => {
 			...routes(),
 			[`GET ${AISHA}/rostered-days`]: {
 				status: 200,
-				body: [{ day: "2026-07-06", minutes: 480 }],
+				body: envelope([{ day: "2026-07-06", minutes: 480 }]),
 			},
 			[`POST ${AISHA}/leave-aisha/approval`]: {
 				status: 200,
@@ -780,8 +780,8 @@ describe("Leave", () => {
 		const calls = stubApi({
 			...routes(),
 			[`GET ${AISHA}/rostered-days`]: [
-				{ status: 200, body: [] },
-				{ status: 200, body: [{ day: "2026-07-06", minutes: 480 }] },
+				{ status: 200, body: envelope([]) },
+				{ status: 200, body: envelope([{ day: "2026-07-06", minutes: 480 }]) },
 			],
 			[`POST ${AISHA}/leave-aisha/approval`]: [
 				problemReply(409, "LEAVE_CLASHES_WITH_ROSTER"),
@@ -820,7 +820,7 @@ describe("Leave", () => {
 			...routes(),
 			[`GET ${AISHA}/rostered-days`]: [
 				problemReply(404, "SOMETHING_ELSE"),
-				{ status: 200, body: [{ day: "2026-07-06", minutes: 480 }] },
+				{ status: 200, body: envelope([{ day: "2026-07-06", minutes: 480 }]) },
 			],
 		});
 		await open("/leave?view=requests");

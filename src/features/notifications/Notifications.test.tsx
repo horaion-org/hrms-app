@@ -61,9 +61,12 @@ describe("Notifications", () => {
 			},
 			[`GET ${BASE}`]: {
 				status: 200,
-				body: { content: [], page: { totalElements: 0 } },
+				body: envelope({ content: [], page: { totalElements: 0 } }),
 			},
-			[`GET ${BASE}/unread-count`]: { status: 200, body: { unreadCount: 0 } },
+			[`GET ${BASE}/unread-count`]: {
+				status: 200,
+				body: envelope({ unreadCount: 0 }),
+			},
 		});
 		await open();
 		const user = userEvent.setup();
@@ -109,9 +112,12 @@ describe("Notifications", () => {
 			},
 			[`GET ${BASE}`]: {
 				status: 200,
-				body: { content: [own], page: { totalElements: 1 } },
+				body: envelope({ content: [own], page: { totalElements: 1 } }),
 			},
-			[`GET ${BASE}/unread-count`]: { status: 200, body: { unreadCount: 1 } },
+			[`GET ${BASE}/unread-count`]: {
+				status: 200,
+				body: envelope({ unreadCount: 1 }),
+			},
 			"GET /api/v1/companies/c-1/me/leave-requests": {
 				status: 200,
 				body: envelope({ content: [], page: { totalElements: 0 } }),
@@ -158,7 +164,7 @@ describe("Notifications", () => {
 			},
 			[`GET ${BASE}`]: {
 				status: 200,
-				body: { content: [], page: { totalElements: 0 } },
+				body: envelope({ content: [], page: { totalElements: 0 } }),
 			},
 			[`GET ${BASE}/unread-count`]: { status: 503, body: { status: 503 } },
 		});
@@ -194,18 +200,18 @@ describe("Notifications", () => {
 			},
 			[`GET ${BASE}`]: () => ({
 				status: 200,
-				body: {
+				body: envelope({
 					content: [{ ...own, readAt: read ? own.createdAt : null }],
 					page: { totalElements: 1 },
-				},
+				}),
 			}),
 			[`GET ${BASE}/unread-count`]: () => ({
 				status: 200,
-				body: { unreadCount: read ? 0 : 1 },
+				body: envelope({ unreadCount: read ? 0 : 1 }),
 			}),
 			[`PUT ${BASE}/notification-1/read`]: () => {
 				read = true;
-				return { status: 200, body: { updatedCount: 1 } };
+				return { status: 200, body: envelope({ updatedCount: 1 }) };
 			},
 		});
 		await open();
@@ -239,12 +245,15 @@ describe("Notifications", () => {
 			},
 			[`GET ${BASE}`]: ({ search }) => ({
 				status: 200,
-				body: {
+				body: envelope({
 					content: [search.includes("REVIEW") ? review : own],
 					page: { totalElements: 1 },
-				},
+				}),
 			}),
-			[`GET ${BASE}/unread-count`]: { status: 200, body: { unreadCount: 1 } },
+			[`GET ${BASE}/unread-count`]: {
+				status: 200,
+				body: envelope({ unreadCount: 1 }),
+			},
 		});
 		await open();
 		await userEvent
@@ -276,20 +285,25 @@ describe("Notifications", () => {
 			},
 			[`GET ${BASE}`]: {
 				status: 200,
-				body: { content: [own], page: { totalElements: 1 } },
+				body: envelope({ content: [own], page: { totalElements: 1 } }),
 			},
-			[`GET ${BASE}/unread-count`]: { status: 200, body: { unreadCount: 1 } },
+			[`GET ${BASE}/unread-count`]: {
+				status: 200,
+				body: envelope({ unreadCount: 1 }),
+			},
 			"GET /api/v1/companies/c-1/me/leave-requests": {
 				status: 200,
 				body: envelope({ content: [], page: { totalElements: 0 } }),
 			},
 			"GET /api/v1/companies/c-1/me/leave-requests/leave-1": {
 				status: 200,
-				body: leaveFixture({
-					leaveRequestId: "leave-1",
-					membershipId: "m-c-1",
-					status: "APPROVED",
-				}),
+				body: envelope(
+					leaveFixture({
+						leaveRequestId: "leave-1",
+						membershipId: "m-c-1",
+						status: "APPROVED",
+					})
+				),
 			},
 		});
 		await open();
@@ -311,9 +325,12 @@ describe("Notifications", () => {
 			"GET /api/v1/me/workspace": { status: 503, body: { status: 503 } },
 			[`GET ${BASE}`]: {
 				status: 200,
-				body: { content: [own], page: { totalElements: 1 } },
+				body: envelope({ content: [own], page: { totalElements: 1 } }),
 			},
-			[`GET ${BASE}/unread-count`]: { status: 200, body: { unreadCount: 1 } },
+			[`GET ${BASE}/unread-count`]: {
+				status: 200,
+				body: envelope({ unreadCount: 1 }),
+			},
 		});
 		await open();
 		expect(
@@ -331,7 +348,7 @@ describe("Notifications", () => {
 			},
 			[`GET ${BASE}`]: {
 				status: 200,
-				body: {
+				body: envelope({
 					content: [
 						{
 							...own,
@@ -342,9 +359,12 @@ describe("Notifications", () => {
 						own,
 					],
 					page: { totalElements: 2 },
-				},
+				}),
 			},
-			[`GET ${BASE}/unread-count`]: { status: 200, body: { unreadCount: 2 } },
+			[`GET ${BASE}/unread-count`]: {
+				status: 200,
+				body: envelope({ unreadCount: 2 }),
+			},
 		});
 		await open();
 		expect(
@@ -365,18 +385,18 @@ describe("Notifications", () => {
 			},
 			[`GET ${BASE}`]: () => ({
 				status: 200,
-				body: {
+				body: envelope({
 					content: [{ ...own, readAt: read ? own.createdAt : null }],
 					page: { totalElements: 1 },
-				},
+				}),
 			}),
 			[`GET ${BASE}/unread-count`]: () => ({
 				status: 200,
-				body: { unreadCount: read ? 0 : 1 },
+				body: envelope({ unreadCount: read ? 0 : 1 }),
 			}),
 			[`PUT ${BASE}/read-all`]: () => {
 				read = true;
-				return { status: 200, body: { updatedCount: 1 } };
+				return { status: 200, body: envelope({ updatedCount: 1 }) };
 			},
 		});
 		await open("/leave");
@@ -414,14 +434,14 @@ describe("Notifications", () => {
 			},
 			[`GET ${BASE}`]: () => ({
 				status: 200,
-				body: {
+				body: envelope({
 					content: deleted ? [] : [own],
 					page: { totalElements: deleted ? 0 : 1 },
-				},
+				}),
 			}),
 			[`GET ${BASE}/unread-count`]: () => ({
 				status: 200,
-				body: { unreadCount: deleted ? 0 : 1 },
+				body: envelope({ unreadCount: deleted ? 0 : 1 }),
 			}),
 			[`DELETE ${BASE}/notification-1`]: () => {
 				deleted = true;
@@ -464,9 +484,12 @@ describe("Notifications", () => {
 			},
 			[`GET ${BASE}`]: {
 				status: 200,
-				body: { content: [own], page: { totalElements: 1 } },
+				body: envelope({ content: [own], page: { totalElements: 1 } }),
 			},
-			[`GET ${BASE}/unread-count`]: { status: 200, body: { unreadCount: 1 } },
+			[`GET ${BASE}/unread-count`]: {
+				status: 200,
+				body: envelope({ unreadCount: 1 }),
+			},
 			[`DELETE ${BASE}/notification-1`]: {
 				status: 404,
 				body: { status: 404, errorCode: "NOTIFICATION_NOT_FOUND" },
@@ -503,12 +526,15 @@ describe("Notifications", () => {
 			},
 			[`GET ${BASE}`]: () => ({
 				status: 200,
-				body: {
+				body: envelope({
 					content: deleted ? [second] : [own, second],
 					page: { totalElements: deleted ? 1 : 2 },
-				},
+				}),
 			}),
-			[`GET ${BASE}/unread-count`]: { status: 200, body: { unreadCount: 1 } },
+			[`GET ${BASE}/unread-count`]: {
+				status: 200,
+				body: envelope({ unreadCount: 1 }),
+			},
 			[`DELETE ${BASE}/notification-1`]: () => {
 				deleted = true;
 				return { status: 204 };
@@ -541,7 +567,7 @@ describe("Notifications", () => {
 			},
 			[`GET ${BASE}`]: {
 				status: 200,
-				body: {
+				body: envelope({
 					content: [
 						{
 							...own,
@@ -559,9 +585,12 @@ describe("Notifications", () => {
 						},
 					],
 					page: { totalElements: 1 },
-				},
+				}),
 			},
-			[`GET ${BASE}/unread-count`]: { status: 200, body: { unreadCount: 1 } },
+			[`GET ${BASE}/unread-count`]: {
+				status: 200,
+				body: envelope({ unreadCount: 1 }),
+			},
 		});
 		await open();
 		const link = await screen.findByRole("link", {
@@ -584,7 +613,7 @@ describe("Notifications", () => {
 			},
 			[`GET ${BASE}`]: {
 				status: 200,
-				body: {
+				body: envelope({
 					content: [
 						{
 							...own,
@@ -596,9 +625,12 @@ describe("Notifications", () => {
 						},
 					],
 					page: { totalElements: 1 },
-				},
+				}),
 			},
-			[`GET ${BASE}/unread-count`]: { status: 200, body: { unreadCount: 1 } },
+			[`GET ${BASE}/unread-count`]: {
+				status: 200,
+				body: envelope({ unreadCount: 1 }),
+			},
 		});
 		await open();
 		const link = await screen.findByRole("link", {
@@ -617,7 +649,7 @@ describe("Notifications", () => {
 			},
 			[`GET ${BASE}`]: {
 				status: 200,
-				body: {
+				body: envelope({
 					content: [
 						{
 							...own,
@@ -638,9 +670,12 @@ describe("Notifications", () => {
 						},
 					],
 					page: { totalElements: 2 },
-				},
+				}),
 			},
-			[`GET ${BASE}/unread-count`]: { status: 200, body: { unreadCount: 2 } },
+			[`GET ${BASE}/unread-count`]: {
+				status: 200,
+				body: envelope({ unreadCount: 2 }),
+			},
 		});
 		await open();
 		const links = await screen.findAllByRole("link", {
@@ -663,7 +698,7 @@ describe("Notifications", () => {
 			},
 			[`GET ${BASE}`]: {
 				status: 200,
-				body: {
+				body: envelope({
 					content: [
 						{
 							...own,
@@ -676,9 +711,12 @@ describe("Notifications", () => {
 						},
 					],
 					page: { totalElements: 1 },
-				},
+				}),
 			},
-			[`GET ${BASE}/unread-count`]: { status: 200, body: { unreadCount: 1 } },
+			[`GET ${BASE}/unread-count`]: {
+				status: 200,
+				body: envelope({ unreadCount: 1 }),
+			},
 		});
 		await open();
 		const link = await screen.findByRole("link", {
@@ -700,7 +738,7 @@ describe("Notifications", () => {
 			},
 			[`GET ${BASE}`]: {
 				status: 200,
-				body: {
+				body: envelope({
 					content: [
 						{
 							...own,
@@ -710,9 +748,12 @@ describe("Notifications", () => {
 						},
 					],
 					page: { totalElements: 1 },
-				},
+				}),
 			},
-			[`GET ${BASE}/unread-count`]: { status: 200, body: { unreadCount: 1 } },
+			[`GET ${BASE}/unread-count`]: {
+				status: 200,
+				body: envelope({ unreadCount: 1 }),
+			},
 		});
 		await open();
 		const link = await screen.findByRole("link", {
@@ -736,7 +777,7 @@ describe("Notifications", () => {
 			},
 			[`GET ${BASE}`]: ({ search }) => ({
 				status: 200,
-				body: {
+				body: envelope({
 					content: search.includes("REVIEW")
 						? [
 								{
@@ -750,9 +791,12 @@ describe("Notifications", () => {
 							]
 						: [],
 					page: { totalElements: search.includes("REVIEW") ? 1 : 0 },
-				},
+				}),
 			}),
-			[`GET ${BASE}/unread-count`]: { status: 200, body: { unreadCount: 1 } },
+			[`GET ${BASE}/unread-count`]: {
+				status: 200,
+				body: envelope({ unreadCount: 1 }),
+			},
 		});
 		await open();
 		await userEvent
