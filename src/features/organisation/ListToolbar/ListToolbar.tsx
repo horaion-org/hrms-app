@@ -150,7 +150,8 @@ export const ListToolbar = ({
 				)
 			}
 			filters={
-				<>
+				// On a phone the search and the Filters button share one row; from `sm` the wrapper steps aside.
+				<div className="flex w-full min-w-0 items-center gap-4 sm:contents">
 					{searchBox}
 					{hasFilterFields && (
 						<FiltersPopover count={chips.length}>
@@ -158,7 +159,7 @@ export const ListToolbar = ({
 							{statusField}
 						</FiltersPopover>
 					)}
-				</>
+				</div>
 			}
 		/>
 	);

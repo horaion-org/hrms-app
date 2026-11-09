@@ -108,4 +108,11 @@ describe("FiltersPopover", () => {
 		expect(panel.contains(options)).toBe(false);
 		expect(layerOf(options)).toBeGreaterThan(layerOf(panel));
 	});
+
+	it("given_aPhone_when_shown_then_theIconAndCountStandForTheNameItKeeps", () => {
+		render(<Page onChange={vi.fn()} />);
+
+		const button = screen.getByRole("button", { name: "Filters" });
+		expect(within(button).getByText("Filters")).toHaveClass("max-sm:sr-only");
+	});
 });

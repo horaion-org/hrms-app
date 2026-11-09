@@ -35,10 +35,12 @@ export const FiltersPopover = ({
 			<PopoverButton
 				aria-describedby={count > 0 ? countId : undefined}
 				as={Button}
+				// On a phone the icon and count stand for the name, so the button fits beside a search.
+				className="max-sm:px-3.5"
 				leadingIcon={<FilterIcon />}
 				variant="secondary"
 			>
-				{t("filtersPopover.label")}
+				<span className="max-sm:sr-only">{t("filtersPopover.label")}</span>
 				<CountBadge aria-hidden="true" count={count} tone="active" />
 				{count > 0 && (
 					<span aria-hidden="true" className="sr-only" id={countId}>
