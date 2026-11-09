@@ -199,3 +199,26 @@ export const carriedForwardFixture = (): ApprovalInstance =>
 			publishStep({ status: "APPROVED", decisions: [sitiApproved] }),
 		],
 	});
+
+/** Aisha's leave (leave-aisha) under the company's leave flow, at HR: Siti approved Manager; HR waits on Siti. */
+export const leaveAtHrInstanceFixture = (): ApprovalInstance =>
+	approvalInstanceFixture({
+		approvalInstanceId: "ai-leave",
+		subjectType: "LEAVE_REQUEST",
+		subjectId: "leave-aisha",
+		requestedBy: { membershipId: "m-aisha", displayName: "Aisha Rahman" },
+		currentStepOrder: 2,
+		steps: [
+			endorseStep({
+				label: "Manager",
+				status: "APPROVED",
+				decisions: [sitiApproved],
+			}),
+			publishStep({
+				label: "HR",
+				rule: "MEMBERS",
+				status: "OPEN",
+				members: [SITI],
+			}),
+		],
+	});
