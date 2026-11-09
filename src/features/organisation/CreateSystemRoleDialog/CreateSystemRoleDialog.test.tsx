@@ -267,6 +267,8 @@ describe("create access role through the Access roles page", () => {
 				"member_profile:read",
 				"leave_request:read",
 				"leave_request:review",
+				"approval:read",
+				"approval:decide",
 			],
 		});
 	});
@@ -284,14 +286,14 @@ describe("create access role through the Access roles page", () => {
 			name: "Leave approver",
 		});
 		expect(approver).toHaveAccessibleDescription(
-			/Includes 2 permissions you can’t give\.$/
+			/Includes 4 permissions you can’t give\.$/
 		);
 
 		await userEvent.click(approver);
 
 		expect(
 			within(dialog).getByText(
-				"2 permissions of this template weren’t added because you can’t give them."
+				"4 permissions of this template weren’t added because you can’t give them."
 			)
 		).toBeVisible();
 		expect(

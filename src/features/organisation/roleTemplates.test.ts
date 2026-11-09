@@ -35,15 +35,21 @@ describe("role templates from the API's contract", () => {
 				"member_profile:read",
 				"leave_request:read",
 				"leave_request:review",
+				"approval:read",
+				"approval:decide",
 			],
 			leftOut: [],
 		});
 	});
 
 	it("leave out what the person can't give, and what needs it", () => {
-		// Reviewing needs the read, so it is left out with it; the profile view still goes in.
+		// Reviewing needs the read, so it is left out with it; the profile view and the approver keys still go in.
 		const start = startFrom(template("leave_approver"), ["leave_request:read"]);
-		expect(start.permissions).toEqual(["member_profile:read"]);
+		expect(start.permissions).toEqual([
+			"member_profile:read",
+			"approval:read",
+			"approval:decide",
+		]);
 		expect(start.leftOut).toEqual([
 			"leave_request:read",
 			"leave_request:review",

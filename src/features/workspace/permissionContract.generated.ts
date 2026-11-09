@@ -3,7 +3,7 @@
 
 /** SHA-256 of the contract file this module was generated from. */
 export const PERMISSION_CONTRACT_SHA256 =
-	"ba3068da6482f45309069676c854362802512fed26f471c60ee0973b1a7e405b";
+	"1315de09be4b1a070266d4e53eb26d362624a99809973bdaa2ef558d7b46a8cf";
 
 /** The places a permission can be assigned at, widest first. */
 export const ASSIGNABLE_SCOPES = ["COMPANY", "BRANCH", "DEPARTMENT"] as const;
@@ -743,6 +743,8 @@ export const ROLE_TEMPLATES = [
 			"leave_request:read",
 			"leave_request:create",
 			"leave_request:review",
+			"approval:read",
+			"approval:decide",
 		],
 		assignableScopes: ["COMPANY", "BRANCH"],
 	},
@@ -771,6 +773,8 @@ export const ROLE_TEMPLATES = [
 			"constraint:create",
 			"constraint:update",
 			"constraint:delete",
+			"approval:read",
+			"approval:decide",
 		],
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 	},
@@ -816,6 +820,8 @@ export const ROLE_TEMPLATES = [
 			"member_profile:read",
 			"leave_request:read",
 			"leave_request:review",
+			"approval:read",
+			"approval:decide",
 		],
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 	},
