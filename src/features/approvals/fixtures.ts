@@ -113,6 +113,7 @@ export const approvalFlowFixture = (
 	departmentId: "d-1",
 	name: "Front Office publishing",
 	active: true,
+	distinctApprovers: false,
 	steps: [
 		{
 			stepOrder: 1,
@@ -149,6 +150,35 @@ export const companyFlowFixture = (): ApprovalFlow =>
 				members: [],
 			},
 		],
+	});
+
+/** The company's leave flow: Manager by anyone who can review leave, then HR by Aisha, a different person each step. */
+export const leaveFlowFixture = (
+	overrides: Partial<ApprovalFlow> = {}
+): ApprovalFlow =>
+	approvalFlowFixture({
+		approvalFlowId: "af-9",
+		subjectType: "LEAVE_REQUEST",
+		departmentId: null,
+		name: "Company leave approval",
+		distinctApprovers: true,
+		steps: [
+			{
+				stepOrder: 1,
+				label: "Manager",
+				rule: "KEY_HOLDERS",
+				quorum: "ANY",
+				members: [],
+			},
+			{
+				stepOrder: 2,
+				label: "HR",
+				rule: "MEMBERS",
+				quorum: "ANY",
+				members: [SITI],
+			},
+		],
+		...overrides,
 	});
 
 /**

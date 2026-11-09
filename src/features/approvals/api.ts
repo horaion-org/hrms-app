@@ -56,8 +56,13 @@ const decisionTypeSchema = z
 	.enum(["APPROVE", "REJECT", "UNKNOWN"])
 	.catch("UNKNOWN");
 
-/** What an approval decides; P1 knows schedule publication only. */
+/** What an approval decides: a schedule's publication, or a leave request. */
 export const SCHEDULE_PUBLICATION = "SCHEDULE_PUBLICATION";
+export const LEAVE_REQUEST = "LEAVE_REQUEST";
+
+/** The subjects the app knows, in the order Settings › Approvals lists them. */
+export const APPROVAL_SUBJECTS = [SCHEDULE_PUBLICATION, LEAVE_REQUEST] as const;
+export type ApprovalSubject = (typeof APPROVAL_SUBJECTS)[number];
 
 /** A company member named on an approval; `displayName` is null once they have left the company. */
 const participantSchema = z.object({
@@ -155,6 +160,11 @@ const flowSchema = z.object({
 	departmentId: z.string().nullable(),
 	name: z.string(),
 	active: z.boolean(),
+	/** Whether each step needs someone who approved no earlier step; an API older than the option reads as false. */
+	distinctApprovers: z
+		.boolean()
+		.nullish()
+		.transform((value) => value ?? false),
 	steps: z.array(flowStepSchema),
 	createdAt: z.string(),
 	updatedAt: z.string(),
