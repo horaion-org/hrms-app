@@ -23,6 +23,18 @@ describe("parseSettingsSearch", () => {
 		expect(parseSettingsSearch({})).toEqual({});
 	});
 
+	it("keeps a known `subject` only with Approvals, for a link to one subject's flows", () => {
+		expect(
+			parseSettingsSearch({ section: "approvals", subject: "leave" })
+		).toEqual({ section: "approvals", subject: "leave" });
+		expect(
+			parseSettingsSearch({ section: "approvals", subject: "overtime" })
+		).toEqual({ section: "approvals" });
+		expect(parseSettingsSearch({ section: "leave", subject: "leave" })).toEqual(
+			{ section: "leave" }
+		);
+	});
+
 	it("keeps `terms` only with Employment, for a link to one terms", () => {
 		expect(
 			parseSettingsSearch({ section: "employment", terms: "t-1" })

@@ -1,5 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState, type ReactNode } from "react";
+import {
+	useEffect,
+	useId,
+	useMemo,
+	useRef,
+	useState,
+	type ReactNode,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { ApiProblemError } from "@/common/problem";
 import type { FunctionComponent } from "@/common/types";
@@ -9,8 +16,10 @@ import { DataTable } from "@/components/ui/DataTable";
 import { PlusIcon } from "@/components/ui/Icon";
 import { OverflowMenuItem } from "@/components/ui/OverflowMenu";
 import {
+	APPROVAL_SUBJECTS,
 	approvalFlowsQuery,
 	type ApprovalFlow,
+	type ApprovalSubject,
 } from "@/features/approvals/api";
 import { ApprovalFlowDialog } from "@/features/approvals/ApprovalFlowDialog";
 import {
@@ -20,6 +29,11 @@ import {
 } from "@/features/approvals/ApprovalFlowDialog/schema";
 import { approvalFlowColumns } from "@/features/approvals/approvalFlowColumns";
 import { flowChangeRefusal } from "@/features/approvals/approvalRefusal";
+import {
+	fallbackLineOf,
+	flowsOfSubject,
+	subjectCopyKey,
+} from "@/features/approvals/approvalSubjects";
 import { useApprovalFlowActions } from "@/features/approvals/useApprovalActions";
 import { workspaceQuery } from "@/features/workspace/api";
 import { retry } from "@/features/workspace/retry";
@@ -31,31 +45,47 @@ export type ApprovalsSettingsProps = {
 	canRead: boolean;
 	/** Holds `approval_flow:manage` company-wide: flows may be added and changed. */
 	canManage: boolean;
+	/** A subject asked for by the address (`?subject=`); its group is scrolled into view. */
+	subject?: ApprovalSubject;
 };
 
 const key = "approvals.flows";
 
 /** A row's change waiting on its confirm: turning it on or off, or deleting it. */
-type Change = { kind: "toggle" | "delete"; flow: ApprovalFlow };
+type Change = {
+	kind: "toggle" | "delete";
+	flow: ApprovalFlow;
+	subject: ApprovalSubject;
+};
+
+/** The flow dialog: adding one for `subject`, or editing `editing`. */
+type FlowDialog = { subject: ApprovalSubject; editing?: ApprovalFlow };
 
 /**
- * Settings › Approvals: who approves a roster before it is published. One
- * row per flow (where it applies, its steps, on or off), the company-wide
- * flow first; with none, publishing stays one click. The list needs
- * `approval_flow:read`, and adding, editing, turning on or off and deleting
- * need `approval_flow:manage`, both held company-wide; the page passes
- * whether they are held.
+ * Settings › Approvals: who approves rosters and leave requests, one group
+ * per subject in `APPROVAL_SUBJECTS` order. Each group lists its flows
+ * (where it applies, its steps, on or off), the company default first, and
+ * ends with a line saying what decides everywhere else; a group with no
+ * flow is that one sentence. The list needs `approval_flow:read`, and
+ * adding, editing, turning on or off and deleting need
+ * `approval_flow:manage`, both held company-wide; the page passes whether
+ * they are held.
  */
 export const ApprovalsSettings = ({
 	companyId,
 	canRead,
 	canManage,
+	subject,
 }: ApprovalsSettingsProps): FunctionComponent => {
 	const { t } = useTranslation();
 	const flows = useQuery(approvalFlowsQuery(companyId, canRead));
 	const workspace = useQuery({ ...workspaceQuery, retry });
 	const actions = useApprovalFlowActions(companyId);
-	const [dialog, setDialog] = useState<{ editing?: ApprovalFlow } | null>(null);
+	const [dialog, setDialog] = useState<FlowDialog | null>(null);
+	const idPrefix = useId();
+	const groupHeadings = useRef<
+		Partial<Record<ApprovalSubject, HTMLHeadingElement | null>>
+	>({});
 	const [change, setChange] = useState<Change | null>(null);
 	const departmentNames = useMemo(
 		() =>
@@ -67,28 +97,31 @@ export const ApprovalsSettings = ({
 			),
 		[workspace.data, companyId]
 	);
-	const columns = useMemo(
-		() =>
+	// One set of columns per subject, so a row's actions know which group it is in.
+	const columnsBySubject = useMemo(() => {
+		const columnsFor = (
+			group: ApprovalSubject
+		): ReturnType<typeof approvalFlowColumns> =>
 			approvalFlowColumns(
 				t,
 				(departmentId) => departmentNames.get(departmentId),
 				canManage
 					? {
 							onEdit: (flow: ApprovalFlow): void => {
-								setDialog({ editing: flow });
+								setDialog({ subject: group, editing: flow });
 							},
 							menu: (flow: ApprovalFlow): ReactNode => (
 								<>
 									<OverflowMenuItem
 										onClick={() => {
-											setChange({ kind: "toggle", flow });
+											setChange({ kind: "toggle", flow, subject: group });
 										}}
 									>
 										{t(flow.active ? `${key}.turnOff` : `${key}.turnOn`)}
 									</OverflowMenuItem>
 									<OverflowMenuItem
 										onClick={() => {
-											setChange({ kind: "delete", flow });
+											setChange({ kind: "delete", flow, subject: group });
 										}}
 									>
 										{t(`${key}.delete`)}
@@ -97,9 +130,17 @@ export const ApprovalsSettings = ({
 							),
 						}
 					: undefined
-			),
-		[t, departmentNames, canManage]
-	);
+			);
+		return new Map(
+			APPROVAL_SUBJECTS.map((group) => [group, columnsFor(group)])
+		);
+	}, [t, departmentNames, canManage]);
+	// A link to one subject's flows opens with its group in view, once the list has its height.
+	const loaded = flows.data !== undefined;
+	useEffect(() => {
+		if (subject && loaded)
+			groupHeadings.current[subject]?.scrollIntoView?.({ block: "start" });
+	}, [subject, loaded]);
 	const forbidden =
 		!canRead ||
 		(flows.error instanceof ApiProblemError && flows.error.status === 403);
@@ -124,49 +165,82 @@ export const ApprovalsSettings = ({
 				</h2>
 				<p className="mt-3 text-sm text-neutral-800">{t(`${key}.subtitle`)}</p>
 			</div>
-			<section className="mt-8 flex flex-col gap-3">
-				<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-					<h3 className="text-sm font-semibold text-neutral-900">
-						{t(`${key}.schedulePublishing`)}
-					</h3>
-					{canManage && (
-						<Button
-							className="self-start"
-							leadingIcon={<PlusIcon />}
-							size="sm"
-							onClick={() => {
-								setDialog({});
-							}}
-						>
-							{t(`${key}.add`)}
-						</Button>
-					)}
-				</div>
-				{problem ? (
-					<p
-						className="text-sm text-neutral-700 data-alert:text-error-700"
-						data-alert={flows.isError && !forbidden ? true : undefined}
-						role={flows.isError && !forbidden ? "alert" : undefined}
-					>
-						{problem}
-					</p>
-				) : (flows.data ?? []).length === 0 ? (
-					<p className="text-sm text-neutral-700">{t(`${key}.empty`)}</p>
-				) : (
-					<DataTable
-						columns={columns}
-						data={flows.data ?? []}
-						emptyState=""
-						getRowId={(flow) => flow.approvalFlowId}
-						label={t(`${key}.schedulePublishing`)}
-					/>
-				)}
-			</section>
+			{problem ? (
+				<p
+					className="mt-8 text-sm text-neutral-700 data-alert:text-error-700"
+					data-alert={flows.isError && !forbidden ? true : undefined}
+					role={flows.isError && !forbidden ? "alert" : undefined}
+				>
+					{problem}
+				</p>
+			) : (
+				APPROVAL_SUBJECTS.map((group) => {
+					const copy = subjectCopyKey(group);
+					const groupFlows = flowsOfSubject(flows.data ?? [], group);
+					const fallback = fallbackLineOf(groupFlows);
+					const headingId = `${idPrefix}-${group}-title`;
+					const addId = `${idPrefix}-${group}-add`;
+					return (
+						<section key={group} className="mt-8 flex flex-col gap-3">
+							<div className="flex items-start justify-between gap-3">
+								<div>
+									<h3
+										ref={(heading) => {
+											groupHeadings.current[group] = heading;
+										}}
+										className="text-sm font-semibold text-neutral-900"
+										id={headingId}
+									>
+										{t(`${copy}.title`)}
+									</h3>
+									<p className="mt-1 text-sm text-neutral-700">
+										{t(`${copy}.description`)}
+									</p>
+								</div>
+								{canManage && (
+									<Button
+										// "Add flow" read with its group: "Add flow Leave requests".
+										aria-labelledby={`${addId} ${headingId}`}
+										className="self-start"
+										id={addId}
+										leadingIcon={<PlusIcon />}
+										size="sm"
+										onClick={() => {
+											setDialog({ subject: group });
+										}}
+									>
+										{t(`${key}.add`)}
+									</Button>
+								)}
+							</div>
+							{groupFlows.length > 0 && (
+								<DataTable
+									// Fits beside Settings' tabs (360–520 px from md to xl), with the steps and status on the name's line.
+									className="[&>table]:min-w-0"
+									columns={columnsBySubject.get(group) ?? []}
+									data={groupFlows}
+									emptyState=""
+									getRowId={(flow) => flow.approvalFlowId}
+									label={t(`${copy}.title`)}
+								/>
+							)}
+							<p className="text-sm text-neutral-700">
+								{fallback === "companyDefault"
+									? t(`${key}.usesCompanyDefault`)
+									: fallback === "everyDepartment"
+										? t(`${key}.everyDepartmentUsesDefault`)
+										: t(`${copy}.${fallback}`)}
+							</p>
+						</section>
+					);
+				})
+			)}
 			{dialog && (
 				<ApprovalFlowDialog
 					companyId={companyId}
 					departmentName={(departmentId) => departmentNames.get(departmentId)}
 					editing={dialog.editing}
+					subjectType={dialog.subject}
 					onClose={() => {
 						setDialog(null);
 					}}
@@ -177,7 +251,9 @@ export const ApprovalsSettings = ({
 									flowId: editing.approvalFlowId,
 									body: updateFlowBodyOf(values, editing.active),
 								})
-							: actions.create.mutateAsync(createFlowBodyOf(values));
+							: actions.create.mutateAsync(
+									createFlowBodyOf(values, dialog.subject)
+								);
 					}}
 				/>
 			)}
@@ -192,18 +268,24 @@ export const ApprovalsSettings = ({
 						? {
 								tone: "danger" as const,
 								title: t(`${key}.deleteTitle`, { name: change.flow.name }),
-								description: t(`${key}.deleteDescription`),
+								description: t(
+									`${subjectCopyKey(change.subject)}.deleteDescription`
+								),
 								confirmLabel: t(`${key}.deleteConfirm`),
 							}
 						: change.flow.active
 							? {
 									title: t(`${key}.turnOffTitle`, { name: change.flow.name }),
-									description: t(`${key}.turnOffDescription`),
+									description: t(
+										`${subjectCopyKey(change.subject)}.turnOffDescription`
+									),
 									confirmLabel: t(`${key}.turnOffConfirm`),
 								}
 							: {
 									title: t(`${key}.turnOnTitle`, { name: change.flow.name }),
-									description: t(`${key}.turnOnDescription`),
+									description: t(
+										`${subjectCopyKey(change.subject)}.turnOnDescription`
+									),
 									confirmLabel: t(`${key}.turnOnConfirm`),
 								})}
 					onClose={closeChange}

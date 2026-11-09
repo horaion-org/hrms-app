@@ -19,6 +19,7 @@ const SIGNED_IN_ROUTES = [
 	"/leave",
 	"/leave?view=requests",
 	"/leave?view=timeline",
+	"/leave?requestId=leave-aisha&memberId=m-aisha",
 	"/availability",
 	"/notifications",
 	"/people",
@@ -35,6 +36,7 @@ const SIGNED_IN_ROUTES = [
 	"/settings/access-roles/r-2?tab=permissions",
 	"/activity",
 	"/settings",
+	"/settings?section=approvals",
 	"/settings/data/import-organisation",
 	"/settings/data/import-people",
 	"/me/profile",
@@ -85,13 +87,16 @@ for (const screen of SCREENS) {
 
 /**
  * Pages whose first row of content a phone must show without scrolling: the
- * roster, a list, a Settings section and the leave timeline. The timeline's
+ * roster, a list, Settings sections (Approvals with its two groups), Team
+ * requests with a request under an approval flow, and the leave timeline. The timeline's
  * demo leave is in May 2026, so its clock is set to a day in that window.
  */
 const FIRST_SCREEN_ROWS: Array<{ path: string; clock?: string }> = [
 	{ path: "/scheduling/s-1" },
 	{ path: "/people" },
 	{ path: "/settings?section=leave" },
+	{ path: "/settings?section=approvals" },
+	{ path: "/leave?view=requests" },
 	{ path: "/leave?view=timeline", clock: "2026-05-20T10:00:00" },
 ];
 

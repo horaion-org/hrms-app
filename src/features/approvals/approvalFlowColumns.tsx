@@ -14,7 +14,7 @@ export const appliesToLabel = (
 	t: TFunction
 ): string =>
 	flow.departmentId === null
-		? t(`${key}.wholeCompany`)
+		? t(`${key}.companyDefault`)
 		: (departmentName(flow.departmentId) ?? t(`${key}.unknownDepartment`));
 
 /** The steps in order as one line: "1 Endorse (all of 2) → 2 Publish". */
@@ -56,8 +56,8 @@ export const approvalFlowColumns = (
 		id: "steps",
 		header: t(`${key}.steps`),
 		cell: (flow) => stepsSummary(flow, t),
-		// Phones keep where it applies, whether it is on and its actions; Edit shows the steps.
-		hideBelow: "md",
+		// Below xl (phones, and tablets and small laptops beside Settings' tabs) the steps read on the name's line.
+		hideBelow: "xl",
 	},
 	{
 		id: "status",
@@ -68,6 +68,8 @@ export const approvalFlowColumns = (
 			</Badge>
 		),
 		headerClassName: "w-30",
+		// It joins the steps on the name's line below xl, so Edit and the row's menu stay on screen.
+		hideBelow: "xl",
 	},
 	...(actions
 		? [actionsColumn<ApprovalFlow>(t, actions.menu, () => true, actions.onEdit)]

@@ -869,6 +869,27 @@ describe("DataTable", () => {
 		).not.toHaveClass("hidden");
 	});
 
+	it("leaves a column out below xl, with its value on the naming cell's line until then", () => {
+		render(
+			<DataTable
+				data={branches}
+				getRowId={getRowId}
+				label="Branches"
+				columns={[
+					{ ...columns[0]!, pin: "start" },
+					{ ...columns[1]!, hideBelow: "xl" },
+				]}
+			/>
+		);
+
+		expect(screen.getByRole("columnheader", { name: "Code" })).toHaveClass(
+			"hidden",
+			"xl:table-cell"
+		);
+		const [onLine] = screen.getAllByText("0002");
+		expect(onLine).toHaveClass("xl:hidden");
+	});
+
 	describe("a hidden column's value on the naming cell's line", () => {
 		type Place = Branch & { city: string | null; note: string };
 		const places: Array<Place> = [

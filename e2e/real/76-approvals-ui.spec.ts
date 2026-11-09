@@ -73,7 +73,7 @@ test("E2E-140 Settings › Approvals: add a department flow (2 steps, named peop
 	await page.goto("/settings?section=approvals");
 	await settle(page);
 	await screen(page, testInfo, "E2E-140", "1-empty");
-	await page.getByRole("button", { name: "Add flow" }).click();
+	await page.getByRole("button", { name: "Add flow Roster publishing" }).click();
 	const dialog = page.getByRole("dialog");
 	await dialog.getByRole("button", { name: "Applies to" }).click();
 	await page.getByRole("option", { name: "Central › Operations" }).click();
@@ -92,7 +92,7 @@ test("E2E-140 Settings › Approvals: add a department flow (2 steps, named peop
 	const rowText = (await row.innerText()).replace(/\s+/g, " ");
 	await screen(page, testInfo, "E2E-140", "3-flow-listed");
 
-	await page.getByRole("button", { name: "Edit Operations publishing" }).click();
+	await page.getByRole("button", { name: "Edit Operations roster approval" }).click();
 	const edit = page.getByRole("dialog");
 	const editSteps = edit.getByRole("listitem").filter({ has: page.getByRole("heading", { name: /^Step \d$/ }) });
 	await editSteps.nth(1).getByRole("button", { name: "People" }).click();
@@ -114,27 +114,27 @@ test("E2E-140 Settings › Approvals: add a department flow (2 steps, named peop
 	state.flowId = operationsFlow?.approvalFlowId;
 	const savedSteps = (operationsFlow?.steps ?? []).map((step: any) => `${step.label}/${step.rule}/${step.quorum}/${(step.members ?? step.memberIds ?? []).length}`).join(" → ");
 
-	await page.getByRole("button", { name: "Add flow" }).click();
+	await page.getByRole("button", { name: "Add flow Roster publishing" }).click();
 	await page.getByRole("dialog").getByRole("textbox", { name: "Name of step 1" }).fill("Check");
 	await page.getByRole("dialog").getByRole("button", { name: "Save flow" }).click();
 	await expect(page.getByText("Approval flow added.").first()).toBeVisible({ timeout: 15_000 });
-	const companyRow = page.getByRole("row", { name: /Whole company/ });
-	await page.getByRole("button", { name: "More actions for Whole company publishing" }).click();
+	const companyRow = page.getByRole("row", { name: /Company default/ });
+	await page.getByRole("button", { name: "More actions for Company roster approval" }).click();
 	await page.getByRole("menuitem", { name: "Turn off" }).click();
 	await page.getByRole("dialog").getByRole("button", { name: "Turn off" }).click();
 	await settle(page);
 	const offStatus = (await companyRow.innerText()).replace(/\s+/g, " ");
 	await screen(page, testInfo, "E2E-140", "5-company-flow-off");
-	await page.getByRole("button", { name: "More actions for Whole company publishing" }).click();
+	await page.getByRole("button", { name: "More actions for Company roster approval" }).click();
 	await page.getByRole("menuitem", { name: "Turn on" }).click();
 	await page.getByRole("dialog").getByRole("button", { name: "Turn on" }).click();
 	await settle(page);
 	const onStatus = (await companyRow.innerText()).replace(/\s+/g, " ");
-	await page.getByRole("button", { name: "More actions for Whole company publishing" }).click();
+	await page.getByRole("button", { name: "More actions for Company roster approval" }).click();
 	await page.getByRole("menuitem", { name: "Delete" }).click();
 	await page.getByRole("dialog").getByRole("button", { name: "Delete flow" }).click();
 	await expect(page.getByText("Approval flow deleted.").first()).toBeVisible({ timeout: 15_000 });
-	const companyRowsLeft = await page.getByRole("row", { name: /Whole company/ }).count();
+	const companyRowsLeft = await page.getByRole("row", { name: /Company default/ }).count();
 	await screen(page, testInfo, "E2E-140", "6-after-delete");
 
 	// The later cases need step 2 to name Ari alone: put it back through the API.

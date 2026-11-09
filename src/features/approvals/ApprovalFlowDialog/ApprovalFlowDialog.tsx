@@ -14,6 +14,7 @@ import { Input } from "@/components/forms/Input";
 import { RadioCard } from "@/components/forms/RadioCard";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
+import { Checkbox } from "@/components/ui/Checkbox";
 import {
 	ArrowDownIcon,
 	ArrowUpIcon,
@@ -24,9 +25,12 @@ import {
 	APPROVAL_FLOW_MAX_STEPS,
 	APPROVAL_STEP_LABEL_INPUT_MAX_LENGTH,
 	APPROVAL_STEP_MAX_MEMBERS,
+	LEAVE_REQUEST,
 	type ApprovalFlow,
+	type ApprovalSubject,
 } from "@/features/approvals/api";
 import { flowRefusal } from "@/features/approvals/approvalRefusal";
+import { subjectCopyKey } from "@/features/approvals/approvalSubjects";
 import {
 	flowSchema,
 	initialFlowValues,
@@ -40,6 +44,8 @@ import { DepartmentSelector } from "@/features/workspace/DepartmentSelector";
 
 export type ApprovalFlowDialogProps = {
 	companyId: string;
+	/** What the flow approves; fixed by the Settings group that opened the dialog. */
+	subjectType: ApprovalSubject;
 	/** Set to edit a flow; where it applies is then fixed. */
 	editing?: ApprovalFlow;
 	/** Names a department by its id, for the "anyone who can publish" choice. */
@@ -60,6 +66,7 @@ const StepChoices = ({
 	idPrefix,
 	anyoneLabel,
 	disabled,
+	peopleHint,
 	peopleError,
 }: {
 	companyId: string;
@@ -68,6 +75,7 @@ const StepChoices = ({
 	idPrefix: string;
 	anyoneLabel: string;
 	disabled: boolean;
+	peopleHint: string;
 	peopleError?: string;
 }): FunctionComponent => {
 	const { t } = useTranslation();
@@ -120,7 +128,7 @@ const StepChoices = ({
 								companyId={companyId}
 								disabled={disabled}
 								error={peopleError}
-								hint={t(`${key}.peopleHint`)}
+								hint={peopleHint}
 								id={`${idPrefix}-people`}
 								label={t(`${key}.people`)}
 								max={APPROVAL_STEP_MAX_MEMBERS}
@@ -170,15 +178,18 @@ const StepChoices = ({
 };
 
 /**
- * Adds or edits an approval flow for schedule publishing: where it applies
- * (the whole company or one department, fixed once added), its name, and up
- * to three steps in order. Each step is named and decided by anyone who can
- * publish the roster there, or only by named people: any one of them, or
- * all of them. Steps move with up and down buttons, and each move is
- * announced. Mount when opened and unmount when closed.
+ * Adds or edits an approval flow for one subject (a roster's publication or
+ * a leave request): where it applies (the company default or one
+ * department, fixed once added), its name, and up to three steps in order.
+ * Each step is named and decided by anyone who holds the subject's review
+ * permission there, or only by named people: any one of them, or all of
+ * them. With two steps or more, each step can require a different person.
+ * Steps move with up and down buttons, and each move is announced. Mount
+ * when opened and unmount when closed.
  */
 export const ApprovalFlowDialog = ({
 	companyId,
+	subjectType,
 	editing,
 	departmentName,
 	onSave,
@@ -187,13 +198,19 @@ export const ApprovalFlowDialog = ({
 	const { t } = useTranslation();
 	const formId = useId();
 	const schema = useMemo(() => flowSchema(t), [t]);
+	const subjectKey = subjectCopyKey(subjectType);
+	const companyDefault = t("approvals.flows.companyDefault");
+	const defaultNameFor = (departmentId: string): string =>
+		departmentId === ""
+			? t(`${subjectKey}.defaultCompanyName`)
+			: t(`${subjectKey}.defaultName`, {
+					unit: departmentName(departmentId) ?? "",
+				});
 	const form = useForm<FlowValues>({
 		resolver: zodResolver(schema),
 		defaultValues: initialFlowValues(editing, {
 			formerMember: t("approvals.trail.formerMember"),
-			newName: t(`${key}.defaultName`, {
-				unit: t("approvals.flows.wholeCompany"),
-			}),
+			newName: defaultNameFor(""),
 		}),
 		mode: "onSubmit",
 		reValidateMode: "onChange",
@@ -234,14 +251,13 @@ export const ApprovalFlowDialog = ({
 			)
 			?.focus();
 	}, [steps.fields]);
-	const unitName =
-		departmentId === ""
-			? t("approvals.flows.wholeCompany")
-			: (departmentName(departmentId) ?? "");
+	const stepCount = steps.fields.length;
 	const anyoneLabel =
 		departmentId === ""
-			? t(`${key}.anyoneCompany`)
-			: t(`${key}.anyone`, { department: unitName });
+			? t(`${subjectKey}.anyoneCompany`)
+			: t(`${subjectKey}.anyone`, {
+					department: departmentName(departmentId) ?? "",
+				});
 	const move = (index: number, direction: "up" | "down"): void => {
 		const to = direction === "up" ? index - 1 : index + 1;
 		if (to < 0 || to >= steps.fields.length || isSubmitting) return;
@@ -254,12 +270,14 @@ export const ApprovalFlowDialog = ({
 		<CreateFormDialog
 			alertRef={submit.alertRef}
 			cancelLabel={t(`${key}.cancel`)}
-			description={t(`${key}.description`)}
+			description={t(`${subjectKey}.dialogDescription`)}
 			formId={formId}
 			message={submit.message}
 			submitLabel={t(`${key}.submit`)}
 			submitting={isSubmitting}
-			title={t(editing ? `${key}.editTitle` : `${key}.title`)}
+			title={t(
+				editing ? `${subjectKey}.dialogEditTitle` : `${subjectKey}.dialogTitle`
+			)}
 			onClose={submit.close}
 			onSubmit={(event) =>
 				handleSubmit(async (values) => {
@@ -287,24 +305,16 @@ export const ApprovalFlowDialog = ({
 							aria-label={t(`${key}.appliesTo`)}
 							companyId={companyId}
 							disabled={isSubmitting || editing !== undefined}
-							emptyLabel={t("approvals.flows.wholeCompany")}
+							emptyLabel={companyDefault}
 							keys={["approval_flow:read"]}
-							placeholder={t("approvals.flows.wholeCompany")}
+							placeholder={companyDefault}
 							status={errors.departmentId ? "error" : undefined}
 							value={field.value}
 							onChange={(next) => {
 								field.onChange(next);
 								// A name nobody typed follows where the flow applies.
 								if (!getFieldState("name").isDirty)
-									setValue(
-										"name",
-										t(`${key}.defaultName`, {
-											unit:
-												next === ""
-													? t("approvals.flows.wholeCompany")
-													: (departmentName(next) ?? ""),
-										})
-									);
+									setValue("name", defaultNameFor(next));
 							}}
 						/>
 					</FormRow>
@@ -403,6 +413,7 @@ export const ApprovalFlowDialog = ({
 								idPrefix={idPrefix}
 								index={index}
 								peopleError={errors.steps?.[index]?.members?.message}
+								peopleHint={t(`${subjectKey}.peopleHint`)}
 							/>
 						</li>
 					);
@@ -411,7 +422,7 @@ export const ApprovalFlowDialog = ({
 			<p aria-live="polite" className="sr-only">
 				{announcement}
 			</p>
-			{steps.fields.length < APPROVAL_FLOW_MAX_STEPS ? (
+			{stepCount < APPROVAL_FLOW_MAX_STEPS ? (
 				<Button
 					disabled={isSubmitting}
 					leadingIcon={<PlusIcon />}
@@ -425,7 +436,27 @@ export const ApprovalFlowDialog = ({
 			) : (
 				<p className="text-sm text-neutral-700">{t(`${key}.maxSteps`)}</p>
 			)}
-			<Callout>{t(`${key}.info`)}</Callout>
+			{stepCount > 1 && (
+				<Controller
+					control={control}
+					name="distinctApprovers"
+					render={({ field }) => (
+						<Checkbox
+							checked={field.value}
+							description={t(`${key}.distinctDescription`)}
+							disabled={isSubmitting}
+							label={t(`${key}.distinct`)}
+							onChange={(event) => {
+								field.onChange(event.target.checked);
+							}}
+						/>
+					)}
+				/>
+			)}
+			{/* A leave flow nobody can approve stops applications there, so it is a warning. */}
+			<Callout tone={subjectType === LEAVE_REQUEST ? "warning" : "info"}>
+				{t(`${subjectKey}.info`)}
+			</Callout>
 		</CreateFormDialog>
 	);
 };

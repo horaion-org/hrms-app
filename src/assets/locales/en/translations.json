@@ -193,7 +193,11 @@
 			"remarkRejected": "Enter a remark of up to 500 characters.",
 			"ownChange": "You can’t change your own leave. Another reviewer needs to do it.",
 			"forbiddenChange": "You no longer have permission to change this leave.",
-			"changeFailed": "We couldn’t save this. Try again."
+			"changeFailed": "We couldn’t save this. Try again.",
+			"approvalPending": "This request now goes through approval steps. Reload the page to see where it stands.",
+			"noApprover": "Nobody can approve leave in this department yet. Ask an HR admin to check who approves leave.",
+			"stepDecided": "Someone else decided this step first. Reload the page to see where it stands.",
+			"notAnApprover": "You can’t decide this step."
 		},
 		"myLeave": "My leave",
 		"teamRequests": "Team requests",
@@ -249,7 +253,17 @@
 			"other": "Changed by {{name}}"
 		},
 		"historyDates": "{{before}} → {{after}}",
-		"historyType": "{{before}} → {{after}}"
+		"historyType": "{{before}} → {{after}}",
+		"approval": {
+			"title": "Approval",
+			"stepApproved": "You approved {{label}} for {{name}}. The next step is asked now.",
+			"middleNote": "Step {{step}} of {{total}} ({{label}}). After you approve, the next step is asked.",
+			"lastNote": "Last step ({{label}}). Approving it approves {{name}}’s leave, and they are told.",
+			"rejectNote": "Rejecting at {{label}} rejects the leave, and {{name}} is told.",
+			"rejectedAt": "Rejected at",
+			"trailFailed": "We couldn’t load the approval steps.",
+			"retry": "Try again"
+		}
 	},
 	"approvals": {
 		"panel": {
@@ -262,7 +276,8 @@
 			"failed": "Couldn’t load the approval.",
 			"retry": "Try again",
 			"open": "Approval ›",
-			"openLabel": "Open the approval"
+			"openLabel": "Open the approval",
+			"stepShort": "Step {{step}} of {{total}}"
 		},
 		"trail": {
 			"submittedBy": "Submitted by {{name}} · {{at}}",
@@ -292,7 +307,8 @@
 			"personApproved": "{{name}} · Approved {{at}}",
 			"personRejected": "{{name}} · Rejected {{at}}",
 			"personWaiting": "{{name}} · Waiting",
-			"waitingFolded": "Waiting on {{count}}: {{names}} and {{more}} more"
+			"waitingFolded": "Waiting on {{count}}: {{names}} and {{more}} more",
+			"anyoneWhoCanReviewLeave": "Anyone who can review {{department}}’s leave"
 		},
 		"actions": {
 			"submit": "Submit for approval",
@@ -341,22 +357,28 @@
 			"requested": "A roster needs your approval.",
 			"decided": "A roster you submitted for approval was decided. Open it to see the outcome.",
 			"cancelled": "The approval of a roster you submitted was cancelled before anyone decided it. Submit it again.",
-			"stalled": "A step of a roster’s approval has nobody left who can decide it. Check who can approve, or withdraw the submission."
+			"stalled": "A step of a roster’s approval has nobody left who can decide it. Check who can approve, or withdraw the submission.",
+			"leave": {
+				"requested": "A leave request needs your approval.",
+				"decided": "A leave request was decided. Open it to see the outcome.",
+				"cancelled": "The approval of a leave request was restarted, so it goes through its steps again.",
+				"stalled": "A step of a leave request’s approval has nobody left who can decide it. Check who can approve leave."
+			}
 		},
 		"flows": {
 			"title": "Approvals",
-			"subtitle": "Who approves a roster before it is published. Departments without a flow publish in one step, by anyone who can publish their roster.",
-			"schedulePublishing": "Schedule publishing",
+			"subtitle": "Who approves rosters and leave requests, step by step. Where nothing is set up, one person decides, as before.",
 			"add": "Add flow",
 			"appliesTo": "Applies to",
 			"steps": "Steps",
 			"status": "Status",
 			"on": "On",
 			"off": "Off",
-			"wholeCompany": "Whole company",
+			"companyDefault": "Company default",
+			"usesCompanyDefault": "Other departments, and any whose flow is off, use the company default.",
+			"everyDepartmentUsesDefault": "Every department uses the company default.",
 			"unknownDepartment": "A department you can’t see",
 			"allOf": "all of {{count}}",
-			"empty": "No approval flows. Rosters publish in one step, by anyone who can publish.",
 			"loading": "Loading approval flows…",
 			"failed": "We couldn’t load the approval flows. Try again.",
 			"hidden": "You don’t have permission to see approval flows.",
@@ -364,13 +386,10 @@
 			"turnOn": "Turn on",
 			"delete": "Delete",
 			"turnOffTitle": "Turn off {{name}}?",
-			"turnOffDescription": "Rosters already waiting keep this flow. Rosters submitted from now on publish without it.",
 			"turnOffConfirm": "Turn off",
 			"turnOnTitle": "Turn on {{name}}?",
-			"turnOnDescription": "Rosters submitted from now on go through its steps.",
 			"turnOnConfirm": "Turn on",
 			"deleteTitle": "Delete {{name}}?",
-			"deleteDescription": "Rosters already waiting keep this flow. Deleting it can’t be undone.",
 			"deleteConfirm": "Delete flow",
 			"cancel": "Cancel",
 			"added": "Approval flow added.",
@@ -381,35 +400,31 @@
 				"exists": "This already has an approval flow. Edit that one instead.",
 				"existsOnTurnOn": "Another flow is already on here. Turn that one off first.",
 				"invalid": "The flow wasn’t accepted. Check its steps and try again.",
-				"noApprover": "A step has nobody who can approve it. Name people who can publish this roster.",
+				"noApprover": "A step has nobody who can approve it. Name people who may decide it.",
 				"gone": "This flow no longer exists. The list has been refreshed.",
 				"forbidden": "You no longer have permission to change approval flows.",
-				"failed": "We couldn’t save the flow. Try again."
+				"failed": "We couldn’t save the flow. Try again.",
+				"noApproverIn_one": "Nobody can approve step {{steps}} in {{department}}.",
+				"noApproverIn_other": "Nobody can approve steps {{steps}} in {{department}}.",
+				"noApproverFix": "Give people “Decide approvals” there in Access roles, or change the step."
 			},
 			"dialog": {
-				"title": "Add approval flow",
-				"editTitle": "Edit approval flow",
-				"description": "Who approves a roster before it is published, step by step.",
 				"appliesTo": "Applies to",
-				"appliesToHint": "The whole company, or one department. It can’t be changed later.",
+				"appliesToHint": "The company default, or one department. It can’t be changed later.",
 				"name": "Name",
 				"nameRequired": "Enter a name.",
 				"nameTooLong": "Use up to 100 characters.",
-				"defaultName": "{{unit}} publishing",
 				"step": "Step {{step}}",
 				"stepLabel": "Name of step {{step}}",
 				"labelPlaceholder": "e.g. Endorse",
 				"labelRequired": "Name this step.",
 				"labelTooLong": "Use up to 24 characters.",
 				"whoDecides": "Who decides",
-				"anyone": "Anyone who can publish the {{department}} roster",
-				"anyoneCompany": "Anyone who can publish the roster",
 				"anyoneDescription": "One approval is enough.",
 				"onlyThese": "Only these people",
 				"onlyTheseDescription": "Name up to 10 people.",
 				"people": "People",
 				"peoplePlaceholder": "Choose people",
-				"peopleHint": "Only people who can publish this roster are asked.",
 				"peopleRequired": "Choose at least one person.",
 				"how": "How many of them",
 				"any": "Any one of them",
@@ -420,10 +435,49 @@
 				"moved": "Step {{from}} moved, now step {{to}}.",
 				"addStep": "Add step",
 				"maxSteps": "Up to 3 steps.",
-				"info": "Only people who can publish this roster can approve it. The person who submits a roster never approves it.",
 				"submit": "Save flow",
 				"cancel": "Cancel",
-				"labelHint": "1–2 words, shown to approvers (e.g. Endorse)"
+				"labelHint": "1–2 words, shown to approvers (e.g. Endorse)",
+				"distinct": "A different person approves each step",
+				"distinctDescription": "Someone who approved an earlier step isn’t asked again."
+			},
+			"subjects": {
+				"roster": {
+					"title": "Roster publishing",
+					"description": "Before a roster is published.",
+					"none": "No approval flow. Rosters publish in one step, by anyone who can publish them.",
+					"oneStep": "Other departments, and any whose flow is off: one step, by anyone who can publish their roster.",
+					"dialogTitle": "Add roster approval flow",
+					"dialogEditTitle": "Edit roster approval flow",
+					"dialogDescription": "Who approves a roster before it is published, step by step.",
+					"defaultName": "{{unit}} roster approval",
+					"defaultCompanyName": "Company roster approval",
+					"anyone": "Anyone who can publish the {{department}} roster",
+					"anyoneCompany": "Anyone who can publish the roster",
+					"peopleHint": "Only people who can publish this roster are asked.",
+					"info": "Only people who can publish this roster can approve it. The person who submits a roster never approves it.",
+					"turnOffDescription": "Rosters already waiting keep this flow. Rosters submitted from now on don’t go through it.",
+					"turnOnDescription": "Rosters submitted from now on go through its steps.",
+					"deleteDescription": "Rosters already waiting keep this flow. Deleting it can’t be undone."
+				},
+				"leave": {
+					"title": "Leave requests",
+					"description": "Before leave is approved.",
+					"none": "No approval flow. Leave is approved or rejected in one step, by anyone who can review it.",
+					"oneStep": "Other departments, and any whose flow is off: one step, by anyone who can review their leave.",
+					"dialogTitle": "Add leave approval flow",
+					"dialogEditTitle": "Edit leave approval flow",
+					"dialogDescription": "Who approves a leave request, step by step.",
+					"defaultName": "{{unit}} leave approval",
+					"defaultCompanyName": "Company leave approval",
+					"anyone": "Anyone who can review {{department}}’s leave",
+					"anyoneCompany": "Anyone who can review the leave",
+					"peopleHint": "Only people who can review this leave are asked.",
+					"info": "Approvers need “Review leave” and “Decide approvals” for the person’s department; without anyone who has both, nobody there can apply for leave. People never approve their own leave. Requests already waiting keep the steps they started with.",
+					"turnOffDescription": "Requests already waiting keep this flow. Leave applied for from now on doesn’t go through it.",
+					"turnOnDescription": "Leave applied for from now on goes through its steps.",
+					"deleteDescription": "Requests already waiting keep this flow. Deleting it can’t be undone."
+				}
 			}
 		},
 		"announce": {
@@ -1491,7 +1545,7 @@
 		},
 		"approvals": {
 			"title": "Approvals",
-			"description": "Who approves rosters before they are published."
+			"description": "Who approves rosters and leave requests."
 		},
 		"data": {
 			"title": "Data",
@@ -4031,7 +4085,7 @@
 			"leaveTitle": "{{type}} request",
 			"leaveDetail": "from {{name}} ({{period}})",
 			"approve": "Approve",
-			"deny": "Deny with reason",
+			"deny": "Reject with reason",
 			"examples": {
 				"shiftSwap": {
 					"title": "Shift swap request",

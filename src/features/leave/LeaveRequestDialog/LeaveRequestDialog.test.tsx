@@ -9,15 +9,23 @@ import userEvent from "@testing-library/user-event";
 import { expect, it, vi } from "vitest";
 import { I18nextProvider } from "react-i18next";
 import { authTestI18n } from "@/features/auth/testingI18n";
-import { LEAVE_FIXTURES, LEAVE_TYPE_FIXTURES } from "@/features/leave/fixtures";
+import { approvalKeys } from "@/features/approvals/api";
+import { leaveAtHrInstanceFixture } from "@/features/approvals/fixtures";
+import {
+	LEAVE_FIXTURES,
+	LEAVE_TYPE_FIXTURES,
+	leaveAtStepFixture,
+} from "@/features/leave/fixtures";
 import {
 	LeaveRequestDialog,
 	type LeaveRequestDialogProps,
 } from "@/features/leave/LeaveRequestDialog";
 
-/** The dialog reads rostered days through the query cache. */
-const render = (ui: ReactElement): RenderResult => {
-	const client = new QueryClient();
+/** The dialog reads rostered days, and an approval's steps, through the query cache. */
+const render = (
+	ui: ReactElement,
+	client: QueryClient = new QueryClient()
+): RenderResult => {
 	return renderPlain(ui, {
 		wrapper: ({ children }) => (
 			<QueryClientProvider client={client}>{children}</QueryClientProvider>
@@ -580,4 +588,98 @@ it("explains leave types that failed to load and offers to read them again", asy
 	expect(screen.getByRole("button", { name: "Submit request" })).toBeDisabled();
 	await user.click(screen.getByRole("button", { name: "Try again" }));
 	expect(onRetryLeaveTypes).toHaveBeenCalledTimes(1);
+});
+
+it("shows a reviewer who reads approvals the steps of a request under a flow, and who decided them", () => {
+	const client = new QueryClient();
+	client.setQueryData(
+		approvalKeys.instance("c-1", "ai-leave"),
+		leaveAtHrInstanceFixture()
+	);
+	render(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveRequestDialog
+				canReview
+				readsApprovalSteps
+				lifecycle={{ companyId: "c-1", own: false, onDone: vi.fn() }}
+				request={leaveAtStepFixture(2)}
+				onApprove={vi.fn()}
+				onClose={vi.fn()}
+				onCreate={vi.fn()}
+				onReject={vi.fn()}
+			/>
+		</I18nextProvider>,
+		client
+	);
+	const approval = screen.getByRole("region", { name: "Approval" });
+	expect(approval).toHaveTextContent("Manager");
+	expect(approval).toHaveTextContent("Siti Rahman");
+	expect(approval).toHaveTextContent("Covered by Ahmad on Sat.");
+	expect(approval).toHaveTextContent("HR");
+});
+
+it("shows the member only the step their own request waits on", () => {
+	render(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveRequestDialog
+				readsApprovalSteps
+				lifecycle={{ companyId: "c-1", own: true, onDone: vi.fn() }}
+				request={leaveAtStepFixture(1)}
+				onApprove={vi.fn()}
+				onClose={vi.fn()}
+				onCreate={vi.fn()}
+				onReject={vi.fn()}
+			/>
+		</I18nextProvider>
+	);
+	expect(screen.getByRole("region", { name: "Approval" })).toHaveTextContent(
+		"Waiting for approval · step 1 of 2 (Manager)"
+	);
+	expect(screen.queryByRole("button", { name: "Approve" })).toBeNull();
+});
+
+it("asks no comment for past leave at a step before the last, and keeps the approval route's limit", async () => {
+	const user = userEvent.setup();
+	const onApprove = vi.fn();
+	render(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveRequestDialog
+				canReview
+				request={leaveAtStepFixture(1)}
+				today={AFTER_THE_LEAVE_STARTED}
+				onApprove={onApprove}
+				onClose={vi.fn()}
+				onCreate={vi.fn()}
+				onReject={vi.fn()}
+			/>
+		</I18nextProvider>
+	);
+	await user.click(screen.getByRole("button", { name: "Approve" }));
+	expect(
+		screen.getByRole("textbox", { name: "Comment (optional)" })
+	).toHaveAttribute("maxlength", "500");
+	await user.click(screen.getByRole("button", { name: "Confirm approval" }));
+	expect(onApprove).toHaveBeenCalledWith(leaveAtStepFixture(1), "", false);
+});
+
+it("asks the comment for past leave at the last step, as a single review does", async () => {
+	const user = userEvent.setup();
+	const onApprove = vi.fn();
+	render(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveRequestDialog
+				canReview
+				request={leaveAtStepFixture(2)}
+				today={AFTER_THE_LEAVE_STARTED}
+				onApprove={onApprove}
+				onClose={vi.fn()}
+				onCreate={vi.fn()}
+				onReject={vi.fn()}
+			/>
+		</I18nextProvider>
+	);
+	await user.click(screen.getByRole("button", { name: "Approve" }));
+	expect(screen.getByRole("textbox", { name: "Comment" })).toBeRequired();
+	await user.click(screen.getByRole("button", { name: "Confirm approval" }));
+	expect(onApprove).not.toHaveBeenCalled();
 });

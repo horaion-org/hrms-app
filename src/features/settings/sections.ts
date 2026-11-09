@@ -1,3 +1,8 @@
+import {
+	SUBJECT_SLUGS,
+	type ApprovalSubjectSlug,
+} from "@/features/approvals/approvalSubjects";
+
 /**
  * Settings' sections, in tab order; `employment`, `scheduling`, `leave`,
  * `approvals`, `access` and `data` are offered only to people who may use them.
@@ -18,23 +23,38 @@ export type SettingsSection = (typeof SETTINGS_SECTIONS)[number];
 
 /**
  * The section in the URL; General, the first, is left out. `terms` opens
- * one employment terms in Settings › Employment (a deep link from a profile).
+ * one employment terms in Settings › Employment (a deep link from a profile);
+ * `subject` brings one subject's group of Settings › Approvals into view
+ * (a deep link from an approval that needs its flow fixed).
  */
-export type SettingsSearch = { section?: SettingsSection; terms?: string };
+export type SettingsSearch = {
+	section?: SettingsSection;
+	terms?: string;
+	subject?: ApprovalSubjectSlug;
+};
+
+const isSubjectSlug = (value: unknown): value is ApprovalSubjectSlug =>
+	(Object.values(SUBJECT_SLUGS) as ReadonlyArray<unknown>).includes(value);
 
 const isSettingsSection = (value: unknown): value is SettingsSection =>
 	(SETTINGS_SECTIONS as ReadonlyArray<unknown>).includes(value);
 
-/** Reads `?section=` (an unknown section, or General, is no section) and, with Employment, `terms`. */
+/**
+ * Reads `?section=` (an unknown section, or General, is no section) and,
+ * with Employment, `terms`; with Approvals, a known `subject`.
+ */
 export const parseSettingsSearch = (
 	search: Record<string, unknown>
 ): SettingsSearch => {
 	const section = search["section"];
 	if (!isSettingsSection(section) || section === "general") return {};
 	const terms = search["terms"];
-	return section === "employment" && typeof terms === "string" && terms !== ""
-		? { section, terms }
-		: { section };
+	if (section === "employment" && typeof terms === "string" && terms !== "")
+		return { section, terms };
+	const subject = search["subject"];
+	if (section === "approvals" && isSubjectSlug(subject))
+		return { section, subject };
+	return { section };
 };
 
 /** The search that opens a section, keeping General's address bare. */

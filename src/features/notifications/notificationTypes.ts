@@ -12,6 +12,7 @@ import {
 	TimeIcon,
 	UploadIcon,
 } from "@/components/ui/Icon";
+import { LEAVE_REQUEST } from "@/features/approvals/api";
 import type { InboxNotification } from "@/features/notifications/api";
 import { formatOfferTime } from "@/features/scheduling/coverOffers/coverOfferRules";
 import { formatDay } from "@/features/scheduling/periods";
@@ -156,6 +157,31 @@ const NOTIFICATION_TYPES = {
 
 export type KnownNotificationType = keyof typeof NOTIFICATION_TYPES;
 
+/**
+ * An approval of a leave request reads as leave: filed under Leave, with
+ * leave's own copy. Its outcome comes as the leave's own approved or
+ * rejected notice, so `APPROVAL_DECIDED` is only here in case it is sent.
+ */
+const LEAVE_APPROVAL_TITLES = {
+	APPROVAL_REQUESTED: "approvals.notifications.leave.requested",
+	APPROVAL_DECIDED: "approvals.notifications.leave.decided",
+	APPROVAL_CANCELLED: "approvals.notifications.leave.cancelled",
+	APPROVAL_STEP_STALLED: "approvals.notifications.leave.stalled",
+} as const satisfies Partial<Record<KnownNotificationType, ParseKeys>>;
+
+const isApprovalType = (
+	type: string
+): type is keyof typeof LEAVE_APPROVAL_TITLES =>
+	Object.prototype.hasOwnProperty.call(LEAVE_APPROVAL_TITLES, type);
+
+const leaveApprovalTitleOf = (
+	notification: Pick<InboxNotification, "type" | "approvalSubjectType">
+): ParseKeys | undefined =>
+	notification.approvalSubjectType === LEAVE_REQUEST &&
+	isApprovalType(notification.type)
+		? LEAVE_APPROVAL_TITLES[notification.type]
+		: undefined;
+
 /** A type this build does not know yet (for example one added by a newer API) still renders, plainly. */
 export const UNKNOWN_NOTIFICATION_TYPE: NotificationTypeDescriptor = {
 	icon: InfoIcon,
@@ -252,13 +278,25 @@ const presentCoverOffer = (
 /**
  * A notification's look and copy. Most follow their type alone; a finished import turns red, and says it stopped,
  * when rows failed or the import itself failed, and its copy carries the counts. A cover offer's copy names its day
- * and deadline, worded with `wording`, and an answer's look follows its outcome.
+ * and deadline, worded with `wording`, and an answer's look follows its outcome. An approval of a leave request
+ * reads as leave.
  */
 export const presentNotification = (
-	notification: Pick<InboxNotification, "type" | "importCounts" | "coverOffer">,
+	notification: Pick<
+		InboxNotification,
+		"type" | "importCounts" | "coverOffer" | "approvalSubjectType"
+	>,
 	wording?: NotificationWording
 ): NotificationPresentation => {
 	const descriptor = describeNotificationType(notification.type);
+	const leaveApprovalTitle = leaveApprovalTitleOf(notification);
+	if (leaveApprovalTitle)
+		return {
+			...descriptor,
+			category: "leave",
+			title: leaveApprovalTitle,
+			values: undefined,
+		};
 	if (
 		notification.type === "COVER_OFFER_SENT" ||
 		notification.type === "COVER_OFFER_ANSWERED"
@@ -292,7 +330,8 @@ export type NotificationTarget =
 	| { kind: "myRoster"; scheduleId: string }
 	| { kind: "approval"; scheduleId: string }
 	| { kind: "offer"; scheduleId: string; offerId: string }
-	| { kind: "import"; importId: string };
+	| { kind: "import"; importId: string }
+	| { kind: "leaveApprovalFlows" };
 
 /**
  * Schedule notifications sent to the members a roster names, who may not hold `schedule:read`: they open the
@@ -306,7 +345,8 @@ const ROSTERED_MEMBER_TYPES: ReadonlyArray<string> = [
 
 /**
  * The page a notification opens, or undefined when it names nothing this build can open. Reviewers of leave also
- * get the beneficiary, which the review dialog needs.
+ * get the beneficiary, which the review dialog needs. An approval of a leave request opens the request, except a
+ * stalled step, which its flow managers fix in Settings › Approvals.
  */
 export const notificationTarget = (
 	notification: Pick<
@@ -324,6 +364,20 @@ export const notificationTarget = (
 	audience: "PERSONAL" | "REVIEW"
 ): NotificationTarget | undefined => {
 	const category = describeNotificationType(notification.type).category;
+	if (notification.approvalSubjectType === LEAVE_REQUEST) {
+		if (notification.type === "APPROVAL_STEP_STALLED")
+			return { kind: "leaveApprovalFlows" };
+		return notification.leaveRequestId
+			? {
+					kind: "leave",
+					requestId: notification.leaveRequestId,
+					memberId:
+						audience === "REVIEW"
+							? (notification.membershipId ?? undefined)
+							: undefined,
+				}
+			: undefined;
+	}
 	// An approval of a schedule's publication opens that roster with its trail beside it.
 	if (
 		notification.approvalSubjectType === "SCHEDULE_PUBLICATION" &&

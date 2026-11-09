@@ -28,6 +28,7 @@ import { useActivityPage } from "@/features/dashboard/useActivityPage";
 import { useSetupChecklist } from "@/features/dashboard/useSetupChecklist";
 import type { LeaveRequest } from "@/features/leave/api";
 import { formatPeriod } from "@/features/leave/dates";
+import { approvedMessage } from "@/features/leave/leaveApproval";
 import { LeaveRequestDialog } from "@/features/leave/LeaveRequestDialog";
 import { leaveTypeLabel } from "@/features/leave/leaveTypeLabel";
 import {
@@ -37,6 +38,7 @@ import {
 import {
 	useLeaveActions,
 	useLeaveRequests,
+	useLeaveTurns,
 } from "@/features/leave/useLeaveRequests";
 import {
 	activityDetails,
@@ -49,8 +51,6 @@ import {
 	useCurrentMembershipId,
 } from "@/features/organisation/useCurrentCompanyId";
 import { LEAVE_READ_KEYS } from "@/features/workspace/permissionKeys";
-import { recordScope } from "@/features/workspace/scopes";
-import { useAccess } from "@/features/workspace/useAccess";
 import { unitSelectionOf } from "@/features/workspace/unitSearch";
 import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 
@@ -77,7 +77,6 @@ const Dashboard = ({
 	const language = formattingLocale(i18n);
 	const companyId = useCurrentCompanyId();
 	const ownMembershipId = useCurrentMembershipId();
-	const access = useAccess();
 	// The header's Branch, resolved as the header resolves it; every Branch in reach when "All branches" is chosen.
 	const branchId = useUnitSelection(
 		companyId,
@@ -115,6 +114,7 @@ const Dashboard = ({
 	const activity = useActivityPage(companyId, 1, ACTIVITY_COUNT);
 	const setup = useSetupChecklist(companyId);
 	const actions = useLeaveActions(companyId, { ownConfirmation: true });
+	const turns = useLeaveTurns(companyId);
 	const busy = actions.approve.isPending || actions.reject.isPending;
 	const now = new Date();
 	const exampleTag = (
@@ -146,16 +146,14 @@ const Dashboard = ({
 			{ request, comment, takeOffRosteredDays },
 			{
 				onSuccess: () => {
-					decided(t("leave.approved", { name: request.displayName }));
+					decided(approvedMessage(request, t));
 				},
 				onError: refused,
 			}
 		);
 	};
-	// Nobody decides their own leave, and each request is decided where its member is filed.
-	const canReview = (request: LeaveRequest): boolean =>
-		request.membershipId !== ownMembershipId &&
-		access.can("leave_request:review", recordScope(request.departmentId));
+	// Nobody decides their own leave; each request is decided where its member is filed, or by its flow's open step.
+	const canReview = turns.canDecide;
 
 	const resolvedShare = ((): number | undefined => {
 		if (
@@ -291,9 +289,17 @@ const Dashboard = ({
 						{pending.status === "ready" &&
 							pending.items.map((request) => {
 								const reviewable = canReview(request);
+								// Under an approval flow, the step it waits on, beside its title.
+								const stepTag = request.approval
+									? t("approvals.meta.stepShort", {
+											step: request.approval.currentStepOrder,
+											total: request.approval.stepCount,
+										})
+									: undefined;
 								return (
 									<li key={request.leaveRequestId} className="py-5 first:pt-0">
 										<NotificationItem
+											tag={stepTag}
 											detail={t(`${key}.notifications.leaveDetail`, {
 												name: request.displayName,
 												period: formatPeriod(
@@ -429,6 +435,7 @@ const Dashboard = ({
 					canReview={canReview(decision.request)}
 					lifecycle={{ companyId, own: false, onDone: decided }}
 					mode={decision.mode}
+					readsApprovalSteps={turns.readsApprovalSteps(decision.request)}
 					refusal={refusal}
 					request={decision.request}
 					onApprove={approve}

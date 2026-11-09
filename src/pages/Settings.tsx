@@ -5,6 +5,7 @@ import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { ArrowUpIcon } from "@/components/ui/Icon";
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from "@/components/ui/Tabs";
+import { subjectOfSlug } from "@/features/approvals/approvalSubjects";
 import { ApprovalsSettings } from "@/features/settings/ApprovalsSettings";
 import { dataItemsFor, offersData } from "@/features/settings/dataAccess";
 import { DataSettings } from "@/features/settings/DataSettings";
@@ -179,6 +180,7 @@ export const Settings = (): FunctionComponent => {
 								canManage={access.can("approval_flow:manage", COMPANY_SCOPE)}
 								canRead={access.can("approval_flow:read", COMPANY_SCOPE)}
 								companyId={companyId}
+								subject={subjectOfSlug(search.subject)}
 							/>
 						</TabPanel>
 					)}

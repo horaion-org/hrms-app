@@ -5,6 +5,7 @@ import { notificationLink } from "@/features/notifications/notificationLink";
 import {
 	describeNotificationType,
 	notificationTarget,
+	presentNotification,
 } from "@/features/notifications/notificationTypes";
 import { canSeeReviewNotifications } from "@/features/notifications/reviewAccess";
 import type { PermissionKey } from "@/features/workspace/permissionContract.generated";
@@ -104,5 +105,68 @@ describe("approval notifications", () => {
 				keys.includes(permission);
 		expect(canSeeReviewNotifications(holding("approval:decide"))).toBe(true);
 		expect(canSeeReviewNotifications(holding("approval:read"))).toBe(false);
+	});
+});
+
+describe("leave approval notifications", () => {
+	const leaveRow = (
+		type: string
+	): Parameters<typeof notificationTarget>[0] &
+		Parameters<typeof presentNotification>[0] => ({
+		...requested,
+		type,
+		approvalSubjectType: "LEAVE_REQUEST",
+		approvalSubjectId: "lr-1",
+		leaveRequestId: "lr-1",
+		membershipId: "m-aisha",
+		importCounts: null,
+		coverOffer: null,
+	});
+
+	it("reads as leave, with leave's own copy, in both locales", () => {
+		expect(presentNotification(leaveRow("APPROVAL_REQUESTED"))).toMatchObject({
+			tone: "warning",
+			category: "leave",
+			title: "approvals.notifications.leave.requested",
+		});
+		expect(presentNotification(leaveRow("APPROVAL_STEP_STALLED")).title).toBe(
+			"approvals.notifications.leave.stalled"
+		);
+		expect(en.approvals.notifications.leave.requested).toBe(
+			"A leave request needs your approval."
+		);
+		expect(Object.keys(es.approvals.notifications.leave)).toEqual(
+			Object.keys(en.approvals.notifications.leave)
+		);
+	});
+
+	it("opens the request, as a reviewer for the approver and as one's own otherwise", () => {
+		expect(
+			notificationTarget(leaveRow("APPROVAL_REQUESTED"), "REVIEW")
+		).toEqual({ kind: "leave", requestId: "lr-1", memberId: "m-aisha" });
+		expect(
+			notificationTarget(leaveRow("APPROVAL_CANCELLED"), "PERSONAL")
+		).toEqual({ kind: "leave", requestId: "lr-1", memberId: undefined });
+	});
+
+	it("sends a stalled step to the leave approval flows in Settings", () => {
+		const target = notificationTarget(
+			leaveRow("APPROVAL_STEP_STALLED"),
+			"PERSONAL"
+		);
+		expect(target).toEqual({ kind: "leaveApprovalFlows" });
+		expect(target && notificationLink(target)).toEqual({
+			to: "/settings",
+			search: { section: "approvals", subject: "leave" },
+		});
+	});
+
+	it("has no target for a leave approval row from an API that names no request", () => {
+		expect(
+			notificationTarget(
+				{ ...leaveRow("APPROVAL_REQUESTED"), leaveRequestId: null },
+				"REVIEW"
+			)
+		).toBeUndefined();
 	});
 });

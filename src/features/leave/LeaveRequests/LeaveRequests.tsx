@@ -1,3 +1,4 @@
+import { joinClassNames } from "@/common/joinClassNames";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
@@ -14,6 +15,7 @@ import {
 	type LeaveSort,
 } from "@/features/leave/api";
 import { formatPeriod, requestedDayOf } from "@/features/leave/dates";
+import { leaveApprovalLine } from "@/features/leave/leaveApproval";
 import { leaveTypeLabel } from "@/features/leave/leaveTypeLabel";
 import { statusTone, type LeaveRequest } from "@/features/leave/types";
 
@@ -27,7 +29,7 @@ export type LeaveRequestsProps = {
 	onSortChange: (sort: LeaveSort) => void;
 	/** Opens the request, straight at a decision's confirmation step when one is named. */
 	onOpen: (request: LeaveRequest, decision?: "reject" | "approve") => void;
-	/** Whether the person may decide this request, as the workspace says. */
+	/** Whether the person may decide this request now: their review key, or, under an approval flow, their turn. */
 	canReview: (request: LeaveRequest) => boolean;
 	/** The caller's own requests: no employee column, no decisions, only viewing. */
 	own?: boolean;
@@ -55,6 +57,29 @@ export const LeaveRequests = ({
 	emptyState,
 }: LeaveRequestsProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
+	const statusBadge = (row: LeaveRequest): ReactNode => (
+		<Badge className="shrink-0 text-xs!" tone={statusTone[row.status]}>
+			{t(`leave.statuses.${row.status}`)}
+		</Badge>
+	);
+	// Under an approval flow, the step it waits on; in bold when it waits on the reader.
+	const approvalNote = (row: LeaveRequest, className?: string): ReactNode => {
+		const callersTurn = !own && canReview(row);
+		const line = leaveApprovalLine(row, callersTurn);
+		return (
+			line && (
+				<span
+					className={joinClassNames(
+						"text-xs text-neutral-800",
+						callersTurn && "font-semibold",
+						className
+					)}
+				>
+					{t(line.key, line.values)}
+				</span>
+			)
+		);
+	};
 	const employee: Array<DataTableColumn<LeaveRequest>> = own
 		? []
 		: [
@@ -154,10 +179,18 @@ export const LeaveRequests = ({
 			headerClassName: "w-30",
 			hideBelow: own ? undefined : "sm",
 			sortValue: (row) => row.status,
-			cell: (row) => (
-				<Badge className="text-xs!" tone={statusTone[row.status]}>
-					{t(`leave.statuses.${row.status}`)}
-				</Badge>
+			cell: (row): ReactNode => (
+				<>
+					{statusBadge(row)}
+					{approvalNote(row, "mt-1 block")}
+				</>
+			),
+			// On a phone's name line the badge stays whole and the step wraps after it.
+			summary: (row): ReactNode => (
+				<span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+					{statusBadge(row)}
+					{approvalNote(row)}
+				</span>
 			),
 		},
 		{

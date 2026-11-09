@@ -1111,7 +1111,9 @@
         "member_employment_terms:update",
         "leave_request:read",
         "leave_request:create",
-        "leave_request:review"
+        "leave_request:review",
+        "approval:read",
+        "approval:decide"
       ]
     },
     {
@@ -1143,7 +1145,9 @@
         "constraint:read",
         "constraint:create",
         "constraint:update",
-        "constraint:delete"
+        "constraint:delete",
+        "approval:read",
+        "approval:decide"
       ]
     },
     {
@@ -1196,7 +1200,9 @@
       "permissions": [
         "member_profile:read",
         "leave_request:read",
-        "leave_request:review"
+        "leave_request:review",
+        "approval:read",
+        "approval:decide"
       ]
     },
     {

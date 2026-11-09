@@ -1,5 +1,6 @@
 import type { TFunction } from "i18next";
 import { ApiProblemError } from "@/common/problem";
+import { APPROVAL_REFUSAL_CODES } from "@/features/approvals/approvalRefusal";
 import { mapRefusal, type Refusal } from "@/features/organisation/refusal";
 
 /** The fields an application's refusal can land on. */
@@ -44,14 +45,36 @@ export const LEAVE_REFUSAL_CODES = {
 	changeEmpty: "400 LEAVE_CHANGE_EMPTY",
 	/** The remark is missing or breaks the rule. */
 	invalidRemark: "400 INVALID_LEAVE_REMARK",
+	/** The request waits on an approval flow, so it is decided on its open step, not in one review. */
+	approvalPending: "409 LEAVE_APPROVAL_PENDING",
 } as const;
 
 const codes = LEAVE_REFUSAL_CODES;
+const approvalCodes = APPROVAL_REFUSAL_CODES;
+
+const codeOf = (error: unknown): string | undefined =>
+	error instanceof ApiProblemError
+		? `${error.status} ${error.errorCode ?? ""}`
+		: undefined;
+
+/**
+ * Whether a decision was refused because the request moved on since the
+ * screen read it: a flow started, or another approver decided the step.
+ * The screen reads the request again.
+ */
+export const isStaleDecision = (error: unknown): boolean => {
+	const code = codeOf(error);
+	return (
+		code === codes.approvalPending ||
+		code === codes.notPending ||
+		code === approvalCodes.stepDecided ||
+		code === approvalCodes.notPending
+	);
+};
 
 /** Whether the API refused because the days hold shifts nobody confirmed. */
 export const isRosterClash = (error: unknown): boolean =>
-	error instanceof ApiProblemError &&
-	`${error.status} ${error.errorCode ?? ""}` === codes.rosterClash;
+	codeOf(error) === codes.rosterClash;
 
 /**
  * Why applying on a person's behalf was refused: on the type, the dates, the
@@ -92,6 +115,10 @@ export const applyRefusal = (
 				refreshMembers: true,
 			},
 		},
+		alerts: {
+			// The department's leave flow has a step nobody may decide, so no application can start it.
+			[approvalCodes.stepHasNoApprover]: t(`${key}.noApprover`),
+		},
 		fieldErrors: {
 			startDate: dates(t(`${key}.invalidPeriod`)),
 			endDate: dates(t(`${key}.invalidPeriod`)),
@@ -109,6 +136,8 @@ export type DecisionField = "reason" | "comment";
 /**
  * Why approving or rejecting was refused, for the dialog that asked. A
  * refused reason or comment lands on its field; everything else is the alert.
+ * A request under a flow is decided through the approvals API, whose
+ * refusals are worded here too.
  */
 export const decisionRefusal = (
 	error: unknown,
@@ -138,6 +167,12 @@ export const decisionRefusal = (
 			[codes.profileNotFound]: t(`${key}.profileMissing`),
 			[codes.ownReview]: t(`${key}.ownReview`),
 			[codes.rosterClash]: t(`${key}.rosterClash`),
+			[codes.approvalPending]: t(`${key}.approvalPending`),
+			[approvalCodes.stepDecided]: t(`${key}.stepDecided`),
+			[approvalCodes.notPending]: t(`${key}.stepDecided`),
+			[approvalCodes.notAnApprover]: t(`${key}.notAnApprover`),
+			[approvalCodes.ownApproval]: t(`${key}.ownReview`),
+			[approvalCodes.instanceNotFound]: t(`${key}.requestMissing`),
 		},
 		fieldErrors: { reason, comment },
 		forbidden: t(`${key}.forbiddenDecide`),

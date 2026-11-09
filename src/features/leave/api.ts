@@ -136,6 +136,25 @@ export const leaveRequestSchema = z.object({
 	rejectionReason: z.string().nullable(),
 	/** The reviewer's words when approving, if any. Absent from an API older than approval comments. */
 	approvalComment: z.string().nullable().default(null),
+	/**
+	 * The approval flow step a pending request waits on; null when it is
+	 * decided in one step (no flow), once decided, and from an API before
+	 * leave approvals. Its presence alone says the request goes through steps.
+	 */
+	approval: z
+		.object({
+			approvalInstanceId: z.string(),
+			currentStepOrder: z.number().int().positive(),
+			currentStepLabel: z.string(),
+			stepCount: z.number().int().positive(),
+		})
+		.nullish()
+		.transform((value) => value ?? null),
+	/** The step that rejected the request; null for a single-step rejection, and otherwise. */
+	rejectedAtStep: z
+		.object({ stepOrder: z.number().int().positive(), stepLabel: z.string() })
+		.nullish()
+		.transform((value) => value ?? null),
 });
 
 /** One leave request as the list, the timeline and the dialog show it. */

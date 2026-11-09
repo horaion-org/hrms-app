@@ -193,7 +193,11 @@
 			"remarkRejected": "Escribe un comentario de hasta 500 caracteres.",
 			"ownChange": "No puedes cambiar tu propio permiso. Debe hacerlo otra persona revisora.",
 			"forbiddenChange": "Ya no tienes permiso para cambiar este permiso.",
-			"changeFailed": "No pudimos guardarlo. Inténtalo de nuevo."
+			"changeFailed": "No pudimos guardarlo. Inténtalo de nuevo.",
+			"approvalPending": "Esta solicitud ahora pasa por pasos de aprobación. Recarga la página para ver en qué punto está.",
+			"noApprover": "Aún nadie puede aprobar permisos en este departamento. Pide a una persona de RR. HH. que revise quién aprueba los permisos.",
+			"stepDecided": "Otra persona decidió este paso antes. Recarga la página para ver en qué punto está.",
+			"notAnApprover": "No puedes decidir este paso."
 		},
 		"myLeave": "Mis ausencias",
 		"teamRequests": "Solicitudes del equipo",
@@ -249,7 +253,17 @@
 			"other": "Cambiado por {{name}}"
 		},
 		"historyDates": "{{before}} → {{after}}",
-		"historyType": "{{before}} → {{after}}"
+		"historyType": "{{before}} → {{after}}",
+		"approval": {
+			"title": "Aprobación",
+			"stepApproved": "Aprobaste {{label}} para {{name}}. Ahora se consulta el siguiente paso.",
+			"middleNote": "Paso {{step}} de {{total}} ({{label}}). Cuando apruebes, se consulta el siguiente paso.",
+			"lastNote": "Último paso ({{label}}). Al aprobarlo se aprueba el permiso de {{name}}, y se le avisa.",
+			"rejectNote": "Rechazar en {{label}} rechaza el permiso, y se avisa a {{name}}.",
+			"rejectedAt": "Rechazado en",
+			"trailFailed": "No pudimos cargar los pasos de aprobación.",
+			"retry": "Intentar de nuevo"
+		}
 	},
 	"approvals": {
 		"panel": {
@@ -262,7 +276,8 @@
 			"failed": "No se pudo cargar la aprobación.",
 			"retry": "Reintentar",
 			"open": "Aprobación ›",
-			"openLabel": "Abrir la aprobación"
+			"openLabel": "Abrir la aprobación",
+			"stepShort": "Paso {{step}} de {{total}}"
 		},
 		"trail": {
 			"submittedBy": "Enviado por {{name}} · {{at}}",
@@ -292,7 +307,8 @@
 			"personApproved": "{{name}} · Aprobado {{at}}",
 			"personRejected": "{{name}} · Rechazado {{at}}",
 			"personWaiting": "{{name}} · En espera",
-			"waitingFolded": "Pendiente de {{count}}: {{names}} y {{more}} más"
+			"waitingFolded": "Pendiente de {{count}}: {{names}} y {{more}} más",
+			"anyoneWhoCanReviewLeave": "Cualquiera que pueda revisar los permisos de {{department}}"
 		},
 		"actions": {
 			"submit": "Enviar a aprobación",
@@ -341,22 +357,28 @@
 			"requested": "Un cuadrante necesita tu aprobación.",
 			"decided": "Se ha decidido un cuadrante que enviaste a aprobación. Ábrelo para ver el resultado.",
 			"cancelled": "Se canceló la aprobación de un cuadrante que enviaste antes de que nadie lo decidiera. Vuelve a enviarlo.",
-			"stalled": "Un paso de la aprobación de un cuadrante ya no tiene a nadie que pueda decidirlo. Revisa quién puede aprobar o retira el envío."
+			"stalled": "Un paso de la aprobación de un cuadrante ya no tiene a nadie que pueda decidirlo. Revisa quién puede aprobar o retira el envío.",
+			"leave": {
+				"requested": "Una solicitud de permiso necesita tu aprobación.",
+				"decided": "Se decidió una solicitud de permiso. Ábrela para ver el resultado.",
+				"cancelled": "La aprobación de una solicitud de permiso se reinició, así que vuelve a pasar por sus pasos.",
+				"stalled": "Un paso de la aprobación de una solicitud de permiso no tiene a nadie que pueda decidirlo. Revisa quién puede aprobar permisos."
+			}
 		},
 		"flows": {
 			"title": "Aprobaciones",
-			"subtitle": "Quién aprueba un cuadrante antes de publicarlo. Los departamentos sin flujo publican en un paso, por cualquiera que pueda publicar su cuadrante.",
-			"schedulePublishing": "Publicación de cuadrantes",
+			"subtitle": "Quién aprueba cuadrantes y solicitudes de permiso, paso a paso. Donde no hay nada configurado, decide una sola persona, como antes.",
 			"add": "Añadir flujo",
 			"appliesTo": "Se aplica a",
 			"steps": "Pasos",
 			"status": "Estado",
 			"on": "Activado",
 			"off": "Desactivado",
-			"wholeCompany": "Toda la empresa",
+			"companyDefault": "Predeterminado de la empresa",
+			"usesCompanyDefault": "Otros departamentos, y los que tengan su flujo desactivado, usan el predeterminado de la empresa.",
+			"everyDepartmentUsesDefault": "Todos los departamentos usan el predeterminado de la empresa.",
 			"unknownDepartment": "Un departamento que no puedes ver",
 			"allOf": "todos los {{count}}",
-			"empty": "No hay flujos de aprobación. Los cuadrantes se publican en un paso, por cualquiera que pueda publicarlos.",
 			"loading": "Cargando flujos de aprobación…",
 			"failed": "No pudimos cargar los flujos de aprobación. Inténtalo de nuevo.",
 			"hidden": "No tienes permiso para ver los flujos de aprobación.",
@@ -364,13 +386,10 @@
 			"turnOn": "Activar",
 			"delete": "Eliminar",
 			"turnOffTitle": "¿Desactivar {{name}}?",
-			"turnOffDescription": "Los cuadrantes que ya esperan conservan este flujo. Los que se envíen a partir de ahora se publican sin él.",
 			"turnOffConfirm": "Desactivar",
 			"turnOnTitle": "¿Activar {{name}}?",
-			"turnOnDescription": "Los cuadrantes que se envíen a partir de ahora pasan por sus pasos.",
 			"turnOnConfirm": "Activar",
 			"deleteTitle": "¿Eliminar {{name}}?",
-			"deleteDescription": "Los cuadrantes que ya esperan conservan este flujo. No se puede deshacer.",
 			"deleteConfirm": "Eliminar flujo",
 			"cancel": "Cancelar",
 			"added": "Flujo de aprobación añadido.",
@@ -381,35 +400,31 @@
 				"exists": "Ya tiene un flujo de aprobación. Edita ese.",
 				"existsOnTurnOn": "Ya hay otro flujo activado aquí. Desactívalo primero.",
 				"invalid": "No se aceptó el flujo. Revisa sus pasos e inténtalo de nuevo.",
-				"noApprover": "Un paso no tiene a nadie que pueda aprobarlo. Indica personas que puedan publicar este cuadrante.",
+				"noApprover": "Un paso no tiene a nadie que pueda aprobarlo. Indica personas que puedan decidirlo.",
 				"gone": "Este flujo ya no existe. Se ha actualizado la lista.",
 				"forbidden": "Ya no tienes permiso para cambiar los flujos de aprobación.",
-				"failed": "No pudimos guardar el flujo. Inténtalo de nuevo."
+				"failed": "No pudimos guardar el flujo. Inténtalo de nuevo.",
+				"noApproverIn_one": "Nadie puede aprobar el paso {{steps}} en {{department}}.",
+				"noApproverIn_other": "Nadie puede aprobar los pasos {{steps}} en {{department}}.",
+				"noApproverFix": "Da «Decidir aprobaciones» a personas de allí en Roles de acceso, o cambia el paso."
 			},
 			"dialog": {
-				"title": "Añadir flujo de aprobación",
-				"editTitle": "Editar flujo de aprobación",
-				"description": "Quién aprueba un cuadrante antes de publicarlo, paso a paso.",
 				"appliesTo": "Se aplica a",
-				"appliesToHint": "Toda la empresa o un departamento. No se puede cambiar después.",
+				"appliesToHint": "El predeterminado de la empresa o un departamento. No se puede cambiar después.",
 				"name": "Nombre",
 				"nameRequired": "Escribe un nombre.",
 				"nameTooLong": "Usa hasta 100 caracteres.",
-				"defaultName": "Publicación de {{unit}}",
 				"step": "Paso {{step}}",
 				"stepLabel": "Nombre del paso {{step}}",
 				"labelPlaceholder": "p. ej., Visto bueno",
 				"labelRequired": "Ponle nombre a este paso.",
 				"labelTooLong": "Usa hasta 24 caracteres.",
 				"whoDecides": "Quién decide",
-				"anyone": "Cualquiera que pueda publicar el cuadrante de {{department}}",
-				"anyoneCompany": "Cualquiera que pueda publicar el cuadrante",
 				"anyoneDescription": "Basta con una aprobación.",
 				"onlyThese": "Solo estas personas",
 				"onlyTheseDescription": "Indica hasta 10 personas.",
 				"people": "Personas",
 				"peoplePlaceholder": "Elige personas",
-				"peopleHint": "Solo se pregunta a quienes pueden publicar este cuadrante.",
 				"peopleRequired": "Elige al menos una persona.",
 				"how": "Cuántas de ellas",
 				"any": "Cualquiera de ellas",
@@ -420,10 +435,49 @@
 				"moved": "El paso {{from}} se ha movido; ahora es el paso {{to}}.",
 				"addStep": "Añadir paso",
 				"maxSteps": "Hasta 3 pasos.",
-				"info": "Solo pueden aprobarlo quienes pueden publicar este cuadrante. Quien envía un cuadrante nunca lo aprueba.",
 				"submit": "Guardar flujo",
 				"cancel": "Cancelar",
-				"labelHint": "1–2 palabras, visibles para los aprobadores (p. ej., Visto bueno)"
+				"labelHint": "1–2 palabras, visibles para los aprobadores (p. ej., Visto bueno)",
+				"distinct": "Una persona distinta aprueba cada paso",
+				"distinctDescription": "Quien aprobó un paso anterior no vuelve a ser consultado."
+			},
+			"subjects": {
+				"roster": {
+					"title": "Publicación de cuadrantes",
+					"description": "Antes de publicar un cuadrante.",
+					"none": "No hay flujo de aprobación. Los cuadrantes se publican en un paso, por cualquiera que pueda publicarlos.",
+					"oneStep": "Otros departamentos, y los que tengan su flujo desactivado: un paso, por cualquiera que pueda publicar su cuadrante.",
+					"dialogTitle": "Añadir flujo de aprobación de cuadrantes",
+					"dialogEditTitle": "Editar flujo de aprobación de cuadrantes",
+					"dialogDescription": "Quién aprueba un cuadrante antes de publicarlo, paso a paso.",
+					"defaultName": "Aprobación de cuadrantes de {{unit}}",
+					"defaultCompanyName": "Aprobación de cuadrantes de la empresa",
+					"anyone": "Cualquiera que pueda publicar el cuadrante de {{department}}",
+					"anyoneCompany": "Cualquiera que pueda publicar el cuadrante",
+					"peopleHint": "Solo se pregunta a quienes pueden publicar este cuadrante.",
+					"info": "Solo pueden aprobarlo quienes pueden publicar este cuadrante. Quien envía un cuadrante nunca lo aprueba.",
+					"turnOffDescription": "Los cuadrantes que ya esperan conservan este flujo. Los que se envíen a partir de ahora no pasan por él.",
+					"turnOnDescription": "Los cuadrantes que se envíen a partir de ahora pasan por sus pasos.",
+					"deleteDescription": "Los cuadrantes que ya esperan conservan este flujo. No se puede deshacer."
+				},
+				"leave": {
+					"title": "Solicitudes de permiso",
+					"description": "Antes de aprobar un permiso.",
+					"none": "No hay flujo de aprobación. Los permisos se aprueban o rechazan en un paso, por cualquiera que pueda revisarlos.",
+					"oneStep": "Otros departamentos, y los que tengan su flujo desactivado: un paso, por cualquiera que pueda revisar sus permisos.",
+					"dialogTitle": "Añadir flujo de aprobación de permisos",
+					"dialogEditTitle": "Editar flujo de aprobación de permisos",
+					"dialogDescription": "Quién aprueba una solicitud de permiso, paso a paso.",
+					"defaultName": "Aprobación de permisos de {{unit}}",
+					"defaultCompanyName": "Aprobación de permisos de la empresa",
+					"anyone": "Cualquiera que pueda revisar los permisos de {{department}}",
+					"anyoneCompany": "Cualquiera que pueda revisar los permisos",
+					"peopleHint": "Solo se pregunta a quienes pueden revisar estos permisos.",
+					"info": "Las personas aprobadoras necesitan «Revisar permisos» y «Decidir aprobaciones» en el departamento de la persona; si nadie tiene ambos, nadie allí puede solicitar permisos. Nadie aprueba su propio permiso. Las solicitudes que ya esperan conservan los pasos con los que empezaron.",
+					"turnOffDescription": "Las solicitudes que ya esperan conservan este flujo. Los permisos que se soliciten a partir de ahora no pasan por él.",
+					"turnOnDescription": "Los permisos que se soliciten a partir de ahora pasan por sus pasos.",
+					"deleteDescription": "Las solicitudes que ya esperan conservan este flujo. No se puede deshacer."
+				}
 			}
 		},
 		"announce": {
@@ -735,7 +789,7 @@
 		},
 		"approvals": {
 			"title": "Aprobaciones",
-			"description": "Quién aprueba los cuadrantes antes de publicarlos."
+			"description": "Quién aprueba cuadrantes y solicitudes de permiso."
 		},
 		"employment": {
 			"title": "Empleo",

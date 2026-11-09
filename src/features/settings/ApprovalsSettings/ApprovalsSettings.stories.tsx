@@ -8,6 +8,7 @@ import {
 import {
 	approvalFlowFixture,
 	companyFlowFixture,
+	leaveFlowFixture,
 } from "@/features/approvals/fixtures";
 import { storyProviders } from "@/features/organisation/storyApi";
 import { ApprovalsSettings } from "@/features/settings/ApprovalsSettings";
@@ -68,15 +69,27 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** The company-wide flow and Front Office's two-step flow, editable. */
+/** Rosters: the company default and Front Office's two-step flow; leave: no flow yet. Editable. */
 export const Editable: Story = {};
+
+/** Both subjects set up: rosters as above, leave by Manager then HR for the whole company. */
+export const BothSubjects: Story = {
+	parameters: {
+		flows: [companyFlowFixture(), approvalFlowFixture(), leaveFlowFixture()],
+	},
+};
+
+/** Only a department's roster flow: the line under it says the rest publish in one step. */
+export const DepartmentOnly: Story = {
+	parameters: { flows: [approvalFlowFixture()] },
+};
 
 /** Read-only: approval_flow:read without :manage. */
 export const ReadOnly: Story = {
 	args: { canManage: false },
 };
 
-/** No flow: rosters publish in one step. */
+/** No flow: rosters publish and leave is decided in one step. */
 export const Empty: Story = {
 	parameters: { flows: [] },
 };

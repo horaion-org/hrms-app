@@ -2,7 +2,10 @@ import { QueryClient } from "@tanstack/react-query";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
 import { ApprovalFlowDialog } from "@/features/approvals/ApprovalFlowDialog";
-import { approvalFlowFixture } from "@/features/approvals/fixtures";
+import {
+	approvalFlowFixture,
+	leaveFlowFixture,
+} from "@/features/approvals/fixtures";
 import { effectiveWorkspace } from "@/common/testing/effectiveWorkspace";
 import { storyProviders } from "@/features/organisation/storyApi";
 import { workspaceQuery } from "@/features/workspace/api";
@@ -16,6 +19,7 @@ const meta = {
 	component: ApprovalFlowDialog,
 	args: {
 		companyId: "story-company",
+		subjectType: "SCHEDULE_PUBLICATION",
 		departmentName: (departmentId: string): string | undefined =>
 			departmentId === "d-1" ? "Front Office" : undefined,
 		onClose: fn(),
@@ -65,4 +69,14 @@ export const Add: Story = {};
 /** Front Office's flow: Endorse by two named people, all of them, then Publish. */
 export const Edit: Story = {
 	args: { editing: approvalFlowFixture() },
+};
+
+/** A new leave flow: the copy names reviewing leave, and the note is a warning. */
+export const AddLeave: Story = {
+	args: { subjectType: "LEAVE_REQUEST" },
+};
+
+/** The company's leave flow: Manager, then HR, a different person each step. */
+export const EditLeave: Story = {
+	args: { subjectType: "LEAVE_REQUEST", editing: leaveFlowFixture() },
 };

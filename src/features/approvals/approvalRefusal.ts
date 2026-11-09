@@ -1,4 +1,6 @@
 import type { TFunction } from "i18next";
+import { z } from "zod";
+import { ApiProblemError } from "@/common/problem";
 import { mapRefusal, type Refusal } from "@/features/organisation/refusal";
 
 /**
@@ -9,6 +11,7 @@ export const APPROVAL_REFUSAL_CODES = {
 	invalidComment: "400 INVALID_APPROVAL_COMMENT",
 	invalidFlow: "400 INVALID_APPROVAL_FLOW",
 	stepHasNoApprover: "400 APPROVAL_STEP_HAS_NO_APPROVER",
+	flowHasNoApprover: "400 APPROVAL_FLOW_HAS_NO_APPROVER",
 	ownApproval: "403 OWN_APPROVAL_DENIED",
 	notAnApprover: "403 NOT_AN_APPROVER",
 	flowNotFound: "404 APPROVAL_FLOW_NOT_FOUND",
@@ -66,12 +69,59 @@ export const withdrawRefusal = (error: unknown, t: TFunction): string => {
 /** The flow dialog's fields a refused save can land on. */
 export type FlowField = "departmentId";
 
-/** Why saving a flow was refused: a unit that already has one on its field, otherwise one message. */
+/** Where a flow that is on would have a step nobody may approve: the refusal's `departments` extension. */
+const unapprovableSchema = z.object({
+	departments: z
+		.array(
+			z.object({
+				departmentName: z.string(),
+				stepOrders: z.array(z.number().int()),
+			})
+		)
+		.min(1),
+});
+
+/**
+ * "Nobody can approve step 2 in Front Office. … Give people “Decide
+ * approvals” there …", from a refusal naming where a flow can't be
+ * approved; undefined for any other error, or a body this app can't read.
+ */
+const unapprovableMessage = (
+	error: unknown,
+	t: TFunction
+): string | undefined => {
+	if (
+		!(error instanceof ApiProblemError) ||
+		`${error.status} ${error.errorCode ?? ""}` !== codes.flowHasNoApprover
+	)
+		return undefined;
+	const parsed = unapprovableSchema.safeParse(error.body);
+	if (!parsed.success) return undefined;
+	const key = "approvals.flows.refusal";
+	return [
+		...parsed.data.departments.map((department) =>
+			t(`${key}.noApproverIn`, {
+				count: department.stepOrders.length,
+				steps: department.stepOrders.join(", "),
+				department: department.departmentName,
+			})
+		),
+		t(`${key}.noApproverFix`),
+	].join(" ");
+};
+
+/**
+ * Why saving a flow was refused: a unit that already has one on its field,
+ * where a step has nobody to approve it, otherwise one message.
+ */
 export const flowRefusal = (
 	error: unknown,
 	t: TFunction
 ): Refusal<FlowField> => {
 	const key = "approvals.flows.refusal";
+	const unapprovable = unapprovableMessage(error, t);
+	if (unapprovable)
+		return { fields: {}, message: unapprovable, refreshMembers: false };
 	return mapRefusal<FlowField>(error, {
 		codes: {
 			[codes.flowExists]: {
@@ -82,6 +132,7 @@ export const flowRefusal = (
 		alerts: {
 			[codes.invalidFlow]: t(`${key}.invalid`),
 			[codes.stepHasNoApprover]: t(`${key}.noApprover`),
+			[codes.flowHasNoApprover]: t(`${key}.noApprover`),
 			[codes.flowNotFound]: t(`${key}.gone`),
 		},
 		forbidden: t(`${key}.forbidden`),
@@ -93,13 +144,16 @@ export const flowRefusal = (
 export const flowChangeRefusal = (error: unknown, t: TFunction): string => {
 	const key = "approvals.flows.refusal";
 	return (
+		unapprovableMessage(error, t) ??
 		mapRefusal<never>(error, {
 			alerts: {
 				[codes.flowExists]: t(`${key}.existsOnTurnOn`),
+				[codes.flowHasNoApprover]: t(`${key}.noApprover`),
 				[codes.flowNotFound]: t(`${key}.gone`),
 			},
 			forbidden: t(`${key}.forbidden`),
 			failed: t(`${key}.failed`),
-		}).message ?? t(`${key}.failed`)
+		}).message ??
+		t(`${key}.failed`)
 	);
 };

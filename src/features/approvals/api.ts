@@ -56,8 +56,13 @@ const decisionTypeSchema = z
 	.enum(["APPROVE", "REJECT", "UNKNOWN"])
 	.catch("UNKNOWN");
 
-/** What an approval decides; P1 knows schedule publication only. */
+/** What an approval decides: a schedule's publication, or a leave request. */
 export const SCHEDULE_PUBLICATION = "SCHEDULE_PUBLICATION";
+export const LEAVE_REQUEST = "LEAVE_REQUEST";
+
+/** The subjects the app knows, in the order Settings › Approvals lists them. */
+export const APPROVAL_SUBJECTS = [SCHEDULE_PUBLICATION, LEAVE_REQUEST] as const;
+export type ApprovalSubject = (typeof APPROVAL_SUBJECTS)[number];
 
 /** A company member named on an approval; `displayName` is null once they have left the company. */
 const participantSchema = z.object({
@@ -155,6 +160,11 @@ const flowSchema = z.object({
 	departmentId: z.string().nullable(),
 	name: z.string(),
 	active: z.boolean(),
+	/** Whether each step needs someone who approved no earlier step; an API older than the option reads as false. */
+	distinctApprovers: z
+		.boolean()
+		.nullish()
+		.transform((value) => value ?? false),
 	steps: z.array(flowStepSchema),
 	createdAt: z.string(),
 	updatedAt: z.string(),
@@ -173,10 +183,11 @@ export type ApprovalFlowStepBody = {
 
 /** What adding a flow sends; where it applies is fixed once added. */
 export type CreateApprovalFlowBody = {
-	subjectType: typeof SCHEDULE_PUBLICATION;
+	subjectType: ApprovalSubject;
 	departmentId: string | null;
 	name: string;
 	steps: Array<ApprovalFlowStepBody>;
+	distinctApprovers: boolean;
 };
 
 /** What replacing a flow sends. */
@@ -184,6 +195,7 @@ export type UpdateApprovalFlowBody = {
 	name: string;
 	active: boolean;
 	steps: Array<ApprovalFlowStepBody>;
+	distinctApprovers: boolean;
 };
 
 /** One decision on the step `stepOrder`; a step that closed meanwhile is refused, never decided by accident. */
@@ -192,6 +204,8 @@ export type ApprovalDecisionBody = {
 	decision: "APPROVE" | "REJECT";
 	/** Optional to approve; required to reject. */
 	comment: string | null;
+	/** Leave's last step only: the approver confirmed taking the person off shifts on the leave days. */
+	takeOffRosteredDays?: boolean;
 };
 
 const flowsPath = (companyId: string): string =>

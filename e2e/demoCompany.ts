@@ -3,7 +3,13 @@ import {
 	effectiveWorkspace,
 	TEST_BRANCHES,
 } from "@/common/testing/effectiveWorkspace";
-import { approvalInstanceFixture } from "@/features/approvals/fixtures";
+import {
+	approvalFlowFixture,
+	approvalInstanceFixture,
+	companyFlowFixture,
+	leaveAtHrInstanceFixture,
+	leaveFlowFixture,
+} from "@/features/approvals/fixtures";
 import { MEMBER_WEEK_FIXTURES } from "@/features/availability/fixtures";
 import {
 	TERMS_OVERVIEW,
@@ -181,6 +187,25 @@ const LEAVE = LEAVE_FIXTURES.map((request) => ({
 	branchName: "Orchard",
 	departmentName: "Kitchen",
 }));
+// Leave under the company's flow (Manager, then HR): Aisha's waits on HR, the owner's turn; Cheryl's on Manager.
+LEAVE[0] = {
+	...LEAVE[0]!,
+	approval: {
+		approvalInstanceId: "ai-leave",
+		currentStepOrder: 2,
+		currentStepLabel: "HR",
+		stepCount: 2,
+	},
+};
+LEAVE[1] = {
+	...LEAVE[1]!,
+	approval: {
+		approvalInstanceId: "ai-cheryl",
+		currentStepOrder: 1,
+		currentStepLabel: "Manager",
+		stepCount: 2,
+	},
+};
 
 /** Answers for paths under the company, matched in order; the first match wins. */
 type Answer = { path: RegExp; data: () => unknown };
@@ -225,6 +250,22 @@ const ANSWERS: Array<Answer> = [
 	{ path: /^\/skill-overview$/, data: () => pageOf(SKILLS) },
 	{ path: /^\/skill-categories$/, data: () => ["Food safety", "Licences"] },
 	{ path: /^\/leave-requests$/, data: () => pageOf(LEAVE) },
+	{
+		path: /^\/member-profiles\/m-[a-z]+\/leave-requests\/rostered-days$/,
+		data: () => [],
+	},
+	{
+		path: /^\/member-profiles\/m-aisha\/leave-requests\/leave-aisha$/,
+		data: () => LEAVE[0],
+	},
+	{
+		path: /^\/approval-flows$/,
+		data: () => [
+			companyFlowFixture(),
+			approvalFlowFixture(),
+			leaveFlowFixture(),
+		],
+	},
 	{ path: /^\/me\/leave-requests$/, data: () => pageOf(LEAVE.slice(0, 2)) },
 	{ path: /^\/me\/leave-types$/, data: () => LEAVE_TYPE_FIXTURES },
 	{ path: /^\/leave-types$/, data: () => LEAVE_TYPE_CATALOGUE_FIXTURE },
@@ -245,7 +286,12 @@ const ANSWERS: Array<Answer> = [
 	},
 	{
 		path: /^\/me\/approval-instances\/pending$/,
-		data: () => [approvalInstanceFixture()],
+		data: () => [approvalInstanceFixture(), leaveAtHrInstanceFixture()],
+	},
+	// Aisha's leave waits on HR, which the owner may decide.
+	{
+		path: /^\/approval-instances\/ai-leave$/,
+		data: () => ({ ...leaveAtHrInstanceFixture(), canDecide: true }),
 	},
 	{ path: /^\/me\/cover-offers$/, data: () => [openCoverOffer()] },
 	// The roster's submission waits on step 1, which the owner may decide.

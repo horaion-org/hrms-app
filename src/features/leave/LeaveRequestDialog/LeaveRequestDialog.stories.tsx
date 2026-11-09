@@ -3,8 +3,14 @@ import type { ReactElement } from "react";
 import { I18nextProvider } from "react-i18next";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { authTestI18n } from "@/features/auth/testingI18n";
+import { approvalInstanceQuery } from "@/features/approvals/api";
+import { leaveAtHrInstanceFixture } from "@/features/approvals/fixtures";
 import { rosteredDaysQuery } from "@/features/leave/api";
-import { LEAVE_FIXTURES, LEAVE_TYPE_FIXTURES } from "@/features/leave/fixtures";
+import {
+	LEAVE_FIXTURES,
+	LEAVE_TYPE_FIXTURES,
+	leaveAtStepFixture,
+} from "@/features/leave/fixtures";
 import { LeaveRequestDialog } from "@/features/leave/LeaveRequestDialog";
 
 const employees = {
@@ -31,6 +37,25 @@ client.setQueryData(
 	).queryKey,
 	[{ day: reviewed.startDate, minutes: 480 }]
 );
+// Aisha's leave under Manager → HR: the steps for a reviewer who reads approvals, and HR's rostered day.
+const atHr = leaveAtStepFixture(2);
+client.setQueryData(
+	approvalInstanceQuery("c-1", "ai-leave").queryKey,
+	leaveAtHrInstanceFixture()
+);
+client.setQueryData(
+	rosteredDaysQuery(
+		"c-1",
+		{ start: atHr.startDate, end: atHr.endDate },
+		atHr.membershipId
+	).queryKey,
+	[{ day: atHr.startDate, minutes: 480 }]
+);
+const reviewerLifecycle = {
+	companyId: "c-1",
+	own: false,
+	onDone: (): void => {},
+};
 
 const meta = {
 	title: "Features/Leave/LeaveRequestDialog",
@@ -82,5 +107,33 @@ export const ApplyRefused: Story = {
 			fields: { endDate: "They already have leave on one of these days." },
 			refreshMembers: false,
 		},
+	},
+};
+
+/** Under a flow, at HR (step 2 of 2), the reviewer's turn: the steps so far, then Approve and Reject. */
+export const MidFlowReviewer: Story = {
+	args: {
+		request: atHr,
+		readsApprovalSteps: true,
+		lifecycle: reviewerLifecycle,
+	},
+};
+
+/** Under a flow, at Manager (step 1 of 2): approving moves it on, so no roster check and no required comment. */
+export const MidFlowApproveStepOne: Story = {
+	args: { request: leaveAtStepFixture(1), mode: "approve" },
+};
+
+/** Under a flow, the last step: the roster check and the step it approves. */
+export const MidFlowApproveLastStep: Story = {
+	args: { request: atHr, mode: "approve", lifecycle: reviewerLifecycle },
+};
+
+/** The member's own request under a flow: only the step it waits on. */
+export const MidFlowOwn: Story = {
+	args: {
+		request: leaveAtStepFixture(1),
+		canReview: false,
+		lifecycle: { companyId: "c-1", own: true, onDone: (): void => {} },
 	},
 };

@@ -27,8 +27,22 @@ export const leaveFixture = (
 	reviewedBy: null,
 	rejectionReason: null,
 	approvalComment: null,
+	approval: null,
+	rejectedAtStep: null,
 	...overrides,
 });
+
+/** Aisha's request under the company's leave flow, waiting on step `step` of 2 (Manager, then HR). */
+export const leaveAtStepFixture = (step: 1 | 2): LeaveRequest =>
+	leaveFixture({
+		leaveRequestId: "leave-aisha",
+		approval: {
+			approvalInstanceId: "ai-leave",
+			currentStepOrder: step,
+			currentStepLabel: step === 1 ? "Manager" : "HR",
+			stepCount: 2,
+		},
+	});
 
 /** A Singapore branch's May 2026 requests: pending, approved and rejected, three people. */
 export const LEAVE_FIXTURES: Array<LeaveRequest> = [
