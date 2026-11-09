@@ -124,8 +124,9 @@ export const NotificationList = ({
 		pendingFocus.current = undefined;
 		const next = rows[Math.min(pending.index, rows.length - 1)];
 		const button = next && deleteButtons.current.get(next.notificationId);
-		if (button) button.focus();
-		else listRef.current?.focus();
+		button?.focus();
+		// On a phone the delete button is in the row's menu, hidden, so focus goes to the list.
+		if (!button || document.activeElement !== button) listRef.current?.focus();
 	}, [rows]);
 
 	const deleteRow = (notification: InboxNotification, index: number): void => {

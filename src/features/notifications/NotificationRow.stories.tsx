@@ -116,3 +116,7 @@ export const RosterChangedWithRemark: Story = {
 		children: "Your shifts on a published schedule changed.",
 	},
 };
+/** On a phone the actions sit in the row's menu. */
+export const Phone: Story = {
+	parameters: { viewport: { defaultViewport: "mobile1" } },
+};

@@ -10,6 +10,7 @@
 		"unreadCount_one": "Notifications, {{count}} unread",
 		"unreadCount_other": "Notifications, {{count}} unread",
 		"countUnavailable": "Notifications, unread count unavailable",
+		"actions": "Notification actions",
 		"markRead": "Mark as read",
 		"markAllRead": "Mark all as read",
 		"remark": "Remark:",

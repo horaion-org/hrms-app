@@ -10,6 +10,7 @@
 		"unreadCount_one": "Notificaciones, {{count}} sin leer",
 		"unreadCount_other": "Notificaciones, {{count}} sin leer",
 		"countUnavailable": "Notificaciones, recuento no disponible",
+		"actions": "Acciones de la notificación",
 		"markRead": "Marcar como leída",
 		"markAllRead": "Marcar todas como leídas",
 		"remark": "Comentario:",
