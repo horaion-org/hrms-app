@@ -30,7 +30,7 @@ import {
 	statusFilterOptions,
 	type StatusFilter,
 } from "@/features/organisation/listColumns";
-import { useAccessRoles } from "@/features/organisation/useOrganisationList";
+import { useAccessRoles } from "@/features/accessRoles/useAccessRoles";
 import { roleSummaryText } from "@/features/accessRoles/sectionLevels";
 import { isPermissionKey } from "@/features/workspace/permissionKeys";
 import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";

@@ -31,10 +31,8 @@ import {
 } from "@/features/accessRoles/assignmentTargets";
 import { placeKey, scopeOfPlace } from "@/features/workspace/places";
 import { useCreateFormSubmit } from "@/features/organisation/useCreateFormSubmit";
-import {
-	useAccessRoles,
-	useJobTitles,
-} from "@/features/organisation/useOrganisationList";
+import { useJobTitles } from "@/features/organisation/useOrganisationList";
+import { useAccessRoles } from "@/features/accessRoles/useAccessRoles";
 import {
 	EMPLOYMENT_TYPES,
 	isEmploymentType,
