@@ -5,7 +5,7 @@ import type { FunctionComponent } from "@/common/types";
 import { Textarea } from "@/components/forms/Textarea";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { APPROVAL_COMMENT_MAX_LENGTH } from "@/features/approvals/api";
-import { decisionRefusal as approvalRefusal } from "@/features/approvals/approvalRefusal";
+import { approvalDecisionRefusal } from "@/features/approvals/approvalRefusal";
 import {
 	stepSummary,
 	type OpenStep,
@@ -137,7 +137,7 @@ export const PublishScheduleDialog = ({
 	const scheduleMutation = mode.kind === "submit" ? submit : publish;
 	const approving = mode.kind === "approve";
 	const approveRefusal = approve.error
-		? approvalRefusal(approve.error, t)
+		? approvalDecisionRefusal(approve.error, t)
 		: undefined;
 	const commentError = approveRefusal?.fields.comment;
 	const error = approving

@@ -139,7 +139,7 @@ export type DecisionField = "reason" | "comment";
  * A request under a flow is decided through the approvals API, whose
  * refusals are worded here too.
  */
-export const decisionRefusal = (
+export const leaveDecisionRefusal = (
 	error: unknown,
 	t: TFunction
 ): Refusal<DecisionField> => {

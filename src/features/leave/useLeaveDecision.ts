@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { approvedMessage } from "@/features/leave/leaveApproval";
 import type { LeaveReview } from "@/features/leave/LeaveRequestDialog";
 import {
-	decisionRefusal,
+	leaveDecisionRefusal,
 	type DecisionField,
 } from "@/features/leave/leaveRefusal";
 import type { LeaveRequest } from "@/features/leave/types";
@@ -44,7 +44,7 @@ export const useLeaveDecision = (
 	const turns = useLeaveTurns(companyId);
 	const [refusal, setRefusal] = useState<Refusal<DecisionField>>();
 	const refused = (error: Error): void => {
-		setRefusal(decisionRefusal(error, t));
+		setRefusal(leaveDecisionRefusal(error, t));
 	};
 	const decided = (message: string): void => {
 		setRefusal(undefined);

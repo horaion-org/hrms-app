@@ -3,7 +3,7 @@ import { ApiProblemError } from "@/common/problem";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import {
 	applyRefusal,
-	decisionRefusal,
+	leaveDecisionRefusal,
 	isRosterClash,
 	isStaleDecision,
 } from "@/features/leave/leaveRefusal";
@@ -22,11 +22,13 @@ const problem = (
 		reason: "http",
 	});
 
-describe("decisionRefusal", () => {
+describe("leaveDecisionRefusal", () => {
 	it("puts a missing comment on approving past leave on the comment field", () => {
 		expect(
-			decisionRefusal(problem(400, "LEAVE_COMMENT_REQUIRED_FOR_PAST_DAYS"), t)
-				.fields
+			leaveDecisionRefusal(
+				problem(400, "LEAVE_COMMENT_REQUIRED_FOR_PAST_DAYS"),
+				t
+			).fields
 		).toEqual({
 			comment: "Enter a comment: this leave includes days before today.",
 		});
@@ -76,20 +78,21 @@ describe("refusals under an approval flow", () => {
 
 	it("words the approvals route's refusals of a step's decision", () => {
 		expect(
-			decisionRefusal(problem(409, "APPROVAL_STEP_ALREADY_DECIDED"), t).message
+			leaveDecisionRefusal(problem(409, "APPROVAL_STEP_ALREADY_DECIDED"), t)
+				.message
 		).toBe(
 			"Someone else decided this step first. Reload the page to see where it stands."
 		);
-		expect(decisionRefusal(problem(403, "NOT_AN_APPROVER"), t).message).toBe(
-			"You can’t decide this step."
-		);
 		expect(
-			decisionRefusal(problem(403, "OWN_APPROVAL_DENIED"), t).message
+			leaveDecisionRefusal(problem(403, "NOT_AN_APPROVER"), t).message
+		).toBe("You can’t decide this step.");
+		expect(
+			leaveDecisionRefusal(problem(403, "OWN_APPROVAL_DENIED"), t).message
 		).toBe(
 			"You can’t approve or reject your own leave. Another reviewer needs to decide it."
 		);
 		expect(
-			decisionRefusal(problem(409, "LEAVE_APPROVAL_PENDING"), t).message
+			leaveDecisionRefusal(problem(409, "LEAVE_APPROVAL_PENDING"), t).message
 		).toBe(
 			"This request now goes through approval steps. Reload the page to see where it stands."
 		);
