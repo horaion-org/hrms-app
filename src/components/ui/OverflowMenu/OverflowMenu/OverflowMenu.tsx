@@ -34,8 +34,11 @@ export type OverflowMenuProps = {
 	  }
 );
 
-/** The panel the compact triggers (icon and avatar) open, below and aligned to their end. */
-const compactPanelClasses =
+/**
+ * The panel the compact triggers (icon and avatar) open, below and aligned to
+ * their end; also the `DataTable` sort menu's panel. The caller adds a `min-w-*`.
+ */
+export const compactMenuPanelClasses =
 	"z-10 w-max divide-y divide-neutral-400 overflow-hidden rounded-lg border border-neutral-400 bg-white shadow-md outline-none [--anchor-gap:4px]";
 
 const IconOverflowMenu = ({
@@ -67,7 +70,7 @@ const IconOverflowMenu = ({
 		</MenuButton>
 		<MenuItems
 			anchor="bottom end"
-			className={joinClassNames(compactPanelClasses, "min-w-40")}
+			className={joinClassNames(compactMenuPanelClasses, "min-w-40")}
 		>
 			{children}
 		</MenuItems>
@@ -101,7 +104,7 @@ const AvatarOverflowMenu = ({
 		</MenuButton>
 		<MenuItems
 			anchor="bottom end"
-			className={joinClassNames(compactPanelClasses, "min-w-48")}
+			className={joinClassNames(compactMenuPanelClasses, "min-w-48")}
 		>
 			{children}
 		</MenuItems>
