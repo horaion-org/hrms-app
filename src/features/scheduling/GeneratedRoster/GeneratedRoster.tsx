@@ -12,7 +12,6 @@ import {
 	type DescriptionListItem,
 } from "@/components/ui/DescriptionList";
 import { FilterChips } from "@/components/ui/FilterChips";
-import type { CoverOffer } from "@/features/scheduling/coverOffers/api";
 import { OffersOutSection } from "@/features/scheduling/coverOffers/OffersOutSection";
 import { FindingList } from "@/features/scheduling/FindingList";
 import { FindingsPanel } from "@/features/scheduling/FindingsPanel";
@@ -65,7 +64,6 @@ import {
 import { RosterCellPanel } from "@/features/scheduling/RosterCellPanel";
 import type { RosterChange } from "@/features/scheduling/rosterChanges/api";
 import { rosterCellKey } from "@/features/scheduling/rosterChanges/rosterEdit";
-import type { RosterChangeTarget } from "@/features/scheduling/rosterChanges/useRosterChangeActions";
 import { RosterGrid } from "@/features/scheduling/RosterGrid";
 import {
 	RosterSidePanel,
@@ -75,9 +73,9 @@ import { RosterWeekBar } from "@/features/scheduling/RosterWeekBar";
 import type {
 	Schedule,
 	ScheduleAssignment,
-	ScheduleShift,
 } from "@/features/scheduling/schedules/api";
 import { ShiftDetailsPanel } from "@/features/scheduling/ShiftDetailsPanel";
+import type { RosterEditing } from "./rosterEditing";
 import { ROSTER_SIDE_LISTS } from "./rosterSideLists";
 
 /** What the roster reads of its schedule: its week, the zone its days are in and, for the findings, its generation. */
@@ -86,29 +84,6 @@ export type RosterSchedule = Pick<
 	"periodStart" | "periodEnd" | "timeZone"
 > &
 	Partial<Pick<Schedule, "generation">>;
-
-/** What changing the roster by hand needs; given only to someone who may change it now. */
-export type RosterEditing = {
-	target: RosterChangeTarget;
-	/** The roster revision on screen. */
-	revision: number;
-	/** The schedule's frozen shifts, with their days and roles. */
-	shifts: ReadonlyArray<ScheduleShift>;
-	/** The roster is published: each change tells the people whose days it changes, so it asks first. */
-	notifiesMembers: boolean;
-	/** Given to someone who may change leave here too: the leave choices beside the roster's own. */
-	leave?: { viewerMembershipId: string };
-	/**
-	 * On a published roster: its cover offers, read by the page. A change that
-	 * adds or moves work then goes out as an offer, and Issues lists them.
-	 */
-	coverOffers?: {
-		offers: ReadonlyArray<CoverOffer>;
-		/** They couldn't be read: Issues says so, with Try again. */
-		failed: boolean;
-		retry: () => void;
-	};
-};
 
 export type GeneratedRosterProps = {
 	schedule: RosterSchedule;
