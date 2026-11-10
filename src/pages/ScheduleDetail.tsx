@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import type { DepartmentPath } from "@/common/companyPath";
 import { dateTimeFormatIn } from "@/common/dateTimeFormatIn";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
@@ -21,7 +22,6 @@ import {
 	type RosterEditing,
 } from "@/features/scheduling/GeneratedRoster";
 import { GenerationFailurePanel } from "@/features/scheduling/GenerationFailurePanel";
-import type { DepartmentPath } from "@/features/scheduling/paths";
 import {
 	PublishScheduleDialog,
 	type PublishMode,

@@ -3,7 +3,7 @@ import {
 	useQueryClient,
 	type UseMutationResult,
 } from "@tanstack/react-query";
-import type { DepartmentPath } from "@/features/scheduling/paths";
+import type { DepartmentPath } from "@/common/companyPath";
 import {
 	applyRosterChange,
 	latestRosterChangeKey,

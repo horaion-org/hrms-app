@@ -1,4 +1,4 @@
-import type { DepartmentPath } from "@/features/scheduling/paths";
+import type { DepartmentPath } from "@/common/companyPath";
 import type { Workspace } from "@/features/workspace/api";
 import type { PermissionKey } from "@/features/workspace/permissionKeys";
 import {

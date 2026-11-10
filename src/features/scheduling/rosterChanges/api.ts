@@ -1,8 +1,9 @@
 import { queryOptions, skipToken } from "@tanstack/react-query";
 import { z } from "zod";
 import { apiRequest } from "@/common/api-client";
+import type { DepartmentPath } from "@/common/companyPath";
 import type { QueryOptionsFor } from "@/common/query-client";
-import { schedulePath, type DepartmentPath } from "@/features/scheduling/paths";
+import { schedulePath } from "@/features/scheduling/paths";
 import {
 	rosterCellSchema,
 	scheduleAssignmentSchema,

@@ -1,7 +1,11 @@
 import { queryOptions, skipToken } from "@tanstack/react-query";
 import { z } from "zod";
 import { apiRequest, apiRequestVoid } from "@/common/api-client";
-import { companyPath } from "@/common/companyPath";
+import {
+	companyPath,
+	departmentPath,
+	type DepartmentPath,
+} from "@/common/companyPath";
 import { ApiProblemError } from "@/common/problem";
 import type { QueryOptionsFor } from "@/common/query-client";
 import { weekdaySchema } from "@/common/weekdays";
@@ -12,10 +16,6 @@ import type {
 	WeekAvailability,
 	WeeklyAvailability,
 } from "@/features/availability/availabilityModel";
-import {
-	departmentPath,
-	type DepartmentPath,
-} from "@/features/scheduling/paths";
 import {
 	accessiblePreviousData,
 	administrativeMeta,

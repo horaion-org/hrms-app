@@ -1,17 +1,11 @@
-import { companyPath } from "@/common/companyPath";
-
-/** The Branch and Department a department-scoped route names. */
-export type DepartmentPath = { branchId: string; departmentId: string };
+import {
+	companyPath,
+	departmentPath,
+	type DepartmentPath,
+} from "@/common/companyPath";
 
 /** Every scheduling query key starts `["scheduling", companyId, …]`. */
 export const SCHEDULING_QUERY_ROOT = "scheduling";
-
-/** One Department's routes; its shifts, constraints and schedules sit under it. */
-export const departmentPath = (
-	companyId: string,
-	{ branchId, departmentId }: DepartmentPath
-): string =>
-	`${companyPath(companyId)}/branches/${encodeURIComponent(branchId)}/departments/${encodeURIComponent(departmentId)}`;
 
 /** A department's live shifts. */
 export const shiftsPath = (companyId: string, unit: DepartmentPath): string =>

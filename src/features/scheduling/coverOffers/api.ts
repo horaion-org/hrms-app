@@ -1,12 +1,11 @@
 import { queryOptions, skipToken } from "@tanstack/react-query";
 import { z } from "zod";
 import { apiRequest } from "@/common/api-client";
-import { companyPath } from "@/common/companyPath";
+import { companyPath, type DepartmentPath } from "@/common/companyPath";
 import type { QueryOptionsFor } from "@/common/query-client";
 import {
-	SCHEDULING_QUERY_ROOT,
 	schedulePath,
-	type DepartmentPath,
+	SCHEDULING_QUERY_ROOT,
 } from "@/features/scheduling/paths";
 import type { RosterChangeCell } from "@/features/scheduling/rosterChanges/api";
 import {

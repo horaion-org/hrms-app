@@ -6,6 +6,7 @@ import {
 	apiRequestVoid,
 	type DownloadedFile,
 } from "@/common/api-client";
+import type { DepartmentPath } from "@/common/companyPath";
 import type { QueryOptionsFor } from "@/common/query-client";
 import { publicationSubmissionSchema } from "@/features/approvals/api";
 import {
@@ -16,10 +17,9 @@ import {
 } from "@/features/scheduling/constraints/api";
 import {
 	companySchedulePath,
-	SCHEDULING_QUERY_ROOT,
 	schedulePath,
 	schedulesPath,
-	type DepartmentPath,
+	SCHEDULING_QUERY_ROOT,
 } from "@/features/scheduling/paths";
 import {
 	SHIFT_COLOUR_PATTERN,

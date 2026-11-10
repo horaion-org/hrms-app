@@ -4,12 +4,10 @@ import {
 	useQueryClient,
 	type UseMutationResult,
 } from "@tanstack/react-query";
+import type { DepartmentPath } from "@/common/companyPath";
 import { ApiProblemError } from "@/common/problem";
 import { approvalKeys } from "@/features/approvals/api";
-import {
-	SCHEDULING_QUERY_ROOT,
-	type DepartmentPath,
-} from "@/features/scheduling/paths";
+import { SCHEDULING_QUERY_ROOT } from "@/features/scheduling/paths";
 import {
 	companyScheduleQuery,
 	createSchedule,

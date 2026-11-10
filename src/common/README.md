@@ -7,7 +7,8 @@ The directory contains:
 - `types.ts`: the `FunctionComponent` return type, and the `Heroicon` type that also describes Horaion's own icons.
 - `createMemoryRouter.tsx`: the memory router used by tests and stories (below).
 - `joinClassNames.ts`: joins the class names that are set, for components that accept a `className`.
-- `companyPath.ts`: `/api/v1/companies/{companyId}`, the path every company-scoped request starts from.
+- `companyPath.ts`: `/api/v1/companies/{companyId}`, the path every company-scoped request starts from, and
+  `departmentPath` for one Branch's Department under it.
 - `countries.ts`: the ISO 3166-1 alpha-2 codes the API accepts and their names in the user's language.
 - `relativeTime.ts`: `timeAgo`, the localised "5 minutes ago" used by activity and notifications.
 - `useNow.ts`: the current time, renewed on an interval, for relative times that must stay current while shown.
