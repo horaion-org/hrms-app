@@ -37,6 +37,36 @@ export type { ApplyEmployees } from "./LeaveApplyForm";
 /** Where a review stands: reading the request, or confirming a decision with its note. */
 type ReviewStep = "review" | "reject" | "approve";
 
+/**
+ * Deciding the shown request: what the reviewer may do and what the host
+ * does with their decision. Without it the request is only read.
+ */
+export type LeaveReview = {
+	/**
+	 * Whether the person may decide the shown request now; Approve and Reject
+	 * are offered only then. Under an approval flow, whether its open step
+	 * waits on them.
+	 */
+	canReview: boolean;
+	/**
+	 * Whether the person reads approvals where the request's member is filed:
+	 * a request under a flow then shows its steps and who decided them;
+	 * otherwise only the step it waits on.
+	 */
+	readsApprovalSteps: boolean;
+	/** While a decision is being sent. */
+	busy: boolean;
+	/** Why the last decision was refused: on the note's field, or as the dialog's alert. */
+	refusal?: Refusal<DecisionField>;
+	/** `comment` is trimmed, and empty when the reviewer wrote none. */
+	onApprove: (
+		request: LeaveRequest,
+		comment: string,
+		takeOffRosteredDays: boolean
+	) => void;
+	onReject: (request: LeaveRequest, reason: string) => void;
+};
+
 export type LeaveRequestDialogProps = {
 	request?: LeaveRequest;
 	/** `reject` and `approve` open straight at that decision's confirmation step. */
@@ -50,6 +80,8 @@ export type LeaveRequestDialogProps = {
 		own: boolean;
 		onDone: (message: string) => void;
 	};
+	/** Deciding the shown request; left out, it is only read. */
+	review?: LeaveReview;
 	/** Who leave may be applied for; left out in `apply` mode when the caller applies for themself. */
 	employees?: ApplyEmployees;
 	/**
@@ -63,30 +95,11 @@ export type LeaveRequestDialogProps = {
 	 */
 	leaveTypesStatus?: LeaveTypesStatus;
 	onRetryLeaveTypes?: () => void;
-	/**
-	 * Whether the person may decide the shown request now; Approve and Reject
-	 * are offered only then. Under an approval flow, whether its open step
-	 * waits on them.
-	 */
-	canReview?: boolean;
-	/**
-	 * Whether the person reads approvals where the request's member is filed:
-	 * a request under a flow then shows its steps and who decided them;
-	 * otherwise only the step it waits on.
-	 */
-	readsApprovalSteps?: boolean;
-	/** While a decision or an application is being sent. */
+	/** While an application is being sent. */
 	busy?: boolean;
-	/** Why the last decision or application was refused: on a field, or as the dialog's alert. */
-	refusal?: Refusal<ApplyField | DecisionField>;
+	/** Why the last application was refused: on a field, or as the form's alert. */
+	refusal?: Refusal<ApplyField>;
 	onClose: () => void;
-	/** `comment` is trimmed, and empty when the reviewer wrote none. */
-	onApprove: (
-		request: LeaveRequest,
-		comment: string,
-		takeOffRosteredDays: boolean
-	) => void;
-	onReject: (request: LeaveRequest, reason: string) => void;
 	/** `membershipId` is null when the caller applies for themself. */
 	onCreate: (membershipId: string | null, body: LeaveRequestBody) => void;
 	/** Today; the reviewer's device's by default. Approving leave before it needs a comment. */
@@ -114,13 +127,10 @@ export const LeaveRequestDialog = ({
 	leaveTypes = [],
 	leaveTypesStatus = "success",
 	onRetryLeaveTypes,
-	canReview = false,
-	readsApprovalSteps = false,
+	review,
 	busy = false,
 	refusal,
 	onClose,
-	onApprove,
-	onReject,
 	onCreate,
 	today: todayOverride,
 }: LeaveRequestDialogProps): FunctionComponent => {
@@ -138,6 +148,7 @@ export const LeaveRequestDialog = ({
 	const [missingRejectionReason, setMissingRejectionReason] = useState(false);
 	const [missingApprovalComment, setMissingApprovalComment] = useState(false);
 	const [takeOffConfirmed, setTakeOffConfirmed] = useState(false);
+	const canReview = review?.canReview ?? false;
 	// Only the decision that approves the leave takes the person off their shifts.
 	const checksRoster =
 		lifecycle !== undefined &&
@@ -164,7 +175,7 @@ export const LeaveRequestDialog = ({
 		approval !== null &&
 		lifecycle !== undefined &&
 		!lifecycle.own &&
-		readsApprovalSteps;
+		review?.readsApprovalSteps === true;
 	const trail = useQuery(
 		approvalInstanceQuery(
 			lifecycle?.companyId ?? "",
@@ -187,7 +198,9 @@ export const LeaveRequestDialog = ({
 			/>
 		);
 	if (!request) return null;
-	const fields = refusal?.fields ?? {};
+	const reviewRefusal = review?.refusal;
+	const deciding = review?.busy ?? false;
+	const fields = reviewRefusal?.fields ?? {};
 	const rejecting = step === "reject";
 	const stage = leaveDecisionStage(request);
 	const rejectionReasonError = missingRejectionReason
@@ -199,19 +212,24 @@ export const LeaveRequestDialog = ({
 		? t("leave.commentMissing")
 		: fields.comment;
 	const decide = (): void => {
+		if (!review) return;
 		if (!rejecting) {
 			if (commentRequired && !approvalComment.trim()) {
 				setMissingApprovalComment(true);
 				return;
 			}
-			onApprove(request, approvalComment.trim(), rosteredDays.length > 0);
+			review.onApprove(
+				request,
+				approvalComment.trim(),
+				rosteredDays.length > 0
+			);
 			return;
 		}
 		if (!rejectionReason.trim()) {
 			setMissingRejectionReason(true);
 			return;
 		}
-		onReject(request, rejectionReason.trim());
+		review.onReject(request, rejectionReason.trim());
 	};
 	const approvalLine = leaveApprovalLine(request, canReview);
 	const moment = dateTimeFormatIn(
@@ -259,7 +277,7 @@ export const LeaveRequestDialog = ({
 							type="submit"
 							variant={rejecting ? "danger" : "primary"}
 							disabled={
-								busy || (!rejecting && (unconfirmedClash || rosterUnknown))
+								deciding || (!rejecting && (unconfirmedClash || rosterUnknown))
 							}
 						>
 							{t(
@@ -271,7 +289,7 @@ export const LeaveRequestDialog = ({
 					<div className="flex justify-end gap-3">
 						<Button
 							className="border-error-300! bg-error-50! text-error-600!"
-							disabled={busy}
+							disabled={deciding}
 							leadingIcon={<CrossIcon />}
 							variant="secondary"
 							onClick={() => {
@@ -281,7 +299,7 @@ export const LeaveRequestDialog = ({
 							{t("leave.reject")}
 						</Button>
 						<Button
-							disabled={busy}
+							disabled={deciding}
 							leadingIcon={<TickIcon />}
 							onClick={() => {
 								setStep("approve");
@@ -294,9 +312,9 @@ export const LeaveRequestDialog = ({
 			}
 			onClose={onClose}
 		>
-			{refusal?.message && (
+			{reviewRefusal?.message && (
 				<p className="mb-6 text-sm text-error-700" role="alert">
-					{refusal.message}
+					{reviewRefusal.message}
 				</p>
 			)}
 			<LeaveRequestDetails request={request} />

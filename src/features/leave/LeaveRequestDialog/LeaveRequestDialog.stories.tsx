@@ -11,7 +11,10 @@ import {
 	LEAVE_TYPE_FIXTURES,
 	leaveAtStepFixture,
 } from "@/features/leave/fixtures";
-import { LeaveRequestDialog } from "@/features/leave/LeaveRequestDialog";
+import {
+	LeaveRequestDialog,
+	type LeaveReview,
+} from "@/features/leave/LeaveRequestDialog";
 
 const employees = {
 	search: "",
@@ -57,6 +60,15 @@ const reviewerLifecycle = {
 	onDone: (): void => {},
 };
 
+/** A reviewer whose turn it is, who does not read the approval's steps. */
+const reviewer: LeaveReview = {
+	canReview: true,
+	readsApprovalSteps: false,
+	busy: false,
+	onApprove: (): void => {},
+	onReject: (): void => {},
+};
+
 const meta = {
 	title: "Features/Leave/LeaveRequestDialog",
 	component: LeaveRequestDialog,
@@ -71,11 +83,9 @@ const meta = {
 	],
 	args: {
 		request: LEAVE_FIXTURES[1],
-		canReview: true,
+		review: reviewer,
 		employees,
 		onClose: (): void => {},
-		onApprove: (): void => {},
-		onReject: (): void => {},
 		onCreate: (): void => {},
 	},
 } satisfies Meta<typeof LeaveRequestDialog>;
@@ -84,7 +94,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Pending: Story = {};
-export const ReadOnly: Story = { args: { canReview: false } };
+export const ReadOnly: Story = { args: { review: undefined } };
 export const Rejection: Story = { args: { mode: "reject" } };
 export const Approval: Story = { args: { mode: "approve" } };
 /** The reviewer must tick the shifts before the approval can be confirmed. */
@@ -114,7 +124,7 @@ export const ApplyRefused: Story = {
 export const MidFlowReviewer: Story = {
 	args: {
 		request: atHr,
-		readsApprovalSteps: true,
+		review: { ...reviewer, readsApprovalSteps: true },
 		lifecycle: reviewerLifecycle,
 	},
 };
@@ -133,7 +143,7 @@ export const MidFlowApproveLastStep: Story = {
 export const MidFlowOwn: Story = {
 	args: {
 		request: leaveAtStepFixture(1),
-		canReview: false,
+		review: undefined,
 		lifecycle: { companyId: "c-1", own: true, onDone: (): void => {} },
 	},
 };

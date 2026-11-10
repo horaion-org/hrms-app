@@ -58,26 +58,28 @@ export const LinkedLeaveRequest = ({
 	const request = query.data;
 	return (
 		<LeaveRequestDialog
-			busy={actions.approve.isPending || actions.reject.isPending}
-			canReview={turns.canDecide(request)}
 			lifecycle={{ companyId, own: memberId === undefined, onDone: onClose }}
-			readsApprovalSteps={turns.readsApprovalSteps(request)}
-			refusal={refusal}
 			request={request}
+			review={{
+				canReview: turns.canDecide(request),
+				readsApprovalSteps: turns.readsApprovalSteps(request),
+				busy: actions.approve.isPending || actions.reject.isPending,
+				refusal,
+				onApprove: (record, comment, takeOffRosteredDays) => {
+					actions.approve.mutate(
+						{ request: record, comment, takeOffRosteredDays },
+						{ onSuccess: onClose, onError: failed }
+					);
+				},
+				onReject: (record, reason) => {
+					actions.reject.mutate(
+						{ request: record, reason },
+						{ onSuccess: onClose, onError: failed }
+					);
+				},
+			}}
 			onClose={onClose}
 			onCreate={() => {}}
-			onApprove={(record, comment, takeOffRosteredDays) => {
-				actions.approve.mutate(
-					{ request: record, comment, takeOffRosteredDays },
-					{ onSuccess: onClose, onError: failed }
-				);
-			}}
-			onReject={(record, reason) => {
-				actions.reject.mutate(
-					{ request: record, reason },
-					{ onSuccess: onClose, onError: failed }
-				);
-			}}
 		/>
 	);
 };

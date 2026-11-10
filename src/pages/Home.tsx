@@ -154,6 +154,17 @@ const Dashboard = ({
 			}
 		);
 	};
+	const reject = (request: LeaveRequest, reason: string): void => {
+		actions.reject.mutate(
+			{ request, reason },
+			{
+				onSuccess: () => {
+					decided(t("leave.rejected", { name: request.displayName }));
+				},
+				onError: refused,
+			}
+		);
+	};
 	// Nobody decides their own leave; each request is decided where its member is filed, or by its flow's open step.
 	const canReview = turns.canDecide;
 
@@ -433,27 +444,19 @@ const Dashboard = ({
 			{decision && (
 				<LeaveRequestDialog
 					key={`${decision.request.leaveRequestId}-${decision.mode}`}
-					busy={busy}
-					canReview={canReview(decision.request)}
 					lifecycle={{ companyId, own: false, onDone: decided }}
 					mode={decision.mode}
-					readsApprovalSteps={turns.readsApprovalSteps(decision.request)}
-					refusal={refusal}
 					request={decision.request}
-					onApprove={approve}
+					review={{
+						canReview: canReview(decision.request),
+						readsApprovalSteps: turns.readsApprovalSteps(decision.request),
+						busy,
+						refusal,
+						onApprove: approve,
+						onReject: reject,
+					}}
 					onClose={close}
 					onCreate={() => undefined}
-					onReject={(request, reason) => {
-						actions.reject.mutate(
-							{ request, reason },
-							{
-								onSuccess: () => {
-									decided(t("leave.rejected", { name: request.displayName }));
-								},
-								onError: refused,
-							}
-						);
-					}}
 				/>
 			)}
 			{toast && (

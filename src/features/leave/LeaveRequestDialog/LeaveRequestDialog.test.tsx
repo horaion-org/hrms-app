@@ -19,6 +19,7 @@ import {
 import {
 	LeaveRequestDialog,
 	type LeaveRequestDialogProps,
+	type LeaveReview,
 } from "@/features/leave/LeaveRequestDialog";
 
 /** The dialog reads rostered days, and an approval's steps, through the query cache. */
@@ -32,6 +33,16 @@ const render = (
 		),
 	});
 };
+
+/** A reviewer whose turn it is, who does not read the approval's steps; `overrides` replace any part. */
+const reviewWith = (overrides: Partial<LeaveReview> = {}): LeaveReview => ({
+	canReview: true,
+	readsApprovalSteps: false,
+	busy: false,
+	onApprove: vi.fn(),
+	onReject: vi.fn(),
+	...overrides,
+});
 
 const pending = LEAVE_FIXTURES[1]!;
 /** Before the pending request's first day, so approving it needs no comment. */
@@ -56,12 +67,10 @@ it("requires a meaningful rejection reason and returns to review when cancelled"
 	render(
 		<I18nextProvider i18n={authTestI18n}>
 			<LeaveRequestDialog
-				canReview
 				request={pending}
-				onApprove={vi.fn()}
+				review={reviewWith({ onReject })}
 				onClose={vi.fn()}
 				onCreate={vi.fn()}
-				onReject={onReject}
 			/>
 		</I18nextProvider>
 	);
@@ -86,17 +95,15 @@ it("requires a meaningful rejection reason and returns to review when cancelled"
 
 it("confirms an approval with an optional trimmed comment and returns to review when cancelled", async () => {
 	const user = userEvent.setup();
-	const onApprove = vi.fn<LeaveRequestDialogProps["onApprove"]>();
+	const onApprove = vi.fn<LeaveReview["onApprove"]>();
 	render(
 		<I18nextProvider i18n={authTestI18n}>
 			<LeaveRequestDialog
-				canReview
 				request={pending}
+				review={reviewWith({ onApprove })}
 				today={BEFORE_THE_LEAVE}
-				onApprove={onApprove}
 				onClose={vi.fn()}
 				onCreate={vi.fn()}
-				onReject={vi.fn()}
 			/>
 		</I18nextProvider>
 	);
@@ -125,18 +132,16 @@ it("confirms an approval with an optional trimmed comment and returns to review 
 
 it("asks for a comment before approving leave that started before today, then sends it", async () => {
 	const user = userEvent.setup();
-	const onApprove = vi.fn<LeaveRequestDialogProps["onApprove"]>();
+	const onApprove = vi.fn<LeaveReview["onApprove"]>();
 	render(
 		<I18nextProvider i18n={authTestI18n}>
 			<LeaveRequestDialog
-				canReview
 				mode="approve"
 				request={pending}
+				review={reviewWith({ onApprove })}
 				today={AFTER_THE_LEAVE_STARTED}
-				onApprove={onApprove}
 				onClose={vi.fn()}
 				onCreate={vi.fn()}
-				onReject={vi.fn()}
 			/>
 		</I18nextProvider>
 	);
@@ -168,18 +173,17 @@ it("opens at the approval step and shows a refused comment on its field", () => 
 	render(
 		<I18nextProvider i18n={authTestI18n}>
 			<LeaveRequestDialog
-				canReview
 				mode="approve"
 				request={pending}
 				today={BEFORE_THE_LEAVE}
-				refusal={{
-					fields: { comment: "Enter a comment of up to 2,000 characters." },
-					refreshMembers: false,
-				}}
-				onApprove={vi.fn()}
+				review={reviewWith({
+					refusal: {
+						fields: { comment: "Enter a comment of up to 2,000 characters." },
+						refreshMembers: false,
+					},
+				})}
 				onClose={vi.fn()}
 				onCreate={vi.fn()}
-				onReject={vi.fn()}
 			/>
 		</I18nextProvider>
 	);
@@ -196,10 +200,8 @@ it("shows an approved request's comment", () => {
 		<I18nextProvider i18n={authTestI18n}>
 			<LeaveRequestDialog
 				request={LEAVE_FIXTURES[3]}
-				onApprove={vi.fn()}
 				onClose={vi.fn()}
 				onCreate={vi.fn()}
-				onReject={vi.fn()}
 			/>
 		</I18nextProvider>
 	);
@@ -213,10 +215,8 @@ it("offers no decision to someone who may not decide, and shows a rejected reque
 		<I18nextProvider i18n={authTestI18n}>
 			<LeaveRequestDialog
 				request={pending}
-				onApprove={vi.fn()}
 				onClose={vi.fn()}
 				onCreate={vi.fn()}
-				onReject={vi.fn()}
 			/>
 		</I18nextProvider>
 	);
@@ -227,12 +227,10 @@ it("offers no decision to someone who may not decide, and shows a rejected reque
 	render(
 		<I18nextProvider i18n={authTestI18n}>
 			<LeaveRequestDialog
-				canReview
 				request={LEAVE_FIXTURES[2]}
-				onApprove={vi.fn()}
+				review={reviewWith()}
 				onClose={vi.fn()}
 				onCreate={vi.fn()}
-				onReject={vi.fn()}
 			/>
 		</I18nextProvider>
 	);
@@ -254,10 +252,8 @@ it("applies for the chosen employee with the chosen type and dates, and shows a 
 				employees={employees}
 				leaveTypes={LEAVE_TYPE_FIXTURES}
 				mode="apply"
-				onApprove={vi.fn()}
 				onClose={vi.fn()}
 				onCreate={onCreate}
-				onReject={vi.fn()}
 			/>
 		</I18nextProvider>
 	);
@@ -288,10 +284,8 @@ it("applies for the chosen employee with the chosen type and dates, and shows a 
 					fields: { endDate: "They already have leave on one of these days." },
 					refreshMembers: false,
 				}}
-				onApprove={vi.fn()}
 				onClose={vi.fn()}
 				onCreate={onCreate}
-				onReject={vi.fn()}
 			/>
 		</I18nextProvider>
 	);
@@ -308,10 +302,8 @@ it("applies for the caller themself when no employees are offered", async () => 
 			<LeaveRequestDialog
 				leaveTypes={LEAVE_TYPE_FIXTURES}
 				mode="apply"
-				onApprove={vi.fn()}
 				onClose={vi.fn()}
 				onCreate={onCreate}
-				onReject={vi.fn()}
 			/>
 		</I18nextProvider>
 	);
@@ -336,10 +328,8 @@ it("sends trimmed remarks, counts them as they are typed, and leaves them out wh
 			<LeaveRequestDialog
 				leaveTypes={LEAVE_TYPE_FIXTURES}
 				mode="apply"
-				onApprove={vi.fn()}
 				onClose={vi.fn()}
 				onCreate={onCreate}
-				onReject={vi.fn()}
 			/>
 		</I18nextProvider>
 	);
@@ -364,10 +354,8 @@ it("sends trimmed remarks, counts them as they are typed, and leaves them out wh
 					fields: { notes: "Use 1,000 characters or fewer." },
 					refreshMembers: false,
 				}}
-				onApprove={vi.fn()}
 				onClose={vi.fn()}
 				onCreate={onCreate}
-				onReject={vi.fn()}
 			/>
 		</I18nextProvider>
 	);
@@ -384,10 +372,8 @@ it("shows the request's remarks with their line breaks, and no Remarks row when 
 		<I18nextProvider i18n={authTestI18n}>
 			<LeaveRequestDialog
 				request={pending}
-				onApprove={vi.fn()}
 				onClose={vi.fn()}
 				onCreate={vi.fn()}
-				onReject={vi.fn()}
 			/>
 		</I18nextProvider>
 	);
@@ -399,10 +385,8 @@ it("shows the request's remarks with their line breaks, and no Remarks row when 
 		<I18nextProvider i18n={authTestI18n}>
 			<LeaveRequestDialog
 				request={LEAVE_FIXTURES[0]}
-				onApprove={vi.fn()}
 				onClose={vi.fn()}
 				onCreate={vi.fn()}
-				onReject={vi.fn()}
 			/>
 		</I18nextProvider>
 	);
@@ -415,10 +399,8 @@ it("shows no reason row for a rejected request whose reason the API withholds", 
 		<I18nextProvider i18n={authTestI18n}>
 			<LeaveRequestDialog
 				request={{ ...LEAVE_FIXTURES[2]!, rejectionReason: null }}
-				onApprove={vi.fn()}
 				onClose={vi.fn()}
 				onCreate={vi.fn()}
-				onReject={vi.fn()}
 			/>
 		</I18nextProvider>
 	);
@@ -433,10 +415,8 @@ it("offers the company's applicable leave types grouped by how they are counted"
 			<LeaveRequestDialog
 				leaveTypes={LEAVE_TYPE_FIXTURES}
 				mode="apply"
-				onApprove={vi.fn()}
 				onClose={vi.fn()}
 				onCreate={vi.fn()}
-				onReject={vi.fn()}
 			/>
 		</I18nextProvider>
 	);
@@ -462,10 +442,8 @@ it("asks for a reason when the chosen leave type requires one, and sends it as r
 			<LeaveRequestDialog
 				leaveTypes={LEAVE_TYPE_FIXTURES}
 				mode="apply"
-				onApprove={vi.fn()}
 				onClose={vi.fn()}
 				onCreate={onCreate}
-				onReject={vi.fn()}
 			/>
 		</I18nextProvider>
 	);
@@ -512,10 +490,8 @@ it("shows a refused leave type on the type field", () => {
 					},
 					refreshMembers: false,
 				}}
-				onApprove={vi.fn()}
 				onClose={vi.fn()}
 				onCreate={vi.fn()}
-				onReject={vi.fn()}
 			/>
 		</I18nextProvider>
 	);
@@ -529,13 +505,7 @@ it("shows a refused leave type on the type field", () => {
 it("cannot submit before the company's leave types arrive", () => {
 	render(
 		<I18nextProvider i18n={authTestI18n}>
-			<LeaveRequestDialog
-				mode="apply"
-				onApprove={vi.fn()}
-				onClose={vi.fn()}
-				onCreate={vi.fn()}
-				onReject={vi.fn()}
-			/>
+			<LeaveRequestDialog mode="apply" onClose={vi.fn()} onCreate={vi.fn()} />
 		</I18nextProvider>
 	);
 	expect(screen.getByRole("button", { name: "Submit request" })).toBeDisabled();
@@ -547,10 +517,8 @@ it("says the leave types are loading, and holds Submit, while they are read", ()
 			<LeaveRequestDialog
 				leaveTypesStatus="pending"
 				mode="apply"
-				onApprove={vi.fn()}
 				onClose={vi.fn()}
 				onCreate={vi.fn()}
-				onReject={vi.fn()}
 			/>
 		</I18nextProvider>
 	);
@@ -569,10 +537,8 @@ it("explains leave types that failed to load and offers to read them again", asy
 			<LeaveRequestDialog
 				leaveTypesStatus="error"
 				mode="apply"
-				onApprove={vi.fn()}
 				onClose={vi.fn()}
 				onCreate={vi.fn()}
-				onReject={vi.fn()}
 				onRetryLeaveTypes={onRetryLeaveTypes}
 			/>
 		</I18nextProvider>
@@ -598,14 +564,11 @@ it("shows a reviewer who reads approvals the steps of a request under a flow, an
 	render(
 		<I18nextProvider i18n={authTestI18n}>
 			<LeaveRequestDialog
-				canReview
-				readsApprovalSteps
 				lifecycle={{ companyId: "c-1", own: false, onDone: vi.fn() }}
 				request={leaveAtStepFixture(2)}
-				onApprove={vi.fn()}
+				review={reviewWith({ readsApprovalSteps: true })}
 				onClose={vi.fn()}
 				onCreate={vi.fn()}
-				onReject={vi.fn()}
 			/>
 		</I18nextProvider>,
 		client
@@ -621,13 +584,11 @@ it("shows the member only the step their own request waits on", () => {
 	render(
 		<I18nextProvider i18n={authTestI18n}>
 			<LeaveRequestDialog
-				readsApprovalSteps
 				lifecycle={{ companyId: "c-1", own: true, onDone: vi.fn() }}
 				request={leaveAtStepFixture(1)}
-				onApprove={vi.fn()}
+				review={reviewWith({ canReview: false, readsApprovalSteps: true })}
 				onClose={vi.fn()}
 				onCreate={vi.fn()}
-				onReject={vi.fn()}
 			/>
 		</I18nextProvider>
 	);
@@ -643,13 +604,11 @@ it("asks no comment for past leave at a step before the last, and keeps the appr
 	render(
 		<I18nextProvider i18n={authTestI18n}>
 			<LeaveRequestDialog
-				canReview
 				request={leaveAtStepFixture(1)}
+				review={reviewWith({ onApprove })}
 				today={AFTER_THE_LEAVE_STARTED}
-				onApprove={onApprove}
 				onClose={vi.fn()}
 				onCreate={vi.fn()}
-				onReject={vi.fn()}
 			/>
 		</I18nextProvider>
 	);
@@ -667,13 +626,11 @@ it("asks the comment for past leave at the last step, as a single review does", 
 	render(
 		<I18nextProvider i18n={authTestI18n}>
 			<LeaveRequestDialog
-				canReview
 				request={leaveAtStepFixture(2)}
+				review={reviewWith({ onApprove })}
 				today={AFTER_THE_LEAVE_STARTED}
-				onApprove={onApprove}
 				onClose={vi.fn()}
 				onCreate={vi.fn()}
-				onReject={vi.fn()}
 			/>
 		</I18nextProvider>
 	);
@@ -688,12 +645,10 @@ it("keeps the approval route's limit on a rejection reason at a flow's step", as
 	render(
 		<I18nextProvider i18n={authTestI18n}>
 			<LeaveRequestDialog
-				canReview
 				request={leaveAtStepFixture(1)}
-				onApprove={vi.fn()}
+				review={reviewWith()}
 				onClose={vi.fn()}
 				onCreate={vi.fn()}
-				onReject={vi.fn()}
 			/>
 		</I18nextProvider>
 	);

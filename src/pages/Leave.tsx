@@ -176,11 +176,11 @@ export const Leave = (): FunctionComponent => {
 				(canRecord && dialog?.mode === "record")
 		)
 	);
-	const applying =
+	const applyFormOpen =
 		dialog?.mode === "apply" ||
 		dialog?.mode === "applyOwn" ||
 		dialog?.mode === "record";
-	const leaveTypes = useQuery(activeLeaveTypesQuery(companyId, applying));
+	const leaveTypes = useQuery(activeLeaveTypesQuery(companyId, applyFormOpen));
 	// Anything that changes which requests are listed starts again from the first page.
 	const show = (next: LeaveSearch): void => {
 		void navigate({
@@ -212,11 +212,23 @@ export const Leave = (): FunctionComponent => {
 			}
 		);
 	};
+	const reject = (request: LeaveRequest, reason: string): void => {
+		decisions.reject.mutate(
+			{ request, reason },
+			{
+				onSuccess: () => {
+					done(t("leave.rejected", { name: request.displayName }));
+				},
+				onError: (error) => {
+					setRefusal(decisionRefusal(error, t));
+				},
+			}
+		);
+	};
 	// Each request is decided where its member is filed, or by its flow's open step; nobody decides their own.
 	const canReview = turns.canDecide;
-	const busy =
-		decisions.approve.isPending ||
-		decisions.reject.isPending ||
+	const deciding = decisions.approve.isPending || decisions.reject.isPending;
+	const applying =
 		applyActions.apply.isPending ||
 		applyActions.applyOwn.isPending ||
 		applyActions.record.isPending;
@@ -470,8 +482,7 @@ export const Leave = (): FunctionComponent => {
 			{dialog && (
 				<LeaveRequestDialog
 					key={`${dialog.request?.leaveRequestId ?? "new"}-${dialog.mode}`}
-					busy={busy}
-					canReview={dialog.request ? canReview(dialog.request) : false}
+					busy={applying}
 					leaveTypes={leaveTypes.data}
 					leaveTypesStatus={leaveTypes.status}
 					mode={dialog.mode === "applyOwn" ? "apply" : dialog.mode}
@@ -498,10 +509,16 @@ export const Leave = (): FunctionComponent => {
 						own: dialog.request?.membershipId === ownMembershipId,
 						onDone: done,
 					}}
-					readsApprovalSteps={
-						dialog.request ? turns.readsApprovalSteps(dialog.request) : false
+					review={
+						dialog.request && {
+							canReview: canReview(dialog.request),
+							readsApprovalSteps: turns.readsApprovalSteps(dialog.request),
+							busy: deciding,
+							refusal,
+							onApprove: approve,
+							onReject: reject,
+						}
 					}
-					onApprove={approve}
 					onClose={close}
 					onCreate={(membershipId, body) => {
 						const handlers = {
@@ -540,19 +557,6 @@ export const Leave = (): FunctionComponent => {
 						} else if (membershipId === null)
 							applyActions.applyOwn.mutate(body, handlers);
 						else applyActions.apply.mutate({ membershipId, body }, handlers);
-					}}
-					onReject={(request, reason) => {
-						decisions.reject.mutate(
-							{ request, reason },
-							{
-								onSuccess: () => {
-									done(t("leave.rejected", { name: request.displayName }));
-								},
-								onError: (error) => {
-									setRefusal(decisionRefusal(error, t));
-								},
-							}
-						);
 					}}
 					onRetryLeaveTypes={() => {
 						void leaveTypes.refetch();
