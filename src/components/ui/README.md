@@ -21,7 +21,7 @@ a part that can open inside another sits one layer higher:
 | ------ | ------------------------------------------------------------------------------------- |
 | `z-1`  | Pinned `DataTable` cells, inside the table's own scrolling frame                      |
 | `z-10` | Menus: `OverflowMenu`, the `DataTable` sort menu                                      |
-| `z-50` | `Dialog`, `Modal`, `Toast`                                                            |
+| `z-50` | `Dialog`, `Toast`                                                                     |
 | `z-60` | Anchored panels: `FiltersPopover`, `DatePicker`, `NotificationBell`, `FindingsMarker` |
 | `z-70` | `Select` options, which can open inside a panel (a Filters field) or a `Dialog`       |
 
