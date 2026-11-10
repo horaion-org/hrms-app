@@ -17,7 +17,7 @@ import {
 } from "@/features/workspace/useCurrentCompany";
 
 /** What the person chose from a role's "More actions" menu. */
-export type SystemRoleAction = {
+export type AccessRoleAction = {
 	kind: "status" | "delete" | "duplicate";
 	role: AccessRole;
 };
@@ -87,19 +87,22 @@ const DeleteRole = ({ role, onClose }: Props): FunctionComponent => {
 	);
 };
 
+export type AccessRoleActionDialogProps = {
+	action: AccessRoleAction;
+	/** What the person holds company-wide: a duplicate keeps only those of the role's permissions. */
+	heldPermissions: ReadonlySet<string>;
+	onClose: () => void;
+};
+
 /**
- * The dialog for one action on a system role's list row. A duplicate starts
+ * The dialog for one action on an access role's list row. A duplicate starts
  * from the role's kind, its name and the permissions the person may grant.
  */
-export const SystemRoleActionDialog = ({
+export const AccessRoleActionDialog = ({
 	action,
 	heldPermissions,
 	onClose,
-}: {
-	action: SystemRoleAction;
-	heldPermissions: ReadonlySet<string>;
-	onClose: () => void;
-}): FunctionComponent => {
+}: AccessRoleActionDialogProps): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
 	const { t } = useTranslation();
 	const { kind, role } = action;

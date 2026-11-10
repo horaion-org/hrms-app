@@ -13,6 +13,10 @@ import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import { OverflowMenuItem } from "@/components/ui/OverflowMenu";
 import type { AccessRole } from "@/features/organisation/api";
+import {
+	AccessRoleActionDialog,
+	type AccessRoleAction,
+} from "@/features/accessRoles/AccessRoleActionDialog";
 import { AssignAccessRole } from "@/features/accessRoles/AssignAccessRole";
 import { CreateSystemRoleDialog } from "@/features/organisation/CreateSystemRoleDialog";
 import { ListToolbar } from "@/features/organisation/ListToolbar";
@@ -30,10 +34,6 @@ import { useAccessRoles } from "@/features/organisation/useOrganisationList";
 import { roleSummaryText } from "@/features/organisation/sectionLevels";
 import { isPermissionKey } from "@/features/workspace/permissionKeys";
 import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
-import {
-	SystemRoleActionDialog,
-	type SystemRoleAction,
-} from "@/pages/SystemRoleActions";
 
 /** Access roles: who may manage what, and where (Settings › Access roles). */
 export const SystemRoles = (): FunctionComponent => {
@@ -78,7 +78,7 @@ export const SystemRoles = (): FunctionComponent => {
 		[navigate]
 	);
 	const [assigning, setAssigning] = useState(false);
-	const [action, setAction] = useState<SystemRoleAction>();
+	const [action, setAction] = useState<AccessRoleAction>();
 	// Neither the Company Owner role nor an inactive role is assigned here.
 	const assignable =
 		// Assigning happens at a place; the dialog offers only places where it is held.
@@ -261,7 +261,7 @@ export const SystemRoles = (): FunctionComponent => {
 				/>
 			)}
 			{action && (
-				<SystemRoleActionDialog
+				<AccessRoleActionDialog
 					// A fresh dialog for each row and action.
 					key={`${action.kind}-${action.role.accessRoleId}`}
 					action={action}
