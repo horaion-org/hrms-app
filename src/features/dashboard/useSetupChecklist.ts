@@ -32,13 +32,13 @@ export type SetupChecklist =
 
 /** A count the workspace lets the person read, or nothing asked for. */
 const useCount = (
-	queryKey: ReadonlyArray<string>,
+	countKey: (companyId: string) => ReadonlyArray<string>,
 	companyId: string,
 	allowed: boolean,
 	fetchCount: (companyId: string) => Promise<number>
 ): number | undefined =>
 	useQuery({
-		queryKey,
+		queryKey: countKey(companyId),
 		retry,
 		meta: administrativeMeta(companyId),
 		queryFn: allowed ? (): Promise<number> => fetchCount(companyId) : skipToken,
@@ -60,25 +60,25 @@ export const useSetupChecklist = (companyId: string): SetupChecklist => {
 	const wanted = !dismissed && (canImportOrganisation || canImportPeople);
 	// The same entries as the Organisation overview's figures, so both share one fetch.
 	const branches = useCount(
-		organisationKeys.activeBranchCount(companyId),
+		organisationKeys.activeBranchCount,
 		companyId,
 		wanted && access.canAnywhere("branch:read"),
 		fetchActiveBranchCount
 	);
 	const departments = useCount(
-		organisationKeys.activeDepartmentCount(companyId),
+		organisationKeys.activeDepartmentCount,
 		companyId,
 		wanted && access.canAnywhere("department:read"),
 		fetchActiveDepartmentCount
 	);
 	const jobTitles = useCount(
-		organisationKeys.activeJobTitleCount(companyId),
+		organisationKeys.activeJobTitleCount,
 		companyId,
 		wanted && access.canAnywhere("job_title:read"),
 		fetchActiveJobTitleCount
 	);
 	const members = useCount(
-		peopleKeys.activeMemberCount(companyId),
+		peopleKeys.activeMemberCount,
 		companyId,
 		wanted && access.canAnywhere("member_profile:read"),
 		fetchActiveMemberCount

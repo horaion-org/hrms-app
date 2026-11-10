@@ -61,6 +61,7 @@
     "@storybook/react-vite": "^10.6.0",
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/devtools-vite": "^0.8.5",
+    "@tanstack/eslint-plugin-query": "^5.103.2",
     "@tanstack/react-devtools": "^0.10.12",
     "@tanstack/react-query-devtools": "^5.103.2",
     "@tanstack/react-table-devtools": "^9.2.0",

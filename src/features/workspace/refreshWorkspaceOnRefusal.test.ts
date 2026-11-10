@@ -38,6 +38,8 @@ const failQuery = async (
 	meta?: QueryAccessMeta
 ): Promise<void> => {
 	await queryClient
+		// A throwaway query that always fails with the given error; its key need not name it.
+		// eslint-disable-next-line @tanstack/query/exhaustive-deps
 		.fetchQuery({ queryKey, queryFn: () => Promise.reject(error), meta })
 		.catch(() => undefined);
 };

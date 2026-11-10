@@ -367,6 +367,8 @@ export const partTimeReadinessQuery = (
 	Array<MemberWithoutAvailability>,
 	readonly ["availability", string, "readiness", string, string, string]
 > =>
+	// The key holds unit's two ids, which is all a DepartmentPath is.
+	// eslint-disable-next-line @tanstack/query/exhaustive-deps
 	queryOptions({
 		queryKey: [
 			...availabilityRoot(companyId),
