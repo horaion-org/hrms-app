@@ -17,16 +17,10 @@ import { Tabs, TabList, Tab, TabPanels, TabPanel } from "@/components/ui/Tabs";
 import { activeLeaveTypesQuery } from "@/features/leave/api";
 import { defaultRange, rangeDays } from "@/features/leave/dates";
 import { LeaveRangeNavigator } from "@/features/leave/LeaveRangeNavigator";
-import { approvedMessage } from "@/features/leave/leaveApproval";
 import { LeaveRequestDialog } from "@/features/leave/LeaveRequestDialog";
 import { LinkedLeaveRequest } from "@/features/leave/LinkedLeaveRequest";
 import { LeaveRequests } from "@/features/leave/LeaveRequests";
-import {
-	applyRefusal,
-	decisionRefusal,
-	type ApplyField,
-	type DecisionField,
-} from "@/features/leave/leaveRefusal";
+import { applyRefusal, type ApplyField } from "@/features/leave/leaveRefusal";
 import {
 	leaveQueryOf,
 	myLeaveQueryOf,
@@ -39,13 +33,10 @@ import {
 import { LeaveStatusFilter } from "@/features/leave/LeaveStatusFilter";
 import { LeaveTimeline } from "@/features/leave/LeaveTimeline";
 import type { LeaveRequest, LeaveRequestBody } from "@/features/leave/types";
-import {
-	useLeaveApplyActions,
-	useLeaveDecisionActions,
-} from "@/features/leave/useLeaveActions";
+import { useLeaveApplyActions } from "@/features/leave/useLeaveActions";
+import { useLeaveDecision } from "@/features/leave/useLeaveDecision";
 import {
 	useLeaveRequests,
-	useLeaveTurns,
 	useMyLeaveRequests,
 	usePendingLeaveCount,
 	type LeaveList,
@@ -73,7 +64,8 @@ import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 
 const route = getRouteApi("/_authenticated/_app/leave");
 
-type Dialog = {
+/** The open dialog: a request being read or decided, or an application. */
+type LeaveDialogState = {
 	request?: LeaveRequest;
 	mode: "view" | "reject" | "approve" | "apply" | "applyOwn" | "record";
 };
@@ -153,14 +145,17 @@ export const Leave = (): FunctionComponent => {
 		units.branches.length > 0 ? timelineQueryOf(shownUnits, range) : undefined,
 		view === "timeline"
 	);
-	const decisions = useLeaveDecisionActions(companyId);
 	const applyActions = useLeaveApplyActions(companyId);
-	const turns = useLeaveTurns(companyId);
-	const [dialog, setDialog] = useState<Dialog | null>(null);
-	const [refusal, setRefusal] = useState<
-		Refusal<ApplyField | DecisionField> | undefined
-	>();
+	const [dialog, setDialog] = useState<LeaveDialogState | null>(null);
+	const [refusal, setRefusal] = useState<Refusal<ApplyField>>();
 	const [message, setMessage] = useState("");
+	// Each request is decided where its member is filed, or by its flow's open step; nobody decides their own.
+	const decision = useLeaveDecision(companyId, {
+		onDecided: (text) => {
+			setDialog(null);
+			setMessage(text);
+		},
+	});
 	const [employeeSearch, setEmployeeSearch] = useState("");
 	const settled = useSettledSearch(employeeSearch);
 	const people = useQuery(
@@ -190,44 +185,12 @@ export const Leave = (): FunctionComponent => {
 	const close = (): void => {
 		setDialog(null);
 		setRefusal(undefined);
+		decision.clearRefusal();
 	};
 	const done = (text: string): void => {
 		close();
 		setMessage(text);
 	};
-	const approve = (
-		request: LeaveRequest,
-		comment: string,
-		takeOffRosteredDays: boolean
-	): void => {
-		decisions.approve.mutate(
-			{ request, comment, takeOffRosteredDays },
-			{
-				onSuccess: () => {
-					done(approvedMessage(request, t));
-				},
-				onError: (error) => {
-					setRefusal(decisionRefusal(error, t));
-				},
-			}
-		);
-	};
-	const reject = (request: LeaveRequest, reason: string): void => {
-		decisions.reject.mutate(
-			{ request, reason },
-			{
-				onSuccess: () => {
-					done(t("leave.rejected", { name: request.displayName }));
-				},
-				onError: (error) => {
-					setRefusal(decisionRefusal(error, t));
-				},
-			}
-		);
-	};
-	// Each request is decided where its member is filed, or by its flow's open step; nobody decides their own.
-	const canReview = turns.canDecide;
-	const deciding = decisions.approve.isPending || decisions.reject.isPending;
 	const applying =
 		applyActions.apply.isPending ||
 		applyActions.applyOwn.isPending ||
@@ -481,7 +444,7 @@ export const Leave = (): FunctionComponent => {
 						{canRead && (
 							<TabPanel>
 								<LeaveRequests
-									canReview={canReview}
+									canReview={decision.canDecide}
 									page={search.page ?? 1}
 									rows={list.status === "ready" ? list.items : []}
 									sort={leaveQueryOf(search).sort}
@@ -538,6 +501,7 @@ export const Leave = (): FunctionComponent => {
 					key={`${dialog.request?.leaveRequestId ?? "new"}-${dialog.mode}`}
 					mode={dialog.mode === "applyOwn" ? "apply" : dialog.mode}
 					request={dialog.request}
+					review={dialog.request && decision.reviewOf(dialog.request)}
 					applyForm={
 						applyFormOpen
 							? {
@@ -558,16 +522,6 @@ export const Leave = (): FunctionComponent => {
 						own: dialog.request?.membershipId === ownMembershipId,
 						onDone: done,
 					}}
-					review={
-						dialog.request && {
-							canReview: canReview(dialog.request),
-							readsApprovalSteps: turns.readsApprovalSteps(dialog.request),
-							busy: deciding,
-							refusal,
-							onApprove: approve,
-							onReject: reject,
-						}
-					}
 					onClose={close}
 				/>
 			)}
