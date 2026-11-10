@@ -49,6 +49,68 @@ export const fetchActiveLeaveTypes = (
 	);
 
 /**
+ * Every leave query's key, from the company down, shaped like `approvalKeys`:
+ * invalidating `all(companyId)` reloads every list, window, detail, history
+ * and rostered-days answer of that company.
+ */
+export const leaveKeys = {
+	all: (companyId: string) => ["leave", companyId] as const,
+	list: (companyId: string, query: LeaveQuery) =>
+		[...leaveKeys.all(companyId), query] as const,
+	pendingCount: (companyId: string) =>
+		[...leaveKeys.all(companyId), "pending-count"] as const,
+	mine: (companyId: string, query: LeaveQuery) =>
+		[...leaveKeys.all(companyId), "me", query] as const,
+	/** `memberId` is left out for the caller's own request. */
+	detail: (
+		companyId: string,
+		ownMembershipId: string,
+		requestId: string,
+		memberId?: string
+	) =>
+		[
+			...leaveKeys.all(companyId),
+			"detail",
+			ownMembershipId,
+			memberId ?? "me",
+			requestId,
+		] as const,
+	/** Every rostered-days answer of a company, for refreshing them after a refusal. */
+	rosteredDays: (companyId: string) =>
+		[...leaveKeys.all(companyId), "rostered-days"] as const,
+	rosteredDaysOf: (
+		companyId: string,
+		period: { start: string; end: string },
+		memberId?: string
+	) =>
+		[
+			...leaveKeys.rosteredDays(companyId),
+			memberId ?? "me",
+			period.start,
+			period.end,
+		] as const,
+	history: (companyId: string, requestId: string, memberId?: string) =>
+		[
+			...leaveKeys.all(companyId),
+			"history",
+			memberId ?? "me",
+			requestId,
+		] as const,
+};
+
+/**
+ * Every leave type query's key. Kept here, not in `features/leaveTypes`, because
+ * leave reads the active catalogue and leaveTypes already imports leave.
+ */
+export const leaveTypeKeys = {
+	all: (companyId: string) => ["leave-types", companyId] as const,
+	active: (companyId: string) =>
+		[...leaveTypeKeys.all(companyId), "ACTIVE"] as const,
+	catalogue: (companyId: string) =>
+		[...leaveTypeKeys.all(companyId), "catalogue"] as const,
+};
+
+/**
  * The company's active leave types, for applying. Any active member may read
  * the catalogue, so it is the caller's own context, never withdrawn with
  * administrative grants. It changes rarely, so it stays fresh for minutes.
@@ -59,10 +121,10 @@ export const activeLeaveTypesQuery = (
 	allowed = true
 ): QueryOptionsFor<
 	Array<CompanyLeaveType>,
-	readonly ["leave-types", string, "ACTIVE"]
+	ReturnType<typeof leaveTypeKeys.active>
 > =>
 	queryOptions({
-		queryKey: ["leave-types", companyId, "ACTIVE"] as const,
+		queryKey: leaveTypeKeys.active(companyId),
 		queryFn: allowed
 			? ({ signal }): Promise<Array<CompanyLeaveType>> =>
 					fetchActiveLeaveTypes(companyId, signal)
@@ -221,12 +283,9 @@ export const leaveRequestsQuery = (
 	companyId: string,
 	query: LeaveQuery,
 	allowed = true
-): QueryOptionsFor<
-	ListPage<LeaveRequest>,
-	readonly ["leave", string, LeaveQuery]
-> =>
+): QueryOptionsFor<ListPage<LeaveRequest>, ReturnType<typeof leaveKeys.list>> =>
 	queryOptions({
-		queryKey: ["leave", companyId, query] as const,
+		queryKey: leaveKeys.list(companyId, query),
 		queryFn: allowed
 			? ({ signal }): Promise<ListPage<LeaveRequest>> =>
 					fetchLeaveRequests(companyId, query, signal)
@@ -259,10 +318,10 @@ export const pendingLeaveCountQuery = (
 	ListPage<LeaveRequest>,
 	Error,
 	number,
-	readonly ["leave", string, "pending-count"]
+	ReturnType<typeof leaveKeys.pendingCount>
 > =>
 	queryOptions({
-		queryKey: ["leave", companyId, "pending-count"] as const,
+		queryKey: leaveKeys.pendingCount(companyId),
 		queryFn: allowed
 			? ({ signal }): Promise<ListPage<LeaveRequest>> =>
 					fetchLeaveRequests(companyId, PENDING_COUNT_QUERY, signal)
@@ -298,12 +357,9 @@ export const fetchMyLeaveRequests = (
 export const myLeaveRequestsQuery = (
 	companyId: string,
 	query: LeaveQuery
-): QueryOptionsFor<
-	ListPage<LeaveRequest>,
-	readonly ["leave", string, "me", LeaveQuery]
-> =>
+): QueryOptionsFor<ListPage<LeaveRequest>, ReturnType<typeof leaveKeys.mine>> =>
 	queryOptions({
-		queryKey: ["leave", companyId, "me", query] as const,
+		queryKey: leaveKeys.mine(companyId, query),
 		queryFn: ({ signal }): Promise<ListPage<LeaveRequest>> =>
 			fetchMyLeaveRequests(companyId, query, signal),
 		placeholderData: keepPreviousData,
@@ -336,19 +392,9 @@ export const leaveRequestQuery = (
 	ownMembershipId: string,
 	requestId: string,
 	memberId?: string
-): QueryOptionsFor<
-	LeaveRequest,
-	readonly ["leave", string, "detail", string, string, string]
-> =>
+): QueryOptionsFor<LeaveRequest, ReturnType<typeof leaveKeys.detail>> =>
 	queryOptions({
-		queryKey: [
-			"leave",
-			companyId,
-			"detail",
-			ownMembershipId,
-			memberId ?? "me",
-			requestId,
-		] as const,
+		queryKey: leaveKeys.detail(companyId, ownMembershipId, requestId, memberId),
 		queryFn: ({ signal }) =>
 			apiRequest(
 				`${memberId ? memberLeavePath(companyId, memberId) : `${companyPath(companyId)}/me/leave-requests`}/${encodeURIComponent(requestId)}`,
@@ -449,12 +495,6 @@ const rosteredDaySchema = z.object({
 /** A day of a period the person holds a shift on. */
 export type RosteredDay = z.infer<typeof rosteredDaySchema>;
 
-/** Every rostered-days answer of a company, for refreshing them after a refusal. */
-export const rosteredDaysKey = (
-	companyId: string
-): readonly ["leave", string, "rostered-days"] =>
-	["leave", companyId, "rostered-days"] as const;
-
 /**
  * The days of a period the person holds a shift on: the caller's own without
  * `memberId`. `allowed` false asks for nothing.
@@ -466,15 +506,10 @@ export const rosteredDaysQuery = (
 	allowed = true
 ): QueryOptionsFor<
 	Array<RosteredDay>,
-	readonly ["leave", string, "rostered-days", string, string, string]
+	ReturnType<typeof leaveKeys.rosteredDaysOf>
 > =>
 	queryOptions({
-		queryKey: [
-			...rosteredDaysKey(companyId),
-			memberId ?? "me",
-			period.start,
-			period.end,
-		] as const,
+		queryKey: leaveKeys.rosteredDaysOf(companyId, period, memberId),
 		queryFn: allowed
 			? ({ signal }): Promise<Array<RosteredDay>> =>
 					apiRequest(
@@ -515,18 +550,9 @@ export const leaveHistoryQuery = (
 	companyId: string,
 	requestId: string,
 	memberId?: string
-): QueryOptionsFor<
-	Array<LeaveChange>,
-	readonly ["leave", string, "history", string, string]
-> =>
+): QueryOptionsFor<Array<LeaveChange>, ReturnType<typeof leaveKeys.history>> =>
 	queryOptions({
-		queryKey: [
-			"leave",
-			companyId,
-			"history",
-			memberId ?? "me",
-			requestId,
-		] as const,
+		queryKey: leaveKeys.history(companyId, requestId, memberId),
 		queryFn: ({ signal }) =>
 			apiRequest(
 				`${memberId ? memberLeavePath(companyId, memberId) : `${companyPath(companyId)}/me/leave-requests`}/${encodeURIComponent(requestId)}/changes`,

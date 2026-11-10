@@ -6,6 +6,7 @@ import {
 import {
 	cancelLeaveDay,
 	changeLeaveDay,
+	leaveKeys,
 	recordLeave,
 	type LeaveRequest,
 } from "@/features/leave/api";
@@ -49,7 +50,7 @@ export const useRosterLeaveActions = ({
 			client.invalidateQueries({
 				queryKey: scheduleKey(companyId, scheduleId),
 			}),
-			client.invalidateQueries({ queryKey: ["leave", companyId] }),
+			client.invalidateQueries({ queryKey: leaveKeys.all(companyId) }),
 		]);
 	};
 	const cancel = ({

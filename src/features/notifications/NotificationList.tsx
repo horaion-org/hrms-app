@@ -30,6 +30,7 @@ import {
 	useCurrentCompanyId,
 	useCurrentMembershipId,
 } from "@/features/workspace/useCurrentCompany";
+import { notificationKeys } from "@/common/notificationKeys";
 
 const ONE_MINUTE_MS = 60_000;
 
@@ -96,7 +97,7 @@ export const NotificationList = ({
 	);
 	const refresh = (): Promise<void> =>
 		client.invalidateQueries({
-			queryKey: ["notifications", companyId, membershipId],
+			queryKey: notificationKeys.member(companyId, membershipId),
 		});
 	const read = useMutation({
 		meta: { successMessage: false },

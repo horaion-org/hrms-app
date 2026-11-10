@@ -10,6 +10,7 @@ import {
 	type QueryAccessMeta,
 } from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";
+import { notificationKeys } from "@/common/notificationKeys";
 
 export type NotificationAudience = "PERSONAL" | "REVIEW";
 
@@ -112,28 +113,17 @@ export const notificationPageQuery = (
 	size = 20
 ): QueryOptionsFor<
 	NotificationPage,
-	readonly [
-		"notifications",
-		string,
-		string,
-		NotificationAudience,
-		"page",
-		number,
-		boolean,
-		number,
-	]
+	ReturnType<typeof notificationKeys.page>
 > =>
 	queryOptions({
-		queryKey: [
-			"notifications",
+		queryKey: notificationKeys.page(
 			companyId,
 			membershipId,
 			audience,
-			"page",
 			page,
 			unreadOnly,
-			size,
-		] as const,
+			size
+		),
 		queryFn: ({ signal }) =>
 			apiRequest(
 				`${base(companyId)}?${new URLSearchParams({ audience, page: String(page - 1), size: String(size), unreadOnly: String(unreadOnly) })}`,
@@ -157,16 +147,10 @@ export const notificationCountQuery = (
 	enabled = true
 ): QueryOptionsFor<
 	NotificationCount,
-	readonly ["notifications", string, string, NotificationAudience, "count"]
+	ReturnType<typeof notificationKeys.count>
 > =>
 	queryOptions({
-		queryKey: [
-			"notifications",
-			companyId,
-			membershipId,
-			audience,
-			"count",
-		] as const,
+		queryKey: notificationKeys.count(companyId, membershipId, audience),
 		queryFn: ({ signal }) =>
 			apiRequest(
 				`${base(companyId)}/unread-count?audience=${audience}`,
