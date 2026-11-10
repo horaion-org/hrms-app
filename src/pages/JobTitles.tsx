@@ -3,6 +3,7 @@ import type { TFunction } from "i18next";
 import { type ReactNode, useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
+import { mapRefusal } from "@/common/refusal";
 import type { FunctionComponent } from "@/common/types";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
@@ -26,7 +27,6 @@ import {
 	statusFilterOptions,
 	type StatusFilter,
 } from "@/features/organisation/listColumns";
-import { mapRefusal } from "@/features/organisation/refusal";
 import { useSetJobTitleStatus } from "@/features/organisation/useChangeListRow";
 import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import { useJobTitles } from "@/features/organisation/useOrganisationList";

@@ -12,6 +12,8 @@ The directory contains:
 - `useNow.ts`: the current time, renewed on an interval, for relative times that must stay current while shown.
 - `importRefusal.ts`: the file checks and refusal-code fallback that the people and organisation imports share.
 - `formattingLocale.ts`, `dateTimeFormatIn.ts`: the locale dates are written in, and a date format in an IANA time zone.
+- `refusal.ts`: `mapRefusal` (a refused request to frontend-owned field and form copy) and `refusalCodeOf` (the
+  `"<status> <errorCode>"` key refusal tables are keyed by).
 - `weeks.ts`: Monday-first weeks as ISO dates (`mondayOf`, `weeksOf`, `daysOf`), shared by scheduling and availability.
 
 ## Memory router (tests and stories)

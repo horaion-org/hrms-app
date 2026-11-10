@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
+import { mapRefusal } from "@/common/refusal";
 import type { FunctionComponent } from "@/common/types";
 import {
 	formatDate,
@@ -22,7 +23,6 @@ import { bulkSummary } from "@/features/employmentTerms/bulkSummary";
 import { termsSentence } from "@/features/employmentTerms/summary";
 import { isMonday, nextMonday } from "@/features/employmentTerms/termsChanges";
 import { CreateFormDialog } from "@/features/organisation/CreateFormDialog";
-import { mapRefusal } from "@/features/organisation/refusal";
 
 export type BulkChangeEmploymentTermsDialogProps = {
 	companyId: string;

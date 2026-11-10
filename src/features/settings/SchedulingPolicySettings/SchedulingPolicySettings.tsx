@@ -2,13 +2,13 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { ApiProblemError } from "@/common/problem";
+import { mapRefusal } from "@/common/refusal";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { DeleteIcon, EditIcon, PlusIcon } from "@/components/ui/Icon";
 import { Toast } from "@/components/ui/Toast";
-import { mapRefusal } from "@/features/organisation/refusal";
 import type {
 	DepartmentConstraint,
 	PolicyLock,

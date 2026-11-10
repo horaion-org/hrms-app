@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import type { FieldValues, Path, UseFormReturn } from "react-hook-form";
-import type { Refusal } from "@/features/organisation/refusal";
+import type { Refusal } from "@/common/refusal";
 
 export type CreateFormSubmit<F extends string> = {
 	/** The form-level refusal, shown as the Dialog's alert. */

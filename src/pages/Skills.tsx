@@ -2,6 +2,7 @@ import type { TFunction } from "i18next";
 import { useCallback, useId, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
+import { mapRefusal } from "@/common/refusal";
 import type { FunctionComponent } from "@/common/types";
 import { todayDate } from "@/components/forms/Calendar";
 import { FormRow, formRowIds } from "@/components/forms/FormRow";
@@ -18,7 +19,6 @@ import {
 	statusFilterOptions,
 	type StatusFilter,
 } from "@/features/organisation/listColumns";
-import { mapRefusal } from "@/features/organisation/refusal";
 import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import type { SkillOverview } from "@/features/skills/api";
 import { BulkAssignSkillDialog } from "@/features/skills/BulkAssignSkillDialog";

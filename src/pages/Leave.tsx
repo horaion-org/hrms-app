@@ -4,6 +4,7 @@ import dayjs from "dayjs";
 import type { TFunction } from "i18next";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import type { Refusal } from "@/common/refusal";
 import type { DateRange } from "@/components/forms/Calendar";
 import { dayParameter, shownDayOf } from "@/common/dayView";
 import type { FunctionComponent } from "@/common/types";
@@ -41,7 +42,6 @@ import {
 	usePendingLeaveCount,
 	type LeaveList,
 } from "@/features/leave/useLeaveRequests";
-import type { Refusal } from "@/features/organisation/refusal";
 import {
 	useCurrentCompanyId,
 	useCurrentMembershipId,

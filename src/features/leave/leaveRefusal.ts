@@ -1,7 +1,7 @@
 import type { TFunction } from "i18next";
 import { ApiProblemError } from "@/common/problem";
+import { mapRefusal, type Refusal } from "@/common/refusal";
 import { APPROVAL_REFUSAL_CODES } from "@/features/approvals/approvalRefusal";
-import { mapRefusal, type Refusal } from "@/features/organisation/refusal";
 
 /** The fields an application's refusal can land on. */
 export type ApplyField = "employee" | "type" | "endDate" | "notes";

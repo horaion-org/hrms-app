@@ -1,6 +1,6 @@
 import type { TFunction } from "i18next";
 import { ApiProblemError } from "@/common/problem";
-import { mapRefusal, type Refusal } from "@/features/organisation/refusal";
+import { mapRefusal, type Refusal } from "@/common/refusal";
 import type { TermsFormValues } from "@/features/employmentTerms/termsForm";
 
 /** The dialog's fields a refusal can point at. */

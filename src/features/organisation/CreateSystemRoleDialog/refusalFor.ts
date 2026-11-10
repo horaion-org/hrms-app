@@ -1,10 +1,10 @@
 import type { TFunction } from "i18next";
+import { mapRefusal, type Refusal } from "@/common/refusal";
 import {
 	ACCESS_ROLE_ERROR,
 	kindConflictMessage,
 } from "@/features/organisation/accessRoleRefusal";
 import type { AccessRoleKind } from "@/features/organisation/api";
-import { mapRefusal, type Refusal } from "@/features/organisation/refusal";
 
 /** Server codes select frontend-owned copy; untrusted server prose is never displayed. */
 export const refusalFor = (

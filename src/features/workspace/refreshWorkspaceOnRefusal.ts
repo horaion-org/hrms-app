@@ -1,6 +1,6 @@
 import type { Query, QueryClient } from "@tanstack/react-query";
 import { ApiProblemError } from "@/common/problem";
-import { BUSINESS_RULE_REFUSALS } from "@/features/organisation/refusal";
+import { BUSINESS_RULE_REFUSALS } from "@/common/refusal";
 import { workspaceQuery } from "@/features/workspace/api";
 
 const FORBIDDEN = 403;

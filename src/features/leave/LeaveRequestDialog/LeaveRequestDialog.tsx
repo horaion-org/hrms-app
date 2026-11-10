@@ -3,6 +3,7 @@ import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { dateTimeFormatIn } from "@/common/dateTimeFormatIn";
 import { formattingLocale } from "@/common/formattingLocale";
+import type { Refusal } from "@/common/refusal";
 import type { FunctionComponent } from "@/common/types";
 import { todayDate, type IsoDate } from "@/components/forms/Calendar";
 import { Button } from "@/components/ui/Button";
@@ -21,7 +22,6 @@ import {
 } from "@/features/leave/leaveApproval";
 import type { DecisionField } from "@/features/leave/leaveRefusal";
 import type { LeaveRequest } from "@/features/leave/types";
-import type { Refusal } from "@/features/organisation/refusal";
 import { LeaveApplyForm, type LeaveApplyFormInput } from "./LeaveApplyForm";
 import { LeaveDecisionStep } from "./LeaveDecisionStep";
 import { LeaveRequestDetails } from "./LeaveRequestDetails";

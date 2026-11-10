@@ -33,6 +33,18 @@ export type RefusalRules<F extends string> = {
 	failed: string;
 };
 
+/** A problem's `"<status> <errorCode>"`, the key refusal copy is chosen by. */
+const codeOf = (problem: ApiProblemError): string =>
+	`${problem.status} ${problem.errorCode ?? ""}`;
+
+/**
+ * The `"<status> <errorCode>"` key of a refused request, as refusal tables
+ * are keyed; undefined for an error that is not an API problem, such as a
+ * network failure.
+ */
+export const refusalCodeOf = (error: unknown): string | undefined =>
+	error instanceof ApiProblemError ? codeOf(error) : undefined;
+
 /**
  * Maps a failed create to frontend-owned copy. Server codes only select copy;
  * untrusted server prose is never displayed.
@@ -42,7 +54,7 @@ export const mapRefusal = <F extends string>(
 	rules: RefusalRules<F>
 ): Refusal<F> => {
 	if (error instanceof ApiProblemError) {
-		const key = `${error.status} ${error.errorCode ?? ""}`;
+		const key = codeOf(error);
 		const coded = rules.codes?.[key];
 		if (coded)
 			return {
