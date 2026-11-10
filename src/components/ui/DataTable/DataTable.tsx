@@ -1,26 +1,17 @@
 import {
 	columnPinningFeature,
 	createSortedRowModel,
-	rowExpandingFeature,
 	rowSelectionFeature,
 	rowSortingFeature,
 	sortFn_alphanumeric as sortAlphanumeric,
 	tableFeatures,
 	useTable,
 	type ColumnDef,
-	type ExpandedState,
 	type RowSelectionState,
 	type SortingState,
 	type Updater,
 } from "@tanstack/react-table";
-import {
-	Fragment,
-	useId,
-	useMemo,
-	useRef,
-	useState,
-	type ReactNode,
-} from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
@@ -46,7 +37,6 @@ import {
 } from "@/components/ui/DataTable/SortMenu";
 import { SummaryLine } from "@/components/ui/DataTable/SummaryLine";
 import { useScrollEdges } from "@/components/ui/DataTable/useScrollEdges";
-import { ChevronRightIcon } from "@/components/ui/Icon";
 
 const features = tableFeatures({
 	rowSortingFeature,
@@ -54,7 +44,6 @@ const features = tableFeatures({
 	sortFns: { alphanumeric: sortAlphanumeric },
 	rowSelectionFeature,
 	columnPinningFeature,
-	rowExpandingFeature,
 });
 
 /** One column: its header text, how a cell renders, and whether it sorts. */
@@ -127,20 +116,6 @@ export type DataTableProps<TData extends object> = {
 		 */
 		canSelect?: (row: TData) => boolean;
 	};
-	/**
-	 * Adds a leading button per row, named by `rowLabel`, that shows
-	 * `render(row)` in a full-width row beneath it. Several rows may be open;
-	 * the content mounts only while its row is open.
-	 */
-	expansion?: {
-		rowLabel: (row: TData) => string;
-		render: (row: TData) => ReactNode;
-		/** Rows that can open; every row when left out. */
-		canExpand?: (row: TData) => boolean;
-		/** The open row ids when the caller owns them; otherwise the table keeps its own. */
-		expandedIds?: Array<string>;
-		onChange?: (expandedIds: Array<string>) => void;
-	};
 	/** Shown across the table body when there are no rows. */
 	emptyState?: ReactNode;
 	className?: string;
@@ -168,7 +143,7 @@ const bodyCellClasses =
  */
 const namingColumnPhoneClasses = "max-sm:w-full max-sm:max-w-0 max-sm:min-w-36";
 
-// The leading cells (row expander, row checkbox) are each 3rem wide.
+// The leading row checkbox cell is 3rem wide.
 const selectionCellClasses = "w-12 px-0";
 
 const ariaSort = (
@@ -189,44 +164,6 @@ const ShownFrom = ({
 }): FunctionComponent =>
 	classes ? <span className={classes}>{children}</span> : <>{children}</>;
 
-// TanStack may set every row open at once as `true`; keep the per-row record.
-const expandedRecordOf = (
-	state: ExpandedState,
-	rowIds: Array<string>
-): Record<string, boolean> =>
-	state === true
-		? Object.fromEntries(rowIds.map((rowId) => [rowId, true]))
-		: state;
-
-/** The leading button that opens and closes a row's details. */
-const RowExpander = ({
-	label,
-	open,
-	detailsId,
-	onToggle,
-}: {
-	label: string;
-	open: boolean;
-	detailsId: string;
-	onToggle: () => void;
-}): FunctionComponent => (
-	<Button
-		aria-controls={open ? detailsId : undefined}
-		aria-expanded={open}
-		aria-label={label}
-		className="mx-auto flex items-center justify-center"
-		variant="icon"
-		onClick={onToggle}
-	>
-		<ChevronRightIcon
-			className={joinClassNames(
-				"motion-safe:transition-transform",
-				open && "rotate-90"
-			)}
-		/>
-	</Button>
-);
-
 export const DataTable = <TData extends object>({
 	label,
 	columns,
@@ -238,7 +175,6 @@ export const DataTable = <TData extends object>({
 	manualSorting = false,
 	sortControl = "toggle",
 	selection,
-	expansion,
 	emptyState,
 	className,
 }: DataTableProps<TData>): FunctionComponent => {
@@ -256,17 +192,6 @@ export const DataTable = <TData extends object>({
 				: ownRowSelection,
 		[selectedIds, ownRowSelection]
 	);
-	const [ownExpanded, setOwnExpanded] = useState<Record<string, boolean>>({});
-	const expandedIds = expansion?.expandedIds;
-	const expanded = useMemo(
-		(): Record<string, boolean> =>
-			expandedIds
-				? Object.fromEntries(expandedIds.map((rowId) => [rowId, true]))
-				: ownExpanded,
-		[expandedIds, ownExpanded]
-	);
-	const detailsIdPrefix = useId();
-
 	const columnsById = useMemo(
 		() => new Map(columns.map((column) => [column.id, column])),
 		[columns]
@@ -290,12 +215,10 @@ export const DataTable = <TData extends object>({
 	);
 	const columnPinning = useMemo(() => pinningStateOf(columns), [columns]);
 	const pinned = columnPinning.start.length + columnPinning.end.length > 0;
-	// Leading cells stick along with a start-pinned column, so it never slides under them.
-	const leadingClasses = (index: number): string | undefined =>
-		columnPinning.start.length > 0 ? stickyStartClasses(index) : undefined;
-	// Leading cells come in a fixed order: the row expander, then the row checkbox.
-	const selectionIndex = expansion ? 1 : 0;
-	const leadingCount = selectionIndex + (selection ? 1 : 0);
+	// The checkbox cell sticks along with a start-pinned column, so it never slides under it.
+	const checkboxPinClasses =
+		columnPinning.start.length > 0 ? stickyStartClasses(0) : undefined;
+	const leadingCount = selection ? 1 : 0;
 	const frameRef = useRef<HTMLDivElement>(null);
 	const edges = useScrollEdges(frameRef, pinned);
 
@@ -311,12 +234,7 @@ export const DataTable = <TData extends object>({
 		enableRowSelection: selection?.canSelect
 			? (row): boolean => selection.canSelect?.(row.original) ?? true
 			: selection !== undefined,
-		enableExpanding: expansion !== undefined,
-		getRowCanExpand: (row) =>
-			expansion?.canExpand?.(row.original) ?? expansion !== undefined,
-		// Open rows stay open when the data refetches or re-sorts.
-		autoResetExpanded: false,
-		state: { sorting, rowSelection, columnPinning, expanded },
+		state: { sorting, rowSelection, columnPinning },
 		onSortingChange: (updater) => {
 			const next = resolve(updater, sorting);
 			if (!sort) setOwnSorting(next);
@@ -327,14 +245,6 @@ export const DataTable = <TData extends object>({
 			const next = resolve(updater, rowSelection);
 			if (!selectedIds) setOwnRowSelection(next);
 			selection?.onChange?.(Object.keys(next).filter((rowId) => next[rowId]));
-		},
-		onExpandedChange: (updater) => {
-			const next = expandedRecordOf(
-				resolve<ExpandedState>(updater, expanded),
-				table.getRowModel().rows.map((row) => row.id)
-			);
-			if (!expandedIds) setOwnExpanded(next);
-			expansion?.onChange?.(Object.keys(next).filter((rowId) => next[rowId]));
 		},
 	});
 
@@ -380,8 +290,6 @@ export const DataTable = <TData extends object>({
 				// table instead of widening the page.
 				"relative overflow-x-auto rounded-lg border border-neutral-400",
 				pinned && "group",
-				// Open details measure the frame (100cqw) to stay in view while it scrolls.
-				expansion && "@container",
 				className
 			)}
 		>
@@ -394,25 +302,13 @@ export const DataTable = <TData extends object>({
 			>
 				<thead>
 					<tr>
-						{expansion && (
-							<th
-								scope="col"
-								className={joinClassNames(
-									headerCellClasses,
-									selectionCellClasses,
-									leadingClasses(0)
-								)}
-							>
-								<span className="sr-only">{t("dataTable.details")}</span>
-							</th>
-						)}
 						{selection && (
 							<th
 								scope="col"
 								className={joinClassNames(
 									headerCellClasses,
 									selectionCellClasses,
-									leadingClasses(selectionIndex)
+									checkboxPinClasses
 								)}
 							>
 								<Checkbox
@@ -505,102 +401,57 @@ export const DataTable = <TData extends object>({
 							</td>
 						</tr>
 					)}
-					{rows.map((row) => {
-						const open = row.getIsExpanded();
-						const detailsId = `${detailsIdPrefix}-details-${row.id}`;
-						return (
-							<Fragment key={row.id}>
-								<tr
-									className="hover:[&>td]:bg-neutral-50 data-expanded:[&>td]:bg-neutral-50"
-									data-expanded={open || undefined}
+					{rows.map((row) => (
+						<tr key={row.id} className="hover:[&>td]:bg-neutral-50">
+							{selection && (
+								<td
+									className={joinClassNames(
+										bodyCellClasses,
+										selectionCellClasses,
+										checkboxPinClasses
+									)}
 								>
-									{expansion && (
-										<td
-											className={joinClassNames(
-												bodyCellClasses,
-												selectionCellClasses,
-												leadingClasses(0)
-											)}
-										>
-											{row.getCanExpand() && (
-												<RowExpander
-													detailsId={detailsId}
-													open={open}
-													label={t("dataTable.showDetails", {
-														name: expansion.rowLabel(row.original),
-													})}
-													onToggle={row.getToggleExpandedHandler()}
-												/>
-											)}
-										</td>
-									)}
-									{selection && (
-										<td
-											className={joinClassNames(
-												bodyCellClasses,
-												selectionCellClasses,
-												leadingClasses(selectionIndex)
-											)}
-										>
-											<Checkbox
-												hideLabel
-												checked={row.getIsSelected()}
-												className="justify-center"
-												disabled={!row.getCanSelect()}
-												label={t("dataTable.selectRow", {
-													name: selection.rowLabel(row.original),
-												})}
-												onChange={row.getToggleSelectedHandler()}
+									<Checkbox
+										hideLabel
+										checked={row.getIsSelected()}
+										className="justify-center"
+										disabled={!row.getCanSelect()}
+										label={t("dataTable.selectRow", {
+											name: selection.rowLabel(row.original),
+										})}
+										onChange={row.getToggleSelectedHandler()}
+									/>
+								</td>
+							)}
+							{[
+								...row.getStartVisibleCells(),
+								...row.getCenterVisibleCells(),
+								...row.getEndVisibleCells(),
+							].map((cell) => {
+								const column = columnsById.get(cell.column.id);
+								return (
+									<td
+										key={cell.id}
+										className={joinClassNames(
+											bodyCellClasses,
+											column?.hideBelow && hiddenBelowClasses[column.hideBelow],
+											column?.cellClassName,
+											column?.pin === "start" && namingColumnPhoneClasses,
+											pinnedCellClasses(cell.column.getIsPinned(), leadingCount)
+										)}
+									>
+										{column?.cell(row.original)}
+										{column === naming && summaryColumns.length > 0 && (
+											<SummaryLine
+												columns={summaryColumns}
+												row={row.original}
 											/>
-										</td>
-									)}
-									{[
-										...row.getStartVisibleCells(),
-										...row.getCenterVisibleCells(),
-										...row.getEndVisibleCells(),
-									].map((cell) => {
-										const column = columnsById.get(cell.column.id);
-										return (
-											<td
-												key={cell.id}
-												className={joinClassNames(
-													bodyCellClasses,
-													column?.hideBelow &&
-														hiddenBelowClasses[column.hideBelow],
-													column?.cellClassName,
-													column?.pin === "start" && namingColumnPhoneClasses,
-													pinnedCellClasses(
-														cell.column.getIsPinned(),
-														leadingCount
-													)
-												)}
-											>
-												{column?.cell(row.original)}
-												{column === naming && summaryColumns.length > 0 && (
-													<SummaryLine
-														columns={summaryColumns}
-														row={row.original}
-													/>
-												)}
-											</td>
-										);
-									})}
-								</tr>
-								{open && expansion && (
-									<tr id={detailsId}>
-										<td
-											className="bg-neutral-50 p-0 text-sm text-neutral-900"
-											colSpan={columnCount}
-										>
-											<div className="px-3 py-4 md:sticky md:start-0 md:w-[100cqw]">
-												{expansion.render(row.original)}
-											</div>
-										</td>
-									</tr>
-								)}
-							</Fragment>
-						);
-					})}
+										)}
+									</td>
+								);
+							})}
+						</tr>
+					))}
 				</tbody>
 			</table>
 		</div>

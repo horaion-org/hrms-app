@@ -876,8 +876,6 @@
 		"sortBy": "Ordenar por {{column}}",
 		"sortAscending": "A – Z",
 		"sortDescending": "Z – A",
-		"details": "Detalles",
-		"showDetails": "Ver detalles de {{name}}",
 		"sortColumn": "{{column}}: {{direction}}",
 		"sortRows": "Ordenar filas"
 	},

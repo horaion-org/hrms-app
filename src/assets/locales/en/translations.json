@@ -807,8 +807,6 @@
 		"sortBy": "Sort by {{column}}",
 		"sortAscending": "A – Z",
 		"sortDescending": "Z – A",
-		"details": "Details",
-		"showDetails": "Show details for {{name}}",
 		"sortColumn": "{{column}}: {{direction}}",
 		"sortRows": "Sort rows"
 	},
