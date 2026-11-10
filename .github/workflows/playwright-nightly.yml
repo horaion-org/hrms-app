@@ -17,7 +17,8 @@ env:
 jobs:
   browser-suite:
     name: Playwright (mocked API)
-    runs-on: ubuntu-latest
+    # Blacksmith runner (backend ADR-0070): the suite mocks the API and holds no secret. CI_RUNNER switches it back.
+    runs-on: ${{ vars.CI_RUNNER || 'blacksmith-2vcpu-ubuntu-2404' }}
     timeout-minutes: 30
 
     steps:

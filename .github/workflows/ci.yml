@@ -24,7 +24,9 @@ env:
 jobs:
   checks:
     name: Type check & lint
-    runs-on: ubuntu-latest
+    # Blacksmith runner (backend ADR-0070): no job in this workflow holds a secret. Setting the repository variable
+    # CI_RUNNER (e.g. to ubuntu-latest) moves every job back to GitHub without a code change.
+    runs-on: ${{ vars.CI_RUNNER || 'blacksmith-2vcpu-ubuntu-2404' }}
     timeout-minutes: 15
 
     steps:
@@ -60,7 +62,7 @@ jobs:
 
   unit-tests:
     name: Unit tests (${{ matrix.shard }}/3)
-    runs-on: ubuntu-latest
+    runs-on: ${{ vars.CI_RUNNER || 'blacksmith-2vcpu-ubuntu-2404' }}
     timeout-minutes: 20
 
     strategy:
