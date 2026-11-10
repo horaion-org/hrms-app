@@ -1,6 +1,6 @@
 import type { TFunction } from "i18next";
 import type { FilterChip } from "@/components/ui/FilterChips";
-import { placeOf } from "@/features/organisation/assignmentTargets";
+import { placeOf } from "@/features/workspace/places";
 import type { ResolvedUnitSelection } from "@/features/workspace/unitSelection";
 
 /** A chip reading "Field: value", e.g. "Department: Kitchen". */

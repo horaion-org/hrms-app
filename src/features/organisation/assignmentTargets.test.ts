@@ -3,9 +3,7 @@ import {
 	changeableAt,
 	companyRoleOutOfReach,
 	keysThatFitNowhere,
-	placeKey,
 	roleFitsScope,
-	scopeOfPlace,
 } from "@/features/organisation/assignmentTargets";
 import {
 	branchScope,
@@ -50,16 +48,6 @@ describe("where a role can be given", () => {
 		expect(keysThatFitNowhere(local, [KITCHEN])).toEqual(["branch:read"]);
 		expect(keysThatFitNowhere(local, [ORCHARD, KITCHEN])).toEqual([]);
 		expect(keysThatFitNowhere(company, [KITCHEN])).toEqual([]);
-	});
-
-	it("reads a place the API sends with null ids", () => {
-		const place = { branchId: null, departmentId: "d-1" };
-		expect(placeKey(place)).toBe("d-1");
-		expect(scopeOfPlace(place)).toEqual(departmentScope("d-1"));
-		expect(placeKey({ branchId: null, departmentId: null })).toBe("");
-		expect(scopeOfPlace({ branchId: null, departmentId: null })).toEqual(
-			COMPANY_SCOPE
-		);
 	});
 });
 

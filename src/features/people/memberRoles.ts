@@ -8,7 +8,7 @@ import type {
 	AccessRole,
 	MemberAccessRoleAssignment,
 } from "@/features/organisation/api";
-import type { PlaceRef } from "@/features/organisation/assignmentTargets";
+import type { PlaceRef } from "@/features/workspace/places";
 import type { AccessRoleHoldersChange } from "@/features/organisation/useAccessRoleHolders";
 
 /** One system role a person holds, and where. */

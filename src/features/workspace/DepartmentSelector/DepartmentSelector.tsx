@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import type { InputStatus } from "@/components/forms/Input";
 import { Select } from "@/components/forms/Select";
-import { placeOf } from "@/features/organisation/assignmentTargets";
+import { placeOf } from "@/features/workspace/places";
 import { workspaceQuery } from "@/features/workspace/api";
 import type { PermissionKey } from "@/features/workspace/permissionKeys";
 import { retry } from "@/features/workspace/retry";
