@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import type { TFunction } from "i18next";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ApiProblemError } from "@/common/problem";
 import { mapRefusal } from "@/common/refusal";
@@ -26,6 +26,7 @@ import {
 } from "@/features/leaveTypes/leaveTypeCatalogue";
 import { useLeaveTypeActions } from "@/features/leaveTypes/useLeaveTypeActions";
 import { actionsColumn } from "@/features/organisation/listColumns";
+import { useMovedArrowFocus } from "@/features/settings/LeaveTypesSettings/useMovedArrowFocus";
 import { COMPANY_SCOPE } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
 
@@ -38,18 +39,6 @@ type EditableLeaveType = ManagedLeaveType & { grantKind: LeaveGrantKind };
 /** Only a type whose kind and status this app knows can be sent back whole. */
 const isEditable = (type: ManagedLeaveType): type is EditableLeaveType =>
 	hasKnownKind(type) && type.status !== "UNKNOWN";
-
-/** The arrow to keep focus on after a move: the pressed one, or the other one once the type reaches an end. */
-const arrowToFocus = (
-	types: ReadonlyArray<ManagedLeaveType>,
-	leaveTypeId: string,
-	direction: "up" | "down"
-): "up" | "down" =>
-	movedOrder(types, leaveTypeId, direction)
-		? direction
-		: direction === "up"
-			? "down"
-			: "up";
 
 const key = "settings.leave.types";
 
@@ -108,26 +97,10 @@ export const LeaveTypesSettings = ({
 	const [toast, setToast] = useState<{ id: number; message: string }>();
 	const types = useMemo(() => list.data ?? [], [list.data]);
 	const sections = useMemo(() => catalogueSections(types), [types]);
-	// The arrow a move was made with; it keeps focus once the moved row re-renders.
-	const movedArrow = useRef<{
-		leaveTypeId: string;
-		direction: "up" | "down";
-	} | null>(null);
-	const tablesRef = useRef<HTMLDivElement>(null);
+	const { containerRef, rememberMove } = useMovedArrowFocus(types);
 	const notify = useCallback((message: string): void => {
 		setToast((previous) => ({ id: (previous?.id ?? 0) + 1, message }));
 	}, []);
-	useEffect(() => {
-		const moved = movedArrow.current;
-		if (!moved) return;
-		movedArrow.current = null;
-		const direction = arrowToFocus(types, moved.leaveTypeId, moved.direction);
-		tablesRef.current
-			?.querySelector<HTMLButtonElement>(
-				`[data-move="${moved.leaveTypeId}:${direction}"]`
-			)
-			?.focus();
-	}, [types]);
 	const columns = useMemo((): {
 		system: Array<DataTableColumn<ManagedLeaveType>>;
 		active: Array<DataTableColumn<ManagedLeaveType>>;
@@ -140,7 +113,7 @@ export const LeaveTypesSettings = ({
 		const move = (type: ManagedLeaveType, direction: "up" | "down"): void => {
 			const order = movedOrder(types, type.leaveTypeId, direction);
 			if (!order || reorder.isPending) return;
-			movedArrow.current = { leaveTypeId: type.leaveTypeId, direction };
+			rememberMove(type.leaveTypeId, direction);
 			reorder.mutate(order, {
 				onSuccess: () => {
 					notify(
@@ -227,7 +200,7 @@ export const LeaveTypesSettings = ({
 			active: canUpdate ? [...base, orderColumn, rowActions] : base,
 			inactive: canUpdate ? [...base, rowActions] : base,
 		};
-	}, [t, types, canUpdate, actions.reorderLeaveTypes, notify]);
+	}, [t, types, canUpdate, actions.reorderLeaveTypes, notify, rememberMove]);
 	const forbidden =
 		!canRead ||
 		(list.error instanceof ApiProblemError && list.error.status === 403);
@@ -289,7 +262,7 @@ export const LeaveTypesSettings = ({
 					{problem}
 				</p>
 			) : (
-				<div ref={tablesRef} className="mt-8 flex flex-col gap-8">
+				<div ref={containerRef} className="mt-8 flex flex-col gap-8">
 					{sections.system.length > 0 && (
 						<section className="flex flex-col gap-3">
 							<div>
