@@ -40,7 +40,10 @@ import { LeaveStatusFilter } from "@/features/leave/LeaveStatusFilter";
 import { LeaveTimeline } from "@/features/leave/LeaveTimeline";
 import type { LeaveRequest } from "@/features/leave/types";
 import {
-	useLeaveActions,
+	useLeaveApplyActions,
+	useLeaveDecisionActions,
+} from "@/features/leave/useLeaveActions";
+import {
 	useLeaveRequests,
 	useLeaveTurns,
 	useMyLeaveRequests,
@@ -150,7 +153,8 @@ export const Leave = (): FunctionComponent => {
 		units.branches.length > 0 ? timelineQueryOf(shownUnits, range) : undefined,
 		view === "timeline"
 	);
-	const actions = useLeaveActions(companyId);
+	const decisions = useLeaveDecisionActions(companyId);
+	const applyActions = useLeaveApplyActions(companyId);
 	const turns = useLeaveTurns(companyId);
 	const [dialog, setDialog] = useState<Dialog | null>(null);
 	const [refusal, setRefusal] = useState<
@@ -196,7 +200,7 @@ export const Leave = (): FunctionComponent => {
 		comment: string,
 		takeOffRosteredDays: boolean
 	): void => {
-		actions.approve.mutate(
+		decisions.approve.mutate(
 			{ request, comment, takeOffRosteredDays },
 			{
 				onSuccess: () => {
@@ -211,11 +215,11 @@ export const Leave = (): FunctionComponent => {
 	// Each request is decided where its member is filed, or by its flow's open step; nobody decides their own.
 	const canReview = turns.canDecide;
 	const busy =
-		actions.approve.isPending ||
-		actions.reject.isPending ||
-		actions.apply.isPending ||
-		actions.applyOwn.isPending ||
-		actions.record.isPending;
+		decisions.approve.isPending ||
+		decisions.reject.isPending ||
+		applyActions.apply.isPending ||
+		applyActions.applyOwn.isPending ||
+		applyActions.record.isPending;
 	const current =
 		view === "mine" ? mine : view === "requests" ? list : timeline;
 	const listProblem = problemOf(current, t, view === "mine");
@@ -515,7 +519,7 @@ export const Leave = (): FunctionComponent => {
 							},
 						};
 						if (dialog.mode === "record" && membershipId !== null) {
-							actions.record.mutate(
+							applyActions.record.mutate(
 								{
 									membershipId,
 									body: {
@@ -534,11 +538,11 @@ export const Leave = (): FunctionComponent => {
 								}
 							);
 						} else if (membershipId === null)
-							actions.applyOwn.mutate(body, handlers);
-						else actions.apply.mutate({ membershipId, body }, handlers);
+							applyActions.applyOwn.mutate(body, handlers);
+						else applyActions.apply.mutate({ membershipId, body }, handlers);
 					}}
 					onReject={(request, reason) => {
-						actions.reject.mutate(
+						decisions.reject.mutate(
 							{ request, reason },
 							{
 								onSuccess: () => {

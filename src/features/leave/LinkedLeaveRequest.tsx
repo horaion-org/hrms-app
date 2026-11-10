@@ -10,10 +10,8 @@ import {
 	type ApplyField,
 	type DecisionField,
 } from "@/features/leave/leaveRefusal";
-import {
-	useLeaveActions,
-	useLeaveTurns,
-} from "@/features/leave/useLeaveRequests";
+import { useLeaveDecisionActions } from "@/features/leave/useLeaveActions";
+import { useLeaveTurns } from "@/features/leave/useLeaveRequests";
 import type { Refusal } from "@/features/organisation/refusal";
 import {
 	useCurrentCompanyId,
@@ -39,7 +37,7 @@ export const LinkedLeaveRequest = ({
 		...leaveRequestQuery(companyId, ownMembershipId, requestId, memberId),
 		enabled: allowed,
 	});
-	const actions = useLeaveActions(companyId);
+	const actions = useLeaveDecisionActions(companyId);
 	const turns = useLeaveTurns(companyId);
 	const [refusal, setRefusal] = useState<Refusal<ApplyField | DecisionField>>();
 	const failed = (error: Error): void => {

@@ -1,31 +1,10 @@
-import {
-	useMutation,
-	useQuery,
-	useQueryClient,
-	type UseMutationResult,
-} from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { ApiProblemError } from "@/common/problem";
+import { myPendingApprovalsQuery } from "@/features/approvals/api";
 import {
-	approvalKeys,
-	decideApproval,
-	myPendingApprovalsQuery,
-} from "@/features/approvals/api";
-import {
-	approveLeaveRequest,
-	cancelLeave,
-	changeLeave,
-	createLeaveRequest,
-	createMyLeaveRequest,
 	leaveRequestsQuery,
 	myLeaveRequestsQuery,
 	pendingLeaveCountQuery,
-	recordLeave,
-	rejectLeaveRequest,
-	rosteredDaysKey,
-	withdrawLeave,
-	type ChangeLeaveBody,
-	type RecordLeaveBody,
-	type LeaveRequestBody,
 	type LeaveQuery,
 	type LeaveRequest,
 } from "@/features/leave/api";
@@ -33,7 +12,6 @@ import {
 	canDecideLeave,
 	leaveApprovalsWaitingOn,
 } from "@/features/leave/leaveApproval";
-import { isRosterClash, isStaleDecision } from "@/features/leave/leaveRefusal";
 import type { ListPage } from "@/features/organisation/api";
 import { useCurrentMembershipId } from "@/features/organisation/useCurrentCompanyId";
 import { LEAVE_READ_KEYS } from "@/features/workspace/permissionKeys";
@@ -142,196 +120,5 @@ export const useLeaveTurns = (companyId: string): LeaveTurns => {
 			}),
 		readsApprovalSteps: (request) =>
 			access.can("approval:read", recordScope(request.departmentId)),
-	};
-};
-
-/** A request under a flow is decided on its open step, which the decision names so a step that moved on is refused. */
-const decideStep = (
-	companyId: string,
-	approval: NonNullable<LeaveRequest["approval"]>,
-	decision: "APPROVE" | "REJECT",
-	comment: string,
-	takeOffRosteredDays?: boolean
-): Promise<unknown> =>
-	decideApproval(companyId, approval.approvalInstanceId, {
-		stepOrder: approval.currentStepOrder,
-		decision,
-		comment: comment === "" ? null : comment,
-		// Sent only when confirmed, as the single-step route does.
-		...(takeOffRosteredDays ? { takeOffRosteredDays: true } : {}),
-	});
-
-export type LeaveActions = {
-	/** Answers the request, or the approval, as the API answered it. */
-	approve: UseMutationResult<
-		unknown,
-		Error,
-		{
-			request: LeaveRequest;
-			comment: string;
-			takeOffRosteredDays?: boolean;
-		}
-	>;
-	reject: UseMutationResult<
-		unknown,
-		Error,
-		{ request: LeaveRequest; reason: string }
-	>;
-	apply: UseMutationResult<
-		LeaveRequest,
-		Error,
-		{ membershipId: string; body: LeaveRequestBody }
-	>;
-	/** The caller's own application. */
-	applyOwn: UseMutationResult<LeaveRequest, Error, LeaveRequestBody>;
-	/** A reviewer records approved leave on a member's behalf. */
-	record: UseMutationResult<
-		LeaveRequest,
-		Error,
-		{ membershipId: string; body: RecordLeaveBody }
-	>;
-	change: UseMutationResult<
-		LeaveRequest,
-		Error,
-		{ request: LeaveRequest; body: ChangeLeaveBody }
-	>;
-	cancel: UseMutationResult<
-		LeaveRequest,
-		Error,
-		{ request: LeaveRequest; remark: string }
-	>;
-	withdraw: UseMutationResult<LeaveRequest, Error, LeaveRequest>;
-};
-
-/**
- * Deciding and applying; each success reloads every list and window of the
- * company's requests, and the approvals. A request under a flow is approved
- * or rejected on its open step; one without is decided in one review.
- */
-export const useLeaveActions = (
-	companyId: string,
-	{ ownConfirmation = false }: { ownConfirmation?: boolean } = {}
-): LeaveActions => {
-	const client = useQueryClient();
-	const reload = async (): Promise<void> => {
-		await Promise.all([
-			client.invalidateQueries({ queryKey: ["leave", companyId] }),
-			client.invalidateQueries({ queryKey: ["notifications", companyId] }),
-			client.invalidateQueries({ queryKey: approvalKeys.all(companyId) }),
-		]);
-	};
-	// A clash the screen did not know of means its rostered days are stale: read
-	// them again, so the confirmation appears instead of the same refusal forever.
-	const refreshRosteredDays = (error: Error): void => {
-		if (isRosterClash(error))
-			void client.invalidateQueries({ queryKey: rosteredDaysKey(companyId) });
-	};
-	// A request that moved on (a flow started, another approver decided) is read again, so the screen shows where it stands.
-	const refreshDecided = (error: Error): void => {
-		refreshRosteredDays(error);
-		if (isStaleDecision(error)) void reload();
-	};
-	return {
-		approve: useMutation({
-			meta: { successMessage: ownConfirmation ? false : undefined },
-			mutationFn: ({
-				request,
-				comment,
-				takeOffRosteredDays,
-			}: {
-				request: LeaveRequest;
-				comment: string;
-				takeOffRosteredDays?: boolean;
-			}) =>
-				request.approval
-					? decideStep(
-							companyId,
-							request.approval,
-							"APPROVE",
-							comment,
-							takeOffRosteredDays
-						)
-					: approveLeaveRequest(
-							companyId,
-							request.membershipId,
-							request.leaveRequestId,
-							comment,
-							takeOffRosteredDays
-						),
-			onSuccess: reload,
-			onError: refreshDecided,
-		}),
-		reject: useMutation({
-			meta: { successMessage: ownConfirmation ? false : undefined },
-			mutationFn: ({
-				request,
-				reason,
-			}: {
-				request: LeaveRequest;
-				reason: string;
-			}) =>
-				request.approval
-					? decideStep(companyId, request.approval, "REJECT", reason)
-					: rejectLeaveRequest(
-							companyId,
-							request.membershipId,
-							request.leaveRequestId,
-							reason
-						),
-			onSuccess: reload,
-			onError: refreshDecided,
-		}),
-		apply: useMutation({
-			mutationFn: ({
-				membershipId,
-				body,
-			}: {
-				membershipId: string;
-				body: LeaveRequestBody;
-			}) => createLeaveRequest(companyId, membershipId, body),
-			onSuccess: reload,
-		}),
-		applyOwn: useMutation({
-			mutationFn: (body: LeaveRequestBody) =>
-				createMyLeaveRequest(companyId, body),
-			onSuccess: reload,
-		}),
-		record: useMutation({
-			mutationFn: ({
-				membershipId,
-				body,
-			}: {
-				membershipId: string;
-				body: RecordLeaveBody;
-			}) => recordLeave(companyId, membershipId, body),
-			onSuccess: reload,
-			onError: refreshRosteredDays,
-		}),
-		change: useMutation({
-			mutationFn: ({
-				request,
-				body,
-			}: {
-				request: LeaveRequest;
-				body: ChangeLeaveBody;
-			}) => changeLeave(companyId, request, body),
-			onSuccess: reload,
-			onError: refreshRosteredDays,
-		}),
-		cancel: useMutation({
-			mutationFn: ({
-				request,
-				remark,
-			}: {
-				request: LeaveRequest;
-				remark: string;
-			}) => cancelLeave(companyId, request, remark),
-			onSuccess: reload,
-		}),
-		withdraw: useMutation({
-			mutationFn: (request: LeaveRequest) =>
-				withdrawLeave(companyId, request.leaveRequestId),
-			onSuccess: reload,
-		}),
 	};
 };

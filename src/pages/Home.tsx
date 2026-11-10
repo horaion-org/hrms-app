@@ -35,8 +35,8 @@ import {
 	decisionRefusal,
 	type DecisionField,
 } from "@/features/leave/leaveRefusal";
+import { useLeaveDecisionActions } from "@/features/leave/useLeaveActions";
 import {
-	useLeaveActions,
 	useLeaveRequests,
 	useLeaveTurns,
 } from "@/features/leave/useLeaveRequests";
@@ -113,7 +113,9 @@ const Dashboard = ({
 	});
 	const activity = useActivityPage(companyId, 1, ACTIVITY_COUNT);
 	const setup = useSetupChecklist(companyId);
-	const actions = useLeaveActions(companyId, { ownConfirmation: true });
+	const actions = useLeaveDecisionActions(companyId, {
+		ownConfirmation: true,
+	});
 	const turns = useLeaveTurns(companyId);
 	const busy = actions.approve.isPending || actions.reject.isPending;
 	const now = new Date();

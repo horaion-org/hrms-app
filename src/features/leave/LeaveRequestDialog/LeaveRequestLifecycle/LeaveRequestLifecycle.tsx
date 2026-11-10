@@ -21,7 +21,7 @@ import { formatPeriod, rangeDays } from "@/features/leave/dates";
 import { changeRefusal } from "@/features/leave/leaveRefusal";
 import { leaveTypeOptions } from "@/features/leave/leaveTypeOptions";
 import type { LeaveRequest } from "@/features/leave/types";
-import { useLeaveActions } from "@/features/leave/useLeaveRequests";
+import { useLeaveLifecycleActions } from "@/features/leave/useLeaveActions";
 import { RosteredDaysNotice } from "../RosteredDaysNotice";
 
 export type LeaveRequestLifecycleProps = {
@@ -157,7 +157,7 @@ const ChangeLeaveConfirmation = ({
 	onClose: () => void;
 }): FunctionComponent => {
 	const { t } = useTranslation();
-	const actions = useLeaveActions(companyId);
+	const actions = useLeaveLifecycleActions(companyId);
 	const leaveTypes = useQuery(activeLeaveTypesQuery(companyId));
 	const [typeCode, setTypeCode] = useState(request.leaveType);
 	const [dates, setDates] = useState({
@@ -274,7 +274,7 @@ export const LeaveRequestLifecycle = ({
 	onDone,
 }: LeaveRequestLifecycleProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
-	const actions = useLeaveActions(companyId);
+	const actions = useLeaveLifecycleActions(companyId);
 	const history = useQuery(
 		leaveHistoryQuery(
 			companyId,
