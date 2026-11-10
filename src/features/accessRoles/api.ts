@@ -4,10 +4,30 @@ import { companyPath } from "@/common/companyPath";
 import type { ListPage } from "@/common/schemas";
 import {
 	listPath,
+	organisationKeys,
 	unitStatusSchema,
 	type ListQuery,
 	type UnitStatus,
 } from "@/features/organisation/api";
+
+/**
+ * Who holds a role, and one member's roles. They sit under the organisation
+ * key, as they always have, so any organisation change reloads them too.
+ */
+export const accessRoleKeys = {
+	holders: (companyId: string, accessRoleId: string) =>
+		[
+			...organisationKeys.all(companyId),
+			"access-role-holders",
+			accessRoleId,
+		] as const,
+	memberAssignments: (companyId: string, membershipId: string) =>
+		[
+			...organisationKeys.all(companyId),
+			"member-assignments",
+			membershipId,
+		] as const,
+};
 
 /** The two kinds of access role, in the order a form offers them. */
 export const ACCESS_ROLE_KINDS = ["COMPANY", "LOCAL"] as const;

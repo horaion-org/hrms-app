@@ -9,6 +9,7 @@ import {
 	type UpdateAccessRoleBody,
 } from "@/features/accessRoles/api";
 import { workspaceQuery } from "@/features/workspace/api";
+import { organisationKeys } from "@/features/organisation/api";
 
 /**
  * Refreshes the company's lists and activity after changing an access role,
@@ -25,7 +26,7 @@ export const useUpdateAccessRole = (
 			updateAccessRole(companyId, accessRoleId, body),
 		onSuccess: () =>
 			Promise.all([
-				client.invalidateQueries({ queryKey: ["organisation", companyId] }),
+				client.invalidateQueries({ queryKey: organisationKeys.all(companyId) }),
 				client.invalidateQueries({ queryKey: workspaceQuery.queryKey }),
 			]),
 	});

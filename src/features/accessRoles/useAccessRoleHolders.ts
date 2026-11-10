@@ -5,13 +5,14 @@ import {
 	type UseMutationResult,
 	type UseQueryResult,
 } from "@tanstack/react-query";
-import type { UnitStatus } from "@/features/organisation/api";
+import { organisationKeys, type UnitStatus } from "@/features/organisation/api";
 import {
 	fetchAccessRoleHolders,
 	grantAccessRole,
 	revokeAccessRole,
 	setAccessRoleAssignmentStatus,
 	type AccessRoleGrant,
+	accessRoleKeys,
 } from "@/features/accessRoles/api";
 import type { AccessRoleAssignmentRow } from "@/features/accessRoles/AccessRoleAssignments";
 import { workspaceQuery } from "@/features/workspace/api";
@@ -24,7 +25,7 @@ export const useAccessRoleHolders = (
 	accessRoleId: string
 ): UseQueryResult<Array<AccessRoleAssignmentRow>> =>
 	useQuery({
-		queryKey: ["organisation", companyId, "access-role-holders", accessRoleId],
+		queryKey: accessRoleKeys.holders(companyId, accessRoleId),
 		queryFn: ({ signal }) =>
 			fetchAccessRoleHolders(companyId, accessRoleId, signal),
 		meta: administrativeMeta(companyId),
@@ -124,7 +125,7 @@ export const useChangeAccessRoleHolders = (
 		},
 		onSettled: () =>
 			Promise.all([
-				client.invalidateQueries({ queryKey: ["organisation", companyId] }),
+				client.invalidateQueries({ queryKey: organisationKeys.all(companyId) }),
 				client.invalidateQueries({ queryKey: workspaceQuery.queryKey }),
 			]),
 	});
