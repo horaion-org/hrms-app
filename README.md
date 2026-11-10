@@ -57,15 +57,18 @@ CI (`.github/workflows/ci.yml`) runs on every pull request to `development` and 
 jobs:
 
 - **Type check & lint:** `pnpm exec tsc`, then `pnpm lint` (the permission contract check, then eslint).
-- **Unit tests:** `vitest run src/` in three shards, with one worker per core and a 15 s per-test timeout. The
+- **Unit tests:** `vitest run src/` in two shards, with one worker per core and a 15 s per-test timeout. The
   5 s default is too tight on a shared runner.
 
+Both jobs run on Blacksmith runners (backend ADR-0070); setting the repository variable `CI_RUNNER` to
+`ubuntu-latest` moves them back to GitHub. A change that touches only Markdown, `docs/` or `.scratch/` runs no CI.
+
 The Playwright suites are not run on pull requests. `.github/workflows/playwright-nightly.yml` runs the mocked browser
-suite in all three browsers every night (and on demand from the Actions tab) and uploads the HTML report as an
+suite in all three browsers every week (and on demand from the Actions tab) and uploads the HTML report as an
 artifact. To reproduce a CI shard locally:
 
 ```sh
-pnpm exec vitest run src/ --shard=1/3 --testTimeout=15000
+pnpm exec vitest run src/ --shard=1/2 --testTimeout=15000
 ```
 
 **The quarantine.** A test that fails on `development` and cannot be fixed at once is marked `it.skip` and listed

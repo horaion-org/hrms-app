@@ -2,11 +2,14 @@ name: CI
 
 # Type check, lint (with the permission contract check) and the Vitest suite on every pull request to development
 # and every push to it. The Playwright suites are not run here. Guide: README.md, "Checks".
+# A change that touches only documentation runs nothing; a change to this workflow, code or configuration still runs.
 on:
   pull_request:
     branches: [ development ]
+    paths-ignore: [ "**/*.md", "docs/**", ".scratch/**" ]
   push:
     branches: [ development ]
+    paths-ignore: [ "**/*.md", "docs/**", ".scratch/**" ]
   workflow_dispatch:
 
 permissions:
@@ -61,14 +64,16 @@ jobs:
         run: node scripts/check-test-quarantine.mjs --summary >> "$GITHUB_STEP_SUMMARY"
 
   unit-tests:
-    name: Unit tests (${{ matrix.shard }}/3)
+    name: Unit tests (${{ matrix.shard }}/${{ strategy.job-total }})
     runs-on: ${{ vars.CI_RUNNER || 'blacksmith-2vcpu-ubuntu-2404' }}
     timeout-minutes: 20
 
+    # Two shards: each job pays about 20 s of setup and is billed in whole minutes, so a third shard cost more
+    # minutes than the wall time it saved. Add a number here to add a shard; the count follows the matrix.
     strategy:
       fail-fast: false
       matrix:
-        shard: [ 1, 2, 3 ]
+        shard: [ 1, 2 ]
 
     steps:
       - name: Checkout repository
@@ -93,6 +98,6 @@ jobs:
       - name: Vitest
         run: >-
           pnpm exec vitest run src/
-          --shard=${{ matrix.shard }}/3
+          --shard=${{ matrix.shard }}/${{ strategy.job-total }}
           --maxWorkers=100%
           --testTimeout=15000

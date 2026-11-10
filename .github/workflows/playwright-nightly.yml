@@ -1,10 +1,10 @@
-name: Playwright nightly
+name: Playwright weekly
 
-# The mocked-API browser suite (e2e/, three browsers) once a night and on demand. It is not run on pull requests
+# The mocked-API browser suite (e2e/, three browsers) once a week and on demand. It is not run on pull requests
 # yet; the CI workflow runs type check, lint and Vitest. Guide: README.md, "Checks".
 on:
   schedule:
-    - cron: "0 19 * * *" # 19:00 UTC, 03:00 in Singapore
+    - cron: "0 19 * * 0" # Sundays 19:00 UTC, Mondays 03:00 in Singapore
   workflow_dispatch:
 
 permissions:
