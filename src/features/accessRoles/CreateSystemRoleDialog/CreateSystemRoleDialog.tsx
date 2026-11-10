@@ -27,7 +27,7 @@ import {
 } from "@/features/accessRoles/PermissionChecklist/groups";
 import { UnitNameField } from "@/features/organisation/UnitNameField";
 import { useCreateFormSubmit } from "@/features/organisation/useCreateFormSubmit";
-import { useCreateAccessRole } from "@/features/organisation/useCreateInOrganisation";
+import { useCreateAccessRole } from "@/features/accessRoles/useCreateAccessRole";
 import {
 	PERMISSION_KEYS,
 	type PermissionKey,

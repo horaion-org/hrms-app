@@ -9,7 +9,7 @@ import { useAccessRoleHolders } from "@/features/accessRoles/useAccessRoleHolder
 import {
 	useDeleteAccessRole,
 	useSetAccessRoleStatus,
-} from "@/features/organisation/useChangeListRow";
+} from "@/features/accessRoles/useAccessRoleRowChanges";
 import { isPermissionKey } from "@/features/workspace/permissionKeys";
 import {
 	useCurrentCompanyId,

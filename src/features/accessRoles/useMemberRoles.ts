@@ -1,7 +1,7 @@
 import { skipToken, useQuery } from "@tanstack/react-query";
 import { ApiProblemError } from "@/common/problem";
 import { fetchMemberAccessRoleAssignments } from "@/features/organisation/api";
-import { useAccessRoles } from "@/features/organisation/useOrganisationList";
+import { useAccessRoles } from "@/features/accessRoles/useAccessRoles";
 import {
 	memberRoles,
 	type MemberRoles,

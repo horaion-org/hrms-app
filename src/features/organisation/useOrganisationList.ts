@@ -8,10 +8,8 @@ import {
 } from "@/features/workspace/queryAccess";
 import { useAccess } from "@/features/workspace/useAccess";
 import {
-	type AccessRole,
 	type Branch,
 	type Department,
-	fetchAccessRoles,
 	fetchBranches,
 	fetchDepartments,
 	fetchJobTitles,
@@ -96,20 +94,4 @@ export const useJobTitles = (
 		["job-titles", query],
 		(signal) => fetchJobTitles(companyId, query, signal),
 		enabled
-	);
-
-/**
- * Role definitions are shared company reference data: their names and
- * permission templates are read with `access_role:read` held anywhere.
- * Who holds them, and where, is scoped separately by the API.
- */
-export const useAccessRoles = (
-	companyId: string,
-	query: ListQuery
-): OrganisationList<AccessRole> =>
-	useOrganisationList(
-		companyId,
-		"access_role:read",
-		["access-roles", query],
-		(signal) => fetchAccessRoles(companyId, query, signal)
 	);

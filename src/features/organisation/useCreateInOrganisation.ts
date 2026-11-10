@@ -4,11 +4,8 @@ import {
 	type UseMutationResult,
 } from "@tanstack/react-query";
 import {
-	createAccessRole,
 	createDepartment,
 	createJobTitle,
-	type AccessRole,
-	type CreateAccessRoleBody,
 	type CreateDepartmentBody,
 	type CreateJobTitleBody,
 	type Department,
@@ -57,11 +54,4 @@ export const useCreateJobTitle = (
 		companyId,
 		({ branchId, departmentId, body }: CreateJobTitleVariables) =>
 			createJobTitle(companyId, branchId, departmentId, body)
-	);
-
-export const useCreateAccessRole = (
-	companyId: string
-): UseMutationResult<AccessRole, Error, CreateAccessRoleBody> =>
-	useCompanyCreate(companyId, (body: CreateAccessRoleBody) =>
-		createAccessRole(companyId, body)
 	);
