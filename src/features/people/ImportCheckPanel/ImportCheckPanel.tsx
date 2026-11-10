@@ -3,29 +3,21 @@ import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
-import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
+import { DataTable } from "@/components/ui/DataTable";
 import { DownloadIcon, UploadIcon } from "@/components/ui/Icon";
-import { flaggedValueCell, problemsCell } from "@/features/imports/checkCells";
-import type { CheckedRow, ImportCheck } from "@/features/people/import/api";
+import type { ImportCheck } from "@/features/people/import/api";
 import {
 	problemGroups,
 	problemText,
 	type ProblemGroup,
 } from "@/features/people/import/importText";
+import { checkedRowColumns } from "@/features/people/ImportCheckPanel/checkedRowColumns";
 
 export type ImportCheckPanelProps = {
 	check: ImportCheck;
 	onDownloadErrors: () => void;
 	onUploadAgain: () => void;
 };
-
-const SHOWN_COLUMNS = [
-	"NAME",
-	"EMAIL",
-	"BRANCH",
-	"DEPARTMENT",
-	"JOB_TITLE",
-] as const;
 
 /**
  * The dry run of an import file: what would be added, skipped and fixed,
@@ -43,32 +35,7 @@ export const ImportCheckPanel = ({
 	const rows = selected
 		? check.rows.filter((row) => selected.rowNumbers.includes(row.row))
 		: check.rows;
-	const columns: Array<DataTableColumn<CheckedRow>> = [
-		{
-			id: "row",
-			header: t("people.importPage.check.rowColumn"),
-			cell: (row) => row.row,
-			headerClassName: "w-16",
-		},
-		...SHOWN_COLUMNS.map((column) => ({
-			id: column,
-			header: t(`people.importPage.columns.${column}`),
-			cell: (row: CheckedRow) => flaggedValueCell(row, column),
-		})),
-		{
-			id: "problem",
-			header: t("people.importPage.check.problemColumn"),
-			cell: (row) =>
-				problemsCell(
-					row.problems,
-					(problem) => problemText(problem, t),
-					row.status === "CORRECT_EMAIL"
-						? t("people.importPage.check.correctsEmail")
-						: t("people.importPage.check.noProblem")
-				),
-			headerClassName: "w-1/3",
-		},
-	];
+	const columns = checkedRowColumns(t);
 
 	return (
 		<section aria-labelledby="import-check-summary">

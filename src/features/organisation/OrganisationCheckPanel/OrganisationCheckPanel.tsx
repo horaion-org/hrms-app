@@ -3,24 +3,18 @@ import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
-import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
+import { DataTable } from "@/components/ui/DataTable";
 import { DownloadIcon, UploadIcon } from "@/components/ui/Icon";
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from "@/components/ui/Tabs";
-import { flaggedValueCell, problemsCell } from "@/features/imports/checkCells";
-import {
-	SHEET_COLUMNS,
-	type OrganisationCheck,
-	type OrganisationCheckedRow,
-	type OrganisationSheet,
-} from "@/features/organisation/import/api";
+import type { OrganisationCheck } from "@/features/organisation/import/api";
 import {
 	checkHeadline,
 	firstSheetToShow,
-	problemText,
 	sheetSummaries,
 	unitCountParts,
 	unitCountsText,
 } from "@/features/organisation/import/importText";
+import { organisationCheckedRowColumns } from "@/features/organisation/OrganisationCheckPanel/organisationCheckedRowColumns";
 
 export type OrganisationCheckPanelProps = {
 	check: OrganisationCheck;
@@ -48,33 +42,6 @@ export const OrganisationCheckPanel = ({
 	useEffect(() => {
 		summaryRef.current?.focus();
 	}, []);
-
-	const columnsOf = (
-		sheet: OrganisationSheet
-	): Array<DataTableColumn<OrganisationCheckedRow>> => [
-		{
-			id: "row",
-			header: t("organisation.import.check.rowColumn"),
-			cell: (row) => row.row,
-			headerClassName: "w-16",
-		},
-		...SHEET_COLUMNS[sheet].map((column) => ({
-			id: column,
-			header: t(`organisation.import.columns.${column}`),
-			cell: (row: OrganisationCheckedRow) => flaggedValueCell(row, column),
-		})),
-		{
-			id: "problem",
-			header: t("organisation.import.check.problemColumn"),
-			cell: (row) =>
-				problemsCell(
-					row.problems,
-					(problem) => problemText(problem, t),
-					t("organisation.import.check.noProblem")
-				),
-			headerClassName: "w-1/3",
-		},
-	];
 
 	return (
 		<section aria-labelledby="organisation-check-summary">
@@ -176,7 +143,7 @@ export const OrganisationCheckPanel = ({
 						<TabPanel key={sheet}>
 							<DataTable
 								className="mt-6"
-								columns={columnsOf(sheet)}
+								columns={organisationCheckedRowColumns(t, sheet)}
 								data={check.rows.filter((row) => row.sheet === sheet)}
 								emptyState={t("organisation.import.check.emptySheet")}
 								getRowId={(row) => `${row.sheet}:${String(row.row)}`}
