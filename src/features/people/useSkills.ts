@@ -6,6 +6,7 @@ import {
 	type UseQueryResult,
 } from "@tanstack/react-query";
 import type { ListPage } from "@/common/schemas";
+import { useDebouncedValue } from "@/common/useDebouncedValue";
 import {
 	memberSkillsQuery,
 	replaceMemberSkills,
@@ -18,7 +19,6 @@ import {
 	administrativeMeta,
 } from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";
-import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 
 /** A person's skills. */
 export const useMemberSkills = (
@@ -65,7 +65,7 @@ export const useSkillSuggestions = (
 	companyId: string,
 	query: string
 ): UseQueryResult<ListPage<Skill>> => {
-	const search = useDebouncedValue(query.trim(), 250);
+	const search = useDebouncedValue(query.trim());
 	return useQuery({
 		queryKey: ["people", companyId, "skills", search] as const,
 		queryFn: ({ signal }) => searchActiveSkills(companyId, search, signal),

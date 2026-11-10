@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { ApiProblemError } from "@/common/problem";
 import { saveFile } from "@/common/saveFile";
 import type { FunctionComponent } from "@/common/types";
+import { useDebouncedValue } from "@/common/useDebouncedValue";
 import { BulkActionBar } from "@/components/ui/BulkActionBar";
 import { Button } from "@/components/ui/Button";
 import { DataTable } from "@/components/ui/DataTable";
@@ -49,7 +50,7 @@ import {
 	statusParameter,
 	type PeopleSearch,
 } from "@/features/people/peopleSearch";
-import { usePeople, useSettledSearch } from "@/features/people/usePeople";
+import { usePeople } from "@/features/people/usePeople";
 import { PEOPLE_READ_KEYS } from "@/features/workspace/permissionKeys";
 import { DepartmentFilter } from "@/features/workspace/DepartmentFilter";
 import { departmentChips, filterChip } from "@/features/workspace/filterChips";
@@ -91,7 +92,7 @@ export const People = (): FunctionComponent => {
 	const search = route.useSearch();
 	const navigate = route.useNavigate();
 	const [text, setText] = useState("");
-	const settled = useSettledSearch(text);
+	const settled = useDebouncedValue(text.trim());
 	const requested = unitSelectionOf(search);
 	// Resolved as the header resolves them, so the list asks for the default Branch before the URL names one.
 	const units = useUnitSelection(

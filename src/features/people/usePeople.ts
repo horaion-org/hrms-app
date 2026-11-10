@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
 import { ApiProblemError } from "@/common/problem";
 import type { ListPage } from "@/common/schemas";
 import {
@@ -35,18 +34,4 @@ export const usePeople = (
 	if (list.isError) return { status: "error" };
 	if (list.data === undefined) return { status: "pending" };
 	return { status: "ready", ...list.data };
-};
-
-/** The search text once typing pauses, so each keystroke is not its own request. */
-export const useSettledSearch = (text: string): string => {
-	const [settled, setSettled] = useState(text.trim());
-	useEffect(() => {
-		const timeout = setTimeout(() => {
-			setSettled(text.trim());
-		}, 250);
-		return (): void => {
-			clearTimeout(timeout);
-		};
-	}, [text]);
-	return settled;
 };

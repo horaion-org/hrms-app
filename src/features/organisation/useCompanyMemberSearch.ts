@@ -3,8 +3,8 @@ import {
 	useQuery,
 	type UseQueryResult,
 } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
 import type { ListPage } from "@/common/schemas";
+import { useDebouncedValue } from "@/common/useDebouncedValue";
 import {
 	type CompanyMember,
 	searchCompanyMembers,
@@ -18,15 +18,7 @@ export const useCompanyMemberSearch = (
 	query: string,
 	enabled = true
 ): UseQueryResult<ListPage<CompanyMember>> => {
-	const [debounced, setDebounced] = useState(query.trim());
-	useEffect(() => {
-		const timeout = setTimeout(() => {
-			setDebounced(query.trim());
-		}, 250);
-		return (): void => {
-			clearTimeout(timeout);
-		};
-	}, [query]);
+	const debounced = useDebouncedValue(query.trim());
 	return useQuery({
 		enabled,
 		queryKey: ["organisation", companyId, "members", "ACTIVE", debounced],
