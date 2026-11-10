@@ -1,5 +1,4 @@
 import { formattingLocale } from "@/common/formattingLocale";
-import { countryName } from "@/common/countries";
 import { useMemo, useState } from "react";
 import { mapRefusal } from "@/common/refusal";
 import { useAccess } from "@/features/workspace/useAccess";
@@ -13,21 +12,17 @@ import {
 	type DataTableColumn,
 	type DataTableSort,
 } from "@/components/ui/DataTable";
-import { OverflowMenuItem } from "@/components/ui/OverflowMenu";
 import type { Branch } from "@/features/organisation/api";
 import { ListToolbar } from "@/features/organisation/ListToolbar";
 import {
-	actionsColumn,
-	createdColumn,
 	describeList,
 	isStatusFilter,
 	matchesSearch,
-	nameColumn,
-	statusColumn,
 	statusFilterChips,
 	statusFilterOptions,
 	type StatusFilter,
 } from "@/features/organisation/listColumns";
+import { branchColumns } from "@/features/organisation/branchColumns";
 import { useSetBranchStatus } from "@/features/organisation/useChangeListRow";
 import { useBranches } from "@/features/organisation/useOrganisationList";
 import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
@@ -69,63 +64,16 @@ export const Branches = (): FunctionComponent => {
 			matchesSearch(branch.name, query) || matchesSearch(branch.code, query)
 	);
 	const columns = useMemo(
-		(): Array<DataTableColumn<Branch>> => [
-			nameColumn<Branch>(t("organisation.branches.name")),
-			{
-				id: "code",
-				header: t("organisation.branches.code"),
-				cell: (branch: Branch): string => branch.code,
-				sortValue: (branch: Branch): string => branch.code,
-				hideBelow: "md",
-			},
-			{
-				id: "city",
-				header: t("organisation.branches.city"),
-				cell: (branch: Branch): string => branch.city,
-				sortValue: (branch: Branch): string => branch.city,
-				hideBelow: "md",
-			},
-			{
-				id: "country",
-				header: t("organisation.branches.country"),
-				cell: (branch: Branch): string =>
-					countryName(branch.country, i18n.language),
-				hideBelow: "md",
-			},
-			// Phones keep the name and the actions; Status joins from `sm`, as on People.
-			{ ...statusColumn<Branch>(t), hideBelow: "sm" },
-			createdColumn<Branch>(t, locale),
-			actionsColumn<Branch>(
-				t,
-				(branch) => (
-					<>
-						<OverflowMenuItem disabled>
-							{t("organisation.list.viewItem")}
-						</OverflowMenuItem>
-						<OverflowMenuItem disabled>
-							{t("organisation.list.duplicateItem")}
-						</OverflowMenuItem>
-						<OverflowMenuItem
-							disabled={
-								!access.can("branch:update", branchScope(branch.branchId))
-							}
-							onClick={() => {
-								setChanging(branch);
-							}}
-						>
-							{t(
-								branch.status === "ACTIVE"
-									? "organisation.list.deactivateItem"
-									: "organisation.list.activateItem"
-							)}
-						</OverflowMenuItem>
-					</>
-				),
+		(): Array<DataTableColumn<Branch>> =>
+			branchColumns(t, {
+				language: i18n.language,
+				locale,
 				// Editing a Branch is granted at that Branch, or company-wide.
-				(branch) => access.can("branch:update", branchScope(branch.branchId)),
-				setEditing
-			),
-		],
+				canUpdate: (branch) =>
+					access.can("branch:update", branchScope(branch.branchId)),
+				onEdit: setEditing,
+				onChangeStatus: setChanging,
+			}),
 		[t, i18n.language, locale, access]
 	);
 

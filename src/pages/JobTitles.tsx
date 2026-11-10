@@ -1,6 +1,6 @@
 import { getRouteApi } from "@tanstack/react-router";
 import type { TFunction } from "i18next";
-import { type ReactNode, useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import { mapRefusal } from "@/common/refusal";
@@ -11,22 +11,17 @@ import {
 	type DataTableColumn,
 	type DataTableSort,
 } from "@/components/ui/DataTable";
-import { OverflowMenuItem } from "@/components/ui/OverflowMenu";
 import type { JobTitle } from "@/features/organisation/api";
 import { CreateJobTitleDialog } from "@/features/organisation/CreateJobTitleDialog";
 import { ListToolbar } from "@/features/organisation/ListToolbar";
 import {
-	actionsColumn,
-	branchColumn,
-	createdColumn,
 	describeList,
 	isStatusFilter,
 	statusFilterChips,
-	nameColumn,
-	statusColumn,
 	statusFilterOptions,
 	type StatusFilter,
 } from "@/features/organisation/listColumns";
+import { jobTitleColumns } from "@/features/organisation/jobTitleColumns";
 import { useSetJobTitleStatus } from "@/features/organisation/useChangeListRow";
 import { useJobTitles } from "@/features/organisation/useOrganisationList";
 import { JOB_TITLE_READ_KEYS } from "@/features/workspace/permissionKeys";
@@ -142,63 +137,15 @@ export const JobTitles = (): FunctionComponent => {
 		chooseDepartment(undefined);
 	};
 	const columns = useMemo(
-		(): Array<DataTableColumn<JobTitle>> => [
-			nameColumn<JobTitle>(
-				t("organisation.jobTitles.name"),
-				(jobTitle) => jobTitle.description
-			),
-			// A unit already chosen is not repeated on every row.
-			...(branchShown ? [] : [branchColumn<JobTitle>(t)]),
-			...(departmentShown
-				? []
-				: [
-						{
-							id: "department",
-							header: t("organisation.jobTitles.department"),
-							cell: (jobTitle: JobTitle): string => jobTitle.departmentName,
-							hideBelow: "md",
-						} satisfies DataTableColumn<JobTitle>,
-					]),
-			{
-				id: "people",
-				header: t("organisation.jobTitles.people"),
-				// Plain text until People can be filtered by job title; nobody holding it reads muted.
-				cell: (jobTitle: JobTitle): ReactNode => (
-					<span
-						className={
-							jobTitle.holderCount === 0 ? "text-neutral-700" : undefined
-						}
-					>
-						{t("organisation.jobTitles.peopleCount", {
-							count: jobTitle.holderCount,
-						})}
-					</span>
-				),
-				hideBelow: "md",
-			},
-			// Phones keep the name and the actions; Status joins from `sm`, as on People.
-			{ ...statusColumn<JobTitle>(t), hideBelow: "sm" },
-			createdColumn<JobTitle>(t, locale),
-			actionsColumn<JobTitle>(
-				t,
-				(jobTitle) => (
-					<OverflowMenuItem
-						disabled={!canEdit(jobTitle)}
-						onClick={() => {
-							setChanging(jobTitle);
-						}}
-					>
-						{t(
-							jobTitle.status === "ACTIVE"
-								? "organisation.list.deactivateItem"
-								: "organisation.list.activateItem"
-						)}
-					</OverflowMenuItem>
-				),
+		(): Array<DataTableColumn<JobTitle>> =>
+			jobTitleColumns(t, {
+				locale,
+				branchShown,
+				departmentShown,
 				canEdit,
-				setEditing
-			),
-		],
+				onEdit: setEditing,
+				onChangeStatus: setChanging,
+			}),
 		[t, locale, canEdit, branchShown, departmentShown]
 	);
 

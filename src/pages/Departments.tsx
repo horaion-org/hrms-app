@@ -10,22 +10,17 @@ import {
 	type DataTableColumn,
 	type DataTableSort,
 } from "@/components/ui/DataTable";
-import { OverflowMenuItem } from "@/components/ui/OverflowMenu";
 import type { Department } from "@/features/organisation/api";
 import { CreateDepartmentDialog } from "@/features/organisation/CreateDepartmentDialog";
 import { ListToolbar } from "@/features/organisation/ListToolbar";
 import {
-	actionsColumn,
-	branchColumn,
-	createdColumn,
 	describeList,
 	isStatusFilter,
 	statusFilterChips,
-	nameColumn,
-	statusColumn,
 	statusFilterOptions,
 	type StatusFilter,
 } from "@/features/organisation/listColumns";
+import { departmentColumns } from "@/features/organisation/departmentColumns";
 import { useSetDepartmentStatus } from "@/features/organisation/useChangeListRow";
 import { useDepartments } from "@/features/organisation/useOrganisationList";
 import { DEPARTMENT_READ_KEYS } from "@/features/workspace/permissionKeys";
@@ -99,44 +94,14 @@ export const Departments = (): FunctionComponent => {
 		t
 	);
 	const columns = useMemo(
-		(): Array<DataTableColumn<Department>> => [
-			nameColumn<Department>(t("organisation.departments.name")),
-			// A Branch already chosen is not repeated on every row.
-			...(branchShown ? [] : [branchColumn<Department>(t)]),
-			// Phones keep the name and the actions; Status joins from `sm`, as on People.
-			{ ...statusColumn<Department>(t), hideBelow: "sm" },
-			createdColumn<Department>(t, locale),
-			actionsColumn<Department>(
-				t,
-				(department) => (
-					<>
-						<OverflowMenuItem
-							disabled={!canUpdate(department)}
-							onClick={() => {
-								setEditing(department);
-							}}
-						>
-							{t("organisation.list.editItem")}
-						</OverflowMenuItem>
-						<OverflowMenuItem
-							disabled={!canUpdate(department)}
-							onClick={() => {
-								setChanging(department);
-							}}
-						>
-							{t(
-								department.status === "ACTIVE"
-									? "organisation.list.deactivateItem"
-									: "organisation.list.activateItem"
-							)}
-						</OverflowMenuItem>
-					</>
-				),
-				// Effective at the Department, whether granted there, at its Branch, or company-wide.
+		(): Array<DataTableColumn<Department>> =>
+			departmentColumns(t, {
+				locale,
+				branchShown,
 				canUpdate,
-				setEditing
-			),
-		],
+				onEdit: setEditing,
+				onChangeStatus: setChanging,
+			}),
 		[t, locale, canUpdate, branchShown]
 	);
 
