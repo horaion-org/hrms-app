@@ -10,7 +10,7 @@ import {
 	roleNames,
 	rolesByPlace,
 	type MemberRole,
-} from "@/features/people/memberRoles";
+} from "@/features/accessRoles/memberRoles";
 
 const role = (accessRoleId: string, name: string): AccessRole => ({
 	accessRoleId,

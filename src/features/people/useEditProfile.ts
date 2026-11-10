@@ -13,7 +13,7 @@ import {
 import {
 	memberRoleChange,
 	type MemberRole,
-} from "@/features/people/memberRoles";
+} from "@/features/accessRoles/memberRoles";
 import { withPeopleNotice } from "@/features/people/peopleNoticeState";
 import type { ProfileFormValues } from "@/features/people/profileFormSchema";
 import { profileUpdateRequest } from "@/features/people/profileRequest";

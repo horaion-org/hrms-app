@@ -18,7 +18,7 @@ import {
 } from "@/features/organisation/useAccessRoleHolders";
 import { useCompanyMemberSearch } from "@/features/organisation/useCompanyMemberSearch";
 import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
-import { useMemberRoles } from "@/features/people/useMemberRoles";
+import { useMemberRoles } from "@/features/accessRoles/useMemberRoles";
 import { workspaceQuery } from "@/features/workspace/api";
 import { retry } from "@/features/workspace/retry";
 import { useAccess } from "@/features/workspace/useAccess";

@@ -2,7 +2,10 @@ import { skipToken, useQuery } from "@tanstack/react-query";
 import { ApiProblemError } from "@/common/problem";
 import { fetchMemberAccessRoleAssignments } from "@/features/organisation/api";
 import { useAccessRoles } from "@/features/organisation/useOrganisationList";
-import { memberRoles, type MemberRoles } from "@/features/people/memberRoles";
+import {
+	memberRoles,
+	type MemberRoles,
+} from "@/features/accessRoles/memberRoles";
 import { administrativeMeta } from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";
 import { useAccess } from "@/features/workspace/useAccess";
