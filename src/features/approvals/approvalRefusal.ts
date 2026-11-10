@@ -27,7 +27,7 @@ const codes = APPROVAL_REFUSAL_CODES;
 export type DecisionField = "comment";
 
 /** Why approving or rejecting a step was refused: an invalid comment on its field, otherwise one message. */
-export const decisionRefusal = (
+export const approvalDecisionRefusal = (
 	error: unknown,
 	t: TFunction
 ): Refusal<DecisionField> => {

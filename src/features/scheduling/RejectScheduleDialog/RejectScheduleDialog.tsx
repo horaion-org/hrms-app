@@ -4,7 +4,7 @@ import type { FunctionComponent } from "@/common/types";
 import { Textarea } from "@/components/forms/Textarea";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { APPROVAL_COMMENT_MAX_LENGTH } from "@/features/approvals/api";
-import { decisionRefusal as approvalRefusal } from "@/features/approvals/approvalRefusal";
+import { approvalDecisionRefusal } from "@/features/approvals/approvalRefusal";
 import type { OpenStep } from "@/features/approvals/approvalStanding";
 import { useApprovalDecisionActions } from "@/features/approvals/useApprovalActions";
 import {
@@ -92,7 +92,7 @@ export const RejectScheduleDialog = ({
 			: withdraw;
 	const approvalRefused =
 		atStep && approval.reject.error
-			? approvalRefusal(approval.reject.error, t)
+			? approvalDecisionRefusal(approval.reject.error, t)
 			: undefined;
 	const rejectRefused =
 		decision === "reject" && !atStep && reject.error

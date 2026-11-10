@@ -21,23 +21,55 @@ is sampled or kept in page state beyond the timeline's window.
   grouped by Grant kind in the company's order.
 - `leaveSearch.ts` — what belongs in the URL (`view`, `branch`, `status`, `sort`, `page`) and the API queries
   built from it; `timelineQueryOf` asks for one window of up to 200 rows.
-- `useLeaveRequests.ts` — the list hook (`hidden` when the key is held nowhere, or the API refuses) and the
-  mutations, each reloading every list and window of the company.
-- `leaveRefusal.ts` — API codes to frontend-owned copy, on a field or as the dialog's alert.
+- `types.ts` — the request types re-exported from `api.ts`, and each status's Badge tone.
+- `dates.ts` — the timeline's window (`defaultRange`, `shiftRange`, `rangeDays`), a request's period as one
+  line, and the calendar day of an instant in the Branch's time zone.
+- `useLeaveRequests.ts` — the reads: the team list hook (`hidden` when the key is held nowhere, or the API
+  refuses), the caller's own requests, the pending count for the Team requests tab, and `useLeaveTurns` (whose
+  turn it is to decide which request).
+- `useLeaveActions.ts` — the writes, one hook per job: `useLeaveDecisionActions` (approve, reject),
+  `useLeaveApplyActions` (apply, apply for oneself, record) and `useLeaveLifecycleActions` (change, cancel,
+  withdraw). Each success runs `reloadLeave`: every list and window of the company, the notifications and the
+  approvals.
+- `useLeaveDecision.ts` — deciding from any screen: the decision mutations, whose turn it is, the refusal and
+  the line that tells the reviewer what happened. `reviewOf(request)` is the dialog's `review` prop; the host
+  only decides what to do with the line (the Leave page's status line, the Dashboard's toast, closing a linked
+  request).
+- `leaveApproval.ts` — leave under an approval flow, as pure rules: which stage a decision is (`single`,
+  `middle`, `last`), whether it approves the leave, the approvals waiting on the caller, the "waiting for"
+  line, `canDecideLeave` and the approved message (a middle step only moves the request on).
+- `leaveRefusal.ts` — API codes to frontend-owned copy, on a field or as the dialog's alert;
+  `leaveDecisionRefusal` also words the approvals API's refusals for a request under a flow.
 - `LeaveRequests` — one server page: sorting, the status filter and paging are handed to the caller.
+- `LeaveStatusFilter` — the status choice in the toolbar's Filters; `LeaveRangeNavigator` — the timeline's
+  previous/next window and its date range.
 - `LeaveTimeline` — rows per person, bars per pending or approved request clipped to the window, weekends
   hatched; the window is the caller's.
-- `LeaveRequestDialog` — review a request with its remarks; approve with an optional comment or reject with a
-  reason, each confirmed in a second step; or apply for yourself or someone found through the People search,
-  choosing from the grouped leave types, with remarks that become a required Reason when the type asks for one.
+- `LeaveRequestDialog` — takes `review` (from `useLeaveDecision`) to offer a decision and `applyForm` for an
+  application; without `review` a request is only read. It reviews a request with its remarks; approve with
+  an optional comment or reject with a reason, each confirmed in a second step; or apply for yourself or
+  someone found through the People search, choosing from the grouped leave types, with remarks that become a
+  required Reason when the type asks for one.
   The shell holds the review (its step and both notes) and the footer; its parts are `LeaveRequestDetails`
   (what the request says), `LeaveDecisionStep` (the reason or comment being confirmed) and `LeaveApplyForm`
   (a new application, with its own state and footer). `RosteredDaysNotice` names the days that hold a shift;
   a reviewer must tick it, and nothing can be confirmed until those days are read. `LeaveRequestLifecycle` is
   the history, Withdraw on one's own pending request, and Change and Cancel on approved leave.
+- `LinkedLeaveRequest` — the request a notification links to (`?requestId=`), opened over any Leave tab and
+  closed after a decision.
 - `fixtures.ts` — API-shaped rows for stories and component tests.
 
-`src/pages/Leave.tsx` composes them and owns the dialog, the decisions and the status line.
+`src/pages/Leave.tsx` composes them and owns the dialog, the application and the status line.
+
+## Approval flows
+
+A request a company's leave flow governs carries `approval` (its instance, open step and step count). It is
+decided on that open step through the approvals API (`features/approvals`), not the leave review routes:
+`useLeaveDecisionActions` picks the route, the dialog limits the note to the approvals API's 500 characters
+(`APPROVAL_COMMENT_MAX_LENGTH`; the leave routes keep 2,000, `LEAVE_APPROVAL_COMMENT_MAX_LENGTH`), and the
+roster check and the comment on past leave apply only at the last step. `useLeaveTurns` reads the caller's
+pending approvals to know whose turn it is; a reviewer holding `approval:read` sees the steps
+(`ApprovalTrail`).
 
 ## Permissions
 

@@ -17,16 +17,10 @@ import { Tabs, TabList, Tab, TabPanels, TabPanel } from "@/components/ui/Tabs";
 import { activeLeaveTypesQuery } from "@/features/leave/api";
 import { defaultRange, rangeDays } from "@/features/leave/dates";
 import { LeaveRangeNavigator } from "@/features/leave/LeaveRangeNavigator";
-import { approvedMessage } from "@/features/leave/leaveApproval";
 import { LeaveRequestDialog } from "@/features/leave/LeaveRequestDialog";
 import { LinkedLeaveRequest } from "@/features/leave/LinkedLeaveRequest";
 import { LeaveRequests } from "@/features/leave/LeaveRequests";
-import {
-	applyRefusal,
-	decisionRefusal,
-	type ApplyField,
-	type DecisionField,
-} from "@/features/leave/leaveRefusal";
+import { applyRefusal, type ApplyField } from "@/features/leave/leaveRefusal";
 import {
 	leaveQueryOf,
 	myLeaveQueryOf,
@@ -38,11 +32,11 @@ import {
 } from "@/features/leave/leaveSearch";
 import { LeaveStatusFilter } from "@/features/leave/LeaveStatusFilter";
 import { LeaveTimeline } from "@/features/leave/LeaveTimeline";
-import type { LeaveRequest } from "@/features/leave/types";
+import type { LeaveRequest, LeaveRequestBody } from "@/features/leave/types";
+import { useLeaveApplyActions } from "@/features/leave/useLeaveActions";
+import { useLeaveDecision } from "@/features/leave/useLeaveDecision";
 import {
-	useLeaveActions,
 	useLeaveRequests,
-	useLeaveTurns,
 	useMyLeaveRequests,
 	usePendingLeaveCount,
 	type LeaveList,
@@ -70,7 +64,8 @@ import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 
 const route = getRouteApi("/_authenticated/_app/leave");
 
-type Dialog = {
+/** The open dialog: a request being read or decided, or an application. */
+type LeaveDialogState = {
 	request?: LeaveRequest;
 	mode: "view" | "reject" | "approve" | "apply" | "applyOwn" | "record";
 };
@@ -150,13 +145,17 @@ export const Leave = (): FunctionComponent => {
 		units.branches.length > 0 ? timelineQueryOf(shownUnits, range) : undefined,
 		view === "timeline"
 	);
-	const actions = useLeaveActions(companyId);
-	const turns = useLeaveTurns(companyId);
-	const [dialog, setDialog] = useState<Dialog | null>(null);
-	const [refusal, setRefusal] = useState<
-		Refusal<ApplyField | DecisionField> | undefined
-	>();
+	const applyActions = useLeaveApplyActions(companyId);
+	const [dialog, setDialog] = useState<LeaveDialogState | null>(null);
+	const [refusal, setRefusal] = useState<Refusal<ApplyField>>();
 	const [message, setMessage] = useState("");
+	// Each request is decided where its member is filed, or by its flow's open step; nobody decides their own.
+	const decision = useLeaveDecision(companyId, {
+		onDecided: (text) => {
+			setDialog(null);
+			setMessage(text);
+		},
+	});
 	const [employeeSearch, setEmployeeSearch] = useState("");
 	const settled = useSettledSearch(employeeSearch);
 	const people = useQuery(
@@ -172,11 +171,11 @@ export const Leave = (): FunctionComponent => {
 				(canRecord && dialog?.mode === "record")
 		)
 	);
-	const applying =
+	const applyFormOpen =
 		dialog?.mode === "apply" ||
 		dialog?.mode === "applyOwn" ||
 		dialog?.mode === "record";
-	const leaveTypes = useQuery(activeLeaveTypesQuery(companyId, applying));
+	const leaveTypes = useQuery(activeLeaveTypesQuery(companyId, applyFormOpen));
 	// Anything that changes which requests are listed starts again from the first page.
 	const show = (next: LeaveSearch): void => {
 		void navigate({
@@ -186,36 +185,16 @@ export const Leave = (): FunctionComponent => {
 	const close = (): void => {
 		setDialog(null);
 		setRefusal(undefined);
+		decision.clearRefusal();
 	};
 	const done = (text: string): void => {
 		close();
 		setMessage(text);
 	};
-	const approve = (
-		request: LeaveRequest,
-		comment: string,
-		takeOffRosteredDays: boolean
-	): void => {
-		actions.approve.mutate(
-			{ request, comment, takeOffRosteredDays },
-			{
-				onSuccess: () => {
-					done(approvedMessage(request, t));
-				},
-				onError: (error) => {
-					setRefusal(decisionRefusal(error, t));
-				},
-			}
-		);
-	};
-	// Each request is decided where its member is filed, or by its flow's open step; nobody decides their own.
-	const canReview = turns.canDecide;
-	const busy =
-		actions.approve.isPending ||
-		actions.reject.isPending ||
-		actions.apply.isPending ||
-		actions.applyOwn.isPending ||
-		actions.record.isPending;
+	const applying =
+		applyActions.apply.isPending ||
+		applyActions.applyOwn.isPending ||
+		applyActions.record.isPending;
 	const current =
 		view === "mine" ? mine : view === "requests" ? list : timeline;
 	const listProblem = problemOf(current, t, view === "mine");
@@ -285,6 +264,60 @@ export const Leave = (): FunctionComponent => {
 				</>
 			)
 		);
+	// Who an application on someone's behalf may name: those the caller may apply, or record, for.
+	const employees = {
+		search: employeeSearch,
+		onSearch: setEmployeeSearch,
+		options: (people.data?.items ?? []).filter((person) =>
+			access.can(
+				dialog?.mode === "record"
+					? "leave_request:review"
+					: "leave_request:create",
+				recordScope(person.departmentId)
+			)
+		),
+	};
+	const create = (
+		membershipId: string | null,
+		body: LeaveRequestBody
+	): void => {
+		const handlers = {
+			onSuccess: (created: LeaveRequest): void => {
+				done(
+					membershipId === null
+						? t("leave.appliedOwn")
+						: t("leave.applied", { name: created.displayName })
+				);
+			},
+			onError: (error: Error): void => {
+				const next = applyRefusal(error, t);
+				setRefusal(next);
+				if (next.refreshMembers) void people.refetch();
+			},
+		};
+		if (dialog?.mode === "record" && membershipId !== null) {
+			applyActions.record.mutate(
+				{
+					membershipId,
+					body: {
+						leaveType: body.leaveType,
+						startDate: body.startDate,
+						endDate: body.endDate,
+						remark: body.notes ?? "",
+						takeOffRosteredDays: body.takeOffRosteredDays ?? false,
+					},
+				},
+				{
+					...handlers,
+					onSuccess: (created) => {
+						done(t("leave.recorded", { name: created.displayName }));
+					},
+				}
+			);
+		} else if (membershipId === null)
+			applyActions.applyOwn.mutate(body, handlers);
+		else applyActions.apply.mutate({ membershipId, body }, handlers);
+	};
 	const paging = (page: number): void => {
 		void navigate({
 			search: (previous) => ({ ...previous, page: pageParameter(page) }),
@@ -411,7 +444,7 @@ export const Leave = (): FunctionComponent => {
 						{canRead && (
 							<TabPanel>
 								<LeaveRequests
-									canReview={canReview}
+									canReview={decision.canDecide}
 									page={search.page ?? 1}
 									rows={list.status === "ready" ? list.items : []}
 									sort={leaveQueryOf(search).sort}
@@ -466,26 +499,21 @@ export const Leave = (): FunctionComponent => {
 			{dialog && (
 				<LeaveRequestDialog
 					key={`${dialog.request?.leaveRequestId ?? "new"}-${dialog.mode}`}
-					busy={busy}
-					canReview={dialog.request ? canReview(dialog.request) : false}
-					leaveTypes={leaveTypes.data}
-					leaveTypesStatus={leaveTypes.status}
 					mode={dialog.mode === "applyOwn" ? "apply" : dialog.mode}
-					refusal={refusal}
 					request={dialog.request}
-					employees={
-						dialog.mode === "apply" || dialog.mode === "record"
+					review={dialog.request && decision.reviewOf(dialog.request)}
+					applyForm={
+						applyFormOpen
 							? {
-									search: employeeSearch,
-									onSearch: setEmployeeSearch,
-									options: (people.data?.items ?? []).filter((person) =>
-										access.can(
-											dialog.mode === "record"
-												? "leave_request:review"
-												: "leave_request:create",
-											recordScope(person.departmentId)
-										)
-									),
+									busy: applying,
+									employees: dialog.mode === "applyOwn" ? undefined : employees,
+									leaveTypes: leaveTypes.data ?? [],
+									leaveTypesStatus: leaveTypes.status,
+									refusal,
+									onCreate: create,
+									onRetryLeaveTypes: (): void => {
+										void leaveTypes.refetch();
+									},
 								}
 							: undefined
 					}
@@ -494,65 +522,7 @@ export const Leave = (): FunctionComponent => {
 						own: dialog.request?.membershipId === ownMembershipId,
 						onDone: done,
 					}}
-					readsApprovalSteps={
-						dialog.request ? turns.readsApprovalSteps(dialog.request) : false
-					}
-					onApprove={approve}
 					onClose={close}
-					onCreate={(membershipId, body) => {
-						const handlers = {
-							onSuccess: (created: LeaveRequest): void => {
-								done(
-									membershipId === null
-										? t("leave.appliedOwn")
-										: t("leave.applied", { name: created.displayName })
-								);
-							},
-							onError: (error: Error): void => {
-								const next = applyRefusal(error, t);
-								setRefusal(next);
-								if (next.refreshMembers) void people.refetch();
-							},
-						};
-						if (dialog.mode === "record" && membershipId !== null) {
-							actions.record.mutate(
-								{
-									membershipId,
-									body: {
-										leaveType: body.leaveType,
-										startDate: body.startDate,
-										endDate: body.endDate,
-										remark: body.notes ?? "",
-										takeOffRosteredDays: body.takeOffRosteredDays ?? false,
-									},
-								},
-								{
-									...handlers,
-									onSuccess: (created) => {
-										done(t("leave.recorded", { name: created.displayName }));
-									},
-								}
-							);
-						} else if (membershipId === null)
-							actions.applyOwn.mutate(body, handlers);
-						else actions.apply.mutate({ membershipId, body }, handlers);
-					}}
-					onReject={(request, reason) => {
-						actions.reject.mutate(
-							{ request, reason },
-							{
-								onSuccess: () => {
-									done(t("leave.rejected", { name: request.displayName }));
-								},
-								onError: (error) => {
-									setRefusal(decisionRefusal(error, t));
-								},
-							}
-						);
-					}}
-					onRetryLeaveTypes={() => {
-						void leaveTypes.refetch();
-					}}
 				/>
 			)}
 		</div>

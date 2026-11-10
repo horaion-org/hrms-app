@@ -1,20 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { Modal } from "@/components/ui/Modal";
 import { leaveRequestQuery } from "@/features/leave/api";
 import { LeaveRequestDialog } from "@/features/leave/LeaveRequestDialog";
-import {
-	decisionRefusal,
-	type ApplyField,
-	type DecisionField,
-} from "@/features/leave/leaveRefusal";
-import {
-	useLeaveActions,
-	useLeaveTurns,
-} from "@/features/leave/useLeaveRequests";
-import type { Refusal } from "@/features/organisation/refusal";
+import { useLeaveDecision } from "@/features/leave/useLeaveDecision";
 import {
 	useCurrentCompanyId,
 	useCurrentMembershipId,
@@ -39,12 +29,8 @@ export const LinkedLeaveRequest = ({
 		...leaveRequestQuery(companyId, ownMembershipId, requestId, memberId),
 		enabled: allowed,
 	});
-	const actions = useLeaveActions(companyId);
-	const turns = useLeaveTurns(companyId);
-	const [refusal, setRefusal] = useState<Refusal<ApplyField | DecisionField>>();
-	const failed = (error: Error): void => {
-		setRefusal(decisionRefusal(error, t));
-	};
+	// A decision closes the linked request; the app's toast says what happened.
+	const decision = useLeaveDecision(companyId, { onDecided: onClose });
 	if (!allowed || query.isError || !query.data)
 		return (
 			<Modal open title={t("notifications.leaveRequest")} onClose={onClose}>
@@ -60,26 +46,10 @@ export const LinkedLeaveRequest = ({
 	const request = query.data;
 	return (
 		<LeaveRequestDialog
-			busy={actions.approve.isPending || actions.reject.isPending}
-			canReview={turns.canDecide(request)}
 			lifecycle={{ companyId, own: memberId === undefined, onDone: onClose }}
-			readsApprovalSteps={turns.readsApprovalSteps(request)}
-			refusal={refusal}
 			request={request}
+			review={decision.reviewOf(request)}
 			onClose={onClose}
-			onCreate={() => {}}
-			onApprove={(record, comment, takeOffRosteredDays) => {
-				actions.approve.mutate(
-					{ request: record, comment, takeOffRosteredDays },
-					{ onSuccess: onClose, onError: failed }
-				);
-			}}
-			onReject={(record, reason) => {
-				actions.reject.mutate(
-					{ request: record, reason },
-					{ onSuccess: onClose, onError: failed }
-				);
-			}}
 		/>
 	);
 };

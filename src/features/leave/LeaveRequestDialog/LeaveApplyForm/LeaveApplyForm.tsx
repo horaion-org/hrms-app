@@ -62,6 +62,12 @@ export type LeaveApplyFormProps = {
 	onCreate: (membershipId: string | null, body: LeaveRequestBody) => void;
 };
 
+/** What a host hands the form through `LeaveRequestDialog`; the dialog adds the company, `recording` and closing. */
+export type LeaveApplyFormInput = Omit<
+	LeaveApplyFormProps,
+	"companyId" | "recording" | "onClose"
+>;
+
 /**
  * A new leave application, for the caller or on a person's behalf: the
  * person, the leave type, the dates and the remarks, which a type with

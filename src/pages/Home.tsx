@@ -28,24 +28,15 @@ import { useActivityPage } from "@/features/dashboard/useActivityPage";
 import { useSetupChecklist } from "@/features/dashboard/useSetupChecklist";
 import type { LeaveRequest } from "@/features/leave/api";
 import { formatPeriod } from "@/features/leave/dates";
-import { approvedMessage } from "@/features/leave/leaveApproval";
 import { LeaveRequestDialog } from "@/features/leave/LeaveRequestDialog";
 import { leaveTypeLabel } from "@/features/leave/leaveTypeLabel";
-import {
-	decisionRefusal,
-	type DecisionField,
-} from "@/features/leave/leaveRefusal";
-import {
-	useLeaveActions,
-	useLeaveRequests,
-	useLeaveTurns,
-} from "@/features/leave/useLeaveRequests";
+import { useLeaveDecision } from "@/features/leave/useLeaveDecision";
+import { useLeaveRequests } from "@/features/leave/useLeaveRequests";
 import {
 	activityDetails,
 	describeActivity,
 } from "@/features/organisation/activity";
 import { ActivityTitle } from "@/features/organisation/ActivityTitle";
-import type { Refusal } from "@/features/organisation/refusal";
 import {
 	useCurrentCompanyId,
 	useCurrentMembershipId,
@@ -85,7 +76,6 @@ const Dashboard = ({
 		DASHBOARD_UNIT_RULES
 	).branch?.branchId;
 	const [decision, setDecision] = useState<Decision>();
-	const [refusal, setRefusal] = useState<Refusal<DecisionField>>();
 	const [toast, setToast] = useState<{ id: number; message: string }>();
 	const [workforce] = useState(exampleWorkforce);
 	const numbers = new Intl.NumberFormat(language, { maximumFractionDigits: 1 });
@@ -113,9 +103,6 @@ const Dashboard = ({
 	});
 	const activity = useActivityPage(companyId, 1, ACTIVITY_COUNT);
 	const setup = useSetupChecklist(companyId);
-	const actions = useLeaveActions(companyId, { ownConfirmation: true });
-	const turns = useLeaveTurns(companyId);
-	const busy = actions.approve.isPending || actions.reject.isPending;
 	const now = new Date();
 	const exampleTag = (
 		<Badge className="shrink-0" tone="neutral">
@@ -126,34 +113,25 @@ const Dashboard = ({
 	const notify = (message: string): void => {
 		setToast((previous) => ({ id: (previous?.id ?? 0) + 1, message }));
 	};
+	// The dashboard says the outcome in its own toast.
+	const leaveDecision = useLeaveDecision(companyId, {
+		ownConfirmation: true,
+		onDecided: (message) => {
+			setDecision(undefined);
+			notify(message);
+		},
+	});
 	const close = (): void => {
 		setDecision(undefined);
-		setRefusal(undefined);
+		leaveDecision.clearRefusal();
 	};
 	const decided = (message: string): void => {
 		close();
 		notify(message);
 	};
-	const refused = (error: Error): void => {
-		setRefusal(decisionRefusal(error, t));
-	};
-	const approve = (
-		request: LeaveRequest,
-		comment: string,
-		takeOffRosteredDays: boolean
-	): void => {
-		actions.approve.mutate(
-			{ request, comment, takeOffRosteredDays },
-			{
-				onSuccess: () => {
-					decided(approvedMessage(request, t));
-				},
-				onError: refused,
-			}
-		);
-	};
 	// Nobody decides their own leave; each request is decided where its member is filed, or by its flow's open step.
-	const canReview = turns.canDecide;
+	const canReview = leaveDecision.canDecide;
+	const busy = leaveDecision.busy;
 
 	const resolvedShare = ((): number | undefined => {
 		if (
@@ -431,27 +409,11 @@ const Dashboard = ({
 			{decision && (
 				<LeaveRequestDialog
 					key={`${decision.request.leaveRequestId}-${decision.mode}`}
-					busy={busy}
-					canReview={canReview(decision.request)}
 					lifecycle={{ companyId, own: false, onDone: decided }}
 					mode={decision.mode}
-					readsApprovalSteps={turns.readsApprovalSteps(decision.request)}
-					refusal={refusal}
 					request={decision.request}
-					onApprove={approve}
+					review={leaveDecision.reviewOf(decision.request)}
 					onClose={close}
-					onCreate={() => undefined}
-					onReject={(request, reason) => {
-						actions.reject.mutate(
-							{ request, reason },
-							{
-								onSuccess: () => {
-									decided(t("leave.rejected", { name: request.displayName }));
-								},
-								onError: refused,
-							}
-						);
-					}}
 				/>
 			)}
 			{toast && (
