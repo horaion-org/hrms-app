@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import { OverflowMenuItem } from "@/components/ui/OverflowMenu";
 import type { AccessRole } from "@/features/organisation/api";
+import { AssignAccessRole } from "@/features/accessRoles/AssignAccessRole";
 import { CreateSystemRoleDialog } from "@/features/organisation/CreateSystemRoleDialog";
 import { ListToolbar } from "@/features/organisation/ListToolbar";
 import {
@@ -33,7 +34,6 @@ import {
 	SystemRoleActionDialog,
 	type SystemRoleAction,
 } from "@/pages/SystemRoleActions";
-import { AssignSystemRole } from "@/pages/SystemRoleHolders";
 
 /** Access roles: who may manage what, and where (Settings › Access roles). */
 export const SystemRoles = (): FunctionComponent => {
@@ -253,7 +253,7 @@ export const SystemRoles = (): FunctionComponent => {
 				}
 			/>
 			{assigning && (
-				<AssignSystemRole
+				<AssignAccessRole
 					roles={assignable}
 					onClose={() => {
 						setAssigning(false);
