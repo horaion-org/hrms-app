@@ -21,6 +21,7 @@ import { administrativeMeta } from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { organisationKeys } from "@/features/organisation/api";
+import { peopleKeys } from "@/features/people/api";
 
 /** The API's largest page, so at most five pages reach the bulk limit. */
 const PAGE_SIZE = 100;
@@ -119,7 +120,7 @@ export const useAssignSkill = (
 		onSuccess: () =>
 			Promise.all([
 				client.invalidateQueries({ queryKey: organisationKeys.all(companyId) }),
-				client.invalidateQueries({ queryKey: ["people", companyId] }),
+				client.invalidateQueries({ queryKey: peopleKeys.all(companyId) }),
 			]),
 	});
 };

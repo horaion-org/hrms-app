@@ -11,6 +11,7 @@ import {
 	updateMemberProfile,
 	type MemberProfileDetail,
 	type MemberStatus,
+	peopleKeys,
 } from "@/features/people/api";
 import {
 	withPeopleNotice,
@@ -58,7 +59,7 @@ export const useSetProfileStatus = (
 				memberProfileQuery(companyId, profile.membershipId).queryKey,
 				(previous) => savedProfile(saved, previous)
 			);
-			await client.invalidateQueries({ queryKey: ["people", companyId] });
+			await client.invalidateQueries({ queryKey: peopleKeys.all(companyId) });
 			await show({
 				kind: saved.status === "ACTIVE" ? "reactivated" : "deactivated",
 				name: saved.displayName,

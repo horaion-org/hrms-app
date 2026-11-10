@@ -7,6 +7,7 @@ import {
 	inviteImportMembers,
 	type InvitationsSent,
 } from "@/features/people/import/api";
+import { peopleKeys } from "@/features/people/api";
 
 /**
  * "Invite everyone from this import". Once sent, the import (its count of
@@ -21,6 +22,6 @@ export const useImportInvitations = (
 	return useMutation({
 		mutationFn: () => inviteImportMembers(companyId, importId),
 		onSuccess: () =>
-			client.invalidateQueries({ queryKey: ["people", companyId] }),
+			client.invalidateQueries({ queryKey: peopleKeys.all(companyId) }),
 	});
 };

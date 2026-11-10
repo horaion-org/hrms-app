@@ -6,7 +6,7 @@ import {
 	fetchActiveJobTitleCount,
 	organisationKeys,
 } from "@/features/organisation/api";
-import { fetchActiveMemberCount } from "@/features/people/api";
+import { fetchActiveMemberCount, peopleKeys } from "@/features/people/api";
 import {
 	isSetupDismissed,
 	rememberSetupDismissed,
@@ -78,7 +78,7 @@ export const useSetupChecklist = (companyId: string): SetupChecklist => {
 		fetchActiveJobTitleCount
 	);
 	const members = useCount(
-		["people", companyId, "active-member-count"],
+		peopleKeys.activeMemberCount(companyId),
 		companyId,
 		wanted && access.canAnywhere("member_profile:read"),
 		fetchActiveMemberCount

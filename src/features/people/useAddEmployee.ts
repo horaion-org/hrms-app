@@ -10,6 +10,7 @@ import {
 	createMemberProfile,
 	type CreateMemberProfileBody,
 	type MemberProfilePlace,
+	peopleKeys,
 } from "@/features/people/api";
 import { withPeopleNotice } from "@/features/people/peopleNoticeState";
 import type { ProfileFormValues } from "@/features/people/profileFormSchema";
@@ -54,7 +55,7 @@ export const useAddEmployee = (
 		}) => createMemberProfile(companyId, place, body),
 		onSuccess: () =>
 			Promise.all([
-				client.invalidateQueries({ queryKey: ["people", companyId] }),
+				client.invalidateQueries({ queryKey: peopleKeys.all(companyId) }),
 				client.invalidateQueries({
 					queryKey: organisationKeys.members(companyId),
 				}),

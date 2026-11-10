@@ -27,6 +27,7 @@ import { retry } from "@/features/workspace/retry";
 import { COMPANY_SCOPE } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
 import { organisationKeys } from "@/features/organisation/api";
+import { peopleKeys } from "@/features/people/api";
 
 /** The catalogue with its holder counts; `hidden` without `skill:read` at the company. */
 export const useSkillOverview = (
@@ -75,7 +76,7 @@ const useCatalogueChange = <TVariables, TResult>(
 		onSuccess: () =>
 			Promise.all([
 				client.invalidateQueries({ queryKey: organisationKeys.all(companyId) }),
-				client.invalidateQueries({ queryKey: ["people", companyId] }),
+				client.invalidateQueries({ queryKey: peopleKeys.all(companyId) }),
 			]),
 	});
 };

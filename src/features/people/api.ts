@@ -18,6 +18,30 @@ import {
 } from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";
 
+/** Every people query's key, shaped like `approvalKeys`. */
+export const peopleKeys = {
+	all: (companyId: string) => ["people", companyId] as const,
+	list: (companyId: string, query: PeopleQuery) =>
+		[...peopleKeys.all(companyId), query] as const,
+	me: (companyId: string) => [...peopleKeys.all(companyId), "me"] as const,
+	profile: (companyId: string, membershipId: string) =>
+		[...peopleKeys.all(companyId), "profile", membershipId] as const,
+	notes: (companyId: string, membershipId: string) =>
+		[...peopleKeys.profile(companyId, membershipId), "notes"] as const,
+	/** One member's skills, on their profile. */
+	memberSkills: (companyId: string, membershipId: string) =>
+		[...peopleKeys.profile(companyId, membershipId), "skills"] as const,
+	/** The catalogue's active skills matching what is typed in a profile. */
+	skillSuggestions: (companyId: string, search: string) =>
+		[...peopleKeys.all(companyId), "skills", search] as const,
+	activeMemberCount: (companyId: string) =>
+		[...peopleKeys.all(companyId), "active-member-count"] as const,
+	imports: (companyId: string) =>
+		[...peopleKeys.all(companyId), "imports"] as const,
+	import: (companyId: string, importId: string) =>
+		[...peopleKeys.imports(companyId), importId] as const,
+};
+
 const memberStatusSchema = z.enum(["ACTIVE", "INACTIVE"]);
 
 /** Whether a person's membership of the company is active. */
@@ -148,10 +172,10 @@ export const peopleQuery = (
 	allowed = true
 ): QueryOptionsFor<
 	ListPage<MemberProfile>,
-	readonly ["people", string, PeopleQuery]
+	ReturnType<typeof peopleKeys.list>
 > =>
 	queryOptions({
-		queryKey: ["people", companyId, query] as const,
+		queryKey: peopleKeys.list(companyId, query),
 		queryFn: allowed
 			? ({ signal }): Promise<ListPage<MemberProfile>> =>
 					fetchPeople(companyId, query, signal)
@@ -286,10 +310,10 @@ export const myProfileQuery = (
 	MemberProfileDetail,
 	Error,
 	MemberProfileDetail,
-	readonly ["people", string, "me"]
+	ReturnType<typeof peopleKeys.me>
 > =>
 	queryOptions({
-		queryKey: ["people", companyId, "me"] as const,
+		queryKey: peopleKeys.me(companyId),
 		queryFn: ({ signal }) => fetchMyProfile(companyId, signal),
 		// Own record: never gated by, or withdrawn for, administrative grants.
 		meta: selfMeta(companyId),
@@ -304,10 +328,10 @@ export const memberProfileQuery = (
 	MemberProfileDetail,
 	Error,
 	MemberProfileDetail,
-	readonly ["people", string, "profile", string]
+	ReturnType<typeof peopleKeys.profile>
 > =>
 	queryOptions({
-		queryKey: ["people", companyId, "profile", membershipId] as const,
+		queryKey: peopleKeys.profile(companyId, membershipId),
 		queryFn: ({ signal }) =>
 			fetchMemberProfile(companyId, membershipId, signal),
 		// A 404 here may mean the person moved out of reach: see `refreshWorkspaceOnRefusal`.
@@ -422,11 +446,11 @@ export const memberNotesQuery = (
 	ListPage<MemberNote>,
 	Error,
 	InfiniteData<ListPage<MemberNote>>,
-	readonly ["people", string, "profile", string, "notes"],
+	ReturnType<typeof peopleKeys.notes>,
 	number
 > =>
 	infiniteQueryOptions({
-		queryKey: ["people", companyId, "profile", membershipId, "notes"] as const,
+		queryKey: peopleKeys.notes(companyId, membershipId),
 		queryFn: ({ pageParam, signal }) =>
 			fetchMemberNotes(companyId, membershipId, pageParam, signal),
 		meta: administrativeMeta(companyId),
@@ -531,10 +555,10 @@ export const memberSkillsQuery = (
 	Array<MemberSkill>,
 	Error,
 	Array<MemberSkill>,
-	readonly ["people", string, "profile", string, "skills"]
+	ReturnType<typeof peopleKeys.memberSkills>
 > =>
 	queryOptions({
-		queryKey: ["people", companyId, "profile", membershipId, "skills"] as const,
+		queryKey: peopleKeys.memberSkills(companyId, membershipId),
 		queryFn: ({ signal }) => fetchMemberSkills(companyId, membershipId, signal),
 		meta: administrativeMeta(companyId),
 		retry,

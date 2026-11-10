@@ -9,6 +9,7 @@ import {
 	type MemberProfileDetail,
 	type MemberProfilePlace,
 	type UpdateMemberProfileBody,
+	peopleKeys,
 } from "@/features/people/api";
 import {
 	memberRoleChange,
@@ -49,7 +50,7 @@ export const useEditProfile = (
 				(previous) => savedProfile(saved, previous)
 			);
 			return Promise.all([
-				client.invalidateQueries({ queryKey: ["people", companyId] }),
+				client.invalidateQueries({ queryKey: peopleKeys.all(companyId) }),
 				client.invalidateQueries({
 					queryKey: organisationKeys.members(companyId),
 				}),
