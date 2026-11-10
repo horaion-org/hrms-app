@@ -1,17 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import type { TFunction } from "i18next";
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import { ApiProblemError } from "@/common/problem";
 import type { FunctionComponent } from "@/common/types";
 import { formatDate } from "@/components/forms/Calendar";
-import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { PlusIcon } from "@/components/ui/Icon";
-import { OverflowMenuItem } from "@/components/ui/OverflowMenu";
 import { Toast } from "@/components/ui/Toast";
 import {
 	termsOverviewQuery,
@@ -22,11 +20,12 @@ import {
 	type TermsSaved,
 } from "@/features/employmentTerms/EmploymentTermsDialog";
 import { termsRowRefusal } from "@/features/employmentTerms/refusals";
-import { restShort, weekShort } from "@/features/employmentTerms/summary";
 import { useEmploymentTermsActions } from "@/features/employmentTerms/useEmploymentTermsActions";
-import { actionsColumn, nameColumn } from "@/features/organisation/listColumns";
+import {
+	employmentTermsColumns,
+	type TermsRowAction,
+} from "@/features/settings/EmploymentTermsSettings/employmentTermsColumns";
 import { COMPANY_SCOPE } from "@/features/workspace/scopes";
-import { ALL_BRANCHES } from "@/features/workspace/unitSelection";
 import { useAccess } from "@/features/workspace/useAccess";
 
 export type EmploymentTermsSettingsProps = {
@@ -38,28 +37,12 @@ export type EmploymentTermsSettingsProps = {
 };
 
 type Editing = { terms?: TermsOverviewItem; preferFromDate?: boolean };
-type RowAction = {
-	kind: "status" | "default" | "delete";
-	terms: TermsOverviewItem;
-};
 
 const key = "employmentTerms.panel";
 
-/** The status cell: Active or Inactive, and Default on the one people without terms follow. */
-const statusCell = (terms: TermsOverviewItem, t: TFunction): ReactNode => (
-	<span className="flex flex-wrap items-center gap-2">
-		<Badge tone={terms.status === "ACTIVE" ? "success" : "neutral"}>
-			{terms.status === "UNKNOWN"
-				? t("organisation.skills.statusUnknown")
-				: t(`organisation.status.${terms.status}`)}
-		</Badge>
-		{terms.isDefault && <Badge>{t(`${key}.default`)}</Badge>}
-	</span>
-);
-
 /** What each confirmation says and does, worded as the job titles list words it. */
 const confirmCopy = (
-	{ kind, terms }: RowAction,
+	{ kind, terms }: TermsRowAction,
 	t: TFunction
 ): { title: string; description: string; confirmLabel: string } => {
 	if (kind === "default")
@@ -119,7 +102,7 @@ export const EmploymentTermsSettings = ({
 	const overview = useQuery(termsOverviewQuery(companyId, canRead));
 	const actions = useEmploymentTermsActions(companyId);
 	const [editing, setEditing] = useState<Editing | null>(null);
-	const [action, setAction] = useState<RowAction | null>(null);
+	const [action, setAction] = useState<TermsRowAction | null>(null);
 	const [toast, setToast] = useState<{ id: number; message: string }>();
 	const notify = (message: string): void => {
 		setToast((previous) => ({ id: (previous?.id ?? 0) + 1, message }));
@@ -134,118 +117,19 @@ export const EmploymentTermsSettings = ({
 		if (openTermsId) onTermsClosed();
 	};
 	const columns = useMemo(
-		(): Array<DataTableColumn<TermsOverviewItem>> => [
-			nameColumn<TermsOverviewItem>(
-				t(`${key}.terms`),
-				(terms) => terms.description
-			),
-			{
-				id: "week",
-				header: t(`${key}.week`),
-				cell: (terms) => (
-					<>
-						<span className="block">{weekShort(terms, t, language)}</span>
-						<span className="block text-neutral-700">
-							{restShort(terms, t)}
-						</span>
-					</>
-				),
-			},
-			{
-				id: "people",
-				header: t(`${key}.people`),
-				sortValue: (terms) => terms.holderCount,
-				cell: (terms) => (
-					<>
-						{canListHolders && terms.holderCount > 0 ? (
-							<span className="block">
-								<Button
-									aria-label={t(`${key}.peopleLink`, { name: terms.name })}
-									search={{ branch: ALL_BRANCHES, terms: terms.id }}
-									to="/people"
-									variant="textlink"
-								>
-									{t(`${key}.peopleCount`, { count: terms.holderCount })}
-								</Button>
-							</span>
-						) : (
-							<span
-								className={
-									terms.holderCount === 0 ? "block text-neutral-700" : "block"
-								}
-							>
-								{t(`${key}.peopleCount`, { count: terms.holderCount })}
-							</span>
-						)}
-						{terms.scheduledCount > 0 && (
-							<span className="block text-neutral-700">
-								{t(`${key}.scheduledCount`, { count: terms.scheduledCount })}
-							</span>
-						)}
-					</>
-				),
-			},
-			{
-				id: "status",
-				header: t("organisation.list.status"),
-				headerClassName: "w-40",
-				sortValue: (terms) => terms.status,
-				cell: (terms) => statusCell(terms, t),
-			},
-			...(canUpdate
-				? [
-						actionsColumn<TermsOverviewItem>(
-							t,
-							(terms) => (
-								<>
-									<OverflowMenuItem
-										disabled={terms.status !== "ACTIVE"}
-										onClick={() => {
-											setEditing({ terms, preferFromDate: true });
-										}}
-									>
-										{t(`${key}.menu.changeFromDate`)}
-									</OverflowMenuItem>
-									<OverflowMenuItem
-										disabled={terms.isDefault || terms.status !== "ACTIVE"}
-										onClick={() => {
-											setAction({ kind: "default", terms });
-										}}
-									>
-										{t(`${key}.menu.makeDefault`)}
-									</OverflowMenuItem>
-									<OverflowMenuItem
-										disabled={terms.isDefault || terms.status === "UNKNOWN"}
-										onClick={() => {
-											setAction({ kind: "status", terms });
-										}}
-									>
-										{t(
-											terms.status === "INACTIVE"
-												? "organisation.list.activateItem"
-												: "organisation.list.deactivateItem"
-										)}
-									</OverflowMenuItem>
-									{terms.holderCount + terms.scheduledCount === 0 &&
-										!terms.isDefault && (
-											<OverflowMenuItem
-												onClick={() => {
-													setAction({ kind: "delete", terms });
-												}}
-											>
-												{t("organisation.list.deleteItem")}
-											</OverflowMenuItem>
-										)}
-								</>
-							),
-							(terms) => terms.status !== "UNKNOWN",
-							(terms) => {
-								setEditing({ terms });
-							}
-						),
-					]
-				: []),
-		],
+		(): Array<DataTableColumn<TermsOverviewItem>> =>
+			employmentTermsColumns(t, {
+				language,
+				canUpdate,
+				canListHolders,
+				onEdit: (terms) => {
+					setEditing({ terms });
+				},
+				onChangeFromDate: (terms) => {
+					setEditing({ terms, preferFromDate: true });
+				},
+				onRowAction: setAction,
+			}),
 		[t, language, canUpdate, canListHolders]
 	);
 	const forbidden =
