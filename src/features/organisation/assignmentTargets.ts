@@ -56,6 +56,12 @@ export const scopeOfPlace = (place: PlaceRef): ScopeRef => {
 	return COMPANY_SCOPE;
 };
 
+/** Whether the person may change an assignment at `place`: `access_role:assign` at that place. */
+export const changeableAt =
+	(can: CanAt) =>
+	(place: PlaceRef): boolean =>
+		can("access_role:assign", scopeOfPlace(place));
+
 const LEVELS: Record<ScopeRef["kind"], AssignableScope> = {
 	company: "COMPANY",
 	branch: "BRANCH",

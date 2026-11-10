@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+	changeableAt,
 	companyRoleOutOfReach,
 	keysThatFitNowhere,
 	placeKey,
@@ -8,6 +9,7 @@ import {
 } from "@/features/organisation/assignmentTargets";
 import {
 	branchScope,
+	type CanAt,
 	COMPANY_SCOPE,
 	departmentScope,
 } from "@/features/workspace/scopes";
@@ -58,5 +60,16 @@ describe("where a role can be given", () => {
 		expect(scopeOfPlace({ branchId: null, departmentId: null })).toEqual(
 			COMPANY_SCOPE
 		);
+	});
+});
+
+describe("which assignments the person may change", () => {
+	it("checks access_role:assign at the assignment's own place", () => {
+		const can: CanAt = (_permission, target) => target.kind === "branch";
+		const changeable = changeableAt(can);
+
+		expect(changeable(ORCHARD)).toBe(true);
+		expect(changeable(KITCHEN)).toBe(false);
+		expect(changeable(WHOLE)).toBe(false);
 	});
 });

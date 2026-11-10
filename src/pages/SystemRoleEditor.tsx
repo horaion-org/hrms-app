@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { ArrowLeftIcon } from "@/components/ui/Icon";
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from "@/components/ui/Tabs";
+import { AccessRoleHolders } from "@/features/accessRoles/AccessRoleHolders";
 import { AccessRoleForm } from "@/features/organisation/AccessRoleForm";
 import { readOnlyReason } from "@/features/organisation/accessRoleReadOnly";
 import { SYSTEM_ROLES_PATH } from "@/features/organisation/systemRolesPath";
@@ -18,7 +19,6 @@ import {
 	unknownKeys,
 } from "@/features/workspace/permissionKeys";
 import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
-import { SystemRoleHolders } from "@/pages/SystemRoleHolders";
 
 const route = getRouteApi(
 	"/_authenticated/_app/settings_/access-roles_/$accessRoleId"
@@ -90,7 +90,7 @@ export const SystemRoleEditor = (): FunctionComponent => {
 				</TabList>
 				<TabPanels className="mt-8">
 					<TabPanel>
-						<SystemRoleHolders holders={holders.data} role={role} />
+						<AccessRoleHolders holders={holders.data} role={role} />
 					</TabPanel>
 					<TabPanel>
 						{reason && (
