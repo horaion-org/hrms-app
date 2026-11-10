@@ -21,6 +21,7 @@ import {
 	type SkillOverview,
 	type SkillOverviewQuery,
 	type UpdateSkillBody,
+	skillKeys,
 } from "@/features/skills/api";
 import { administrativeMeta } from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";
@@ -47,7 +48,7 @@ export const useSkillCategories = (
 ): UseQueryResult<Array<string>> => {
 	const allowed = useAccess().can("skill:read", COMPANY_SCOPE);
 	return useQuery({
-		queryKey: ["organisation", companyId, "skill-categories"],
+		queryKey: skillKeys.categories(companyId),
 		queryFn: allowed
 			? ({ signal }): Promise<Array<string>> =>
 					fetchSkillCategories(companyId, signal)

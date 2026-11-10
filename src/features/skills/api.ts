@@ -3,7 +3,40 @@ import { apiRequest, apiRequestVoid, fetchList } from "@/common/api-client";
 import { companyPath } from "@/common/companyPath";
 import type { ListPage } from "@/common/schemas";
 import type { IsoDate } from "@/components/forms/Calendar";
-import { LIST_PAGE_SIZE } from "@/features/organisation/api";
+import { LIST_PAGE_SIZE, organisationKeys } from "@/features/organisation/api";
+
+/**
+ * The skill catalogue's query keys. They sit under the organisation key,
+ * as they always have, so any organisation change reloads them too.
+ */
+export const skillKeys = {
+	overview: (companyId: string) =>
+		[...organisationKeys.all(companyId), "skill-overview"] as const,
+	categories: (companyId: string) =>
+		[...organisationKeys.all(companyId), "skill-categories"] as const,
+	assignablePeople: (
+		companyId: string,
+		search: string,
+		departmentId: string | undefined
+	) =>
+		[
+			...organisationKeys.all(companyId),
+			"assignable-people",
+			search,
+			departmentId,
+		] as const,
+	holders: (
+		companyId: string,
+		skillId: string,
+		departmentId: string | undefined
+	) =>
+		[
+			...organisationKeys.all(companyId),
+			"skill-holders",
+			skillId,
+			departmentId,
+		] as const,
+};
 
 /*
  * The company's skill catalogue (the API's ADR-0057). A skill is rated 1 to
