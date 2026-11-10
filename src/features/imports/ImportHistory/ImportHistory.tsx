@@ -1,12 +1,9 @@
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
-import { Button } from "@/components/ui/Button";
-import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
-import {
-	historyResultText,
-	type ImportHistoryEntry,
-} from "@/features/imports/importHistory";
+import { DataTable } from "@/components/ui/DataTable";
+import { importHistoryColumns } from "@/features/imports/ImportHistory/importHistoryColumns";
+import type { ImportHistoryEntry } from "@/features/imports/importHistory";
 
 export type ImportHistoryProps = {
 	/** Imports of both kinds, newest first. */
@@ -29,51 +26,10 @@ export const ImportHistory = ({
 }: ImportHistoryProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const Heading = headingLevel === 2 ? "h2" : "h3";
-	const columns: Array<DataTableColumn<ImportHistoryEntry>> = [
-		{
-			id: "when",
-			header: t("settings.data.history.whenColumn"),
-			cell: (entry) =>
-				new Date(entry.importRecord.createdAt).toLocaleString(
-					formattingLocale(i18n),
-					{
-						dateStyle: "medium",
-						timeStyle: "short",
-					}
-				),
-		},
-		{
-			id: "kind",
-			header: t("settings.data.history.kindColumn"),
-			cell: (entry) => t(`settings.data.history.kinds.${entry.kind}`),
-		},
-		{
-			id: "by",
-			header: t("settings.data.history.byColumn"),
-			cell: (entry) => entry.importRecord.requestedBy,
-		},
-		{
-			id: "result",
-			header: t("settings.data.history.resultColumn"),
-			cell: (entry) => historyResultText(entry, t),
-		},
-		{
-			id: "open",
-			header: t("settings.data.history.openColumn"),
-			cell: (entry) => (
-				<Button
-					size="sm"
-					variant="textlink"
-					onClick={() => {
-						onOpen(entry);
-					}}
-				>
-					{t("settings.data.history.open")}
-				</Button>
-			),
-			headerClassName: "w-24",
-		},
-	];
+	const columns = importHistoryColumns(t, {
+		locale: formattingLocale(i18n),
+		onOpen,
+	});
 
 	return (
 		<section aria-labelledby="import-history-heading" className={className}>

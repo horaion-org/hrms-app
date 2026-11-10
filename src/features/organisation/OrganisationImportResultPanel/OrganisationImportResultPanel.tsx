@@ -3,12 +3,10 @@ import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { Callout } from "@/components/ui/Callout";
-import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
-import type {
-	OrganisationImport,
-	OrganisationRowOutcome,
-} from "@/features/organisation/import/api";
+import { DataTable } from "@/components/ui/DataTable";
+import type { OrganisationImport } from "@/features/organisation/import/api";
 import { unitCountsText } from "@/features/organisation/import/importText";
+import { organisationRowOutcomeColumns } from "@/features/organisation/OrganisationImportResultPanel/organisationRowOutcomeColumns";
 
 export type OrganisationImportResultPanelProps = {
 	organisationImport: OrganisationImport;
@@ -26,24 +24,6 @@ export const OrganisationImportResultPanel = ({
 	actions,
 }: OrganisationImportResultPanelProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
-	const columns: Array<DataTableColumn<OrganisationRowOutcome>> = [
-		{
-			id: "sheet",
-			header: t("organisation.import.result.sheetColumn"),
-			cell: (outcome) => t(`organisation.import.sheets.${outcome.sheet}`),
-		},
-		{
-			id: "row",
-			header: t("organisation.import.result.rowColumn"),
-			cell: (outcome) => outcome.rowNumber,
-			headerClassName: "w-16",
-		},
-		{
-			id: "result",
-			header: t("organisation.import.result.resultColumn"),
-			cell: (outcome) => t(`organisation.import.results.${outcome.result}`),
-		},
-	];
 
 	return (
 		<section aria-live="polite">
@@ -67,7 +47,7 @@ export const OrganisationImportResultPanel = ({
 			{actions && <div className="mt-4 flex flex-wrap gap-3">{actions}</div>}
 			<DataTable
 				className="mt-6"
-				columns={columns}
+				columns={organisationRowOutcomeColumns(t)}
 				data={organisationImport.rows}
 				getRowId={(outcome) => `${outcome.sheet}:${String(outcome.rowNumber)}`}
 				label={t("organisation.import.result.tableLabel")}

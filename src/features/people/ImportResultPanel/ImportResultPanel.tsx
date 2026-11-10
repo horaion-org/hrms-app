@@ -1,16 +1,12 @@
-import { Link } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { Callout } from "@/components/ui/Callout";
-import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
+import { DataTable } from "@/components/ui/DataTable";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-import type { MemberImport, RowOutcome } from "@/features/people/import/api";
-import {
-	outcomeDetail,
-	resolvedText,
-} from "@/features/people/import/importText";
+import type { MemberImport } from "@/features/people/import/api";
+import { rowOutcomeColumns } from "@/features/people/ImportResultPanel/rowOutcomeColumns";
 
 export type ImportResultPanelProps = {
 	memberImport: MemberImport;
@@ -30,22 +26,6 @@ const rowsNeedingAttention = (memberImport: MemberImport): number =>
 			memberImport.resolvedRows
 	);
 
-const ProfileLink = ({
-	membershipId,
-	label,
-}: {
-	membershipId: string;
-	label: string;
-}): FunctionComponent => (
-	<Link
-		className="font-semibold text-ink-blue-700 underline"
-		params={{ membershipId }}
-		to="/people/$membershipId"
-	>
-		{label}
-	</Link>
-);
-
 /**
  * One import as it runs and once it ends: progress while people are being
  * added (announced to screen readers), then the counts and one line per row,
@@ -58,51 +38,13 @@ export const ImportResultPanel = ({
 	actions,
 }: ImportResultPanelProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
-	const columns: Array<DataTableColumn<RowOutcome>> = [
-		{
-			id: "row",
-			header: t("people.importPage.result.rowColumn"),
-			cell: (outcome) => outcome.rowNumber,
-			headerClassName: "w-16",
-		},
-		{
-			id: "person",
-			header: t("people.importPage.result.nameColumn"),
-			cell: (outcome) => outcome.name ?? outcome.email ?? "",
-		},
-		{
-			id: "result",
-			header: t("people.importPage.result.resultColumn"),
-			cell: (outcome) =>
-				resolvedText(outcome, t, formattingLocale(i18n)) ??
-				t(`people.importPage.results.${outcome.result}`),
-		},
-		{
-			id: "detail",
-			header: t("people.importPage.result.detailColumn"),
-			cell: (outcome): ReactNode => {
-				const linkedMembershipId =
-					outcome.membershipId ?? outcome.resolvedMembershipId;
-				return linkedMembershipId ? (
-					<span className="flex flex-wrap gap-2">
-						{!outcome.resolved && outcomeDetail(outcome, t)}
-						<ProfileLink
-							label={t("people.importPage.result.open")}
-							membershipId={linkedMembershipId}
-						/>
-					</span>
-				) : (
-					!outcome.resolved && outcomeDetail(outcome, t)
-				);
-			},
-		},
-	];
 	const showsPeople = memberImport.rows.some(
 		(outcome) => outcome.name !== null || outcome.email !== null
 	);
-	const shownColumns = showsPeople
-		? columns
-		: columns.filter((column) => column.id !== "person");
+	const columns = rowOutcomeColumns(t, {
+		locale: formattingLocale(i18n),
+		showsPeople,
+	});
 	const stopped = memberImport.status === "FAILED";
 
 	if (isOpen(memberImport))
@@ -192,7 +134,7 @@ export const ImportResultPanel = ({
 			{actions && <div className="mt-4 flex flex-wrap gap-3">{actions}</div>}
 			<DataTable
 				className="mt-6"
-				columns={shownColumns}
+				columns={columns}
 				data={memberImport.rows}
 				getRowId={(outcome) => String(outcome.rowNumber)}
 				label={t("people.importPage.result.tableLabel")}
