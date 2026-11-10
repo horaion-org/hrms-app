@@ -1,10 +1,7 @@
-import {
-	queryOptions,
-	skipToken,
-	type UndefinedInitialDataOptions,
-} from "@tanstack/react-query";
+import { queryOptions, skipToken } from "@tanstack/react-query";
 import { z } from "zod";
 import { apiRequest } from "@/common/api-client";
+import type { QueryOptionsFor } from "@/common/query-client";
 import { schedulePath, type DepartmentPath } from "@/features/scheduling/paths";
 import { scheduleKey } from "@/features/scheduling/schedules/api";
 import { administrativeMeta } from "@/features/workspace/queryAccess";
@@ -178,12 +175,7 @@ export const startingDaysQuery = (
 	unit: DepartmentPath | undefined,
 	scheduleId: string,
 	allowed = true
-): UndefinedInitialDataOptions<
-	StartingDays,
-	Error,
-	StartingDays,
-	ReturnType<typeof startingDaysKey>
-> =>
+): QueryOptionsFor<StartingDays, ReturnType<typeof startingDaysKey>> =>
 	queryOptions({
 		queryKey: startingDaysKey(companyId, scheduleId),
 		queryFn:
@@ -202,12 +194,7 @@ export const startingContextQuery = (
 	unit: DepartmentPath | undefined,
 	scheduleId: string,
 	allowed = true
-): UndefinedInitialDataOptions<
-	StartingContext,
-	Error,
-	StartingContext,
-	ReturnType<typeof startingContextKey>
-> =>
+): QueryOptionsFor<StartingContext, ReturnType<typeof startingContextKey>> =>
 	queryOptions({
 		queryKey: startingContextKey(companyId, scheduleId),
 		queryFn:

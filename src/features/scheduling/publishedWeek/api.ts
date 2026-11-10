@@ -1,10 +1,7 @@
-import {
-	queryOptions,
-	skipToken,
-	type UndefinedInitialDataOptions,
-} from "@tanstack/react-query";
+import { queryOptions, skipToken } from "@tanstack/react-query";
 import { z } from "zod";
 import { apiRequest } from "@/common/api-client";
+import type { QueryOptionsFor } from "@/common/query-client";
 import {
 	SCHEDULING_QUERY_ROOT,
 	schedulesPath,
@@ -67,12 +64,7 @@ export const publishedWeekQuery = (
 	companyId: string,
 	unit: DepartmentPath | undefined,
 	periodStart: string | undefined
-): UndefinedInitialDataOptions<
-	PublishedWeek,
-	Error,
-	PublishedWeek,
-	ReturnType<typeof publishedWeekKey>
-> =>
+): QueryOptionsFor<PublishedWeek, ReturnType<typeof publishedWeekKey>> =>
 	queryOptions({
 		queryKey: publishedWeekKey(
 			companyId,

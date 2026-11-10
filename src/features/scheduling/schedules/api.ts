@@ -1,8 +1,4 @@
-import {
-	queryOptions,
-	skipToken,
-	type UndefinedInitialDataOptions,
-} from "@tanstack/react-query";
+import { queryOptions, skipToken } from "@tanstack/react-query";
 import { z } from "zod";
 import {
 	apiDownload,
@@ -10,6 +6,7 @@ import {
 	apiRequestVoid,
 	type DownloadedFile,
 } from "@/common/api-client";
+import type { QueryOptionsFor } from "@/common/query-client";
 import { publicationSubmissionSchema } from "@/features/approvals/api";
 import {
 	constraintCategorySchema,
@@ -782,9 +779,7 @@ export const scheduleKey = (
 /** Whether a schedule is read again every 15 seconds while it is being generated. */
 export type SchedulePolling = { pollWhileGenerating?: boolean };
 
-type ScheduleQueryOptions = UndefinedInitialDataOptions<
-	Schedule,
-	Error,
+type ScheduleQueryOptions = QueryOptionsFor<
 	Schedule,
 	ReturnType<typeof scheduleKey>
 >;
@@ -868,9 +863,7 @@ export const scheduleShiftsQuery = (
 	unit: DepartmentPath | undefined,
 	scheduleId: string,
 	allowed = true
-): UndefinedInitialDataOptions<
-	Array<ScheduleShift>,
-	Error,
+): QueryOptionsFor<
 	Array<ScheduleShift>,
 	ReturnType<typeof scheduleShiftsKey>
 > =>
@@ -899,9 +892,7 @@ export const scheduleConstraintsQuery = (
 	unit: DepartmentPath | undefined,
 	scheduleId: string,
 	allowed = true
-): UndefinedInitialDataOptions<
-	Array<ScheduleConstraint>,
-	Error,
+): QueryOptionsFor<
 	Array<ScheduleConstraint>,
 	ReturnType<typeof scheduleConstraintsKey>
 > =>
@@ -966,9 +957,7 @@ export const scheduleAssignmentsQuery = (
 	runId: string | null,
 	revision: number,
 	allowed = true
-): UndefinedInitialDataOptions<
-	Array<ScheduleAssignment>,
-	Error,
+): QueryOptionsFor<
 	Array<ScheduleAssignment>,
 	ReturnType<typeof scheduleAssignmentsKey>
 > =>

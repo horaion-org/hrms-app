@@ -1,10 +1,8 @@
-import {
-	queryOptions,
-	type UndefinedInitialDataOptions,
-} from "@tanstack/react-query";
+import { queryOptions } from "@tanstack/react-query";
 import { z } from "zod";
 import { apiRequest, apiRequestVoid } from "@/common/api-client";
 import { companyPath } from "@/common/companyPath";
+import type { QueryOptionsFor } from "@/common/query-client";
 import { pagedSchema } from "@/common/schemas";
 import {
 	administrativeMeta,
@@ -112,9 +110,7 @@ export const notificationPageQuery = (
 	unreadOnly: boolean,
 	enabled: boolean,
 	size = 20
-): UndefinedInitialDataOptions<
-	NotificationPage,
-	Error,
+): QueryOptionsFor<
 	NotificationPage,
 	readonly [
 		"notifications",
@@ -159,9 +155,7 @@ export const notificationCountQuery = (
 	membershipId: string,
 	audience: NotificationAudience,
 	enabled = true
-): UndefinedInitialDataOptions<
-	NotificationCount,
-	Error,
+): QueryOptionsFor<
 	NotificationCount,
 	readonly ["notifications", string, string, NotificationAudience, "count"]
 > =>

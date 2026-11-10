@@ -1,11 +1,8 @@
-import {
-	queryOptions,
-	skipToken,
-	type UndefinedInitialDataOptions,
-} from "@tanstack/react-query";
+import { queryOptions, skipToken } from "@tanstack/react-query";
 import { z } from "zod";
 import { apiRequest, apiRequestVoid } from "@/common/api-client";
 import { companyPath } from "@/common/companyPath";
+import type { QueryOptionsFor } from "@/common/query-client";
 import {
 	constraintOptionsSchema,
 	departmentConstraintSchema,
@@ -108,12 +105,7 @@ export const policyKey = (
 export const policyConstraintsQuery = (
 	companyId: string,
 	allowed = true
-): UndefinedInitialDataOptions<
-	Array<DepartmentConstraint>,
-	Error,
-	Array<DepartmentConstraint>,
-	ReturnType<typeof policyKey>
-> =>
+): QueryOptionsFor<Array<DepartmentConstraint>, ReturnType<typeof policyKey>> =>
 	queryOptions({
 		queryKey: policyKey(companyId, "constraints"),
 		queryFn: allowed
@@ -129,12 +121,7 @@ export const policyConstraintsQuery = (
 export const policyOptionsQuery = (
 	companyId: string,
 	allowed = true
-): UndefinedInitialDataOptions<
-	ConstraintOptions,
-	Error,
-	ConstraintOptions,
-	ReturnType<typeof policyKey>
-> =>
+): QueryOptionsFor<ConstraintOptions, ReturnType<typeof policyKey>> =>
 	queryOptions({
 		queryKey: policyKey(companyId, "constraint-options"),
 		queryFn: allowed

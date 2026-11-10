@@ -7,6 +7,7 @@ import {
 import { z } from "zod";
 import { apiRequest, fetchList } from "@/common/api-client";
 import { companyPath } from "@/common/companyPath";
+import type { QueryOptionsFor } from "@/common/query-client";
 import { memberRefSchema, type ListPage } from "@/common/schemas";
 import {
 	accessiblePreviousData,
@@ -56,9 +57,7 @@ export const fetchActiveLeaveTypes = (
 export const activeLeaveTypesQuery = (
 	companyId: string,
 	allowed = true
-): UndefinedInitialDataOptions<
-	Array<CompanyLeaveType>,
-	Error,
+): QueryOptionsFor<
 	Array<CompanyLeaveType>,
 	readonly ["leave-types", string, "ACTIVE"]
 > =>
@@ -222,9 +221,7 @@ export const leaveRequestsQuery = (
 	companyId: string,
 	query: LeaveQuery,
 	allowed = true
-): UndefinedInitialDataOptions<
-	ListPage<LeaveRequest>,
-	Error,
+): QueryOptionsFor<
 	ListPage<LeaveRequest>,
 	readonly ["leave", string, LeaveQuery]
 > =>
@@ -301,9 +298,7 @@ export const fetchMyLeaveRequests = (
 export const myLeaveRequestsQuery = (
 	companyId: string,
 	query: LeaveQuery
-): UndefinedInitialDataOptions<
-	ListPage<LeaveRequest>,
-	Error,
+): QueryOptionsFor<
 	ListPage<LeaveRequest>,
 	readonly ["leave", string, "me", LeaveQuery]
 > =>
@@ -341,9 +336,7 @@ export const leaveRequestQuery = (
 	ownMembershipId: string,
 	requestId: string,
 	memberId?: string
-): UndefinedInitialDataOptions<
-	LeaveRequest,
-	Error,
+): QueryOptionsFor<
 	LeaveRequest,
 	readonly ["leave", string, "detail", string, string, string]
 > =>
@@ -471,9 +464,7 @@ export const rosteredDaysQuery = (
 	period: { start: string; end: string },
 	memberId?: string,
 	allowed = true
-): UndefinedInitialDataOptions<
-	Array<RosteredDay>,
-	Error,
+): QueryOptionsFor<
 	Array<RosteredDay>,
 	readonly ["leave", string, "rostered-days", string, string, string]
 > =>
@@ -524,9 +515,7 @@ export const leaveHistoryQuery = (
 	companyId: string,
 	requestId: string,
 	memberId?: string
-): UndefinedInitialDataOptions<
-	Array<LeaveChange>,
-	Error,
+): QueryOptionsFor<
 	Array<LeaveChange>,
 	readonly ["leave", string, "history", string, string]
 > =>

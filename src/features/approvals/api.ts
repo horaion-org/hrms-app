@@ -1,11 +1,8 @@
-import {
-	queryOptions,
-	skipToken,
-	type UndefinedInitialDataOptions,
-} from "@tanstack/react-query";
+import { queryOptions, skipToken } from "@tanstack/react-query";
 import { z } from "zod";
 import { apiRequest, apiRequestVoid } from "@/common/api-client";
 import { companyPath } from "@/common/companyPath";
+import type { QueryOptionsFor } from "@/common/query-client";
 import { formerMemberRefSchema } from "@/common/schemas";
 import { administrativeMeta, selfMeta } from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";
@@ -331,18 +328,14 @@ export const approvalKeys = {
 		[...approvalKeys.all(companyId), "pending"] as const,
 };
 
-type Options<T, K extends ReadonlyArray<unknown>> = UndefinedInitialDataOptions<
-	T,
-	Error,
-	T,
-	K
->;
-
 /** The company's flows; `allowed` false asks for nothing. */
 export const approvalFlowsQuery = (
 	companyId: string,
 	allowed = true
-): Options<Array<ApprovalFlow>, ReturnType<typeof approvalKeys.flows>> =>
+): QueryOptionsFor<
+	Array<ApprovalFlow>,
+	ReturnType<typeof approvalKeys.flows>
+> =>
 	queryOptions({
 		queryKey: approvalKeys.flows(companyId),
 		queryFn: allowed
@@ -359,7 +352,10 @@ export const subjectApprovalsQuery = (
 	companyId: string,
 	subjectId: string,
 	allowed = true
-): Options<Array<ApprovalInstance>, ReturnType<typeof approvalKeys.subject>> =>
+): QueryOptionsFor<
+	Array<ApprovalInstance>,
+	ReturnType<typeof approvalKeys.subject>
+> =>
 	queryOptions({
 		queryKey: approvalKeys.subject(companyId, subjectId),
 		queryFn: allowed
@@ -375,7 +371,10 @@ export const subjectApprovalsQuery = (
 export const approvalInstanceQuery = (
 	companyId: string,
 	instanceId: string | undefined
-): Options<ApprovalInstance, ReturnType<typeof approvalKeys.instance>> =>
+): QueryOptionsFor<
+	ApprovalInstance,
+	ReturnType<typeof approvalKeys.instance>
+> =>
 	queryOptions({
 		queryKey: approvalKeys.instance(companyId, instanceId ?? ""),
 		queryFn: instanceId
@@ -391,7 +390,10 @@ export const approvalInstanceQuery = (
 export const myPendingApprovalsQuery = (
 	companyId: string,
 	enabled = true
-): Options<Array<ApprovalInstance>, ReturnType<typeof approvalKeys.pending>> =>
+): QueryOptionsFor<
+	Array<ApprovalInstance>,
+	ReturnType<typeof approvalKeys.pending>
+> =>
 	queryOptions({
 		queryKey: approvalKeys.pending(companyId),
 		queryFn:

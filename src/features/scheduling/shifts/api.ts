@@ -1,10 +1,7 @@
-import {
-	queryOptions,
-	skipToken,
-	type UndefinedInitialDataOptions,
-} from "@tanstack/react-query";
+import { queryOptions, skipToken } from "@tanstack/react-query";
 import { z } from "zod";
 import { apiRequest, apiRequestVoid } from "@/common/api-client";
+import type { QueryOptionsFor } from "@/common/query-client";
 import { WEEKDAYS, weekdaySchema, type Weekday } from "@/common/weekdays";
 import {
 	SCHEDULING_QUERY_ROOT,
@@ -156,12 +153,7 @@ export const shiftRoleOptionsQuery = (
 	companyId: string,
 	unit: DepartmentPath | undefined,
 	allowed = true
-): UndefinedInitialDataOptions<
-	Array<ShiftRole>,
-	Error,
-	Array<ShiftRole>,
-	ReturnType<typeof shiftRoleOptionsKey>
-> =>
+): QueryOptionsFor<Array<ShiftRole>, ReturnType<typeof shiftRoleOptionsKey>> =>
 	queryOptions({
 		queryKey: shiftRoleOptionsKey(companyId, unit?.departmentId ?? ""),
 		queryFn:

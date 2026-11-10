@@ -1,12 +1,9 @@
-import {
-	queryOptions,
-	skipToken,
-	type UndefinedInitialDataOptions,
-} from "@tanstack/react-query";
+import { queryOptions, skipToken } from "@tanstack/react-query";
 import { z } from "zod";
 import { apiRequest, apiRequestVoid } from "@/common/api-client";
 import { companyPath } from "@/common/companyPath";
 import { ApiProblemError } from "@/common/problem";
+import type { QueryOptionsFor } from "@/common/query-client";
 import { weekdaySchema } from "@/common/weekdays";
 import type {
 	AvailabilityDay,
@@ -276,12 +273,7 @@ export const memberAvailabilityQuery = (
 	companyId: string,
 	membershipId: string,
 	allowed = true
-): UndefinedInitialDataOptions<
-	WeeklyAvailability,
-	Error,
-	WeeklyAvailability,
-	ReadonlyArray<string>
-> =>
+): QueryOptionsFor<WeeklyAvailability, ReadonlyArray<string>> =>
 	queryOptions({
 		queryKey: patternKeyOf(companyId, memberOwner(membershipId)),
 		queryFn: allowed
@@ -297,12 +289,7 @@ export const memberAvailabilityQuery = (
 export const myAvailabilityQuery = (
 	companyId: string,
 	allowed = true
-): UndefinedInitialDataOptions<
-	WeeklyAvailability,
-	Error,
-	WeeklyAvailability,
-	ReadonlyArray<string>
-> =>
+): QueryOptionsFor<WeeklyAvailability, ReadonlyArray<string>> =>
 	queryOptions({
 		queryKey: patternKeyOf(companyId, MY_AVAILABILITY),
 		queryFn: allowed
@@ -324,12 +311,7 @@ export const weekAvailabilityQuery = (
 	companyId: string,
 	owner: AvailabilityOwner,
 	weekStartMonday: string | undefined
-): UndefinedInitialDataOptions<
-	WeekAvailability | null,
-	Error,
-	WeekAvailability | null,
-	ReadonlyArray<string>
-> =>
+): QueryOptionsFor<WeekAvailability | null, ReadonlyArray<string>> =>
 	queryOptions({
 		queryKey: [
 			...patternKeyOf(companyId, owner),
@@ -355,9 +337,7 @@ export const availabilityListQuery = (
 	companyId: string,
 	query: AvailabilityListQuery,
 	allowed = true
-): UndefinedInitialDataOptions<
-	AvailabilityList,
-	Error,
+): QueryOptionsFor<
 	AvailabilityList,
 	readonly ["availability", string, "list", AvailabilityListQuery]
 > =>
@@ -383,9 +363,7 @@ export const partTimeReadinessQuery = (
 	companyId: string,
 	unit: DepartmentPath | undefined,
 	weekStartMonday?: string
-): UndefinedInitialDataOptions<
-	Array<MemberWithoutAvailability>,
-	Error,
+): QueryOptionsFor<
 	Array<MemberWithoutAvailability>,
 	readonly ["availability", string, "readiness", string, string, string]
 > =>
