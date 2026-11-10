@@ -21,6 +21,8 @@ export type LeaveDecisionOptions = {
 export type LeaveDecisionControls = {
 	/** Whether the caller may approve or reject the request now, e.g. for a list's row actions. */
 	canDecide: (request: LeaveRequest) => boolean;
+	/** While a decision is being sent. */
+	busy: boolean;
 	/** Everything `LeaveRequestDialog` needs to decide `request`. */
 	reviewOf: (request: LeaveRequest) => LeaveReview;
 	/** Forgets the last refusal; called when the dialog closes. */
@@ -77,6 +79,7 @@ export const useLeaveDecision = (
 	};
 	return {
 		canDecide: turns.canDecide,
+		busy,
 		reviewOf: (request): LeaveReview => ({
 			canReview: turns.canDecide(request),
 			readsApprovalSteps: turns.readsApprovalSteps(request),
