@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { fetchAccessRole } from "@/features/organisation/api";
+import { fetchAccessRole } from "@/features/accessRoles/api";
 import { workspaceQuery } from "@/features/workspace/api";
 import {
 	SystemRoleEditor,

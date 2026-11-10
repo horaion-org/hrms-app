@@ -5,7 +5,7 @@ import {
 	AccessRoleAssignments,
 	type AccessRoleAssignmentRow,
 } from "@/features/accessRoles/AccessRoleAssignments";
-import type { AccessRole } from "@/features/organisation/api";
+import type { AccessRole } from "@/features/accessRoles/api";
 import { PermissionSummary } from "@/features/accessRoles/PermissionSummary";
 import { isPermissionKey } from "@/features/workspace/permissionKeys";
 

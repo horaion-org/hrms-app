@@ -5,14 +5,14 @@ import {
 	type UseMutationResult,
 	type UseQueryResult,
 } from "@tanstack/react-query";
+import type { UnitStatus } from "@/features/organisation/api";
 import {
 	fetchAccessRoleHolders,
 	grantAccessRole,
 	revokeAccessRole,
 	setAccessRoleAssignmentStatus,
 	type AccessRoleGrant,
-	type UnitStatus,
-} from "@/features/organisation/api";
+} from "@/features/accessRoles/api";
 import type { AccessRoleAssignmentRow } from "@/features/accessRoles/AccessRoleAssignments";
 import { workspaceQuery } from "@/features/workspace/api";
 import { administrativeMeta } from "@/features/workspace/queryAccess";

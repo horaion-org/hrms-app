@@ -7,7 +7,7 @@ import {
 import type {
 	AccessRole,
 	MemberAccessRoleAssignment,
-} from "@/features/organisation/api";
+} from "@/features/accessRoles/api";
 import type { PlaceRef } from "@/features/workspace/places";
 import type { AccessRoleHoldersChange } from "@/features/accessRoles/useAccessRoleHolders";
 

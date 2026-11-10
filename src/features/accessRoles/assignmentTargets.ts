@@ -1,5 +1,5 @@
 import type { TFunction } from "i18next";
-import type { AccessRole } from "@/features/organisation/api";
+import type { AccessRole } from "@/features/accessRoles/api";
 import type { Workspace } from "@/features/workspace/api";
 import {
 	type AssignableScope,

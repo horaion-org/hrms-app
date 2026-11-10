@@ -1,5 +1,5 @@
 import type { TFunction } from "i18next";
-import type { AccessRoleKind } from "@/features/organisation/api";
+import type { AccessRoleKind } from "@/features/accessRoles/api";
 import {
 	companyOnlyKeys,
 	definitionOf,

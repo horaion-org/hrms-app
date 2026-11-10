@@ -7,7 +7,7 @@ import {
 	createAccessRole,
 	type AccessRole,
 	type AccessRoleBody,
-} from "@/features/organisation/api";
+} from "@/features/accessRoles/api";
 
 /** Refreshes the company's lists, counts and activity after creating an access role. */
 export const useCreateAccessRole = (

@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { placeLabels } from "@/features/accessRoles/accessSummary";
 import type { AccessRolePerson } from "@/features/accessRoles/AccessRoleAssignments";
-import type { AccessRole } from "@/features/organisation/api";
+import type { AccessRole } from "@/features/accessRoles/api";
 import { AssignAccessRoleDialog } from "@/features/accessRoles/AssignAccessRoleDialog";
 import { assignmentRefusal } from "@/features/accessRoles/assignmentRefusal";
 import {

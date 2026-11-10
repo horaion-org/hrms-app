@@ -4,7 +4,7 @@ import { useState, type ReactElement } from "react";
 import { I18nextProvider } from "react-i18next";
 import { describe, expect, it } from "vitest";
 import { authTestI18n } from "@/features/auth/testingI18n";
-import type { AccessRoleKind } from "@/features/organisation/api";
+import type { AccessRoleKind } from "@/features/accessRoles/api";
 import { PermissionChecklist } from "@/features/accessRoles/PermissionChecklist";
 import { PERMISSION_GROUPS } from "@/features/accessRoles/PermissionChecklist/groups";
 import {

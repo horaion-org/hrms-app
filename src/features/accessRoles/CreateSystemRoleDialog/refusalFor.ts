@@ -4,7 +4,7 @@ import {
 	ACCESS_ROLE_ERROR,
 	kindConflictMessage,
 } from "@/features/accessRoles/accessRoleRefusal";
-import type { AccessRoleKind } from "@/features/organisation/api";
+import type { AccessRoleKind } from "@/features/accessRoles/api";
 
 /** Server codes select frontend-owned copy; untrusted server prose is never displayed. */
 export const refusalFor = (

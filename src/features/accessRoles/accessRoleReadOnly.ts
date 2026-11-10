@@ -1,4 +1,4 @@
-import type { AccessRole } from "@/features/organisation/api";
+import type { AccessRole } from "@/features/accessRoles/api";
 
 /**
  * Why the person can only view a role, or `undefined` when they may change
