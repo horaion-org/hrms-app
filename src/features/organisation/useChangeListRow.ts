@@ -11,6 +11,7 @@ import {
 	type Department,
 	type JobTitle,
 	type UnitStatus,
+	organisationKeys,
 } from "@/features/organisation/api";
 import { workspaceQuery } from "@/features/workspace/api";
 
@@ -28,7 +29,7 @@ export const useRowChange = <TVariables, TResult>(
 		mutationFn: change,
 		onSuccess: () =>
 			Promise.all([
-				client.invalidateQueries({ queryKey: ["organisation", companyId] }),
+				client.invalidateQueries({ queryKey: organisationKeys.all(companyId) }),
 				client.invalidateQueries({ queryKey: workspaceQuery.queryKey }),
 			]),
 	});

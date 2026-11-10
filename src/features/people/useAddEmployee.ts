@@ -14,6 +14,7 @@ import {
 import { withPeopleNotice } from "@/features/people/peopleNoticeState";
 import type { ProfileFormValues } from "@/features/people/profileFormSchema";
 import { profileRequest } from "@/features/people/profileRequest";
+import { organisationKeys } from "@/features/organisation/api";
 
 /**
  * Adds a person, then gives them the chosen system role at its explicit target,
@@ -55,7 +56,7 @@ export const useAddEmployee = (
 			Promise.all([
 				client.invalidateQueries({ queryKey: ["people", companyId] }),
 				client.invalidateQueries({
-					queryKey: ["organisation", companyId, "members"],
+					queryKey: organisationKeys.members(companyId),
 				}),
 			]),
 	});

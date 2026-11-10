@@ -41,6 +41,7 @@ import { OrganisationCheckPanel } from "@/features/organisation/OrganisationChec
 import { OrganisationImportResultPanel } from "@/features/organisation/OrganisationImportResultPanel";
 import { useAccess } from "@/features/workspace/useAccess";
 import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
+import { organisationKeys } from "@/features/organisation/api";
 
 const route = getRouteApi(
 	"/_authenticated/_app/settings_/data/import-organisation"
@@ -80,7 +81,9 @@ export const OrganisationImport = (): FunctionComponent => {
 		onSuccess: (finished) => {
 			wizard.closeConfirm();
 			// The new units change the organisation counts, its lists and Import history.
-			void client.invalidateQueries({ queryKey: ["organisation", companyId] });
+			void client.invalidateQueries({
+				queryKey: organisationKeys.all(companyId),
+			});
 			// The answer is the result, so it is shown without reading it again.
 			client.setQueryData(
 				organisationImportQuery(companyId, finished.importId).queryKey,

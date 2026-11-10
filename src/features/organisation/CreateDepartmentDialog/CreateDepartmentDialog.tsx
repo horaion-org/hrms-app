@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { FormRow, formRowIds } from "@/components/forms/FormRow";
 import { Select } from "@/components/forms/Select";
-import type { Department } from "@/features/organisation/api";
+import { organisationKeys, type Department } from "@/features/organisation/api";
 import { refusalFor } from "@/features/organisation/CreateDepartmentDialog/refusalFor";
 import {
 	createDepartmentSchema,
@@ -129,11 +129,11 @@ export const CreateDepartmentDialog = ({
 					);
 					if (refusal?.fields.branchId)
 						void client.invalidateQueries({
-							queryKey: ["organisation", companyId, "branches"],
+							queryKey: organisationKeys.branches(companyId),
 						});
 					if (refusal?.refreshMembers)
 						void client.invalidateQueries({
-							queryKey: ["organisation", companyId, "members"],
+							queryKey: organisationKeys.members(companyId),
 						});
 				})(event)
 			}

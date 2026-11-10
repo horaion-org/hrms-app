@@ -8,6 +8,7 @@ import type { ListPage } from "@/common/schemas";
 import {
 	type CompanyMember,
 	searchCompanyMembers,
+	organisationKeys,
 } from "@/features/organisation/api";
 import { retry } from "@/features/organisation/useOrganisationOverview";
 import { selfMeta } from "@/features/workspace/queryAccess";
@@ -29,7 +30,7 @@ export const useCompanyMemberSearch = (
 	}, [query]);
 	return useQuery({
 		enabled,
-		queryKey: ["organisation", companyId, "members", "ACTIVE", debounced],
+		queryKey: organisationKeys.activeMembers(companyId, debounced),
 		queryFn: ({ signal }) =>
 			searchCompanyMembers(
 				companyId,

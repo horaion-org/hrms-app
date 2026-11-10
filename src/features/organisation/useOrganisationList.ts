@@ -15,6 +15,7 @@ import {
 	fetchJobTitles,
 	type JobTitle,
 	type ListQuery,
+	organisationKeys,
 } from "@/features/organisation/api";
 import { retry } from "@/features/organisation/useOrganisationOverview";
 
@@ -38,7 +39,7 @@ export const useOrganisationList = <T>(
 	const access = useAccess();
 	const allowed = access.canAnywhere(permission);
 	const list = useQuery({
-		queryKey: ["organisation", companyId, ...key],
+		queryKey: [...organisationKeys.all(companyId), ...key],
 		retry,
 		// Keep the current rows on screen while a new sort or filter loads, unless withdrawn.
 		placeholderData: accessiblePreviousData(),

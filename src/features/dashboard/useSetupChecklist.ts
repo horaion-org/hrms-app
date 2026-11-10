@@ -4,6 +4,7 @@ import {
 	fetchActiveBranchCount,
 	fetchActiveDepartmentCount,
 	fetchActiveJobTitleCount,
+	organisationKeys,
 } from "@/features/organisation/api";
 import { fetchActiveMemberCount } from "@/features/people/api";
 import {
@@ -59,19 +60,19 @@ export const useSetupChecklist = (companyId: string): SetupChecklist => {
 	const wanted = !dismissed && (canImportOrganisation || canImportPeople);
 	// The same entries as the Organisation overview's figures, so both share one fetch.
 	const branches = useCount(
-		["organisation", companyId, "active-branch-count"],
+		organisationKeys.activeBranchCount(companyId),
 		companyId,
 		wanted && access.canAnywhere("branch:read"),
 		fetchActiveBranchCount
 	);
 	const departments = useCount(
-		["organisation", companyId, "active-department-count"],
+		organisationKeys.activeDepartmentCount(companyId),
 		companyId,
 		wanted && access.canAnywhere("department:read"),
 		fetchActiveDepartmentCount
 	);
 	const jobTitles = useCount(
-		["organisation", companyId, "active-job-title-count"],
+		organisationKeys.activeJobTitleCount(companyId),
 		companyId,
 		wanted && access.canAnywhere("job_title:read"),
 		fetchActiveJobTitleCount
