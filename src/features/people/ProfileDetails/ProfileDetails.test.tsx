@@ -2,7 +2,7 @@ import { render, screen, within } from "@testing-library/react";
 import { I18nextProvider } from "react-i18next";
 import { describe, expect, it } from "vitest";
 import { authTestI18n } from "@/features/auth/testingI18n";
-import type { PlaceAccessText } from "@/features/organisation/accessSummary";
+import type { PlaceAccessText } from "@/features/accessRoles/accessSummary";
 import type { MemberProfileDetail } from "@/features/people/api";
 import { ProfileDetails } from "@/features/people/ProfileDetails";
 

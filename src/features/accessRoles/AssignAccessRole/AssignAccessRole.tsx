@@ -2,20 +2,20 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
-import { placeLabels } from "@/features/organisation/accessSummary";
-import type { AccessRolePerson } from "@/features/organisation/AccessRoleAssignments";
+import { placeLabels } from "@/features/accessRoles/accessSummary";
+import type { AccessRolePerson } from "@/features/accessRoles/AccessRoleAssignments";
 import type { AccessRole } from "@/features/organisation/api";
-import { AssignAccessRoleDialog } from "@/features/organisation/AssignAccessRoleDialog";
-import { assignmentRefusal } from "@/features/organisation/assignmentRefusal";
+import { AssignAccessRoleDialog } from "@/features/accessRoles/AssignAccessRoleDialog";
+import { assignmentRefusal } from "@/features/accessRoles/assignmentRefusal";
 import {
 	assignmentTargets,
 	changeableAt,
-} from "@/features/organisation/assignmentTargets";
+} from "@/features/accessRoles/assignmentTargets";
 import { placeKey, placeOf } from "@/features/workspace/places";
 import {
 	useAccessRoleHolders,
 	useChangeAccessRoleHolders,
-} from "@/features/organisation/useAccessRoleHolders";
+} from "@/features/accessRoles/useAccessRoleHolders";
 import { useCompanyMemberSearch } from "@/features/organisation/useCompanyMemberSearch";
 import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 import { useMemberRoles } from "@/features/accessRoles/useMemberRoles";
