@@ -16,7 +16,6 @@ import { schedulingNoticeFrom } from "@/features/scheduling/schedulingNotice";
 import { Can } from "@/features/workspace/Can";
 import { ListToolbar } from "@/features/organisation/ListToolbar";
 import { formatPeriod } from "@/features/scheduling/periods";
-import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import { useSchedules } from "@/features/scheduling/schedules/useSchedules";
 import { decidable, type Schedule } from "@/features/scheduling/schedules/api";
 import { scheduleViewLink } from "@/features/scheduling/schedules/scheduleViewLink";
@@ -32,6 +31,7 @@ import {
 	selectedUnits,
 } from "@/features/workspace/unitSelection";
 import { useAccess } from "@/features/workspace/useAccess";
+import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 
 const key = "scheduling.overview";

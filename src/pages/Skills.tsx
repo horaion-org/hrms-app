@@ -19,7 +19,6 @@ import {
 	statusFilterOptions,
 	type StatusFilter,
 } from "@/features/organisation/listColumns";
-import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import type { SkillOverview } from "@/features/skills/api";
 import { BulkAssignSkillDialog } from "@/features/skills/BulkAssignSkillDialog";
 import { bulkAssignSummary } from "@/features/skills/skillRules";
@@ -34,6 +33,7 @@ import {
 import { filterChip } from "@/features/workspace/filterChips";
 import { COMPANY_SCOPE } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
+import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 
 /** The option value standing for every category; never a real one. */
 const ALL_CATEGORIES = "";

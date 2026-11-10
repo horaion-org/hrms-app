@@ -10,11 +10,11 @@ import {
 	useDeleteAccessRole,
 	useSetAccessRoleStatus,
 } from "@/features/organisation/useChangeListRow";
+import { isPermissionKey } from "@/features/workspace/permissionKeys";
 import {
 	useCurrentCompanyId,
 	useCurrentMembershipId,
-} from "@/features/organisation/useCurrentCompanyId";
-import { isPermissionKey } from "@/features/workspace/permissionKeys";
+} from "@/features/workspace/useCurrentCompany";
 
 /** What the person chose from a role's "More actions" menu. */
 export type SystemRoleAction = {

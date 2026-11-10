@@ -18,7 +18,7 @@ import { useLeaveDecision } from "@/features/leave/useLeaveDecision";
 import { workspaceQuery } from "@/features/workspace/api";
 
 // The hook reads the signed-in member from the route context; this test has no router.
-vi.mock("@/features/organisation/useCurrentCompanyId", () => ({
+vi.mock("@/features/workspace/useCurrentCompany", () => ({
 	useCurrentCompanyId: (): string => "c-1",
 	useCurrentMembershipId: (): string => "m-owner",
 }));

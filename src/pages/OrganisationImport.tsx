@@ -39,8 +39,8 @@ import {
 } from "@/features/organisation/import/importText";
 import { OrganisationCheckPanel } from "@/features/organisation/OrganisationCheckPanel";
 import { OrganisationImportResultPanel } from "@/features/organisation/OrganisationImportResultPanel";
-import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import { useAccess } from "@/features/workspace/useAccess";
+import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 
 const route = getRouteApi(
 	"/_authenticated/_app/settings_/data/import-organisation"

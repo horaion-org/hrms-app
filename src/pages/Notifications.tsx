@@ -4,7 +4,7 @@ import { NotificationViews } from "@/features/notifications/NotificationViews";
 import {
 	useCurrentCompanyId,
 	useCurrentMembershipId,
-} from "@/features/organisation/useCurrentCompanyId";
+} from "@/features/workspace/useCurrentCompany";
 
 const CompanyNotifications = (): FunctionComponent => {
 	const { t } = useTranslation();

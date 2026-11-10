@@ -5,11 +5,11 @@ import { Modal } from "@/components/ui/Modal";
 import { leaveRequestQuery } from "@/features/leave/api";
 import { LeaveRequestDialog } from "@/features/leave/LeaveRequestDialog";
 import { useLeaveDecision } from "@/features/leave/useLeaveDecision";
+import { useAccess } from "@/features/workspace/useAccess";
 import {
 	useCurrentCompanyId,
 	useCurrentMembershipId,
-} from "@/features/organisation/useCurrentCompanyId";
-import { useAccess } from "@/features/workspace/useAccess";
+} from "@/features/workspace/useCurrentCompany";
 
 export const LinkedLeaveRequest = ({
 	requestId,

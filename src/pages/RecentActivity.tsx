@@ -12,7 +12,7 @@ import {
 	describeActivity,
 } from "@/features/organisation/activity";
 import { ActivityTitle } from "@/features/organisation/ActivityTitle";
-import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
+import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 
 const route = getRouteApi("/_authenticated/_app/activity");
 

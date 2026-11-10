@@ -28,13 +28,13 @@ import {
 	useChangeAccessRoleHolders,
 } from "@/features/organisation/useAccessRoleHolders";
 import { useCompanyMemberSearch } from "@/features/organisation/useCompanyMemberSearch";
-import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import { useMemberRoles } from "@/features/people/useMemberRoles";
 import { workspaceQuery } from "@/features/workspace/api";
 import { isPermissionKey } from "@/features/workspace/permissionKeys";
 import { retry } from "@/features/workspace/retry";
 import type { CanAt } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
+import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 
 const key = "organisation.accessRoles.assignments";
 

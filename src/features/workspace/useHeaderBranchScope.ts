@@ -1,6 +1,5 @@
 import { useMatches, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import {
 	fixedBranchOf,
 	type BranchScope,
@@ -12,6 +11,7 @@ import {
 	type ResolvedUnitSelection,
 	type UnitSelectionRules,
 } from "@/features/workspace/unitSelection";
+import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 
 /** Stands in while no route declares a scope, so the hooks below always run. */

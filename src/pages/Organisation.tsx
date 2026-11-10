@@ -7,13 +7,13 @@ import { OverflowMenu, OverflowMenuItem } from "@/components/ui/OverflowMenu";
 import { StatCard } from "@/components/ui/StatCard";
 import { describeActivity } from "@/features/organisation/activity";
 import { ActivityTitle } from "@/features/organisation/ActivityTitle";
-import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import {
 	useOrganisationOverview,
 	type Visible,
 } from "@/features/organisation/useOrganisationOverview";
 import { COMPANY_SCOPE } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
+import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 
 export const Organisation = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();

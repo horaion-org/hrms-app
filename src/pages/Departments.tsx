@@ -27,13 +27,13 @@ import {
 	type StatusFilter,
 } from "@/features/organisation/listColumns";
 import { useSetDepartmentStatus } from "@/features/organisation/useChangeListRow";
-import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import { useDepartments } from "@/features/organisation/useOrganisationList";
 import { DEPARTMENT_READ_KEYS } from "@/features/workspace/permissionKeys";
 import { departmentScope } from "@/features/workspace/scopes";
 import { DEPARTMENTS_UNIT_RULES } from "@/features/organisation/listUnitRules";
 import { unitSelectionOf } from "@/features/workspace/unitSearch";
 import { useAccess } from "@/features/workspace/useAccess";
+import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 
 const route = getRouteApi("/_authenticated/_app/organisation/departments");

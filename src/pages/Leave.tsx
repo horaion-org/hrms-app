@@ -42,10 +42,6 @@ import {
 	usePendingLeaveCount,
 	type LeaveList,
 } from "@/features/leave/useLeaveRequests";
-import {
-	useCurrentCompanyId,
-	useCurrentMembershipId,
-} from "@/features/organisation/useCurrentCompanyId";
 import { peopleQuery } from "@/features/people/api";
 import { useSettledSearch } from "@/features/people/usePeople";
 import { workspaceQuery } from "@/features/workspace/api";
@@ -60,6 +56,10 @@ import {
 	selectedUnits,
 } from "@/features/workspace/unitSelection";
 import { useAccess } from "@/features/workspace/useAccess";
+import {
+	useCurrentCompanyId,
+	useCurrentMembershipId,
+} from "@/features/workspace/useCurrentCompany";
 import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 
 const route = getRouteApi("/_authenticated/_app/leave");

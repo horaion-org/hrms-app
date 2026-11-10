@@ -24,7 +24,6 @@ import {
 	UPLOAD_STEP,
 } from "@/features/imports/importWizard";
 import { useImportWizard } from "@/features/imports/useImportWizard";
-import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import { ImportCheckPanel } from "@/features/people/ImportCheckPanel";
 import { ImportResultPanel } from "@/features/people/ImportResultPanel";
 import {
@@ -47,6 +46,7 @@ import {
 } from "@/features/people/import/importText";
 import { useImportInvitations } from "@/features/people/import/useImportInvitations";
 import { useAccess } from "@/features/workspace/useAccess";
+import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 
 const route = getRouteApi("/_authenticated/_app/settings_/data/import-people");
 

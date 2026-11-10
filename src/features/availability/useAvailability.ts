@@ -31,10 +31,10 @@ import {
 	type WeeklyAvailability,
 	type WeeklyWindow,
 } from "@/features/availability/availabilityModel";
-import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import { myProfileQuery } from "@/features/people/api";
 import { AVAILABILITY_READ_KEYS } from "@/features/workspace/permissionKeys";
 import { useAccess } from "@/features/workspace/useAccess";
+import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 
 /** A 403: the person's grants don't reach what was asked for, whatever the workspace said. */
 const isRefused = (error: Error | null): boolean =>

@@ -10,10 +10,6 @@ import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { ArrowLeftIcon, EditIcon } from "@/components/ui/Icon";
 import { placeLabels } from "@/features/organisation/accessSummary";
-import {
-	useCurrentCompanyId,
-	useCurrentMembershipId,
-} from "@/features/organisation/useCurrentCompanyId";
 import { memberProfileQuery } from "@/features/people/api";
 import {
 	describeMemberAccess,
@@ -34,6 +30,10 @@ import { workspaceQuery } from "@/features/workspace/api";
 import { retry } from "@/features/workspace/retry";
 import { useAccess } from "@/features/workspace/useAccess";
 import { EmploymentTermsRow } from "@/features/employmentTerms/EmploymentTermsRow";
+import {
+	useCurrentCompanyId,
+	useCurrentMembershipId,
+} from "@/features/workspace/useCurrentCompany";
 import { PersonProfileEdit } from "@/pages/PersonProfileEdit";
 
 const route = getRouteApi("/_authenticated/_app/people_/$membershipId");

@@ -32,7 +32,6 @@ import {
 	useAvailabilityList,
 	type TeamAvailabilityList,
 } from "@/features/availability/useAvailability";
-import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import { myProfileQuery } from "@/features/people/api";
 import { workspaceQuery } from "@/features/workspace/api";
 import {
@@ -49,6 +48,7 @@ import {
 	selectedUnits,
 } from "@/features/workspace/unitSelection";
 import { useAccess } from "@/features/workspace/useAccess";
+import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 
 const route = getRouteApi("/_authenticated/_app/availability");

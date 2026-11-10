@@ -15,7 +15,6 @@ import {
 import { Stepper, StepperStep } from "@/components/ui/Stepper";
 import { Toast } from "@/components/ui/Toast";
 import { placeOf } from "@/features/organisation/assignmentTargets";
-import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import { ConstraintDialog } from "@/features/scheduling/constraints/ConstraintDialog";
 import { deleteConstraintRefusal } from "@/features/scheduling/constraints/constraintRefusal";
 import { ConstraintsStep } from "@/features/scheduling/constraints/ConstraintsStep";
@@ -91,6 +90,7 @@ import {
 } from "@/features/workspace/permissionKeys";
 import { retry } from "@/features/workspace/retry";
 import { SCHEDULING_UNIT_RULES } from "@/features/scheduling/schedules/schedulesUnitRules";
+import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 import { departmentScope } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";

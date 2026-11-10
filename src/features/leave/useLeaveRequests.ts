@@ -13,10 +13,10 @@ import {
 	canDecideLeave,
 	leaveApprovalsWaitingOn,
 } from "@/features/leave/leaveApproval";
-import { useCurrentMembershipId } from "@/features/organisation/useCurrentCompanyId";
 import { LEAVE_READ_KEYS } from "@/features/workspace/permissionKeys";
 import { recordScope } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
+import { useCurrentMembershipId } from "@/features/workspace/useCurrentCompany";
 
 /**
  * One page of leave requests. `hidden` when the person's grants don't reach

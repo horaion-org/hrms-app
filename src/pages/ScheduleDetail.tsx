@@ -16,10 +16,6 @@ import {
 	type ApprovalStanding,
 } from "@/features/approvals/approvalStanding";
 import {
-	useCurrentCompanyId,
-	useCurrentMembershipId,
-} from "@/features/organisation/useCurrentCompanyId";
-import {
 	GeneratedRoster,
 	type GeneratedRosterProps,
 	type RosterEditing,
@@ -81,6 +77,10 @@ import {
 import { runsByMember } from "@/features/scheduling/startingContext/startingGrid";
 import { departmentScope } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
+import {
+	useCurrentCompanyId,
+	useCurrentMembershipId,
+} from "@/features/workspace/useCurrentCompany";
 
 const route = getRouteApi("/_authenticated/_app/scheduling_/$scheduleId");
 

@@ -29,8 +29,8 @@ import {
 	type StatusFilter,
 } from "@/features/organisation/listColumns";
 import { useSetBranchStatus } from "@/features/organisation/useChangeListRow";
-import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import { useBranches } from "@/features/organisation/useOrganisationList";
+import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 
 export const Branches = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
