@@ -1,5 +1,5 @@
 import type { Decorator, Meta, StoryObj } from "@storybook/react-vite";
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import { fn, userEvent, within } from "storybook/test";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
@@ -193,50 +193,6 @@ export const PinnedScrolled: Story = {
 			.getByRole("table")
 			.parentElement?.scrollTo({ left: 200 });
 	},
-};
-
-/** What each branch shows when its row opens. */
-const branchDetails = (branch: Branch): ReactNode => (
-	<dl className="grid grid-cols-[max-content_1fr] gap-x-6 gap-y-1">
-		<dt className="font-semibold">Opening hours</dt>
-		<dd>Mon–Fri 09:00–18:00</dd>
-		<dt className="font-semibold">Address</dt>
-		<dd>{branch.city}</dd>
-	</dl>
-);
-
-/** A leading button per row opens its details beneath it; several may be open. */
-export const Expandable: Story = {
-	args: {
-		expansion: {
-			rowLabel: (branch: Branch): string => branch.name,
-			render: branchDetails,
-		},
-	},
-};
-
-export const ExpandableOpen: Story = {
-	...Expandable,
-	play: async ({ canvasElement }) => {
-		await userEvent.click(
-			within(canvasElement).getByRole("button", {
-				name: "Show details for Jurong",
-			})
-		);
-	},
-};
-
-/** Details stay in view while a wide table scrolls under its pinned columns. */
-export const ExpandablePinnedSelectable: Story = {
-	args: {
-		...Pinned.args,
-		expansion: {
-			rowLabel: (branch: Branch): string => branch.name,
-			render: branchDetails,
-			expandedIds: ["b-2"],
-		},
-	},
-	decorators: [narrowFrame],
 };
 
 /**
