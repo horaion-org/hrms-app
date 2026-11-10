@@ -67,10 +67,9 @@ it("requires a meaningful rejection reason and returns to review when cancelled"
 	);
 	expect(screen.getByText("Moses Lee")).toBeInTheDocument();
 	await user.click(screen.getByRole("button", { name: "Reject" }));
-	await user.type(
-		screen.getByRole("textbox", { name: "Reason for rejection" }),
-		"   "
-	);
+	const reason = screen.getByRole("textbox", { name: "Reason for rejection" });
+	expect(reason).toHaveAttribute("maxLength", "2000");
+	await user.type(reason, "   ");
 	expect(screen.getByRole("button", { name: "Confirm rejection" })).toHaveClass(
 		"bg-error-600"
 	);
@@ -682,4 +681,24 @@ it("asks the comment for past leave at the last step, as a single review does", 
 	expect(screen.getByRole("textbox", { name: "Comment" })).toBeRequired();
 	await user.click(screen.getByRole("button", { name: "Confirm approval" }));
 	expect(onApprove).not.toHaveBeenCalled();
+});
+
+it("keeps the approval route's limit on a rejection reason at a flow's step", async () => {
+	const user = userEvent.setup();
+	render(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveRequestDialog
+				canReview
+				request={leaveAtStepFixture(1)}
+				onApprove={vi.fn()}
+				onClose={vi.fn()}
+				onCreate={vi.fn()}
+				onReject={vi.fn()}
+			/>
+		</I18nextProvider>
+	);
+	await user.click(screen.getByRole("button", { name: "Reject" }));
+	expect(
+		screen.getByRole("textbox", { name: "Reason for rejection" })
+	).toHaveAttribute("maxLength", "500");
 });

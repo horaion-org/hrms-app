@@ -1,10 +1,10 @@
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { Textarea } from "@/components/forms/Textarea";
-import { APPROVAL_COMMENT_MAX_LENGTH } from "@/features/leave/api";
-
-/** The longest rejection reason the API keeps, in characters. */
-const REJECTION_REASON_MAX_LENGTH = 2000;
+import {
+	LEAVE_APPROVAL_COMMENT_MAX_LENGTH,
+	LEAVE_REJECTION_REASON_MAX_LENGTH,
+} from "@/features/leave/api";
 
 /** The decision being confirmed. */
 export type LeaveDecision = "approve" | "reject";
@@ -94,8 +94,8 @@ export const LeaveDecisionStep = ({
 				maxLength={
 					noteMaxLength ??
 					(rejecting
-						? REJECTION_REASON_MAX_LENGTH
-						: APPROVAL_COMMENT_MAX_LENGTH)
+						? LEAVE_REJECTION_REASON_MAX_LENGTH
+						: LEAVE_APPROVAL_COMMENT_MAX_LENGTH)
 				}
 				onChange={(event) => {
 					onNoteChange(event.target.value);

@@ -401,8 +401,15 @@ export const createMyLeaveRequest = (
 		}
 	);
 
-/** The longest approval comment the API keeps, in characters. */
-export const APPROVAL_COMMENT_MAX_LENGTH = 2000;
+/**
+ * The longest approval comment the leave routes keep, in characters. A
+ * request under an approval flow is decided through the approvals API,
+ * whose limit is `APPROVAL_COMMENT_MAX_LENGTH` in `features/approvals/api`.
+ */
+export const LEAVE_APPROVAL_COMMENT_MAX_LENGTH = 2000;
+
+/** The longest rejection reason the leave routes keep, in characters. */
+export const LEAVE_REJECTION_REASON_MAX_LENGTH = 2000;
 
 /** Grants a pending request; the reviewer is the caller. A blank comment sends no body, which means none. */
 export const approveLeaveRequest = (
