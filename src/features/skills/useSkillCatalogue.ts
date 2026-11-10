@@ -21,11 +21,14 @@ import {
 	type SkillOverview,
 	type SkillOverviewQuery,
 	type UpdateSkillBody,
+	skillKeys,
 } from "@/features/skills/api";
 import { administrativeMeta } from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";
 import { COMPANY_SCOPE } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
+import { organisationKeys } from "@/features/organisation/api";
+import { peopleKeys } from "@/features/people/api";
 
 /** The catalogue with its holder counts; `hidden` without `skill:read` at the company. */
 export const useSkillOverview = (
@@ -45,7 +48,7 @@ export const useSkillCategories = (
 ): UseQueryResult<Array<string>> => {
 	const allowed = useAccess().can("skill:read", COMPANY_SCOPE);
 	return useQuery({
-		queryKey: ["organisation", companyId, "skill-categories"],
+		queryKey: skillKeys.categories(companyId),
 		queryFn: allowed
 			? ({ signal }): Promise<Array<string>> =>
 					fetchSkillCategories(companyId, signal)
@@ -73,8 +76,8 @@ const useCatalogueChange = <TVariables, TResult>(
 		meta: { successMessage },
 		onSuccess: () =>
 			Promise.all([
-				client.invalidateQueries({ queryKey: ["organisation", companyId] }),
-				client.invalidateQueries({ queryKey: ["people", companyId] }),
+				client.invalidateQueries({ queryKey: organisationKeys.all(companyId) }),
+				client.invalidateQueries({ queryKey: peopleKeys.all(companyId) }),
 			]),
 	});
 };

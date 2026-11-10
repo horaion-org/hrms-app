@@ -9,6 +9,7 @@ import { companyPath } from "@/common/companyPath";
 import type { QueryOptionsFor } from "@/common/query-client";
 import { administrativeMeta } from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";
+import { organisationKeys } from "@/features/organisation/api";
 
 /** The template's data sheets, in the order units are created. */
 export const ORGANISATION_SHEETS = [
@@ -167,10 +168,10 @@ export const organisationImportQuery = (
 	importId: string
 ): QueryOptionsFor<
 	OrganisationImport,
-	readonly ["organisation", string, "imports", string]
+	ReturnType<typeof organisationKeys.import>
 > =>
 	queryOptions({
-		queryKey: ["organisation", companyId, "imports", importId] as const,
+		queryKey: organisationKeys.import(companyId, importId),
 		queryFn: ({ signal }) =>
 			apiRequest(
 				`${importsPath(companyId)}/${encodeURIComponent(importId)}`,
@@ -188,10 +189,10 @@ export const recentOrganisationImportsQuery = (
 	companyId: string
 ): QueryOptionsFor<
 	Array<OrganisationImport>,
-	readonly ["organisation", string, "imports"]
+	ReturnType<typeof organisationKeys.imports>
 > =>
 	queryOptions({
-		queryKey: ["organisation", companyId, "imports"] as const,
+		queryKey: organisationKeys.imports(companyId),
 		queryFn: ({ signal }) =>
 			apiRequest(importsPath(companyId), z.array(organisationImportSchema), {
 				signal,

@@ -5,6 +5,7 @@ import { companyPath } from "@/common/companyPath";
 import type { QueryOptionsFor } from "@/common/query-client";
 import { administrativeMeta } from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";
+import { leaveTypeKeys } from "@/features/leave/api";
 
 /*
  * The company's leave type catalogue as its admins manage it (the API's
@@ -119,20 +120,16 @@ export const reorderLeaveTypes = (
 		body,
 	});
 
-/** Every leave type query of a company starts with this, the apply form's catalogue included. */
-export const leaveTypesKey = (companyId: string): readonly [string, string] =>
-	["leave-types", companyId] as const;
-
 /** The catalogue with request counts; `allowed` false asks for nothing. */
 export const leaveTypeCatalogueQuery = (
 	companyId: string,
 	allowed = true
 ): QueryOptionsFor<
 	Array<ManagedLeaveType>,
-	readonly [string, string, "catalogue"]
+	ReturnType<typeof leaveTypeKeys.catalogue>
 > =>
 	queryOptions({
-		queryKey: [...leaveTypesKey(companyId), "catalogue"] as const,
+		queryKey: leaveTypeKeys.catalogue(companyId),
 		queryFn: allowed
 			? ({ signal }): Promise<Array<ManagedLeaveType>> =>
 					fetchLeaveTypeCatalogue(companyId, signal)

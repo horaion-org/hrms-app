@@ -14,6 +14,7 @@ import {
 	fetchActiveSkillCount,
 	fetchRecentActivity,
 	type AuditEvent,
+	organisationKeys,
 } from "@/features/organisation/api";
 
 export const RECENT_ACTIVITY_SIZE = 4;
@@ -64,7 +65,7 @@ export const useOrganisationOverview = (
 	const canReadActivity = access.can("audit_event:read", COMPANY_SCOPE);
 
 	const branches = useQuery({
-		queryKey: ["organisation", companyId, "active-branch-count"],
+		queryKey: organisationKeys.activeBranchCount(companyId),
 		retry,
 		meta,
 		queryFn: canReadBranches
@@ -72,7 +73,7 @@ export const useOrganisationOverview = (
 			: skipToken,
 	});
 	const departments = useQuery({
-		queryKey: ["organisation", companyId, "active-department-count"],
+		queryKey: organisationKeys.activeDepartmentCount(companyId),
 		retry,
 		meta,
 		queryFn: canReadDepartments
@@ -80,7 +81,7 @@ export const useOrganisationOverview = (
 			: skipToken,
 	});
 	const jobTitles = useQuery({
-		queryKey: ["organisation", companyId, "active-job-title-count"],
+		queryKey: organisationKeys.activeJobTitleCount(companyId),
 		retry,
 		meta,
 		queryFn: canReadJobTitles
@@ -88,7 +89,7 @@ export const useOrganisationOverview = (
 			: skipToken,
 	});
 	const skills = useQuery({
-		queryKey: ["organisation", companyId, "active-skill-count"],
+		queryKey: organisationKeys.activeSkillCount(companyId),
 		retry,
 		meta,
 		queryFn: canReadSkills
@@ -96,7 +97,7 @@ export const useOrganisationOverview = (
 			: skipToken,
 	});
 	const activity = useQuery({
-		queryKey: ["organisation", companyId, "recent-activity"],
+		queryKey: organisationKeys.recentActivity(companyId),
 		retry,
 		meta,
 		queryFn: canReadActivity

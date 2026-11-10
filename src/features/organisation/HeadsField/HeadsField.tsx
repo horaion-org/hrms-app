@@ -46,7 +46,7 @@ export type HeadsFieldProps = {
 /**
  * Chooses one to twenty heads (or up to `max` people) by searching the company's active people, or
  * one person with `multiple={false}`. Invalidate
- * `["organisation", companyId, "members"]` to reload the options.
+ * `organisationKeys.members(companyId)` to reload the options.
  */
 export const HeadsField = ({
 	companyId,

@@ -9,6 +9,7 @@ import {
 	type MemberProfileDetail,
 	type MemberProfilePlace,
 	type UpdateMemberProfileBody,
+	peopleKeys,
 } from "@/features/people/api";
 import {
 	memberRoleChange,
@@ -17,6 +18,7 @@ import {
 import { withPeopleNotice } from "@/features/people/peopleNoticeState";
 import type { ProfileFormValues } from "@/features/people/profileFormSchema";
 import { profileUpdateRequest } from "@/features/people/profileRequest";
+import { organisationKeys } from "@/features/organisation/api";
 
 /**
  * Saves a person's profile. Then, when `role` is given, it changes the
@@ -48,9 +50,9 @@ export const useEditProfile = (
 				(previous) => savedProfile(saved, previous)
 			);
 			return Promise.all([
-				client.invalidateQueries({ queryKey: ["people", companyId] }),
+				client.invalidateQueries({ queryKey: peopleKeys.all(companyId) }),
 				client.invalidateQueries({
-					queryKey: ["organisation", companyId, "members"],
+					queryKey: organisationKeys.members(companyId),
 				}),
 			]);
 		},

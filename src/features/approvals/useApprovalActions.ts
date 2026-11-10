@@ -15,6 +15,7 @@ import {
 	type CreateApprovalFlowBody,
 	type UpdateApprovalFlowBody,
 } from "@/features/approvals/api";
+import { notificationKeys } from "@/common/notificationKeys";
 
 type Replaced = { flowId: string; body: UpdateApprovalFlowBody };
 
@@ -90,7 +91,7 @@ export const useApprovalDecisionActions = (
 		Promise.all([
 			client.invalidateQueries({ queryKey: approvalKeys.all(companyId) }),
 			// A decided step leaves the approvers' Needs review list (addendum C6).
-			client.invalidateQueries({ queryKey: ["notifications", companyId] }),
+			client.invalidateQueries({ queryKey: notificationKeys.all(companyId) }),
 			reloadSubject(),
 		]);
 	const decide =

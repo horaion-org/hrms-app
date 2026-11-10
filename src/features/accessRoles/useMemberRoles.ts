@@ -1,6 +1,9 @@
 import { skipToken, useQuery } from "@tanstack/react-query";
 import { ApiProblemError } from "@/common/problem";
-import { fetchMemberAccessRoleAssignments } from "@/features/accessRoles/api";
+import {
+	accessRoleKeys,
+	fetchMemberAccessRoleAssignments,
+} from "@/features/accessRoles/api";
 import { useAccessRoles } from "@/features/accessRoles/useAccessRoles";
 import {
 	memberRoles,
@@ -26,7 +29,7 @@ export const useMemberRoles = (
 	const allowed = useAccess().canAnywhere("access_role:read");
 	// Inside the Organisation entries, so assigning or removing a role reloads it.
 	const assignments = useQuery({
-		queryKey: ["organisation", companyId, "member-assignments", membershipId],
+		queryKey: accessRoleKeys.memberAssignments(companyId, membershipId),
 		queryFn:
 			allowed && membershipId
 				? ({ signal }): ReturnType<typeof fetchMemberAccessRoleAssignments> =>

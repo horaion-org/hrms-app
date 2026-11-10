@@ -47,6 +47,7 @@ import {
 import { useImportInvitations } from "@/features/people/import/useImportInvitations";
 import { useAccess } from "@/features/workspace/useAccess";
 import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
+import { peopleKeys } from "@/features/people/api";
 
 const route = getRouteApi("/_authenticated/_app/settings_/data/import-people");
 
@@ -112,7 +113,7 @@ export const PeopleImport = (): FunctionComponent => {
 	// Once an import ends, the People list and Import history show what it added.
 	useEffect(() => {
 		if (ended)
-			void client.invalidateQueries({ queryKey: ["people", companyId] });
+			void client.invalidateQueries({ queryKey: peopleKeys.all(companyId) });
 	}, [ended, client, companyId]);
 
 	const { check, currentStep, file, refusal } = wizard;

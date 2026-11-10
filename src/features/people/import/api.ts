@@ -7,7 +7,7 @@ import {
 } from "@/common/api-client";
 import { companyPath } from "@/common/companyPath";
 import type { QueryOptionsFor } from "@/common/query-client";
-import type { PeopleQuery } from "@/features/people/api";
+import { peopleKeys, type PeopleQuery } from "@/features/people/api";
 import { administrativeMeta } from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";
 
@@ -192,12 +192,9 @@ const isOpen = (memberImport: MemberImport | undefined): boolean =>
 export const memberImportQuery = (
 	companyId: string,
 	importId: string
-): QueryOptionsFor<
-	MemberImport,
-	readonly ["people", string, "imports", string]
-> =>
+): QueryOptionsFor<MemberImport, ReturnType<typeof peopleKeys.import>> =>
 	queryOptions({
-		queryKey: ["people", companyId, "imports", importId] as const,
+		queryKey: peopleKeys.import(companyId, importId),
 		queryFn: ({ signal }) =>
 			apiRequest(
 				`${importsPath(companyId)}/${encodeURIComponent(importId)}`,
@@ -240,10 +237,10 @@ export const recentImportsQuery = (
 	companyId: string
 ): QueryOptionsFor<
 	Array<MemberImport>,
-	readonly ["people", string, "imports"]
+	ReturnType<typeof peopleKeys.imports>
 > =>
 	queryOptions({
-		queryKey: ["people", companyId, "imports"] as const,
+		queryKey: peopleKeys.imports(companyId),
 		queryFn: ({ signal }) =>
 			apiRequest(importsPath(companyId), z.array(memberImportSchema), {
 				signal,

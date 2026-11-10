@@ -11,8 +11,13 @@ import {
 	replaceMemberSkills,
 	type MemberSkill,
 	type SkillValue,
+	peopleKeys,
 } from "@/features/people/api";
-import { searchActiveSkills, type Skill } from "@/features/skills/api";
+import {
+	searchActiveSkills,
+	skillKeys,
+	type Skill,
+} from "@/features/skills/api";
 import {
 	accessiblePreviousData,
 	administrativeMeta,
@@ -51,7 +56,7 @@ export const useReplaceSkills = (
 				saved
 			);
 			return client.invalidateQueries({
-				queryKey: ["organisation", companyId, "skill-overview"],
+				queryKey: skillKeys.overview(companyId),
 			});
 		},
 	});
@@ -67,7 +72,7 @@ export const useSkillSuggestions = (
 ): UseQueryResult<ListPage<Skill>> => {
 	const search = useDebouncedValue(query.trim(), 250);
 	return useQuery({
-		queryKey: ["people", companyId, "skills", search] as const,
+		queryKey: peopleKeys.skillSuggestions(companyId, search),
 		queryFn: ({ signal }) => searchActiveSkills(companyId, search, signal),
 		placeholderData: accessiblePreviousData(),
 		meta: administrativeMeta(companyId),

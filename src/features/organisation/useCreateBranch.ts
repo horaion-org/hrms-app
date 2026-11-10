@@ -7,6 +7,7 @@ import {
 	createBranch,
 	type Branch,
 	type CreateBranchBody,
+	organisationKeys,
 } from "@/features/organisation/api";
 import { workspaceQuery } from "@/features/workspace/api";
 
@@ -19,7 +20,7 @@ export const useCreateBranch = (
 		mutationFn: (body: CreateBranchBody) => createBranch(companyId, body),
 		onSuccess: () =>
 			Promise.all([
-				client.invalidateQueries({ queryKey: ["organisation", companyId] }),
+				client.invalidateQueries({ queryKey: organisationKeys.all(companyId) }),
 				client.invalidateQueries({ queryKey: workspaceQuery.queryKey }),
 			]),
 	});

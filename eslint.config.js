@@ -9,6 +9,7 @@ import eslintPluginReact from "eslint-plugin-react"
 import eslintPluginReactHooks from "eslint-plugin-react-hooks"
 import eslintPluginReactRefresh from "eslint-plugin-react-refresh"
 import eslintPluginUnicorn from "eslint-plugin-unicorn"
+import eslintPluginQuery from "@tanstack/eslint-plugin-query"
 import globals from "globals"
 import typescriptEslint from 'typescript-eslint';
 
@@ -194,17 +195,33 @@ const unicornConfig = {
   }
 }
 
+// TanStack Query's own rules: exhaustive query keys, stable query clients, no rest-destructured results.
+const tanstackQueryConfig = {
+  name: "tanstackQuery",
+  extends: [...eslintPluginQuery.configs["flat/recommended"]],
+}
+
 const eslintConfig = typescriptEslint.config(
   baseESLintConfig,
   typescriptConfig,
   eslintConfigPrettier,
   reactConfig,
   jsxA11yConfig,
-  unicornConfig
+  unicornConfig,
+  tanstackQueryConfig
 )
 
 eslintConfig.map((config) => {
   config.files = ["src/**/*.ts", "src/**/*.tsx"]
+})
+
+// Scheduling's queries are keyed by schedule id and read the schedule's Department path (`unit`) beside it, which
+// exhaustive-deps reports. Scheduling's keys are left to its own refactor (schedules/api.ts and startingContext/api.ts
+// are in open PRs #89 and #99), so the rule stays off there until then.
+eslintConfig.push({
+  name: "tanstackQuery/scheduling",
+  files: ["src/features/scheduling/**/*.ts", "src/features/scheduling/**/*.tsx"],
+  rules: { "@tanstack/query/exhaustive-deps": "off" },
 })
 
 // Build output carries inline disable directives for rules this config doesn't load.

@@ -55,6 +55,7 @@ import { retry } from "@/features/workspace/retry";
 import { departmentChoices } from "@/features/workspace/unitChoices";
 import { COMPANY_SCOPE } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
+import { organisationKeys } from "@/features/organisation/api";
 
 /** What only changing an existing person needs. */
 export type ProfileFormEdit = {
@@ -406,11 +407,11 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 						});
 					if (refusal?.fields.jobTitleId)
 						void client.invalidateQueries({
-							queryKey: ["organisation", companyId, "job-titles"],
+							queryKey: organisationKeys.jobTitles(companyId),
 						});
 					if (refusal?.refreshMembers)
 						void client.invalidateQueries({
-							queryKey: ["organisation", companyId, "members"],
+							queryKey: organisationKeys.members(companyId),
 						});
 				})(event)
 			}

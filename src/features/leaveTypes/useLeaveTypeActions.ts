@@ -6,7 +6,6 @@ import {
 import {
 	createLeaveType,
 	leaveTypeCatalogueQuery,
-	leaveTypesKey,
 	reorderLeaveTypes,
 	updateLeaveType,
 	type LeaveTypeBody,
@@ -14,6 +13,7 @@ import {
 	type ManagedLeaveType,
 	type UpdateLeaveTypeBody,
 } from "@/features/leaveTypes/api";
+import { leaveKeys, leaveTypeKeys } from "@/features/leave/api";
 
 type Replaced = { leaveTypeId: string; body: UpdateLeaveTypeBody };
 
@@ -39,8 +39,8 @@ export const useLeaveTypeActions = (companyId: string): LeaveTypeActions => {
 	const client = useQueryClient();
 	const reload = (): Promise<unknown> =>
 		Promise.all([
-			client.invalidateQueries({ queryKey: leaveTypesKey(companyId) }),
-			client.invalidateQueries({ queryKey: ["leave", companyId] }),
+			client.invalidateQueries({ queryKey: leaveTypeKeys.all(companyId) }),
+			client.invalidateQueries({ queryKey: leaveKeys.all(companyId) }),
 		]);
 	return {
 		createLeaveType: useMutation({

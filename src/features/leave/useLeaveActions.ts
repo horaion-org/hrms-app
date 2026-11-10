@@ -13,7 +13,7 @@ import {
 	createMyLeaveRequest,
 	recordLeave,
 	rejectLeaveRequest,
-	rosteredDaysKey,
+	leaveKeys,
 	withdrawLeave,
 	type ChangeLeaveBody,
 	type LeaveRequest,
@@ -21,6 +21,7 @@ import {
 	type RecordLeaveBody,
 } from "@/features/leave/api";
 import { isRosterClash, isStaleDecision } from "@/features/leave/leaveRefusal";
+import { notificationKeys } from "@/common/notificationKeys";
 
 /**
  * Reloads every list and window of the company's requests, the
@@ -32,8 +33,8 @@ export const reloadLeave = async (
 	companyId: string
 ): Promise<void> => {
 	await Promise.all([
-		client.invalidateQueries({ queryKey: ["leave", companyId] }),
-		client.invalidateQueries({ queryKey: ["notifications", companyId] }),
+		client.invalidateQueries({ queryKey: leaveKeys.all(companyId) }),
+		client.invalidateQueries({ queryKey: notificationKeys.all(companyId) }),
 		client.invalidateQueries({ queryKey: approvalKeys.all(companyId) }),
 	]);
 };
@@ -48,7 +49,9 @@ const refreshRosteredDaysOn = (
 	error: Error
 ): void => {
 	if (isRosterClash(error))
-		void client.invalidateQueries({ queryKey: rosteredDaysKey(companyId) });
+		void client.invalidateQueries({
+			queryKey: leaveKeys.rosteredDays(companyId),
+		});
 };
 
 /** A request under a flow is decided on its open step, which the decision names so a step that moved on is refused. */

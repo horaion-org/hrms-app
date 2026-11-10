@@ -16,10 +16,13 @@ import {
 	type BulkAssignBody,
 	type BulkAssignResult,
 	type SkillHolder,
+	skillKeys,
 } from "@/features/skills/api";
 import { administrativeMeta } from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { organisationKeys } from "@/features/organisation/api";
+import { peopleKeys } from "@/features/people/api";
 
 /** The API's largest page, so at most five pages reach the bulk limit. */
 const PAGE_SIZE = 100;
@@ -56,13 +59,7 @@ export const useAssignablePeople = (
 ): UseQueryResult<ListPage<AssignablePerson>> => {
 	const typed = useDebouncedValue(search.trim(), 250);
 	return useQuery({
-		queryKey: [
-			"organisation",
-			companyId,
-			"assignable-people",
-			typed,
-			departmentId,
-		],
+		queryKey: skillKeys.assignablePeople(companyId, typed, departmentId),
 		queryFn: ({ signal }) =>
 			collectPages((page) =>
 				fetchAssignablePeople(
@@ -84,13 +81,7 @@ export const useSkillHolders = (
 	departmentId: string | undefined
 ): UseQueryResult<Map<string, SkillHolder>> =>
 	useQuery({
-		queryKey: [
-			"organisation",
-			companyId,
-			"skill-holders",
-			skillId,
-			departmentId,
-		],
+		queryKey: skillKeys.holders(companyId, skillId, departmentId),
 		queryFn: async ({ signal }) => {
 			const holders = await collectPages((page) =>
 				fetchSkillHolders(companyId, skillId, { departmentId, page }, signal)
@@ -117,8 +108,8 @@ export const useAssignSkill = (
 		meta: { successMessage: false },
 		onSuccess: () =>
 			Promise.all([
-				client.invalidateQueries({ queryKey: ["organisation", companyId] }),
-				client.invalidateQueries({ queryKey: ["people", companyId] }),
+				client.invalidateQueries({ queryKey: organisationKeys.all(companyId) }),
+				client.invalidateQueries({ queryKey: peopleKeys.all(companyId) }),
 			]),
 	});
 };

@@ -10,6 +10,7 @@ import {
 	type CreateJobTitleBody,
 	type Department,
 	type JobTitle,
+	organisationKeys,
 } from "@/features/organisation/api";
 import { workspaceQuery } from "@/features/workspace/api";
 
@@ -23,7 +24,7 @@ const useCompanyCreate = <TBody, TResult>(
 		mutationFn: create,
 		onSuccess: () =>
 			Promise.all([
-				client.invalidateQueries({ queryKey: ["organisation", companyId] }),
+				client.invalidateQueries({ queryKey: organisationKeys.all(companyId) }),
 				client.invalidateQueries({ queryKey: workspaceQuery.queryKey }),
 			]),
 	});

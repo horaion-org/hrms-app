@@ -4,6 +4,39 @@ import { apiRequest, fetchList } from "@/common/api-client";
 import { companyPath } from "@/common/companyPath";
 import { memberRefSchema, type ListPage } from "@/common/schemas";
 
+/**
+ * Every organisation query's key, shaped like `approvalKeys`. Invalidating
+ * `all(companyId)` reloads the company's lists, counts, activity and imports,
+ * and the skill and access role keys built on it (`skillKeys`,
+ * `accessRoleKeys`).
+ */
+export const organisationKeys = {
+	all: (companyId: string) => ["organisation", companyId] as const,
+	branches: (companyId: string) =>
+		[...organisationKeys.all(companyId), "branches"] as const,
+	jobTitles: (companyId: string) =>
+		[...organisationKeys.all(companyId), "job-titles"] as const,
+	/** Every member search of the company, e.g. a heads picker's options. */
+	members: (companyId: string) =>
+		[...organisationKeys.all(companyId), "members"] as const,
+	activeMembers: (companyId: string, search: string) =>
+		[...organisationKeys.members(companyId), "ACTIVE", search] as const,
+	activeBranchCount: (companyId: string) =>
+		[...organisationKeys.all(companyId), "active-branch-count"] as const,
+	activeDepartmentCount: (companyId: string) =>
+		[...organisationKeys.all(companyId), "active-department-count"] as const,
+	activeJobTitleCount: (companyId: string) =>
+		[...organisationKeys.all(companyId), "active-job-title-count"] as const,
+	activeSkillCount: (companyId: string) =>
+		[...organisationKeys.all(companyId), "active-skill-count"] as const,
+	recentActivity: (companyId: string) =>
+		[...organisationKeys.all(companyId), "recent-activity"] as const,
+	imports: (companyId: string) =>
+		[...organisationKeys.all(companyId), "imports"] as const,
+	import: (companyId: string, importId: string) =>
+		[...organisationKeys.imports(companyId), importId] as const,
+};
+
 const totalSchema = z.object({
 	page: z.object({ totalElements: z.number().int().nonnegative() }),
 });

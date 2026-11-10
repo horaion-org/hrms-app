@@ -8,6 +8,7 @@ import {
 	type AccessRole,
 	type AccessRoleBody,
 } from "@/features/accessRoles/api";
+import { organisationKeys } from "@/features/organisation/api";
 
 /** Refreshes the company's lists, counts and activity after creating an access role. */
 export const useCreateAccessRole = (
@@ -17,6 +18,6 @@ export const useCreateAccessRole = (
 	return useMutation({
 		mutationFn: (body: AccessRoleBody) => createAccessRole(companyId, body),
 		onSuccess: () =>
-			client.invalidateQueries({ queryKey: ["organisation", companyId] }),
+			client.invalidateQueries({ queryKey: organisationKeys.all(companyId) }),
 	});
 };
