@@ -12,7 +12,7 @@ import { Textarea } from "@/components/forms/Textarea";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import { SearchIcon } from "@/components/ui/Icon";
-import { Modal } from "@/components/ui/Modal";
+import { Dialog } from "@/components/ui/Dialog";
 import {
 	LEAVE_NOTES_MAX_LENGTH,
 	LEAVE_REMARK_MAX_LENGTH,
@@ -137,17 +137,17 @@ export const LeaveApplyForm = ({
 		rosterUnknown ||
 		(recording && rosteredDays.length > 0 && !takeOffConfirmed);
 	return (
-		<Modal
+		<Dialog
 			open
 			footer={
-				<>
+				<div className="flex justify-end gap-3">
 					<Button variant="cancel" onClick={onClose}>
 						{t("leave.cancel")}
 					</Button>
 					<Button disabled={incomplete || busy} form={id} type="submit">
 						{t(recording ? "leave.recordConfirm" : "leave.submit")}
 					</Button>
-				</>
+				</div>
 			}
 			title={t(
 				recording
@@ -159,7 +159,7 @@ export const LeaveApplyForm = ({
 			onClose={onClose}
 		>
 			<form
-				className="space-y-6 p-6"
+				className="space-y-6"
 				id={id}
 				onSubmit={(event) => {
 					event.preventDefault();
@@ -349,6 +349,6 @@ export const LeaveApplyForm = ({
 					/>
 				</FormRow>
 			</form>
-		</Modal>
+		</Dialog>
 	);
 };
