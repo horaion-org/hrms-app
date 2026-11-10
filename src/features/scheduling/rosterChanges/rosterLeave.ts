@@ -1,5 +1,9 @@
 import { ApiProblemError } from "@/common/problem";
 import { LEAVE_REFUSAL_CODES } from "@/features/leave/leaveRefusal";
+import type {
+	RosterChangeBody,
+	RosterChangeCell,
+} from "@/features/scheduling/rosterChanges/api";
 import type { RosterEditChoice } from "@/features/scheduling/rosterChanges/rosterEdit";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 
@@ -98,6 +102,62 @@ export const rosterChoiceOfLeaveMove = (
 ): RosterEditChoice | undefined =>
 	move?.kind === "backToShift"
 		? { kind: "shift", shiftId: move.shiftId }
+		: undefined;
+
+/** What decides the roster edit a day's choices make. */
+export type EditChoiceFacts = {
+	/** A leave day the person may change: only its leave move can edit the roster. */
+	leaveDayEditable: boolean;
+	mode: RosterPanelMode | undefined;
+	shiftId: string | undefined;
+	partner: ScheduleAssignment | undefined;
+	leaveMove: RosterLeaveMove | undefined;
+};
+
+/**
+ * The roster edit the chosen mode makes once its shift or partner is picked;
+ * undefined while incomplete, and for leave moves that don't edit the roster. Pure.
+ */
+export const editChoiceOf = ({
+	leaveDayEditable,
+	mode,
+	shiftId,
+	partner,
+	leaveMove,
+}: EditChoiceFacts): RosterEditChoice | undefined => {
+	if (leaveDayEditable) return rosterChoiceOfLeaveMove(leaveMove);
+	if (mode === "dayOff") return { kind: "dayOff" };
+	if (mode === "shift" && shiftId !== undefined)
+		return { kind: "shift", shiftId };
+	if (mode === "swap" && partner !== undefined)
+		return { kind: "swap", partner };
+	return undefined;
+};
+
+/**
+ * The roster change to preview and apply, or undefined when there are no
+ * cells. Taking someone off leave cancels the leave first, so the checks read
+ * the day as it will then be. Pure.
+ */
+export const rosterChangeBodyOf = ({
+	revision,
+	cells,
+	leaveMove,
+	day,
+}: {
+	revision: number;
+	cells: Array<RosterChangeCell>;
+	leaveMove: RosterLeaveMove | undefined;
+	day: string;
+}): RosterChangeBody | undefined =>
+	cells.length > 0
+		? {
+				expectedRevision: revision,
+				cells,
+				...(leaveMove?.kind === "backToShift"
+					? { assumeLeaveCancelledOn: [day] }
+					: {}),
+			}
 		: undefined;
 
 /** Whether a move writes the roster, so a published one asks first. Changing the type alone does not. */
