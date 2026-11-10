@@ -1,11 +1,9 @@
-import {
-	queryOptions,
-	skipToken,
-	type UndefinedInitialDataOptions,
-} from "@tanstack/react-query";
+import { queryOptions, skipToken } from "@tanstack/react-query";
 import { z } from "zod";
 import { apiRequest, apiRequestVoid } from "@/common/api-client";
-import { companyPath } from "@/features/organisation/api";
+import { companyPath } from "@/common/companyPath";
+import type { QueryOptionsFor } from "@/common/query-client";
+import { formerMemberRefSchema } from "@/common/schemas";
 import { administrativeMeta, selfMeta } from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";
 
@@ -65,15 +63,10 @@ export const APPROVAL_SUBJECTS = [SCHEDULE_PUBLICATION, LEAVE_REQUEST] as const;
 export type ApprovalSubject = (typeof APPROVAL_SUBJECTS)[number];
 
 /** A company member named on an approval; `displayName` is null once they have left the company. */
-const participantSchema = z.object({
-	membershipId: z.string(),
-	displayName: z.string().nullable(),
-});
-
-export type ApprovalParticipant = z.infer<typeof participantSchema>;
+export type ApprovalParticipant = z.infer<typeof formerMemberRefSchema>;
 
 const decisionSchema = z.object({
-	decidedBy: participantSchema.nullable(),
+	decidedBy: formerMemberRefSchema.nullable(),
 	decision: decisionTypeSchema,
 	comment: z
 		.string()
@@ -91,14 +84,16 @@ const instanceStepSchema = z.object({
 	quorum: quorumSchema,
 	status: stepStatusSchema,
 	/** The named people of a MEMBERS step, by name; empty for KEY_HOLDERS. */
-	members: z.array(participantSchema).default([]),
+	members: z.array(formerMemberRefSchema).default([]),
 	decisions: z.array(decisionSchema).default([]),
 	/**
 	 * Who approved this step together with the next one, which they could
 	 * decide too (ADR-0067 §11): it closed SKIPPED and their approval moved
 	 * on. Null unless skipped that way.
 	 */
-	skippedBy: participantSchema.nullish().transform((value) => value ?? null),
+	skippedBy: formerMemberRefSchema
+		.nullish()
+		.transform((value) => value ?? null),
 	/** When it was skipped that way; null otherwise. */
 	skippedAt: z
 		.string()
@@ -116,7 +111,7 @@ const instanceSchema = z.object({
 	subjectId: z.string(),
 	departmentId: z.string(),
 	approvalFlowId: z.string(),
-	requestedBy: participantSchema.nullable(),
+	requestedBy: formerMemberRefSchema.nullable(),
 	status: instanceStatusSchema,
 	/** The open step's order while PENDING. */
 	currentStepOrder: z.number().int().nullable(),
@@ -143,12 +138,33 @@ const instanceSchema = z.object({
 export type ApprovalInstance = z.infer<typeof instanceSchema>;
 export type ApprovalInstanceStatus = ApprovalInstance["status"];
 
+/**
+ * The roster's submission waiting for approval, as the schedule read tells
+ * every schedule reader (hrms-backend-v2 PR #164): where it stands and
+ * whether the caller submitted it, so a submitter without `approval:read`
+ * sees it wait and may withdraw it. It names nobody.
+ */
+export const publicationSubmissionSchema = z.object({
+	/** The approval to withdraw it by (`POST /me/approval-instances/{id}/cancellation`). */
+	approvalInstanceId: z.string(),
+	/** The open step, from 1. */
+	currentStepOrder: z.number().int(),
+	/** The open step's name, as it was when submitted. */
+	currentStepLabel: z.string(),
+	/** How many steps the submission has. */
+	stepCount: z.number().int(),
+	submittedByCaller: z.boolean(),
+});
+
+/** A waiting submission as the schedule read tells it; null on `publication` when nothing waits. */
+export type PublicationSubmission = z.infer<typeof publicationSubmissionSchema>;
+
 const flowStepSchema = z.object({
 	stepOrder: z.number().int(),
 	label: z.string(),
 	rule: ruleSchema,
 	quorum: quorumSchema,
-	members: z.array(participantSchema).default([]),
+	members: z.array(formerMemberRefSchema).default([]),
 });
 
 export type ApprovalFlowStep = z.infer<typeof flowStepSchema>;
@@ -312,18 +328,14 @@ export const approvalKeys = {
 		[...approvalKeys.all(companyId), "pending"] as const,
 };
 
-type Options<T, K extends ReadonlyArray<unknown>> = UndefinedInitialDataOptions<
-	T,
-	Error,
-	T,
-	K
->;
-
 /** The company's flows; `allowed` false asks for nothing. */
 export const approvalFlowsQuery = (
 	companyId: string,
 	allowed = true
-): Options<Array<ApprovalFlow>, ReturnType<typeof approvalKeys.flows>> =>
+): QueryOptionsFor<
+	Array<ApprovalFlow>,
+	ReturnType<typeof approvalKeys.flows>
+> =>
 	queryOptions({
 		queryKey: approvalKeys.flows(companyId),
 		queryFn: allowed
@@ -340,7 +352,10 @@ export const subjectApprovalsQuery = (
 	companyId: string,
 	subjectId: string,
 	allowed = true
-): Options<Array<ApprovalInstance>, ReturnType<typeof approvalKeys.subject>> =>
+): QueryOptionsFor<
+	Array<ApprovalInstance>,
+	ReturnType<typeof approvalKeys.subject>
+> =>
 	queryOptions({
 		queryKey: approvalKeys.subject(companyId, subjectId),
 		queryFn: allowed
@@ -356,7 +371,10 @@ export const subjectApprovalsQuery = (
 export const approvalInstanceQuery = (
 	companyId: string,
 	instanceId: string | undefined
-): Options<ApprovalInstance, ReturnType<typeof approvalKeys.instance>> =>
+): QueryOptionsFor<
+	ApprovalInstance,
+	ReturnType<typeof approvalKeys.instance>
+> =>
 	queryOptions({
 		queryKey: approvalKeys.instance(companyId, instanceId ?? ""),
 		queryFn: instanceId
@@ -372,7 +390,10 @@ export const approvalInstanceQuery = (
 export const myPendingApprovalsQuery = (
 	companyId: string,
 	enabled = true
-): Options<Array<ApprovalInstance>, ReturnType<typeof approvalKeys.pending>> =>
+): QueryOptionsFor<
+	Array<ApprovalInstance>,
+	ReturnType<typeof approvalKeys.pending>
+> =>
 	queryOptions({
 		queryKey: approvalKeys.pending(companyId),
 		queryFn:

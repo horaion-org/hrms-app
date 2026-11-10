@@ -1,6 +1,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
+import { mapRefusal } from "@/common/refusal";
 import type { FunctionComponent } from "@/common/types";
 import { formatDate, todayDate } from "@/components/forms/Calendar";
 import { Badge } from "@/components/ui/Badge";
@@ -24,7 +25,6 @@ import {
 	expiryStatusOn,
 	sortHeldSkills,
 } from "@/features/skills/skillRules";
-import { mapRefusal } from "@/features/organisation/refusal";
 import { COMPANY_SCOPE } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
 

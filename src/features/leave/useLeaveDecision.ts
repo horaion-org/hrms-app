@@ -9,7 +9,7 @@ import {
 import type { LeaveRequest } from "@/features/leave/types";
 import { useLeaveDecisionActions } from "@/features/leave/useLeaveActions";
 import { useLeaveTurns } from "@/features/leave/useLeaveRequests";
-import type { Refusal } from "@/features/organisation/refusal";
+import type { Refusal } from "@/common/refusal";
 
 export type LeaveDecisionOptions = {
 	/** The host says the outcome itself, so the app's success toast stays quiet. */

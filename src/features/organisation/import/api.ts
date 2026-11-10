@@ -1,14 +1,12 @@
-import {
-	queryOptions,
-	type UndefinedInitialDataOptions,
-} from "@tanstack/react-query";
+import { queryOptions } from "@tanstack/react-query";
 import { z } from "zod";
 import {
 	apiDownload,
 	apiRequest,
 	type DownloadedFile,
 } from "@/common/api-client";
-import { companyPath } from "@/features/organisation/api";
+import { companyPath } from "@/common/companyPath";
+import type { QueryOptionsFor } from "@/common/query-client";
 import { administrativeMeta } from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";
 
@@ -167,9 +165,7 @@ export const startOrganisationImport = (
 export const organisationImportQuery = (
 	companyId: string,
 	importId: string
-): UndefinedInitialDataOptions<
-	OrganisationImport,
-	Error,
+): QueryOptionsFor<
 	OrganisationImport,
 	readonly ["organisation", string, "imports", string]
 > =>
@@ -190,9 +186,7 @@ export const organisationImportQuery = (
 /** The company's last organisation imports, newest first, without their rows. */
 export const recentOrganisationImportsQuery = (
 	companyId: string
-): UndefinedInitialDataOptions<
-	Array<OrganisationImport>,
-	Error,
+): QueryOptionsFor<
 	Array<OrganisationImport>,
 	readonly ["organisation", string, "imports"]
 > =>

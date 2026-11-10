@@ -1,11 +1,8 @@
-import {
-	queryOptions,
-	skipToken,
-	type UndefinedInitialDataOptions,
-} from "@tanstack/react-query";
+import { queryOptions, skipToken } from "@tanstack/react-query";
 import { z } from "zod";
 import { apiRequest } from "@/common/api-client";
-import { companyPath } from "@/features/organisation/api";
+import { companyPath } from "@/common/companyPath";
+import type { QueryOptionsFor } from "@/common/query-client";
 import { administrativeMeta } from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";
 
@@ -130,9 +127,7 @@ export const leaveTypesKey = (companyId: string): readonly [string, string] =>
 export const leaveTypeCatalogueQuery = (
 	companyId: string,
 	allowed = true
-): UndefinedInitialDataOptions<
-	Array<ManagedLeaveType>,
-	Error,
+): QueryOptionsFor<
 	Array<ManagedLeaveType>,
 	readonly [string, string, "catalogue"]
 > =>

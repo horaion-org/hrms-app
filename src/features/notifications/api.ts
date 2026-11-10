@@ -1,10 +1,9 @@
-import {
-	queryOptions,
-	type UndefinedInitialDataOptions,
-} from "@tanstack/react-query";
+import { queryOptions } from "@tanstack/react-query";
 import { z } from "zod";
 import { apiRequest, apiRequestVoid } from "@/common/api-client";
-import { companyPath } from "@/features/organisation/api";
+import { companyPath } from "@/common/companyPath";
+import type { QueryOptionsFor } from "@/common/query-client";
+import { pagedSchema } from "@/common/schemas";
 import {
 	administrativeMeta,
 	selfMeta,
@@ -89,10 +88,7 @@ export const notificationSchema = z.object({
 });
 export type InboxNotification = z.infer<typeof notificationSchema>;
 
-const pageSchema = z.object({
-	content: z.array(notificationSchema),
-	page: z.object({ totalElements: z.number().int().nonnegative() }),
-});
+const pageSchema = pagedSchema(notificationSchema);
 const countSchema = z.object({ unreadCount: z.number().int().nonnegative() });
 const readSchema = z.object({ updatedCount: z.number().int().nonnegative() });
 type NotificationPage = z.infer<typeof pageSchema>;
@@ -114,9 +110,7 @@ export const notificationPageQuery = (
 	unreadOnly: boolean,
 	enabled: boolean,
 	size = 20
-): UndefinedInitialDataOptions<
-	NotificationPage,
-	Error,
+): QueryOptionsFor<
 	NotificationPage,
 	readonly [
 		"notifications",
@@ -161,9 +155,7 @@ export const notificationCountQuery = (
 	membershipId: string,
 	audience: NotificationAudience,
 	enabled = true
-): UndefinedInitialDataOptions<
-	NotificationCount,
-	Error,
+): QueryOptionsFor<
 	NotificationCount,
 	readonly ["notifications", string, string, NotificationAudience, "count"]
 > =>

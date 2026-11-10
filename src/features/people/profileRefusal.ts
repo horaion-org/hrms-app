@@ -1,6 +1,6 @@
 import type { TFunction } from "i18next";
 import { ApiProblemError } from "@/common/problem";
-import { mapRefusal, type Refusal } from "@/features/organisation/refusal";
+import { mapRefusal, type Refusal } from "@/common/refusal";
 
 /** The profile fields a refusal can land on, in the order they are shown. */
 export const PROFILE_FIELDS = [

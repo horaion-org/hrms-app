@@ -14,11 +14,11 @@ import { MyCoverOffers } from "@/features/scheduling/coverOffers/MyCoverOffers";
 import { GeneratedRoster } from "@/features/scheduling/GeneratedRoster";
 import { myRosterQuery } from "@/features/scheduling/myRoster/api";
 import { MyRosterChanges } from "@/features/scheduling/MyRosterChanges";
+import { formatPeriod } from "@/features/scheduling/periods";
 import {
 	useCurrentCompanyId,
 	useCurrentMembershipId,
-} from "@/features/organisation/useCurrentCompanyId";
-import { formatPeriod } from "@/features/scheduling/periods";
+} from "@/features/workspace/useCurrentCompany";
 
 const route = getRouteApi("/_authenticated/_app/me/schedules/$scheduleId");
 

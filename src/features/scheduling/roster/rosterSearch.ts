@@ -1,6 +1,6 @@
 import { z } from "zod";
+import { mondayOf } from "@/common/weeks";
 import type { IssuesAbout } from "@/features/scheduling/roster/rosterMarks";
-import { mondayOf } from "@/features/scheduling/schedules";
 
 const isMonday = (date: string): boolean => mondayOf(date) === date;
 

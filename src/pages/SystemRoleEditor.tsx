@@ -11,13 +11,13 @@ import { AccessRoleForm } from "@/features/organisation/AccessRoleForm";
 import { readOnlyReason } from "@/features/organisation/accessRoleReadOnly";
 import { SYSTEM_ROLES_PATH } from "@/features/organisation/systemRolesPath";
 import { useAccessRoleHolders } from "@/features/organisation/useAccessRoleHolders";
-import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import { useUpdateAccessRole } from "@/features/organisation/useUpdateAccessRole";
 import { companyPermissions, workspaceQuery } from "@/features/workspace/api";
 import {
 	isPermissionKey,
 	unknownKeys,
 } from "@/features/workspace/permissionKeys";
+import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 import { SystemRoleHolders } from "@/pages/SystemRoleHolders";
 
 const route = getRouteApi(

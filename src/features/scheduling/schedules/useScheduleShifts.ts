@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
+import type { DepartmentPath } from "@/common/companyPath";
 import { ApiProblemError } from "@/common/problem";
-import type { DepartmentPath } from "@/features/scheduling/paths";
 import {
 	scheduleShiftsQuery,
 	type ScheduleShift,

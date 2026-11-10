@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
+import type { Refusal } from "@/common/refusal";
 import type { FunctionComponent } from "@/common/types";
 import { DatePicker } from "@/components/forms/DatePicker";
 import { FormRow, formRowIds } from "@/components/forms/FormRow";
@@ -21,7 +22,6 @@ import {
 import type { ApplyField } from "@/features/leave/leaveRefusal";
 import { leaveTypeOptions } from "@/features/leave/leaveTypeOptions";
 import type { LeaveRequestBody } from "@/features/leave/types";
-import type { Refusal } from "@/features/organisation/refusal";
 import { RosteredDaysNotice } from "../RosteredDaysNotice";
 
 /** The people offered when applying: a search the caller owns and its current answer. */

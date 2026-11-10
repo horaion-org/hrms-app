@@ -1,6 +1,7 @@
 import { formattingLocale } from "@/common/formattingLocale";
 import { countryName } from "@/common/countries";
 import { useMemo, useState } from "react";
+import { mapRefusal } from "@/common/refusal";
 import { useAccess } from "@/features/workspace/useAccess";
 import { branchScope, COMPANY_SCOPE } from "@/features/workspace/scopes";
 import { CreateBranchDialog } from "@/features/organisation/CreateBranchDialog";
@@ -27,10 +28,9 @@ import {
 	statusFilterOptions,
 	type StatusFilter,
 } from "@/features/organisation/listColumns";
-import { mapRefusal } from "@/features/organisation/refusal";
 import { useSetBranchStatus } from "@/features/organisation/useChangeListRow";
-import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import { useBranches } from "@/features/organisation/useOrganisationList";
+import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 
 export const Branches = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();

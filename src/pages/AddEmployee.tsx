@@ -3,7 +3,6 @@ import { useNavigate } from "@tanstack/react-router";
 import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
-import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import { EMPTY_PROFILE } from "@/features/people/profileFormSchema";
 import { ProfileForm } from "@/features/people/ProfileForm";
 import {
@@ -17,6 +16,7 @@ import {
 	type EmploymentTerms,
 } from "@/features/employmentTerms/api";
 import { EmploymentTermsField } from "@/features/employmentTerms/EmploymentTermsField";
+import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 
 /**
  * A new person in a Department where the caller may add employees, or without one

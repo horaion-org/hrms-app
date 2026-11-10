@@ -3,6 +3,7 @@ import type { TFunction } from "i18next";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ApiProblemError } from "@/common/problem";
+import { mapRefusal } from "@/common/refusal";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -25,7 +26,6 @@ import {
 } from "@/features/leaveTypes/leaveTypeCatalogue";
 import { useLeaveTypeActions } from "@/features/leaveTypes/useLeaveTypeActions";
 import { actionsColumn } from "@/features/organisation/listColumns";
-import { mapRefusal } from "@/features/organisation/refusal";
 import { COMPANY_SCOPE } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
 

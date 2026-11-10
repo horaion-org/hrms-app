@@ -1,5 +1,6 @@
 import { skipToken, useQuery, type QueryKey } from "@tanstack/react-query";
 import { ApiProblemError } from "@/common/problem";
+import type { ListPage } from "@/common/schemas";
 import type { PermissionKey } from "@/features/workspace/permissionKeys";
 import {
 	accessiblePreviousData,
@@ -7,15 +8,14 @@ import {
 } from "@/features/workspace/queryAccess";
 import { useAccess } from "@/features/workspace/useAccess";
 import {
+	type AccessRole,
+	type Branch,
+	type Department,
 	fetchAccessRoles,
 	fetchBranches,
 	fetchDepartments,
 	fetchJobTitles,
-	type AccessRole,
-	type Branch,
-	type Department,
 	type JobTitle,
-	type ListPage,
 	type ListQuery,
 } from "@/features/organisation/api";
 import { retry } from "@/features/organisation/useOrganisationOverview";

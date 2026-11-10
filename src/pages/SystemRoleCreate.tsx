@@ -8,9 +8,9 @@ import { AccessRoleForm } from "@/features/organisation/AccessRoleForm";
 import type { AccessRoleFormInput } from "@/features/organisation/accessRoleFormSchema";
 import { SYSTEM_ROLES_PATH } from "@/features/organisation/systemRolesPath";
 import { useCreateAccessRole } from "@/features/organisation/useCreateAccessRole";
-import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import { companyPermissions, workspaceQuery } from "@/features/workspace/api";
 import { PERMISSION_KEYS } from "@/features/workspace/permissionKeys";
+import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 
 const key = "organisation.accessRoles.editor";
 // A new role has no kind until the person chooses one.

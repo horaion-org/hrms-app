@@ -1,7 +1,7 @@
 import type { TFunction } from "i18next";
 import { z } from "zod";
 import { ApiProblemError } from "@/common/problem";
-import { mapRefusal, type Refusal } from "@/features/organisation/refusal";
+import { mapRefusal, refusalCodeOf, type Refusal } from "@/common/refusal";
 
 /**
  * The refusals of the approvals API, as `"<status> <errorCode>"`, each named
@@ -92,7 +92,7 @@ const unapprovableMessage = (
 ): string | undefined => {
 	if (
 		!(error instanceof ApiProblemError) ||
-		`${error.status} ${error.errorCode ?? ""}` !== codes.flowHasNoApprover
+		refusalCodeOf(error) !== codes.flowHasNoApprover
 	)
 		return undefined;
 	const parsed = unapprovableSchema.safeParse(error.body);

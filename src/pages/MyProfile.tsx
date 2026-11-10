@@ -1,11 +1,11 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
-import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import { EmploymentTermsRow } from "@/features/employmentTerms/EmploymentTermsRow";
 import { myProfileQuery } from "@/features/people/api";
 import { ProfileDetails } from "@/features/people/ProfileDetails";
 import { ProfileHeader } from "@/features/people/ProfileHeader";
+import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 
 /**
  * The caller's own profile in the current company, read-only: the same

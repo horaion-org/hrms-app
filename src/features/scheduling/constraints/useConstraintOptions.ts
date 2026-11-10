@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
+import type { DepartmentPath } from "@/common/companyPath";
 import { ApiProblemError } from "@/common/problem";
 import {
 	constraintOptionsQuery,
 	type ConstraintOptions,
 } from "@/features/scheduling/constraints/api";
-import type { DepartmentPath } from "@/features/scheduling/paths";
 import { departmentScope } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
 

@@ -4,9 +4,9 @@ import { createInstance } from "i18next";
 import { initReactI18next } from "react-i18next";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import en from "@/assets/locales/en/translations.json";
+import { daysOf } from "@/common/weeks";
 import { RosterGrid } from "@/features/scheduling/RosterGrid";
 import { rosterFromAssignments } from "@/features/scheduling/roster/roster";
-import { daysOf } from "@/features/scheduling/schedules";
 import { placeFindings } from "@/features/scheduling/roster/findings/findingsOnGrid";
 import {
 	findingsOfEveryKindFixture,

@@ -4,10 +4,10 @@ import {
 	type UseQueryResult,
 } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import type { ListPage } from "@/common/schemas";
 import {
-	searchCompanyMembers,
 	type CompanyMember,
-	type ListPage,
+	searchCompanyMembers,
 } from "@/features/organisation/api";
 import { retry } from "@/features/organisation/useOrganisationOverview";
 import { selfMeta } from "@/features/workspace/queryAccess";

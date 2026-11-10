@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { apiRequest } from "@/common/api-client";
-import { companyPath } from "@/features/organisation/api";
+import { companyPath } from "@/common/companyPath";
 
 const renamedCompanySchema = z.object({
 	companyId: z.string(),

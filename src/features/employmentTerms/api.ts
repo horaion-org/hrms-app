@@ -2,13 +2,13 @@ import {
 	queryOptions,
 	skipToken,
 	type QueryClient,
-	type UndefinedInitialDataOptions,
 } from "@tanstack/react-query";
 import { z } from "zod";
 import { apiRequest, apiRequestVoid } from "@/common/api-client";
+import { companyPath } from "@/common/companyPath";
+import type { QueryOptionsFor } from "@/common/query-client";
 import { WEEKDAYS } from "@/common/weekdays";
 import type { IsoDate } from "@/components/forms/Calendar";
-import { companyPath } from "@/features/organisation/api";
 import { SCHEDULING_QUERY_ROOT } from "@/features/scheduling/paths";
 import { administrativeMeta, selfMeta } from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";
@@ -453,16 +453,11 @@ export const reloadTermsReads = (
 		}),
 	]).then(() => undefined);
 
-type TermsQuery<
-	T,
-	K extends ReadonlyArray<string>,
-> = UndefinedInitialDataOptions<T, Error, T, K>;
-
 /** Settings › Employment's list; `allowed` false asks for nothing. */
 export const termsOverviewQuery = (
 	companyId: string,
 	allowed = true
-): TermsQuery<TermsOverview, readonly [string, string, "overview"]> =>
+): QueryOptionsFor<TermsOverview, readonly [string, string, "overview"]> =>
 	queryOptions({
 		queryKey: [...termsRoot(companyId), "overview"] as const,
 		queryFn: allowed
@@ -478,7 +473,7 @@ export const termsOverviewQuery = (
 export const activeTermsQuery = (
 	companyId: string,
 	allowed = true
-): TermsQuery<TermsList, readonly [string, string, "active"]> =>
+): QueryOptionsFor<TermsList, readonly [string, string, "active"]> =>
 	queryOptions({
 		queryKey: [...termsRoot(companyId), "active"] as const,
 		queryFn: allowed
@@ -493,7 +488,7 @@ export const activeTermsQuery = (
 export const allTermsQuery = (
 	companyId: string,
 	allowed = true
-): TermsQuery<TermsList, readonly [string, string, "all"]> =>
+): QueryOptionsFor<TermsList, readonly [string, string, "all"]> =>
 	queryOptions({
 		queryKey: [...termsRoot(companyId), "all"] as const,
 		queryFn: allowed
@@ -508,7 +503,7 @@ export const allTermsQuery = (
 export const termsPresetsQuery = (
 	companyId: string,
 	allowed = true
-): TermsQuery<TermsPresets, readonly [string, string, "presets"]> =>
+): QueryOptionsFor<TermsPresets, readonly [string, string, "presets"]> =>
 	queryOptions({
 		queryKey: [...termsRoot(companyId), "presets"] as const,
 		queryFn: allowed
@@ -525,7 +520,7 @@ export const memberTermsQuery = (
 	companyId: string,
 	membershipId: string,
 	allowed = true
-): TermsQuery<MemberTerms, readonly [string, string, "member", string]> =>
+): QueryOptionsFor<MemberTerms, readonly [string, string, "member", string]> =>
 	queryOptions({
 		queryKey: [...termsRoot(companyId), "member", membershipId] as const,
 		queryFn: allowed
@@ -541,7 +536,7 @@ export const memberTermsQuery = (
 export const myTermsQuery = (
 	companyId: string,
 	allowed = true
-): TermsQuery<MemberTerms, readonly [string, string, "me"]> =>
+): QueryOptionsFor<MemberTerms, readonly [string, string, "me"]> =>
 	queryOptions({
 		queryKey: [...termsRoot(companyId), "me"] as const,
 		queryFn: allowed

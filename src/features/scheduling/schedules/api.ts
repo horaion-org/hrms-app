@@ -1,8 +1,4 @@
-import {
-	queryOptions,
-	skipToken,
-	type UndefinedInitialDataOptions,
-} from "@tanstack/react-query";
+import { queryOptions, skipToken } from "@tanstack/react-query";
 import { z } from "zod";
 import {
 	apiDownload,
@@ -10,6 +6,9 @@ import {
 	apiRequestVoid,
 	type DownloadedFile,
 } from "@/common/api-client";
+import type { DepartmentPath } from "@/common/companyPath";
+import type { QueryOptionsFor } from "@/common/query-client";
+import { publicationSubmissionSchema } from "@/features/approvals/api";
 import {
 	constraintCategorySchema,
 	constraintRequirementSchema,
@@ -18,10 +17,9 @@ import {
 } from "@/features/scheduling/constraints/api";
 import {
 	companySchedulePath,
-	SCHEDULING_QUERY_ROOT,
 	schedulePath,
 	schedulesPath,
-	type DepartmentPath,
+	SCHEDULING_QUERY_ROOT,
 } from "@/features/scheduling/paths";
 import {
 	SHIFT_COLOUR_PATTERN,
@@ -191,27 +189,6 @@ const participantSchema = z.object({
 });
 
 /**
- * The roster's submission waiting for approval, as the schedule read tells
- * every schedule reader (hrms-backend-v2 PR #164): where it stands and
- * whether the caller submitted it, so a submitter without `approval:read`
- * sees it wait and may withdraw it. It names nobody.
- */
-const submissionSchema = z.object({
-	/** The approval to withdraw it by (`POST /me/approval-instances/{id}/cancellation`). */
-	approvalInstanceId: z.string(),
-	/** The open step, from 1. */
-	currentStepOrder: z.number().int(),
-	/** The open step's name, as it was when submitted. */
-	currentStepLabel: z.string(),
-	/** How many steps the submission has. */
-	stepCount: z.number().int(),
-	submittedByCaller: z.boolean(),
-});
-
-/** A waiting submission as the schedule read tells it; null on `publication` when nothing waits. */
-export type PublicationSubmission = z.infer<typeof submissionSchema>;
-
-/**
  * The approval step that rejected the roster, as the schedule read tells
  * every reader, so a submitter without `approval:read` sees where it was
  * rejected. `decidedBy` says who rejected it.
@@ -272,7 +249,7 @@ const scheduleSchema = z.object({
 		.object({
 			requiresApproval: z.boolean(),
 			stepLabels: z.array(z.string()),
-			submission: submissionSchema
+			submission: publicationSubmissionSchema
 				.nullish()
 				.transform((value) => value ?? null),
 			/** The step that rejected the roster; null unless an approval step did. */
@@ -802,9 +779,7 @@ export const scheduleKey = (
 /** Whether a schedule is read again every 15 seconds while it is being generated. */
 export type SchedulePolling = { pollWhileGenerating?: boolean };
 
-type ScheduleQueryOptions = UndefinedInitialDataOptions<
-	Schedule,
-	Error,
+type ScheduleQueryOptions = QueryOptionsFor<
 	Schedule,
 	ReturnType<typeof scheduleKey>
 >;
@@ -888,9 +863,7 @@ export const scheduleShiftsQuery = (
 	unit: DepartmentPath | undefined,
 	scheduleId: string,
 	allowed = true
-): UndefinedInitialDataOptions<
-	Array<ScheduleShift>,
-	Error,
+): QueryOptionsFor<
 	Array<ScheduleShift>,
 	ReturnType<typeof scheduleShiftsKey>
 > =>
@@ -919,9 +892,7 @@ export const scheduleConstraintsQuery = (
 	unit: DepartmentPath | undefined,
 	scheduleId: string,
 	allowed = true
-): UndefinedInitialDataOptions<
-	Array<ScheduleConstraint>,
-	Error,
+): QueryOptionsFor<
 	Array<ScheduleConstraint>,
 	ReturnType<typeof scheduleConstraintsKey>
 > =>
@@ -986,9 +957,7 @@ export const scheduleAssignmentsQuery = (
 	runId: string | null,
 	revision: number,
 	allowed = true
-): UndefinedInitialDataOptions<
-	Array<ScheduleAssignment>,
-	Error,
+): QueryOptionsFor<
 	Array<ScheduleAssignment>,
 	ReturnType<typeof scheduleAssignmentsKey>
 > =>

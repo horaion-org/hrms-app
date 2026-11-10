@@ -37,12 +37,12 @@ import {
 	describeActivity,
 } from "@/features/organisation/activity";
 import { ActivityTitle } from "@/features/organisation/ActivityTitle";
+import { LEAVE_READ_KEYS } from "@/features/workspace/permissionKeys";
+import { unitSelectionOf } from "@/features/workspace/unitSearch";
 import {
 	useCurrentCompanyId,
 	useCurrentMembershipId,
-} from "@/features/organisation/useCurrentCompanyId";
-import { LEAVE_READ_KEYS } from "@/features/workspace/permissionKeys";
-import { unitSelectionOf } from "@/features/workspace/unitSearch";
+} from "@/features/workspace/useCurrentCompany";
 import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 
 const route = getRouteApi("/_authenticated/_app/");

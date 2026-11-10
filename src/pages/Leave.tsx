@@ -4,6 +4,7 @@ import dayjs from "dayjs";
 import type { TFunction } from "i18next";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import type { Refusal } from "@/common/refusal";
 import type { DateRange } from "@/components/forms/Calendar";
 import { dayParameter, shownDayOf } from "@/common/dayView";
 import type { FunctionComponent } from "@/common/types";
@@ -41,11 +42,6 @@ import {
 	usePendingLeaveCount,
 	type LeaveList,
 } from "@/features/leave/useLeaveRequests";
-import type { Refusal } from "@/features/organisation/refusal";
-import {
-	useCurrentCompanyId,
-	useCurrentMembershipId,
-} from "@/features/organisation/useCurrentCompanyId";
 import { peopleQuery } from "@/features/people/api";
 import { useSettledSearch } from "@/features/people/usePeople";
 import { workspaceQuery } from "@/features/workspace/api";
@@ -60,6 +56,10 @@ import {
 	selectedUnits,
 } from "@/features/workspace/unitSelection";
 import { useAccess } from "@/features/workspace/useAccess";
+import {
+	useCurrentCompanyId,
+	useCurrentMembershipId,
+} from "@/features/workspace/useCurrentCompany";
 import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 
 const route = getRouteApi("/_authenticated/_app/leave");

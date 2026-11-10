@@ -21,15 +21,15 @@ import {
 	presentNotification,
 	notificationTarget,
 } from "@/features/notifications/notificationTypes";
-import {
-	useCurrentCompanyId,
-	useCurrentMembershipId,
-} from "@/features/organisation/useCurrentCompanyId";
 import { canSeeReviewNotifications } from "@/features/notifications/reviewAccess";
 import { useAccess } from "@/features/workspace/useAccess";
 import { accessiblePreviousData } from "@/features/workspace/queryAccess";
 import { notificationLink } from "@/features/notifications/notificationLink";
 import { NotificationRow } from "@/features/notifications/NotificationRow";
+import {
+	useCurrentCompanyId,
+	useCurrentMembershipId,
+} from "@/features/workspace/useCurrentCompany";
 
 const ONE_MINUTE_MS = 60_000;
 

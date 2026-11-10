@@ -3,6 +3,7 @@ import type { TFunction } from "i18next";
 import { type ReactNode, useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
+import { mapRefusal } from "@/common/refusal";
 import type { FunctionComponent } from "@/common/types";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
@@ -26,9 +27,7 @@ import {
 	statusFilterOptions,
 	type StatusFilter,
 } from "@/features/organisation/listColumns";
-import { mapRefusal } from "@/features/organisation/refusal";
 import { useSetJobTitleStatus } from "@/features/organisation/useChangeListRow";
-import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import { useJobTitles } from "@/features/organisation/useOrganisationList";
 import { JOB_TITLE_READ_KEYS } from "@/features/workspace/permissionKeys";
 import { departmentScope } from "@/features/workspace/scopes";
@@ -38,6 +37,7 @@ import { departmentChips } from "@/features/workspace/filterChips";
 import { unitSelectionOf } from "@/features/workspace/unitSearch";
 import { selectedUnits } from "@/features/workspace/unitSelection";
 import { useAccess } from "@/features/workspace/useAccess";
+import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 
 /** What the status confirm says; deactivating a title people hold names how many keep it. */

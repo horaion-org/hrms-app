@@ -1,3 +1,4 @@
+import type { DepartmentPath } from "@/common/companyPath";
 import {
 	MINUTES_PER_DAY,
 	minutesOfDay,
@@ -9,7 +10,6 @@ import type {
 	ConstraintStatus,
 	DepartmentConstraint,
 } from "@/features/scheduling/constraints/api";
-import type { DepartmentPath } from "@/features/scheduling/paths";
 import type {
 	Schedule,
 	ScheduleConstraint,

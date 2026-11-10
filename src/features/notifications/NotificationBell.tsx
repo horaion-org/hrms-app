@@ -11,12 +11,12 @@ import { CloseIcon, NotificationIcon } from "@/components/ui/Icon";
 import { notificationCountQuery } from "@/features/notifications/api";
 import { NotificationViews } from "@/features/notifications/NotificationViews";
 import { NotificationDemo } from "@/features/notifications/NotificationDemo";
+import { canSeeReviewNotifications } from "@/features/notifications/reviewAccess";
+import { useAccess } from "@/features/workspace/useAccess";
 import {
 	useCurrentCompanyId,
 	useCurrentMembershipId,
-} from "@/features/organisation/useCurrentCompanyId";
-import { canSeeReviewNotifications } from "@/features/notifications/reviewAccess";
-import { useAccess } from "@/features/workspace/useAccess";
+} from "@/features/workspace/useCurrentCompany";
 
 export const NotificationBell = (): FunctionComponent => {
 	const titleId = useId();

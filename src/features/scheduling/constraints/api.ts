@@ -1,15 +1,12 @@
-import {
-	queryOptions,
-	skipToken,
-	type UndefinedInitialDataOptions,
-} from "@tanstack/react-query";
+import { queryOptions, skipToken } from "@tanstack/react-query";
 import { z } from "zod";
 import { apiRequest, apiRequestVoid } from "@/common/api-client";
+import type { DepartmentPath } from "@/common/companyPath";
+import type { QueryOptionsFor } from "@/common/query-client";
 import {
-	SCHEDULING_QUERY_ROOT,
 	constraintOptionsPath,
 	constraintsPath,
-	type DepartmentPath,
+	SCHEDULING_QUERY_ROOT,
 } from "@/features/scheduling/paths";
 import { administrativeMeta } from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";
@@ -286,9 +283,7 @@ export const constraintsQuery = (
 	companyId: string,
 	unit: DepartmentPath | undefined,
 	allowed = true
-): UndefinedInitialDataOptions<
-	Array<DepartmentConstraint>,
-	Error,
+): QueryOptionsFor<
 	Array<DepartmentConstraint>,
 	ReturnType<typeof constraintsKey>
 > =>
@@ -399,9 +394,7 @@ export const constraintOptionsQuery = (
 	companyId: string,
 	unit: DepartmentPath | undefined,
 	allowed = true
-): UndefinedInitialDataOptions<
-	ConstraintOptions,
-	Error,
+): QueryOptionsFor<
 	ConstraintOptions,
 	ReturnType<typeof constraintOptionsKey>
 > =>

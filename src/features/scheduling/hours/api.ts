@@ -1,11 +1,9 @@
-import {
-	queryOptions,
-	skipToken,
-	type UndefinedInitialDataOptions,
-} from "@tanstack/react-query";
+import { queryOptions, skipToken } from "@tanstack/react-query";
 import { z } from "zod";
 import { apiRequest } from "@/common/api-client";
-import { schedulePath, type DepartmentPath } from "@/features/scheduling/paths";
+import type { DepartmentPath } from "@/common/companyPath";
+import type { QueryOptionsFor } from "@/common/query-client";
+import { schedulePath } from "@/features/scheduling/paths";
 import { scheduleKey } from "@/features/scheduling/schedules/api";
 import { administrativeMeta } from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";
@@ -101,12 +99,7 @@ export const openingBalancesQuery = (
 	unit: DepartmentPath | undefined,
 	scheduleId: string,
 	allowed = true
-): UndefinedInitialDataOptions<
-	OpeningBalances,
-	Error,
-	OpeningBalances,
-	ReturnType<typeof openingBalancesKey>
-> =>
+): QueryOptionsFor<OpeningBalances, ReturnType<typeof openingBalancesKey>> =>
 	queryOptions({
 		queryKey: openingBalancesKey(companyId, scheduleId),
 		queryFn:

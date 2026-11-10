@@ -1,7 +1,6 @@
 import type { TFunction } from "i18next";
-import { ApiProblemError } from "@/common/problem";
+import { mapRefusal, refusalCodeOf, type Refusal } from "@/common/refusal";
 import { APPROVAL_REFUSAL_CODES } from "@/features/approvals/approvalRefusal";
-import { mapRefusal, type Refusal } from "@/features/organisation/refusal";
 
 /** The fields an application's refusal can land on. */
 export type ApplyField = "employee" | "type" | "endDate" | "notes";
@@ -52,18 +51,13 @@ export const LEAVE_REFUSAL_CODES = {
 const codes = LEAVE_REFUSAL_CODES;
 const approvalCodes = APPROVAL_REFUSAL_CODES;
 
-const codeOf = (error: unknown): string | undefined =>
-	error instanceof ApiProblemError
-		? `${error.status} ${error.errorCode ?? ""}`
-		: undefined;
-
 /**
  * Whether a decision was refused because the request moved on since the
  * screen read it: a flow started, or another approver decided the step.
  * The screen reads the request again.
  */
 export const isStaleDecision = (error: unknown): boolean => {
-	const code = codeOf(error);
+	const code = refusalCodeOf(error);
 	return (
 		code === codes.approvalPending ||
 		code === codes.notPending ||
@@ -74,7 +68,7 @@ export const isStaleDecision = (error: unknown): boolean => {
 
 /** Whether the API refused because the days hold shifts nobody confirmed. */
 export const isRosterClash = (error: unknown): boolean =>
-	codeOf(error) === codes.rosterClash;
+	refusalCodeOf(error) === codes.rosterClash;
 
 /**
  * Why applying on a person's behalf was refused: on the type, the dates, the

@@ -17,10 +17,11 @@ their API exists.
   every returned row.
 - `ScheduleCard` — one API schedule on the overview, grouped by period: branch and department, status, what it
   includes (`ScheduleSummary`) and View.
-- `schedules.ts` — each status's badge tone and the period's weeks and days (`mondayOf`, `weeksOf`, `daysOf`).
+- `schedules/scheduleStatusTones.ts` — each status's badge tone. A period's weeks and days (`mondayOf`, `weeksOf`,
+  `daysOf`) are calendar helpers in `@/common/weeks`.
 
-- `paths.ts` — the department, shift, constraint and schedule paths every scheduling request is built from, and the
-  query root (`["scheduling", companyId, …]`).
+- `paths.ts` — the shift, constraint and schedule paths every scheduling request is built from (on
+  `departmentPath` from `@/common/companyPath`), and the query root (`["scheduling", companyId, …]`).
 - `departmentUnit.ts` — the Branch and Department a route names, for a Department the workspace offers under the
   given keys; nothing for one out of reach.
 - `shifts/api.ts` — the live shift schema and requests at the department's routes (create, replace, delete) and the

@@ -27,7 +27,6 @@ import {
 	chosenTermsName,
 	termsChoices,
 } from "@/features/employmentTerms/termsFilter";
-import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import { ListToolbar } from "@/features/organisation/ListToolbar";
 import {
 	isMemberStatus,
@@ -57,6 +56,7 @@ import { departmentChips, filterChip } from "@/features/workspace/filterChips";
 import { unitSelectionOf } from "@/features/workspace/unitSearch";
 import { selectedUnits } from "@/features/workspace/unitSelection";
 import { useAccess } from "@/features/workspace/useAccess";
+import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 
 const route = getRouteApi("/_authenticated/_app/people");

@@ -1,7 +1,7 @@
 import type { TFunction } from "i18next";
 import { z } from "zod";
 import { ApiProblemError } from "@/common/problem";
-import { mapRefusal, type Refusal } from "@/features/organisation/refusal";
+import { mapRefusal, type Refusal } from "@/common/refusal";
 import type { MemberSkill, SkillValue } from "@/features/people/api";
 import { PROFILE_REFUSAL_CODES } from "@/features/people/profileRefusal";
 

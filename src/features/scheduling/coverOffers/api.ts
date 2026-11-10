@@ -1,15 +1,11 @@
-import {
-	queryOptions,
-	skipToken,
-	type UndefinedInitialDataOptions,
-} from "@tanstack/react-query";
+import { queryOptions, skipToken } from "@tanstack/react-query";
 import { z } from "zod";
 import { apiRequest } from "@/common/api-client";
-import { companyPath } from "@/features/organisation/api";
+import { companyPath, type DepartmentPath } from "@/common/companyPath";
+import type { QueryOptionsFor } from "@/common/query-client";
 import {
-	SCHEDULING_QUERY_ROOT,
 	schedulePath,
-	type DepartmentPath,
+	SCHEDULING_QUERY_ROOT,
 } from "@/features/scheduling/paths";
 import type { RosterChangeCell } from "@/features/scheduling/rosterChanges/api";
 import {
@@ -215,12 +211,7 @@ export const coverOffersQuery = (
 	unit: DepartmentPath | undefined,
 	scheduleId: string,
 	allowed: boolean
-): UndefinedInitialDataOptions<
-	Array<CoverOffer>,
-	Error,
-	Array<CoverOffer>,
-	ReturnType<typeof coverOffersKey>
-> =>
+): QueryOptionsFor<Array<CoverOffer>, ReturnType<typeof coverOffersKey>> =>
 	queryOptions({
 		queryKey: coverOffersKey(companyId, scheduleId),
 		queryFn:
@@ -236,12 +227,7 @@ export const coverOffersQuery = (
 /** The caller's own offers. */
 export const myCoverOffersQuery = (
 	companyId: string
-): UndefinedInitialDataOptions<
-	Array<CoverOffer>,
-	Error,
-	Array<CoverOffer>,
-	ReturnType<typeof myCoverOffersKey>
-> =>
+): QueryOptionsFor<Array<CoverOffer>, ReturnType<typeof myCoverOffersKey>> =>
 	queryOptions({
 		queryKey: myCoverOffersKey(companyId),
 		queryFn: ({ signal }): Promise<Array<CoverOffer>> =>

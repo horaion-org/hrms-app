@@ -3,6 +3,7 @@ import {
 	useQueryClient,
 	type UseMutationResult,
 } from "@tanstack/react-query";
+import type { DepartmentPath } from "@/common/companyPath";
 import {
 	createConstraint,
 	deleteConstraint,
@@ -10,10 +11,7 @@ import {
 	type ConstraintBody,
 	type DepartmentConstraint,
 } from "@/features/scheduling/constraints/api";
-import {
-	SCHEDULING_QUERY_ROOT,
-	type DepartmentPath,
-} from "@/features/scheduling/paths";
+import { SCHEDULING_QUERY_ROOT } from "@/features/scheduling/paths";
 
 type Saved = { unit: DepartmentPath; body: ConstraintBody };
 type Replaced = Saved & { constraintId: string };

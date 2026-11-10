@@ -2,6 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useId, useMemo, useState, type ReactNode } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import { mapRefusal } from "@/common/refusal";
 import type { FunctionComponent } from "@/common/types";
 import { DatePicker } from "@/components/forms/DatePicker";
 import { FormRow, formRowIds } from "@/components/forms/FormRow";
@@ -13,7 +14,6 @@ import { Checkbox } from "@/components/ui/Checkbox";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { SearchIcon } from "@/components/ui/Icon";
 import { CreateFormDialog } from "@/features/organisation/CreateFormDialog";
-import { mapRefusal } from "@/features/organisation/refusal";
 import { useCreateFormSubmit } from "@/features/organisation/useCreateFormSubmit";
 import { PROFILE_REFUSAL_CODES } from "@/features/people/profileRefusal";
 import {

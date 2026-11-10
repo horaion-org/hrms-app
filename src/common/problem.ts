@@ -24,9 +24,7 @@ type ProblemOptions = {
 	status: number;
 	errorCode?: string;
 	fieldErrors: ReadonlyArray<{ field: string; message: string }>;
-	/** The problem's whole-number properties, such as `memberCount`; counts, never personal data. */
-	counts?: Readonly<Record<string, number>>;
-	/** The problem body as sent, for a refusal whose extensions carry more than counts; read through a schema. */
+	/** The problem body as sent, for a refusal whose extensions say more; read through a schema. */
 	body?: unknown;
 	retryAfterSeconds?: number;
 	reason: ProblemReason;
@@ -42,8 +40,6 @@ export class ApiProblemError extends Error {
 	}>;
 	public readonly retryAfterSeconds: number | undefined;
 	public readonly reason: ProblemReason;
-	/** Whole-number properties of the problem, e.g. how many members a refusal is about. */
-	public readonly counts: Readonly<Record<string, number>>;
 	/**
 	 * The problem body as sent, e.g. the departments a refused approval flow
 	 * has nobody to approve in. Untrusted: parse it with a schema and show
@@ -61,21 +57,9 @@ export class ApiProblemError extends Error {
 		this.fieldErrors = options.fieldErrors;
 		this.retryAfterSeconds = options.retryAfterSeconds;
 		this.reason = options.reason;
-		this.counts = options.counts ?? {};
 		this.body = options.body;
 	}
 }
-
-/** The whole-number properties of a problem body, leaving out its HTTP status. */
-const countsOf = (body: unknown): Record<string, number> =>
-	typeof body === "object" && body !== null
-		? Object.fromEntries(
-				Object.entries(body).filter(
-					(entry): entry is [string, number] =>
-						entry[0] !== "status" && Number.isInteger(entry[1])
-				)
-			)
-		: {};
 
 export class UnreachableError extends Error {
 	public override name = "UnreachableError";
@@ -133,7 +117,6 @@ export async function readProblem(
 		fieldErrors: parsed.success ? parsed.data.errors : [],
 		retryAfterSeconds: retryAfter(response.headers.get("Retry-After")),
 		reason: reasonOf(response.status, errorCode),
-		counts: countsOf(body),
 		body,
 	});
 }

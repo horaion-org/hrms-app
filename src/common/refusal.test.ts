@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ApiProblemError, UnreachableError } from "@/common/problem";
-import { mapRefusal, type RefusalRules } from "@/features/organisation/refusal";
+import { mapRefusal, refusalCodeOf, type RefusalRules } from "@/common/refusal";
 
 const problem = (
 	status: number,
@@ -32,6 +32,26 @@ const rules: RefusalRules<"name" | "heads"> = {
 	forbidden: "Forbidden",
 	failed: "Failed",
 };
+
+describe("refusalCodeOf", () => {
+	it.each([
+		[problem(409, "NAME_CONFLICT"), "409 NAME_CONFLICT"],
+		[
+			new ApiProblemError({
+				status: 403,
+				fieldErrors: [],
+				reason: "forbidden",
+				message: "No code",
+			}),
+			"403 ",
+		],
+		[new UnreachableError("offline"), undefined],
+		[new Error("plain"), undefined],
+		["not an error", undefined],
+	])("keys %o as %j", (error, code) => {
+		expect(refusalCodeOf(error)).toBe(code);
+	});
+});
 
 describe("mapRefusal", () => {
 	it("places a known code on its field only when status and code both match", () => {

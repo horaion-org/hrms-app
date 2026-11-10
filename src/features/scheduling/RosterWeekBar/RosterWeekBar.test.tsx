@@ -4,8 +4,8 @@ import { createInstance } from "i18next";
 import { initReactI18next } from "react-i18next";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import en from "@/assets/locales/en/translations.json";
+import { weeksOf } from "@/common/weeks";
 import { RosterWeekBar } from "@/features/scheduling/RosterWeekBar";
-import { weeksOf } from "@/features/scheduling/schedules";
 
 beforeAll(async () => {
 	await createInstance()

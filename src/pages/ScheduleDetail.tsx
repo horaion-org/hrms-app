@@ -2,6 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import type { DepartmentPath } from "@/common/companyPath";
+import { dateTimeFormatIn } from "@/common/dateTimeFormatIn";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
@@ -15,16 +17,11 @@ import {
 	type ApprovalStanding,
 } from "@/features/approvals/approvalStanding";
 import {
-	useCurrentCompanyId,
-	useCurrentMembershipId,
-} from "@/features/organisation/useCurrentCompanyId";
-import {
 	GeneratedRoster,
 	type GeneratedRosterProps,
 	type RosterEditing,
 } from "@/features/scheduling/GeneratedRoster";
 import { GenerationFailurePanel } from "@/features/scheduling/GenerationFailurePanel";
-import type { DepartmentPath } from "@/features/scheduling/paths";
 import {
 	PublishScheduleDialog,
 	type PublishMode,
@@ -37,7 +34,6 @@ import {
 	publishedWeekQuery,
 } from "@/features/scheduling/publishedWeek/api";
 import { PublishedWeekCallout } from "@/features/scheduling/publishedWeek/PublishedWeekCallout";
-import { dateTimeFormatIn } from "@/features/scheduling/roster/roster";
 import type { RosterSearch } from "@/features/scheduling/roster/rosterSearch";
 import { RosterHeader } from "@/features/scheduling/RosterHeader";
 import { coverOffersQuery } from "@/features/scheduling/coverOffers/api";
@@ -81,6 +77,10 @@ import {
 import { runsByMember } from "@/features/scheduling/startingContext/startingGrid";
 import { departmentScope } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
+import {
+	useCurrentCompanyId,
+	useCurrentMembershipId,
+} from "@/features/workspace/useCurrentCompany";
 
 const route = getRouteApi("/_authenticated/_app/scheduling_/$scheduleId");
 

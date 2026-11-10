@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { daysOf } from "@/common/weeks";
 import { placeFindings } from "@/features/scheduling/roster/findings/findingsOnGrid";
 import {
 	rosterFromAssignments,
@@ -9,7 +10,6 @@ import {
 	daysToDecide,
 	leaveAndCoverDays,
 } from "@/features/scheduling/roster/rosterSummary";
-import { daysOf } from "@/features/scheduling/schedules";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 import {
 	generationFindingsFixture,

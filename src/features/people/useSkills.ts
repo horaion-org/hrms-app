@@ -5,7 +5,7 @@ import {
 	type UseMutationResult,
 	type UseQueryResult,
 } from "@tanstack/react-query";
-import type { ListPage } from "@/features/organisation/api";
+import type { ListPage } from "@/common/schemas";
 import {
 	memberSkillsQuery,
 	replaceMemberSkills,

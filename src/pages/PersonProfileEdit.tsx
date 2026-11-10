@@ -1,7 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
-import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import type { MemberProfileDetail } from "@/features/people/api";
 import {
 	roleNames,
@@ -15,6 +14,7 @@ import { ProfileNotesAndSkills } from "@/features/people/ProfileNotesAndSkills";
 import { useEditProfile } from "@/features/people/useEditProfile";
 import { scopeOfPlace } from "@/features/organisation/assignmentTargets";
 import { useAccess } from "@/features/workspace/useAccess";
+import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 
 export type PersonProfileEditProps = {
 	profile: MemberProfileDetail;

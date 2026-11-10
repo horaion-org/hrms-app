@@ -25,10 +25,10 @@ import {
 	statusFilterOptions,
 	type StatusFilter,
 } from "@/features/organisation/listColumns";
-import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import { useAccessRoles } from "@/features/organisation/useOrganisationList";
 import { roleSummaryText } from "@/features/organisation/sectionLevels";
 import { isPermissionKey } from "@/features/workspace/permissionKeys";
+import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 import {
 	SystemRoleActionDialog,
 	type SystemRoleAction,

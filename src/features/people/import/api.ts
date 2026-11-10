@@ -1,14 +1,12 @@
-import {
-	queryOptions,
-	type UndefinedInitialDataOptions,
-} from "@tanstack/react-query";
+import { queryOptions } from "@tanstack/react-query";
 import { z } from "zod";
 import {
 	apiDownload,
 	apiRequest,
 	type DownloadedFile,
 } from "@/common/api-client";
-import { companyPath } from "@/features/organisation/api";
+import { companyPath } from "@/common/companyPath";
+import type { QueryOptionsFor } from "@/common/query-client";
 import type { PeopleQuery } from "@/features/people/api";
 import { administrativeMeta } from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";
@@ -194,9 +192,7 @@ const isOpen = (memberImport: MemberImport | undefined): boolean =>
 export const memberImportQuery = (
 	companyId: string,
 	importId: string
-): UndefinedInitialDataOptions<
-	MemberImport,
-	Error,
+): QueryOptionsFor<
 	MemberImport,
 	readonly ["people", string, "imports", string]
 > =>
@@ -242,9 +238,7 @@ export const inviteImportMembers = (
 /** The company's recent imports the person may read, newest first. */
 export const recentImportsQuery = (
 	companyId: string
-): UndefinedInitialDataOptions<
-	Array<MemberImport>,
-	Error,
+): QueryOptionsFor<
 	Array<MemberImport>,
 	readonly ["people", string, "imports"]
 > =>

@@ -1,5 +1,5 @@
 import type { TFunction } from "i18next";
-import { mapRefusal, type Refusal } from "@/features/organisation/refusal";
+import { mapRefusal, type Refusal } from "@/common/refusal";
 
 export type LeaveTypeField = "name";
 

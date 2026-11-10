@@ -1,6 +1,7 @@
 import type { TFunction } from "i18next";
+import { z } from "zod";
 import { ApiProblemError } from "@/common/problem";
-import { mapRefusal, type Refusal } from "@/features/organisation/refusal";
+import { mapRefusal, type Refusal } from "@/common/refusal";
 import type { TermsFormValues } from "@/features/employmentTerms/termsForm";
 
 /** The dialog's fields a refusal can point at. */
@@ -14,9 +15,15 @@ export type TermsField = keyof Pick<
 	| "restWeekday"
 >;
 
+/** The refusal's `memberCount` extension. */
+const memberCountSchema = z.object({ memberCount: z.number().int() });
+
 /** How many people's own hours stand above corrected terms (`409 CONTRACTED_HOURS_ABOVE_CORRECTED_TERMS`). */
-const ownHoursAboveCount = (error: unknown): number =>
-	error instanceof ApiProblemError ? (error.counts["memberCount"] ?? 0) : 0;
+const ownHoursAboveCount = (error: unknown): number => {
+	if (!(error instanceof ApiProblemError)) return 0;
+	const parsed = memberCountSchema.safeParse(error.body);
+	return parsed.success ? parsed.data.memberCount : 0;
+};
 
 /** Saving terms: server codes choose the app's own copy; server prose is never shown. */
 export const termsSaveRefusal = (

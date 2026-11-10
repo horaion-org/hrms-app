@@ -1,10 +1,10 @@
 import { useTranslation } from "react-i18next";
+import type { DepartmentPath } from "@/common/companyPath";
 import type { FunctionComponent } from "@/common/types";
+import { mondayOf } from "@/common/weeks";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import type { MemberWithoutAvailability } from "@/features/availability/api";
-import type { DepartmentPath } from "@/features/scheduling/paths";
-import { mondayOf } from "@/features/scheduling/schedules";
 
 export type PartTimeReadinessCalloutProps = {
 	/** The Department's part-timers without any availability. */

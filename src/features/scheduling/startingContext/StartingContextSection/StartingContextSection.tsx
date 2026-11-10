@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import type { DepartmentPath } from "@/common/companyPath";
 import { ApiProblemError } from "@/common/problem";
 import type { FunctionComponent } from "@/common/types";
 import {
@@ -10,7 +11,6 @@ import {
 	type OpeningBalances,
 	type OpeningEntry,
 } from "@/features/scheduling/hours/api";
-import type { DepartmentPath } from "@/features/scheduling/paths";
 import {
 	saveStartingDays,
 	startingDaysKey,

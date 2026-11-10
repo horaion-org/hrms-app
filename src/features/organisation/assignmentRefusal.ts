@@ -1,6 +1,6 @@
 import type { TFunction } from "i18next";
 import { ApiProblemError } from "@/common/problem";
-import { mapRefusal } from "@/features/organisation/refusal";
+import { mapRefusal } from "@/common/refusal";
 import {
 	firstFailure,
 	PartialChangeError,

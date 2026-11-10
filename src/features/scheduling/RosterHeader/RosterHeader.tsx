@@ -5,8 +5,8 @@ import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { Badge } from "@/components/ui/Badge";
 import { formatPeriod } from "@/features/scheduling/periods";
-import { scheduleStatusTones } from "@/features/scheduling/schedules";
 import type { Schedule } from "@/features/scheduling/schedules/api";
+import { scheduleStatusTones } from "@/features/scheduling/schedules/scheduleStatusTones";
 
 export type RosterHeaderProps = {
 	schedule: Schedule;

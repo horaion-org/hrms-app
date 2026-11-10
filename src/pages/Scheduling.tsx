@@ -11,17 +11,16 @@ import { PlusIcon, ViewIcon } from "@/components/ui/Icon";
 import { Toast } from "@/components/ui/Toast";
 import { myPendingApprovalsQuery } from "@/features/approvals/api";
 import { scheduleCardApprovalLine } from "@/features/approvals/approvalStanding";
+import { scheduleStatusTones } from "@/features/scheduling/schedules/scheduleStatusTones";
 import { schedulingNoticeFrom } from "@/features/scheduling/schedulingNotice";
 import { Can } from "@/features/workspace/Can";
 import { ListToolbar } from "@/features/organisation/ListToolbar";
 import { formatPeriod } from "@/features/scheduling/periods";
-import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import { useSchedules } from "@/features/scheduling/schedules/useSchedules";
 import { decidable, type Schedule } from "@/features/scheduling/schedules/api";
 import { scheduleViewLink } from "@/features/scheduling/schedules/scheduleViewLink";
 import { ScheduleCard } from "@/features/scheduling/ScheduleCard";
 import { ScheduleMenu } from "@/features/scheduling/ScheduleMenu";
-import { scheduleStatusTones } from "@/features/scheduling/schedules";
 import { SCHEDULING_UNIT_RULES } from "@/features/scheduling/schedules/schedulesUnitRules";
 import { DepartmentFilter } from "@/features/workspace/DepartmentFilter";
 import { departmentChips } from "@/features/workspace/filterChips";
@@ -32,6 +31,7 @@ import {
 	selectedUnits,
 } from "@/features/workspace/unitSelection";
 import { useAccess } from "@/features/workspace/useAccess";
+import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 
 const key = "scheduling.overview";

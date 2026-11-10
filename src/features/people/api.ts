@@ -3,17 +3,14 @@ import {
 	queryOptions,
 	skipToken,
 	type InfiniteData,
-	type UndefinedInitialDataOptions,
 	type UnusedSkipTokenInfiniteOptions,
 	type UnusedSkipTokenOptions,
 } from "@tanstack/react-query";
 import { z } from "zod";
-import { apiRequest, apiRequestVoid } from "@/common/api-client";
-import {
-	companyPath,
-	fetchList,
-	type ListPage,
-} from "@/features/organisation/api";
+import { apiRequest, apiRequestVoid, fetchList } from "@/common/api-client";
+import { companyPath } from "@/common/companyPath";
+import type { QueryOptionsFor } from "@/common/query-client";
+import type { ListPage } from "@/common/schemas";
 import {
 	accessiblePreviousData,
 	administrativeMeta,
@@ -149,9 +146,7 @@ export const peopleQuery = (
 	companyId: string,
 	query: PeopleQuery,
 	allowed = true
-): UndefinedInitialDataOptions<
-	ListPage<MemberProfile>,
-	Error,
+): QueryOptionsFor<
 	ListPage<MemberProfile>,
 	readonly ["people", string, PeopleQuery]
 > =>

@@ -7,10 +7,18 @@ The directory contains:
 - `types.ts`: the `FunctionComponent` return type, and the `Heroicon` type that also describes Horaion's own icons.
 - `createMemoryRouter.tsx`: the memory router used by tests and stories (below).
 - `joinClassNames.ts`: joins the class names that are set, for components that accept a `className`.
+- `companyPath.ts`: `/api/v1/companies/{companyId}`, the path every company-scoped request starts from, and
+  `departmentPath` for one Branch's Department under it.
 - `countries.ts`: the ISO 3166-1 alpha-2 codes the API accepts and their names in the user's language.
 - `relativeTime.ts`: `timeAgo`, the localised "5 minutes ago" used by activity and notifications.
 - `useNow.ts`: the current time, renewed on an interval, for relative times that must stay current while shown.
 - `importRefusal.ts`: the file checks and refusal-code fallback that the people and organisation imports share.
+- `formattingLocale.ts`, `dateTimeFormatIn.ts`: the locale dates are written in, and a date format in an IANA time zone.
+- `refusal.ts`: `mapRefusal` (a refused request to frontend-owned field and form copy) and `refusalCodeOf` (the
+  `"<status> <errorCode>"` key refusal tables are keyed by).
+- `schemas.ts`: API shapes several features read: `memberRefSchema`, `formerMemberRefSchema` (name null once the
+  member left), `pagedSchema(item)` and the app's `ListPage`; `api-client.ts`'s `fetchList` reads a paged list into it.
+- `weeks.ts`: Monday-first weeks as ISO dates (`mondayOf`, `weeksOf`, `daysOf`), shared by scheduling and availability.
 
 ## Memory router (tests and stories)
 

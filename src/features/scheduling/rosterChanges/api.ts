@@ -1,11 +1,9 @@
-import {
-	queryOptions,
-	skipToken,
-	type UndefinedInitialDataOptions,
-} from "@tanstack/react-query";
+import { queryOptions, skipToken } from "@tanstack/react-query";
 import { z } from "zod";
 import { apiRequest } from "@/common/api-client";
-import { schedulePath, type DepartmentPath } from "@/features/scheduling/paths";
+import type { DepartmentPath } from "@/common/companyPath";
+import type { QueryOptionsFor } from "@/common/query-client";
+import { schedulePath } from "@/features/scheduling/paths";
 import {
 	rosterCellSchema,
 	scheduleAssignmentSchema,
@@ -311,9 +309,7 @@ export const latestRosterChangeQuery = (
 	scheduleId: string,
 	revision: number,
 	allowed: boolean
-): UndefinedInitialDataOptions<
-	RosterChange | null,
-	Error,
+): QueryOptionsFor<
 	RosterChange | null,
 	ReturnType<typeof latestRosterChangeKey>
 > =>
@@ -335,9 +331,7 @@ export const rosterChangeShiftsQuery = (
 	unit: DepartmentPath | undefined,
 	scheduleId: string,
 	allowed: boolean
-): UndefinedInitialDataOptions<
-	Array<ScheduleShift>,
-	Error,
+): QueryOptionsFor<
 	Array<ScheduleShift>,
 	ReturnType<typeof rosterChangeShiftsKey>
 > =>
@@ -362,9 +356,7 @@ export const rosterChangePreviewQuery = (
 	unit: DepartmentPath,
 	scheduleId: string,
 	body: RosterChangeBody | undefined
-): UndefinedInitialDataOptions<
-	RosterChangePreview,
-	Error,
+): QueryOptionsFor<
 	RosterChangePreview,
 	ReturnType<typeof rosterChangePreviewKey>
 > =>

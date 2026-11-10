@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import { workspaceQuery } from "@/features/workspace/api";
 import type { PermissionKey } from "@/features/workspace/permissionKeys";
 import { retry } from "@/features/workspace/retry";
@@ -14,6 +13,7 @@ import {
 	type AccessTarget,
 	type ScopeRef,
 } from "@/features/workspace/scopes";
+import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 
 /** What the person may be shown in the current company, from the workspace. */
 export type Access = {

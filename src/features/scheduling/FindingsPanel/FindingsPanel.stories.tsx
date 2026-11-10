@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { daysOf } from "@/common/weeks";
 import { FindingsPanel } from "@/features/scheduling/FindingsPanel";
 import { findingNames } from "@/features/scheduling/roster/findings/findingNames";
-import { daysOf } from "@/features/scheduling/schedules";
 import {
 	findingsOfEveryKindFixture,
 	generationFindingsFixture,

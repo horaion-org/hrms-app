@@ -4,7 +4,7 @@ import {
 } from "@tanstack/react-query";
 import { z } from "zod";
 import { apiRequest } from "@/common/api-client";
-import { companyPath } from "@/features/organisation/api";
+import { companyPath } from "@/common/companyPath";
 import { SCHEDULING_QUERY_ROOT } from "@/features/scheduling/paths";
 import { scheduleAssignmentSchema } from "@/features/scheduling/schedules/api";
 import { selfMeta } from "@/features/workspace/queryAccess";

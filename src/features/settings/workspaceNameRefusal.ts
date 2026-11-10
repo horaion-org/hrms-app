@@ -1,5 +1,5 @@
 import type { TFunction } from "i18next";
-import { mapRefusal } from "@/features/organisation/refusal";
+import { mapRefusal } from "@/common/refusal";
 
 /** Where a refused rename lands: on the name field, or as the form's alert. */
 export type WorkspaceNameRefusal = { workspaceName?: string; message?: string };
