@@ -7,21 +7,20 @@ import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
-import { DeleteIcon, EditIcon, PlusIcon } from "@/components/ui/Icon";
+import { PlusIcon } from "@/components/ui/Icon";
 import { Toast } from "@/components/ui/Toast";
 import type {
 	DepartmentConstraint,
 	PolicyLock,
 } from "@/features/scheduling/constraints/api";
-import { constraintColumns } from "@/features/scheduling/constraints/constraintColumns";
 import { ConstraintDialog } from "@/features/scheduling/constraints/ConstraintDialog";
-import { ConstraintOrigin } from "@/features/scheduling/constraints/ConstraintOrigin";
 import type { ConstraintOptionsState } from "@/features/scheduling/constraints/useConstraintOptions";
 import {
 	policyConstraintsQuery,
 	policyOptionsQuery,
 } from "@/features/scheduling/policy/api";
 import { usePolicyActions } from "@/features/scheduling/policy/usePolicyActions";
+import { schedulingPolicyColumns } from "@/features/settings/SchedulingPolicySettings/schedulingPolicyColumns";
 import { COMPANY_SCOPE } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
 
@@ -62,61 +61,17 @@ export const SchedulingPolicySettings = ({
 	const notify = (message: string): void => {
 		setToast((previous) => ({ id: (previous?.id ?? 0) + 1, message }));
 	};
-	const columns = useMemo((): Array<DataTableColumn<DepartmentConstraint>> => {
-		const constraints = "scheduling.constraints";
-		const shared = constraintColumns<DepartmentConstraint>(t);
-		return [
-			shared.name,
-			shared.type,
-			shared.details,
-			{
-				id: "lock",
-				header: t(`${key}.lock`),
-				headerClassName: "w-32",
-				cell: (constraint) => (
-					<ConstraintOrigin constraint={constraint} showLevel={false} />
-				),
-			},
-			shared.status,
-			...(canUpdate
-				? [
-						{
-							id: "actions",
-							header: t(`${constraints}.actions`),
-							headerClassName: "w-30",
-							pin: "end" as const,
-							cell: (constraint: DepartmentConstraint) => (
-								<div className="flex justify-center gap-2">
-									<Button
-										variant="icon"
-										aria-label={t(`${constraints}.edit`, {
-											name: constraint.name,
-										})}
-										onClick={() => {
-											setDialog({ editing: constraint });
-										}}
-									>
-										<EditIcon />
-									</Button>
-									<Button
-										className="text-error-700"
-										variant="icon"
-										aria-label={t(`${constraints}.delete`, {
-											name: constraint.name,
-										})}
-										onClick={() => {
-											setRemoving(constraint);
-										}}
-									>
-										<DeleteIcon />
-									</Button>
-								</div>
-							),
-						},
-					]
-				: []),
-		];
-	}, [t, canUpdate, setDialog, setRemoving]);
+	const columns = useMemo(
+		(): Array<DataTableColumn<DepartmentConstraint>> =>
+			schedulingPolicyColumns(t, {
+				canUpdate,
+				onEdit: (constraint) => {
+					setDialog({ editing: constraint });
+				},
+				onRemove: setRemoving,
+			}),
+		[t, canUpdate, setDialog, setRemoving]
+	);
 	const forbidden =
 		!canRead ||
 		(list.error instanceof ApiProblemError && list.error.status === 403);
