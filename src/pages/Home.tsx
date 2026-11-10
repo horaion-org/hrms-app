@@ -456,7 +456,6 @@ const Dashboard = ({
 						onReject: reject,
 					}}
 					onClose={close}
-					onCreate={() => undefined}
 				/>
 			)}
 			{toast && (

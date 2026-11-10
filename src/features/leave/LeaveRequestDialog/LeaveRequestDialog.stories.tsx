@@ -13,6 +13,7 @@ import {
 } from "@/features/leave/fixtures";
 import {
 	LeaveRequestDialog,
+	type LeaveApplyFormInput,
 	type LeaveReview,
 } from "@/features/leave/LeaveRequestDialog";
 
@@ -60,6 +61,14 @@ const reviewerLifecycle = {
 	onDone: (): void => {},
 };
 
+/** An application on someone's behalf, with the company's leave types read. */
+const applyForm: LeaveApplyFormInput = {
+	busy: false,
+	employees,
+	leaveTypes: LEAVE_TYPE_FIXTURES,
+	onCreate: (): void => {},
+};
+
 /** A reviewer whose turn it is, who does not read the approval's steps. */
 const reviewer: LeaveReview = {
 	canReview: true,
@@ -84,9 +93,7 @@ const meta = {
 	args: {
 		request: LEAVE_FIXTURES[1],
 		review: reviewer,
-		employees,
 		onClose: (): void => {},
-		onCreate: (): void => {},
 	},
 } satisfies Meta<typeof LeaveRequestDialog>;
 
@@ -106,16 +113,16 @@ export const ApprovalOverAShift: Story = {
 };
 export const Rejected: Story = { args: { request: LEAVE_FIXTURES[2] } };
 export const Approved: Story = { args: { request: LEAVE_FIXTURES[3] } };
-export const Apply: Story = {
-	args: { mode: "apply", leaveTypes: LEAVE_TYPE_FIXTURES },
-};
+export const Apply: Story = { args: { mode: "apply", applyForm } };
 export const ApplyRefused: Story = {
 	args: {
 		mode: "apply",
-		leaveTypes: LEAVE_TYPE_FIXTURES,
-		refusal: {
-			fields: { endDate: "They already have leave on one of these days." },
-			refreshMembers: false,
+		applyForm: {
+			...applyForm,
+			refusal: {
+				fields: { endDate: "They already have leave on one of these days." },
+				refreshMembers: false,
+			},
 		},
 	},
 };

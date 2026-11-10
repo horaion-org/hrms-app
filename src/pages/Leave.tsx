@@ -38,7 +38,7 @@ import {
 } from "@/features/leave/leaveSearch";
 import { LeaveStatusFilter } from "@/features/leave/LeaveStatusFilter";
 import { LeaveTimeline } from "@/features/leave/LeaveTimeline";
-import type { LeaveRequest } from "@/features/leave/types";
+import type { LeaveRequest, LeaveRequestBody } from "@/features/leave/types";
 import {
 	useLeaveApplyActions,
 	useLeaveDecisionActions,
@@ -301,6 +301,60 @@ export const Leave = (): FunctionComponent => {
 				</>
 			)
 		);
+	// Who an application on someone's behalf may name: those the caller may apply, or record, for.
+	const employees = {
+		search: employeeSearch,
+		onSearch: setEmployeeSearch,
+		options: (people.data?.items ?? []).filter((person) =>
+			access.can(
+				dialog?.mode === "record"
+					? "leave_request:review"
+					: "leave_request:create",
+				recordScope(person.departmentId)
+			)
+		),
+	};
+	const create = (
+		membershipId: string | null,
+		body: LeaveRequestBody
+	): void => {
+		const handlers = {
+			onSuccess: (created: LeaveRequest): void => {
+				done(
+					membershipId === null
+						? t("leave.appliedOwn")
+						: t("leave.applied", { name: created.displayName })
+				);
+			},
+			onError: (error: Error): void => {
+				const next = applyRefusal(error, t);
+				setRefusal(next);
+				if (next.refreshMembers) void people.refetch();
+			},
+		};
+		if (dialog?.mode === "record" && membershipId !== null) {
+			applyActions.record.mutate(
+				{
+					membershipId,
+					body: {
+						leaveType: body.leaveType,
+						startDate: body.startDate,
+						endDate: body.endDate,
+						remark: body.notes ?? "",
+						takeOffRosteredDays: body.takeOffRosteredDays ?? false,
+					},
+				},
+				{
+					...handlers,
+					onSuccess: (created) => {
+						done(t("leave.recorded", { name: created.displayName }));
+					},
+				}
+			);
+		} else if (membershipId === null)
+			applyActions.applyOwn.mutate(body, handlers);
+		else applyActions.apply.mutate({ membershipId, body }, handlers);
+	};
 	const paging = (page: number): void => {
 		void navigate({
 			search: (previous) => ({ ...previous, page: pageParameter(page) }),
@@ -482,25 +536,20 @@ export const Leave = (): FunctionComponent => {
 			{dialog && (
 				<LeaveRequestDialog
 					key={`${dialog.request?.leaveRequestId ?? "new"}-${dialog.mode}`}
-					busy={applying}
-					leaveTypes={leaveTypes.data}
-					leaveTypesStatus={leaveTypes.status}
 					mode={dialog.mode === "applyOwn" ? "apply" : dialog.mode}
-					refusal={refusal}
 					request={dialog.request}
-					employees={
-						dialog.mode === "apply" || dialog.mode === "record"
+					applyForm={
+						applyFormOpen
 							? {
-									search: employeeSearch,
-									onSearch: setEmployeeSearch,
-									options: (people.data?.items ?? []).filter((person) =>
-										access.can(
-											dialog.mode === "record"
-												? "leave_request:review"
-												: "leave_request:create",
-											recordScope(person.departmentId)
-										)
-									),
+									busy: applying,
+									employees: dialog.mode === "applyOwn" ? undefined : employees,
+									leaveTypes: leaveTypes.data ?? [],
+									leaveTypesStatus: leaveTypes.status,
+									refusal,
+									onCreate: create,
+									onRetryLeaveTypes: (): void => {
+										void leaveTypes.refetch();
+									},
 								}
 							: undefined
 					}
@@ -520,47 +569,6 @@ export const Leave = (): FunctionComponent => {
 						}
 					}
 					onClose={close}
-					onCreate={(membershipId, body) => {
-						const handlers = {
-							onSuccess: (created: LeaveRequest): void => {
-								done(
-									membershipId === null
-										? t("leave.appliedOwn")
-										: t("leave.applied", { name: created.displayName })
-								);
-							},
-							onError: (error: Error): void => {
-								const next = applyRefusal(error, t);
-								setRefusal(next);
-								if (next.refreshMembers) void people.refetch();
-							},
-						};
-						if (dialog.mode === "record" && membershipId !== null) {
-							applyActions.record.mutate(
-								{
-									membershipId,
-									body: {
-										leaveType: body.leaveType,
-										startDate: body.startDate,
-										endDate: body.endDate,
-										remark: body.notes ?? "",
-										takeOffRosteredDays: body.takeOffRosteredDays ?? false,
-									},
-								},
-								{
-									...handlers,
-									onSuccess: (created) => {
-										done(t("leave.recorded", { name: created.displayName }));
-									},
-								}
-							);
-						} else if (membershipId === null)
-							applyActions.applyOwn.mutate(body, handlers);
-						else applyActions.apply.mutate({ membershipId, body }, handlers);
-					}}
-					onRetryLeaveTypes={() => {
-						void leaveTypes.refetch();
-					}}
 				/>
 			)}
 		</div>

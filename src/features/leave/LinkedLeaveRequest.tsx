@@ -79,7 +79,6 @@ export const LinkedLeaveRequest = ({
 				},
 			}}
 			onClose={onClose}
-			onCreate={() => {}}
 		/>
 	);
 };

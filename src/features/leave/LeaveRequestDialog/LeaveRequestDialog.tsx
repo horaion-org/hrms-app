@@ -12,27 +12,23 @@ import {
 	approvalInstanceQuery,
 } from "@/features/approvals/api";
 import { ApprovalTrail } from "@/features/approvals/ApprovalTrail";
-import { rosteredDaysQuery, type CompanyLeaveType } from "@/features/leave/api";
+import { rosteredDaysQuery } from "@/features/leave/api";
 import {
 	approvesLeave,
 	leaveApprovalLine,
 	leaveDecisionStage,
 } from "@/features/leave/leaveApproval";
-import type { ApplyField, DecisionField } from "@/features/leave/leaveRefusal";
-import type { LeaveRequest, LeaveRequestBody } from "@/features/leave/types";
+import type { DecisionField } from "@/features/leave/leaveRefusal";
+import type { LeaveRequest } from "@/features/leave/types";
 import type { Refusal } from "@/features/organisation/refusal";
 import { dateTimeFormatIn } from "@/features/scheduling/roster/roster";
-import {
-	LeaveApplyForm,
-	type ApplyEmployees,
-	type LeaveTypesStatus,
-} from "./LeaveApplyForm";
+import { LeaveApplyForm, type LeaveApplyFormInput } from "./LeaveApplyForm";
 import { LeaveDecisionStep } from "./LeaveDecisionStep";
 import { LeaveRequestDetails } from "./LeaveRequestDetails";
 import { LeaveRequestLifecycle } from "./LeaveRequestLifecycle";
 import { RosteredDaysNotice } from "./RosteredDaysNotice";
 
-export type { ApplyEmployees } from "./LeaveApplyForm";
+export type { ApplyEmployees, LeaveApplyFormInput } from "./LeaveApplyForm";
 
 /** Where a review stands: reading the request, or confirming a decision with its note. */
 type ReviewStep = "review" | "reject" | "approve";
@@ -82,26 +78,9 @@ export type LeaveRequestDialogProps = {
 	};
 	/** Deciding the shown request; left out, it is only read. */
 	review?: LeaveReview;
-	/** Who leave may be applied for; left out in `apply` mode when the caller applies for themself. */
-	employees?: ApplyEmployees;
-	/**
-	 * The company's leave types, for `apply` mode. Only active types that are
-	 * not the scheduler's own are offered, grouped by how they are counted.
-	 */
-	leaveTypes?: ReadonlyArray<CompanyLeaveType>;
-	/**
-	 * How reading `leaveTypes` stands, in `apply` mode: the Type field says
-	 * it is loading while "pending", and offers `onRetryLeaveTypes` on "error".
-	 */
-	leaveTypesStatus?: LeaveTypesStatus;
-	onRetryLeaveTypes?: () => void;
-	/** While an application is being sent. */
-	busy?: boolean;
-	/** Why the last application was refused: on a field, or as the form's alert. */
-	refusal?: Refusal<ApplyField>;
+	/** The application's people, leave types and handlers, for `apply` and `record` modes. */
+	applyForm?: LeaveApplyFormInput;
 	onClose: () => void;
-	/** `membershipId` is null when the caller applies for themself. */
-	onCreate: (membershipId: string | null, body: LeaveRequestBody) => void;
 	/** Today; the reviewer's device's by default. Approving leave before it needs a comment. */
 	today?: IsoDate;
 };
@@ -123,15 +102,9 @@ export const LeaveRequestDialog = ({
 	request,
 	mode = "view",
 	lifecycle,
-	employees,
-	leaveTypes = [],
-	leaveTypesStatus = "success",
-	onRetryLeaveTypes,
 	review,
-	busy = false,
-	refusal,
+	applyForm,
 	onClose,
-	onCreate,
 	today: todayOverride,
 }: LeaveRequestDialogProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
@@ -183,20 +156,14 @@ export const LeaveRequestDialog = ({
 		)
 	);
 	if (mode === "apply" || mode === "record")
-		return (
+		return applyForm ? (
 			<LeaveApplyForm
-				busy={busy}
+				{...applyForm}
 				companyId={lifecycle?.companyId}
-				employees={employees}
-				leaveTypes={leaveTypes}
-				leaveTypesStatus={leaveTypesStatus}
 				recording={mode === "record"}
-				refusal={refusal}
 				onClose={onClose}
-				onCreate={onCreate}
-				onRetryLeaveTypes={onRetryLeaveTypes}
 			/>
-		);
+		) : null;
 	if (!request) return null;
 	const reviewRefusal = review?.refusal;
 	const deciding = review?.busy ?? false;
