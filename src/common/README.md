@@ -14,6 +14,8 @@ The directory contains:
 - `formattingLocale.ts`, `dateTimeFormatIn.ts`: the locale dates are written in, and a date format in an IANA time zone.
 - `refusal.ts`: `mapRefusal` (a refused request to frontend-owned field and form copy) and `refusalCodeOf` (the
   `"<status> <errorCode>"` key refusal tables are keyed by).
+- `schemas.ts`: API shapes several features read: `memberRefSchema`, `formerMemberRefSchema` (name null once the
+  member left), `pagedSchema(item)` and the app's `ListPage`; `api-client.ts`'s `fetchList` reads a paged list into it.
 - `weeks.ts`: Monday-first weeks as ISO dates (`mondayOf`, `weeksOf`, `daysOf`), shared by scheduling and availability.
 
 ## Memory router (tests and stories)

@@ -4,6 +4,7 @@ import {
 } from "@tanstack/react-query";
 import { z } from "zod";
 import { apiRequest, apiRequestVoid } from "@/common/api-client";
+import { pagedSchema } from "@/common/schemas";
 import { companyPath } from "@/features/organisation/api";
 import {
 	administrativeMeta,
@@ -89,10 +90,7 @@ export const notificationSchema = z.object({
 });
 export type InboxNotification = z.infer<typeof notificationSchema>;
 
-const pageSchema = z.object({
-	content: z.array(notificationSchema),
-	page: z.object({ totalElements: z.number().int().nonnegative() }),
-});
+const pageSchema = pagedSchema(notificationSchema);
 const countSchema = z.object({ unreadCount: z.number().int().nonnegative() });
 const readSchema = z.object({ updatedCount: z.number().int().nonnegative() });
 type NotificationPage = z.infer<typeof pageSchema>;

@@ -5,12 +5,9 @@ import {
 	type UndefinedInitialDataOptions,
 } from "@tanstack/react-query";
 import { z } from "zod";
-import { apiRequest } from "@/common/api-client";
-import {
-	companyPath,
-	fetchList,
-	type ListPage,
-} from "@/features/organisation/api";
+import { apiRequest, fetchList } from "@/common/api-client";
+import { memberRefSchema, type ListPage } from "@/common/schemas";
+import { companyPath } from "@/features/organisation/api";
 import {
 	accessiblePreviousData,
 	administrativeMeta,
@@ -91,11 +88,6 @@ export const LEAVE_STATUSES = leaveStatusSchema.options;
 export const isLeaveStatus = (value: string): value is LeaveStatus =>
 	leaveStatusSchema.safeParse(value).success;
 
-const participantSchema = z.object({
-	membershipId: z.string(),
-	displayName: z.string(),
-});
-
 export const leaveRequestSchema = z.object({
 	leaveRequestId: z.string(),
 	membershipId: z.string(),
@@ -129,9 +121,9 @@ export const leaveRequestSchema = z.object({
 	notes: z.string().nullable().default(null),
 	status: leaveStatusSchema,
 	requestedAt: z.iso.datetime({ offset: true }),
-	requestedBy: participantSchema,
+	requestedBy: memberRefSchema,
 	reviewedAt: z.iso.datetime({ offset: true }).nullable(),
-	reviewedBy: participantSchema.nullable(),
+	reviewedBy: memberRefSchema.nullable(),
 	/** Present exactly when rejected. */
 	rejectionReason: z.string().nullable(),
 	/** The reviewer's words when approving, if any. Absent from an API older than approval comments. */

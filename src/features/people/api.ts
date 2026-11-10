@@ -8,12 +8,9 @@ import {
 	type UnusedSkipTokenOptions,
 } from "@tanstack/react-query";
 import { z } from "zod";
-import { apiRequest, apiRequestVoid } from "@/common/api-client";
-import {
-	companyPath,
-	fetchList,
-	type ListPage,
-} from "@/features/organisation/api";
+import { apiRequest, apiRequestVoid, fetchList } from "@/common/api-client";
+import type { ListPage } from "@/common/schemas";
+import { companyPath } from "@/features/organisation/api";
 import {
 	accessiblePreviousData,
 	administrativeMeta,

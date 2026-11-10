@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { ApiProblemError } from "@/common/problem";
-import type { ListPage } from "@/features/organisation/api";
+import type { ListPage } from "@/common/schemas";
 import {
 	peopleQuery,
 	type MemberProfile,

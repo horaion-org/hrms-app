@@ -1,9 +1,9 @@
 import { skipToken, useQuery } from "@tanstack/react-query";
 import { ApiProblemError } from "@/common/problem";
+import type { ListPage } from "@/common/schemas";
 import {
-	fetchActivityPage,
 	type AuditEvent,
-	type ListPage,
+	fetchActivityPage,
 } from "@/features/organisation/api";
 import { administrativeMeta } from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";

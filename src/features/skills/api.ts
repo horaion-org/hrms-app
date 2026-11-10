@@ -1,12 +1,8 @@
 import { z } from "zod";
-import { apiRequest, apiRequestVoid } from "@/common/api-client";
+import { apiRequest, apiRequestVoid, fetchList } from "@/common/api-client";
+import type { ListPage } from "@/common/schemas";
 import type { IsoDate } from "@/components/forms/Calendar";
-import {
-	companyPath,
-	fetchList,
-	LIST_PAGE_SIZE,
-	type ListPage,
-} from "@/features/organisation/api";
+import { companyPath, LIST_PAGE_SIZE } from "@/features/organisation/api";
 
 /*
  * The company's skill catalogue (the API's ADR-0057). A skill is rated 1 to

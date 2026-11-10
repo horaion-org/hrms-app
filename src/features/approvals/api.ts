@@ -5,6 +5,7 @@ import {
 } from "@tanstack/react-query";
 import { z } from "zod";
 import { apiRequest, apiRequestVoid } from "@/common/api-client";
+import { formerMemberRefSchema } from "@/common/schemas";
 import { companyPath } from "@/features/organisation/api";
 import { administrativeMeta, selfMeta } from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";
@@ -65,15 +66,10 @@ export const APPROVAL_SUBJECTS = [SCHEDULE_PUBLICATION, LEAVE_REQUEST] as const;
 export type ApprovalSubject = (typeof APPROVAL_SUBJECTS)[number];
 
 /** A company member named on an approval; `displayName` is null once they have left the company. */
-const participantSchema = z.object({
-	membershipId: z.string(),
-	displayName: z.string().nullable(),
-});
-
-export type ApprovalParticipant = z.infer<typeof participantSchema>;
+export type ApprovalParticipant = z.infer<typeof formerMemberRefSchema>;
 
 const decisionSchema = z.object({
-	decidedBy: participantSchema.nullable(),
+	decidedBy: formerMemberRefSchema.nullable(),
 	decision: decisionTypeSchema,
 	comment: z
 		.string()
@@ -91,14 +87,16 @@ const instanceStepSchema = z.object({
 	quorum: quorumSchema,
 	status: stepStatusSchema,
 	/** The named people of a MEMBERS step, by name; empty for KEY_HOLDERS. */
-	members: z.array(participantSchema).default([]),
+	members: z.array(formerMemberRefSchema).default([]),
 	decisions: z.array(decisionSchema).default([]),
 	/**
 	 * Who approved this step together with the next one, which they could
 	 * decide too (ADR-0067 §11): it closed SKIPPED and their approval moved
 	 * on. Null unless skipped that way.
 	 */
-	skippedBy: participantSchema.nullish().transform((value) => value ?? null),
+	skippedBy: formerMemberRefSchema
+		.nullish()
+		.transform((value) => value ?? null),
 	/** When it was skipped that way; null otherwise. */
 	skippedAt: z
 		.string()
@@ -116,7 +114,7 @@ const instanceSchema = z.object({
 	subjectId: z.string(),
 	departmentId: z.string(),
 	approvalFlowId: z.string(),
-	requestedBy: participantSchema.nullable(),
+	requestedBy: formerMemberRefSchema.nullable(),
 	status: instanceStatusSchema,
 	/** The open step's order while PENDING. */
 	currentStepOrder: z.number().int().nullable(),
@@ -169,7 +167,7 @@ const flowStepSchema = z.object({
 	label: z.string(),
 	rule: ruleSchema,
 	quorum: quorumSchema,
-	members: z.array(participantSchema).default([]),
+	members: z.array(formerMemberRefSchema).default([]),
 });
 
 export type ApprovalFlowStep = z.infer<typeof flowStepSchema>;

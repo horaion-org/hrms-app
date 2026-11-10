@@ -1,6 +1,7 @@
 import { normalizeBranchCity } from "@/features/organisation/city";
 import { z } from "zod";
-import { apiRequest, apiRequestVoid } from "@/common/api-client";
+import { apiRequest, apiRequestVoid, fetchList } from "@/common/api-client";
+import { memberRefSchema, type ListPage } from "@/common/schemas";
 
 const totalSchema = z.object({
 	page: z.object({ totalElements: z.number().int().nonnegative() }),
@@ -239,16 +240,6 @@ export type AccessRole = z.infer<typeof accessRoleSchema>;
 
 export type CreateAccessRoleBody = AccessRoleBody;
 
-const pageOf = <T extends z.ZodType>(
-	item: T
-): z.ZodObject<{
-	content: z.ZodArray<T>;
-	page: typeof totalSchema.shape.page;
-}> => z.object({ content: z.array(item), page: totalSchema.shape.page });
-
-/** One page of a list and how many rows match in all. */
-export type ListPage<T> = { items: Array<T>; total: number };
-
 /** A server-side sort on one of the API's allow-listed fields. */
 export type ListSort = { field: string; desc: boolean };
 
@@ -274,16 +265,6 @@ const listPath = (
 	if (branchId) search.set("branchId", branchId);
 	if (departmentId) search.set("departmentId", departmentId);
 	return `${companyPath(companyId)}/${resource}?${search.toString()}`;
-};
-
-/** One page of a paged list, read from the API's `content` and page total. */
-export const fetchList = async <T extends z.ZodType>(
-	path: string,
-	item: T,
-	signal?: AbortSignal
-): Promise<ListPage<z.infer<T>>> => {
-	const page = await apiRequest(path, pageOf(item), { signal });
-	return { items: page.content, total: page.page.totalElements };
 };
 
 /**
@@ -313,9 +294,7 @@ export const fetchActivityPage = (
 	);
 };
 
-export const companyMemberSchema = z.object({
-	membershipId: z.string(),
-	displayName: z.string(),
+export const companyMemberSchema = memberRefSchema.extend({
 	status: unitStatusSchema,
 });
 

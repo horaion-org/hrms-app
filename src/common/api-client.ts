@@ -4,6 +4,7 @@ import {
 	UnreachableError,
 	UnexpectedResponseError,
 } from "@/common/problem";
+import { pagedSchema, type ListPage } from "@/common/schemas";
 
 export type RenewalOutcome =
 	{ kind: "renewed" } | { kind: "expired" } | { kind: "unreachable" };
@@ -186,6 +187,16 @@ export async function apiRequest<S extends z.ZodType>(
 		throw new UnexpectedResponseError("API returned an unexpected payload");
 	return payload.data;
 }
+
+/** One page of a paged list, read from the API's `content` and page total. */
+export const fetchList = async <T extends z.ZodType>(
+	path: string,
+	item: T,
+	signal?: AbortSignal
+): Promise<ListPage<z.infer<T>>> => {
+	const page = await apiRequest(path, pagedSchema(item), { signal });
+	return { items: page.content, total: page.page.totalElements };
+};
 
 /** Explicitly bodyless contracts, including 202 and 204. */
 export async function apiRequestVoid(

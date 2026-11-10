@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { ApiProblemError } from "@/common/problem";
+import type { ListPage } from "@/common/schemas";
 import { myPendingApprovalsQuery } from "@/features/approvals/api";
 import {
 	leaveRequestsQuery,
@@ -12,7 +13,6 @@ import {
 	canDecideLeave,
 	leaveApprovalsWaitingOn,
 } from "@/features/leave/leaveApproval";
-import type { ListPage } from "@/features/organisation/api";
 import { useCurrentMembershipId } from "@/features/organisation/useCurrentCompanyId";
 import { LEAVE_READ_KEYS } from "@/features/workspace/permissionKeys";
 import { recordScope } from "@/features/workspace/scopes";
