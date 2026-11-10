@@ -28,7 +28,7 @@ import {
 	assignmentTargets,
 	roleFitsScope,
 	type AssignmentTarget,
-} from "@/features/organisation/assignmentTargets";
+} from "@/features/accessRoles/assignmentTargets";
 import { placeKey, scopeOfPlace } from "@/features/workspace/places";
 import { useCreateFormSubmit } from "@/features/organisation/useCreateFormSubmit";
 import {

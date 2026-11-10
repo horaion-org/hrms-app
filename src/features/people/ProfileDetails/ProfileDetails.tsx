@@ -16,7 +16,7 @@ import {
 	RoleIcon,
 	UserIcon,
 } from "@/components/ui/Icon";
-import type { PlaceAccessText } from "@/features/organisation/accessSummary";
+import type { PlaceAccessText } from "@/features/accessRoles/accessSummary";
 import type { MemberProfileDetail } from "@/features/people/api";
 import { PROFILE_FIELD_WIDTH } from "@/features/people/profileLayout";
 

@@ -7,15 +7,15 @@ import {
 	AccessRoleAssignments,
 	type AccessRoleAssignmentRow,
 	type AccessRolePerson,
-} from "@/features/organisation/AccessRoleAssignments";
+} from "@/features/accessRoles/AccessRoleAssignments";
 import type { AccessRole, UnitStatus } from "@/features/organisation/api";
 import {
 	assignmentRemoveRefusal,
 	assignmentStatusRefusal,
-} from "@/features/organisation/assignmentRefusal";
-import { changeableAt } from "@/features/organisation/assignmentTargets";
-import { PermissionSummary } from "@/features/organisation/PermissionSummary";
-import { useChangeAccessRoleHolders } from "@/features/organisation/useAccessRoleHolders";
+} from "@/features/accessRoles/assignmentRefusal";
+import { changeableAt } from "@/features/accessRoles/assignmentTargets";
+import { PermissionSummary } from "@/features/accessRoles/PermissionSummary";
+import { useChangeAccessRoleHolders } from "@/features/accessRoles/useAccessRoleHolders";
 import { isPermissionKey } from "@/features/workspace/permissionKeys";
 import type { CanAt } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";

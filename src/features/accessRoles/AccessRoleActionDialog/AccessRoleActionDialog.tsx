@@ -1,11 +1,11 @@
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { accessRoleRowRefusal } from "@/features/organisation/accessRoleRefusal";
-import { AccessRoleStatusDialog } from "@/features/organisation/AccessRoleStatusDialog";
+import { accessRoleRowRefusal } from "@/features/accessRoles/accessRoleRefusal";
+import { AccessRoleStatusDialog } from "@/features/accessRoles/AccessRoleStatusDialog";
 import type { AccessRole } from "@/features/organisation/api";
-import { CreateSystemRoleDialog } from "@/features/organisation/CreateSystemRoleDialog";
-import { useAccessRoleHolders } from "@/features/organisation/useAccessRoleHolders";
+import { CreateSystemRoleDialog } from "@/features/accessRoles/CreateSystemRoleDialog";
+import { useAccessRoleHolders } from "@/features/accessRoles/useAccessRoleHolders";
 import {
 	useDeleteAccessRole,
 	useSetAccessRoleStatus,

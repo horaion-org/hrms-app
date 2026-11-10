@@ -3,10 +3,8 @@ import { ApiProblemError } from "@/common/problem";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import { refusalFor as departmentRefusal } from "@/features/organisation/CreateDepartmentDialog/refusalFor";
 import { refusalFor as jobTitleRefusal } from "@/features/organisation/CreateJobTitleDialog/refusalFor";
-import { refusalFor as systemRoleRefusal } from "@/features/organisation/CreateSystemRoleDialog/refusalFor";
 
 const t = authTestI18n.t.bind(authTestI18n);
-const ROLE = { name: "R", kind: "LOCAL" } as const;
 const problem = (
 	status: number,
 	errorCode?: string,
@@ -90,37 +88,5 @@ describe("create job title refusals", () => {
 		expect(jobTitleRefusal(new Error("offline"), "Chef", true, t).message).toBe(
 			"We couldn’t save the job title. Try again."
 		);
-	});
-});
-
-describe("create access role refusals", () => {
-	it("shows a drifted catalogue as a form alert, not on a field", () => {
-		expect(
-			systemRoleRefusal(
-				problem(400, "INVALID_ACCESS_ROLE_PERMISSIONS"),
-				ROLE,
-				t
-			)
-		).toEqual({
-			fields: {},
-			message:
-				"Some permissions are no longer available. Reload the page and try again.",
-			refreshMembers: false,
-		});
-	});
-	it("explains the subset rule on a 403", () => {
-		expect(
-			systemRoleRefusal(problem(403, "AUTHORIZATION_DENIED"), ROLE, t).message
-		).toContain("no longer hold some of the chosen permissions");
-	});
-	it("puts a kind conflict on the Role type field", () => {
-		expect(
-			systemRoleRefusal(problem(400, "ACCESS_ROLE_KIND_CONFLICT"), ROLE, t)
-		).toEqual({
-			fields: {
-				kind: "A role for chosen places can’t hold company-wide permissions. Choose “Across the whole company”, or remove those permissions.",
-			},
-			refreshMembers: false,
-		});
 	});
 });

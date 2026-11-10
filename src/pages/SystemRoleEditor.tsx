@@ -8,11 +8,11 @@ import { Button } from "@/components/ui/Button";
 import { ArrowLeftIcon } from "@/components/ui/Icon";
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from "@/components/ui/Tabs";
 import { AccessRoleHolders } from "@/features/accessRoles/AccessRoleHolders";
-import { AccessRoleForm } from "@/features/organisation/AccessRoleForm";
-import { readOnlyReason } from "@/features/organisation/accessRoleReadOnly";
-import { SYSTEM_ROLES_PATH } from "@/features/organisation/systemRolesPath";
-import { useAccessRoleHolders } from "@/features/organisation/useAccessRoleHolders";
-import { useUpdateAccessRole } from "@/features/organisation/useUpdateAccessRole";
+import { AccessRoleForm } from "@/features/accessRoles/AccessRoleForm";
+import { readOnlyReason } from "@/features/accessRoles/accessRoleReadOnly";
+import { SYSTEM_ROLES_PATH } from "@/features/accessRoles/systemRolesPath";
+import { useAccessRoleHolders } from "@/features/accessRoles/useAccessRoleHolders";
+import { useUpdateAccessRole } from "@/features/accessRoles/useUpdateAccessRole";
 import { companyPermissions, workspaceQuery } from "@/features/workspace/api";
 import {
 	isPermissionKey,

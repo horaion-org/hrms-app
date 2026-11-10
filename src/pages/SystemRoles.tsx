@@ -18,7 +18,7 @@ import {
 	type AccessRoleAction,
 } from "@/features/accessRoles/AccessRoleActionDialog";
 import { AssignAccessRole } from "@/features/accessRoles/AssignAccessRole";
-import { CreateSystemRoleDialog } from "@/features/organisation/CreateSystemRoleDialog";
+import { CreateSystemRoleDialog } from "@/features/accessRoles/CreateSystemRoleDialog";
 import { ListToolbar } from "@/features/organisation/ListToolbar";
 import {
 	actionsColumn,
@@ -31,7 +31,7 @@ import {
 	type StatusFilter,
 } from "@/features/organisation/listColumns";
 import { useAccessRoles } from "@/features/organisation/useOrganisationList";
-import { roleSummaryText } from "@/features/organisation/sectionLevels";
+import { roleSummaryText } from "@/features/accessRoles/sectionLevels";
 import { isPermissionKey } from "@/features/workspace/permissionKeys";
 import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 

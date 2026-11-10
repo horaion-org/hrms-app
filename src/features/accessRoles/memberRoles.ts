@@ -3,13 +3,13 @@ import {
 	accessSummary,
 	describeAccess,
 	type PlaceAccessText,
-} from "@/features/organisation/accessSummary";
+} from "@/features/accessRoles/accessSummary";
 import type {
 	AccessRole,
 	MemberAccessRoleAssignment,
 } from "@/features/organisation/api";
 import type { PlaceRef } from "@/features/workspace/places";
-import type { AccessRoleHoldersChange } from "@/features/organisation/useAccessRoleHolders";
+import type { AccessRoleHoldersChange } from "@/features/accessRoles/useAccessRoleHolders";
 
 /** One system role a person holds, and where. */
 export type MemberRole = {
