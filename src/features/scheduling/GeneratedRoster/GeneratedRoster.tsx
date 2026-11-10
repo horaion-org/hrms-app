@@ -1,89 +1,33 @@
-import { useCallback, useId, useRef, useState, type ReactNode } from "react";
+import { useId, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { dayParameter, shownDayOf } from "@/common/dayView";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
-import { mondayOf, weeksOf } from "@/common/weeks";
+import { weeksOf } from "@/common/weeks";
 import { Button } from "@/components/ui/Button";
 import { CountBadge } from "@/components/ui/CountBadge";
 import { DaySwitcher } from "@/components/ui/DaySwitcher";
-import {
-	DescriptionList,
-	type DescriptionListItem,
-} from "@/components/ui/DescriptionList";
-import { FilterChips } from "@/components/ui/FilterChips";
-import { OffersOutSection } from "@/features/scheduling/coverOffers/OffersOutSection";
-import { FindingList } from "@/features/scheduling/FindingList";
-import { FindingsPanel } from "@/features/scheduling/FindingsPanel";
+import type { DescriptionListItem } from "@/components/ui/DescriptionList";
 import { LastRosterChange } from "@/features/scheduling/LastRosterChange";
-import {
-	findingCounts,
-	hasFindings,
-} from "@/features/scheduling/roster/findings/findingCounts";
-import {
-	findingNames,
-	type FindingNameSources,
-} from "@/features/scheduling/roster/findings/findingNames";
-import { findingFamily } from "@/features/scheduling/roster/findings/finding";
-import { placeFindings } from "@/features/scheduling/roster/findings/findingsOnGrid";
-import { formatDay } from "@/features/scheduling/periods";
-import { RosterDayNotes } from "@/features/scheduling/RosterDayNotes";
-import {
-	isoDateIn,
-	legendOf,
-	rosterFromAssignments,
-	weekDays,
-	type RosterRow,
-} from "@/features/scheduling/roster/roster";
-import {
-	cellFindings,
-	dayNoteLines,
-	issuesOfHeader,
-	saidApartBy,
-	type IssuesAbout,
-} from "@/features/scheduling/roster/rosterMarks";
-import {
-	changedDayItems,
-	daysToDecideItems,
-	leaveAndCoverItems,
-	startingPointItems,
-} from "@/features/scheduling/roster/rosterPanels";
-import {
-	issuesAboutOf,
-	type RosterPanel,
-	type RosterSearch,
+import type { FindingNameSources } from "@/features/scheduling/roster/findings/findingNames";
+import { legendOf } from "@/features/scheduling/roster/roster";
+import { rosterListSections } from "@/features/scheduling/roster/rosterListSections";
+import type {
+	RosterPanel,
+	RosterSearch,
 } from "@/features/scheduling/roster/rosterSearch";
 import {
-	changedDays,
-	daysToDecide,
-	issueCount,
-	leaveAndCoverDays,
 	rosterSummarySegments,
 	type SummarySegment,
 } from "@/features/scheduling/roster/rosterSummary";
-import { RosterCellPanel } from "@/features/scheduling/RosterCellPanel";
+import type { RosterSchedule } from "@/features/scheduling/roster/rosterView";
 import type { RosterChange } from "@/features/scheduling/rosterChanges/api";
-import { rosterCellKey } from "@/features/scheduling/rosterChanges/rosterEdit";
 import { RosterGrid } from "@/features/scheduling/RosterGrid";
-import {
-	RosterSidePanel,
-	type RosterSidePanelSection,
-} from "@/features/scheduling/RosterSidePanel";
 import { RosterWeekBar } from "@/features/scheduling/RosterWeekBar";
-import type {
-	Schedule,
-	ScheduleAssignment,
-} from "@/features/scheduling/schedules/api";
-import { ShiftDetailsPanel } from "@/features/scheduling/ShiftDetailsPanel";
+import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 import type { RosterEditing } from "./rosterEditing";
+import { RosterSidePanelSlot } from "./RosterSidePanelSlot";
 import { ROSTER_SIDE_LISTS } from "./rosterSideLists";
-
-/** What the roster reads of its schedule: its week, the zone its days are in and, for the findings, its generation. */
-export type RosterSchedule = Pick<
-	Schedule,
-	"periodStart" | "periodEnd" | "timeZone"
-> &
-	Partial<Pick<Schedule, "generation">>;
+import { useRosterView } from "./useRosterView";
 
 export type GeneratedRosterProps = {
 	schedule: RosterSchedule;
@@ -119,20 +63,10 @@ export type GeneratedRosterProps = {
 	offeredDays?: ReadonlyMap<string, string>;
 };
 
-const NO_DAYS: ReadonlySet<string> = new Set();
-
 /** Hours in the summary line keep one decimal at most: "37.5 h". */
 const HOURS_FRACTION_DIGITS = 1;
 
 const key = "scheduling.detail";
-
-/** What has focus now, to give it back when a panel opened from it closes. */
-const focusedElement = (): HTMLElement | null =>
-	document.activeElement instanceof HTMLElement ? document.activeElement : null;
-
-/** The `rosterCellKey` of a row's day; none once its member no longer resolves. */
-const cellOf = (row: RosterRow, day: string): string | undefined =>
-	row.membershipId === null ? undefined : rosterCellKey(row.membershipId, day);
 
 /**
  * A generated schedule's roster, a week at a time, kept quiet at rest: one
@@ -141,6 +75,10 @@ const cellOf = (row: RosterRow, day: string): string | undefined =>
  * the view in the URL: a chosen day's shift (read-only) or editor, or one
  * list (Issues, Changed, Details, Approval). Findings are also marked on the grid.
  * A member's own roster shows only the grid, with their changed days marked.
+ *
+ * What it shows follows from its rows and the view (`rosterViewOf`, through
+ * `useRosterView`); the lists are built by `rosterListSections`, and the
+ * panel beside the grid is `RosterSidePanelSlot`.
  */
 export const GeneratedRoster = ({
 	schedule,
@@ -160,107 +98,30 @@ export const GeneratedRoster = ({
 }: GeneratedRosterProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const language = formattingLocale(i18n);
-	const [previewDays, setPreviewDays] = useState<ReadonlySet<string>>(NO_DAYS);
 	const [applied, setApplied] = useState<RosterChange>();
 	const sidePanelId = useId();
-	// Where focus goes back to when the panel closes: what opened it.
-	const opener = useRef<HTMLElement | null>(null);
-	const onPreviewDays = useCallback((keys: ReadonlyArray<string>) => {
-		setPreviewDays(keys.length === 0 ? NO_DAYS : new Set(keys));
-	}, []);
+	const roster = useRosterView({
+		schedule,
+		assignments,
+		view,
+		onViewChange,
+		shifts,
+		constraints,
+		membersWithChangedStart,
+		hasDetails: details !== undefined,
+		hasApproval: Boolean(approval),
+		editable: editing !== undefined,
+		withSummary,
+		changesLeave: editing?.leave !== undefined,
+	});
+	const { rows, days, period, openList } = roster;
 
-	const period = { start: schedule.periodStart, end: schedule.periodEnd };
-	// "This week" and "today" follow the branch's time zone, not the browser's.
-	const today = isoDateIn(schedule.timeZone, new Date());
-	const week = view.week ?? mondayOf(today);
-	const days = weekDays(period, week);
-	const rows = rosterFromAssignments(assignments, period);
-	const findings = schedule.generation?.findings ?? null;
-	const counts = findings ? findingCounts(findings) : null;
-	const names =
-		findings && counts && hasFindings(counts)
-			? findingNames(findings, { assignments, shifts, constraints })
-			: null;
-	const changed = changedDays(assignments);
-	const markedDays = leaveAndCoverDays(assignments);
-	const toDecide = daysToDecide(assignments);
-	const editedDays = new Set(
-		changed.flatMap((row) =>
-			row.member ? [rosterCellKey(row.member.membershipId, row.day)] : []
-		)
-	);
-	const listCounts: Record<RosterPanel, number> = {
-		issues: issueCount({
-			findings: counts,
-			membersWithChangedStart,
-			leaveAndCoverDays: markedDays.length,
-			daysToDecide: toDecide.length,
-		}),
-		changes: changed.length,
-		details: details ? 1 : 0,
-		approval: approval ? 1 : 0,
-	};
-	const chosenRow = assignments.find(
-		(row) =>
-			row.member !== null &&
-			rosterCellKey(row.member.membershipId, row.day) === view.cell
-	);
-	// A phone shows one of the week's days inside the period, the grid hiding the others'
-	// columns: a chosen day's, so its tile stays in view, else the URL's.
-	const periodDays = days.filter(
-		(day) => day >= period.start && day <= period.end
-	);
-	const shownDay = shownDayOf(periodDays, chosenRow?.day ?? view.day, today);
-	// The list shown beside the grid: the one the URL names, while no day is chosen and it has something in it.
-	const openList =
-		view.panel && !chosenRow && listCounts[view.panel] > 0
-			? view.panel
-			: undefined;
-	const chosenMemberRow = rows.find(
-		(row) => row.membershipId === chosenRow?.member?.membershipId
-	);
-	const chosenCell = chosenMemberRow?.days[chosenRow?.day ?? ""];
-	const placed = findings && names ? placeFindings(findings, days) : undefined;
-	// The header the Issues list was opened from, if any: it lists only what that header counted.
-	const issuesAbout = openList === "issues" ? issuesAboutOf(view) : undefined;
-
-	/** Shows `next` beside the grid, keeping the week and day shown. */
-	const showView = (next: Omit<RosterSearch, "week" | "day">): void => {
-		onViewChange({
-			...(view.week ? { week: view.week } : {}),
-			...(view.day ? { day: view.day } : {}),
-			...next,
-		});
-	};
-	/** Opens `next` beside the grid; focus goes back to `from` when it closes. */
-	const open = (
-		next: Omit<RosterSearch, "week" | "day">,
-		from: HTMLElement | null = focusedElement()
-	): void => {
-		opener.current = from;
-		setPreviewDays(NO_DAYS);
-		showView(next);
-	};
-	const close = (): void => {
-		setPreviewDays(NO_DAYS);
-		showView({});
-		opener.current?.focus();
-	};
-	/** Closes the open list, or opens `panel`; Issues opened from a header shows all of Issues instead. */
-	const toggleList = (panel: RosterPanel, from: HTMLElement): void => {
-		if (openList === panel && !issuesAbout) close();
-		else open({ panel }, from);
-	};
-	/** Shows every issue again, keeping where focus goes back to. */
-	const showAllIssues = (): void => {
-		showView({ panel: "issues" });
-	};
 	/** The week bar's buttons: each list that has one, while it has something to show. */
 	const toolbarLists = withSummary
 		? (Object.keys(ROSTER_SIDE_LISTS) as Array<RosterPanel>).flatMap(
 				(panel) => {
 					const button = ROSTER_SIDE_LISTS[panel].button;
-					const count = listCounts[panel];
+					const count = roster.listCounts[panel];
 					return button && count > 0 ? [{ panel, button, count }] : [];
 				}
 			)
@@ -276,19 +137,6 @@ export const GeneratedRoster = ({
 			hours: hours === undefined ? undefined : numbers.format(hours),
 		});
 	};
-	/** One line each, said above the findings in the Issues panel. */
-	const issueNotes = [
-		...(membersWithChangedStart > 0
-			? [
-					t("scheduling.startingContext.stale", {
-						count: membersWithChangedStart,
-					}),
-				]
-			: []),
-		...(findings && editedDays.size > 0
-			? [t("scheduling.rosterEdit.findingsOutOfDate")]
-			: []),
-	];
 	const latestChange = editing && (
 		<LastRosterChange
 			applied={applied}
@@ -301,217 +149,25 @@ export const GeneratedRoster = ({
 			}}
 		/>
 	);
-	/** The Issues list for one header: its filter as a chip, then exactly what that header counted. */
-	const headerIssueSections = (
-		about: IssuesAbout
-	): Array<RosterSidePanelSection> => {
-		const listed = issuesOfHeader(about, {
-			placed,
-			days,
-			daysToDecide: toDecide,
-			leaveAndCover: markedDays,
-		});
-		const chipLabel =
-			about.kind === "date"
-				? formatDay(about.date, language)
-				: (rows.find((row) => row.membershipId === about.membershipId)?.name ??
-					t(`${key}.formerMember`));
-		const findingPart = (family: "roster" | "setup"): ReactNode => {
-			const part = listed.findings.filter(
-				(finding) => findingFamily(finding) === family
-			);
-			return (
-				names &&
-				part.length > 0 && (
-					<FindingList
-						findings={part}
-						names={names}
-						showDates={about.kind === "member"}
-					/>
-				)
-			);
-		};
-		return [
-			{
-				key: "about",
-				content: (
-					<FilterChips
-						chips={[
-							{ key: about.kind, label: chipLabel, onRemove: showAllIssues },
-						]}
-						onClearAll={showAllIssues}
-					/>
-				),
-			},
-			{
-				key: "roster",
-				title: t("scheduling.findings.marker.roster"),
-				content: findingPart("roster"),
-			},
-			{
-				key: "setup",
-				title: t("scheduling.findings.marker.setup"),
-				content: findingPart("setup"),
-			},
-			{
-				key: "daysToDecide",
-				title: t(`${key}.daysToDecide`),
-				items: daysToDecideItems(listed.daysToDecide, t, language),
-			},
-			{
-				key: "leaveAndCover",
-				title: t(`${key}.leaveAndCover`),
-				items: leaveAndCoverItems(listed.leaveAndCover, t, language),
-			},
-		];
-	};
-	const listSections: Record<RosterPanel, Array<RosterSidePanelSection>> = {
-		issues: issuesAbout
-			? headerIssueSections(issuesAbout)
-			: [
-					// Each note is a section of its own, spaced like the sections around it.
-					...issueNotes.map((line) => ({
-						key: line,
-						items: [{ key: line, lines: [line] }],
-					})),
-					{
-						key: "findings",
-						content: findings && names && (
-							<FindingsPanel
-								findings={findings}
-								names={names}
-								visibleDays={days}
-							/>
-						),
-					},
-					{
-						key: "daysToDecide",
-						title: t(`${key}.daysToDecide`),
-						items: daysToDecideItems(toDecide, t, language),
-					},
-					{
-						key: "leaveAndCover",
-						title: t(`${key}.leaveAndCover`),
-						items: leaveAndCoverItems(markedDays, t, language),
-					},
-					{
-						key: "offersOut",
-						content: editing?.coverOffers &&
-							(editing.coverOffers.failed ||
-								editing.coverOffers.offers.length > 0) && (
-								<OffersOutSection
-									assignments={assignments}
-									failed={editing.coverOffers.failed}
-									offers={editing.coverOffers.offers}
-									target={editing.target}
-									timeZone={schedule.timeZone}
-									onRetry={editing.coverOffers.retry}
-								/>
-							),
-					},
-					{
-						key: "startingPoints",
-						title: t(`${key}.startingPoints`),
-						items: startingPointItems(rows, startingRuns, t),
-					},
-				],
-		changes: [
-			{ key: "latest", content: latestChange },
-			{ key: "days", items: changedDayItems(changed, t, language) },
-		],
-		details: [
-			{
-				key: "details",
-				content: details && (
-					<DescriptionList items={details} valueWidth="sm:w-3/5" />
-				),
-			},
-		],
-		approval: [{ key: "trail", content: approval }],
-	};
-
-	/**
-	 * What needs a look on the chosen day, first in its panel: none on a
-	 * member's own roster, which marks no issues, or on a day with nothing
-	 * to say beyond what the editor says itself.
-	 */
-	const chosenDayIssues = (): ReactNode => {
-		if (!withSummary || !chosenRow || !chosenMemberRow) return undefined;
-		const dayFindings = cellFindings(placed, chosenMemberRow, chosenRow.day);
-		const saidApart = saidApartBy(
-			editing && { changesLeave: editing.leave !== undefined }
-		);
-		if (
-			dayFindings.length === 0 &&
-			dayNoteLines(chosenCell?.note, saidApart).length === 0
-		)
-			return undefined;
-		return (
-			<RosterDayNotes
-				findings={names ? { list: dayFindings, names } : undefined}
-				membershipId={chosenMemberRow.membershipId}
-				note={chosenCell?.note}
-				saidApart={saidApart}
-				viewerMembershipId={viewerMembershipId}
-			/>
-		);
-	};
-
-	/** The panel beside the grid: a chosen day first, else the open list. */
-	const sidePanel = (): ReactNode => {
-		if (editing && chosenRow)
-			return (
-				<RosterCellPanel
-					// Each day starts with nothing chosen.
-					key={chosenRow.assignmentId}
-					assignment={chosenRow}
-					assignments={assignments}
-					issues={chosenDayIssues()}
-					leaveEditing={editing.leave}
-					notifiesMembers={editing.notifiesMembers}
-					revision={editing.revision}
-					shifts={editing.shifts}
-					target={editing.target}
-					coverOffers={
-						editing.coverOffers && {
-							offers: editing.coverOffers.offers,
-							timeZone: schedule.timeZone,
-						}
-					}
-					onClose={close}
-					onCoverRecorded={close}
-					onLeaveChanged={close}
-					onPreviewDays={onPreviewDays}
-					onApplied={(change) => {
-						setApplied(change);
-						close();
-					}}
-				/>
-			);
-		if (!editing && chosenCell?.kind === "shift" && chosenRow)
-			return (
-				<ShiftDetailsPanel
-					issues={chosenDayIssues()}
-					shift={{ ...chosenCell, date: chosenRow.day }}
-					staffName={chosenRow.member?.displayName ?? t(`${key}.formerMember`)}
-					onClose={close}
-				/>
-			);
-		if (openList)
-			return (
-				<RosterSidePanel
-					// A new list or filter starts afresh, its heading taking focus.
-					key={`${openList}|${view.member ?? view.date ?? ""}`}
-					id={sidePanelId}
-					sections={listSections[openList]}
-					title={t(ROSTER_SIDE_LISTS[openList].titleKey)}
-					onClose={close}
-				/>
-			);
-		return null;
-	};
-
-	const panel = sidePanel();
+	const listSections = openList
+		? rosterListSections(openList, {
+				roster,
+				assignments,
+				t,
+				language,
+				membersWithChangedStart,
+				startingRuns,
+				coverOffers: editing?.coverOffers && {
+					...editing.coverOffers,
+					target: editing.target,
+					timeZone: schedule.timeZone,
+				},
+				latestChange,
+				details,
+				approval,
+				onShowAllIssues: roster.showAllIssues,
+			})
+		: [];
 
 	return (
 		<>
@@ -531,10 +187,10 @@ export const GeneratedRoster = ({
 						week={days[0] ?? period.start}
 						weeks={weeksOf(period)}
 						onToday={() => {
-							onViewChange({ ...view, week: undefined, day: undefined });
+							roster.showWeek(undefined);
 						}}
 						onWeekChange={(next) => {
-							onViewChange({ ...view, week: next, day: undefined });
+							roster.showWeek(next);
 						}}
 					>
 						{toolbarLists.map(({ panel, button, count }) => (
@@ -547,7 +203,7 @@ export const GeneratedRoster = ({
 								size="sm"
 								variant="secondary"
 								onClick={(event) => {
-									toggleList(panel, event.currentTarget);
+									roster.toggleList(panel, event.currentTarget);
 								}}
 							>
 								{t(ROSTER_SIDE_LISTS[panel].titleKey)}
@@ -555,55 +211,50 @@ export const GeneratedRoster = ({
 							</Button>
 						))}
 					</RosterWeekBar>
-					{shownDay && (
+					{roster.shownDay && (
 						<DaySwitcher
 							className="mt-4"
-							day={shownDay}
-							days={periodDays}
-							onDayChange={(day) => {
-								onViewChange({
-									...view,
-									day: dayParameter(periodDays, day, today),
-								});
-							}}
+							day={roster.shownDay}
+							days={roster.periodDays}
+							onDayChange={roster.showDay}
 						/>
 					)}
 					<div className="mt-4 flex flex-col items-start gap-6 lg:flex-row">
 						<RosterGrid
 							className="w-full lg:flex-1"
-							compact={panel !== null}
+							compact={roster.sidePanel !== undefined}
 							days={days}
-							editedDays={editedDays}
-							findings={placed}
+							editedDays={roster.editedDays}
+							findings={roster.placed}
 							offeredDays={offeredDays}
-							previewDays={previewDays}
+							previewDays={roster.previewDays}
 							rows={rows}
 							selectedDayKey={editing ? view.cell : undefined}
-							selectedShiftId={chosenRow?.assignmentId}
-							shownDay={shownDay}
+							selectedShiftId={roster.chosenRow?.assignmentId}
+							shownDay={roster.shownDay}
 							showsIssues={withSummary}
-							onAssignmentSelect={(row, day) => {
-								const cell = cellOf(row, day);
-								if (cell) open({ cell });
+							onAssignmentSelect={roster.openDay}
+							onDaySelect={editing ? roster.openDay : undefined}
+							onShowIssues={roster.showIssuesOf}
+						/>
+						<RosterSidePanelSlot
+							assignments={assignments}
+							editing={editing}
+							roster={roster}
+							timeZone={schedule.timeZone}
+							viewerMembershipId={viewerMembershipId}
+							list={{
+								id: sidePanelId,
+								resetKey: `${openList ?? ""}|${view.member ?? view.date ?? ""}`,
+								sections: listSections,
 							}}
-							onDaySelect={
-								editing
-									? (row, day): void => {
-											const cell = cellOf(row, day);
-											if (cell) open({ cell });
-										}
-									: undefined
-							}
-							onShowIssues={(about, from) => {
-								open(
-									about.kind === "member"
-										? { panel: "issues", member: about.membershipId }
-										: { panel: "issues", date: about.date },
-									from
-								);
+							onClose={roster.close}
+							onPreviewDays={roster.onPreviewDays}
+							onApplied={(change) => {
+								setApplied(change);
+								roster.close();
 							}}
 						/>
-						{panel}
 					</div>
 				</>
 			)}
