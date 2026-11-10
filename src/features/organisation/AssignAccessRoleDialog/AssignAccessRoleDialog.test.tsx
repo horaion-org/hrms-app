@@ -4,10 +4,7 @@ import { I18nextProvider } from "react-i18next";
 import { describe, expect, it, vi } from "vitest";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import type { AccessRole } from "@/features/organisation/api";
-import {
-	placeKey,
-	type PlaceRef,
-} from "@/features/organisation/assignmentTargets";
+import { placeKey, type PlaceRef } from "@/features/workspace/places";
 import { AssignAccessRoleDialog } from "@/features/organisation/AssignAccessRoleDialog";
 
 const people = [

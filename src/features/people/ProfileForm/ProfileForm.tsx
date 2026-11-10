@@ -26,11 +26,10 @@ import {
 import { HeadsField } from "@/features/organisation/HeadsField";
 import {
 	assignmentTargets,
-	placeKey,
 	roleFitsScope,
-	scopeOfPlace,
 	type AssignmentTarget,
 } from "@/features/organisation/assignmentTargets";
+import { placeKey, scopeOfPlace } from "@/features/workspace/places";
 import { useCreateFormSubmit } from "@/features/organisation/useCreateFormSubmit";
 import {
 	useAccessRoles,

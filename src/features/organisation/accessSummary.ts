@@ -3,13 +3,13 @@ import type {
 	AccessRole,
 	MemberAccessRoleAssignment,
 } from "@/features/organisation/api";
+import { levelOf } from "@/features/organisation/assignmentTargets";
 import {
-	levelOf,
 	placeKey,
 	placeOf,
 	scopeOfPlace,
 	type PlaceRef,
-} from "@/features/organisation/assignmentTargets";
+} from "@/features/workspace/places";
 import {
 	sectionLevels,
 	sectionLevelText,

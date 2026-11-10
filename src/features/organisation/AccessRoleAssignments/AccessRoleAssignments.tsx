@@ -7,7 +7,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { PlusIcon } from "@/components/ui/Icon";
 import { OverflowMenuItem } from "@/components/ui/OverflowMenu";
 import type { UnitStatus } from "@/features/organisation/api";
-import { placeOf } from "@/features/organisation/assignmentTargets";
+import { placeOf } from "@/features/workspace/places";
 import {
 	actionsColumn,
 	statusColumn,

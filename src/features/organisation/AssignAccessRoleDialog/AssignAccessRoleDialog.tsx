@@ -20,12 +20,14 @@ import type {
 import {
 	companyRoleOutOfReach,
 	keysThatFitNowhere,
-	placeKey,
 	roleFitsScope,
-	scopeOfPlace,
 	type AssignmentTarget,
-	type PlaceRef,
 } from "@/features/organisation/assignmentTargets";
+import {
+	placeKey,
+	scopeOfPlace,
+	type PlaceRef,
+} from "@/features/workspace/places";
 import { permissionList } from "@/features/organisation/PermissionChecklist/groups";
 import { PermissionSummary } from "@/features/organisation/PermissionSummary";
 import { isPermissionKey } from "@/features/workspace/permissionKeys";

@@ -10,9 +10,8 @@ import { assignmentRefusal } from "@/features/organisation/assignmentRefusal";
 import {
 	assignmentTargets,
 	changeableAt,
-	placeKey,
-	placeOf,
 } from "@/features/organisation/assignmentTargets";
+import { placeKey, placeOf } from "@/features/workspace/places";
 import {
 	useAccessRoleHolders,
 	useChangeAccessRoleHolders,
