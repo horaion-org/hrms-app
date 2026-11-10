@@ -23,6 +23,10 @@ import {
 } from "@/features/approvals/api";
 import { flowRefusal } from "@/features/approvals/approvalRefusal";
 import { subjectCopyKey } from "@/features/approvals/approvalSubjects";
+import {
+	movedFocusTarget,
+	type MoveDirection,
+} from "@/features/approvals/ApprovalFlowDialog/movedFocusTarget";
 import { StepChoices } from "@/features/approvals/ApprovalFlowDialog/StepChoices";
 import {
 	flowSchema,
@@ -101,7 +105,7 @@ export const ApprovalFlowDialog = ({
 	const departmentId = useWatch({ control, name: "departmentId" });
 	const [announcement, setAnnouncement] = useState("");
 	// The arrow a move was made with; focus follows the moved step to its new place.
-	const moved = useRef<{ index: number; direction: "up" | "down" } | null>(
+	const moved = useRef<{ index: number; direction: MoveDirection } | null>(
 		null
 	);
 	const stepsRef = useRef<HTMLOListElement>(null);
@@ -109,15 +113,11 @@ export const ApprovalFlowDialog = ({
 		const last = moved.current;
 		if (!last) return;
 		moved.current = null;
-		const lastIndex = steps.fields.length - 1;
-		// At an end the pressed arrow is gone from use; keep focus on the other one.
-		const direction =
-			(last.direction === "up" && last.index === 0) ||
-			(last.direction === "down" && last.index === lastIndex)
-				? last.direction === "up"
-					? "down"
-					: "up"
-				: last.direction;
+		const direction = movedFocusTarget(
+			last.index,
+			last.direction,
+			steps.fields.length - 1
+		);
 		stepsRef.current
 			?.querySelector<HTMLButtonElement>(
 				`[data-move="${last.index}:${direction}"]`
