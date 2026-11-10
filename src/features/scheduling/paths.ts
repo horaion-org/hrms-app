@@ -1,4 +1,4 @@
-import { companyPath } from "@/features/organisation/api";
+import { companyPath } from "@/common/companyPath";
 
 /** The Branch and Department a department-scoped route names. */
 export type DepartmentPath = { branchId: string; departmentId: string };

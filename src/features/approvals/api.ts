@@ -5,8 +5,8 @@ import {
 } from "@tanstack/react-query";
 import { z } from "zod";
 import { apiRequest, apiRequestVoid } from "@/common/api-client";
+import { companyPath } from "@/common/companyPath";
 import { formerMemberRefSchema } from "@/common/schemas";
-import { companyPath } from "@/features/organisation/api";
 import { administrativeMeta, selfMeta } from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";
 

@@ -9,8 +9,8 @@ import {
 } from "@tanstack/react-query";
 import { z } from "zod";
 import { apiRequest, apiRequestVoid, fetchList } from "@/common/api-client";
+import { companyPath } from "@/common/companyPath";
 import type { ListPage } from "@/common/schemas";
-import { companyPath } from "@/features/organisation/api";
 import {
 	accessiblePreviousData,
 	administrativeMeta,

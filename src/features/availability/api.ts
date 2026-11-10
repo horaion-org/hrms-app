@@ -5,6 +5,7 @@ import {
 } from "@tanstack/react-query";
 import { z } from "zod";
 import { apiRequest, apiRequestVoid } from "@/common/api-client";
+import { companyPath } from "@/common/companyPath";
 import { ApiProblemError } from "@/common/problem";
 import { weekdaySchema } from "@/common/weekdays";
 import type {
@@ -14,7 +15,6 @@ import type {
 	WeekAvailability,
 	WeeklyAvailability,
 } from "@/features/availability/availabilityModel";
-import { companyPath } from "@/features/organisation/api";
 import {
 	departmentPath,
 	type DepartmentPath,

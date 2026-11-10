@@ -5,7 +5,7 @@ import {
 } from "@tanstack/react-query";
 import { z } from "zod";
 import { apiRequest } from "@/common/api-client";
-import { companyPath } from "@/features/organisation/api";
+import { companyPath } from "@/common/companyPath";
 import {
 	SCHEDULING_QUERY_ROOT,
 	schedulePath,

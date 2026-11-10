@@ -6,9 +6,9 @@ import {
 } from "@tanstack/react-query";
 import { z } from "zod";
 import { apiRequest, apiRequestVoid } from "@/common/api-client";
+import { companyPath } from "@/common/companyPath";
 import { WEEKDAYS } from "@/common/weekdays";
 import type { IsoDate } from "@/components/forms/Calendar";
-import { companyPath } from "@/features/organisation/api";
 import { SCHEDULING_QUERY_ROOT } from "@/features/scheduling/paths";
 import { administrativeMeta, selfMeta } from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";

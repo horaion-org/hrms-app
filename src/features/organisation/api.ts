@@ -1,6 +1,7 @@
 import { normalizeBranchCity } from "@/features/organisation/city";
 import { z } from "zod";
 import { apiRequest, apiRequestVoid, fetchList } from "@/common/api-client";
+import { companyPath } from "@/common/companyPath";
 import { memberRefSchema, type ListPage } from "@/common/schemas";
 
 const totalSchema = z.object({
@@ -36,9 +37,6 @@ export const ORGANISATION_ENTITY_TYPES = [
 	"Skill",
 	"OrganisationImportJob",
 ] as const;
-
-export const companyPath = (companyId: string): string =>
-	`/api/v1/companies/${encodeURIComponent(companyId)}`;
 
 /** A one-row page is enough: only the page's total is read. */
 const countOf = async (path: string): Promise<number> =>

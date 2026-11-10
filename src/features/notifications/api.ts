@@ -4,8 +4,8 @@ import {
 } from "@tanstack/react-query";
 import { z } from "zod";
 import { apiRequest, apiRequestVoid } from "@/common/api-client";
+import { companyPath } from "@/common/companyPath";
 import { pagedSchema } from "@/common/schemas";
-import { companyPath } from "@/features/organisation/api";
 import {
 	administrativeMeta,
 	selfMeta,

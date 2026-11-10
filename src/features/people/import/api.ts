@@ -8,7 +8,7 @@ import {
 	apiRequest,
 	type DownloadedFile,
 } from "@/common/api-client";
-import { companyPath } from "@/features/organisation/api";
+import { companyPath } from "@/common/companyPath";
 import type { PeopleQuery } from "@/features/people/api";
 import { administrativeMeta } from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";
