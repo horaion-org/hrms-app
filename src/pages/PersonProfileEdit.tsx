@@ -6,7 +6,7 @@ import {
 	roleNames,
 	rolesByPlace,
 	type MemberRoles,
-} from "@/features/people/memberRoles";
+} from "@/features/accessRoles/memberRoles";
 import { profileEditValues } from "@/features/people/profileRequest";
 import { ProfileForm } from "@/features/people/ProfileForm";
 import { ProfileHeader } from "@/features/people/ProfileHeader";
