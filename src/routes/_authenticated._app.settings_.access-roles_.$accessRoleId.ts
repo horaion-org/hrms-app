@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { fetchAccessRole } from "@/features/accessRoles/api";
 import { workspaceQuery } from "@/features/workspace/api";
 import {
-	AccessRoleEditor,
+	AccessRoleEditorPage,
 	AccessRoleEditorProblem,
 } from "@/pages/AccessRoleEditor";
 
@@ -26,6 +26,6 @@ export const Route = createFileRoute(
 		]);
 		return role;
 	},
-	component: AccessRoleEditor,
+	component: AccessRoleEditorPage,
 	errorComponent: AccessRoleEditorProblem,
 });

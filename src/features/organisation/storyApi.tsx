@@ -4,8 +4,15 @@ import { I18nextProvider } from "react-i18next";
 import { configureApiClient, resetApiClient } from "@/common/api-client";
 import { authTestI18n } from "@/features/auth/testingI18n";
 
-/** One stubbed GET for stories: the path fragment it answers and its rows. */
-export type StoryList = { path: string; content: Array<unknown> };
+/**
+ * One stubbed GET for stories: the path fragment it answers and its rows,
+ * sent as a page unless `paged` is false (a route that answers a plain array).
+ */
+export type StoryList = {
+	path: string;
+	content: Array<unknown>;
+	paged?: boolean;
+};
 
 const json = (body: unknown, status: number): Response =>
 	new Response(JSON.stringify(body), {
@@ -52,10 +59,13 @@ export const stubStoryApi = (
 						message: "OK",
 						path: "/",
 						timestamp: "2026-09-27T00:00:00Z",
-						data: {
-							content: list.content,
-							page: { totalElements: list.content.length },
-						},
+						data:
+							list.paged === false
+								? list.content
+								: {
+										content: list.content,
+										page: { totalElements: list.content.length },
+									},
 					},
 					200
 				)
