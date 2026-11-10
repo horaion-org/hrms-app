@@ -18,7 +18,7 @@ import {
 	type AccessRoleAction,
 } from "@/features/accessRoles/AccessRoleActionDialog";
 import { AssignAccessRole } from "@/features/accessRoles/AssignAccessRole";
-import { CreateSystemRoleDialog } from "@/features/accessRoles/CreateSystemRoleDialog";
+import { CreateAccessRoleDialog } from "@/features/accessRoles/CreateAccessRoleDialog";
 import { ListToolbar } from "@/features/organisation/ListToolbar";
 import {
 	actionsColumn,
@@ -36,7 +36,7 @@ import { isPermissionKey } from "@/features/workspace/permissionKeys";
 import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 
 /** Access roles: who may manage what, and where (Settings › Access roles). */
-export const SystemRoles = (): FunctionComponent => {
+export const AccessRoles = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
 	const { t } = useTranslation();
 	const [creating, setCreating] = useState(false);
@@ -272,7 +272,7 @@ export const SystemRoles = (): FunctionComponent => {
 				/>
 			)}
 			{creating && canCreate && (
-				<CreateSystemRoleDialog
+				<CreateAccessRoleDialog
 					key={companyId}
 					companyId={companyId}
 					heldPermissions={permissions}

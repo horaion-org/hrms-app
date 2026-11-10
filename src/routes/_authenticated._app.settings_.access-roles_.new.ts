@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { workspaceQuery } from "@/features/workspace/api";
 import { forbiddenRedirect } from "@/features/workspace/forbiddenRedirect";
 import { COMPANY_SCOPE } from "@/features/workspace/scopes";
-import { SystemRoleCreate } from "@/pages/SystemRoleCreate";
+import { AccessRoleCreate } from "@/pages/AccessRoleCreate";
 
 export const Route = createFileRoute(
 	"/_authenticated/_app/settings_/access-roles_/new"
@@ -22,5 +22,5 @@ export const Route = createFileRoute(
 			target: COMPANY_SCOPE,
 		});
 	},
-	component: SystemRoleCreate,
+	component: AccessRoleCreate,
 });

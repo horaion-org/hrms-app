@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { SystemRoles } from "@/pages/SystemRoles";
+import { AccessRoles } from "@/pages/AccessRoles";
 export const Route = createFileRoute(
 	"/_authenticated/_app/settings_/access-roles"
 )({
-	component: SystemRoles,
+	component: AccessRoles,
 });

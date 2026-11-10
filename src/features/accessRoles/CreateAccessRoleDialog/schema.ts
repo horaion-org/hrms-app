@@ -8,7 +8,7 @@ import {
 	type PermissionKey,
 } from "@/features/workspace/permissionKeys";
 
-export const createSystemRoleSchema = (
+export const createAccessRoleSchema = (
 	t: TFunction
 ): z.ZodObject<{
 	kind: z.ZodType<AccessRoleKind, AccessRoleKind | "">;
@@ -30,11 +30,11 @@ export const createSystemRoleSchema = (
 };
 
 /** What the dialog holds while it is filled in: the kind may still be unchosen (""). */
-export type CreateSystemRoleInput = z.input<
-	ReturnType<typeof createSystemRoleSchema>
+export type CreateAccessRoleInput = z.input<
+	ReturnType<typeof createAccessRoleSchema>
 >;
 
 /** What the dialog creates: a role with its kind chosen. */
-export type CreateSystemRoleValues = z.output<
-	ReturnType<typeof createSystemRoleSchema>
+export type CreateAccessRoleValues = z.output<
+	ReturnType<typeof createAccessRoleSchema>
 >;

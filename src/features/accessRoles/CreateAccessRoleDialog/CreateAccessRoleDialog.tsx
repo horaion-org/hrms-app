@@ -8,12 +8,12 @@ import { RadioCard } from "@/components/forms/RadioCard";
 import { roleKindChoices } from "@/features/accessRoles/accessRoleFormSchema";
 import { isAccessRoleKind } from "@/features/accessRoles/api";
 import { CreateFormDialog } from "@/features/organisation/CreateFormDialog";
-import { refusalFor } from "@/features/accessRoles/CreateSystemRoleDialog/refusalFor";
+import { refusalFor } from "@/features/accessRoles/CreateAccessRoleDialog/refusalFor";
 import {
-	createSystemRoleSchema,
-	type CreateSystemRoleInput,
-	type CreateSystemRoleValues,
-} from "@/features/accessRoles/CreateSystemRoleDialog/schema";
+	createAccessRoleSchema,
+	type CreateAccessRoleInput,
+	type CreateAccessRoleValues,
+} from "@/features/accessRoles/CreateAccessRoleDialog/schema";
 import { PermissionChecklist } from "@/features/accessRoles/PermissionChecklist";
 import {
 	ROLE_TEMPLATE_LIST,
@@ -33,7 +33,7 @@ import {
 	type PermissionKey,
 } from "@/features/workspace/permissionKeys";
 
-export type CreateSystemRoleDialogProps = {
+export type CreateAccessRoleDialogProps = {
 	companyId: string;
 	/**
 	 * The permissions the person holds company-wide. Only these can be granted
@@ -41,12 +41,12 @@ export type CreateSystemRoleDialogProps = {
 	 */
 	heldPermissions: ReadonlySet<string>;
 	/** What the form starts from when duplicating a role, its kind included; empty otherwise. */
-	initial?: CreateSystemRoleInput;
+	initial?: CreateAccessRoleInput;
 	onClose: () => void;
 };
 
 const FIELDS = ["kind", "name", "permissions"] as const;
-const EMPTY: CreateSystemRoleInput = { kind: "", name: "", permissions: [] };
+const EMPTY: CreateAccessRoleInput = { kind: "", name: "", permissions: [] };
 
 const SCRATCH = "scratch";
 
@@ -60,18 +60,18 @@ const SCRATCH = "scratch";
  * company-only permissions and says which. Mount when opened and unmount
  * when closed so every attempt starts fresh.
  */
-export const CreateSystemRoleDialog = ({
+export const CreateAccessRoleDialog = ({
 	companyId,
 	heldPermissions,
 	initial = EMPTY,
 	onClose,
-}: CreateSystemRoleDialogProps): FunctionComponent => {
+}: CreateAccessRoleDialogProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const key = "organisation.accessRoles.createDialog";
 	const kindKey = "organisation.accessRoles.kind";
 	const formId = useId();
-	const schema = useMemo(() => createSystemRoleSchema(t), [t]);
-	const form = useForm<CreateSystemRoleInput, unknown, CreateSystemRoleValues>({
+	const schema = useMemo(() => createAccessRoleSchema(t), [t]);
+	const form = useForm<CreateAccessRoleInput, unknown, CreateAccessRoleValues>({
 		resolver: zodResolver(schema),
 		defaultValues: initial,
 		mode: "onSubmit",

@@ -21,7 +21,7 @@ import {
 	type PermissionKey,
 } from "@/features/workspace/permissionKeys";
 
-/** What a person's system roles give at one place. */
+/** What a person's access roles give at one place. */
 export type PlaceAccess = {
 	branchId: string | null;
 	departmentId: string | null;
@@ -34,7 +34,7 @@ const levelRank = (place: PlaceRef): number =>
 	({ company: 0, branch: 1, department: 2 })[scopeOfPlace(place).kind];
 
 /**
- * Per place, the permissions a person's system roles give there, from the
+ * Per place, the permissions a person's access roles give there, from the
  * active assignments of active roles only: the whole company first, then
  * Branches, then Departments, each level in the order its places are first
  * held. A key gives nothing at a level it can't be given at (a company-only

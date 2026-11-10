@@ -90,7 +90,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Opened from the System Roles list: the person chooses the role. */
+/** Opened from the Access roles list: the person chooses the role. */
 export const Default: Story = { args: {} };
 
 const LABELS: Record<string, string> = {
