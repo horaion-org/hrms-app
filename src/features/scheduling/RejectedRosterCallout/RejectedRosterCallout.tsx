@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next";
+import { dateTimeFormatIn } from "@/common/dateTimeFormatIn";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { Callout } from "@/components/ui/Callout";
 import { Quote } from "@/components/ui/Quote";
-import { dateTimeFormatIn } from "@/features/scheduling/roster/roster";
 import type { Schedule } from "@/features/scheduling/schedules/api";
 import { scheduleDecision } from "@/features/scheduling/schedules/scheduleDecision";
 

@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { dateTimeFormatIn } from "@/common/dateTimeFormatIn";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
@@ -37,7 +38,6 @@ import {
 	publishedWeekQuery,
 } from "@/features/scheduling/publishedWeek/api";
 import { PublishedWeekCallout } from "@/features/scheduling/publishedWeek/PublishedWeekCallout";
-import { dateTimeFormatIn } from "@/features/scheduling/roster/roster";
 import type { RosterSearch } from "@/features/scheduling/roster/rosterSearch";
 import { RosterHeader } from "@/features/scheduling/RosterHeader";
 import { coverOffersQuery } from "@/features/scheduling/coverOffers/api";

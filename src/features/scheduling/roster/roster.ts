@@ -1,3 +1,4 @@
+import { dateTimeFormatIn } from "@/common/dateTimeFormatIn";
 import type { SchedulePeriod } from "@/features/scheduling/periods";
 import {
 	hoursFromMinutes,
@@ -196,19 +197,6 @@ export const hoursInDays = (
 	hoursFromMinutes(
 		days.reduce((total, day) => total + paidMinutesOf(row.days[day]), 0)
 	);
-
-/** A date format in `timeZone` (an IANA name); the browser's own zone when the name is unknown. */
-export const dateTimeFormatIn = (
-	language: string,
-	timeZone: string,
-	options: Intl.DateTimeFormatOptions
-): Intl.DateTimeFormat => {
-	try {
-		return new Intl.DateTimeFormat(language, { ...options, timeZone });
-	} catch {
-		return new Intl.DateTimeFormat(language, options);
-	}
-};
 
 /**
  * Today's ISO date in `timeZone` (the branch's IANA zone), so "this week"
