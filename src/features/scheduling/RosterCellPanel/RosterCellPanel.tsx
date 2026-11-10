@@ -5,11 +5,11 @@ import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { ErrorText } from "@/components/ui/ErrorText";
 import type { CoverOffer } from "@/features/scheduling/coverOffers/api";
 import { CoverOfferSent } from "@/features/scheduling/coverOffers/CoverOfferActions/CoverOfferSent";
 import { CellChoices } from "@/features/scheduling/RosterCellPanel/CellChoices";
 import { CellNow } from "@/features/scheduling/RosterCellPanel/CellNow";
-import { CellPanelAlert } from "@/features/scheduling/RosterCellPanel/CellPanelAlert";
 import { CellPanelFooter } from "@/features/scheduling/RosterCellPanel/CellPanelFooter";
 import { CellPanelHeader } from "@/features/scheduling/RosterCellPanel/CellPanelHeader";
 import { useRosterCellPanel } from "@/features/scheduling/RosterCellPanel/useRosterCellPanel";
@@ -117,9 +117,7 @@ export const RosterCellPanel = ({
 		failure: RosterLeaveRefusal | undefined
 	): ReactNode =>
 		failure && (
-			<CellPanelAlert>
-				{t(`${key}.leaveFailed.${failure}`, { name })}
-			</CellPanelAlert>
+			<ErrorText>{t(`${key}.leaveFailed.${failure}`, { name })}</ErrorText>
 		);
 
 	/** An offer out for the member's day, with Withdraw. */
@@ -174,14 +172,14 @@ export const RosterCellPanel = ({
 		offerOpen: () => offerOut(coverOffer?.openOffer),
 		stranded: () =>
 			stranded && (
-				<CellPanelAlert>
+				<ErrorText>
 					{t(
 						stranded.flagged
 							? `${key}.strandedNeedsDecision`
 							: `${key}.strandedDayOff`,
 						{ day, reason: t(`${key}.error.${stranded.refusal}`) }
 					)}
-				</CellPanelAlert>
+				</ErrorText>
 			),
 		readOnly: () => (
 			<p className="text-sm text-neutral-800">
@@ -231,9 +229,9 @@ export const RosterCellPanel = ({
 					</div>
 				)}
 				{changeReview.applyRefusal && !stranded && (
-					<CellPanelAlert>
+					<ErrorText>
 						{t(`${key}.error.${changeReview.applyRefusal}`)}
-					</CellPanelAlert>
+					</ErrorText>
 				)}
 				{leaveFailureAlert(changeReview.leaveFailure)}
 				<CellPanelFooter
