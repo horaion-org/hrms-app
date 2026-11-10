@@ -68,12 +68,12 @@ jobs:
     runs-on: ${{ vars.CI_RUNNER || 'blacksmith-2vcpu-ubuntu-2404' }}
     timeout-minutes: 20
 
-    # Two shards: each job pays about 20 s of setup and is billed in whole minutes, so a third shard cost more
-    # minutes than the wall time it saved. Add a number here to add a shard; the count follows the matrix.
+    # Three shards keep each job near two minutes. Two shards on a 2-vCPU runner took 182-271 s per shard and made a
+    # timing-sensitive test flake. The job name and --shard read the count from this matrix (strategy.job-total).
     strategy:
       fail-fast: false
       matrix:
-        shard: [ 1, 2 ]
+        shard: [ 1, 2, 3 ]
 
     steps:
       - name: Checkout repository
