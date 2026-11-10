@@ -7,7 +7,7 @@ import {
 	updateAccessRole,
 	type AccessRole,
 	type UpdateAccessRoleBody,
-} from "@/features/organisation/api";
+} from "@/features/accessRoles/api";
 import { workspaceQuery } from "@/features/workspace/api";
 
 /**

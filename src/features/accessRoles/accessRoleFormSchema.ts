@@ -3,7 +3,7 @@ import { z } from "zod";
 import {
 	ACCESS_ROLE_KINDS,
 	type AccessRoleKind,
-} from "@/features/organisation/api";
+} from "@/features/accessRoles/api";
 import { nameSchema } from "@/features/organisation/nameSchema";
 import {
 	PERMISSION_KEYS,

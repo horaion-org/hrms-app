@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { AccessRole } from "@/features/organisation/api";
+import type { AccessRole } from "@/features/accessRoles/api";
 import type { TFunction } from "i18next";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import {

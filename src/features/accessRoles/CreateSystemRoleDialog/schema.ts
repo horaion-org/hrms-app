@@ -1,7 +1,7 @@
 import type { TFunction } from "i18next";
 import { z } from "zod";
 import { roleKindSchema } from "@/features/accessRoles/accessRoleFormSchema";
-import type { AccessRoleKind } from "@/features/organisation/api";
+import type { AccessRoleKind } from "@/features/accessRoles/api";
 import { unitNameSchema } from "@/features/organisation/createSchemas";
 import {
 	PERMISSION_KEYS,

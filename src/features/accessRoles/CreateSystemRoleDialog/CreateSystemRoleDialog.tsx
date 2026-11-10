@@ -6,7 +6,7 @@ import type { FunctionComponent } from "@/common/types";
 import { FormRow, formRowIds } from "@/components/forms/FormRow";
 import { RadioCard } from "@/components/forms/RadioCard";
 import { roleKindChoices } from "@/features/accessRoles/accessRoleFormSchema";
-import { isAccessRoleKind } from "@/features/organisation/api";
+import { isAccessRoleKind } from "@/features/accessRoles/api";
 import { CreateFormDialog } from "@/features/organisation/CreateFormDialog";
 import { refusalFor } from "@/features/accessRoles/CreateSystemRoleDialog/refusalFor";
 import {

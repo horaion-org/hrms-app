@@ -8,7 +8,8 @@ import {
 	type AccessRoleAssignmentRow,
 	type AccessRolePerson,
 } from "@/features/accessRoles/AccessRoleAssignments";
-import type { AccessRole, UnitStatus } from "@/features/organisation/api";
+import type { UnitStatus } from "@/features/organisation/api";
+import type { AccessRole } from "@/features/accessRoles/api";
 import {
 	assignmentRemoveRefusal,
 	assignmentStatusRefusal,

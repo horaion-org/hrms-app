@@ -15,7 +15,7 @@ import {
 	type AccessRoleFormValues,
 } from "@/features/accessRoles/accessRoleFormSchema";
 import { accessRoleRefusal } from "@/features/accessRoles/accessRoleRefusal";
-import { isAccessRoleKind } from "@/features/organisation/api";
+import { isAccessRoleKind } from "@/features/accessRoles/api";
 import { PermissionChecklist } from "@/features/accessRoles/PermissionChecklist";
 import {
 	keysFor,

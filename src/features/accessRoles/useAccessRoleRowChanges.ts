@@ -3,7 +3,7 @@ import {
 	deleteAccessRole,
 	updateAccessRole,
 	type AccessRole,
-} from "@/features/organisation/api";
+} from "@/features/accessRoles/api";
 import {
 	useRowChange,
 	type StatusChange,

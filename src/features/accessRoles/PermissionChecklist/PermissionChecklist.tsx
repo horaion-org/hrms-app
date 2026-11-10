@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { Checkbox } from "@/components/ui/Checkbox";
-import type { AccessRoleKind } from "@/features/organisation/api";
+import type { AccessRoleKind } from "@/features/accessRoles/api";
 import {
 	blockedBy,
 	canTick,

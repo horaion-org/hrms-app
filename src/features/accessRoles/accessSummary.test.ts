@@ -10,7 +10,7 @@ import {
 import type {
 	AccessRole,
 	MemberAccessRoleAssignment,
-} from "@/features/organisation/api";
+} from "@/features/accessRoles/api";
 
 const t = authTestI18n.t.bind(authTestI18n);
 

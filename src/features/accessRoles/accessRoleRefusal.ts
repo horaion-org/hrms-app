@@ -1,7 +1,7 @@
 import type { TFunction } from "i18next";
 import { ApiProblemError } from "@/common/problem";
 import { mapRefusal } from "@/common/refusal";
-import type { AccessRoleKind } from "@/features/organisation/api";
+import type { AccessRoleKind } from "@/features/accessRoles/api";
 
 /** The API's stable codes for refusing a change to an access role. */
 export const ACCESS_ROLE_ERROR = {

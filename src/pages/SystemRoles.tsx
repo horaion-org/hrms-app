@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import { OverflowMenuItem } from "@/components/ui/OverflowMenu";
-import type { AccessRole } from "@/features/organisation/api";
+import type { AccessRole } from "@/features/accessRoles/api";
 import {
 	AccessRoleActionDialog,
 	type AccessRoleAction,

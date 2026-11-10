@@ -1,8 +1,5 @@
-import {
-	fetchAccessRoles,
-	type AccessRole,
-	type ListQuery,
-} from "@/features/organisation/api";
+import type { ListQuery } from "@/features/organisation/api";
+import { fetchAccessRoles, type AccessRole } from "@/features/accessRoles/api";
 import {
 	useOrganisationList,
 	type OrganisationList,

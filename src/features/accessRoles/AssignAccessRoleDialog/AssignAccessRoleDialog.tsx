@@ -12,11 +12,11 @@ import {
 	assignmentsAfter,
 	describeAccess,
 } from "@/features/accessRoles/accessSummary";
+import type { CompanyMember } from "@/features/organisation/api";
 import type {
 	AccessRole,
-	CompanyMember,
 	MemberAccessRoleAssignment,
-} from "@/features/organisation/api";
+} from "@/features/accessRoles/api";
 import {
 	companyRoleOutOfReach,
 	keysThatFitNowhere,

@@ -2,7 +2,7 @@ import type { TFunction } from "i18next";
 import type {
 	AccessRole,
 	MemberAccessRoleAssignment,
-} from "@/features/organisation/api";
+} from "@/features/accessRoles/api";
 import { levelOf } from "@/features/accessRoles/assignmentTargets";
 import {
 	placeKey,
