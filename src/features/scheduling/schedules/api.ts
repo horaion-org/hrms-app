@@ -10,6 +10,7 @@ import {
 	apiRequestVoid,
 	type DownloadedFile,
 } from "@/common/api-client";
+import { publicationSubmissionSchema } from "@/features/approvals/api";
 import {
 	constraintCategorySchema,
 	constraintRequirementSchema,
@@ -191,27 +192,6 @@ const participantSchema = z.object({
 });
 
 /**
- * The roster's submission waiting for approval, as the schedule read tells
- * every schedule reader (hrms-backend-v2 PR #164): where it stands and
- * whether the caller submitted it, so a submitter without `approval:read`
- * sees it wait and may withdraw it. It names nobody.
- */
-const submissionSchema = z.object({
-	/** The approval to withdraw it by (`POST /me/approval-instances/{id}/cancellation`). */
-	approvalInstanceId: z.string(),
-	/** The open step, from 1. */
-	currentStepOrder: z.number().int(),
-	/** The open step's name, as it was when submitted. */
-	currentStepLabel: z.string(),
-	/** How many steps the submission has. */
-	stepCount: z.number().int(),
-	submittedByCaller: z.boolean(),
-});
-
-/** A waiting submission as the schedule read tells it; null on `publication` when nothing waits. */
-export type PublicationSubmission = z.infer<typeof submissionSchema>;
-
-/**
  * The approval step that rejected the roster, as the schedule read tells
  * every reader, so a submitter without `approval:read` sees where it was
  * rejected. `decidedBy` says who rejected it.
@@ -272,7 +252,7 @@ const scheduleSchema = z.object({
 		.object({
 			requiresApproval: z.boolean(),
 			stepLabels: z.array(z.string()),
-			submission: submissionSchema
+			submission: publicationSubmissionSchema
 				.nullish()
 				.transform((value) => value ?? null),
 			/** The step that rejected the roster; null unless an approval step did. */

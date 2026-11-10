@@ -1,5 +1,7 @@
-import type { ApprovalInstance } from "@/features/approvals/api";
-import type { PublicationSubmission } from "@/features/scheduling/schedules/api";
+import type {
+	ApprovalInstance,
+	PublicationSubmission,
+} from "@/features/approvals/api";
 
 /** What the page could read of a subject's submission. */
 export type ApprovalRead =
