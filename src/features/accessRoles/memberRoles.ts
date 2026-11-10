@@ -11,7 +11,7 @@ import type {
 import type { PlaceRef } from "@/features/workspace/places";
 import type { AccessRoleHoldersChange } from "@/features/accessRoles/useAccessRoleHolders";
 
-/** One system role a person holds, and where. */
+/** One access role a person holds, and where. */
 export type MemberRole = {
 	assignmentId: string;
 	accessRoleId: string;
@@ -23,7 +23,7 @@ export type MemberRole = {
 };
 
 /**
- * A person's system roles as loaded, or why they aren't shown. Once ready,
+ * A person's access roles as loaded, or why they aren't shown. Once ready,
  * it carries what they were read from: the person's assignments the reader
  * may see, and the company's roles.
  */
@@ -129,7 +129,7 @@ export const memberRoleChange = ({
 };
 
 /**
- * A person's system roles in words for their profile, or undefined when the
+ * A person's access roles in words for their profile, or undefined when the
  * person may not read roles, which leaves the row out.
  */
 export const describeMemberRoles = (
@@ -153,7 +153,7 @@ export const describeMemberRoles = (
 };
 
 /**
- * Where a person's system roles give them permissions, for their profile:
+ * Where a person's access roles give them permissions, for their profile:
  * each place the reader can see, or why that isn't shown. Undefined when
  * the reader may not read roles, which leaves it out.
  */

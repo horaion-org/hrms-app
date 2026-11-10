@@ -10,7 +10,7 @@ import { Tab, TabList, TabPanel, TabPanels, Tabs } from "@/components/ui/Tabs";
 import { AccessRoleHolders } from "@/features/accessRoles/AccessRoleHolders";
 import { AccessRoleForm } from "@/features/accessRoles/AccessRoleForm";
 import { readOnlyReason } from "@/features/accessRoles/accessRoleReadOnly";
-import { SYSTEM_ROLES_PATH } from "@/features/accessRoles/systemRolesPath";
+import { ACCESS_ROLES_PATH } from "@/features/accessRoles/accessRolesPath";
 import { useAccessRoleHolders } from "@/features/accessRoles/useAccessRoleHolders";
 import { useUpdateAccessRole } from "@/features/accessRoles/useUpdateAccessRole";
 import { companyPermissions, workspaceQuery } from "@/features/workspace/api";
@@ -33,7 +33,7 @@ const BackToList = (): FunctionComponent => {
 	return (
 		<Button
 			leadingIcon={<ArrowLeftIcon />}
-			to={SYSTEM_ROLES_PATH}
+			to={ACCESS_ROLES_PATH}
 			variant="textlink"
 		>
 			{t(`${key}.back`)}
@@ -48,7 +48,7 @@ const BackToList = (): FunctionComponent => {
  * role, when the person may not change roles, or when it holds a permission
  * the person doesn't: the API refuses any change to such a role.
  */
-export const SystemRoleEditor = (): FunctionComponent => {
+export const AccessRoleEditor = (): FunctionComponent => {
 	const role = route.useLoaderData();
 	const navigate = route.useNavigate();
 	const { tab } = route.useSearch();
@@ -119,7 +119,7 @@ export const SystemRoleEditor = (): FunctionComponent => {
 									permissions: [...values.permissions, ...unknown],
 									status: role.status,
 								});
-								await navigate({ to: SYSTEM_ROLES_PATH });
+								await navigate({ to: ACCESS_ROLES_PATH });
 							}}
 						/>
 					</TabPanel>
@@ -140,7 +140,7 @@ const loadProblem = (
 };
 
 /** Shown in place of the editor when the role can't be loaded. */
-export const SystemRoleEditorProblem = ({
+export const AccessRoleEditorProblem = ({
 	error,
 }: ErrorComponentProps): FunctionComponent => {
 	const { t } = useTranslation();

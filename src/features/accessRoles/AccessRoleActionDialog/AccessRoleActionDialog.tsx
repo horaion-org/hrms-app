@@ -4,7 +4,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { accessRoleRowRefusal } from "@/features/accessRoles/accessRoleRefusal";
 import { AccessRoleStatusDialog } from "@/features/accessRoles/AccessRoleStatusDialog";
 import type { AccessRole } from "@/features/accessRoles/api";
-import { CreateSystemRoleDialog } from "@/features/accessRoles/CreateSystemRoleDialog";
+import { CreateAccessRoleDialog } from "@/features/accessRoles/CreateAccessRoleDialog";
 import { useAccessRoleHolders } from "@/features/accessRoles/useAccessRoleHolders";
 import {
 	useDeleteAccessRole,
@@ -109,7 +109,7 @@ export const AccessRoleActionDialog = ({
 	if (kind === "status") return <ChangeStatus role={role} onClose={onClose} />;
 	if (kind === "delete") return <DeleteRole role={role} onClose={onClose} />;
 	return (
-		<CreateSystemRoleDialog
+		<CreateAccessRoleDialog
 			companyId={companyId}
 			heldPermissions={heldPermissions}
 			initial={{

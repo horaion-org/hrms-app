@@ -13,7 +13,7 @@ import { useAccess } from "@/features/workspace/useAccess";
 const BY_NAME = { sort: { field: "name", desc: false } } as const;
 
 /**
- * The system roles a person holds. Asked for with `access_role:read` held
+ * The access roles a person holds. Asked for with `access_role:read` held
  * anywhere: the API returns only the assignments whose own place is inside
  * the caller's read scopes. Without the key, or when the API refuses with a
  * 403, they are `hidden`. With no person (`membershipId` empty), nothing is

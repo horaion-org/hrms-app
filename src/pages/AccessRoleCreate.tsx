@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { ArrowLeftIcon } from "@/components/ui/Icon";
 import { AccessRoleForm } from "@/features/accessRoles/AccessRoleForm";
 import type { AccessRoleFormInput } from "@/features/accessRoles/accessRoleFormSchema";
-import { SYSTEM_ROLES_PATH } from "@/features/accessRoles/systemRolesPath";
+import { ACCESS_ROLES_PATH } from "@/features/accessRoles/accessRolesPath";
 import { useCreateAccessRole } from "@/features/accessRoles/useCreateAccessRole";
 import { companyPermissions, workspaceQuery } from "@/features/workspace/api";
 import { PERMISSION_KEYS } from "@/features/workspace/permissionKeys";
@@ -20,7 +20,7 @@ const EMPTY: AccessRoleFormInput = { kind: "", name: "", permissions: [] };
  * A new access role. The person can only give it permissions they hold
  * company-wide, because the API refuses a role holding any other.
  */
-export const SystemRoleCreate = (): FunctionComponent => {
+export const AccessRoleCreate = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
 	const navigate = useNavigate();
 	const { t } = useTranslation();
@@ -33,7 +33,7 @@ export const SystemRoleCreate = (): FunctionComponent => {
 		<>
 			<Button
 				leadingIcon={<ArrowLeftIcon />}
-				to={SYSTEM_ROLES_PATH}
+				to={ACCESS_ROLES_PATH}
 				variant="textlink"
 			>
 				{t(`${key}.back`)}
@@ -56,7 +56,7 @@ export const SystemRoleCreate = (): FunctionComponent => {
 						unavailable={unavailable}
 						onSubmit={async (values) => {
 							await create.mutateAsync(values);
-							await navigate({ to: SYSTEM_ROLES_PATH });
+							await navigate({ to: ACCESS_ROLES_PATH });
 						}}
 					/>
 				</>

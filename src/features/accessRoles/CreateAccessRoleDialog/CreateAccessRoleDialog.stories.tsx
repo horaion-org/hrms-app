@@ -1,7 +1,7 @@
 import { QueryClient } from "@tanstack/react-query";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn, userEvent, within } from "storybook/test";
-import { CreateSystemRoleDialog } from "@/features/accessRoles/CreateSystemRoleDialog";
+import { CreateAccessRoleDialog } from "@/features/accessRoles/CreateAccessRoleDialog";
 import { storyProviders, stubStoryApi } from "@/features/organisation/storyApi";
 import { PERMISSION_KEYS } from "@/features/workspace/permissionKeys";
 
@@ -9,8 +9,8 @@ const client = new QueryClient({
 	defaultOptions: { queries: { retry: false } },
 });
 const meta = {
-	title: "Features/AccessRoles/CreateSystemRoleDialog",
-	component: CreateSystemRoleDialog,
+	title: "Features/AccessRoles/CreateAccessRoleDialog",
+	component: CreateAccessRoleDialog,
 	args: {
 		companyId: "story-company",
 		heldPermissions: new Set(PERMISSION_KEYS),
@@ -19,7 +19,7 @@ const meta = {
 	decorators: [storyProviders(client)],
 	beforeEach: ({ parameters }): (() => void) =>
 		stubStoryApi([], Boolean(parameters["pending"]), client),
-} satisfies Meta<typeof CreateSystemRoleDialog>;
+} satisfies Meta<typeof CreateAccessRoleDialog>;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
