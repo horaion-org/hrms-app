@@ -1,12 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { ApiProblemError } from "@/common/problem";
 import {
+	editChoiceOf,
 	isLeaveDay,
 	leaveMoveOf,
 	moveChangesRoster,
 	needsDecision,
 	panelModes,
+	rosterChangeBodyOf,
 	rosterLeaveRefusal,
+	type EditChoiceFacts,
 } from "@/features/scheduling/rosterChanges/rosterLeave";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 import { scheduleAssignmentsFixture } from "@/features/scheduling/schedules/fixtures";
@@ -178,5 +181,99 @@ describe("rosterLeaveRefusal", () => {
 		);
 		expect(rosterLeaveRefusal(problem(500, "BOOM"))).toBe("failed");
 		expect(rosterLeaveRefusal(new Error("offline"))).toBe("failed");
+	});
+});
+
+describe("editChoiceOf", () => {
+	const nothingChosen: EditChoiceFacts = {
+		leaveDayEditable: false,
+		mode: undefined,
+		shiftId: undefined,
+		partner: undefined,
+		leaveMove: undefined,
+	};
+
+	it.each<[string, Partial<EditChoiceFacts>, ReturnType<typeof editChoiceOf>]>([
+		["nothing chosen", {}, undefined],
+		["a day off", { mode: "dayOff" }, { kind: "dayOff" }],
+		["a shift mode with no shift yet", { mode: "shift" }, undefined],
+		[
+			"a picked shift",
+			{ mode: "shift", shiftId: "sh-1" },
+			{ kind: "shift", shiftId: "sh-1" },
+		],
+		["a swap with no partner yet", { mode: "swap" }, undefined],
+		[
+			"a picked partner",
+			{ mode: "swap", partner: working },
+			{ kind: "swap", partner: working },
+		],
+		["putting someone on leave", { mode: "leave" }, undefined],
+		[
+			"an editable leave day back to a shift",
+			{
+				leaveDayEditable: true,
+				mode: "shift",
+				shiftId: "sh-1",
+				leaveMove: { kind: "backToShift", shiftId: "sh-1" },
+			},
+			{ kind: "shift", shiftId: "sh-1" },
+		],
+		[
+			"an editable leave day back to a day off, which Leave does alone",
+			{
+				leaveDayEditable: true,
+				mode: "dayOff",
+				leaveMove: { kind: "backToDayOff" },
+			},
+			undefined,
+		],
+	])("given %s, makes the matching roster edit", (_, facts, choice) => {
+		expect(editChoiceOf({ ...nothingChosen, ...facts })).toEqual(choice);
+	});
+});
+
+describe("rosterChangeBodyOf", () => {
+	const cell = {
+		membershipId: "m-1",
+		day: "2026-10-12",
+		kind: "OFF",
+	} as const;
+
+	it("sends nothing without cells", () => {
+		expect(
+			rosterChangeBodyOf({
+				revision: 3,
+				cells: [],
+				leaveMove: undefined,
+				day: "2026-10-12",
+			})
+		).toBeUndefined();
+	});
+
+	it("sends the cells at the revision read", () => {
+		expect(
+			rosterChangeBodyOf({
+				revision: 3,
+				cells: [cell],
+				leaveMove: undefined,
+				day: "2026-10-12",
+			})
+		).toEqual({ expectedRevision: 3, cells: [cell] });
+	});
+
+	it("reads the day as off leave when the move gives a shift back", () => {
+		expect(
+			rosterChangeBodyOf({
+				revision: 3,
+				cells: [cell],
+				leaveMove: { kind: "backToShift", shiftId: "sh-1" },
+				day: "2026-10-12",
+			})
+		).toEqual({
+			expectedRevision: 3,
+			cells: [cell],
+			assumeLeaveCancelledOn: ["2026-10-12"],
+		});
 	});
 });
