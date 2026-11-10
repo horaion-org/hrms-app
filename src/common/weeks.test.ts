@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { daysOf, mondayOf, weeksOf } from "@/features/scheduling/schedules";
+import { daysOf, mondayOf, weeksOf } from "@/common/weeks";
 
-describe("schedule dates", () => {
+describe("weeks", () => {
 	it("given_anyDay_when_askedForItsMonday_then_goesBackToIt", () => {
 		expect(mondayOf("2026-04-16")).toBe("2026-04-13");
 		expect(mondayOf("2026-04-19")).toBe("2026-04-13");

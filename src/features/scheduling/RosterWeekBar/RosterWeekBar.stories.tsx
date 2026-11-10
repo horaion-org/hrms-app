@@ -2,9 +2,9 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { fn } from "storybook/test";
 import type { FunctionComponent } from "@/common/types";
+import { weeksOf } from "@/common/weeks";
 import type { RosterLegendEntry } from "@/features/scheduling/roster/roster";
 import { RosterWeekBar } from "@/features/scheduling/RosterWeekBar";
-import { weeksOf } from "@/features/scheduling/schedules";
 import "@/common/i18n";
 
 const weeks = weeksOf({ start: "2026-04-13", end: "2026-04-26" });

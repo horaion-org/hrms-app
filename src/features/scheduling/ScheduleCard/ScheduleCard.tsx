@@ -7,9 +7,9 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { SchedulingIcon } from "@/components/ui/Icon";
 import { formatPeriod } from "@/features/scheduling/periods";
-import { scheduleStatusTones } from "@/features/scheduling/schedules";
 import type { ApprovalLine } from "@/features/approvals/approvalStanding";
 import type { Schedule } from "@/features/scheduling/schedules/api";
+import { scheduleStatusTones } from "@/features/scheduling/schedules/scheduleStatusTones";
 import { scheduleViewLink } from "@/features/scheduling/schedules/scheduleViewLink";
 import { ScheduleSummary } from "@/features/scheduling/ScheduleCard/ScheduleSummary";
 

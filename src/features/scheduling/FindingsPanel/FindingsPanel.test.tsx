@@ -3,10 +3,10 @@ import { createInstance } from "i18next";
 import { initReactI18next } from "react-i18next";
 import { beforeAll, describe, expect, it } from "vitest";
 import en from "@/assets/locales/en/translations.json";
+import { daysOf } from "@/common/weeks";
 import { frozenConstraintsFixture } from "@/features/scheduling/constraints/fixtures";
 import { FindingsPanel } from "@/features/scheduling/FindingsPanel";
 import { findingNames } from "@/features/scheduling/roster/findings/findingNames";
-import { daysOf } from "@/features/scheduling/schedules";
 import {
 	findingsOfEveryKindFixture,
 	generationFindingsFixture,

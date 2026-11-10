@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { dayParameter, shownDayOf } from "@/common/dayView";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
+import { mondayOf, weeksOf } from "@/common/weeks";
 import { Button } from "@/components/ui/Button";
 import { CountBadge } from "@/components/ui/CountBadge";
 import { DaySwitcher } from "@/components/ui/DaySwitcher";
@@ -71,7 +72,6 @@ import {
 	type RosterSidePanelSection,
 } from "@/features/scheduling/RosterSidePanel";
 import { RosterWeekBar } from "@/features/scheduling/RosterWeekBar";
-import { mondayOf, weeksOf } from "@/features/scheduling/schedules";
 import type {
 	Schedule,
 	ScheduleAssignment,

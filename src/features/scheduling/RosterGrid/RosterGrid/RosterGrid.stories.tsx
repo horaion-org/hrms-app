@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
+import { daysOf } from "@/common/weeks";
 import { RosterGrid } from "@/features/scheduling/RosterGrid";
 import { placeFindings } from "@/features/scheduling/roster/findings/findingsOnGrid";
 import { rosterFromAssignments } from "@/features/scheduling/roster/roster";
-import { daysOf } from "@/features/scheduling/schedules";
 import {
 	findingsOfEveryKindFixture,
 	scheduleAssignmentsFixture,

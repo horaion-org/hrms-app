@@ -18,6 +18,7 @@ import {
 	stubApi,
 	type StubReply,
 } from "@/common/testing/stubApi";
+import { mondayOf } from "@/common/weeks";
 import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
 import {
@@ -25,7 +26,6 @@ import {
 	WEEKDAY_MORNINGS,
 	weeklyAvailabilityFixture,
 } from "@/features/availability/fixtures";
-import { mondayOf } from "@/features/scheduling/schedules";
 
 const REFRESH = "POST /api/v1/public/sessions/refreshes";
 const ME = "GET /api/v1/me";

@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
 import { MINUTES_PER_DAY, minutesOfDay } from "@/common/timeOfDay";
 import { WEEKDAYS, type Weekday } from "@/common/weekdays";
-import { mondayOf } from "@/features/scheduling/schedules";
+import { mondayOf } from "@/common/weeks";
 
 /*
  * A part-time member's work availability: a weekly pattern of windows, each

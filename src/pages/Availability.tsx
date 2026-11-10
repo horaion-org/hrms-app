@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { dayParameter, shownDayOf } from "@/common/dayView";
 import type { FunctionComponent } from "@/common/types";
+import { daysOf, mondayOf } from "@/common/weeks";
 import { Callout } from "@/components/ui/Callout";
 import { FilterChips } from "@/components/ui/FilterChips";
 import { FiltersPopover } from "@/components/ui/FiltersPopover";
@@ -33,7 +34,6 @@ import {
 } from "@/features/availability/useAvailability";
 import { useCurrentCompanyId } from "@/features/organisation/useCurrentCompanyId";
 import { myProfileQuery } from "@/features/people/api";
-import { daysOf, mondayOf } from "@/features/scheduling/schedules";
 import { workspaceQuery } from "@/features/workspace/api";
 import {
 	AVAILABILITY_READ_KEYS,

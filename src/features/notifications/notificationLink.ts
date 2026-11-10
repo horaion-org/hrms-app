@@ -1,7 +1,7 @@
 import { linkOptions } from "@tanstack/react-router";
+import { mondayOf } from "@/common/weeks";
 import type { NotificationTarget } from "@/features/notifications/notificationTypes";
 import type { RosterSearch } from "@/features/scheduling/roster/rosterSearch";
-import { mondayOf } from "@/features/scheduling/schedules";
 
 /** Where a notification's title links to, as a link's props. */
 export type NotificationLink =

@@ -1,7 +1,7 @@
 import { z } from "zod";
+import { mondayOf } from "@/common/weeks";
 import type { AvailabilityListQuery } from "@/features/availability/api";
 import { isMonday } from "@/features/availability/availabilityModel";
-import { mondayOf } from "@/features/scheduling/schedules";
 import {
 	unitSearchOf,
 	unitSearchSchema,

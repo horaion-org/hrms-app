@@ -5,12 +5,12 @@ import { dayColumnClasses } from "@/common/dayView";
 import { formattingLocale } from "@/common/formattingLocale";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
+import { daysOf } from "@/common/weeks";
 import {
 	weekdayOf,
 	type AvailabilityDay,
 } from "@/features/availability/availabilityModel";
 import { WeekGridRow } from "@/features/availability/WeekGrid/WeekGridRow";
-import { daysOf } from "@/features/scheduling/schedules";
 
 /** One row of the grid: its days and, when the grid has those columns, its heading and action. */
 export type WeekGridRowData = {

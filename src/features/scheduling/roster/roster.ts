@@ -1,10 +1,10 @@
 import { dateTimeFormatIn } from "@/common/dateTimeFormatIn";
+import { daysOf, weeksOf } from "@/common/weeks";
 import type { SchedulePeriod } from "@/features/scheduling/periods";
 import {
 	hoursFromMinutes,
 	paidShiftMinutes,
 } from "@/features/scheduling/scheduleDraft";
-import { daysOf, weeksOf } from "@/features/scheduling/schedules";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 
 /*
