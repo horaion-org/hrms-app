@@ -1,22 +1,11 @@
-import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
-import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
-import { DeleteIcon, EditIcon, PlusIcon } from "@/components/ui/Icon";
-import { Tab, TabList, Tabs } from "@/components/ui/Tabs";
-import {
-	formatPaidHours,
-	formatTimeRange,
-} from "@/features/scheduling/formatShift";
+import { PlusIcon } from "@/components/ui/Icon";
 import type { ListProblem } from "@/features/scheduling/scheduleDraft";
 import type { ScheduleShift } from "@/features/scheduling/schedules/api";
-import { groupsOf } from "@/features/scheduling/shifts/api";
+import { ShiftTable } from "@/features/scheduling/shifts/ShiftTable";
 import { StepPanel } from "@/features/scheduling/StepPanel";
-
-/** The first tab shows every shift; the ones after it, one group each. */
-const ALL_TAB = 0;
 
 export type ShiftsStepProps = {
 	shifts: Array<ScheduleShift>;
@@ -57,100 +46,6 @@ export const ShiftsStep = ({
 	className,
 }: ShiftsStepProps): FunctionComponent => {
 	const { t } = useTranslation();
-	const [tab, setTab] = useState(ALL_TAB);
-	const groups = groupsOf(shifts);
-	// A deleted group's tab disappears, so an index past the end means "all".
-	const selected = tab > groups.length ? ALL_TAB : tab;
-	const group = selected === ALL_TAB ? undefined : groups[selected - 1];
-	const countOf = (name: string): number =>
-		shifts.filter((shift) => shift.group === name).length;
-	const rows =
-		group === undefined
-			? shifts
-			: shifts.filter((shift) => shift.group === group);
-	const columns = useMemo(
-		(): Array<DataTableColumn<ScheduleShift>> => [
-			{
-				id: "name",
-				header: t("scheduling.shifts.name"),
-				cell: (shift) => shift.name,
-				cellClassName: "font-semibold",
-				pin: "start",
-			},
-			{
-				id: "timeRange",
-				header: t("scheduling.shifts.timeRange"),
-				cell: (shift) => formatTimeRange(shift, t),
-			},
-			{
-				id: "paidHours",
-				header: t("scheduling.shifts.paidHours"),
-				cell: (shift) => (
-					<div className="flex flex-col items-start gap-1">
-						<span>{formatPaidHours(shift, t)}</span>
-						{shift.carriesOvertime && (
-							<Badge>{t("scheduling.shifts.carriesOvertime")}</Badge>
-						)}
-					</div>
-				),
-			},
-			{
-				id: "days",
-				header: t("scheduling.shifts.days"),
-				cell: (shift) =>
-					shift.days.map((day) => t(`scheduling.days.${day}`)).join(", "),
-			},
-			{
-				id: "roleCount",
-				header: t("scheduling.shifts.roleCount"),
-				cell: (shift) =>
-					t("scheduling.shifts.roleCountValue", { count: shift.roles.length }),
-			},
-			...(onEdit || onDelete
-				? [
-						{
-							id: "actions",
-							header: t("scheduling.shifts.actions"),
-							headerClassName: "w-35",
-							pin: "end" as const,
-							cell: (shift: ScheduleShift) => (
-								<div className="flex justify-center gap-2">
-									{onEdit && (
-										<Button
-											variant="icon"
-											aria-label={t("scheduling.shifts.edit", {
-												name: shift.name,
-											})}
-											onClick={() => {
-												onEdit(shift);
-											}}
-										>
-											<EditIcon />
-										</Button>
-									)}
-									{onDelete && (
-										<Button
-											className="text-error-700"
-											variant="icon"
-											aria-label={t("scheduling.shifts.delete", {
-												name: shift.name,
-											})}
-											onClick={() => {
-												onDelete(shift);
-											}}
-										>
-											<DeleteIcon />
-										</Button>
-									)}
-								</div>
-							),
-						},
-					]
-				: []),
-		],
-		[t, onEdit, onDelete]
-	);
-
 	const description = t(
 		frozen
 			? "scheduling.shifts.frozenDescription"
@@ -184,37 +79,18 @@ export const ShiftsStep = ({
 					{listProblem.message}
 				</p>
 			) : (
-				<>
-					{shifts.length > 0 && (
-						<Tabs className="mt-10" selectedIndex={selected} onChange={setTab}>
-							<TabList aria-label={t("scheduling.shifts.groups")}>
-								<Tab count={shifts.length}>
-									{t("scheduling.shifts.allShifts")}
-								</Tab>
-								{groups.map((name) => (
-									<Tab key={name} count={countOf(name)}>
-										{name}
-									</Tab>
-								))}
-							</TabList>
-						</Tabs>
-					)}
-					<DataTable
-						className={shifts.length > 0 ? "mt-6" : "mt-10"}
-						columns={columns}
-						data={rows}
-						emptyState={t("scheduling.shifts.empty")}
-						getRowId={(shift) => shift.shiftId}
-						label={t("scheduling.shifts.label")}
-						selection={
-							onIncludedChange && {
-								rowLabel: (shift) => shift.name,
-								selectedIds: includedShiftIds,
-								onChange: onIncludedChange,
-							}
+				<ShiftTable
+					className="mt-10"
+					shifts={shifts}
+					selection={
+						onIncludedChange && {
+							selectedIds: includedShiftIds,
+							onChange: onIncludedChange,
 						}
-					/>
-				</>
+					}
+					onDelete={onDelete}
+					onEdit={onEdit}
+				/>
 			)}
 		</StepPanel>
 	);

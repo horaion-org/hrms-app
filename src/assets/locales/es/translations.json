@@ -3062,7 +3062,8 @@
 				"SPLIT": "Partido",
 				"ON_CALL": "De guardia",
 				"OVERTIME": "Horas extra"
-			}
+			},
+			"department": "Departamento"
 		},
 		"constraints": {
 			"title": "Restricciones del horario",

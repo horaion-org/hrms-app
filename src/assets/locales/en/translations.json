@@ -3240,7 +3240,8 @@
 				"SPLIT": "Split",
 				"ON_CALL": "On Call",
 				"OVERTIME": "Overtime"
-			}
+			},
+			"department": "Department"
 		},
 		"constraints": {
 			"title": "Scheduling constraints",
