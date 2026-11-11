@@ -4114,6 +4114,21 @@
 			"createSchedule": "Create schedule",
 			"backToSchedule": "Back to the schedule",
 			"done": "Done"
+		},
+		"week": {
+			"title": "What {{period}} uses",
+			"titleGenerated": "What {{period}} used",
+			"intro": "Untick to leave something out of this week only. {{department}} keeps it.",
+			"shifts": "Shifts",
+			"constraints": "Constraints",
+			"locked": "Locked: always applies.",
+			"leavesOut": "Uses {{shifts, list}}, which this week leaves out.",
+			"shiftGone": "Uses a shift that no longer exists.",
+			"noShift": "Choose at least one shift for this week.",
+			"noStaffing": "Tick at least one staffing constraint. Without one, nobody is rostered.",
+			"apply": "Use for week",
+			"cancel": "Cancel",
+			"close": "Close"
 		}
 	},
 	"colourSwatchPicker": {
