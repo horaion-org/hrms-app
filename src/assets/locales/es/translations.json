@@ -1373,10 +1373,6 @@
 					"why": "el asistente de horarios muestra los turnos del departamento",
 					"without": "quien lo tenga no verá el paso de turnos del asistente de horarios"
 				},
-				"shiftsInWizard": {
-					"why": "la aplicación cambia los turnos solo en el asistente de horarios, que abre un horario",
-					"without": "quien lo tenga no llegará a los turnos, que la aplicación muestra solo en el asistente de horarios"
-				},
 				"leaveForSomeone": {
 					"why": "solicitar para otra persona busca en la lista de Personas",
 					"without": "quien lo tenga no encontrará a la persona para quien solicita"
@@ -3906,6 +3902,11 @@
 			"descriptionAll": "Las franjas en que trabaja cada departamento. Los horarios nuevos las usan; los horarios generados conservan los turnos con los que se crearon.",
 			"search": "Buscar turnos",
 			"noMatch": "Ningún turno coincide con tu búsqueda."
+		},
+		"views": {
+			"label": "Vistas de planificación",
+			"schedules": "Horarios",
+			"shifts": "Turnos"
 		}
 	},
 	"workspace": {

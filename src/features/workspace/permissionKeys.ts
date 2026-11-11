@@ -208,10 +208,6 @@ export const PERMISSION_USES = {
 	"schedule:create": [{ key: "shift:read", reason: "scheduleShifts" }],
 	"schedule:update": [{ key: "shift:read", reason: "scheduleShifts" }],
 	"schedule:generate": [{ key: "shift:read", reason: "scheduleShifts" }],
-	// Shifts are changed only inside the schedule wizard, on a saved draft (`useSchedule`).
-	"shift:create": [{ key: "schedule:read", reason: "shiftsInWizard" }],
-	"shift:update": [{ key: "schedule:read", reason: "shiftsInWizard" }],
-	"shift:delete": [{ key: "schedule:read", reason: "shiftsInWizard" }],
 	// Applying on someone's behalf searches the People list (`peopleQuery`).
 	"leave_request:create": [
 		{ key: "member_profile:read", reason: "leaveForSomeone" },

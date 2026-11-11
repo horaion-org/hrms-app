@@ -2469,10 +2469,6 @@
 					"why": "the schedule wizard lists the department’s shifts",
 					"without": "holders can’t see the shifts step of the schedule wizard"
 				},
-				"shiftsInWizard": {
-					"why": "the app changes shifts only in the schedule wizard, which opens a schedule",
-					"without": "holders can’t reach shifts, which the app shows only in the schedule wizard"
-				},
 				"leaveForSomeone": {
 					"why": "applying for someone searches the People list",
 					"without": "holders can’t find the person to apply for"
@@ -4084,6 +4080,11 @@
 			"descriptionAll": "The times each department works. New schedules use them; generated schedules keep the shifts they were made with.",
 			"search": "Search shifts",
 			"noMatch": "No shifts match your search."
+		},
+		"views": {
+			"label": "Scheduling views",
+			"schedules": "Schedules",
+			"shifts": "Shifts"
 		}
 	},
 	"colourSwatchPicker": {
