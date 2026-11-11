@@ -74,7 +74,10 @@ import {
 	type WeekChoiceIds,
 } from "@/features/scheduling/weekChoice";
 import { WeekChoiceDialog } from "@/features/scheduling/WeekChoiceDialog";
-import { WeekChoiceSummary } from "@/features/scheduling/WeekChoiceSummary";
+import {
+	WeekChoiceSummary,
+	type SetupLink,
+} from "@/features/scheduling/WeekChoiceSummary";
 import { workspaceQuery } from "@/features/workspace/api";
 import {
 	SCHEDULE_CREATE_KEYS,
@@ -512,6 +515,24 @@ export const CreateSchedule = (): FunctionComponent => {
 							frozen
 						)
 					: undefined;
+	// The Scheduling tab that edits the week's department, where its list may be read.
+	const weekUnit = saved ?? setupUnit;
+	const editLink = (
+		view: SetupLink["search"]["view"],
+		readKey: PermissionKey
+	): SetupLink | undefined =>
+		weekUnit && access.can(readKey, departmentScope(weekUnit.departmentId))
+			? {
+					to: "/scheduling",
+					search: {
+						view,
+						branch: weekUnit.branchId,
+						department: weekUnit.departmentId,
+					},
+				}
+			: undefined;
+	const editShifts = editLink("shifts", "shift:read");
+	const editConstraints = editLink("constraints", "constraint:read");
 	// The week can be chosen from its lists while the setup can change.
 	const canChooseWeek =
 		!frozen && !weekListsHidden && (saved === undefined || canSave);
@@ -524,6 +545,8 @@ export const CreateSchedule = (): FunctionComponent => {
 	const weekSummary = weekLine && (
 		<WeekChoiceSummary
 			actionLabel={weekActionLabel}
+			editConstraints={editConstraints}
+			editShifts={editShifts}
 			line={weekLine}
 			onAction={() => {
 				setChoosingWeek(true);
@@ -534,6 +557,8 @@ export const CreateSchedule = (): FunctionComponent => {
 	const generateWeekSummary = weekLine && (
 		<WeekChoiceSummary
 			actionLabel={canChooseWeek ? t("scheduling.week.change") : undefined}
+			editConstraints={editConstraints}
+			editShifts={editShifts}
 			line={weekLine}
 			onAction={() => {
 				goTo(0);

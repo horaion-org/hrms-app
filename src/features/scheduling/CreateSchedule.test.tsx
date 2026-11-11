@@ -461,6 +461,70 @@ describe("Create Schedule: the week's choice", () => {
 		).toBeNull();
 	});
 
+	it("given_theReadKeys_when_aDepartmentIsChosen_then_linksToEditItsShiftsAndConstraints", async () => {
+		const user = userEvent.setup();
+		await open("/scheduling/new", {
+			[`GET ${LIVE_SHIFTS}`]: reply(LIVE_SHIFT_ROWS),
+		});
+
+		await fillSetup(user);
+
+		expect(
+			await screen.findByRole("link", { name: "Edit shifts" })
+		).toHaveAttribute(
+			"href",
+			"/scheduling?view=shifts&branch=b-1&department=d-1"
+		);
+		expect(
+			screen.getByRole("link", { name: "Edit constraints" })
+		).toHaveAttribute(
+			"href",
+			"/scheduling?view=constraints&branch=b-1&department=d-1"
+		);
+	});
+
+	it("given_aSavedDraft_when_onGenerate_then_linksToEditItsDepartment", async () => {
+		await open("/scheduling/new?step=generate&scheduleId=s-1&departmentId=d-1");
+
+		expect(
+			await screen.findByRole("link", { name: "Edit constraints" })
+		).toHaveAttribute(
+			"href",
+			"/scheduling?view=constraints&branch=b-1&department=d-1"
+		);
+		expect(screen.getByRole("link", { name: "Edit shifts" })).toBeVisible();
+	});
+
+	it("given_noShiftReadKey_when_aDepartmentIsChosen_then_leavesOutEditShifts", async () => {
+		const user = userEvent.setup();
+		await open("/scheduling/new", {}, [
+			"schedule:read",
+			"schedule:create",
+			"constraint:read",
+		]);
+
+		await fillSetup(user);
+
+		expect(
+			await screen.findByRole("link", { name: "Edit constraints" })
+		).toBeVisible();
+		expect(screen.queryByRole("link", { name: "Edit shifts" })).toBeNull();
+	});
+
+	it("given_noConstraintReadKey_when_aDepartmentIsChosen_then_leavesOutEditConstraints", async () => {
+		const user = userEvent.setup();
+		await open("/scheduling/new", {}, [
+			"schedule:read",
+			"schedule:create",
+			"shift:read",
+		]);
+
+		await fillSetup(user);
+
+		expect(await screen.findByRole("link", { name: "Edit shifts" })).toBeVisible();
+		expect(screen.queryByRole("link", { name: "Edit constraints" })).toBeNull();
+	});
+
 	it("given_listsThePersonMayNotRead_when_aDepartmentIsChosen_then_saysItUsesEverythingWithoutAChoice", async () => {
 		const user = userEvent.setup();
 		await open("/scheduling/new", {}, [
