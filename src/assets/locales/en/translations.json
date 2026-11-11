@@ -4128,7 +4128,21 @@
 			"noStaffing": "Tick at least one staffing constraint. Without one, nobody is rostered.",
 			"apply": "Use for week",
 			"cancel": "Cancel",
-			"close": "Close"
+			"close": "Close",
+			"uses": "Uses {{shifts}} and {{constraints}} of {{department}}.",
+			"shiftsAll_one": "its {{count}} shift",
+			"shiftsAll_other": "all {{count}} shifts",
+			"shiftsSome": "{{count}} of {{total}} shifts",
+			"constraintsAll_one": "its {{count}} constraint",
+			"constraintsAll_other": "all {{count}} constraints",
+			"constraintsSome": "{{count}} of {{total}} constraints",
+			"generatedWith": "Generated with {{shifts}} and {{constraints}}.",
+			"shiftCount_one": "{{count}} shift",
+			"shiftCount_other": "{{count}} shifts",
+			"constraintCount_one": "{{count}} constraint",
+			"constraintCount_other": "{{count}} constraints",
+			"editShifts": "Edit shifts",
+			"editConstraints": "Edit constraints"
 		}
 	},
 	"colourSwatchPicker": {

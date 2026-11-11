@@ -1,4 +1,8 @@
-import { isTickable, type Constraint } from "@/features/scheduling/scheduleDraft";
+import type { TFunction } from "i18next";
+import {
+	isTickable,
+	type Constraint,
+} from "@/features/scheduling/scheduleDraft";
 import type { ScheduleShift } from "@/features/scheduling/schedules/api";
 
 /*
@@ -158,4 +162,43 @@ export const usesSummary = (
 		).length,
 		constraintsTotal: listed.length,
 	};
+};
+
+/**
+ * The line saying what the week uses: "Uses all 3 shifts and 5 constraints
+ * of Kitchen.", "Uses 2 of 3 shifts and 4 of 5 constraints of Kitchen.", or
+ * for a generated schedule "Generated with 2 shifts and 4 constraints.".
+ * When every shift and every constraint is used, "all" is said once.
+ */
+export const usesLineOf = (
+	t: TFunction,
+	summary: UsesSummary,
+	departmentName: string,
+	frozen: boolean
+): string => {
+	const key = "scheduling.week";
+	if (frozen)
+		return t(`${key}.generatedWith`, {
+			shifts: t(`${key}.shiftCount`, { count: summary.shiftsChosen }),
+			constraints: t(`${key}.constraintCount`, {
+				count: summary.constraintsChosen,
+			}),
+		});
+	const allShifts = summary.shiftsChosen === summary.shiftsTotal;
+	const allConstraints = summary.constraintsChosen === summary.constraintsTotal;
+	const shifts = allShifts
+		? t(`${key}.shiftsAll`, { count: summary.shiftsTotal })
+		: t(`${key}.shiftsSome`, {
+				count: summary.shiftsChosen,
+				total: summary.shiftsTotal,
+			});
+	const constraints = !allConstraints
+		? t(`${key}.constraintsSome`, {
+				count: summary.constraintsChosen,
+				total: summary.constraintsTotal,
+			})
+		: allShifts
+			? t(`${key}.constraintCount`, { count: summary.constraintsTotal })
+			: t(`${key}.constraintsAll`, { count: summary.constraintsTotal });
+	return t(`${key}.uses`, { shifts, constraints, department: departmentName });
 };

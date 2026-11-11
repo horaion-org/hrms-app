@@ -5,10 +5,12 @@ import {
 	constraintFixture,
 } from "@/features/scheduling/constraints/fixtures";
 import { shiftFixture } from "@/features/scheduling/shifts/fixtures";
+import { authTestI18n } from "@/features/auth/testingI18n";
 import {
 	allOf,
 	isSelectable,
 	noteOf,
+	usesLineOf,
 	usesSummary,
 	weekChoiceProblem,
 	withShiftsChosen,
@@ -182,5 +184,55 @@ describe("usesSummary", () => {
 			constraintsChosen: 3,
 			constraintsTotal: 5,
 		});
+	});
+});
+
+describe("usesLineOf", () => {
+	const t = authTestI18n.t;
+	const summary = (
+		shiftsChosen: number,
+		constraintsChosen: number
+	): Parameters<typeof usesLineOf>[1] => ({
+		shiftsChosen,
+		shiftsTotal: 3,
+		constraintsChosen,
+		constraintsTotal: 5,
+	});
+
+	it("says all once when everything is used", () => {
+		expect(usesLineOf(t, summary(3, 5), "Kitchen", false)).toBe(
+			"Uses all 3 shifts and 5 constraints of Kitchen."
+		);
+	});
+
+	it("counts what is used of each when something is left out", () => {
+		expect(usesLineOf(t, summary(2, 4), "Kitchen", false)).toBe(
+			"Uses 2 of 3 shifts and 4 of 5 constraints of Kitchen."
+		);
+		expect(usesLineOf(t, summary(3, 4), "Kitchen", false)).toBe(
+			"Uses all 3 shifts and 4 of 5 constraints of Kitchen."
+		);
+	});
+
+	it("speaks of its one shift and constraint", () => {
+		expect(
+			usesLineOf(
+				t,
+				{
+					shiftsChosen: 1,
+					shiftsTotal: 1,
+					constraintsChosen: 0,
+					constraintsTotal: 1,
+				},
+				"Kitchen",
+				false
+			)
+		).toBe("Uses its 1 shift and 0 of 1 constraints of Kitchen.");
+	});
+
+	it("says what a generated schedule was made with", () => {
+		expect(usesLineOf(t, summary(2, 1), "Kitchen", true)).toBe(
+			"Generated with 2 shifts and 1 constraint."
+		);
 	});
 });

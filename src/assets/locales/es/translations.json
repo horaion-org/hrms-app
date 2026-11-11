@@ -3950,7 +3950,21 @@
 			"noStaffing": "Marca al menos una restricción de personal. Sin ella, no se asigna a nadie.",
 			"apply": "Usar para la semana",
 			"cancel": "Cancelar",
-			"close": "Cerrar"
+			"close": "Cerrar",
+			"uses": "Usa {{shifts}} y {{constraints}} de {{department}}.",
+			"shiftsAll_one": "su {{count}} turno",
+			"shiftsAll_other": "los {{count}} turnos",
+			"shiftsSome": "{{count}} de {{total}} turnos",
+			"constraintsAll_one": "su {{count}} restricción",
+			"constraintsAll_other": "las {{count}} restricciones",
+			"constraintsSome": "{{count}} de {{total}} restricciones",
+			"generatedWith": "Generado con {{shifts}} y {{constraints}}.",
+			"shiftCount_one": "{{count}} turno",
+			"shiftCount_other": "{{count}} turnos",
+			"constraintCount_one": "{{count}} restricción",
+			"constraintCount_other": "{{count}} restricciones",
+			"editShifts": "Editar turnos",
+			"editConstraints": "Editar restricciones"
 		}
 	},
 	"workspace": {
