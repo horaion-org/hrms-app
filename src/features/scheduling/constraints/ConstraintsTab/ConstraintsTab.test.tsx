@@ -245,9 +245,16 @@ describe("ConstraintsTab", () => {
 			within(tabs)
 				.getAllByRole("tab")
 				.map((tab) => tab.textContent)
-		).toEqual(["All 3", "Staffing 1", "Role coverage 1", "Working hours 1"]);
+		).toEqual([
+			"All 3",
+			"People on shifts 1",
+			"On duty throughout 1",
+			"Rest and hours 1",
+		]);
 
-		await user.click(within(tabs).getByRole("tab", { name: /Staffing/ }));
+		await user.click(
+			within(tabs).getByRole("tab", { name: /People on shifts/ })
+		);
 		const table = screen.getByRole("table", { name: "Constraints" });
 		expect(within(table).getAllByRole("row")).toHaveLength(2);
 		expect(

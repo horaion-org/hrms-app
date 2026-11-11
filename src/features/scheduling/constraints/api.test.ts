@@ -170,6 +170,27 @@ describe("constraints client", () => {
 		]);
 	});
 
+	it("reads a shift's job titles as none from an API that predates them", async () => {
+		stubApi({
+			[`GET ${DEPARTMENT}/constraint-options`]: {
+				status: 200,
+				body: envelope({
+					types: CONSTRAINT_OPTIONS_RESPONSE.types,
+					links: {
+						SHIFT: [{ id: "front-desk-am", name: "Front Desk AM" }],
+						JOB_TITLE: [],
+					},
+				}),
+			},
+		});
+
+		const options = await fetchConstraintOptions("c-1", UNIT);
+
+		expect(options.shifts).toEqual([
+			{ shiftId: "front-desk-am", name: "Front Desk AM", jobTitleIds: [] },
+		]);
+	});
+
 	it("keeps all six types when the department has no shifts or job titles", async () => {
 		stubApi({
 			[`GET ${DEPARTMENT}/constraint-options`]: {

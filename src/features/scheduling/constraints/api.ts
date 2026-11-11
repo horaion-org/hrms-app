@@ -71,6 +71,8 @@ const constraintFieldSchema = z.enum([
 /** One field a constraint type takes; its label is keyed by this name. */
 export type ConstraintField = z.infer<typeof constraintFieldSchema>;
 
+export const CONSTRAINT_FIELDS = constraintFieldSchema.options;
+
 const constraintFieldKindSchema = z.enum([
 	"NUMBER",
 	"COMPARISON",
@@ -387,6 +389,8 @@ export type ConstraintTypeOption = z.infer<typeof constraintTypeOptionSchema>;
 const constraintLinkOptionSchema = z.object({
 	id: z.string(),
 	name: z.string(),
+	/** A shift's job titles; empty for a job title, or from an API that predates it. */
+	jobTitleIds: z.array(z.string()).catch([]),
 });
 
 /** The API groups generic { id, name } choices by link kind (ADR-0050). */
@@ -400,7 +404,11 @@ export const constraintOptionsSchema = z
 	})
 	.transform(({ types, links }) => ({
 		types,
-		shifts: links.SHIFT.map(({ id, name }) => ({ shiftId: id, name })),
+		shifts: links.SHIFT.map(({ id, name, jobTitleIds }) => ({
+			shiftId: id,
+			name,
+			jobTitleIds,
+		})),
 		jobTitles: links.JOB_TITLE.map(({ id, name }) => ({
 			jobTitleId: id,
 			name,

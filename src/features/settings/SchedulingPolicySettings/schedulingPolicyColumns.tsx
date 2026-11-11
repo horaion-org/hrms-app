@@ -17,7 +17,7 @@ export type SchedulingPolicyColumnsOptions = {
 };
 
 /**
- * The Scheduling policy's columns: the constraint's name, type and details
+ * The Scheduling policy's columns: the constraint's name and how it reads,
  * as a department's list shows them, its lock, its status, and, for someone
  * who may change the policy, Edit and Delete.
  */
@@ -28,8 +28,7 @@ export const schedulingPolicyColumns = (
 	const shared = constraintColumns<DepartmentConstraint>(t);
 	return [
 		shared.name,
-		shared.type,
-		shared.details,
+		shared.statement,
 		{
 			id: "lock",
 			header: t(`${key}.lock`),

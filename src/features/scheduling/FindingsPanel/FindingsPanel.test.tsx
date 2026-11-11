@@ -73,7 +73,9 @@ describe("FindingsPanel", () => {
 			"Chen Wei",
 		]);
 		expect(roster).toHaveTextContent("Rule: Forecast demand");
-		expect(roster).toHaveTextContent("Rule: Role presence");
+		expect(roster).toHaveTextContent(
+			"Rule: Someone on duty for the whole shift"
+		);
 	});
 
 	it("given_onlyRosterNotes_when_rendered_then_leavesOutTheSetupPart", () => {

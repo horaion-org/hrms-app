@@ -1,10 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useId } from "react";
+import { Fragment, useEffect, useId } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { FormRow, formRowIds } from "@/components/forms/FormRow";
 import { Input } from "@/components/forms/Input";
+import { RadioCard } from "@/components/forms/RadioCard";
 import { Select, type SelectOption } from "@/components/forms/Select";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
@@ -14,6 +15,7 @@ import { UnitNameField } from "@/features/organisation/UnitNameField";
 import { useCreateFormSubmit } from "@/features/organisation/useCreateFormSubmit";
 import { ConstraintPreview } from "@/features/scheduling/constraints/ConstraintPreview";
 import {
+	CONSTRAINT_CATEGORIES,
 	CONSTRAINT_COMPARISONS,
 	CONSTRAINT_REQUIREMENTS,
 	CONSTRAINT_STATUSES,
@@ -24,6 +26,10 @@ import {
 	type ConstraintTypeOption,
 } from "@/features/scheduling/constraints/api";
 import { constraintRefusal } from "@/features/scheduling/constraints/constraintRefusal";
+import { fieldRowsInReadingOrder } from "@/features/scheduling/constraints/ConstraintDialog/fieldOrder";
+import { nameSuggestion } from "@/features/scheduling/constraints/ConstraintDialog/nameSuggestion";
+import { shiftsMissingTitles } from "@/features/scheduling/constraints/ConstraintDialog/shiftsMissingTitles";
+import { appliesToOf } from "@/features/scheduling/constraints/appliesTo";
 import {
 	constraintSchema,
 	type ConstraintDialogBody,
@@ -35,9 +41,8 @@ import {
 	compareStrictness,
 } from "@/features/scheduling/constraints/constraintStrictness";
 import {
-	constraintWords,
-	sentenceSlotsOf,
-	type ConstraintWords,
+	firmnessOf,
+	type SentenceValue,
 } from "@/features/scheduling/constraints/constraintSentence";
 import type { ConstraintOptionsState } from "@/features/scheduling/constraints/useConstraintOptions";
 import type { Constraint } from "@/features/scheduling/scheduleDraft";
@@ -70,6 +75,22 @@ export type ConstraintDialogProps = {
 };
 
 const FIELDS = ["name", "type"] as const;
+
+/** The fields whose row carries a hint; the others say enough in their label. */
+const HINTED_FIELDS = [
+	"SHIFT",
+	"HEADCOUNT",
+	"JOB_TITLE",
+	"STAND_INS_PER_PERSON",
+	"DAYS_OFF",
+	"PERIOD_DAYS",
+	"REST_HOURS",
+] as const satisfies ReadonlyArray<ConstraintField>;
+
+type HintedField = (typeof HINTED_FIELDS)[number];
+
+const isHinted = (field: ConstraintField): field is HintedField =>
+	(HINTED_FIELDS as ReadonlyArray<ConstraintField>).includes(field);
 
 /** A row of the form: one of its own fields, or one of the type's. */
 type FieldName = keyof ConstraintFormValues | ConstraintField;
@@ -120,7 +141,8 @@ export const ConstraintDialog = ({
 		defaultValues: {
 			name: editing?.name ?? "",
 			type: startingPoint?.type ?? "",
-			requirement: startingPoint?.requirement ?? "",
+			// A new constraint starts as a Must; an edit or replacement keeps its own.
+			requirement: startingPoint ? (startingPoint.requirement ?? "") : "MUST",
 			status: editing?.status ?? "ACTIVE",
 			lock: withLock ? (editing?.lock ?? "LOCKED") : "",
 			values: startingPoint ? valuesByField(startingPoint.values) : {},
@@ -157,37 +179,32 @@ export const ConstraintDialog = ({
 	};
 	const labelledBy = (name: FieldName): string =>
 		formRowIds(fieldId(name)).labelId;
-	const typeOptions: Array<SelectOption> = (offered?.types ?? []).map(
-		(option) => ({
-			value: option.type,
-			label: t(`${key}.typeOption`, {
-				category: t(`scheduling.constraints.categories.${option.category}`),
-				type: t(`scheduling.constraints.types.${option.type}`),
-			}),
-		})
+	// Grouped under their category: the Select heads each run of one group.
+	const typeOptions: Array<SelectOption> = CONSTRAINT_CATEGORIES.flatMap(
+		(category) =>
+			(offered?.types ?? [])
+				.filter((option) => option.category === category)
+				.map((option) => ({
+					value: option.type,
+					label: t(`scheduling.constraints.types.${option.type}`),
+					group: t(`scheduling.constraints.categories.${category}`),
+				}))
 	);
 	// A saved company rule keeps its type (the API answers CONSTRAINT_TYPE_FIXED); a new rule is added instead.
 	const typeFixed = withLock && editing !== undefined;
 	// Until a Department is chosen there are no types, shifts or job titles to offer.
 	const departmentMissing =
 		department?.kind === "choose" && department.value === "";
-	const typeHint = typeFixed
-		? t(`${key}.typeFixed`)
-		: departmentMissing
-			? t(`${key}.optionsNeedDepartment`)
-			: options.status === "pending"
-				? t(`${key}.optionsLoading`)
-				: options.status === "hidden"
-					? t(`${key}.optionsHidden`)
-					: options.status === "error"
-						? t(`${key}.optionsFailed`)
-						: t(`${key}.typeHint`);
-	const requirementOptions: Array<SelectOption> = CONSTRAINT_REQUIREMENTS.map(
-		(requirement) => ({
-			value: requirement,
-			label: t(`scheduling.constraints.requirements.${requirement}`),
-		})
-	);
+	// Why there is nothing to choose yet, or once a type is chosen, one worked example of it.
+	const typeHint = (): string => {
+		if (typeFixed) return t(`${key}.typeFixed`);
+		if (departmentMissing) return t(`${key}.optionsNeedDepartment`);
+		if (options.status === "pending") return t(`${key}.optionsLoading`);
+		if (options.status === "hidden") return t(`${key}.optionsHidden`);
+		if (options.status === "error") return t(`${key}.optionsFailed`);
+		if (chosen) return t(`scheduling.constraints.examples.${chosen.type}`);
+		return t(`${key}.typeHintEmpty`);
+	};
 	const statusOptions: Array<SelectOption> = CONSTRAINT_STATUSES.map(
 		(status) => ({
 			value: status,
@@ -241,26 +258,56 @@ export const ConstraintDialog = ({
 			label,
 		])
 	);
-	// The constraint as filled in so far, in words, for the preview.
-	const wordsOf = (option: ConstraintTypeOption): ConstraintWords =>
-		constraintWords(
-			{
-				requirement: option.hasRequirement
-					? (CONSTRAINT_REQUIREMENTS.find((item) => item === requirement) ??
-						null)
-					: null,
-				values: option.fields.flatMap(({ field }) =>
-					(values[field] ?? []).filter(Boolean).map((value) => ({
-						field,
-						value,
-						name: namesById.get(value) ?? null,
-					}))
-				),
-			},
-			t
+	// The constraint's values as filled in so far, named, for the preview.
+	const filledValues = (option: ConstraintTypeOption): Array<SentenceValue> =>
+		option.fields.flatMap(({ field }) =>
+			(values[field] ?? []).filter(Boolean).map((value) => ({
+				field,
+				value,
+				name: namesById.get(value) ?? null,
+			}))
 		);
+	// Never blocks: a chosen shift that lists none of the counted job titles
+	// could never count anyone, which the manager may still mean to fix later.
+	const shiftWarning = (option: ConstraintTypeOption): string | undefined => {
+		const filled = filledValues(option);
+		const ofField = (fields: Array<ConstraintField>): Array<SentenceValue> =>
+			filled.filter((value) => fields.includes(value.field));
+		const counted = ofField(["JOB_TITLE", "STAND_IN_JOB_TITLE"]);
+		const chosenShiftIds = ofField(["SHIFT"]).map((value) => value.value);
+		const missing = shiftsMissingTitles(
+			(offered?.shifts ?? []).filter((shift) =>
+				chosenShiftIds.includes(shift.shiftId)
+			),
+			counted.map((value) => value.value)
+		);
+		if (missing.length === 0) return undefined;
+		return t(`${key}.shiftMissingTitles`, {
+			count: missing.length,
+			shifts: t("scheduling.constraints.list", { items: missing }),
+			jobTitles: t("scheduling.constraints.listOr", {
+				items: counted.map((value) => value.name ?? value.value),
+			}),
+		});
+	};
+	// A new constraint's name fills itself in from what it controls and its
+	// first shift, until the manager types one; an edit or a replacement keeps
+	// the name it has.
+	const suggestsName = editing === undefined && replacing === undefined;
+	const firstShiftId = values.SHIFT?.[0];
+	const suggestedName = chosen
+		? nameSuggestion(
+				chosen.type,
+				firstShiftId === undefined ? undefined : namesById.get(firstShiftId),
+				t
+			)
+		: "";
+	const nameTyped = form.getFieldState("name", form.formState).isDirty;
+	useEffect(() => {
+		if (suggestsName && !nameTyped) setValue("name", suggestedName);
+	}, [suggestsName, nameTyped, suggestedName, setValue]);
 	const selectRow = (
-		field: "type" | "requirement" | "status" | "lock",
+		field: "type" | "status" | "lock",
 		choiceOptions: Array<SelectOption>,
 		hint: string,
 		disabled = false
@@ -295,17 +342,77 @@ export const ConstraintDialog = ({
 			/>
 		</FormRow>
 	);
-	const valueRow = (spec: ConstraintFieldSpec): FunctionComponent => {
+	// Must or If possible as two cards, each saying what happens when unmet; a type that offers no choice says which it always is.
+	const firmnessRow = (option: ConstraintTypeOption): FunctionComponent => {
+		const id = fieldId("requirement");
+		const label = t(`${key}.requirement`);
+		const error = errors.requirement?.message;
+		if (!option.hasRequirement) {
+			const fixed = firmnessOf({ type: option.type, requirement: null });
+			return (
+				fixed && (
+					<FormRow htmlFor={id} label={label} layout="stacked">
+						<p className="text-sm text-neutral-800" id={id}>
+							{t(`scheduling.constraints.fixedFirmness.${fixed}`)}
+						</p>
+					</FormRow>
+				)
+			);
+		}
+		return (
+			<FormRow
+				required
+				error={error}
+				htmlFor={id}
+				label={label}
+				layout="stacked"
+			>
+				<Controller
+					control={control}
+					name="requirement"
+					render={({ field }) => (
+						<div
+							aria-describedby={describedBy("requirement", error, false)}
+							aria-labelledby={labelledBy("requirement")}
+							className="grid gap-4 sm:grid-cols-2"
+							id={id}
+							role="radiogroup"
+						>
+							{CONSTRAINT_REQUIREMENTS.map((choice) => (
+								<RadioCard
+									key={choice}
+									checked={field.value === choice}
+									description={t(`scheduling.constraints.firmness.${choice}`)}
+									disabled={isSubmitting}
+									label={t(`scheduling.constraints.requirements.${choice}`)}
+									name={`${formId}-requirement`}
+									value={choice}
+									onChange={field.onChange}
+								/>
+							))}
+						</div>
+					)}
+				/>
+			</FormRow>
+		);
+	};
+	const valueRow = (
+		spec: ConstraintFieldSpec,
+		className?: string
+	): FunctionComponent => {
 		const id = fieldId(spec.field);
 		const error = errors.values?.[spec.field]?.message;
-		const hint =
-			spec.kind === "NUMBER"
-				? t(`${key}.numberHint`, { min: spec.min, max: spec.max })
-				: undefined;
+		const hint = isHinted(spec.field)
+			? t(`scheduling.constraints.fieldHints.${spec.field}`, {
+					min: spec.min,
+					max: spec.max,
+				})
+			: undefined;
 		return (
 			<FormRow
 				key={spec.field}
 				required
+				className={className}
 				error={error}
 				hint={hint}
 				htmlFor={id}
@@ -337,7 +444,6 @@ export const ConstraintDialog = ({
 									inputMode="numeric"
 									max={spec.max ?? undefined}
 									min={spec.min ?? undefined}
-									placeholder={t(`${key}.enterNumber`)}
 									type="number"
 									value={value[0] ?? ""}
 									onChange={(event) => {
@@ -496,20 +602,10 @@ export const ConstraintDialog = ({
 						)}
 					</Callout>
 				)}
-				<UnitNameField
-					autoFocus
-					counter={t(`${key}.nameCounter`, { count: name.length })}
-					error={errors.name?.message}
-					hint={t(`${key}.nameHint`)}
-					id={fieldId("name")}
-					label={t(`${key}.name`)}
-					placeholder={t(`${key}.namePlaceholder`)}
-					registration={register("name")}
-				/>
 				{selectRow(
 					"type",
 					typeOptions,
-					typeHint,
+					typeHint(),
 					offered === undefined ||
 						typeFixed ||
 						replacing !== undefined ||
@@ -524,22 +620,55 @@ export const ConstraintDialog = ({
 				{chosen && (
 					<>
 						<ConstraintPreview
-							slots={sentenceSlotsOf(chosen)}
-							type={chosen.type}
-							words={wordsOf(chosen)}
+							appliesTo={appliesToOf(
+								{
+									type: chosen.type,
+									level: withLock ? "COMPANY" : "DEPARTMENT",
+									values: filledValues(chosen),
+								},
+								t
+							)}
+							constraint={{
+								type: chosen.type,
+								requirement: chosen.hasRequirement
+									? (CONSTRAINT_REQUIREMENTS.find(
+											(choice) => choice === requirement
+										) ?? null)
+									: null,
+								values: filledValues(chosen),
+							}}
 						/>
-						<div className="flex flex-col gap-6 sm:flex-row">
-							{chosen.hasRequirement &&
-								selectRow(
-									"requirement",
-									requirementOptions,
-									t(`${key}.requirementHint`)
-								)}
-							{selectRow("status", statusOptions, t(`${key}.statusHint`))}
-						</div>
-						{chosen.fields.map(valueRow)}
+						{fieldRowsInReadingOrder(chosen).map((row) => {
+							const warning =
+								row[0]?.field === "SHIFT" ? shiftWarning(chosen) : undefined;
+							return (
+								<Fragment key={row.map((spec) => spec.field).join("-")}>
+									{row.length === 1 ? (
+										valueRow(row[0]!)
+									) : (
+										<div className="flex flex-col gap-6 sm:flex-row">
+											{row.map((spec) => valueRow(spec, "sm:flex-1"))}
+										</div>
+									)}
+									{warning && <Callout tone="warning">{warning}</Callout>}
+								</Fragment>
+							);
+						})}
+						{firmnessRow(chosen)}
+						{/* A new constraint is Active; whether to switch one off is asked only when editing. */}
+						{editing &&
+							selectRow("status", statusOptions, t(`${key}.statusHint`))}
 					</>
 				)}
+				<UnitNameField
+					counter={t(`${key}.nameCounter`, { count: name.length })}
+					error={errors.name?.message}
+					hint={t(`${key}.nameHint`)}
+					id={fieldId("name")}
+					label={t(`${key}.name`)}
+					placeholder={t(`${key}.namePlaceholder`)}
+					registration={register("name")}
+				/>
 				{impactNote && <p className="text-sm text-neutral-700">{impactNote}</p>}
 			</form>
 		</Dialog>

@@ -3063,10 +3063,7 @@
 		"constraints": {
 			"add": "Añadir restricción",
 			"label": "Restricciones",
-			"name": "Nombre de la restricción",
-			"type": "Tipo de restricción",
-			"details": "Detalles",
-			"requirement": "Requisito",
+			"name": "Nombre",
 			"status": "Estado",
 			"actions": "Acciones",
 			"edit": "Editar {{name}}",
@@ -3082,70 +3079,111 @@
 			"deleteFailed": "No pudimos eliminar la restricción. Inténtalo de nuevo.",
 			"list": "{{items, list}}",
 			"categories": {
-				"STAFFING": "Dotación",
-				"ROLE_COVERAGE": "Cobertura de puestos",
-				"SHIFT_PATTERN": "Patrón de turnos",
-				"WORKING_HOURS": "Horas de trabajo"
-			},
-			"categoryHints": {
-				"STAFFING": "Cuántas personas necesita un turno",
-				"ROLE_COVERAGE": "Qué puestos deben estar presentes mientras dura un turno",
-				"SHIFT_PATTERN": "Cómo se reparten los días libres en la semana",
-				"WORKING_HOURS": "Cuánto descansa el personal entre turnos"
+				"STAFFING": "Personas en turnos",
+				"ROLE_COVERAGE": "De servicio todo el turno",
+				"SHIFT_PATTERN": "Días libres",
+				"WORKING_HOURS": "Descanso y horas"
 			},
 			"types": {
-				"SHIFT_STAFFING": "Dotación del turno",
-				"SHIFT_STAFFING_WITH_STAND_INS": "Dotación del turno con suplentes",
-				"ROLE_PRESENCE": "Presencia de puestos",
-				"DAYS_OFF_PER_PERIOD": "Días libres por periodo",
-				"AVOID_DAYS_OFF_ON": "Evitar días libres en",
+				"SHIFT_STAFFING": "Personas en un turno",
+				"SHIFT_STAFFING_WITH_STAND_INS": "Personas en un turno, con suplentes",
+				"ROLE_PRESENCE": "Alguien de servicio todo el turno",
+				"DAYS_OFF_PER_PERIOD": "Días libres en una racha de días",
+				"AVOID_DAYS_OFF_ON": "Días en que evitar dar libre",
 				"REST_BETWEEN_SHIFTS": "Descanso entre turnos"
 			},
 			"sentences": {
-				"SHIFT_STAFFING": "El personal en <SHIFT/>, contando <JOB_TITLE/>, <REQUIREMENT/> sumar <COMPARISON/> <HEADCOUNT/>.",
-				"SHIFT_STAFFING_WITH_STAND_INS": "El personal en <SHIFT/>, contando <JOB_TITLE/>, <REQUIREMENT/> sumar al menos <HEADCOUNT/>, y <STAND_IN_JOB_TITLE/> pueden suplir a razón de <STAND_INS_PER_PERSON/> por uno.",
-				"ROLE_PRESENCE": "El personal presente durante todo <SHIFT/>, contando <JOB_TITLE/>, <REQUIREMENT/> ser <COMPARISON/> <HEADCOUNT/>.",
-				"DAYS_OFF_PER_PERIOD": "Los días libres de cada persona en cualquier periodo de <PERIOD_DAYS/> días <REQUIREMENT/> ser <COMPARISON/> <DAYS_OFF/>.",
-				"AVOID_DAYS_OFF_ON": "Intenta no dar días libres en: <WEEKDAY/>.",
-				"REST_BETWEEN_SHIFTS": "Las horas de descanso entre un turno y el siguiente deben ser al menos <REST_HOURS/>."
-			},
-			"fixedRequirements": {
-				"SHIFT_STAFFING": "Debe o debería",
-				"SHIFT_STAFFING_WITH_STAND_INS": "Debe o debería",
-				"ROLE_PRESENCE": "Debe o debería",
-				"DAYS_OFF_PER_PERIOD": "Debe o debería",
-				"AVOID_DAYS_OFF_ON": "Debería (siempre)",
-				"REST_BETWEEN_SHIFTS": "Debe (siempre)"
+				"SHIFT_STAFFING": {
+					"oneShift": {
+						"AT_LEAST_one": "<SHIFT/> necesita al menos <HEADCOUNT/> persona como <JOB_TITLE/>.",
+						"AT_LEAST_other": "<SHIFT/> necesita al menos <HEADCOUNT/> personas como <JOB_TITLE/>.",
+						"AT_MOST_one": "<SHIFT/> tiene como máximo <HEADCOUNT/> persona como <JOB_TITLE/>.",
+						"AT_MOST_other": "<SHIFT/> tiene como máximo <HEADCOUNT/> personas como <JOB_TITLE/>.",
+						"AT_MOST_zero": "<SHIFT/> no tiene a nadie como <JOB_TITLE/>.",
+						"EXACTLY_one": "<SHIFT/> necesita exactamente <HEADCOUNT/> persona como <JOB_TITLE/>.",
+						"EXACTLY_other": "<SHIFT/> necesita exactamente <HEADCOUNT/> personas como <JOB_TITLE/>.",
+						"EXACTLY_zero": "<SHIFT/> no tiene a nadie como <JOB_TITLE/>."
+					},
+					"severalShifts": {
+						"AT_LEAST_one": "<SHIFT/> necesitan juntos al menos <HEADCOUNT/> persona como <JOB_TITLE/> cada día.",
+						"AT_LEAST_other": "<SHIFT/> necesitan juntos al menos <HEADCOUNT/> personas como <JOB_TITLE/> cada día.",
+						"AT_MOST_one": "<SHIFT/> tienen juntos como máximo <HEADCOUNT/> persona como <JOB_TITLE/> cada día.",
+						"AT_MOST_other": "<SHIFT/> tienen juntos como máximo <HEADCOUNT/> personas como <JOB_TITLE/> cada día.",
+						"AT_MOST_zero": "<SHIFT/> no tienen juntos a nadie como <JOB_TITLE/> cada día.",
+						"EXACTLY_one": "<SHIFT/> necesitan juntos exactamente <HEADCOUNT/> persona como <JOB_TITLE/> cada día.",
+						"EXACTLY_other": "<SHIFT/> necesitan juntos exactamente <HEADCOUNT/> personas como <JOB_TITLE/> cada día.",
+						"EXACTLY_zero": "<SHIFT/> no tienen juntos a nadie como <JOB_TITLE/> cada día."
+					}
+				},
+				"SHIFT_STAFFING_WITH_STAND_INS": {
+					"oneShift": {
+						"AT_LEAST_one": "<SHIFT/> necesita al menos <HEADCOUNT/> persona como <JOB_TITLE/>.",
+						"AT_LEAST_other": "<SHIFT/> necesita al menos <HEADCOUNT/> personas como <JOB_TITLE/>."
+					},
+					"severalShifts": {
+						"AT_LEAST_one": "<SHIFT/> necesitan juntos al menos <HEADCOUNT/> persona como <JOB_TITLE/> cada día.",
+						"AT_LEAST_other": "<SHIFT/> necesitan juntos al menos <HEADCOUNT/> personas como <JOB_TITLE/> cada día."
+					},
+					"standIns_one": "<STAND_INS_PER_PERSON/> persona como <STAND_IN_JOB_TITLE/> cuenta como 1 <JOB_TITLE/>.",
+					"standIns_other": "<STAND_INS_PER_PERSON/> personas como <STAND_IN_JOB_TITLE/> cuentan como 1 <JOB_TITLE/>."
+				},
+				"ROLE_PRESENCE": {
+					"oneShift": {
+						"AT_LEAST_one": "<SHIFT/> tiene al menos <HEADCOUNT/> persona como <JOB_TITLE/> de servicio de principio a fin.",
+						"AT_LEAST_other": "<SHIFT/> tiene al menos <HEADCOUNT/> personas como <JOB_TITLE/> de servicio de principio a fin.",
+						"AT_MOST_one": "<SHIFT/> tiene como máximo <HEADCOUNT/> persona como <JOB_TITLE/> de servicio a la vez.",
+						"AT_MOST_other": "<SHIFT/> tiene como máximo <HEADCOUNT/> personas como <JOB_TITLE/> de servicio a la vez.",
+						"AT_MOST_zero": "<SHIFT/> no tiene a nadie como <JOB_TITLE/> de servicio en ningún momento.",
+						"EXACTLY_one": "<SHIFT/> tiene exactamente <HEADCOUNT/> persona como <JOB_TITLE/> de servicio en todo momento.",
+						"EXACTLY_other": "<SHIFT/> tiene exactamente <HEADCOUNT/> personas como <JOB_TITLE/> de servicio en todo momento.",
+						"EXACTLY_zero": "<SHIFT/> no tiene a nadie como <JOB_TITLE/> de servicio en ningún momento."
+					},
+					"severalShifts": {
+						"AT_LEAST_one": "<SHIFT/> tiene al menos <HEADCOUNT/> persona como <JOB_TITLE/> de servicio de principio a fin.",
+						"AT_LEAST_other": "<SHIFT/> tiene al menos <HEADCOUNT/> personas como <JOB_TITLE/> de servicio de principio a fin.",
+						"AT_MOST_one": "<SHIFT/> tienen cada uno como máximo <HEADCOUNT/> persona como <JOB_TITLE/> de servicio a la vez.",
+						"AT_MOST_other": "<SHIFT/> tienen cada uno como máximo <HEADCOUNT/> personas como <JOB_TITLE/> de servicio a la vez.",
+						"AT_MOST_zero": "<SHIFT/> no tienen a nadie como <JOB_TITLE/> de servicio en ningún momento.",
+						"EXACTLY_one": "<SHIFT/> tienen cada uno exactamente <HEADCOUNT/> persona como <JOB_TITLE/> de servicio en todo momento.",
+						"EXACTLY_other": "<SHIFT/> tienen cada uno exactamente <HEADCOUNT/> personas como <JOB_TITLE/> de servicio en todo momento.",
+						"EXACTLY_zero": "<SHIFT/> no tienen a nadie como <JOB_TITLE/> de servicio en ningún momento."
+					}
+				},
+				"DAYS_OFF_PER_PERIOD": {
+					"AT_LEAST_one": "Todos tienen al menos <DAYS_OFF/> día libre en cualquier periodo de <PERIOD_DAYS/> días seguidos.",
+					"AT_LEAST_other": "Todos tienen al menos <DAYS_OFF/> días libres en cualquier periodo de <PERIOD_DAYS/> días seguidos.",
+					"AT_MOST_one": "Todos tienen como máximo <DAYS_OFF/> día libre en cualquier periodo de <PERIOD_DAYS/> días seguidos.",
+					"AT_MOST_other": "Todos tienen como máximo <DAYS_OFF/> días libres en cualquier periodo de <PERIOD_DAYS/> días seguidos.",
+					"AT_MOST_zero": "Nadie tiene días libres en ningún periodo de <PERIOD_DAYS/> días seguidos.",
+					"EXACTLY_one": "Todos tienen exactamente <DAYS_OFF/> día libre en cualquier periodo de <PERIOD_DAYS/> días seguidos.",
+					"EXACTLY_other": "Todos tienen exactamente <DAYS_OFF/> días libres en cualquier periodo de <PERIOD_DAYS/> días seguidos.",
+					"EXACTLY_zero": "Nadie tiene días libres en ningún periodo de <PERIOD_DAYS/> días seguidos."
+				},
+				"AVOID_DAYS_OFF_ON": "Evitar días libres el <WEEKDAY/>.",
+				"REST_BETWEEN_SHIFTS_one": "Todos tienen al menos <REST_HOURS/> hora libre entre turnos.",
+				"REST_BETWEEN_SHIFTS_other": "Todos tienen al menos <REST_HOURS/> horas libres entre turnos."
 			},
 			"fields": {
-				"COMPARISON": "Comparación",
-				"HEADCOUNT": "Número de personas",
-				"STAND_INS_PER_PERSON": "Suplentes por persona",
+				"COMPARISON": "Al menos, como máximo o exactamente",
+				"HEADCOUNT": "Personas",
+				"STAND_INS_PER_PERSON": "Suplentes por 1 persona",
 				"DAYS_OFF": "Días libres",
-				"PERIOD_DAYS": "Periodo en días",
-				"REST_HOURS": "Descanso en horas",
-				"JOB_TITLE": "Puestos",
-				"STAND_IN_JOB_TITLE": "Puestos suplentes",
+				"PERIOD_DAYS": "Días seguidos",
+				"REST_HOURS": "Horas libres",
+				"JOB_TITLE": "Puestos que cuentan",
+				"STAND_IN_JOB_TITLE": "Puestos que pueden suplir",
 				"SHIFT": "Turnos",
-				"WEEKDAY": "Días"
+				"WEEKDAY": "Días de la semana"
 			},
 			"requirements": {
-				"MUST": "Debe",
-				"SHOULD": "Debería"
-			},
-			"requirementWords": {
-				"MUST": "debe",
-				"SHOULD": "debería"
+				"MUST": "Obligatoria",
+				"SHOULD": "Si es posible",
+				"unset": "Obligatoria o si es posible"
 			},
 			"comparisons": {
 				"AT_LEAST": "Al menos",
 				"AT_MOST": "Como máximo",
 				"EXACTLY": "Exactamente"
-			},
-			"comparisonWords": {
-				"AT_LEAST": "al menos",
-				"AT_MOST": "como máximo",
-				"EXACTLY": "exactamente"
 			},
 			"statuses": {
 				"ACTIVE": "Activa",
@@ -3154,24 +3192,19 @@
 			"dialog": {
 				"title": "Añadir restricción",
 				"editTitle": "Editar restricción",
-				"name": "Nombre de la restricción",
+				"name": "Nombre",
 				"namePlaceholder": "p. ej., Cobertura de mañana",
-				"nameHint": "De 2 a 100 caracteres. Solo letras, números, espacios y . ' & -.",
+				"nameHint": "Se muestra en la lista. De 2 a 100 caracteres.",
 				"nameCounter": "{{count}}/100",
-				"type": "Tipo de restricción",
-				"typeOption": "{{category}}: {{type}}",
-				"typeHint": "Lo que dice la restricción. Los campos de abajo dependen de él.",
+				"type": "Qué controla",
 				"optionsLoading": "Cargando tipos de restricción…",
 				"optionsHidden": "No tienes permiso para ver los tipos de restricción de este departamento.",
 				"optionsFailed": "No pudimos cargar los tipos de restricción. Inténtalo de nuevo.",
-				"requirement": "Requisito",
-				"requirementHint": "Debe: un horario nunca la incumple. Debería: se cumple siempre que se pueda.",
+				"requirement": "Firmeza",
 				"status": "Estado",
 				"statusHint": "Solo una restricción activa se puede aplicar a un horario.",
 				"pleaseSelect": "Selecciona",
-				"enterNumber": "Escribe un número",
 				"selectAll": "Seleccionar todo",
-				"numberHint": "Un número entero de {{min}} a {{max}}.",
 				"noJobTitles": "Este departamento aún no tiene puestos activos. Crea uno en Organización primero.",
 				"noShifts": "Este departamento aún no tiene turnos. Añade uno en el paso Turnos primero.",
 				"reset": "Restablecer",
@@ -3179,8 +3212,8 @@
 				"nameRequired": "Escribe un nombre de restricción.",
 				"nameLength": "Usa de 2 a 100 caracteres.",
 				"nameCharacters": "Usa solo letras, números, espacios y . ' & - en el nombre.",
-				"typeRequired": "Elige un tipo de restricción.",
-				"requirementRequired": "Elige debe o debería.",
+				"typeRequired": "Elige qué controla.",
+				"requirementRequired": "Elige Obligatoria o Si es posible.",
 				"number": "Escribe un número entero de {{min}} a {{max}}.",
 				"chooseOne": "Elige uno.",
 				"chooseAtLeast_one": "Elige al menos uno.",
@@ -3222,12 +3255,13 @@
 				"departmentPlaceholder": "Selecciona un departamento",
 				"departmentHint": "Cada restricción pertenece a un departamento; las de toda la empresa se definen en Configuración.",
 				"departmentsEmpty": "No hay ningún departamento activo al que puedas añadir restricciones.",
-				"optionsNeedDepartment": "Elige primero un departamento."
+				"optionsNeedDepartment": "Elige primero un departamento.",
+				"typeHintEmpty": "Elige una opción para ver un ejemplo.",
+				"shiftMissingTitles_one": "{{shifts}} no incluye {{jobTitles}}, así que nadie puede contar ahí. Añádelos al turno o elige otros puestos.",
+				"shiftMissingTitles_other": "{{shifts}} no incluyen {{jobTitles}}, así que nadie puede contar ahí. Añádelos a los turnos o elige otros puestos."
 			},
 			"preview": {
-				"title": "Vista previa de la restricción",
-				"complete": "Completa",
-				"incomplete": "Incompleta"
+				"title": "Cómo se lee"
 			},
 			"setBy": "Definida por",
 			"levels": {
@@ -3248,7 +3282,57 @@
 			"department": "Departamento",
 			"allDepartments": "Todos los departamentos",
 			"allConstraints": "Todas",
-			"categoriesLabel": "Categorías de restricciones"
+			"categoriesLabel": "Categorías de restricciones",
+			"listOr": "{{items, list(type: disjunction)}}",
+			"firmness": {
+				"MUST": "Se cumple siempre. Si las personas y los turnos no alcanzan, el horario muestra dónde falta.",
+				"SHOULD": "Se cumple cuando se puede. El horario muestra dónde no se cumplió."
+			},
+			"appliesTo": {
+				"everyoneIn": "Todo el personal de {{department}}",
+				"wholeCompany": "Toda la empresa"
+			},
+			"placeholders": {
+				"SHIFT": "qué turno",
+				"HEADCOUNT": "cuántas",
+				"STAND_INS_PER_PERSON": "cuántas",
+				"DAYS_OFF": "cuántos",
+				"PERIOD_DAYS": "cuántos",
+				"REST_HOURS": "cuántas",
+				"JOB_TITLE": "qué puestos",
+				"STAND_IN_JOB_TITLE": "qué puestos",
+				"WEEKDAY": "qué días"
+			},
+			"statement": "Restricción",
+			"examples": {
+				"SHIFT_STAFFING": "Por ejemplo: Recepción AM necesita al menos 2 personas como Cajero o Encargado.",
+				"SHIFT_STAFFING_WITH_STAND_INS": "Por ejemplo: Cierre necesita al menos 2 personas como Encargado. 2 personas como Cajero cuentan como 1 Encargado.",
+				"ROLE_PRESENCE": "Por ejemplo: Cierre tiene al menos 1 persona como Supervisor de servicio de principio a fin. Las horas extra del turno anterior cuentan.",
+				"DAYS_OFF_PER_PERIOD": "Por ejemplo: Todos tienen al menos 2 días libres en cualquier periodo de 7 días seguidos.",
+				"AVOID_DAYS_OFF_ON": "Por ejemplo: Evitar días libres el viernes y el sábado, los días de más trabajo.",
+				"REST_BETWEEN_SHIFTS": "Por ejemplo: Todos tienen al menos 11 horas libres entre turnos."
+			},
+			"fieldHints": {
+				"SHIFT": "Elige más de uno para contarlos juntos cada día.",
+				"HEADCOUNT": "Personas en el turno con uno de los puestos de abajo. De {{min}} a {{max}}.",
+				"JOB_TITLE": "Cuenta cualquiera con uno de estos puestos.",
+				"STAND_INS_PER_PERSON": "Por ejemplo 2: dos suplentes cuentan como una persona. De {{min}} a {{max}}.",
+				"DAYS_OFF": "De {{min}} a {{max}}.",
+				"PERIOD_DAYS": "Por ejemplo 7: cualquier periodo de 7 días seguidos. De {{min}} a {{max}}.",
+				"REST_HOURS": "Desde el final de un turno hasta el inicio del siguiente. De {{min}} a {{max}}."
+			},
+			"fixedFirmness": {
+				"MUST": "Siempre obligatoria para este tipo de restricción.",
+				"SHOULD": "Siempre si es posible para este tipo de restricción."
+			},
+			"nameSuggestions": {
+				"SHIFT_STAFFING": "Personal de {{shift}}",
+				"SHIFT_STAFFING_WITH_STAND_INS": "Personal de {{shift}}",
+				"ROLE_PRESENCE": "De servicio en {{shift}}",
+				"DAYS_OFF_PER_PERIOD": "Días libres",
+				"AVOID_DAYS_OFF_ON": "Evitar días libres",
+				"REST_BETWEEN_SHIFTS": "Descanso entre turnos"
+			}
 		},
 		"forecast": {
 			"title": "Previsión de personal",

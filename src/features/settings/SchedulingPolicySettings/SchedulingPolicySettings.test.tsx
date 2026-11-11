@@ -80,9 +80,14 @@ describe("SchedulingPolicySettings", () => {
 		});
 		const rest = within(table).getByRole("row", { name: /Company rest/ });
 		expect(rest).toHaveTextContent(
-			"Hours of rest between one shift and the next must be at least 11."
+			"Must Everyone gets at least 11 hours off between shifts.Whole company"
 		);
 		expect(rest).toHaveTextContent("Locked");
+		expect(
+			within(table)
+				.getAllByRole("columnheader")
+				.map((header) => header.textContent)
+		).not.toContain("Constraint type");
 		expect(
 			within(table).getByRole("row", { name: /Company weekends/ })
 		).toHaveTextContent("Default");
@@ -124,17 +129,19 @@ describe("SchedulingPolicySettings", () => {
 		const dialog = await screen.findByRole("dialog", {
 			name: "Add constraint",
 		});
-		await user.type(within(dialog).getByLabelText("Constraint name"), "Rest");
+		const name = within(dialog).getByRole("textbox", { name: /^Name/ });
+		await user.clear(name);
+		await user.type(name, "Rest");
 		await user.click(
-			within(dialog).getByRole("button", { name: /^Constraint type/ })
+			within(dialog).getByRole("button", { name: /^What it controls/ })
 		);
 		await user.click(
 			await screen.findByRole("option", {
-				name: "Working hours: Rest between shifts",
+				name: "Rest between shifts",
 			})
 		);
 		await user.type(
-			within(dialog).getByRole("spinbutton", { name: /Rest/ }),
+			within(dialog).getByRole("spinbutton", { name: /^Hours off/ }),
 			"11"
 		);
 		await user.click(within(dialog).getByRole("button", { name: "Save" }));
@@ -172,7 +179,7 @@ describe("SchedulingPolicySettings", () => {
 		const dialog = await screen.findByRole("dialog", {
 			name: "Edit constraint",
 		});
-		const rest = within(dialog).getByRole("spinbutton", { name: /Rest/ });
+		const rest = within(dialog).getByRole("spinbutton", { name: /^Hours off/ });
 		await user.clear(rest);
 		await user.type(rest, "12");
 		await user.click(within(dialog).getByRole("button", { name: "Save" }));
@@ -214,17 +221,19 @@ describe("SchedulingPolicySettings", () => {
 		const dialog = await screen.findByRole("dialog", {
 			name: "Add constraint",
 		});
-		await user.type(within(dialog).getByLabelText("Constraint name"), "Rest");
+		const name = within(dialog).getByRole("textbox", { name: /^Name/ });
+		await user.clear(name);
+		await user.type(name, "Rest");
 		await user.click(
-			within(dialog).getByRole("button", { name: /^Constraint type/ })
+			within(dialog).getByRole("button", { name: /^What it controls/ })
 		);
 		await user.click(
 			await screen.findByRole("option", {
-				name: "Working hours: Rest between shifts",
+				name: "Rest between shifts",
 			})
 		);
 		await user.type(
-			within(dialog).getByRole("spinbutton", { name: /Rest/ }),
+			within(dialog).getByRole("spinbutton", { name: /^Hours off/ }),
 			"12"
 		);
 		await user.click(within(dialog).getByRole("button", { name: "Save" }));

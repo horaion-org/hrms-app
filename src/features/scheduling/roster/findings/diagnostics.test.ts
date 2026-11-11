@@ -76,7 +76,7 @@ describe("diagnosticSentence", () => {
 		],
 		[
 			"RULE_REFERENCES_MISSING_ENTITY",
-			"Shift staffing with stand-ins names 2 items that aren’t in this schedule.",
+			"People on a shift, with stand-ins names 2 items that aren’t in this schedule.",
 		],
 		[
 			"UNASSIGNABLE_EMPLOYEE",

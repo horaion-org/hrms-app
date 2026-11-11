@@ -3241,10 +3241,7 @@
 		"constraints": {
 			"add": "Add constraint",
 			"label": "Constraints",
-			"name": "Constraint name",
-			"type": "Constraint type",
-			"details": "Details",
-			"requirement": "Requirement",
+			"name": "Name",
 			"status": "Status",
 			"actions": "Actions",
 			"edit": "Edit {{name}}",
@@ -3260,70 +3257,111 @@
 			"deleteFailed": "We couldn’t delete the constraint. Try again.",
 			"list": "{{items, list}}",
 			"categories": {
-				"STAFFING": "Staffing",
-				"ROLE_COVERAGE": "Role coverage",
-				"SHIFT_PATTERN": "Shift pattern",
-				"WORKING_HOURS": "Working hours"
-			},
-			"categoryHints": {
-				"STAFFING": "How many people a shift needs",
-				"ROLE_COVERAGE": "Which job titles must be present while a shift runs",
-				"SHIFT_PATTERN": "How days off fall across the week",
-				"WORKING_HOURS": "How long people rest between shifts"
+				"STAFFING": "People on shifts",
+				"ROLE_COVERAGE": "On duty throughout",
+				"SHIFT_PATTERN": "Days off",
+				"WORKING_HOURS": "Rest and hours"
 			},
 			"types": {
-				"SHIFT_STAFFING": "Shift staffing",
-				"SHIFT_STAFFING_WITH_STAND_INS": "Shift staffing with stand-ins",
-				"ROLE_PRESENCE": "Role presence",
-				"DAYS_OFF_PER_PERIOD": "Days off per period",
-				"AVOID_DAYS_OFF_ON": "Avoid days off on",
+				"SHIFT_STAFFING": "People on a shift",
+				"SHIFT_STAFFING_WITH_STAND_INS": "People on a shift, with stand-ins",
+				"ROLE_PRESENCE": "Someone on duty for the whole shift",
+				"DAYS_OFF_PER_PERIOD": "Days off in a run of days",
+				"AVOID_DAYS_OFF_ON": "Days to avoid giving off",
 				"REST_BETWEEN_SHIFTS": "Rest between shifts"
 			},
 			"sentences": {
-				"SHIFT_STAFFING": "Staff on <SHIFT/>, counting <JOB_TITLE/>, <REQUIREMENT/> total <COMPARISON/> <HEADCOUNT/>.",
-				"SHIFT_STAFFING_WITH_STAND_INS": "Staff on <SHIFT/>, counting <JOB_TITLE/>, <REQUIREMENT/> total at least <HEADCOUNT/>, with <STAND_IN_JOB_TITLE/> standing in at <STAND_INS_PER_PERSON/> to one.",
-				"ROLE_PRESENCE": "Staff present throughout <SHIFT/>, counting <JOB_TITLE/>, <REQUIREMENT/> be <COMPARISON/> <HEADCOUNT/>.",
-				"DAYS_OFF_PER_PERIOD": "Days off for everyone in any <PERIOD_DAYS/>-day period <REQUIREMENT/> be <COMPARISON/> <DAYS_OFF/>.",
-				"AVOID_DAYS_OFF_ON": "Try not to give days off on <WEEKDAY/>.",
-				"REST_BETWEEN_SHIFTS": "Hours of rest between one shift and the next must be at least <REST_HOURS/>."
-			},
-			"fixedRequirements": {
-				"SHIFT_STAFFING": "Must or should",
-				"SHIFT_STAFFING_WITH_STAND_INS": "Must or should",
-				"ROLE_PRESENCE": "Must or should",
-				"DAYS_OFF_PER_PERIOD": "Must or should",
-				"AVOID_DAYS_OFF_ON": "Should (always)",
-				"REST_BETWEEN_SHIFTS": "Must (always)"
+				"SHIFT_STAFFING": {
+					"oneShift": {
+						"AT_LEAST_one": "<SHIFT/> needs at least <HEADCOUNT/> person as <JOB_TITLE/>.",
+						"AT_LEAST_other": "<SHIFT/> needs at least <HEADCOUNT/> people as <JOB_TITLE/>.",
+						"AT_MOST_one": "<SHIFT/> has at most <HEADCOUNT/> person as <JOB_TITLE/>.",
+						"AT_MOST_other": "<SHIFT/> has at most <HEADCOUNT/> people as <JOB_TITLE/>.",
+						"AT_MOST_zero": "<SHIFT/> has no one as <JOB_TITLE/>.",
+						"EXACTLY_one": "<SHIFT/> needs exactly <HEADCOUNT/> person as <JOB_TITLE/>.",
+						"EXACTLY_other": "<SHIFT/> needs exactly <HEADCOUNT/> people as <JOB_TITLE/>.",
+						"EXACTLY_zero": "<SHIFT/> has no one as <JOB_TITLE/>."
+					},
+					"severalShifts": {
+						"AT_LEAST_one": "<SHIFT/> together need at least <HEADCOUNT/> person as <JOB_TITLE/> each day.",
+						"AT_LEAST_other": "<SHIFT/> together need at least <HEADCOUNT/> people as <JOB_TITLE/> each day.",
+						"AT_MOST_one": "<SHIFT/> together have at most <HEADCOUNT/> person as <JOB_TITLE/> each day.",
+						"AT_MOST_other": "<SHIFT/> together have at most <HEADCOUNT/> people as <JOB_TITLE/> each day.",
+						"AT_MOST_zero": "<SHIFT/> together have no one as <JOB_TITLE/> each day.",
+						"EXACTLY_one": "<SHIFT/> together need exactly <HEADCOUNT/> person as <JOB_TITLE/> each day.",
+						"EXACTLY_other": "<SHIFT/> together need exactly <HEADCOUNT/> people as <JOB_TITLE/> each day.",
+						"EXACTLY_zero": "<SHIFT/> together have no one as <JOB_TITLE/> each day."
+					}
+				},
+				"SHIFT_STAFFING_WITH_STAND_INS": {
+					"oneShift": {
+						"AT_LEAST_one": "<SHIFT/> needs at least <HEADCOUNT/> person as <JOB_TITLE/>.",
+						"AT_LEAST_other": "<SHIFT/> needs at least <HEADCOUNT/> people as <JOB_TITLE/>."
+					},
+					"severalShifts": {
+						"AT_LEAST_one": "<SHIFT/> together need at least <HEADCOUNT/> person as <JOB_TITLE/> each day.",
+						"AT_LEAST_other": "<SHIFT/> together need at least <HEADCOUNT/> people as <JOB_TITLE/> each day."
+					},
+					"standIns_one": "<STAND_INS_PER_PERSON/> person as <STAND_IN_JOB_TITLE/> counts as 1 <JOB_TITLE/>.",
+					"standIns_other": "<STAND_INS_PER_PERSON/> people as <STAND_IN_JOB_TITLE/> count as 1 <JOB_TITLE/>."
+				},
+				"ROLE_PRESENCE": {
+					"oneShift": {
+						"AT_LEAST_one": "<SHIFT/> has at least <HEADCOUNT/> person as <JOB_TITLE/> on duty from start to finish.",
+						"AT_LEAST_other": "<SHIFT/> has at least <HEADCOUNT/> people as <JOB_TITLE/> on duty from start to finish.",
+						"AT_MOST_one": "<SHIFT/> has at most <HEADCOUNT/> person as <JOB_TITLE/> on duty at any time.",
+						"AT_MOST_other": "<SHIFT/> has at most <HEADCOUNT/> people as <JOB_TITLE/> on duty at any time.",
+						"AT_MOST_zero": "<SHIFT/> has no one as <JOB_TITLE/> on duty at any time.",
+						"EXACTLY_one": "<SHIFT/> has exactly <HEADCOUNT/> person as <JOB_TITLE/> on duty at all times.",
+						"EXACTLY_other": "<SHIFT/> has exactly <HEADCOUNT/> people as <JOB_TITLE/> on duty at all times.",
+						"EXACTLY_zero": "<SHIFT/> has no one as <JOB_TITLE/> on duty at any time."
+					},
+					"severalShifts": {
+						"AT_LEAST_one": "<SHIFT/> has at least <HEADCOUNT/> person as <JOB_TITLE/> on duty from start to finish.",
+						"AT_LEAST_other": "<SHIFT/> has at least <HEADCOUNT/> people as <JOB_TITLE/> on duty from start to finish.",
+						"AT_MOST_one": "<SHIFT/> each have at most <HEADCOUNT/> person as <JOB_TITLE/> on duty at any time.",
+						"AT_MOST_other": "<SHIFT/> each have at most <HEADCOUNT/> people as <JOB_TITLE/> on duty at any time.",
+						"AT_MOST_zero": "<SHIFT/> each have no one as <JOB_TITLE/> on duty at any time.",
+						"EXACTLY_one": "<SHIFT/> each have exactly <HEADCOUNT/> person as <JOB_TITLE/> on duty at all times.",
+						"EXACTLY_other": "<SHIFT/> each have exactly <HEADCOUNT/> people as <JOB_TITLE/> on duty at all times.",
+						"EXACTLY_zero": "<SHIFT/> each have no one as <JOB_TITLE/> on duty at any time."
+					}
+				},
+				"DAYS_OFF_PER_PERIOD": {
+					"AT_LEAST_one": "Everyone gets at least <DAYS_OFF/> day off in any <PERIOD_DAYS/> days in a row.",
+					"AT_LEAST_other": "Everyone gets at least <DAYS_OFF/> days off in any <PERIOD_DAYS/> days in a row.",
+					"AT_MOST_one": "Everyone gets at most <DAYS_OFF/> day off in any <PERIOD_DAYS/> days in a row.",
+					"AT_MOST_other": "Everyone gets at most <DAYS_OFF/> days off in any <PERIOD_DAYS/> days in a row.",
+					"AT_MOST_zero": "Everyone gets no days off in any <PERIOD_DAYS/> days in a row.",
+					"EXACTLY_one": "Everyone gets exactly <DAYS_OFF/> day off in any <PERIOD_DAYS/> days in a row.",
+					"EXACTLY_other": "Everyone gets exactly <DAYS_OFF/> days off in any <PERIOD_DAYS/> days in a row.",
+					"EXACTLY_zero": "Everyone gets no days off in any <PERIOD_DAYS/> days in a row."
+				},
+				"AVOID_DAYS_OFF_ON": "Avoid days off on <WEEKDAY/>.",
+				"REST_BETWEEN_SHIFTS_one": "Everyone gets at least <REST_HOURS/> hour off between shifts.",
+				"REST_BETWEEN_SHIFTS_other": "Everyone gets at least <REST_HOURS/> hours off between shifts."
 			},
 			"fields": {
-				"COMPARISON": "Comparison",
-				"HEADCOUNT": "Headcount",
-				"STAND_INS_PER_PERSON": "Stand-ins per person",
+				"COMPARISON": "At least, at most or exactly",
+				"HEADCOUNT": "People",
+				"STAND_INS_PER_PERSON": "Stand-ins for 1 person",
 				"DAYS_OFF": "Days off",
-				"PERIOD_DAYS": "Period in days",
-				"REST_HOURS": "Rest in hours",
-				"JOB_TITLE": "Job titles",
-				"STAND_IN_JOB_TITLE": "Stand-in job titles",
+				"PERIOD_DAYS": "Days in a row",
+				"REST_HOURS": "Hours off",
+				"JOB_TITLE": "Job titles that count",
+				"STAND_IN_JOB_TITLE": "Job titles that can stand in",
 				"SHIFT": "Shifts",
-				"WEEKDAY": "Days"
+				"WEEKDAY": "Days of the week"
 			},
 			"requirements": {
 				"MUST": "Must",
-				"SHOULD": "Should"
-			},
-			"requirementWords": {
-				"MUST": "must",
-				"SHOULD": "should"
+				"SHOULD": "If possible",
+				"unset": "Must or if possible"
 			},
 			"comparisons": {
 				"AT_LEAST": "At least",
 				"AT_MOST": "At most",
 				"EXACTLY": "Exactly"
-			},
-			"comparisonWords": {
-				"AT_LEAST": "at least",
-				"AT_MOST": "at most",
-				"EXACTLY": "exactly"
 			},
 			"statuses": {
 				"ACTIVE": "Active",
@@ -3332,24 +3370,19 @@
 			"dialog": {
 				"title": "Add constraint",
 				"editTitle": "Edit constraint",
-				"name": "Constraint name",
+				"name": "Name",
 				"namePlaceholder": "e.g. Morning cover",
-				"nameHint": "2–100 characters. Letters, numbers, spaces and . ' & - only.",
+				"nameHint": "Shown in the list. 2–100 characters.",
 				"nameCounter": "{{count}}/100",
-				"type": "Constraint type",
-				"typeOption": "{{category}}: {{type}}",
-				"typeHint": "What the constraint says. The fields below follow from it.",
+				"type": "What it controls",
 				"optionsLoading": "Loading constraint types…",
 				"optionsHidden": "You don’t have permission to see this department’s constraint types.",
 				"optionsFailed": "We couldn’t load constraint types. Try again.",
-				"requirement": "Requirement",
-				"requirementHint": "Must: a schedule never breaks it. Should: kept wherever it can be.",
+				"requirement": "How firm",
 				"status": "Status",
 				"statusHint": "Only an active constraint can be applied to a schedule.",
 				"pleaseSelect": "Please select",
-				"enterNumber": "Enter a number",
 				"selectAll": "Select all",
-				"numberHint": "A whole number from {{min}} to {{max}}.",
 				"noJobTitles": "This department has no active job titles yet. Create one under Organisation first.",
 				"noShifts": "This department has no shifts yet. Add one on the Shifts step first.",
 				"reset": "Reset",
@@ -3357,8 +3390,8 @@
 				"nameRequired": "Enter a constraint name.",
 				"nameLength": "Use 2 to 100 characters.",
 				"nameCharacters": "Use only letters, numbers, spaces and . ' & - in the name.",
-				"typeRequired": "Choose a constraint type.",
-				"requirementRequired": "Choose must or should.",
+				"typeRequired": "Choose what it controls.",
+				"requirementRequired": "Choose Must or If possible.",
 				"number": "Enter a whole number from {{min}} to {{max}}.",
 				"chooseOne": "Choose one.",
 				"chooseAtLeast_one": "Choose at least one.",
@@ -3400,12 +3433,13 @@
 				"departmentPlaceholder": "Select a department",
 				"departmentHint": "Constraints belong to one department; company-wide ones are set in Settings.",
 				"departmentsEmpty": "No active department you can add constraints to.",
-				"optionsNeedDepartment": "Choose a department first."
+				"optionsNeedDepartment": "Choose a department first.",
+				"typeHintEmpty": "Choose one to see an example.",
+				"shiftMissingTitles_one": "{{shifts}} doesn't list {{jobTitles}}, so no one can be counted there. Add them to the shift or choose other job titles.",
+				"shiftMissingTitles_other": "{{shifts}} don't list {{jobTitles}}, so no one can be counted there. Add them to the shifts or choose other job titles."
 			},
 			"preview": {
-				"title": "Constraint preview",
-				"complete": "Complete",
-				"incomplete": "Incomplete"
+				"title": "How it reads"
 			},
 			"setBy": "Set by",
 			"levels": {
@@ -3426,7 +3460,57 @@
 			"department": "Department",
 			"allDepartments": "All departments",
 			"allConstraints": "All",
-			"categoriesLabel": "Constraint categories"
+			"categoriesLabel": "Constraint categories",
+			"listOr": "{{items, list(type: disjunction)}}",
+			"firmness": {
+				"MUST": "Always kept. If the people and shifts can't meet it, the schedule shows where it falls short.",
+				"SHOULD": "Kept when it can be. The schedule shows where it wasn't."
+			},
+			"appliesTo": {
+				"everyoneIn": "Everyone rostered in {{department}}",
+				"wholeCompany": "Whole company"
+			},
+			"placeholders": {
+				"SHIFT": "which shift",
+				"HEADCOUNT": "how many",
+				"STAND_INS_PER_PERSON": "how many",
+				"DAYS_OFF": "how many",
+				"PERIOD_DAYS": "how many",
+				"REST_HOURS": "how many",
+				"JOB_TITLE": "which job titles",
+				"STAND_IN_JOB_TITLE": "which job titles",
+				"WEEKDAY": "which days"
+			},
+			"statement": "Constraint",
+			"examples": {
+				"SHIFT_STAFFING": "For example: Front desk AM needs at least 2 people as Clerk or Lead.",
+				"SHIFT_STAFFING_WITH_STAND_INS": "For example: Closing needs at least 2 people as Lead. 2 people as Clerk count as 1 Lead.",
+				"ROLE_PRESENCE": "For example: Closing has at least 1 person as Supervisor on duty from start to finish. Overtime from the shift before counts.",
+				"DAYS_OFF_PER_PERIOD": "For example: Everyone gets at least 2 days off in any 7 days in a row.",
+				"AVOID_DAYS_OFF_ON": "For example: Avoid days off on Friday and Saturday, your busiest days.",
+				"REST_BETWEEN_SHIFTS": "For example: Everyone gets at least 11 hours off between shifts."
+			},
+			"fieldHints": {
+				"SHIFT": "Choose more than one to count them together each day.",
+				"HEADCOUNT": "People rostered on the shift as one of the job titles below. {{min}} to {{max}}.",
+				"JOB_TITLE": "Anyone with one of these counts.",
+				"STAND_INS_PER_PERSON": "For example 2: two stand-ins count as one person. {{min}} to {{max}}.",
+				"DAYS_OFF": "{{min}} to {{max}}.",
+				"PERIOD_DAYS": "For example 7: any 7 days in a row. {{min}} to {{max}}.",
+				"REST_HOURS": "From the end of one shift to the start of the next. {{min}} to {{max}}."
+			},
+			"fixedFirmness": {
+				"MUST": "Always a must for this kind of constraint.",
+				"SHOULD": "Always if possible for this kind of constraint."
+			},
+			"nameSuggestions": {
+				"SHIFT_STAFFING": "{{shift}} staffing",
+				"SHIFT_STAFFING_WITH_STAND_INS": "{{shift}} staffing",
+				"ROLE_PRESENCE": "{{shift}} on duty",
+				"DAYS_OFF_PER_PERIOD": "Days off",
+				"AVOID_DAYS_OFF_ON": "Days to avoid off",
+				"REST_BETWEEN_SHIFTS": "Rest between shifts"
+			}
 		},
 		"forecast": {
 			"title": "Staffing forecast",

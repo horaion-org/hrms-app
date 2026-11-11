@@ -4,8 +4,6 @@ import { initReactI18next } from "react-i18next";
 import { beforeAll, describe, expect, it } from "vitest";
 import en from "@/assets/locales/en/translations.json";
 import { ConstraintPreview } from "@/features/scheduling/constraints/ConstraintPreview";
-import { sentenceSlotsOf } from "@/features/scheduling/constraints/constraintSentence";
-import { CONSTRAINT_TYPE_OPTIONS } from "@/features/scheduling/constraints/fixtures";
 
 beforeAll(async () => {
 	await createInstance()
@@ -13,44 +11,42 @@ beforeAll(async () => {
 		.init({ lng: "en", resources: { en: { translation: en } } });
 });
 
-const shiftStaffing = CONSTRAINT_TYPE_OPTIONS[0]!;
-const daysOff = CONSTRAINT_TYPE_OPTIONS[3]!;
-
 describe("ConstraintPreview", () => {
-	it("given_missingParts_when_rendered_then_showsTheirLabelsAndIncomplete", () => {
+	it("given_nothingChosenYet_when_rendered_then_readsGreyWordsAndNoCompletenessBadge", () => {
 		render(
 			<ConstraintPreview
-				slots={sentenceSlotsOf(shiftStaffing)}
-				type="SHIFT_STAFFING"
-				words={{ REQUIREMENT: "must" }}
+				constraint={{ type: "SHIFT_STAFFING", requirement: null, values: [] }}
 			/>
 		);
 
-		expect(screen.getByText("Incomplete")).toBeInTheDocument();
-		expect(screen.getByRole("paragraph")).toHaveTextContent(
-			"Staff on Shifts, counting Job titles, must total Comparison Headcount."
+		expect(
+			screen.getByRole("region", { name: "How it reads" })
+		).toHaveTextContent(
+			"How it readsMust or if possible which shift needs at least how many people as which job titles."
 		);
-		expect(screen.getByText("Headcount")).toHaveClass("bg-neutral-300");
-		expect(screen.getByText("must")).toHaveClass("bg-ink-blue-50");
+		expect(screen.queryByText("Incomplete")).toBeNull();
 	});
 
-	it("given_everyPart_when_rendered_then_readsTheConstraintAsComplete", () => {
+	it("given_everyPart_when_rendered_then_readsAsTheListWill", () => {
 		render(
 			<ConstraintPreview
-				slots={sentenceSlotsOf(daysOff)}
-				type="DAYS_OFF_PER_PERIOD"
-				words={{
-					REQUIREMENT: "should",
-					COMPARISON: "at least",
-					DAYS_OFF: "2",
-					PERIOD_DAYS: "7",
+				appliesTo="Everyone rostered in Sales"
+				constraint={{
+					type: "DAYS_OFF_PER_PERIOD",
+					requirement: "SHOULD",
+					values: [
+						{ field: "COMPARISON", value: "AT_LEAST", name: null },
+						{ field: "DAYS_OFF", value: "2", name: null },
+						{ field: "PERIOD_DAYS", value: "7", name: null },
+					],
 				}}
 			/>
 		);
 
-		expect(screen.getByText("Complete")).toBeInTheDocument();
-		expect(screen.getByRole("paragraph")).toHaveTextContent(
-			"Days off for everyone in any 7-day period should be at least 2."
+		expect(
+			screen.getByRole("region", { name: "How it reads" })
+		).toHaveTextContent(
+			"If possible Everyone gets at least 2 days off in any 7 days in a row.Everyone rostered in Sales"
 		);
 	});
 });
