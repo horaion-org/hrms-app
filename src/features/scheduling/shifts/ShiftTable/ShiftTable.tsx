@@ -55,7 +55,8 @@ export type ShiftTableProps<Row extends ShiftTableRow> = {
 /**
  * Shifts as a table, with a tab per shift group that narrows the rows; what
  * is ticked is kept whether or not it is shown. The wizard's shift step and
- * the Shifts tab both list shifts with it.
+ * the Shifts tab both list shifts with it. Phones keep the name and the
+ * actions; every other value reads on the name's line, as on Job titles.
  */
 export const ShiftTable = <Row extends ShiftTableRow>({
 	shifts,
@@ -104,6 +105,7 @@ export const ShiftTable = <Row extends ShiftTableRow>({
 				id: "timeRange",
 				header: t("scheduling.shifts.timeRange"),
 				cell: (shift) => formatTimeRange(shift, t),
+				hideBelow: "md",
 			},
 			{
 				id: "paidHours",
@@ -116,18 +118,30 @@ export const ShiftTable = <Row extends ShiftTableRow>({
 						)}
 					</div>
 				),
+				// On the name's line the hours and the overtime mark sit side by side.
+				summary: (shift) => (
+					<span className="inline-flex items-center gap-1">
+						{formatPaidHours(shift, t)}
+						{shift.carriesOvertime && (
+							<Badge>{t("scheduling.shifts.carriesOvertime")}</Badge>
+						)}
+					</span>
+				),
+				hideBelow: "md",
 			},
 			{
 				id: "days",
 				header: t("scheduling.shifts.days"),
 				cell: (shift) =>
 					shift.days.map((day) => t(`scheduling.days.${day}`)).join(", "),
+				hideBelow: "md",
 			},
 			{
 				id: "roleCount",
 				header: t("scheduling.shifts.roleCount"),
 				cell: (shift) =>
 					t("scheduling.shifts.roleCountValue", { count: shift.roles.length }),
+				hideBelow: "md",
 			},
 			...(onEdit || onDelete
 				? [

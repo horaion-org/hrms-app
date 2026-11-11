@@ -107,6 +107,32 @@ describe("ConstraintTable", () => {
 		).toBeNull();
 	});
 
+	it("given_aPhone_when_rendered_then_keepsOnlyTheNameAndActionsAsColumns", () => {
+		render(
+			<ConstraintTable
+				showBranch
+				showDepartment
+				constraints={rows}
+				onDelete={vi.fn()}
+				onEdit={vi.fn()}
+			/>
+		);
+
+		const hiddenOnPhones = screen
+			.getAllByRole("columnheader")
+			.filter((header) => header.className.includes("hidden md:table-cell"))
+			.map((header) => header.textContent);
+		expect(hiddenOnPhones).toEqual([
+			"Branch",
+			"Department",
+			"Constraint type",
+			"Details",
+			"Set by",
+			"Requirement",
+			"Status",
+		]);
+	});
+
 	it("given_noRows_when_rendered_then_showsTheEmptyStateGiven", () => {
 		render(<ConstraintTable constraints={[]} emptyState="Nothing matches." />);
 

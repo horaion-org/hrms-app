@@ -87,6 +87,33 @@ describe("ShiftTable", () => {
 		).toBeNull();
 	});
 
+	it("given_aPhone_when_rendered_then_keepsOnlyTheNameAndActionsAsColumns", () => {
+		render(
+			<ShiftTable
+				showBranch
+				showDepartment
+				shifts={rows}
+				onDelete={vi.fn()}
+				onEdit={vi.fn()}
+			/>
+		);
+
+		const hiddenOnPhones = screen
+			.getAllByRole("columnheader")
+			.filter((header) => header.className.includes("hidden md:table-cell"))
+			.map((header) => header.textContent);
+		expect(hiddenOnPhones).toEqual([
+			"Branch",
+			"Department",
+			"Time range",
+			"Paid hours",
+			"Days applied to",
+			"Role count",
+		]);
+		const frontDesk = screen.getByRole("row", { name: /Front Desk AM/ });
+		expect(frontDesk).toHaveTextContent("09:00 – 15:00");
+	});
+
 	it("given_noShifts_when_rendered_then_showsTheEmptyStateGiven", () => {
 		render(<ShiftTable emptyState="Nothing matches." shifts={[]} />);
 

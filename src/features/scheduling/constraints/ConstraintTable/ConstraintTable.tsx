@@ -11,6 +11,7 @@ import { DeleteIcon, EditIcon } from "@/components/ui/Icon";
 import { branchColumn } from "@/features/organisation/listColumns";
 import { constraintColumns } from "@/features/scheduling/constraints/constraintColumns";
 import { ConstraintOrigin } from "@/features/scheduling/constraints/ConstraintOrigin";
+import { ConstraintTypeTag } from "@/features/scheduling/constraints/ConstraintTypeTag";
 import type { Constraint } from "@/features/scheduling/scheduleDraft";
 
 /** What the table reads of a constraint; a list across departments also names its Branch and Department. */
@@ -61,7 +62,8 @@ export type ConstraintTableProps<Row extends ConstraintTableRow> = {
 /**
  * Constraints as a table: each reads as its type's sentence, with who set it
  * and its requirement. The wizard's constraint step and the Constraints tab
- * both list constraints with it.
+ * both list constraints with it. Phones keep the name and the actions;
+ * every other value reads on the name's line, as on Job titles.
  */
 export const ConstraintTable = <Row extends ConstraintTableRow>({
 	constraints,
@@ -100,13 +102,29 @@ export const ConstraintTable = <Row extends ConstraintTableRow>({
 						} satisfies DataTableColumn<Row>,
 					]
 				: []),
-			shared.type,
-			shared.details,
+			{
+				...shared.type,
+				// On the name's line the category and the type sit side by side.
+				summary: (constraint) => (
+					<span className="inline-flex items-center gap-1.5">
+						<ConstraintTypeTag category={constraint.category} />
+						{t(`${key}.types.${constraint.type}`)}
+					</span>
+				),
+				hideBelow: "md",
+			},
+			{
+				...shared.details,
+				// One span, so the sentence wraps as text on the name's line rather than as separate pieces.
+				summary: (constraint) => <span>{shared.details.cell(constraint)}</span>,
+				hideBelow: "md",
+			},
 			{
 				id: "setBy",
 				header: t(`${key}.setBy`),
 				headerClassName: "w-44",
 				cell: (constraint) => <ConstraintOrigin constraint={constraint} />,
+				hideBelow: "md",
 			},
 			{
 				id: "requirement",
@@ -114,8 +132,9 @@ export const ConstraintTable = <Row extends ConstraintTableRow>({
 				headerClassName: "w-36",
 				cell: requirementOf,
 				sortValue: requirementOf,
+				hideBelow: "md",
 			},
-			...(frozen ? [] : [shared.status]),
+			...(frozen ? [] : [{ ...shared.status, hideBelow: "md" as const }]),
 			...(onEdit || onDelete || onReplace
 				? [
 						{

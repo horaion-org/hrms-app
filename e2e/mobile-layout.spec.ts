@@ -119,3 +119,34 @@ test.describe("on a phone, the first screen", () => {
 		});
 	}
 });
+
+/**
+ * Setup tabs whose rows a person may change: on a phone the table keeps only
+ * the name and the actions, so the first row's Edit is on screen without
+ * scrolling the table sideways.
+ */
+const ROW_ACTION_ROUTES = ["/scheduling?view=shifts"];
+
+test.describe("on a phone, a setup tab's first row", () => {
+	test.use({ viewport: { width: 360, height: 740 }, hasTouch: true });
+
+	for (const path of ROW_ACTION_ROUTES) {
+		test(`${path} shows its Edit button inside the screen`, async ({
+			context,
+			page,
+		}) => {
+			await mockDemoCompany(context);
+			await page.goto(path);
+			const edit = page
+				.getByRole("main")
+				.locator("tbody tr")
+				.first()
+				.getByRole("button", { name: /^Edit / });
+			await expect(edit).toBeVisible();
+			const box = await edit.boundingBox();
+
+			expect(box).not.toBeNull();
+			expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(360);
+		});
+	}
+});
