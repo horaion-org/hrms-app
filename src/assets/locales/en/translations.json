@@ -4078,6 +4078,12 @@
 			"deleteShift": "Delete shift",
 			"deleteConstraint": "Delete constraint",
 			"cancel": "Cancel"
+		},
+		"shiftsTab": {
+			"descriptionOne": "The times {{department}} works. New schedules use them; generated schedules keep the shifts they were made with.",
+			"descriptionAll": "The times each department works. New schedules use them; generated schedules keep the shifts they were made with.",
+			"search": "Search shifts",
+			"noMatch": "No shifts match your search."
 		}
 	},
 	"colourSwatchPicker": {

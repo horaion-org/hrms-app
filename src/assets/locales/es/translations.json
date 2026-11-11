@@ -3900,6 +3900,12 @@
 			"deleteShift": "Eliminar turno",
 			"deleteConstraint": "Eliminar restricción",
 			"cancel": "Cancelar"
+		},
+		"shiftsTab": {
+			"descriptionOne": "Las franjas en que trabaja {{department}}. Los horarios nuevos las usan; los horarios generados conservan los turnos con los que se crearon.",
+			"descriptionAll": "Las franjas en que trabaja cada departamento. Los horarios nuevos las usan; los horarios generados conservan los turnos con los que se crearon.",
+			"search": "Buscar turnos",
+			"noMatch": "Ningún turno coincide con tu búsqueda."
 		}
 	},
 	"workspace": {
