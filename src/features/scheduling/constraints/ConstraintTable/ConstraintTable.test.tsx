@@ -6,8 +6,10 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 import en from "@/assets/locales/en/translations.json";
 import { ConstraintTable } from "@/features/scheduling/constraints/ConstraintTable";
 import {
+	BRANCH_POLICY_FIXTURE,
 	COMPANY_CONSTRAINT_FIXTURES,
 	CONSTRAINT_FIXTURES,
+	DEPARTMENTS_POLICY_FIXTURE,
 } from "@/features/scheduling/constraints/fixtures";
 
 beforeAll(async () => {
@@ -60,6 +62,22 @@ describe("ConstraintTable", () => {
 		render(<ConstraintTable showDepartment constraints={rows} />);
 
 		expect(row(companyRest.name)).toHaveTextContent("All departments");
+	});
+
+	it("given_workPolicyRowsWithAReach_when_departmentsShown_then_eachReadsWhereItApplies", () => {
+		render(
+			<ConstraintTable
+				showDepartment
+				constraints={[BRANCH_POLICY_FIXTURE, DEPARTMENTS_POLICY_FIXTURE]}
+			/>
+		);
+
+		expect(row(BRANCH_POLICY_FIXTURE.name)).toHaveTextContent(
+			"Orchard (branch)"
+		);
+		expect(row(DEPARTMENTS_POLICY_FIXTURE.name)).toHaveTextContent(
+			"Bar, Kitchen"
+		);
 	});
 
 	it("given_branchAndDepartmentChosen_when_rendered_then_leavesTheirColumnsOut", () => {
