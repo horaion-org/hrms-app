@@ -232,7 +232,7 @@ it("deletes the schedule from the header's menu and goes back to the overview", 
 	);
 
 	expect(
-		await screen.findByRole("heading", { level: 1, name: "Schedule overview" })
+		await screen.findByRole("heading", { level: 1, name: "Scheduling" })
 	).toBeInTheDocument();
 	expect(app?.router.state.location.pathname).toBe("/scheduling");
 	expect(
