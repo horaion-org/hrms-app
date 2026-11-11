@@ -57,3 +57,7 @@ export const schedulePath = (
 	scheduleId: string
 ): string =>
 	`${schedulesPath(companyId, unit)}/${encodeURIComponent(scheduleId)}`;
+
+/** Whether each department in reach is ready to schedule (ADR-0071 in the API). */
+export const schedulingReadinessPath = (companyId: string): string =>
+	`${companyPath(companyId)}/scheduling-readiness`;
