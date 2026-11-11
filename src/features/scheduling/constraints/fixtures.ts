@@ -144,7 +144,11 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 /** Front Office's live shifts and active job titles, as the constraint dialog offers them. */
 export const CONSTRAINT_OPTIONS: ConstraintOptions = {
 	types: CONSTRAINT_TYPE_OPTIONS,
-	shifts: SHIFT_FIXTURES.map(({ shiftId, name }) => ({ shiftId, name })),
+	shifts: SHIFT_FIXTURES.map(({ shiftId, name, roles }) => ({
+		shiftId,
+		name,
+		jobTitleIds: roles.map((role) => role.jobTitleId),
+	})),
 	jobTitles: [
 		{ jobTitleId: "cashier", name: "Cashier" },
 		{ jobTitleId: "front-desk-lead", name: "Front Desk Lead" },
@@ -158,13 +162,15 @@ export const CONSTRAINT_OPTIONS: ConstraintOptions = {
 export const CONSTRAINT_OPTIONS_RESPONSE = {
 	types: CONSTRAINT_OPTIONS.types,
 	links: {
-		SHIFT: CONSTRAINT_OPTIONS.shifts.map(({ shiftId, name }) => ({
+		SHIFT: CONSTRAINT_OPTIONS.shifts.map(({ shiftId, name, jobTitleIds }) => ({
 			id: shiftId,
 			name,
+			jobTitleIds,
 		})),
 		JOB_TITLE: CONSTRAINT_OPTIONS.jobTitles.map(({ jobTitleId, name }) => ({
 			id: jobTitleId,
 			name,
+			jobTitleIds: [],
 		})),
 	},
 };
