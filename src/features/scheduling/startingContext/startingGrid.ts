@@ -16,7 +16,13 @@ export type PreviousWeek =
 	| { kind: "none" }
 	| { kind: "carried"; periodStart: string; uncovered: number };
 
+/** How the dialog splits the days before the period: the nearer week, and any earlier days. */
+export type SplitDays = { earlier: Array<string>; nearer: Array<string> };
+
 const SHIFT_PREFIX = "shift:";
+
+/** The days nearest the period the dialog shows first. */
+export const NEARER_DAYS = 7;
 
 /** The value a cell holds when it names the shift worked. */
 export const shiftCellValue = (shiftId: string): CellValue =>
@@ -41,6 +47,27 @@ export const initialEntries = (week: StartingDays): Entries =>
 			),
 		])
 	);
+
+/** The last `NEARER_DAYS` days, and whatever comes before them, both in order. */
+export const splitDays = (days: Array<string>): SplitDays => ({
+	earlier: days.slice(0, Math.max(days.length - NEARER_DAYS, 0)),
+	nearer: days.slice(-NEARER_DAYS),
+});
+
+/** Whether any member has a value entered on one of the dates. */
+export const hasEnteredDayOn = (
+	entries: Entries,
+	dates: Array<string>
+): boolean =>
+	Object.values(entries).some((days) =>
+		dates.some((date) => (days[date] ?? "") !== "")
+	);
+
+/** A member's cell on a date, or undefined when the answer has none. */
+export const cellOn = (
+	member: StartingDays["members"][number],
+	date: string
+): StartingCell | undefined => member.cells.find((cell) => cell.date === date);
 
 /** Sets one cell; a locked cell is never set. */
 export const withCell = (

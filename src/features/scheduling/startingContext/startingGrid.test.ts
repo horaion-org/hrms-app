@@ -4,12 +4,15 @@ import {
 	firstWeek,
 } from "@/features/scheduling/startingContext/fixtures";
 import {
+	cellOn,
 	enteredDays,
 	enteredMemberCount,
 	fillEmpty,
+	hasEnteredDayOn,
 	initialEntries,
 	previousWeekOf,
 	runsByMember,
+	splitDays,
 	withCell,
 } from "@/features/scheduling/startingContext/startingGrid";
 
@@ -55,6 +58,41 @@ describe("startingGrid", () => {
 				shiftId: null,
 			},
 		]);
+	});
+
+	it("given_fourteenDays_when_split_then_sevenEarlierAndTheSevenNearerInOrder", () => {
+		const days = Array.from(
+			{ length: 14 },
+			(_, index) => `2026-10-${String(26 + index).padStart(2, "0")}`
+		);
+
+		const { earlier, nearer } = splitDays(days);
+
+		expect(earlier).toEqual(days.slice(0, 7));
+		expect(nearer).toEqual(days.slice(7));
+	});
+
+	it("given_sevenDays_when_split_then_noEarlierDays", () => {
+		const { earlier, nearer } = splitDays(firstWeek().days);
+
+		expect(earlier).toEqual([]);
+		expect(nearer).toEqual(firstWeek().days);
+	});
+
+	it("given_entries_when_askedForEnteredDays_then_onlyNonEmptyValuesOnThoseDatesCount", () => {
+		const entries = initialEntries(firstWeek());
+
+		expect(hasEnteredDayOn(entries, ["2026-11-08"])).toBe(true);
+		expect(hasEnteredDayOn(entries, ["2026-11-06"])).toBe(false);
+		expect(hasEnteredDayOn(entries, ["2026-10-30"])).toBe(false);
+		expect(hasEnteredDayOn(entries, [])).toBe(false);
+	});
+
+	it("given_aMember_when_aCellIsLookedUpByDate_then_foundOrUndefined", () => {
+		const tan = firstWeek().members[0]!;
+
+		expect(cellOn(tan, "2026-11-08")?.shiftName).toBe("Night");
+		expect(cellOn(tan, "2026-10-30")).toBeUndefined();
 	});
 
 	it("given_noPreviousRoster_when_described_then_none", () => {
