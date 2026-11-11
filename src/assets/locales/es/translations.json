@@ -406,7 +406,7 @@
 				"failed": "No pudimos guardar el flujo. Inténtalo de nuevo.",
 				"noApproverIn_one": "Nadie puede aprobar el paso {{steps}} en {{department}}.",
 				"noApproverIn_other": "Nadie puede aprobar los pasos {{steps}} en {{department}}.",
-				"noApproverFix": "Da «Decidir aprobaciones» a personas de allí en Roles de acceso, o cambia el paso."
+				"noApproverFix": "Da «Aprobar o rechazar un paso» a personas de allí en Roles de acceso, o cambia el paso."
 			},
 			"dialog": {
 				"appliesTo": "Se aplica a",
@@ -479,7 +479,7 @@
 					"anyoneCompany": "Cualquiera que pueda revisar los permisos",
 					"peopleHint": "Solo aparecen quienes tienen «Aprobar o rechazar permisos» y «Aprobar o rechazar un paso» en {{department}}. Si falta alguien, dale ambos permisos en Roles de acceso primero.",
 					"peopleHintCompany": "Solo aparecen quienes tienen «Aprobar o rechazar permisos» y «Aprobar o rechazar un paso» en al menos un departamento. Si falta alguien, dale ambos permisos en Roles de acceso primero.",
-					"info": "Las personas aprobadoras necesitan «Revisar permisos» y «Decidir aprobaciones» en el departamento de la persona; si nadie tiene ambos, nadie allí puede solicitar permisos. Nadie aprueba su propio permiso. Las solicitudes que ya esperan conservan los pasos con los que empezaron.",
+					"info": "Las personas aprobadoras necesitan «Aprobar o rechazar permisos» y «Aprobar o rechazar un paso» en el departamento de la persona; si nadie tiene ambos, nadie allí puede solicitar permisos. Nadie aprueba su propio permiso. Las solicitudes que ya esperan conservan los pasos con los que empezaron.",
 					"turnOffDescription": "Las solicitudes que ya esperan conservan este flujo. Los permisos que se soliciten a partir de ahora no pasan por él.",
 					"turnOnDescription": "Los permisos que se soliciten a partir de ahora pasan por sus pasos.",
 					"deleteDescription": "Las solicitudes que ya esperan conservan este flujo. No se puede deshacer."

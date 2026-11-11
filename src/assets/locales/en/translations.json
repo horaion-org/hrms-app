@@ -406,7 +406,7 @@
 				"failed": "We couldn’t save the flow. Try again.",
 				"noApproverIn_one": "Nobody can approve step {{steps}} in {{department}}.",
 				"noApproverIn_other": "Nobody can approve steps {{steps}} in {{department}}.",
-				"noApproverFix": "Give people “Decide approvals” there in Access roles, or change the step."
+				"noApproverFix": "Give people “Approve or reject a step” there in Access roles, or change the step."
 			},
 			"dialog": {
 				"appliesTo": "Applies to",
@@ -479,7 +479,7 @@
 					"anyoneCompany": "Anyone who can review the leave",
 					"peopleHint": "Only people with “Approve or reject leave” and “Approve or reject a step” in {{department}} are listed. If someone is missing, give them both permissions in Access roles first.",
 					"peopleHintCompany": "Only people with “Approve or reject leave” and “Approve or reject a step” in at least one department are listed. If someone is missing, give them both permissions in Access roles first.",
-					"info": "Approvers need “Review leave” and “Decide approvals” for the person’s department; without anyone who has both, nobody there can apply for leave. People never approve their own leave. Requests already waiting keep the steps they started with.",
+					"info": "Approvers need “Approve or reject leave” and “Approve or reject a step” for the person’s department; without anyone who has both, nobody there can apply for leave. People never approve their own leave. Requests already waiting keep the steps they started with.",
 					"turnOffDescription": "Requests already waiting keep this flow. Leave applied for from now on doesn’t go through it.",
 					"turnOnDescription": "Leave applied for from now on goes through its steps.",
 					"deleteDescription": "Requests already waiting keep this flow. Deleting it can’t be undone."

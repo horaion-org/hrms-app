@@ -305,7 +305,7 @@ describe("ApprovalsSettings", () => {
 			})
 		).toBeChecked();
 		expect(dialog).toHaveTextContent(
-			"Approvers need “Review leave” and “Decide approvals”"
+			"Approvers need “Approve or reject leave” and “Approve or reject a step”"
 		);
 		await user.type(within(dialog).getByLabelText(/Name of step 1/), "Manager");
 		await user.click(within(dialog).getByRole("button", { name: "Save flow" }));
@@ -574,7 +574,7 @@ describe("ApprovalsSettings", () => {
 
 		expect(
 			await within(dialog).findByText(
-				"Nobody can approve step 1 in Kitchen. Give people “Decide approvals” there in Access roles, or change the step."
+				"Nobody can approve step 1 in Kitchen. Give people “Approve or reject a step” there in Access roles, or change the step."
 			)
 		).toBeInTheDocument();
 	});
