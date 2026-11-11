@@ -79,7 +79,7 @@ export const StartedWeek: Story = {
 /** A generated schedule, or a draft the person may not change. */
 export const ReadOnly: Story = { args: { ...savedDraft, readOnly: true } };
 
-/** The page's own row after the department and name: here, what the week uses. */
+/** The page's own row below the Schedule period: here, what the week uses. */
 export const WithDepartmentExtras: Story = {
 	args: {
 		departmentExtras: (

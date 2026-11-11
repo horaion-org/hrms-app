@@ -67,7 +67,7 @@ export type ScheduleSetupStepProps = {
 	onDepartmentChange?: (departmentId: string) => void;
 	/** Told the week chosen, whenever it changes, so the page can name it before the setup is saved. */
 	onPeriodChange?: (periodStart: string) => void;
-	/** Shown right after the department and name, e.g. what the week uses of the department. */
+	/** Shown below the Schedule period row, once the fields are done: e.g. what the week uses of the department. */
 	departmentExtras?: ReactNode;
 	/** Saves the setup; what it answers lands on the refused fields. */
 	onSubmit: (
@@ -318,7 +318,6 @@ export const ScheduleSetupStep = ({
 							/>
 						</FormRow>
 					</div>
-					{departmentExtras}
 					{readinessUnit && (
 						<PartTimeReadinessCallout
 							members={readiness.data ?? []}
@@ -361,6 +360,7 @@ export const ScheduleSetupStep = ({
 							{t("scheduling.setup.periodNote")}
 						</Callout>
 					</div>
+					{departmentExtras}
 					{publishedScheduleId && (
 						<PublishedWeekCallout
 							publishedScheduleId={publishedScheduleId}

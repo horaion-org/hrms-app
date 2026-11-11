@@ -182,7 +182,7 @@ describe("ScheduleSetupStep", () => {
 		});
 	});
 
-	it("given_departmentExtras_when_rendered_then_showsThemAfterTheDepartmentAndName", () => {
+	it("given_departmentExtras_when_rendered_then_showsThemBelowTheSchedulePeriod", () => {
 		render(
 			<Harness
 				departmentExtras={<p>Uses all 3 shifts and 5 constraints of Kitchen.</p>}
@@ -194,12 +194,12 @@ describe("ScheduleSetupStep", () => {
 		);
 		expect(
 			screen
-				.getByRole("textbox", { name: /Schedule name/ })
+				.getByRole("button", { name: /Schedule period/ })
 				.compareDocumentPosition(extras) & Node.DOCUMENT_POSITION_FOLLOWING
 		).toBeTruthy();
 		expect(
 			extras.compareDocumentPosition(
-				screen.getByRole("button", { name: /Schedule period/ })
+				screen.getByRole("checkbox", { name: "Include leave requests" })
 			) & Node.DOCUMENT_POSITION_FOLLOWING
 		).toBeTruthy();
 	});
