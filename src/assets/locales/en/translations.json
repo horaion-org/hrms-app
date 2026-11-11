@@ -4191,7 +4191,7 @@
 			"intro": "Untick to leave something out of this week only. {{department}} keeps it.",
 			"shifts": "Shifts",
 			"constraints": "Constraints",
-			"locked": "Locked: always applies.",
+			"locked": "Locked by the work policy.",
 			"leavesOut": "Uses {{shifts, list}}, which this week leaves out.",
 			"shiftGone": "Uses a shift that no longer exists.",
 			"noShift": "Choose at least one shift for this week.",

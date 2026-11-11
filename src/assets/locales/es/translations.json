@@ -4013,7 +4013,7 @@
 			"intro": "Desmarca para dejar algo fuera solo de esta semana. {{department}} lo conserva.",
 			"shifts": "Turnos",
 			"constraints": "Restricciones",
-			"locked": "Bloqueada: se aplica siempre.",
+			"locked": "Bloqueada por la política de trabajo.",
 			"leavesOut": "Usa {{shifts, list}}, que esta semana queda fuera.",
 			"shiftGone": "Usa un turno que ya no existe.",
 			"noShift": "Elige al menos un turno para esta semana.",
