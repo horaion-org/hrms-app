@@ -38,7 +38,7 @@ describe("StartingDaysDialog", () => {
 	it("given_aFirstWeek_when_shown_then_membersDownDaysAcrossWithLeaveLocked", () => {
 		show();
 
-		const table = screen.getByRole("table", { name: "The week before" });
+		const table = screen.getByRole("table", { name: "The days before this week" });
 		const tan = within(table).getByRole("row", { name: /Tan Wei Ming/ });
 		expect(within(tan).getByText("On Leave")).toBeInTheDocument();
 		expect(
@@ -57,7 +57,7 @@ describe("StartingDaysDialog", () => {
 		show(vi.fn(), week);
 
 		const tan = within(
-			screen.getByRole("table", { name: "The week before" })
+			screen.getByRole("table", { name: "The days before this week" })
 		).getByRole("row", { name: /Tan Wei Ming/ });
 		expect(within(tan).getByText("Unknown")).toBeInTheDocument();
 	});
@@ -101,7 +101,7 @@ describe("StartingDaysDialog", () => {
 			])
 		);
 
-		const table = screen.getByRole("table", { name: "The week before" });
+		const table = screen.getByRole("table", { name: "The days before this week" });
 		const siti = within(table).getByRole("row", { name: /Siti/ });
 		expect(within(siti).getAllByText("From rosters")).toHaveLength(2);
 		await userEvent.type(
