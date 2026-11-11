@@ -27,6 +27,10 @@ export const constraintsPath = (
 	unit: DepartmentPath
 ): string => `${departmentPath(companyId, unit)}/constraints`;
 
+/** The live constraints of every department in reach across the company, with the company's own first. */
+export const companyConstraintsPath = (companyId: string): string =>
+	`${companyPath(companyId)}/constraints`;
+
 /** The constraint types with their fields, and the department's shifts and active job titles, as the constraint dialog offers them. */
 export const constraintOptionsPath = (
 	companyId: string,

@@ -193,6 +193,9 @@ export const constraintFixture = (
 		Pick<DepartmentConstraint, "constraintId" | "name" | "type" | "values">
 ): DepartmentConstraint => ({
 	departmentId: "d-1",
+	departmentName: "Front Office",
+	branchId: "b-1",
+	branchName: "Main branch",
 	category: "STAFFING",
 	requirement: "MUST",
 	status: "ACTIVE",
@@ -217,6 +220,9 @@ export const companyConstraintFixture = (
 ): DepartmentConstraint =>
 	constraintFixture({
 		departmentId: null,
+		departmentName: null,
+		branchId: null,
+		branchName: null,
 		level: "COMPANY",
 		locked: overrides.lock === "LOCKED",
 		...overrides,
