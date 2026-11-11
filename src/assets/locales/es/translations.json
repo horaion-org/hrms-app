@@ -3876,6 +3876,30 @@
 				"loadFailed": "No se pudieron cargar las ofertas.",
 				"tryAgain": "Reintentar"
 			}
+		},
+		"reach": {
+			"editShift_one": "Al guardar, este turno cambia para {{department}}: los horarios nuevos y {{count}} borrador que lo usa. Los horarios generados y publicados conservan su propia copia.",
+			"editShift_other": "Al guardar, este turno cambia para {{department}}: los horarios nuevos y {{count}} borradores que lo usan. Los horarios generados y publicados conservan su propia copia.",
+			"editShiftNoDrafts": "Al guardar, este turno cambia para {{department}} y los horarios nuevos. Los horarios generados y publicados conservan su propia copia.",
+			"editShiftUnknown": "Al guardar, este turno cambia para {{department}}, los horarios nuevos y los borradores que lo usen. Los horarios generados y publicados conservan su propia copia.",
+			"editConstraint_one": "Al guardar, esta restricción cambia para {{department}}: los horarios nuevos y {{count}} borrador que la usa. Los horarios generados y publicados conservan su propia copia.",
+			"editConstraint_other": "Al guardar, esta restricción cambia para {{department}}: los horarios nuevos y {{count}} borradores que la usan. Los horarios generados y publicados conservan su propia copia.",
+			"editConstraintNoDrafts": "Al guardar, esta restricción cambia para {{department}} y los horarios nuevos. Los horarios generados y publicados conservan su propia copia.",
+			"editConstraintUnknown": "Al guardar, esta restricción cambia para {{department}}, los horarios nuevos y los borradores que la usen. Los horarios generados y publicados conservan su propia copia.",
+			"deleteTitle": "¿Eliminar {{name}}?",
+			"deleteShiftBody_one": "Se quita de {{department}} y de {{count}} borrador que lo usa. Los horarios generados y publicados conservan su copia.",
+			"deleteShiftBody_other": "Se quita de {{department}} y de {{count}} borradores que lo usan. Los horarios generados y publicados conservan su copia.",
+			"deleteShiftBodyNoDrafts": "Se quita de {{department}}. Los horarios generados y publicados conservan su copia.",
+			"deleteShiftBodyUnknown": "Se quita de {{department}} y de los borradores que lo usen. Los horarios generados y publicados conservan su copia.",
+			"deleteConstraintBody_one": "Se quita de {{department}} y de {{count}} borrador que la usa. Los horarios generados y publicados conservan su copia.",
+			"deleteConstraintBody_other": "Se quita de {{department}} y de {{count}} borradores que la usan. Los horarios generados y publicados conservan su copia.",
+			"deleteConstraintBodyNoDrafts": "Se quita de {{department}}. Los horarios generados y publicados conservan su copia.",
+			"deleteConstraintBodyUnknown": "Se quita de {{department}} y de los borradores que la usen. Los horarios generados y publicados conservan su copia.",
+			"namedByConstraints_one": "{{count}} restricción nombra este turno; dejará de aplicarse a él.",
+			"namedByConstraints_other": "{{count}} restricciones nombran este turno; dejarán de aplicarse a él.",
+			"deleteShift": "Eliminar turno",
+			"deleteConstraint": "Eliminar restricción",
+			"cancel": "Cancelar"
 		}
 	},
 	"workspace": {

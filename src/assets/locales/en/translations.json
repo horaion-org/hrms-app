@@ -4054,6 +4054,30 @@
 				"loadFailed": "Couldn’t load offers.",
 				"tryAgain": "Try again"
 			}
+		},
+		"reach": {
+			"editShift_one": "Saving changes this shift for {{department}}: new schedules and {{count}} draft that uses it. Generated and published schedules keep their own copy.",
+			"editShift_other": "Saving changes this shift for {{department}}: new schedules and {{count}} drafts that use it. Generated and published schedules keep their own copy.",
+			"editShiftNoDrafts": "Saving changes this shift for {{department}} and new schedules. Generated and published schedules keep their own copy.",
+			"editShiftUnknown": "Saving changes this shift for {{department}}, new schedules and any drafts that use it. Generated and published schedules keep their own copy.",
+			"editConstraint_one": "Saving changes this constraint for {{department}}: new schedules and {{count}} draft that uses it. Generated and published schedules keep their own copy.",
+			"editConstraint_other": "Saving changes this constraint for {{department}}: new schedules and {{count}} drafts that use it. Generated and published schedules keep their own copy.",
+			"editConstraintNoDrafts": "Saving changes this constraint for {{department}} and new schedules. Generated and published schedules keep their own copy.",
+			"editConstraintUnknown": "Saving changes this constraint for {{department}}, new schedules and any drafts that use it. Generated and published schedules keep their own copy.",
+			"deleteTitle": "Delete {{name}}?",
+			"deleteShiftBody_one": "It's removed from {{department}} and from {{count}} draft that uses it. Generated and published schedules keep their copy.",
+			"deleteShiftBody_other": "It's removed from {{department}} and from {{count}} drafts that use it. Generated and published schedules keep their copy.",
+			"deleteShiftBodyNoDrafts": "It's removed from {{department}}. Generated and published schedules keep their copy.",
+			"deleteShiftBodyUnknown": "It's removed from {{department}} and from any drafts that use it. Generated and published schedules keep their copy.",
+			"deleteConstraintBody_one": "It's removed from {{department}} and from {{count}} draft that uses it. Generated and published schedules keep their copy.",
+			"deleteConstraintBody_other": "It's removed from {{department}} and from {{count}} drafts that use it. Generated and published schedules keep their copy.",
+			"deleteConstraintBodyNoDrafts": "It's removed from {{department}}. Generated and published schedules keep their copy.",
+			"deleteConstraintBodyUnknown": "It's removed from {{department}} and from any drafts that use it. Generated and published schedules keep their copy.",
+			"namedByConstraints_one": "{{count}} constraint names this shift; it will stop applying to it.",
+			"namedByConstraints_other": "{{count}} constraints name this shift; they'll stop applying to it.",
+			"deleteShift": "Delete shift",
+			"deleteConstraint": "Delete constraint",
+			"cancel": "Cancel"
 		}
 	},
 	"colourSwatchPicker": {
