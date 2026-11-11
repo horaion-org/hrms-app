@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useId, useMemo } from "react";
+import { useEffect, useId, useMemo, type ReactNode } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
@@ -63,6 +63,10 @@ export type ScheduleSetupStepProps = {
 	branchId?: string;
 	/** Shows the setup without letting it change: a generated schedule, or one the person may not change. */
 	readOnly?: boolean;
+	/** Told the department chosen, whenever it changes, so the page can follow it. */
+	onDepartmentChange?: (departmentId: string) => void;
+	/** Shown right after the department and name, e.g. what the week uses of the department. */
+	departmentExtras?: ReactNode;
 	/** Saves the setup; what it answers lands on the refused fields. */
 	onSubmit: (
 		values: ScheduleSetupValues
@@ -99,6 +103,8 @@ export const ScheduleSetupStep = ({
 	lockedDepartment,
 	branchId,
 	readOnly = false,
+	onDepartmentChange,
+	departmentExtras,
 	onSubmit,
 	className,
 }: ScheduleSetupStepProps): FunctionComponent => {
@@ -122,6 +128,9 @@ export const ScheduleSetupStep = ({
 		control,
 		name: ["departmentId", "periodStart"],
 	});
+	useEffect(() => {
+		onDepartmentChange?.(departmentId);
+	}, [departmentId, onDepartmentChange]);
 	// Only where availability may be read: the workspace offers the department under its key.
 	const readinessUnit =
 		!readOnly && workspace.data && departmentId
@@ -303,6 +312,7 @@ export const ScheduleSetupStep = ({
 							/>
 						</FormRow>
 					</div>
+					{departmentExtras}
 					{readinessUnit && (
 						<PartTimeReadinessCallout
 							members={readiness.data ?? []}

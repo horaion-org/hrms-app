@@ -156,6 +156,41 @@ describe("ScheduleSetupStep", () => {
 		);
 	});
 
+	it("given_aDepartmentChosen_when_itChanges_then_tellsThePage", async () => {
+		const user = userEvent.setup();
+		const onDepartmentChange = vi.fn();
+		render(<Harness onDepartmentChange={onDepartmentChange} />);
+
+		await user.click(screen.getByRole("button", { name: /Department/ }));
+		await user.click(await screen.findByRole("option", { name: "Kitchen" }));
+
+		await vi.waitFor(() => {
+			expect(onDepartmentChange).toHaveBeenLastCalledWith("d-2");
+		});
+	});
+
+	it("given_departmentExtras_when_rendered_then_showsThemAfterTheDepartmentAndName", () => {
+		render(
+			<Harness
+				departmentExtras={<p>Uses all 3 shifts and 5 constraints of Kitchen.</p>}
+			/>
+		);
+
+		const extras = screen.getByText(
+			"Uses all 3 shifts and 5 constraints of Kitchen."
+		);
+		expect(
+			screen
+				.getByRole("textbox", { name: /Schedule name/ })
+				.compareDocumentPosition(extras) & Node.DOCUMENT_POSITION_FOLLOWING
+		).toBeTruthy();
+		expect(
+			extras.compareDocumentPosition(
+				screen.getByRole("button", { name: /Schedule period/ })
+			) & Node.DOCUMENT_POSITION_FOLLOWING
+		).toBeTruthy();
+	});
+
 	it("given_aSavedDraft_when_rendered_then_showsItsDepartmentWithoutAChoice", () => {
 		render(
 			<Harness

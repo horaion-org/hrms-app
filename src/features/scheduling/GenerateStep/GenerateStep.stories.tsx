@@ -18,3 +18,14 @@ export const Default: Story = {};
 export const PartialCoverage: Story = {
 	args: { summary: { shifts: 2, roles: 4, coverage: 75 } },
 };
+
+/** What the week uses of its department, above where everyone starts. */
+export const WithWhatTheWeekUses: Story = {
+	args: {
+		uses: (
+			<p className="text-sm text-neutral-800">
+				Uses 2 of 3 shifts and 4 of 5 constraints of Front Office.
+			</p>
+		),
+	},
+};

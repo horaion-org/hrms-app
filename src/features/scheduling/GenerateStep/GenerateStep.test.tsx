@@ -37,4 +37,22 @@ describe("GenerateStep", () => {
 			"Generation may take a few moments."
 		);
 	});
+
+	it("given_whatTheWeekUses_when_rendered_then_showsItAboveTheStartingPoint", () => {
+		render(
+			<GenerateStep
+				startingPoint={<p>Starting point</p>}
+				summary={{ shifts: 1, roles: 2, coverage: 100 }}
+				uses={<p>Uses all 3 shifts and 5 constraints of Kitchen.</p>}
+			/>
+		);
+
+		const uses = screen.getByText(
+			"Uses all 3 shifts and 5 constraints of Kitchen."
+		);
+		expect(
+			uses.compareDocumentPosition(screen.getByText("Starting point")) &
+				Node.DOCUMENT_POSITION_FOLLOWING
+		).toBeTruthy();
+	});
 });
