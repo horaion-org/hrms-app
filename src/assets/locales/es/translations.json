@@ -2882,6 +2882,11 @@
 			"SUN": "dom",
 			"weekdays": "Entre semana"
 		},
+		"dayTypes": {
+			"OFF": "Día libre",
+			"REST": "Día de descanso",
+			"LEAVE": "Permiso"
+		},
 		"shiftColours": {
 			"terracotta": "Terracota",
 			"peach": "Melocotón",
@@ -3447,6 +3452,7 @@
 			"hours_other": "{{count}} h",
 			"off": "LIBRE",
 			"leave": "PERMISO",
+			"absent": "Ausente",
 			"shiftLabel": "{{name}}, {{day}} {{time}}",
 			"shiftDetails": {
 				"title": "Detalles del turno",

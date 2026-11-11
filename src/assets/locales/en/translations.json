@@ -3060,6 +3060,11 @@
 			"SUN": "Sun",
 			"weekdays": "Weekdays"
 		},
+		"dayTypes": {
+			"OFF": "Day off",
+			"REST": "Rest day",
+			"LEAVE": "Leave"
+		},
 		"shiftColours": {
 			"terracotta": "Terracotta",
 			"peach": "Peach",
@@ -3625,6 +3630,7 @@
 			"hours_other": "{{count}} hrs",
 			"off": "OFF",
 			"leave": "LEAVE",
+			"absent": "Absent",
 			"shiftLabel": "{{name}}, {{day}} {{time}}",
 			"shiftDetails": {
 				"title": "Shift Details",
