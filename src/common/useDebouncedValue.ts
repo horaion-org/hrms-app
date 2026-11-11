@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 
 /**
- * Generic reusable hook: returns a debounced copy of `value` that only updates
- * after `delayMs` has elapsed without a change. Handy for search/filter inputs.
+ * `value` once it has stayed the same for `delayMs`, so a search box does
+ * not send a request per keystroke. It starts as `value` itself.
  */
-export const useDebouncedValue = <T>(value: T, delayMs = 300): T => {
+export const useDebouncedValue = <T>(value: T, delayMs = 250): T => {
 	const [debounced, setDebounced] = useState<T>(value);
 
 	useEffect((): (() => void) => {

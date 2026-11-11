@@ -1,16 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
-import type { TFunction } from "i18next";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ApiProblemError } from "@/common/problem";
 import { mapRefusal } from "@/common/refusal";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
-import { ArrowDownIcon, ArrowUpIcon, PlusIcon } from "@/components/ui/Icon";
-import { LockIcon } from "@/components/ui/LockIcon";
-import { OverflowMenuItem } from "@/components/ui/OverflowMenu";
+import { DataTable } from "@/components/ui/DataTable";
+import { PlusIcon } from "@/components/ui/Icon";
 import { Toast } from "@/components/ui/Toast";
 import {
 	leaveTypeCatalogueQuery,
@@ -25,7 +22,11 @@ import {
 	statusToggleBody,
 } from "@/features/leaveTypes/leaveTypeCatalogue";
 import { useLeaveTypeActions } from "@/features/leaveTypes/useLeaveTypeActions";
-import { actionsColumn } from "@/features/organisation/listColumns";
+import {
+	leaveTypeColumns,
+	type LeaveTypeTableColumns,
+} from "@/features/settings/LeaveTypesSettings/leaveTypeColumns";
+import { useMovedArrowFocus } from "@/features/settings/LeaveTypesSettings/useMovedArrowFocus";
 import { COMPANY_SCOPE } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
 
@@ -39,50 +40,7 @@ type EditableLeaveType = ManagedLeaveType & { grantKind: LeaveGrantKind };
 const isEditable = (type: ManagedLeaveType): type is EditableLeaveType =>
 	hasKnownKind(type) && type.status !== "UNKNOWN";
 
-/** The arrow to keep focus on after a move: the pressed one, or the other one once the type reaches an end. */
-const arrowToFocus = (
-	types: ReadonlyArray<ManagedLeaveType>,
-	leaveTypeId: string,
-	direction: "up" | "down"
-): "up" | "down" =>
-	movedOrder(types, leaveTypeId, direction)
-		? direction
-		: direction === "up"
-			? "down"
-			: "up";
-
 const key = "settings.leave.types";
-
-/** "Paid · Reason required": what a type is, in the words of its two flags. */
-const detailsOf = (type: ManagedLeaveType, t: TFunction): string =>
-	[
-		t(type.paid ? `${key}.paid` : `${key}.unpaid`),
-		...(type.requiresReason ? [t(`${key}.reasonRequired`)] : []),
-	].join(" · ");
-
-/** The columns every table shares: the type, its flags and how many requests use it. */
-const baseColumns = (
-	t: TFunction
-): Array<DataTableColumn<ManagedLeaveType>> => [
-	{
-		id: "name",
-		header: t(`${key}.name`),
-		cell: (type) => type.name,
-		cellClassName: "font-semibold",
-		pin: "start",
-	},
-	{
-		id: "details",
-		header: t(`${key}.details`),
-		cell: (type) => detailsOf(type, t),
-	},
-	{
-		id: "requests",
-		header: t(`${key}.requests`),
-		headerClassName: "w-30",
-		cell: (type) => t(`${key}.requestCount`, { count: type.requestCount }),
-	},
-];
 
 /**
  * Settings › Leave: the company's leave types (ADR-0055). The scheduler's day
@@ -108,39 +66,17 @@ export const LeaveTypesSettings = ({
 	const [toast, setToast] = useState<{ id: number; message: string }>();
 	const types = useMemo(() => list.data ?? [], [list.data]);
 	const sections = useMemo(() => catalogueSections(types), [types]);
-	// The arrow a move was made with; it keeps focus once the moved row re-renders.
-	const movedArrow = useRef<{
-		leaveTypeId: string;
-		direction: "up" | "down";
-	} | null>(null);
-	const tablesRef = useRef<HTMLDivElement>(null);
+	const { containerRef, rememberMove } = useMovedArrowFocus(types);
 	const notify = useCallback((message: string): void => {
 		setToast((previous) => ({ id: (previous?.id ?? 0) + 1, message }));
 	}, []);
-	useEffect(() => {
-		const moved = movedArrow.current;
-		if (!moved) return;
-		movedArrow.current = null;
-		const direction = arrowToFocus(types, moved.leaveTypeId, moved.direction);
-		tablesRef.current
-			?.querySelector<HTMLButtonElement>(
-				`[data-move="${moved.leaveTypeId}:${direction}"]`
-			)
-			?.focus();
-	}, [types]);
-	const columns = useMemo((): {
-		system: Array<DataTableColumn<ManagedLeaveType>>;
-		active: Array<DataTableColumn<ManagedLeaveType>>;
-		inactive: Array<DataTableColumn<ManagedLeaveType>>;
-	} => {
-		const base = baseColumns(t);
-		const reorder = actions.reorderLeaveTypes;
-		// Arrows stay focusable at either end and while a move is saving (aria-disabled, not disabled), so a
-		// keyboard user keeps their place; the move itself is announced through the Toast's live region.
-		const move = (type: ManagedLeaveType, direction: "up" | "down"): void => {
+	const reorder = actions.reorderLeaveTypes;
+	// Arrows stay pressable at either end and while a move saves; a move that cannot happen does nothing.
+	const move = useCallback(
+		(type: ManagedLeaveType, direction: "up" | "down"): void => {
 			const order = movedOrder(types, type.leaveTypeId, direction);
 			if (!order || reorder.isPending) return;
-			movedArrow.current = { leaveTypeId: type.leaveTypeId, direction };
+			rememberMove(type.leaveTypeId, direction);
 			reorder.mutate(order, {
 				onSuccess: () => {
 					notify(
@@ -152,82 +88,27 @@ export const LeaveTypesSettings = ({
 					);
 				},
 			});
-		};
-		const arrow = (
-			type: ManagedLeaveType,
-			direction: "up" | "down"
-		): FunctionComponent => {
-			const unavailable =
-				reorder.isPending || !movedOrder(types, type.leaveTypeId, direction);
-			return (
-				<Button
-					aria-disabled={unavailable || undefined}
-					className="aria-disabled:cursor-not-allowed aria-disabled:text-neutral-400"
-					data-move={`${type.leaveTypeId}:${direction}`}
-					variant="icon"
-					aria-label={t(
-						direction === "up" ? `${key}.moveUp` : `${key}.moveDown`,
-						{
-							name: type.name,
-						}
-					)}
-					onClick={() => {
-						move(type, direction);
-					}}
-				>
-					{direction === "up" ? <ArrowUpIcon /> : <ArrowDownIcon />}
-				</Button>
-			);
-		};
-		const orderColumn: DataTableColumn<ManagedLeaveType> = {
-			id: "order",
-			header: t(`${key}.order`),
-			headerClassName: "w-30",
-			cell: (type) => (
-				<div className="flex justify-center gap-2">
-					{arrow(type, "up")}
-					{arrow(type, "down")}
-				</div>
-			),
-		};
-		const rowActions = actionsColumn<ManagedLeaveType>(
-			t,
-			(type) => (
-				<OverflowMenuItem
-					disabled={!isEditable(type)}
-					onClick={() => {
-						if (isEditable(type)) setToggling(type);
-					}}
-				>
-					{t(
-						type.status === "ACTIVE"
-							? "organisation.list.deactivateItem"
-							: "organisation.list.activateItem"
-					)}
-				</OverflowMenuItem>
-			),
-			isEditable,
-			(type) => {
-				if (isEditable(type)) setDialog({ editing: type });
-			}
-		);
-		const lockColumn: DataTableColumn<ManagedLeaveType> = {
-			id: "actions",
-			header: t("organisation.list.actions"),
-			headerClassName: "w-35",
-			pin: "end",
-			cell: () => (
-				<span className="flex justify-center text-neutral-700">
-					<LockIcon className="size-5" title={t(`${key}.systemLock`)} />
-				</span>
-			),
-		};
-		return {
-			system: [...base, lockColumn],
-			active: canUpdate ? [...base, orderColumn, rowActions] : base,
-			inactive: canUpdate ? [...base, rowActions] : base,
-		};
-	}, [t, types, canUpdate, actions.reorderLeaveTypes, notify]);
+		},
+		[t, types, reorder, notify, rememberMove]
+	);
+	const columns = useMemo(
+		(): LeaveTypeTableColumns =>
+			leaveTypeColumns(t, {
+				canUpdate,
+				isEditable,
+				canMove: (type, direction) =>
+					!reorder.isPending &&
+					movedOrder(types, type.leaveTypeId, direction) !== null,
+				onMove: move,
+				onEdit: (type) => {
+					if (isEditable(type)) setDialog({ editing: type });
+				},
+				onToggleStatus: (type) => {
+					if (isEditable(type)) setToggling(type);
+				},
+			}),
+		[t, types, canUpdate, reorder.isPending, move]
+	);
 	const forbidden =
 		!canRead ||
 		(list.error instanceof ApiProblemError && list.error.status === 403);
@@ -289,7 +170,7 @@ export const LeaveTypesSettings = ({
 					{problem}
 				</p>
 			) : (
-				<div ref={tablesRef} className="mt-8 flex flex-col gap-8">
+				<div ref={containerRef} className="mt-8 flex flex-col gap-8">
 					{sections.system.length > 0 && (
 						<section className="flex flex-col gap-3">
 							<div>

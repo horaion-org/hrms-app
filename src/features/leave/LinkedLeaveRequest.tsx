@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
-import { Modal } from "@/components/ui/Modal";
+import { Dialog } from "@/components/ui/Dialog";
 import { leaveRequestQuery } from "@/features/leave/api";
 import { LeaveRequestDialog } from "@/features/leave/LeaveRequestDialog";
 import { useLeaveDecision } from "@/features/leave/useLeaveDecision";
@@ -33,7 +33,7 @@ export const LinkedLeaveRequest = ({
 	const decision = useLeaveDecision(companyId, { onDecided: onClose });
 	if (!allowed || query.isError || !query.data)
 		return (
-			<Modal open title={t("notifications.leaveRequest")} onClose={onClose}>
+			<Dialog open title={t("notifications.leaveRequest")} onClose={onClose}>
 				<p role={query.isError || !allowed ? "alert" : undefined}>
 					{t(
 						query.isError || !allowed
@@ -41,7 +41,7 @@ export const LinkedLeaveRequest = ({
 							: "notifications.loading"
 					)}
 				</p>
-			</Modal>
+			</Dialog>
 		);
 	const request = query.data;
 	return (

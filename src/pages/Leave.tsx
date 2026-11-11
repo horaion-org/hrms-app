@@ -5,6 +5,7 @@ import type { TFunction } from "i18next";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Refusal } from "@/common/refusal";
+import { useDebouncedValue } from "@/common/useDebouncedValue";
 import type { DateRange } from "@/components/forms/Calendar";
 import { dayParameter, shownDayOf } from "@/common/dayView";
 import type { FunctionComponent } from "@/common/types";
@@ -43,7 +44,6 @@ import {
 	type LeaveList,
 } from "@/features/leave/useLeaveRequests";
 import { peopleQuery } from "@/features/people/api";
-import { useSettledSearch } from "@/features/people/usePeople";
 import { workspaceQuery } from "@/features/workspace/api";
 import { LEAVE_READ_KEYS } from "@/features/workspace/permissionKeys";
 import { retry } from "@/features/workspace/retry";
@@ -157,7 +157,7 @@ export const Leave = (): FunctionComponent => {
 		},
 	});
 	const [employeeSearch, setEmployeeSearch] = useState("");
-	const settled = useSettledSearch(employeeSearch);
+	const settled = useDebouncedValue(employeeSearch.trim());
 	const people = useQuery(
 		peopleQuery(
 			companyId,

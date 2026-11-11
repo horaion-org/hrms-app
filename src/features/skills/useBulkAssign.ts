@@ -7,6 +7,7 @@ import {
 	type UseQueryResult,
 } from "@tanstack/react-query";
 import type { ListPage } from "@/common/schemas";
+import { useDebouncedValue } from "@/common/useDebouncedValue";
 import {
 	assignSkill,
 	BULK_ASSIGN_MAX_PEOPLE,
@@ -19,7 +20,6 @@ import {
 } from "@/features/skills/api";
 import { administrativeMeta } from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";
-import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 
 /** The API's largest page, so at most five pages reach the bulk limit. */
 const PAGE_SIZE = 100;
@@ -54,7 +54,7 @@ export const useAssignablePeople = (
 	search: string,
 	departmentId: string | undefined
 ): UseQueryResult<ListPage<AssignablePerson>> => {
-	const typed = useDebouncedValue(search.trim(), 250);
+	const typed = useDebouncedValue(search.trim());
 	return useQuery({
 		queryKey: [
 			"organisation",

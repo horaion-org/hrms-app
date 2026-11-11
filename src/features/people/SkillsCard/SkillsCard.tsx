@@ -1,30 +1,25 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import { mapRefusal } from "@/common/refusal";
 import type { FunctionComponent } from "@/common/types";
-import { formatDate, todayDate } from "@/components/forms/Calendar";
-import { Badge } from "@/components/ui/Badge";
+import { todayDate } from "@/components/forms/Calendar";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
-import { DeleteIcon, EditIcon, SkillsIcon } from "@/components/ui/Icon";
+import { SkillsIcon } from "@/components/ui/Icon";
 import type { MemberProfileDetail, MemberSkill } from "@/features/people/api";
-import { ProficiencyMeter } from "@/features/people/ProficiencyMeter";
 import { isRefused } from "@/features/people/profileEditAccess";
 import { SkillDialog } from "@/features/people/SkillDialog";
+import { memberSkillColumns } from "@/features/people/SkillsCard/memberSkillColumns";
 import {
 	withChangedHolding,
 	withHolding,
 	withoutHolding,
 } from "@/features/people/skills";
 import { useMemberSkills, useReplaceSkills } from "@/features/people/useSkills";
-import {
-	expiryBadge,
-	expiryStatusOn,
-	sortHeldSkills,
-} from "@/features/skills/skillRules";
+import { sortHeldSkills } from "@/features/skills/skillRules";
 import { COMPANY_SCOPE } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
 
@@ -79,103 +74,22 @@ export const SkillsCard = ({
 		remove.reset();
 		setOpen(undefined);
 	};
-	const columns = useMemo((): Array<DataTableColumn<MemberSkill>> => {
-		const expiryCell = (skill: MemberSkill): ReactNode => {
-			const status = expiryStatusOn(skill, today);
-			if (!status) return null;
-			const badge = expiryBadge(status, t);
-			return (
-				<span className="flex flex-wrap items-center gap-2">
-					{skill.expiresOn && (
-						<time dateTime={skill.expiresOn}>
-							{formatDate(skill.expiresOn, locale)}
-						</time>
-					)}
-					<Badge tone={badge.tone}>{badge.label}</Badge>
-				</span>
-			);
-		};
-		return [
-			{
-				id: "name",
-				header: t(`${key}.skill`),
-				cell: (skill) => (
-					<>
-						<span className="block font-semibold">
-							{skill.name}
-							{skill.skillStatus === "INACTIVE" && (
-								<Badge className="ml-2" tone="neutral">
-									{t("organisation.status.INACTIVE")}
-								</Badge>
-							)}
-						</span>
-						{skill.notes && (
-							<span
-								className="block truncate text-neutral-700"
-								title={skill.notes}
-							>
-								{skill.notes}
-							</span>
-						)}
-					</>
-				),
-				sortValue: (skill) => skill.name.toLocaleLowerCase(),
-			},
-			{
-				id: "proficiency",
-				header: t(`${key}.proficiency`),
-				cell: (skill) =>
-					skill.proficiency === null ? (
-						<span className="text-neutral-700">{t(`${key}.notRated`)}</span>
-					) : (
-						<ProficiencyMeter name={skill.name} value={skill.proficiency} />
-					),
-				sortValue: (skill) => skill.proficiency ?? 0,
-			},
-			...(showsExpiry
-				? [
-						{
-							id: "expiry",
-							header: t(`${key}.expiresOn`),
-							cell: expiryCell,
-							sortValue: (skill: MemberSkill): string => skill.expiresOn ?? "",
-						},
-					]
-				: []),
-			...(changeable
-				? [
-						{
-							id: "actions",
-							header: t(`${key}.actions`),
-							cell: (skill: MemberSkill): ReactNode => (
-								<span className="flex items-center justify-center gap-2">
-									<Button
-										aria-label={t(`${key}.edit`, { name: skill.name })}
-										variant="icon"
-										onClick={() => {
-											setOpen({ kind: "edit", skill });
-										}}
-									>
-										<EditIcon />
-									</Button>
-									<Button
-										aria-label={t(`${key}.remove`, { name: skill.name })}
-										variant="icon"
-										onClick={() => {
-											setOpen({ kind: "remove", skill });
-										}}
-									>
-										<DeleteIcon className="text-error-600" />
-									</Button>
-								</span>
-							),
-							headerClassName: "w-28",
-							cellClassName: "px-0",
-						},
-					]
-				: []),
-		];
-	}, [t, locale, today, showsExpiry, changeable]);
+	const columns = useMemo(
+		(): Array<DataTableColumn<MemberSkill>> =>
+			memberSkillColumns(t, {
+				locale,
+				today,
+				showsExpiry,
+				changeable,
+				onEdit: (skill) => {
+					setOpen({ kind: "edit", skill });
+				},
+				onRemove: (skill) => {
+					setOpen({ kind: "remove", skill });
+				},
+			}),
+		[t, locale, today, showsExpiry, changeable]
+	);
 	if (isRefused(loaded.error)) return null;
 
 	return (

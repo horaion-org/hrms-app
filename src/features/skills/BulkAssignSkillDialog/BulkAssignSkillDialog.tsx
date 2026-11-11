@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useId, useMemo, useState, type ReactNode } from "react";
+import { useId, useMemo, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { mapRefusal } from "@/common/refusal";
@@ -9,9 +9,8 @@ import { FormRow, formRowIds } from "@/components/forms/FormRow";
 import { Input } from "@/components/forms/Input";
 import { Slider } from "@/components/forms/Slider";
 import { Textarea } from "@/components/forms/Textarea";
-import { Badge } from "@/components/ui/Badge";
 import { Checkbox } from "@/components/ui/Checkbox";
-import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
+import { DataTable } from "@/components/ui/DataTable";
 import { SearchIcon } from "@/components/ui/Icon";
 import { CreateFormDialog } from "@/features/organisation/CreateFormDialog";
 import { useCreateFormSubmit } from "@/features/organisation/useCreateFormSubmit";
@@ -24,10 +23,10 @@ import {
 } from "@/features/people/skills";
 import {
 	BULK_ASSIGN_MAX_PEOPLE,
-	type AssignablePerson,
 	type BulkAssignResult,
 	type SkillOverview,
 } from "@/features/skills/api";
+import { assignablePeopleColumns } from "@/features/skills/BulkAssignSkillDialog/assignablePeopleColumns";
 import {
 	bulkAssignBodyOf,
 	bulkAssignSchema,
@@ -117,36 +116,7 @@ export const BulkAssignSkillDialog = ({
 	const assign = useAssignSkill(companyId, skill.skillId);
 	const submit = useCreateFormSubmit(form, FIELDS, onClose);
 	const columns = useMemo(
-		(): Array<DataTableColumn<AssignablePerson>> => [
-			{
-				id: "name",
-				header: t(`${key}.person`),
-				cell: (person) => person.displayName,
-				sortValue: (person) => person.displayName,
-				cellClassName: "font-semibold",
-			},
-			{
-				id: "department",
-				header: t(`${key}.department`),
-				cell: (person) =>
-					person.departmentName ?? t("organisation.skills.none"),
-			},
-			{
-				id: "held",
-				header: t(`${key}.held`),
-				cell: (person): ReactNode => {
-					const holding = holders.data?.get(person.membershipId);
-					if (!holding) return null;
-					return (
-						<Badge tone="neutral">
-							{holding.proficiency === null
-								? t(`${key}.hasIt`)
-								: t(`${key}.hasLevel`, { value: holding.proficiency })}
-						</Badge>
-					);
-				},
-			},
-		],
+		() => assignablePeopleColumns(t, holders.data),
 		[t, holders.data]
 	);
 	const listed = people.data?.items ?? [];
