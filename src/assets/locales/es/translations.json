@@ -3264,7 +3264,9 @@
 			"companyRuleApplies": "Se aplica la regla de la empresa",
 			"companyRuleAppliesHint": "La restricción de la empresa ahora es más estricta que esta, así que se aplican ambas.",
 			"department": "Departamento",
-			"allDepartments": "Todos los departamentos"
+			"allDepartments": "Todos los departamentos",
+			"allConstraints": "Todas",
+			"categoriesLabel": "Categorías de restricciones"
 		},
 		"forecast": {
 			"title": "Previsión de personal",
@@ -3912,6 +3914,12 @@
 			"label": "Vistas de planificación",
 			"schedules": "Horarios",
 			"shifts": "Turnos"
+		},
+		"constraintsTab": {
+			"descriptionOne": "Cómo se cubre y descansa {{department}}. Las restricciones de la empresa van primero; las bloqueadas se aplican siempre.",
+			"descriptionAll": "Cómo se cubre y descansa cada departamento. Las restricciones de la empresa se aplican a todos los departamentos; las bloqueadas, siempre.",
+			"search": "Buscar restricciones",
+			"noMatch": "Ninguna restricción coincide con tu búsqueda."
 		}
 	},
 	"workspace": {
