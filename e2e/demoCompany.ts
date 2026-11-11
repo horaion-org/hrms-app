@@ -215,6 +215,32 @@ const KITCHEN_CONSTRAINT = {
 	branchId: "b-1",
 	branchName: "Orchard",
 };
+/**
+ * The department's own constraints, as the department list answers them:
+ * each that names a shift names Kitchen's own shift, so a new schedule's week
+ * can use them all.
+ */
+const DEPARTMENT_CONSTRAINTS = CONSTRAINT_FIXTURES.map((constraint) => {
+	const otherValues = constraint.values.filter(
+		(value) => value.field !== "SHIFT"
+	);
+	const namesAShift = otherValues.length < constraint.values.length;
+	return {
+		...constraint,
+		departmentName: "Kitchen",
+		branchName: "Orchard",
+		values: namesAShift
+			? [
+					...otherValues,
+					{
+						field: "SHIFT" as const,
+						value: KITCHEN_SHIFT.shiftId,
+						name: KITCHEN_SHIFT.name,
+					},
+				]
+			: otherValues,
+	};
+});
 const BAR_CONSTRAINT = {
 	...CONSTRAINT_FIXTURES[4]!,
 	departmentId: "d-2",
@@ -369,7 +395,7 @@ const ANSWERS: Array<Answer> = [
 	},
 	{
 		path: /\/departments\/[^/]+\/constraints$/,
-		data: () => CONSTRAINT_FIXTURES,
+		data: () => DEPARTMENT_CONSTRAINTS,
 	},
 	{
 		path: /\/constraint-options$/,
