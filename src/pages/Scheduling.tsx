@@ -6,6 +6,7 @@ import { Tab, TabList, TabPanel, TabPanels, Tabs } from "@/components/ui/Tabs";
 import { ConstraintsTab } from "@/features/scheduling/constraints/ConstraintsTab";
 import { SchedulesTab } from "@/features/scheduling/SchedulesTab";
 import { SCHEDULING_UNIT_RULES } from "@/features/scheduling/schedules/schedulesUnitRules";
+import { returnLinkOf } from "@/features/scheduling/readiness/readinessCopy";
 import {
 	SCHEDULING_VIEW_KEYS,
 	schedulingViewOf,
@@ -71,10 +72,12 @@ export const Scheduling = (): FunctionComponent => {
 		units,
 		onDepartmentChange: chooseDepartment,
 	};
+	// Set while the wizard waits for a department to be set up here.
+	const returnTo = returnLinkOf(search);
 	const panels: Record<SchedulingView, ReactNode> = {
 		schedules: <SchedulesTab {...tab} />,
-		shifts: <ShiftsTab {...tab} />,
-		constraints: <ConstraintsTab {...tab} />,
+		shifts: <ShiftsTab {...tab} returnTo={returnTo} />,
+		constraints: <ConstraintsTab {...tab} returnTo={returnTo} />,
 	};
 
 	return (

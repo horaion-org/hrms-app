@@ -156,6 +156,54 @@ describe("ScheduleSetupStep", () => {
 		);
 	});
 
+	it("given_aDepartmentChosen_when_itChanges_then_tellsThePage", async () => {
+		const user = userEvent.setup();
+		const onDepartmentChange = vi.fn();
+		render(<Harness onDepartmentChange={onDepartmentChange} />);
+
+		await user.click(screen.getByRole("button", { name: /Department/ }));
+		await user.click(await screen.findByRole("option", { name: "Kitchen" }));
+
+		await vi.waitFor(() => {
+			expect(onDepartmentChange).toHaveBeenLastCalledWith("d-2");
+		});
+	});
+
+	it("given_aWeekChosen_when_itChanges_then_tellsThePage", async () => {
+		const user = userEvent.setup();
+		const onPeriodChange = vi.fn();
+		render(<Harness onPeriodChange={onPeriodChange} />);
+
+		await user.click(screen.getByRole("button", { name: /Schedule period/ }));
+		await user.click(await screen.findByRole("option", { name: /19.+25/ }));
+
+		await vi.waitFor(() => {
+			expect(onPeriodChange).toHaveBeenLastCalledWith("2026-10-19");
+		});
+	});
+
+	it("given_departmentExtras_when_rendered_then_showsThemBelowTheSchedulePeriod", () => {
+		render(
+			<Harness
+				departmentExtras={<p>Uses all 3 shifts and 5 constraints of Kitchen.</p>}
+			/>
+		);
+
+		const extras = screen.getByText(
+			"Uses all 3 shifts and 5 constraints of Kitchen."
+		);
+		expect(
+			screen
+				.getByRole("button", { name: /Schedule period/ })
+				.compareDocumentPosition(extras) & Node.DOCUMENT_POSITION_FOLLOWING
+		).toBeTruthy();
+		expect(
+			extras.compareDocumentPosition(
+				screen.getByRole("checkbox", { name: "Include leave requests" })
+			) & Node.DOCUMENT_POSITION_FOLLOWING
+		).toBeTruthy();
+	});
+
 	it("given_aSavedDraft_when_rendered_then_showsItsDepartmentWithoutAChoice", () => {
 		render(
 			<Harness

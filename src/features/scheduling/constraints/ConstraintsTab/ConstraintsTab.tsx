@@ -20,6 +20,9 @@ import { useConstraintActions } from "@/features/scheduling/constraints/useConst
 import { useConstraintOptions } from "@/features/scheduling/constraints/useConstraintOptions";
 import { useConstraintsInUnits } from "@/features/scheduling/constraints/useConstraintsInUnits";
 import { departmentUnitOf } from "@/features/scheduling/departmentUnit";
+import { ReadinessCallout } from "@/features/scheduling/readiness/ReadinessCallout";
+import type { ReturnLink } from "@/features/scheduling/readiness/readinessCopy";
+import { useSchedulingReadiness } from "@/features/scheduling/readiness/useSchedulingReadiness";
 import { initialDepartmentOf } from "@/features/scheduling/setupDepartment";
 import { deleteCopy, editNote } from "@/features/scheduling/setupReach";
 import { useDraftCount } from "@/features/scheduling/useDraftCount";
@@ -32,6 +35,7 @@ import { departmentScope } from "@/features/workspace/scopes";
 import { departmentChoices } from "@/features/workspace/unitChoices";
 import {
 	offersDepartmentChoice,
+	selectedUnits,
 	type ResolvedUnitSelection,
 } from "@/features/workspace/unitSelection";
 import { useAccess } from "@/features/workspace/useAccess";
@@ -94,6 +98,8 @@ export type ConstraintsTabProps = {
 	units: ResolvedUnitSelection;
 	/** Writes the chosen Department to the URL; undefined for every Department. */
 	onDepartmentChange: (department: string | undefined) => void;
+	/** The way back into the wizard, when the wizard sent the person here to set a department up. */
+	returnTo?: ReturnLink;
 };
 
 /**
@@ -107,6 +113,7 @@ export const ConstraintsTab = ({
 	companyId,
 	units,
 	onDepartmentChange,
+	returnTo,
 }: ConstraintsTabProps): FunctionComponent => {
 	const { t } = useTranslation();
 	const key = "scheduling.constraintsTab";
@@ -134,6 +141,7 @@ export const ConstraintsTab = ({
 		);
 	const { data: workspace } = useQuery({ ...workspaceQuery, retry });
 	const list = useConstraintsInUnits(companyId, units);
+	const readiness = useSchedulingReadiness(companyId, selectedUnits(units));
 	const actions = useConstraintActions(companyId);
 	const [search, setSearch] = useState("");
 	const [tab, setTab] = useState(ALL_TAB);
@@ -270,6 +278,16 @@ export const ConstraintsTab = ({
 						: undefined
 				}
 			/>
+			{readiness.status === "ready" && (
+				<ReadinessCallout
+					className="mt-6"
+					department={units.department}
+					returnTo={returnTo}
+					rows={readiness.rows}
+					view="constraints"
+					onChooseDepartment={onDepartmentChange}
+				/>
+			)}
 			{list.status === "ready" ? (
 				<div className="mt-8">
 					{rows.length > 0 && (
@@ -295,9 +313,7 @@ export const ConstraintsTab = ({
 						showBranch={!units.branch}
 						showDepartment={!units.department}
 						emptyState={
-							search.trim()
-								? t(`${key}.noMatch`)
-								: t("scheduling.constraints.empty")
+							search.trim() ? t(`${key}.noMatch`) : t(`${key}.emptyGuide`)
 						}
 						onDelete={setDeleting}
 						onEdit={openEdit}

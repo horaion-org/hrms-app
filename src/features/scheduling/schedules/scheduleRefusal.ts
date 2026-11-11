@@ -13,6 +13,7 @@ export const SCHEDULE_REFUSAL_CODES = {
 	isDraft: "409 SCHEDULE_IS_DRAFT",
 	generationInProgress: "409 SCHEDULE_GENERATION_IN_PROGRESS",
 	hasNoShifts: "409 SCHEDULE_HAS_NO_SHIFTS",
+	hasNoStaffing: "409 SCHEDULE_HAS_NO_STAFFING_CONSTRAINT",
 	hasNoEmployees: "409 SCHEDULE_HAS_NO_EMPLOYEES",
 	constraintUnusable: "409 SCHEDULE_CONSTRAINT_UNUSABLE",
 	scheduleNotFound: "404 SCHEDULE_NOT_FOUND",
@@ -97,6 +98,7 @@ export const generationRefusal = (error: unknown, t: TFunction): string => {
 		mapRefusal<never>(error, {
 			alerts: {
 				[codes.hasNoShifts]: t(`${key}.noShifts`),
+				[codes.hasNoStaffing]: t(`${key}.noStaffing`),
 				[codes.hasNoEmployees]: t(`${key}.noEmployees`),
 				[codes.constraintUnusable]: t(`${key}.constraintUnusable`),
 				[codes.notDraft]: t(`${key}.notDraft`),

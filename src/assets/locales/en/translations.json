@@ -3037,8 +3037,6 @@
 			"viewSubtitle": "How this schedule was set up: its department, period, shifts and constraints.",
 			"steps": {
 				"setup": "Setup",
-				"shifts": "Shifts",
-				"constraints": "Constraints",
 				"forecast": "Forecast",
 				"generate": "Generate"
 			},
@@ -3120,9 +3118,6 @@
 			}
 		},
 		"shifts": {
-			"title": "Select shifts",
-			"description": "Choose which of the department’s shifts this schedule includes. A change to a shift applies to every draft of the department.",
-			"frozenDescription": "The shifts this schedule was generated with, as they were then. Regenerating keeps them; a later change to a shift reaches only a new schedule.",
 			"add": "Add shift",
 			"label": "Shifts",
 			"allShifts": "All",
@@ -3142,7 +3137,6 @@
 			"delete": "Delete {{name}}",
 			"deleted": "Shift successfully deleted",
 			"empty": "No shifts yet.",
-			"required": "Choose at least one shift to include in this schedule.",
 			"added": "Shift added",
 			"edited": "Shift saved",
 			"loading": "Loading shifts…",
@@ -3245,9 +3239,6 @@
 			"department": "Department"
 		},
 		"constraints": {
-			"title": "Scheduling constraints",
-			"description": "Choose which constraints this schedule applies. The company’s come first; locked ones always apply. A change to a constraint applies to every draft of the department.",
-			"frozenDescription": "The constraints this schedule was generated with, as they were then.",
 			"add": "Add constraint",
 			"label": "Constraints",
 			"name": "Constraint name",
@@ -3416,15 +3407,6 @@
 				"complete": "Complete",
 				"incomplete": "Incomplete"
 			},
-			"unticked": {
-				"title": "Continue without constraints?",
-				"none": "This department has no constraints yet.",
-				"noneTicked_one": "This department’s {{count}} constraint is not ticked.",
-				"noneTicked_other": "None of this department’s {{count}} constraints are ticked.",
-				"consequence": "The schedule will be generated without rules such as days off or maximum hours.",
-				"confirm": "Continue without constraints",
-				"cancel": "Back to constraints"
-			},
 			"setBy": "Set by",
 			"levels": {
 				"COMPANY": "Company",
@@ -3504,7 +3486,8 @@
 			"notDraft": "This schedule has already been generated.",
 			"forbidden": "You no longer have permission to generate this schedule.",
 			"failed": "We couldn’t generate the schedule. Try again.",
-			"weekAlreadyPublished": "This department already has a published roster for this week. Only one roster can be published per week, so schedule a different week instead."
+			"weekAlreadyPublished": "This department already has a published roster for this week. Only one roster can be published per week, so schedule a different week instead.",
+			"noStaffing": "This schedule uses no staffing constraint on its shifts, so nobody would be rostered. Choose for this week on Setup."
 		},
 		"draft": {
 			"loading": "Loading the draft…",
@@ -4086,7 +4069,8 @@
 			"descriptionOne": "The times {{department}} works. New schedules use them; generated schedules keep the shifts they were made with.",
 			"descriptionAll": "The times each department works. New schedules use them; generated schedules keep the shifts they were made with.",
 			"search": "Search shifts",
-			"noMatch": "No shifts match your search."
+			"noMatch": "No shifts match your search.",
+			"emptyGuide": "No shifts yet. Shifts are the times people work, such as Opening 07:00–15:00."
 		},
 		"views": {
 			"label": "Scheduling views",
@@ -4098,7 +4082,71 @@
 			"descriptionOne": "How {{department}} is staffed and rested. Company constraints come first; locked ones always apply.",
 			"descriptionAll": "How each department is staffed and rested. Company constraints apply to every department; locked ones always apply.",
 			"search": "Search constraints",
-			"noMatch": "No constraints match your search."
+			"noMatch": "No constraints match your search.",
+			"emptyGuide": "No department constraints yet. Start with a staffing constraint: how many people each shift needs."
+		},
+		"readiness": {
+			"departmentsNotReady_one": "{{count}} department isn’t ready to schedule:",
+			"departmentsNotReady_other": "{{count}} departments aren’t ready to schedule:",
+			"notReadyTitle": "{{department}} isn’t ready to schedule yet",
+			"addShift": "Add a shift",
+			"addStaffing": "Add a staffing constraint: how many people each shift needs.",
+			"addShiftFirst": "Add a shift first.",
+			"goToConstraints": "Go to Constraints",
+			"ready": "{{department}} is ready to schedule.",
+			"createSchedule": "Create schedule",
+			"backToSchedule": "Back to the schedule",
+			"done": "Done"
+		},
+		"week": {
+			"title": "What {{period}} uses",
+			"titleGenerated": "What {{period}} used",
+			"intro": "Untick to leave something out of this week only. {{department}} keeps it.",
+			"shifts": "Shifts",
+			"constraints": "Constraints",
+			"locked": "Locked: always applies.",
+			"leavesOut": "Uses {{shifts, list}}, which this week leaves out.",
+			"shiftGone": "Uses a shift that no longer exists.",
+			"noShift": "Choose at least one shift for this week.",
+			"noStaffing": "Tick at least one staffing constraint. Without one, nobody is rostered.",
+			"apply": "Use for week",
+			"cancel": "Cancel",
+			"close": "Close",
+			"uses": "Uses {{shifts}} and {{constraints}} of {{department}}.",
+			"shiftsAll_one": "its {{count}} shift",
+			"shiftsAll_other": "all {{count}} shifts",
+			"shiftsSome": "{{count}} of {{total}} shifts",
+			"constraintsAll_one": "its {{count}} constraint",
+			"constraintsAll_other": "all {{count}} constraints",
+			"constraintsSome": "{{count}} of {{total}} constraints",
+			"generatedWith": "Generated with {{shifts}} and {{constraints}}.",
+			"shiftCount_one": "{{count}} shift",
+			"shiftCount_other": "{{count}} shifts",
+			"constraintCount_one": "{{count}} constraint",
+			"constraintCount_other": "{{count}} constraints",
+			"editShifts": "Edit shifts",
+			"editConstraints": "Edit constraints",
+			"choose": "Choose for this week",
+			"view": "View",
+			"everything": "This week uses every shift and constraint of {{department}}.",
+			"change": "Change",
+			"listsHiddenNote": "You need to see {{department}}’s shifts and constraints to create its schedule.",
+			"problemNote": "Choose what this week uses on Setup to generate."
+		},
+		"gate": {
+			"nothing": "{{department}} has no shifts or staffing constraints yet. A schedule needs both.",
+			"setUp": "Set up {{department}}",
+			"nothingNote": "Set up shifts and a staffing constraint for {{department}} first.",
+			"noStaffing": "{{department}} has shifts but no staffing constraint, so nobody would be rostered.",
+			"addStaffing": "Add a staffing constraint",
+			"noStaffingNote": "Add a staffing constraint for {{department}} first.",
+			"cannotFixShifts": "{{department}} isn’t ready to schedule: it has no shifts. Ask someone who manages {{department}}’s scheduling to add them.",
+			"cannotFixStaffing": "{{department}} isn’t ready to schedule: it has no staffing constraint. Ask someone who manages {{department}}’s scheduling to add one.",
+			"viewShifts": "View shifts",
+			"viewConstraints": "View constraints",
+			"noLongerShift": "{{department}} no longer has a shift, so this schedule can’t be generated.",
+			"noLongerStaffing": "{{department}} no longer has a staffing constraint, so this schedule can’t be generated.",
+			"noLongerNote": "Fix {{department}}’s setup to generate."
 		}
 	},
 	"colourSwatchPicker": {

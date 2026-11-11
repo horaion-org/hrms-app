@@ -897,6 +897,11 @@ describe("schedule refusals", () => {
 			"Choose at least one shift before generating this schedule.",
 		],
 		[
+			"SCHEDULE_HAS_NO_STAFFING_CONSTRAINT",
+			409,
+			"This schedule uses no staffing constraint on its shifts, so nobody would be rostered. Choose for this week on Setup.",
+		],
+		[
 			"SCHEDULE_HAS_NO_EMPLOYEES",
 			409,
 			"This department has no employees who can be scheduled. Give at least one active member of the department a job title, then try again.",

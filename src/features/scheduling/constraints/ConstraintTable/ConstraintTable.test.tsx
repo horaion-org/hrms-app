@@ -184,4 +184,33 @@ describe("ConstraintTable", () => {
 
 		expect(screen.getByText("Nothing matches.")).toBeVisible();
 	});
+
+	it("given_aNote_when_rendered_then_showsItUnderTheNameOfThatRowOnly", () => {
+		render(
+			<ConstraintTable
+				constraints={rows}
+				noteOf={(constraint) =>
+					constraint.constraintId === morningCover.constraintId
+						? "Uses Breakfast Prep, which this week leaves out."
+						: undefined
+				}
+			/>
+		);
+
+		const nameCell = within(row(morningCover.name)).getAllByRole("cell")[0];
+		expect(nameCell).toHaveTextContent(
+			"Morning coverUses Breakfast Prep, which this week leaves out."
+		);
+		expect(
+			within(row(barCover.name)).getAllByRole("cell")[0]
+		).toHaveTextContent(new RegExp(`^${barCover.name}`));
+		expect(row(barCover.name)).not.toHaveTextContent("leaves out");
+	});
+
+	it("given_noNote_when_rendered_then_theNameCellIsTheNameAlone", () => {
+		render(<ConstraintTable constraints={[morningCover]} />);
+
+		const nameCell = within(row(morningCover.name)).getAllByRole("cell")[0];
+		expect(nameCell?.querySelector("span.block")).toBeNull();
+	});
 });

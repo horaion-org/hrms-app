@@ -15,6 +15,8 @@ const SIGNED_IN_ROUTES = [
 	"/scheduling?view=shifts",
 	"/scheduling?view=constraints",
 	"/scheduling/new",
+	"/scheduling/new?department=d-1",
+	"/scheduling?view=shifts&branch=b-1&department=d-2",
 	"/scheduling/s-1",
 	"/scheduling/s-1?day=2026-10-14",
 	"/me/schedules/s-1",
@@ -88,7 +90,7 @@ for (const screen of SCREENS) {
 }
 
 /**
- * Pages whose first row of content a phone must show without scrolling: the
+ * Pages whose first row of content (or a callout above it) a phone must show without scrolling: the
  * roster, the Constraints tab under its category tabs, a list, Settings sections (Approvals with its two groups), Team
  * requests with a request under an approval flow, and the leave timeline. The timeline's
  * demo leave is in May 2026, so its clock is set to a day in that window.
@@ -107,7 +109,7 @@ test.describe("on a phone, the first screen", () => {
 	test.use({ viewport: { width: 360, height: 740 }, hasTouch: true });
 
 	for (const { path, clock } of FIRST_SCREEN_ROWS) {
-		test(`${path} starts its first row above the fold`, async ({
+		test(`${path} starts its first row, or a callout above it, above the fold`, async ({
 			context,
 			page,
 		}) => {
@@ -116,8 +118,17 @@ test.describe("on a phone, the first screen", () => {
 			await page.goto(path);
 			const firstRow = page.getByRole("main").locator("tbody tr").first();
 			await expect(firstRow).toBeVisible();
+			await page.waitForLoadState("networkidle");
+			// A callout above the rows (e.g. the departments not ready to schedule) is what the person must act on
+			// first, so the first screen may lead with it instead of the first row.
+			const callouts = page.getByRole("main").getByRole("note");
+			const calloutTop =
+				(await callouts.count()) > 0
+					? ((await callouts.first().boundingBox())?.y ?? Infinity)
+					: Infinity;
+			const rowTop = (await firstRow.boundingBox())?.y ?? Infinity;
 
-			expect((await firstRow.boundingBox())?.y).toBeLessThan(740);
+			expect(Math.min(rowTop, calloutTop)).toBeLessThan(740);
 		});
 	}
 });
@@ -131,6 +142,7 @@ test.describe("on a phone, the first screen", () => {
 const ROW_ACTION_ROUTES = [
 	"/scheduling?view=shifts",
 	"/scheduling?view=constraints",
+	"/scheduling?view=shifts&branch=b-1&department=d-2",
 ];
 
 test.describe("on a phone, a setup tab's first row", () => {

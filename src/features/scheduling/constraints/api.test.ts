@@ -278,6 +278,22 @@ describe("constraints client", () => {
 		});
 	});
 
+	it("reads whether a constraint requires people, and false from an API that predates it", async () => {
+		const { requiresPeople, ...predating } = CONSTRAINT_FIXTURES[2]!;
+		stubApi({
+			[`GET ${CONSTRAINTS}`]: {
+				status: 200,
+				body: envelope([CONSTRAINT_FIXTURES[2], predating]),
+			},
+		});
+
+		const [staffing, older] = await fetchConstraints("c-1", UNIT);
+
+		expect(requiresPeople).toBe(true);
+		expect(staffing?.requiresPeople).toBe(true);
+		expect(older?.requiresPeople).toBe(false);
+	});
+
 	it("asks for nothing without the read, and keys the company's constraints per branch", () => {
 		expect(typeof companyConstraintsQuery("c-1", "b-1").queryFn).toBe(
 			"function"

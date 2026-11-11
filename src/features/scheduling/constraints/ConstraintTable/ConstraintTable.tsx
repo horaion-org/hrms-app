@@ -59,6 +59,8 @@ export type ConstraintTableProps<Row extends ConstraintTableRow> = {
 	showDepartment?: boolean;
 	/** Puts Set by, Requirement and Status on the name's line below 2xl, for the setup tab. */
 	metaOnNameLine?: boolean;
+	/** A short note under a constraint's name, e.g. why it can't be chosen; none when it returns undefined. */
+	noteOf?: (constraint: Row) => string | undefined;
 	/** Shown across the table when there are no rows; "no constraints yet" when left out. */
 	emptyState?: ReactNode;
 	className?: string;
@@ -84,6 +86,7 @@ export const ConstraintTable = <Row extends ConstraintTableRow>({
 	showBranch = false,
 	showDepartment = false,
 	metaOnNameLine = false,
+	noteOf,
 	emptyState,
 	className,
 }: ConstraintTableProps<Row>): FunctionComponent => {
@@ -104,7 +107,21 @@ export const ConstraintTable = <Row extends ConstraintTableRow>({
 		// name's line until 2xl; the wizard leaves them as columns from md.
 		const settingsHideBelow: ColumnBreakpoint = metaOnNameLine ? "2xl" : "md";
 		return [
-			shared.name,
+			{
+				...shared.name,
+				cell: (constraint: Row): ReactNode => {
+					const note = noteOf?.(constraint);
+					if (!note) return constraint.name;
+					return (
+						<>
+							<span className="block">{constraint.name}</span>
+							<span className="mt-1 block font-normal text-neutral-800">
+								{note}
+							</span>
+						</>
+					);
+				},
+			},
 			...(showBranch ? [branchColumn<Row>(t)] : []),
 			...(showDepartment
 				? [
@@ -215,6 +232,7 @@ export const ConstraintTable = <Row extends ConstraintTableRow>({
 		showBranch,
 		showDepartment,
 		metaOnNameLine,
+		noteOf,
 	]);
 
 	return (

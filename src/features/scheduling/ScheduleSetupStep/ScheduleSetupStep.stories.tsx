@@ -78,3 +78,14 @@ export const StartedWeek: Story = {
 
 /** A generated schedule, or a draft the person may not change. */
 export const ReadOnly: Story = { args: { ...savedDraft, readOnly: true } };
+
+/** The page's own row below the Schedule period: here, what the week uses. */
+export const WithDepartmentExtras: Story = {
+	args: {
+		departmentExtras: (
+			<p className="text-sm text-neutral-800">
+				Uses all 3 shifts and 5 constraints of Front Office.
+			</p>
+		),
+	},
+};

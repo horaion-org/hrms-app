@@ -6,8 +6,6 @@ export type StepFacts = {
 	saved: boolean;
 	/** The schedule is past DRAFT: generation was requested, done or failed. */
 	frozen: boolean;
-	tickedShiftCount: number;
-	tickedConstraintCount: number;
 	/** The step the person is on, as an index of `SCHEDULE_STEPS`. */
 	currentIndex: number;
 };
@@ -22,13 +20,9 @@ const FORECAST_INDEX = SCHEDULE_STEPS.indexOf("forecast");
 export const stepCompletion = ({
 	saved,
 	frozen,
-	tickedShiftCount,
-	tickedConstraintCount,
 	currentIndex,
 }: StepFacts): Record<ScheduleStep, boolean> => ({
 	setup: saved,
-	shifts: tickedShiftCount > 0,
-	constraints: tickedConstraintCount > 0,
 	forecast: frozen || currentIndex > FORECAST_INDEX,
 	generate: frozen,
 });

@@ -23,6 +23,7 @@ import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
 import type { Schedule } from "@/features/scheduling/schedules/api";
 import { CONSTRAINT_FIXTURES } from "@/features/scheduling/constraints/fixtures";
+import { readinessFixture } from "@/features/scheduling/readiness/fixtures";
 import { departmentShiftFixture } from "@/features/scheduling/shifts/fixtures";
 import type { Workspace } from "@/features/workspace/api";
 import {
@@ -682,5 +683,39 @@ describe("Scheduling's tabs", () => {
 				})
 			).toBeVisible();
 		});
+	});
+});
+
+describe("Scheduling's tabs: the way back to the wizard", () => {
+	it("given_theWizardWaitingOnAReadyDepartment_when_onItsShifts_then_linksBackToSetupWithItsWeek", async () => {
+		vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+		stubApi({
+			"POST /api/v1/public/sessions/refreshes": accessPassReply(),
+			"GET /api/v1/me": currentUserReply(),
+			"GET /api/v1/me/workspace": {
+				status: 200,
+				body: envelope(companyWideWorkspace(["shift:read", "schedule:create"])),
+			},
+			"GET /api/v1/companies/c-1/branches/b-1/departments/d-1/shifts": {
+				status: 200,
+				body: envelope([]),
+			},
+			"GET /api/v1/companies/c-1/scheduling-readiness": {
+				status: 200,
+				body: envelope([readinessFixture()]),
+			},
+		});
+		app = await openApp(
+			"/scheduling?view=shifts&branch=b-1&department=d-1&next=create&week=2026-11-16"
+		);
+		renderAuthApp(app);
+
+		expect(
+			await screen.findByRole("link", { name: "Create schedule" })
+		).toHaveAttribute(
+			"href",
+			// Links keep the header's Branch, as every link in the app does.
+			"/scheduling/new?department=d-1&week=2026-11-16&branch=b-1"
+		);
 	});
 });

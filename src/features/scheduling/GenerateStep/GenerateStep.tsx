@@ -10,6 +10,8 @@ export type GenerateStepProps = {
 	summary: ScheduleSummary;
 	/** Why this schedule can't be generated, above everything else. */
 	notice?: ReactNode;
+	/** What the week uses of its department, above where everyone starts. */
+	uses?: ReactNode;
 	/** Where everyone starts: the week before the period, above the summary. */
 	startingPoint?: ReactNode;
 	className?: string;
@@ -25,6 +27,7 @@ const NEXT_KEYS = [
 export const GenerateStep = ({
 	summary,
 	notice,
+	uses,
 	startingPoint,
 	className,
 }: GenerateStepProps): FunctionComponent => {
@@ -64,6 +67,7 @@ export const GenerateStep = ({
 			}
 		>
 			{notice && <div className="mt-7">{notice}</div>}
+			{uses && <div className="mt-7">{uses}</div>}
 			{startingPoint && <div className="mt-7">{startingPoint}</div>}
 			<dl
 				aria-label={t("scheduling.generate.summary")}

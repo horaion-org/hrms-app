@@ -242,8 +242,9 @@ describe("scheduleDraftReducer", () => {
 			shifts,
 		});
 		const ticked = scheduleDraftReducer(seeded, {
-			type: "shiftsIncluded",
+			type: "weekChosen",
 			shiftIds: ["lunch-rush", "swing-shift"],
+			constraintIds: [],
 		});
 		// A reload of the same shifts keeps what the person ticked since.
 		const reloaded = scheduleDraftReducer(ticked, {
@@ -253,31 +254,6 @@ describe("scheduleDraftReducer", () => {
 
 		expect(seeded.includedShiftIds).toEqual(["lunch-rush"]);
 		expect(reloaded.includedShiftIds).toEqual(["lunch-rush", "swing-shift"]);
-	});
-
-	it("given_anIncludedShift_when_removed_then_leavesTheSelectionAndItsAllocations", () => {
-		const draft = scheduleDraftReducer(chosen(), {
-			type: "shiftRemoved",
-			shiftId: "front-desk-am",
-		});
-
-		expect(draft.includedShiftIds).not.toContain("front-desk-am");
-		expect(draft.allocations["front-desk-am"]).toBeUndefined();
-		expect(draft.allocations["lunch-rush"]).toBeDefined();
-	});
-
-	it("given_constraintsTicked_when_oneIsRemoved_then_onlyItsTickGoes", () => {
-		const ticked = scheduleDraftReducer(chosen(), {
-			type: "constraintsIncluded",
-			constraintIds: ["morning-cover", "two-days-off"],
-		});
-		const draft = scheduleDraftReducer(ticked, {
-			type: "constraintRemoved",
-			constraintId: "morning-cover",
-		});
-
-		expect(draft.includedConstraintIds).toEqual(["two-days-off"]);
-		expect(draft.includedShiftIds).toEqual(chosen().includedShiftIds);
 	});
 
 	it("given_anAllocation_when_changed_then_updatesOnlyThatRoleAndNeverBelowZero", () => {
@@ -328,6 +304,60 @@ describe("scheduleDraftReducer", () => {
 			"prep-cook": 2,
 			"pastry-assistant": 0,
 		});
+	});
+});
+
+describe("the week's choice", () => {
+	it("given_aNewDraft_when_started_then_itsWeekIsNotChosen", () => {
+		expect(emptyScheduleDraft().weekChosen).toBe(false);
+	});
+
+	it("given_aSchedule_when_loaded_then_itsTicksAreTheWeeksChoice", () => {
+		const draft = scheduleDraftReducer(emptyScheduleDraft(), {
+			type: "scheduleLoaded",
+			schedule: scheduleFixture(),
+		});
+
+		expect(draft.weekChosen).toBe(true);
+	});
+
+	it("given_aChoice_when_made_then_setsBothListsAndTheFlag", () => {
+		const draft = scheduleDraftReducer(emptyScheduleDraft(), {
+			type: "weekChosen",
+			shiftIds: ["front-desk-am"],
+			constraintIds: ["morning-cover"],
+		});
+
+		expect(draft.includedShiftIds).toEqual(["front-desk-am"]);
+		expect(draft.includedConstraintIds).toEqual(["morning-cover"]);
+		expect(draft.weekChosen).toBe(true);
+	});
+
+	it("given_aNewDraftsChoice_when_itsDepartmentChanges_then_startsAgainFromEverything", () => {
+		const chosenWeek = scheduleDraftReducer(emptyScheduleDraft(), {
+			type: "weekChosen",
+			shiftIds: ["front-desk-am"],
+			constraintIds: ["morning-cover"],
+		});
+
+		const draft = scheduleDraftReducer(chosenWeek, {
+			type: "departmentChosen",
+		});
+
+		expect(draft.includedShiftIds).toEqual([]);
+		expect(draft.includedConstraintIds).toEqual([]);
+		expect(draft.weekChosen).toBe(false);
+	});
+
+	it("given_aSavedDraft_when_departmentChosen_then_keepsItsChoice", () => {
+		const loaded = scheduleDraftReducer(emptyScheduleDraft(), {
+			type: "scheduleLoaded",
+			schedule: scheduleFixture(),
+		});
+
+		expect(
+			scheduleDraftReducer(loaded, { type: "departmentChosen" })
+		).toBe(loaded);
 	});
 });
 
