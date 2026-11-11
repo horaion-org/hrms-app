@@ -131,6 +131,12 @@ export const ApprovalFlowDialog = ({
 			: t(`${subjectKey}.anyone`, {
 					department: departmentName(departmentId) ?? "",
 				});
+	const peopleHint =
+		departmentId === ""
+			? t(`${subjectKey}.peopleHintCompany`)
+			: t(`${subjectKey}.peopleHint`, {
+					department: departmentName(departmentId) ?? "",
+				});
 	const move = (index: number, direction: "up" | "down"): void => {
 		const to = direction === "up" ? index - 1 : index + 1;
 		if (to < 0 || to >= steps.fields.length || isSubmitting) return;
@@ -188,6 +194,10 @@ export const ApprovalFlowDialog = ({
 								// A name nobody typed follows where the flow applies.
 								if (!getFieldState("name").isDirty)
 									setValue("name", defaultNameFor(next));
+								// Who can approve differs per department, so named people do not carry over.
+								steps.fields.forEach((_, stepIndex) => {
+									setValue(`steps.${stepIndex}.members`, []);
+								});
 							}}
 						/>
 					</FormRow>
@@ -287,7 +297,7 @@ export const ApprovalFlowDialog = ({
 								idPrefix={idPrefix}
 								index={index}
 								peopleError={errors.steps?.[index]?.members?.message}
-								peopleHint={t(`${subjectKey}.peopleHint`)}
+								peopleHint={peopleHint}
 								subjectType={subjectType}
 							/>
 						</li>

@@ -25,6 +25,7 @@ import {
 
 const COMPANY = "/api/v1/companies/c-1";
 const FLOWS = `${COMPANY}/approval-flows`;
+const ELIGIBLE = `${FLOWS}/eligible-approvers`;
 const READ_AND_MANAGE = ["approval_flow:read", "approval_flow:manage"];
 /** The test workspace's d-1 is "Kitchen"; the fixture flow sits there. */
 const KITCHEN_FLOW = approvalFlowFixture({ name: "Kitchen publishing" });
@@ -58,7 +59,7 @@ const routes = (
 	"GET /api/v1/me": currentUserReply(),
 	"GET /api/v1/me/workspace": ok(companyWideWorkspace(permissions)),
 	[`GET ${FLOWS}`]: ok(flows),
-	[`GET ${FLOWS}/eligible-approvers`]: ok({
+	[`GET ${ELIGIBLE}`]: ok({
 		content: [
 			{ membershipId: "m-3", displayName: "Siti Rahman", status: "ACTIVE" },
 		],
@@ -213,6 +214,9 @@ describe("ApprovalsSettings", () => {
 		await user.click(
 			within(dialog).getByRole("radio", { name: "Only these people" })
 		);
+		expect(dialog).toHaveTextContent(
+			"Only people with “Publish or reject rosters” and “Approve or reject a step” in at least one department are listed."
+		);
 		await user.click(within(dialog).getByRole("button", { name: "Save flow" }));
 		expect(
 			await within(dialog).findByText("Choose at least one person.")
@@ -222,6 +226,11 @@ describe("ApprovalsSettings", () => {
 		await user.click(
 			await screen.findByRole("option", { name: "Siti Rahman" })
 		);
+		const eligibleQuery = new URLSearchParams(
+			calls.find((call) => call.path === ELIGIBLE)?.search
+		);
+		expect(eligibleQuery.get("subjectType")).toBe("SCHEDULE_PUBLICATION");
+		expect(eligibleQuery.has("departmentId")).toBe(false);
 		await user.keyboard("{Escape}");
 		await user.click(
 			within(dialog).getByRole("radio", { name: "All of them" })
@@ -309,6 +318,69 @@ describe("ApprovalsSettings", () => {
 		).toMatchObject({ subjectType: "LEAVE_REQUEST", distinctApprovers: false });
 	});
 
+	it("clears the named people when Applies to changes, and lists the new department's approvers", async () => {
+		const calls = stubApi(routes(READ_AND_MANAGE, []));
+		const user = userEvent.setup();
+
+		const panel = await open();
+		await user.click(
+			await within(panel).findByRole("button", {
+				name: "Add flow Roster publishing",
+			})
+		);
+		const dialog = screen.getByRole("dialog", {
+			name: "Add roster approval flow",
+		});
+		await user.click(
+			within(dialog).getByRole("radio", { name: "Only these people" })
+		);
+		await user.click(within(dialog).getByLabelText("People"));
+		await user.click(
+			await screen.findByRole("option", { name: "Siti Rahman" })
+		);
+		await user.keyboard("{Escape}");
+		expect(within(dialog).getByText("Siti Rahman")).toBeInTheDocument();
+
+		await user.click(within(dialog).getByLabelText("Applies to"));
+		await user.click(await screen.findByRole("option", { name: /Kitchen/ }));
+
+		expect(within(dialog).queryByText("Siti Rahman")).toBeNull();
+		expect(dialog).toHaveTextContent(
+			"Only people with “Publish or reject rosters” and “Approve or reject a step” in Kitchen are listed. If someone is missing, give them both permissions in Access roles first."
+		);
+		await waitFor(() => {
+			expect(
+				calls.some(
+					(call) =>
+						call.path === ELIGIBLE &&
+						new URLSearchParams(call.search).get("departmentId") === "d-1"
+				)
+			).toBe(true);
+		});
+	});
+
+	it("words the people hint for leave reviewers", async () => {
+		stubApi(routes(READ_AND_MANAGE, []));
+		const user = userEvent.setup();
+
+		const panel = await open();
+		await user.click(
+			await within(panel).findByRole("button", {
+				name: "Add flow Leave requests",
+			})
+		);
+		const dialog = screen.getByRole("dialog", {
+			name: "Add leave approval flow",
+		});
+		await user.click(
+			within(dialog).getByRole("radio", { name: "Only these people" })
+		);
+
+		expect(dialog).toHaveTextContent(
+			"Only people with “Approve or reject leave” and “Approve or reject a step” in at least one department are listed."
+		);
+	});
+
 	it("moves a step with its arrows and says so", async () => {
 		const calls = stubApi(
 			routes(READ_AND_MANAGE, [companyFlowFixture()], {
@@ -373,6 +445,12 @@ describe("ApprovalsSettings", () => {
 			})
 		).not.toHaveLength(0);
 		expect(within(dialog).queryByText(/Kitchen’s roster/)).toBeNull();
+		// People saved on the flow stay chosen when it is edited; the hint names its department.
+		expect(within(dialog).getByText("Siti Rahman")).toBeInTheDocument();
+		expect(within(dialog).getByText("Ahmad Ali")).toBeInTheDocument();
+		expect(dialog).toHaveTextContent(
+			"Only people with “Publish or reject rosters” and “Approve or reject a step” in Kitchen are listed."
+		);
 	});
 
 	it("puts a unit that already has a flow on its field", async () => {
