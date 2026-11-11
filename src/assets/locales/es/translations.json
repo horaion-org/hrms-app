@@ -3969,6 +3969,21 @@
 			"view": "Ver",
 			"everything": "Esta semana usa todos los turnos y restricciones de {{department}}.",
 			"change": "Cambiar"
+		},
+		"gate": {
+			"nothing": "{{department}} aún no tiene turnos ni restricciones de personal. Un horario necesita ambos.",
+			"setUp": "Configurar {{department}}",
+			"nothingNote": "Configura primero turnos y una restricción de personal para {{department}}.",
+			"noStaffing": "{{department}} tiene turnos pero ninguna restricción de personal, así que no se asignaría a nadie.",
+			"addStaffing": "Añadir una restricción de personal",
+			"noStaffingNote": "Añade primero una restricción de personal para {{department}}.",
+			"cannotFixShifts": "{{department}} no está listo para planificar: no tiene turnos. Pide a quien gestiona la planificación de {{department}} que los añada.",
+			"cannotFixStaffing": "{{department}} no está listo para planificar: no tiene ninguna restricción de personal. Pide a quien gestiona la planificación de {{department}} que la añada.",
+			"viewShifts": "Ver turnos",
+			"viewConstraints": "Ver restricciones",
+			"noLongerShift": "{{department}} ya no tiene ningún turno, así que este horario no se puede generar.",
+			"noLongerStaffing": "{{department}} ya no tiene ninguna restricción de personal, así que este horario no se puede generar.",
+			"noLongerNote": "Corrige la configuración de {{department}} para generar."
 		}
 	},
 	"workspace": {

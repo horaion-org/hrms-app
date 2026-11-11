@@ -4147,6 +4147,21 @@
 			"view": "View",
 			"everything": "This week uses every shift and constraint of {{department}}.",
 			"change": "Change"
+		},
+		"gate": {
+			"nothing": "{{department}} has no shifts or staffing constraints yet. A schedule needs both.",
+			"setUp": "Set up {{department}}",
+			"nothingNote": "Set up shifts and a staffing constraint for {{department}} first.",
+			"noStaffing": "{{department}} has shifts but no staffing constraint, so nobody would be rostered.",
+			"addStaffing": "Add a staffing constraint",
+			"noStaffingNote": "Add a staffing constraint for {{department}} first.",
+			"cannotFixShifts": "{{department}} isn’t ready to schedule: it has no shifts. Ask someone who manages {{department}}’s scheduling to add them.",
+			"cannotFixStaffing": "{{department}} isn’t ready to schedule: it has no staffing constraint. Ask someone who manages {{department}}’s scheduling to add one.",
+			"viewShifts": "View shifts",
+			"viewConstraints": "View constraints",
+			"noLongerShift": "{{department}} no longer has a shift, so this schedule can’t be generated.",
+			"noLongerStaffing": "{{department}} no longer has a staffing constraint, so this schedule can’t be generated.",
+			"noLongerNote": "Fix {{department}}’s setup to generate."
 		}
 	},
 	"colourSwatchPicker": {
