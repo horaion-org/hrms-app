@@ -6,6 +6,7 @@ import type { QueryOptionsFor } from "@/common/query-client";
 import { WEEKDAYS, weekdaySchema, type Weekday } from "@/common/weekdays";
 import {
 	SCHEDULING_QUERY_ROOT,
+	companyShiftsPath,
 	shiftRoleOptionsPath,
 	shiftsPath,
 } from "@/features/scheduling/paths";
@@ -49,6 +50,9 @@ export const shiftPayFields = {
 const departmentShiftSchema = z.object({
 	shiftId: z.string(),
 	departmentId: z.string(),
+	departmentName: z.string(),
+	branchId: z.string(),
+	branchName: z.string(),
 	name: z.string(),
 	/** The group the shift belongs to: a plain name, shared by the shifts that use it. */
 	group: z.string(),
@@ -113,6 +117,96 @@ export const deleteShift = (
 	shiftId: string
 ): Promise<void> =>
 	apiRequestVoid(shiftPath(companyId, unit, shiftId), { method: "DELETE" });
+
+const departmentShiftsSchema = z.array(departmentShiftSchema);
+
+/** A Department's live shifts. */
+export const fetchDepartmentShifts = (
+	companyId: string,
+	unit: DepartmentPath,
+	signal?: AbortSignal
+): Promise<Array<DepartmentShift>> =>
+	apiRequest(shiftsPath(companyId, unit), departmentShiftsSchema, { signal });
+
+/** The key a Department's live shifts are cached under. */
+export const departmentShiftsKey = (
+	companyId: string,
+	departmentId: string
+): readonly ["scheduling", string, "departments", string, "shifts"] =>
+	[
+		SCHEDULING_QUERY_ROOT,
+		companyId,
+		"departments",
+		departmentId,
+		"shifts",
+	] as const;
+
+/** A Department's live shifts; `unit` undefined, or `allowed` false, asks for nothing. */
+export const departmentShiftsQuery = (
+	companyId: string,
+	unit: DepartmentPath | undefined,
+	allowed = true
+): QueryOptionsFor<
+	Array<DepartmentShift>,
+	ReturnType<typeof departmentShiftsKey>
+> =>
+	queryOptions({
+		queryKey: departmentShiftsKey(companyId, unit?.departmentId ?? ""),
+		queryFn:
+			allowed && unit
+				? ({ signal }): Promise<Array<DepartmentShift>> =>
+						fetchDepartmentShifts(companyId, unit, signal)
+				: skipToken,
+		meta: administrativeMeta(companyId),
+		staleTime: 30_000,
+		retry,
+	});
+
+/**
+ * The live shifts of every department where the person may read shifts,
+ * across the company or within one Branch.
+ */
+export const fetchCompanyShifts = (
+	companyId: string,
+	branchId: string | undefined,
+	signal?: AbortSignal
+): Promise<Array<DepartmentShift>> => {
+	const search = branchId
+		? `?${new URLSearchParams({ branchId }).toString()}`
+		: "";
+	return apiRequest(
+		`${companyShiftsPath(companyId)}${search}`,
+		departmentShiftsSchema,
+		{ signal }
+	);
+};
+
+/** The key the company's live shifts are cached under, per Branch or for all of them. */
+export const companyShiftsKey = (
+	companyId: string,
+	branchId?: string
+): readonly ["scheduling", string, "shifts", string] =>
+	[SCHEDULING_QUERY_ROOT, companyId, "shifts", branchId ?? "all"] as const;
+
+/** The company's live shifts, within one Branch when given; `allowed` false asks for nothing. */
+export const companyShiftsQuery = (
+	companyId: string,
+	branchId: string | undefined,
+	allowed = true
+): QueryOptionsFor<
+	Array<DepartmentShift>,
+	ReturnType<typeof companyShiftsKey>
+> =>
+	queryOptions({
+		queryKey: companyShiftsKey(companyId, branchId),
+		queryFn: allowed
+			? ({ signal }): Promise<Array<DepartmentShift>> =>
+					fetchCompanyShifts(companyId, branchId, signal)
+			: skipToken,
+		meta: administrativeMeta(companyId),
+		staleTime: 30_000,
+		retry,
+	});
 
 const shiftRoleOptionsSchema = z.array(shiftRoleSchema);
 

@@ -11,6 +11,10 @@ export const SCHEDULING_QUERY_ROOT = "scheduling";
 export const shiftsPath = (companyId: string, unit: DepartmentPath): string =>
 	`${departmentPath(companyId, unit)}/shifts`;
 
+/** The live shifts of every department in reach across the company. */
+export const companyShiftsPath = (companyId: string): string =>
+	`${companyPath(companyId)}/shifts`;
+
 /** A department's active job titles, as the shift dialog offers them. */
 export const shiftRoleOptionsPath = (
 	companyId: string,
