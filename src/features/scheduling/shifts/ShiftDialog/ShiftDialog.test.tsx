@@ -92,7 +92,7 @@ describe("ShiftDialog", () => {
 		const user = userEvent.setup();
 		const { onSave } = renderDialog();
 		const dialog = await screen.findByRole("dialog", {
-			name: "Add custom shift",
+			name: "Add shift",
 		});
 
 		await user.type(screen.getByLabelText("Shift name"), "Front Desk AM");
@@ -114,7 +114,7 @@ describe("ShiftDialog", () => {
 	it("given_everyField_when_saved_then_sendsTheShiftAndCloses", async () => {
 		const user = userEvent.setup();
 		const { onSave, onClose } = renderDialog();
-		await screen.findByRole("dialog", { name: "Add custom shift" });
+		await screen.findByRole("dialog", { name: "Add shift" });
 
 		await user.type(screen.getByLabelText("Shift name"), " Front Desk AM ");
 		await pickGroup(user, "Kitchen");
@@ -361,7 +361,7 @@ describe("ShiftDialog", () => {
 
 	it("given_rolesHidden_when_rendered_then_saysSoAndOffersNone", async () => {
 		renderDialog({ roles: { status: "hidden" } });
-		await screen.findByRole("dialog", { name: "Add custom shift" });
+		await screen.findByRole("dialog", { name: "Add shift" });
 
 		expect(
 			screen.getByText(
@@ -373,7 +373,7 @@ describe("ShiftDialog", () => {
 
 	it("given_noActiveRoles_when_rendered_then_saysWhereToCreateOne", async () => {
 		renderDialog({ roles: { status: "ready", items: [] } });
-		await screen.findByRole("dialog", { name: "Add custom shift" });
+		await screen.findByRole("dialog", { name: "Add shift" });
 
 		expect(
 			screen.getByText(
@@ -442,7 +442,7 @@ describe("ShiftDialog with a Department field", () => {
 	it("given_noDepartmentYet_when_named_then_keepsSaveDisabledAndAsksForTheDepartmentFirst", async () => {
 		const user = userEvent.setup();
 		renderInCompany(<ChoosingDialog initial="" onSave={vi.fn()} />);
-		await screen.findByRole("dialog", { name: "Add custom shift" });
+		await screen.findByRole("dialog", { name: "Add shift" });
 
 		await user.type(screen.getByLabelText("Shift name"), "Late");
 
@@ -458,7 +458,7 @@ describe("ShiftDialog with a Department field", () => {
 	it("given_rolesChosen_when_theDepartmentChanges_then_clearsThem", async () => {
 		const user = userEvent.setup();
 		renderInCompany(<ChoosingDialog initial="d-1" onSave={vi.fn()} />);
-		await screen.findByRole("dialog", { name: "Add custom shift" });
+		await screen.findByRole("dialog", { name: "Add shift" });
 
 		await pick(user, /Roles applied to/, "Front Desk Lead");
 		expect(trigger(/Roles applied to/)).toHaveTextContent("Front Desk Lead");

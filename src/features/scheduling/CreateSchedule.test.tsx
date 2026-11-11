@@ -619,9 +619,9 @@ describe("Create Schedule: the department's shifts", () => {
 		});
 		await screen.findByRole("row", { name: /Front Desk AM/ });
 
-		await user.click(screen.getByRole("button", { name: "Add custom shift" }));
+		await user.click(screen.getByRole("button", { name: "Add shift" }));
 		const dialog = await screen.findByRole("dialog", {
-			name: "Add custom shift",
+			name: "Add shift",
 		});
 		await user.type(
 			within(dialog).getByLabelText("Shift name"),
@@ -777,7 +777,7 @@ describe("Create Schedule: the department's shifts", () => {
 			)
 		).toBeVisible();
 		expect(
-			screen.queryByRole("button", { name: "Add custom shift" })
+			screen.queryByRole("button", { name: "Add shift" })
 		).toBeNull();
 		expect(screen.queryByRole("button", { name: /^Edit / })).toBeNull();
 		expect(screen.queryByRole("button", { name: /^Delete / })).toBeNull();
@@ -794,7 +794,7 @@ describe("Create Schedule: the department's shifts", () => {
 		await screen.findByRole("row", { name: /Front Desk AM/ });
 
 		expect(
-			screen.getByRole("button", { name: "Add custom shift" })
+			screen.getByRole("button", { name: "Add shift" })
 		).toBeVisible();
 		expect(screen.queryByRole("button", { name: /^Edit / })).toBeNull();
 		expect(screen.queryByRole("button", { name: /^Delete / })).toBeNull();
@@ -1450,7 +1450,7 @@ describe("Create Schedule: generating", () => {
 		).toBeVisible();
 		expect(screen.queryByRole("checkbox")).toBeNull();
 		expect(
-			screen.queryByRole("button", { name: "Add custom shift" })
+			screen.queryByRole("button", { name: "Add shift" })
 		).toBeNull();
 		expect(
 			screen.queryByRole("button", { name: /^(Edit|Delete) / })

@@ -3123,7 +3123,7 @@
 			"title": "Select shifts",
 			"description": "Choose which of the department’s shifts this schedule includes. A change to a shift applies to every draft of the department.",
 			"frozenDescription": "The shifts this schedule was generated with, as they were then. Regenerating keeps them; a later change to a shift reaches only a new schedule.",
-			"add": "Add custom shift",
+			"add": "Add shift",
 			"label": "Shifts",
 			"allShifts": "All",
 			"groups": "Shift types",
@@ -3151,7 +3151,7 @@
 			"deleteForbidden": "You no longer have permission to delete shifts here.",
 			"deleteFailed": "We couldn’t delete the shift. Try again.",
 			"dialog": {
-				"title": "Add custom shift",
+				"title": "Add shift",
 				"editTitle": "Edit shift",
 				"name": "Shift name",
 				"namePlaceholder": "e.g. Morning shift",
