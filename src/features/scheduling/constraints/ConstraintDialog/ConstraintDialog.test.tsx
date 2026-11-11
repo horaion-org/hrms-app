@@ -1,5 +1,7 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useState, type ReactElement } from "react";
 import { I18nextProvider } from "react-i18next";
 import { describe, expect, it, vi } from "vitest";
 import { ApiProblemError } from "@/common/problem";
@@ -13,6 +15,8 @@ import {
 	CONSTRAINT_TYPE_OPTIONS,
 } from "@/features/scheduling/constraints/fixtures";
 import type { ConstraintOptionsState } from "@/features/scheduling/constraints/useConstraintOptions";
+import { schedulingWorkspace } from "@/features/scheduling/schedules/fixtures";
+import { workspaceQuery } from "@/features/workspace/api";
 
 const options: ConstraintOptionsState = {
 	status: "ready",
@@ -484,6 +488,104 @@ describe("ConstraintDialog", () => {
 		).toBeVisible();
 		expect(trigger(/^Constraint type/)).toBeDisabled();
 		expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
+	});
+});
+
+describe("ConstraintDialog with a Department field", () => {
+	/** Adds a constraint in Main branch, whose Front Office (d-1) and Kitchen (d-2) hold constraint:create; options load once one is chosen. */
+	const ChoosingDialog = ({ initial }: { initial: string }): ReactElement => {
+		const [departmentId, setDepartmentId] = useState(initial);
+		return (
+			<ConstraintDialog
+				options={departmentId ? options : { status: "pending" }}
+				department={{
+					kind: "choose",
+					companyId: "c-1",
+					keys: ["constraint:create"],
+					value: departmentId,
+					onChange: setDepartmentId,
+				}}
+				onClose={vi.fn()}
+				onSave={vi.fn()}
+			/>
+		);
+	};
+
+	const renderInCompany = (dialog: ReactElement): void => {
+		const client = new QueryClient({
+			defaultOptions: { queries: { retry: false } },
+		});
+		client.setQueryData(
+			workspaceQuery.queryKey,
+			schedulingWorkspace(["constraint:create"])
+		);
+		render(
+			<I18nextProvider i18n={authTestI18n}>
+				<QueryClientProvider client={client}>{dialog}</QueryClientProvider>
+			</I18nextProvider>
+		);
+	};
+
+	it("given_noDepartmentYet_when_named_then_keepsSaveDisabledAndAsksForTheDepartmentFirst", async () => {
+		const user = userEvent.setup();
+		renderInCompany(<ChoosingDialog initial="" />);
+		await screen.findByRole("dialog", { name: "Add constraint" });
+
+		await user.type(screen.getByLabelText("Constraint name"), "Rest");
+
+		expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
+		expect(screen.getByText("Choose a department first.")).toBeVisible();
+		expect(trigger(/^Constraint type/)).toBeDisabled();
+
+		await user.click(trigger(/^Department/));
+		await user.click(screen.getByRole("option", { name: /Front Office/ }));
+		expect(screen.getByRole("button", { name: "Save" })).toBeEnabled();
+	});
+
+	it("given_valuesFilledIn_when_theDepartmentChanges_then_clearsThemAndKeepsTheRest", async () => {
+		const user = userEvent.setup();
+		renderInCompany(<ChoosingDialog initial="d-1" />);
+		await start(user, "Working hours: Rest between shifts");
+		await user.type(screen.getByRole("spinbutton", { name: /Rest/ }), "11");
+
+		await user.click(trigger(/^Department/));
+		await user.click(screen.getByRole("option", { name: /Kitchen/ }));
+
+		expect(screen.getByRole("spinbutton", { name: /Rest/ })).toHaveValue(null);
+		expect(screen.getByLabelText("Constraint name")).toHaveValue(
+			"Morning cover"
+		);
+		expect(trigger(/^Constraint type/)).toHaveTextContent(
+			"Rest between shifts"
+		);
+	});
+
+	it("given_aFixedDepartmentAndANote_when_editing_then_showsTheDepartmentDisabledAndTheNote", async () => {
+		renderInCompany(
+			<ConstraintDialog
+				editing={CONSTRAINT_FIXTURES[2]}
+				impactNote="Saving changes this constraint for Front Office and new schedules."
+				options={options}
+				department={{
+					kind: "fixed",
+					departmentId: "d-1",
+					label: "Main branch › Front Office",
+				}}
+				onClose={vi.fn()}
+				onSave={vi.fn()}
+			/>
+		);
+		await screen.findByRole("dialog", { name: "Edit constraint" });
+
+		expect(trigger(/^Department/)).toBeDisabled();
+		expect(trigger(/^Department/)).toHaveTextContent(
+			"Main branch › Front Office"
+		);
+		expect(
+			screen.getByText(
+				"Saving changes this constraint for Front Office and new schedules."
+			)
+		).toBeVisible();
 	});
 });
 

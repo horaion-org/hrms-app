@@ -3404,7 +3404,12 @@
 				"levelNotAllowed": "This kind of constraint names a department’s shifts or job titles, so only a department can set it.",
 				"nameConflictCompany": "The company already has a constraint named \"{{name}}\". Choose a different name.",
 				"typeAlreadyUsedCompany": "The company already has a constraint of this type. Edit that one instead.",
-				"typeFixed": "A company constraint’s type can’t be changed. Add a new constraint instead."
+				"typeFixed": "A company constraint’s type can’t be changed. Add a new constraint instead.",
+				"department": "Department",
+				"departmentPlaceholder": "Select a department",
+				"departmentHint": "Constraints belong to one department; company-wide ones are set in Settings.",
+				"departmentsEmpty": "No active department you can add constraints to.",
+				"optionsNeedDepartment": "Choose a department first."
 			},
 			"preview": {
 				"title": "Constraint preview",
