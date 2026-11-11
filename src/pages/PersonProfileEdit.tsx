@@ -6,13 +6,13 @@ import {
 	roleNames,
 	rolesByPlace,
 	type MemberRoles,
-} from "@/features/people/memberRoles";
+} from "@/features/accessRoles/memberRoles";
 import { profileEditValues } from "@/features/people/profileRequest";
 import { ProfileForm } from "@/features/people/ProfileForm";
 import { ProfileHeader } from "@/features/people/ProfileHeader";
 import { ProfileNotesAndSkills } from "@/features/people/ProfileNotesAndSkills";
 import { useEditProfile } from "@/features/people/useEditProfile";
-import { scopeOfPlace } from "@/features/organisation/assignmentTargets";
+import { scopeOfPlace } from "@/features/workspace/places";
 import { useAccess } from "@/features/workspace/useAccess";
 import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 

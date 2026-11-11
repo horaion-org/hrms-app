@@ -11,7 +11,7 @@ import {
 	JOB_TITLE_DESCRIPTION_MAX_LENGTH,
 	type JobTitle,
 } from "@/features/organisation/api";
-import { placeOf } from "@/features/organisation/assignmentTargets";
+import { placeOf } from "@/features/workspace/places";
 import { CreateFormDialog } from "@/features/organisation/CreateFormDialog";
 import { refusalFor } from "@/features/organisation/CreateJobTitleDialog/refusalFor";
 import {

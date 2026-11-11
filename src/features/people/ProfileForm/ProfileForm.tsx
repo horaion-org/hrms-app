@@ -26,16 +26,13 @@ import {
 import { HeadsField } from "@/features/organisation/HeadsField";
 import {
 	assignmentTargets,
-	placeKey,
 	roleFitsScope,
-	scopeOfPlace,
 	type AssignmentTarget,
-} from "@/features/organisation/assignmentTargets";
+} from "@/features/accessRoles/assignmentTargets";
+import { placeKey, scopeOfPlace } from "@/features/workspace/places";
 import { useCreateFormSubmit } from "@/features/organisation/useCreateFormSubmit";
-import {
-	useAccessRoles,
-	useJobTitles,
-} from "@/features/organisation/useOrganisationList";
+import { useJobTitles } from "@/features/organisation/useOrganisationList";
+import { useAccessRoles } from "@/features/accessRoles/useAccessRoles";
 import {
 	EMPLOYMENT_TYPES,
 	isEmploymentType,

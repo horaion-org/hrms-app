@@ -6,7 +6,6 @@ import { configureApiClient, resetApiClient } from "@/common/api-client";
 import type { FunctionComponent } from "@/common/types";
 import { envelope, stubApi } from "@/common/testing/stubApi";
 import {
-	useCreateAccessRole,
 	useCreateDepartment,
 	useCreateJobTitle,
 } from "@/features/organisation/useCreateInOrganisation";
@@ -40,16 +39,6 @@ const jobTitle = {
 	status: "ACTIVE",
 	holderCount: 0,
 };
-const role = {
-	accessRoleId: "r-1",
-	name: "Auditor",
-	protectedRole: false,
-	kind: "COMPANY",
-	status: "ACTIVE",
-	holderCount: 0,
-	permissions: ["audit_event:read"],
-};
-
 it.each([
 	[
 		"department",
@@ -71,13 +60,6 @@ it.each([
 			departmentId: "d-1",
 			body: { name: "Chef", description: "" },
 		},
-	],
-	[
-		"access role",
-		"POST /api/v1/companies/c-1/access-roles",
-		role,
-		(): unknown => useCreateAccessRole("c-1"),
-		{ name: "Auditor", permissions: ["audit_event:read"] },
 	],
 ])(
 	"creating a %s invalidates this company's lists and overview only",

@@ -4,8 +4,8 @@ import {
 	correctMemberTerms,
 	fetchMemberTerms,
 } from "@/features/employmentTerms/api";
-import { useChangeAccessRoleHolders } from "@/features/organisation/useAccessRoleHolders";
-import type { AssignmentTarget } from "@/features/organisation/assignmentTargets";
+import { useChangeAccessRoleHolders } from "@/features/accessRoles/useAccessRoleHolders";
+import type { AssignmentTarget } from "@/features/accessRoles/assignmentTargets";
 import {
 	createMemberProfile,
 	type CreateMemberProfileBody,

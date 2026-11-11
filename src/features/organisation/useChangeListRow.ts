@@ -4,12 +4,9 @@ import {
 	type UseMutationResult,
 } from "@tanstack/react-query";
 import {
-	deleteAccessRole,
-	updateAccessRole,
 	updateBranch,
 	updateDepartment,
 	updateJobTitle,
-	type AccessRole,
 	type Branch,
 	type Department,
 	type JobTitle,
@@ -22,7 +19,7 @@ import { workspaceQuery } from "@/features/workspace/api";
  * activity, and the workspace too, because activating, deactivating or
  * deleting something can change what the person themselves may do.
  */
-const useRowChange = <TVariables, TResult>(
+export const useRowChange = <TVariables, TResult>(
 	companyId: string,
 	change: (variables: TVariables) => Promise<TResult>
 ): UseMutationResult<TResult, Error, TVariables> => {
@@ -83,25 +80,4 @@ export const useSetJobTitleStatus = (
 ): UseMutationResult<JobTitle, Error, StatusChange<JobTitle>> =>
 	useRowChange(companyId, ({ row, status }: StatusChange<JobTitle>) =>
 		updateJobTitle(companyId, { ...row, status })
-	);
-
-/** Activates or deactivates an access role, leaving its kind, name and permissions as they are. */
-export const useSetAccessRoleStatus = (
-	companyId: string
-): UseMutationResult<AccessRole, Error, StatusChange<AccessRole>> =>
-	useRowChange(companyId, ({ row, status }: StatusChange<AccessRole>) =>
-		updateAccessRole(companyId, row.accessRoleId, {
-			kind: row.kind,
-			name: row.name,
-			permissions: row.permissions,
-			status,
-		})
-	);
-
-/** Deletes an access role nobody holds. */
-export const useDeleteAccessRole = (
-	companyId: string
-): UseMutationResult<void, Error, AccessRole> =>
-	useRowChange(companyId, (role: AccessRole) =>
-		deleteAccessRole(companyId, role.accessRoleId)
 	);

@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { useChangeAccessRoleHolders } from "@/features/organisation/useAccessRoleHolders";
-import type { AssignmentTarget } from "@/features/organisation/assignmentTargets";
+import { useChangeAccessRoleHolders } from "@/features/accessRoles/useAccessRoleHolders";
+import type { AssignmentTarget } from "@/features/accessRoles/assignmentTargets";
 import {
 	memberProfileQuery,
 	savedProfile,
@@ -13,7 +13,7 @@ import {
 import {
 	memberRoleChange,
 	type MemberRole,
-} from "@/features/people/memberRoles";
+} from "@/features/accessRoles/memberRoles";
 import { withPeopleNotice } from "@/features/people/peopleNoticeState";
 import type { ProfileFormValues } from "@/features/people/profileFormSchema";
 import { profileUpdateRequest } from "@/features/people/profileRequest";

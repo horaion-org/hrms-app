@@ -9,12 +9,12 @@ import { ApiProblemError } from "@/common/problem";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { ArrowLeftIcon, EditIcon } from "@/components/ui/Icon";
-import { placeLabels } from "@/features/organisation/accessSummary";
+import { placeLabels } from "@/features/accessRoles/accessSummary";
 import { memberProfileQuery } from "@/features/people/api";
 import {
 	describeMemberAccess,
 	describeMemberRoles,
-} from "@/features/people/memberRoles";
+} from "@/features/accessRoles/memberRoles";
 import { PeopleNotice } from "@/features/people/PeopleNotice";
 import { peopleNoticeFrom } from "@/features/people/peopleNoticeState";
 import { ProfileDetails } from "@/features/people/ProfileDetails";
@@ -25,7 +25,7 @@ import {
 import { ProfileHeader } from "@/features/people/ProfileHeader";
 import { ProfileMenu } from "@/features/people/ProfileMenu";
 import { ProfileNotesAndSkills } from "@/features/people/ProfileNotesAndSkills";
-import { useMemberRoles } from "@/features/people/useMemberRoles";
+import { useMemberRoles } from "@/features/accessRoles/useMemberRoles";
 import { workspaceQuery } from "@/features/workspace/api";
 import { retry } from "@/features/workspace/retry";
 import { useAccess } from "@/features/workspace/useAccess";
