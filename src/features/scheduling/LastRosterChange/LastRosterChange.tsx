@@ -5,6 +5,7 @@ import { formattingLocale } from "@/common/formattingLocale";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
+import { ErrorText } from "@/components/ui/ErrorText";
 import { Toast } from "@/components/ui/Toast";
 import { formatDay } from "@/features/scheduling/periods";
 import {
@@ -138,9 +139,9 @@ export const LastRosterChange = ({
 				</div>
 			)}
 			{failure && (
-				<p className="mt-2 text-sm text-error-700" role="alert">
+				<ErrorText className="mt-2">
 					{t(`${key}.error.${rosterChangeRefusal(failure)}`)}
-				</p>
+				</ErrorText>
 			)}
 			{asking && (
 				<UndoRosterChangeDialog
