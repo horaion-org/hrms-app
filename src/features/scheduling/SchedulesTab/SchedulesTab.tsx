@@ -171,7 +171,7 @@ export const SchedulesTab = ({
 		<>
 			<ListToolbar
 				chips={chips}
-				className="mt-10"
+				className="mt-6"
 				search={search}
 				searchLabel={t(`${key}.search`)}
 				actions={
