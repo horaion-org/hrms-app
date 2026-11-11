@@ -58,7 +58,7 @@ const routes = (
 	"GET /api/v1/me": currentUserReply(),
 	"GET /api/v1/me/workspace": ok(companyWideWorkspace(permissions)),
 	[`GET ${FLOWS}`]: ok(flows),
-	[`GET ${COMPANY}/me/colleagues`]: ok({
+	[`GET ${FLOWS}/eligible-approvers`]: ok({
 		content: [
 			{ membershipId: "m-3", displayName: "Siti Rahman", status: "ACTIVE" },
 		],

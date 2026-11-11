@@ -282,11 +282,13 @@ export const ApprovalFlowDialog = ({
 								anyoneLabel={anyoneLabel}
 								companyId={companyId}
 								control={control}
+								departmentId={departmentId}
 								disabled={isSubmitting}
 								idPrefix={idPrefix}
 								index={index}
 								peopleError={errors.steps?.[index]?.members?.message}
 								peopleHint={t(`${subjectKey}.peopleHint`)}
+								subjectType={subjectType}
 							/>
 						</li>
 					);

@@ -1,15 +1,25 @@
+import { useState } from "react";
 import { Controller, useWatch, type Control } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { RadioCard } from "@/components/forms/RadioCard";
-import { APPROVAL_STEP_MAX_MEMBERS } from "@/features/approvals/api";
+import {
+	APPROVAL_STEP_MAX_MEMBERS,
+	type ApprovalSubject,
+	ELIGIBLE_APPROVERS_PAGE_SIZE,
+} from "@/features/approvals/api";
 import type { FlowValues } from "@/features/approvals/ApprovalFlowDialog/schema";
-import { HeadsField } from "@/features/organisation/HeadsField";
+import { useEligibleApproverSearch } from "@/features/approvals/useEligibleApproverSearch";
+import { MemberPickerField } from "@/features/organisation/MemberPickerField";
 
 const key = "approvals.flows.dialog";
 
 export type StepChoicesProps = {
 	companyId: string;
+	/** What the flow approves; the picker lists the people who can approve it. */
+	subjectType: ApprovalSubject;
+	/** Where the flow applies, "" for the company default; the picker lists the people who can approve there. */
+	departmentId: string;
 	control: Control<FlowValues>;
 	/** The step's place in the form's `steps`. */
 	index: number;
@@ -25,10 +35,14 @@ export type StepChoicesProps = {
 /**
  * One step's "who decides" and, for named people, "how many of them": anyone
  * who holds the subject's review permission (`KEY_HOLDERS`), or only the
- * people named here (`MEMBERS`), then any one of them or all of them.
+ * people named here (`MEMBERS`), then any one of them or all of them. The
+ * people offered are only those who can approve the subject where the flow
+ * applies.
  */
 export const StepChoices = ({
 	companyId,
+	subjectType,
+	departmentId,
 	control,
 	index,
 	idPrefix,
@@ -39,6 +53,25 @@ export const StepChoices = ({
 }: StepChoicesProps): FunctionComponent => {
 	const { t } = useTranslation();
 	const rule = useWatch({ control, name: `steps.${index}.rule` });
+	const [query, setQuery] = useState("");
+	const approvers = useEligibleApproverSearch(
+		companyId,
+		subjectType,
+		departmentId,
+		query,
+		rule === "MEMBERS"
+	);
+	const approverCount = approvers.data?.total ?? 0;
+	// No footer under an empty list: its line already says why nobody is shown.
+	const approversFooter =
+		approverCount === 0
+			? undefined
+			: t(
+					approverCount > ELIGIBLE_APPROVERS_PAGE_SIZE
+						? `${key}.approversTruncated`
+						: `${key}.approversFooter`,
+					{ total: approverCount }
+				);
 	return (
 		<>
 			<Controller
@@ -82,18 +115,28 @@ export const StepChoices = ({
 						control={control}
 						name={`steps.${index}.members`}
 						render={({ field }) => (
-							<HeadsField
+							<MemberPickerField
 								ref={field.ref}
-								companyId={companyId}
 								disabled={disabled}
 								error={peopleError}
+								footerText={approversFooter}
 								hint={peopleHint}
 								id={`${idPrefix}-people`}
 								label={t(`${key}.people`)}
+								loadFailed={approvers.isError}
+								loading={approvers.isFetching}
 								max={APPROVAL_STEP_MAX_MEMBERS}
+								options={approvers.data?.items ?? []}
 								placeholder={t(`${key}.peoplePlaceholder`)}
+								query={query}
 								value={field.value}
+								noResultsText={t(
+									query.trim() === ""
+										? `${key}.noApprovers`
+										: `${key}.noApproverMatch`
+								)}
 								onChange={field.onChange}
+								onQueryChange={setQuery}
 							/>
 						)}
 					/>
