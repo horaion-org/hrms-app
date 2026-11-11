@@ -3202,9 +3202,7 @@
 				"namePlaceholder": "p. ej., Cobertura de mañana",
 				"nameHint": "De 2 a 100 caracteres. Solo letras, números, espacios y . ' & -.",
 				"nameCounter": "{{count}}/100",
-				"type": "Tipo de restricción",
-				"typeOption": "{{category}}: {{type}}",
-				"typeHint": "Lo que dice la restricción. Los campos de abajo dependen de él.",
+				"type": "Qué controla",
 				"optionsLoading": "Cargando tipos de restricción…",
 				"optionsHidden": "No tienes permiso para ver los tipos de restricción de este departamento.",
 				"optionsFailed": "No pudimos cargar los tipos de restricción. Inténtalo de nuevo.",
@@ -3223,7 +3221,7 @@
 				"nameRequired": "Escribe un nombre de restricción.",
 				"nameLength": "Usa de 2 a 100 caracteres.",
 				"nameCharacters": "Usa solo letras, números, espacios y . ' & - en el nombre.",
-				"typeRequired": "Elige un tipo de restricción.",
+				"typeRequired": "Elige qué controla.",
 				"requirementRequired": "Elige debe o debería.",
 				"number": "Escribe un número entero de {{min}} a {{max}}.",
 				"chooseOne": "Elige uno.",
@@ -3266,7 +3264,8 @@
 				"departmentPlaceholder": "Selecciona un departamento",
 				"departmentHint": "Cada restricción pertenece a un departamento; las de toda la empresa se definen en Configuración.",
 				"departmentsEmpty": "No hay ningún departamento activo al que puedas añadir restricciones.",
-				"optionsNeedDepartment": "Elige primero un departamento."
+				"optionsNeedDepartment": "Elige primero un departamento.",
+				"typeHintEmpty": "Elige una opción para ver un ejemplo."
 			},
 			"preview": {
 				"title": "Vista previa de la restricción",
@@ -3313,7 +3312,15 @@
 				"STAND_IN_JOB_TITLE": "qué puestos",
 				"WEEKDAY": "qué días"
 			},
-			"statement": "Restricción"
+			"statement": "Restricción",
+			"examples": {
+				"SHIFT_STAFFING": "Por ejemplo: Recepción AM necesita al menos 2 personas como Cajero o Encargado.",
+				"SHIFT_STAFFING_WITH_STAND_INS": "Por ejemplo: Cierre necesita al menos 2 personas como Encargado. 2 personas como Cajero cuentan como 1 Encargado.",
+				"ROLE_PRESENCE": "Por ejemplo: Cierre tiene al menos 1 persona como Supervisor de servicio de principio a fin. Las horas extra del turno anterior cuentan.",
+				"DAYS_OFF_PER_PERIOD": "Por ejemplo: Todos tienen al menos 2 días libres en cualquier periodo de 7 días seguidos.",
+				"AVOID_DAYS_OFF_ON": "Por ejemplo: Evitar días libres el viernes y el sábado, los días de más trabajo.",
+				"REST_BETWEEN_SHIFTS": "Por ejemplo: Todos tienen al menos 11 horas libres entre turnos."
+			}
 		},
 		"forecast": {
 			"title": "Previsión de personal",

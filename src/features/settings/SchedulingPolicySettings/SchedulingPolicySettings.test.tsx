@@ -131,11 +131,11 @@ describe("SchedulingPolicySettings", () => {
 		});
 		await user.type(within(dialog).getByLabelText("Constraint name"), "Rest");
 		await user.click(
-			within(dialog).getByRole("button", { name: /^Constraint type/ })
+			within(dialog).getByRole("button", { name: /^What it controls/ })
 		);
 		await user.click(
 			await screen.findByRole("option", {
-				name: "Rest and hours: Rest between shifts",
+				name: "Rest between shifts",
 			})
 		);
 		await user.type(
@@ -221,11 +221,11 @@ describe("SchedulingPolicySettings", () => {
 		});
 		await user.type(within(dialog).getByLabelText("Constraint name"), "Rest");
 		await user.click(
-			within(dialog).getByRole("button", { name: /^Constraint type/ })
+			within(dialog).getByRole("button", { name: /^What it controls/ })
 		);
 		await user.click(
 			await screen.findByRole("option", {
-				name: "Rest and hours: Rest between shifts",
+				name: "Rest between shifts",
 			})
 		);
 		await user.type(

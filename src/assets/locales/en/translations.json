@@ -3380,9 +3380,7 @@
 				"namePlaceholder": "e.g. Morning cover",
 				"nameHint": "2–100 characters. Letters, numbers, spaces and . ' & - only.",
 				"nameCounter": "{{count}}/100",
-				"type": "Constraint type",
-				"typeOption": "{{category}}: {{type}}",
-				"typeHint": "What the constraint says. The fields below follow from it.",
+				"type": "What it controls",
 				"optionsLoading": "Loading constraint types…",
 				"optionsHidden": "You don’t have permission to see this department’s constraint types.",
 				"optionsFailed": "We couldn’t load constraint types. Try again.",
@@ -3401,7 +3399,7 @@
 				"nameRequired": "Enter a constraint name.",
 				"nameLength": "Use 2 to 100 characters.",
 				"nameCharacters": "Use only letters, numbers, spaces and . ' & - in the name.",
-				"typeRequired": "Choose a constraint type.",
+				"typeRequired": "Choose what it controls.",
 				"requirementRequired": "Choose must or should.",
 				"number": "Enter a whole number from {{min}} to {{max}}.",
 				"chooseOne": "Choose one.",
@@ -3444,7 +3442,8 @@
 				"departmentPlaceholder": "Select a department",
 				"departmentHint": "Constraints belong to one department; company-wide ones are set in Settings.",
 				"departmentsEmpty": "No active department you can add constraints to.",
-				"optionsNeedDepartment": "Choose a department first."
+				"optionsNeedDepartment": "Choose a department first.",
+				"typeHintEmpty": "Choose one to see an example."
 			},
 			"preview": {
 				"title": "Constraint preview",
@@ -3491,7 +3490,15 @@
 				"STAND_IN_JOB_TITLE": "which job titles",
 				"WEEKDAY": "which days"
 			},
-			"statement": "Constraint"
+			"statement": "Constraint",
+			"examples": {
+				"SHIFT_STAFFING": "For example: Front desk AM needs at least 2 people as Clerk or Lead.",
+				"SHIFT_STAFFING_WITH_STAND_INS": "For example: Closing needs at least 2 people as Lead. 2 people as Clerk count as 1 Lead.",
+				"ROLE_PRESENCE": "For example: Closing has at least 1 person as Supervisor on duty from start to finish. Overtime from the shift before counts.",
+				"DAYS_OFF_PER_PERIOD": "For example: Everyone gets at least 2 days off in any 7 days in a row.",
+				"AVOID_DAYS_OFF_ON": "For example: Avoid days off on Friday and Saturday, your busiest days.",
+				"REST_BETWEEN_SHIFTS": "For example: Everyone gets at least 11 hours off between shifts."
+			}
 		},
 		"forecast": {
 			"title": "Staffing forecast",

@@ -14,6 +14,7 @@ import { UnitNameField } from "@/features/organisation/UnitNameField";
 import { useCreateFormSubmit } from "@/features/organisation/useCreateFormSubmit";
 import { ConstraintPreview } from "@/features/scheduling/constraints/ConstraintPreview";
 import {
+	CONSTRAINT_CATEGORIES,
 	CONSTRAINT_COMPARISONS,
 	CONSTRAINT_REQUIREMENTS,
 	CONSTRAINT_STATUSES,
@@ -24,6 +25,7 @@ import {
 	type ConstraintTypeOption,
 } from "@/features/scheduling/constraints/api";
 import { constraintRefusal } from "@/features/scheduling/constraints/constraintRefusal";
+import { fieldsInReadingOrder } from "@/features/scheduling/constraints/ConstraintDialog/fieldOrder";
 import {
 	constraintSchema,
 	type ConstraintDialogBody,
@@ -153,31 +155,32 @@ export const ConstraintDialog = ({
 	};
 	const labelledBy = (name: FieldName): string =>
 		formRowIds(fieldId(name)).labelId;
-	const typeOptions: Array<SelectOption> = (offered?.types ?? []).map(
-		(option) => ({
-			value: option.type,
-			label: t(`${key}.typeOption`, {
-				category: t(`scheduling.constraints.categories.${option.category}`),
-				type: t(`scheduling.constraints.types.${option.type}`),
-			}),
-		})
+	// Grouped under their category: the Select heads each run of one group.
+	const typeOptions: Array<SelectOption> = CONSTRAINT_CATEGORIES.flatMap(
+		(category) =>
+			(offered?.types ?? [])
+				.filter((option) => option.category === category)
+				.map((option) => ({
+					value: option.type,
+					label: t(`scheduling.constraints.types.${option.type}`),
+					group: t(`scheduling.constraints.categories.${category}`),
+				}))
 	);
 	// A saved company rule keeps its type (the API answers CONSTRAINT_TYPE_FIXED); a new rule is added instead.
 	const typeFixed = withLock && editing !== undefined;
 	// Until a Department is chosen there are no types, shifts or job titles to offer.
 	const departmentMissing =
 		department?.kind === "choose" && department.value === "";
-	const typeHint = typeFixed
-		? t(`${key}.typeFixed`)
-		: departmentMissing
-			? t(`${key}.optionsNeedDepartment`)
-			: options.status === "pending"
-				? t(`${key}.optionsLoading`)
-				: options.status === "hidden"
-					? t(`${key}.optionsHidden`)
-					: options.status === "error"
-						? t(`${key}.optionsFailed`)
-						: t(`${key}.typeHint`);
+	// Why there is nothing to choose yet, or once a type is chosen, one worked example of it.
+	const typeHint = (): string => {
+		if (typeFixed) return t(`${key}.typeFixed`);
+		if (departmentMissing) return t(`${key}.optionsNeedDepartment`);
+		if (options.status === "pending") return t(`${key}.optionsLoading`);
+		if (options.status === "hidden") return t(`${key}.optionsHidden`);
+		if (options.status === "error") return t(`${key}.optionsFailed`);
+		if (chosen) return t(`scheduling.constraints.examples.${chosen.type}`);
+		return t(`${key}.typeHintEmpty`);
+	};
 	const requirementOptions: Array<SelectOption> = CONSTRAINT_REQUIREMENTS.map(
 		(requirement) => ({
 			value: requirement,
@@ -496,7 +499,7 @@ export const ConstraintDialog = ({
 				{selectRow(
 					"type",
 					typeOptions,
-					typeHint,
+					typeHint(),
 					offered === undefined ||
 						typeFixed ||
 						replacing !== undefined ||
@@ -523,7 +526,7 @@ export const ConstraintDialog = ({
 								)}
 							{selectRow("status", statusOptions, t(`${key}.statusHint`))}
 						</div>
-						{chosen.fields.map(valueRow)}
+						{fieldsInReadingOrder(chosen).map(valueRow)}
 					</>
 				)}
 				{impactNote && <p className="text-sm text-neutral-700">{impactNote}</p>}
