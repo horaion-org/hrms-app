@@ -112,7 +112,7 @@ const policyLevelSchema = z
 	.enum(["COMPANY", "DEPARTMENT", "UNKNOWN"])
 	.catch("UNKNOWN");
 
-/** Where a constraint is set: the company's Scheduling policy, or one Department. */
+/** Where a constraint is set: the company's work policy, or one Department. */
 export type PolicyLevel = z.infer<typeof policyLevelSchema>;
 
 const replacementStatusSchema = z
@@ -169,6 +169,24 @@ export const constraintValueSchema = z.object({
 /** One value of a constraint; a list field has one per item. */
 export type ConstraintValue = z.infer<typeof constraintValueSchema>;
 
+const reachedBranchSchema = z.object({
+	branchId: z.string(),
+	branchName: z.string(),
+});
+
+/** A Branch a work-policy constraint applies to, every Department in it now and later (ADR-0072). */
+export type ReachedBranch = z.infer<typeof reachedBranchSchema>;
+
+const reachedDepartmentSchema = z.object({
+	departmentId: z.string(),
+	departmentName: z.string(),
+	branchId: z.string(),
+	branchName: z.string(),
+});
+
+/** A Department a work-policy constraint applies to, with its Branch. */
+export type ReachedDepartment = z.infer<typeof reachedDepartmentSchema>;
+
 export const departmentConstraintSchema = z.object({
 	constraintId: z.string(),
 	/** Null for a company constraint, which belongs to no Department. */
@@ -190,6 +208,13 @@ export const departmentConstraintSchema = z.object({
 	level: policyLevelSchema,
 	/** A company constraint's lock; null for a Department's own. */
 	lock: policyLockSchema,
+	/**
+	 * Where a work-policy constraint applies: its chosen Branches or its chosen
+	 * Departments. Both empty for the whole company and for a Department's own;
+	 * an answer from an API without reach reads as the whole company.
+	 */
+	appliesToBranches: z.array(reachedBranchSchema).default([]),
+	appliesToDepartments: z.array(reachedDepartmentSchema).default([]),
 	/** Whether the Department's schedules must apply it: a locked company constraint, or its replacement here. */
 	locked: z.boolean().catch(false),
 	/** The company constraint a Department constraint replaces. */

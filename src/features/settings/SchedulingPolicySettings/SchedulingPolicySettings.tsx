@@ -147,8 +147,19 @@ export const SchedulingPolicySettings = ({
 						setDialog(null);
 					}}
 					onSave={async ({ lock, ...constraint }) => {
-						const body = { ...constraint, lock: lock as PolicyLock };
 						const editing = dialog.editing;
+						// Keeps where an edited constraint applies; a new one applies to the whole company.
+						const body = {
+							...constraint,
+							lock: lock as PolicyLock,
+							appliesToBranchIds:
+								editing?.appliesToBranches.map((branch) => branch.branchId) ??
+								[],
+							appliesToDepartmentIds:
+								editing?.appliesToDepartments.map(
+									(department) => department.departmentId
+								) ?? [],
+						};
 						await (editing
 							? actions.updateConstraint.mutateAsync({
 									constraintId: editing.constraintId,
