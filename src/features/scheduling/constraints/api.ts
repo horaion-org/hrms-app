@@ -196,6 +196,8 @@ export const departmentConstraintSchema = z.object({
 	overriddenByConstraintId: z.string().nullable().catch(null),
 	/** A replacement's standing against its company constraint now; null on any other row. */
 	replacementStatus: replacementStatusSchema,
+	/** Whether it asks for one or more people on its shifts, so a schedule using it rosters someone (ADR-0071). */
+	requiresPeople: z.boolean().catch(false),
 });
 
 /** One of a Department's live constraints, as the constraint routes answer it. */

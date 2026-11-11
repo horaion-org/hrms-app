@@ -207,6 +207,7 @@ export const constraintFixture = (
 	overridesConstraintId: null,
 	overriddenByConstraintId: null,
 	replacementStatus: null,
+	requiresPeople: false,
 	...overrides,
 });
 
@@ -254,6 +255,7 @@ export const COMPANY_CONSTRAINT_FIXTURES: Array<DepartmentConstraint> = [
 export const CONSTRAINT_FIXTURES: Array<DepartmentConstraint> = [
 	constraintFixture({
 		constraintId: "closing-supervisor",
+		requiresPeople: true,
 		name: "Closing supervisor",
 		type: "ROLE_PRESENCE",
 		category: "ROLE_COVERAGE",
@@ -267,6 +269,7 @@ export const CONSTRAINT_FIXTURES: Array<DepartmentConstraint> = [
 	}),
 	constraintFixture({
 		constraintId: "lunch-stand-ins",
+		requiresPeople: true,
 		name: "Lunch cover with stand-ins",
 		type: "SHIFT_STAFFING_WITH_STAND_INS",
 		requirement: "SHOULD",
@@ -280,6 +283,7 @@ export const CONSTRAINT_FIXTURES: Array<DepartmentConstraint> = [
 	}),
 	constraintFixture({
 		constraintId: "morning-cover",
+		requiresPeople: true,
 		name: "Morning cover",
 		type: "SHIFT_STAFFING",
 		values: [
