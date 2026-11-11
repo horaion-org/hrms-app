@@ -118,7 +118,7 @@ export const WeekChoiceDialog = ({
 			})}
 			onClose={onClose}
 		>
-			<h3 className="text-lg font-semibold text-neutral-900">
+			<h3 className="text-sm font-semibold text-neutral-900">
 				{t(`${key}.shifts`)}
 			</h3>
 			<ShiftTable
@@ -135,7 +135,7 @@ export const WeekChoiceDialog = ({
 							}
 				}
 			/>
-			<h3 className="mt-8 text-lg font-semibold text-neutral-900">
+			<h3 className="mt-8 text-sm font-semibold text-neutral-900">
 				{t(`${key}.constraints`)}
 			</h3>
 			<ConstraintTable
