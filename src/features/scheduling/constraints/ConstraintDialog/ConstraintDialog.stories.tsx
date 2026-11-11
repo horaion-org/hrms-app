@@ -7,7 +7,9 @@ import {
 	COMPANY_CONSTRAINT_FIXTURES,
 	CONSTRAINT_FIXTURES,
 	CONSTRAINT_OPTIONS,
+	DEPARTMENTS_POLICY_FIXTURE,
 } from "@/features/scheduling/constraints/fixtures";
+import { reachValueOf } from "@/features/scheduling/policy/policyReach";
 
 const meta = {
 	title: "Features/Scheduling/Constraints/ConstraintDialog",
@@ -45,6 +47,40 @@ export const OptionsLoading: Story = {
 export const OptionsHidden: Story = { args: { options: { status: "hidden" } } };
 /** A company constraint of the Scheduling policy: the lock is offered. */
 export const SchedulingPolicy: Story = { args: { withLock: true } };
+
+/** A work-policy constraint for two chosen Departments: the lock, and where it applies. */
+export const WorkPolicyWithReach: Story = {
+	args: {
+		withLock: true,
+		editing: DEPARTMENTS_POLICY_FIXTURE,
+		reach: {
+			choices: {
+				branches: [
+					{ branchId: "b-1", name: "Orchard", country: "SG", status: "ACTIVE" },
+				],
+				departments: [
+					{
+						departmentId: "d-2",
+						name: "Bar",
+						branchId: "b-1",
+						branchName: "Orchard",
+						country: "SG",
+						status: "ACTIVE",
+					},
+					{
+						departmentId: "d-1",
+						name: "Kitchen",
+						branchId: "b-1",
+						branchName: "Orchard",
+						country: "SG",
+						status: "ACTIVE",
+					},
+				],
+			},
+			initial: reachValueOf(DEPARTMENTS_POLICY_FIXTURE),
+		},
+	},
+};
 /** Making a locked company constraint stricter for one department. */
 export const ReplacingALockedConstraint: Story = {
 	args: { replacing: COMPANY_CONSTRAINT_FIXTURES[0] },

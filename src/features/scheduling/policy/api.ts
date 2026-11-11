@@ -16,19 +16,27 @@ import { administrativeMeta } from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";
 
 /*
- * The company's Scheduling policy (ADR-0058): constraints set once for every
- * department, each locked (departments may only make it stricter) or a
- * default (ticked on new drafts, may be left out). Read under
+ * The company's work policy (ADR-0058, ADR-0072): constraints for the whole
+ * company, chosen Branches or chosen Departments, each locked (departments may
+ * only make it stricter) or a default (ticked on new drafts, may be left out). Read under
  * `scheduling_policy:read` and changed under `scheduling_policy:update`, both
  * held company-wide; a constraint here has the shape of a Department's, with
  * no Department. Only types that link to nothing can be set: the policy's own
  * `constraint-options` lists them.
  */
 
-/** What adding or replacing a company constraint sends: a constraint body and its lock. */
-export type PolicyConstraintBody = ConstraintBody & { lock: PolicyLock };
+/**
+ * What adding or replacing a work-policy constraint sends: a constraint body,
+ * its lock, and where it applies. Both id lists empty is the whole company;
+ * at most one of them has ids.
+ */
+export type PolicyConstraintBody = ConstraintBody & {
+	lock: PolicyLock;
+	appliesToBranchIds: Array<string>;
+	appliesToDepartmentIds: Array<string>;
+};
 
-/** The company's Scheduling policy routes. */
+/** The company's work policy routes (the path keeps its scheduling-policy name). */
 export const schedulingPolicyPath = (companyId: string): string =>
 	`${companyPath(companyId)}/scheduling-policy`;
 
@@ -52,7 +60,7 @@ export const fetchPolicyConstraints = (
 		signal,
 	});
 
-/** Adds a company constraint; it reaches every department's drafts. */
+/** Adds a work-policy constraint; it reaches the drafts of the Departments it applies to. */
 export const createPolicyConstraint = (
 	companyId: string,
 	body: PolicyConstraintBody
@@ -62,7 +70,7 @@ export const createPolicyConstraint = (
 		body,
 	});
 
-/** Replaces a company constraint, its lock included. */
+/** Replaces a work-policy constraint, its lock and reach included. */
 export const updatePolicyConstraint = (
 	companyId: string,
 	constraintId: string,
@@ -74,7 +82,7 @@ export const updatePolicyConstraint = (
 		{ method: "PUT", body }
 	);
 
-/** Removes a company constraint; generated schedules keep their copies. */
+/** Removes a work-policy constraint; generated schedules keep their copies. */
 export const deletePolicyConstraint = (
 	companyId: string,
 	constraintId: string
@@ -94,7 +102,7 @@ export const fetchPolicyOptions = (
 		{ signal }
 	);
 
-/** Every Scheduling policy query sits under the company's scheduling root, so a change reloads the Departments' lists. */
+/** Every work policy query sits under the company's scheduling root, so a change reloads the Departments' lists. */
 export const policyKey = (
 	companyId: string,
 	part: "constraints" | "constraint-options"

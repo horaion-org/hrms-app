@@ -209,6 +209,8 @@ export const constraintFixture = (
 	updatedAt: "2026-10-08T09:00:00Z",
 	level: "DEPARTMENT",
 	lock: null,
+	appliesToBranches: [],
+	appliesToDepartments: [],
 	locked: false,
 	overridesConstraintId: null,
 	overriddenByConstraintId: null,
@@ -217,7 +219,7 @@ export const constraintFixture = (
 	...overrides,
 });
 
-/** A company constraint of the Scheduling policy, as a Department's list or the policy's own list answers it. */
+/** A constraint of the company's work policy, as a Department's list or the policy's own list answers it. */
 export const companyConstraintFixture = (
 	overrides: Partial<DepartmentConstraint> &
 		Pick<
@@ -235,7 +237,7 @@ export const companyConstraintFixture = (
 		...overrides,
 	});
 
-/** The company's Scheduling policy: eleven hours of rest, locked, and a default on weekends. */
+/** The company's work policy, whole company: eleven hours of rest, locked, and a default on weekends. */
 export const COMPANY_CONSTRAINT_FIXTURES: Array<DepartmentConstraint> = [
 	companyConstraintFixture({
 		constraintId: "company-rest",
@@ -256,6 +258,49 @@ export const COMPANY_CONSTRAINT_FIXTURES: Array<DepartmentConstraint> = [
 		values: [plain("WEEKDAY", "SAT")],
 	}),
 ];
+
+/** A work-policy constraint for two chosen Departments, Orchard's Kitchen and Bar. */
+export const DEPARTMENTS_POLICY_FIXTURE: DepartmentConstraint =
+	companyConstraintFixture({
+		constraintId: "kitchen-bar-rest",
+		name: "Kitchen and Bar rest",
+		type: "DAYS_OFF_PER_PERIOD",
+		category: "SHIFT_PATTERN",
+		requirement: "MUST",
+		lock: "LOCKED",
+		values: [
+			plain("COMPARISON", "AT_LEAST"),
+			plain("DAYS_OFF", "2"),
+			plain("PERIOD_DAYS", "7"),
+		],
+		appliesToDepartments: [
+			{
+				departmentId: "d-2",
+				departmentName: "Bar",
+				branchId: "b-1",
+				branchName: "Orchard",
+			},
+			{
+				departmentId: "d-1",
+				departmentName: "Kitchen",
+				branchId: "b-1",
+				branchName: "Orchard",
+			},
+		],
+	});
+
+/** A work-policy constraint for one chosen Branch, Orchard, and every Department in it. */
+export const BRANCH_POLICY_FIXTURE: DepartmentConstraint =
+	companyConstraintFixture({
+		constraintId: "orchard-weekends",
+		name: "Orchard weekends",
+		type: "AVOID_DAYS_OFF_ON",
+		category: "SHIFT_PATTERN",
+		requirement: null,
+		lock: "DEFAULT",
+		values: [plain("WEEKDAY", "SUN")],
+		appliesToBranches: [{ branchId: "b-1", branchName: "Orchard" }],
+	});
 
 /** Front Office's live constraints, by name, as the list answers them; Weekend days on is inactive. */
 export const CONSTRAINT_FIXTURES: Array<DepartmentConstraint> = [

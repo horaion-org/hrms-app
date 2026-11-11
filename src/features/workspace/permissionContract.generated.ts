@@ -3,7 +3,7 @@
 
 /** SHA-256 of the contract file this module was generated from. */
 export const PERMISSION_CONTRACT_SHA256 =
-	"1315de09be4b1a070266d4e53eb26d362624a99809973bdaa2ef558d7b46a8cf";
+	"52f6ed4b6905378f1b605dc33c604f17364f2567b62d83e49a32a0e606f10839";
 
 /** The places a permission can be assigned at, widest first. */
 export const ASSIGNABLE_SCOPES = ["COMPANY", "BRANCH", "DEPARTMENT"] as const;

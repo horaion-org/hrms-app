@@ -87,7 +87,7 @@ describe("EmploymentTermsSettings", () => {
 		// No one is described as following the Default: everyone has terms.
 		expect(panel).not.toHaveTextContent(/of their own|counted under/);
 		expect(
-			within(panel).getByRole("link", { name: "Scheduling" })
+			within(panel).getByRole("link", { name: "Work policy" })
 		).toHaveAttribute("href", "/settings?section=scheduling");
 	});
 
@@ -137,7 +137,7 @@ describe("EmploymentTermsSettings", () => {
 		app = await openApp("/settings");
 		renderAuthApp(app);
 
-		await screen.findByRole("tab", { name: /Scheduling/ });
+		await screen.findByRole("tab", { name: /Work policy/ });
 		expect(screen.queryByRole("tab", { name: /Employment/ })).toBeNull();
 	});
 

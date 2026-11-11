@@ -210,9 +210,7 @@ describe("ShiftsTab", () => {
 			requested: { branchId: "b-1", departmentId: "d-2" },
 		});
 
-		await user.click(
-			await screen.findByRole("button", { name: "Add shift" })
-		);
+		await user.click(await screen.findByRole("button", { name: "Add shift" }));
 
 		const dialog = await screen.findByRole("dialog", {
 			name: "Add shift",
@@ -227,9 +225,7 @@ describe("ShiftsTab", () => {
 		show({ permissions: ["shift:read"] });
 
 		await screen.findByRole("row", { name: /Front Desk AM/ });
-		expect(
-			screen.queryByRole("button", { name: "Add shift" })
-		).toBeNull();
+		expect(screen.queryByRole("button", { name: "Add shift" })).toBeNull();
 		expect(
 			screen.queryByRole("button", { name: "Edit Front Desk AM" })
 		).toBeNull();

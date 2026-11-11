@@ -5,6 +5,7 @@ import { fetchConstraints } from "@/features/scheduling/constraints/api";
 import {
 	COMPANY_CONSTRAINT_FIXTURES,
 	CONSTRAINT_OPTIONS_RESPONSE,
+	DEPARTMENTS_POLICY_FIXTURE,
 } from "@/features/scheduling/constraints/fixtures";
 import {
 	createPolicyConstraint,
@@ -25,6 +26,8 @@ const BODY: PolicyConstraintBody = {
 	status: "ACTIVE",
 	lock: "LOCKED",
 	values: [{ field: "REST_HOURS", value: "11" }],
+	appliesToBranchIds: [],
+	appliesToDepartmentIds: ["d-1", "d-2"],
 };
 
 beforeEach(() => {
@@ -39,7 +42,7 @@ afterEach(() => {
 	vi.unstubAllGlobals();
 });
 
-describe("Scheduling policy client", () => {
+describe("Work policy client", () => {
 	it("lists the company's constraints with their locks and no department", async () => {
 		stubApi({
 			[`GET ${POLICY}/constraints`]: {
@@ -97,6 +100,24 @@ describe("Scheduling policy client", () => {
 		expect(options.types.map((type) => type.type)).toContain(
 			"REST_BETWEEN_SHIFTS"
 		);
+	});
+
+	it("reads where a work-policy constraint applies, and an answer without reach as the whole company", async () => {
+		const { appliesToBranches, appliesToDepartments, ...withoutReach } = REST;
+		stubApi({
+			[`GET ${POLICY}/constraints`]: {
+				status: 200,
+				body: envelope([DEPARTMENTS_POLICY_FIXTURE, withoutReach]),
+			},
+		});
+
+		const [chosen, older] = await fetchPolicyConstraints("c-1");
+
+		expect(
+			chosen?.appliesToDepartments.map((unit) => unit.departmentName)
+		).toEqual(["Bar", "Kitchen"]);
+		expect(older).toMatchObject({ appliesToBranches, appliesToDepartments });
+		expect(older?.appliesToBranches).toEqual([]);
 	});
 
 	it("reads a lock or level a newer API adds as unknown instead of failing", async () => {

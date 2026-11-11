@@ -45,6 +45,12 @@ import {
 	type SentenceValue,
 } from "@/features/scheduling/constraints/constraintSentence";
 import type { ConstraintOptionsState } from "@/features/scheduling/constraints/useConstraintOptions";
+import {
+	reachedUnitsOf,
+	type PolicyReachChoices,
+	type PolicyReachValue,
+} from "@/features/scheduling/policy/policyReach";
+import { PolicyReachField } from "@/features/scheduling/policy/PolicyReachField";
 import type { Constraint } from "@/features/scheduling/scheduleDraft";
 import {
 	SetupDepartmentField,
@@ -63,8 +69,10 @@ export type ConstraintDialogProps = {
 	 * loosened (ADR-0058).
 	 */
 	replacing?: Constraint;
-	/** Offers the lock, for a constraint of the company's Scheduling policy. */
+	/** Offers the lock, for a constraint of the company's work policy. */
 	withLock?: boolean;
+	/** Offers Applies to, for a work-policy constraint: what to choose from, and the reach it opens with (ADR-0072). */
+	reach?: { choices: PolicyReachChoices; initial: PolicyReachValue };
 	/** The Department field, shown first: chosen when adding, fixed when editing; left out inside a schedule, whose department is known. */
 	department?: SetupDepartment;
 	/** What saving the change reaches, said below the last field. */
@@ -116,6 +124,7 @@ export const ConstraintDialog = ({
 	options,
 	replacing,
 	withLock = false,
+	reach,
 	department,
 	impactNote,
 	onSave,
@@ -133,11 +142,9 @@ export const ConstraintDialog = ({
 	const form = useForm<ConstraintFormValues, unknown, ConstraintDialogBody>({
 		// The fields to check depend on the type chosen, so the schema is built per check.
 		resolver: (values, context, resolverOptions) =>
-			zodResolver(constraintSchema(typeOf(values.type), t, withLock))(
-				values,
-				context,
-				resolverOptions
-			),
+			zodResolver(
+				constraintSchema(typeOf(values.type), t, withLock, reach !== undefined)
+			)(values, context, resolverOptions),
 		defaultValues: {
 			name: editing?.name ?? "",
 			type: startingPoint?.type ?? "",
@@ -146,6 +153,7 @@ export const ConstraintDialog = ({
 			status: editing?.status ?? "ACTIVE",
 			lock: withLock ? (editing?.lock ?? "LOCKED") : "",
 			values: startingPoint ? valuesByField(startingPoint.values) : {},
+			...(reach ? { reach: reach.initial } : {}),
 		},
 		mode: "onSubmit",
 		reValidateMode: "onChange",
@@ -216,6 +224,8 @@ export const ConstraintDialog = ({
 		label: t(`scheduling.constraints.locks.${lock}`),
 	}));
 	const [lock] = useWatch({ control, name: ["lock"] });
+	// Where a work-policy constraint will apply, so the preview says it before saving.
+	const chosenReach = useWatch({ control, name: "reach" });
 	// A locked company constraint is a floor: refuse a looser replacement before the API does.
 	const tooLoose = (body: ConstraintDialogBody): boolean => {
 		const parentType = replacing && typeOf(replacing.type);
@@ -611,6 +621,25 @@ export const ConstraintDialog = ({
 						replacing !== undefined ||
 						editing?.overridesConstraintId != null
 				)}
+				{reach && (
+					<Controller
+						control={control}
+						name="reach"
+						render={({ field }) => (
+							<PolicyReachField
+								choices={reach.choices}
+								disabled={isSubmitting}
+								idPrefix={fieldId("reach")}
+								value={field.value ?? reach.initial}
+								error={
+									errors.reach?.branchIds?.message ??
+									errors.reach?.departmentIds?.message
+								}
+								onChange={field.onChange}
+							/>
+						)}
+					/>
+				)}
 				{withLock &&
 					selectRow(
 						"lock",
@@ -625,6 +654,9 @@ export const ConstraintDialog = ({
 									type: chosen.type,
 									level: withLock ? "COMPANY" : "DEPARTMENT",
 									values: filledValues(chosen),
+									...(reach && chosenReach
+										? reachedUnitsOf(chosenReach, reach.choices)
+										: {}),
 								},
 								t
 							)}

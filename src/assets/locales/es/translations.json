@@ -677,27 +677,27 @@
 			}
 		},
 		"scheduling": {
-			"title": "Programación",
-			"description": "Límites que respetan los horarios de todos los departamentos.",
+			"title": "Política de trabajo",
+			"description": "Restricciones que se aplican a toda la empresa o a sucursales o departamentos elegidos.",
 			"policy": {
-				"title": "Política de programación",
-				"subtitle": "Restricciones que siguen los horarios de todos los departamentos. Un departamento no puede quitar ni relajar una bloqueada; las predeterminadas empiezan marcadas y se pueden quitar.",
+				"title": "Política de trabajo",
+				"subtitle": "Restricciones que se aplican a toda la empresa o a sucursales o departamentos elegidos. Un departamento no puede quitar ni relajar una bloqueada; las predeterminadas empiezan marcadas y se pueden quitar.",
 				"add": "Añadir restricción",
-				"label": "Restricciones de la política de programación",
-				"empty": "Aún no hay restricciones para toda la empresa. Cada departamento define las suyas.",
-				"loading": "Cargando la política de programación…",
-				"failed": "No pudimos cargar la política de programación. Inténtalo de nuevo.",
-				"hidden": "No tienes permiso para ver la política de programación.",
+				"label": "Restricciones de la política de trabajo",
+				"empty": "Aún no hay restricciones en la política de trabajo. Cada departamento define las suyas.",
+				"loading": "Cargando la política de trabajo…",
+				"failed": "No pudimos cargar la política de trabajo. Inténtalo de nuevo.",
+				"hidden": "No tienes permiso para ver la política de trabajo.",
 				"lock": "Bloqueo",
-				"added": "Restricción añadida a la política de programación",
-				"saved": "Restricción de la política de programación guardada",
-				"deleted": "Restricción quitada de la política de programación",
+				"added": "Restricción añadida a la política de trabajo",
+				"saved": "Restricción de la política de trabajo guardada",
+				"deleted": "Restricción quitada de la política de trabajo",
 				"deleteTitle": "¿Quitar {{name}}?",
-				"deleteDescription": "Deja de aplicarse a los borradores de todos los departamentos. Los horarios generados la conservan, y la versión propia de un departamento sigue siendo suya.",
+				"deleteDescription": "Deja de aplicarse a los borradores de los departamentos que alcanza. Los horarios generados la conservan, y la versión propia de un departamento sigue siendo suya.",
 				"deleteConfirm": "Quitar",
 				"cancel": "Cancelar",
 				"deleteFailed": "No pudimos quitar la restricción. Inténtalo de nuevo.",
-				"deleteForbidden": "Ya no tienes permiso para cambiar la política de programación.",
+				"deleteForbidden": "Ya no tienes permiso para cambiar la política de trabajo.",
 				"termsLink": "Las horas normales salen de las condiciones de empleo de cada persona en <0>Empleo</0>."
 			}
 		},
@@ -1178,15 +1178,15 @@
 				}
 			},
 			"scheduling_policy": {
-				"name": "Política de planificación",
-				"description": "Las restricciones propias de la empresa, definidas una vez para todos los departamentos: las bloqueadas, que cada departamento debe mantener y solo puede hacer más estrictas, y las predeterminadas, que puede omitir.",
+				"name": "Política de trabajo",
+				"description": "Las restricciones propias de la empresa, para toda la empresa o para sucursales o departamentos elegidos: las bloqueadas, que cada departamento debe mantener y solo puede hacer más estrictas, y las predeterminadas, que puede omitir.",
 				"actions": {
-					"read": "Ver la política de planificación",
-					"update": "Cambiar la política de planificación"
+					"read": "Ver la política de trabajo",
+					"update": "Cambiar la política de trabajo"
 				},
 				"actionHints": {
-					"read": "Las restricciones definidas una vez para todos los departamentos",
-					"update": "Las restricciones bloqueadas que todos los departamentos mantienen, y las predeterminadas"
+					"read": "Las restricciones definidas para toda la empresa o para sucursales o departamentos elegidos",
+					"update": "Las restricciones bloqueadas y las predeterminadas, y dónde se aplica cada una"
 				}
 			},
 			"leave_type": {
@@ -1361,7 +1361,7 @@
 				},
 				"company_settings": {
 					"name": "Ajustes de la empresa",
-					"description": "El espacio de trabajo, las habilidades, las condiciones de empleo, los tipos de permiso y la política de planificación."
+					"description": "El espacio de trabajo, las habilidades, las condiciones de empleo, los tipos de permiso y la política de trabajo."
 				},
 				"access_and_activity": {
 					"name": "Acceso y actividad",
@@ -1498,9 +1498,9 @@
 				"skillUpdated": "Habilidad actualizada: {{name}}",
 				"skillDeleted": "Habilidad eliminada: {{name}}",
 				"skillAssigned": "Habilidad asignada a personas: {{name}}",
-				"schedulingPolicyCreated": "Restricción añadida a la política de programación: {{name}}",
-				"schedulingPolicyUpdated": "Restricción de la política de programación cambiada: {{name}}",
-				"schedulingPolicyDeleted": "Restricción quitada de la política de programación: {{name}}",
+				"schedulingPolicyCreated": "Restricción añadida a la política de trabajo: {{name}}",
+				"schedulingPolicyUpdated": "Restricción de la política de trabajo cambiada: {{name}}",
+				"schedulingPolicyDeleted": "Restricción quitada de la política de trabajo: {{name}}",
 				"leaveTypeCreated": "Tipo de permiso añadido: {{name}}",
 				"leaveTypeUpdated": "Tipo de permiso cambiado: {{name}}",
 				"leaveTypesReordered": "Tipos de permiso reordenados",
@@ -1553,9 +1553,9 @@
 				"skillUpdated": "Habilidad actualizada",
 				"skillDeleted": "Habilidad eliminada",
 				"skillAssigned": "Habilidad asignada a personas",
-				"schedulingPolicyCreated": "Restricción añadida a la política de programación",
-				"schedulingPolicyUpdated": "Restricción de la política de programación cambiada",
-				"schedulingPolicyDeleted": "Restricción quitada de la política de programación",
+				"schedulingPolicyCreated": "Restricción añadida a la política de trabajo",
+				"schedulingPolicyUpdated": "Restricción de la política de trabajo cambiada",
+				"schedulingPolicyDeleted": "Restricción quitada de la política de trabajo",
 				"leaveTypeCreated": "Tipo de permiso añadido",
 				"leaveTypeUpdated": "Tipo de permiso cambiado",
 				"leaveTypesReordered": "Tipos de permiso reordenados",
@@ -3253,7 +3253,7 @@
 				"typeFixed": "El tipo de una restricción de la empresa no se puede cambiar. Añade una restricción nueva.",
 				"department": "Departamento",
 				"departmentPlaceholder": "Selecciona un departamento",
-				"departmentHint": "Cada restricción pertenece a un departamento; las de toda la empresa se definen en Configuración.",
+				"departmentHint": "Cada restricción pertenece a un departamento; las de la política de trabajo se definen en Configuración.",
 				"departmentsEmpty": "No hay ningún departamento activo al que puedas añadir restricciones.",
 				"optionsNeedDepartment": "Elige primero un departamento.",
 				"typeHintEmpty": "Elige una opción para ver un ejemplo.",
@@ -3265,10 +3265,10 @@
 			},
 			"setBy": "Definida por",
 			"levels": {
-				"COMPANY": "Empresa",
+				"COMPANY": "Política de trabajo",
 				"DEPARTMENT": "Este departamento"
 			},
-			"setByCompany": "Definida por la empresa",
+			"setByCompany": "Definida en la política de trabajo",
 			"stricterHere": "Más estricta aquí",
 			"changedHere": "Cambiada aquí",
 			"makeStricter": "Hacer {{name}} más estricta aquí",
@@ -3277,8 +3277,8 @@
 				"LOCKED": "Bloqueada",
 				"DEFAULT": "Predeterminada"
 			},
-			"companyRuleApplies": "Se aplica la regla de la empresa",
-			"companyRuleAppliesHint": "La restricción de la empresa ahora es más estricta que esta, así que se aplican ambas.",
+			"companyRuleApplies": "Se aplica la política de trabajo",
+			"companyRuleAppliesHint": "La restricción de la política de trabajo ahora es más estricta que esta, así que se aplican ambas.",
 			"department": "Departamento",
 			"allDepartments": "Todos los departamentos",
 			"allConstraints": "Todas",
@@ -3987,11 +3987,12 @@
 			"constraints": "Restricciones"
 		},
 		"constraintsTab": {
-			"descriptionOne": "Cómo se cubre y descansa {{department}}. Las restricciones de la empresa van primero; las bloqueadas se aplican siempre.",
-			"descriptionAll": "Cómo se cubre y descansa cada departamento. Las restricciones de la empresa se aplican a todos los departamentos; las bloqueadas, siempre.",
+			"descriptionOne": "Cómo se cubre y descansa {{department}}. Las restricciones de la política de trabajo van primero; las bloqueadas se aplican siempre.",
+			"descriptionAll": "Cómo se cubre y descansa cada departamento. Las restricciones de la política de trabajo se aplican donde alcanzan; las bloqueadas, siempre.",
 			"search": "Buscar restricciones",
 			"noMatch": "Ninguna restricción coincide con tu búsqueda.",
-			"emptyGuide": "Este departamento aún no tiene restricciones. Empieza por una restricción de personal: cuántas personas necesita cada turno."
+			"emptyGuide": "Este departamento aún no tiene restricciones. Empieza por una restricción de personal: cuántas personas necesita cada turno.",
+			"openWorkPolicy": "Abrir política de trabajo"
 		},
 		"readiness": {
 			"departmentsNotReady_one": "{{count}} departamento no está listo para planificar:",
@@ -4012,7 +4013,7 @@
 			"intro": "Desmarca para dejar algo fuera solo de esta semana. {{department}} lo conserva.",
 			"shifts": "Turnos",
 			"constraints": "Restricciones",
-			"locked": "Bloqueada: se aplica siempre.",
+			"locked": "Bloqueada por la política de trabajo.",
 			"leavesOut": "Usa {{shifts, list}}, que esta semana queda fuera.",
 			"shiftGone": "Usa un turno que ya no existe.",
 			"noShift": "Elige al menos un turno para esta semana.",
@@ -4055,6 +4056,30 @@
 			"noLongerShift": "{{department}} ya no tiene ningún turno, así que este horario no se puede generar.",
 			"noLongerStaffing": "{{department}} ya no tiene ninguna restricción de personal, así que este horario no se puede generar.",
 			"noLongerNote": "Corrige la configuración de {{department}} para generar."
+		},
+		"policy": {
+			"reach": {
+				"label": "Se aplica a",
+				"choices": {
+					"COMPANY": "Toda la empresa",
+					"BRANCHES": "Sucursales elegidas",
+					"DEPARTMENTS": "Departamentos elegidos"
+				},
+				"descriptions": {
+					"COMPANY": "Todos los departamentos, ahora y en el futuro.",
+					"BRANCHES": "Todos los departamentos de las sucursales que elijas.",
+					"DEPARTMENTS": "Solo los departamentos que elijas."
+				},
+				"branchesHint": "Una sucursal incluye los departamentos que se le añadan después.",
+				"departmentsHint": "Los departamentos añadidos después no se incluyen.",
+				"branchesRequired": "Elige al menos una sucursal.",
+				"departmentsRequired": "Elige al menos un departamento.",
+				"branchesPlaceholder": "Selecciona sucursales",
+				"departmentsPlaceholder": "Selecciona departamentos",
+				"selectAll": "Seleccionar todo",
+				"wholeCompany": "Todos los departamentos",
+				"branch": "{{name}} (sucursal)"
+			}
 		}
 	},
 	"workspace": {
@@ -4341,7 +4366,7 @@
 	"employmentTerms": {
 		"panel": {
 			"title": "Condiciones de empleo",
-			"subtitle": "La semana laboral que fija cada tipo de contrato: días laborables, horas normales y día de descanso. Asígnalas desde el perfil de cada persona o desde la lista de Personas. Los límites que todo cuadrante debe respetar están en <0>Programación</0>.",
+			"subtitle": "La semana laboral que fija cada tipo de contrato: días laborables, horas normales y día de descanso. Asígnalas desde el perfil de cada persona o desde la lista de Personas. Los límites que los cuadrantes deben respetar están en la <0>Política de trabajo</0>.",
 			"add": "Añadir condiciones de empleo",
 			"label": "Condiciones de empleo",
 			"terms": "Condiciones",

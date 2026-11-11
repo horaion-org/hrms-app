@@ -25,6 +25,8 @@ const BODY: PolicyConstraintBody = {
 	status: "ACTIVE",
 	lock: "LOCKED",
 	values: [{ field: "REST_HOURS", value: "12" }],
+	appliesToBranchIds: [],
+	appliesToDepartmentIds: [],
 };
 
 beforeEach(() => {

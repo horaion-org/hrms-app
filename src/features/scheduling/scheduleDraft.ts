@@ -386,7 +386,11 @@ export type ScheduleDraftAction =
 	| { type: "shiftsLoaded"; shifts: Array<ScheduleShift> }
 	| { type: "setupSaved"; setup: ScheduleSetup }
 	/** What the week uses, as the manager chose it. */
-	| { type: "weekChosen"; shiftIds: Array<string>; constraintIds: Array<string> }
+	| {
+			type: "weekChosen";
+			shiftIds: Array<string>;
+			constraintIds: Array<string>;
+	  }
 	/** A new draft's department changed: its week starts again from everything. */
 	| { type: "departmentChosen" }
 	| { type: "forecastModeChosen"; mode: ForecastMode }

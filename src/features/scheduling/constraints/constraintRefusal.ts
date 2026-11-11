@@ -33,7 +33,7 @@ export type ConstraintRefusalField = "name" | "type";
 export type ConstraintRefusalContext = {
 	name: string;
 	editing: boolean;
-	/** The company's Scheduling policy, not a department's constraints, so the copy names the company. */
+	/** The company's work policy, not a department's constraints, so the copy names the company. */
 	company: boolean;
 };
 

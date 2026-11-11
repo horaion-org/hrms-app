@@ -17,9 +17,11 @@ export type SchedulingPolicyColumnsOptions = {
 };
 
 /**
- * The Scheduling policy's columns: the constraint's name and how it reads,
- * as a department's list shows them, its lock, its status, and, for someone
- * who may change the policy, Edit and Delete.
+ * The work policy's columns: the constraint's name and how it reads (where it
+ * applies on its last line), as a department's list shows them, its lock, its
+ * status, and, for someone who may change the policy, Edit and Delete. A phone
+ * keeps the name and the actions as columns and puts the rest on the name's
+ * line, as the Constraints tab does.
  */
 export const schedulingPolicyColumns = (
 	t: TFunction,
@@ -28,7 +30,12 @@ export const schedulingPolicyColumns = (
 	const shared = constraintColumns<DepartmentConstraint>(t);
 	return [
 		shared.name,
-		shared.statement,
+		{
+			...shared.statement,
+			// On a phone the constraint reads in full on the name's line, as on the Constraints tab.
+			summary: (constraint) => shared.statement.cell(constraint),
+			hideBelow: "md",
+		},
 		{
 			id: "lock",
 			header: t(`${key}.lock`),
@@ -36,8 +43,10 @@ export const schedulingPolicyColumns = (
 			cell: (constraint) => (
 				<ConstraintOrigin constraint={constraint} showLevel={false} />
 			),
+			// A phone keeps only the name and the actions as columns.
+			hideBelow: "md",
 		},
-		shared.status,
+		{ ...shared.status, hideBelow: "md" },
 		...(canUpdate
 			? [
 					{

@@ -426,7 +426,9 @@ describe("Create Schedule: the week's choice", () => {
 		);
 
 		expect(
-			await weekLine("Uses 3 of 4 shifts and 4 of 5 constraints of Front Office.")
+			await weekLine(
+				"Uses 3 of 4 shifts and 4 of 5 constraints of Front Office."
+			)
 		).toBeVisible();
 		await user.click(next());
 		await waitFor(() => {
@@ -524,7 +526,9 @@ describe("Create Schedule: the week's choice", () => {
 
 		await fillSetup(user);
 
-		expect(await screen.findByRole("link", { name: "Edit shifts" })).toBeVisible();
+		expect(
+			await screen.findByRole("link", { name: "Edit shifts" })
+		).toBeVisible();
 		expect(screen.queryByRole("link", { name: "Edit constraints" })).toBeNull();
 	});
 
@@ -641,9 +645,7 @@ describe("Create Schedule: the Setup gate", () => {
 				{ exact: false }
 			)
 		).toBeVisible();
-		expect(
-			screen.queryByRole("link", { name: "View constraints" })
-		).toBeNull();
+		expect(screen.queryByRole("link", { name: "View constraints" })).toBeNull();
 		expect(next()).toBeDisabled();
 	});
 
@@ -657,7 +659,9 @@ describe("Create Schedule: the Setup gate", () => {
 		await fillSetup(user);
 
 		await screen.findByText(WEEK_LINE);
-		expect(screen.queryByText(/isn’t ready|has no shifts|no staffing/)).toBeNull();
+		expect(
+			screen.queryByText(/isn’t ready|has no shifts|no staffing/)
+		).toBeNull();
 		expect(next()).toBeEnabled();
 	});
 
@@ -1297,9 +1301,9 @@ describe("Create Schedule: back from the Scheduling tabs", () => {
 		expect(
 			screen.getByRole("button", { name: /Schedule period/ }).textContent
 		).toBe(week);
-		expect(
-			screen.getByRole("textbox", { name: /Schedule name/ })
-		).toHaveValue("");
+		expect(screen.getByRole("textbox", { name: /Schedule name/ })).toHaveValue(
+			""
+		);
 	});
 
 	it("given_aSavedDraftsGate_when_itsDepartmentIsReadyOnTheTab_then_backToTheScheduleOpensItsGenerateStep", async () => {

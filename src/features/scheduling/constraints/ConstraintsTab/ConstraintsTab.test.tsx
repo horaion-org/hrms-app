@@ -192,7 +192,7 @@ describe("ConstraintsTab", () => {
 		).toHaveTextContent("Bar");
 		expect(
 			screen.getByText(
-				"How each department is staffed and rested. Company constraints apply to every department; locked ones always apply."
+				"How each department is staffed and rested. Work policy constraints apply where they reach; locked ones always apply."
 			)
 		).toBeVisible();
 	});
@@ -283,6 +283,22 @@ describe("ConstraintsTab", () => {
 		expect(
 			within(dialog).getByRole("button", { name: /^Department/ })
 		).toHaveTextContent("Orchard › Kitchen");
+	});
+
+	it("given_theWorkPolicyReadKey_when_listed_then_linksToTheWorkPolicyInSettings", async () => {
+		stubApi({ [COMPANY_CONSTRAINTS]: ok([kitchenCover]) });
+		show({ permissions: ["constraint:read", "scheduling_policy:read"] });
+
+		const link = await screen.findByRole("link", { name: "Open work policy" });
+		expect(link).toHaveAttribute("href", "/settings?section=scheduling");
+	});
+
+	it("given_noWorkPolicyReadKey_when_listed_then_offersNoLinkToIt", async () => {
+		stubApi({ [COMPANY_CONSTRAINTS]: ok([kitchenCover]) });
+		show({ permissions: ["constraint:read"] });
+
+		await screen.findByRole("row", { name: /Morning cover/ });
+		expect(screen.queryByRole("link", { name: "Open work policy" })).toBeNull();
 	});
 
 	it("given_noCreateKey_when_listed_then_offersNoAdd", async () => {

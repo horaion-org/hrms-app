@@ -4,6 +4,8 @@ import type { DataTableColumn } from "@/components/ui/DataTable";
 import {
 	CONSTRAINT_STATUSES,
 	type ConstraintStatus,
+	type ReachedBranch,
+	type ReachedDepartment,
 } from "@/features/scheduling/constraints/api";
 import { appliesToOf } from "@/features/scheduling/constraints/appliesTo";
 import { ConstraintStatement } from "@/features/scheduling/constraints/ConstraintStatement";
@@ -11,7 +13,7 @@ import type { Constraint } from "@/features/scheduling/scheduleDraft";
 
 /*
  * The columns every list of constraints shares, so a schedule's Constraints
- * step and the company's Scheduling policy read the same and later list work
+ * step and the company's work policy read the same and later list work
  * changes one place: the name, the constraint as it reads (its firmness tag,
  * its sentence and who it applies to) and the status. Each list adds its own
  * columns around them.
@@ -24,6 +26,9 @@ type ConstraintRow = Pick<
 > & {
 	/** Names the department in the applies-to line; lists that leave it out show no line for department-wide types. */
 	departmentName?: string | null;
+	/** Where a work-policy constraint applies; a frozen copy has none and reads as the whole company. */
+	appliesToBranches?: Array<ReachedBranch>;
+	appliesToDepartments?: Array<ReachedDepartment>;
 };
 
 export const statusTones: Record<ConstraintStatus, BadgeTone> = {

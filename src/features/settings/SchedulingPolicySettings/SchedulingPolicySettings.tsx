@@ -19,8 +19,14 @@ import {
 	policyConstraintsQuery,
 	policyOptionsQuery,
 } from "@/features/scheduling/policy/api";
+import {
+	reachChoicesOf,
+	reachValueOf,
+} from "@/features/scheduling/policy/policyReach";
 import { usePolicyActions } from "@/features/scheduling/policy/usePolicyActions";
 import { schedulingPolicyColumns } from "@/features/settings/SchedulingPolicySettings/schedulingPolicyColumns";
+import { workspaceQuery } from "@/features/workspace/api";
+import { retry } from "@/features/workspace/retry";
 import { COMPANY_SCOPE } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
 
@@ -29,12 +35,13 @@ export type SchedulingPolicySettingsProps = {
 };
 
 /**
- * Settings › Scheduling: the company's Scheduling policy (ADR-0058), the
- * constraints every department's schedules follow. Each reads as its type's
- * sentence with its lock; adding, editing and removing need
+ * Settings › Work policy (section key `scheduling`): the company's work
+ * policy (ADR-0058, ADR-0072), constraints for the whole company or chosen
+ * Branches or Departments. Each reads as its type's sentence with where it
+ * applies and its lock; adding, editing and removing need
  * `scheduling_policy:update` held company-wide, and the list itself
  * `scheduling_policy:read`. The constraint dialog is the department's, with
- * the lock offered and only the types a company may set.
+ * the lock and Applies to offered and only the types a company may set.
  */
 export const SchedulingPolicySettings = ({
 	companyId,
@@ -45,6 +52,7 @@ export const SchedulingPolicySettings = ({
 	const canRead = access.can("scheduling_policy:read", COMPANY_SCOPE);
 	const canUpdate = access.can("scheduling_policy:update", COMPANY_SCOPE);
 	const list = useQuery(policyConstraintsQuery(companyId, canRead));
+	const { data: workspace } = useQuery({ ...workspaceQuery, retry });
 	const [dialog, setDialog] = useState<{
 		editing?: DepartmentConstraint;
 	} | null>(null);
@@ -143,12 +151,28 @@ export const SchedulingPolicySettings = ({
 					withLock
 					editing={dialog.editing}
 					options={options}
+					reach={{
+						choices: workspace
+							? reachChoicesOf(workspace, companyId)
+							: { branches: [], departments: [] },
+						initial: reachValueOf(dialog.editing),
+					}}
 					onClose={() => {
 						setDialog(null);
 					}}
-					onSave={async ({ lock, ...constraint }) => {
-						const body = { ...constraint, lock: lock as PolicyLock };
+					onSave={async ({
+						lock,
+						appliesToBranchIds,
+						appliesToDepartmentIds,
+						...constraint
+					}) => {
 						const editing = dialog.editing;
+						const body = {
+							...constraint,
+							lock: lock as PolicyLock,
+							appliesToBranchIds: appliesToBranchIds ?? [],
+							appliesToDepartmentIds: appliesToDepartmentIds ?? [],
+						};
 						await (editing
 							? actions.updateConstraint.mutateAsync({
 									constraintId: editing.constraintId,

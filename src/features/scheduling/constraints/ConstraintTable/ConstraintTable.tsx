@@ -12,6 +12,11 @@ import { DeleteIcon, EditIcon } from "@/components/ui/Icon";
 import { branchColumn } from "@/features/organisation/listColumns";
 import { constraintColumns } from "@/features/scheduling/constraints/constraintColumns";
 import { ConstraintOrigin } from "@/features/scheduling/constraints/ConstraintOrigin";
+import type {
+	ReachedBranch,
+	ReachedDepartment,
+} from "@/features/scheduling/constraints/api";
+import { reachLabel } from "@/features/scheduling/policy/policyReach";
 import type { Constraint } from "@/features/scheduling/scheduleDraft";
 
 /** What the table reads of a constraint; a list across departments also names its Branch and Department. */
@@ -34,6 +39,9 @@ export type ConstraintTableRow = Pick<
 	/** Null on a company constraint, which belongs to no Department. */
 	branchName?: string | null;
 	departmentName?: string | null;
+	/** Where a work-policy constraint applies; a frozen copy has none and reads as every Department. */
+	appliesToBranches?: Array<ReachedBranch>;
+	appliesToDepartments?: Array<ReachedDepartment>;
 };
 
 export type ConstraintTableProps<Row extends ConstraintTableRow> = {
@@ -54,7 +62,7 @@ export type ConstraintTableProps<Row extends ConstraintTableRow> = {
 	canDelete?: (constraint: Row) => boolean;
 	/** No Branch is chosen, so each row names its own. */
 	showBranch?: boolean;
-	/** No Department is chosen, so each row names its own, and a company row reads "All departments". */
+	/** No Department is chosen, so each row names its own, and a work-policy row reads where it applies. */
 	showDepartment?: boolean;
 	/** Puts Set by and Status on the name's line below 2xl, for the setup tab. */
 	metaOnNameLine?: boolean;
@@ -124,7 +132,16 @@ export const ConstraintTable = <Row extends ConstraintTableRow>({
 							id: "department",
 							header: t(`${key}.department`),
 							cell: (constraint: Row): string =>
-								constraint.departmentName ?? t(`${key}.allDepartments`),
+								constraint.level === "COMPANY"
+									? reachLabel(
+											{
+												appliesToBranches: constraint.appliesToBranches ?? [],
+												appliesToDepartments:
+													constraint.appliesToDepartments ?? [],
+											},
+											t
+										)
+									: (constraint.departmentName ?? t(`${key}.allDepartments`)),
 							hideBelow: "md",
 						} satisfies DataTableColumn<Row>,
 					]

@@ -26,6 +26,38 @@ describe("appliesToOf", () => {
 		).toBe("Whole company");
 	});
 
+	it("reads a work-policy constraint for chosen units as where it reaches", () => {
+		expect(
+			appliesToOf(
+				{
+					type: "REST_BETWEEN_SHIFTS",
+					level: "COMPANY",
+					values: [],
+					appliesToBranches: [{ branchId: "b-1", branchName: "Orchard" }],
+				},
+				t
+			)
+		).toBe("Orchard (branch)");
+		expect(
+			appliesToOf(
+				{
+					type: "REST_BETWEEN_SHIFTS",
+					level: "COMPANY",
+					values: [],
+					appliesToDepartments: [
+						{
+							departmentId: "d-2",
+							departmentName: "Bar",
+							branchId: "b-1",
+							branchName: "Orchard",
+						},
+					],
+				},
+				t
+			)
+		).toBe("Bar");
+	});
+
 	it("names the one shift a shift type counts", () => {
 		expect(
 			appliesToOf(

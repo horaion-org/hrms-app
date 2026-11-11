@@ -1431,27 +1431,27 @@
 			"description": "Control what you are notified about and how."
 		},
 		"scheduling": {
-			"title": "Scheduling",
-			"description": "Limits every department’s schedules keep.",
+			"title": "Work policy",
+			"description": "Constraints that apply to the whole company or to chosen branches or departments.",
 			"policy": {
-				"title": "Scheduling policy",
-				"subtitle": "Constraints every department’s schedules follow. A department can’t remove or loosen a locked one; defaults start ticked and may be left out.",
+				"title": "Work policy",
+				"subtitle": "Constraints that apply to the whole company or to chosen branches or departments. A department can’t remove or loosen a locked one; defaults start ticked and may be left out.",
 				"add": "Add constraint",
-				"label": "Scheduling policy constraints",
-				"empty": "No company-wide constraints yet. Each department sets its own.",
-				"loading": "Loading the Scheduling policy…",
-				"failed": "We couldn’t load the Scheduling policy. Try again.",
-				"hidden": "You don’t have permission to see the Scheduling policy.",
+				"label": "Work policy constraints",
+				"empty": "No work policy constraints yet. Each department sets its own.",
+				"loading": "Loading the work policy…",
+				"failed": "We couldn’t load the work policy. Try again.",
+				"hidden": "You don’t have permission to see the work policy.",
 				"lock": "Lock",
-				"added": "Constraint added to the Scheduling policy",
-				"saved": "Scheduling policy constraint saved",
-				"deleted": "Constraint removed from the Scheduling policy",
+				"added": "Constraint added to the work policy",
+				"saved": "Work policy constraint saved",
+				"deleted": "Constraint removed from the work policy",
 				"deleteTitle": "Remove {{name}}?",
-				"deleteDescription": "It stops applying to every department’s draft schedules. Generated schedules keep it, and a department’s own version stays as theirs.",
+				"deleteDescription": "It stops applying to the draft schedules of the departments it reaches. Generated schedules keep it, and a department’s own version stays as theirs.",
 				"deleteConfirm": "Remove",
 				"cancel": "Cancel",
 				"deleteFailed": "We couldn’t remove the constraint. Try again.",
-				"deleteForbidden": "You no longer have permission to change the Scheduling policy.",
+				"deleteForbidden": "You no longer have permission to change the work policy.",
 				"termsLink": "Normal hours come from each person’s employment terms in <0>Employment</0>."
 			}
 		},
@@ -2388,15 +2388,15 @@
 				}
 			},
 			"scheduling_policy": {
-				"name": "Scheduling policy",
-				"description": "The company’s own constraints, set once for every department: locked ones each department must keep and can only make stricter, and defaults it may leave out.",
+				"name": "Work policy",
+				"description": "The company’s own constraints, for the whole company or chosen branches or departments: locked ones each department must keep and can only make stricter, and defaults it may leave out.",
 				"actions": {
-					"read": "See the scheduling policy",
-					"update": "Change the scheduling policy"
+					"read": "See the work policy",
+					"update": "Change the work policy"
 				},
 				"actionHints": {
-					"read": "The constraints set once for every department",
-					"update": "Locked constraints every department keeps, and defaults"
+					"read": "The constraints set for the whole company or chosen branches or departments",
+					"update": "Locked constraints and defaults, and where each applies"
 				}
 			},
 			"employment_terms": {
@@ -2457,7 +2457,7 @@
 				},
 				"company_settings": {
 					"name": "Company settings",
-					"description": "The workspace, skills, employment terms, leave types and the scheduling policy."
+					"description": "The workspace, skills, employment terms, leave types and the work policy."
 				},
 				"access_and_activity": {
 					"name": "Access and activity",
@@ -2530,9 +2530,9 @@
 				"skillUpdated": "Skill updated: {{name}}",
 				"skillDeleted": "Skill deleted: {{name}}",
 				"skillAssigned": "Skill assigned to people: {{name}}",
-				"schedulingPolicyCreated": "Scheduling policy constraint added: {{name}}",
-				"schedulingPolicyUpdated": "Scheduling policy constraint changed: {{name}}",
-				"schedulingPolicyDeleted": "Scheduling policy constraint removed: {{name}}",
+				"schedulingPolicyCreated": "Work policy constraint added: {{name}}",
+				"schedulingPolicyUpdated": "Work policy constraint changed: {{name}}",
+				"schedulingPolicyDeleted": "Work policy constraint removed: {{name}}",
 				"leaveTypeCreated": "Leave type added: {{name}}",
 				"leaveTypeUpdated": "Leave type changed: {{name}}",
 				"leaveTypesReordered": "Leave types reordered",
@@ -2585,9 +2585,9 @@
 				"skillUpdated": "Skill updated",
 				"skillDeleted": "Skill deleted",
 				"skillAssigned": "Skill assigned to people",
-				"schedulingPolicyCreated": "Scheduling policy constraint added",
-				"schedulingPolicyUpdated": "Scheduling policy constraint changed",
-				"schedulingPolicyDeleted": "Scheduling policy constraint removed",
+				"schedulingPolicyCreated": "Work policy constraint added",
+				"schedulingPolicyUpdated": "Work policy constraint changed",
+				"schedulingPolicyDeleted": "Work policy constraint removed",
 				"leaveTypeCreated": "Leave type added",
 				"leaveTypeUpdated": "Leave type changed",
 				"leaveTypesReordered": "Leave types reordered",
@@ -3431,7 +3431,7 @@
 				"typeFixed": "A company constraint’s type can’t be changed. Add a new constraint instead.",
 				"department": "Department",
 				"departmentPlaceholder": "Select a department",
-				"departmentHint": "Constraints belong to one department; company-wide ones are set in Settings.",
+				"departmentHint": "Constraints belong to one department; work policy ones are set in Settings.",
 				"departmentsEmpty": "No active department you can add constraints to.",
 				"optionsNeedDepartment": "Choose a department first.",
 				"typeHintEmpty": "Choose one to see an example.",
@@ -3443,10 +3443,10 @@
 			},
 			"setBy": "Set by",
 			"levels": {
-				"COMPANY": "Company",
+				"COMPANY": "Work policy",
 				"DEPARTMENT": "This department"
 			},
-			"setByCompany": "Set by company",
+			"setByCompany": "Set in the work policy",
 			"stricterHere": "Stricter here",
 			"changedHere": "Changed here",
 			"makeStricter": "Make {{name}} stricter here",
@@ -3455,8 +3455,8 @@
 				"LOCKED": "Locked",
 				"DEFAULT": "Default"
 			},
-			"companyRuleApplies": "Company rule applies",
-			"companyRuleAppliesHint": "The company’s constraint is now stricter than this one, so both apply.",
+			"companyRuleApplies": "Work policy applies",
+			"companyRuleAppliesHint": "The work policy’s constraint is now stricter than this one, so both apply.",
 			"department": "Department",
 			"allDepartments": "All departments",
 			"allConstraints": "All",
@@ -4165,11 +4165,12 @@
 			"constraints": "Constraints"
 		},
 		"constraintsTab": {
-			"descriptionOne": "How {{department}} is staffed and rested. Company constraints come first; locked ones always apply.",
-			"descriptionAll": "How each department is staffed and rested. Company constraints apply to every department; locked ones always apply.",
+			"descriptionOne": "How {{department}} is staffed and rested. Work policy constraints come first; locked ones always apply.",
+			"descriptionAll": "How each department is staffed and rested. Work policy constraints apply where they reach; locked ones always apply.",
 			"search": "Search constraints",
 			"noMatch": "No constraints match your search.",
-			"emptyGuide": "No department constraints yet. Start with a staffing constraint: how many people each shift needs."
+			"emptyGuide": "No department constraints yet. Start with a staffing constraint: how many people each shift needs.",
+			"openWorkPolicy": "Open work policy"
 		},
 		"readiness": {
 			"departmentsNotReady_one": "{{count}} department isn’t ready to schedule:",
@@ -4190,7 +4191,7 @@
 			"intro": "Untick to leave something out of this week only. {{department}} keeps it.",
 			"shifts": "Shifts",
 			"constraints": "Constraints",
-			"locked": "Locked: always applies.",
+			"locked": "Locked by the work policy.",
 			"leavesOut": "Uses {{shifts, list}}, which this week leaves out.",
 			"shiftGone": "Uses a shift that no longer exists.",
 			"noShift": "Choose at least one shift for this week.",
@@ -4233,6 +4234,30 @@
 			"noLongerShift": "{{department}} no longer has a shift, so this schedule can’t be generated.",
 			"noLongerStaffing": "{{department}} no longer has a staffing constraint, so this schedule can’t be generated.",
 			"noLongerNote": "Fix {{department}}’s setup to generate."
+		},
+		"policy": {
+			"reach": {
+				"label": "Applies to",
+				"choices": {
+					"COMPANY": "Whole company",
+					"BRANCHES": "Chosen branches",
+					"DEPARTMENTS": "Chosen departments"
+				},
+				"descriptions": {
+					"COMPANY": "Every department, now and later.",
+					"BRANCHES": "Every department in the branches you choose.",
+					"DEPARTMENTS": "Only the departments you choose."
+				},
+				"branchesHint": "A branch includes departments added to it later.",
+				"departmentsHint": "Departments added later aren’t included.",
+				"branchesRequired": "Choose at least one branch.",
+				"departmentsRequired": "Choose at least one department.",
+				"branchesPlaceholder": "Select branches",
+				"departmentsPlaceholder": "Select departments",
+				"selectAll": "Select all",
+				"wholeCompany": "All departments",
+				"branch": "{{name}} (branch)"
+			}
 		}
 	},
 	"colourSwatchPicker": {
@@ -4341,7 +4366,7 @@
 	"employmentTerms": {
 		"panel": {
 			"title": "Employment terms",
-			"subtitle": "The working week each kind of contract sets: working days, normal hours and rest day. Give them to people from their profile or the People list. Limits every roster must keep are in <0>Scheduling</0>.",
+			"subtitle": "The working week each kind of contract sets: working days, normal hours and rest day. Give them to people from their profile or the People list. Limits rosters must keep are in the <0>Work policy</0>.",
 			"add": "Add employment terms",
 			"label": "Employment terms",
 			"terms": "Terms",

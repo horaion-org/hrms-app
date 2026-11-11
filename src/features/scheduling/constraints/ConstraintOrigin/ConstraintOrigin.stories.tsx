@@ -65,5 +65,5 @@ export const Department: Story = {
 		},
 	},
 };
-/** On the Scheduling policy's own list, only the lock. */
+/** On the work policy's own list, only the lock. */
 export const LockOnly: Story = { args: { showLevel: false } };

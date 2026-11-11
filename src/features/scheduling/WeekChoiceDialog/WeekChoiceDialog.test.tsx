@@ -111,7 +111,7 @@ describe("WeekChoiceDialog", () => {
 		expect(box("Company rest")).toBeChecked();
 		expect(box("Company rest")).toBeDisabled();
 		expect(screen.getByRole("row", { name: /Company rest/ })).toHaveTextContent(
-			"Locked: always applies."
+			"Locked by the work policy."
 		);
 	});
 
