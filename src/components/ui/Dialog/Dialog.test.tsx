@@ -129,4 +129,57 @@ describe("Dialog", () => {
 			"supports-[height:100dvh]:max-h-[calc(100dvh-1rem)]"
 		);
 	});
+
+	it("leaves out the body when there is nothing to show and keeps one divider", () => {
+		render(
+			<I18nextProvider i18n={i18n}>
+				<Dialog
+					open
+					description="The schedule and its shifts are removed."
+					footer={<button>Cancel</button>}
+					title="Delete schedule"
+					onClose={vi.fn()}
+				>
+					{undefined}
+					{false}
+					{""}
+				</Dialog>
+			</I18nextProvider>
+		);
+		const header = screen
+			.getByRole("heading", { name: "Delete schedule" })
+			.closest("header");
+		const footer = screen
+			.getByRole("button", { name: "Cancel" })
+			.closest("footer");
+
+		// Header and footer sit next to each other, with only the footer's top line between them.
+		expect(header?.nextElementSibling).toBe(footer);
+		expect(header).not.toHaveClass("border-b");
+		expect(footer).toHaveClass("border-t");
+	});
+
+	it("renders the body between header and footer when it has content", () => {
+		render(
+			<I18nextProvider i18n={i18n}>
+				<Dialog
+					open
+					footer={<button>Cancel</button>}
+					title="Create branch"
+					onClose={vi.fn()}
+				>
+					Branch details
+				</Dialog>
+			</I18nextProvider>
+		);
+		const header = screen
+			.getByRole("heading", { name: "Create branch" })
+			.closest("header");
+		const body = header?.nextElementSibling;
+
+		expect(header).toHaveClass("border-b");
+		expect(body).toHaveTextContent("Branch details");
+		expect(body).toHaveClass("min-h-0", "overflow-y-auto", "p-4", "sm:p-6");
+		expect(body?.nextElementSibling?.tagName).toBe("FOOTER");
+	});
 });

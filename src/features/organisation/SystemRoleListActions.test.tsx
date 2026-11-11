@@ -87,6 +87,18 @@ const routes = (
 	[`DELETE ${ASSIGNMENT_PATH}`]: { status: 204 },
 });
 
+/**
+ * Closing a Combobox puts focus back on its trigger on the next animation frame.
+ * Let that land before the next step, or it pulls focus out of whatever the test
+ * opens or focuses next, and a picker opened in the meantime closes again.
+ */
+const afterFocusReturns = (): Promise<void> =>
+	new Promise((resolve) => {
+		requestAnimationFrame(() => {
+			resolve();
+		});
+	});
+
 let app: OpenedApp | undefined;
 beforeEach(() => {
 	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
@@ -558,6 +570,7 @@ describe("Access role people, checked at each assignment's own place", () => {
 			(await screen.findAllByRole("option")).map((option) => option.textContent)
 		).toEqual(["Orchard › Kitchen"]);
 		await userEvent.keyboard("{Escape}");
+		await afterFocusReturns();
 		await userEvent.click(within(dialog).getByLabelText("Person"));
 		expect(
 			await screen.findByRole("option", { name: "Alice Lim" })

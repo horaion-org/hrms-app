@@ -5,7 +5,7 @@ import {
 	DialogPanel,
 	DialogTitle,
 } from "@headlessui/react";
-import type { ReactNode } from "react";
+import { Children, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/Button";
 import { CloseIcon } from "@/components/ui/Icon";
@@ -48,6 +48,8 @@ export const Dialog = ({
 	className,
 }: DialogProps): FunctionComponent => {
 	const { t } = useTranslation();
+	// `Children.toArray` drops null, undefined and booleans; an empty string is left to drop here.
+	const hasBody = Children.toArray(children).some((child) => child !== "");
 	const close = (): void => {
 		if (!preventClose) onClose();
 	};
@@ -62,7 +64,12 @@ export const Dialog = ({
 						className
 					)}
 				>
-					<header className="shrink-0 border-b border-neutral-200 p-4 sm:p-6">
+					<header
+						className={joinClassNames(
+							"shrink-0 border-neutral-200 p-4 sm:p-6",
+							hasBody && "border-b"
+						)}
+					>
 						<div className="flex items-start justify-between gap-4">
 							<DialogTitle className="text-xl font-semibold text-neutral-900">
 								{title}
@@ -82,7 +89,9 @@ export const Dialog = ({
 							</Description>
 						)}
 					</header>
-					<div className="min-h-0 overflow-y-auto p-4 sm:p-6">{children}</div>
+					{hasBody && (
+						<div className="min-h-0 overflow-y-auto p-4 sm:p-6">{children}</div>
+					)}
 					{footer && (
 						<footer className="shrink-0 border-t border-neutral-200 p-4 sm:p-6">
 							{footer}
