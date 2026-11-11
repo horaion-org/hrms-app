@@ -2945,7 +2945,7 @@
 			"title": "Seleccionar turnos",
 			"description": "Elige qué turnos del departamento incluye este horario. Un cambio en un turno se aplica a todos los borradores del departamento.",
 			"frozenDescription": "Los turnos con los que se generó este horario, tal como eran entonces. Al regenerar se conservan; un cambio posterior en un turno solo llega a un horario nuevo.",
-			"add": "Añadir turno personalizado",
+			"add": "Añadir turno",
 			"label": "Turnos",
 			"allShifts": "Todos",
 			"groups": "Grupos de turnos",
@@ -2973,7 +2973,7 @@
 			"deleteForbidden": "Ya no tienes permiso para eliminar turnos aquí.",
 			"deleteFailed": "No pudimos eliminar el turno. Inténtalo de nuevo.",
 			"dialog": {
-				"title": "Añadir turno personalizado",
+				"title": "Añadir turno",
 				"editTitle": "Editar turno",
 				"name": "Nombre del turno",
 				"namePlaceholder": "p. ej., Turno de mañana",

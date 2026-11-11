@@ -189,7 +189,7 @@ describe("ShiftsStep", () => {
 		);
 
 		expect(
-			screen.queryByRole("button", { name: "Add custom shift" })
+			screen.queryByRole("button", { name: "Add shift" })
 		).toBeNull();
 		expect(screen.queryByRole("button", { name: /^Edit / })).toBeNull();
 		expect(screen.queryByRole("button", { name: /^Delete / })).toBeNull();
@@ -209,7 +209,7 @@ describe("ShiftsStep", () => {
 			/>
 		);
 
-		await user.click(screen.getByRole("button", { name: "Add custom shift" }));
+		await user.click(screen.getByRole("button", { name: "Add shift" }));
 		await user.click(
 			screen.getByRole("button", { name: "Edit Front Desk AM" })
 		);
