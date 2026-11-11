@@ -18,8 +18,10 @@ import {
 import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
 import {
+	BRANCH_POLICY_FIXTURE,
 	COMPANY_CONSTRAINT_FIXTURES,
 	CONSTRAINT_OPTIONS_RESPONSE,
+	DEPARTMENTS_POLICY_FIXTURE,
 } from "@/features/scheduling/constraints/fixtures";
 
 const REFRESH = "POST /api/v1/public/sessions/refreshes";
@@ -96,6 +98,92 @@ describe("SchedulingPolicySettings", () => {
 		).toBeVisible();
 	});
 
+	it("says where each constraint applies", async () => {
+		stubApi(
+			routes(READ_AND_UPDATE, {
+				[`GET ${POLICY}/constraints`]: {
+					status: 200,
+					body: envelope([
+						...COMPANY_CONSTRAINT_FIXTURES,
+						DEPARTMENTS_POLICY_FIXTURE,
+						BRANCH_POLICY_FIXTURE,
+					]),
+				},
+			})
+		);
+		const panel = await open();
+
+		const table = await within(panel).findByRole("table", {
+			name: "Scheduling policy constraints",
+		});
+		expect(
+			within(table).getByRole("columnheader", { name: "Applies to" })
+		).toBeInTheDocument();
+		expect(
+			within(table).getByRole("row", { name: /Company rest/ })
+		).toHaveTextContent("All departments");
+		expect(
+			within(table).getByRole("row", { name: /Kitchen and Bar rest/ })
+		).toHaveTextContent("Bar, Kitchen");
+		expect(
+			within(table).getByRole("row", { name: /Orchard weekends/ })
+		).toHaveTextContent("Orchard (branch)");
+	});
+
+	it("adds a constraint for chosen departments", async () => {
+		const calls = stubApi(
+			routes(READ_AND_UPDATE, {
+				[`POST ${POLICY}/constraints`]: {
+					status: 201,
+					body: envelope(DEPARTMENTS_POLICY_FIXTURE),
+				},
+			})
+		);
+		const user = userEvent.setup();
+		const panel = await open();
+
+		await user.click(
+			await within(panel).findByRole("button", { name: "Add constraint" })
+		);
+		const dialog = await screen.findByRole("dialog", {
+			name: "Add constraint",
+		});
+		await user.type(within(dialog).getByLabelText("Constraint name"), "Rest");
+		await user.click(
+			within(dialog).getByRole("button", { name: /^Constraint type/ })
+		);
+		await user.click(
+			await screen.findByRole("option", {
+				name: "Working hours: Rest between shifts",
+			})
+		);
+		await user.click(
+			within(dialog).getByRole("radio", { name: "Chosen departments" })
+		);
+		await user.click(
+			within(dialog).getByRole("button", { name: /^Chosen departments/ })
+		);
+		await user.click(await screen.findByRole("option", { name: "Front" }));
+		await user.keyboard("{Escape}");
+		await user.type(
+			within(dialog).getByRole("spinbutton", { name: /Rest/ }),
+			"11"
+		);
+		await user.click(within(dialog).getByRole("button", { name: "Save" }));
+
+		await waitFor(() => {
+			expect(
+				calls.find(
+					(call) =>
+						call.method === "POST" && call.path === `${POLICY}/constraints`
+				)?.body
+			).toMatchObject({
+				appliesToBranchIds: [],
+				appliesToDepartmentIds: ["d-3"],
+			});
+		});
+	});
+
 	it("offers no changes without scheduling_policy:update", async () => {
 		stubApi(routes(["scheduling_policy:read"]));
 		const panel = await open();
@@ -157,6 +245,8 @@ describe("SchedulingPolicySettings", () => {
 				type: "REST_BETWEEN_SHIFTS",
 				lock: "LOCKED",
 				values: [{ field: "REST_HOURS", value: "11" }],
+				appliesToBranchIds: [],
+				appliesToDepartmentIds: [],
 			});
 		});
 	});
