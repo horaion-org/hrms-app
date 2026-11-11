@@ -148,7 +148,7 @@ const ACTIVITIES: Record<string, { key: ActivityKey; icon: Heroicon }> = {
 		key: "rosterChangeUndone",
 		icon: SchedulingIcon,
 	},
-	// The company's Scheduling policy (ADR-0058): constraints set for every department.
+	// The company's work policy (ADR-0058, ADR-0072): constraints for the whole company or chosen units.
 	"scheduling_policy.create": {
 		key: "schedulingPolicyCreated",
 		icon: SchedulingIcon,

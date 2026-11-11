@@ -15,7 +15,7 @@ export type ConstraintOriginProps = {
 		| "replacementStatus"
 		| "replacesCompanyConstraint"
 	>;
-	/** Names the level too ("Company · Locked"); the Scheduling policy's own list leaves it out. */
+	/** Names the source too ("Work policy · Locked"); the work policy's own list leaves it out. */
 	showLevel?: boolean;
 	className?: string;
 };
@@ -38,8 +38,8 @@ const standsIn = (constraint: ConstraintOriginProps["constraint"]): boolean => {
 /**
  * Where a constraint comes from and how firmly it binds (ADR-0058), as a
  * Badge, or muted text for the department's own:
- * - a company constraint names its lock ("Company · Locked"), with a lock
- *   named "Set by company" when it is locked;
+ * - a work-policy constraint names its lock ("Work policy · Locked"), with a
+ *   lock titled "Set in the work policy" when it is locked;
  * - a department's replacement reads "Stricter here" (a locked one) or
  *   "Changed here" (a default);
  * - a replacement the company constraint has since been tightened past reads

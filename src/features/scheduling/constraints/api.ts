@@ -23,8 +23,9 @@ import { retry } from "@/features/workspace/retry";
  * form from that. Paths, fields and codes follow the API's
  * `docs/implementation/2026-10-12-scheduling-constraints.md` and ADR-0050.
  *
- * A Department also sees its company's Scheduling policy (ADR-0058): the
- * company's constraints come first in its list, each with its lock, and a
+ * A Department also sees its company's work policy (ADR-0058): the
+ * work-policy constraints that reach it (ADR-0072) come first in its list,
+ * each with its lock, and a
  * Department may replace one for itself (`overridesConstraintId`), never less
  * strictly than a locked one.
  */
@@ -206,7 +207,7 @@ export const departmentConstraintSchema = z.object({
 	createdAt: z.string(),
 	updatedAt: z.string(),
 	level: policyLevelSchema,
-	/** A company constraint's lock; null for a Department's own. */
+	/** A work-policy constraint's lock; null for a Department's own. */
 	lock: policyLockSchema,
 	/**
 	 * Where a work-policy constraint applies: its chosen Branches or its chosen

@@ -116,7 +116,7 @@ describe("PermissionChecklist", () => {
 			"Skills",
 			"Employment terms",
 			"Leave types",
-			"Scheduling policy",
+			"Work policy",
 			"Access roles",
 			"Activity",
 		]);

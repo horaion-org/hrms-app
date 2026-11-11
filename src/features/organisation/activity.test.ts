@@ -95,12 +95,12 @@ describe("describeActivity", () => {
 		["skill.delete", "Skill deleted: Orchard", SkillsIcon],
 		[
 			"scheduling_policy.create",
-			"Scheduling policy constraint added: Orchard",
+			"Work policy constraint added: Orchard",
 			SchedulingIcon,
 		],
 		[
 			"scheduling_policy.delete",
-			"Scheduling policy constraint removed: Orchard",
+			"Work policy constraint removed: Orchard",
 			SchedulingIcon,
 		],
 		[
@@ -183,7 +183,7 @@ describe("describeActivity", () => {
 		["schedule.roster_change.apply", "Roster changed"],
 		["member_skill.replace", "Employee skills updated"],
 		["skill.delete", "Skill deleted"],
-		["scheduling_policy.update", "Scheduling policy constraint changed"],
+		["scheduling_policy.update", "Work policy constraint changed"],
 		["member_skill.bulk_assign", "Skill assigned to people"],
 		["employment_terms.status", "Employment terms status changed"],
 		[

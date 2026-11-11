@@ -192,7 +192,7 @@ describe("ConstraintsTab", () => {
 		).toHaveTextContent("Bar");
 		expect(
 			screen.getByText(
-				"How each department is staffed and rested. Company constraints apply to every department; locked ones always apply."
+				"How each department is staffed and rested. Work policy constraints apply where they reach; locked ones always apply."
 			)
 		).toBeVisible();
 	});

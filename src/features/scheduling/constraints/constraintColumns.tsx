@@ -11,7 +11,7 @@ import type { Constraint } from "@/features/scheduling/scheduleDraft";
 
 /*
  * The columns every list of constraints shares, so a schedule's Constraints
- * step and the company's Scheduling policy read the same and later list work
+ * step and the company's work policy read the same and later list work
  * changes one place: the name, the constraint as it reads (its firmness tag,
  * its sentence and who it applies to) and the status. Each list adds its own
  * columns around them.

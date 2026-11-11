@@ -27,9 +27,11 @@ describe("ConstraintOrigin", () => {
 		});
 
 		expect(
-			screen.getByRole("img", { name: "Set by company" })
+			screen.getByRole("img", {
+				name: "Set in the work policy; ask an admin to change it.",
+			})
 		).toBeInTheDocument();
-		expect(screen.getByText("Company · Locked")).toBeInTheDocument();
+		expect(screen.getByText("Work policy · Locked")).toBeInTheDocument();
 	});
 
 	it("shows a company default without a lock", () => {
@@ -73,11 +75,11 @@ describe("ConstraintOrigin", () => {
 			},
 		});
 
-		const badge = screen.getByText("Company rule applies");
+		const badge = screen.getByText("Work policy applies");
 		expect(badge).toHaveClass("bg-warning-100");
 		expect(badge).toHaveAttribute(
 			"title",
-			"The company’s constraint is now stricter than this one, so both apply."
+			"The work policy’s constraint is now stricter than this one, so both apply."
 		);
 		expect(screen.queryByText("Stricter here")).not.toBeInTheDocument();
 	});

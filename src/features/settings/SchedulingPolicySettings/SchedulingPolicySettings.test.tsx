@@ -69,7 +69,7 @@ const routes = (
 const open = async (): Promise<HTMLElement> => {
 	app = await openApp("/settings?section=scheduling");
 	renderAuthApp(app);
-	return screen.findByRole("tabpanel", { name: "Scheduling" });
+	return screen.findByRole("tabpanel", { name: "Work policy" });
 };
 
 describe("SchedulingPolicySettings", () => {
@@ -78,7 +78,7 @@ describe("SchedulingPolicySettings", () => {
 		const panel = await open();
 
 		const table = await within(panel).findByRole("table", {
-			name: "Scheduling policy constraints",
+			name: "Work policy constraints",
 		});
 		const rest = within(table).getByRole("row", { name: /Company rest/ });
 		expect(rest).toHaveTextContent(
@@ -114,7 +114,7 @@ describe("SchedulingPolicySettings", () => {
 		const panel = await open();
 
 		const table = await within(panel).findByRole("table", {
-			name: "Scheduling policy constraints",
+			name: "Work policy constraints",
 		});
 		expect(
 			within(table).getByRole("columnheader", { name: "Applies to" })
@@ -189,7 +189,7 @@ describe("SchedulingPolicySettings", () => {
 		const panel = await open();
 
 		await within(panel).findByRole("table", {
-			name: "Scheduling policy constraints",
+			name: "Work policy constraints",
 		});
 		expect(
 			within(panel).queryByRole("button", { name: "Add constraint" })
@@ -289,7 +289,7 @@ describe("SchedulingPolicySettings", () => {
 			});
 		});
 		expect(
-			await screen.findByText("Scheduling policy constraint saved")
+			await screen.findByText("Work policy constraint saved")
 		).toBeVisible();
 	});
 
@@ -348,7 +348,7 @@ describe("SchedulingPolicySettings", () => {
 
 		expect(
 			await within(panel).findByText(
-				"You don’t have permission to see the Scheduling policy."
+				"You don’t have permission to see the work policy."
 			)
 		).toBeVisible();
 		expect(within(panel).queryByRole("alert")).toBeNull();
@@ -363,7 +363,7 @@ describe("SchedulingPolicySettings", () => {
 		const panel = await open();
 
 		expect(await within(panel).findByRole("alert")).toHaveTextContent(
-			"We couldn’t load the Scheduling policy. Try again."
+			"We couldn’t load the work policy. Try again."
 		);
 	});
 
@@ -372,7 +372,7 @@ describe("SchedulingPolicySettings", () => {
 		const panel = await open();
 
 		expect(panel).toHaveTextContent(
-			"You don’t have permission to see the Scheduling policy."
+			"You don’t have permission to see the work policy."
 		);
 		expect(calls.some((call) => call.path === `${POLICY}/constraints`)).toBe(
 			false
