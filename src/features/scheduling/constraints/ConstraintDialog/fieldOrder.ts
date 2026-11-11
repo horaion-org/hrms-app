@@ -42,3 +42,23 @@ export const fieldsInReadingOrder = (
 		(first, second) => placeOf(first) - placeOf(second)
 	);
 };
+
+/**
+ * A type's fields as the dialog's rows: a comparison and the number it
+ * compares share one row ("At least" beside "2"); every other field has its own.
+ */
+export const fieldRowsInReadingOrder = (
+	option: Pick<ConstraintTypeOption, "type" | "fields">
+): Array<Array<ConstraintFieldSpec>> => {
+	const rows: Array<Array<ConstraintFieldSpec>> = [];
+	for (const spec of fieldsInReadingOrder(option)) {
+		const previous = rows[rows.length - 1];
+		const pairsWithPrevious =
+			previous?.length === 1 &&
+			previous[0]?.kind === "COMPARISON" &&
+			spec.kind === "NUMBER";
+		if (previous && pairsWithPrevious) previous.push(spec);
+		else rows.push([spec]);
+	}
+	return rows;
+};

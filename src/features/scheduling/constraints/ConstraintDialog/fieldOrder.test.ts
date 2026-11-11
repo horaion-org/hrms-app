@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { ConstraintFieldSpec } from "@/features/scheduling/constraints/api";
-import { fieldsInReadingOrder } from "@/features/scheduling/constraints/ConstraintDialog/fieldOrder";
+import {
+	fieldRowsInReadingOrder,
+	fieldsInReadingOrder,
+} from "@/features/scheduling/constraints/ConstraintDialog/fieldOrder";
 import { CONSTRAINT_TYPE_OPTIONS } from "@/features/scheduling/constraints/fixtures";
 
 const fieldsOf = (specs: Array<ConstraintFieldSpec>): Array<string> =>
@@ -40,5 +43,26 @@ describe("fieldsInReadingOrder", () => {
 				fieldsInReadingOrder({ ...rest, fields: [unknown, ...rest.fields] })
 			)
 		).toEqual(["REST_HOURS", "WEEKDAY"]);
+	});
+});
+
+describe("fieldRowsInReadingOrder", () => {
+	it.each([
+		["SHIFT_STAFFING", [["SHIFT"], ["COMPARISON", "HEADCOUNT"], ["JOB_TITLE"]]],
+		["DAYS_OFF_PER_PERIOD", [["COMPARISON", "DAYS_OFF"], ["PERIOD_DAYS"]]],
+		[
+			"SHIFT_STAFFING_WITH_STAND_INS",
+			[
+				["SHIFT"],
+				["HEADCOUNT"],
+				["JOB_TITLE"],
+				["STAND_INS_PER_PERSON"],
+				["STAND_IN_JOB_TITLE"],
+			],
+		],
+	])("puts %s's comparison and its number on one row", (type, rows) => {
+		const option = CONSTRAINT_TYPE_OPTIONS.find((each) => each.type === type)!;
+
+		expect(fieldRowsInReadingOrder(option).map(fieldsOf)).toEqual(rows);
 	});
 });

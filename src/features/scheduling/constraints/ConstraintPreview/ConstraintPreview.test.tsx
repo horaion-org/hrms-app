@@ -4,7 +4,6 @@ import { initReactI18next } from "react-i18next";
 import { beforeAll, describe, expect, it } from "vitest";
 import en from "@/assets/locales/en/translations.json";
 import { ConstraintPreview } from "@/features/scheduling/constraints/ConstraintPreview";
-import { CONSTRAINT_TYPE_OPTIONS } from "@/features/scheduling/constraints/fixtures";
 
 beforeAll(async () => {
 	await createInstance()
@@ -12,35 +11,29 @@ beforeAll(async () => {
 		.init({ lng: "en", resources: { en: { translation: en } } });
 });
 
-const shiftStaffing = CONSTRAINT_TYPE_OPTIONS[0]!;
-const daysOff = CONSTRAINT_TYPE_OPTIONS[3]!;
-const fieldsOf = (
-	option: typeof shiftStaffing
-): Array<(typeof option.fields)[number]["field"]> =>
-	option.fields.map((spec) => spec.field);
-
 describe("ConstraintPreview", () => {
-	it("given_missingParts_when_rendered_then_showsTheirLabelsAndIncomplete", () => {
+	it("given_nothingChosenYet_when_rendered_then_readsGreyWordsAndNoCompletenessBadge", () => {
 		render(
 			<ConstraintPreview
-				constraint={{ type: "SHIFT_STAFFING", values: [] }}
-				fields={fieldsOf(shiftStaffing)}
+				constraint={{ type: "SHIFT_STAFFING", requirement: null, values: [] }}
 			/>
 		);
 
-		expect(screen.getByText("Incomplete")).toBeInTheDocument();
-		expect(screen.getByRole("paragraph")).toHaveTextContent(
-			"Shifts needs at least Headcount people as Job titles."
+		expect(
+			screen.getByRole("region", { name: "How it reads" })
+		).toHaveTextContent(
+			"How it readsMust or if possible which shift needs at least how many people as which job titles."
 		);
-		expect(screen.getByText("Headcount")).toHaveClass("bg-neutral-300");
+		expect(screen.queryByText("Incomplete")).toBeNull();
 	});
 
-	it("given_everyPart_when_rendered_then_readsTheConstraintAsComplete", () => {
+	it("given_everyPart_when_rendered_then_readsAsTheListWill", () => {
 		render(
 			<ConstraintPreview
-				fields={fieldsOf(daysOff)}
+				appliesTo="Everyone rostered in Sales"
 				constraint={{
 					type: "DAYS_OFF_PER_PERIOD",
+					requirement: "SHOULD",
 					values: [
 						{ field: "COMPARISON", value: "AT_LEAST", name: null },
 						{ field: "DAYS_OFF", value: "2", name: null },
@@ -50,10 +43,10 @@ describe("ConstraintPreview", () => {
 			/>
 		);
 
-		expect(screen.getByText("Complete")).toBeInTheDocument();
-		expect(screen.getByRole("paragraph")).toHaveTextContent(
-			"Everyone gets at least 2 days off in any 7 days in a row."
+		expect(
+			screen.getByRole("region", { name: "How it reads" })
+		).toHaveTextContent(
+			"If possible Everyone gets at least 2 days off in any 7 days in a row.Everyone rostered in Sales"
 		);
-		expect(screen.getByText("2")).toHaveClass("bg-ink-blue-50");
 	});
 });

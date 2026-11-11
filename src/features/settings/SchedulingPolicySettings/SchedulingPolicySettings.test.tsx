@@ -139,7 +139,7 @@ describe("SchedulingPolicySettings", () => {
 			})
 		);
 		await user.type(
-			within(dialog).getByRole("spinbutton", { name: /Rest/ }),
+			within(dialog).getByRole("spinbutton", { name: /^Hours off/ }),
 			"11"
 		);
 		await user.click(within(dialog).getByRole("button", { name: "Save" }));
@@ -177,7 +177,7 @@ describe("SchedulingPolicySettings", () => {
 		const dialog = await screen.findByRole("dialog", {
 			name: "Edit constraint",
 		});
-		const rest = within(dialog).getByRole("spinbutton", { name: /Rest/ });
+		const rest = within(dialog).getByRole("spinbutton", { name: /^Hours off/ });
 		await user.clear(rest);
 		await user.type(rest, "12");
 		await user.click(within(dialog).getByRole("button", { name: "Save" }));
@@ -229,7 +229,7 @@ describe("SchedulingPolicySettings", () => {
 			})
 		);
 		await user.type(
-			within(dialog).getByRole("spinbutton", { name: /Rest/ }),
+			within(dialog).getByRole("spinbutton", { name: /^Hours off/ }),
 			"12"
 		);
 		await user.click(within(dialog).getByRole("button", { name: "Save" }));

@@ -25,7 +25,8 @@ import {
 	type ConstraintTypeOption,
 } from "@/features/scheduling/constraints/api";
 import { constraintRefusal } from "@/features/scheduling/constraints/constraintRefusal";
-import { fieldsInReadingOrder } from "@/features/scheduling/constraints/ConstraintDialog/fieldOrder";
+import { fieldRowsInReadingOrder } from "@/features/scheduling/constraints/ConstraintDialog/fieldOrder";
+import { appliesToOf } from "@/features/scheduling/constraints/appliesTo";
 import {
 	constraintSchema,
 	type ConstraintDialogBody,
@@ -68,6 +69,22 @@ export type ConstraintDialogProps = {
 };
 
 const FIELDS = ["name", "type"] as const;
+
+/** The fields whose row carries a hint; the others say enough in their label. */
+const HINTED_FIELDS = [
+	"SHIFT",
+	"HEADCOUNT",
+	"JOB_TITLE",
+	"STAND_INS_PER_PERSON",
+	"DAYS_OFF",
+	"PERIOD_DAYS",
+	"REST_HOURS",
+] as const satisfies ReadonlyArray<ConstraintField>;
+
+type HintedField = (typeof HINTED_FIELDS)[number];
+
+const isHinted = (field: ConstraintField): field is HintedField =>
+	(HINTED_FIELDS as ReadonlyArray<ConstraintField>).includes(field);
 
 /** A row of the form: one of its own fields, or one of the type's. */
 type FieldName = keyof ConstraintFormValues | ConstraintField;
@@ -134,9 +151,9 @@ export const ConstraintDialog = ({
 		setValue,
 		formState: { errors, isSubmitting },
 	} = form;
-	const [name, type, values] = useWatch({
+	const [name, type, requirement, values] = useWatch({
 		control,
-		name: ["name", "type", "values"],
+		name: ["name", "type", "requirement", "values"],
 	});
 	const chosen = typeOf(type);
 	const { message, alertRef, close, run } = useCreateFormSubmit(
@@ -285,17 +302,23 @@ export const ConstraintDialog = ({
 			/>
 		</FormRow>
 	);
-	const valueRow = (spec: ConstraintFieldSpec): FunctionComponent => {
+	const valueRow = (
+		spec: ConstraintFieldSpec,
+		className?: string
+	): FunctionComponent => {
 		const id = fieldId(spec.field);
 		const error = errors.values?.[spec.field]?.message;
-		const hint =
-			spec.kind === "NUMBER"
-				? t(`${key}.numberHint`, { min: spec.min, max: spec.max })
-				: undefined;
+		const hint = isHinted(spec.field)
+			? t(`scheduling.constraints.fieldHints.${spec.field}`, {
+					min: spec.min,
+					max: spec.max,
+				})
+			: undefined;
 		return (
 			<FormRow
 				key={spec.field}
 				required
+				className={className}
 				error={error}
 				hint={hint}
 				htmlFor={id}
@@ -327,7 +350,6 @@ export const ConstraintDialog = ({
 									inputMode="numeric"
 									max={spec.max ?? undefined}
 									min={spec.min ?? undefined}
-									placeholder={t(`${key}.enterNumber`)}
 									type="number"
 									value={value[0] ?? ""}
 									onChange={(event) => {
@@ -514,9 +536,36 @@ export const ConstraintDialog = ({
 				{chosen && (
 					<>
 						<ConstraintPreview
-							constraint={{ type: chosen.type, values: filledValues(chosen) }}
-							fields={chosen.fields.map((spec) => spec.field)}
+							appliesTo={appliesToOf(
+								{
+									type: chosen.type,
+									level: withLock ? "COMPANY" : "DEPARTMENT",
+									values: filledValues(chosen),
+								},
+								t
+							)}
+							constraint={{
+								type: chosen.type,
+								requirement: chosen.hasRequirement
+									? (CONSTRAINT_REQUIREMENTS.find(
+											(choice) => choice === requirement
+										) ?? null)
+									: null,
+								values: filledValues(chosen),
+							}}
 						/>
+						{fieldRowsInReadingOrder(chosen).map((row) =>
+							row.length === 1 ? (
+								valueRow(row[0]!)
+							) : (
+								<div
+									key={row.map((spec) => spec.field).join("-")}
+									className="flex flex-col gap-6 sm:flex-row"
+								>
+									{row.map((spec) => valueRow(spec, "sm:flex-1"))}
+								</div>
+							)
+						)}
 						<div className="flex flex-col gap-6 sm:flex-row">
 							{chosen.hasRequirement &&
 								selectRow(
@@ -526,7 +575,6 @@ export const ConstraintDialog = ({
 								)}
 							{selectRow("status", statusOptions, t(`${key}.statusHint`))}
 						</div>
-						{fieldsInReadingOrder(chosen).map(valueRow)}
 					</>
 				)}
 				{impactNote && <p className="text-sm text-neutral-700">{impactNote}</p>}

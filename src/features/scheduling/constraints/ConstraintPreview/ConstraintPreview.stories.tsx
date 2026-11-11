@@ -1,9 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { ConstraintPreview } from "@/features/scheduling/constraints/ConstraintPreview";
-import { CONSTRAINT_TYPE_OPTIONS } from "@/features/scheduling/constraints/fixtures";
 import "@/common/i18n";
-
-const shiftStaffing = CONSTRAINT_TYPE_OPTIONS[0]!;
 
 const meta = {
 	title: "Features/Scheduling/Constraints/ConstraintPreview",
@@ -11,8 +8,7 @@ const meta = {
 	parameters: { layout: "padded" },
 	args: {
 		className: "max-w-138",
-		constraint: { type: shiftStaffing.type, values: [] },
-		fields: shiftStaffing.fields.map((spec) => spec.field),
+		constraint: { type: "SHIFT_STAFFING", requirement: null, values: [] },
 	},
 } satisfies Meta<typeof ConstraintPreview>;
 
@@ -20,12 +16,16 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Incomplete: Story = {};
+/** Just chosen: grey words for every part still to fill in. */
+export const NothingChosenYet: Story = {};
 
-export const Complete: Story = {
+/** Filled in: reads as it will in the list. */
+export const FilledIn: Story = {
 	args: {
+		appliesTo: "Front Desk AM",
 		constraint: {
-			type: shiftStaffing.type,
+			type: "SHIFT_STAFFING",
+			requirement: "MUST",
 			values: [
 				{ field: "COMPARISON", value: "AT_LEAST", name: null },
 				{ field: "HEADCOUNT", value: "2", name: null },

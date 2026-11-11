@@ -3170,16 +3170,16 @@
 				"REST_BETWEEN_SHIFTS_other": "Todos tienen al menos <REST_HOURS/> horas libres entre turnos."
 			},
 			"fields": {
-				"COMPARISON": "Comparación",
-				"HEADCOUNT": "Número de personas",
-				"STAND_INS_PER_PERSON": "Suplentes por persona",
+				"COMPARISON": "Al menos, como máximo o exactamente",
+				"HEADCOUNT": "Personas",
+				"STAND_INS_PER_PERSON": "Suplentes por 1 persona",
 				"DAYS_OFF": "Días libres",
-				"PERIOD_DAYS": "Periodo en días",
-				"REST_HOURS": "Descanso en horas",
-				"JOB_TITLE": "Puestos",
-				"STAND_IN_JOB_TITLE": "Puestos suplentes",
+				"PERIOD_DAYS": "Días seguidos",
+				"REST_HOURS": "Horas libres",
+				"JOB_TITLE": "Puestos que cuentan",
+				"STAND_IN_JOB_TITLE": "Puestos que pueden suplir",
 				"SHIFT": "Turnos",
-				"WEEKDAY": "Días"
+				"WEEKDAY": "Días de la semana"
 			},
 			"requirements": {
 				"MUST": "Obligatoria",
@@ -3211,9 +3211,7 @@
 				"status": "Estado",
 				"statusHint": "Solo una restricción activa se puede aplicar a un horario.",
 				"pleaseSelect": "Selecciona",
-				"enterNumber": "Escribe un número",
 				"selectAll": "Seleccionar todo",
-				"numberHint": "Un número entero de {{min}} a {{max}}.",
 				"noJobTitles": "Este departamento aún no tiene puestos activos. Crea uno en Organización primero.",
 				"noShifts": "Este departamento aún no tiene turnos. Añade uno en el paso Turnos primero.",
 				"reset": "Restablecer",
@@ -3268,9 +3266,7 @@
 				"typeHintEmpty": "Elige una opción para ver un ejemplo."
 			},
 			"preview": {
-				"title": "Vista previa de la restricción",
-				"complete": "Completa",
-				"incomplete": "Incompleta"
+				"title": "Cómo se lee"
 			},
 			"setBy": "Definida por",
 			"levels": {
@@ -3320,6 +3316,15 @@
 				"DAYS_OFF_PER_PERIOD": "Por ejemplo: Todos tienen al menos 2 días libres en cualquier periodo de 7 días seguidos.",
 				"AVOID_DAYS_OFF_ON": "Por ejemplo: Evitar días libres el viernes y el sábado, los días de más trabajo.",
 				"REST_BETWEEN_SHIFTS": "Por ejemplo: Todos tienen al menos 11 horas libres entre turnos."
+			},
+			"fieldHints": {
+				"SHIFT": "Elige más de uno para contarlos juntos cada día.",
+				"HEADCOUNT": "Personas en el turno con uno de los puestos de abajo. De {{min}} a {{max}}.",
+				"JOB_TITLE": "Cuenta cualquiera con uno de estos puestos.",
+				"STAND_INS_PER_PERSON": "Por ejemplo 2: dos suplentes cuentan como una persona. De {{min}} a {{max}}.",
+				"DAYS_OFF": "De {{min}} a {{max}}.",
+				"PERIOD_DAYS": "Por ejemplo 7: cualquier periodo de 7 días seguidos. De {{min}} a {{max}}.",
+				"REST_HOURS": "Desde el final de un turno hasta el inicio del siguiente. De {{min}} a {{max}}."
 			}
 		},
 		"forecast": {

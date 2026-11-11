@@ -102,7 +102,10 @@ describe("ConstraintDialog for the Scheduling policy (ADR-0058)", () => {
 		).toBeVisible();
 
 		await pick(user, /^Lock/, "Default");
-		await user.type(screen.getByRole("spinbutton", { name: /Rest/ }), "11");
+		await user.type(
+			screen.getByRole("spinbutton", { name: /^Hours off/ }),
+			"11"
+		);
 		await user.click(screen.getByRole("button", { name: "Save" }));
 
 		await waitFor(() => {
@@ -128,7 +131,7 @@ describe("ConstraintDialog for the Scheduling policy (ADR-0058)", () => {
 		expect(trigger(/^What it controls/)).toBeDisabled();
 
 		await user.type(screen.getByLabelText("Constraint name"), "Front rest");
-		const hours = screen.getByRole("spinbutton", { name: /Rest/ });
+		const hours = screen.getByRole("spinbutton", { name: /^Hours off/ });
 		await user.clear(hours);
 		await user.type(hours, "10");
 		await user.click(screen.getByRole("button", { name: "Save" }));
@@ -147,7 +150,7 @@ describe("ConstraintDialog for the Scheduling policy (ADR-0058)", () => {
 		renderDialog({ replacing: companyRest, onSave });
 		await screen.findByRole("dialog", { name: "Set for this department" });
 		await user.type(screen.getByLabelText("Constraint name"), "Front rest");
-		const hours = screen.getByRole("spinbutton", { name: /Rest/ });
+		const hours = screen.getByRole("spinbutton", { name: /^Hours off/ });
 		await user.clear(hours);
 		await user.type(hours, "12");
 		await user.click(screen.getByRole("button", { name: "Save" }));
@@ -174,7 +177,7 @@ describe("ConstraintDialog for the Scheduling policy (ADR-0058)", () => {
 		await screen.findByRole("dialog", { name: "Set for this department" });
 
 		await user.type(screen.getByLabelText("Constraint name"), "Front rest");
-		const hours = screen.getByRole("spinbutton", { name: /Rest/ });
+		const hours = screen.getByRole("spinbutton", { name: /^Hours off/ });
 		await user.clear(hours);
 		await user.type(hours, "12");
 		await user.click(screen.getByRole("button", { name: "Save" }));
@@ -306,17 +309,52 @@ describe("ConstraintDialog", () => {
 
 		expect(trigger(/^Requirement/)).toBeVisible();
 		expect(trigger(/^Status/)).toHaveTextContent("Active");
+		expect(screen.getByRole("spinbutton", { name: /^People/ })).toHaveAttribute(
+			"max",
+			"999"
+		);
 		expect(
-			screen.getByRole("spinbutton", { name: /Headcount/ })
-		).toHaveAttribute("max", "999");
-		expect(
-			screen.getByRole("spinbutton", { name: /Stand-ins per person/ })
+			screen.getByRole("spinbutton", { name: /^Stand-ins for 1 person/ })
 		).toHaveAttribute("min", "1");
-		expect(screen.getByText("A whole number from 1 to 10.")).toBeVisible();
-		expect(trigger(/^Job titles/)).toBeVisible();
-		expect(trigger(/^Stand-in job titles/)).toBeVisible();
+		expect(
+			screen.getByText(
+				"For example 2: two stand-ins count as one person. 1 to 10."
+			)
+		).toBeVisible();
+		expect(trigger(/^Job titles that count/)).toBeVisible();
+		expect(trigger(/^Job titles that can stand in/)).toBeVisible();
 		expect(trigger(/^Shifts/)).toBeVisible();
-		expect(screen.queryByRole("button", { name: /^Comparison/ })).toBeNull();
+		expect(
+			screen.queryByRole("button", { name: /^At least, at most or exactly/ })
+		).toBeNull();
+	});
+
+	it("given_aStaffingType_when_chosen_then_thePreviewComesFirstAndTheFieldsFollowInReadingOrder", async () => {
+		const user = userEvent.setup();
+		renderDialog();
+		await start(user, "People on a shift");
+
+		const labels = [
+			screen.getByRole("region", { name: "How it reads" }),
+			trigger(/^Shifts/),
+			trigger(/^At least, at most or exactly/),
+			screen.getByRole("spinbutton", { name: /^People/ }),
+			trigger(/^Job titles that count/),
+		];
+		for (const [earlier, later] of labels
+			.slice(0, -1)
+			.map((element, index) => [element, labels[index + 1]!]))
+			expect(
+				earlier!.compareDocumentPosition(later!) &
+					Node.DOCUMENT_POSITION_FOLLOWING
+			).toBeTruthy();
+		// The comparison and the number it compares share one row.
+		const comparisonRow = trigger(/^At least, at most or exactly/).closest(
+			".sm\\:flex-row"
+		);
+		expect(comparisonRow).toContainElement(
+			screen.getByRole("spinbutton", { name: /^People/ })
+		);
 	});
 
 	it("given_onlyANameAndType_when_saved_then_asksForEachFieldAsItsSpecSaysAndSendsNothing", async () => {
@@ -327,13 +365,13 @@ describe("ConstraintDialog", () => {
 		await user.click(screen.getByRole("button", { name: "Save" }));
 
 		const alerts = await screen.findAllByRole("alert");
-		// In reading order: shifts, comparison, people, job titles.
+		// In reading order: shifts, comparison, people, job titles, then how firm.
 		expect(alerts.map((alert) => alert.textContent)).toEqual([
-			"Choose must or should.",
 			"Choose at least one.",
 			"Choose one.",
 			"Enter a whole number from 0 to 999.",
 			"Choose at least one.",
+			"Choose must or should.",
 		]);
 		expect(onSave).not.toHaveBeenCalled();
 	});
@@ -344,14 +382,19 @@ describe("ConstraintDialog", () => {
 		await start(user, "People on a shift");
 
 		await pick(user, /^Requirement/, "Must");
-		await pick(user, /^Comparison/, "At least");
-		await user.type(screen.getByRole("spinbutton", { name: /Headcount/ }), "2");
-		await pick(user, /^Job titles/, "Front Desk Staff", "Front Desk Lead");
+		await pick(user, /^At least, at most or exactly/, "At least");
+		await user.type(screen.getByRole("spinbutton", { name: /^People/ }), "2");
+		await pick(
+			user,
+			/^Job titles that count/,
+			"Front Desk Staff",
+			"Front Desk Lead"
+		);
 		await pick(user, /^Shifts/, "Front Desk AM");
 		expect(
-			screen.getByText("Complete").closest("section")?.querySelector("p")
+			screen.getByRole("region", { name: "How it reads" })
 		).toHaveTextContent(
-			"Front Desk AM needs at least 2 people as Front Desk Lead or Front Desk Staff."
+			"Must Front Desk AM needs at least 2 people as Front Desk Lead or Front Desk Staff.Front Desk AM"
 		);
 		await user.click(screen.getByRole("button", { name: "Save" }));
 
@@ -379,7 +422,7 @@ describe("ConstraintDialog", () => {
 		await start(user, "Days to avoid giving off");
 
 		expect(screen.queryByRole("button", { name: /^Requirement/ })).toBeNull();
-		await pick(user, /^Days/, "Saturday", "Friday");
+		await pick(user, /^Days of the week/, "Saturday", "Friday");
 		await user.click(screen.getByRole("button", { name: "Save" }));
 
 		await waitFor(() => {
@@ -403,7 +446,7 @@ describe("ConstraintDialog", () => {
 		await start(user, "Rest between shifts");
 
 		await user.type(
-			screen.getByRole("spinbutton", { name: /Rest in hours/ }),
+			screen.getByRole("spinbutton", { name: /^Hours off/ }),
 			"25"
 		);
 		await user.click(screen.getByRole("button", { name: "Save" }));
@@ -427,7 +470,9 @@ describe("ConstraintDialog", () => {
 			"Days off in a run of days"
 		);
 		expect(trigger(/^Requirement/)).toHaveTextContent("Must");
-		expect(trigger(/^Comparison/)).toHaveTextContent("At least");
+		expect(trigger(/^At least, at most or exactly/)).toHaveTextContent(
+			"At least"
+		);
 		expect(daysOff).toHaveValue(2);
 
 		await user.clear(daysOff);
@@ -464,10 +509,12 @@ describe("ConstraintDialog", () => {
 		const { onSave } = renderDialog({ editing: constraint("two-days-off") });
 		await screen.findByRole("dialog", { name: "Edit constraint" });
 		const periodDays = screen.getByRole("spinbutton", {
-			name: /^Period in days/,
+			name: /^Days in a row/,
 		});
 
-		expect(screen.getByText("A whole number from 1 to 7.")).toBeVisible();
+		expect(
+			screen.getByText("For example 7: any 7 days in a row. 1 to 7.")
+		).toBeVisible();
 
 		await user.clear(periodDays);
 		await user.type(periodDays, "8");
@@ -573,12 +620,17 @@ describe("ConstraintDialog with a Department field", () => {
 		const user = userEvent.setup();
 		renderInCompany(<ChoosingDialog initial="d-1" />);
 		await start(user, "Rest between shifts");
-		await user.type(screen.getByRole("spinbutton", { name: /Rest/ }), "11");
+		await user.type(
+			screen.getByRole("spinbutton", { name: /^Hours off/ }),
+			"11"
+		);
 
 		await user.click(trigger(/^Department/));
 		await user.click(screen.getByRole("option", { name: /Kitchen/ }));
 
-		expect(screen.getByRole("spinbutton", { name: /Rest/ })).toHaveValue(null);
+		expect(screen.getByRole("spinbutton", { name: /^Hours off/ })).toHaveValue(
+			null
+		);
 		expect(screen.getByLabelText("Constraint name")).toHaveValue(
 			"Morning cover"
 		);
