@@ -105,6 +105,11 @@ export type ScheduleDraft = {
 	shiftsSeeded: boolean;
 	/** The ticked constraints: the schedule's own, then the person's. */
 	includedConstraintIds: Array<string>;
+	/**
+	 * Whether the ticks are what the week uses: false for a new draft until
+	 * its week is chosen, when everything is used; true once loaded from the API.
+	 */
+	weekChosen: boolean;
 	allocations: Allocations;
 	forecastMode: ForecastMode;
 	demand: TimeBlockDemand;
@@ -117,6 +122,7 @@ export const emptyScheduleDraft = (): ScheduleDraft => ({
 	includedShiftIds: [],
 	shiftsSeeded: false,
 	includedConstraintIds: [],
+	weekChosen: false,
 	allocations: {},
 	forecastMode: "SHIFT",
 	demand: {},
@@ -388,6 +394,10 @@ export type ScheduleDraftAction =
 	| { type: "constraintsIncluded"; constraintIds: Array<string> }
 	/** A constraint the API no longer has; its tick goes with it. */
 	| { type: "constraintRemoved"; constraintId: string }
+	/** What the week uses, as the manager chose it. */
+	| { type: "weekChosen"; shiftIds: Array<string>; constraintIds: Array<string> }
+	/** A new draft's department changed: its week starts again from everything. */
+	| { type: "departmentChosen" }
 	| { type: "forecastModeChosen"; mode: ForecastMode }
 	| {
 			type: "allocationChanged";
@@ -409,7 +419,11 @@ export const scheduleDraftReducer = (
 ): ScheduleDraft => {
 	switch (action.type) {
 		case "scheduleLoaded":
-			return { ...emptyScheduleDraft(), ...fromSchedule(action.schedule) };
+			return {
+				...emptyScheduleDraft(),
+				...fromSchedule(action.schedule),
+				weekChosen: true,
+			};
 		case "shiftsLoaded":
 			return draft.shiftsSeeded
 				? draft
@@ -444,6 +458,23 @@ export const scheduleDraftReducer = (
 					(constraintId) => constraintId !== action.constraintId
 				),
 			};
+		case "weekChosen":
+			return {
+				...draft,
+				includedShiftIds: action.shiftIds,
+				includedConstraintIds: action.constraintIds,
+				weekChosen: true,
+			};
+		case "departmentChosen":
+			// A saved draft's department never changes.
+			return draft.saved
+				? draft
+				: {
+						...draft,
+						includedShiftIds: [],
+						includedConstraintIds: [],
+						weekChosen: false,
+					};
 		case "forecastModeChosen":
 			return { ...draft, forecastMode: action.mode };
 		case "allocationChanged":

@@ -331,6 +331,60 @@ describe("scheduleDraftReducer", () => {
 	});
 });
 
+describe("the week's choice", () => {
+	it("given_aNewDraft_when_started_then_itsWeekIsNotChosen", () => {
+		expect(emptyScheduleDraft().weekChosen).toBe(false);
+	});
+
+	it("given_aSchedule_when_loaded_then_itsTicksAreTheWeeksChoice", () => {
+		const draft = scheduleDraftReducer(emptyScheduleDraft(), {
+			type: "scheduleLoaded",
+			schedule: scheduleFixture(),
+		});
+
+		expect(draft.weekChosen).toBe(true);
+	});
+
+	it("given_aChoice_when_made_then_setsBothListsAndTheFlag", () => {
+		const draft = scheduleDraftReducer(emptyScheduleDraft(), {
+			type: "weekChosen",
+			shiftIds: ["front-desk-am"],
+			constraintIds: ["morning-cover"],
+		});
+
+		expect(draft.includedShiftIds).toEqual(["front-desk-am"]);
+		expect(draft.includedConstraintIds).toEqual(["morning-cover"]);
+		expect(draft.weekChosen).toBe(true);
+	});
+
+	it("given_aNewDraftsChoice_when_itsDepartmentChanges_then_startsAgainFromEverything", () => {
+		const chosenWeek = scheduleDraftReducer(emptyScheduleDraft(), {
+			type: "weekChosen",
+			shiftIds: ["front-desk-am"],
+			constraintIds: ["morning-cover"],
+		});
+
+		const draft = scheduleDraftReducer(chosenWeek, {
+			type: "departmentChosen",
+		});
+
+		expect(draft.includedShiftIds).toEqual([]);
+		expect(draft.includedConstraintIds).toEqual([]);
+		expect(draft.weekChosen).toBe(false);
+	});
+
+	it("given_aSavedDraft_when_departmentChosen_then_keepsItsChoice", () => {
+		const loaded = scheduleDraftReducer(emptyScheduleDraft(), {
+			type: "scheduleLoaded",
+			schedule: scheduleFixture(),
+		});
+
+		expect(
+			scheduleDraftReducer(loaded, { type: "departmentChosen" })
+		).toBe(loaded);
+	});
+});
+
 describe("frozen schedules and ticks", () => {
 	it("given_aStatus_when_asked_then_onlyADraftIsNotFrozen", () => {
 		expect(isFrozen({ status: "DRAFT" })).toBe(false);
