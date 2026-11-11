@@ -3967,7 +3967,8 @@
 			"editConstraints": "Editar restricciones",
 			"choose": "Elegir para esta semana",
 			"view": "Ver",
-			"everything": "Esta semana usa todos los turnos y restricciones de {{department}}."
+			"everything": "Esta semana usa todos los turnos y restricciones de {{department}}.",
+			"change": "Cambiar"
 		}
 	},
 	"workspace": {

@@ -18,14 +18,11 @@ import {
 import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
 import {
-	COMPANY_CONSTRAINT_FIXTURES,
 	CONSTRAINT_FIXTURES,
 	CONSTRAINT_OPTIONS_RESPONSE,
 	INCLUDED_CONSTRAINT_IDS,
-	constraintFixture,
 	frozenConstraintsFixture,
 } from "@/features/scheduling/constraints/fixtures";
-import type { ScheduleShift } from "@/features/scheduling/schedules/api";
 import {
 	generatedScheduleFixture,
 	scheduleFixture,
@@ -80,10 +77,8 @@ const ALL = [
 ];
 const DRAFT = scheduleFixture();
 const DRAFT_SHIFTS = scheduleShiftsFixture();
-/** Front Desk AM, the first shift listed. */
-const FIRST_SHIFT = DRAFT_SHIFTS[0] as ScheduleShift;
 /** A reopened draft lands here. */
-const REOPEN = "/scheduling/new?step=shifts&scheduleId=s-1&departmentId=d-1";
+const REOPEN = "/scheduling/new?step=forecast&scheduleId=s-1&departmentId=d-1";
 const DRAFT_SETUP = {
 	name: "Front Office - Week 42",
 	periodStart: "2026-10-12",
@@ -160,14 +155,14 @@ const open = async (
 	return { opened: app, calls };
 };
 
-/** Opens the saved draft s-1 on its Shifts step, once its step is shown. */
+/** Opens the saved draft s-1 on its Forecast step, once its step is shown. */
 const reopen = async (
 	extra: Record<string, StubReply | Array<StubReply>> = {},
 	permissions: Array<string> | Workspace = ALL,
 	entry = REOPEN
 ): Promise<{ opened: OpenedApp; calls: Array<Call> }> => {
 	const opened = await open(entry, extra, permissions);
-	await screen.findByRole("region", { name: "Select shifts" });
+	await screen.findByRole("region", { name: "Staffing forecast" });
 	return opened;
 };
 
@@ -190,43 +185,12 @@ const next = (): HTMLElement => screen.getByRole("button", { name: "Next" });
 const checkbox = (name: string): HTMLElement =>
 	screen.getByRole("checkbox", { name: `Select ${name}` });
 
-/** Clicks Next from Shifts to Constraints, once its constraints are listed. */
-const toConstraints = async (
-	user: ReturnType<typeof userEvent.setup>
-): Promise<void> => {
-	await screen.findByRole("row", { name: /Front Desk AM/ });
-	await user.click(next());
-	await screen.findByRole("region", { name: "Scheduling constraints" });
-};
-
-/** Clicks Next until the Generate step is shown. */
+/** Clicks Next from Forecast until the Generate step is shown. */
 const toGenerate = async (
 	user: ReturnType<typeof userEvent.setup>
 ): Promise<void> => {
 	await user.click(next());
-	await screen.findByRole("region", { name: "Scheduling constraints" });
-	await user.click(next());
-	await screen.findByRole("region", { name: "Staffing forecast" });
-	await user.click(next());
 	await screen.findByRole("region", { name: "Ready to generate" });
-};
-
-/** Opens one of the dialog's selects, picks each option and closes it. */
-const pick = async (
-	user: ReturnType<typeof userEvent.setup>,
-	dialog: HTMLElement,
-	name: RegExp,
-	...labels: Array<string>
-): Promise<void> => {
-	await user.click(within(dialog).getByRole("button", { name }));
-	await labels.reduce(
-		(previous, label) =>
-			previous.then(async () => {
-				await user.click(await screen.findByRole("option", { name: label }));
-			}),
-		Promise.resolve()
-	);
-	if (screen.queryByRole("listbox")) await user.keyboard("{Escape}");
 };
 
 const fillSetup = async (
@@ -326,7 +290,7 @@ describe("Create Schedule: opening and setup", () => {
 
 	it("given_aScheduleIdWithoutItsDepartment_when_linkedTo_then_returnsToSetup", async () => {
 		const { opened, calls } = await open(
-			"/scheduling/new?step=shifts&scheduleId=s-1"
+			"/scheduling/new?step=forecast&scheduleId=s-1"
 		);
 
 		expect(
@@ -337,7 +301,7 @@ describe("Create Schedule: opening and setup", () => {
 		expect(calls.filter((call) => call.path === SCHEDULE)).toEqual([]);
 	});
 
-	it("given_aCompletedSetup_when_nextClicked_then_createsTheDraftAtTheChosenDepartmentAndOpensItsShifts", async () => {
+	it("given_aCompletedSetup_when_nextClicked_then_createsTheDraftAtTheChosenDepartmentAndOpensItsForecast", async () => {
 		const user = userEvent.setup();
 		const created = scheduleFixture({
 			includedShiftIds: [],
@@ -354,9 +318,9 @@ describe("Create Schedule: opening and setup", () => {
 		await screen.findByText(WEEK_LINE);
 		await user.click(next());
 
-		await screen.findByRole("region", { name: "Select shifts" });
+		await screen.findByRole("region", { name: "Staffing forecast" });
 		expect(opened.router.state.location.search).toEqual({
-			step: "shifts",
+			step: "forecast",
 			scheduleId: "s-1",
 			departmentId: "d-1",
 		});
@@ -369,7 +333,6 @@ describe("Create Schedule: opening and setup", () => {
 				includedConstraintIds: ACTIVE_CONSTRAINT_IDS,
 			},
 		]);
-		expect(await screen.findByText("No shifts yet.")).toBeVisible();
 	});
 
 	it("given_aRefusedPeriod_when_setupCompleted_then_saysSoOnThePeriod", async () => {
@@ -399,9 +362,9 @@ describe("Create Schedule: opening and setup", () => {
 		await user.type(name, "Front Office - Late Week");
 		await user.click(next());
 
-		await screen.findByRole("region", { name: "Select shifts" });
+		await screen.findByRole("region", { name: "Staffing forecast" });
 		expect(opened.router.state.location.search).toEqual({
-			step: "shifts",
+			step: "forecast",
 			scheduleId: "s-1",
 			departmentId: "d-1",
 		});
@@ -580,11 +543,22 @@ describe("Create Schedule: a reopened draft", () => {
 		).not.toHaveAttribute("readonly");
 	});
 
-	it("given_aDraftsUrl_when_reopened_then_listsItsShiftsTickedAsTheApiKeepsThem", async () => {
+	it("given_aDraftsUrl_when_reopened_then_itsWeekListsItsShiftsTickedAsTheApiKeepsThem", async () => {
 		const user = userEvent.setup();
-		const { calls } = await reopen();
+		const { calls } = await open(SETUP_OF_S1);
 
-		const table = await screen.findByRole("table", { name: "Shifts" });
+		const department = await screen.findByRole("button", {
+			name: /Department/,
+		});
+		expect(department).toHaveTextContent("Main branch › Front Office");
+		expect(department).toBeDisabled();
+		await user.click(
+			await screen.findByRole("button", { name: "Choose for this week" })
+		);
+		const dialog = await screen.findByRole("dialog", {
+			name: /^What .+ uses$/,
+		});
+		const table = within(dialog).getByRole("table", { name: "Shifts" });
 		expect(within(table).getAllByRole("row")).toHaveLength(
 			SHIFT_FIXTURES.length + 1
 		);
@@ -596,63 +570,46 @@ describe("Create Schedule: a reopened draft", () => {
 			expect.arrayContaining([`GET ${SCHEDULE}`, `GET ${SCHEDULE_SHIFTS}`])
 		);
 		// A tab per group, above the table.
-		const tabs = screen.getByRole("tablist", { name: "Shift types" });
+		const tabs = within(dialog).getByRole("tablist", { name: "Shift types" });
 		expect(within(tabs).getAllByRole("tab")).toHaveLength(6);
-
-		await user.click(screen.getByRole("button", { name: "Back" }));
-
-		expect(
-			await screen.findByRole("textbox", { name: /Schedule name/ })
-		).toHaveValue("Front Office - Week 42");
-		const department = screen.getByRole("button", { name: /Department/ });
-		expect(department).toHaveTextContent("Main branch › Front Office");
-		expect(department).toBeDisabled();
 	});
 
-	it("given_aDraftWithTicks_when_reopenedAtSetup_then_itsDoneStepsAreTickedAheadButNotJumpedTo", async () => {
-		await open("/scheduling/new?step=setup&scheduleId=s-1&departmentId=d-1");
+	it("given_aGeneratedSchedule_when_reopenedAtSetup_then_itsDoneStepsAreTickedAheadButNotJumpedTo", async () => {
+		await open(SETUP_OF_S1, {
+			[`GET ${SCHEDULE}`]: reply(
+				generatedScheduleFixture({ status: "GENERATED" })
+			),
+			[`GET ${SCHEDULE_SHIFTS}`]: reply(frozenShiftsFixture()),
+			[`GET ${SCHEDULE_CONSTRAINTS}`]: reply(frozenConstraintsFixture()),
+		});
 
 		expect(
-			await screen.findByRole("listitem", { name: "Step 2: Shifts, completed" })
-		).toBeVisible();
-		expect(
 			await screen.findByRole("listitem", {
-				name: "Step 3: Constraints, completed",
+				name: "Step 2: Forecast, completed",
 			})
 		).toBeVisible();
 		expect(
-			screen.getByRole("listitem", { name: "Step 4: Forecast" })
+			screen.getByRole("listitem", { name: "Step 3: Generate, completed" })
 		).toBeVisible();
 		const steps = screen.getByRole("navigation", { name: "Steps" });
 		expect(within(steps).queryByRole("button")).not.toBeInTheDocument();
 	});
 
-	it("given_aDraftWithoutConstraintTicks_when_pastConstraints_then_itKeepsItsNumberAndCanBeReturnedTo", async () => {
+	it("given_aDraftOnItsForecast_when_setupIsChosen_then_itIsTickedAndCanBeReturnedTo", async () => {
 		const user = userEvent.setup();
-		await open(
-			"/scheduling/new?step=forecast&scheduleId=s-1&departmentId=d-1",
-			{
-				[`GET ${SCHEDULE}`]: reply(
-					scheduleFixture({ includedConstraintIds: [] })
-				),
-			}
-		);
-		await screen.findByRole("region", { name: "Staffing forecast" });
+		await reopen();
 
-		expect(
-			await screen.findByRole("button", { name: "Step 2: Shifts, completed" })
-		).toBeVisible();
 		await user.click(
-			screen.getByRole("button", { name: "Step 3: Constraints" })
+			await screen.findByRole("button", { name: "Step 1: Setup, completed" })
 		);
 
 		expect(
-			await screen.findByRole("region", { name: "Scheduling constraints" })
+			await screen.findByRole("region", { name: "Schedule setup" })
 		).toBeVisible();
 	});
 
 	it("given_aDraftTheApiDoesNotHave_when_opened_then_saysSo", async () => {
-		await open("/scheduling/new?step=shifts&scheduleId=s-9&departmentId=d-1");
+		await open("/scheduling/new?step=forecast&scheduleId=s-9&departmentId=d-1");
 
 		expect(
 			await screen.findByText(
@@ -682,18 +639,26 @@ describe("Create Schedule: a reopened draft", () => {
 		);
 	});
 
-	it("given_changedTicks_when_draftSaved_then_putsTheSetupWithTheTickedShifts", async () => {
+	it("given_changedTicks_when_setupCompleted_then_putsTheSetupWithTheChosenShifts", async () => {
 		const user = userEvent.setup();
-		const { calls } = await reopen({ [`PUT ${SCHEDULE}`]: reply(DRAFT) });
-		await screen.findByRole("row", { name: /Front Desk AM/ });
+		const { calls } = await open(SETUP_OF_S1, {
+			[`PUT ${SCHEDULE}`]: reply(DRAFT),
+		});
+		await user.click(
+			await screen.findByRole("button", { name: "Choose for this week" })
+		);
+		const dialog = await screen.findByRole("dialog", {
+			name: /^What .+ uses$/,
+		});
 
 		await user.click(checkbox("Swing Shift"));
 		await user.click(checkbox("Overnight Ops"));
-		await user.click(screen.getByRole("button", { name: "Save draft" }));
+		await user.click(
+			within(dialog).getByRole("button", { name: "Use for week" })
+		);
+		await user.click(next());
 
-		await waitFor(() => {
-			expect(screen.getByRole("status")).toHaveTextContent("Draft saved");
-		});
+		await screen.findByRole("region", { name: "Staffing forecast" });
 		expect(sent(calls, `PUT ${SCHEDULE}`)).toEqual([
 			{
 				...DRAFT_SETUP,
@@ -723,684 +688,70 @@ describe("Create Schedule: a reopened draft", () => {
 		);
 	});
 
-	it("given_noShiftsChosen_when_nextClicked_then_staysAndSaysWhy", async () => {
+	it("given_noShiftsChosen_when_choosingTheWeek_then_saysWhyAndUseIsDisabled", async () => {
 		const user = userEvent.setup();
-		const { opened } = await reopen({
+		await open(SETUP_OF_S1, {
 			[`GET ${SCHEDULE}`]: reply(scheduleFixture({ includedShiftIds: [] })),
 			[`GET ${SCHEDULE_SHIFTS}`]: reply(
 				DRAFT_SHIFTS.map((shift) => ({ ...shift, included: false }))
 			),
 		});
-		await screen.findByRole("row", { name: /Front Desk AM/ });
 
-		await user.click(next());
-
-		expect(screen.getByRole("alert")).toHaveTextContent(
-			"Choose at least one shift to include in this schedule."
+		await user.click(
+			await screen.findByRole("button", { name: "Choose for this week" })
 		);
-		expect(opened.router.state.location.search).toEqual({
-			step: "shifts",
+		const dialog = await screen.findByRole("dialog", {
+			name: /^What .+ uses$/,
+		});
+
+		expect(within(dialog).getByRole("alert")).toHaveTextContent(
+			"Choose at least one shift for this week."
+		);
+		expect(
+			within(dialog).getByRole("button", { name: "Use for week" })
+		).toBeDisabled();
+	});
+});
+
+describe("Create Schedule: three steps", () => {
+	it("given_theWizard_when_opened_then_itsStepsAreSetupForecastAndGenerate", async () => {
+		await open("/scheduling/new");
+
+		const steps = await screen.findByRole("navigation", { name: "Steps" });
+		expect(
+			within(steps)
+				.getAllByRole("listitem")
+				.map((step) => step.getAttribute("aria-label") ?? step.textContent)
+		).toEqual(["Step 1: Setup", "Step 2: Forecast", "Step 3: Generate"]);
+	});
+
+	it("given_anOldShiftsStepUrl_when_opened_then_opensSetup", async () => {
+		await open("/scheduling/new?step=shifts&scheduleId=s-1&departmentId=d-1");
+
+		expect(
+			await screen.findByRole("region", { name: "Schedule setup" })
+		).toBeVisible();
+		expect(
+			await screen.findByRole("textbox", { name: /Schedule name/ })
+		).toHaveValue("Front Office - Week 42");
+	});
+
+	it("given_theGenerateStep_when_changeClicked_then_returnsToSetup", async () => {
+		const user = userEvent.setup();
+		const { opened } = await open(
+			"/scheduling/new?step=generate&scheduleId=s-1&departmentId=d-1"
+		);
+		await screen.findByRole("region", { name: "Ready to generate" });
+
+		await user.click(await screen.findByRole("button", { name: "Change" }));
+
+		expect(
+			await screen.findByRole("region", { name: "Schedule setup" })
+		).toBeVisible();
+		expect(opened.router.state.location.search).toMatchObject({
+			step: "setup",
 			scheduleId: "s-1",
-			departmentId: "d-1",
 		});
-	});
-});
-
-describe("Create Schedule: the department's shifts", () => {
-	it("given_aShift_when_addedThroughTheDialog_then_postsItToTheDepartmentAndTicksIt", async () => {
-		const user = userEvent.setup();
-		const created = departmentShiftFixture({
-			...FIRST_SHIFT,
-			shiftId: "evening-desk",
-			name: "Evening Desk",
-			group: "Evening",
-		});
-		const { calls } = await reopen({
-			[`POST ${LIVE_SHIFTS}`]: reply(created, 201),
-			// The shifts reload after the save; from then on they list the new one, not yet ticked.
-			[`GET ${SCHEDULE_SHIFTS}`]: [
-				reply(DRAFT_SHIFTS),
-				reply([
-					...DRAFT_SHIFTS,
-					{ ...created, included: false, frozen: false },
-				]),
-			],
-		});
-		await screen.findByRole("row", { name: /Front Desk AM/ });
-
-		await user.click(screen.getByRole("button", { name: "Add shift" }));
-		const dialog = await screen.findByRole("dialog", {
-			name: "Add shift",
-		});
-		await user.type(
-			within(dialog).getByLabelText("Shift name"),
-			"Evening Desk"
-		);
-		await user.click(
-			within(dialog).getByRole("button", { name: /Shift type/ })
-		);
-		await user.type(screen.getByRole("combobox"), "Evening");
-		await user.click(screen.getByRole("option", { name: 'Create "Evening"' }));
-		expect(writes(calls)).toEqual([]);
-		await user.click(within(dialog).getByRole("radio", { name: "Slate" }));
-		await pick(user, dialog, /Start time/, "17:00");
-		await pick(user, dialog, /End time/, "23:00");
-		await pick(user, dialog, /Days applied to/, "Monday");
-		await waitFor(() => {
-			expect(
-				within(dialog).getByRole("button", { name: /Roles applied to/ })
-			).toBeEnabled();
-		});
-		await pick(user, dialog, /Roles applied to/, "Front Desk Staff");
-		await user.click(within(dialog).getByRole("button", { name: "Save" }));
-
-		await waitFor(() => {
-			expect(screen.getByRole("status")).toHaveTextContent("Shift added");
-		});
-		// The shifts reload with the new one, ticked here, under a tab for its group.
-		await screen.findByRole("row", { name: /Evening Desk/ });
-		expect(checkbox("Evening Desk")).toBeChecked();
-		await user.click(screen.getByRole("tab", { name: /Evening/ }));
-		expect(
-			within(screen.getByRole("table", { name: "Shifts" })).getAllByRole("row")
-		).toHaveLength(2);
-		expect(sent(calls, `POST ${LIVE_SHIFTS}`)).toEqual([
-			{
-				name: "Evening Desk",
-				group: "Evening",
-				colour: "#6E72A5",
-				startTime: "17:00",
-				endTime: "23:00",
-				days: ["MON"],
-				jobTitleIds: ["front-desk-staff"],
-				unpaidBreakMinutes: 0,
-				carriesOvertime: false,
-			},
-		]);
-		expect(writes(calls)).toEqual([`POST ${LIVE_SHIFTS}`]);
-		// The roles come from the shifts module, never from the job titles list.
-		expect(calls.filter((call) => call.path.endsWith("/job-titles"))).toEqual(
-			[]
-		);
-		expect(calls.map((call) => call.path)).toContain(ROLE_OPTIONS);
-	});
-
-	it("given_aShift_when_editedThroughTheDialog_then_putsItAtTheDepartment", async () => {
-		const user = userEvent.setup();
-		const { calls } = await reopen({
-			[`PUT ${LIVE_SHIFTS}/front-desk-am`]: reply(
-				departmentShiftFixture({ ...FIRST_SHIFT, name: "Front Desk Early" })
-			),
-		});
-		await screen.findByRole("row", { name: /Front Desk AM/ });
-
-		await user.click(
-			screen.getByRole("button", { name: "Edit Front Desk AM" })
-		);
-		const dialog = await screen.findByRole("dialog", { name: "Edit shift" });
-		const name = within(dialog).getByLabelText("Shift name");
-		await user.clear(name);
-		await user.type(name, "Front Desk Early");
-		await user.click(within(dialog).getByRole("button", { name: "Save" }));
-
-		await waitFor(() => {
-			expect(screen.getByRole("status")).toHaveTextContent("Shift saved");
-		});
-		expect(sent(calls, `PUT ${LIVE_SHIFTS}/front-desk-am`)).toEqual([
-			expect.objectContaining({ name: "Front Desk Early" }),
-		]);
-	});
-
-	it("given_aShift_when_deleted_then_deletesItAtTheDepartmentAndUnticksIt", async () => {
-		const user = userEvent.setup();
-		const { calls } = await reopen({
-			[`DELETE ${LIVE_SHIFTS}/front-desk-am`]: { status: 204 },
-			[`PUT ${SCHEDULE}`]: reply(DRAFT),
-		});
-		await screen.findByRole("row", { name: /Front Desk AM/ });
-
-		await user.click(
-			screen.getByRole("button", { name: "Delete Front Desk AM" })
-		);
-
-		await waitFor(() => {
-			expect(screen.getByRole("status")).toHaveTextContent(
-				"Shift successfully deleted"
-			);
-		});
-		await user.click(screen.getByRole("button", { name: "Save draft" }));
-		await waitFor(() => {
-			expect(sent(calls, `PUT ${SCHEDULE}`)).toHaveLength(1);
-		});
-		expect(writes(calls)).toEqual([
-			`DELETE ${LIVE_SHIFTS}/front-desk-am`,
-			`PUT ${SCHEDULE}`,
-		]);
-		expect(sent(calls, `PUT ${SCHEDULE}`)).toEqual([
-			{
-				...DRAFT_SETUP,
-				includedShiftIds: ["breakfast-prep", "lunch-rush", "swing-shift"],
-				includedConstraintIds: INCLUDED_CONSTRAINT_IDS,
-			},
-		]);
-	});
-
-	it("given_aDeleteRefused_when_deleting_then_saysWhy", async () => {
-		const user = userEvent.setup();
-		await reopen({
-			[`DELETE ${LIVE_SHIFTS}/front-desk-am`]: problemReply(
-				404,
-				"SHIFT_NOT_FOUND"
-			),
-		});
-		await screen.findByRole("row", { name: /Front Desk AM/ });
-
-		await user.click(
-			screen.getByRole("button", { name: "Delete Front Desk AM" })
-		);
-
-		expect(await screen.findByRole("alert")).toHaveTextContent(
-			"This shift no longer exists."
-		);
-	});
-
-	it("given_noShiftReadKey_when_onTheShiftsStep_then_saysTheShiftsAreHidden", async () => {
-		const { calls } = await reopen({}, ["schedule:read", "schedule:update"]);
-
-		expect(
-			await screen.findByText(
-				"You don’t have permission to see this department’s shifts."
-			)
-		).toBeVisible();
-		expect(screen.queryByRole("table", { name: "Shifts" })).toBeNull();
-		expect(calls.filter((call) => call.path === SCHEDULE_SHIFTS)).toEqual([]);
-	});
-
-	it("given_onlyReadKeys_when_onTheShiftsStep_then_listsThemButOffersNoChanges", async () => {
-		await reopen({}, ["schedule:read", "shift:read"]);
-		await screen.findByRole("row", { name: /Front Desk AM/ });
-
-		expect(
-			screen.getByText(
-				"You can view this draft, but you don’t have permission to change it."
-			)
-		).toBeVisible();
-		expect(
-			screen.queryByRole("button", { name: "Add shift" })
-		).toBeNull();
-		expect(screen.queryByRole("button", { name: /^Edit / })).toBeNull();
-		expect(screen.queryByRole("button", { name: /^Delete / })).toBeNull();
-		expect(screen.queryByRole("button", { name: "Save draft" })).toBeNull();
-	});
-
-	it("given_keysHeldAtTheDepartmentOnly_when_onItsShifts_then_eachActionFollowsItsOwnKeyThere", async () => {
-		const workspace = grantedAt({
-			"d-1": ["schedule:read", "shift:read", "shift:create"],
-			// Held at another department, so never offered here.
-			"d-2": ["shift:update", "shift:delete", "schedule:update"],
-		});
-		await reopen({}, workspace);
-		await screen.findByRole("row", { name: /Front Desk AM/ });
-
-		expect(
-			screen.getByRole("button", { name: "Add shift" })
-		).toBeVisible();
-		expect(screen.queryByRole("button", { name: /^Edit / })).toBeNull();
-		expect(screen.queryByRole("button", { name: /^Delete / })).toBeNull();
-		expect(screen.queryByRole("button", { name: "Save draft" })).toBeNull();
-	});
-});
-
-describe("Create Schedule: the department's constraints", () => {
-	it("given_aDraft_when_onConstraints_then_listsTheDepartmentsConstraintsTickedAsTheScheduleKeepsThem", async () => {
-		const user = userEvent.setup();
-		const { calls } = await reopen();
-
-		await toConstraints(user);
-
-		const table = await screen.findByRole("table", { name: "Constraints" });
-		expect(within(table).getAllByRole("row")).toHaveLength(
-			CONSTRAINT_FIXTURES.length + 1
-		);
-		for (const constraint of CONSTRAINT_FIXTURES)
-			if (INCLUDED_CONSTRAINT_IDS.includes(constraint.constraintId))
-				expect(checkbox(constraint.name)).toBeChecked();
-			else expect(checkbox(constraint.name)).not.toBeChecked();
-		expect(
-			within(table).getByRole("row", { name: /Morning cover/ })
-		).toHaveTextContent(
-			"Staff on Breakfast Prep and Front Desk AM, counting Front Desk Lead and Front Desk Staff, must total at least 2."
-		);
-		expect(calls.map((call) => call.path)).toContain(LIVE_CONSTRAINTS);
-	});
-
-	it("given_changedConstraintTicks_when_draftSaved_then_putsThemWithTheShifts", async () => {
-		const user = userEvent.setup();
-		const { calls } = await reopen({ [`PUT ${SCHEDULE}`]: reply(DRAFT) });
-		await toConstraints(user);
-
-		await user.click(checkbox("Two days off"));
-		await user.click(checkbox("Rest between shifts"));
-		// Inactive, so the API would refuse it: it is never ticked.
-		await user.click(checkbox("Weekend days on"));
-		expect(checkbox("Weekend days on")).not.toBeChecked();
-		await user.click(screen.getByRole("button", { name: "Save draft" }));
-
-		await waitFor(() => {
-			expect(screen.getByRole("status")).toHaveTextContent("Draft saved");
-		});
-		expect(sent(calls, `PUT ${SCHEDULE}`)).toEqual([
-			{
-				...DRAFT_SETUP,
-				includedShiftIds: INCLUDED_SHIFT_IDS,
-				includedConstraintIds: [
-					"lunch-stand-ins",
-					"morning-cover",
-					"two-days-off",
-				],
-			},
-		]);
-	});
-
-	it("given_aConstraint_when_addedThroughTheDialog_then_postsItToTheDepartmentAndTicksIt", async () => {
-		const user = userEvent.setup();
-		const created = constraintFixture({
-			constraintId: "one-day-off",
-			name: "One day off",
-			type: "DAYS_OFF_PER_PERIOD",
-			category: "SHIFT_PATTERN",
-			requirement: "SHOULD",
-			values: [
-				{ field: "COMPARISON", value: "AT_MOST", name: null },
-				{ field: "DAYS_OFF", value: "1", name: null },
-				{ field: "PERIOD_DAYS", value: "7", name: null },
-			],
-		});
-		const { calls } = await reopen({
-			[`POST ${LIVE_CONSTRAINTS}`]: reply(created, 201),
-			[`GET ${LIVE_CONSTRAINTS}`]: [
-				reply(CONSTRAINT_FIXTURES),
-				reply([...CONSTRAINT_FIXTURES, created]),
-			],
-			[`PUT ${SCHEDULE}`]: reply(DRAFT),
-		});
-		await toConstraints(user);
-
-		await user.click(screen.getByRole("button", { name: "Add constraint" }));
-		const dialog = await screen.findByRole("dialog", {
-			name: "Add constraint",
-		});
-		await user.type(
-			within(dialog).getByLabelText("Constraint name"),
-			"One day off"
-		);
-		await waitFor(() => {
-			expect(
-				within(dialog).getByRole("button", { name: /^Constraint type/ })
-			).toBeEnabled();
-		});
-		await pick(
-			user,
-			dialog,
-			/^Constraint type/,
-			"Shift pattern: Days off per period"
-		);
-		await pick(user, dialog, /^Requirement/, "Should");
-		await pick(user, dialog, /^Comparison/, "At most");
-		await user.type(
-			within(dialog).getByRole("spinbutton", { name: /^Days off/ }),
-			"1"
-		);
-		await user.type(
-			within(dialog).getByRole("spinbutton", { name: /Period in days/ }),
-			"7"
-		);
-		await user.click(within(dialog).getByRole("button", { name: "Save" }));
-
-		await waitFor(() => {
-			expect(screen.getByRole("status")).toHaveTextContent(
-				"Constraint successfully added"
-			);
-		});
-		await screen.findByRole("row", { name: /One day off/ });
-		expect(checkbox("One day off")).toBeChecked();
-		expect(sent(calls, `POST ${LIVE_CONSTRAINTS}`)).toEqual([
-			{
-				name: "One day off",
-				type: "DAYS_OFF_PER_PERIOD",
-				requirement: "SHOULD",
-				status: "ACTIVE",
-				values: [
-					{ field: "COMPARISON", value: "AT_MOST" },
-					{ field: "DAYS_OFF", value: "1" },
-					{ field: "PERIOD_DAYS", value: "7" },
-				],
-			},
-		]);
-		// The dialog's choices come from the constraints module, never from the job titles or shifts lists.
-		expect(calls.map((call) => call.path)).toContain(CONSTRAINT_OPTIONS_PATH);
-		expect(calls.filter((call) => call.path.endsWith("/job-titles"))).toEqual(
-			[]
-		);
-
-		await user.click(screen.getByRole("button", { name: "Save draft" }));
-		await waitFor(() => {
-			expect(sent(calls, `PUT ${SCHEDULE}`)).toEqual([
-				expect.objectContaining({
-					includedConstraintIds: [...INCLUDED_CONSTRAINT_IDS, "one-day-off"],
-				}),
-			]);
-		});
-	});
-
-	it("given_aConstraint_when_editedThroughTheDialog_then_putsItAtTheDepartment", async () => {
-		const user = userEvent.setup();
-		const morning = CONSTRAINT_FIXTURES[2]!;
-		const { calls } = await reopen({
-			[`PUT ${LIVE_CONSTRAINTS}/morning-cover`]: reply({
-				...morning,
-				name: "Breakfast cover",
-			}),
-		});
-		await toConstraints(user);
-
-		await user.click(
-			screen.getByRole("button", { name: "Edit Morning cover" })
-		);
-		const dialog = await screen.findByRole("dialog", {
-			name: "Edit constraint",
-		});
-		const name = within(dialog).getByLabelText("Constraint name");
-		await user.clear(name);
-		await user.type(name, "Breakfast cover");
-		await waitFor(() => {
-			expect(
-				within(dialog).getByRole("spinbutton", { name: /Headcount/ })
-			).toHaveValue(2);
-		});
-		await user.click(within(dialog).getByRole("button", { name: "Save" }));
-
-		await waitFor(() => {
-			expect(screen.getByRole("status")).toHaveTextContent("Constraint saved");
-		});
-		expect(sent(calls, `PUT ${LIVE_CONSTRAINTS}/morning-cover`)).toEqual([
-			{
-				name: "Breakfast cover",
-				type: "SHIFT_STAFFING",
-				requirement: "MUST",
-				status: "ACTIVE",
-				values: morning.values.map(({ field, value }) => ({ field, value })),
-			},
-		]);
-	});
-
-	it("given_aLockedCompanyConstraint_when_madeStricterHere_then_itsReplacementTakesItsPlaceTickedAndIsSaved", async () => {
-		const user = userEvent.setup();
-		const [companyRest, companyWeekends] = COMPANY_CONSTRAINT_FIXTURES;
-		// The department has no rest of its own, so the company's applies.
-		const departmentOwn = CONSTRAINT_FIXTURES.filter(
-			(constraint) => constraint.type !== "REST_BETWEEN_SHIFTS"
-		);
-		const frontRest = constraintFixture({
-			constraintId: "front-rest",
-			name: "Front rest",
-			type: "REST_BETWEEN_SHIFTS",
-			category: "WORKING_HOURS",
-			requirement: null,
-			values: [{ field: "REST_HOURS", value: "12", name: null }],
-			locked: true,
-			overridesConstraintId: "company-rest",
-			replacementStatus: "STANDS_IN",
-		});
-		const { calls } = await reopen({
-			[`POST ${LIVE_CONSTRAINTS}`]: reply(frontRest, 201),
-			[`GET ${LIVE_CONSTRAINTS}`]: [
-				reply([companyRest, companyWeekends, ...departmentOwn]),
-				reply([
-					{ ...companyRest, overriddenByConstraintId: "front-rest" },
-					companyWeekends,
-					...departmentOwn,
-					frontRest,
-				]),
-			],
-			[`PUT ${SCHEDULE}`]: reply(DRAFT),
-		});
-		await toConstraints(user);
-		expect(checkbox("Company rest")).toBeChecked();
-
-		await user.click(
-			screen.getByRole("button", { name: "Make Company rest stricter here" })
-		);
-		const dialog = await screen.findByRole("dialog", {
-			name: "Set for this department",
-		});
-		await user.type(
-			within(dialog).getByLabelText("Constraint name"),
-			"Front rest"
-		);
-		const hours = within(dialog).getByRole("spinbutton", { name: /Rest/ });
-		await user.clear(hours);
-		await user.type(hours, "12");
-		await user.click(within(dialog).getByRole("button", { name: "Save" }));
-
-		await screen.findByRole("row", { name: /Front rest/ });
-		expect(screen.queryByRole("row", { name: /Company rest/ })).toBeNull();
-		expect(screen.getByRole("row", { name: /Front rest/ })).toHaveTextContent(
-			"Stricter here"
-		);
-		expect(checkbox("Front rest")).toBeChecked();
-		expect(checkbox("Front rest")).toBeDisabled();
-		expect(sent(calls, `POST ${LIVE_CONSTRAINTS}`)).toEqual([
-			expect.objectContaining({
-				type: "REST_BETWEEN_SHIFTS",
-				overridesConstraintId: "company-rest",
-				values: [{ field: "REST_HOURS", value: "12" }],
-			}),
-		]);
-
-		await user.click(screen.getByRole("button", { name: "Save draft" }));
-		await waitFor(() => {
-			expect(sent(calls, `PUT ${SCHEDULE}`)).toHaveLength(1);
-		});
-		const saved = sent(calls, `PUT ${SCHEDULE}`)[0] as {
-			includedConstraintIds: Array<string>;
-		};
-		expect(saved.includedConstraintIds).toContain("front-rest");
-		expect(saved.includedConstraintIds).not.toContain("company-rest");
-	});
-
-	it("given_aConstraint_when_deleted_then_deletesItAtTheDepartmentAndUnticksIt", async () => {
-		const user = userEvent.setup();
-		const { calls } = await reopen({
-			[`DELETE ${LIVE_CONSTRAINTS}/morning-cover`]: { status: 204 },
-			[`PUT ${SCHEDULE}`]: reply(DRAFT),
-		});
-		await toConstraints(user);
-
-		await user.click(
-			screen.getByRole("button", { name: "Delete Morning cover" })
-		);
-		await waitFor(() => {
-			expect(screen.getByRole("status")).toHaveTextContent(
-				"Constraint successfully deleted"
-			);
-		});
-		await user.click(screen.getByRole("button", { name: "Save draft" }));
-
-		await waitFor(() => {
-			expect(sent(calls, `PUT ${SCHEDULE}`)).toHaveLength(1);
-		});
-		expect(writes(calls)).toEqual([
-			`DELETE ${LIVE_CONSTRAINTS}/morning-cover`,
-			`PUT ${SCHEDULE}`,
-		]);
-		expect(sent(calls, `PUT ${SCHEDULE}`)).toEqual([
-			expect.objectContaining({
-				includedConstraintIds: ["lunch-stand-ins", "rest-between-shifts"],
-			}),
-		]);
-	});
-
-	it("given_aSaveRefusedForAnInactiveConstraint_when_draftSaved_then_saysSo", async () => {
-		const user = userEvent.setup();
-		await reopen({
-			[`PUT ${SCHEDULE}`]: problemReply(409, "CONSTRAINT_INACTIVE"),
-		});
-		await toConstraints(user);
-
-		await user.click(screen.getByRole("button", { name: "Save draft" }));
-
-		expect(await screen.findByRole("alert")).toHaveTextContent(
-			"A chosen constraint is inactive. Untick it or make it active, then try again."
-		);
-	});
-
-	describe("leaving without constraints", () => {
-		const NONE_TICKED = {
-			[`GET ${SCHEDULE}`]: reply(
-				scheduleFixture({ includedConstraintIds: [] })
-			),
-		};
-
-		it("given_noConstraintTicked_when_nextClicked_then_asksFirstAndStaysOnCancel", async () => {
-			const user = userEvent.setup();
-			await reopen(NONE_TICKED);
-			await toConstraints(user);
-
-			await user.click(next());
-
-			const dialog = await screen.findByRole("dialog", {
-				name: "Continue without constraints?",
-			});
-			expect(dialog).toHaveTextContent(
-				`None of this department’s ${CONSTRAINT_FIXTURES.length} constraints are ticked. The schedule will be generated without rules such as days off or maximum hours.`
-			);
-			await user.click(
-				within(dialog).getByRole("button", { name: "Back to constraints" })
-			);
-			await waitFor(() => {
-				expect(screen.queryByRole("dialog")).toBeNull();
-			});
-			expect(
-				screen.getByRole("region", { name: "Scheduling constraints" })
-			).toBeVisible();
-		});
-
-		it("given_noConstraintTicked_when_continuedWithout_then_opensTheForecast", async () => {
-			const user = userEvent.setup();
-			await reopen(NONE_TICKED);
-			await toConstraints(user);
-
-			await user.click(next());
-			await user.click(
-				await screen.findByRole("button", {
-					name: "Continue without constraints",
-				})
-			);
-
-			expect(
-				await screen.findByRole("region", { name: "Staffing forecast" })
-			).toBeVisible();
-		});
-
-		it("given_aDepartmentWithoutConstraints_when_nextClicked_then_saysItHasNone", async () => {
-			const user = userEvent.setup();
-			await reopen({ ...NONE_TICKED, [`GET ${LIVE_CONSTRAINTS}`]: reply([]) });
-			await toConstraints(user);
-
-			await user.click(next());
-
-			expect(
-				await screen.findByRole("dialog", {
-					name: "Continue without constraints?",
-				})
-			).toHaveTextContent("This department has no constraints yet.");
-		});
-
-		it("given_aConstraintTicked_when_nextClicked_then_goesOnWithoutAsking", async () => {
-			const user = userEvent.setup();
-			await reopen();
-			await toConstraints(user);
-
-			await user.click(next());
-
-			expect(
-				await screen.findByRole("region", { name: "Staffing forecast" })
-			).toBeVisible();
-			expect(screen.queryByRole("dialog")).toBeNull();
-		});
-
-		it("given_hiddenConstraints_when_nextClicked_then_goesOnWithoutAsking", async () => {
-			const user = userEvent.setup();
-			await reopen(NONE_TICKED, [
-				"schedule:read",
-				"schedule:update",
-				"shift:read",
-			]);
-			await toConstraints(user);
-			await screen.findByText(
-				"You don’t have permission to see this department’s constraints."
-			);
-
-			await user.click(next());
-
-			expect(
-				await screen.findByRole("region", { name: "Staffing forecast" })
-			).toBeVisible();
-			expect(screen.queryByRole("dialog")).toBeNull();
-		});
-	});
-
-	it("given_noConstraintReadKey_when_onConstraints_then_saysTheyAreHiddenAndKeepsTheTicks", async () => {
-		const user = userEvent.setup();
-		const { calls } = await reopen({ [`PUT ${SCHEDULE}`]: reply(DRAFT) }, [
-			"schedule:read",
-			"schedule:update",
-			"shift:read",
-		]);
-		await toConstraints(user);
-
-		expect(
-			await screen.findByText(
-				"You don’t have permission to see this department’s constraints."
-			)
-		).toBeVisible();
-		expect(screen.queryByRole("table", { name: "Constraints" })).toBeNull();
-		await user.click(screen.getByRole("button", { name: "Save draft" }));
-
-		await waitFor(() => {
-			expect(sent(calls, `PUT ${SCHEDULE}`)).toEqual([
-				expect.objectContaining({
-					includedConstraintIds: INCLUDED_CONSTRAINT_IDS,
-				}),
-			]);
-		});
-		expect(calls.filter((call) => call.path.endsWith("/constraints"))).toEqual(
-			[]
-		);
-	});
-
-	it("given_keysHeldAtTheDepartmentOnly_when_onItsConstraints_then_eachActionFollowsItsOwnKeyThere", async () => {
-		const user = userEvent.setup();
-		const workspace = grantedAt({
-			"d-1": [
-				"schedule:read",
-				"shift:read",
-				"constraint:read",
-				"constraint:update",
-			],
-			// Held at another department, so never offered here.
-			"d-2": ["constraint:create", "constraint:delete", "schedule:update"],
-		});
-		await reopen({}, workspace);
-		await toConstraints(user);
-		await screen.findByRole("row", { name: /Morning cover/ });
-
-		expect(
-			screen.getByRole("button", { name: "Edit Morning cover" })
-		).toBeVisible();
-		expect(screen.queryByRole("button", { name: "Add constraint" })).toBeNull();
-		expect(screen.queryByRole("button", { name: /^Delete / })).toBeNull();
 	});
 });
 
@@ -1408,14 +759,9 @@ describe("Create Schedule: generating", () => {
 	it("given_everyStep_when_completed_then_reachesGenerateWithTheSummary", async () => {
 		const user = userEvent.setup();
 		await reopen();
-		await screen.findByRole("row", { name: /Front Desk AM/ });
 
-		await user.click(next());
-		await screen.findByRole("region", { name: "Scheduling constraints" });
-		await user.click(next());
-		await screen.findByRole("region", { name: "Staffing forecast" });
 		// Nothing is allocated until the person says so.
-		expect(screen.getAllByText("0 staff allocated")[0]).toBeVisible();
+		expect((await screen.findAllByText("0 staff allocated"))[0]).toBeVisible();
 		await user.click(
 			screen.getByRole("button", { name: "More Front Desk Lead" })
 		);
@@ -1439,8 +785,6 @@ describe("Create Schedule: generating", () => {
 			[`PUT ${SCHEDULE}`]: reply(DRAFT),
 			[`POST ${GENERATION}`]: reply(generatedScheduleFixture()),
 		});
-		await screen.findByRole("row", { name: /Front Desk AM/ });
-		await user.click(checkbox("Overnight Ops"));
 		await toGenerate(user);
 
 		await user.click(screen.getByRole("button", { name: "Generate" }));
@@ -1455,7 +799,7 @@ describe("Create Schedule: generating", () => {
 		expect(sent(calls, `PUT ${SCHEDULE}`)).toEqual([
 			{
 				...DRAFT_SETUP,
-				includedShiftIds: [...INCLUDED_SHIFT_IDS, "overnight-ops"],
+				includedShiftIds: INCLUDED_SHIFT_IDS,
 				includedConstraintIds: INCLUDED_CONSTRAINT_IDS,
 			},
 		]);
@@ -1574,22 +918,29 @@ describe("Create Schedule: generating", () => {
 		}
 	);
 
-	it("given_aGeneratedSchedule_when_reopened_then_showsItsFrozenShiftsReadOnly", async () => {
+	it("given_aGeneratedSchedule_when_reopened_then_showsWhatItWasGeneratedWithReadOnly", async () => {
 		const user = userEvent.setup();
-		const { calls } = await reopen({
-			[`GET ${SCHEDULE}`]: reply(
-				generatedScheduleFixture({ status: "GENERATED" })
-			),
-			[`GET ${SCHEDULE_SHIFTS}`]: reply(frozenShiftsFixture()),
-			[`GET ${SCHEDULE_CONSTRAINTS}`]: reply(frozenConstraintsFixture()),
-		});
+		const { calls } = await open(
+			"/scheduling/new?step=setup&scheduleId=s-1&departmentId=d-1",
+			{
+				[`GET ${SCHEDULE}`]: reply(
+					generatedScheduleFixture({ status: "GENERATED" })
+				),
+				[`GET ${SCHEDULE_SHIFTS}`]: reply(frozenShiftsFixture()),
+				[`GET ${SCHEDULE_CONSTRAINTS}`]: reply(frozenConstraintsFixture()),
+			}
+		);
 
 		expect(
 			await screen.findByText(
 				"This schedule has been generated. It shows the shifts and constraints it was generated with and can no longer be changed."
 			)
 		).toBeVisible();
-		const table = await screen.findByRole("table", { name: "Shifts" });
+		await user.click(await screen.findByRole("button", { name: "View" }));
+		const dialog = await screen.findByRole("dialog", {
+			name: /^What .+ used$/,
+		});
+		const table = within(dialog).getByRole("table", { name: "Shifts" });
 		expect(within(table).getAllByRole("row")).toHaveLength(
 			INCLUDED_SHIFT_IDS.length + 1
 		);
@@ -1597,17 +948,7 @@ describe("Create Schedule: generating", () => {
 		expect(
 			within(table).getByRole("row", { name: /Breakfast Prep/ })
 		).toBeVisible();
-		expect(screen.queryByRole("checkbox")).toBeNull();
-		expect(
-			screen.queryByRole("button", { name: "Add shift" })
-		).toBeNull();
-		expect(
-			screen.queryByRole("button", { name: /^(Edit|Delete) / })
-		).toBeNull();
-		expect(screen.queryByRole("button", { name: "Save draft" })).toBeNull();
-
-		await user.click(next());
-		const constraints = await screen.findByRole("table", {
+		const constraints = within(dialog).getByRole("table", {
 			name: "Constraints",
 		});
 		expect(within(constraints).getAllByRole("row")).toHaveLength(
@@ -1617,14 +958,16 @@ describe("Create Schedule: generating", () => {
 		expect(
 			within(constraints).getByRole("row", { name: /Rest between shifts/ })
 		).toBeVisible();
-		expect(screen.queryByRole("checkbox")).toBeNull();
-		expect(screen.queryByRole("button", { name: "Add constraint" })).toBeNull();
-		expect(
-			screen.queryByRole("button", { name: /^(Edit|Delete) / })
-		).toBeNull();
+		expect(within(dialog).queryByRole("checkbox")).toBeNull();
 		// The frozen copies are read, never the department's live constraints.
 		expect(calls.map((call) => call.path)).toContain(SCHEDULE_CONSTRAINTS);
 		expect(calls.map((call) => call.path)).not.toContain(LIVE_CONSTRAINTS);
+		await user.click(
+			within(dialog).getAllByRole("button", { name: "Close" })[1]!
+		);
+		await waitFor(() => {
+			expect(screen.queryByRole("dialog")).toBeNull();
+		});
 
 		await user.click(next());
 		await screen.findByRole("region", { name: "Staffing forecast" });
@@ -1829,7 +1172,7 @@ describe("Create Schedule: the header's Branch", () => {
 			{},
 			twoBranchSchedulingWorkspace(ALL)
 		);
-		await screen.findByRole("tablist", { name: "Shift types" });
+		await screen.findByRole("region", { name: "Staffing forecast" });
 
 		const header = screen.getByRole("banner");
 		expect(

@@ -4145,7 +4145,8 @@
 			"editConstraints": "Edit constraints",
 			"choose": "Choose for this week",
 			"view": "View",
-			"everything": "This week uses every shift and constraint of {{department}}."
+			"everything": "This week uses every shift and constraint of {{department}}.",
+			"change": "Change"
 		}
 	},
 	"colourSwatchPicker": {

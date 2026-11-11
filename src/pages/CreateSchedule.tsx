@@ -2,7 +2,6 @@ import { useQuery } from "@tanstack/react-query";
 import { Navigate, useNavigate, useSearch } from "@tanstack/react-router";
 import { useCallback, useId, useReducer, useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { TFunction } from "i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
@@ -16,12 +15,6 @@ import { Stepper, StepperStep } from "@/components/ui/Stepper";
 import { Toast } from "@/components/ui/Toast";
 import { placeOf } from "@/features/organisation/assignmentTargets";
 import { constraintsQuery } from "@/features/scheduling/constraints/api";
-import { ConstraintDialog } from "@/features/scheduling/constraints/ConstraintDialog";
-import { deleteConstraintRefusal } from "@/features/scheduling/constraints/constraintRefusal";
-import { ConstraintsStep } from "@/features/scheduling/constraints/ConstraintsStep";
-import { useConstraintActions } from "@/features/scheduling/constraints/useConstraintActions";
-import { NoConstraintsDialog } from "@/features/scheduling/constraints/NoConstraintsDialog";
-import { useConstraintOptions } from "@/features/scheduling/constraints/useConstraintOptions";
 import { departmentUnitOf } from "@/features/scheduling/departmentUnit";
 import { ForecastStep } from "@/features/scheduling/ForecastStep";
 import { GenerateStep } from "@/features/scheduling/GenerateStep";
@@ -42,18 +35,14 @@ import {
 	emptyScheduleDraft,
 	includedShifts,
 	isFrozen,
-	isTickable,
 	scheduleDraftReducer,
 	summarise,
 	tickedConstraintsOf,
 	tickedOf,
-	type Constraint,
-	type ListProblem,
 	type ScheduleSetup,
 } from "@/features/scheduling/scheduleDraft";
 import type {
 	ScheduleBody,
-	ScheduleShift,
 	ScheduleStatus,
 } from "@/features/scheduling/schedules/api";
 import {
@@ -74,18 +63,10 @@ import {
 } from "@/features/scheduling/ScheduleSetupStep";
 import { withSchedulingNotice } from "@/features/scheduling/schedulingNotice";
 import type { ScheduleSetupValues } from "@/features/scheduling/setupSchema";
-import {
-	departmentShiftsQuery,
-	groupsOf,
-} from "@/features/scheduling/shifts/api";
-import { ShiftDialog } from "@/features/scheduling/shifts/ShiftDialog";
-import { deleteShiftRefusal } from "@/features/scheduling/shifts/shiftRefusal";
-import { ShiftsStep } from "@/features/scheduling/shifts/ShiftsStep";
-import { useShiftActions } from "@/features/scheduling/shifts/useShiftActions";
-import { useShiftRoleOptions } from "@/features/scheduling/shifts/useShiftRoleOptions";
+import { departmentShiftsQuery } from "@/features/scheduling/shifts/api";
 import { StepActions } from "@/features/scheduling/StepActions";
 import { stepCompletion } from "@/features/scheduling/stepCompletion";
-import { SCHEDULE_STEPS } from "@/features/scheduling/steps";
+import { isScheduleStep, SCHEDULE_STEPS } from "@/features/scheduling/steps";
 import {
 	allOf,
 	usesLineOf,
@@ -122,20 +103,6 @@ const bodyOf = (
 	includedConstraintIds,
 });
 
-/** Why a step's list (`copy` names it: its shifts or its constraints) is not shown. */
-const listProblemOf = (
-	status: "pending" | "error" | "hidden" | "ready",
-	copy: "scheduling.shifts" | "scheduling.constraints",
-	t: TFunction
-): ListProblem | undefined => {
-	if (status === "hidden")
-		return { message: t(`${copy}.hidden`), alert: false };
-	if (status === "error") return { message: t(`${copy}.failed`), alert: true };
-	if (status === "pending")
-		return { message: t(`${copy}.loading`), alert: false };
-	return undefined;
-};
-
 /** The copy a draft that can't be shown is explained with. */
 const draftProblemKey = (
 	status: ScheduleState["status"]
@@ -164,18 +131,18 @@ const frozenNoticeKey = (
 };
 
 /**
- * The Create Schedule steps: Setup, Shifts, Constraints, Forecast and
- * Generate. The URL names the current step and, once Setup is done, the
- * saved draft (`scheduleId` with its `departmentId`, whose routes name it);
- * a later step without a draft sends the person back to Setup. Completing
- * Setup creates the DRAFT schedule; reopening the URL loads it back. Its
- * shifts and constraints are the Department's live ones, ticked as the
- * schedule keeps them, and changed under their own keys for every draft of
- * the Department. Save Draft sends the setup and the ticks; Generate saves,
- * then freezes the ticked shifts and constraints into the schedule and
- * returns to Scheduling. A generated schedule shows its frozen shifts and
- * constraints and changes no more. Allocations and demand stay in the page
- * until their API exists.
+ * The Create Schedule steps: Setup, Forecast and Generate. The URL names the
+ * current step and, once Setup is done, the saved draft (`scheduleId` with
+ * its `departmentId`, whose routes name it); a later step without a draft
+ * sends the person back to Setup. A new draft uses every live shift and
+ * constraint of its Department unless the manager chooses otherwise for the
+ * week on Setup; completing Setup creates the DRAFT schedule with that
+ * choice, and reopening the URL loads it back. The Department's shifts and
+ * constraints themselves are changed on the Scheduling tabs. Save Draft
+ * sends the setup and the ticks; Generate saves, then freezes the ticked
+ * shifts and constraints into the schedule and returns to Scheduling. A
+ * generated schedule shows what it was generated with and changes no more.
+ * Allocations and demand stay in the page until their API exists.
  */
 export const CreateSchedule = (): FunctionComponent => {
 	const { t, i18n } = useTranslation();
@@ -184,7 +151,8 @@ export const CreateSchedule = (): FunctionComponent => {
 	const access = useAccess();
 	const workspace = useQuery({ ...workspaceQuery, retry });
 	const search = useSearch({ from: "/_authenticated/_app/scheduling_/new" });
-	const step = search.step ?? "setup";
+	// A step the wizard no longer has (an old Shifts or Constraints link) opens Setup.
+	const step = isScheduleStep(search.step) ? search.step : "setup";
 	// The header's Branch, resolved as the header resolves it: a new draft's departments are its own.
 	const headerBranchId = useUnitSelection(
 		companyId,
@@ -264,12 +232,6 @@ export const CreateSchedule = (): FunctionComponent => {
 	);
 	const canGenerate =
 		!frozen && allowed("schedule:generate") && weekPublishedBy === undefined;
-	const canAddShift = !frozen && allowed("shift:create");
-	const canEditShift = !frozen && allowed("shift:update");
-	const canDeleteShift = !frozen && allowed("shift:delete");
-	const canAddConstraint = !frozen && allowed("constraint:create");
-	const canEditConstraint = !frozen && allowed("constraint:update");
-	const canDeleteConstraint = !frozen && allowed("constraint:delete");
 	const shifts = useScheduleShifts(companyId, saved, saved?.scheduleId);
 	// The first answer after a load ticks what the schedule includes.
 	if (saved && shifts.status === "ready" && !draft.shiftsSeeded)
@@ -280,8 +242,6 @@ export const CreateSchedule = (): FunctionComponent => {
 		shifts.status === "ready" ? shifts.items : undefined
 	);
 	const constraints = useScheduleConstraints(companyId, saved);
-	const constraintRows =
-		constraints.status === "ready" ? constraints.items : [];
 	const tickedConstraints = tickedConstraintsOf(
 		draft,
 		constraints.status === "ready" ? constraints.items : undefined
@@ -342,68 +302,13 @@ export const CreateSchedule = (): FunctionComponent => {
 			? { shiftIds: ticked, constraintIds: tickedConstraints }
 			: allOf(weekShifts ?? [], weekConstraints ?? []);
 	const [choosingWeek, setChoosingWeek] = useState(false);
-	const [shiftDialog, setShiftDialog] = useState<{
-		editing?: ScheduleShift;
-	} | null>(null);
-	const roles = useShiftRoleOptions(companyId, saved, shiftDialog !== null);
-	const [constraintDialog, setConstraintDialog] = useState<{
-		editing?: Constraint;
-		/** The company constraint being replaced for this department (ADR-0058). */
-		replacing?: Constraint;
-	} | null>(null);
-	const constraintOptions = useConstraintOptions(
-		companyId,
-		saved,
-		constraintDialog !== null
-	);
 	const scheduleActions = useScheduleActions(companyId);
-	const shiftActions = useShiftActions(companyId);
-	const constraintActions = useConstraintActions(companyId);
 	const [toast, setToast] = useState<{ id: number; message: string }>();
 	const [problem, setProblem] = useState("");
-	// Set when Next is refused, so the reason shows only after a try.
-	const [blocked, setBlocked] = useState(false);
-	// Set while the person is asked whether to go on without constraints.
-	const [confirmingNoConstraints, setConfirmingNoConstraints] = useState(false);
 	const setupFormId = useId();
 
 	const notify = (message: string): void => {
 		setToast((previous) => ({ id: (previous?.id ?? 0) + 1, message }));
-	};
-	const deleteShift = (shift: ScheduleShift): void => {
-		if (!saved) return;
-		setProblem("");
-		shiftActions.deleteShift.mutate(
-			{ unit: saved, shiftId: shift.shiftId },
-			{
-				onSuccess: () => {
-					dispatch({ type: "shiftRemoved", shiftId: shift.shiftId });
-					notify(t("scheduling.shifts.deleted"));
-				},
-				onError: (error) => {
-					setProblem(deleteShiftRefusal(error, t));
-				},
-			}
-		);
-	};
-	const deleteConstraint = (constraint: Constraint): void => {
-		if (!saved) return;
-		setProblem("");
-		constraintActions.deleteConstraint.mutate(
-			{ unit: saved, constraintId: constraint.constraintId },
-			{
-				onSuccess: () => {
-					dispatch({
-						type: "constraintRemoved",
-						constraintId: constraint.constraintId,
-					});
-					notify(t("scheduling.constraints.deleted"));
-				},
-				onError: (error) => {
-					setProblem(deleteConstraintRefusal(error, t));
-				},
-			}
-		);
 	};
 	const changeAllocation = (
 		shiftId: string,
@@ -411,21 +316,6 @@ export const CreateSchedule = (): FunctionComponent => {
 		allocated: number
 	): void => {
 		dispatch({ type: "allocationChanged", shiftId, jobTitleId, allocated });
-	};
-	const openShiftDialog = (editing?: ScheduleShift): void => {
-		setShiftDialog({ editing });
-	};
-	const openConstraintDialog = (editing?: Constraint): void => {
-		// A replacement is edited against the company constraint it replaces.
-		const replacing = editing?.overridesConstraintId
-			? constraintRows.find(
-					(row) => row.constraintId === editing.overridesConstraintId
-				)
-			: undefined;
-		setConstraintDialog({ editing, replacing });
-	};
-	const openReplaceDialog = (replacing: Constraint): void => {
-		setConstraintDialog({ replacing });
 	};
 
 	const current = SCHEDULE_STEPS.indexOf(step);
@@ -470,7 +360,6 @@ export const CreateSchedule = (): FunctionComponent => {
 		);
 
 	const goTo = (index: number, draftIds = named): void => {
-		setBlocked(false);
 		setProblem("");
 		void navigate({
 			to: "/scheduling/new",
@@ -566,21 +455,8 @@ export const CreateSchedule = (): FunctionComponent => {
 	};
 	const included = includedShifts({ includedShiftIds: ticked }, shiftRows);
 	const summary = summarise(included, draft.allocations);
-	const stepProblem =
-		step === "shifts" && !frozen && ticked.length === 0
-			? t("scheduling.shifts.required")
-			: undefined;
-	const shownProblem = blocked ? stepProblem : undefined;
-	// Only when the list is known: a hidden or failed list may have constraints ticked.
-	const leavesWithoutConstraints =
-		step === "constraints" &&
-		!frozen &&
-		constraints.status === "ready" &&
-		tickedConstraints.length === 0;
 	const next = (): void => {
-		if (stepProblem) setBlocked(true);
-		else if (leavesWithoutConstraints) setConfirmingNoConstraints(true);
-		else goTo(current + 1);
+		goTo(current + 1);
 	};
 	const firstPeriod = defaultPeriod(today);
 	const setupDefaults: ScheduleSetupValues = draft.setup ?? {
@@ -604,8 +480,6 @@ export const CreateSchedule = (): FunctionComponent => {
 	const completion = stepCompletion({
 		saved: saved !== undefined,
 		frozen,
-		tickedShiftCount: ticked.length,
-		tickedConstraintCount: tickedConstraints.length,
 		currentIndex: current,
 	});
 	const busy =
@@ -638,11 +512,13 @@ export const CreateSchedule = (): FunctionComponent => {
 							frozen
 						)
 					: undefined;
-	const weekActionLabel = weekListsHidden
-		? undefined
-		: frozen
+	// The week can be chosen from its lists while the setup can change.
+	const canChooseWeek =
+		!frozen && !weekListsHidden && (saved === undefined || canSave);
+	const weekActionLabel =
+		frozen && !weekListsHidden
 			? t("scheduling.week.view")
-			: saved === undefined || canSave
+			: canChooseWeek
 				? t("scheduling.week.choose")
 				: undefined;
 	const weekSummary = weekLine && (
@@ -654,22 +530,22 @@ export const CreateSchedule = (): FunctionComponent => {
 			}}
 		/>
 	);
+	// Generate says the same, and "Change" goes back to Setup, where the week is chosen.
+	const generateWeekSummary = weekLine && (
+		<WeekChoiceSummary
+			actionLabel={canChooseWeek ? t("scheduling.week.change") : undefined}
+			line={weekLine}
+			onAction={() => {
+				goTo(0);
+			}}
+		/>
+	);
 	// A frozen schedule, or a draft the person may not change, is shown as it is.
 	const notice = frozen
 		? t(frozenNoticeKey(saved.status))
 		: saved && !canSave
 			? t("scheduling.draft.readOnly")
 			: undefined;
-	const onAddShift = canAddShift
-		? (): void => {
-				openShiftDialog();
-			}
-		: undefined;
-	const onAddConstraint = canAddConstraint
-		? (): void => {
-				openConstraintDialog();
-			}
-		: undefined;
 	const onSaveDraft =
 		step !== "setup" && canSave
 			? (): void => {
@@ -692,16 +568,6 @@ export const CreateSchedule = (): FunctionComponent => {
 				? "scheduling.publishedWeek.generateUnavailable"
 				: "scheduling.create.generateForbidden"
 	);
-	const onShiftsIncluded = frozen
-		? undefined
-		: (shiftIds: Array<string>): void => {
-				dispatch({ type: "shiftsIncluded", shiftIds });
-			};
-	const onConstraintsIncluded = frozen
-		? undefined
-		: (constraintIds: Array<string>): void => {
-				dispatch({ type: "constraintsIncluded", constraintIds });
-			};
 
 	return (
 		<>
@@ -732,36 +598,6 @@ export const CreateSchedule = (): FunctionComponent => {
 						onSubmit={submitSetup}
 					/>
 				)}
-				{step === "shifts" && (
-					<ShiftsStep
-						frozen={frozen}
-						includedShiftIds={ticked}
-						listProblem={listProblemOf(shifts.status, "scheduling.shifts", t)}
-						problem={shownProblem}
-						shifts={shiftRows}
-						onAdd={onAddShift}
-						onDelete={canDeleteShift ? deleteShift : undefined}
-						onEdit={canEditShift ? openShiftDialog : undefined}
-						onIncludedChange={onShiftsIncluded}
-					/>
-				)}
-				{step === "constraints" && (
-					<ConstraintsStep
-						constraints={constraintRows}
-						frozen={frozen}
-						includedConstraintIds={tickedConstraints}
-						listProblem={listProblemOf(
-							constraints.status,
-							"scheduling.constraints",
-							t
-						)}
-						onAdd={onAddConstraint}
-						onDelete={canDeleteConstraint ? deleteConstraint : undefined}
-						onEdit={canEditConstraint ? openConstraintDialog : undefined}
-						onIncludedChange={onConstraintsIncluded}
-						onReplace={canAddConstraint ? openReplaceDialog : undefined}
-					/>
-				)}
 				{step === "forecast" && (
 					<ForecastStep
 						allocations={draft.allocations}
@@ -784,6 +620,7 @@ export const CreateSchedule = (): FunctionComponent => {
 				{step === "generate" && (
 					<GenerateStep
 						summary={summary}
+						uses={generateWeekSummary}
 						notice={
 							weekPublishedBy && (
 								<PublishedWeekCallout
@@ -832,82 +669,6 @@ export const CreateSchedule = (): FunctionComponent => {
 						: undefined
 				}
 			/>
-			{shiftDialog && saved && (
-				<ShiftDialog
-					editing={shiftDialog.editing}
-					groups={groupsOf(shiftRows)}
-					roles={roles}
-					onClose={() => {
-						setShiftDialog(null);
-					}}
-					onSave={async (body) => {
-						const editing = shiftDialog.editing;
-						const shift = editing
-							? await shiftActions.updateShift.mutateAsync({
-									unit: saved,
-									shiftId: editing.shiftId,
-									body,
-								})
-							: await shiftActions.createShift.mutateAsync({
-									unit: saved,
-									body,
-								});
-						// A shift added here is ticked for this draft until it is saved or unticked.
-						if (!editing)
-							dispatch({
-								type: "shiftsIncluded",
-								shiftIds: [...draft.includedShiftIds, shift.shiftId],
-							});
-						notify(
-							t(
-								editing ? "scheduling.shifts.edited" : "scheduling.shifts.added"
-							)
-						);
-					}}
-				/>
-			)}
-			{constraintDialog && saved && (
-				<ConstraintDialog
-					editing={constraintDialog.editing}
-					options={constraintOptions}
-					replacing={constraintDialog.replacing}
-					onClose={() => {
-						setConstraintDialog(null);
-					}}
-					onSave={async (body) => {
-						const editing = constraintDialog.editing;
-						const constraint = editing
-							? await constraintActions.updateConstraint.mutateAsync({
-									unit: saved,
-									constraintId: editing.constraintId,
-									body,
-								})
-							: await constraintActions.createConstraint.mutateAsync({
-									unit: saved,
-									body,
-								});
-						// A constraint added here is ticked for this draft, when it can be, until it is saved or unticked;
-						// a replacement takes its company constraint's place.
-						if (!editing && isTickable(constraint))
-							dispatch({
-								type: "constraintsIncluded",
-								constraintIds: [
-									...draft.includedConstraintIds.filter(
-										(id) => id !== constraint.overridesConstraintId
-									),
-									constraint.constraintId,
-								],
-							});
-						notify(
-							t(
-								editing
-									? "scheduling.constraints.edited"
-									: "scheduling.constraints.added"
-							)
-						);
-					}}
-				/>
-			)}
 			{choosingWeek && weekShifts && weekConstraints && weekDepartmentName && (
 				<WeekChoiceDialog
 					constraints={weekConstraints}
@@ -922,18 +683,6 @@ export const CreateSchedule = (): FunctionComponent => {
 					}}
 					onClose={() => {
 						setChoosingWeek(false);
-					}}
-				/>
-			)}
-			{confirmingNoConstraints && (
-				<NoConstraintsDialog
-					constraintCount={constraintRows.length}
-					onClose={() => {
-						setConfirmingNoConstraints(false);
-					}}
-					onConfirm={() => {
-						setConfirmingNoConstraints(false);
-						goTo(current + 1);
 					}}
 				/>
 			)}
