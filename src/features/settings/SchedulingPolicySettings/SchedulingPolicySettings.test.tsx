@@ -80,9 +80,14 @@ describe("SchedulingPolicySettings", () => {
 		});
 		const rest = within(table).getByRole("row", { name: /Company rest/ });
 		expect(rest).toHaveTextContent(
-			"Everyone gets at least 11 hours off between shifts."
+			"Must Everyone gets at least 11 hours off between shifts.Whole company"
 		);
 		expect(rest).toHaveTextContent("Locked");
+		expect(
+			within(table)
+				.getAllByRole("columnheader")
+				.map((header) => header.textContent)
+		).not.toContain("Constraint type");
 		expect(
 			within(table).getByRole("row", { name: /Company weekends/ })
 		).toHaveTextContent("Default");

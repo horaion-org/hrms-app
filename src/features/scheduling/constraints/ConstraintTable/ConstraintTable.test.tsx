@@ -35,6 +35,18 @@ const headers = (): Array<string> =>
 	screen.getAllByRole("columnheader").map((header) => header.textContent ?? "");
 
 describe("ConstraintTable", () => {
+	it("given_rows_when_rendered_then_eachReadsAsItsTagSentenceAndWhoItAppliesTo", () => {
+		render(<ConstraintTable constraints={rows} />);
+
+		expect(headers()).toEqual(["Name", "Constraint", "Set by", "Status"]);
+		expect(row(companyRest.name)).toHaveTextContent(
+			"Must Everyone gets at least 11 hours off between shifts.Whole company"
+		);
+		expect(row(morningCover.name)).toHaveTextContent(
+			/^Morning cover.*Must Breakfast Prep and Front Desk AM together need at least 2 people as Front Desk Lead or Front Desk Staff each day\.Breakfast Prep and Front Desk AM/
+		);
+	});
+
 	it("given_noBranchOrDepartmentChosen_when_rendered_then_namesEachRowsBranchAndDepartment", () => {
 		render(<ConstraintTable showBranch showDepartment constraints={rows} />);
 
@@ -131,10 +143,8 @@ describe("ConstraintTable", () => {
 		expect(headersHiddenBelow("hidden md:table-cell")).toEqual([
 			"Branch",
 			"Department",
-			"Constraint type",
-			"Details",
+			"Constraint",
 			"Set by",
-			"Requirement",
 			"Status",
 		]);
 	});
@@ -144,23 +154,17 @@ describe("ConstraintTable", () => {
 			"the setup tab across departments",
 			true,
 			true,
-			["Department", "Constraint type", "Details"],
-			["Set by", "Requirement", "Status"],
+			["Department", "Constraint"],
+			["Set by", "Status"],
 		],
 		[
 			"the setup tab with one department",
 			true,
 			false,
-			["Constraint type", "Details"],
-			["Set by", "Requirement", "Status"],
+			["Constraint"],
+			["Set by", "Status"],
 		],
-		[
-			"the wizard",
-			false,
-			false,
-			["Constraint type", "Details", "Set by", "Requirement", "Status"],
-			[],
-		],
+		["the wizard", false, false, ["Constraint", "Set by", "Status"], []],
 	])(
 		"given_%s_when_rendered_then_hidesTheSettingsColumnsAtTheirBreakpoint",
 		(_where, metaOnNameLine, showDepartment, belowMd, below2xl) => {

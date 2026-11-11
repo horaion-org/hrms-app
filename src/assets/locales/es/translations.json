@@ -3063,10 +3063,7 @@
 		"constraints": {
 			"add": "Añadir restricción",
 			"label": "Restricciones",
-			"name": "Nombre de la restricción",
-			"type": "Tipo de restricción",
-			"details": "Detalles",
-			"requirement": "Requisito",
+			"name": "Nombre",
 			"status": "Estado",
 			"actions": "Acciones",
 			"edit": "Editar {{name}}",
@@ -3171,14 +3168,6 @@
 				"AVOID_DAYS_OFF_ON": "Evitar días libres el <WEEKDAY/>.",
 				"REST_BETWEEN_SHIFTS_one": "Todos tienen al menos <REST_HOURS/> hora libre entre turnos.",
 				"REST_BETWEEN_SHIFTS_other": "Todos tienen al menos <REST_HOURS/> horas libres entre turnos."
-			},
-			"fixedRequirements": {
-				"SHIFT_STAFFING": "Debe o debería",
-				"SHIFT_STAFFING_WITH_STAND_INS": "Debe o debería",
-				"ROLE_PRESENCE": "Debe o debería",
-				"DAYS_OFF_PER_PERIOD": "Debe o debería",
-				"AVOID_DAYS_OFF_ON": "Debería (siempre)",
-				"REST_BETWEEN_SHIFTS": "Debe (siempre)"
 			},
 			"fields": {
 				"COMPARISON": "Comparación",
@@ -3323,7 +3312,8 @@
 				"JOB_TITLE": "qué puestos",
 				"STAND_IN_JOB_TITLE": "qué puestos",
 				"WEEKDAY": "qué días"
-			}
+			},
+			"statement": "Restricción"
 		},
 		"forecast": {
 			"title": "Previsión de personal",

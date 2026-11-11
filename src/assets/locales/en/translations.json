@@ -3241,10 +3241,7 @@
 		"constraints": {
 			"add": "Add constraint",
 			"label": "Constraints",
-			"name": "Constraint name",
-			"type": "Constraint type",
-			"details": "Details",
-			"requirement": "Requirement",
+			"name": "Name",
 			"status": "Status",
 			"actions": "Actions",
 			"edit": "Edit {{name}}",
@@ -3349,14 +3346,6 @@
 				"AVOID_DAYS_OFF_ON": "Avoid days off on <WEEKDAY/>.",
 				"REST_BETWEEN_SHIFTS_one": "Everyone gets at least <REST_HOURS/> hour off between shifts.",
 				"REST_BETWEEN_SHIFTS_other": "Everyone gets at least <REST_HOURS/> hours off between shifts."
-			},
-			"fixedRequirements": {
-				"SHIFT_STAFFING": "Must or should",
-				"SHIFT_STAFFING_WITH_STAND_INS": "Must or should",
-				"ROLE_PRESENCE": "Must or should",
-				"DAYS_OFF_PER_PERIOD": "Must or should",
-				"AVOID_DAYS_OFF_ON": "Should (always)",
-				"REST_BETWEEN_SHIFTS": "Must (always)"
 			},
 			"fields": {
 				"COMPARISON": "Comparison",
@@ -3501,7 +3490,8 @@
 				"JOB_TITLE": "which job titles",
 				"STAND_IN_JOB_TITLE": "which job titles",
 				"WEEKDAY": "which days"
-			}
+			},
+			"statement": "Constraint"
 		},
 		"forecast": {
 			"title": "Staffing forecast",
