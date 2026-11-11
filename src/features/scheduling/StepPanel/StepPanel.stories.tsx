@@ -23,7 +23,7 @@ export const WithActions: Story = {
 	args: {
 		actions: (
 			<Button leadingIcon={<PlusIcon />} size="sm">
-				Add custom shift
+				Add shift
 			</Button>
 		),
 	},

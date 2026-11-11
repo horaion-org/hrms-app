@@ -197,11 +197,11 @@ describe("ShiftsTab", () => {
 		});
 
 		await user.click(
-			await screen.findByRole("button", { name: "Add custom shift" })
+			await screen.findByRole("button", { name: "Add shift" })
 		);
 
 		const dialog = await screen.findByRole("dialog", {
-			name: "Add custom shift",
+			name: "Add shift",
 		});
 		expect(
 			within(dialog).getByRole("button", { name: /^Department/ })
@@ -214,7 +214,7 @@ describe("ShiftsTab", () => {
 
 		await screen.findByRole("row", { name: /Front Desk AM/ });
 		expect(
-			screen.queryByRole("button", { name: "Add custom shift" })
+			screen.queryByRole("button", { name: "Add shift" })
 		).toBeNull();
 		expect(
 			screen.queryByRole("button", { name: "Edit Front Desk AM" })
@@ -440,9 +440,9 @@ describe("ShiftsTab", () => {
 		await user.keyboard("{Escape}");
 		await user.keyboard("{Escape}");
 
-		await user.click(screen.getByRole("button", { name: "Add custom shift" }));
+		await user.click(screen.getByRole("button", { name: "Add shift" }));
 		const dialog = await screen.findByRole("dialog", {
-			name: "Add custom shift",
+			name: "Add shift",
 		});
 		await user.click(
 			within(dialog).getByRole("button", { name: /^Department/ })
