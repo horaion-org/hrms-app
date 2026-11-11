@@ -1,17 +1,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import {
-	Controller,
-	useFieldArray,
-	useForm,
-	useWatch,
-	type Control,
-} from "react-hook-form";
+import { Controller, useFieldArray, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { FormRow } from "@/components/forms/FormRow";
 import { Input } from "@/components/forms/Input";
-import { RadioCard } from "@/components/forms/RadioCard";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import { Checkbox } from "@/components/ui/Checkbox";
@@ -24,7 +17,6 @@ import {
 import {
 	APPROVAL_FLOW_MAX_STEPS,
 	APPROVAL_STEP_LABEL_INPUT_MAX_LENGTH,
-	APPROVAL_STEP_MAX_MEMBERS,
 	LEAVE_REQUEST,
 	type ApprovalFlow,
 	type ApprovalSubject,
@@ -32,13 +24,17 @@ import {
 import { flowRefusal } from "@/features/approvals/approvalRefusal";
 import { subjectCopyKey } from "@/features/approvals/approvalSubjects";
 import {
+	movedFocusTarget,
+	type MoveDirection,
+} from "@/features/approvals/ApprovalFlowDialog/movedFocusTarget";
+import { StepChoices } from "@/features/approvals/ApprovalFlowDialog/StepChoices";
+import {
 	flowSchema,
 	initialFlowValues,
 	newStep,
 	type FlowValues,
 } from "@/features/approvals/ApprovalFlowDialog/schema";
 import { CreateFormDialog } from "@/features/organisation/CreateFormDialog";
-import { HeadsField } from "@/features/organisation/HeadsField";
 import { useCreateFormSubmit } from "@/features/organisation/useCreateFormSubmit";
 import { DepartmentSelector } from "@/features/workspace/DepartmentSelector";
 
@@ -57,125 +53,6 @@ export type ApprovalFlowDialogProps = {
 
 const FIELDS = ["departmentId"] as const;
 const key = "approvals.flows.dialog";
-
-/** One step's "who decides" and, for named people, "how many of them". */
-const StepChoices = ({
-	companyId,
-	control,
-	index,
-	idPrefix,
-	anyoneLabel,
-	disabled,
-	peopleHint,
-	peopleError,
-}: {
-	companyId: string;
-	control: Control<FlowValues>;
-	index: number;
-	idPrefix: string;
-	anyoneLabel: string;
-	disabled: boolean;
-	peopleHint: string;
-	peopleError?: string;
-}): FunctionComponent => {
-	const { t } = useTranslation();
-	const rule = useWatch({ control, name: `steps.${index}.rule` });
-	return (
-		<>
-			<Controller
-				control={control}
-				name={`steps.${index}.rule`}
-				render={({ field }) => (
-					<div className="flex flex-col gap-2">
-						<p className="text-sm text-neutral-800" id={`${idPrefix}-who`}>
-							{t(`${key}.whoDecides`)}
-						</p>
-						<div
-							aria-labelledby={`${idPrefix}-who`}
-							className="grid gap-3"
-							role="radiogroup"
-						>
-							<RadioCard
-								checked={field.value === "KEY_HOLDERS"}
-								description={t(`${key}.anyoneDescription`)}
-								disabled={disabled}
-								label={anyoneLabel}
-								name={`${idPrefix}-rule`}
-								value="KEY_HOLDERS"
-								onChange={field.onChange}
-							/>
-							<RadioCard
-								checked={field.value === "MEMBERS"}
-								description={t(`${key}.onlyTheseDescription`)}
-								disabled={disabled}
-								label={t(`${key}.onlyThese`)}
-								name={`${idPrefix}-rule`}
-								value="MEMBERS"
-								onChange={field.onChange}
-							/>
-						</div>
-					</div>
-				)}
-			/>
-			{rule === "MEMBERS" && (
-				<>
-					<Controller
-						control={control}
-						name={`steps.${index}.members`}
-						render={({ field }) => (
-							<HeadsField
-								ref={field.ref}
-								companyId={companyId}
-								disabled={disabled}
-								error={peopleError}
-								hint={peopleHint}
-								id={`${idPrefix}-people`}
-								label={t(`${key}.people`)}
-								max={APPROVAL_STEP_MAX_MEMBERS}
-								placeholder={t(`${key}.peoplePlaceholder`)}
-								value={field.value}
-								onChange={field.onChange}
-							/>
-						)}
-					/>
-					<Controller
-						control={control}
-						name={`steps.${index}.quorum`}
-						render={({ field }) => (
-							<div className="flex flex-col gap-2">
-								<p className="text-sm text-neutral-800" id={`${idPrefix}-how`}>
-									{t(`${key}.how`)}
-								</p>
-								<div
-									aria-labelledby={`${idPrefix}-how`}
-									className="grid gap-3 sm:grid-cols-2"
-									role="radiogroup"
-								>
-									<RadioCard
-										checked={field.value === "ANY"}
-										disabled={disabled}
-										label={t(`${key}.any`)}
-										name={`${idPrefix}-quorum`}
-										value="ANY"
-										onChange={field.onChange}
-									/>
-									<RadioCard
-										checked={field.value === "ALL"}
-										disabled={disabled}
-										label={t(`${key}.all`)}
-										name={`${idPrefix}-quorum`}
-										value="ALL"
-										onChange={field.onChange}
-									/>
-								</div>
-							</div>
-						)}
-					/>
-				</>
-			)}
-		</>
-	);
-};
 
 /**
  * Adds or edits an approval flow for one subject (a roster's publication or
@@ -228,7 +105,7 @@ export const ApprovalFlowDialog = ({
 	const departmentId = useWatch({ control, name: "departmentId" });
 	const [announcement, setAnnouncement] = useState("");
 	// The arrow a move was made with; focus follows the moved step to its new place.
-	const moved = useRef<{ index: number; direction: "up" | "down" } | null>(
+	const moved = useRef<{ index: number; direction: MoveDirection } | null>(
 		null
 	);
 	const stepsRef = useRef<HTMLOListElement>(null);
@@ -236,15 +113,11 @@ export const ApprovalFlowDialog = ({
 		const last = moved.current;
 		if (!last) return;
 		moved.current = null;
-		const lastIndex = steps.fields.length - 1;
-		// At an end the pressed arrow is gone from use; keep focus on the other one.
-		const direction =
-			(last.direction === "up" && last.index === 0) ||
-			(last.direction === "down" && last.index === lastIndex)
-				? last.direction === "up"
-					? "down"
-					: "up"
-				: last.direction;
+		const direction = movedFocusTarget(
+			last.index,
+			last.direction,
+			steps.fields.length - 1
+		);
 		stepsRef.current
 			?.querySelector<HTMLButtonElement>(
 				`[data-move="${last.index}:${direction}"]`

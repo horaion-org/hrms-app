@@ -7,7 +7,7 @@ import { ArrowUpIcon } from "@/components/ui/Icon";
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from "@/components/ui/Tabs";
 import { subjectOfSlug } from "@/features/approvals/approvalSubjects";
 import { ApprovalsSettings } from "@/features/settings/ApprovalsSettings";
-import { dataItemsFor, offersData } from "@/features/settings/dataAccess";
+import { dataItemsFor } from "@/features/settings/dataAccess";
 import { DataSettings } from "@/features/settings/DataSettings";
 import { EmploymentTermsSettings } from "@/features/settings/EmploymentTermsSettings";
 import { GeneralSettingsForm } from "@/features/settings/GeneralSettingsForm";
@@ -21,6 +21,7 @@ import {
 	visibleSections,
 	type SettingsSection,
 } from "@/features/settings/sections";
+import { offeredSections } from "@/features/settings/settingsAccess";
 import { useRenameWorkspace } from "@/features/settings/useRenameWorkspace";
 import { COMPANY_SCOPE } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
@@ -47,26 +48,7 @@ export const Settings = (): FunctionComponent => {
 	const search = route.useSearch();
 	const dataItems = dataItemsFor(access);
 	// The section lives in the URL, so a link such as `?section=data` opens it.
-	// Employment, Scheduling, Leave and Approvals are offered with their read
-	// keys (employment_terms, scheduling_policy, leave_type, approval_flow); a
-	// link to any of them still opens it, to say the person may not see it.
-	const sections = visibleSections({
-		employment:
-			access.can("employment_terms:read", COMPANY_SCOPE) ||
-			search.section === "employment",
-		scheduling:
-			access.can("scheduling_policy:read", COMPANY_SCOPE) ||
-			search.section === "scheduling",
-		leave:
-			access.can("leave_type:read", COMPANY_SCOPE) ||
-			search.section === "leave",
-		approvals:
-			access.can("approval_flow:read", COMPANY_SCOPE) ||
-			search.section === "approvals",
-		// The roles list shows the roles where the key is held, so held anywhere is enough.
-		access: access.canAnywhere("access_role:read"),
-		data: offersData(dataItems),
-	});
+	const sections = visibleSections(offeredSections(access, search));
 	const selectedIndex = selectedSectionIndex(sections, search.section);
 	const planTabRef = useRef<HTMLButtonElement>(null);
 	const show = (next: SettingsSection): void => {
