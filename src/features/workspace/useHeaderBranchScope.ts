@@ -71,9 +71,10 @@ export const useHeaderBranchScope = (): HeaderBranchScope | undefined => {
 	const search = (match?.search ?? {}) as Record<string, unknown>;
 	const rules = scope.rulesFor(search);
 	const { branch } = parseUnitSearch(search);
+	const keys = scope.keysFor?.(search) ?? scope.keys;
 	const selection = useUnitSelection(
 		companyId,
-		scope.keys,
+		keys,
 		{ branchId: branch },
 		HEADER_RULES
 	);
