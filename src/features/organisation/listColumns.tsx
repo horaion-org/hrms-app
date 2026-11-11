@@ -77,7 +77,7 @@ export const nameColumn = <T extends { name: string }>(
 });
 
 /** The Branch each row belongs to, by name; left out below `md`, like every column but name, status and actions. */
-export const branchColumn = <T extends { branchName?: string }>(
+export const branchColumn = <T extends { branchName?: string | null }>(
 	t: TFunction
 ): DataTableColumn<T> => ({
 	id: "branch",

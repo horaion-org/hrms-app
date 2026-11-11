@@ -3434,7 +3434,9 @@
 				"DEFAULT": "Default"
 			},
 			"companyRuleApplies": "Company rule applies",
-			"companyRuleAppliesHint": "The company’s constraint is now stricter than this one, so both apply."
+			"companyRuleAppliesHint": "The company’s constraint is now stricter than this one, so both apply.",
+			"department": "Department",
+			"allDepartments": "All departments"
 		},
 		"forecast": {
 			"title": "Staffing forecast",
