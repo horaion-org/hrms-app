@@ -192,7 +192,9 @@ describe("ShiftDialog", () => {
 		await user.clear(field);
 		await user.type(field, "720");
 		expect(
-			screen.getByText("Leave at 0 if the shift has no unpaid break.")
+			screen.getByText(
+				"Enter a break only if people are free during it. A break spent on duty counts as work: leave this at 0."
+			)
 		).toBeVisible();
 		await user.click(screen.getByRole("button", { name: "Save" }));
 

@@ -3192,7 +3192,7 @@
 				"timeRequired": "Choose a time.",
 				"timeRejected": "Check the time and try again.",
 				"unpaidBreak": "Unpaid break (minutes)",
-				"unpaidBreakHint": "Leave at 0 if the shift has no unpaid break.",
+				"unpaidBreakHint": "Enter a break only if people are free during it. A break spent on duty counts as work: leave this at 0.",
 				"paidHours_one": "{{count}} paid hour",
 				"paidHours_other": "{{count}} paid hours",
 				"breakWhole": "Enter the break in whole minutes, or 0.",

@@ -3014,7 +3014,7 @@
 				"timeRequired": "Elige una hora.",
 				"timeRejected": "Revisa la hora e inténtalo de nuevo.",
 				"unpaidBreak": "Pausa no remunerada (minutos)",
-				"unpaidBreakHint": "Déjalo en 0 si el turno no tiene pausa no remunerada.",
+				"unpaidBreakHint": "Indica una pausa solo si las personas quedan libres durante ella. Una pausa en servicio cuenta como trabajo: déjala en 0.",
 				"paidHours_one": "{{count}} hora remunerada",
 				"paidHours_other": "{{count}} horas remuneradas",
 				"breakWhole": "Escribe la pausa en minutos enteros, o 0.",
