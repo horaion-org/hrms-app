@@ -93,7 +93,7 @@ describe("ConstraintDialog for the Scheduling policy (ADR-0058)", () => {
 	it("given_withLock_when_saved_then_sendsTheLockChosen", async () => {
 		const user = userEvent.setup();
 		const { onSave } = renderDialog({ withLock: true });
-		await start(user, "Working hours: Rest between shifts");
+		await start(user, "Rest and hours: Rest between shifts");
 		expect(trigger(/^Lock/)).toHaveTextContent("Locked");
 		expect(
 			screen.getByText(
@@ -264,19 +264,19 @@ describe("ConstraintDialog", () => {
 		expect(
 			screen.getAllByRole("option").map((option) => option.textContent)
 		).toEqual([
-			"Staffing: Shift staffing",
-			"Staffing: Shift staffing with stand-ins",
-			"Role coverage: Role presence",
-			"Shift pattern: Days off per period",
-			"Shift pattern: Avoid days off on",
-			"Working hours: Rest between shifts",
+			"People on shifts: People on a shift",
+			"People on shifts: People on a shift, with stand-ins",
+			"On duty throughout: Someone on duty for the whole shift",
+			"Days off: Days off in a run of days",
+			"Days off: Days to avoid giving off",
+			"Rest and hours: Rest between shifts",
 		]);
 	});
 
 	it("given_aType_when_chosen_then_rendersOneRowPerFieldOfItsSpecByKind", async () => {
 		const user = userEvent.setup();
 		renderDialog();
-		await start(user, "Staffing: Shift staffing with stand-ins");
+		await start(user, "People on shifts: People on a shift, with stand-ins");
 
 		expect(trigger(/^Requirement/)).toBeVisible();
 		expect(trigger(/^Status/)).toHaveTextContent("Active");
@@ -296,7 +296,7 @@ describe("ConstraintDialog", () => {
 	it("given_onlyANameAndType_when_saved_then_asksForEachFieldAsItsSpecSaysAndSendsNothing", async () => {
 		const user = userEvent.setup();
 		const { onSave } = renderDialog();
-		await start(user, "Staffing: Shift staffing");
+		await start(user, "People on shifts: People on a shift");
 
 		await user.click(screen.getByRole("button", { name: "Save" }));
 
@@ -314,7 +314,7 @@ describe("ConstraintDialog", () => {
 	it("given_everyField_when_saved_then_sendsOneValueRowPerValueAndReadsItBack", async () => {
 		const user = userEvent.setup();
 		const { onSave, onClose } = renderDialog();
-		await start(user, "Staffing: Shift staffing");
+		await start(user, "People on shifts: People on a shift");
 
 		await pick(user, /^Requirement/, "Must");
 		await pick(user, /^Comparison/, "At least");
@@ -349,7 +349,7 @@ describe("ConstraintDialog", () => {
 	it("given_aTypeWithoutARequirement_when_saved_then_offersNoneAndSendsNone", async () => {
 		const user = userEvent.setup();
 		const { onSave } = renderDialog();
-		await start(user, "Shift pattern: Avoid days off on");
+		await start(user, "Days off: Days to avoid giving off");
 
 		expect(screen.queryByRole("button", { name: /^Requirement/ })).toBeNull();
 		await pick(user, /^Days/, "Saturday", "Friday");
@@ -373,7 +373,7 @@ describe("ConstraintDialog", () => {
 	it("given_aNumberOutsideItsRange_when_saved_then_saysTheRangeFromTheSpec", async () => {
 		const user = userEvent.setup();
 		const { onSave } = renderDialog();
-		await start(user, "Working hours: Rest between shifts");
+		await start(user, "Rest and hours: Rest between shifts");
 
 		await user.type(
 			screen.getByRole("spinbutton", { name: /Rest in hours/ }),
@@ -397,7 +397,7 @@ describe("ConstraintDialog", () => {
 			"Two days off"
 		);
 		expect(trigger(/^Constraint type/)).toHaveTextContent(
-			"Shift pattern: Days off per period"
+			"Days off: Days off in a run of days"
 		);
 		expect(trigger(/^Requirement/)).toHaveTextContent("Must");
 		expect(trigger(/^Comparison/)).toHaveTextContent("At least");
@@ -545,7 +545,7 @@ describe("ConstraintDialog with a Department field", () => {
 	it("given_valuesFilledIn_when_theDepartmentChanges_then_clearsThemAndKeepsTheRest", async () => {
 		const user = userEvent.setup();
 		renderInCompany(<ChoosingDialog initial="d-1" />);
-		await start(user, "Working hours: Rest between shifts");
+		await start(user, "Rest and hours: Rest between shifts");
 		await user.type(screen.getByRole("spinbutton", { name: /Rest/ }), "11");
 
 		await user.click(trigger(/^Department/));

@@ -3079,23 +3079,23 @@
 			"deleteFailed": "No pudimos eliminar la restricción. Inténtalo de nuevo.",
 			"list": "{{items, list}}",
 			"categories": {
-				"STAFFING": "Dotación",
-				"ROLE_COVERAGE": "Cobertura de puestos",
-				"SHIFT_PATTERN": "Patrón de turnos",
-				"WORKING_HOURS": "Horas de trabajo"
+				"STAFFING": "Personas en turnos",
+				"ROLE_COVERAGE": "De servicio todo el turno",
+				"SHIFT_PATTERN": "Días libres",
+				"WORKING_HOURS": "Descanso y horas"
 			},
 			"categoryHints": {
-				"STAFFING": "Cuántas personas necesita un turno",
-				"ROLE_COVERAGE": "Qué puestos deben estar presentes mientras dura un turno",
-				"SHIFT_PATTERN": "Cómo se reparten los días libres en la semana",
-				"WORKING_HOURS": "Cuánto descansa el personal entre turnos"
+				"STAFFING": "Cuántas personas necesita cada turno",
+				"ROLE_COVERAGE": "Quién está de servicio durante todo el turno",
+				"SHIFT_PATTERN": "Cómo se reparten los días libres",
+				"WORKING_HOURS": "Descanso entre turnos"
 			},
 			"types": {
-				"SHIFT_STAFFING": "Dotación del turno",
-				"SHIFT_STAFFING_WITH_STAND_INS": "Dotación del turno con suplentes",
-				"ROLE_PRESENCE": "Presencia de puestos",
-				"DAYS_OFF_PER_PERIOD": "Días libres por periodo",
-				"AVOID_DAYS_OFF_ON": "Evitar días libres en",
+				"SHIFT_STAFFING": "Personas en un turno",
+				"SHIFT_STAFFING_WITH_STAND_INS": "Personas en un turno, con suplentes",
+				"ROLE_PRESENCE": "Alguien de servicio todo el turno",
+				"DAYS_OFF_PER_PERIOD": "Días libres en una racha de días",
+				"AVOID_DAYS_OFF_ON": "Días en que evitar dar libre",
 				"REST_BETWEEN_SHIFTS": "Descanso entre turnos"
 			},
 			"sentences": {

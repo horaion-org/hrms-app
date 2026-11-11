@@ -135,7 +135,7 @@ describe("SchedulingPolicySettings", () => {
 		);
 		await user.click(
 			await screen.findByRole("option", {
-				name: "Working hours: Rest between shifts",
+				name: "Rest and hours: Rest between shifts",
 			})
 		);
 		await user.type(
@@ -225,7 +225,7 @@ describe("SchedulingPolicySettings", () => {
 		);
 		await user.click(
 			await screen.findByRole("option", {
-				name: "Working hours: Rest between shifts",
+				name: "Rest and hours: Rest between shifts",
 			})
 		);
 		await user.type(

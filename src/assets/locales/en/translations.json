@@ -3257,23 +3257,23 @@
 			"deleteFailed": "We couldn’t delete the constraint. Try again.",
 			"list": "{{items, list}}",
 			"categories": {
-				"STAFFING": "Staffing",
-				"ROLE_COVERAGE": "Role coverage",
-				"SHIFT_PATTERN": "Shift pattern",
-				"WORKING_HOURS": "Working hours"
+				"STAFFING": "People on shifts",
+				"ROLE_COVERAGE": "On duty throughout",
+				"SHIFT_PATTERN": "Days off",
+				"WORKING_HOURS": "Rest and hours"
 			},
 			"categoryHints": {
-				"STAFFING": "How many people a shift needs",
-				"ROLE_COVERAGE": "Which job titles must be present while a shift runs",
-				"SHIFT_PATTERN": "How days off fall across the week",
-				"WORKING_HOURS": "How long people rest between shifts"
+				"STAFFING": "How many people each shift needs",
+				"ROLE_COVERAGE": "Who is on duty for the whole shift",
+				"SHIFT_PATTERN": "How days off fall",
+				"WORKING_HOURS": "Rest between shifts"
 			},
 			"types": {
-				"SHIFT_STAFFING": "Shift staffing",
-				"SHIFT_STAFFING_WITH_STAND_INS": "Shift staffing with stand-ins",
-				"ROLE_PRESENCE": "Role presence",
-				"DAYS_OFF_PER_PERIOD": "Days off per period",
-				"AVOID_DAYS_OFF_ON": "Avoid days off on",
+				"SHIFT_STAFFING": "People on a shift",
+				"SHIFT_STAFFING_WITH_STAND_INS": "People on a shift, with stand-ins",
+				"ROLE_PRESENCE": "Someone on duty for the whole shift",
+				"DAYS_OFF_PER_PERIOD": "Days off in a run of days",
+				"AVOID_DAYS_OFF_ON": "Days to avoid giving off",
 				"REST_BETWEEN_SHIFTS": "Rest between shifts"
 			},
 			"sentences": {

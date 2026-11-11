@@ -1056,7 +1056,7 @@ it("names findings without reading the setup it can't see", async () => {
 
 	expect(
 		screen.getByRole("region", { name: "Roster notes (3)" })
-	).toHaveTextContent("Rule: Shift staffing");
+	).toHaveTextContent("Rule: People on a shift");
 	expect(
 		screen.getByRole("region", { name: "Setup issues (1)" })
 	).toHaveTextContent("No one in this schedule can take one of its shifts.");
