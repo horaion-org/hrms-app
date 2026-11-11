@@ -81,6 +81,7 @@ import {
 	allOf,
 	usesLineOf,
 	usesSummary,
+	weekChoiceProblem,
 	type WeekChoiceIds,
 } from "@/features/scheduling/weekChoice";
 import { WeekChoiceDialog } from "@/features/scheduling/WeekChoiceDialog";
@@ -614,17 +615,40 @@ export const CreateSchedule = (): FunctionComponent => {
 			}}
 		/>
 	);
-	// Generate says the same, and "Change" goes back to Setup, where the week is chosen.
+	// A saved draft whose department can no longer roster anyone isn't generated.
+	const generateGate =
+		saved && !frozen && readinessRow
+			? gateOf(readinessRow, canFix, "generate")
+			: undefined;
+	// Nor is a week whose own choice rosters nobody; a generated schedule's copies stay as they were.
+	const weekProblem =
+		saved && !frozen && weekConstraints
+			? weekChoiceProblem(weekChoice, weekConstraints)
+			: undefined;
+	const canGenerateWeek =
+		canGenerate && generateGate === undefined && weekProblem === undefined;
+	// Generate says the same, with the week's problem above it, and "Change" goes back to Setup.
 	const generateWeekSummary = weekLine && (
-		<WeekChoiceSummary
-			actionLabel={canChooseWeek ? t("scheduling.week.change") : undefined}
-			editConstraints={editConstraints}
-			editShifts={editShifts}
-			line={weekLine}
-			onAction={() => {
-				goTo(0);
-			}}
-		/>
+		<>
+			{weekProblem && (
+				<p className="mb-3 text-sm text-error-700" role="alert">
+					{t(
+						weekProblem === "noShift"
+							? "scheduling.week.noShift"
+							: "scheduling.week.noStaffing"
+					)}
+				</p>
+			)}
+			<WeekChoiceSummary
+				actionLabel={canChooseWeek ? t("scheduling.week.change") : undefined}
+				editConstraints={editConstraints}
+				editShifts={editShifts}
+				line={weekLine}
+				onAction={() => {
+					goTo(0);
+				}}
+			/>
+		</>
 	);
 	// A frozen schedule, or a draft the person may not change, is shown as it is.
 	const notice = frozen
@@ -639,7 +663,7 @@ export const CreateSchedule = (): FunctionComponent => {
 				}
 			: undefined;
 	const onNext = isLast
-		? canGenerate
+		? canGenerateWeek
 			? (): void => {
 					void generate();
 				}
@@ -647,13 +671,15 @@ export const CreateSchedule = (): FunctionComponent => {
 		: step === "setup"
 			? undefined
 			: next;
-	const unavailableNote = t(
-		frozen
-			? "scheduling.create.generated"
-			: weekPublishedBy
-				? "scheduling.publishedWeek.generateUnavailable"
-				: "scheduling.create.generateForbidden"
-	);
+	const unavailableNote = frozen
+		? t("scheduling.create.generated")
+		: weekPublishedBy
+			? t("scheduling.publishedWeek.generateUnavailable")
+			: generateGate
+				? t(generateGate.nextNoteKey, { department: generateGate.department })
+				: weekProblem
+					? t("scheduling.week.problemNote")
+					: t("scheduling.create.generateForbidden");
 
 	return (
 		<>
@@ -721,11 +747,24 @@ export const CreateSchedule = (): FunctionComponent => {
 						summary={summary}
 						uses={generateWeekSummary}
 						notice={
-							weekPublishedBy && (
-								<PublishedWeekCallout
-									publishedScheduleId={weekPublishedBy}
-									stage="blocked"
-								/>
+							(generateGate || weekPublishedBy) && (
+								<div className="flex flex-col gap-4">
+									{saved && generateGate && (
+										<ReadinessGateCallout
+											gate={generateGate}
+											link={fixLink(generateGate, {
+												next: "draft",
+												scheduleId: saved.scheduleId,
+											})}
+										/>
+									)}
+									{weekPublishedBy && (
+										<PublishedWeekCallout
+											publishedScheduleId={weekPublishedBy}
+											stage="blocked"
+										/>
+									)}
+								</div>
 							)
 						}
 						startingPoint={
@@ -750,7 +789,7 @@ export const CreateSchedule = (): FunctionComponent => {
 				busy={busy}
 				className="mt-12"
 				form={step === "setup" ? setupFormId : undefined}
-				nextDisabled={(isLast && !canGenerate) || setupNextDisabled}
+				nextDisabled={(isLast && !canGenerateWeek) || setupNextDisabled}
 				nextIcon={isLast ? <GenerateScheduleIcon /> : <ArrowRightIcon />}
 				nextLabel={
 					isLast

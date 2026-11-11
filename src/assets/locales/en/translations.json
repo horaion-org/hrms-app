@@ -3504,7 +3504,8 @@
 			"notDraft": "This schedule has already been generated.",
 			"forbidden": "You no longer have permission to generate this schedule.",
 			"failed": "We couldn’t generate the schedule. Try again.",
-			"weekAlreadyPublished": "This department already has a published roster for this week. Only one roster can be published per week, so schedule a different week instead."
+			"weekAlreadyPublished": "This department already has a published roster for this week. Only one roster can be published per week, so schedule a different week instead.",
+			"noStaffing": "This schedule uses no staffing constraint on its shifts, so nobody would be rostered. Choose for this week on Setup."
 		},
 		"draft": {
 			"loading": "Loading the draft…",
@@ -4147,7 +4148,8 @@
 			"view": "View",
 			"everything": "This week uses every shift and constraint of {{department}}.",
 			"change": "Change",
-			"listsHiddenNote": "You need to see {{department}}’s shifts and constraints to create its schedule."
+			"listsHiddenNote": "You need to see {{department}}’s shifts and constraints to create its schedule.",
+			"problemNote": "Choose what this week uses on Setup to generate."
 		},
 		"gate": {
 			"nothing": "{{department}} has no shifts or staffing constraints yet. A schedule needs both.",

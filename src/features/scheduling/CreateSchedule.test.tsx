@@ -1195,6 +1195,64 @@ describe("Create Schedule: generating", () => {
 	});
 });
 
+describe("Create Schedule: the Generate gate", () => {
+	const READINESS = "GET /api/v1/companies/c-1/scheduling-readiness";
+	const GENERATE_STEP =
+		"/scheduling/new?step=generate&scheduleId=s-1&departmentId=d-1";
+	const generateNote = (): string | null => {
+		const generate = screen.getByRole("button", { name: "Generate" });
+		return (
+			document.getElementById(generate.getAttribute("aria-describedby") ?? "")
+				?.textContent ?? null
+		);
+	};
+
+	it("given_aDraftWhoseDepartmentLostItsStaffing_when_onGenerate_then_saysSoAndCannotGenerate", async () => {
+		await open(GENERATE_STEP, {
+			[READINESS]: reply([
+				readinessFixture({
+					departmentName: "Front Office",
+					ready: false,
+					missing: ["STAFFING_CONSTRAINT"],
+				}),
+			]),
+		});
+
+		expect(
+			await screen.findByText(
+				"Front Office no longer has a staffing constraint, so this schedule can’t be generated.",
+				{ exact: false }
+			)
+		).toBeVisible();
+		expect(
+			screen.getByRole("link", { name: "Add a staffing constraint" })
+		).toHaveAttribute(
+			"href",
+			"/scheduling?view=constraints&branch=b-1&department=d-1&next=draft&scheduleId=s-1"
+		);
+		expect(screen.getByRole("button", { name: "Generate" })).toBeDisabled();
+		expect(generateNote()).toBe("Fix Front Office’s setup to generate.");
+	});
+
+	it("given_aWeekWithoutStaffing_when_onGenerate_then_saysSoAndCannotGenerate", async () => {
+		await open(GENERATE_STEP, {
+			[`GET ${SCHEDULE}`]: reply(
+				scheduleFixture({ includedConstraintIds: ["rest-between-shifts"] })
+			),
+		});
+
+		expect(
+			await screen.findByText(
+				"Tick at least one staffing constraint. Without one, nobody is rostered."
+			)
+		).toBeVisible();
+		expect(screen.getByRole("button", { name: "Generate" })).toBeDisabled();
+		expect(generateNote()).toBe(
+			"Choose what this week uses on Setup to generate."
+		);
+	});
+});
+
 describe("Create Schedule: where everyone starts", () => {
 	const STARTING_DAYS = `${SCHEDULE}/starting-days`;
 	/** Tan's entered Sunday night, and Siti's Sunday off as "Fill empty days" sets it. */

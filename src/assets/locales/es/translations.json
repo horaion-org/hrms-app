@@ -3326,7 +3326,8 @@
 			"notDraft": "Este horario ya se generó.",
 			"forbidden": "Ya no tienes permiso para generar este horario.",
 			"failed": "No pudimos generar el horario. Inténtalo de nuevo.",
-			"weekAlreadyPublished": "Este departamento ya tiene un cuadrante publicado para esta semana. Solo se puede publicar un cuadrante por semana, así que programa otra semana."
+			"weekAlreadyPublished": "Este departamento ya tiene un cuadrante publicado para esta semana. Solo se puede publicar un cuadrante por semana, así que programa otra semana.",
+			"noStaffing": "Este horario no usa ninguna restricción de personal en sus turnos, así que no se asignaría a nadie. Elige para esta semana en Configuración."
 		},
 		"draft": {
 			"loading": "Cargando el borrador…",
@@ -3969,7 +3970,8 @@
 			"view": "Ver",
 			"everything": "Esta semana usa todos los turnos y restricciones de {{department}}.",
 			"change": "Cambiar",
-			"listsHiddenNote": "Necesitas ver los turnos y las restricciones de {{department}} para crear su horario."
+			"listsHiddenNote": "Necesitas ver los turnos y las restricciones de {{department}} para crear su horario.",
+			"problemNote": "Elige qué usa esta semana en Configuración para generar."
 		},
 		"gate": {
 			"nothing": "{{department}} aún no tiene turnos ni restricciones de personal. Un horario necesita ambos.",
