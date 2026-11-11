@@ -86,7 +86,12 @@ export const WeekChoiceDialog = ({
 		<Dialog
 			open
 			className="md:max-w-288"
-			description={t(`${key}.intro`, { department: departmentName })}
+			// Nothing can be unticked once generated, so only a choice is introduced.
+			description={
+				readOnly
+					? undefined
+					: t(`${key}.intro`, { department: departmentName })
+			}
 			footer={
 				readOnly ? (
 					<Button className="w-full" variant="secondary" onClick={onClose}>

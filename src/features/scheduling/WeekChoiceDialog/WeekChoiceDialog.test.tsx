@@ -161,6 +161,7 @@ describe("WeekChoiceDialog", () => {
 			name: "What Nov 16 – 22, 2026 used",
 		});
 		expect(within(dialog).queryByRole("checkbox")).toBeNull();
+		expect(dialog).not.toHaveTextContent("Untick");
 		expect(
 			within(dialog).queryByRole("button", { name: "Use for week" })
 		).toBeNull();
