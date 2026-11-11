@@ -83,6 +83,17 @@ const openDialog = async (): Promise<HTMLElement> => {
 	);
 	return screen.findByRole("dialog", { name: "Create branch" });
 };
+/**
+ * Closing a Combobox puts focus back on its trigger on the next animation frame.
+ * Let that land before the next step, or it pulls focus out of whatever the test
+ * opens or focuses next, and a picker opened in the meantime closes again.
+ */
+const afterFocusReturns = (): Promise<void> =>
+	new Promise((resolve) => {
+		requestAnimationFrame(() => {
+			resolve();
+		});
+	});
 const fill = async (
 	dialog: HTMLElement,
 	name = "Orchard Road"
@@ -97,6 +108,7 @@ const fill = async (
 		"singap"
 	);
 	await user.click(await screen.findByRole("option", { name: "Singapore" }));
+	await afterFocusReturns();
 	await user.click(within(dialog).getByLabelText("Time zone"));
 	await user.type(
 		screen.getByRole("combobox", { name: "Search city, region or offset" }),
@@ -105,14 +117,11 @@ const fill = async (
 	await user.click(
 		await screen.findByRole("option", { name: /Asia\/Singapore/ })
 	);
+	await afterFocusReturns();
 	await user.click(within(dialog).getByLabelText("Branch heads"));
 	await user.click(await screen.findByRole("option", { name: "Marcus Lim" }));
 	await user.keyboard("{Escape}");
-	// Closing a Combobox puts focus back on the next animation frame. Let that land
-	// here, or it moves focus off a field the test has just focused.
-	await new Promise((resolve) => {
-		requestAnimationFrame(resolve);
-	});
+	await afterFocusReturns();
 };
 
 describe("create branch through the Branches page", () => {
