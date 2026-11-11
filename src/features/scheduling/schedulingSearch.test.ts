@@ -42,6 +42,38 @@ describe("parseSchedulingSearch", () => {
 			parseSchedulingSearch({ view: "roster", branch: "", page: 2 })
 		).toEqual({});
 	});
+
+	it("given_theWayBackToANewDraft_when_parsed_then_keepsItsWeek", () => {
+		expect(
+			parseSchedulingSearch({
+				view: "shifts",
+				department: "d-1",
+				next: "create",
+				week: "2026-11-16",
+			})
+		).toEqual({
+			view: "shifts",
+			department: "d-1",
+			next: "create",
+			week: "2026-11-16",
+		});
+	});
+
+	it("given_theWayBackToASavedDraft_when_parsed_then_keepsItsId", () => {
+		expect(parseSchedulingSearch({ next: "draft", scheduleId: "s-1" })).toEqual(
+			{ next: "draft", scheduleId: "s-1" }
+		);
+	});
+
+	it("given_aDraftWithoutItsId_when_parsed_then_dropsNext", () => {
+		expect(parseSchedulingSearch({ next: "draft" })).toEqual({});
+	});
+
+	it("given_malformedWayBackParts_when_parsed_then_dropsThem", () => {
+		expect(
+			parseSchedulingSearch({ next: "later", week: "16 Nov", scheduleId: "" })
+		).toEqual({});
+	});
 });
 
 describe("schedulingViewsOf", () => {

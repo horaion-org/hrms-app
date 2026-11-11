@@ -46,6 +46,7 @@ import {
 	unknownCell,
 } from "@/features/scheduling/startingContext/fixtures";
 import type { Workspace } from "@/features/workspace/api";
+import { Route as createScheduleRoute } from "@/routes/_authenticated._app.scheduling_.new";
 
 // Under load (Maven build alongside, shared CI runner) this file timed out at the 5 s default.
 vi.setConfig({ testTimeout: 15_000 });
@@ -230,6 +231,32 @@ const grantedAt = (grants: Record<string, Array<string>>): Workspace => {
 			department.permissions.push(...(grants[department.uuid] ?? []));
 	return workspace;
 };
+
+describe("Create Schedule: the URL", () => {
+	/** The route's own search validator, as the router runs it. */
+	const parseCreateScheduleSearch = (
+		search: Record<string, unknown>
+	): unknown => {
+		const validate = createScheduleRoute.options.validateSearch;
+		if (typeof validate !== "function") throw new Error("No validator");
+		return validate(search);
+	};
+
+	it("given_aDepartmentAndWeekToPreFill_when_parsed_then_keepsThem", () => {
+		expect(
+			parseCreateScheduleSearch({ department: "d-1", week: "2026-11-16" })
+		).toEqual({
+			department: "d-1",
+			week: "2026-11-16",
+		});
+	});
+
+	it("given_aMalformedDepartmentOrWeek_when_parsed_then_dropsThem", () => {
+		expect(
+			parseCreateScheduleSearch({ department: "", week: "16-11" })
+		).toEqual({});
+	});
+});
 
 describe("Create Schedule: opening and setup", () => {
 	it("given_theSchedulingOverview_when_createClicked_then_opensSetup", async () => {
