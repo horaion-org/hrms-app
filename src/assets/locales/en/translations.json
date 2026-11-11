@@ -3440,7 +3440,9 @@
 				"departmentHint": "Constraints belong to one department; company-wide ones are set in Settings.",
 				"departmentsEmpty": "No active department you can add constraints to.",
 				"optionsNeedDepartment": "Choose a department first.",
-				"typeHintEmpty": "Choose one to see an example."
+				"typeHintEmpty": "Choose one to see an example.",
+				"shiftMissingTitles_one": "{{shifts}} doesn't list {{jobTitles}}, so no one can be counted there. Add them to the shift or choose other job titles.",
+				"shiftMissingTitles_other": "{{shifts}} don't list {{jobTitles}}, so no one can be counted there. Add them to the shifts or choose other job titles."
 			},
 			"preview": {
 				"title": "How it reads"

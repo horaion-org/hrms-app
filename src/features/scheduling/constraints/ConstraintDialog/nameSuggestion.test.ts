@@ -23,6 +23,8 @@ describe("nameSuggestion", () => {
 	});
 
 	it("keeps a name within the 100 characters the API takes", () => {
-		expect(nameSuggestion("SHIFT_STAFFING", "A".repeat(120), t)).toHaveLength(100);
+		expect(nameSuggestion("SHIFT_STAFFING", "A".repeat(120), t)).toHaveLength(
+			100
+		);
 	});
 });

@@ -3262,7 +3262,9 @@
 				"departmentHint": "Cada restricción pertenece a un departamento; las de toda la empresa se definen en Configuración.",
 				"departmentsEmpty": "No hay ningún departamento activo al que puedas añadir restricciones.",
 				"optionsNeedDepartment": "Elige primero un departamento.",
-				"typeHintEmpty": "Elige una opción para ver un ejemplo."
+				"typeHintEmpty": "Elige una opción para ver un ejemplo.",
+				"shiftMissingTitles_one": "{{shifts}} no incluye {{jobTitles}}, así que nadie puede contar ahí. Añádelos al turno o elige otros puestos.",
+				"shiftMissingTitles_other": "{{shifts}} no incluyen {{jobTitles}}, así que nadie puede contar ahí. Añádelos a los turnos o elige otros puestos."
 			},
 			"preview": {
 				"title": "Cómo se lee"

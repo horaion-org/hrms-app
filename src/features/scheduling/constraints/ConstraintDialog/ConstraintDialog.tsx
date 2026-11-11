@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useId } from "react";
+import { Fragment, useEffect, useId } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
@@ -28,6 +28,7 @@ import {
 import { constraintRefusal } from "@/features/scheduling/constraints/constraintRefusal";
 import { fieldRowsInReadingOrder } from "@/features/scheduling/constraints/ConstraintDialog/fieldOrder";
 import { nameSuggestion } from "@/features/scheduling/constraints/ConstraintDialog/nameSuggestion";
+import { shiftsMissingTitles } from "@/features/scheduling/constraints/ConstraintDialog/shiftsMissingTitles";
 import { appliesToOf } from "@/features/scheduling/constraints/appliesTo";
 import {
 	constraintSchema,
@@ -266,6 +267,29 @@ export const ConstraintDialog = ({
 				name: namesById.get(value) ?? null,
 			}))
 		);
+	// Never blocks: a chosen shift that lists none of the counted job titles
+	// could never count anyone, which the manager may still mean to fix later.
+	const shiftWarning = (option: ConstraintTypeOption): string | undefined => {
+		const filled = filledValues(option);
+		const ofField = (fields: Array<ConstraintField>): Array<SentenceValue> =>
+			filled.filter((value) => fields.includes(value.field));
+		const counted = ofField(["JOB_TITLE", "STAND_IN_JOB_TITLE"]);
+		const chosenShiftIds = ofField(["SHIFT"]).map((value) => value.value);
+		const missing = shiftsMissingTitles(
+			(offered?.shifts ?? []).filter((shift) =>
+				chosenShiftIds.includes(shift.shiftId)
+			),
+			counted.map((value) => value.value)
+		);
+		if (missing.length === 0) return undefined;
+		return t(`${key}.shiftMissingTitles`, {
+			count: missing.length,
+			shifts: t("scheduling.constraints.list", { items: missing }),
+			jobTitles: t("scheduling.constraints.listOr", {
+				items: counted.map((value) => value.name ?? value.value),
+			}),
+		});
+	};
 	// A new constraint's name fills itself in from what it controls and its
 	// first shift, until the manager types one; an edit or a replacement keeps
 	// the name it has.
@@ -614,18 +638,22 @@ export const ConstraintDialog = ({
 								values: filledValues(chosen),
 							}}
 						/>
-						{fieldRowsInReadingOrder(chosen).map((row) =>
-							row.length === 1 ? (
-								valueRow(row[0]!)
-							) : (
-								<div
-									key={row.map((spec) => spec.field).join("-")}
-									className="flex flex-col gap-6 sm:flex-row"
-								>
-									{row.map((spec) => valueRow(spec, "sm:flex-1"))}
-								</div>
-							)
-						)}
+						{fieldRowsInReadingOrder(chosen).map((row) => {
+							const warning =
+								row[0]?.field === "SHIFT" ? shiftWarning(chosen) : undefined;
+							return (
+								<Fragment key={row.map((spec) => spec.field).join("-")}>
+									{row.length === 1 ? (
+										valueRow(row[0]!)
+									) : (
+										<div className="flex flex-col gap-6 sm:flex-row">
+											{row.map((spec) => valueRow(spec, "sm:flex-1"))}
+										</div>
+									)}
+									{warning && <Callout tone="warning">{warning}</Callout>}
+								</Fragment>
+							);
+						})}
 						{firmnessRow(chosen)}
 						{/* A new constraint is Active; whether to switch one off is asked only when editing. */}
 						{editing &&

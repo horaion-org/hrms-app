@@ -457,6 +457,31 @@ describe("ConstraintDialog", () => {
 		expect(nameField()).toHaveValue("Morning cover");
 	});
 
+	it("given_aShiftThatListsNoneOfTheJobTitles_when_chosen_then_warnsAndStillSaves", async () => {
+		const user = userEvent.setup();
+		const { onSave } = renderDialog();
+		await start(user, "People on a shift");
+		await pick(user, /^Shifts/, "Front Desk AM");
+		await pick(user, /^At least, at most or exactly/, "At least");
+		await user.type(screen.getByRole("spinbutton", { name: /^People/ }), "2");
+
+		await pick(user, /^Job titles that count/, "Front Desk Lead");
+		expect(screen.queryByText(/doesn't list/)).toBeNull();
+
+		// Swaps Front Desk Lead (ticked again, so off) for Cashier, which Front Desk AM does not list.
+		await pick(user, /^Job titles that count/, "Front Desk Lead", "Cashier");
+		expect(
+			screen.getByText(
+				"Front Desk AM doesn't list Cashier, so no one can be counted there. Add them to the shift or choose other job titles."
+			)
+		).toBeVisible();
+
+		await user.click(screen.getByRole("button", { name: "Save" }));
+		await waitFor(() => {
+			expect(onSave).toHaveBeenCalledOnce();
+		});
+	});
+
 	it("given_aSavedConstraint_when_editing_then_keepsItsName", async () => {
 		renderDialog({ editing: constraint("closing-supervisor") });
 		await screen.findByRole("dialog", { name: "Edit constraint" });
