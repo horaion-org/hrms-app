@@ -99,7 +99,9 @@ describe("StartingContextSection", () => {
 			await screen.findByRole("button", { name: /last week/ })
 		);
 		await userEvent.type(
-			screen.getByRole("spinbutton", { name: /Tan Wei Ming, paid hours worked/ }),
+			screen.getByRole("spinbutton", {
+				name: /Tan Wei Ming, paid hours worked/,
+			}),
 			"72"
 		);
 		await userEvent.click(screen.getByRole("button", { name: "Save days" }));
@@ -108,7 +110,9 @@ describe("StartingContextSection", () => {
 			await screen.findByText(/Last week’s days were saved, but the hours/)
 		).toBeVisible();
 		expect(
-			screen.getByRole("spinbutton", { name: /Tan Wei Ming, paid hours worked/ })
+			screen.getByRole("spinbutton", {
+				name: /Tan Wei Ming, paid hours worked/,
+			})
 		).toHaveValue(72);
 		expect(calls.map((call) => `${call.method} ${call.path}`)).toContain(
 			`PUT ${SCHEDULE}/starting-days`

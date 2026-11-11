@@ -45,9 +45,10 @@ import {
 	type SentenceValue,
 } from "@/features/scheduling/constraints/constraintSentence";
 import type { ConstraintOptionsState } from "@/features/scheduling/constraints/useConstraintOptions";
-import type {
-	PolicyReachChoices,
-	PolicyReachValue,
+import {
+	reachedUnitsOf,
+	type PolicyReachChoices,
+	type PolicyReachValue,
 } from "@/features/scheduling/policy/policyReach";
 import { PolicyReachField } from "@/features/scheduling/policy/PolicyReachField";
 import type { Constraint } from "@/features/scheduling/scheduleDraft";
@@ -223,6 +224,8 @@ export const ConstraintDialog = ({
 		label: t(`scheduling.constraints.locks.${lock}`),
 	}));
 	const [lock] = useWatch({ control, name: ["lock"] });
+	// Where a work-policy constraint will apply, so the preview says it before saving.
+	const chosenReach = useWatch({ control, name: "reach" });
 	// A locked company constraint is a floor: refuse a looser replacement before the API does.
 	const tooLoose = (body: ConstraintDialogBody): boolean => {
 		const parentType = replacing && typeOf(replacing.type);
@@ -651,6 +654,9 @@ export const ConstraintDialog = ({
 									type: chosen.type,
 									level: withLock ? "COMPANY" : "DEPARTMENT",
 									values: filledValues(chosen),
+									...(reach && chosenReach
+										? reachedUnitsOf(chosenReach, reach.choices)
+										: {}),
 								},
 								t
 							)}

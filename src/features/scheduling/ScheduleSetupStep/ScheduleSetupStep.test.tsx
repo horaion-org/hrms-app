@@ -185,7 +185,9 @@ describe("ScheduleSetupStep", () => {
 	it("given_departmentExtras_when_rendered_then_showsThemBelowTheSchedulePeriod", () => {
 		render(
 			<Harness
-				departmentExtras={<p>Uses all 3 shifts and 5 constraints of Kitchen.</p>}
+				departmentExtras={
+					<p>Uses all 3 shifts and 5 constraints of Kitchen.</p>
+				}
 			/>
 		);
 

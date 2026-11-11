@@ -41,12 +41,12 @@ describe("stepCompletion", () => {
 	});
 
 	it("given_aFrozenSchedule_when_reopenedAtSetup_then_everyStepIsDone", () => {
-		expect(
-			stepCompletion({ ...NEW_DRAFT, saved: true, frozen: true })
-		).toEqual({
-			setup: true,
-			forecast: true,
-			generate: true,
-		});
+		expect(stepCompletion({ ...NEW_DRAFT, saved: true, frozen: true })).toEqual(
+			{
+				setup: true,
+				forecast: true,
+				generate: true,
+			}
+		);
 	});
 });

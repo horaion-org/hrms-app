@@ -314,11 +314,16 @@ describe("ConstraintDialog for a work-policy constraint's reach (ADR-0072)", () 
 	it("given_chosenDepartments_when_saved_then_sendsThemAndNoBranch", async () => {
 		const user = userEvent.setup();
 		const { onSave } = renderDialog({ withLock: true, reach: REACH });
-		await start(user, "Working hours: Rest between shifts");
+		await start(user, "Rest between shifts");
 
 		await user.click(screen.getByRole("radio", { name: "Chosen departments" }));
 		await pick(user, /^Chosen departments/, "Kitchen", "Bar");
-		await user.type(screen.getByRole("spinbutton", { name: /Rest/ }), "11");
+		// The preview says where it will apply before it is saved.
+		expect(screen.getByText("Bar, Kitchen")).toBeVisible();
+		await user.type(
+			screen.getByRole("spinbutton", { name: /^Hours off/ }),
+			"11"
+		);
 		await user.click(screen.getByRole("button", { name: "Save" }));
 
 		await waitFor(() => {
@@ -335,10 +340,13 @@ describe("ConstraintDialog for a work-policy constraint's reach (ADR-0072)", () 
 	it("given_chosenBranchesWithNoneChosen_when_saved_then_asksForOneWithoutSending", async () => {
 		const user = userEvent.setup();
 		const { onSave } = renderDialog({ withLock: true, reach: REACH });
-		await start(user, "Working hours: Rest between shifts");
+		await start(user, "Rest between shifts");
 
 		await user.click(screen.getByRole("radio", { name: "Chosen branches" }));
-		await user.type(screen.getByRole("spinbutton", { name: /Rest/ }), "11");
+		await user.type(
+			screen.getByRole("spinbutton", { name: /^Hours off/ }),
+			"11"
+		);
 		await user.click(screen.getByRole("button", { name: "Save" }));
 
 		expect(

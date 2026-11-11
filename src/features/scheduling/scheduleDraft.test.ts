@@ -355,9 +355,9 @@ describe("the week's choice", () => {
 			schedule: scheduleFixture(),
 		});
 
-		expect(
-			scheduleDraftReducer(loaded, { type: "departmentChosen" })
-		).toBe(loaded);
+		expect(scheduleDraftReducer(loaded, { type: "departmentChosen" })).toBe(
+			loaded
+		);
 	});
 });
 

@@ -1,5 +1,9 @@
 import type { TFunction } from "i18next";
-import type { DepartmentConstraint } from "@/features/scheduling/constraints/api";
+import type {
+	DepartmentConstraint,
+	ReachedBranch,
+	ReachedDepartment,
+} from "@/features/scheduling/constraints/api";
 import type { Workspace } from "@/features/workspace/api";
 import {
 	branchChoices,
@@ -56,6 +60,42 @@ export const reachValueOf = (constraint?: ReachRow): PolicyReachValue => ({
 	departmentIds: (constraint?.appliesToDepartments ?? []).map(
 		(department) => department.departmentId
 	),
+});
+
+/**
+ * The units a dialog's reach names, as a saved constraint carries them, so its
+ * preview reads where the constraint will apply before it is saved. Only the
+ * chosen kind's units count; the whole company names none.
+ */
+export const reachedUnitsOf = (
+	value: PolicyReachValue,
+	choices: PolicyReachChoices
+): {
+	appliesToBranches: Array<ReachedBranch>;
+	appliesToDepartments: Array<ReachedDepartment>;
+} => ({
+	appliesToBranches:
+		value.appliesTo === "BRANCHES"
+			? choices.branches
+					.filter((branch) => value.branchIds.includes(branch.branchId))
+					.map((branch) => ({
+						branchId: branch.branchId,
+						branchName: branch.name,
+					}))
+			: [],
+	appliesToDepartments:
+		value.appliesTo === "DEPARTMENTS"
+			? choices.departments
+					.filter((department) =>
+						value.departmentIds.includes(department.departmentId)
+					)
+					.map((department) => ({
+						departmentId: department.departmentId,
+						departmentName: department.name,
+						branchId: department.branchId,
+						branchName: department.branchName,
+					}))
+			: [],
 });
 
 /** The reach in words: "All departments", "Orchard (branch)", or "Bar, Kitchen". */

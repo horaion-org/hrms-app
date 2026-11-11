@@ -8,6 +8,7 @@ import {
 } from "@/features/scheduling/constraints/fixtures";
 import {
 	reachChoicesOf,
+	reachedUnitsOf,
 	reachLabel,
 	reachOf,
 	reachValueOf,
@@ -86,6 +87,42 @@ describe("reachLabel", () => {
 
 	it("lists chosen departments by name", () => {
 		expect(reachLabel(DEPARTMENTS_POLICY_FIXTURE, t)).toBe("Bar, Kitchen");
+	});
+});
+
+describe("reachedUnitsOf", () => {
+	const choices = reachChoicesOf(workspace, "c-1");
+
+	it("names the chosen kind's units only", () => {
+		expect(
+			reachedUnitsOf(
+				{
+					appliesTo: "DEPARTMENTS",
+					branchIds: ["b-1"],
+					departmentIds: ["d-1"],
+				},
+				choices
+			)
+		).toEqual({
+			appliesToBranches: [],
+			appliesToDepartments: [
+				{
+					departmentId: "d-1",
+					departmentName: "Kitchen",
+					branchId: "b-1",
+					branchName: "Orchard",
+				},
+			],
+		});
+	});
+
+	it("names nothing for the whole company", () => {
+		expect(
+			reachedUnitsOf(
+				{ appliesTo: "COMPANY", branchIds: ["b-1"], departmentIds: [] },
+				choices
+			)
+		).toEqual({ appliesToBranches: [], appliesToDepartments: [] });
 	});
 });
 

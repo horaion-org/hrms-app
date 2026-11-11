@@ -117,11 +117,8 @@ describe("SchedulingPolicySettings", () => {
 			name: "Work policy constraints",
 		});
 		expect(
-			within(table).getByRole("columnheader", { name: "Applies to" })
-		).toBeInTheDocument();
-		expect(
 			within(table).getByRole("row", { name: /Company rest/ })
-		).toHaveTextContent("All departments");
+		).toHaveTextContent("Whole company");
 		expect(
 			within(table).getByRole("row", { name: /Kitchen and Bar rest/ })
 		).toHaveTextContent("Bar, Kitchen");
@@ -148,14 +145,14 @@ describe("SchedulingPolicySettings", () => {
 		const dialog = await screen.findByRole("dialog", {
 			name: "Add constraint",
 		});
-		await user.type(within(dialog).getByLabelText("Constraint name"), "Rest");
+		const name = within(dialog).getByRole("textbox", { name: /^Name/ });
+		await user.clear(name);
+		await user.type(name, "Rest");
 		await user.click(
-			within(dialog).getByRole("button", { name: /^Constraint type/ })
+			within(dialog).getByRole("button", { name: /^What it controls/ })
 		);
 		await user.click(
-			await screen.findByRole("option", {
-				name: "Working hours: Rest between shifts",
-			})
+			await screen.findByRole("option", { name: "Rest between shifts" })
 		);
 		await user.click(
 			within(dialog).getByRole("radio", { name: "Chosen departments" })
@@ -166,7 +163,7 @@ describe("SchedulingPolicySettings", () => {
 		await user.click(await screen.findByRole("option", { name: "Front" }));
 		await user.keyboard("{Escape}");
 		await user.type(
-			within(dialog).getByRole("spinbutton", { name: /Rest/ }),
+			within(dialog).getByRole("spinbutton", { name: /^Hours off/ }),
 			"11"
 		);
 		await user.click(within(dialog).getByRole("button", { name: "Save" }));

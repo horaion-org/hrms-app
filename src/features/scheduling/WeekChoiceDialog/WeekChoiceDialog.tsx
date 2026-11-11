@@ -88,9 +88,7 @@ export const WeekChoiceDialog = ({
 			className="md:max-w-288"
 			// Nothing can be unticked once generated, so only a choice is introduced.
 			description={
-				readOnly
-					? undefined
-					: t(`${key}.intro`, { department: departmentName })
+				readOnly ? undefined : t(`${key}.intro`, { department: departmentName })
 			}
 			footer={
 				readOnly ? (
