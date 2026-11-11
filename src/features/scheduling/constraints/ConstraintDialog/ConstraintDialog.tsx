@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { FormRow, formRowIds } from "@/components/forms/FormRow";
 import { Input } from "@/components/forms/Input";
+import { RadioCard } from "@/components/forms/RadioCard";
 import { Select, type SelectOption } from "@/components/forms/Select";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
@@ -37,7 +38,10 @@ import {
 	allowsReplacement,
 	compareStrictness,
 } from "@/features/scheduling/constraints/constraintStrictness";
-import type { SentenceValue } from "@/features/scheduling/constraints/constraintSentence";
+import {
+	firmnessOf,
+	type SentenceValue,
+} from "@/features/scheduling/constraints/constraintSentence";
 import type { ConstraintOptionsState } from "@/features/scheduling/constraints/useConstraintOptions";
 import type { Constraint } from "@/features/scheduling/scheduleDraft";
 import {
@@ -135,7 +139,8 @@ export const ConstraintDialog = ({
 		defaultValues: {
 			name: editing?.name ?? "",
 			type: startingPoint?.type ?? "",
-			requirement: startingPoint?.requirement ?? "",
+			// A new constraint starts as a Must; an edit or replacement keeps its own.
+			requirement: startingPoint ? (startingPoint.requirement ?? "") : "MUST",
 			status: editing?.status ?? "ACTIVE",
 			lock: withLock ? (editing?.lock ?? "LOCKED") : "",
 			values: startingPoint ? valuesByField(startingPoint.values) : {},
@@ -198,12 +203,6 @@ export const ConstraintDialog = ({
 		if (chosen) return t(`scheduling.constraints.examples.${chosen.type}`);
 		return t(`${key}.typeHintEmpty`);
 	};
-	const requirementOptions: Array<SelectOption> = CONSTRAINT_REQUIREMENTS.map(
-		(requirement) => ({
-			value: requirement,
-			label: t(`scheduling.constraints.requirements.${requirement}`),
-		})
-	);
 	const statusOptions: Array<SelectOption> = CONSTRAINT_STATUSES.map(
 		(status) => ({
 			value: status,
@@ -267,7 +266,7 @@ export const ConstraintDialog = ({
 			}))
 		);
 	const selectRow = (
-		field: "type" | "requirement" | "status" | "lock",
+		field: "type" | "status" | "lock",
 		choiceOptions: Array<SelectOption>,
 		hint: string,
 		disabled = false
@@ -302,6 +301,60 @@ export const ConstraintDialog = ({
 			/>
 		</FormRow>
 	);
+	// Must or If possible as two cards, each saying what happens when unmet; a type that offers no choice says which it always is.
+	const firmnessRow = (option: ConstraintTypeOption): FunctionComponent => {
+		const id = fieldId("requirement");
+		const label = t(`${key}.requirement`);
+		const error = errors.requirement?.message;
+		if (!option.hasRequirement) {
+			const fixed = firmnessOf({ type: option.type, requirement: null });
+			return (
+				fixed && (
+					<FormRow htmlFor={id} label={label} layout="stacked">
+						<p className="text-sm text-neutral-800" id={id}>
+							{t(`scheduling.constraints.fixedFirmness.${fixed}`)}
+						</p>
+					</FormRow>
+				)
+			);
+		}
+		return (
+			<FormRow
+				required
+				error={error}
+				htmlFor={id}
+				label={label}
+				layout="stacked"
+			>
+				<Controller
+					control={control}
+					name="requirement"
+					render={({ field }) => (
+						<div
+							aria-describedby={describedBy("requirement", error, false)}
+							aria-labelledby={labelledBy("requirement")}
+							className="grid gap-4 sm:grid-cols-2"
+							id={id}
+							role="radiogroup"
+						>
+							{CONSTRAINT_REQUIREMENTS.map((choice) => (
+								<RadioCard
+									key={choice}
+									checked={field.value === choice}
+									description={t(`scheduling.constraints.firmness.${choice}`)}
+									disabled={isSubmitting}
+									label={t(`scheduling.constraints.requirements.${choice}`)}
+									name={`${formId}-requirement`}
+									value={choice}
+									onChange={field.onChange}
+								/>
+							))}
+						</div>
+					)}
+				/>
+			</FormRow>
+		);
+	};
 	const valueRow = (
 		spec: ConstraintFieldSpec,
 		className?: string
@@ -566,15 +619,8 @@ export const ConstraintDialog = ({
 								</div>
 							)
 						)}
-						<div className="flex flex-col gap-6 sm:flex-row">
-							{chosen.hasRequirement &&
-								selectRow(
-									"requirement",
-									requirementOptions,
-									t(`${key}.requirementHint`)
-								)}
-							{selectRow("status", statusOptions, t(`${key}.statusHint`))}
-						</div>
+						{firmnessRow(chosen)}
+						{selectRow("status", statusOptions, t(`${key}.statusHint`))}
 					</>
 				)}
 				{impactNote && <p className="text-sm text-neutral-700">{impactNote}</p>}

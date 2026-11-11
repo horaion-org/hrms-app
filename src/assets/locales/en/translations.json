@@ -3384,8 +3384,7 @@
 				"optionsLoading": "Loading constraint types…",
 				"optionsHidden": "You don’t have permission to see this department’s constraint types.",
 				"optionsFailed": "We couldn’t load constraint types. Try again.",
-				"requirement": "Requirement",
-				"requirementHint": "Must: a schedule never breaks it. Should: kept wherever it can be.",
+				"requirement": "How firm",
 				"status": "Status",
 				"statusHint": "Only an active constraint can be applied to a schedule.",
 				"pleaseSelect": "Please select",
@@ -3398,7 +3397,7 @@
 				"nameLength": "Use 2 to 100 characters.",
 				"nameCharacters": "Use only letters, numbers, spaces and . ' & - in the name.",
 				"typeRequired": "Choose what it controls.",
-				"requirementRequired": "Choose must or should.",
+				"requirementRequired": "Choose Must or If possible.",
 				"number": "Enter a whole number from {{min}} to {{max}}.",
 				"chooseOne": "Choose one.",
 				"chooseAtLeast_one": "Choose at least one.",
@@ -3503,6 +3502,10 @@
 				"DAYS_OFF": "{{min}} to {{max}}.",
 				"PERIOD_DAYS": "For example 7: any 7 days in a row. {{min}} to {{max}}.",
 				"REST_HOURS": "From the end of one shift to the start of the next. {{min}} to {{max}}."
+			},
+			"fixedFirmness": {
+				"MUST": "Always a must for this kind of constraint.",
+				"SHOULD": "Always if possible for this kind of constraint."
 			}
 		},
 		"forecast": {

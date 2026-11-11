@@ -3206,8 +3206,7 @@
 				"optionsLoading": "Cargando tipos de restricción…",
 				"optionsHidden": "No tienes permiso para ver los tipos de restricción de este departamento.",
 				"optionsFailed": "No pudimos cargar los tipos de restricción. Inténtalo de nuevo.",
-				"requirement": "Requisito",
-				"requirementHint": "Debe: un horario nunca la incumple. Debería: se cumple siempre que se pueda.",
+				"requirement": "Firmeza",
 				"status": "Estado",
 				"statusHint": "Solo una restricción activa se puede aplicar a un horario.",
 				"pleaseSelect": "Selecciona",
@@ -3220,7 +3219,7 @@
 				"nameLength": "Usa de 2 a 100 caracteres.",
 				"nameCharacters": "Usa solo letras, números, espacios y . ' & - en el nombre.",
 				"typeRequired": "Elige qué controla.",
-				"requirementRequired": "Elige debe o debería.",
+				"requirementRequired": "Elige Obligatoria o Si es posible.",
 				"number": "Escribe un número entero de {{min}} a {{max}}.",
 				"chooseOne": "Elige uno.",
 				"chooseAtLeast_one": "Elige al menos uno.",
@@ -3325,6 +3324,10 @@
 				"DAYS_OFF": "De {{min}} a {{max}}.",
 				"PERIOD_DAYS": "Por ejemplo 7: cualquier periodo de 7 días seguidos. De {{min}} a {{max}}.",
 				"REST_HOURS": "Desde el final de un turno hasta el inicio del siguiente. De {{min}} a {{max}}."
+			},
+			"fixedFirmness": {
+				"MUST": "Siempre obligatoria para este tipo de restricción.",
+				"SHOULD": "Siempre si es posible para este tipo de restricción."
 			}
 		},
 		"forecast": {

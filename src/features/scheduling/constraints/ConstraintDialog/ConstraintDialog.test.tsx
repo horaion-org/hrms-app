@@ -307,7 +307,7 @@ describe("ConstraintDialog", () => {
 		renderDialog();
 		await start(user, "People on a shift, with stand-ins");
 
-		expect(trigger(/^Requirement/)).toBeVisible();
+		expect(screen.getByRole("radiogroup", { name: /^How firm/ })).toBeVisible();
 		expect(trigger(/^Status/)).toHaveTextContent("Active");
 		expect(screen.getByRole("spinbutton", { name: /^People/ })).toHaveAttribute(
 			"max",
@@ -365,13 +365,12 @@ describe("ConstraintDialog", () => {
 		await user.click(screen.getByRole("button", { name: "Save" }));
 
 		const alerts = await screen.findAllByRole("alert");
-		// In reading order: shifts, comparison, people, job titles, then how firm.
+		// In reading order: shifts, comparison, people, job titles; how firm starts as Must.
 		expect(alerts.map((alert) => alert.textContent)).toEqual([
 			"Choose at least one.",
 			"Choose one.",
 			"Enter a whole number from 0 to 999.",
 			"Choose at least one.",
-			"Choose must or should.",
 		]);
 		expect(onSave).not.toHaveBeenCalled();
 	});
@@ -381,7 +380,7 @@ describe("ConstraintDialog", () => {
 		const { onSave, onClose } = renderDialog();
 		await start(user, "People on a shift");
 
-		await pick(user, /^Requirement/, "Must");
+		expect(screen.getByRole("radio", { name: "Must" })).toBeChecked();
 		await pick(user, /^At least, at most or exactly/, "At least");
 		await user.type(screen.getByRole("spinbutton", { name: /^People/ }), "2");
 		await pick(
@@ -416,12 +415,37 @@ describe("ConstraintDialog", () => {
 		expect(onClose).toHaveBeenCalledOnce();
 	});
 
+	it("given_IfPossibleChosen_when_previewed_then_theTagFollows", async () => {
+		const user = userEvent.setup();
+		renderDialog();
+		await start(user, "Days off in a run of days");
+		const preview = screen.getByRole("region", { name: "How it reads" });
+		expect(within(preview).getByText("Must")).toBeVisible();
+
+		await user.click(screen.getByRole("radio", { name: "If possible" }));
+
+		expect(within(preview).getByText("If possible")).toHaveAttribute(
+			"title",
+			"Kept when it can be. The schedule shows where it wasn't."
+		);
+	});
+
+	it("given_aShouldConstraint_when_editing_then_startsOnIfPossible", async () => {
+		renderDialog({ editing: constraint("closing-supervisor") });
+		await screen.findByRole("dialog", { name: "Edit constraint" });
+
+		expect(screen.getByRole("radio", { name: "If possible" })).toBeChecked();
+	});
+
 	it("given_aTypeWithoutARequirement_when_saved_then_offersNoneAndSendsNone", async () => {
 		const user = userEvent.setup();
 		const { onSave } = renderDialog();
 		await start(user, "Days to avoid giving off");
 
-		expect(screen.queryByRole("button", { name: /^Requirement/ })).toBeNull();
+		expect(screen.queryByRole("radiogroup")).toBeNull();
+		expect(
+			screen.getByText("Always if possible for this kind of constraint.")
+		).toBeVisible();
 		await pick(user, /^Days of the week/, "Saturday", "Friday");
 		await user.click(screen.getByRole("button", { name: "Save" }));
 
@@ -469,7 +493,7 @@ describe("ConstraintDialog", () => {
 		expect(trigger(/^What it controls/)).toHaveTextContent(
 			"Days off in a run of days"
 		);
-		expect(trigger(/^Requirement/)).toHaveTextContent("Must");
+		expect(screen.getByRole("radio", { name: "Must" })).toBeChecked();
 		expect(trigger(/^At least, at most or exactly/)).toHaveTextContent(
 			"At least"
 		);
