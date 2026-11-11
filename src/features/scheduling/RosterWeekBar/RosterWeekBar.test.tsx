@@ -57,7 +57,7 @@ describe("RosterWeekBar", () => {
 	it("given_aGeneratedLegend_when_rendered_then_keepsItBehindTheLegendButton", () => {
 		render(
 			<RosterWeekBar
-				legend={[{ kind: "off" }, { kind: "leave" }]}
+				legend={[{ kind: "off", dayType: "OFF" }, { kind: "leave" }]}
 				week="2026-04-13"
 				weeks={weeks}
 				onToday={vi.fn()}
@@ -86,14 +86,18 @@ describe("RosterWeekBar", () => {
 		expect(screen.queryByRole("button", { name: "Legend" })).toBeNull();
 	});
 
-	it("given_theLegendButton_when_chosen_then_namesOffLeaveAndEachShiftInItsColour", async () => {
+	it("given_theLegendButton_when_chosen_then_namesEachDayTypeAbsentLeaveAndEachShiftInItsColour", async () => {
 		const user = userEvent.setup();
 		render(
 			<RosterWeekBar
 				week="2026-04-13"
 				weeks={weeks}
 				legend={[
-					{ kind: "off" },
+					{ kind: "off", dayType: "OFF" },
+					{ kind: "off", dayType: "REST" },
+					{ kind: "off", dayType: "PUBLIC_HOLIDAY_OFF" },
+					{ kind: "off", dayType: null },
+					{ kind: "absent" },
 					{ kind: "leave" },
 					{
 						kind: "shift",
@@ -110,8 +114,24 @@ describe("RosterWeekBar", () => {
 		await user.click(screen.getByRole("button", { name: "Legend" }));
 
 		const legend = await screen.findByRole("list", { name: "Legend" });
-		expect(legend).toHaveTextContent("Day OffOn LeaveFront Desk AM");
-		const [, leave, shift] = within(legend).getAllByRole("listitem");
+		expect(
+			within(legend)
+				.getAllByRole("listitem")
+				.map((item) => item.textContent)
+		).toEqual([
+			"Day off",
+			"Rest day",
+			"Public holiday off",
+			"Day Off",
+			"Absent",
+			"On Leave",
+			"Front Desk AM",
+		]);
+		const [dayOff, restDay, , , absent, leave, shift] =
+			within(legend).getAllByRole("listitem");
+		// Every non-working day and an absent day share the Off look.
+		for (const item of [dayOff, restDay, absent])
+			expect(item!.firstElementChild).toHaveClass("bg-neutral-100");
 		expect(leave!.firstElementChild).toHaveClass("bg-ink-blue-50");
 		expect(shift!.firstElementChild).toHaveStyle({
 			backgroundColor: "#E9A55A",

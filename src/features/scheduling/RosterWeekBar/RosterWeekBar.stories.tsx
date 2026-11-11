@@ -9,9 +9,11 @@ import "@/common/i18n";
 
 const weeks = weeksOf({ start: "2026-04-13", end: "2026-04-26" });
 
-/** A day off, leave and each shift in its colour. */
+/** Each non-working day type, absent, leave and each shift in its colour. */
 const legend: Array<RosterLegendEntry> = [
-	{ kind: "off" },
+	{ kind: "off", dayType: "OFF" },
+	{ kind: "off", dayType: "REST" },
+	{ kind: "absent" },
 	{ kind: "leave" },
 	{
 		kind: "shift",

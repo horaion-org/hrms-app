@@ -62,7 +62,7 @@ describe("GeneratedRoster", () => {
 
 		expect(
 			screen.getByText(
-				"3 people · 15 shifts · 4 days off · 2 days on leave · 94 h"
+				"3 people · 15 shifts · 3 days off · 2 days on leave · 94 h"
 			)
 		).toBeInTheDocument();
 		expect(screen.queryByRole("region")).toBeNull();

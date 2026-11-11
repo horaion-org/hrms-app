@@ -33,7 +33,8 @@ describe("rosterSummarySegments", () => {
 			[
 				{ key: "people", values: { count: 3 } },
 				{ key: "shifts", values: { count: 15 } },
-				{ key: "daysOff", values: { count: 4 } },
+				// Ben's absent Sunday is not a day off.
+				{ key: "daysOff", values: { count: 3 } },
 				{ key: "onLeave", values: { count: 2 } },
 				{ key: "hours", values: { hours: 94 } },
 			],

@@ -1,5 +1,7 @@
+import type { TFunction } from "i18next";
 import { dateTimeFormatIn } from "@/common/dateTimeFormatIn";
 import { daysOf, weeksOf } from "@/common/weeks";
+import { dayTypeLabel } from "@/features/scheduling/dayTypes";
 import type { SchedulePeriod } from "@/features/scheduling/periods";
 import {
 	hoursFromMinutes,
@@ -49,9 +51,22 @@ export type RosterLeaveCell = {
 	note?: RosterDayNote;
 };
 
-/** One member's day: a shift, a plain day off, or approved leave. */
+/** A non-working day, of the type the API names; null when it names none. */
+export type RosterOffCell = {
+	kind: "off";
+	dayType: string | null;
+	note?: RosterDayNote;
+};
+
+/** A day without a shift and without a type, such as a part-timer's. */
+export type RosterAbsentCell = { kind: "absent"; note?: RosterDayNote };
+
+/** One member's day: a shift, a non-working day, absent, or approved leave. */
 export type RosterCell =
-	RosterShiftCell | { kind: "off"; note?: RosterDayNote } | RosterLeaveCell;
+	RosterShiftCell | RosterOffCell | RosterAbsentCell | RosterLeaveCell;
+
+/** A day with no shift worked. */
+export type RosterDayWithoutShift = Exclude<RosterCell, RosterShiftCell>;
 
 /** One member's week. */
 export type RosterRow = {
@@ -69,9 +84,10 @@ export type RosterRow = {
 	days: Record<string, RosterCell>;
 };
 
-/** One entry of a roster's legend: a plain day off, leave, or one of its shifts. */
+/** One entry of a roster's legend: a non-working day's type, absent, leave, or one of its shifts. */
 export type RosterLegendEntry =
-	| { kind: "off" }
+	| { kind: "off"; dayType: string | null }
+	| { kind: "absent" }
 	| { kind: "leave" }
 	| { kind: "shift"; shiftId: string; name: string; colour: string };
 
@@ -87,9 +103,11 @@ export type RosterStats = {
 
 const offCellOf = ({
 	offReason,
+	dayType,
 	leaveTypeName,
-}: ScheduleAssignment): RosterCell => {
-	if (offReason !== "LEAVE") return { kind: "off" };
+}: ScheduleAssignment): RosterDayWithoutShift => {
+	if (offReason === "ABSENT") return { kind: "absent" };
+	if (offReason !== "LEAVE") return { kind: "off", dayType };
 	return leaveTypeName ? { kind: "leave", leaveTypeName } : { kind: "leave" };
 };
 
@@ -223,20 +241,67 @@ export const weekDays = (
 	return shown ? daysOf(shown.start) : [];
 };
 
-/** A day off, leave, then each distinct shift of the rows by group and name. */
+/**
+ * A day with no shift as its tile writes it: the leave type, the day type, or
+ * "OFF", "LEAVE", "Absent". Pure.
+ */
+export const dayWithoutShiftTileText = (
+	cell: RosterDayWithoutShift,
+	t: TFunction
+): string => {
+	if (cell.kind === "leave")
+		return cell.leaveTypeName ?? t("scheduling.detail.leave");
+	if (cell.kind === "off" && cell.dayType !== null)
+		return dayTypeLabel(cell.dayType, t);
+	return t(`scheduling.detail.${cell.kind}`);
+};
+
+/**
+ * The same day in plain words, not the tile's capitals, as a screen reader
+ * hears it: "Rest day", "Day off", "Absent", "Sick leave". Pure.
+ */
+export const dayWithoutShiftPlainText = (
+	cell: RosterDayWithoutShift,
+	t: TFunction
+): string => {
+	if (cell.kind === "leave")
+		return cell.leaveTypeName ?? t("scheduling.rosterEdit.onLeave");
+	if (cell.kind === "absent") return t("scheduling.detail.absent");
+	if (cell.dayType === null) return t("scheduling.rosterEdit.dayOff");
+	return dayTypeLabel(cell.dayType, t);
+};
+
+/**
+ * Each non-working day type the rows hold, by code with a day without a type
+ * first, so every week keys them in the same order; absent when a row is;
+ * leave; then each distinct shift of the rows by group and name.
+ */
 export const legendOf = (
 	rows: ReadonlyArray<RosterRow>
 ): Array<RosterLegendEntry> => {
+	const cells = rows.flatMap((row) => Object.values(row.days));
+	const dayTypes = new Set<string | null>();
 	const shifts = new Map<string, RosterShiftCell>();
-	for (const row of rows)
-		for (const cell of Object.values(row.days))
-			if (cell.kind === "shift" && !shifts.has(cell.shiftId))
-				shifts.set(cell.shiftId, cell);
+	for (const cell of cells) {
+		if (cell.kind === "off") dayTypes.add(cell.dayType);
+		if (cell.kind === "shift" && !shifts.has(cell.shiftId))
+			shifts.set(cell.shiftId, cell);
+	}
 	const ordered = [...shifts.values()].sort(
 		(a, b) => a.group.localeCompare(b.group) || a.name.localeCompare(b.name)
 	);
+	// No type reads as "", which sorts before every code.
+	const dayTypesByCode = [...dayTypes].sort((a, b) =>
+		(a ?? "").localeCompare(b ?? "")
+	);
+	const absent: Array<RosterLegendEntry> = cells.some(
+		(cell) => cell.kind === "absent"
+	)
+		? [{ kind: "absent" }]
+		: [];
 	return [
-		{ kind: "off" },
+		...dayTypesByCode.map((dayType) => ({ kind: "off" as const, dayType })),
+		...absent,
 		{ kind: "leave" },
 		...ordered.map(({ shiftId, name, colour }) => ({
 			kind: "shift" as const,

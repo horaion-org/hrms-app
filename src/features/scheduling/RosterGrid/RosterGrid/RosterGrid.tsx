@@ -11,6 +11,8 @@ import { RosterHeaderCount } from "@/features/scheduling/RosterGrid/RosterHeader
 import { RosterShift } from "@/features/scheduling/RosterGrid/RosterShift";
 import type { GridFindings } from "@/features/scheduling/roster/findings/findingsOnGrid";
 import {
+	dayWithoutShiftPlainText,
+	dayWithoutShiftTileText,
 	hoursInDays,
 	type RosterRow,
 	type RosterShiftCell,
@@ -194,17 +196,12 @@ export const RosterGrid = ({
 		if (cell === undefined) return null;
 		const key = dayKey(row, date);
 		if (cell.kind !== "shift") {
-			const text =
-				(cell.kind === "leave" && cell.leaveTypeName) ||
-				t(`scheduling.detail.${cell.kind}`);
+			const text = dayWithoutShiftTileText(cell, t);
 			// Read in words, not the tile's capitals: "Aisha Rahman, Sat: Day off".
 			const plainLabel = t("scheduling.detail.dayLabel", {
 				name,
 				day: weekday.format(dayjs(date).toDate()),
-				kind:
-					cell.kind === "leave"
-						? (cell.leaveTypeName ?? t("scheduling.rosterEdit.onLeave"))
-						: t("scheduling.rosterEdit.dayOff"),
+				kind: dayWithoutShiftPlainText(cell, t),
 			});
 			const { mark, label } = cellMarking(row, date, plainLabel);
 			const looks = joinClassNames(
@@ -213,7 +210,8 @@ export const RosterGrid = ({
 				compact ? "h-10 px-2.5" : "h-14 px-1",
 				// Words kept clear of the mark in the corner, as on a shift tile.
 				mark && "pr-3.5",
-				rosterLooks[cell.kind]
+				// Every non-working day and an absent day share the Off look; leave keeps its own.
+				cell.kind === "leave" ? rosterLooks.leave : rosterLooks.off
 			);
 			const markSpot = mark && (
 				<span
