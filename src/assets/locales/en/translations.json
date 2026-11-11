@@ -4099,6 +4099,19 @@
 			"descriptionAll": "How each department is staffed and rested. Company constraints apply to every department; locked ones always apply.",
 			"search": "Search constraints",
 			"noMatch": "No constraints match your search."
+		},
+		"readiness": {
+			"departmentsNotReady_one": "{{count}} department isn’t ready to schedule:",
+			"departmentsNotReady_other": "{{count}} departments aren’t ready to schedule:",
+			"notReadyTitle": "{{department}} isn’t ready to schedule yet",
+			"addShift": "Add a shift",
+			"addStaffing": "Add a staffing constraint: how many people each shift needs.",
+			"addShiftFirst": "Add a shift first.",
+			"goToConstraints": "Go to Constraints",
+			"ready": "{{department}} is ready to schedule.",
+			"createSchedule": "Create schedule",
+			"backToSchedule": "Back to the schedule",
+			"done": "Done"
 		}
 	},
 	"colourSwatchPicker": {
