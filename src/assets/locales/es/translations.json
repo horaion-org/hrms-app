@@ -3055,7 +3055,12 @@
 					"type": "Elige un tipo de turno.",
 					"start": "Elige una hora de inicio.",
 					"end": "Elige una hora de fin."
-				}
+				},
+				"department": "Departamento",
+				"departmentPlaceholder": "Selecciona un departamento",
+				"departmentHint": "Cada turno pertenece a un departamento.",
+				"departmentsEmpty": "No hay ningún departamento activo al que puedas añadir turnos.",
+				"rolesNeedDepartment": "Elige primero un departamento."
 			},
 			"types": {
 				"REGULAR": "Regular",

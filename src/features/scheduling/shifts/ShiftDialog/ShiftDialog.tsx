@@ -21,6 +21,10 @@ import {
 	shiftMinutes,
 } from "@/features/scheduling/scheduleDraft";
 import type { ScheduleShift } from "@/features/scheduling/schedules/api";
+import {
+	SetupDepartmentField,
+	type SetupDepartment,
+} from "@/features/scheduling/SetupDepartmentField";
 import type { ShiftBody } from "@/features/scheduling/shifts/api";
 import {
 	shiftSchema,
@@ -31,9 +35,27 @@ import { shiftRefusal } from "@/features/scheduling/shifts/shiftRefusal";
 import { SHIFT_COLOURS } from "@/features/scheduling/shifts/shiftColours";
 import type { ShiftRoleOptions } from "@/features/scheduling/shifts/useShiftRoleOptions";
 
+/** The dialog reads only these fields of the shift it edits, a draft's or a department's alike. */
+export type ShiftBeingEdited = Pick<
+	ScheduleShift,
+	| "name"
+	| "group"
+	| "colour"
+	| "startTime"
+	| "endTime"
+	| "days"
+	| "roles"
+	| "unpaidBreakMinutes"
+	| "carriesOvertime"
+>;
+
 export type ShiftDialogProps = {
 	/** Set to change one of the department's shifts. */
-	editing?: ScheduleShift;
+	editing?: ShiftBeingEdited;
+	/** The Department field, shown first: chosen when adding, fixed when editing; left out inside a schedule, whose department is known. */
+	department?: SetupDepartment;
+	/** What saving the change reaches, said below the last field. */
+	impactNote?: string;
 	/** The department's active job titles, which the shift's roles are chosen from. */
 	roles: ShiftRoleOptions;
 	/** The groups the department's shifts already belong to; a new one may be created in place. */
@@ -63,6 +85,8 @@ const same = (a: string): string => a;
  */
 export const ShiftDialog = ({
 	editing,
+	department,
+	impactNote,
 	roles,
 	groups,
 	onSave,
@@ -94,6 +118,7 @@ export const ShiftDialog = ({
 		control,
 		handleSubmit,
 		reset,
+		setValue,
 		trigger,
 		formState: { errors, isSubmitting },
 	} = form;
@@ -133,8 +158,12 @@ export const ShiftDialog = ({
 					label: role.name,
 				}))
 			: [];
-	const rolesHint =
-		roles.status === "pending"
+	// Until a Department is chosen there are no roles to offer.
+	const departmentMissing =
+		department?.kind === "choose" && department.value === "";
+	const rolesHint = departmentMissing
+		? t(`${key}.rolesNeedDepartment`)
+		: roles.status === "pending"
 			? t(`${key}.rolesLoading`)
 			: roles.status === "hidden"
 				? t(`${key}.rolesHidden`)
@@ -206,7 +235,7 @@ export const ShiftDialog = ({
 						{t(`${key}.reset`)}
 					</Button>
 					<Button
-						disabled={!name.trim()}
+						disabled={!name.trim() || departmentMissing}
 						form={formId}
 						leadingIcon={<SaveIcon />}
 						loading={isSubmitting}
@@ -242,6 +271,28 @@ export const ShiftDialog = ({
 					>
 						{message}
 					</p>
+				)}
+				{department && (
+					<SetupDepartmentField
+						department={
+							department.kind === "choose"
+								? {
+										...department,
+										onChange: (departmentId): void => {
+											// Roles belong to one Department, so a new one starts them again.
+											setValue("jobTitleIds", []);
+											department.onChange(departmentId);
+										},
+									}
+								: department
+						}
+						labels={{
+							label: t(`${key}.department`),
+							placeholder: t(`${key}.departmentPlaceholder`),
+							hint: t(`${key}.departmentHint`),
+							empty: t(`${key}.departmentsEmpty`),
+						}}
+					/>
 				)}
 				<UnitNameField
 					autoFocus
@@ -413,6 +464,7 @@ export const ShiftDialog = ({
 						/>
 					</FormRow>
 				</div>
+				{impactNote && <p className="text-sm text-neutral-700">{impactNote}</p>}
 			</form>
 		</Dialog>
 	);

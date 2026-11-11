@@ -3233,7 +3233,12 @@
 					"type": "Choose a shift type.",
 					"start": "Choose a start time.",
 					"end": "Choose an end time."
-				}
+				},
+				"department": "Department",
+				"departmentPlaceholder": "Select a department",
+				"departmentHint": "Shifts belong to one department.",
+				"departmentsEmpty": "No active department you can add shifts to.",
+				"rolesNeedDepartment": "Choose a department first."
 			},
 			"types": {
 				"REGULAR": "Regular",
