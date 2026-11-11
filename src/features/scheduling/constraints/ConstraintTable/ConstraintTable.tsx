@@ -57,6 +57,8 @@ export type ConstraintTableProps<Row extends ConstraintTableRow> = {
 	showBranch?: boolean;
 	/** No Department is chosen, so each row names its own, and a company row reads "All departments". */
 	showDepartment?: boolean;
+	/** Puts Set by, Requirement and Status on the name's line below 2xl, for the setup tab. */
+	metaOnNameLine?: boolean;
 	/** Shown across the table when there are no rows; "no constraints yet" when left out. */
 	emptyState?: ReactNode;
 	className?: string;
@@ -67,8 +69,8 @@ export type ConstraintTableProps<Row extends ConstraintTableRow> = {
  * and its requirement. The wizard's constraint step and the Constraints tab
  * both list constraints with it. Phones keep the name and the actions;
  * every other value reads on the name's line, as on Job titles.
- * Across departments the Department column crowds a desktop screen, so
- * Set by, Requirement and Status stay on that line up to 2xl.
+ * On the setup tab, Set by, Requirement and Status stay on that line up
+ * to 2xl, so the sentence keeps room on a desktop screen.
  */
 export const ConstraintTable = <Row extends ConstraintTableRow>({
 	constraints,
@@ -81,6 +83,7 @@ export const ConstraintTable = <Row extends ConstraintTableRow>({
 	canDelete,
 	showBranch = false,
 	showDepartment = false,
+	metaOnNameLine = false,
 	emptyState,
 	className,
 }: ConstraintTableProps<Row>): FunctionComponent => {
@@ -97,9 +100,9 @@ export const ConstraintTable = <Row extends ConstraintTableRow>({
 			constraint.level !== "COMPANY" && (canEdit?.(constraint) ?? true);
 		const deletable = (constraint: Row): boolean =>
 			constraint.level !== "COMPANY" && (canDelete?.(constraint) ?? true);
-		// With a Department column, who set it, its requirement and its status
-		// read on the name's line until 2xl; the wizard never shows Department.
-		const settingsHideBelow: ColumnBreakpoint = showDepartment ? "2xl" : "md";
+		// The setup tab keeps who set it, its requirement and its status on the
+		// name's line until 2xl; the wizard leaves them as columns from md.
+		const settingsHideBelow: ColumnBreakpoint = metaOnNameLine ? "2xl" : "md";
 		return [
 			shared.name,
 			...(showBranch ? [branchColumn<Row>(t)] : []),
@@ -211,6 +214,7 @@ export const ConstraintTable = <Row extends ConstraintTableRow>({
 		canDelete,
 		showBranch,
 		showDepartment,
+		metaOnNameLine,
 	]);
 
 	return (

@@ -133,33 +133,41 @@ describe("ConstraintTable", () => {
 			"Department",
 			"Constraint type",
 			"Details",
-		]);
-		expect(headersHiddenBelow("hidden 2xl:table-cell")).toEqual([
 			"Set by",
 			"Requirement",
 			"Status",
 		]);
 	});
 
-	it.each<[string, boolean, Array<string>, Array<string>]>([
+	it.each<[string, boolean, boolean, Array<string>, Array<string>]>([
 		[
-			"every department",
+			"the setup tab across departments",
+			true,
 			true,
 			["Department", "Constraint type", "Details"],
 			["Set by", "Requirement", "Status"],
 		],
 		[
-			"one department",
+			"the setup tab with one department",
+			true,
+			false,
+			["Constraint type", "Details"],
+			["Set by", "Requirement", "Status"],
+		],
+		[
+			"the wizard",
+			false,
 			false,
 			["Constraint type", "Details", "Set by", "Requirement", "Status"],
 			[],
 		],
 	])(
 		"given_%s_when_rendered_then_hidesTheSettingsColumnsAtTheirBreakpoint",
-		(_shown, showDepartment, belowMd, below2xl) => {
+		(_where, metaOnNameLine, showDepartment, belowMd, below2xl) => {
 			render(
 				<ConstraintTable
 					constraints={rows}
+					metaOnNameLine={metaOnNameLine}
 					showDepartment={showDepartment}
 					onDelete={vi.fn()}
 					onEdit={vi.fn()}

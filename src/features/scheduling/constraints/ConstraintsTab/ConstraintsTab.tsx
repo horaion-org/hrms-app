@@ -287,6 +287,7 @@ export const ConstraintsTab = ({
 						</Tabs>
 					)}
 					<ConstraintTable
+						metaOnNameLine
 						canDelete={canDelete}
 						canEdit={canEdit}
 						className={rows.length > 0 ? "mt-6" : undefined}
