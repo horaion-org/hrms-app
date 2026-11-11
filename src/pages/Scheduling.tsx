@@ -3,6 +3,7 @@ import { useEffect, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from "@/components/ui/Tabs";
+import { ConstraintsTab } from "@/features/scheduling/constraints/ConstraintsTab";
 import { SchedulesTab } from "@/features/scheduling/SchedulesTab";
 import { SCHEDULING_UNIT_RULES } from "@/features/scheduling/schedules/schedulesUnitRules";
 import {
@@ -22,9 +23,10 @@ const key = "scheduling.overview";
 const route = getRouteApi("/_authenticated/_app/scheduling");
 
 /**
- * Scheduling: a tab per view the person may read (Schedules, Shifts), each
- * listing in the header's Branch, narrowed to a Department from the
- * Filters; the tab, Branch and Department are kept in the URL.
+ * Scheduling: a tab per view the person may read (Schedules, Shifts,
+ * Constraints), each listing in the header's Branch, narrowed to a
+ * Department from the Filters; the tab, Branch and Department are kept in
+ * the URL.
  */
 export const Scheduling = (): FunctionComponent => {
 	const { t } = useTranslation();
@@ -72,6 +74,7 @@ export const Scheduling = (): FunctionComponent => {
 	const panels: Record<SchedulingView, ReactNode> = {
 		schedules: <SchedulesTab {...tab} />,
 		shifts: <ShiftsTab {...tab} />,
+		constraints: <ConstraintsTab {...tab} />,
 	};
 
 	return (

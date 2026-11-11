@@ -16,6 +16,12 @@ const holding =
 		keys.some((key) => held.includes(key));
 
 describe("parseSchedulingSearch", () => {
+	it("given_theConstraintsView_when_parsed_then_keepsIt", () => {
+		expect(parseSchedulingSearch({ view: "constraints" })).toEqual({
+			view: "constraints",
+		});
+	});
+
 	it("given_everyPart_when_parsed_then_keepsThem", () => {
 		expect(
 			parseSchedulingSearch({
@@ -40,10 +46,30 @@ describe("parseSchedulingSearch", () => {
 
 describe("schedulingViewsOf", () => {
 	it.each<[string, Array<PermissionKey>, Array<string>]>([
-		["both keys", ["schedule:read", "shift:read"], ["schedules", "shifts"]],
+		[
+			"every key",
+			["schedule:read", "shift:read", "constraint:read"],
+			["schedules", "shifts", "constraints"],
+		],
+		[
+			"schedule:read and shift:read",
+			["schedule:read", "shift:read"],
+			["schedules", "shifts"],
+		],
+		[
+			"schedule:read and constraint:read",
+			["schedule:read", "constraint:read"],
+			["schedules", "constraints"],
+		],
+		[
+			"shift:read and constraint:read",
+			["shift:read", "constraint:read"],
+			["shifts", "constraints"],
+		],
 		["schedule:read only", ["schedule:read"], ["schedules"]],
 		["shift:read only", ["shift:read"], ["shifts"]],
-		["neither", ["leave_request:read"], []],
+		["constraint:read only", ["constraint:read"], ["constraints"]],
+		["none of them", ["leave_request:read"], []],
 	])(
 		"given_%s_when_listed_then_offersThoseViewsInOrder",
 		(_held, keys, views) => {
@@ -71,6 +97,10 @@ describe("SCHEDULING_KEYS", () => {
 		expect(SCHEDULING_KEYS).toEqual(
 			SCHEDULING_VIEWS.flatMap((view) => SCHEDULING_VIEW_KEYS[view])
 		);
-		expect(SCHEDULING_KEYS).toEqual(["schedule:read", "shift:read"]);
+		expect(SCHEDULING_KEYS).toEqual([
+			"schedule:read",
+			"shift:read",
+			"constraint:read",
+		]);
 	});
 });

@@ -22,6 +22,7 @@ import {
 import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
 import type { Schedule } from "@/features/scheduling/schedules/api";
+import { CONSTRAINT_FIXTURES } from "@/features/scheduling/constraints/fixtures";
 import { departmentShiftFixture } from "@/features/scheduling/shifts/fixtures";
 import type { Workspace } from "@/features/workspace/api";
 import {
@@ -505,12 +506,25 @@ describe("the Scheduling link in the main navigation", () => {
 
 		expect(await schedulingLink()).toBeVisible();
 	});
+
+	it("is offered with only constraint:read", async () => {
+		await openSchedulingAs(schedulingWorkspace(["constraint:read"]));
+
+		expect(await schedulingLink()).toBeVisible();
+	});
 });
 
 describe("Scheduling's tabs", () => {
 	const COMPANY_SHIFTS = "/api/v1/companies/c-1/shifts";
+	const COMPANY_CONSTRAINTS = "/api/v1/companies/c-1/constraints";
 	const KITCHEN_SHIFTS =
 		"/api/v1/companies/c-1/branches/b-1/departments/d-1/shifts";
+	/** Morning cover in Orchard's Kitchen (d-1). */
+	const kitchenCover = {
+		...CONSTRAINT_FIXTURES[2]!,
+		departmentName: "Kitchen",
+		branchName: "Orchard",
+	};
 	/** Front Desk AM in Orchard's Kitchen (d-1). */
 	const kitchenShift = {
 		...departmentShiftFixture(),
@@ -536,6 +550,10 @@ describe("Scheduling's tabs", () => {
 				status: 200,
 				body: envelope([kitchenShift]),
 			},
+			[`GET ${COMPANY_CONSTRAINTS}`]: {
+				status: 200,
+				body: envelope([kitchenCover]),
+			},
 		});
 		app = await openApp(path);
 		renderAuthApp(app);
@@ -548,11 +566,16 @@ describe("Scheduling's tabs", () => {
 
 	it.each<[Array<string>, Array<string>]>([
 		[
+			["schedule:read", "shift:read", "constraint:read"],
+			["Schedules", "Shifts", "Constraints"],
+		],
+		[
 			["schedule:read", "shift:read"],
 			["Schedules", "Shifts"],
 		],
 		[["schedule:read"], ["Schedules"]],
 		[["shift:read"], ["Shifts"]],
+		[["constraint:read"], ["Constraints"]],
 	])("given_%j_when_opened_then_offersTabs_%j", async (keys, tabs) => {
 		await openScheduling(companyWideWorkspace(keys));
 
@@ -580,6 +603,22 @@ describe("Scheduling's tabs", () => {
 		expect(
 			calls
 				.filter((call) => call.path === COMPANY_SHIFTS)
+				.map((call) => call.search)
+		).toEqual(["branchId=b-1"]);
+	});
+
+	it("given_viewConstraints_when_opened_then_listsTheCompanysConstraintsInTheHeadersBranch", async () => {
+		const calls = await openScheduling(
+			companyWideWorkspace(["schedule:read", "constraint:read"]),
+			"/scheduling?view=constraints"
+		);
+
+		expect(
+			await screen.findByRole("row", { name: /Morning cover/ })
+		).toHaveTextContent("Kitchen");
+		expect(
+			calls
+				.filter((call) => call.path === COMPANY_CONSTRAINTS)
 				.map((call) => call.search)
 		).toEqual(["branchId=b-1"]);
 	});

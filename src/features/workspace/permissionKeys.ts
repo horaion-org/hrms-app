@@ -106,6 +106,11 @@ export const SCHEDULE_READ_KEYS: ReadonlyArray<PermissionKey> = [
 /** Shifts are listed where this is held at their Department: the Shifts tab's unit choices. */
 export const SHIFT_READ_KEYS: ReadonlyArray<PermissionKey> = ["shift:read"];
 
+/** Constraints are listed where this is held at their Department: the Constraints tab's unit choices. */
+export const CONSTRAINT_READ_KEYS: ReadonlyArray<PermissionKey> = [
+	"constraint:read",
+];
+
 /**
  * Holding this at a member's Department is what lets a person change that
  * member's work availability. A member's own needs nothing granted.

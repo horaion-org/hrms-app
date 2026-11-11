@@ -4091,7 +4091,8 @@
 		"views": {
 			"label": "Scheduling views",
 			"schedules": "Schedules",
-			"shifts": "Shifts"
+			"shifts": "Shifts",
+			"constraints": "Constraints"
 		},
 		"constraintsTab": {
 			"descriptionOne": "How {{department}} is staffed and rested. Company constraints come first; locked ones always apply.",

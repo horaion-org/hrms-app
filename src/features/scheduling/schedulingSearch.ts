@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+	CONSTRAINT_READ_KEYS,
 	SCHEDULE_READ_KEYS,
 	SHIFT_READ_KEYS,
 	type PermissionKey,
@@ -10,7 +11,7 @@ import {
 } from "@/features/workspace/unitSearch";
 
 /** Scheduling's tabs, in the order they show. */
-export const SCHEDULING_VIEWS = ["schedules", "shifts"] as const;
+export const SCHEDULING_VIEWS = ["schedules", "shifts", "constraints"] as const;
 
 export type SchedulingView = (typeof SCHEDULING_VIEWS)[number];
 
@@ -21,6 +22,7 @@ export const SCHEDULING_VIEW_KEYS: Record<
 > = {
 	schedules: SCHEDULE_READ_KEYS,
 	shifts: SHIFT_READ_KEYS,
+	constraints: CONSTRAINT_READ_KEYS,
 };
 
 /** Every key that offers a tab: the navigation offers Scheduling with any of them. */
