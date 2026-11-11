@@ -115,7 +115,7 @@ export const ConstraintTable = <Row extends ConstraintTableRow>({
 					return (
 						<>
 							<span className="block">{constraint.name}</span>
-							<span className="block text-sm font-normal text-neutral-700">
+							<span className="mt-1 block font-normal text-neutral-800">
 								{note}
 							</span>
 						</>
