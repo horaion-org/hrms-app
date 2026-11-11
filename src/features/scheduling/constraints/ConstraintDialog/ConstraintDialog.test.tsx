@@ -308,7 +308,7 @@ describe("ConstraintDialog", () => {
 		await start(user, "People on a shift, with stand-ins");
 
 		expect(screen.getByRole("radiogroup", { name: /^How firm/ })).toBeVisible();
-		expect(trigger(/^Status/)).toHaveTextContent("Active");
+		expect(screen.queryByRole("button", { name: /^Status/ })).toBeNull();
 		expect(screen.getByRole("spinbutton", { name: /^People/ })).toHaveAttribute(
 			"max",
 			"999"
@@ -435,6 +435,7 @@ describe("ConstraintDialog", () => {
 		await screen.findByRole("dialog", { name: "Edit constraint" });
 
 		expect(screen.getByRole("radio", { name: "If possible" })).toBeChecked();
+		expect(trigger(/^Status/)).toHaveTextContent("Active");
 	});
 
 	it("given_aTypeWithoutARequirement_when_saved_then_offersNoneAndSendsNone", async () => {

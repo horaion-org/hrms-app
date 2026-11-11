@@ -620,7 +620,9 @@ export const ConstraintDialog = ({
 							)
 						)}
 						{firmnessRow(chosen)}
-						{selectRow("status", statusOptions, t(`${key}.statusHint`))}
+						{/* A new constraint is Active; whether to switch one off is asked only when editing. */}
+						{editing &&
+							selectRow("status", statusOptions, t(`${key}.statusHint`))}
 					</>
 				)}
 				{impactNote && <p className="text-sm text-neutral-700">{impactNote}</p>}
