@@ -25,6 +25,8 @@ const offer = coverOfferFixture;
 const shift = offer().shift!;
 const working = { shift, offReason: null } as const;
 const dayOff = { shift: null, offReason: "OFF" } as const;
+const restDay = { shift: null, offReason: "OFF", dayType: "REST" } as const;
+const absent = { shift: null, offReason: "ABSENT" } as const;
 const onLeave = { shift: null, offReason: "LEAVE" } as const;
 const anotherShift: RosterEditChoice = { kind: "shift", shiftId: "x" };
 const AFTER_DEADLINE = new Date("2026-10-16T07:31:00Z");
@@ -44,6 +46,22 @@ describe("consentKindOf", () => {
 			"a shift on a day off",
 			true,
 			dayOff,
+			anotherShift,
+			false,
+			"OFF_DAY_SHIFT",
+		],
+		[
+			"a shift on a rest day",
+			true,
+			restDay,
+			anotherShift,
+			false,
+			"OFF_DAY_SHIFT",
+		],
+		[
+			"a shift on an absent day",
+			true,
+			absent,
 			anotherShift,
 			false,
 			"OFF_DAY_SHIFT",

@@ -11,6 +11,7 @@ const meta = {
 			member: (): string => "Aisha Rahman",
 			shift: (): string => "Front Desk AM",
 			day: (): string => "Mon, Oct 12",
+			dayType: (): string => "rest day",
 		},
 		checks: [
 			rosterCheckFixture({ code: "LEAVE_APPROVED", severity: "NEEDS_REMARK" }),

@@ -4,7 +4,10 @@ import type { FunctionComponent } from "@/common/types";
 import { RadioCard } from "@/components/forms/RadioCard";
 import { Select } from "@/components/forms/Select";
 import { formatTimeRange } from "@/features/scheduling/formatShift";
-import { rosterCellText } from "@/features/scheduling/rosterChanges/cellText";
+import {
+	assignmentCell,
+	rosterCellText,
+} from "@/features/scheduling/rosterChanges/cellText";
 import type { RosterPanelMode } from "@/features/scheduling/rosterChanges/rosterLeave";
 import type { CellChoicesState } from "@/features/scheduling/RosterCellPanel/cellPanelState";
 
@@ -106,12 +109,7 @@ export const CellChoices = ({
 						options={partners.available.map((row) => ({
 							value: row.assignmentId,
 							label: `${row.member?.displayName ?? ""} · ${rosterCellText(
-								{
-									kind: row.shift === null ? "OFF" : "WORK",
-									dayType: row.dayType,
-									shift: row.shift,
-									jobTitle: row.jobTitle,
-								},
+								assignmentCell(row),
 								t
 							)}`,
 						}))}

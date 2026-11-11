@@ -4011,7 +4011,7 @@
 				"OUTSIDE_AVAILABILITY": "{{shift}} is outside {{name}}’s availability on {{day}}.",
 				"ROSTERED_ELSEWHERE": "{{name}} also works on {{day}} in another roster.",
 				"NOT_SCHEDULABLE_NOW": "{{name}} can no longer be rostered in this department.",
-				"WORKS_ON_DAY_OFF": "{{day}} was {{name}}’s day off.",
+				"WORKS_ON_DAY_OFF": "{{name}} works on their {{dayType}} on {{day}}.",
 				"COVERAGE_CHANGED": "{{shift}}, {{day}}: {{before}} → {{after}} people.",
 				"UNKNOWN": "Another check applies to this change."
 			},

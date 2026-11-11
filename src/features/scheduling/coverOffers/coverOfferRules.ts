@@ -29,9 +29,10 @@ export const MAX_PARALLEL_OFFERS = 3;
  * The offer kind a cell-panel change is when it needs the member's yes, or
  * undefined when it keeps Apply. Only a published roster asks, and only for
  * a change that adds or moves work: another shift on a working day (MOVE),
- * a shift on a day off (OFF_DAY_SHIFT). A day off, a swap and the roster
- * half of a leave move keep "Apply and notify" (Q1 = A). The app can't tell
- * a rest day from a day off, so it never sends REST_DAY_SHIFT.
+ * a shift on a day they don't work (OFF_DAY_SHIFT), whatever its type and
+ * absent days too. A day off, a swap and the roster half of a leave move
+ * keep "Apply and notify" (Q1 = A). A day's type is data the app doesn't
+ * branch on, so it never sends REST_DAY_SHIFT.
  */
 export const consentKindOf = ({
 	published,
