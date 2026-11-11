@@ -1,5 +1,5 @@
 import type { TFunction } from "i18next";
-import type { ReactElement } from "react";
+import { Fragment, type ReactElement } from "react";
 import { Trans } from "react-i18next";
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import type { DataTableColumn } from "@/components/ui/DataTable";
@@ -9,7 +9,7 @@ import {
 } from "@/features/scheduling/constraints/api";
 import {
 	constraintWords,
-	sentenceKey,
+	sentencePartsOf,
 	type ConstraintWords,
 } from "@/features/scheduling/constraints/constraintSentence";
 import { ConstraintTypeTag } from "@/features/scheduling/constraints/ConstraintTypeTag";
@@ -76,12 +76,19 @@ export const constraintColumns = <Row extends ConstraintRow>(
 		details: {
 			id: "details",
 			header: t(`${key}.details`),
-			cell: (constraint) => (
-				<Trans
-					components={partsOf(constraintWords(constraint, t))}
-					i18nKey={sentenceKey(constraint.type)}
-				/>
-			),
+			cell: (constraint): Array<ReactElement> => {
+				const parts = partsOf(constraintWords(constraint, t));
+				return sentencePartsOf(constraint).map((part, index) => (
+					<Fragment key={part.i18nKey}>
+						{index > 0 && " "}
+						<Trans
+							components={parts}
+							count={part.count}
+							i18nKey={part.i18nKey}
+						/>
+					</Fragment>
+				));
+			},
 		},
 		status: {
 			id: "status",

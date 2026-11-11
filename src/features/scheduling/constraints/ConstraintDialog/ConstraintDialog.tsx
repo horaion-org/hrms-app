@@ -34,11 +34,7 @@ import {
 	allowsReplacement,
 	compareStrictness,
 } from "@/features/scheduling/constraints/constraintStrictness";
-import {
-	constraintWords,
-	sentenceSlotsOf,
-	type ConstraintWords,
-} from "@/features/scheduling/constraints/constraintSentence";
+import type { SentenceValue } from "@/features/scheduling/constraints/constraintSentence";
 import type { ConstraintOptionsState } from "@/features/scheduling/constraints/useConstraintOptions";
 import type { Constraint } from "@/features/scheduling/scheduleDraft";
 import {
@@ -136,9 +132,9 @@ export const ConstraintDialog = ({
 		setValue,
 		formState: { errors, isSubmitting },
 	} = form;
-	const [name, type, requirement, values] = useWatch({
+	const [name, type, values] = useWatch({
 		control,
-		name: ["name", "type", "requirement", "values"],
+		name: ["name", "type", "values"],
 	});
 	const chosen = typeOf(type);
 	const { message, alertRef, close, run } = useCreateFormSubmit(
@@ -241,23 +237,14 @@ export const ConstraintDialog = ({
 			label,
 		])
 	);
-	// The constraint as filled in so far, in words, for the preview.
-	const wordsOf = (option: ConstraintTypeOption): ConstraintWords =>
-		constraintWords(
-			{
-				requirement: option.hasRequirement
-					? (CONSTRAINT_REQUIREMENTS.find((item) => item === requirement) ??
-						null)
-					: null,
-				values: option.fields.flatMap(({ field }) =>
-					(values[field] ?? []).filter(Boolean).map((value) => ({
-						field,
-						value,
-						name: namesById.get(value) ?? null,
-					}))
-				),
-			},
-			t
+	// The constraint's values as filled in so far, named, for the preview.
+	const filledValues = (option: ConstraintTypeOption): Array<SentenceValue> =>
+		option.fields.flatMap(({ field }) =>
+			(values[field] ?? []).filter(Boolean).map((value) => ({
+				field,
+				value,
+				name: namesById.get(value) ?? null,
+			}))
 		);
 	const selectRow = (
 		field: "type" | "requirement" | "status" | "lock",
@@ -524,9 +511,8 @@ export const ConstraintDialog = ({
 				{chosen && (
 					<>
 						<ConstraintPreview
-							slots={sentenceSlotsOf(chosen)}
-							type={chosen.type}
-							words={wordsOf(chosen)}
+							constraint={{ type: chosen.type, values: filledValues(chosen) }}
+							fields={chosen.fields.map((spec) => spec.field)}
 						/>
 						<div className="flex flex-col gap-6 sm:flex-row">
 							{chosen.hasRequirement &&

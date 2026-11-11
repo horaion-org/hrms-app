@@ -1,21 +1,23 @@
+import { Fragment } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { Badge } from "@/components/ui/Badge";
-import type { ConstraintType } from "@/features/scheduling/constraints/api";
+import type {
+	ConstraintField,
+	ConstraintType,
+} from "@/features/scheduling/constraints/api";
 import {
-	sentenceKey,
-	type ConstraintSlot,
-	type ConstraintWords,
+	constraintWords,
+	sentencePartsOf,
+	type SentenceValue,
 } from "@/features/scheduling/constraints/constraintSentence";
 
 export type ConstraintPreviewProps = {
-	/** The constraint's type, whose sentence is read. */
-	type: ConstraintType;
-	/** Every slot the type's sentence has (see `sentenceSlotsOf`). */
-	slots: Array<ConstraintSlot>;
-	/** The slots chosen so far, in words (see `constraintWords`); a missing or empty one shows its label. */
-	words: ConstraintWords;
+	/** The constraint as filled in so far: its type and the values chosen. */
+	constraint: { type: ConstraintType; values: Array<SentenceValue> };
+	/** Every field the type takes; a field with no value yet shows its label. */
+	fields: Array<ConstraintField>;
 	className?: string;
 };
 
@@ -25,20 +27,22 @@ export type ConstraintPreviewProps = {
  * is complete.
  */
 export const ConstraintPreview = ({
-	type,
-	slots,
-	words,
+	constraint,
+	fields,
 	className,
 }: ConstraintPreviewProps): FunctionComponent => {
 	const { t } = useTranslation();
-	const complete = slots.every((slot) => Boolean(words[slot]));
+	const words = constraintWords(constraint, t);
+	const complete = fields.every(
+		(field) => Boolean(words[field]) || field === "COMPARISON"
+	);
 	const parts = Object.fromEntries(
-		slots.map((slot) => {
-			const value = words[slot];
+		fields.map((field) => {
+			const value = words[field];
 			return [
-				slot,
+				field,
 				<span
-					key={slot}
+					key={field}
 					className={joinClassNames(
 						"inline-flex min-h-6 max-w-full items-center rounded border px-2 py-0.5 break-words",
 						value
@@ -46,10 +50,7 @@ export const ConstraintPreview = ({
 							: "border-neutral-500 bg-neutral-300 text-neutral-600"
 					)}
 				>
-					{value ||
-						(slot === "REQUIREMENT"
-							? t("scheduling.constraints.requirement")
-							: t(`scheduling.constraints.fields.${slot}`))}
+					{value || t(`scheduling.constraints.fields.${field}`)}
 				</span>,
 			];
 		})
@@ -74,7 +75,15 @@ export const ConstraintPreview = ({
 				</Badge>
 			</div>
 			<p className="mt-5 flex flex-wrap items-center gap-2 text-xs font-semibold text-neutral-900">
-				<Trans components={parts} i18nKey={sentenceKey(type)} />
+				{sentencePartsOf(constraint).map((part) => (
+					<Fragment key={part.i18nKey}>
+						<Trans
+							components={parts}
+							count={part.count}
+							i18nKey={part.i18nKey}
+						/>
+					</Fragment>
+				))}
 			</p>
 		</section>
 	);

@@ -3280,12 +3280,75 @@
 				"REST_BETWEEN_SHIFTS": "Rest between shifts"
 			},
 			"sentences": {
-				"SHIFT_STAFFING": "Staff on <SHIFT/>, counting <JOB_TITLE/>, <REQUIREMENT/> total <COMPARISON/> <HEADCOUNT/>.",
-				"SHIFT_STAFFING_WITH_STAND_INS": "Staff on <SHIFT/>, counting <JOB_TITLE/>, <REQUIREMENT/> total at least <HEADCOUNT/>, with <STAND_IN_JOB_TITLE/> standing in at <STAND_INS_PER_PERSON/> to one.",
-				"ROLE_PRESENCE": "Staff present throughout <SHIFT/>, counting <JOB_TITLE/>, <REQUIREMENT/> be <COMPARISON/> <HEADCOUNT/>.",
-				"DAYS_OFF_PER_PERIOD": "Days off for everyone in any <PERIOD_DAYS/>-day period <REQUIREMENT/> be <COMPARISON/> <DAYS_OFF/>.",
-				"AVOID_DAYS_OFF_ON": "Try not to give days off on <WEEKDAY/>.",
-				"REST_BETWEEN_SHIFTS": "Hours of rest between one shift and the next must be at least <REST_HOURS/>."
+				"SHIFT_STAFFING": {
+					"oneShift": {
+						"AT_LEAST_one": "<SHIFT/> needs at least <HEADCOUNT/> person as <JOB_TITLE/>.",
+						"AT_LEAST_other": "<SHIFT/> needs at least <HEADCOUNT/> people as <JOB_TITLE/>.",
+						"AT_MOST_one": "<SHIFT/> has at most <HEADCOUNT/> person as <JOB_TITLE/>.",
+						"AT_MOST_other": "<SHIFT/> has at most <HEADCOUNT/> people as <JOB_TITLE/>.",
+						"AT_MOST_zero": "<SHIFT/> has no one as <JOB_TITLE/>.",
+						"EXACTLY_one": "<SHIFT/> needs exactly <HEADCOUNT/> person as <JOB_TITLE/>.",
+						"EXACTLY_other": "<SHIFT/> needs exactly <HEADCOUNT/> people as <JOB_TITLE/>.",
+						"EXACTLY_zero": "<SHIFT/> has no one as <JOB_TITLE/>."
+					},
+					"severalShifts": {
+						"AT_LEAST_one": "<SHIFT/> together need at least <HEADCOUNT/> person as <JOB_TITLE/> each day.",
+						"AT_LEAST_other": "<SHIFT/> together need at least <HEADCOUNT/> people as <JOB_TITLE/> each day.",
+						"AT_MOST_one": "<SHIFT/> together have at most <HEADCOUNT/> person as <JOB_TITLE/> each day.",
+						"AT_MOST_other": "<SHIFT/> together have at most <HEADCOUNT/> people as <JOB_TITLE/> each day.",
+						"AT_MOST_zero": "<SHIFT/> together have no one as <JOB_TITLE/> each day.",
+						"EXACTLY_one": "<SHIFT/> together need exactly <HEADCOUNT/> person as <JOB_TITLE/> each day.",
+						"EXACTLY_other": "<SHIFT/> together need exactly <HEADCOUNT/> people as <JOB_TITLE/> each day.",
+						"EXACTLY_zero": "<SHIFT/> together have no one as <JOB_TITLE/> each day."
+					}
+				},
+				"SHIFT_STAFFING_WITH_STAND_INS": {
+					"oneShift": {
+						"AT_LEAST_one": "<SHIFT/> needs at least <HEADCOUNT/> person as <JOB_TITLE/>.",
+						"AT_LEAST_other": "<SHIFT/> needs at least <HEADCOUNT/> people as <JOB_TITLE/>."
+					},
+					"severalShifts": {
+						"AT_LEAST_one": "<SHIFT/> together need at least <HEADCOUNT/> person as <JOB_TITLE/> each day.",
+						"AT_LEAST_other": "<SHIFT/> together need at least <HEADCOUNT/> people as <JOB_TITLE/> each day."
+					},
+					"standIns_one": "<STAND_INS_PER_PERSON/> person as <STAND_IN_JOB_TITLE/> counts as 1 <JOB_TITLE/>.",
+					"standIns_other": "<STAND_INS_PER_PERSON/> people as <STAND_IN_JOB_TITLE/> count as 1 <JOB_TITLE/>."
+				},
+				"ROLE_PRESENCE": {
+					"oneShift": {
+						"AT_LEAST_one": "<SHIFT/> has at least <HEADCOUNT/> person as <JOB_TITLE/> on duty from start to finish.",
+						"AT_LEAST_other": "<SHIFT/> has at least <HEADCOUNT/> people as <JOB_TITLE/> on duty from start to finish.",
+						"AT_MOST_one": "<SHIFT/> has at most <HEADCOUNT/> person as <JOB_TITLE/> on duty at any time.",
+						"AT_MOST_other": "<SHIFT/> has at most <HEADCOUNT/> people as <JOB_TITLE/> on duty at any time.",
+						"AT_MOST_zero": "<SHIFT/> has no one as <JOB_TITLE/> on duty at any time.",
+						"EXACTLY_one": "<SHIFT/> has exactly <HEADCOUNT/> person as <JOB_TITLE/> on duty at all times.",
+						"EXACTLY_other": "<SHIFT/> has exactly <HEADCOUNT/> people as <JOB_TITLE/> on duty at all times.",
+						"EXACTLY_zero": "<SHIFT/> has no one as <JOB_TITLE/> on duty at any time."
+					},
+					"severalShifts": {
+						"AT_LEAST_one": "<SHIFT/> has at least <HEADCOUNT/> person as <JOB_TITLE/> on duty from start to finish.",
+						"AT_LEAST_other": "<SHIFT/> has at least <HEADCOUNT/> people as <JOB_TITLE/> on duty from start to finish.",
+						"AT_MOST_one": "<SHIFT/> each have at most <HEADCOUNT/> person as <JOB_TITLE/> on duty at any time.",
+						"AT_MOST_other": "<SHIFT/> each have at most <HEADCOUNT/> people as <JOB_TITLE/> on duty at any time.",
+						"AT_MOST_zero": "<SHIFT/> each have no one as <JOB_TITLE/> on duty at any time.",
+						"EXACTLY_one": "<SHIFT/> each have exactly <HEADCOUNT/> person as <JOB_TITLE/> on duty at all times.",
+						"EXACTLY_other": "<SHIFT/> each have exactly <HEADCOUNT/> people as <JOB_TITLE/> on duty at all times.",
+						"EXACTLY_zero": "<SHIFT/> each have no one as <JOB_TITLE/> on duty at any time."
+					}
+				},
+				"DAYS_OFF_PER_PERIOD": {
+					"AT_LEAST_one": "Everyone gets at least <DAYS_OFF/> day off in any <PERIOD_DAYS/> days in a row.",
+					"AT_LEAST_other": "Everyone gets at least <DAYS_OFF/> days off in any <PERIOD_DAYS/> days in a row.",
+					"AT_MOST_one": "Everyone gets at most <DAYS_OFF/> day off in any <PERIOD_DAYS/> days in a row.",
+					"AT_MOST_other": "Everyone gets at most <DAYS_OFF/> days off in any <PERIOD_DAYS/> days in a row.",
+					"AT_MOST_zero": "Everyone gets no days off in any <PERIOD_DAYS/> days in a row.",
+					"EXACTLY_one": "Everyone gets exactly <DAYS_OFF/> day off in any <PERIOD_DAYS/> days in a row.",
+					"EXACTLY_other": "Everyone gets exactly <DAYS_OFF/> days off in any <PERIOD_DAYS/> days in a row.",
+					"EXACTLY_zero": "Everyone gets no days off in any <PERIOD_DAYS/> days in a row."
+				},
+				"AVOID_DAYS_OFF_ON": "Avoid days off on <WEEKDAY/>.",
+				"REST_BETWEEN_SHIFTS_one": "Everyone gets at least <REST_HOURS/> hour off between shifts.",
+				"REST_BETWEEN_SHIFTS_other": "Everyone gets at least <REST_HOURS/> hours off between shifts."
 			},
 			"fixedRequirements": {
 				"SHIFT_STAFFING": "Must or should",
@@ -3311,19 +3374,10 @@
 				"MUST": "Must",
 				"SHOULD": "Should"
 			},
-			"requirementWords": {
-				"MUST": "must",
-				"SHOULD": "should"
-			},
 			"comparisons": {
 				"AT_LEAST": "At least",
 				"AT_MOST": "At most",
 				"EXACTLY": "Exactly"
-			},
-			"comparisonWords": {
-				"AT_LEAST": "at least",
-				"AT_MOST": "at most",
-				"EXACTLY": "exactly"
 			},
 			"statuses": {
 				"ACTIVE": "Active",
@@ -3426,7 +3480,8 @@
 			"department": "Department",
 			"allDepartments": "All departments",
 			"allConstraints": "All",
-			"categoriesLabel": "Constraint categories"
+			"categoriesLabel": "Constraint categories",
+			"listOr": "{{items, list(type: disjunction)}}"
 		},
 		"forecast": {
 			"title": "Staffing forecast",

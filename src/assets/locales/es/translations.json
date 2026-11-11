@@ -3102,12 +3102,75 @@
 				"REST_BETWEEN_SHIFTS": "Descanso entre turnos"
 			},
 			"sentences": {
-				"SHIFT_STAFFING": "El personal en <SHIFT/>, contando <JOB_TITLE/>, <REQUIREMENT/> sumar <COMPARISON/> <HEADCOUNT/>.",
-				"SHIFT_STAFFING_WITH_STAND_INS": "El personal en <SHIFT/>, contando <JOB_TITLE/>, <REQUIREMENT/> sumar al menos <HEADCOUNT/>, y <STAND_IN_JOB_TITLE/> pueden suplir a razón de <STAND_INS_PER_PERSON/> por uno.",
-				"ROLE_PRESENCE": "El personal presente durante todo <SHIFT/>, contando <JOB_TITLE/>, <REQUIREMENT/> ser <COMPARISON/> <HEADCOUNT/>.",
-				"DAYS_OFF_PER_PERIOD": "Los días libres de cada persona en cualquier periodo de <PERIOD_DAYS/> días <REQUIREMENT/> ser <COMPARISON/> <DAYS_OFF/>.",
-				"AVOID_DAYS_OFF_ON": "Intenta no dar días libres en: <WEEKDAY/>.",
-				"REST_BETWEEN_SHIFTS": "Las horas de descanso entre un turno y el siguiente deben ser al menos <REST_HOURS/>."
+				"SHIFT_STAFFING": {
+					"oneShift": {
+						"AT_LEAST_one": "<SHIFT/> necesita al menos <HEADCOUNT/> persona como <JOB_TITLE/>.",
+						"AT_LEAST_other": "<SHIFT/> necesita al menos <HEADCOUNT/> personas como <JOB_TITLE/>.",
+						"AT_MOST_one": "<SHIFT/> tiene como máximo <HEADCOUNT/> persona como <JOB_TITLE/>.",
+						"AT_MOST_other": "<SHIFT/> tiene como máximo <HEADCOUNT/> personas como <JOB_TITLE/>.",
+						"AT_MOST_zero": "<SHIFT/> no tiene a nadie como <JOB_TITLE/>.",
+						"EXACTLY_one": "<SHIFT/> necesita exactamente <HEADCOUNT/> persona como <JOB_TITLE/>.",
+						"EXACTLY_other": "<SHIFT/> necesita exactamente <HEADCOUNT/> personas como <JOB_TITLE/>.",
+						"EXACTLY_zero": "<SHIFT/> no tiene a nadie como <JOB_TITLE/>."
+					},
+					"severalShifts": {
+						"AT_LEAST_one": "<SHIFT/> necesitan juntos al menos <HEADCOUNT/> persona como <JOB_TITLE/> cada día.",
+						"AT_LEAST_other": "<SHIFT/> necesitan juntos al menos <HEADCOUNT/> personas como <JOB_TITLE/> cada día.",
+						"AT_MOST_one": "<SHIFT/> tienen juntos como máximo <HEADCOUNT/> persona como <JOB_TITLE/> cada día.",
+						"AT_MOST_other": "<SHIFT/> tienen juntos como máximo <HEADCOUNT/> personas como <JOB_TITLE/> cada día.",
+						"AT_MOST_zero": "<SHIFT/> no tienen juntos a nadie como <JOB_TITLE/> cada día.",
+						"EXACTLY_one": "<SHIFT/> necesitan juntos exactamente <HEADCOUNT/> persona como <JOB_TITLE/> cada día.",
+						"EXACTLY_other": "<SHIFT/> necesitan juntos exactamente <HEADCOUNT/> personas como <JOB_TITLE/> cada día.",
+						"EXACTLY_zero": "<SHIFT/> no tienen juntos a nadie como <JOB_TITLE/> cada día."
+					}
+				},
+				"SHIFT_STAFFING_WITH_STAND_INS": {
+					"oneShift": {
+						"AT_LEAST_one": "<SHIFT/> necesita al menos <HEADCOUNT/> persona como <JOB_TITLE/>.",
+						"AT_LEAST_other": "<SHIFT/> necesita al menos <HEADCOUNT/> personas como <JOB_TITLE/>."
+					},
+					"severalShifts": {
+						"AT_LEAST_one": "<SHIFT/> necesitan juntos al menos <HEADCOUNT/> persona como <JOB_TITLE/> cada día.",
+						"AT_LEAST_other": "<SHIFT/> necesitan juntos al menos <HEADCOUNT/> personas como <JOB_TITLE/> cada día."
+					},
+					"standIns_one": "<STAND_INS_PER_PERSON/> persona como <STAND_IN_JOB_TITLE/> cuenta como 1 <JOB_TITLE/>.",
+					"standIns_other": "<STAND_INS_PER_PERSON/> personas como <STAND_IN_JOB_TITLE/> cuentan como 1 <JOB_TITLE/>."
+				},
+				"ROLE_PRESENCE": {
+					"oneShift": {
+						"AT_LEAST_one": "<SHIFT/> tiene al menos <HEADCOUNT/> persona como <JOB_TITLE/> de servicio de principio a fin.",
+						"AT_LEAST_other": "<SHIFT/> tiene al menos <HEADCOUNT/> personas como <JOB_TITLE/> de servicio de principio a fin.",
+						"AT_MOST_one": "<SHIFT/> tiene como máximo <HEADCOUNT/> persona como <JOB_TITLE/> de servicio a la vez.",
+						"AT_MOST_other": "<SHIFT/> tiene como máximo <HEADCOUNT/> personas como <JOB_TITLE/> de servicio a la vez.",
+						"AT_MOST_zero": "<SHIFT/> no tiene a nadie como <JOB_TITLE/> de servicio en ningún momento.",
+						"EXACTLY_one": "<SHIFT/> tiene exactamente <HEADCOUNT/> persona como <JOB_TITLE/> de servicio en todo momento.",
+						"EXACTLY_other": "<SHIFT/> tiene exactamente <HEADCOUNT/> personas como <JOB_TITLE/> de servicio en todo momento.",
+						"EXACTLY_zero": "<SHIFT/> no tiene a nadie como <JOB_TITLE/> de servicio en ningún momento."
+					},
+					"severalShifts": {
+						"AT_LEAST_one": "<SHIFT/> tiene al menos <HEADCOUNT/> persona como <JOB_TITLE/> de servicio de principio a fin.",
+						"AT_LEAST_other": "<SHIFT/> tiene al menos <HEADCOUNT/> personas como <JOB_TITLE/> de servicio de principio a fin.",
+						"AT_MOST_one": "<SHIFT/> tienen cada uno como máximo <HEADCOUNT/> persona como <JOB_TITLE/> de servicio a la vez.",
+						"AT_MOST_other": "<SHIFT/> tienen cada uno como máximo <HEADCOUNT/> personas como <JOB_TITLE/> de servicio a la vez.",
+						"AT_MOST_zero": "<SHIFT/> no tienen a nadie como <JOB_TITLE/> de servicio en ningún momento.",
+						"EXACTLY_one": "<SHIFT/> tienen cada uno exactamente <HEADCOUNT/> persona como <JOB_TITLE/> de servicio en todo momento.",
+						"EXACTLY_other": "<SHIFT/> tienen cada uno exactamente <HEADCOUNT/> personas como <JOB_TITLE/> de servicio en todo momento.",
+						"EXACTLY_zero": "<SHIFT/> no tienen a nadie como <JOB_TITLE/> de servicio en ningún momento."
+					}
+				},
+				"DAYS_OFF_PER_PERIOD": {
+					"AT_LEAST_one": "Todos tienen al menos <DAYS_OFF/> día libre en cualquier periodo de <PERIOD_DAYS/> días seguidos.",
+					"AT_LEAST_other": "Todos tienen al menos <DAYS_OFF/> días libres en cualquier periodo de <PERIOD_DAYS/> días seguidos.",
+					"AT_MOST_one": "Todos tienen como máximo <DAYS_OFF/> día libre en cualquier periodo de <PERIOD_DAYS/> días seguidos.",
+					"AT_MOST_other": "Todos tienen como máximo <DAYS_OFF/> días libres en cualquier periodo de <PERIOD_DAYS/> días seguidos.",
+					"AT_MOST_zero": "Nadie tiene días libres en ningún periodo de <PERIOD_DAYS/> días seguidos.",
+					"EXACTLY_one": "Todos tienen exactamente <DAYS_OFF/> día libre en cualquier periodo de <PERIOD_DAYS/> días seguidos.",
+					"EXACTLY_other": "Todos tienen exactamente <DAYS_OFF/> días libres en cualquier periodo de <PERIOD_DAYS/> días seguidos.",
+					"EXACTLY_zero": "Nadie tiene días libres en ningún periodo de <PERIOD_DAYS/> días seguidos."
+				},
+				"AVOID_DAYS_OFF_ON": "Evitar días libres el <WEEKDAY/>.",
+				"REST_BETWEEN_SHIFTS_one": "Todos tienen al menos <REST_HOURS/> hora libre entre turnos.",
+				"REST_BETWEEN_SHIFTS_other": "Todos tienen al menos <REST_HOURS/> horas libres entre turnos."
 			},
 			"fixedRequirements": {
 				"SHIFT_STAFFING": "Debe o debería",
@@ -3133,19 +3196,10 @@
 				"MUST": "Debe",
 				"SHOULD": "Debería"
 			},
-			"requirementWords": {
-				"MUST": "debe",
-				"SHOULD": "debería"
-			},
 			"comparisons": {
 				"AT_LEAST": "Al menos",
 				"AT_MOST": "Como máximo",
 				"EXACTLY": "Exactamente"
-			},
-			"comparisonWords": {
-				"AT_LEAST": "al menos",
-				"AT_MOST": "como máximo",
-				"EXACTLY": "exactamente"
 			},
 			"statuses": {
 				"ACTIVE": "Activa",
@@ -3248,7 +3302,8 @@
 			"department": "Departamento",
 			"allDepartments": "Todos los departamentos",
 			"allConstraints": "Todas",
-			"categoriesLabel": "Categorías de restricciones"
+			"categoriesLabel": "Categorías de restricciones",
+			"listOr": "{{items, list(type: disjunction)}}"
 		},
 		"forecast": {
 			"title": "Previsión de personal",

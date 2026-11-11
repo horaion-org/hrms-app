@@ -4,7 +4,6 @@ import { initReactI18next } from "react-i18next";
 import { beforeAll, describe, expect, it } from "vitest";
 import en from "@/assets/locales/en/translations.json";
 import { ConstraintPreview } from "@/features/scheduling/constraints/ConstraintPreview";
-import { sentenceSlotsOf } from "@/features/scheduling/constraints/constraintSentence";
 import { CONSTRAINT_TYPE_OPTIONS } from "@/features/scheduling/constraints/fixtures";
 
 beforeAll(async () => {
@@ -15,42 +14,46 @@ beforeAll(async () => {
 
 const shiftStaffing = CONSTRAINT_TYPE_OPTIONS[0]!;
 const daysOff = CONSTRAINT_TYPE_OPTIONS[3]!;
+const fieldsOf = (
+	option: typeof shiftStaffing
+): Array<(typeof option.fields)[number]["field"]> =>
+	option.fields.map((spec) => spec.field);
 
 describe("ConstraintPreview", () => {
 	it("given_missingParts_when_rendered_then_showsTheirLabelsAndIncomplete", () => {
 		render(
 			<ConstraintPreview
-				slots={sentenceSlotsOf(shiftStaffing)}
-				type="SHIFT_STAFFING"
-				words={{ REQUIREMENT: "must" }}
+				constraint={{ type: "SHIFT_STAFFING", values: [] }}
+				fields={fieldsOf(shiftStaffing)}
 			/>
 		);
 
 		expect(screen.getByText("Incomplete")).toBeInTheDocument();
 		expect(screen.getByRole("paragraph")).toHaveTextContent(
-			"Staff on Shifts, counting Job titles, must total Comparison Headcount."
+			"Shifts needs at least Headcount people as Job titles."
 		);
 		expect(screen.getByText("Headcount")).toHaveClass("bg-neutral-300");
-		expect(screen.getByText("must")).toHaveClass("bg-ink-blue-50");
 	});
 
 	it("given_everyPart_when_rendered_then_readsTheConstraintAsComplete", () => {
 		render(
 			<ConstraintPreview
-				slots={sentenceSlotsOf(daysOff)}
-				type="DAYS_OFF_PER_PERIOD"
-				words={{
-					REQUIREMENT: "should",
-					COMPARISON: "at least",
-					DAYS_OFF: "2",
-					PERIOD_DAYS: "7",
+				fields={fieldsOf(daysOff)}
+				constraint={{
+					type: "DAYS_OFF_PER_PERIOD",
+					values: [
+						{ field: "COMPARISON", value: "AT_LEAST", name: null },
+						{ field: "DAYS_OFF", value: "2", name: null },
+						{ field: "PERIOD_DAYS", value: "7", name: null },
+					],
 				}}
 			/>
 		);
 
 		expect(screen.getByText("Complete")).toBeInTheDocument();
 		expect(screen.getByRole("paragraph")).toHaveTextContent(
-			"Days off for everyone in any 7-day period should be at least 2."
+			"Everyone gets at least 2 days off in any 7 days in a row."
 		);
+		expect(screen.getByText("2")).toHaveClass("bg-ink-blue-50");
 	});
 });

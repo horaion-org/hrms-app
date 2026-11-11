@@ -80,7 +80,7 @@ describe("SchedulingPolicySettings", () => {
 		});
 		const rest = within(table).getByRole("row", { name: /Company rest/ });
 		expect(rest).toHaveTextContent(
-			"Hours of rest between one shift and the next must be at least 11."
+			"Everyone gets at least 11 hours off between shifts."
 		);
 		expect(rest).toHaveTextContent("Locked");
 		expect(

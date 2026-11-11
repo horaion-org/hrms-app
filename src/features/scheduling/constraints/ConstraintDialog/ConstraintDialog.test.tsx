@@ -324,7 +324,7 @@ describe("ConstraintDialog", () => {
 		expect(
 			screen.getByText("Complete").closest("section")?.querySelector("p")
 		).toHaveTextContent(
-			"Staff on Front Desk AM, counting Front Desk Lead and Front Desk Staff, must total at least 2."
+			"Front Desk AM needs at least 2 people as Front Desk Lead or Front Desk Staff."
 		);
 		await user.click(screen.getByRole("button", { name: "Save" }));
 
