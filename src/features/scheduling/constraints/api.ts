@@ -71,6 +71,8 @@ const constraintFieldSchema = z.enum([
 /** One field a constraint type takes; its label is keyed by this name. */
 export type ConstraintField = z.infer<typeof constraintFieldSchema>;
 
+export const CONSTRAINT_FIELDS = constraintFieldSchema.options;
+
 const constraintFieldKindSchema = z.enum([
 	"NUMBER",
 	"COMPARISON",

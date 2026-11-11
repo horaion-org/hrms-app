@@ -3193,8 +3193,9 @@
 				"WEEKDAY": "Días"
 			},
 			"requirements": {
-				"MUST": "Debe",
-				"SHOULD": "Debería"
+				"MUST": "Obligatoria",
+				"SHOULD": "Si es posible",
+				"unset": "Obligatoria o si es posible"
 			},
 			"comparisons": {
 				"AT_LEAST": "Al menos",
@@ -3303,7 +3304,26 @@
 			"allDepartments": "Todos los departamentos",
 			"allConstraints": "Todas",
 			"categoriesLabel": "Categorías de restricciones",
-			"listOr": "{{items, list(type: disjunction)}}"
+			"listOr": "{{items, list(type: disjunction)}}",
+			"firmness": {
+				"MUST": "Se cumple siempre. Si las personas y los turnos no alcanzan, el horario muestra dónde falta.",
+				"SHOULD": "Se cumple cuando se puede. El horario muestra dónde no se cumplió."
+			},
+			"appliesTo": {
+				"everyoneIn": "Todo el personal de {{department}}",
+				"wholeCompany": "Toda la empresa"
+			},
+			"placeholders": {
+				"SHIFT": "qué turno",
+				"HEADCOUNT": "cuántas",
+				"STAND_INS_PER_PERSON": "cuántas",
+				"DAYS_OFF": "cuántos",
+				"PERIOD_DAYS": "cuántos",
+				"REST_HOURS": "cuántas",
+				"JOB_TITLE": "qué puestos",
+				"STAND_IN_JOB_TITLE": "qué puestos",
+				"WEEKDAY": "qué días"
+			}
 		},
 		"forecast": {
 			"title": "Previsión de personal",

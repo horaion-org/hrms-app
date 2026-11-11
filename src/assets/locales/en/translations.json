@@ -3372,7 +3372,8 @@
 			},
 			"requirements": {
 				"MUST": "Must",
-				"SHOULD": "Should"
+				"SHOULD": "If possible",
+				"unset": "Must or if possible"
 			},
 			"comparisons": {
 				"AT_LEAST": "At least",
@@ -3481,7 +3482,26 @@
 			"allDepartments": "All departments",
 			"allConstraints": "All",
 			"categoriesLabel": "Constraint categories",
-			"listOr": "{{items, list(type: disjunction)}}"
+			"listOr": "{{items, list(type: disjunction)}}",
+			"firmness": {
+				"MUST": "Always kept. If the people and shifts can't meet it, the schedule shows where it falls short.",
+				"SHOULD": "Kept when it can be. The schedule shows where it wasn't."
+			},
+			"appliesTo": {
+				"everyoneIn": "Everyone rostered in {{department}}",
+				"wholeCompany": "Whole company"
+			},
+			"placeholders": {
+				"SHIFT": "which shift",
+				"HEADCOUNT": "how many",
+				"STAND_INS_PER_PERSON": "how many",
+				"DAYS_OFF": "how many",
+				"PERIOD_DAYS": "how many",
+				"REST_HOURS": "how many",
+				"JOB_TITLE": "which job titles",
+				"STAND_IN_JOB_TITLE": "which job titles",
+				"WEEKDAY": "which days"
+			}
 		},
 		"forecast": {
 			"title": "Staffing forecast",
