@@ -3198,9 +3198,9 @@
 			"dialog": {
 				"title": "Añadir restricción",
 				"editTitle": "Editar restricción",
-				"name": "Nombre de la restricción",
+				"name": "Nombre",
 				"namePlaceholder": "p. ej., Cobertura de mañana",
-				"nameHint": "De 2 a 100 caracteres. Solo letras, números, espacios y . ' & -.",
+				"nameHint": "Se muestra en la lista. De 2 a 100 caracteres.",
 				"nameCounter": "{{count}}/100",
 				"type": "Qué controla",
 				"optionsLoading": "Cargando tipos de restricción…",
@@ -3328,6 +3328,14 @@
 			"fixedFirmness": {
 				"MUST": "Siempre obligatoria para este tipo de restricción.",
 				"SHOULD": "Siempre si es posible para este tipo de restricción."
+			},
+			"nameSuggestions": {
+				"SHIFT_STAFFING": "Personal de {{shift}}",
+				"SHIFT_STAFFING_WITH_STAND_INS": "Personal de {{shift}}",
+				"ROLE_PRESENCE": "De servicio en {{shift}}",
+				"DAYS_OFF_PER_PERIOD": "Días libres",
+				"AVOID_DAYS_OFF_ON": "Evitar días libres",
+				"REST_BETWEEN_SHIFTS": "Descanso entre turnos"
 			}
 		},
 		"forecast": {

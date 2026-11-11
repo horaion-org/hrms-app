@@ -3376,9 +3376,9 @@
 			"dialog": {
 				"title": "Add constraint",
 				"editTitle": "Edit constraint",
-				"name": "Constraint name",
+				"name": "Name",
 				"namePlaceholder": "e.g. Morning cover",
-				"nameHint": "2–100 characters. Letters, numbers, spaces and . ' & - only.",
+				"nameHint": "Shown in the list. 2–100 characters.",
 				"nameCounter": "{{count}}/100",
 				"type": "What it controls",
 				"optionsLoading": "Loading constraint types…",
@@ -3506,6 +3506,14 @@
 			"fixedFirmness": {
 				"MUST": "Always a must for this kind of constraint.",
 				"SHOULD": "Always if possible for this kind of constraint."
+			},
+			"nameSuggestions": {
+				"SHIFT_STAFFING": "{{shift}} staffing",
+				"SHIFT_STAFFING_WITH_STAND_INS": "{{shift}} staffing",
+				"ROLE_PRESENCE": "{{shift}} on duty",
+				"DAYS_OFF_PER_PERIOD": "Days off",
+				"AVOID_DAYS_OFF_ON": "Days to avoid off",
+				"REST_BETWEEN_SHIFTS": "Rest between shifts"
 			}
 		},
 		"forecast": {

@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useId } from "react";
+import { useEffect, useId } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
@@ -27,6 +27,7 @@ import {
 } from "@/features/scheduling/constraints/api";
 import { constraintRefusal } from "@/features/scheduling/constraints/constraintRefusal";
 import { fieldRowsInReadingOrder } from "@/features/scheduling/constraints/ConstraintDialog/fieldOrder";
+import { nameSuggestion } from "@/features/scheduling/constraints/ConstraintDialog/nameSuggestion";
 import { appliesToOf } from "@/features/scheduling/constraints/appliesTo";
 import {
 	constraintSchema,
@@ -265,6 +266,22 @@ export const ConstraintDialog = ({
 				name: namesById.get(value) ?? null,
 			}))
 		);
+	// A new constraint's name fills itself in from what it controls and its
+	// first shift, until the manager types one; an edit or a replacement keeps
+	// the name it has.
+	const suggestsName = editing === undefined && replacing === undefined;
+	const firstShiftId = values.SHIFT?.[0];
+	const suggestedName = chosen
+		? nameSuggestion(
+				chosen.type,
+				firstShiftId === undefined ? undefined : namesById.get(firstShiftId),
+				t
+			)
+		: "";
+	const nameTyped = form.getFieldState("name", form.formState).isDirty;
+	useEffect(() => {
+		if (suggestsName && !nameTyped) setValue("name", suggestedName);
+	}, [suggestsName, nameTyped, suggestedName, setValue]);
 	const selectRow = (
 		field: "type" | "status" | "lock",
 		choiceOptions: Array<SelectOption>,
@@ -561,16 +578,6 @@ export const ConstraintDialog = ({
 						)}
 					</Callout>
 				)}
-				<UnitNameField
-					autoFocus
-					counter={t(`${key}.nameCounter`, { count: name.length })}
-					error={errors.name?.message}
-					hint={t(`${key}.nameHint`)}
-					id={fieldId("name")}
-					label={t(`${key}.name`)}
-					placeholder={t(`${key}.namePlaceholder`)}
-					registration={register("name")}
-				/>
 				{selectRow(
 					"type",
 					typeOptions,
@@ -625,6 +632,15 @@ export const ConstraintDialog = ({
 							selectRow("status", statusOptions, t(`${key}.statusHint`))}
 					</>
 				)}
+				<UnitNameField
+					counter={t(`${key}.nameCounter`, { count: name.length })}
+					error={errors.name?.message}
+					hint={t(`${key}.nameHint`)}
+					id={fieldId("name")}
+					label={t(`${key}.name`)}
+					placeholder={t(`${key}.namePlaceholder`)}
+					registration={register("name")}
+				/>
 				{impactNote && <p className="text-sm text-neutral-700">{impactNote}</p>}
 			</form>
 		</Dialog>

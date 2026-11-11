@@ -70,13 +70,25 @@ const pick = async (
 	if (screen.queryByRole("listbox")) await user.keyboard("{Escape}");
 };
 
+const nameField = (): HTMLElement =>
+	screen.getByRole("textbox", { name: /^Name/ });
+
+/** Replaces the name, suggested or not, with one typed in. */
+const typeName = async (
+	user: ReturnType<typeof userEvent.setup>,
+	name: string
+): Promise<void> => {
+	await user.clear(nameField());
+	await user.type(nameField(), name);
+};
+
 /** Names the constraint and chooses its type, as every new constraint starts. */
 const start = async (
 	user: ReturnType<typeof userEvent.setup>,
 	type: string
 ): Promise<void> => {
 	await screen.findByRole("dialog", { name: "Add constraint" });
-	await user.type(screen.getByLabelText("Constraint name"), "Morning cover");
+	await typeName(user, "Morning cover");
 	await pick(user, /^What it controls/, type);
 };
 
@@ -130,7 +142,7 @@ describe("ConstraintDialog for the Scheduling policy (ADR-0058)", () => {
 		).toBeVisible();
 		expect(trigger(/^What it controls/)).toBeDisabled();
 
-		await user.type(screen.getByLabelText("Constraint name"), "Front rest");
+		await typeName(user, "Front rest");
 		const hours = screen.getByRole("spinbutton", { name: /^Hours off/ });
 		await user.clear(hours);
 		await user.type(hours, "10");
@@ -149,7 +161,7 @@ describe("ConstraintDialog for the Scheduling policy (ADR-0058)", () => {
 		const onSave = vi.fn().mockRejectedValue(problem(500, "INTERNAL_ERROR"));
 		renderDialog({ replacing: companyRest, onSave });
 		await screen.findByRole("dialog", { name: "Set for this department" });
-		await user.type(screen.getByLabelText("Constraint name"), "Front rest");
+		await typeName(user, "Front rest");
 		const hours = screen.getByRole("spinbutton", { name: /^Hours off/ });
 		await user.clear(hours);
 		await user.type(hours, "12");
@@ -176,7 +188,7 @@ describe("ConstraintDialog for the Scheduling policy (ADR-0058)", () => {
 		const { onSave } = renderDialog({ replacing: companyRest });
 		await screen.findByRole("dialog", { name: "Set for this department" });
 
-		await user.type(screen.getByLabelText("Constraint name"), "Front rest");
+		await typeName(user, "Front rest");
 		const hours = screen.getByRole("spinbutton", { name: /^Hours off/ });
 		await user.clear(hours);
 		await user.type(hours, "12");
@@ -198,7 +210,7 @@ describe("ConstraintDialog for the Scheduling policy (ADR-0058)", () => {
 		const { onSave } = renderDialog({ replacing: companyWeekends });
 		await screen.findByRole("dialog", { name: "Set for this department" });
 
-		await user.type(screen.getByLabelText("Constraint name"), "No weekends");
+		await typeName(user, "No weekends");
 		await user.click(screen.getByRole("button", { name: "Save" }));
 
 		await waitFor(() => {
@@ -243,7 +255,7 @@ describe("ConstraintDialog for the Scheduling policy (ADR-0058)", () => {
 		renderDialog({ replacing: companyWeekends, onSave });
 		await screen.findByRole("dialog", { name: "Set for this department" });
 
-		await user.type(screen.getByLabelText("Constraint name"), "No weekends");
+		await typeName(user, "No weekends");
 		await user.click(screen.getByRole("button", { name: "Save" }));
 
 		expect(
@@ -430,6 +442,28 @@ describe("ConstraintDialog", () => {
 		);
 	});
 
+	it("given_aNewConstraint_when_typeAndShiftChosen_then_theNameFillsItselfInUntilTyped", async () => {
+		const user = userEvent.setup();
+		renderDialog();
+		await screen.findByRole("dialog", { name: "Add constraint" });
+
+		await pick(user, /^What it controls/, "People on a shift");
+		expect(nameField()).toHaveValue("People on a shift");
+		await pick(user, /^Shifts/, "Front Desk AM");
+		expect(nameField()).toHaveValue("Front Desk AM staffing");
+
+		await typeName(user, "Morning cover");
+		await pick(user, /^Shifts/, "Breakfast Prep");
+		expect(nameField()).toHaveValue("Morning cover");
+	});
+
+	it("given_aSavedConstraint_when_editing_then_keepsItsName", async () => {
+		renderDialog({ editing: constraint("closing-supervisor") });
+		await screen.findByRole("dialog", { name: "Edit constraint" });
+
+		expect(nameField()).toHaveValue("Closing supervisor");
+	});
+
 	it("given_aShouldConstraint_when_editing_then_startsOnIfPossible", async () => {
 		renderDialog({ editing: constraint("closing-supervisor") });
 		await screen.findByRole("dialog", { name: "Edit constraint" });
@@ -488,9 +522,7 @@ describe("ConstraintDialog", () => {
 		await screen.findByRole("dialog", { name: "Edit constraint" });
 		const daysOff = screen.getByRole("spinbutton", { name: /^Days off/ });
 
-		expect(screen.getByLabelText("Constraint name")).toHaveValue(
-			"Two days off"
-		);
+		expect(nameField()).toHaveValue("Two days off");
 		expect(trigger(/^What it controls/)).toHaveTextContent(
 			"Days off in a run of days"
 		);
@@ -630,7 +662,7 @@ describe("ConstraintDialog with a Department field", () => {
 		renderInCompany(<ChoosingDialog initial="" />);
 		await screen.findByRole("dialog", { name: "Add constraint" });
 
-		await user.type(screen.getByLabelText("Constraint name"), "Rest");
+		await typeName(user, "Rest");
 
 		expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
 		expect(screen.getByText("Choose a department first.")).toBeVisible();
@@ -656,9 +688,7 @@ describe("ConstraintDialog with a Department field", () => {
 		expect(screen.getByRole("spinbutton", { name: /^Hours off/ })).toHaveValue(
 			null
 		);
-		expect(screen.getByLabelText("Constraint name")).toHaveValue(
-			"Morning cover"
-		);
+		expect(nameField()).toHaveValue("Morning cover");
 		expect(trigger(/^What it controls/)).toHaveTextContent(
 			"Rest between shifts"
 		);

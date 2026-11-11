@@ -129,7 +129,9 @@ describe("SchedulingPolicySettings", () => {
 		const dialog = await screen.findByRole("dialog", {
 			name: "Add constraint",
 		});
-		await user.type(within(dialog).getByLabelText("Constraint name"), "Rest");
+		const name = within(dialog).getByRole("textbox", { name: /^Name/ });
+		await user.clear(name);
+		await user.type(name, "Rest");
 		await user.click(
 			within(dialog).getByRole("button", { name: /^What it controls/ })
 		);
@@ -219,7 +221,9 @@ describe("SchedulingPolicySettings", () => {
 		const dialog = await screen.findByRole("dialog", {
 			name: "Add constraint",
 		});
-		await user.type(within(dialog).getByLabelText("Constraint name"), "Rest");
+		const name = within(dialog).getByRole("textbox", { name: /^Name/ });
+		await user.clear(name);
+		await user.type(name, "Rest");
 		await user.click(
 			within(dialog).getByRole("button", { name: /^What it controls/ })
 		);
