@@ -8,6 +8,7 @@ import { CellNow } from "./CellNow";
 const roster = scheduleAssignmentsFixture();
 const working = roster[0]!;
 const onLeave = roster.find((row) => row.offReason === "LEAVE")!;
+const onRestDay = roster.find((row) => row.shift !== null && row.dayType)!;
 
 const meta = {
 	title: "Features/Scheduling/RosterCellPanel/CellNow",
@@ -35,6 +36,11 @@ type Story = StoryObj<typeof meta>;
 
 /** A working day: its shift, time and job title. */
 export const WorkingDay: Story = {};
+
+/** Chen's Saturday: a shift put on his rest day. */
+export const ShiftOnRestDay: Story = {
+	args: { assignment: onRestDay },
+};
 
 /** A leave day, read-only to this viewer. */
 export const LeaveDay: Story = {

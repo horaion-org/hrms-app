@@ -8,6 +8,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { CloseIcon } from "@/components/ui/Icon";
+import { dayTypeInSentence } from "@/features/scheduling/dayTypes";
 import { formatTimeRange } from "@/features/scheduling/formatShift";
 import type { RosterShiftCell } from "@/features/scheduling/roster/roster";
 import { paidShiftHours } from "@/features/scheduling/scheduleDraft";
@@ -24,7 +25,11 @@ export type ShiftDetailsPanelProps = {
 
 const key = "scheduling.detail.shiftDetails";
 
-/** One worked day beside the roster, read-only: what needs a look on it, then its date, time, shift, group and role. */
+/**
+ * One worked day beside the roster, read-only: what needs a look on it, who
+ * is assigned and on what non-working day type, then its date, time, shift,
+ * group and role.
+ */
 export const ShiftDetailsPanel = ({
 	staffName,
 	shift,
@@ -41,6 +46,7 @@ export const ShiftDetailsPanel = ({
 		month: "short",
 		year: "numeric",
 	}).format(dayjs(shift.date).toDate());
+	const workedDayType = shift.note?.dayType;
 	const details = [
 		{ label: t(`${key}.date`), value: date },
 		{
@@ -107,6 +113,13 @@ export const ShiftDetailsPanel = ({
 					<Badge className="mt-5 uppercase" tone="success">
 						{t(`${key}.assigned`)}
 					</Badge>
+					{workedDayType !== undefined && (
+						<p className="mt-3 text-sm text-neutral-800">
+							{t("scheduling.rosterMarkers.onDayType", {
+								dayType: dayTypeInSentence(workedDayType, t),
+							})}
+						</p>
+					)}
 				</div>
 				<dl className="flex flex-col gap-4 px-4 py-4 text-sm">
 					{details.map(({ label, value }) => (

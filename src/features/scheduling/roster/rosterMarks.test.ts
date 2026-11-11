@@ -1,4 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { createInstance, type TFunction } from "i18next";
+import { beforeAll, describe, expect, it } from "vitest";
+import en from "@/assets/locales/en/translations.json";
 import { daysOf } from "@/common/weeks";
 import { placeFindings } from "@/features/scheduling/roster/findings/findingsOnGrid";
 import {
@@ -25,6 +27,7 @@ import {
 	rowIssueCount,
 	saidApartBy,
 	showsRole,
+	tileStatus,
 	tileStatusKey,
 	type CellFacts,
 	type DayNoteLine,
@@ -111,6 +114,7 @@ describe("dayNoteIssues", () => {
 			2,
 		],
 		["a flag the app does not know", { flag: "UNKNOWN" }, 0],
+		["a shift on a rest day, which is no issue", { dayType: "REST" }, 0],
 	])("given_%s_then_countsIt", (_, note, count) => {
 		expect(dayNoteIssues(note)).toBe(count);
 	});
@@ -175,6 +179,12 @@ describe("dayNoteLines", () => {
 			{ flag: "ON_LEAVE_WHILE_ROSTERED" },
 			new Set(["decision", "leaveRequested"] as const),
 			[{ kind: "leave", key: "onLeave" }],
+		],
+		[
+			"a shift on a rest day that leaves another short, the type being no line of its own",
+			{ uncoveredShiftName: "Morning", dayType: "REST" },
+			undefined,
+			[{ kind: "cover", shiftName: "Morning" }],
 		],
 	])("given_%s_then_readsItsLines", (_, note, saidApart, lines) => {
 		expect(dayNoteLines(note, saidApart)).toEqual(lines);
@@ -314,6 +324,57 @@ describe("tileStatusKey", () => {
 		["no note", undefined, false, undefined],
 	])("given_%s_then_readsIt", (_, note, showsIssues, key) => {
 		expect(tileStatusKey(note, showsIssues)).toBe(key);
+	});
+});
+
+describe("tileStatus", () => {
+	let t: TFunction;
+	beforeAll(async () => {
+		const i18n = createInstance();
+		await i18n.init({ lng: "en", resources: { en: { translation: en } } });
+		t = i18n.t;
+	});
+
+	it.each<[string, RosterDayNote | undefined, boolean, string | undefined]>([
+		[
+			"own leave requested",
+			{ flag: "LEAVE_REQUESTED" },
+			false,
+			"Leave requested",
+		],
+		[
+			"a shift on a rest day, on a manager's roster",
+			{ dayType: "REST" },
+			true,
+			"On rest day",
+		],
+		[
+			"a shift on a day off, on one's own roster",
+			{ dayType: "OFF" },
+			false,
+			"On day off",
+		],
+		[
+			"a shift on a type added later",
+			{ dayType: "PUBLIC_HOLIDAY_OFF" },
+			true,
+			"On public holiday off",
+		],
+		[
+			"own leave requested on a rest day, which leave says first",
+			{ flag: "LEAVE_REQUESTED", dayType: "REST" },
+			false,
+			"Leave requested",
+		],
+		[
+			"leave requested on a manager's roster",
+			{ flag: "LEAVE_REQUESTED" },
+			true,
+			undefined,
+		],
+		["no note", undefined, false, undefined],
+	])("given_%s_then_saysIt", (_, note, showsIssues, status) => {
+		expect(tileStatus(note, showsIssues, t)).toBe(status);
 	});
 });
 

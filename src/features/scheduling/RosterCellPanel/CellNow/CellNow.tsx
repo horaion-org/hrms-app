@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
+import { dayTypeInSentence } from "@/features/scheduling/dayTypes";
 import { formatDay } from "@/features/scheduling/periods";
 import type { LeaveLinkSearch } from "@/features/scheduling/RosterDayNotes/leaveLinkSearch";
 import {
@@ -24,9 +25,9 @@ export type CellNowProps = {
 const key = "scheduling.rosterEdit";
 
 /**
- * What the day holds now: its cell, job title and leave type, the leave
- * behind a day off, a link to change the whole request in Leave, and who
- * changed the day last, from what, and why.
+ * What the day holds now: its cell, job title and leave type, the day type a
+ * shift falls on, the leave behind a day off, a link to change the whole
+ * request in Leave, and who changed the day last, from what, and why.
  */
 export const CellNow = ({
 	assignment,
@@ -51,6 +52,13 @@ export const CellNow = ({
 					assignment.leaveTypeName &&
 					` · ${assignment.leaveTypeName}`}
 			</dd>
+			{assignment.shift !== null && assignment.dayType !== null && (
+				<dd className="text-neutral-800">
+					{t("scheduling.rosterMarkers.onDayType", {
+						dayType: dayTypeInSentence(assignment.dayType, t),
+					})}
+				</dd>
+			)}
 			{leaveDay &&
 				assignment.offReason === "OFF" &&
 				assignment.leaveTypeName && (

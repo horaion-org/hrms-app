@@ -3728,6 +3728,7 @@
 			"leaveRequested": "Permiso solicitado",
 			"onLeave": "De permiso",
 			"needsCover": "Necesita cobertura: {{shift}}",
+			"onDayType": "En {{dayType}}",
 			"needsDecision": "Necesita una decisión",
 			"needsAttention": "Necesita atención",
 			"needsALook": "Por revisar",

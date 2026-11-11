@@ -1,7 +1,10 @@
 import { createInstance, type TFunction } from "i18next";
 import { beforeAll, describe, expect, it } from "vitest";
 import en from "@/assets/locales/en/translations.json";
-import { dayTypeLabel } from "@/features/scheduling/dayTypes";
+import {
+	dayTypeInSentence,
+	dayTypeLabel,
+} from "@/features/scheduling/dayTypes";
 
 let t: TFunction;
 beforeAll(async () => {
@@ -24,5 +27,15 @@ describe("dayTypeLabel", () => {
 
 	it("given_aCodeWithoutATranslation_when_labelled_then_isTheCodeMadeReadable", () => {
 		expect(dayTypeLabel("PUBLIC_HOLIDAY_OFF", t)).toBe("Public holiday off");
+	});
+});
+
+describe("dayTypeInSentence", () => {
+	it.each([
+		["REST", "rest day"],
+		["PUBLIC_HOLIDAY_OFF", "public holiday off"],
+		[null, "day off"],
+	])("given_%s_when_putInASentence_then_isLowerCase", (code, words) => {
+		expect(dayTypeInSentence(code, t)).toBe(words);
 	});
 });

@@ -281,6 +281,18 @@ describe("RosterGrid", () => {
 		expect(tile.querySelector("[aria-hidden='true']")).toBeNull();
 	});
 
+	it("given_aShiftOnARestDay_when_rendered_then_saysItInTheTileWithNoDot", () => {
+		render(<RosterGrid days={week} rows={rows} />);
+
+		const chen = screen.getByRole("row", { name: /Chen Wei/ });
+		const tile = within(chen).getByRole("button", {
+			name: /^Chen Wei, Sat .*, On rest day$/,
+		});
+		expect(tile).toHaveTextContent(/On rest day$/);
+		expect(tile.querySelector("[aria-hidden='true']")).toBeNull();
+		expect(within(chen).getAllByText("On rest day")).toHaveLength(1);
+	});
+
 	it("when_noFindingsAreGiven_then_marksNothing", () => {
 		render(<RosterGrid days={week} rows={rows} onShowIssues={vi.fn()} />);
 

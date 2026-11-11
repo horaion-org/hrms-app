@@ -34,6 +34,13 @@ type Story = StoryObj<typeof meta>;
 /** A generated roster's day: its frozen shift, read-only. */
 export const Default: Story = {};
 
+/** A shift put on the member's rest day: said as a plain line under who is assigned. */
+export const OnRestDay: Story = {
+	args: {
+		shift: { ...meta.args.shift, note: { dayType: "REST" } },
+	},
+};
+
 /** A day that needs a look: its notes come first, above the shift. */
 export const WithIssues: Story = {
 	args: {

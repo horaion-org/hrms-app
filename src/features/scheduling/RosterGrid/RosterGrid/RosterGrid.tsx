@@ -24,7 +24,7 @@ import {
 	dayIssueCount,
 	rowIssueCount,
 	showsRole,
-	tileStatusKey,
+	tileStatus,
 	type CellMark,
 	type HeaderCount,
 	type IssuesAbout,
@@ -254,8 +254,7 @@ export const RosterGrid = ({
 			{ startTime: cell.start, endTime: cell.end },
 			t
 		);
-		const statusKey = tileStatusKey(cell.note, showsIssues);
-		const status = statusKey && t(`scheduling.rosterMarkers.${statusKey}`);
+		const status = tileStatus(cell.note, showsIssues, t);
 		const shiftLabel = t("scheduling.detail.shiftLabel", {
 			name,
 			day: weekday.format(dayjs(date).toDate()),

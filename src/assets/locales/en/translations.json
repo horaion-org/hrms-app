@@ -3906,6 +3906,7 @@
 			"leaveRequested": "Leave requested",
 			"onLeave": "On leave",
 			"needsCover": "Needs cover: {{shift}}",
+			"onDayType": "On {{dayType}}",
 			"needsDecision": "Needs a decision",
 			"needsAttention": "Needs attention",
 			"needsALook": "Needs a look",

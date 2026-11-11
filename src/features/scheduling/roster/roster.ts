@@ -42,6 +42,8 @@ export type RosterDayNote = {
 	leaveTypeName?: string;
 	/** The shift this day's absence leaves short, by name; absent when none is. */
 	uncoveredShiftName?: string;
+	/** On a worked day, the non-working day type it had before a shift was put on it. */
+	dayType?: string;
 };
 
 /** Approved leave, named by its leave type when the API names it. */
@@ -117,13 +119,18 @@ const noteOf = ({
 	leaveRequestId,
 	leaveTypeName,
 	uncoveredShift,
+	shift,
+	dayType,
 }: ScheduleAssignment): RosterDayNote | undefined => {
-	if (!flag && !uncoveredShift) return undefined;
+	// Only a worked day notes its type; a day not worked shows it in its own cell.
+	const workedDayType = shift === null ? null : dayType;
+	if (!flag && !uncoveredShift && workedDayType === null) return undefined;
 	return {
 		...(flag ? { flag } : {}),
 		...(leaveRequestId ? { leaveRequestId } : {}),
 		...(leaveTypeName ? { leaveTypeName } : {}),
 		...(uncoveredShift ? { uncoveredShiftName: uncoveredShift.name } : {}),
+		...(workedDayType === null ? {} : { dayType: workedDayType }),
 	};
 };
 

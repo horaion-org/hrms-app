@@ -414,6 +414,31 @@ describe("day notes", () => {
 		expect(row?.days["2026-11-02"]).not.toHaveProperty("note");
 	});
 
+	it.each(["REST", "OFF"])(
+		"notes the %s day type a shift falls on",
+		(dayType) => {
+			const [row] = rosterFromAssignments([{ ...assignment, dayType }], period);
+			expect(row?.days["2026-11-02"]?.note).toEqual({ dayType });
+		}
+	);
+
+	it("leaves the type of a day not worked to its cell, not a note", () => {
+		const [row] = rosterFromAssignments(
+			[
+				{
+					...assignment,
+					off: true,
+					offReason: "OFF",
+					dayType: "REST",
+					shift: null,
+					jobTitle: null,
+				},
+			],
+			period
+		);
+		expect(row?.days["2026-11-02"]).toEqual({ kind: "off", dayType: "REST" });
+	});
+
 	it("carries the flag, the request and the short shift", () => {
 		const [row] = rosterFromAssignments(
 			[
