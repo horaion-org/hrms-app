@@ -111,6 +111,12 @@ describe("ConstraintTable", () => {
 		).toBeVisible();
 	});
 
+	const headersHiddenBelow = (classes: string): Array<string | null> =>
+		screen
+			.getAllByRole("columnheader")
+			.filter((header) => header.className.includes(classes))
+			.map((header) => header.textContent);
+
 	it("given_aPhone_when_rendered_then_keepsOnlyTheNameAndActionsAsColumns", () => {
 		render(
 			<ConstraintTable
@@ -122,20 +128,48 @@ describe("ConstraintTable", () => {
 			/>
 		);
 
-		const hiddenOnPhones = screen
-			.getAllByRole("columnheader")
-			.filter((header) => header.className.includes("hidden md:table-cell"))
-			.map((header) => header.textContent);
-		expect(hiddenOnPhones).toEqual([
+		expect(headersHiddenBelow("hidden md:table-cell")).toEqual([
 			"Branch",
 			"Department",
 			"Constraint type",
 			"Details",
+		]);
+		expect(headersHiddenBelow("hidden 2xl:table-cell")).toEqual([
 			"Set by",
 			"Requirement",
 			"Status",
 		]);
 	});
+
+	it.each<[string, boolean, Array<string>, Array<string>]>([
+		[
+			"every department",
+			true,
+			["Department", "Constraint type", "Details"],
+			["Set by", "Requirement", "Status"],
+		],
+		[
+			"one department",
+			false,
+			["Constraint type", "Details", "Set by", "Requirement", "Status"],
+			[],
+		],
+	])(
+		"given_%s_when_rendered_then_hidesTheSettingsColumnsAtTheirBreakpoint",
+		(_shown, showDepartment, belowMd, below2xl) => {
+			render(
+				<ConstraintTable
+					constraints={rows}
+					showDepartment={showDepartment}
+					onDelete={vi.fn()}
+					onEdit={vi.fn()}
+				/>
+			);
+
+			expect(headersHiddenBelow("hidden md:table-cell")).toEqual(belowMd);
+			expect(headersHiddenBelow("hidden 2xl:table-cell")).toEqual(below2xl);
+		}
+	);
 
 	it("given_noRows_when_rendered_then_showsTheEmptyStateGiven", () => {
 		render(<ConstraintTable constraints={[]} emptyState="Nothing matches." />);

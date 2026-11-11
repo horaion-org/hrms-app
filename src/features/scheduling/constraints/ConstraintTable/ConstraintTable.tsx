@@ -4,6 +4,7 @@ import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import {
 	DataTable,
+	type ColumnBreakpoint,
 	type DataTableColumn,
 	type DataTableProps,
 } from "@/components/ui/DataTable";
@@ -66,6 +67,8 @@ export type ConstraintTableProps<Row extends ConstraintTableRow> = {
  * and its requirement. The wizard's constraint step and the Constraints tab
  * both list constraints with it. Phones keep the name and the actions;
  * every other value reads on the name's line, as on Job titles.
+ * Across departments the Department column crowds a desktop screen, so
+ * Set by, Requirement and Status stay on that line up to 2xl.
  */
 export const ConstraintTable = <Row extends ConstraintTableRow>({
 	constraints,
@@ -94,6 +97,9 @@ export const ConstraintTable = <Row extends ConstraintTableRow>({
 			constraint.level !== "COMPANY" && (canEdit?.(constraint) ?? true);
 		const deletable = (constraint: Row): boolean =>
 			constraint.level !== "COMPANY" && (canDelete?.(constraint) ?? true);
+		// With a Department column, who set it, its requirement and its status
+		// read on the name's line until 2xl; the wizard never shows Department.
+		const settingsHideBelow: ColumnBreakpoint = showDepartment ? "2xl" : "md";
 		return [
 			shared.name,
 			...(showBranch ? [branchColumn<Row>(t)] : []),
@@ -130,7 +136,7 @@ export const ConstraintTable = <Row extends ConstraintTableRow>({
 				header: t(`${key}.setBy`),
 				headerClassName: "w-44",
 				cell: (constraint) => <ConstraintOrigin constraint={constraint} />,
-				hideBelow: "md",
+				hideBelow: settingsHideBelow,
 			},
 			{
 				id: "requirement",
@@ -138,9 +144,9 @@ export const ConstraintTable = <Row extends ConstraintTableRow>({
 				headerClassName: "w-36",
 				cell: requirementOf,
 				sortValue: requirementOf,
-				hideBelow: "md",
+				hideBelow: settingsHideBelow,
 			},
-			...(frozen ? [] : [{ ...shared.status, hideBelow: "md" as const }]),
+			...(frozen ? [] : [{ ...shared.status, hideBelow: settingsHideBelow }]),
 			...(onEdit || onDelete || onReplace
 				? [
 						{
