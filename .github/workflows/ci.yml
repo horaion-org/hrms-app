@@ -2,11 +2,14 @@ name: CI
 
 # Type check, lint (with the permission contract check) and the Vitest suite on every pull request to development
 # and every push to it. The Playwright suites are not run here. Guide: README.md, "Checks".
+# A change that touches only documentation runs nothing; a change to this workflow, code or configuration still runs.
 on:
   pull_request:
     branches: [ development ]
+    paths-ignore: [ "**/*.md", "docs/**", ".scratch/**" ]
   push:
     branches: [ development ]
+    paths-ignore: [ "**/*.md", "docs/**", ".scratch/**" ]
   workflow_dispatch:
 
 permissions:
@@ -24,7 +27,9 @@ env:
 jobs:
   checks:
     name: Type check & lint
-    runs-on: ubuntu-latest
+    # Blacksmith runner (backend ADR-0070): no job in this workflow holds a secret. Setting the repository variable
+    # CI_RUNNER (e.g. to ubuntu-latest) moves every job back to GitHub without a code change.
+    runs-on: ${{ vars.CI_RUNNER || 'blacksmith-2vcpu-ubuntu-2404' }}
     timeout-minutes: 15
 
     steps:
@@ -59,10 +64,12 @@ jobs:
         run: node scripts/check-test-quarantine.mjs --summary >> "$GITHUB_STEP_SUMMARY"
 
   unit-tests:
-    name: Unit tests (${{ matrix.shard }}/3)
-    runs-on: ubuntu-latest
+    name: Unit tests (${{ matrix.shard }}/${{ strategy.job-total }})
+    runs-on: ${{ vars.CI_RUNNER || 'blacksmith-2vcpu-ubuntu-2404' }}
     timeout-minutes: 20
 
+    # Three shards keep each job near two minutes. Two shards on a 2-vCPU runner took 182-271 s per shard and made a
+    # timing-sensitive test flake. The job name and --shard read the count from this matrix (strategy.job-total).
     strategy:
       fail-fast: false
       matrix:
@@ -91,6 +98,6 @@ jobs:
       - name: Vitest
         run: >-
           pnpm exec vitest run src/
-          --shard=${{ matrix.shard }}/3
+          --shard=${{ matrix.shard }}/${{ strategy.job-total }}
           --maxWorkers=100%
           --testTimeout=15000
