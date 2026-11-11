@@ -72,7 +72,7 @@ type Entered = {
 };
 
 /**
- * The week before the period on the Generate step: the calm line saying where
+ * The days before the period on the Generate step: the calm line saying where
  * everyone starts, and, where the draft may change, the grid to add last
  * week's days and, for a roster starting mid-month, each member's hours and
  * overtime so far this month. The grid opens only once the openings have been

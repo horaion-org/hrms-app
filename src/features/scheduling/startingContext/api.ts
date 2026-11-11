@@ -10,7 +10,7 @@ import { retry } from "@/features/workspace/retry";
 
 /*
  * A schedule's starting context (T3-12, the API's ADR-0056): what each member
- * was doing in the 7 days before the period. Days a roster (the published
+ * was doing in the 14 days before the period. Days a roster (the published
  * one, else the newest generated) or approved leave covers come filled and
  * locked; the rest may be entered on a draft as a shift or a day off, and an
  * empty day is not known, never read as worked or off. The context is frozen
@@ -46,7 +46,7 @@ const startingCellSchema = z.object({
 export type StartingCell = z.infer<typeof startingCellSchema>;
 
 const startingDaysSchema = z.object({
-	/** The 7 days before the period, in order. */
+	/** The 14 days before the period, oldest first. */
 	days: z.array(z.string()),
 	/** The roster that counts for the day before the period; null when there is none. */
 	previousRoster: z
@@ -76,7 +76,7 @@ const startingDaysSchema = z.object({
 	),
 });
 
-/** The week before a schedule's period, as the Generate step's grid shows it. */
+/** The 14 days before a schedule's period, as the Generate step's grid shows them. */
 export type StartingDays = z.infer<typeof startingDaysSchema>;
 
 /** One entered day, as the save sends it. */
@@ -112,7 +112,7 @@ const startingDaysPath = (
 	scheduleId: string
 ): string => `${schedulePath(companyId, unit, scheduleId)}/starting-days`;
 
-/** The week before a schedule's period. */
+/** The 14 days before a schedule's period. */
 export const fetchStartingDays = (
 	companyId: string,
 	unit: DepartmentPath,

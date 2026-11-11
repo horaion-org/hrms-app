@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useId, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
@@ -32,10 +32,13 @@ import type {
 	StartingDays,
 } from "@/features/scheduling/startingContext/api";
 import {
+	cellOn,
 	enteredDays,
 	fillEmpty,
+	hasEnteredDayOn,
 	initialEntries,
 	shiftCellValue,
+	splitDays,
 	withCell,
 	type CellValue,
 	type Entries,
@@ -65,12 +68,15 @@ type MemberRow = StartingDays["members"][number];
 const key = "scheduling.startingContext";
 
 /**
- * The 7 days before the period, laid out like the roster: members down, days
- * across. A day a roster or approved leave covers shows what it was, locked;
- * any other day is a department shift, a day off, or not known (left empty).
- * "Fill empty" sets one day for everyone not entered yet. When the roster
- * starts mid-month, two more cells take the hours and overtime each member
- * already worked this month, so monthly overtime limits count from the 1st.
+ * The days before the period, laid out like the roster: members down, days
+ * across. The 7 nearest the period show first; the earlier ones show on
+ * request, and by themselves when one of them already holds a typed day.
+ * Hidden days are still saved. A day a roster or approved leave covers shows
+ * what it was, locked; any other day is a department shift, a day off, or not
+ * known (left empty). "Fill empty" sets one shown day for everyone not
+ * entered yet. When the roster starts mid-month, two more cells take the
+ * hours and overtime each member already worked this month, so monthly
+ * overtime limits count from the 1st.
  */
 export const StartingDaysDialog = ({
 	open,
@@ -84,6 +90,12 @@ export const StartingDaysDialog = ({
 	const { t, i18n } = useTranslation();
 	const language = formattingLocale(i18n);
 	const [entries, setEntries] = useState<Entries>(() => initialEntries(week));
+	const { earlier, nearer } = splitDays(week.days);
+	const [showEarlier, setShowEarlier] = useState(() =>
+		hasEnteredDayOn(initialEntries(week), earlier)
+	);
+	const shownDays = showEarlier ? week.days : nearer;
+	const tableId = useId();
 	const lastDay = week.days[week.days.length - 1] ?? "";
 	const [fillDay, setFillDay] = useState(lastDay);
 	const [fillValue, setFillValue] = useState<CellValue>("OFF");
@@ -121,15 +133,12 @@ export const StartingDaysDialog = ({
 		if (cell.kind === "UNKNOWN") return t("scheduling.detail.kinds.unknown");
 		return cell.shiftName ?? t(`${key}.worked`);
 	};
-	const dayColumn = (
-		date: string,
-		index: number
-	): DataTableColumn<MemberRow> => ({
+	const dayColumn = (date: string): DataTableColumn<MemberRow> => ({
 		id: date,
 		header: labelOf(date),
 		headerClassName: "w-40",
 		cell: (member): ReactNode => {
-			const cell = member.cells[index];
+			const cell = cellOn(member, date);
 			if (cell === undefined) return null;
 			if (cell.locked)
 				return (
@@ -240,7 +249,7 @@ export const StartingDaysDialog = ({
 				</span>
 			),
 		},
-		...week.days.map(dayColumn),
+		...shownDays.map(dayColumn),
 		...(asksOpenings
 			? [openingColumn("worked"), openingColumn("overtime")]
 			: []),
@@ -273,6 +282,20 @@ export const StartingDaysDialog = ({
 			onClose={onClose}
 		>
 			<p className="text-sm text-neutral-700">{t(`${key}.hint`)}</p>
+			{earlier.length > 0 && (
+				<Button
+					aria-controls={tableId}
+					aria-expanded={showEarlier}
+					className="mt-2"
+					variant="textlink"
+					onClick={() => {
+						if (showEarlier && earlier.includes(fillDay)) setFillDay(lastDay);
+						setShowEarlier(!showEarlier);
+					}}
+				>
+					{t(`${key}.${showEarlier ? "hideEarlier" : "showEarlier"}`)}
+				</Button>
+			)}
 			{asksOpenings && (
 				<p className="mt-2 text-sm text-neutral-700">
 					{t(`${key}.opening.hint`, { day: asOfLabel })}
@@ -283,7 +306,7 @@ export const StartingDaysDialog = ({
 					aria-label={t(`${key}.fillDay`)}
 					className="w-40"
 					value={fillDay}
-					options={week.days.map((date) => ({
+					options={shownDays.map((date) => ({
 						value: date,
 						label: labelOf(date),
 					}))}
@@ -317,13 +340,15 @@ export const StartingDaysDialog = ({
 					{t(`${key}.opening.${openingTrouble}`)}
 				</Callout>
 			)}
-			<DataTable
-				className="mt-4"
-				columns={columns}
-				data={week.members}
-				getRowId={(member) => member.memberProfileId}
-				label={t(`${key}.tableLabel`)}
-			/>
+			<div id={tableId}>
+				<DataTable
+					className="mt-4"
+					columns={columns}
+					data={week.members}
+					getRowId={(member) => member.memberProfileId}
+					label={t(`${key}.tableLabel`)}
+				/>
+			</div>
 		</Dialog>
 	);
 };

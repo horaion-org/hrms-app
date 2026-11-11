@@ -3,7 +3,7 @@ import type {
 	StartingDays,
 } from "@/features/scheduling/startingContext/api";
 
-/** The 7 days before the period starting Monday 9 November 2026. */
+/** The 7 days nearest the period starting Monday 9 November 2026. */
 export const WEEK_BEFORE = [
 	"2026-11-02",
 	"2026-11-03",
@@ -13,6 +13,20 @@ export const WEEK_BEFORE = [
 	"2026-11-07",
 	"2026-11-08",
 ];
+
+/** The 7 days before those, which the dialog shows on request. */
+export const EARLIER_WEEK = [
+	"2026-10-26",
+	"2026-10-27",
+	"2026-10-28",
+	"2026-10-29",
+	"2026-10-30",
+	"2026-10-31",
+	"2026-11-01",
+];
+
+/** The 14 days before the period, oldest first, as the API answers them. */
+export const DAYS_BEFORE = [...EARLIER_WEEK, ...WEEK_BEFORE];
 
 /** A day nobody knows anything about. */
 export const unknownCell = (date: string): StartingCell => ({
@@ -53,9 +67,12 @@ export const enteredNightCell = (date: string): StartingCell => ({
 	endTime: "06:00",
 });
 
-/** A first roster: no previous roster, Tan with an entered Sunday night and leave on Saturday, Siti unknown. */
+/**
+ * A first roster: no previous roster, Tan with an entered Sunday night and
+ * leave on Saturday, Siti unknown; nothing known in the earlier week.
+ */
 export const firstWeek = (): StartingDays => ({
-	days: WEEK_BEFORE,
+	days: DAYS_BEFORE,
 	previousRoster: null,
 	shifts: [
 		{ shiftId: "s-day", name: "Day", startTime: "07:00", endTime: "19:00" },
@@ -66,7 +83,7 @@ export const firstWeek = (): StartingDays => ({
 			memberProfileId: "p-tan",
 			displayName: "Tan Wei Ming",
 			jobTitleName: "Officer",
-			cells: WEEK_BEFORE.map((date) =>
+			cells: DAYS_BEFORE.map((date) =>
 				date === "2026-11-08"
 					? enteredNightCell(date)
 					: date === "2026-11-07"
@@ -78,12 +95,12 @@ export const firstWeek = (): StartingDays => ({
 			memberProfileId: "p-siti",
 			displayName: "Siti Rahmah",
 			jobTitleName: "Officer",
-			cells: WEEK_BEFORE.map(unknownCell),
+			cells: DAYS_BEFORE.map(unknownCell),
 		},
 	],
 });
 
-/** A week a published roster covers for Tan; Siti, a new joiner, is not on it. */
+/** Published rosters cover both weeks for Tan; Siti, a new joiner, is on neither. */
 export const carriedWeek = (): StartingDays => ({
 	...firstWeek(),
 	previousRoster: {
@@ -97,13 +114,33 @@ export const carriedWeek = (): StartingDays => ({
 			memberProfileId: "p-tan",
 			displayName: "Tan Wei Ming",
 			jobTitleName: "Officer",
-			cells: WEEK_BEFORE.map(rosterOffCell),
+			cells: DAYS_BEFORE.map(rosterOffCell),
 		},
 		{
 			memberProfileId: "p-siti",
 			displayName: "Siti Rahmah",
 			jobTitleName: "Officer",
-			cells: WEEK_BEFORE.map(unknownCell),
+			cells: DAYS_BEFORE.map(unknownCell),
 		},
 	],
 });
+
+/** The first roster with Siti's Friday of the earlier week typed as a day off. */
+export const earlierDayTypedWeek = (): StartingDays => {
+	const week = firstWeek();
+	return {
+		...week,
+		members: week.members.map((member) =>
+			member.memberProfileId === "p-siti"
+				? {
+						...member,
+						cells: member.cells.map((cell) =>
+							cell.date === "2026-10-30"
+								? { ...unknownCell(cell.date), kind: "OFF", source: "ENTERED" }
+								: cell
+						),
+					}
+				: member
+		),
+	};
+};

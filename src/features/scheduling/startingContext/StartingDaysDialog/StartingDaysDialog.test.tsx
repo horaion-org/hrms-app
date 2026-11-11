@@ -9,10 +9,12 @@ import {
 	editableMember,
 	midMonthOpenings,
 } from "@/features/scheduling/hours/fixtures";
+import type { StartingDays } from "@/features/scheduling/startingContext/api";
 import {
 	carriedWeek,
+	earlierDayTypedWeek,
 	firstWeek,
-	rosterOffCell,
+	WEEK_BEFORE,
 } from "@/features/scheduling/startingContext/fixtures";
 import { StartingDaysDialog } from "@/features/scheduling/startingContext/StartingDaysDialog";
 
@@ -35,11 +37,26 @@ const show = (
 	);
 };
 
+/** The answer of an API that still sends only the 7 days. */
+const onlyTheNearerWeek = (): StartingDays => {
+	const week = firstWeek();
+	return {
+		...week,
+		days: WEEK_BEFORE,
+		members: week.members.map((member) => ({
+			...member,
+			cells: member.cells.filter((cell) => WEEK_BEFORE.includes(cell.date)),
+		})),
+	};
+};
+
 describe("StartingDaysDialog", () => {
 	it("given_aFirstWeek_when_shown_then_membersDownDaysAcrossWithLeaveLocked", () => {
 		show();
 
-		const table = screen.getByRole("table", { name: "The week before" });
+		const table = screen.getByRole("table", {
+			name: "The days before this week",
+		});
 		const tan = within(table).getByRole("row", { name: /Tan Wei Ming/ });
 		expect(within(tan).getByText("On Leave")).toBeInTheDocument();
 		expect(
@@ -52,14 +69,13 @@ describe("StartingDaysDialog", () => {
 
 	it("given_aLockedDayOfAKindThisBuildDoesNotKnow_when_shown_then_readsUnknown", () => {
 		const week = carriedWeek();
-		week.members[0]!.cells[6] = {
-			...rosterOffCell("2026-11-08"),
-			kind: "UNKNOWN",
-		};
+		week.members[0]!.cells = week.members[0]!.cells.map((cell) =>
+			cell.date === "2026-11-08" ? { ...cell, kind: "UNKNOWN" } : cell
+		);
 		show(vi.fn(), week);
 
 		const tan = within(
-			screen.getByRole("table", { name: "The week before" })
+			screen.getByRole("table", { name: "The days before this week" })
 		).getByRole("row", { name: /Tan Wei Ming/ });
 		expect(within(tan).getByText("Unknown")).toBeInTheDocument();
 	});
@@ -103,11 +119,15 @@ describe("StartingDaysDialog", () => {
 			])
 		);
 
-		const table = screen.getByRole("table", { name: "The week before" });
+		const table = screen.getByRole("table", {
+			name: "The days before this week",
+		});
 		const siti = within(table).getByRole("row", { name: /Siti/ });
 		expect(within(siti).getAllByText("From rosters")).toHaveLength(2);
 		await userEvent.type(
-			screen.getByRole("spinbutton", { name: /Tan Wei Ming, paid hours worked/ }),
+			screen.getByRole("spinbutton", {
+				name: /Tan Wei Ming, paid hours worked/,
+			}),
 			"72"
 		);
 		await userEvent.type(
@@ -166,7 +186,9 @@ describe("StartingDaysDialog", () => {
 		);
 
 		expect(
-			screen.getByRole("spinbutton", { name: /Tan Wei Ming, paid hours worked/ })
+			screen.getByRole("spinbutton", {
+				name: /Tan Wei Ming, paid hours worked/,
+			})
 		).toHaveValue(72);
 		await userEvent.click(screen.getByRole("button", { name: "Save days" }));
 		expect(onSave).toHaveBeenCalledWith(expect.any(Array), undefined);
@@ -187,7 +209,9 @@ describe("StartingDaysDialog", () => {
 		);
 
 		await userEvent.clear(
-			screen.getByRole("spinbutton", { name: /Tan Wei Ming, paid hours worked/ })
+			screen.getByRole("spinbutton", {
+				name: /Tan Wei Ming, paid hours worked/,
+			})
 		);
 		await userEvent.clear(
 			screen.getByRole("spinbutton", { name: /Tan Wei Ming, overtime/ })
@@ -197,5 +221,149 @@ describe("StartingDaysDialog", () => {
 		expect(onSave).toHaveBeenCalledWith(expect.any(Array), [
 			{ memberProfileId: "p-tan", workedMinutes: null, overtimeMinutes: null },
 		]);
+	});
+	it("given_fourteenDays_when_opened_then_onlyTheNearerWeekIsShown", () => {
+		show();
+
+		const table = screen.getByRole("table", {
+			name: "The days before this week",
+		});
+		expect(
+			within(table).getByRole("columnheader", { name: "Mon, Nov 2" })
+		).toBeInTheDocument();
+		expect(
+			within(table).queryByRole("columnheader", { name: "Sun, Nov 1" })
+		).not.toBeInTheDocument();
+		expect(
+			screen.getByRole("button", { name: "Show 7 earlier days" })
+		).toHaveAttribute("aria-expanded", "false");
+	});
+
+	it("given_theNearerWeek_when_showEarlierClicked_then_fourteenColumnsAndDayToFillListsThem", async () => {
+		const user = userEvent.setup();
+		show();
+
+		await user.click(
+			screen.getByRole("button", { name: "Show 7 earlier days" })
+		);
+
+		const table = screen.getByRole("table", {
+			name: "The days before this week",
+		});
+		expect(
+			within(table).getByRole("columnheader", { name: "Mon, Oct 26" })
+		).toBeInTheDocument();
+		expect(
+			screen.getByRole("button", { name: "Hide earlier days" })
+		).toHaveAttribute("aria-expanded", "true");
+		await user.click(screen.getByRole("button", { name: "Day to fill" }));
+		expect(screen.getByRole("option", { name: "Mon, Oct 26" })).toBeVisible();
+	});
+
+	it("given_anEnteredEarlierDay_when_opened_then_theEarlierWeekIsShown", () => {
+		show(vi.fn(), earlierDayTypedWeek());
+
+		expect(
+			within(
+				screen.getByRole("table", { name: "The days before this week" })
+			).getByRole("columnheader", { name: "Fri, Oct 30" })
+		).toBeInTheDocument();
+		expect(
+			screen.getByRole("button", { name: "Hide earlier days" })
+		).toBeInTheDocument();
+	});
+
+	it("given_earlierDaysEntered_when_hiddenAndSaved_then_theyAreStillSent", async () => {
+		const user = userEvent.setup();
+		const onSave = vi.fn();
+		show(onSave, earlierDayTypedWeek());
+
+		await user.click(screen.getByRole("button", { name: "Hide earlier days" }));
+		await user.click(screen.getByRole("button", { name: "Save days" }));
+
+		expect(onSave).toHaveBeenCalledWith(
+			[
+				{
+					memberProfileId: "p-tan",
+					date: "2026-11-08",
+					kind: "SHIFT",
+					shiftId: "s-night",
+				},
+				{
+					memberProfileId: "p-siti",
+					date: "2026-10-30",
+					kind: "OFF",
+					shiftId: null,
+				},
+			],
+			undefined
+		);
+	});
+
+	it("given_dayToFillInTheEarlierWeek_when_hidden_then_dayToFillIsSunday", async () => {
+		const user = userEvent.setup();
+		show();
+
+		await user.click(
+			screen.getByRole("button", { name: "Show 7 earlier days" })
+		);
+		await user.click(screen.getByRole("button", { name: "Day to fill" }));
+		await user.click(screen.getByRole("option", { name: "Mon, Oct 26" }));
+		await user.click(screen.getByRole("button", { name: "Hide earlier days" }));
+
+		expect(
+			screen.getByRole("button", { name: "Day to fill" })
+		).toHaveTextContent("Sun, Nov 8");
+	});
+
+	it("given_fillEmptyOnAnEarlierDay_when_clicked_then_onlyThatDaysEmptyCellsAreFilled", async () => {
+		const user = userEvent.setup();
+		const onSave = vi.fn();
+		show(onSave);
+
+		await user.click(
+			screen.getByRole("button", { name: "Show 7 earlier days" })
+		);
+		await user.click(screen.getByRole("button", { name: "Day to fill" }));
+		await user.click(screen.getByRole("option", { name: "Mon, Oct 26" }));
+		await user.click(screen.getByRole("button", { name: "Fill empty days" }));
+		await user.click(screen.getByRole("button", { name: "Save days" }));
+
+		expect(onSave).toHaveBeenCalledWith(
+			[
+				{
+					memberProfileId: "p-tan",
+					date: "2026-10-26",
+					kind: "OFF",
+					shiftId: null,
+				},
+				{
+					memberProfileId: "p-tan",
+					date: "2026-11-08",
+					kind: "SHIFT",
+					shiftId: "s-night",
+				},
+				{
+					memberProfileId: "p-siti",
+					date: "2026-10-26",
+					kind: "OFF",
+					shiftId: null,
+				},
+			],
+			undefined
+		);
+	});
+
+	it("given_onlySevenDays_when_opened_then_noShowEarlierButton", () => {
+		show(vi.fn(), onlyTheNearerWeek());
+
+		expect(
+			screen.queryByRole("button", { name: "Show 7 earlier days" })
+		).not.toBeInTheDocument();
+		expect(
+			within(
+				screen.getByRole("table", { name: "The days before this week" })
+			).getByRole("columnheader", { name: "Sun, Nov 8" })
+		).toBeInTheDocument();
 	});
 });

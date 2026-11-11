@@ -118,11 +118,13 @@ their API exists.
   reopened draft whose week has left the offered ones.
 - `stepCompletion.ts` — which steps the Stepper ticks, from the draft's data (saved, frozen) rather than from being
   behind the current step.
-- `startingContext/` — the week before the period (T3-12, the API's ADR-0056). `api.ts` reads and replaces a draft's
-  `starting-days` and reads the `starting-context` frozen at generation; `startingGrid.ts` is the dialog's pure state
-  (entries by member and date, `shiftCellValue`, `fillEmpty`, the save body, `runsByMember` for the roster's badge).
-  `StartingContextSection` owns the query and the save; `StartingContextCallout` is its one line on the Generate
-  step and `StartingDaysDialog` the members-by-days grid. An empty day means "not known", never worked or off.
+- `startingContext/` — the 14 days before the period, the nearer 7 shown first (T3-12, the API's ADR-0056). `api.ts`
+  reads and replaces a draft's `starting-days` and reads the `starting-context` frozen at generation; `startingGrid.ts`
+  is the dialog's pure state (entries by member and date, `shiftCellValue`, `fillEmpty`, the save body, `splitDays`
+  for the nearer and earlier week, `runsByMember` for the roster's badge). `StartingContextSection` owns the query
+  and the save; `StartingContextCallout` is its one line on the Generate step and `StartingDaysDialog` the
+  members-by-days grid, which shows the earlier week on request and still saves it when hidden. An empty day means
+  "not known", never worked or off.
 
 `src/pages/CreateSchedule.tsx` composes the steps and owns the draft, the week's choice, the readiness gates, the
 saves and generation.
