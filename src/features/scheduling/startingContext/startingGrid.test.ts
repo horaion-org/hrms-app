@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
 	carriedWeek,
+	DAYS_BEFORE,
+	EARLIER_WEEK,
 	firstWeek,
+	WEEK_BEFORE,
 } from "@/features/scheduling/startingContext/fixtures";
 import {
 	cellOn,
@@ -61,22 +64,17 @@ describe("startingGrid", () => {
 	});
 
 	it("given_fourteenDays_when_split_then_sevenEarlierAndTheSevenNearerInOrder", () => {
-		const days = Array.from(
-			{ length: 14 },
-			(_, index) => `2026-10-${String(26 + index).padStart(2, "0")}`
-		);
+		const { earlier, nearer } = splitDays(DAYS_BEFORE);
 
-		const { earlier, nearer } = splitDays(days);
-
-		expect(earlier).toEqual(days.slice(0, 7));
-		expect(nearer).toEqual(days.slice(7));
+		expect(earlier).toEqual(EARLIER_WEEK);
+		expect(nearer).toEqual(WEEK_BEFORE);
 	});
 
 	it("given_sevenDays_when_split_then_noEarlierDays", () => {
-		const { earlier, nearer } = splitDays(firstWeek().days);
+		const { earlier, nearer } = splitDays(WEEK_BEFORE);
 
 		expect(earlier).toEqual([]);
-		expect(nearer).toEqual(firstWeek().days);
+		expect(nearer).toEqual(WEEK_BEFORE);
 	});
 
 	it("given_entries_when_askedForEnteredDays_then_onlyNonEmptyValuesOnThoseDatesCount", () => {
@@ -92,7 +90,7 @@ describe("startingGrid", () => {
 		const tan = firstWeek().members[0]!;
 
 		expect(cellOn(tan, "2026-11-08")?.shiftName).toBe("Night");
-		expect(cellOn(tan, "2026-10-30")).toBeUndefined();
+		expect(cellOn(tan, "2026-10-25")).toBeUndefined();
 	});
 
 	it("given_noPreviousRoster_when_described_then_none", () => {

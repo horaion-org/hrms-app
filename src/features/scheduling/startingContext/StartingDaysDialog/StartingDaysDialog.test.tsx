@@ -12,7 +12,6 @@ import {
 import {
 	carriedWeek,
 	firstWeek,
-	rosterOffCell,
 } from "@/features/scheduling/startingContext/fixtures";
 import { StartingDaysDialog } from "@/features/scheduling/startingContext/StartingDaysDialog";
 
@@ -52,10 +51,9 @@ describe("StartingDaysDialog", () => {
 
 	it("given_aLockedDayOfAKindThisBuildDoesNotKnow_when_shown_then_readsUnknown", () => {
 		const week = carriedWeek();
-		week.members[0]!.cells[6] = {
-			...rosterOffCell("2026-11-08"),
-			kind: "UNKNOWN",
-		};
+		week.members[0]!.cells = week.members[0]!.cells.map((cell) =>
+			cell.date === "2026-11-08" ? { ...cell, kind: "UNKNOWN" } : cell
+		);
 		show(vi.fn(), week);
 
 		const tan = within(
