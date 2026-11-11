@@ -24,6 +24,7 @@ describe("widerOf", () => {
 		["sm", "md", "md"],
 		["xl", "lg", "xl"],
 		["md", "md", "md"],
+		["2xl", "xl", "2xl"],
 	])("of %s and %s is %s", (first, second, wider) => {
 		expect(widerOf(first, second)).toBe(wider);
 	});
@@ -114,6 +115,25 @@ describe("hiddenSortBandsOf", () => {
 			]
 		);
 		expect(regularFrom).toBe("hidden lg:inline-flex");
+	});
+
+	it("keeps a column hidden below 2xl in the menu from md until it shows", () => {
+		const { bands, regularFrom } = hiddenSortBandsOf(
+			[
+				naming,
+				{ id: "branch", hideBelow: "md", sortValue: sortable },
+				{ id: "status", hideBelow: "2xl", sortValue: sortable },
+			],
+			naming
+		);
+
+		expect(bands.map((band) => [band.shownClasses, ids(band.columns)])).toEqual(
+			[
+				["inline-flex md:hidden", ["name", "branch", "status"]],
+				["hidden md:inline-flex 2xl:hidden", ["name", "status"]],
+			]
+		);
+		expect(regularFrom).toBe("hidden 2xl:inline-flex");
 	});
 
 	it("offers only the hidden columns when the naming column does not sort", () => {

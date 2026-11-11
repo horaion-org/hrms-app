@@ -6,7 +6,7 @@
 import type { ColumnPin } from "@/components/ui/DataTable/columnPinning";
 
 /** A breakpoint below which a column is left out. */
-export type ColumnBreakpoint = "sm" | "md" | "lg" | "xl";
+export type ColumnBreakpoint = "sm" | "md" | "lg" | "xl" | "2xl";
 
 /** What the rules read of a column. */
 type ResponsiveColumn = {
@@ -27,6 +27,7 @@ export const hiddenBelowClasses: Record<ColumnBreakpoint, string> = {
 	md: "hidden md:table-cell",
 	lg: "hidden lg:table-cell",
 	xl: "hidden xl:table-cell",
+	"2xl": "hidden 2xl:table-cell",
 };
 
 /** Shown only below the breakpoint: while a column hidden there is out of the table. */
@@ -35,6 +36,7 @@ export const shownBelowClasses: Record<ColumnBreakpoint, string> = {
 	md: "md:hidden",
 	lg: "lg:hidden",
 	xl: "xl:hidden",
+	"2xl": "2xl:hidden",
 };
 
 /** Shown from `from` up to (not including) `below`; `from` left out means from the smallest screen. */
@@ -43,19 +45,31 @@ const shownBetweenClasses: Record<string, string> = {
 	"-md": "inline-flex md:hidden",
 	"-lg": "inline-flex lg:hidden",
 	"-xl": "inline-flex xl:hidden",
+	"-2xl": "inline-flex 2xl:hidden",
 	"sm-md": "hidden sm:inline-flex md:hidden",
 	"sm-lg": "hidden sm:inline-flex lg:hidden",
 	"sm-xl": "hidden sm:inline-flex xl:hidden",
+	"sm-2xl": "hidden sm:inline-flex 2xl:hidden",
 	"md-lg": "hidden md:inline-flex lg:hidden",
 	"md-xl": "hidden md:inline-flex xl:hidden",
+	"md-2xl": "hidden md:inline-flex 2xl:hidden",
 	"lg-xl": "hidden lg:inline-flex xl:hidden",
+	"lg-2xl": "hidden lg:inline-flex 2xl:hidden",
+	"xl-2xl": "hidden xl:inline-flex 2xl:hidden",
 	"sm-": "hidden sm:inline-flex",
 	"md-": "hidden md:inline-flex",
 	"lg-": "hidden lg:inline-flex",
 	"xl-": "hidden xl:inline-flex",
+	"2xl-": "hidden 2xl:inline-flex",
 };
 
-const BREAKPOINT_ORDER: Array<ColumnBreakpoint> = ["sm", "md", "lg", "xl"];
+const BREAKPOINT_ORDER: Array<ColumnBreakpoint> = [
+	"sm",
+	"md",
+	"lg",
+	"xl",
+	"2xl",
+];
 
 /** The wider of two breakpoints. */
 export const widerOf = (
