@@ -306,6 +306,7 @@ describe("day notes", () => {
 		day: "2026-11-02",
 		off: false,
 		offReason: null,
+		dayType: null,
 		shift,
 		jobTitle: { jobTitleId: "j1", name: "Clerk" },
 	} as const;

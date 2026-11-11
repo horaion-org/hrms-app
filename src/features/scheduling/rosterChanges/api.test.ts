@@ -51,6 +51,80 @@ describe("roster changes client", () => {
 		expect(parsed.ruleCheck).toBe("NOT_CHECKED");
 	});
 
+	it("reads an absent cell, a cell's day type and a check's day type, and a kind it doesn't know as OFF", async () => {
+		const [cell] = rosterChangePreviewFixture().cells;
+		stubApi({
+			[`POST ${CHANGES}/preview`]: {
+				status: 200,
+				body: envelope(
+					rosterChangePreviewFixture({
+						cells: [
+							{
+								...cell!,
+								before: {
+									kind: "ABSENT",
+									dayType: null,
+									shift: null,
+									jobTitle: null,
+								},
+								after: {
+									kind: "SOMETHING_NEW" as never,
+									dayType: "REST",
+									shift: null,
+									jobTitle: null,
+								},
+							},
+						],
+						checks: [
+							rosterCheckFixture({
+								code: "WORKS_ON_DAY_OFF",
+								dayType: "PUBLIC_HOLIDAY_OFF",
+							}),
+						],
+					})
+				),
+			},
+		});
+
+		const parsed = await previewRosterChange("c-1", UNIT, "s-1", BODY);
+
+		expect(parsed.cells[0]?.before).toMatchObject({
+			kind: "ABSENT",
+			dayType: null,
+		});
+		expect(parsed.cells[0]?.after).toMatchObject({
+			kind: "OFF",
+			dayType: "REST",
+		});
+		expect(parsed.checks[0]?.dayType).toBe("PUBLIC_HOLIDAY_OFF");
+	});
+
+	it("reads a cell and a check without a day type, from an older API, as null", async () => {
+		const [cell] = rosterChangePreviewFixture().cells;
+		stubApi({
+			[`POST ${CHANGES}/preview`]: {
+				status: 200,
+				body: envelope(
+					rosterChangePreviewFixture({
+						// undefined leaves the key out of the JSON.
+						cells: [
+							{
+								...cell!,
+								after: { ...cell!.after, dayType: undefined as never },
+							},
+						],
+						checks: [rosterCheckFixture({ dayType: undefined as never })],
+					})
+				),
+			},
+		});
+
+		const parsed = await previewRosterChange("c-1", UNIT, "s-1", BODY);
+
+		expect(parsed.cells[0]?.after.dayType).toBeNull();
+		expect(parsed.checks[0]?.dayType).toBeNull();
+	});
+
 	it("applies a change and undoes it by the revision it produced", async () => {
 		const change = rosterChangeFixture();
 		const calls = stubApi({

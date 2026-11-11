@@ -616,7 +616,10 @@ export const fetchScheduleConstraints = (
 		{ signal }
 	);
 
-const assignmentOffReasonSchema = z.enum(["OFF", "LEAVE"]);
+// A reason a newer API adds reads as OFF: the day shows as a non-working day.
+const assignmentOffReasonSchema = z
+	.enum(["OFF", "LEAVE", "ABSENT"])
+	.catch("OFF");
 const rosterDayFlagSchema = z
 	.enum([
 		"LEAVE_REQUESTED",
@@ -627,7 +630,11 @@ const rosterDayFlagSchema = z
 	])
 	.catch("UNKNOWN");
 
-/** Why a member is off on a day: a plain day off, or approved leave. */
+/**
+ * Why a member is off on a day: a non-working day (its type is the day's
+ * `dayType`), approved leave, or absent (a day without a shift and without a
+ * type, such as a part-timer's).
+ */
 export type AssignmentOffReason = z.infer<typeof assignmentOffReasonSchema>;
 
 /** A frozen shift as a roster day names it. */
@@ -648,15 +655,27 @@ const rosterJobTitleSchema = z.object({
 	name: z.string(),
 });
 
-// A kind a newer API adds reads as OFF: the day shows as a plain day off.
-const rosterCellKindSchema = z.enum(["WORK", "OFF", "LEAVE"]).catch("OFF");
+// A kind a newer API adds reads as OFF: the day shows as a non-working day.
+const rosterCellKindSchema = z
+	.enum(["WORK", "OFF", "LEAVE", "ABSENT"])
+	.catch("OFF");
+
+/**
+ * A day's type, such as a day off or a rest day: on a non-working day, the
+ * kind of day it is; on a worked day, the type it had before a shift was put
+ * on it. Any code may arrive, since types are added over time; null when the
+ * day has none.
+ */
+const dayTypeSchema = z.string().nullable().catch(null);
 
 /**
  * What a roster day holds before or after a hand change: a shift worked as a
- * job title, a day off, or leave (only for someone who may read leave).
+ * job title, a non-working day of its type, leave (only for someone who may
+ * read leave), or absent.
  */
 export const rosterCellSchema = z.object({
 	kind: rosterCellKindSchema,
+	dayType: dayTypeSchema,
 	shift: rosterShiftSchema.nullable(),
 	jobTitle: rosterJobTitleSchema.nullable(),
 });
@@ -706,9 +725,12 @@ export const scheduleAssignmentSchema = z.object({
 	off: z.boolean(),
 	/**
 	 * Why they are off, or null on a working day. Leave reads LEAVE only for
-	 * someone who may read leave at the Department; anyone else gets OFF.
+	 * someone who may read leave at the Department; anyone else gets OFF with
+	 * the row's day type, or ABSENT on a part-timer's row.
 	 */
 	offReason: assignmentOffReasonSchema.nullable(),
+	/** The day's type; see `dayTypeSchema`. */
+	dayType: dayTypeSchema,
 	/**
 	 * On a LEAVE day, the approved request's leave type ("Sick leave"); null
 	 * when none covers the day any more. Absent from an older API.

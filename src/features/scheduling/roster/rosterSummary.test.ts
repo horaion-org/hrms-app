@@ -152,7 +152,12 @@ describe("changedDays", () => {
 			appliedAt: "2026-10-10T09:00:00Z",
 			appliedBy: null,
 			remark: null,
-			before: { kind: "OFF" as const, shift: null, jobTitle: null },
+			before: {
+				kind: "OFF" as const,
+				dayType: "OFF",
+				shift: null,
+				jobTitle: null,
+			},
 		};
 		const rows = scheduleAssignmentsFixture().map((row) =>
 			row.day === "2026-10-13" ||

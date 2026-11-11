@@ -7,7 +7,10 @@ import type {
 
 /** What a roster row holds now, in the shape a change's "before" has. Pure. */
 export const assignmentCell = (
-	assignment: Pick<ScheduleAssignment, "offReason" | "shift" | "jobTitle">
+	assignment: Pick<
+		ScheduleAssignment,
+		"offReason" | "dayType" | "shift" | "jobTitle"
+	>
 ): RosterCellValue => ({
 	kind:
 		assignment.offReason === "LEAVE"
@@ -15,6 +18,7 @@ export const assignmentCell = (
 			: assignment.shift === null
 				? "OFF"
 				: "WORK",
+	dayType: assignment.dayType,
 	shift: assignment.shift,
 	jobTitle: assignment.jobTitle,
 });

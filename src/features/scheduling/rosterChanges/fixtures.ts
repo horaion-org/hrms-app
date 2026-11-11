@@ -16,6 +16,7 @@ import type {
 
 const FRONT_DESK_AM: RosterCellValue = {
 	kind: "WORK",
+	dayType: null,
 	shift: {
 		shiftId: "front-desk-am-copy",
 		name: "Front Desk AM",
@@ -29,7 +30,12 @@ const FRONT_DESK_AM: RosterCellValue = {
 	jobTitle: { jobTitleId: "front-desk-lead", name: "Front Desk Lead" },
 };
 
-const DAY_OFF: RosterCellValue = { kind: "OFF", shift: null, jobTitle: null };
+const DAY_OFF: RosterCellValue = {
+	kind: "OFF",
+	dayType: "OFF",
+	shift: null,
+	jobTitle: null,
+};
 
 /** A check; `overrides` set it apart. */
 export const rosterCheckFixture = (
@@ -42,6 +48,7 @@ export const rosterCheckFixture = (
 	shiftId: "front-desk-am-copy",
 	countBefore: 2,
 	countAfter: 1,
+	dayType: null,
 	...overrides,
 });
 
@@ -75,6 +82,7 @@ export const editedAssignmentFixture = (
 	...assignment,
 	off: true,
 	offReason: "OFF",
+	dayType: "OFF",
 	shift: null,
 	jobTitle: null,
 	lastChange: {

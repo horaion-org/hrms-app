@@ -86,7 +86,12 @@ describe("changedDayItems", () => {
 						appliedAt: "2026-10-10T09:00:00Z",
 						appliedBy: { membershipId: "m-9", displayName: "Moses Lee" },
 						remark: null,
-						before: { kind: "OFF", shift: null, jobTitle: null },
+						before: {
+							kind: "OFF",
+							dayType: "OFF",
+							shift: null,
+							jobTitle: null,
+						},
 					},
 				},
 			],

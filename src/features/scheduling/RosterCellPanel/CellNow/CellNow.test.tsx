@@ -63,7 +63,7 @@ describe("CellNow", () => {
 					changeId: "c-1",
 					appliedAt: "2026-10-10T09:00:00Z",
 					appliedBy: { membershipId: "m-9", displayName: "Dana Lim" },
-					before: { kind: "OFF", shift: null, jobTitle: null },
+					before: { kind: "OFF", dayType: "OFF", shift: null, jobTitle: null },
 					remark: "Covering for Ben",
 					reason: null,
 				},

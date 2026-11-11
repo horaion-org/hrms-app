@@ -108,6 +108,7 @@ export const CellChoices = ({
 							label: `${row.member?.displayName ?? ""} · ${rosterCellText(
 								{
 									kind: row.shift === null ? "OFF" : "WORK",
+									dayType: row.dayType,
 									shift: row.shift,
 									jobTitle: row.jobTitle,
 								},
