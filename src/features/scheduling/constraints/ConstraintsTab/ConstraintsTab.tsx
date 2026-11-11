@@ -3,6 +3,7 @@ import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { DepartmentPath } from "@/common/companyPath";
 import type { FunctionComponent } from "@/common/types";
+import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Tab, TabList, Tabs } from "@/components/ui/Tabs";
 import { Toast } from "@/components/ui/Toast";
@@ -31,7 +32,7 @@ import { DepartmentFilter } from "@/features/workspace/DepartmentFilter";
 import { departmentChips } from "@/features/workspace/filterChips";
 import type { PermissionKey } from "@/features/workspace/permissionKeys";
 import { retry } from "@/features/workspace/retry";
-import { departmentScope } from "@/features/workspace/scopes";
+import { COMPANY_SCOPE, departmentScope } from "@/features/workspace/scopes";
 import { departmentChoices } from "@/features/workspace/unitChoices";
 import {
 	offersDepartmentChoice,
@@ -255,6 +256,18 @@ export const ConstraintsTab = ({
 				createLabel={t("scheduling.constraints.add")}
 				search={search}
 				searchLabel={t(`${key}.search`)}
+				actions={
+					// Where the work policy's rows are set; only for those who may read it there.
+					access.can("scheduling_policy:read", COMPANY_SCOPE) && (
+						<Button
+							search={{ section: "scheduling" }}
+							to="/settings"
+							variant="textlink"
+						>
+							{t(`${key}.openWorkPolicy`)}
+						</Button>
+					)
+				}
 				filterFields={
 					offersDepartmentChoice(units) && (
 						<DepartmentFilter selection={units} onChange={onDepartmentChange} />
