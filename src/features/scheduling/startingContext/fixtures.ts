@@ -124,3 +124,23 @@ export const carriedWeek = (): StartingDays => ({
 		},
 	],
 });
+
+/** The first roster with Siti's Friday of the earlier week typed as a day off. */
+export const earlierDayTypedWeek = (): StartingDays => {
+	const week = firstWeek();
+	return {
+		...week,
+		members: week.members.map((member) =>
+			member.memberProfileId === "p-siti"
+				? {
+						...member,
+						cells: member.cells.map((cell) =>
+							cell.date === "2026-10-30"
+								? { ...unknownCell(cell.date), kind: "OFF", source: "ENTERED" }
+								: cell
+						),
+					}
+				: member
+		),
+	};
+};
