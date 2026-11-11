@@ -4142,7 +4142,10 @@
 			"constraintCount_one": "{{count}} constraint",
 			"constraintCount_other": "{{count}} constraints",
 			"editShifts": "Edit shifts",
-			"editConstraints": "Edit constraints"
+			"editConstraints": "Edit constraints",
+			"choose": "Choose for this week",
+			"view": "View",
+			"everything": "This week uses every shift and constraint of {{department}}."
 		}
 	},
 	"colourSwatchPicker": {

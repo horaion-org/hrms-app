@@ -91,6 +91,23 @@ const DRAFT_SETUP = {
 	allowOpenShifts: false,
 };
 
+/** Front Office's live shifts as a new draft lists them: every shift its active constraints name. */
+const LIVE_SHIFT_ROWS = [
+	"front-desk-am",
+	"breakfast-prep",
+	"lunch-rush",
+	"closing-crew",
+].map((shiftId) =>
+	departmentShiftFixture(
+		SHIFT_FIXTURES.find((shift) => shift.shiftId === shiftId)
+	)
+);
+/** Front Office's ACTIVE constraints, as everything chosen ticks them. */
+const ACTIVE_CONSTRAINT_IDS = CONSTRAINT_FIXTURES.filter(
+	(constraint) => constraint.status === "ACTIVE"
+).map((constraint) => constraint.constraintId);
+const WEEK_LINE = "Uses all 4 shifts and 5 constraints of Front Office.";
+
 type Call = { method: string; path: string; search: string; body: unknown };
 
 let app: OpenedApp | undefined;
@@ -330,9 +347,11 @@ describe("Create Schedule: opening and setup", () => {
 			[`POST ${SCHEDULES}`]: reply(created, 201),
 			[`GET ${SCHEDULE}`]: reply(created),
 			[`GET ${SCHEDULE_SHIFTS}`]: reply([]),
+			[`GET ${LIVE_SHIFTS}`]: reply(LIVE_SHIFT_ROWS),
 		});
 
 		await fillSetup(user);
+		await screen.findByText(WEEK_LINE);
 		await user.click(next());
 
 		await screen.findByRole("region", { name: "Select shifts" });
@@ -345,8 +364,9 @@ describe("Create Schedule: opening and setup", () => {
 			{
 				...DRAFT_SETUP,
 				periodStart: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/) as string,
-				includedShiftIds: [],
-				includedConstraintIds: [],
+				// A new draft uses everything until its week is chosen.
+				includedShiftIds: LIVE_SHIFT_ROWS.map((shift) => shift.shiftId),
+				includedConstraintIds: ACTIVE_CONSTRAINT_IDS,
 			},
 		]);
 		expect(await screen.findByText("No shifts yet.")).toBeVisible();
@@ -394,6 +414,108 @@ describe("Create Schedule: opening and setup", () => {
 			},
 		]);
 		expect(sent(calls, `POST ${SCHEDULES}`)).toEqual([]);
+	});
+});
+
+describe("Create Schedule: the week's choice", () => {
+	const SETUP_OF_S1 =
+		"/scheduling/new?step=setup&scheduleId=s-1&departmentId=d-1";
+	const weekLine = (text: string): Promise<HTMLElement> =>
+		screen.findByText(text, { exact: false });
+
+	it("given_aNewDraftsDepartment_when_chosen_then_saysItUsesEverything", async () => {
+		const user = userEvent.setup();
+		await open("/scheduling/new", {
+			[`GET ${LIVE_SHIFTS}`]: reply(LIVE_SHIFT_ROWS),
+		});
+
+		await fillSetup(user);
+
+		expect(await weekLine(WEEK_LINE)).toBeVisible();
+		expect(
+			screen.getByRole("button", { name: "Choose for this week" })
+		).toBeVisible();
+	});
+
+	it("given_aShiftLeftOut_when_theWeekIsChosen_then_theLineCountsWhatIsUsedAndNextPostsIt", async () => {
+		const user = userEvent.setup();
+		const created = scheduleFixture();
+		const { calls } = await open("/scheduling/new", {
+			[`GET ${LIVE_SHIFTS}`]: reply(LIVE_SHIFT_ROWS),
+			[`POST ${SCHEDULES}`]: reply(created, 201),
+		});
+		await fillSetup(user);
+		await user.click(
+			await screen.findByRole("button", { name: "Choose for this week" })
+		);
+		const dialog = await screen.findByRole("dialog", {
+			name: /^What .+ uses$/,
+		});
+
+		await user.click(
+			within(dialog).getByRole("checkbox", { name: "Select Lunch Rush" })
+		);
+		await user.click(
+			within(dialog).getByRole("button", { name: "Use for week" })
+		);
+
+		expect(
+			await weekLine("Uses 3 of 4 shifts and 4 of 5 constraints of Front Office.")
+		).toBeVisible();
+		await user.click(next());
+		await waitFor(() => {
+			expect(sent(calls, `POST ${SCHEDULES}`)).toHaveLength(1);
+		});
+		expect(sent(calls, `POST ${SCHEDULES}`)[0]).toMatchObject({
+			includedShiftIds: ["front-desk-am", "breakfast-prep", "closing-crew"],
+			includedConstraintIds: ACTIVE_CONSTRAINT_IDS.filter(
+				(constraintId) => constraintId !== "lunch-stand-ins"
+			),
+		});
+	});
+
+	it("given_aGeneratedSchedule_when_itsSetupIsViewed_then_saysWhatItWasGeneratedWithAndViewIsReadOnly", async () => {
+		const user = userEvent.setup();
+		await open(SETUP_OF_S1, {
+			[`GET ${SCHEDULE}`]: reply(
+				generatedScheduleFixture({ status: "GENERATED" })
+			),
+			[`GET ${SCHEDULE_SHIFTS}`]: reply(frozenShiftsFixture()),
+			[`GET ${SCHEDULE_CONSTRAINTS}`]: reply(frozenConstraintsFixture()),
+		});
+
+		expect(
+			await weekLine("Generated with 4 shifts and 3 constraints.")
+		).toBeVisible();
+		await user.click(screen.getByRole("button", { name: "View" }));
+
+		const dialog = await screen.findByRole("dialog", {
+			name: /^What .+ used$/,
+		});
+		expect(within(dialog).queryByRole("checkbox")).toBeNull();
+		expect(
+			within(dialog).queryByRole("button", { name: "Use for week" })
+		).toBeNull();
+	});
+
+	it("given_listsThePersonMayNotRead_when_aDepartmentIsChosen_then_saysItUsesEverythingWithoutAChoice", async () => {
+		const user = userEvent.setup();
+		await open("/scheduling/new", {}, [
+			"schedule:read",
+			"schedule:create",
+			"constraint:read",
+		]);
+
+		await fillSetup(user);
+
+		expect(
+			await weekLine(
+				"This week uses every shift and constraint of Front Office."
+			)
+		).toBeVisible();
+		expect(
+			screen.queryByRole("button", { name: "Choose for this week" })
+		).toBeNull();
 	});
 });
 

@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Navigate, useNavigate, useSearch } from "@tanstack/react-router";
-import { useId, useReducer, useState } from "react";
+import { useCallback, useId, useReducer, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
 import { formattingLocale } from "@/common/formattingLocale";
@@ -15,6 +15,7 @@ import {
 import { Stepper, StepperStep } from "@/components/ui/Stepper";
 import { Toast } from "@/components/ui/Toast";
 import { placeOf } from "@/features/organisation/assignmentTargets";
+import { constraintsQuery } from "@/features/scheduling/constraints/api";
 import { ConstraintDialog } from "@/features/scheduling/constraints/ConstraintDialog";
 import { deleteConstraintRefusal } from "@/features/scheduling/constraints/constraintRefusal";
 import { ConstraintsStep } from "@/features/scheduling/constraints/ConstraintsStep";
@@ -73,7 +74,10 @@ import {
 } from "@/features/scheduling/ScheduleSetupStep";
 import { withSchedulingNotice } from "@/features/scheduling/schedulingNotice";
 import type { ScheduleSetupValues } from "@/features/scheduling/setupSchema";
-import { groupsOf } from "@/features/scheduling/shifts/api";
+import {
+	departmentShiftsQuery,
+	groupsOf,
+} from "@/features/scheduling/shifts/api";
 import { ShiftDialog } from "@/features/scheduling/shifts/ShiftDialog";
 import { deleteShiftRefusal } from "@/features/scheduling/shifts/shiftRefusal";
 import { ShiftsStep } from "@/features/scheduling/shifts/ShiftsStep";
@@ -82,6 +86,14 @@ import { useShiftRoleOptions } from "@/features/scheduling/shifts/useShiftRoleOp
 import { StepActions } from "@/features/scheduling/StepActions";
 import { stepCompletion } from "@/features/scheduling/stepCompletion";
 import { SCHEDULE_STEPS } from "@/features/scheduling/steps";
+import {
+	allOf,
+	usesLineOf,
+	usesSummary,
+	type WeekChoiceIds,
+} from "@/features/scheduling/weekChoice";
+import { WeekChoiceDialog } from "@/features/scheduling/WeekChoiceDialog";
+import { WeekChoiceSummary } from "@/features/scheduling/WeekChoiceSummary";
 import { workspaceQuery } from "@/features/workspace/api";
 import {
 	SCHEDULE_CREATE_KEYS,
@@ -94,6 +106,7 @@ import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 import { departmentScope } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
+import { departmentChoices } from "@/features/workspace/unitChoices";
 
 /** What saving a schedule sends: its setup and the ticked shifts and constraints, each the whole set. */
 const bodyOf = (
@@ -273,6 +286,62 @@ export const CreateSchedule = (): FunctionComponent => {
 		draft,
 		constraints.status === "ready" ? constraints.items : undefined
 	);
+	// The department and week chosen on Setup, as the form holds them before they are saved.
+	const [setupDepartmentId, setSetupDepartmentId] = useState("");
+	const [setupPeriodStart, setSetupPeriodStart] = useState("");
+	// A new draft's week starts again from everything when its department changes.
+	const chooseSetupDepartment = useCallback(
+		(departmentId: string): void => {
+			if (departmentId === setupDepartmentId) return;
+			setSetupDepartmentId(departmentId);
+			if (!saved) dispatch({ type: "departmentChosen" });
+		},
+		[setupDepartmentId, saved, dispatch]
+	);
+	// A new draft's department, where schedules may be created; a saved draft names its own.
+	const setupChoice =
+		!saved && workspace.data && setupDepartmentId
+			? departmentChoices(workspace.data, companyId, SCHEDULE_CREATE_KEYS, {
+					activeOnly: true,
+				}).find((choice) => choice.departmentId === setupDepartmentId)
+			: undefined;
+	const setupUnit = setupChoice && {
+		branchId: setupChoice.branchId,
+		departmentId: setupChoice.departmentId,
+	};
+	const readsNewShifts =
+		setupUnit !== undefined &&
+		access.can("shift:read", departmentScope(setupUnit.departmentId));
+	const readsNewConstraints =
+		setupUnit !== undefined &&
+		access.can("constraint:read", departmentScope(setupUnit.departmentId));
+	// A new draft lists its department's live shifts and constraints; a saved one keeps its own lists.
+	const newShifts = useQuery(
+		departmentShiftsQuery(companyId, setupUnit, readsNewShifts)
+	);
+	const newConstraints = useQuery(
+		constraintsQuery(companyId, setupUnit, readsNewConstraints)
+	);
+	const weekDepartmentName = saved?.departmentName ?? setupChoice?.name;
+	const weekShifts = saved
+		? shifts.status === "ready"
+			? shifts.items
+			: undefined
+		: newShifts.data;
+	const weekConstraints = saved
+		? constraints.status === "ready"
+			? constraints.items
+			: undefined
+		: newConstraints.data;
+	const weekListsHidden = saved
+		? shifts.status === "hidden" || constraints.status === "hidden"
+		: setupUnit !== undefined && (!readsNewShifts || !readsNewConstraints);
+	// Everything until the week is chosen; a generated schedule used all of its frozen copies.
+	const weekChoice: WeekChoiceIds =
+		draft.weekChosen && !frozen
+			? { shiftIds: ticked, constraintIds: tickedConstraints }
+			: allOf(weekShifts ?? [], weekConstraints ?? []);
+	const [choosingWeek, setChoosingWeek] = useState(false);
 	const [shiftDialog, setShiftDialog] = useState<{
 		editing?: ScheduleShift;
 	} | null>(null);
@@ -440,7 +509,7 @@ export const CreateSchedule = (): FunctionComponent => {
 			if (!target) return undefined;
 			const created = await scheduleActions.create.mutateAsync({
 				unit: target,
-				body: bodyOf(setup, [], []),
+				body: bodyOf(setup, weekChoice.shiftIds, weekChoice.constraintIds),
 			});
 			dispatch({ type: "scheduleLoaded", schedule: created });
 			goTo(1, {
@@ -550,6 +619,41 @@ export const CreateSchedule = (): FunctionComponent => {
 			t
 		),
 	};
+	// The week the Setup form holds, so the dialog names it before it is saved.
+	const weekPeriodLabel = formatPeriod(
+		periodStartingOn(setupPeriodStart || period.start),
+		formattingLocale(i18n)
+	);
+	// What the week uses, once its department and both lists are known; hidden lists can't be chosen from.
+	const weekLine =
+		weekDepartmentName === undefined
+			? undefined
+			: weekListsHidden
+				? t("scheduling.week.everything", { department: weekDepartmentName })
+				: weekShifts && weekConstraints
+					? usesLineOf(
+							t,
+							usesSummary(weekChoice, weekShifts, weekConstraints),
+							weekDepartmentName,
+							frozen
+						)
+					: undefined;
+	const weekActionLabel = weekListsHidden
+		? undefined
+		: frozen
+			? t("scheduling.week.view")
+			: saved === undefined || canSave
+				? t("scheduling.week.choose")
+				: undefined;
+	const weekSummary = weekLine && (
+		<WeekChoiceSummary
+			actionLabel={weekActionLabel}
+			line={weekLine}
+			onAction={() => {
+				setChoosingWeek(true);
+			}}
+		/>
+	);
 	// A frozen schedule, or a draft the person may not change, is shown as it is.
 	const notice = frozen
 		? t(frozenNoticeKey(saved.status))
@@ -618,10 +722,13 @@ export const CreateSchedule = (): FunctionComponent => {
 						branchId={headerBranchId}
 						companyId={companyId}
 						defaultValues={setupDefaults}
+						departmentExtras={weekSummary}
 						formId={setupFormId}
 						lockedDepartment={lockedDepartment}
 						periods={periods}
 						readOnly={readOnly}
+						onDepartmentChange={chooseSetupDepartment}
+						onPeriodChange={setSetupPeriodStart}
 						onSubmit={submitSetup}
 					/>
 				)}
@@ -798,6 +905,23 @@ export const CreateSchedule = (): FunctionComponent => {
 									: "scheduling.constraints.added"
 							)
 						);
+					}}
+				/>
+			)}
+			{choosingWeek && weekShifts && weekConstraints && weekDepartmentName && (
+				<WeekChoiceDialog
+					constraints={weekConstraints}
+					departmentName={weekDepartmentName}
+					periodLabel={weekPeriodLabel}
+					readOnly={frozen}
+					shifts={weekShifts}
+					value={weekChoice}
+					onApply={(choice) => {
+						dispatch({ type: "weekChosen", ...choice });
+						setChoosingWeek(false);
+					}}
+					onClose={() => {
+						setChoosingWeek(false);
 					}}
 				/>
 			)}

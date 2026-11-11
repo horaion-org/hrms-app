@@ -3964,7 +3964,10 @@
 			"constraintCount_one": "{{count}} restricción",
 			"constraintCount_other": "{{count}} restricciones",
 			"editShifts": "Editar turnos",
-			"editConstraints": "Editar restricciones"
+			"editConstraints": "Editar restricciones",
+			"choose": "Elegir para esta semana",
+			"view": "Ver",
+			"everything": "Esta semana usa todos los turnos y restricciones de {{department}}."
 		}
 	},
 	"workspace": {

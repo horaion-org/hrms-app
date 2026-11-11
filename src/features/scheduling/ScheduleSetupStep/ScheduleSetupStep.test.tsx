@@ -169,6 +169,19 @@ describe("ScheduleSetupStep", () => {
 		});
 	});
 
+	it("given_aWeekChosen_when_itChanges_then_tellsThePage", async () => {
+		const user = userEvent.setup();
+		const onPeriodChange = vi.fn();
+		render(<Harness onPeriodChange={onPeriodChange} />);
+
+		await user.click(screen.getByRole("button", { name: /Schedule period/ }));
+		await user.click(await screen.findByRole("option", { name: /19.+25/ }));
+
+		await vi.waitFor(() => {
+			expect(onPeriodChange).toHaveBeenLastCalledWith("2026-10-19");
+		});
+	});
+
 	it("given_departmentExtras_when_rendered_then_showsThemAfterTheDepartmentAndName", () => {
 		render(
 			<Harness

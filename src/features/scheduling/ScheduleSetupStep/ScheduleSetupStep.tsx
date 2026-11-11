@@ -65,6 +65,8 @@ export type ScheduleSetupStepProps = {
 	readOnly?: boolean;
 	/** Told the department chosen, whenever it changes, so the page can follow it. */
 	onDepartmentChange?: (departmentId: string) => void;
+	/** Told the week chosen, whenever it changes, so the page can name it before the setup is saved. */
+	onPeriodChange?: (periodStart: string) => void;
 	/** Shown right after the department and name, e.g. what the week uses of the department. */
 	departmentExtras?: ReactNode;
 	/** Saves the setup; what it answers lands on the refused fields. */
@@ -104,6 +106,7 @@ export const ScheduleSetupStep = ({
 	branchId,
 	readOnly = false,
 	onDepartmentChange,
+	onPeriodChange,
 	departmentExtras,
 	onSubmit,
 	className,
@@ -131,6 +134,9 @@ export const ScheduleSetupStep = ({
 	useEffect(() => {
 		onDepartmentChange?.(departmentId);
 	}, [departmentId, onDepartmentChange]);
+	useEffect(() => {
+		onPeriodChange?.(periodStart);
+	}, [periodStart, onPeriodChange]);
 	// Only where availability may be read: the workspace offers the department under its key.
 	const readinessUnit =
 		!readOnly && workspace.data && departmentId
