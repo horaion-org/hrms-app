@@ -1,10 +1,12 @@
 # Scheduling
 
-The Create Schedule steps at `/scheduling/new` (Setup, Shifts, Constraints, Forecast, Generate). Completing Setup
-creates the schedule on the API as a DRAFT, and from then on the URL names it with its department
-(`?step=…&scheduleId=…&departmentId=…`), so a refresh or a link reopens the same draft. Shifts and constraints belong
-to the department: one live set of each per department, changed under their own `shift` and `constraint` keys and
-routes, and a draft only remembers which of them are ticked. Generating a draft freezes the ticked shifts and
+The Create Schedule steps at `/scheduling/new` (Setup, Forecast, Generate). Completing Setup creates the schedule on
+the API as a DRAFT, and from then on the URL names it with its department (`?step=…&scheduleId=…&departmentId=…`), so
+a refresh or a link reopens the same draft. Shifts and constraints belong to the department: one live set of each per
+department, changed on the Scheduling page's Shifts and Constraints tabs under their own `shift` and `constraint` keys
+and routes, and a draft only remembers which of them its week uses (everything, unless the manager leaves something
+out on Setup). A department that can't roster anyone (the API's readiness read, ADR-0071) stops the wizard at Setup
+and Generate, with a link to the tab that fixes it and a way back. Generating a draft freezes the ticked shifts and
 constraints into it; a generated schedule always shows the shifts and constraints it was generated with. The
 contracts are §2.4 of the API's `docs/implementation/2026-10-11-shifts-module.md` and §4.5 of its
 `docs/implementation/2026-10-12-scheduling-constraints.md` (ADR-0050). Allocations and demand stay in the page until
@@ -39,9 +41,6 @@ their API exists.
   a group is a plain name), colour (`SwatchPicker`), start and end time on the 30-minute grid, the unpaid break in minutes with the
   paid hours worked out beneath it, the built-in overtime tick, days and roles (`Select` with its select-all row),
   Reset and Save. The tick only labels: each person's employment terms say how much of the shift is overtime.
-- `shifts/ShiftsStep` — the schedule's shifts under a tab per group ("All" plus one per group, with counts) above
-  the table, ticking what the schedule includes, with each shift's paid hours and any built-in overtime; a generated
-  schedule's frozen copies are listed read-only, with their own values.
 - `constraints/api.ts` — the live constraint schema and requests at the department's routes (list, create, replace,
   delete) and the constraint options (`constraint-options`, read under `constraint:read`: every constraint type with
   its category, whether it takes a requirement (Must or Should), whether a department holds only one, and its fields,
@@ -73,9 +72,6 @@ their API exists.
 - `constraints/ConstraintPreview` — the constraint read back live in the dialog as its type's sentence, each part
   marked as filled in or still to choose.
 - `constraints/ConstraintTypeTag` — a constraint category with its colour key; hovering says what it covers.
-- `constraints/ConstraintsStep` — the department's constraints ticked as the schedule applies them: name, category tag
-  and type, the constraint as a sentence, Must or Should (or the type's fixed meaning), status, and Edit and Delete.
-  An inactive constraint is listed but never ticked. A generated schedule's frozen copies are listed read-only.
 - `schedules/api.ts` — the schedule schema (its status, ticked `includedShiftIds` and `includedConstraintIds`, the
   branch's `timeZone` and its newest `generation` run with the engine's findings) and its requests: create, read,
   replace (setup and ticks together), request generation, the schedule's shifts (a draft's live shifts with
@@ -87,40 +83,49 @@ their API exists.
   update, generate, regenerate, remove, publish, reject).
 - `schedules/useScheduleShifts.ts` — the schedule's shifts as the steps show them (`hidden` without `shift:read` at
   the department or on a 403).
-- `schedules/useScheduleConstraints.ts` — the constraints the Constraints step lists: for a draft the department's
+- `schedules/useScheduleConstraints.ts` — a saved schedule's constraints, as the week's choice lists them: for a draft the department's
   live constraints, inactive ones included (`GET …/constraints`); once generated, the frozen copies
   (`GET …/schedules/{s}/constraints`). `hidden` without `constraint:read` at the department or on a 403.
 - `schedules/scheduleRefusal.ts` — the schedules API's codes to copy, every code named once in
   `SCHEDULE_REFUSAL_CODES`: for a save (`CONSTRAINT_NOT_FOUND`, `CONSTRAINT_INACTIVE`, …), a generation
-  (`SCHEDULE_HAS_NO_SHIFTS`, `SCHEDULE_CONSTRAINT_UNUSABLE`, `SCHEDULE_NOT_DRAFT`), a delete, a regeneration and a
+  (`SCHEDULE_HAS_NO_SHIFTS`, `SCHEDULE_HAS_NO_STAFFING_CONSTRAINT`, `SCHEDULE_CONSTRAINT_UNUSABLE`,
+  `SCHEDULE_NOT_DRAFT`), a delete, a regeneration and a
   decision (`INVALID_REJECTION_REASON` lands on the reason field).
 - `schedules/fixtures.ts` — draft s-1 and its generated twin (with the run its status implies), the engine's
   findings as the API serves them (`generationFindingsFixture`, `findingsOfEveryKindFixture`,
   `emptyFindingsFixture`), the 21-row roster of its three members, and a workspace for company c-1.
 - `scheduleDraft.ts` — what the page holds: the setup, the saved schedule (id, department and status, which never
-  change in the page), the shift and constraint ticks, the allocations per shift and job title, and the demand per
-  time slot. A frozen copy has its own id, never sent to a shift or constraint route; `tickedOf` drops ticks of shifts
-  no longer listed and `tickedConstraintsOf` of constraints no longer listed or no longer ACTIVE.
-  `ListProblem` is why a step's list is not shown, for the Shifts and Constraints steps alike. `TIME_STEP_MINUTES` is
-  the one grain shift times and demand slots share.
+  change in the page), the shift and constraint ticks with whether the week was chosen (`weekChosen`), the
+  allocations per shift and job title, and the demand per time slot. A frozen copy has its own id, never sent to a
+  shift or constraint route; `tickedOf` drops ticks of shifts no longer listed and `tickedConstraintsOf` of
+  constraints no longer listed or no longer ACTIVE. `TIME_STEP_MINUTES` is the one grain shift times and demand slots
+  share.
+- `weekChoice.ts` — what one week uses, pure: everything by default (`allOf`), a constraint switched off when any
+  shift it names is left out (`withShiftsChosen`, `noteOf`), the week's problem (`weekChoiceProblem`: no shift, or no
+  chosen constraint that `requiresPeople`) and the line (`usesSummary`, `usesLineOf`).
+- `WeekChoiceDialog` — the week's shifts and constraints with boxes; read-only for a generated schedule.
+  `WeekChoiceSummary` — the "Uses …" line with its action and the "Edit shifts · Edit constraints" links, on Setup and
+  Generate.
+- `readiness/` — the API's readiness read (`api.ts`, `useSchedulingReadiness`, under `schedule:create`), its wording
+  and links (`readinessCopy.ts`: `gateOf`, `checklistOf`, `fixLinkOf`, `returnLinkOf`), `ReadinessCallout` (the
+  tabs' first-run checklist and way back) and `ReadinessGateCallout` (the wizard's gate).
 - `schedulingNotice.ts` — the confirmation the Scheduling page shows after a generation, carried in history state.
-- `ForecastStep`, `GenerateStep`, `ScheduleSetupStep`, `StepActions` — the other steps; `ShiftAllocationTable` and
-  `TimeBlockGrid` are the two forecast views. `GenerateStep` takes a `startingPoint` slot, filled with
-  `StartingContextSection`.
+- `ForecastStep`, `GenerateStep`, `ScheduleSetupStep`, `StepActions` — the steps; `ShiftAllocationTable` and
+  `TimeBlockGrid` are the two forecast views. `ScheduleSetupStep` reports the department and week chosen and takes a
+  `departmentExtras` slot below its fields; `GenerateStep` takes `notice`, `uses` and `startingPoint` slots.
 - `periods.ts` — the weeks Setup offers (`selectablePeriods`: `PAST_WEEKS` back, this week, `FUTURE_WEEKS` ahead,
   each told whether it is last, this or next week and whether it has started), `defaultPeriod` and `withPeriod` for a
   reopened draft whose week has left the offered ones.
-- `stepCompletion.ts` — which steps the Stepper ticks, from the draft's data (saved, ticked shifts and constraints,
-  frozen) rather than from being behind the current step.
-- `constraints/NoConstraintsDialog` — asks before leaving Constraints with nothing ticked; a warning only.
+- `stepCompletion.ts` — which steps the Stepper ticks, from the draft's data (saved, frozen) rather than from being
+  behind the current step.
 - `startingContext/` — the week before the period (T3-12, the API's ADR-0056). `api.ts` reads and replaces a draft's
   `starting-days` and reads the `starting-context` frozen at generation; `startingGrid.ts` is the dialog's pure state
   (entries by member and date, `shiftCellValue`, `fillEmpty`, the save body, `runsByMember` for the roster's badge).
   `StartingContextSection` owns the query and the save; `StartingContextCallout` is its one line on the Generate
   step and `StartingDaysDialog` the members-by-days grid. An empty day means "not known", never worked or off.
 
-`src/pages/CreateSchedule.tsx` composes the steps and owns the draft, the saves, generation and the shift and
-constraint dialogs.
+`src/pages/CreateSchedule.tsx` composes the steps and owns the draft, the week's choice, the readiness gates, the
+saves and generation.
 
 ## Roster page
 

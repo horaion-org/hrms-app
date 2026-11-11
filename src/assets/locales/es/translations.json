@@ -2859,8 +2859,6 @@
 			"viewSubtitle": "Cómo se configuró este horario: su departamento, periodo, turnos y restricciones.",
 			"steps": {
 				"setup": "Configuración",
-				"shifts": "Turnos",
-				"constraints": "Restricciones",
 				"forecast": "Previsión",
 				"generate": "Generar"
 			},
@@ -2942,9 +2940,6 @@
 			}
 		},
 		"shifts": {
-			"title": "Seleccionar turnos",
-			"description": "Elige qué turnos del departamento incluye este horario. Un cambio en un turno se aplica a todos los borradores del departamento.",
-			"frozenDescription": "Los turnos con los que se generó este horario, tal como eran entonces. Al regenerar se conservan; un cambio posterior en un turno solo llega a un horario nuevo.",
 			"add": "Añadir turno",
 			"label": "Turnos",
 			"allShifts": "Todos",
@@ -2964,7 +2959,6 @@
 			"delete": "Eliminar {{name}}",
 			"deleted": "Turno eliminado",
 			"empty": "Todavía no hay turnos.",
-			"required": "Elige al menos un turno para este horario.",
 			"added": "Turno añadido",
 			"edited": "Turno guardado",
 			"loading": "Cargando turnos…",
@@ -3067,9 +3061,6 @@
 			"department": "Departamento"
 		},
 		"constraints": {
-			"title": "Restricciones del horario",
-			"description": "Elige qué restricciones aplica este horario. Las de la empresa van primero; las bloqueadas se aplican siempre. Un cambio en una restricción se aplica a todos los borradores del departamento.",
-			"frozenDescription": "Las restricciones con las que se generó este horario, tal como eran entonces.",
 			"add": "Añadir restricción",
 			"label": "Restricciones",
 			"name": "Nombre de la restricción",
@@ -3237,15 +3228,6 @@
 				"title": "Vista previa de la restricción",
 				"complete": "Completa",
 				"incomplete": "Incompleta"
-			},
-			"unticked": {
-				"title": "¿Continuar sin restricciones?",
-				"none": "Este departamento aún no tiene restricciones.",
-				"noneTicked_one": "La {{count}} restricción de este departamento no está marcada.",
-				"noneTicked_other": "Ninguna de las {{count}} restricciones de este departamento está marcada.",
-				"consequence": "El horario se generará sin reglas como días libres u horas máximas.",
-				"confirm": "Continuar sin restricciones",
-				"cancel": "Volver a las restricciones"
 			},
 			"setBy": "Definida por",
 			"levels": {

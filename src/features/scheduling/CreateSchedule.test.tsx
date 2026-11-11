@@ -938,7 +938,7 @@ describe("Create Schedule: three steps", () => {
 		).toEqual(["Step 1: Setup", "Step 2: Forecast", "Step 3: Generate"]);
 	});
 
-	it("given_anOldShiftsStepUrl_when_opened_then_opensSetup", async () => {
+	it("given_anOldShiftsUrl_when_opened_then_opensSetup", async () => {
 		await open("/scheduling/new?step=shifts&scheduleId=s-1&departmentId=d-1");
 
 		expect(

@@ -36,7 +36,7 @@ import {
 export { TIME_STEP_MINUTES, timeSteps, WEEKDAYS, type ShiftRole, type Weekday };
 
 /**
- * One of a schedule's constraints as the Constraints step shows it: for a
+ * One of a schedule's constraints as the week's choice lists it: for a
  * draft, one of the Department's live constraints, inactive ones included; once
  * generated, one of its frozen copies, which has no status and whose id is
  * never sent to a constraint route, since a generated schedule is never
@@ -63,9 +63,6 @@ export type Constraint = Omit<
 /** Only an ACTIVE constraint can be ticked; the API refuses an inactive one. */
 export const isTickable = (constraint: Pick<Constraint, "status">): boolean =>
 	constraint.status === "ACTIVE";
-
-/** Why a step's list is not shown: a notice, or an alert when loading failed. */
-export type ListProblem = { message: string; alert: boolean };
 
 /** Whether demand is set per shift or per time block. */
 export type ForecastMode = "SHIFT" | "BLOCKS";
@@ -388,12 +385,6 @@ export type ScheduleDraftAction =
 	/** The schedule's shifts as the API answers them: the first answer after a load seeds the ticks from `included`. */
 	| { type: "shiftsLoaded"; shifts: Array<ScheduleShift> }
 	| { type: "setupSaved"; setup: ScheduleSetup }
-	| { type: "shiftsIncluded"; shiftIds: Array<string> }
-	/** A shift the API no longer has; its selection and allocations go with it. */
-	| { type: "shiftRemoved"; shiftId: string }
-	| { type: "constraintsIncluded"; constraintIds: Array<string> }
-	/** A constraint the API no longer has; its tick goes with it. */
-	| { type: "constraintRemoved"; constraintId: string }
 	/** What the week uses, as the manager chose it. */
 	| { type: "weekChosen"; shiftIds: Array<string>; constraintIds: Array<string> }
 	/** A new draft's department changed: its week starts again from everything. */
@@ -435,29 +426,6 @@ export const scheduleDraftReducer = (
 		case "setupSaved":
 			// A saved draft's department never changes, so what is chosen carries over.
 			return { ...draft, setup: action.setup };
-		case "shiftsIncluded":
-			return { ...draft, includedShiftIds: action.shiftIds };
-		case "shiftRemoved":
-			return {
-				...draft,
-				includedShiftIds: draft.includedShiftIds.filter(
-					(shiftId) => shiftId !== action.shiftId
-				),
-				allocations: Object.fromEntries(
-					Object.entries(draft.allocations).filter(
-						([shiftId]) => shiftId !== action.shiftId
-					)
-				),
-			};
-		case "constraintsIncluded":
-			return { ...draft, includedConstraintIds: action.constraintIds };
-		case "constraintRemoved":
-			return {
-				...draft,
-				includedConstraintIds: draft.includedConstraintIds.filter(
-					(constraintId) => constraintId !== action.constraintId
-				),
-			};
 		case "weekChosen":
 			return {
 				...draft,

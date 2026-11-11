@@ -242,8 +242,9 @@ describe("scheduleDraftReducer", () => {
 			shifts,
 		});
 		const ticked = scheduleDraftReducer(seeded, {
-			type: "shiftsIncluded",
+			type: "weekChosen",
 			shiftIds: ["lunch-rush", "swing-shift"],
+			constraintIds: [],
 		});
 		// A reload of the same shifts keeps what the person ticked since.
 		const reloaded = scheduleDraftReducer(ticked, {
@@ -253,31 +254,6 @@ describe("scheduleDraftReducer", () => {
 
 		expect(seeded.includedShiftIds).toEqual(["lunch-rush"]);
 		expect(reloaded.includedShiftIds).toEqual(["lunch-rush", "swing-shift"]);
-	});
-
-	it("given_anIncludedShift_when_removed_then_leavesTheSelectionAndItsAllocations", () => {
-		const draft = scheduleDraftReducer(chosen(), {
-			type: "shiftRemoved",
-			shiftId: "front-desk-am",
-		});
-
-		expect(draft.includedShiftIds).not.toContain("front-desk-am");
-		expect(draft.allocations["front-desk-am"]).toBeUndefined();
-		expect(draft.allocations["lunch-rush"]).toBeDefined();
-	});
-
-	it("given_constraintsTicked_when_oneIsRemoved_then_onlyItsTickGoes", () => {
-		const ticked = scheduleDraftReducer(chosen(), {
-			type: "constraintsIncluded",
-			constraintIds: ["morning-cover", "two-days-off"],
-		});
-		const draft = scheduleDraftReducer(ticked, {
-			type: "constraintRemoved",
-			constraintId: "morning-cover",
-		});
-
-		expect(draft.includedConstraintIds).toEqual(["two-days-off"]);
-		expect(draft.includedShiftIds).toEqual(chosen().includedShiftIds);
 	});
 
 	it("given_anAllocation_when_changed_then_updatesOnlyThatRoleAndNeverBelowZero", () => {

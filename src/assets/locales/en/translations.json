@@ -3037,8 +3037,6 @@
 			"viewSubtitle": "How this schedule was set up: its department, period, shifts and constraints.",
 			"steps": {
 				"setup": "Setup",
-				"shifts": "Shifts",
-				"constraints": "Constraints",
 				"forecast": "Forecast",
 				"generate": "Generate"
 			},
@@ -3120,9 +3118,6 @@
 			}
 		},
 		"shifts": {
-			"title": "Select shifts",
-			"description": "Choose which of the department’s shifts this schedule includes. A change to a shift applies to every draft of the department.",
-			"frozenDescription": "The shifts this schedule was generated with, as they were then. Regenerating keeps them; a later change to a shift reaches only a new schedule.",
 			"add": "Add shift",
 			"label": "Shifts",
 			"allShifts": "All",
@@ -3142,7 +3137,6 @@
 			"delete": "Delete {{name}}",
 			"deleted": "Shift successfully deleted",
 			"empty": "No shifts yet.",
-			"required": "Choose at least one shift to include in this schedule.",
 			"added": "Shift added",
 			"edited": "Shift saved",
 			"loading": "Loading shifts…",
@@ -3245,9 +3239,6 @@
 			"department": "Department"
 		},
 		"constraints": {
-			"title": "Scheduling constraints",
-			"description": "Choose which constraints this schedule applies. The company’s come first; locked ones always apply. A change to a constraint applies to every draft of the department.",
-			"frozenDescription": "The constraints this schedule was generated with, as they were then.",
 			"add": "Add constraint",
 			"label": "Constraints",
 			"name": "Constraint name",
@@ -3415,15 +3406,6 @@
 				"title": "Constraint preview",
 				"complete": "Complete",
 				"incomplete": "Incomplete"
-			},
-			"unticked": {
-				"title": "Continue without constraints?",
-				"none": "This department has no constraints yet.",
-				"noneTicked_one": "This department’s {{count}} constraint is not ticked.",
-				"noneTicked_other": "None of this department’s {{count}} constraints are ticked.",
-				"consequence": "The schedule will be generated without rules such as days off or maximum hours.",
-				"confirm": "Continue without constraints",
-				"cancel": "Back to constraints"
 			},
 			"setBy": "Set by",
 			"levels": {
