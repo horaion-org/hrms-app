@@ -19,7 +19,12 @@ import {
 import { LEAVE_FIXTURES, LEAVE_TYPE_FIXTURES } from "@/features/leave/fixtures";
 import { LEAVE_TYPE_CATALOGUE_FIXTURE } from "@/features/leaveTypes/fixtures";
 import { notificationDemoFixtures } from "@/features/notifications/fixtures";
-import { frozenConstraintsFixture } from "@/features/scheduling/constraints/fixtures";
+import {
+	COMPANY_CONSTRAINT_FIXTURES,
+	CONSTRAINT_FIXTURES,
+	CONSTRAINT_OPTIONS_RESPONSE,
+	frozenConstraintsFixture,
+} from "@/features/scheduling/constraints/fixtures";
 import { coverOfferFixture } from "@/features/scheduling/coverOffers/fixtures";
 import {
 	generatedScheduleFixture,
@@ -202,6 +207,21 @@ const BAR_SHIFT = {
 	branchId: "b-1",
 	branchName: "Orchard",
 };
+/** Live constraints of Orchard's Kitchen (d-1) and Bar (d-2), as the company constraint list answers them. */
+const KITCHEN_CONSTRAINT = {
+	...CONSTRAINT_FIXTURES[2]!,
+	departmentId: "d-1",
+	departmentName: "Kitchen",
+	branchId: "b-1",
+	branchName: "Orchard",
+};
+const BAR_CONSTRAINT = {
+	...CONSTRAINT_FIXTURES[4]!,
+	departmentId: "d-2",
+	departmentName: "Bar",
+	branchId: "b-1",
+	branchName: "Orchard",
+};
 const LEAVE = LEAVE_FIXTURES.map((request) => ({
 	...request,
 	branchName: "Orchard",
@@ -339,6 +359,22 @@ const ANSWERS: Array<Answer> = [
 	{ path: /^\/shifts$/, data: () => [KITCHEN_SHIFT, BAR_SHIFT] },
 	{ path: /\/departments\/[^/]+\/shifts$/, data: () => [KITCHEN_SHIFT] },
 	{ path: /\/shift-role-options$/, data: () => SHIFT_ROLE_OPTIONS },
+	{
+		path: /^\/constraints$/,
+		data: () => [
+			...COMPANY_CONSTRAINT_FIXTURES,
+			KITCHEN_CONSTRAINT,
+			BAR_CONSTRAINT,
+		],
+	},
+	{
+		path: /\/departments\/[^/]+\/constraints$/,
+		data: () => CONSTRAINT_FIXTURES,
+	},
+	{
+		path: /\/constraint-options$/,
+		data: () => CONSTRAINT_OPTIONS_RESPONSE,
+	},
 	{ path: /^(?!\/me).*\/schedules\/s-\d+$/, data: () => schedule },
 	{
 		path: /\/schedules\/s-\d+\/assignments$/,
