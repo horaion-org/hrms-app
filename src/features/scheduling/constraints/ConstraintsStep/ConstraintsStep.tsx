@@ -1,11 +1,8 @@
-import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
-import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
-import { DeleteIcon, EditIcon, PlusIcon } from "@/components/ui/Icon";
-import { constraintColumns } from "@/features/scheduling/constraints/constraintColumns";
-import { ConstraintOrigin } from "@/features/scheduling/constraints/ConstraintOrigin";
+import { PlusIcon } from "@/components/ui/Icon";
+import { ConstraintTable } from "@/features/scheduling/constraints/ConstraintTable";
 import {
 	isTickable,
 	tickedConstraintsOf,
@@ -75,85 +72,6 @@ export const ConstraintsStep = ({
 		.map((constraint) => constraint.constraintId);
 	// The same rule the API applies: locked ones, and a replaced company tick as its replacement.
 	const ticked = tickedConstraintsOf({ includedConstraintIds }, constraints);
-	const columns = useMemo((): Array<DataTableColumn<Constraint>> => {
-		const shared = constraintColumns<Constraint>(t);
-		const requirementOf = (constraint: Constraint): string =>
-			constraint.requirement
-				? t(`${key}.requirements.${constraint.requirement}`)
-				: t(`${key}.fixedRequirements.${constraint.type}`);
-		return [
-			shared.name,
-			shared.type,
-			shared.details,
-			{
-				id: "setBy",
-				header: t(`${key}.setBy`),
-				headerClassName: "w-44",
-				cell: (constraint) => <ConstraintOrigin constraint={constraint} />,
-			},
-			{
-				id: "requirement",
-				header: t(`${key}.requirement`),
-				headerClassName: "w-36",
-				cell: requirementOf,
-				sortValue: requirementOf,
-			},
-			...(frozen ? [] : [shared.status]),
-			...(onEdit || onDelete || onReplace
-				? [
-						{
-							id: "actions",
-							header: t(`${key}.actions`),
-							headerClassName: "w-30",
-							pin: "end" as const,
-							cell: (constraint: Constraint) => (
-								<div className="flex justify-center gap-2">
-									{onReplace && constraint.level === "COMPANY" && (
-										<Button
-											variant="icon"
-											aria-label={t(
-												constraint.locked
-													? `${key}.makeStricter`
-													: `${key}.changeHere`,
-												{ name: constraint.name }
-											)}
-											onClick={() => {
-												onReplace(constraint);
-											}}
-										>
-											<EditIcon />
-										</Button>
-									)}
-									{onEdit && constraint.level !== "COMPANY" && (
-										<Button
-											aria-label={t(`${key}.edit`, { name: constraint.name })}
-											variant="icon"
-											onClick={() => {
-												onEdit(constraint);
-											}}
-										>
-											<EditIcon />
-										</Button>
-									)}
-									{onDelete && constraint.level !== "COMPANY" && (
-										<Button
-											aria-label={t(`${key}.delete`, { name: constraint.name })}
-											className="text-error-700"
-											variant="icon"
-											onClick={() => {
-												onDelete(constraint);
-											}}
-										>
-											<DeleteIcon />
-										</Button>
-									)}
-								</div>
-							),
-						},
-					]
-				: []),
-		];
-	}, [t, frozen, onEdit, onDelete, onReplace]);
 
 	return (
 		<StepPanel
@@ -179,13 +97,10 @@ export const ConstraintsStep = ({
 					{listProblem.message}
 				</p>
 			) : (
-				<DataTable
+				<ConstraintTable
 					className="mt-10"
-					columns={columns}
-					data={shown}
-					emptyState={t(`${key}.empty`)}
-					getRowId={(constraint) => constraint.constraintId}
-					label={t(`${key}.label`)}
+					constraints={shown}
+					frozen={frozen}
 					selection={
 						onIncludedChange && {
 							rowLabel: (constraint) => constraint.name,
@@ -203,6 +118,9 @@ export const ConstraintsStep = ({
 							},
 						}
 					}
+					onDelete={onDelete}
+					onEdit={onEdit}
+					onReplace={onReplace}
 				/>
 			)}
 		</StepPanel>

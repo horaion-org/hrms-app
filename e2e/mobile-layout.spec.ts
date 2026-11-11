@@ -12,6 +12,8 @@ const SCREENS = [
 const SIGNED_IN_ROUTES = [
 	"/",
 	"/scheduling",
+	"/scheduling?view=shifts",
+	"/scheduling?view=constraints",
 	"/scheduling/new",
 	"/scheduling/s-1",
 	"/scheduling/s-1?day=2026-10-14",
@@ -87,12 +89,13 @@ for (const screen of SCREENS) {
 
 /**
  * Pages whose first row of content a phone must show without scrolling: the
- * roster, a list, Settings sections (Approvals with its two groups), Team
+ * roster, the Constraints tab under its category tabs, a list, Settings sections (Approvals with its two groups), Team
  * requests with a request under an approval flow, and the leave timeline. The timeline's
  * demo leave is in May 2026, so its clock is set to a day in that window.
  */
 const FIRST_SCREEN_ROWS: Array<{ path: string; clock?: string }> = [
 	{ path: "/scheduling/s-1" },
+	{ path: "/scheduling?view=constraints" },
 	{ path: "/people" },
 	{ path: "/settings?section=leave" },
 	{ path: "/settings?section=approvals" },
@@ -115,6 +118,43 @@ test.describe("on a phone, the first screen", () => {
 			await expect(firstRow).toBeVisible();
 
 			expect((await firstRow.boundingBox())?.y).toBeLessThan(740);
+		});
+	}
+});
+
+/**
+ * Setup tabs whose rows a person may change: on a phone the table keeps only
+ * the name and the actions, so the first editable row's Edit is on screen
+ * without scrolling the table sideways. Company constraints list first and
+ * have no Edit, so the check takes the first row that offers one.
+ */
+const ROW_ACTION_ROUTES = [
+	"/scheduling?view=shifts",
+	"/scheduling?view=constraints",
+];
+
+test.describe("on a phone, a setup tab's first row", () => {
+	test.use({ viewport: { width: 360, height: 740 }, hasTouch: true });
+
+	for (const path of ROW_ACTION_ROUTES) {
+		test(`${path} shows its first Edit button inside the screen`, async ({
+			context,
+			page,
+		}) => {
+			await mockDemoCompany(context);
+			await page.goto(path);
+			const editButton = page.getByRole("button", { name: /^Edit / });
+			const edit = page
+				.getByRole("main")
+				.locator("tbody tr")
+				.filter({ has: editButton })
+				.first()
+				.getByRole("button", { name: /^Edit / });
+			await expect(edit).toBeVisible();
+			const box = await edit.boundingBox();
+
+			expect(box).not.toBeNull();
+			expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(360);
 		});
 	}
 });

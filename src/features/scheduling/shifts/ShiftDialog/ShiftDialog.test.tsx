@@ -1,16 +1,20 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useState, type ReactElement } from "react";
 import { I18nextProvider } from "react-i18next";
 import { describe, expect, it, vi } from "vitest";
 import { ApiProblemError } from "@/common/problem";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import type { ScheduleShift } from "@/features/scheduling/schedules/api";
+import { schedulingWorkspace } from "@/features/scheduling/schedules/fixtures";
 import {
 	SHIFT_FIXTURES,
 	SHIFT_ROLE_OPTIONS,
 } from "@/features/scheduling/shifts/fixtures";
 import { ShiftDialog } from "@/features/scheduling/shifts/ShiftDialog";
 import type { ShiftRoleOptions } from "@/features/scheduling/shifts/useShiftRoleOptions";
+import { workspaceQuery } from "@/features/workspace/api";
 
 const roles: ShiftRoleOptions = { status: "ready", items: SHIFT_ROLE_OPTIONS };
 
@@ -192,7 +196,9 @@ describe("ShiftDialog", () => {
 		await user.clear(field);
 		await user.type(field, "720");
 		expect(
-			screen.getByText("Leave at 0 if the shift has no unpaid break.")
+			screen.getByText(
+				"Enter a break only if people are free during it. A break spent on duty counts as work: leave this at 0."
+			)
 		).toBeVisible();
 		await user.click(screen.getByRole("button", { name: "Save" }));
 
@@ -388,5 +394,108 @@ describe("ShiftDialog", () => {
 
 		expect(await screen.findByText("Use 2 to 50 characters.")).toBeVisible();
 		expect(onSave).not.toHaveBeenCalled();
+	});
+});
+
+describe("ShiftDialog with a Department field", () => {
+	/** Adds a shift in Main branch, whose Front Office (d-1) and Kitchen (d-2) hold shift:create; roles load once one is chosen. */
+	const ChoosingDialog = ({
+		initial,
+		onSave,
+	}: {
+		initial: string;
+		onSave: () => Promise<unknown>;
+	}): ReactElement => {
+		const [departmentId, setDepartmentId] = useState(initial);
+		return (
+			<ShiftDialog
+				groups={["Front Desk"]}
+				roles={departmentId ? roles : { status: "pending" }}
+				department={{
+					kind: "choose",
+					companyId: "c-1",
+					keys: ["shift:create"],
+					value: departmentId,
+					onChange: setDepartmentId,
+				}}
+				onClose={vi.fn()}
+				onSave={onSave}
+			/>
+		);
+	};
+
+	const renderInCompany = (dialog: ReactElement): void => {
+		const client = new QueryClient({
+			defaultOptions: { queries: { retry: false } },
+		});
+		client.setQueryData(
+			workspaceQuery.queryKey,
+			schedulingWorkspace(["shift:create"])
+		);
+		render(
+			<I18nextProvider i18n={authTestI18n}>
+				<QueryClientProvider client={client}>{dialog}</QueryClientProvider>
+			</I18nextProvider>
+		);
+	};
+
+	it("given_noDepartmentYet_when_named_then_keepsSaveDisabledAndAsksForTheDepartmentFirst", async () => {
+		const user = userEvent.setup();
+		renderInCompany(<ChoosingDialog initial="" onSave={vi.fn()} />);
+		await screen.findByRole("dialog", { name: "Add custom shift" });
+
+		await user.type(screen.getByLabelText("Shift name"), "Late");
+
+		expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
+		expect(screen.getByText("Choose a department first.")).toBeVisible();
+		expect(trigger(/Roles applied to/)).toBeDisabled();
+
+		await user.click(trigger(/^Department/));
+		await user.click(screen.getByRole("option", { name: /Front Office/ }));
+		expect(screen.getByRole("button", { name: "Save" })).toBeEnabled();
+	});
+
+	it("given_rolesChosen_when_theDepartmentChanges_then_clearsThem", async () => {
+		const user = userEvent.setup();
+		renderInCompany(<ChoosingDialog initial="d-1" onSave={vi.fn()} />);
+		await screen.findByRole("dialog", { name: "Add custom shift" });
+
+		await pick(user, /Roles applied to/, "Front Desk Lead");
+		expect(trigger(/Roles applied to/)).toHaveTextContent("Front Desk Lead");
+		await user.click(trigger(/^Department/));
+		await user.click(screen.getByRole("option", { name: /Kitchen/ }));
+
+		expect(trigger(/Roles applied to/)).not.toHaveTextContent(
+			"Front Desk Lead"
+		);
+	});
+
+	it("given_aFixedDepartmentAndANote_when_editing_then_showsTheDepartmentDisabledAndTheNote", async () => {
+		renderInCompany(
+			<ShiftDialog
+				editing={SHIFT_FIXTURES[0]}
+				groups={["Front Desk"]}
+				impactNote="Saving changes this shift for Front Office and new schedules."
+				roles={roles}
+				department={{
+					kind: "fixed",
+					departmentId: "d-1",
+					label: "Main branch › Front Office",
+				}}
+				onClose={vi.fn()}
+				onSave={vi.fn()}
+			/>
+		);
+		await screen.findByRole("dialog", { name: "Edit shift" });
+
+		expect(trigger(/^Department/)).toBeDisabled();
+		expect(trigger(/^Department/)).toHaveTextContent(
+			"Main branch › Front Office"
+		);
+		expect(
+			screen.getByText(
+				"Saving changes this shift for Front Office and new schedules."
+			)
+		).toBeVisible();
 	});
 });

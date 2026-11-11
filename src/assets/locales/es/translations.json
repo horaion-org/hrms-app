@@ -1373,10 +1373,6 @@
 					"why": "el asistente de horarios muestra los turnos del departamento",
 					"without": "quien lo tenga no verá el paso de turnos del asistente de horarios"
 				},
-				"shiftsInWizard": {
-					"why": "la aplicación cambia los turnos solo en el asistente de horarios, que abre un horario",
-					"without": "quien lo tenga no llegará a los turnos, que la aplicación muestra solo en el asistente de horarios"
-				},
 				"leaveForSomeone": {
 					"why": "solicitar para otra persona busca en la lista de Personas",
 					"without": "quien lo tenga no encontrará a la persona para quien solicita"
@@ -2825,8 +2821,8 @@
 			"formerMember": "Antiguo miembro de la empresa",
 			"yes": "Sí",
 			"no": "No",
-			"title": "Resumen de horarios",
-			"subtitle": "Consulta y gestiona los horarios por departamento.",
+			"title": "Programación",
+			"subtitle": "Los horarios, y los turnos y las restricciones con los que se crean.",
 			"search": "Buscar departamento",
 			"view": "Ver horario",
 			"viewNamed": "Ver horario {{code}}",
@@ -3014,7 +3010,7 @@
 				"timeRequired": "Elige una hora.",
 				"timeRejected": "Revisa la hora e inténtalo de nuevo.",
 				"unpaidBreak": "Pausa no remunerada (minutos)",
-				"unpaidBreakHint": "Déjalo en 0 si el turno no tiene pausa no remunerada.",
+				"unpaidBreakHint": "Indica una pausa solo si las personas quedan libres durante ella. Una pausa en servicio cuenta como trabajo: déjala en 0.",
 				"paidHours_one": "{{count}} hora remunerada",
 				"paidHours_other": "{{count}} horas remuneradas",
 				"breakWhole": "Escribe la pausa en minutos enteros, o 0.",
@@ -3055,14 +3051,20 @@
 					"type": "Elige un tipo de turno.",
 					"start": "Elige una hora de inicio.",
 					"end": "Elige una hora de fin."
-				}
+				},
+				"department": "Departamento",
+				"departmentPlaceholder": "Selecciona un departamento",
+				"departmentHint": "Cada turno pertenece a un departamento.",
+				"departmentsEmpty": "No hay ningún departamento activo al que puedas añadir turnos.",
+				"rolesNeedDepartment": "Elige primero un departamento."
 			},
 			"types": {
 				"REGULAR": "Regular",
 				"SPLIT": "Partido",
 				"ON_CALL": "De guardia",
 				"OVERTIME": "Horas extra"
-			}
+			},
+			"department": "Departamento"
 		},
 		"constraints": {
 			"title": "Restricciones del horario",
@@ -3224,7 +3226,12 @@
 				"levelNotAllowed": "Este tipo de restricción nombra turnos o puestos de un departamento, así que solo un departamento puede definirla.",
 				"nameConflictCompany": "La empresa ya tiene una restricción llamada \"{{name}}\". Elige otro nombre.",
 				"typeAlreadyUsedCompany": "La empresa ya tiene una restricción de este tipo. Edita esa.",
-				"typeFixed": "El tipo de una restricción de la empresa no se puede cambiar. Añade una restricción nueva."
+				"typeFixed": "El tipo de una restricción de la empresa no se puede cambiar. Añade una restricción nueva.",
+				"department": "Departamento",
+				"departmentPlaceholder": "Selecciona un departamento",
+				"departmentHint": "Cada restricción pertenece a un departamento; las de toda la empresa se definen en Configuración.",
+				"departmentsEmpty": "No hay ningún departamento activo al que puedas añadir restricciones.",
+				"optionsNeedDepartment": "Elige primero un departamento."
 			},
 			"preview": {
 				"title": "Vista previa de la restricción",
@@ -3255,7 +3262,11 @@
 				"DEFAULT": "Predeterminada"
 			},
 			"companyRuleApplies": "Se aplica la regla de la empresa",
-			"companyRuleAppliesHint": "La restricción de la empresa ahora es más estricta que esta, así que se aplican ambas."
+			"companyRuleAppliesHint": "La restricción de la empresa ahora es más estricta que esta, así que se aplican ambas.",
+			"department": "Departamento",
+			"allDepartments": "Todos los departamentos",
+			"allConstraints": "Todas",
+			"categoriesLabel": "Categorías de restricciones"
 		},
 		"forecast": {
 			"title": "Previsión de personal",
@@ -3868,6 +3879,48 @@
 				"loadFailed": "No se pudieron cargar las ofertas.",
 				"tryAgain": "Reintentar"
 			}
+		},
+		"reach": {
+			"editShift_one": "Al guardar, este turno cambia para {{department}}: los horarios nuevos y {{count}} borrador que lo usa. Los horarios generados y publicados conservan su propia copia.",
+			"editShift_other": "Al guardar, este turno cambia para {{department}}: los horarios nuevos y {{count}} borradores que lo usan. Los horarios generados y publicados conservan su propia copia.",
+			"editShiftNoDrafts": "Al guardar, este turno cambia para {{department}} y los horarios nuevos. Los horarios generados y publicados conservan su propia copia.",
+			"editShiftUnknown": "Al guardar, este turno cambia para {{department}}, los horarios nuevos y los borradores que lo usen. Los horarios generados y publicados conservan su propia copia.",
+			"editConstraint_one": "Al guardar, esta restricción cambia para {{department}}: los horarios nuevos y {{count}} borrador que la usa. Los horarios generados y publicados conservan su propia copia.",
+			"editConstraint_other": "Al guardar, esta restricción cambia para {{department}}: los horarios nuevos y {{count}} borradores que la usan. Los horarios generados y publicados conservan su propia copia.",
+			"editConstraintNoDrafts": "Al guardar, esta restricción cambia para {{department}} y los horarios nuevos. Los horarios generados y publicados conservan su propia copia.",
+			"editConstraintUnknown": "Al guardar, esta restricción cambia para {{department}}, los horarios nuevos y los borradores que la usen. Los horarios generados y publicados conservan su propia copia.",
+			"deleteTitle": "¿Eliminar {{name}}?",
+			"deleteShiftBody_one": "Se quita de {{department}} y de {{count}} borrador que lo usa. Los horarios generados y publicados conservan su copia.",
+			"deleteShiftBody_other": "Se quita de {{department}} y de {{count}} borradores que lo usan. Los horarios generados y publicados conservan su copia.",
+			"deleteShiftBodyNoDrafts": "Se quita de {{department}}. Los horarios generados y publicados conservan su copia.",
+			"deleteShiftBodyUnknown": "Se quita de {{department}} y de los borradores que lo usen. Los horarios generados y publicados conservan su copia.",
+			"deleteConstraintBody_one": "Se quita de {{department}} y de {{count}} borrador que la usa. Los horarios generados y publicados conservan su copia.",
+			"deleteConstraintBody_other": "Se quita de {{department}} y de {{count}} borradores que la usan. Los horarios generados y publicados conservan su copia.",
+			"deleteConstraintBodyNoDrafts": "Se quita de {{department}}. Los horarios generados y publicados conservan su copia.",
+			"deleteConstraintBodyUnknown": "Se quita de {{department}} y de los borradores que la usen. Los horarios generados y publicados conservan su copia.",
+			"namedByConstraints_one": "{{count}} restricción nombra este turno; dejará de aplicarse a él.",
+			"namedByConstraints_other": "{{count}} restricciones nombran este turno; dejarán de aplicarse a él.",
+			"deleteShift": "Eliminar turno",
+			"deleteConstraint": "Eliminar restricción",
+			"cancel": "Cancelar"
+		},
+		"shiftsTab": {
+			"descriptionOne": "Las franjas en que trabaja {{department}}. Los horarios nuevos las usan; los horarios generados conservan los turnos con los que se crearon.",
+			"descriptionAll": "Las franjas en que trabaja cada departamento. Los horarios nuevos las usan; los horarios generados conservan los turnos con los que se crearon.",
+			"search": "Buscar turnos",
+			"noMatch": "Ningún turno coincide con tu búsqueda."
+		},
+		"views": {
+			"label": "Vistas de programación",
+			"schedules": "Horarios",
+			"shifts": "Turnos",
+			"constraints": "Restricciones"
+		},
+		"constraintsTab": {
+			"descriptionOne": "Cómo se cubre y descansa {{department}}. Las restricciones de la empresa van primero; las bloqueadas se aplican siempre.",
+			"descriptionAll": "Cómo se cubre y descansa cada departamento. Las restricciones de la empresa se aplican a todos los departamentos; las bloqueadas, siempre.",
+			"search": "Buscar restricciones",
+			"noMatch": "Ninguna restricción coincide con tu búsqueda."
 		}
 	},
 	"workspace": {

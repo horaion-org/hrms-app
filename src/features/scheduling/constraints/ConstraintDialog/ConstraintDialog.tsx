@@ -41,6 +41,10 @@ import {
 } from "@/features/scheduling/constraints/constraintSentence";
 import type { ConstraintOptionsState } from "@/features/scheduling/constraints/useConstraintOptions";
 import type { Constraint } from "@/features/scheduling/scheduleDraft";
+import {
+	SetupDepartmentField,
+	type SetupDepartment,
+} from "@/features/scheduling/SetupDepartmentField";
 import { WEEKDAYS } from "@/features/scheduling/shifts/api";
 
 export type ConstraintDialogProps = {
@@ -56,6 +60,10 @@ export type ConstraintDialogProps = {
 	replacing?: Constraint;
 	/** Offers the lock, for a constraint of the company's Scheduling policy. */
 	withLock?: boolean;
+	/** The Department field, shown first: chosen when adding, fixed when editing; left out inside a schedule, whose department is known. */
+	department?: SetupDepartment;
+	/** What saving the change reaches, said below the last field. */
+	impactNote?: string;
 	/** Sends the constraint; a rejection is explained on its field or as the alert. */
 	onSave: (body: ConstraintDialogBody) => Promise<unknown>;
 	onClose: () => void;
@@ -87,6 +95,8 @@ export const ConstraintDialog = ({
 	options,
 	replacing,
 	withLock = false,
+	department,
+	impactNote,
 	onSave,
 	onClose,
 }: ConstraintDialogProps): FunctionComponent => {
@@ -123,6 +133,7 @@ export const ConstraintDialog = ({
 		control,
 		handleSubmit,
 		reset,
+		setValue,
 		formState: { errors, isSubmitting },
 	} = form;
 	const [name, type, requirement, values] = useWatch({
@@ -157,15 +168,20 @@ export const ConstraintDialog = ({
 	);
 	// A saved company rule keeps its type (the API answers CONSTRAINT_TYPE_FIXED); a new rule is added instead.
 	const typeFixed = withLock && editing !== undefined;
+	// Until a Department is chosen there are no types, shifts or job titles to offer.
+	const departmentMissing =
+		department?.kind === "choose" && department.value === "";
 	const typeHint = typeFixed
 		? t(`${key}.typeFixed`)
-		: options.status === "pending"
-			? t(`${key}.optionsLoading`)
-			: options.status === "hidden"
-				? t(`${key}.optionsHidden`)
-				: options.status === "error"
-					? t(`${key}.optionsFailed`)
-					: t(`${key}.typeHint`);
+		: departmentMissing
+			? t(`${key}.optionsNeedDepartment`)
+			: options.status === "pending"
+				? t(`${key}.optionsLoading`)
+				: options.status === "hidden"
+					? t(`${key}.optionsHidden`)
+					: options.status === "error"
+						? t(`${key}.optionsFailed`)
+						: t(`${key}.typeHint`);
 	const requirementOptions: Array<SelectOption> = CONSTRAINT_REQUIREMENTS.map(
 		(requirement) => ({
 			value: requirement,
@@ -448,6 +464,28 @@ export const ConstraintDialog = ({
 						{message}
 					</p>
 				)}
+				{department && (
+					<SetupDepartmentField
+						department={
+							department.kind === "choose"
+								? {
+										...department,
+										onChange: (departmentId): void => {
+											// Shifts and job titles belong to one Department, so a new one starts the values again.
+											setValue("values", {});
+											department.onChange(departmentId);
+										},
+									}
+								: department
+						}
+						labels={{
+							label: t(`${key}.department`),
+							placeholder: t(`${key}.departmentPlaceholder`),
+							hint: t(`${key}.departmentHint`),
+							empty: t(`${key}.departmentsEmpty`),
+						}}
+					/>
+				)}
 				{replacing && (
 					<Callout>
 						{t(
@@ -502,6 +540,7 @@ export const ConstraintDialog = ({
 						{chosen.fields.map(valueRow)}
 					</>
 				)}
+				{impactNote && <p className="text-sm text-neutral-700">{impactNote}</p>}
 			</form>
 		</Dialog>
 	);

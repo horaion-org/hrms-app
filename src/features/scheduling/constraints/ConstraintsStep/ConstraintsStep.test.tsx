@@ -86,7 +86,8 @@ describe("ConstraintsStep", () => {
 				.getAllByRole("cell")
 				.map((cell) => cell.textContent);
 			expect(cells.slice(1)).toEqual([
-				name,
+				// The name's cell also holds the values a phone shows on its line.
+				expect.stringMatching(new RegExp(`^${name}`)),
 				`${category}${type}`,
 				sentence,
 				"This department",

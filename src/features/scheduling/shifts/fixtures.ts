@@ -155,6 +155,9 @@ export const departmentShiftFixture = (
 ): DepartmentShift => ({
 	shiftId: shift.shiftId,
 	departmentId: "d-1",
+	departmentName: "Front Office",
+	branchId: "b-1",
+	branchName: "Main branch",
 	name: shift.name,
 	group: shift.group,
 	colour: shift.colour,

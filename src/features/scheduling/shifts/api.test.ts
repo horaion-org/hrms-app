@@ -4,8 +4,12 @@ import { ApiProblemError, UnexpectedResponseError } from "@/common/problem";
 import { envelope, stubApi } from "@/common/testing/stubApi";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import {
+	companyShiftsQuery,
 	createShift,
 	deleteShift,
+	departmentShiftsQuery,
+	fetchCompanyShifts,
+	fetchDepartmentShifts,
 	fetchShiftRoleOptions,
 	groupsOf,
 	updateShift,
@@ -127,6 +131,87 @@ describe("shifts client", () => {
 		);
 		expect(calls.map((call) => call.path)).toEqual([
 			`${DEPARTMENT}/shift-role-options`,
+		]);
+	});
+
+	it("reads a department's live shifts with their department and branch names", async () => {
+		const calls = stubApi({
+			[`GET ${SHIFTS}`]: { status: 200, body: envelope([LIVE]) },
+		});
+
+		await expect(fetchDepartmentShifts("c-1", UNIT)).resolves.toEqual([LIVE]);
+		expect(calls.map((call) => call.path)).toEqual([SHIFTS]);
+		expect(LIVE).toMatchObject({
+			departmentName: "Front Office",
+			branchId: "b-1",
+			branchName: "Main branch",
+		});
+	});
+
+	it("reads the company's live shifts, naming the branch only when given", async () => {
+		const calls = stubApi({
+			"GET /api/v1/companies/c-1/shifts": {
+				status: 200,
+				body: envelope([LIVE]),
+			},
+		});
+
+		await expect(fetchCompanyShifts("c-1", undefined)).resolves.toEqual([LIVE]);
+		await expect(fetchCompanyShifts("c-1", "b-1")).resolves.toEqual([LIVE]);
+		expect(calls.map((call) => [call.path, call.search])).toEqual([
+			["/api/v1/companies/c-1/shifts", ""],
+			["/api/v1/companies/c-1/shifts", "branchId=b-1"],
+		]);
+	});
+
+	it("rejects a company shift without its department's name", async () => {
+		const { departmentName, ...unnamed } = LIVE;
+		stubApi({
+			"GET /api/v1/companies/c-1/shifts": {
+				status: 200,
+				body: envelope([unnamed]),
+			},
+		});
+
+		await expect(fetchCompanyShifts("c-1", undefined)).rejects.toBeInstanceOf(
+			UnexpectedResponseError
+		);
+		expect(departmentName).toBe("Front Office");
+	});
+
+	it("asks for nothing without the read, or without a department", () => {
+		expect(typeof departmentShiftsQuery("c-1", UNIT).queryFn).toBe("function");
+		expect(typeof departmentShiftsQuery("c-1", UNIT, false).queryFn).not.toBe(
+			"function"
+		);
+		expect(typeof departmentShiftsQuery("c-1", undefined).queryFn).not.toBe(
+			"function"
+		);
+		expect(typeof companyShiftsQuery("c-1", "b-1").queryFn).toBe("function");
+		expect(typeof companyShiftsQuery("c-1", undefined, false).queryFn).not.toBe(
+			"function"
+		);
+	});
+
+	it("keys the company's shifts per branch, and every key under the company", () => {
+		expect(companyShiftsQuery("c-1", undefined).queryKey).toEqual([
+			"scheduling",
+			"c-1",
+			"shifts",
+			"all",
+		]);
+		expect(companyShiftsQuery("c-1", "b-1").queryKey).toEqual([
+			"scheduling",
+			"c-1",
+			"shifts",
+			"b-1",
+		]);
+		expect(departmentShiftsQuery("c-1", UNIT).queryKey).toEqual([
+			"scheduling",
+			"c-1",
+			"departments",
+			"d-1",
+			"shifts",
 		]);
 	});
 

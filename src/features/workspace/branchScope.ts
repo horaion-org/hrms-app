@@ -10,6 +10,8 @@ import type { UnitSelectionRules } from "@/features/workspace/unitSelection";
  */
 export type BranchScope = {
 	keys: ReadonlyArray<PermissionKey>;
+	/** A view's own read keys for the route's current search; `keys` when left out. */
+	keysFor?: (search: Record<string, unknown>) => ReadonlyArray<PermissionKey>;
 	rulesFor: (search: Record<string, unknown>) => UnitSelectionRules | undefined;
 };
 

@@ -11,6 +11,10 @@ export const SCHEDULING_QUERY_ROOT = "scheduling";
 export const shiftsPath = (companyId: string, unit: DepartmentPath): string =>
 	`${departmentPath(companyId, unit)}/shifts`;
 
+/** The live shifts of every department in reach across the company. */
+export const companyShiftsPath = (companyId: string): string =>
+	`${companyPath(companyId)}/shifts`;
+
 /** A department's active job titles, as the shift dialog offers them. */
 export const shiftRoleOptionsPath = (
 	companyId: string,
@@ -22,6 +26,10 @@ export const constraintsPath = (
 	companyId: string,
 	unit: DepartmentPath
 ): string => `${departmentPath(companyId, unit)}/constraints`;
+
+/** The live constraints of every department in reach across the company, with the company's own first. */
+export const companyConstraintsPath = (companyId: string): string =>
+	`${companyPath(companyId)}/constraints`;
 
 /** The constraint types with their fields, and the department's shifts and active job titles, as the constraint dialog offers them. */
 export const constraintOptionsPath = (

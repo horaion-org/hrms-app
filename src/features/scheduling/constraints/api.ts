@@ -4,6 +4,7 @@ import { apiRequest, apiRequestVoid } from "@/common/api-client";
 import type { DepartmentPath } from "@/common/companyPath";
 import type { QueryOptionsFor } from "@/common/query-client";
 import {
+	companyConstraintsPath,
 	constraintOptionsPath,
 	constraintsPath,
 	SCHEDULING_QUERY_ROOT,
@@ -170,6 +171,10 @@ export const departmentConstraintSchema = z.object({
 	constraintId: z.string(),
 	/** Null for a company constraint, which belongs to no Department. */
 	departmentId: z.string().nullable(),
+	/** The Department's and its Branch's names and the Branch's id; null on a company constraint. */
+	departmentName: z.string().nullable(),
+	branchId: z.string().nullable(),
+	branchName: z.string().nullable(),
 	name: z.string(),
 	type: constraintTypeSchema,
 	category: constraintCategorySchema,
@@ -294,6 +299,53 @@ export const constraintsQuery = (
 				? ({ signal }): Promise<Array<DepartmentConstraint>> =>
 						fetchConstraints(companyId, unit, signal)
 				: skipToken,
+		meta: administrativeMeta(companyId),
+		staleTime: 30_000,
+		retry,
+	});
+
+/**
+ * The live constraints of every department where the person may read
+ * constraints, across the company or within one Branch; the company's own
+ * come first, once each.
+ */
+export const fetchCompanyConstraints = (
+	companyId: string,
+	branchId: string | undefined,
+	signal?: AbortSignal
+): Promise<Array<DepartmentConstraint>> => {
+	const search = branchId
+		? `?${new URLSearchParams({ branchId }).toString()}`
+		: "";
+	return apiRequest(
+		`${companyConstraintsPath(companyId)}${search}`,
+		departmentConstraintsSchema,
+		{ signal }
+	);
+};
+
+/** The key the company's live constraints are cached under, per Branch or for all of them. */
+export const companyConstraintsKey = (
+	companyId: string,
+	branchId?: string
+): readonly ["scheduling", string, "constraints", string] =>
+	[SCHEDULING_QUERY_ROOT, companyId, "constraints", branchId ?? "all"] as const;
+
+/** The company's live constraints, within one Branch when given; `allowed` false asks for nothing. */
+export const companyConstraintsQuery = (
+	companyId: string,
+	branchId: string | undefined,
+	allowed = true
+): QueryOptionsFor<
+	Array<DepartmentConstraint>,
+	ReturnType<typeof companyConstraintsKey>
+> =>
+	queryOptions({
+		queryKey: companyConstraintsKey(companyId, branchId),
+		queryFn: allowed
+			? ({ signal }): Promise<Array<DepartmentConstraint>> =>
+					fetchCompanyConstraints(companyId, branchId, signal)
+			: skipToken,
 		meta: administrativeMeta(companyId),
 		staleTime: 30_000,
 		retry,

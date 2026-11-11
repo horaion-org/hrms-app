@@ -103,6 +103,14 @@ export const SCHEDULE_READ_KEYS: ReadonlyArray<PermissionKey> = [
 	"schedule:read",
 ];
 
+/** Shifts are listed where this is held at their Department: the Shifts tab's unit choices. */
+export const SHIFT_READ_KEYS: ReadonlyArray<PermissionKey> = ["shift:read"];
+
+/** Constraints are listed where this is held at their Department: the Constraints tab's unit choices. */
+export const CONSTRAINT_READ_KEYS: ReadonlyArray<PermissionKey> = [
+	"constraint:read",
+];
+
 /**
  * Holding this at a member's Department is what lets a person change that
  * member's work availability. A member's own needs nothing granted.
@@ -205,10 +213,6 @@ export const PERMISSION_USES = {
 	"schedule:create": [{ key: "shift:read", reason: "scheduleShifts" }],
 	"schedule:update": [{ key: "shift:read", reason: "scheduleShifts" }],
 	"schedule:generate": [{ key: "shift:read", reason: "scheduleShifts" }],
-	// Shifts are changed only inside the schedule wizard, on a saved draft (`useSchedule`).
-	"shift:create": [{ key: "schedule:read", reason: "shiftsInWizard" }],
-	"shift:update": [{ key: "schedule:read", reason: "shiftsInWizard" }],
-	"shift:delete": [{ key: "schedule:read", reason: "shiftsInWizard" }],
 	// Applying on someone's behalf searches the People list (`peopleQuery`).
 	"leave_request:create": [
 		{ key: "member_profile:read", reason: "leaveForSomeone" },

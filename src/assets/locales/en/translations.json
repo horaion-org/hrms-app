@@ -2469,10 +2469,6 @@
 					"why": "the schedule wizard lists the department’s shifts",
 					"without": "holders can’t see the shifts step of the schedule wizard"
 				},
-				"shiftsInWizard": {
-					"why": "the app changes shifts only in the schedule wizard, which opens a schedule",
-					"without": "holders can’t reach shifts, which the app shows only in the schedule wizard"
-				},
 				"leaveForSomeone": {
 					"why": "applying for someone searches the People list",
 					"without": "holders can’t find the person to apply for"
@@ -3003,8 +2999,8 @@
 			"formerMember": "Former company member",
 			"yes": "Yes",
 			"no": "No",
-			"title": "Schedule overview",
-			"subtitle": "View and manage schedules by departments.",
+			"title": "Scheduling",
+			"subtitle": "Schedules, and the shifts and constraints they are built from.",
 			"search": "Search schedules or departments",
 			"view": "View Schedule",
 			"viewNamed": "View schedule {{code}}",
@@ -3192,7 +3188,7 @@
 				"timeRequired": "Choose a time.",
 				"timeRejected": "Check the time and try again.",
 				"unpaidBreak": "Unpaid break (minutes)",
-				"unpaidBreakHint": "Leave at 0 if the shift has no unpaid break.",
+				"unpaidBreakHint": "Enter a break only if people are free during it. A break spent on duty counts as work: leave this at 0.",
 				"paidHours_one": "{{count}} paid hour",
 				"paidHours_other": "{{count}} paid hours",
 				"breakWhole": "Enter the break in whole minutes, or 0.",
@@ -3233,14 +3229,20 @@
 					"type": "Choose a shift type.",
 					"start": "Choose a start time.",
 					"end": "Choose an end time."
-				}
+				},
+				"department": "Department",
+				"departmentPlaceholder": "Select a department",
+				"departmentHint": "Shifts belong to one department.",
+				"departmentsEmpty": "No active department you can add shifts to.",
+				"rolesNeedDepartment": "Choose a department first."
 			},
 			"types": {
 				"REGULAR": "Regular",
 				"SPLIT": "Split",
 				"ON_CALL": "On Call",
 				"OVERTIME": "Overtime"
-			}
+			},
+			"department": "Department"
 		},
 		"constraints": {
 			"title": "Scheduling constraints",
@@ -3402,7 +3404,12 @@
 				"levelNotAllowed": "This kind of constraint names a department’s shifts or job titles, so only a department can set it.",
 				"nameConflictCompany": "The company already has a constraint named \"{{name}}\". Choose a different name.",
 				"typeAlreadyUsedCompany": "The company already has a constraint of this type. Edit that one instead.",
-				"typeFixed": "A company constraint’s type can’t be changed. Add a new constraint instead."
+				"typeFixed": "A company constraint’s type can’t be changed. Add a new constraint instead.",
+				"department": "Department",
+				"departmentPlaceholder": "Select a department",
+				"departmentHint": "Constraints belong to one department; company-wide ones are set in Settings.",
+				"departmentsEmpty": "No active department you can add constraints to.",
+				"optionsNeedDepartment": "Choose a department first."
 			},
 			"preview": {
 				"title": "Constraint preview",
@@ -3433,7 +3440,11 @@
 				"DEFAULT": "Default"
 			},
 			"companyRuleApplies": "Company rule applies",
-			"companyRuleAppliesHint": "The company’s constraint is now stricter than this one, so both apply."
+			"companyRuleAppliesHint": "The company’s constraint is now stricter than this one, so both apply.",
+			"department": "Department",
+			"allDepartments": "All departments",
+			"allConstraints": "All",
+			"categoriesLabel": "Constraint categories"
 		},
 		"forecast": {
 			"title": "Staffing forecast",
@@ -4046,6 +4057,48 @@
 				"loadFailed": "Couldn’t load offers.",
 				"tryAgain": "Try again"
 			}
+		},
+		"reach": {
+			"editShift_one": "Saving changes this shift for {{department}}: new schedules and {{count}} draft that uses it. Generated and published schedules keep their own copy.",
+			"editShift_other": "Saving changes this shift for {{department}}: new schedules and {{count}} drafts that use it. Generated and published schedules keep their own copy.",
+			"editShiftNoDrafts": "Saving changes this shift for {{department}} and new schedules. Generated and published schedules keep their own copy.",
+			"editShiftUnknown": "Saving changes this shift for {{department}}, new schedules and any drafts that use it. Generated and published schedules keep their own copy.",
+			"editConstraint_one": "Saving changes this constraint for {{department}}: new schedules and {{count}} draft that uses it. Generated and published schedules keep their own copy.",
+			"editConstraint_other": "Saving changes this constraint for {{department}}: new schedules and {{count}} drafts that use it. Generated and published schedules keep their own copy.",
+			"editConstraintNoDrafts": "Saving changes this constraint for {{department}} and new schedules. Generated and published schedules keep their own copy.",
+			"editConstraintUnknown": "Saving changes this constraint for {{department}}, new schedules and any drafts that use it. Generated and published schedules keep their own copy.",
+			"deleteTitle": "Delete {{name}}?",
+			"deleteShiftBody_one": "It's removed from {{department}} and from {{count}} draft that uses it. Generated and published schedules keep their copy.",
+			"deleteShiftBody_other": "It's removed from {{department}} and from {{count}} drafts that use it. Generated and published schedules keep their copy.",
+			"deleteShiftBodyNoDrafts": "It's removed from {{department}}. Generated and published schedules keep their copy.",
+			"deleteShiftBodyUnknown": "It's removed from {{department}} and from any drafts that use it. Generated and published schedules keep their copy.",
+			"deleteConstraintBody_one": "It's removed from {{department}} and from {{count}} draft that uses it. Generated and published schedules keep their copy.",
+			"deleteConstraintBody_other": "It's removed from {{department}} and from {{count}} drafts that use it. Generated and published schedules keep their copy.",
+			"deleteConstraintBodyNoDrafts": "It's removed from {{department}}. Generated and published schedules keep their copy.",
+			"deleteConstraintBodyUnknown": "It's removed from {{department}} and from any drafts that use it. Generated and published schedules keep their copy.",
+			"namedByConstraints_one": "{{count}} constraint names this shift; it will stop applying to it.",
+			"namedByConstraints_other": "{{count}} constraints name this shift; they'll stop applying to it.",
+			"deleteShift": "Delete shift",
+			"deleteConstraint": "Delete constraint",
+			"cancel": "Cancel"
+		},
+		"shiftsTab": {
+			"descriptionOne": "The times {{department}} works. New schedules use them; generated schedules keep the shifts they were made with.",
+			"descriptionAll": "The times each department works. New schedules use them; generated schedules keep the shifts they were made with.",
+			"search": "Search shifts",
+			"noMatch": "No shifts match your search."
+		},
+		"views": {
+			"label": "Scheduling views",
+			"schedules": "Schedules",
+			"shifts": "Shifts",
+			"constraints": "Constraints"
+		},
+		"constraintsTab": {
+			"descriptionOne": "How {{department}} is staffed and rested. Company constraints come first; locked ones always apply.",
+			"descriptionAll": "How each department is staffed and rested. Company constraints apply to every department; locked ones always apply.",
+			"search": "Search constraints",
+			"noMatch": "No constraints match your search."
 		}
 	},
 	"colourSwatchPicker": {

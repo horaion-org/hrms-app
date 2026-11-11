@@ -28,10 +28,10 @@ import { AccountMenu } from "@/features/auth/AccountMenu";
 import { usableCompanies } from "@/features/auth/currentCompany";
 import { logOut } from "@/features/auth/session";
 import { useAvailabilityViews } from "@/features/availability/useAvailability";
+import { SCHEDULING_KEYS } from "@/features/scheduling/schedulingSearch";
 import {
 	ORGANISATION_READ_KEYS,
 	PEOPLE_READ_KEYS,
-	SCHEDULE_READ_KEYS,
 } from "@/features/workspace/permissionKeys";
 import { Can } from "@/features/workspace/Can";
 import { HeaderBranchScope } from "@/features/workspace/HeaderBranchScope";
@@ -150,9 +150,9 @@ export const MainLayout = (): FunctionComponent => {
 						label={t("shell.navigation.dashboard")}
 						to="/"
 					/>
-					{/* Scheduling is offered where schedules may be read, at any scope. A member's own
-					    roster needs nothing granted: it opens from its notice, under /me. */}
-					<Can anyOf={SCHEDULE_READ_KEYS} at="anywhere">
+					{/* Scheduling is offered where any of its tabs may be read (schedules, shifts), at any
+					    scope. A member's own roster needs nothing granted: it opens from its notice, under /me. */}
+					<Can anyOf={SCHEDULING_KEYS} at="anywhere">
 						<SidebarItem
 							activeIcon={SchedulingFilledIcon}
 							icon={SchedulingIcon}

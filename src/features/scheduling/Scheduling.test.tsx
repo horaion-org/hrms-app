@@ -2,7 +2,11 @@ import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { resetApiClient } from "@/common/api-client";
-import { companyWideWorkspace } from "@/common/testing/effectiveWorkspace";
+import {
+	companyWideWorkspace,
+	effectiveWorkspace,
+	TEST_BRANCHES,
+} from "@/common/testing/effectiveWorkspace";
 import {
 	currentUserReply,
 	openApp,
@@ -18,6 +22,8 @@ import {
 import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
 import type { Schedule } from "@/features/scheduling/schedules/api";
+import { CONSTRAINT_FIXTURES } from "@/features/scheduling/constraints/fixtures";
+import { departmentShiftFixture } from "@/features/scheduling/shifts/fixtures";
 import type { Workspace } from "@/features/workspace/api";
 import {
 	generatedScheduleFixture,
@@ -493,5 +499,188 @@ describe("the Scheduling link in the main navigation", () => {
 		await openSchedulingAs(workspace);
 
 		expect(await schedulingLink()).toBeVisible();
+	});
+
+	it("is offered with only shift:read", async () => {
+		await openSchedulingAs(schedulingWorkspace(["shift:read"]));
+
+		expect(await schedulingLink()).toBeVisible();
+	});
+
+	it("is offered with only constraint:read", async () => {
+		await openSchedulingAs(schedulingWorkspace(["constraint:read"]));
+
+		expect(await schedulingLink()).toBeVisible();
+	});
+});
+
+describe("Scheduling's tabs", () => {
+	const COMPANY_SHIFTS = "/api/v1/companies/c-1/shifts";
+	const COMPANY_CONSTRAINTS = "/api/v1/companies/c-1/constraints";
+	const KITCHEN_SHIFTS =
+		"/api/v1/companies/c-1/branches/b-1/departments/d-1/shifts";
+	/** Morning cover in Orchard's Kitchen (d-1). */
+	const kitchenCover = {
+		...CONSTRAINT_FIXTURES[2]!,
+		departmentName: "Kitchen",
+		branchName: "Orchard",
+	};
+	/** Front Desk AM in Orchard's Kitchen (d-1). */
+	const kitchenShift = {
+		...departmentShiftFixture(),
+		departmentName: "Kitchen",
+		branchName: "Orchard",
+	};
+
+	const openScheduling = async (
+		workspace: Workspace,
+		path = "/scheduling"
+	): Promise<ReturnType<typeof stubApi>> => {
+		vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+		const calls = stubApi({
+			"POST /api/v1/public/sessions/refreshes": accessPassReply(),
+			"GET /api/v1/me": currentUserReply(),
+			"GET /api/v1/me/workspace": { status: 200, body: envelope(workspace) },
+			[`GET ${SCHEDULES_PATH}`]: listOf([scheduleFixture()]),
+			[`GET ${COMPANY_SHIFTS}`]: {
+				status: 200,
+				body: envelope([kitchenShift]),
+			},
+			[`GET ${KITCHEN_SHIFTS}`]: {
+				status: 200,
+				body: envelope([kitchenShift]),
+			},
+			[`GET ${COMPANY_CONSTRAINTS}`]: {
+				status: 200,
+				body: envelope([kitchenCover]),
+			},
+		});
+		app = await openApp(path);
+		renderAuthApp(app);
+		return calls;
+	};
+	const tabNames = async (): Promise<Array<string>> =>
+		within(await screen.findByRole("tablist", { name: "Scheduling views" }))
+			.getAllByRole("tab")
+			.map((tab) => (tab.textContent ?? "").trim());
+
+	it.each<[Array<string>, Array<string>]>([
+		[
+			["schedule:read", "shift:read", "constraint:read"],
+			["Schedules", "Shifts", "Constraints"],
+		],
+		[
+			["schedule:read", "shift:read"],
+			["Schedules", "Shifts"],
+		],
+		[["schedule:read"], ["Schedules"]],
+		[["shift:read"], ["Shifts"]],
+		[["constraint:read"], ["Constraints"]],
+	])("given_%j_when_opened_then_offersTabs_%j", async (keys, tabs) => {
+		await openScheduling(companyWideWorkspace(keys));
+
+		expect(await tabNames()).toEqual(tabs);
+	});
+
+	it("given_onlyShiftRead_when_opened_then_showsShiftsAndNamesItInTheUrl", async () => {
+		await openScheduling(companyWideWorkspace(["shift:read"]));
+
+		await screen.findByRole("row", { name: /Front Desk AM/ });
+		await waitFor(() => {
+			expect(app?.router.state.location.search).toEqual({ view: "shifts" });
+		});
+	});
+
+	it("given_viewShifts_when_opened_then_listsTheCompanysShiftsInTheHeadersBranch", async () => {
+		const calls = await openScheduling(
+			companyWideWorkspace(["schedule:read", "shift:read"]),
+			"/scheduling?view=shifts"
+		);
+
+		expect(
+			await screen.findByRole("row", { name: /Front Desk AM/ })
+		).toHaveTextContent("Kitchen");
+		expect(
+			calls
+				.filter((call) => call.path === COMPANY_SHIFTS)
+				.map((call) => call.search)
+		).toEqual(["branchId=b-1"]);
+	});
+
+	it("given_viewConstraints_when_opened_then_listsTheCompanysConstraintsInTheHeadersBranch", async () => {
+		const calls = await openScheduling(
+			companyWideWorkspace(["schedule:read", "constraint:read"]),
+			"/scheduling?view=constraints"
+		);
+
+		expect(
+			await screen.findByRole("row", { name: /Morning cover/ })
+		).toHaveTextContent("Kitchen");
+		expect(
+			calls
+				.filter((call) => call.path === COMPANY_CONSTRAINTS)
+				.map((call) => call.search)
+		).toEqual(["branchId=b-1"]);
+	});
+
+	it("given_theShiftsTab_when_aDepartmentIsChosen_then_readsThatDepartmentsShifts", async () => {
+		const calls = await openScheduling(
+			companyWideWorkspace(["shift:read"]),
+			"/scheduling?view=shifts"
+		);
+		const user = userEvent.setup();
+		await screen.findByRole("row", { name: /Front Desk AM/ });
+
+		await user.click(screen.getByRole("button", { name: "Filters" }));
+		await user.click(screen.getByRole("button", { name: "Department" }));
+		await user.click(screen.getByRole("option", { name: "Kitchen" }));
+
+		await waitFor(() => {
+			expect(calls.map((call) => call.path)).toContain(KITCHEN_SHIFTS);
+		});
+		expect(app?.router.state.location.search).toEqual({
+			view: "shifts",
+			department: "d-1",
+		});
+	});
+
+	it("given_theShiftsTab_when_opened_then_theHeaderOffersTheBranchesWhereShiftReadIsHeld", async () => {
+		// schedule:read across the company; shift:read at Tampines (b-2) only.
+		const workspace = effectiveWorkspace({
+			companies: [
+				{
+					uuid: "c-1",
+					name: "Company c-1",
+					permissions: ["schedule:read"],
+					branches: TEST_BRANCHES.map((branch) => ({
+						...branch,
+						permissions: branch.uuid === "b-2" ? ["shift:read"] : [],
+					})),
+				},
+			],
+		});
+		await openScheduling(workspace, "/scheduling?view=shifts");
+		const user = userEvent.setup();
+
+		// One Branch offered: the header names it as text.
+		await waitFor(() => {
+			expect(
+				within(screen.getByRole("banner")).getByText("Tampines")
+			).toBeVisible();
+		});
+		expect(
+			within(screen.getByRole("banner")).queryByRole("button", {
+				name: "Branch",
+			})
+		).toBeNull();
+
+		await user.click(screen.getByRole("tab", { name: "Schedules" }));
+		await waitFor(() => {
+			expect(
+				within(screen.getByRole("banner")).getByRole("button", {
+					name: "Branch",
+				})
+			).toBeVisible();
+		});
 	});
 });

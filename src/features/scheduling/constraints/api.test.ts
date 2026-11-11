@@ -4,8 +4,10 @@ import { ApiProblemError, UnexpectedResponseError } from "@/common/problem";
 import { envelope, stubApi } from "@/common/testing/stubApi";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import {
+	companyConstraintsQuery,
 	createConstraint,
 	deleteConstraint,
+	fetchCompanyConstraints,
 	fetchConstraintOptions,
 	fetchConstraints,
 	updateConstraint,
@@ -16,6 +18,7 @@ import {
 	deleteConstraintRefusal,
 } from "@/features/scheduling/constraints/constraintRefusal";
 import {
+	COMPANY_CONSTRAINT_FIXTURES,
 	CONSTRAINT_FIXTURES,
 	CONSTRAINT_OPTIONS,
 	CONSTRAINT_OPTIONS_RESPONSE,
@@ -228,6 +231,72 @@ describe("constraints client", () => {
 		await expect(fetchConstraintOptions("c-1", UNIT)).rejects.toBeInstanceOf(
 			UnexpectedResponseError
 		);
+	});
+
+	it("reads the company's live constraints, naming the branch only when given", async () => {
+		const rows = [...COMPANY_CONSTRAINT_FIXTURES, LIVE];
+		const calls = stubApi({
+			"GET /api/v1/companies/c-1/constraints": {
+				status: 200,
+				body: envelope(rows),
+			},
+		});
+
+		await expect(fetchCompanyConstraints("c-1", undefined)).resolves.toEqual(
+			rows
+		);
+		await expect(fetchCompanyConstraints("c-1", "b-1")).resolves.toEqual(rows);
+		expect(calls.map((call) => [call.path, call.search])).toEqual([
+			["/api/v1/companies/c-1/constraints", ""],
+			["/api/v1/companies/c-1/constraints", "branchId=b-1"],
+		]);
+	});
+
+	it("reads a company row without department or branch names, and a department row with them", async () => {
+		stubApi({
+			"GET /api/v1/companies/c-1/constraints": {
+				status: 200,
+				body: envelope([COMPANY_CONSTRAINT_FIXTURES[0], LIVE]),
+			},
+		});
+
+		const [company, department] = await fetchCompanyConstraints(
+			"c-1",
+			undefined
+		);
+
+		expect(company).toMatchObject({
+			departmentId: null,
+			departmentName: null,
+			branchId: null,
+			branchName: null,
+		});
+		expect(department).toMatchObject({
+			departmentName: "Front Office",
+			branchId: "b-1",
+			branchName: "Main branch",
+		});
+	});
+
+	it("asks for nothing without the read, and keys the company's constraints per branch", () => {
+		expect(typeof companyConstraintsQuery("c-1", "b-1").queryFn).toBe(
+			"function"
+		);
+		expect(
+			typeof companyConstraintsQuery("c-1", undefined, false).queryFn
+		).not.toBe("function");
+		expect(companyConstraintsQuery("c-1", undefined).queryKey).toEqual([
+			"scheduling",
+			"c-1",
+			"constraints",
+			"all",
+		]);
+		expect(companyConstraintsQuery("c-1", "b-1").queryKey).toEqual([
+			"scheduling",
+			"c-1",
+			"constraints",
+			"b-1",
+		]);
 	});
 });
 
