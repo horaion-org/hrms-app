@@ -852,7 +852,7 @@
       "module": "company_settings",
       "prerequisites": [],
       "resource": "scheduling_policy",
-      "resourceName": "Scheduling Policy"
+      "resourceName": "Work Policy"
     },
     {
       "action": "update",
@@ -866,7 +866,7 @@
         "scheduling_policy:read"
       ],
       "resource": "scheduling_policy",
-      "resourceName": "Scheduling Policy"
+      "resourceName": "Work Policy"
     },
     {
       "action": "read",
