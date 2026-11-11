@@ -26,6 +26,7 @@ import {
 	frozenConstraintsFixture,
 } from "@/features/scheduling/constraints/fixtures";
 import { coverOfferFixture } from "@/features/scheduling/coverOffers/fixtures";
+import { readinessFixture } from "@/features/scheduling/readiness/fixtures";
 import {
 	generatedScheduleFixture,
 	scheduleAssignmentsFixture,
@@ -383,6 +384,19 @@ const ANSWERS: Array<Answer> = [
 			]),
 	},
 	{ path: /^\/shifts$/, data: () => [KITCHEN_SHIFT, BAR_SHIFT] },
+	// Kitchen is ready to schedule; Bar has shifts but no staffing constraint.
+	{
+		path: /^\/scheduling-readiness$/,
+		data: () => [
+			readinessFixture(),
+			readinessFixture({
+				departmentId: "d-2",
+				departmentName: "Bar",
+				ready: false,
+				missing: ["STAFFING_CONSTRAINT"],
+			}),
+		],
+	},
 	{ path: /\/departments\/[^/]+\/shifts$/, data: () => [KITCHEN_SHIFT] },
 	{ path: /\/shift-role-options$/, data: () => SHIFT_ROLE_OPTIONS },
 	{
