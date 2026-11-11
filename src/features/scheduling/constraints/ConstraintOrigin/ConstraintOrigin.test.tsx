@@ -27,9 +27,7 @@ describe("ConstraintOrigin", () => {
 		});
 
 		expect(
-			screen.getByRole("img", {
-				name: "Set in the work policy; ask an admin to change it.",
-			})
+			screen.getByRole("img", { name: "Set in the work policy" })
 		).toBeInTheDocument();
 		expect(screen.getByText("Work policy · Locked")).toBeInTheDocument();
 	});

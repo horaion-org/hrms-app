@@ -3268,7 +3268,7 @@
 				"COMPANY": "Política de trabajo",
 				"DEPARTMENT": "Este departamento"
 			},
-			"setByCompany": "Definida en la política de trabajo; pide a un administrador que la cambie.",
+			"setByCompany": "Definida en la política de trabajo",
 			"stricterHere": "Más estricta aquí",
 			"changedHere": "Cambiada aquí",
 			"makeStricter": "Hacer {{name}} más estricta aquí",

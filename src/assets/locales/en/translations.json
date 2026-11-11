@@ -3446,7 +3446,7 @@
 				"COMPANY": "Work policy",
 				"DEPARTMENT": "This department"
 			},
-			"setByCompany": "Set in the work policy; ask an admin to change it.",
+			"setByCompany": "Set in the work policy",
 			"stricterHere": "Stricter here",
 			"changedHere": "Changed here",
 			"makeStricter": "Make {{name}} stricter here",
