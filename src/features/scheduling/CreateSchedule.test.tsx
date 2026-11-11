@@ -17,6 +17,7 @@ import {
 } from "@/common/testing/stubApi";
 import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
+import { readinessFixture } from "@/features/scheduling/readiness/fixtures";
 import {
 	CONSTRAINT_FIXTURES,
 	CONSTRAINT_OPTIONS_RESPONSE,
@@ -339,9 +340,11 @@ describe("Create Schedule: opening and setup", () => {
 		const user = userEvent.setup();
 		const { opened } = await open("/scheduling/new", {
 			[`POST ${SCHEDULES}`]: problemReply(400, "SCHEDULE_PERIOD_NOT_MONDAY"),
+			[`GET ${LIVE_SHIFTS}`]: reply(LIVE_SHIFT_ROWS),
 		});
 
 		await fillSetup(user);
+		await screen.findByText(WEEK_LINE);
 		await user.click(next());
 
 		expect(
@@ -543,6 +546,152 @@ describe("Create Schedule: the week's choice", () => {
 		expect(
 			screen.queryByRole("button", { name: "Choose for this week" })
 		).toBeNull();
+	});
+});
+
+describe("Create Schedule: the Setup gate", () => {
+	const READINESS = "GET /api/v1/companies/c-1/scheduling-readiness";
+	const frontOffice = (
+		missing: Array<"SHIFT" | "STAFFING_CONSTRAINT">
+	): StubReply =>
+		reply([
+			readinessFixture({
+				departmentName: "Front Office",
+				branchName: "Main branch",
+				ready: missing.length === 0,
+				missing,
+			}),
+		]);
+	const nextNote = (): string | null =>
+		document.getElementById(next().getAttribute("aria-describedby") ?? "")
+			?.textContent ?? null;
+
+	it("given_nothingSetUp_when_theDepartmentIsChosen_then_stopsAndLinksToItsShiftsWithTheWayBack", async () => {
+		const user = userEvent.setup();
+		await open("/scheduling/new", {
+			[`GET ${LIVE_SHIFTS}`]: reply([]),
+			[`GET ${LIVE_CONSTRAINTS}`]: reply([]),
+			[READINESS]: frontOffice(["SHIFT", "STAFFING_CONSTRAINT"]),
+		});
+
+		await fillSetup(user);
+
+		expect(
+			await screen.findByText(
+				"Front Office has no shifts or staffing constraints yet. A schedule needs both.",
+				{ exact: false }
+			)
+		).toBeVisible();
+		expect(
+			screen.getByRole("link", { name: "Set up Front Office" })
+		).toHaveAttribute(
+			"href",
+			expect.stringMatching(
+				/^\/scheduling\?view=shifts&branch=b-1&department=d-1&next=create&week=\d{4}-\d{2}-\d{2}$/
+			) as string
+		);
+		expect(next()).toBeDisabled();
+		expect(nextNote()).toBe(
+			"Set up shifts and a staffing constraint for Front Office first."
+		);
+	});
+
+	it("given_shiftsButNoStaffing_when_theDepartmentIsChosen_then_linksToItsConstraints", async () => {
+		const user = userEvent.setup();
+		await open("/scheduling/new", {
+			[`GET ${LIVE_SHIFTS}`]: reply(LIVE_SHIFT_ROWS),
+			[READINESS]: frontOffice(["STAFFING_CONSTRAINT"]),
+		});
+
+		await fillSetup(user);
+
+		expect(
+			await screen.findByRole("link", { name: "Add a staffing constraint" })
+		).toHaveAttribute(
+			"href",
+			expect.stringMatching(
+				/^\/scheduling\?view=constraints&branch=b-1&department=d-1&next=create&week=/
+			) as string
+		);
+		expect(
+			screen.getByText(
+				"Front Office has shifts but no staffing constraint, so nobody would be rostered.",
+				{ exact: false }
+			)
+		).toBeVisible();
+		expect(next()).toBeDisabled();
+	});
+
+	it("given_someoneWhoCannotFixIt_when_theDepartmentIsChosen_then_saysWhoCanWithoutALink", async () => {
+		const user = userEvent.setup();
+		await open(
+			"/scheduling/new",
+			{
+				[`GET ${LIVE_SHIFTS}`]: reply(LIVE_SHIFT_ROWS),
+				[READINESS]: frontOffice(["STAFFING_CONSTRAINT"]),
+			},
+			["schedule:read", "schedule:create", "shift:read"]
+		);
+
+		await fillSetup(user);
+
+		expect(
+			await screen.findByText(
+				"Front Office isn’t ready to schedule: it has no staffing constraint. Ask someone who manages Front Office’s scheduling to add one.",
+				{ exact: false }
+			)
+		).toBeVisible();
+		expect(
+			screen.queryByRole("link", { name: "View constraints" })
+		).toBeNull();
+		expect(next()).toBeDisabled();
+	});
+
+	it("given_aReadyDepartment_when_chosen_then_showsNoGateAndNextGoesOn", async () => {
+		const user = userEvent.setup();
+		await open("/scheduling/new", {
+			[`GET ${LIVE_SHIFTS}`]: reply(LIVE_SHIFT_ROWS),
+			[READINESS]: frontOffice([]),
+		});
+
+		await fillSetup(user);
+
+		await screen.findByText(WEEK_LINE);
+		expect(screen.queryByText(/isn’t ready|has no shifts|no staffing/)).toBeNull();
+		expect(next()).toBeEnabled();
+	});
+
+	it("given_listsThePersonMayNotSee_when_aDepartmentIsChosen_then_nextSaysWhy", async () => {
+		const user = userEvent.setup();
+		await open("/scheduling/new", {}, [
+			"schedule:read",
+			"schedule:create",
+			"constraint:read",
+		]);
+
+		await fillSetup(user);
+
+		await screen.findByText(
+			"This week uses every shift and constraint of Front Office.",
+			{ exact: false }
+		);
+		expect(next()).toBeDisabled();
+		expect(nextNote()).toBe(
+			"You need to see Front Office’s shifts and constraints to create its schedule."
+		);
+	});
+
+	it("given_aListThatHasNotAnswered_when_aDepartmentIsChosen_then_nextWaitsWithoutANote", async () => {
+		const user = userEvent.setup();
+		// The department's live shifts fail to load, so the week isn't known.
+		await open("/scheduling/new");
+
+		await fillSetup(user);
+
+		await waitFor(() => {
+			expect(next()).toBeDisabled();
+		});
+		expect(nextNote()).toBe("");
 	});
 });
 

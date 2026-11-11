@@ -64,6 +64,16 @@ import {
 import { withSchedulingNotice } from "@/features/scheduling/schedulingNotice";
 import type { ScheduleSetupValues } from "@/features/scheduling/setupSchema";
 import { departmentShiftsQuery } from "@/features/scheduling/shifts/api";
+import {
+	fixLinkOf,
+	gateOf,
+	type Gate,
+} from "@/features/scheduling/readiness/readinessCopy";
+import {
+	ReadinessGateCallout,
+	type FixLink,
+} from "@/features/scheduling/readiness/ReadinessGateCallout";
+import { useSchedulingReadiness } from "@/features/scheduling/readiness/useSchedulingReadiness";
 import { StepActions } from "@/features/scheduling/StepActions";
 import { stepCompletion } from "@/features/scheduling/stepCompletion";
 import { isScheduleStep, SCHEDULE_STEPS } from "@/features/scheduling/steps";
@@ -305,6 +315,17 @@ export const CreateSchedule = (): FunctionComponent => {
 			? { shiftIds: ticked, constraintIds: tickedConstraints }
 			: allOf(weekShifts ?? [], weekConstraints ?? []);
 	const [choosingWeek, setChoosingWeek] = useState(false);
+	// Whether the week's department could roster anyone, as the API answers it; nothing is asked before one is chosen.
+	const readinessDepartmentId = saved?.departmentId ?? setupUnit?.departmentId;
+	const readiness = useSchedulingReadiness(
+		companyId,
+		{ departmentId: readinessDepartmentId },
+		readinessDepartmentId !== undefined
+	);
+	const readinessRow =
+		readiness.status === "ready"
+			? readiness.rows.find((row) => row.departmentId === readinessDepartmentId)
+			: undefined;
 	const scheduleActions = useScheduleActions(companyId);
 	const [toast, setToast] = useState<{ id: number; message: string }>();
 	const [problem, setProblem] = useState("");
@@ -496,9 +517,10 @@ export const CreateSchedule = (): FunctionComponent => {
 			t
 		),
 	};
-	// The week the Setup form holds, so the dialog names it before it is saved.
+	// The week the Setup form holds, so the dialog and the gate's link name it before it is saved.
+	const setupWeek = setupPeriodStart || period.start;
 	const weekPeriodLabel = formatPeriod(
-		periodStartingOn(setupPeriodStart || period.start),
+		periodStartingOn(setupWeek),
 		formattingLocale(i18n)
 	);
 	// What the week uses, once its department and both lists are known; hidden lists can't be chosen from.
@@ -533,6 +555,45 @@ export const CreateSchedule = (): FunctionComponent => {
 			: undefined;
 	const editShifts = editLink("shifts", "shift:read");
 	const editConstraints = editLink("constraints", "constraint:read");
+	// Whether the person may add what the department lacks there.
+	const canFix = {
+		shifts:
+			weekUnit !== undefined &&
+			access.can("shift:create", departmentScope(weekUnit.departmentId)),
+		constraints:
+			weekUnit !== undefined &&
+			access.can("constraint:create", departmentScope(weekUnit.departmentId)),
+	};
+	// A new draft stops at Setup while its department can't roster anyone.
+	const setupGate =
+		!saved && readinessRow ? gateOf(readinessRow, canFix, "setup") : undefined;
+	// The tab that fixes the gate, carrying the way back; only where that tab may be read.
+	const fixLink = (
+		gate: Gate | undefined,
+		returnTo: Parameters<typeof fixLinkOf>[2]
+	): FixLink | undefined =>
+		gate?.linkTo &&
+		weekUnit &&
+		(gate.linkTo === "shifts" ? editShifts : editConstraints)
+			? {
+					to: "/scheduling",
+					search: fixLinkOf(gate.linkTo, weekUnit, returnTo),
+				}
+			: undefined;
+	// Why Setup's Next waits on a new draft: its gate, lists the person may not see, or lists still loading (no note).
+	const newListsWaiting =
+		!saved &&
+		setupUnit !== undefined &&
+		!weekListsHidden &&
+		(weekShifts === undefined || weekConstraints === undefined);
+	const setupNextNote = setupGate
+		? t(setupGate.nextNoteKey, { department: setupGate.department })
+		: !saved && weekListsHidden && weekDepartmentName
+			? t("scheduling.week.listsHiddenNote", { department: weekDepartmentName })
+			: newListsWaiting
+				? ""
+				: undefined;
+	const setupNextDisabled = step === "setup" && setupNextNote !== undefined;
 	// The week can be chosen from its lists while the setup can change.
 	const canChooseWeek =
 		!frozen && !weekListsHidden && (saved === undefined || canSave);
@@ -613,11 +674,24 @@ export const CreateSchedule = (): FunctionComponent => {
 						branchId={headerBranchId}
 						companyId={companyId}
 						defaultValues={setupDefaults}
-						departmentExtras={weekSummary}
 						formId={setupFormId}
 						lockedDepartment={lockedDepartment}
 						periods={periods}
 						readOnly={readOnly}
+						departmentExtras={
+							<>
+								{setupGate && (
+									<ReadinessGateCallout
+										gate={setupGate}
+										link={fixLink(setupGate, {
+											next: "create",
+											week: setupWeek,
+										})}
+									/>
+								)}
+								{weekSummary}
+							</>
+						}
 						onDepartmentChange={chooseSetupDepartment}
 						onPeriodChange={setSetupPeriodStart}
 						onSubmit={submitSetup}
@@ -676,13 +750,15 @@ export const CreateSchedule = (): FunctionComponent => {
 				busy={busy}
 				className="mt-12"
 				form={step === "setup" ? setupFormId : undefined}
-				nextDisabled={isLast && !canGenerate}
+				nextDisabled={(isLast && !canGenerate) || setupNextDisabled}
 				nextIcon={isLast ? <GenerateScheduleIcon /> : <ArrowRightIcon />}
-				unavailableNote={unavailableNote}
 				nextLabel={
 					isLast
 						? t("scheduling.actions.generate")
 						: t("scheduling.actions.next")
+				}
+				unavailableNote={
+					setupNextDisabled ? (setupNextNote ?? "") : unavailableNote
 				}
 				onNext={onNext}
 				onSaveDraft={onSaveDraft}

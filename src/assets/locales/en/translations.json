@@ -4146,7 +4146,8 @@
 			"choose": "Choose for this week",
 			"view": "View",
 			"everything": "This week uses every shift and constraint of {{department}}.",
-			"change": "Change"
+			"change": "Change",
+			"listsHiddenNote": "You need to see {{department}}’s shifts and constraints to create its schedule."
 		},
 		"gate": {
 			"nothing": "{{department}} has no shifts or staffing constraints yet. A schedule needs both.",

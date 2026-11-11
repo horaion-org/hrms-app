@@ -3968,7 +3968,8 @@
 			"choose": "Elegir para esta semana",
 			"view": "Ver",
 			"everything": "Esta semana usa todos los turnos y restricciones de {{department}}.",
-			"change": "Cambiar"
+			"change": "Cambiar",
+			"listsHiddenNote": "Necesitas ver los turnos y las restricciones de {{department}} para crear su horario."
 		},
 		"gate": {
 			"nothing": "{{department}} aún no tiene turnos ni restricciones de personal. Un horario necesita ambos.",

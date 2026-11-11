@@ -123,6 +123,33 @@ describe("useSchedulingReadiness", () => {
 		});
 	});
 
+	it("given_nothingToAsk_when_rendered_then_isHiddenAndAsksForNothing", async () => {
+		const calls = stubApi({});
+		const client = new QueryClient({
+			defaultOptions: { queries: { retry: false } },
+		});
+		const { result } = renderHook(
+			() => useSchedulingReadiness("c-1", {}, false),
+			{
+				wrapper: ({ children }: { children: ReactNode }): FunctionComponent => (
+					<QueryClientProvider client={client}>
+						{storyCompany(client, "c-1")(
+							() => (
+								<>{children}</>
+							),
+							{ parameters: { permissions: ["schedule:create"] } } as never
+						)}
+					</QueryClientProvider>
+				),
+			}
+		);
+
+		await waitFor(() => {
+			expect(result.current.status).toBe("hidden");
+		});
+		expect(calls).toEqual([]);
+	});
+
 	it("given_noCreateKey_when_asked_then_isHiddenAndAsksForNothing", async () => {
 		const calls = stubApi({});
 		const { result } = askReadiness({}, ["shift:read"]);

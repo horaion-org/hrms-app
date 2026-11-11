@@ -20,16 +20,20 @@ export type SchedulingReadinessRows =
 /**
  * One chosen Department asks where schedules may be created there;
  * otherwise anywhere in the company, which the API narrows to the
- * Departments where `schedule:create` is held.
+ * Departments where `schedule:create` is held. `asked` false asks for
+ * nothing, e.g. before the wizard has a department, and reads as hidden.
  */
 export const useSchedulingReadiness = (
 	companyId: string,
-	units: UnitSelection
+	units: UnitSelection,
+	asked = true
 ): SchedulingReadinessRows => {
 	const access = useAccess();
-	const allowed = units.departmentId
-		? access.can("schedule:create", departmentScope(units.departmentId))
-		: access.canAnywhere("schedule:create");
+	const allowed =
+		asked &&
+		(units.departmentId
+			? access.can("schedule:create", departmentScope(units.departmentId))
+			: access.canAnywhere("schedule:create"));
 	const readiness = useQuery(
 		schedulingReadinessQuery(companyId, units, allowed)
 	);
