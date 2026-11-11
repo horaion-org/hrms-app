@@ -7,14 +7,19 @@ import { describe, expect, it, vi } from "vitest";
 import { ApiProblemError } from "@/common/problem";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import { ConstraintDialog } from "@/features/scheduling/constraints/ConstraintDialog";
-import { constraintSchema } from "@/features/scheduling/constraints/ConstraintDialog/schema";
 import {
+	constraintSchema,
+	type ConstraintDialogBody,
+} from "@/features/scheduling/constraints/ConstraintDialog/schema";
+import {
+	BRANCH_POLICY_FIXTURE,
 	COMPANY_CONSTRAINT_FIXTURES,
 	CONSTRAINT_FIXTURES,
 	CONSTRAINT_OPTIONS,
 	CONSTRAINT_TYPE_OPTIONS,
 } from "@/features/scheduling/constraints/fixtures";
 import type { ConstraintOptionsState } from "@/features/scheduling/constraints/useConstraintOptions";
+import { reachValueOf } from "@/features/scheduling/policy/policyReach";
 import { schedulingWorkspace } from "@/features/scheduling/schedules/fixtures";
 import { workspaceQuery } from "@/features/workspace/api";
 
@@ -90,6 +95,45 @@ const start = async (
 	await screen.findByRole("dialog", { name: "Add constraint" });
 	await typeName(user, "Morning cover");
 	await pick(user, /^What it controls/, type);
+};
+
+/** Orchard with Kitchen and Bar, and Marina; the Applies to field chooses from these. */
+const REACH = {
+	choices: {
+		branches: [
+			{
+				branchId: "b-2",
+				name: "Marina",
+				country: "SG",
+				status: "ACTIVE" as const,
+			},
+			{
+				branchId: "b-1",
+				name: "Orchard",
+				country: "SG",
+				status: "ACTIVE" as const,
+			},
+		],
+		departments: [
+			{
+				departmentId: "d-2",
+				name: "Bar",
+				branchId: "b-1",
+				branchName: "Orchard",
+				country: "SG",
+				status: "ACTIVE" as const,
+			},
+			{
+				departmentId: "d-1",
+				name: "Kitchen",
+				branchId: "b-1",
+				branchName: "Orchard",
+				country: "SG",
+				status: "ACTIVE" as const,
+			},
+		],
+	},
+	initial: reachValueOf(),
 };
 
 const constraint = (
@@ -263,6 +307,65 @@ describe("ConstraintDialog for the Scheduling policy (ADR-0058)", () => {
 				"These values wouldn’t be at least as strict as the company’s locked constraint in every part. Make them stricter, or keep the company’s."
 			)
 		).toBeVisible();
+	});
+});
+
+describe("ConstraintDialog for a work-policy constraint's reach (ADR-0072)", () => {
+	it("given_chosenDepartments_when_saved_then_sendsThemAndNoBranch", async () => {
+		const user = userEvent.setup();
+		const { onSave } = renderDialog({ withLock: true, reach: REACH });
+		await start(user, "Working hours: Rest between shifts");
+
+		await user.click(screen.getByRole("radio", { name: "Chosen departments" }));
+		await pick(user, /^Chosen departments/, "Kitchen", "Bar");
+		await user.type(screen.getByRole("spinbutton", { name: /Rest/ }), "11");
+		await user.click(screen.getByRole("button", { name: "Save" }));
+
+		await waitFor(() => {
+			expect(onSave).toHaveBeenCalled();
+		});
+		const [body] = onSave.mock.lastCall as [ConstraintDialogBody];
+		expect(body.appliesToBranchIds).toEqual([]);
+		expect([...(body.appliesToDepartmentIds ?? [])].sort()).toEqual([
+			"d-1",
+			"d-2",
+		]);
+	});
+
+	it("given_chosenBranchesWithNoneChosen_when_saved_then_asksForOneWithoutSending", async () => {
+		const user = userEvent.setup();
+		const { onSave } = renderDialog({ withLock: true, reach: REACH });
+		await start(user, "Working hours: Rest between shifts");
+
+		await user.click(screen.getByRole("radio", { name: "Chosen branches" }));
+		await user.type(screen.getByRole("spinbutton", { name: /Rest/ }), "11");
+		await user.click(screen.getByRole("button", { name: "Save" }));
+
+		expect(
+			await screen.findByText("Choose at least one branch.")
+		).toBeVisible();
+		expect(onSave).not.toHaveBeenCalled();
+	});
+
+	it("given_aConstraintForOneBranch_when_edited_then_opensOnThatBranch", async () => {
+		renderDialog({
+			editing: BRANCH_POLICY_FIXTURE,
+			withLock: true,
+			reach: { ...REACH, initial: reachValueOf(BRANCH_POLICY_FIXTURE) },
+		});
+		await screen.findByRole("dialog", { name: "Edit constraint" });
+
+		expect(
+			screen.getByRole("radio", { name: "Chosen branches" })
+		).toBeChecked();
+		expect(trigger(/^Chosen branches/)).toHaveTextContent("Orchard");
+	});
+
+	it("given_aDepartmentsDialog_when_shown_then_offersNoReach", async () => {
+		renderDialog();
+		await screen.findByRole("dialog", { name: "Add constraint" });
+
+		expect(screen.queryByRole("radiogroup", { name: /Applies to/ })).toBeNull();
 	});
 });
 
