@@ -1,6 +1,7 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterFocusReturns } from "@/common/testing/afterFocusReturns";
 import {
 	companyWideWorkspace,
 	effectiveWorkspace,
@@ -631,6 +632,7 @@ describe("Departments", () => {
 			screen.queryByRole("button", { name: "Department" })
 		).not.toBeInTheDocument();
 		await user.keyboard("{Escape}");
+		await afterFocusReturns();
 		await user.click(screen.getByRole("button", { name: "Branch" }));
 		await user.click(screen.getByRole("option", { name: "All branches" }));
 

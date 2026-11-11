@@ -14,6 +14,7 @@ import {
 	vi,
 } from "vitest";
 import en from "@/assets/locales/en/translations.json";
+import { afterFocusReturns } from "@/common/testing/afterFocusReturns";
 import es from "@/assets/locales/es/translations.json";
 import { Select, type SelectProps } from "@/components/forms/Select";
 import * as stories from "@/components/forms/Select/Select.stories";
@@ -397,6 +398,7 @@ describe("Select", () => {
 		render(<ReactHookForm />);
 		await user.click(screen.getByRole("button", { name: "Department" }));
 		await user.click(screen.getByRole("option", { name: "Finance" }));
+		await afterFocusReturns();
 		await user.click(screen.getByRole("button", { name: "Departments" }));
 		await user.click(
 			screen.getByRole("option", { name: "Operations and administration" })

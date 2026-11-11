@@ -1,6 +1,7 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterFocusReturns } from "@/common/testing/afterFocusReturns";
 import { companyWideWorkspace } from "@/common/testing/effectiveWorkspace";
 import { resetApiClient } from "@/common/api-client";
 import {
@@ -103,17 +104,6 @@ const openDialog = async (): Promise<HTMLElement> => {
 	);
 	return screen.findByRole("dialog", { name: "Create department" });
 };
-/**
- * Closing a Combobox puts focus back on its trigger on the next animation frame.
- * Let that land before the next step, or it pulls focus out of whatever the test
- * opens or focuses next, and a picker opened in the meantime closes again.
- */
-const afterFocusReturns = (): Promise<void> =>
-	new Promise((resolve) => {
-		requestAnimationFrame(() => {
-			resolve();
-		});
-	});
 const chooseBranch = async (
 	dialog: HTMLElement,
 	name: string
