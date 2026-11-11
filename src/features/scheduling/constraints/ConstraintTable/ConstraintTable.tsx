@@ -48,8 +48,10 @@ export type ConstraintTableProps<Row extends ConstraintTableRow> = {
 	onDelete?: (constraint: Row) => void;
 	/** Offered on each company constraint: make it stricter (or change a default) for the Department (ADR-0058). */
 	onReplace?: (constraint: Row) => void;
-	/** Whether the person may edit or delete this row; every row when left out. */
-	canChange?: (constraint: Row) => boolean;
+	/** Whether this Department constraint offers Edit; every one when left out. */
+	canEdit?: (constraint: Row) => boolean;
+	/** Whether this Department constraint offers Delete; every one when left out. */
+	canDelete?: (constraint: Row) => boolean;
 	/** No Branch is chosen, so each row names its own. */
 	showBranch?: boolean;
 	/** No Department is chosen, so each row names its own, and a company row reads "All departments". */
@@ -72,7 +74,8 @@ export const ConstraintTable = <Row extends ConstraintTableRow>({
 	onEdit,
 	onDelete,
 	onReplace,
-	canChange,
+	canEdit,
+	canDelete,
 	showBranch = false,
 	showDepartment = false,
 	emptyState,
@@ -86,8 +89,11 @@ export const ConstraintTable = <Row extends ConstraintTableRow>({
 			constraint.requirement
 				? t(`${key}.requirements.${constraint.requirement}`)
 				: t(`${key}.fixedRequirements.${constraint.type}`);
-		const changeable = (constraint: Row): boolean =>
-			constraint.level !== "COMPANY" && (canChange?.(constraint) ?? true);
+		// A company constraint is changed only by replacing it here, never edited or deleted.
+		const editable = (constraint: Row): boolean =>
+			constraint.level !== "COMPANY" && (canEdit?.(constraint) ?? true);
+		const deletable = (constraint: Row): boolean =>
+			constraint.level !== "COMPANY" && (canDelete?.(constraint) ?? true);
 		return [
 			shared.name,
 			...(showBranch ? [branchColumn<Row>(t)] : []),
@@ -160,7 +166,7 @@ export const ConstraintTable = <Row extends ConstraintTableRow>({
 											<EditIcon />
 										</Button>
 									)}
-									{onEdit && changeable(constraint) && (
+									{onEdit && editable(constraint) && (
 										<Button
 											aria-label={t(`${key}.edit`, { name: constraint.name })}
 											variant="icon"
@@ -171,7 +177,7 @@ export const ConstraintTable = <Row extends ConstraintTableRow>({
 											<EditIcon />
 										</Button>
 									)}
-									{onDelete && changeable(constraint) && (
+									{onDelete && deletable(constraint) && (
 										<Button
 											aria-label={t(`${key}.delete`, { name: constraint.name })}
 											className="text-error-700"
@@ -195,7 +201,8 @@ export const ConstraintTable = <Row extends ConstraintTableRow>({
 		onEdit,
 		onDelete,
 		onReplace,
-		canChange,
+		canEdit,
+		canDelete,
 		showBranch,
 		showDepartment,
 	]);

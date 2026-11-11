@@ -221,6 +221,31 @@ describe("ShiftsTab", () => {
 		).toBeNull();
 	});
 
+	it.each<[string, Array<string>, boolean, boolean]>([
+		["only the delete key", ["shift:read", "shift:delete"], false, true],
+		["only the update key", ["shift:read", "shift:update"], true, false],
+	])(
+		"given_%s_when_listed_then_offersOnlyItsButton",
+		async (_case, permissions, edits, deletes) => {
+			stubApi({ [`GET ${KITCHEN}/shifts`]: ok([kitchenShift]) });
+			show({
+				permissions,
+				requested: { branchId: "b-1", departmentId: "d-1" },
+			});
+
+			const row = await screen.findByRole("row", { name: /Front Desk AM/ });
+			expect(
+				within(row).queryByRole("button", { name: "Edit Front Desk AM" }) !==
+					null
+			).toBe(edits);
+			expect(
+				within(row).queryByRole("button", {
+					name: "Delete Front Desk AM",
+				}) !== null
+			).toBe(deletes);
+		}
+	);
+
 	it("given_schedulesReadable_when_editing_then_theNoteCountsTheDrafts", async () => {
 		const user = userEvent.setup();
 		stubApi({
@@ -294,7 +319,6 @@ describe("ShiftsTab", () => {
 		show({
 			permissions: [
 				"shift:read",
-				"shift:update",
 				"shift:delete",
 				"schedule:read",
 				"constraint:read",
@@ -329,7 +353,7 @@ describe("ShiftsTab", () => {
 			),
 		});
 		show({
-			permissions: ["shift:read", "shift:update", "shift:delete"],
+			permissions: ["shift:read", "shift:delete"],
 			requested: { branchId: "b-1", departmentId: "d-1" },
 		});
 

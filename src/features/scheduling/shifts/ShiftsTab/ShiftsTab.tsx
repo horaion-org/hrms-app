@@ -96,10 +96,15 @@ export const ShiftsTab = ({
 	const key = "scheduling.shiftsTab";
 	const access = useAccess();
 	const canCreate = access.canAnywhere("shift:create");
-	const canDelete = access.canAnywhere("shift:delete");
-	const canChange = useCallback(
+	// Edit and Delete each follow their own key at the row's department.
+	const canEdit = useCallback(
 		(shift: DepartmentShift): boolean =>
 			access.can("shift:update", departmentScope(shift.departmentId)),
+		[access]
+	);
+	const canDelete = useCallback(
+		(shift: DepartmentShift): boolean =>
+			access.can("shift:delete", departmentScope(shift.departmentId)),
 		[access]
 	);
 	const { data: workspace } = useQuery({ ...workspaceQuery, retry });
@@ -225,7 +230,8 @@ export const ShiftsTab = ({
 			/>
 			{list.status === "ready" ? (
 				<ShiftTable
-					canChange={canChange}
+					canDelete={canDelete}
+					canEdit={canEdit}
 					className="mt-8"
 					shifts={rows}
 					showBranch={!units.branch}
@@ -233,7 +239,7 @@ export const ShiftsTab = ({
 					emptyState={
 						search.trim() ? t(`${key}.noMatch`) : t("scheduling.shifts.empty")
 					}
-					onDelete={canDelete ? setDeleting : undefined}
+					onDelete={setDeleting}
 					onEdit={(shift) => {
 						setDialog({ kind: "edit", shift });
 					}}

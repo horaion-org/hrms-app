@@ -86,10 +86,11 @@ describe("ConstraintTable", () => {
 		expect(onReplace).toHaveBeenCalledWith(companyRest);
 	});
 
-	it("given_aRowThePersonMayNotChange_when_rendered_then_leavesOutItsEditAndDelete", () => {
+	it("given_editAndDeleteByRow_when_rendered_then_eachButtonFollowsItsOwnRule", () => {
 		render(
 			<ConstraintTable
-				canChange={(constraint) => constraint.departmentName !== "Bar"}
+				canDelete={(constraint) => constraint.departmentName === "Bar"}
+				canEdit={(constraint) => constraint.departmentName !== "Bar"}
 				constraints={rows}
 				onDelete={vi.fn()}
 				onEdit={vi.fn()}
@@ -100,11 +101,14 @@ describe("ConstraintTable", () => {
 			screen.getByRole("button", { name: `Edit ${morningCover.name}` })
 		).toBeVisible();
 		expect(
+			screen.queryByRole("button", { name: `Delete ${morningCover.name}` })
+		).toBeNull();
+		expect(
 			screen.queryByRole("button", { name: `Edit ${barCover.name}` })
 		).toBeNull();
 		expect(
-			screen.queryByRole("button", { name: `Delete ${barCover.name}` })
-		).toBeNull();
+			screen.getByRole("button", { name: `Delete ${barCover.name}` })
+		).toBeVisible();
 	});
 
 	it("given_aPhone_when_rendered_then_keepsOnlyTheNameAndActionsAsColumns", () => {

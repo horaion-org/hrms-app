@@ -41,8 +41,10 @@ export type ShiftTableProps<Row extends ShiftTableRow> = {
 	/** Offered on each row the person may change. */
 	onEdit?: (shift: Row) => void;
 	onDelete?: (shift: Row) => void;
-	/** Whether the person may change this row; every row when left out. */
-	canChange?: (shift: Row) => boolean;
+	/** Whether this row offers Edit; every row when left out. */
+	canEdit?: (shift: Row) => boolean;
+	/** Whether this row offers Delete; every row when left out. */
+	canDelete?: (shift: Row) => boolean;
 	/** No Branch is chosen, so each row names its own. */
 	showBranch?: boolean;
 	/** No Department is chosen, so each row names its own. */
@@ -63,7 +65,8 @@ export const ShiftTable = <Row extends ShiftTableRow>({
 	selection,
 	onEdit,
 	onDelete,
-	canChange,
+	canEdit,
+	canDelete,
 	showBranch = false,
 	showDepartment = false,
 	emptyState,
@@ -150,43 +153,42 @@ export const ShiftTable = <Row extends ShiftTableRow>({
 							header: t("scheduling.shifts.actions"),
 							headerClassName: "w-35",
 							pin: "end" as const,
-							cell: (shift: Row) =>
-								(canChange?.(shift) ?? true) && (
-									<div className="flex justify-center gap-2">
-										{onEdit && (
-											<Button
-												variant="icon"
-												aria-label={t("scheduling.shifts.edit", {
-													name: shift.name,
-												})}
-												onClick={() => {
-													onEdit(shift);
-												}}
-											>
-												<EditIcon />
-											</Button>
-										)}
-										{onDelete && (
-											<Button
-												className="text-error-700"
-												variant="icon"
-												aria-label={t("scheduling.shifts.delete", {
-													name: shift.name,
-												})}
-												onClick={() => {
-													onDelete(shift);
-												}}
-											>
-												<DeleteIcon />
-											</Button>
-										)}
-									</div>
-								),
+							cell: (shift: Row) => (
+								<div className="flex justify-center gap-2">
+									{onEdit && (canEdit?.(shift) ?? true) && (
+										<Button
+											variant="icon"
+											aria-label={t("scheduling.shifts.edit", {
+												name: shift.name,
+											})}
+											onClick={() => {
+												onEdit(shift);
+											}}
+										>
+											<EditIcon />
+										</Button>
+									)}
+									{onDelete && (canDelete?.(shift) ?? true) && (
+										<Button
+											className="text-error-700"
+											variant="icon"
+											aria-label={t("scheduling.shifts.delete", {
+												name: shift.name,
+											})}
+											onClick={() => {
+												onDelete(shift);
+											}}
+										>
+											<DeleteIcon />
+										</Button>
+									)}
+								</div>
+							),
 						},
 					]
 				: []),
 		],
-		[t, onEdit, onDelete, canChange, showBranch, showDepartment]
+		[t, onEdit, onDelete, canEdit, canDelete, showBranch, showDepartment]
 	);
 
 	return (

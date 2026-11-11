@@ -63,10 +63,11 @@ describe("ShiftTable", () => {
 		expect(within(table).getAllByRole("row")).toHaveLength(2);
 	});
 
-	it("given_aRowThePersonMayNotChange_when_rendered_then_leavesOutOnlyItsButtons", () => {
+	it("given_editAndDeleteByRow_when_rendered_then_eachButtonFollowsItsOwnRule", () => {
 		render(
 			<ShiftTable
-				canChange={(shift) => shift.departmentId === "d-1"}
+				canDelete={(shift) => shift.departmentId === "d-2"}
+				canEdit={(shift) => shift.departmentId === "d-1"}
 				shifts={rows}
 				onDelete={vi.fn()}
 				onEdit={vi.fn()}
@@ -77,14 +78,14 @@ describe("ShiftTable", () => {
 			screen.getByRole("button", { name: "Edit Front Desk AM" })
 		).toBeVisible();
 		expect(
-			screen.getByRole("button", { name: "Delete Front Desk AM" })
-		).toBeVisible();
+			screen.queryByRole("button", { name: "Delete Front Desk AM" })
+		).toBeNull();
 		expect(
 			screen.queryByRole("button", { name: "Edit Breakfast Prep" })
 		).toBeNull();
 		expect(
-			screen.queryByRole("button", { name: "Delete Breakfast Prep" })
-		).toBeNull();
+			screen.getByRole("button", { name: "Delete Breakfast Prep" })
+		).toBeVisible();
 	});
 
 	it("given_aPhone_when_rendered_then_keepsOnlyTheNameAndActionsAsColumns", () => {

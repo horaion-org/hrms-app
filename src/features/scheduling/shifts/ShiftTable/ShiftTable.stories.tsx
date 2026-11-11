@@ -31,11 +31,11 @@ export const AcrossDepartments: Story = {
 	args: { showBranch: true, showDepartment: true },
 };
 
-/** Rows of a department the person may only read have no buttons. */
-export const ReadOnlyRows: Story = {
+/** Bar's rows offer Delete only: the person holds the delete key there but not the update key. */
+export const DeleteOnlyInBar: Story = {
 	args: {
 		showDepartment: true,
-		canChange: (shift) => shift.departmentName !== "Bar",
+		canEdit: (shift) => shift.departmentName !== "Bar",
 	},
 };
 
