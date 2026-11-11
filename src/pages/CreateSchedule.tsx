@@ -484,16 +484,24 @@ export const CreateSchedule = (): FunctionComponent => {
 		goTo(current + 1);
 	};
 	const firstPeriod = defaultPeriod(today);
+	const offered = selectablePeriods(today);
+	// A new draft starts from the department and week the Scheduling tabs send back; a saved draft ignores them.
+	const returnedWeek =
+		named === undefined &&
+		offered.some((offeredPeriod) => offeredPeriod.start === search.week)
+			? search.week
+			: undefined;
+	const returnedDepartmentId =
+		named === undefined ? (search.department ?? "") : "";
 	const setupDefaults: ScheduleSetupValues = draft.setup ?? {
-		departmentId: "",
+		departmentId: returnedDepartmentId,
 		name: "",
-		periodStart: firstPeriod.start,
+		periodStart: returnedWeek ?? firstPeriod.start,
 		includeLeave: true,
 		allowOpenShifts: false,
 	};
 	const chosenStart = draft.setup?.periodStart;
 	// A reopened draft's week may lie outside the offered ones.
-	const offered = selectablePeriods(today);
 	const periods =
 		chosenStart === undefined
 			? offered

@@ -1253,6 +1253,77 @@ describe("Create Schedule: the Generate gate", () => {
 	});
 });
 
+describe("Create Schedule: back from the Scheduling tabs", () => {
+	const READINESS = "GET /api/v1/companies/c-1/scheduling-readiness";
+	const frontOffice = (ready: boolean): StubReply =>
+		reply([
+			readinessFixture({
+				departmentName: "Front Office",
+				branchName: "Main branch",
+				ready,
+				missing: ready ? [] : ["SHIFT", "STAFFING_CONSTRAINT"],
+			}),
+		]);
+
+	it("given_theSetupGate_when_fixedOnTheShiftsTab_then_createScheduleReturnsToSetupWithTheDepartmentAndWeek", async () => {
+		const user = userEvent.setup();
+		await open("/scheduling/new", {
+			[`GET ${LIVE_SHIFTS}`]: reply(LIVE_SHIFT_ROWS),
+			// Not ready on Setup, ready once the tab asks again.
+			[READINESS]: [frontOffice(false), frontOffice(true)],
+		});
+		await fillSetup(user);
+		await user.click(screen.getByRole("button", { name: /Schedule period/ }));
+		await user.click((await screen.findAllByRole("option"))[1]!);
+		const week = screen.getByRole("button", {
+			name: /Schedule period/,
+		}).textContent;
+
+		await user.click(
+			await screen.findByRole("link", { name: "Set up Front Office" })
+		);
+		await user.click(
+			await screen.findByRole("link", { name: "Create schedule" })
+		);
+
+		expect(
+			await screen.findByRole("region", { name: "Schedule setup" })
+		).toBeVisible();
+		await waitFor(() => {
+			expect(
+				screen.getByRole("button", { name: /Department/ })
+			).toHaveTextContent("Front Office");
+		});
+		expect(
+			screen.getByRole("button", { name: /Schedule period/ }).textContent
+		).toBe(week);
+		expect(
+			screen.getByRole("textbox", { name: /Schedule name/ })
+		).toHaveValue("");
+	});
+
+	it("given_aSavedDraftsGate_when_itsDepartmentIsReadyOnTheTab_then_backToTheScheduleOpensItsGenerateStep", async () => {
+		const user = userEvent.setup();
+		const { opened } = await open(
+			"/scheduling?view=constraints&branch=b-1&department=d-1&next=draft&scheduleId=s-1",
+			{ [READINESS]: frontOffice(true) }
+		);
+
+		await user.click(
+			await screen.findByRole("link", { name: "Back to the schedule" })
+		);
+
+		expect(
+			await screen.findByRole("region", { name: "Ready to generate" })
+		).toBeVisible();
+		expect(opened.router.state.location.search).toMatchObject({
+			step: "generate",
+			scheduleId: "s-1",
+			departmentId: "d-1",
+		});
+	});
+});
+
 describe("Create Schedule: where everyone starts", () => {
 	const STARTING_DAYS = `${SCHEDULE}/starting-days`;
 	/** Tan's entered Sunday night, and Siti's Sunday off as "Fill empty days" sets it. */
