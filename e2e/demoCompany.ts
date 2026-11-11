@@ -26,7 +26,12 @@ import {
 	scheduleAssignmentsFixture,
 	scheduleFixture,
 } from "@/features/scheduling/schedules/fixtures";
-import { frozenShiftsFixture } from "@/features/scheduling/shifts/fixtures";
+import {
+	SHIFT_FIXTURES,
+	SHIFT_ROLE_OPTIONS,
+	departmentShiftFixture,
+	frozenShiftsFixture,
+} from "@/features/scheduling/shifts/fixtures";
 import {
 	licenceFixture,
 	overviewFixture,
@@ -182,6 +187,21 @@ const SKILLS = [
 ];
 
 const schedule = generatedScheduleFixture({ status: "GENERATED" });
+/** Live shifts of Orchard's Kitchen (d-1) and Bar (d-2), as the shift lists answer them. */
+const KITCHEN_SHIFT = {
+	...departmentShiftFixture(SHIFT_FIXTURES[0]),
+	departmentId: "d-1",
+	departmentName: "Kitchen",
+	branchId: "b-1",
+	branchName: "Orchard",
+};
+const BAR_SHIFT = {
+	...departmentShiftFixture(SHIFT_FIXTURES[1]),
+	departmentId: "d-2",
+	departmentName: "Bar",
+	branchId: "b-1",
+	branchName: "Orchard",
+};
 const LEAVE = LEAVE_FIXTURES.map((request) => ({
 	...request,
 	branchName: "Orchard",
@@ -316,6 +336,9 @@ const ANSWERS: Array<Answer> = [
 				scheduleFixture({ scheduleId: "s-2", name: "Bar - Week 46" }),
 			]),
 	},
+	{ path: /^\/shifts$/, data: () => [KITCHEN_SHIFT, BAR_SHIFT] },
+	{ path: /\/departments\/[^/]+\/shifts$/, data: () => [KITCHEN_SHIFT] },
+	{ path: /\/shift-role-options$/, data: () => SHIFT_ROLE_OPTIONS },
 	{ path: /^(?!\/me).*\/schedules\/s-\d+$/, data: () => schedule },
 	{
 		path: /\/schedules\/s-\d+\/assignments$/,

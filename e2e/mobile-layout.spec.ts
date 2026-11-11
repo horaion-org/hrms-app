@@ -12,6 +12,7 @@ const SCREENS = [
 const SIGNED_IN_ROUTES = [
 	"/",
 	"/scheduling",
+	"/scheduling?view=shifts",
 	"/scheduling/new",
 	"/scheduling/s-1",
 	"/scheduling/s-1?day=2026-10-14",
