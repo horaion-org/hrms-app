@@ -3084,12 +3084,6 @@
 				"SHIFT_PATTERN": "Días libres",
 				"WORKING_HOURS": "Descanso y horas"
 			},
-			"categoryHints": {
-				"STAFFING": "Cuántas personas necesita cada turno",
-				"ROLE_COVERAGE": "Quién está de servicio durante todo el turno",
-				"SHIFT_PATTERN": "Cómo se reparten los días libres",
-				"WORKING_HOURS": "Descanso entre turnos"
-			},
 			"types": {
 				"SHIFT_STAFFING": "Personas en un turno",
 				"SHIFT_STAFFING_WITH_STAND_INS": "Personas en un turno, con suplentes",

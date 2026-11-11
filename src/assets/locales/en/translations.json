@@ -3262,12 +3262,6 @@
 				"SHIFT_PATTERN": "Days off",
 				"WORKING_HOURS": "Rest and hours"
 			},
-			"categoryHints": {
-				"STAFFING": "How many people each shift needs",
-				"ROLE_COVERAGE": "Who is on duty for the whole shift",
-				"SHIFT_PATTERN": "How days off fall",
-				"WORKING_HOURS": "Rest between shifts"
-			},
 			"types": {
 				"SHIFT_STAFFING": "People on a shift",
 				"SHIFT_STAFFING_WITH_STAND_INS": "People on a shift, with stand-ins",
