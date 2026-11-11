@@ -14,6 +14,11 @@ import {
 } from "@/common/testing/stubApi";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import { storyCompany } from "@/features/people/storyCompany";
+import { readinessFixture } from "@/features/scheduling/readiness/fixtures";
+import {
+	returnLinkOf,
+	type ReturnLink,
+} from "@/features/scheduling/readiness/readinessCopy";
 import { constraintFixture } from "@/features/scheduling/constraints/fixtures";
 import { scheduleFixture } from "@/features/scheduling/schedules/fixtures";
 import { SCHEDULING_UNIT_RULES } from "@/features/scheduling/schedules/schedulesUnitRules";
@@ -117,10 +122,14 @@ const show = ({
 	permissions = [],
 	held = {},
 	requested = {},
+	onDepartmentChange = vi.fn(),
+	returnTo,
 }: {
 	permissions?: Array<string>;
 	held?: Record<string, Array<string>>;
 	requested?: UnitSelection;
+	onDepartmentChange?: (department: string | undefined) => void;
+	returnTo?: ReturnLink;
 }): void => {
 	const units = resolveWorkspaceUnits(
 		effectiveWorkspace({
@@ -137,7 +146,12 @@ const show = ({
 		defaultOptions: { queries: { retry: false } },
 	});
 	const Story = (): ReactElement => (
-		<ShiftsTab companyId="c-1" units={units} onDepartmentChange={vi.fn()} />
+		<ShiftsTab
+			companyId="c-1"
+			returnTo={returnTo}
+			units={units}
+			onDepartmentChange={onDepartmentChange}
+		/>
 	);
 	render(
 		<I18nextProvider i18n={authTestI18n}>
@@ -386,7 +400,12 @@ describe("ShiftsTab", () => {
 			problemReply(400, "BAD_REQUEST"),
 			"We couldn’t load shifts. Try again.",
 		],
-		["no shifts", ["shift:read"], ok([]), "No shifts yet."],
+		[
+			"no shifts",
+			["shift:read"],
+			ok([]),
+			"No shifts yet. Shifts are the times people work, such as Opening 07:00–15:00.",
+		],
 	])(
 		"given_%s_when_listed_then_saysSo",
 		async (_case, permissions, reply, text) => {
@@ -455,6 +474,102 @@ describe("ShiftsTab", () => {
 			calls.filter(
 				(call) => call.path.includes("d-3") || call.search.includes("d-3")
 			)
+		).toEqual([]);
+	});
+});
+
+describe("ShiftsTab: readiness", () => {
+	const READINESS = `GET ${COMPANY}/scheduling-readiness`;
+	const BAR_NOT_READY = readinessFixture({
+		departmentId: "d-2",
+		departmentName: "Bar",
+		ready: false,
+		missing: ["STAFFING_CONSTRAINT"],
+	});
+
+	it("given_everyDepartment_when_oneIsNotReady_then_namesItAndANameSetsTheFilter", async () => {
+		const user = userEvent.setup();
+		const onDepartmentChange = vi.fn();
+		const calls = stubApi({
+			[COMPANY_SHIFTS]: ok([]),
+			[READINESS]: ok([readinessFixture(), BAR_NOT_READY]),
+		});
+		show({
+			permissions: ["shift:read", "schedule:create"],
+			onDepartmentChange,
+		});
+
+		const note = await screen.findByText(
+			"1 department isn’t ready to schedule:"
+		);
+		expect(screen.queryByRole("button", { name: "Kitchen" })).toBeNull();
+		await user.click(screen.getByRole("button", { name: "Bar" }));
+		expect(onDepartmentChange).toHaveBeenCalledWith("d-2");
+		expect(note).toBeVisible();
+		expect(
+			calls
+				.filter((call) => call.path.endsWith("/scheduling-readiness"))
+				.map((call) => call.search)
+		).toEqual(["branchId=b-1"]);
+	});
+
+	it("given_oneDepartmentNotReady_when_listed_then_showsItsChecklist", async () => {
+		stubApi({
+			[`GET ${KITCHEN}/shifts`]: ok([]),
+			[READINESS]: ok([
+				readinessFixture({
+					ready: false,
+					missing: ["SHIFT", "STAFFING_CONSTRAINT"],
+				}),
+			]),
+		});
+		show({
+			permissions: ["shift:read", "schedule:create"],
+			requested: { branchId: "b-1", departmentId: "d-1" },
+		});
+
+		const note = (
+			await screen.findByText("Kitchen isn’t ready to schedule yet")
+		).closest("[role='note']");
+		expect(note).not.toBeNull();
+		expect(within(note as HTMLElement).getAllByRole("listitem")).toHaveLength(
+			2
+		);
+	});
+
+	it("given_theWizardWaitingAndAReadyDepartment_when_listed_then_offersToCreateTheSchedule", async () => {
+		stubApi({
+			[`GET ${KITCHEN}/shifts`]: ok([]),
+			[READINESS]: ok([readinessFixture()]),
+		});
+		show({
+			permissions: ["shift:read", "schedule:create"],
+			requested: { branchId: "b-1", departmentId: "d-1" },
+			returnTo: returnLinkOf({
+				next: "create",
+				department: "d-1",
+				week: "2026-11-16",
+			}),
+		});
+
+		expect(
+			await screen.findByText("Kitchen is ready to schedule.")
+		).toBeVisible();
+		expect(
+			screen.getByRole("link", { name: "Create schedule" })
+		).toHaveAttribute("href", "/scheduling/new?department=d-1&week=2026-11-16");
+	});
+
+	it("given_noScheduleCreateKey_when_listed_then_showsNoCalloutAndAsksNothing", async () => {
+		const calls = stubApi({ [COMPANY_SHIFTS]: ok([]) });
+		show({ permissions: ["shift:read"] });
+
+		await screen.findByText(
+			"No shifts yet. Shifts are the times people work, such as Opening 07:00–15:00."
+		);
+		expect(screen.queryByRole("note")).toBeNull();
+		expect(
+			calls.filter((call) => call.path.endsWith("/scheduling-readiness"))
 		).toEqual([]);
 	});
 });

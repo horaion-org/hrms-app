@@ -9,6 +9,9 @@ import { placeOf } from "@/features/organisation/assignmentTargets";
 import { ListToolbar } from "@/features/organisation/ListToolbar";
 import { constraintsQuery } from "@/features/scheduling/constraints/api";
 import { departmentUnitOf } from "@/features/scheduling/departmentUnit";
+import { ReadinessCallout } from "@/features/scheduling/readiness/ReadinessCallout";
+import type { ReturnLink } from "@/features/scheduling/readiness/readinessCopy";
+import { useSchedulingReadiness } from "@/features/scheduling/readiness/useSchedulingReadiness";
 import { initialDepartmentOf } from "@/features/scheduling/setupDepartment";
 import {
 	constraintsNamingShift,
@@ -36,6 +39,7 @@ import { departmentScope } from "@/features/workspace/scopes";
 import { departmentChoices } from "@/features/workspace/unitChoices";
 import {
 	offersDepartmentChoice,
+	selectedUnits,
 	type ResolvedUnitSelection,
 } from "@/features/workspace/unitSelection";
 import { useAccess } from "@/features/workspace/useAccess";
@@ -80,6 +84,8 @@ export type ShiftsTabProps = {
 	units: ResolvedUnitSelection;
 	/** Writes the chosen Department to the URL; undefined for every Department. */
 	onDepartmentChange: (department: string | undefined) => void;
+	/** The way back into the wizard, when the wizard sent the person here to set a department up. */
+	returnTo?: ReturnLink;
 };
 
 /**
@@ -91,6 +97,7 @@ export const ShiftsTab = ({
 	companyId,
 	units,
 	onDepartmentChange,
+	returnTo,
 }: ShiftsTabProps): FunctionComponent => {
 	const { t } = useTranslation();
 	const key = "scheduling.shiftsTab";
@@ -109,6 +116,7 @@ export const ShiftsTab = ({
 	);
 	const { data: workspace } = useQuery({ ...workspaceQuery, retry });
 	const list = useShiftsInUnits(companyId, units);
+	const readiness = useSchedulingReadiness(companyId, selectedUnits(units));
 	const actions = useShiftActions(companyId);
 	const [search, setSearch] = useState("");
 	const [dialog, setDialog] = useState<DialogState>();
@@ -228,6 +236,16 @@ export const ShiftsTab = ({
 						: undefined
 				}
 			/>
+			{readiness.status === "ready" && (
+				<ReadinessCallout
+					className="mt-6"
+					department={units.department}
+					returnTo={returnTo}
+					rows={readiness.rows}
+					view="shifts"
+					onChooseDepartment={onDepartmentChange}
+				/>
+			)}
 			{list.status === "ready" ? (
 				<ShiftTable
 					canDelete={canDelete}
@@ -237,7 +255,7 @@ export const ShiftsTab = ({
 					showBranch={!units.branch}
 					showDepartment={!units.department}
 					emptyState={
-						search.trim() ? t(`${key}.noMatch`) : t("scheduling.shifts.empty")
+						search.trim() ? t(`${key}.noMatch`) : t(`${key}.emptyGuide`)
 					}
 					onDelete={setDeleting}
 					onEdit={(shift) => {

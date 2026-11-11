@@ -3908,7 +3908,8 @@
 			"descriptionOne": "Las franjas en que trabaja {{department}}. Los horarios nuevos las usan; los horarios generados conservan los turnos con los que se crearon.",
 			"descriptionAll": "Las franjas en que trabaja cada departamento. Los horarios nuevos las usan; los horarios generados conservan los turnos con los que se crearon.",
 			"search": "Buscar turnos",
-			"noMatch": "Ningún turno coincide con tu búsqueda."
+			"noMatch": "Ningún turno coincide con tu búsqueda.",
+			"emptyGuide": "Todavía no hay turnos. Los turnos son las franjas en que trabaja la gente, como Apertura 07:00–15:00."
 		},
 		"views": {
 			"label": "Vistas de programación",
@@ -3920,7 +3921,8 @@
 			"descriptionOne": "Cómo se cubre y descansa {{department}}. Las restricciones de la empresa van primero; las bloqueadas se aplican siempre.",
 			"descriptionAll": "Cómo se cubre y descansa cada departamento. Las restricciones de la empresa se aplican a todos los departamentos; las bloqueadas, siempre.",
 			"search": "Buscar restricciones",
-			"noMatch": "Ninguna restricción coincide con tu búsqueda."
+			"noMatch": "Ninguna restricción coincide con tu búsqueda.",
+			"emptyGuide": "Este departamento aún no tiene restricciones. Empieza por una restricción de personal: cuántas personas necesita cada turno."
 		},
 		"readiness": {
 			"departmentsNotReady_one": "{{count}} departamento no está listo para planificar:",

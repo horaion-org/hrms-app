@@ -4086,7 +4086,8 @@
 			"descriptionOne": "The times {{department}} works. New schedules use them; generated schedules keep the shifts they were made with.",
 			"descriptionAll": "The times each department works. New schedules use them; generated schedules keep the shifts they were made with.",
 			"search": "Search shifts",
-			"noMatch": "No shifts match your search."
+			"noMatch": "No shifts match your search.",
+			"emptyGuide": "No shifts yet. Shifts are the times people work, such as Opening 07:00–15:00."
 		},
 		"views": {
 			"label": "Scheduling views",
@@ -4098,7 +4099,8 @@
 			"descriptionOne": "How {{department}} is staffed and rested. Company constraints come first; locked ones always apply.",
 			"descriptionAll": "How each department is staffed and rested. Company constraints apply to every department; locked ones always apply.",
 			"search": "Search constraints",
-			"noMatch": "No constraints match your search."
+			"noMatch": "No constraints match your search.",
+			"emptyGuide": "No department constraints yet. Start with a staffing constraint: how many people each shift needs."
 		},
 		"readiness": {
 			"departmentsNotReady_one": "{{count}} department isn’t ready to schedule:",
