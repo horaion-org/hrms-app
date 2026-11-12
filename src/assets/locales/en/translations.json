@@ -4125,6 +4125,8 @@
 			"pay": {
 				"sameHours": "Same hours, different shift",
 				"longer": "Longer shift",
+				"withinContract": "Within contracted hours",
+				"extraHours": "Extra hours (part-time) · {{hours}} h",
 				"overtime": "Overtime · {{hours}} h",
 				"restDay": "Rest day work, at the company’s request",
 				"unknown": "As set by the company"

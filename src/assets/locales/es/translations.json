@@ -3947,6 +3947,8 @@
 			"pay": {
 				"sameHours": "Mismas horas, otro turno",
 				"longer": "Turno más largo",
+				"withinContract": "Dentro de las horas del contrato",
+				"extraHours": "Horas complementarias (tiempo parcial) · {{hours}} h",
 				"overtime": "Horas extra · {{hours}} h",
 				"restDay": "Trabajo en día de descanso, a petición de la empresa",
 				"unknown": "Según lo fije la empresa"

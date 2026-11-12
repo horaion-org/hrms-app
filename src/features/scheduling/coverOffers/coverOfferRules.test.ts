@@ -160,6 +160,37 @@ describe("payWordsOf", () => {
 	] as const)("given_%s_when_read_then_%o", (optionKind, words) => {
 		expect(payWordsOf(offer({ optionKind }))).toEqual(words);
 	});
+
+	it.each([
+		[
+			"within the member's contracted week",
+			{ normalMinutes: 360, extraMinutes: 0, overtimeMinutes: 0 },
+			{ key: "withinContract" },
+		],
+		[
+			"a part-timer's extra hours",
+			{ normalMinutes: 120, extraMinutes: 240, overtimeMinutes: 0 },
+			{ key: "extraHours", hours: 4 },
+		],
+		[
+			"overtime, read from the pay and not the shift's length",
+			{ normalMinutes: 270, extraMinutes: 0, overtimeMinutes: 90 },
+			{ key: "overtime", hours: 1.5 },
+		],
+	] as const)(
+		"given_aDayOffOfferWithPay_%s_when_read_then_%o",
+		(_case, pay, words) => {
+			expect(payWordsOf(offer({ optionKind: "OFF_DAY_SHIFT", pay }))).toEqual(
+				words
+			);
+		}
+	);
+
+	it("given_aDayOffOfferWithoutPay_when_read_then_theShiftsHoursAsOvertimeAsBefore", () => {
+		expect(
+			payWordsOf(offer({ optionKind: "OFF_DAY_SHIFT", pay: null }))
+		).toEqual({ key: "overtime", hours: 6 });
+	});
 });
 
 describe("offerStanding", () => {

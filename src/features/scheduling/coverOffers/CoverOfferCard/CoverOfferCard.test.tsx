@@ -40,6 +40,18 @@ const closed = (
 });
 
 describe("CoverOfferCard", () => {
+	it("given_anOfferWithinTheMembersContractedWeek_when_shown_then_saysSoAndNotOvertime", () => {
+		show({
+			offer: coverOfferFixture({
+				pay: { normalMinutes: 360, extraMinutes: 0, overtimeMinutes: 0 },
+			}),
+		});
+
+		const card = screen.getByRole("region", { name: "Shift offered" });
+		expect(card).toHaveTextContent("Within contracted hours");
+		expect(card).not.toHaveTextContent("Overtime");
+	});
+
 	it("given_anOpenOffer_when_shown_then_saysWhenWhatChangesThePayWhoAskedAndByWhen", () => {
 		show();
 
