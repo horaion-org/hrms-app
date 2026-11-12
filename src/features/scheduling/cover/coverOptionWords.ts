@@ -16,12 +16,20 @@ import type { ScheduleShift } from "@/features/scheduling/schedules/api";
 
 const key = "scheduling.cover";
 
+/** What the list says of a shift; roles only when the schedule's frozen shifts could be read. */
+export type CoverShift = Pick<
+	ScheduleShift,
+	"name" | "startTime" | "endTime"
+> & {
+	roles?: ScheduleShift["roles"];
+};
+
 /** How the list names people, shifts, days and hours on screen. */
 export type CoverNames = {
 	/** A member's name by membership id. */
 	member: (membershipId: string) => string;
-	/** A frozen shift by its id; undefined for one the schedule doesn't have. */
-	shift: (shiftId: string) => ScheduleShift | undefined;
+	/** A shift by its frozen id; undefined for one neither the schedule nor its roster names. */
+	shift: (shiftId: string) => CoverShift | undefined;
 	/** A day, e.g. "Sat, Oct 17". */
 	day: (isoDate: string) => string;
 	/** Minutes as hours, one decimal at most: 450 → "7.5". */
@@ -29,22 +37,29 @@ export type CoverNames = {
 };
 
 /** The shift's roles as one phrase: "Front Desk Staff or Front Desk Lead". */
-const jobTitlesOf = (shift: ScheduleShift | undefined, t: TFunction): string =>
+const jobTitlesOf = (shift: CoverShift | undefined, t: TFunction): string =>
 	(shift?.roles ?? []).map((role) => role.name).join(t(`${key}.jobTitlesOr`));
 
-/** What is short: "Front Desk AM · Sat, Oct 17 · 09:00 – 15:00 · Front Desk Staff". */
+/**
+ * What is short: "Front Desk AM · Sat, Oct 17 · 09:00 – 15:00 · Front Desk
+ * Staff"; without the roles when they can't be read.
+ */
 export const gapTitle = (
 	gap: CoverGapRequest,
 	names: CoverNames,
 	t: TFunction
 ): string => {
 	const shift = names.shift(gap.shiftId);
-	return t(`${key}.gap`, {
+	const jobTitles = jobTitlesOf(shift, t);
+	const values = {
 		shift: shift?.name ?? "",
 		day: names.day(gap.day),
 		time: shift ? formatTimeRange(shift, t) : "",
-		jobTitles: jobTitlesOf(shift, t),
-	});
+		jobTitles,
+	};
+	return jobTitles === ""
+		? t(`${key}.gapWithoutRoles`, values)
+		: t(`${key}.gap`, values);
 };
 
 /** Why it is short: "1 short: Aisha Rahman is on leave", "1 short since generation", "2 short". */
@@ -139,6 +154,6 @@ export const neighbourLine = (
 /** Why someone can't cover the shift, in a few words. */
 export const reasonText = (
 	reason: CoverUnavailableReason,
-	shift: ScheduleShift | undefined,
+	shift: CoverShift | undefined,
 	t: TFunction
 ): string => t(`${key}.reason.${reason}`, { jobTitles: jobTitlesOf(shift, t) });

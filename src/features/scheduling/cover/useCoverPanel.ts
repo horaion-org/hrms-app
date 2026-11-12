@@ -232,7 +232,11 @@ export const useCoverPanel = ({
 		review: {
 			names: {
 				member: memberName,
-				shift: (id) => shifts.find((shift) => shift.shiftId === id)?.name ?? "",
+				// The roster's own days name the shifts worked when the frozen shifts can't be read.
+				shift: (id) =>
+					shifts.find((shift) => shift.shiftId === id)?.name ??
+					assignments.find((row) => row.shift?.shiftId === id)?.shift?.name ??
+					"",
 				day: (date) => formatDay(date, language),
 				dayType: (code) => dayTypeInSentence(code, t),
 			},

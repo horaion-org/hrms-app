@@ -4065,7 +4065,8 @@
 				"close": "Cerrar",
 				"nobody": "Nadie de este cuadrante puede cubrir {{shift}} el {{day}}.",
 				"notChecked": "Aún no se ha comprobado con las reglas de programación."
-			}
+			},
+			"gapWithoutRoles": "{{shift}} · {{day}} · {{time}}"
 		},
 		"reach": {
 			"editShift_one": "Al guardar, este turno cambia para {{department}}: los horarios nuevos y {{count}} borrador que lo usa. Los horarios generados y publicados conservan su propia copia.",

@@ -4243,7 +4243,8 @@
 				"close": "Close",
 				"nobody": "Nobody on this roster can cover {{shift}} on {{day}}.",
 				"notChecked": "Not checked against the scheduling rules yet."
-			}
+			},
+			"gapWithoutRoles": "{{shift}} · {{day}} · {{time}}"
 		},
 		"reach": {
 			"editShift_one": "Saving changes this shift for {{department}}: new schedules and {{count}} draft that uses it. Generated and published schedules keep their own copy.",

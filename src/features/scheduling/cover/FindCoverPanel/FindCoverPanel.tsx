@@ -14,6 +14,7 @@ import {
 	optionLines,
 	reasonText,
 	type CoverNames,
+	type CoverShift,
 } from "@/features/scheduling/cover/coverOptionWords";
 import {
 	useCoverPanel,
@@ -57,14 +58,16 @@ export const FindCoverPanel = ({
 	const radioName = useId();
 	const panel = useCoverPanel(input);
 	const { status, options, selected, review, offer } = panel;
-	const shift = input.shifts.find(
-		({ shiftId }) => shiftId === input.gap.shiftId
-	);
+	// The roster's own days name a shift when the frozen shifts can't be read.
+	const shiftOf = (shiftId: string): CoverShift | undefined =>
+		input.shifts.find((candidate) => candidate.shiftId === shiftId) ??
+		input.assignments.find((row) => row.shift?.shiftId === shiftId)?.shift ??
+		undefined;
+	const shift = shiftOf(input.gap.shiftId);
 	const numbers = new Intl.NumberFormat(language, { maximumFractionDigits: 1 });
 	const names: CoverNames = {
 		member: (membershipId) => review.names.member(membershipId),
-		shift: (shiftId) =>
-			input.shifts.find((candidate) => candidate.shiftId === shiftId),
+		shift: shiftOf,
 		day: (date) => formatDay(date, language),
 		hours: (minutes) => numbers.format(minutes / 60),
 	};

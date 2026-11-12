@@ -110,6 +110,22 @@ describe("FindCoverPanel", () => {
 		).toBeVisible();
 	});
 
+	it("given_frozenShiftsNotReadable_when_shown_then_theRostersOwnDaysNameTheShift", async () => {
+		stubApi({
+			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
+			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
+		});
+		show({ shifts: [] });
+
+		expect(
+			await screen.findByText(/^Front Desk AM · Sat, Oct 17 · 09:00 – 15:00/)
+		).toBeVisible();
+		await screen.findByRole("radio", { name: "Aisha Rahman" });
+		expect(screen.getByRole("note")).toHaveTextContent(
+			"Aisha Rahman works Front Desk AM on Fri, Oct 16"
+		);
+	});
+
 	it("given_aDraft_when_applied_then_theChangeGoesInWithTheCells", async () => {
 		const calls = stubApi({
 			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),

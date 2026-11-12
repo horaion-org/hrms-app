@@ -40,6 +40,20 @@ describe("gapTitle and gapReason", () => {
 		expect(gapReason(gap, names, t)).toBe("1 short since generation");
 	});
 
+	it("given_aShiftWhoseRolesCantBeRead_when_worded_then_theTitleWithoutThem", () => {
+		const withoutRoles: CoverNames = {
+			...names,
+			shift: (shiftId) => {
+				const shift = names.shift(shiftId);
+				return shift && { ...shift, roles: undefined };
+			},
+		};
+
+		expect(gapTitle(gap, withoutRoles, t)).toBe(
+			"Front Desk AM · Sat, Oct 17 · 09:00 – 15:00"
+		);
+	});
+
 	it("given_oneAbsentMember_when_worded_then_namesWhoIsOnLeave", () => {
 		expect(
 			gapReason(
