@@ -2,7 +2,12 @@ import type { Schedule } from "@/features/scheduling/schedules/api";
 
 /** A notice the roster page shows under its header. */
 export type ScheduleNoticeId =
-	"weekPublished" | "rejected" | "generating" | "failed" | "draft";
+	| "weekPublished"
+	| "unpublished"
+	| "rejected"
+	| "generating"
+	| "failed"
+	| "draft";
 
 /** What decides the notices on one schedule. */
 export type ScheduleNoticeFacts = {
@@ -26,6 +31,12 @@ export const SCHEDULE_NOTICES: ReadonlyArray<{
 	{
 		id: "weekPublished",
 		shownWhen: ({ weekPublishedElsewhere }) => weekPublishedElsewhere,
+	},
+	// A generated roster on screen is not final: staff see a week only once it is published.
+	{
+		id: "unpublished",
+		shownWhen: ({ status, generating, hasRoster }) =>
+			status === "GENERATED" && !generating && hasRoster,
 	},
 	{ id: "rejected", shownWhen: ({ status }) => status === "REJECTED" },
 	{ id: "generating", shownWhen: ({ generating }) => generating },

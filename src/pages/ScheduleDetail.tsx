@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState, type ReactNode } from "react";
-import { useTranslation } from "react-i18next";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { Trans, useTranslation } from "react-i18next";
 import type { DepartmentPath } from "@/common/companyPath";
 import { dateTimeFormatIn } from "@/common/dateTimeFormatIn";
 import { formattingLocale } from "@/common/formattingLocale";
@@ -22,6 +22,13 @@ import {
 	type RosterEditing,
 } from "@/features/scheduling/GeneratedRoster";
 import { GenerationFailurePanel } from "@/features/scheduling/GenerationFailurePanel";
+import { scheduleMonthQuery } from "@/features/scheduling/months/api";
+import { formatMonth, monthOf } from "@/features/scheduling/months/monthWeeks";
+import {
+	rosterWeekLink,
+	rosterWeeksOf,
+} from "@/features/scheduling/months/rosterWeeks";
+import { formatPeriod } from "@/features/scheduling/periods";
 import {
 	PublishScheduleDialog,
 	type PublishMode,
@@ -53,6 +60,10 @@ import {
 	scheduleActions,
 	type ScheduleActionId,
 } from "@/features/scheduling/schedules/scheduleActions";
+import {
+	actionWaitsForEarlierWeek,
+	publishWaitsFor,
+} from "@/features/scheduling/schedules/publishOrder";
 import { scheduleDetailItems } from "@/features/scheduling/schedules/scheduleDetails";
 import {
 	rosterShown,
@@ -101,11 +112,37 @@ const ROSTER_PROBLEMS = {
 	hidden: "unavailable",
 } as const;
 
-const BackLink = (): FunctionComponent => {
-	const { t } = useTranslation();
+/**
+ * Back to the schedule's month page, named by the month ("November 2026"),
+ * once the schedule is known; back to Scheduling before that.
+ */
+const BackLink = ({
+	month,
+	departmentId,
+}: {
+	month?: string;
+	departmentId?: string;
+}): FunctionComponent => {
+	const { t, i18n } = useTranslation();
+	if (month === undefined || departmentId === undefined)
+		return (
+			<Button
+				leadingIcon={<ArrowLeftIcon />}
+				to="/scheduling"
+				variant="textlink"
+			>
+				{t(`${key}.back`)}
+			</Button>
+		);
 	return (
-		<Button leadingIcon={<ArrowLeftIcon />} to="/scheduling" variant="textlink">
-			{t(`${key}.back`)}
+		<Button
+			leadingIcon={<ArrowLeftIcon />}
+			params={{ month }}
+			search={{ department: departmentId }}
+			to="/scheduling/months/$month"
+			variant="textlink"
+		>
+			{formatMonth(month, formattingLocale(i18n))}
 		</Button>
 	);
 };
@@ -347,11 +384,27 @@ const ApiSchedule = ({
 		publishedWeek.data,
 		scheduleId
 	);
+	// The Department's weeks of the schedule's month, for the week bar and the back link.
+	const month =
+		state.status === "ready" ? monthOf(state.schedule.periodStart) : "";
+	const scheduleMonth = useQuery(
+		scheduleMonthQuery(
+			companyId,
+			unit?.departmentId ?? "",
+			month,
+			unit !== undefined &&
+				access.can("schedule:read", departmentScope(unit.departmentId))
+		)
+	).data;
+	const publishNoteId = useId();
 	if (state.status !== "ready")
 		return (
-			<Problem alert={state.status !== "pending"}>
-				{t(`${key}.${SCHEDULE_PROBLEMS[state.status]}`)}
-			</Problem>
+			<>
+				<BackLink />
+				<Problem alert={state.status !== "pending"}>
+					{t(`${key}.${SCHEDULE_PROBLEMS[state.status]}`)}
+				</Problem>
+			</>
 		);
 	const openRegenerate =
 		regenerable(state.schedule) &&
@@ -479,9 +532,31 @@ const ApiSchedule = ({
 			/>
 		),
 		draft: <Callout>{t(`${key}.draft`)}</Callout>,
+		unpublished: (
+			<Callout>
+				<Trans
+					components={[<strong key="lead" className="font-semibold" />]}
+					i18nKey="scheduling.months.roster.unpublished"
+				/>
+			</Callout>
+		),
+	};
+	// Weeks are published in order: Publish (and Submit, and the last step's Approve) waits for an earlier week.
+	const waitsFor = publishWaitsFor(schedule);
+	const primaryWaits =
+		primary !== undefined &&
+		waitsFor !== undefined &&
+		actionWaitsForEarlierWeek(primary.id);
+	const departmentWeeks = scheduleMonth && {
+		weeks: rosterWeeksOf(scheduleMonth, t),
+		onWeekChange: (week: string): void => {
+			const link = rosterWeekLink(scheduleMonth, week);
+			if (link) void navigate(link);
+		},
 	};
 	return (
 		<>
+			<BackLink departmentId={schedule.departmentId} month={month} />
 			{/* Only where an approval is involved: without a flow the page is as before. */}
 			{(standing.kind !== "direct" || approval.instance) && (
 				<p className="sr-only" role="status">
@@ -495,12 +570,26 @@ const ApiSchedule = ({
 					// On a phone the menu sits beside the title and the primary action takes its own row.
 					<div className="flex items-center gap-3 max-sm:contents">
 						{primary && (
-							<Button
-								className="max-sm:order-last max-sm:w-full"
-								onClick={runAction[primary.id]}
-							>
-								{t(primary.labelKey)}
-							</Button>
+							<div className="flex flex-col items-end gap-2 max-sm:order-last max-sm:w-full">
+								<Button
+									aria-describedby={primaryWaits ? publishNoteId : undefined}
+									className="max-sm:w-full"
+									disabled={primaryWaits}
+									onClick={runAction[primary.id]}
+								>
+									{t(primary.labelKey)}
+								</Button>
+								{primaryWaits && (
+									<p
+										className="text-right text-sm text-neutral-700 max-sm:text-left"
+										id={publishNoteId}
+									>
+										{t("scheduling.months.roster.publishFirst", {
+											week: formatPeriod(waitsFor, formattingLocale(i18n)),
+										})}
+									</p>
+								)}
+							</div>
 						)}
 						<ScheduleMenu
 							withExport
@@ -578,6 +667,7 @@ const ApiSchedule = ({
 					approval={trail}
 					assignments={assignments}
 					constraints={readyItems(constraints)}
+					departmentWeeks={departmentWeeks}
 					editing={editing}
 					schedule={schedule}
 					shifts={readyItems(shifts)}
@@ -649,7 +739,6 @@ export const ScheduleDetailPage = (): FunctionComponent => {
 	const { scheduleId } = route.useParams();
 	return (
 		<>
-			<BackLink />
 			<ApiSchedule
 				key={`${companyId}/${scheduleId}`}
 				companyId={companyId}

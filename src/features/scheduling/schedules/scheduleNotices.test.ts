@@ -17,11 +17,11 @@ describe("scheduleNotices", () => {
 	it.each<
 		[string, Partial<ScheduleNoticeFacts>, Array<ScheduleNoticeId>, boolean]
 	>([
-		["a generated roster", {}, [], true],
+		["a generated roster", {}, ["unpublished"], true],
 		[
 			"a roster whose week is published elsewhere",
 			{ weekPublishedElsewhere: true },
-			["weekPublished"],
+			["weekPublished", "unpublished"],
 			true,
 		],
 		["a rejected roster", { status: "REJECTED" }, ["rejected"], true],

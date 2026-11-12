@@ -1,6 +1,7 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, it, vi } from "vitest";
+import dayjs from "dayjs";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { resetApiClient } from "@/common/api-client";
 import {
 	currentUserReply,
@@ -34,6 +35,10 @@ import {
 	rosterCheckFixture,
 } from "@/features/scheduling/rosterChanges/fixtures";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
+import {
+	monthWeekFixture,
+	scheduleMonthFixture,
+} from "@/features/scheduling/months/fixtures";
 import { frozenShiftsFixture } from "@/features/scheduling/shifts/fixtures";
 
 let app: OpenedApp | undefined;
@@ -123,9 +128,10 @@ it("opens an older link that also names the department, reading the schedule by 
 	);
 	expect(readsOf(calls, SCHEDULE_READ)).toHaveLength(1);
 	expect(readsOf(calls, SCHEDULE)).toHaveLength(0);
-	expect(
-		screen.getByRole("link", { name: "Back to Overview" })
-	).toHaveAttribute("href", "/scheduling");
+	expect(screen.getByRole("link", { name: "October 2026" })).toHaveAttribute(
+		"href",
+		"/scheduling/months/2026-10?department=d-1"
+	);
 });
 
 it("shows a generated schedule's header, figures and roster from the API", async () => {
@@ -152,7 +158,10 @@ it("shows a generated schedule's header, figures and roster from the API", async
 		)
 	).toBeInTheDocument();
 	expect(screen.queryByRole("region", { name: "Conflicts" })).toBeNull();
-	expect(screen.queryByRole("note")).toBeNull();
+	// The one note a generated roster carries: it is not final yet.
+	expect(screen.getByRole("note")).toHaveTextContent(
+		"Not published. Staff can’t see this week."
+	);
 
 	const roster = screen.getByRole("table", { name: "Roster" });
 	expect(within(roster).getAllByRole("row")).toHaveLength(4);
@@ -966,7 +975,8 @@ it("counts what the engine found on one Issues button and lists it in the side p
 
 	const issues = await screen.findByRole("button", { name: "Issues: 4" });
 	expect(issues).toHaveAttribute("aria-expanded", "false");
-	expect(screen.queryByRole("note")).toBeNull();
+	// Only the note that the roster isn't published; findings stay in the Issues panel.
+	expect(screen.getByRole("note")).toHaveTextContent("Not published.");
 	expect(screen.queryByRole("region", { name: /Setup issues/ })).toBeNull();
 	await user.click(issues);
 
@@ -1175,7 +1185,8 @@ it("lists where members started the week, and that it changed since, under Issue
 		)
 	).toBeInTheDocument();
 	expect(within(roster).queryByText(/of a run/)).toBeNull();
-	expect(screen.queryByRole("note")).toBeNull();
+	// Only the note that the roster isn't published; findings stay in the Issues panel.
+	expect(screen.getByRole("note")).toHaveTextContent("Not published.");
 	expect(readsOf(calls, `${SCHEDULE}/starting-context`)).toHaveLength(1);
 });
 
@@ -1987,4 +1998,194 @@ it("never offers to delete a published schedule, even to someone who may delete 
 		"Details",
 		"Export roster",
 	]);
+});
+
+describe("the roster in its month", () => {
+	/** Front Office's October 2026, as the month read answers it: s-0 published, s-1 (this roster) and s-2. */
+	const OCTOBER = "/api/v1/companies/c-1/schedule-months/2026-10";
+	const october = (
+		thisWeek: Parameters<typeof monthWeekFixture>[0] = {}
+	): ReturnType<typeof scheduleMonthFixture> =>
+		scheduleMonthFixture({
+			month: "2026-10",
+			departmentName: "Front Office",
+			weeks: [
+				monthWeekFixture({
+					periodStart: "2026-10-05",
+					periodEnd: "2026-10-11",
+					state: "PUBLISHED",
+					scheduleId: "s-0",
+				}),
+				monthWeekFixture({
+					periodStart: "2026-10-12",
+					periodEnd: "2026-10-18",
+					state: "TO_REVIEW",
+					scheduleId: "s-1",
+					...thisWeek,
+				}),
+				monthWeekFixture({
+					periodStart: "2026-10-19",
+					periodEnd: "2026-10-25",
+					state: "TENTATIVE",
+					scheduleId: "s-2",
+				}),
+				monthWeekFixture({
+					periodStart: "2026-10-26",
+					periodEnd: "2026-11-01",
+					state: "NOT_GENERATED",
+					scheduleId: null,
+					days: [],
+					handChangedDays: null,
+				}),
+			],
+		});
+	/** The fixture's roster rows moved from the week of 12 Oct to the week of `monday`. */
+	const assignmentsOfWeek = (monday: string): Array<ScheduleAssignment> => {
+		const days = dayjs(monday).diff("2026-10-12", "day");
+		return scheduleAssignmentsFixture().map((row) => ({
+			...row,
+			day: dayjs(row.day).add(days, "day").format("YYYY-MM-DD"),
+		}));
+	};
+	const heldUp = (): ReturnType<typeof generatedScheduleFixture> => {
+		const schedule = generatedScheduleFixture({ status: "GENERATED" });
+		return {
+			...schedule,
+			publication: {
+				...schedule.publication,
+				waitingForWeek: { periodStart: "2026-10-05", periodEnd: "2026-10-11" },
+			},
+		};
+	};
+
+	it("goes back to its month and steps to another week of it, the arrows staying in the month", async () => {
+		const calls = await openRoster({
+			...signedIn(),
+			[`GET ${SCHEDULE_READ}`]: ok(
+				generatedScheduleFixture({ status: "GENERATED" })
+			),
+			[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+			[`GET ${OCTOBER}`]: ok(october()),
+			"GET /api/v1/companies/c-1/schedules/s-2": ok(
+				generatedScheduleFixture({
+					scheduleId: "s-2",
+					status: "GENERATED",
+					periodStart: "2026-10-19",
+					periodEnd: "2026-10-25",
+				})
+			),
+			"GET /api/v1/companies/c-1/branches/b-1/departments/d-1/schedules/s-2/assignments":
+				ok(assignmentsOfWeek("2026-10-19")),
+		});
+		const user = userEvent.setup();
+
+		expect(
+			await screen.findByRole("link", { name: "October 2026" })
+		).toHaveAttribute("href", "/scheduling/months/2026-10?department=d-1");
+		expect(readsOf(calls, OCTOBER)[0]?.search).toBe("departmentId=d-1");
+		await waitFor(() => {
+			expect(screen.getByRole("button", { name: "Week" })).toHaveTextContent(
+				"· To review"
+			);
+		});
+		await user.click(screen.getByRole("button", { name: "Week" }));
+		const weeks = screen.getAllByRole("option");
+		expect(weeks).toHaveLength(4);
+		expect(weeks[3]).toHaveAttribute("aria-disabled", "true");
+		await user.keyboard("{Escape}");
+
+		await user.click(screen.getByRole("button", { name: "Next week" }));
+
+		await waitFor(() => {
+			expect(screen.getByRole("button", { name: "Week" })).toHaveTextContent(
+				"· Tentative"
+			);
+		});
+		expect(app?.router.state.location.pathname).toBe("/scheduling/s-2");
+		// The month's last week has no schedule, so this is as far as the arrow goes.
+		expect(screen.getByRole("button", { name: "Next week" })).toBeDisabled();
+	});
+
+	it("disables the arrow past the month's first week", async () => {
+		await openRoster(
+			{
+				...signedIn(),
+				"GET /api/v1/companies/c-1/schedules/s-0": ok(
+					generatedScheduleFixture({
+						scheduleId: "s-0",
+						status: "PUBLISHED",
+						periodStart: "2026-10-05",
+						periodEnd: "2026-10-11",
+					})
+				),
+				"GET /api/v1/companies/c-1/branches/b-1/departments/d-1/schedules/s-0/assignments":
+					ok(assignmentsOfWeek("2026-10-05")),
+				[`GET ${OCTOBER}`]: ok(october()),
+			},
+			"/scheduling/s-0"
+		);
+
+		await waitFor(() => {
+			expect(screen.getByRole("button", { name: "Week" })).toHaveTextContent(
+				"· Published"
+			);
+		});
+		expect(
+			screen.getByRole("button", { name: "Previous week" })
+		).toBeDisabled();
+	});
+
+	it("reads Tentative, says it isn't published and holds Publish until the earlier week is published", async () => {
+		await openRoster({
+			...signedIn(["schedule:read", "schedule:publish"]),
+			[`GET ${SCHEDULE_READ}`]: ok(heldUp()),
+			[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+			[`GET ${OCTOBER}`]: ok(october({ state: "TENTATIVE" })),
+		});
+
+		const publish = await screen.findByRole("button", {
+			name: "Publish roster",
+		});
+		expect(publish).toBeDisabled();
+		expect(publish).toHaveAccessibleDescription(
+			/^Publish Oct 5\s?–\s?11, 2026 first\. Weeks are published in order\.$/
+		);
+		expect(screen.getByText("Tentative")).toBeInTheDocument();
+		expect(screen.getByRole("note")).toHaveTextContent(
+			"Not published. Staff can’t see this week."
+		);
+	});
+
+	it("offers Publish on the week under review", async () => {
+		await openRoster({
+			...signedIn(["schedule:read", "schedule:publish"]),
+			[`GET ${SCHEDULE_READ}`]: ok(
+				generatedScheduleFixture({ status: "GENERATED" })
+			),
+			[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+			[`GET ${OCTOBER}`]: ok(october()),
+		});
+
+		expect(
+			await screen.findByRole("button", { name: "Publish roster" })
+		).toBeEnabled();
+		expect(screen.getByText("Generated")).toBeInTheDocument();
+	});
+
+	it("shows neither the note nor a held Publish on a published week", async () => {
+		await openRoster({
+			...signedIn(["schedule:read", "schedule:publish"]),
+			[`GET ${SCHEDULE_READ}`]: ok(
+				generatedScheduleFixture({ status: "PUBLISHED" })
+			),
+			[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+			[`GET ${OCTOBER}`]: ok(october({ state: "PUBLISHED" })),
+		});
+
+		expect(
+			await screen.findByRole("row", { name: /Aisha Rahman/ })
+		).toBeInTheDocument();
+		expect(screen.queryByText("Not published.")).toBeNull();
+		expect(screen.queryByText(/Weeks are published in order/)).toBeNull();
+	});
 });

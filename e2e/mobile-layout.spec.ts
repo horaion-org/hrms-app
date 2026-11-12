@@ -20,6 +20,7 @@ const SIGNED_IN_ROUTES = [
 	"/scheduling/s-1",
 	"/scheduling/s-1?day=2026-10-14",
 	"/scheduling/months/2026-11?department=d-1",
+	"/scheduling/s-3",
 	"/me/schedules/s-1",
 	"/leave",
 	"/leave?view=requests",

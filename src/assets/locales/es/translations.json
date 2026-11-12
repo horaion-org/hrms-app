@@ -4204,7 +4204,12 @@
 				"toReview": "La semana del {{week}} espera tu revisión.",
 				"generatedAhead": "Generado por adelantado. Primero va {{month}}."
 			},
-			"tabFailed": "No pudimos cargar los meses. Inténtalo de nuevo."
+			"tabFailed": "No pudimos cargar los meses. Inténtalo de nuevo.",
+			"roster": {
+				"unpublished": "<0>Sin publicar.</0> El personal no puede ver esta semana.",
+				"publishFirst": "Publica primero {{week}}. Las semanas se publican en orden.",
+				"weekWithState": "{{week}} · {{state}}"
+			}
 		}
 	},
 	"workspace": {

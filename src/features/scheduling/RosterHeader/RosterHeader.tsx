@@ -6,7 +6,7 @@ import type { FunctionComponent } from "@/common/types";
 import { Badge } from "@/components/ui/Badge";
 import { formatPeriod } from "@/features/scheduling/periods";
 import type { Schedule } from "@/features/scheduling/schedules/api";
-import { scheduleStatusTones } from "@/features/scheduling/schedules/scheduleStatusTones";
+import { rosterStatusBadge } from "@/features/scheduling/schedules/publishOrder";
 
 export type RosterHeaderProps = {
 	schedule: Schedule;
@@ -37,6 +37,7 @@ export const RosterHeader = ({
 }: RosterHeaderProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const language = formattingLocale(i18n);
+	const badge = rosterStatusBadge(schedule);
 	return (
 		<div
 			className={joinClassNames(
@@ -54,11 +55,8 @@ export const RosterHeader = ({
 						{ start: schedule.periodStart, end: schedule.periodEnd },
 						language
 					)}
-					<Badge
-						className="uppercase"
-						tone={scheduleStatusTones[schedule.status]}
-					>
-						{t(`scheduling.overview.statuses.${schedule.status}`)}
+					<Badge className="uppercase" tone={badge.tone}>
+						{t(badge.labelKey)}
 					</Badge>
 					{meta}
 					<span className="text-xs font-normal text-neutral-700">

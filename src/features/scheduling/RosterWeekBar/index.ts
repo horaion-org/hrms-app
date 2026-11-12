@@ -1,1 +1,5 @@
-export { RosterWeekBar, type RosterWeekBarProps } from "./RosterWeekBar";
+export {
+	RosterWeekBar,
+	type RosterWeek,
+	type RosterWeekBarProps,
+} from "./RosterWeekBar";

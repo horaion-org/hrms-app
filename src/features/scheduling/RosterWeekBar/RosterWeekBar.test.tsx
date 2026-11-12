@@ -15,6 +15,18 @@ beforeAll(async () => {
 
 const weeks = weeksOf({ start: "2026-04-13", end: "2026-04-26" });
 
+/** Three weeks of a Department's month as the roster page lists them; the last has no schedule. */
+const MONTH_WEEKS = [
+	{ start: "2026-11-02", end: "2026-11-08", state: "Published" },
+	{ start: "2026-11-16", end: "2026-11-22", state: "Tentative" },
+	{
+		start: "2026-11-23",
+		end: "2026-11-29",
+		state: "Not generated",
+		disabled: true,
+	},
+];
+
 describe("RosterWeekBar", () => {
 	it("given_theFirstWeek_when_rendered_then_onlyNextIsOffered", async () => {
 		const user = userEvent.setup();
@@ -160,5 +172,57 @@ describe("RosterWeekBar", () => {
 		expect(screen.getByRole("button", { name: "Today" })).toHaveClass(
 			"max-sm:order-4"
 		);
+	});
+
+	it("given_monthWeeksWithStates_when_opened_then_eachReadsWithItsStateAndAWeekWithoutAScheduleCantBeChosen", async () => {
+		const user = userEvent.setup();
+		const onWeekChange = vi.fn();
+		render(
+			<RosterWeekBar
+				legend={[]}
+				week="2026-11-16"
+				weeks={MONTH_WEEKS}
+				onToday={vi.fn()}
+				onWeekChange={onWeekChange}
+			/>
+		);
+
+		await user.click(screen.getByRole("button", { name: "Week" }));
+		const options = screen.getAllByRole("option");
+		expect(options.map((option) => option.textContent)).toEqual([
+			expect.stringMatching(/· Published$/),
+			expect.stringMatching(/· Tentative$/),
+			expect.stringMatching(/· Not generated$/),
+		]);
+		expect(options[2]).toHaveAttribute("aria-disabled", "true");
+	});
+
+	it("given_aWeekWithoutAScheduleNext_when_stepping_then_theArrowsSkipItOrStopAtTheMonthsEnd", async () => {
+		const user = userEvent.setup();
+		const onWeekChange = vi.fn();
+		render(
+			<RosterWeekBar
+				legend={[]}
+				week="2026-11-02"
+				weeks={[
+					{ start: "2026-11-02", end: "2026-11-08", state: "Published" },
+					{
+						start: "2026-11-09",
+						end: "2026-11-15",
+						state: "Not generated",
+						disabled: true,
+					},
+					{ start: "2026-11-16", end: "2026-11-22", state: "Tentative" },
+				]}
+				onToday={vi.fn()}
+				onWeekChange={onWeekChange}
+			/>
+		);
+
+		expect(
+			screen.getByRole("button", { name: "Previous week" })
+		).toBeDisabled();
+		await user.click(screen.getByRole("button", { name: "Next week" }));
+		expect(onWeekChange).toHaveBeenCalledWith("2026-11-16");
 	});
 });

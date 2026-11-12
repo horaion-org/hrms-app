@@ -4382,7 +4382,12 @@
 				"toReview": "Week of {{week}} is waiting for your review.",
 				"generatedAhead": "Generated ahead. {{month}} comes first."
 			},
-			"tabFailed": "The months couldn’t be loaded. Please try again."
+			"tabFailed": "The months couldn’t be loaded. Please try again.",
+			"roster": {
+				"unpublished": "<0>Not published.</0> Staff can’t see this week.",
+				"publishFirst": "Publish {{week}} first. Weeks are published in order.",
+				"weekWithState": "{{week}} · {{state}}"
+			}
 		}
 	},
 	"colourSwatchPicker": {
