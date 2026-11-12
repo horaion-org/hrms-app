@@ -47,18 +47,22 @@ export type PanelModeFacts = {
 	hasShifts: boolean;
 	/** The person may change this member's leave from the roster. */
 	mayChangeLeave: boolean;
+	/** A type can be chosen for the day not worked (`dayTypeChoices`). */
+	canChooseDayType: boolean;
 };
 
 /**
  * The choices a day offers. A leave day offers only leave moves, and only to
  * someone who may make them; otherwise it stays read-only as before. A plain
  * day off under leave someone can't change keeps the roster's own choices.
+ * A day already not worked offers not working again only to change its type.
  * Leave is offered only where no request covers the day. Pure.
  */
 export const panelModes = ({
 	assignment,
 	hasShifts,
 	mayChangeLeave,
+	canChooseDayType,
 }: PanelModeFacts): Array<RosterPanelMode> => {
 	const shiftChoice: Array<RosterPanelMode> = hasShifts ? ["shift"] : [];
 	if (isLeaveDay(assignment) && mayChangeLeave)
@@ -66,7 +70,9 @@ export const panelModes = ({
 	if (assignment.offReason === "LEAVE") return [];
 	return [
 		...shiftChoice,
-		...(assignment.shift !== null || needsDecision(assignment)
+		...(assignment.shift !== null ||
+		needsDecision(assignment) ||
+		canChooseDayType
 			? (["dayOff"] as const)
 			: []),
 		...(mayChangeLeave && !assignment.leaveRequestId
@@ -110,6 +116,8 @@ export type EditChoiceFacts = {
 	leaveDayEditable: boolean;
 	mode: RosterPanelMode | undefined;
 	shiftId: string | undefined;
+	/** The type the day not worked takes; none when the schedule offers none. */
+	dayType: string | undefined;
 	partner: ScheduleAssignment | undefined;
 	leaveMove: RosterLeaveMove | undefined;
 };
@@ -122,11 +130,12 @@ export const editChoiceOf = ({
 	leaveDayEditable,
 	mode,
 	shiftId,
+	dayType,
 	partner,
 	leaveMove,
 }: EditChoiceFacts): RosterEditChoice | undefined => {
 	if (leaveDayEditable) return rosterChoiceOfLeaveMove(leaveMove);
-	if (mode === "dayOff") return { kind: "dayOff" };
+	if (mode === "dayOff") return { kind: "dayOff", dayType };
 	if (mode === "shift" && shiftId !== undefined)
 		return { kind: "shift", shiftId };
 	if (mode === "swap" && partner !== undefined)

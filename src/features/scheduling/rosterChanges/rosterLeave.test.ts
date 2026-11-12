@@ -76,9 +76,25 @@ describe("panelModes", () => {
 		["a day to decide", toDecide, false, ["shift", "dayOff", "swap"]],
 		["a pending request", pending, true, ["shift", "dayOff", "swap"]],
 	] as const)("given_%s", (_, assignment, mayChangeLeave, expected) => {
-		expect(panelModes({ assignment, hasShifts: true, mayChangeLeave })).toEqual(
-			expected
-		);
+		expect(
+			panelModes({
+				assignment,
+				hasShifts: true,
+				mayChangeLeave,
+				canChooseDayType: false,
+			})
+		).toEqual(expected);
+	});
+
+	it("given_aDayOffWithAnotherTypeToChoose_then_offersNotWorkingToChangeIt", () => {
+		expect(
+			panelModes({
+				assignment: dayOff,
+				hasShifts: true,
+				mayChangeLeave: false,
+				canChooseDayType: true,
+			})
+		).toEqual(["shift", "dayOff", "swap"]);
 	});
 
 	it("given_noFrozenShifts_when_onLeave_then_noShiftChoice", () => {
@@ -87,6 +103,7 @@ describe("panelModes", () => {
 				assignment: onLeave,
 				hasShifts: false,
 				mayChangeLeave: true,
+				canChooseDayType: true,
 			})
 		).toEqual(["anotherType", "dayOff"]);
 	});
@@ -189,6 +206,7 @@ describe("editChoiceOf", () => {
 		leaveDayEditable: false,
 		mode: undefined,
 		shiftId: undefined,
+		dayType: undefined,
 		partner: undefined,
 		leaveMove: undefined,
 	};
@@ -196,6 +214,11 @@ describe("editChoiceOf", () => {
 	it.each<[string, Partial<EditChoiceFacts>, ReturnType<typeof editChoiceOf>]>([
 		["nothing chosen", {}, undefined],
 		["a day off", { mode: "dayOff" }, { kind: "dayOff" }],
+		[
+			"a day not worked with its type",
+			{ mode: "dayOff", dayType: "REST" },
+			{ kind: "dayOff", dayType: "REST" },
+		],
 		["a shift mode with no shift yet", { mode: "shift" }, undefined],
 		[
 			"a picked shift",

@@ -66,6 +66,7 @@ export const scheduleFixture = (
 		rejectedAtStep: null,
 	},
 	publicationWithdrawnAt: null,
+	nonWorkingDayTypes: ["OFF", "REST"],
 	generation: null,
 	createdAt: "2026-10-08T09:00:00Z",
 	updatedAt: "2026-10-08T09:00:00Z",
@@ -80,6 +81,7 @@ const ROSTER_MEMBERS = [
 		displayName: "Aisha Rahman",
 		employeeCode: "EMP-001",
 		jobTitleName: "Front Desk Lead",
+		partTime: false,
 	},
 	{
 		membershipId: "m-2",
@@ -87,6 +89,7 @@ const ROSTER_MEMBERS = [
 		displayName: "Ben Ong",
 		employeeCode: "EMP-002",
 		jobTitleName: "Front Desk Staff",
+		partTime: true,
 	},
 	{
 		membershipId: "m-3",
@@ -94,6 +97,7 @@ const ROSTER_MEMBERS = [
 		displayName: "Chen Wei",
 		employeeCode: "EMP-003",
 		jobTitleName: "Duty Manager",
+		partTime: false,
 	},
 ] as const;
 

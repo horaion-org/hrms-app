@@ -272,6 +272,12 @@ const scheduleSchema = z.object({
 	 * schedule is published once and never regenerated. Null from an older API.
 	 */
 	publicationWithdrawnAt: z.string().nullable().default(null),
+	/**
+	 * The types a day can be made when it is not worked, such as a day off or
+	 * a rest day, as codes; `dayTypeLabel` words them. Empty from an older
+	 * API, which takes a day off without a type.
+	 */
+	nonWorkingDayTypes: z.array(z.string()).catch([]),
 	createdAt: z.string(),
 	updatedAt: z.string(),
 });
@@ -718,6 +724,11 @@ export const scheduleAssignmentSchema = z.object({
 			employeeCode: z.string(),
 			/** Their current home job title, or null when they hold none. */
 			jobTitleName: z.string().nullable(),
+			/**
+			 * A part-timer's days without a shift are absent, never of a type.
+			 * False from an older API.
+			 */
+			partTime: z.boolean().catch(false),
 		})
 		.nullable(),
 	/** A day of the schedule's week, as an ISO date. */

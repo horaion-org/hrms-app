@@ -72,6 +72,7 @@ export const RosterSidePanelSlot = ({
 				assignments={assignments}
 				issues={issues}
 				leaveEditing={editing.leave}
+				nonWorkingDayTypes={editing.nonWorkingDayTypes}
 				notifiesMembers={editing.notifiesMembers}
 				revision={editing.revision}
 				shifts={editing.shifts}

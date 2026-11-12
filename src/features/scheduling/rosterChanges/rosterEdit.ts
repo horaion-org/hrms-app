@@ -4,6 +4,7 @@ import type {
 	RosterChangeCell,
 	RosterCheck,
 } from "@/features/scheduling/rosterChanges/api";
+import { needsDecision } from "@/features/scheduling/rosterChanges/rosterLeave";
 import type {
 	ScheduleAssignment,
 	ScheduleShift,
@@ -18,7 +19,7 @@ import type {
 /** What the person chose to do with a day. */
 export type RosterEditChoice =
 	| { kind: "shift"; shiftId: string }
-	| { kind: "dayOff" }
+	| { kind: "dayOff"; dayType?: string }
 	| { kind: "swap"; partner: ScheduleAssignment };
 
 /** One roster day's place on the grid: whose day, which date. */
@@ -30,6 +31,16 @@ const weekdayOf = (day: string): Weekday =>
 	// dayjs counts Sunday as 0; WEEKDAYS starts on Monday.
 	WEEKDAYS[(dayjs(day).day() + 6) % 7] ?? "MON";
 
+/** A day not worked, as a change sends it: with its type, or none when none was chosen. */
+const offCell = (
+	membershipId: string,
+	day: string,
+	dayType: string | undefined
+): RosterChangeCell =>
+	dayType === undefined
+		? { membershipId, day, kind: "OFF" }
+		: { membershipId, day, kind: "OFF", dayType };
+
 /** What a roster row holds, as a change sends it; leave is never sent. */
 const cellOf = (
 	membershipId: string,
@@ -37,7 +48,7 @@ const cellOf = (
 	shiftId: string | undefined
 ): RosterChangeCell =>
 	shiftId === undefined
-		? { membershipId, day, kind: "OFF" }
+		? offCell(membershipId, day, undefined)
 		: { membershipId, day, kind: "WORK", shiftId };
 
 /**
@@ -54,13 +65,69 @@ export const cellsForChoice = (
 	const day = assignment.day;
 	if (choice.kind === "shift")
 		return [cellOf(membershipId, day, choice.shiftId)];
-	if (choice.kind === "dayOff") return [cellOf(membershipId, day, undefined)];
+	if (choice.kind === "dayOff")
+		return [offCell(membershipId, day, choice.dayType)];
 	const partnerId = choice.partner.member?.membershipId;
 	if (partnerId === undefined) return [];
 	return [
 		cellOf(membershipId, day, choice.partner.shift?.shiftId),
 		cellOf(partnerId, day, assignment.shift?.shiftId),
 	];
+};
+
+/**
+ * The types a day can be made when it is not worked, from the schedule's
+ * list. A part-timer's day takes none: without a shift it is only absent. A
+ * day already not worked leaves out its own type, which would change nothing,
+ * unless a manager must confirm it. Pure.
+ */
+export const dayTypeChoices = (
+	nonWorkingDayTypes: ReadonlyArray<string>,
+	assignment: ScheduleAssignment
+): Array<string> => {
+	if (assignment.member?.partTime) return [];
+	if (assignment.shift !== null || needsDecision(assignment))
+		return [...nonWorkingDayTypes];
+	return nonWorkingDayTypes.filter((code) => code !== assignment.dayType);
+};
+
+/**
+ * The type picked first: the day's own when it is offered, so a worked rest
+ * day stays a rest day, else the first offered. Pure.
+ */
+export const preselectedDayType = (
+	choices: ReadonlyArray<string>,
+	currentDayType: string | null
+): string | undefined =>
+	currentDayType !== null && choices.includes(currentDayType)
+		? currentDayType
+		: choices[0];
+
+/** How the choice not to work a day reads, as `scheduling.rosterEdit` keys it. */
+export type NotWorkingWording =
+	| "confirmDayOff"
+	| "confirmNoShift"
+	| "notWorking"
+	| "removeShift"
+	| "anotherDayType";
+
+/**
+ * How the choice not to work a day reads: confirming a day a manager must
+ * decide (a part-timer has no day off, so theirs confirms no shift); a leave
+ * day going back to not worked; removing a part-timer's shift, which leaves
+ * the day absent; another type for a day already not worked; else making a
+ * worked day not worked. Pure.
+ */
+export const notWorkingWording = (
+	assignment: ScheduleAssignment,
+	leaveDayEditable: boolean
+): NotWorkingWording => {
+	if (needsDecision(assignment))
+		return assignment.member?.partTime ? "confirmNoShift" : "confirmDayOff";
+	if (leaveDayEditable) return "notWorking";
+	if (assignment.member?.partTime) return "removeShift";
+	if (assignment.shift === null) return "anotherDayType";
+	return "notWorking";
 };
 
 /**

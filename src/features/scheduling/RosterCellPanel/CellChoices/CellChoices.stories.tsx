@@ -25,7 +25,6 @@ const meta = {
 		name: "Aisha Rahman",
 		day: "Mon 12 Oct",
 		dayHasShift: true,
-		dayNeedsDecision: false,
 	},
 } satisfies Meta<typeof CellChoices>;
 
@@ -46,7 +45,54 @@ export const AnotherShift: Story = {
 	},
 };
 
-/** A day to decide: the day-off choice confirms it. */
+/** Not working chosen: pick the day's type from the schedule's, its own type first. */
+export const NotWorkingWithType: Story = {
+	args: {
+		choices: cellChoicesFixture({
+			mode: "dayOff",
+			dayTypes: ["OFF", "REST"],
+			dayType: "REST",
+			setDayType: fn(),
+		}),
+	},
+};
+
+/** A day already not worked: change its type. */
+export const AnotherDayType: Story = {
+	args: {
+		dayHasShift: false,
+		choices: cellChoicesFixture({
+			mode: "dayOff",
+			notWorkingWording: "anotherDayType",
+			dayTypes: ["OFF"],
+			dayType: "OFF",
+			setDayType: fn(),
+		}),
+	},
+};
+
+/** A part-timer's shift: removing it leaves the day absent, with no type to choose. */
+export const PartTimerRemovesShift: Story = {
+	args: {
+		choices: cellChoicesFixture({
+			mode: "dayOff",
+			notWorkingWording: "removeShift",
+		}),
+	},
+};
+
+/** A part-timer's day to decide: they have no day off, so it confirms no shift. */
+export const PartTimerDayToDecide: Story = {
+	args: {
+		dayHasShift: false,
+		choices: cellChoicesFixture({ notWorkingWording: "confirmNoShift" }),
+	},
+};
+
+/** A day to decide: the not-working choice confirms the day off. */
 export const DayToDecide: Story = {
-	args: { dayHasShift: false, dayNeedsDecision: true },
+	args: {
+		dayHasShift: false,
+		choices: cellChoicesFixture({ notWorkingWording: "confirmDayOff" }),
+	},
 };

@@ -490,6 +490,7 @@ describe("GeneratedRoster", () => {
 							},
 							revision: 1,
 							shifts: [],
+							nonWorkingDayTypes: [],
 							notifiesMembers: true,
 							coverOffers: {
 								offers: [

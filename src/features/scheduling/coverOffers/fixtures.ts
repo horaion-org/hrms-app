@@ -38,6 +38,7 @@ export const coverOfferFixture = (
 			displayName: "Aisha Rahman",
 			employeeCode: "EMP-001",
 			jobTitleName: "Front Desk Lead",
+			partTime: false,
 		},
 		shift,
 		optionKind: "OFF_DAY_SHIFT",

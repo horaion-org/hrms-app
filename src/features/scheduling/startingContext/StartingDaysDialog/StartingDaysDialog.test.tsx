@@ -14,19 +14,23 @@ import {
 	carriedWeek,
 	earlierDayTypedWeek,
 	firstWeek,
+	typedDaysOffWeek,
 	WEEK_BEFORE,
 } from "@/features/scheduling/startingContext/fixtures";
 import { StartingDaysDialog } from "@/features/scheduling/startingContext/StartingDaysDialog";
 
+/** Shown as for a schedule from an older API, which names no day types, unless given some. */
 const show = (
 	onSave = vi.fn(),
 	week = firstWeek(),
-	openings?: OpeningBalances
+	openings?: OpeningBalances,
+	nonWorkingDayTypes: ReadonlyArray<string> = []
 ): void => {
 	render(
 		<I18nextProvider i18n={authTestI18n}>
 			<StartingDaysDialog
 				open
+				nonWorkingDayTypes={nonWorkingDayTypes}
 				openings={openings}
 				saving={false}
 				week={week}
@@ -108,6 +112,67 @@ describe("StartingDaysDialog", () => {
 		);
 	});
 
+	it("given_typedDaysOff_when_shown_then_eachReadsItsTypeAndTheChoicesAreTheSchedulesPlusAnyEntered", async () => {
+		show(vi.fn(), typedDaysOffWeek(), undefined, ["OFF", "REST"]);
+
+		const table = screen.getByRole("table", {
+			name: "The days before this week",
+		});
+		const tan = within(table).getByRole("row", { name: /Tan Wei Ming/ });
+		expect(within(tan).getByText("Rest day")).toBeInTheDocument();
+		const sitiFriday = within(table).getByRole("button", {
+			name: /Siti Rahmah, Fri, Nov 6/,
+		});
+		expect(sitiFriday).toHaveTextContent("Rest day");
+		expect(
+			within(table).getByRole("button", { name: /Siti Rahmah, Sat, Nov 7/ })
+		).toHaveTextContent("Public holiday off");
+		await userEvent.click(sitiFriday);
+		expect(
+			screen.getAllByRole("option").map((option) => option.textContent)
+		).toEqual([
+			"Not known",
+			"Day off",
+			"Rest day",
+			"Public holiday off",
+			"Day 07:00 – 19:00",
+			"Night 22:00 – 06:00",
+		]);
+	});
+
+	it("given_aRestDayChosen_when_aDayIsFilledAndSaved_then_itIsSentWithItsType", async () => {
+		const user = userEvent.setup();
+		const onSave = vi.fn();
+		show(onSave, firstWeek(), undefined, ["OFF", "REST"]);
+
+		expect(screen.getByRole("button", { name: "Fill with" })).toHaveTextContent(
+			"Day off"
+		);
+		await user.click(screen.getByRole("button", { name: "Fill with" }));
+		await user.click(screen.getByRole("option", { name: "Rest day" }));
+		await user.click(screen.getByRole("button", { name: "Fill empty days" }));
+		await user.click(screen.getByRole("button", { name: "Save days" }));
+
+		expect(onSave).toHaveBeenCalledWith(
+			[
+				{
+					memberProfileId: "p-tan",
+					date: "2026-11-08",
+					kind: "SHIFT",
+					shiftId: "s-night",
+				},
+				{
+					memberProfileId: "p-siti",
+					date: "2026-11-08",
+					kind: "OFF",
+					shiftId: null,
+					dayType: "REST",
+				},
+			],
+			undefined
+		);
+	});
+
 	it("given_aRosterStartingMidMonth_when_hoursTyped_then_theyAreSavedAsMinutesBesideTheDays", async () => {
 		const onSave = vi.fn();
 		show(
@@ -163,6 +228,7 @@ describe("StartingDaysDialog", () => {
 			<I18nextProvider i18n={authTestI18n}>
 				<StartingDaysDialog
 					open
+					nonWorkingDayTypes={[]}
 					openings={openings}
 					saving={false}
 					week={firstWeek()}

@@ -880,6 +880,59 @@ describe("a schedule's roster", () => {
 		});
 		expect(missingDayType?.dayType).toBeNull();
 	});
+
+	it("reads a part-timer's row, and a member from an older API as not part-time", async () => {
+		const [first, second] = scheduleAssignmentsFixture() as [
+			ScheduleAssignment,
+			ScheduleAssignment,
+		];
+		stubApi({
+			[`GET ${SCHEDULES}/s-1/assignments`]: {
+				status: 200,
+				body: envelope([
+					{ ...first, member: { ...first.member, partTime: true } },
+					// undefined leaves the key out of the JSON, as an older API sends it.
+					{ ...second, member: { ...second.member, partTime: undefined } },
+				]),
+			},
+		});
+
+		const [partTimer, olderApi] = await fetchScheduleAssignments(
+			"c-1",
+			UNIT,
+			"s-1"
+		);
+
+		expect(partTimer?.member?.partTime).toBe(true);
+		expect(olderApi?.member?.partTime).toBe(false);
+	});
+
+	it("reads the types a day can be made when not worked, and none from an older API", async () => {
+		stubApi({
+			[`GET ${SCHEDULES}/s-1`]: {
+				status: 200,
+				body: envelope(
+					generatedScheduleFixture({
+						nonWorkingDayTypes: ["OFF", "REST", "PUBLIC_HOLIDAY_OFF"],
+					})
+				),
+			},
+			[`GET ${SCHEDULES}/s-2`]: {
+				status: 200,
+				body: envelope({
+					...generatedScheduleFixture({ scheduleId: "s-2" }),
+					nonWorkingDayTypes: undefined,
+				}),
+			},
+		});
+
+		expect(
+			(await fetchSchedule("c-1", UNIT, "s-1")).nonWorkingDayTypes
+		).toEqual(["OFF", "REST", "PUBLIC_HOLIDAY_OFF"]);
+		expect(
+			(await fetchSchedule("c-1", UNIT, "s-2")).nonWorkingDayTypes
+		).toEqual([]);
+	});
 });
 
 describe("schedule refusals", () => {

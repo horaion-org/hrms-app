@@ -22,10 +22,14 @@ import { administrativeMeta } from "@/features/workspace/queryAccess";
  * preview says the rules weren't checked again.
  */
 
-/** One day to change: work a frozen shift, or take the day off. */
+/**
+ * One day to change: work a frozen shift, or not work it. A day not worked
+ * names its type from the schedule's `nonWorkingDayTypes`; without one (a
+ * part-timer's day, or an older API) the API decides what the day becomes.
+ */
 export type RosterChangeCell =
 	| { membershipId: string; day: string; kind: "WORK"; shiftId: string }
-	| { membershipId: string; day: string; kind: "OFF" };
+	| { membershipId: string; day: string; kind: "OFF"; dayType?: string };
 
 /** What a preview and an apply send. */
 export type RosterChangeBody = {

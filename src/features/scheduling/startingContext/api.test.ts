@@ -4,6 +4,7 @@ import { envelope, stubApi } from "@/common/testing/stubApi";
 import {
 	fetchStartingContext,
 	fetchStartingDays,
+	saveStartingDays,
 } from "@/features/scheduling/startingContext/api";
 import {
 	carriedWeek,
@@ -55,6 +56,66 @@ describe("starting context client", () => {
 		expect(read.members[0]?.cells[0]).toMatchObject({
 			kind: "UNKNOWN",
 			source: "UNKNOWN",
+		});
+	});
+
+	it("reads a day off's type as sent, and one from an older API as none", async () => {
+		const week = carriedWeek();
+		stubApi({
+			[`GET ${SCHEDULE}/starting-days`]: {
+				status: 200,
+				body: envelope({
+					...week,
+					members: [
+						{
+							...week.members[0],
+							cells: [
+								{ ...rosterOffCell("2026-11-02"), dayType: "REST" },
+								// undefined leaves the key out of the JSON, as an older API sends it.
+								{ ...rosterOffCell("2026-11-03"), dayType: undefined },
+							],
+						},
+					],
+				}),
+			},
+		});
+
+		const read = await fetchStartingDays("c-1", UNIT, "s-1");
+
+		expect(read.members[0]?.cells.map((cell) => cell.dayType)).toEqual([
+			"REST",
+			null,
+		]);
+	});
+
+	it("sends an entered day off with its type", async () => {
+		const calls = stubApi({
+			[`PUT ${SCHEDULE}/starting-days`]: {
+				status: 200,
+				body: envelope(carriedWeek()),
+			},
+		});
+
+		await saveStartingDays("c-1", UNIT, "s-1", [
+			{
+				memberProfileId: "p-siti",
+				date: "2026-11-06",
+				kind: "OFF",
+				shiftId: null,
+				dayType: "REST",
+			},
+		]);
+
+		expect(calls[0]?.body).toEqual({
+			days: [
+				{
+					memberProfileId: "p-siti",
+					date: "2026-11-06",
+					kind: "OFF",
+					shiftId: null,
+					dayType: "REST",
+				},
+			],
 		});
 	});
 

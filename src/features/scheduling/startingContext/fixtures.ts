@@ -34,6 +34,7 @@ export const unknownCell = (date: string): StartingCell => ({
 	kind: null,
 	source: null,
 	locked: false,
+	dayType: null,
 	shiftId: null,
 	shiftName: null,
 	startTime: null,
@@ -142,5 +143,43 @@ export const earlierDayTypedWeek = (): StartingDays => {
 					}
 				: member
 		),
+	};
+};
+
+/** A day off of a type, entered by a scheduler. */
+const enteredDayOffCell = (date: string, dayType: string): StartingCell => ({
+	...unknownCell(date),
+	kind: "OFF",
+	source: "ENTERED",
+	dayType,
+});
+
+/**
+ * The first roster with typed days off: Tan's Thursday a rest day a
+ * published roster covers (locked); Siti's Friday an entered rest day and
+ * her Saturday an entered type the schedule no longer offers.
+ */
+export const typedDaysOffWeek = (): StartingDays => {
+	const week = firstWeek();
+	const typedCell = (
+		memberProfileId: string,
+		cell: StartingCell
+	): StartingCell => {
+		if (memberProfileId === "p-tan" && cell.date === "2026-11-05")
+			return { ...rosterOffCell(cell.date), dayType: "REST" };
+		if (memberProfileId === "p-siti" && cell.date === "2026-11-06")
+			return enteredDayOffCell(cell.date, "REST");
+		if (memberProfileId === "p-siti" && cell.date === "2026-11-07")
+			return enteredDayOffCell(cell.date, "PUBLIC_HOLIDAY_OFF");
+		return cell;
+	};
+	return {
+		...week,
+		members: week.members.map((member) => ({
+			...member,
+			cells: member.cells.map((cell) =>
+				typedCell(member.memberProfileId, cell)
+			),
+		})),
 	};
 };

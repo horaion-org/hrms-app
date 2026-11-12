@@ -71,6 +71,7 @@ const show = (
 		assignment: dayOf("m-1", "2026-10-12"),
 		assignments: roster,
 		shifts: frozenShiftsFixture(),
+		nonWorkingDayTypes: ["OFF", "REST"],
 		onClose: vi.fn(),
 		onPreviewDays: vi.fn(),
 		onApplied: vi.fn(),
@@ -132,7 +133,7 @@ describe("RosterCellPanel", () => {
 		const props = show();
 		const user = userEvent.setup();
 
-		await user.click(screen.getByRole("radio", { name: "Day off" }));
+		await user.click(screen.getByRole("radio", { name: "Not working" }));
 
 		const panel = screen.getByRole("complementary");
 		expect(
@@ -142,9 +143,161 @@ describe("RosterCellPanel", () => {
 		).toBeVisible();
 		expect(calls[0]?.body).toEqual({
 			expectedRevision: 1,
-			cells: [{ membershipId: "m-1", day: "2026-10-12", kind: "OFF" }],
+			cells: [
+				{ membershipId: "m-1", day: "2026-10-12", kind: "OFF", dayType: "OFF" },
+			],
 		});
 		expect(props.onPreviewDays).toHaveBeenLastCalledWith(["m-1|2026-10-12"]);
+	});
+
+	describe("a day not worked and its type", () => {
+		const previewed = (): ReturnType<typeof stubApi> =>
+			stubApi({
+				[`POST ${PREVIEW}`]: {
+					status: 200,
+					body: envelope(rosterChangePreviewFixture()),
+				},
+			});
+		const sentCells = (calls: ReturnType<typeof stubApi>): unknown =>
+			(calls[calls.length - 1]?.body as { cells: unknown } | undefined)?.cells;
+
+		it("given_aWorkedRestDay_when_notWorkingIsChosen_then_preselectsRestAndSendsTheTypePicked", async () => {
+			const calls = previewed();
+			show({ assignment: dayOf("m-3", "2026-10-17") });
+			const user = userEvent.setup();
+
+			await user.click(screen.getByRole("radio", { name: "Not working" }));
+
+			const dayType = screen.getByRole("button", { name: "Day type" });
+			expect(dayType).toHaveTextContent("Rest day");
+			await waitFor(() => {
+				expect(sentCells(calls)).toEqual([
+					{
+						membershipId: "m-3",
+						day: "2026-10-17",
+						kind: "OFF",
+						dayType: "REST",
+					},
+				]);
+			});
+			await user.click(dayType);
+			await user.click(screen.getByRole("option", { name: "Day off" }));
+			await waitFor(() => {
+				expect(sentCells(calls)).toEqual([
+					{
+						membershipId: "m-3",
+						day: "2026-10-17",
+						kind: "OFF",
+						dayType: "OFF",
+					},
+				]);
+			});
+		});
+
+		it("given_aRestDay_when_anotherTypeIsChosen_then_offersTheOtherTypesOnly", async () => {
+			const calls = previewed();
+			show({ assignment: dayOf("m-1", "2026-10-18") });
+			const user = userEvent.setup();
+
+			await user.click(screen.getByRole("radio", { name: "Another day type" }));
+			await user.click(screen.getByRole("button", { name: "Day type" }));
+
+			expect(
+				screen.getAllByRole("option").map((option) => option.textContent)
+			).toEqual(["Day off"]);
+			await waitFor(() => {
+				expect(sentCells(calls)).toEqual([
+					{
+						membershipId: "m-1",
+						day: "2026-10-18",
+						kind: "OFF",
+						dayType: "OFF",
+					},
+				]);
+			});
+		});
+
+		it("given_aPartTimersShift_when_removed_then_noTypeIsOfferedOrSent", async () => {
+			const calls = previewed();
+			show({ assignment: dayOf("m-2", "2026-10-12") });
+			const user = userEvent.setup();
+
+			await user.click(screen.getByRole("radio", { name: "Remove shift" }));
+
+			expect(screen.queryByRole("button", { name: "Day type" })).toBeNull();
+			await waitFor(() => {
+				expect(sentCells(calls)).toEqual([
+					{ membershipId: "m-2", day: "2026-10-12", kind: "OFF" },
+				]);
+			});
+		});
+
+		it("given_aPartTimersAbsentDay_when_opened_then_offersNoTypeToChange", () => {
+			show({ assignment: dayOf("m-2", "2026-10-18") });
+
+			expect(
+				screen.getAllByRole("radio").map((radio) => radio.getAttribute("value"))
+			).toEqual(["shift", "swap"]);
+		});
+
+		it("given_aPartTimersDayToDecide_when_confirmed_then_confirmsNoShiftWithNoTypeOfferedOrSent", async () => {
+			const calls = previewed();
+			show({
+				assignment: { ...dayOf("m-2", "2026-10-18"), flag: "NEEDS_DECISION" },
+			});
+			const user = userEvent.setup();
+
+			expect(
+				screen.queryByRole("radio", { name: "Confirm day off" })
+			).toBeNull();
+			await user.click(screen.getByRole("radio", { name: "Confirm no shift" }));
+
+			expect(screen.queryByRole("button", { name: "Day type" })).toBeNull();
+			await waitFor(() => {
+				expect(sentCells(calls)).toEqual([
+					{ membershipId: "m-2", day: "2026-10-18", kind: "OFF" },
+				]);
+			});
+		});
+
+		it("given_aFullTimersDayToDecide_when_confirmed_then_confirmsTheDayOffWithItsTypePicked", async () => {
+			const calls = previewed();
+			show({
+				assignment: { ...dayOf("m-1", "2026-10-18"), flag: "NEEDS_DECISION" },
+			});
+			const user = userEvent.setup();
+
+			await user.click(screen.getByRole("radio", { name: "Confirm day off" }));
+
+			expect(
+				screen.getByRole("button", { name: "Day type" })
+			).toHaveTextContent("Rest day");
+			await waitFor(() => {
+				expect(sentCells(calls)).toEqual([
+					{
+						membershipId: "m-1",
+						day: "2026-10-18",
+						kind: "OFF",
+						dayType: "REST",
+					},
+				]);
+			});
+		});
+
+		it("given_anOlderApiWithNoTypes_when_notWorkingIsChosen_then_noTypeIsOfferedOrSent", async () => {
+			const calls = previewed();
+			show({ nonWorkingDayTypes: [] });
+			const user = userEvent.setup();
+
+			await user.click(screen.getByRole("radio", { name: "Not working" }));
+
+			expect(screen.queryByRole("button", { name: "Day type" })).toBeNull();
+			await waitFor(() => {
+				expect(sentCells(calls)).toEqual([
+					{ membershipId: "m-1", day: "2026-10-12", kind: "OFF" },
+				]);
+			});
+		});
 	});
 
 	it("given_escapeInsideAnOpenList_when_pressed_then_closesOnlyTheList", async () => {
@@ -267,7 +420,7 @@ describe("RosterCellPanel", () => {
 			{
 				move: "leave nobody took a shift for to a day off",
 				assignment: onLeave,
-				option: "Day off",
+				option: "Not working",
 				type: undefined,
 				path: `${LEAVE}/r-1/days/${shiftDay.day}/cancellation`,
 				expected: { remark: "Fell ill" },
@@ -275,7 +428,7 @@ describe("RosterCellPanel", () => {
 			{
 				move: "a day off under leave back to a plain day off",
 				assignment: dayOffUnderLeave,
-				option: "Day off",
+				option: "Not working",
 				type: undefined,
 				path: `${LEAVE}/r-1/days/${shiftDay.day}/cancellation`,
 				expected: { remark: "Fell ill" },
@@ -315,7 +468,7 @@ describe("RosterCellPanel", () => {
 			const props = show({ assignment: takenOffByLeave, leaveEditing });
 			const user = userEvent.setup();
 
-			await fillIn(user, "Day off");
+			await fillIn(user, "Not working");
 			await user.click(screen.getByRole("button", { name: "Apply" }));
 
 			await waitFor(() => {
@@ -399,7 +552,7 @@ describe("RosterCellPanel", () => {
 			const props = show({ assignment: takenOffByLeave, leaveEditing });
 			const user = userEvent.setup();
 
-			await fillIn(user, "Day off");
+			await fillIn(user, "Not working");
 			await user.click(screen.getByRole("button", { name: "Apply" }));
 
 			expect(
@@ -422,7 +575,7 @@ describe("RosterCellPanel", () => {
 			const props = show({ assignment: takenOffByLeave, leaveEditing });
 			const user = userEvent.setup();
 
-			await fillIn(user, "Day off");
+			await fillIn(user, "Not working");
 			await user.click(screen.getByRole("button", { name: "Apply" }));
 
 			expect(
@@ -443,7 +596,7 @@ describe("RosterCellPanel", () => {
 			});
 			show({ assignment: takenOffByLeave, leaveEditing });
 			const user = userEvent.setup();
-			await fillIn(user, "Day off");
+			await fillIn(user, "Not working");
 			await user.click(screen.getByRole("button", { name: "Apply" }));
 			await screen.findByText("We couldn’t change the leave. Try again.");
 
@@ -513,7 +666,7 @@ describe("RosterCellPanel", () => {
 			show({ assignment: onLeave, leaveEditing });
 			const user = userEvent.setup();
 
-			await user.click(screen.getByRole("radio", { name: "Day off" }));
+			await user.click(screen.getByRole("radio", { name: "Not working" }));
 
 			expect(screen.getByRole("button", { name: "Apply" })).toBeDisabled();
 		});

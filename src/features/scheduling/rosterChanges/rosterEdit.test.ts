@@ -7,8 +7,11 @@ import {
 	applyGate,
 	canApply,
 	cellsForChoice,
+	dayTypeChoices,
+	notWorkingWording,
 	patchRoster,
 	peopleTold,
+	preselectedDayType,
 	rosterCellKey,
 	rosteredJobTitleId,
 	shiftChoices,
@@ -26,6 +29,7 @@ const dayOf = (membershipId: string, day: string): ScheduleAssignment =>
 const MONDAY = "2026-10-12";
 const WEDNESDAY = "2026-10-14";
 const SATURDAY = "2026-10-17";
+const SUNDAY = "2026-10-18";
 
 describe("cellsForChoice", () => {
 	it("given_aShiftOrADayOff_when_chosen_then_oneCellForTheDay", () => {
@@ -44,6 +48,20 @@ describe("cellsForChoice", () => {
 		expect(cellsForChoice(aisha, { kind: "dayOff" })).toEqual([
 			{ membershipId: "m-1", day: MONDAY, kind: "OFF" },
 		]);
+	});
+
+	it("given_aTypeForTheDayNotWorked_when_chosen_then_theCellNamesIt", () => {
+		expect(
+			cellsForChoice(dayOf("m-1", MONDAY), { kind: "dayOff", dayType: "REST" })
+		).toEqual([
+			{ membershipId: "m-1", day: MONDAY, kind: "OFF", dayType: "REST" },
+		]);
+	});
+
+	it("given_noType_when_notWorkingIsChosen_then_theCellLeavesTheTypeOut", () => {
+		const [cell] = cellsForChoice(dayOf("m-2", MONDAY), { kind: "dayOff" });
+
+		expect(cell).not.toHaveProperty("dayType");
 	});
 
 	it("given_aSwapOfAShiftAndADayOff_when_chosen_then_eachDayTakesWhatTheOtherHeld", () => {
@@ -65,6 +83,85 @@ describe("cellsForChoice", () => {
 
 	it("given_noChoiceYet_when_asked_then_noCells", () => {
 		expect(cellsForChoice(dayOf("m-1", MONDAY), undefined)).toEqual([]);
+	});
+});
+
+describe("dayTypeChoices", () => {
+	const TYPES = ["OFF", "REST", "PUBLIC_HOLIDAY_OFF"];
+
+	it("given_aWorkedDay_when_listed_then_everyType", () => {
+		expect(dayTypeChoices(TYPES, dayOf("m-1", MONDAY))).toEqual(TYPES);
+	});
+
+	it("given_aRestDay_when_listed_then_everyTypeButItsOwn", () => {
+		expect(dayTypeChoices(TYPES, dayOf("m-1", SUNDAY))).toEqual([
+			"OFF",
+			"PUBLIC_HOLIDAY_OFF",
+		]);
+	});
+
+	it("given_aDayToDecide_when_listed_then_everyTypeSoItsOwnCanBeConfirmed", () => {
+		const toDecide: ScheduleAssignment = {
+			...dayOf("m-1", SUNDAY),
+			flag: "NEEDS_DECISION",
+		};
+
+		expect(dayTypeChoices(TYPES, toDecide)).toEqual(TYPES);
+	});
+
+	it("given_aPartTimer_when_listed_then_none", () => {
+		expect(dayTypeChoices(TYPES, dayOf("m-2", MONDAY))).toEqual([]);
+	});
+
+	it("given_aPartTimersDayToDecide_when_listed_then_none", () => {
+		const toDecide: ScheduleAssignment = {
+			...dayOf("m-2", SUNDAY),
+			flag: "NEEDS_DECISION",
+		};
+
+		expect(dayTypeChoices(TYPES, toDecide)).toEqual([]);
+	});
+
+	it("given_anOlderApi_when_listed_then_none", () => {
+		expect(dayTypeChoices([], dayOf("m-1", MONDAY))).toEqual([]);
+	});
+});
+
+describe("preselectedDayType", () => {
+	it("given_theDaysOwnTypeOffered_when_picked_then_itsOwn", () => {
+		expect(preselectedDayType(["OFF", "REST"], "REST")).toBe("REST");
+	});
+
+	it("given_noTypeOrOneNotOffered_when_picked_then_theFirst", () => {
+		expect(preselectedDayType(["OFF", "REST"], null)).toBe("OFF");
+		expect(preselectedDayType(["OFF"], "REST")).toBe("OFF");
+	});
+
+	it("given_nothingOffered_when_picked_then_none", () => {
+		expect(preselectedDayType([], "REST")).toBeUndefined();
+	});
+});
+
+describe("notWorkingWording", () => {
+	it.each<[string, ScheduleAssignment, boolean, string]>([
+		["a worked day", dayOf("m-1", MONDAY), false, "notWorking"],
+		["a part-timer's worked day", dayOf("m-2", MONDAY), false, "removeShift"],
+		["a day already not worked", dayOf("m-1", SUNDAY), false, "anotherDayType"],
+		[
+			"a day to decide",
+			{ ...dayOf("m-1", SUNDAY), flag: "NEEDS_DECISION" },
+			false,
+			"confirmDayOff",
+		],
+		[
+			"a part-timer's day to decide",
+			{ ...dayOf("m-2", SUNDAY), flag: "NEEDS_DECISION" },
+			false,
+			"confirmNoShift",
+		],
+		["a leave day going back", dayOf("m-2", WEDNESDAY), true, "notWorking"],
+	])("given_%s", (_, assignment, leaveDayEditable, wording) => {
+		expect(notWorkingWording(assignment, leaveDayEditable)).toBe(wording);
 	});
 });
 

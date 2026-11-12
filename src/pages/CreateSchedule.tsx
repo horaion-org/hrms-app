@@ -785,6 +785,11 @@ export const CreateSchedule = (): FunctionComponent => {
 									companyId={companyId}
 									scheduleId={saved.scheduleId}
 									unit={saved}
+									nonWorkingDayTypes={
+										schedule.status === "ready"
+											? schedule.schedule.nonWorkingDayTypes
+											: []
+									}
 								/>
 							)
 						}
