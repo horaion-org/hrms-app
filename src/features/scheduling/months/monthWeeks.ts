@@ -30,6 +30,12 @@ export const formatMonth = (month: string, language: string): string =>
 		dayjs(`${month}-01`).toDate()
 	);
 
+/** A date's day and month in the person's language, e.g. "16 Nov". */
+export const formatDayAndMonth = (date: string, language: string): string =>
+	new Intl.DateTimeFormat(language, { day: "numeric", month: "short" }).format(
+		dayjs(date).toDate()
+	);
+
 /** A month's name alone in the person's language, e.g. "November". */
 export const formatMonthName = (month: string, language: string): string =>
 	new Intl.DateTimeFormat(language, { month: "long" }).format(

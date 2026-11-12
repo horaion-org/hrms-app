@@ -4351,7 +4351,9 @@
 				"review": "Review",
 				"open": "Open",
 				"reviewWeek": "Review {{week}}",
-				"openWeek": "Open {{week}}"
+				"openWeek": "Open {{week}}",
+				"openMonth": "Open month",
+				"openMonthNamed": "Open {{department}}, {{month}}"
 			},
 			"counts": {
 				"PUBLISHED_one": "{{count}} published",
@@ -4385,6 +4387,11 @@
 				"loading": "Loading the month…",
 				"loadFailed": "This month could not be loaded. Please try again.",
 				"unavailable": "This month doesn’t exist or you don’t have permission to see it."
+			},
+			"waitingOnYou": "Week of {{week}}: waiting on you · step {{step}} of {{total}} ({{label}})",
+			"hints": {
+				"toReview": "Week of {{week}} is waiting for your review.",
+				"generatedAhead": "Generated ahead. {{month}} comes first."
 			}
 		}
 	},

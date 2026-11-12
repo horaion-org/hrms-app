@@ -4173,7 +4173,9 @@
 				"review": "Revisar",
 				"open": "Abrir",
 				"reviewWeek": "Revisar {{week}}",
-				"openWeek": "Abrir {{week}}"
+				"openWeek": "Abrir {{week}}",
+				"openMonth": "Abrir mes",
+				"openMonthNamed": "Abrir {{department}}, {{month}}"
 			},
 			"counts": {
 				"PUBLISHED_one": "{{count}} publicada",
@@ -4207,6 +4209,11 @@
 				"loading": "Cargando el mes…",
 				"loadFailed": "No pudimos cargar este mes. Inténtalo de nuevo.",
 				"unavailable": "Este mes no existe o no tienes permiso para verlo."
+			},
+			"waitingOnYou": "Semana del {{week}}: pendiente de ti · paso {{step}} de {{total}} ({{label}})",
+			"hints": {
+				"toReview": "La semana del {{week}} espera tu revisión.",
+				"generatedAhead": "Generado por adelantado. Primero va {{month}}."
 			}
 		}
 	},

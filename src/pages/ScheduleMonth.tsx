@@ -17,6 +17,7 @@ import {
 import { isMonth } from "@/features/scheduling/months/monthSearch";
 import {
 	crossingWeekOf,
+	formatDayAndMonth,
 	formatMonth,
 	formatMonthName,
 	formatWeekDates,
@@ -188,18 +189,14 @@ const MonthContent = ({
 	const first = weeks[0];
 	const last = weeks[weeks.length - 1];
 	const noSchedule = weeks.every((week) => week.scheduleId === null);
-	const dayAndMonth = new Intl.DateTimeFormat(language, {
-		day: "numeric",
-		month: "short",
-	});
 	const counts = stateCountsLine(weeks, t);
 	const summary = [
 		first &&
 			last &&
 			t(`${key}.weeks`, {
 				count: weeks.length,
-				from: dayAndMonth.format(new Date(`${first.periodStart}T00:00:00`)),
-				to: dayAndMonth.format(new Date(`${last.periodEnd}T00:00:00`)),
+				from: formatDayAndMonth(first.periodStart, language),
+				to: formatDayAndMonth(last.periodEnd, language),
 			}),
 		counts && `${counts}.`,
 	]

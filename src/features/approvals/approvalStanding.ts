@@ -178,7 +178,10 @@ export type ApprovalLine = {
 	values: Record<string, string | number>;
 };
 
-const stepValues = (step: OpenStep): Record<string, string | number> => ({
+/** An open step's place and label, as the approval lines' copy takes them. */
+export const stepValues = (
+	step: OpenStep
+): Record<string, string | number> => ({
 	step: step.order,
 	total: step.count,
 	label: step.label,
