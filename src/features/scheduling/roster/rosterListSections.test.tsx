@@ -78,6 +78,44 @@ const shownKeys = (
 		.map(({ key }) => key);
 
 describe("rosterListSections", () => {
+	it("given_findCoverAndAShiftLeftShort_when_issuesAreListed_then_itsRowHasFindCover", () => {
+		const leaveGap = scheduleAssignmentsFixture().map((row) =>
+			row.member?.membershipId === "m-1" && row.day === "2026-10-12"
+				? { ...row, uncoveredShift: row.shift }
+				: row
+		);
+		const onFindCover = vi.fn();
+
+		const sections = rosterListSections(
+			"issues",
+			inputOf({ onFindCover }, undefined, leaveGap)
+		);
+		const row = sections.find(({ key }) => key === "leaveAndCover")?.items?.[0];
+		row?.action?.onClick();
+
+		expect(row?.action?.label).toBe("scheduling.cover.findCover");
+		expect(onFindCover).toHaveBeenCalledWith(
+			expect.objectContaining({ day: "2026-10-12" })
+		);
+	});
+
+	it("given_noFindCover_when_issuesAreListed_then_noButtonOnTheRow", () => {
+		const leaveGap = scheduleAssignmentsFixture().map((row) =>
+			row.member?.membershipId === "m-1" && row.day === "2026-10-12"
+				? { ...row, uncoveredShift: row.shift }
+				: row
+		);
+
+		const sections = rosterListSections(
+			"issues",
+			inputOf({}, undefined, leaveGap)
+		);
+
+		expect(
+			sections.find(({ key }) => key === "leaveAndCover")?.items?.[0]?.action
+		).toBeUndefined();
+	});
+
 	it.each<[string, Parameters<typeof rosterListSections>, Array<string>]>([
 		["Issues with nothing in it", ["issues", inputOf()], []],
 		[

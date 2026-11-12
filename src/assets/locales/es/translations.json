@@ -4051,7 +4051,9 @@
 				"showFewer": "Mostrar menos",
 				"cantHelp": "No pueden cubrirlo ({{count}})",
 				"cantHelpLine": "{{name}} · {{reason}}"
-			}
+			},
+			"findCover": "Buscar cobertura",
+			"findCoverFor": "Buscar cobertura: {{shift}}"
 		},
 		"reach": {
 			"editShift_one": "Al guardar, este turno cambia para {{department}}: los horarios nuevos y {{count}} borrador que lo usa. Los horarios generados y publicados conservan su propia copia.",

@@ -5,6 +5,7 @@ import {
 	type DescriptionListItem,
 } from "@/components/ui/DescriptionList";
 import { FilterChips } from "@/components/ui/FilterChips";
+import type { CoverGapRequest } from "@/features/scheduling/cover/api";
 import type { CoverOffer } from "@/features/scheduling/coverOffers/api";
 import { OffersOutSection } from "@/features/scheduling/coverOffers/OffersOutSection";
 import { FindingList } from "@/features/scheduling/FindingList";
@@ -68,6 +69,8 @@ export type RosterListInput = {
 	approval?: ReactNode;
 	/** Shows every issue again, from a header's narrowed Issues list. */
 	onShowAllIssues: () => void;
+	/** On a roster that may be changed: opens Find cover for a short shift, from its Issues row. */
+	onFindCover?: (gap: CoverGapRequest) => void;
 };
 
 /** One line each, said above the findings in the Issues panel. */
@@ -99,6 +102,7 @@ export const headerIssueSections = (
 		t,
 		language,
 		onShowAllIssues,
+		onFindCover,
 	}: RosterListInput
 ): Array<RosterSidePanelSection> => {
 	const listed = issuesOfHeader(about, {
@@ -123,6 +127,7 @@ export const headerIssueSections = (
 					findings={part}
 					names={names}
 					showDates={about.kind === "member"}
+					onFindCover={onFindCover}
 				/>
 			)
 		);
@@ -157,7 +162,7 @@ export const headerIssueSections = (
 		{
 			key: "leaveAndCover",
 			title: t(`${key}.leaveAndCover`),
-			items: leaveAndCoverItems(listed.leaveAndCover, t, language),
+			items: leaveAndCoverItems(listed.leaveAndCover, t, language, onFindCover),
 		},
 	];
 };
@@ -181,6 +186,7 @@ export const issuesSections = (
 		language,
 		startingRuns,
 		coverOffers,
+		onFindCover,
 	} = input;
 	if (issuesAbout) return headerIssueSections(issuesAbout, input);
 	return [
@@ -192,7 +198,12 @@ export const issuesSections = (
 		{
 			key: "findings",
 			content: findings && names && (
-				<FindingsPanel findings={findings} names={names} visibleDays={days} />
+				<FindingsPanel
+					findings={findings}
+					names={names}
+					visibleDays={days}
+					onFindCover={onFindCover}
+				/>
 			),
 		},
 		{
@@ -203,7 +214,7 @@ export const issuesSections = (
 		{
 			key: "leaveAndCover",
 			title: t(`${key}.leaveAndCover`),
-			items: leaveAndCoverItems(leaveAndCover, t, language),
+			items: leaveAndCoverItems(leaveAndCover, t, language, onFindCover),
 		},
 		{
 			key: "offersOut",

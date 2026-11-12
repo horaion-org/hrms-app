@@ -1,7 +1,8 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { createInstance } from "i18next";
 import { initReactI18next } from "react-i18next";
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import en from "@/assets/locales/en/translations.json";
 import { frozenConstraintsFixture } from "@/features/scheduling/constraints/fixtures";
 import { FindingList } from "@/features/scheduling/FindingList";
@@ -35,6 +36,42 @@ const morningCover: Finding = {
 };
 
 describe("FindingList", () => {
+	it("given_findCoverAndAShiftLeftShort_when_listed_then_aFindCoverButtonForItsShiftAndDay", async () => {
+		const onFindCover = vi.fn();
+		render(
+			<FindingList
+				findings={[morningCover]}
+				names={names}
+				onFindCover={onFindCover}
+			/>
+		);
+
+		await userEvent.click(screen.getByRole("button", { name: "Find cover" }));
+
+		expect(onFindCover).toHaveBeenCalledWith({
+			shiftId: findings.conflicts[0]!.shiftUuids[0],
+			day: "2026-10-17",
+		});
+	});
+
+	it("given_findCoverAndAHoleAboutOnePerson_when_listed_then_noButton", () => {
+		const aboutBen: Finding = {
+			kind: "conflict",
+			conflict: { ...findings.conflicts[0]!, employeeUuid: "mp-2" },
+		};
+		render(
+			<FindingList findings={[aboutBen]} names={names} onFindCover={vi.fn()} />
+		);
+
+		expect(screen.queryByRole("button")).toBeNull();
+	});
+
+	it("given_noFindCover_when_listed_then_noButton", () => {
+		render(<FindingList findings={[morningCover]} names={names} />);
+
+		expect(screen.queryByRole("button")).toBeNull();
+	});
+
 	it("given_aConflict_when_listed_then_saysWhenHowShortAndWhichRule", () => {
 		render(<FindingList findings={[morningCover]} names={names} />);
 

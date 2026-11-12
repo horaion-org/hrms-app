@@ -1,4 +1,5 @@
 import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import type { FindingNames } from "@/features/scheduling/roster/findings/findingNames";
 import { leaveLinkSearch } from "./leaveLinkSearch";
@@ -137,6 +138,23 @@ describe("RosterDayNotes", () => {
 			screen.getByText("scheduling.rosterMarkers.needsCover")
 		).toBeInTheDocument();
 		expect(screen.queryByRole("link")).not.toBeInTheDocument();
+	});
+
+	it("given_findCover_when_theDayLeavesAShiftShort_then_offersIt", async () => {
+		const onFindCover = vi.fn();
+		render(
+			<RosterDayNotes
+				membershipId={MEMBER}
+				note={{ uncoveredShiftName: "Morning" }}
+				onFindCover={onFindCover}
+			/>
+		);
+
+		await userEvent.click(
+			screen.getByRole("button", { name: "scheduling.cover.findCover" })
+		);
+
+		expect(onFindCover).toHaveBeenCalledOnce();
 	});
 
 	it("leaves out what the day editor says in its own words", () => {

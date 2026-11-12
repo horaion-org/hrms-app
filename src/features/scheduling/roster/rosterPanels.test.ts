@@ -1,5 +1,5 @@
 import type { TFunction } from "i18next";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { rosterFromAssignments } from "@/features/scheduling/roster/roster";
 import { scheduleAssignmentsFixture } from "@/features/scheduling/schedules/fixtures";
 import {
@@ -29,6 +29,39 @@ describe("startingPointItems", () => {
 });
 
 describe("leaveAndCoverItems", () => {
+	it("given_aShiftLeftShortAndFindCover_when_listed_then_aFindCoverButtonForThatShiftDay", () => {
+		const [first] = scheduleAssignmentsFixture();
+		if (!first?.shift) throw new Error("fixture has a working day");
+		const onFindCover = vi.fn();
+
+		const [item] = leaveAndCoverItems(
+			[{ ...first, uncoveredShift: first.shift }],
+			t,
+			"en",
+			onFindCover
+		);
+		item?.action?.onClick();
+
+		expect(item?.action?.label).toBe("scheduling.cover.findCover");
+		expect(onFindCover).toHaveBeenCalledWith({
+			shiftId: first.shift.shiftId,
+			day: first.day,
+		});
+	});
+
+	it("given_noFindCover_when_listed_then_noButton", () => {
+		const [first] = scheduleAssignmentsFixture();
+		if (!first) throw new Error("fixture has a day");
+
+		const [item] = leaveAndCoverItems(
+			[{ ...first, uncoveredShift: first.shift }],
+			t,
+			"en"
+		);
+
+		expect(item?.action).toBeUndefined();
+	});
+
 	it("says whose day, then the leave marker with its type and any shift left short", () => {
 		const [first] = scheduleAssignmentsFixture();
 		if (!first) throw new Error("fixture has a day");

@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
+import type { CoverGapRequest } from "@/features/scheduling/cover/api";
 import type { RosterEditing } from "@/features/scheduling/GeneratedRoster/rosterEditing";
 import { ROSTER_SIDE_LISTS } from "@/features/scheduling/GeneratedRoster/rosterSideLists";
 import type { RosterView } from "@/features/scheduling/roster/rosterView";
@@ -38,6 +39,8 @@ export type RosterSidePanelSlotProps = {
 	onPreviewDays: (keys: ReadonlyArray<string>) => void;
 	/** A hand change went through: the roster says so, and the panel closes. */
 	onApplied: (change: RosterChange) => void;
+	/** Opens Find cover for a short shift; given only where the roster may be changed. */
+	onFindCover?: (gap: CoverGapRequest) => void;
 };
 
 /**
@@ -55,12 +58,21 @@ export const RosterSidePanelSlot = ({
 	onClose,
 	onPreviewDays,
 	onApplied,
+	onFindCover,
 }: RosterSidePanelSlotProps): FunctionComponent => {
 	const { t } = useTranslation();
+	const shortShift = chosenRow?.uncoveredShift;
+	const findCover =
+		onFindCover && chosenRow && shortShift
+			? (): void => {
+					onFindCover({ shiftId: shortShift.shiftId, day: chosenRow.day });
+				}
+			: undefined;
 	const issues = chosenDayNotes && (
 		<RosterDayNotes
 			{...chosenDayNotes}
 			viewerMembershipId={viewerMembershipId}
+			onFindCover={editing ? findCover : undefined}
 		/>
 	);
 	if (sidePanel === "dayEditor" && editing && chosenRow)

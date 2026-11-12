@@ -3,6 +3,8 @@ import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
+import { Button } from "@/components/ui/Button";
+import type { CoverGapRequest } from "@/features/scheduling/cover/api";
 import { formatTimeRange } from "@/features/scheduling/formatShift";
 import { formatDay } from "@/features/scheduling/periods";
 import { conflictClockTimes } from "@/features/scheduling/roster/findings/conflictTimes";
@@ -20,6 +22,8 @@ export type FindingListProps = {
 	names: FindingNames;
 	/** Whether each finding says its day; off where a heading already names it. */
 	showDates?: boolean;
+	/** Offers Find cover on a shift the generation left short; none without. */
+	onFindCover?: (gap: CoverGapRequest) => void;
 };
 
 const key = "scheduling.findings";
@@ -27,12 +31,14 @@ const key = "scheduling.findings";
 /**
  * Findings as the Issues panel lists them, each led by its tone's outline
  * icon (`FINDING_TONE_ICONS`). The engine's own words are quoted, never
- * shown as the app's copy (ADR-0003).
+ * shown as the app's copy (ADR-0003). With `onFindCover`, a shift left short
+ * (a hole about no one person) has a Find cover button per shift it names.
  */
 export const FindingList = ({
 	findings,
 	names,
 	showDates = false,
+	onFindCover,
 }: FindingListProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const language = formattingLocale(i18n);
@@ -69,6 +75,24 @@ export const FindingList = ({
 								),
 							})}
 						</p>
+						{onFindCover &&
+							conflict.employeeUuid === null &&
+							conflict.shiftUuids.map((shiftId) => (
+								<Button
+									key={shiftId}
+									className="mt-1 block"
+									variant="textlink"
+									onClick={() => {
+										onFindCover({ shiftId, day: conflict.date });
+									}}
+								>
+									{conflict.shiftUuids.length > 1
+										? t("scheduling.cover.findCoverFor", {
+												shift: names.shifts.get(shiftId) ?? "",
+											})
+										: t("scheduling.cover.findCover")}
+								</Button>
+							))}
 					</>
 				);
 			}

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
+import type { CoverGapRequest } from "@/features/scheduling/cover/api";
 import { FindingList } from "@/features/scheduling/FindingList";
 import { formatDay } from "@/features/scheduling/periods";
 import {
@@ -18,6 +19,8 @@ export type FindingsPanelProps = {
 	names: FindingNames;
 	/** The days in view; roster notes on other days are left out. */
 	visibleDays: ReadonlyArray<string>;
+	/** Offers Find cover on the shifts the generation left short; none without. */
+	onFindCover?: (gap: CoverGapRequest) => void;
 	className?: string;
 };
 
@@ -66,6 +69,7 @@ export const FindingsPanel = ({
 	findings,
 	names,
 	visibleDays,
+	onFindCover,
 	className,
 }: FindingsPanelProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
@@ -111,7 +115,11 @@ export const FindingsPanel = ({
 				<FindingPart title={t(`${key}.rosterTitle`, { count: rosterCount })}>
 					{notes.byDate.map(({ date, findings: dayFindings }) => (
 						<FindingGroup key={date} title={formatDay(date, language)}>
-							<FindingList findings={dayFindings} names={names} />
+							<FindingList
+								findings={dayFindings}
+								names={names}
+								onFindCover={onFindCover}
+							/>
 						</FindingGroup>
 					))}
 					{notes.byMember.map(
@@ -124,6 +132,7 @@ export const FindingsPanel = ({
 									showDates
 									findings={memberFindings}
 									names={names}
+									onFindCover={onFindCover}
 								/>
 							</FindingGroup>
 						)

@@ -49,3 +49,24 @@ export const WithTitledSection: Story = {
 		],
 	},
 };
+
+/** An Issues row with a button under its lines, as Find cover sits on a shift left short. */
+export const WithItemAction: Story = {
+	args: {
+		title: "Issues",
+		sections: [
+			{
+				key: "leaveAndCover",
+				title: "Leave and cover",
+				items: [
+					{
+						key: "m-1",
+						title: "Aisha Rahman · Sat, Oct 17",
+						lines: ["On leave: Sick leave", "Needs cover: Front Desk AM"],
+						action: { label: "Find cover", onClick: fn() },
+					},
+				],
+			},
+		],
+	},
+};
