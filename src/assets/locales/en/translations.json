@@ -3604,7 +3604,6 @@
 			"noEmployees": "This department has no employees who can be scheduled. Give at least one active member of the department a job title, then try again.",
 			"constraintUnusable": "A chosen constraint names a shift this schedule doesn’t include or a job title that’s no longer active. Tick that shift, edit the constraint or untick it, then try again.",
 			"notDraft": "This schedule has already been generated.",
-			"forbidden": "You no longer have permission to generate this schedule.",
 			"failed": "We couldn’t generate the schedule. Try again.",
 			"weekAlreadyPublished": "This department already has a published roster for this week. Only one roster can be published per week, so schedule a different week instead.",
 			"noStaffing": "This schedule uses no staffing constraint on its shifts, so nobody would be rostered. Choose for this week on Setup."
@@ -3831,24 +3830,11 @@
 			"failed": "We couldn’t delete the schedule. Try again."
 		},
 		"regenerate": {
-			"button": "Regenerate roster",
 			"retry": "Generate again",
-			"title": "Regenerate this roster?",
-			"retryTitle": "Try generating again?",
-			"description": "A new run replaces the current roster. It keeps this schedule’s setup, shifts and constraints, and reads its staff, approved leave and availability again.",
-			"retryDescription": "A new run keeps this schedule’s setup, shifts and constraints, and reads its staff, approved leave and availability again.",
-			"confirm": "Regenerate roster",
-			"retryConfirm": "Generate again",
 			"cancel": "Cancel",
-			"done": "Regeneration requested.",
-			"draft": "This schedule hasn’t been generated yet. Generate it from its setup.",
 			"inProgress": "This schedule is being generated. Try again once the run finishes.",
 			"published": "This roster is published, so it can’t be regenerated or deleted. Change its days on the roster instead.",
-			"oncePublished": "This roster was published once, so it can’t be regenerated. Change its days on the roster instead.",
-			"forbidden": "You no longer have permission to regenerate this schedule.",
-			"failed": "We couldn’t regenerate the roster. Try again.",
-			"editsLost": "Changes made by hand will be lost: a new run replaces the roster and every change made to it.",
-			"weekAlreadyPublished": "This department already has a published roster for this week. Only one roster can be published per week, so schedule a different week instead."
+			"oncePublished": "This roster was published once, so it can’t be regenerated. Change its days on the roster instead."
 		},
 		"export": {
 			"menu": "Export roster",

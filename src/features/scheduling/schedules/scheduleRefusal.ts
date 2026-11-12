@@ -96,26 +96,6 @@ export const scheduleRefusalMessage = (
 	);
 };
 
-/** Why requesting generation was refused, as one message for the page. */
-export const generationRefusal = (error: unknown, t: TFunction): string => {
-	const key = "scheduling.generate";
-	return (
-		mapRefusal<never>(error, {
-			alerts: {
-				[codes.hasNoShifts]: t(`${key}.noShifts`),
-				[codes.hasNoStaffing]: t(`${key}.noStaffing`),
-				[codes.hasNoEmployees]: t(`${key}.noEmployees`),
-				[codes.constraintUnusable]: t(`${key}.constraintUnusable`),
-				[codes.notDraft]: t(`${key}.notDraft`),
-				[codes.weekAlreadyPublished]: t(`${key}.weekAlreadyPublished`),
-				[codes.scheduleNotFound]: t("scheduling.draft.gone"),
-			},
-			forbidden: t(`${key}.forbidden`),
-			failed: t(`${key}.failed`),
-		}).message ?? t(`${key}.failed`)
-	);
-};
-
 /** Why deleting a schedule was refused, as one message for its dialog. */
 export const deleteRefusal = (error: unknown, t: TFunction): string => {
 	const key = "scheduling.delete";
@@ -125,26 +105,6 @@ export const deleteRefusal = (error: unknown, t: TFunction): string => {
 				[codes.generationInProgress]: t(`${key}.inProgress`),
 				[codes.publishedNotDeletable]: t(`${key}.published`),
 				[codes.scheduleNotFound]: t(`${key}.gone`),
-			},
-			forbidden: t(`${key}.forbidden`),
-			failed: t(`${key}.failed`),
-		}).message ?? t(`${key}.failed`)
-	);
-};
-
-/** Why regenerating a schedule was refused, as one message for its dialog. */
-export const regenerationRefusal = (error: unknown, t: TFunction): string => {
-	const key = "scheduling.regenerate";
-	return (
-		mapRefusal<never>(error, {
-			alerts: {
-				[codes.isDraft]: t(`${key}.draft`),
-				[codes.generationInProgress]: t(`${key}.inProgress`),
-				[codes.published]: t(`${key}.published`),
-				[codes.oncePublished]: t(`${key}.oncePublished`),
-				[codes.weekAlreadyPublished]: t(`${key}.weekAlreadyPublished`),
-				[codes.hasNoEmployees]: t("scheduling.generate.noEmployees"),
-				[codes.scheduleNotFound]: t("scheduling.delete.gone"),
 			},
 			forbidden: t(`${key}.forbidden`),
 			failed: t(`${key}.failed`),

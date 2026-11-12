@@ -16,8 +16,6 @@ import {
 	publishSchedule,
 	rejectSchedule,
 	withdrawPublication,
-	requestGeneration,
-	requestRegeneration,
 	scheduleKey,
 	schedulesKey,
 	scheduleQuery,
@@ -107,7 +105,6 @@ export const useCompanySchedule = (
 
 type Created = { unit: DepartmentPath; body: ScheduleBody };
 type Replaced = Created & { scheduleId: string };
-type Generated = { unit: DepartmentPath; scheduleId: string };
 type Removed = { unit: DepartmentPath; scheduleId: string };
 type Decided = { unit: DepartmentPath; scheduleId: string };
 type Rejected = Decided & { reason: string };
@@ -116,8 +113,6 @@ type Withdrawn = Decided & { remark: string };
 export type ScheduleActions = {
 	create: UseMutationResult<Schedule, Error, Created>;
 	update: UseMutationResult<Schedule, Error, Replaced>;
-	generate: UseMutationResult<void, Error, Generated>;
-	regenerate: UseMutationResult<void, Error, Generated>;
 	remove: UseMutationResult<void, Error, Removed>;
 	publish: UseMutationResult<Schedule, Error, Decided>;
 	/** Publish where an approval flow applies: the same route, which submits the roster instead. */
@@ -173,19 +168,6 @@ export const useScheduleActions = (companyId: string): ScheduleActions => {
 			mutationFn: ({ unit, scheduleId, body }: Replaced) =>
 				updateSchedule(companyId, unit, scheduleId, body),
 			onSuccess: saved,
-		}),
-		generate: useMutation({
-			meta: { successMessage: false },
-			mutationFn: ({ unit, scheduleId }: Generated) =>
-				requestGeneration(companyId, unit, scheduleId),
-			onSuccess: reload,
-		}),
-		regenerate: useMutation({
-			meta: { successMessage: "scheduling.regenerate.done" },
-			mutationFn: ({ unit, scheduleId }: Generated) =>
-				requestRegeneration(companyId, unit, scheduleId),
-			onSuccess: reload,
-			onError: reload,
 		}),
 		remove: useMutation({
 			meta: { successMessage: "scheduling.delete.done" },

@@ -3426,7 +3426,6 @@
 			"noEmployees": "Este departamento no tiene empleados que se puedan programar. Asigna un puesto a al menos un miembro activo del departamento e inténtalo de nuevo.",
 			"constraintUnusable": "Una restricción elegida nombra un turno que este horario no incluye o un puesto que ya no está activo. Marca ese turno, edita la restricción o desmárcala e inténtalo de nuevo.",
 			"notDraft": "Este horario ya se generó.",
-			"forbidden": "Ya no tienes permiso para generar este horario.",
 			"failed": "No pudimos generar el horario. Inténtalo de nuevo.",
 			"weekAlreadyPublished": "Este departamento ya tiene un cuadrante publicado para esta semana. Solo se puede publicar un cuadrante por semana, así que programa otra semana.",
 			"noStaffing": "Este horario no usa ninguna restricción de personal en sus turnos, así que no se asignaría a nadie. Elige para esta semana en Configuración."
@@ -3653,24 +3652,11 @@
 			"failed": "No pudimos eliminar el horario. Inténtalo de nuevo."
 		},
 		"regenerate": {
-			"button": "Regenerar cuadrante",
 			"retry": "Generar de nuevo",
-			"title": "¿Regenerar este cuadrante?",
-			"retryTitle": "¿Intentar generarlo de nuevo?",
-			"description": "Una nueva ejecución sustituye el cuadrante actual. Conserva la configuración, los turnos y las restricciones de este horario, y vuelve a leer su personal, las ausencias aprobadas y la disponibilidad.",
-			"retryDescription": "Una nueva ejecución conserva la configuración, los turnos y las restricciones de este horario, y vuelve a leer su personal, las ausencias aprobadas y la disponibilidad.",
-			"confirm": "Regenerar cuadrante",
-			"retryConfirm": "Generar de nuevo",
 			"cancel": "Cancelar",
-			"done": "Regeneración solicitada.",
-			"draft": "Este horario aún no se ha generado. Genéralo desde su configuración.",
 			"inProgress": "Este horario se está generando. Inténtalo de nuevo cuando termine la ejecución.",
 			"published": "Este cuadrante está publicado, así que no se puede regenerar ni eliminar. Cambia sus días en el cuadrante.",
-			"oncePublished": "Este cuadrante se publicó una vez, así que no se puede regenerar. Cambia sus días en el cuadrante.",
-			"forbidden": "Ya no tienes permiso para regenerar este horario.",
-			"failed": "No pudimos regenerar el cuadrante. Inténtalo de nuevo.",
-			"editsLost": "Se perderán los cambios hechos a mano: una nueva ejecución reemplaza el cuadrante y todos sus cambios.",
-			"weekAlreadyPublished": "Este departamento ya tiene un cuadrante publicado para esta semana. Solo se puede publicar un cuadrante por semana, así que programa otra semana."
+			"oncePublished": "Este cuadrante se publicó una vez, así que no se puede regenerar. Cambia sus días en el cuadrante."
 		},
 		"export": {
 			"menu": "Exportar cuadrante",
