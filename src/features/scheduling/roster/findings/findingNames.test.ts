@@ -28,6 +28,29 @@ describe("findingNames", () => {
 		expect(names.rules.get("morning-cover-copy")).toBe("Morning cover");
 	});
 
+	it("given_rulesAboutDayTypes_when_named_then_keepsEachRulesDayTypesOnly", () => {
+		const names = findingNames(findings, {
+			assignments: [],
+			shifts: [],
+			constraints: [
+				...frozenConstraintsFixture(),
+				{
+					constraintId: "days-limit-copy",
+					name: "Days in a row",
+					values: [
+						{ field: "DAYS_IN_A_ROW", value: "6", name: null },
+						{ field: "DAY_TYPE", value: "REST", name: null },
+						{ field: "DAY_TYPE", value: "OFF", name: null },
+					],
+				},
+			],
+		});
+
+		expect(names.ruleDayTypes.get("days-limit-copy")).toEqual(["REST", "OFF"]);
+		expect(names.ruleDayTypes.has("morning-cover-copy")).toBe(false);
+		expect(names.ruleDayTypes.size).toBe(1);
+	});
+
 	it("given_onlyTheRoster_when_named_then_namesWhatTheRosterWorks", () => {
 		const names = findingNames(findings, {
 			assignments: scheduleAssignmentsFixture(),

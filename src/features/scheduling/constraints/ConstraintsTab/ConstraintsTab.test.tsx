@@ -24,6 +24,7 @@ import {
 	COMPANY_CONSTRAINT_FIXTURES,
 	CONSTRAINT_FIXTURES,
 	CONSTRAINT_OPTIONS_RESPONSE,
+	DAYS_LIMIT_FIXTURE,
 } from "@/features/scheduling/constraints/fixtures";
 import { scheduleFixture } from "@/features/scheduling/schedules/fixtures";
 import { SCHEDULING_UNIT_RULES } from "@/features/scheduling/schedules/schedulesUnitRules";
@@ -221,6 +222,39 @@ describe("ConstraintsTab", () => {
 			within(dialog).getByRole("button", { name: /^Department/ })
 		).toHaveTextContent("Orchard › Kitchen");
 		expect(calls.map((call) => call.path)).toContain(`${KITCHEN}/constraints`);
+	});
+
+	it("given_oneDepartment_when_listed_then_aRuleForFullTimersSaysSo", async () => {
+		stubApi({
+			[`GET ${KITCHEN}/constraints`]: ok([companyRest, DAYS_LIMIT_FIXTURE]),
+			[`GET ${KITCHEN}/constraint-options`]: ok(CONSTRAINT_OPTIONS_RESPONSE),
+		});
+		show({ permissions: ["constraint:read"], requested: KITCHEN_ONLY });
+
+		const limit = await screen.findByRole("row", { name: /Days in a row/ });
+		await waitFor(() => {
+			expect(limit).toHaveTextContent(
+				"No full-timer goes more than 6 days in a row without a Day off or Rest day."
+			);
+		});
+	});
+
+	it("given_everyDepartment_when_listed_then_aRuleForFullTimersSaysSoFromTheFirstReadableDepartmentsTypes", async () => {
+		const calls = stubApi({
+			[COMPANY_CONSTRAINTS]: ok([companyRest, DAYS_LIMIT_FIXTURE]),
+			[`GET ${KITCHEN}/constraint-options`]: ok(CONSTRAINT_OPTIONS_RESPONSE),
+		});
+		show({ held: { "d-1": ["constraint:read"] } });
+
+		const limit = await screen.findByRole("row", { name: /Days in a row/ });
+		await waitFor(() => {
+			expect(limit).toHaveTextContent(
+				"No full-timer goes more than 6 days in a row without a Day off or Rest day."
+			);
+		});
+		expect(calls.map((call) => call.path)).toContain(
+			`${KITCHEN}/constraint-options`
+		);
 	});
 
 	it("given_everyDepartment_when_listed_then_offersNoMakeStricter", async () => {

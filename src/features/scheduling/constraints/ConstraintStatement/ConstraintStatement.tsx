@@ -21,6 +21,8 @@ export type ConstraintStatementProps = {
 		/** Null for a type that gives no choice, or while none is chosen. */
 		requirement: ConstraintRequirement | null;
 		values: ReadonlyArray<SentenceValue>;
+		/** Whether its type covers full-timers only, which its sentence says; absent reads as everyone. */
+		fullTimersOnly?: boolean;
 	};
 	/** Who it applies to, as a muted line under the sentence (see `appliesToOf`). */
 	appliesTo?: string;

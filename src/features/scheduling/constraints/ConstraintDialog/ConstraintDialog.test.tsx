@@ -17,6 +17,7 @@ import {
 	CONSTRAINT_FIXTURES,
 	CONSTRAINT_OPTIONS,
 	CONSTRAINT_TYPE_OPTIONS,
+	WEEKLY_RULE_FIXTURE,
 } from "@/features/scheduling/constraints/fixtures";
 import type { ConstraintOptionsState } from "@/features/scheduling/constraints/useConstraintOptions";
 import { reachValueOf } from "@/features/scheduling/policy/policyReach";
@@ -395,12 +396,13 @@ describe("ConstraintDialog", () => {
 			"Someone on duty for the whole shift",
 			"Days off in a run of days",
 			"Days to avoid giving off",
+			"Limit on days in a row",
 			"Rest between shifts",
 		]);
 		for (const [category, count] of [
 			["People on shifts", 2],
 			["On duty throughout", 1],
-			["Days off", 2],
+			["Days off", 3],
 			["Rest and hours", 1],
 		] as const)
 			expect(
@@ -629,6 +631,116 @@ describe("ConstraintDialog", () => {
 					values: [
 						{ field: "WEEKDAY", value: "FRI" },
 						{ field: "WEEKDAY", value: "SAT" },
+					],
+				})
+			);
+		});
+	});
+
+	it("given_theWeeklyRule_when_edited_then_offersItsComparisonsAndNumberWithItsDayTypeFixed", async () => {
+		const user = userEvent.setup();
+		const { onSave } = renderDialog({
+			withLock: true,
+			editing: WEEKLY_RULE_FIXTURE,
+			reach: { choices: REACH.choices, initial: reachValueOf() },
+		});
+		await screen.findByRole("dialog", { name: "Edit constraint" });
+
+		expect(trigger(/^What it controls/)).toHaveTextContent(
+			"Required days each week"
+		);
+		expect(trigger(/^What it controls/)).toBeDisabled();
+		expect(screen.queryByRole("button", { name: /^Lock/ })).toBeNull();
+		expect(screen.queryByRole("button", { name: /^Status/ })).toBeNull();
+		expect(screen.queryByRole("radiogroup", { name: /Applies to/ })).toBeNull();
+		expect(trigger(/^Day types/)).toHaveTextContent("Rest day");
+		expect(trigger(/^Day types/)).toBeDisabled();
+		await user.click(trigger(/^At least, at most or exactly/));
+		expect(
+			screen.getAllByRole("option").map((option) => option.textContent)
+		).toEqual(["At least", "Exactly"]);
+		await user.click(screen.getByRole("option", { name: "Exactly" }));
+		await user.click(screen.getByRole("button", { name: "Save" }));
+
+		await waitFor(() => {
+			expect(onSave).toHaveBeenCalledWith(
+				expect.objectContaining({
+					type: "DAY_TYPE_DAYS_PER_WEEK",
+					lock: "LOCKED",
+					values: [
+						{ field: "COMPARISON", value: "EXACTLY" },
+						{ field: "DAY_TYPE_COUNT", value: "1" },
+						{ field: "DAY_TYPE", value: "REST" },
+					],
+				})
+			);
+		});
+	});
+
+	it("given_aPeopleType_when_chosen_then_offersAllThreeComparisons", async () => {
+		const user = userEvent.setup();
+		renderDialog();
+		await start(user, "People on a shift");
+
+		await user.click(trigger(/^At least, at most or exactly/));
+		expect(
+			screen.getAllByRole("option").map((option) => option.textContent)
+		).toEqual(["At least", "At most", "Exactly"]);
+	});
+
+	it("given_theDaysLimit_when_saved_then_offersTheApisDayTypesByLabelAndSendsTheChosenCodes", async () => {
+		const user = userEvent.setup();
+		const { onSave } = renderDialog({
+			options: {
+				status: "ready",
+				options: {
+					...CONSTRAINT_OPTIONS,
+					dayTypeChoices: ["OFF", "REST", "LEAVE", "PUBLIC_HOLIDAY_OFF"],
+				},
+			},
+		});
+		await start(user, "Limit on days in a row");
+
+		expect(screen.queryByRole("radiogroup")).toBeNull();
+		expect(
+			screen.getByText("Always a must for this kind of constraint.")
+		).toBeVisible();
+		expect(
+			screen.getByRole("spinbutton", { name: /^Most days in a row/ })
+		).toHaveAttribute("max", "14");
+		await user.click(trigger(/^Day types/));
+		expect(
+			screen.getAllByRole("option").map((option) => option.textContent)
+		).toEqual(
+			expect.arrayContaining([
+				"Day off",
+				"Rest day",
+				"Leave",
+				"Public holiday off",
+			])
+		);
+		await user.keyboard("{Escape}");
+		await user.type(
+			screen.getByRole("spinbutton", { name: /^Most days in a row/ }),
+			"12"
+		);
+		await pick(user, /^Day types/, "Rest day", "Public holiday off");
+
+		expect(
+			screen.getByRole("region", { name: "How it reads" })
+		).toHaveTextContent(
+			"No full-timer goes more than 12 days in a row without a Rest day or Public holiday off."
+		);
+		await user.click(screen.getByRole("button", { name: "Save" }));
+		await waitFor(() => {
+			expect(onSave).toHaveBeenCalledWith(
+				expect.objectContaining({
+					type: "MAX_DAYS_WITHOUT_DAY_TYPES",
+					requirement: null,
+					values: [
+						{ field: "DAYS_IN_A_ROW", value: "12" },
+						{ field: "DAY_TYPE", value: "REST" },
+						{ field: "DAY_TYPE", value: "PUBLIC_HOLIDAY_OFF" },
 					],
 				})
 			);

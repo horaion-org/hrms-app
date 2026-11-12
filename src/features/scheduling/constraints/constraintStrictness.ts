@@ -72,6 +72,8 @@ const byField = (
 	switch (strictness) {
 		case "HIGHER_IS_STRICTER":
 			return numbers(parent, candidate, true);
+		case "LOWER_IS_STRICTER":
+			return numbers(parent, candidate, false);
 		case "FOLLOWS_COMPARISON":
 		case "AGAINST_COMPARISON": {
 			if (comparison === "EXACTLY")

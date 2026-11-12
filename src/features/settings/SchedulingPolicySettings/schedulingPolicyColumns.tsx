@@ -1,8 +1,12 @@
 import type { TFunction } from "i18next";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import type { DataTableColumn } from "@/components/ui/DataTable";
 import { DeleteIcon, EditIcon } from "@/components/ui/Icon";
-import type { DepartmentConstraint } from "@/features/scheduling/constraints/api";
+import type {
+	ConstraintTypeOption,
+	DepartmentConstraint,
+} from "@/features/scheduling/constraints/api";
 import { constraintColumns } from "@/features/scheduling/constraints/constraintColumns";
 import { ConstraintOrigin } from "@/features/scheduling/constraints/ConstraintOrigin";
 
@@ -12,6 +16,8 @@ const constraints = "scheduling.constraints";
 export type SchedulingPolicyColumnsOptions = {
 	/** Whether the reader may change the policy (`scheduling_policy:update`); without it there are no actions. */
 	canUpdate: boolean;
+	/** The constraint types (`constraint-options`): who each covers, and which the system adds; empty until read. */
+	types: ReadonlyArray<ConstraintTypeOption>;
 	onEdit: (constraint: DepartmentConstraint) => void;
 	onRemove: (constraint: DepartmentConstraint) => void;
 };
@@ -19,15 +25,21 @@ export type SchedulingPolicyColumnsOptions = {
 /**
  * The work policy's columns: the constraint's name and how it reads (where it
  * applies on its last line), as a department's list shows them, its lock, its
- * status, and, for someone who may change the policy, Edit and Delete. A phone
+ * status, and, for someone who may change the policy, Edit and Delete. A rule
+ * the system adds always applies: "Always applies" in place of its lock, and
+ * no Delete. A phone
  * keeps the name and the actions as columns and puts the rest on the name's
  * line, as the Constraints tab does.
  */
 export const schedulingPolicyColumns = (
 	t: TFunction,
-	{ canUpdate, onEdit, onRemove }: SchedulingPolicyColumnsOptions
+	{ canUpdate, types, onEdit, onRemove }: SchedulingPolicyColumnsOptions
 ): Array<DataTableColumn<DepartmentConstraint>> => {
-	const shared = constraintColumns<DepartmentConstraint>(t);
+	const shared = constraintColumns<DepartmentConstraint>(t, types);
+	const alwaysApplies = (constraint: DepartmentConstraint): boolean =>
+		types.some(
+			(option) => option.type === constraint.type && option.addedBySystem
+		);
 	return [
 		shared.name,
 		{
@@ -40,9 +52,12 @@ export const schedulingPolicyColumns = (
 			id: "lock",
 			header: t(`${key}.lock`),
 			headerClassName: "w-32",
-			cell: (constraint) => (
-				<ConstraintOrigin constraint={constraint} showLevel={false} />
-			),
+			cell: (constraint) =>
+				alwaysApplies(constraint) ? (
+					<Badge tone="neutral">{t("scheduling.policy.alwaysApplies")}</Badge>
+				) : (
+					<ConstraintOrigin constraint={constraint} showLevel={false} />
+				),
 			// A phone keeps only the name and the actions as columns.
 			hideBelow: "md",
 		},
@@ -67,18 +82,20 @@ export const schedulingPolicyColumns = (
 								>
 									<EditIcon />
 								</Button>
-								<Button
-									className="text-error-700"
-									variant="icon"
-									aria-label={t(`${constraints}.delete`, {
-										name: constraint.name,
-									})}
-									onClick={() => {
-										onRemove(constraint);
-									}}
-								>
-									<DeleteIcon />
-								</Button>
+								{!alwaysApplies(constraint) && (
+									<Button
+										className="text-error-700"
+										variant="icon"
+										aria-label={t(`${constraints}.delete`, {
+											name: constraint.name,
+										})}
+										onClick={() => {
+											onRemove(constraint);
+										}}
+									>
+										<DeleteIcon />
+									</Button>
+								)}
 							</div>
 						),
 					},

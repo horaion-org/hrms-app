@@ -58,9 +58,9 @@ export const SchedulingPolicySettings = ({
 	} | null>(null);
 	const [removing, setRemoving] = useState<DepartmentConstraint | null>(null);
 	const [toast, setToast] = useState<{ id: number; message: string }>();
-	const offered = useQuery(
-		policyOptionsQuery(companyId, canRead && dialog !== null)
-	);
+	// Read with the list, and the list waits for it: the rows say who each rule
+	// covers, and a rule that always applies never shows Delete, even briefly.
+	const offered = useQuery(policyOptionsQuery(companyId, canRead));
 	const actions = usePolicyActions(companyId);
 	const options: ConstraintOptionsState =
 		offered.data === undefined
@@ -73,21 +73,23 @@ export const SchedulingPolicySettings = ({
 		(): Array<DataTableColumn<DepartmentConstraint>> =>
 			schedulingPolicyColumns(t, {
 				canUpdate,
+				types: offered.data?.types ?? [],
 				onEdit: (constraint) => {
 					setDialog({ editing: constraint });
 				},
 				onRemove: setRemoving,
 			}),
-		[t, canUpdate, setDialog, setRemoving]
+		[t, canUpdate, offered.data, setDialog, setRemoving]
 	);
 	const forbidden =
 		!canRead ||
 		(list.error instanceof ApiProblemError && list.error.status === 403);
+	const failed = list.isError || offered.isError;
 	const problem = forbidden
 		? t(`${key}.hidden`)
-		: list.isError
+		: failed
 			? t(`${key}.failed`)
-			: list.data === undefined
+			: list.data === undefined || offered.data === undefined
 				? t(`${key}.loading`)
 				: undefined;
 
@@ -131,8 +133,8 @@ export const SchedulingPolicySettings = ({
 			{problem ? (
 				<p
 					className="mt-8 text-sm text-neutral-700 data-alert:text-error-700"
-					data-alert={list.isError && !forbidden ? true : undefined}
-					role={list.isError && !forbidden ? "alert" : undefined}
+					data-alert={failed && !forbidden ? true : undefined}
+					role={failed && !forbidden ? "alert" : undefined}
 				>
 					{problem}
 				</p>

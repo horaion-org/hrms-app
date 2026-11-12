@@ -37,6 +37,8 @@ export const constraintTypeSchema = z.enum([
 	"DAYS_OFF_PER_PERIOD",
 	"AVOID_DAYS_OFF_ON",
 	"REST_BETWEEN_SHIFTS",
+	"MAX_DAYS_WITHOUT_DAY_TYPES",
+	"DAY_TYPE_DAYS_PER_WEEK",
 ]);
 
 /** What a constraint says; its copy (label and sentence) is keyed by this name. */
@@ -67,6 +69,9 @@ const constraintFieldSchema = z.enum([
 	"STAND_IN_JOB_TITLE",
 	"SHIFT",
 	"WEEKDAY",
+	"DAY_TYPE",
+	"DAYS_IN_A_ROW",
+	"DAY_TYPE_COUNT",
 ]);
 
 /** One field a constraint type takes; its label is keyed by this name. */
@@ -80,6 +85,7 @@ const constraintFieldKindSchema = z.enum([
 	"WEEKDAY",
 	"JOB_TITLE",
 	"SHIFT",
+	"DAY_TYPE",
 ]);
 
 /** What a field's values are, which decides the control that chooses them. */
@@ -107,6 +113,8 @@ export const CONSTRAINT_COMPARISONS = [
 ] as const;
 
 export type ConstraintComparison = (typeof CONSTRAINT_COMPARISONS)[number];
+
+const constraintComparisonSchema = z.enum(CONSTRAINT_COMPARISONS);
 
 // A level, lock or direction a newer API adds reads as UNKNOWN instead of failing the whole answer.
 const policyLevelSchema = z
@@ -148,6 +156,7 @@ const policyLockSchema = z
 const fieldStrictnessSchema = z
 	.enum([
 		"HIGHER_IS_STRICTER",
+		"LOWER_IS_STRICTER",
 		"FOLLOWS_COMPARISON",
 		"AGAINST_COMPARISON",
 		"SUPERSET_IS_STRICTER",
@@ -391,6 +400,8 @@ const constraintFieldSpecSchema = z.object({
 	min: z.number().nullable(),
 	max: z.number().nullable(),
 	strictness: fieldStrictnessSchema,
+	/** The comparisons a COMPARISON field takes; null for any other field, or for one that takes all three. */
+	comparisons: z.array(constraintComparisonSchema).nullable().catch(null),
 });
 
 /** One field a constraint type takes, as the API declares it. */
@@ -407,6 +418,10 @@ const constraintTypeOptionSchema = z.object({
 	levels: z.array(policyLevelSchema).catch([]),
 	/** The fields it takes, in the order the dialog shows them. */
 	fields: z.array(constraintFieldSpecSchema),
+	/** Whether the system creates it and it always applies: never added, deleted or switched off by hand. */
+	addedBySystem: z.boolean().catch(false),
+	/** Whether it covers full-timers only; otherwise it covers everyone. */
+	fullTimersOnly: z.boolean().catch(false),
 });
 
 /** A constraint type and the fields it takes. */
@@ -427,9 +442,12 @@ export const constraintOptionsSchema = z
 			SHIFT: z.array(constraintLinkOptionSchema),
 			JOB_TITLE: z.array(constraintLinkOptionSchema),
 		}),
+		/** The day types a DAY_TYPE field may name, as codes; empty from an API that predates them. */
+		dayTypeChoices: z.array(z.string()).catch([]),
 	})
-	.transform(({ types, links }) => ({
+	.transform(({ types, links, dayTypeChoices }) => ({
 		types,
+		dayTypeChoices,
 		shifts: links.SHIFT.map(({ id, name, jobTitleIds }) => ({
 			shiftId: id,
 			name,

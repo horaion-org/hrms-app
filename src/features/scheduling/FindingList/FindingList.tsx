@@ -82,7 +82,12 @@ export const FindingList = ({
 				);
 			}
 			case "diagnostic": {
-				const sentence = diagnosticSentence(finding.diagnostic, names, t);
+				const sentence = diagnosticSentence(
+					finding.diagnostic,
+					names,
+					t,
+					(date) => formatDay(date, language)
+				);
 				if (sentence === null)
 					return (
 						<q className="text-neutral-800">{finding.diagnostic.message}</q>

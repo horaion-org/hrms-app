@@ -13,6 +13,7 @@ import { branchColumn } from "@/features/organisation/listColumns";
 import { constraintColumns } from "@/features/scheduling/constraints/constraintColumns";
 import { ConstraintOrigin } from "@/features/scheduling/constraints/ConstraintOrigin";
 import type {
+	ConstraintTypeOption,
 	ReachedBranch,
 	ReachedDepartment,
 } from "@/features/scheduling/constraints/api";
@@ -70,6 +71,8 @@ export type ConstraintTableProps<Row extends ConstraintTableRow> = {
 	noteOf?: (constraint: Row) => string | undefined;
 	/** Shown across the table when there are no rows; "no constraints yet" when left out. */
 	emptyState?: ReactNode;
+	/** The constraint types (`constraint-options`), so a rule's sentence says who it covers; none reads as everyone. */
+	types?: ReadonlyArray<ConstraintTypeOption>;
 	className?: string;
 };
 
@@ -95,12 +98,13 @@ export const ConstraintTable = <Row extends ConstraintTableRow>({
 	metaOnNameLine = false,
 	noteOf,
 	emptyState,
+	types,
 	className,
 }: ConstraintTableProps<Row>): FunctionComponent => {
 	const { t } = useTranslation();
 	const key = "scheduling.constraints";
 	const columns = useMemo((): Array<DataTableColumn<Row>> => {
-		const shared = constraintColumns<Row>(t);
+		const shared = constraintColumns<Row>(t, types);
 		// A company constraint is changed only by replacing it here, never edited or deleted.
 		const editable = (constraint: Row): boolean =>
 			constraint.level !== "COMPANY" && (canEdit?.(constraint) ?? true);
@@ -226,6 +230,7 @@ export const ConstraintTable = <Row extends ConstraintTableRow>({
 		showDepartment,
 		metaOnNameLine,
 		noteOf,
+		types,
 	]);
 
 	return (

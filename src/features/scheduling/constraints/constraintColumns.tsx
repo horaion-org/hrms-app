@@ -4,6 +4,7 @@ import type { DataTableColumn } from "@/components/ui/DataTable";
 import {
 	CONSTRAINT_STATUSES,
 	type ConstraintStatus,
+	type ConstraintTypeOption,
 	type ReachedBranch,
 	type ReachedDepartment,
 } from "@/features/scheduling/constraints/api";
@@ -36,9 +37,14 @@ export const statusTones: Record<ConstraintStatus, BadgeTone> = {
 	INACTIVE: "neutral",
 };
 
-/** The shared columns, each placed by the list that uses it. */
+/**
+ * The shared columns, each placed by the list that uses it. With the
+ * constraint types (`constraint-options`), a rule's sentence says who it
+ * covers; without them it reads as covering everyone.
+ */
 export const constraintColumns = <Row extends ConstraintRow>(
-	t: TFunction
+	t: TFunction,
+	types: ReadonlyArray<ConstraintTypeOption> = []
 ): {
 	name: DataTableColumn<Row>;
 	statement: DataTableColumn<Row>;
@@ -59,7 +65,13 @@ export const constraintColumns = <Row extends ConstraintRow>(
 			cell: (constraint) => (
 				<ConstraintStatement
 					appliesTo={appliesToOf(constraint, t)}
-					constraint={constraint}
+					constraint={{
+						...constraint,
+						fullTimersOnly: types.some(
+							(option) =>
+								option.type === constraint.type && option.fullTimersOnly
+						),
+					}}
 				/>
 			),
 		},

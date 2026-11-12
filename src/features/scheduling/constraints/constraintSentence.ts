@@ -6,6 +6,7 @@ import {
 	type ConstraintRequirement,
 	type ConstraintType,
 } from "@/features/scheduling/constraints/api";
+import { dayTypeLabel } from "@/features/scheduling/dayTypes";
 import { WEEKDAYS, type Weekday } from "@/features/scheduling/shifts/api";
 
 /*
@@ -13,7 +14,8 @@ import { WEEKDAYS, type Weekday } from "@/features/scheduling/shifts/api";
  * needs at least 2 people as Clerk or Lead." Each type has a sentence per
  * comparison, and the shift types one for a single shift and one for several
  * (`scheduling.constraints.sentences.<TYPE>…`), each with a plural form per
- * number. Each tag is filled with the field's values in words. How firm the
+ * number. A rule about day types says who it covers: full-timers or
+ * everyone. Each tag is filled with the field's values in words. How firm the
  * constraint is (Must or If possible) is not in the sentence; it is a tag in
  * front of it (`firmnessOf`).
  */
@@ -28,16 +30,24 @@ export type SentenceValue = {
 /** Each field of a constraint in words; a field not filled in yet has none. */
 export type ConstraintWords = Partial<Record<ConstraintField, string>>;
 
-/** What a constraint's sentence is chosen from: its type and the values filled in so far. */
+/** What a constraint's sentence is chosen from: its type, the values filled in so far, and who it covers. */
 type SentenceSource = {
 	type: ConstraintType;
 	values: ReadonlyArray<Pick<SentenceValue, "field" | "value">>;
+	/** Whether its type covers full-timers only (`ConstraintTypeOption.fullTimersOnly`); absent reads as everyone. */
+	fullTimersOnly?: boolean;
 };
 
 const SENTENCES = "scheduling.constraints.sentences";
 
 /** A shift type reads differently for one shift and for several. */
 type ShiftCount = "oneShift" | "severalShifts";
+
+/** Who a rule about day types covers. */
+type CoveredGroup = "fullTimers" | "everyone";
+
+/** The weekly rule takes "at least" or "exactly", never "at most" (`ConstraintFieldSpec.comparisons`). */
+type WeeklyComparison = "AT_LEAST" | "EXACTLY";
 
 /** The copy key of one sentence of a constraint. */
 export type SentenceKey =
@@ -46,7 +56,9 @@ export type SentenceKey =
 	| `${typeof SENTENCES}.SHIFT_STAFFING_WITH_STAND_INS.standIns`
 	| `${typeof SENTENCES}.DAYS_OFF_PER_PERIOD.${ConstraintComparison}`
 	| `${typeof SENTENCES}.AVOID_DAYS_OFF_ON`
-	| `${typeof SENTENCES}.REST_BETWEEN_SHIFTS`;
+	| `${typeof SENTENCES}.REST_BETWEEN_SHIFTS`
+	| `${typeof SENTENCES}.MAX_DAYS_WITHOUT_DAY_TYPES.${CoveredGroup}`
+	| `${typeof SENTENCES}.DAY_TYPE_DAYS_PER_WEEK.${CoveredGroup}.${WeeklyComparison}`;
 
 /** One sentence of a constraint: its copy key and the number its plural follows. */
 export type SentencePart = { i18nKey: SentenceKey; count: number };
@@ -58,6 +70,8 @@ const UNFILLED_COUNT = 2;
 const FIXED_FIRMNESS: Partial<Record<ConstraintType, ConstraintRequirement>> = {
 	AVOID_DAYS_OFF_ON: "SHOULD",
 	REST_BETWEEN_SHIFTS: "MUST",
+	MAX_DAYS_WITHOUT_DAY_TYPES: "MUST",
+	DAY_TYPE_DAYS_PER_WEEK: "MUST",
 };
 
 const valuesOf = (
@@ -87,6 +101,19 @@ const comparisonOf = (constraint: SentenceSource): ConstraintComparison => {
 
 const shiftCountOf = (constraint: SentenceSource): ShiftCount =>
 	valuesOf(constraint, "SHIFT").length > 1 ? "severalShifts" : "oneShift";
+
+const coveredGroupOf = (constraint: SentenceSource): CoveredGroup =>
+	constraint.fullTimersOnly ? "fullTimers" : "everyone";
+
+/** "Exactly" when chosen, else "at least", the weekly rule's default. */
+const weeklyComparisonOf = (constraint: SentenceSource): WeeklyComparison =>
+	comparisonOf(constraint) === "EXACTLY" ? "EXACTLY" : "AT_LEAST";
+
+/** How many days of its day types the weekly rule asks for; any other rule names one day ("without a Rest day"). */
+const dayTypeCountOf = (constraint: SentenceSource): number =>
+	constraint.type === "DAY_TYPE_DAYS_PER_WEEK"
+		? countOf(constraint, "DAY_TYPE_COUNT")
+		: 1;
 
 /** The sentences a constraint reads as: one, or with stand-ins a second saying what a stand-in counts for. */
 export const sentencePartsOf = (
@@ -128,23 +155,47 @@ export const sentencePartsOf = (
 					count: countOf(constraint, "REST_HOURS"),
 				},
 			];
+		case "MAX_DAYS_WITHOUT_DAY_TYPES":
+			return [
+				{
+					i18nKey: `${SENTENCES}.${constraint.type}.${coveredGroupOf(constraint)}`,
+					count: countOf(constraint, "DAYS_IN_A_ROW"),
+				},
+			];
+		case "DAY_TYPE_DAYS_PER_WEEK":
+			return [
+				{
+					i18nKey: `${SENTENCES}.${constraint.type}.${coveredGroupOf(constraint)}.${weeklyComparisonOf(constraint)}`,
+					count: countOf(constraint, "DAY_TYPE_COUNT"),
+				},
+			];
 	}
 };
 
 const isWeekday = (text: string): text is Weekday =>
 	(WEEKDAYS as ReadonlyArray<string>).includes(text);
 
-/** One value in words: a job title's or shift's name, a weekday in words, a number as written. */
-const wordOf = ({ value, name }: SentenceValue, t: TFunction): string => {
+/**
+ * One value in words: a job title's or shift's name, a day type by its label
+ * (plural when the weekly rule counts more than one), a weekday in words, a
+ * number as written.
+ */
+const wordOf = (
+	{ field, value, name }: SentenceValue,
+	dayTypeCount: number,
+	t: TFunction
+): string => {
 	if (name !== null) return name;
+	if (field === "DAY_TYPE") return dayTypeLabel(value, t, dayTypeCount);
 	if (isWeekday(value)) return t(`weekdays.${value}`);
 	return value;
 };
 
 /**
- * Anyone with one of several job titles counts, so they join with "or". On
- * duty "at least" over several shifts is met on any one of them, so those
- * shifts join with "or" too; everything else joins with "and".
+ * Anyone with one of several job titles counts, so they join with "or", as do
+ * day types: any one of them breaks a run. On duty "at least" over several
+ * shifts is met on any one of them, so those shifts join with "or" too;
+ * everything else joins with "and".
  */
 const joinsWithOr = (
 	constraint: SentenceSource,
@@ -152,6 +203,7 @@ const joinsWithOr = (
 ): boolean =>
 	field === "JOB_TITLE" ||
 	field === "STAND_IN_JOB_TITLE" ||
+	field === "DAY_TYPE" ||
 	(field === "SHIFT" &&
 		constraint.type === "ROLE_PRESENCE" &&
 		comparisonOf(constraint) === "AT_LEAST");
@@ -165,6 +217,7 @@ export const constraintWords = (
 	t: TFunction
 ): ConstraintWords => {
 	const words: ConstraintWords = {};
+	const dayTypeCount = dayTypeCountOf(constraint);
 	const fields = new Set(constraint.values.map((value) => value.field));
 	fields.delete("COMPARISON");
 	for (const field of fields)
@@ -175,7 +228,7 @@ export const constraintWords = (
 			{
 				items: constraint.values
 					.filter((value) => value.field === field)
-					.map((value) => wordOf(value, t)),
+					.map((value) => wordOf(value, dayTypeCount, t)),
 			}
 		);
 	return words;

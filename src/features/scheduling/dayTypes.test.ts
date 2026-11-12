@@ -28,6 +28,27 @@ describe("dayTypeLabel", () => {
 	it("given_aCodeWithoutATranslation_when_labelled_then_isTheCodeMadeReadable", () => {
 		expect(dayTypeLabel("PUBLIC_HOLIDAY_OFF", t)).toBe("Public holiday off");
 	});
+
+	it.each([
+		["REST", 2, "Rest days"],
+		["OFF", 2, "Days off"],
+		["REST", 1, "Rest day"],
+	])(
+		"given_%s_andACountOf_%s_when_labelled_then_isItsPlural",
+		(code, count, label) => {
+			expect(dayTypeLabel(code, t, count)).toBe(label);
+		}
+	);
+
+	it.each([
+		["LEAVE", "Leave"],
+		["PUBLIC_HOLIDAY_OFF", "Public holiday off"],
+	])(
+		"given_%s_withNoPlural_andACountOf2_when_labelled_then_keepsItsSingular",
+		(code, label) => {
+			expect(dayTypeLabel(code, t, 2)).toBe(label);
+		}
+	);
 });
 
 describe("dayTypeInSentence", () => {

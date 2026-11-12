@@ -7,9 +7,17 @@ import { humaniseIdentifier } from "@/features/scheduling/roster/findings/ruleLa
  * until it gets a translation.
  */
 
-/** A day type in words: its translation, else its code made readable ("PUBLIC_HOLIDAY_OFF" → "Public holiday off"). Pure. */
-export const dayTypeLabel = (code: string, t: TFunction): string =>
-	t(`scheduling.dayTypes.${code}`, { defaultValue: humaniseIdentifier(code) });
+/**
+ * A day type in words: its translation, else its code made readable
+ * ("PUBLIC_HOLIDAY_OFF" → "Public holiday off"). With a `count` it takes the
+ * plural a sentence needs ("2 Rest days"); a type with no plural reads as its
+ * singular. Pure.
+ */
+export const dayTypeLabel = (code: string, t: TFunction, count = 1): string =>
+	t(`scheduling.dayTypes.${code}`, {
+		count,
+		defaultValue: humaniseIdentifier(code),
+	});
 
 /**
  * A day type's label as a sentence carries it, lower-cased: "On rest day".

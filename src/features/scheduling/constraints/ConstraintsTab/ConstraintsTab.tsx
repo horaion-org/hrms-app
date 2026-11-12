@@ -203,6 +203,23 @@ export const ConstraintsTab = ({
 		dialogUnit,
 		dialog !== undefined
 	);
+	// The types for the sentences: the chosen Department's, else the first in view with constraint:read (a type's flags are the same in every Department).
+	const typesDepartment =
+		units.department ??
+		(workspace
+			? departmentChoices(workspace, companyId, ["constraint:read"]).find(
+					(choice) =>
+						units.branch === undefined ||
+						choice.branchId === units.branch.branchId
+				)
+			: undefined);
+	const listOptions = useConstraintOptions(
+		companyId,
+		typesDepartment && {
+			branchId: typesDepartment.branchId,
+			departmentId: typesDepartment.departmentId,
+		}
+	);
 
 	// Edit and delete say how many drafts tick the constraint, where schedules may be read.
 	const reached = dialog?.kind === "edit" ? dialog.constraint : deleting;
@@ -327,6 +344,9 @@ export const ConstraintsTab = ({
 						showDepartment={!units.department}
 						emptyState={
 							search.trim() ? t(`${key}.noMatch`) : t(`${key}.emptyGuide`)
+						}
+						types={
+							listOptions.status === "ready" ? listOptions.options.types : []
 						}
 						onDelete={setDeleting}
 						onEdit={openEdit}

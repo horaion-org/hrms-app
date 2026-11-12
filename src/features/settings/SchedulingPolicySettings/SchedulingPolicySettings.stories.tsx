@@ -5,6 +5,7 @@ import { storyProviders } from "@/features/organisation/storyApi";
 import {
 	COMPANY_CONSTRAINT_FIXTURES,
 	CONSTRAINT_OPTIONS,
+	WEEKLY_RULE_FIXTURE,
 } from "@/features/scheduling/constraints/fixtures";
 import {
 	policyConstraintsQuery,
@@ -61,6 +62,13 @@ type Story = StoryObj<typeof meta>;
 
 /** A locked rest constraint and a default on weekends, editable. */
 export const Editable: Story = {};
+
+/** With the weekly rule the system adds: "Always applies" in place of its lock, and no Delete. */
+export const WithWeeklyRule: Story = {
+	parameters: {
+		constraints: [...COMPANY_CONSTRAINT_FIXTURES, WEEKLY_RULE_FIXTURE],
+	},
+};
 
 /** Read-only: scheduling_policy:read without :update. */
 export const ReadOnly: Story = {
