@@ -4,6 +4,7 @@ import {
 	carriedWeek,
 	earlierDayTypedWeek,
 	firstWeek,
+	typedDaysOffWeek,
 } from "@/features/scheduling/startingContext/fixtures";
 import { StartingDaysDialog } from "@/features/scheduling/startingContext/StartingDaysDialog";
 import "@/common/i18n";
@@ -14,6 +15,7 @@ const meta = {
 	args: {
 		open: true,
 		week: firstWeek(),
+		nonWorkingDayTypes: ["OFF", "REST"],
 		saving: false,
 		onSave: fn(),
 		onClose: fn(),
@@ -32,6 +34,12 @@ export const CarriedOver: Story = { args: { week: carriedWeek() } };
 
 /** Siti has a day typed in the earlier week, so both weeks show from the start. */
 export const TwoWeeksShown: Story = { args: { week: earlierDayTypedWeek() } };
+
+/** Days off by type: a locked rest day, an entered one, and a type the schedule no longer offers, kept. */
+export const TypedDaysOff: Story = { args: { week: typedDaysOffWeek() } };
+
+/** An older API names no day types: one untyped day off, as before. */
+export const WithoutDayTypes: Story = { args: { nonWorkingDayTypes: [] } };
 
 export const Saving: Story = { args: { saving: true } };
 

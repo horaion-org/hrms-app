@@ -35,6 +35,11 @@ const startingCellSchema = z.object({
 	source: startingDaySourceSchema.nullable(),
 	/** A roster or approved leave covers it, so it can't be entered. */
 	locked: z.boolean(),
+	/**
+	 * A day off's type, such as a rest day; any code may arrive, since types
+	 * are added over time. Null on other days, and from an older API.
+	 */
+	dayType: z.string().nullable().catch(null),
 	/** An entered worked day's live shift. */
 	shiftId: z.string().nullable(),
 	shiftName: z.string().nullable(),
@@ -85,6 +90,8 @@ export type EnteredDay = {
 	date: string;
 	kind: "SHIFT" | "OFF";
 	shiftId: string | null;
+	/** A day off's type; left out when none was chosen, as an older API takes it. */
+	dayType?: string;
 };
 
 const startingContextSchema = z.object({

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { Dialog } from "@/components/ui/Dialog";
+import { dayTypeLabel } from "@/features/scheduling/dayTypes";
 import { formatTimeRange } from "@/features/scheduling/formatShift";
 import type {
 	OpeningBalances,
@@ -37,6 +38,8 @@ import {
 	fillEmpty,
 	hasEnteredDayOn,
 	initialEntries,
+	offCellValue,
+	offDayTypes,
 	shiftCellValue,
 	splitDays,
 	withCell,
@@ -47,6 +50,8 @@ import {
 export type StartingDaysDialogProps = {
 	open: boolean;
 	week: StartingDays;
+	/** The schedule's types for a day off; empty from an older API, which takes a day off without one. */
+	nonWorkingDayTypes: ReadonlyArray<string>;
 	saving: boolean;
 	/** Why the last save was refused, shown in the dialog. */
 	problem?: string;
@@ -72,8 +77,8 @@ const key = "scheduling.startingContext";
  * across. The 7 nearest the period show first; the earlier ones show on
  * request, and by themselves when one of them already holds a typed day.
  * Hidden days are still saved. A day a roster or approved leave covers shows
- * what it was, locked; any other day is a department shift, a day off, or not
- * known (left empty). "Fill empty" sets one shown day for everyone not
+ * what it was, locked; any other day is a department shift, a day off of one
+ * of the schedule's types, or not known (left empty). "Fill empty" sets one shown day for everyone not
  * entered yet. When the roster starts mid-month, two more cells take the
  * hours and overtime each member already worked this month, so monthly
  * overtime limits count from the 1st.
@@ -81,6 +86,7 @@ const key = "scheduling.startingContext";
 export const StartingDaysDialog = ({
 	open,
 	week,
+	nonWorkingDayTypes,
 	saving,
 	problem,
 	openings,
@@ -98,7 +104,10 @@ export const StartingDaysDialog = ({
 	const tableId = useId();
 	const lastDay = week.days[week.days.length - 1] ?? "";
 	const [fillDay, setFillDay] = useState(lastDay);
-	const [fillValue, setFillValue] = useState<CellValue>("OFF");
+	const dayOffTypes = offDayTypes(week, nonWorkingDayTypes);
+	const [fillValue, setFillValue] = useState<CellValue>(() =>
+		offCellValue(dayOffTypes[0] ?? null)
+	);
 	const askedOpenings = openings?.applies === true ? openings : undefined;
 	const asksOpenings = askedOpenings !== undefined;
 	// Only what the person typed is state; the API's answer is read on every
@@ -119,9 +128,16 @@ export const StartingDaysDialog = ({
 		return changed.length === 0 ? undefined : changed;
 	};
 	const labelOf = (date: string): string => formatDay(date, language);
+	const dayOffLabel = (dayType: string | null): string =>
+		dayType === null
+			? t("scheduling.detail.kinds.off")
+			: dayTypeLabel(dayType, t);
 	const valueOptions = [
 		{ value: "", label: t(`${key}.notKnown`) },
-		{ value: "OFF", label: t("scheduling.detail.kinds.off") },
+		...dayOffTypes.map((dayType) => ({
+			value: offCellValue(dayType),
+			label: dayOffLabel(dayType),
+		})),
 		...week.shifts.map((shift) => ({
 			value: shiftCellValue(shift.shiftId),
 			label: `${shift.name} ${formatTimeRange(shift, t)}`,
@@ -129,7 +145,7 @@ export const StartingDaysDialog = ({
 	];
 	const lockedLabel = (cell: StartingCell): string => {
 		if (cell.kind === "LEAVE") return t("scheduling.detail.kinds.leave");
-		if (cell.kind === "OFF") return t("scheduling.detail.kinds.off");
+		if (cell.kind === "OFF") return dayOffLabel(cell.dayType);
 		if (cell.kind === "UNKNOWN") return t("scheduling.detail.kinds.unknown");
 		return cell.shiftName ?? t(`${key}.worked`);
 	};

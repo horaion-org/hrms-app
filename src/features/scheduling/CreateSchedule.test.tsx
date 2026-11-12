@@ -1330,7 +1330,10 @@ describe("Create Schedule: back from the Scheduling tabs", () => {
 
 describe("Create Schedule: where everyone starts", () => {
 	const STARTING_DAYS = `${SCHEDULE}/starting-days`;
-	/** Tan's entered Sunday night, and Siti's Sunday off as "Fill empty days" sets it. */
+	/**
+	 * Tan's entered Sunday night, and Siti's Sunday off as "Fill empty days"
+	 * sets it: the schedule's first day type.
+	 */
 	const SUNDAY_ENTRIES = [
 		{
 			memberProfileId: "p-tan",
@@ -1343,6 +1346,7 @@ describe("Create Schedule: where everyone starts", () => {
 			date: "2026-11-08",
 			kind: "OFF",
 			shiftId: null,
+			dayType: "OFF",
 		},
 	];
 
@@ -1361,6 +1365,7 @@ describe("Create Schedule: where everyone starts", () => {
 											...unknownCell(cell.date),
 											kind: "OFF",
 											source: "ENTERED",
+											dayType: "OFF",
 										}
 									: cell
 							),

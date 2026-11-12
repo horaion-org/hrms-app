@@ -5,8 +5,11 @@ import type {
 	StartingDays,
 } from "@/features/scheduling/startingContext/api";
 
-/** A cell's value in the grid's select: not known, a day off, or a shift by id. */
-export type CellValue = "" | "OFF" | `shift:${string}`;
+/**
+ * A cell's value in the grid's select: not known, a day off by its type, or
+ * a shift by id. `off:` alone is a day off without a type.
+ */
+export type CellValue = "" | `off:${string}` | `shift:${string}`;
 
 /** The entered values the grid holds, by member then date; locked cells are never in it. */
 export type Entries = Record<string, Record<string, CellValue>>;
@@ -20,6 +23,7 @@ export type PreviousWeek =
 export type SplitDays = { earlier: Array<string>; nearer: Array<string> };
 
 const SHIFT_PREFIX = "shift:";
+const OFF_PREFIX = "off:";
 
 /** The days nearest the period the dialog shows first. */
 export const NEARER_DAYS = 7;
@@ -28,10 +32,14 @@ export const NEARER_DAYS = 7;
 export const shiftCellValue = (shiftId: string): CellValue =>
 	`${SHIFT_PREFIX}${shiftId}`;
 
+/** The value a cell holds when it is a day off of a type, or of none. */
+export const offCellValue = (dayType: string | null): CellValue =>
+	`${OFF_PREFIX}${dayType ?? ""}`;
+
 /** The value an entered cell holds; a locked or unknown cell holds none. */
 const valueOf = (cell: StartingCell): CellValue => {
 	if (cell.locked || cell.kind === null) return "";
-	if (cell.kind === "OFF") return "OFF";
+	if (cell.kind === "OFF") return offCellValue(cell.dayType);
 	return cell.shiftId === null ? "" : shiftCellValue(cell.shiftId);
 };
 
@@ -47,6 +55,25 @@ export const initialEntries = (week: StartingDays): Entries =>
 			),
 		])
 	);
+
+/**
+ * The types an entered day off can take: the schedule's, then any an entered
+ * day already has that the schedule no longer offers, so it still shows and
+ * is kept. Null is a day off without a type, offered when the schedule names
+ * none (an older API). Pure.
+ */
+export const offDayTypes = (
+	week: StartingDays,
+	nonWorkingDayTypes: ReadonlyArray<string>
+): Array<string | null> => {
+	const offered = nonWorkingDayTypes.length > 0 ? nonWorkingDayTypes : [null];
+	const entered = week.members.flatMap((member) =>
+		member.cells
+			.filter((cell) => !cell.locked && cell.kind === "OFF")
+			.map((cell) => cell.dayType)
+	);
+	return [...new Set([...offered, ...entered])];
+};
 
 /** The last `NEARER_DAYS` days, and whatever comes before them, both in order. */
 export const splitDays = (days: Array<string>): SplitDays => ({
@@ -93,21 +120,35 @@ export const fillEmpty = (
 		])
 	);
 
+/** One entered cell as the save sends it: a day off with its type when it has one, or a shift. */
+const enteredDayOf = (
+	memberProfileId: string,
+	date: string,
+	value: CellValue
+): EnteredDay => {
+	if (value.startsWith(SHIFT_PREFIX))
+		return {
+			memberProfileId,
+			date,
+			kind: "SHIFT",
+			shiftId: value.slice(SHIFT_PREFIX.length),
+		};
+	const dayType = value.slice(OFF_PREFIX.length);
+	const dayOff: EnteredDay = {
+		memberProfileId,
+		date,
+		kind: "OFF",
+		shiftId: null,
+	};
+	return dayType === "" ? dayOff : { ...dayOff, dayType };
+};
+
 /** The save body: one day per entered cell; an empty cell is left out (not known). */
 export const enteredDays = (entries: Entries): Array<EnteredDay> =>
 	Object.entries(entries).flatMap(([memberProfileId, days]) =>
 		Object.entries(days)
 			.filter(([, value]) => value !== "")
-			.map(([date, value]) =>
-				value === "OFF"
-					? { memberProfileId, date, kind: "OFF" as const, shiftId: null }
-					: {
-							memberProfileId,
-							date,
-							kind: "SHIFT" as const,
-							shiftId: value.slice(SHIFT_PREFIX.length),
-						}
-			)
+			.map(([date, value]) => enteredDayOf(memberProfileId, date, value))
 	);
 
 /**

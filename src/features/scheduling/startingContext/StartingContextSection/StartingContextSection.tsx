@@ -28,6 +28,8 @@ export type StartingContextSectionProps = {
 	companyId: string;
 	unit: DepartmentPath;
 	scheduleId: string;
+	/** The schedule's types for a day off; empty from an older API. */
+	nonWorkingDayTypes: ReadonlyArray<string>;
 	/** Whether the person may change the draft (`schedule:update`, still a draft). */
 	canEdit: boolean;
 	className?: string;
@@ -85,6 +87,7 @@ export const StartingContextSection = ({
 	companyId,
 	unit,
 	scheduleId,
+	nonWorkingDayTypes,
 	canEdit,
 	className,
 }: StartingContextSectionProps): FunctionComponent => {
@@ -153,6 +156,7 @@ export const StartingContextSection = ({
 			{open && (
 				<StartingDaysDialog
 					open
+					nonWorkingDayTypes={nonWorkingDayTypes}
 					openings={openings.data}
 					problem={problem}
 					saving={saving.isPending}

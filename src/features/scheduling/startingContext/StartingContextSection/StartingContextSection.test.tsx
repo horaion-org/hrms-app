@@ -39,6 +39,7 @@ const show = (): void => {
 				<StartingContextSection
 					canEdit
 					companyId="c-1"
+					nonWorkingDayTypes={[]}
 					scheduleId="s-1"
 					unit={UNIT}
 				/>
