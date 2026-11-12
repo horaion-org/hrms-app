@@ -1,4 +1,6 @@
 import type {
+	MonthGeneration,
+	MonthGenerationCheck,
 	MonthWeek,
 	ScheduleMonth,
 	ScheduleMonthSummary,
@@ -93,5 +95,60 @@ export const monthSummaryFixture = (
 	weeks: scheduleMonthFixture().weeks.map(
 		({ periodStart, state, scheduleId }) => ({ periodStart, state, scheduleId })
 	),
+	...overrides,
+});
+
+/** Kitchen's December before anything is generated: four weeks, each one a run would create. */
+export const ungeneratedMonthFixture = (
+	overrides: Partial<ScheduleMonth> = {}
+): ScheduleMonth =>
+	scheduleMonthFixture({
+		month: "2026-12",
+		weeks: ["2026-12-07", "2026-12-14", "2026-12-21", "2026-12-28"].map(
+			(monday) =>
+				monthWeekFixture({
+					periodStart: monday,
+					periodEnd: coverDays(monday)[6]?.date ?? monday,
+					state: "NOT_GENERATED",
+					scheduleId: null,
+					days: [],
+					handChangedDays: null,
+					includedInMonthGeneration: true,
+				})
+		),
+		...overrides,
+	});
+
+/** Kitchen ready to generate December, with two people on approved leave and one request waiting. */
+export const monthGenerationCheckFixture = (
+	overrides: Partial<MonthGenerationCheck> = {}
+): MonthGenerationCheck => ({
+	month: "2026-12",
+	departmentId: "d-1",
+	departmentName: "Kitchen",
+	ready: true,
+	missing: [],
+	shiftCount: 3,
+	staffingConstraint: {
+		name: "Morning cover",
+		shiftNames: ["Breakfast Prep", "Front Desk AM"],
+	},
+	peopleWithApprovedLeave: 2,
+	leaveRequestsWaiting: 1,
+	...overrides,
+});
+
+/** Every week of `ungeneratedMonthFixture` started. */
+export const monthGenerationFixture = (
+	overrides: Partial<MonthGeneration> = {}
+): MonthGeneration => ({
+	month: "2026-12",
+	departmentId: "d-1",
+	weeks: ungeneratedMonthFixture().weeks.map((week, index) => ({
+		periodStart: week.periodStart,
+		scheduleId: `s-new-${index + 1}`,
+		outcome: "STARTED",
+		reason: null,
+	})),
 	...overrides,
 });
