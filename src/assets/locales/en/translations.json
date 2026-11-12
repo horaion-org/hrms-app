@@ -4446,6 +4446,16 @@
 				"validation": {
 					"month": "Choose a month."
 				}
+			},
+			"create": {
+				"everything": "Every week uses every shift and constraint of {{department}}.",
+				"usesEveryWeek": "Every week uses {{shifts}} and {{constraints}} of {{department}}.",
+				"usesSomeWeeks_one": "{{count}} of {{total}} weeks uses everything of {{department}}. Changed: {{changed}}.",
+				"usesSomeWeeks_other": "{{count}} of {{total}} weeks use everything of {{department}}. Changed: {{changed}}.",
+				"changedWeek_one": "{{week}} ({{count}} left out)",
+				"changedWeek_other": "{{week}} ({{count}} left out)",
+				"choosePerWeek": "Choose per week",
+				"allSet": "Every week of {{month}} already has a schedule."
 			}
 		}
 	},

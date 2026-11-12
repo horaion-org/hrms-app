@@ -115,9 +115,10 @@ export const checklistOf = (row: SchedulingReadiness): Array<ChecklistItem> => [
 	{ key: "addStaffing", done: !row.missing.includes("STAFFING_CONSTRAINT") },
 ];
 
-/** Where the wizard comes back to after the fix: a new draft's Setup with its week, or a saved draft. */
+/** Where the wizard comes back to after the fix: a new month's Setup with its month (or a new week's), or a saved draft. */
 export type ReturnTo =
-	{ next: "create"; week: string } | { next: "draft"; scheduleId: string };
+	| { next: "create"; week?: string; month?: string }
+	| { next: "draft"; scheduleId: string };
 
 /** The search for `/scheduling` that opens a setup tab on the department, carrying the way back. */
 export type FixSearch = {
@@ -126,6 +127,7 @@ export type FixSearch = {
 	department: string;
 	next: "create" | "draft";
 	week?: string;
+	month?: string;
 	scheduleId?: string;
 };
 
@@ -146,6 +148,7 @@ export type ReturnSearch = {
 	next?: "create" | "draft";
 	department?: string;
 	week?: string;
+	month?: string;
 	scheduleId?: string;
 };
 
@@ -153,7 +156,7 @@ export type ReturnSearch = {
 export type ReturnLink =
 	| {
 			to: "/scheduling/new";
-			search: { department?: string; week?: string };
+			search: { department?: string; week?: string; month?: string };
 	  }
 	| {
 			to: "/scheduling/new";
@@ -162,7 +165,7 @@ export type ReturnLink =
 
 /**
  * The way back the tab offers once the department is ready: a new draft's
- * Setup with the department and week, or the saved draft's Generate step.
+ * Setup with the department and its week or month, or the saved draft's Generate step.
  * None without `next`, or for a draft without its id or department.
  */
 export const returnLinkOf = (search: ReturnSearch): ReturnLink | undefined => {
@@ -172,6 +175,7 @@ export const returnLinkOf = (search: ReturnSearch): ReturnLink | undefined => {
 			search: {
 				...(search.department ? { department: search.department } : {}),
 				...(search.week ? { week: search.week } : {}),
+				...(search.month ? { month: search.month } : {}),
 			},
 		};
 	if (search.next === "draft" && search.scheduleId && search.department)

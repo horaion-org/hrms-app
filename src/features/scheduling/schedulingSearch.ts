@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isMonth } from "@/features/scheduling/months/monthSearch";
 import {
 	CONSTRAINT_READ_KEYS,
 	SCHEDULE_READ_KEYS,
@@ -36,6 +37,8 @@ const searchSchema = z.object({
 	next: z.enum(["create", "draft"]).optional().catch(undefined),
 	/** A new draft's week, its Monday as an ISO date. */
 	week: z.iso.date().optional().catch(undefined),
+	/** A new month's month, as "yyyy-MM". */
+	month: z.string().refine(isMonth).optional().catch(undefined),
 	/** The saved draft to return to. */
 	scheduleId: z.string().min(1).optional().catch(undefined),
 });
@@ -45,8 +48,8 @@ const searchSchema = z.object({
  * reload and can be shared: the tab, and the Branch and Department its list
  * is narrowed to. Each part is left out at its default: Schedules, the
  * default Branch (see `resolveUnitSelection`), every Department. While the
- * wizard sends the person here to set a department up, `next` with `week`
- * or `scheduleId` says where to return; `next=draft` is kept only with its
+ * wizard sends the person here to set a department up, `next` with `week`,
+ * `month` or `scheduleId` says where to return; `next=draft` is kept only with its
  * `scheduleId`.
  */
 export type SchedulingSearch = z.infer<typeof searchSchema>;
@@ -55,13 +58,14 @@ export type SchedulingSearch = z.infer<typeof searchSchema>;
 export const parseSchedulingSearch = (
 	search: Record<string, unknown>
 ): SchedulingSearch => {
-	const { view, branch, department, next, week, scheduleId } =
+	const { view, branch, department, next, week, month, scheduleId } =
 		searchSchema.parse(search);
 	return {
 		...(view === undefined || view === "schedules" ? {} : { view }),
 		...unitSearchOf({ branch, department }),
 		...(next === "create" || (next === "draft" && scheduleId) ? { next } : {}),
 		...(week === undefined ? {} : { week }),
+		...(month === undefined ? {} : { month }),
 		...(scheduleId === undefined ? {} : { scheduleId }),
 	};
 };

@@ -136,6 +136,15 @@ describe("returnLinkOf", () => {
 		});
 	});
 
+	it("returns a new month to Setup with the department and the month", () => {
+		expect(
+			returnLinkOf({ next: "create", department: "d-1", month: "2026-12" })
+		).toEqual({
+			to: "/scheduling/new",
+			search: { department: "d-1", month: "2026-12" },
+		});
+	});
+
 	it("returns a saved draft to its Generate step", () => {
 		expect(
 			returnLinkOf({ next: "draft", department: "d-1", scheduleId: "s-1" })

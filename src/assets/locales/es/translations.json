@@ -4268,6 +4268,16 @@
 				"validation": {
 					"month": "Elige un mes."
 				}
+			},
+			"create": {
+				"everything": "Todas las semanas usan todos los turnos y restricciones de {{department}}.",
+				"usesEveryWeek": "Todas las semanas usan {{shifts}} y {{constraints}} de {{department}}.",
+				"usesSomeWeeks_one": "{{count}} de {{total}} semanas usa todo lo de {{department}}. Cambiadas: {{changed}}.",
+				"usesSomeWeeks_other": "{{count}} de {{total}} semanas usan todo lo de {{department}}. Cambiadas: {{changed}}.",
+				"changedWeek_one": "{{week}} ({{count}} fuera)",
+				"changedWeek_other": "{{week}} ({{count}} fuera)",
+				"choosePerWeek": "Elegir por semana",
+				"allSet": "Todas las semanas de {{month}} ya tienen horario."
 			}
 		}
 	},

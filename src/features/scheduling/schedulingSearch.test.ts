@@ -59,6 +59,16 @@ describe("parseSchedulingSearch", () => {
 		});
 	});
 
+	it("given_theWayBackToANewMonth_when_parsed_then_keepsItsMonth", () => {
+		expect(
+			parseSchedulingSearch({
+				next: "create",
+				department: "d-1",
+				month: "2026-12",
+			})
+		).toEqual({ department: "d-1", next: "create", month: "2026-12" });
+	});
+
 	it("given_theWayBackToASavedDraft_when_parsed_then_keepsItsId", () => {
 		expect(parseSchedulingSearch({ next: "draft", scheduleId: "s-1" })).toEqual(
 			{ next: "draft", scheduleId: "s-1" }
@@ -71,7 +81,12 @@ describe("parseSchedulingSearch", () => {
 
 	it("given_malformedWayBackParts_when_parsed_then_dropsThem", () => {
 		expect(
-			parseSchedulingSearch({ next: "later", week: "16 Nov", scheduleId: "" })
+			parseSchedulingSearch({
+				next: "later",
+				week: "16 Nov",
+				month: "2026-13",
+				scheduleId: "",
+			})
 		).toEqual({});
 	});
 });

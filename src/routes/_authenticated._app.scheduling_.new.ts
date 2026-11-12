@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
+import { isMonth } from "@/features/scheduling/months/monthSearch";
 import { SCHEDULING_UNIT_RULES } from "@/features/scheduling/schedules/schedulesUnitRules";
 import { isScheduleStep, type ScheduleStep } from "@/features/scheduling/steps";
 import { workspaceQuery } from "@/features/workspace/api";
@@ -9,7 +10,7 @@ import {
 	SCHEDULE_READ_KEYS,
 } from "@/features/workspace/permissionKeys";
 import { departmentChoices } from "@/features/workspace/unitChoices";
-import { CreateSchedule } from "@/pages/CreateSchedule";
+import { NewSchedule } from "@/pages/NewSchedule";
 
 /**
  * The wizard's step and, once Setup is done, the saved draft it works on:
@@ -22,6 +23,8 @@ export type CreateScheduleSearch = {
 	departmentId?: string;
 	department?: string;
 	week?: string;
+	/** A new month run's month, "yyyy-MM"; with no draft named, the month wizard opens. */
+	month?: string;
 };
 
 const isId = (value: unknown): value is string =>
@@ -32,13 +35,14 @@ const isIsoDate = (value: unknown): value is string =>
 
 export const Route = createFileRoute("/_authenticated/_app/scheduling_/new")({
 	validateSearch: (search: Record<string, unknown>): CreateScheduleSearch => {
-		const { step, scheduleId, departmentId, department, week } = search;
+		const { step, scheduleId, departmentId, department, week, month } = search;
 		return {
 			...(isScheduleStep(step) ? { step } : {}),
 			...(isId(scheduleId) ? { scheduleId } : {}),
 			...(isId(departmentId) ? { departmentId } : {}),
 			...(isId(department) ? { department } : {}),
 			...(isIsoDate(week) ? { week } : {}),
+			...(typeof month === "string" && isMonth(month) ? { month } : {}),
 		};
 	},
 	// Before a draft exists, the header's Branch narrows the Departments it may be created in,
@@ -78,5 +82,5 @@ export const Route = createFileRoute("/_authenticated/_app/scheduling_/new")({
 				}
 			: {};
 	},
-	component: CreateSchedule,
+	component: NewSchedule,
 });
