@@ -6,23 +6,28 @@ import {
 	assignmentCell,
 	rosterCellText,
 } from "@/features/scheduling/rosterChanges/cellText";
+import type { CoverGapRequest } from "@/features/scheduling/cover/api";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 
-/** One entry of a side panel list: an optional bold first line, then plain lines. */
+/** One entry of a side panel list: an optional bold first line, plain lines, then an optional button. */
 export type PanelItem = {
 	key: string;
 	title?: string;
 	lines: ReadonlyArray<string>;
+	/** A button under the lines, such as Find cover on a shift left short. */
+	action?: { label: string; onClick: () => void };
 };
 
 /**
  * Each day the roster marks for leave or cover: whose and which day, then
  * what is marked ("Leave requested: Annual leave", "Needs cover: Morning").
+ * With `onFindCover`, a shift left short has a Find cover button.
  */
 export const leaveAndCoverItems = (
 	days: ReadonlyArray<ScheduleAssignment>,
 	t: TFunction,
-	language: string
+	language: string,
+	onFindCover?: (gap: CoverGapRequest) => void
 ): Array<PanelItem> =>
 	days.map((row) => {
 		// A flag without a leave marker has no line.
@@ -31,6 +36,7 @@ export const leaveAndCoverItems = (
 			? t(`scheduling.rosterMarkers.${markerKey}`)
 			: undefined;
 		const name = row.member?.displayName ?? t("scheduling.detail.formerMember");
+		const uncovered = row.uncoveredShift;
 		return {
 			key: row.assignmentId,
 			title: `${name} · ${formatDay(row.day, language)}`,
@@ -46,6 +52,16 @@ export const leaveAndCoverItems = (
 						]
 					: []),
 			],
+			...(onFindCover && uncovered
+				? {
+						action: {
+							label: t("scheduling.cover.findCover"),
+							onClick: (): void => {
+								onFindCover({ shiftId: uncovered.shiftId, day: row.day });
+							},
+						},
+					}
+				: {}),
 		};
 	});
 

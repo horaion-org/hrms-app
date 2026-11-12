@@ -58,4 +58,31 @@ describe("RosterSidePanel", () => {
 			"Aisha · MonOff → AM"
 		);
 	});
+
+	it("given_anItemWithAnAction_when_rendered_then_itsButtonUnderTheLines", async () => {
+		const onClick = vi.fn();
+		render(
+			<RosterSidePanel
+				title="Issues"
+				sections={[
+					{
+						key: "cover",
+						items: [
+							{
+								key: "a",
+								title: "Aisha · Sat",
+								lines: ["Needs cover: Swing"],
+								action: { label: "Find cover", onClick },
+							},
+						],
+					},
+				]}
+				onClose={vi.fn()}
+			/>
+		);
+
+		await userEvent.click(screen.getByRole("button", { name: "Find cover" }));
+
+		expect(onClick).toHaveBeenCalledOnce();
+	});
 });

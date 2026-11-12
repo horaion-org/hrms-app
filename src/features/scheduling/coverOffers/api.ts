@@ -7,6 +7,7 @@ import {
 	schedulePath,
 	SCHEDULING_QUERY_ROOT,
 } from "@/features/scheduling/paths";
+import { payMinutesSchema } from "@/features/scheduling/cover/api";
 import type { RosterChangeCell } from "@/features/scheduling/rosterChanges/api";
 import {
 	scheduleAssignmentSchema,
@@ -90,6 +91,12 @@ const coverOfferSchema = z.object({
 	appliedChangeId: z.string().nullable(),
 	createdBy: participantSchema,
 	createdAt: z.string(),
+	/**
+	 * What working the shift adds to the member's week, read from the hours
+	 * ledger when served; null unless a shift on a day off, absent from an
+	 * older API. It follows the roster: an open offer says what a yes costs now.
+	 */
+	pay: payMinutesSchema.nullish(),
 });
 
 export type CoverOffer = z.infer<typeof coverOfferSchema>;

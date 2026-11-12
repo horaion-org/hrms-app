@@ -26,6 +26,8 @@ export type RosterDayNotesProps = {
 	viewerMembershipId?: string;
 	/** Lines the day editor already says in its own words, left out here. */
 	saidApart?: SaidApart;
+	/** Offers Find cover for the shift the day leaves short; none without. */
+	onFindCover?: () => void;
 };
 
 const key = "scheduling.rosterMarkers";
@@ -34,7 +36,7 @@ const key = "scheduling.rosterMarkers";
  * What needs a look on one chosen day, first in its panel beside the grid:
  * what the engine left on it, then what the leave records add (a day to
  * decide, leave requested or taken, with a link to it in Leave, and a shift
- * left short). Each line is led by the outline triangle, as the Issues
+ * left short, with Find cover when the roster may be changed). Each line is led by the outline triangle, as the Issues
  * panel's are. Nothing renders when the day has nothing to say.
  */
 export const RosterDayNotes = ({
@@ -43,6 +45,7 @@ export const RosterDayNotes = ({
 	membershipId,
 	viewerMembershipId,
 	saidApart,
+	onFindCover,
 }: RosterDayNotesProps): FunctionComponent => {
 	const { t } = useTranslation();
 	const titleId = useId();
@@ -57,9 +60,16 @@ export const RosterDayNotes = ({
 				return <p className="text-neutral-800">{t(`${key}.${line.key}`)}</p>;
 			case "cover":
 				return (
-					<p className="text-neutral-800">
-						{t(`${key}.needsCover`, { shift: line.shiftName })}
-					</p>
+					<>
+						<p className="text-neutral-800">
+							{t(`${key}.needsCover`, { shift: line.shiftName })}
+						</p>
+						{onFindCover && (
+							<Button variant="textlink" onClick={onFindCover}>
+								{t("scheduling.cover.findCover")}
+							</Button>
+						)}
+					</>
 				);
 			case "leave": {
 				const status = t(`${key}.${line.key}`);

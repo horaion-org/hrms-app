@@ -4125,6 +4125,8 @@
 			"pay": {
 				"sameHours": "Same hours, different shift",
 				"longer": "Longer shift",
+				"withinContract": "Within contracted hours",
+				"extraHours": "Extra hours (part-time) · {{hours}} h",
 				"overtime": "Overtime · {{hours}} h",
 				"restDay": "Rest day work, at the company’s request",
 				"unknown": "As set by the company"
@@ -4183,6 +4185,66 @@
 				"loadFailed": "Couldn’t load offers.",
 				"tryAgain": "Try again"
 			}
+		},
+		"cover": {
+			"gap": "{{shift}} · {{day}} · {{time}} · {{jobTitles}}",
+			"short": {
+				"onLeave": "1 short: {{name}} is on leave",
+				"sinceGeneration_one": "{{count}} short since generation",
+				"sinceGeneration_other": "{{count}} short since generation",
+				"plain_one": "{{count}} short",
+				"plain_other": "{{count}} short"
+			},
+			"option": {
+				"FREE": "Within contracted hours",
+				"EXTRA_HOURS": "Extra hours (part-time) · {{before}} → {{after}} h this week",
+				"OVERTIME": "Works a day off · {{hours}} h overtime",
+				"UNKNOWN": "Works a day off",
+				"week": "This week {{before}} → {{after}} h of {{contract}} h",
+				"month": "Overtime this month {{before}} → {{after}} h",
+				"ROSTERED_ELSEWHERE": "Also works on another roster that day"
+			},
+			"neighbours": "{{name}} works {{shifts}}.",
+			"neighbour": "{{shift}} on {{day}} ({{time}})",
+			"noNeighbours": "{{name}} has no shift the day before or after.",
+			"and": " and ",
+			"jobTitlesOr": " or ",
+			"reason": {
+				"MEMBER_GONE": "Has left",
+				"ON_LEAVE": "On leave",
+				"NOT_AVAILABLE": "Not available that day",
+				"ROLE_NOT_HELD": "Not a {{jobTitles}}",
+				"SHIFT_NOT_ON_DAY": "The shift doesn't run that day",
+				"NOT_SCHEDULABLE_NOW": "No longer rostered in this department",
+				"ALREADY_WORKING": "Already working that day",
+				"REST_DAY": "Rest day: not offered yet",
+				"OUTSIDE_AVAILABILITY": "Not available then",
+				"HOURS_UNKNOWN": "Working hours not set",
+				"UNKNOWN": "Can't help"
+			},
+			"list": {
+				"whoCovers": "Who covers",
+				"suggested": "Suggested",
+				"showMore": "Show more ({{count}})",
+				"showFewer": "Show fewer",
+				"cantHelp": "Can't help ({{count}})",
+				"cantHelpLine": "{{name}} · {{reason}}"
+			},
+			"findCover": "Find cover",
+			"findCoverFor": "Find cover: {{shift}}",
+			"remark": "Covers {{name}}",
+			"panel": {
+				"title": "Find cover",
+				"loading": "Finding who can cover…",
+				"rosterMoved": "The roster changed since this list was made.",
+				"findAgain": "Find again",
+				"failed": "The list couldn't be loaded.",
+				"covered": "{{shift}} on {{day}} is covered now.",
+				"close": "Close",
+				"nobody": "Nobody on this roster can cover {{shift}} on {{day}}.",
+				"notChecked": "Not checked against the scheduling rules yet."
+			},
+			"gapWithoutRoles": "{{shift}} · {{day}} · {{time}}"
 		},
 		"reach": {
 			"editShift_one": "Saving changes this shift for {{department}}: new schedules and {{count}} draft that uses it. Generated and published schedules keep their own copy.",

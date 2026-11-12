@@ -76,3 +76,12 @@ export const List: Story = {
 		},
 	},
 };
+
+/** Find cover for a short shift, on a roster that may be changed (its list loads from the API). */
+export const FindCover: Story = {
+	args: {
+		roster: slotRosterFixture({ cover: "front-desk-am-copy|2026-10-17" }, true),
+		editing: slotEditingFixture(),
+		onCloseCover: fn(),
+	},
+};

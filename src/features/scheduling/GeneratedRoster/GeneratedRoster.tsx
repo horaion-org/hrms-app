@@ -179,6 +179,7 @@ export const GeneratedRoster = ({
 				details,
 				approval,
 				onShowAllIssues: roster.showAllIssues,
+				onFindCover: editing ? roster.openCover : undefined,
 			})
 		: [];
 
@@ -263,6 +264,8 @@ export const GeneratedRoster = ({
 								sections: listSections,
 							}}
 							onClose={roster.close}
+							onCloseCover={roster.closeCover}
+							onFindCover={editing ? roster.openCover : undefined}
 							onPreviewDays={roster.onPreviewDays}
 							onApplied={(change) => {
 								setApplied(change);

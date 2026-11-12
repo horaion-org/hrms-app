@@ -36,8 +36,8 @@ export type RosterSidePanelProps = {
  * in the same slot, width and frame as the day editor: beside the grid from
  * `lg` up, under it on a phone. Every list is drawn from sections, so each
  * reads alike: a heading, its items one under another (titled items set
- * apart by a rule), then any other content; a section with nothing in it
- * is left out. Its heading takes focus when it opens; Escape or the close
+ * apart by a rule, each with an optional button under its lines), then any
+ * other content; a section with nothing in it is left out. Its heading takes focus when it opens; Escape or the close
  * button closes it.
  */
 export const RosterSidePanel = ({
@@ -115,6 +115,16 @@ export const RosterSidePanel = ({
 														{line}
 													</p>
 												))}
+												{item.action && (
+													<Button
+														className="mt-2"
+														size="sm"
+														variant="secondary"
+														onClick={item.action.onClick}
+													>
+														{item.action.label}
+													</Button>
+												)}
 											</li>
 										))}
 									</ul>

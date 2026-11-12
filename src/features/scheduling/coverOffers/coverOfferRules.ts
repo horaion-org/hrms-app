@@ -9,7 +9,10 @@ import {
 	rosterCellKey,
 	type RosterEditChoice,
 } from "@/features/scheduling/rosterChanges/rosterEdit";
-import { paidShiftHours } from "@/features/scheduling/scheduleDraft";
+import {
+	hoursFromMinutes,
+	paidShiftHours,
+} from "@/features/scheduling/scheduleDraft";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 
 /*
@@ -100,12 +103,38 @@ export const parallelToOf = (
 export type PayWords =
 	| { key: "sameHours" }
 	| { key: "longer" }
+	| { key: "withinContract" }
+	| { key: "extraHours"; hours: number }
 	| { key: "overtime"; hours: number }
 	| { key: "restDay" }
 	| { key: "unknown" };
 
+/**
+ * A shift on a day off reads by what it adds to the member's week, as the
+ * API's hours ledger says: overtime, a part-timer's extra hours, or within
+ * contracted hours. Without the API's pay (an older API) every such shift
+ * reads as overtime, as before.
+ */
+const dayOffPayWords = (offer: Pick<CoverOffer, "shift" | "pay">): PayWords => {
+	if (!offer.pay)
+		return offer.shift
+			? { key: "overtime", hours: paidShiftHours(offer.shift) }
+			: { key: "unknown" };
+	if (offer.pay.overtimeMinutes > 0)
+		return {
+			key: "overtime",
+			hours: hoursFromMinutes(offer.pay.overtimeMinutes),
+		};
+	if (offer.pay.extraMinutes > 0)
+		return {
+			key: "extraHours",
+			hours: hoursFromMinutes(offer.pay.extraMinutes),
+		};
+	return { key: "withinContract" };
+};
+
 export const payWordsOf = (
-	offer: Pick<CoverOffer, "optionKind" | "shift">
+	offer: Pick<CoverOffer, "optionKind" | "shift" | "pay">
 ): PayWords => {
 	switch (offer.optionKind) {
 		case "MOVE":
@@ -113,9 +142,7 @@ export const payWordsOf = (
 		case "STRETCH":
 			return { key: "longer" };
 		case "OFF_DAY_SHIFT":
-			return offer.shift
-				? { key: "overtime", hours: paidShiftHours(offer.shift) }
-				: { key: "unknown" };
+			return dayOffPayWords(offer);
 		case "REST_DAY_SHIFT":
 			return { key: "restDay" };
 		default:

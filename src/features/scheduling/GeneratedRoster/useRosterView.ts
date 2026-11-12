@@ -2,9 +2,11 @@ import { useCallback, useRef, useState } from "react";
 import { dayParameter } from "@/common/dayView";
 import { isoDateIn, type RosterRow } from "@/features/scheduling/roster/roster";
 import type { IssuesAbout } from "@/features/scheduling/roster/rosterMarks";
-import type {
-	RosterPanel,
-	RosterSearch,
+import type { CoverGapRequest } from "@/features/scheduling/cover/api";
+import {
+	coverParameter,
+	type RosterPanel,
+	type RosterSearch,
 } from "@/features/scheduling/roster/rosterSearch";
 import {
 	rosterViewOf,
@@ -49,6 +51,10 @@ export type RosterViewState = RosterView & {
 	showAllIssues: () => void;
 	/** Opens a member's day: its editor, or its shift when read-only. */
 	openDay: (row: RosterRow, day: string) => void;
+	/** Opens Find cover for a short shift-day, in place of what the panel shows. */
+	openCover: (gap: CoverGapRequest) => void;
+	/** Closes Find cover back to Issues, where it was opened from. */
+	closeCover: () => void;
 	/** Opens Issues for one row or day header. */
 	showIssuesOf: (about: IssuesAbout, from: HTMLElement) => void;
 	/** Shows another week, or this week when none is given. */
@@ -117,6 +123,13 @@ export const useRosterView = ({
 		openDay: (row, day): void => {
 			const cell = cellOf(row, day);
 			if (cell) open({ cell });
+		},
+		openCover: (gap): void => {
+			open({ cover: coverParameter(gap) });
+		},
+		closeCover: (): void => {
+			setPreviewDays(NO_DAYS);
+			showView({ panel: "issues" });
 		},
 		showIssuesOf: (about, from): void => {
 			open(

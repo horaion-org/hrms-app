@@ -3947,6 +3947,8 @@
 			"pay": {
 				"sameHours": "Mismas horas, otro turno",
 				"longer": "Turno más largo",
+				"withinContract": "Dentro de las horas del contrato",
+				"extraHours": "Horas complementarias (tiempo parcial) · {{hours}} h",
 				"overtime": "Horas extra · {{hours}} h",
 				"restDay": "Trabajo en día de descanso, a petición de la empresa",
 				"unknown": "Según lo fije la empresa"
@@ -4005,6 +4007,66 @@
 				"loadFailed": "No se pudieron cargar las ofertas.",
 				"tryAgain": "Reintentar"
 			}
+		},
+		"cover": {
+			"gap": "{{shift}} · {{day}} · {{time}} · {{jobTitles}}",
+			"short": {
+				"onLeave": "Falta 1: {{name}} está de permiso",
+				"sinceGeneration_one": "Falta {{count}} desde la generación",
+				"sinceGeneration_other": "Faltan {{count}} desde la generación",
+				"plain_one": "Falta {{count}}",
+				"plain_other": "Faltan {{count}}"
+			},
+			"option": {
+				"FREE": "Dentro de las horas del contrato",
+				"EXTRA_HOURS": "Horas complementarias (tiempo parcial) · {{before}} → {{after}} h esta semana",
+				"OVERTIME": "Trabaja un día libre · {{hours}} h extra",
+				"UNKNOWN": "Trabaja un día libre",
+				"week": "Esta semana {{before}} → {{after}} h de {{contract}} h",
+				"month": "Horas extra este mes {{before}} → {{after}} h",
+				"ROSTERED_ELSEWHERE": "Ese día también trabaja en otro cuadrante"
+			},
+			"neighbours": "{{name}} trabaja {{shifts}}.",
+			"neighbour": "{{shift}} el {{day}} ({{time}})",
+			"noNeighbours": "{{name}} no tiene turno el día anterior ni el siguiente.",
+			"and": " y ",
+			"jobTitlesOr": " o ",
+			"reason": {
+				"MEMBER_GONE": "Ya no está en la empresa",
+				"ON_LEAVE": "De permiso",
+				"NOT_AVAILABLE": "No disponible ese día",
+				"ROLE_NOT_HELD": "No es {{jobTitles}}",
+				"SHIFT_NOT_ON_DAY": "El turno no se hace ese día",
+				"NOT_SCHEDULABLE_NOW": "Ya no se le asignan turnos en este departamento",
+				"ALREADY_WORKING": "Ya trabaja ese día",
+				"REST_DAY": "Día de descanso: aún no se ofrece",
+				"OUTSIDE_AVAILABILITY": "No disponible a esa hora",
+				"HOURS_UNKNOWN": "Horas de trabajo sin definir",
+				"UNKNOWN": "No puede cubrirlo"
+			},
+			"list": {
+				"whoCovers": "Quién cubre",
+				"suggested": "Sugerido",
+				"showMore": "Mostrar más ({{count}})",
+				"showFewer": "Mostrar menos",
+				"cantHelp": "No pueden cubrirlo ({{count}})",
+				"cantHelpLine": "{{name}} · {{reason}}"
+			},
+			"findCover": "Buscar cobertura",
+			"findCoverFor": "Buscar cobertura: {{shift}}",
+			"remark": "Cubre a {{name}}",
+			"panel": {
+				"title": "Buscar cobertura",
+				"loading": "Buscando quién puede cubrirlo…",
+				"rosterMoved": "El cuadrante cambió desde que se hizo esta lista.",
+				"findAgain": "Buscar de nuevo",
+				"failed": "No se pudo cargar la lista.",
+				"covered": "{{shift}} el {{day}} ya está cubierto.",
+				"close": "Cerrar",
+				"nobody": "Nadie de este cuadrante puede cubrir {{shift}} el {{day}}.",
+				"notChecked": "Aún no se ha comprobado con las reglas de programación."
+			},
+			"gapWithoutRoles": "{{shift}} · {{day}} · {{time}}"
 		},
 		"reach": {
 			"editShift_one": "Al guardar, este turno cambia para {{department}}: los horarios nuevos y {{count}} borrador que lo usa. Los horarios generados y publicados conservan su propia copia.",

@@ -1,5 +1,7 @@
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
+import type { CoverGapRequest } from "@/features/scheduling/cover/api";
+import { FindCoverPanel } from "@/features/scheduling/cover/FindCoverPanel";
 import type { RosterEditing } from "@/features/scheduling/GeneratedRoster/rosterEditing";
 import { ROSTER_SIDE_LISTS } from "@/features/scheduling/GeneratedRoster/rosterSideLists";
 import type { RosterView } from "@/features/scheduling/roster/rosterView";
@@ -16,10 +18,15 @@ import { ShiftDetailsPanel } from "@/features/scheduling/ShiftDetailsPanel";
 const key = "scheduling.detail";
 
 export type RosterSidePanelSlotProps = {
-	/** What opens (`sidePanel`), the chosen day, its notes, and the open list. */
+	/** What opens (`sidePanel`), the chosen day, its notes, the open list and the gap Find cover is for. */
 	roster: Pick<
 		RosterView,
-		"sidePanel" | "chosenRow" | "chosenCell" | "chosenDayNotes" | "openList"
+		| "sidePanel"
+		| "chosenRow"
+		| "chosenCell"
+		| "chosenDayNotes"
+		| "openList"
+		| "coverGap"
 	>;
 	assignments: ReadonlyArray<ScheduleAssignment>;
 	/** Lets the chosen day be changed; read-only without. */
@@ -38,15 +45,27 @@ export type RosterSidePanelSlotProps = {
 	onPreviewDays: (keys: ReadonlyArray<string>) => void;
 	/** A hand change went through: the roster says so, and the panel closes. */
 	onApplied: (change: RosterChange) => void;
+	/** Opens Find cover for a short shift; given only where the roster may be changed. */
+	onFindCover?: (gap: CoverGapRequest) => void;
+	/** Closes Find cover back to Issues. */
+	onCloseCover?: () => void;
 };
 
 /**
  * The one panel beside the roster grid: a chosen day's editor (or its shift,
- * read-only), else the open list, else nothing. What opens is decided by
+ * read-only), else Find cover for a short shift, else the open list, else
+ * nothing. What opens is decided by
  * `sidePanelOf`; the chosen day's notes come first in its panel.
  */
 export const RosterSidePanelSlot = ({
-	roster: { sidePanel, chosenRow, chosenCell, chosenDayNotes, openList },
+	roster: {
+		sidePanel,
+		chosenRow,
+		chosenCell,
+		chosenDayNotes,
+		openList,
+		coverGap,
+	},
 	assignments,
 	editing,
 	timeZone,
@@ -55,12 +74,22 @@ export const RosterSidePanelSlot = ({
 	onClose,
 	onPreviewDays,
 	onApplied,
+	onFindCover,
+	onCloseCover = onClose,
 }: RosterSidePanelSlotProps): FunctionComponent => {
 	const { t } = useTranslation();
+	const shortShift = chosenRow?.uncoveredShift;
+	const findCover =
+		onFindCover && chosenRow && shortShift
+			? (): void => {
+					onFindCover({ shiftId: shortShift.shiftId, day: chosenRow.day });
+				}
+			: undefined;
 	const issues = chosenDayNotes && (
 		<RosterDayNotes
 			{...chosenDayNotes}
 			viewerMembershipId={viewerMembershipId}
+			onFindCover={editing ? findCover : undefined}
 		/>
 	);
 	if (sidePanel === "dayEditor" && editing && chosenRow)
@@ -88,6 +117,35 @@ export const RosterSidePanelSlot = ({
 				onCoverRecorded={onClose}
 				onLeaveChanged={onClose}
 				onPreviewDays={onPreviewDays}
+			/>
+		);
+	const coverDayRow =
+		coverGap && assignments.find((row) => row.day === coverGap.day);
+	if (sidePanel === "cover" && editing && coverGap && coverDayRow)
+		return (
+			<FindCoverPanel
+				// Each gap starts afresh, with the first option chosen.
+				key={`${coverGap.shiftId}|${coverGap.day}`}
+				assignments={assignments}
+				dayRow={coverDayRow}
+				gap={coverGap}
+				id={list.id}
+				revision={editing.revision}
+				shifts={editing.shifts}
+				target={editing.target}
+				coverOffers={
+					editing.coverOffers && {
+						offers: editing.coverOffers.offers,
+						timeZone,
+					}
+				}
+				onClose={onCloseCover}
+				onCoverRecorded={onCloseCover}
+				onPreviewDays={onPreviewDays}
+				onApplied={(change) => {
+					onApplied(change);
+					onCloseCover();
+				}}
 			/>
 		);
 	if (sidePanel === "shiftDetails" && chosenCell?.kind === "shift" && chosenRow)
