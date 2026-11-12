@@ -4391,6 +4391,11 @@
 				"unpublished": "<0>Not published.</0> Staff can’t see this week.",
 				"publishFirst": "Publish {{week}} first. Weeks are published in order.",
 				"weekWithState": "{{week}} · {{state}}"
+			},
+			"generate": {
+				"choiceMissing": "A week of this month was set up while you were here. Reload the page and generate again.",
+				"forbidden": "You don’t have permission to generate this month here.",
+				"failed": "We couldn’t generate the month. Try again."
 			}
 		}
 	},

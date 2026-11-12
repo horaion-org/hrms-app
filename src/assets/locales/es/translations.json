@@ -4213,6 +4213,11 @@
 				"unpublished": "<0>Sin publicar.</0> El personal no puede ver esta semana.",
 				"publishFirst": "Publica primero {{week}}. Las semanas se publican en orden.",
 				"weekWithState": "{{week}} · {{state}}"
+			},
+			"generate": {
+				"choiceMissing": "Se configuró una semana de este mes mientras estabas aquí. Vuelve a cargar la página y genera de nuevo.",
+				"forbidden": "No tienes permiso para generar este mes aquí.",
+				"failed": "No pudimos generar el mes. Inténtalo de nuevo."
 			}
 		}
 	},

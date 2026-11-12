@@ -73,4 +73,27 @@ describe("generationFailure", () => {
 			code: null,
 		});
 	});
+
+	it("given_aMonthWeeksFailure_when_worded_then_readsLikeASchedulesGeneration", () => {
+		expect(
+			generationFailure(
+				{
+					status: "FAILED",
+					errorCode: "engine_unreachable",
+					engineOutcome: null,
+				},
+				t
+			)
+		).toEqual({
+			message:
+				"The scheduling engine couldn’t be reached in time, so nothing was generated.",
+			code: "engine_unreachable",
+		});
+		expect(
+			generationFailure(
+				{ status: "SUCCEEDED", errorCode: null, engineOutcome: "INFEASIBLE" },
+				t
+			).code
+		).toBeNull();
+	});
 });

@@ -35,6 +35,8 @@ export const SCHEDULE_REFUSAL_CODES = {
 	notPublished: "409 SCHEDULE_NOT_PUBLISHED",
 	oncePublished: "409 SCHEDULE_ONCE_PUBLISHED",
 	invalidWithdrawalRemark: "400 INVALID_PUBLICATION_WITHDRAWAL_REMARK",
+	weekChoiceMissing: "400 MONTH_WEEK_CHOICE_MISSING",
+	monthNotFound: "404 SCHEDULE_MONTH_NOT_FOUND",
 } as const;
 
 const codes = SCHEDULE_REFUSAL_CODES;
@@ -212,4 +214,57 @@ export const withdrawalRefusal = (
 		forbidden: t(`${key}.withdrawForbidden`),
 		failed: t(`${key}.failed`),
 	});
+};
+
+/** The bare API code of a `"<status> <errorCode>"` entry. */
+const errorCodeOf = (statusAndCode: string): string =>
+	statusAndCode.slice(statusAndCode.indexOf(" ") + 1);
+
+/** The words for each refusal a month's week can meet, reusing the words of generating one week. */
+const WEEK_REFUSAL_WORDS: Record<string, (t: TFunction) => string> = {
+	[errorCodeOf(codes.hasNoShifts)]: (t) => t("scheduling.generate.noShifts"),
+	[errorCodeOf(codes.hasNoStaffing)]: (t) =>
+		t("scheduling.generate.noStaffing"),
+	[errorCodeOf(codes.hasNoEmployees)]: (t) =>
+		t("scheduling.generate.noEmployees"),
+	[errorCodeOf(codes.constraintUnusable)]: (t) =>
+		t("scheduling.generate.constraintUnusable"),
+	[errorCodeOf(codes.notDraft)]: (t) => t("scheduling.generate.notDraft"),
+	[errorCodeOf(codes.weekAlreadyPublished)]: (t) =>
+		t("scheduling.generate.weekAlreadyPublished"),
+	[errorCodeOf(codes.weekTaken)]: (t) => t("scheduling.draft.weekTaken"),
+	[errorCodeOf(codes.generationInProgress)]: (t) =>
+		t("scheduling.regenerate.inProgress"),
+	[errorCodeOf(codes.published)]: (t) => t("scheduling.regenerate.published"),
+	[errorCodeOf(codes.oncePublished)]: (t) =>
+		t("scheduling.regenerate.oncePublished"),
+};
+
+/** A code the app doesn't know. */
+const plainGenerationFailure = (t: TFunction): string =>
+	t("scheduling.generate.failed");
+
+/**
+ * The words for an API error code met outside an error object: a week a month
+ * run refused. A code the app doesn't know reads as the plain failure.
+ */
+export const refusalOfCode = (errorCode: string, t: TFunction): string =>
+	(WEEK_REFUSAL_WORDS[errorCode] ?? plainGenerationFailure)(t);
+
+/** Why generating a month was refused as a whole, as one message for the page. */
+export const monthGenerationRefusal = (
+	error: unknown,
+	t: TFunction
+): string => {
+	const key = "scheduling.months.generate";
+	return (
+		mapRefusal<never>(error, {
+			alerts: {
+				[codes.weekChoiceMissing]: t(`${key}.choiceMissing`),
+				[codes.monthNotFound]: t("scheduling.months.page.unavailable"),
+			},
+			forbidden: t(`${key}.forbidden`),
+			failed: t(`${key}.failed`),
+		}).message ?? t(`${key}.failed`)
+	);
 };

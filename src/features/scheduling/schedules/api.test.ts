@@ -45,6 +45,8 @@ import {
 	decisionRefusal,
 	deleteRefusal,
 	generationRefusal,
+	monthGenerationRefusal,
+	refusalOfCode,
 	regenerationRefusal,
 	withdrawalRefusal,
 	scheduleRefusal,
@@ -1144,6 +1146,45 @@ describe("schedule refusals", () => {
 		],
 	])("explains a regeneration refused with %s", (code, status, copy) => {
 		expect(regenerationRefusal(problem(status, code), t)).toBe(copy);
+	});
+
+	it.each([
+		[
+			"SCHEDULE_HAS_NO_EMPLOYEES",
+			"This department has no employees who can be scheduled. Give at least one active member of the department a job title, then try again.",
+		],
+		[
+			"SCHEDULE_WEEK_TAKEN",
+			"This department already has a schedule for that week.",
+		],
+		[
+			"SCHEDULE_GENERATION_IN_PROGRESS",
+			"This schedule is being generated. Try again once the run finishes.",
+		],
+		["SOMETHING_NEW", "We couldn’t generate the schedule. Try again."],
+	])("words a month week refused with %s", (code, copy) => {
+		expect(refusalOfCode(code, t)).toBe(copy);
+	});
+
+	it.each([
+		[
+			"MONTH_WEEK_CHOICE_MISSING",
+			400,
+			"A week of this month was set up while you were here. Reload the page and generate again.",
+		],
+		[
+			"AUTHORIZATION_DENIED",
+			403,
+			"You don’t have permission to generate this month here.",
+		],
+	])("explains a month generation refused with %s", (code, status, copy) => {
+		expect(monthGenerationRefusal(problem(status, code), t)).toBe(copy);
+	});
+
+	it("falls back to a plain failure for a month generation", () => {
+		expect(monthGenerationRefusal(new Error("offline"), t)).toBe(
+			"We couldn’t generate the month. Try again."
+		);
 	});
 
 	it("falls back to a plain failure for a regeneration", () => {
