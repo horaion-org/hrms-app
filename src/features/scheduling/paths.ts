@@ -61,3 +61,11 @@ export const schedulePath = (
 /** Whether each department in reach is ready to schedule (ADR-0071 in the API). */
 export const schedulingReadinessPath = (companyId: string): string =>
 	`${companyPath(companyId)}/scheduling-readiness`;
+
+/** The company's schedules by month: the month summaries, and one Department's month below it. */
+export const scheduleMonthsPath = (companyId: string): string =>
+	`${companyPath(companyId)}/schedule-months`;
+
+/** One month of schedules; the Department is a required query parameter. */
+export const scheduleMonthPath = (companyId: string, month: string): string =>
+	`${scheduleMonthsPath(companyId)}/${encodeURIComponent(month)}`;

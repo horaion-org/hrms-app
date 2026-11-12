@@ -26,6 +26,11 @@ import {
 	frozenConstraintsFixture,
 } from "@/features/scheduling/constraints/fixtures";
 import { coverOfferFixture } from "@/features/scheduling/coverOffers/fixtures";
+import {
+	monthSummaryFixture,
+	monthWeekFixture,
+	scheduleMonthFixture,
+} from "@/features/scheduling/months/fixtures";
 import { readinessFixture } from "@/features/scheduling/readiness/fixtures";
 import {
 	generatedScheduleFixture,
@@ -193,6 +198,44 @@ const SKILLS = [
 ];
 
 const schedule = generatedScheduleFixture({ status: "GENERATED" });
+/** Front Office's October around s-3: 5 Oct under review, s-3 tentative after it, 19 Oct not generated yet. */
+const OCTOBER_MONTH = scheduleMonthFixture({
+	month: "2026-10",
+	departmentName: "Front Office",
+	weeks: [
+		monthWeekFixture({
+			periodStart: "2026-10-05",
+			periodEnd: "2026-10-11",
+			state: "TO_REVIEW",
+			scheduleId: "s-1",
+		}),
+		monthWeekFixture({
+			periodStart: "2026-10-12",
+			periodEnd: "2026-10-18",
+			state: "TENTATIVE",
+			scheduleId: "s-3",
+		}),
+		monthWeekFixture({
+			periodStart: "2026-10-19",
+			periodEnd: "2026-10-25",
+			state: "NOT_GENERATED",
+			scheduleId: null,
+			days: [],
+			handChangedDays: null,
+		}),
+	],
+});
+/** s-3: a generated week held up by an earlier one, so its roster page reads Tentative and holds Publish. */
+const heldUpSchedule = {
+	...generatedScheduleFixture({ scheduleId: "s-3", status: "GENERATED" }),
+	publication: {
+		requiresApproval: false,
+		stepLabels: [],
+		submission: null,
+		rejectedAtStep: null,
+		waitingForWeek: { periodStart: "2026-10-05", periodEnd: "2026-10-11" },
+	},
+};
 /** Live shifts of Orchard's Kitchen (d-1) and Bar (d-2), as the shift lists answer them. */
 const KITCHEN_SHIFT = {
 	...departmentShiftFixture(SHIFT_FIXTURES[0]),
@@ -275,7 +318,8 @@ LEAVE[1] = {
 };
 
 /** Answers for paths under the company, matched in order; the first match wins. */
-type Answer = { path: RegExp; data: () => unknown };
+/** A canned read; `data` may look at the query, e.g. which subject an approval read names. */
+type Answer = { path: RegExp; data: (search: URLSearchParams) => unknown };
 
 const ANSWERS: Array<Answer> = [
 	{ path: /^\/me\/profile$/, data: () => profileDetail(PEOPLE[0]!) },
@@ -366,7 +410,12 @@ const ANSWERS: Array<Answer> = [
 		path: /^\/approval-instances\/ai-\d+$/,
 		data: () => approvalInstanceFixture({ canDecide: true }),
 	},
-	{ path: /^\/approval-instances$/, data: () => [approvalInstanceFixture()] },
+	{
+		path: /^\/approval-instances$/,
+		// s-3, the held-up week, has no approval: its roster page offers Publish, held.
+		data: (search) =>
+			search.get("subjectId") === "s-3" ? [] : [approvalInstanceFixture()],
+	},
 	{
 		path: /^\/employment-terms\/overview$/,
 		data: () => TERMS_OVERVIEW_RESPONSE,
@@ -382,6 +431,17 @@ const ANSWERS: Array<Answer> = [
 				schedule,
 				scheduleFixture({ scheduleId: "s-2", name: "Bar - Week 46" }),
 			]),
+	},
+	// Kitchen's months: November 2026 for any month asked, and its card on the Schedules tab.
+	{ path: /^\/schedule-months$/, data: () => [monthSummaryFixture()] },
+	// October holds s-3, the week held up by 5 Oct's.
+	{
+		path: /^\/schedule-months\/2026-10$/,
+		data: () => OCTOBER_MONTH,
+	},
+	{
+		path: /^\/schedule-months\/\d{4}-\d{2}$/,
+		data: () => scheduleMonthFixture(),
 	},
 	{ path: /^\/shifts$/, data: () => [KITCHEN_SHIFT, BAR_SHIFT] },
 	// Kitchen is ready to schedule; Bar has shifts but no staffing constraint.
@@ -415,6 +475,7 @@ const ANSWERS: Array<Answer> = [
 		path: /\/constraint-options$/,
 		data: () => CONSTRAINT_OPTIONS_RESPONSE,
 	},
+	{ path: /^(?!\/me).*\/schedules\/s-3$/, data: () => heldUpSchedule },
 	{ path: /^(?!\/me).*\/schedules\/s-\d+$/, data: () => schedule },
 	{
 		path: /\/schedules\/s-\d+\/assignments$/,
@@ -476,7 +537,7 @@ export const mockDemoCompany = async (
 			);
 		const local = path.startsWith(COMPANY) ? path.slice(COMPANY.length) : path;
 		const answer = ANSWERS.find((candidate) => candidate.path.test(local));
-		if (answer) return envelope(route, answer.data());
+		if (answer) return envelope(route, answer.data(url.searchParams));
 		unanswered.push(`${local}${url.search}`);
 		return envelope(route, emptyPage);
 	});

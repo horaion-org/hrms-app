@@ -10,12 +10,21 @@ import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { PlusIcon, ViewIcon } from "@/components/ui/Icon";
 import { Toast } from "@/components/ui/Toast";
 import { myPendingApprovalsQuery } from "@/features/approvals/api";
-import { scheduleCardApprovalLine } from "@/features/approvals/approvalStanding";
 import { ListToolbar } from "@/features/organisation/ListToolbar";
+import {
+	scheduleMonthSummariesQuery,
+	type ScheduleMonthSummary,
+} from "@/features/scheduling/months/api";
+import { MonthCard } from "@/features/scheduling/months/MonthCard";
+import {
+	earlierReviewMonth,
+	formatMonth,
+	summariesByMonth,
+	summaryRange,
+} from "@/features/scheduling/months/monthWeeks";
 import { formatPeriod } from "@/features/scheduling/periods";
-import { ScheduleCard } from "@/features/scheduling/ScheduleCard";
 import { ScheduleMenu } from "@/features/scheduling/ScheduleMenu";
-import { decidable, type Schedule } from "@/features/scheduling/schedules/api";
+import type { Schedule } from "@/features/scheduling/schedules/api";
 import { scheduleStatusTones } from "@/features/scheduling/schedules/scheduleStatusTones";
 import { scheduleViewLink } from "@/features/scheduling/schedules/scheduleViewLink";
 import { useSchedules } from "@/features/scheduling/schedules/useSchedules";
@@ -41,6 +50,12 @@ const matches = (schedule: Schedule, search: string): boolean => {
 	);
 };
 
+/** A month card matches the search by its Department's name, as a history row does. */
+const monthMatches = (summary: ScheduleMonthSummary, search: string): boolean =>
+	summary.departmentName
+		.toLocaleLowerCase()
+		.includes(search.trim().toLocaleLowerCase());
+
 export type SchedulesTabProps = {
 	companyId: string;
 	/** The header's Branch and the Department chosen in the Filters. */
@@ -50,9 +65,10 @@ export type SchedulesTabProps = {
 };
 
 /**
- * Dashboard cards and history from the accessible schedules in the
- * header's Branch, narrowed to a Department from the Filters; the search
- * stays on the tab.
+ * One section per month, from this week's month to 12 months ahead, with a
+ * card per Department that has a schedule in it, then the history of every
+ * accessible schedule; both in the header's Branch, narrowed to a
+ * Department from the Filters. The search stays on the tab.
  */
 export const SchedulesTab = ({
 	companyId,
@@ -65,13 +81,19 @@ export const SchedulesTab = ({
 	);
 	const [dismissed, setDismissed] = useState(false);
 	const language = formattingLocale(i18n);
+	const access = useAccess();
 	const list = useSchedules(companyId, selectedUnits(units));
-	// What waits on the caller, so a card can say "Waiting on you"; asked only of possible approvers.
-	const waitingOnMe = useQuery(
-		myPendingApprovalsQuery(
+	const months = useQuery(
+		scheduleMonthSummariesQuery(
 			companyId,
-			useAccess().canAnywhere("approval:decide")
+			selectedUnits(units),
+			summaryRange(new Date()),
+			access.canAnywhere("schedule:read")
 		)
+	);
+	// What waits on the caller, so a month card can say "Waiting on you"; asked only of possible approvers.
+	const waitingOnMe = useQuery(
+		myPendingApprovalsQuery(companyId, access.canAnywhere("approval:decide"))
 	).data;
 	const [search, setSearch] = useState("");
 	// The Branch is the header's scope; the Department is the one filter.
@@ -158,14 +180,10 @@ export const SchedulesTab = ({
 			},
 		];
 	}, [t, language, companyId]);
-	const periods = new Map<string, Array<Schedule>>();
-	for (const schedule of history) {
-		const periodKey = `${schedule.periodStart}/${schedule.periodEnd}`;
-		const group = periods.get(periodKey) ?? [];
-		group.push(schedule);
-		periods.set(periodKey, group);
-	}
-	const groups = [...periods.entries()].sort(([a], [b]) => b.localeCompare(a));
+	const summaries = months.data ?? [];
+	const monthGroups = summariesByMonth(
+		summaries.filter((summary) => monthMatches(summary, search))
+	);
 
 	return (
 		<>
@@ -192,37 +210,30 @@ export const SchedulesTab = ({
 					onDepartmentChange(undefined);
 				}}
 			/>
-			{groups.map(([periodKey, schedules]) => (
+			{months.isError && (
+				<p className="mt-8 text-sm text-neutral-700" role="alert">
+					{t("scheduling.months.tabFailed")}
+				</p>
+			)}
+			{monthGroups.map(([month, monthSummaries]) => (
 				<section
-					key={periodKey}
-					aria-labelledby={`period-${periodKey}`}
+					key={month}
+					aria-labelledby={`month-${month}`}
 					className="mt-12"
 				>
 					<h2
 						className="text-2xl font-semibold text-neutral-900"
-						id={`period-${periodKey}`}
+						id={`month-${month}`}
 					>
-						{formatPeriod(
-							{
-								start: schedules[0]!.periodStart,
-								end: schedules[0]!.periodEnd,
-							},
-							language
-						)}
+						{formatMonth(month, language)}
 					</h2>
 					<div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-						{schedules.map((schedule) => (
-							<ScheduleCard
-								key={schedule.scheduleId}
-								schedule={schedule}
-								approvalLine={scheduleCardApprovalLine(
-									{
-										scheduleId: schedule.scheduleId,
-										awaitingDecision: decidable(schedule),
-										publication: schedule.publication,
-									},
-									waitingOnMe ?? []
-								)}
+						{monthSummaries.map((summary) => (
+							<MonthCard
+								key={summary.departmentId}
+								reviewMonth={earlierReviewMonth(summaries, summary)}
+								summary={summary}
+								waitingOnMe={waitingOnMe ?? []}
 							/>
 						))}
 					</div>

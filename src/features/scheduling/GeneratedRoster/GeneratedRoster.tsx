@@ -22,7 +22,10 @@ import {
 import type { RosterSchedule } from "@/features/scheduling/roster/rosterView";
 import type { RosterChange } from "@/features/scheduling/rosterChanges/api";
 import { RosterGrid } from "@/features/scheduling/RosterGrid";
-import { RosterWeekBar } from "@/features/scheduling/RosterWeekBar";
+import {
+	RosterWeekBar,
+	type RosterWeek,
+} from "@/features/scheduling/RosterWeekBar";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 import type { RosterEditing } from "./rosterEditing";
 import { RosterSidePanelSlot } from "./RosterSidePanelSlot";
@@ -61,6 +64,15 @@ export type GeneratedRosterProps = {
 	viewerMembershipId?: string;
 	/** On a member's own roster: their days with an open offer, and its deadline, said in the tile's label. */
 	offeredDays?: ReadonlyMap<string, string>;
+	/**
+	 * The Department's weeks of the schedule's month, for the week bar to
+	 * step through, and where choosing one goes; without it the bar pages the
+	 * schedule's own weeks, as a member's own roster does.
+	 */
+	departmentWeeks?: {
+		weeks: Array<RosterWeek>;
+		onWeekChange: (week: string) => void;
+	};
 };
 
 /** Hours in the summary line keep one decimal at most: "37.5 h". */
@@ -95,6 +107,7 @@ export const GeneratedRoster = ({
 	editing,
 	viewerMembershipId,
 	offeredDays,
+	departmentWeeks,
 }: GeneratedRosterProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const language = formattingLocale(i18n);
@@ -185,12 +198,13 @@ export const GeneratedRoster = ({
 						className="mt-6"
 						legend={legendOf(rows)}
 						week={days[0] ?? period.start}
-						weeks={weeksOf(period)}
+						weeks={departmentWeeks?.weeks ?? weeksOf(period)}
 						onToday={() => {
 							roster.showWeek(undefined);
 						}}
 						onWeekChange={(next) => {
-							roster.showWeek(next);
+							if (departmentWeeks) departmentWeeks.onWeekChange(next);
+							else roster.showWeek(next);
 						}}
 					>
 						{toolbarLists.map(({ panel, button, count }) => (

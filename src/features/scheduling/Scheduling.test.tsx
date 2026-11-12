@@ -22,6 +22,7 @@ import {
 import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
 import type { Schedule } from "@/features/scheduling/schedules/api";
+import { monthSummaryFixture } from "@/features/scheduling/months/fixtures";
 import { CONSTRAINT_FIXTURES } from "@/features/scheduling/constraints/fixtures";
 import { readinessFixture } from "@/features/scheduling/readiness/fixtures";
 import { departmentShiftFixture } from "@/features/scheduling/shifts/fixtures";
@@ -39,6 +40,7 @@ afterEach(() => {
 	app = undefined;
 	endSession("expired");
 	resetApiClient();
+	vi.useRealTimers();
 	vi.unstubAllGlobals();
 	vi.restoreAllMocks();
 	localStorage.clear();
@@ -63,29 +65,48 @@ it("shows API history and links to the saved schedule", async () => {
 	});
 	app = await openApp("/scheduling");
 	renderAuthApp(app);
-	const card = await screen.findByRole("region", { name: "API schedule" });
-	expect(within(card).getByText("Draft")).toBeInTheDocument();
+	const history = await screen.findByRole("table", {
+		name: "Schedule history",
+	});
+	const row = within(history).getByRole("row", { name: /^API schedule/ });
+	expect(within(row).getByText("Draft")).toBeInTheDocument();
 	expect(
-		within(card).getByText("Main branch › Front Office")
-	).toBeInTheDocument();
-	expect(
-		within(card).getByText("Included shifts").nextElementSibling
-	).toHaveTextContent("4");
-	expect(
-		within(card).getByText("Applied constraints").nextElementSibling
-	).toHaveTextContent("3");
-	expect(
-		within(card).getByText("Include leave").nextElementSibling
-	).toHaveTextContent("Yes");
-	expect(
-		within(card).getByText("Allow open shifts").nextElementSibling
-	).toHaveTextContent("No");
-	expect(
-		within(screen.getByRole("table")).getByText("API schedule")
-	).toBeInTheDocument();
-	expect(
-		within(card).getByRole("link", { name: "View schedule API schedule" })
+		within(row).getByRole("link", { name: "View schedule API schedule" })
 	).toHaveAttribute("href", expect.stringContaining("departmentId=d-1"));
+});
+
+it("groups the schedules by month, from this week's month to 12 months ahead", async () => {
+	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+	vi.useFakeTimers({ now: new Date(2026, 10, 12), toFake: ["Date"] });
+	const calls = stubApi({
+		"POST /api/v1/public/sessions/refreshes": accessPassReply(),
+		"GET /api/v1/me": currentUserReply(),
+		"GET /api/v1/me/workspace": {
+			status: 200,
+			body: envelope(schedulingWorkspace(["schedule:read"])),
+		},
+		"GET /api/v1/companies/c-1/schedules": {
+			status: 200,
+			body: envelope({ content: [], page: { hasNext: false } }),
+		},
+		"GET /api/v1/companies/c-1/schedule-months": {
+			status: 200,
+			body: envelope([monthSummaryFixture({ departmentName: "Front Office" })]),
+		},
+	});
+	app = await openApp("/scheduling");
+	renderAuthApp(app);
+
+	const november = await screen.findByRole("region", { name: "November 2026" });
+	expect(
+		within(november).getByRole("link", {
+			name: "Open Front Office, November 2026",
+		})
+	).toHaveAttribute("href", "/scheduling/months/2026-11?department=d-1");
+	const read = calls.find(
+		(call) => call.path === "/api/v1/companies/c-1/schedule-months"
+	);
+	expect(read?.search).toMatch(/^from=2026-11&to=2027-11/);
 });
 
 it("labels and tones every API status in the history", async () => {
@@ -142,7 +163,7 @@ it("labels and tones every API status in the history", async () => {
 	}
 });
 
-it("opens a draft in the wizard and any other schedule's roster, from its card and its history row", async () => {
+it("opens a draft in the wizard and any other schedule's roster, from its history row", async () => {
 	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
 	const views = [
 		{
@@ -189,14 +210,9 @@ it("opens a draft in the wizard and any other schedule's roster, from its card a
 	});
 	for (const { status, href } of views) {
 		const name = `View schedule ${status} schedule`;
-		const card = screen.getByRole("region", { name: `${status} schedule` });
 		const row = within(history).getByRole("row", {
 			name: new RegExp(`^${status} schedule`),
 		});
-		expect(within(card).getByRole("link", { name })).toHaveAttribute(
-			"href",
-			href
-		);
 		expect(within(row).getByRole("link", { name })).toHaveAttribute(
 			"href",
 			href

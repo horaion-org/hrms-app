@@ -3,6 +3,9 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
 import { storyProviders } from "@/features/organisation/storyApi";
 import { storyCompany } from "@/features/people/storyCompany";
+import { scheduleMonthSummariesKey } from "@/features/scheduling/months/api";
+import { monthSummaryFixture } from "@/features/scheduling/months/fixtures";
+import { summaryRange } from "@/features/scheduling/months/monthWeeks";
 import { SchedulesTab } from "@/features/scheduling/SchedulesTab";
 import { schedulesInUnitsKey } from "@/features/scheduling/schedules/api";
 import {
@@ -48,6 +51,32 @@ const meta = {
 				name: "Kitchen - Week 41",
 			}),
 		]);
+		client.setQueryData(
+			scheduleMonthSummariesKey(
+				COMPANY,
+				selectedUnits(units),
+				summaryRange(new Date())
+			),
+			[
+				monthSummaryFixture({ departmentName: "Front Office" }),
+				monthSummaryFixture({
+					month: "2026-12",
+					departmentName: "Front Office",
+					weeks: [
+						{
+							periodStart: "2026-12-07",
+							state: "TENTATIVE",
+							scheduleId: "s-6",
+						},
+						{
+							periodStart: "2026-12-14",
+							state: "NOT_GENERATED",
+							scheduleId: null,
+						},
+					],
+				}),
+			]
+		);
 	},
 } satisfies Meta<typeof SchedulesTab>;
 
@@ -55,5 +84,5 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** A draft and a generated schedule in Main branch: a card each and the history table. */
+/** Front Office's November under review and December generated ahead, then the history table. */
 export const Default: Story = {};

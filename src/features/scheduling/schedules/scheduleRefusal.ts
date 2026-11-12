@@ -25,6 +25,8 @@ export const SCHEDULE_REFUSAL_CODES = {
 	notGenerated: "409 SCHEDULE_NOT_GENERATED",
 	alreadyDecided: "409 SCHEDULE_ALREADY_DECIDED",
 	weekAlreadyPublished: "409 SCHEDULE_WEEK_ALREADY_PUBLISHED",
+	weekTaken: "409 SCHEDULE_WEEK_TAKEN",
+	earlierWeekUnpublished: "409 SCHEDULE_EARLIER_WEEK_UNPUBLISHED",
 	published: "409 SCHEDULE_PUBLISHED",
 	publishedNotDeletable: "409 PUBLISHED_SCHEDULE_NOT_DELETABLE",
 	invalidRejectionReason: "400 INVALID_REJECTION_REASON",
@@ -56,6 +58,7 @@ export const scheduleRefusal = (
 		codes: {
 			[codes.periodNotMonday]: field("periodStart", t(`${key}.periodRejected`)),
 			[codes.invalidName]: field("name", t(`${key}.nameRejected`)),
+			[codes.weekTaken]: field("periodStart", t(`${key}.weekTaken`)),
 		},
 		alerts: {
 			[codes.notDraft]: t(`${key}.notDraft`),
@@ -171,6 +174,7 @@ export const decisionRefusal = (
 			[codes.notGenerated]: t(`${key}.notGenerated`),
 			[codes.alreadyDecided]: t(`${key}.alreadyDecided`),
 			[codes.weekAlreadyPublished]: t(`${key}.weekAlreadyPublished`),
+			[codes.earlierWeekUnpublished]: t(`${key}.earlierWeekUnpublished`),
 			[codes.scheduleNotFound]: t("scheduling.delete.gone"),
 			[codes.approvalPending]: t(`${key}.approvalPending`),
 			[codes.stepHasNoApprover]: t(`${key}.noApprover`),

@@ -76,6 +76,7 @@ const FLOW: Schedule["publication"] = {
 	stepLabels: ["Endorse", "Publish"],
 	submission: null,
 	rejectedAtStep: null,
+	waitingForWeek: null,
 };
 
 /** Front Office's schedule s-1, generated, where Endorse → Publish applies. */

@@ -17,8 +17,14 @@ their API exists.
 - `schedules/useSchedules.ts` — the overview's permission-aware company-wide history. Reads every page of
   `GET /api/v1/companies/{companyId}/schedules`, with API names, dates, departments and statuses; search covers
   every returned row.
-- `ScheduleCard` — one API schedule on the overview, grouped by period: branch and department, status, what it
-  includes (`ScheduleSummary`) and View.
+- `months/` — schedules by month (ADR-0074 in the API: a week belongs to the month its Monday falls in, and its
+  state is derived by the API). `api.ts` (the month summaries and one Department's month under
+  `["scheduling", companyId, "months"]`; the Department is a query parameter), `monthWeeks.ts` (pure: months as
+  `yyyy-MM`, `summaryRange` from this week's month to 12 months ahead, the counts line, the crossing week, which
+  earlier month is under review), `weekStateLooks.ts` (tones, day marks, a week's one action), `monthApprovals.ts`
+  (`weekWaitingOnMe`), `monthSearch.ts`, and the components `MonthCard` (one Department's month on the Schedules
+  tab), `WeekCard` (one week on the month page) and `DayCoverMarks` (a week's seven days). The month page is
+  `src/pages/ScheduleMonth.tsx` at `/scheduling/months/$month?department=…`.
 - `schedules/scheduleStatusTones.ts` — each status's badge tone. A period's weeks and days (`mondayOf`, `weeksOf`,
   `daysOf`) are calendar helpers in `@/common/weeks`.
 
@@ -246,7 +252,6 @@ saves and generation.
 - `RosterSidePanel` — the side panel's frame (title, close, Escape, focus) drawing every list from sections: a heading,
   `PanelItem`s (`roster/rosterPanels.ts`: starting points, changed days) and other content (`FindingsPanel`, the
   latest change, `DescriptionList`).
-- `ScheduleCard` — shows "N setup issues" beside the status when its newest run's findings have diagnostics.
 - `ScheduleMenu` — the "More actions" menu on a history row and the roster header: the caller's own items first
   (`children`), then Export roster (header only, once there is a roster) and Delete. It owns the export mutation and
   opens `DeleteScheduleDialog`.

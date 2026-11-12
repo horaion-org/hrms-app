@@ -45,6 +45,7 @@ import { Route as AuthenticatedAppSettingsAccessRolesRouteImport } from './route
 import { Route as AuthenticatedAppMeSchedulesScheduleIdRouteImport } from './routes/_authenticated._app.me.schedules.$scheduleId'
 import { Route as AuthenticatedAppOrganisationSystemRolesAccessRoleIdRouteImport } from './routes/_authenticated._app.organisation.system-roles_.$accessRoleId'
 import { Route as AuthenticatedAppOrganisationSystemRolesNewRouteImport } from './routes/_authenticated._app.organisation.system-roles_.new'
+import { Route as AuthenticatedAppSchedulingMonthsMonthRouteImport } from './routes/_authenticated._app.scheduling_.months.$month'
 import { Route as AuthenticatedAppSettingsAccessRolesAccessRoleIdRouteImport } from './routes/_authenticated._app.settings_.access-roles_.$accessRoleId'
 import { Route as AuthenticatedAppSettingsAccessRolesNewRouteImport } from './routes/_authenticated._app.settings_.access-roles_.new'
 import { Route as AuthenticatedAppSettingsDataImportOrganisationRouteImport } from './routes/_authenticated._app.settings_.data.import-organisation'
@@ -251,6 +252,12 @@ const AuthenticatedAppOrganisationSystemRolesNewRoute =
     path: '/organisation/system-roles/new',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppSchedulingMonthsMonthRoute =
+  AuthenticatedAppSchedulingMonthsMonthRouteImport.update({
+    id: '/scheduling_/months/$month',
+    path: '/scheduling/months/$month',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppSettingsAccessRolesAccessRoleIdRoute =
   AuthenticatedAppSettingsAccessRolesAccessRoleIdRouteImport.update({
     id: '/settings_/access-roles_/$accessRoleId',
@@ -311,6 +318,7 @@ export interface FileRoutesByFullPath {
   '/me/schedules/$scheduleId': typeof AuthenticatedAppMeSchedulesScheduleIdRoute
   '/organisation/system-roles/$accessRoleId': typeof AuthenticatedAppOrganisationSystemRolesAccessRoleIdRoute
   '/organisation/system-roles/new': typeof AuthenticatedAppOrganisationSystemRolesNewRoute
+  '/scheduling/months/$month': typeof AuthenticatedAppSchedulingMonthsMonthRoute
   '/settings/access-roles/$accessRoleId': typeof AuthenticatedAppSettingsAccessRolesAccessRoleIdRoute
   '/settings/access-roles/new': typeof AuthenticatedAppSettingsAccessRolesNewRoute
   '/settings/data/import-organisation': typeof AuthenticatedAppSettingsDataImportOrganisationRoute
@@ -351,6 +359,7 @@ export interface FileRoutesByTo {
   '/me/schedules/$scheduleId': typeof AuthenticatedAppMeSchedulesScheduleIdRoute
   '/organisation/system-roles/$accessRoleId': typeof AuthenticatedAppOrganisationSystemRolesAccessRoleIdRoute
   '/organisation/system-roles/new': typeof AuthenticatedAppOrganisationSystemRolesNewRoute
+  '/scheduling/months/$month': typeof AuthenticatedAppSchedulingMonthsMonthRoute
   '/settings/access-roles/$accessRoleId': typeof AuthenticatedAppSettingsAccessRolesAccessRoleIdRoute
   '/settings/access-roles/new': typeof AuthenticatedAppSettingsAccessRolesNewRoute
   '/settings/data/import-organisation': typeof AuthenticatedAppSettingsDataImportOrganisationRoute
@@ -394,6 +403,7 @@ export interface FileRoutesById {
   '/_authenticated/_app/me/schedules/$scheduleId': typeof AuthenticatedAppMeSchedulesScheduleIdRoute
   '/_authenticated/_app/organisation/system-roles_/$accessRoleId': typeof AuthenticatedAppOrganisationSystemRolesAccessRoleIdRoute
   '/_authenticated/_app/organisation/system-roles_/new': typeof AuthenticatedAppOrganisationSystemRolesNewRoute
+  '/_authenticated/_app/scheduling_/months/$month': typeof AuthenticatedAppSchedulingMonthsMonthRoute
   '/_authenticated/_app/settings_/access-roles_/$accessRoleId': typeof AuthenticatedAppSettingsAccessRolesAccessRoleIdRoute
   '/_authenticated/_app/settings_/access-roles_/new': typeof AuthenticatedAppSettingsAccessRolesNewRoute
   '/_authenticated/_app/settings_/data/import-organisation': typeof AuthenticatedAppSettingsDataImportOrganisationRoute
@@ -436,6 +446,7 @@ export interface FileRouteTypes {
     | '/me/schedules/$scheduleId'
     | '/organisation/system-roles/$accessRoleId'
     | '/organisation/system-roles/new'
+    | '/scheduling/months/$month'
     | '/settings/access-roles/$accessRoleId'
     | '/settings/access-roles/new'
     | '/settings/data/import-organisation'
@@ -476,6 +487,7 @@ export interface FileRouteTypes {
     | '/me/schedules/$scheduleId'
     | '/organisation/system-roles/$accessRoleId'
     | '/organisation/system-roles/new'
+    | '/scheduling/months/$month'
     | '/settings/access-roles/$accessRoleId'
     | '/settings/access-roles/new'
     | '/settings/data/import-organisation'
@@ -518,6 +530,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/me/schedules/$scheduleId'
     | '/_authenticated/_app/organisation/system-roles_/$accessRoleId'
     | '/_authenticated/_app/organisation/system-roles_/new'
+    | '/_authenticated/_app/scheduling_/months/$month'
     | '/_authenticated/_app/settings_/access-roles_/$accessRoleId'
     | '/_authenticated/_app/settings_/access-roles_/new'
     | '/_authenticated/_app/settings_/data/import-organisation'
@@ -790,6 +803,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppOrganisationSystemRolesNewRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/_app/scheduling_/months/$month': {
+      id: '/_authenticated/_app/scheduling_/months/$month'
+      path: '/scheduling/months/$month'
+      fullPath: '/scheduling/months/$month'
+      preLoaderRoute: typeof AuthenticatedAppSchedulingMonthsMonthRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/_app/settings_/access-roles_/$accessRoleId': {
       id: '/_authenticated/_app/settings_/access-roles_/$accessRoleId'
       path: '/settings/access-roles/$accessRoleId'
@@ -848,6 +868,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppMeSchedulesScheduleIdRoute: typeof AuthenticatedAppMeSchedulesScheduleIdRoute
   AuthenticatedAppOrganisationSystemRolesAccessRoleIdRoute: typeof AuthenticatedAppOrganisationSystemRolesAccessRoleIdRoute
   AuthenticatedAppOrganisationSystemRolesNewRoute: typeof AuthenticatedAppOrganisationSystemRolesNewRoute
+  AuthenticatedAppSchedulingMonthsMonthRoute: typeof AuthenticatedAppSchedulingMonthsMonthRoute
   AuthenticatedAppSettingsAccessRolesAccessRoleIdRoute: typeof AuthenticatedAppSettingsAccessRolesAccessRoleIdRoute
   AuthenticatedAppSettingsAccessRolesNewRoute: typeof AuthenticatedAppSettingsAccessRolesNewRoute
   AuthenticatedAppSettingsDataImportOrganisationRoute: typeof AuthenticatedAppSettingsDataImportOrganisationRoute
@@ -893,6 +914,8 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
     AuthenticatedAppOrganisationSystemRolesAccessRoleIdRoute,
   AuthenticatedAppOrganisationSystemRolesNewRoute:
     AuthenticatedAppOrganisationSystemRolesNewRoute,
+  AuthenticatedAppSchedulingMonthsMonthRoute:
+    AuthenticatedAppSchedulingMonthsMonthRoute,
   AuthenticatedAppSettingsAccessRolesAccessRoleIdRoute:
     AuthenticatedAppSettingsAccessRolesAccessRoleIdRoute,
   AuthenticatedAppSettingsAccessRolesNewRoute:

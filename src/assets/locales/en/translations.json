@@ -2995,20 +2995,9 @@
 		"overview": {
 			"createSchedule": "Create schedule",
 			"generated": "Generation requested for {{name}}.",
-			"includedShifts": "Included shifts",
-			"appliedConstraints": "Applied constraints",
-			"includeLeave": "Include leave",
-			"allowOpenShifts": "Allow open shifts",
-			"updatedAt": "Last updated",
-			"generationRequestedAt": "Generation requested",
-			"requestedBy": "Requested by",
-			"formerMember": "Former company member",
-			"yes": "Yes",
-			"no": "No",
 			"title": "Scheduling",
 			"subtitle": "Schedules, and the shifts and constraints they are built from.",
 			"search": "Search schedules or departments",
-			"view": "View Schedule",
 			"viewNamed": "View schedule {{code}}",
 			"percent": "{{value}}%",
 			"noMatch": "No schedules match your search.",
@@ -3641,7 +3630,8 @@
 			"createForbidden": "You don’t have permission to create schedules for this department.",
 			"saveForbidden": "You no longer have permission to change this schedule.",
 			"createFailed": "We couldn’t create the draft. Try again.",
-			"saveFailed": "We couldn’t save the draft. Try again."
+			"saveFailed": "We couldn’t save the draft. Try again.",
+			"weekTaken": "This department already has a schedule for that week."
 		},
 		"detail": {
 			"back": "Back to Overview",
@@ -3906,7 +3896,8 @@
 				"forbidden": "You no longer have permission to publish or reject this roster.",
 				"failed": "We couldn’t save the decision. Try again.",
 				"approvalPending": "This roster is already waiting for approval. Reload the page to see where it stands.",
-				"noApprover": "A step of this department’s approval flow has nobody who can approve it. Ask an admin to change it in Settings › Approvals."
+				"noApprover": "A step of this department’s approval flow has nobody who can approve it. Ask an admin to change it in Settings › Approvals.",
+				"earlierWeekUnpublished": "Publish the earlier week first. Weeks are published in order."
 			}
 		},
 		"startingContext": {
@@ -4324,6 +4315,82 @@
 				"selectAll": "Select all",
 				"wholeCompany": "All departments",
 				"branch": "{{name}} (branch)"
+			}
+		},
+		"months": {
+			"states": {
+				"PUBLISHED": "Published",
+				"TO_REVIEW": "To review",
+				"TENTATIVE": "Tentative",
+				"GENERATING": "Generating",
+				"FAILED": "Generation failed",
+				"REJECTED": "Rejected",
+				"DRAFT": "Draft",
+				"NOT_GENERATED": "Not generated",
+				"UNKNOWN": "Unknown"
+			},
+			"cover": {
+				"dayCovered": "{{day}} covered",
+				"dayShort_one": "{{day}} {{count}} shift short",
+				"dayShort_other": "{{day}} {{count}} shifts short",
+				"dayNoRoster": "{{day}} no roster",
+				"everyShiftCovered": "Every shift covered",
+				"shiftsShort_one": "{{count}} shift short",
+				"shiftsShort_other": "{{count}} shifts short",
+				"handChanged_one": "{{count}} day changed by hand",
+				"handChanged_other": "{{count}} days changed by hand"
+			},
+			"actions": {
+				"review": "Review",
+				"open": "Open",
+				"reviewWeek": "Review {{week}}",
+				"openWeek": "Open {{week}}",
+				"openMonth": "Open month",
+				"openMonthNamed": "Open {{department}}, {{month}}"
+			},
+			"counts": {
+				"PUBLISHED_one": "{{count}} published",
+				"PUBLISHED_other": "{{count}} published",
+				"TO_REVIEW_one": "{{count}} to review",
+				"TO_REVIEW_other": "{{count}} to review",
+				"TENTATIVE_one": "{{count}} tentative",
+				"TENTATIVE_other": "{{count}} tentative",
+				"GENERATING_one": "{{count}} generating",
+				"GENERATING_other": "{{count}} generating",
+				"FAILED_one": "{{count}} failed",
+				"FAILED_other": "{{count}} failed",
+				"REJECTED_one": "{{count}} rejected",
+				"REJECTED_other": "{{count}} rejected",
+				"DRAFT_one": "{{count}} draft",
+				"DRAFT_other": "{{count}} drafts",
+				"UNKNOWN_one": "{{count}} unknown",
+				"UNKNOWN_other": "{{count}} unknown"
+			},
+			"page": {
+				"title": "{{department}} · {{month}}",
+				"weeks_one": "{{count}} week, {{from}} to {{to}}.",
+				"weeks_other": "{{count}} weeks, {{from}} to {{to}}.",
+				"previousMonth": "Previous month, {{month}}",
+				"nextMonth": "Next month, {{month}}",
+				"crossingWeek": "{{week}} is in <0>{{month}}</0>’s page.",
+				"noSchedule": "No week of {{month}} has a schedule yet.",
+				"legendCovered": "Every shift covered",
+				"legendShort": "A shift is short",
+				"footnote": "Staff see a week only after it is published. Weeks are published in order.",
+				"loading": "Loading the month…",
+				"loadFailed": "This month could not be loaded. Please try again.",
+				"unavailable": "This month doesn’t exist or you don’t have permission to see it."
+			},
+			"waitingOnYou": "Week of {{week}}: waiting on you · step {{step}} of {{total}} ({{label}})",
+			"hints": {
+				"toReview": "Week of {{week}} is waiting for your review.",
+				"generatedAhead": "Generated ahead. {{month}} comes first."
+			},
+			"tabFailed": "The months couldn’t be loaded. Please try again.",
+			"roster": {
+				"unpublished": "<0>Not published.</0> Staff can’t see this week.",
+				"publishFirst": "Publish {{week}} first. Weeks are published in order.",
+				"weekWithState": "{{week}} · {{state}}"
 			}
 		}
 	},

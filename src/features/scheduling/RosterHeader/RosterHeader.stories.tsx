@@ -21,6 +21,22 @@ type Story = StoryObj<typeof meta>;
 
 export const Generated: Story = {};
 
+/** A generated week after an earlier one still to review: the same word as the month page, "Tentative". */
+export const Tentative: Story = {
+	args: {
+		schedule: {
+			...generatedScheduleFixture({ status: "GENERATED" }),
+			publication: {
+				requiresApproval: false,
+				stepLabels: [],
+				submission: null,
+				rejectedAtStep: null,
+				waitingForWeek: { periodStart: "2026-10-05", periodEnd: "2026-10-11" },
+			},
+		},
+	},
+};
+
 /** Being generated: no primary action yet. */
 export const Generating: Story = {
 	args: { schedule: generatedScheduleFixture(), actions: undefined },

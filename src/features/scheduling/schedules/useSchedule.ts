@@ -7,6 +7,7 @@ import {
 import type { DepartmentPath } from "@/common/companyPath";
 import { ApiProblemError } from "@/common/problem";
 import { approvalKeys } from "@/features/approvals/api";
+import { scheduleMonthsKey } from "@/features/scheduling/months/api";
 import { SCHEDULING_QUERY_ROOT } from "@/features/scheduling/paths";
 import {
 	companyScheduleQuery,
@@ -190,8 +191,12 @@ export const useScheduleActions = (companyId: string): ScheduleActions => {
 			meta: { successMessage: "scheduling.delete.done" },
 			mutationFn: ({ unit, scheduleId }: Removed) =>
 				deleteSchedule(companyId, unit, scheduleId),
+			// The lists only: a roster still on screen is not read again and found missing.
 			onSuccess: () =>
-				client.invalidateQueries({ queryKey: schedulesKey(companyId) }),
+				Promise.all([
+					client.invalidateQueries({ queryKey: schedulesKey(companyId) }),
+					client.invalidateQueries({ queryKey: scheduleMonthsKey(companyId) }),
+				]),
 			onError: reload,
 		}),
 		publish: useMutation({

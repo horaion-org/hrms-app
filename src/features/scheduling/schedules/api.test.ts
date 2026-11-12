@@ -613,6 +613,7 @@ describe("a schedule's decision", () => {
 							stepLabels: ["Endorse", "Publish"],
 							submission,
 							rejectedAtStep: null,
+							waitingForWeek: null,
 						},
 					})
 				),
@@ -631,6 +632,7 @@ describe("a schedule's decision", () => {
 			stepLabels: ["Endorse", "Publish"],
 			submission,
 			rejectedAtStep: null,
+			waitingForWeek: null,
 		});
 		expect(
 			(await fetchSchedule("c-1", UNIT, "s-2")).publication.submission
@@ -649,6 +651,7 @@ describe("a schedule's decision", () => {
 							stepLabels: ["Endorse", "Publish"],
 							submission: null,
 							rejectedAtStep: { stepOrder: 2, stepLabel: "Publish" },
+							waitingForWeek: null,
 						},
 					})
 				),
@@ -667,6 +670,44 @@ describe("a schedule's decision", () => {
 		).toEqual({ stepOrder: 2, stepLabel: "Publish" });
 		expect(
 			(await fetchSchedule("c-1", UNIT, "s-2")).publication.rejectedAtStep
+		).toBeNull();
+	});
+
+	it("given_aHeldUpWeek_when_parsed_then_itsPublicationNamesTheWeekItWaitsFor_andNoneFromAnApiBeforeIt", async () => {
+		const waitingForWeek = {
+			periodStart: "2026-11-09",
+			periodEnd: "2026-11-15",
+		};
+		stubApi({
+			[`GET ${SCHEDULES}/s-1`]: {
+				status: 200,
+				body: envelope(
+					generatedScheduleFixture({
+						status: "GENERATED",
+						publication: {
+							requiresApproval: false,
+							stepLabels: [],
+							submission: null,
+							rejectedAtStep: null,
+							waitingForWeek,
+						},
+					})
+				),
+			},
+			[`GET ${SCHEDULES}/s-2`]: {
+				status: 200,
+				body: envelope({
+					...generatedScheduleFixture({ scheduleId: "s-2" }),
+					publication: { requiresApproval: false, stepLabels: [] },
+				}),
+			},
+		});
+
+		expect(
+			(await fetchSchedule("c-1", UNIT, "s-1")).publication.waitingForWeek
+		).toEqual(waitingForWeek);
+		expect(
+			(await fetchSchedule("c-1", UNIT, "s-2")).publication.waitingForWeek
 		).toBeNull();
 	});
 
@@ -946,6 +987,14 @@ describe("schedule refusals", () => {
 			message: errorCode,
 		});
 
+	it("puts a week the department already has a schedule for on the period", () => {
+		expect(
+			scheduleRefusal(problem(409, "SCHEDULE_WEEK_TAKEN"), true, t).fields
+		).toEqual({
+			periodStart: "This department already has a schedule for that week.",
+		});
+	});
+
 	it("puts a period that isn't a Monday on the period", () => {
 		expect(
 			scheduleRefusal(problem(400, "SCHEDULE_PERIOD_NOT_MONDAY"), true, t)
@@ -1123,6 +1172,11 @@ describe("schedule refusals", () => {
 			"SCHEDULE_WEEK_ALREADY_PUBLISHED",
 			409,
 			"This department already has a published roster for this week. Only one roster can be published per week, so schedule a different week instead.",
+		],
+		[
+			"SCHEDULE_EARLIER_WEEK_UNPUBLISHED",
+			409,
+			"Publish the earlier week first. Weeks are published in order.",
 		],
 		["SCHEDULE_NOT_FOUND", 404, "This schedule no longer exists."],
 		[

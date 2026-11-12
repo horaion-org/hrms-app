@@ -2817,20 +2817,9 @@
 		"overview": {
 			"createSchedule": "Crear horario",
 			"generated": "Se solicitó la generación de {{name}}.",
-			"includedShifts": "Turnos incluidos",
-			"appliedConstraints": "Restricciones aplicadas",
-			"includeLeave": "Incluir permisos",
-			"allowOpenShifts": "Permitir turnos abiertos",
-			"updatedAt": "Última actualización",
-			"generationRequestedAt": "Generación solicitada",
-			"requestedBy": "Solicitado por",
-			"formerMember": "Antiguo miembro de la empresa",
-			"yes": "Sí",
-			"no": "No",
 			"title": "Programación",
 			"subtitle": "Los horarios, y los turnos y las restricciones con los que se crean.",
 			"search": "Buscar departamento",
-			"view": "Ver horario",
 			"viewNamed": "Ver horario {{code}}",
 			"percent": "{{value}} %",
 			"noMatch": "Ningún horario coincide con tu búsqueda.",
@@ -3463,7 +3452,8 @@
 			"createForbidden": "No tienes permiso para crear horarios en este departamento.",
 			"saveForbidden": "Ya no tienes permiso para cambiar este horario.",
 			"createFailed": "No pudimos crear el borrador. Inténtalo de nuevo.",
-			"saveFailed": "No pudimos guardar el borrador. Inténtalo de nuevo."
+			"saveFailed": "No pudimos guardar el borrador. Inténtalo de nuevo.",
+			"weekTaken": "Este departamento ya tiene un horario para esa semana."
 		},
 		"detail": {
 			"back": "Volver al resumen",
@@ -3728,7 +3718,8 @@
 				"forbidden": "Ya no tienes permiso para publicar o rechazar este cuadrante.",
 				"failed": "No pudimos guardar la decisión. Inténtalo de nuevo.",
 				"approvalPending": "Este cuadrante ya está pendiente de aprobación. Vuelve a cargar la página para ver en qué punto está.",
-				"noApprover": "Un paso del flujo de aprobación de este departamento no tiene a nadie que pueda aprobarlo. Pide a un administrador que lo cambie en Ajustes › Aprobaciones."
+				"noApprover": "Un paso del flujo de aprobación de este departamento no tiene a nadie que pueda aprobarlo. Pide a un administrador que lo cambie en Ajustes › Aprobaciones.",
+				"earlierWeekUnpublished": "Publica primero la semana anterior. Las semanas se publican en orden."
 			}
 		},
 		"startingContext": {
@@ -4146,6 +4137,82 @@
 				"selectAll": "Seleccionar todo",
 				"wholeCompany": "Todos los departamentos",
 				"branch": "{{name}} (sucursal)"
+			}
+		},
+		"months": {
+			"states": {
+				"PUBLISHED": "Publicado",
+				"TO_REVIEW": "Por revisar",
+				"TENTATIVE": "Provisional",
+				"GENERATING": "Generando",
+				"FAILED": "Fallida",
+				"REJECTED": "Rechazado",
+				"DRAFT": "Borrador",
+				"NOT_GENERATED": "Sin generar",
+				"UNKNOWN": "Desconocido"
+			},
+			"cover": {
+				"dayCovered": "{{day}} cubierto",
+				"dayShort_one": "{{day}} falta {{count}} turno",
+				"dayShort_other": "{{day}} faltan {{count}} turnos",
+				"dayNoRoster": "{{day}} sin cuadrante",
+				"everyShiftCovered": "Todos los turnos cubiertos",
+				"shiftsShort_one": "Falta {{count}} turno",
+				"shiftsShort_other": "Faltan {{count}} turnos",
+				"handChanged_one": "{{count}} día cambiado a mano",
+				"handChanged_other": "{{count}} días cambiados a mano"
+			},
+			"actions": {
+				"review": "Revisar",
+				"open": "Abrir",
+				"reviewWeek": "Revisar {{week}}",
+				"openWeek": "Abrir {{week}}",
+				"openMonth": "Abrir mes",
+				"openMonthNamed": "Abrir {{department}}, {{month}}"
+			},
+			"counts": {
+				"PUBLISHED_one": "{{count}} publicada",
+				"PUBLISHED_other": "{{count}} publicadas",
+				"TO_REVIEW_one": "{{count}} por revisar",
+				"TO_REVIEW_other": "{{count}} por revisar",
+				"TENTATIVE_one": "{{count}} provisional",
+				"TENTATIVE_other": "{{count}} provisionales",
+				"GENERATING_one": "{{count}} generándose",
+				"GENERATING_other": "{{count}} generándose",
+				"FAILED_one": "{{count}} fallida",
+				"FAILED_other": "{{count}} fallidas",
+				"REJECTED_one": "{{count}} rechazada",
+				"REJECTED_other": "{{count}} rechazadas",
+				"DRAFT_one": "{{count}} borrador",
+				"DRAFT_other": "{{count}} borradores",
+				"UNKNOWN_one": "{{count}} desconocida",
+				"UNKNOWN_other": "{{count}} desconocidas"
+			},
+			"page": {
+				"title": "{{department}} · {{month}}",
+				"weeks_one": "{{count}} semana, del {{from}} al {{to}}.",
+				"weeks_other": "{{count}} semanas, del {{from}} al {{to}}.",
+				"previousMonth": "Mes anterior, {{month}}",
+				"nextMonth": "Mes siguiente, {{month}}",
+				"crossingWeek": "{{week}} está en la página de <0>{{month}}</0>.",
+				"noSchedule": "Ninguna semana de {{month}} tiene horario todavía.",
+				"legendCovered": "Todos los turnos cubiertos",
+				"legendShort": "Falta un turno",
+				"footnote": "El personal solo ve una semana después de publicarla. Las semanas se publican en orden.",
+				"loading": "Cargando el mes…",
+				"loadFailed": "No pudimos cargar este mes. Inténtalo de nuevo.",
+				"unavailable": "Este mes no existe o no tienes permiso para verlo."
+			},
+			"waitingOnYou": "Semana del {{week}}: pendiente de ti · paso {{step}} de {{total}} ({{label}})",
+			"hints": {
+				"toReview": "La semana del {{week}} espera tu revisión.",
+				"generatedAhead": "Generado por adelantado. Primero va {{month}}."
+			},
+			"tabFailed": "No pudimos cargar los meses. Inténtalo de nuevo.",
+			"roster": {
+				"unpublished": "<0>Sin publicar.</0> El personal no puede ver esta semana.",
+				"publishFirst": "Publica primero {{week}}. Las semanas se publican en orden.",
+				"weekWithState": "{{week}} · {{state}}"
 			}
 		}
 	},

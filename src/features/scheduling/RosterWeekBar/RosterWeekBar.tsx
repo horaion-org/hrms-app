@@ -15,9 +15,17 @@ import {
 import type { RosterLegendEntry } from "@/features/scheduling/roster/roster";
 import { rosterLooks } from "@/features/scheduling/rosterLooks";
 
+/** A week the bar lists: its dates, with a state and whether it can be chosen when the bar steps through a month. */
+export type RosterWeek = SchedulePeriod & {
+	/** Shown after the dates in the picker, e.g. "Tentative"; none on a member's own roster. */
+	state?: string;
+	/** No schedule to open: listed, not chosen; the arrows step over it. */
+	disabled?: boolean;
+};
+
 export type RosterWeekBarProps = {
-	/** The weeks the schedule covers, Monday first. */
-	weeks: Array<SchedulePeriod>;
+	/** The weeks the bar steps through, Monday first: the schedule's own, or its Department's month. */
+	weeks: Array<RosterWeek>;
 	/** The shown week's Monday. */
 	week: string;
 	onWeekChange: (week: string) => void;
@@ -28,6 +36,19 @@ export type RosterWeekBarProps = {
 	/** At the end of the bar, before Legend: the roster's Issues and Changed buttons. */
 	children?: ReactNode;
 	className?: string;
+};
+
+/** The nearest week in the direction `by` that can be chosen; none at the end. */
+const neighbourOf = (
+	weeks: ReadonlyArray<RosterWeek>,
+	index: number,
+	by: 1 | -1
+): RosterWeek | undefined => {
+	for (let at = index + by; at >= 0 && at < weeks.length; at += by) {
+		const week = weeks[at];
+		if (week && !week.disabled) return week;
+	}
+	return undefined;
 };
 
 /** One legend entry: a look from `rosterLooks`, or a shift's own colour. */
@@ -51,6 +72,7 @@ export const RosterWeekBar = ({
 	const { t, i18n } = useTranslation();
 	const language = formattingLocale(i18n);
 	const index = weeks.findIndex((item) => item.start === week);
+	const withStates = weeks.some((item) => item.state !== undefined);
 	const swatches = legend.map((entry): Swatch => {
 		if (entry.kind === "shift")
 			return { key: entry.shiftId, label: entry.name, colour: entry.colour };
@@ -76,10 +98,8 @@ export const RosterWeekBar = ({
 			look: rosterLooks.off,
 		};
 	});
-	const step = (by: number): void => {
-		const next = weeks[index + by];
-		if (next) onWeekChange(next.start);
-	};
+	const previous = index === -1 ? undefined : neighbourOf(weeks, index, -1);
+	const next = index === -1 ? undefined : neighbourOf(weeks, index, 1);
 
 	// On a phone the week takes one row, the picker between its arrows, and Today
 	// joins the row of extras; the reading order stays Today, arrows, week.
@@ -101,10 +121,10 @@ export const RosterWeekBar = ({
 			<Button
 				aria-label={t("scheduling.detail.previousWeek")}
 				className="size-12! rounded-full! border border-neutral-500"
-				disabled={index <= 0}
+				disabled={previous === undefined}
 				variant="icon"
 				onClick={() => {
-					step(-1);
+					if (previous) onWeekChange(previous.start);
 				}}
 			>
 				<ChevronLeftIcon />
@@ -112,21 +132,31 @@ export const RosterWeekBar = ({
 			<Button
 				aria-label={t("scheduling.detail.nextWeek")}
 				className="size-12! rounded-full! border border-neutral-500 max-sm:order-3"
-				disabled={index === -1 || index >= weeks.length - 1}
+				disabled={next === undefined}
 				variant="icon"
 				onClick={() => {
-					step(1);
+					if (next) onWeekChange(next.start);
 				}}
 			>
 				<ChevronRightIcon />
 			</Button>
 			<Select
 				aria-label={t("scheduling.detail.week")}
-				className="h-12! w-58 rounded-full! max-sm:order-2 max-sm:w-auto max-sm:min-w-0 max-sm:grow max-sm:basis-40"
 				value={week}
+				className={joinClassNames(
+					"h-12! rounded-full! max-sm:order-2 max-sm:w-auto max-sm:min-w-0 max-sm:grow max-sm:basis-40",
+					// A week with its state ("30 Nov – 6 Dec 2026 · Generation failed") sizes the trigger to its label.
+					withStates ? "w-auto" : "w-58"
+				)}
 				options={weeks.map((item) => ({
 					value: item.start,
-					label: formatPeriod(item, language),
+					label: item.state
+						? t("scheduling.months.roster.weekWithState", {
+								week: formatPeriod(item, language),
+								state: item.state,
+							})
+						: formatPeriod(item, language),
+					disabled: item.disabled,
 				}))}
 				onChange={onWeekChange}
 			/>
