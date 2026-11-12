@@ -206,8 +206,57 @@ describe("sidePanelOf", () => {
 				editable: true,
 				chosenRow: undefined,
 				chosenCell: undefined,
+				coverGap: undefined,
 				openList: undefined,
 			})
 		).toBeUndefined();
+	});
+
+	it("given_aCoverGapOnARosterThatMayBeChanged_when_asked_then_findCoverOverTheList", () => {
+		expect(
+			sidePanelOf({
+				editable: true,
+				chosenRow: undefined,
+				chosenCell: undefined,
+				coverGap: { shiftId: "front-desk-am-copy", day: "2026-10-17" },
+				openList: "issues",
+			})
+		).toBe("cover");
+	});
+
+	it("given_aCoverGapOnAReadOnlyRoster_when_asked_then_noFindCover", () => {
+		expect(
+			sidePanelOf({
+				editable: false,
+				chosenRow: undefined,
+				chosenCell: undefined,
+				coverGap: { shiftId: "front-desk-am-copy", day: "2026-10-17" },
+				openList: undefined,
+			})
+		).toBeUndefined();
+	});
+});
+
+describe("rosterViewOf: Find cover", () => {
+	it("given_coverInTheUrl_when_editable_then_theGapAndTheCoverPanel", () => {
+		const view = viewOf({
+			view: { week: "2026-10-12", cover: "front-desk-am-copy|2026-10-17" },
+		});
+
+		expect(view.coverGap).toEqual({
+			shiftId: "front-desk-am-copy",
+			day: "2026-10-17",
+		});
+		expect(view.sidePanel).toBe("cover");
+	});
+
+	it("given_coverInTheUrl_when_readOnly_then_nothing", () => {
+		const view = viewOf({
+			editable: false,
+			view: { week: "2026-10-12", cover: "front-desk-am-copy|2026-10-17" },
+		});
+
+		expect(view.coverGap).toBeUndefined();
+		expect(view.sidePanel).toBeUndefined();
 	});
 });

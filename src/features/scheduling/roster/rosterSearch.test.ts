@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { issuesAboutOf, parseRosterSearch } from "./rosterSearch";
+import {
+	coverGapOf,
+	coverParameter,
+	issuesAboutOf,
+	parseRosterSearch,
+} from "./rosterSearch";
 
 describe("parseRosterSearch", () => {
 	it.each([
@@ -28,6 +33,15 @@ describe("parseRosterSearch", () => {
 			{ week: "2026-10-12", day: "2026-10-14", cell: "m-1|2026-10-14" },
 		],
 		[{ day: "Wednesday" }, {}],
+		[
+			{ cover: "front-desk-am-copy|2026-10-17", panel: "issues" },
+			{ cover: "front-desk-am-copy|2026-10-17" },
+		],
+		[
+			{ cell: "m-1|2026-10-14", cover: "front-desk-am-copy|2026-10-17" },
+			{ cell: "m-1|2026-10-14" },
+		],
+		[{ cover: "front-desk-am-copy" }, {}],
 	])("reads %j as %j", (search, view) => {
 		expect(parseRosterSearch(search)).toEqual(view);
 	});
@@ -51,5 +65,18 @@ describe("issuesAboutOf", () => {
 		[{ date: "2026-10-17" }, { kind: "date", date: "2026-10-17" }],
 	])("reads %j as %j", (view, about) => {
 		expect(issuesAboutOf(view)).toEqual(about);
+	});
+});
+
+describe("coverParameter and coverGapOf", () => {
+	it("given_aGap_when_writtenAndReadBack_then_theSameGap", () => {
+		const gap = { shiftId: "front-desk-am-copy", day: "2026-10-17" };
+
+		expect(coverParameter(gap)).toBe("front-desk-am-copy|2026-10-17");
+		expect(coverGapOf(coverParameter(gap))).toEqual(gap);
+	});
+
+	it("given_noCover_when_read_then_noGap", () => {
+		expect(coverGapOf(undefined)).toBeUndefined();
 	});
 });

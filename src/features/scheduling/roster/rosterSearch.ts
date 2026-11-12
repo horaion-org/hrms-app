@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { mondayOf } from "@/common/weeks";
+import type { CoverGapRequest } from "@/features/scheduling/cover/api";
 import type { IssuesAbout } from "@/features/scheduling/roster/rosterMarks";
 
 const isMonday = (date: string): boolean => mondayOf(date) === date;
@@ -25,6 +26,12 @@ const searchSchema = z.object({
 		.regex(/^[^|]+\|\d{4}-\d{2}-\d{2}$/)
 		.optional()
 		.catch(undefined),
+	/** A short shift Find cover lists people for: "{shiftId}|{date}" (`coverParameter`). */
+	cover: z
+		.string()
+		.regex(/^[^|]+\|\d{4}-\d{2}-\d{2}$/)
+		.optional()
+		.catch(undefined),
 	/** The Issues list opened from a member's row header: that member's issues only, by membership. */
 	member: z.string().min(1).optional().catch(undefined),
 	/** The Issues list opened from a day's header: that day's issues only. */
@@ -35,8 +42,8 @@ const searchSchema = z.object({
  * A roster's view that belongs in the URL, so it survives a reload and can
  * be linked: the week shown (its Monday; this week when left out), the one
  * day a phone shows (`day`), and what the side panel shows, either one list
- * (`panel`) or a chosen day (`cell`).
- * A chosen day wins when both are given. The Issues list may be narrowed to
+ * (`panel`), a chosen day (`cell`) or Find cover for a short shift (`cover`).
+ * A chosen day wins over Find cover, which wins over a list. The Issues list may be narrowed to
  * the header it was opened from: one member (`member`), else one day (`date`).
  */
 export type RosterSearch = z.infer<typeof searchSchema>;
@@ -56,11 +63,32 @@ const listOf = ({
 export const parseRosterSearch = (
 	search: Record<string, unknown>
 ): RosterSearch => {
-	const { week, day, cell, ...list } = searchSchema.parse(search);
+	const { week, day, cell, cover, ...list } = searchSchema.parse(search);
+	const shown = (): RosterSearch => {
+		if (cell !== undefined) return { cell };
+		if (cover !== undefined) return { cover };
+		return listOf(list);
+	};
 	return {
 		...(week === undefined ? {} : { week }),
 		...(day === undefined ? {} : { day }),
-		...(cell !== undefined ? { cell } : listOf(list)),
+		...shown(),
+	};
+};
+
+/** The URL's `cover` for a short shift-day: "{shiftId}|{date}". */
+export const coverParameter = ({ shiftId, day }: CoverGapRequest): string =>
+	`${shiftId}|${day}`;
+
+/** The short shift-day the URL's `cover` names; none without one. */
+export const coverGapOf = (
+	cover: string | undefined
+): CoverGapRequest | undefined => {
+	if (cover === undefined) return undefined;
+	const separator = cover.lastIndexOf("|");
+	return {
+		shiftId: cover.slice(0, separator),
+		day: cover.slice(separator + 1),
 	};
 };
 
