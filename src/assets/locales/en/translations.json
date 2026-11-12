@@ -4186,6 +4186,43 @@
 				"tryAgain": "Try again"
 			}
 		},
+		"cover": {
+			"gap": "{{shift}} · {{day}} · {{time}} · {{jobTitles}}",
+			"short": {
+				"onLeave": "1 short: {{name}} is on leave",
+				"sinceGeneration_one": "{{count}} short since generation",
+				"sinceGeneration_other": "{{count}} short since generation",
+				"plain_one": "{{count}} short",
+				"plain_other": "{{count}} short"
+			},
+			"option": {
+				"FREE": "Within contracted hours",
+				"EXTRA_HOURS": "Extra hours (part-time) · {{before}} → {{after}} h this week",
+				"OVERTIME": "Works a day off · {{hours}} h overtime",
+				"UNKNOWN": "Works a day off",
+				"week": "This week {{before}} → {{after}} h of {{contract}} h",
+				"month": "Overtime this month {{before}} → {{after}} h",
+				"ROSTERED_ELSEWHERE": "Also works on another roster that day"
+			},
+			"neighbours": "{{name}} works {{shifts}}.",
+			"neighbour": "{{shift}} on {{day}} ({{time}})",
+			"noNeighbours": "{{name}} has no shift the day before or after.",
+			"and": " and ",
+			"jobTitlesOr": " or ",
+			"reason": {
+				"MEMBER_GONE": "Has left",
+				"ON_LEAVE": "On leave",
+				"NOT_AVAILABLE": "Not available that day",
+				"ROLE_NOT_HELD": "Not a {{jobTitles}}",
+				"SHIFT_NOT_ON_DAY": "The shift doesn't run that day",
+				"NOT_SCHEDULABLE_NOW": "No longer rostered in this department",
+				"ALREADY_WORKING": "Already working that day",
+				"REST_DAY": "Rest day: not offered yet",
+				"OUTSIDE_AVAILABILITY": "Not available then",
+				"HOURS_UNKNOWN": "Working hours not set",
+				"UNKNOWN": "Can't help"
+			}
+		},
 		"reach": {
 			"editShift_one": "Saving changes this shift for {{department}}: new schedules and {{count}} draft that uses it. Generated and published schedules keep their own copy.",
 			"editShift_other": "Saving changes this shift for {{department}}: new schedules and {{count}} drafts that use it. Generated and published schedules keep their own copy.",
