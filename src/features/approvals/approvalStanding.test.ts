@@ -3,7 +3,6 @@ import {
 	approvalMetaLine,
 	approvalStanding,
 	currentInstanceOf,
-	scheduleCardApprovalLine,
 	type ApprovalStanding,
 	type ApprovalStandingFacts,
 } from "@/features/approvals/approvalStanding";
@@ -215,46 +214,5 @@ describe("currentInstanceOf", () => {
 		expect(currentInstanceOf([older], "2026-10-11T00:00:00Z")).toBeNull();
 		expect(currentInstanceOf([older], null)).toBe(older);
 		expect(currentInstanceOf([], null)).toBeNull();
-	});
-});
-
-describe("scheduleCardApprovalLine", () => {
-	const schedule = {
-		scheduleId: "s-1",
-		awaitingDecision: true,
-		publication: FLOW,
-	};
-
-	it("says it waits on the viewer when their list holds it", () => {
-		expect(scheduleCardApprovalLine(schedule, [atStepTwoFixture()])).toEqual({
-			key: "approvals.meta.waitingOnYou",
-			values: { step: 2, total: 2, label: "Publish" },
-		});
-	});
-
-	it("says it waits for approval when someone else's step is open", () => {
-		expect(
-			scheduleCardApprovalLine(
-				{ ...schedule, publication: SUBMITTED(true) },
-				[]
-			)
-		).toEqual({
-			key: "approvals.meta.waiting",
-			values: { step: 1, total: 2, label: "Endorse" },
-		});
-	});
-
-	it("otherwise says what publishing goes through, and nothing once decided or without a flow", () => {
-		expect(scheduleCardApprovalLine(schedule, [])?.key).toBe(
-			"approvals.meta.needsApproval"
-		);
-		expect(
-			scheduleCardApprovalLine({ ...schedule, publication: NO_FLOW }, [])
-		).toBeUndefined();
-		expect(
-			scheduleCardApprovalLine({ ...schedule, awaitingDecision: false }, [
-				atStepTwoFixture(),
-			])
-		).toBeUndefined();
 	});
 });

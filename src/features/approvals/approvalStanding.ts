@@ -221,38 +221,3 @@ export const approvalMetaLine = (
 			return undefined;
 	}
 };
-
-/**
- * A schedule card's approval line, from the caller's own waiting list:
- * "Waiting on you · step 2 of 2 (Publish)" when one of its steps waits on
- * them, "Waiting for approval · …" when it waits on someone else, else what
- * publishing it goes through. None without a flow, or once decided.
- */
-export const scheduleCardApprovalLine = (
-	schedule: {
-		scheduleId: string;
-		awaitingDecision: boolean;
-		publication: ApprovalStandingFacts["publication"];
-	},
-	waitingOnMe: ReadonlyArray<ApprovalInstance>
-): ApprovalLine | undefined => {
-	if (!schedule.awaitingDecision) return undefined;
-	const mine = waitingOnMe.find(
-		(instance) => instance.subjectId === schedule.scheduleId
-	);
-	const step = mine && openStepOf(mine);
-	if (step)
-		return { key: "approvals.meta.waitingOnYou", values: stepValues(step) };
-	const { submission } = schedule.publication;
-	if (submission)
-		return {
-			key: "approvals.meta.waiting",
-			values: stepValues(openStepOfSubmission(submission)),
-		};
-	return schedule.publication.requiresApproval
-		? {
-				key: "approvals.meta.needsApproval",
-				values: { steps: stepSummary(schedule.publication.stepLabels) },
-			}
-		: undefined;
-};
