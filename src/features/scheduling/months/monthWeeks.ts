@@ -1,6 +1,7 @@
 import dayjs from "dayjs";
 import { mondayOf } from "@/common/weeks";
 import type { MonthRange, WeekState } from "@/features/scheduling/months/api";
+import type { SchedulePeriod } from "@/features/scheduling/periods";
 
 /*
  * Months as "yyyy-MM", pure. A week belongs to the month its Monday falls
@@ -26,6 +27,12 @@ export const summaryRange = (today: Date): MonthRange => {
 /** A month in the person's language, e.g. "November 2026". */
 export const formatMonth = (month: string, language: string): string =>
 	new Intl.DateTimeFormat(language, { month: "long", year: "numeric" }).format(
+		dayjs(`${month}-01`).toDate()
+	);
+
+/** A month's name alone in the person's language, e.g. "November". */
+export const formatMonthName = (month: string, language: string): string =>
+	new Intl.DateTimeFormat(language, { month: "long" }).format(
 		dayjs(`${month}-01`).toDate()
 	);
 
@@ -56,3 +63,17 @@ export const formatWeekDates = (
 			month: "short",
 		}) as RangeFormat
 	).formatRange(dayjs(week.start).toDate(), dayjs(week.end).toDate());
+
+/**
+ * The week that starts in the month before and ends in this one, shown on
+ * its Monday's month only; undefined when the month starts on a Monday.
+ */
+export const crossingWeekOf = (month: string): SchedulePeriod | undefined => {
+	const first = `${month}-01`;
+	const monday = mondayOf(first);
+	if (monday === first) return undefined;
+	return {
+		start: monday,
+		end: dayjs(monday).add(6, "day").format("YYYY-MM-DD"),
+	};
+};

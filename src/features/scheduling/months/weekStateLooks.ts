@@ -44,3 +44,15 @@ export const weekAction = ({
 	if (state === "TO_REVIEW") return "review";
 	return scheduleId ? "open" : undefined;
 };
+
+/**
+ * A day's mark on a week card and in the month page's legend. Shape tells
+ * them apart as well as colour (as `rosterLooks` marks do): a filled square
+ * for every shift covered, a hollow ring for a short day, a dashed square
+ * for no roster.
+ */
+export const dayMarkLooks = {
+	covered: "size-3 rounded-sm bg-ink-blue-700",
+	short: "size-3 rounded-full border-2 border-warning-900",
+	noRoster: "size-3 rounded-sm border border-dashed border-neutral-500",
+} as const;

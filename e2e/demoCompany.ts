@@ -26,6 +26,10 @@ import {
 	frozenConstraintsFixture,
 } from "@/features/scheduling/constraints/fixtures";
 import { coverOfferFixture } from "@/features/scheduling/coverOffers/fixtures";
+import {
+	monthSummaryFixture,
+	scheduleMonthFixture,
+} from "@/features/scheduling/months/fixtures";
 import { readinessFixture } from "@/features/scheduling/readiness/fixtures";
 import {
 	generatedScheduleFixture,
@@ -382,6 +386,12 @@ const ANSWERS: Array<Answer> = [
 				schedule,
 				scheduleFixture({ scheduleId: "s-2", name: "Bar - Week 46" }),
 			]),
+	},
+	// Kitchen's months: November 2026 for any month asked, and its card on the Schedules tab.
+	{ path: /^\/schedule-months$/, data: () => [monthSummaryFixture()] },
+	{
+		path: /^\/schedule-months\/\d{4}-\d{2}$/,
+		data: () => scheduleMonthFixture(),
 	},
 	{ path: /^\/shifts$/, data: () => [KITCHEN_SHIFT, BAR_SHIFT] },
 	// Kitchen is ready to schedule; Bar has shifts but no staffing constraint.

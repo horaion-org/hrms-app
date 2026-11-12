@@ -4,6 +4,7 @@ import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { daysOf } from "@/common/weeks";
 import type { MonthWeek } from "@/features/scheduling/months/api";
+import { dayMarkLooks } from "@/features/scheduling/months/weekStateLooks";
 
 export type DayCoverMarksProps = {
 	/** Seven days, Monday first; empty when the week has no roster. */
@@ -14,18 +15,7 @@ export type DayCoverMarksProps = {
 /** A Monday to name the weekdays by when the week has no roster to give dates. */
 const ANY_MONDAY = "2024-01-01";
 
-/**
- * Shape tells the marks apart as well as colour (as `rosterLooks` marks
- * do): a filled square for every shift covered, a hollow ring for a short
- * day, a dashed square for no roster.
- */
-const markLooks = {
-	covered: "size-3 rounded-sm bg-ink-blue-700",
-	short: "size-3 rounded-full border-2 border-warning-900",
-	noRoster: "size-3 rounded-sm border border-dashed border-neutral-500",
-} as const;
-
-type MarkLook = keyof typeof markLooks;
+type MarkLook = keyof typeof dayMarkLooks;
 
 /** What each mark reads aloud. */
 const labelKeys = {
@@ -75,7 +65,7 @@ export const DayCoverMarks = ({
 					className="flex flex-col items-center gap-1 text-xs text-neutral-700"
 				>
 					{mark.letter}
-					<span className={markLooks[mark.look]} />
+					<span className={dayMarkLooks[mark.look]} />
 				</span>
 			))}
 		</div>

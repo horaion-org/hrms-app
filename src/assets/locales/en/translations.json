@@ -4352,6 +4352,39 @@
 				"open": "Open",
 				"reviewWeek": "Review {{week}}",
 				"openWeek": "Open {{week}}"
+			},
+			"counts": {
+				"PUBLISHED_one": "{{count}} published",
+				"PUBLISHED_other": "{{count}} published",
+				"TO_REVIEW_one": "{{count}} to review",
+				"TO_REVIEW_other": "{{count}} to review",
+				"TENTATIVE_one": "{{count}} tentative",
+				"TENTATIVE_other": "{{count}} tentative",
+				"GENERATING_one": "{{count}} generating",
+				"GENERATING_other": "{{count}} generating",
+				"FAILED_one": "{{count}} failed",
+				"FAILED_other": "{{count}} failed",
+				"REJECTED_one": "{{count}} rejected",
+				"REJECTED_other": "{{count}} rejected",
+				"DRAFT_one": "{{count}} draft",
+				"DRAFT_other": "{{count}} drafts",
+				"UNKNOWN_one": "{{count}} unknown",
+				"UNKNOWN_other": "{{count}} unknown"
+			},
+			"page": {
+				"title": "{{department}} · {{month}}",
+				"weeks_one": "{{count}} week, {{from}} to {{to}}.",
+				"weeks_other": "{{count}} weeks, {{from}} to {{to}}.",
+				"previousMonth": "Previous month, {{month}}",
+				"nextMonth": "Next month, {{month}}",
+				"crossingWeek": "{{week}} is in <0>{{month}}</0>’s page.",
+				"noSchedule": "No week of {{month}} has a schedule yet.",
+				"legendCovered": "Every shift covered",
+				"legendShort": "A shift is short",
+				"footnote": "Staff see a week only after it is published. Weeks are published in order.",
+				"loading": "Loading the month…",
+				"loadFailed": "This month could not be loaded. Please try again.",
+				"unavailable": "This month doesn’t exist or you don’t have permission to see it."
 			}
 		}
 	},

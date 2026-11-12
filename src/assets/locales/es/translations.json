@@ -4174,6 +4174,39 @@
 				"open": "Abrir",
 				"reviewWeek": "Revisar {{week}}",
 				"openWeek": "Abrir {{week}}"
+			},
+			"counts": {
+				"PUBLISHED_one": "{{count}} publicada",
+				"PUBLISHED_other": "{{count}} publicadas",
+				"TO_REVIEW_one": "{{count}} por revisar",
+				"TO_REVIEW_other": "{{count}} por revisar",
+				"TENTATIVE_one": "{{count}} provisional",
+				"TENTATIVE_other": "{{count}} provisionales",
+				"GENERATING_one": "{{count}} generándose",
+				"GENERATING_other": "{{count}} generándose",
+				"FAILED_one": "{{count}} fallida",
+				"FAILED_other": "{{count}} fallidas",
+				"REJECTED_one": "{{count}} rechazada",
+				"REJECTED_other": "{{count}} rechazadas",
+				"DRAFT_one": "{{count}} borrador",
+				"DRAFT_other": "{{count}} borradores",
+				"UNKNOWN_one": "{{count}} desconocida",
+				"UNKNOWN_other": "{{count}} desconocidas"
+			},
+			"page": {
+				"title": "{{department}} · {{month}}",
+				"weeks_one": "{{count}} semana, del {{from}} al {{to}}.",
+				"weeks_other": "{{count}} semanas, del {{from}} al {{to}}.",
+				"previousMonth": "Mes anterior, {{month}}",
+				"nextMonth": "Mes siguiente, {{month}}",
+				"crossingWeek": "{{week}} está en la página de <0>{{month}}</0>.",
+				"noSchedule": "Ninguna semana de {{month}} tiene horario todavía.",
+				"legendCovered": "Todos los turnos cubiertos",
+				"legendShort": "Falta un turno",
+				"footnote": "El personal solo ve una semana después de publicarla. Las semanas se publican en orden.",
+				"loading": "Cargando el mes…",
+				"loadFailed": "No pudimos cargar este mes. Inténtalo de nuevo.",
+				"unavailable": "Este mes no existe o no tienes permiso para verlo."
 			}
 		}
 	},

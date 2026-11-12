@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+	crossingWeekOf,
 	formatMonth,
+	formatMonthName,
 	formatWeekDates,
 	monthOf,
 	shiftMonth,
@@ -66,5 +68,25 @@ describe("stateCounts", () => {
 				{ state: "NOT_GENERATED" },
 			])
 		).toEqual({ PUBLISHED: 2, TO_REVIEW: 1, TENTATIVE: 1 });
+	});
+});
+
+describe("formatMonthName", () => {
+	it("given_november_when_named_then_theMonthAlone", () => {
+		expect(formatMonthName("2026-11", "en")).toBe("November");
+		expect(formatMonthName("2026-11", "es")).toBe("noviembre");
+	});
+});
+
+describe("crossingWeekOf", () => {
+	it("given_decemberWhoseFirstIsATuesday_when_asked_then_theWeekFrom30November", () => {
+		expect(crossingWeekOf("2026-12")).toEqual({
+			start: "2026-11-30",
+			end: "2026-12-06",
+		});
+	});
+
+	it("given_marchWhoseFirstIsAMonday_when_asked_then_none", () => {
+		expect(crossingWeekOf("2027-03")).toBeUndefined();
 	});
 });
