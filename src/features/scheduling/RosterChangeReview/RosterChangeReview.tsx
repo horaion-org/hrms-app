@@ -30,6 +30,8 @@ export type RosterChangeReviewProps = {
 	remarkRequired?: boolean;
 	/** Who reads the remark, where it isn't the roster's own readers: a leave move's remark reaches the employee. */
 	remarkHint?: string;
+	/** Says rules aren't re-checked; off where the panel already says so in its own words (Find cover). */
+	showsRulesNote?: boolean;
 };
 
 const key = "scheduling.rosterEdit";
@@ -37,7 +39,8 @@ const key = "scheduling.rosterEdit";
 /**
  * What a change, or the undo of one, would do before it is applied: each day
  * before → after, the checks with what each asks, the line saying rules are
- * not re-checked, and the remark and tick the checks ask for. Shared by the
+ * not re-checked (unless the panel says it itself), and the remark and tick
+ * the checks ask for. Shared by the
  * editor beside the grid and the undo question, so both ask the same way.
  */
 export const RosterChangeReview = ({
@@ -50,6 +53,7 @@ export const RosterChangeReview = ({
 	notifiesMembers = false,
 	remarkRequired = false,
 	remarkHint,
+	showsRulesNote = true,
 }: RosterChangeReviewProps): FunctionComponent => {
 	const { t } = useTranslation();
 	const remarkId = useId();
@@ -85,7 +89,7 @@ export const RosterChangeReview = ({
 			{preview && (
 				<>
 					<RosterChangeChecks checks={preview.checks} names={names} />
-					<Callout>{t(`${key}.rulesNotChecked`)}</Callout>
+					{showsRulesNote && <Callout>{t(`${key}.rulesNotChecked`)}</Callout>}
 				</>
 			)}
 			{preview && !gate.refused && (

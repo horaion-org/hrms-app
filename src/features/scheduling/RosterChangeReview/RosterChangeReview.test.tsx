@@ -16,13 +16,17 @@ const names = {
 	dayType: (): string => "rest day",
 };
 
-const show = (preview: RosterChangePreview | undefined): void => {
+const show = (
+	preview: RosterChangePreview | undefined,
+	showsRulesNote?: boolean
+): void => {
 	render(
 		<I18nextProvider i18n={authTestI18n}>
 			<RosterChangeReview
 				names={names}
 				preview={preview}
 				remark=""
+				showsRulesNote={showsRulesNote}
 				ticked={false}
 				onRemarkChange={vi.fn()}
 				onTickedChange={vi.fn()}
@@ -77,5 +81,12 @@ describe("RosterChangeReview", () => {
 		show(undefined);
 
 		expect(screen.getByRole("status")).toHaveTextContent("Checking…");
+	});
+
+	it("given_aPanelThatSaysItItself_when_shown_then_noRulesNote", () => {
+		show(rosterChangePreviewFixture(), false);
+
+		expect(screen.queryByRole("note")).toBeNull();
+		expect(screen.getByText("Checks")).toBeVisible();
 	});
 });

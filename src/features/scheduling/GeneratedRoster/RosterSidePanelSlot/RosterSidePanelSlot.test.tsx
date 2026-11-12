@@ -85,4 +85,54 @@ describe("RosterSidePanelSlot", () => {
 		await user.keyboard("{Escape}");
 		expect(onClose).toHaveBeenCalledOnce();
 	});
+
+	it("given_findCoverOnARosterThatMayBeChanged_when_rendered_then_opensFindCoverAndClosesBackToIssues", async () => {
+		const user = userEvent.setup();
+		const onCloseCover = vi.fn();
+		show({
+			roster: slotRosterFixture(
+				{ cover: "front-desk-am-copy|2026-10-17" },
+				true
+			),
+			editing: slotEditingFixture(),
+			onCloseCover,
+		});
+
+		expect(screen.getByRole("heading", { name: "Find cover" })).toBeVisible();
+		await user.keyboard("{Escape}");
+		expect(onCloseCover).toHaveBeenCalledOnce();
+	});
+
+	it("given_aShiftLeftShortOnTheChosenDay_when_findCoverIsPressed_then_opensItForThatShiftDay", async () => {
+		const user = userEvent.setup();
+		const onFindCover = vi.fn();
+		const roster = scheduleAssignmentsFixture().map((row) =>
+			row.member?.membershipId === "m-1" && row.day === "2026-10-13"
+				? { ...row, uncoveredShift: row.shift }
+				: row
+		);
+		show({
+			assignments: roster,
+			roster: {
+				...slotRosterFixture({ cell: "m-1|2026-10-13" }, true),
+				chosenRow: roster.find(
+					(row) =>
+						row.member?.membershipId === "m-1" && row.day === "2026-10-13"
+				),
+				chosenDayNotes: {
+					membershipId: "m-1",
+					note: { uncoveredShiftName: "Front Desk AM" },
+				},
+			},
+			editing: slotEditingFixture(),
+			onFindCover,
+		});
+
+		await user.click(screen.getByRole("button", { name: "Find cover" }));
+
+		expect(onFindCover).toHaveBeenCalledWith({
+			shiftId: "front-desk-am-copy",
+			day: "2026-10-13",
+		});
+	});
 });

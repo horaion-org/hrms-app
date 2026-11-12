@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import {
-	gapLines,
+	gapReason,
+	gapTitle,
 	neighbourLine,
 	optionLines,
 	reasonText,
@@ -31,27 +32,27 @@ const names: CoverNames = {
 };
 const gap = coverOptionsFixture().gap;
 
-describe("gapLines", () => {
+describe("gapTitle and gapReason", () => {
 	it("given_aGenerationHole_when_worded_then_theShiftDayTimeRolesAndShortSinceGeneration", () => {
-		expect(gapLines(gap, names, t)).toEqual([
-			"Front Desk AM · Sat, Oct 17 · 09:00 – 15:00 · Front Desk Staff or Front Desk Lead",
-			"1 short since generation",
-		]);
+		expect(gapTitle(gap, names, t)).toBe(
+			"Front Desk AM · Sat, Oct 17 · 09:00 – 15:00 · Front Desk Staff or Front Desk Lead"
+		);
+		expect(gapReason(gap, names, t)).toBe("1 short since generation");
 	});
 
 	it("given_oneAbsentMember_when_worded_then_namesWhoIsOnLeave", () => {
 		expect(
-			gapLines(
+			gapReason(
 				{ ...gap, shortSinceGeneration: 0, absentMembershipIds: ["m-1"] },
 				names,
 				t
-			)[1]
+			)
 		).toBe("1 short: Aisha Rahman is on leave");
 	});
 
 	it("given_aMixOfLeaveAndHoles_when_worded_then_onlyHowManyShort", () => {
 		expect(
-			gapLines(
+			gapReason(
 				{
 					...gap,
 					shortBy: 2,
@@ -60,7 +61,7 @@ describe("gapLines", () => {
 				},
 				names,
 				t
-			)[1]
+			)
 		).toBe("2 short");
 	});
 });

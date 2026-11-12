@@ -4232,7 +4232,18 @@
 			},
 			"findCover": "Find cover",
 			"findCoverFor": "Find cover: {{shift}}",
-			"remark": "Covers {{name}}"
+			"remark": "Covers {{name}}",
+			"panel": {
+				"title": "Find cover",
+				"loading": "Finding who can cover…",
+				"rosterMoved": "The roster changed since this list was made.",
+				"findAgain": "Find again",
+				"failed": "The list couldn't be loaded.",
+				"covered": "{{shift}} on {{day}} is covered now.",
+				"close": "Close",
+				"nobody": "Nobody on this roster can cover {{shift}} on {{day}}.",
+				"notChecked": "Not checked against the scheduling rules yet."
+			}
 		},
 		"reach": {
 			"editShift_one": "Saving changes this shift for {{department}}: new schedules and {{count}} draft that uses it. Generated and published schedules keep their own copy.",

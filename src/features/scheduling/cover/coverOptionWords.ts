@@ -1,6 +1,7 @@
 import type { TFunction } from "i18next";
 import type {
 	CoverGap,
+	CoverGapRequest,
 	CoverOption,
 	CoverUnavailableReason,
 } from "@/features/scheduling/cover/api";
@@ -31,31 +32,33 @@ export type CoverNames = {
 const jobTitlesOf = (shift: ScheduleShift | undefined, t: TFunction): string =>
 	(shift?.roles ?? []).map((role) => role.name).join(t(`${key}.jobTitlesOr`));
 
-/**
- * The gap in two lines: what is short ("Front Desk AM · Sat, Oct 17 · 09:00 –
- * 15:00 · Front Desk Staff"), then why ("1 short: Aisha Rahman is on leave",
- * "1 short since generation", "2 short").
- */
-export const gapLines = (
-	gap: CoverGap,
+/** What is short: "Front Desk AM · Sat, Oct 17 · 09:00 – 15:00 · Front Desk Staff". */
+export const gapTitle = (
+	gap: CoverGapRequest,
 	names: CoverNames,
 	t: TFunction
-): [string, string] => {
+): string => {
 	const shift = names.shift(gap.shiftId);
-	const what = t(`${key}.gap`, {
+	return t(`${key}.gap`, {
 		shift: shift?.name ?? "",
 		day: names.day(gap.day),
 		time: shift ? formatTimeRange(shift, t) : "",
 		jobTitles: jobTitlesOf(shift, t),
 	});
+};
+
+/** Why it is short: "1 short: Aisha Rahman is on leave", "1 short since generation", "2 short". */
+export const gapReason = (
+	gap: CoverGap,
+	names: CoverNames,
+	t: TFunction
+): string => {
 	const [absent] = gap.absentMembershipIds;
 	if (gap.shortBy === 1 && absent !== undefined)
-		return [what, t(`${key}.short.onLeave`, { name: names.member(absent) })];
-	const why =
-		gap.shortSinceGeneration === gap.shortBy
-			? t(`${key}.short.sinceGeneration`, { count: gap.shortBy })
-			: t(`${key}.short.plain`, { count: gap.shortBy });
-	return [what, why];
+		return t(`${key}.short.onLeave`, { name: names.member(absent) });
+	return gap.shortSinceGeneration === gap.shortBy
+		? t(`${key}.short.sinceGeneration`, { count: gap.shortBy })
+		: t(`${key}.short.plain`, { count: gap.shortBy });
 };
 
 /**

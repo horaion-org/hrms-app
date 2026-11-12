@@ -4054,7 +4054,18 @@
 			},
 			"findCover": "Buscar cobertura",
 			"findCoverFor": "Buscar cobertura: {{shift}}",
-			"remark": "Cubre a {{name}}"
+			"remark": "Cubre a {{name}}",
+			"panel": {
+				"title": "Buscar cobertura",
+				"loading": "Buscando quién puede cubrirlo…",
+				"rosterMoved": "El cuadrante cambió desde que se hizo esta lista.",
+				"findAgain": "Buscar de nuevo",
+				"failed": "No se pudo cargar la lista.",
+				"covered": "{{shift}} el {{day}} ya está cubierto.",
+				"close": "Cerrar",
+				"nobody": "Nadie de este cuadrante puede cubrir {{shift}} el {{day}}.",
+				"notChecked": "Aún no se ha comprobado con las reglas de programación."
+			}
 		},
 		"reach": {
 			"editShift_one": "Al guardar, este turno cambia para {{department}}: los horarios nuevos y {{count}} borrador que lo usa. Los horarios generados y publicados conservan su propia copia.",

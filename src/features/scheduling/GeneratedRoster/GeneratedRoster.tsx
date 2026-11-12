@@ -264,6 +264,7 @@ export const GeneratedRoster = ({
 								sections: listSections,
 							}}
 							onClose={roster.close}
+							onCloseCover={roster.closeCover}
 							onFindCover={editing ? roster.openCover : undefined}
 							onPreviewDays={roster.onPreviewDays}
 							onApplied={(change) => {
