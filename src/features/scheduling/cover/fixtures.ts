@@ -7,19 +7,19 @@ import { shiftCopyId } from "@/features/scheduling/shifts/fixtures";
 /*
  * API-shaped Find cover answers for stories and tests; never sent anywhere.
  * Schedule s-1's Front Desk AM is one short on Saturday 17 October (the
- * generation's hole in `schedules/fixtures.ts`): Ben Ong (m-2) is free within
- * his contracted hours, Chen Wei (m-3) would work it as overtime, and Aisha
- * Rahman (m-1) is on leave.
+ * generation's hole in `schedules/fixtures.ts`): Aisha Rahman (m-1), off that
+ * day, is free within her contracted hours, Chen Wei (m-3) would work it as
+ * overtime, and Ben Ong (m-2) already works that day.
  */
 
 const FRONT_DESK_AM = shiftCopyId("front-desk-am");
 const SATURDAY = "2026-10-17";
 
-/** One option: Ben, free that day and within his hours; `overrides` set it apart. */
+/** One option: Aisha, off that day and within her hours; `overrides` set it apart. */
 export const coverOptionFixture = (
 	overrides: Partial<CoverOption> = {}
 ): CoverOption => {
-	const membershipId = overrides.membershipId ?? "m-2";
+	const membershipId = overrides.membershipId ?? "m-1";
 	return {
 		membershipId,
 		kind: "FREE",
@@ -59,7 +59,7 @@ export const coverOptionsFixture = (
 			warnings: ["ROSTERED_ELSEWHERE"],
 		}),
 	],
-	unavailable: [{ membershipId: "m-1", reason: "ON_LEAVE" }],
+	unavailable: [{ membershipId: "m-2", reason: "ALREADY_WORKING" }],
 	ruleCheck: "NOT_CHECKED",
 	...overrides,
 });

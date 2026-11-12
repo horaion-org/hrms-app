@@ -4053,7 +4053,8 @@
 				"cantHelpLine": "{{name}} · {{reason}}"
 			},
 			"findCover": "Buscar cobertura",
-			"findCoverFor": "Buscar cobertura: {{shift}}"
+			"findCoverFor": "Buscar cobertura: {{shift}}",
+			"remark": "Cubre a {{name}}"
 		},
 		"reach": {
 			"editShift_one": "Al guardar, este turno cambia para {{department}}: los horarios nuevos y {{count}} borrador que lo usa. Los horarios generados y publicados conservan su propia copia.",

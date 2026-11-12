@@ -110,14 +110,14 @@ describe("optionLines", () => {
 describe("neighbourLine", () => {
 	it("given_aShiftTheDayBefore_when_worded_then_namesItsDayAndTime", () => {
 		expect(neighbourLine(coverOptionFixture(), names, t)).toBe(
-			"Ben Ong works Front Desk AM on Fri, Oct 16 (09:00 – 15:00)."
+			"Aisha Rahman works Front Desk AM on Fri, Oct 16 (09:00 – 15:00)."
 		);
 	});
 
 	it("given_noShiftBesideIt_when_worded_then_saysSo", () => {
 		expect(
 			neighbourLine(coverOptionFixture({ neighbours: [] }), names, t)
-		).toBe("Ben Ong has no shift the day before or after.");
+		).toBe("Aisha Rahman has no shift the day before or after.");
 	});
 });
 
