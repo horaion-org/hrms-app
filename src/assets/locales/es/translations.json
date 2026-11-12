@@ -4249,6 +4249,16 @@
 				"generatingTitle": "Generando {{month}}…",
 				"generatingDetail": "Se están calculando las semanas que no están publicadas. Puedes salir de esta página.",
 				"refused": "Sin generar: {{reason}}"
+			},
+			"choice": {
+				"title": "Qué usa {{month}}",
+				"intro": "Todo empieza marcado. Desmarca un turno o una restricción para dejarlo fuera solo de esa semana.",
+				"weeks": "Semanas de {{month}}",
+				"weekLeftOut_one": "{{week}} · {{count}} fuera",
+				"weekLeftOut_other": "{{week}} · {{count}} fuera",
+				"useForEveryWeek": "Usar la elección de esta semana en todas las semanas",
+				"apply": "Usar para {{month}}",
+				"weekProblem": "{{week}}: {{problem}}"
 			}
 		}
 	},

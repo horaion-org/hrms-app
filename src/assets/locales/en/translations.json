@@ -4427,6 +4427,16 @@
 				"generatingTitle": "Generating {{month}}…",
 				"generatingDetail": "The weeks that aren’t published are being worked out. You can leave this page.",
 				"refused": "Not generated: {{reason}}"
+			},
+			"choice": {
+				"title": "What {{month}} uses",
+				"intro": "Everything starts ticked. Untick a shift or constraint to leave it out of that week only.",
+				"weeks": "Weeks of {{month}}",
+				"weekLeftOut_one": "{{week}} · {{count}} left out",
+				"weekLeftOut_other": "{{week}} · {{count}} left out",
+				"useForEveryWeek": "Use this week’s choice for every week",
+				"apply": "Use for {{month}}",
+				"weekProblem": "{{week}}: {{problem}}"
 			}
 		}
 	},
