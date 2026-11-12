@@ -1,8 +1,10 @@
 import type {
+	GenerateMonthBody,
 	MonthGeneration,
 	MonthWeek,
 	ScheduleMonth,
 } from "@/features/scheduling/months/api";
+import type { WeekChoiceIds } from "@/features/scheduling/weekChoice";
 
 /*
  * What generating a month means on the page, from the month read alone. The
@@ -47,3 +49,41 @@ export const refusedWeeks = (answer: MonthGeneration): Record<string, string> =>
 				: []
 		)
 	);
+
+/** Each new week's choice of shifts and constraints, by Monday. */
+export type MonthChoices = Record<string, WeekChoiceIds>;
+
+/** The setup of the weeks a run creates. */
+export type MonthSetup = { includeLeave: boolean; allowOpenShifts: boolean };
+
+/** A new week's setup, as the week wizard starts a new draft (`pages/CreateSchedule.tsx`, `setupDefaults`). */
+export const MONTH_SETUP_DEFAULTS: MonthSetup = {
+	includeLeave: true,
+	allowOpenShifts: false,
+};
+
+/**
+ * What generating the month sends: the setup, and a choice for every week the
+ * run creates, the given one or else `everything`. A week without either is
+ * left out, and the API refuses the run with MONTH_WEEK_CHOICE_MISSING.
+ */
+export const generateMonthBody = (
+	month: ScheduleMonth,
+	choices: MonthChoices,
+	everything: WeekChoiceIds | undefined,
+	setup: MonthSetup
+): GenerateMonthBody => ({
+	...setup,
+	newWeeks: weeksToCreate(month).flatMap((week) => {
+		const choice = choices[week.periodStart] ?? everything;
+		return choice
+			? [
+					{
+						periodStart: week.periodStart,
+						includedShiftIds: choice.shiftIds,
+						includedConstraintIds: choice.constraintIds,
+					},
+				]
+			: [];
+	}),
+});
