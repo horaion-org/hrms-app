@@ -4395,7 +4395,34 @@
 			"generate": {
 				"choiceMissing": "A week of this month was set up while you were here. Reload the page and generate again.",
 				"forbidden": "You don’t have permission to generate this month here.",
-				"failed": "We couldn’t generate the month. Try again."
+				"failed": "We couldn’t generate the month. Try again.",
+				"panel": {
+					"title": "Before you generate {{month}}",
+					"shiftsTitle": "Shifts.",
+					"shifts_one": "{{department}} has {{count}} shift.",
+					"shifts_other": "{{department}} has {{count}} shifts.",
+					"noShifts": "{{department}} has no shifts.",
+					"editShifts": "Edit shifts",
+					"addShift": "Add a shift",
+					"staffingTitle": "Staffing.",
+					"staffing": "“{{name}}” puts people on {{shifts}}.",
+					"noStaffing": "No constraint puts people on a shift, so nobody would be rostered.",
+					"editConstraints": "Edit constraints",
+					"addStaffing": "Add a staffing constraint",
+					"leaveTitle": "Leave.",
+					"approvedLeave_one": "{{count}} person has approved leave in {{month}}.",
+					"approvedLeave_other": "{{count}} people have approved leave in {{month}}.",
+					"noApprovedLeave": "No approved leave in {{month}}. If people plan to take leave, approve it first: leave approved later changes the roster.",
+					"waitingMore_one": "{{count}} more request is waiting for a decision.",
+					"waitingMore_other": "{{count}} more requests are waiting for a decision.",
+					"waiting_one": "{{count}} request is waiting for a decision.",
+					"waiting_other": "{{count}} requests are waiting for a decision.",
+					"openLeave": "Open leave requests",
+					"hint": "Generating works out every week of {{month}} that isn’t published. You then review and publish them week by week.",
+					"generate": "Generate {{month}}",
+					"blockedShift": "{{department}} can’t be generated until it has a shift.",
+					"blockedStaffing": "{{department}} can’t be generated until a constraint puts people on a shift."
+				}
 			}
 		}
 	},

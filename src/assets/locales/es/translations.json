@@ -4217,7 +4217,34 @@
 			"generate": {
 				"choiceMissing": "Se configuró una semana de este mes mientras estabas aquí. Vuelve a cargar la página y genera de nuevo.",
 				"forbidden": "No tienes permiso para generar este mes aquí.",
-				"failed": "No pudimos generar el mes. Inténtalo de nuevo."
+				"failed": "No pudimos generar el mes. Inténtalo de nuevo.",
+				"panel": {
+					"title": "Antes de generar {{month}}",
+					"shiftsTitle": "Turnos.",
+					"shifts_one": "{{department}} tiene {{count}} turno.",
+					"shifts_other": "{{department}} tiene {{count}} turnos.",
+					"noShifts": "{{department}} no tiene turnos.",
+					"editShifts": "Editar turnos",
+					"addShift": "Añadir un turno",
+					"staffingTitle": "Personal.",
+					"staffing": "«{{name}}» asigna personas a {{shifts}}.",
+					"noStaffing": "Ninguna restricción asigna personas a un turno, así que no se asignaría a nadie.",
+					"editConstraints": "Editar restricciones",
+					"addStaffing": "Añadir una restricción de personal",
+					"leaveTitle": "Ausencias.",
+					"approvedLeave_one": "{{count}} persona tiene una ausencia aprobada en {{month}}.",
+					"approvedLeave_other": "{{count}} personas tienen ausencias aprobadas en {{month}}.",
+					"noApprovedLeave": "No hay ausencias aprobadas en {{month}}. Si alguien piensa ausentarse, apruébalo primero: una ausencia aprobada después cambia el horario.",
+					"waitingMore_one": "{{count}} solicitud más espera una decisión.",
+					"waitingMore_other": "{{count}} solicitudes más esperan una decisión.",
+					"waiting_one": "{{count}} solicitud espera una decisión.",
+					"waiting_other": "{{count}} solicitudes esperan una decisión.",
+					"openLeave": "Abrir solicitudes de ausencia",
+					"hint": "Generar calcula cada semana de {{month}} que no esté publicada. Después revisas y publicas cada semana.",
+					"generate": "Generar {{month}}",
+					"blockedShift": "{{department}} no se puede generar hasta que tenga un turno.",
+					"blockedStaffing": "{{department}} no se puede generar hasta que una restricción asigne personas a un turno."
+				}
 			}
 		}
 	},
