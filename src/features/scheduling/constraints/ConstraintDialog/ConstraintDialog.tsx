@@ -174,6 +174,8 @@ export const ConstraintDialog = ({
 		name: ["name", "type", "requirement", "values"],
 	});
 	const chosen = typeOf(type);
+	// A rule the system adds always applies: only its comparison, number and name change.
+	const alwaysApplies = chosen?.addedBySystem === true;
 	const { message, alertRef, close, run } = useCreateFormSubmit(
 		form,
 		FIELDS,
@@ -191,10 +193,15 @@ export const ConstraintDialog = ({
 	const labelledBy = (name: FieldName): string =>
 		formRowIds(fieldId(name)).labelId;
 	// Grouped under their category: the Select heads each run of one group.
+	// A type the system adds is never offered, only shown on its own rule.
 	const typeOptions: Array<SelectOption> = CONSTRAINT_CATEGORIES.flatMap(
 		(category) =>
 			(offered?.types ?? [])
-				.filter((option) => option.category === category)
+				.filter(
+					(option) =>
+						option.category === category &&
+						(!option.addedBySystem || option.type === startingPoint?.type)
+				)
 				.map((option) => ({
 					value: option.type,
 					label: t(`scheduling.constraints.types.${option.type}`),
@@ -238,15 +245,17 @@ export const ConstraintDialog = ({
 			compareStrictness(parentType, replacing, body)
 		);
 	};
-	// What a field of each kind but a number is chosen from.
-	const choices: Record<
-		Exclude<ConstraintFieldKind, "NUMBER">,
-		Array<SelectOption>
-	> = {
-		COMPARISON: CONSTRAINT_COMPARISONS.map((comparison) => ({
+	// The comparisons a field takes, as the API lists them; all three when it lists none.
+	const comparisonChoices = (spec: ConstraintFieldSpec): Array<SelectOption> =>
+		(spec.comparisons ?? CONSTRAINT_COMPARISONS).map((comparison) => ({
 			value: comparison,
 			label: t(`scheduling.constraints.comparisons.${comparison}`),
-		})),
+		}));
+	// What a field of each other kind but a number is chosen from.
+	const choices: Record<
+		Exclude<ConstraintFieldKind, "NUMBER" | "COMPARISON">,
+		Array<SelectOption>
+	> = {
 		WEEKDAY: WEEKDAYS.map((day) => ({
 			value: day,
 			label: t(`weekdays.${day}`),
@@ -471,8 +480,13 @@ export const ConstraintDialog = ({
 						const select = {
 							...shared,
 							"aria-labelledby": labelledBy(spec.field),
-							options: choices[spec.kind],
+							options:
+								spec.kind === "COMPARISON"
+									? comparisonChoices(spec)
+									: choices[spec.kind],
 							placeholder: t(`${key}.pleaseSelect`),
+							// The day type a rule the system adds is about stays as it was set.
+							disabled: alwaysApplies && spec.kind === "DAY_TYPE",
 						};
 						return spec.maxCount === 1 ? (
 							<Select
@@ -628,7 +642,7 @@ export const ConstraintDialog = ({
 						replacing !== undefined ||
 						editing?.overridesConstraintId != null
 				)}
-				{reach && (
+				{reach && !alwaysApplies && (
 					<Controller
 						control={control}
 						name="reach"
@@ -648,6 +662,7 @@ export const ConstraintDialog = ({
 					/>
 				)}
 				{withLock &&
+					!alwaysApplies &&
 					selectRow(
 						"lock",
 						lockOptions,
@@ -697,6 +712,7 @@ export const ConstraintDialog = ({
 						{firmnessRow(chosen)}
 						{/* A new constraint is Active; whether to switch one off is asked only when editing. */}
 						{editing &&
+							!alwaysApplies &&
 							selectRow("status", statusOptions, t(`${key}.statusHint`))}
 					</>
 				)}

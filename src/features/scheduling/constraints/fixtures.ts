@@ -314,6 +314,22 @@ export const COMPANY_CONSTRAINT_FIXTURES: Array<DepartmentConstraint> = [
 	}),
 ];
 
+/** The weekly rule the system adds to the work policy: at least 1 Rest day each week, locked. */
+export const WEEKLY_RULE_FIXTURE: DepartmentConstraint =
+	companyConstraintFixture({
+		constraintId: "weekly-rest",
+		name: "Rest days each week",
+		type: "DAY_TYPE_DAYS_PER_WEEK",
+		category: "SHIFT_PATTERN",
+		requirement: null,
+		lock: "LOCKED",
+		values: [
+			plain("COMPARISON", "AT_LEAST"),
+			plain("DAY_TYPE_COUNT", "1"),
+			plain("DAY_TYPE", "REST"),
+		],
+	});
+
 /** Front Office's days limit: at most 6 days in a row without a Rest day or a Day off. */
 export const DAYS_LIMIT_FIXTURE: DepartmentConstraint = constraintFixture({
 	constraintId: "days-limit",

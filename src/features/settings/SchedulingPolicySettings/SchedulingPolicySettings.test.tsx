@@ -22,6 +22,7 @@ import {
 	COMPANY_CONSTRAINT_FIXTURES,
 	CONSTRAINT_OPTIONS_RESPONSE,
 	DEPARTMENTS_POLICY_FIXTURE,
+	WEEKLY_RULE_FIXTURE,
 } from "@/features/scheduling/constraints/fixtures";
 
 const REFRESH = "POST /api/v1/public/sessions/refreshes";
@@ -177,6 +178,145 @@ describe("SchedulingPolicySettings", () => {
 			).toMatchObject({
 				appliesToBranchIds: [],
 				appliesToDepartmentIds: ["d-3"],
+			});
+		});
+	});
+
+	it("shows the weekly rule as always applying, to edit but never delete", async () => {
+		stubApi(
+			routes(READ_AND_UPDATE, {
+				[`GET ${POLICY}/constraints`]: {
+					status: 200,
+					body: envelope([...COMPANY_CONSTRAINT_FIXTURES, WEEKLY_RULE_FIXTURE]),
+				},
+			})
+		);
+		const panel = await open();
+
+		const table = await within(panel).findByRole("table", {
+			name: "Work policy constraints",
+		});
+		const weekly = within(table).getByRole("row", {
+			name: /Rest days each week/,
+		});
+		expect(weekly).toHaveTextContent(
+			"Must Every full-timer has at least 1 Rest day each week.Whole company"
+		);
+		await waitFor(() => {
+			expect(weekly).toHaveTextContent("Always applies");
+		});
+		expect(weekly).not.toHaveTextContent("Locked");
+		expect(
+			within(weekly).getByRole("button", { name: "Edit Rest days each week" })
+		).toBeVisible();
+		expect(
+			within(weekly).queryByRole("button", {
+				name: "Delete Rest days each week",
+			})
+		).toBeNull();
+		expect(
+			within(table).getByRole("button", { name: "Delete Company rest" })
+		).toBeVisible();
+	});
+
+	it("lists no row until the constraint types are read, so the weekly rule never shows Delete", async () => {
+		const calls = stubApi(
+			routes(READ_AND_UPDATE, {
+				[`GET ${POLICY}/constraints`]: {
+					status: 200,
+					body: envelope([WEEKLY_RULE_FIXTURE]),
+				},
+			})
+		);
+		// The constraint types never answer.
+		const answer = globalThis.fetch;
+		vi.stubGlobal("fetch", (url: string, init?: RequestInit) =>
+			url.includes("/constraint-options")
+				? new Promise<Response>(() => {})
+				: answer(url, init)
+		);
+		const panel = await open();
+
+		await waitFor(() => {
+			expect(
+				calls.some(
+					(call) =>
+						call.method === "GET" && call.path === `${POLICY}/constraints`
+				)
+			).toBe(true);
+		});
+		expect(
+			await within(panel).findByText("Loading the work policy…")
+		).toBeVisible();
+		expect(
+			within(panel).queryByRole("row", { name: /Rest days each week/ })
+		).toBeNull();
+		expect(
+			within(panel).queryByRole("button", {
+				name: "Delete Rest days each week",
+			})
+		).toBeNull();
+	});
+
+	it("edits the weekly rule's comparison and number only", async () => {
+		const calls = stubApi(
+			routes(READ_AND_UPDATE, {
+				[`GET ${POLICY}/constraints`]: {
+					status: 200,
+					body: envelope([WEEKLY_RULE_FIXTURE]),
+				},
+				[`PUT ${POLICY}/constraints/weekly-rest`]: {
+					status: 200,
+					body: envelope(WEEKLY_RULE_FIXTURE),
+				},
+			})
+		);
+		const user = userEvent.setup();
+		const panel = await open();
+
+		await user.click(
+			await within(panel).findByRole("button", {
+				name: "Edit Rest days each week",
+			})
+		);
+		const dialog = await screen.findByRole("dialog", {
+			name: "Edit constraint",
+		});
+		expect(within(dialog).queryByRole("button", { name: /^Lock/ })).toBeNull();
+		expect(
+			within(dialog).queryByRole("button", { name: /^Status/ })
+		).toBeNull();
+		expect(
+			within(dialog).queryByRole("radiogroup", { name: /Applies to/ })
+		).toBeNull();
+		expect(
+			within(dialog).getByRole("button", { name: /^Day types/ })
+		).toBeDisabled();
+		const days = within(dialog).getByRole("spinbutton", {
+			name: /^Days each week/,
+		});
+		await user.clear(days);
+		await user.type(days, "2");
+		await user.click(within(dialog).getByRole("button", { name: "Save" }));
+
+		await waitFor(() => {
+			expect(
+				calls.find(
+					(call) =>
+						call.method === "PUT" &&
+						call.path === `${POLICY}/constraints/weekly-rest`
+				)?.body
+			).toMatchObject({
+				type: "DAY_TYPE_DAYS_PER_WEEK",
+				status: "ACTIVE",
+				lock: "LOCKED",
+				values: [
+					{ field: "COMPARISON", value: "AT_LEAST" },
+					{ field: "DAY_TYPE_COUNT", value: "2" },
+					{ field: "DAY_TYPE", value: "REST" },
+				],
+				appliesToBranchIds: [],
+				appliesToDepartmentIds: [],
 			});
 		});
 	});

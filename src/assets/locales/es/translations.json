@@ -4107,6 +4107,7 @@
 			"noLongerNote": "Corrige la configuración de {{department}} para generar."
 		},
 		"policy": {
+			"alwaysApplies": "Siempre se aplica",
 			"reach": {
 				"label": "Se aplica a",
 				"choices": {

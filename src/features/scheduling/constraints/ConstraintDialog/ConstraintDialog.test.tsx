@@ -17,6 +17,7 @@ import {
 	CONSTRAINT_FIXTURES,
 	CONSTRAINT_OPTIONS,
 	CONSTRAINT_TYPE_OPTIONS,
+	WEEKLY_RULE_FIXTURE,
 } from "@/features/scheduling/constraints/fixtures";
 import type { ConstraintOptionsState } from "@/features/scheduling/constraints/useConstraintOptions";
 import { reachValueOf } from "@/features/scheduling/policy/policyReach";
@@ -396,13 +397,12 @@ describe("ConstraintDialog", () => {
 			"Days off in a run of days",
 			"Days to avoid giving off",
 			"Limit on days in a row",
-			"Required days each week",
 			"Rest between shifts",
 		]);
 		for (const [category, count] of [
 			["People on shifts", 2],
 			["On duty throughout", 1],
-			["Days off", 4],
+			["Days off", 3],
 			["Rest and hours", 1],
 		] as const)
 			expect(
@@ -635,6 +635,57 @@ describe("ConstraintDialog", () => {
 				})
 			);
 		});
+	});
+
+	it("given_theWeeklyRule_when_edited_then_offersItsComparisonsAndNumberWithItsDayTypeFixed", async () => {
+		const user = userEvent.setup();
+		const { onSave } = renderDialog({
+			withLock: true,
+			editing: WEEKLY_RULE_FIXTURE,
+			reach: { choices: REACH.choices, initial: reachValueOf() },
+		});
+		await screen.findByRole("dialog", { name: "Edit constraint" });
+
+		expect(trigger(/^What it controls/)).toHaveTextContent(
+			"Required days each week"
+		);
+		expect(trigger(/^What it controls/)).toBeDisabled();
+		expect(screen.queryByRole("button", { name: /^Lock/ })).toBeNull();
+		expect(screen.queryByRole("button", { name: /^Status/ })).toBeNull();
+		expect(screen.queryByRole("radiogroup", { name: /Applies to/ })).toBeNull();
+		expect(trigger(/^Day types/)).toHaveTextContent("Rest day");
+		expect(trigger(/^Day types/)).toBeDisabled();
+		await user.click(trigger(/^At least, at most or exactly/));
+		expect(
+			screen.getAllByRole("option").map((option) => option.textContent)
+		).toEqual(["At least", "Exactly"]);
+		await user.click(screen.getByRole("option", { name: "Exactly" }));
+		await user.click(screen.getByRole("button", { name: "Save" }));
+
+		await waitFor(() => {
+			expect(onSave).toHaveBeenCalledWith(
+				expect.objectContaining({
+					type: "DAY_TYPE_DAYS_PER_WEEK",
+					lock: "LOCKED",
+					values: [
+						{ field: "COMPARISON", value: "EXACTLY" },
+						{ field: "DAY_TYPE_COUNT", value: "1" },
+						{ field: "DAY_TYPE", value: "REST" },
+					],
+				})
+			);
+		});
+	});
+
+	it("given_aPeopleType_when_chosen_then_offersAllThreeComparisons", async () => {
+		const user = userEvent.setup();
+		renderDialog();
+		await start(user, "People on a shift");
+
+		await user.click(trigger(/^At least, at most or exactly/));
+		expect(
+			screen.getAllByRole("option").map((option) => option.textContent)
+		).toEqual(["At least", "At most", "Exactly"]);
 	});
 
 	it("given_theDaysLimit_when_saved_then_offersTheApisDayTypesByLabelAndSendsTheChosenCodes", async () => {

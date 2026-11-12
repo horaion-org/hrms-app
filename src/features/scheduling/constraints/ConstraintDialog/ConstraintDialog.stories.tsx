@@ -9,6 +9,7 @@ import {
 	CONSTRAINT_OPTIONS,
 	DAYS_LIMIT_FIXTURE,
 	DEPARTMENTS_POLICY_FIXTURE,
+	WEEKLY_RULE_FIXTURE,
 } from "@/features/scheduling/constraints/fixtures";
 import { reachValueOf } from "@/features/scheduling/policy/policyReach";
 
@@ -45,6 +46,10 @@ export const EditWithoutRequirement: Story = {
 /** The days limit: a number and the day types that break a run, chosen from the API's list. */
 export const EditDaysLimit: Story = {
 	args: { editing: DAYS_LIMIT_FIXTURE },
+};
+/** The weekly rule the system adds: comparison, number and name only; its day type fixed, no lock, status or reach. */
+export const EditWeeklyRule: Story = {
+	args: { withLock: true, editing: WEEKLY_RULE_FIXTURE },
 };
 export const OptionsLoading: Story = {
 	args: { options: { status: "pending" } },
