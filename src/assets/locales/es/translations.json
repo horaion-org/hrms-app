@@ -4244,7 +4244,11 @@
 					"generate": "Generar {{month}}",
 					"blockedShift": "{{department}} no se puede generar hasta que tenga un turno.",
 					"blockedStaffing": "{{department}} no se puede generar hasta que una restricción asigne personas a un turno."
-				}
+				},
+				"cannotCreate": "No puedes crear horarios en {{department}}, así que no se pueden crear las semanas que le faltan a este mes.",
+				"generatingTitle": "Generando {{month}}…",
+				"generatingDetail": "Se están calculando las semanas que no están publicadas. Puedes salir de esta página.",
+				"refused": "Sin generar: {{reason}}"
 			}
 		}
 	},

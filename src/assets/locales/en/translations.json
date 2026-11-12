@@ -4422,7 +4422,11 @@
 					"generate": "Generate {{month}}",
 					"blockedShift": "{{department}} can’t be generated until it has a shift.",
 					"blockedStaffing": "{{department}} can’t be generated until a constraint puts people on a shift."
-				}
+				},
+				"cannotCreate": "You can’t create schedules at {{department}}, so the weeks this month still needs can’t be made.",
+				"generatingTitle": "Generating {{month}}…",
+				"generatingDetail": "The weeks that aren’t published are being worked out. You can leave this page.",
+				"refused": "Not generated: {{reason}}"
 			}
 		}
 	},

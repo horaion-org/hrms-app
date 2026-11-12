@@ -1,19 +1,36 @@
 import { useQuery, type UseQueryResult } from "@tanstack/react-query";
-import { getRouteApi } from "@tanstack/react-router";
+import type { TFunction } from "i18next";
+import { getRouteApi, useRouterState } from "@tanstack/react-router";
 import { Trans, useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import { ApiProblemError } from "@/common/problem";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
+import { Callout } from "@/components/ui/Callout";
 import {
 	ArrowLeftIcon,
 	ChevronLeftIcon,
 	ChevronRightIcon,
 } from "@/components/ui/Icon";
 import {
+	monthGenerationCheckQuery,
 	scheduleMonthQuery,
 	type ScheduleMonth,
 } from "@/features/scheduling/months/api";
+import {
+	BeforeGeneratePanel,
+	type PanelLink,
+} from "@/features/scheduling/months/BeforeGeneratePanel";
+import {
+	isGenerating,
+	refusedWeeks,
+	showsBeforeGenerate,
+} from "@/features/scheduling/months/monthGeneration";
+import { refusedWeeksFrom } from "@/features/scheduling/months/refusedWeeksState";
+import {
+	type GenerateMonth,
+	useGenerateMonth,
+} from "@/features/scheduling/months/useGenerateMonth";
 import { isMonth } from "@/features/scheduling/months/monthSearch";
 import {
 	crossingWeekOf,
@@ -27,7 +44,13 @@ import {
 import { stateCountsLine } from "@/features/scheduling/months/monthCopy";
 import { WeekCard } from "@/features/scheduling/months/WeekCard";
 import { dayMarkLooks } from "@/features/scheduling/months/weekStateLooks";
-import { useAccess } from "@/features/workspace/useAccess";
+import { generationFailure } from "@/features/scheduling/roster/generationFailure";
+import {
+	monthGenerationRefusal,
+	refusalOfCode,
+} from "@/features/scheduling/schedules/scheduleRefusal";
+import { departmentScope } from "@/features/workspace/scopes";
+import { type Access, useAccess } from "@/features/workspace/useAccess";
 import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 
 const route = getRouteApi("/_authenticated/_app/scheduling_/months/$month");
@@ -177,7 +200,53 @@ const Legend = (): FunctionComponent => {
 	);
 };
 
-/** The month itself: its title and summary, its weeks, and the legend. */
+/** The panel's fix links, each only where the person may read what it opens. */
+const panelLinks = (
+	access: Access,
+	unit: { branchId: string; departmentId: string }
+): { shifts?: PanelLink; constraints?: PanelLink; leave?: PanelLink } => {
+	const scope = departmentScope(unit.departmentId);
+	const setupTab =
+		(view: "shifts" | "constraints"): PanelLink =>
+		(label) => (
+			<Button
+				search={{ view, branch: unit.branchId, department: unit.departmentId }}
+				to="/scheduling"
+				variant="textlink"
+			>
+				{label}
+			</Button>
+		);
+	return {
+		...(access.can("shift:read", scope) ? { shifts: setupTab("shifts") } : {}),
+		...(access.can("constraint:read", scope)
+			? { constraints: setupTab("constraints") }
+			: {}),
+		...(access.canAnywhere("leave_request:read")
+			? {
+					leave: (label: string) => (
+						<Button to="/leave" variant="textlink">
+							{label}
+						</Button>
+					),
+				}
+			: {}),
+	};
+};
+
+/** The note under a Generate that waits for something besides readiness; none while the lists load. */
+const blockedNoteOf = (
+	block: GenerateMonth["block"],
+	department: string,
+	t: TFunction
+): string | undefined =>
+	block === "cannotCreate"
+		? t("scheduling.months.generate.cannotCreate", { department })
+		: block === "listsHidden"
+			? t("scheduling.week.listsHiddenNote", { department })
+			: undefined;
+
+/** The month itself: its title and summary, before generating or while generating, its weeks, and the legend. */
 const MonthContent = ({
 	scheduleMonth,
 }: {
@@ -185,7 +254,26 @@ const MonthContent = ({
 }): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const language = formattingLocale(i18n);
-	const { month, departmentId, departmentName, weeks } = scheduleMonth;
+	const companyId = useCurrentCompanyId();
+	const access = useAccess();
+	const { month, departmentId, departmentName, branchId, weeks } =
+		scheduleMonth;
+	const mayGenerate = access.can(
+		"schedule:generate",
+		departmentScope(departmentId)
+	);
+	const showsPanel = mayGenerate && showsBeforeGenerate(scheduleMonth);
+	const check = useQuery(
+		monthGenerationCheckQuery(companyId, departmentId, month, showsPanel)
+	);
+	const generation = useGenerateMonth(companyId, scheduleMonth);
+	const refused = {
+		...refusedWeeksFrom(
+			useRouterState({ select: (state) => state.location.state })
+		),
+		...(generation.answer ? refusedWeeks(generation.answer) : {}),
+	};
+	const monthName = formatMonthName(month, language);
 	const first = weeks[0];
 	const last = weeks[weeks.length - 1];
 	const noSchedule = weeks.every((week) => week.scheduleId === null);
@@ -218,19 +306,60 @@ const MonthContent = ({
 				<MonthSteps department={departmentId} month={month} />
 			</header>
 			<CrossingWeekLine department={departmentId} month={month} />
-			{noSchedule && (
+			{isGenerating(scheduleMonth) && (
+				<Callout role="status">
+					<strong>
+						{t("scheduling.months.generate.generatingTitle", {
+							month: monthName,
+						})}
+					</strong>{" "}
+					{t("scheduling.months.generate.generatingDetail")}
+				</Callout>
+			)}
+			{showsPanel && check.data && (
+				<BeforeGeneratePanel
+					blockedNote={blockedNoteOf(generation.block, departmentName, t)}
+					check={check.data}
+					generating={generation.isPending}
+					links={panelLinks(access, { branchId, departmentId })}
+					month={month}
+					waiting={generation.block === "listsLoading"}
+					onGenerate={() => {
+						// A refusal shows from generation.error below.
+						void generation.generate().catch(() => undefined);
+					}}
+				/>
+			)}
+			{generation.error && (
+				<p className="text-sm text-error-700" role="alert">
+					{monthGenerationRefusal(generation.error, t)}
+				</p>
+			)}
+			{noSchedule && !showsPanel && (
 				<p className="text-sm text-neutral-800">
 					{t(`${key}.noSchedule`, { month: formatMonth(month, language) })}
 				</p>
 			)}
 			<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-				{weeks.map((week) => (
-					<WeekCard
-						key={week.periodStart}
-						departmentId={departmentId}
-						week={week}
-					/>
-				))}
+				{weeks.map((week) => {
+					const refusal = refused[week.periodStart];
+					return (
+						<WeekCard
+							key={week.periodStart}
+							departmentId={departmentId}
+							refusal={refusal ? refusalOfCode(refusal, t) : undefined}
+							week={week}
+							failureMessage={
+								week.failure
+									? generationFailure(
+											{ ...week.failure, status: week.failure.runStatus },
+											t
+										).message
+									: undefined
+							}
+						/>
+					);
+				})}
 			</div>
 			<Legend />
 		</div>

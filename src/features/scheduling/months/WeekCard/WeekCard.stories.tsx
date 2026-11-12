@@ -57,3 +57,21 @@ export const NotGeneratedYet: Story = {
 		}),
 	},
 };
+export const FailedWithItsReason: Story = {
+	args: {
+		week: monthWeekFixture({ state: "FAILED", ...noRoster }),
+		failureMessage:
+			"The scheduling engine couldn’t be reached in time, so nothing was generated.",
+	},
+};
+export const RefusedByTheMonthRun: Story = {
+	args: {
+		week: monthWeekFixture({
+			state: "NOT_GENERATED",
+			scheduleId: null,
+			...noRoster,
+		}),
+		refusal:
+			"This department has no employees who can be scheduled. Give at least one active member of the department a job title, then try again.",
+	},
+};
