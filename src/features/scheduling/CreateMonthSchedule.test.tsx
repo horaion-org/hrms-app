@@ -22,9 +22,12 @@ import {
 	CONSTRAINT_OPTIONS_RESPONSE,
 } from "@/features/scheduling/constraints/fixtures";
 import type { GenerateMonthBody } from "@/features/scheduling/months/api";
+import { midMonthOpenings } from "@/features/scheduling/hours/fixtures";
 import {
 	monthGenerationCheckFixture,
 	monthGenerationFixture,
+	monthWeekFixture,
+	scheduleMonthFixture,
 	ungeneratedMonthFixture,
 } from "@/features/scheduling/months/fixtures";
 import { readinessFixture } from "@/features/scheduling/readiness/fixtures";
@@ -38,6 +41,7 @@ import {
 	departmentShiftFixture,
 	scheduleShiftsFixture,
 } from "@/features/scheduling/shifts/fixtures";
+import { firstWeek } from "@/features/scheduling/startingContext/fixtures";
 import { allOf, withShiftsChosen } from "@/features/scheduling/weekChoice";
 import type { Workspace } from "@/features/workspace/api";
 
@@ -507,5 +511,161 @@ describe("Create schedules for a month: the header's Branch", () => {
 		expect(
 			screen.getAllByRole("option").map((option) => option.textContent)
 		).toEqual(["Front Office"]);
+	});
+});
+
+describe("Create schedules for a month: where everyone starts", () => {
+	const NOVEMBER = `${COMPANY}/schedule-months/2026-11`;
+	const SCHEDULES = `${DEPARTMENT}/schedules`;
+	/** November with its last week, the week before December's first, in `state`. */
+	const novemberEndingIn = (state: "NOT_GENERATED" | "PUBLISHED"): StubReply =>
+		reply(
+			scheduleMonthFixture({
+				weeks: [
+					monthWeekFixture({
+						periodStart: "2026-11-30",
+						periodEnd: "2026-12-06",
+						state,
+						scheduleId: state === "PUBLISHED" ? "s-nov" : null,
+						days: [],
+						handChangedDays: null,
+					}),
+				],
+			})
+		);
+	/** December once its first week is saved as the draft s-start. */
+	const decemberWithItsFirstWeekSaved = (): StubReply => {
+		const month = ungeneratedMonthFixture();
+		return reply({
+			...month,
+			weeks: month.weeks.map((week, index) =>
+				index === 0 ? { ...week, state: "DRAFT", scheduleId: "s-start" } : week
+			),
+		});
+	};
+	const addLastWeek = (): HTMLElement | null =>
+		screen.queryByRole("button", { name: "Add last week" });
+
+	it("given_noRosterBefore_when_lastWeekAdded_then_savesTheWeekOpensTheGridAndGenerateLeavesItOut", async () => {
+		const user = userEvent.setup();
+		const { calls } = await open(NEW_DECEMBER, {
+			[`GET ${NOVEMBER}`]: novemberEndingIn("NOT_GENERATED"),
+			[`GET ${DECEMBER}`]: [
+				reply(ungeneratedMonthFixture()),
+				decemberWithItsFirstWeekSaved(),
+			],
+			[`POST ${SCHEDULES}`]: reply(
+				scheduleFixture({ scheduleId: "s-start" }),
+				201
+			),
+			[`GET ${SCHEDULES}/s-start/starting-days`]: reply(firstWeek()),
+			[`GET ${SCHEDULES}/s-start/opening-balances`]: reply(midMonthOpenings()),
+		});
+
+		expect(
+			await screen.findByText(
+				"No roster before this week. Everyone starts rested."
+			)
+		).toBeVisible();
+		await user.click(
+			await screen.findByRole("button", { name: "Add last week" })
+		);
+
+		expect(await screen.findByRole("dialog")).toBeVisible();
+		expect(
+			calls
+				.filter((call) => call.method === "POST" && call.path === SCHEDULES)
+				.map((call) => call.body)
+		).toEqual([
+			{
+				name: "Week of 2026-12-07",
+				periodStart: "2026-12-07",
+				includeLeave: true,
+				allowOpenShifts: false,
+				includedShiftIds: EVERYTHING.shiftIds,
+				includedConstraintIds: EVERYTHING.constraintIds,
+			},
+		]);
+		await user.keyboard("{Escape}");
+		expect(
+			await screen.findByText(
+				/^Dec 7\s?–\s?13 is saved as a draft; change what it uses on its own page\.$/
+			)
+		).toBeVisible();
+
+		await user.click(screen.getByRole("button", { name: "Choose per week" }));
+		expect(
+			within(await screen.findByRole("tablist", { name: "Weeks of December" }))
+				.getAllByRole("tab")
+				.map((tab) => tab.textContent?.trim())
+		).not.toContainEqual(expect.stringMatching(/^Dec 7/));
+		await user.click(screen.getByRole("button", { name: "Cancel" }));
+		await user.click(next());
+		await screen.findByRole("region", { name: "Staffing forecast" });
+		await user.click(next());
+		const generate = await screen.findByRole("button", {
+			name: "Generate December",
+		});
+		await vi.waitFor(() => {
+			expect(generate).toBeEnabled();
+		});
+		await user.click(generate);
+
+		await vi.waitFor(() => {
+			expect(
+				calls.some(
+					(call) =>
+						call.method === "POST" && call.path === `${DECEMBER}/generation`
+				)
+			).toBe(true);
+		});
+		const post = calls.find(
+			(call) => call.method === "POST" && call.path === `${DECEMBER}/generation`
+		);
+		expect(
+			(post?.body as GenerateMonthBody).newWeeks.map((week) => week.periodStart)
+		).toEqual(["2026-12-14", "2026-12-21", "2026-12-28"]);
+	});
+
+	it("given_theWeekBeforeRostered_when_onSetup_then_saysWhereItCarriesFromWithoutALink", async () => {
+		await open(NEW_DECEMBER, {
+			[`GET ${NOVEMBER}`]: novemberEndingIn("PUBLISHED"),
+		});
+
+		expect(
+			await screen.findByText("Carried over from the week of Nov 30.")
+		).toBeVisible();
+		expect(addLastWeek()).toBeNull();
+	});
+
+	it("given_noScheduleUpdate_when_noRosterBefore_then_noLink", async () => {
+		await open(
+			NEW_DECEMBER,
+			{ [`GET ${NOVEMBER}`]: novemberEndingIn("NOT_GENERATED") },
+			ALL.filter((permission) => permission !== "schedule:update")
+		);
+
+		expect(
+			await screen.findByText(
+				"No roster before this week. Everyone starts rested."
+			)
+		).toBeVisible();
+		expect(addLastWeek()).toBeNull();
+	});
+
+	it("given_aRefusedSave_when_lastWeekAdded_then_saysWhy", async () => {
+		const user = userEvent.setup();
+		await open(NEW_DECEMBER, {
+			[`GET ${NOVEMBER}`]: novemberEndingIn("NOT_GENERATED"),
+			[`POST ${SCHEDULES}`]: problemReply(403, "FORBIDDEN"),
+		});
+
+		await user.click(
+			await screen.findByRole("button", { name: "Add last week" })
+		);
+
+		expect(await screen.findByRole("alert")).toHaveTextContent(
+			"You don’t have permission to create schedules for this department."
+		);
 	});
 });

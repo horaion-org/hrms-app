@@ -1,11 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { Navigate, useNavigate, useSearch } from "@tanstack/react-router";
+import dayjs from "dayjs";
 import type { TFunction } from "i18next";
 import { useCallback, useId, useReducer, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
+import { Callout } from "@/components/ui/Callout";
 import { ArrowLeftIcon, ArrowRightIcon } from "@/components/ui/Icon";
 import { Stepper, StepperStep } from "@/components/ui/Stepper";
 import { constraintsQuery } from "@/features/scheduling/constraints/api";
@@ -21,15 +23,21 @@ import { BeforeGeneratePanel } from "@/features/scheduling/months/BeforeGenerate
 import {
 	MONTH_SETUP_DEFAULTS,
 	refusedWeeks,
+	startingWeekOf,
+	weekNameOf,
 	weeksToCreate,
 	type MonthChoices,
+	type MonthSetup,
 } from "@/features/scheduling/months/monthGeneration";
 import {
+	formatDayAndMonth,
 	formatMonth,
 	formatMonthName,
 	formatWeekDates,
 	monthChoicesFrom,
+	monthOf,
 } from "@/features/scheduling/months/monthWeeks";
+import { hasRoster } from "@/features/scheduling/months/weekStateLooks";
 import { withRefusedWeeks } from "@/features/scheduling/months/refusedWeeksState";
 import { useGenerateMonth } from "@/features/scheduling/months/useGenerateMonth";
 import {
@@ -51,12 +59,20 @@ import {
 	scheduleDraftReducer,
 } from "@/features/scheduling/scheduleDraft";
 import type { ScheduleShift } from "@/features/scheduling/schedules/api";
-import { monthGenerationRefusal } from "@/features/scheduling/schedules/scheduleRefusal";
+import {
+	monthGenerationRefusal,
+	scheduleRefusalMessage,
+} from "@/features/scheduling/schedules/scheduleRefusal";
+import {
+	useSchedule,
+	useScheduleActions,
+} from "@/features/scheduling/schedules/useSchedule";
 import { SCHEDULING_UNIT_RULES } from "@/features/scheduling/schedules/schedulesUnitRules";
 import {
 	departmentShiftsQuery,
 	type DepartmentShift,
 } from "@/features/scheduling/shifts/api";
+import { StartingContextSection } from "@/features/scheduling/startingContext/StartingContextSection";
 import { StepActions } from "@/features/scheduling/StepActions";
 import { isScheduleStep, SCHEDULE_STEPS } from "@/features/scheduling/steps";
 import {
@@ -165,6 +181,13 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 	// Each week's choice, by Monday; a week without one uses everything.
 	const [choices, setChoices] = useState<MonthChoices>({});
 	const [choosing, setChoosing] = useState(false);
+	// The settings the Setup form holds, for the first week when it is saved before the form is.
+	const [settings, setSettings] = useState<MonthSetup>({
+		includeLeave: setupDefaults.includeLeave,
+		allowOpenShifts: setupDefaults.allowOpenShifts,
+	});
+	// The first week's draft this page just saved, so its grid opens once.
+	const [savedStartId, setSavedStartId] = useState<string>();
 	const [forecast, dispatch] = useReducer(
 		scheduleDraftReducer,
 		undefined,
@@ -220,6 +243,31 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 	);
 	const constraintOptions = useConstraintOptions(companyId, unit);
 	const generation = useGenerateMonth(companyId, scheduleMonth.data);
+	const scheduleActions = useScheduleActions(companyId);
+	// Where everyone starts is set on the first covered week without a roster.
+	const startingWeek = scheduleMonth.data
+		? startingWeekOf(scheduleMonth.data)
+		: undefined;
+	// A saved first week's draft, read for its day-off types.
+	const startingDraft = useSchedule(
+		companyId,
+		unit,
+		startingWeek?.state === "DRAFT"
+			? (startingWeek.scheduleId ?? undefined)
+			: undefined
+	);
+	const weekBefore =
+		startingWeek &&
+		dayjs(startingWeek.periodStart).subtract(7, "day").format("YYYY-MM-DD");
+	// The week before may sit in the month before; its state comes from that month's read.
+	const monthBefore = useQuery(
+		scheduleMonthQuery(
+			companyId,
+			departmentId,
+			weekBefore ? monthOf(weekBefore) : month,
+			unit !== undefined && startingWeek?.state === "NOT_GENERATED"
+		)
+	);
 	const mayGenerate = allowedHere("schedule:generate");
 	const check = useQuery(
 		monthGenerationCheckQuery(
@@ -334,6 +382,77 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 								choice.name,
 								language
 							);
+	const weekBeforeRostered = monthBefore.data?.weeks.some(
+		(week) => week.periodStart === weekBefore && hasRoster(week.state)
+	);
+	// Saves the first week as a draft, with its choice and the Setup's settings, to add its starting point.
+	const saveStartingWeek = async (monday: string): Promise<void> => {
+		if (!unit || !everything) return;
+		setProblem("");
+		const weekChoice = choices[monday] ?? everything;
+		try {
+			const created = await scheduleActions.create.mutateAsync({
+				unit,
+				body: {
+					name: weekNameOf(monday),
+					periodStart: monday,
+					includeLeave: settings.includeLeave,
+					allowOpenShifts: settings.allowOpenShifts,
+					includedShiftIds: weekChoice.shiftIds,
+					includedConstraintIds: weekChoice.constraintIds,
+				},
+			});
+			setSavedStartId(created.scheduleId);
+		} catch (error) {
+			setProblem(scheduleRefusalMessage(error, true, t));
+		}
+	};
+	const startingPoint =
+		!unit || !startingWeek ? undefined : startingWeek.state === "DRAFT" &&
+		  startingWeek.scheduleId ? (
+			<StartingContextSection
+				canEdit={allowedHere("schedule:update")}
+				companyId={companyId}
+				openOnStart={savedStartId === startingWeek.scheduleId}
+				scheduleId={startingWeek.scheduleId}
+				unit={unit}
+				nonWorkingDayTypes={
+					startingDraft.status === "ready"
+						? startingDraft.schedule.nonWorkingDayTypes
+						: []
+				}
+			/>
+		) : monthBefore.isPending ? undefined : weekBefore && weekBeforeRostered ? (
+			<Callout>
+				{t("scheduling.startingContext.carried", {
+					week: formatDayAndMonth(weekBefore, language),
+				})}
+			</Callout>
+		) : (
+			<Callout>
+				<span className="flex flex-wrap items-center gap-x-4 gap-y-1">
+					<span>{t("scheduling.startingContext.none")}</span>
+					{allowedHere("schedule:create") &&
+						allowedHere("schedule:update") &&
+						everything && (
+							<Button
+								disabled={scheduleActions.create.isPending}
+								variant="textlink"
+								onClick={() => {
+									void saveStartingWeek(startingWeek.periodStart);
+								}}
+							>
+								{t("scheduling.startingContext.add")}
+							</Button>
+						)}
+				</span>
+			</Callout>
+		);
+	// The first week saved as a draft keeps its own choice, changed on its own page.
+	const savedDraftLine =
+		startingWeek?.state === "DRAFT"
+			? t(`${key}.savedDraft`, { week: weekLabel(startingWeek) })
+			: undefined;
 	const usesSummary = usesLine && (
 		<WeekChoiceSummary
 			editConstraints={editConstraints}
@@ -425,7 +544,6 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 						defaultValues={setupDefaults}
 						formId={setupFormId}
 						months={months}
-						usesLine={usesSummary}
 						departmentExtras={
 							setupGate && (
 								<ReadinessGateCallout
@@ -434,8 +552,18 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 								/>
 							)
 						}
+						usesLine={
+							<div className="flex flex-col gap-4">
+								{usesSummary}
+								{savedDraftLine && (
+									<p className="text-sm text-neutral-800">{savedDraftLine}</p>
+								)}
+								{startingPoint}
+							</div>
+						}
 						onDepartmentChange={chooseDepartment}
 						onMonthChange={chooseMonth}
+						onSettingsChange={setSettings}
 						onSubmit={(values) => {
 							setSetup(values);
 							goTo(1, values);

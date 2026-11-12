@@ -87,3 +87,18 @@ export const generateMonthBody = (
 			: [];
 	}),
 });
+
+/**
+ * The week where everyone's starting point is set before a run: the first
+ * covered week, while it has no roster yet (not generated, or a draft);
+ * none when it has one or nothing is covered.
+ */
+export const startingWeekOf = (month: ScheduleMonth): MonthWeek | undefined => {
+	const [first] = coveredWeeks(month);
+	return first && (first.state === "NOT_GENERATED" || first.state === "DRAFT")
+		? first
+		: undefined;
+};
+
+/** The name of a week's draft the app saves: the same words the API names the weeks it creates with. */
+export const weekNameOf = (monday: string): string => `Week of ${monday}`;

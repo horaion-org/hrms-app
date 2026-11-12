@@ -4455,7 +4455,8 @@
 				"changedWeek_one": "{{week}} ({{count}} left out)",
 				"changedWeek_other": "{{week}} ({{count}} left out)",
 				"choosePerWeek": "Choose per week",
-				"allSet": "Every week of {{month}} already has a schedule."
+				"allSet": "Every week of {{month}} already has a schedule.",
+				"savedDraft": "{{week}} is saved as a draft; change what it uses on its own page."
 			}
 		}
 	},

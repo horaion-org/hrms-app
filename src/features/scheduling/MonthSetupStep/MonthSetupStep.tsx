@@ -9,6 +9,7 @@ import type { FunctionComponent } from "@/common/types";
 import { FormRow, formRowIds } from "@/components/forms/FormRow";
 import { Select } from "@/components/forms/Select";
 import { Checkbox } from "@/components/ui/Checkbox";
+import type { MonthSetup } from "@/features/scheduling/months/monthGeneration";
 import {
 	formatMonth,
 	formatWeekdayDate,
@@ -45,6 +46,8 @@ export type MonthSetupStepProps = {
 	onDepartmentChange: (departmentId: string) => void;
 	/** Told the month chosen, whenever it changes. */
 	onMonthChange: (month: string) => void;
+	/** Told the two settings, whenever they change, for a week the page saves before the form is submitted. */
+	onSettingsChange?: (settings: MonthSetup) => void;
 	onSubmit: (values: MonthSetupValues) => void;
 	className?: string;
 };
@@ -79,6 +82,7 @@ export const MonthSetupStep = ({
 	usesLine,
 	onDepartmentChange,
 	onMonthChange,
+	onSettingsChange,
 	onSubmit,
 	className,
 }: MonthSetupStepProps): FunctionComponent => {
@@ -96,10 +100,13 @@ export const MonthSetupStep = ({
 		defaultValues,
 		mode: "onTouched",
 	});
-	const [departmentId, month] = useWatch({
+	const [departmentId, month, includeLeave, allowOpenShifts] = useWatch({
 		control,
-		name: ["departmentId", "month"],
+		name: ["departmentId", "month", "includeLeave", "allowOpenShifts"],
 	});
+	useEffect(() => {
+		onSettingsChange?.({ includeLeave, allowOpenShifts });
+	}, [includeLeave, allowOpenShifts, onSettingsChange]);
 	useEffect(() => {
 		onDepartmentChange(departmentId);
 	}, [departmentId, onDepartmentChange]);

@@ -32,6 +32,8 @@ export type StartingContextSectionProps = {
 	nonWorkingDayTypes: ReadonlyArray<string>;
 	/** Whether the person may change the draft (`schedule:update`, still a draft). */
 	canEdit: boolean;
+	/** Opens the grid as soon as the openings have been read, for a caller that just saved the draft to add them to. */
+	openOnStart?: boolean;
 	className?: string;
 };
 
@@ -89,6 +91,7 @@ export const StartingContextSection = ({
 	scheduleId,
 	nonWorkingDayTypes,
 	canEdit,
+	openOnStart = false,
 	className,
 }: StartingContextSectionProps): FunctionComponent => {
 	const { t } = useTranslation();
@@ -129,6 +132,18 @@ export const StartingContextSection = ({
 			if (saved.openingsRefusal === undefined) setOpen(false);
 		},
 	});
+	// Opened once, on the same condition the link waits for, so the grid never saves over figures it did not see.
+	const [openedOnStart, setOpenedOnStart] = useState(false);
+	if (
+		openOnStart &&
+		canEdit &&
+		!openedOnStart &&
+		week.data !== undefined &&
+		!openings.isPending
+	) {
+		setOpenedOnStart(true);
+		setOpen(true);
+	}
 	if (week.data === undefined) return null;
 	const openingsRefusal = saving.data?.openingsRefusal;
 	const problem = saving.isError

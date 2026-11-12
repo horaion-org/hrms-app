@@ -11,6 +11,8 @@ import {
 	isGenerating,
 	refusedWeeks,
 	showsBeforeGenerate,
+	startingWeekOf,
+	weekNameOf,
 	weeksToCreate,
 } from "@/features/scheduling/months/monthGeneration";
 
@@ -120,5 +122,54 @@ describe("month generation", () => {
 		expect(refusedWeeks(answer)).toEqual({
 			"2026-12-14": "SCHEDULE_HAS_NO_EMPLOYEES",
 		});
+	});
+});
+
+describe("startingWeekOf", () => {
+	const firstWeekAs = (
+		state: "NOT_GENERATED" | "DRAFT" | "TO_REVIEW"
+	): ReturnType<typeof ungeneratedMonthFixture> => {
+		const month = ungeneratedMonthFixture();
+		return {
+			...month,
+			weeks: month.weeks.map((week, index) =>
+				index === 0 ? { ...week, state } : week
+			),
+		};
+	};
+
+	it("given_theFirstCoveredWeekNotGenerated_when_read_then_thatWeek", () => {
+		expect(startingWeekOf(firstWeekAs("NOT_GENERATED"))?.periodStart).toBe(
+			"2026-12-07"
+		);
+	});
+
+	it("given_theFirstCoveredWeekADraft_when_read_then_thatWeek", () => {
+		expect(startingWeekOf(firstWeekAs("DRAFT"))?.periodStart).toBe(
+			"2026-12-07"
+		);
+	});
+
+	it("given_theFirstCoveredWeekUnderReview_when_read_then_none", () => {
+		expect(startingWeekOf(firstWeekAs("TO_REVIEW"))).toBeUndefined();
+	});
+
+	it("given_nothingCovered_when_read_then_none", () => {
+		const month = ungeneratedMonthFixture();
+		expect(
+			startingWeekOf({
+				...month,
+				weeks: month.weeks.map((week) => ({
+					...week,
+					includedInMonthGeneration: false,
+				})),
+			})
+		).toBeUndefined();
+	});
+});
+
+describe("weekNameOf", () => {
+	it("given_aMonday_when_named_then_asTheApiNamesTheWeeksItCreates", () => {
+		expect(weekNameOf("2026-11-02")).toBe("Week of 2026-11-02");
 	});
 });

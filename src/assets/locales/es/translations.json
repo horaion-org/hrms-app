@@ -4277,7 +4277,8 @@
 				"changedWeek_one": "{{week}} ({{count}} fuera)",
 				"changedWeek_other": "{{week}} ({{count}} fuera)",
 				"choosePerWeek": "Elegir por semana",
-				"allSet": "Todas las semanas de {{month}} ya tienen horario."
+				"allSet": "Todas las semanas de {{month}} ya tienen horario.",
+				"savedDraft": "{{week}} está guardada como borrador; cambia lo que usa en su propia página."
 			}
 		}
 	},

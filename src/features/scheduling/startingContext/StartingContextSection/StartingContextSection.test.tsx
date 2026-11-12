@@ -29,7 +29,7 @@ afterEach(() => {
 	vi.unstubAllGlobals();
 });
 
-const show = (): void => {
+const show = (openOnStart = false): void => {
 	const client = new QueryClient({
 		defaultOptions: { queries: { retry: false } },
 	});
@@ -40,6 +40,7 @@ const show = (): void => {
 					canEdit
 					companyId="c-1"
 					nonWorkingDayTypes={[]}
+					openOnStart={openOnStart}
 					scheduleId="s-1"
 					unit={UNIT}
 				/>
@@ -73,6 +74,36 @@ describe("StartingContextSection", () => {
 		expect(
 			screen.queryByRole("button", { name: /last week/ })
 		).not.toBeInTheDocument();
+	});
+
+	it("given_openOnStartWhileTheOpeningsLoad_when_shown_then_theGridWaitsForThem", async () => {
+		stubApi({
+			[`GET ${SCHEDULE}/starting-days`]: {
+				status: 200,
+				body: envelope(firstWeek()),
+			},
+		});
+		holdOpenings();
+		show(true);
+
+		expect(await screen.findByText(/No roster before this week/)).toBeVisible();
+		expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+	});
+
+	it("given_openOnStart_when_theOpeningsAnswer_then_theGridOpens", async () => {
+		stubApi({
+			[`GET ${SCHEDULE}/starting-days`]: {
+				status: 200,
+				body: envelope(firstWeek()),
+			},
+			[`GET ${SCHEDULE}/opening-balances`]: {
+				status: 200,
+				body: envelope(midMonthOpenings()),
+			},
+		});
+		show(true);
+
+		expect(await screen.findByRole("dialog")).toBeVisible();
 	});
 
 	it("given_theOpeningsAreRefusedAfterTheDays_when_saved_then_saysTheDaysWentThroughAndKeepsTheDialog", async () => {
