@@ -8,6 +8,7 @@ import { shiftFixture } from "@/features/scheduling/shifts/fixtures";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import {
 	allOf,
+	leftOutCount,
 	isSelectable,
 	noteOf,
 	usesLineOf,
@@ -96,6 +97,35 @@ describe("allOf", () => {
 		const replaced = { ...COMPANY_REST, overriddenByConstraintId: "rest" };
 
 		expect(allOf(SHIFTS, [replaced, REST]).constraintIds).toEqual(["rest"]);
+	});
+});
+
+describe("leftOutCount", () => {
+	it("given_everything_when_counted_then_nothingIsLeftOut", () => {
+		expect(leftOutCount(allOf(SHIFTS, CONSTRAINTS), SHIFTS, CONSTRAINTS)).toBe(
+			0
+		);
+	});
+
+	it("given_oneShiftLeftOut_when_counted_then_theShiftAndTheConstraintsItSwitchedOffCountOnce", () => {
+		const choice = withShiftsChosen(
+			allOf(SHIFTS, CONSTRAINTS),
+			["opening", "closing"],
+			CONSTRAINTS
+		);
+
+		// Sunday, then Sunday cover and Evening pair, which name it.
+		expect(leftOutCount(choice, SHIFTS, CONSTRAINTS)).toBe(3);
+	});
+
+	it("given_oneConstraintUnticked_when_counted_then_one", () => {
+		const everything = allOf(SHIFTS, CONSTRAINTS);
+		const choice = {
+			...everything,
+			constraintIds: everything.constraintIds.filter((id) => id !== "rest"),
+		};
+
+		expect(leftOutCount(choice, SHIFTS, CONSTRAINTS)).toBe(1);
 	});
 });
 

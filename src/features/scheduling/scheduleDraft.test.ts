@@ -332,33 +332,6 @@ describe("the week's choice", () => {
 		expect(draft.includedConstraintIds).toEqual(["morning-cover"]);
 		expect(draft.weekChosen).toBe(true);
 	});
-
-	it("given_aNewDraftsChoice_when_itsDepartmentChanges_then_startsAgainFromEverything", () => {
-		const chosenWeek = scheduleDraftReducer(emptyScheduleDraft(), {
-			type: "weekChosen",
-			shiftIds: ["front-desk-am"],
-			constraintIds: ["morning-cover"],
-		});
-
-		const draft = scheduleDraftReducer(chosenWeek, {
-			type: "departmentChosen",
-		});
-
-		expect(draft.includedShiftIds).toEqual([]);
-		expect(draft.includedConstraintIds).toEqual([]);
-		expect(draft.weekChosen).toBe(false);
-	});
-
-	it("given_aSavedDraft_when_departmentChosen_then_keepsItsChoice", () => {
-		const loaded = scheduleDraftReducer(emptyScheduleDraft(), {
-			type: "scheduleLoaded",
-			schedule: scheduleFixture(),
-		});
-
-		expect(scheduleDraftReducer(loaded, { type: "departmentChosen" })).toBe(
-			loaded
-		);
-	});
 });
 
 describe("frozen schedules and ticks", () => {

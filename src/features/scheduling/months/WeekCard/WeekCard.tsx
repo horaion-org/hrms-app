@@ -17,6 +17,10 @@ import { scheduleViewLink } from "@/features/scheduling/schedules/scheduleViewLi
 
 export type WeekCardProps = {
 	week: MonthWeek;
+	/** Why a failed week gave no roster, in today's failure words. */
+	failureMessage?: string;
+	/** Why the last month run refused this week, in today's refusal words. */
+	refusal?: string;
 	/** The week's Department, for the link to a draft's setup. */
 	departmentId: string;
 	className?: string;
@@ -29,10 +33,14 @@ const key = "scheduling.months";
  * cover and how many were changed by hand, and one action: Review on the
  * week under review, Open on any other week with a schedule (a draft opens
  * its setup, any other its roster), none on a week not generated yet. A
- * tentative or missing week has a dashed frame: it is not final.
+ * tentative or missing week has a dashed frame: it is not final. A failed
+ * week says why; a week the last month run refused says why too. A week
+ * being generated shows its state only.
  */
 export const WeekCard = ({
 	week,
+	failureMessage,
+	refusal,
 	departmentId,
 	className,
 }: WeekCardProps): FunctionComponent => {
@@ -66,6 +74,14 @@ export const WeekCard = ({
 					{t(`${key}.states.${week.state}`)}
 				</Badge>
 			</div>
+			{week.state === "FAILED" && failureMessage && (
+				<p className="text-sm text-neutral-800">{failureMessage}</p>
+			)}
+			{refusal && (
+				<p className="text-sm text-neutral-800">
+					{t(`${key}.generate.refused`, { reason: refusal })}
+				</p>
+			)}
 			<DayCoverMarks days={week.days} />
 			{hasRoster(week.state) && (
 				<div className="text-sm text-neutral-800">

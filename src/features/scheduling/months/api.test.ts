@@ -2,15 +2,21 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { configureApiClient, resetApiClient } from "@/common/api-client";
 import { envelope, stubApi } from "@/common/testing/stubApi";
 import {
+	fetchMonthGenerationCheck,
 	fetchScheduleMonth,
 	fetchScheduleMonthSummaries,
+	generateMonth,
+	monthGenerationCheckQuery,
 	scheduleMonthQuery,
 	scheduleMonthSummariesQuery,
 } from "@/features/scheduling/months/api";
 import {
+	monthGenerationCheckFixture,
+	monthGenerationFixture,
 	monthSummaryFixture,
 	monthWeekFixture,
 	scheduleMonthFixture,
+	ungeneratedMonthFixture,
 } from "@/features/scheduling/months/fixtures";
 
 const MONTHS = "/api/v1/companies/c-1/schedule-months";
@@ -107,6 +113,103 @@ describe("schedule months client", () => {
 		]);
 		expect(
 			scheduleMonthSummariesQuery("c-1", {}, RANGE).queryKey.slice(0, 3)
+		).toEqual(["scheduling", "c-1", "months"]);
+	});
+});
+
+describe("generating a month", () => {
+	const CHECK = `${NOVEMBER}/generation-check`;
+	const GENERATION = `${NOVEMBER}/generation`;
+	const BODY = {
+		includeLeave: true,
+		allowOpenShifts: false,
+		newWeeks: [
+			{
+				periodStart: "2026-11-30",
+				includedShiftIds: ["sh-1"],
+				includedConstraintIds: ["co-1"],
+			},
+		],
+	};
+
+	it("given_theCheck_when_fetched_then_asksTheMonthsCheckWithTheDepartmentInTheQueryOnly", async () => {
+		const calls = stubApi({
+			[`GET ${CHECK}`]: {
+				status: 200,
+				body: envelope(monthGenerationCheckFixture()),
+			},
+		});
+
+		await expect(
+			fetchMonthGenerationCheck("c-1", "d-1", "2026-11")
+		).resolves.toEqual(monthGenerationCheckFixture());
+		expect(calls[0]?.path).toBe(CHECK);
+		expect(calls[0]?.search).toBe("departmentId=d-1");
+	});
+
+	it("given_aGeneration_when_posted_then_sendsTheBodyToTheMonthWithTheDepartmentInTheQueryOnly", async () => {
+		const calls = stubApi({
+			[`POST ${GENERATION}`]: {
+				status: 200,
+				body: envelope(monthGenerationFixture()),
+			},
+		});
+
+		await expect(generateMonth("c-1", "d-1", "2026-11", BODY)).resolves.toEqual(
+			monthGenerationFixture()
+		);
+		expect(calls[0]?.path).toBe(GENERATION);
+		expect(calls[0]?.search).toBe("departmentId=d-1");
+		expect(calls[0]?.body).toEqual(BODY);
+	});
+
+	it("given_anOutcomeANewerApiAdds_when_parsed_then_readsAsUnknown", async () => {
+		const answer = monthGenerationFixture();
+		stubApi({
+			[`POST ${GENERATION}`]: {
+				status: 200,
+				body: envelope({
+					...answer,
+					weeks: [{ ...answer.weeks[0], outcome: "QUEUED" }],
+				}),
+			},
+		});
+
+		const parsed = await generateMonth("c-1", "d-1", "2026-11", BODY);
+
+		expect(parsed.weeks[0]?.outcome).toBe("UNKNOWN");
+	});
+
+	it("given_weeksWithAndWithoutTheGenerationFields_when_parsed_then_bothRead", async () => {
+		const failed = monthWeekFixture({
+			state: "FAILED",
+			includedInMonthGeneration: true,
+			failure: {
+				runStatus: "FAILED",
+				errorCode: "engine_unreachable",
+				engineOutcome: null,
+			},
+		});
+		stubApi({
+			[`GET ${NOVEMBER}`]: {
+				status: 200,
+				body: envelope(
+					scheduleMonthFixture({ weeks: [failed, monthWeekFixture()] })
+				),
+			},
+		});
+
+		const month = await fetchScheduleMonth("c-1", "d-1", "2026-11");
+
+		expect(month.weeks[0]?.failure?.errorCode).toBe("engine_unreachable");
+		expect(month.weeks[0]?.includedInMonthGeneration).toBe(true);
+		expect(month.weeks[1]?.includedInMonthGeneration).toBeUndefined();
+		expect(ungeneratedMonthFixture().weeks).toHaveLength(4);
+	});
+
+	it("given_theCheckQuery_when_built_then_itsKeySitsUnderTheMonthReads", () => {
+		expect(
+			monthGenerationCheckQuery("c-1", "d-1", "2026-11").queryKey.slice(0, 3)
 		).toEqual(["scheduling", "c-1", "months"]);
 	});
 });

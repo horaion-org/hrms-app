@@ -86,6 +86,24 @@ export const allOf = (
 	return { shiftIds, constraintIds };
 };
 
+/**
+ * How many of what the week could use it leaves out: the shifts not chosen
+ * and the usable constraints not chosen (a constraint a left-out shift
+ * switched off counts once). Counted against everything (`allOf`).
+ */
+export const leftOutCount = (
+	choice: WeekChoiceIds,
+	shifts: Array<ChoiceShift>,
+	constraints: Array<ChoiceConstraint>
+): number => {
+	const everything = allOf(shifts, constraints);
+	return (
+		everything.shiftIds.filter((id) => !choice.shiftIds.includes(id)).length +
+		everything.constraintIds.filter((id) => !choice.constraintIds.includes(id))
+			.length
+	);
+};
+
 /** The choice with these shifts, dropping the constraints they leave unusable; locked ones stay. */
 export const withShiftsChosen = (
 	choice: WeekChoiceIds,

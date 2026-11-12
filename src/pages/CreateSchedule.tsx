@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Navigate, useNavigate, useSearch } from "@tanstack/react-router";
-import { useCallback, useId, useReducer, useState } from "react";
+import { useId, useReducer, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
@@ -14,7 +14,6 @@ import {
 import { Stepper, StepperStep } from "@/components/ui/Stepper";
 import { Toast } from "@/components/ui/Toast";
 import { placeOf } from "@/features/organisation/assignmentTargets";
-import { constraintsQuery } from "@/features/scheduling/constraints/api";
 import { useConstraintOptions } from "@/features/scheduling/constraints/useConstraintOptions";
 import { departmentUnitOf } from "@/features/scheduling/departmentUnit";
 import { ForecastStep } from "@/features/scheduling/ForecastStep";
@@ -23,7 +22,22 @@ import {
 	publishedRosterOtherThan,
 	publishedWeekQuery,
 } from "@/features/scheduling/publishedWeek/api";
+import {
+	scheduleMonthQuery,
+	type MonthGeneration,
+} from "@/features/scheduling/months/api";
+import {
+	handChangedCoveredWeeks,
+	refusedWeeks,
+} from "@/features/scheduling/months/monthGeneration";
+import {
+	formatMonthName,
+	monthOf,
+} from "@/features/scheduling/months/monthWeeks";
+import { withRefusedWeeks } from "@/features/scheduling/months/refusedWeeksState";
+import { useGenerateMonth } from "@/features/scheduling/months/useGenerateMonth";
 import { PublishedWeekCallout } from "@/features/scheduling/publishedWeek/PublishedWeekCallout";
+import { RegenerateMonthDialog } from "@/features/scheduling/RegenerateMonthDialog";
 import { StartingContextSection } from "@/features/scheduling/startingContext/StartingContextSection";
 import {
 	defaultPeriod,
@@ -47,7 +61,7 @@ import type {
 	ScheduleStatus,
 } from "@/features/scheduling/schedules/api";
 import {
-	generationRefusal,
+	monthGenerationRefusal,
 	scheduleRefusal,
 	scheduleRefusalMessage,
 } from "@/features/scheduling/schedules/scheduleRefusal";
@@ -62,9 +76,7 @@ import {
 	ScheduleSetupStep,
 	type SetupFieldErrors,
 } from "@/features/scheduling/ScheduleSetupStep";
-import { withSchedulingNotice } from "@/features/scheduling/schedulingNotice";
 import type { ScheduleSetupValues } from "@/features/scheduling/setupSchema";
-import { departmentShiftsQuery } from "@/features/scheduling/shifts/api";
 import {
 	fixLinkOf,
 	gateOf,
@@ -92,17 +104,13 @@ import {
 } from "@/features/scheduling/WeekChoiceSummary";
 import { workspaceQuery } from "@/features/workspace/api";
 import {
-	SCHEDULE_CREATE_KEYS,
 	SCHEDULE_READ_KEYS,
 	type PermissionKey,
 } from "@/features/workspace/permissionKeys";
 import { retry } from "@/features/workspace/retry";
-import { SCHEDULING_UNIT_RULES } from "@/features/scheduling/schedules/schedulesUnitRules";
 import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
-import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 import { departmentScope } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
-import { departmentChoices } from "@/features/workspace/unitChoices";
 
 /** What saving a schedule sends: its setup and the ticked shifts and constraints, each the whole set. */
 const bodyOf = (
@@ -168,13 +176,6 @@ export const CreateSchedule = (): FunctionComponent => {
 	const search = useSearch({ from: "/_authenticated/_app/scheduling_/new" });
 	// A step the wizard no longer has (an old Shifts or Constraints link) opens Setup.
 	const step = isScheduleStep(search.step) ? search.step : "setup";
-	// The header's Branch, resolved as the header resolves it: a new draft's departments are its own.
-	const headerBranchId = useUnitSelection(
-		companyId,
-		SCHEDULE_CREATE_KEYS,
-		{ branchId: search.branch },
-		SCHEDULING_UNIT_RULES
-	).branch?.branchId;
 	// The two ids name a draft only together.
 	const named =
 		search.scheduleId !== undefined && search.departmentId !== undefined
@@ -261,66 +262,25 @@ export const CreateSchedule = (): FunctionComponent => {
 		draft,
 		constraints.status === "ready" ? constraints.items : undefined
 	);
-	// The department and week chosen on Setup, as the form holds them before they are saved.
-	const [setupDepartmentId, setSetupDepartmentId] = useState("");
+	// The week chosen on Setup, as the form holds it before it is saved.
 	const [setupPeriodStart, setSetupPeriodStart] = useState("");
-	// A new draft's week starts again from everything when its department changes.
-	const chooseSetupDepartment = useCallback(
-		(departmentId: string): void => {
-			if (departmentId === setupDepartmentId) return;
-			setSetupDepartmentId(departmentId);
-			if (!saved) dispatch({ type: "departmentChosen" });
-		},
-		[setupDepartmentId, saved, dispatch]
-	);
-	// A new draft's department, where schedules may be created; a saved draft names its own.
-	const setupChoice =
-		!saved && workspace.data && setupDepartmentId
-			? departmentChoices(workspace.data, companyId, SCHEDULE_CREATE_KEYS, {
-					activeOnly: true,
-				}).find((choice) => choice.departmentId === setupDepartmentId)
-			: undefined;
-	const setupUnit = setupChoice && {
-		branchId: setupChoice.branchId,
-		departmentId: setupChoice.departmentId,
-	};
-	const readsNewShifts =
-		setupUnit !== undefined &&
-		access.can("shift:read", departmentScope(setupUnit.departmentId));
-	const readsNewConstraints =
-		setupUnit !== undefined &&
-		access.can("constraint:read", departmentScope(setupUnit.departmentId));
-	// A new draft lists its department's live shifts and constraints; a saved one keeps its own lists.
-	const newShifts = useQuery(
-		departmentShiftsQuery(companyId, setupUnit, readsNewShifts)
-	);
-	const newConstraints = useQuery(
-		constraintsQuery(companyId, setupUnit, readsNewConstraints)
-	);
 	// The constraint types, read with the lists, so the week's rules say who they cover.
-	const weekOptions = useConstraintOptions(companyId, saved ?? setupUnit);
-	const weekDepartmentName = saved?.departmentName ?? setupChoice?.name;
-	const weekShifts = saved
-		? shifts.status === "ready"
-			? shifts.items
-			: undefined
-		: newShifts.data;
-	const weekConstraints = saved
-		? constraints.status === "ready"
-			? constraints.items
-			: undefined
-		: newConstraints.data;
-	const weekListsHidden = saved
-		? shifts.status === "hidden" || constraints.status === "hidden"
-		: setupUnit !== undefined && (!readsNewShifts || !readsNewConstraints);
+	const weekOptions = useConstraintOptions(companyId, saved);
+	const weekDepartmentName = saved?.departmentName;
+	// A saved draft keeps its own lists: live while a draft, frozen copies once generated.
+	const weekShifts = shifts.status === "ready" ? shifts.items : undefined;
+	const weekConstraints =
+		constraints.status === "ready" ? constraints.items : undefined;
+	const weekListsHidden =
+		shifts.status === "hidden" || constraints.status === "hidden";
 	// Everything until the week is chosen; a generated schedule used all of its frozen copies.
 	const weekChoice: WeekChoiceIds =
 		draft.weekChosen && !frozen
 			? { shiftIds: ticked, constraintIds: tickedConstraints }
 			: allOf(weekShifts ?? [], weekConstraints ?? []);
 	const [choosingWeek, setChoosingWeek] = useState(false);
-	// Whether the week's department could roster anyone, as the API answers it; nothing is asked before one is chosen.
-	const readinessDepartmentId = saved?.departmentId ?? setupUnit?.departmentId;
+	// Whether the week's department could roster anyone, as the API answers it.
+	const readinessDepartmentId = saved?.departmentId;
 	const readiness = useSchedulingReadiness(
 		companyId,
 		{ departmentId: readinessDepartmentId },
@@ -331,6 +291,19 @@ export const CreateSchedule = (): FunctionComponent => {
 			? readiness.rows.find((row) => row.departmentId === readinessDepartmentId)
 			: undefined;
 	const scheduleActions = useScheduleActions(companyId);
+	// Generating a draft generates its month: the week belongs to its Monday's month.
+	const draftMonth = draft.setup ? monthOf(draft.setup.periodStart) : "";
+	const scheduleMonth = useQuery(
+		scheduleMonthQuery(
+			companyId,
+			saved?.departmentId ?? "",
+			draftMonth,
+			// Only a draft that can be generated: a generated one never reads the live lists.
+			canGenerate && draftMonth !== ""
+		)
+	);
+	const monthGeneration = useGenerateMonth(companyId, scheduleMonth.data);
+	const [confirmingRegenerate, setConfirmingRegenerate] = useState(false);
 	const [toast, setToast] = useState<{ id: number; message: string }>();
 	const [problem, setProblem] = useState("");
 	const setupFormId = useId();
@@ -397,45 +370,24 @@ export const CreateSchedule = (): FunctionComponent => {
 			},
 		});
 	};
-	// Completing Setup creates the draft, or replaces the saved one's setup.
+	// Completing Setup replaces the saved draft's setup where the person may change it.
 	const submitSetup = async (
 		setup: ScheduleSetupValues
 	): Promise<SetupFieldErrors | undefined> => {
+		if (!saved) return undefined;
 		setProblem("");
 		try {
-			if (saved) {
-				if (canSave)
-					await scheduleActions.update.mutateAsync({
-						unit: saved,
-						scheduleId: saved.scheduleId,
-						body: bodyOf(setup, ticked, tickedConstraints),
-					});
-				dispatch({ type: "setupSaved", setup });
-				goTo(1);
-				return undefined;
-			}
-			const target =
-				workspace.data &&
-				departmentUnitOf(
-					workspace.data,
-					companyId,
-					SCHEDULE_CREATE_KEYS,
-					setup.departmentId,
-					{ activeOnly: true }
-				);
-			if (!target) return undefined;
-			const created = await scheduleActions.create.mutateAsync({
-				unit: target,
-				body: bodyOf(setup, weekChoice.shiftIds, weekChoice.constraintIds),
-			});
-			dispatch({ type: "scheduleLoaded", schedule: created });
-			goTo(1, {
-				scheduleId: created.scheduleId,
-				departmentId: created.departmentId,
-			});
+			if (canSave)
+				await scheduleActions.update.mutateAsync({
+					unit: saved,
+					scheduleId: saved.scheduleId,
+					body: bodyOf(setup, ticked, tickedConstraints),
+				});
+			dispatch({ type: "setupSaved", setup });
+			goTo(1);
 			return undefined;
 		} catch (error) {
-			const refusal = scheduleRefusal(error, !saved, t);
+			const refusal = scheduleRefusal(error, false, t);
 			setProblem(refusal.message ?? "");
 			return refusal.fields;
 		}
@@ -459,27 +411,30 @@ export const CreateSchedule = (): FunctionComponent => {
 		setProblem("");
 		if (await save()) notify(t("scheduling.draft.saved"));
 	};
-	// Saves first when the person may, then freezes the ticked shifts and constraints and leaves.
+	// Lands on the month page with the weeks the run refused.
+	const showMonth = async (answer: MonthGeneration): Promise<void> => {
+		await navigate({
+			to: "/scheduling/months/$month",
+			params: { month: answer.month },
+			search: { department: answer.departmentId },
+			state: withRefusedWeeks(refusedWeeks(answer)),
+		});
+	};
+	// Saves first when the person may, then generates the draft's month: at once, or after
+	// asking when a covered week was changed by hand.
 	const generate = async (): Promise<void> => {
-		if (!saved || !draft.setup) return;
+		if (!saved || !scheduleMonth.data) return;
 		setProblem("");
 		if (canSave && !(await save())) return;
-		try {
-			await scheduleActions.generate.mutateAsync({
-				unit: saved,
-				scheduleId: saved.scheduleId,
-			});
-		} catch (error) {
-			setProblem(generationRefusal(error, t));
+		if (handChangedCoveredWeeks(scheduleMonth.data).length > 0) {
+			setConfirmingRegenerate(true);
 			return;
 		}
-		await navigate({
-			to: "/scheduling",
-			state: withSchedulingNotice({
-				kind: "generated",
-				name: draft.setup.name,
-			}),
-		});
+		try {
+			await showMonth(await monthGeneration.generate());
+		} catch (error) {
+			setProblem(monthGenerationRefusal(error, t));
+		}
 	};
 	const included = includedShifts({ includedShiftIds: ticked }, shiftRows);
 	const summary = summarise(included, draft.allocations);
@@ -488,18 +443,11 @@ export const CreateSchedule = (): FunctionComponent => {
 	};
 	const firstPeriod = defaultPeriod(today);
 	const offered = selectablePeriods(today);
-	// A new draft starts from the department and week the Scheduling tabs send back; a saved draft ignores them.
-	const returnedWeek =
-		named === undefined &&
-		offered.some((offeredPeriod) => offeredPeriod.start === search.week)
-			? search.week
-			: undefined;
-	const returnedDepartmentId =
-		named === undefined ? (search.department ?? "") : "";
+	// A saved draft's setup; the empty one only shows for the moment before it is taken in.
 	const setupDefaults: ScheduleSetupValues = draft.setup ?? {
-		departmentId: returnedDepartmentId,
+		departmentId: "",
 		name: "",
-		periodStart: returnedWeek ?? firstPeriod.start,
+		periodStart: firstPeriod.start,
 		includeLeave: true,
 		allowOpenShifts: false,
 	};
@@ -518,10 +466,7 @@ export const CreateSchedule = (): FunctionComponent => {
 		frozen,
 		currentIndex: current,
 	});
-	const busy =
-		scheduleActions.create.isPending ||
-		scheduleActions.update.isPending ||
-		scheduleActions.generate.isPending;
+	const busy = scheduleActions.update.isPending || monthGeneration.isPending;
 	const lockedDepartment = saved && {
 		departmentId: saved.departmentId,
 		label: placeOf(
@@ -550,7 +495,7 @@ export const CreateSchedule = (): FunctionComponent => {
 						)
 					: undefined;
 	// The Scheduling tab that edits the week's department, where its list may be read.
-	const weekUnit = saved ?? setupUnit;
+	const weekUnit = saved;
 	const editLink = (
 		view: SetupLink["search"]["view"],
 		readKey: PermissionKey
@@ -576,9 +521,6 @@ export const CreateSchedule = (): FunctionComponent => {
 			weekUnit !== undefined &&
 			access.can("constraint:create", departmentScope(weekUnit.departmentId)),
 	};
-	// A new draft stops at Setup while its department can't roster anyone.
-	const setupGate =
-		!saved && readinessRow ? gateOf(readinessRow, canFix, "setup") : undefined;
 	// The tab that fixes the gate, carrying the way back; only where that tab may be read.
 	const fixLink = (
 		gate: Gate | undefined,
@@ -592,20 +534,6 @@ export const CreateSchedule = (): FunctionComponent => {
 					search: fixLinkOf(gate.linkTo, weekUnit, returnTo),
 				}
 			: undefined;
-	// Why Setup's Next waits on a new draft: its gate, lists the person may not see, or lists still loading (no note).
-	const newListsWaiting =
-		!saved &&
-		setupUnit !== undefined &&
-		!weekListsHidden &&
-		(weekShifts === undefined || weekConstraints === undefined);
-	const setupNextNote = setupGate
-		? t(setupGate.nextNoteKey, { department: setupGate.department })
-		: !saved && weekListsHidden && weekDepartmentName
-			? t("scheduling.week.listsHiddenNote", { department: weekDepartmentName })
-			: newListsWaiting
-				? ""
-				: undefined;
-	const setupNextDisabled = step === "setup" && setupNextNote !== undefined;
 	// The week can be chosen from its lists while the setup can change.
 	const canChooseWeek =
 		!frozen && !weekListsHidden && (saved === undefined || canSave);
@@ -637,7 +565,10 @@ export const CreateSchedule = (): FunctionComponent => {
 			? weekChoiceProblem(weekChoice, weekConstraints)
 			: undefined;
 	const canGenerateWeek =
-		canGenerate && generateGate === undefined && weekProblem === undefined;
+		canGenerate &&
+		generateGate === undefined &&
+		weekProblem === undefined &&
+		scheduleMonth.data !== undefined;
 	// Generate says the same, with the week's problem above it, and "Change" goes back to Setup.
 	const generateWeekSummary = weekLine && (
 		<>
@@ -690,7 +621,10 @@ export const CreateSchedule = (): FunctionComponent => {
 				? t(generateGate.nextNoteKey, { department: generateGate.department })
 				: weekProblem
 					? t("scheduling.week.problemNote")
-					: t("scheduling.create.generateForbidden");
+					: canGenerate
+						? // The month is still being read: no note.
+							""
+						: t("scheduling.create.generateForbidden");
 
 	return (
 		<>
@@ -708,28 +642,13 @@ export const CreateSchedule = (): FunctionComponent => {
 			<div className="mt-12">
 				{step === "setup" && (
 					<ScheduleSetupStep
-						branchId={headerBranchId}
 						companyId={companyId}
 						defaultValues={setupDefaults}
+						departmentExtras={weekSummary}
 						formId={setupFormId}
 						lockedDepartment={lockedDepartment}
 						periods={periods}
 						readOnly={readOnly}
-						departmentExtras={
-							<>
-								{setupGate && (
-									<ReadinessGateCallout
-										gate={setupGate}
-										link={fixLink(setupGate, {
-											next: "create",
-											week: setupWeek,
-										})}
-									/>
-								)}
-								{weekSummary}
-							</>
-						}
-						onDepartmentChange={chooseSetupDepartment}
 						onPeriodChange={setSetupPeriodStart}
 						onSubmit={submitSetup}
 					/>
@@ -805,15 +724,13 @@ export const CreateSchedule = (): FunctionComponent => {
 				busy={busy}
 				className="mt-12"
 				form={step === "setup" ? setupFormId : undefined}
-				nextDisabled={(isLast && !canGenerateWeek) || setupNextDisabled}
+				nextDisabled={isLast && !canGenerateWeek}
 				nextIcon={isLast ? <GenerateScheduleIcon /> : <ArrowRightIcon />}
+				unavailableNote={unavailableNote}
 				nextLabel={
 					isLast
 						? t("scheduling.actions.generate")
 						: t("scheduling.actions.next")
-				}
-				unavailableNote={
-					setupNextDisabled ? (setupNextNote ?? "") : unavailableNote
 				}
 				onNext={onNext}
 				onSaveDraft={onSaveDraft}
@@ -825,6 +742,25 @@ export const CreateSchedule = (): FunctionComponent => {
 						: undefined
 				}
 			/>
+			{isLast && canGenerateWeek && (
+				<p className="mt-3 text-right text-sm text-neutral-700">
+					{t("scheduling.months.generate.draftGeneratesMonth", {
+						month: formatMonthName(draftMonth, formattingLocale(i18n)),
+					})}
+				</p>
+			)}
+			{confirmingRegenerate && scheduleMonth.data && (
+				<RegenerateMonthDialog
+					companyId={companyId}
+					month={scheduleMonth.data}
+					onClose={() => {
+						setConfirmingRegenerate(false);
+					}}
+					onStarted={(answer) => {
+						void showMonth(answer);
+					}}
+				/>
+			)}
 			{choosingWeek && weekShifts && weekConstraints && weekDepartmentName && (
 				<WeekChoiceDialog
 					constraints={weekConstraints}

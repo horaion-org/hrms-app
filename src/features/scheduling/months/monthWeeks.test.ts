@@ -6,11 +6,15 @@ import {
 	formatMonth,
 	formatMonthName,
 	formatWeekDates,
+	formatWeekdayDate,
+	mondaysIn,
+	monthChoicesFrom,
 	monthOf,
 	shiftMonth,
 	stateCounts,
 	summariesByMonth,
 	summaryRange,
+	waitingWeekBefore,
 } from "@/features/scheduling/months/monthWeeks";
 
 describe("monthOf", () => {
@@ -39,6 +43,48 @@ describe("summaryRange", () => {
 			from: "2026-11",
 			to: "2027-11",
 		});
+	});
+});
+
+describe("monthChoicesFrom", () => {
+	it("given_aDayInNovember_when_listed_then_novemberAndTheTwelveMonthsAfter", () => {
+		const months = monthChoicesFrom(new Date(2026, 10, 12));
+
+		expect(months).toHaveLength(13);
+		expect(months[0]).toBe("2026-11");
+		expect(months[12]).toBe("2027-11");
+	});
+
+	it("given_aSundayWhoseMondayIsInTheMonthBefore_when_listed_then_startsAtThatMonth", () => {
+		// Sunday 1 Nov 2026 belongs to the week of Monday 26 Oct.
+		expect(monthChoicesFrom(new Date(2026, 10, 1))[0]).toBe("2026-10");
+	});
+});
+
+describe("mondaysIn", () => {
+	it("given_november2026_when_listed_then_fiveMondaysFromThe2nd", () => {
+		expect(mondaysIn("2026-11")).toEqual([
+			"2026-11-02",
+			"2026-11-09",
+			"2026-11-16",
+			"2026-11-23",
+			"2026-11-30",
+		]);
+	});
+
+	it("given_aMonthStartingOnAMonday_when_listed_then_itsFirstDayIsTheFirstMonday", () => {
+		expect(mondaysIn("2027-02")).toEqual([
+			"2027-02-01",
+			"2027-02-08",
+			"2027-02-15",
+			"2027-02-22",
+		]);
+	});
+});
+
+describe("formatWeekdayDate", () => {
+	it("given_aDate_when_formatted_then_weekdayDayAndMonth", () => {
+		expect(formatWeekdayDate("2026-11-02", "en-GB")).toBe("Mon 2 Nov");
 	});
 });
 
@@ -137,5 +183,25 @@ describe("summariesByMonth", () => {
 			["2026-11", ["Bar", "Kitchen"]],
 			["2026-12", ["Kitchen"]],
 		]);
+	});
+});
+
+describe("waitingWeekBefore", () => {
+	const november = monthSummaryFixture({
+		month: "2026-11",
+		weeks: [
+			{ periodStart: "2026-11-09", state: "PUBLISHED", scheduleId: "s-1" },
+			{ periodStart: "2026-11-16", state: "TO_REVIEW", scheduleId: "s-2" },
+			{ periodStart: "2026-11-23", state: "TENTATIVE", scheduleId: "s-3" },
+		],
+	});
+
+	it("given_aWeekToReviewInAnEarlierMonth_when_asked_then_thatWeek", () => {
+		expect(waitingWeekBefore([november], "2027-01")).toBe("2026-11-16");
+	});
+
+	it("given_noEarlierMonthWithAWeekToReview_when_asked_then_none", () => {
+		expect(waitingWeekBefore([november], "2026-11")).toBeUndefined();
+		expect(waitingWeekBefore([], "2027-01")).toBeUndefined();
 	});
 });

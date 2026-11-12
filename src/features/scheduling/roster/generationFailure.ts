@@ -47,6 +47,18 @@ const codeMessage = (code: string, t: TFunction): string => {
 	return t(`${key}.failed`);
 };
 
+/**
+ * What `generationFailure` reads of a run: a schedule's generation, or a
+ * month week's `failure` (whose run status is `runStatus` there).
+ */
+export type FailedRun = Pick<
+	ScheduleGeneration,
+	"errorCode" | "engineOutcome"
+> & {
+	status: string;
+	findings?: ScheduleGeneration["findings"];
+};
+
 /** What the failure panel says, and the code to show beside it when there is one. */
 export type GenerationFailure = { message: string; code: string | null };
 
@@ -57,7 +69,7 @@ export type GenerationFailure = { message: string; code: string | null };
  * INFEASIBLE. Anything else reads as a plain failure.
  */
 export const generationFailure = (
-	generation: ScheduleGeneration | null,
+	generation: FailedRun | null,
 	t: TFunction
 ): GenerationFailure => {
 	if (generation?.status === "FAILED" && generation.errorCode !== null)

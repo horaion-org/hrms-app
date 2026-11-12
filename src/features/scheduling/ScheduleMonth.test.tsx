@@ -1,6 +1,6 @@
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { resetApiClient } from "@/common/api-client";
 import {
 	currentUserReply,
@@ -16,10 +16,16 @@ import {
 } from "@/common/testing/stubApi";
 import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
+import { constraintFixture } from "@/features/scheduling/constraints/fixtures";
 import {
+	monthGenerationCheckFixture,
+	monthGenerationFixture,
+	monthSummaryFixture,
 	monthWeekFixture,
 	scheduleMonthFixture,
+	ungeneratedMonthFixture,
 } from "@/features/scheduling/months/fixtures";
+import { departmentShiftFixture } from "@/features/scheduling/shifts/fixtures";
 import { schedulingWorkspace } from "@/features/scheduling/schedules/fixtures";
 
 let app: OpenedApp | undefined;
@@ -30,6 +36,7 @@ afterEach(() => {
 	app = undefined;
 	endSession("expired");
 	resetApiClient();
+	vi.useRealTimers();
 	vi.unstubAllGlobals();
 	vi.restoreAllMocks();
 	localStorage.clear();
@@ -182,4 +189,252 @@ it("given_noScheduleRead_when_opened_then_asksForNothing", async () => {
 
 	expect(await screen.findByRole("alert")).toBeInTheDocument();
 	expect(calls.some((call) => call.path.startsWith(MONTHS))).toBe(false);
+});
+
+// ===== generating a month =====
+
+const DECEMBER = `${MONTHS}/2026-12`;
+const KITCHEN_UNIT = "/api/v1/companies/c-1/branches/b-1/departments/d-1";
+const GENERATORS = [
+	"schedule:read",
+	"schedule:generate",
+	"schedule:create",
+	"shift:read",
+	"constraint:read",
+];
+const SHIFT = departmentShiftFixture();
+const STAFFING = constraintFixture({
+	constraintId: "co-1",
+	name: "Morning cover",
+	type: "SHIFT_STAFFING",
+	values: [{ field: "SHIFT", value: SHIFT.shiftId, name: SHIFT.name }],
+	requiresPeople: true,
+});
+const generatingDecember = ungeneratedMonthFixture({
+	weeks: ungeneratedMonthFixture().weeks.map((week, index) => ({
+		...week,
+		state: "GENERATING" as const,
+		scheduleId: `s-new-${index + 1}`,
+		includedInMonthGeneration: false,
+	})),
+});
+
+const decemberRoutes = (monthReplies: Array<StubReply>): Routes => ({
+	...signedIn(GENERATORS),
+	[`GET ${DECEMBER}`]: monthReplies,
+	[`GET ${DECEMBER}/generation-check`]: ok(monthGenerationCheckFixture()),
+	[`GET ${KITCHEN_UNIT}/shifts`]: ok([SHIFT]),
+	[`GET ${KITCHEN_UNIT}/constraints`]: ok([STAFFING]),
+	[`POST ${DECEMBER}/generation`]: ok(monthGenerationFixture()),
+});
+
+it("given_aMonthNothingWasGeneratedIn_when_generated_then_everyWeekIsSentAndTheMonthReadsGenerating", async () => {
+	const calls = await openMonth(
+		decemberRoutes([ok(ungeneratedMonthFixture()), ok(generatingDecember)]),
+		"/scheduling/months/2026-12?department=d-1"
+	);
+
+	expect(
+		await screen.findByRole("heading", { name: "Before you generate December" })
+	).toBeInTheDocument();
+	expect(screen.getByText("Kitchen has 3 shifts.")).toBeInTheDocument();
+	const generate = screen.getByRole("button", { name: "Generate December" });
+	await vi.waitFor(() => {
+		expect(generate).toBeEnabled();
+	});
+	await userEvent.click(generate);
+
+	expect(await screen.findByText("Generating December…")).toBeInTheDocument();
+	const post = calls.find(
+		(call) => call.method === "POST" && call.path === `${DECEMBER}/generation`
+	);
+	expect(post?.search).toBe("departmentId=d-1");
+	expect(
+		(post?.body as { newWeeks: Array<{ periodStart: string }> }).newWeeks.map(
+			(week) => week.periodStart
+		)
+	).toEqual(["2026-12-07", "2026-12-14", "2026-12-21", "2026-12-28"]);
+	expect(
+		screen.queryByRole("heading", { name: "Before you generate December" })
+	).toBeNull();
+	expect(screen.getAllByText("Generating").length).toBeGreaterThanOrEqual(4);
+});
+
+it("given_aRefusedWeekInTheAnswer_when_generated_then_itsCardSaysWhy", async () => {
+	const answer = monthGenerationFixture();
+	answer.weeks[1] = {
+		...answer.weeks[1]!,
+		outcome: "REFUSED",
+		scheduleId: null,
+		reason: "SCHEDULE_HAS_NO_EMPLOYEES",
+	};
+	await openMonth(
+		{
+			...decemberRoutes([ok(ungeneratedMonthFixture())]),
+			[`POST ${DECEMBER}/generation`]: ok(answer),
+		},
+		"/scheduling/months/2026-12?department=d-1"
+	);
+	const generate = await screen.findByRole("button", {
+		name: "Generate December",
+	});
+	await vi.waitFor(() => {
+		expect(generate).toBeEnabled();
+	});
+
+	await userEvent.click(generate);
+
+	expect(
+		await screen.findByText(
+			"Not generated: This department has no employees who can be scheduled. Give at least one active member of the department a job title, then try again."
+		)
+	).toBeInTheDocument();
+});
+
+it("given_aFailedWeek_when_shown_then_itsCardSaysWhy", async () => {
+	await openMonth({
+		...signedIn(),
+		[`GET ${MONTHS}/2026-11`]: ok(
+			scheduleMonthFixture({
+				weeks: [
+					monthWeekFixture({
+						state: "FAILED",
+						days: [],
+						handChangedDays: null,
+						failure: {
+							runStatus: "FAILED",
+							errorCode: "engine_unreachable",
+							engineOutcome: null,
+						},
+					}),
+				],
+			})
+		),
+	});
+
+	expect(
+		await screen.findByText(
+			"The scheduling engine couldn’t be reached in time, so nothing was generated."
+		)
+	).toBeInTheDocument();
+});
+
+it("given_noScheduleGenerate_when_aMonthIsNotGenerated_then_noPanelAndTheNoScheduleLine", async () => {
+	const calls = await openMonth(
+		{ ...decemberRoutes([ok(ungeneratedMonthFixture())]), ...signedIn() },
+		"/scheduling/months/2026-12?department=d-1"
+	);
+
+	expect(
+		await screen.findByText("No week of December 2026 has a schedule yet.")
+	).toBeInTheDocument();
+	expect(
+		screen.queryByRole("heading", { name: "Before you generate December" })
+	).toBeNull();
+	expect(calls.some((call) => call.path.endsWith("/generation-check"))).toBe(
+		false
+	);
+});
+
+it("given_aCoveredWeekChangedByHand_when_generated_then_asksFirstAndPostsOnConfirm", async () => {
+	const user = userEvent.setup();
+	const december = ungeneratedMonthFixture();
+	const handChanged = ungeneratedMonthFixture({
+		weeks: december.weeks.map((week, index) =>
+			index === 0
+				? {
+						...week,
+						state: "TENTATIVE" as const,
+						scheduleId: "s-7",
+						handChangedDays: 1,
+					}
+				: week
+		),
+	});
+	const calls = await openMonth(
+		decemberRoutes([ok(handChanged)]),
+		"/scheduling/months/2026-12?department=d-1"
+	);
+	const generate = await screen.findByRole("button", {
+		name: "Generate December",
+	});
+	await vi.waitFor(() => {
+		expect(generate).toBeEnabled();
+	});
+
+	await user.click(generate);
+
+	const dialog = await screen.findByRole("dialog", {
+		name: "Regenerate December?",
+	});
+	expect(dialog).toHaveTextContent(/Dec 7\s?–\s?13 was changed by hand\./);
+	expect(calls.some((call) => call.path === `${DECEMBER}/generation`)).toBe(
+		false
+	);
+	await user.click(
+		within(dialog).getByRole("button", { name: "Regenerate December" })
+	);
+	await vi.waitFor(() => {
+		expect(
+			calls.filter(
+				(call) =>
+					call.method === "POST" && call.path === `${DECEMBER}/generation`
+			)
+		).toHaveLength(1);
+	});
+});
+
+describe("a month held back by an earlier month's week", () => {
+	const tentativeDecember = ungeneratedMonthFixture({
+		weeks: ungeneratedMonthFixture().weeks.map((week, index) => ({
+			...week,
+			state: "TENTATIVE" as const,
+			scheduleId: `s-${index + 10}`,
+		})),
+	});
+	const novemberToReview = monthSummaryFixture({
+		month: "2026-11",
+		weeks: [
+			{ periodStart: "2026-11-16", state: "TO_REVIEW", scheduleId: "s-2" },
+		],
+	});
+
+	it("given_everyWeekTentativeAndAWeekToReviewInNovember_when_opened_then_saysWhichWeekTheyWaitFor", async () => {
+		// Thursday 12 Nov 2026: the summaries are read from November.
+		vi.useFakeTimers({ toFake: ["Date"], now: new Date(2026, 10, 12) });
+		const calls = await openMonth(
+			{
+				...signedIn(),
+				[`GET ${DECEMBER}`]: ok(tentativeDecember),
+				[`GET ${MONTHS}`]: ok([novemberToReview]),
+			},
+			"/scheduling/months/2026-12?department=d-1"
+		);
+
+		const line = await screen.findByText(/These weeks wait for/);
+		expect(line).toHaveTextContent(
+			/^These weeks wait for Nov 16\s?–\s?22, 2026 to be published first\.$/
+		);
+		expect(within(line).getByRole("link")).toHaveAttribute(
+			"href",
+			"/scheduling/months/2026-11?department=d-1"
+		);
+		expect(calls.find((call) => call.path === MONTHS)?.search).toBe(
+			"from=2026-11&to=2026-11&departmentId=d-1"
+		);
+	});
+
+	it("given_aWeekToReviewInTheMonthItself_when_opened_then_noWaitingLineAndNoSummaryRead", async () => {
+		const calls = await openMonth({
+			...signedIn(),
+			[`GET ${MONTHS}/2026-11`]: ok(scheduleMonthFixture()),
+		});
+
+		await screen.findByRole("heading", {
+			level: 1,
+			name: "Kitchen · November 2026",
+		});
+		expect(screen.queryByText(/These weeks wait for/)).toBeNull();
+		expect(calls.some((call) => call.path === MONTHS)).toBe(false);
+	});
 });

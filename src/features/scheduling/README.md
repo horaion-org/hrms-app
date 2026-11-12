@@ -132,8 +132,10 @@ their API exists.
   members-by-days grid, which shows the earlier week on request and still saves it when hidden. An empty day means
   "not known", never worked or off.
 
-`src/pages/CreateSchedule.tsx` composes the steps and owns the draft, the week's choice, the readiness gates, the
-saves and generation.
+`/scheduling/new` opens `src/pages/CreateMonthSchedule.tsx` for anything new (a Department's month, generated in one
+run through `months/useGenerateMonth.ts`; `pages/NewSchedule.tsx` holds the switch) and
+`src/pages/CreateSchedule.tsx` for a saved draft the URL names, which owns the draft, the week's choice, the readiness
+gate, the saves and generating the draft's month.
 
 ## Roster page
 
@@ -255,8 +257,9 @@ saves and generation.
 - `ScheduleMenu` — the "More actions" menu on a history row and the roster header: the caller's own items first
   (`children`), then Export roster (header only, once there is a roster) and Delete. It owns the export mutation and
   opens `DeleteScheduleDialog`.
-- `DeleteScheduleDialog`, `RegenerateDialog` — `ConfirmDialog`s in the `danger` tone (a failed run's retry is not,
-  as there is nothing to replace); each refusal shows inside the dialog.
+- `DeleteScheduleDialog` — a `ConfirmDialog` in the `danger` tone. `RegenerateMonthDialog` — asks before a month is
+  generated again, naming the weeks changed by hand; `danger` only when it replaces them. Each refusal shows inside
+  the dialog.
 - `RejectedRosterCallout` — a rejected roster says who rejected it, when, why and what next.
   `schedules/scheduleDecision.ts` reads the decision off the status alone. `PublishScheduleDialog` (from the header's
   Publish) and `RejectScheduleDialog` (from the menu; reason required, as rejecting leave) make the decision.

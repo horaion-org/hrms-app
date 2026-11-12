@@ -4,6 +4,8 @@ import { apiRequest } from "@/common/api-client";
 import type { QueryOptionsFor } from "@/common/query-client";
 import {
 	SCHEDULING_QUERY_ROOT,
+	scheduleMonthGenerationCheckPath,
+	scheduleMonthGenerationPath,
 	scheduleMonthPath,
 	scheduleMonthsPath,
 } from "@/features/scheduling/paths";
@@ -49,6 +51,16 @@ const monthWeekSchema = z.object({
 	days: z.array(z.object({ date: z.string(), shortShifts: z.number() })),
 	/** Cells changed by hand, or null without a roster. */
 	handChangedDays: z.number().nullable(),
+	/** Whether generating the month generates this week; absent from an API without it. */
+	includedInMonthGeneration: z.boolean().nullish(),
+	/** Why a failed week's newest run gave no roster; only on a FAILED week. */
+	failure: z
+		.object({
+			runStatus: z.string(),
+			errorCode: z.string().nullable(),
+			engineOutcome: z.string().nullable(),
+		})
+		.nullish(),
 });
 
 /** One week of a Department's month, as the month page shows it. */
@@ -198,6 +210,136 @@ export const scheduleMonthSummariesQuery = (
 					fetchScheduleMonthSummaries(companyId, units, range, signal)
 			: skipToken,
 		meta: administrativeMeta(companyId),
+		staleTime: 30_000,
+		retry,
+	});
+
+/** What a Department needs before its month is generated, and what is worth a look. */
+export const monthGenerationCheckSchema = z.object({
+	month: z.string(),
+	departmentId: z.string(),
+	departmentName: z.string(),
+	/** False while anything is missing; generating is refused then. */
+	ready: z.boolean(),
+	/** "SHIFT", "STAFFING_CONSTRAINT", in checklist order. */
+	missing: z.array(z.string()),
+	shiftCount: z.number(),
+	/** The constraint that puts people on the Department's shifts, or null when none does. */
+	staffingConstraint: z
+		.object({ name: z.string(), shiftNames: z.array(z.string()) })
+		.nullable(),
+	/** Schedulable members with approved leave in the month's weeks. */
+	peopleWithApprovedLeave: z.number(),
+	/** Their leave requests in the month's weeks still waiting for a decision. */
+	leaveRequestsWaiting: z.number(),
+});
+
+/** The "Before you generate" facts of one Department's month. */
+export type MonthGenerationCheck = z.infer<typeof monthGenerationCheckSchema>;
+
+export const monthGenerationSchema = z.object({
+	month: z.string(),
+	departmentId: z.string(),
+	weeks: z.array(
+		z.object({
+			periodStart: z.string(),
+			scheduleId: z.string().nullable(),
+			// An outcome a newer API adds reads as UNKNOWN instead of failing the answer.
+			outcome: z
+				.enum(["STARTED", "LEFT_AS_IS", "REFUSED", "UNKNOWN"])
+				.catch("UNKNOWN"),
+			/** PUBLISHED, GENERATING or ENDED when left as is; the refusal's code when refused. */
+			reason: z.string().nullable(),
+		})
+	),
+});
+
+/** What generating a month did with each of its weeks, Monday order. */
+export type MonthGeneration = z.infer<typeof monthGenerationSchema>;
+
+/** One week to create: its Monday and what it ticks. */
+export type NewWeek = {
+	periodStart: string;
+	includedShiftIds: Array<string>;
+	includedConstraintIds: Array<string>;
+};
+
+/** What generating a month sends: the setup of the weeks it creates, and each one's choice. */
+export type GenerateMonthBody = {
+	includeLeave: boolean;
+	allowOpenShifts: boolean;
+	newWeeks: Array<NewWeek>;
+};
+
+/** `?departmentId=`: the Department is a query parameter, never in the path. */
+const departmentSearch = (departmentId: string): string =>
+	new URLSearchParams({ departmentId }).toString();
+
+/** The "Before you generate" facts of one Department's month; out of reach is a 404. */
+export const fetchMonthGenerationCheck = (
+	companyId: string,
+	departmentId: string,
+	month: string,
+	signal?: AbortSignal
+): Promise<MonthGenerationCheck> =>
+	apiRequest(
+		`${scheduleMonthGenerationCheckPath(companyId, month)}?${departmentSearch(departmentId)}`,
+		monthGenerationCheckSchema,
+		{ signal }
+	);
+
+/**
+ * Generates one Department's month: creates the weeks it still needs with
+ * the body's choices, then starts every week that isn't published,
+ * generating or ended. Answers each week's outcome.
+ */
+export const generateMonth = (
+	companyId: string,
+	departmentId: string,
+	month: string,
+	body: GenerateMonthBody
+): Promise<MonthGeneration> =>
+	apiRequest(
+		`${scheduleMonthGenerationPath(companyId, month)}?${departmentSearch(departmentId)}`,
+		monthGenerationSchema,
+		{ method: "POST", body }
+	);
+
+/** The key a month's "Before you generate" facts are cached under, under the month reads. */
+export const monthGenerationCheckKey = (
+	companyId: string,
+	departmentId: string,
+	month: string
+): readonly [
+	"scheduling",
+	string,
+	"months",
+	string,
+	string,
+	"generation-check",
+] =>
+	[
+		...scheduleMonthKey(companyId, departmentId, month),
+		"generation-check",
+	] as const;
+
+/** One Department's "Before you generate" facts; `allowed` false asks for nothing. */
+export const monthGenerationCheckQuery = (
+	companyId: string,
+	departmentId: string,
+	month: string,
+	allowed = true
+): QueryOptionsFor<
+	MonthGenerationCheck,
+	ReturnType<typeof monthGenerationCheckKey>
+> =>
+	queryOptions({
+		queryKey: monthGenerationCheckKey(companyId, departmentId, month),
+		queryFn: allowed
+			? ({ signal }): Promise<MonthGenerationCheck> =>
+					fetchMonthGenerationCheck(companyId, departmentId, month, signal)
+			: skipToken,
+		meta: administrativeMeta(companyId, { record: true }),
 		staleTime: 30_000,
 		retry,
 	});

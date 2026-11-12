@@ -18,10 +18,8 @@ import {
 	hasRoster,
 	regenerable,
 	withdrawable,
-	requestGeneration,
 	publishSchedule,
 	rejectSchedule,
-	requestRegeneration,
 	rosterEditable,
 	rosterRunId,
 	scheduleAssignmentsKey,
@@ -44,8 +42,8 @@ import {
 import {
 	decisionRefusal,
 	deleteRefusal,
-	generationRefusal,
-	regenerationRefusal,
+	monthGenerationRefusal,
+	refusalOfCode,
 	withdrawalRefusal,
 	scheduleRefusal,
 	scheduleRefusalMessage,
@@ -307,23 +305,6 @@ describe("schedules client", () => {
 		).toBe(false);
 	});
 
-	it("requests a regeneration with no body and reads nothing back", async () => {
-		const calls = stubApi({
-			[`POST ${SCHEDULES}/s-1/regeneration`]: {
-				status: 200,
-				body: envelope(generatedScheduleFixture()),
-			},
-		});
-
-		await expect(
-			requestRegeneration("c-1", UNIT, "s-1")
-		).resolves.toBeUndefined();
-		expect(calls.map((call) => `${call.method} ${call.path}`)).toEqual([
-			`POST ${SCHEDULES}/s-1/regeneration`,
-		]);
-		expect(calls[0]?.body).toBeUndefined();
-	});
-
 	it("publishes a roster with no body and reads the schedule back", async () => {
 		const published = generatedScheduleFixture({ status: "PUBLISHED" });
 		const calls = stubApi({
@@ -366,23 +347,6 @@ describe("schedules client", () => {
 		expect(calls.map((call) => `${call.method} ${call.path}`)).toEqual([
 			`DELETE ${SCHEDULES}/s-1`,
 		]);
-	});
-
-	it("requests generation with no body and reads nothing back", async () => {
-		const calls = stubApi({
-			[`POST ${SCHEDULES}/s-1/generation`]: {
-				status: 200,
-				body: envelope(generatedScheduleFixture()),
-			},
-		});
-
-		await expect(
-			requestGeneration("c-1", UNIT, "s-1")
-		).resolves.toBeUndefined();
-		expect(calls.map((call) => `${call.method} ${call.path}`)).toEqual([
-			`POST ${SCHEDULES}/s-1/generation`,
-		]);
-		expect(calls[0]?.body).toBeUndefined();
 	});
 });
 
@@ -1043,45 +1007,35 @@ describe("schedule refusals", () => {
 	it.each([
 		[
 			"SCHEDULE_HAS_NO_SHIFTS",
-			409,
 			"Choose at least one shift before generating this schedule.",
 		],
 		[
 			"SCHEDULE_HAS_NO_STAFFING_CONSTRAINT",
-			409,
 			"This schedule uses no staffing constraint on its shifts, so nobody would be rostered. Choose for this week on Setup.",
 		],
-		[
-			"SCHEDULE_HAS_NO_EMPLOYEES",
-			409,
-			"This department has no employees who can be scheduled. Give at least one active member of the department a job title, then try again.",
-		],
-		["SCHEDULE_NOT_DRAFT", 409, "This schedule has already been generated."],
+		["SCHEDULE_NOT_DRAFT", "This schedule has already been generated."],
 		[
 			"SCHEDULE_WEEK_ALREADY_PUBLISHED",
-			409,
 			"This department already has a published roster for this week. Only one roster can be published per week, so schedule a different week instead.",
 		],
 		[
 			"SCHEDULE_CONSTRAINT_UNUSABLE",
-			409,
 			"A chosen constraint names a shift this schedule doesn’t include or a job title that’s no longer active. Tick that shift, edit the constraint or untick it, then try again.",
 		],
-		["SCHEDULE_NOT_FOUND", 404, "This draft no longer exists."],
 		[
-			"ACCESS_DENIED",
-			403,
-			"You no longer have permission to generate this schedule.",
+			"SCHEDULE_PUBLISHED",
+			"This roster is published, so it can’t be regenerated or deleted. Change its days on the roster instead.",
 		],
-	])("explains a generation refused with %s", (code, status, copy) => {
-		expect(generationRefusal(problem(status, code), t)).toBe(copy);
-	});
-
-	it("falls back to a plain failure for generation", () => {
-		expect(generationRefusal(new Error("offline"), t)).toBe(
-			"We couldn’t generate the schedule. Try again."
-		);
-	});
+		[
+			"SCHEDULE_ONCE_PUBLISHED",
+			"This roster was published once, so it can’t be regenerated. Change its days on the roster instead.",
+		],
+	])(
+		"words a month week refused with %s in a week's own words",
+		(code, copy) => {
+			expect(refusalOfCode(code, t)).toBe(copy);
+		}
+	);
 
 	it.each([
 		[
@@ -1112,43 +1066,40 @@ describe("schedule refusals", () => {
 
 	it.each([
 		[
-			"SCHEDULE_IS_DRAFT",
-			409,
-			"This schedule hasn’t been generated yet. Generate it from its setup.",
-		],
-		[
-			"SCHEDULE_GENERATION_IN_PROGRESS",
-			409,
-			"This schedule is being generated. Try again once the run finishes.",
-		],
-		[
 			"SCHEDULE_HAS_NO_EMPLOYEES",
-			409,
 			"This department has no employees who can be scheduled. Give at least one active member of the department a job title, then try again.",
 		],
 		[
-			"SCHEDULE_PUBLISHED",
-			409,
-			"This roster is published, so it can’t be regenerated or deleted. Change its days on the roster instead.",
+			"SCHEDULE_WEEK_TAKEN",
+			"This department already has a schedule for that week.",
 		],
 		[
-			"SCHEDULE_WEEK_ALREADY_PUBLISHED",
-			409,
-			"This department already has a published roster for this week. Only one roster can be published per week, so schedule a different week instead.",
+			"SCHEDULE_GENERATION_IN_PROGRESS",
+			"This schedule is being generated. Try again once the run finishes.",
 		],
-		["SCHEDULE_NOT_FOUND", 404, "This schedule no longer exists."],
-		[
-			"ACCESS_DENIED",
-			403,
-			"You no longer have permission to regenerate this schedule.",
-		],
-	])("explains a regeneration refused with %s", (code, status, copy) => {
-		expect(regenerationRefusal(problem(status, code), t)).toBe(copy);
+		["SOMETHING_NEW", "We couldn’t generate the schedule. Try again."],
+	])("words a month week refused with %s", (code, copy) => {
+		expect(refusalOfCode(code, t)).toBe(copy);
 	});
 
-	it("falls back to a plain failure for a regeneration", () => {
-		expect(regenerationRefusal(new Error("offline"), t)).toBe(
-			"We couldn’t regenerate the roster. Try again."
+	it.each([
+		[
+			"MONTH_WEEK_CHOICE_MISSING",
+			400,
+			"A week of this month was set up while you were here. Reload the page and generate again.",
+		],
+		[
+			"AUTHORIZATION_DENIED",
+			403,
+			"You don’t have permission to generate this month here.",
+		],
+	])("explains a month generation refused with %s", (code, status, copy) => {
+		expect(monthGenerationRefusal(problem(status, code), t)).toBe(copy);
+	});
+
+	it("falls back to a plain failure for a month generation", () => {
+		expect(monthGenerationRefusal(new Error("offline"), t)).toBe(
+			"We couldn’t generate the month. Try again."
 		);
 	});
 
@@ -1217,14 +1168,6 @@ describe("schedule refusals", () => {
 				t
 			).fields
 		).toEqual({ remark: "Enter a remark of up to 500 characters." });
-	});
-
-	it("explains a regeneration of a once-published roster", () => {
-		expect(
-			regenerationRefusal(problem(409, "SCHEDULE_ONCE_PUBLISHED"), t)
-		).toBe(
-			"This roster was published once, so it can’t be regenerated. Change its days on the roster instead."
-		);
 	});
 
 	it("knows only a published roster with no run open can have its publication withdrawn", () => {

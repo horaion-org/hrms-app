@@ -69,3 +69,15 @@ export const scheduleMonthsPath = (companyId: string): string =>
 /** One month of schedules; the Department is a required query parameter. */
 export const scheduleMonthPath = (companyId: string, month: string): string =>
 	`${scheduleMonthsPath(companyId)}/${encodeURIComponent(month)}`;
+
+/** What a Department needs before its month is generated; the Department is a required query parameter. */
+export const scheduleMonthGenerationCheckPath = (
+	companyId: string,
+	month: string
+): string => `${scheduleMonthPath(companyId, month)}/generation-check`;
+
+/** Generating a Department's month; the Department is a required query parameter. */
+export const scheduleMonthGenerationPath = (
+	companyId: string,
+	month: string
+): string => `${scheduleMonthPath(companyId, month)}/generation`;

@@ -440,35 +440,6 @@ export const updateSchedule = (
 	});
 
 /**
- * Freezes a DRAFT's ticked live shifts and constraints into it and marks it
- * GENERATION_REQUESTED. Whatever it answers is not read: the page leaves
- * the schedule and every scheduling query reloads.
- */
-export const requestGeneration = (
-	companyId: string,
-	unit: DepartmentPath,
-	scheduleId: string
-): Promise<void> =>
-	apiRequestVoid(`${schedulePath(companyId, unit, scheduleId)}/generation`, {
-		method: "POST",
-	});
-
-/**
- * Generates a GENERATED, GENERATION_FAILED or REJECTED schedule again from its frozen
- * shifts and constraints: its roster is removed and it is
- * GENERATION_REQUESTED until the new run ends. Whatever it answers is not
- * read: every scheduling query reloads.
- */
-export const requestRegeneration = (
-	companyId: string,
-	unit: DepartmentPath,
-	scheduleId: string
-): Promise<void> =>
-	apiRequestVoid(`${schedulePath(companyId, unit, scheduleId)}/regeneration`, {
-		method: "POST",
-	});
-
-/**
  * Records a publish decision on a GENERATED schedule's roster. It answers
  * the schedule: read its status from the answer, never assume it. Where an
  * approval flow applies (`publication.requiresApproval`) it submits the

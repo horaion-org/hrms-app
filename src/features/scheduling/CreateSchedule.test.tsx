@@ -34,7 +34,6 @@ import {
 	INCLUDED_SHIFT_IDS,
 	SHIFT_FIXTURES,
 	SHIFT_ROLE_OPTIONS,
-	departmentShiftFixture,
 	frozenShiftsFixture,
 	scheduleShiftsFixture,
 } from "@/features/scheduling/shifts/fixtures";
@@ -43,6 +42,10 @@ import {
 	firstWeek,
 	unknownCell,
 } from "@/features/scheduling/startingContext/fixtures";
+import {
+	monthWeekFixture,
+	scheduleMonthFixture,
+} from "@/features/scheduling/months/fixtures";
 import type { Workspace } from "@/features/workspace/api";
 import { Route as createScheduleRoute } from "@/routes/_authenticated._app.scheduling_.new";
 
@@ -56,12 +59,13 @@ const DEPARTMENT = "/api/v1/companies/c-1/branches/b-1/departments/d-1";
 const SCHEDULES = `${DEPARTMENT}/schedules`;
 const SCHEDULE = `${SCHEDULES}/s-1`;
 const SCHEDULE_SHIFTS = `${SCHEDULE}/shifts`;
-const GENERATION = `${SCHEDULE}/generation`;
-const LIVE_SHIFTS = `${DEPARTMENT}/shifts`;
 const ROLE_OPTIONS = `${DEPARTMENT}/shift-role-options`;
 const SCHEDULE_CONSTRAINTS = `${SCHEDULE}/constraints`;
 const LIVE_CONSTRAINTS = `${DEPARTMENT}/constraints`;
 const CONSTRAINT_OPTIONS_PATH = `${DEPARTMENT}/constraint-options`;
+/** October, the month of draft s-1's week: generating the draft posts it here. */
+const OCTOBER = "/api/v1/companies/c-1/schedule-months/2026-10";
+const OCTOBER_GENERATION = `${OCTOBER}/generation`;
 const ALL = [
 	"schedule:read",
 	"schedule:create",
@@ -87,23 +91,6 @@ const DRAFT_SETUP = {
 	allowOpenShifts: false,
 };
 
-/** Front Office's live shifts as a new draft lists them: every shift its active constraints name. */
-const LIVE_SHIFT_ROWS = [
-	"front-desk-am",
-	"breakfast-prep",
-	"lunch-rush",
-	"closing-crew",
-].map((shiftId) =>
-	departmentShiftFixture(
-		SHIFT_FIXTURES.find((shift) => shift.shiftId === shiftId)
-	)
-);
-/** Front Office's ACTIVE constraints, as everything chosen ticks them. */
-const ACTIVE_CONSTRAINT_IDS = CONSTRAINT_FIXTURES.filter(
-	(constraint) => constraint.status === "ACTIVE"
-).map((constraint) => constraint.constraintId);
-const WEEK_LINE = "Uses all 4 shifts and 5 constraints of Front Office.";
-
 type Call = { method: string; path: string; search: string; body: unknown };
 
 let app: OpenedApp | undefined;
@@ -126,6 +113,40 @@ const reply = (data: unknown, status = 200): StubReply => ({
 	body: envelope(data),
 });
 
+/** October with draft s-1's week the one week a run covers, changed by hand on `handChangedDays`. */
+const october = (handChangedDays: number | null = null): StubReply =>
+	reply(
+		scheduleMonthFixture({
+			month: "2026-10",
+			departmentName: "Front Office",
+			weeks: [
+				monthWeekFixture({
+					periodStart: "2026-10-12",
+					periodEnd: "2026-10-18",
+					state: "DRAFT",
+					scheduleId: "s-1",
+					days: [],
+					handChangedDays,
+					includedInMonthGeneration: true,
+				}),
+			],
+		})
+	);
+/** What the month route answers once October's one covered week started. */
+const octoberStarted = (): StubReply =>
+	reply({
+		month: "2026-10",
+		departmentId: "d-1",
+		weeks: [
+			{
+				periodStart: "2026-10-12",
+				scheduleId: "s-1",
+				outcome: "STARTED",
+				reason: null,
+			},
+		],
+	});
+
 /** The workspace granting `permissions` company-wide, or exactly as given. */
 const workspaceOf = (permissions: Array<string> | Workspace): StubReply =>
 	reply(
@@ -143,6 +164,7 @@ const routes = (
 	[`GET ${ROLE_OPTIONS}`]: reply(SHIFT_ROLE_OPTIONS),
 	[`GET ${LIVE_CONSTRAINTS}`]: reply(CONSTRAINT_FIXTURES),
 	[`GET ${CONSTRAINT_OPTIONS_PATH}`]: reply(CONSTRAINT_OPTIONS_RESPONSE),
+	[`GET ${OCTOBER}`]: october(),
 });
 
 const open = async (
@@ -192,17 +214,6 @@ const toGenerate = async (
 ): Promise<void> => {
 	await user.click(next());
 	await screen.findByRole("region", { name: "Ready to generate" });
-};
-
-const fillSetup = async (
-	user: ReturnType<typeof userEvent.setup>
-): Promise<void> => {
-	await user.click(await screen.findByRole("button", { name: /Department/ }));
-	await user.click(await screen.findByRole("option", { name: "Front Office" }));
-	await user.type(
-		screen.getByRole("textbox", { name: /Schedule name/ }),
-		"Front Office - Week 42"
-	);
 };
 
 /** Grants each key only at the Department it names, as a Department-level role would. */
@@ -302,57 +313,6 @@ describe("Create Schedule: opening and setup", () => {
 		expect(calls.filter((call) => call.path === SCHEDULE)).toEqual([]);
 	});
 
-	it("given_aCompletedSetup_when_nextClicked_then_createsTheDraftAtTheChosenDepartmentAndOpensItsForecast", async () => {
-		const user = userEvent.setup();
-		const created = scheduleFixture({
-			includedShiftIds: [],
-			includedConstraintIds: [],
-		});
-		const { opened, calls } = await open("/scheduling/new", {
-			[`POST ${SCHEDULES}`]: reply(created, 201),
-			[`GET ${SCHEDULE}`]: reply(created),
-			[`GET ${SCHEDULE_SHIFTS}`]: reply([]),
-			[`GET ${LIVE_SHIFTS}`]: reply(LIVE_SHIFT_ROWS),
-		});
-
-		await fillSetup(user);
-		await screen.findByText(WEEK_LINE);
-		await user.click(next());
-
-		await screen.findByRole("region", { name: "Staffing forecast" });
-		expect(opened.router.state.location.search).toEqual({
-			step: "forecast",
-			scheduleId: "s-1",
-			departmentId: "d-1",
-		});
-		expect(sent(calls, `POST ${SCHEDULES}`)).toEqual([
-			{
-				...DRAFT_SETUP,
-				periodStart: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/) as string,
-				// A new draft uses everything until its week is chosen.
-				includedShiftIds: LIVE_SHIFT_ROWS.map((shift) => shift.shiftId),
-				includedConstraintIds: ACTIVE_CONSTRAINT_IDS,
-			},
-		]);
-	});
-
-	it("given_aRefusedPeriod_when_setupCompleted_then_saysSoOnThePeriod", async () => {
-		const user = userEvent.setup();
-		const { opened } = await open("/scheduling/new", {
-			[`POST ${SCHEDULES}`]: problemReply(400, "SCHEDULE_PERIOD_NOT_MONDAY"),
-			[`GET ${LIVE_SHIFTS}`]: reply(LIVE_SHIFT_ROWS),
-		});
-
-		await fillSetup(user);
-		await screen.findByText(WEEK_LINE);
-		await user.click(next());
-
-		expect(
-			await screen.findByText("Choose a period that starts on a Monday.")
-		).toBeVisible();
-		expect(opened.router.state.location.search).toEqual({});
-	});
-
 	it("given_aSavedDraft_when_setupCompletedAgain_then_replacesItsSetupKeepingItsTicks", async () => {
 		const user = userEvent.setup();
 		const { opened, calls } = await open(
@@ -389,59 +349,6 @@ describe("Create Schedule: the week's choice", () => {
 	const weekLine = (text: string): Promise<HTMLElement> =>
 		screen.findByText(text, { exact: false });
 
-	it("given_aNewDraftsDepartment_when_chosen_then_saysItUsesEverything", async () => {
-		const user = userEvent.setup();
-		await open("/scheduling/new", {
-			[`GET ${LIVE_SHIFTS}`]: reply(LIVE_SHIFT_ROWS),
-		});
-
-		await fillSetup(user);
-
-		expect(await weekLine(WEEK_LINE)).toBeVisible();
-		expect(
-			screen.getByRole("button", { name: "Choose for this week" })
-		).toBeVisible();
-	});
-
-	it("given_aShiftLeftOut_when_theWeekIsChosen_then_theLineCountsWhatIsUsedAndNextPostsIt", async () => {
-		const user = userEvent.setup();
-		const created = scheduleFixture();
-		const { calls } = await open("/scheduling/new", {
-			[`GET ${LIVE_SHIFTS}`]: reply(LIVE_SHIFT_ROWS),
-			[`POST ${SCHEDULES}`]: reply(created, 201),
-		});
-		await fillSetup(user);
-		await user.click(
-			await screen.findByRole("button", { name: "Choose for this week" })
-		);
-		const dialog = await screen.findByRole("dialog", {
-			name: /^What .+ uses$/,
-		});
-
-		await user.click(
-			within(dialog).getByRole("checkbox", { name: "Select Lunch Rush" })
-		);
-		await user.click(
-			within(dialog).getByRole("button", { name: "Use for week" })
-		);
-
-		expect(
-			await weekLine(
-				"Uses 3 of 4 shifts and 4 of 5 constraints of Front Office."
-			)
-		).toBeVisible();
-		await user.click(next());
-		await waitFor(() => {
-			expect(sent(calls, `POST ${SCHEDULES}`)).toHaveLength(1);
-		});
-		expect(sent(calls, `POST ${SCHEDULES}`)[0]).toMatchObject({
-			includedShiftIds: ["front-desk-am", "breakfast-prep", "closing-crew"],
-			includedConstraintIds: ACTIVE_CONSTRAINT_IDS.filter(
-				(constraintId) => constraintId !== "lunch-stand-ins"
-			),
-		});
-	});
-
 	it("given_aGeneratedSchedule_when_itsSetupIsViewed_then_saysWhatItWasGeneratedWithAndViewIsReadOnly", async () => {
 		const user = userEvent.setup();
 		await open(SETUP_OF_S1, {
@@ -466,28 +373,6 @@ describe("Create Schedule: the week's choice", () => {
 		).toBeNull();
 	});
 
-	it("given_theReadKeys_when_aDepartmentIsChosen_then_linksToEditItsShiftsAndConstraints", async () => {
-		const user = userEvent.setup();
-		await open("/scheduling/new", {
-			[`GET ${LIVE_SHIFTS}`]: reply(LIVE_SHIFT_ROWS),
-		});
-
-		await fillSetup(user);
-
-		expect(
-			await screen.findByRole("link", { name: "Edit shifts" })
-		).toHaveAttribute(
-			"href",
-			"/scheduling?view=shifts&branch=b-1&department=d-1"
-		);
-		expect(
-			screen.getByRole("link", { name: "Edit constraints" })
-		).toHaveAttribute(
-			"href",
-			"/scheduling?view=constraints&branch=b-1&department=d-1"
-		);
-	});
-
 	it("given_aSavedDraft_when_onGenerate_then_linksToEditItsDepartment", async () => {
 		await open("/scheduling/new?step=generate&scheduleId=s-1&departmentId=d-1");
 
@@ -498,204 +383,6 @@ describe("Create Schedule: the week's choice", () => {
 			"/scheduling?view=constraints&branch=b-1&department=d-1"
 		);
 		expect(screen.getByRole("link", { name: "Edit shifts" })).toBeVisible();
-	});
-
-	it("given_noShiftReadKey_when_aDepartmentIsChosen_then_leavesOutEditShifts", async () => {
-		const user = userEvent.setup();
-		await open("/scheduling/new", {}, [
-			"schedule:read",
-			"schedule:create",
-			"constraint:read",
-		]);
-
-		await fillSetup(user);
-
-		expect(
-			await screen.findByRole("link", { name: "Edit constraints" })
-		).toBeVisible();
-		expect(screen.queryByRole("link", { name: "Edit shifts" })).toBeNull();
-	});
-
-	it("given_noConstraintReadKey_when_aDepartmentIsChosen_then_leavesOutEditConstraints", async () => {
-		const user = userEvent.setup();
-		await open("/scheduling/new", {}, [
-			"schedule:read",
-			"schedule:create",
-			"shift:read",
-		]);
-
-		await fillSetup(user);
-
-		expect(
-			await screen.findByRole("link", { name: "Edit shifts" })
-		).toBeVisible();
-		expect(screen.queryByRole("link", { name: "Edit constraints" })).toBeNull();
-	});
-
-	it("given_listsThePersonMayNotRead_when_aDepartmentIsChosen_then_saysItUsesEverythingWithoutAChoice", async () => {
-		const user = userEvent.setup();
-		await open("/scheduling/new", {}, [
-			"schedule:read",
-			"schedule:create",
-			"constraint:read",
-		]);
-
-		await fillSetup(user);
-
-		expect(
-			await weekLine(
-				"This week uses every shift and constraint of Front Office."
-			)
-		).toBeVisible();
-		expect(
-			screen.queryByRole("button", { name: "Choose for this week" })
-		).toBeNull();
-	});
-});
-
-describe("Create Schedule: the Setup gate", () => {
-	const READINESS = "GET /api/v1/companies/c-1/scheduling-readiness";
-	const frontOffice = (
-		missing: Array<"SHIFT" | "STAFFING_CONSTRAINT">
-	): StubReply =>
-		reply([
-			readinessFixture({
-				departmentName: "Front Office",
-				branchName: "Main branch",
-				ready: missing.length === 0,
-				missing,
-			}),
-		]);
-	const nextNote = (): string | null =>
-		document.getElementById(next().getAttribute("aria-describedby") ?? "")
-			?.textContent ?? null;
-
-	it("given_nothingSetUp_when_theDepartmentIsChosen_then_stopsAndLinksToItsShiftsWithTheWayBack", async () => {
-		const user = userEvent.setup();
-		await open("/scheduling/new", {
-			[`GET ${LIVE_SHIFTS}`]: reply([]),
-			[`GET ${LIVE_CONSTRAINTS}`]: reply([]),
-			[READINESS]: frontOffice(["SHIFT", "STAFFING_CONSTRAINT"]),
-		});
-
-		await fillSetup(user);
-
-		expect(
-			await screen.findByText(
-				"Front Office has no shifts or staffing constraints yet. A schedule needs both.",
-				{ exact: false }
-			)
-		).toBeVisible();
-		expect(
-			screen.getByRole("link", { name: "Set up Front Office" })
-		).toHaveAttribute(
-			"href",
-			expect.stringMatching(
-				/^\/scheduling\?view=shifts&branch=b-1&department=d-1&next=create&week=\d{4}-\d{2}-\d{2}$/
-			) as string
-		);
-		expect(next()).toBeDisabled();
-		expect(nextNote()).toBe(
-			"Set up shifts and a staffing constraint for Front Office first."
-		);
-	});
-
-	it("given_shiftsButNoStaffing_when_theDepartmentIsChosen_then_linksToItsConstraints", async () => {
-		const user = userEvent.setup();
-		await open("/scheduling/new", {
-			[`GET ${LIVE_SHIFTS}`]: reply(LIVE_SHIFT_ROWS),
-			[READINESS]: frontOffice(["STAFFING_CONSTRAINT"]),
-		});
-
-		await fillSetup(user);
-
-		expect(
-			await screen.findByRole("link", { name: "Add a staffing constraint" })
-		).toHaveAttribute(
-			"href",
-			expect.stringMatching(
-				/^\/scheduling\?view=constraints&branch=b-1&department=d-1&next=create&week=/
-			) as string
-		);
-		expect(
-			screen.getByText(
-				"Front Office has shifts but no staffing constraint, so nobody would be rostered.",
-				{ exact: false }
-			)
-		).toBeVisible();
-		expect(next()).toBeDisabled();
-	});
-
-	it("given_someoneWhoCannotFixIt_when_theDepartmentIsChosen_then_saysWhoCanWithoutALink", async () => {
-		const user = userEvent.setup();
-		await open(
-			"/scheduling/new",
-			{
-				[`GET ${LIVE_SHIFTS}`]: reply(LIVE_SHIFT_ROWS),
-				[READINESS]: frontOffice(["STAFFING_CONSTRAINT"]),
-			},
-			["schedule:read", "schedule:create", "shift:read"]
-		);
-
-		await fillSetup(user);
-
-		expect(
-			await screen.findByText(
-				"Front Office isn’t ready to schedule: it has no staffing constraint. Ask someone who manages Front Office’s scheduling to add one.",
-				{ exact: false }
-			)
-		).toBeVisible();
-		expect(screen.queryByRole("link", { name: "View constraints" })).toBeNull();
-		expect(next()).toBeDisabled();
-	});
-
-	it("given_aReadyDepartment_when_chosen_then_showsNoGateAndNextGoesOn", async () => {
-		const user = userEvent.setup();
-		await open("/scheduling/new", {
-			[`GET ${LIVE_SHIFTS}`]: reply(LIVE_SHIFT_ROWS),
-			[READINESS]: frontOffice([]),
-		});
-
-		await fillSetup(user);
-
-		await screen.findByText(WEEK_LINE);
-		expect(
-			screen.queryByText(/isn’t ready|has no shifts|no staffing/)
-		).toBeNull();
-		expect(next()).toBeEnabled();
-	});
-
-	it("given_listsThePersonMayNotSee_when_aDepartmentIsChosen_then_nextSaysWhy", async () => {
-		const user = userEvent.setup();
-		await open("/scheduling/new", {}, [
-			"schedule:read",
-			"schedule:create",
-			"constraint:read",
-		]);
-
-		await fillSetup(user);
-
-		await screen.findByText(
-			"This week uses every shift and constraint of Front Office.",
-			{ exact: false }
-		);
-		expect(next()).toBeDisabled();
-		expect(nextNote()).toBe(
-			"You need to see Front Office’s shifts and constraints to create its schedule."
-		);
-	});
-
-	it("given_aListThatHasNotAnswered_when_aDepartmentIsChosen_then_nextWaitsWithoutANote", async () => {
-		const user = userEvent.setup();
-		// The department's live shifts fail to load, so the week isn't known.
-		await open("/scheduling/new");
-
-		await fillSetup(user);
-
-		await waitFor(() => {
-			expect(next()).toBeDisabled();
-		});
-		expect(nextNote()).toBe("");
 	});
 });
 
@@ -996,23 +683,33 @@ describe("Create Schedule: generating", () => {
 		expect(screen.getByRole("button", { name: "Save draft" })).toBeEnabled();
 	});
 
-	it("given_aDraft_when_generated_then_savesItRequestsGenerationAndReturnsToSchedulingWithAConfirmation", async () => {
+	it("given_aDraft_when_generated_then_savesItPostsItsMonthAndLandsOnTheMonth", async () => {
 		const user = userEvent.setup();
 		const { opened, calls } = await reopen({
 			[`PUT ${SCHEDULE}`]: reply(DRAFT),
-			[`POST ${GENERATION}`]: reply(generatedScheduleFixture()),
+			[`POST ${OCTOBER_GENERATION}`]: octoberStarted(),
 		});
 		await toGenerate(user);
+		const generate = screen.getByRole("button", { name: "Generate" });
+		await waitFor(() => {
+			expect(generate).toBeEnabled();
+		});
+		expect(
+			screen.getByText("Generates every week of October that isn’t published.")
+		).toBeVisible();
 
-		await user.click(screen.getByRole("button", { name: "Generate" }));
+		await user.click(generate);
 
 		await waitFor(() => {
-			expect(opened.router.state.location.pathname).toBe("/scheduling");
+			expect(opened.router.state.location.pathname).toBe(
+				"/scheduling/months/2026-10"
+			);
 		});
-		expect(await screen.findByRole("status")).toHaveTextContent(
-			"Generation requested for Front Office - Week 42."
-		);
-		expect(writes(calls)).toEqual([`PUT ${SCHEDULE}`, `POST ${GENERATION}`]);
+		expect(opened.router.state.location.search).toEqual({ department: "d-1" });
+		expect(writes(calls)).toEqual([
+			`PUT ${SCHEDULE}`,
+			`POST ${OCTOBER_GENERATION}`,
+		]);
 		expect(sent(calls, `PUT ${SCHEDULE}`)).toEqual([
 			{
 				...DRAFT_SETUP,
@@ -1020,35 +717,65 @@ describe("Create Schedule: generating", () => {
 				includedConstraintIds: INCLUDED_CONSTRAINT_IDS,
 			},
 		]);
+		// The draft is a covered week already: nothing new is created.
+		expect(sent(calls, `POST ${OCTOBER_GENERATION}`)).toEqual([
+			{ includeLeave: true, allowOpenShifts: false, newWeeks: [] },
+		]);
 	});
 
-	it.each([
-		[
-			"SCHEDULE_HAS_NO_SHIFTS",
-			"Choose at least one shift before generating this schedule.",
-		],
-		["SCHEDULE_NOT_DRAFT", "This schedule has already been generated."],
-		[
-			"SCHEDULE_CONSTRAINT_UNUSABLE",
-			"A chosen constraint names a shift this schedule doesn’t include or a job title that’s no longer active. Tick that shift, edit the constraint or untick it, then try again.",
-		],
-	])(
-		"given_generationRefusedWith_%s_when_generating_then_staysAndSaysWhy",
-		async (code, copy) => {
-			const user = userEvent.setup();
-			const { opened } = await reopen({
-				[`PUT ${SCHEDULE}`]: reply(DRAFT),
-				[`POST ${GENERATION}`]: problemReply(409, code),
-			});
-			await screen.findByRole("row", { name: /Front Desk AM/ });
-			await toGenerate(user);
+	it("given_aCoveredWeekChangedByHand_when_generated_then_asksFirstAndLandsOnTheMonth", async () => {
+		const user = userEvent.setup();
+		const { opened, calls } = await reopen({
+			[`GET ${OCTOBER}`]: october(1),
+			[`PUT ${SCHEDULE}`]: reply(DRAFT),
+			[`POST ${OCTOBER_GENERATION}`]: octoberStarted(),
+		});
+		await toGenerate(user);
+		const generate = screen.getByRole("button", { name: "Generate" });
+		await waitFor(() => {
+			expect(generate).toBeEnabled();
+		});
 
-			await user.click(screen.getByRole("button", { name: "Generate" }));
+		await user.click(generate);
+		const dialog = await screen.findByRole("dialog", {
+			name: "Regenerate October?",
+		});
+		expect(writes(calls)).toEqual([`PUT ${SCHEDULE}`]);
+		await user.click(
+			within(dialog).getByRole("button", { name: "Regenerate October" })
+		);
 
-			expect(await screen.findByRole("alert")).toHaveTextContent(copy);
-			expect(opened.router.state.location.pathname).toBe("/scheduling/new");
-		}
-	);
+		await waitFor(() => {
+			expect(opened.router.state.location.pathname).toBe(
+				"/scheduling/months/2026-10"
+			);
+		});
+		expect(writes(calls)).toEqual([
+			`PUT ${SCHEDULE}`,
+			`POST ${OCTOBER_GENERATION}`,
+		]);
+	});
+
+	it("given_theMonthRefused_when_generating_then_staysAndSaysWhy", async () => {
+		const user = userEvent.setup();
+		const { opened } = await reopen({
+			[`PUT ${SCHEDULE}`]: reply(DRAFT),
+			[`POST ${OCTOBER_GENERATION}`]: problemReply(403, "FORBIDDEN"),
+		});
+		await screen.findByRole("row", { name: /Front Desk AM/ });
+		await toGenerate(user);
+		const generate = screen.getByRole("button", { name: "Generate" });
+		await waitFor(() => {
+			expect(generate).toBeEnabled();
+		});
+
+		await user.click(generate);
+
+		expect(await screen.findByRole("alert")).toHaveTextContent(
+			"You don’t have permission to generate this month here."
+		);
+		expect(opened.router.state.location.pathname).toBe("/scheduling/new");
+	});
 
 	it("given_aRefusedSave_when_generating_then_neverAsksForGeneration", async () => {
 		const user = userEvent.setup();
@@ -1269,43 +996,6 @@ describe("Create Schedule: back from the Scheduling tabs", () => {
 			}),
 		]);
 
-	it("given_theSetupGate_when_fixedOnTheShiftsTab_then_createScheduleReturnsToSetupWithTheDepartmentAndWeek", async () => {
-		const user = userEvent.setup();
-		await open("/scheduling/new", {
-			[`GET ${LIVE_SHIFTS}`]: reply(LIVE_SHIFT_ROWS),
-			// Not ready on Setup, ready once the tab asks again.
-			[READINESS]: [frontOffice(false), frontOffice(true)],
-		});
-		await fillSetup(user);
-		await user.click(screen.getByRole("button", { name: /Schedule period/ }));
-		await user.click((await screen.findAllByRole("option"))[1]!);
-		const week = screen.getByRole("button", {
-			name: /Schedule period/,
-		}).textContent;
-
-		await user.click(
-			await screen.findByRole("link", { name: "Set up Front Office" })
-		);
-		await user.click(
-			await screen.findByRole("link", { name: "Create schedule" })
-		);
-
-		expect(
-			await screen.findByRole("region", { name: "Schedule setup" })
-		).toBeVisible();
-		await waitFor(() => {
-			expect(
-				screen.getByRole("button", { name: /Department/ })
-			).toHaveTextContent("Front Office");
-		});
-		expect(
-			screen.getByRole("button", { name: /Schedule period/ }).textContent
-		).toBe(week);
-		expect(screen.getByRole("textbox", { name: /Schedule name/ })).toHaveValue(
-			""
-		);
-	});
-
 	it("given_aSavedDraftsGate_when_itsDepartmentIsReadyOnTheTab_then_backToTheScheduleOpensItsGenerateStep", async () => {
 		const user = userEvent.setup();
 		const { opened } = await open(
@@ -1466,57 +1156,6 @@ describe("Create Schedule: where everyone starts", () => {
 });
 
 describe("Create Schedule: the header's Branch", () => {
-	it("given_oneBranchToCreateIn_when_setupOpens_then_theHeaderNamesItAsText", async () => {
-		await open("/scheduling/new");
-		await screen.findByRole("textbox", { name: /Schedule name/ });
-
-		const header = screen.getByRole("banner");
-		expect(
-			within(header).queryByRole("button", { name: "Branch" })
-		).not.toBeInTheDocument();
-		expect(within(header).getByText("Main branch")).toBeVisible();
-	});
-
-	it("given_twoBranches_when_theHeaderBranchChanges_then_offersItsDepartmentsAndLetsTheChosenOneGo", async () => {
-		const user = userEvent.setup();
-		const { opened } = await open(
-			"/scheduling/new",
-			{},
-			twoBranchSchedulingWorkspace(ALL)
-		);
-		await screen.findByRole("textbox", { name: /Schedule name/ });
-		const header = screen.getByRole("banner");
-		const branch = within(header).getByRole("button", { name: "Branch" });
-		// The Scheduling list's rule: the first Branch by name, "All branches" last.
-		expect(branch).toHaveTextContent("Main branch");
-
-		await user.click(screen.getByRole("button", { name: /Department/ }));
-		expect(
-			screen.getAllByRole("option").map((option) => option.textContent)
-		).toEqual(["Front Office", "Kitchen"]);
-		await user.click(screen.getByRole("option", { name: "Kitchen" }));
-
-		await user.click(branch);
-		const options = screen.getAllByRole("option");
-		expect(options[options.length - 1]).toHaveTextContent("All branches");
-		await user.click(screen.getByRole("option", { name: "North" }));
-
-		await waitFor(() => {
-			expect(opened.router.state.location.search).toMatchObject({
-				branch: "b-2",
-			});
-		});
-		await waitFor(() => {
-			expect(
-				screen.getByRole("button", { name: /Department/ })
-			).toHaveTextContent("Select a department");
-		});
-		await user.click(screen.getByRole("button", { name: /Department/ }));
-		expect(
-			screen.getAllByRole("option").map((option) => option.textContent)
-		).toEqual(["Front Office"]);
-	});
-
 	it("given_aReopenedDraft_when_shown_then_theHeaderNamesItsBranchAndKeepsTheListsChoice", async () => {
 		const { opened } = await open(
 			`${REOPEN}&branch=all`,

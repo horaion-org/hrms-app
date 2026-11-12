@@ -97,4 +97,40 @@ describe("WeekCard", () => {
 
 		expect(card).toHaveTextContent("1 day changed by hand");
 	});
+
+	it("given_aFailedWeekWithItsReason_when_rendered_then_saysWhy", async () => {
+		render(
+			<MemoryRouterHarness>
+				<WeekCard
+					departmentId="d-1"
+					failureMessage="The engine couldn’t be reached."
+					week={monthWeekFixture({ state: "FAILED", ...noRoster })}
+				/>
+			</MemoryRouterHarness>
+		);
+
+		expect(
+			await screen.findByText("The engine couldn’t be reached.")
+		).toBeInTheDocument();
+	});
+
+	it("given_aWeekTheRunRefused_when_rendered_then_saysNotGeneratedAndWhy", async () => {
+		render(
+			<MemoryRouterHarness>
+				<WeekCard
+					departmentId="d-1"
+					refusal="Nobody can be scheduled."
+					week={monthWeekFixture({
+						state: "NOT_GENERATED",
+						scheduleId: null,
+						...noRoster,
+					})}
+				/>
+			</MemoryRouterHarness>
+		);
+
+		expect(
+			await screen.findByText("Not generated: Nobody can be scheduled.")
+		).toBeInTheDocument();
+	});
 });

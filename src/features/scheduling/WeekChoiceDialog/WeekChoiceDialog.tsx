@@ -5,29 +5,16 @@ import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
 import type { ConstraintTypeOption } from "@/features/scheduling/constraints/api";
 import {
-	ConstraintTable,
-	type ConstraintTableRow,
-} from "@/features/scheduling/constraints/ConstraintTable";
+	WeekChoiceLists,
+	type WeekChoiceConstraintRow,
+	type WeekChoiceShiftRow,
+} from "@/features/scheduling/WeekChoiceDialog/WeekChoiceLists";
 import {
-	ShiftTable,
-	type ShiftTableRow,
-} from "@/features/scheduling/shifts/ShiftTable";
-import {
-	isSelectable,
-	listedConstraints,
-	noteOf,
 	weekChoiceProblem,
-	withShiftsChosen,
-	type ChoiceConstraint,
-	type ConstraintChoiceNote,
 	type WeekChoiceIds,
 } from "@/features/scheduling/weekChoice";
 
-/** A shift as the dialog lists it. */
-export type WeekChoiceShiftRow = ShiftTableRow;
-
-/** A constraint as the dialog lists and chooses it. */
-export type WeekChoiceConstraintRow = ConstraintTableRow & ChoiceConstraint;
+export type { WeekChoiceConstraintRow, WeekChoiceShiftRow };
 
 export type WeekChoiceDialogProps = {
 	/** The week, as the wizard names it, e.g. "Nov 16 – 22, 2026". */
@@ -49,9 +36,8 @@ export type WeekChoiceDialogProps = {
 
 /**
  * What one week uses of its department's shifts and constraints. The manager
- * unticks what this week leaves out; the department keeps it. Leaving out a
- * shift switches off every constraint that names it, with the shifts named
- * under it; a locked constraint always applies. "Use for week" waits for at
+ * unticks what this week leaves out; the department keeps it. The lists and
+ * their rules are WeekChoiceLists. "Use for week" waits for at
  * least one shift and one staffing constraint. Knows nothing about other
  * weeks: one choice in, one out.
  */
@@ -69,22 +55,9 @@ export const WeekChoiceDialog = ({
 	const { t } = useTranslation();
 	const key = "scheduling.week";
 	const [working, setWorking] = useState(value);
-	const listed = listedConstraints(constraints);
-	const listedShiftIds = shifts.map((shift) => shift.shiftId);
-	const locked = listed
-		.filter((constraint) => constraint.locked)
-		.map((constraint) => constraint.constraintId);
 	const problem = readOnly
 		? undefined
 		: weekChoiceProblem(working, constraints);
-	const noteText = (
-		note: ConstraintChoiceNote | undefined
-	): string | undefined => {
-		if (note === undefined) return undefined;
-		if (note.kind === "locked") return t(`${key}.locked`);
-		if (note.kind === "shiftGone") return t(`${key}.shiftGone`);
-		return t(`${key}.leavesOut`, { shifts: note.shiftNames });
-	};
 
 	return (
 		<Dialog
@@ -120,62 +93,13 @@ export const WeekChoiceDialog = ({
 			})}
 			onClose={onClose}
 		>
-			<h3 className="text-sm font-semibold text-neutral-900">
-				{t(`${key}.shifts`)}
-			</h3>
-			<ShiftTable
-				className="mt-4"
+			<WeekChoiceLists
+				constraintTypes={constraintTypes}
+				constraints={constraints}
+				readOnly={readOnly}
 				shifts={shifts}
-				selection={
-					readOnly
-						? undefined
-						: {
-								selectedIds: working.shiftIds,
-								onChange: (shiftIds): void => {
-									setWorking(withShiftsChosen(working, shiftIds, constraints));
-								},
-							}
-				}
-			/>
-			<h3 className="mt-8 text-sm font-semibold text-neutral-900">
-				{t(`${key}.constraints`)}
-			</h3>
-			<ConstraintTable
-				className="mt-4"
-				constraints={listed}
-				frozen={readOnly}
-				types={constraintTypes}
-				noteOf={(constraint) =>
-					noteText(noteOf(constraint, working.shiftIds, listedShiftIds))
-				}
-				selection={
-					readOnly
-						? undefined
-						: {
-								rowLabel: (constraint) => constraint.name,
-								selectedIds: working.constraintIds,
-								canSelect: (constraint) =>
-									isSelectable(constraint, working.shiftIds),
-								onChange: (constraintIds): void => {
-									// Locked constraints are always used, whatever the table reports.
-									setWorking({
-										...working,
-										constraintIds: [
-											...new Set([
-												...locked,
-												...constraintIds.filter((constraintId) =>
-													listed.some(
-														(constraint) =>
-															constraint.constraintId === constraintId &&
-															isSelectable(constraint, working.shiftIds)
-													)
-												),
-											]),
-										],
-									});
-								},
-							}
-				}
+				value={working}
+				onChange={setWorking}
 			/>
 			{problem && (
 				<p className="mt-6 text-sm text-error-700" role="alert">

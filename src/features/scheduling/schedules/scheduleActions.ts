@@ -52,7 +52,7 @@ export type ScheduleAction = {
 		| "scheduling.decision.publish"
 		| "scheduling.decision.reject"
 		| "scheduling.decision.withdraw"
-		| "scheduling.regenerate.button"
+		| "scheduling.months.regenerate.button"
 		| "scheduling.detail.viewSetup"
 		| "scheduling.detail.details.title";
 	/** The status where this is the page's one primary button; otherwise it is in the menu. */
@@ -118,7 +118,7 @@ export const SCHEDULE_ACTIONS: ReadonlyArray<ScheduleAction> = [
 	},
 	{
 		id: "regenerate",
-		labelKey: "scheduling.regenerate.button",
+		labelKey: "scheduling.months.regenerate.button",
 		primaryWhen: "REJECTED",
 		offered: ({ mayRegenerate }) => mayRegenerate,
 	},

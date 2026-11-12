@@ -3426,7 +3426,6 @@
 			"noEmployees": "Este departamento no tiene empleados que se puedan programar. Asigna un puesto a al menos un miembro activo del departamento e inténtalo de nuevo.",
 			"constraintUnusable": "Una restricción elegida nombra un turno que este horario no incluye o un puesto que ya no está activo. Marca ese turno, edita la restricción o desmárcala e inténtalo de nuevo.",
 			"notDraft": "Este horario ya se generó.",
-			"forbidden": "Ya no tienes permiso para generar este horario.",
 			"failed": "No pudimos generar el horario. Inténtalo de nuevo.",
 			"weekAlreadyPublished": "Este departamento ya tiene un cuadrante publicado para esta semana. Solo se puede publicar un cuadrante por semana, así que programa otra semana.",
 			"noStaffing": "Este horario no usa ninguna restricción de personal en sus turnos, así que no se asignaría a nadie. Elige para esta semana en Configuración."
@@ -3653,24 +3652,11 @@
 			"failed": "No pudimos eliminar el horario. Inténtalo de nuevo."
 		},
 		"regenerate": {
-			"button": "Regenerar cuadrante",
 			"retry": "Generar de nuevo",
-			"title": "¿Regenerar este cuadrante?",
-			"retryTitle": "¿Intentar generarlo de nuevo?",
-			"description": "Una nueva ejecución sustituye el cuadrante actual. Conserva la configuración, los turnos y las restricciones de este horario, y vuelve a leer su personal, las ausencias aprobadas y la disponibilidad.",
-			"retryDescription": "Una nueva ejecución conserva la configuración, los turnos y las restricciones de este horario, y vuelve a leer su personal, las ausencias aprobadas y la disponibilidad.",
-			"confirm": "Regenerar cuadrante",
-			"retryConfirm": "Generar de nuevo",
 			"cancel": "Cancelar",
-			"done": "Regeneración solicitada.",
-			"draft": "Este horario aún no se ha generado. Genéralo desde su configuración.",
 			"inProgress": "Este horario se está generando. Inténtalo de nuevo cuando termine la ejecución.",
 			"published": "Este cuadrante está publicado, así que no se puede regenerar ni eliminar. Cambia sus días en el cuadrante.",
-			"oncePublished": "Este cuadrante se publicó una vez, así que no se puede regenerar. Cambia sus días en el cuadrante.",
-			"forbidden": "Ya no tienes permiso para regenerar este horario.",
-			"failed": "No pudimos regenerar el cuadrante. Inténtalo de nuevo.",
-			"editsLost": "Se perderán los cambios hechos a mano: una nueva ejecución reemplaza el cuadrante y todos sus cambios.",
-			"weekAlreadyPublished": "Este departamento ya tiene un cuadrante publicado para esta semana. Solo se puede publicar un cuadrante por semana, así que programa otra semana."
+			"oncePublished": "Este cuadrante se publicó una vez, así que no se puede regenerar. Cambia sus días en el cuadrante."
 		},
 		"export": {
 			"menu": "Exportar cuadrante",
@@ -4263,7 +4249,8 @@
 				"footnote": "El personal solo ve una semana después de publicarla. Las semanas se publican en orden.",
 				"loading": "Cargando el mes…",
 				"loadFailed": "No pudimos cargar este mes. Inténtalo de nuevo.",
-				"unavailable": "Este mes no existe o no tienes permiso para verlo."
+				"unavailable": "Este mes no existe o no tienes permiso para verlo.",
+				"waitingWeek": "Estas semanas esperan a que <0>{{week}}</0> se publique primero."
 			},
 			"waitingOnYou": "Semana del {{week}}: pendiente de ti · paso {{step}} de {{total}} ({{label}})",
 			"hints": {
@@ -4275,6 +4262,85 @@
 				"unpublished": "<0>Sin publicar.</0> El personal no puede ver esta semana.",
 				"publishFirst": "Publica primero {{week}}. Las semanas se publican en orden.",
 				"weekWithState": "{{week}} · {{state}}"
+			},
+			"generate": {
+				"choiceMissing": "Se configuró una semana de este mes mientras estabas aquí. Vuelve a cargar la página y genera de nuevo.",
+				"forbidden": "No tienes permiso para generar este mes aquí.",
+				"failed": "No pudimos generar el mes. Inténtalo de nuevo.",
+				"panel": {
+					"title": "Antes de generar {{month}}",
+					"shiftsTitle": "Turnos.",
+					"shifts_one": "{{department}} tiene {{count}} turno.",
+					"shifts_other": "{{department}} tiene {{count}} turnos.",
+					"noShifts": "{{department}} no tiene turnos.",
+					"editShifts": "Editar turnos",
+					"addShift": "Añadir un turno",
+					"staffingTitle": "Personal.",
+					"staffing": "«{{name}}» asigna personas a {{shifts}}.",
+					"noStaffing": "Ninguna restricción asigna personas a un turno, así que no se asignaría a nadie.",
+					"editConstraints": "Editar restricciones",
+					"addStaffing": "Añadir una restricción de personal",
+					"leaveTitle": "Ausencias.",
+					"approvedLeave_one": "{{count}} persona tiene una ausencia aprobada en {{month}}.",
+					"approvedLeave_other": "{{count}} personas tienen ausencias aprobadas en {{month}}.",
+					"noApprovedLeave": "No hay ausencias aprobadas en {{month}}. Si alguien piensa ausentarse, apruébalo primero: una ausencia aprobada después cambia el horario.",
+					"waitingMore_one": "{{count}} solicitud más espera una decisión.",
+					"waitingMore_other": "{{count}} solicitudes más esperan una decisión.",
+					"waiting_one": "{{count}} solicitud espera una decisión.",
+					"waiting_other": "{{count}} solicitudes esperan una decisión.",
+					"openLeave": "Abrir solicitudes de ausencia",
+					"hint": "Generar calcula cada semana de {{month}} que no esté publicada. Después revisas y publicas cada semana.",
+					"generate": "Generar {{month}}",
+					"blockedShift": "{{department}} no se puede generar hasta que tenga un turno.",
+					"blockedStaffing": "{{department}} no se puede generar hasta que una restricción asigne personas a un turno."
+				},
+				"cannotCreate": "No puedes crear horarios en {{department}}, así que no se pueden crear las semanas que le faltan a este mes.",
+				"generatingTitle": "Generando {{month}}…",
+				"generatingDetail": "Se están calculando las semanas que no están publicadas. Puedes salir de esta página.",
+				"refused": "Sin generar: {{reason}}",
+				"draftGeneratesMonth": "Genera todas las semanas de {{month}} que no están publicadas."
+			},
+			"choice": {
+				"title": "Qué usa {{month}}",
+				"intro": "Todo empieza marcado. Desmarca un turno o una restricción para dejarlo fuera solo de esa semana.",
+				"weeks": "Semanas de {{month}}",
+				"weekLeftOut_one": "{{week}} · {{count}} fuera",
+				"weekLeftOut_other": "{{week}} · {{count}} fuera",
+				"useForEveryWeek": "Usar la elección de esta semana en todas las semanas",
+				"apply": "Usar para {{month}}",
+				"weekProblem": "{{week}}: {{problem}}"
+			},
+			"setup": {
+				"description": "Selecciona el departamento y el mes que quieres generar.",
+				"month": "Mes",
+				"weeks_one": "{{count}} semana: del {{from}} al {{to}}. Una semana pertenece al mes en que cae su lunes.",
+				"weeks_other": "{{count}} semanas: del {{from}} al {{to}}. Una semana pertenece al mes en que cae su lunes.",
+				"validation": {
+					"month": "Elige un mes."
+				}
+			},
+			"create": {
+				"everything": "Todas las semanas usan todos los turnos y restricciones de {{department}}.",
+				"usesEveryWeek": "Todas las semanas usan {{shifts}} y {{constraints}} de {{department}}.",
+				"usesSomeWeeks_one": "{{count}} de {{total}} semanas usa todo lo de {{department}}. Cambiadas: {{changed}}.",
+				"usesSomeWeeks_other": "{{count}} de {{total}} semanas usan todo lo de {{department}}. Cambiadas: {{changed}}.",
+				"changedWeek_one": "{{week}} ({{count}} fuera)",
+				"changedWeek_other": "{{week}} ({{count}} fuera)",
+				"choosePerWeek": "Elegir por semana",
+				"allSet": "Todas las semanas de {{month}} ya tienen horario.",
+				"savedDraft": "{{week}} está guardada como borrador; cambia lo que usa en su propia página."
+			},
+			"regenerate": {
+				"button": "Regenerar {{month}}",
+				"title": "¿Regenerar {{month}}?",
+				"confirm": "Regenerar {{month}}",
+				"someWeeks_one": "La semana de {{month}} que no está publicada se vuelve a calcular, desde {{from}}. Las semanas publicadas se quedan como están.",
+				"someWeeks_other": "Las {{count}} semanas de {{month}} que no están publicadas se vuelven a calcular, desde {{from}}. Las semanas publicadas se quedan como están.",
+				"allWeeks_one": "La semana de {{month}} se vuelve a calcular. Aún no hay nada publicado, así que puede cambiar.",
+				"allWeeks_other": "Las {{count}} semanas de {{month}} se vuelven a calcular. Aún no hay nada publicado, así que todas pueden cambiar.",
+				"handChanged_one": "{{weeks}} se cambió a mano.",
+				"handChanged_other": "{{weeks}} se cambiaron a mano.",
+				"replaced": "Esos cambios se reemplazarán."
 			}
 		}
 	},

@@ -391,8 +391,6 @@ export type ScheduleDraftAction =
 			shiftIds: Array<string>;
 			constraintIds: Array<string>;
 	  }
-	/** A new draft's department changed: its week starts again from everything. */
-	| { type: "departmentChosen" }
 	| { type: "forecastModeChosen"; mode: ForecastMode }
 	| {
 			type: "allocationChanged";
@@ -437,16 +435,6 @@ export const scheduleDraftReducer = (
 				includedConstraintIds: action.constraintIds,
 				weekChosen: true,
 			};
-		case "departmentChosen":
-			// A saved draft's department never changes.
-			return draft.saved
-				? draft
-				: {
-						...draft,
-						includedShiftIds: [],
-						includedConstraintIds: [],
-						weekChosen: false,
-					};
 		case "forecastModeChosen":
 			return { ...draft, forecastMode: action.mode };
 		case "allocationChanged":

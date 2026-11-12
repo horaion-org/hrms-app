@@ -3604,7 +3604,6 @@
 			"noEmployees": "This department has no employees who can be scheduled. Give at least one active member of the department a job title, then try again.",
 			"constraintUnusable": "A chosen constraint names a shift this schedule doesn’t include or a job title that’s no longer active. Tick that shift, edit the constraint or untick it, then try again.",
 			"notDraft": "This schedule has already been generated.",
-			"forbidden": "You no longer have permission to generate this schedule.",
 			"failed": "We couldn’t generate the schedule. Try again.",
 			"weekAlreadyPublished": "This department already has a published roster for this week. Only one roster can be published per week, so schedule a different week instead.",
 			"noStaffing": "This schedule uses no staffing constraint on its shifts, so nobody would be rostered. Choose for this week on Setup."
@@ -3831,24 +3830,11 @@
 			"failed": "We couldn’t delete the schedule. Try again."
 		},
 		"regenerate": {
-			"button": "Regenerate roster",
 			"retry": "Generate again",
-			"title": "Regenerate this roster?",
-			"retryTitle": "Try generating again?",
-			"description": "A new run replaces the current roster. It keeps this schedule’s setup, shifts and constraints, and reads its staff, approved leave and availability again.",
-			"retryDescription": "A new run keeps this schedule’s setup, shifts and constraints, and reads its staff, approved leave and availability again.",
-			"confirm": "Regenerate roster",
-			"retryConfirm": "Generate again",
 			"cancel": "Cancel",
-			"done": "Regeneration requested.",
-			"draft": "This schedule hasn’t been generated yet. Generate it from its setup.",
 			"inProgress": "This schedule is being generated. Try again once the run finishes.",
 			"published": "This roster is published, so it can’t be regenerated or deleted. Change its days on the roster instead.",
-			"oncePublished": "This roster was published once, so it can’t be regenerated. Change its days on the roster instead.",
-			"forbidden": "You no longer have permission to regenerate this schedule.",
-			"failed": "We couldn’t regenerate the roster. Try again.",
-			"editsLost": "Changes made by hand will be lost: a new run replaces the roster and every change made to it.",
-			"weekAlreadyPublished": "This department already has a published roster for this week. Only one roster can be published per week, so schedule a different week instead."
+			"oncePublished": "This roster was published once, so it can’t be regenerated. Change its days on the roster instead."
 		},
 		"export": {
 			"menu": "Export roster",
@@ -4441,7 +4427,8 @@
 				"footnote": "Staff see a week only after it is published. Weeks are published in order.",
 				"loading": "Loading the month…",
 				"loadFailed": "This month could not be loaded. Please try again.",
-				"unavailable": "This month doesn’t exist or you don’t have permission to see it."
+				"unavailable": "This month doesn’t exist or you don’t have permission to see it.",
+				"waitingWeek": "These weeks wait for <0>{{week}}</0> to be published first."
 			},
 			"waitingOnYou": "Week of {{week}}: waiting on you · step {{step}} of {{total}} ({{label}})",
 			"hints": {
@@ -4453,6 +4440,85 @@
 				"unpublished": "<0>Not published.</0> Staff can’t see this week.",
 				"publishFirst": "Publish {{week}} first. Weeks are published in order.",
 				"weekWithState": "{{week}} · {{state}}"
+			},
+			"generate": {
+				"choiceMissing": "A week of this month was set up while you were here. Reload the page and generate again.",
+				"forbidden": "You don’t have permission to generate this month here.",
+				"failed": "We couldn’t generate the month. Try again.",
+				"panel": {
+					"title": "Before you generate {{month}}",
+					"shiftsTitle": "Shifts.",
+					"shifts_one": "{{department}} has {{count}} shift.",
+					"shifts_other": "{{department}} has {{count}} shifts.",
+					"noShifts": "{{department}} has no shifts.",
+					"editShifts": "Edit shifts",
+					"addShift": "Add a shift",
+					"staffingTitle": "Staffing.",
+					"staffing": "“{{name}}” puts people on {{shifts}}.",
+					"noStaffing": "No constraint puts people on a shift, so nobody would be rostered.",
+					"editConstraints": "Edit constraints",
+					"addStaffing": "Add a staffing constraint",
+					"leaveTitle": "Leave.",
+					"approvedLeave_one": "{{count}} person has approved leave in {{month}}.",
+					"approvedLeave_other": "{{count}} people have approved leave in {{month}}.",
+					"noApprovedLeave": "No approved leave in {{month}}. If people plan to take leave, approve it first: leave approved later changes the roster.",
+					"waitingMore_one": "{{count}} more request is waiting for a decision.",
+					"waitingMore_other": "{{count}} more requests are waiting for a decision.",
+					"waiting_one": "{{count}} request is waiting for a decision.",
+					"waiting_other": "{{count}} requests are waiting for a decision.",
+					"openLeave": "Open leave requests",
+					"hint": "Generating works out every week of {{month}} that isn’t published. You then review and publish them week by week.",
+					"generate": "Generate {{month}}",
+					"blockedShift": "{{department}} can’t be generated until it has a shift.",
+					"blockedStaffing": "{{department}} can’t be generated until a constraint puts people on a shift."
+				},
+				"cannotCreate": "You can’t create schedules at {{department}}, so the weeks this month still needs can’t be made.",
+				"generatingTitle": "Generating {{month}}…",
+				"generatingDetail": "The weeks that aren’t published are being worked out. You can leave this page.",
+				"refused": "Not generated: {{reason}}",
+				"draftGeneratesMonth": "Generates every week of {{month}} that isn’t published."
+			},
+			"choice": {
+				"title": "What {{month}} uses",
+				"intro": "Everything starts ticked. Untick a shift or constraint to leave it out of that week only.",
+				"weeks": "Weeks of {{month}}",
+				"weekLeftOut_one": "{{week}} · {{count}} left out",
+				"weekLeftOut_other": "{{week}} · {{count}} left out",
+				"useForEveryWeek": "Use this week’s choice for every week",
+				"apply": "Use for {{month}}",
+				"weekProblem": "{{week}}: {{problem}}"
+			},
+			"setup": {
+				"description": "Select the department and the month to generate.",
+				"month": "Month",
+				"weeks_one": "{{count}} week: {{from}} to {{to}}. A week belongs to the month its Monday falls in.",
+				"weeks_other": "{{count}} weeks: {{from}} to {{to}}. A week belongs to the month its Monday falls in.",
+				"validation": {
+					"month": "Choose a month."
+				}
+			},
+			"create": {
+				"everything": "Every week uses every shift and constraint of {{department}}.",
+				"usesEveryWeek": "Every week uses {{shifts}} and {{constraints}} of {{department}}.",
+				"usesSomeWeeks_one": "{{count}} of {{total}} weeks uses everything of {{department}}. Changed: {{changed}}.",
+				"usesSomeWeeks_other": "{{count}} of {{total}} weeks use everything of {{department}}. Changed: {{changed}}.",
+				"changedWeek_one": "{{week}} ({{count}} left out)",
+				"changedWeek_other": "{{week}} ({{count}} left out)",
+				"choosePerWeek": "Choose per week",
+				"allSet": "Every week of {{month}} already has a schedule.",
+				"savedDraft": "{{week}} is saved as a draft; change what it uses on its own page."
+			},
+			"regenerate": {
+				"button": "Regenerate {{month}}",
+				"title": "Regenerate {{month}}?",
+				"confirm": "Regenerate {{month}}",
+				"someWeeks_one": "The {{count}} week of {{month}} that isn’t published is worked out again, from {{from}} on. The published weeks stay as they are.",
+				"someWeeks_other": "The {{count}} weeks of {{month}} that aren’t published are worked out again, from {{from}} on. The published weeks stay as they are.",
+				"allWeeks_one": "The {{count}} week of {{month}} is worked out again. Nothing is published yet, so it can change.",
+				"allWeeks_other": "All {{count}} weeks of {{month}} are worked out again. Nothing is published yet, so every week can change.",
+				"handChanged_one": "{{weeks}} was changed by hand.",
+				"handChanged_other": "{{weeks}} were changed by hand.",
+				"replaced": "Those changes will be replaced."
 			}
 		}
 	},

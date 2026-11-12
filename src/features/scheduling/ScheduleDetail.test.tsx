@@ -64,6 +64,9 @@ const ASSIGNMENTS = `${SCHEDULE}/assignments`;
 const PUBLISHED_WEEK =
 	"/api/v1/companies/c-1/branches/b-1/departments/d-1/schedules/published-week";
 const ROSTER_URL = "/scheduling/s-1";
+/** Front Office's October, where schedule s-1's week falls: generating again posts the month here. */
+const OCTOBER_MONTH = "/api/v1/companies/c-1/schedule-months/2026-10";
+const OCTOBER_GENERATION = `${OCTOBER_MONTH}/generation`;
 
 type Routes = Parameters<typeof stubApi>[0];
 type Calls = ReturnType<typeof stubApi>;
@@ -93,6 +96,47 @@ const openRoster = async (
 	renderAuthApp(app);
 	return calls;
 };
+
+/** October as the month read answers it: this roster's week, in `state`, the one week a run covers. */
+const octoberRead = (
+	state: "TO_REVIEW" | "TENTATIVE" | "FAILED" | "REJECTED" = "TO_REVIEW",
+	handChangedDays = 0
+): Routes => ({
+	[`GET ${OCTOBER_MONTH}`]: ok(
+		scheduleMonthFixture({
+			month: "2026-10",
+			departmentName: "Front Office",
+			weeks: [
+				monthWeekFixture({
+					periodStart: "2026-10-12",
+					periodEnd: "2026-10-18",
+					state,
+					scheduleId: "s-1",
+					handChangedDays,
+					includedInMonthGeneration: true,
+				}),
+			],
+		})
+	),
+});
+
+/** What the month route answers once October's one covered week started again. */
+const octoberStarted = (): StubReply =>
+	ok({
+		month: "2026-10",
+		departmentId: "d-1",
+		weeks: [
+			{
+				periodStart: "2026-10-12",
+				scheduleId: "s-1",
+				outcome: "STARTED",
+				reason: null,
+			},
+		],
+	});
+
+const postsOf = (calls: Calls, path: string): Calls =>
+	calls.filter((call) => call.method === "POST" && call.path === path);
 
 const readsOf = (calls: Calls, path: string): Calls =>
 	calls.filter((call) => call.method === "GET" && call.path === path);
@@ -271,7 +315,7 @@ it.each(["GENERATED", "PUBLISHED", "REJECTED"] as const)(
 		]);
 		expect(screen.queryByRole("button", { name: "Publish roster" })).toBeNull();
 		expect(
-			screen.queryByRole("button", { name: "Regenerate roster" })
+			screen.queryByRole("button", { name: "Regenerate October" })
 		).toBeNull();
 	}
 );
@@ -282,7 +326,7 @@ it.each([
 		"Publish roster",
 		[
 			"Reject",
-			"Regenerate roster",
+			"Regenerate October",
 			"View setup",
 			"Details",
 			"Export roster",
@@ -291,7 +335,7 @@ it.each([
 	],
 	[
 		"REJECTED",
-		"Regenerate roster",
+		"Regenerate October",
 		["View setup", "Details", "Export roster", "Delete"],
 	],
 	[
@@ -311,6 +355,7 @@ it.each([
 			]),
 			[`GET ${SCHEDULE_READ}`]: ok(generatedScheduleFixture({ status })),
 			[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+			...octoberRead(),
 		});
 		const user = userEvent.setup();
 
@@ -406,7 +451,7 @@ it("says when the roster couldn't be downloaded and lets the person try again", 
 	).toBeEnabled();
 });
 
-it("regenerates a generated roster after a danger confirm, then follows the new run", async () => {
+it("regenerates the month over a hand-changed week after a danger confirm, then follows the new run", async () => {
 	const calls = await openRoster({
 		...signedIn(["schedule:read", "schedule:generate"]),
 		[`GET ${SCHEDULE_READ}`]: [
@@ -414,21 +459,21 @@ it("regenerates a generated roster after a danger confirm, then follows the new 
 			ok(generatedScheduleFixture({ status: "GENERATION_REQUESTED" })),
 		],
 		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
-		[`POST ${SCHEDULE}/regeneration`]: ok(
-			generatedScheduleFixture({ status: "GENERATION_REQUESTED" })
-		),
+		...octoberRead("TO_REVIEW", 2),
+		[`POST ${OCTOBER_GENERATION}`]: octoberStarted(),
 	});
 	const user = userEvent.setup();
 
-	await chooseFromMenu(user, "Regenerate roster");
-	const dialog = screen.getByRole("dialog", {
-		name: "Regenerate this roster?",
-	});
+	await chooseFromMenu(user, "Regenerate October");
+	const dialog = screen.getByRole("dialog", { name: "Regenerate October?" });
 	expect(dialog).toHaveTextContent(
-		"A new run replaces the current roster. It keeps this schedule’s setup, shifts and constraints, and reads its staff, approved leave and availability again."
+		"The 1 week of October is worked out again. Nothing is published yet, so it can change."
+	);
+	expect(dialog).toHaveTextContent(
+		/Oct 12\s?–\s?18 was changed by hand\. Those changes will be replaced\./
 	);
 	const confirm = within(dialog).getByRole("button", {
-		name: "Regenerate roster",
+		name: "Regenerate October",
 	});
 	expect(confirm).toHaveClass("bg-error-600");
 	await user.click(confirm);
@@ -438,14 +483,16 @@ it("regenerates a generated roster after a danger confirm, then follows the new 
 	);
 	expect(screen.queryByRole("dialog")).toBeNull();
 	expect(
-		screen.queryByRole("button", { name: "Regenerate roster" })
+		screen.queryByRole("button", { name: "Regenerate October" })
 	).toBeNull();
-	expect(
-		calls.filter(
-			(call) =>
-				call.method === "POST" && call.path === `${SCHEDULE}/regeneration`
-		)
-	).toHaveLength(1);
+	const posts = postsOf(calls, OCTOBER_GENERATION);
+	expect(posts).toHaveLength(1);
+	expect(posts[0]?.search).toBe("departmentId=d-1");
+	expect(posts[0]?.body).toEqual({
+		includeLeave: true,
+		allowOpenShifts: false,
+		newWeeks: [],
+	});
 });
 
 /** A run's roster in which only Ben and Chen are rostered: Aisha's rows are gone. */
@@ -475,18 +522,19 @@ it("shows the new run's roster once the poll reports it finished, without a relo
 			ok(scheduleAtRun("GENERATED", "run-2")),
 		],
 		[`GET ${ASSIGNMENTS}`]: () => ok(roster),
-		[`POST ${SCHEDULE}/regeneration`]: { status: 204 },
+		...octoberRead(),
+		[`POST ${OCTOBER_GENERATION}`]: octoberStarted(),
 	});
 	const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
 
 	expect(
 		await screen.findByRole("row", { name: /Aisha Rahman/ })
 	).toBeInTheDocument();
-	await chooseFromMenu(user, "Regenerate roster");
+	await chooseFromMenu(user, "Regenerate October");
 	roster = [];
 	await user.click(
 		within(screen.getByRole("dialog")).getByRole("button", {
-			name: "Regenerate roster",
+			name: "Regenerate October",
 		})
 	);
 	expect(await screen.findByRole("note")).toHaveTextContent(
@@ -511,15 +559,16 @@ it("shows the generating state, not the old roster, while a new run is open", as
 			ok(scheduleAtRun("GENERATION_REQUESTED", "run-2")),
 		],
 		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
-		[`POST ${SCHEDULE}/regeneration`]: { status: 204 },
+		...octoberRead(),
+		[`POST ${OCTOBER_GENERATION}`]: octoberStarted(),
 	});
 	const user = userEvent.setup();
 
 	await screen.findByRole("table", { name: "Roster" });
-	await chooseFromMenu(user, "Regenerate roster");
+	await chooseFromMenu(user, "Regenerate October");
 	await user.click(
 		within(screen.getByRole("dialog")).getByRole("button", {
-			name: "Regenerate roster",
+			name: "Regenerate October",
 		})
 	);
 
@@ -530,15 +579,14 @@ it("shows the generating state, not the old roster, while a new run is open", as
 	expect(screen.queryByText(/ shifts · /)).toBeNull();
 });
 
-it("offers to generate a failed schedule again from its failure panel", async () => {
+it("offers to generate a failed schedule's month again from its failure panel", async () => {
 	const calls = await openRoster({
 		...signedIn(["schedule:read", "schedule:generate"]),
 		[`GET ${SCHEDULE_READ}`]: ok(
 			generatedScheduleFixture({ status: "GENERATION_FAILED" })
 		),
-		[`POST ${SCHEDULE}/regeneration`]: ok(
-			generatedScheduleFixture({ status: "GENERATION_REQUESTED" })
-		),
+		...octoberRead("FAILED"),
+		[`POST ${OCTOBER_GENERATION}`]: octoberStarted(),
 	});
 	const user = userEvent.setup();
 
@@ -546,25 +594,18 @@ it("offers to generate a failed schedule again from its failure panel", async ()
 		name: "Why it wasn’t generated",
 	});
 	await user.click(
-		within(panel).getByRole("button", { name: "Generate again" })
+		await within(panel).findByRole("button", { name: "Generate again" })
 	);
-	const dialog = screen.getByRole("dialog", {
-		name: "Try generating again?",
-	});
-	expect(dialog).not.toHaveTextContent("replaces the current roster");
+	const dialog = screen.getByRole("dialog", { name: "Regenerate October?" });
+	expect(dialog).not.toHaveTextContent("changed by hand");
 	const confirm = within(dialog).getByRole("button", {
-		name: "Generate again",
+		name: "Regenerate October",
 	});
 	expect(confirm).not.toHaveClass("bg-error-600");
 	await user.click(confirm);
 
 	await waitFor(() => {
-		expect(
-			calls.filter(
-				(call) =>
-					call.method === "POST" && call.path === `${SCHEDULE}/regeneration`
-			)
-		).toHaveLength(1);
+		expect(postsOf(calls, OCTOBER_GENERATION)).toHaveLength(1);
 	});
 });
 
@@ -575,23 +616,19 @@ it("shows a refused regeneration inside the dialog and keeps it open", async () 
 			generatedScheduleFixture({ status: "GENERATED" })
 		),
 		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
-		[`POST ${SCHEDULE}/regeneration`]: problemReply(
-			409,
-			"SCHEDULE_GENERATION_IN_PROGRESS"
-		),
+		...octoberRead(),
+		[`POST ${OCTOBER_GENERATION}`]: problemReply(403, "FORBIDDEN"),
 	});
 	const user = userEvent.setup();
 
-	await chooseFromMenu(user, "Regenerate roster");
-	const dialog = screen.getByRole("dialog", {
-		name: "Regenerate this roster?",
-	});
+	await chooseFromMenu(user, "Regenerate October");
+	const dialog = screen.getByRole("dialog", { name: "Regenerate October?" });
 	await user.click(
-		within(dialog).getByRole("button", { name: "Regenerate roster" })
+		within(dialog).getByRole("button", { name: "Regenerate October" })
 	);
 
 	expect(await within(dialog).findByRole("alert")).toHaveTextContent(
-		"This schedule is being generated. Try again once the run finishes."
+		"You don’t have permission to generate this month here."
 	);
 	expect(screen.getByRole("dialog")).toBeInTheDocument();
 });
@@ -627,10 +664,10 @@ it.each([
 	await screen.findByText("Front Office Schedule");
 	if (screen.queryByRole("button", { name: MENU }))
 		expect(await menuItemsOf(userEvent.setup())).not.toContain(
-			"Regenerate roster"
+			"Regenerate October"
 		);
 	expect(
-		screen.queryByRole("button", { name: "Regenerate roster" })
+		screen.queryByRole("button", { name: "Regenerate October" })
 	).toBeNull();
 });
 
@@ -696,7 +733,7 @@ it("withholds Publish and Regenerate when another schedule is already the week's
 	expect(screen.queryByRole("button", { name: "Publish roster" })).toBeNull();
 	const items = await menuItemsOf(userEvent.setup());
 	expect(items).toContain("Reject");
-	expect(items).not.toContain("Regenerate roster");
+	expect(items).not.toContain("Regenerate October");
 	expect(readsOf(calls, PUBLISHED_WEEK)[0]?.search).toBe(
 		`periodStart=${generatedScheduleFixture().periodStart}`
 	);
@@ -731,6 +768,7 @@ it("asks for a reason before rejecting a roster, then shows the reason", async (
 		[`POST ${SCHEDULE}/rejection`]: ok(
 			generatedScheduleFixture({ status: "REJECTED" })
 		),
+		...octoberRead(),
 	});
 	const user = userEvent.setup();
 
@@ -769,7 +807,7 @@ it("asks for a reason before rejecting a roster, then shows the reason", async (
 		calls.find((call) => call.path === `${SCHEDULE}/rejection`)?.body
 	).toEqual({ reason: "Two nights have no supervisor." });
 	expect(
-		screen.getByRole("button", { name: "Regenerate roster" })
+		screen.getByRole("button", { name: "Regenerate October" })
 	).toBeInTheDocument();
 });
 
@@ -867,7 +905,7 @@ it("withdraws a published roster's publication with a remark, back to Generated"
 		calls.find((call) => call.path === `${SCHEDULE}/publication-withdrawal`)
 			?.body
 	).toEqual({ remark: "Wrong week went out." });
-	expect(await menuItemsOf(user)).not.toContain("Regenerate roster");
+	expect(await menuItemsOf(user)).not.toContain("Regenerate October");
 });
 
 it("shows a refused withdrawal remark on its field and keeps the dialog open", async () => {
