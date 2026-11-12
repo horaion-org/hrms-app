@@ -4043,6 +4043,14 @@
 				"OUTSIDE_AVAILABILITY": "No disponible a esa hora",
 				"HOURS_UNKNOWN": "Horas de trabajo sin definir",
 				"UNKNOWN": "No puede cubrirlo"
+			},
+			"list": {
+				"whoCovers": "Quién cubre",
+				"suggested": "Sugerido",
+				"showMore": "Mostrar más ({{count}})",
+				"showFewer": "Mostrar menos",
+				"cantHelp": "No pueden cubrirlo ({{count}})",
+				"cantHelpLine": "{{name}} · {{reason}}"
 			}
 		},
 		"reach": {

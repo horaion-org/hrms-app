@@ -4221,6 +4221,14 @@
 				"OUTSIDE_AVAILABILITY": "Not available then",
 				"HOURS_UNKNOWN": "Working hours not set",
 				"UNKNOWN": "Can't help"
+			},
+			"list": {
+				"whoCovers": "Who covers",
+				"suggested": "Suggested",
+				"showMore": "Show more ({{count}})",
+				"showFewer": "Show fewer",
+				"cantHelp": "Can't help ({{count}})",
+				"cantHelpLine": "{{name}} · {{reason}}"
 			}
 		},
 		"reach": {
