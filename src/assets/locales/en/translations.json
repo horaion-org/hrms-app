@@ -4742,6 +4742,8 @@
 			"daysHint": "Half days are allowed, such as 5.5. Leave empty for part-time without set days.",
 			"dayHours": "Normal hours a day",
 			"weekHours": "Normal hours a week",
+			"mostWeekHours": "Most hours a week",
+			"mostWeekHint": "Overtime included. Leave empty for no limit. Rosters never go past it.",
 			"weekFromDays": "= {{days}} × {{day}}",
 			"weekDiffers": "Differs from {{days}} × {{day}}: the week figure is used for overtime.",
 			"restDay": "Rest day",

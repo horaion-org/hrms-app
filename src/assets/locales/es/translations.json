@@ -4742,6 +4742,8 @@
 			"daysHint": "Se permiten medios días, como 5,5. Déjalo vacío para tiempo parcial sin días fijos.",
 			"dayHours": "Horas normales al día",
 			"weekHours": "Horas normales a la semana",
+			"mostWeekHours": "Máximo de horas a la semana",
+			"mostWeekHint": "Incluye horas extra. Déjalo vacío si no hay límite. Los turnos nunca lo superan.",
 			"weekFromDays": "= {{days}} × {{day}}",
 			"weekDiffers": "Distinto de {{days}} × {{day}}: las horas extra se calculan con la cifra semanal.",
 			"restDay": "Día de descanso",
