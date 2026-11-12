@@ -4365,7 +4365,8 @@
 				"footnote": "Staff see a week only after it is published. Weeks are published in order.",
 				"loading": "Loading the month…",
 				"loadFailed": "This month could not be loaded. Please try again.",
-				"unavailable": "This month doesn’t exist or you don’t have permission to see it."
+				"unavailable": "This month doesn’t exist or you don’t have permission to see it.",
+				"waitingWeek": "These weeks wait for <0>{{week}}</0> to be published first."
 			},
 			"waitingOnYou": "Week of {{week}}: waiting on you · step {{step}} of {{total}} ({{label}})",
 			"hints": {

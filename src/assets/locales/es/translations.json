@@ -4187,7 +4187,8 @@
 				"footnote": "El personal solo ve una semana después de publicarla. Las semanas se publican en orden.",
 				"loading": "Cargando el mes…",
 				"loadFailed": "No pudimos cargar este mes. Inténtalo de nuevo.",
-				"unavailable": "Este mes no existe o no tienes permiso para verlo."
+				"unavailable": "Este mes no existe o no tienes permiso para verlo.",
+				"waitingWeek": "Estas semanas esperan a que <0>{{week}}</0> se publique primero."
 			},
 			"waitingOnYou": "Semana del {{week}}: pendiente de ti · paso {{step}} de {{total}} ({{label}})",
 			"hints": {

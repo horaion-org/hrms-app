@@ -1,6 +1,6 @@
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { resetApiClient } from "@/common/api-client";
 import {
 	currentUserReply,
@@ -20,6 +20,7 @@ import { constraintFixture } from "@/features/scheduling/constraints/fixtures";
 import {
 	monthGenerationCheckFixture,
 	monthGenerationFixture,
+	monthSummaryFixture,
 	monthWeekFixture,
 	scheduleMonthFixture,
 	ungeneratedMonthFixture,
@@ -35,6 +36,7 @@ afterEach(() => {
 	app = undefined;
 	endSession("expired");
 	resetApiClient();
+	vi.useRealTimers();
 	vi.unstubAllGlobals();
 	vi.restoreAllMocks();
 	localStorage.clear();
@@ -379,5 +381,60 @@ it("given_aCoveredWeekChangedByHand_when_generated_then_asksFirstAndPostsOnConfi
 					call.method === "POST" && call.path === `${DECEMBER}/generation`
 			)
 		).toHaveLength(1);
+	});
+});
+
+describe("a month held back by an earlier month's week", () => {
+	const tentativeDecember = ungeneratedMonthFixture({
+		weeks: ungeneratedMonthFixture().weeks.map((week, index) => ({
+			...week,
+			state: "TENTATIVE" as const,
+			scheduleId: `s-${index + 10}`,
+		})),
+	});
+	const novemberToReview = monthSummaryFixture({
+		month: "2026-11",
+		weeks: [
+			{ periodStart: "2026-11-16", state: "TO_REVIEW", scheduleId: "s-2" },
+		],
+	});
+
+	it("given_everyWeekTentativeAndAWeekToReviewInNovember_when_opened_then_saysWhichWeekTheyWaitFor", async () => {
+		// Thursday 12 Nov 2026: the summaries are read from November.
+		vi.useFakeTimers({ toFake: ["Date"], now: new Date(2026, 10, 12) });
+		const calls = await openMonth(
+			{
+				...signedIn(),
+				[`GET ${DECEMBER}`]: ok(tentativeDecember),
+				[`GET ${MONTHS}`]: ok([novemberToReview]),
+			},
+			"/scheduling/months/2026-12?department=d-1"
+		);
+
+		const line = await screen.findByText(/These weeks wait for/);
+		expect(line).toHaveTextContent(
+			/^These weeks wait for Nov 16\s?–\s?22, 2026 to be published first\.$/
+		);
+		expect(within(line).getByRole("link")).toHaveAttribute(
+			"href",
+			"/scheduling/months/2026-11?department=d-1"
+		);
+		expect(calls.find((call) => call.path === MONTHS)?.search).toBe(
+			"from=2026-11&to=2026-11&departmentId=d-1"
+		);
+	});
+
+	it("given_aWeekToReviewInTheMonthItself_when_opened_then_noWaitingLineAndNoSummaryRead", async () => {
+		const calls = await openMonth({
+			...signedIn(),
+			[`GET ${MONTHS}/2026-11`]: ok(scheduleMonthFixture()),
+		});
+
+		await screen.findByRole("heading", {
+			level: 1,
+			name: "Kitchen · November 2026",
+		});
+		expect(screen.queryByText(/These weeks wait for/)).toBeNull();
+		expect(calls.some((call) => call.path === MONTHS)).toBe(false);
 	});
 });

@@ -14,6 +14,7 @@ import {
 	stateCounts,
 	summariesByMonth,
 	summaryRange,
+	waitingWeekBefore,
 } from "@/features/scheduling/months/monthWeeks";
 
 describe("monthOf", () => {
@@ -182,5 +183,25 @@ describe("summariesByMonth", () => {
 			["2026-11", ["Bar", "Kitchen"]],
 			["2026-12", ["Kitchen"]],
 		]);
+	});
+});
+
+describe("waitingWeekBefore", () => {
+	const november = monthSummaryFixture({
+		month: "2026-11",
+		weeks: [
+			{ periodStart: "2026-11-09", state: "PUBLISHED", scheduleId: "s-1" },
+			{ periodStart: "2026-11-16", state: "TO_REVIEW", scheduleId: "s-2" },
+			{ periodStart: "2026-11-23", state: "TENTATIVE", scheduleId: "s-3" },
+		],
+	});
+
+	it("given_aWeekToReviewInAnEarlierMonth_when_asked_then_thatWeek", () => {
+		expect(waitingWeekBefore([november], "2027-01")).toBe("2026-11-16");
+	});
+
+	it("given_noEarlierMonthWithAWeekToReview_when_asked_then_none", () => {
+		expect(waitingWeekBefore([november], "2026-11")).toBeUndefined();
+		expect(waitingWeekBefore([], "2027-01")).toBeUndefined();
 	});
 });

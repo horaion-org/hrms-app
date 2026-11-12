@@ -141,6 +141,22 @@ export const earlierReviewMonth = (
 		: undefined;
 };
 
+/**
+ * The week an earlier month holds this month's weeks back with: the earliest
+ * week to review in a month before `month`, as the publish-in-order rule
+ * counts it; none when no earlier month has one.
+ */
+export const waitingWeekBefore = (
+	summaries: ReadonlyArray<ScheduleMonthSummary>,
+	month: string
+): string | undefined =>
+	summaries
+		.filter((summary) => summary.month < month)
+		.flatMap((summary) => summary.weeks)
+		.filter((week) => week.state === "TO_REVIEW")
+		.map((week) => week.periodStart)
+		.sort()[0];
+
 /** The summaries grouped by month, earliest first; within a month, in the API's order (Branch, then Department). */
 export const summariesByMonth = (
 	summaries: ReadonlyArray<ScheduleMonthSummary>
