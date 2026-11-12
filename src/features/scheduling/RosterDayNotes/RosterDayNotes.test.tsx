@@ -30,6 +30,7 @@ const NO_NAMES: FindingNames = {
 	shifts: new Map(),
 	jobTitles: new Map(),
 	rules: new Map(),
+	ruleDayTypes: new Map(),
 };
 
 describe("leaveLinkSearch", () => {

@@ -18,13 +18,17 @@ export type FindingNames = {
 	jobTitles: ReadonlyMap<string, string>;
 	/** By the frozen constraint copy's id, which a conflict names as `sourceRuleId`. */
 	rules: ReadonlyMap<string, string>;
+	/** By the frozen constraint copy's id, the day types its rule is about, as codes; only rules that name any. */
+	ruleDayTypes: ReadonlyMap<string, ReadonlyArray<string>>;
 };
 
 /** What the names are read from besides the findings; each list may be empty when it isn't readable. */
 export type FindingNameSources = {
 	assignments: ReadonlyArray<ScheduleAssignment>;
 	shifts: ReadonlyArray<Pick<ScheduleShift, "shiftId" | "name" | "roles">>;
-	constraints: ReadonlyArray<Pick<ScheduleConstraint, "constraintId" | "name">>;
+	constraints: ReadonlyArray<
+		Pick<ScheduleConstraint, "constraintId" | "name" | "values">
+	>;
 };
 
 const memberNames = (
@@ -60,6 +64,19 @@ const jobTitleNames = ({
 		),
 	]);
 
+/** Each rule's DAY_TYPE values, as the engine's day-type findings name them by the rule. */
+const ruleDayTypes = ({
+	constraints,
+}: FindingNameSources): Map<string, ReadonlyArray<string>> =>
+	new Map(
+		constraints.flatMap(({ constraintId, values }) => {
+			const dayTypes = values
+				.filter((value) => value.field === "DAY_TYPE")
+				.map((value) => value.value);
+			return dayTypes.length === 0 ? [] : [[constraintId, dayTypes] as const];
+		})
+	);
+
 /** Every name the findings can be shown with, from the findings' members, the roster and the schedule's setup. */
 export const findingNames = (
 	findings: Pick<GenerationFindings, "members">,
@@ -71,4 +88,5 @@ export const findingNames = (
 	rules: new Map(
 		sources.constraints.map(({ constraintId, name }) => [constraintId, name])
 	),
+	ruleDayTypes: ruleDayTypes(sources),
 });

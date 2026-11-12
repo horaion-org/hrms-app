@@ -3796,6 +3796,19 @@
 				"DEAD_SHIFT": {
 					"label": "Shifts nobody can take",
 					"sentence": "No one in this schedule can take {{shift}}."
+				},
+				"PRIOR_RUN_NEEDS_DAY_TYPE": {
+					"label": "Run carried in from before",
+					"sentence_one": "{{member}} has gone {{count}} day in a row without a {{dayTypes}} before this schedule, so one is needed by {{date}}.",
+					"sentence_other": "{{member}} has gone {{count}} days in a row without a {{dayTypes}} before this schedule, so one is needed by {{date}}.",
+					"sentenceWithoutDayTypes_one": "{{member}} has gone {{count}} day in a row before this schedule, so a day off under one of its rules is needed by {{date}}.",
+					"sentenceWithoutDayTypes_other": "{{member}} has gone {{count}} days in a row before this schedule, so a day off under one of its rules is needed by {{date}}."
+				},
+				"PRIOR_DAYS_UNKNOWN": {
+					"label": "Days before not known",
+					"sentence_one": "Only {{count}} of the {{lookBack}} days before this schedule is known for {{member}}, so the limit on days in a row is counted from what is known.",
+					"sentence_other": "Only {{count}} of the {{lookBack}} days before this schedule are known for {{member}}, so the limit on days in a row is counted from what is known.",
+					"wholeSchedule": "No days before this schedule are known, so the limit on days in a row is counted from its first day."
 				}
 			},
 			"marker": {

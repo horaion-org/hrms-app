@@ -3618,6 +3618,19 @@
 				"DEAD_SHIFT": {
 					"label": "Turnos que nadie puede cubrir",
 					"sentence": "Nadie en este horario puede cubrir {{shift}}."
+				},
+				"PRIOR_RUN_NEEDS_DAY_TYPE": {
+					"label": "Racha que viene de antes",
+					"sentence_one": "{{member}} lleva {{count}} día seguido sin un {{dayTypes}} antes de este horario, así que necesita uno a más tardar el {{date}}.",
+					"sentence_other": "{{member}} lleva {{count}} días seguidos sin un {{dayTypes}} antes de este horario, así que necesita uno a más tardar el {{date}}.",
+					"sentenceWithoutDayTypes_one": "{{member}} lleva {{count}} día seguido antes de este horario, así que necesita un día libre según una de sus reglas a más tardar el {{date}}.",
+					"sentenceWithoutDayTypes_other": "{{member}} lleva {{count}} días seguidos antes de este horario, así que necesita un día libre según una de sus reglas a más tardar el {{date}}."
+				},
+				"PRIOR_DAYS_UNKNOWN": {
+					"label": "Días anteriores desconocidos",
+					"sentence_one": "De {{member}} solo se conoce {{count}} de los {{lookBack}} días antes de este horario, así que el límite de días seguidos se cuenta con lo que se conoce.",
+					"sentence_other": "De {{member}} solo se conocen {{count}} de los {{lookBack}} días antes de este horario, así que el límite de días seguidos se cuenta con lo que se conoce.",
+					"wholeSchedule": "No se conoce ningún día antes de este horario, así que el límite de días seguidos se cuenta desde su primer día."
 				}
 			},
 			"marker": {
