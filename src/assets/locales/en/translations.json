@@ -4457,6 +4457,18 @@
 				"choosePerWeek": "Choose per week",
 				"allSet": "Every week of {{month}} already has a schedule.",
 				"savedDraft": "{{week}} is saved as a draft; change what it uses on its own page."
+			},
+			"regenerate": {
+				"button": "Regenerate {{month}}",
+				"title": "Regenerate {{month}}?",
+				"confirm": "Regenerate {{month}}",
+				"someWeeks_one": "The {{count}} week of {{month}} that isn’t published is worked out again, from {{from}} on. The published weeks stay as they are.",
+				"someWeeks_other": "The {{count}} weeks of {{month}} that aren’t published are worked out again, from {{from}} on. The published weeks stay as they are.",
+				"allWeeks_one": "The {{count}} week of {{month}} is worked out again. Nothing is published yet, so it can change.",
+				"allWeeks_other": "All {{count}} weeks of {{month}} are worked out again. Nothing is published yet, so every week can change.",
+				"handChanged_one": "{{weeks}} was changed by hand.",
+				"handChanged_other": "{{weeks}} were changed by hand.",
+				"replaced": "Those changes will be replaced."
 			}
 		}
 	},

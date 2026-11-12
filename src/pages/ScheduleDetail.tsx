@@ -23,7 +23,11 @@ import {
 } from "@/features/scheduling/GeneratedRoster";
 import { GenerationFailurePanel } from "@/features/scheduling/GenerationFailurePanel";
 import { scheduleMonthQuery } from "@/features/scheduling/months/api";
-import { formatMonth, monthOf } from "@/features/scheduling/months/monthWeeks";
+import {
+	formatMonth,
+	formatMonthName,
+	monthOf,
+} from "@/features/scheduling/months/monthWeeks";
 import {
 	rosterWeekLink,
 	rosterWeeksOf,
@@ -33,7 +37,7 @@ import {
 	PublishScheduleDialog,
 	type PublishMode,
 } from "@/features/scheduling/PublishScheduleDialog";
-import { RegenerateDialog } from "@/features/scheduling/RegenerateDialog";
+import { RegenerateMonthDialog } from "@/features/scheduling/RegenerateMonthDialog";
 import { RejectedRosterCallout } from "@/features/scheduling/RejectedRosterCallout";
 import { RejectScheduleDialog } from "@/features/scheduling/RejectScheduleDialog";
 import {
@@ -397,6 +401,7 @@ const ApiSchedule = ({
 		)
 	).data;
 	const publishNoteId = useId();
+	const monthName = month ? formatMonthName(month, formattingLocale(i18n)) : "";
 	if (state.status !== "ready")
 		return (
 			<>
@@ -406,7 +411,9 @@ const ApiSchedule = ({
 				</Problem>
 			</>
 		);
+	// Regenerating names the month's weeks, so it waits for the month's read.
 	const openRegenerate =
+		scheduleMonth !== undefined &&
 		regenerable(state.schedule) &&
 		weekPublishedBy === undefined &&
 		access.can(
@@ -578,7 +585,7 @@ const ApiSchedule = ({
 									disabled={primaryWaits}
 									onClick={runAction[primary.id]}
 								>
-									{t(primary.labelKey)}
+									{t(primary.labelKey, { month: monthName })}
 								</Button>
 								{primaryWaits && (
 									<p
@@ -606,7 +613,7 @@ const ApiSchedule = ({
 										key={action.id}
 										onClick={runAction[action.id]}
 									>
-										{t(action.labelKey)}
+										{t(action.labelKey, { month: monthName })}
 									</OverflowMenuItem>
 								))}
 						</ScheduleMenu>
@@ -720,10 +727,10 @@ const ApiSchedule = ({
 					onClose={closeDialog}
 				/>
 			)}
-			{openDialog === "regenerate" && (
-				<RegenerateDialog
+			{openDialog === "regenerate" && scheduleMonth && (
+				<RegenerateMonthDialog
 					companyId={companyId}
-					schedule={schedule}
+					month={scheduleMonth}
 					onClose={closeDialog}
 				/>
 			)}

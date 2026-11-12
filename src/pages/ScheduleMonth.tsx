@@ -1,6 +1,7 @@
 import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 import type { TFunction } from "i18next";
 import { getRouteApi, useRouterState } from "@tanstack/react-router";
+import { useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import { ApiProblemError } from "@/common/problem";
@@ -15,6 +16,7 @@ import {
 import {
 	monthGenerationCheckQuery,
 	scheduleMonthQuery,
+	type MonthGeneration,
 	type ScheduleMonth,
 } from "@/features/scheduling/months/api";
 import {
@@ -22,11 +24,13 @@ import {
 	type PanelLink,
 } from "@/features/scheduling/months/BeforeGeneratePanel";
 import {
+	handChangedCoveredWeeks,
 	isGenerating,
 	refusedWeeks,
 	showsBeforeGenerate,
 } from "@/features/scheduling/months/monthGeneration";
 import { refusedWeeksFrom } from "@/features/scheduling/months/refusedWeeksState";
+import { RegenerateMonthDialog } from "@/features/scheduling/RegenerateMonthDialog";
 import {
 	type GenerateMonth,
 	useGenerateMonth,
@@ -267,11 +271,15 @@ const MonthContent = ({
 		monthGenerationCheckQuery(companyId, departmentId, month, showsPanel)
 	);
 	const generation = useGenerateMonth(companyId, scheduleMonth);
+	// Generating again over hand changes asks first; the dialog posts the month itself.
+	const [confirmingRegenerate, setConfirmingRegenerate] = useState(false);
+	const [regenerateAnswer, setRegenerateAnswer] = useState<MonthGeneration>();
+	const lastAnswer = generation.answer ?? regenerateAnswer;
 	const refused = {
 		...refusedWeeksFrom(
 			useRouterState({ select: (state) => state.location.state })
 		),
-		...(generation.answer ? refusedWeeks(generation.answer) : {}),
+		...(lastAnswer ? refusedWeeks(lastAnswer) : {}),
 	};
 	const monthName = formatMonthName(month, language);
 	const first = weeks[0];
@@ -325,6 +333,10 @@ const MonthContent = ({
 					month={month}
 					waiting={generation.block === "listsLoading"}
 					onGenerate={() => {
+						if (handChangedCoveredWeeks(scheduleMonth).length > 0) {
+							setConfirmingRegenerate(true);
+							return;
+						}
 						// A refusal shows from generation.error below.
 						void generation.generate().catch(() => undefined);
 					}}
@@ -362,6 +374,16 @@ const MonthContent = ({
 				})}
 			</div>
 			<Legend />
+			{confirmingRegenerate && (
+				<RegenerateMonthDialog
+					companyId={companyId}
+					month={scheduleMonth}
+					onStarted={setRegenerateAnswer}
+					onClose={() => {
+						setConfirmingRegenerate(false);
+					}}
+				/>
+			)}
 		</div>
 	);
 };

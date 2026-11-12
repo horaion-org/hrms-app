@@ -4279,6 +4279,18 @@
 				"choosePerWeek": "Elegir por semana",
 				"allSet": "Todas las semanas de {{month}} ya tienen horario.",
 				"savedDraft": "{{week}} está guardada como borrador; cambia lo que usa en su propia página."
+			},
+			"regenerate": {
+				"button": "Regenerar {{month}}",
+				"title": "¿Regenerar {{month}}?",
+				"confirm": "Regenerar {{month}}",
+				"someWeeks_one": "La semana de {{month}} que no está publicada se vuelve a calcular, desde {{from}}. Las semanas publicadas se quedan como están.",
+				"someWeeks_other": "Las {{count}} semanas de {{month}} que no están publicadas se vuelven a calcular, desde {{from}}. Las semanas publicadas se quedan como están.",
+				"allWeeks_one": "La semana de {{month}} se vuelve a calcular. Aún no hay nada publicado, así que puede cambiar.",
+				"allWeeks_other": "Las {{count}} semanas de {{month}} se vuelven a calcular. Aún no hay nada publicado, así que todas pueden cambiar.",
+				"handChanged_one": "{{weeks}} se cambió a mano.",
+				"handChanged_other": "{{weeks}} se cambiaron a mano.",
+				"replaced": "Esos cambios se reemplazarán."
 			}
 		}
 	},

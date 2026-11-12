@@ -333,3 +333,51 @@ it("given_noScheduleGenerate_when_aMonthIsNotGenerated_then_noPanelAndTheNoSched
 		false
 	);
 });
+
+it("given_aCoveredWeekChangedByHand_when_generated_then_asksFirstAndPostsOnConfirm", async () => {
+	const user = userEvent.setup();
+	const december = ungeneratedMonthFixture();
+	const handChanged = ungeneratedMonthFixture({
+		weeks: december.weeks.map((week, index) =>
+			index === 0
+				? {
+						...week,
+						state: "TENTATIVE" as const,
+						scheduleId: "s-7",
+						handChangedDays: 1,
+					}
+				: week
+		),
+	});
+	const calls = await openMonth(
+		decemberRoutes([ok(handChanged)]),
+		"/scheduling/months/2026-12?department=d-1"
+	);
+	const generate = await screen.findByRole("button", {
+		name: "Generate December",
+	});
+	await vi.waitFor(() => {
+		expect(generate).toBeEnabled();
+	});
+
+	await user.click(generate);
+
+	const dialog = await screen.findByRole("dialog", {
+		name: "Regenerate December?",
+	});
+	expect(dialog).toHaveTextContent(/Dec 7\s?–\s?13 was changed by hand\./);
+	expect(calls.some((call) => call.path === `${DECEMBER}/generation`)).toBe(
+		false
+	);
+	await user.click(
+		within(dialog).getByRole("button", { name: "Regenerate December" })
+	);
+	await vi.waitFor(() => {
+		expect(
+			calls.filter(
+				(call) =>
+					call.method === "POST" && call.path === `${DECEMBER}/generation`
+			)
+		).toHaveLength(1);
+	});
+});
