@@ -47,7 +47,7 @@ export type RosterChangeBody = {
 };
 
 // A code or severity a newer API adds still shows, as a plain note.
-const checkCodeSchema = z
+export const checkCodeSchema = z
 	.enum([
 		"CELL_ON_LEAVE",
 		"SHIFT_NOT_ON_DAY",
