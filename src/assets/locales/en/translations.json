@@ -4426,7 +4426,8 @@
 				"cannotCreate": "You can’t create schedules at {{department}}, so the weeks this month still needs can’t be made.",
 				"generatingTitle": "Generating {{month}}…",
 				"generatingDetail": "The weeks that aren’t published are being worked out. You can leave this page.",
-				"refused": "Not generated: {{reason}}"
+				"refused": "Not generated: {{reason}}",
+				"draftGeneratesMonth": "Generates every week of {{month}} that isn’t published."
 			},
 			"choice": {
 				"title": "What {{month}} uses",

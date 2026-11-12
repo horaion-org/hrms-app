@@ -42,6 +42,10 @@ import {
 	firstWeek,
 	unknownCell,
 } from "@/features/scheduling/startingContext/fixtures";
+import {
+	monthWeekFixture,
+	scheduleMonthFixture,
+} from "@/features/scheduling/months/fixtures";
 import type { Workspace } from "@/features/workspace/api";
 import { Route as createScheduleRoute } from "@/routes/_authenticated._app.scheduling_.new";
 
@@ -55,11 +59,13 @@ const DEPARTMENT = "/api/v1/companies/c-1/branches/b-1/departments/d-1";
 const SCHEDULES = `${DEPARTMENT}/schedules`;
 const SCHEDULE = `${SCHEDULES}/s-1`;
 const SCHEDULE_SHIFTS = `${SCHEDULE}/shifts`;
-const GENERATION = `${SCHEDULE}/generation`;
 const ROLE_OPTIONS = `${DEPARTMENT}/shift-role-options`;
 const SCHEDULE_CONSTRAINTS = `${SCHEDULE}/constraints`;
 const LIVE_CONSTRAINTS = `${DEPARTMENT}/constraints`;
 const CONSTRAINT_OPTIONS_PATH = `${DEPARTMENT}/constraint-options`;
+/** October, the month of draft s-1's week: generating the draft posts it here. */
+const OCTOBER = "/api/v1/companies/c-1/schedule-months/2026-10";
+const OCTOBER_GENERATION = `${OCTOBER}/generation`;
 const ALL = [
 	"schedule:read",
 	"schedule:create",
@@ -107,6 +113,40 @@ const reply = (data: unknown, status = 200): StubReply => ({
 	body: envelope(data),
 });
 
+/** October with draft s-1's week the one week a run covers, changed by hand on `handChangedDays`. */
+const october = (handChangedDays: number | null = null): StubReply =>
+	reply(
+		scheduleMonthFixture({
+			month: "2026-10",
+			departmentName: "Front Office",
+			weeks: [
+				monthWeekFixture({
+					periodStart: "2026-10-12",
+					periodEnd: "2026-10-18",
+					state: "DRAFT",
+					scheduleId: "s-1",
+					days: [],
+					handChangedDays,
+					includedInMonthGeneration: true,
+				}),
+			],
+		})
+	);
+/** What the month route answers once October's one covered week started. */
+const octoberStarted = (): StubReply =>
+	reply({
+		month: "2026-10",
+		departmentId: "d-1",
+		weeks: [
+			{
+				periodStart: "2026-10-12",
+				scheduleId: "s-1",
+				outcome: "STARTED",
+				reason: null,
+			},
+		],
+	});
+
 /** The workspace granting `permissions` company-wide, or exactly as given. */
 const workspaceOf = (permissions: Array<string> | Workspace): StubReply =>
 	reply(
@@ -124,6 +164,7 @@ const routes = (
 	[`GET ${ROLE_OPTIONS}`]: reply(SHIFT_ROLE_OPTIONS),
 	[`GET ${LIVE_CONSTRAINTS}`]: reply(CONSTRAINT_FIXTURES),
 	[`GET ${CONSTRAINT_OPTIONS_PATH}`]: reply(CONSTRAINT_OPTIONS_RESPONSE),
+	[`GET ${OCTOBER}`]: october(),
 });
 
 const open = async (
@@ -642,23 +683,33 @@ describe("Create Schedule: generating", () => {
 		expect(screen.getByRole("button", { name: "Save draft" })).toBeEnabled();
 	});
 
-	it("given_aDraft_when_generated_then_savesItRequestsGenerationAndReturnsToSchedulingWithAConfirmation", async () => {
+	it("given_aDraft_when_generated_then_savesItPostsItsMonthAndLandsOnTheMonth", async () => {
 		const user = userEvent.setup();
 		const { opened, calls } = await reopen({
 			[`PUT ${SCHEDULE}`]: reply(DRAFT),
-			[`POST ${GENERATION}`]: reply(generatedScheduleFixture()),
+			[`POST ${OCTOBER_GENERATION}`]: octoberStarted(),
 		});
 		await toGenerate(user);
+		const generate = screen.getByRole("button", { name: "Generate" });
+		await waitFor(() => {
+			expect(generate).toBeEnabled();
+		});
+		expect(
+			screen.getByText("Generates every week of October that isn’t published.")
+		).toBeVisible();
 
-		await user.click(screen.getByRole("button", { name: "Generate" }));
+		await user.click(generate);
 
 		await waitFor(() => {
-			expect(opened.router.state.location.pathname).toBe("/scheduling");
+			expect(opened.router.state.location.pathname).toBe(
+				"/scheduling/months/2026-10"
+			);
 		});
-		expect(await screen.findByRole("status")).toHaveTextContent(
-			"Generation requested for Front Office - Week 42."
-		);
-		expect(writes(calls)).toEqual([`PUT ${SCHEDULE}`, `POST ${GENERATION}`]);
+		expect(opened.router.state.location.search).toEqual({ department: "d-1" });
+		expect(writes(calls)).toEqual([
+			`PUT ${SCHEDULE}`,
+			`POST ${OCTOBER_GENERATION}`,
+		]);
 		expect(sent(calls, `PUT ${SCHEDULE}`)).toEqual([
 			{
 				...DRAFT_SETUP,
@@ -666,35 +717,65 @@ describe("Create Schedule: generating", () => {
 				includedConstraintIds: INCLUDED_CONSTRAINT_IDS,
 			},
 		]);
+		// The draft is a covered week already: nothing new is created.
+		expect(sent(calls, `POST ${OCTOBER_GENERATION}`)).toEqual([
+			{ includeLeave: true, allowOpenShifts: false, newWeeks: [] },
+		]);
 	});
 
-	it.each([
-		[
-			"SCHEDULE_HAS_NO_SHIFTS",
-			"Choose at least one shift before generating this schedule.",
-		],
-		["SCHEDULE_NOT_DRAFT", "This schedule has already been generated."],
-		[
-			"SCHEDULE_CONSTRAINT_UNUSABLE",
-			"A chosen constraint names a shift this schedule doesn’t include or a job title that’s no longer active. Tick that shift, edit the constraint or untick it, then try again.",
-		],
-	])(
-		"given_generationRefusedWith_%s_when_generating_then_staysAndSaysWhy",
-		async (code, copy) => {
-			const user = userEvent.setup();
-			const { opened } = await reopen({
-				[`PUT ${SCHEDULE}`]: reply(DRAFT),
-				[`POST ${GENERATION}`]: problemReply(409, code),
-			});
-			await screen.findByRole("row", { name: /Front Desk AM/ });
-			await toGenerate(user);
+	it("given_aCoveredWeekChangedByHand_when_generated_then_asksFirstAndLandsOnTheMonth", async () => {
+		const user = userEvent.setup();
+		const { opened, calls } = await reopen({
+			[`GET ${OCTOBER}`]: october(1),
+			[`PUT ${SCHEDULE}`]: reply(DRAFT),
+			[`POST ${OCTOBER_GENERATION}`]: octoberStarted(),
+		});
+		await toGenerate(user);
+		const generate = screen.getByRole("button", { name: "Generate" });
+		await waitFor(() => {
+			expect(generate).toBeEnabled();
+		});
 
-			await user.click(screen.getByRole("button", { name: "Generate" }));
+		await user.click(generate);
+		const dialog = await screen.findByRole("dialog", {
+			name: "Regenerate October?",
+		});
+		expect(writes(calls)).toEqual([`PUT ${SCHEDULE}`]);
+		await user.click(
+			within(dialog).getByRole("button", { name: "Regenerate October" })
+		);
 
-			expect(await screen.findByRole("alert")).toHaveTextContent(copy);
-			expect(opened.router.state.location.pathname).toBe("/scheduling/new");
-		}
-	);
+		await waitFor(() => {
+			expect(opened.router.state.location.pathname).toBe(
+				"/scheduling/months/2026-10"
+			);
+		});
+		expect(writes(calls)).toEqual([
+			`PUT ${SCHEDULE}`,
+			`POST ${OCTOBER_GENERATION}`,
+		]);
+	});
+
+	it("given_theMonthRefused_when_generating_then_staysAndSaysWhy", async () => {
+		const user = userEvent.setup();
+		const { opened } = await reopen({
+			[`PUT ${SCHEDULE}`]: reply(DRAFT),
+			[`POST ${OCTOBER_GENERATION}`]: problemReply(403, "FORBIDDEN"),
+		});
+		await screen.findByRole("row", { name: /Front Desk AM/ });
+		await toGenerate(user);
+		const generate = screen.getByRole("button", { name: "Generate" });
+		await waitFor(() => {
+			expect(generate).toBeEnabled();
+		});
+
+		await user.click(generate);
+
+		expect(await screen.findByRole("alert")).toHaveTextContent(
+			"You don’t have permission to generate this month here."
+		);
+		expect(opened.router.state.location.pathname).toBe("/scheduling/new");
+	});
 
 	it("given_aRefusedSave_when_generating_then_neverAsksForGeneration", async () => {
 		const user = userEvent.setup();

@@ -23,7 +23,22 @@ import {
 	publishedRosterOtherThan,
 	publishedWeekQuery,
 } from "@/features/scheduling/publishedWeek/api";
+import {
+	scheduleMonthQuery,
+	type MonthGeneration,
+} from "@/features/scheduling/months/api";
+import {
+	handChangedCoveredWeeks,
+	refusedWeeks,
+} from "@/features/scheduling/months/monthGeneration";
+import {
+	formatMonthName,
+	monthOf,
+} from "@/features/scheduling/months/monthWeeks";
+import { withRefusedWeeks } from "@/features/scheduling/months/refusedWeeksState";
+import { useGenerateMonth } from "@/features/scheduling/months/useGenerateMonth";
 import { PublishedWeekCallout } from "@/features/scheduling/publishedWeek/PublishedWeekCallout";
+import { RegenerateMonthDialog } from "@/features/scheduling/RegenerateMonthDialog";
 import { StartingContextSection } from "@/features/scheduling/startingContext/StartingContextSection";
 import {
 	defaultPeriod,
@@ -47,7 +62,7 @@ import type {
 	ScheduleStatus,
 } from "@/features/scheduling/schedules/api";
 import {
-	generationRefusal,
+	monthGenerationRefusal,
 	scheduleRefusal,
 	scheduleRefusalMessage,
 } from "@/features/scheduling/schedules/scheduleRefusal";
@@ -62,7 +77,6 @@ import {
 	ScheduleSetupStep,
 	type SetupFieldErrors,
 } from "@/features/scheduling/ScheduleSetupStep";
-import { withSchedulingNotice } from "@/features/scheduling/schedulingNotice";
 import type { ScheduleSetupValues } from "@/features/scheduling/setupSchema";
 import { departmentShiftsQuery } from "@/features/scheduling/shifts/api";
 import {
@@ -331,6 +345,19 @@ export const CreateSchedule = (): FunctionComponent => {
 			? readiness.rows.find((row) => row.departmentId === readinessDepartmentId)
 			: undefined;
 	const scheduleActions = useScheduleActions(companyId);
+	// Generating a draft generates its month: the week belongs to its Monday's month.
+	const draftMonth = draft.setup ? monthOf(draft.setup.periodStart) : "";
+	const scheduleMonth = useQuery(
+		scheduleMonthQuery(
+			companyId,
+			saved?.departmentId ?? "",
+			draftMonth,
+			// Only a draft that can be generated: a generated one never reads the live lists.
+			canGenerate && draftMonth !== ""
+		)
+	);
+	const monthGeneration = useGenerateMonth(companyId, scheduleMonth.data);
+	const [confirmingRegenerate, setConfirmingRegenerate] = useState(false);
 	const [toast, setToast] = useState<{ id: number; message: string }>();
 	const [problem, setProblem] = useState("");
 	const setupFormId = useId();
@@ -459,27 +486,30 @@ export const CreateSchedule = (): FunctionComponent => {
 		setProblem("");
 		if (await save()) notify(t("scheduling.draft.saved"));
 	};
-	// Saves first when the person may, then freezes the ticked shifts and constraints and leaves.
+	// Lands on the month page with the weeks the run refused.
+	const showMonth = async (answer: MonthGeneration): Promise<void> => {
+		await navigate({
+			to: "/scheduling/months/$month",
+			params: { month: answer.month },
+			search: { department: answer.departmentId },
+			state: withRefusedWeeks(refusedWeeks(answer)),
+		});
+	};
+	// Saves first when the person may, then generates the draft's month: at once, or after
+	// asking when a covered week was changed by hand.
 	const generate = async (): Promise<void> => {
-		if (!saved || !draft.setup) return;
+		if (!saved || !scheduleMonth.data) return;
 		setProblem("");
 		if (canSave && !(await save())) return;
-		try {
-			await scheduleActions.generate.mutateAsync({
-				unit: saved,
-				scheduleId: saved.scheduleId,
-			});
-		} catch (error) {
-			setProblem(generationRefusal(error, t));
+		if (handChangedCoveredWeeks(scheduleMonth.data).length > 0) {
+			setConfirmingRegenerate(true);
 			return;
 		}
-		await navigate({
-			to: "/scheduling",
-			state: withSchedulingNotice({
-				kind: "generated",
-				name: draft.setup.name,
-			}),
-		});
+		try {
+			await showMonth(await monthGeneration.generate());
+		} catch (error) {
+			setProblem(monthGenerationRefusal(error, t));
+		}
 	};
 	const included = includedShifts({ includedShiftIds: ticked }, shiftRows);
 	const summary = summarise(included, draft.allocations);
@@ -521,7 +551,7 @@ export const CreateSchedule = (): FunctionComponent => {
 	const busy =
 		scheduleActions.create.isPending ||
 		scheduleActions.update.isPending ||
-		scheduleActions.generate.isPending;
+		monthGeneration.isPending;
 	const lockedDepartment = saved && {
 		departmentId: saved.departmentId,
 		label: placeOf(
@@ -637,7 +667,10 @@ export const CreateSchedule = (): FunctionComponent => {
 			? weekChoiceProblem(weekChoice, weekConstraints)
 			: undefined;
 	const canGenerateWeek =
-		canGenerate && generateGate === undefined && weekProblem === undefined;
+		canGenerate &&
+		generateGate === undefined &&
+		weekProblem === undefined &&
+		scheduleMonth.data !== undefined;
 	// Generate says the same, with the week's problem above it, and "Change" goes back to Setup.
 	const generateWeekSummary = weekLine && (
 		<>
@@ -690,7 +723,10 @@ export const CreateSchedule = (): FunctionComponent => {
 				? t(generateGate.nextNoteKey, { department: generateGate.department })
 				: weekProblem
 					? t("scheduling.week.problemNote")
-					: t("scheduling.create.generateForbidden");
+					: canGenerate
+						? // The month is still being read: no note.
+							""
+						: t("scheduling.create.generateForbidden");
 
 	return (
 		<>
@@ -825,6 +861,25 @@ export const CreateSchedule = (): FunctionComponent => {
 						: undefined
 				}
 			/>
+			{isLast && canGenerateWeek && (
+				<p className="mt-3 text-right text-sm text-neutral-700">
+					{t("scheduling.months.generate.draftGeneratesMonth", {
+						month: formatMonthName(draftMonth, formattingLocale(i18n)),
+					})}
+				</p>
+			)}
+			{confirmingRegenerate && scheduleMonth.data && (
+				<RegenerateMonthDialog
+					companyId={companyId}
+					month={scheduleMonth.data}
+					onClose={() => {
+						setConfirmingRegenerate(false);
+					}}
+					onStarted={(answer) => {
+						void showMonth(answer);
+					}}
+				/>
+			)}
 			{choosingWeek && weekShifts && weekConstraints && weekDepartmentName && (
 				<WeekChoiceDialog
 					constraints={weekConstraints}

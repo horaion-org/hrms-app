@@ -4248,7 +4248,8 @@
 				"cannotCreate": "No puedes crear horarios en {{department}}, así que no se pueden crear las semanas que le faltan a este mes.",
 				"generatingTitle": "Generando {{month}}…",
 				"generatingDetail": "Se están calculando las semanas que no están publicadas. Puedes salir de esta página.",
-				"refused": "Sin generar: {{reason}}"
+				"refused": "Sin generar: {{reason}}",
+				"draftGeneratesMonth": "Genera todas las semanas de {{month}} que no están publicadas."
 			},
 			"choice": {
 				"title": "Qué usa {{month}}",
