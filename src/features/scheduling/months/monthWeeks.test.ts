@@ -1,12 +1,15 @@
 import { describe, expect, it } from "vitest";
+import { monthSummaryFixture } from "@/features/scheduling/months/fixtures";
 import {
 	crossingWeekOf,
+	earlierReviewMonth,
 	formatMonth,
 	formatMonthName,
 	formatWeekDates,
 	monthOf,
 	shiftMonth,
 	stateCounts,
+	summariesByMonth,
 	summaryRange,
 } from "@/features/scheduling/months/monthWeeks";
 
@@ -88,5 +91,51 @@ describe("crossingWeekOf", () => {
 
 	it("given_marchWhoseFirstIsAMonday_when_asked_then_none", () => {
 		expect(crossingWeekOf("2027-03")).toBeUndefined();
+	});
+});
+
+describe("earlierReviewMonth", () => {
+	const november = monthSummaryFixture();
+	const december = monthSummaryFixture({
+		month: "2026-12",
+		weeks: [
+			{ periodStart: "2026-12-07", state: "TENTATIVE", scheduleId: "s-6" },
+		],
+	});
+
+	it("given_tentativeWeeksAfterAMonthUnderReview_when_asked_then_thatEarlierMonth", () => {
+		expect(earlierReviewMonth([november, december], december)).toBe("2026-11");
+	});
+
+	it("given_theMonthUnderReviewItself_when_asked_then_none", () => {
+		expect(earlierReviewMonth([november, december], november)).toBeUndefined();
+	});
+
+	it("given_anotherDepartmentsReview_when_asked_then_none", () => {
+		const bar = { ...december, departmentId: "d-2", departmentName: "Bar" };
+		expect(earlierReviewMonth([november, bar], bar)).toBeUndefined();
+	});
+});
+
+describe("summariesByMonth", () => {
+	it("given_theApisNewestFirstOrder_when_grouped_then_earliestMonthFirstAndDepartmentsInTheApisOrder", () => {
+		const bar = monthSummaryFixture({
+			departmentId: "d-2",
+			departmentName: "Bar",
+		});
+		const kitchenDecember = monthSummaryFixture({ month: "2026-12" });
+		const kitchenNovember = monthSummaryFixture();
+
+		expect(
+			summariesByMonth([kitchenDecember, bar, kitchenNovember]).map(
+				([month, summaries]) => [
+					month,
+					summaries.map((each) => each.departmentName),
+				]
+			)
+		).toEqual([
+			["2026-11", ["Bar", "Kitchen"]],
+			["2026-12", ["Kitchen"]],
+		]);
 	});
 });

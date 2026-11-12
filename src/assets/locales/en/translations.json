@@ -4392,7 +4392,8 @@
 			"hints": {
 				"toReview": "Week of {{week}} is waiting for your review.",
 				"generatedAhead": "Generated ahead. {{month}} comes first."
-			}
+			},
+			"tabFailed": "The months couldn’t be loaded. Please try again."
 		}
 	},
 	"colourSwatchPicker": {

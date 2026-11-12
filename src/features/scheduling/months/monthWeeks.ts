@@ -1,6 +1,10 @@
 import dayjs from "dayjs";
 import { mondayOf } from "@/common/weeks";
-import type { MonthRange, WeekState } from "@/features/scheduling/months/api";
+import type {
+	MonthRange,
+	ScheduleMonthSummary,
+	WeekState,
+} from "@/features/scheduling/months/api";
 import type { SchedulePeriod } from "@/features/scheduling/periods";
 
 /*
@@ -82,4 +86,37 @@ export const crossingWeekOf = (month: string): SchedulePeriod | undefined => {
 		start: monday,
 		end: dayjs(monday).add(6, "day").format("YYYY-MM-DD"),
 	};
+};
+
+/**
+ * For a month with tentative weeks, the earlier month whose week is under
+ * review for the same Department, which comes first; undefined otherwise.
+ */
+export const earlierReviewMonth = (
+	summaries: ReadonlyArray<ScheduleMonthSummary>,
+	summary: ScheduleMonthSummary
+): string | undefined => {
+	if (!summary.weeks.some((week) => week.state === "TENTATIVE"))
+		return undefined;
+	const reviewing = summaries.find(
+		(candidate) =>
+			candidate.departmentId === summary.departmentId &&
+			candidate.weeks.some((week) => week.state === "TO_REVIEW")
+	);
+	return reviewing && reviewing.month < summary.month
+		? reviewing.month
+		: undefined;
+};
+
+/** The summaries grouped by month, earliest first; within a month, in the API's order (Branch, then Department). */
+export const summariesByMonth = (
+	summaries: ReadonlyArray<ScheduleMonthSummary>
+): Array<[string, Array<ScheduleMonthSummary>]> => {
+	const months = new Map<string, Array<ScheduleMonthSummary>>();
+	for (const summary of summaries) {
+		months.set(summary.month, [...(months.get(summary.month) ?? []), summary]);
+	}
+	return [...months.entries()].sort(([first], [second]) =>
+		first.localeCompare(second)
+	);
 };

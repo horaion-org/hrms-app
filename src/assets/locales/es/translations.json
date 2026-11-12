@@ -4214,7 +4214,8 @@
 			"hints": {
 				"toReview": "La semana del {{week}} espera tu revisión.",
 				"generatedAhead": "Generado por adelantado. Primero va {{month}}."
-			}
+			},
+			"tabFailed": "No pudimos cargar los meses. Inténtalo de nuevo."
 		}
 	},
 	"workspace": {
