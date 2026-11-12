@@ -3586,6 +3586,7 @@
 			"missing_other": "Faltan {{count}} personas",
 			"rule": "Regla: {{rule}}",
 			"forecastDemand": "Demanda prevista",
+			"mostHoursAWeek": "Máximo de horas a la semana",
 			"unknownMember": "Un antiguo miembro",
 			"unknownShift": "uno de sus turnos",
 			"unknownJobTitle": "un puesto",
@@ -4708,6 +4709,7 @@
 			"overtimeDayOrWeek": "Las horas extra empiezan después de {{day}} horas al día o {{week}} horas a la semana.",
 			"overtimeAveraged": "Las horas extra empiezan después de un promedio de {{week}} horas a la semana.",
 			"partTime": "Tiempo parcial: menos de {{line}} horas a la semana. Las horas por encima de sus horas propias son horas adicionales hasta las horas normales de un tiempo completo; después, horas extra.",
+			"mostHours": "Se programa como máximo {{most}} horas a la semana.",
 			"limitsApply": "Se aplican los límites de horas de la Ley de Empleo.",
 			"limitsDontApply": "No se aplican los límites de horas de la Ley de Empleo; las horas se siguen contando.",
 			"short": {
@@ -4717,6 +4719,7 @@
 				"day": "{{day}} h al día",
 				"shifts": "turnos de {{day}} h",
 				"week": "{{week}} h",
+				"most": "máx. {{most}} h",
 				"restFixed": "Descanso: {{weekday}}",
 				"restRostered": "Descanso según el cuadrante"
 			},

@@ -3764,6 +3764,7 @@
 			"missing_other": "{{count}} people short",
 			"rule": "Rule: {{rule}}",
 			"forecastDemand": "Forecast demand",
+			"mostHoursAWeek": "Most hours a week",
 			"unknownMember": "A former member",
 			"unknownShift": "one of its shifts",
 			"unknownJobTitle": "one job title",
@@ -4708,6 +4709,7 @@
 			"overtimeDayOrWeek": "Overtime starts after {{day}} hours in a day or {{week}} hours in a week.",
 			"overtimeAveraged": "Overtime starts after an average of {{week}} hours a week.",
 			"partTime": "Part-time: below {{line}} hours a week. Hours past their own hours are extra hours until a full-timer’s normal hours, then overtime.",
+			"mostHours": "Rostered for at most {{most}} hours a week.",
 			"limitsApply": "Employment Act hour limits apply.",
 			"limitsDontApply": "Employment Act hour limits don’t apply; hours are still counted.",
 			"short": {
@@ -4717,6 +4719,7 @@
 				"day": "{{day}} h a day",
 				"shifts": "{{day}} h shifts",
 				"week": "{{week}} h",
+				"most": "at most {{most}} h",
 				"restFixed": "Rest day {{weekday}}",
 				"restRostered": "Rest day on the roster"
 			},

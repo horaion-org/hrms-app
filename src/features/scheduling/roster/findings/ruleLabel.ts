@@ -6,7 +6,8 @@ import type { FindingNames } from "@/features/scheduling/roster/findings/finding
  * The engine names a rule by its own rule name (`shift_demand_requirement`),
  * never by the constraint's. These are the engine names the API gives each
  * constraint type (`ConstraintType.java` in the API), so a rule the schedule's
- * constraints can't name still reads as its type.
+ * constraints can't name still reads as its type. The map lists constraint
+ * types only; the engine's own rules with no constraint behind them follow it.
  */
 const ENGINE_RULE_TYPES: ReadonlyMap<string, ConstraintType> = new Map([
 	["shift_demand_requirement", "SHIFT_STAFFING"],
@@ -20,6 +21,8 @@ const ENGINE_RULE_TYPES: ReadonlyMap<string, ConstraintType> = new Map([
 ]);
 /** The engine's own rule for the demand forecast; no constraint stands behind it. */
 const FORECAST_DEMAND_RULE = "timeblock_demand_coverage";
+/** The engine's rule for the most hours a week on employment terms; no constraint stands behind it. */
+const MOST_HOURS_RULE = "work_minutes_per_period";
 
 /** "UNKNOWN_CODE" or "some_rule_name" → "Unknown code", "Some rule name". */
 export const humaniseIdentifier = (identifier: string): string => {
@@ -32,7 +35,8 @@ export type EngineRule = { name: string; constraintId: string | null };
 
 /**
  * What a rule is called on the roster: the schedule's constraint by its own
- * name, else its type, else the forecast, else its engine name made readable.
+ * name, else its type, else the forecast or the most hours a week, else its
+ * engine name made readable.
  */
 export const ruleLabel = (
 	{ name, constraintId }: EngineRule,
@@ -46,5 +50,6 @@ export const ruleLabel = (
 	if (type !== undefined) return t(`scheduling.constraints.types.${type}`);
 	if (name === FORECAST_DEMAND_RULE)
 		return t("scheduling.findings.forecastDemand");
+	if (name === MOST_HOURS_RULE) return t("scheduling.findings.mostHoursAWeek");
 	return humaniseIdentifier(name);
 };

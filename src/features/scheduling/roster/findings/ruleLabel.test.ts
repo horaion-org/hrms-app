@@ -39,6 +39,7 @@ describe("ruleLabel", () => {
 		["max_days_without_day_types", "Limit on days in a row"],
 		["days_of_day_types_per_period", "Required days each week"],
 		["timeblock_demand_coverage", "Forecast demand"],
+		["work_minutes_per_period", "Most hours a week"],
 		["a_rule_added_later", "A rule added later"],
 	])(
 		"given_theEngineRule_%s_withoutAListedConstraint_when_labelled_then_reads_%s",

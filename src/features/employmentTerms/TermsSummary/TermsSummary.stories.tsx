@@ -29,4 +29,8 @@ export const ShiftWork: Story = { args: { fields: SIX_DAY_SHIFT } };
 
 export const PartTime: Story = { args: { fields: PART_TIME_20 } };
 
+export const WithMostHoursAWeek: Story = {
+	args: { fields: { ...SIX_DAY_SHIFT, mostWeekMinutes: 4320 } },
+};
+
 export const Incomplete: Story = { args: { fields: undefined } };

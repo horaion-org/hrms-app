@@ -52,6 +52,19 @@ describe("termsSentence", () => {
 		expect(termsSentence(fields, REFERENCE, t, "en")).toBe(sentence);
 	});
 
+	it("says the most hours a week after overtime, before the hour limits", () => {
+		expect(
+			termsSentence(
+				{ ...SIX_DAY_SHIFT, mostWeekMinutes: 4320 },
+				REFERENCE,
+				t,
+				"en"
+			)
+		).toBe(
+			"Works 6 days a week in shifts of up to 12 hours. The roster sets one rest day each week. Overtime starts after an average of 44 hours a week. Rostered for at most 72 hours a week. Employment Act hour limits apply."
+		);
+	});
+
 	it("leaves overtime out when the reader can't know the part-time line", () => {
 		expect(termsSentence(PART_TIME_20, undefined, t, "en")).toBe(
 			"Works 20 hours a week. The roster sets one rest day each week. Employment Act hour limits apply."
@@ -79,6 +92,16 @@ describe("weekShort and restShort", () => {
 	])("shortens %o", (fields, week, rest) => {
 		expect(weekShort(fields, t, "en")).toBe(week);
 		expect(restShort(fields, t)).toBe(rest);
+	});
+
+	it.each<[WeekFields, string]>([
+		[
+			{ ...SIX_DAY_SHIFT, mostWeekMinutes: 4320 },
+			"6 days · 12 h shifts · 44 h · at most 72 h",
+		],
+		[{ ...PART_TIME_20, mostWeekMinutes: 1800 }, "20 h a week · at most 30 h"],
+	])("ends %o with the most hours a week", (fields, week) => {
+		expect(weekShort(fields, t, "en")).toBe(week);
 	});
 });
 
