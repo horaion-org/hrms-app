@@ -24,7 +24,7 @@ export type RosterShiftProps = {
 	mark?: CellMark;
 	/** False when the role repeats the member's job title in the row header (`showsRole`). */
 	showsRole?: boolean;
-	/** A line of the member's own, e.g. "Leave requested" (`tileStatusKey`). */
+	/** A line under the role: the member's own leave ("Leave requested") or the day type the shift falls on (`tileStatus`). */
 	status?: string;
 	/** Beside an open panel: the time only; the label and the panel name the rest. */
 	compact?: boolean;

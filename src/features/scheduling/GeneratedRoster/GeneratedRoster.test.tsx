@@ -62,7 +62,7 @@ describe("GeneratedRoster", () => {
 
 		expect(
 			screen.getByText(
-				"3 people · 15 shifts · 4 days off · 2 days on leave · 94 h"
+				"3 people · 15 shifts · 3 days off · 2 days on leave · 94 h"
 			)
 		).toBeInTheDocument();
 		expect(screen.queryByRole("region")).toBeNull();
@@ -328,7 +328,12 @@ describe("GeneratedRoster", () => {
 							appliedAt: "2026-10-10T09:00:00Z",
 							appliedBy: { membershipId: "m-9", displayName: "Moses Lee" },
 							remark: null,
-							before: { kind: "OFF", shift: null, jobTitle: null },
+							before: {
+								kind: "OFF",
+								dayType: "OFF",
+								shift: null,
+								jobTitle: null,
+							},
 						},
 					},
 					...rest,

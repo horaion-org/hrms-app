@@ -1,5 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { createInstance, type TFunction } from "i18next";
+import { beforeAll, describe, expect, it } from "vitest";
+import en from "@/assets/locales/en/translations.json";
 import {
+	dayWithoutShiftPlainText,
+	dayWithoutShiftTileText,
 	hoursInDays,
 	hoursOf,
 	isoDateIn,
@@ -81,12 +85,39 @@ describe("rosterFromAssignments", () => {
 		});
 	});
 
-	it("given_offAndLeave_when_mapped_then_tellsThemApart", () => {
-		const [, ben] = rosterFromAssignments(scheduleAssignmentsFixture(), period);
+	it("given_offLeaveAndAbsent_when_mapped_then_tellsThemApart", () => {
+		const [aisha, ben] = rosterFromAssignments(
+			scheduleAssignmentsFixture(),
+			period
+		);
 
 		expect(ben!.days["2026-10-14"]).toEqual({ kind: "leave" });
 		expect(ben!.days["2026-10-15"]).toEqual({ kind: "leave" });
-		expect(ben!.days["2026-10-18"]).toEqual({ kind: "off" });
+		expect(ben!.days["2026-10-18"]).toEqual({ kind: "absent" });
+		expect(aisha!.days["2026-10-17"]).toEqual({ kind: "off", dayType: "OFF" });
+		expect(aisha!.days["2026-10-18"]).toEqual({
+			kind: "off",
+			dayType: "REST",
+		});
+	});
+
+	it("given_aNonWorkingDayWithoutAType_when_mapped_then_isOffWithANullType", () => {
+		const [first] = scheduleAssignmentsFixture();
+		const [row] = rosterFromAssignments(
+			[
+				{
+					...first!,
+					off: true,
+					offReason: "OFF",
+					dayType: null,
+					shift: null,
+					jobTitle: null,
+				},
+			],
+			period
+		);
+
+		expect(row!.days["2026-10-12"]).toEqual({ kind: "off", dayType: null });
 	});
 
 	it("given_leaveNamedByItsType_when_mapped_then_theLeaveCellCarriesTheName", () => {
@@ -102,7 +133,7 @@ describe("rosterFromAssignments", () => {
 			kind: "leave",
 			leaveTypeName: "Sick leave",
 		});
-		expect(ben!.days["2026-10-18"]).toEqual({ kind: "off" });
+		expect(ben!.days["2026-10-18"]).toEqual({ kind: "absent" });
 	});
 
 	it("given_rowsWhoseMemberIsGone_when_mapped_then_keysEachByItsAssignment", () => {
@@ -152,7 +183,8 @@ describe("hoursOf", () => {
 		["a shift past midnight", shiftCell("23:00", "07:00"), 8],
 		["a shift ending at midnight", shiftCell("16:00", "00:00"), 8],
 		["only the paid part of a shift", shiftCell("07:00", "19:00", 60), 11],
-		["a day off", { kind: "off" } as const, 0],
+		["a day off", { kind: "off", dayType: "OFF" } as const, 0],
+		["an absent day", { kind: "absent" } as const, 0],
 		["leave", { kind: "leave" } as const, 0],
 		["no row for the day", undefined, 0],
 	])("counts %s", (_, cell, hours) => {
@@ -223,11 +255,13 @@ describe("weekDays", () => {
 });
 
 describe("legendOf", () => {
-	it("given_aWeek_when_keyed_then_listsOffLeaveAndEachShiftByGroupAndName", () => {
+	it("given_aWeek_when_keyed_then_listsEachDayTypeAbsentLeaveAndEachShiftByGroupAndName", () => {
 		const rows = rosterFromAssignments(scheduleAssignmentsFixture(), period);
 
 		expect(legendOf(rows)).toEqual([
-			{ kind: "off" },
+			{ kind: "off", dayType: "OFF" },
+			{ kind: "off", dayType: "REST" },
+			{ kind: "absent" },
 			{ kind: "leave" },
 			{
 				kind: "shift",
@@ -250,20 +284,83 @@ describe("legendOf", () => {
 		]);
 	});
 
-	it("given_noShifts_when_keyed_then_listsOffAndLeave", () => {
-		expect(legendOf([])).toEqual([{ kind: "off" }, { kind: "leave" }]);
+	it("given_noRows_when_keyed_then_listsLeaveOnly", () => {
+		expect(legendOf([])).toEqual([{ kind: "leave" }]);
+	});
+
+	it("given_typesMetInAnyOrder_when_keyed_then_listsEachOnceByCodeWithNoTypeFirst", () => {
+		const rows: Array<RosterRow> = [
+			{
+				key: "m-1",
+				membershipId: "m-1",
+				name: "Aisha Rahman",
+				jobTitle: null,
+				employeeCode: null,
+				days: {
+					"2026-10-12": { kind: "off", dayType: "REST" },
+					"2026-10-13": { kind: "off", dayType: "PUBLIC_HOLIDAY_OFF" },
+					"2026-10-14": { kind: "off", dayType: null },
+					"2026-10-15": { kind: "off", dayType: "REST" },
+				},
+			},
+		];
+
+		expect(legendOf(rows)).toEqual([
+			{ kind: "off", dayType: null },
+			{ kind: "off", dayType: "PUBLIC_HOLIDAY_OFF" },
+			{ kind: "off", dayType: "REST" },
+			{ kind: "leave" },
+		]);
+	});
+});
+
+describe("a day without a shift in words", () => {
+	let t: TFunction;
+	beforeAll(async () => {
+		const i18n = createInstance();
+		await i18n.init({ lng: "en", resources: { en: { translation: en } } });
+		t = i18n.t;
+	});
+
+	it.each([
+		["a rest day", { kind: "off", dayType: "REST" }, "Rest day", "Rest day"],
+		["a day off", { kind: "off", dayType: "OFF" }, "Day off", "Day off"],
+		[
+			"a type added later",
+			{ kind: "off", dayType: "PUBLIC_HOLIDAY_OFF" },
+			"Public holiday off",
+			"Public holiday off",
+		],
+		[
+			"a non-working day without a type",
+			{ kind: "off", dayType: null },
+			"OFF",
+			"Day off",
+		],
+		["an absent day", { kind: "absent" }, "Absent", "Absent"],
+		["leave", { kind: "leave" }, "LEAVE", "On leave"],
+		[
+			"leave named by its type",
+			{ kind: "leave", leaveTypeName: "Sick leave" },
+			"Sick leave",
+			"Sick leave",
+		],
+	] as const)("writes %s", (_, cell, tile, plain) => {
+		expect(dayWithoutShiftTileText(cell, t)).toBe(tile);
+		expect(dayWithoutShiftPlainText(cell, t)).toBe(plain);
 	});
 });
 
 describe("rosterStats", () => {
-	it("given_aWeek_when_counted_then_countsStaffShiftsOffAndLeave", () => {
+	it("given_aWeek_when_counted_then_countsEveryNonWorkingDayAsOffAndAbsentAsNeither", () => {
 		const rows = rosterFromAssignments(scheduleAssignmentsFixture(), period);
 
+		// Aisha's day off and rest day, and Chen's day off; Ben's absent Sunday counts in neither.
 		expect(rosterStats(rows)).toEqual({
 			staffRostered: 3,
 			staffTotal: 3,
 			shifts: 15,
-			daysOff: 4,
+			daysOff: 3,
 			onLeave: 2,
 		});
 	});
@@ -306,6 +403,7 @@ describe("day notes", () => {
 		day: "2026-11-02",
 		off: false,
 		offReason: null,
+		dayType: null,
 		shift,
 		jobTitle: { jobTitleId: "j1", name: "Clerk" },
 	} as const;
@@ -314,6 +412,31 @@ describe("day notes", () => {
 	it("leaves a day with nothing to add without a note", () => {
 		const [row] = rosterFromAssignments([assignment], period);
 		expect(row?.days["2026-11-02"]).not.toHaveProperty("note");
+	});
+
+	it.each(["REST", "OFF"])(
+		"notes the %s day type a shift falls on",
+		(dayType) => {
+			const [row] = rosterFromAssignments([{ ...assignment, dayType }], period);
+			expect(row?.days["2026-11-02"]?.note).toEqual({ dayType });
+		}
+	);
+
+	it("leaves the type of a day not worked to its cell, not a note", () => {
+		const [row] = rosterFromAssignments(
+			[
+				{
+					...assignment,
+					off: true,
+					offReason: "OFF",
+					dayType: "REST",
+					shift: null,
+					jobTitle: null,
+				},
+			],
+			period
+		);
+		expect(row?.days["2026-11-02"]).toEqual({ kind: "off", dayType: "REST" });
 	});
 
 	it("carries the flag, the request and the short shift", () => {

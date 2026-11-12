@@ -28,10 +28,25 @@ const shift = {
 } as const;
 
 describe("ShiftDetailsPanel", () => {
+	it("given_aShiftOnARestDay_when_rendered_then_saysSoAsAPlainLine", () => {
+		render(
+			<ShiftDetailsPanel
+				shift={{ ...shift, note: { dayType: "REST" } }}
+				staffName="Aisha"
+				onClose={vi.fn()}
+			/>
+		);
+
+		expect(screen.getByText("On rest day")).toBeVisible();
+		expect(screen.queryByText("Needs a look")).not.toBeInTheDocument();
+	});
+
 	it("given_aShiftWithNoBreakOrMarker_when_rendered_then_showsNeither", () => {
 		render(
 			<ShiftDetailsPanel shift={shift} staffName="Aisha" onClose={vi.fn()} />
 		);
+
+		expect(screen.queryByText(/^On /)).not.toBeInTheDocument();
 
 		expect(screen.queryByText("Unpaid break")).not.toBeInTheDocument();
 		expect(screen.queryByText("Paid hours")).not.toBeInTheDocument();

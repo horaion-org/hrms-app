@@ -148,7 +148,7 @@ it("shows a generated schedule's header, figures and roster from the API", async
 	expect(screen.queryByText(/Requested by/)).toBeNull();
 	expect(
 		screen.getByText(
-			"3 people · 15 shifts · 4 days off · 2 days on leave · 94 h"
+			"3 people · 15 shifts · 3 days off · 2 days on leave · 94 h"
 		)
 	).toBeInTheDocument();
 	expect(screen.queryByRole("region", { name: "Conflicts" })).toBeNull();
@@ -160,7 +160,7 @@ it("shows a generated schedule's header, figures and roster from the API", async
 	expect(within(ben).getAllByText("LEAVE")).toHaveLength(2);
 	await userEvent.click(screen.getByRole("button", { name: "Legend" }));
 	expect(await screen.findByRole("list", { name: "Legend" })).toHaveTextContent(
-		"Day OffOn LeaveFront Desk AMLunch RushSwing Shift"
+		"Day offRest dayAbsentOn LeaveFront Desk AMLunch RushSwing Shift"
 	);
 	expect(readsOf(calls, ASSIGNMENTS)).toHaveLength(1);
 });

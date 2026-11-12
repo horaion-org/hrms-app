@@ -81,6 +81,8 @@ const checkSchema = z.object({
 	shiftId: z.string().nullable(),
 	countBefore: z.number().nullable(),
 	countAfter: z.number().nullable(),
+	/** On WORKS_ON_DAY_OFF, the type of the day worked; null otherwise, and from an older API. */
+	dayType: z.string().nullable().catch(null),
 });
 
 export type RosterCheck = z.infer<typeof checkSchema>;

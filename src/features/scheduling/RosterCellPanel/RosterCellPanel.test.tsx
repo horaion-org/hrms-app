@@ -188,7 +188,7 @@ describe("RosterCellPanel", () => {
 				appliedBy: null,
 				remark: null,
 				reason: "LEAVE_APPROVED",
-				before: { kind: "WORK", shift: null, jobTitle: null },
+				before: { kind: "WORK", dayType: null, shift: null, jobTitle: null },
 			},
 		};
 		const dayOffUnderLeave: ScheduleAssignment = {

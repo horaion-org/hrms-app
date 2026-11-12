@@ -26,14 +26,14 @@ describe("RosterGrid", () => {
 		end: "2026-10-18",
 	});
 
-	it("when_rendered_then_showsEachMembersShiftsDaysOffAndLeave", () => {
+	it("when_rendered_then_showsEachMembersShiftsAbsentDaysAndLeave", () => {
 		render(<RosterGrid days={week} rows={rows} />);
 
 		expect(screen.queryByRole("button", { name: /Collapse/ })).toBeNull();
 		const ben = screen.getByRole("row", { name: /Ben Ong/ });
 		expect(within(ben).getAllByRole("button")).toHaveLength(4);
 		expect(within(ben).getAllByText("LEAVE")).toHaveLength(2);
-		expect(within(ben).getAllByText("OFF")).toHaveLength(1);
+		expect(within(ben).getAllByText("Absent")).toHaveLength(1);
 		expect(ben).toHaveTextContent("Front Desk Staff");
 		expect(ben).toHaveTextContent("16 hrs");
 		expect(
@@ -42,6 +42,52 @@ describe("RosterGrid", () => {
 			})
 		).toHaveTextContent("11:00 – 13:00Lunch RushCashier");
 		expect(screen.getAllByRole("row")).toHaveLength(4);
+	});
+
+	it("given_nonWorkingDaysByType_when_rendered_then_namesEachTypeInTheOffLook", () => {
+		const typed = rosterFromAssignments(
+			scheduleAssignmentsFixture().map((assignment) =>
+				assignment.member?.displayName === "Chen Wei" && assignment.off
+					? { ...assignment, dayType: "PUBLIC_HOLIDAY_OFF" }
+					: assignment
+			),
+			{ start: "2026-10-12", end: "2026-10-18" }
+		);
+
+		const { rerender } = render(<RosterGrid days={week} rows={typed} />);
+
+		const aisha = screen.getByRole("row", { name: /Aisha Rahman/ });
+		const ben = screen.getByRole("row", { name: /Ben Ong/ });
+		const chen = screen.getByRole("row", { name: /Chen Wei/ });
+		const tiles = [
+			within(aisha).getByText("Day off"),
+			within(aisha).getByText("Rest day"),
+			within(ben).getByText("Absent"),
+			within(chen).getByText("Public holiday off"),
+		];
+		for (const tile of tiles) expect(tile).toHaveClass("bg-neutral-100");
+
+		rerender(<RosterGrid days={week} rows={typed} onDaySelect={vi.fn()} />);
+
+		expect(
+			screen.getByRole("button", { name: "Aisha Rahman, Sun: Rest day" })
+		).toBeInTheDocument();
+	});
+
+	it("given_aNonWorkingDayWithoutAType_when_rendered_then_showsOff", () => {
+		const untyped = rosterFromAssignments(
+			scheduleAssignmentsFixture().map((assignment) =>
+				assignment.offReason === "OFF"
+					? { ...assignment, dayType: null }
+					: assignment
+			),
+			{ start: "2026-10-12", end: "2026-10-18" }
+		);
+
+		render(<RosterGrid days={week} rows={untyped} />);
+
+		const aisha = screen.getByRole("row", { name: /Aisha Rahman/ });
+		expect(within(aisha).getAllByText("OFF")).toHaveLength(2);
 	});
 
 	it("given_aShownDay_when_rendered_then_hidesEveryOtherDaysColumnBelowMd", () => {
@@ -100,7 +146,7 @@ describe("RosterGrid", () => {
 		const ben = screen.getByRole("row", { name: /Ben Ong/ });
 		expect(within(ben).getAllByText("Sick leave")).toHaveLength(2);
 		expect(within(ben).queryByText("LEAVE")).toBeNull();
-		expect(within(ben).getAllByText("OFF")).toHaveLength(1);
+		expect(within(ben).getAllByText("Absent")).toHaveLength(1);
 	});
 
 	it("when_aTileIsChosen_then_reportsTheMemberDayAndShift", async () => {
@@ -235,6 +281,18 @@ describe("RosterGrid", () => {
 		expect(tile.querySelector("[aria-hidden='true']")).toBeNull();
 	});
 
+	it("given_aShiftOnARestDay_when_rendered_then_saysItInTheTileWithNoDot", () => {
+		render(<RosterGrid days={week} rows={rows} />);
+
+		const chen = screen.getByRole("row", { name: /Chen Wei/ });
+		const tile = within(chen).getByRole("button", {
+			name: /^Chen Wei, Sat .*, On rest day$/,
+		});
+		expect(tile).toHaveTextContent(/On rest day$/);
+		expect(tile.querySelector("[aria-hidden='true']")).toBeNull();
+		expect(within(chen).getAllByText("On rest day")).toHaveLength(1);
+	});
+
 	it("when_noFindingsAreGiven_then_marksNothing", () => {
 		render(<RosterGrid days={week} rows={rows} onShowIssues={vi.fn()} />);
 
@@ -303,7 +361,7 @@ describe("RosterGrid", () => {
 		expect(
 			within(ben).getByRole("button", { name: "Ben Ong, Fri 11:00 – 13:00" })
 		).toHaveTextContent(/^11:00 – 13:00$/);
-		for (const tile of within(ben).getAllByText(/^(OFF|LEAVE)$/))
+		for (const tile of within(ben).getAllByText(/^(Absent|LEAVE)$/))
 			expect(tile).toHaveClass("h-10");
 	});
 

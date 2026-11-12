@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { dayTypeInSentence } from "@/features/scheduling/dayTypes";
 import { formatDay } from "@/features/scheduling/periods";
 import { RosterChangeReview } from "@/features/scheduling/RosterChangeReview";
 import type {
@@ -61,6 +62,7 @@ export const UndoRosterChangeDialog = ({
 				.flatMap((cell) => [cell.before.shift, cell.after.shift])
 				.find((shift) => shift?.shiftId === id)?.name ?? "",
 		day: (date) => formatDay(date, language),
+		dayType: (code) => dayTypeInSentence(code, t),
 	};
 	return (
 		<ConfirmDialog

@@ -33,7 +33,8 @@ describe("rosterSummarySegments", () => {
 			[
 				{ key: "people", values: { count: 3 } },
 				{ key: "shifts", values: { count: 15 } },
-				{ key: "daysOff", values: { count: 4 } },
+				// Ben's absent Sunday is not a day off.
+				{ key: "daysOff", values: { count: 3 } },
 				{ key: "onLeave", values: { count: 2 } },
 				{ key: "hours", values: { hours: 94 } },
 			],
@@ -152,7 +153,12 @@ describe("changedDays", () => {
 			appliedAt: "2026-10-10T09:00:00Z",
 			appliedBy: null,
 			remark: null,
-			before: { kind: "OFF" as const, shift: null, jobTitle: null },
+			before: {
+				kind: "OFF" as const,
+				dayType: "OFF",
+				shift: null,
+				jobTitle: null,
+			},
 		};
 		const rows = scheduleAssignmentsFixture().map((row) =>
 			row.day === "2026-10-13" ||

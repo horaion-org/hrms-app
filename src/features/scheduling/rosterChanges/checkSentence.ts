@@ -9,6 +9,8 @@ export type CheckNames = {
 	shift: (shiftId: string | null) => string;
 	/** A day, e.g. "Sat 17 Oct". */
 	day: (isoDate: string) => string;
+	/** A day type inside a sentence, e.g. "rest day"; "day off" without one (`dayTypeInSentence`). */
+	dayType: (code: string | null) => string;
 };
 
 /** A check as a translation key and the values its sentence names. */
@@ -19,7 +21,8 @@ export type CheckSentence = {
 
 /**
  * The sentence for one check. Pure: the API sends codes and ids only, and the
- * app writes every sentence (ADR-0003), naming the member, shift and day.
+ * app writes every sentence (ADR-0003), naming the member, shift, day and,
+ * on WORKS_ON_DAY_OFF, the type of the day worked.
  */
 export const checkSentence = (
 	check: RosterCheck,
@@ -32,5 +35,6 @@ export const checkSentence = (
 		day: names.day(check.day),
 		before: check.countBefore ?? 0,
 		after: check.countAfter ?? 0,
+		dayType: names.dayType(check.dayType),
 	},
 });

@@ -7,6 +7,7 @@ import type { FunctionComponent } from "@/common/types";
 import { Select } from "@/components/forms/Select";
 import { Button } from "@/components/ui/Button";
 import { ChevronLeftIcon, ChevronRightIcon } from "@/components/ui/Icon";
+import { dayTypeLabel } from "@/features/scheduling/dayTypes";
 import {
 	formatPeriod,
 	type SchedulePeriod,
@@ -22,7 +23,7 @@ export type RosterWeekBarProps = {
 	onWeekChange: (week: string) => void;
 	/** Shows the week holding today, or the first week when today is outside the schedule. */
 	onToday: () => void;
-	/** What the roster's colours mean: a day off, leave and each shift. */
+	/** What the roster's colours mean: each non-working day type, absent, leave and each shift. */
 	legend: Array<RosterLegendEntry>;
 	/** At the end of the bar, before Legend: the roster's Issues and Changed buttons. */
 	children?: ReactNode;
@@ -50,15 +51,31 @@ export const RosterWeekBar = ({
 	const { t, i18n } = useTranslation();
 	const language = formattingLocale(i18n);
 	const index = weeks.findIndex((item) => item.start === week);
-	const swatches = legend.map((entry): Swatch =>
-		entry.kind === "shift"
-			? { key: entry.shiftId, label: entry.name, colour: entry.colour }
-			: {
-					key: entry.kind,
-					label: t(`scheduling.detail.kinds.${entry.kind}`),
-					look: rosterLooks[entry.kind],
-				}
-	);
+	const swatches = legend.map((entry): Swatch => {
+		if (entry.kind === "shift")
+			return { key: entry.shiftId, label: entry.name, colour: entry.colour };
+		if (entry.kind === "leave")
+			return {
+				key: entry.kind,
+				label: t("scheduling.detail.kinds.leave"),
+				look: rosterLooks.leave,
+			};
+		// Every non-working day and an absent day share the Off look; the words tell them apart.
+		if (entry.kind === "absent")
+			return {
+				key: entry.kind,
+				label: t("scheduling.detail.absent"),
+				look: rosterLooks.off,
+			};
+		return {
+			key: `off:${entry.dayType ?? ""}`,
+			label:
+				entry.dayType === null
+					? t("scheduling.detail.kinds.off")
+					: dayTypeLabel(entry.dayType, t),
+			look: rosterLooks.off,
+		};
+	});
 	const step = (by: number): void => {
 		const next = weeks[index + by];
 		if (next) onWeekChange(next.start);

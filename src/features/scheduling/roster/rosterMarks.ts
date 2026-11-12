@@ -1,3 +1,5 @@
+import type { TFunction } from "i18next";
+import { dayTypeInSentence } from "@/features/scheduling/dayTypes";
 import {
 	strongestTone,
 	type Finding,
@@ -116,7 +118,8 @@ export const saidApartBy = (
 
 /**
  * A day note's lines, in order: a day to decide, then leave, then a shift
- * left short. A line `saidApart` names is left out.
+ * left short. A line `saidApart` names is left out. The day type a shift
+ * falls on is a fact, not an issue: the tile and the day's panel say it.
  */
 export const dayNoteLines = (
 	note: RosterDayNote | undefined,
@@ -240,6 +243,24 @@ export const tileStatusKey = (
 	showsIssues: boolean
 ): "leaveRequested" | "onLeave" | undefined =>
 	showsIssues || !note?.flag ? undefined : LEAVE_MARKER_KEYS[note.flag];
+
+/**
+ * The line a shift tile adds below its role: the member's own leave on their
+ * own roster (`tileStatusKey`), else the non-working day type the shift falls
+ * on ("On rest day"), on every roster, as no dot marks it. Pure.
+ */
+export const tileStatus = (
+	note: RosterDayNote | undefined,
+	showsIssues: boolean,
+	t: TFunction
+): string | undefined => {
+	const leaveKey = tileStatusKey(note, showsIssues);
+	if (leaveKey) return t(`scheduling.rosterMarkers.${leaveKey}`);
+	if (note?.dayType === undefined) return undefined;
+	return t("scheduling.rosterMarkers.onDayType", {
+		dayType: dayTypeInSentence(note.dayType, t),
+	});
+};
 
 /** Which header opened the Issues panel: one member's row, or one day. */
 export type IssuesAbout =

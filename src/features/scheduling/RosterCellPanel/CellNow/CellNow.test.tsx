@@ -42,6 +42,24 @@ describe("CellNow", () => {
 		expect(screen.queryByRole("link")).toBeNull();
 	});
 
+	it.each([
+		["REST", "On rest day"],
+		["OFF", "On day off"],
+	])(
+		"given_aShiftOnA%sDay_when_rendered_then_saysTheDayType",
+		(dayType, words) => {
+			show({ assignment: { ...dayOf("m-1", "2026-10-12"), dayType } });
+
+			expect(screen.getByText(words)).toBeVisible();
+		}
+	);
+
+	it("given_aShiftOnADayWithoutAType_when_rendered_then_saysNoDayType", () => {
+		show();
+
+		expect(screen.queryByText(/^On /)).toBeNull();
+	});
+
 	it("given_aLeaveDayForALeaveEditor_when_rendered_then_linksToEveryDayOfTheRequest", () => {
 		show({
 			assignment: { ...dayOf("m-2", "2026-10-14"), leaveRequestId: "r-1" },
@@ -63,7 +81,7 @@ describe("CellNow", () => {
 					changeId: "c-1",
 					appliedAt: "2026-10-10T09:00:00Z",
 					appliedBy: { membershipId: "m-9", displayName: "Dana Lim" },
-					before: { kind: "OFF", shift: null, jobTitle: null },
+					before: { kind: "OFF", dayType: "OFF", shift: null, jobTitle: null },
 					remark: "Covering for Ben",
 					reason: null,
 				},

@@ -44,6 +44,24 @@ describe("MyRosterChanges", () => {
 		expect(screen.getAllByRole("listitem")).toHaveLength(1);
 	});
 
+	it("given_aDayOffMadeARestDay_when_shown_then_namesBothTypes", () => {
+		const monday = changedMonday(null);
+		show([
+			{
+				...monday,
+				dayType: "REST",
+				lastChange: monday.lastChange && {
+					...monday.lastChange,
+					before: { kind: "OFF", dayType: "OFF", shift: null, jobTitle: null },
+				},
+			},
+		]);
+
+		expect(screen.getByRole("note")).toHaveTextContent(
+			/was Day off.*now Rest day/
+		);
+	});
+
 	it("given_aChangeWithoutARemark_when_shown_then_noRemarkLine", () => {
 		show([changedMonday(null)]);
 

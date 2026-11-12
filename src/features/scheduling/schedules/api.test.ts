@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { configureApiClient, resetApiClient } from "@/common/api-client";
-import { ApiProblemError, UnexpectedResponseError } from "@/common/problem";
+import { ApiProblemError } from "@/common/problem";
 import { envelope, stubApi } from "@/common/testing/stubApi";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import {
@@ -811,26 +811,74 @@ describe("a schedule's roster", () => {
 		);
 	});
 
-	it("rejects a day off whose reason it doesn't know", async () => {
-		const [row] = scheduleAssignmentsFixture();
+	it("reads each day's type: a rest day, a worked rest day, a day off, and an absent day without one", async () => {
+		const rows = scheduleAssignmentsFixture();
+		stubApi({
+			[`GET ${SCHEDULES}/s-1/assignments`]: {
+				status: 200,
+				body: envelope(rows),
+			},
+		});
+
+		const parsed = await fetchScheduleAssignments("c-1", UNIT, "s-1");
+		const dayOf = (name: string, day: string): ScheduleAssignment =>
+			parsed.find(
+				(row) => row.member?.displayName === name && row.day === day
+			)!;
+
+		expect(dayOf("Aisha Rahman", "2026-10-17")).toMatchObject({
+			offReason: "OFF",
+			dayType: "OFF",
+		});
+		expect(dayOf("Aisha Rahman", "2026-10-18")).toMatchObject({
+			offReason: "OFF",
+			dayType: "REST",
+		});
+		expect(dayOf("Ben Ong", "2026-10-18")).toMatchObject({
+			offReason: "ABSENT",
+			dayType: null,
+		});
+		expect(dayOf("Chen Wei", "2026-10-17")).toMatchObject({
+			off: false,
+			offReason: null,
+			dayType: "REST",
+		});
+	});
+
+	it("reads a reason it doesn't know as OFF, any day type as sent, and a missing day type as null", async () => {
+		const [first, second] = scheduleAssignmentsFixture() as [
+			ScheduleAssignment,
+			ScheduleAssignment,
+		];
 		stubApi({
 			[`GET ${SCHEDULES}/s-1/assignments`]: {
 				status: 200,
 				body: envelope([
 					{
-						...row,
+						...first,
 						off: true,
 						offReason: "SICK",
+						dayType: "PUBLIC_HOLIDAY_OFF",
 						shift: null,
 						jobTitle: null,
 					},
+					// An older API sends no day type; undefined leaves the key out of the JSON.
+					{ ...second, dayType: undefined },
 				]),
 			},
 		});
 
-		await expect(
-			fetchScheduleAssignments("c-1", UNIT, "s-1")
-		).rejects.toBeInstanceOf(UnexpectedResponseError);
+		const [unknownReason, missingDayType] = await fetchScheduleAssignments(
+			"c-1",
+			UNIT,
+			"s-1"
+		);
+
+		expect(unknownReason).toMatchObject({
+			offReason: "OFF",
+			dayType: "PUBLIC_HOLIDAY_OFF",
+		});
+		expect(missingDayType?.dayType).toBeNull();
 	});
 });
 

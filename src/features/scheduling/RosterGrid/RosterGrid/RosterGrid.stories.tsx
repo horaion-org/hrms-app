@@ -28,8 +28,27 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** A generated week of Front Office: shifts in their colours, days off and leave. */
+/** A generated week of Front Office: shifts in their colours, days off, a rest day, leave and an absent day. */
 export const Default: Story = {};
+
+/**
+ * Every non-working day in the Off look, named by its type: Aisha's day off
+ * and rest day, Ben's absent Sunday, Chen's Friday of a type added later
+ * (shown by its code made readable), and Chen's Saturday worked on his rest
+ * day.
+ */
+export const NonWorkingDayTypes: Story = {
+	args: {
+		rows: rosterFromAssignments(
+			scheduleAssignmentsFixture().map((assignment) =>
+				assignment.member?.displayName === "Chen Wei" && assignment.off
+					? { ...assignment, dayType: "PUBLIC_HOLIDAY_OFF" }
+					: assignment
+			),
+			{ start: "2026-10-12", end: "2026-10-18" }
+		),
+	},
+};
 
 export const ShiftSelected: Story = {
 	args: { selectedShiftId: "a-mp-1-2026-10-13" },

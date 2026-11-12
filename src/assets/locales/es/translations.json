@@ -2882,6 +2882,11 @@
 			"SUN": "dom",
 			"weekdays": "Entre semana"
 		},
+		"dayTypes": {
+			"OFF": "Día libre",
+			"REST": "Día de descanso",
+			"LEAVE": "Permiso"
+		},
 		"shiftColours": {
 			"terracotta": "Terracota",
 			"peach": "Melocotón",
@@ -3447,6 +3452,7 @@
 			"hours_other": "{{count}} h",
 			"off": "LIBRE",
 			"leave": "PERMISO",
+			"absent": "Ausente",
 			"shiftLabel": "{{name}}, {{day}} {{time}}",
 			"shiftDetails": {
 				"title": "Detalles del turno",
@@ -3722,6 +3728,7 @@
 			"leaveRequested": "Permiso solicitado",
 			"onLeave": "De permiso",
 			"needsCover": "Necesita cobertura: {{shift}}",
+			"onDayType": "En {{dayType}}",
 			"needsDecision": "Necesita una decisión",
 			"needsAttention": "Necesita atención",
 			"needsALook": "Por revisar",
@@ -3826,7 +3833,7 @@
 				"OUTSIDE_AVAILABILITY": "{{shift}} queda fuera de la disponibilidad de {{name}} el {{day}}.",
 				"ROSTERED_ELSEWHERE": "{{name}} también trabaja el {{day}} en otro cuadrante.",
 				"NOT_SCHEDULABLE_NOW": "{{name}} ya no puede programarse en este departamento.",
-				"WORKS_ON_DAY_OFF": "El {{day}} era el día libre de {{name}}.",
+				"WORKS_ON_DAY_OFF": "{{name}} trabaja en su {{dayType}} el {{day}}.",
 				"COVERAGE_CHANGED": "{{shift}}, {{day}}: {{before}} → {{after}} personas.",
 				"UNKNOWN": "Otra comprobación se aplica a este cambio."
 			},

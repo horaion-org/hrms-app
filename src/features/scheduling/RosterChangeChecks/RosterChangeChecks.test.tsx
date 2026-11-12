@@ -9,6 +9,7 @@ const names = {
 	member: (): string => "Aisha Rahman",
 	shift: (): string => "Front Desk AM",
 	day: (): string => "Mon, Oct 12",
+	dayType: (): string => "rest day",
 };
 
 describe("RosterChangeChecks", () => {

@@ -8,6 +8,8 @@ const names = {
 	shift: (id: string | null): string =>
 		id === "front-desk-am-copy" ? "Front Desk AM" : "",
 	day: (date: string): string => `day ${date}`,
+	dayType: (code: string | null): string =>
+		code === null ? "day off" : `type ${code}`,
 };
 
 describe("checkSentence", () => {
@@ -20,9 +22,33 @@ describe("checkSentence", () => {
 				day: "day 2026-10-12",
 				before: 2,
 				after: 1,
+				dayType: "day off",
 			},
 		});
 	});
+
+	it.each([
+		["REST", "type REST"],
+		[null, "day off"],
+	])(
+		"given_aShiftOnADayOfType_%s_when_written_then_namesTheTypeOrDayOff",
+		(dayType, words) => {
+			const sentence = checkSentence(
+				rosterCheckFixture({
+					code: "WORKS_ON_DAY_OFF",
+					membershipId: "m-1",
+					dayType,
+				}),
+				names
+			);
+
+			expect(sentence.key).toBe("scheduling.rosterEdit.check.WORKS_ON_DAY_OFF");
+			expect(sentence.values).toMatchObject({
+				name: "Aisha Rahman",
+				dayType: words,
+			});
+		}
+	);
 
 	it("given_aCheckAboutAMember_when_written_then_namesThem", () => {
 		const sentence = checkSentence(

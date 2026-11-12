@@ -45,7 +45,7 @@ const lastLeaveChange: ScheduleAssignment = {
 		appliedBy: null,
 		remark: null,
 		reason: "LEAVE_RECORDED",
-		before: { kind: "WORK", shift: null, jobTitle: null },
+		before: { kind: "WORK", dayType: null, shift: null, jobTitle: null },
 	},
 };
 

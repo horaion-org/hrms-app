@@ -7,6 +7,7 @@ import { rangeDays } from "@/features/leave/dates";
 import { leaveTypeOptions } from "@/features/leave/leaveTypeOptions";
 import type { CoverOffer } from "@/features/scheduling/coverOffers/api";
 import { useCellCoverOffer } from "@/features/scheduling/coverOffers/useCellCoverOffer";
+import { dayTypeInSentence } from "@/features/scheduling/dayTypes";
 import { formatDay } from "@/features/scheduling/periods";
 import type { RosterCellPanelState } from "@/features/scheduling/RosterCellPanel/cellPanelState";
 import { useLeaveMove } from "@/features/scheduling/RosterCellPanel/useLeaveMove";
@@ -240,6 +241,7 @@ export const useRosterCellPanel = ({
 			assignments.find((row) => row.shift?.shiftId === id)?.shift?.name ??
 			"",
 		day: (date) => formatDay(date, language),
+		dayType: (code) => dayTypeInSentence(code, t),
 	};
 
 	const chooseMode = (value: RosterPanelMode): void => {

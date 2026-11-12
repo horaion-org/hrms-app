@@ -356,8 +356,19 @@ const ROSTER_WEEK = [
 	"2026-10-18",
 ] as const;
 
-/** A worked day: the live shift whose frozen copy is worked, and the job title it is worked as. */
-type WorkedDay = { shift: string; jobTitleId: string; jobTitle: string };
+/**
+ * A worked day: the live shift whose frozen copy is worked, the job title it is
+ * worked as, and the non-working day type the day had before, if any.
+ */
+type WorkedDay = {
+	shift: string;
+	jobTitleId: string;
+	jobTitle: string;
+	dayType?: string;
+};
+
+/** A day not worked: why, and the non-working day's type when it has one. */
+type DayNotWorked = { offReason: AssignmentOffReason; dayType: string | null };
 
 const frontDeskLead: WorkedDay = {
 	shift: "front-desk-am",
@@ -379,26 +390,32 @@ const dutyManager: WorkedDay = {
 	jobTitleId: "duty-manager",
 	jobTitle: "Duty Manager",
 };
+const dutyManagerOnRestDay: WorkedDay = { ...dutyManager, dayType: "REST" };
+
+const dayOff: DayNotWorked = { offReason: "OFF", dayType: "OFF" };
+const restDay: DayNotWorked = { offReason: "OFF", dayType: "REST" };
+const onLeave: DayNotWorked = { offReason: "LEAVE", dayType: null };
+const absent: DayNotWorked = { offReason: "ABSENT", dayType: null };
 
 /** Each member's week, Monday first, in the order of `ROSTER_MEMBERS`. */
-const ROSTER_WEEKS: Array<Array<WorkedDay | AssignmentOffReason>> = [
+const ROSTER_WEEKS: Array<Array<WorkedDay | DayNotWorked>> = [
 	[
 		frontDeskLead,
 		frontDeskLead,
 		frontDeskLead,
 		frontDeskLead,
 		frontDeskLead,
-		"OFF",
-		"OFF",
+		dayOff,
+		restDay,
 	],
-	[frontDeskStaff, frontDeskStaff, "LEAVE", "LEAVE", cashier, cashier, "OFF"],
+	[frontDeskStaff, frontDeskStaff, onLeave, onLeave, cashier, cashier, absent],
 	[
 		dutyManager,
 		dutyManager,
 		dutyManager,
 		dutyManager,
-		"OFF",
-		dutyManager,
+		dayOff,
+		dutyManagerOnRestDay,
 		dutyManager,
 	],
 ];
@@ -406,7 +423,9 @@ const ROSTER_WEEKS: Array<Array<WorkedDay | AssignmentOffReason>> = [
 /**
  * Schedule s-1's roster as `GET …/assignments` answers it: 21 rows, one per
  * member per day, by name then day. Aisha works Front Desk AM on weekdays,
- * Ben is on leave Wednesday and Thursday, Chen works the swing shift.
+ * with a day off Saturday and a rest day Sunday. Ben, a part-timer, is on
+ * leave Wednesday and Thursday and absent Sunday. Chen works the swing shift,
+ * Saturday on his rest day.
  */
 export const scheduleAssignmentsFixture = (): Array<ScheduleAssignment> => {
 	const copies = frozenShiftsFixture();
@@ -418,11 +437,12 @@ export const scheduleAssignmentsFixture = (): Array<ScheduleAssignment> => {
 				member: { ...member },
 				day,
 			};
-			if (typeof plan === "string")
+			if ("offReason" in plan)
 				return {
 					...row,
 					off: true,
-					offReason: plan,
+					offReason: plan.offReason,
+					dayType: plan.dayType,
 					shift: null,
 					jobTitle: null,
 				};
@@ -433,6 +453,7 @@ export const scheduleAssignmentsFixture = (): Array<ScheduleAssignment> => {
 				...row,
 				off: false,
 				offReason: null,
+				dayType: plan.dayType ?? null,
 				shift: {
 					shiftId: copy.shiftId,
 					name: copy.name,
