@@ -3463,7 +3463,8 @@
 			"createForbidden": "No tienes permiso para crear horarios en este departamento.",
 			"saveForbidden": "Ya no tienes permiso para cambiar este horario.",
 			"createFailed": "No pudimos crear el borrador. Inténtalo de nuevo.",
-			"saveFailed": "No pudimos guardar el borrador. Inténtalo de nuevo."
+			"saveFailed": "No pudimos guardar el borrador. Inténtalo de nuevo.",
+			"weekTaken": "Este departamento ya tiene un horario para esa semana."
 		},
 		"detail": {
 			"back": "Volver al resumen",
@@ -3728,7 +3729,8 @@
 				"forbidden": "Ya no tienes permiso para publicar o rechazar este cuadrante.",
 				"failed": "No pudimos guardar la decisión. Inténtalo de nuevo.",
 				"approvalPending": "Este cuadrante ya está pendiente de aprobación. Vuelve a cargar la página para ver en qué punto está.",
-				"noApprover": "Un paso del flujo de aprobación de este departamento no tiene a nadie que pueda aprobarlo. Pide a un administrador que lo cambie en Ajustes › Aprobaciones."
+				"noApprover": "Un paso del flujo de aprobación de este departamento no tiene a nadie que pueda aprobarlo. Pide a un administrador que lo cambie en Ajustes › Aprobaciones.",
+				"earlierWeekUnpublished": "Publica primero la semana anterior. Las semanas se publican en orden."
 			}
 		},
 		"startingContext": {

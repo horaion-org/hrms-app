@@ -64,6 +64,7 @@ export const scheduleFixture = (
 		stepLabels: [],
 		submission: null,
 		rejectedAtStep: null,
+		waitingForWeek: null,
 	},
 	publicationWithdrawnAt: null,
 	generation: null,

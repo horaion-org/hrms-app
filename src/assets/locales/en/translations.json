@@ -3641,7 +3641,8 @@
 			"createForbidden": "You don’t have permission to create schedules for this department.",
 			"saveForbidden": "You no longer have permission to change this schedule.",
 			"createFailed": "We couldn’t create the draft. Try again.",
-			"saveFailed": "We couldn’t save the draft. Try again."
+			"saveFailed": "We couldn’t save the draft. Try again.",
+			"weekTaken": "This department already has a schedule for that week."
 		},
 		"detail": {
 			"back": "Back to Overview",
@@ -3906,7 +3907,8 @@
 				"forbidden": "You no longer have permission to publish or reject this roster.",
 				"failed": "We couldn’t save the decision. Try again.",
 				"approvalPending": "This roster is already waiting for approval. Reload the page to see where it stands.",
-				"noApprover": "A step of this department’s approval flow has nobody who can approve it. Ask an admin to change it in Settings › Approvals."
+				"noApprover": "A step of this department’s approval flow has nobody who can approve it. Ask an admin to change it in Settings › Approvals.",
+				"earlierWeekUnpublished": "Publish the earlier week first. Weeks are published in order."
 			}
 		},
 		"startingContext": {
