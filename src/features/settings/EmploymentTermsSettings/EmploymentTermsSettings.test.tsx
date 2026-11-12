@@ -22,6 +22,7 @@ import {
 	SIX_DAY_SHIFT,
 	TERMS_OVERVIEW_RESPONSE,
 	TERMS_PRESETS,
+	overviewResponse,
 } from "@/features/employmentTerms/fixtures";
 
 const TERMS = "/api/v1/companies/c-1/employment-terms";
@@ -190,12 +191,99 @@ describe("EmploymentTermsSettings", () => {
 			daysPerWeek: 5,
 			weekMinutes: 2520,
 			dayMinutes: 528,
+			mostWeekMinutes: null,
 			restDay: "SUN",
 			dailyOvertime: true,
 			shiftWork: false,
 			hoursLimitsApply: true,
 		});
 		expect(await screen.findByText("Employment terms added")).toBeVisible();
+	});
+
+	it("sends the most hours a week typed in hours", async () => {
+		const calls = stubApi(
+			routes(READ_AND_UPDATE, {
+				[`POST ${TERMS}`]: { status: 201, body: envelope(FIVE_DAY_WEEK) },
+			})
+		);
+		const user = userEvent.setup();
+		const panel = await open();
+
+		await user.click(
+			await within(panel).findByRole("button", { name: "Add employment terms" })
+		);
+		const dialog = await screen.findByRole("dialog", {
+			name: "Add employment terms",
+		});
+		await user.click(
+			await within(dialog).findByRole("radio", { name: /Five-day week, 44 h/ })
+		);
+		await user.type(within(dialog).getByLabelText("Most hours a week"), "72");
+		await user.click(
+			within(dialog).getByRole("button", { name: "Add employment terms" })
+		);
+
+		await waitFor(() => {
+			expect(screen.queryByRole("dialog")).toBeNull();
+		});
+		expect(
+			calls.find((call) => call.method === "POST" && call.path === TERMS)?.body
+		).toMatchObject({ weekMinutes: 2640, mostWeekMinutes: 4320 });
+	});
+
+	it("refuses most hours a week below the normal week, sending nothing", async () => {
+		const calls = stubApi(routes(READ_AND_UPDATE));
+		const user = userEvent.setup();
+		const panel = await open();
+
+		await user.click(
+			await within(panel).findByRole("button", { name: "Add employment terms" })
+		);
+		const dialog = await screen.findByRole("dialog", {
+			name: "Add employment terms",
+		});
+		await user.click(
+			await within(dialog).findByRole("radio", { name: /Five-day week, 44 h/ })
+		);
+		await user.type(within(dialog).getByLabelText("Most hours a week"), "40");
+		await user.click(
+			within(dialog).getByRole("button", { name: "Add employment terms" })
+		);
+
+		expect(
+			await within(dialog).findByText(
+				"Most hours a week can’t be less than the normal hours a week."
+			)
+		).toBeVisible();
+		expect(calls.some((call) => call.path === TERMS)).toBe(false);
+	});
+
+	it("shows the most hours a week of terms being edited in hours", async () => {
+		stubApi(
+			routes(READ_AND_UPDATE, {
+				[`GET ${TERMS}/overview`]: {
+					status: 200,
+					body: envelope(
+						overviewResponse([{ ...FIVE_DAY_WEEK, mostWeekMinutes: 4320 }])
+					),
+				},
+			})
+		);
+		const user = userEvent.setup();
+		const panel = await open();
+
+		await user.click(
+			await within(await table(panel)).findByRole("button", {
+				name: "Edit Five-day week, 44 h",
+			})
+		);
+		const dialog = await screen.findByRole("dialog", {
+			name: "Edit employment terms",
+		});
+
+		expect(within(dialog).getByLabelText("Most hours a week")).toHaveValue(
+			"72"
+		);
 	});
 
 	it("explains what is wrong before saving, and sends nothing", async () => {

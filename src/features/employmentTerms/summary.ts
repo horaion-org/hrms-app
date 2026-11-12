@@ -62,13 +62,22 @@ const overtimeSentence = (
 	return t(`${key}.overtimeWeek`, { week });
 };
 
+/** "Rostered for at most 72 hours a week." */
+const mostSentence = (
+	mostWeekMinutes: number,
+	t: TFunction,
+	language: string
+): string =>
+	t(`${key}.mostHours`, { most: formatHours(mostWeekMinutes, language) });
+
 /**
  * What terms mean, in plain words, built from their fields alone: the
- * working week, the rest day, when overtime starts, and whether the Act's
- * hour limits apply. The one sentence the dialog, the catalogue and every
- * profile read, so they never disagree. Overtime is read against the
- * API's `reference` (the part-time line and a full-timer's week); without
- * it the sentence leaves overtime out rather than state a wrong threshold.
+ * working week, the rest day, when overtime starts, the most hours a week
+ * when set, and whether the Act's hour limits apply. The one sentence the
+ * dialog, the catalogue and every profile read, so they never disagree.
+ * Overtime is read against the API's `reference` (the part-time line and a
+ * full-timer's week); without it the sentence leaves overtime out rather
+ * than state a wrong threshold.
  */
 export const termsSentence = (
 	fields: WeekFields,
@@ -82,19 +91,34 @@ export const termsSentence = (
 		...(reference === undefined
 			? []
 			: [overtimeSentence(fields, reference, t, language)]),
+		...(fields.mostWeekMinutes === null
+			? []
+			: [mostSentence(fields.mostWeekMinutes, t, language)]),
 		t(
 			fields.hoursLimitsApply ? `${key}.limitsApply` : `${key}.limitsDontApply`
 		),
 	].join(" ");
 
-/** The catalogue's short form: "5 days · 8.8 h a day · 44 h", or "20 h a week". */
+/**
+ * The catalogue's short form: "5 days · 8.8 h a day · 44 h", or "20 h a
+ * week", ending "· at most 72 h" when the terms set most hours a week.
+ */
 export const weekShort = (
 	fields: WeekFields,
 	t: TFunction,
 	language: string
 ): string => {
 	const week = formatHours(fields.weekMinutes, language);
-	if (fields.daysPerWeek === null) return t(`${key}.short.weekOnly`, { week });
+	const most =
+		fields.mostWeekMinutes === null
+			? []
+			: [
+					t(`${key}.short.most`, {
+						most: formatHours(fields.mostWeekMinutes, language),
+					}),
+				];
+	if (fields.daysPerWeek === null)
+		return [t(`${key}.short.weekOnly`, { week }), ...most].join(" · ");
 	const parts = [
 		t(`${key}.short.days`, {
 			days: formatDays(fields.daysPerWeek, language),
@@ -107,7 +131,7 @@ export const weekShort = (
 				day: formatHours(fields.dayMinutes, language),
 			})
 		);
-	parts.push(t(`${key}.short.week`, { week }));
+	parts.push(t(`${key}.short.week`, { week }), ...most);
 	return parts.join(" · ");
 };
 

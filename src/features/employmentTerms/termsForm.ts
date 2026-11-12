@@ -32,6 +32,8 @@ export type TermsFormValues = {
 	daysPerWeek: string;
 	dayHours: string;
 	weekHours: string;
+	/** Most hours a week, overtime included; empty for no limit. */
+	mostWeekHours: string;
 	restKind: "FIXED" | "ROSTERED";
 	restWeekday: Weekday | "";
 	dailyOvertime: boolean;
@@ -46,6 +48,7 @@ export const BLANK_TERMS: TermsFormValues = {
 	daysPerWeek: "",
 	dayHours: "",
 	weekHours: "",
+	mostWeekHours: "",
 	restKind: "FIXED",
 	restWeekday: "SUN",
 	dailyOvertime: true,
@@ -86,6 +89,7 @@ export const weekFieldsOf = (
 		daysPerWeek: days,
 		weekMinutes,
 		dayMinutes,
+		mostWeekMinutes: minutesOrNull(values.mostWeekHours),
 		restDay:
 			values.restKind === "ROSTERED"
 				? "ROSTERED"
@@ -122,6 +126,7 @@ export const termsFormValuesOf = (
 					start.daysPerWeek === null ? "" : String(start.daysPerWeek),
 				dayHours: hoursInput(start.dayMinutes),
 				weekHours: hoursInput(start.weekMinutes),
+				mostWeekHours: hoursInput(start.mostWeekMinutes),
 				restKind: start.restDay === "ROSTERED" ? "ROSTERED" : "FIXED",
 				restWeekday: isWeekday(start.restDay) ? start.restDay : "",
 				dailyOvertime: start.dailyOvertime,
@@ -159,7 +164,7 @@ const hoursProblem = (
  * Mirrors the API's rules for terms (`EmploymentTermsRules`) so most
  * mistakes show before saving: a name, whole-minute hours in range, a week
  * no longer than its days × its day, a day when overtime counts by the day,
- * and a weekday for a fixed rest day. The longest normal day is the
+ * most hours a week not below the week, and a weekday for a fixed rest day. The longest normal day is the
  * country's, so it comes from the API (`maxDayMinutes`); without it the API
  * alone judges it.
  */
@@ -184,6 +189,7 @@ export const termsFormSchema = (
 			daysPerWeek: z.string(),
 			dayHours: z.string(),
 			weekHours: z.string(),
+			mostWeekHours: z.string(),
 			restKind: z.enum(["FIXED", "ROSTERED"]),
 			restWeekday: z.union([
 				z.enum(["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"]),
@@ -214,6 +220,13 @@ export const termsFormSchema = (
 				language
 			);
 			if (weekProblem) problem("weekHours", weekProblem);
+			const mostWeekProblem = hoursProblem(
+				values.mostWeekHours,
+				{ required: false, min: 0, max: null },
+				t,
+				language
+			);
+			if (mostWeekProblem) problem("mostWeekHours", mostWeekProblem);
 			if (values.restKind === "FIXED" && values.restWeekday === "")
 				problem("restWeekday", t(`${key}.restDayRequired`));
 			const days = parseDays(values.daysPerWeek);
@@ -226,4 +239,7 @@ export const termsFormSchema = (
 				week > days * day + ROUNDING_MINUTES
 			)
 				problem("weekHours", t(`${key}.weekAboveDays`));
+			const mostWeek = minutesOrNull(values.mostWeekHours);
+			if (mostWeek !== null && week !== null && mostWeek < week)
+				problem("mostWeekHours", t(`${key}.mostBelowWeek`));
 		});

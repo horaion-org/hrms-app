@@ -75,6 +75,7 @@ const FIELDS = [
 	"daysPerWeek",
 	"dayHours",
 	"weekHours",
+	"mostWeekHours",
 	"restWeekday",
 ] as const;
 const BLANK = "blank";
@@ -163,7 +164,7 @@ const TermsForm = ({
 			);
 	};
 	const hoursField = (
-		name: "daysPerWeek" | "dayHours" | "weekHours",
+		name: "daysPerWeek" | "dayHours" | "weekHours" | "mostWeekHours",
 		label: string,
 		hint?: string
 	): ReactNode => {
@@ -291,6 +292,13 @@ const TermsForm = ({
 					{hoursField("daysPerWeek", t(`${key}.daysPerWeek`))}
 					{hoursField("dayHours", t(`${key}.dayHours`))}
 					{hoursField("weekHours", t(`${key}.weekHours`), weekHint)}
+					<div className="sm:col-start-3">
+						{hoursField(
+							"mostWeekHours",
+							t(`${key}.mostWeekHours`),
+							t(`${key}.mostWeekHint`)
+						)}
+					</div>
 				</div>
 				<p className="text-xs text-neutral-700">{t(`${key}.daysHint`)}</p>
 			</fieldset>

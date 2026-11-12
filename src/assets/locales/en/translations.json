@@ -3764,6 +3764,7 @@
 			"missing_other": "{{count}} people short",
 			"rule": "Rule: {{rule}}",
 			"forecastDemand": "Forecast demand",
+			"mostHoursAWeek": "Most hours a week",
 			"unknownMember": "A former member",
 			"unknownShift": "one of its shifts",
 			"unknownJobTitle": "one job title",
@@ -4708,6 +4709,7 @@
 			"overtimeDayOrWeek": "Overtime starts after {{day}} hours in a day or {{week}} hours in a week.",
 			"overtimeAveraged": "Overtime starts after an average of {{week}} hours a week.",
 			"partTime": "Part-time: below {{line}} hours a week. Hours past their own hours are extra hours until a full-timer’s normal hours, then overtime.",
+			"mostHours": "Rostered for at most {{most}} hours a week.",
 			"limitsApply": "Employment Act hour limits apply.",
 			"limitsDontApply": "Employment Act hour limits don’t apply; hours are still counted.",
 			"short": {
@@ -4717,6 +4719,7 @@
 				"day": "{{day}} h a day",
 				"shifts": "{{day}} h shifts",
 				"week": "{{week}} h",
+				"most": "at most {{most}} h",
 				"restFixed": "Rest day {{weekday}}",
 				"restRostered": "Rest day on the roster"
 			},
@@ -4742,6 +4745,8 @@
 			"daysHint": "Half days are allowed, such as 5.5. Leave empty for part-time without set days.",
 			"dayHours": "Normal hours a day",
 			"weekHours": "Normal hours a week",
+			"mostWeekHours": "Most hours a week",
+			"mostWeekHint": "Overtime included. Leave empty for no limit. Rosters never go past it.",
 			"weekFromDays": "= {{days}} × {{day}}",
 			"weekDiffers": "Differs from {{days}} × {{day}}: the week figure is used for overtime.",
 			"restDay": "Rest day",
@@ -4780,6 +4785,7 @@
 			"daysInvalid": "Enter 0.5 to 7 days, in half days.",
 			"restDayRequired": "Choose the rest day.",
 			"weekAboveDays": "The week is longer than its working days × the normal day.",
+			"mostBelowWeek": "Most hours a week can’t be less than the normal hours a week.",
 			"nameTaken": "Employment terms named “{{name}}” already exist. Choose another name.",
 			"rejected": "Check the terms and try again.",
 			"forbidden": "You no longer have permission to change employment terms.",
@@ -4789,6 +4795,7 @@
 			"hoursRange": "Enter {{min}} to {{max}} hours.",
 			"dayRejected": "Check the normal hours a day: they’re outside what terms may set.",
 			"weekRejected": "Check the normal hours a week: 1 to 60 hours, and no more than the working days × the normal day.",
+			"mostRejected": "Check the most hours a week: no less than the normal hours a week, and no more than a whole week.",
 			"dailyNeedsDay": "Overtime after the normal day needs a normal day.",
 			"shiftNoDaily": "Shift work has no overtime after the day; untick “…and after the normal day”.",
 			"weekUnchanged": "Nothing changes from a date: the working week is the same. Change the days, hours or rest day first, or use Edit to save a new name or description."
