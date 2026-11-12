@@ -4335,6 +4335,12 @@
 				"DRAFT": "Draft",
 				"NOT_GENERATED": "Not generated",
 				"UNKNOWN": "Unknown"
+			},
+			"cover": {
+				"dayCovered": "{{day}} covered",
+				"dayShort_one": "{{day}} {{count}} shift short",
+				"dayShort_other": "{{day}} {{count}} shifts short",
+				"dayNoRoster": "{{day}} no roster"
 			}
 		}
 	},

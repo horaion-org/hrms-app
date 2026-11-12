@@ -4157,6 +4157,12 @@
 				"DRAFT": "Borrador",
 				"NOT_GENERATED": "Sin generar",
 				"UNKNOWN": "Desconocido"
+			},
+			"cover": {
+				"dayCovered": "{{day}} cubierto",
+				"dayShort_one": "{{day}} falta {{count}} turno",
+				"dayShort_other": "{{day}} faltan {{count}} turnos",
+				"dayNoRoster": "{{day}} sin cuadrante"
 			}
 		}
 	},
