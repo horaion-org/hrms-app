@@ -36,6 +36,8 @@ describe("ruleLabel", () => {
 		["off_requirement_per_horizon", "Days off in a run of days"],
 		["avoid_off_on_weekdays", "Days to avoid giving off"],
 		["minimum_rest_between_shifts", "Rest between shifts"],
+		["max_days_without_day_types", "Limit on days in a row"],
+		["days_of_day_types_per_period", "Required days each week"],
 		["timeblock_demand_coverage", "Forecast demand"],
 		["a_rule_added_later", "A rule added later"],
 	])(

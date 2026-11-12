@@ -162,8 +162,11 @@ describe("constraints client", () => {
 					min: 1,
 					max: 24,
 					strictness: "HIGHER_IS_STRICTER",
+					comparisons: null,
 				},
 			],
+			addedBySystem: false,
+			fullTimersOnly: false,
 		});
 		expect(calls.map((call) => call.path)).toEqual([
 			`${DEPARTMENT}/constraint-options`,
@@ -191,7 +194,89 @@ describe("constraints client", () => {
 		]);
 	});
 
-	it("keeps all six types when the department has no shifts or job titles", async () => {
+	it("reads the day-type rules, the day types to choose from, and the comparisons a field takes", async () => {
+		stubApi({
+			[`GET ${DEPARTMENT}/constraint-options`]: {
+				status: 200,
+				body: envelope(CONSTRAINT_OPTIONS_RESPONSE),
+			},
+		});
+
+		const options = await fetchConstraintOptions("c-1", UNIT);
+		const weekly = options.types.find(
+			(type) => type.type === "DAY_TYPE_DAYS_PER_WEEK"
+		);
+		const daysLimit = options.types.find(
+			(type) => type.type === "MAX_DAYS_WITHOUT_DAY_TYPES"
+		);
+
+		expect(options.dayTypeChoices).toEqual(["OFF", "REST", "LEAVE"]);
+		expect(weekly).toMatchObject({ addedBySystem: true, fullTimersOnly: true });
+		expect(weekly?.fields[0]).toMatchObject({
+			field: "COMPARISON",
+			comparisons: ["AT_LEAST", "EXACTLY"],
+		});
+		expect(daysLimit).toMatchObject({
+			addedBySystem: false,
+			fullTimersOnly: true,
+		});
+		expect(
+			daysLimit?.fields.map(({ field, kind, strictness }) => ({
+				field,
+				kind,
+				strictness,
+			}))
+		).toEqual([
+			{
+				field: "DAYS_IN_A_ROW",
+				kind: "NUMBER",
+				strictness: "LOWER_IS_STRICTER",
+			},
+			{ field: "DAY_TYPE", kind: "DAY_TYPE", strictness: "MUST_MATCH" },
+		]);
+	});
+
+	it("reads an API that predates day-type rules with safe defaults", async () => {
+		stubApi({
+			[`GET ${DEPARTMENT}/constraint-options`]: {
+				status: 200,
+				body: envelope({
+					types: [
+						{
+							type: "DAYS_OFF_PER_PERIOD",
+							category: "SHIFT_PATTERN",
+							hasRequirement: true,
+							onePerDepartment: false,
+							levels: ["COMPANY", "DEPARTMENT"],
+							fields: [
+								{
+									field: "COMPARISON",
+									kind: "COMPARISON",
+									minCount: 1,
+									maxCount: 1,
+									min: null,
+									max: null,
+									strictness: "MUST_MATCH",
+								},
+							],
+						},
+					],
+					links: CONSTRAINT_OPTIONS_RESPONSE.links,
+				}),
+			},
+		});
+
+		const options = await fetchConstraintOptions("c-1", UNIT);
+
+		expect(options.dayTypeChoices).toEqual([]);
+		expect(options.types[0]).toMatchObject({
+			addedBySystem: false,
+			fullTimersOnly: false,
+		});
+		expect(options.types[0]?.fields[0]?.comparisons).toBeNull();
+	});
+
+	it("keeps all eight types when the department has no shifts or job titles", async () => {
 		stubApi({
 			[`GET ${DEPARTMENT}/constraint-options`]: {
 				status: 200,
@@ -202,7 +287,7 @@ describe("constraints client", () => {
 			},
 		});
 		const options = await fetchConstraintOptions("c-1", UNIT);
-		expect(options.types).toHaveLength(6);
+		expect(options.types).toHaveLength(8);
 		expect(options.shifts).toEqual([]);
 		expect(options.jobTitles).toEqual([]);
 	});

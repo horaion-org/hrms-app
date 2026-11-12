@@ -36,6 +36,17 @@ const daysOff = (
 	],
 });
 
+const daysLimit = (
+	days: string,
+	...dayTypes: Array<string>
+): ComparedConstraint => ({
+	requirement: null,
+	values: [
+		{ field: "DAYS_IN_A_ROW", value: days },
+		...dayTypes.map((value) => ({ field: "DAY_TYPE" as const, value })),
+	],
+});
+
 const avoid = (...days: Array<string>): ComparedConstraint => ({
 	requirement: null,
 	values: days.map((value) => ({ field: "WEEKDAY", value })),
@@ -74,6 +85,23 @@ describe("compareStrictness", () => {
 		).toBe("STRICTER");
 		expect(
 			compareStrictness(type, twoInSeven, daysOff("AT_MOST", "2", "7"))
+		).toBe("INCOMPARABLE");
+	});
+
+	it("counts fewer days in a row as stricter, and other day types as not comparable", () => {
+		const type = typeOf("MAX_DAYS_WITHOUT_DAY_TYPES");
+		const twelve = daysLimit("12", "REST");
+		expect(compareStrictness(type, twelve, daysLimit("10", "REST"))).toBe(
+			"STRICTER"
+		);
+		expect(compareStrictness(type, twelve, daysLimit("12", "REST"))).toBe(
+			"SAME"
+		);
+		expect(compareStrictness(type, twelve, daysLimit("13", "REST"))).toBe(
+			"LOOSER"
+		);
+		expect(
+			compareStrictness(type, twelve, daysLimit("12", "REST", "OFF"))
 		).toBe("INCOMPARABLE");
 	});
 

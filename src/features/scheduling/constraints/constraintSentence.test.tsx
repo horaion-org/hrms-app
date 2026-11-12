@@ -41,10 +41,11 @@ const named = (field: ConstraintField, name: string): SentenceValue => ({
 const read = (
 	type: ConstraintType,
 	values: Array<SentenceValue>,
-	language = "en"
+	language = "en",
+	fullTimersOnly = false
 ): string => {
 	const t = i18n.getFixedT(language);
-	const constraint = { type, values };
+	const constraint = { type, values, fullTimersOnly };
 	const words = constraintWords(constraint, t);
 	const parts = Object.fromEntries(
 		Object.entries(words).map(([field, text]) => [
@@ -334,6 +335,110 @@ describe("sentencePartsOf with constraintWords", () => {
 		]);
 	});
 
+	it.each([
+		[
+			true,
+			"12",
+			"No full-timer goes more than 12 days in a row without a Rest day.",
+		],
+		[
+			true,
+			"1",
+			"No full-timer goes more than 1 day in a row without a Rest day.",
+		],
+		[false, "12", "Nobody goes more than 12 days in a row without a Rest day."],
+	])(
+		"reads the days limit for full-timers only %s, %s days",
+		(fullTimersOnly, days, sentence) => {
+			expect(
+				read(
+					"MAX_DAYS_WITHOUT_DAY_TYPES",
+					[plain("DAYS_IN_A_ROW", days), plain("DAY_TYPE", "REST")],
+					"en",
+					fullTimersOnly
+				)
+			).toBe(sentence);
+		}
+	);
+
+	it("reads the days limit's day types joined by or, an unknown one made readable", () => {
+		expect(
+			read("MAX_DAYS_WITHOUT_DAY_TYPES", [
+				plain("DAYS_IN_A_ROW", "6"),
+				plain("DAY_TYPE", "REST"),
+				plain("DAY_TYPE", "PUBLIC_HOLIDAY_OFF"),
+			])
+		).toBe(
+			"Nobody goes more than 6 days in a row without a Rest day or Public holiday off."
+		);
+	});
+
+	it.each([
+		[
+			true,
+			"AT_LEAST",
+			"1",
+			"Every full-timer has at least 1 Rest day each week.",
+		],
+		[
+			true,
+			"AT_LEAST",
+			"2",
+			"Every full-timer has at least 2 Rest days each week.",
+		],
+		[
+			true,
+			"EXACTLY",
+			"2",
+			"Every full-timer has exactly 2 Rest days each week.",
+		],
+		[false, "AT_LEAST", "1", "Everyone has at least 1 Rest day each week."],
+		[false, "EXACTLY", "2", "Everyone has exactly 2 Rest days each week."],
+	])(
+		"reads the weekly rule for full-timers only %s, %s %s",
+		(fullTimersOnly, comparison, count, sentence) => {
+			expect(
+				read(
+					"DAY_TYPE_DAYS_PER_WEEK",
+					[
+						plain("COMPARISON", comparison),
+						plain("DAY_TYPE_COUNT", count),
+						plain("DAY_TYPE", "REST"),
+					],
+					"en",
+					fullTimersOnly
+				)
+			).toBe(sentence);
+		}
+	);
+
+	it("keeps the singular label of a day type with no plural in the weekly rule", () => {
+		expect(
+			read("DAY_TYPE_DAYS_PER_WEEK", [
+				plain("COMPARISON", "AT_LEAST"),
+				plain("DAY_TYPE_COUNT", "2"),
+				plain("DAY_TYPE", "LEAVE"),
+			])
+		).toBe("Everyone has at least 2 Leave each week.");
+	});
+
+	it("reads the weekly rule in Spanish with the plural label", () => {
+		expect(
+			read(
+				"DAY_TYPE_DAYS_PER_WEEK",
+				[
+					plain("COMPARISON", "AT_LEAST"),
+					plain("DAY_TYPE_COUNT", "2"),
+					plain("DAY_TYPE", "REST"),
+				],
+				"es",
+				true
+			)
+		).toBe(
+			"Cada empleado a tiempo completo tiene al menos 2 Días de descanso cada semana."
+		);
+	});
+
 	it("joins job titles with o in Spanish", () => {
 		expect(
 			read(
@@ -349,6 +454,8 @@ describe("firmnessOf", () => {
 	it.each([
 		["AVOID_DAYS_OFF_ON", null, "SHOULD"],
 		["REST_BETWEEN_SHIFTS", null, "MUST"],
+		["MAX_DAYS_WITHOUT_DAY_TYPES", null, "MUST"],
+		["DAY_TYPE_DAYS_PER_WEEK", null, "MUST"],
 		["SHIFT_STAFFING", "SHOULD", "SHOULD"],
 		["DAYS_OFF_PER_PERIOD", "MUST", "MUST"],
 		["SHIFT_STAFFING", null, null],

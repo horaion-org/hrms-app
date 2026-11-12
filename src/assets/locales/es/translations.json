@@ -2890,7 +2890,9 @@
 		},
 		"dayTypes": {
 			"OFF": "Día libre",
+			"OFF_other": "Días libres",
 			"REST": "Día de descanso",
+			"REST_other": "Días de descanso",
 			"LEAVE": "Permiso"
 		},
 		"shiftColours": {
@@ -3101,7 +3103,9 @@
 				"ROLE_PRESENCE": "Alguien de servicio todo el turno",
 				"DAYS_OFF_PER_PERIOD": "Días libres en una racha de días",
 				"AVOID_DAYS_OFF_ON": "Días en que evitar dar libre",
-				"REST_BETWEEN_SHIFTS": "Descanso entre turnos"
+				"REST_BETWEEN_SHIFTS": "Descanso entre turnos",
+				"MAX_DAYS_WITHOUT_DAY_TYPES": "Límite de días seguidos",
+				"DAY_TYPE_DAYS_PER_WEEK": "Días obligatorios cada semana"
 			},
 			"sentences": {
 				"SHIFT_STAFFING": {
@@ -3172,7 +3176,27 @@
 				},
 				"AVOID_DAYS_OFF_ON": "Evitar días libres el <WEEKDAY/>.",
 				"REST_BETWEEN_SHIFTS_one": "Todos tienen al menos <REST_HOURS/> hora libre entre turnos.",
-				"REST_BETWEEN_SHIFTS_other": "Todos tienen al menos <REST_HOURS/> horas libres entre turnos."
+				"REST_BETWEEN_SHIFTS_other": "Todos tienen al menos <REST_HOURS/> horas libres entre turnos.",
+				"MAX_DAYS_WITHOUT_DAY_TYPES": {
+					"fullTimers_one": "Ningún empleado a tiempo completo pasa más de <DAYS_IN_A_ROW/> día seguido sin un <DAY_TYPE/>.",
+					"fullTimers_other": "Ningún empleado a tiempo completo pasa más de <DAYS_IN_A_ROW/> días seguidos sin un <DAY_TYPE/>.",
+					"everyone_one": "Nadie pasa más de <DAYS_IN_A_ROW/> día seguido sin un <DAY_TYPE/>.",
+					"everyone_other": "Nadie pasa más de <DAYS_IN_A_ROW/> días seguidos sin un <DAY_TYPE/>."
+				},
+				"DAY_TYPE_DAYS_PER_WEEK": {
+					"fullTimers": {
+						"AT_LEAST_one": "Cada empleado a tiempo completo tiene al menos <DAY_TYPE_COUNT/> <DAY_TYPE/> cada semana.",
+						"AT_LEAST_other": "Cada empleado a tiempo completo tiene al menos <DAY_TYPE_COUNT/> <DAY_TYPE/> cada semana.",
+						"EXACTLY_one": "Cada empleado a tiempo completo tiene exactamente <DAY_TYPE_COUNT/> <DAY_TYPE/> cada semana.",
+						"EXACTLY_other": "Cada empleado a tiempo completo tiene exactamente <DAY_TYPE_COUNT/> <DAY_TYPE/> cada semana."
+					},
+					"everyone": {
+						"AT_LEAST_one": "Todos tienen al menos <DAY_TYPE_COUNT/> <DAY_TYPE/> cada semana.",
+						"AT_LEAST_other": "Todos tienen al menos <DAY_TYPE_COUNT/> <DAY_TYPE/> cada semana.",
+						"EXACTLY_one": "Todos tienen exactamente <DAY_TYPE_COUNT/> <DAY_TYPE/> cada semana.",
+						"EXACTLY_other": "Todos tienen exactamente <DAY_TYPE_COUNT/> <DAY_TYPE/> cada semana."
+					}
+				}
 			},
 			"fields": {
 				"COMPARISON": "Al menos, como máximo o exactamente",
@@ -3184,7 +3208,10 @@
 				"JOB_TITLE": "Puestos que cuentan",
 				"STAND_IN_JOB_TITLE": "Puestos que pueden suplir",
 				"SHIFT": "Turnos",
-				"WEEKDAY": "Días de la semana"
+				"WEEKDAY": "Días de la semana",
+				"DAY_TYPE": "Tipos de día",
+				"DAYS_IN_A_ROW": "Máximo de días seguidos",
+				"DAY_TYPE_COUNT": "Días cada semana"
 			},
 			"requirements": {
 				"MUST": "Obligatoria",
@@ -3312,7 +3339,10 @@
 				"REST_HOURS": "cuántas",
 				"JOB_TITLE": "qué puestos",
 				"STAND_IN_JOB_TITLE": "qué puestos",
-				"WEEKDAY": "qué días"
+				"WEEKDAY": "qué días",
+				"DAY_TYPE": "qué tipos de día",
+				"DAYS_IN_A_ROW": "cuántos",
+				"DAY_TYPE_COUNT": "cuántos"
 			},
 			"statement": "Restricción",
 			"examples": {
@@ -3321,7 +3351,9 @@
 				"ROLE_PRESENCE": "Por ejemplo: Cierre tiene al menos 1 persona como Supervisor de servicio de principio a fin. Las horas extra del turno anterior cuentan.",
 				"DAYS_OFF_PER_PERIOD": "Por ejemplo: Todos tienen al menos 2 días libres en cualquier periodo de 7 días seguidos.",
 				"AVOID_DAYS_OFF_ON": "Por ejemplo: Evitar días libres el viernes y el sábado, los días de más trabajo.",
-				"REST_BETWEEN_SHIFTS": "Por ejemplo: Todos tienen al menos 11 horas libres entre turnos."
+				"REST_BETWEEN_SHIFTS": "Por ejemplo: Todos tienen al menos 11 horas libres entre turnos.",
+				"MAX_DAYS_WITHOUT_DAY_TYPES": "Por ejemplo: Nadie pasa más de 6 días seguidos sin un Día de descanso o Día libre.",
+				"DAY_TYPE_DAYS_PER_WEEK": "Por ejemplo: Todos tienen al menos 1 Día de descanso cada semana."
 			},
 			"fieldHints": {
 				"SHIFT": "Elige más de uno para contarlos juntos cada día.",
@@ -3330,7 +3362,9 @@
 				"STAND_INS_PER_PERSON": "Por ejemplo 2: dos suplentes cuentan como una persona. De {{min}} a {{max}}.",
 				"DAYS_OFF": "De {{min}} a {{max}}.",
 				"PERIOD_DAYS": "Por ejemplo 7: cualquier periodo de 7 días seguidos. De {{min}} a {{max}}.",
-				"REST_HOURS": "Desde el final de un turno hasta el inicio del siguiente. De {{min}} a {{max}}."
+				"REST_HOURS": "Desde el final de un turno hasta el inicio del siguiente. De {{min}} a {{max}}.",
+				"DAYS_IN_A_ROW": "De {{min}} a {{max}}.",
+				"DAY_TYPE_COUNT": "De {{min}} a {{max}}."
 			},
 			"fixedFirmness": {
 				"MUST": "Siempre obligatoria para este tipo de restricción.",
@@ -3342,7 +3376,9 @@
 				"ROLE_PRESENCE": "De servicio en {{shift}}",
 				"DAYS_OFF_PER_PERIOD": "Días libres",
 				"AVOID_DAYS_OFF_ON": "Evitar días libres",
-				"REST_BETWEEN_SHIFTS": "Descanso entre turnos"
+				"REST_BETWEEN_SHIFTS": "Descanso entre turnos",
+				"MAX_DAYS_WITHOUT_DAY_TYPES": "Días seguidos",
+				"DAY_TYPE_DAYS_PER_WEEK": "Días cada semana"
 			}
 		},
 		"forecast": {

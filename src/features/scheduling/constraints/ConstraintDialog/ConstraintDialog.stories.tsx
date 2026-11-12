@@ -7,6 +7,7 @@ import {
 	COMPANY_CONSTRAINT_FIXTURES,
 	CONSTRAINT_FIXTURES,
 	CONSTRAINT_OPTIONS,
+	DAYS_LIMIT_FIXTURE,
 	DEPARTMENTS_POLICY_FIXTURE,
 } from "@/features/scheduling/constraints/fixtures";
 import { reachValueOf } from "@/features/scheduling/policy/policyReach";
@@ -40,6 +41,10 @@ export const EditStandIns: Story = {
 };
 export const EditWithoutRequirement: Story = {
 	args: { editing: CONSTRAINT_FIXTURES[5] },
+};
+/** The days limit: a number and the day types that break a run, chosen from the API's list. */
+export const EditDaysLimit: Story = {
+	args: { editing: DAYS_LIMIT_FIXTURE },
 };
 export const OptionsLoading: Story = {
 	args: { options: { status: "pending" } },

@@ -15,6 +15,7 @@ import { Stepper, StepperStep } from "@/components/ui/Stepper";
 import { Toast } from "@/components/ui/Toast";
 import { placeOf } from "@/features/organisation/assignmentTargets";
 import { constraintsQuery } from "@/features/scheduling/constraints/api";
+import { useConstraintOptions } from "@/features/scheduling/constraints/useConstraintOptions";
 import { departmentUnitOf } from "@/features/scheduling/departmentUnit";
 import { ForecastStep } from "@/features/scheduling/ForecastStep";
 import { GenerateStep } from "@/features/scheduling/GenerateStep";
@@ -296,6 +297,8 @@ export const CreateSchedule = (): FunctionComponent => {
 	const newConstraints = useQuery(
 		constraintsQuery(companyId, setupUnit, readsNewConstraints)
 	);
+	// The constraint types, read with the lists, so the week's rules say who they cover.
+	const weekOptions = useConstraintOptions(companyId, saved ?? setupUnit);
 	const weekDepartmentName = saved?.departmentName ?? setupChoice?.name;
 	const weekShifts = saved
 		? shifts.status === "ready"
@@ -825,6 +828,9 @@ export const CreateSchedule = (): FunctionComponent => {
 					readOnly={frozen}
 					shifts={weekShifts}
 					value={weekChoice}
+					constraintTypes={
+						weekOptions.status === "ready" ? weekOptions.options.types : []
+					}
 					onApply={(choice) => {
 						dispatch({ type: "weekChosen", ...choice });
 						setChoosingWeek(false);

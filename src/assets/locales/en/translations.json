@@ -3068,7 +3068,9 @@
 		},
 		"dayTypes": {
 			"OFF": "Day off",
+			"OFF_other": "Days off",
 			"REST": "Rest day",
+			"REST_other": "Rest days",
 			"LEAVE": "Leave"
 		},
 		"shiftColours": {
@@ -3279,7 +3281,9 @@
 				"ROLE_PRESENCE": "Someone on duty for the whole shift",
 				"DAYS_OFF_PER_PERIOD": "Days off in a run of days",
 				"AVOID_DAYS_OFF_ON": "Days to avoid giving off",
-				"REST_BETWEEN_SHIFTS": "Rest between shifts"
+				"REST_BETWEEN_SHIFTS": "Rest between shifts",
+				"MAX_DAYS_WITHOUT_DAY_TYPES": "Limit on days in a row",
+				"DAY_TYPE_DAYS_PER_WEEK": "Required days each week"
 			},
 			"sentences": {
 				"SHIFT_STAFFING": {
@@ -3350,7 +3354,27 @@
 				},
 				"AVOID_DAYS_OFF_ON": "Avoid days off on <WEEKDAY/>.",
 				"REST_BETWEEN_SHIFTS_one": "Everyone gets at least <REST_HOURS/> hour off between shifts.",
-				"REST_BETWEEN_SHIFTS_other": "Everyone gets at least <REST_HOURS/> hours off between shifts."
+				"REST_BETWEEN_SHIFTS_other": "Everyone gets at least <REST_HOURS/> hours off between shifts.",
+				"MAX_DAYS_WITHOUT_DAY_TYPES": {
+					"fullTimers_one": "No full-timer goes more than <DAYS_IN_A_ROW/> day in a row without a <DAY_TYPE/>.",
+					"fullTimers_other": "No full-timer goes more than <DAYS_IN_A_ROW/> days in a row without a <DAY_TYPE/>.",
+					"everyone_one": "Nobody goes more than <DAYS_IN_A_ROW/> day in a row without a <DAY_TYPE/>.",
+					"everyone_other": "Nobody goes more than <DAYS_IN_A_ROW/> days in a row without a <DAY_TYPE/>."
+				},
+				"DAY_TYPE_DAYS_PER_WEEK": {
+					"fullTimers": {
+						"AT_LEAST_one": "Every full-timer has at least <DAY_TYPE_COUNT/> <DAY_TYPE/> each week.",
+						"AT_LEAST_other": "Every full-timer has at least <DAY_TYPE_COUNT/> <DAY_TYPE/> each week.",
+						"EXACTLY_one": "Every full-timer has exactly <DAY_TYPE_COUNT/> <DAY_TYPE/> each week.",
+						"EXACTLY_other": "Every full-timer has exactly <DAY_TYPE_COUNT/> <DAY_TYPE/> each week."
+					},
+					"everyone": {
+						"AT_LEAST_one": "Everyone has at least <DAY_TYPE_COUNT/> <DAY_TYPE/> each week.",
+						"AT_LEAST_other": "Everyone has at least <DAY_TYPE_COUNT/> <DAY_TYPE/> each week.",
+						"EXACTLY_one": "Everyone has exactly <DAY_TYPE_COUNT/> <DAY_TYPE/> each week.",
+						"EXACTLY_other": "Everyone has exactly <DAY_TYPE_COUNT/> <DAY_TYPE/> each week."
+					}
+				}
 			},
 			"fields": {
 				"COMPARISON": "At least, at most or exactly",
@@ -3362,7 +3386,10 @@
 				"JOB_TITLE": "Job titles that count",
 				"STAND_IN_JOB_TITLE": "Job titles that can stand in",
 				"SHIFT": "Shifts",
-				"WEEKDAY": "Days of the week"
+				"WEEKDAY": "Days of the week",
+				"DAY_TYPE": "Day types",
+				"DAYS_IN_A_ROW": "Most days in a row",
+				"DAY_TYPE_COUNT": "Days each week"
 			},
 			"requirements": {
 				"MUST": "Must",
@@ -3490,7 +3517,10 @@
 				"REST_HOURS": "how many",
 				"JOB_TITLE": "which job titles",
 				"STAND_IN_JOB_TITLE": "which job titles",
-				"WEEKDAY": "which days"
+				"WEEKDAY": "which days",
+				"DAY_TYPE": "which day types",
+				"DAYS_IN_A_ROW": "how many",
+				"DAY_TYPE_COUNT": "how many"
 			},
 			"statement": "Constraint",
 			"examples": {
@@ -3499,7 +3529,9 @@
 				"ROLE_PRESENCE": "For example: Closing has at least 1 person as Supervisor on duty from start to finish. Overtime from the shift before counts.",
 				"DAYS_OFF_PER_PERIOD": "For example: Everyone gets at least 2 days off in any 7 days in a row.",
 				"AVOID_DAYS_OFF_ON": "For example: Avoid days off on Friday and Saturday, your busiest days.",
-				"REST_BETWEEN_SHIFTS": "For example: Everyone gets at least 11 hours off between shifts."
+				"REST_BETWEEN_SHIFTS": "For example: Everyone gets at least 11 hours off between shifts.",
+				"MAX_DAYS_WITHOUT_DAY_TYPES": "For example: Nobody goes more than 6 days in a row without a Rest day or Day off.",
+				"DAY_TYPE_DAYS_PER_WEEK": "For example: Everyone has at least 1 Rest day each week."
 			},
 			"fieldHints": {
 				"SHIFT": "Choose more than one to count them together each day.",
@@ -3508,7 +3540,9 @@
 				"STAND_INS_PER_PERSON": "For example 2: two stand-ins count as one person. {{min}} to {{max}}.",
 				"DAYS_OFF": "{{min}} to {{max}}.",
 				"PERIOD_DAYS": "For example 7: any 7 days in a row. {{min}} to {{max}}.",
-				"REST_HOURS": "From the end of one shift to the start of the next. {{min}} to {{max}}."
+				"REST_HOURS": "From the end of one shift to the start of the next. {{min}} to {{max}}.",
+				"DAYS_IN_A_ROW": "{{min}} to {{max}}.",
+				"DAY_TYPE_COUNT": "{{min}} to {{max}}."
 			},
 			"fixedFirmness": {
 				"MUST": "Always a must for this kind of constraint.",
@@ -3520,7 +3554,9 @@
 				"ROLE_PRESENCE": "{{shift}} on duty",
 				"DAYS_OFF_PER_PERIOD": "Days off",
 				"AVOID_DAYS_OFF_ON": "Days to avoid off",
-				"REST_BETWEEN_SHIFTS": "Rest between shifts"
+				"REST_BETWEEN_SHIFTS": "Rest between shifts",
+				"MAX_DAYS_WITHOUT_DAY_TYPES": "Days in a row",
+				"DAY_TYPE_DAYS_PER_WEEK": "Days each week"
 			}
 		},
 		"forecast": {

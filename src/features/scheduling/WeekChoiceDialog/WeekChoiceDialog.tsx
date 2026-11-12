@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
+import type { ConstraintTypeOption } from "@/features/scheduling/constraints/api";
 import {
 	ConstraintTable,
 	type ConstraintTableRow,
@@ -35,6 +36,8 @@ export type WeekChoiceDialogProps = {
 	departmentName: string;
 	shifts: Array<WeekChoiceShiftRow>;
 	constraints: Array<WeekChoiceConstraintRow>;
+	/** The constraint types, so a rule's sentence says who it covers; none reads as everyone. */
+	constraintTypes?: ReadonlyArray<ConstraintTypeOption>;
 	/** What the week uses now. */
 	value: WeekChoiceIds;
 	/** A generated schedule: shown as it was generated, nothing to tick. */
@@ -57,6 +60,7 @@ export const WeekChoiceDialog = ({
 	departmentName,
 	shifts,
 	constraints,
+	constraintTypes,
 	value,
 	readOnly = false,
 	onApply,
@@ -140,6 +144,7 @@ export const WeekChoiceDialog = ({
 				className="mt-4"
 				constraints={listed}
 				frozen={readOnly}
+				types={constraintTypes}
 				noteOf={(constraint) =>
 					noteText(noteOf(constraint, working.shiftIds, listedShiftIds))
 				}

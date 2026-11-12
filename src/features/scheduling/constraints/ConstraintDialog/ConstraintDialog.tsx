@@ -56,6 +56,7 @@ import {
 	SetupDepartmentField,
 	type SetupDepartment,
 } from "@/features/scheduling/SetupDepartmentField";
+import { dayTypeLabel } from "@/features/scheduling/dayTypes";
 import { WEEKDAYS } from "@/features/scheduling/shifts/api";
 
 export type ConstraintDialogProps = {
@@ -93,6 +94,8 @@ const HINTED_FIELDS = [
 	"DAYS_OFF",
 	"PERIOD_DAYS",
 	"REST_HOURS",
+	"DAYS_IN_A_ROW",
+	"DAY_TYPE_COUNT",
 ] as const satisfies ReadonlyArray<ConstraintField>;
 
 type HintedField = (typeof HINTED_FIELDS)[number];
@@ -255,6 +258,10 @@ export const ConstraintDialog = ({
 		SHIFT: (offered?.shifts ?? []).map((shift) => ({
 			value: shift.shiftId,
 			label: shift.name,
+		})),
+		DAY_TYPE: (offered?.dayTypeChoices ?? []).map((code) => ({
+			value: code,
+			label: dayTypeLabel(code, t),
 		})),
 	};
 	const noChoices: Partial<Record<ConstraintFieldKind, string>> = {
@@ -668,6 +675,7 @@ export const ConstraintDialog = ({
 										) ?? null)
 									: null,
 								values: filledValues(chosen),
+								fullTimersOnly: chosen.fullTimersOnly,
 							}}
 						/>
 						{fieldRowsInReadingOrder(chosen).map((row) => {

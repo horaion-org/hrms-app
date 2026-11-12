@@ -395,12 +395,14 @@ describe("ConstraintDialog", () => {
 			"Someone on duty for the whole shift",
 			"Days off in a run of days",
 			"Days to avoid giving off",
+			"Limit on days in a row",
+			"Required days each week",
 			"Rest between shifts",
 		]);
 		for (const [category, count] of [
 			["People on shifts", 2],
 			["On duty throughout", 1],
-			["Days off", 2],
+			["Days off", 4],
 			["Rest and hours", 1],
 		] as const)
 			expect(
@@ -629,6 +631,65 @@ describe("ConstraintDialog", () => {
 					values: [
 						{ field: "WEEKDAY", value: "FRI" },
 						{ field: "WEEKDAY", value: "SAT" },
+					],
+				})
+			);
+		});
+	});
+
+	it("given_theDaysLimit_when_saved_then_offersTheApisDayTypesByLabelAndSendsTheChosenCodes", async () => {
+		const user = userEvent.setup();
+		const { onSave } = renderDialog({
+			options: {
+				status: "ready",
+				options: {
+					...CONSTRAINT_OPTIONS,
+					dayTypeChoices: ["OFF", "REST", "LEAVE", "PUBLIC_HOLIDAY_OFF"],
+				},
+			},
+		});
+		await start(user, "Limit on days in a row");
+
+		expect(screen.queryByRole("radiogroup")).toBeNull();
+		expect(
+			screen.getByText("Always a must for this kind of constraint.")
+		).toBeVisible();
+		expect(
+			screen.getByRole("spinbutton", { name: /^Most days in a row/ })
+		).toHaveAttribute("max", "14");
+		await user.click(trigger(/^Day types/));
+		expect(
+			screen.getAllByRole("option").map((option) => option.textContent)
+		).toEqual(
+			expect.arrayContaining([
+				"Day off",
+				"Rest day",
+				"Leave",
+				"Public holiday off",
+			])
+		);
+		await user.keyboard("{Escape}");
+		await user.type(
+			screen.getByRole("spinbutton", { name: /^Most days in a row/ }),
+			"12"
+		);
+		await pick(user, /^Day types/, "Rest day", "Public holiday off");
+
+		expect(
+			screen.getByRole("region", { name: "How it reads" })
+		).toHaveTextContent(
+			"No full-timer goes more than 12 days in a row without a Rest day or Public holiday off."
+		);
+		await user.click(screen.getByRole("button", { name: "Save" }));
+		await waitFor(() => {
+			expect(onSave).toHaveBeenCalledWith(
+				expect.objectContaining({
+					type: "MAX_DAYS_WITHOUT_DAY_TYPES",
+					requirement: null,
+					values: [
+						{ field: "DAYS_IN_A_ROW", value: "12" },
+						{ field: "DAY_TYPE", value: "REST" },
+						{ field: "DAY_TYPE", value: "PUBLIC_HOLIDAY_OFF" },
 					],
 				})
 			);

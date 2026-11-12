@@ -5,8 +5,10 @@ import { describe, expect, it, vi } from "vitest";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import type { ConstraintValue } from "@/features/scheduling/constraints/api";
 import {
+	CONSTRAINT_TYPE_OPTIONS,
 	companyConstraintFixture,
 	constraintFixture,
+	DAYS_LIMIT_FIXTURE,
 } from "@/features/scheduling/constraints/fixtures";
 import { shiftFixture } from "@/features/scheduling/shifts/fixtures";
 import {
@@ -168,5 +170,20 @@ describe("WeekChoiceDialog", () => {
 		expect(
 			within(dialog).getAllByRole("button", { name: "Close" }).length
 		).toBeGreaterThan(0);
+	});
+});
+
+describe("WeekChoiceDialog with the constraint types", () => {
+	it("given_aRuleForFullTimers_when_listed_then_itsSentenceSaysSo", () => {
+		show({
+			constraints: [...CONSTRAINTS, DAYS_LIMIT_FIXTURE],
+			constraintTypes: CONSTRAINT_TYPE_OPTIONS,
+		});
+
+		expect(
+			screen.getByRole("row", { name: /Days in a row/ })
+		).toHaveTextContent(
+			"No full-timer goes more than 6 days in a row without a Day off or Rest day."
+		);
 	});
 });

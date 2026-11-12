@@ -1,4 +1,5 @@
 import type {
+	ConstraintComparison,
 	ConstraintField,
 	ConstraintFieldKind,
 	ConstraintFieldSpec,
@@ -32,6 +33,9 @@ const STRICTNESS: Record<ConstraintField, FieldStrictness> = {
 	STAND_IN_JOB_TITLE: "MUST_MATCH",
 	SHIFT: "MUST_MATCH",
 	WEEKDAY: "SUPERSET_IS_STRICTER",
+	DAY_TYPE: "MUST_MATCH",
+	DAYS_IN_A_ROW: "LOWER_IS_STRICTER",
+	DAY_TYPE_COUNT: "FOLLOWS_COMPARISON",
 };
 
 /** Types that link to nothing may be set for the whole company; the rest by a Department only. */
@@ -52,6 +56,7 @@ const choice = (
 	min: null,
 	max: null,
 	strictness: STRICTNESS[field],
+	comparisons: null,
 });
 
 /** A number field in its range. */
@@ -67,7 +72,19 @@ const number = (
 	min,
 	max,
 	strictness: STRICTNESS[field],
+	comparisons: null,
 });
+
+/** A comparison field that takes only some comparisons, as the weekly rule's does. */
+const comparisonOf = (
+	comparisons: Array<ConstraintComparison>
+): ConstraintFieldSpec => ({
+	...choice("COMPARISON", "COMPARISON"),
+	comparisons,
+});
+
+/** Neither added by the system nor limited to full-timers, as every type but the day-type rules. */
+const ORDINARY = { addedBySystem: false, fullTimersOnly: false } as const;
 
 /** Every constraint type as `constraint-options` answers it, declared as the API's `ConstraintType` does. */
 export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
@@ -77,6 +94,7 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 		hasRequirement: true,
 		onePerDepartment: false,
 		levels: [...DEPARTMENT_ONLY],
+		...ORDINARY,
 		fields: [
 			choice("COMPARISON", "COMPARISON"),
 			number("HEADCOUNT", 0, 999),
@@ -90,6 +108,7 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 		hasRequirement: true,
 		onePerDepartment: false,
 		levels: [...DEPARTMENT_ONLY],
+		...ORDINARY,
 		fields: [
 			number("HEADCOUNT", 0, 999),
 			number("STAND_INS_PER_PERSON", 1, 10),
@@ -104,6 +123,7 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 		hasRequirement: true,
 		onePerDepartment: false,
 		levels: [...DEPARTMENT_ONLY],
+		...ORDINARY,
 		fields: [
 			choice("COMPARISON", "COMPARISON"),
 			number("HEADCOUNT", 0, 999),
@@ -117,6 +137,7 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 		hasRequirement: true,
 		onePerDepartment: false,
 		levels: [...ANY_LEVEL],
+		...ORDINARY,
 		fields: [
 			choice("COMPARISON", "COMPARISON"),
 			number("DAYS_OFF", 0, 31),
@@ -129,6 +150,7 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 		hasRequirement: false,
 		onePerDepartment: false,
 		levels: [...ANY_LEVEL],
+		...ORDINARY,
 		fields: [choice("WEEKDAY", "WEEKDAY", 1, 7)],
 	},
 	{
@@ -137,13 +159,45 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 		hasRequirement: false,
 		onePerDepartment: true,
 		levels: [...ANY_LEVEL],
+		...ORDINARY,
 		fields: [number("REST_HOURS", 1, 24)],
 	},
+	{
+		type: "MAX_DAYS_WITHOUT_DAY_TYPES",
+		category: "SHIFT_PATTERN",
+		hasRequirement: false,
+		onePerDepartment: false,
+		levels: [...ANY_LEVEL],
+		fields: [
+			number("DAYS_IN_A_ROW", 1, 14),
+			choice("DAY_TYPE", "DAY_TYPE", 1, 3),
+		],
+		addedBySystem: false,
+		fullTimersOnly: true,
+	},
+	{
+		type: "DAY_TYPE_DAYS_PER_WEEK",
+		category: "SHIFT_PATTERN",
+		hasRequirement: false,
+		onePerDepartment: false,
+		levels: [...ANY_LEVEL],
+		fields: [
+			comparisonOf(["AT_LEAST", "EXACTLY"]),
+			number("DAY_TYPE_COUNT", 1, 7),
+			choice("DAY_TYPE", "DAY_TYPE", 1, 1),
+		],
+		addedBySystem: true,
+		fullTimersOnly: true,
+	},
 ];
+
+/** The day types a rule may name, as the API lists them: its non-working day types, then leave. */
+export const DAY_TYPE_CHOICES = ["OFF", "REST", "LEAVE"];
 
 /** Front Office's live shifts and active job titles, as the constraint dialog offers them. */
 export const CONSTRAINT_OPTIONS: ConstraintOptions = {
 	types: CONSTRAINT_TYPE_OPTIONS,
+	dayTypeChoices: DAY_TYPE_CHOICES,
 	shifts: SHIFT_FIXTURES.map(({ shiftId, name, roles }) => ({
 		shiftId,
 		name,
@@ -161,6 +215,7 @@ export const CONSTRAINT_OPTIONS: ConstraintOptions = {
 /** ConstraintOptionsResponse wire shape, distinct from the dialog's mapped choices. */
 export const CONSTRAINT_OPTIONS_RESPONSE = {
 	types: CONSTRAINT_OPTIONS.types,
+	dayTypeChoices: CONSTRAINT_OPTIONS.dayTypeChoices,
 	links: {
 		SHIFT: CONSTRAINT_OPTIONS.shifts.map(({ shiftId, name, jobTitleIds }) => ({
 			id: shiftId,
@@ -258,6 +313,20 @@ export const COMPANY_CONSTRAINT_FIXTURES: Array<DepartmentConstraint> = [
 		values: [plain("WEEKDAY", "SAT")],
 	}),
 ];
+
+/** Front Office's days limit: at most 6 days in a row without a Rest day or a Day off. */
+export const DAYS_LIMIT_FIXTURE: DepartmentConstraint = constraintFixture({
+	constraintId: "days-limit",
+	name: "Days in a row",
+	type: "MAX_DAYS_WITHOUT_DAY_TYPES",
+	category: "SHIFT_PATTERN",
+	requirement: null,
+	values: [
+		plain("DAYS_IN_A_ROW", "6"),
+		plain("DAY_TYPE", "OFF"),
+		plain("DAY_TYPE", "REST"),
+	],
+});
 
 /** A work-policy constraint for two chosen Departments, Orchard's Kitchen and Bar. */
 export const DEPARTMENTS_POLICY_FIXTURE: DepartmentConstraint =
