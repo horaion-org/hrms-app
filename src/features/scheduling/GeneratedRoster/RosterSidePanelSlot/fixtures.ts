@@ -39,5 +39,6 @@ export const slotEditingFixture = (): NonNullable<
 	},
 	revision: 1,
 	shifts: frozenShiftsFixture(),
+	nonWorkingDayTypes: ["OFF", "REST"],
 	notifiesMembers: false,
 });

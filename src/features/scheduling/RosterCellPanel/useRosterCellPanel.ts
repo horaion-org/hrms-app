@@ -30,7 +30,10 @@ import {
 	applyGate,
 	canApply,
 	cellsForChoice,
+	dayTypeChoices,
+	notWorkingWording,
 	peopleTold,
+	preselectedDayType,
 	rosterCellKey,
 	rosteredJobTitleId,
 	shiftChoices,
@@ -62,6 +65,8 @@ export type RosterCellPanelInput = {
 	assignment: ScheduleAssignment;
 	assignments: ReadonlyArray<ScheduleAssignment>;
 	shifts: ReadonlyArray<ScheduleShift>;
+	/** The schedule's types for a day not worked; empty from an older API. */
+	nonWorkingDayTypes: ReadonlyArray<string>;
 	onPreviewDays: (keys: ReadonlyArray<string>) => void;
 	onApplied: (change: RosterChange) => void;
 	onLeaveChanged?: () => void;
@@ -88,6 +93,7 @@ export const useRosterCellPanel = ({
 	assignment,
 	assignments,
 	shifts,
+	nonWorkingDayTypes,
 	onPreviewDays,
 	onApplied,
 	onLeaveChanged,
@@ -104,6 +110,7 @@ export const useRosterCellPanel = ({
 	const [shiftId, setShiftId] = useState<string>();
 	const [partnerId, setPartnerId] = useState<string>();
 	const [leaveType, setLeaveType] = useState<string>();
+	const [chosenDayType, setDayType] = useState<string>();
 	const [remark, setRemark] = useState("");
 	// The fingerprint of the checks the person ticked: new checks need a new tick.
 	const [tickedFor, setTickedFor] = useState<string | null>(null);
@@ -130,6 +137,7 @@ export const useRosterCellPanel = ({
 	const mayChangeLeave =
 		leaveEditing !== undefined && membershipId !== null && !ownDay;
 	const leaveDay = isLeaveDay(assignment);
+	const leaveDayEditable = mayChangeLeave && leaveDay;
 
 	// What can be chosen, and what is.
 	const partners = swapPartners(assignments, assignment);
@@ -141,11 +149,18 @@ export const useRosterCellPanel = ({
 			: rosteredJobTitleId(assignments, membershipId),
 		assignment.shift?.shiftId
 	);
+	// A leave day goes back to not worked through Leave, which takes no type.
+	const dayTypes = leaveDayEditable
+		? []
+		: dayTypeChoices(nonWorkingDayTypes, assignment);
+	const dayType =
+		chosenDayType ?? preselectedDayType(dayTypes, assignment.dayType);
 	// Another shift needs the schedule's frozen shifts; until they load it isn't offered.
 	const modes = panelModes({
 		assignment,
 		hasShifts: shifts.length > 0,
 		mayChangeLeave,
+		canChooseDayType: dayTypes.length > 0,
 	});
 	const leaveMove = mayChangeLeave
 		? leaveMoveOf(assignment, mode, { leaveType, shiftId })
@@ -178,9 +193,10 @@ export const useRosterCellPanel = ({
 
 	// The roster change the choice makes, and its preview.
 	const choice = editChoiceOf({
-		leaveDayEditable: mayChangeLeave && leaveDay,
+		leaveDayEditable,
 		mode,
 		shiftId,
+		dayType,
 		partner: partners.available.find((row) => row.assignmentId === partnerId),
 		leaveMove,
 	});
@@ -346,6 +362,10 @@ export const useRosterCellPanel = ({
 			shiftChoices: choices,
 			shiftId,
 			setShiftId,
+			notWorkingWording: notWorkingWording(assignment, leaveDayEditable),
+			dayTypes,
+			dayType,
+			setDayType,
 			partners,
 			partnerId,
 			setPartnerId,

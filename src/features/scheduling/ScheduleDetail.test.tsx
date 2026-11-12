@@ -1483,7 +1483,7 @@ it("changes a generated roster's day by hand: preview, apply, mark, then undo", 
 	expect(panel).toHaveTextContent(
 		"NowFront Desk AM · 09:00 – 15:00 · Front Desk Lead"
 	);
-	await user.click(within(panel).getByRole("radio", { name: "Day off" }));
+	await user.click(within(panel).getByRole("radio", { name: "Not working" }));
 
 	expect(
 		await within(panel).findByText("Front Desk AM, Mon, Oct 12: 2 → 1 people.")
@@ -1512,7 +1512,9 @@ it("changes a generated roster's day by hand: preview, apply, mark, then undo", 
 	);
 	expect(applied?.body).toEqual({
 		expectedRevision: 1,
-		cells: [{ membershipId: "m-1", day: "2026-10-12", kind: "OFF" }],
+		cells: [
+			{ membershipId: "m-1", day: "2026-10-12", kind: "OFF", dayType: "OFF" },
+		],
 	});
 	await user.click(
 		await screen.findByRole("button", { name: "Changed by hand: 1 day" })
@@ -1582,7 +1584,7 @@ it("asks before an undo that needs a tick and a remark, as an edit would", async
 	const user = userEvent.setup();
 
 	const panel = await openAishaMonday(user);
-	await user.click(within(panel).getByRole("radio", { name: "Day off" }));
+	await user.click(within(panel).getByRole("radio", { name: "Not working" }));
 	await within(panel).findByText("Front Desk AM, Mon, Oct 12: 2 → 1 people.");
 	await user.click(within(panel).getByRole("button", { name: "Apply change" }));
 	await user.click(
@@ -1638,7 +1640,7 @@ it("keeps the grid, its week and the open editor while a stale roster reloads", 
 			: row
 	);
 
-	await user.click(within(panel).getByRole("radio", { name: "Day off" }));
+	await user.click(within(panel).getByRole("radio", { name: "Not working" }));
 	expect(await within(panel).findByRole("alert")).toHaveTextContent(
 		"Someone changed this roster since you opened it. Check your change again."
 	);
@@ -1666,7 +1668,7 @@ it("says the roster changed when someone else got there first, and reads it agai
 	const user = userEvent.setup();
 
 	const panel = await openAishaMonday(user);
-	await user.click(within(panel).getByRole("radio", { name: "Day off" }));
+	await user.click(within(panel).getByRole("radio", { name: "Not working" }));
 	await within(panel).findByText("Front Desk AM, Mon, Oct 12: 2 → 1 people.");
 	const readsBefore = readsOf(calls, SCHEDULE_READ).length;
 	await user.click(within(panel).getByRole("button", { name: "Apply change" }));
@@ -1706,7 +1708,7 @@ it("holds Apply on a check that needs a remark until it is ticked and a remark i
 	const user = userEvent.setup();
 
 	const panel = await openAishaMonday(user);
-	await user.click(within(panel).getByRole("radio", { name: "Day off" }));
+	await user.click(within(panel).getByRole("radio", { name: "Not working" }));
 	expect(
 		await within(panel).findByText(
 			"Front Desk AM is outside Aisha Rahman’s availability on Mon, Oct 12."
@@ -1733,7 +1735,9 @@ it("holds Apply on a check that needs a remark until it is ticked and a remark i
 			)?.body
 		).toEqual({
 			expectedRevision: 1,
-			cells: [{ membershipId: "m-1", day: "2026-10-12", kind: "OFF" }],
+			cells: [
+				{ membershipId: "m-1", day: "2026-10-12", kind: "OFF", dayType: "OFF" },
+			],
 			remark: "Asked to cover",
 			checksFingerprint: "f".repeat(64),
 		});
@@ -1759,7 +1763,7 @@ it("keeps the roster read-only for someone who may only read it", async () => {
 	expect(
 		screen.getByRole("complementary", { name: "Shift Details" })
 	).toBeVisible();
-	expect(screen.queryByRole("radio", { name: "Day off" })).toBeNull();
+	expect(screen.queryByRole("radio", { name: "Not working" })).toBeNull();
 	expect(screen.queryByRole("button", { name: /Day off$/ })).toBeNull();
 });
 
@@ -1783,7 +1787,7 @@ it("keeps the roster read-only for someone who may change a draft but not edit s
 	expect(
 		screen.getByRole("complementary", { name: "Shift Details" })
 	).toBeVisible();
-	expect(screen.queryByRole("radio", { name: "Day off" })).toBeNull();
+	expect(screen.queryByRole("radio", { name: "Not working" })).toBeNull();
 	expect(readsOf(calls, `${ROSTER_CHANGES}/shifts`)).toHaveLength(0);
 	expect(readsOf(calls, `${ROSTER_CHANGES}/latest`)).toHaveLength(0);
 });
@@ -1828,7 +1832,7 @@ it("changes a published roster's day only after saying how many people will be t
 	const user = userEvent.setup();
 
 	const panel = await openAishaMonday(user);
-	await user.click(within(panel).getByRole("radio", { name: "Day off" }));
+	await user.click(within(panel).getByRole("radio", { name: "Not working" }));
 	expect(
 		await within(panel).findByText(
 			"Seen by schedulers of this department and by everyone whose day changes, both people in a swap included."
@@ -1870,7 +1874,7 @@ it("sends nothing when the person cancels a change to a published roster", async
 	const user = userEvent.setup();
 
 	const panel = await openAishaMonday(user);
-	await user.click(within(panel).getByRole("radio", { name: "Day off" }));
+	await user.click(within(panel).getByRole("radio", { name: "Not working" }));
 	await within(panel).findByText("Front Desk AM, Mon, Oct 12: 2 → 1 people.");
 	await user.click(within(panel).getByRole("button", { name: "Apply change" }));
 	await user.click(

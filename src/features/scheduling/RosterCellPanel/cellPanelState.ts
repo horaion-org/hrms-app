@@ -5,7 +5,10 @@ import type { RosterChangePreview } from "@/features/scheduling/rosterChanges/ap
 import type { CellPanelFacts } from "@/features/scheduling/rosterChanges/cellPanelSections";
 import type { CheckNames } from "@/features/scheduling/rosterChanges/checkSentence";
 import type { RosterChangeRefusal } from "@/features/scheduling/rosterChanges/rosterChangeRefusal";
-import type { SwapPartners } from "@/features/scheduling/rosterChanges/rosterEdit";
+import type {
+	NotWorkingWording,
+	SwapPartners,
+} from "@/features/scheduling/rosterChanges/rosterEdit";
 import type {
 	RosterLeaveRefusal,
 	RosterPanelMode,
@@ -28,6 +31,12 @@ export type CellChoicesState = {
 	shiftChoices: Array<ScheduleShift>;
 	shiftId: string | undefined;
 	setShiftId: (shiftId: string) => void;
+	/** How the choice not to work the day reads. */
+	notWorkingWording: NotWorkingWording;
+	/** The types the day not worked can take; none hides the choice and sends no type. */
+	dayTypes: Array<string>;
+	dayType: string | undefined;
+	setDayType: (dayType: string) => void;
 	partners: SwapPartners;
 	partnerId: string | undefined;
 	setPartnerId: (assignmentId: string) => void;

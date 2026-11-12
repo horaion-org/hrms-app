@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { RadioCard } from "@/components/forms/RadioCard";
 import { Select } from "@/components/forms/Select";
+import { dayTypeLabel } from "@/features/scheduling/dayTypes";
 import { formatTimeRange } from "@/features/scheduling/formatShift";
 import {
 	assignmentCell,
@@ -21,16 +22,15 @@ export type CellChoicesProps = {
 	day: string;
 	/** The day holds a shift, so the shift choice reads "Another shift". */
 	dayHasShift: boolean;
-	/** A manager must decide the day, so the day-off choice reads "Confirm day off". */
-	dayNeedsDecision: boolean;
 };
 
 const key = "scheduling.rosterEdit";
 
 /**
  * "Change to": one radio per mode the day offers, then the pick the chosen
- * mode needs: a leave type, a shift (or why there is none), or a person to
- * swap with, naming those who can't.
+ * mode needs: a leave type, a shift (or why there is none), the type of a day
+ * not worked (when the schedule offers types), or a person to swap with,
+ * naming those who can't.
  */
 export const CellChoices = ({
 	choices,
@@ -38,14 +38,13 @@ export const CellChoices = ({
 	name,
 	day,
 	dayHasShift,
-	dayNeedsDecision,
 }: CellChoicesProps): FunctionComponent => {
 	const { t } = useTranslation();
 	const choicesId = useId();
 	const { mode, partners } = choices;
 	const modeLabels: Record<RosterPanelMode, string> = {
 		shift: t(dayHasShift ? `${key}.anotherShift` : `${key}.aShift`),
-		dayOff: t(dayNeedsDecision ? `${key}.confirmDayOff` : `${key}.makeDayOff`),
+		dayOff: t(`${key}.${choices.notWorkingWording}`),
 		swap: t(`${key}.swap`),
 		leave: t(`${key}.leave`),
 		anotherType: t(`${key}.anotherLeaveType`),
@@ -100,6 +99,17 @@ export const CellChoices = ({
 						onChange={choices.setShiftId}
 					/>
 				))}
+			{mode === "dayOff" && choices.dayTypes.length > 0 && (
+				<Select
+					aria-label={t(`${key}.dayType`)}
+					value={choices.dayType}
+					options={choices.dayTypes.map((code) => ({
+						value: code,
+						label: dayTypeLabel(code, t),
+					}))}
+					onChange={choices.setDayType}
+				/>
+			)}
 			{mode === "swap" && (
 				<>
 					<Select

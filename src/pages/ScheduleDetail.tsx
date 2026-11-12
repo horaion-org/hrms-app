@@ -370,6 +370,7 @@ const ApiSchedule = ({
 					target: { companyId, unit, scheduleId, runId },
 					revision: state.schedule.rosterRevision,
 					shifts: editorShifts.data ?? [],
+					nonWorkingDayTypes: state.schedule.nonWorkingDayTypes,
 					notifiesMembers: state.schedule.status === "PUBLISHED",
 					...(publishedForEditing
 						? {

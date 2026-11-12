@@ -20,10 +20,7 @@ import {
 	cellPanelSections,
 	type CellPanelSectionId,
 } from "@/features/scheduling/rosterChanges/cellPanelSections";
-import {
-	needsDecision,
-	type RosterLeaveRefusal,
-} from "@/features/scheduling/rosterChanges/rosterLeave";
+import type { RosterLeaveRefusal } from "@/features/scheduling/rosterChanges/rosterLeave";
 import type { RosterChangeTarget } from "@/features/scheduling/rosterChanges/useRosterChangeActions";
 import type {
 	ScheduleAssignment,
@@ -41,6 +38,8 @@ export type RosterCellPanelProps = {
 	assignments: ReadonlyArray<ScheduleAssignment>;
 	/** The schedule's frozen shifts, with their days and roles. */
 	shifts: ReadonlyArray<ScheduleShift>;
+	/** The schedule's types for a day not worked; empty from an older API. */
+	nonWorkingDayTypes: ReadonlyArray<string>;
 	onClose: () => void;
 	/** The days the change being previewed would touch, as `rosterCellKey` names them. */
 	onPreviewDays: (keys: ReadonlyArray<string>) => void;
@@ -191,7 +190,6 @@ export const RosterCellPanel = ({
 				choices={panel.choices}
 				day={day}
 				dayHasShift={assignment.shift !== null}
-				dayNeedsDecision={needsDecision(assignment)}
 				name={name}
 				radioName={`${titleId}-mode`}
 			/>

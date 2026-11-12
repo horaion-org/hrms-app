@@ -9,6 +9,8 @@ export type RosterEditing = {
 	revision: number;
 	/** The schedule's frozen shifts, with their days and roles. */
 	shifts: ReadonlyArray<ScheduleShift>;
+	/** The schedule's types for a day not worked; empty from an older API. */
+	nonWorkingDayTypes: ReadonlyArray<string>;
 	/** The roster is published: each change tells the people whose days it changes, so it asks first. */
 	notifiesMembers: boolean;
 	/** Given to someone who may change leave here too: the leave choices beside the roster's own. */

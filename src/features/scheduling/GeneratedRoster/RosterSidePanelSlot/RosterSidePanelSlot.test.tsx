@@ -67,7 +67,7 @@ describe("RosterSidePanelSlot", () => {
 			editing: slotEditingFixture(),
 		});
 
-		expect(screen.getByRole("radio", { name: "Day off" })).toBeVisible();
+		expect(screen.getByRole("radio", { name: "Not working" })).toBeVisible();
 	});
 
 	it("given_anOpenList_when_closed_then_callsOnClose", async () => {

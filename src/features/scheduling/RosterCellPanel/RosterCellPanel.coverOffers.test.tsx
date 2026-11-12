@@ -73,6 +73,7 @@ const show = (
 		assignment: friday,
 		assignments: roster,
 		shifts: frozenShiftsFixture(),
+		nonWorkingDayTypes: ["OFF", "REST"],
 		notifiesMembers: true,
 		coverOffers: { offers, timeZone: "Asia/Singapore" },
 		onClose: vi.fn(),
@@ -245,12 +246,12 @@ describe("RosterCellPanel on a published roster", () => {
 		);
 	});
 
-	it("given_aDayOff_when_chosen_then_keepsApplyAndNotify", async () => {
+	it("given_aRemovedShift_when_chosen_then_keepsApplyAndNotify", async () => {
 		stubApi({ [`POST ${PREVIEW}`]: preview });
 		show();
 		const user = userEvent.setup();
 
-		await user.click(screen.getByRole("radio", { name: "Day off" }));
+		await user.click(screen.getByRole("radio", { name: "Remove shift" }));
 
 		expect(
 			await screen.findByRole("button", { name: "Apply change" })

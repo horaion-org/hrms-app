@@ -34,6 +34,7 @@ const meta = {
 		assignment: roster[0]!,
 		assignments: roster,
 		shifts: frozenShiftsFixture(),
+		nonWorkingDayTypes: ["OFF", "REST"],
 		onClose: fn(),
 		onPreviewDays: fn(),
 		onApplied: fn(),

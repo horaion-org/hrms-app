@@ -15,7 +15,6 @@ const show = (choices: Partial<CellChoicesState> = {}): void => {
 				dayHasShift
 				choices={cellChoicesFixture(choices)}
 				day="Mon 12 Oct"
-				dayNeedsDecision={false}
 				name="Aisha Rahman"
 				radioName="mode"
 			/>
@@ -29,9 +28,54 @@ describe("CellChoices", () => {
 		show({ chooseMode });
 
 		expect(screen.getByRole("radio", { name: "Another shift" })).toBeVisible();
-		await userEvent.click(screen.getByRole("radio", { name: "Day off" }));
+		await userEvent.click(screen.getByRole("radio", { name: "Not working" }));
 
 		expect(chooseMode).toHaveBeenCalledWith("dayOff");
+	});
+
+	it("given_theSchedulesTypes_when_notWorkingIsChosen_then_listsThemByLabelWithThePickShown", async () => {
+		const setDayType = vi.fn();
+		show({
+			mode: "dayOff",
+			dayTypes: ["OFF", "REST", "PUBLIC_HOLIDAY_OFF"],
+			dayType: "REST",
+			setDayType,
+		});
+
+		const dayType = screen.getByRole("button", { name: "Day type" });
+		expect(dayType).toHaveTextContent("Rest day");
+		await userEvent.click(dayType);
+		expect(
+			screen.getAllByRole("option").map((option) => option.textContent)
+		).toEqual(["Day off", "Rest day", "Public holiday off"]);
+		await userEvent.click(
+			screen.getByRole("option", { name: "Public holiday off" })
+		);
+
+		expect(setDayType).toHaveBeenCalledWith("PUBLIC_HOLIDAY_OFF");
+	});
+
+	it("given_aDayAlreadyNotWorked_when_shown_then_offersAnotherDayType", () => {
+		show({ notWorkingWording: "anotherDayType" });
+
+		expect(
+			screen.getByRole("radio", { name: "Another day type" })
+		).toBeVisible();
+	});
+
+	it("given_aPartTimersDayToDecide_when_shown_then_confirmsNoShift", () => {
+		show({ notWorkingWording: "confirmNoShift" });
+
+		expect(
+			screen.getByRole("radio", { name: "Confirm no shift" })
+		).toBeVisible();
+	});
+
+	it("given_aPartTimersShift_when_removeShiftIsChosen_then_noTypeToChoose", () => {
+		show({ mode: "dayOff", notWorkingWording: "removeShift", dayTypes: [] });
+
+		expect(screen.getByRole("radio", { name: "Remove shift" })).toBeChecked();
+		expect(screen.queryByRole("button", { name: "Day type" })).toBeNull();
 	});
 
 	it("given_noOtherShiftThatDay_when_shiftIsChosen_then_saysWhy", () => {

@@ -399,6 +399,7 @@ describe("day notes", () => {
 			displayName: "Alex Tan",
 			employeeCode: "E1",
 			jobTitleName: null,
+			partTime: false,
 		},
 		day: "2026-11-02",
 		off: false,
