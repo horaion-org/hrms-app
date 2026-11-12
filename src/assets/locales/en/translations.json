@@ -4323,6 +4323,19 @@
 				"wholeCompany": "All departments",
 				"branch": "{{name}} (branch)"
 			}
+		},
+		"months": {
+			"states": {
+				"PUBLISHED": "Published",
+				"TO_REVIEW": "To review",
+				"TENTATIVE": "Tentative",
+				"GENERATING": "Generating",
+				"FAILED": "Generation failed",
+				"REJECTED": "Rejected",
+				"DRAFT": "Draft",
+				"NOT_GENERATED": "Not generated",
+				"UNKNOWN": "Unknown"
+			}
 		}
 	},
 	"colourSwatchPicker": {

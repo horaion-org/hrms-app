@@ -4145,6 +4145,19 @@
 				"wholeCompany": "Todos los departamentos",
 				"branch": "{{name}} (sucursal)"
 			}
+		},
+		"months": {
+			"states": {
+				"PUBLISHED": "Publicado",
+				"TO_REVIEW": "Por revisar",
+				"TENTATIVE": "Provisional",
+				"GENERATING": "Generando",
+				"FAILED": "Fallida",
+				"REJECTED": "Rechazado",
+				"DRAFT": "Borrador",
+				"NOT_GENERATED": "Sin generar",
+				"UNKNOWN": "Desconocido"
+			}
 		}
 	},
 	"workspace": {
