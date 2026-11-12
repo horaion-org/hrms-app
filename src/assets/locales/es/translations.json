@@ -406,7 +406,7 @@
 				"failed": "No pudimos guardar el flujo. Inténtalo de nuevo.",
 				"noApproverIn_one": "Nadie puede aprobar el paso {{steps}} en {{department}}.",
 				"noApproverIn_other": "Nadie puede aprobar los pasos {{steps}} en {{department}}.",
-				"noApproverFix": "Da «Decidir aprobaciones» a personas de allí en Roles de acceso, o cambia el paso."
+				"noApproverFix": "Da «Aprobar o rechazar un paso» a personas de allí en Roles de acceso, o cambia el paso."
 			},
 			"dialog": {
 				"appliesTo": "Se aplica a",
@@ -426,6 +426,10 @@
 				"people": "Personas",
 				"peoplePlaceholder": "Elige personas",
 				"peopleRequired": "Elige al menos una persona.",
+				"noApprovers": "Aquí todavía nadie puede aprobar. Da ambos permisos en Roles de acceso primero.",
+				"noApproverMatch": "Nadie que pueda aprobar coincide con tu búsqueda. Si falta alguien, dale ambos permisos en Roles de acceso primero.",
+				"approversFooter": "Mostrando personas que pueden aprobar",
+				"approversTruncated": "Mostrando 20 de {{total}} personas que pueden aprobar. Escribe para acotar la búsqueda.",
 				"how": "Cuántas de ellas",
 				"any": "Cualquiera de ellas",
 				"all": "Todas ellas",
@@ -454,7 +458,8 @@
 					"defaultCompanyName": "Aprobación de cuadrantes de la empresa",
 					"anyone": "Cualquiera que pueda publicar el cuadrante de {{department}}",
 					"anyoneCompany": "Cualquiera que pueda publicar el cuadrante",
-					"peopleHint": "Solo se pregunta a quienes pueden publicar este cuadrante.",
+					"peopleHint": "Solo aparecen quienes tienen «Publicar o rechazar cuadrantes» y «Aprobar o rechazar un paso» en {{department}}. Si falta alguien, dale ambos permisos en Roles de acceso primero.",
+					"peopleHintCompany": "Solo aparecen quienes tienen «Publicar o rechazar cuadrantes» y «Aprobar o rechazar un paso» en al menos un departamento. Si falta alguien, dale ambos permisos en Roles de acceso primero.",
 					"info": "Solo pueden aprobarlo quienes pueden publicar este cuadrante. Quien envía un cuadrante nunca lo aprueba.",
 					"turnOffDescription": "Los cuadrantes que ya esperan conservan este flujo. Los que se envíen a partir de ahora no pasan por él.",
 					"turnOnDescription": "Los cuadrantes que se envíen a partir de ahora pasan por sus pasos.",
@@ -472,8 +477,9 @@
 					"defaultCompanyName": "Aprobación de permisos de la empresa",
 					"anyone": "Cualquiera que pueda revisar los permisos de {{department}}",
 					"anyoneCompany": "Cualquiera que pueda revisar los permisos",
-					"peopleHint": "Solo se pregunta a quienes pueden revisar estos permisos.",
-					"info": "Las personas aprobadoras necesitan «Revisar permisos» y «Decidir aprobaciones» en el departamento de la persona; si nadie tiene ambos, nadie allí puede solicitar permisos. Nadie aprueba su propio permiso. Las solicitudes que ya esperan conservan los pasos con los que empezaron.",
+					"peopleHint": "Solo aparecen quienes tienen «Aprobar o rechazar permisos» y «Aprobar o rechazar un paso» en {{department}}. Si falta alguien, dale ambos permisos en Roles de acceso primero.",
+					"peopleHintCompany": "Solo aparecen quienes tienen «Aprobar o rechazar permisos» y «Aprobar o rechazar un paso» en al menos un departamento. Si falta alguien, dale ambos permisos en Roles de acceso primero.",
+					"info": "Las personas aprobadoras necesitan «Aprobar o rechazar permisos» y «Aprobar o rechazar un paso» en el departamento de la persona; si nadie tiene ambos, nadie allí puede solicitar permisos. Nadie aprueba su propio permiso. Las solicitudes que ya esperan conservan los pasos con los que empezaron.",
 					"turnOffDescription": "Las solicitudes que ya esperan conservan este flujo. Los permisos que se soliciten a partir de ahora no pasan por él.",
 					"turnOnDescription": "Los permisos que se soliciten a partir de ahora pasan por sus pasos.",
 					"deleteDescription": "Las solicitudes que ya esperan conservan este flujo. No se puede deshacer."

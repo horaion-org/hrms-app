@@ -11,7 +11,11 @@ import {
 	StepChoices,
 	type StepChoicesProps,
 } from "@/features/approvals/ApprovalFlowDialog/StepChoices";
-import { storyProviders } from "@/features/organisation/storyApi";
+import {
+	STORY_PEOPLE,
+	storyProviders,
+	stubStoryApi,
+} from "@/features/organisation/storyApi";
 
 const client = new QueryClient({
 	defaultOptions: { queries: { retry: false, staleTime: Infinity } },
@@ -55,12 +59,27 @@ const meta = {
 	component: StepChoicesInForm,
 	args: {
 		companyId: "story-company",
+		subjectType: "SCHEDULE_PUBLICATION",
+		departmentId: "front-office",
 		anyoneLabel: "Anyone who can publish in Front Office",
 		disabled: false,
 		peopleHint: "They decide this step.",
 		step: newStep(),
 	},
 	decorators: [storyProviders(client)],
+	parameters: { approvers: STORY_PEOPLE },
+	// The picker lists the people who can approve; `approvers` sets who they are.
+	beforeEach: ({ parameters }): (() => void) =>
+		stubStoryApi(
+			[
+				{
+					path: "/eligible-approvers",
+					content: parameters["approvers"] as Array<unknown>,
+				},
+			],
+			false,
+			client
+		),
 } satisfies Meta<typeof StepChoicesInForm>;
 
 export default meta;
@@ -92,4 +111,14 @@ export const AllOfThesePeople: Story = {
 			members: NAMED_PEOPLE,
 		},
 	},
+};
+
+/** Only these people, but nobody can approve there yet: the picker says what to do. */
+export const OnlyThesePeopleNoneEligible: Story = {
+	args: {
+		departmentId: "control-room",
+		anyoneLabel: "Anyone who can publish in Control Room",
+		step: { ...newStep(), rule: "MEMBERS", quorum: "ANY", members: [] },
+	},
+	parameters: { approvers: [] },
 };

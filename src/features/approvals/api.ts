@@ -1,9 +1,13 @@
 import { queryOptions, skipToken } from "@tanstack/react-query";
 import { z } from "zod";
-import { apiRequest, apiRequestVoid } from "@/common/api-client";
+import { apiRequest, apiRequestVoid, fetchList } from "@/common/api-client";
 import { companyPath } from "@/common/companyPath";
 import type { QueryOptionsFor } from "@/common/query-client";
-import { formerMemberRefSchema } from "@/common/schemas";
+import { formerMemberRefSchema, type ListPage } from "@/common/schemas";
+import {
+	type CompanyMember,
+	companyMemberSchema,
+} from "@/features/organisation/api";
 import { administrativeMeta, selfMeta } from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";
 
@@ -32,6 +36,8 @@ export const APPROVAL_STEP_LABEL_INPUT_MAX_LENGTH = 24;
 export const APPROVAL_FLOW_NAME_MAX_LENGTH = 100;
 /** The longest comment or reason a decision keeps, in characters. */
 export const APPROVAL_COMMENT_MAX_LENGTH = 500;
+/** People the flow dialog's picker asks for at a time; more are reached by typing. */
+export const ELIGIBLE_APPROVERS_PAGE_SIZE = 20;
 
 export const APPROVAL_STEP_RULES = ["KEY_HOLDERS", "MEMBERS"] as const;
 /** Who decides a step: anyone holding the subject's key at the department, or only named people among them. */
@@ -261,6 +267,35 @@ export const deleteApprovalFlow = (
 ): Promise<void> =>
 	apiRequestVoid(flowPath(companyId, flowId), { method: "DELETE" });
 
+/**
+ * The people a step's "Only these people" may name: those who hold the
+ * subject's approver permissions in the department, or in at least one
+ * department for the company default (`departmentId` ""). Searched by
+ * display name only, never email.
+ */
+export const searchEligibleApprovers = (
+	companyId: string,
+	{
+		subjectType,
+		departmentId,
+		search,
+	}: { subjectType: ApprovalSubject; departmentId: string; search: string },
+	signal?: AbortSignal
+): Promise<ListPage<CompanyMember>> => {
+	const query = new URLSearchParams({
+		subjectType,
+		size: String(ELIGIBLE_APPROVERS_PAGE_SIZE),
+		sort: "user.displayName",
+	});
+	if (departmentId) query.set("departmentId", departmentId);
+	if (search.trim()) query.set("search", search.trim());
+	return fetchList(
+		`${flowsPath(companyId)}/eligible-approvers?${query.toString()}`,
+		companyMemberSchema,
+		signal
+	);
+};
+
 /** A subject's submissions, newest first. */
 export const fetchSubjectApprovals = (
 	companyId: string,
@@ -326,6 +361,19 @@ export const approvalKeys = {
 		[...approvalKeys.all(companyId), "instance", instanceId] as const,
 	pending: (companyId: string) =>
 		[...approvalKeys.all(companyId), "pending"] as const,
+	eligibleApprovers: (
+		companyId: string,
+		subjectType: ApprovalSubject,
+		departmentId: string,
+		search: string
+	) =>
+		[
+			...approvalKeys.all(companyId),
+			"eligibleApprovers",
+			subjectType,
+			departmentId,
+			search,
+		] as const,
 };
 
 /** The company's flows; `allowed` false asks for nothing. */

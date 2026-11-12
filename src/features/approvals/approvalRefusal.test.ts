@@ -28,7 +28,7 @@ describe("a flow nobody can approve somewhere", () => {
 
 	it("names each department and step on save, and how to fix it", () => {
 		expect(flowRefusal(noApprover(body), t).message).toBe(
-			"Nobody can approve step 2 in Front Office. Nobody can approve steps 1, 2 in Guarding. Give people “Decide approvals” there in Access roles, or change the step."
+			"Nobody can approve step 2 in Front Office. Nobody can approve steps 1, 2 in Guarding. Give people “Approve or reject a step” there in Access roles, or change the step."
 		);
 	});
 
