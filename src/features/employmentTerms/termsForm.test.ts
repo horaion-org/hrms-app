@@ -108,6 +108,21 @@ describe("termsFormSchema", () => {
 		expect(problemsOf({ ...valid, ...change })).toEqual(problems);
 	});
 
+	describe("most hours a week, on a 44 h week", () => {
+		it.each(["", "44", "72"])("accepts %j", (mostWeekHours) => {
+			expect(problemsOf({ ...valid, mostWeekHours })).toEqual({});
+		});
+
+		it.each<[string, string]>([
+			["43.5", "Most hours a week can’t be less than the normal hours a week."],
+			["abc", "Enter hours as a number, such as 8 or 8.5."],
+		])("refuses %j", (mostWeekHours, message) => {
+			expect(problemsOf({ ...valid, mostWeekHours })).toEqual({
+				mostWeekHours: message,
+			});
+		});
+	});
+
 	it("needs no day when overtime counts by the week only", () => {
 		expect(
 			problemsOf({ ...valid, dailyOvertime: false, dayHours: "" })
@@ -123,6 +138,7 @@ describe("weekFieldsOf and termsBodyOf", () => {
 			daysPerWeek: 5,
 			weekMinutes: 2640,
 			dayMinutes: 528,
+			mostWeekMinutes: null,
 			restDay: "SUN",
 			dailyOvertime: true,
 			shiftWork: false,
@@ -134,6 +150,23 @@ describe("weekFieldsOf and termsBodyOf", () => {
 		expect(
 			weekFieldsOf({ ...valid, shiftWork: true, dailyOvertime: true })
 		).toMatchObject({ shiftWork: true, dailyOvertime: false });
+	});
+
+	it("reads most hours a week in minutes, and empty as no limit", () => {
+		expect(weekFieldsOf({ ...valid, mostWeekHours: "72" })).toMatchObject({
+			mostWeekMinutes: 4320,
+		});
+		expect(weekFieldsOf({ ...valid, mostWeekHours: "" })).toMatchObject({
+			mostWeekMinutes: null,
+		});
+	});
+
+	it("starts the form from most hours a week in hours", () => {
+		expect(
+			termsFormValuesOf({ ...FIVE_DAY_WEEK, mostWeekMinutes: 4320 })
+				.mostWeekHours
+		).toBe("72");
+		expect(termsFormValuesOf(FIVE_DAY_WEEK).mostWeekHours).toBe("");
 	});
 
 	it("has no week while the form is blank", () => {

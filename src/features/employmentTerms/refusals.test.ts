@@ -82,6 +82,7 @@ describe("termsSaveRefusal", () => {
 		["daysPerWeek", "daysPerWeek", "employmentTerms.dialog.daysInvalid"],
 		["dayMinutes", "dayHours", "employmentTerms.dialog.dayRejected"],
 		["weekMinutes", "weekHours", "employmentTerms.dialog.weekRejected"],
+		["mostWeekMinutes", "mostWeekHours", "employmentTerms.dialog.mostRejected"],
 		["restDay", "restWeekday", "employmentTerms.dialog.restDayRequired"],
 		["dailyOvertime", "dayHours", "employmentTerms.dialog.dailyNeedsDay"],
 		["shiftWork", "dayHours", "employmentTerms.dialog.shiftNoDaily"],

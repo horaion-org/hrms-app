@@ -190,6 +190,7 @@ describe("EmploymentTermsSettings", () => {
 			daysPerWeek: 5,
 			weekMinutes: 2520,
 			dayMinutes: 528,
+			mostWeekMinutes: null,
 			restDay: "SUN",
 			dailyOvertime: true,
 			shiftWork: false,

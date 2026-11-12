@@ -7,11 +7,13 @@ import {
 	fetchActiveTerms,
 	fetchMemberTerms,
 	fetchTermsOverview,
+	fetchTermsPresets,
 } from "@/features/employmentTerms/api";
 import {
 	MEMBER_TERMS,
 	REFERENCE,
 	SIX_DAY_SHIFT,
+	TERMS_PRESETS,
 	overviewResponse,
 	termsListResponse,
 } from "@/features/employmentTerms/fixtures";
@@ -101,6 +103,48 @@ describe("employment terms api", () => {
 
 		expect(list.terms.map((each) => each.id)).toEqual([SIX_DAY_SHIFT.id]);
 		expect(list.reference).toEqual(REFERENCE);
+	});
+
+	it("reads the most hours a week, and a backend without it as no limit", async () => {
+		stubApi({
+			[`GET ${BASE}/employment-terms`]: {
+				status: 200,
+				body: envelope({
+					terms: [
+						{ ...SIX_DAY_SHIFT, mostWeekMinutes: 4320 },
+						// JSON drops an undefined key, as a backend without the field sends it.
+						{ ...SIX_DAY_SHIFT, mostWeekMinutes: undefined },
+					],
+					reference: REFERENCE,
+				}),
+			},
+		});
+
+		const list = await fetchActiveTerms("c-1");
+
+		expect(list.terms.map((each) => each.mostWeekMinutes)).toEqual([
+			4320,
+			null,
+		]);
+	});
+
+	it("reads a preset without the most hours a week as no limit", async () => {
+		stubApi({
+			[`GET ${BASE}/employment-terms/presets`]: {
+				status: 200,
+				body: envelope({
+					...TERMS_PRESETS,
+					presets: TERMS_PRESETS.presets.map((preset) => ({
+						...preset,
+						mostWeekMinutes: undefined,
+					})),
+				}),
+			},
+		});
+
+		const presets = await fetchTermsPresets("c-1");
+
+		expect(presets.presets[0]?.mostWeekMinutes).toBeNull();
 	});
 
 	it("corrects terms for everyone through the query, with the fields only", async () => {

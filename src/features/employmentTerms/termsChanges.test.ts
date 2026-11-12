@@ -24,6 +24,7 @@ const bodyOf = (
 	daysPerWeek: terms.daysPerWeek,
 	weekMinutes: terms.weekMinutes,
 	dayMinutes: terms.dayMinutes,
+	mostWeekMinutes: terms.mostWeekMinutes,
 	restDay: terms.restDay,
 	dailyOvertime: terms.dailyOvertime,
 	shiftWork: terms.shiftWork,
@@ -45,6 +46,18 @@ describe("needsApplyChoice", () => {
 		expect(
 			needsApplyChoice(SIX_DAY_SHIFT, { ...body, description: "Night" })
 		).toBe(false);
+	});
+
+	it("asks when held terms change their most hours a week, not when it stays", () => {
+		const held = { ...SIX_DAY_SHIFT, mostWeekMinutes: 4320 };
+		const body = bodyOf(held);
+		expect(needsApplyChoice(held, { ...body, mostWeekMinutes: 3600 })).toBe(
+			true
+		);
+		expect(needsApplyChoice(held, { ...body, mostWeekMinutes: null })).toBe(
+			true
+		);
+		expect(needsApplyChoice(held, body)).toBe(false);
 	});
 
 	it("never asks for terms nobody holds or is scheduled onto", () => {

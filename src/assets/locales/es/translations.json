@@ -4780,6 +4780,7 @@
 			"daysInvalid": "Escribe de 0,5 a 7 días, en medios días.",
 			"restDayRequired": "Elige el día de descanso.",
 			"weekAboveDays": "La semana es más larga que sus días laborables × el día normal.",
+			"mostBelowWeek": "El máximo de horas a la semana no puede ser menor que las horas normales a la semana.",
 			"nameTaken": "Ya existen unas condiciones de empleo llamadas «{{name}}». Elige otro nombre.",
 			"rejected": "Revisa las condiciones e inténtalo de nuevo.",
 			"forbidden": "Ya no tienes permiso para cambiar las condiciones de empleo.",
@@ -4789,6 +4790,7 @@
 			"hoursRange": "Escribe de {{min}} a {{max}} horas.",
 			"dayRejected": "Revisa las horas normales al día: están fuera de lo que pueden fijar las condiciones.",
 			"weekRejected": "Revisa las horas normales a la semana: de 1 a 60 horas, y no más que los días laborables × el día normal.",
+			"mostRejected": "Revisa el máximo de horas a la semana: no menos que las horas normales a la semana y no más que una semana entera.",
 			"dailyNeedsDay": "Las horas extra después del día normal necesitan un día normal.",
 			"shiftNoDaily": "El trabajo por turnos no tiene horas extra después del día; desmarca «…y después del día normal».",
 			"weekUnchanged": "No hay nada que cambiar desde una fecha: la semana laboral es la misma. Cambia antes los días, las horas o el día de descanso, o usa Editar para guardar un nuevo nombre o descripción."

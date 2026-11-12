@@ -44,6 +44,8 @@ const weekFieldsSchema = z.object({
 	weekMinutes: z.number().int(),
 	/** Normal hours a day; empty when the terms set none. */
 	dayMinutes: z.number().int().nullable(),
+	/** The most hours a week anyone on the terms is rostered, overtime included; empty for no limit. */
+	mostWeekMinutes: z.number().int().nullable().catch(null),
 	restDay: restDaySchema,
 	/** Overtime also starts past the normal day, not only past the week. */
 	dailyOvertime: z.boolean(),

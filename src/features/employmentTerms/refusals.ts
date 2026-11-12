@@ -12,6 +12,7 @@ export type TermsField = keyof Pick<
 	| "daysPerWeek"
 	| "dayHours"
 	| "weekHours"
+	| "mostWeekHours"
 	| "restWeekday"
 >;
 
@@ -60,6 +61,10 @@ export const termsSaveRefusal = (
 			daysPerWeek: { field: "daysPerWeek", message: t(`${key}.daysInvalid`) },
 			dayMinutes: { field: "dayHours", message: t(`${key}.dayRejected`) },
 			weekMinutes: { field: "weekHours", message: t(`${key}.weekRejected`) },
+			mostWeekMinutes: {
+				field: "mostWeekHours",
+				message: t(`${key}.mostRejected`),
+			},
 			restDay: { field: "restWeekday", message: t(`${key}.restDayRequired`) },
 			dailyOvertime: { field: "dayHours", message: t(`${key}.dailyNeedsDay`) },
 			shiftWork: { field: "dayHours", message: t(`${key}.shiftNoDaily`) },

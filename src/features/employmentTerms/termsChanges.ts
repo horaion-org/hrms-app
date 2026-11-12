@@ -14,6 +14,7 @@ const WEEK_FIELDS: ReadonlyArray<keyof WeekFields> = [
 	"daysPerWeek",
 	"weekMinutes",
 	"dayMinutes",
+	"mostWeekMinutes",
 	"restDay",
 	"dailyOvertime",
 	"shiftWork",
