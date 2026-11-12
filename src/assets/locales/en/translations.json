@@ -4340,7 +4340,18 @@
 				"dayCovered": "{{day}} covered",
 				"dayShort_one": "{{day}} {{count}} shift short",
 				"dayShort_other": "{{day}} {{count}} shifts short",
-				"dayNoRoster": "{{day}} no roster"
+				"dayNoRoster": "{{day}} no roster",
+				"everyShiftCovered": "Every shift covered",
+				"shiftsShort_one": "{{count}} shift short",
+				"shiftsShort_other": "{{count}} shifts short",
+				"handChanged_one": "{{count}} day changed by hand",
+				"handChanged_other": "{{count}} days changed by hand"
+			},
+			"actions": {
+				"review": "Review",
+				"open": "Open",
+				"reviewWeek": "Review {{week}}",
+				"openWeek": "Open {{week}}"
 			}
 		}
 	},

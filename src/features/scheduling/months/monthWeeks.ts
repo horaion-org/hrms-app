@@ -39,3 +39,20 @@ export const stateCounts = (
 	}
 	return counts;
 };
+
+/** `formatRange` is ES2021, past the ES2020 lib this project compiles against. */
+type RangeFormat = Intl.DateTimeFormat & {
+	formatRange: (start: Date, end: Date) => string;
+};
+
+/** A week's dates without the year, as the month page names a week, e.g. "16 – 22 Nov". */
+export const formatWeekDates = (
+	week: { start: string; end: string },
+	language: string
+): string =>
+	(
+		new Intl.DateTimeFormat(language, {
+			day: "numeric",
+			month: "short",
+		}) as RangeFormat
+	).formatRange(dayjs(week.start).toDate(), dayjs(week.end).toDate());

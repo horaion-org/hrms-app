@@ -4162,7 +4162,18 @@
 				"dayCovered": "{{day}} cubierto",
 				"dayShort_one": "{{day}} falta {{count}} turno",
 				"dayShort_other": "{{day}} faltan {{count}} turnos",
-				"dayNoRoster": "{{day}} sin cuadrante"
+				"dayNoRoster": "{{day}} sin cuadrante",
+				"everyShiftCovered": "Todos los turnos cubiertos",
+				"shiftsShort_one": "Falta {{count}} turno",
+				"shiftsShort_other": "Faltan {{count}} turnos",
+				"handChanged_one": "{{count}} día cambiado a mano",
+				"handChanged_other": "{{count}} días cambiados a mano"
+			},
+			"actions": {
+				"review": "Revisar",
+				"open": "Abrir",
+				"reviewWeek": "Revisar {{week}}",
+				"openWeek": "Abrir {{week}}"
 			}
 		}
 	},

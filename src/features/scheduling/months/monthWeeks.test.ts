@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
 	formatMonth,
+	formatWeekDates,
 	monthOf,
 	shiftMonth,
 	stateCounts,
@@ -40,6 +41,17 @@ describe("formatMonth", () => {
 	it("given_englishAndSpanish_when_formatted_then_theMonthAndYearInEach", () => {
 		expect(formatMonth("2026-11", "en")).toBe("November 2026");
 		expect(formatMonth("2026-11", "es")).toBe("noviembre de 2026");
+	});
+});
+
+describe("formatWeekDates", () => {
+	it("given_aWeekInOneMonthAndOneAcrossTwo_when_formatted_then_daysAndMonthsWithoutTheYear", () => {
+		expect(
+			formatWeekDates({ start: "2026-11-16", end: "2026-11-22" }, "en-GB")
+		).toMatch(/^16\s?–\s?22\sNov$/);
+		expect(
+			formatWeekDates({ start: "2026-11-30", end: "2026-12-06" }, "en-GB")
+		).toMatch(/^30\sNov\s–\s6\sDec$/);
 	});
 });
 
