@@ -4437,6 +4437,15 @@
 				"useForEveryWeek": "Use this week’s choice for every week",
 				"apply": "Use for {{month}}",
 				"weekProblem": "{{week}}: {{problem}}"
+			},
+			"setup": {
+				"description": "Select the department and the month to generate.",
+				"month": "Month",
+				"weeks_one": "{{count}} week: {{from}} to {{to}}. A week belongs to the month its Monday falls in.",
+				"weeks_other": "{{count}} weeks: {{from}} to {{to}}. A week belongs to the month its Monday falls in.",
+				"validation": {
+					"month": "Choose a month."
+				}
 			}
 		}
 	},

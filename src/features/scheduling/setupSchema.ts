@@ -32,3 +32,23 @@ export const scheduleSetupSchema = (t: TFunction): ScheduleSetupSchema =>
 	});
 
 export type ScheduleSetupValues = z.infer<ScheduleSetupSchema>;
+
+type MonthSetupSchema = z.ZodObject<{
+	departmentId: z.ZodString;
+	month: z.ZodString;
+	includeLeave: z.ZodBoolean;
+	allowOpenShifts: z.ZodBoolean;
+}>;
+
+/** A month run's setup: no name, since the API names each week it creates. */
+export const monthSetupSchema = (t: TFunction): MonthSetupSchema =>
+	z.object({
+		departmentId: z
+			.string()
+			.min(1, t("scheduling.setup.validation.department")),
+		month: z.string().min(1, t("scheduling.months.setup.validation.month")),
+		includeLeave: z.boolean(),
+		allowOpenShifts: z.boolean(),
+	});
+
+export type MonthSetupValues = z.infer<MonthSetupSchema>;

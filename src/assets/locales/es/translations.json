@@ -4259,6 +4259,15 @@
 				"useForEveryWeek": "Usar la elección de esta semana en todas las semanas",
 				"apply": "Usar para {{month}}",
 				"weekProblem": "{{week}}: {{problem}}"
+			},
+			"setup": {
+				"description": "Selecciona el departamento y el mes que quieres generar.",
+				"month": "Mes",
+				"weeks_one": "{{count}} semana: del {{from}} al {{to}}. Una semana pertenece al mes en que cae su lunes.",
+				"weeks_other": "{{count}} semanas: del {{from}} al {{to}}. Una semana pertenece al mes en que cae su lunes.",
+				"validation": {
+					"month": "Elige un mes."
+				}
 			}
 		}
 	},
