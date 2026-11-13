@@ -762,8 +762,8 @@
 			"dialog": {
 				"title": "Añadir tipo de permiso",
 				"editTitle": "Editar tipo de permiso",
-				"description": "Añade un tipo de permiso que se pueda solicitar.",
-				"editDescription": "Cambia el nombre de {{name}} y cómo se cuenta.",
+				"description": "Añade un tipo de permiso que se pueda solicitar y elige dónde se aplica.",
+				"editDescription": "Cambia el nombre de {{name}}, cómo se cuenta y dónde se aplica.",
 				"name": "Nombre",
 				"namePlaceholder": "p. ej. Permiso de estudios",
 				"nameHint": "De 2 a 100 caracteres: letras, números, espacios y . ' & -",

@@ -1516,8 +1516,8 @@
 			"dialog": {
 				"title": "Add leave type",
 				"editTitle": "Edit leave type",
-				"description": "Add a kind of leave people can apply for.",
-				"editDescription": "Change how {{name}} is named and counted.",
+				"description": "Add a kind of leave people can apply for, and choose where it applies.",
+				"editDescription": "Change how {{name}} is named and counted, and where it applies.",
 				"name": "Name",
 				"namePlaceholder": "e.g. Study leave",
 				"nameHint": "2 to 100 characters: letters, numbers, spaces and . ' & -",
