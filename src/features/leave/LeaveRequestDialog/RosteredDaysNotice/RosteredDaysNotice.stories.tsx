@@ -22,6 +22,8 @@ const meta = {
 			{ day: "2026-06-03", minutes: 480 },
 			{ day: "2026-06-04", minutes: 480 },
 		],
+		// Storybook makes every on* prop an action; a set onRetry means the days could not be read.
+		onRetry: undefined,
 	},
 } satisfies Meta<typeof RosteredDaysNotice>;
 
