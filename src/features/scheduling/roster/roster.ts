@@ -166,7 +166,10 @@ const noteOf = (assignment: ScheduleAssignment): RosterDayNote | undefined => {
 	} = assignment;
 	// Only a worked day notes its type; a day not worked shows it in its own cell.
 	const workedDayType = shift === null ? null : dayType;
-	if (!flag && !uncoveredShift && workedDayType === null) return undefined;
+	// A shift kept around part-day leave always has a note, so its tile can name the leave.
+	const keptAroundLeave = Boolean(assignment.workedTimes?.length);
+	if (!flag && !uncoveredShift && workedDayType === null && !keptAroundLeave)
+		return undefined;
 	const leavePortion = leavePortionOf(assignment);
 	return {
 		...(flag ? { flag } : {}),

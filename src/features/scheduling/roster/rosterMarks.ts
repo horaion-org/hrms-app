@@ -1,4 +1,5 @@
 import type { TFunction } from "i18next";
+import { timeRangeText } from "@/features/leave/dayPortion";
 import { dayTypeInSentence } from "@/features/scheduling/dayTypes";
 import {
 	strongestTone,
@@ -12,6 +13,8 @@ import type {
 	RosterDayNote,
 	RosterLeavePortion,
 	RosterRow,
+	RosterShiftCell,
+	WorkedTime,
 } from "@/features/scheduling/roster/roster";
 import {
 	asksForDecision,
@@ -262,6 +265,46 @@ export const tileStatus = (
 	if (note?.dayType === undefined) return undefined;
 	return t("scheduling.rosterMarkers.onDayType", {
 		dayType: dayTypeInSentence(note.dayType, t),
+	});
+};
+
+/**
+ * The part of a shift kept around part-day leave that is not worked, from the
+ * pieces still worked: between two pieces, or before or after one.
+ */
+const timeOffOf = (
+	cell: Pick<RosterShiftCell, "start" | "end">,
+	worked: ReadonlyArray<WorkedTime>
+): WorkedTime => {
+	const [first, second] = worked;
+	if (second) return { start: first!.end, end: second.start };
+	return first!.start === cell.start
+		? { start: first!.end, end: cell.end }
+		: { start: cell.start, end: first!.start };
+};
+
+/**
+ * A shift tile's status line. On a shift kept around approved part-day leave
+ * (the API's ADR-0077, part 4) it names the leave and its time on every
+ * roster, ahead of the day type: "Annual leave 07:00–11:00", or "Off
+ * 07:00–11:00" for a viewer who may not see the leave. Any other shift reads
+ * as `tileStatus`. Pure.
+ */
+export const shiftStatus = (
+	cell: Pick<RosterShiftCell, "start" | "end" | "workedTimes" | "note">,
+	showsIssues: boolean,
+	t: TFunction
+): string | undefined => {
+	if (!cell.workedTimes?.length) return tileStatus(cell.note, showsIssues, t);
+	const portion = cell.note?.leavePortion;
+	if (cell.note?.leaveTypeName && portion)
+		return t("scheduling.rosterMarkers.partDayLeave", {
+			type: cell.note.leaveTypeName,
+			time: timeRangeText(portion.startTime, portion.endTime, t),
+		});
+	const off = timeOffOf(cell, cell.workedTimes);
+	return t("scheduling.rosterMarkers.partDayOff", {
+		time: timeRangeText(off.start, off.end, t),
 	});
 };
 

@@ -4089,7 +4089,9 @@
 			"needsDecision": "Needs a decision",
 			"needsAttention": "Needs attention",
 			"needsALook": "Needs a look",
-			"tileStatus": "{{label}}, {{status}}"
+			"tileStatus": "{{label}}, {{status}}",
+			"partDayLeave": "{{type}} {{time}}",
+			"partDayOff": "Off {{time}}"
 		},
 		"rosterEdit": {
 			"title": "{{name}} · {{date}}",
