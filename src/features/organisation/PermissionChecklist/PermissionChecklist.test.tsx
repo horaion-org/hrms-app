@@ -116,6 +116,7 @@ describe("PermissionChecklist", () => {
 			"Skills",
 			"Employment terms",
 			"Leave types",
+			"Leave durations",
 			"Work policy",
 			"Access roles",
 			"Activity",
@@ -349,7 +350,7 @@ describe("PermissionChecklist", () => {
 		).toHaveLength(3);
 	});
 
-	it("leaves company-only permissions, and rows and sections left without any, out of a local role", () => {
+	it("leaves company-only permissions, and rows left without any, out of a local role", () => {
 		render(<Harness initial={[]} kind="LOCAL" />);
 
 		expect(rowNames()).toEqual([
@@ -367,13 +368,17 @@ describe("PermissionChecklist", () => {
 			"Departments",
 			"Department members",
 			"Job titles",
+			"Leave durations",
 			"Access roles",
 		]);
+		// Company settings keeps only the leave durations, held at any scope.
 		expect(
-			screen.queryByRole("region", { name: "Company settings" })
-		).not.toBeInTheDocument();
+			within(
+				screen.getByRole("region", { name: "Company settings" })
+			).getAllByRole("group")
+		).toHaveLength(1);
 		expect(screen.getAllByRole("checkbox")).toHaveLength(
-			PERMISSION_KEYS.filter((key) => !isCompanyOnly(key)).length + 15
+			PERMISSION_KEYS.filter((key) => !isCompanyOnly(key)).length + 16
 		);
 		expect(within(row("Branches")).getAllByRole("checkbox")).toHaveLength(3);
 		expect(

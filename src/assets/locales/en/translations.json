@@ -2206,6 +2206,18 @@
 					"update": "Manage leave types"
 				},
 				"actionHints": {
+					"read": "Those for the places this role is given, and the whole company’s",
+					"update": "Add, change and remove those whose every department this role covers; reordering needs the whole company"
+				}
+			},
+			"leave_duration": {
+				"name": "Leave durations",
+				"description": "The parts of a day people can take as leave, and where each applies.",
+				"actions": {
+					"read": "See leave durations",
+					"update": "Manage leave durations"
+				},
+				"actionHints": {
 					"read": "With how many requests use each, never who took them",
 					"update": "Add, rename, reorder, deactivate and reactivate them"
 				}
@@ -2547,6 +2559,10 @@
 				"leaveTypeCreated": "Leave type added: {{name}}",
 				"leaveTypeUpdated": "Leave type changed: {{name}}",
 				"leaveTypesReordered": "Leave types reordered",
+				"leaveDurationCreated": "Leave duration added: {{name}}",
+				"leaveDurationUpdated": "Leave duration changed: {{name}}",
+				"leaveDurationDeleted": "Leave duration removed: {{name}}",
+				"leaveDurationsReordered": "Leave durations reordered",
 				"employmentTermsCreated": "Employment terms added: {{name}}",
 				"employmentTermsUpdated": "Employment terms updated: {{name}}",
 				"employmentTermsChangedFromDate": "Employment terms changed from a date: {{name}}",
@@ -2602,6 +2618,10 @@
 				"leaveTypeCreated": "Leave type added",
 				"leaveTypeUpdated": "Leave type changed",
 				"leaveTypesReordered": "Leave types reordered",
+				"leaveDurationCreated": "Leave duration added",
+				"leaveDurationUpdated": "Leave duration changed",
+				"leaveDurationDeleted": "Leave duration removed",
+				"leaveDurationsReordered": "Leave durations reordered",
 				"employmentTermsCreated": "Employment terms added",
 				"employmentTermsUpdated": "Employment terms updated",
 				"employmentTermsChangedFromDate": "Employment terms changed from a date",
@@ -2667,6 +2687,7 @@
 				"CoverOffer": "Cover offer",
 				"EmploymentTerms": "Employment terms",
 				"LeaveType": "Leave type",
+				"LeaveDuration": "Leave duration",
 				"ScheduleRosterChange": "Roster change"
 			}
 		},

@@ -19,8 +19,10 @@ const READ_KEYS = {
  * Which optional Settings sections to offer. Employment, Scheduling, Leave
  * and Approvals are offered with their read key company-wide, and also when
  * the link names them (`?section=leave`), so the section opens to say the
- * person may not see it. Access roles are offered when the key is held
- * anywhere (the list shows the roles where it is), Data when it has an item.
+ * person may not see it. Leave is also offered with the leave durations read
+ * key anywhere, since department admins manage their own durations. Access
+ * roles are offered when the key is held anywhere (the list shows the roles
+ * where it is), Data when it has an item.
  */
 export const offeredSections = (
 	access: Pick<Access, "can" | "canAnywhere">,
@@ -31,7 +33,7 @@ export const offeredSections = (
 	return {
 		employment: offered("employment"),
 		scheduling: offered("scheduling"),
-		leave: offered("leave"),
+		leave: offered("leave") || access.canAnywhere("leave_duration:read"),
 		approvals: offered("approvals"),
 		access: access.canAnywhere("access_role:read"),
 		data: offersData(dataItemsFor(access)),

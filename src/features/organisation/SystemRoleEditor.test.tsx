@@ -241,7 +241,7 @@ describe("Access role editor", () => {
 		expect(box("Branches", "See branches")).toHaveAccessibleDescription(
 			/Not at departments$/
 		);
-		expect(screen.getByText("2 of 49 selected")).toBeVisible();
+		expect(screen.getByText("2 of 51 selected")).toBeVisible();
 		expect(
 			screen.getByText("Where it can be used changed, 1 removed")
 		).toBeVisible();

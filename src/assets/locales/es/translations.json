@@ -1208,6 +1208,18 @@
 					"update": "Gestionar los tipos de permiso"
 				},
 				"actionHints": {
+					"read": "Las de los lugares donde se da este rol, y las de toda la empresa",
+					"update": "Añadir, cambiar y quitar aquellas cuyos departamentos cubre este rol; reordenar requiere toda la empresa"
+				}
+			},
+			"leave_duration": {
+				"name": "Duraciones de permiso",
+				"description": "Las partes del día que se pueden tomar como permiso, y dónde se aplica cada una.",
+				"actions": {
+					"read": "Ver las duraciones de permiso",
+					"update": "Gestionar las duraciones de permiso"
+				},
+				"actionHints": {
 					"read": "Con cuántas solicitudes usan cada uno, nunca quién los tomó",
 					"update": "Añadirlos, renombrarlos, ordenarlos, desactivarlos y reactivarlos"
 				}
@@ -1515,6 +1527,10 @@
 				"leaveTypeCreated": "Tipo de permiso añadido: {{name}}",
 				"leaveTypeUpdated": "Tipo de permiso cambiado: {{name}}",
 				"leaveTypesReordered": "Tipos de permiso reordenados",
+				"leaveDurationCreated": "Duración de permiso añadida: {{name}}",
+				"leaveDurationUpdated": "Duración de permiso cambiada: {{name}}",
+				"leaveDurationDeleted": "Duración de permiso eliminada: {{name}}",
+				"leaveDurationsReordered": "Duraciones de permiso reordenadas",
 				"employmentTermsCreated": "Condiciones de empleo añadidas: {{name}}",
 				"employmentTermsUpdated": "Condiciones de empleo actualizadas: {{name}}",
 				"employmentTermsChangedFromDate": "Condiciones de empleo cambiadas desde una fecha: {{name}}",
@@ -1570,6 +1586,10 @@
 				"leaveTypeCreated": "Tipo de permiso añadido",
 				"leaveTypeUpdated": "Tipo de permiso cambiado",
 				"leaveTypesReordered": "Tipos de permiso reordenados",
+				"leaveDurationCreated": "Duración de permiso añadida",
+				"leaveDurationUpdated": "Duración de permiso cambiada",
+				"leaveDurationDeleted": "Duración de permiso eliminada",
+				"leaveDurationsReordered": "Duraciones de permiso reordenadas",
 				"employmentTermsCreated": "Condiciones de empleo añadidas",
 				"employmentTermsUpdated": "Condiciones de empleo actualizadas",
 				"employmentTermsChangedFromDate": "Condiciones de empleo cambiadas desde una fecha",
@@ -1635,6 +1655,7 @@
 				"CoverOffer": "oferta de cobertura",
 				"EmploymentTerms": "condiciones de empleo",
 				"LeaveType": "tipo de permiso",
+				"LeaveDuration": "Duración de permiso",
 				"ScheduleRosterChange": "cambio de cuadrante"
 			}
 		},

@@ -157,11 +157,14 @@ describe("the role editor's sections", () => {
 					expect(moduleOf(key)).toBe(section.module);
 	});
 
-	it("leaves a local role's sections that would be empty out", () => {
+	it("gives a local role's sections only the rows it may hold", () => {
 		const local = sectionsFor("LOCAL");
-		expect(local.map((section) => section.module)).not.toContain(
-			"company_settings"
-		);
+		// Company settings keeps only the leave durations, held at any scope.
+		expect(
+			local
+				.find((section) => section.module === "company_settings")
+				?.groups.map((group) => group.resource)
+		).toEqual(["leave_duration"]);
 		// The same rows as the local role's list, only regrouped.
 		expect(
 			local
