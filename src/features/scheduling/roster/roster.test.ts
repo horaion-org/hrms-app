@@ -10,12 +10,18 @@ import {
 	legendOf,
 	rosterFromAssignments,
 	rosterStats,
+	shiftTimeText,
 	weekDays,
 	type RosterCell,
 	type RosterRow,
+	type RosterShiftCell,
 } from "@/features/scheduling/roster/roster";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
-import { scheduleAssignmentsFixture } from "@/features/scheduling/schedules/fixtures";
+import {
+	scheduleAssignmentsFixture,
+	shortenedShiftFixture,
+	workedAroundLeaveFixture,
+} from "@/features/scheduling/schedules/fixtures";
 
 const period = { start: "2026-10-12", end: "2026-10-18" };
 
@@ -239,6 +245,17 @@ describe("hoursOf", () => {
 		["a shift past midnight", shiftCell("23:00", "07:00"), 8],
 		["a shift ending at midnight", shiftCell("16:00", "00:00"), 8],
 		["only the paid part of a shift", shiftCell("07:00", "19:00", 60), 11],
+		[
+			"only the time still worked around leave, with no break",
+			{
+				...shiftCell("07:00", "15:00", 30),
+				workedTimes: [
+					{ start: "07:00", end: "10:00" },
+					{ start: "12:00", end: "15:00" },
+				],
+			},
+			6,
+		],
 		["a day off", { kind: "off", dayType: "OFF" } as const, 0],
 		["an absent day", { kind: "absent" } as const, 0],
 		["leave", { kind: "leave" } as const, 0],
@@ -270,6 +287,53 @@ describe("hoursOf", () => {
 			expect(hoursInDays(row, days)).toBe(hours);
 		}
 	);
+});
+
+describe("shifts kept around part-day leave", () => {
+	let t: TFunction;
+	beforeAll(async () => {
+		const i18n = createInstance();
+		await i18n.init({ lng: "en", resources: { en: { translation: en } } });
+		t = i18n.t;
+	});
+
+	it("given_aShiftKeptAroundLeave_when_mapped_then_theCellCarriesTheTimeStillWorked", () => {
+		const [row] = rosterFromAssignments([shortenedShiftFixture()], period);
+
+		expect(row!.days["2026-10-12"]).toMatchObject({
+			kind: "shift",
+			start: "09:00",
+			end: "15:00",
+			workedTimes: [{ start: "11:00", end: "15:00" }],
+		});
+	});
+
+	it("given_aWholeShift_when_mapped_then_noWorkedPieces", () => {
+		const [row] = rosterFromAssignments(scheduleAssignmentsFixture(), period);
+
+		expect(row!.days["2026-10-12"]).not.toHaveProperty("workedTimes");
+	});
+
+	it("given_eachKindOfShift_when_itsTimeIsWritten_then_theTimeStillWorked", () => {
+		const [shortened] = rosterFromAssignments(
+			[shortenedShiftFixture()],
+			period
+		);
+		const [around] = rosterFromAssignments(
+			[workedAroundLeaveFixture()],
+			period
+		);
+
+		expect(shiftTimeText({ start: "09:00", end: "15:00" }, t)).toBe(
+			"09:00 – 15:00"
+		);
+		expect(
+			shiftTimeText(shortened!.days["2026-10-12"] as RosterShiftCell, t)
+		).toBe("11:00 – 15:00");
+		expect(
+			shiftTimeText(around!.days["2026-10-12"] as RosterShiftCell, t)
+		).toBe("09:00 – 11:00 · 13:00 – 15:00");
+	});
 });
 
 describe("isoDateIn", () => {

@@ -6,7 +6,6 @@ import { formattingLocale } from "@/common/formattingLocale";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { Avatar } from "@/components/ui/Avatar";
-import { formatTimeRange } from "@/features/scheduling/formatShift";
 import { RosterHeaderCount } from "@/features/scheduling/RosterGrid/RosterHeaderCount";
 import { RosterShift } from "@/features/scheduling/RosterGrid/RosterShift";
 import type { GridFindings } from "@/features/scheduling/roster/findings/findingsOnGrid";
@@ -14,6 +13,7 @@ import {
 	dayWithoutShiftPlainText,
 	dayWithoutShiftTileText,
 	leavePortionTimeText,
+	shiftTimeText,
 	hoursInDays,
 	type RosterRow,
 	type RosterShiftCell,
@@ -261,10 +261,7 @@ export const RosterGrid = ({
 				</button>
 			);
 		}
-		const time = formatTimeRange(
-			{ startTime: cell.start, endTime: cell.end },
-			t
-		);
+		const time = shiftTimeText(cell, t);
 		const status = tileStatus(cell.note, showsIssues, t);
 		const shiftLabel = t("scheduling.detail.shiftLabel", {
 			name,

@@ -3,6 +3,7 @@ import { dateTimeFormatIn } from "@/common/dateTimeFormatIn";
 import { daysOf, weeksOf } from "@/common/weeks";
 import { portionText, timeRangeText } from "@/features/leave/dayPortion";
 import { dayTypeLabel } from "@/features/scheduling/dayTypes";
+import { formatTimeRange } from "@/features/scheduling/formatShift";
 import type { SchedulePeriod } from "@/features/scheduling/periods";
 import {
 	hoursFromMinutes,
@@ -33,8 +34,17 @@ export type RosterShiftCell = {
 	carriesOvertime: boolean;
 	/** The job title's name, as frozen with the shift. */
 	role: string;
+	/**
+	 * When the shift is kept around approved part-day leave, the pieces still
+	 * worked (one, or two around a leave in the middle); absent when the whole
+	 * shift is worked.
+	 */
+	workedTimes?: ReadonlyArray<WorkedTime>;
 	note?: RosterDayNote;
 };
+
+/** A piece of a shift still worked, "HH:mm" to "HH:mm". */
+export type WorkedTime = { start: string; end: string };
 
 /** The part of one day a leave takes ("Morning 07:00–11:00"); the duration's name is null for Custom times. */
 export type RosterLeavePortion = {
@@ -186,6 +196,9 @@ const cellOf = (assignment: ScheduleAssignment): RosterCell => {
 		unpaidBreakMinutes: assignment.shift.unpaidBreakMinutes,
 		carriesOvertime: assignment.shift.carriesOvertime,
 		role: assignment.jobTitle?.name ?? "",
+		...(assignment.workedTimes?.length
+			? { workedTimes: assignment.workedTimes }
+			: {}),
 		...(note ? { note } : {}),
 	};
 };
@@ -234,15 +247,44 @@ export const rosterFromAssignments = (
 	return [...rows.values()];
 };
 
-/** Paid minutes of a day: a shift's (past midnight when it ends at or before its start); 0 off. */
-const paidMinutesOf = (cell: RosterCell | undefined): number =>
-	cell?.kind === "shift"
-		? paidShiftMinutes({
-				startTime: cell.start,
-				endTime: cell.end,
-				unpaidBreakMinutes: cell.unpaidBreakMinutes,
-			})
-		: 0;
+/**
+ * Paid minutes of a day: a shift's (past midnight when it ends at or before
+ * its start), or on a shift kept around part-day leave the pieces still
+ * worked, with no unpaid break (the API's ADR-0077, Q7); 0 off.
+ */
+const paidMinutesOf = (cell: RosterCell | undefined): number => {
+	if (cell?.kind !== "shift") return 0;
+	if (cell.workedTimes)
+		return cell.workedTimes.reduce(
+			(total, piece) =>
+				total +
+				paidShiftMinutes({
+					startTime: piece.start,
+					endTime: piece.end,
+					unpaidBreakMinutes: 0,
+				}),
+			0
+		);
+	return paidShiftMinutes({
+		startTime: cell.start,
+		endTime: cell.end,
+		unpaidBreakMinutes: cell.unpaidBreakMinutes,
+	});
+};
+
+/**
+ * A shift tile's time: the shift's ("09:00 – 15:00"), or the time still
+ * worked around part-day leave ("09:00 – 11:00 · 13:00 – 15:00"). Pure.
+ */
+export const shiftTimeText = (
+	cell: Pick<RosterShiftCell, "start" | "end" | "workedTimes">,
+	t: TFunction
+): string =>
+	(cell.workedTimes ?? [{ start: cell.start, end: cell.end }])
+		.map((piece) =>
+			formatTimeRange({ startTime: piece.start, endTime: piece.end }, t)
+		)
+		.join(" · ");
 
 /** Paid hours of a day. */
 export const hoursOf = (cell: RosterCell | undefined): number =>

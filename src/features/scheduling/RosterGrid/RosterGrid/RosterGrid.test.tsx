@@ -11,6 +11,7 @@ import { placeFindings } from "@/features/scheduling/roster/findings/findingsOnG
 import {
 	findingsOfEveryKindFixture,
 	scheduleAssignmentsFixture,
+	workedAroundLeaveFixture,
 } from "@/features/scheduling/schedules/fixtures";
 
 beforeAll(async () => {
@@ -170,6 +171,20 @@ describe("RosterGrid", () => {
 		const ben = screen.getByRole("row", { name: /Ben Ong/ });
 		expect(within(ben).getAllByText("07:00–11:00").length).toBeGreaterThan(0);
 		expect(within(ben).getAllByText("Annual leave").length).toBeGreaterThan(0);
+	});
+
+	it("given_aShiftKeptAroundLeaveInTheMiddle_when_rendered_then_theTileShowsBothPiecesWorked", () => {
+		const rows = rosterFromAssignments(
+			[workedAroundLeaveFixture(), ...scheduleAssignmentsFixture().slice(1)],
+			{ start: "2026-10-12", end: "2026-10-18" }
+		);
+
+		render(<RosterGrid days={week} rows={rows} />);
+
+		const aisha = screen.getByRole("row", { name: /Aisha Rahman/ });
+		expect(
+			within(aisha).getByText("09:00 – 11:00 · 13:00 – 15:00")
+		).toBeInTheDocument();
 	});
 
 	it("when_aTileIsChosen_then_reportsTheMemberDayAndShift", async () => {
