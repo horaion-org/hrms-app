@@ -9,6 +9,7 @@ import { FormRow, formRowIds } from "@/components/forms/FormRow";
 import { Input } from "@/components/forms/Input";
 import { Select } from "@/components/forms/Select";
 import { Textarea } from "@/components/forms/Textarea";
+import { TimeSelect } from "@/components/forms/TimeSelect";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import { SearchIcon } from "@/components/ui/Icon";
@@ -19,6 +20,13 @@ import {
 	leaveOptionsQuery,
 	rosteredDaysQuery,
 } from "@/features/leave/api";
+import {
+	dayPortionBody,
+	dayPortionChoiceOf,
+	dayPortionOptions,
+	FULL_DAY_VALUE,
+} from "@/features/leave/dayPortion";
+import { durationText, minutesBetween } from "@/features/leave/leaveLength";
 import type { ApplyField } from "@/features/leave/leaveRefusal";
 import { leaveTypeOptions } from "@/features/leave/leaveTypeOptions";
 import type { LeaveRequestBody } from "@/features/leave/types";
@@ -65,8 +73,10 @@ export type LeaveApplyFormInput = Omit<
  * person, the leave type, the dates and the remarks, which a type with
  * `requiresReason` asks for as a reason. The types offered are those that
  * apply to that person's home Department (the API's ADR-0077), read here
- * once the person is known, grouped by how they are counted. It only
- * collects; the caller sends.
+ * once the person is known, grouped by how they are counted. On one date,
+ * with a type that can be taken in part days, it also asks how much of the
+ * day: the full day, one of the person's leave durations, or their own
+ * times (Custom). It only collects; the caller sends.
  */
 export const LeaveApplyForm = ({
 	companyId,
@@ -88,6 +98,8 @@ export const LeaveApplyForm = ({
 	const [remarks, setRemarks] = useState("");
 	const [missingRemarks, setMissingRemarks] = useState(false);
 	const [takeOffConfirmed, setTakeOffConfirmed] = useState(false);
+	const [chosenPortion, setChosenPortion] = useState(FULL_DAY_VALUE);
+	const [customTimes, setCustomTimes] = useState({ start: "", end: "" });
 	const own = employees === undefined;
 	const chosen = employees?.options.find(
 		(person) => person.membershipId === membershipId
@@ -110,11 +122,31 @@ export const LeaveApplyForm = ({
 		: (typeOptions[0]?.value ?? "");
 	const noTypesApply =
 		optionsReadable && options.isSuccess && typeOptions.length === 0;
+	const chosenLeaveType = leaveTypes.find(
+		(leaveType) => leaveType.code === typeCode
+	);
 	const remarksRequired =
-		recording ||
-		(leaveTypes.find((leaveType) => leaveType.code === typeCode)
-			?.requiresReason ??
-			false);
+		recording || (chosenLeaveType?.requiresReason ?? false);
+	const typeAllowsPartDays = chosenLeaveType?.allowsPartDays ?? false;
+	const oneDate = dates.start === dates.end;
+	const portionOptions = dayPortionOptions(
+		optionsReadable ? (options.data?.durations ?? []) : [],
+		t
+	);
+	// Part days are one date of a type that allows them; otherwise, or when the pick no longer applies, the full day.
+	const partDaysOffered = oneDate && typeAllowsPartDays;
+	const portionValue =
+		partDaysOffered &&
+		portionOptions.some((option) => option.value === chosenPortion)
+			? chosenPortion
+			: FULL_DAY_VALUE;
+	const portion = dayPortionChoiceOf(portionValue);
+	const customMinutes =
+		customTimes.start && customTimes.end
+			? minutesBetween(customTimes.start, customTimes.end)
+			: 0;
+	const customIncomplete = portion.kind === "CUSTOM" && customMinutes === 0;
+	const portionIds = formRowIds(`${id}-portion`);
 	const remarksError =
 		missingRemarks && remarksRequired
 			? t("leave.leaveReasonRequired")
@@ -138,6 +170,7 @@ export const LeaveApplyForm = ({
 	const incomplete =
 		(!own && !chosen) ||
 		typeCode === "" ||
+		customIncomplete ||
 		rosterUnknown ||
 		(recording && rosteredDays.length > 0 && !takeOffConfirmed);
 	return (
@@ -177,6 +210,7 @@ export const LeaveApplyForm = ({
 						leaveType: typeCode,
 						startDate: dates.start,
 						endDate: dates.end,
+						...dayPortionBody(portion, customTimes),
 						...(trimmedRemarks === "" ? {} : { notes: trimmedRemarks }),
 						...(recording
 							? { takeOffRosteredDays: rosteredDays.length > 0 }
@@ -295,12 +329,75 @@ export const LeaveApplyForm = ({
 						value={dates}
 						onChange={setDates}
 					/>
+					{!oneDate && typeAllowsPartDays && (
+						<p className="text-sm text-neutral-700">
+							{t("leave.portion.severalDays")}
+						</p>
+					)}
 					{fields.endDate && (
 						<p className="text-sm text-error-700" role="alert">
 							{fields.endDate}
 						</p>
 					)}
 				</div>
+				{partDaysOffered && (
+					<FormRow
+						error={fields.duration}
+						htmlFor={`${id}-portion`}
+						label={t("leave.portion.label")}
+						layout="stacked"
+					>
+						<Select
+							aria-labelledby={portionIds.labelId}
+							className="w-full"
+							options={portionOptions}
+							status={fields.duration ? "error" : undefined}
+							value={portionValue}
+							aria-describedby={
+								fields.duration ? portionIds.errorId : undefined
+							}
+							onChange={setChosenPortion}
+						/>
+					</FormRow>
+				)}
+				{portion.kind === "CUSTOM" && (
+					<div className="flex flex-col gap-6 sm:flex-row">
+						{(["start", "end"] as const).map((edge) => {
+							const timeIds = formRowIds(`${id}-${edge}`);
+							const hint =
+								edge === "end" && customMinutes > 0
+									? t(
+											customTimes.end < customTimes.start
+												? "leave.portion.lengthNextDay"
+												: "leave.portion.length",
+											{ length: durationText(customMinutes, t) }
+										)
+									: undefined;
+							return (
+								<FormRow
+									key={edge}
+									required
+									className="sm:flex-1"
+									hint={hint}
+									htmlFor={`${id}-${edge}`}
+									label={t(`leave.portion.${edge}`)}
+									layout="stacked"
+								>
+									<TimeSelect
+										aria-describedby={hint ? timeIds.hintId : undefined}
+										aria-labelledby={timeIds.labelId}
+										className="w-full"
+										placeholder={t("leave.portion.chooseTime")}
+										value={customTimes[edge]}
+										onChange={(time) => {
+											setCustomTimes((times) => ({ ...times, [edge]: time }));
+										}}
+									/>
+								</FormRow>
+							);
+						})}
+					</div>
+				)}
 				<RosteredDaysNotice
 					confirmed={recording ? takeOffConfirmed : undefined}
 					days={rosteredDays}

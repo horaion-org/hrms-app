@@ -202,7 +202,11 @@
 			"approvalPending": "This request now goes through approval steps. Reload the page to see where it stands.",
 			"noApprover": "Nobody can approve leave in this department yet. Ask an HR admin to check who approves leave.",
 			"stepDecided": "Someone else decided this step first. Reload the page to see where it stands.",
-			"notAnApprover": "You can’t decide this step."
+			"notAnApprover": "You can’t decide this step.",
+			"durationNotAvailable": "That duration no longer applies; choose another.",
+			"durationRejected": "This leave type can’t be taken for part of a day, or the times need another look. Choose again.",
+			"partDayOneDate": "Leave for part of a day is for one date. Choose the same start and end date.",
+			"partDayChange": "Leave for part of a day stays on one date, with a leave type that can be taken in part days."
 		},
 		"myLeave": "My leave",
 		"teamRequests": "Team requests",
@@ -278,7 +282,14 @@
 			"option": "{{name}} · {{range}} · {{length}}",
 			"text": "{{name}} {{range}}",
 			"timeRange": "{{start}}–{{end}}",
-			"timeRangeNextDay": "{{start}}–{{end}} next day"
+			"timeRangeNextDay": "{{start}}–{{end}} next day",
+			"label": "How much of the day",
+			"start": "Start",
+			"end": "End",
+			"chooseTime": "Choose a time",
+			"length": "{{length}}",
+			"lengthNextDay": "{{length}} · Ends the next day",
+			"severalDays": "Leave over several days is taken in full days."
 		}
 	},
 	"approvals": {

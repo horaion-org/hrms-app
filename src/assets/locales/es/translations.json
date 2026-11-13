@@ -202,7 +202,11 @@
 			"approvalPending": "Esta solicitud ahora pasa por pasos de aprobación. Recarga la página para ver en qué punto está.",
 			"noApprover": "Aún nadie puede aprobar permisos en este departamento. Pide a una persona de RR. HH. que revise quién aprueba los permisos.",
 			"stepDecided": "Otra persona decidió este paso antes. Recarga la página para ver en qué punto está.",
-			"notAnApprover": "No puedes decidir este paso."
+			"notAnApprover": "No puedes decidir este paso.",
+			"durationNotAvailable": "Esa duración ya no se aplica; elige otra.",
+			"durationRejected": "Este tipo de permiso no se puede tomar por partes del día, o hay que revisar el horario. Vuelve a elegir.",
+			"partDayOneDate": "Un permiso por parte del día es para una sola fecha. Elige la misma fecha de inicio y de fin.",
+			"partDayChange": "Un permiso por parte del día se queda en una sola fecha, con un tipo de permiso que se pueda tomar por partes del día."
 		},
 		"myLeave": "Mis ausencias",
 		"teamRequests": "Solicitudes del equipo",
@@ -278,7 +282,14 @@
 			"option": "{{name}} · {{range}} · {{length}}",
 			"text": "{{name}} {{range}}",
 			"timeRange": "{{start}}–{{end}}",
-			"timeRangeNextDay": "{{start}}–{{end}} del día siguiente"
+			"timeRangeNextDay": "{{start}}–{{end}} del día siguiente",
+			"label": "Qué parte del día",
+			"start": "Inicio",
+			"end": "Fin",
+			"chooseTime": "Elige una hora",
+			"length": "{{length}}",
+			"lengthNextDay": "{{length}} · Termina al día siguiente",
+			"severalDays": "Un permiso de varios días se toma en días completos."
 		}
 	},
 	"approvals": {

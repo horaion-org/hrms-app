@@ -15,7 +15,10 @@ import { configureApiClient, resetApiClient } from "@/common/api-client";
 import { envelope, problemReply, stubApi } from "@/common/testing/stubApi";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import { rosteredDaysQuery } from "@/features/leave/api";
-import { LEAVE_TYPE_FIXTURES } from "@/features/leave/fixtures";
+import {
+	LEAVE_DURATION_OPTION_FIXTURES,
+	LEAVE_TYPE_FIXTURES,
+} from "@/features/leave/fixtures";
 import { LeaveApplyForm } from "./LeaveApplyForm";
 import * as stories from "./LeaveApplyForm.stories";
 
@@ -40,10 +43,11 @@ const OWN_ROSTERED_DAYS =
 const OWN_LEAVE_OPTIONS =
 	"GET /api/v1/companies/c-1/me/leave-requests/leave-options";
 const optionsReply = (
-	leaveTypes = LEAVE_TYPE_FIXTURES
+	leaveTypes = LEAVE_TYPE_FIXTURES,
+	durations = LEAVE_DURATION_OPTION_FIXTURES
 ): { status: number; body: unknown } => ({
 	status: 200,
-	body: envelope({ leaveTypes }),
+	body: envelope({ leaveTypes, durations }),
 });
 const aisha = {
 	membershipId: "m-aisha",
@@ -286,4 +290,155 @@ it("given_theTypesFailToLoad_when_retried_then_readsThemAgain", async () => {
 				call.path === "/api/v1/companies/c-1/me/leave-requests/leave-options"
 		)
 	).toHaveLength(2);
+});
+
+/** The caller's own form, today to today, with the given leave types offered. */
+const renderOwnForm = (
+	leaveTypes = LEAVE_TYPE_FIXTURES,
+	refusal?: { fields: { duration: string }; refreshMembers: false }
+): ReturnType<typeof vi.fn> => {
+	stubApi({
+		[OWN_ROSTERED_DAYS]: { status: 200, body: envelope([]) },
+		[OWN_LEAVE_OPTIONS]: optionsReply(leaveTypes),
+	});
+	const onCreate = vi.fn();
+	render(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveApplyForm
+				busy={false}
+				companyId="c-1"
+				refusal={refusal}
+				onClose={vi.fn()}
+				onCreate={onCreate}
+			/>
+		</I18nextProvider>
+	);
+	return onCreate;
+};
+
+const choosePortion = async (name: RegExp | string): Promise<void> => {
+	await userEvent.click(
+		await screen.findByRole("button", { name: "How much of the day" })
+	);
+	await userEvent.click(await screen.findByRole("option", { name }));
+};
+
+const submit = async (): Promise<void> => {
+	await waitFor(() => {
+		expect(
+			screen.getByRole("button", { name: "Submit request" })
+		).toBeEnabled();
+	});
+	await userEvent.click(screen.getByRole("button", { name: "Submit request" }));
+};
+
+it("given_oneDate_when_opened_then_offersTheFullDayDurationsAndCustom", async () => {
+	const onCreate = renderOwnForm();
+
+	const portion = await screen.findByRole("button", {
+		name: "How much of the day",
+	});
+	expect(portion).toHaveTextContent("Full day");
+	await submit();
+
+	expect(onCreate.mock.calls[0]?.[1]).not.toHaveProperty("leaveDurationId");
+	expect(onCreate.mock.calls[0]?.[1]).not.toHaveProperty("startTime");
+	await userEvent.click(portion);
+	expect(
+		screen.getAllByRole("option").map((option) => option.textContent)
+	).toEqual([
+		"Full day",
+		"Morning · 09:00–13:00 · 4 h",
+		"Night · 22:00–02:00 next day · 4 h",
+		"Custom",
+	]);
+});
+
+it("given_aDurationChosen_when_submitted_then_sendsItsIdAlone", async () => {
+	const onCreate = renderOwnForm();
+
+	await choosePortion(/^Morning/);
+	await submit();
+
+	expect(onCreate).toHaveBeenCalledWith(
+		null,
+		expect.objectContaining({
+			leaveType: "ANNUAL",
+			leaveDurationId: "ld-morning",
+		})
+	);
+	expect(onCreate.mock.calls[0]?.[1]).not.toHaveProperty("startTime");
+});
+
+it("given_customChosen_when_bothTimesArePicked_then_showsTheLengthAndSendsThem", async () => {
+	const user = userEvent.setup();
+	const onCreate = renderOwnForm();
+
+	await choosePortion("Custom");
+	expect(screen.getByRole("button", { name: "Submit request" })).toBeDisabled();
+	await user.click(screen.getByRole("button", { name: "Start" }));
+	await user.click(screen.getByRole("option", { name: "10:00" }));
+	await user.click(screen.getByRole("button", { name: "End" }));
+	await user.click(screen.getByRole("option", { name: "12:30" }));
+
+	expect(screen.getByText("2 h 30 min")).toBeVisible();
+	await submit();
+	expect(onCreate).toHaveBeenCalledWith(
+		null,
+		expect.objectContaining({ startTime: "10:00", endTime: "12:30" })
+	);
+	expect(onCreate.mock.calls[0]?.[1]).not.toHaveProperty("leaveDurationId");
+});
+
+it("given_aTypeTakenInFullDaysOnly_when_chosen_then_doesNotAskHowMuchOfTheDay", async () => {
+	const sick = LEAVE_TYPE_FIXTURES.find((type) => type.code === "SICK")!;
+	renderOwnForm([{ ...sick, allowsPartDays: false }]);
+
+	await waitFor(() => {
+		expect(screen.getByRole("button", { name: "Type" })).toHaveTextContent(
+			"Sick leave"
+		);
+	});
+	expect(
+		screen.queryByRole("button", { name: "How much of the day" })
+	).not.toBeInTheDocument();
+});
+
+it("given_severalDays_when_chosen_then_takesFullDaysAndSaysSo", async () => {
+	const user = userEvent.setup();
+	const onCreate = renderOwnForm();
+	await choosePortion(/^Morning/);
+
+	await user.click(screen.getByRole("button", { name: /^Leave dates:/ }));
+	const month = dayjs().startOf("month");
+	await user.click(
+		screen.getByRole("gridcell", {
+			name: new RegExp(month.date(10).format("D MMMM YYYY")),
+		})
+	);
+	await user.click(
+		screen.getByRole("gridcell", {
+			name: new RegExp(month.date(12).format("D MMMM YYYY")),
+		})
+	);
+
+	expect(
+		screen.queryByRole("button", { name: "How much of the day" })
+	).not.toBeInTheDocument();
+	expect(
+		screen.getByText("Leave over several days is taken in full days.")
+	).toBeVisible();
+	await submit();
+	expect(onCreate.mock.calls[0]?.[1]).not.toHaveProperty("leaveDurationId");
+});
+
+it("given_aRefusedPartOfTheDay_when_shown_then_itLandsOnHowMuchOfTheDay", async () => {
+	renderOwnForm(LEAVE_TYPE_FIXTURES, {
+		fields: { duration: "That duration no longer applies; choose another." },
+		refreshMembers: false,
+	});
+
+	expect(
+		await screen.findByText("That duration no longer applies; choose another.")
+	).toBeVisible();
 });
