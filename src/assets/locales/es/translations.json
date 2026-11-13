@@ -263,7 +263,10 @@
 			"rejectedAt": "Rechazado en",
 			"trailFailed": "No pudimos cargar los pasos de aprobación.",
 			"retry": "Intentar de nuevo"
-		}
+		},
+		"choosePersonFirst": "Primero elige a una persona",
+		"noTypesApply": "Aún no hay tipos de permiso para {{name}}. Un administrador puede configurarlos en Ajustes › Permisos.",
+		"noTypesApplyOwn": "Aún no hay tipos de permiso para ti. Un administrador puede configurarlos en Ajustes › Permisos."
 	},
 	"approvals": {
 		"panel": {

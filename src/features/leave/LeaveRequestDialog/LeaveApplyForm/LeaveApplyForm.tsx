@@ -16,8 +16,8 @@ import { Dialog } from "@/components/ui/Dialog";
 import {
 	LEAVE_NOTES_MAX_LENGTH,
 	LEAVE_REMARK_MAX_LENGTH,
+	leaveOptionsQuery,
 	rosteredDaysQuery,
-	type CompanyLeaveType,
 } from "@/features/leave/api";
 import type { ApplyField } from "@/features/leave/leaveRefusal";
 import { leaveTypeOptions } from "@/features/leave/leaveTypeOptions";
@@ -35,24 +35,16 @@ export type ApplyEmployees = {
 	}>;
 };
 
-/** How reading the leave types stands. */
-export type LeaveTypesStatus = "pending" | "error" | "success";
-
 export type LeaveApplyFormProps = {
-	/** With it, the form tells which chosen days hold a shift. */
+	/**
+	 * With it, the form reads the leave types that apply to the person the
+	 * leave is for, and tells which chosen days hold a shift.
+	 */
 	companyId?: string;
 	/** A reviewer records approved leave: a required remark, and rostered days must be confirmed. */
 	recording?: boolean;
 	/** Who leave may be applied for; left out when the caller applies for themself. */
 	employees?: ApplyEmployees;
-	/**
-	 * The company's leave types. Only active types that are not the
-	 * scheduler's own are offered, grouped by how they are counted.
-	 */
-	leaveTypes: ReadonlyArray<CompanyLeaveType>;
-	/** The Type field says the types are loading while "pending", and offers `onRetryLeaveTypes` on "error". */
-	leaveTypesStatus?: LeaveTypesStatus;
-	onRetryLeaveTypes?: () => void;
 	/** While the application is being sent. */
 	busy: boolean;
 	/** Why the last application was refused: on a field, or as the form's alert. */
@@ -71,15 +63,15 @@ export type LeaveApplyFormInput = Omit<
 /**
  * A new leave application, for the caller or on a person's behalf: the
  * person, the leave type, the dates and the remarks, which a type with
- * `requiresReason` asks for as a reason. It only collects; the caller sends.
+ * `requiresReason` asks for as a reason. The types offered are those that
+ * apply to that person's home Department (the API's ADR-0077), read here
+ * once the person is known, grouped by how they are counted. It only
+ * collects; the caller sends.
  */
 export const LeaveApplyForm = ({
 	companyId,
 	recording = false,
 	employees,
-	leaveTypes,
-	leaveTypesStatus = "success",
-	onRetryLeaveTypes,
 	busy,
 	refusal,
 	onClose,
@@ -103,9 +95,21 @@ export const LeaveApplyForm = ({
 	const fields = refusal?.fields ?? {};
 	const employeeError = fields.employee ? `${id}-employee-error` : undefined;
 	const remarksIds = formRowIds(`${id}-remarks`);
+	// Until the person is known there is nothing to offer: the types depend on their Department.
+	const personKnown = own || chosen !== undefined;
+	const optionsReadable = companyId !== undefined && personKnown;
+	const options = useQuery(
+		leaveOptionsQuery(companyId ?? "", chosen?.membershipId, optionsReadable)
+	);
+	const leaveTypes = optionsReadable ? (options.data?.leaveTypes ?? []) : [];
 	const typeOptions = leaveTypeOptions(leaveTypes, t);
-	// Until the person picks one, the first type offered is chosen, even if the catalogue arrives after opening.
-	const typeCode = chosenType ?? typeOptions[0]?.value ?? "";
+	// The first type offered is chosen until the person picks one; a pick that no longer applies (another person
+	// was chosen) falls back the same way.
+	const typeCode = typeOptions.some((option) => option.value === chosenType)
+		? (chosenType ?? "")
+		: (typeOptions[0]?.value ?? "");
+	const noTypesApply =
+		optionsReadable && options.isSuccess && typeOptions.length === 0;
 	const remarksRequired =
 		recording ||
 		(leaveTypes.find((leaveType) => leaveType.code === typeCode)
@@ -237,26 +241,39 @@ export const LeaveApplyForm = ({
 					<p className="text-sm font-medium" id={`${id}-type`}>
 						{t("leave.type")}
 					</p>
-					{leaveTypesStatus === "error" ? (
+					{options.isError ? (
 						<Callout role="alert" tone="warning">
 							{t("leave.typesFailed")}{" "}
-							<Button variant="textlink" onClick={onRetryLeaveTypes}>
+							<Button
+								variant="textlink"
+								onClick={() => {
+									void options.refetch();
+								}}
+							>
 								{t("leave.retry")}
 							</Button>
+						</Callout>
+					) : noTypesApply ? (
+						<Callout tone="info">
+							{own
+								? t("leave.noTypesApplyOwn")
+								: t("leave.noTypesApply", { name: chosen?.displayName })}
 						</Callout>
 					) : (
 						<Select
 							aria-describedby={typeError}
 							aria-labelledby={`${id}-type`}
 							className="w-full"
-							disabled={leaveTypesStatus === "pending"}
+							disabled={!optionsReadable || options.isPending}
 							options={typeOptions}
 							status={fields.type ? "error" : undefined}
 							value={typeCode}
 							placeholder={
-								leaveTypesStatus === "pending"
-									? t("leave.typesLoading")
-									: undefined
+								!personKnown
+									? t("leave.choosePersonFirst")
+									: options.isPending
+										? t("leave.typesLoading")
+										: undefined
 							}
 							onChange={setChosenType}
 						/>

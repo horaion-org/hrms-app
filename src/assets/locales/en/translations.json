@@ -263,7 +263,10 @@
 			"rejectedAt": "Rejected at",
 			"trailFailed": "We couldn’t load the approval steps.",
 			"retry": "Try again"
-		}
+		},
+		"choosePersonFirst": "Choose a person first",
+		"noTypesApply": "No leave types apply to {{name}} yet. An admin can set them in Settings › Leave.",
+		"noTypesApplyOwn": "No leave types apply to you yet. An admin can set them in Settings › Leave."
 	},
 	"approvals": {
 		"panel": {

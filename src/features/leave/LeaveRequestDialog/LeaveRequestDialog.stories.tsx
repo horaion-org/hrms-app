@@ -5,7 +5,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import { approvalInstanceQuery } from "@/features/approvals/api";
 import { leaveAtHrInstanceFixture } from "@/features/approvals/fixtures";
-import { rosteredDaysQuery } from "@/features/leave/api";
+import { leaveOptionsQuery, rosteredDaysQuery } from "@/features/leave/api";
 import {
 	LEAVE_FIXTURES,
 	LEAVE_TYPE_FIXTURES,
@@ -33,6 +33,15 @@ const reviewed = LEAVE_FIXTURES[1]!;
 const client = new QueryClient({
 	defaultOptions: { queries: { retry: false, staleTime: Infinity } },
 });
+// The apply form reads the leave types that apply to the person it is for; the stories hold them already.
+for (const memberId of [
+	undefined,
+	...employees.options.map((person) => person.membershipId),
+]) {
+	client.setQueryData(leaveOptionsQuery("c-1", memberId).queryKey, {
+		leaveTypes: LEAVE_TYPE_FIXTURES,
+	});
+}
 client.setQueryData(
 	rosteredDaysQuery(
 		"c-1",
@@ -65,7 +74,6 @@ const reviewerLifecycle = {
 const applyForm: LeaveApplyFormInput = {
 	busy: false,
 	employees,
-	leaveTypes: LEAVE_TYPE_FIXTURES,
 	onCreate: (): void => {},
 };
 
@@ -113,10 +121,19 @@ export const ApprovalOverAShift: Story = {
 };
 export const Rejected: Story = { args: { request: LEAVE_FIXTURES[2] } };
 export const Approved: Story = { args: { request: LEAVE_FIXTURES[3] } };
-export const Apply: Story = { args: { mode: "apply", applyForm } };
+/** The application reads the leave types that apply to the chosen person in the company `lifecycle` names. */
+const applyLifecycle = {
+	companyId: "c-1",
+	own: false,
+	onDone: (): void => {},
+};
+export const Apply: Story = {
+	args: { mode: "apply", applyForm, lifecycle: applyLifecycle },
+};
 export const ApplyRefused: Story = {
 	args: {
 		mode: "apply",
+		lifecycle: applyLifecycle,
 		applyForm: {
 			...applyForm,
 			refusal: {

@@ -5,11 +5,13 @@ import {
 	render as renderPlain,
 	screen,
 } from "@testing-library/react";
+import dayjs from "dayjs";
 import userEvent from "@testing-library/user-event";
 import { expect, it, vi } from "vitest";
 import { I18nextProvider } from "react-i18next";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import { approvalKeys } from "@/features/approvals/api";
+import { leaveOptionsQuery, rosteredDaysQuery } from "@/features/leave/api";
 import { leaveAtHrInstanceFixture } from "@/features/approvals/fixtures";
 import {
 	LEAVE_FIXTURES,
@@ -44,15 +46,33 @@ const reviewWith = (overrides: Partial<LeaveReview> = {}): LeaveReview => ({
 	...overrides,
 });
 
-/** An application with no leave types read yet; `overrides` replace any part. */
+/** An application; the form reads its leave types itself. `overrides` replace any part. */
 const applyFormWith = (
 	overrides: Partial<LeaveApplyFormInput> = {}
 ): LeaveApplyFormInput => ({
 	busy: false,
-	leaveTypes: [],
 	onCreate: vi.fn(),
 	...overrides,
 });
+
+/** The company the apply form reads leave types and rostered days in. */
+const APPLY_LIFECYCLE = { companyId: "c-1", own: false, onDone: vi.fn() };
+
+/** A cache holding the leave types that apply to the caller and to Aisha, and an empty roster today. */
+const applyClient = (): QueryClient => {
+	const client = new QueryClient();
+	const today = dayjs().format("YYYY-MM-DD");
+	for (const memberId of [undefined, "m-aisha"]) {
+		client.setQueryData(leaveOptionsQuery("c-1", memberId).queryKey, {
+			leaveTypes: LEAVE_TYPE_FIXTURES,
+		});
+		client.setQueryData(
+			rosteredDaysQuery("c-1", { start: today, end: today }, memberId).queryKey,
+			[]
+		);
+	}
+	return client;
+};
 
 const pending = LEAVE_FIXTURES[1]!;
 /** Before the pending request's first day, so approving it needs no comment. */
@@ -246,15 +266,16 @@ it("applies for the chosen employee with the chosen type and dates, and shows a 
 	const view = render(
 		<I18nextProvider i18n={authTestI18n}>
 			<LeaveRequestDialog
+				lifecycle={APPLY_LIFECYCLE}
 				mode="apply"
 				applyForm={applyFormWith({
 					employees,
-					leaveTypes: LEAVE_TYPE_FIXTURES,
 					onCreate,
 				})}
 				onClose={vi.fn()}
 			/>
-		</I18nextProvider>
+		</I18nextProvider>,
+		applyClient()
 	);
 	expect(screen.getByRole("button", { name: "Submit request" })).toBeDisabled();
 	await user.type(
@@ -276,10 +297,10 @@ it("applies for the chosen employee with the chosen type and dates, and shows a 
 	view.rerender(
 		<I18nextProvider i18n={authTestI18n}>
 			<LeaveRequestDialog
+				lifecycle={APPLY_LIFECYCLE}
 				mode="apply"
 				applyForm={applyFormWith({
 					employees,
-					leaveTypes: LEAVE_TYPE_FIXTURES,
 					refusal: {
 						fields: {
 							endDate: "They already have leave on one of these days.",
@@ -303,11 +324,13 @@ it("applies for the caller themself when no employees are offered", async () => 
 	render(
 		<I18nextProvider i18n={authTestI18n}>
 			<LeaveRequestDialog
-				applyForm={applyFormWith({ leaveTypes: LEAVE_TYPE_FIXTURES, onCreate })}
+				applyForm={applyFormWith({ onCreate })}
+				lifecycle={APPLY_LIFECYCLE}
 				mode="apply"
 				onClose={vi.fn()}
 			/>
-		</I18nextProvider>
+		</I18nextProvider>,
+		applyClient()
 	);
 	expect(
 		screen.getByRole("dialog", { name: "Apply for leave" })
@@ -328,11 +351,13 @@ it("sends trimmed remarks, counts them as they are typed, and leaves them out wh
 	const view = render(
 		<I18nextProvider i18n={authTestI18n}>
 			<LeaveRequestDialog
-				applyForm={applyFormWith({ leaveTypes: LEAVE_TYPE_FIXTURES, onCreate })}
+				applyForm={applyFormWith({ onCreate })}
+				lifecycle={APPLY_LIFECYCLE}
 				mode="apply"
 				onClose={vi.fn()}
 			/>
-		</I18nextProvider>
+		</I18nextProvider>,
+		applyClient()
 	);
 	const remarks = screen.getByRole("textbox", { name: "Remarks (optional)" });
 	expect(remarks).toHaveAttribute("maxLength", "1000");
@@ -349,9 +374,9 @@ it("sends trimmed remarks, counts them as they are typed, and leaves them out wh
 	view.rerender(
 		<I18nextProvider i18n={authTestI18n}>
 			<LeaveRequestDialog
+				lifecycle={APPLY_LIFECYCLE}
 				mode="apply"
 				applyForm={applyFormWith({
-					leaveTypes: LEAVE_TYPE_FIXTURES,
 					refusal: {
 						fields: { notes: "Use 1,000 characters or fewer." },
 						refreshMembers: false,
@@ -407,11 +432,13 @@ it("offers the company's applicable leave types grouped by how they are counted"
 	render(
 		<I18nextProvider i18n={authTestI18n}>
 			<LeaveRequestDialog
-				applyForm={applyFormWith({ leaveTypes: LEAVE_TYPE_FIXTURES })}
+				applyForm={applyFormWith()}
+				lifecycle={APPLY_LIFECYCLE}
 				mode="apply"
 				onClose={vi.fn()}
 			/>
-		</I18nextProvider>
+		</I18nextProvider>,
+		applyClient()
 	);
 	const type = screen.getByRole("button", { name: "Type" });
 	expect(type).toHaveTextContent("Annual leave");
@@ -433,11 +460,13 @@ it("asks for a reason when the chosen leave type requires one, and sends it as r
 	render(
 		<I18nextProvider i18n={authTestI18n}>
 			<LeaveRequestDialog
-				applyForm={applyFormWith({ leaveTypes: LEAVE_TYPE_FIXTURES, onCreate })}
+				applyForm={applyFormWith({ onCreate })}
+				lifecycle={APPLY_LIFECYCLE}
 				mode="apply"
 				onClose={vi.fn()}
 			/>
-		</I18nextProvider>
+		</I18nextProvider>,
+		applyClient()
 	);
 	await user.type(
 		screen.getByRole("textbox", { name: "Remarks (optional)" }),
@@ -474,9 +503,9 @@ it("shows a refused leave type on the type field", () => {
 	render(
 		<I18nextProvider i18n={authTestI18n}>
 			<LeaveRequestDialog
+				lifecycle={APPLY_LIFECYCLE}
 				mode="apply"
 				applyForm={applyFormWith({
-					leaveTypes: LEAVE_TYPE_FIXTURES,
 					refusal: {
 						fields: {
 							type: "This leave type is no longer offered. Choose another.",
@@ -486,7 +515,8 @@ it("shows a refused leave type on the type field", () => {
 				})}
 				onClose={vi.fn()}
 			/>
-		</I18nextProvider>
+		</I18nextProvider>,
+		applyClient()
 	);
 	expect(
 		screen.getByRole("button", { name: "Type" })
@@ -506,50 +536,6 @@ it("cannot submit before the company's leave types arrive", () => {
 		</I18nextProvider>
 	);
 	expect(screen.getByRole("button", { name: "Submit request" })).toBeDisabled();
-});
-
-it("says the leave types are loading, and holds Submit, while they are read", () => {
-	render(
-		<I18nextProvider i18n={authTestI18n}>
-			<LeaveRequestDialog
-				applyForm={applyFormWith({ leaveTypesStatus: "pending" })}
-				mode="apply"
-				onClose={vi.fn()}
-			/>
-		</I18nextProvider>
-	);
-
-	const type = screen.getByRole("button", { name: "Type" });
-	expect(type).toHaveTextContent("Loading leave types…");
-	expect(type).toBeDisabled();
-	expect(screen.getByRole("button", { name: "Submit request" })).toBeDisabled();
-});
-
-it("explains leave types that failed to load and offers to read them again", async () => {
-	const user = userEvent.setup();
-	const onRetryLeaveTypes = vi.fn();
-	render(
-		<I18nextProvider i18n={authTestI18n}>
-			<LeaveRequestDialog
-				mode="apply"
-				applyForm={applyFormWith({
-					leaveTypesStatus: "error",
-					onRetryLeaveTypes,
-				})}
-				onClose={vi.fn()}
-			/>
-		</I18nextProvider>
-	);
-
-	expect(screen.getByRole("alert")).toHaveTextContent(
-		"We couldn’t load the leave types."
-	);
-	expect(
-		screen.queryByRole("button", { name: "Type" })
-	).not.toBeInTheDocument();
-	expect(screen.getByRole("button", { name: "Submit request" })).toBeDisabled();
-	await user.click(screen.getByRole("button", { name: "Try again" }));
-	expect(onRetryLeaveTypes).toHaveBeenCalledTimes(1);
 });
 
 it("shows a reviewer who reads approvals the steps of a request under a flow, and who decided them", () => {

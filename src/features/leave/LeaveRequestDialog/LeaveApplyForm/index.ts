@@ -3,5 +3,4 @@ export {
 	type ApplyEmployees,
 	type LeaveApplyFormInput,
 	type LeaveApplyFormProps,
-	type LeaveTypesStatus,
 } from "./LeaveApplyForm";

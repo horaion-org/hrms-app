@@ -4,15 +4,32 @@ import { I18nextProvider } from "react-i18next";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
 import { authTestI18n } from "@/features/auth/testingI18n";
+import { leaveOptionsQuery } from "@/features/leave/api";
 import { LEAVE_FIXTURES, LEAVE_TYPE_FIXTURES } from "@/features/leave/fixtures";
 import { LeaveApplyForm } from "./LeaveApplyForm";
+
+const COMPANY = "c-1";
+
+/** A cache already holding everyone's leave options, so stories need no API. */
+const clientWithOptions = (leaveTypes = LEAVE_TYPE_FIXTURES): QueryClient => {
+	const client = new QueryClient();
+	for (const memberId of [
+		undefined,
+		...LEAVE_FIXTURES.map((leave) => leave.membershipId),
+	]) {
+		client.setQueryData(leaveOptionsQuery(COMPANY, memberId).queryKey, {
+			leaveTypes,
+		});
+	}
+	return client;
+};
 
 const meta = {
 	title: "Features/Leave/LeaveRequestDialog/LeaveApplyForm",
 	component: LeaveApplyForm,
 	decorators: [
 		(Story): ReactElement => (
-			<QueryClientProvider client={new QueryClient()}>
+			<QueryClientProvider client={clientWithOptions()}>
 				<I18nextProvider i18n={authTestI18n}>
 					<Story />
 				</I18nextProvider>
@@ -20,7 +37,7 @@ const meta = {
 		),
 	],
 	args: {
-		leaveTypes: LEAVE_TYPE_FIXTURES,
+		companyId: COMPANY,
 		busy: false,
 		employees: {
 			search: "",
@@ -54,4 +71,16 @@ export const Refused: Story = {
 			refreshMembers: false,
 		},
 	},
+};
+
+/** No leave type applies to the caller's Department yet. */
+export const NoTypesApply: Story = {
+	args: { employees: undefined },
+	decorators: [
+		(Story: () => ReactElement): ReactElement => (
+			<QueryClientProvider client={clientWithOptions([])}>
+				<Story />
+			</QueryClientProvider>
+		),
+	],
 };
