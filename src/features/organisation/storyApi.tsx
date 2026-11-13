@@ -1,4 +1,11 @@
 import { QueryClientProvider, type QueryClient } from "@tanstack/react-query";
+import {
+	createMemoryHistory,
+	createRootRoute,
+	createRoute,
+	createRouter,
+	RouterProvider,
+} from "@tanstack/react-router";
 import type { Decorator } from "@storybook/react-vite";
 import { I18nextProvider } from "react-i18next";
 import { configureApiClient, resetApiClient } from "@/common/api-client";
@@ -79,6 +86,33 @@ export const storyProviders =
 			</QueryClientProvider>
 		</I18nextProvider>
 	);
+
+/**
+ * The signed-in route a page section reads its company from
+ * (`useCurrentCompanyId`), settled on `companyId`, for a story of a component
+ * that checks the person's access. Use inside `storyProviders`.
+ */
+export const storyCompanyRoute =
+	(companyId: string): Decorator =>
+	(Story) => {
+		const root = createRootRoute();
+		const authenticated = createRoute({
+			getParentRoute: () => root,
+			id: "_authenticated",
+			context: () => ({
+				currentCompany: {
+					kind: "settled" as const,
+					company: { companyId, membershipId: "story-member" },
+				},
+			}),
+			component: () => <Story />,
+		});
+		const router = createRouter({
+			routeTree: root.addChildren([authenticated]),
+			history: createMemoryHistory(),
+		});
+		return <RouterProvider router={router} />;
+	};
 
 export const STORY_PEOPLE = ["Marcus Lim", "Priya Nair", "Daniel Tan"].map(
 	(displayName, index) => ({

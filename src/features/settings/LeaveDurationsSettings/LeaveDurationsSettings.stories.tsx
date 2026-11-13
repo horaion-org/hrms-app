@@ -6,7 +6,10 @@ import {
 	type ManagedLeaveDuration,
 } from "@/features/leaveDurations/api";
 import { LEAVE_DURATION_CATALOGUE_FIXTURE } from "@/features/leaveDurations/fixtures";
-import { storyProviders } from "@/features/organisation/storyApi";
+import {
+	storyCompanyRoute,
+	storyProviders,
+} from "@/features/organisation/storyApi";
 import { LeaveDurationsSettings } from "@/features/settings/LeaveDurationsSettings";
 import { workspaceQuery } from "@/features/workspace/api";
 
@@ -35,7 +38,8 @@ const meta = {
 	component: LeaveDurationsSettings,
 	parameters: { layout: "padded" },
 	args: { companyId: COMPANY },
-	decorators: [storyProviders(client)],
+	// Decorators wrap outward: the route sits inside the query client the card reads.
+	decorators: [storyCompanyRoute(COMPANY), storyProviders(client)],
 	beforeEach: ({ parameters }): void => {
 		const given = parameters as Parameters;
 		client.setQueryData(
