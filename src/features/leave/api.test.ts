@@ -1,5 +1,11 @@
-import { describe, expect, it } from "vitest";
-import { leaveRequestSchema, rosteredDaysQuery } from "@/features/leave/api";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { configureApiClient, resetApiClient } from "@/common/api-client";
+import { envelope, stubApi } from "@/common/testing/stubApi";
+import {
+	leaveOptionsQuery,
+	leaveRequestSchema,
+	rosteredDaysQuery,
+} from "@/features/leave/api";
 import { leaveFixture } from "@/features/leave/fixtures";
 
 describe("leaveRequestSchema", () => {
@@ -35,5 +41,68 @@ describe("leave lifecycle paths", () => {
 			"2026-06-01",
 			"2026-06-02",
 		]);
+	});
+});
+
+describe("leaveOptionsQuery", () => {
+	beforeEach(() => {
+		configureApiClient({
+			accessToken: () => Promise.resolve("test-pass"),
+			renew: () => Promise.resolve({ kind: "expired" }),
+			onUnauthenticated: () => {},
+		});
+	});
+	afterEach(() => {
+		resetApiClient();
+		vi.unstubAllGlobals();
+	});
+
+	const annual = {
+		leaveTypeId: "lt-annual",
+		code: "ANNUAL",
+		name: "Annual leave",
+		grantKind: "ALLOWANCE",
+		paid: true,
+		requiresReason: false,
+		status: "ACTIVE",
+		displayOrder: 1,
+		system: false,
+	};
+
+	it("reads the caller's own options, an older answer allowing part days", async () => {
+		stubApi({
+			"GET /api/v1/companies/c1/me/leave-requests/leave-options": {
+				status: 200,
+				body: envelope({ leaveTypes: [annual] }),
+			},
+		});
+		const query = leaveOptionsQuery("c1");
+		expect(query.queryKey).toEqual(["leave", "c1", "leave-options", "me"]);
+		const options = await (
+			query.queryFn as (context: { signal?: AbortSignal }) => Promise<unknown>
+		)({});
+		expect(options).toEqual({
+			leaveTypes: [{ ...annual, allowsPartDays: true }],
+		});
+	});
+
+	it("reads a member's options on their path, keyed on them", async () => {
+		stubApi({
+			"GET /api/v1/companies/c1/member-profiles/m-1/leave-requests/leave-options":
+				{
+					status: 200,
+					body: envelope({
+						leaveTypes: [{ ...annual, allowsPartDays: false }],
+					}),
+				},
+		});
+		const query = leaveOptionsQuery("c1", "m-1");
+		expect(query.queryKey).toEqual(["leave", "c1", "leave-options", "m-1"]);
+		const options = await (
+			query.queryFn as (context: { signal?: AbortSignal }) => Promise<unknown>
+		)({});
+		expect(options).toMatchObject({
+			leaveTypes: [{ code: "ANNUAL", allowsPartDays: false }],
+		});
 	});
 });
