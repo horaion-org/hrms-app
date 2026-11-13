@@ -55,8 +55,12 @@ jobs:
 
       # check:contract (the permission contract is not stale), check:quarantine (every skipped test is listed in
       # test-quarantine.json with its reason, and nothing else is skipped), then eslint with zero warnings.
+      # ESLint's type-aware rules outgrew Node's default heap on the 2-vCPU runner (JavaScript heap out of memory,
+      # exit 134); 6 GB leaves the runner's other 2 GB to the system.
       - name: Lint
         run: pnpm lint
+        env:
+          NODE_OPTIONS: --max-old-space-size=6144
 
       # The quarantine is visible on every run, green or not.
       - name: Quarantined tests to the job summary
