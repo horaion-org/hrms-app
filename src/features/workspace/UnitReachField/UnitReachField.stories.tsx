@@ -113,3 +113,16 @@ export const NoDepartmentChosen: Story = {
 		error: "Choose at least one department.",
 	},
 };
+
+/** A department admin's choice: only Chosen departments, with their own Department. */
+export const DepartmentsOnly: Story = {
+	args: {
+		reaches: ["DEPARTMENTS"],
+		choices: { branches: [], departments: CHOICES.departments.slice(2) },
+		initial: {
+			appliesTo: "DEPARTMENTS",
+			branchIds: [],
+			departmentIds: ["d-1"],
+		},
+	},
+};

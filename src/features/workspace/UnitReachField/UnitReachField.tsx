@@ -23,6 +23,11 @@ export type UnitReachFieldProps = {
 	disabled: boolean;
 	/** The refusal for the chosen kind's empty list, shown under its select. */
 	error?: string;
+	/**
+	 * The choices offered, in their usual order; every choice when left out.
+	 * One choice still shows, checked, so the person reads where it applies.
+	 */
+	reaches?: ReadonlyArray<UnitReach>;
 };
 
 /**
@@ -37,6 +42,7 @@ export const UnitReachField = ({
 	idPrefix,
 	disabled,
 	error,
+	reaches = UNIT_REACHES,
 }: UnitReachFieldProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const groupId = `${idPrefix}-applies-to`;
@@ -53,20 +59,22 @@ export const UnitReachField = ({
 					</span>
 				</p>
 				<div aria-labelledby={groupId} className="grid gap-3" role="radiogroup">
-					{UNIT_REACHES.map((reach) => (
-						<RadioCard
-							key={reach}
-							checked={value.appliesTo === reach}
-							description={t(`${key}.descriptions.${reach}`)}
-							disabled={disabled}
-							label={t(`${key}.choices.${reach}`)}
-							name={groupId}
-							value={reach}
-							onChange={(appliesTo) => {
-								onChange({ ...value, appliesTo: appliesTo as UnitReach });
-							}}
-						/>
-					))}
+					{UNIT_REACHES.filter((reach) => reaches.includes(reach)).map(
+						(reach) => (
+							<RadioCard
+								key={reach}
+								checked={value.appliesTo === reach}
+								description={t(`${key}.descriptions.${reach}`)}
+								disabled={disabled}
+								label={t(`${key}.choices.${reach}`)}
+								name={groupId}
+								value={reach}
+								onChange={(appliesTo) => {
+									onChange({ ...value, appliesTo: appliesTo as UnitReach });
+								}}
+							/>
+						)
+					)}
 				</div>
 			</div>
 			{value.appliesTo !== "COMPANY" && (
