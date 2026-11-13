@@ -3,16 +3,16 @@ import { useState } from "react";
 import "@/common/i18n";
 import type { FunctionComponent } from "@/common/types";
 import {
-	PolicyReachField,
-	type PolicyReachFieldProps,
-} from "@/features/scheduling/policy/PolicyReachField";
+	UnitReachField,
+	type UnitReachFieldProps,
+} from "@/features/workspace/UnitReachField";
 import type {
-	PolicyReachChoices,
-	PolicyReachValue,
-} from "@/features/scheduling/policy/policyReach";
+	UnitReachChoices,
+	UnitReachValue,
+} from "@/features/workspace/unitReach";
 
 /** Orchard with Kitchen and Bar, and Marina with Kitchen: two Departments share a name across Branches. */
-const CHOICES: PolicyReachChoices = {
+const CHOICES: UnitReachChoices = {
 	branches: [
 		{ branchId: "b-2", name: "Marina", country: "SG", status: "ACTIVE" },
 		{ branchId: "b-1", name: "Orchard", country: "SG", status: "ACTIVE" },
@@ -45,23 +45,23 @@ const CHOICES: PolicyReachChoices = {
 	],
 };
 
-type PolicyReachFieldInFormProps = Omit<
-	PolicyReachFieldProps,
+type UnitReachFieldInFormProps = Omit<
+	UnitReachFieldProps,
 	"value" | "onChange" | "idPrefix"
 > & {
 	/** What the field starts with. */
-	initial: PolicyReachValue;
+	initial: UnitReachValue;
 };
 
 /** The field holding its own value, as the dialog's form does. */
-const PolicyReachFieldInForm = ({
+const UnitReachFieldInForm = ({
 	initial,
 	...props
-}: PolicyReachFieldInFormProps): FunctionComponent => {
+}: UnitReachFieldInFormProps): FunctionComponent => {
 	const [value, setValue] = useState(initial);
 	return (
 		<div className="flex max-w-140 flex-col gap-4">
-			<PolicyReachField
+			<UnitReachField
 				{...props}
 				idPrefix="story"
 				value={value}
@@ -72,14 +72,14 @@ const PolicyReachFieldInForm = ({
 };
 
 const meta = {
-	title: "Features/Scheduling/Policy/PolicyReachField",
-	component: PolicyReachFieldInForm,
+	title: "Features/Workspace/UnitReachField",
+	component: UnitReachFieldInForm,
 	args: {
 		choices: CHOICES,
 		disabled: false,
 		initial: { appliesTo: "COMPANY", branchIds: [], departmentIds: [] },
 	},
-} satisfies Meta<typeof PolicyReachFieldInForm>;
+} satisfies Meta<typeof UnitReachFieldInForm>;
 
 export default meta;
 

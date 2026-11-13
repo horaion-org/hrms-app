@@ -21,10 +21,14 @@ import {
 import { CreateFormDialog } from "@/features/organisation/CreateFormDialog";
 import { UnitNameField } from "@/features/organisation/UnitNameField";
 import { useCreateFormSubmit } from "@/features/organisation/useCreateFormSubmit";
+import type { UnitReachChoices } from "@/features/workspace/unitReach";
+import { UnitReachField } from "@/features/workspace/UnitReachField";
 
 export type LeaveTypeDialogProps = {
 	/** Set to edit an existing type; its status stays as it is. */
 	editing?: ManagedLeaveType & { grantKind: LeaveGrantKind };
+	/** The Branches and Departments the Applies to field offers. */
+	reachChoices: UnitReachChoices;
 	/** Saves the type; a rejection is shown in the dialog. */
 	onSave: (body: LeaveTypeBody) => Promise<unknown>;
 	onClose: () => void;
@@ -35,13 +39,15 @@ const key = "settings.leave.dialog";
 
 /**
  * Adds a leave type to the company's catalogue, or edits one: its name, how
- * it is counted, whether it is paid and whether applying asks for a reason.
+ * it is counted, whether it is paid, whether applying asks for a reason and
+ * where it applies: the whole company, chosen Branches or chosen Departments.
  * Once any request uses the type, how it is counted is fixed, as the API
  * keeps it. Mount when opened and unmount when closed so every attempt starts
  * fresh.
  */
 export const LeaveTypeDialog = ({
 	editing,
+	reachChoices,
 	onSave,
 	onClose,
 }: LeaveTypeDialogProps): FunctionComponent => {
@@ -168,6 +174,23 @@ export const LeaveTypeDialog = ({
 						onChange={(event) => {
 							field.onChange(event.target.checked);
 						}}
+					/>
+				)}
+			/>
+			<Controller
+				control={control}
+				name="reach"
+				render={({ field }) => (
+					<UnitReachField
+						choices={reachChoices}
+						disabled={isSubmitting}
+						idPrefix={`${formId}-reach`}
+						value={field.value}
+						error={
+							errors.reach?.branchIds?.message ??
+							errors.reach?.departmentIds?.message
+						}
+						onChange={field.onChange}
 					/>
 				)}
 			/>

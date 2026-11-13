@@ -19,10 +19,7 @@ import {
 	policyConstraintsQuery,
 	policyOptionsQuery,
 } from "@/features/scheduling/policy/api";
-import {
-	reachChoicesOf,
-	reachValueOf,
-} from "@/features/scheduling/policy/policyReach";
+import { reachChoicesOf, reachValueOf } from "@/features/workspace/unitReach";
 import { usePolicyActions } from "@/features/scheduling/policy/usePolicyActions";
 import { schedulingPolicyColumns } from "@/features/settings/SchedulingPolicySettings/schedulingPolicyColumns";
 import { workspaceQuery } from "@/features/workspace/api";
@@ -155,7 +152,7 @@ export const SchedulingPolicySettings = ({
 					options={options}
 					reach={{
 						choices: workspace
-							? reachChoicesOf(workspace, companyId)
+							? reachChoicesOf(workspace, companyId, "scheduling_policy:update")
 							: { branches: [], departments: [] },
 						initial: reachValueOf(dialog.editing),
 					}}

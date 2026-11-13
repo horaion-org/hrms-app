@@ -36,7 +36,8 @@ vi.mock("@tanstack/react-router", () => ({
 const CHANGES =
 	"/api/v1/companies/c-1/branches/b-1/departments/d-1/schedules/s-1/roster-changes";
 const LEAVE = "/api/v1/companies/c-1/member-profiles/m-1/leave-requests";
-const LEAVE_TYPES = "/api/v1/companies/c-1/me/leave-types";
+// The leave types that apply to the member whose day it is (the API's ADR-0077).
+const LEAVE_TYPES = `${LEAVE}/leave-options`;
 const PREVIEW =
 	"/api/v1/companies/c-1/branches/b-1/departments/d-1/schedules/s-1/roster-changes/preview";
 const roster = scheduleAssignmentsFixture();
@@ -369,7 +370,7 @@ describe("RosterCellPanel", () => {
 		const routes = {
 			[`GET ${LEAVE_TYPES}`]: {
 				status: 200,
-				body: envelope(LEAVE_TYPE_FIXTURES),
+				body: envelope({ leaveTypes: LEAVE_TYPE_FIXTURES }),
 			},
 			[`GET ${LEAVE}/r-1`]: {
 				status: 200,

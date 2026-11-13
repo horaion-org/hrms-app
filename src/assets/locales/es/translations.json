@@ -263,7 +263,10 @@
 			"rejectedAt": "Rechazado en",
 			"trailFailed": "No pudimos cargar los pasos de aprobación.",
 			"retry": "Intentar de nuevo"
-		}
+		},
+		"choosePersonFirst": "Primero elige a una persona",
+		"noTypesApply": "Aún no hay tipos de permiso para {{name}}. Un administrador puede configurarlos en Ajustes › Permisos.",
+		"noTypesApplyOwn": "Aún no hay tipos de permiso para ti. Un administrador puede configurarlos en Ajustes › Permisos."
 	},
 	"approvals": {
 		"panel": {
@@ -753,13 +756,14 @@
 				"changeForbidden": "Ya no tienes permiso para cambiar los tipos de permiso.",
 				"statusFailed": "No pudimos cambiar el tipo de permiso. Inténtalo de nuevo.",
 				"reorderFailed": "No pudimos cambiar el orden. Inténtalo de nuevo.",
-				"orderStale": "La lista había cambiado, así que se ha actualizado. Inténtalo de nuevo."
+				"orderStale": "La lista había cambiado, así que se ha actualizado. Inténtalo de nuevo.",
+				"appliesTo": "Se aplica a"
 			},
 			"dialog": {
 				"title": "Añadir tipo de permiso",
 				"editTitle": "Editar tipo de permiso",
-				"description": "Añade un tipo de permiso que se pueda solicitar.",
-				"editDescription": "Cambia el nombre de {{name}} y cómo se cuenta.",
+				"description": "Añade un tipo de permiso que se pueda solicitar y elige dónde se aplica.",
+				"editDescription": "Cambia el nombre de {{name}}, cómo se cuenta y dónde se aplica.",
 				"name": "Nombre",
 				"namePlaceholder": "p. ej. Permiso de estudios",
 				"nameHint": "De 2 a 100 caracteres: letras, números, espacios y . ' & -",
@@ -790,7 +794,8 @@
 				"forbidden": "Ya no tienes permiso para añadir tipos de permiso.",
 				"editForbidden": "Ya no tienes permiso para cambiar los tipos de permiso.",
 				"failed": "No pudimos añadir el tipo de permiso. Inténtalo de nuevo.",
-				"editFailed": "No pudimos guardar el tipo de permiso. Inténtalo de nuevo."
+				"editFailed": "No pudimos guardar el tipo de permiso. Inténtalo de nuevo.",
+				"reachRejected": "Una sucursal o un departamento que elegiste ya no existe. Vuelve a elegir."
 			}
 		},
 		"approvals": {
@@ -4163,29 +4168,7 @@
 			"noLongerNote": "Corrige la configuración de {{department}} para generar."
 		},
 		"policy": {
-			"alwaysApplies": "Siempre se aplica",
-			"reach": {
-				"label": "Se aplica a",
-				"choices": {
-					"COMPANY": "Toda la empresa",
-					"BRANCHES": "Sucursales elegidas",
-					"DEPARTMENTS": "Departamentos elegidos"
-				},
-				"descriptions": {
-					"COMPANY": "Todos los departamentos, ahora y en el futuro.",
-					"BRANCHES": "Todos los departamentos de las sucursales que elijas.",
-					"DEPARTMENTS": "Solo los departamentos que elijas."
-				},
-				"branchesHint": "Una sucursal incluye los departamentos que se le añadan después.",
-				"departmentsHint": "Los departamentos añadidos después no se incluyen.",
-				"branchesRequired": "Elige al menos una sucursal.",
-				"departmentsRequired": "Elige al menos un departamento.",
-				"branchesPlaceholder": "Selecciona sucursales",
-				"departmentsPlaceholder": "Selecciona departamentos",
-				"selectAll": "Seleccionar todo",
-				"wholeCompany": "Todos los departamentos",
-				"branch": "{{name}} (sucursal)"
-			}
+			"alwaysApplies": "Siempre se aplica"
 		},
 		"months": {
 			"states": {
@@ -4353,6 +4336,28 @@
 		"departmentFilter": {
 			"department": "Departamento",
 			"allDepartments": "Todos los departamentos"
+		},
+		"unitReach": {
+			"label": "Se aplica a",
+			"choices": {
+				"COMPANY": "Toda la empresa",
+				"BRANCHES": "Sucursales elegidas",
+				"DEPARTMENTS": "Departamentos elegidos"
+			},
+			"descriptions": {
+				"COMPANY": "Todos los departamentos, ahora y en el futuro.",
+				"BRANCHES": "Todos los departamentos de las sucursales que elijas.",
+				"DEPARTMENTS": "Solo los departamentos que elijas."
+			},
+			"branchesHint": "Una sucursal incluye los departamentos que se le añadan después.",
+			"departmentsHint": "Los departamentos añadidos después no se incluyen.",
+			"branchesRequired": "Elige al menos una sucursal.",
+			"departmentsRequired": "Elige al menos un departamento.",
+			"branchesPlaceholder": "Selecciona sucursales",
+			"departmentsPlaceholder": "Selecciona departamentos",
+			"selectAll": "Seleccionar todo",
+			"wholeCompany": "Todos los departamentos",
+			"branch": "{{name}} (sucursal)"
 		}
 	},
 	"colourSwatchPicker": {

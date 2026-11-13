@@ -26,6 +26,7 @@ export const refusalFor = (
 			"409 LEAVE_TYPE_KIND_LOCKED": t(`${key}.kindLocked`),
 			"409 LEAVE_TYPE_SYSTEM": t(`${key}.system`),
 			"404 LEAVE_TYPE_NOT_FOUND": t(`${key}.gone`),
+			"400 INVALID_UNIT_REACH": t(`${key}.reachRejected`),
 		},
 		fieldErrors: {
 			name: { field: "name", message: t(`${key}.nameRejected`) },

@@ -109,6 +109,7 @@ export const leaveTypeFixture = (
 	status: "ACTIVE",
 	displayOrder: 1,
 	system: false,
+	allowsPartDays: true,
 	...overrides,
 });
 

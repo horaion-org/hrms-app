@@ -263,7 +263,10 @@
 			"rejectedAt": "Rejected at",
 			"trailFailed": "We couldn’t load the approval steps.",
 			"retry": "Try again"
-		}
+		},
+		"choosePersonFirst": "Choose a person first",
+		"noTypesApply": "No leave types apply to {{name}} yet. An admin can set them in Settings › Leave.",
+		"noTypesApplyOwn": "No leave types apply to you yet. An admin can set them in Settings › Leave."
 	},
 	"approvals": {
 		"panel": {
@@ -1507,13 +1510,14 @@
 				"changeForbidden": "You no longer have permission to change leave types.",
 				"statusFailed": "We couldn’t change the leave type. Try again.",
 				"reorderFailed": "We couldn’t change the order. Try again.",
-				"orderStale": "The list had changed, so it has been refreshed. Try again."
+				"orderStale": "The list had changed, so it has been refreshed. Try again.",
+				"appliesTo": "Applies to"
 			},
 			"dialog": {
 				"title": "Add leave type",
 				"editTitle": "Edit leave type",
-				"description": "Add a kind of leave people can apply for.",
-				"editDescription": "Change how {{name}} is named and counted.",
+				"description": "Add a kind of leave people can apply for, and choose where it applies.",
+				"editDescription": "Change how {{name}} is named and counted, and where it applies.",
 				"name": "Name",
 				"namePlaceholder": "e.g. Study leave",
 				"nameHint": "2 to 100 characters: letters, numbers, spaces and . ' & -",
@@ -1544,7 +1548,8 @@
 				"forbidden": "You no longer have permission to add leave types.",
 				"editForbidden": "You no longer have permission to change leave types.",
 				"failed": "We couldn’t add the leave type. Try again.",
-				"editFailed": "We couldn’t save the leave type. Try again."
+				"editFailed": "We couldn’t save the leave type. Try again.",
+				"reachRejected": "A branch or department you chose no longer exists. Choose again."
 			}
 		},
 		"approvals": {
@@ -2985,6 +2990,28 @@
 		"departmentFilter": {
 			"department": "Department",
 			"allDepartments": "All departments"
+		},
+		"unitReach": {
+			"label": "Applies to",
+			"choices": {
+				"COMPANY": "Whole company",
+				"BRANCHES": "Chosen branches",
+				"DEPARTMENTS": "Chosen departments"
+			},
+			"descriptions": {
+				"COMPANY": "Every department, now and later.",
+				"BRANCHES": "Every department in the branches you choose.",
+				"DEPARTMENTS": "Only the departments you choose."
+			},
+			"branchesHint": "A branch includes departments added to it later.",
+			"departmentsHint": "Departments added later aren’t included.",
+			"branchesRequired": "Choose at least one branch.",
+			"departmentsRequired": "Choose at least one department.",
+			"branchesPlaceholder": "Select branches",
+			"departmentsPlaceholder": "Select departments",
+			"selectAll": "Select all",
+			"wholeCompany": "All departments",
+			"branch": "{{name}} (branch)"
 		}
 	},
 	"numberStepper": {
@@ -4341,29 +4368,7 @@
 			"noLongerNote": "Fix {{department}}’s setup to generate."
 		},
 		"policy": {
-			"alwaysApplies": "Always applies",
-			"reach": {
-				"label": "Applies to",
-				"choices": {
-					"COMPANY": "Whole company",
-					"BRANCHES": "Chosen branches",
-					"DEPARTMENTS": "Chosen departments"
-				},
-				"descriptions": {
-					"COMPANY": "Every department, now and later.",
-					"BRANCHES": "Every department in the branches you choose.",
-					"DEPARTMENTS": "Only the departments you choose."
-				},
-				"branchesHint": "A branch includes departments added to it later.",
-				"departmentsHint": "Departments added later aren’t included.",
-				"branchesRequired": "Choose at least one branch.",
-				"departmentsRequired": "Choose at least one department.",
-				"branchesPlaceholder": "Select branches",
-				"departmentsPlaceholder": "Select departments",
-				"selectAll": "Select all",
-				"wholeCompany": "All departments",
-				"branch": "{{name}} (branch)"
-			}
+			"alwaysApplies": "Always applies"
 		},
 		"months": {
 			"states": {

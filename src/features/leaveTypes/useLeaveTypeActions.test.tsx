@@ -5,7 +5,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { configureApiClient, resetApiClient } from "@/common/api-client";
 import type { FunctionComponent } from "@/common/types";
 import { envelope, problemReply, stubApi } from "@/common/testing/stubApi";
-import { activeLeaveTypesQuery } from "@/features/leave/api";
+import { leaveOptionsQuery } from "@/features/leave/api";
 import {
 	leaveTypeCatalogueQuery,
 	type LeaveTypeOrderBody,
@@ -39,10 +39,10 @@ const setUp = (): {
 	const client = new QueryClient({
 		defaultOptions: { mutations: { retry: false } },
 	});
-	client.setQueryData(activeLeaveTypesQuery("c-1").queryKey, []);
+	client.setQueryData(leaveOptionsQuery("c-1").queryKey, { leaveTypes: [] });
 	client.setQueryData(leaveTypeCatalogueQuery("c-1").queryKey, []);
 	client.setQueryData(["leave", "c-1", "me", {}], []);
-	client.setQueryData(activeLeaveTypesQuery("c-2").queryKey, []);
+	client.setQueryData(leaveOptionsQuery("c-2").queryKey, { leaveTypes: [] });
 	const wrapper = ({
 		children,
 	}: {
@@ -75,14 +75,17 @@ it("reloads the apply form's catalogue and the leave lists after a write, this c
 				grantKind: "ALLOWANCE",
 				paid: true,
 				requiresReason: false,
+				allowsPartDays: true,
+				appliesToBranchIds: [],
+				appliesToDepartmentIds: [],
 				status: "ACTIVE",
 			},
 		})
 	);
 
-	expect(invalidated(activeLeaveTypesQuery("c-1").queryKey)).toBe(true);
+	expect(invalidated(leaveOptionsQuery("c-1").queryKey)).toBe(true);
 	expect(invalidated(["leave", "c-1", "me", {}])).toBe(true);
-	expect(invalidated(activeLeaveTypesQuery("c-2").queryKey)).toBe(false);
+	expect(invalidated(leaveOptionsQuery("c-2").queryKey)).toBe(false);
 });
 
 it("shows a new order at once and reloads after a refused one, so the next try starts fresh", async () => {

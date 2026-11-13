@@ -20,7 +20,7 @@ import {
 	WEEKLY_RULE_FIXTURE,
 } from "@/features/scheduling/constraints/fixtures";
 import type { ConstraintOptionsState } from "@/features/scheduling/constraints/useConstraintOptions";
-import { reachValueOf } from "@/features/scheduling/policy/policyReach";
+import { reachValueOf } from "@/features/workspace/unitReach";
 import { schedulingWorkspace } from "@/features/scheduling/schedules/fixtures";
 import { workspaceQuery } from "@/features/workspace/api";
 

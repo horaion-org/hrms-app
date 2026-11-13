@@ -16,7 +16,6 @@ import { FilterChips } from "@/components/ui/FilterChips";
 import { FiltersPopover } from "@/components/ui/FiltersPopover";
 import { PageToolbar } from "@/components/ui/PageToolbar";
 import { Tabs, TabList, Tab, TabPanels, TabPanel } from "@/components/ui/Tabs";
-import { activeLeaveTypesQuery } from "@/features/leave/api";
 import { defaultRange, rangeDays } from "@/features/leave/dates";
 import { LeaveRangeNavigator } from "@/features/leave/LeaveRangeNavigator";
 import { LeaveRequestDialog } from "@/features/leave/LeaveRequestDialog";
@@ -175,7 +174,6 @@ export const Leave = (): FunctionComponent => {
 		dialog?.mode === "apply" ||
 		dialog?.mode === "applyOwn" ||
 		dialog?.mode === "record";
-	const leaveTypes = useQuery(activeLeaveTypesQuery(companyId, applyFormOpen));
 	// Anything that changes which requests are listed starts again from the first page.
 	const show = (next: LeaveSearch): void => {
 		void navigate({
@@ -507,13 +505,8 @@ export const Leave = (): FunctionComponent => {
 							? {
 									busy: applying,
 									employees: dialog.mode === "applyOwn" ? undefined : employees,
-									leaveTypes: leaveTypes.data ?? [],
-									leaveTypesStatus: leaveTypes.status,
 									refusal,
 									onCreate: create,
-									onRetryLeaveTypes: (): void => {
-										void leaveTypes.refetch();
-									},
 								}
 							: undefined
 					}

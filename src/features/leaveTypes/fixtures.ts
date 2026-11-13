@@ -14,6 +14,9 @@ export const managedLeaveTypeFixture = (
 	displayOrder: 1,
 	system: false,
 	requestCount: 0,
+	allowsPartDays: true,
+	appliesToBranches: [],
+	appliesToDepartments: [],
 	...overrides,
 });
 
@@ -26,6 +29,14 @@ export const LEAVE_TYPE_CATALOGUE_FIXTURE: Array<ManagedLeaveType> = [
 		name: "Sick leave",
 		displayOrder: 2,
 		requestCount: 3,
+		appliesToDepartments: [
+			{
+				departmentId: "d-kitchen",
+				departmentName: "Kitchen",
+				branchId: "b-orchard",
+				branchName: "Orchard",
+			},
+		],
 	}),
 	managedLeaveTypeFixture({
 		leaveTypeId: "lt-marriage",
@@ -33,6 +44,7 @@ export const LEAVE_TYPE_CATALOGUE_FIXTURE: Array<ManagedLeaveType> = [
 		name: "Marriage leave",
 		grantKind: "PER_OCCASION",
 		displayOrder: 1,
+		allowsPartDays: false,
 	}),
 	managedLeaveTypeFixture({
 		leaveTypeId: "lt-study",

@@ -2,11 +2,13 @@ import type { TFunction } from "i18next";
 import type {
 	ConstraintType,
 	PolicyLevel,
-	ReachedBranch,
-	ReachedDepartment,
 } from "@/features/scheduling/constraints/api";
 import type { SentenceValue } from "@/features/scheduling/constraints/constraintSentence";
-import { reachLabel } from "@/features/scheduling/policy/policyReach";
+import {
+	reachLabel,
+	type ReachedBranch,
+	type ReachedDepartment,
+} from "@/features/workspace/unitReach";
 
 /** What the line under a constraint's sentence is built from. */
 export type AppliesToSource = {

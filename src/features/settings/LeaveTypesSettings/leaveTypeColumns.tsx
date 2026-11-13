@@ -7,6 +7,7 @@ import { LockIcon } from "@/components/ui/LockIcon";
 import { OverflowMenuItem } from "@/components/ui/OverflowMenu";
 import type { ManagedLeaveType } from "@/features/leaveTypes/api";
 import { actionsColumn } from "@/features/organisation/listColumns";
+import { reachLabel } from "@/features/workspace/unitReach";
 
 const key = "settings.leave.types";
 
@@ -53,6 +54,13 @@ const baseColumns = (
 		id: "details",
 		header: t(`${key}.details`),
 		cell: (type) => detailsOf(type, t),
+	},
+	{
+		id: "appliesTo",
+		header: t(`${key}.appliesTo`),
+		cell: (type) => reachLabel(type, t),
+		// A phone keeps the name, the count and the actions; where a type applies is in its dialog.
+		hideBelow: "md",
 	},
 	{
 		id: "requests",

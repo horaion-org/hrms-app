@@ -125,7 +125,7 @@ The morning or the afternoon of one day; the smallest amount of leave a person c
 _Avoid_: Partial day, AM leave, PM leave
 
 **Leave type**:
-A kind of leave a Company offers and a Leave request is for. Every Company starts with the same default set (Annual, Sick, Hospitalisation, Childcare, Maternity, Paternity, Shared parental, Marriage, Compassionate, Off in lieu, Unpaid and Other); its admins add, rename, reorder, deactivate and reactivate them under Settings › Leave, and never delete one. Each has a Grant kind and may ask for a reason when someone applies. The app names a Leave type as the Company does, never in its own words.
+A kind of leave a Company offers and a Leave request is for. Every Company starts with the same default set (Annual, Sick, Hospitalisation, Childcare, Maternity, Paternity, Shared parental, Marriage, Compassionate, Off in lieu, Unpaid and Other); its admins add, rename, reorder, deactivate and reactivate them under Settings › Leave, and never delete one. Each has a Grant kind and may ask for a reason when someone applies. It applies to the whole Company, chosen Branches or chosen Departments, and a person is offered the types that apply to their home Department. The app names a Leave type as the Company does, never in its own words.
 _Avoid_: Request type, leave code, absence type
 
 **Grant kind**:

@@ -11,7 +11,7 @@ import {
 	DEPARTMENTS_POLICY_FIXTURE,
 	WEEKLY_RULE_FIXTURE,
 } from "@/features/scheduling/constraints/fixtures";
-import { reachValueOf } from "@/features/scheduling/policy/policyReach";
+import { reachValueOf } from "@/features/workspace/unitReach";
 
 const meta = {
 	title: "Features/Scheduling/Constraints/ConstraintDialog",

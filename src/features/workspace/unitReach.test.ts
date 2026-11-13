@@ -12,7 +12,9 @@ import {
 	reachLabel,
 	reachOf,
 	reachValueOf,
-} from "@/features/scheduling/policy/policyReach";
+	unitReachBody,
+	unitReachSchema,
+} from "@/features/workspace/unitReach";
 import type { Workspace } from "@/features/workspace/api";
 
 const t = authTestI18n.t;
@@ -91,7 +93,7 @@ describe("reachLabel", () => {
 });
 
 describe("reachedUnitsOf", () => {
-	const choices = reachChoicesOf(workspace, "c-1");
+	const choices = reachChoicesOf(workspace, "c-1", "scheduling_policy:update");
 
 	it("names the chosen kind's units only", () => {
 		expect(
@@ -128,7 +130,11 @@ describe("reachedUnitsOf", () => {
 
 describe("reachChoicesOf", () => {
 	it("offers every branch and department of the company, inactive ones too", () => {
-		const choices = reachChoicesOf(workspace, "c-1");
+		const choices = reachChoicesOf(
+			workspace,
+			"c-1",
+			"scheduling_policy:update"
+		);
 
 		expect(choices.branches.map((branch) => branch.name)).toEqual([
 			"Marina",
@@ -141,9 +147,50 @@ describe("reachChoicesOf", () => {
 	});
 
 	it("offers nothing for another company", () => {
-		expect(reachChoicesOf(workspace, "c-2")).toEqual({
+		expect(
+			reachChoicesOf(workspace, "c-2", "scheduling_policy:update")
+		).toEqual({
 			branches: [],
 			departments: [],
 		});
+	});
+});
+
+describe("unitReachBody", () => {
+	it("sends only the chosen kind's units, and none for the whole company", () => {
+		const picks = { branchIds: ["b-1"], departmentIds: ["d-1"] };
+		expect(unitReachBody({ appliesTo: "COMPANY", ...picks })).toEqual({
+			appliesToBranchIds: [],
+			appliesToDepartmentIds: [],
+		});
+		expect(unitReachBody({ appliesTo: "BRANCHES", ...picks })).toEqual({
+			appliesToBranchIds: ["b-1"],
+			appliesToDepartmentIds: [],
+		});
+		expect(unitReachBody({ appliesTo: "DEPARTMENTS", ...picks })).toEqual({
+			appliesToBranchIds: [],
+			appliesToDepartmentIds: ["d-1"],
+		});
+	});
+});
+
+describe("unitReachSchema", () => {
+	const schema = unitReachSchema(authTestI18n.t);
+
+	it("asks for at least one unit of the chosen kind", () => {
+		expect(
+			schema.safeParse({
+				appliesTo: "DEPARTMENTS",
+				branchIds: ["b-1"],
+				departmentIds: [],
+			}).success
+		).toBe(false);
+		expect(
+			schema.safeParse({
+				appliesTo: "COMPANY",
+				branchIds: [],
+				departmentIds: [],
+			}).success
+		).toBe(true);
 	});
 });

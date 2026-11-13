@@ -33,6 +33,8 @@ const MY_LEAVE_PATH = "/api/v1/companies/c-1/me/leave-requests";
 const MY_LEAVE = `GET ${MY_LEAVE_PATH}`;
 const PEOPLE = "GET /api/v1/companies/c-1/member-profiles";
 const LEAVE_TYPES_PATH = "/api/v1/companies/c-1/me/leave-types";
+const OWN_LEAVE_OPTIONS_PATH =
+	"/api/v1/companies/c-1/me/leave-requests/leave-options";
 const AISHA = "/api/v1/companies/c-1/member-profiles/m-aisha/leave-requests";
 const CHERYL = "/api/v1/companies/c-1/member-profiles/m-cheryl/leave-requests";
 const ALL = [
@@ -153,6 +155,14 @@ const routes = (
 		body: envelope(LEAVE_TYPE_FIXTURES),
 	},
 	[`GET ${AISHA}/rostered-days`]: { status: 200, body: envelope([]) },
+	[`GET ${OWN_LEAVE_OPTIONS_PATH}`]: {
+		status: 200,
+		body: envelope({ leaveTypes: LEAVE_TYPE_FIXTURES }),
+	},
+	[`GET ${AISHA}/leave-options`]: {
+		status: 200,
+		body: envelope({ leaveTypes: LEAVE_TYPE_FIXTURES }),
+	},
 });
 
 const searchesOf = (calls: Array<Call>, path: string): Array<string> =>
@@ -596,7 +606,7 @@ describe("Leave", () => {
 		expect(
 			within(dialog).queryByRole("searchbox", { name: "Search employees" })
 		).not.toBeInTheDocument();
-		// The company's leave types arrive once the dialog opens; the first is chosen.
+		// The leave types that apply to the member arrive once the dialog opens; the first is chosen.
 		await waitFor(() => {
 			expect(
 				within(dialog).getByRole("button", { name: "Type" })
@@ -613,16 +623,20 @@ describe("Leave", () => {
 		expect(sent(calls, `POST ${MY_LEAVE_PATH}`)).toEqual([
 			expect.objectContaining({ leaveType: "SICK" }),
 		]);
-		expect(searchesOf(calls, LEAVE_TYPES_PATH)).toEqual(["status=ACTIVE"]);
+		// Read when the dialog opens (and again after the request refreshes every leave read).
+		expect(searchesOf(calls, OWN_LEAVE_OPTIONS_PATH)).toContain("");
 	});
 
 	it("reads the leave types again from the dialog after they failed to load", async () => {
 		const user = userEvent.setup();
 		const calls = stubApi({
 			...routes(workspaceReply([])),
-			[`GET ${LEAVE_TYPES_PATH}`]: [
+			[`GET ${OWN_LEAVE_OPTIONS_PATH}`]: [
 				problemReply(400, "BAD_REQUEST"),
-				{ status: 200, body: envelope(LEAVE_TYPE_FIXTURES) },
+				{
+					status: 200,
+					body: envelope({ leaveTypes: LEAVE_TYPE_FIXTURES }),
+				},
 			],
 		});
 		await open("/leave");
@@ -643,7 +657,7 @@ describe("Leave", () => {
 			).toHaveTextContent("Annual leave");
 		});
 		expect(within(dialog).queryByRole("alert")).not.toBeInTheDocument();
-		expect(searchesOf(calls, LEAVE_TYPES_PATH)).toHaveLength(2);
+		expect(searchesOf(calls, OWN_LEAVE_OPTIONS_PATH)).toHaveLength(2);
 	});
 
 	it("keeps the team tabs for someone holding the read key, with their own leave first", async () => {

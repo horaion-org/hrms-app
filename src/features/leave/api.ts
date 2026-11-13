@@ -32,45 +32,12 @@ export const companyLeaveTypeSchema = z.object({
 	status: z.enum(["ACTIVE", "INACTIVE"]),
 	displayOrder: z.number().int(),
 	system: z.boolean(),
+	/** Whether it can be taken for part of a day; an older API means yes. */
+	allowsPartDays: z.boolean().catch(true),
 });
 
 /** One leave type a company offers, as its catalogue lists it. */
 export type CompanyLeaveType = z.infer<typeof companyLeaveTypeSchema>;
-
-/** The company's active leave types, in the API's order: kind, then the company's order. */
-export const fetchActiveLeaveTypes = (
-	companyId: string,
-	signal?: AbortSignal
-): Promise<Array<CompanyLeaveType>> =>
-	apiRequest(
-		`${companyPath(companyId)}/me/leave-types?${new URLSearchParams({ status: "ACTIVE" }).toString()}`,
-		z.array(companyLeaveTypeSchema),
-		{ signal }
-	);
-
-/**
- * The company's active leave types, for applying. Any active member may read
- * the catalogue, so it is the caller's own context, never withdrawn with
- * administrative grants. It changes rarely, so it stays fresh for minutes.
- * `allowed` false asks for nothing, until someone opens an application.
- */
-export const activeLeaveTypesQuery = (
-	companyId: string,
-	allowed = true
-): QueryOptionsFor<
-	Array<CompanyLeaveType>,
-	readonly ["leave-types", string, "ACTIVE"]
-> =>
-	queryOptions({
-		queryKey: ["leave-types", companyId, "ACTIVE"] as const,
-		queryFn: allowed
-			? ({ signal }): Promise<Array<CompanyLeaveType>> =>
-					fetchActiveLeaveTypes(companyId, signal)
-			: skipToken,
-		meta: selfMeta(companyId),
-		staleTime: 5 * 60_000,
-		retry,
-	});
 
 const leaveStatusSchema = z.enum([
 	"PENDING",
@@ -480,6 +447,50 @@ export const rosteredDaysQuery = (
 					apiRequest(
 						`${memberId ? memberLeavePath(companyId, memberId) : `${companyPath(companyId)}/me/leave-requests`}/rostered-days?${new URLSearchParams({ startDate: period.start, endDate: period.end }).toString()}`,
 						z.array(rosteredDaySchema),
+						{ signal }
+					)
+			: skipToken,
+		meta: memberId
+			? administrativeMeta(companyId, { record: true })
+			: selfMeta(companyId),
+		staleTime: 30_000,
+		retry,
+	});
+
+const leaveOptionsSchema = z.object({
+	/** The types that apply to the person's home Department, in the API's order. */
+	leaveTypes: z.array(companyLeaveTypeSchema),
+});
+
+/** What an apply form may offer one person (the API's ADR-0077). */
+export type LeaveOptions = z.infer<typeof leaveOptionsSchema>;
+
+/** Every leave-options answer of a company, for refreshing them after a leave type changes. */
+export const leaveOptionsKey = (
+	companyId: string
+): readonly ["leave", string, "leave-options"] =>
+	["leave", companyId, "leave-options"] as const;
+
+/**
+ * What an apply form may offer: the leave types that apply to the caller,
+ * or to `memberId` when applying, recording or changing on their behalf.
+ * `allowed` false asks for nothing.
+ */
+export const leaveOptionsQuery = (
+	companyId: string,
+	memberId?: string,
+	allowed = true
+): QueryOptionsFor<
+	LeaveOptions,
+	readonly ["leave", string, "leave-options", string]
+> =>
+	queryOptions({
+		queryKey: [...leaveOptionsKey(companyId), memberId ?? "me"] as const,
+		queryFn: allowed
+			? ({ signal }): Promise<LeaveOptions> =>
+					apiRequest(
+						`${memberId ? memberLeavePath(companyId, memberId) : `${companyPath(companyId)}/me/leave-requests`}/leave-options`,
+						leaveOptionsSchema,
 						{ signal }
 					)
 			: skipToken,

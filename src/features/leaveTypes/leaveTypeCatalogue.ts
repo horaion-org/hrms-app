@@ -5,6 +5,7 @@ import {
 	type ManagedLeaveType,
 	type UpdateLeaveTypeBody,
 } from "@/features/leaveTypes/api";
+import { reachValueOf, unitReachBody } from "@/features/workspace/unitReach";
 
 /** The catalogue as the Settings page lays it out. */
 export type CatalogueSections = {
@@ -77,7 +78,11 @@ export const movedOrder = (
 	};
 };
 
-/** The full replacement that only flips a type between active and inactive. */
+/**
+ * The full replacement that only flips a type between active and inactive. It
+ * sends the type's reach and part-day switch back as they are, since the API
+ * replaces both.
+ */
 export const statusToggleBody = (
 	type: ManagedLeaveType & { grantKind: LeaveGrantKind }
 ): UpdateLeaveTypeBody => ({
@@ -85,6 +90,8 @@ export const statusToggleBody = (
 	grantKind: type.grantKind,
 	paid: type.paid,
 	requiresReason: type.requiresReason,
+	allowsPartDays: type.allowsPartDays,
+	...unitReachBody(reachValueOf(type)),
 	status: type.status === "ACTIVE" ? "INACTIVE" : "ACTIVE",
 });
 

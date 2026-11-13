@@ -9,8 +9,8 @@ is sampled or kept in page state beyond the timeline's window.
 ## Shape
 
 - `api.ts` — the zod schemas, `leaveRequestsQuery` (one entry per page, sort, filter and window), the
-  active-Branches query that drives the country and Branch filters, `activeLeaveTypesQuery` (the company's
-  active leave types, asked for once an application opens), and the writes: apply (own or on behalf, with
+  active-Branches query that drives the country and Branch filters, `leaveOptionsQuery` (the leave types that
+  apply to the person an application is for, read by the apply form once that person is known), and the writes: apply (own or on behalf, with
   remarks, required when the leave type asks for a reason), approve (with an optional comment) and reject (with
   a reason), plus withdraw, record, change and cancel, the history and the rostered days. A request's `leaveType` is any code: a company names its own types. Its admins manage them under
   Settings › Leave (`features/leaveTypes`, `features/settings/LeaveTypesSettings`); every change there reloads

@@ -2,7 +2,7 @@ import { composeStories } from "@storybook/react-vite";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { expect, it } from "vitest";
-import * as stories from "./PolicyReachField.stories";
+import * as stories from "./UnitReachField.stories";
 
 const { WholeCompany, ChosenBranches, NoDepartmentChosen } =
 	composeStories(stories);
