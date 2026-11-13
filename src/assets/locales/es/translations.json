@@ -753,7 +753,8 @@
 				"changeForbidden": "Ya no tienes permiso para cambiar los tipos de permiso.",
 				"statusFailed": "No pudimos cambiar el tipo de permiso. Inténtalo de nuevo.",
 				"reorderFailed": "No pudimos cambiar el orden. Inténtalo de nuevo.",
-				"orderStale": "La lista había cambiado, así que se ha actualizado. Inténtalo de nuevo."
+				"orderStale": "La lista había cambiado, así que se ha actualizado. Inténtalo de nuevo.",
+				"appliesTo": "Se aplica a"
 			},
 			"dialog": {
 				"title": "Añadir tipo de permiso",

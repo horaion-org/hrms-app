@@ -102,6 +102,9 @@ describe("LeaveTypesSettings", () => {
 		]);
 		expect(rows[0]).toHaveTextContent("Paid");
 		expect(rows[0]).toHaveTextContent("12 requests");
+		// Where each type applies: the whole company, or the Departments it names.
+		expect(rows[0]).toHaveTextContent("All departments");
+		expect(rows[1]).toHaveTextContent("Kitchen");
 		expect(
 			within(panel).getByRole("table", { name: "Per occasion" })
 		).toHaveTextContent("Marriage leave");

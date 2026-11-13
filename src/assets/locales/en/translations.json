@@ -1507,7 +1507,8 @@
 				"changeForbidden": "You no longer have permission to change leave types.",
 				"statusFailed": "We couldn’t change the leave type. Try again.",
 				"reorderFailed": "We couldn’t change the order. Try again.",
-				"orderStale": "The list had changed, so it has been refreshed. Try again."
+				"orderStale": "The list had changed, so it has been refreshed. Try again.",
+				"appliesTo": "Applies to"
 			},
 			"dialog": {
 				"title": "Add leave type",
