@@ -6,6 +6,8 @@ import { formatDay } from "@/features/scheduling/periods";
 import {
 	leaveLineText,
 	leavePortionOf,
+	leavePortionTimeText,
+	shiftTimeText,
 } from "@/features/scheduling/roster/roster";
 import type { LeaveLinkSearch } from "@/features/scheduling/RosterDayNotes/leaveLinkSearch";
 import {
@@ -29,8 +31,10 @@ export type CellNowProps = {
 const key = "scheduling.rosterEdit";
 
 /**
- * What the day holds now: its cell, job title and leave type (with its part
- * of the day for part-day leave, and why the whole day was kept free), the
+ * What the day holds now: its cell (on a shift kept around part-day leave,
+ * the time still worked and the leave it is kept around), job title and
+ * leave type (with its part of the day for part-day leave, and why the whole
+ * day was kept free), the
  * day type a shift falls on, the leave behind a day off, a link to change the
  * whole request in Leave, and who changed the day last, from what, and why.
  */
@@ -44,6 +48,8 @@ export const CellNow = ({
 	const { t } = useTranslation();
 	const lastChange = assignment.lastChange;
 	const leavePortion = leavePortionOf(assignment);
+	const workedTimes = assignment.workedTimes ?? [];
+	const keptAroundLeave = assignment.shift !== null && workedTimes.length > 0;
 	const changedOn = lastChange
 		? formatDay(lastChange.appliedAt, language)
 		: undefined;
@@ -52,12 +58,41 @@ export const CellNow = ({
 		<dl className="flex flex-col gap-1 text-sm">
 			<dt className="font-medium text-neutral-800">{t(`${key}.now`)}</dt>
 			<dd className="font-semibold text-neutral-900">
-				{rosterCellText(assignmentCell(assignment), t)}
+				{keptAroundLeave
+					? t(`${key}.works`, {
+							time: shiftTimeText(
+								{
+									start: assignment.shift!.startTime,
+									end: assignment.shift!.endTime,
+									workedTimes,
+								},
+								t
+							),
+							shift: assignment.shift!.name,
+						})
+					: rosterCellText(assignmentCell(assignment), t)}
 				{assignment.jobTitle && ` · ${assignment.jobTitle.name}`}
 				{assignment.offReason === "LEAVE" &&
 					assignment.leaveTypeName &&
 					` · ${leaveLineText(assignment.leaveTypeName, leavePortion, t)}`}
 			</dd>
+			{/* A shift kept around part-day leave names the leave it is kept around. */}
+			{keptAroundLeave && assignment.leaveTypeName && leavePortion && (
+				<dd className="text-neutral-800">
+					{t("scheduling.rosterMarkers.partDayLeave", {
+						type: assignment.leaveTypeName,
+						time: leavePortionTimeText(leavePortion, t),
+					})}
+					{requestLink && (
+						<>
+							{" · "}
+							<Button search={requestLink} to="/leave" variant="textlink">
+								{t(`${key}.openInLeave`)}
+							</Button>
+						</>
+					)}
+				</dd>
+			)}
 			{/* Part-day leave on a day as generated: the scheduler kept the whole day free. */}
 			{assignment.offReason === "LEAVE" && leavePortion && !lastChange && (
 				<dd className="text-neutral-800">
@@ -101,7 +136,13 @@ export const CellNow = ({
 						{t(`${key}.was`, { cell: rosterCellText(lastChange.before, t) })}
 					</span>
 					{leaveTookTheShift(assignment) && (
-						<span className="block">{t(`${key}.takenOffForLeave`)}</span>
+						<span className="block">
+							{t(
+								keptAroundLeave
+									? `${key}.shortenedForLeave`
+									: `${key}.takenOffForLeave`
+							)}
+						</span>
 					)}
 					{lastChange.remark && <q className="block">{lastChange.remark}</q>}
 				</dd>

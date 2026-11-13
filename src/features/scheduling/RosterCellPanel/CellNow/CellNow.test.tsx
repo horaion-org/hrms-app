@@ -4,7 +4,11 @@ import { describe, expect, it, vi } from "vitest";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 import { editedAssignmentFixture } from "@/features/scheduling/rosterChanges/fixtures";
-import { scheduleAssignmentsFixture } from "@/features/scheduling/schedules/fixtures";
+import {
+	scheduleAssignmentsFixture,
+	shortenedShiftFixture,
+	workedAroundLeaveFixture,
+} from "@/features/scheduling/schedules/fixtures";
 import { CellNow, type CellNowProps } from "./CellNow";
 
 vi.mock("@tanstack/react-router", () => ({
@@ -131,6 +135,40 @@ describe("CellNow", () => {
 			expect(
 				screen.queryByText(/The scheduler can’t plan part days yet/)
 			).toBeNull();
+		});
+	});
+	describe("a shift kept around part-day leave", () => {
+		it("given_aShortenedShift_when_rendered_then_saysTheTimeStillWorkedAndTheLeave", () => {
+			show({ assignment: shortenedShiftFixture() });
+
+			expect(
+				screen.getByText(/Works 11:00 – 15:00 · Front Desk AM/)
+			).toBeVisible();
+			expect(screen.getByText("Annual leave 09:00–11:00")).toBeVisible();
+		});
+
+		it("given_leaveInTheMiddle_when_rendered_then_saysBothPieces", () => {
+			show({ assignment: workedAroundLeaveFixture() });
+
+			expect(
+				screen.getByText(/Works 09:00 – 11:00 · 13:00 – 15:00/)
+			).toBeVisible();
+		});
+
+		it("given_leaveKeptTheShift_when_rendered_then_saysItWasShortenedNotTakenOff", () => {
+			const kept = shortenedShiftFixture();
+			show({
+				assignment: {
+					...kept,
+					lastChange: {
+						...editedAssignmentFixture(kept).lastChange!,
+						reason: "LEAVE_APPROVED",
+					},
+				},
+			});
+
+			expect(screen.getByText("Shortened for leave")).toBeVisible();
+			expect(screen.queryByText("Taken off for leave")).toBeNull();
 		});
 	});
 });
