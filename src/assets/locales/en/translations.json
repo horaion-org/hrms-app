@@ -271,7 +271,15 @@
 		},
 		"choosePersonFirst": "Choose a person first",
 		"noTypesApply": "No leave types apply to {{name}} yet. An admin can set them in Settings › Leave.",
-		"noTypesApplyOwn": "No leave types apply to you yet. An admin can set them in Settings › Leave."
+		"noTypesApplyOwn": "No leave types apply to you yet. An admin can set them in Settings › Leave.",
+		"portion": {
+			"fullDay": "Full day",
+			"custom": "Custom",
+			"option": "{{name}} · {{range}} · {{length}}",
+			"text": "{{name}} {{range}}",
+			"timeRange": "{{start}}–{{end}}",
+			"timeRangeNextDay": "{{start}}–{{end}} next day"
+		}
 	},
 	"approvals": {
 		"panel": {

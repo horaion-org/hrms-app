@@ -271,7 +271,15 @@
 		},
 		"choosePersonFirst": "Primero elige a una persona",
 		"noTypesApply": "Aún no hay tipos de permiso para {{name}}. Un administrador puede configurarlos en Ajustes › Permisos.",
-		"noTypesApplyOwn": "Aún no hay tipos de permiso para ti. Un administrador puede configurarlos en Ajustes › Permisos."
+		"noTypesApplyOwn": "Aún no hay tipos de permiso para ti. Un administrador puede configurarlos en Ajustes › Permisos.",
+		"portion": {
+			"fullDay": "Día completo",
+			"custom": "Personalizado",
+			"option": "{{name}} · {{range}} · {{length}}",
+			"text": "{{name}} {{range}}",
+			"timeRange": "{{start}}–{{end}}",
+			"timeRangeNextDay": "{{start}}–{{end}} del día siguiente"
+		}
 	},
 	"approvals": {
 		"panel": {
