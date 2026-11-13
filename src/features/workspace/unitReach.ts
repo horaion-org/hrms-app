@@ -54,6 +54,44 @@ export type UnitReachValue = {
 	departmentIds: Array<string>;
 };
 
+/** The Applies to field: a choice, and at least one unit of the chosen kind unless it is the whole company. */
+export const unitReachSchema = (
+	t: TFunction
+): z.ZodType<UnitReachValue, UnitReachValue> =>
+	z
+		.object({
+			appliesTo: z.enum(UNIT_REACHES),
+			branchIds: z.array(z.string()),
+			departmentIds: z.array(z.string()),
+		})
+		.superRefine(({ appliesTo, branchIds, departmentIds }, context) => {
+			if (appliesTo === "BRANCHES" && branchIds.length === 0)
+				context.addIssue({
+					code: "custom",
+					path: ["branchIds"],
+					message: t("workspace.unitReach.branchesRequired"),
+				});
+			if (appliesTo === "DEPARTMENTS" && departmentIds.length === 0)
+				context.addIssue({
+					code: "custom",
+					path: ["departmentIds"],
+					message: t("workspace.unitReach.departmentsRequired"),
+				});
+		});
+
+/** What a body sends for a reach: only the chosen kind's units; the whole company sends neither. */
+export const unitReachBody = ({
+	appliesTo,
+	branchIds,
+	departmentIds,
+}: UnitReachValue): {
+	appliesToBranchIds: Array<string>;
+	appliesToDepartmentIds: Array<string>;
+} => ({
+	appliesToBranchIds: appliesTo === "BRANCHES" ? branchIds : [],
+	appliesToDepartmentIds: appliesTo === "DEPARTMENTS" ? departmentIds : [],
+});
+
 /** The reach an item carries; a Department's own constraint reads as the whole company, since it names no unit. */
 type ReachRow = {
 	appliesToBranches: Array<ReachedBranch>;

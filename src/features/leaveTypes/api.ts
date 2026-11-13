@@ -5,11 +5,17 @@ import { companyPath } from "@/common/companyPath";
 import type { QueryOptionsFor } from "@/common/query-client";
 import { administrativeMeta } from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";
+import {
+	reachedBranchSchema,
+	reachedDepartmentSchema,
+} from "@/features/workspace/unitReach";
 
 /*
  * The company's leave type catalogue as its admins manage it (the API's
  * ADR-0055): every type, active and inactive, with how many leave requests
- * use it. Read under `leave_type:read` and changed under `leave_type:update`,
+ * use it, where each applies (the API's ADR-0077: the whole company, chosen
+ * Branches or chosen Departments) and whether it can be taken for part of a
+ * day. Read under `leave_type:read` and changed under `leave_type:update`,
  * both held company-wide. The scheduler's day off (`system`) is listed and
  * never changed. Members read the active types to apply through
  * `activeLeaveTypesQuery` in `features/leave`, with no key.
@@ -51,6 +57,11 @@ const managedLeaveTypeSchema = z.object({
 	system: z.boolean(),
 	/** How many leave requests use it, in any status; names nobody. */
 	requestCount: z.number().int(),
+	/** Whether it can be taken for part of a day; an older API means yes. */
+	allowsPartDays: z.boolean().catch(true),
+	/** Where it applies; both empty is the whole company. */
+	appliesToBranches: z.array(reachedBranchSchema).catch([]),
+	appliesToDepartments: z.array(reachedDepartmentSchema).catch([]),
 });
 
 /** One leave type as its admins see it, with how many requests use it. */
@@ -58,12 +69,15 @@ export type ManagedLeaveType = z.infer<typeof managedLeaveTypeSchema>;
 
 const catalogueSchema = z.array(managedLeaveTypeSchema);
 
-/** What adding a leave type sends; the API makes its code from the name. */
+/** What adding a leave type sends; the API makes its code from the name. Both unit lists empty is the whole company. */
 export type LeaveTypeBody = {
 	name: string;
 	grantKind: LeaveGrantKind;
 	paid: boolean;
 	requiresReason: boolean;
+	allowsPartDays: boolean;
+	appliesToBranchIds: Array<string>;
+	appliesToDepartmentIds: Array<string>;
 };
 
 /** What replacing a leave type sends: its fields and status. */

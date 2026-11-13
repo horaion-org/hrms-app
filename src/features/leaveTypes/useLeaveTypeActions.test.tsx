@@ -75,6 +75,9 @@ it("reloads the apply form's catalogue and the leave lists after a write, this c
 				grantKind: "ALLOWANCE",
 				paid: true,
 				requiresReason: false,
+				allowsPartDays: true,
+				appliesToBranchIds: [],
+				appliesToDepartmentIds: [],
 				status: "ACTIVE",
 			},
 		})

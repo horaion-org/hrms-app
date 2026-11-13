@@ -114,6 +114,9 @@ describe("LeaveTypeDialog", () => {
 				grantKind: "PER_OCCASION",
 				paid: true,
 				requiresReason: true,
+				allowsPartDays: true,
+				appliesToBranchIds: [],
+				appliesToDepartmentIds: [],
 			});
 		});
 		expect(await screen.findByText("Leave type added")).toBeVisible();
@@ -208,6 +211,9 @@ describe("LeaveTypeDialog", () => {
 				grantKind: "ALLOWANCE",
 				paid: true,
 				requiresReason: false,
+				allowsPartDays: true,
+				appliesToBranchIds: [],
+				appliesToDepartmentIds: [],
 				status: "ACTIVE",
 			});
 		});
@@ -223,6 +229,8 @@ describe("leave type form rules", () => {
 			grantKind: "ALLOWANCE",
 			paid: true,
 			requiresReason: false,
+			allowsPartDays: true,
+			reach: { appliesTo: "COMPANY", branchIds: [], departmentIds: [] },
 		});
 		expect(
 			initialLeaveTypeValues({
@@ -234,6 +242,8 @@ describe("leave type form rules", () => {
 			grantKind: "UNTRACKED",
 			paid: false,
 			requiresReason: true,
+			allowsPartDays: true,
+			reach: { appliesTo: "COMPANY", branchIds: [], departmentIds: [] },
 		});
 	});
 
@@ -244,6 +254,8 @@ describe("leave type form rules", () => {
 				grantKind: "ALLOWANCE",
 				paid: true,
 				requiresReason: false,
+				allowsPartDays: true,
+				reach: { appliesTo: "COMPANY", branchIds: [], departmentIds: [] },
 			}).success
 		).toBe(false);
 		const values = schema.parse({
@@ -251,12 +263,21 @@ describe("leave type form rules", () => {
 			grantKind: "UNTRACKED",
 			paid: false,
 			requiresReason: true,
+			allowsPartDays: false,
+			reach: {
+				appliesTo: "DEPARTMENTS",
+				branchIds: ["b-orchard"],
+				departmentIds: ["d-kitchen"],
+			},
 		});
 		expect(leaveTypeBodyOf(values)).toEqual({
 			name: "Study leave",
 			grantKind: "UNTRACKED",
 			paid: false,
 			requiresReason: true,
+			allowsPartDays: false,
+			appliesToBranchIds: [],
+			appliesToDepartmentIds: ["d-kitchen"],
 		});
 	});
 });

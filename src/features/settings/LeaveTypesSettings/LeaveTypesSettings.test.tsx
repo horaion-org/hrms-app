@@ -228,6 +228,9 @@ describe("LeaveTypesSettings", () => {
 				grantKind: "ALLOWANCE",
 				paid: true,
 				requiresReason: false,
+				allowsPartDays: true,
+				appliesToBranchIds: [],
+				appliesToDepartmentIds: [],
 				status: "INACTIVE",
 			});
 		});
@@ -372,6 +375,9 @@ describe("LeaveTypesSettings", () => {
 				grantKind: "UNTRACKED",
 				paid: true,
 				requiresReason: true,
+				allowsPartDays: true,
+				appliesToBranchIds: [],
+				appliesToDepartmentIds: [],
 				status: "INACTIVE",
 			});
 		});

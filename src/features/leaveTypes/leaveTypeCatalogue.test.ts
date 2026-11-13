@@ -93,10 +93,24 @@ describe("statusToggleBody", () => {
 			grantKind: "UNTRACKED",
 			paid: false,
 			requiresReason: true,
+			allowsPartDays: true,
+			appliesToBranchIds: [],
+			appliesToDepartmentIds: [],
 			status: "ACTIVE",
 		});
 		expect(statusToggleBody({ ...study, status: "ACTIVE" }).status).toBe(
 			"INACTIVE"
 		);
+	});
+
+	it("sends a type's departments and part-day switch back as they are", () => {
+		const sick = LEAVE_TYPE_CATALOGUE_FIXTURE[1]!;
+		if (!hasKnownKind(sick)) throw new Error("fixture kind");
+		expect(statusToggleBody({ ...sick, allowsPartDays: false })).toMatchObject({
+			allowsPartDays: false,
+			appliesToBranchIds: [],
+			appliesToDepartmentIds: ["d-kitchen"],
+			status: "INACTIVE",
+		});
 	});
 });

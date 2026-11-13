@@ -14,7 +14,8 @@ import {
 	type PolicyLock,
 } from "@/features/scheduling/constraints/api";
 import {
-	UNIT_REACHES,
+	unitReachBody,
+	unitReachSchema,
 	type UnitReachValue,
 } from "@/features/workspace/unitReach";
 
@@ -104,44 +105,6 @@ const checkConsistent = (
 		});
 };
 
-/** The Applies to field: a choice, and at least one unit of the chosen kind unless it is the whole company. */
-const reachSchema = (
-	t: TFunction
-): z.ZodType<UnitReachValue, UnitReachValue> =>
-	z
-		.object({
-			appliesTo: z.enum(UNIT_REACHES),
-			branchIds: z.array(z.string()),
-			departmentIds: z.array(z.string()),
-		})
-		.superRefine(({ appliesTo, branchIds, departmentIds }, context) => {
-			if (appliesTo === "BRANCHES" && branchIds.length === 0)
-				context.addIssue({
-					code: "custom",
-					path: ["branchIds"],
-					message: t("workspace.unitReach.branchesRequired"),
-				});
-			if (appliesTo === "DEPARTMENTS" && departmentIds.length === 0)
-				context.addIssue({
-					code: "custom",
-					path: ["departmentIds"],
-					message: t("workspace.unitReach.departmentsRequired"),
-				});
-		});
-
-/** Only the chosen kind's units are sent; the whole company sends neither. */
-const reachBody = ({
-	appliesTo,
-	branchIds,
-	departmentIds,
-}: UnitReachValue): Pick<
-	ConstraintDialogBody,
-	"appliesToBranchIds" | "appliesToDepartmentIds"
-> => ({
-	appliesToBranchIds: appliesTo === "BRANCHES" ? branchIds : [],
-	appliesToDepartmentIds: appliesTo === "DEPARTMENTS" ? departmentIds : [],
-});
-
 /**
  * Mirrors the API's checks for a constraint of `type`, built from its spec: how
  * many values each field takes, a number's range, a requirement exactly
@@ -184,7 +147,7 @@ export const constraintSchema = (
 				)
 			),
 			reach: withReach
-				? reachSchema(t)
+				? unitReachSchema(t)
 				: z
 						.custom<UnitReachValue>()
 						.optional()
@@ -196,7 +159,7 @@ export const constraintSchema = (
 		.transform(({ values, lock, reach, ...constraint }) => ({
 			...constraint,
 			...(lock === undefined ? {} : { lock }),
-			...(reach === undefined ? {} : reachBody(reach)),
+			...(reach === undefined ? {} : unitReachBody(reach)),
 			values: fields.flatMap(({ field }) =>
 				(values[field] ?? []).map((value) => ({ field, value }))
 			),

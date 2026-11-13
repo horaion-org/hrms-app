@@ -7,6 +7,12 @@ import {
 	type LeaveTypeBody,
 	type ManagedLeaveType,
 } from "@/features/leaveTypes/api";
+import {
+	reachValueOf,
+	unitReachBody,
+	unitReachSchema,
+	type UnitReachValue,
+} from "@/features/workspace/unitReach";
 
 const key = "settings.leave.dialog";
 
@@ -22,6 +28,8 @@ export const leaveTypeSchema = (
 	}>;
 	paid: z.ZodBoolean;
 	requiresReason: z.ZodBoolean;
+	allowsPartDays: z.ZodBoolean;
+	reach: z.ZodType<UnitReachValue, UnitReachValue>;
 }> =>
 	z.object({
 		name: unitNameSchema({
@@ -32,11 +40,13 @@ export const leaveTypeSchema = (
 		grantKind: z.enum(LEAVE_GRANT_KINDS),
 		paid: z.boolean(),
 		requiresReason: z.boolean(),
+		allowsPartDays: z.boolean(),
+		reach: unitReachSchema(t),
 	});
 
 export type LeaveTypeValues = z.infer<ReturnType<typeof leaveTypeSchema>>;
 
-/** Where the form starts: the type being edited, or a new paid yearly allowance. */
+/** Where the form starts: the type being edited, or a new paid yearly allowance for the whole company that can be taken in part days. */
 export const initialLeaveTypeValues = (
 	editing: (ManagedLeaveType & { grantKind: LeaveGrantKind }) | undefined
 ): LeaveTypeValues => ({
@@ -44,6 +54,8 @@ export const initialLeaveTypeValues = (
 	grantKind: editing?.grantKind ?? "ALLOWANCE",
 	paid: editing?.paid ?? true,
 	requiresReason: editing?.requiresReason ?? false,
+	allowsPartDays: editing?.allowsPartDays ?? true,
+	reach: reachValueOf(editing),
 });
 
 /** What the form sends. */
@@ -52,4 +64,6 @@ export const leaveTypeBodyOf = (values: LeaveTypeValues): LeaveTypeBody => ({
 	grantKind: values.grantKind,
 	paid: values.paid,
 	requiresReason: values.requiresReason,
+	allowsPartDays: values.allowsPartDays,
+	...unitReachBody(values.reach),
 });
