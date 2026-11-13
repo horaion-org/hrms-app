@@ -11,7 +11,7 @@ import { Textarea } from "@/components/forms/Textarea";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import {
-	activeLeaveTypesQuery,
+	leaveOptionsQuery,
 	leaveHistoryQuery,
 	LEAVE_REMARK_MAX_LENGTH,
 	rosteredDaysQuery,
@@ -19,7 +19,10 @@ import {
 } from "@/features/leave/api";
 import { formatPeriod, rangeDays } from "@/features/leave/dates";
 import { changeRefusal } from "@/features/leave/leaveRefusal";
-import { leaveTypeOptions } from "@/features/leave/leaveTypeOptions";
+import {
+	leaveTypeOptions,
+	withCurrentType,
+} from "@/features/leave/leaveTypeOptions";
 import type { LeaveRequest } from "@/features/leave/types";
 import { useLeaveLifecycleActions } from "@/features/leave/useLeaveActions";
 import { RosteredDaysNotice } from "../RosteredDaysNotice";
@@ -158,7 +161,10 @@ const ChangeLeaveConfirmation = ({
 }): FunctionComponent => {
 	const { t } = useTranslation();
 	const actions = useLeaveLifecycleActions(companyId);
-	const leaveTypes = useQuery(activeLeaveTypesQuery(companyId));
+	// The types that apply to the member now; the request keeps its own even when that no longer does.
+	const leaveOptions = useQuery(
+		leaveOptionsQuery(companyId, request.membershipId)
+	);
 	const [typeCode, setTypeCode] = useState(request.leaveType);
 	const [dates, setDates] = useState({
 		start: request.startDate,
@@ -180,7 +186,13 @@ const ChangeLeaveConfirmation = ({
 	const datesMoved =
 		dates.start !== request.startDate || dates.end !== request.endDate;
 	const rosterUnknown = datesMoved && (rostered.isFetching || rostered.isError);
-	const options = leaveTypeOptions(leaveTypes.data ?? [], t);
+	const options = withCurrentType(
+		leaveTypeOptions(leaveOptions.data?.leaveTypes ?? [], t),
+		{
+			code: request.leaveType,
+			name: request.leaveTypeName ?? request.leaveType,
+		}
+	);
 	return (
 		<ConfirmDialog
 			cancelLabel={t("leave.changeKeep")}

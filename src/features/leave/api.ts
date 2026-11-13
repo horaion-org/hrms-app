@@ -39,41 +39,6 @@ export const companyLeaveTypeSchema = z.object({
 /** One leave type a company offers, as its catalogue lists it. */
 export type CompanyLeaveType = z.infer<typeof companyLeaveTypeSchema>;
 
-/** The company's active leave types, in the API's order: kind, then the company's order. */
-export const fetchActiveLeaveTypes = (
-	companyId: string,
-	signal?: AbortSignal
-): Promise<Array<CompanyLeaveType>> =>
-	apiRequest(
-		`${companyPath(companyId)}/me/leave-types?${new URLSearchParams({ status: "ACTIVE" }).toString()}`,
-		z.array(companyLeaveTypeSchema),
-		{ signal }
-	);
-
-/**
- * The company's active leave types, for applying. Any active member may read
- * the catalogue, so it is the caller's own context, never withdrawn with
- * administrative grants. It changes rarely, so it stays fresh for minutes.
- * `allowed` false asks for nothing, until someone opens an application.
- */
-export const activeLeaveTypesQuery = (
-	companyId: string,
-	allowed = true
-): QueryOptionsFor<
-	Array<CompanyLeaveType>,
-	readonly ["leave-types", string, "ACTIVE"]
-> =>
-	queryOptions({
-		queryKey: ["leave-types", companyId, "ACTIVE"] as const,
-		queryFn: allowed
-			? ({ signal }): Promise<Array<CompanyLeaveType>> =>
-					fetchActiveLeaveTypes(companyId, signal)
-			: skipToken,
-		meta: selfMeta(companyId),
-		staleTime: 5 * 60_000,
-		retry,
-	});
-
 const leaveStatusSchema = z.enum([
 	"PENDING",
 	"APPROVED",

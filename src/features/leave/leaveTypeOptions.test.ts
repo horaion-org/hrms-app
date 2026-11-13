@@ -5,7 +5,10 @@ import {
 	LEAVE_TYPE_FIXTURES,
 	leaveTypeFixture,
 } from "@/features/leave/fixtures";
-import { leaveTypeOptions } from "@/features/leave/leaveTypeOptions";
+import {
+	leaveTypeOptions,
+	withCurrentType,
+} from "@/features/leave/leaveTypeOptions";
 
 let t: TFunction;
 beforeAll(async () => {
@@ -120,5 +123,21 @@ describe("leaveTypeOptions", () => {
 			{ value: "ANNUAL", label: "Annual", group: "Yearly allowance" },
 			{ value: "TOIL", label: "Time off in lieu" },
 		]);
+	});
+});
+
+describe("withCurrentType", () => {
+	const sick = { value: "SICK", label: "Sick leave" };
+
+	it("leaves the options as they are when the request's type still applies", () => {
+		expect(
+			withCurrentType([sick], { code: "SICK", name: "Sick leave" })
+		).toEqual([sick]);
+	});
+
+	it("puts the request's own type first when it no longer applies", () => {
+		expect(
+			withCurrentType([sick], { code: "STUDY", name: "Study leave" })
+		).toEqual([{ value: "STUDY", label: "Study leave" }, sick]);
 	});
 });

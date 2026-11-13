@@ -44,3 +44,16 @@ export const leaveTypeOptions = (
 			: {}),
 	}));
 };
+
+/**
+ * The options for changing a request's type: the types that apply to its
+ * member now, with the request's own type first when it no longer applies,
+ * so keeping it is always possible (the API accepts an unchanged type).
+ */
+export const withCurrentType = (
+	options: Array<SelectOption>,
+	current: { code: string; name: string }
+): Array<SelectOption> =>
+	options.some((option) => option.value === current.code)
+		? options
+		: [{ value: current.code, label: current.name }, ...options];

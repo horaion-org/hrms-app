@@ -18,7 +18,8 @@ import {
  * day. Read under `leave_type:read` and changed under `leave_type:update`,
  * both held company-wide. The scheduler's day off (`system`) is listed and
  * never changed. Members read the active types to apply through
- * `activeLeaveTypesQuery` in `features/leave`, with no key.
+ * `leaveOptionsQuery` in `features/leave` (the types that apply to them), with
+ * no key.
  */
 
 /** The kinds a type can be given here, in the order the catalogue groups them. */

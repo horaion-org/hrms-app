@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
-import { activeLeaveTypesQuery, leaveRequestQuery } from "@/features/leave/api";
+import { leaveOptionsQuery, leaveRequestQuery } from "@/features/leave/api";
 import { rangeDays } from "@/features/leave/dates";
 import { leaveTypeOptions } from "@/features/leave/leaveTypeOptions";
 import type { CoverOffer } from "@/features/scheduling/coverOffers/api";
@@ -165,10 +165,18 @@ export const useRosterCellPanel = ({
 	const leaveMove = mayChangeLeave
 		? leaveMoveOf(assignment, mode, { leaveType, shiftId })
 		: undefined;
+	// The types that apply to this person now (their own options on their own day).
 	const leaveTypes = useQuery(
-		activeLeaveTypesQuery(target.companyId, mayChangeLeave)
+		leaveOptionsQuery(
+			target.companyId,
+			ownDay ? undefined : (membershipId ?? undefined),
+			mayChangeLeave
+		)
 	);
-	const leaveOptions = leaveTypeOptions(leaveTypes.data ?? [], t).filter(
+	const leaveOptions = leaveTypeOptions(
+		leaveTypes.data?.leaveTypes ?? [],
+		t
+	).filter(
 		(option) =>
 			mode !== "anotherType" || option.label !== assignment.leaveTypeName
 	);
