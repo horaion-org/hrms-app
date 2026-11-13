@@ -1,4 +1,5 @@
 import type { TFunction } from "i18next";
+import { timeRangeText } from "@/features/leave/dayPortion";
 import { formatDay } from "@/features/scheduling/periods";
 import {
 	leaveLineText,
@@ -24,7 +25,8 @@ export type PanelItem = {
 
 /**
  * Each day the roster marks for leave or cover: whose and which day, then
- * what is marked ("Leave requested: Annual leave", "Needs cover: Morning").
+ * what is marked ("Leave requested: Annual leave", "Needs cover: Morning",
+ * or for part of a shift "Short 09:00–11:00: Aisha Rahman is on leave").
  * With `onFindCover`, a shift left short has a Find cover button.
  */
 export const leaveAndCoverItems = (
@@ -54,9 +56,14 @@ export const leaveAndCoverItems = (
 					: []),
 				...(row.uncoveredShift
 					? [
-							t("scheduling.rosterMarkers.needsCover", {
-								shift: row.uncoveredShift.name,
-							}),
+							row.uncoveredFrom && row.uncoveredTo
+								? t("scheduling.rosterMarkers.partGap", {
+										time: timeRangeText(row.uncoveredFrom, row.uncoveredTo, t),
+										name,
+									})
+								: t("scheduling.rosterMarkers.needsCover", {
+										shift: row.uncoveredShift.name,
+									}),
 						]
 					: []),
 			],

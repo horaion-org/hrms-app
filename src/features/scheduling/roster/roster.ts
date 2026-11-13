@@ -62,6 +62,8 @@ export type RosterDayNote = {
 	leavePortion?: RosterLeavePortion;
 	/** The shift this day's absence leaves short, by name; absent when none is. */
 	uncoveredShiftName?: string;
+	/** When only part of that shift is short (a shift kept around part-day leave), the hours that need cover. */
+	uncoveredTime?: WorkedTime;
 	/** On a worked day, the non-working day type it had before a shift was put on it. */
 	dayType?: string;
 };
@@ -177,6 +179,14 @@ const noteOf = (assignment: ScheduleAssignment): RosterDayNote | undefined => {
 		...(leaveTypeName ? { leaveTypeName } : {}),
 		...(leavePortion ? { leavePortion } : {}),
 		...(uncoveredShift ? { uncoveredShiftName: uncoveredShift.name } : {}),
+		...(uncoveredShift && assignment.uncoveredFrom && assignment.uncoveredTo
+			? {
+					uncoveredTime: {
+						start: assignment.uncoveredFrom,
+						end: assignment.uncoveredTo,
+					},
+				}
+			: {}),
 		...(workedDayType === null ? {} : { dayType: workedDayType }),
 	};
 };

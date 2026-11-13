@@ -100,7 +100,7 @@ export type DayNoteLine =
 			leavePortion?: RosterLeavePortion;
 			leaveRequestId?: string;
 	  }
-	| { kind: "cover"; shiftName: string };
+	| { kind: "cover"; shiftName: string; time?: WorkedTime };
 
 /** What the day editor already says in its own words, so its panel leaves that line out. */
 export type SaidApart = ReadonlySet<"decision" | "leaveRequested">;
@@ -166,7 +166,13 @@ export const dayNoteLines = (
 			: []),
 		...(note.uncoveredShiftName === undefined
 			? []
-			: [{ kind: "cover" as const, shiftName: note.uncoveredShiftName }]),
+			: [
+					{
+						kind: "cover" as const,
+						shiftName: note.uncoveredShiftName,
+						...(note.uncoveredTime ? { time: note.uncoveredTime } : {}),
+					},
+				]),
 	];
 };
 

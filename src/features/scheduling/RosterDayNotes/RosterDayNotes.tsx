@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
+import { timeRangeText } from "@/features/leave/dayPortion";
 import { FindingList } from "@/features/scheduling/FindingList";
 import { FINDING_TONE_ICONS } from "@/features/scheduling/FindingList/findingToneIcons";
 import type { Finding } from "@/features/scheduling/roster/findings/finding";
@@ -65,7 +66,11 @@ export const RosterDayNotes = ({
 				return (
 					<>
 						<p className="text-neutral-800">
-							{t(`${key}.needsCover`, { shift: line.shiftName })}
+							{line.time
+								? t(`${key}.partGapNeedsCover`, {
+										time: timeRangeText(line.time.start, line.time.end, t),
+									})
+								: t(`${key}.needsCover`, { shift: line.shiftName })}
 						</p>
 						{onFindCover && (
 							<Button variant="textlink" onClick={onFindCover}>

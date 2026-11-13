@@ -178,6 +178,21 @@ describe("dayNoteLines", () => {
 			],
 		],
 		[
+			"part of a shift short around part-day leave",
+			{
+				uncoveredShiftName: "Morning",
+				uncoveredTime: { start: "09:00", end: "11:00" },
+			},
+			undefined,
+			[
+				{
+					kind: "cover",
+					shiftName: "Morning",
+					time: { start: "09:00", end: "11:00" },
+				},
+			],
+		],
+		[
 			"leave taken that leaves a shift short",
 			{ flag: "ON_LEAVE_WHILE_ROSTERED", uncoveredShiftName: "Morning" },
 			undefined,

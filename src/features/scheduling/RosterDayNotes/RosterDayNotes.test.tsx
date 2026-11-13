@@ -164,6 +164,22 @@ describe("RosterDayNotes", () => {
 		expect(screen.queryByRole("link")).not.toBeInTheDocument();
 	});
 
+	it("names the hours a shift kept around leave is short", () => {
+		render(
+			<RosterDayNotes
+				membershipId={MEMBER}
+				note={{
+					uncoveredShiftName: "Morning",
+					uncoveredTime: { start: "09:00", end: "11:00" },
+				}}
+			/>
+		);
+
+		expect(
+			screen.getByText("scheduling.rosterMarkers.partGapNeedsCover")
+		).toBeInTheDocument();
+	});
+
 	it("given_findCover_when_theDayLeavesAShiftShort_then_offersIt", async () => {
 		const onFindCover = vi.fn();
 		render(

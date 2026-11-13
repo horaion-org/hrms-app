@@ -4091,7 +4091,9 @@
 			"needsALook": "Needs a look",
 			"tileStatus": "{{label}}, {{status}}",
 			"partDayLeave": "{{type}} {{time}}",
-			"partDayOff": "Off {{time}}"
+			"partDayOff": "Off {{time}}",
+			"partGapNeedsCover": "{{time}} needs cover",
+			"partGap": "Short {{time}}: {{name}} is on leave"
 		},
 		"rosterEdit": {
 			"title": "{{name}} · {{date}}",

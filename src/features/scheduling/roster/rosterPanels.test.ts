@@ -1,7 +1,10 @@
 import type { TFunction } from "i18next";
 import { describe, expect, it, vi } from "vitest";
 import { rosterFromAssignments } from "@/features/scheduling/roster/roster";
-import { scheduleAssignmentsFixture } from "@/features/scheduling/schedules/fixtures";
+import {
+	scheduleAssignmentsFixture,
+	shortenedShiftFixture,
+} from "@/features/scheduling/schedules/fixtures";
 import {
 	changedDayItems,
 	daysToDecideItems,
@@ -83,6 +86,24 @@ describe("leaveAndCoverItems", () => {
 			"scheduling.rosterMarkers.onLeave: Annual leave",
 			`scheduling.rosterMarkers.needsCover(${first.shift?.name ?? ""})`,
 		]);
+	});
+});
+
+describe("leaveAndCoverItems for part of a shift", () => {
+	it("says which hours are short and whose leave it is, and still offers Find cover", () => {
+		const onFindCover = vi.fn();
+		const kept = shortenedShiftFixture();
+
+		const [item] = leaveAndCoverItems([kept], t, "en", onFindCover);
+		item?.action?.onClick();
+
+		expect(item?.lines).toEqual([
+			"scheduling.rosterMarkers.partGap(leave.portion.timeRange(09:00|11:00)|Aisha Rahman)",
+		]);
+		expect(onFindCover).toHaveBeenCalledWith({
+			shiftId: kept.shift?.shiftId,
+			day: kept.day,
+		});
 	});
 });
 
