@@ -4163,29 +4163,7 @@
 			"noLongerNote": "Corrige la configuración de {{department}} para generar."
 		},
 		"policy": {
-			"alwaysApplies": "Siempre se aplica",
-			"reach": {
-				"label": "Se aplica a",
-				"choices": {
-					"COMPANY": "Toda la empresa",
-					"BRANCHES": "Sucursales elegidas",
-					"DEPARTMENTS": "Departamentos elegidos"
-				},
-				"descriptions": {
-					"COMPANY": "Todos los departamentos, ahora y en el futuro.",
-					"BRANCHES": "Todos los departamentos de las sucursales que elijas.",
-					"DEPARTMENTS": "Solo los departamentos que elijas."
-				},
-				"branchesHint": "Una sucursal incluye los departamentos que se le añadan después.",
-				"departmentsHint": "Los departamentos añadidos después no se incluyen.",
-				"branchesRequired": "Elige al menos una sucursal.",
-				"departmentsRequired": "Elige al menos un departamento.",
-				"branchesPlaceholder": "Selecciona sucursales",
-				"departmentsPlaceholder": "Selecciona departamentos",
-				"selectAll": "Seleccionar todo",
-				"wholeCompany": "Todos los departamentos",
-				"branch": "{{name}} (sucursal)"
-			}
+			"alwaysApplies": "Siempre se aplica"
 		},
 		"months": {
 			"states": {
@@ -4353,6 +4331,28 @@
 		"departmentFilter": {
 			"department": "Departamento",
 			"allDepartments": "Todos los departamentos"
+		},
+		"unitReach": {
+			"label": "Se aplica a",
+			"choices": {
+				"COMPANY": "Toda la empresa",
+				"BRANCHES": "Sucursales elegidas",
+				"DEPARTMENTS": "Departamentos elegidos"
+			},
+			"descriptions": {
+				"COMPANY": "Todos los departamentos, ahora y en el futuro.",
+				"BRANCHES": "Todos los departamentos de las sucursales que elijas.",
+				"DEPARTMENTS": "Solo los departamentos que elijas."
+			},
+			"branchesHint": "Una sucursal incluye los departamentos que se le añadan después.",
+			"departmentsHint": "Los departamentos añadidos después no se incluyen.",
+			"branchesRequired": "Elige al menos una sucursal.",
+			"departmentsRequired": "Elige al menos un departamento.",
+			"branchesPlaceholder": "Selecciona sucursales",
+			"departmentsPlaceholder": "Selecciona departamentos",
+			"selectAll": "Seleccionar todo",
+			"wholeCompany": "Todos los departamentos",
+			"branch": "{{name}} (sucursal)"
 		}
 	},
 	"colourSwatchPicker": {

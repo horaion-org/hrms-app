@@ -12,12 +12,12 @@ import { DeleteIcon, EditIcon } from "@/components/ui/Icon";
 import { branchColumn } from "@/features/organisation/listColumns";
 import { constraintColumns } from "@/features/scheduling/constraints/constraintColumns";
 import { ConstraintOrigin } from "@/features/scheduling/constraints/ConstraintOrigin";
-import type {
-	ConstraintTypeOption,
-	ReachedBranch,
-	ReachedDepartment,
-} from "@/features/scheduling/constraints/api";
-import { reachLabel } from "@/features/scheduling/policy/policyReach";
+import type { ConstraintTypeOption } from "@/features/scheduling/constraints/api";
+import {
+	reachLabel,
+	type ReachedBranch,
+	type ReachedDepartment,
+} from "@/features/workspace/unitReach";
 import type { Constraint } from "@/features/scheduling/scheduleDraft";
 
 /** What the table reads of a constraint; a list across departments also names its Branch and Department. */

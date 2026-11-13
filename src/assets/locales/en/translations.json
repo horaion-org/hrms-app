@@ -2985,6 +2985,28 @@
 		"departmentFilter": {
 			"department": "Department",
 			"allDepartments": "All departments"
+		},
+		"unitReach": {
+			"label": "Applies to",
+			"choices": {
+				"COMPANY": "Whole company",
+				"BRANCHES": "Chosen branches",
+				"DEPARTMENTS": "Chosen departments"
+			},
+			"descriptions": {
+				"COMPANY": "Every department, now and later.",
+				"BRANCHES": "Every department in the branches you choose.",
+				"DEPARTMENTS": "Only the departments you choose."
+			},
+			"branchesHint": "A branch includes departments added to it later.",
+			"departmentsHint": "Departments added later aren’t included.",
+			"branchesRequired": "Choose at least one branch.",
+			"departmentsRequired": "Choose at least one department.",
+			"branchesPlaceholder": "Select branches",
+			"departmentsPlaceholder": "Select departments",
+			"selectAll": "Select all",
+			"wholeCompany": "All departments",
+			"branch": "{{name}} (branch)"
 		}
 	},
 	"numberStepper": {
@@ -4341,29 +4363,7 @@
 			"noLongerNote": "Fix {{department}}’s setup to generate."
 		},
 		"policy": {
-			"alwaysApplies": "Always applies",
-			"reach": {
-				"label": "Applies to",
-				"choices": {
-					"COMPANY": "Whole company",
-					"BRANCHES": "Chosen branches",
-					"DEPARTMENTS": "Chosen departments"
-				},
-				"descriptions": {
-					"COMPANY": "Every department, now and later.",
-					"BRANCHES": "Every department in the branches you choose.",
-					"DEPARTMENTS": "Only the departments you choose."
-				},
-				"branchesHint": "A branch includes departments added to it later.",
-				"departmentsHint": "Departments added later aren’t included.",
-				"branchesRequired": "Choose at least one branch.",
-				"departmentsRequired": "Choose at least one department.",
-				"branchesPlaceholder": "Select branches",
-				"departmentsPlaceholder": "Select departments",
-				"selectAll": "Select all",
-				"wholeCompany": "All departments",
-				"branch": "{{name}} (branch)"
-			}
+			"alwaysApplies": "Always applies"
 		},
 		"months": {
 			"states": {

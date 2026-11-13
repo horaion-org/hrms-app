@@ -5,19 +5,19 @@ import { FormRow, formRowIds } from "@/components/forms/FormRow";
 import { RadioCard } from "@/components/forms/RadioCard";
 import { Select } from "@/components/forms/Select";
 import {
-	POLICY_REACHES,
-	type PolicyReach,
-	type PolicyReachChoices,
-	type PolicyReachValue,
-} from "@/features/scheduling/policy/policyReach";
+	UNIT_REACHES,
+	type UnitReach,
+	type UnitReachChoices,
+	type UnitReachValue,
+} from "@/features/workspace/unitReach";
 import { branchGroupLabel } from "@/features/workspace/unitChoices";
 
-const key = "scheduling.policy.reach";
+const key = "workspace.unitReach";
 
-export type PolicyReachFieldProps = {
-	choices: PolicyReachChoices;
-	value: PolicyReachValue;
-	onChange: (value: PolicyReachValue) => void;
+export type UnitReachFieldProps = {
+	choices: UnitReachChoices;
+	value: UnitReachValue;
+	onChange: (value: UnitReachValue) => void;
 	/** Prefixes the ids the radio group and the select label themselves with. */
 	idPrefix: string;
 	disabled: boolean;
@@ -26,18 +26,18 @@ export type PolicyReachFieldProps = {
 };
 
 /**
- * Where a work-policy constraint applies (ADR-0072): the whole company, chosen
+ * Where a company item applies (ADR-0072, ADR-0077): the whole company, chosen
  * Branches (every Department in them, now and later) or chosen Departments,
  * then the Branches or the Departments, grouped by Branch, to choose from.
  */
-export const PolicyReachField = ({
+export const UnitReachField = ({
 	choices,
 	value,
 	onChange,
 	idPrefix,
 	disabled,
 	error,
-}: PolicyReachFieldProps): FunctionComponent => {
+}: UnitReachFieldProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const groupId = `${idPrefix}-applies-to`;
 	const unitsId = `${idPrefix}-units`;
@@ -53,7 +53,7 @@ export const PolicyReachField = ({
 					</span>
 				</p>
 				<div aria-labelledby={groupId} className="grid gap-3" role="radiogroup">
-					{POLICY_REACHES.map((reach) => (
+					{UNIT_REACHES.map((reach) => (
 						<RadioCard
 							key={reach}
 							checked={value.appliesTo === reach}
@@ -63,7 +63,7 @@ export const PolicyReachField = ({
 							name={groupId}
 							value={reach}
 							onChange={(appliesTo) => {
-								onChange({ ...value, appliesTo: appliesTo as PolicyReach });
+								onChange({ ...value, appliesTo: appliesTo as UnitReach });
 							}}
 						/>
 					))}

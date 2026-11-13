@@ -11,6 +11,10 @@ import {
 } from "@/features/scheduling/paths";
 import { administrativeMeta } from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";
+import {
+	reachedBranchSchema,
+	reachedDepartmentSchema,
+} from "@/features/workspace/unitReach";
 
 /*
  * The constraints API: one live set of scheduling constraints per
@@ -178,24 +182,6 @@ export const constraintValueSchema = z.object({
 
 /** One value of a constraint; a list field has one per item. */
 export type ConstraintValue = z.infer<typeof constraintValueSchema>;
-
-const reachedBranchSchema = z.object({
-	branchId: z.string(),
-	branchName: z.string(),
-});
-
-/** A Branch a work-policy constraint applies to, every Department in it now and later (ADR-0072). */
-export type ReachedBranch = z.infer<typeof reachedBranchSchema>;
-
-const reachedDepartmentSchema = z.object({
-	departmentId: z.string(),
-	departmentName: z.string(),
-	branchId: z.string(),
-	branchName: z.string(),
-});
-
-/** A Department a work-policy constraint applies to, with its Branch. */
-export type ReachedDepartment = z.infer<typeof reachedDepartmentSchema>;
 
 export const departmentConstraintSchema = z.object({
 	constraintId: z.string(),

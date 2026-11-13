@@ -14,9 +14,9 @@ import {
 	type PolicyLock,
 } from "@/features/scheduling/constraints/api";
 import {
-	POLICY_REACHES,
-	type PolicyReachValue,
-} from "@/features/scheduling/policy/policyReach";
+	UNIT_REACHES,
+	type UnitReachValue,
+} from "@/features/workspace/unitReach";
 
 /** Each field's values as the form holds them: as text, a field of one value as a list of one. */
 export type ConstraintFieldValues = Partial<
@@ -36,7 +36,7 @@ export type ConstraintFormValues = {
 	/** Every field filled in so far, kept across a change of type; only the chosen type's are sent. */
 	values: ConstraintFieldValues;
 	/** Where a work-policy constraint applies; absent when the dialog does not offer it. */
-	reach?: PolicyReachValue;
+	reach?: UnitReachValue;
 };
 
 /** What the dialog sends: a constraint body, with a lock and where it applies when it edits the work policy. */
@@ -107,10 +107,10 @@ const checkConsistent = (
 /** The Applies to field: a choice, and at least one unit of the chosen kind unless it is the whole company. */
 const reachSchema = (
 	t: TFunction
-): z.ZodType<PolicyReachValue, PolicyReachValue> =>
+): z.ZodType<UnitReachValue, UnitReachValue> =>
 	z
 		.object({
-			appliesTo: z.enum(POLICY_REACHES),
+			appliesTo: z.enum(UNIT_REACHES),
 			branchIds: z.array(z.string()),
 			departmentIds: z.array(z.string()),
 		})
@@ -119,13 +119,13 @@ const reachSchema = (
 				context.addIssue({
 					code: "custom",
 					path: ["branchIds"],
-					message: t("scheduling.policy.reach.branchesRequired"),
+					message: t("workspace.unitReach.branchesRequired"),
 				});
 			if (appliesTo === "DEPARTMENTS" && departmentIds.length === 0)
 				context.addIssue({
 					code: "custom",
 					path: ["departmentIds"],
-					message: t("scheduling.policy.reach.departmentsRequired"),
+					message: t("workspace.unitReach.departmentsRequired"),
 				});
 		});
 
@@ -134,7 +134,7 @@ const reachBody = ({
 	appliesTo,
 	branchIds,
 	departmentIds,
-}: PolicyReachValue): Pick<
+}: UnitReachValue): Pick<
 	ConstraintDialogBody,
 	"appliesToBranchIds" | "appliesToDepartmentIds"
 > => ({
@@ -186,7 +186,7 @@ export const constraintSchema = (
 			reach: withReach
 				? reachSchema(t)
 				: z
-						.custom<PolicyReachValue>()
+						.custom<UnitReachValue>()
 						.optional()
 						.transform(() => undefined),
 		})

@@ -47,10 +47,10 @@ import {
 import type { ConstraintOptionsState } from "@/features/scheduling/constraints/useConstraintOptions";
 import {
 	reachedUnitsOf,
-	type PolicyReachChoices,
-	type PolicyReachValue,
-} from "@/features/scheduling/policy/policyReach";
-import { PolicyReachField } from "@/features/scheduling/policy/PolicyReachField";
+	type UnitReachChoices,
+	type UnitReachValue,
+} from "@/features/workspace/unitReach";
+import { UnitReachField } from "@/features/workspace/UnitReachField";
 import type { Constraint } from "@/features/scheduling/scheduleDraft";
 import {
 	SetupDepartmentField,
@@ -73,7 +73,7 @@ export type ConstraintDialogProps = {
 	/** Offers the lock, for a constraint of the company's work policy. */
 	withLock?: boolean;
 	/** Offers Applies to, for a work-policy constraint: what to choose from, and the reach it opens with (ADR-0072). */
-	reach?: { choices: PolicyReachChoices; initial: PolicyReachValue };
+	reach?: { choices: UnitReachChoices; initial: UnitReachValue };
 	/** The Department field, shown first: chosen when adding, fixed when editing; left out inside a schedule, whose department is known. */
 	department?: SetupDepartment;
 	/** What saving the change reaches, said below the last field. */
@@ -647,7 +647,7 @@ export const ConstraintDialog = ({
 						control={control}
 						name="reach"
 						render={({ field }) => (
-							<PolicyReachField
+							<UnitReachField
 								choices={reach.choices}
 								disabled={isSubmitting}
 								idPrefix={fieldId("reach")}

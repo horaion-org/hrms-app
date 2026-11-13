@@ -1,10 +1,7 @@
 import type { TFunction } from "i18next";
-import type {
-	DepartmentConstraint,
-	ReachedBranch,
-	ReachedDepartment,
-} from "@/features/scheduling/constraints/api";
+import { z } from "zod";
 import type { Workspace } from "@/features/workspace/api";
+import type { PermissionKey } from "@/features/workspace/permissionKeys";
 import {
 	branchChoices,
 	departmentChoices,
@@ -13,46 +10,65 @@ import {
 } from "@/features/workspace/unitChoices";
 
 /*
- * Where a work-policy constraint applies (ADR-0072): the whole company,
- * chosen Branches (every Department in them, now and later) or chosen
- * Departments. The API sends the chosen units by name; these helpers turn
- * them into the dialog's choice and into words for a list.
+ * Where a company item applies (the API's ADR-0072 and ADR-0077): a
+ * work-policy constraint or a leave type reaches the whole company, chosen
+ * Branches (every Department in them, now and later) or chosen Departments.
+ * The API sends the chosen units by name; these helpers turn them into the
+ * dialog's choice and into words for a list.
  */
 
+export const reachedBranchSchema = z.object({
+	branchId: z.string(),
+	branchName: z.string(),
+});
+
+/** A Branch an item applies to, every Department in it now and later. */
+export type ReachedBranch = z.infer<typeof reachedBranchSchema>;
+
+export const reachedDepartmentSchema = z.object({
+	departmentId: z.string(),
+	departmentName: z.string(),
+	branchId: z.string(),
+	branchName: z.string(),
+});
+
+/** A Department an item applies to, with its Branch. */
+export type ReachedDepartment = z.infer<typeof reachedDepartmentSchema>;
+
 /** The three reach choices, in the order the dialog offers them. */
-export const POLICY_REACHES = ["COMPANY", "BRANCHES", "DEPARTMENTS"] as const;
+export const UNIT_REACHES = ["COMPANY", "BRANCHES", "DEPARTMENTS"] as const;
 
 /** Whole company, chosen Branches, or chosen Departments. */
-export type PolicyReach = (typeof POLICY_REACHES)[number];
+export type UnitReach = (typeof UNIT_REACHES)[number];
 
 /** What the dialog may offer to choose from: the company's Branches and its Departments with their Branches. */
-export type PolicyReachChoices = {
+export type UnitReachChoices = {
 	branches: Array<BranchChoice>;
 	departments: Array<DepartmentChoice>;
 };
 
 /** What the Applies to field holds: the choice, and the picks of both kinds so switching back restores them. */
-export type PolicyReachValue = {
-	appliesTo: PolicyReach;
+export type UnitReachValue = {
+	appliesTo: UnitReach;
 	branchIds: Array<string>;
 	departmentIds: Array<string>;
 };
 
-/** The reach a constraint carries; a Department's own reads as the whole company, since it names no unit. */
-type ReachRow = Pick<
-	DepartmentConstraint,
-	"appliesToBranches" | "appliesToDepartments"
->;
+/** The reach an item carries; a Department's own constraint reads as the whole company, since it names no unit. */
+type ReachRow = {
+	appliesToBranches: Array<ReachedBranch>;
+	appliesToDepartments: Array<ReachedDepartment>;
+};
 
 /** Which of the three choices a constraint's reach is. */
-export const reachOf = (constraint: ReachRow): PolicyReach => {
+export const reachOf = (constraint: ReachRow): UnitReach => {
 	if (constraint.appliesToDepartments.length > 0) return "DEPARTMENTS";
 	if (constraint.appliesToBranches.length > 0) return "BRANCHES";
 	return "COMPANY";
 };
 
 /** The Applies to field's starting value: an edited constraint's reach, or the whole company for a new one. */
-export const reachValueOf = (constraint?: ReachRow): PolicyReachValue => ({
+export const reachValueOf = (constraint?: ReachRow): UnitReachValue => ({
 	appliesTo: constraint ? reachOf(constraint) : "COMPANY",
 	branchIds: (constraint?.appliesToBranches ?? []).map(
 		(branch) => branch.branchId
@@ -68,8 +84,8 @@ export const reachValueOf = (constraint?: ReachRow): PolicyReachValue => ({
  * chosen kind's units count; the whole company names none.
  */
 export const reachedUnitsOf = (
-	value: PolicyReachValue,
-	choices: PolicyReachChoices
+	value: UnitReachValue,
+	choices: UnitReachChoices
 ): {
 	appliesToBranches: Array<ReachedBranch>;
 	appliesToDepartments: Array<ReachedDepartment>;
@@ -100,7 +116,7 @@ export const reachedUnitsOf = (
 
 /** The reach in words: "All departments", "Orchard (branch)", or "Bar, Kitchen". */
 export const reachLabel = (constraint: ReachRow, t: TFunction): string => {
-	const key = "scheduling.policy.reach";
+	const key = "workspace.unitReach";
 	switch (reachOf(constraint)) {
 		case "DEPARTMENTS":
 			return constraint.appliesToDepartments
@@ -116,17 +132,17 @@ export const reachLabel = (constraint: ReachRow, t: TFunction): string => {
 };
 
 /**
- * Every Branch and Department of the company a work-policy editor may choose,
- * inactive ones too: the API accepts any live unit, and a Branch closed for a
- * season keeps its constraints. The key is held company-wide, so every unit
- * the workspace lists is offered.
+ * Every Branch and Department of the company an editor holding `permission`
+ * may choose, inactive ones too: the API accepts any live unit, and a Branch
+ * closed for a season keeps its items. The work policy's and the leave
+ * types' keys are held company-wide, so every unit the workspace lists is
+ * offered.
  */
 export const reachChoicesOf = (
 	workspace: Workspace,
-	companyId: string
-): PolicyReachChoices => ({
-	branches: branchChoices(workspace, companyId, ["scheduling_policy:update"]),
-	departments: departmentChoices(workspace, companyId, [
-		"scheduling_policy:update",
-	]),
+	companyId: string,
+	permission: PermissionKey
+): UnitReachChoices => ({
+	branches: branchChoices(workspace, companyId, [permission]),
+	departments: departmentChoices(workspace, companyId, [permission]),
 });

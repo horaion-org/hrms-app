@@ -5,9 +5,11 @@ import {
 	CONSTRAINT_STATUSES,
 	type ConstraintStatus,
 	type ConstraintTypeOption,
-	type ReachedBranch,
-	type ReachedDepartment,
 } from "@/features/scheduling/constraints/api";
+import type {
+	ReachedBranch,
+	ReachedDepartment,
+} from "@/features/workspace/unitReach";
 import { appliesToOf } from "@/features/scheduling/constraints/appliesTo";
 import { ConstraintStatement } from "@/features/scheduling/constraints/ConstraintStatement";
 import type { Constraint } from "@/features/scheduling/scheduleDraft";
