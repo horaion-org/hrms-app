@@ -83,6 +83,17 @@ export const leaveRequestSchema = z.object({
 	endDate: z.iso.date(),
 	/** The days of the period that use leave, as the API counts them from rosters. */
 	workingDays: z.number().int().nonnegative(),
+	/**
+	 * For part of one day: the leave duration's name when the request was
+	 * made; null for Custom times, for whole days and from an older API.
+	 */
+	durationName: z.string().nullable().default(null),
+	/** For part of one day: "HH:mm" the time off starts; null for whole days. */
+	startTime: z.string().nullable().default(null),
+	/** "HH:mm" it ends; before the start means the next day; null for whole days. */
+	endTime: z.string().nullable().default(null),
+	/** The minutes a part day counts; null for whole days, counted in `workingDays`. */
+	leaveMinutes: z.number().int().nullable().default(null),
 	/** The applicant's remarks for the reviewer; null when none. Absent from an API older than remarks. */
 	notes: z.string().nullable().default(null),
 	status: leaveStatusSchema,
@@ -290,6 +301,11 @@ export type LeaveRequestBody = {
 	startDate: string;
 	endDate: string;
 	notes?: string;
+	/** For part of one day: one of the person's leave durations, sent alone. */
+	leaveDurationId?: string;
+	/** For part of one day at the person's own times (Custom): "HH:mm", sent with `endTime`. */
+	startTime?: string;
+	endTime?: string;
 	/** Only when recording: the reviewer confirmed taking the person off their shifts. */
 	takeOffRosteredDays?: boolean;
 };
@@ -457,9 +473,25 @@ export const rosteredDaysQuery = (
 		retry,
 	});
 
+/** A leave duration an apply form offers one person ("Morning · 09:00–13:00 · 4 h"). */
+export const leaveDurationOptionSchema = z.object({
+	leaveDurationId: z.string(),
+	name: z.string(),
+	/** "HH:mm"; an end before the start runs past midnight. */
+	startTime: z.string(),
+	endTime: z.string(),
+	/** The length between the two times. */
+	minutes: z.number().int(),
+});
+
+/** One leave duration a person may pick for part of a day. */
+export type LeaveDurationOption = z.infer<typeof leaveDurationOptionSchema>;
+
 const leaveOptionsSchema = z.object({
 	/** The types that apply to the person's home Department, in the API's order. */
 	leaveTypes: z.array(companyLeaveTypeSchema),
+	/** The leave durations that apply to them, in the API's order; none from an older API. */
+	durations: z.array(leaveDurationOptionSchema).catch([]),
 });
 
 /** What an apply form may offer one person (the API's ADR-0077). */

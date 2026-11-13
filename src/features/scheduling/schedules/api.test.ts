@@ -912,6 +912,40 @@ describe("a schedule's roster", () => {
 		expect(olderApi?.member?.partTime).toBe(false);
 	});
 
+	it("reads a part-day leave's duration and times, and none from an older API", async () => {
+		const [first, second] = scheduleAssignmentsFixture() as [
+			ScheduleAssignment,
+			ScheduleAssignment,
+		];
+		stubApi({
+			[`GET ${SCHEDULES}/s-1/assignments`]: {
+				status: 200,
+				body: envelope([
+					{
+						...first,
+						leaveDurationName: "Morning",
+						leaveStartTime: "07:00",
+						leaveEndTime: "11:00",
+					},
+					second,
+				]),
+			},
+		});
+
+		const [partDay, olderApi] = await fetchScheduleAssignments(
+			"c-1",
+			UNIT,
+			"s-1"
+		);
+
+		expect(partDay).toMatchObject({
+			leaveDurationName: "Morning",
+			leaveStartTime: "07:00",
+			leaveEndTime: "11:00",
+		});
+		expect(olderApi?.leaveStartTime).toBeUndefined();
+	});
+
 	it("reads the types a day can be made when not worked, and none from an older API", async () => {
 		stubApi({
 			[`GET ${SCHEDULES}/s-1`]: {

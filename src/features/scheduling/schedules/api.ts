@@ -728,6 +728,15 @@ export const scheduleAssignmentSchema = z.object({
 	 * when none covers the day any more. Absent from an older API.
 	 */
 	leaveTypeName: z.string().nullish(),
+	/**
+	 * For part-day leave, the duration's name; null for Custom times and
+	 * whole days. Shown only where `leaveTypeName` is. Absent from an older API.
+	 */
+	leaveDurationName: z.string().nullish(),
+	/** For part-day leave, "HH:mm" the time off starts; null for whole days. */
+	leaveStartTime: z.string().nullish(),
+	/** "HH:mm" it ends; before the start means the next day. */
+	leaveEndTime: z.string().nullish(),
 	/** The frozen shift worked, or null when off. */
 	shift: rosterShiftSchema.nullable(),
 	/** The job title the shift is worked as, named as frozen with it; null when off. */
