@@ -7,6 +7,7 @@ import { rosterFromAssignments } from "@/features/scheduling/roster/roster";
 import {
 	findingsOfEveryKindFixture,
 	scheduleAssignmentsFixture,
+	keptAroundLeaveFixture,
 } from "@/features/scheduling/schedules/fixtures";
 import "@/common/i18n";
 
@@ -144,4 +145,36 @@ export const MembersOwnRoster: Story = {
 /** Beside an open panel: tiles show their time only, in tighter cells, so the week stays in view. */
 export const Compact: Story = {
 	args: { compact: true, selectedShiftId: "a-mp-1-2026-10-13" },
+};
+
+/**
+ * Aisha's Monday shortened by morning leave (case a) and her Tuesday worked
+ * around leave in the middle (case c), as a leave reader sees them: the time
+ * still worked, the leave on the status line, and the issue dot.
+ */
+export const PartDayShifts: Story = {
+	args: {
+		showsIssues: true,
+		rows: rosterFromAssignments(
+			scheduleAssignmentsFixture().map((assignment) => {
+				if (assignment.assignmentId === "a-mp-1-2026-10-12")
+					return keptAroundLeaveFixture(
+						assignment,
+						{ start: "09:00", end: "11:00", durationName: "Morning" },
+						[{ start: "11:00", end: "15:00" }]
+					);
+				if (assignment.assignmentId === "a-mp-1-2026-10-13")
+					return keptAroundLeaveFixture(
+						assignment,
+						{ start: "11:00", end: "13:00" },
+						[
+							{ start: "09:00", end: "11:00" },
+							{ start: "13:00", end: "15:00" },
+						]
+					);
+				return assignment;
+			}),
+			{ start: "2026-10-12", end: "2026-10-18" }
+		),
+	},
 };

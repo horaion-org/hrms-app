@@ -40,3 +40,28 @@ export const Reviewer: Story = {
 export const CouldNotRead: Story = {
 	args: { days: [], name: "Alex Tan", onRetry: fn() },
 };
+
+const shortened = [
+	{
+		day: "2026-06-03",
+		minutes: 480,
+		shiftStart: "07:00",
+		shiftEnd: "15:00",
+		outcome: "SHORTENED" as const,
+		workedTimes: [{ start: "11:00", end: "15:00" }],
+		gap: { start: "07:00", end: "11:00" },
+	},
+];
+
+/** Pending morning leave, as the applicant reads it. */
+export const PartDayOwn: Story = { args: { days: shortened } };
+
+/** Pending morning leave, as the reviewer approving it reads it. */
+export const PartDayReviewer: Story = {
+	args: {
+		days: shortened,
+		name: "Alex Tan",
+		confirmed: false,
+		onConfirmedChange: fn(),
+	},
+};

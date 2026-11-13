@@ -1,4 +1,5 @@
 import type { Decorator, Meta, StoryObj } from "@storybook/react-vite";
+import { fn } from "storybook/test";
 import {
 	createMemoryHistory,
 	createRootRoute,
@@ -65,6 +66,17 @@ export const PartDayLeaveRequested: Story = {
 				endTime: "11:00",
 			},
 		},
+	},
+};
+
+/** A shift kept around part-day leave: the hours it is short, with Find cover. */
+export const PartGap: Story = {
+	args: {
+		note: {
+			uncoveredShiftName: "Front Desk AM",
+			uncoveredTime: { start: "09:00", end: "11:00" },
+		},
+		onFindCover: fn(),
 	},
 };
 
