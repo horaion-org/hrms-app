@@ -81,6 +81,11 @@
 		"close": "Close dialog"
 	},
 	"leave": {
+		"length": {
+			"hours": "{{hours}} h",
+			"hoursAndMinutes": "{{hours}} h {{minutes}} min",
+			"minutes": "{{minutes}} min"
+		},
 		"title": "Leave overview",
 		"subtitle": "Manage employee leave requests and upcoming absences.",
 		"noBranches": "Add a branch to the organisation before managing leave.",

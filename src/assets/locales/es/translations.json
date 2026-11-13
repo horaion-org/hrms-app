@@ -81,6 +81,11 @@
 		"close": "Cerrar diálogo"
 	},
 	"leave": {
+		"length": {
+			"hours": "{{hours}} h",
+			"hoursAndMinutes": "{{hours}} h {{minutes}} min",
+			"minutes": "{{minutes}} min"
+		},
 		"title": "Resumen de ausencias",
 		"subtitle": "Gestiona las solicitudes de permiso y las próximas ausencias.",
 		"noBranches": "Añade una sucursal a la organización antes de gestionar ausencias.",
