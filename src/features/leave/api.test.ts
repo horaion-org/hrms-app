@@ -69,7 +69,59 @@ describe("leave lifecycle paths", () => {
 			"me",
 			"2026-06-01",
 			"2026-06-02",
+			"",
+			"",
 		]);
+	});
+
+	it("given_aPartDayLeaveWindow_when_rosteredDaysAreAsked_then_theTimesGoInTheQueryAndTheOutcomeIsRead", async () => {
+		configureApiClient({
+			accessToken: () => Promise.resolve("test-pass"),
+			renew: () => Promise.resolve({ kind: "expired" }),
+			onUnauthenticated: () => {},
+		});
+		const calls = stubApi({
+			"GET /api/v1/companies/c1/me/leave-requests/rostered-days": {
+				status: 200,
+				body: envelope([
+					{
+						day: "2026-06-01",
+						minutes: 480,
+						shiftStart: "07:00",
+						shiftEnd: "15:00",
+						outcome: "SHORTENED",
+						workedTimes: [{ start: "11:00", end: "15:00" }],
+						gap: { start: "07:00", end: "11:00" },
+					},
+					{ day: "2026-06-02", minutes: 480, outcome: "SPLIT_LATER" },
+				]),
+			},
+		});
+		const query = rosteredDaysQuery("c1", {
+			start: "2026-06-01",
+			end: "2026-06-02",
+			startTime: "07:00",
+			endTime: "11:00",
+		});
+
+		const days = await (
+			query.queryFn as (context: { signal?: AbortSignal }) => Promise<unknown>
+		)({});
+
+		expect(new URLSearchParams(calls[0]?.search)).toEqual(
+			new URLSearchParams({
+				startDate: "2026-06-01",
+				endDate: "2026-06-02",
+				startTime: "07:00",
+				endTime: "11:00",
+			})
+		);
+		expect(days).toMatchObject([
+			{ outcome: "SHORTENED", gap: { start: "07:00", end: "11:00" } },
+			{ outcome: "UNKNOWN" },
+		]);
+		resetApiClient();
+		vi.unstubAllGlobals();
 	});
 });
 

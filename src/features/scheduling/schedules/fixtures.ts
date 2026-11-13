@@ -475,6 +475,46 @@ export const scheduleAssignmentsFixture = (): Array<ScheduleAssignment> => {
 	);
 };
 
+/**
+ * A worked row kept around approved part-day leave (the API's ADR-0077,
+ * part 4), as a leave reader gets it: the leave line, the pieces still
+ * worked, and the lost hours as a part gap on the row's own shift.
+ */
+export const keptAroundLeaveFixture = (
+	row: ScheduleAssignment,
+	leave: { start: string; end: string; durationName?: string | null },
+	workedTimes: Array<{ start: string; end: string }>
+): ScheduleAssignment => ({
+	...row,
+	leaveTypeName: "Annual leave",
+	leaveDurationName: leave.durationName ?? null,
+	leaveStartTime: leave.start,
+	leaveEndTime: leave.end,
+	workedTimes,
+	uncoveredShift: row.shift,
+	uncoveredFrom: leave.start,
+	uncoveredTo: leave.end,
+});
+
+/** Aisha's Monday Front Desk AM (09:00–15:00) shortened by morning leave 09:00–11:00. */
+export const shortenedShiftFixture = (): ScheduleAssignment =>
+	keptAroundLeaveFixture(
+		scheduleAssignmentsFixture()[0]!,
+		{ start: "09:00", end: "11:00", durationName: "Morning" },
+		[{ start: "11:00", end: "15:00" }]
+	);
+
+/** Aisha's Monday Front Desk AM worked around leave in the middle, 11:00–13:00. */
+export const workedAroundLeaveFixture = (): ScheduleAssignment =>
+	keptAroundLeaveFixture(
+		scheduleAssignmentsFixture()[0]!,
+		{ start: "11:00", end: "13:00" },
+		[
+			{ start: "09:00", end: "11:00" },
+			{ start: "13:00", end: "15:00" },
+		]
+	);
+
 type Branches = Workspace["companies"][number]["branches"];
 
 /** "Main branch" (b-1): Front Office (d-1) and Kitchen (d-2) active, Archive (d-3) inactive. */

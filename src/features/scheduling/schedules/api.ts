@@ -756,6 +756,17 @@ export const scheduleAssignmentSchema = z.object({
 	leaveRequestId: z.string().nullish(),
 	/** The frozen shift this absence leaves short; only on the manager's roster. */
 	uncoveredShift: rosterShiftSchema.nullish(),
+	/**
+	 * On a shift kept around approved part-day leave (the API's ADR-0077,
+	 * part 4), the pieces still worked in order: one, or two around a leave in
+	 * the middle. Empty when the whole shift is worked, and from an older API.
+	 */
+	workedTimes: z
+		.array(z.object({ start: z.string(), end: z.string() }))
+		.nullish(),
+	/** With `uncoveredShift`, when only part of it is short: the hours that need cover. */
+	uncoveredFrom: z.string().nullish(),
+	uncoveredTo: z.string().nullish(),
 });
 
 /** One member's day in a generated schedule: a frozen shift, or off with its reason. */

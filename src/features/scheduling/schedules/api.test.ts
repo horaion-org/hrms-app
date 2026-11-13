@@ -34,6 +34,7 @@ import {
 	generationFixture,
 	scheduleAssignmentsFixture,
 	scheduleFixture,
+	workedAroundLeaveFixture,
 } from "@/features/scheduling/schedules/fixtures";
 import {
 	CONSTRAINT_FIXTURES,
@@ -944,6 +945,31 @@ describe("a schedule's roster", () => {
 			leaveEndTime: "11:00",
 		});
 		expect(olderApi?.leaveStartTime).toBeUndefined();
+	});
+
+	it("reads a shift kept around part-day leave: the time still worked and the part gap", async () => {
+		const [, second] = scheduleAssignmentsFixture() as [
+			ScheduleAssignment,
+			ScheduleAssignment,
+		];
+		stubApi({
+			[`GET ${SCHEDULES}/s-1/assignments`]: {
+				status: 200,
+				body: envelope([workedAroundLeaveFixture(), second]),
+			},
+		});
+
+		const [kept, olderApi] = await fetchScheduleAssignments("c-1", UNIT, "s-1");
+
+		expect(kept).toMatchObject({
+			workedTimes: [
+				{ start: "09:00", end: "11:00" },
+				{ start: "13:00", end: "15:00" },
+			],
+			uncoveredFrom: "11:00",
+			uncoveredTo: "13:00",
+		});
+		expect(olderApi?.workedTimes).toBeUndefined();
 	});
 
 	it("reads the types a day can be made when not worked, and none from an older API", async () => {

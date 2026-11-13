@@ -424,13 +424,47 @@ const leaveRequestPath = (
 /** The longest remark on recorded, changed or cancelled leave, in characters. */
 export const LEAVE_REMARK_MAX_LENGTH = 500;
 
+/** A stretch of a day, "HH:mm" to "HH:mm"; an end before the start runs past midnight. */
+const timePieceSchema = z.object({ start: z.string(), end: z.string() });
+
+/** What approving a part-day leave would do to a shift (the API's ADR-0077, part 4); UNKNOWN for a value added later. */
+const partDayOutcomeSchema = z
+	.enum(["UNCHANGED", "SHORTENED", "WORKS_AROUND", "TAKEN_OFF", "UNKNOWN"])
+	.catch("UNKNOWN");
+
+export type PartDayOutcome = z.infer<typeof partDayOutcomeSchema>;
+
 const rosteredDaySchema = z.object({
 	day: z.iso.date(),
 	minutes: z.number().int().nonnegative(),
+	/** The day's shift when exactly one is held; null otherwise and from an older API. */
+	shiftStart: z.string().nullish(),
+	shiftEnd: z.string().nullish(),
+	/** With a part-day leave's times asked for: what approving it would do to the shift. */
+	outcome: partDayOutcomeSchema.nullish(),
+	/** With an outcome, the pieces of the shift still worked. */
+	workedTimes: z.array(timePieceSchema).nullish(),
+	/** With an outcome that keeps part of the shift, the hours that would need cover. */
+	gap: timePieceSchema.nullish(),
 });
 
 /** A day of a period the person holds a shift on. */
 export type RosteredDay = z.infer<typeof rosteredDaySchema>;
+
+/** The rostered-days query string: the period, and a part-day leave's times when both are given. */
+const rosteredDaysSearch = (period: {
+	start: string;
+	end: string;
+	startTime?: string;
+	endTime?: string;
+}): string =>
+	new URLSearchParams({
+		startDate: period.start,
+		endDate: period.end,
+		...(period.startTime && period.endTime
+			? { startTime: period.startTime, endTime: period.endTime }
+			: {}),
+	}).toString();
 
 /** Every rostered-days answer of a company, for refreshing them after a refusal. */
 export const rosteredDaysKey = (
@@ -440,16 +474,27 @@ export const rosteredDaysKey = (
 
 /**
  * The days of a period the person holds a shift on: the caller's own without
- * `memberId`. `allowed` false asks for nothing.
+ * `memberId`. With a part-day leave's `startTime` and `endTime`, each day
+ * also says what that leave would do to its shift. `allowed` false asks for
+ * nothing.
  */
 export const rosteredDaysQuery = (
 	companyId: string,
-	period: { start: string; end: string },
+	period: { start: string; end: string; startTime?: string; endTime?: string },
 	memberId?: string,
 	allowed = true
 ): QueryOptionsFor<
 	Array<RosteredDay>,
-	readonly ["leave", string, "rostered-days", string, string, string]
+	readonly [
+		"leave",
+		string,
+		"rostered-days",
+		string,
+		string,
+		string,
+		string,
+		string,
+	]
 > =>
 	queryOptions({
 		queryKey: [
@@ -457,11 +502,13 @@ export const rosteredDaysQuery = (
 			memberId ?? "me",
 			period.start,
 			period.end,
+			period.startTime ?? "",
+			period.endTime ?? "",
 		] as const,
 		queryFn: allowed
 			? ({ signal }): Promise<Array<RosteredDay>> =>
 					apiRequest(
-						`${memberId ? memberLeavePath(companyId, memberId) : `${companyPath(companyId)}/me/leave-requests`}/rostered-days?${new URLSearchParams({ startDate: period.start, endDate: period.end }).toString()}`,
+						`${memberId ? memberLeavePath(companyId, memberId) : `${companyPath(companyId)}/me/leave-requests`}/rostered-days?${rosteredDaysSearch(period)}`,
 						z.array(rosteredDaySchema),
 						{ signal }
 					)
