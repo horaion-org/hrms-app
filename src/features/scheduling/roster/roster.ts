@@ -1,6 +1,7 @@
 import type { TFunction } from "i18next";
 import { dateTimeFormatIn } from "@/common/dateTimeFormatIn";
 import { daysOf, weeksOf } from "@/common/weeks";
+import { portionText, timeRangeText } from "@/features/leave/dayPortion";
 import { dayTypeLabel } from "@/features/scheduling/dayTypes";
 import type { SchedulePeriod } from "@/features/scheduling/periods";
 import {
@@ -35,11 +36,20 @@ export type RosterShiftCell = {
 	note?: RosterDayNote;
 };
 
+/** The part of one day a leave takes ("Morning 07:00–11:00"); the duration's name is null for Custom times. */
+export type RosterLeavePortion = {
+	durationName: string | null;
+	startTime: string;
+	endTime: string;
+};
+
 /** What the leave records add to a day the roster alone cannot say. */
 export type RosterDayNote = {
 	flag?: NonNullable<ScheduleAssignment["flag"]>;
 	leaveRequestId?: string;
 	leaveTypeName?: string;
+	/** For part-day leave, the part of the day it takes. */
+	leavePortion?: RosterLeavePortion;
 	/** The shift this day's absence leaves short, by name; absent when none is. */
 	uncoveredShiftName?: string;
 	/** On a worked day, the non-working day type it had before a shift was put on it. */
@@ -50,6 +60,8 @@ export type RosterDayNote = {
 export type RosterLeaveCell = {
 	kind: "leave";
 	leaveTypeName?: string;
+	/** For part-day leave, which still takes the whole day off the roster this round. */
+	leavePortion?: RosterLeavePortion;
 	note?: RosterDayNote;
 };
 
@@ -103,32 +115,54 @@ export type RosterStats = {
 	onLeave: number;
 };
 
-const offCellOf = ({
-	offReason,
-	dayType,
-	leaveTypeName,
-}: ScheduleAssignment): RosterDayWithoutShift => {
+/** The part of the day a part-day leave takes, when the API names its times; nothing for whole days. */
+export const leavePortionOf = ({
+	leaveDurationName,
+	leaveStartTime,
+	leaveEndTime,
+}: Pick<
+	ScheduleAssignment,
+	"leaveDurationName" | "leaveStartTime" | "leaveEndTime"
+>): RosterLeavePortion | undefined =>
+	leaveStartTime && leaveEndTime
+		? {
+				durationName: leaveDurationName ?? null,
+				startTime: leaveStartTime,
+				endTime: leaveEndTime,
+			}
+		: undefined;
+
+const offCellOf = (assignment: ScheduleAssignment): RosterDayWithoutShift => {
+	const { offReason, dayType, leaveTypeName } = assignment;
 	if (offReason === "ABSENT") return { kind: "absent" };
 	if (offReason !== "LEAVE") return { kind: "off", dayType };
-	return leaveTypeName ? { kind: "leave", leaveTypeName } : { kind: "leave" };
+	const leavePortion = leavePortionOf(assignment);
+	return {
+		kind: "leave",
+		...(leaveTypeName ? { leaveTypeName } : {}),
+		...(leavePortion ? { leavePortion } : {}),
+	};
 };
 
 /** The day's note, or nothing on a day with nothing to add. */
-const noteOf = ({
-	flag,
-	leaveRequestId,
-	leaveTypeName,
-	uncoveredShift,
-	shift,
-	dayType,
-}: ScheduleAssignment): RosterDayNote | undefined => {
+const noteOf = (assignment: ScheduleAssignment): RosterDayNote | undefined => {
+	const {
+		flag,
+		leaveRequestId,
+		leaveTypeName,
+		uncoveredShift,
+		shift,
+		dayType,
+	} = assignment;
 	// Only a worked day notes its type; a day not worked shows it in its own cell.
 	const workedDayType = shift === null ? null : dayType;
 	if (!flag && !uncoveredShift && workedDayType === null) return undefined;
+	const leavePortion = leavePortionOf(assignment);
 	return {
 		...(flag ? { flag } : {}),
 		...(leaveRequestId ? { leaveRequestId } : {}),
 		...(leaveTypeName ? { leaveTypeName } : {}),
+		...(leavePortion ? { leavePortion } : {}),
 		...(uncoveredShift ? { uncoveredShiftName: uncoveredShift.name } : {}),
 		...(workedDayType === null ? {} : { dayType: workedDayType }),
 	};
@@ -248,6 +282,23 @@ export const weekDays = (
 	return shown ? daysOf(shown.start) : [];
 };
 
+/** A part-day leave's times: "07:00–11:00", or "22:00–02:00 next day". */
+export const leavePortionTimeText = (
+	portion: RosterLeavePortion,
+	t: TFunction
+): string => timeRangeText(portion.startTime, portion.endTime, t);
+
+/**
+ * The leave a roster line names: its type, then for part-day leave which
+ * part of the day ("Annual leave · Morning 07:00–11:00").
+ */
+export const leaveLineText = (
+	leaveTypeName: string,
+	portion: RosterLeavePortion | undefined,
+	t: TFunction
+): string =>
+	portion ? `${leaveTypeName} · ${portionText(portion, t)}` : leaveTypeName;
+
 /**
  * A day with no shift as its tile writes it: the leave type, the day type, or
  * "OFF", "LEAVE", "Absent". Pure.
@@ -271,8 +322,15 @@ export const dayWithoutShiftPlainText = (
 	cell: RosterDayWithoutShift,
 	t: TFunction
 ): string => {
-	if (cell.kind === "leave")
-		return cell.leaveTypeName ?? t("scheduling.rosterEdit.onLeave");
+	if (cell.kind === "leave") {
+		const leave = cell.leaveTypeName ?? t("scheduling.rosterEdit.onLeave");
+		return cell.leavePortion
+			? t("scheduling.detail.leaveWithTime", {
+					leave,
+					time: leavePortionTimeText(cell.leavePortion, t),
+				})
+			: leave;
+	}
 	if (cell.kind === "absent") return t("scheduling.detail.absent");
 	if (cell.dayType === null) return t("scheduling.rosterEdit.dayOff");
 	return dayTypeLabel(cell.dayType, t);

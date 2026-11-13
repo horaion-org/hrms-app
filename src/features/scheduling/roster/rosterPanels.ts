@@ -1,6 +1,10 @@
 import type { TFunction } from "i18next";
 import { formatDay } from "@/features/scheduling/periods";
-import type { RosterRow } from "@/features/scheduling/roster/roster";
+import {
+	leaveLineText,
+	leavePortionOf,
+	type RosterRow,
+} from "@/features/scheduling/roster/roster";
 import { LEAVE_MARKER_KEYS } from "@/features/scheduling/roster/rosterMarks";
 import {
 	assignmentCell,
@@ -42,7 +46,11 @@ export const leaveAndCoverItems = (
 			title: `${name} · ${formatDay(row.day, language)}`,
 			lines: [
 				...(marker
-					? [row.leaveTypeName ? `${marker}: ${row.leaveTypeName}` : marker]
+					? [
+							row.leaveTypeName
+								? `${marker}: ${leaveLineText(row.leaveTypeName, leavePortionOf(row), t)}`
+								: marker,
+						]
 					: []),
 				...(row.uncoveredShift
 					? [

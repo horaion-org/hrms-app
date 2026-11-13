@@ -136,6 +136,62 @@ describe("rosterFromAssignments", () => {
 		expect(ben!.days["2026-10-18"]).toEqual({ kind: "absent" });
 	});
 
+	it("given_partDayLeave_when_mapped_then_theLeaveCellCarriesItsPartOfTheDay", () => {
+		const partDay = scheduleAssignmentsFixture().map((assignment) =>
+			assignment.offReason === "LEAVE"
+				? {
+						...assignment,
+						leaveTypeName: "Annual leave",
+						leaveDurationName: "Morning",
+						leaveStartTime: "07:00",
+						leaveEndTime: "11:00",
+					}
+				: assignment
+		);
+
+		const [, ben] = rosterFromAssignments(partDay, period);
+
+		expect(ben!.days["2026-10-14"]).toEqual({
+			kind: "leave",
+			leaveTypeName: "Annual leave",
+			leavePortion: {
+				durationName: "Morning",
+				startTime: "07:00",
+				endTime: "11:00",
+			},
+		});
+	});
+
+	it("given_pendingPartDayLeaveOnAShift_when_mapped_then_theNoteCarriesItsPartOfTheDay", () => {
+		const [first, ...rest] = scheduleAssignmentsFixture();
+		const [aisha] = rosterFromAssignments(
+			[
+				{
+					...first!,
+					flag: "LEAVE_REQUESTED",
+					leaveTypeName: "Annual leave",
+					leaveDurationName: null,
+					leaveStartTime: "10:00",
+					leaveEndTime: "12:00",
+				},
+				...rest,
+			],
+			period
+		);
+
+		expect(aisha!.days[first!.day]).toMatchObject({
+			kind: "shift",
+			note: {
+				flag: "LEAVE_REQUESTED",
+				leavePortion: {
+					durationName: null,
+					startTime: "10:00",
+					endTime: "12:00",
+				},
+			},
+		});
+	});
+
 	it("given_rowsWhoseMemberIsGone_when_mapped_then_keysEachByItsAssignment", () => {
 		const [first, second] = scheduleAssignmentsFixture();
 		const gone: Array<ScheduleAssignment> = [

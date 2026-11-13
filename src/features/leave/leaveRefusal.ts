@@ -1,9 +1,10 @@
 import type { TFunction } from "i18next";
+import { ApiProblemError } from "@/common/problem";
 import { mapRefusal, refusalCodeOf, type Refusal } from "@/common/refusal";
 import { APPROVAL_REFUSAL_CODES } from "@/features/approvals/approvalRefusal";
 
 /** The fields an application's refusal can land on. */
-export type ApplyField = "employee" | "type" | "endDate" | "notes";
+export type ApplyField = "employee" | "type" | "endDate" | "notes" | "duration";
 
 /**
  * The refusals of applying for and deciding leave, as `"<status> <errorCode>"`.
@@ -46,6 +47,13 @@ export const LEAVE_REFUSAL_CODES = {
 	invalidRemark: "400 INVALID_LEAVE_REMARK",
 	/** The request waits on an approval flow, so it is decided on its open step, not in one review. */
 	approvalPending: "409 LEAVE_APPROVAL_PENDING",
+	/**
+	 * A part day broke a rule: it is one date, a duration or two times, of a
+	 * type that can be taken in part days. The field it names says which.
+	 */
+	invalidDuration: "400 INVALID_LEAVE_DURATION",
+	/** The leave duration no longer applies to the person, or is switched off. */
+	durationNotAvailable: "400 LEAVE_DURATION_NOT_AVAILABLE",
 } as const;
 
 const codes = LEAVE_REFUSAL_CODES;
@@ -70,6 +78,19 @@ export const isStaleDecision = (error: unknown): boolean => {
 export const isRosterClash = (error: unknown): boolean =>
 	refusalCodeOf(error) === codes.rosterClash;
 
+/** A broken part-day rule lands on the dates when the API names `endDate`, otherwise on the part of the day. */
+const partDayRefusal = (error: unknown, t: TFunction): Refusal<ApplyField> => {
+	const onEndDate =
+		error instanceof ApiProblemError &&
+		error.fieldErrors.some(({ field }) => field === "endDate");
+	return {
+		fields: onEndDate
+			? { endDate: t("leave.refusal.partDayOneDate") }
+			: { duration: t("leave.refusal.durationRejected") },
+		refreshMembers: false,
+	};
+};
+
 /**
  * Why applying on a person's behalf was refused: on the type, the dates, the
  * remarks or the employee, or as the dialog's alert. Server codes select frontend-owned
@@ -80,6 +101,8 @@ export const applyRefusal = (
 	t: TFunction
 ): Refusal<ApplyField> => {
 	const key = "leave.refusal";
+	if (refusalCodeOf(error) === codes.invalidDuration)
+		return partDayRefusal(error, t);
 	const dates = (message: string) => ({ field: "endDate", message }) as const;
 	const notes = { field: "notes", message: t(`${key}.notesRejected`) } as const;
 	const type = {
@@ -97,6 +120,10 @@ export const applyRefusal = (
 				message: t(`${key}.reasonRequired`),
 			},
 			[codes.typeNotAvailable]: type,
+			[codes.durationNotAvailable]: {
+				field: "duration",
+				message: t(`${key}.durationNotAvailable`),
+			},
 			[codes.invalidRemark]: notes,
 			[codes.rosterClash]: dates(t(`${key}.rosterClash`)),
 			[codes.ownReview]: {
@@ -185,6 +212,7 @@ export const changeRefusal = (error: unknown, t: TFunction): string => {
 			[codes.overlaps]: t(`${key}.overlaps`),
 			[codes.invalidPeriod]: t(`${key}.invalidPeriod`),
 			[codes.typeNotAvailable]: t(`${key}.typeNotAvailable`),
+			[codes.invalidDuration]: t(`${key}.partDayChange`),
 			[codes.invalidRemark]: t(`${key}.remarkRejected`),
 			[codes.rosterClash]: t(`${key}.rosterClash`),
 			[codes.notApproved]: t(`${key}.notApproved`),

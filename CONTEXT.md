@@ -109,7 +109,7 @@ _Avoid_: Rule, scheduling rule, condition, priority
 ## Leave
 
 **Leave request**:
-A person's request to be away from work over a Date range, decided by an Approver. It is a Draft, pending, approved, rejected, or cancelled; a pending one can be cancelled at any time, an approved one only until it starts. Every calendar day in the range counts, Weekends included, and the smallest amount is a Half day. Someone with permission can make one on another person's behalf.
+A person's request to be away from work over a Date range, decided by an Approver. It is a Draft, pending, approved, rejected, or cancelled; a pending one can be cancelled at any time, an approved one only until it starts. Every calendar day in the range counts, Weekends included, and the smallest amount is a Part day. Someone with permission can make one on another person's behalf.
 _Avoid_: Leave application, absence request, time-off request
 
 **Draft**:
@@ -120,12 +120,16 @@ _Avoid_: Saved request, unsubmitted request
 The person named on a Leave request to decide it. Being named is not enough: the Approver must also hold permission to approve leave for the person taking it. Often a Department head, but being one does not by itself make someone an Approver.
 _Avoid_: Supervisor, manager, line manager
 
-**Half day**:
-The morning or the afternoon of one day; the smallest amount of leave a person can take. Only a Leave request for a single day can be a Half day.
-_Avoid_: Partial day, AM leave, PM leave
+**Part day**:
+Leave for part of one day, counted in hours: a Leave duration or Custom times. Only a Leave request for a single day, of a Leave type that can be taken in part days, can be a Part day.
+_Avoid_: Half day, partial day, AM leave, PM leave
+
+**Leave duration**:
+A named part of a day a Company offers for leave, with its start and end time; it counts as the hours between them. Admins choose where it applies. A person may instead give their own times (Custom). Only a Leave request for a single day, of a Leave type that can be taken in part days, can use one.
+_Avoid_: Day portion, preset, leave code
 
 **Leave type**:
-A kind of leave a Company offers and a Leave request is for. Every Company starts with the same default set (Annual, Sick, Hospitalisation, Childcare, Maternity, Paternity, Shared parental, Marriage, Compassionate, Off in lieu, Unpaid and Other); its admins add, rename, reorder, deactivate and reactivate them under Settings › Leave, and never delete one. Each has a Grant kind and may ask for a reason when someone applies. It applies to the whole Company, chosen Branches or chosen Departments, and a person is offered the types that apply to their home Department. The app names a Leave type as the Company does, never in its own words.
+A kind of leave a Company offers and a Leave request is for. Every Company starts with the same default set (Annual, Sick, Hospitalisation, Childcare, Maternity, Paternity, Shared parental, Marriage, Compassionate, Off in lieu, Unpaid and Other); its admins add, rename, reorder, deactivate and reactivate them under Settings › Leave, and never delete one. Each has a Grant kind, may ask for a reason when someone applies, and says whether it can be taken in part days. It applies to the whole Company, chosen Branches or chosen Departments, and a person is offered the types that apply to their home Department. The app names a Leave type as the Company does, never in its own words.
 _Avoid_: Request type, leave code, absence type
 
 **Grant kind**:

@@ -50,6 +50,26 @@ export const NonWorkingDayTypes: Story = {
 	},
 };
 
+/** Ben's leave days are part-day leave this round: still the whole day, with the time on a second line. */
+export const PartDayLeave: Story = {
+	args: {
+		rows: rosterFromAssignments(
+			scheduleAssignmentsFixture().map((assignment) =>
+				assignment.offReason === "LEAVE"
+					? {
+							...assignment,
+							leaveTypeName: "Annual leave",
+							leaveDurationName: "Morning",
+							leaveStartTime: "07:00",
+							leaveEndTime: "11:00",
+						}
+					: assignment
+			),
+			{ start: "2026-10-12", end: "2026-10-18" }
+		),
+	},
+};
+
 export const ShiftSelected: Story = {
 	args: { selectedShiftId: "a-mp-1-2026-10-13" },
 };

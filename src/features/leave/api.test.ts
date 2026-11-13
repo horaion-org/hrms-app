@@ -6,7 +6,11 @@ import {
 	leaveRequestSchema,
 	rosteredDaysQuery,
 } from "@/features/leave/api";
-import { leaveFixture } from "@/features/leave/fixtures";
+import {
+	LEAVE_DURATION_OPTION_FIXTURES,
+	leaveFixture,
+	partDayLeaveFixture,
+} from "@/features/leave/fixtures";
 
 describe("leaveRequestSchema", () => {
 	it("accepts a leave type code the app has never seen", () => {
@@ -25,6 +29,31 @@ describe("leaveRequestSchema", () => {
 		const parsed = leaveRequestSchema.parse(older);
 		expect(parsed.leaveTypeId).toBeNull();
 		expect(parsed.leaveTypeName).toBeNull();
+	});
+
+	it("reads a part-day request's duration, times and minutes", () => {
+		expect(leaveRequestSchema.parse(partDayLeaveFixture())).toMatchObject({
+			durationName: "Morning",
+			startTime: "09:00",
+			endTime: "13:00",
+			leaveMinutes: 240,
+		});
+	});
+
+	it("reads a request from an API older than part days as whole days", () => {
+		const older: Record<string, unknown> = {
+			...leaveFixture({ leaveRequestId: "r-3" }),
+		};
+		delete older["durationName"];
+		delete older["startTime"];
+		delete older["endTime"];
+		delete older["leaveMinutes"];
+		expect(leaveRequestSchema.parse(older)).toMatchObject({
+			durationName: null,
+			startTime: null,
+			endTime: null,
+			leaveMinutes: null,
+		});
 	});
 });
 
@@ -83,6 +112,7 @@ describe("leaveOptionsQuery", () => {
 		)({});
 		expect(options).toEqual({
 			leaveTypes: [{ ...annual, allowsPartDays: true }],
+			durations: [],
 		});
 	});
 
@@ -93,6 +123,7 @@ describe("leaveOptionsQuery", () => {
 					status: 200,
 					body: envelope({
 						leaveTypes: [{ ...annual, allowsPartDays: false }],
+						durations: LEAVE_DURATION_OPTION_FIXTURES,
 					}),
 				},
 		});
@@ -103,6 +134,7 @@ describe("leaveOptionsQuery", () => {
 		)({});
 		expect(options).toMatchObject({
 			leaveTypes: [{ code: "ANNUAL", allowsPartDays: false }],
+			durations: LEAVE_DURATION_OPTION_FIXTURES,
 		});
 	});
 });

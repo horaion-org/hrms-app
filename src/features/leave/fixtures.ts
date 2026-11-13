@@ -1,4 +1,8 @@
-import type { CompanyLeaveType, LeaveRequest } from "@/features/leave/api";
+import type {
+	CompanyLeaveType,
+	LeaveDurationOption,
+	LeaveRequest,
+} from "@/features/leave/api";
 
 /** One request as the API answers it, for stories and tests; never sent anywhere. */
 export const leaveFixture = (
@@ -19,6 +23,10 @@ export const leaveFixture = (
 	startDate: "2026-05-22",
 	endDate: "2026-05-22",
 	workingDays: 1,
+	durationName: null,
+	startTime: null,
+	endTime: null,
+	leaveMinutes: null,
 	notes: null,
 	status: "PENDING",
 	requestedAt: "2026-05-02T08:00:00Z",
@@ -196,4 +204,35 @@ export const LEAVE_TYPE_FIXTURES: Array<CompanyLeaveType> = [
 		displayOrder: 0,
 		system: true,
 	}),
+];
+
+/** Aisha's morning off on one day at a leave duration: four hours, not a day. */
+export const partDayLeaveFixture = (
+	overrides: Partial<LeaveRequest> = {}
+): LeaveRequest =>
+	leaveFixture({
+		leaveRequestId: "leave-aisha-morning",
+		durationName: "Morning",
+		startTime: "09:00",
+		endTime: "13:00",
+		leaveMinutes: 240,
+		...overrides,
+	});
+
+/** The leave durations a person in the Sales Department may pick: a morning and a night across midnight. */
+export const LEAVE_DURATION_OPTION_FIXTURES: Array<LeaveDurationOption> = [
+	{
+		leaveDurationId: "ld-morning",
+		name: "Morning",
+		startTime: "09:00",
+		endTime: "13:00",
+		minutes: 240,
+	},
+	{
+		leaveDurationId: "ld-night",
+		name: "Night",
+		startTime: "22:00",
+		endTime: "02:00",
+		minutes: 240,
+	},
 ];

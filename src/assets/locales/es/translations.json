@@ -202,7 +202,11 @@
 			"approvalPending": "Esta solicitud ahora pasa por pasos de aprobación. Recarga la página para ver en qué punto está.",
 			"noApprover": "Aún nadie puede aprobar permisos en este departamento. Pide a una persona de RR. HH. que revise quién aprueba los permisos.",
 			"stepDecided": "Otra persona decidió este paso antes. Recarga la página para ver en qué punto está.",
-			"notAnApprover": "No puedes decidir este paso."
+			"notAnApprover": "No puedes decidir este paso.",
+			"durationNotAvailable": "Esa duración ya no se aplica; elige otra.",
+			"durationRejected": "Este tipo de permiso no se puede tomar por partes del día, o hay que revisar el horario. Vuelve a elegir.",
+			"partDayOneDate": "Un permiso por parte del día es para una sola fecha. Elige la misma fecha de inicio y de fin.",
+			"partDayChange": "Un permiso por parte del día se queda en una sola fecha, con un tipo de permiso que se pueda tomar por partes del día."
 		},
 		"myLeave": "Mis ausencias",
 		"teamRequests": "Solicitudes del equipo",
@@ -271,7 +275,22 @@
 		},
 		"choosePersonFirst": "Primero elige a una persona",
 		"noTypesApply": "Aún no hay tipos de permiso para {{name}}. Un administrador puede configurarlos en Ajustes › Permisos.",
-		"noTypesApplyOwn": "Aún no hay tipos de permiso para ti. Un administrador puede configurarlos en Ajustes › Permisos."
+		"noTypesApplyOwn": "Aún no hay tipos de permiso para ti. Un administrador puede configurarlos en Ajustes › Permisos.",
+		"portion": {
+			"fullDay": "Día completo",
+			"custom": "Personalizado",
+			"option": "{{name}} · {{range}} · {{length}}",
+			"text": "{{name}} {{range}}",
+			"timeRange": "{{start}}–{{end}}",
+			"timeRangeNextDay": "{{start}}–{{end}} del día siguiente",
+			"label": "Qué parte del día",
+			"start": "Inicio",
+			"end": "Fin",
+			"chooseTime": "Elige una hora",
+			"length": "{{length}}",
+			"lengthNextDay": "{{length}} · Termina al día siguiente",
+			"severalDays": "Un permiso de varios días se toma en días completos."
+		}
 	},
 	"approvals": {
 		"panel": {
@@ -862,6 +881,8 @@
 				"paidDescription": "Para tus registros. Todavía no se calcula nada con este dato.",
 				"requiresReason": "Pedir un motivo",
 				"requiresReasonDescription": "Al solicitarlo hay que indicar para qué es el permiso. Quien revise la solicitud puede leerlo.",
+				"allowsPartDays": "Se puede tomar por partes del día",
+				"allowsPartDaysDescription": "Se puede elegir una duración o un horario propio en un solo día.",
 				"kindLocked": "Hay solicitudes que usan este tipo de permiso, así que no se puede cambiar cómo se cuenta.",
 				"system": "El día libre del planificador no se puede cambiar.",
 				"gone": "Este tipo de permiso ya no está disponible. Cierra y vuelve a cargar la página.",
@@ -3635,7 +3656,8 @@
 				"rejected": "Rechazado",
 				"timeZone": "Zona horaria",
 				"byAt": "{{name}} · {{at}}"
-			}
+			},
+			"leaveWithTime": "{{leave}} {{time}}"
 		},
 		"myRoster": {
 			"title": "Mi cuadrante · {{department}} · {{period}}",
@@ -3990,7 +4012,8 @@
 			"undoTitle": "¿Deshacer este cambio?",
 			"undoDescription": "Deshacer es un cambio de vuelta: se comprueba igual, y los permisos o la disponibilidad pueden haber cambiado desde entonces.",
 			"undoChange": "Deshacer cambio",
-			"undoAnyway": "Deshacer de todos modos"
+			"undoAnyway": "Deshacer de todos modos",
+			"partDayKeptFree": "Aprobado antes de crear este turno. El planificador aún no puede planificar partes del día, así que se dejó libre el día entero de {{name}}."
 		},
 		"publishedWeek": {
 			"setup": "Esta semana ya tiene un cuadrante publicado para este departamento. Solo se puede publicar un cuadrante por semana, así que elige otra semana para crear uno nuevo.",

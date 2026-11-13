@@ -3,6 +3,7 @@ import { ApiProblemError } from "@/common/problem";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import {
 	applyRefusal,
+	changeRefusal,
 	leaveDecisionRefusal,
 	isRosterClash,
 	isStaleDecision,
@@ -47,6 +48,36 @@ describe("applyRefusal", () => {
 		expect(applyRefusal(problem(400, "LEAVE_TYPE_NOT_AVAILABLE"), t)).toEqual({
 			fields: { type: "This leave type is no longer offered. Choose another." },
 			refreshMembers: false,
+		});
+	});
+
+	it("puts a part day over several dates on the end date", () => {
+		expect(
+			applyRefusal(problem(400, "INVALID_LEAVE_DURATION", ["endDate"]), t)
+				.fields
+		).toEqual({
+			endDate:
+				"Leave for part of a day is for one date. Choose the same start and end date.",
+		});
+	});
+
+	it.each(["leaveDurationId", "startTime", "endTime"])(
+		"puts a part-day rule refused on %s on how much of the day",
+		(field) => {
+			expect(
+				applyRefusal(problem(400, "INVALID_LEAVE_DURATION", [field]), t).fields
+			).toEqual({
+				duration:
+					"This leave type can’t be taken for part of a day, or the times need another look. Choose again.",
+			});
+		}
+	);
+
+	it("puts a duration that no longer applies on how much of the day", () => {
+		expect(
+			applyRefusal(problem(400, "LEAVE_DURATION_NOT_AVAILABLE"), t).fields
+		).toEqual({
+			duration: "That duration no longer applies; choose another.",
 		});
 	});
 
@@ -106,6 +137,16 @@ describe("refusals under an approval flow", () => {
 		expect(isStaleDecision(problem(409, "APPROVAL_NOT_PENDING"))).toBe(true);
 		expect(isStaleDecision(problem(409, "LEAVE_CLASHES_WITH_ROSTER"))).toBe(
 			false
+		);
+	});
+});
+
+describe("changeRefusal", () => {
+	it("says a part day stays one date of a type that allows it", () => {
+		expect(
+			changeRefusal(problem(400, "INVALID_LEAVE_DURATION", ["endDate"]), t)
+		).toBe(
+			"Leave for part of a day stays on one date, with a leave type that can be taken in part days."
 		);
 	});
 });

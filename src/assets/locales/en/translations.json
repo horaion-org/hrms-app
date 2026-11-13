@@ -202,7 +202,11 @@
 			"approvalPending": "This request now goes through approval steps. Reload the page to see where it stands.",
 			"noApprover": "Nobody can approve leave in this department yet. Ask an HR admin to check who approves leave.",
 			"stepDecided": "Someone else decided this step first. Reload the page to see where it stands.",
-			"notAnApprover": "You can’t decide this step."
+			"notAnApprover": "You can’t decide this step.",
+			"durationNotAvailable": "That duration no longer applies; choose another.",
+			"durationRejected": "This leave type can’t be taken for part of a day, or the times need another look. Choose again.",
+			"partDayOneDate": "Leave for part of a day is for one date. Choose the same start and end date.",
+			"partDayChange": "Leave for part of a day stays on one date, with a leave type that can be taken in part days."
 		},
 		"myLeave": "My leave",
 		"teamRequests": "Team requests",
@@ -271,7 +275,22 @@
 		},
 		"choosePersonFirst": "Choose a person first",
 		"noTypesApply": "No leave types apply to {{name}} yet. An admin can set them in Settings › Leave.",
-		"noTypesApplyOwn": "No leave types apply to you yet. An admin can set them in Settings › Leave."
+		"noTypesApplyOwn": "No leave types apply to you yet. An admin can set them in Settings › Leave.",
+		"portion": {
+			"fullDay": "Full day",
+			"custom": "Custom",
+			"option": "{{name}} · {{range}} · {{length}}",
+			"text": "{{name}} {{range}}",
+			"timeRange": "{{start}}–{{end}}",
+			"timeRangeNextDay": "{{start}}–{{end}} next day",
+			"label": "How much of the day",
+			"start": "Start",
+			"end": "End",
+			"chooseTime": "Choose a time",
+			"length": "{{length}}",
+			"lengthNextDay": "{{length}} · Ends the next day",
+			"severalDays": "Leave over several days is taken in full days."
+		}
 	},
 	"approvals": {
 		"panel": {
@@ -1616,6 +1635,8 @@
 				"paidDescription": "For your records. Nothing is worked out from it yet.",
 				"requiresReason": "Ask for a reason",
 				"requiresReasonDescription": "People must say what the leave is for when they apply. Reviewers of the request can read it.",
+				"allowsPartDays": "Can be taken in part days",
+				"allowsPartDaysDescription": "People can pick a duration or their own times on a single day.",
 				"kindLocked": "Requests use this leave type, so how it is counted can’t change.",
 				"system": "The scheduler’s day off can’t be changed.",
 				"gone": "This leave type is no longer available. Close and reload the page.",
@@ -3835,7 +3856,8 @@
 				"rejected": "Rejected",
 				"timeZone": "Time zone",
 				"byAt": "{{name}} · {{at}}"
-			}
+			},
+			"leaveWithTime": "{{leave}} {{time}}"
 		},
 		"myRoster": {
 			"title": "My roster · {{department}} · {{period}}",
@@ -4190,7 +4212,8 @@
 			"undoTitle": "Undo this change?",
 			"undoDescription": "An undo is a change back: it is checked the same way, and leave or availability may have changed since.",
 			"undoChange": "Undo change",
-			"undoAnyway": "Undo anyway"
+			"undoAnyway": "Undo anyway",
+			"partDayKeptFree": "Approved before this roster was made. The scheduler can’t plan part days yet, so {{name}}’s whole day was kept free."
 		},
 		"publishedWeek": {
 			"setup": "This week already has a published roster for this department. Only one roster can be published per week, so pick another week to make a new one.",

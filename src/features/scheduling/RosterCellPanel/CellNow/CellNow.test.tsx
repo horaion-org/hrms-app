@@ -3,6 +3,7 @@ import { I18nextProvider } from "react-i18next";
 import { describe, expect, it, vi } from "vitest";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
+import { editedAssignmentFixture } from "@/features/scheduling/rosterChanges/fixtures";
 import { scheduleAssignmentsFixture } from "@/features/scheduling/schedules/fixtures";
 import { CellNow, type CellNowProps } from "./CellNow";
 
@@ -91,5 +92,45 @@ describe("CellNow", () => {
 		expect(screen.getByText(/by Dana Lim/)).toBeVisible();
 		expect(screen.getByText("Was: Day off")).toBeVisible();
 		expect(screen.getByText("Covering for Ben")).toBeVisible();
+	});
+
+	describe("part-day leave", () => {
+		const leaveDay = (): ScheduleAssignment => {
+			const day = roster.find((row) => row.offReason === "LEAVE")!;
+			return {
+				...day,
+				leaveTypeName: "Annual leave",
+				leaveDurationName: "Morning",
+				leaveStartTime: "07:00",
+				leaveEndTime: "11:00",
+				lastChange: null,
+			};
+		};
+
+		it("given_aDayAsGenerated_when_rendered_then_namesThePartAndSaysWhyTheWholeDayIsFree", () => {
+			show({ assignment: leaveDay(), leaveDay: true });
+
+			expect(
+				screen.getByText(/Annual leave · Morning 07:00–11:00/)
+			).toBeVisible();
+			expect(
+				screen.getByText(/The scheduler can’t plan part days yet/)
+			).toBeVisible();
+		});
+
+		it("given_aDayChangedSinceGeneration_when_rendered_then_doesNotSayItWasApprovedBefore", () => {
+			const day = leaveDay();
+			show({
+				assignment: {
+					...day,
+					lastChange: editedAssignmentFixture(day).lastChange,
+				},
+				leaveDay: true,
+			});
+
+			expect(
+				screen.queryByText(/The scheduler can’t plan part days yet/)
+			).toBeNull();
+		});
 	});
 });

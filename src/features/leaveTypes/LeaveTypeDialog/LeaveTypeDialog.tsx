@@ -39,8 +39,9 @@ const key = "settings.leave.dialog";
 
 /**
  * Adds a leave type to the company's catalogue, or edits one: its name, how
- * it is counted, whether it is paid, whether applying asks for a reason and
- * where it applies: the whole company, chosen Branches or chosen Departments.
+ * it is counted, whether it is paid, whether applying asks for a reason,
+ * whether it can be taken in part days and where it applies: the whole
+ * company, chosen Branches or chosen Departments.
  * Once any request uses the type, how it is counted is fixed, as the API
  * keeps it. Mount when opened and unmount when closed so every attempt starts
  * fresh.
@@ -169,6 +170,23 @@ export const LeaveTypeDialog = ({
 						description={t(`${key}.requiresReasonDescription`)}
 						disabled={isSubmitting}
 						label={t(`${key}.requiresReason`)}
+						name={field.name}
+						onBlur={field.onBlur}
+						onChange={(event) => {
+							field.onChange(event.target.checked);
+						}}
+					/>
+				)}
+			/>
+			<Controller
+				control={control}
+				name="allowsPartDays"
+				render={({ field }) => (
+					<Checkbox
+						checked={field.value}
+						description={t(`${key}.allowsPartDaysDescription`)}
+						disabled={isSubmitting}
+						label={t(`${key}.allowsPartDays`)}
 						name={field.name}
 						onBlur={field.onBlur}
 						onChange={(event) => {

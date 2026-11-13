@@ -13,6 +13,7 @@ import type { GridFindings } from "@/features/scheduling/roster/findings/finding
 import {
 	dayWithoutShiftPlainText,
 	dayWithoutShiftTileText,
+	leavePortionTimeText,
 	hoursInDays,
 	type RosterRow,
 	type RosterShiftCell,
@@ -196,7 +197,17 @@ export const RosterGrid = ({
 		if (cell === undefined) return null;
 		const key = dayKey(row, date);
 		if (cell.kind !== "shift") {
-			const text = dayWithoutShiftTileText(cell, t);
+			const words = dayWithoutShiftTileText(cell, t);
+			// Part-day leave still takes the whole day this round; its time goes on a second line.
+			const text =
+				cell.kind === "leave" && cell.leavePortion ? (
+					<span className="flex flex-col">
+						<span>{words}</span>
+						<span>{leavePortionTimeText(cell.leavePortion, t)}</span>
+					</span>
+				) : (
+					words
+				);
 			// Read in words, not the tile's capitals: "Aisha Rahman, Sat: Day off".
 			const plainLabel = t("scheduling.detail.dayLabel", {
 				name,

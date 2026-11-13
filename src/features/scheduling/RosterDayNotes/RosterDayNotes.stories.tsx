@@ -52,6 +52,22 @@ export const LeaveRequested: Story = {
 	},
 };
 
+/** A colleague's request for part of the day, named with its duration and times. */
+export const PartDayLeaveRequested: Story = {
+	args: {
+		note: {
+			flag: "LEAVE_REQUESTED",
+			leaveRequestId: "r1",
+			leaveTypeName: "Annual leave",
+			leavePortion: {
+				durationName: "Morning",
+				startTime: "07:00",
+				endTime: "11:00",
+			},
+		},
+	},
+};
+
 /** What the engine left on Chen's Sunday, then the shift his absence leaves short. */
 export const FindingAndShortShift: Story = {
 	args: {
