@@ -70,7 +70,12 @@ export const LeaveTypesSettings = ({
 	const [toast, setToast] = useState<{ id: number; message: string }>();
 	const types = useMemo(() => list.data ?? [], [list.data]);
 	const sections = useMemo(() => catalogueSections(types), [types]);
-	const { containerRef, rememberMove } = useMovedArrowFocus(types);
+	const canMoveType = useCallback(
+		(leaveTypeId: string, direction: "up" | "down"): boolean =>
+			movedOrder(types, leaveTypeId, direction) !== null,
+		[types]
+	);
+	const { containerRef, rememberMove } = useMovedArrowFocus(canMoveType);
 	const notify = useCallback((message: string): void => {
 		setToast((previous) => ({ id: (previous?.id ?? 0) + 1, message }));
 	}, []);

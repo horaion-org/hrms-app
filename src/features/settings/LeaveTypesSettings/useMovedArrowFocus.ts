@@ -1,52 +1,45 @@
 import { useCallback, useEffect, useRef, type RefObject } from "react";
-import type { ManagedLeaveType } from "@/features/leaveTypes/api";
-import { movedOrder } from "@/features/leaveTypes/leaveTypeCatalogue";
 
 type MoveDirection = "up" | "down";
 
-/** The arrow to keep focus on after a move: the pressed one, or the other one once the type reaches an end. */
-const arrowToFocus = (
-	types: ReadonlyArray<ManagedLeaveType>,
-	leaveTypeId: string,
-	direction: MoveDirection
-): MoveDirection =>
-	movedOrder(types, leaveTypeId, direction)
-		? direction
-		: direction === "up"
-			? "down"
-			: "up";
+/** Whether an item can still move one place this way in the list as it now is. */
+export type CanMove = (id: string, direction: MoveDirection) => boolean;
 
 /**
  * Keeps a keyboard user's place while reordering: remember the arrow a move
- * was made with, and once `types` arrive in their new order, focus that arrow
- * on the moved row (or the other one at an end). The arrows are found inside
- * `containerRef` by their `data-move="<leaveTypeId>:<direction>"`.
+ * was made with, and once the list arrives in its new order (a new
+ * `canMove`, made from it), focus that arrow on the moved row, or the other
+ * one once the row reaches an end. The arrows are found inside
+ * `containerRef` by their `data-move="<id>:<direction>"`. Pass `canMove`
+ * memoised on the list, so it changes only when the list does.
  */
 export const useMovedArrowFocus = (
-	types: ReadonlyArray<ManagedLeaveType>
+	canMove: CanMove
 ): {
 	containerRef: RefObject<HTMLDivElement | null>;
-	rememberMove: (leaveTypeId: string, direction: MoveDirection) => void;
+	rememberMove: (id: string, direction: MoveDirection) => void;
 } => {
 	const containerRef = useRef<HTMLDivElement>(null);
-	const movedArrow = useRef<{
-		leaveTypeId: string;
-		direction: MoveDirection;
-	} | null>(null);
+	const movedArrow = useRef<{ id: string; direction: MoveDirection } | null>(
+		null
+	);
 	useEffect(() => {
 		const moved = movedArrow.current;
 		if (!moved) return;
 		movedArrow.current = null;
-		const direction = arrowToFocus(types, moved.leaveTypeId, moved.direction);
+		const opposite = moved.direction === "up" ? "down" : "up";
+		const direction = canMove(moved.id, moved.direction)
+			? moved.direction
+			: opposite;
 		containerRef.current
 			?.querySelector<HTMLButtonElement>(
-				`[data-move="${moved.leaveTypeId}:${direction}"]`
+				`[data-move="${moved.id}:${direction}"]`
 			)
 			?.focus();
-	}, [types]);
+	}, [canMove]);
 	const rememberMove = useCallback(
-		(leaveTypeId: string, direction: MoveDirection): void => {
-			movedArrow.current = { leaveTypeId, direction };
+		(id: string, direction: MoveDirection): void => {
+			movedArrow.current = { id, direction };
 		},
 		[]
 	);
