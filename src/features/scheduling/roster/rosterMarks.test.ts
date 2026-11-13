@@ -148,6 +148,31 @@ describe("dayNoteLines", () => {
 			],
 		],
 		[
+			"part-day leave requested, with its part of the day",
+			{
+				flag: "LEAVE_REQUESTED",
+				leaveTypeName: "Annual",
+				leavePortion: {
+					durationName: "Morning",
+					startTime: "07:00",
+					endTime: "11:00",
+				},
+			},
+			undefined,
+			[
+				{
+					kind: "leave",
+					key: "leaveRequested",
+					leaveTypeName: "Annual",
+					leavePortion: {
+						durationName: "Morning",
+						startTime: "07:00",
+						endTime: "11:00",
+					},
+				},
+			],
+		],
+		[
 			"leave taken that leaves a shift short",
 			{ flag: "ON_LEAVE_WHILE_ROSTERED", uncoveredShiftName: "Morning" },
 			undefined,

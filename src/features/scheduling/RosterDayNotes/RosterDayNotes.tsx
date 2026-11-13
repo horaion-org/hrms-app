@@ -7,7 +7,10 @@ import { FindingList } from "@/features/scheduling/FindingList";
 import { FINDING_TONE_ICONS } from "@/features/scheduling/FindingList/findingToneIcons";
 import type { Finding } from "@/features/scheduling/roster/findings/finding";
 import type { FindingNames } from "@/features/scheduling/roster/findings/findingNames";
-import type { RosterDayNote } from "@/features/scheduling/roster/roster";
+import {
+	leaveLineText,
+	type RosterDayNote,
+} from "@/features/scheduling/roster/roster";
 import {
 	dayNoteLines,
 	type DayNoteLine,
@@ -84,7 +87,9 @@ export const RosterDayNotes = ({
 				return (
 					<>
 						<p className="text-neutral-800">
-							{line.leaveTypeName ? `${status}: ${line.leaveTypeName}` : status}
+							{line.leaveTypeName
+								? `${status}: ${leaveLineText(line.leaveTypeName, line.leavePortion, t)}`
+								: status}
 						</p>
 						{search && (
 							<Button search={search} to="/leave" variant="textlink">

@@ -149,6 +149,29 @@ describe("RosterGrid", () => {
 		expect(within(ben).getAllByText("Absent")).toHaveLength(1);
 	});
 
+	it("given_partDayLeaveOnALeaveDay_when_rendered_then_putsItsTimeOnASecondLine", () => {
+		const partDay = rosterFromAssignments(
+			scheduleAssignmentsFixture().map((assignment) =>
+				assignment.offReason === "LEAVE"
+					? {
+							...assignment,
+							leaveTypeName: "Annual leave",
+							leaveDurationName: "Morning",
+							leaveStartTime: "07:00",
+							leaveEndTime: "11:00",
+						}
+					: assignment
+			),
+			{ start: "2026-10-12", end: "2026-10-18" }
+		);
+
+		render(<RosterGrid days={week} rows={partDay} />);
+
+		const ben = screen.getByRole("row", { name: /Ben Ong/ });
+		expect(within(ben).getAllByText("07:00–11:00").length).toBeGreaterThan(0);
+		expect(within(ben).getAllByText("Annual leave").length).toBeGreaterThan(0);
+	});
+
 	it("when_aTileIsChosen_then_reportsTheMemberDayAndShift", async () => {
 		const user = userEvent.setup();
 		const onAssignmentSelect = vi.fn();

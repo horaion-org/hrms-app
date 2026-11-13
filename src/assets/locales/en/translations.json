@@ -3856,7 +3856,8 @@
 				"rejected": "Rejected",
 				"timeZone": "Time zone",
 				"byAt": "{{name}} · {{at}}"
-			}
+			},
+			"leaveWithTime": "{{leave}} {{time}}"
 		},
 		"myRoster": {
 			"title": "My roster · {{department}} · {{period}}",
@@ -4211,7 +4212,8 @@
 			"undoTitle": "Undo this change?",
 			"undoDescription": "An undo is a change back: it is checked the same way, and leave or availability may have changed since.",
 			"undoChange": "Undo change",
-			"undoAnyway": "Undo anyway"
+			"undoAnyway": "Undo anyway",
+			"partDayKeptFree": "Approved before this roster was made. The scheduler can’t plan part days yet, so {{name}}’s whole day was kept free."
 		},
 		"publishedWeek": {
 			"setup": "This week already has a published roster for this department. Only one roster can be published per week, so pick another week to make a new one.",

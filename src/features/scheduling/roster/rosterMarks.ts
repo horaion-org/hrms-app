@@ -10,6 +10,7 @@ import {
 } from "@/features/scheduling/roster/findings/findingsOnGrid";
 import type {
 	RosterDayNote,
+	RosterLeavePortion,
 	RosterRow,
 } from "@/features/scheduling/roster/roster";
 import {
@@ -93,6 +94,7 @@ export type DayNoteLine =
 			kind: "leave";
 			key: "leaveRequested" | "onLeave";
 			leaveTypeName?: string;
+			leavePortion?: RosterLeavePortion;
 			leaveRequestId?: string;
 	  }
 	| { kind: "cover"; shiftName: string };
@@ -152,6 +154,7 @@ export const dayNoteLines = (
 						...(note.leaveTypeName
 							? { leaveTypeName: note.leaveTypeName }
 							: {}),
+						...(note.leavePortion ? { leavePortion: note.leavePortion } : {}),
 						...(note.leaveRequestId
 							? { leaveRequestId: note.leaveRequestId }
 							: {}),

@@ -3656,7 +3656,8 @@
 				"rejected": "Rechazado",
 				"timeZone": "Zona horaria",
 				"byAt": "{{name}} · {{at}}"
-			}
+			},
+			"leaveWithTime": "{{leave}} {{time}}"
 		},
 		"myRoster": {
 			"title": "Mi cuadrante · {{department}} · {{period}}",
@@ -4011,7 +4012,8 @@
 			"undoTitle": "¿Deshacer este cambio?",
 			"undoDescription": "Deshacer es un cambio de vuelta: se comprueba igual, y los permisos o la disponibilidad pueden haber cambiado desde entonces.",
 			"undoChange": "Deshacer cambio",
-			"undoAnyway": "Deshacer de todos modos"
+			"undoAnyway": "Deshacer de todos modos",
+			"partDayKeptFree": "Aprobado antes de crear este turno. El planificador aún no puede planificar partes del día, así que se dejó libre el día entero de {{name}}."
 		},
 		"publishedWeek": {
 			"setup": "Esta semana ya tiene un cuadrante publicado para este departamento. Solo se puede publicar un cuadrante por semana, así que elige otra semana para crear uno nuevo.",

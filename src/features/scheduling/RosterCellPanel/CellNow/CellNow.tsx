@@ -3,6 +3,10 @@ import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { dayTypeInSentence } from "@/features/scheduling/dayTypes";
 import { formatDay } from "@/features/scheduling/periods";
+import {
+	leaveLineText,
+	leavePortionOf,
+} from "@/features/scheduling/roster/roster";
 import type { LeaveLinkSearch } from "@/features/scheduling/RosterDayNotes/leaveLinkSearch";
 import {
 	assignmentCell,
@@ -25,9 +29,10 @@ export type CellNowProps = {
 const key = "scheduling.rosterEdit";
 
 /**
- * What the day holds now: its cell, job title and leave type, the day type a
- * shift falls on, the leave behind a day off, a link to change the whole
- * request in Leave, and who changed the day last, from what, and why.
+ * What the day holds now: its cell, job title and leave type (with its part
+ * of the day for part-day leave, and why the whole day was kept free), the
+ * day type a shift falls on, the leave behind a day off, a link to change the
+ * whole request in Leave, and who changed the day last, from what, and why.
  */
 export const CellNow = ({
 	assignment,
@@ -38,6 +43,7 @@ export const CellNow = ({
 }: CellNowProps): FunctionComponent => {
 	const { t } = useTranslation();
 	const lastChange = assignment.lastChange;
+	const leavePortion = leavePortionOf(assignment);
 	const changedOn = lastChange
 		? formatDay(lastChange.appliedAt, language)
 		: undefined;
@@ -50,8 +56,18 @@ export const CellNow = ({
 				{assignment.jobTitle && ` · ${assignment.jobTitle.name}`}
 				{assignment.offReason === "LEAVE" &&
 					assignment.leaveTypeName &&
-					` · ${assignment.leaveTypeName}`}
+					` · ${leaveLineText(assignment.leaveTypeName, leavePortion, t)}`}
 			</dd>
+			{/* Part-day leave on a day as generated: the scheduler kept the whole day free. */}
+			{assignment.offReason === "LEAVE" && leavePortion && !lastChange && (
+				<dd className="text-neutral-800">
+					{t(`${key}.partDayKeptFree`, {
+						name:
+							assignment.member?.displayName ??
+							t("scheduling.detail.formerMember"),
+					})}
+				</dd>
+			)}
 			{assignment.shift !== null && assignment.dayType !== null && (
 				<dd className="text-neutral-800">
 					{t("scheduling.rosterMarkers.onDayType", {

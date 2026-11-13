@@ -111,6 +111,30 @@ describe("RosterDayNotes", () => {
 		);
 	});
 
+	it("names the part of the day a part-day leave takes", () => {
+		render(
+			<RosterDayNotes
+				membershipId={MEMBER}
+				viewerMembershipId={VIEWER}
+				note={{
+					flag: "LEAVE_REQUESTED",
+					leaveTypeName: "Annual leave",
+					leavePortion: {
+						durationName: "Morning",
+						startTime: "07:00",
+						endTime: "11:00",
+					},
+				}}
+			/>
+		);
+
+		expect(
+			screen.getByText(
+				/^scheduling\.rosterMarkers\.leaveRequested: Annual leave · /
+			)
+		).toBeVisible();
+	});
+
 	it("links the viewer's own leave to My leave", () => {
 		render(
 			<RosterDayNotes
