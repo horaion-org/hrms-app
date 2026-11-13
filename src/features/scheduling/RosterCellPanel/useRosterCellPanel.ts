@@ -2,7 +2,11 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
-import { leaveOptionsQuery, leaveRequestQuery } from "@/features/leave/api";
+import {
+	leaveOptionsQuery,
+	leaveRequestQuery,
+	rosteredDaysQuery,
+} from "@/features/leave/api";
 import { rangeDays } from "@/features/leave/dates";
 import { leaveTypeOptions } from "@/features/leave/leaveTypeOptions";
 import type { CoverOffer } from "@/features/scheduling/coverOffers/api";
@@ -199,6 +203,25 @@ export const useRosterCellPanel = ({
 				)
 			: undefined;
 
+	// Pending part-day leave on a shift: what approving it would do, from the API (ADR-0077, part 4).
+	const pendingPartDay =
+		assignment.flag === "LEAVE_REQUESTED" &&
+		requestLink !== undefined &&
+		Boolean(assignment.leaveStartTime && assignment.leaveEndTime);
+	const partDayOutcome = useQuery(
+		rosteredDaysQuery(
+			target.companyId,
+			{
+				start: assignment.day,
+				end: assignment.day,
+				startTime: assignment.leaveStartTime ?? undefined,
+				endTime: assignment.leaveEndTime ?? undefined,
+			},
+			ownDay ? undefined : (membershipId ?? undefined),
+			pendingPartDay
+		)
+	);
+
 	// The roster change the choice makes, and its preview.
 	const choice = editChoiceOf({
 		leaveDayEditable,
@@ -358,6 +381,10 @@ export const useRosterCellPanel = ({
 		ownDay,
 		leaveDay,
 		requestLink,
+		// Only a day whose shift approving would keep in part has something to say.
+		pendingPartDayDays: pendingPartDay
+			? (partDayOutcome.data ?? []).filter((day) => day.gap)
+			: [],
 		requestDays: request.data
 			? rangeDays({ start: request.data.startDate, end: request.data.endDate })
 					.length

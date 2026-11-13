@@ -7,6 +7,7 @@ import {
 	dayPortionBody,
 	dayPortionChoiceOf,
 	dayPortionOptions,
+	dayPortionTimes,
 	FULL_DAY_VALUE,
 	portionText,
 	timeRangeText,
@@ -101,5 +102,38 @@ describe("timeRangeText", () => {
 		expect(timeRangeText("22:00", "02:00", i18n.getFixedT("es"))).toBe(
 			"22:00–02:00 del día siguiente"
 		);
+	});
+});
+
+describe("dayPortionTimes", () => {
+	it("gives a duration's times, Custom's once set, and none for the full day", () => {
+		expect(
+			dayPortionTimes(
+				dayPortionChoiceOf("ld-morning"),
+				LEAVE_DURATION_OPTION_FIXTURES,
+				CUSTOM_TIMES
+			)
+		).toEqual({ startTime: "09:00", endTime: "13:00" });
+		expect(
+			dayPortionTimes(
+				dayPortionChoiceOf(CUSTOM_VALUE),
+				LEAVE_DURATION_OPTION_FIXTURES,
+				CUSTOM_TIMES
+			)
+		).toEqual({ startTime: "10:00", endTime: "12:30" });
+		expect(
+			dayPortionTimes(
+				dayPortionChoiceOf(CUSTOM_VALUE),
+				LEAVE_DURATION_OPTION_FIXTURES,
+				{ start: "10:00", end: "" }
+			)
+		).toEqual({});
+		expect(
+			dayPortionTimes(
+				dayPortionChoiceOf(FULL_DAY_VALUE),
+				LEAVE_DURATION_OPTION_FIXTURES,
+				CUSTOM_TIMES
+			)
+		).toEqual({});
 	});
 });

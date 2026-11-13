@@ -442,3 +442,34 @@ it("given_aRefusedPartOfTheDay_when_shown_then_itLandsOnHowMuchOfTheDay", async 
 		await screen.findByText("That duration no longer applies; choose another.")
 	).toBeVisible();
 });
+
+it("given_aDurationChosen_when_theRosterIsRead_then_itAsksWithTheDurationsTimes", async () => {
+	const calls = stubApi({
+		[OWN_ROSTERED_DAYS]: { status: 200, body: envelope([]) },
+		[OWN_LEAVE_OPTIONS]: optionsReply(),
+	});
+	render(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveApplyForm
+				busy={false}
+				companyId="c-1"
+				onClose={vi.fn()}
+				onCreate={vi.fn()}
+			/>
+		</I18nextProvider>
+	);
+
+	await choosePortion(/^Morning/);
+
+	await waitFor(() => {
+		expect(
+			calls.some(
+				(call) =>
+					call.path ===
+						"/api/v1/companies/c-1/me/leave-requests/rostered-days" &&
+					new URLSearchParams(call.search).get("startTime") === "09:00" &&
+					new URLSearchParams(call.search).get("endTime") === "13:00"
+			)
+		).toBe(true);
+	});
+});

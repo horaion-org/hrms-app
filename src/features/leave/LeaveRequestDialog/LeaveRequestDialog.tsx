@@ -131,7 +131,13 @@ export const LeaveRequestDialog = ({
 	const rostered = useQuery(
 		rosteredDaysQuery(
 			lifecycle?.companyId ?? "",
-			{ start: request?.startDate ?? "", end: request?.endDate ?? "" },
+			{
+				start: request?.startDate ?? "",
+				end: request?.endDate ?? "",
+				// A part-day request asks what approving would do to the shift.
+				startTime: request?.startTime ?? undefined,
+				endTime: request?.endTime ?? undefined,
+			},
 			request?.membershipId,
 			checksRoster
 		)

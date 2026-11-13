@@ -1,4 +1,5 @@
 import type { SelectOption } from "@/components/forms/Select";
+import type { RosteredDay } from "@/features/leave/api";
 import type { CellCoverOffer } from "@/features/scheduling/coverOffers/useCellCoverOffer";
 import type { LeaveLinkSearch } from "@/features/scheduling/RosterDayNotes/leaveLinkSearch";
 import type { RosterChangePreview } from "@/features/scheduling/rosterChanges/api";
@@ -109,6 +110,12 @@ export type RosterCellPanelState = {
 	requestLink: LeaveLinkSearch | undefined;
 	/** How many days the day's request covers; 1 until it is read. */
 	requestDays: number;
+	/**
+	 * For pending part-day leave on the shift, the day as the rostered-days
+	 * read answers it with the leave's times, when approving would keep part of
+	 * the shift; empty otherwise.
+	 */
+	pendingPartDayDays: ReadonlyArray<RosteredDay>;
 	stranded: StrandedLeave | undefined;
 	choices: CellChoicesState;
 	changeReview: CellChangeReviewState;

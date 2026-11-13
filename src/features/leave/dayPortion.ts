@@ -75,6 +75,34 @@ export const dayPortionBody = (
 	return {};
 };
 
+/**
+ * The times a choice takes off: a duration's, or Custom's once both are set
+ * and differ; none for the full day. The rostered-days read uses them to say
+ * what the leave would do to a shift.
+ */
+export const dayPortionTimes = (
+	choice: DayPortionChoice,
+	durations: ReadonlyArray<LeaveDurationOption>,
+	custom: { start: string; end: string }
+): { startTime?: string; endTime?: string } => {
+	if (choice.kind === "DURATION") {
+		const duration = durations.find(
+			(option) => option.leaveDurationId === choice.durationId
+		);
+		return duration
+			? { startTime: duration.startTime, endTime: duration.endTime }
+			: {};
+	}
+	if (
+		choice.kind === "CUSTOM" &&
+		custom.start &&
+		custom.end &&
+		custom.start !== custom.end
+	)
+		return { startTime: custom.start, endTime: custom.end };
+	return {};
+};
+
 /** How much leave a request takes: "4 h" for part of a day, otherwise "3 days". */
 export const amountText = (
 	request: Pick<LeaveRequest, "workingDays" | "leaveMinutes">,

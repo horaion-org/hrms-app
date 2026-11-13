@@ -24,6 +24,7 @@ import {
 	dayPortionBody,
 	dayPortionChoiceOf,
 	dayPortionOptions,
+	dayPortionTimes,
 	FULL_DAY_VALUE,
 } from "@/features/leave/dayPortion";
 import { durationText, minutesBetween } from "@/features/leave/leaveLength";
@@ -129,10 +130,8 @@ export const LeaveApplyForm = ({
 		recording || (chosenLeaveType?.requiresReason ?? false);
 	const typeAllowsPartDays = chosenLeaveType?.allowsPartDays ?? false;
 	const oneDate = dates.start === dates.end;
-	const portionOptions = dayPortionOptions(
-		optionsReadable ? (options.data?.durations ?? []) : [],
-		t
-	);
+	const durations = optionsReadable ? (options.data?.durations ?? []) : [];
+	const portionOptions = dayPortionOptions(durations, t);
 	// Part days are one date of a type that allows them; otherwise, or when the pick no longer applies, the full day.
 	const partDaysOffered = oneDate && typeAllowsPartDays;
 	const portionValue =
@@ -157,7 +156,8 @@ export const LeaveApplyForm = ({
 	const rostered = useQuery(
 		rosteredDaysQuery(
 			companyId ?? "",
-			dates,
+			// With part of the day chosen, each day says what the leave would do to its shift.
+			{ ...dates, ...dayPortionTimes(portion, durations, customTimes) },
 			chosen?.membershipId,
 			rosterReadable
 		)

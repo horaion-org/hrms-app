@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ErrorText } from "@/components/ui/ErrorText";
+import { RosteredDaysNotice } from "@/features/leave/LeaveRequestDialog/RosteredDaysNotice";
 import type { CoverOffer } from "@/features/scheduling/coverOffers/api";
 import { CoverOfferSent } from "@/features/scheduling/coverOffers/CoverOfferActions/CoverOfferSent";
 import { CellChoices } from "@/features/scheduling/RosterCellPanel/CellChoices";
@@ -163,6 +164,7 @@ export const RosterCellPanel = ({
 						type: assignment.leaveTypeName,
 					})}
 				</p>
+				<RosteredDaysNotice days={panel.pendingPartDayDays} name={name} />
 				<Button search={panel.requestLink} to="/leave" variant="textlink">
 					{t(`${key}.reviewInLeave`)}
 				</Button>

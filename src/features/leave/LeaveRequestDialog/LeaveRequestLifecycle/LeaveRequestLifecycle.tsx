@@ -173,7 +173,16 @@ const ChangeLeaveConfirmation = ({
 	const [remark, setRemark] = useState("");
 	const [confirmed, setConfirmed] = useState(false);
 	const rostered = useQuery(
-		rosteredDaysQuery(companyId, dates, request.membershipId)
+		rosteredDaysQuery(
+			companyId,
+			{
+				...dates,
+				// A part-day request keeps its times when its date moves.
+				startTime: request.startTime ?? undefined,
+				endTime: request.endTime ?? undefined,
+			},
+			request.membershipId
+		)
 	);
 	const oldDays = new Set(
 		rangeDays({ start: request.startDate, end: request.endDate })
