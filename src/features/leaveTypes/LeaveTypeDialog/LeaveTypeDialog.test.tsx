@@ -189,7 +189,10 @@ describe("LeaveTypeDialog", () => {
 		const dialog = await screen.findByRole("dialog", {
 			name: "Edit leave type",
 		});
-		for (const radio of within(dialog).getAllByRole("radio")) {
+		const kinds = within(dialog).getByRole("radiogroup", {
+			name: "How it is counted",
+		});
+		for (const radio of within(kinds).getAllByRole("radio")) {
 			expect(radio).toBeDisabled();
 		}
 		expect(dialog).toHaveTextContent(
@@ -217,6 +220,66 @@ describe("LeaveTypeDialog", () => {
 				status: "ACTIVE",
 			});
 		});
+	});
+});
+
+describe("LeaveTypeDialog applies to", () => {
+	it("adds a type for chosen departments", async () => {
+		const calls = stubApi(
+			routes({
+				[`POST ${LEAVE_TYPES}`]: {
+					status: 201,
+					body: envelope(managedLeaveTypeFixture()),
+				},
+			})
+		);
+		const user = userEvent.setup();
+		const dialog = await openAdd();
+
+		await user.type(within(dialog).getByLabelText("Name"), "Study leave");
+		await user.click(
+			within(dialog).getByRole("radio", { name: "Chosen departments" })
+		);
+		await user.click(
+			within(dialog).getByRole("button", { name: /^Chosen departments/ })
+		);
+		await user.click(await screen.findByRole("option", { name: "Front" }));
+		await user.keyboard("{Escape}");
+		await user.click(
+			within(dialog).getByRole("button", { name: "Add leave type" })
+		);
+
+		await waitFor(() => {
+			expect(
+				calls.find(
+					(call) => call.method === "POST" && call.path === LEAVE_TYPES
+				)?.body
+			).toMatchObject({
+				appliesToBranchIds: [],
+				appliesToDepartmentIds: ["d-3"],
+			});
+		});
+	});
+
+	it("asks for a department when chosen departments has none", async () => {
+		const calls = stubApi(routes());
+		const user = userEvent.setup();
+		const dialog = await openAdd();
+
+		await user.type(within(dialog).getByLabelText("Name"), "Study leave");
+		await user.click(
+			within(dialog).getByRole("radio", { name: "Chosen departments" })
+		);
+		await user.click(
+			within(dialog).getByRole("button", { name: "Add leave type" })
+		);
+
+		expect(
+			await within(dialog).findByText("Choose at least one department.")
+		).toBeVisible();
+		expect(
+			calls.some((call) => call.method === "POST" && call.path === LEAVE_TYPES)
+		).toBe(false);
 	});
 });
 

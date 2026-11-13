@@ -1544,7 +1544,8 @@
 				"forbidden": "You no longer have permission to add leave types.",
 				"editForbidden": "You no longer have permission to change leave types.",
 				"failed": "We couldn’t add the leave type. Try again.",
-				"editFailed": "We couldn’t save the leave type. Try again."
+				"editFailed": "We couldn’t save the leave type. Try again.",
+				"reachRejected": "A branch or department you chose no longer exists. Choose again."
 			}
 		},
 		"approvals": {

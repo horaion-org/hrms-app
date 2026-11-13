@@ -27,7 +27,10 @@ import {
 	type LeaveTypeTableColumns,
 } from "@/features/settings/LeaveTypesSettings/leaveTypeColumns";
 import { useMovedArrowFocus } from "@/features/settings/LeaveTypesSettings/useMovedArrowFocus";
+import { workspaceQuery } from "@/features/workspace/api";
+import { retry } from "@/features/workspace/retry";
 import { COMPANY_SCOPE } from "@/features/workspace/scopes";
+import { reachChoicesOf } from "@/features/workspace/unitReach";
 import { useAccess } from "@/features/workspace/useAccess";
 
 export type LeaveTypesSettingsProps = {
@@ -58,6 +61,7 @@ export const LeaveTypesSettings = ({
 	const canRead = access.can("leave_type:read", COMPANY_SCOPE);
 	const canUpdate = access.can("leave_type:update", COMPANY_SCOPE);
 	const list = useQuery(leaveTypeCatalogueQuery(companyId, canRead));
+	const { data: workspace } = useQuery({ ...workspaceQuery, retry });
 	const actions = useLeaveTypeActions(companyId);
 	const [dialog, setDialog] = useState<{ editing?: EditableLeaveType } | null>(
 		null
@@ -228,6 +232,11 @@ export const LeaveTypesSettings = ({
 			{dialog && (
 				<LeaveTypeDialog
 					editing={dialog.editing}
+					reachChoices={
+						workspace
+							? reachChoicesOf(workspace, companyId, "leave_type:update")
+							: { branches: [], departments: [] }
+					}
 					onClose={() => {
 						setDialog(null);
 					}}

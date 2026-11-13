@@ -790,7 +790,8 @@
 				"forbidden": "Ya no tienes permiso para añadir tipos de permiso.",
 				"editForbidden": "Ya no tienes permiso para cambiar los tipos de permiso.",
 				"failed": "No pudimos añadir el tipo de permiso. Inténtalo de nuevo.",
-				"editFailed": "No pudimos guardar el tipo de permiso. Inténtalo de nuevo."
+				"editFailed": "No pudimos guardar el tipo de permiso. Inténtalo de nuevo.",
+				"reachRejected": "Una sucursal o un departamento que elegiste ya no existe. Vuelve a elegir."
 			}
 		},
 		"approvals": {
