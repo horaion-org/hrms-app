@@ -213,6 +213,56 @@ it("switches through the settings sections with the arrow keys", async () => {
 	).toHaveValue("Horaion");
 });
 
+it("shows each Leave card under its own key", async () => {
+	stubApi({
+		[REFRESH]: accessPassReply(),
+		[ME]: currentUserReply(),
+		[WORKSPACE]: workspaceReply([
+			{ uuid: "c-1", name: "Horaion", permissions: ["leave_type:read"] },
+		]),
+		"GET /api/v1/companies/c-1/leave-types": {
+			status: 200,
+			body: envelope([]),
+		},
+	});
+	await open("/settings?section=leave");
+
+	const panel = await screen.findByRole("tabpanel", { name: "Leave" });
+	expect(
+		await within(panel).findByRole("heading", { name: "Leave types" })
+	).toBeVisible();
+	expect(
+		within(panel).queryByRole("heading", { name: "Leave durations" })
+	).toBeNull();
+});
+
+it("shows someone who manages only leave durations just that card", async () => {
+	stubApi({
+		[REFRESH]: accessPassReply(),
+		[ME]: currentUserReply(),
+		[WORKSPACE]: workspaceReply([
+			{
+				uuid: "c-1",
+				name: "Horaion",
+				permissions: ["leave_duration:read"],
+			},
+		]),
+		"GET /api/v1/companies/c-1/leave-durations": {
+			status: 200,
+			body: envelope([]),
+		},
+	});
+	await open("/settings?section=leave");
+
+	const panel = await screen.findByRole("tabpanel", { name: "Leave" });
+	expect(
+		await within(panel).findByRole("heading", { name: "Leave durations" })
+	).toBeVisible();
+	expect(
+		within(panel).queryByRole("heading", { name: "Leave types" })
+	).toBeNull();
+});
+
 it("leaves the workspace name empty when the workspace does not list the current company", async () => {
 	stubApi({
 		[REFRESH]: accessPassReply(),

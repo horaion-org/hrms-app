@@ -11,6 +11,7 @@ import { dataItemsFor } from "@/features/settings/dataAccess";
 import { DataSettings } from "@/features/settings/DataSettings";
 import { EmploymentTermsSettings } from "@/features/settings/EmploymentTermsSettings";
 import { GeneralSettingsForm } from "@/features/settings/GeneralSettingsForm";
+import { LeaveDurationsSettings } from "@/features/settings/LeaveDurationsSettings";
 import { LeaveTypesSettings } from "@/features/settings/LeaveTypesSettings";
 import { PlanSettings } from "@/features/settings/PlanSettings";
 import { SchedulingPolicySettings } from "@/features/settings/SchedulingPolicySettings";
@@ -153,7 +154,17 @@ export const Settings = (): FunctionComponent => {
 					)}
 					{sections.includes("leave") && (
 						<TabPanel className={panelClasses}>
-							<LeaveTypesSettings companyId={companyId} />
+							{/* A department admin who manages only durations sees only those; the types card
+							also answers a link opened without either key, to say it is not theirs to see. */}
+							{(access.can("leave_type:read", COMPANY_SCOPE) ||
+								!access.canAnywhere("leave_duration:read")) && (
+								<LeaveTypesSettings companyId={companyId} />
+							)}
+							{access.canAnywhere("leave_duration:read") && (
+								<div className="mt-8 border-t border-neutral-200 pt-6 first:mt-0 first:border-t-0 first:pt-0">
+									<LeaveDurationsSettings companyId={companyId} />
+								</div>
+							)}
 						</TabPanel>
 					)}
 					{sections.includes("approvals") && (
