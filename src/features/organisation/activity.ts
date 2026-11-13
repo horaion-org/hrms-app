@@ -60,6 +60,10 @@ type ActivityKey =
 	| "leaveTypeCreated"
 	| "leaveTypeUpdated"
 	| "leaveTypesReordered"
+	| "leaveDurationCreated"
+	| "leaveDurationUpdated"
+	| "leaveDurationDeleted"
+	| "leaveDurationsReordered"
 	| "employmentTermsCreated"
 	| "employmentTermsUpdated"
 	| "employmentTermsChangedFromDate"
@@ -165,6 +169,11 @@ const ACTIVITIES: Record<string, { key: ActivityKey; icon: Heroicon }> = {
 	"leave_type.create": { key: "leaveTypeCreated", icon: LeaveIcon },
 	"leave_type.update": { key: "leaveTypeUpdated", icon: LeaveIcon },
 	"leave_type.reorder": { key: "leaveTypesReordered", icon: LeaveIcon },
+	// Leave durations (ADR-0077); the API does not name them yet, so the plain labels show.
+	"leave_duration.create": { key: "leaveDurationCreated", icon: LeaveIcon },
+	"leave_duration.update": { key: "leaveDurationUpdated", icon: LeaveIcon },
+	"leave_duration.delete": { key: "leaveDurationDeleted", icon: LeaveIcon },
+	"leave_duration.reorder": { key: "leaveDurationsReordered", icon: LeaveIcon },
 	// Employment terms (Settings › Employment) and who works on which, from when.
 	"employment_terms.create": { key: "employmentTermsCreated", icon: TimeIcon },
 	"employment_terms.update": { key: "employmentTermsUpdated", icon: TimeIcon },

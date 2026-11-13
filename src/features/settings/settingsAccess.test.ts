@@ -51,6 +51,12 @@ describe("offeredSections", () => {
 		}
 	);
 
+	it("offers Leave with the leave durations read key held only in a department", () => {
+		expect(
+			offeredSections(accessWith([], ["leave_duration:read"]), {})
+		).toEqual({ ...NOTHING, leave: true });
+	});
+
 	it("offers Access roles with the read key anywhere, and not from a link alone", () => {
 		expect(offeredSections(accessWith([], ["access_role:read"]), {})).toEqual({
 			...NOTHING,

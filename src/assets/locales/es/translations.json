@@ -81,6 +81,11 @@
 		"close": "Cerrar diálogo"
 	},
 	"leave": {
+		"length": {
+			"hours": "{{hours}} h",
+			"hoursAndMinutes": "{{hours}} h {{minutes}} min",
+			"minutes": "{{minutes}} min"
+		},
 		"title": "Resumen de ausencias",
 		"subtitle": "Gestiona las solicitudes de permiso y las próximas ausencias.",
 		"noBranches": "Añade una sucursal a la organización antes de gestionar ausencias.",
@@ -711,6 +716,78 @@
 			}
 		},
 		"leave": {
+			"durations": {
+				"title": "Duraciones de permiso",
+				"subtitle": "Las partes del día que se pueden tomar como permiso, y dónde se aplica cada una. Siempre se puede tomar el día completo o fijar horas propias.",
+				"add": "Añadir duración",
+				"name": "Nombre",
+				"time": "Horario",
+				"length": "Duración",
+				"appliesTo": "Se aplica a",
+				"order": "Orden",
+				"timeRange": "{{start}}–{{end}}",
+				"timeRangeNextDay": "{{start}}–{{end}} del día siguiente",
+				"moveUp": "Subir {{name}}",
+				"moveDown": "Bajar {{name}}",
+				"moved": "{{name}} pasó al puesto {{position}}.",
+				"lock": "Cubre departamentos que no gestionas",
+				"empty": "Todavía no hay duraciones. Se puede tomar el día completo o fijar horas propias.",
+				"loading": "Cargando duraciones de permiso…",
+				"failed": "No pudimos cargar las duraciones de permiso. Inténtalo de nuevo.",
+				"hidden": "No tienes permiso para ver las duraciones de permiso.",
+				"added": "Duración de permiso añadida",
+				"saved": "Duración de permiso guardada",
+				"deactivated": "{{name}} desactivada",
+				"activated": "{{name}} activada",
+				"deleted": "{{name}} eliminada",
+				"deactivateTitle": "¿Desactivar {{name}}?",
+				"deactivateDescription": "Nadie podrá elegirla para nuevos permisos. Los permisos que ya la usan conservan sus horas. Puedes activarla de nuevo más tarde.",
+				"deactivateConfirm": "Desactivar",
+				"activateTitle": "¿Activar {{name}}?",
+				"activateDescription": "Se podrá elegir de nuevo al tomar parte del día libre.",
+				"activateConfirm": "Activar",
+				"deleteTitle": "¿Eliminar {{name}}?",
+				"deleteDescription": "Las solicitudes que la usaron conservan sus horas.",
+				"deleteConfirm": "Eliminar",
+				"cancel": "Cancelar",
+				"changeForbidden": "Ya no tienes permiso para cambiar esta duración de permiso.",
+				"statusFailed": "No pudimos cambiar la duración de permiso. Inténtalo de nuevo.",
+				"deleteFailed": "No pudimos eliminar la duración de permiso. Inténtalo de nuevo.",
+				"reorderFailed": "No pudimos cambiar el orden. Inténtalo de nuevo.",
+				"orderStale": "La lista había cambiado, así que se actualizó. Inténtalo de nuevo."
+			},
+			"durationDialog": {
+				"title": "Añadir duración de permiso",
+				"editTitle": "Editar duración de permiso",
+				"description": "Nombra una parte del día que se puede tomar como permiso, fija sus horas y elige dónde se aplica.",
+				"editDescription": "Cambia el nombre, las horas y dónde se aplica {{name}}.",
+				"name": "Nombre",
+				"namePlaceholder": "p. ej. Mañana",
+				"nameHint": "De 2 a 100 caracteres: letras, números, espacios y . ' & -",
+				"nameCounter": "{{count}}/100",
+				"nameRequired": "Escribe un nombre.",
+				"nameLength": "Usa de 2 a 100 caracteres.",
+				"nameCharacters": "Usa solo letras, números, espacios y . ' & - en el nombre.",
+				"nameConflict": "Ya hay una duración con este nombre en uno de estos departamentos.",
+				"nameRejected": "Revisa el nombre y vuelve a intentarlo.",
+				"startTime": "Empieza",
+				"endTime": "Termina",
+				"pleaseSelect": "Elige una hora",
+				"timeRequired": "Elige una hora.",
+				"timesEqual": "El final debe ser distinto del inicio.",
+				"length": "{{length}}",
+				"lengthNextDay": "{{length}} · Termina al día siguiente",
+				"notCovered": "Solo puedes elegir departamentos que gestionas.",
+				"reachRejected": "Una sucursal o un departamento que elegiste ya no existe. Vuelve a elegir.",
+				"gone": "Esta duración de permiso ya no está disponible. Cierra y recarga la página.",
+				"submit": "Añadir duración",
+				"editSubmit": "Guardar",
+				"cancel": "Cancelar",
+				"forbidden": "Ya no tienes permiso para añadir duraciones de permiso.",
+				"editForbidden": "Ya no tienes permiso para cambiar esta duración de permiso.",
+				"failed": "No pudimos añadir la duración de permiso. Inténtalo de nuevo.",
+				"editFailed": "No pudimos guardar la duración de permiso. Inténtalo de nuevo."
+			},
 			"title": "Permisos",
 			"description": "Tipos de permiso que se pueden solicitar.",
 			"types": {
@@ -1208,6 +1285,18 @@
 					"update": "Gestionar los tipos de permiso"
 				},
 				"actionHints": {
+					"read": "Las de los lugares donde se da este rol, y las de toda la empresa",
+					"update": "Añadir, cambiar y quitar aquellas cuyos departamentos cubre este rol; reordenar requiere toda la empresa"
+				}
+			},
+			"leave_duration": {
+				"name": "Duraciones de permiso",
+				"description": "Las partes del día que se pueden tomar como permiso, y dónde se aplica cada una.",
+				"actions": {
+					"read": "Ver las duraciones de permiso",
+					"update": "Gestionar las duraciones de permiso"
+				},
+				"actionHints": {
 					"read": "Con cuántas solicitudes usan cada uno, nunca quién los tomó",
 					"update": "Añadirlos, renombrarlos, ordenarlos, desactivarlos y reactivarlos"
 				}
@@ -1515,6 +1604,10 @@
 				"leaveTypeCreated": "Tipo de permiso añadido: {{name}}",
 				"leaveTypeUpdated": "Tipo de permiso cambiado: {{name}}",
 				"leaveTypesReordered": "Tipos de permiso reordenados",
+				"leaveDurationCreated": "Duración de permiso añadida: {{name}}",
+				"leaveDurationUpdated": "Duración de permiso cambiada: {{name}}",
+				"leaveDurationDeleted": "Duración de permiso eliminada: {{name}}",
+				"leaveDurationsReordered": "Duraciones de permiso reordenadas",
 				"employmentTermsCreated": "Condiciones de empleo añadidas: {{name}}",
 				"employmentTermsUpdated": "Condiciones de empleo actualizadas: {{name}}",
 				"employmentTermsChangedFromDate": "Condiciones de empleo cambiadas desde una fecha: {{name}}",
@@ -1570,6 +1663,10 @@
 				"leaveTypeCreated": "Tipo de permiso añadido",
 				"leaveTypeUpdated": "Tipo de permiso cambiado",
 				"leaveTypesReordered": "Tipos de permiso reordenados",
+				"leaveDurationCreated": "Duración de permiso añadida",
+				"leaveDurationUpdated": "Duración de permiso cambiada",
+				"leaveDurationDeleted": "Duración de permiso eliminada",
+				"leaveDurationsReordered": "Duraciones de permiso reordenadas",
 				"employmentTermsCreated": "Condiciones de empleo añadidas",
 				"employmentTermsUpdated": "Condiciones de empleo actualizadas",
 				"employmentTermsChangedFromDate": "Condiciones de empleo cambiadas desde una fecha",
@@ -1635,6 +1732,7 @@
 				"CoverOffer": "oferta de cobertura",
 				"EmploymentTerms": "condiciones de empleo",
 				"LeaveType": "tipo de permiso",
+				"LeaveDuration": "Duración de permiso",
 				"ScheduleRosterChange": "cambio de cuadrante"
 			}
 		},

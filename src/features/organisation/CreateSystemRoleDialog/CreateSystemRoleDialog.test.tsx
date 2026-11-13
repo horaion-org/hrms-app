@@ -165,7 +165,7 @@ describe("create access role through the Access roles page", () => {
 		const list = within(dialog).getByRole("group", { name: "Permissions" });
 		// One box per key, plus each resource's own.
 		expect(within(list).getAllByRole("checkbox")).toHaveLength(
-			PERMISSION_KEYS.length + 22
+			PERMISSION_KEYS.length + 23
 		);
 		for (const item of within(list).getAllByRole("checkbox"))
 			expect(item).toBeEnabled();

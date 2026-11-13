@@ -3,7 +3,7 @@
 
 /** SHA-256 of the contract file this module was generated from. */
 export const PERMISSION_CONTRACT_SHA256 =
-	"52f6ed4b6905378f1b605dc33c604f17364f2567b62d83e49a32a0e606f10839";
+	"385a7465cfc3169433b11c54f82433bfdb03c7aed7792160b150c692f9d2ab90";
 
 /** The places a permission can be assigned at, widest first. */
 export const ASSIGNABLE_SCOPES = ["COMPANY", "BRANCH", "DEPARTMENT"] as const;
@@ -350,6 +350,22 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: ["leave_type:read"],
 	},
 	{
+		key: "leave_duration:read",
+		resource: "leave_duration",
+		action: "read",
+		module: "company_settings",
+		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
+		prerequisites: [],
+	},
+	{
+		key: "leave_duration:update",
+		resource: "leave_duration",
+		action: "update",
+		module: "company_settings",
+		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
+		prerequisites: ["leave_duration:read"],
+	},
+	{
 		key: "schedule:read",
 		resource: "schedule",
 		action: "read",
@@ -616,6 +632,8 @@ export const PERMISSION_KEYS = [
 	"leave_request:review",
 	"leave_type:read",
 	"leave_type:update",
+	"leave_duration:read",
+	"leave_duration:update",
 	"schedule:read",
 	"schedule:create",
 	"schedule:update",
@@ -692,6 +710,8 @@ export const ROLE_TEMPLATES = [
 			"leave_request:review",
 			"leave_type:read",
 			"leave_type:update",
+			"leave_duration:read",
+			"leave_duration:update",
 			"schedule:read",
 			"schedule:create",
 			"schedule:update",
@@ -743,6 +763,8 @@ export const ROLE_TEMPLATES = [
 			"leave_request:read",
 			"leave_request:create",
 			"leave_request:review",
+			"leave_duration:read",
+			"leave_duration:update",
 			"approval:read",
 			"approval:decide",
 		],
@@ -793,6 +815,8 @@ export const ROLE_TEMPLATES = [
 			"work_availability:update",
 			"leave_request:read",
 			"leave_request:review",
+			"leave_duration:read",
+			"leave_duration:update",
 			"schedule:read",
 			"schedule:create",
 			"schedule:update",
@@ -837,6 +861,7 @@ export const ROLE_TEMPLATES = [
 			"member_profile:read",
 			"work_availability:read",
 			"member_employment_terms:read",
+			"leave_duration:read",
 			"schedule:read",
 			"shift:read",
 			"constraint:read",

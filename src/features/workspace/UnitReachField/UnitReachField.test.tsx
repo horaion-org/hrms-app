@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { expect, it } from "vitest";
 import * as stories from "./UnitReachField.stories";
 
-const { WholeCompany, ChosenBranches, NoDepartmentChosen } =
+const { WholeCompany, ChosenBranches, NoDepartmentChosen, DepartmentsOnly } =
 	composeStories(stories);
 
 it("given_wholeCompany_when_shown_then_threeChoicesAndNoUnitsToPick", () => {
@@ -46,4 +46,17 @@ it("given_departmentsUnderTwoBranches_when_theSelectOpens_then_eachBranchHeadsIt
 	expect(screen.getByRole("group", { name: "Orchard" })).toBeVisible();
 	expect(screen.getByRole("group", { name: "Marina" })).toBeVisible();
 	expect(screen.getByText("Choose at least one department.")).toBeVisible();
+});
+
+it("given_onlyDepartmentsOffered_when_shown_then_oneCheckedChoiceWithTheirDepartment", () => {
+	render(<DepartmentsOnly />);
+
+	const group = screen.getByRole("radiogroup", { name: /Applies to/ });
+	expect(within(group).getAllByRole("radio")).toHaveLength(1);
+	expect(
+		screen.getByRole("radio", { name: "Chosen departments" })
+	).toBeChecked();
+	expect(
+		screen.getByRole("button", { name: "Chosen departments" })
+	).toHaveTextContent("Kitchen");
 });

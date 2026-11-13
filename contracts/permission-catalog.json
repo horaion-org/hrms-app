@@ -616,6 +616,36 @@
         "BRANCH",
         "DEPARTMENT"
       ],
+      "key": "leave_duration:read",
+      "module": "company_settings",
+      "prerequisites": [],
+      "resource": "leave_duration",
+      "resourceName": "Leave Duration"
+    },
+    {
+      "action": "update",
+      "actionName": "Update",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
+      "key": "leave_duration:update",
+      "module": "company_settings",
+      "prerequisites": [
+        "leave_duration:read"
+      ],
+      "resource": "leave_duration",
+      "resourceName": "Leave Duration"
+    },
+    {
+      "action": "read",
+      "actionName": "Read",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
       "key": "schedule:read",
       "module": "scheduling",
       "prerequisites": [],
@@ -1058,6 +1088,8 @@
         "leave_request:review",
         "leave_type:read",
         "leave_type:update",
+        "leave_duration:read",
+        "leave_duration:update",
         "schedule:read",
         "schedule:create",
         "schedule:update",
@@ -1112,6 +1144,8 @@
         "leave_request:read",
         "leave_request:create",
         "leave_request:review",
+        "leave_duration:read",
+        "leave_duration:update",
         "approval:read",
         "approval:decide"
       ]
@@ -1170,6 +1204,8 @@
         "work_availability:update",
         "leave_request:read",
         "leave_request:review",
+        "leave_duration:read",
+        "leave_duration:update",
         "schedule:read",
         "schedule:create",
         "schedule:update",
@@ -1221,6 +1257,7 @@
         "member_profile:read",
         "work_availability:read",
         "member_employment_terms:read",
+        "leave_duration:read",
         "schedule:read",
         "shift:read",
         "constraint:read",

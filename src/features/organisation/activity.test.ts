@@ -193,6 +193,9 @@ describe("describeActivity", () => {
 		["organisation_import.complete", "Organisation imported"],
 		["leave_type.update", "Leave type changed"],
 		["leave_type.reorder", "Leave types reordered"],
+		["leave_duration.create", "Leave duration added"],
+		["leave_duration.delete", "Leave duration removed"],
+		["leave_duration.reorder", "Leave durations reordered"],
 	])("words %s without a name as %s", (action, title) => {
 		expect(
 			describeActivity(event({ action, entityName: null }), t)?.title
