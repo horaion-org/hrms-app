@@ -221,6 +221,37 @@ describe("LeaveTypeDialog", () => {
 			});
 		});
 	});
+
+	it("starts a new type taken in part days and sends the switch turned off", async () => {
+		const calls = stubApi(
+			routes({
+				[`POST ${LEAVE_TYPES}`]: {
+					status: 201,
+					body: envelope(managedLeaveTypeFixture({ allowsPartDays: false })),
+				},
+			})
+		);
+		const user = userEvent.setup();
+		const dialog = await openAdd();
+		const partDays = within(dialog).getByRole("checkbox", {
+			name: /Can be taken in part days/,
+		});
+
+		expect(partDays).toBeChecked();
+		await user.type(within(dialog).getByLabelText("Name"), "Study leave");
+		await user.click(partDays);
+		await user.click(
+			within(dialog).getByRole("button", { name: "Add leave type" })
+		);
+
+		await waitFor(() => {
+			expect(
+				calls.find(
+					(call) => call.method === "POST" && call.path === LEAVE_TYPES
+				)?.body
+			).toMatchObject({ name: "Study leave", allowsPartDays: false });
+		});
+	});
 });
 
 describe("LeaveTypeDialog applies to", () => {

@@ -1616,6 +1616,8 @@
 				"paidDescription": "For your records. Nothing is worked out from it yet.",
 				"requiresReason": "Ask for a reason",
 				"requiresReasonDescription": "People must say what the leave is for when they apply. Reviewers of the request can read it.",
+				"allowsPartDays": "Can be taken in part days",
+				"allowsPartDaysDescription": "People can pick a duration or their own times on a single day.",
 				"kindLocked": "Requests use this leave type, so how it is counted can’t change.",
 				"system": "The scheduler’s day off can’t be changed.",
 				"gone": "This leave type is no longer available. Close and reload the page.",

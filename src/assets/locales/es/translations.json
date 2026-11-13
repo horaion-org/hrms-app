@@ -862,6 +862,8 @@
 				"paidDescription": "Para tus registros. Todavía no se calcula nada con este dato.",
 				"requiresReason": "Pedir un motivo",
 				"requiresReasonDescription": "Al solicitarlo hay que indicar para qué es el permiso. Quien revise la solicitud puede leerlo.",
+				"allowsPartDays": "Se puede tomar por partes del día",
+				"allowsPartDaysDescription": "Se puede elegir una duración o un horario propio en un solo día.",
 				"kindLocked": "Hay solicitudes que usan este tipo de permiso, así que no se puede cambiar cómo se cuenta.",
 				"system": "El día libre del planificador no se puede cambiar.",
 				"gone": "Este tipo de permiso ya no está disponible. Cierra y vuelve a cargar la página.",
