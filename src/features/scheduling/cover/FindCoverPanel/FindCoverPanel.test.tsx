@@ -6,6 +6,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { configureApiClient, resetApiClient } from "@/common/api-client";
 import { envelope, stubApi } from "@/common/testing/stubApi";
 import { authTestI18n } from "@/features/auth/testingI18n";
+import {
+	infeasibleRepair,
+	repairOptionsFixture,
+} from "@/features/scheduling/cover/engineRepairFixtures";
 import { coverOptionsFixture } from "@/features/scheduling/cover/fixtures";
 import { coverOfferFixture } from "@/features/scheduling/coverOffers/fixtures";
 import {
@@ -27,7 +31,9 @@ const COVER_OPTIONS = `${SCHEDULE}/cover-options`;
 const PREVIEW = `${SCHEDULE}/roster-changes/preview`;
 const CHANGES = `${SCHEDULE}/roster-changes`;
 const OFFERS = `${SCHEDULE}/cover-offers`;
+const REPAIR_OPTIONS = `${SCHEDULE}/repair-options`;
 const GAP = coverOptionsFixture().gap;
+const GAP_REQUEST = { shiftId: GAP.shiftId, day: GAP.day };
 const roster = scheduleAssignmentsFixture();
 const answer = (body: unknown): { status: number; body: unknown } => ({
 	status: 200,
@@ -107,6 +113,67 @@ describe("FindCoverPanel", () => {
 		);
 		expect(
 			screen.getByRole("button", { name: "Can't help (1)" })
+		).toBeVisible();
+	});
+
+	it("given_theEngineSection_when_asked_then_itsOptionsUnderTheBackendsOwnFeasibleFirst", async () => {
+		const calls = stubApi({
+			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
+			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
+			[`POST ${REPAIR_OPTIONS}`]: answer(
+				repairOptionsFixture([
+					infeasibleRepair(),
+					...repairOptionsFixture().options,
+				])
+			),
+		});
+		show();
+		const user = userEvent.setup();
+		await screen.findByRole("radio", { name: "Aisha Rahman" });
+		expect(
+			screen.getByRole("heading", { name: "From the scheduling engine" })
+		).toBeInTheDocument();
+		expect(calls.filter((call) => call.path === REPAIR_OPTIONS)).toHaveLength(
+			0
+		);
+
+		await user.click(screen.getByRole("button", { name: "Ask the engine" }));
+
+		const fills = await screen.findByText("Fills the gap");
+		const cannot = screen.getByText("Can’t fill the gap");
+		expect(
+			fills.compareDocumentPosition(cannot) & Node.DOCUMENT_POSITION_FOLLOWING
+		).toBeTruthy();
+		expect(
+			screen.getByText("Call in Aisha Rahman for Front Desk AM Sat, Oct 17")
+		).toBeVisible();
+		expect(calls.find((call) => call.path === REPAIR_OPTIONS)?.body).toEqual({
+			...GAP_REQUEST,
+			expectedRevision: 1,
+		});
+	});
+
+	it("given_aGapTheEngineDidNotReport_when_asked_then_itSaysSoInPlainWords", async () => {
+		stubApi({
+			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
+			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
+			[`POST ${REPAIR_OPTIONS}`]: {
+				status: 409,
+				body: {
+					status: 409,
+					title: "Conflict",
+					errorCode: "REPAIR_GAP_NOT_FROM_ENGINE",
+				},
+			},
+		});
+		show();
+		const user = userEvent.setup();
+		await screen.findByRole("radio", { name: "Aisha Rahman" });
+
+		await user.click(screen.getByRole("button", { name: "Ask the engine" }));
+
+		expect(
+			await screen.findByText(/The engine didn’t report this gap/)
 		).toBeVisible();
 	});
 

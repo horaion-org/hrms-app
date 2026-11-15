@@ -7,6 +7,7 @@ import { Callout } from "@/components/ui/Callout";
 import { ErrorText } from "@/components/ui/ErrorText";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { CoverOptionList } from "@/features/scheduling/cover/CoverOptionList";
+import { EngineRepairOptions } from "@/features/scheduling/cover/EngineRepairOptions";
 import {
 	gapReason,
 	gapTitle,
@@ -20,6 +21,7 @@ import {
 	useCoverPanel,
 	type CoverPanelInput,
 } from "@/features/scheduling/cover/useCoverPanel";
+import { useEngineRepair } from "@/features/scheduling/cover/useEngineRepair";
 import { CoverOfferSent } from "@/features/scheduling/coverOffers/CoverOfferActions/CoverOfferSent";
 import { formatDay } from "@/features/scheduling/periods";
 import { CellPanelFooter } from "@/features/scheduling/RosterCellPanel/CellPanelFooter";
@@ -45,8 +47,11 @@ const SKELETON_ROWS = ["first", "second", "third"];
  * the first one chosen and previewed on the grid, the line that the rules
  * aren't checked yet with the person's shifts beside it as facts, and the
  * same review and actions a hand change gets: Apply on a draft, Send offer
- * or They agreed on a published roster. `useCoverPanel` holds the state and
- * calls; this component only lays the parts out.
+ * or They agreed on a published roster. Under them, "From the scheduling
+ * engine" asks the engine for its own repair on demand
+ * (`EngineRepairOptions`), while the shift is still short. `useCoverPanel`
+ * and `useEngineRepair` hold the state and calls; this component only lays
+ * the parts out.
  */
 export const FindCoverPanel = ({
 	id,
@@ -58,6 +63,7 @@ export const FindCoverPanel = ({
 	const radioName = useId();
 	const panel = useCoverPanel(input);
 	const { status, options, selected, review, offer } = panel;
+	const engineRepair = useEngineRepair(input.target, input.gap, input.revision);
 	// The roster's own days name a shift when the frozen shifts can't be read.
 	const shiftOf = (shiftId: string): CoverShift | undefined =>
 		input.shifts.find((candidate) => candidate.shiftId === shiftId) ??
@@ -245,6 +251,13 @@ export const FindCoverPanel = ({
 			),
 		},
 		{ key: "review", content: reviewContent() },
+		{
+			key: "engine",
+			title: t("scheduling.cover.engine.title"),
+			content: status !== "closed" && (
+				<EngineRepairOptions names={names} repair={engineRepair} />
+			),
+		},
 	];
 
 	return (
