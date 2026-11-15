@@ -4,11 +4,14 @@ import {
 	type RenderResult,
 	render as renderPlain,
 	screen,
+	waitFor,
 } from "@testing-library/react";
 import dayjs from "dayjs";
 import userEvent from "@testing-library/user-event";
 import { expect, it, vi } from "vitest";
 import { I18nextProvider } from "react-i18next";
+import { configureApiClient, resetApiClient } from "@/common/api-client";
+import { envelope, stubApi } from "@/common/testing/stubApi";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import { approvalKeys } from "@/features/approvals/api";
 import { leaveOptionsQuery, rosteredDaysQuery } from "@/features/leave/api";
@@ -17,6 +20,7 @@ import {
 	LEAVE_FIXTURES,
 	LEAVE_TYPE_FIXTURES,
 	leaveAtStepFixture,
+	partDayLeaveFixture,
 } from "@/features/leave/fixtures";
 import {
 	LeaveRequestDialog,
@@ -634,4 +638,43 @@ it("keeps the approval route's limit on a rejection reason at a flow's step", as
 	expect(
 		screen.getByRole("textbox", { name: "Reason for rejection" })
 	).toHaveAttribute("maxLength", "500");
+});
+
+it("asks what approving a part day with no shift that day would do, sending its times and choice", async () => {
+	const user = userEvent.setup();
+	configureApiClient({
+		accessToken: () => Promise.resolve("test-pass"),
+		renew: () => Promise.resolve({ kind: "expired" }),
+		onUnauthenticated: () => {},
+	});
+	const calls = stubApi({
+		"GET /api/v1/companies/c-1/member-profiles/m-aisha/leave-requests/rostered-days":
+			{ status: 200, body: envelope([]) },
+	});
+	render(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveRequestDialog
+				lifecycle={{ companyId: "c-1", own: false, onDone: vi.fn() }}
+				request={partDayLeaveFixture({ allowsShiftSameDay: false })}
+				review={reviewWith()}
+				today={BEFORE_THE_LEAVE}
+				onClose={vi.fn()}
+			/>
+		</I18nextProvider>
+	);
+
+	await user.click(screen.getByRole("button", { name: "Approve" }));
+
+	await waitFor(() => {
+		const read = calls.find((call) => call.path.endsWith("/rostered-days"));
+		expect(Object.fromEntries(new URLSearchParams(read?.search))).toMatchObject(
+			{
+				startTime: "09:00",
+				endTime: "13:00",
+				allowsShiftSameDay: "false",
+			}
+		);
+	});
+	resetApiClient();
+	vi.unstubAllGlobals();
 });

@@ -134,9 +134,10 @@ export const LeaveRequestDialog = ({
 			{
 				start: request?.startDate ?? "",
 				end: request?.endDate ?? "",
-				// A part-day request asks what approving would do to the shift.
+				// A part-day request asks what approving would do to the shift, with its own shift choice.
 				startTime: request?.startTime ?? undefined,
 				endTime: request?.endTime ?? undefined,
+				allowsShiftSameDay: request?.allowsShiftSameDay ?? undefined,
 			},
 			request?.membershipId,
 			checksRoster

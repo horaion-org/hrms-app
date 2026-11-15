@@ -177,9 +177,10 @@ const ChangeLeaveConfirmation = ({
 			companyId,
 			{
 				...dates,
-				// A part-day request keeps its times when its date moves.
+				// A part-day request keeps its times and shift choice when its date moves.
 				startTime: request.startTime ?? undefined,
 				endTime: request.endTime ?? undefined,
+				allowsShiftSameDay: request.allowsShiftSameDay ?? undefined,
 			},
 			request.membershipId
 		)

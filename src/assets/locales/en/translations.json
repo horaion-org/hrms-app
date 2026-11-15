@@ -280,6 +280,7 @@
 			"fullDay": "Full day",
 			"custom": "Custom",
 			"option": "{{name}} · {{range}} · {{length}}",
+			"optionNoShift": "{{name}} · {{range}} · {{length}} · no shift that day",
 			"text": "{{name}} {{range}}",
 			"timeRange": "{{start}}–{{end}}",
 			"timeRangeNextDay": "{{start}}–{{end}} next day",

@@ -39,7 +39,8 @@ export const timeRangeText = (
 
 /**
  * The choices as Select options: Full day first, each duration as
- * "Morning · 09:00–13:00 · 4 h" in the API's order, then Custom.
+ * "Morning · 09:00–13:00 · 4 h" in the API's order (ending "· no shift
+ * that day" when it rules a shift out), then Custom.
  */
 export const dayPortionOptions = (
 	durations: ReadonlyArray<LeaveDurationOption>,
@@ -48,11 +49,16 @@ export const dayPortionOptions = (
 	{ value: FULL_DAY_VALUE, label: t("leave.portion.fullDay") },
 	...durations.map((duration) => ({
 		value: duration.leaveDurationId,
-		label: t("leave.portion.option", {
-			name: duration.name,
-			range: timeRangeText(duration.startTime, duration.endTime, t),
-			length: durationText(duration.minutes, t),
-		}),
+		label: t(
+			duration.allowsShiftSameDay
+				? "leave.portion.option"
+				: "leave.portion.optionNoShift",
+			{
+				name: duration.name,
+				range: timeRangeText(duration.startTime, duration.endTime, t),
+				length: durationText(duration.minutes, t),
+			}
+		),
 	})),
 	{ value: CUSTOM_VALUE, label: t("leave.portion.custom") },
 ];
@@ -76,21 +82,26 @@ export const dayPortionBody = (
 };
 
 /**
- * The times a choice takes off: a duration's, or Custom's once both are set
- * and differ; none for the full day. The rostered-days read uses them to say
- * what the leave would do to a shift.
+ * The times a choice takes off: a duration's, with whether it lets the
+ * person still work a shift that day, or Custom's once both are set and
+ * differ (the API's default choice); none for the full day. The
+ * rostered-days read uses them to say what the leave would do to a shift.
  */
 export const dayPortionTimes = (
 	choice: DayPortionChoice,
 	durations: ReadonlyArray<LeaveDurationOption>,
 	custom: { start: string; end: string }
-): { startTime?: string; endTime?: string } => {
+): { startTime?: string; endTime?: string; allowsShiftSameDay?: boolean } => {
 	if (choice.kind === "DURATION") {
 		const duration = durations.find(
 			(option) => option.leaveDurationId === choice.durationId
 		);
 		return duration
-			? { startTime: duration.startTime, endTime: duration.endTime }
+			? {
+					startTime: duration.startTime,
+					endTime: duration.endTime,
+					allowsShiftSameDay: duration.allowsShiftSameDay,
+				}
 			: {};
 	}
 	if (

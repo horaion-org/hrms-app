@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { configureApiClient, resetApiClient } from "@/common/api-client";
 import { envelope, problemReply, stubApi } from "@/common/testing/stubApi";
 import { authTestI18n } from "@/features/auth/testingI18n";
-import { leaveFixture } from "@/features/leave/fixtures";
+import { leaveFixture, partDayLeaveFixture } from "@/features/leave/fixtures";
 import type { LeaveRequest } from "@/features/leave/types";
 import {
 	LeaveRequestLifecycle,
@@ -217,6 +217,38 @@ describe("LeaveRequestLifecycle", () => {
 		expect(
 			within(dialog).queryByText(/couldn’t check the roster/)
 		).not.toBeInTheDocument();
+	});
+
+	it("given_aPartDayWithNoShiftThatDay_when_changing_then_theRosterReadSendsItsTimesAndChoice", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			[`GET ${MEMBER}/leave-1/changes`]: { status: 200, body: envelope([]) },
+			[`GET ${MEMBER}/rostered-days`]: { status: 200, body: envelope([]) },
+			[LEAVE_TYPES]: { status: 200, body: envelope([]) },
+		});
+		show(
+			partDayLeaveFixture({
+				leaveRequestId: "leave-1",
+				status: "APPROVED",
+				allowsShiftSameDay: false,
+			}),
+			{ canChange: true }
+		);
+
+		await user.click(
+			await screen.findByRole("button", { name: "Change leave…" })
+		);
+
+		await waitFor(() => {
+			const read = calls.find((call) => call.path.endsWith("/rostered-days"));
+			expect(
+				Object.fromEntries(new URLSearchParams(read?.search))
+			).toMatchObject({
+				startTime: "09:00",
+				endTime: "13:00",
+				allowsShiftSameDay: "false",
+			});
+		});
 	});
 
 	it("given_movedDatesWhoseRosterCannotBeRead_when_changing_then_cannotConfirmAndCanRetry", async () => {

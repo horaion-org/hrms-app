@@ -221,7 +221,11 @@ export const partDayLeaveFixture = (
 		...overrides,
 	});
 
-/** The leave durations a person in the Sales Department may pick: a morning and a night across midnight. */
+/**
+ * The leave durations a person in the Sales Department may pick: a morning,
+ * a night across midnight, and a three-quarter day that leaves no shift that
+ * day.
+ */
 export const LEAVE_DURATION_OPTION_FIXTURES: Array<LeaveDurationOption> = [
 	{
 		leaveDurationId: "ld-morning",
@@ -238,5 +242,13 @@ export const LEAVE_DURATION_OPTION_FIXTURES: Array<LeaveDurationOption> = [
 		endTime: "02:00",
 		minutes: 240,
 		allowsShiftSameDay: true,
+	},
+	{
+		leaveDurationId: "ld-three-quarters",
+		name: "Three quarters",
+		startTime: "09:00",
+		endTime: "15:00",
+		minutes: 360,
+		allowsShiftSameDay: false,
 	},
 ];

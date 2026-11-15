@@ -23,8 +23,21 @@ describe("dayPortionOptions", () => {
 			{ value: FULL_DAY_VALUE, label: "Full day" },
 			{ value: "ld-morning", label: "Morning · 09:00–13:00 · 4 h" },
 			{ value: "ld-night", label: "Night · 22:00–02:00 next day · 4 h" },
+			{
+				value: "ld-three-quarters",
+				label: "Three quarters · 09:00–15:00 · 6 h · no shift that day",
+			},
 			{ value: CUSTOM_VALUE, label: "Custom" },
 		]);
+	});
+
+	it("says no shift that day in Spanish too", () => {
+		expect(
+			dayPortionOptions(
+				LEAVE_DURATION_OPTION_FIXTURES.slice(2),
+				i18n.getFixedT("es")
+			)[1]?.label
+		).toBe("Three quarters · 09:00–15:00 · 6 h · sin turno ese día");
 	});
 
 	it("offers the full day and Custom when no duration applies", () => {
@@ -106,14 +119,29 @@ describe("timeRangeText", () => {
 });
 
 describe("dayPortionTimes", () => {
-	it("gives a duration's times, Custom's once set, and none for the full day", () => {
+	it("gives a duration's times and shift choice, Custom's times once set, and none for the full day", () => {
 		expect(
 			dayPortionTimes(
 				dayPortionChoiceOf("ld-morning"),
 				LEAVE_DURATION_OPTION_FIXTURES,
 				CUSTOM_TIMES
 			)
-		).toEqual({ startTime: "09:00", endTime: "13:00" });
+		).toEqual({
+			startTime: "09:00",
+			endTime: "13:00",
+			allowsShiftSameDay: true,
+		});
+		expect(
+			dayPortionTimes(
+				dayPortionChoiceOf("ld-three-quarters"),
+				LEAVE_DURATION_OPTION_FIXTURES,
+				CUSTOM_TIMES
+			)
+		).toEqual({
+			startTime: "09:00",
+			endTime: "15:00",
+			allowsShiftSameDay: false,
+		});
 		expect(
 			dayPortionTimes(
 				dayPortionChoiceOf(CUSTOM_VALUE),

@@ -350,6 +350,7 @@ it("given_oneDate_when_opened_then_offersTheFullDayDurationsAndCustom", async ()
 		"Full day",
 		"Morning · 09:00–13:00 · 4 h",
 		"Night · 22:00–02:00 next day · 4 h",
+		"Three quarters · 09:00–15:00 · 6 h · no shift that day",
 		"Custom",
 	]);
 });
@@ -470,6 +471,40 @@ it("given_aDurationChosen_when_theRosterIsRead_then_itAsksWithTheDurationsTimes"
 					new URLSearchParams(call.search).get("startTime") === "09:00" &&
 					new URLSearchParams(call.search).get("endTime") === "13:00"
 			)
+		).toBe(true);
+	});
+});
+
+it("given_aDurationWithNoShiftThatDay_when_theRosterIsRead_then_itSendsTheChoiceWithTheTimes", async () => {
+	const calls = stubApi({
+		[OWN_ROSTERED_DAYS]: { status: 200, body: envelope([]) },
+		[OWN_LEAVE_OPTIONS]: optionsReply(),
+	});
+	render(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveApplyForm
+				busy={false}
+				companyId="c-1"
+				onClose={vi.fn()}
+				onCreate={vi.fn()}
+			/>
+		</I18nextProvider>
+	);
+
+	await choosePortion(/^Three quarters/);
+
+	await waitFor(() => {
+		expect(
+			calls.some((call) => {
+				const search = new URLSearchParams(call.search);
+				return (
+					call.path ===
+						"/api/v1/companies/c-1/me/leave-requests/rostered-days" &&
+					search.get("startTime") === "09:00" &&
+					search.get("endTime") === "15:00" &&
+					search.get("allowsShiftSameDay") === "false"
+				);
+			})
 		).toBe(true);
 	});
 });
