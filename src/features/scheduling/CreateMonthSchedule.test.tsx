@@ -41,7 +41,10 @@ import {
 	departmentShiftFixture,
 	scheduleShiftsFixture,
 } from "@/features/scheduling/shifts/fixtures";
-import { firstWeek } from "@/features/scheduling/startingContext/fixtures";
+import {
+	enteredNightCell,
+	firstWeek,
+} from "@/features/scheduling/startingContext/fixtures";
 import { allOf, withShiftsChosen } from "@/features/scheduling/weekChoice";
 import type { Workspace } from "@/features/workspace/api";
 
@@ -544,7 +547,7 @@ describe("Create schedules for a month: where everyone starts", () => {
 		});
 	};
 	const addLastWeek = (): HTMLElement | null =>
-		screen.queryByRole("button", { name: "Add last week" });
+		screen.queryByRole("button", { name: "Add last week’s shifts" });
 
 	it("given_noRosterBefore_when_lastWeekAdded_then_savesTheWeekOpensTheGridAndGenerateLeavesItOut", async () => {
 		const user = userEvent.setup();
@@ -564,11 +567,11 @@ describe("Create schedules for a month: where everyone starts", () => {
 
 		expect(
 			await screen.findByText(
-				"No roster before this week. Everyone starts rested."
+				"Horaion doesn’t know what people worked last week."
 			)
 		).toBeVisible();
 		await user.click(
-			await screen.findByRole("button", { name: "Add last week" })
+			await screen.findByRole("button", { name: "Add last week’s shifts" })
 		);
 
 		expect(await screen.findByRole("dialog")).toBeVisible();
@@ -647,10 +650,63 @@ describe("Create schedules for a month: where everyone starts", () => {
 
 		expect(
 			await screen.findByText(
-				"No roster before this week. Everyone starts rested."
+				"Horaion doesn’t know what people worked last week."
 			)
 		).toBeVisible();
 		expect(addLastWeek()).toBeNull();
+	});
+
+	it("given_noRosterBeforeAndNothingEntered_when_onSetup_then_theWeekPagesWarningWithItsButton", async () => {
+		await open(NEW_DECEMBER, {
+			[`GET ${NOVEMBER}`]: novemberEndingIn("NOT_GENERATED"),
+		});
+
+		const warning = (
+			await screen.findByText(
+				"Horaion doesn’t know what people worked last week."
+			)
+		).closest("[role='note']");
+		expect(warning).toHaveClass("bg-warning-50");
+		expect(warning).toHaveTextContent(
+			"Without it, everyone is treated as rested, so someone who worked Sunday night could be given Monday morning."
+		);
+		expect(addLastWeek()).toBeVisible();
+	});
+
+	it("given_theFirstWeekSavedWithDaysEntered_when_onSetup_then_theCalmLineWithItsEditButton", async () => {
+		const week = firstWeek();
+		const [first, ...rest] = week.members;
+		if (!first) throw new Error("fixture has a member");
+		const lastDay = week.days[week.days.length - 1]!;
+		const entered = {
+			...week,
+			members: [
+				{
+					...first,
+					cells: first.cells.map((cell) =>
+						cell.date === lastDay ? enteredNightCell(lastDay) : cell
+					),
+				},
+				...rest,
+			],
+		};
+		await open(NEW_DECEMBER, {
+			[`GET ${NOVEMBER}`]: novemberEndingIn("NOT_GENERATED"),
+			[`GET ${DECEMBER}`]: decemberWithItsFirstWeekSaved(),
+			[`GET ${SCHEDULES}/s-start`]: reply(
+				scheduleFixture({ scheduleId: "s-start" })
+			),
+			[`GET ${SCHEDULES}/s-start/starting-days`]: reply(entered),
+			[`GET ${SCHEDULES}/s-start/opening-balances`]: reply(midMonthOpenings()),
+		});
+
+		const line = await screen.findByText(
+			"No roster before this week. Days are added for 1 person; everyone else starts rested."
+		);
+		expect(line.closest("[role='note']")).not.toHaveClass("bg-warning-50");
+		expect(
+			screen.queryByText("Horaion doesn’t know what people worked last week.")
+		).toBeNull();
 	});
 
 	it("given_aRefusedSave_when_lastWeekAdded_then_saysWhy", async () => {
@@ -661,7 +717,7 @@ describe("Create schedules for a month: where everyone starts", () => {
 		});
 
 		await user.click(
-			await screen.findByRole("button", { name: "Add last week" })
+			await screen.findByRole("button", { name: "Add last week’s shifts" })
 		);
 
 		expect(await screen.findByRole("alert")).toHaveTextContent(

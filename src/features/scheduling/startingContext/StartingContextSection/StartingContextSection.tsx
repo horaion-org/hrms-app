@@ -21,6 +21,7 @@ import { StartingContextCallout } from "@/features/scheduling/startingContext/St
 import { StartingDaysDialog } from "@/features/scheduling/startingContext/StartingDaysDialog";
 import {
 	enteredMemberCount,
+	previousWeekOf,
 	initialEntries,
 } from "@/features/scheduling/startingContext/startingGrid";
 
@@ -158,7 +159,7 @@ export const StartingContextSection = ({
 			<StartingContextCallout
 				className={className}
 				enteredCount={enteredMemberCount(initialEntries(week.data))}
-				week={week.data}
+				previous={previousWeekOf(week.data)}
 				onAdd={
 					canEdit && !openings.isPending
 						? (): void => {

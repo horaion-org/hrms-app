@@ -4,6 +4,7 @@ import {
 	carriedWeek,
 	firstWeek,
 } from "@/features/scheduling/startingContext/fixtures";
+import { previousWeekOf } from "@/features/scheduling/startingContext/startingGrid";
 import { StartingContextCallout } from "@/features/scheduling/startingContext/StartingContextCallout";
 import "@/common/i18n";
 
@@ -11,7 +12,7 @@ const meta = {
 	title: "Features/Scheduling/StartingContext/StartingContextCallout",
 	component: StartingContextCallout,
 	parameters: { layout: "padded" },
-	args: { week: firstWeek(), enteredCount: 0, onAdd: fn() },
+	args: { previous: previousWeekOf(firstWeek()), enteredCount: 0, onAdd: fn() },
 } satisfies Meta<typeof StartingContextCallout>;
 
 export default meta;
@@ -27,7 +28,9 @@ export const NoPreviousRosterWithEntries: Story = {
 };
 
 /** A published roster covers the week before, but not Siti, a new joiner: calm, with a small link. */
-export const CarriedWithNewJoiner: Story = { args: { week: carriedWeek() } };
+export const CarriedWithNewJoiner: Story = {
+	args: { previous: previousWeekOf(carriedWeek()) },
+};
 
 /** The draft can't be changed, so there is nothing to add. */
 export const ReadOnly: Story = { args: { onAdd: undefined } };

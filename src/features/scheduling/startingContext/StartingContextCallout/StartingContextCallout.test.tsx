@@ -9,6 +9,7 @@ import {
 	firstWeek,
 } from "@/features/scheduling/startingContext/fixtures";
 import { StartingContextCallout } from "@/features/scheduling/startingContext/StartingContextCallout";
+import { previousWeekOf } from "@/features/scheduling/startingContext/startingGrid";
 
 const show = (
 	week: StartingDays,
@@ -19,7 +20,7 @@ const show = (
 		<I18nextProvider i18n={authTestI18n}>
 			<StartingContextCallout
 				enteredCount={enteredCount}
-				week={week}
+				previous={previousWeekOf(week)}
 				onAdd={onAdd}
 			/>
 		</I18nextProvider>

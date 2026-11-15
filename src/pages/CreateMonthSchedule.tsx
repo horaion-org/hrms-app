@@ -7,7 +7,6 @@ import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
-import { Callout } from "@/components/ui/Callout";
 import { ArrowLeftIcon, ArrowRightIcon } from "@/components/ui/Icon";
 import { Stepper, StepperStep } from "@/components/ui/Stepper";
 import { constraintsQuery } from "@/features/scheduling/constraints/api";
@@ -30,7 +29,6 @@ import {
 	type MonthSetup,
 } from "@/features/scheduling/months/monthGeneration";
 import {
-	formatDayAndMonth,
 	formatMonth,
 	formatMonthName,
 	formatWeekDates,
@@ -72,6 +70,7 @@ import {
 	departmentShiftsQuery,
 	type DepartmentShift,
 } from "@/features/scheduling/shifts/api";
+import { StartingContextCallout } from "@/features/scheduling/startingContext/StartingContextCallout";
 import { StartingContextSection } from "@/features/scheduling/startingContext/StartingContextSection";
 import { StepActions } from "@/features/scheduling/StepActions";
 import { isScheduleStep, SCHEDULE_STEPS } from "@/features/scheduling/steps";
@@ -422,31 +421,26 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 						: []
 				}
 			/>
-		) : monthBefore.isPending ? undefined : weekBefore && weekBeforeRostered ? (
-			<Callout>
-				{t("scheduling.startingContext.carried", {
-					week: formatDayAndMonth(weekBefore, language),
-				})}
-			</Callout>
-		) : (
-			<Callout>
-				<span className="flex flex-wrap items-center gap-x-4 gap-y-1">
-					<span>{t("scheduling.startingContext.none")}</span>
-					{allowedHere("schedule:create") &&
-						allowedHere("schedule:update") &&
-						everything && (
-							<Button
-								disabled={scheduleActions.create.isPending}
-								variant="textlink"
-								onClick={() => {
-									void saveStartingWeek(startingWeek.periodStart);
-								}}
-							>
-								{t("scheduling.startingContext.add")}
-							</Button>
-						)}
-				</span>
-			</Callout>
+		) : monthBefore.isPending ? undefined : (
+			// Before the first week's draft exists: the same notice the week page shows.
+			<StartingContextCallout
+				adding={scheduleActions.create.isPending}
+				enteredCount={0}
+				previous={
+					weekBefore && weekBeforeRostered
+						? { kind: "carried", periodStart: weekBefore, uncovered: 0 }
+						: { kind: "none" }
+				}
+				onAdd={
+					allowedHere("schedule:create") &&
+					allowedHere("schedule:update") &&
+					everything
+						? (): void => {
+								void saveStartingWeek(startingWeek.periodStart);
+							}
+						: undefined
+				}
+			/>
 		);
 	// The first week saved as a draft keeps its own choice, changed on its own page.
 	const savedDraftLine =
