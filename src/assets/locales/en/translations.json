@@ -4437,8 +4437,8 @@
 			"gap": "{{shift}} · {{day}} · {{time}} · {{jobTitles}}",
 			"short": {
 				"onLeave": "1 short: {{name}} is on leave",
-				"sinceGeneration_one": "{{count}} short since generation",
-				"sinceGeneration_other": "{{count}} short since generation",
+				"sinceGeneration_one": "{{count}} short since the roster was generated",
+				"sinceGeneration_other": "{{count}} short since the roster was generated",
 				"plain_one": "{{count}} short",
 				"plain_other": "{{count}} short"
 			},
@@ -4489,7 +4489,7 @@
 				"covered": "{{shift}} on {{day}} is covered now.",
 				"close": "Close",
 				"nobody": "Nobody on this roster can cover {{shift}} on {{day}}.",
-				"notChecked": "Not checked against the scheduling rules yet."
+				"notChecked": "Not checked against the working-time rules yet: validate the schedule after you make the change."
 			},
 			"gapWithoutRoles": "{{shift}} · {{day}} · {{time}}",
 			"engine": {
@@ -4829,7 +4829,7 @@
 			"extraSummary": "Extra {{hours}}",
 			"overtimeSummary": "Overtime {{hours}}",
 			"empty": "Nobody is rostered this week.",
-			"note": "Planned hours from this roster, classified with each person’s employment terms for the week.",
+			"note": "Planned hours in this roster, by each person’s employment terms that week. Normal: within their contracted hours. Extra: a part-timer’s hours above their contract. Overtime: hours past the normal day or week.",
 			"loading": "Loading hours…",
 			"loadFailed": "Couldn’t load the hours."
 		},

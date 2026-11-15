@@ -57,7 +57,7 @@ describe("RosterHours", () => {
 		]);
 		expect(
 			screen.getByText(
-				"Planned hours from this roster, classified with each person’s employment terms for the week."
+				"Planned hours in this roster, by each person’s employment terms that week. Normal: within their contracted hours. Extra: a part-timer’s hours above their contract. Overtime: hours past the normal day or week."
 			)
 		).toBeInTheDocument();
 	});

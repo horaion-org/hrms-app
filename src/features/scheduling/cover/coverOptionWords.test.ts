@@ -37,7 +37,9 @@ describe("gapTitle and gapReason", () => {
 		expect(gapTitle(gap, names, t)).toBe(
 			"Front Desk AM · Sat, Oct 17 · 09:00 – 15:00 · Front Desk Staff or Front Desk Lead"
 		);
-		expect(gapReason(gap, names, t)).toBe("1 short since generation");
+		expect(gapReason(gap, names, t)).toBe(
+			"1 short since the roster was generated"
+		);
 	});
 
 	it("given_aShiftWhoseRolesCantBeRead_when_worded_then_theTitleWithoutThem", () => {

@@ -4237,8 +4237,8 @@
 			"gap": "{{shift}} · {{day}} · {{time}} · {{jobTitles}}",
 			"short": {
 				"onLeave": "Falta 1: {{name}} está de permiso",
-				"sinceGeneration_one": "Falta {{count}} desde la generación",
-				"sinceGeneration_other": "Faltan {{count}} desde la generación",
+				"sinceGeneration_one": "Falta {{count}} desde que se generó el cuadrante",
+				"sinceGeneration_other": "Faltan {{count}} desde que se generó el cuadrante",
 				"plain_one": "Falta {{count}}",
 				"plain_other": "Faltan {{count}}"
 			},
@@ -4289,7 +4289,7 @@
 				"covered": "{{shift}} el {{day}} ya está cubierto.",
 				"close": "Cerrar",
 				"nobody": "Nadie de este cuadrante puede cubrir {{shift}} el {{day}}.",
-				"notChecked": "Aún no se ha comprobado con las reglas de programación."
+				"notChecked": "Aún no se ha comprobado con las reglas de tiempo de trabajo: valida el cuadrante después de hacer el cambio."
 			},
 			"gapWithoutRoles": "{{shift}} · {{day}} · {{time}}",
 			"engine": {
@@ -4629,7 +4629,7 @@
 			"extraSummary": "Complementarias {{hours}}",
 			"overtimeSummary": "Horas extra {{hours}}",
 			"empty": "Nadie tiene turnos esta semana.",
-			"note": "Horas previstas de este cuadrante, clasificadas con las condiciones de empleo de cada persona para la semana.",
+			"note": "Horas previstas de este cuadrante, según las condiciones de empleo de cada persona esa semana. Normales: dentro de sus horas de contrato. Complementarias: horas de una persona a tiempo parcial por encima de su contrato. Horas extra: las que pasan de la jornada o la semana normal.",
 			"loading": "Cargando las horas…",
 			"loadFailed": "No se pudieron cargar las horas."
 		},

@@ -132,9 +132,11 @@ describe("FindCoverPanel", () => {
 		expect(
 			await screen.findByRole("radio", { name: "Aisha Rahman" })
 		).toBeChecked();
-		expect(screen.getByText("1 short since generation")).toBeVisible();
+		expect(
+			screen.getByText("1 short since the roster was generated")
+		).toBeVisible();
 		expect(screen.getByRole("note")).toHaveTextContent(
-			"Not checked against the scheduling rules yet."
+			"Not checked against the working-time rules yet: validate the schedule after you make the change."
 		);
 		// One "not checked" line: the review's own is left out here.
 		expect((await screen.findAllByText("Note")).length).toBeGreaterThan(0);
