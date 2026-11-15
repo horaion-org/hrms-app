@@ -287,10 +287,15 @@ describe("FindCoverPanel", () => {
 		expect(
 			screen.getByRole("radio", { name: "Aisha Rahman" })
 		).not.toBeChecked();
-		// The engine's warning stays in the review, beside the option's own.
+		// The engine's warning heads its options and stays in the review.
 		expect(
-			screen.getAllByText(/^Not checked against working-time rules/)
-		).toHaveLength(2);
+			screen.getByText(
+				/^None of these options is checked against working-time rules/
+			)
+		).toBeVisible();
+		expect(
+			screen.getByText(/^Not checked against working-time rules/)
+		).toBeVisible();
 		const apply = screen.getByRole("button", { name: "Apply change" });
 		await waitFor(() => {
 			expect(apply).toBeEnabled();

@@ -4268,7 +4268,8 @@
 					"failed": "El motor no pudo responder."
 				},
 				"review": "Revisar este cambio",
-				"byHand": "La aplicación no puede aplicar esta: hazla a mano en el cuadrante."
+				"byHand": "La aplicación no puede aplicar esta: hazla a mano en el cuadrante.",
+				"noneChecked": "Ninguna de estas opciones se ha comprobado con las reglas de tiempo de trabajo: horas al día, horas extra al mes, días a la semana y permisos. Compruébalo antes de cambiar el cuadrante."
 			}
 		},
 		"reach": {

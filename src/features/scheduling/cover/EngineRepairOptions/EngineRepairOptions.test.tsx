@@ -25,6 +25,8 @@ const names: RepairNames = {
 	day: () => "Sat, Oct 17",
 	hours: (minutes) => String(minutes / 60),
 };
+const NONE_CHECKED =
+	"None of these options is checked against working-time rules: hours a day, overtime a month, days a week and leave. Check before you change the roster.";
 const NOT_CHECKED =
 	"Not checked against working-time rules: hours a day, overtime a month, days a week and leave. Check before you change the roster.";
 
@@ -89,7 +91,9 @@ describe("EngineRepairOptions", () => {
 				"Moving anyone would leave another shift short."
 			)
 		).toBeVisible();
-		expect(screen.getAllByText(NOT_CHECKED)).toHaveLength(2);
+		// None was checked, so one note heads the list for both rather than one under each.
+		expect(screen.getAllByText(NONE_CHECKED)).toHaveLength(1);
+		expect(screen.queryByText(NOT_CHECKED)).toBeNull();
 	});
 
 	it("says the engine found nothing", () => {
@@ -204,5 +208,24 @@ describe("EngineRepairOptions", () => {
 		expect(
 			screen.queryByRole("button", { name: "Review this change" })
 		).toBeNull();
+	});
+
+	it("notes on each option it holds for when only some options were checked", () => {
+		render(
+			<EngineRepairOptions
+				names={names}
+				repair={{
+					status: "ready",
+					options: [
+						feasibleRepair([callInMove()], { workingTimeRulesChecked: true }),
+						feasibleRepair([stretchMove()]),
+					],
+					ask: vi.fn(),
+				}}
+			/>
+		);
+
+		expect(screen.queryByText(NONE_CHECKED)).toBeNull();
+		expect(screen.getAllByText(NOT_CHECKED)).toHaveLength(1);
 	});
 });

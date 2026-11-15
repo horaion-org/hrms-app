@@ -4468,7 +4468,8 @@
 					"failed": "The engine couldn’t answer."
 				},
 				"review": "Review this change",
-				"byHand": "The app can’t apply this one: make it by hand on the roster."
+				"byHand": "The app can’t apply this one: make it by hand on the roster.",
+				"noneChecked": "None of these options is checked against working-time rules: hours a day, overtime a month, days a week and leave. Check before you change the roster."
 			}
 		},
 		"reach": {

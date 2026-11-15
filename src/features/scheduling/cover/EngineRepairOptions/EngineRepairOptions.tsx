@@ -34,10 +34,13 @@ const OptionItem = ({
 	option,
 	names,
 	onReview,
+	warnedAbove,
 }: {
 	option: RepairOption;
 	names: RepairNames;
 	onReview?: (cells: Array<RosterChangeCell>) => void;
+	/** The working-time note heads the list for every option, so this one need not repeat it. */
+	warnedAbove: boolean;
 }): FunctionComponent => {
 	const { t } = useTranslation();
 	const leftShort = leftShortLine(option, t);
@@ -65,7 +68,7 @@ const OptionItem = ({
 					{option.warnings.join("\n")}
 				</Quote>
 			)}
-			{!option.workingTimeRulesChecked && (
+			{!option.workingTimeRulesChecked && !warnedAbove && (
 				<Callout tone="warning">{t(`${key}.notChecked`)}</Callout>
 			)}
 			{option.feasible &&
@@ -91,8 +94,9 @@ const OptionItem = ({
  * The scheduling engine's options in Find cover's panel, under the backend's
  * own suggestions: asked for with a button (the engine runs a solver, which
  * takes a moment), then each option feasible first, in plain words, an
- * infeasible one with the engine's reason quoted, and on every option the
- * note that working-time rules were not checked. A feasible option whose
+ * infeasible one with the engine's reason quoted, and the note that
+ * working-time rules were not checked: once above the list when it holds for
+ * every option, otherwise on each option it holds for. A feasible option whose
  * change Find cover's Apply states exactly (`repairCells`) offers to review
  * it there; any other says it has to be made by hand. A refusal says why, and
  * a failure offers to ask again.
@@ -135,21 +139,32 @@ export const EngineRepairOptions = ({
 					)}
 				</div>
 			);
-		default:
-			return repair.options.length === 0 ? (
-				<p className="text-neutral-800">{t(`${key}.none`)}</p>
-			) : (
-				<ul className="flex flex-col divide-y divide-neutral-300">
-					{repair.options.map((option, rank) => (
-						// An option has no id of its own; its place in the engine's ranking is stable.
-						<OptionItem
-							key={rank}
-							names={names}
-							option={option}
-							onReview={onReview}
-						/>
-					))}
-				</ul>
+		default: {
+			if (repair.options.length === 0)
+				return <p className="text-neutral-800">{t(`${key}.none`)}</p>;
+			// When no option was checked, as on tonight's engine, one note heads the list for all of them.
+			const noneChecked = repair.options.every(
+				(option) => !option.workingTimeRulesChecked
 			);
+			return (
+				<div className="flex flex-col gap-3">
+					{noneChecked && (
+						<Callout tone="warning">{t(`${key}.noneChecked`)}</Callout>
+					)}
+					<ul className="flex flex-col divide-y divide-neutral-300">
+						{repair.options.map((option, rank) => (
+							// An option has no id of its own; its place in the engine's ranking is stable.
+							<OptionItem
+								key={rank}
+								names={names}
+								option={option}
+								warnedAbove={noneChecked}
+								onReview={onReview}
+							/>
+						))}
+					</ul>
+				</div>
+			);
+		}
 	}
 };
