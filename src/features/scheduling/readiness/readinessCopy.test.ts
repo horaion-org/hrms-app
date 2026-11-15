@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { readinessFixture } from "@/features/scheduling/readiness/fixtures";
 import {
 	checklistOf,
+	constraintsNeedingAttentionOf,
 	fixLinkOf,
 	gateOf,
 	returnLinkOf,
@@ -157,5 +158,18 @@ describe("returnLinkOf", () => {
 	it("offers no way back without next, or for a draft without its department", () => {
 		expect(returnLinkOf({ department: "d-1" })).toBeUndefined();
 		expect(returnLinkOf({ next: "draft", scheduleId: "s-1" })).toBeUndefined();
+	});
+});
+
+describe("constraintsNeedingAttentionOf", () => {
+	const rows = [
+		readinessFixture({ constraintsNeedingAttention: 2 }),
+		readinessFixture({ departmentId: "d-2", constraintsNeedingAttention: 1 }),
+	];
+
+	it("counts every department's rules that need attention, or one department's", () => {
+		expect(constraintsNeedingAttentionOf(rows)).toBe(3);
+		expect(constraintsNeedingAttentionOf(rows, "d-2")).toBe(1);
+		expect(constraintsNeedingAttentionOf(rows, "d-9")).toBe(0);
 	});
 });

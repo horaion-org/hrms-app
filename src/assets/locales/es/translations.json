@@ -4382,6 +4382,8 @@
 			"addStaffing": "Añade una restricción de personal: cuántas personas necesita cada turno.",
 			"addShiftFirst": "Añade primero un turno.",
 			"goToConstraints": "Ir a Restricciones",
+			"constraintsNeedAttention_one": "{{count}} regla requiere atención: ya no encaja con sus turnos o puestos.",
+			"constraintsNeedAttention_other": "{{count}} reglas requieren atención: ya no encajan con sus turnos o puestos.",
 			"ready": "{{department}} está listo para planificar.",
 			"createSchedule": "Crear horario",
 			"backToSchedule": "Volver al horario",

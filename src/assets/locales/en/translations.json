@@ -4582,6 +4582,8 @@
 			"addStaffing": "Add a staffing constraint: how many people each shift needs.",
 			"addShiftFirst": "Add a shift first.",
 			"goToConstraints": "Go to Constraints",
+			"constraintsNeedAttention_one": "{{count}} rule needs attention: it no longer fits its shifts or job titles.",
+			"constraintsNeedAttention_other": "{{count}} rules need attention: they no longer fit their shifts or job titles.",
 			"ready": "{{department}} is ready to schedule.",
 			"createSchedule": "Create schedule",
 			"backToSchedule": "Back to the schedule",

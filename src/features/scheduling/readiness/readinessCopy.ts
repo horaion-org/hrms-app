@@ -189,3 +189,17 @@ export const returnLinkOf = (search: ReturnSearch): ReturnLink | undefined => {
 		};
 	return undefined;
 };
+
+/**
+ * How many rules no longer fit their shifts or job titles (ADR-0085): in the
+ * one department chosen, or across every department in view.
+ */
+export const constraintsNeedingAttentionOf = (
+	rows: ReadonlyArray<SchedulingReadiness>,
+	departmentId?: string
+): number =>
+	rows
+		.filter(
+			(row) => departmentId === undefined || row.departmentId === departmentId
+		)
+		.reduce((total, row) => total + row.constraintsNeedingAttention, 0);
