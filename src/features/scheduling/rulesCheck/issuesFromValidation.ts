@@ -1,4 +1,5 @@
 import type { CoverGapRequest } from "@/features/scheduling/cover/api";
+import { brokenRuleCount } from "@/features/scheduling/rulesCheck/rosterRulesCheckWords";
 import type { LastValidation } from "@/features/scheduling/rulesCheck/useRosterRulesCheck";
 import type { GenerationFindings } from "@/features/scheduling/schedules/api";
 
@@ -61,10 +62,7 @@ export const findingsShown = (
 /** How many issues the last validation's broken rules add: one per rule named, one when broken with none named. */
 export const brokenRuleIssueCount = (
 	last: LastValidation | undefined
-): number =>
-	last?.check.status === "BROKEN"
-		? Math.max(last.check.brokenRules.length, 1)
-		: 0;
+): number => (last ? brokenRuleCount(last.check) : 0);
 
 /**
  * Whether the generation stored a gap for this shift and day, as the API
