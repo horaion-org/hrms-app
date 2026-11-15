@@ -585,6 +585,15 @@ describe("Editing a person", () => {
 		expect(screen.getByText("Also holds elsewhere: Admin.")).toBeVisible();
 	});
 
+	it("names the employment terms row as a group, which its label can name though it is no field", async () => {
+		stubApi(routes(workspaceReply([...ALL, "member_employment_terms:read"])));
+		await open("/people/m-1?edit=true");
+
+		expect(
+			await screen.findByRole("group", { name: "Employment terms" })
+		).toBeInTheDocument();
+	});
+
 	it("keeps the email address once they've logged in, and lets it be corrected before", async () => {
 		stubApi(routes());
 		await open("/people/m-1?edit=true");

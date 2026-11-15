@@ -2,7 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useId, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
-import { FormRow } from "@/components/forms/FormRow";
+import { FormRow, formRowIds } from "@/components/forms/FormRow";
 import { EmploymentTermsRow } from "@/features/employmentTerms/EmploymentTermsRow";
 import type { MemberProfileDetail } from "@/features/people/api";
 import {
@@ -99,7 +99,13 @@ export const PersonProfileEdit = ({
 									htmlFor={termsId}
 									label={t("people.form.employmentTerms")}
 								>
-									<div id={termsId}>
+									// Not a form control: the row is a group the label names, so
+									a screen reader announces it.
+									<div
+										aria-labelledby={formRowIds(termsId).labelId}
+										id={termsId}
+										role="group"
+									>
 										<EmploymentTermsRow
 											editing
 											companyId={companyId}
