@@ -57,6 +57,8 @@ export type SentenceKey =
 	| `${typeof SENTENCES}.DAYS_OFF_PER_PERIOD.${ConstraintComparison}`
 	| `${typeof SENTENCES}.AVOID_DAYS_OFF_ON`
 	| `${typeof SENTENCES}.REST_BETWEEN_SHIFTS`
+	| `${typeof SENTENCES}.MAX_WORK_HOURS_PER_DAY`
+	| `${typeof SENTENCES}.MAX_OVERTIME_HOURS_PER_MONTH`
 	| `${typeof SENTENCES}.MAX_DAYS_WITHOUT_DAY_TYPES.${CoveredGroup}`
 	| `${typeof SENTENCES}.DAY_TYPE_DAYS_PER_WEEK.${CoveredGroup}.${WeeklyComparison}`;
 
@@ -72,6 +74,8 @@ const FIXED_FIRMNESS: Partial<Record<ConstraintType, ConstraintRequirement>> = {
 	REST_BETWEEN_SHIFTS: "MUST",
 	MAX_DAYS_WITHOUT_DAY_TYPES: "MUST",
 	DAY_TYPE_DAYS_PER_WEEK: "MUST",
+	MAX_WORK_HOURS_PER_DAY: "MUST",
+	MAX_OVERTIME_HOURS_PER_MONTH: "MUST",
 };
 
 const valuesOf = (
@@ -167,6 +171,20 @@ export const sentencePartsOf = (
 				{
 					i18nKey: `${SENTENCES}.${constraint.type}.${coveredGroupOf(constraint)}.${weeklyComparisonOf(constraint)}`,
 					count: countOf(constraint, "DAY_TYPE_COUNT"),
+				},
+			];
+		case "MAX_WORK_HOURS_PER_DAY":
+			return [
+				{
+					i18nKey: `${SENTENCES}.${constraint.type}`,
+					count: countOf(constraint, "WORK_HOURS_A_DAY"),
+				},
+			];
+		case "MAX_OVERTIME_HOURS_PER_MONTH":
+			return [
+				{
+					i18nKey: `${SENTENCES}.${constraint.type}`,
+					count: countOf(constraint, "OVERTIME_HOURS_A_MONTH"),
 				},
 			];
 	}

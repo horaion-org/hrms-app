@@ -38,6 +38,8 @@ describe("ruleLabel", () => {
 		["minimum_rest_between_shifts", "Rest between shifts"],
 		["max_days_without_day_types", "Limit on days in a row"],
 		["days_of_day_types_per_period", "Required days each week"],
+		["max_work_hours_per_day", "Most hours a day"],
+		["max_overtime_hours_per_month", "Most overtime a month"],
 		["timeblock_demand_coverage", "Forecast demand"],
 		["a_rule_added_later", "A rule added later"],
 	])(

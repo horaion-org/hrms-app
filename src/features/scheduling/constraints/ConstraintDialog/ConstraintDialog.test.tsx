@@ -17,6 +17,8 @@ import {
 	CONSTRAINT_FIXTURES,
 	CONSTRAINT_OPTIONS,
 	CONSTRAINT_TYPE_OPTIONS,
+	MOST_HOURS_A_DAY_FIXTURE,
+	MOST_OVERTIME_A_MONTH_FIXTURE,
 	WEEKLY_RULE_FIXTURE,
 } from "@/features/scheduling/constraints/fixtures";
 import type { ConstraintOptionsState } from "@/features/scheduling/constraints/useConstraintOptions";
@@ -281,6 +283,102 @@ describe("ConstraintDialog for the Scheduling policy (ADR-0058)", () => {
 		await waitFor(() => {
 			expect(onSave).toHaveBeenCalledWith(
 				expect.objectContaining({ type: companyRest.type })
+			);
+		});
+	});
+
+	it("given_mostHoursADay_when_edited_then_showsMomsLimitAndKeepsAFigureAboveIt", async () => {
+		const user = userEvent.setup();
+		const { onSave } = renderDialog({
+			withLock: true,
+			editing: MOST_HOURS_A_DAY_FIXTURE,
+			reach: { choices: REACH.choices, initial: reachValueOf() },
+		});
+		await screen.findByRole("dialog", { name: "Edit constraint" });
+
+		expect(trigger(/^What it controls/)).toHaveTextContent("Most hours a day");
+		expect(trigger(/^What it controls/)).toBeDisabled();
+		expect(screen.queryByRole("button", { name: /^Lock/ })).toBeNull();
+		expect(screen.queryByRole("button", { name: /^Status/ })).toBeNull();
+		expect(screen.getByText("1 to 24. MOM’s limit is 12.")).toBeVisible();
+		const hours = screen.getByRole("spinbutton", { name: /^Hours a day/ });
+		expect(hours).toHaveAttribute("max", "24");
+
+		await user.clear(hours);
+		await user.type(hours, "13");
+		await user.click(screen.getByRole("button", { name: "Save" }));
+
+		await waitFor(() => {
+			expect(onSave).toHaveBeenCalledWith(
+				expect.objectContaining({
+					type: "MAX_WORK_HOURS_PER_DAY",
+					lock: "LOCKED",
+					values: [{ field: "WORK_HOURS_A_DAY", value: "13" }],
+				})
+			);
+		});
+	});
+
+	it("given_mostOvertimeAMonth_when_edited_then_explainsRestDayWorkAndKeepsNoOvertime", async () => {
+		const user = userEvent.setup();
+		const { onSave } = renderDialog({
+			withLock: true,
+			editing: MOST_OVERTIME_A_MONTH_FIXTURE,
+			reach: { choices: REACH.choices, initial: reachValueOf() },
+		});
+		await screen.findByRole("dialog", { name: "Edit constraint" });
+
+		expect(
+			screen.getByText(
+				"0 to 744. MOM’s limit is 72; rest-day work is outside it, except hours past the normal day."
+			)
+		).toBeVisible();
+		const hours = screen.getByRole("spinbutton", {
+			name: /^Overtime hours a month/,
+		});
+
+		await user.clear(hours);
+		await user.type(hours, "0");
+		await user.click(screen.getByRole("button", { name: "Save" }));
+
+		await waitFor(() => {
+			expect(onSave).toHaveBeenCalledWith(
+				expect.objectContaining({
+					type: "MAX_OVERTIME_HOURS_PER_MONTH",
+					values: [{ field: "OVERTIME_HOURS_A_MONTH", value: "0" }],
+				})
+			);
+		});
+	});
+
+	it("given_theLockedMostHoursADay_when_aDepartmentAsksForMore_then_refusedBeforeSendingAndFewerIsSent", async () => {
+		const user = userEvent.setup();
+		const { onSave } = renderDialog({ replacing: MOST_HOURS_A_DAY_FIXTURE });
+		await screen.findByRole("dialog", { name: "Set for this department" });
+		await typeName(user, "Kitchen hours");
+		const hours = screen.getByRole("spinbutton", { name: /^Hours a day/ });
+
+		await user.clear(hours);
+		await user.type(hours, "13");
+		await user.click(screen.getByRole("button", { name: "Save" }));
+		expect(
+			await screen.findByText(
+				"These values wouldn’t be at least as strict as the company’s locked constraint in every part. Make them stricter, or keep the company’s."
+			)
+		).toBeVisible();
+		expect(onSave).not.toHaveBeenCalled();
+
+		await user.clear(hours);
+		await user.type(hours, "10");
+		await user.click(screen.getByRole("button", { name: "Save" }));
+
+		await waitFor(() => {
+			expect(onSave).toHaveBeenCalledWith(
+				expect.objectContaining({
+					type: "MAX_WORK_HOURS_PER_DAY",
+					overridesConstraintId: "most-hours-a-day",
+					values: [{ field: "WORK_HOURS_A_DAY", value: "10" }],
+				})
 			);
 		});
 	});

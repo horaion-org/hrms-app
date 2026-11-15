@@ -3425,7 +3425,9 @@
 				"AVOID_DAYS_OFF_ON": "Days to avoid giving off",
 				"REST_BETWEEN_SHIFTS": "Rest between shifts",
 				"MAX_DAYS_WITHOUT_DAY_TYPES": "Limit on days in a row",
-				"DAY_TYPE_DAYS_PER_WEEK": "Required days each week"
+				"DAY_TYPE_DAYS_PER_WEEK": "Required days each week",
+				"MAX_WORK_HOURS_PER_DAY": "Most hours a day",
+				"MAX_OVERTIME_HOURS_PER_MONTH": "Most overtime a month"
 			},
 			"sentences": {
 				"SHIFT_STAFFING": {
@@ -3497,6 +3499,11 @@
 				"AVOID_DAYS_OFF_ON": "Avoid days off on <WEEKDAY/>.",
 				"REST_BETWEEN_SHIFTS_one": "Everyone gets at least <REST_HOURS/> hour off between shifts.",
 				"REST_BETWEEN_SHIFTS_other": "Everyone gets at least <REST_HOURS/> hours off between shifts.",
+				"MAX_WORK_HOURS_PER_DAY_one": "Nobody whose Employment Act limits apply works more than <WORK_HOURS_A_DAY/> hour in a day, overtime included.",
+				"MAX_WORK_HOURS_PER_DAY_other": "Nobody whose Employment Act limits apply works more than <WORK_HOURS_A_DAY/> hours in a day, overtime included.",
+				"MAX_OVERTIME_HOURS_PER_MONTH_zero": "Nobody whose Employment Act limits apply works overtime.",
+				"MAX_OVERTIME_HOURS_PER_MONTH_one": "Nobody whose Employment Act limits apply works more than <OVERTIME_HOURS_A_MONTH/> hour of overtime in a calendar month.",
+				"MAX_OVERTIME_HOURS_PER_MONTH_other": "Nobody whose Employment Act limits apply works more than <OVERTIME_HOURS_A_MONTH/> hours of overtime in a calendar month.",
 				"MAX_DAYS_WITHOUT_DAY_TYPES": {
 					"fullTimers_one": "No full-timer goes more than <DAYS_IN_A_ROW/> day in a row without a <DAY_TYPE/>.",
 					"fullTimers_other": "No full-timer goes more than <DAYS_IN_A_ROW/> days in a row without a <DAY_TYPE/>.",
@@ -3531,7 +3538,9 @@
 				"WEEKDAY": "Days of the week",
 				"DAY_TYPE": "Day types",
 				"DAYS_IN_A_ROW": "Most days in a row",
-				"DAY_TYPE_COUNT": "Days each week"
+				"DAY_TYPE_COUNT": "Days each week",
+				"WORK_HOURS_A_DAY": "Hours a day",
+				"OVERTIME_HOURS_A_MONTH": "Overtime hours a month"
 			},
 			"requirements": {
 				"MUST": "Must",
@@ -3662,7 +3671,9 @@
 				"WEEKDAY": "which days",
 				"DAY_TYPE": "which day types",
 				"DAYS_IN_A_ROW": "how many",
-				"DAY_TYPE_COUNT": "how many"
+				"DAY_TYPE_COUNT": "how many",
+				"WORK_HOURS_A_DAY": "how many",
+				"OVERTIME_HOURS_A_MONTH": "how many"
 			},
 			"statement": "Constraint",
 			"examples": {
@@ -3673,7 +3684,9 @@
 				"AVOID_DAYS_OFF_ON": "For example: Avoid days off on Friday and Saturday, your busiest days.",
 				"REST_BETWEEN_SHIFTS": "For example: Everyone gets at least 11 hours off between shifts.",
 				"MAX_DAYS_WITHOUT_DAY_TYPES": "For example: Nobody goes more than 6 days in a row without a Rest day or Day off.",
-				"DAY_TYPE_DAYS_PER_WEEK": "For example: Everyone has at least 1 Rest day each week."
+				"DAY_TYPE_DAYS_PER_WEEK": "For example: Everyone has at least 1 Rest day each week.",
+				"MAX_WORK_HOURS_PER_DAY": "For example: Nobody whose Employment Act limits apply works more than 12 hours in a day, overtime included.",
+				"MAX_OVERTIME_HOURS_PER_MONTH": "For example: Nobody whose Employment Act limits apply works more than 72 hours of overtime in a calendar month."
 			},
 			"fieldHints": {
 				"SHIFT": "Choose more than one to count them together each day.",
@@ -3684,7 +3697,9 @@
 				"PERIOD_DAYS": "For example 7: any 7 days in a row. {{min}} to {{max}}.",
 				"REST_HOURS": "From the end of one shift to the start of the next. {{min}} to {{max}}.",
 				"DAYS_IN_A_ROW": "{{min}} to {{max}}.",
-				"DAY_TYPE_COUNT": "{{min}} to {{max}}."
+				"DAY_TYPE_COUNT": "{{min}} to {{max}}.",
+				"WORK_HOURS_A_DAY": "{{min}} to {{max}}. MOM’s limit is 12.",
+				"OVERTIME_HOURS_A_MONTH": "{{min}} to {{max}}. MOM’s limit is 72; rest-day work is outside it, except hours past the normal day."
 			},
 			"fixedFirmness": {
 				"MUST": "Always a must for this kind of constraint.",
@@ -3698,7 +3713,9 @@
 				"AVOID_DAYS_OFF_ON": "Days to avoid off",
 				"REST_BETWEEN_SHIFTS": "Rest between shifts",
 				"MAX_DAYS_WITHOUT_DAY_TYPES": "Days in a row",
-				"DAY_TYPE_DAYS_PER_WEEK": "Days each week"
+				"DAY_TYPE_DAYS_PER_WEEK": "Days each week",
+				"MAX_WORK_HOURS_PER_DAY": "Most hours a day",
+				"MAX_OVERTIME_HOURS_PER_MONTH": "Most overtime a month"
 			}
 		},
 		"forecast": {
