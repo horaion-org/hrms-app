@@ -3,15 +3,20 @@ import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
-import type { StartingDays } from "@/features/scheduling/startingContext/api";
-import { previousWeekOf } from "@/features/scheduling/startingContext/startingGrid";
+import type { PreviousWeek } from "@/features/scheduling/startingContext/startingGrid";
 
 export type StartingContextCalloutProps = {
-	week: StartingDays;
+	/**
+	 * Whether a roster covers the week before (`previousWeekOf` a draft's
+	 * starting days, or the month page's own read before any draft exists).
+	 */
+	previous: PreviousWeek;
 	/** Members with any day entered on the draft. */
 	enteredCount: number;
 	/** Opens the week-before grid; left out when the draft can't be changed. */
 	onAdd?: () => void;
+	/** The button waits while `onAdd`'s own work is under way, such as the month page saving its first week. */
+	adding?: boolean;
 	className?: string;
 };
 
@@ -25,17 +30,17 @@ const key = "scheduling.startingContext";
  * With days entered, a calm line and the same button to edit them. When a
  * roster carries over, a calm line naming members it doesn't cover, with a
  * small link to edit their days. Without `onAdd`, no control. It never
- * blocks generating.
+ * blocks generating. The week page and the month page both show it.
  */
 export const StartingContextCallout = ({
-	week,
+	previous,
 	enteredCount,
 	onAdd,
+	adding = false,
 	className,
 }: StartingContextCalloutProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const language = formattingLocale(i18n);
-	const previous = previousWeekOf(week);
 	const weekOf = (periodStart: string): string =>
 		new Intl.DateTimeFormat(language, {
 			day: "numeric",
@@ -45,7 +50,7 @@ export const StartingContextCallout = ({
 	const shiftsButton = (label: string): FunctionComponent =>
 		onAdd === undefined ? null : (
 			<span className="mt-3 block">
-				<Button size="sm" variant="secondary" onClick={onAdd}>
+				<Button disabled={adding} size="sm" variant="secondary" onClick={onAdd}>
 					{label}
 				</Button>
 			</span>
