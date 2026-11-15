@@ -1,6 +1,7 @@
 import type { TFunction } from "i18next";
 import type { ConstraintType } from "@/features/scheduling/constraints/api";
 import type { FindingNames } from "@/features/scheduling/roster/findings/findingNames";
+import { brokenRuleLabel } from "@/features/scheduling/rulesCheck/rosterRulesCheckWords";
 
 /*
  * The engine names a rule by its own rule name (`shift_demand_requirement`),
@@ -36,7 +37,9 @@ export type EngineRule = { name: string; constraintId: string | null };
 
 /**
  * What a rule is called on the roster: the schedule's constraint by its own
- * name, else its type, else the forecast, else its engine name made readable.
+ * name, else its type, else the forecast, else the roster check's label for
+ * a working-time rule, else "a working-time rule": an engine name is never
+ * shown.
  */
 export const ruleLabel = (
 	{ name, constraintId }: EngineRule,
@@ -50,5 +53,5 @@ export const ruleLabel = (
 	if (type !== undefined) return t(`scheduling.constraints.types.${type}`);
 	if (name === FORECAST_DEMAND_RULE)
 		return t("scheduling.findings.forecastDemand");
-	return humaniseIdentifier(name);
+	return brokenRuleLabel({ rule: name, constraintId, constraintName: null }, t);
 };

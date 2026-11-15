@@ -43,7 +43,8 @@ describe("ruleLabel", () => {
 		["shortest_part_shift", "Shortest part of a shift around leave"],
 		["most_call_backs_per_person", "Call-backs on a rest or off day"],
 		["timeblock_demand_coverage", "Forecast demand"],
-		["a_rule_added_later", "A rule added later"],
+		["most_minutes_a_day", "Most hours a day"],
+		["a_rule_added_later", "A working-time rule"],
 	])(
 		"given_theEngineRule_%s_withoutAListedConstraint_when_labelled_then_reads_%s",
 		(name, label) => {
