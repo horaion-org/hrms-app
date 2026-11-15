@@ -72,16 +72,17 @@ describe("FindingList", () => {
 		expect(screen.queryByRole("button")).toBeNull();
 	});
 
-	it("given_aConflict_when_listed_then_saysWhenHowShortAndWhichRule", () => {
+	it("given_aShiftLeftShort_when_listed_then_namesTheShiftWhenHowShortAndWhichRule", () => {
 		render(<FindingList findings={[morningCover]} names={names} />);
 
 		const item = screen.getByRole("listitem");
+		// The engine's own sentence repeats the line, so it is left out.
 		expect(item).toHaveTextContent(
-			"09:00 – 15:00•1 person shortFront Desk AM is one Front Desk Staff short.Rule: Morning cover"
+			/^Front Desk AM 09:00 – 15:00•1 Front Desk Staff shortRule: Morning cover/
 		);
 		expect(
-			screen.getByText("Front Desk AM is one Front Desk Staff short.").tagName
-		).toBe("Q");
+			screen.queryByText("Front Desk AM is one Front Desk Staff short.")
+		).toBeNull();
 	});
 
 	it("given_showDates_when_listed_then_eachFindingSaysItsDay", () => {
@@ -98,7 +99,9 @@ describe("FindingList", () => {
 		);
 
 		const [conflict, dated, undated] = screen.getAllByRole("listitem");
-		expect(conflict).toHaveTextContent("Sat, Oct 17, 09:00 – 15:00");
+		expect(conflict).toHaveTextContent(
+			"Sat, Oct 17, Front Desk AM 09:00 – 15:00"
+		);
 		expect(dated).toHaveTextContent("Sun, Oct 18Alone.");
 		expect(undated).toHaveTextContent(/^Tired\.$/);
 	});

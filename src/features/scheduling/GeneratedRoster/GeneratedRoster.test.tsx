@@ -423,7 +423,7 @@ describe("GeneratedRoster", () => {
 
 		const panel = screen.getByRole("complementary", { name: "Issues" });
 		expect(within(panel).getByText("Sat, Oct 17")).toBeVisible();
-		expect(panel).toHaveTextContent("1 person short");
+		expect(panel).toHaveTextContent("1 Front Desk Staff short");
 		expect(panel).not.toHaveTextContent(
 			"Ben Ong works more than five days in a row."
 		);
@@ -537,9 +537,10 @@ describe("GeneratedRoster", () => {
 			notifiesMembers: false,
 		};
 		/** The generation's own gap on Saturday, as the fixture's findings carry it. */
-		const GENERATED_GAP = "Front Desk AM is one Front Desk Staff short.";
-		const NEW_GAP =
-			"Swing Shift: got 0 of at least 1 employee with role Duty Manager";
+		// Each gap's line names its shift, its times and how short it is.
+		const GENERATED_GAP =
+			"Front Desk AM 09:00 – 15:00•1 Front Desk Staff short";
+		const NEW_GAP = "Swing Shift 14:00 – 22:00•1 Front Desk Staff short";
 
 		/** The roster for an editor, with Validate schedule in the given state. */
 		const showValidated = (validation: RosterValidation): void => {

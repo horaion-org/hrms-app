@@ -50,7 +50,18 @@ export const FindingList = ({
 		switch (finding.kind) {
 			case "conflict": {
 				const { conflict } = finding;
-				const time = formatTimeRange(conflictClockTimes(conflict), t);
+				const clock = formatTimeRange(conflictClockTimes(conflict), t);
+				// A shift left short says which shift and which job title; the engine's own sentence adds nothing to that.
+				const [onlyShift] = conflict.shiftUuids;
+				const shiftName =
+					conflict.shiftUuids.length === 1 && onlyShift
+						? names.shifts.get(onlyShift)
+						: undefined;
+				const time = shiftName
+					? t(`${key}.shiftAt`, { shift: shiftName, time: clock })
+					: clock;
+				const jobTitle = names.jobTitles.get(conflict.roleUuid);
+				const aboutAShift = conflict.employeeUuid === null;
 				const day = dayOf(conflict.date);
 				return (
 					<>
@@ -59,9 +70,14 @@ export const FindingList = ({
 							<span aria-hidden="true" className="mx-2">
 								•
 							</span>
-							{t(`${key}.missing`, { count: conflict.missing })}
+							{aboutAShift && jobTitle
+								? t(`${key}.missingAs`, {
+										count: conflict.missing,
+										jobTitle,
+									})
+								: t(`${key}.missing`, { count: conflict.missing })}
 						</p>
-						{conflict.message && (
+						{conflict.message && !aboutAShift && (
 							<q className="mt-1 block text-neutral-800">{conflict.message}</q>
 						)}
 						<p className="mt-1 text-neutral-700">

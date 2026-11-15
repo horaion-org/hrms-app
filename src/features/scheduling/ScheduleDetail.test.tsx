@@ -1074,7 +1074,9 @@ it("counts what the engine found on one Issues button and lists it in the side p
 	).toBeNull();
 	const roster = screen.getByRole("region", { name: "Roster notes (3)" });
 	expect(roster).toHaveTextContent("1 shift short, 1 person in all.");
-	expect(roster).toHaveTextContent("Sat, Oct 1709:00 – 15:00•1 person short");
+	expect(roster).toHaveTextContent(
+		"Sat, Oct 17Front Desk AM 09:00 – 15:00•1 Front Desk Staff short"
+	);
 	expect(roster).toHaveTextContent("Rule: Morning cover");
 	expect(roster).toHaveTextContent(
 		"Ben OngBen Ong works more than five days in a row."
