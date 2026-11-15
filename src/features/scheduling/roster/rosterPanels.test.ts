@@ -17,7 +17,7 @@ const t = ((key: string, values?: Record<string, unknown>) =>
 	values ? `${key}(${Object.values(values).join("|")})` : key) as TFunction;
 
 describe("startingPointItems", () => {
-	it("names each member who brought a run in, with the day Monday is for them", () => {
+	it("names each member who brought a run in, with how many days they worked in a row before", () => {
 		const rows = rosterFromAssignments(scheduleAssignmentsFixture(), {
 			start: "2026-10-12",
 			end: "2026-10-18",
@@ -27,7 +27,7 @@ describe("startingPointItems", () => {
 			startingPointItems(rows, new Map([["mp-1", 3]]), t).map(
 				(item) => item.lines
 			)
-		).toEqual([["Aisha Rahman: scheduling.startingContext.runBadge(4)"]]);
+		).toEqual([["scheduling.detail.workedInARow(Aisha Rahman|3)"]]);
 	});
 });
 

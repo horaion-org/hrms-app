@@ -3739,6 +3739,8 @@
 			"changesCount_other": "Cambiados a mano: {{count}} días",
 			"closePanel": "Cerrar {{title}}",
 			"startingPoints": "Cómo empezó cada persona la semana",
+			"workedInARow_one": "{{name}} ha trabajado {{count}} día seguido antes de esta semana.",
+			"workedInARow_other": "{{name}} ha trabajado {{count}} días seguidos antes de esta semana.",
 			"leaveAndCover": "Permisos y cobertura",
 			"daysToDecide": "Días por decidir",
 			"details": {
@@ -3968,8 +3970,6 @@
 			"invalid": "No se pudo guardar un día. Comprueba que su turno sigue en uso e inténtalo de nuevo.",
 			"notDraft": "Este horario ya se generó, así que su punto de partida ya no puede cambiar.",
 			"failed": "No se pudieron guardar los días. Inténtalo de nuevo.",
-			"runBadge_one": "Día {{count}} seguido",
-			"runBadge_other": "Día {{count}} seguido",
 			"stale_one": "Los días antes de esta semana de {{count}} persona cambiaron después de generar este horario. Se planificó con lo que se sabía entonces.",
 			"stale_other": "Los días antes de esta semana de {{count}} personas cambiaron después de generar este horario. Se planificó con lo que se sabía entonces.",
 			"opening": {

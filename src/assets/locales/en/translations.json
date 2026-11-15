@@ -3939,6 +3939,8 @@
 			"changesCount_other": "Changed by hand: {{count}} days",
 			"closePanel": "Close {{title}}",
 			"startingPoints": "Where people started the week",
+			"workedInARow_one": "{{name}} has worked {{count}} day in a row before this week.",
+			"workedInARow_other": "{{name}} has worked {{count}} days in a row before this week.",
 			"leaveAndCover": "Leave and cover",
 			"daysToDecide": "Days to decide",
 			"details": {
@@ -4168,8 +4170,6 @@
 			"invalid": "A day couldn’t be saved. Check that its shift is still in use, then try again.",
 			"notDraft": "This schedule has already been generated, so its starting point can no longer change.",
 			"failed": "The days couldn’t be saved. Try again.",
-			"runBadge_one": "Day {{count}} of a run",
-			"runBadge_other": "Day {{count}} of a run",
 			"stale_one": "{{count}} person’s days before this week changed after this schedule was generated. It was planned from what was known then.",
 			"stale_other": "{{count}} people’s days before this week changed after this schedule was generated. It was planned from what was known then.",
 			"opening": {

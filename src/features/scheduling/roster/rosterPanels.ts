@@ -101,7 +101,7 @@ export const daysToDecideItems = (
 		],
 	}));
 
-/** "Aisha Rahman: Day 4 of a run" for each member who brought working days into the period. */
+/** "Aisha Rahman has worked 3 days in a row before this week." for each member who brought working days into the period. */
 export const startingPointItems = (
 	rows: ReadonlyArray<RosterRow>,
 	startingRuns: ReadonlyMap<string, number> | undefined,
@@ -114,10 +114,12 @@ export const startingPointItems = (
 				: startingRuns?.get(row.memberProfileId);
 		if (run === undefined) return [];
 		const name = row.name ?? t("scheduling.detail.formerMember");
-		const dayOfRun = t("scheduling.startingContext.runBadge", {
-			count: run + 1,
-		});
-		return [{ key: row.key, lines: [`${name}: ${dayOfRun}`] }];
+		return [
+			{
+				key: row.key,
+				lines: [t("scheduling.detail.workedInARow", { name, count: run })],
+			},
+		];
 	});
 
 /**

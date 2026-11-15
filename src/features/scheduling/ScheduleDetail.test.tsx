@@ -1258,14 +1258,18 @@ it("lists where members started the week, and that it changed since, under Issue
 
 	const panel = screen.getByRole("complementary", { name: "Issues" });
 	// Three days worked before Monday make Monday the fourth day of the run.
-	expect(panel).toHaveTextContent("Aisha Rahman: Day 4 of a run");
-	expect(within(panel).getAllByText(/of a run/)).toHaveLength(1);
+	expect(panel).toHaveTextContent(
+		"Aisha Rahman has worked 3 days in a row before this week."
+	);
+	expect(within(panel).getAllByText(/in a row before this week/)).toHaveLength(
+		1
+	);
 	expect(
 		within(panel).getByText(
 			/^1 person’s days before this week changed after this schedule was generated\./
 		)
 	).toBeInTheDocument();
-	expect(within(roster).queryByText(/of a run/)).toBeNull();
+	expect(within(roster).queryByText(/in a row before this week/)).toBeNull();
 	// Only the note that the roster isn't published; findings stay in the Issues panel.
 	expect(screen.getByRole("note")).toHaveTextContent("Not published.");
 	expect(readsOf(calls, `${SCHEDULE}/starting-context`)).toHaveLength(1);
@@ -1283,7 +1287,7 @@ it("shows the roster without starting points when they can't be read", async () 
 
 	const roster = await screen.findByRole("table", { name: "Roster" });
 	expect(within(roster).getAllByRole("row")).toHaveLength(4);
-	expect(within(roster).queryByText(/of a run/)).toBeNull();
+	expect(within(roster).queryByText(/in a row before this week/)).toBeNull();
 	expect(
 		screen.queryByText(/changed after this schedule was generated/)
 	).toBeNull();

@@ -44,7 +44,14 @@ export const WithTitledSection: Story = {
 			{
 				key: "startingPoints",
 				title: "Where people started the week",
-				items: [{ key: "m-1", lines: ["Aisha Rahman: Day 4 of a run"] }],
+				items: [
+					{
+						key: "m-1",
+						lines: [
+							"Aisha Rahman has worked 3 days in a row before this week.",
+						],
+					},
+				],
 			},
 		],
 	},
