@@ -6,6 +6,7 @@ import { Quote } from "@/components/ui/Quote";
 import { Skeleton } from "@/components/ui/Skeleton";
 import type { RepairOption } from "@/features/scheduling/cover/engineRepairApi";
 import { repairCells } from "@/features/scheduling/cover/engineRepairChange";
+import { NotAssignedList } from "@/features/scheduling/cover/NotAssignedList";
 import {
 	leftShortLine,
 	moveLine,
@@ -98,8 +99,9 @@ const OptionItem = ({
  * working-time rules were not checked: once above the list when it holds for
  * every option, otherwise on each option it holds for. A feasible option whose
  * change Find cover's Apply states exactly (`repairCells`) offers to review
- * it there; any other says it has to be made by hand. A refusal says why, and
- * a failure offers to ask again.
+ * it there; any other says it has to be made by hand. Under them, why nobody
+ * else was assigned (`NotAssignedList`). A refusal says why, and a failure
+ * offers to ask again.
  */
 export const EngineRepairOptions = ({
 	repair,
@@ -141,7 +143,12 @@ export const EngineRepairOptions = ({
 			);
 		default: {
 			if (repair.options.length === 0)
-				return <p className="text-neutral-800">{t(`${key}.none`)}</p>;
+				return (
+					<div className="flex flex-col gap-3">
+						<p className="text-neutral-800">{t(`${key}.none`)}</p>
+						<NotAssignedList people={repair.notAssigned} />
+					</div>
+				);
 			// When no option was checked, as on tonight's engine, one note heads the list for all of them.
 			const noneChecked = repair.options.every(
 				(option) => !option.workingTimeRulesChecked
@@ -163,6 +170,7 @@ export const EngineRepairOptions = ({
 							/>
 						))}
 					</ul>
+					<NotAssignedList people={repair.notAssigned} />
 				</div>
 			);
 		}

@@ -4472,7 +4472,24 @@
 				},
 				"review": "Review this change",
 				"byHand": "The app can’t apply this one: make it by hand on the roster.",
-				"noneChecked": "None of these options is checked against working-time rules: hours a day, overtime a month, days a week and leave. Check before you change the roster."
+				"noneChecked": "None of these options is checked against working-time rules: hours a day, overtime a month, days a week and leave. Check before you change the roster.",
+				"whyNot": {
+					"title": "Why nobody was assigned",
+					"couldTake": "Could take this shift",
+					"nobodyElse": "Nobody else holds this shift’s job title.",
+					"reason": {
+						"fixed_day_no_call_back": "Has a fixed rest or off day that day, and may not be called back.",
+						"on_leave": "On leave that day.",
+						"outside_availability": "Not available for this shift’s hours.",
+						"too_little_shift_left": "Leave that day leaves too little of the shift to work.",
+						"works_another_shift": "Already on another shift that day.",
+						"breaks_unnamed_rule": "Would break a working-time rule.",
+						"not_checked": "Not checked in time."
+					},
+					"breaksRule": "Would break: {{rule}}",
+					"aWorkingTimeRule": "a working-time rule",
+					"otherReason": "Cannot take this shift."
+				}
 			}
 		},
 		"reach": {

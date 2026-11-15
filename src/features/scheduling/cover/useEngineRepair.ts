@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import type { CoverGapRequest } from "@/features/scheduling/cover/api";
 import {
+	type NotAssignedPerson,
 	repairOptionsQuery,
 	type RepairOption,
 } from "@/features/scheduling/cover/engineRepairApi";
@@ -15,7 +16,12 @@ import type { RosterChangeTarget } from "@/features/scheduling/rosterChanges/use
 /** Where the engine's section stands: not asked yet, asking, answered, or refused with why. */
 export type EngineRepairState =
 	| { status: "idle" | "loading" }
-	| { status: "ready"; options: Array<RepairOption> }
+	| {
+			status: "ready";
+			options: Array<RepairOption>;
+			/** Why each person with the gap's job title was not assigned; null or left out when not known. */
+			notAssigned?: Array<NotAssignedPerson> | null;
+	  }
 	| { status: "refused"; refusal: RepairRefusal };
 
 /**
@@ -49,5 +55,10 @@ export const useEngineRepair = (
 		return { status: "refused", refusal: repairRefusalOf(query.error), ask };
 	if (query.data === undefined || query.isFetching)
 		return { status: "loading", ask };
-	return { status: "ready", options: optionsInOrder(query.data.options), ask };
+	return {
+		status: "ready",
+		options: optionsInOrder(query.data.options),
+		notAssigned: query.data.notAssigned,
+		ask,
+	};
 };
