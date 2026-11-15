@@ -109,7 +109,7 @@ describe("ShiftTable", () => {
 			"Time range",
 			"Paid hours",
 			"Days applied to",
-			"Role count",
+			"Job titles",
 		]);
 		const frontDesk = screen.getByRole("row", { name: /Front Desk AM/ });
 		expect(frontDesk).toHaveTextContent("09:00 – 15:00");

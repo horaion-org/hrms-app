@@ -105,7 +105,7 @@ describe("ShiftDialog", () => {
 			"Choose a time.",
 			"Choose a time.",
 			"Choose at least one day.",
-			"Choose at least one role.",
+			"Choose at least one job title.",
 		]);
 		expect(dialog).toBeVisible();
 		expect(onSave).not.toHaveBeenCalled();
@@ -123,7 +123,7 @@ describe("ShiftDialog", () => {
 		await pick(user, /Start time/, "09:00");
 		await pick(user, /End time/, "15:00");
 		await pick(user, /Days applied to/, "Monday", "Friday");
-		await pick(user, /Roles applied to/, "Front Desk Lead");
+		await pick(user, /Job titles that can work it/, "Front Desk Lead");
 		await user.click(screen.getByRole("button", { name: "Save" }));
 
 		await waitFor(() => {
@@ -321,7 +321,7 @@ describe("ShiftDialog", () => {
 		expect(screen.getByRole("radio", { name: "Orange" })).toBeChecked();
 		expect(trigger(/Start time/)).toHaveTextContent("09:00");
 		expect(trigger(/Days applied to/)).toHaveTextContent("5 selected");
-		expect(trigger(/Roles applied to/)).toHaveTextContent("2 selected");
+		expect(trigger(/Job titles that can work it/)).toHaveTextContent("2 selected");
 
 		await user.type(screen.getByLabelText("Shift name"), " Late");
 		await user.click(screen.getByRole("radio", { name: "Olive" }));
@@ -365,10 +365,10 @@ describe("ShiftDialog", () => {
 
 		expect(
 			screen.getByText(
-				"You don’t have permission to see this department’s roles."
+				"You don’t have permission to see this department’s job titles."
 			)
 		).toBeVisible();
-		expect(trigger(/Roles applied to/)).toBeDisabled();
+		expect(trigger(/Job titles that can work it/)).toBeDisabled();
 	});
 
 	it("given_noActiveRoles_when_rendered_then_saysWhereToCreateOne", async () => {
@@ -448,7 +448,7 @@ describe("ShiftDialog with a Department field", () => {
 
 		expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
 		expect(screen.getByText("Choose a department first.")).toBeVisible();
-		expect(trigger(/Roles applied to/)).toBeDisabled();
+		expect(trigger(/Job titles that can work it/)).toBeDisabled();
 
 		await user.click(trigger(/^Department/));
 		await user.click(screen.getByRole("option", { name: /Front Office/ }));
@@ -460,12 +460,12 @@ describe("ShiftDialog with a Department field", () => {
 		renderInCompany(<ChoosingDialog initial="d-1" onSave={vi.fn()} />);
 		await screen.findByRole("dialog", { name: "Add shift" });
 
-		await pick(user, /Roles applied to/, "Front Desk Lead");
-		expect(trigger(/Roles applied to/)).toHaveTextContent("Front Desk Lead");
+		await pick(user, /Job titles that can work it/, "Front Desk Lead");
+		expect(trigger(/Job titles that can work it/)).toHaveTextContent("Front Desk Lead");
 		await user.click(trigger(/^Department/));
 		await user.click(screen.getByRole("option", { name: /Kitchen/ }));
 
-		expect(trigger(/Roles applied to/)).not.toHaveTextContent(
+		expect(trigger(/Job titles that can work it/)).not.toHaveTextContent(
 			"Front Desk Lead"
 		);
 	});

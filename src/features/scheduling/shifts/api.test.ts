@@ -255,7 +255,7 @@ describe("shift refusals", () => {
 			).fields
 		).toEqual({
 			jobTitleIds:
-				"A chosen role isn’t an active job title of this department. Choose again.",
+				"A chosen job title isn’t an active job title of this department. Choose again.",
 		});
 	});
 
