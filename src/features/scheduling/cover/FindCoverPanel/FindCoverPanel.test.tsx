@@ -7,8 +7,11 @@ import { configureApiClient, resetApiClient } from "@/common/api-client";
 import { envelope, stubApi } from "@/common/testing/stubApi";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import {
+	feasibleRepair,
 	infeasibleRepair,
+	reassignMove,
 	repairOptionsFixture,
+	stretchMove,
 } from "@/features/scheduling/cover/engineRepairFixtures";
 import { coverOptionsFixture } from "@/features/scheduling/cover/fixtures";
 import { coverOfferFixture } from "@/features/scheduling/coverOffers/fixtures";
@@ -217,6 +220,84 @@ describe("FindCoverPanel", () => {
 		expect(calls.find((call) => call.path === CHANGES)?.body).toMatchObject({
 			cells: coverOptionsFixture().options[0]!.cells,
 		});
+	});
+
+	it("given_anEngineOption_when_reviewedAndApplied_then_itsCellsGoThroughFindCoversOwnPreviewAndApply", async () => {
+		const calls = stubApi({
+			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
+			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
+			[`POST ${REPAIR_OPTIONS}`]: answer(
+				repairOptionsFixture([feasibleRepair([reassignMove()])])
+			),
+			[`POST ${CHANGES}`]: {
+				status: 201,
+				body: envelope(rosterChangeFixture()),
+			},
+		});
+		const { onApplied } = show();
+		const user = userEvent.setup();
+		await screen.findByRole("radio", { name: "Aisha Rahman" });
+		await user.click(screen.getByRole("button", { name: "Ask the engine" }));
+
+		await user.click(
+			await screen.findByRole("button", { name: "Review this change" })
+		);
+
+		const engineCells = [
+			{
+				membershipId: "m-2",
+				day: "2026-10-17",
+				kind: "WORK",
+				shiftId: reassignMove().shiftId,
+			},
+		];
+		await waitFor(() => {
+			expect(
+				calls.filter((call) => call.path === PREVIEW).slice(-1)[0]?.body
+			).toMatchObject({ cells: engineCells });
+		});
+		expect(
+			screen.getByRole("radio", { name: "Aisha Rahman" })
+		).not.toBeChecked();
+		// The engine's warning stays in the review, beside the option's own.
+		expect(
+			screen.getAllByText(/^Not checked against working-time rules/)
+		).toHaveLength(2);
+		const apply = screen.getByRole("button", { name: "Apply change" });
+		await waitFor(() => {
+			expect(apply).toBeEnabled();
+		});
+		await user.click(apply);
+
+		await waitFor(() => {
+			expect(onApplied).toHaveBeenCalled();
+		});
+		expect(calls.find((call) => call.path === CHANGES)?.body).toMatchObject({
+			cells: engineCells,
+		});
+	});
+
+	it("given_aStretchOrAPublishedRoster_when_listed_then_madeByHandWithNothingToReview", async () => {
+		stubApi({
+			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
+			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
+			[`POST ${REPAIR_OPTIONS}`]: answer(
+				repairOptionsFixture([feasibleRepair([stretchMove()])])
+			),
+		});
+		show();
+		const user = userEvent.setup();
+		await screen.findByRole("radio", { name: "Aisha Rahman" });
+		await user.click(screen.getByRole("button", { name: "Ask the engine" }));
+
+		expect(
+			await screen.findByText(
+				"The app can’t apply this one: make it by hand on the roster."
+			)
+		).toBeVisible();
+		expect(
+			screen.queryByRole("button", { name: "Review this change" })
+		).toBeNull();
 	});
 
 	it("given_aPublishedRoster_when_shown_then_sendOfferAndTheyAgreedInPlaceOfApply", async () => {

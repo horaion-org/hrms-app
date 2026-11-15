@@ -88,7 +88,7 @@ export const FindCoverPanel = ({
 		options && (
 			<CoverOptionList
 				radioName={radioName}
-				selected={selected?.membershipId}
+				selected={panel.repairChosen ? undefined : selected?.membershipId}
 				unavailableOpen={unavailableOpen}
 				options={options.options.map((option) => ({
 					membershipId: option.membershipId,
@@ -151,7 +151,7 @@ export const FindCoverPanel = ({
 	};
 
 	const reviewContent = (): ReactNode => {
-		if (!selected) return null;
+		if (!selected && !panel.repairChosen) return null;
 		if (offer && offerOut)
 			return (
 				<CoverOfferSent
@@ -165,6 +165,11 @@ export const FindCoverPanel = ({
 			);
 		return (
 			<div className="flex flex-col gap-3">
+				{panel.repairChosen && (
+					<Callout tone="warning">
+						{t("scheduling.cover.engine.notChecked")}
+					</Callout>
+				)}
 				<RosterChangeReview
 					names={review.names}
 					notifiesMembers={offer !== undefined}
@@ -241,7 +246,7 @@ export const FindCoverPanel = ({
 		{ key: "status", content: statusContent[status]() },
 		{
 			key: "notChecked",
-			content: selected && (
+			content: selected && !panel.repairChosen && (
 				<Callout tone="info">
 					<span className="block">{t(`${key}.notChecked`)}</span>
 					<span className="mt-1 block font-normal">
@@ -250,14 +255,19 @@ export const FindCoverPanel = ({
 				</Callout>
 			),
 		},
-		{ key: "review", content: reviewContent() },
 		{
 			key: "engine",
 			title: t("scheduling.cover.engine.title"),
 			content: status !== "closed" && (
-				<EngineRepairOptions names={names} repair={engineRepair} />
+				<EngineRepairOptions
+					names={names}
+					repair={engineRepair}
+					// A published roster's changes go out as offers, one person at a time: made by hand there.
+					onReview={input.coverOffers ? undefined : panel.chooseRepair}
+				/>
 			),
 		},
+		{ key: "review", content: reviewContent() },
 	];
 
 	return (
