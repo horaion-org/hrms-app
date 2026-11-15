@@ -19,6 +19,7 @@ import {
 	rosterChangePreviewQuery,
 	type RosterChange,
 	type RosterChangeBody,
+	type RosterChangeCell,
 	type RosterChangePreview,
 } from "@/features/scheduling/rosterChanges/api";
 import type { CheckNames } from "@/features/scheduling/rosterChanges/checkSentence";
@@ -76,6 +77,10 @@ export type CoverPanel = {
 	/** The chosen option; the first (Suggested) until another is chosen. */
 	selected: CoverOption | undefined;
 	select: (membershipId: string) => void;
+	/** Whether the change under review is one of the scheduling engine's options instead. */
+	repairChosen: boolean;
+	/** Reviews an engine option's change, as Find cover's cells, in place of the chosen option. */
+	chooseRepair: (cells: Array<RosterChangeCell>) => void;
 	/** After the roster moved, reads it again so the list is made afresh; otherwise asks again. */
 	findAgain: () => void;
 	review: {
@@ -117,7 +122,9 @@ const statusOf = (
  * gap, the chosen option (the first until another is chosen), its preview
  * through the roster-change preview (the grid outlines what it touches),
  * and Apply on a draft or the offer actions on a published roster, exactly
- * as the day editor does it (`useRosterCellPanel`, `useCellCoverOffer`).
+ * as the day editor does it (`useRosterCellPanel`, `useCellCoverOffer`). An
+ * engine option chosen (`chooseRepair`) takes the chosen option's place in
+ * the same preview and Apply, and offers nothing.
  */
 export const useCoverPanel = ({
 	target,
@@ -138,6 +145,7 @@ export const useCoverPanel = ({
 	const [chosen, setChosen] = useState<string>();
 	const [editedRemark, setEditedRemark] = useState<string>();
 	const [tickedFor, setTickedFor] = useState<string | null>(null);
+	const [repairCells, setRepairCells] = useState<Array<RosterChangeCell>>();
 
 	const list = useQuery(coverOptionsQuery(target, gap, revision));
 	const options = list.data;
@@ -146,9 +154,10 @@ export const useCoverPanel = ({
 	const selected =
 		shown.find((option) => option.membershipId === chosen) ?? shown[0];
 
-	const body: RosterChangeBody | undefined = selected && {
+	const chosenCells = repairCells ?? selected?.cells;
+	const body: RosterChangeBody | undefined = chosenCells && {
 		expectedRevision: revision,
-		cells: selected.cells,
+		cells: chosenCells,
 	};
 	const preview = useQuery(
 		rosterChangePreviewQuery(
@@ -185,11 +194,11 @@ export const useCoverPanel = ({
 		published: coverOffers !== undefined,
 		assignment: candidateRow ?? dayRow,
 		choice:
-			candidateRow && selected
+			candidateRow && selected && !repairCells
 				? { kind: "shift", shiftId: gap.shiftId }
 				: undefined,
 		leaveMove: false,
-		body,
+		body: repairCells ? undefined : body,
 		checksFingerprint: fingerprint,
 		remark,
 		onChecksChanged: () => {
@@ -215,15 +224,26 @@ export const useCoverPanel = ({
 		? rosterChangeRefusal(preview.error)
 		: undefined;
 
+	/** A new choice starts its review afresh. */
+	const startReview = (): void => {
+		setTickedFor(null);
+		apply.reset();
+		offer.reset();
+	};
+
 	return {
 		status,
 		options,
 		selected,
 		select: (membershipId): void => {
 			setChosen(membershipId);
-			setTickedFor(null);
-			apply.reset();
-			offer.reset();
+			setRepairCells(undefined);
+			startReview();
+		},
+		repairChosen: repairCells !== undefined,
+		chooseRepair: (cells): void => {
+			setRepairCells(cells);
+			startReview();
 		},
 		findAgain: (): void => {
 			if (status === "rosterMoved") refreshRoster();
