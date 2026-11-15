@@ -37,10 +37,12 @@ const moveSchema = z.object({
 	/** Null for someone the roster no longer names. */
 	membershipId: z.string().nullable(),
 	displayName: z.string().nullable(),
-	/** Where a move between shifts leaves; null for the other kinds. */
+	/** Where a move between shifts leaves (a frozen shift's id and name); null for the other kinds. */
+	fromShiftId: z.string().nullable(),
 	fromShiftName: z.string().nullable(),
 	fromDate: z.string().nullable(),
-	/** The shift worked after the move, and its day. */
+	/** The frozen shift worked after the move, its name, and its day. */
+	shiftId: z.string().nullable(),
 	shiftName: z.string().nullable(),
 	date: z.string().nullable(),
 	period: spanSchema,
