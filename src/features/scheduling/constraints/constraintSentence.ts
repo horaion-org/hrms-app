@@ -85,6 +85,15 @@ const FIXED_FIRMNESS: Partial<Record<ConstraintType, ConstraintRequirement>> = {
 	MAX_OVERTIME_HOURS_PER_MONTH: "MUST",
 };
 
+/** The types whose sentence is one number, and the field that number is read from. */
+const COUNTED_FIELD = {
+	REST_BETWEEN_SHIFTS: "REST_HOURS",
+	MAX_WORK_HOURS_PER_DAY: "WORK_HOURS_A_DAY",
+	MAX_OVERTIME_HOURS_PER_MONTH: "OVERTIME_HOURS_A_MONTH",
+	SHORTEST_PART_SHIFT: "PART_SHIFT_MINUTES",
+	MAX_CALL_BACKS_PER_PERSON: "CALL_BACKS",
+} as const satisfies Partial<Record<ConstraintType, ConstraintField>>;
+
 const valuesOf = (
 	constraint: SentenceSource,
 	field: ConstraintField
@@ -160,10 +169,14 @@ export const sentencePartsOf = (
 		case "AVOID_DAYS_OFF_ON":
 			return [{ i18nKey: `${SENTENCES}.${constraint.type}`, count: 1 }];
 		case "REST_BETWEEN_SHIFTS":
+		case "MAX_WORK_HOURS_PER_DAY":
+		case "MAX_OVERTIME_HOURS_PER_MONTH":
+		case "SHORTEST_PART_SHIFT":
+		case "MAX_CALL_BACKS_PER_PERSON":
 			return [
 				{
 					i18nKey: `${SENTENCES}.${constraint.type}`,
-					count: countOf(constraint, "REST_HOURS"),
+					count: countOf(constraint, COUNTED_FIELD[constraint.type]),
 				},
 			];
 		case "MAX_DAYS_WITHOUT_DAY_TYPES":
@@ -178,34 +191,6 @@ export const sentencePartsOf = (
 				{
 					i18nKey: `${SENTENCES}.${constraint.type}.${coveredGroupOf(constraint)}.${weeklyComparisonOf(constraint)}`,
 					count: countOf(constraint, "DAY_TYPE_COUNT"),
-				},
-			];
-		case "MAX_WORK_HOURS_PER_DAY":
-			return [
-				{
-					i18nKey: `${SENTENCES}.${constraint.type}`,
-					count: countOf(constraint, "WORK_HOURS_A_DAY"),
-				},
-			];
-		case "MAX_OVERTIME_HOURS_PER_MONTH":
-			return [
-				{
-					i18nKey: `${SENTENCES}.${constraint.type}`,
-					count: countOf(constraint, "OVERTIME_HOURS_A_MONTH"),
-				},
-			];
-		case "SHORTEST_PART_SHIFT":
-			return [
-				{
-					i18nKey: `${SENTENCES}.${constraint.type}`,
-					count: countOf(constraint, "PART_SHIFT_MINUTES"),
-				},
-			];
-		case "MAX_CALL_BACKS_PER_PERSON":
-			return [
-				{
-					i18nKey: `${SENTENCES}.${constraint.type}`,
-					count: countOf(constraint, "CALL_BACKS"),
 				},
 			];
 		case "PAY_RATES":
