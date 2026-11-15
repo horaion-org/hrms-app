@@ -4239,7 +4239,35 @@
 				"nobody": "Nadie de este cuadrante puede cubrir {{shift}} el {{day}}.",
 				"notChecked": "Aún no se ha comprobado con las reglas de programación."
 			},
-			"gapWithoutRoles": "{{shift}} · {{day}} · {{time}}"
+			"gapWithoutRoles": "{{shift}} · {{day}} · {{time}}",
+			"engine": {
+				"title": "Del motor de planificación",
+				"intro": "El motor puede buscar su propia forma de cubrir este hueco. Tarda unos segundos.",
+				"ask": "Preguntar al motor",
+				"loading": "Preguntando al motor…",
+				"none": "El motor no encontró forma de cubrirlo.",
+				"fills": "Cubre el hueco",
+				"cannotFill": "No puede cubrir el hueco",
+				"reason": "El motivo del motor",
+				"warnings": "El motor también indica",
+				"notChecked": "No se ha comprobado con las reglas de tiempo de trabajo: horas al día, horas extra al mes, días a la semana y permisos. Compruébalo antes de cambiar el cuadrante.",
+				"unknownShift": "un turno",
+				"leftShort_one": "Aún falta {{count}} {{times}}",
+				"leftShort_other": "Aún faltan {{count}} {{times}}",
+				"move": {
+					"REASSIGN": "Mover a {{name}} de {{fromShift}} {{fromDay}} a {{shift}} {{day}}",
+					"CALL_IN": "Llamar a {{name}} para {{shift}} {{day}}",
+					"OVERTIME_EXTENSION": "Alargar {{shift}} de {{name}} {{hours}} h",
+					"UNKNOWN": "Un cambio que la aplicación aún no sabe describir"
+				},
+				"refusal": {
+					"notFromEngine": "El motor no informó de este hueco, así que no tiene nada que reparar. Puede faltar alguien por un permiso.",
+					"expired": "El motor ya no guarda la generación de esta semana. Genera la semana de nuevo para preguntarle.",
+					"notConnected": "El motor de planificación no está conectado aquí.",
+					"rosterMoved": "El cuadrante cambió desde que abriste esto. Busca cobertura de nuevo para preguntar al motor.",
+					"failed": "El motor no pudo responder."
+				}
+			}
 		},
 		"reach": {
 			"editShift_one": "Al guardar, este turno cambia para {{department}}: los horarios nuevos y {{count}} borrador que lo usa. Los horarios generados y publicados conservan su propia copia.",

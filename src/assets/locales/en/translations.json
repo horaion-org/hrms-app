@@ -4439,7 +4439,35 @@
 				"nobody": "Nobody on this roster can cover {{shift}} on {{day}}.",
 				"notChecked": "Not checked against the scheduling rules yet."
 			},
-			"gapWithoutRoles": "{{shift}} · {{day}} · {{time}}"
+			"gapWithoutRoles": "{{shift}} · {{day}} · {{time}}",
+			"engine": {
+				"title": "From the scheduling engine",
+				"intro": "The engine can look for its own way to fill this gap. It takes a few seconds.",
+				"ask": "Ask the engine",
+				"loading": "Asking the engine…",
+				"none": "The engine found no way to fill this.",
+				"fills": "Fills the gap",
+				"cannotFill": "Can’t fill the gap",
+				"reason": "The engine’s reason",
+				"warnings": "The engine also notes",
+				"notChecked": "Not checked against working-time rules: hours a day, overtime a month, days a week and leave. Check before you change the roster.",
+				"unknownShift": "a shift",
+				"leftShort_one": "Still {{count}} short {{times}}",
+				"leftShort_other": "Still {{count}} short {{times}}",
+				"move": {
+					"REASSIGN": "Move {{name}} from {{fromShift}} {{fromDay}} to {{shift}} {{day}}",
+					"CALL_IN": "Call in {{name}} for {{shift}} {{day}}",
+					"OVERTIME_EXTENSION": "Extend {{name}}’s {{shift}} by {{hours}} h",
+					"UNKNOWN": "A change the app can’t describe yet"
+				},
+				"refusal": {
+					"notFromEngine": "The engine didn’t report this gap, so it has nothing to repair. It may be short because of leave.",
+					"expired": "The engine no longer holds this week’s generation. Generate the week again to ask it.",
+					"notConnected": "The scheduling engine isn’t connected here.",
+					"rosterMoved": "The roster changed since you opened this. Find cover again to ask the engine.",
+					"failed": "The engine couldn’t answer."
+				}
+			}
 		},
 		"reach": {
 			"editShift_one": "Saving changes this shift for {{department}}: new schedules and {{count}} draft that uses it. Generated and published schedules keep their own copy.",
