@@ -58,3 +58,11 @@ export const strongestTone = (findings: ReadonlyArray<Finding>): FindingTone =>
 				TONE_STRENGTH[tone] > TONE_STRENGTH[strongest] ? tone : strongest,
 			"info"
 		);
+
+/** How many people a finding stands for: a shift left short counts each person it is short; anything else counts once. */
+export const findingWeight = (finding: Finding): number =>
+	finding.kind === "conflict" ? Math.max(finding.conflict.missing, 1) : 1;
+
+/** Whether a diagnostic only explains the roster (the engine's "info"): nothing to fix. */
+export const isInfoDiagnostic = (diagnostic: FindingsDiagnostic): boolean =>
+	findingTone({ kind: "diagnostic", diagnostic }) === "info";

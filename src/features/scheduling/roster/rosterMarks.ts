@@ -2,6 +2,7 @@ import type { TFunction } from "i18next";
 import { timeRangeText } from "@/features/leave/dayPortion";
 import { dayTypeInSentence } from "@/features/scheduling/dayTypes";
 import {
+	findingWeight,
 	strongestTone,
 	type Finding,
 } from "@/features/scheduling/roster/findings/finding";
@@ -234,12 +235,30 @@ export const rowIssueCount = (
 	);
 };
 
-/** A day header's count: what the engine left about the day as a whole (no member's cell). */
+/**
+ * A day header's count: what the engine left about the day as a whole (no
+ * member's cell). When all of it is shifts left short (`peopleShort`), it
+ * counts the people they are short, so filling half of a shift lowers the
+ * number; otherwise each thing to look at counts once.
+ */
 export const dayIssueCount = (
 	placed: GridFindings | undefined,
 	date: string
-): HeaderCount | undefined =>
-	headerCount(placed?.byDate.get(date) ?? NO_FINDINGS, 0);
+): (HeaderCount & { peopleShort: boolean }) | undefined => {
+	const findings = placed?.byDate.get(date) ?? NO_FINDINGS;
+	const counted = headerCount(findings, 0);
+	if (!counted) return undefined;
+	const peopleShort = findings.every((finding) => finding.kind === "conflict");
+	if (!peopleShort) return { ...counted, peopleShort };
+	return {
+		...counted,
+		count: findings.reduce(
+			(total, finding) => total + findingWeight(finding),
+			0
+		),
+		peopleShort,
+	};
+};
 
 /** Whether a tile shows its role line: not when empty or when it repeats the member's job title in the row header. */
 export const showsRole = (role: string, jobTitle: string | null): boolean =>

@@ -1066,12 +1066,14 @@ it("counts what the engine found on one Issues button and lists it in the side p
 	expect(setup).toHaveTextContent(
 		"No one in this schedule can take Breakfast Prep."
 	);
+	// The app's own sentence stands alone; the engine's is not repeated under it.
 	expect(
-		within(setup).getByText(
+		within(setup).queryByText(
 			"Shift Breakfast Prep: no employee holds an eligible role."
-		).tagName
-	).toBe("Q");
+		)
+	).toBeNull();
 	const roster = screen.getByRole("region", { name: "Roster notes (3)" });
+	expect(roster).toHaveTextContent("1 shift short, 1 person in all.");
 	expect(roster).toHaveTextContent("Sat, Oct 1709:00 – 15:00•1 person short");
 	expect(roster).toHaveTextContent("Rule: Morning cover");
 	expect(roster).toHaveTextContent(
@@ -1162,7 +1164,7 @@ it("counts findings in the row and day headers, opens them in Issues, and says a
 	const roster = await screen.findByRole("table", { name: "Roster" });
 	expect(
 		within(roster).getByRole("button", {
-			name: "Saturday, October 17: 1 to look at. Show in Issues",
+			name: "Saturday, October 17: 1 person short. Show in Issues",
 		})
 	).toBeInTheDocument();
 	expect(within(roster).queryByRole("button", { name: /^Sunday/ })).toBeNull();

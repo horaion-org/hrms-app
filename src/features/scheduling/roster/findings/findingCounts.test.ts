@@ -10,14 +10,15 @@ import {
 } from "@/features/scheduling/schedules/fixtures";
 
 describe("findingCounts", () => {
-	it("given_findings_when_counted_then_countsEachConflictAndMessageAndEachDiagnostic", () => {
+	it("given_findings_when_counted_then_countsEachConflictAndMessageAndEachDiagnosticButAnInfoOne", () => {
 		expect(findingCounts(generationFindingsFixture())).toEqual({
 			roster: 3,
 			setup: 1,
 		});
+		// Its fifth diagnostic (a shift too short) is info: good to know, nothing to fix.
 		expect(findingCounts(findingsOfEveryKindFixture())).toEqual({
 			roster: 8,
-			setup: 5,
+			setup: 4,
 		});
 	});
 

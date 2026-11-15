@@ -3995,6 +3995,12 @@
 			"setupTitle": "Setup issues ({{count}})",
 			"setupHint": "Fix these in the schedule’s setup; generating again with the same setup won’t clear them.",
 			"rosterTitle": "Roster notes ({{count}})",
+			"shortSummary_one": "{{count}} shift short, {{people}} in all.",
+			"shortSummary_other": "{{count}} shifts short, {{people}} in all.",
+			"people_one": "{{count}} person",
+			"people_other": "{{count}} people",
+			"goodToKnowTitle": "Good to know ({{count}})",
+			"goodToKnowHint": "Nothing to fix: these explain why the roster looks as it does.",
 			"groupTitle": "{{label}} · {{count}}",
 			"wholeRoster": "Whole roster",
 			"when": "{{day}}, {{time}}",
@@ -4036,6 +4042,10 @@
 					"sentence_one": "Only {{count}} of the {{lookBack}} days before this schedule is known for {{member}}, so the limit on days in a row is counted from what is known.",
 					"sentence_other": "Only {{count}} of the {{lookBack}} days before this schedule are known for {{member}}, so the limit on days in a row is counted from what is known.",
 					"wholeSchedule": "No days before this schedule are known, so the limit on days in a row is counted from its first day."
+				},
+				"PRIOR_REST_BLOCKS_SHIFTS": {
+					"label": "Rest carried in from before",
+					"sentence": "{{member}} can only start from {{time}} on {{day}}, because of rest after their last shift, which ended {{endDay}} at {{endTime}}."
 				}
 			},
 			"marker": {
@@ -4043,6 +4053,8 @@
 				"row_other": "{{name}}: {{count}} to look at. Show in Issues",
 				"date_one": "{{day}}: {{count}} to look at. Show in Issues",
 				"date_other": "{{day}}: {{count}} to look at. Show in Issues",
+				"dateShort_one": "{{day}}: {{count}} person short. Show in Issues",
+				"dateShort_other": "{{day}}: {{count}} people short. Show in Issues",
 				"tileLabel_one": "{{label}}, needs a look: {{count}}",
 				"tileLabel_other": "{{label}}, needs a look: {{count}}",
 				"roster": "Roster",

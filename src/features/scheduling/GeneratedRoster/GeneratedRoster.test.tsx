@@ -417,7 +417,7 @@ describe("GeneratedRoster", () => {
 
 		await user.click(
 			screen.getByRole("button", {
-				name: "Saturday, October 17: 1 to look at. Show in Issues",
+				name: "Saturday, October 17: 1 person short. Show in Issues",
 			})
 		);
 

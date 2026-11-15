@@ -338,10 +338,12 @@ export const RosterGrid = ({
 										{headerCount(
 											count,
 											{ kind: "date", date },
-											t("scheduling.findings.marker.date", {
-												count: count?.count,
-												day: dayName(date),
-											})
+											t(
+												count?.peopleShort
+													? "scheduling.findings.marker.dateShort"
+													: "scheduling.findings.marker.date",
+												{ count: count?.count, day: dayName(date) }
+											)
 										)}
 									</span>
 									<span className="mt-1 block text-xs font-normal max-md:ml-1.5 max-md:inline">

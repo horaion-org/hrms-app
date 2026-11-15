@@ -103,7 +103,7 @@ describe("FindingList", () => {
 		expect(undated).toHaveTextContent(/^Tired\.$/);
 	});
 
-	it("given_diagnostics_when_listed_then_theAppsSentenceAndTheEnginesWordsQuoted", () => {
+	it("given_diagnostics_when_listed_then_theAppsSentenceAloneOrElseTheEnginesWordsQuoted", () => {
 		const dead = findings.diagnostics.find(
 			({ code }) => code === "DEAD_SHIFT"
 		)!;
@@ -122,7 +122,7 @@ describe("FindingList", () => {
 
 		const [known, other] = screen.getAllByRole("listitem");
 		expect(known).toHaveTextContent(
-			"No one in this schedule can take Breakfast Prep.Shift Breakfast Prep: no employee holds an eligible role."
+			/^No one in this schedule can take Breakfast Prep\.$/
 		);
 		expect(other).toHaveTextContent(
 			/^Shift Lunch Rush is shorter than one block\.$/

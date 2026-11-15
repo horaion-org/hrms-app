@@ -36,5 +36,5 @@ const onDayHeaderGrey: Decorator = (Story) => (
 /** On the grey day header, where the old marker's white box showed as a patch. */
 export const OnTheDayHeader: Story = {
 	decorators: [onDayHeaderGrey],
-	args: { label: "Saturday, October 17: 1 to look at. Show in Issues" },
+	args: { label: "Saturday, October 17: 1 person short. Show in Issues" },
 };

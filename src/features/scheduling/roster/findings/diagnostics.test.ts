@@ -207,6 +207,26 @@ describe("diagnosticSentence", () => {
 		);
 	});
 
+	it("given_restCarriedInFromBefore_when_worded_then_saysWhenTheMemberMayFirstStartAndWhy", () => {
+		const diagnostic = {
+			...withCode("DEAD_SHIFT"),
+			code: "PRIOR_REST_BLOCKS_SHIFTS",
+			severity: "info",
+			entities: {
+				employeeId: "mp-2",
+				date: "2026-10-12",
+				shiftIds: ["front-desk-am"],
+				previousShiftEnd: "2026-10-11T22:00",
+				restedAt: "2026-10-12T09:00",
+				minimumRestHours: 11,
+			},
+		};
+
+		expect(diagnosticSentence(diagnostic, withDaysLimit, t, day)).toBe(
+			"Ben Ong can only start from 09:00 on day 2026-10-12, because of rest after their last shift, which ended day 2026-10-11 at 22:00."
+		);
+	});
+
 	it("given_daysBeforeOnlyPartlyKnown_when_worded_then_namesTheMemberCountsAndRule", () => {
 		const diagnostic = dayTypeFinding("PRIOR_DAYS_UNKNOWN", {
 			employeeId: "mp-2",

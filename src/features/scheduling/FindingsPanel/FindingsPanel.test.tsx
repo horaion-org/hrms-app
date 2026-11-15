@@ -38,7 +38,7 @@ describe("FindingsPanel", () => {
 			<FindingsPanel findings={findings} names={names} visibleDays={week} />
 		);
 
-		const setup = screen.getByRole("region", { name: "Setup issues (5)" });
+		const setup = screen.getByRole("region", { name: "Setup issues (4)" });
 		expect(setup).toHaveTextContent(
 			"Fix these in the schedule’s setup; generating again with the same setup won’t clear them."
 		);
@@ -51,8 +51,31 @@ describe("FindingsPanel", () => {
 			"Rules naming missing items · 1",
 			"Members no shift fits · 1",
 			"Shifts nobody can take · 1",
-			"Shift too short · 1",
 		]);
+	});
+
+	it("given_aDiagnosticThatOnlyExplains_when_rendered_then_itIsGoodToKnowNotASetupIssue", () => {
+		render(
+			<FindingsPanel findings={findings} names={names} visibleDays={week} />
+		);
+
+		const goodToKnow = screen.getByRole("region", {
+			name: "Good to know (1)",
+		});
+		expect(goodToKnow).toHaveTextContent(
+			"Nothing to fix: these explain why the roster looks as it does."
+		);
+		expect(goodToKnow).toHaveTextContent("Shift too short · 1");
+	});
+
+	it("given_shiftsLeftShort_when_rendered_then_saysHowManyShiftsAndPeople", () => {
+		render(
+			<FindingsPanel findings={findings} names={names} visibleDays={week} />
+		);
+
+		expect(
+			screen.getByRole("region", { name: "Roster notes (8)" })
+		).toHaveTextContent("3 shifts short, 4 people in all.");
 	});
 
 	it("given_rosterNotes_when_rendered_then_groupsThemByDayThenByMember", () => {

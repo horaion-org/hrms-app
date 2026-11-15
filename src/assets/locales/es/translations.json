@@ -3795,6 +3795,12 @@
 			"setupTitle": "Problemas de configuración ({{count}})",
 			"setupHint": "Corrígelos en la configuración del horario; generarlo de nuevo con la misma configuración no los resolverá.",
 			"rosterTitle": "Notas del cuadrante ({{count}})",
+			"shortSummary_one": "{{count}} turno incompleto; faltan {{people}} en total.",
+			"shortSummary_other": "{{count}} turnos incompletos; faltan {{people}} en total.",
+			"people_one": "{{count}} persona",
+			"people_other": "{{count}} personas",
+			"goodToKnowTitle": "Para tener en cuenta ({{count}})",
+			"goodToKnowHint": "No hay nada que corregir: esto explica por qué el cuadrante es así.",
 			"groupTitle": "{{label}} · {{count}}",
 			"wholeRoster": "Todo el cuadrante",
 			"when": "{{day}}, {{time}}",
@@ -3836,6 +3842,10 @@
 					"sentence_one": "De {{member}} solo se conoce {{count}} de los {{lookBack}} días antes de este horario, así que el límite de días seguidos se cuenta con lo que se conoce.",
 					"sentence_other": "De {{member}} solo se conocen {{count}} de los {{lookBack}} días antes de este horario, así que el límite de días seguidos se cuenta con lo que se conoce.",
 					"wholeSchedule": "No se conoce ningún día antes de este horario, así que el límite de días seguidos se cuenta desde su primer día."
+				},
+				"PRIOR_REST_BLOCKS_SHIFTS": {
+					"label": "Descanso que viene de antes",
+					"sentence": "{{member}} solo puede empezar desde las {{time}} del {{day}}, por el descanso tras su último turno, que terminó el {{endDay}} a las {{endTime}}."
 				}
 			},
 			"marker": {
@@ -3843,6 +3853,8 @@
 				"row_other": "{{name}}: {{count}} por revisar. Ver en Avisos",
 				"date_one": "{{day}}: {{count}} por revisar. Ver en Avisos",
 				"date_other": "{{day}}: {{count}} por revisar. Ver en Avisos",
+				"dateShort_one": "{{day}}: falta {{count}} persona. Ver en Avisos",
+				"dateShort_other": "{{day}}: faltan {{count}} personas. Ver en Avisos",
 				"tileLabel_one": "{{label}}, por revisar: {{count}}",
 				"tileLabel_other": "{{label}}, por revisar: {{count}}",
 				"roster": "Cuadrante",

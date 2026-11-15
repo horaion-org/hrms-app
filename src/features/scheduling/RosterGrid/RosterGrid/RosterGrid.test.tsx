@@ -254,8 +254,9 @@ describe("RosterGrid", () => {
 				name: "Friday, October 16: 3 to look at. Show in Issues",
 			})
 		).toBeInTheDocument();
+		// Saturday holds only a shift left short, so its count is the people it is short.
 		const saturday = screen.getByRole("button", {
-			name: "Saturday, October 17: 1 to look at. Show in Issues",
+			name: "Saturday, October 17: 1 person short. Show in Issues",
 		});
 		await user.click(saturday);
 		expect(onShowIssues).toHaveBeenCalledWith(
@@ -270,7 +271,7 @@ describe("RosterGrid", () => {
 		);
 		// The cell's words open with the tile; it has no count of its own.
 		expect(screen.getAllByRole("button", { name: /to look at/ })).toHaveLength(
-			4
+			3
 		);
 	});
 

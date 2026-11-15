@@ -1,3 +1,4 @@
+import { isInfoDiagnostic } from "@/features/scheduling/roster/findings/finding";
 import type { GenerationFindings } from "@/features/scheduling/schedules/api";
 
 /** How many roster notes and setup issues the engine left. */
@@ -9,14 +10,17 @@ const messageCount = (
 
 /**
  * Each conflict, each error message and each day's message is one roster
- * note; each diagnostic is one setup issue.
+ * note; each diagnostic is one setup issue, except one that only explains
+ * the roster (info), which is nothing to fix.
  */
 export const findingCounts = (findings: GenerationFindings): FindingCounts => ({
 	roster:
 		findings.conflicts.length +
 		messageCount(findings.errors) +
 		messageCount(findings.assignmentMessages),
-	setup: findings.diagnostics.length,
+	setup: findings.diagnostics.filter(
+		(diagnostic) => !isInfoDiagnostic(diagnostic)
+	).length,
 });
 
 /** Whether the engine left anything at all. */

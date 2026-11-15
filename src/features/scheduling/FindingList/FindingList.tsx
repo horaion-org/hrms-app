@@ -31,7 +31,8 @@ const key = "scheduling.findings";
 /**
  * Findings as the Issues panel lists them, each led by its tone's outline
  * icon (`FINDING_TONE_ICONS`). The engine's own words are quoted, never
- * shown as the app's copy (ADR-0003). With `onFindCover`, a shift left short
+ * shown as the app's copy (ADR-0003), and only where the app has no sentence
+ * of its own. With `onFindCover`, a shift left short
  * (a hole about no one person) has a Find cover button per shift it names.
  */
 export const FindingList = ({
@@ -116,14 +117,8 @@ export const FindingList = ({
 					return (
 						<q className="text-neutral-800">{finding.diagnostic.message}</q>
 					);
-				return (
-					<>
-						<p className="text-neutral-900">{sentence}</p>
-						<q className="mt-1 block text-xs text-neutral-700">
-							{finding.diagnostic.message}
-						</q>
-					</>
-				);
+				// The app's own sentence says it in full; the engine's, with its raw dates, is left out.
+				return <p className="text-neutral-900">{sentence}</p>;
 			}
 		}
 	};

@@ -323,9 +323,27 @@ describe("dayIssueCount", () => {
 		expect(dayIssueCount(placed, "2026-10-17")).toEqual({
 			count: 1,
 			tone: "attention",
+			peopleShort: true,
 		});
 		expect(dayIssueCount(placed, "2026-10-18")).toBeUndefined();
 		expect(dayIssueCount(undefined, "2026-10-17")).toBeUndefined();
+	});
+
+	it("counts the people a day's short shifts are short, so a half-filled shift lowers it", () => {
+		const shortBy = (missing: number): ReturnType<typeof placeFindings> =>
+			placeFindings(
+				generationFindingsFixture({
+					conflicts: [
+						{ ...generationFindingsFixture().conflicts[0]!, missing },
+					],
+					errors: [],
+					assignmentMessages: [],
+				}),
+				["2026-10-17"]
+			);
+
+		expect(dayIssueCount(shortBy(2), "2026-10-17")?.count).toBe(2);
+		expect(dayIssueCount(shortBy(1), "2026-10-17")?.count).toBe(1);
 	});
 });
 

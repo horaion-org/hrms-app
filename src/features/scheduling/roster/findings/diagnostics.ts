@@ -9,8 +9,10 @@ import type { FindingsDiagnostic } from "@/features/scheduling/schedules/api";
 
 /*
  * The engine's diagnostics in the app's words. The first four codes are those
- * of the engine's `scheduling_core/diagnostics/checks.py`; the last two are
- * its findings about the days before a schedule, for a rule about day types.
+ * of the engine's `scheduling_core/diagnostics/checks.py`; the next two are
+ * its findings about the days before a schedule, for a rule about day types;
+ * the last says when someone may first start after rest carried in from
+ * before.
  * The set is open, so a code added later reads by its code and the engine's
  * own sentence.
  */
@@ -22,6 +24,7 @@ export const KNOWN_DIAGNOSTIC_CODES = [
 	"DEAD_SHIFT",
 	"PRIOR_RUN_NEEDS_DAY_TYPE",
 	"PRIOR_DAYS_UNKNOWN",
+	"PRIOR_REST_BLOCKS_SHIFTS",
 ] as const;
 
 type KnownDiagnosticCode = (typeof KNOWN_DIAGNOSTIC_CODES)[number];
@@ -74,6 +77,13 @@ const entityCount = (
 	const value = diagnostic.entities[entity];
 	return typeof value === "number" ? value : 0;
 };
+
+/** How many characters an ISO date takes at the start of a date-time ("2026-11-23"). */
+const ISO_DATE_LENGTH = 10;
+
+/** The clock time of a local ISO date-time, "09:00" from "2026-11-23T09:00"; empty when absent. */
+const clockOf = (dateTime: string): string =>
+	dateTime.split("T")[1]?.slice(0, 5) ?? "";
 
 /** The name `id` stands for in `names`, or `fallback` when it doesn't resolve. */
 const nameOf = (
@@ -157,6 +167,18 @@ export const diagnosticSentence = (
 			return dayTypes === null
 				? t(`${key}.${code}.sentenceWithoutDayTypes`, run)
 				: t(`${key}.${code}.sentence`, { ...run, dayTypes });
+		}
+		case "PRIOR_REST_BLOCKS_SHIFTS": {
+			// Local date-times as the engine keys them, "2026-11-23T09:00".
+			const restedAt = entityText(diagnostic, "restedAt") ?? "";
+			const previousEnd = entityText(diagnostic, "previousShiftEnd") ?? "";
+			return t(`${key}.${code}.sentence`, {
+				member: member(),
+				time: clockOf(restedAt),
+				day: restedAt ? day(restedAt.slice(0, ISO_DATE_LENGTH)) : "",
+				endDay: previousEnd ? day(previousEnd.slice(0, ISO_DATE_LENGTH)) : "",
+				endTime: clockOf(previousEnd),
+			});
 		}
 		case "PRIOR_DAYS_UNKNOWN":
 			// Without a member it is about the whole schedule: no day before it is known.
