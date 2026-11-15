@@ -1079,7 +1079,9 @@ describe("Create Schedule: where everyone starts", () => {
 				"No roster before this week. Days are added for 1 person; everyone else starts rested."
 			)
 		).toBeInTheDocument();
-		await user.click(screen.getByRole("button", { name: "Edit last week" }));
+		await user.click(
+			screen.getByRole("button", { name: "Edit last week’s shifts" })
+		);
 		const dialog = await screen.findByRole("dialog", {
 			name: "Before this week",
 		});
@@ -1125,7 +1127,7 @@ describe("Create Schedule: where everyone starts", () => {
 			await toGenerate(user);
 
 			await user.click(
-				await screen.findByRole("button", { name: "Edit last week" })
+				await screen.findByRole("button", { name: "Edit last week’s shifts" })
 			);
 			const dialog = await screen.findByRole("dialog", {
 				name: "Before this week",

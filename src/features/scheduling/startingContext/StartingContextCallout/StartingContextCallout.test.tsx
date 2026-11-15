@@ -27,43 +27,57 @@ const show = (
 };
 
 describe("StartingContextCallout", () => {
-	it("given_noPreviousRoster_when_shown_then_saysEveryoneStartsRestedAndOffersLastWeek", async () => {
+	it("given_noPreviousRosterAndNothingEntered_when_shown_then_warnsWhatIsUnknownAndOffersAButton", async () => {
 		const onAdd = vi.fn();
 		show(firstWeek(), 0, onAdd);
 
 		const note = screen.getByRole("note");
+		expect(note).toHaveClass("bg-warning-50");
 		expect(note).toHaveTextContent(
-			"No roster before this week. Everyone starts rested."
+			"Horaion doesn’t know what people worked last week." +
+				"Without it, everyone is treated as rested, so someone who worked Sunday night could be given Monday morning." +
+				"Add last week’s shifts"
 		);
-		expect(note).toHaveClass("bg-ink-blue-50");
 		await userEvent.click(
-			screen.getByRole("button", { name: "Add last week" })
+			screen.getByRole("button", { name: "Add last week’s shifts" })
 		);
 		expect(onAdd).toHaveBeenCalledOnce();
 	});
 
-	it("given_daysEnteredForOnePerson_when_shown_then_saysSoAndOffersToEdit", () => {
-		show(firstWeek(), 1, vi.fn());
+	it("given_daysEnteredForOnePerson_when_shown_then_calmlySaysSoAndOffersToEditThem", async () => {
+		const onAdd = vi.fn();
+		show(firstWeek(), 1, onAdd);
 
-		expect(screen.getByRole("note")).toHaveTextContent(
+		const note = screen.getByRole("note");
+		expect(note).toHaveClass("bg-ink-blue-50");
+		expect(note).toHaveTextContent(
 			"No roster before this week. Days are added for 1 person; everyone else starts rested."
 		);
-		expect(
-			screen.getByRole("button", { name: "Edit last week" })
-		).toBeInTheDocument();
+		await userEvent.click(
+			screen.getByRole("button", { name: "Edit last week’s shifts" })
+		);
+		expect(onAdd).toHaveBeenCalledOnce();
 	});
 
-	it("given_aPreviousRosterMissingANewJoiner_when_shown_then_carriedOverWithTheNewJoinerNamed", () => {
+	it("given_aPreviousRosterMissingANewJoiner_when_shown_then_carriedOverWithTheNewJoinerNamedAndASmallLink", () => {
 		show(carriedWeek(), 0, vi.fn());
 
-		expect(screen.getByRole("note")).toHaveTextContent(
+		const note = screen.getByRole("note");
+		expect(note).toHaveClass("bg-ink-blue-50");
+		expect(note).toHaveTextContent(
 			"Carried over from the week of Nov 2. 1 person isn’t on that roster and starts rested."
 		);
+		expect(
+			screen.getByRole("button", { name: "Edit last week’s shifts" })
+		).toHaveClass("text-ink-blue-700");
 	});
 
-	it("given_aDraftThePersonMayNotChange_when_shown_then_noButton", () => {
+	it("given_aDraftThePersonMayNotChange_when_shown_then_stillWarnsButOffersNoControl", () => {
 		show(firstWeek(), 0);
 
+		expect(screen.getByRole("note")).toHaveTextContent(
+			"Horaion doesn’t know what people worked last week."
+		);
 		expect(screen.queryByRole("button")).not.toBeInTheDocument();
 	});
 });

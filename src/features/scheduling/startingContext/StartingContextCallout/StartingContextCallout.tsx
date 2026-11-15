@@ -18,9 +18,14 @@ export type StartingContextCalloutProps = {
 const key = "scheduling.startingContext";
 
 /**
- * One calm line on the Generate step about the week before the period: no
- * roster (everyone starts rested unless days are added), or the roster it
- * carries over from, naming members it doesn't cover.
+ * The line on the Generate step about the week before the period. With no
+ * roster before it and nothing entered, a warning says Horaion doesn't know
+ * last week and why that matters, with a button to add its shifts (the
+ * nearest analogue: ReadinessCallout's warning, a title then a plain line).
+ * With days entered, a calm line and the same button to edit them. When a
+ * roster carries over, a calm line naming members it doesn't cover, with a
+ * small link to edit their days. Without `onAdd`, no control. It never
+ * blocks generating.
  */
 export const StartingContextCallout = ({
 	week,
@@ -36,26 +41,53 @@ export const StartingContextCallout = ({
 			day: "numeric",
 			month: "short",
 		}).format(new Date(`${periodStart}T00:00:00`));
-	const message =
-		previous.kind === "none"
-			? enteredCount > 0
-				? t(`${key}.noneWithEntries`, { count: enteredCount })
-				: t(`${key}.none`)
-			: previous.uncovered > 0
-				? t(`${key}.carriedWithNew`, {
-						week: weekOf(previous.periodStart),
-						count: previous.uncovered,
-					})
-				: t(`${key}.carried`, { week: weekOf(previous.periodStart) });
-	const addable =
-		onAdd !== undefined && (previous.kind === "none" || previous.uncovered > 0);
+	/** The prompt to enter last week's shifts, on its own line under the words. */
+	const shiftsButton = (label: string): FunctionComponent =>
+		onAdd === undefined ? null : (
+			<span className="mt-3 block">
+				<Button size="sm" variant="secondary" onClick={onAdd}>
+					{label}
+				</Button>
+			</span>
+		);
+
+	if (previous.kind === "none" && enteredCount === 0)
+		return (
+			<Callout className={className} tone="warning">
+				<span className="block">{t(`${key}.unknownLastWeek`)}</span>
+				<span className="mt-1 block font-normal">
+					{t(`${key}.unknownLastWeekRisk`)}
+				</span>
+				{shiftsButton(t(`${key}.addShifts`))}
+			</Callout>
+		);
+
+	if (previous.kind === "none")
+		return (
+			<Callout className={className}>
+				<span className="block">
+					{t(`${key}.noneWithEntries`, { count: enteredCount })}
+				</span>
+				{shiftsButton(t(`${key}.editShifts`))}
+			</Callout>
+		);
+
+	const carried =
+		previous.uncovered > 0
+			? t(`${key}.carriedWithNew`, {
+					week: weekOf(previous.periodStart),
+					count: previous.uncovered,
+				})
+			: t(`${key}.carried`, { week: weekOf(previous.periodStart) });
+	// A carried-over week only needs days for the members its roster doesn't cover.
+	const editable = onAdd !== undefined && previous.uncovered > 0;
 	return (
 		<Callout className={className}>
 			<span className="flex flex-wrap items-center gap-x-4 gap-y-1">
-				<span>{message}</span>
-				{addable && (
+				<span>{carried}</span>
+				{editable && (
 					<Button variant="textlink" onClick={onAdd}>
-						{enteredCount > 0 ? t(`${key}.edit`) : t(`${key}.add`)}
+						{t(`${key}.editShifts`)}
 					</Button>
 				)}
 			</span>
