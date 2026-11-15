@@ -59,6 +59,9 @@ export type SentenceKey =
 	| `${typeof SENTENCES}.REST_BETWEEN_SHIFTS`
 	| `${typeof SENTENCES}.MAX_WORK_HOURS_PER_DAY`
 	| `${typeof SENTENCES}.MAX_OVERTIME_HOURS_PER_MONTH`
+	| `${typeof SENTENCES}.SHORTEST_PART_SHIFT`
+	| `${typeof SENTENCES}.MAX_CALL_BACKS_PER_PERSON`
+	| `${typeof SENTENCES}.PAY_RATES`
 	| `${typeof SENTENCES}.MAX_DAYS_WITHOUT_DAY_TYPES.${CoveredGroup}`
 	| `${typeof SENTENCES}.DAY_TYPE_DAYS_PER_WEEK.${CoveredGroup}.${WeeklyComparison}`;
 
@@ -76,6 +79,8 @@ const FIXED_FIRMNESS: Partial<Record<ConstraintType, ConstraintRequirement>> = {
 	DAY_TYPE_DAYS_PER_WEEK: "MUST",
 	MAX_WORK_HOURS_PER_DAY: "MUST",
 	MAX_OVERTIME_HOURS_PER_MONTH: "MUST",
+	SHORTEST_PART_SHIFT: "MUST",
+	MAX_CALL_BACKS_PER_PERSON: "MUST",
 };
 
 const valuesOf = (
@@ -187,6 +192,22 @@ export const sentencePartsOf = (
 					count: countOf(constraint, "OVERTIME_HOURS_A_MONTH"),
 				},
 			];
+		case "SHORTEST_PART_SHIFT":
+			return [
+				{
+					i18nKey: `${SENTENCES}.${constraint.type}`,
+					count: countOf(constraint, "PART_SHIFT_MINUTES"),
+				},
+			];
+		case "MAX_CALL_BACKS_PER_PERSON":
+			return [
+				{
+					i18nKey: `${SENTENCES}.${constraint.type}`,
+					count: countOf(constraint, "CALL_BACKS"),
+				},
+			];
+		case "PAY_RATES":
+			return [{ i18nKey: `${SENTENCES}.${constraint.type}`, count: 1 }];
 	}
 };
 

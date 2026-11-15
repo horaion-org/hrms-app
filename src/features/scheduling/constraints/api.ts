@@ -45,6 +45,9 @@ export const constraintTypeSchema = z.enum([
 	"DAY_TYPE_DAYS_PER_WEEK",
 	"MAX_WORK_HOURS_PER_DAY",
 	"MAX_OVERTIME_HOURS_PER_MONTH",
+	"SHORTEST_PART_SHIFT",
+	"MAX_CALL_BACKS_PER_PERSON",
+	"PAY_RATES",
 ]);
 
 /** What a constraint says; its copy (label and sentence) is keyed by this name. */
@@ -80,6 +83,11 @@ const constraintFieldSchema = z.enum([
 	"DAY_TYPE_COUNT",
 	"WORK_HOURS_A_DAY",
 	"OVERTIME_HOURS_A_MONTH",
+	"PART_SHIFT_MINUTES",
+	"CALL_BACKS",
+	"OVERTIME_PERCENT",
+	"REST_DAY_WORK_PERCENT",
+	"TIME_OFF_EARNED_PERCENT",
 ]);
 
 /** One field a constraint type takes; its label is keyed by this name. */

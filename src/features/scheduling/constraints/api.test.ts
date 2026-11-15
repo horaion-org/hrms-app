@@ -25,6 +25,7 @@ import {
 	CONSTRAINT_OPTIONS_RESPONSE,
 	MOST_HOURS_A_DAY_FIXTURE,
 	MOST_OVERTIME_A_MONTH_FIXTURE,
+	PAY_RATES_FIXTURE,
 } from "@/features/scheduling/constraints/fixtures";
 
 const UNIT = { branchId: "b-1", departmentId: "d-1" };
@@ -337,6 +338,68 @@ describe("constraints client", () => {
 				max: 744,
 				strictness: "LOWER_IS_STRICTER",
 			},
+		]);
+	});
+
+	it("reads the working-time settings as ordinary types a planner adds, once per department", async () => {
+		stubApi({
+			[`GET ${DEPARTMENT}/constraint-options`]: {
+				status: 200,
+				body: envelope(CONSTRAINT_OPTIONS_RESPONSE),
+			},
+		});
+
+		const options = await fetchConstraintOptions("c-1", UNIT);
+		const settings = options.types.filter(
+			(type) =>
+				type.type === "SHORTEST_PART_SHIFT" ||
+				type.type === "MAX_CALL_BACKS_PER_PERSON" ||
+				type.type === "PAY_RATES"
+		);
+
+		expect(
+			settings.map(({ type, addedBySystem, onePerDepartment, fields }) => ({
+				type,
+				addedBySystem,
+				onePerDepartment,
+				fields: fields.map(({ field, min, max }) => [field, min, max]),
+			}))
+		).toEqual([
+			{
+				type: "SHORTEST_PART_SHIFT",
+				addedBySystem: false,
+				onePerDepartment: true,
+				fields: [["PART_SHIFT_MINUTES", 1, 1440]],
+			},
+			{
+				type: "MAX_CALL_BACKS_PER_PERSON",
+				addedBySystem: false,
+				onePerDepartment: true,
+				fields: [["CALL_BACKS", 0, 31]],
+			},
+			{
+				type: "PAY_RATES",
+				addedBySystem: false,
+				onePerDepartment: true,
+				fields: [
+					["OVERTIME_PERCENT", 0, 1000],
+					["REST_DAY_WORK_PERCENT", 0, 1000],
+					["TIME_OFF_EARNED_PERCENT", 0, 1000],
+				],
+			},
+		]);
+	});
+
+	it("reads a work policy's pay rates", async () => {
+		stubApi({
+			"GET /api/v1/companies/c-1/constraints": {
+				status: 200,
+				body: envelope([PAY_RATES_FIXTURE]),
+			},
+		});
+
+		await expect(fetchCompanyConstraints("c-1", undefined)).resolves.toEqual([
+			PAY_RATES_FIXTURE,
 		]);
 	});
 

@@ -98,6 +98,11 @@ const HINTED_FIELDS = [
 	"DAY_TYPE_COUNT",
 	"WORK_HOURS_A_DAY",
 	"OVERTIME_HOURS_A_MONTH",
+	"PART_SHIFT_MINUTES",
+	"CALL_BACKS",
+	"OVERTIME_PERCENT",
+	"REST_DAY_WORK_PERCENT",
+	"TIME_OFF_EARNED_PERCENT",
 ] as const satisfies ReadonlyArray<ConstraintField>;
 
 type HintedField = (typeof HINTED_FIELDS)[number];

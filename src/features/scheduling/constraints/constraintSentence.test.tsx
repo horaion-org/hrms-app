@@ -358,6 +358,52 @@ describe("sentencePartsOf with constraintWords", () => {
 		).toBe(sentence);
 	});
 
+	it.each([
+		[
+			"240",
+			"A shift is given around leave on the same day only if at least 240 minutes of it are worked.",
+		],
+		[
+			"1",
+			"A shift is given around leave on the same day only if at least 1 minute of it is worked.",
+		],
+	])(
+		"reads the shortest part of a shift of %s minutes",
+		(minutes, sentence) => {
+			expect(
+				read("SHORTEST_PART_SHIFT", [plain("PART_SHIFT_MINUTES", minutes)])
+			).toBe(sentence);
+		}
+	);
+
+	it.each([
+		[
+			"2",
+			"Everyone may be called back to work on a rest or off day at most 2 times in a roster.",
+		],
+		[
+			"1",
+			"Everyone may be called back to work on a rest or off day at most 1 time in a roster.",
+		],
+		["0", "Nobody is called back to work on a rest or off day."],
+	])("reads most call-backs of %s", (callBacks, sentence) => {
+		expect(
+			read("MAX_CALL_BACKS_PER_PERSON", [plain("CALL_BACKS", callBacks)])
+		).toBe(sentence);
+	});
+
+	it("reads the pay rates as one sentence of three percentages", () => {
+		expect(
+			read("PAY_RATES", [
+				plain("OVERTIME_PERCENT", "150"),
+				plain("REST_DAY_WORK_PERCENT", "200"),
+				plain("TIME_OFF_EARNED_PERCENT", "100"),
+			])
+		).toBe(
+			"Overtime costs 150% of normal pay, rest-day work 200%, and hours given back as time off 100%."
+		);
+	});
+
 	it("reads most hours a day in Spanish", () => {
 		expect(
 			read("MAX_WORK_HOURS_PER_DAY", [plain("WORK_HOURS_A_DAY", "12")], "es")
@@ -499,6 +545,9 @@ describe("firmnessOf", () => {
 		["DAY_TYPE_DAYS_PER_WEEK", null, "MUST"],
 		["MAX_WORK_HOURS_PER_DAY", null, "MUST"],
 		["MAX_OVERTIME_HOURS_PER_MONTH", null, "MUST"],
+		["SHORTEST_PART_SHIFT", null, "MUST"],
+		["MAX_CALL_BACKS_PER_PERSON", null, "MUST"],
+		["PAY_RATES", null, null],
 		["SHIFT_STAFFING", "SHOULD", "SHOULD"],
 		["DAYS_OFF_PER_PERIOD", "MUST", "MUST"],
 		["SHIFT_STAFFING", null, null],

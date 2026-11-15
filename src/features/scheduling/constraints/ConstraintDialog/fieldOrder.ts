@@ -30,6 +30,13 @@ export const FIELD_READING_ORDER: Record<
 	DAY_TYPE_DAYS_PER_WEEK: ["COMPARISON", "DAY_TYPE_COUNT", "DAY_TYPE"],
 	MAX_WORK_HOURS_PER_DAY: ["WORK_HOURS_A_DAY"],
 	MAX_OVERTIME_HOURS_PER_MONTH: ["OVERTIME_HOURS_A_MONTH"],
+	SHORTEST_PART_SHIFT: ["PART_SHIFT_MINUTES"],
+	MAX_CALL_BACKS_PER_PERSON: ["CALL_BACKS"],
+	PAY_RATES: [
+		"OVERTIME_PERCENT",
+		"REST_DAY_WORK_PERCENT",
+		"TIME_OFF_EARNED_PERCENT",
+	],
 };
 
 /** A type's fields in reading order; a field the order does not know keeps its API place after the known ones. */

@@ -38,6 +38,11 @@ const STRICTNESS: Record<ConstraintField, FieldStrictness> = {
 	DAY_TYPE_COUNT: "FOLLOWS_COMPARISON",
 	WORK_HOURS_A_DAY: "LOWER_IS_STRICTER",
 	OVERTIME_HOURS_A_MONTH: "LOWER_IS_STRICTER",
+	PART_SHIFT_MINUTES: "HIGHER_IS_STRICTER",
+	CALL_BACKS: "LOWER_IS_STRICTER",
+	OVERTIME_PERCENT: "MUST_MATCH",
+	REST_DAY_WORK_PERCENT: "MUST_MATCH",
+	TIME_OFF_EARNED_PERCENT: "MUST_MATCH",
 };
 
 /** Types that link to nothing may be set for the whole company; the rest by a Department only. */
@@ -211,6 +216,37 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 		addedBySystem: true,
 		fullTimersOnly: false,
 	},
+	{
+		type: "SHORTEST_PART_SHIFT",
+		category: "WORKING_HOURS",
+		hasRequirement: false,
+		onePerDepartment: true,
+		levels: [...ANY_LEVEL],
+		...ORDINARY,
+		fields: [number("PART_SHIFT_MINUTES", 1, 1440)],
+	},
+	{
+		type: "MAX_CALL_BACKS_PER_PERSON",
+		category: "WORKING_HOURS",
+		hasRequirement: false,
+		onePerDepartment: true,
+		levels: [...ANY_LEVEL],
+		...ORDINARY,
+		fields: [number("CALL_BACKS", 0, 31)],
+	},
+	{
+		type: "PAY_RATES",
+		category: "WORKING_HOURS",
+		hasRequirement: false,
+		onePerDepartment: true,
+		levels: [...ANY_LEVEL],
+		...ORDINARY,
+		fields: [
+			number("OVERTIME_PERCENT", 0, 1000),
+			number("REST_DAY_WORK_PERCENT", 0, 1000),
+			number("TIME_OFF_EARNED_PERCENT", 0, 1000),
+		],
+	},
 ];
 
 /** The day types a rule may name, as the API lists them: its non-working day types, then leave. */
@@ -375,6 +411,23 @@ export const MOST_OVERTIME_A_MONTH_FIXTURE: DepartmentConstraint =
 		lock: "LOCKED",
 		values: [plain("OVERTIME_HOURS_A_MONTH", "72")],
 	});
+
+/** The work policy's pay rates for extra hours, at MOM's overtime and rest-day rates, a default for every department. */
+export const PAY_RATES_FIXTURE: DepartmentConstraint = companyConstraintFixture(
+	{
+		constraintId: "pay-rates",
+		name: "Pay rates",
+		type: "PAY_RATES",
+		category: "WORKING_HOURS",
+		requirement: null,
+		lock: "DEFAULT",
+		values: [
+			plain("OVERTIME_PERCENT", "150"),
+			plain("REST_DAY_WORK_PERCENT", "200"),
+			plain("TIME_OFF_EARNED_PERCENT", "100"),
+		],
+	}
+);
 
 /** Front Office's days limit: at most 6 days in a row without a Rest day or a Day off. */
 export const DAYS_LIMIT_FIXTURE: DepartmentConstraint = constraintFixture({

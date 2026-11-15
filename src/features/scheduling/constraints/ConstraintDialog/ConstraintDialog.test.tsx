@@ -496,18 +496,120 @@ describe("ConstraintDialog", () => {
 			"Days to avoid giving off",
 			"Limit on days in a row",
 			"Rest between shifts",
+			"Shortest part of a shift around leave",
+			"Call-backs on a rest or off day",
+			"Pay rates for extra hours",
 		]);
 		for (const [category, count] of [
 			["People on shifts", 2],
 			["On duty throughout", 1],
 			["Days off", 3],
-			["Rest and hours", 1],
+			["Rest and hours", 4],
 		] as const)
 			expect(
 				within(screen.getByRole("group", { name: category })).getAllByRole(
 					"option"
 				)
 			).toHaveLength(count);
+	});
+
+	it("given_payRates_when_chosen_then_threePercentagesWithMomsRatesInTheHintsAndNoFirmness", async () => {
+		const user = userEvent.setup();
+		const { onSave } = renderDialog();
+		await start(user, "Pay rates for extra hours");
+
+		expect(screen.queryByRole("radiogroup", { name: /^How firm/ })).toBeNull();
+		expect(
+			screen.queryByText("Always a must for this kind of constraint.")
+		).toBeNull();
+		expect(
+			screen.getByText("0 to 1000. MOM’s rate is 150, 1.5 times normal pay.")
+		).toBeVisible();
+		expect(
+			screen.getByText("0 to 1000. MOM’s rate is 200, 2 times normal pay.")
+		).toBeVisible();
+		expect(
+			screen.getByText(
+				"0 to 1000. The rate for hours given back as time off; 100 means one hour off for each extra hour."
+			)
+		).toBeVisible();
+		await user.type(
+			screen.getByRole("spinbutton", { name: /^Overtime \(% of normal pay\)/ }),
+			"150"
+		);
+		await user.type(
+			screen.getByRole("spinbutton", {
+				name: /^Rest-day work \(% of normal pay\)/,
+			}),
+			"200"
+		);
+		await user.type(
+			screen.getByRole("spinbutton", { name: /^Time off earned \(%\)/ }),
+			"100"
+		);
+		await user.click(screen.getByRole("button", { name: "Save" }));
+
+		await waitFor(() => {
+			expect(onSave).toHaveBeenCalledWith(
+				expect.objectContaining({
+					type: "PAY_RATES",
+					requirement: null,
+					values: [
+						{ field: "OVERTIME_PERCENT", value: "150" },
+						{ field: "REST_DAY_WORK_PERCENT", value: "200" },
+						{ field: "TIME_OFF_EARNED_PERCENT", value: "100" },
+					],
+				})
+			);
+		});
+	});
+
+	it("given_theShortestPartOfAShift_when_chosen_then_minutesInADayAndWhatHappensWithoutIt", async () => {
+		const user = userEvent.setup();
+		const { onSave } = renderDialog();
+		await start(user, "Shortest part of a shift around leave");
+
+		expect(
+			screen.getByText(
+				"1 to 1440 minutes. Without this setting, a shift that touches a leave is never given."
+			)
+		).toBeVisible();
+		const minutes = screen.getByRole("spinbutton", {
+			name: /^Shortest part \(minutes\)/,
+		});
+		expect(minutes).toHaveAttribute("max", "1440");
+		await user.type(minutes, "240");
+		await user.click(screen.getByRole("button", { name: "Save" }));
+
+		await waitFor(() => {
+			expect(onSave).toHaveBeenCalledWith(
+				expect.objectContaining({
+					type: "SHORTEST_PART_SHIFT",
+					values: [{ field: "PART_SHIFT_MINUTES", value: "240" }],
+				})
+			);
+		});
+	});
+
+	it("given_callBacks_when_noneAllowed_then_zeroIsSent", async () => {
+		const user = userEvent.setup();
+		const { onSave } = renderDialog();
+		await start(user, "Call-backs on a rest or off day");
+
+		await user.type(
+			screen.getByRole("spinbutton", { name: /^Most call-backs a person/ }),
+			"0"
+		);
+		await user.click(screen.getByRole("button", { name: "Save" }));
+
+		await waitFor(() => {
+			expect(onSave).toHaveBeenCalledWith(
+				expect.objectContaining({
+					type: "MAX_CALL_BACKS_PER_PERSON",
+					values: [{ field: "CALL_BACKS", value: "0" }],
+				})
+			);
+		});
 	});
 
 	it("given_aTypeChosen_when_rendered_then_itsHintIsAWorkedExample", async () => {
