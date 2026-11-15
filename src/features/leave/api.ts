@@ -438,8 +438,6 @@ const partDayOutcomeSchema = z
 	.enum(["UNCHANGED", "SHORTENED", "WORKS_AROUND", "TAKEN_OFF", "UNKNOWN"])
 	.catch("UNKNOWN");
 
-export type PartDayOutcome = z.infer<typeof partDayOutcomeSchema>;
-
 const rosteredDaySchema = z.object({
 	day: z.iso.date(),
 	minutes: z.number().int().nonnegative(),
@@ -549,7 +547,7 @@ export const rosteredDaysQuery = (
 export const DEFAULT_ALLOWS_SHIFT_SAME_DAY = true;
 
 /** A leave duration an apply form offers one person ("Morning · 09:00–13:00 · 4 h"). */
-export const leaveDurationOptionSchema = z.object({
+const leaveDurationOptionSchema = z.object({
 	leaveDurationId: z.string(),
 	name: z.string(),
 	/** "HH:mm"; an end before the start runs past midnight. */
