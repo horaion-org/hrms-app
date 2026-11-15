@@ -350,7 +350,7 @@ describe("GeneratedRoster", () => {
 		await user.click(screen.getByRole("button", { name: "Issues: 5" }));
 		const panel = screen.getByRole("complementary", { name: "Issues" });
 		expect(panel).toHaveTextContent(
-			"2 people’s days before this week changed after this schedule was generated."
+			"2 people’s days before this week changed after this roster was generated, so what it says about the week before is what was known then."
 		);
 		expect(panel).toHaveTextContent(
 			"These notes are from generation. Changes made by hand since aren’t reflected."

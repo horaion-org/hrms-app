@@ -3739,6 +3739,7 @@
 			"changesCount_other": "Cambiados a mano: {{count}} días",
 			"closePanel": "Cerrar {{title}}",
 			"startingPoints": "Cómo empezó cada persona la semana",
+			"startingPointsAsGenerated": "Cómo empezó cada persona la semana, al generarla",
 			"workedInARow_one": "{{name}} ha trabajado {{count}} día seguido antes de esta semana.",
 			"workedInARow_other": "{{name}} ha trabajado {{count}} días seguidos antes de esta semana.",
 			"leaveAndCover": "Permisos y cobertura",
@@ -3970,8 +3971,8 @@
 			"invalid": "No se pudo guardar un día. Comprueba que su turno sigue en uso e inténtalo de nuevo.",
 			"notDraft": "Este horario ya se generó, así que su punto de partida ya no puede cambiar.",
 			"failed": "No se pudieron guardar los días. Inténtalo de nuevo.",
-			"stale_one": "Los días antes de esta semana de {{count}} persona cambiaron después de generar este horario. Se planificó con lo que se sabía entonces.",
-			"stale_other": "Los días antes de esta semana de {{count}} personas cambiaron después de generar este horario. Se planificó con lo que se sabía entonces.",
+			"stale_one": "Los días de {{count}} persona antes de esta semana cambiaron después de generar este cuadrante, así que lo que dice de la semana anterior es lo que se sabía entonces. Para planificar con los días actuales, regenera el mes desde su página.",
+			"stale_other": "Los días de {{count}} personas antes de esta semana cambiaron después de generar este cuadrante, así que lo que dice de la semana anterior es lo que se sabía entonces. Para planificar con los días actuales, regenera el mes desde su página.",
 			"opening": {
 				"hint": "Los límites de horas extra cuentan desde el día 1. Para quien no tenga cuadrante antes en este mes, añade las horas remuneradas y horas extra que ya trabajó antes del {{day}}.",
 				"worked": "Horas remuneradas antes del {{day}}",

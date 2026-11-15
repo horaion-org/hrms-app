@@ -1266,7 +1266,13 @@ it("lists where members started the week, and that it changed since, under Issue
 	);
 	expect(
 		within(panel).getByText(
-			/^1 person’s days before this week changed after this schedule was generated\./
+			/^1 person’s days before this week changed after this roster was generated, so what it says about the week before is what was known then\. To plan from the days as they are now, regenerate the month from its page\.$/
+		)
+	).toBeInTheDocument();
+	// What it lists is from generation, and the heading says so.
+	expect(
+		within(panel).getByText(
+			"Where people started the week, when it was generated"
 		)
 	).toBeInTheDocument();
 	expect(within(roster).queryByText(/in a row before this week/)).toBeNull();
@@ -1289,7 +1295,7 @@ it("shows the roster without starting points when they can't be read", async () 
 	expect(within(roster).getAllByRole("row")).toHaveLength(4);
 	expect(within(roster).queryByText(/in a row before this week/)).toBeNull();
 	expect(
-		screen.queryByText(/changed after this schedule was generated/)
+		screen.queryByText(/changed after this roster was generated/)
 	).toBeNull();
 });
 

@@ -254,7 +254,12 @@ export const issuesSections = (
 		},
 		{
 			key: "startingPoints",
-			title: t(`${key}.startingPoints`),
+			// Frozen at generation: once the days before have changed, the title says it is then, not now.
+			title: t(
+				input.membersWithChangedStart > 0
+					? `${key}.startingPointsAsGenerated`
+					: `${key}.startingPoints`
+			),
 			items: startingPointItems(rows, startingRuns, t),
 		},
 	];
