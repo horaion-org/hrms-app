@@ -212,9 +212,13 @@ describe("constraints client", () => {
 		)!;
 		const older = {
 			...staffing,
-			fields: staffing.fields.map(
-				({ listedBy, listsSomeOf, excludes, ...spec }) => spec
-			),
+			fields: staffing.fields.map((spec) => {
+				const predating: Record<string, unknown> = { ...spec };
+				delete predating["listedBy"];
+				delete predating["listsSomeOf"];
+				delete predating["excludes"];
+				return predating;
+			}),
 		};
 		stubApi({
 			[`GET ${DEPARTMENT}/constraint-options`]: {
