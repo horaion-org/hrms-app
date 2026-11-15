@@ -6,6 +6,7 @@ import { Quote } from "@/components/ui/Quote";
 import { Skeleton } from "@/components/ui/Skeleton";
 import type { RepairOption } from "@/features/scheduling/cover/engineRepairApi";
 import { repairCells } from "@/features/scheduling/cover/engineRepairChange";
+import { extraHoursLine } from "@/features/scheduling/cover/engineRepairHours";
 import { NotAssignedList } from "@/features/scheduling/cover/NotAssignedList";
 import {
 	leftShortLine,
@@ -59,6 +60,9 @@ const OptionItem = ({
 							<li key={line}>{line}</li>
 						))}
 				</ul>
+			)}
+			{option.feasible && extraHoursLine(option, names, t) && (
+				<p className="text-neutral-800">{extraHoursLine(option, names, t)}</p>
 			)}
 			{leftShort && <p className="text-neutral-700">{leftShort}</p>}
 			{!option.feasible && option.infeasibleReason && (

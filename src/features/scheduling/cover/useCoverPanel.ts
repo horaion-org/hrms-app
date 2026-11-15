@@ -312,7 +312,12 @@ export const useCoverPanel = ({
 					}
 				);
 			},
-			applyRefusal: apply.error ? rosterChangeRefusal(apply.error) : undefined,
+			// A refusal belongs to the change it refused: once the roster is read again at another revision, the
+			// change under review is another one, so the old words do not sit under it.
+			applyRefusal:
+				apply.error && apply.variables?.expectedRevision === revision
+					? rosterChangeRefusal(apply.error)
+					: undefined,
 			busy: apply.isPending,
 		},
 		offer: coverOffers && {

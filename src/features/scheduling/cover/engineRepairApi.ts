@@ -30,6 +30,7 @@ const spanSchema = z.object({
 	end: z.string().nullable(),
 });
 
+/** A span of local time; an unreadable end is null. */
 export type RepairSpan = z.infer<typeof spanSchema>;
 
 const moveSchema = z.object({
@@ -50,6 +51,7 @@ const moveSchema = z.object({
 	extensionMinutes: z.number().nullable(),
 });
 
+/** One move of an engine option: who, from where, to which shift and day. */
 export type RepairMove = z.infer<typeof moveSchema>;
 
 const optionSchema = z.object({
@@ -64,9 +66,29 @@ const optionSchema = z.object({
 	leftShort: z.array(spanSchema),
 	leftShortBy: z.number().nullable(),
 	warnings: z.array(z.string()),
+	/**
+	 * What the option does, as the engine names it ("call_in", "move", or one
+	 * added later); absent from the older repair.
+	 */
+	kind: z.string().nullish(),
+	/**
+	 * How the person's minutes of each kind change that week if the option is
+	 * applied, all 0 when it costs no extra hours; absent from the older repair.
+	 */
+	extraMinutes: z
+		.object({
+			overtime: z.number(),
+			restDayWork: z.number(),
+			timeOffEarned: z.number(),
+		})
+		.nullish(),
 });
 
+/** One of the engine's ways to fill the gap, or its honest no. */
 export type RepairOption = z.infer<typeof optionSchema>;
+
+/** An option's extra minutes that week, by kind. */
+export type RepairExtraMinutes = NonNullable<RepairOption["extraMinutes"]>;
 
 /** One reason the engine gives for not putting someone on the short shift; `code` is open, so a new one still reads. */
 const notAssignedReasonSchema = z.object({
@@ -78,6 +100,7 @@ const notAssignedReasonSchema = z.object({
 	constraintName: z.string().nullable(),
 });
 
+/** One reason someone was not put on the short shift. */
 export type NotAssignedReason = z.infer<typeof notAssignedReasonSchema>;
 
 /** Someone with the gap's job title the engine did not put on the shift, and why. */
@@ -89,6 +112,7 @@ const notAssignedPersonSchema = z.object({
 	reasons: z.array(notAssignedReasonSchema),
 });
 
+/** Someone with the gap's job title who was not assigned, and why. */
 export type NotAssignedPerson = z.infer<typeof notAssignedPersonSchema>;
 
 const repairOptionsSchema = z.object({
@@ -102,6 +126,7 @@ const repairOptionsSchema = z.object({
 	notAssigned: z.array(notAssignedPersonSchema).nullable().default(null),
 });
 
+/** The engine's answer for one gap: its options, and why nobody else was assigned. */
 export type RepairOptions = z.infer<typeof repairOptionsSchema>;
 
 /** The engine's options for `gap` at `expectedRevision`; nothing is written. */

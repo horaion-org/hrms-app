@@ -17,6 +17,7 @@ import {
 	valuesListingNone,
 	type LinksByKind,
 } from "@/features/scheduling/constraints/ConstraintDialog/fieldChoices";
+import type { Constraint } from "@/features/scheduling/scheduleDraft";
 import {
 	unitReachBody,
 	unitReachSchema,
@@ -27,6 +28,17 @@ import {
 export type ConstraintFieldValues = Partial<
 	Record<ConstraintField, Array<string>>
 >;
+
+/** A constraint's values by field, as the form holds them; a value that no longer fits is left out. */
+export const valuesByField = (
+	values: Constraint["values"]
+): ConstraintFieldValues => {
+	const byField: ConstraintFieldValues = {};
+	for (const { field, value, problem } of values)
+		if (value !== null && !problem)
+			byField[field] = [...(byField[field] ?? []), value];
+	return byField;
+};
 
 /** What the form holds while being filled in. */
 export type ConstraintFormValues = {

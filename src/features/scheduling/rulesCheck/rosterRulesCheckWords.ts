@@ -45,7 +45,7 @@ const RULE_TYPES: Readonly<Record<string, ConstraintType>> = {
 };
 
 /** The engine's rules that are no setting of their own, each with the roster check's label. */
-export const LABELLED_RULES = [
+const LABELLED_RULES = [
 	"most_days_a_week",
 	"overtime_past_the_normal_day",
 	"overtime_past_the_normal_week",
@@ -80,6 +80,7 @@ export const rulesCheckRefusalOf = (error: unknown): RulesCheckRefusal =>
 		? REFUSALS[error.errorCode]
 		: undefined) ?? "failed";
 
+/** Whether the app has a plain label for the engine's rule name. */
 const isLabelled = (rule: string): rule is LabelledRule =>
 	(LABELLED_RULES as ReadonlyArray<string>).includes(rule);
 
@@ -109,6 +110,13 @@ export const brokenRuleLabel = (rule: BrokenRule, t: TFunction): string => {
 };
 
 /**
+ * How many problems the check's broken rules count as: one per rule named,
+ * and one when the roster is broken with none named; none unless broken.
+ */
+export const brokenRuleCount = (check: RosterRulesCheck): number =>
+	check.status === "BROKEN" ? Math.max(check.brokenRules.length, 1) : 0;
+
+/**
  * What the week bar's button marks once the current revision is validated:
  * how many problems (rules broken, at least one when broken with none named,
  * plus staffing gaps), or none for a roster that holds and is fully staffed;
@@ -117,9 +125,7 @@ export const brokenRuleLabel = (rule: BrokenRule, t: TFunction): string => {
 export const validationMark = (
 	check: RosterRulesCheck
 ): { kind: "problems"; count: number } | { kind: "clean" } | undefined => {
-	const broken =
-		check.status === "BROKEN" ? Math.max(check.brokenRules.length, 1) : 0;
-	const problems = broken + (check.staffingGaps?.length ?? 0);
+	const problems = brokenRuleCount(check) + (check.staffingGaps?.length ?? 0);
 	if (problems > 0) return { kind: "problems", count: problems };
 	return check.status === "HOLDS" && check.staffingGaps !== null
 		? { kind: "clean" }

@@ -29,6 +29,7 @@ const WORDED_REASONS = [
 
 type WordedReason = (typeof WORDED_REASONS)[number];
 
+/** Whether the app has a sentence for the reason code. */
 const isWordedReason = (code: string): code is WordedReason =>
 	(WORDED_REASONS as ReadonlyArray<string>).includes(code);
 

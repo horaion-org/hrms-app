@@ -8,6 +8,7 @@ import { configureApiClient, resetApiClient } from "@/common/api-client";
 import { envelope, stubApi } from "@/common/testing/stubApi";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import {
+	callInMove,
 	feasibleRepair,
 	infeasibleRepair,
 	reassignMove,
@@ -71,14 +72,25 @@ const Harness = ({
 }): React.JSX.Element => {
 	const [revision, setRevision] = useState(props.revision);
 	return (
-		<FindCoverPanel
-			{...props}
-			revision={revision}
-			onApplied={(change) => {
-				props.onApplied(change);
-				if (movesRevisionOnApply) setRevision(change.toRevision);
-			}}
-		/>
+		<>
+			<FindCoverPanel
+				{...props}
+				revision={revision}
+				onApplied={(change) => {
+					props.onApplied(change);
+					if (movesRevisionOnApply) setRevision(change.toRevision);
+				}}
+			/>
+			{/* Stands in for the page's read moving on, as a stale refusal's refresh brings it. */}
+			<button
+				type="button"
+				onClick={() => {
+					setRevision((current) => current + 1);
+				}}
+			>
+				Roster read again
+			</button>
+		</>
 	);
 };
 
@@ -438,6 +450,15 @@ describe("FindCoverPanel", () => {
 		const previewsAfter = calls
 			.slice(applied + 1)
 			.filter((call) => call.path === PREVIEW);
+		// Find cover's own list is asked again, at the new revision only.
+		expect(
+			calls
+				.slice(applied + 1)
+				.filter((call) => call.path === COVER_OPTIONS)
+				.map(
+					(call) => (call.body as { expectedRevision: number }).expectedRevision
+				)
+		).toContain(2);
 		expect(
 			previewsAfter.map(
 				(call) => (call.body as { expectedRevision: number }).expectedRevision
@@ -570,5 +591,299 @@ describe("FindCoverPanel", () => {
 		await user.keyboard("{Escape}");
 
 		expect(onClose).toHaveBeenCalled();
+	});
+
+	describe("the engine's repair, as a tester walks it", () => {
+		/** Asks the engine and opens its first option's review. */
+		const reviewFirstOption = async (
+			user: ReturnType<typeof userEvent.setup>
+		): Promise<void> => {
+			await screen.findByRole("radio", { name: "Aisha Rahman" });
+			await user.click(screen.getByRole("button", { name: "Ask the engine" }));
+			await user.click(
+				await screen.findByRole("button", { name: "Review this change" })
+			);
+		};
+
+		const callInCells = [
+			{
+				membershipId: "m-1",
+				day: "2026-10-17",
+				kind: "WORK",
+				shiftId: callInMove().shiftId,
+			},
+		];
+
+		it("given_aCallInWithItsHours_when_reviewedAndApplied_then_itsCellGoesThroughPreviewAndApply", async () => {
+			const calls = stubApi({
+				[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
+				[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
+				[`POST ${REPAIR_OPTIONS}`]: answer(
+					repairOptionsFixture([
+						feasibleRepair([callInMove()], {
+							kind: "call_in",
+							extraMinutes: { overtime: 0, restDayWork: 480, timeOffEarned: 0 },
+						}),
+					])
+				),
+				[`POST ${CHANGES}`]: {
+					status: 201,
+					body: envelope(rosterChangeFixture()),
+				},
+			});
+			const { onApplied } = show();
+			const user = userEvent.setup();
+			await screen.findByRole("radio", { name: "Aisha Rahman" });
+			await user.click(screen.getByRole("button", { name: "Ask the engine" }));
+
+			expect(
+				await screen.findByText("Adds 8 h of rest-day work for Aisha Rahman.")
+			).toBeVisible();
+			await user.click(
+				screen.getByRole("button", { name: "Review this change" })
+			);
+			const apply = screen.getByRole("button", { name: "Apply change" });
+			await waitFor(() => {
+				expect(apply).toBeEnabled();
+			});
+			await user.click(apply);
+
+			await waitFor(() => {
+				expect(onApplied).toHaveBeenCalled();
+			});
+			expect(
+				calls.filter((call) => call.path === PREVIEW).slice(-1)[0]?.body
+			).toMatchObject({ cells: callInCells });
+			expect(calls.find((call) => call.path === CHANGES)?.body).toMatchObject({
+				cells: callInCells,
+			});
+		});
+
+		it.each([
+			[
+				"a stale revision",
+				409,
+				"ROSTER_REVISION_CONFLICT",
+				"Someone changed this roster since you opened it. Check your change again.",
+			],
+			[
+				"the backend refusing the change",
+				422,
+				"ROSTER_CHANGE_REFUSED",
+				"This change can’t be applied. Review the checks.",
+			],
+		])(
+			"given_anEngineOptionsApplyRefusedFor%s_when_applied_then_itSaysWhatHappenedAndWhatToDo",
+			async (_case, status, code, words) => {
+				stubApi({
+					[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
+					[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
+					[`POST ${REPAIR_OPTIONS}`]: answer(
+						repairOptionsFixture([feasibleRepair([callInMove()])])
+					),
+					[`POST ${CHANGES}`]: {
+						status,
+						body: { status, title: "Refused", errorCode: code },
+					},
+				});
+				const { onApplied } = show();
+				const user = userEvent.setup();
+				await reviewFirstOption(user);
+				const apply = screen.getByRole("button", { name: "Apply change" });
+				await waitFor(() => {
+					expect(apply).toBeEnabled();
+				});
+
+				await user.click(apply);
+
+				expect(await screen.findByText(words)).toBeVisible();
+				expect(onApplied).not.toHaveBeenCalled();
+			}
+		);
+
+		it("given_noOptionAndNoReasons_when_asked_then_saysTheEngineFoundNoWayAndListsNobody", async () => {
+			stubApi({
+				[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
+				[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
+				[`POST ${REPAIR_OPTIONS}`]: answer({
+					...repairOptionsFixture([]),
+					notAssigned: null,
+				}),
+			});
+			show();
+			const user = userEvent.setup();
+			await screen.findByRole("radio", { name: "Aisha Rahman" });
+			await user.click(screen.getByRole("button", { name: "Ask the engine" }));
+
+			expect(
+				await screen.findByText("The engine found no way to fill this.")
+			).toBeVisible();
+			expect(screen.queryByText(/Why nobody was assigned/)).toBeNull();
+		});
+
+		it("given_theEngineDown_when_asked_then_saysSoAndTryAgainAsksAgain", async () => {
+			const calls = stubApi({
+				[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
+				[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
+				[`POST ${REPAIR_OPTIONS}`]: [
+					{
+						status: 502,
+						body: {
+							status: 502,
+							title: "Bad gateway",
+							errorCode: "REPAIR_ENGINE_FAILED",
+						},
+					},
+					answer(repairOptionsFixture([feasibleRepair([callInMove()])])),
+				],
+			});
+			show();
+			const user = userEvent.setup();
+			await screen.findByRole("radio", { name: "Aisha Rahman" });
+			await user.click(screen.getByRole("button", { name: "Ask the engine" }));
+
+			expect(
+				await screen.findByText("The engine couldn’t answer.")
+			).toBeVisible();
+			await user.click(screen.getByRole("button", { name: "Try again" }));
+
+			expect(
+				await screen.findByRole("button", { name: "Review this change" })
+			).toBeVisible();
+			expect(calls.filter((call) => call.path === REPAIR_OPTIONS)).toHaveLength(
+				2
+			);
+		});
+
+		it("given_aStaleRefusal_when_theRosterIsReadAgain_then_theStaleWordsDoNotSitUnderAnotherChange", async () => {
+			stubApi({
+				[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
+				[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
+				[`POST ${REPAIR_OPTIONS}`]: answer(
+					repairOptionsFixture([feasibleRepair([callInMove()])])
+				),
+				[`POST ${CHANGES}`]: {
+					status: 409,
+					body: {
+						status: 409,
+						title: "Conflict",
+						errorCode: "ROSTER_REVISION_CONFLICT",
+					},
+				},
+			});
+			show();
+			const user = userEvent.setup();
+			await reviewFirstOption(user);
+			const apply = screen.getByRole("button", { name: "Apply change" });
+			await waitFor(() => {
+				expect(apply).toBeEnabled();
+			});
+			await user.click(apply);
+			const stale =
+				"Someone changed this roster since you opened it. Check your change again.";
+			expect(await screen.findByText(stale)).toBeVisible();
+
+			await user.click(
+				screen.getByRole("button", { name: "Roster read again" })
+			);
+
+			// The engine's change was for the old roster: it is dropped, and the engine asked afresh.
+			expect(
+				await screen.findByRole("button", { name: "Ask the engine" })
+			).toBeVisible();
+			await waitFor(() => {
+				expect(
+					screen.getByRole("radio", { name: "Aisha Rahman" })
+				).toBeChecked();
+			});
+			expect(screen.queryByText(stale)).toBeNull();
+		});
+
+		it("given_noOptionButReasons_when_asked_then_saysTheEngineFoundNoWayAndWhyNobodyWasAssigned", async () => {
+			stubApi({
+				[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
+				[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
+				[`POST ${REPAIR_OPTIONS}`]: answer({
+					...repairOptionsFixture([]),
+					notAssigned: [
+						{
+							memberProfileId: "mp-3",
+							name: "Chen Wei",
+							couldTake: false,
+							reasons: [
+								{
+									code: "RULE",
+									rule: "most_minutes_a_day",
+									constraintId: null,
+									constraintName: null,
+								},
+							],
+						},
+					],
+				}),
+			});
+			show();
+			const user = userEvent.setup();
+			await screen.findByRole("radio", { name: "Aisha Rahman" });
+			await user.click(screen.getByRole("button", { name: "Ask the engine" }));
+
+			expect(
+				await screen.findByText("The engine found no way to fill this.")
+			).toBeVisible();
+			expect(
+				screen.getByRole("region", { name: "Why nobody was assigned" })
+			).toHaveTextContent("Chen Wei");
+		});
+
+		it("given_optionsInTheEnginesOrder_when_listed_then_noExtraHoursFirstAndCostOrderKept", async () => {
+			stubApi({
+				[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
+				[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
+				[`POST ${REPAIR_OPTIONS}`]: answer(
+					repairOptionsFixture([
+						feasibleRepair([callInMove()], {
+							kind: "call_in",
+							extraMinutes: { overtime: 0, restDayWork: 0, timeOffEarned: 0 },
+						}),
+						feasibleRepair(
+							[callInMove({ membershipId: "m-3", displayName: "Chen Wei" })],
+							{
+								kind: "move",
+								extraMinutes: {
+									overtime: 120,
+									restDayWork: 0,
+									timeOffEarned: 0,
+								},
+							}
+						),
+						feasibleRepair(
+							[callInMove({ membershipId: "m-2", displayName: "Ben Ong" })],
+							{
+								kind: "call_in",
+								extraMinutes: {
+									overtime: 480,
+									restDayWork: 0,
+									timeOffEarned: 0,
+								},
+							}
+						),
+					])
+				),
+			});
+			show();
+			const user = userEvent.setup();
+			await screen.findByRole("radio", { name: "Aisha Rahman" });
+			await user.click(screen.getByRole("button", { name: "Ask the engine" }));
+
+			await screen.findByText("No extra hours.");
+			const lines = screen
+				.getAllByText(/^(No extra hours\.|Adds )/)
+				.map((line) => line.textContent);
+			expect(lines).toEqual([
+				"No extra hours.",
+				"Adds 2 h of overtime for Chen Wei that week.",
+				"Adds 8 h of overtime for Ben Ong that week.",
+			]);
+		});
 	});
 });
