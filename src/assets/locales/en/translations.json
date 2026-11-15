@@ -2166,6 +2166,8 @@
 				"title": "Access",
 				"note": "Only places you can see are shown.",
 				"none": "No permissions at the places you can see.",
+				"places": "{{places, list}}",
+				"through": "Through {{roles, list}}",
 				"after": "{{name}}’s access after this change"
 			},
 			"where": "Where",

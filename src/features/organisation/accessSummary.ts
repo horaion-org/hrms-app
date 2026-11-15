@@ -27,6 +27,8 @@ export type PlaceAccess = {
 	departmentId: string | null;
 	/** In catalogue order. */
 	permissions: Array<PermissionKey>;
+	/** The active roles held there, by name, in the order first held; what gives the access. */
+	roleNames: Array<string>;
 };
 
 /** The whole company first, then Branches, then Departments. */
@@ -46,19 +48,27 @@ export const accessSummary = (
 	assignments: ReadonlyArray<MemberAccessRoleAssignment>,
 	roles: ReadonlyArray<AccessRole>
 ): Array<PlaceAccess> => {
-	const byPlace = new Map<string, { place: PlaceRef; keys: Set<string> }>();
+	const byPlace = new Map<
+		string,
+		{ place: PlaceRef; keys: Set<string>; roleNames: Set<string> }
+	>();
 	for (const assignment of assignments) {
 		const role = roles.find(
 			(candidate) => candidate.accessRoleId === assignment.accessRoleId
 		);
 		if (assignment.status !== "ACTIVE" || role?.status !== "ACTIVE") continue;
 		const id = placeKey(assignment);
-		const entry = byPlace.get(id) ?? { place: assignment, keys: new Set() };
+		const entry = byPlace.get(id) ?? {
+			place: assignment,
+			keys: new Set(),
+			roleNames: new Set(),
+		};
 		for (const permission of role.permissions) entry.keys.add(permission);
+		entry.roleNames.add(role.name);
 		byPlace.set(id, entry);
 	}
 	return [...byPlace.values()]
-		.map(({ place, keys }) => {
+		.map(({ place, keys, roleNames }) => {
 			const level = levelOf(scopeOfPlace(place));
 			return {
 				branchId: place.branchId ?? null,
@@ -66,6 +76,7 @@ export const accessSummary = (
 				permissions: PERMISSION_KEYS.filter(
 					(key) => keys.has(key) && assignableAt(key, level)
 				),
+				roleNames: [...roleNames],
 			};
 		})
 		.filter((place) => place.permissions.length > 0)
@@ -144,8 +155,36 @@ export const placeLabels =
 		return undefined;
 	};
 
-/** One place's access in words: where, and one "Section: Level" line per section, e.g. "Scheduling: Manage". */
-export type PlaceAccessText = { place: string; lines: Array<string> };
+/** One place's access in words: where, the roles that give it, and one "Section: Level" line per section, e.g. "Scheduling: Manage". */
+export type PlaceAccessText = {
+	place: string;
+	roles: Array<string>;
+	lines: Array<string>;
+};
+
+/** Places given the same roles and the same access, as one entry naming them all. */
+export type SharedAccessText = {
+	places: Array<string>;
+	roles: Array<string>;
+	lines: Array<string>;
+};
+
+/**
+ * Groups places whose roles and access read the same, so a list is not
+ * repeated per place; each group keeps the order its first place had.
+ */
+export const groupSameAccess = (
+	texts: ReadonlyArray<PlaceAccessText>
+): Array<SharedAccessText> => {
+	const groups = new Map<string, SharedAccessText>();
+	for (const { place, roles, lines } of texts) {
+		const sameAs = JSON.stringify([roles, lines]);
+		const group = groups.get(sameAs);
+		if (group) group.places.push(place);
+		else groups.set(sameAs, { places: [place], roles, lines });
+	}
+	return [...groups.values()];
+};
 
 /**
  * A summary in words, for a `DescriptionList`: per place, how much of each
@@ -163,5 +202,5 @@ export const describeAccess = (
 		const lines = sectionLevels(entry.permissions).map((section) =>
 			sectionLevelText(section, t)
 		);
-		return [{ place, lines }];
+		return [{ place, roles: entry.roleNames, lines }];
 	});

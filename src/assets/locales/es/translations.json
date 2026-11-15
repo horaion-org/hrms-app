@@ -2032,6 +2032,8 @@
 				"title": "Acceso",
 				"note": "Solo se muestran los lugares que puedes ver.",
 				"none": "Sin permisos en los lugares que puedes ver.",
+				"places": "{{places, list}}",
+				"through": "Mediante {{roles, list}}",
 				"after": "Acceso de {{name}} después de este cambio"
 			},
 			"where": "Dónde",

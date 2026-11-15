@@ -238,8 +238,12 @@ describe("member access", () => {
 				english
 			)
 		).toEqual([
-			{ place: "Whole company", lines: ["Organisation: View"] },
-			{ place: "Orchard", lines: ["Leave: View"] },
+			{
+				place: "Whole company",
+				roles: [expect.any(String)],
+				lines: ["Organisation: View"],
+			},
+			{ place: "Orchard", roles: [expect.any(String)], lines: ["Leave: View"] },
 		]);
 	});
 

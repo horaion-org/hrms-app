@@ -4,6 +4,7 @@ import { formattingLocale } from "@/common/formattingLocale";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { formatDate } from "@/components/forms/Calendar";
+import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { CopyButton } from "@/components/ui/CopyButton";
 import {
@@ -12,11 +13,15 @@ import {
 } from "@/components/ui/DescriptionList";
 import {
 	OrganisationIcon,
+	PermissionsIcon,
 	PhoneIcon,
 	RoleIcon,
 	UserIcon,
 } from "@/components/ui/Icon";
-import type { PlaceAccessText } from "@/features/organisation/accessSummary";
+import {
+	groupSameAccess,
+	type PlaceAccessText,
+} from "@/features/organisation/accessSummary";
 import type { MemberProfileDetail } from "@/features/people/api";
 import { PROFILE_FIELD_WIDTH } from "@/features/people/profileLayout";
 
@@ -36,6 +41,7 @@ export type ProfileDetailsProps = {
 };
 
 const key = "people.form";
+const accessKey = "organisation.accessRoles.access";
 
 // Plain text until hovered, like the People list's Contact links; on touch screens as tall as the copy button beside it.
 const contactLinkClasses =
@@ -43,8 +49,10 @@ const contactLinkClasses =
 
 /**
  * A person's profile, read-only, in the same four cards and rows as the
- * form that edits it, then what their system roles give them where.
- * Anything not set reads as a dash.
+ * form that edits it, then what their system roles give them where: one
+ * entry per place, or per set of places given the same roles and access,
+ * naming the roles and showing what they allow as badges, as
+ * `PermissionSummary` does. Anything not set reads as a dash.
  */
 export const ProfileDetails = ({
 	profile,
@@ -151,31 +159,45 @@ export const ProfileDetails = ({
 			{access !== undefined && (
 				<Card
 					className="xl:col-span-2"
-					icon={RoleIcon}
-					title={t("organisation.accessRoles.access.title")}
+					icon={PermissionsIcon}
+					title={t(`${accessKey}.title`)}
 				>
 					<div className="flex flex-col gap-4">
-						<p className="text-sm text-neutral-700">
-							{t("organisation.accessRoles.access.note")}
-						</p>
-						{typeof access === "string" || access.length === 0 ? (
-							<p className="text-base text-neutral-900">
-								{typeof access === "string"
-									? access
-									: t("organisation.accessRoles.access.none")}
-							</p>
+						<p className="text-sm text-neutral-700">{t(`${accessKey}.note`)}</p>
+						{typeof access === "string" ? (
+							<p className="text-base text-neutral-900">{access}</p>
+						) : access.length === 0 ? (
+							<div className="flex flex-col gap-1">
+								<p className="text-base text-neutral-900">
+									{t(`${accessKey}.none`)}
+								</p>
+								<p className="text-sm text-neutral-700">
+									{t("organisation.accessRoles.baseline")}
+								</p>
+							</div>
 						) : (
-							<DescriptionList
-								valueWidth={PROFILE_FIELD_WIDTH}
-								items={access.map(({ place, lines }) => ({
-									label: place,
-									value: lines.map((line) => (
-										<span key={line} className="block">
-											{line}
-										</span>
-									)),
-								}))}
-							/>
+							<ul className="flex flex-col divide-y divide-neutral-300">
+								{groupSameAccess(access).map(({ places, roles, lines }) => (
+									<li
+										key={places.join()}
+										className="flex flex-col gap-2 py-3 first:pt-0 last:pb-0 sm:flex-row sm:items-start sm:gap-6"
+									>
+										<div className="flex min-w-0 flex-col gap-0.5 sm:w-2/5 sm:shrink-0">
+											<span className="font-semibold text-neutral-900">
+												{t(`${accessKey}.places`, { places })}
+											</span>
+											<span className="text-sm text-neutral-700">
+												{t(`${accessKey}.through`, { roles })}
+											</span>
+										</div>
+										<div className="flex min-w-0 flex-wrap gap-2">
+											{lines.map((line) => (
+												<Badge key={line}>{line}</Badge>
+											))}
+										</div>
+									</li>
+								))}
+							</ul>
 						)}
 					</div>
 				</Card>

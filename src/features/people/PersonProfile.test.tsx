@@ -342,18 +342,11 @@ describe("A person's profile", () => {
 		expect(access).toHaveTextContent("Only places you can see are shown.");
 		expect(
 			within(access)
-				.getAllByRole("term")
-				.map(
-					(term) =>
-						`${term.textContent}: ${[
-							...(term.nextElementSibling?.children ?? []),
-						]
-							.map((line) => line.textContent)
-							.join(" / ")}`
-				)
+				.getAllByRole("listitem")
+				.map((entry) => entry.textContent)
 		).toEqual([
-			"Whole company: People: View",
-			"Orchard › Kitchen: People: View / Leave: View",
+			"Whole companyThrough AdminPeople: View",
+			"Orchard › KitchenThrough SupervisorPeople: ViewLeave: View",
 		]);
 		expect(button("Copy phone number")).toBeVisible();
 		expect(button("Copy email address")).toBeVisible();

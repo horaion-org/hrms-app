@@ -5,6 +5,7 @@ import {
 	accessSummary,
 	assignmentsAfter,
 	describeAccess,
+	groupSameAccess,
 	placeLabels,
 } from "@/features/organisation/accessSummary";
 import type {
@@ -66,11 +67,13 @@ describe("a person's access summary", () => {
 				branchId: null,
 				departmentId: null,
 				permissions: ["department:read", "member_profile:read"],
+				roleNames: ["viewer"],
 			},
 			{
 				branchId: "b-2",
 				departmentId: null,
 				permissions: ["leave_request:read", "leave_request:review"],
+				roleNames: ["approver"],
 			},
 			{
 				branchId: "b-1",
@@ -81,6 +84,7 @@ describe("a person's access summary", () => {
 					"leave_request:read",
 					"leave_request:review",
 				],
+				roleNames: ["viewer", "approver"],
 			},
 		]);
 	});
@@ -109,11 +113,17 @@ describe("a person's access summary", () => {
 				ROLES
 			)
 		).toEqual([
-			{ branchId: "b-1", departmentId: null, permissions: ["branch:read"] },
+			{
+				branchId: "b-1",
+				departmentId: null,
+				permissions: ["branch:read"],
+				roleNames: ["creator"],
+			},
 			{
 				branchId: null,
 				departmentId: "d-1",
 				permissions: ["member_note:read"],
+				roleNames: ["newer"],
 			},
 		]);
 		expect(
@@ -176,8 +186,14 @@ describe("a person's access summary", () => {
 							"leave_request:read",
 							"leave_request:review",
 						],
+						roleNames: ["HR manager"],
 					},
-					{ branchId: "b-9", departmentId: null, permissions: ["branch:read"] },
+					{
+						branchId: "b-9",
+						departmentId: null,
+						permissions: ["branch:read"],
+						roleNames: ["Viewer"],
+					},
 				],
 				placeLabels(companyWideWorkspace([]), "c-1", t),
 				t
@@ -185,9 +201,34 @@ describe("a person's access summary", () => {
 		).toEqual([
 			{
 				place: "Whole company",
+				roles: ["HR manager"],
 				// Section by section, in the role editor's order.
 				lines: ["Leave: Manage", "Organisation: View"],
 			},
+		]);
+	});
+
+	it("groups places given the same roles and access into one entry, each in its first place's order", () => {
+		const manager = ["People: Manage", "Leave: Manage"];
+		expect(
+			groupSameAccess([
+				{ place: "North Point", roles: ["Department Manager"], lines: manager },
+				{ place: "Orchard", roles: ["Viewer"], lines: ["People: View"] },
+				{
+					place: "North Point › Security",
+					roles: ["Department Manager"],
+					lines: manager,
+				},
+				{ place: "Marina", roles: ["Leave approver"], lines: manager },
+			])
+		).toEqual([
+			{
+				places: ["North Point", "North Point › Security"],
+				roles: ["Department Manager"],
+				lines: manager,
+			},
+			{ places: ["Orchard"], roles: ["Viewer"], lines: ["People: View"] },
+			{ places: ["Marina"], roles: ["Leave approver"], lines: manager },
 		]);
 	});
 });
