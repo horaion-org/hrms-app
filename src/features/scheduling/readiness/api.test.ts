@@ -63,6 +63,25 @@ describe("scheduling readiness client", () => {
 		]);
 	});
 
+	it("reads how many rules need attention, and none from an API that predates it", async () => {
+		const older: Record<string, unknown> = { ...NOT_READY };
+		delete older["constraintsNeedingAttention"];
+		stubApi({
+			[`GET ${READINESS}`]: {
+				status: 200,
+				body: envelope([
+					readinessFixture({ constraintsNeedingAttention: 2 }),
+					older,
+				]),
+			},
+		});
+
+		const [current, predating] = await fetchSchedulingReadiness("c-1", {});
+
+		expect(current?.constraintsNeedingAttention).toBe(2);
+		expect(predating?.constraintsNeedingAttention).toBe(0);
+	});
+
 	it("rejects a gap it does not know", async () => {
 		stubApi({
 			[`GET ${READINESS}`]: {

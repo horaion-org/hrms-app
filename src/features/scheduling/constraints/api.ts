@@ -184,12 +184,28 @@ const fieldStrictnessSchema = z
 /** Which way a field's values protect people more, as the API declares it per field. */
 export type FieldStrictness = z.infer<typeof fieldStrictnessSchema>;
 
+// A problem a newer API adds reads as UNKNOWN: still a problem, worded generically.
+const constraintValueProblemSchema = z
+	.enum(["UNAVAILABLE", "NOT_LISTED", "LISTS_NONE", "UNKNOWN"])
+	.catch("UNKNOWN");
+
+/**
+ * Why a stored value no longer fits (ADR-0085 in the API): its shift or job
+ * title is gone or inactive, a job title no chosen shift lists any more, or a
+ * shift that lists none of the chosen job titles.
+ */
+export type ConstraintValueProblem = z.infer<
+	typeof constraintValueProblemSchema
+>;
+
 export const constraintValueSchema = z.object({
 	field: constraintFieldSchema,
 	/** As the API takes it: a number, a comparison or weekday name, or a job title's or shift's id. */
 	value: z.string(),
 	/** The job title's or shift's current name; null for a plain value. */
 	name: z.string().nullable(),
+	/** Why the value no longer fits; null when it fits, on a frozen copy, and from an older API. */
+	problem: constraintValueProblemSchema.nullable().default(null),
 });
 
 /** One value of a constraint; a list field has one per item. */
@@ -400,6 +416,12 @@ const constraintFieldSpecSchema = z.object({
 	strictness: fieldStrictnessSchema,
 	/** The comparisons a COMPARISON field takes; null for any other field, or for one that takes all three. */
 	comparisons: z.array(constraintComparisonSchema).nullable().catch(null),
+	/** Each value must be listed by a chosen value of this field (a job title by a chosen shift); null when free. */
+	listedBy: constraintFieldSchema.nullable().catch(null),
+	/** Each chosen value must list a chosen value of one of these fields (a shift, one of the job titles). */
+	listsSomeOf: z.array(constraintFieldSchema).catch([]),
+	/** No value may also be a chosen value of this field (a stand-in is never also counted); null when free. */
+	excludes: constraintFieldSchema.nullable().catch(null),
 });
 
 /** One field a constraint type takes, as the API declares it. */
@@ -425,11 +447,21 @@ const constraintTypeOptionSchema = z.object({
 /** A constraint type and the fields it takes. */
 export type ConstraintTypeOption = z.infer<typeof constraintTypeOptionSchema>;
 
+/**
+ * What one shift or job title lists, keyed by link kind (`JOB_TITLE`): a
+ * shift its job titles; a job title nothing. A kind a newer API adds is kept.
+ */
+const listedIdsSchema = z.record(z.string(), z.array(z.string())).catch({});
+
+/** What a link lists, by kind; empty from an API that predates it. */
+export type ListedIds = z.infer<typeof listedIdsSchema>;
+
 const constraintLinkOptionSchema = z.object({
 	id: z.string(),
 	name: z.string(),
 	/** A shift's job titles; empty for a job title, or from an API that predates it. */
 	jobTitleIds: z.array(z.string()).catch([]),
+	listedIds: listedIdsSchema,
 });
 
 /** The API groups generic { id, name } choices by link kind (ADR-0050). */
@@ -446,14 +478,16 @@ export const constraintOptionsSchema = z
 	.transform(({ types, links, dayTypeChoices }) => ({
 		types,
 		dayTypeChoices,
-		shifts: links.SHIFT.map(({ id, name, jobTitleIds }) => ({
+		shifts: links.SHIFT.map(({ id, name, jobTitleIds, listedIds }) => ({
 			shiftId: id,
 			name,
 			jobTitleIds,
+			listedIds,
 		})),
-		jobTitles: links.JOB_TITLE.map(({ id, name }) => ({
+		jobTitles: links.JOB_TITLE.map(({ id, name, listedIds }) => ({
 			jobTitleId: id,
 			name,
+			listedIds,
 		})),
 	}));
 

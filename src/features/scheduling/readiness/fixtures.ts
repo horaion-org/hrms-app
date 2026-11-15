@@ -15,5 +15,6 @@ export const readinessFixture = (
 	branchName: "Orchard",
 	ready: true,
 	missing: [],
+	constraintsNeedingAttention: 0,
 	...overrides,
 });

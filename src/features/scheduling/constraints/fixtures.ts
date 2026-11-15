@@ -49,6 +49,13 @@ const STRICTNESS: Record<ConstraintField, FieldStrictness> = {
 const DEPARTMENT_ONLY = ["DEPARTMENT"] as const;
 const ANY_LEVEL = ["COMPANY", "DEPARTMENT"] as const;
 
+/** A field whose values depend on no other field's. */
+const NO_DEPENDENCY = {
+	listedBy: null,
+	listsSomeOf: [],
+	excludes: null,
+} as const;
+
 /** A field chosen from a list; one value unless the counts say otherwise. */
 const choice = (
 	field: ConstraintField,
@@ -64,6 +71,7 @@ const choice = (
 	max: null,
 	strictness: STRICTNESS[field],
 	comparisons: null,
+	...NO_DEPENDENCY,
 });
 
 /** A number field in its range. */
@@ -80,6 +88,7 @@ const number = (
 	max,
 	strictness: STRICTNESS[field],
 	comparisons: null,
+	...NO_DEPENDENCY,
 });
 
 /** A comparison field that takes only some comparisons, as the weekly rule's does. */
@@ -88,6 +97,20 @@ const comparisonOf = (
 ): ConstraintFieldSpec => ({
 	...choice("COMPARISON", "COMPARISON"),
 	comparisons,
+});
+
+/** Job titles a chosen shift lists, as the staffing types declare them (ADR-0085). */
+const listedByShift = (field: ConstraintField): ConstraintFieldSpec => ({
+	...choice(field, "JOB_TITLE", 1, 20),
+	listedBy: "SHIFT",
+});
+
+/** Shifts that each list one of `counted`, as the staffing types declare them. */
+const shiftsListing = (
+	counted: Array<ConstraintField>
+): ConstraintFieldSpec => ({
+	...choice("SHIFT", "SHIFT", 1, 20),
+	listsSomeOf: counted,
 });
 
 /** Neither added by the system nor limited to full-timers, as every type but the day-type rules. */
@@ -105,8 +128,8 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 		fields: [
 			choice("COMPARISON", "COMPARISON"),
 			number("HEADCOUNT", 0, 999),
-			choice("JOB_TITLE", "JOB_TITLE", 1, 20),
-			choice("SHIFT", "SHIFT", 1, 20),
+			listedByShift("JOB_TITLE"),
+			shiftsListing(["JOB_TITLE"]),
 		],
 	},
 	{
@@ -119,9 +142,9 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 		fields: [
 			number("HEADCOUNT", 0, 999),
 			number("STAND_INS_PER_PERSON", 1, 10),
-			choice("JOB_TITLE", "JOB_TITLE", 1, 20),
-			choice("STAND_IN_JOB_TITLE", "JOB_TITLE", 1, 20),
-			choice("SHIFT", "SHIFT", 1, 20),
+			listedByShift("JOB_TITLE"),
+			{ ...listedByShift("STAND_IN_JOB_TITLE"), excludes: "JOB_TITLE" },
+			shiftsListing(["JOB_TITLE", "STAND_IN_JOB_TITLE"]),
 		],
 	},
 	{
@@ -134,8 +157,8 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 		fields: [
 			choice("COMPARISON", "COMPARISON"),
 			number("HEADCOUNT", 0, 999),
-			choice("JOB_TITLE", "JOB_TITLE", 1, 20),
-			choice("SHIFT", "SHIFT", 1, 20),
+			listedByShift("JOB_TITLE"),
+			shiftsListing(["JOB_TITLE"]),
 		],
 	},
 	{
@@ -260,13 +283,14 @@ export const CONSTRAINT_OPTIONS: ConstraintOptions = {
 		shiftId,
 		name,
 		jobTitleIds: roles.map((role) => role.jobTitleId),
+		listedIds: { JOB_TITLE: roles.map((role) => role.jobTitleId) },
 	})),
 	jobTitles: [
-		{ jobTitleId: "cashier", name: "Cashier" },
-		{ jobTitleId: "front-desk-lead", name: "Front Desk Lead" },
-		{ jobTitleId: "front-desk-staff", name: "Front Desk Staff" },
-		{ jobTitleId: "service-staff", name: "Service Staff" },
-		{ jobTitleId: "supervisor", name: "Supervisor" },
+		{ jobTitleId: "cashier", name: "Cashier", listedIds: {} },
+		{ jobTitleId: "front-desk-lead", name: "Front Desk Lead", listedIds: {} },
+		{ jobTitleId: "front-desk-staff", name: "Front Desk Staff", listedIds: {} },
+		{ jobTitleId: "service-staff", name: "Service Staff", listedIds: {} },
+		{ jobTitleId: "supervisor", name: "Supervisor", listedIds: {} },
 	],
 };
 
@@ -275,15 +299,19 @@ export const CONSTRAINT_OPTIONS_RESPONSE = {
 	types: CONSTRAINT_OPTIONS.types,
 	dayTypeChoices: CONSTRAINT_OPTIONS.dayTypeChoices,
 	links: {
-		SHIFT: CONSTRAINT_OPTIONS.shifts.map(({ shiftId, name, jobTitleIds }) => ({
-			id: shiftId,
-			name,
-			jobTitleIds,
-		})),
+		SHIFT: CONSTRAINT_OPTIONS.shifts.map(
+			({ shiftId, name, jobTitleIds, listedIds }) => ({
+				id: shiftId,
+				name,
+				jobTitleIds,
+				listedIds,
+			})
+		),
 		JOB_TITLE: CONSTRAINT_OPTIONS.jobTitles.map(({ jobTitleId, name }) => ({
 			id: jobTitleId,
 			name,
 			jobTitleIds: [],
+			listedIds: {},
 		})),
 	},
 };
@@ -293,6 +321,7 @@ const plain = (field: ConstraintField, value: string): ConstraintValue => ({
 	field,
 	value,
 	name: null,
+	problem: null,
 });
 
 /** A job title or shift, with its name. */
@@ -304,6 +333,7 @@ const named = (
 	field,
 	value,
 	name,
+	problem: null,
 });
 
 /** One of Front Office's live constraints; `constraintId`, `name`, `type` and `values` set it apart. */

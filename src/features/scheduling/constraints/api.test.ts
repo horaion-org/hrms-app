@@ -167,6 +167,9 @@ describe("constraints client", () => {
 					max: 24,
 					strictness: "HIGHER_IS_STRICTER",
 					comparisons: null,
+					listedBy: null,
+					listsSomeOf: [],
+					excludes: null,
 				},
 			],
 			addedBySystem: false,
@@ -194,7 +197,115 @@ describe("constraints client", () => {
 		const options = await fetchConstraintOptions("c-1", UNIT);
 
 		expect(options.shifts).toEqual([
-			{ shiftId: "front-desk-am", name: "Front Desk AM", jobTitleIds: [] },
+			{
+				shiftId: "front-desk-am",
+				name: "Front Desk AM",
+				jobTitleIds: [],
+				listedIds: {},
+			},
+		]);
+	});
+
+	it("reads which fields depend on which, and what each shift lists, with none from an API that predates them", async () => {
+		const staffing = CONSTRAINT_OPTIONS_RESPONSE.types.find(
+			(type) => type.type === "SHIFT_STAFFING_WITH_STAND_INS"
+		)!;
+		const older = {
+			...staffing,
+			fields: staffing.fields.map(
+				({ listedBy, listsSomeOf, excludes, ...spec }) => spec
+			),
+		};
+		stubApi({
+			[`GET ${DEPARTMENT}/constraint-options`]: {
+				status: 200,
+				body: envelope({
+					...CONSTRAINT_OPTIONS_RESPONSE,
+					types: [staffing, older],
+				}),
+			},
+		});
+
+		const options = await fetchConstraintOptions("c-1", UNIT);
+
+		const [current, predating] = options.types;
+		expect(
+			current?.fields.map(({ field, listedBy, listsSomeOf, excludes }) => ({
+				field,
+				listedBy,
+				listsSomeOf,
+				excludes,
+			}))
+		).toEqual([
+			{ field: "HEADCOUNT", listedBy: null, listsSomeOf: [], excludes: null },
+			{
+				field: "STAND_INS_PER_PERSON",
+				listedBy: null,
+				listsSomeOf: [],
+				excludes: null,
+			},
+			{
+				field: "JOB_TITLE",
+				listedBy: "SHIFT",
+				listsSomeOf: [],
+				excludes: null,
+			},
+			{
+				field: "STAND_IN_JOB_TITLE",
+				listedBy: "SHIFT",
+				listsSomeOf: [],
+				excludes: "JOB_TITLE",
+			},
+			{
+				field: "SHIFT",
+				listedBy: null,
+				listsSomeOf: ["JOB_TITLE", "STAND_IN_JOB_TITLE"],
+				excludes: null,
+			},
+		]);
+		expect(
+			predating?.fields.every(
+				(spec) =>
+					spec.listedBy === null &&
+					spec.listsSomeOf.length === 0 &&
+					spec.excludes === null
+			)
+		).toBe(true);
+		expect(options.shifts[0]?.listedIds).toEqual({
+			JOB_TITLE: ["front-desk-staff", "front-desk-lead"],
+		});
+		expect(options.jobTitles[0]?.listedIds).toEqual({});
+	});
+
+	it("reads why a stored value no longer fits, a problem the app does not know as unknown, and none from an API that predates it", async () => {
+		const [shift, jobTitle, comparison] = [
+			{
+				field: "SHIFT",
+				value: "gone",
+				name: "Old shift",
+				problem: "UNAVAILABLE",
+			},
+			{
+				field: "JOB_TITLE",
+				value: "lead",
+				name: "Lead",
+				problem: "SOMETHING_NEW",
+			},
+			{ field: "COMPARISON", value: "AT_LEAST", name: null },
+		];
+		stubApi({
+			[`GET ${CONSTRAINTS}`]: {
+				status: 200,
+				body: envelope([{ ...LIVE, values: [shift, jobTitle, comparison] }]),
+			},
+		});
+
+		const [constraint] = await fetchConstraints("c-1", UNIT);
+
+		expect(constraint?.values.map((value) => value.problem)).toEqual([
+			"UNAVAILABLE",
+			"UNKNOWN",
+			null,
 		]);
 	});
 
