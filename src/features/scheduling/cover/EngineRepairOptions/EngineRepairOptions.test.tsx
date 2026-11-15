@@ -256,7 +256,9 @@ describe("EngineRepairOptions", () => {
 			.filter((item) => item.parentElement?.parentElement?.tagName !== "LI");
 		expect(within(free!).getByText("No extra hours.")).toBeVisible();
 		expect(
-			within(overtime!).getByText("Adds 8 h of overtime for Chen Wei that week.")
+			within(overtime!).getByText(
+				"Adds 8 h of overtime for Chen Wei that week."
+			)
 		).toBeVisible();
 		expect(older).not.toHaveTextContent(/extra hours|Adds/);
 	});

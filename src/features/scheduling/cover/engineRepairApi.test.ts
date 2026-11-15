@@ -156,7 +156,10 @@ describe("engine repair options client", () => {
 			},
 		});
 
-		const parsed = await fetchRepairOptions(TARGET, { ...GAP, expectedRevision: 1 });
+		const parsed = await fetchRepairOptions(TARGET, {
+			...GAP,
+			expectedRevision: 1,
+		});
 
 		expect(parsed.options[0]?.kind).toBe("swap_shifts");
 		expect(parsed.options[0]?.extraMinutes?.overtime).toBe(90);

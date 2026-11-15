@@ -5,6 +5,7 @@ import {
 	feasibleRepair,
 	reassignMove,
 } from "@/features/scheduling/cover/engineRepairFixtures";
+import type { RepairOption } from "@/features/scheduling/cover/engineRepairApi";
 import { extraHoursLine } from "@/features/scheduling/cover/engineRepairHours";
 import type { RepairNames } from "@/features/scheduling/cover/engineRepairWords";
 
@@ -18,7 +19,7 @@ const names: RepairNames = {
 const NONE = { overtime: 0, restDayWork: 0, timeOffEarned: 0 };
 
 /** A call-in for Aisha costing the given minutes. */
-const costing = (extraMinutes: typeof NONE | null | undefined) =>
+const costing = (extraMinutes: typeof NONE | null | undefined): RepairOption =>
 	feasibleRepair([callInMove()], { kind: "call_in", extraMinutes });
 
 describe("extraHoursLine", () => {
@@ -27,9 +28,21 @@ describe("extraHoursLine", () => {
 	});
 
 	it.each([
-		["overtime", { ...NONE, overtime: 480 }, "Adds 8 h of overtime for Aisha Rahman that week."],
-		["rest-day work", { ...NONE, restDayWork: 480 }, "Adds 8 h of rest-day work for Aisha Rahman."],
-		["time off earned", { ...NONE, timeOffEarned: 480 }, "Adds 8 h of time off earned for Aisha Rahman."],
+		[
+			"overtime",
+			{ ...NONE, overtime: 480 },
+			"Adds 8 h of overtime for Aisha Rahman that week.",
+		],
+		[
+			"rest-day work",
+			{ ...NONE, restDayWork: 480 },
+			"Adds 8 h of rest-day work for Aisha Rahman.",
+		],
+		[
+			"time off earned",
+			{ ...NONE, timeOffEarned: 480 },
+			"Adds 8 h of time off earned for Aisha Rahman.",
+		],
 	])("names one kind in its own sentence: %s", (_kind, minutes, line) => {
 		expect(extraHoursLine(costing(minutes), names, t)).toBe(line);
 	});
@@ -45,8 +58,14 @@ describe("extraHoursLine", () => {
 			"Adds 8 h of overtime, 8 h of rest-day work and 4 h of time off earned for Aisha Rahman that week."
 		);
 		expect(
-			extraHoursLine(costing({ ...NONE, overtime: 60, restDayWork: 120 }), names, t)
-		).toBe("Adds 1 h of overtime and 2 h of rest-day work for Aisha Rahman that week.");
+			extraHoursLine(
+				costing({ ...NONE, overtime: 60, restDayWork: 120 }),
+				names,
+				t
+			)
+		).toBe(
+			"Adds 1 h of overtime and 2 h of rest-day work for Aisha Rahman that week."
+		);
 	});
 
 	it("writes minutes that are not whole hours as the page does", () => {
@@ -59,11 +78,15 @@ describe("extraHoursLine", () => {
 	});
 
 	it("counts only hours added: a kind that falls is not extra", () => {
+		expect(extraHoursLine(costing({ ...NONE, overtime: -240 }), names, t)).toBe(
+			"No extra hours."
+		);
 		expect(
-			extraHoursLine(costing({ ...NONE, overtime: -240 }), names, t)
-		).toBe("No extra hours.");
-		expect(
-			extraHoursLine(costing({ ...NONE, overtime: -240, restDayWork: 480 }), names, t)
+			extraHoursLine(
+				costing({ ...NONE, overtime: -240, restDayWork: 480 }),
+				names,
+				t
+			)
 		).toBe("Adds 8 h of rest-day work for Aisha Rahman.");
 	});
 

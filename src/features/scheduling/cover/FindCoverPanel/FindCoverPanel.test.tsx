@@ -453,7 +453,9 @@ describe("FindCoverPanel", () => {
 			calls
 				.slice(applied + 1)
 				.filter((call) => call.path === COVER_OPTIONS)
-				.map((call) => (call.body as { expectedRevision: number }).expectedRevision)
+				.map(
+					(call) => (call.body as { expectedRevision: number }).expectedRevision
+				)
 		).toContain(2);
 		expect(
 			previewsAfter.map(
@@ -622,7 +624,10 @@ describe("FindCoverPanel", () => {
 						}),
 					])
 				),
-				[`POST ${CHANGES}`]: { status: 201, body: envelope(rosterChangeFixture()) },
+				[`POST ${CHANGES}`]: {
+					status: 201,
+					body: envelope(rosterChangeFixture()),
+				},
 			});
 			const { onApplied } = show();
 			const user = userEvent.setup();
@@ -632,7 +637,9 @@ describe("FindCoverPanel", () => {
 			expect(
 				await screen.findByText("Adds 8 h of rest-day work for Aisha Rahman.")
 			).toBeVisible();
-			await user.click(screen.getByRole("button", { name: "Review this change" }));
+			await user.click(
+				screen.getByRole("button", { name: "Review this change" })
+			);
 			const apply = screen.getByRole("button", { name: "Apply change" });
 			await waitFor(() => {
 				expect(apply).toBeEnabled();
@@ -663,31 +670,34 @@ describe("FindCoverPanel", () => {
 				"ROSTER_CHANGE_REFUSED",
 				"This change can’t be applied. Review the checks.",
 			],
-		])("given_anEngineOptionsApplyRefusedFor%s_when_applied_then_itSaysWhatHappenedAndWhatToDo", async (_case, status, code, words) => {
-			stubApi({
-				[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
-				[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
-				[`POST ${REPAIR_OPTIONS}`]: answer(
-					repairOptionsFixture([feasibleRepair([callInMove()])])
-				),
-				[`POST ${CHANGES}`]: {
-					status,
-					body: { status, title: "Refused", errorCode: code },
-				},
-			});
-			const { onApplied } = show();
-			const user = userEvent.setup();
-			await reviewFirstOption(user);
-			const apply = screen.getByRole("button", { name: "Apply change" });
-			await waitFor(() => {
-				expect(apply).toBeEnabled();
-			});
+		])(
+			"given_anEngineOptionsApplyRefusedFor%s_when_applied_then_itSaysWhatHappenedAndWhatToDo",
+			async (_case, status, code, words) => {
+				stubApi({
+					[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
+					[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
+					[`POST ${REPAIR_OPTIONS}`]: answer(
+						repairOptionsFixture([feasibleRepair([callInMove()])])
+					),
+					[`POST ${CHANGES}`]: {
+						status,
+						body: { status, title: "Refused", errorCode: code },
+					},
+				});
+				const { onApplied } = show();
+				const user = userEvent.setup();
+				await reviewFirstOption(user);
+				const apply = screen.getByRole("button", { name: "Apply change" });
+				await waitFor(() => {
+					expect(apply).toBeEnabled();
+				});
 
-			await user.click(apply);
+				await user.click(apply);
 
-			expect(await screen.findByText(words)).toBeVisible();
-			expect(onApplied).not.toHaveBeenCalled();
-		});
+				expect(await screen.findByText(words)).toBeVisible();
+				expect(onApplied).not.toHaveBeenCalled();
+			}
+		);
 
 		it("given_noOptionAndNoReasons_when_asked_then_saysTheEngineFoundNoWayAndListsNobody", async () => {
 			stubApi({
@@ -716,7 +726,11 @@ describe("FindCoverPanel", () => {
 				[`POST ${REPAIR_OPTIONS}`]: [
 					{
 						status: 502,
-						body: { status: 502, title: "Bad gateway", errorCode: "REPAIR_ENGINE_FAILED" },
+						body: {
+							status: 502,
+							title: "Bad gateway",
+							errorCode: "REPAIR_ENGINE_FAILED",
+						},
 					},
 					answer(repairOptionsFixture([feasibleRepair([callInMove()])])),
 				],
@@ -726,13 +740,17 @@ describe("FindCoverPanel", () => {
 			await screen.findByRole("radio", { name: "Aisha Rahman" });
 			await user.click(screen.getByRole("button", { name: "Ask the engine" }));
 
-			expect(await screen.findByText("The engine couldn’t answer.")).toBeVisible();
+			expect(
+				await screen.findByText("The engine couldn’t answer.")
+			).toBeVisible();
 			await user.click(screen.getByRole("button", { name: "Try again" }));
 
 			expect(
 				await screen.findByRole("button", { name: "Review this change" })
 			).toBeVisible();
-			expect(calls.filter((call) => call.path === REPAIR_OPTIONS)).toHaveLength(2);
+			expect(calls.filter((call) => call.path === REPAIR_OPTIONS)).toHaveLength(
+				2
+			);
 		});
 
 		it("given_aStaleRefusal_when_theRosterIsReadAgain_then_theStaleWordsDoNotSitUnderAnotherChange", async () => {
@@ -744,7 +762,11 @@ describe("FindCoverPanel", () => {
 				),
 				[`POST ${CHANGES}`]: {
 					status: 409,
-					body: { status: 409, title: "Conflict", errorCode: "ROSTER_REVISION_CONFLICT" },
+					body: {
+						status: 409,
+						title: "Conflict",
+						errorCode: "ROSTER_REVISION_CONFLICT",
+					},
 				},
 			});
 			show();
@@ -759,14 +781,18 @@ describe("FindCoverPanel", () => {
 				"Someone changed this roster since you opened it. Check your change again.";
 			expect(await screen.findByText(stale)).toBeVisible();
 
-			await user.click(screen.getByRole("button", { name: "Roster read again" }));
+			await user.click(
+				screen.getByRole("button", { name: "Roster read again" })
+			);
 
 			// The engine's change was for the old roster: it is dropped, and the engine asked afresh.
 			expect(
 				await screen.findByRole("button", { name: "Ask the engine" })
 			).toBeVisible();
 			await waitFor(() => {
-				expect(screen.getByRole("radio", { name: "Aisha Rahman" })).toBeChecked();
+				expect(
+					screen.getByRole("radio", { name: "Aisha Rahman" })
+				).toBeChecked();
 			});
 			expect(screen.queryByText(stale)).toBeNull();
 		});
@@ -817,14 +843,28 @@ describe("FindCoverPanel", () => {
 							kind: "call_in",
 							extraMinutes: { overtime: 0, restDayWork: 0, timeOffEarned: 0 },
 						}),
-						feasibleRepair([callInMove({ membershipId: "m-3", displayName: "Chen Wei" })], {
-							kind: "move",
-							extraMinutes: { overtime: 120, restDayWork: 0, timeOffEarned: 0 },
-						}),
-						feasibleRepair([callInMove({ membershipId: "m-2", displayName: "Ben Ong" })], {
-							kind: "call_in",
-							extraMinutes: { overtime: 480, restDayWork: 0, timeOffEarned: 0 },
-						}),
+						feasibleRepair(
+							[callInMove({ membershipId: "m-3", displayName: "Chen Wei" })],
+							{
+								kind: "move",
+								extraMinutes: {
+									overtime: 120,
+									restDayWork: 0,
+									timeOffEarned: 0,
+								},
+							}
+						),
+						feasibleRepair(
+							[callInMove({ membershipId: "m-2", displayName: "Ben Ong" })],
+							{
+								kind: "call_in",
+								extraMinutes: {
+									overtime: 480,
+									restDayWork: 0,
+									timeOffEarned: 0,
+								},
+							}
+						),
 					])
 				),
 			});
