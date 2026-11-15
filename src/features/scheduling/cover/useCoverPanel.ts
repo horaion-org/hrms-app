@@ -77,6 +77,8 @@ export type CoverPanel = {
 	/** The chosen option; the first (Suggested) until another is chosen. */
 	selected: CoverOption | undefined;
 	select: (membershipId: string) => void;
+	/** A change is landing, or landed at a revision the roster does not show yet: nothing is asked meanwhile. */
+	landing: boolean;
 	/** Whether the change under review is one of the scheduling engine's options instead. */
 	repairChosen: boolean;
 	/** Reviews an engine option's change, as Find cover's cells, in place of the chosen option. */
@@ -145,9 +147,26 @@ export const useCoverPanel = ({
 	const [chosen, setChosen] = useState<string>();
 	const [editedRemark, setEditedRemark] = useState<string>();
 	const [tickedFor, setTickedFor] = useState<string | null>(null);
-	const [repairCells, setRepairCells] = useState<Array<RosterChangeCell>>();
+	// An engine option's change holds for the revision it was chosen at: once it lands (or the roster moves),
+	// it is dropped with its preview, as a chosen option of the list is when the list is made afresh.
+	const [repairChoice, setRepairChoice] = useState<{
+		cells: Array<RosterChangeCell>;
+		revision: number;
+	}>();
+	const repairCells =
+		repairChoice?.revision === revision ? repairChoice.cells : undefined;
 
-	const list = useQuery(coverOptionsQuery(target, gap, revision));
+	// While a change lands, and until the roster shows its revision, the list and the preview are not asked
+	// again: the landing refreshes the schedule's reads, and these, keyed by the revision it passed, would only
+	// be refused as stale.
+	const landedRevision = apply.data?.toRevision;
+	const landing =
+		apply.isPending ||
+		(landedRevision !== undefined && landedRevision > revision);
+	const list = useQuery({
+		...coverOptionsQuery(target, gap, revision),
+		enabled: !landing,
+	});
 	const options = list.data;
 	const status = statusOf(list, options);
 	const shown = status === "options" ? (options?.options ?? []) : [];
@@ -159,14 +178,15 @@ export const useCoverPanel = ({
 		expectedRevision: revision,
 		cells: chosenCells,
 	};
-	const preview = useQuery(
-		rosterChangePreviewQuery(
+	const preview = useQuery({
+		...rosterChangePreviewQuery(
 			target.companyId,
 			target.unit,
 			target.scheduleId,
 			body
-		)
-	);
+		),
+		enabled: !landing,
+	});
 	const fingerprint = preview.data?.checksFingerprint ?? null;
 	const gate = applyGate(preview.data?.checks ?? []);
 	const ticked = fingerprint !== null && tickedFor === fingerprint;
@@ -237,12 +257,13 @@ export const useCoverPanel = ({
 		selected,
 		select: (membershipId): void => {
 			setChosen(membershipId);
-			setRepairCells(undefined);
+			setRepairChoice(undefined);
 			startReview();
 		},
+		landing,
 		repairChosen: repairCells !== undefined,
 		chooseRepair: (cells): void => {
-			setRepairCells(cells);
+			setRepairChoice({ cells, revision });
 			startReview();
 		},
 		findAgain: (): void => {

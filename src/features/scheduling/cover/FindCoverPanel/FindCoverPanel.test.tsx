@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useState } from "react";
 import { I18nextProvider } from "react-i18next";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { configureApiClient, resetApiClient } from "@/common/api-client";
@@ -35,6 +36,8 @@ const PREVIEW = `${SCHEDULE}/roster-changes/preview`;
 const CHANGES = `${SCHEDULE}/roster-changes`;
 const OFFERS = `${SCHEDULE}/cover-offers`;
 const REPAIR_OPTIONS = `${SCHEDULE}/repair-options`;
+const NETWORK_MILLISECONDS = 5;
+const SETTLE_MILLISECONDS = 50;
 const GAP = coverOptionsFixture().gap;
 const GAP_REQUEST = { shiftId: GAP.shiftId, day: GAP.day };
 const roster = scheduleAssignmentsFixture();
@@ -55,8 +58,33 @@ afterEach(() => {
 	vi.unstubAllGlobals();
 });
 
+/**
+ * The panel at revision 1. With `movesRevisionOnApply`, a landed change moves
+ * it to revision 2 while it stays open, as the roster's own read does.
+ */
+const Harness = ({
+	props,
+	movesRevisionOnApply,
+}: {
+	props: FindCoverPanelProps;
+	movesRevisionOnApply: boolean;
+}): React.JSX.Element => {
+	const [revision, setRevision] = useState(props.revision);
+	return (
+		<FindCoverPanel
+			{...props}
+			revision={revision}
+			onApplied={(change) => {
+				props.onApplied(change);
+				if (movesRevisionOnApply) setRevision(change.toRevision);
+			}}
+		/>
+	);
+};
+
 const show = (
-	props: Partial<FindCoverPanelProps> = {}
+	props: Partial<FindCoverPanelProps> = {},
+	{ movesRevisionOnApply = false }: { movesRevisionOnApply?: boolean } = {}
 ): FindCoverPanelProps => {
 	const all: FindCoverPanelProps = {
 		target: {
@@ -83,7 +111,7 @@ const show = (
 					new QueryClient({ defaultOptions: { queries: { retry: false } } })
 				}
 			>
-				<FindCoverPanel {...all} />
+				<Harness movesRevisionOnApply={movesRevisionOnApply} props={all} />
 			</QueryClientProvider>
 		</I18nextProvider>
 	);
@@ -275,6 +303,128 @@ describe("FindCoverPanel", () => {
 		expect(calls.find((call) => call.path === CHANGES)?.body).toMatchObject({
 			cells: engineCells,
 		});
+	});
+
+	it("given_anEngineOptionApplied_when_theRosterMovesToItsNewRevision_then_nothingIsAskedAgainAndThePanelSaysCovered", async () => {
+		const covered = coverOptionsFixture();
+		const calls = stubApi({
+			// Once the change lands, the shift is covered at the new revision.
+			[`POST ${COVER_OPTIONS}`]: (call) =>
+				(call.body as { expectedRevision: number }).expectedRevision === 1
+					? answer(coverOptionsFixture())
+					: answer({
+							...covered,
+							revision: 2,
+							gap: { ...covered.gap, shortBy: 0 },
+							options: [],
+						}),
+			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
+			[`POST ${REPAIR_OPTIONS}`]: answer(
+				repairOptionsFixture([feasibleRepair([reassignMove()])])
+			),
+			[`POST ${CHANGES}`]: {
+				status: 201,
+				body: envelope(rosterChangeFixture()),
+			},
+		});
+		// Every answer takes a moment, as over a network, so the panel renders between asking and the answer.
+		const answerAtOnce = globalThis.fetch;
+		vi.stubGlobal("fetch", (url: string, init?: RequestInit) =>
+			new Promise((settle) => {
+				setTimeout(settle, NETWORK_MILLISECONDS);
+			}).then(() => answerAtOnce(url, init))
+		);
+		const props = show({}, { movesRevisionOnApply: true });
+		const user = userEvent.setup();
+		await screen.findByRole("radio", { name: "Aisha Rahman" });
+		await user.click(screen.getByRole("button", { name: "Ask the engine" }));
+		await user.click(
+			await screen.findByRole("button", { name: "Review this change" })
+		);
+		const apply = screen.getByRole("button", { name: "Apply change" });
+		await waitFor(() => {
+			expect(apply).toBeEnabled();
+		});
+
+		await user.click(apply);
+		await waitFor(() => {
+			expect(props.onApplied).toHaveBeenCalled();
+		});
+		const applied = calls.findIndex((call) => call.path === CHANGES);
+		// Covered at the new revision: the panel says so, and the engine's section is gone with its options.
+		expect(await screen.findByRole("button", { name: "Close" })).toBeVisible();
+		expect(screen.queryByText("Fills the gap")).toBeNull();
+		await new Promise((settle) => {
+			setTimeout(settle, SETTLE_MILLISECONDS);
+		});
+
+		const after = calls.slice(applied + 1);
+		const atOldRevision = after.filter(
+			(call) =>
+				(call.body as { expectedRevision?: number } | undefined)
+					?.expectedRevision === 1
+		);
+		expect(atOldRevision.map((call) => call.path)).toEqual([]);
+		expect(after.filter((call) => call.path === PREVIEW)).toEqual([]);
+		expect(after.filter((call) => call.path === REPAIR_OPTIONS)).toEqual([]);
+	});
+
+	it("given_anEngineOptionApplied_when_theShiftIsStillShortAtTheNewRevision_then_theEngineIsUnaskedAndItsChangeNotPreviewedAgain", async () => {
+		const calls = stubApi({
+			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
+			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
+			[`POST ${REPAIR_OPTIONS}`]: answer(
+				repairOptionsFixture([feasibleRepair([reassignMove()])])
+			),
+			[`POST ${CHANGES}`]: {
+				status: 201,
+				body: envelope(rosterChangeFixture()),
+			},
+		});
+		const answerAtOnce = globalThis.fetch;
+		vi.stubGlobal("fetch", (url: string, init?: RequestInit) =>
+			new Promise((settle) => {
+				setTimeout(settle, NETWORK_MILLISECONDS);
+			}).then(() => answerAtOnce(url, init))
+		);
+		const props = show({}, { movesRevisionOnApply: true });
+		const user = userEvent.setup();
+		await screen.findByRole("radio", { name: "Aisha Rahman" });
+		await user.click(screen.getByRole("button", { name: "Ask the engine" }));
+		await user.click(
+			await screen.findByRole("button", { name: "Review this change" })
+		);
+		const apply = screen.getByRole("button", { name: "Apply change" });
+		await waitFor(() => {
+			expect(apply).toBeEnabled();
+		});
+
+		await user.click(apply);
+		await waitFor(() => {
+			expect(props.onApplied).toHaveBeenCalled();
+		});
+
+		expect(
+			await screen.findByRole("button", { name: "Ask the engine" })
+		).toBeVisible();
+		// Find cover's own first option is previewed afresh at the new revision; the engine's change never again.
+		await waitFor(() => {
+			expect(screen.getByRole("radio", { name: "Aisha Rahman" })).toBeChecked();
+		});
+		const applied = calls.findIndex((call) => call.path === CHANGES);
+		const previewsAfter = calls
+			.slice(applied + 1)
+			.filter((call) => call.path === PREVIEW);
+		expect(
+			previewsAfter.map(
+				(call) => (call.body as { expectedRevision: number }).expectedRevision
+			)
+		).not.toContain(1);
+		expect(previewsAfter.map((call) => call.body)).not.toContainEqual(
+			expect.objectContaining({
+				cells: [expect.objectContaining({ membershipId: "m-2" })],
+			})
+		);
 	});
 
 	it("given_aStretchOrAPublishedRoster_when_listed_then_madeByHandWithNothingToReview", async () => {

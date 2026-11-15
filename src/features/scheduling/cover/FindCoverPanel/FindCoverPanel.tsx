@@ -63,7 +63,12 @@ export const FindCoverPanel = ({
 	const radioName = useId();
 	const panel = useCoverPanel(input);
 	const { status, options, selected, review, offer } = panel;
-	const engineRepair = useEngineRepair(input.target, input.gap, input.revision);
+	const engineRepair = useEngineRepair(
+		input.target,
+		input.gap,
+		input.revision,
+		panel.landing
+	);
 	// The roster's own days name a shift when the frozen shifts can't be read.
 	const shiftOf = (shiftId: string): CoverShift | undefined =>
 		input.shifts.find((candidate) => candidate.shiftId === shiftId) ??

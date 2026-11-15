@@ -21,18 +21,27 @@ export type EngineRepairState =
 /**
  * The engine's options for one gap, asked for on demand: nothing is sent until
  * `ask`, since the engine runs a solver. Asking again after a refusal sends
- * again. The options come feasible first.
+ * again. An ask holds for the revision it was made at: once the roster moves
+ * (a change applied), the section is unasked again rather than solving anew
+ * unasked; while a change lands (`landing`) nothing is asked. The options come
+ * feasible first.
  */
 export const useEngineRepair = (
 	target: RosterChangeTarget,
 	gap: CoverGapRequest,
-	revision: number
+	revision: number,
+	landing: boolean
 ): EngineRepairState & { ask: () => void } => {
-	const [asked, setAsked] = useState(false);
-	const query = useQuery(repairOptionsQuery(target, gap, revision, asked));
+	const [askedAt, setAskedAt] = useState<number>();
+	const asked = askedAt === revision;
+	// Not asked again while a change lands: the revision it was asked at is passing.
+	const query = useQuery({
+		...repairOptionsQuery(target, gap, revision, asked),
+		enabled: !landing,
+	});
 	const ask = (): void => {
 		if (asked) void query.refetch();
-		else setAsked(true);
+		else setAskedAt(revision);
 	};
 
 	if (!asked) return { status: "idle", ask };
