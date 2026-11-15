@@ -204,8 +204,8 @@ export const constraintValueSchema = z.object({
 	value: z.string(),
 	/** The job title's or shift's current name; null for a plain value. */
 	name: z.string().nullable(),
-	/** Why the value no longer fits; null when it fits, on a frozen copy, and from an older API. */
-	problem: constraintValueProblemSchema.nullable().default(null),
+	/** Why the value no longer fits; null or absent when it fits, on a frozen copy, and from an older API. */
+	problem: constraintValueProblemSchema.nullish(),
 });
 
 /** One value of a constraint; a list field has one per item. */

@@ -305,7 +305,7 @@ describe("constraints client", () => {
 		expect(constraint?.values.map((value) => value.problem)).toEqual([
 			"UNAVAILABLE",
 			"UNKNOWN",
-			null,
+			undefined,
 		]);
 	});
 
