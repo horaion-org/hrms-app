@@ -4559,13 +4559,9 @@
 			"loadFailed": "No se pudieron cargar las horas."
 		},
 		"rulesCheck": {
-			"title": "Validar cuadrante",
 			"check": "Validar cuadrante",
 			"loading": "Validando el cuadrante…",
-			"holds": "No se incumple ninguna regla de tiempo de trabajo.",
-			"breaks": "Este cuadrante incumple:",
 			"brokenUnnamed": "Este cuadrante incumple una regla de tiempo de trabajo.",
-			"unchecked": "No se pudieron comprobar las reglas.",
 			"unnamedRule": "Una regla de tiempo de trabajo",
 			"rule": {
 				"most_minutes_a_day": "Máximo de horas al día",
@@ -4592,13 +4588,11 @@
 			"problemsFound_one": "Validar cuadrante: {{count}} problema encontrado",
 			"problemsFound_other": "Validar cuadrante: {{count}} problemas encontrados",
 			"allClear": "Validar cuadrante: sin problemas",
-			"rulesTitle": "Reglas",
-			"staffingTitle": "Personal",
-			"checkedRules": "Comprobado: horas al día, horas extra al mes, días a la semana, descanso entre turnos, un turno al día, turnos que una persona no puede hacer, la parte más corta de un turno alrededor de un permiso y el límite de llamadas.",
-			"staffed": "Todos los turnos tienen el personal que piden las reglas.",
-			"short": "Falta personal:",
-			"staffingUnchecked": "No se pudo comprobar el personal.",
-			"shortUnnamed": "Falta personal"
+			"staffingUnchecked": "No se pudo comprobar el personal; los turnos con falta de personal de abajo son los anteriores.",
+			"brokenRulesTitle": "Reglas de tiempo de trabajo incumplidas",
+			"outOfDate": "El cuadrante ha cambiado desde que se hizo esta lista. Valídalo para actualizarla.",
+			"rulesUnchecked": "No se pudieron comprobar las reglas de tiempo de trabajo; la lista de abajo es la anterior.",
+			"validated": "Validado: esta lista es el cuadrante tal como está."
 		}
 	},
 	"workspace": {

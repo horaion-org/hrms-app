@@ -13,7 +13,7 @@ export type ValidateScheduleButtonProps = {
 	last?: LastValidation;
 	/** Whether the roster carries hand changes, which prompt a first validation. */
 	hasChanges: boolean;
-	/** Whether its panel is open beside the grid, for `aria-expanded`. */
+	/** Whether Issues, which it validates into, is open beside the grid, for `aria-expanded`. */
 	open: boolean;
 	/** The panel's id, for `aria-controls` while open. */
 	panelId: string;
@@ -24,7 +24,8 @@ const key = "scheduling.rulesCheck";
 
 /**
  * Validate schedule in the week bar, beside Issues and Changed and built as
- * they are. It lights up (the primary look) while the roster changed since it
+ * they are; pressing it validates and opens Issues, which then shows the
+ * validation's gaps and broken rules. It lights up (the primary look) while the roster changed since it
  * was last validated in this visit, or has hand changes and was never
  * validated, and says so in its name; once the roster on screen is validated
  * it is plain again, with the problems' count, as Issues shows its count, or

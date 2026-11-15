@@ -15,6 +15,11 @@ import {
 } from "@/features/scheduling/GeneratedRoster";
 import type { RosterSearch } from "@/features/scheduling/roster/rosterSearch";
 import {
+	rulesCheckFixture,
+	staffingGapFixture,
+} from "@/features/scheduling/rulesCheck/fixtures";
+import type { RosterValidation } from "@/features/scheduling/rulesCheck/useRosterRulesCheck";
+import {
 	emptyFindingsFixture,
 	generatedScheduleFixture,
 	generationFixture,
@@ -518,7 +523,7 @@ describe("GeneratedRoster", () => {
 		});
 	});
 
-	describe("Validate schedule", () => {
+	describe("Issues with Validate schedule", () => {
 		const editing = {
 			target: {
 				companyId: "c-1",
@@ -531,73 +536,146 @@ describe("GeneratedRoster", () => {
 			nonWorkingDayTypes: [],
 			notifiesMembers: false,
 		};
+		/** The generation's own gap on Saturday, as the fixture's findings carry it. */
+		const GENERATED_GAP = "Front Desk AM is one Front Desk Staff short.";
+		const NEW_GAP =
+			"Swing Shift: got 0 of at least 1 employee with role Duty Manager";
 
-		it("given_anEditor_when_rendered_then_itJoinsIssuesInTheWeekBarAndOpensItsResultInTheSidePanel", async () => {
-			const ask = vi.fn();
-			const user = userEvent.setup();
+		/** The roster for an editor, with Validate schedule in the given state. */
+		const showValidated = (validation: RosterValidation): void => {
 			render(
 				<QueryClientProvider client={new QueryClient()}>
 					<Roster
 						assignments={scheduleAssignmentsFixture()}
 						editing={editing}
 						schedule={schedule}
-						validation={{
-							status: "ready",
-							check: { status: "HOLDS", brokenRules: [], staffingGaps: [] },
-							ask,
-							last: {
-								revision: 1,
-								check: { status: "HOLDS", brokenRules: [], staffingGaps: [] },
-							},
-						}}
+						validation={validation}
 					/>
 				</QueryClientProvider>
 			);
+		};
 
-			expect(screen.getByRole("button", { name: "Issues: 4" })).toBeVisible();
-			await user.click(
-				screen.getByRole("button", {
-					name: "Validate schedule: no problems found",
-				})
+		it("given_noValidationYet_when_issuesOpens_then_theGenerationsConflictsWithNoNote", async () => {
+			const user = userEvent.setup();
+			showValidated({ status: "idle", ask: vi.fn() });
+
+			await user.click(screen.getByRole("button", { name: "Issues: 4" }));
+
+			const panel = screen.getByRole("complementary", { name: "Issues" });
+			expect(panel).toHaveTextContent(GENERATED_GAP);
+			expect(panel).not.toHaveTextContent(
+				"has changed since this list was made"
 			);
-
-			const panel = screen.getByRole("complementary", {
-				name: "Validate schedule",
-			});
-			expect(
-				within(panel).getByText("No working-time rule is broken.")
-			).toBeVisible();
-			expect(
-				within(panel).getByText("Every shift is staffed as the rules ask.")
-			).toBeVisible();
-			// Already answered for the roster on screen: opening asks nothing new.
-			expect(ask).not.toHaveBeenCalled();
 		});
 
-		it("given_aRosterNeverValidated_when_opened_then_itIsAskedAndValidatingShows", async () => {
+		it("given_aValidationOfTheRosterOnScreen_when_issuesOpens_then_itsGapsReplaceTheGenerationsAndItsRulesJoin", async () => {
+			const user = userEvent.setup();
+			const check = rulesCheckFixture({
+				status: "BROKEN",
+				brokenRules: [
+					{
+						rule: "most_minutes_a_day",
+						constraintId: "k-1",
+						constraintName: "Twelve hours a day",
+					},
+				],
+				staffingGaps: [
+					staffingGapFixture({
+						conflictId: "validated-2",
+						date: "2026-10-16",
+						start: "2026-10-16T14:00",
+						end: "2026-10-16T22:00",
+						message: NEW_GAP,
+						shiftUuids: ["swing-shift-copy"],
+					}),
+				],
+			});
+			showValidated({
+				status: "ready",
+				check,
+				ask: vi.fn(),
+				last: { revision: 1, check },
+			});
+
+			// The generation's one gap gone, the new gap and the broken rule in: the count follows the list.
+			await user.click(screen.getByRole("button", { name: "Issues: 5" }));
+
+			const panel = screen.getByRole("complementary", { name: "Issues" });
+			expect(panel).not.toHaveTextContent(GENERATED_GAP);
+			expect(panel).toHaveTextContent(NEW_GAP);
+			expect(
+				within(panel).getByRole("heading", {
+					name: "Working-time rules broken",
+				})
+			).toBeVisible();
+			expect(within(panel).getByText("Twelve hours a day")).toBeVisible();
+			expect(
+				within(panel).getByText(
+					"Validated: this list is the schedule as it stands."
+				)
+			).toBeVisible();
+		});
+
+		it("given_aValidationOfAnEarlierRevision_when_issuesOpens_then_itValidatesAndSaysTheListIsOutOfDateWithTheAction", async () => {
 			const ask = vi.fn();
 			const user = userEvent.setup();
-			render(
-				<QueryClientProvider client={new QueryClient()}>
-					<Roster
-						assignments={scheduleAssignmentsFixture()}
-						editing={editing}
-						schedule={schedule}
-						validation={{ status: "idle", ask }}
-					/>
-				</QueryClientProvider>
+			const check = rulesCheckFixture({ staffingGaps: [staffingGapFixture()] });
+			showValidated({
+				status: "idle",
+				ask,
+				last: { revision: 0, check },
+			});
+
+			await user.click(screen.getByRole("button", { name: /^Issues: / }));
+
+			expect(ask).toHaveBeenCalledOnce();
+			const panel = screen.getByRole("complementary", { name: "Issues" });
+			expect(panel).toHaveTextContent(
+				"The schedule has changed since this list was made. Validate it to refresh the list."
 			);
+			await user.click(
+				within(panel).getByRole("button", { name: "Validate schedule" })
+			);
+			expect(ask).toHaveBeenCalledTimes(2);
+		});
+
+		it("given_staffingTheEngineCouldNotWorkOut_when_issuesOpens_then_saysSoAndKeepsTheGenerationsList", async () => {
+			const user = userEvent.setup();
+			const check = rulesCheckFixture({
+				status: "UNCHECKED",
+				staffingGaps: null,
+			});
+			showValidated({
+				status: "ready",
+				check,
+				ask: vi.fn(),
+				last: { revision: 1, check },
+			});
+
+			await user.click(screen.getByRole("button", { name: "Issues: 4" }));
+
+			const panel = screen.getByRole("complementary", { name: "Issues" });
+			expect(panel).toHaveTextContent(GENERATED_GAP);
+			expect(panel).toHaveTextContent(
+				"The working-time rules could not be checked; the list below is from before."
+			);
+			expect(panel).toHaveTextContent(
+				"Staffing could not be checked; the shifts left short below are from before."
+			);
+		});
+
+		it("given_theValidateButton_when_pressed_then_itValidatesAndOpensIssues", async () => {
+			const ask = vi.fn();
+			const user = userEvent.setup();
+			showValidated({ status: "loading", ask });
 
 			await user.click(
-				screen.getByRole("button", { name: "Validate schedule" })
+				screen.getByRole("button", { name: /^Validate schedule/ })
 			);
 
 			expect(ask).toHaveBeenCalledOnce();
-			expect(
-				within(
-					screen.getByRole("complementary", { name: "Validate schedule" })
-				).getByText("Validating the schedule…")
-			).toBeInTheDocument();
+			const panel = screen.getByRole("complementary", { name: "Issues" });
+			expect(panel).toHaveTextContent("Validating the schedule…");
 		});
 
 		it("given_noValidation_when_rendered_then_noValidateButton", () => {

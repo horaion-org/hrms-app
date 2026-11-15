@@ -21,6 +21,7 @@ import {
 	daysToDecideItems,
 	leaveAndCoverItems,
 	startingPointItems,
+	type PanelItem,
 } from "@/features/scheduling/roster/rosterPanels";
 import type { RosterPanel } from "@/features/scheduling/roster/rosterSearch";
 import type { RosterView } from "@/features/scheduling/roster/rosterView";
@@ -67,8 +68,14 @@ export type RosterListInput = {
 	details?: ReadonlyArray<DescriptionListItem>;
 	/** The roster's approval trail for Approval. */
 	approval?: ReactNode;
-	/** The roster's validation result for Validate schedule. */
-	validation?: ReactNode;
+	/**
+	 * What Validate schedule says of the list, first in Issues: that the
+	 * schedule changed since the list was made (with the action), that it is
+	 * being validated, refused, could not be checked, or holds clean.
+	 */
+	validationNote?: ReactNode;
+	/** The working-time rules the last validation found broken, one item each. */
+	brokenRules?: ReadonlyArray<PanelItem>;
 	/** Shows every issue again, from a header's narrowed Issues list. */
 	onShowAllIssues: () => void;
 	/** On a roster that may be changed: opens Find cover for a short shift, from its Issues row. */
@@ -189,9 +196,17 @@ export const issuesSections = (
 		startingRuns,
 		coverOffers,
 		onFindCover,
+		validationNote,
+		brokenRules,
 	} = input;
 	if (issuesAbout) return headerIssueSections(issuesAbout, input);
 	return [
+		{ key: "validation", content: validationNote },
+		{
+			key: "brokenRules",
+			title: t("scheduling.rulesCheck.brokenRulesTitle"),
+			items: brokenRules,
+		},
 		// Each note is a section of its own, spaced like the sections around it.
 		...issueNoteLines(input).map((line) => ({
 			key: line,
@@ -270,13 +285,6 @@ export const approvalSections = ({
 	{ key: "trail", content: approval },
 ];
 
-/** Validate schedule: the rules and the staffing, as the engine checked them. */
-export const validateSections = ({
-	validation,
-}: RosterListInput): Array<RosterSidePanelSection> => [
-	{ key: "validation", content: validation },
-];
-
 const LIST_SECTIONS: Record<
 	RosterPanel,
 	(input: RosterListInput) => Array<RosterSidePanelSection>
@@ -285,7 +293,6 @@ const LIST_SECTIONS: Record<
 	changes: changesSections,
 	details: detailsSections,
 	approval: approvalSections,
-	validate: validateSections,
 };
 
 /**

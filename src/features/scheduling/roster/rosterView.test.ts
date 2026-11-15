@@ -157,7 +157,6 @@ describe("rosterViewOf", () => {
 			changes: 0,
 			details: 1,
 			approval: 1,
-			validate: 1,
 		});
 	});
 

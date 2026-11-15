@@ -4,7 +4,11 @@ import { apiRequest } from "@/common/api-client";
 import type { QueryOptionsFor } from "@/common/query-client";
 import { schedulePath } from "@/features/scheduling/paths";
 import type { RosterChangeTarget } from "@/features/scheduling/rosterChanges/useRosterChangeActions";
-import { scheduleKey } from "@/features/scheduling/schedules/api";
+import {
+	findingsConflictSchema,
+	scheduleKey,
+	type FindingsConflict,
+} from "@/features/scheduling/schedules/api";
 import { administrativeMeta } from "@/features/workspace/queryAccess";
 
 /*
@@ -32,24 +36,15 @@ const brokenRuleSchema = z.object({
 
 export type BrokenRule = z.infer<typeof brokenRuleSchema>;
 
-const staffingGapSchema = z.object({
-	date: z.string(),
-	/** The engine's own sentence for the gap, quoted. */
-	message: z.string().nullable(),
-	missing: z.number().nullable(),
-	constraintId: z.string().nullable(),
-	/** The company constraint's own name, when the gap's rule is one of the schedule's. */
-	constraintName: z.string().nullable(),
-});
-
-export type StaffingGap = z.infer<typeof staffingGapSchema>;
+/** A staffing gap of the roster as it stands, in the shape a generation's findings carry its conflicts. */
+export type StaffingGap = FindingsConflict;
 
 const rosterRulesCheckSchema = z.object({
 	status: statusSchema,
 	/** The rules broken the engine could name; empty unless broken, and possibly empty then. */
 	brokenRules: z.array(brokenRuleSchema),
-	/** The roster's staffing gaps; null when the engine could not work them out. */
-	staffingGaps: z.array(staffingGapSchema).nullable(),
+	/** The roster's staffing gaps, read as the Issues list reads a generation's; null when not worked out. */
+	staffingGaps: z.array(findingsConflictSchema).nullable(),
 });
 
 export type RosterRulesCheck = z.infer<typeof rosterRulesCheckSchema>;

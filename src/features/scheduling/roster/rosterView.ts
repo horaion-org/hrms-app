@@ -73,8 +73,13 @@ export type RosterViewInput = {
 	/** The page gives a Details list, and an approval trail, only when it has them. */
 	hasDetails: boolean;
 	hasApproval: boolean;
-	/** Whether the roster may be validated here (someone who may change it): the Validate schedule panel. */
+	/**
+	 * Whether the roster may be validated here (someone who may change it):
+	 * Issues then opens even when empty, to show what validating found.
+	 */
 	hasValidation?: boolean;
+	/** Issues the last validation adds to the generation's: the working-time rules it found broken. */
+	brokenRuleIssues?: number;
 	/** Days may be changed by hand: a chosen day opens its editor rather than its shift. */
 	editable: boolean;
 	/** The manager's tools are shown, so a chosen day's panel starts with what needs a look. */
@@ -198,6 +203,7 @@ export const rosterViewOf = ({
 	hasDetails,
 	hasApproval,
 	hasValidation = false,
+	brokenRuleIssues = 0,
 	editable,
 	withSummary,
 	changesLeave,
@@ -221,16 +227,16 @@ export const rosterViewOf = ({
 		)
 	);
 	const listCounts: Record<RosterPanel, number> = {
-		issues: issueCount({
-			findings: counts,
-			membersWithChangedStart,
-			leaveAndCoverDays: leaveAndCover.length,
-			daysToDecide: toDecide.length,
-		}),
+		issues:
+			issueCount({
+				findings: counts,
+				membersWithChangedStart,
+				leaveAndCoverDays: leaveAndCover.length,
+				daysToDecide: toDecide.length,
+			}) + brokenRuleIssues,
 		changes: changed.length,
 		details: hasDetails ? 1 : 0,
 		approval: hasApproval ? 1 : 0,
-		validate: hasValidation ? 1 : 0,
 	};
 	const chosenRow = assignments.find(
 		(row) =>
@@ -243,10 +249,10 @@ export const rosterViewOf = ({
 		(day) => day >= period.start && day <= period.end
 	);
 	const shownDay = shownDayOf(periodDays, chosenRow?.day ?? view.day, today);
+	const openable = (panel: RosterPanel): boolean =>
+		listCounts[panel] > 0 || (panel === "issues" && hasValidation);
 	const openList =
-		view.panel && !chosenRow && listCounts[view.panel] > 0
-			? view.panel
-			: undefined;
+		view.panel && !chosenRow && openable(view.panel) ? view.panel : undefined;
 	const chosenMemberRow = rows.find(
 		(row) => row.membershipId === chosenRow?.member?.membershipId
 	);

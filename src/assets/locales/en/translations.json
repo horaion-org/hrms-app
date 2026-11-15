@@ -4759,13 +4759,9 @@
 			"loadFailed": "Couldn’t load the hours."
 		},
 		"rulesCheck": {
-			"title": "Validate schedule",
 			"check": "Validate schedule",
 			"loading": "Validating the schedule…",
-			"holds": "No working-time rule is broken.",
-			"breaks": "This roster breaks:",
 			"brokenUnnamed": "This roster breaks a working-time rule.",
-			"unchecked": "The rules could not be checked.",
 			"unnamedRule": "A working-time rule",
 			"rule": {
 				"most_minutes_a_day": "Most hours a day",
@@ -4792,13 +4788,11 @@
 			"problemsFound_one": "Validate schedule: {{count}} problem found",
 			"problemsFound_other": "Validate schedule: {{count}} problems found",
 			"allClear": "Validate schedule: no problems found",
-			"rulesTitle": "Rules",
-			"staffingTitle": "Staffing",
-			"checkedRules": "Checked: hours a day, overtime a month, days a week, rest between shifts, one shift a day, shifts a person may not take, the shortest part of a shift around leave, and the call-back limit.",
-			"staffed": "Every shift is staffed as the rules ask.",
-			"short": "Staffing is short:",
-			"staffingUnchecked": "Staffing could not be checked.",
-			"shortUnnamed": "Short of staff"
+			"staffingUnchecked": "Staffing could not be checked; the shifts left short below are from before.",
+			"brokenRulesTitle": "Working-time rules broken",
+			"outOfDate": "The schedule has changed since this list was made. Validate it to refresh the list.",
+			"rulesUnchecked": "The working-time rules could not be checked; the list below is from before.",
+			"validated": "Validated: this list is the schedule as it stands."
 		}
 	},
 	"colourSwatchPicker": {

@@ -11,7 +11,6 @@ export const ROSTER_PANELS = [
 	"changes",
 	"details",
 	"approval",
-	"validate",
 ] as const;
 
 export type RosterPanel = (typeof ROSTER_PANELS)[number];

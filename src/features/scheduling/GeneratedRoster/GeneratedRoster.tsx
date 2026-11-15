@@ -16,6 +16,7 @@ import type {
 	RosterSearch,
 } from "@/features/scheduling/roster/rosterSearch";
 import {
+	changedDays,
 	rosterSummarySegments,
 	type SummarySegment,
 } from "@/features/scheduling/roster/rosterSummary";
@@ -26,8 +27,15 @@ import {
 	RosterWeekBar,
 	type RosterWeek,
 } from "@/features/scheduling/RosterWeekBar";
-import { RosterRulesCheck } from "@/features/scheduling/rulesCheck/RosterRulesCheck";
+import {
+	brokenRuleIssueCount,
+	findingsShown,
+	generationStoredGap,
+	validationStanding,
+} from "@/features/scheduling/rulesCheck/issuesFromValidation";
+import { brokenRuleItems } from "@/features/scheduling/rulesCheck/rosterRulesCheckWords";
 import type { RosterValidation } from "@/features/scheduling/rulesCheck/useRosterRulesCheck";
+import { ValidationNote } from "@/features/scheduling/rulesCheck/ValidationNote";
 import { ValidateScheduleButton } from "@/features/scheduling/rulesCheck/ValidateScheduleButton";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 import type { RosterEditing } from "./rosterEditing";
@@ -94,9 +102,11 @@ const key = "scheduling.detail";
  * summary line, the week bar with the Issues and Changed buttons, and the
  * grid. Everything else opens in the one panel beside the grid, named by
  * the view in the URL: a chosen day's shift (read-only) or editor, or one
- * list (Issues, Changed, Details, Approval, Validate schedule). Findings are also marked on the grid.
- * Validate schedule sits in the week bar after Issues and Changed for whoever may change the roster, and
- * lights up once the roster changed since it was last validated.
+ * list (Issues, Changed, Details, Approval). Findings are also marked on the grid.
+ * Validate schedule sits in the week bar after Issues and Changed for whoever may change the roster, lights
+ * up once the roster changed since it was last validated, and validates into Issues: the last validation's
+ * gaps stand in for the generation's conflicts there, and its broken rules join them
+ * (`issuesFromValidation`).
  * A member's own roster shows only the grid, with their changed days marked.
  *
  * What it shows follows from its rows and the view (`rosterViewOf`, through
@@ -125,8 +135,25 @@ export const GeneratedRoster = ({
 	const language = formattingLocale(i18n);
 	const [applied, setApplied] = useState<RosterChange>();
 	const sidePanelId = useId();
+	// Issues says what is true now: the last validation's gaps and broken rules over the generation's.
+	const validating = editing !== undefined && validation !== undefined;
+	const last = validating ? validation.last : undefined;
+	const standing = validationStanding({
+		revision: editing?.revision ?? 0,
+		last,
+		hasChanges: changedDays(assignments).length > 0,
+	});
+	const generationFindings = schedule.generation?.findings ?? null;
+	const shownFindings = findingsShown(generationFindings, last);
+	const scheduleShown =
+		shownFindings === generationFindings || !schedule.generation
+			? schedule
+			: {
+					...schedule,
+					generation: { ...schedule.generation, findings: shownFindings },
+				};
 	const roster = useRosterView({
-		schedule,
+		schedule: scheduleShown,
 		assignments,
 		view,
 		onViewChange,
@@ -135,7 +162,8 @@ export const GeneratedRoster = ({
 		membersWithChangedStart,
 		hasDetails: details !== undefined,
 		hasApproval: Boolean(approval),
-		hasValidation: editing !== undefined && validation !== undefined,
+		hasValidation: validating,
+		brokenRuleIssues: brokenRuleIssueCount(last),
 		editable: editing !== undefined,
 		withSummary,
 		changesLeave: editing?.leave !== undefined,
@@ -191,7 +219,10 @@ export const GeneratedRoster = ({
 				latestChange,
 				details,
 				approval,
-				validation: validation && <RosterRulesCheck check={validation} />,
+				validationNote: validating && (
+					<ValidationNote standing={standing} validation={validation} />
+				),
+				brokenRules: last ? brokenRuleItems(last.check, t) : [],
 				onShowAllIssues: roster.showAllIssues,
 				onFindCover: editing ? roster.openCover : undefined,
 			})
@@ -232,6 +263,14 @@ export const GeneratedRoster = ({
 								size="sm"
 								variant="secondary"
 								onClick={(event) => {
+									// Opening Issues while its list is out of date validates it first.
+									if (
+										panel === "issues" &&
+										openList !== "issues" &&
+										validating &&
+										standing === "outOfDate"
+									)
+										validation.ask();
 									roster.toggleList(panel, event.currentTarget);
 								}}
 							>
@@ -243,13 +282,12 @@ export const GeneratedRoster = ({
 							<ValidateScheduleButton
 								hasChanges={roster.listCounts.changes > 0}
 								last={validation.last}
-								open={openList === "validate"}
+								open={openList === "issues"}
 								panelId={sidePanelId}
 								revision={editing.revision}
 								onClick={(from) => {
-									if (openList !== "validate" && validation.status === "idle")
-										validation.ask();
-									roster.toggleList("validate", from);
+									validation.ask();
+									roster.open({ panel: "issues" }, from);
 								}}
 							/>
 						)}
@@ -286,6 +324,9 @@ export const GeneratedRoster = ({
 							roster={roster}
 							timeZone={schedule.timeZone}
 							viewerMembershipId={viewerMembershipId}
+							engineRepairFor={(gap) =>
+								generationStoredGap(generationFindings, gap)
+							}
 							list={{
 								id: sidePanelId,
 								resetKey: `${openList ?? ""}|${view.member ?? view.date ?? ""}`,
