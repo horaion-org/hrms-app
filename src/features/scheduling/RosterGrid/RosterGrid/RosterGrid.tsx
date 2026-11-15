@@ -199,11 +199,15 @@ export const RosterGrid = ({
 		if (cell.kind !== "shift") {
 			const words = dayWithoutShiftTileText(cell, t);
 			// Part-day leave still takes the whole day this round; its time goes on a second line.
+			// Each line keeps to one line and is cut short in a narrow cell (beside an open panel);
+			// the tile's label and the panel carry it in full.
 			const text =
 				cell.kind === "leave" && cell.leavePortion ? (
-					<span className="flex flex-col">
-						<span>{words}</span>
-						<span>{leavePortionTimeText(cell.leavePortion, t)}</span>
+					<span className="flex max-w-full min-w-0 flex-col">
+						<span className="truncate">{words}</span>
+						<span className="truncate">
+							{leavePortionTimeText(cell.leavePortion, t)}
+						</span>
 					</span>
 				) : (
 					words

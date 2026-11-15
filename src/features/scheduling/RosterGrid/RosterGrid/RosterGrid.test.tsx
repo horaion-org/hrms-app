@@ -171,6 +171,12 @@ describe("RosterGrid", () => {
 		const ben = screen.getByRole("row", { name: /Ben Ong/ });
 		expect(within(ben).getAllByText("07:00–11:00").length).toBeGreaterThan(0);
 		expect(within(ben).getAllByText("Annual leave").length).toBeGreaterThan(0);
+		// Each line keeps to one line, cut short in a narrow cell instead of spilling out of its tile.
+		for (const line of [
+			...within(ben).getAllByText("07:00–11:00"),
+			...within(ben).getAllByText("Annual leave"),
+		])
+			expect(line).toHaveClass("truncate");
 	});
 
 	it("given_aShiftKeptAroundLeaveInTheMiddle_when_rendered_then_theTileShowsBothPiecesWorked", () => {
