@@ -40,6 +40,8 @@ describe("ruleLabel", () => {
 		["days_of_day_types_per_period", "Required days each week"],
 		["max_work_hours_per_day", "Most hours a day"],
 		["max_overtime_hours_per_month", "Most overtime a month"],
+		["shortest_part_shift", "Shortest part of a shift around leave"],
+		["most_call_backs_per_person", "Call-backs on a rest or off day"],
 		["timeblock_demand_coverage", "Forecast demand"],
 		["a_rule_added_later", "A rule added later"],
 	])(

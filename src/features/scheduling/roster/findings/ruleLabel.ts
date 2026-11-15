@@ -19,6 +19,8 @@ const ENGINE_RULE_TYPES: ReadonlyMap<string, ConstraintType> = new Map([
 	["days_of_day_types_per_period", "DAY_TYPE_DAYS_PER_WEEK"],
 	["max_work_hours_per_day", "MAX_WORK_HOURS_PER_DAY"],
 	["max_overtime_hours_per_month", "MAX_OVERTIME_HOURS_PER_MONTH"],
+	["shortest_part_shift", "SHORTEST_PART_SHIFT"],
+	["most_call_backs_per_person", "MAX_CALL_BACKS_PER_PERSON"],
 ]);
 /** The engine's own rule for the demand forecast; no constraint stands behind it. */
 const FORECAST_DEMAND_RULE = "timeblock_demand_coverage";
