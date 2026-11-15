@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
@@ -37,6 +37,12 @@ export type EmploymentTermsRowProps = {
 	>;
 	/** The caller's own profile: read from `/me`, never changed. */
 	self?: boolean;
+	/**
+	 * Edit profile's Employment card: offers Change… and History's corrections
+	 * to whoever may change terms. Read, the row only shows the terms and
+	 * their history.
+	 */
+	editing?: boolean;
 };
 
 type Open =
@@ -47,23 +53,33 @@ type Open =
 
 const key = "employmentTerms.row";
 
+/** A dialog's own form submits only itself: React would carry its submit up to Edit profile's form around the row. */
+const keepSubmitInside = (event: FormEvent): void => {
+	event.stopPropagation();
+};
+
 /**
  * The Employment card's "Employment terms" value: the terms a person works
- * on today in plain words, since when, their own hours and any change ahead,
- * with Change… and History for whoever may change their terms. The terms'
- * name opens them in Settings › Employment for whoever may read the
- * catalogue. On My profile it is read-only.
+ * on today in plain words, since when, their own hours, and on its own line
+ * any change ahead, so a roster before it is not read as if it applied.
+ * History reads the past and coming changes; under Edit profile
+ * (`editing`) whoever may change terms also gets Change… and History's
+ * corrections. The terms' name opens them in Settings › Employment for
+ * whoever may read the catalogue. On My profile it is read-only.
  */
 export const EmploymentTermsRow = ({
 	companyId,
 	profile,
 	self = false,
+	editing = false,
 }: EmploymentTermsRowProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const language = formattingLocale(i18n);
 	const access = useAccess();
 	const canChange =
-		!self && access.can("member_employment_terms:update", personScope(profile));
+		editing &&
+		!self &&
+		access.can("member_employment_terms:update", personScope(profile));
 	const canViewCatalogue = access.can("employment_terms:read", COMPANY_SCOPE);
 	// My profile never links into Settings.
 	const linksToSettings = !self && canViewCatalogue;
@@ -118,7 +134,7 @@ export const EmploymentTermsRow = ({
 						{t(inForce ? `${key}.change` : `${key}.set`)}
 					</Button>
 				)}
-				{canChange && current.history.length > 0 && (
+				{current.history.length > 0 && (
 					<Button
 						variant="textlink"
 						onClick={() => {
@@ -144,100 +160,104 @@ export const EmploymentTermsRow = ({
 								week: formatHours(inForce.contractedWeekMinutes, language),
 							})
 						: undefined,
-					upcoming
-						? t(`${key}.upcoming`, {
-								date: formatDate(upcoming.effectiveFrom, language),
-								name: upcoming.termsName,
-							})
-						: undefined,
 				]
 					.filter(Boolean)
 					.join(" · ")}
 			</span>
-			{current.mismatch && (
-				<Callout className="mt-1" tone="warning">
-					{t(
-						current.mismatch.employmentType === "PART_TIME"
-							? `${key}.mismatch.partTimeOnFullTerms`
-							: `${key}.mismatch.fullTimeOnPartTerms`,
-						{
-							week: formatHours(
-								current.mismatch.effectiveWeekMinutes,
-								language
-							),
-						}
-					)}
-				</Callout>
-			)}
-			{(open?.kind === "change" || open?.kind === "correct") && (
-				<ChangeEmploymentTermsDialog
-					companyId={companyId}
-					correcting={open.kind === "correct" ? open.entry : undefined}
-					current={current}
-					person={profile}
-					onSaved={notify}
-					onClose={() => {
-						setOpen(null);
-					}}
-				/>
-			)}
-			{open?.kind === "history" && (
-				<EmploymentTermsHistoryDialog
-					canChange={canChange}
-					displayName={profile.displayName}
-					history={current.history}
-					onCancelChange={(entry) => {
-						setOpen({ kind: "cancel", entry });
-					}}
-					onClose={() => {
-						setOpen(null);
-					}}
-					onCorrect={(entry) => {
-						setOpen({ kind: "correct", entry });
-					}}
-				/>
-			)}
-			{open?.kind === "cancel" && (
-				<ConfirmDialog
-					cancelLabel={t("employmentTerms.history.keep")}
-					confirmLabel={t("employmentTerms.history.cancelConfirm")}
-					description={t("employmentTerms.history.cancelDescription")}
-					submitting={actions.cancel.isPending}
-					tone="danger"
-					error={
-						actions.cancel.error
-							? memberTermsRefusal(actions.cancel.error, t).message
-							: undefined
-					}
-					title={t("employmentTerms.history.cancelTitle", {
-						name: open.entry.termsName,
-						date: formatDate(open.entry.effectiveFrom, language),
+			{upcoming && (
+				<span className="text-xs font-semibold text-neutral-900">
+					{t(`${key}.upcoming`, {
+						date: formatDate(upcoming.effectiveFrom, language),
+						name: upcoming.termsName,
 					})}
-					onClose={() => {
-						actions.cancel.reset();
-						setOpen({ kind: "history" });
-					}}
-					onConfirm={() => {
-						actions.cancel.mutate(open.entry.id, {
-							onSuccess: () => {
-								actions.cancel.reset();
-								setOpen({ kind: "history" });
-								notify(t("employmentTerms.change.toast.cancelled"));
-							},
-						});
-					}}
-				/>
+				</span>
 			)}
-			{toast && (
-				<Toast
-					key={toast.id}
-					onDismiss={() => {
-						setToast(undefined);
-					}}
-				>
-					{toast.message}
-				</Toast>
-			)}
+			<span className="contents" onSubmit={keepSubmitInside}>
+				{current.mismatch && (
+					<Callout className="mt-1" tone="warning">
+						{t(
+							current.mismatch.employmentType === "PART_TIME"
+								? `${key}.mismatch.partTimeOnFullTerms`
+								: `${key}.mismatch.fullTimeOnPartTerms`,
+							{
+								week: formatHours(
+									current.mismatch.effectiveWeekMinutes,
+									language
+								),
+							}
+						)}
+					</Callout>
+				)}
+				{(open?.kind === "change" || open?.kind === "correct") && (
+					<ChangeEmploymentTermsDialog
+						companyId={companyId}
+						correcting={open.kind === "correct" ? open.entry : undefined}
+						current={current}
+						person={profile}
+						onSaved={notify}
+						onClose={() => {
+							setOpen(null);
+						}}
+					/>
+				)}
+				{open?.kind === "history" && (
+					<EmploymentTermsHistoryDialog
+						canChange={canChange}
+						displayName={profile.displayName}
+						history={current.history}
+						onCancelChange={(entry) => {
+							setOpen({ kind: "cancel", entry });
+						}}
+						onClose={() => {
+							setOpen(null);
+						}}
+						onCorrect={(entry) => {
+							setOpen({ kind: "correct", entry });
+						}}
+					/>
+				)}
+				{open?.kind === "cancel" && (
+					<ConfirmDialog
+						cancelLabel={t("employmentTerms.history.keep")}
+						confirmLabel={t("employmentTerms.history.cancelConfirm")}
+						description={t("employmentTerms.history.cancelDescription")}
+						submitting={actions.cancel.isPending}
+						tone="danger"
+						error={
+							actions.cancel.error
+								? memberTermsRefusal(actions.cancel.error, t).message
+								: undefined
+						}
+						title={t("employmentTerms.history.cancelTitle", {
+							name: open.entry.termsName,
+							date: formatDate(open.entry.effectiveFrom, language),
+						})}
+						onClose={() => {
+							actions.cancel.reset();
+							setOpen({ kind: "history" });
+						}}
+						onConfirm={() => {
+							actions.cancel.mutate(open.entry.id, {
+								onSuccess: () => {
+									actions.cancel.reset();
+									setOpen({ kind: "history" });
+									notify(t("employmentTerms.change.toast.cancelled"));
+								},
+							});
+						}}
+					/>
+				)}
+				{toast && (
+					<Toast
+						key={toast.id}
+						onDismiss={() => {
+							setToast(undefined);
+						}}
+					>
+						{toast.message}
+					</Toast>
+				)}
+			</span>
 		</span>
 	);
 };

@@ -5161,7 +5161,7 @@
 			"since": "Desde el {{date}}",
 			"unset": "Sin fijar",
 			"ownHours": "Sus horas propias: {{week}} h a la semana",
-			"upcoming": "Desde el {{date}}: {{name}}",
+			"upcoming": "Cambia a {{name}} desde el {{date}}.",
 			"set": "Fijar…",
 			"change": "Cambiar…",
 			"history": "Historial",
