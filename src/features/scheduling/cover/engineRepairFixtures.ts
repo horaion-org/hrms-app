@@ -1,4 +1,5 @@
 import type {
+	NotAssignedPerson,
 	RepairMove,
 	RepairOption,
 	RepairOptions,
@@ -100,7 +101,43 @@ export const infeasibleRepair = (): RepairOption => ({
 	warnings: [],
 });
 
-/** The engine's answer with the given options. */
+/** The engine's answer with the given options, and why others were not assigned when given. */
 export const repairOptionsFixture = (
-	options: Array<RepairOption> = [feasibleRepair()]
-): RepairOptions => ({ conflictId: "conflict-1", options });
+	options: Array<RepairOption> = [feasibleRepair()],
+	notAssigned: Array<NotAssignedPerson> | null = null
+): RepairOptions => ({ conflictId: "conflict-1", options, notAssigned });
+
+/**
+ * Why the other Front Desk staff were not put on the short shift: Dana is
+ * on leave, Ella would break the company's "Rest between shifts", and Farid
+ * could take it.
+ */
+export const NOT_ASSIGNED_FIXTURE: Array<NotAssignedPerson> = [
+	{
+		memberProfileId: "m-4",
+		name: "Dana Lim",
+		couldTake: false,
+		reasons: [
+			{
+				code: "on_leave",
+				rule: null,
+				constraintId: null,
+				constraintName: null,
+			},
+		],
+	},
+	{
+		memberProfileId: "m-5",
+		name: "Ella Tan",
+		couldTake: false,
+		reasons: [
+			{
+				code: "breaks_rule",
+				rule: "minimum_rest_between_shifts",
+				constraintId: "c-rest",
+				constraintName: "Rest between shifts",
+			},
+		],
+	},
+	{ memberProfileId: "m-6", name: "Farid Aziz", couldTake: true, reasons: [] },
+];

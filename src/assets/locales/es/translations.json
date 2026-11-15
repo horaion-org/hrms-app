@@ -4272,7 +4272,24 @@
 				},
 				"review": "Revisar este cambio",
 				"byHand": "La aplicación no puede aplicar esta: hazla a mano en el cuadrante.",
-				"noneChecked": "Ninguna de estas opciones se ha comprobado con las reglas de tiempo de trabajo: horas al día, horas extra al mes, días a la semana y permisos. Compruébalo antes de cambiar el cuadrante."
+				"noneChecked": "Ninguna de estas opciones se ha comprobado con las reglas de tiempo de trabajo: horas al día, horas extra al mes, días a la semana y permisos. Compruébalo antes de cambiar el cuadrante.",
+				"whyNot": {
+					"title": "Por qué no se asignó a nadie",
+					"couldTake": "Podría cubrir este turno",
+					"nobodyElse": "Nadie más tiene el puesto de este turno.",
+					"reason": {
+						"fixed_day_no_call_back": "Tiene ese día un descanso o día libre fijo y no se le puede volver a llamar.",
+						"on_leave": "Tiene permiso ese día.",
+						"outside_availability": "No está disponible en el horario de este turno.",
+						"too_little_shift_left": "El permiso de ese día deja muy poco turno por trabajar.",
+						"works_another_shift": "Ya tiene otro turno ese día.",
+						"breaks_unnamed_rule": "Incumpliría una norma de tiempo de trabajo.",
+						"not_checked": "No se comprobó a tiempo."
+					},
+					"breaksRule": "Incumpliría: {{rule}}",
+					"aWorkingTimeRule": "una norma de tiempo de trabajo",
+					"otherReason": "No puede cubrir este turno."
+				}
 			}
 		},
 		"reach": {

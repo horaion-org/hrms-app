@@ -68,9 +68,38 @@ const optionSchema = z.object({
 
 export type RepairOption = z.infer<typeof optionSchema>;
 
+/** One reason the engine gives for not putting someone on the short shift; `code` is open, so a new one still reads. */
+const notAssignedReasonSchema = z.object({
+	code: z.string(),
+	/** The engine's snake_case rule name, for a rule the shift would break. */
+	rule: z.string().nullable(),
+	constraintId: z.string().nullable(),
+	/** The company constraint's own name, when the engine's id is one of the schedule's. */
+	constraintName: z.string().nullable(),
+});
+
+export type NotAssignedReason = z.infer<typeof notAssignedReasonSchema>;
+
+/** Someone with the gap's job title the engine did not put on the shift, and why. */
+const notAssignedPersonSchema = z.object({
+	memberProfileId: z.string(),
+	name: z.string(),
+	/** Whether they could take the shift after all. */
+	couldTake: z.boolean(),
+	reasons: z.array(notAssignedReasonSchema),
+});
+
+export type NotAssignedPerson = z.infer<typeof notAssignedPersonSchema>;
+
 const repairOptionsSchema = z.object({
 	conflictId: z.string(),
 	options: z.array(optionSchema),
+	/**
+	 * Why each person with the gap's job title was not assigned; null when the
+	 * engine could not work it out, and from an older API. Empty: nobody else
+	 * holds the job title.
+	 */
+	notAssigned: z.array(notAssignedPersonSchema).nullable().default(null),
 });
 
 export type RepairOptions = z.infer<typeof repairOptionsSchema>;
