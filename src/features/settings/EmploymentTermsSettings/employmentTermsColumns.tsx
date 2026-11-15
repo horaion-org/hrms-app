@@ -73,11 +73,14 @@ export const employmentTermsColumns = (
 				<span className="block text-neutral-700">{restShort(terms, t)}</span>
 			</>
 		),
+		// A phone keeps the terms and the actions as columns; the rest reads on the name's line, as Job titles does.
+		hideBelow: "md",
 	},
 	{
 		id: "people",
 		header: t(`${key}.people`),
 		sortValue: (terms) => terms.holderCount,
+		hideBelow: "md",
 		cell: (terms) => (
 			<>
 				{canListHolders && terms.holderCount > 0 ? (
@@ -114,6 +117,7 @@ export const employmentTermsColumns = (
 		headerClassName: "w-40",
 		sortValue: (terms) => terms.status,
 		cell: (terms) => statusCell(terms, t),
+		hideBelow: "md",
 	},
 	...(canUpdate
 		? [

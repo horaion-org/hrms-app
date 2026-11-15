@@ -103,12 +103,15 @@ describe("EmploymentTermsSettings", () => {
 
 		const rows = await table(panel);
 		const sixDay = within(rows).getByRole("row", { name: /Six-day shift/ });
-		expect(
-			within(sixDay).getByRole("link", {
-				name: "Show the people on Six-day shift, 12 h",
-			})
-		).toHaveAttribute("href", `/people?branch=all&terms=${SIX_DAY_SHIFT.id}`);
-		expect(within(sixDay).getByRole("link")).toHaveTextContent("41 people");
+		// The phone's summary line repeats the column's link; both go to the same list.
+		const [link] = within(sixDay).getAllByRole("link", {
+			name: "Show the people on Six-day shift, 12 h",
+		});
+		expect(link).toHaveAttribute(
+			"href",
+			`/people?branch=all&terms=${SIX_DAY_SHIFT.id}`
+		);
+		expect(link).toHaveTextContent("41 people");
 	});
 
 	it("shows the counts as plain text to someone who cannot list people's terms company-wide", async () => {
