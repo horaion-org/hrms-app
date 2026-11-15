@@ -48,6 +48,7 @@ export const constraintTypeSchema = z.enum([
 	"SHORTEST_PART_SHIFT",
 	"MAX_CALL_BACKS_PER_PERSON",
 	"PAY_RATES",
+	"NO_OVERTIME_WHEN_GENERATING",
 ]);
 
 /** What a constraint says; its copy (label and sentence) is keyed by this name. */
@@ -88,6 +89,7 @@ const constraintFieldSchema = z.enum([
 	"OVERTIME_PERCENT",
 	"REST_DAY_WORK_PERCENT",
 	"TIME_OFF_EARNED_PERCENT",
+	"DAY_OFF_WORK_PERCENT",
 ]);
 
 /** One field a constraint type takes; its label is keyed by this name. */
@@ -405,11 +407,27 @@ const constraintFieldSpecSchema = z.object({
 /** One field a constraint type takes, as the API declares it. */
 export type ConstraintFieldSpec = z.infer<typeof constraintFieldSpecSchema>;
 
+// A policy a newer API adds reads as UNKNOWN instead of failing the whole answer.
+const requirementPolicySchema = z
+	.enum([
+		"MUST_OR_SHOULD",
+		"ALWAYS_MUST",
+		"ALWAYS_SHOULD",
+		"SETTING",
+		"UNKNOWN",
+	])
+	.catch("UNKNOWN");
+
+/** How a constraint type runs: chosen, always one way, or a setting that is neither. */
+export type RequirementPolicy = z.infer<typeof requirementPolicySchema>;
+
 const constraintTypeOptionSchema = z.object({
 	type: constraintTypeSchema,
 	category: constraintCategorySchema,
 	/** Whether a constraint of the type is a Must or a Should; without, it sends none. */
 	hasRequirement: z.boolean(),
+	/** How it runs; a SETTING is neither a Must nor an If possible, so it carries no label (ADR-0084). */
+	requirementPolicy: requirementPolicySchema,
 	/** Whether a Department may hold only one constraint of the type. */
 	onePerDepartment: z.boolean(),
 	/** The levels it may be set at; only types that link to nothing reach COMPANY. */

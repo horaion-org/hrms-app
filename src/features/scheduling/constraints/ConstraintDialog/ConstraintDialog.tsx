@@ -103,9 +103,20 @@ const HINTED_FIELDS = [
 	"OVERTIME_PERCENT",
 	"REST_DAY_WORK_PERCENT",
 	"TIME_OFF_EARNED_PERCENT",
+	"DAY_OFF_WORK_PERCENT",
 ] as const satisfies ReadonlyArray<ConstraintField>;
 
 type HintedField = (typeof HINTED_FIELDS)[number];
+
+/** Numbers a type may leave out, each worded as a choice: what leaving it out means, or a figure. */
+const CHOICE_FIELDS = [
+	"DAY_OFF_WORK_PERCENT",
+] as const satisfies ReadonlyArray<ConstraintField>;
+
+type ChoiceField = (typeof CHOICE_FIELDS)[number];
+
+const isChoiceField = (field: ConstraintField): field is ChoiceField =>
+	(CHOICE_FIELDS as ReadonlyArray<ConstraintField>).includes(field);
 
 const isHinted = (field: ConstraintField): field is HintedField =>
 	(HINTED_FIELDS as ReadonlyArray<ConstraintField>).includes(field);
@@ -441,16 +452,19 @@ export const ConstraintDialog = ({
 					max: spec.max,
 				})
 			: undefined;
+		// A number the type may leave out is a choice: its "left out" meaning, or a figure.
+		const choiceField = isChoiceField(spec.field) ? spec.field : undefined;
+		const optional = choiceField !== undefined && spec.minCount === 0;
 		return (
 			<FormRow
 				key={spec.field}
-				required
 				className={className}
 				error={error}
 				hint={hint}
 				htmlFor={id}
 				label={t(`scheduling.constraints.fields.${spec.field}`)}
 				layout="stacked"
+				required={!optional}
 			>
 				<Controller
 					control={control}
@@ -468,22 +482,54 @@ export const ConstraintDialog = ({
 							name: field.name,
 							status: error ? ("error" as const) : undefined,
 						};
-						if (spec.kind === "NUMBER")
+						const numberInput = (
+							<Input
+								{...shared}
+								aria-required={optional ? undefined : "true"}
+								id={id}
+								inputMode="numeric"
+								max={spec.max ?? undefined}
+								min={spec.min ?? undefined}
+								type="number"
+								value={value[0] ?? ""}
+								onChange={(event) => {
+									field.onChange([event.target.value]);
+								}}
+							/>
+						);
+						if (choiceField !== undefined && optional)
 							return (
-								<Input
-									{...shared}
-									aria-required="true"
-									id={id}
-									inputMode="numeric"
-									max={spec.max ?? undefined}
-									min={spec.min ?? undefined}
-									type="number"
-									value={value[0] ?? ""}
-									onChange={(event) => {
-										field.onChange([event.target.value]);
-									}}
-								/>
+								<div className="grid gap-3">
+									<div className="grid gap-4 sm:grid-cols-2" role="radiogroup">
+										<RadioCard
+											checked={value.length === 0}
+											disabled={isSubmitting}
+											name={`${formId}-${spec.field}-choice`}
+											value="unset"
+											label={t(
+												`scheduling.constraints.optionalNumbers.${choiceField}.unset`
+											)}
+											onChange={() => {
+												field.onChange([]);
+											}}
+										/>
+										<RadioCard
+											checked={value.length > 0}
+											disabled={isSubmitting}
+											name={`${formId}-${spec.field}-choice`}
+											value="set"
+											label={t(
+												`scheduling.constraints.optionalNumbers.${choiceField}.set`
+											)}
+											onChange={() => {
+												field.onChange([value[0] ?? ""]);
+											}}
+										/>
+									</div>
+									{value.length > 0 && numberInput}
+								</div>
 							);
+						if (spec.kind === "NUMBER") return numberInput;
 						const select = {
 							...shared,
 							"aria-labelledby": labelledBy(spec.field),

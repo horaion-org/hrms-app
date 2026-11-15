@@ -3430,7 +3430,8 @@
 				"MAX_OVERTIME_HOURS_PER_MONTH": "Most overtime a month",
 				"SHORTEST_PART_SHIFT": "Shortest part of a shift around leave",
 				"MAX_CALL_BACKS_PER_PERSON": "Call-backs on a rest or off day",
-				"PAY_RATES": "Pay rates for extra hours"
+				"PAY_RATES": "Pay rates for extra hours",
+				"NO_OVERTIME_WHEN_GENERATING": "No overtime in generated rosters"
 			},
 			"sentences": {
 				"SHIFT_STAFFING": {
@@ -3512,7 +3513,12 @@
 				"MAX_CALL_BACKS_PER_PERSON_zero": "Nobody is called back to work on a rest or off day.",
 				"MAX_CALL_BACKS_PER_PERSON_one": "Everyone may be called back to work on a rest or off day at most <CALL_BACKS/> time in a roster.",
 				"MAX_CALL_BACKS_PER_PERSON_other": "Everyone may be called back to work on a rest or off day at most <CALL_BACKS/> times in a roster.",
-				"PAY_RATES": "Overtime costs <OVERTIME_PERCENT/>% of normal pay, rest-day work <REST_DAY_WORK_PERCENT/>%, and hours given back as time off <TIME_OFF_EARNED_PERCENT/>%.",
+				"PAY_RATES": {
+					"rates": "An hour of overtime costs <OVERTIME_PERCENT/>% of a normal hour, and an hour of work on a rest day <REST_DAY_WORK_PERCENT/>%.",
+					"dayOffOrdinary": "Work on a day off counts as ordinary hours.",
+					"dayOffPriced": "An hour of work on a day off costs <DAY_OFF_WORK_PERCENT/>% of a normal hour."
+				},
+				"NO_OVERTIME_WHEN_GENERATING": "A generated roster gives nobody overtime past their normal day or week and calls nobody back on a rest day. Shifts it can’t staff without extra hours are left as gaps, and overtime is offered in the repair options.",
 				"MAX_DAYS_WITHOUT_DAY_TYPES": {
 					"fullTimers_one": "No full-timer goes more than <DAYS_IN_A_ROW/> day in a row without a <DAY_TYPE/>.",
 					"fullTimers_other": "No full-timer goes more than <DAYS_IN_A_ROW/> days in a row without a <DAY_TYPE/>.",
@@ -3552,9 +3558,10 @@
 				"OVERTIME_HOURS_A_MONTH": "Overtime hours a month",
 				"PART_SHIFT_MINUTES": "Shortest part (minutes)",
 				"CALL_BACKS": "Most call-backs a person",
-				"OVERTIME_PERCENT": "Overtime (% of normal pay)",
-				"REST_DAY_WORK_PERCENT": "Rest-day work (% of normal pay)",
-				"TIME_OFF_EARNED_PERCENT": "Time off earned (%)"
+				"OVERTIME_PERCENT": "An hour of overtime costs (% of a normal hour)",
+				"REST_DAY_WORK_PERCENT": "An hour of work on a rest day costs (% of a normal hour)",
+				"TIME_OFF_EARNED_PERCENT": "Time off earned (%)",
+				"DAY_OFF_WORK_PERCENT": "Work on a day off"
 			},
 			"requirements": {
 				"MUST": "Must",
@@ -3692,7 +3699,14 @@
 				"CALL_BACKS": "how many",
 				"OVERTIME_PERCENT": "how much",
 				"REST_DAY_WORK_PERCENT": "how much",
-				"TIME_OFF_EARNED_PERCENT": "how much"
+				"TIME_OFF_EARNED_PERCENT": "how much",
+				"DAY_OFF_WORK_PERCENT": "how much"
+			},
+			"optionalNumbers": {
+				"DAY_OFF_WORK_PERCENT": {
+					"unset": "Counts as ordinary hours",
+					"set": "Costs this % of a normal hour"
+				}
 			},
 			"statement": "Constraint",
 			"examples": {
@@ -3708,7 +3722,8 @@
 				"MAX_OVERTIME_HOURS_PER_MONTH": "For example: Nobody whose Employment Act limits apply works more than 72 hours of overtime in a calendar month.",
 				"SHORTEST_PART_SHIFT": "For example: A shift is given around leave on the same day only if at least 240 minutes of it are worked.",
 				"MAX_CALL_BACKS_PER_PERSON": "For example: Everyone may be called back to work on a rest or off day at most 2 times in a roster.",
-				"PAY_RATES": "For example: Overtime costs 150% of normal pay, rest-day work 200%, and hours given back as time off 100%."
+				"PAY_RATES": "These rates only guide which roster the engine prefers; they are not used for pay.",
+				"NO_OVERTIME_WHEN_GENERATING": "For example: shifts the team can’t staff without extra hours stay open, and you choose overtime when you repair the roster."
 			},
 			"fieldHints": {
 				"SHIFT": "Choose more than one to count them together each day.",
@@ -3724,8 +3739,9 @@
 				"OVERTIME_HOURS_A_MONTH": "{{min}} to {{max}}. MOM’s limit is 72; rest-day work is outside it, except hours past the normal day.",
 				"PART_SHIFT_MINUTES": "{{min}} to {{max}} minutes. Without this setting, a shift that touches a leave is never given.",
 				"CALL_BACKS": "{{min}} to {{max}}. 0 means nobody is called back; without this setting, nobody is called back either.",
-				"OVERTIME_PERCENT": "{{min}} to {{max}}. MOM’s rate is 150, 1.5 times normal pay.",
-				"REST_DAY_WORK_PERCENT": "{{min}} to {{max}}. MOM’s rate is 200, 2 times normal pay.",
+				"OVERTIME_PERCENT": "{{min}} to {{max}}. MOM’s rate is 150, 1.5 times a normal hour.",
+				"REST_DAY_WORK_PERCENT": "{{min}} to {{max}}. MOM’s rate is 200, 2 times a normal hour.",
+				"DAY_OFF_WORK_PERCENT": "{{min}} to {{max}} when a day off has its own rate.",
 				"TIME_OFF_EARNED_PERCENT": "{{min}} to {{max}}. The rate for hours given back as time off; 100 means one hour off for each extra hour."
 			},
 			"fixedFirmness": {
@@ -3745,7 +3761,8 @@
 				"MAX_OVERTIME_HOURS_PER_MONTH": "Most overtime a month",
 				"SHORTEST_PART_SHIFT": "Shortest part of a shift",
 				"MAX_CALL_BACKS_PER_PERSON": "Call-backs",
-				"PAY_RATES": "Pay rates"
+				"PAY_RATES": "Pay rates",
+				"NO_OVERTIME_WHEN_GENERATING": "No overtime when generating"
 			}
 		},
 		"forecast": {
@@ -4484,7 +4501,8 @@
 						"too_little_shift_left": "Leave that day leaves too little of the shift to work.",
 						"works_another_shift": "Already on another shift that day.",
 						"breaks_unnamed_rule": "Would break a working-time rule.",
-						"not_checked": "Not checked in time."
+						"not_checked": "Not checked in time.",
+						"needs_overtime": "Only as overtime, which isn’t assigned when a roster is generated."
 					},
 					"breaksRule": "Would break: {{rule}}",
 					"aWorkingTimeRule": "a working-time rule",

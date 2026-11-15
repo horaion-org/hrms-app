@@ -4,6 +4,7 @@ import en from "@/assets/locales/en/translations.json";
 import type { NotAssignedReason } from "@/features/scheduling/cover/engineRepairApi";
 import { NOT_ASSIGNED_FIXTURE } from "@/features/scheduling/cover/engineRepairFixtures";
 import {
+	couldTakeTheShift,
 	notAssignedInOrder,
 	notAssignedReasonLine,
 } from "@/features/scheduling/cover/notAssignedWords";
@@ -73,6 +74,35 @@ describe("notAssignedReasonLine", () => {
 		expect(notAssignedReasonLine(reason("breaks_rule"), t)).toBe(
 			"Would break: a working-time rule"
 		);
+	});
+});
+
+describe("needs_overtime", () => {
+	it("words someone who could take the shift only as overtime, which a generated roster never assigns", () => {
+		expect(notAssignedReasonLine(reason("needs_overtime"), t)).toBe(
+			"Only as overtime, which isn’t assigned when a roster is generated."
+		);
+	});
+
+	it("counts them as able to take the shift, listed first, not as a refusal", () => {
+		const overtimeOnly = {
+			memberProfileId: "m-9",
+			name: "Gina Tan",
+			couldTake: false,
+			reasons: [reason("needs_overtime")],
+		};
+		const refused = {
+			memberProfileId: "m-8",
+			name: "Hari Lim",
+			couldTake: false,
+			reasons: [reason("on_leave")],
+		};
+
+		expect(couldTakeTheShift(overtimeOnly)).toBe(true);
+		expect(couldTakeTheShift(refused)).toBe(false);
+		expect(
+			notAssignedInOrder([refused, overtimeOnly]).map((person) => person.name)
+		).toEqual(["Gina Tan", "Hari Lim"]);
 	});
 });
 

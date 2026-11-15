@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import type { NotAssignedPerson } from "@/features/scheduling/cover/engineRepairApi";
 import {
+	couldTakeTheShift,
 	notAssignedInOrder,
 	notAssignedReasonLine,
 } from "@/features/scheduling/cover/notAssignedWords";
@@ -39,7 +40,7 @@ export const NotAssignedList = ({
 						<li key={person.memberProfileId}>
 							<p className="font-semibold text-neutral-900">{person.name}</p>
 							<ul className="text-neutral-800">
-								{person.couldTake && <li>{t(`${key}.couldTake`)}</li>}
+								{couldTakeTheShift(person) && <li>{t(`${key}.couldTake`)}</li>}
 								{person.reasons.map((reason, place) => (
 									// A reason has no id of its own; its place in the engine's list is stable.
 									<li key={place}>{notAssignedReasonLine(reason, t)}</li>
