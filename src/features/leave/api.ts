@@ -94,6 +94,12 @@ export const leaveRequestSchema = z.object({
 	endTime: z.string().nullable().default(null),
 	/** The minutes a part day counts; null for whole days, counted in `workingDays`. */
 	leaveMinutes: z.number().int().nullable().default(null),
+	/**
+	 * For part of one day: whether the person can still work a shift that
+	 * day, as the duration said when the request was made; null for whole
+	 * days and from an older API.
+	 */
+	allowsShiftSameDay: z.boolean().nullable().default(null),
 	/** The applicant's remarks for the reviewer; null when none. Absent from an API older than remarks. */
 	notes: z.string().nullable().default(null),
 	status: leaveStatusSchema,
@@ -451,20 +457,32 @@ const rosteredDaySchema = z.object({
 /** A day of a period the person holds a shift on. */
 export type RosteredDay = z.infer<typeof rosteredDaySchema>;
 
-/** The rostered-days query string: the period, and a part-day leave's times when both are given. */
-const rosteredDaysSearch = (period: {
+/**
+ * The period a rostered-days read covers, and a part-day leave's times with
+ * whether it lets the person still work a shift that day (left out, the
+ * API takes its default).
+ */
+type RosteredDaysPeriod = {
 	start: string;
 	end: string;
 	startTime?: string;
 	endTime?: string;
-}): string =>
-	new URLSearchParams({
+	allowsShiftSameDay?: boolean;
+};
+
+/** The rostered-days query string: the period, and a part-day leave's times and shift choice when both times are given. */
+const rosteredDaysSearch = (period: RosteredDaysPeriod): string => {
+	const search = new URLSearchParams({
 		startDate: period.start,
 		endDate: period.end,
-		...(period.startTime && period.endTime
-			? { startTime: period.startTime, endTime: period.endTime }
-			: {}),
-	}).toString();
+	});
+	if (!period.startTime || !period.endTime) return search.toString();
+	search.set("startTime", period.startTime);
+	search.set("endTime", period.endTime);
+	if (period.allowsShiftSameDay !== undefined)
+		search.set("allowsShiftSameDay", String(period.allowsShiftSameDay));
+	return search.toString();
+};
 
 /** Every rostered-days answer of a company, for refreshing them after a refusal. */
 export const rosteredDaysKey = (
@@ -475,12 +493,13 @@ export const rosteredDaysKey = (
 /**
  * The days of a period the person holds a shift on: the caller's own without
  * `memberId`. With a part-day leave's `startTime` and `endTime`, each day
- * also says what that leave would do to its shift. `allowed` false asks for
- * nothing.
+ * also says what that leave would do to its shift, and with
+ * `allowsShiftSameDay` false, that it takes the shift off. `allowed` false
+ * asks for nothing.
  */
 export const rosteredDaysQuery = (
 	companyId: string,
-	period: { start: string; end: string; startTime?: string; endTime?: string },
+	period: RosteredDaysPeriod,
 	memberId?: string,
 	allowed = true
 ): QueryOptionsFor<
@@ -494,6 +513,7 @@ export const rosteredDaysQuery = (
 		string,
 		string,
 		string,
+		boolean | null,
 	]
 > =>
 	queryOptions({
@@ -504,6 +524,7 @@ export const rosteredDaysQuery = (
 			period.end,
 			period.startTime ?? "",
 			period.endTime ?? "",
+			period.allowsShiftSameDay ?? null,
 		] as const,
 		queryFn: allowed
 			? ({ signal }): Promise<Array<RosteredDay>> =>
@@ -520,6 +541,13 @@ export const rosteredDaysQuery = (
 		retry,
 	});
 
+/**
+ * Whether a leave duration lets the person still work a shift that day when
+ * nothing says otherwise: yes, the API's default for new durations, the
+ * durations made before the choice, and an answer from an older API.
+ */
+export const DEFAULT_ALLOWS_SHIFT_SAME_DAY = true;
+
 /** A leave duration an apply form offers one person ("Morning · 09:00–13:00 · 4 h"). */
 export const leaveDurationOptionSchema = z.object({
 	leaveDurationId: z.string(),
@@ -529,6 +557,8 @@ export const leaveDurationOptionSchema = z.object({
 	endTime: z.string(),
 	/** The length between the two times. */
 	minutes: z.number().int(),
+	/** Whether the person can still work a shift that day; false keeps them off the roster that whole day. */
+	allowsShiftSameDay: z.boolean().catch(DEFAULT_ALLOWS_SHIFT_SAME_DAY),
 });
 
 /** One leave duration a person may pick for part of a day. */

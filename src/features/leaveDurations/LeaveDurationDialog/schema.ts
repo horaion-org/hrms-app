@@ -1,5 +1,6 @@
 import type { TFunction } from "i18next";
 import { z } from "zod";
+import { DEFAULT_ALLOWS_SHIFT_SAME_DAY } from "@/features/leave/api";
 import type {
 	LeaveDurationBody,
 	ManagedLeaveDuration,
@@ -28,6 +29,7 @@ export const leaveDurationSchema = (
 			}),
 			startTime: z.string().min(1, t(`${key}.timeRequired`)),
 			endTime: z.string().min(1, t(`${key}.timeRequired`)),
+			allowsShiftSameDay: z.boolean(),
 			reach: unitReachSchema(t),
 		})
 		.refine((values) => values.startTime !== values.endTime, {
@@ -40,13 +42,15 @@ export type LeaveDurationValues = {
 	name: string;
 	startTime: string;
 	endTime: string;
+	allowsShiftSameDay: boolean;
 	reach: UnitReachValue;
 };
 
 /**
- * Where the form starts: the duration being edited, or a new one on the first
- * reach the person may save, with their only Department picked when that
- * reach is Chosen departments and they hold just one.
+ * Where the form starts: the duration being edited, or a new one that lets
+ * the person still work a shift that day, on the first reach the person may
+ * save, with their only Department picked when that reach is Chosen
+ * departments and they hold just one.
  */
 export const initialLeaveDurationValues = (
 	editing: ManagedLeaveDuration | undefined,
@@ -57,6 +61,7 @@ export const initialLeaveDurationValues = (
 			name: editing.name,
 			startTime: editing.startTime,
 			endTime: editing.endTime,
+			allowsShiftSameDay: editing.allowsShiftSameDay,
 			reach: reachValueOf(editing),
 		};
 	const appliesTo = reach.reaches[0] ?? "COMPANY";
@@ -69,6 +74,7 @@ export const initialLeaveDurationValues = (
 		name: "",
 		startTime: "",
 		endTime: "",
+		allowsShiftSameDay: DEFAULT_ALLOWS_SHIFT_SAME_DAY,
 		reach: { appliesTo, branchIds: [], departmentIds: onlyDepartment },
 	};
 };
@@ -80,5 +86,6 @@ export const leaveDurationBodyOf = (
 	name: values.name,
 	startTime: values.startTime,
 	endTime: values.endTime,
+	allowsShiftSameDay: values.allowsShiftSameDay,
 	...unitReachBody(values.reach),
 });

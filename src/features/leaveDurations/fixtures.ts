@@ -9,6 +9,7 @@ export const managedLeaveDurationFixture = (
 	startTime: "09:00",
 	endTime: "13:00",
 	minutes: 240,
+	allowsShiftSameDay: true,
 	status: "ACTIVE",
 	displayOrder: 1,
 	appliesToBranches: [],

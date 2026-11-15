@@ -27,12 +27,13 @@ afterEach(() => {
 });
 
 describe("leave duration catalogue client", () => {
-	it("reads the durations with their times, length, reach and edit right", async () => {
+	it("reads the durations with their times, length, shift choice, reach and edit right", async () => {
 		stubApi({
 			"GET /api/v1/companies/c-1/leave-durations": {
 				status: 200,
 				body: envelope([
 					managedLeaveDurationFixture({
+						allowsShiftSameDay: false,
 						appliesToDepartments: [KITCHEN_REACH],
 						canEdit: false,
 					}),
@@ -45,17 +46,19 @@ describe("leave duration catalogue client", () => {
 			startTime: "09:00",
 			endTime: "13:00",
 			minutes: 240,
+			allowsShiftSameDay: false,
 			appliesToDepartments: [KITCHEN_REACH],
 			canEdit: false,
 		});
 	});
 
-	it("reads a status newer than the app as unknown, and a missing edit right as no", async () => {
+	it("reads a status newer than the app as unknown, a missing edit right as no, and a missing shift choice as a shift still possible", async () => {
 		const newer: Record<string, unknown> = {
 			...managedLeaveDurationFixture(),
 			status: "ARCHIVED",
 		};
 		delete newer["canEdit"];
+		delete newer["allowsShiftSameDay"];
 		stubApi({
 			"GET /api/v1/companies/c-1/leave-durations": {
 				status: 200,
@@ -63,7 +66,11 @@ describe("leave duration catalogue client", () => {
 			},
 		});
 		const durations = await fetchLeaveDurationCatalogue("c-1");
-		expect(durations[0]).toMatchObject({ status: "UNKNOWN", canEdit: false });
+		expect(durations[0]).toMatchObject({
+			status: "UNKNOWN",
+			canEdit: false,
+			allowsShiftSameDay: true,
+		});
 	});
 
 	it("adds, replaces, reorders and deletes with the bodies the API takes", async () => {
@@ -88,6 +95,7 @@ describe("leave duration catalogue client", () => {
 			name: "Morning",
 			startTime: "09:00",
 			endTime: "13:00",
+			allowsShiftSameDay: false,
 			appliesToBranchIds: [],
 			appliesToDepartmentIds: ["d-kitchen"],
 		};

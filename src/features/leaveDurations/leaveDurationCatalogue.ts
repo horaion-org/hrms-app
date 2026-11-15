@@ -35,8 +35,8 @@ export const movedOrder = (
 
 /**
  * The full replacement that only flips a duration between active and
- * inactive. It sends the duration's times and reach back as they are, since
- * the API replaces them.
+ * inactive. It sends the duration's times, shift choice and reach back as
+ * they are, since the API replaces them.
  */
 export const statusToggleBody = (
 	duration: ManagedLeaveDuration
@@ -44,6 +44,7 @@ export const statusToggleBody = (
 	name: duration.name,
 	startTime: duration.startTime,
 	endTime: duration.endTime,
+	allowsShiftSameDay: duration.allowsShiftSameDay,
 	...unitReachBody(reachValueOf(duration)),
 	status: duration.status === "ACTIVE" ? "INACTIVE" : "ACTIVE",
 });

@@ -27,6 +27,7 @@ export const leaveFixture = (
 	startTime: null,
 	endTime: null,
 	leaveMinutes: null,
+	allowsShiftSameDay: null,
 	notes: null,
 	status: "PENDING",
 	requestedAt: "2026-05-02T08:00:00Z",
@@ -216,6 +217,7 @@ export const partDayLeaveFixture = (
 		startTime: "09:00",
 		endTime: "13:00",
 		leaveMinutes: 240,
+		allowsShiftSameDay: true,
 		...overrides,
 	});
 
@@ -227,6 +229,7 @@ export const LEAVE_DURATION_OPTION_FIXTURES: Array<LeaveDurationOption> = [
 		startTime: "09:00",
 		endTime: "13:00",
 		minutes: 240,
+		allowsShiftSameDay: true,
 	},
 	{
 		leaveDurationId: "ld-night",
@@ -234,5 +237,6 @@ export const LEAVE_DURATION_OPTION_FIXTURES: Array<LeaveDurationOption> = [
 		startTime: "22:00",
 		endTime: "02:00",
 		minutes: 240,
+		allowsShiftSameDay: true,
 	},
 ];

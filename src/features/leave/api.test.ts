@@ -2,6 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { configureApiClient, resetApiClient } from "@/common/api-client";
 import { envelope, stubApi } from "@/common/testing/stubApi";
 import {
+	type LeaveDurationOption,
+	type LeaveOptions,
 	leaveOptionsQuery,
 	leaveRequestSchema,
 	rosteredDaysQuery,
@@ -31,13 +33,25 @@ describe("leaveRequestSchema", () => {
 		expect(parsed.leaveTypeName).toBeNull();
 	});
 
-	it("reads a part-day request's duration, times and minutes", () => {
+	it("reads a part-day request's duration, times, minutes and shift choice", () => {
 		expect(leaveRequestSchema.parse(partDayLeaveFixture())).toMatchObject({
 			durationName: "Morning",
 			startTime: "09:00",
 			endTime: "13:00",
 			leaveMinutes: 240,
+			allowsShiftSameDay: true,
 		});
+		expect(
+			leaveRequestSchema.parse(
+				partDayLeaveFixture({ allowsShiftSameDay: false })
+			).allowsShiftSameDay
+		).toBe(false);
+	});
+
+	it("reads a part-day request from an API older than the shift choice as not saying", () => {
+		const older: Record<string, unknown> = { ...partDayLeaveFixture() };
+		delete older["allowsShiftSameDay"];
+		expect(leaveRequestSchema.parse(older).allowsShiftSameDay).toBeNull();
 	});
 
 	it("reads a request from an API older than part days as whole days", () => {
@@ -71,6 +85,7 @@ describe("leave lifecycle paths", () => {
 			"2026-06-02",
 			"",
 			"",
+			null,
 		]);
 	});
 
@@ -120,6 +135,84 @@ describe("leave lifecycle paths", () => {
 			{ outcome: "SHORTENED", gap: { start: "07:00", end: "11:00" } },
 			{ outcome: "UNKNOWN" },
 		]);
+		resetApiClient();
+		vi.unstubAllGlobals();
+	});
+
+	it("given_aPartDayLeaveWithNoShiftThatDay_when_rosteredDaysAreAsked_then_theChoiceGoesWithTheTimes", async () => {
+		configureApiClient({
+			accessToken: () => Promise.resolve("test-pass"),
+			renew: () => Promise.resolve({ kind: "expired" }),
+			onUnauthenticated: () => {},
+		});
+		const calls = stubApi({
+			"GET /api/v1/companies/c1/me/leave-requests/rostered-days": {
+				status: 200,
+				body: envelope([]),
+			},
+		});
+		const period = {
+			start: "2026-06-01",
+			end: "2026-06-01",
+			startTime: "07:00",
+			endTime: "11:00",
+			allowsShiftSameDay: false,
+		};
+		const query = rosteredDaysQuery("c1", period);
+
+		await (
+			query.queryFn as (context: { signal?: AbortSignal }) => Promise<unknown>
+		)({});
+
+		expect(query.queryKey).toEqual([
+			"leave",
+			"c1",
+			"rostered-days",
+			"me",
+			"2026-06-01",
+			"2026-06-01",
+			"07:00",
+			"11:00",
+			false,
+		]);
+		expect(new URLSearchParams(calls[0]?.search)).toEqual(
+			new URLSearchParams({
+				startDate: "2026-06-01",
+				endDate: "2026-06-01",
+				startTime: "07:00",
+				endTime: "11:00",
+				allowsShiftSameDay: "false",
+			})
+		);
+		resetApiClient();
+		vi.unstubAllGlobals();
+	});
+
+	it("given_theShiftChoiceWithoutTimes_when_rosteredDaysAreAsked_then_itIsNotSent", async () => {
+		configureApiClient({
+			accessToken: () => Promise.resolve("test-pass"),
+			renew: () => Promise.resolve({ kind: "expired" }),
+			onUnauthenticated: () => {},
+		});
+		const calls = stubApi({
+			"GET /api/v1/companies/c1/me/leave-requests/rostered-days": {
+				status: 200,
+				body: envelope([]),
+			},
+		});
+		const query = rosteredDaysQuery("c1", {
+			start: "2026-06-01",
+			end: "2026-06-01",
+			allowsShiftSameDay: false,
+		});
+
+		await (
+			query.queryFn as (context: { signal?: AbortSignal }) => Promise<unknown>
+		)({});
+
+		expect(new URLSearchParams(calls[0]?.search)).toEqual(
+			new URLSearchParams({ startDate: "2026-06-01", endDate: "2026-06-01" })
+		);
 		resetApiClient();
 		vi.unstubAllGlobals();
 	});
@@ -188,5 +281,31 @@ describe("leaveOptionsQuery", () => {
 			leaveTypes: [{ code: "ANNUAL", allowsPartDays: false }],
 			durations: LEAVE_DURATION_OPTION_FIXTURES,
 		});
+	});
+
+	it("reads a duration's shift choice, and an older answer without it as a shift still possible", async () => {
+		const [morning, night] = LEAVE_DURATION_OPTION_FIXTURES as [
+			LeaveDurationOption,
+			LeaveDurationOption,
+		];
+		const older: Record<string, unknown> = { ...night };
+		delete older["allowsShiftSameDay"];
+		stubApi({
+			"GET /api/v1/companies/c1/me/leave-requests/leave-options": {
+				status: 200,
+				body: envelope({
+					leaveTypes: [annual],
+					durations: [{ ...morning, allowsShiftSameDay: false }, older],
+				}),
+			},
+		});
+		const options = await (
+			leaveOptionsQuery("c1").queryFn as (context: {
+				signal?: AbortSignal;
+			}) => Promise<LeaveOptions>
+		)({});
+		expect(
+			options.durations.map((duration) => duration.allowsShiftSameDay)
+		).toEqual([false, true]);
 	});
 });

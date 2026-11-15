@@ -47,6 +47,7 @@ describe("LeaveDurationDialog", () => {
 				name: "Morning",
 				startTime: "09:00",
 				endTime: "13:00",
+				allowsShiftSameDay: true,
 				appliesToBranchIds: [],
 				appliesToDepartmentIds: [],
 			});
