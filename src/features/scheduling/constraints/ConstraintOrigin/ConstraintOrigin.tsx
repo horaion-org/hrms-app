@@ -37,7 +37,9 @@ const standsIn = (constraint: ConstraintOriginProps["constraint"]): boolean => {
 
 /**
  * Where a constraint comes from and how firmly it binds (ADR-0058), as a
- * Badge, or muted text for the department's own:
+ * compact Badge that wraps inside a narrow table cell rather than running
+ * past it (as the statement column's tag does), or muted text for the
+ * department's own:
  * - a work-policy constraint names its lock ("Work policy · Locked"), with a
  *   lock titled "Set in the work policy" when it is locked;
  * - a department's replacement reads "Stricter here" (a locked one) or
@@ -64,21 +66,27 @@ export const ConstraintOrigin = ({
 	const label = (): FunctionComponent => {
 		if (level === "COMPANY") {
 			return companyLabel ? (
-				<Badge tone="neutral">{companyLabel}</Badge>
+				<Badge compact tone="neutral">
+					{companyLabel}
+				</Badge>
 			) : (
 				<span className="text-neutral-700">—</span>
 			);
 		}
 		if (constraint.replacementStatus === "NO_LONGER_STRICTER") {
 			return (
-				<Badge title={t(`${key}.companyRuleAppliesHint`)} tone="warning">
+				<Badge
+					compact
+					title={t(`${key}.companyRuleAppliesHint`)}
+					tone="warning"
+				>
 					{t(`${key}.companyRuleApplies`)}
 				</Badge>
 			);
 		}
 		if (standsIn(constraint)) {
 			return (
-				<Badge tone="neutral">
+				<Badge compact tone="neutral">
 					{t(locked ? `${key}.stricterHere` : `${key}.changedHere`)}
 				</Badge>
 			);
@@ -90,7 +98,7 @@ export const ConstraintOrigin = ({
 	return (
 		<span
 			className={joinClassNames(
-				"inline-flex min-w-0 items-center gap-1.5 text-sm",
+				"flex min-w-0 max-w-full items-start gap-1.5 text-sm",
 				className
 			)}
 		>

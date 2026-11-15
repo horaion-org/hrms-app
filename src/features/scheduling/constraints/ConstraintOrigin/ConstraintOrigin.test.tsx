@@ -160,4 +160,29 @@ describe("ConstraintOrigin", () => {
 
 		expect(screen.getByText("This department")).toBeInTheDocument();
 	});
+
+	it("keeps the work policy token whole inside its cell: it wraps, never truncates or runs past", () => {
+		const { container } = renderOrigin({
+			constraint: {
+				level: "COMPANY",
+				lock: "LOCKED",
+				locked: true,
+				overridesConstraintId: null,
+			},
+		});
+
+		const token = screen.getByText("Work policy · Locked");
+		expect(token).toHaveAttribute("title", "Work policy · Locked");
+		expect(token).toHaveClass("max-w-full", "wrap-anywhere");
+		expect(token).not.toHaveClass("truncate");
+		// The token and its lock are held to the cell's width, the lock never squeezed.
+		expect(container.firstElementChild).toHaveClass(
+			"flex",
+			"min-w-0",
+			"max-w-full"
+		);
+		expect(
+			screen.getByRole("img", { name: "Set in the work policy" })
+		).toHaveClass("shrink-0");
+	});
 });
