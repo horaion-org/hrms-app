@@ -7,9 +7,14 @@ import {
 	brokenRuleIssueCount,
 	findingsShown,
 	generationStoredGap,
+	scheduleWithFindingsShown,
 	validationStanding,
 } from "@/features/scheduling/rulesCheck/issuesFromValidation";
-import { generationFindingsFixture } from "@/features/scheduling/schedules/fixtures";
+import {
+	generationFindingsFixture,
+	generationFixture,
+	scheduleFixture,
+} from "@/features/scheduling/schedules/fixtures";
 import { shiftCopyId } from "@/features/scheduling/shifts/fixtures";
 
 const findings = generationFindingsFixture();
@@ -104,5 +109,37 @@ describe("generationStoredGap", () => {
 		expect(
 			generationStoredGap(null, { shiftId: frontDesk, day: "2026-10-17" })
 		).toBe(false);
+	});
+});
+
+describe("scheduleWithFindingsShown", () => {
+	const validated = {
+		revision: 1,
+		check: rulesCheckFixture({ staffingGaps: [staffingGapFixture()] }),
+	};
+
+	it("swaps the validation's gaps into the generation's findings", () => {
+		const schedule = scheduleFixture({
+			generation: generationFixture({ findings }),
+		});
+
+		const shown = scheduleWithFindingsShown(schedule, validated);
+
+		expect(shown.generation?.findings?.conflicts).toEqual([
+			staffingGapFixture(),
+		]);
+		expect(shown.generation?.findings?.errors).toEqual(findings.errors);
+	});
+
+	it("keeps the same schedule when nothing was validated or there is no generation", () => {
+		const schedule = scheduleFixture({
+			generation: generationFixture({ findings }),
+		});
+		const ungenerated = scheduleFixture({ generation: null });
+
+		expect(scheduleWithFindingsShown(schedule, undefined)).toBe(schedule);
+		expect(scheduleWithFindingsShown(ungenerated, validated)).toBe(
+			ungenerated
+		);
 	});
 });

@@ -29,8 +29,8 @@ import {
 } from "@/features/scheduling/RosterWeekBar";
 import {
 	brokenRuleIssueCount,
-	findingsShown,
 	generationStoredGap,
+	scheduleWithFindingsShown,
 	validationStanding,
 } from "@/features/scheduling/rulesCheck/issuesFromValidation";
 import { brokenRuleItems } from "@/features/scheduling/rulesCheck/rosterRulesCheckWords";
@@ -144,16 +144,8 @@ export const GeneratedRoster = ({
 		hasChanges: changedDays(assignments).length > 0,
 	});
 	const generationFindings = schedule.generation?.findings ?? null;
-	const shownFindings = findingsShown(generationFindings, last);
-	const scheduleShown =
-		shownFindings === generationFindings || !schedule.generation
-			? schedule
-			: {
-					...schedule,
-					generation: { ...schedule.generation, findings: shownFindings },
-				};
 	const roster = useRosterView({
-		schedule: scheduleShown,
+		schedule: scheduleWithFindingsShown(schedule, last),
 		assignments,
 		view,
 		onViewChange,

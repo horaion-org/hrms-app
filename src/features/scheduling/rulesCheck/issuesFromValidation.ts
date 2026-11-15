@@ -1,6 +1,7 @@
 import type { CoverGapRequest } from "@/features/scheduling/cover/api";
 import { brokenRuleCount } from "@/features/scheduling/rulesCheck/rosterRulesCheckWords";
 import type { LastValidation } from "@/features/scheduling/rulesCheck/useRosterRulesCheck";
+import type { RosterSchedule } from "@/features/scheduling/roster/rosterView";
 import type { GenerationFindings } from "@/features/scheduling/schedules/api";
 
 /*
@@ -57,6 +58,22 @@ export const findingsShown = (
 	const gaps = last?.check.staffingGaps;
 	if (!last || gaps === null || gaps === undefined) return findings;
 	return { ...(findings ?? NO_FINDINGS), conflicts: gaps };
+};
+
+/**
+ * The schedule as Issues reads it: its generation's findings as
+ * `findingsShown` gives them; the same schedule when they are unchanged or
+ * there is no generation.
+ */
+export const scheduleWithFindingsShown = <Shown extends RosterSchedule>(
+	schedule: Shown,
+	last: LastValidation | undefined
+): Shown => {
+	if (!schedule.generation) return schedule;
+	const findings = findingsShown(schedule.generation.findings, last);
+	return findings === schedule.generation.findings
+		? schedule
+		: { ...schedule, generation: { ...schedule.generation, findings } };
 };
 
 /** How many issues the last validation's broken rules add: one per rule named, one when broken with none named. */
