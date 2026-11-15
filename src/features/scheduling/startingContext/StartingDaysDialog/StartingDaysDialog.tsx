@@ -153,12 +153,16 @@ export const StartingDaysDialog = ({
 		id: date,
 		header: labelOf(date),
 		headerClassName: "w-40",
+		wrapHeader: true,
 		cell: (member): ReactNode => {
 			const cell = cellOn(member, date);
 			if (cell === undefined) return null;
 			if (cell.locked)
 				return (
-					<span className="block truncate text-sm text-neutral-600">
+					<span
+						className="block truncate text-sm text-neutral-600"
+						title={lockedLabel(cell)}
+					>
 						{lockedLabel(cell)}
 					</span>
 				);
@@ -205,10 +209,14 @@ export const StartingDaysDialog = ({
 		id: `opening-${field}`,
 		header: t(`${key}.opening.${field}`, { day: asOfLabel }),
 		headerClassName: "w-36",
+		wrapHeader: true,
 		cell: (member): ReactNode => {
 			if (!openingByMember.get(member.memberProfileId)?.editable)
 				return (
-					<span className="block truncate text-sm text-neutral-600">
+					<span
+						className="block truncate text-sm text-neutral-600"
+						title={lockedOpeningText(member, field)}
+					>
 						{lockedOpeningText(member, field)}
 					</span>
 				);
@@ -254,11 +262,17 @@ export const StartingDaysDialog = ({
 			pin: "start",
 			cell: (member) => (
 				<span className="block min-w-0">
-					<span className="block truncate text-sm font-semibold">
+					<span
+						className="block truncate text-sm font-semibold"
+						title={member.displayName}
+					>
 						{member.displayName}
 					</span>
 					{member.jobTitleName && (
-						<span className="block truncate text-xs text-neutral-600">
+						<span
+							className="block truncate text-xs text-neutral-600"
+							title={member.jobTitleName}
+						>
 							{member.jobTitleName}
 						</span>
 					)}

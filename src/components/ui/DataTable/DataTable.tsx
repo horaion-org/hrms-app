@@ -54,6 +54,12 @@ export type DataTableColumn<TData extends object> = {
 	cell: (row: TData) => ReactNode;
 	/** The value the column sorts by; a column with one is sortable. */
 	sortValue?: (row: TData) => string | number;
+	/**
+	 * Lets the header wrap onto more lines instead of truncating, for a narrow
+	 * column whose header must read in full (as the availability week grid's
+	 * two-line day headers do).
+	 */
+	wrapHeader?: boolean;
 	/** Classes for the header cell, e.g. a fixed width such as `w-30`. */
 	headerClassName?: string;
 	/** Classes for each body cell, e.g. `font-semibold` or `text-center`. */
@@ -340,7 +346,15 @@ export const DataTable = <TData extends object>({
 									)}
 								>
 									<div className="flex items-center justify-between gap-2">
-										<span className="min-w-0 truncate">{column?.header}</span>
+										<span
+											className={
+												column?.wrapHeader
+													? "min-w-0 py-1 break-words"
+													: "min-w-0 truncate"
+											}
+										>
+											{column?.header}
+										</span>
 										{column === naming &&
 											hiddenSort.bands.map((band) => (
 												<span
