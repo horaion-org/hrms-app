@@ -156,6 +156,17 @@ const offCellOf = (assignment: ScheduleAssignment): RosterDayWithoutShift => {
 	};
 };
 
+/**
+ * On a shift kept around approved part-day leave, the pieces still worked;
+ * undefined when the whole shift is worked (an empty list, or none from an
+ * older API).
+ */
+const workedPiecesOf = ({
+	workedTimes,
+}: Pick<ScheduleAssignment, "workedTimes">):
+	| ReadonlyArray<WorkedTime>
+	| undefined => (workedTimes?.length ? workedTimes : undefined);
+
 /** The day's note, or nothing on a day with nothing to add. */
 const noteOf = (assignment: ScheduleAssignment): RosterDayNote | undefined => {
 	const {
@@ -169,8 +180,12 @@ const noteOf = (assignment: ScheduleAssignment): RosterDayNote | undefined => {
 	// Only a worked day notes its type; a day not worked shows it in its own cell.
 	const workedDayType = shift === null ? null : dayType;
 	// A shift kept around part-day leave always has a note, so its tile can name the leave.
-	const keptAroundLeave = Boolean(assignment.workedTimes?.length);
-	if (!flag && !uncoveredShift && workedDayType === null && !keptAroundLeave)
+	if (
+		!flag &&
+		!uncoveredShift &&
+		workedDayType === null &&
+		workedPiecesOf(assignment) === undefined
+	)
 		return undefined;
 	const leavePortion = leavePortionOf(assignment);
 	return {
@@ -193,6 +208,7 @@ const noteOf = (assignment: ScheduleAssignment): RosterDayNote | undefined => {
 
 const cellOf = (assignment: ScheduleAssignment): RosterCell => {
 	const note = noteOf(assignment);
+	const workedTimes = workedPiecesOf(assignment);
 	if (assignment.shift === null) {
 		const cell = offCellOf(assignment);
 		return note ? { ...cell, note } : cell;
@@ -209,9 +225,7 @@ const cellOf = (assignment: ScheduleAssignment): RosterCell => {
 		unpaidBreakMinutes: assignment.shift.unpaidBreakMinutes,
 		carriesOvertime: assignment.shift.carriesOvertime,
 		role: assignment.jobTitle?.name ?? "",
-		...(assignment.workedTimes?.length
-			? { workedTimes: assignment.workedTimes }
-			: {}),
+		...(workedTimes ? { workedTimes } : {}),
 		...(note ? { note } : {}),
 	};
 };
