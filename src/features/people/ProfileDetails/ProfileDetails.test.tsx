@@ -134,11 +134,16 @@ describe("ProfileDetails", () => {
 		expect(screen.queryByRole("link", { name: /^\+/ })).not.toBeInTheDocument();
 	});
 
-	it("shows where their roles give them permissions, one row per place, noting only visible places count", () => {
+	it("shows each place with the roles that give access there and what they allow as badges, noting only visible places count", () => {
 		show(kent, "Supervisor", [
-			{ place: "Whole company", lines: ["Departments: View"] },
+			{
+				place: "Whole company",
+				roles: ["Viewer"],
+				lines: ["Departments: View"],
+			},
 			{
 				place: "Orchard",
+				roles: ["Leave approver", "Viewer"],
 				lines: ["Branches: View", "Leave: View, Approve or reject"],
 			},
 		]);
@@ -147,25 +152,44 @@ describe("ProfileDetails", () => {
 		expect(access).toHaveTextContent("Only places you can see are shown.");
 		expect(
 			within(access)
-				.getAllByRole("term")
-				.map(
-					(term) =>
-						`${term.textContent}: ${[
-							...(term.nextElementSibling?.children ?? []),
-						]
-							.map((line) => line.textContent)
-							.join(" / ")}`
-				)
+				.getAllByRole("listitem")
+				.map((entry) => entry.textContent)
 		).toEqual([
-			"Whole company: Departments: View",
-			"Orchard: Branches: View / Leave: View, Approve or reject",
+			"Whole companyThrough ViewerDepartments: View",
+			"OrchardThrough Leave approver and ViewerBranches: ViewLeave: View, Approve or reject",
 		]);
+		expect(
+			within(access).getByText("Leave: View, Approve or reject")
+		).toHaveAttribute("title", "Leave: View, Approve or reject");
 	});
 
-	it("says when their roles give nothing at the places the reader can see", () => {
+	it("names places given the same roles and access once, together, instead of repeating what they allow", () => {
+		const manager = ["People: Manage", "Leave: Manage", "Scheduling: Full"];
+		show(kent, "Supervisor", [
+			{ place: "North Point", roles: ["Department Manager"], lines: manager },
+			{
+				place: "North Point › Security",
+				roles: ["Department Manager"],
+				lines: manager,
+			},
+		]);
+
+		const access = screen.getByRole("region", { name: "Access" });
+		expect(within(access).getAllByRole("listitem")).toHaveLength(1);
+		expect(access).toHaveTextContent(
+			"North Point and North Point › SecurityThrough Department Manager"
+		);
+		expect(within(access).getAllByText("Scheduling: Full")).toHaveLength(1);
+	});
+
+	it("says when their roles give nothing at the places the reader can see, and what everyone can already do", () => {
 		show(kent, "Supervisor", []);
-		expect(screen.getByRole("region", { name: "Access" })).toHaveTextContent(
+		const access = screen.getByRole("region", { name: "Access" });
+		expect(access).toHaveTextContent(
 			"No permissions at the places you can see."
+		);
+		expect(access).toHaveTextContent(
+			"Everyone can already see their own roster, apply for their own leave and set their own availability."
 		);
 	});
 
@@ -173,7 +197,7 @@ describe("ProfileDetails", () => {
 		show(kent, "Supervisor", "We couldn’t load their access roles.");
 		const access = screen.getByRole("region", { name: "Access" });
 		expect(access).toHaveTextContent("We couldn’t load their access roles.");
-		expect(within(access).queryByRole("term")).not.toBeInTheDocument();
+		expect(within(access).queryByRole("listitem")).not.toBeInTheDocument();
 	});
 
 	it("leaves out the Access card when not given", () => {

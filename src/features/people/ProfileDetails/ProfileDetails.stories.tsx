@@ -73,14 +73,20 @@ export const Sparse: Story = {
 export const WithAccess: Story = {
 	args: {
 		access: [
-			{ place: "Whole company", lines: ["Departments: View"] },
+			{
+				place: "Whole company",
+				roles: ["Viewer"],
+				lines: ["Departments: View"],
+			},
 			{
 				place: "Orchard",
-				lines: ["Branches: View", "Leave: View, Approve or reject"],
+				roles: ["Department manager"],
+				lines: ["People: Manage", "Leave: Manage", "Scheduling: Full"],
 			},
 			{
 				place: "Orchard › Food & Beverage",
-				lines: ["People: View, Edit", "Notes: View, Add"],
+				roles: ["Department manager"],
+				lines: ["People: Manage", "Leave: Manage", "Scheduling: Full"],
 			},
 		],
 	},

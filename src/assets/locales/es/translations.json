@@ -2032,6 +2032,8 @@
 				"title": "Acceso",
 				"note": "Solo se muestran los lugares que puedes ver.",
 				"none": "Sin permisos en los lugares que puedes ver.",
+				"places": "{{places, list}}",
+				"through": "Mediante {{roles, list}}",
 				"after": "Acceso de {{name}} después de este cambio"
 			},
 			"where": "Dónde",
@@ -5155,7 +5157,7 @@
 			"since": "Desde el {{date}}",
 			"unset": "Sin fijar",
 			"ownHours": "Sus horas propias: {{week}} h a la semana",
-			"upcoming": "Desde el {{date}}: {{name}}",
+			"upcoming": "Cambia a {{name}} desde el {{date}}.",
 			"set": "Fijar…",
 			"change": "Cambiar…",
 			"history": "Historial",

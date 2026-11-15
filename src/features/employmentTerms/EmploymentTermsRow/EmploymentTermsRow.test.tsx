@@ -94,6 +94,19 @@ const CHANGER = workspaceReply(
 	["member_employment_terms:read", "member_employment_terms:update"]
 );
 
+/** A changer who may also edit the profile, so Edit profile opens with Change…. */
+const EDITOR = workspaceReply(
+	["member_profile:read", "employment_terms:read"],
+	[
+		"member_profile:update",
+		"member_employment_terms:read",
+		"member_employment_terms:update",
+	]
+);
+
+/** Edit profile, where terms are changed. */
+const EDITING = "/people/m-1?edit=true";
+
 const routes = (
 	workspace: StubReply,
 	terms: StubReply | Array<StubReply> = {
@@ -157,8 +170,44 @@ describe("A person's employment terms", () => {
 			"Works 6 days a week in shifts of up to 12 hours."
 		);
 		expect(card).toHaveTextContent("Since 1 Mar 2025");
-		expect(card).toHaveTextContent("From 4 Jan 2027: Five-day week, 44 h");
-		expect(within(card).getByRole("button", { name: "Change…" })).toBeVisible();
+		expect(card).toHaveTextContent(
+			"Changes to Five-day week, 44 h from 4 Jan 2027."
+		);
+		// Read, terms are only shown: they are changed under Edit profile.
+		expect(within(card).queryByRole("button", { name: "Change…" })).toBeNull();
+		expect(within(card).getByRole("button", { name: "History" })).toBeVisible();
+	});
+
+	it("offer Change… under Edit profile, with the change ahead said there too", async () => {
+		stubApi(routes(EDITOR));
+		const card = await open(EDITING);
+
+		expect(
+			await within(card).findByRole("button", { name: "Change…" })
+		).toBeVisible();
+		expect(card).toHaveTextContent(
+			"Changes to Five-day week, 44 h from 4 Jan 2027."
+		);
+	});
+
+	it("show History read-only when read, with no correction or cancelling", async () => {
+		const user = userEvent.setup();
+		stubApi(routes(CHANGER));
+		const card = await open();
+
+		await user.click(
+			await within(card).findByRole("button", { name: "History" })
+		);
+		const history = await screen.findByRole("dialog", {
+			name: "Employment terms history",
+		});
+		expect(history).toHaveTextContent("Five-day week, 44 h");
+		expect(
+			within(history).queryByRole("button", { name: /^Correct the entry/ })
+		).toBeNull();
+		expect(
+			within(history).queryByRole("button", { name: /^Cancel the change/ })
+		).toBeNull();
 	});
 
 	it("are read-only without member_employment_terms:update", async () => {
@@ -199,7 +248,6 @@ describe("A person's employment terms", () => {
 		).toHaveTextContent("Standard week");
 		expect(card).toHaveTextContent("Since 3 Jun 2024");
 		expect(card).not.toHaveTextContent(/\(default\)|Not set for them/);
-		expect(within(card).getByRole("button", { name: "Change…" })).toBeVisible();
 
 		await user.click(within(card).getByRole("button", { name: "History" }));
 		const history = await screen.findByRole("dialog", {
@@ -229,14 +277,16 @@ describe("A person's employment terms", () => {
 		const card = await open();
 
 		expect(
-			await within(card).findByText(/From 4 Jan 2027: Five-day week, 44 h/)
+			await within(card).findByText(
+				"Changes to Five-day week, 44 h from 4 Jan 2027."
+			)
 		).toBeVisible();
 		expect(card).not.toHaveTextContent("Part-time, 20 h");
 	});
 
 	it("change from a Monday, with their own hours, and warn of a mismatch", async () => {
 		const calls = stubApi(
-			routes(CHANGER, undefined, {
+			routes(EDITOR, undefined, {
 				[`POST ${MEMBER_TERMS_PATH}`]: {
 					status: 201,
 					body: envelope(MEMBER_TERMS),
@@ -244,7 +294,7 @@ describe("A person's employment terms", () => {
 			})
 		);
 		const user = userEvent.setup();
-		const card = await open();
+		const card = await open(EDITING);
 
 		await user.click(
 			await within(card).findByRole("button", { name: "Change…" })
@@ -288,7 +338,7 @@ describe("A person's employment terms", () => {
 
 	it("explain a refusal on the field it is about", async () => {
 		stubApi(
-			routes(CHANGER, undefined, {
+			routes(EDITOR, undefined, {
 				[`POST ${MEMBER_TERMS_PATH}`]: problemReply(
 					409,
 					"EMPLOYMENT_TERMS_CHANGE_EXISTS"
@@ -296,7 +346,7 @@ describe("A person's employment terms", () => {
 			})
 		);
 		const user = userEvent.setup();
-		const card = await open();
+		const card = await open(EDITING);
 
 		await user.click(
 			await within(card).findByRole("button", { name: "Change…" })
@@ -317,7 +367,7 @@ describe("A person's employment terms", () => {
 
 	it("list their history, cancel a change ahead, and correct an entry", async () => {
 		const calls = stubApi(
-			routes(CHANGER, undefined, {
+			routes(EDITOR, undefined, {
 				[`DELETE ${MEMBER_TERMS_PATH}/entry-upcoming`]: { status: 204 },
 				[`PUT ${MEMBER_TERMS_PATH}/entry-first`]: {
 					status: 200,
@@ -326,7 +376,7 @@ describe("A person's employment terms", () => {
 			})
 		);
 		const user = userEvent.setup();
-		const card = await open();
+		const card = await open(EDITING);
 
 		await user.click(
 			await within(card).findByRole("button", { name: "History" })
@@ -391,7 +441,7 @@ describe("A person's employment terms", () => {
 describe("Correcting an entry on terms deactivated since", () => {
 	it("keeps them chosen, marked inactive", async () => {
 		stubApi(
-			routes(CHANGER, {
+			routes(EDITOR, {
 				status: 200,
 				body: envelope({
 					...MEMBER_TERMS,
@@ -407,7 +457,7 @@ describe("Correcting an entry on terms deactivated since", () => {
 			})
 		);
 		const user = userEvent.setup();
-		const card = await open();
+		const card = await open(EDITING);
 
 		await user.click(
 			await within(card).findByRole("button", { name: "History" })
