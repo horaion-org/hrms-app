@@ -4759,10 +4759,10 @@
 			"loadFailed": "Couldn’t load the hours."
 		},
 		"rulesCheck": {
-			"title": "Working-time rules",
-			"check": "Check rules",
-			"loading": "Checking the rules…",
-			"holds": "Every working-time rule holds.",
+			"title": "Validate schedule",
+			"check": "Validate schedule",
+			"loading": "Validating the schedule…",
+			"holds": "No working-time rule is broken.",
 			"breaks": "This roster breaks:",
 			"brokenUnnamed": "This roster breaks a working-time rule.",
 			"unchecked": "The rules could not be checked.",
@@ -4787,7 +4787,18 @@
 				"notConnected": "The scheduling engine isn’t connected here.",
 				"rosterMoved": "The roster changed since you opened it. Reload and check again.",
 				"failed": "The rules couldn’t be checked just now."
-			}
+			},
+			"changedSinceValidated": "Validate schedule: the schedule changed since it was last validated",
+			"problemsFound_one": "Validate schedule: {{count}} problem found",
+			"problemsFound_other": "Validate schedule: {{count}} problems found",
+			"allClear": "Validate schedule: no problems found",
+			"rulesTitle": "Rules",
+			"staffingTitle": "Staffing",
+			"checkedRules": "Checked: hours a day, overtime a month, days a week, rest between shifts, one shift a day, shifts a person may not take, the shortest part of a shift around leave, and the call-back limit.",
+			"staffed": "Every shift is staffed as the rules ask.",
+			"short": "Staffing is short:",
+			"staffingUnchecked": "Staffing could not be checked.",
+			"shortUnnamed": "Short of staff"
 		}
 	},
 	"colourSwatchPicker": {

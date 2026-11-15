@@ -7,28 +7,40 @@ const meta = {
 	title: "Features/Scheduling/RosterRulesCheck",
 	component: RosterRulesCheck,
 	parameters: { layout: "padded" },
-	args: { check: { status: "idle", ask: fn() } },
+	args: { check: { status: "loading", ask: fn() } },
 } satisfies Meta<typeof RosterRulesCheck>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Before the rules are checked. */
-export const NotCheckedYet: Story = {};
+/** While the schedule is validated. */
+export const Validating: Story = {};
 
-/** Every rule holds. */
-export const Holds: Story = {
+/** No rule broken, and a Tuesday nobody works. */
+export const HoldsButShort: Story = {
 	args: {
 		check: {
 			status: "ready",
-			check: { status: "HOLDS", brokenRules: [] },
+			check: {
+				status: "HOLDS",
+				brokenRules: [],
+				staffingGaps: [
+					{
+						date: "2026-11-10",
+						message: "Front Desk AM is 2 short",
+						missing: 2,
+						constraintId: "k-2",
+						constraintName: "Two at the desk",
+					},
+				],
+			},
 			ask: fn(),
 		},
 	},
 };
 
-/** Two rules broken: one named by the company, one by the app's label. */
+/** Two rules broken, every shift staffed. */
 export const Broken: Story = {
 	args: {
 		check: {
@@ -47,18 +59,19 @@ export const Broken: Story = {
 						constraintName: null,
 					},
 				],
+				staffingGaps: [],
 			},
 			ask: fn(),
 		},
 	},
 };
 
-/** The engine could not check. */
+/** The engine could check neither. */
 export const Unchecked: Story = {
 	args: {
 		check: {
 			status: "ready",
-			check: { status: "UNCHECKED", brokenRules: [] },
+			check: { status: "UNCHECKED", brokenRules: [], staffingGaps: null },
 			ask: fn(),
 		},
 	},

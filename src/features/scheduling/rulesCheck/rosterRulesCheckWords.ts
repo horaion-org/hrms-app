@@ -1,6 +1,9 @@
 import type { TFunction } from "i18next";
 import { ApiProblemError } from "@/common/problem";
-import type { BrokenRule } from "@/features/scheduling/rulesCheck/rosterRulesCheckApi";
+import type {
+	BrokenRule,
+	RosterRulesCheck,
+} from "@/features/scheduling/rulesCheck/rosterRulesCheckApi";
 
 /*
  * The roster check in the app's words, pure: the API sends a status and the
@@ -58,4 +61,22 @@ export const brokenRuleLabel = (rule: BrokenRule, t: TFunction): string => {
 	return isLabelled(rule.rule)
 		? t(`${key}.rule.${rule.rule}`)
 		: t(`${key}.unnamedRule`);
+};
+
+/**
+ * What the week bar's button marks once the current revision is validated:
+ * how many problems (rules broken, at least one when broken with none named,
+ * plus staffing gaps), or none for a roster that holds and is fully staffed;
+ * nothing when the engine could not check either part.
+ */
+export const validationMark = (
+	check: RosterRulesCheck
+): { kind: "problems"; count: number } | { kind: "clean" } | undefined => {
+	const broken =
+		check.status === "BROKEN" ? Math.max(check.brokenRules.length, 1) : 0;
+	const problems = broken + (check.staffingGaps?.length ?? 0);
+	if (problems > 0) return { kind: "problems", count: problems };
+	return check.status === "HOLDS" && check.staffingGaps !== null
+		? { kind: "clean" }
+		: undefined;
 };

@@ -73,6 +73,8 @@ export type RosterViewInput = {
 	/** The page gives a Details list, and an approval trail, only when it has them. */
 	hasDetails: boolean;
 	hasApproval: boolean;
+	/** Whether the roster may be validated here (someone who may change it): the Validate schedule panel. */
+	hasValidation?: boolean;
 	/** Days may be changed by hand: a chosen day opens its editor rather than its shift. */
 	editable: boolean;
 	/** The manager's tools are shown, so a chosen day's panel starts with what needs a look. */
@@ -195,6 +197,7 @@ export const rosterViewOf = ({
 	membersWithChangedStart,
 	hasDetails,
 	hasApproval,
+	hasValidation = false,
 	editable,
 	withSummary,
 	changesLeave,
@@ -227,6 +230,7 @@ export const rosterViewOf = ({
 		changes: changed.length,
 		details: hasDetails ? 1 : 0,
 		approval: hasApproval ? 1 : 0,
+		validate: hasValidation ? 1 : 0,
 	};
 	const chosenRow = assignments.find(
 		(row) =>

@@ -26,6 +26,9 @@ import {
 	RosterWeekBar,
 	type RosterWeek,
 } from "@/features/scheduling/RosterWeekBar";
+import { RosterRulesCheck } from "@/features/scheduling/rulesCheck/RosterRulesCheck";
+import type { RosterValidation } from "@/features/scheduling/rulesCheck/useRosterRulesCheck";
+import { ValidateScheduleButton } from "@/features/scheduling/rulesCheck/ValidateScheduleButton";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 import type { RosterEditing } from "./rosterEditing";
 import { RosterSidePanelSlot } from "./RosterSidePanelSlot";
@@ -60,6 +63,12 @@ export type GeneratedRosterProps = {
 	withSummary?: boolean;
 	/** Lets a day be changed by hand beside the grid; read-only without. */
 	editing?: RosterEditing;
+	/**
+	 * Validate schedule, read by the page for whoever may change the roster:
+	 * its button joins Issues and Changed in the week bar, and its result
+	 * opens in the side panel. Not offered without.
+	 */
+	validation?: RosterValidation;
 	/** The viewer's own membership, which decides where a chosen day's leave request opens. */
 	viewerMembershipId?: string;
 	/** On a member's own roster: their days with an open offer, and its deadline, said in the tile's label. */
@@ -85,7 +94,9 @@ const key = "scheduling.detail";
  * summary line, the week bar with the Issues and Changed buttons, and the
  * grid. Everything else opens in the one panel beside the grid, named by
  * the view in the URL: a chosen day's shift (read-only) or editor, or one
- * list (Issues, Changed, Details, Approval). Findings are also marked on the grid.
+ * list (Issues, Changed, Details, Approval, Validate schedule). Findings are also marked on the grid.
+ * Validate schedule sits in the week bar after Issues and Changed for whoever may change the roster, and
+ * lights up once the roster changed since it was last validated.
  * A member's own roster shows only the grid, with their changed days marked.
  *
  * What it shows follows from its rows and the view (`rosterViewOf`, through
@@ -105,6 +116,7 @@ export const GeneratedRoster = ({
 	approval,
 	withSummary = true,
 	editing,
+	validation,
 	viewerMembershipId,
 	offeredDays,
 	departmentWeeks,
@@ -123,6 +135,7 @@ export const GeneratedRoster = ({
 		membersWithChangedStart,
 		hasDetails: details !== undefined,
 		hasApproval: Boolean(approval),
+		hasValidation: editing !== undefined && validation !== undefined,
 		editable: editing !== undefined,
 		withSummary,
 		changesLeave: editing?.leave !== undefined,
@@ -178,6 +191,7 @@ export const GeneratedRoster = ({
 				latestChange,
 				details,
 				approval,
+				validation: validation && <RosterRulesCheck check={validation} />,
 				onShowAllIssues: roster.showAllIssues,
 				onFindCover: editing ? roster.openCover : undefined,
 			})
@@ -225,6 +239,20 @@ export const GeneratedRoster = ({
 								<CountBadge aria-hidden="true" count={count} tone="inactive" />
 							</Button>
 						))}
+						{editing && validation && (
+							<ValidateScheduleButton
+								hasChanges={roster.listCounts.changes > 0}
+								last={validation.last}
+								open={openList === "validate"}
+								panelId={sidePanelId}
+								revision={editing.revision}
+								onClick={(from) => {
+									if (openList !== "validate" && validation.status === "idle")
+										validation.ask();
+									roster.toggleList("validate", from);
+								}}
+							/>
+						)}
 					</RosterWeekBar>
 					{roster.shownDay && (
 						<DaySwitcher

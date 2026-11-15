@@ -517,4 +517,102 @@ describe("GeneratedRoster", () => {
 			);
 		});
 	});
+
+	describe("Validate schedule", () => {
+		const editing = {
+			target: {
+				companyId: "c-1",
+				unit: { branchId: "b-1", departmentId: "d-1" },
+				scheduleId: "s-1",
+				runId: "r-1",
+			},
+			revision: 1,
+			shifts: [],
+			nonWorkingDayTypes: [],
+			notifiesMembers: false,
+		};
+
+		it("given_anEditor_when_rendered_then_itJoinsIssuesInTheWeekBarAndOpensItsResultInTheSidePanel", async () => {
+			const ask = vi.fn();
+			const user = userEvent.setup();
+			render(
+				<QueryClientProvider client={new QueryClient()}>
+					<Roster
+						assignments={scheduleAssignmentsFixture()}
+						editing={editing}
+						schedule={schedule}
+						validation={{
+							status: "ready",
+							check: { status: "HOLDS", brokenRules: [], staffingGaps: [] },
+							ask,
+							last: {
+								revision: 1,
+								check: { status: "HOLDS", brokenRules: [], staffingGaps: [] },
+							},
+						}}
+					/>
+				</QueryClientProvider>
+			);
+
+			expect(screen.getByRole("button", { name: "Issues: 4" })).toBeVisible();
+			await user.click(
+				screen.getByRole("button", {
+					name: "Validate schedule: no problems found",
+				})
+			);
+
+			const panel = screen.getByRole("complementary", {
+				name: "Validate schedule",
+			});
+			expect(
+				within(panel).getByText("No working-time rule is broken.")
+			).toBeVisible();
+			expect(
+				within(panel).getByText("Every shift is staffed as the rules ask.")
+			).toBeVisible();
+			// Already answered for the roster on screen: opening asks nothing new.
+			expect(ask).not.toHaveBeenCalled();
+		});
+
+		it("given_aRosterNeverValidated_when_opened_then_itIsAskedAndValidatingShows", async () => {
+			const ask = vi.fn();
+			const user = userEvent.setup();
+			render(
+				<QueryClientProvider client={new QueryClient()}>
+					<Roster
+						assignments={scheduleAssignmentsFixture()}
+						editing={editing}
+						schedule={schedule}
+						validation={{ status: "idle", ask }}
+					/>
+				</QueryClientProvider>
+			);
+
+			await user.click(
+				screen.getByRole("button", { name: "Validate schedule" })
+			);
+
+			expect(ask).toHaveBeenCalledOnce();
+			expect(
+				within(
+					screen.getByRole("complementary", { name: "Validate schedule" })
+				).getByText("Validating the schedule…")
+			).toBeInTheDocument();
+		});
+
+		it("given_noValidation_when_rendered_then_noValidateButton", () => {
+			render(
+				<QueryClientProvider client={new QueryClient()}>
+					<Roster
+						assignments={scheduleAssignmentsFixture()}
+						schedule={schedule}
+					/>
+				</QueryClientProvider>
+			);
+
+			expect(
+				screen.queryByRole("button", { name: /^Validate schedule/ })
+			).toBeNull();
+		});
+	});
 });

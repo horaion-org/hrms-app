@@ -8,9 +8,10 @@ import { scheduleKey } from "@/features/scheduling/schedules/api";
 import { administrativeMeta } from "@/features/workspace/queryAccess";
 
 /*
- * Whether the roster as it stands keeps the working-time rules, as the
- * scheduling engine checks it (the API's `…/roster-check`, ADR-0082), under
- * `schedule:edit_shift`. Nothing is stored.
+ * Validate schedule: whether the roster as it stands keeps the working-time
+ * rules, and where it is short of staff, as the scheduling engine checks it
+ * (the API's `…/roster-check`, ADR-0082), under `schedule:edit_shift`. A
+ * roster can keep every rule and still be short. Nothing is stored.
  */
 
 // A status a newer API adds reads as not checked, never as holding.
@@ -31,10 +32,24 @@ const brokenRuleSchema = z.object({
 
 export type BrokenRule = z.infer<typeof brokenRuleSchema>;
 
+const staffingGapSchema = z.object({
+	date: z.string(),
+	/** The engine's own sentence for the gap, quoted. */
+	message: z.string().nullable(),
+	missing: z.number().nullable(),
+	constraintId: z.string().nullable(),
+	/** The company constraint's own name, when the gap's rule is one of the schedule's. */
+	constraintName: z.string().nullable(),
+});
+
+export type StaffingGap = z.infer<typeof staffingGapSchema>;
+
 const rosterRulesCheckSchema = z.object({
 	status: statusSchema,
 	/** The rules broken the engine could name; empty unless broken, and possibly empty then. */
 	brokenRules: z.array(brokenRuleSchema),
+	/** The roster's staffing gaps; null when the engine could not work them out. */
+	staffingGaps: z.array(staffingGapSchema).nullable(),
 });
 
 export type RosterRulesCheck = z.infer<typeof rosterRulesCheckSchema>;

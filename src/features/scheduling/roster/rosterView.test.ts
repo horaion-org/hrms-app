@@ -148,6 +148,7 @@ describe("rosterViewOf", () => {
 			membersWithChangedStart: 2,
 			hasDetails: true,
 			hasApproval: true,
+			hasValidation: true,
 		});
 
 		// The changed starts count once, as the one line Issues says them in; the requested leave once.
@@ -156,6 +157,7 @@ describe("rosterViewOf", () => {
 			changes: 0,
 			details: 1,
 			approval: 1,
+			validate: 1,
 		});
 	});
 

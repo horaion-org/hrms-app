@@ -4559,10 +4559,10 @@
 			"loadFailed": "No se pudieron cargar las horas."
 		},
 		"rulesCheck": {
-			"title": "Reglas de tiempo de trabajo",
-			"check": "Comprobar reglas",
-			"loading": "Comprobando las reglas…",
-			"holds": "Se cumplen todas las reglas de tiempo de trabajo.",
+			"title": "Validar cuadrante",
+			"check": "Validar cuadrante",
+			"loading": "Validando el cuadrante…",
+			"holds": "No se incumple ninguna regla de tiempo de trabajo.",
 			"breaks": "Este cuadrante incumple:",
 			"brokenUnnamed": "Este cuadrante incumple una regla de tiempo de trabajo.",
 			"unchecked": "No se pudieron comprobar las reglas.",
@@ -4587,7 +4587,18 @@
 				"notConnected": "El motor de planificación no está conectado aquí.",
 				"rosterMoved": "El cuadrante cambió desde que lo abriste. Recarga y comprueba de nuevo.",
 				"failed": "No se pudieron comprobar las reglas ahora."
-			}
+			},
+			"changedSinceValidated": "Validar cuadrante: el cuadrante cambió desde la última validación",
+			"problemsFound_one": "Validar cuadrante: {{count}} problema encontrado",
+			"problemsFound_other": "Validar cuadrante: {{count}} problemas encontrados",
+			"allClear": "Validar cuadrante: sin problemas",
+			"rulesTitle": "Reglas",
+			"staffingTitle": "Personal",
+			"checkedRules": "Comprobado: horas al día, horas extra al mes, días a la semana, descanso entre turnos, un turno al día, turnos que una persona no puede hacer, la parte más corta de un turno alrededor de un permiso y el límite de llamadas.",
+			"staffed": "Todos los turnos tienen el personal que piden las reglas.",
+			"short": "Falta personal:",
+			"staffingUnchecked": "No se pudo comprobar el personal.",
+			"shortUnnamed": "Falta personal"
 		}
 	},
 	"workspace": {

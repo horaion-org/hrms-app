@@ -67,6 +67,8 @@ export type RosterListInput = {
 	details?: ReadonlyArray<DescriptionListItem>;
 	/** The roster's approval trail for Approval. */
 	approval?: ReactNode;
+	/** The roster's validation result for Validate schedule. */
+	validation?: ReactNode;
 	/** Shows every issue again, from a header's narrowed Issues list. */
 	onShowAllIssues: () => void;
 	/** On a roster that may be changed: opens Find cover for a short shift, from its Issues row. */
@@ -268,6 +270,13 @@ export const approvalSections = ({
 	{ key: "trail", content: approval },
 ];
 
+/** Validate schedule: the rules and the staffing, as the engine checked them. */
+export const validateSections = ({
+	validation,
+}: RosterListInput): Array<RosterSidePanelSection> => [
+	{ key: "validation", content: validation },
+];
+
 const LIST_SECTIONS: Record<
 	RosterPanel,
 	(input: RosterListInput) => Array<RosterSidePanelSection>
@@ -276,6 +285,7 @@ const LIST_SECTIONS: Record<
 	changes: changesSections,
 	details: detailsSections,
 	approval: approvalSections,
+	validate: validateSections,
 };
 
 /**

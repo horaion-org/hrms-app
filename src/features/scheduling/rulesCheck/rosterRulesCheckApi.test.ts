@@ -39,6 +39,15 @@ describe("roster rules check client", () => {
 					constraintName: "Twelve hours",
 				},
 			],
+			staffingGaps: [
+				{
+					date: "2026-11-10",
+					message: "Front Desk AM is 1 short",
+					missing: 1,
+					constraintId: null,
+					constraintName: null,
+				},
+			],
 		});
 
 		const check = await fetchRosterRulesCheck(TARGET, { expectedRevision: 3 });
@@ -46,13 +55,22 @@ describe("roster rules check client", () => {
 		expect(calls[0]?.body).toEqual({ expectedRevision: 3 });
 		expect(check.status).toBe("BROKEN");
 		expect(check.brokenRules[0]?.constraintName).toBe("Twelve hours");
+		expect(check.staffingGaps?.[0]?.missing).toBe(1);
 	});
 
 	it("reads a status a newer API adds as not checked, never as holding", async () => {
-		answer({ status: "PARTLY", brokenRules: [] });
+		answer({ status: "PARTLY", brokenRules: [], staffingGaps: null });
 
 		const check = await fetchRosterRulesCheck(TARGET, { expectedRevision: 1 });
 
 		expect(check.status).toBe("UNCHECKED");
+	});
+
+	it("keeps staffing the engine could not work out apart from none", async () => {
+		answer({ status: "HOLDS", brokenRules: [], staffingGaps: null });
+
+		const check = await fetchRosterRulesCheck(TARGET, { expectedRevision: 1 });
+
+		expect(check.staffingGaps).toBeNull();
 	});
 });

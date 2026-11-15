@@ -10,7 +10,8 @@ export const ROSTER_SIDE_LISTS: Record<
 			| "scheduling.detail.issues"
 			| "scheduling.detail.changes"
 			| "scheduling.detail.details.title"
-			| "approvals.panel.title";
+			| "approvals.panel.title"
+			| "scheduling.rulesCheck.title";
 		button?: {
 			/** The button's name with its count, e.g. "Issues: 11". */
 			labelKey:
@@ -40,4 +41,6 @@ export const ROSTER_SIDE_LISTS: Record<
 	details: { titleKey: "scheduling.detail.details.title" },
 	// Opened from the header's approval line.
 	approval: { titleKey: "approvals.panel.title" },
+	// Opened from the week bar's own Validate schedule button, which lights up after a change.
+	validate: { titleKey: "scheduling.rulesCheck.title" },
 };
