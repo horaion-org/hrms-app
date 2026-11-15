@@ -31,7 +31,18 @@ export type RepairNames = {
 
 /** Why the engine's options can't be shown, as the section words it. */
 export type RepairRefusal =
-	"notFromEngine" | "expired" | "notConnected" | "rosterMoved" | "failed";
+	| "notFromEngine"
+	| "expired"
+	| "notConnected"
+	| "rosterMoved"
+	| "tooSlow"
+	| "failed";
+
+/** The refusals a second ask may mend: the engine failed, or took too long this time. */
+export const RETRYABLE_REPAIR_REFUSALS: ReadonlyArray<RepairRefusal> = [
+	"tooSlow",
+	"failed",
+];
 
 /** The API's refusal codes, by what the section says. */
 const REFUSALS: Record<string, RepairRefusal> = {
@@ -40,6 +51,7 @@ const REFUSALS: Record<string, RepairRefusal> = {
 	REPAIR_NO_ENGINE_JOB: "expired",
 	REPAIR_ENGINE_NOT_CONFIGURED: "notConnected",
 	ROSTER_REVISION_CONFLICT: "rosterMoved",
+	REPAIR_ENGINE_TOO_SLOW: "tooSlow",
 };
 
 /** What a failed ask means; anything not named reads as the engine failing, which a retry may mend. */

@@ -10,6 +10,7 @@ import { extraHoursLine } from "@/features/scheduling/cover/engineRepairHours";
 import { NotAssignedList } from "@/features/scheduling/cover/NotAssignedList";
 import {
 	leftShortLine,
+	RETRYABLE_REPAIR_REFUSALS,
 	moveLine,
 	type RepairNames,
 } from "@/features/scheduling/cover/engineRepairWords";
@@ -138,7 +139,7 @@ export const EngineRepairOptions = ({
 					<p className="text-neutral-800">
 						{t(`${key}.refusal.${repair.refusal}`)}
 					</p>
-					{repair.refusal === "failed" && (
+					{RETRYABLE_REPAIR_REFUSALS.includes(repair.refusal) && (
 						<Button variant="textlink" onClick={repair.ask}>
 							{t("scheduling.rosterEdit.tryAgain")}
 						</Button>

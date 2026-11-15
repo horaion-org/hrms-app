@@ -89,6 +89,7 @@ describe("repairRefusalOf", () => {
 		["REPAIR_NO_ENGINE_JOB", "expired"],
 		["REPAIR_ENGINE_NOT_CONFIGURED", "notConnected"],
 		["ROSTER_REVISION_CONFLICT", "rosterMoved"],
+		["REPAIR_ENGINE_TOO_SLOW", "tooSlow"],
 		["REPAIR_ENGINE_FAILED", "failed"],
 	] as const)("reads %s as %s", (code, refusal) => {
 		expect(repairRefusalOf(problem(code))).toBe(refusal);

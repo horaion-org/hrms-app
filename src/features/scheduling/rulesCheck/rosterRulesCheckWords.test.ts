@@ -150,6 +150,7 @@ describe("rulesCheckRefusalOf", () => {
 		["ROSTER_CHECK_JOB_EXPIRED", "expired"],
 		["ROSTER_CHECK_ENGINE_NOT_CONFIGURED", "notConnected"],
 		["ROSTER_REVISION_CONFLICT", "rosterMoved"],
+		["ROSTER_CHECK_ENGINE_TOO_SLOW", "tooSlow"],
 		["ROSTER_CHECK_ENGINE_FAILED", "failed"],
 	] as const)("reads %s as %s", (code, refusal) => {
 		expect(rulesCheckRefusalOf(problem(code))).toBe(refusal);

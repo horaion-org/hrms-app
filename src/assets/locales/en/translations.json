@@ -4517,6 +4517,7 @@
 					"expired": "The engine no longer holds this week’s generation. Generate the week again to ask it.",
 					"notConnected": "The scheduling engine isn’t connected here.",
 					"rosterMoved": "The roster changed since you opened this. Find cover again to ask the engine.",
+					"tooSlow": "The engine took too long to look for options this time.",
 					"failed": "The engine couldn’t answer."
 				},
 				"review": "Review this change",
@@ -4865,6 +4866,7 @@
 				"expired": "The engine no longer holds this week’s generation, so it can’t be validated. Generate the week again, then validate it.",
 				"notConnected": "The scheduling engine isn’t connected here.",
 				"rosterMoved": "Someone changed this roster since you opened it. Reload the page, then validate it again.",
+				"tooSlow": "The engine took too long this time, so the schedule wasn’t validated.",
 				"failed": "The schedule couldn’t be validated just now."
 			},
 			"changedSinceValidated": "Validate schedule: the schedule changed since it was last validated",

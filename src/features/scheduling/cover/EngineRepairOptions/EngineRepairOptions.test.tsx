@@ -132,6 +132,22 @@ describe("EngineRepairOptions", () => {
 		expect(ask).toHaveBeenCalledOnce();
 	});
 
+	it("says the engine took too long this time, and offers to ask again", async () => {
+		const ask = vi.fn();
+		render(
+			<EngineRepairOptions
+				names={names}
+				repair={{ status: "refused", refusal: "tooSlow", ask }}
+			/>
+		);
+
+		expect(screen.getByRole("alert")).toHaveTextContent(
+			"The engine took too long to look for options this time."
+		);
+		await userEvent.click(screen.getByRole("button", { name: "Try again" }));
+		expect(ask).toHaveBeenCalledOnce();
+	});
+
 	it("offers to review a change Apply can state, and leaves the rest, or every one without a review, by hand", async () => {
 		const onReview = vi.fn();
 		const repair = {

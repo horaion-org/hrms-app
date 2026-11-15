@@ -64,7 +64,13 @@ export const NAMED_RULES: ReadonlyArray<string> = [
 
 /** Why the check couldn't be shown, as the section words it. */
 export type RulesCheckRefusal =
-	"expired" | "notConnected" | "rosterMoved" | "failed";
+	"expired" | "notConnected" | "rosterMoved" | "tooSlow" | "failed";
+
+/** The refusals a second try may mend: the engine failed, or took too long this time. */
+export const RETRYABLE_CHECK_REFUSALS: ReadonlyArray<RulesCheckRefusal> = [
+	"tooSlow",
+	"failed",
+];
 
 /** The API's refusal codes, by what the section says. */
 const REFUSALS: Record<string, RulesCheckRefusal> = {
@@ -72,6 +78,7 @@ const REFUSALS: Record<string, RulesCheckRefusal> = {
 	ROSTER_CHECK_JOB_EXPIRED: "expired",
 	ROSTER_CHECK_ENGINE_NOT_CONFIGURED: "notConnected",
 	ROSTER_REVISION_CONFLICT: "rosterMoved",
+	ROSTER_CHECK_ENGINE_TOO_SLOW: "tooSlow",
 };
 
 /** What a failed check means; anything not named reads as the engine failing, which a retry may mend. */

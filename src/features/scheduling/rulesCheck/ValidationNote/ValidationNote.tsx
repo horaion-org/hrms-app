@@ -3,6 +3,7 @@ import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import type { ValidationStanding } from "@/features/scheduling/rulesCheck/issuesFromValidation";
+import { RETRYABLE_CHECK_REFUSALS } from "@/features/scheduling/rulesCheck/rosterRulesCheckWords";
 import type { RosterValidation } from "@/features/scheduling/rulesCheck/useRosterRulesCheck";
 
 export type ValidationNoteProps = {
@@ -16,7 +17,7 @@ const key = "scheduling.rulesCheck";
 
 /**
  * The one line at the head of Issues that says how the list stands: being
- * validated; refused (Try again when the engine failed); out of date since
+ * validated; refused (Try again when the engine failed or took too long); out of date since
  * the schedule changed, with Validate schedule right there; validated, with
  * what the engine could not check, or that nothing needs a look. Nothing
  * while the list is still the generation's and nothing has changed.
@@ -38,7 +39,7 @@ export const ValidationNote = ({
 				<p className="text-neutral-800">
 					{t(`${key}.refusal.${validation.refusal}`)}
 				</p>
-				{validation.refusal === "failed" && (
+				{RETRYABLE_CHECK_REFUSALS.includes(validation.refusal) && (
 					<Button variant="textlink" onClick={validation.ask}>
 						{t("scheduling.rosterEdit.tryAgain")}
 					</Button>

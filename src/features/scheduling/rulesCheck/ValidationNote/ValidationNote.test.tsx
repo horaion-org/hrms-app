@@ -54,15 +54,20 @@ describe("ValidationNote", () => {
 		expect(screen.getByText(copy.loading)).toBeInTheDocument();
 	});
 
-	it("offers to try again when the engine failed", async () => {
-		const ask = show("current", { status: "refused", refusal: "failed" });
+	it.each(["failed", "tooSlow"] as const)(
+		"offers to try again when refused as %s",
+		async (refusal) => {
+			const ask = show("current", { status: "refused", refusal });
 
-		expect(screen.getByRole("alert")).toHaveTextContent(copy.refusal.failed);
-		await userEvent.click(
-			screen.getByRole("button", { name: en.scheduling.rosterEdit.tryAgain })
-		);
-		expect(ask).toHaveBeenCalledOnce();
-	});
+			expect(screen.getByRole("alert")).toHaveTextContent(
+				copy.refusal[refusal]
+			);
+			await userEvent.click(
+				screen.getByRole("button", { name: en.scheduling.rosterEdit.tryAgain })
+			);
+			expect(ask).toHaveBeenCalledOnce();
+		}
+	);
 
 	it.each(["expired", "notConnected", "rosterMoved"] as const)(
 		"says why when refused as %s, with nothing to retry",
