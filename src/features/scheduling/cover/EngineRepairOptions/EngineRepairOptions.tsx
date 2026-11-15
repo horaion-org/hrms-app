@@ -5,17 +5,25 @@ import { Callout } from "@/components/ui/Callout";
 import { Quote } from "@/components/ui/Quote";
 import { Skeleton } from "@/components/ui/Skeleton";
 import type { RepairOption } from "@/features/scheduling/cover/engineRepairApi";
+import { repairCells } from "@/features/scheduling/cover/engineRepairChange";
 import {
 	leftShortLine,
 	moveLine,
 	type RepairNames,
 } from "@/features/scheduling/cover/engineRepairWords";
 import type { EngineRepairState } from "@/features/scheduling/cover/useEngineRepair";
+import type { RosterChangeCell } from "@/features/scheduling/rosterChanges/api";
 
 export type EngineRepairOptionsProps = {
 	/** Where the ask stands, and how to ask (again). */
 	repair: EngineRepairState & { ask: () => void };
 	names: RepairNames;
+	/**
+	 * Reviews an option's change in Find cover's own review, before anything
+	 * is applied; without it (a published roster, whose changes go out as
+	 * offers) every option is made by hand.
+	 */
+	onReview?: (cells: Array<RosterChangeCell>) => void;
 };
 
 const key = "scheduling.cover.engine";
@@ -25,12 +33,15 @@ const SKELETON_ROWS = ["first", "second"];
 const OptionItem = ({
 	option,
 	names,
+	onReview,
 }: {
 	option: RepairOption;
 	names: RepairNames;
+	onReview?: (cells: Array<RosterChangeCell>) => void;
 }): FunctionComponent => {
 	const { t } = useTranslation();
 	const leftShort = leftShortLine(option, t);
+	const cells = repairCells(option);
 	return (
 		<li className="flex flex-col gap-2 py-3 first:pt-0 last:pb-0">
 			<p className="font-semibold text-neutral-900">
@@ -57,6 +68,21 @@ const OptionItem = ({
 			{!option.workingTimeRulesChecked && (
 				<Callout tone="warning">{t(`${key}.notChecked`)}</Callout>
 			)}
+			{option.feasible &&
+				(cells && onReview ? (
+					<Button
+						className="self-start"
+						size="sm"
+						variant="secondary"
+						onClick={() => {
+							onReview(cells);
+						}}
+					>
+						{t(`${key}.review`)}
+					</Button>
+				) : (
+					<p className="text-neutral-700">{t(`${key}.byHand`)}</p>
+				))}
 		</li>
 	);
 };
@@ -66,12 +92,15 @@ const OptionItem = ({
  * own suggestions: asked for with a button (the engine runs a solver, which
  * takes a moment), then each option feasible first, in plain words, an
  * infeasible one with the engine's reason quoted, and on every option the
- * note that working-time rules were not checked. A refusal says why, and a
- * failure offers to ask again.
+ * note that working-time rules were not checked. A feasible option whose
+ * change Find cover's Apply states exactly (`repairCells`) offers to review
+ * it there; any other says it has to be made by hand. A refusal says why, and
+ * a failure offers to ask again.
  */
 export const EngineRepairOptions = ({
 	repair,
 	names,
+	onReview,
 }: EngineRepairOptionsProps): FunctionComponent => {
 	const { t } = useTranslation();
 	switch (repair.status) {
@@ -113,7 +142,12 @@ export const EngineRepairOptions = ({
 				<ul className="flex flex-col divide-y divide-neutral-300">
 					{repair.options.map((option, rank) => (
 						// An option has no id of its own; its place in the engine's ranking is stable.
-						<OptionItem key={rank} names={names} option={option} />
+						<OptionItem
+							key={rank}
+							names={names}
+							option={option}
+							onReview={onReview}
+						/>
 					))}
 				</ul>
 			);

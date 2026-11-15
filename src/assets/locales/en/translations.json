@@ -4466,7 +4466,9 @@
 					"notConnected": "The scheduling engine isn’t connected here.",
 					"rosterMoved": "The roster changed since you opened this. Find cover again to ask the engine.",
 					"failed": "The engine couldn’t answer."
-				}
+				},
+				"review": "Review this change",
+				"byHand": "The app can’t apply this one: make it by hand on the roster."
 			}
 		},
 		"reach": {

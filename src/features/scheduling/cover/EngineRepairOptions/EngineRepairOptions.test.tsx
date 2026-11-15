@@ -126,4 +126,41 @@ describe("EngineRepairOptions", () => {
 		await userEvent.click(screen.getByRole("button", { name: "Try again" }));
 		expect(ask).toHaveBeenCalledOnce();
 	});
+
+	it("offers to review a change Apply can state, and leaves the rest, or every one without a review, by hand", async () => {
+		const onReview = vi.fn();
+		const repair = {
+			status: "ready" as const,
+			options: [
+				feasibleRepair([callInMove()]),
+				feasibleRepair([stretchMove()]),
+			],
+			ask: vi.fn(),
+		};
+		const { rerender } = render(
+			<EngineRepairOptions names={names} repair={repair} onReview={onReview} />
+		);
+
+		await userEvent.click(
+			screen.getByRole("button", { name: "Review this change" })
+		);
+		expect(onReview).toHaveBeenCalledWith([
+			expect.objectContaining({ membershipId: "m-1", kind: "WORK" }),
+		]);
+		expect(
+			screen.getAllByText(
+				"The app can’t apply this one: make it by hand on the roster."
+			)
+		).toHaveLength(1);
+
+		rerender(<EngineRepairOptions names={names} repair={repair} />);
+		expect(
+			screen.queryByRole("button", { name: "Review this change" })
+		).toBeNull();
+		expect(
+			screen.getAllByText(
+				"The app can’t apply this one: make it by hand on the roster."
+			)
+		).toHaveLength(2);
+	});
 });

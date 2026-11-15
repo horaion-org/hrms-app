@@ -4266,7 +4266,9 @@
 					"notConnected": "El motor de planificación no está conectado aquí.",
 					"rosterMoved": "El cuadrante cambió desde que abriste esto. Busca cobertura de nuevo para preguntar al motor.",
 					"failed": "El motor no pudo responder."
-				}
+				},
+				"review": "Revisar este cambio",
+				"byHand": "La aplicación no puede aplicar esta: hazla a mano en el cuadrante."
 			}
 		},
 		"reach": {
