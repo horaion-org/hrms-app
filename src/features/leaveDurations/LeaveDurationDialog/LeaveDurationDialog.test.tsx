@@ -16,8 +16,13 @@ const problem = (status: number, errorCode: string): ApiProblemError =>
 		reason: "http",
 	});
 
-const { CompanyAdminAdds, DepartmentAdminAdds, Edit, NightDuration } =
-	composeStories(stories);
+const {
+	CompanyAdminAdds,
+	DepartmentAdminAdds,
+	Edit,
+	NightDuration,
+	NoShiftThatDay,
+} = composeStories(stories);
 
 const chooseTime = async (
 	user: ReturnType<typeof userEvent.setup>,
@@ -51,6 +56,59 @@ describe("LeaveDurationDialog", () => {
 				appliesToBranchIds: [],
 				appliesToDepartmentIds: [],
 			});
+		});
+	});
+
+	it("starts a new duration with a shift that day still possible, and turning it off sends false", async () => {
+		const user = userEvent.setup();
+		const onSave = fn<LeaveDurationDialogProps["onSave"]>(() =>
+			Promise.resolve()
+		);
+		render(<CompanyAdminAdds onSave={onSave} />);
+
+		const shiftSameDay = screen.getByRole("checkbox", {
+			name: /Can still work a shift that day/,
+		});
+		expect(shiftSameDay).toBeChecked();
+		expect(
+			screen.getByText(
+				"When off, the person is kept off the roster for the whole day, as with full-day leave."
+			)
+		).toBeVisible();
+		await user.type(screen.getByRole("textbox", { name: /Name/ }), "Morning");
+		await chooseTime(user, "Starts", "09:00");
+		await chooseTime(user, "Ends", "13:00");
+		await user.click(shiftSameDay);
+		await user.click(screen.getByRole("button", { name: "Add duration" }));
+
+		await waitFor(() => {
+			expect(onSave).toHaveBeenCalledWith(
+				expect.objectContaining({ allowsShiftSameDay: false })
+			);
+		});
+	});
+
+	it("shows an edited duration's choice and sends it back turned on", async () => {
+		const user = userEvent.setup();
+		const onSave = fn<LeaveDurationDialogProps["onSave"]>(() =>
+			Promise.resolve()
+		);
+		render(<NoShiftThatDay onSave={onSave} />);
+
+		const shiftSameDay = screen.getByRole("checkbox", {
+			name: /Can still work a shift that day/,
+		});
+		expect(shiftSameDay).not.toBeChecked();
+		await user.click(shiftSameDay);
+		await user.click(screen.getByRole("button", { name: "Save" }));
+
+		await waitFor(() => {
+			expect(onSave).toHaveBeenCalledWith(
+				expect.objectContaining({
+					name: "Three quarters",
+					allowsShiftSameDay: true,
+				})
+			);
 		});
 	});
 

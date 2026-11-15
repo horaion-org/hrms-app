@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { FormRow, formRowIds } from "@/components/forms/FormRow";
 import { TimeSelect } from "@/components/forms/TimeSelect";
+import { Checkbox } from "@/components/ui/Checkbox";
 import { durationText, minutesBetween } from "@/features/leave/leaveLength";
 import type {
 	LeaveDurationBody,
@@ -38,8 +39,9 @@ const key = "settings.leave.durationDialog";
 
 /**
  * Adds a leave duration, or edits one: its name, when it starts and ends (an
- * end before the start runs into the next day), and where it applies. It
- * counts as the hours between its times, shown under the pair. Applies to
+ * end before the start runs into the next day), whether the person can still
+ * work a shift that day, and where it applies. It counts as the hours
+ * between its times, shown under the pair. Applies to
  * offers only the reaches and units the person manages, as the API's
  * coverage rule allows. Mount when opened and unmount when closed so every
  * attempt starts fresh.
@@ -157,6 +159,23 @@ export const LeaveDurationDialog = ({
 				{timeField("startTime")}
 				{timeField("endTime", lengthHint)}
 			</div>
+			<Controller
+				control={control}
+				name="allowsShiftSameDay"
+				render={({ field }) => (
+					<Checkbox
+						checked={field.value}
+						description={t(`${key}.allowsShiftSameDayDescription`)}
+						disabled={isSubmitting}
+						label={t(`${key}.allowsShiftSameDay`)}
+						name={field.name}
+						onBlur={field.onBlur}
+						onChange={(event) => {
+							field.onChange(event.target.checked);
+						}}
+					/>
+				)}
+			/>
 			<Controller
 				control={control}
 				name="reach"

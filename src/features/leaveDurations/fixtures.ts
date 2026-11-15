@@ -29,7 +29,7 @@ export const KITCHEN_REACH = {
 /**
  * Three durations as a Kitchen admin sees them: the whole company's morning
  * (theirs to read, not to change), Kitchen's own prep, switched off, and a
- * night one for the Orchard branch.
+ * night one for the Orchard branch that leaves no shift that day.
  */
 export const LEAVE_DURATION_CATALOGUE_FIXTURE: Array<ManagedLeaveDuration> = [
 	managedLeaveDurationFixture({ canEdit: false }),
@@ -49,6 +49,7 @@ export const LEAVE_DURATION_CATALOGUE_FIXTURE: Array<ManagedLeaveDuration> = [
 		startTime: "22:00",
 		endTime: "02:00",
 		minutes: 240,
+		allowsShiftSameDay: false,
 		displayOrder: 3,
 		appliesToBranches: [{ branchId: "b-orchard", branchName: "Orchard" }],
 		canEdit: false,

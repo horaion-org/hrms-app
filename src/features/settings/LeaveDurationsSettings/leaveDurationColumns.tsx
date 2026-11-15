@@ -43,12 +43,32 @@ export const timeRangeOf = (
 		{ start: duration.startTime, end: duration.endTime }
 	);
 
+/**
+ * The Time column: the range, with a muted "No shift that day" second line
+ * only on a duration that keeps the person off the roster that day, as the
+ * name column's second line reads.
+ */
+const timeCell = (duration: ManagedLeaveDuration, t: TFunction): ReactNode => {
+	const range = timeRangeOf(duration, t);
+	if (duration.allowsShiftSameDay) return range;
+	const noShift = t(`${key}.noShiftThatDay`);
+	return (
+		<>
+			<span className="block">{range}</span>
+			<span className="block truncate text-neutral-700" title={noShift}>
+				{noShift}
+			</span>
+		</>
+	);
+};
+
 /** Only a duration whose status this app knows can be sent back whole. */
 const isEditable = (duration: ManagedLeaveDuration): boolean =>
 	duration.canEdit && duration.status !== "UNKNOWN";
 
 /**
- * The leave durations table's columns: name, time, length, where it applies
+ * The leave durations table's columns: name, time (with "No shift that
+ * day" under it when the duration rules a shift out), length, where it applies
  * and status; then up and down arrows for a reader who may reorder; then the
  * row actions (Edit, and Activate or Deactivate and Delete in the menu) on a
  * row the reader may change, or a lock on one that covers departments they
@@ -128,7 +148,7 @@ export const leaveDurationColumns = (
 		{
 			id: "time",
 			header: t(`${key}.time`),
-			cell: (duration) => timeRangeOf(duration, t),
+			cell: (duration) => timeCell(duration, t),
 		},
 		{
 			id: "length",
