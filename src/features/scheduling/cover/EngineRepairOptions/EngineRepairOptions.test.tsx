@@ -8,6 +8,7 @@ import {
 	callInMove,
 	feasibleRepair,
 	infeasibleRepair,
+	reassignMove,
 	stretchMove,
 } from "@/features/scheduling/cover/engineRepairFixtures";
 import type { RepairNames } from "@/features/scheduling/cover/engineRepairWords";
@@ -162,5 +163,46 @@ describe("EngineRepairOptions", () => {
 				"The app can’t apply this one: make it by hand on the roster."
 			)
 		).toHaveLength(2);
+	});
+
+	it("shows a feasible option the app cannot apply with its moves and the by-hand line, an infeasible one with its reason only", () => {
+		render(
+			<EngineRepairOptions
+				names={names}
+				repair={{
+					status: "ready",
+					options: [
+						feasibleRepair([stretchMove()]),
+						feasibleRepair([reassignMove({ fromDate: "2026-10-16" })]),
+						infeasibleRepair(),
+					],
+					ask: vi.fn(),
+				}}
+				onReview={vi.fn()}
+			/>
+		);
+
+		const [stretch, nextDay, cannot] = screen
+			.getAllByRole("listitem")
+			.filter((item) => item.parentElement?.parentElement?.tagName !== "LI");
+		const byHand =
+			"The app can’t apply this one: make it by hand on the roster.";
+		expect(
+			within(stretch!).getByText("Extend Chen Wei’s Swing Shift by 2 h")
+		).toBeVisible();
+		expect(within(stretch!).getByText(byHand)).toBeVisible();
+		expect(
+			within(nextDay!).getByText(/^Move Ben Ong from Swing Shift/)
+		).toBeVisible();
+		expect(within(nextDay!).getByText(byHand)).toBeVisible();
+		expect(
+			within(cannot!).getByText(
+				"Moving anyone would leave another shift short."
+			)
+		).toBeVisible();
+		expect(within(cannot!).queryByText(byHand)).toBeNull();
+		expect(
+			screen.queryByRole("button", { name: "Review this change" })
+		).toBeNull();
 	});
 });
