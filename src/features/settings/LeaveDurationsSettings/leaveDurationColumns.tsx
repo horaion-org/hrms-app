@@ -160,13 +160,14 @@ export const leaveDurationColumns = (
 			id: "appliesTo",
 			header: t(`${key}.appliesTo`),
 			cell: (duration) => reachLabel(duration, t),
-			// A phone keeps the name, the time and the actions; where it applies is in its dialog.
-			hideBelow: "md",
+			// Settings' tables sit in a narrow pane: below 2xl, where it applies and its status read on the name's line.
+			hideBelow: "2xl",
 		},
 		{
 			id: "status",
 			header: t("organisation.list.status"),
 			headerClassName: "w-30",
+			hideBelow: "2xl",
 			cell: (duration) => (
 				<Badge tone={duration.status === "ACTIVE" ? "success" : "neutral"}>
 					{t(

@@ -60,10 +60,10 @@ export const schedulingPolicyColumns = (
 				) : (
 					<ConstraintOrigin constraint={constraint} showLevel={false} />
 				),
-			// A phone keeps only the name and the actions as columns.
-			hideBelow: "md",
+			// The settings pane is narrow: below 2xl the lock and status read on the name's line, so the constraint has room.
+			hideBelow: "2xl",
 		},
-		{ ...shared.status, hideBelow: "md" },
+		{ ...shared.status, hideBelow: "2xl" },
 		...(canUpdate
 			? [
 					{
