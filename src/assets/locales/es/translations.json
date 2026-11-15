@@ -3062,8 +3062,6 @@
 			"additional": "Ajustes adicionales",
 			"includeLeave": "Incluir solicitudes de ausencia",
 			"includeLeaveDescription": "Tener en cuenta las ausencias aprobadas al generar el horario.",
-			"allowOpenShifts": "Permitir turnos abiertos",
-			"allowOpenShiftsDescription": "Generar el horario aunque algunos turnos queden sin asignar.",
 			"validation": {
 				"department": "Elige un departamento.",
 				"name": "Escribe un nombre para el horario.",

@@ -184,7 +184,6 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 	// The settings the Setup form holds, for the first week when it is saved before the form is.
 	const [settings, setSettings] = useState<MonthSetup>({
 		includeLeave: setupDefaults.includeLeave,
-		allowOpenShifts: setupDefaults.allowOpenShifts,
 	});
 	// The first week's draft this page just saved, so its grid opens once.
 	const [savedStartId, setSavedStartId] = useState<string>();
@@ -397,7 +396,6 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 					name: weekNameOf(monday),
 					periodStart: monday,
 					includeLeave: settings.includeLeave,
-					allowOpenShifts: settings.allowOpenShifts,
 					includedShiftIds: weekChoice.shiftIds,
 					includedConstraintIds: weekChoice.constraintIds,
 				},
@@ -486,7 +484,6 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 				choices,
 				setup: {
 					includeLeave: setup.includeLeave,
-					allowOpenShifts: setup.allowOpenShifts,
 				},
 			});
 			await navigate({

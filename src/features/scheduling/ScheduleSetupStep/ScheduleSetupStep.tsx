@@ -82,11 +82,6 @@ const SETTINGS = [
 		labelKey: "scheduling.setup.includeLeave",
 		descriptionKey: "scheduling.setup.includeLeaveDescription",
 	},
-	{
-		name: "allowOpenShifts",
-		labelKey: "scheduling.setup.allowOpenShifts",
-		descriptionKey: "scheduling.setup.allowOpenShiftsDescription",
-	},
 ] as const;
 
 /**

@@ -88,7 +88,6 @@ const DRAFT_SETUP = {
 	name: "Front Office - Week 42",
 	periodStart: "2026-10-12",
 	includeLeave: true,
-	allowOpenShifts: false,
 };
 
 type Call = { method: string; path: string; search: string; body: unknown };
@@ -719,7 +718,7 @@ describe("Create Schedule: generating", () => {
 		]);
 		// The draft is a covered week already: nothing new is created.
 		expect(sent(calls, `POST ${OCTOBER_GENERATION}`)).toEqual([
-			{ includeLeave: true, allowOpenShifts: false, newWeeks: [] },
+			{ includeLeave: true, newWeeks: [] },
 		]);
 	});
 

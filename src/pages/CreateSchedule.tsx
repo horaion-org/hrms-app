@@ -121,7 +121,6 @@ const bodyOf = (
 	name: setup.name,
 	periodStart: setup.periodStart,
 	includeLeave: setup.includeLeave,
-	allowOpenShifts: setup.allowOpenShifts,
 	includedShiftIds,
 	includedConstraintIds,
 });
@@ -449,7 +448,6 @@ export const CreateSchedule = (): FunctionComponent => {
 		name: "",
 		periodStart: firstPeriod.start,
 		includeLeave: true,
-		allowOpenShifts: false,
 	};
 	const chosenStart = draft.setup?.periodStart;
 	// A reopened draft's week may lie outside the offered ones.

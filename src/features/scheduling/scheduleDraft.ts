@@ -73,7 +73,6 @@ export type ScheduleSetup = {
 	/** The Monday the week-long period starts, as an ISO date. */
 	periodStart: string;
 	includeLeave: boolean;
-	allowOpenShifts: boolean;
 };
 
 /** People allocated to each job title of each shift, by shift id then job title id. */
@@ -304,7 +303,6 @@ export const fromSchedule = (
 		name: schedule.name,
 		periodStart: schedule.periodStart,
 		includeLeave: schedule.includeLeave,
-		allowOpenShifts: schedule.allowOpenShifts,
 	},
 	saved: {
 		scheduleId: schedule.scheduleId,

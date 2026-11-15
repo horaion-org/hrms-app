@@ -40,7 +40,6 @@ export const scheduleFixture = (
 	periodStart: "2026-10-12",
 	periodEnd: "2026-10-18",
 	includeLeave: true,
-	allowOpenShifts: false,
 	status: "DRAFT",
 	includedShiftIds: [
 		"front-desk-am",

@@ -215,7 +215,6 @@ const scheduleSchema = z.object({
 	/** The Sunday it ends, six days on. */
 	periodEnd: z.string(),
 	includeLeave: z.boolean(),
-	allowOpenShifts: z.boolean(),
 	status: scheduleStatusSchema,
 	/** A draft's ticked live shifts; once generated, every frozen copy's own id. */
 	includedShiftIds: z.array(z.string()),
@@ -391,7 +390,6 @@ export type ScheduleBody = {
 	name: string;
 	periodStart: string;
 	includeLeave: boolean;
-	allowOpenShifts: boolean;
 	includedShiftIds: Array<string>;
 	includedConstraintIds: Array<string>;
 };

@@ -27,7 +27,6 @@ const DEFAULTS = {
 	name: "",
 	periodStart: "2026-10-12",
 	includeLeave: true,
-	allowOpenShifts: false,
 };
 
 const clientWith = (workspace: Workspace): QueryClient => {
@@ -89,9 +88,6 @@ describe("ScheduleSetupStep", () => {
 		);
 		await user.click(screen.getByRole("button", { name: /Schedule period/ }));
 		await user.click(await screen.findByRole("option", { name: /19.+25/ }));
-		await user.click(
-			screen.getByRole("checkbox", { name: "Allow open shifts" })
-		);
 		await user.click(screen.getByRole("button", { name: "Next" }));
 
 		await vi.waitFor(() => {
@@ -102,7 +98,6 @@ describe("ScheduleSetupStep", () => {
 			name: "Kitchen - Week 42",
 			periodStart: "2026-10-19",
 			includeLeave: true,
-			allowOpenShifts: true,
 		});
 	});
 
@@ -614,5 +609,14 @@ describe("ScheduleSetupStep", () => {
 				screen.getByRole("button", { name: "Department" })
 			).toHaveTextContent("Orchard › Kitchen");
 		});
+	});
+
+	it("given_additionalSettings_when_shown_then_onlyIncludeLeaveRequestsAndNoOpenShiftsSwitch", () => {
+		render(<Harness onSubmit={vi.fn()} />);
+
+		expect(
+			screen.getByRole("checkbox", { name: "Include leave requests" })
+		).toBeInTheDocument();
+		expect(screen.queryByRole("checkbox", { name: /open shifts/i })).toBeNull();
 	});
 });

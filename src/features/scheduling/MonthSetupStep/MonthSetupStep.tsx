@@ -52,23 +52,18 @@ export type MonthSetupStepProps = {
 	className?: string;
 };
 
-/** The two settings every week the month run creates takes, as a week's setup has them. */
+/** The setting every week the month run creates takes, as a week's setup has it. */
 const SETTINGS = [
 	{
 		name: "includeLeave",
 		labelKey: "scheduling.setup.includeLeave",
 		descriptionKey: "scheduling.setup.includeLeaveDescription",
 	},
-	{
-		name: "allowOpenShifts",
-		labelKey: "scheduling.setup.allowOpenShifts",
-		descriptionKey: "scheduling.setup.allowOpenShiftsDescription",
-	},
 ] as const;
 
 /**
- * Which Department and month to generate, and how leave and open shifts
- * count in the weeks it creates. No name: the API names each week. The
+ * Which Department and month to generate, and whether leave counts in the
+ * weeks it creates. No name: the API names each week. The
  * Department is chosen as a week's setup chooses it (ScheduleSetupStep):
  * the active ones of the header's Branch where schedules may be created.
  */
@@ -100,13 +95,13 @@ export const MonthSetupStep = ({
 		defaultValues,
 		mode: "onTouched",
 	});
-	const [departmentId, month, includeLeave, allowOpenShifts] = useWatch({
+	const [departmentId, month, includeLeave] = useWatch({
 		control,
-		name: ["departmentId", "month", "includeLeave", "allowOpenShifts"],
+		name: ["departmentId", "month", "includeLeave"],
 	});
 	useEffect(() => {
-		onSettingsChange?.({ includeLeave, allowOpenShifts });
-	}, [includeLeave, allowOpenShifts, onSettingsChange]);
+		onSettingsChange?.({ includeLeave });
+	}, [includeLeave, onSettingsChange]);
 	useEffect(() => {
 		onDepartmentChange(departmentId);
 	}, [departmentId, onDepartmentChange]);
