@@ -111,6 +111,24 @@ describe("RosterShift", () => {
 		).toBeNull();
 	});
 
+	it("given_aStatusLongerThanTheCell_when_rendered_then_itShowsWholeOnHover", () => {
+		render(
+			<RosterShift
+				label="Aisha Rahman, Wed 11:00 – 15:00, Annual leave 07:00–11:00"
+				selected={false}
+				shift={assignment}
+				status="Annual leave 07:00–11:00"
+				timeRange="11:00 – 15:00"
+				onSelect={vi.fn()}
+			/>
+		);
+
+		expect(screen.getByText("Annual leave 07:00–11:00")).toHaveAttribute(
+			"title",
+			"Annual leave 07:00–11:00"
+		);
+	});
+
 	it("given_anOpenPanel_when_compact_then_showsTheTimeOnlyAndKeepsTheFullLabel", () => {
 		render(
 			<RosterShift

@@ -33,8 +33,9 @@ export type RosterShiftProps = {
 /**
  * One shift in a roster cell, on its shift's colour: its time first and in
  * full, as a manager reads it first, then its name and, when it says
- * something the row header doesn't, its role; both may be cut short in a
- * narrow cell (the label names the day in full). Beside an open panel it
+ * something the row header doesn't, its role, then its status; each may be
+ * cut short in a narrow cell (the label names the day in full, and the
+ * status shows whole on hover). Beside an open panel it
  * shows its time only. Its one mark sits in its top-right corner. Choosing
  * it shows its details.
  */
@@ -79,7 +80,12 @@ export const RosterShift = ({
 				<>
 					<span className="mt-1 block truncate">{shift.name}</span>
 					{showsRole && <span className="block truncate">{shift.role}</span>}
-					{status && <span className="block truncate">{status}</span>}
+					{status && (
+						// Cut short in a narrow cell; hovering shows it whole, as the mark's title does.
+						<span className="block truncate" title={status}>
+							{status}
+						</span>
+					)}
 				</>
 			)}
 		</button>
