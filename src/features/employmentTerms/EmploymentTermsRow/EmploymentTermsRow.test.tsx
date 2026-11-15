@@ -334,6 +334,10 @@ describe("A person's employment terms", () => {
 		expect(
 			await screen.findByText(/^Employment terms changed from /)
 		).toBeVisible();
+		// The dialog's submit stays inside it: Edit profile's own form around the row is not saved.
+		expect(
+			calls.some((call) => call.method === "PUT" && call.path === PROFILE)
+		).toBe(false);
 	});
 
 	it("explain a refusal on the field it is about", async () => {
