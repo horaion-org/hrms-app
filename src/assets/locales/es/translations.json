@@ -1580,7 +1580,9 @@
 				"activateDescription": "El puesto vuelve a estar activo.",
 				"activateConfirm": "Activar puesto",
 				"forbidden": "No tienes permiso para cambiar este puesto.",
-				"failed": "No pudimos cambiar el puesto. Inténtalo de nuevo."
+				"failed": "No pudimos cambiar el puesto. Inténtalo de nuevo.",
+				"namedByConstraints_one": "{{count}} regla nombra este puesto y requerirá atención.",
+				"namedByConstraints_other": "{{count}} reglas nombran este puesto y requerirán atención."
 			},
 			"department": "Departamento"
 		},
@@ -4347,8 +4349,10 @@
 			"deleteConstraintBody_other": "Se quita de {{department}} y de {{count}} borradores que la usan. Los horarios generados y publicados conservan su copia.",
 			"deleteConstraintBodyNoDrafts": "Se quita de {{department}}. Los horarios generados y publicados conservan su copia.",
 			"deleteConstraintBodyUnknown": "Se quita de {{department}} y de los borradores que la usen. Los horarios generados y publicados conservan su copia.",
-			"namedByConstraints_one": "{{count}} restricción nombra este turno; dejará de aplicarse a él.",
-			"namedByConstraints_other": "{{count}} restricciones nombran este turno; dejarán de aplicarse a él.",
+			"namedByConstraints_one": "{{count}} regla nombra este turno y requerirá atención.",
+			"namedByConstraints_other": "{{count}} reglas nombran este turno y requerirán atención.",
+			"namedByConstraintsOnEdit_one": "{{count}} regla nombra este turno; si quitas del turno un puesto que cuenta, requerirá atención.",
+			"namedByConstraintsOnEdit_other": "{{count}} reglas nombran este turno; las que cuenten un puesto que quites del turno requerirán atención.",
 			"deleteShift": "Eliminar turno",
 			"deleteConstraint": "Eliminar restricción",
 			"cancel": "Cancelar"

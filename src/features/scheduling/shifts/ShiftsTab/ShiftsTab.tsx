@@ -169,16 +169,16 @@ export const ShiftsTab = ({
 		reached && unitOf(reached),
 		reached && { kind: "shift", id: reached.shiftId }
 	);
-	// Deleting also says how many of the department's constraints name the shift, where they may be read.
+	// Edit and delete also say how many of the department's constraints name the shift, where they may be read.
 	const readsConstraints =
-		deleting !== undefined &&
-		access.can("constraint:read", departmentScope(deleting.departmentId));
+		reached !== undefined &&
+		access.can("constraint:read", departmentScope(reached.departmentId));
 	const departmentConstraints = useQuery(
-		constraintsQuery(companyId, deleting && unitOf(deleting), readsConstraints)
+		constraintsQuery(companyId, reached && unitOf(reached), readsConstraints)
 	);
 	const namedBy =
-		deleting && departmentConstraints.data
-			? constraintsNamingShift(departmentConstraints.data, deleting.shiftId)
+		reached && departmentConstraints.data
+			? constraintsNamingShift(departmentConstraints.data, reached.shiftId)
 			: undefined;
 
 	const saveShift = async (body: ShiftBody): Promise<void> => {
@@ -296,7 +296,16 @@ export const ShiftsTab = ({
 					}
 					impactNote={
 						dialog.kind === "edit"
-							? editNote(t, "shift", dialog.shift.departmentName, draftCount)
+							? [
+									editNote(t, "shift", dialog.shift.departmentName, draftCount),
+									...(namedBy
+										? [
+												t("scheduling.reach.namedByConstraintsOnEdit", {
+													count: namedBy,
+												}),
+											]
+										: []),
+								].join(" ")
 							: undefined
 					}
 					onSave={saveShift}

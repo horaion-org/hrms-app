@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
 import type { TFunction } from "i18next";
 import { useCallback, useMemo, useState } from "react";
@@ -22,6 +23,8 @@ import {
 	type StatusFilter,
 } from "@/features/organisation/listColumns";
 import { jobTitleColumns } from "@/features/organisation/jobTitleColumns";
+import { constraintsQuery } from "@/features/scheduling/constraints/api";
+import { constraintsNamingJobTitle } from "@/features/scheduling/setupReach";
 import { useSetJobTitleStatus } from "@/features/organisation/useChangeListRow";
 import { useJobTitles } from "@/features/organisation/useOrganisationList";
 import { JOB_TITLE_READ_KEYS } from "@/features/workspace/permissionKeys";
@@ -35,10 +38,15 @@ import { useAccess } from "@/features/workspace/useAccess";
 import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 
-/** What the status confirm says; deactivating a title people hold names how many keep it. */
+/**
+ * What the status confirm says; deactivating a title people hold names how
+ * many keep it, and how many rules name it and will need attention when
+ * `namedBy` is known.
+ */
 const statusChangeCopy = (
 	jobTitle: JobTitle,
-	t: TFunction
+	t: TFunction,
+	namedBy?: number
 ): { title: string; description: string; confirmLabel: string } => {
 	const key = "organisation.jobTitles.status";
 	if (jobTitle.status === "INACTIVE")
@@ -48,12 +56,16 @@ const statusChangeCopy = (
 			confirmLabel: t(`${key}.activateConfirm`),
 		};
 	const count = jobTitle.holderCount;
+	const description =
+		count > 0
+			? t(`${key}.deactivateDescriptionHeld`, { count })
+			: t(`${key}.deactivateDescription`);
+	const named = namedBy
+		? t(`${key}.namedByConstraints`, { count: namedBy })
+		: undefined;
 	return {
 		title: t(`${key}.deactivateTitle`, { name: jobTitle.name }),
-		description:
-			count > 0
-				? t(`${key}.deactivateDescriptionHeld`, { count })
-				: t(`${key}.deactivateDescription`),
+		description: named ? `${description} ${named}` : description,
 		confirmLabel:
 			count > 0
 				? t(`${key}.deactivateConfirmHeld`, { count })
@@ -96,6 +108,27 @@ export const JobTitles = (): FunctionComponent => {
 	// The Job title whose status the person asked to change, until they confirm or cancel.
 	const [changing, setChanging] = useState<JobTitle>();
 	const setJobTitleStatus = useSetJobTitleStatus(companyId);
+	// Deactivating says how many of the department's rules name the title, where they may be read.
+	const readsConstraints =
+		changing?.status === "ACTIVE" &&
+		access.can("constraint:read", departmentScope(changing.departmentId));
+	const departmentConstraints = useQuery(
+		constraintsQuery(
+			companyId,
+			changing && {
+				branchId: changing.branchId,
+				departmentId: changing.departmentId,
+			},
+			readsConstraints
+		)
+	);
+	const namedBy =
+		changing && departmentConstraints.data
+			? constraintsNamingJobTitle(
+					departmentConstraints.data,
+					changing.jobTitleId
+				)
+			: undefined;
 	const closeChange = (): void => {
 		setJobTitleStatus.reset();
 		setChanging(undefined);
@@ -205,7 +238,7 @@ export const JobTitles = (): FunctionComponent => {
 			)}
 			{changing && (
 				<ConfirmDialog
-					{...statusChangeCopy(changing, t)}
+					{...statusChangeCopy(changing, t, namedBy)}
 					cancelLabel={t("organisation.list.cancel")}
 					submitting={setJobTitleStatus.isPending}
 					error={

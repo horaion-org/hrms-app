@@ -280,6 +280,48 @@ describe("ShiftsTab", () => {
 		expect(screen.getByRole("button", { name: /^Department/ })).toBeDisabled();
 	});
 
+	it("given_constraintsNamingTheShift_when_editing_then_theNoteSaysTheyMayNeedAttention", async () => {
+		const user = userEvent.setup();
+		stubApi({
+			[`GET ${KITCHEN}/shifts`]: ok([kitchenShift]),
+			[`GET ${KITCHEN}/shift-role-options`]: ok(SHIFT_ROLE_OPTIONS),
+			[`GET ${COMPANY}/schedules`]: schedulesReply([kitchenShift.shiftId]),
+			[`GET ${KITCHEN}/constraints`]: ok([
+				constraintFixture({
+					constraintId: "kitchen-cover",
+					name: "Kitchen cover",
+					type: "SHIFT_STAFFING",
+					values: [
+						{
+							field: "SHIFT",
+							value: kitchenShift.shiftId,
+							name: "Front Desk AM",
+						},
+					],
+				}),
+			]),
+		});
+		show({
+			permissions: [
+				"shift:read",
+				"shift:update",
+				"schedule:read",
+				"constraint:read",
+			],
+			requested: { branchId: "b-1", departmentId: "d-1" },
+		});
+
+		await user.click(
+			await screen.findByRole("button", { name: "Edit Front Desk AM" })
+		);
+
+		expect(
+			await screen.findByText(
+				"Saving changes this shift for Kitchen: new schedules and 1 draft that uses it. Generated and published schedules keep their own copy. 1 rule names this shift; if you take a job title it counts off the shift, it will need attention."
+			)
+		).toBeVisible();
+	});
+
 	it("given_schedulesNotReadable_when_editing_then_theNoteSaysAnyDrafts", async () => {
 		const user = userEvent.setup();
 		const calls = stubApi({
@@ -345,7 +387,7 @@ describe("ShiftsTab", () => {
 		});
 		await waitFor(() => {
 			expect(dialog).toHaveTextContent(
-				"It's removed from Kitchen and from 2 drafts that use it. Generated and published schedules keep their copy. 1 constraint names this shift; it will stop applying to it."
+				"It's removed from Kitchen and from 2 drafts that use it. Generated and published schedules keep their copy. 1 rule names this shift and will need attention."
 			);
 		});
 		expect(

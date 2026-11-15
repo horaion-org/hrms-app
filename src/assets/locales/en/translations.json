@@ -1950,7 +1950,9 @@
 				"activateDescription": "The job title becomes active again.",
 				"activateConfirm": "Activate job title",
 				"forbidden": "You don’t have permission to change this job title.",
-				"failed": "We couldn’t change the job title. Try again."
+				"failed": "We couldn’t change the job title. Try again.",
+				"namedByConstraints_one": "{{count}} rule names this job title and will need attention.",
+				"namedByConstraints_other": "{{count}} rules name this job title and will need attention."
 			},
 			"department": "Department",
 			"people": "People",
@@ -4547,8 +4549,10 @@
 			"deleteConstraintBody_other": "It's removed from {{department}} and from {{count}} drafts that use it. Generated and published schedules keep their copy.",
 			"deleteConstraintBodyNoDrafts": "It's removed from {{department}}. Generated and published schedules keep their copy.",
 			"deleteConstraintBodyUnknown": "It's removed from {{department}} and from any drafts that use it. Generated and published schedules keep their copy.",
-			"namedByConstraints_one": "{{count}} constraint names this shift; it will stop applying to it.",
-			"namedByConstraints_other": "{{count}} constraints name this shift; they'll stop applying to it.",
+			"namedByConstraints_one": "{{count}} rule names this shift and will need attention.",
+			"namedByConstraints_other": "{{count}} rules name this shift and will need attention.",
+			"namedByConstraintsOnEdit_one": "{{count}} rule names this shift; if you take a job title it counts off the shift, it will need attention.",
+			"namedByConstraintsOnEdit_other": "{{count}} rules name this shift; any that counts a job title you take off the shift will need attention.",
 			"deleteShift": "Delete shift",
 			"deleteConstraint": "Delete constraint",
 			"cancel": "Cancel"

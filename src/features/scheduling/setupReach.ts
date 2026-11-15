@@ -41,6 +41,23 @@ export const constraintsNamingShift = (
 	).length;
 
 /**
+ * How many of the department's own constraints name the job title, counted
+ * or standing in: any value that is a link (it has a name) and is the job
+ * title's id. Company constraints name no job title.
+ */
+export const constraintsNamingJobTitle = (
+	constraints: ReadonlyArray<Pick<DepartmentConstraint, "level" | "values">>,
+	jobTitleId: string
+): number =>
+	constraints.filter(
+		(constraint) =>
+			constraint.level !== "COMPANY" &&
+			constraint.values.some(
+				(value) => value.name !== null && value.value === jobTitleId
+			)
+	).length;
+
+/**
  * The edit dialog's note on what saving reaches. `draftCount` is undefined
  * where the person may not read schedules, so the drafts go uncounted.
  */
@@ -68,7 +85,8 @@ export type DeleteCopy = {
 
 /**
  * The delete confirmation's words: what the item is removed from and, for
- * a shift, how many of the department's constraints stop applying to it.
+ * a shift, how many of the department's constraints name it and will need
+ * attention (ADR-0085).
  * `draftCount` is undefined where the person may not read schedules.
  */
 export const deleteCopy = (
