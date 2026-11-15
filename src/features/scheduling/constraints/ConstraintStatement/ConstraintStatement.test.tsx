@@ -60,6 +60,36 @@ describe("ConstraintStatement", () => {
 		);
 	});
 
+	it("marks a field holding a value that no longer fits, and says what to do under the sentence", () => {
+		render(
+			<ConstraintStatement
+				constraint={{
+					type: "SHIFT_STAFFING",
+					requirement: "MUST",
+					values: [
+						{ field: "COMPARISON", value: "AT_LEAST", name: null },
+						{ field: "HEADCOUNT", value: "2", name: null },
+						{
+							field: "JOB_TITLE",
+							value: "lead",
+							name: "Lead",
+							problem: "NOT_LISTED",
+						},
+						{ field: "SHIFT", value: "closing", name: "Closing" },
+					],
+				}}
+			/>
+		);
+
+		expect(screen.getByText("Lead")).toHaveClass("text-warning-700");
+		expect(screen.getByText("Closing")).not.toHaveClass("text-warning-700");
+		expect(
+			screen.getByText(
+				"Lead isn’t on the rule’s shifts any more. Edit the rule, or add Lead to the shift."
+			)
+		).toBeVisible();
+	});
+
 	it("shows who it applies to under the sentence only when given", () => {
 		const { rerender } = render(
 			<ConstraintStatement appliesTo="Whole company" constraint={REST} />

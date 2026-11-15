@@ -49,6 +49,25 @@ describe("ConstraintTable", () => {
 		);
 	});
 
+	it("given_aRuleWhoseJobTitleLeftItsShift_when_rendered_then_needsAttentionWithWhatToDo", () => {
+		const stale = {
+			...morningCover,
+			values: morningCover.values.map((value) =>
+				value.value === "front-desk-lead"
+					? { ...value, problem: "NOT_LISTED" as const }
+					: value
+			),
+		};
+		render(<ConstraintTable constraints={[stale, barCover]} />);
+
+		expect(row(stale.name)).toHaveTextContent("Needs attention");
+		expect(row(stale.name)).toHaveTextContent(
+			"Front Desk Lead isn’t on the rule’s shifts any more. Edit the rule, or add Front Desk Lead to the shift."
+		);
+		expect(row(barCover.name)).not.toHaveTextContent("Needs attention");
+		expect(row(barCover.name)).not.toHaveTextContent("any more");
+	});
+
 	it("given_noBranchOrDepartmentChosen_when_rendered_then_namesEachRowsBranchAndDepartment", () => {
 		render(<ConstraintTable showBranch showDepartment constraints={rows} />);
 

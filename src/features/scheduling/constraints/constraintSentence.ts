@@ -5,6 +5,7 @@ import {
 	type ConstraintField,
 	type ConstraintRequirement,
 	type ConstraintType,
+	type ConstraintValueProblem,
 } from "@/features/scheduling/constraints/api";
 import { dayTypeLabel } from "@/features/scheduling/dayTypes";
 import { WEEKDAYS, type Weekday } from "@/features/scheduling/shifts/api";
@@ -25,6 +26,8 @@ export type SentenceValue = {
 	field: ConstraintField;
 	value: string;
 	name: string | null;
+	/** Why a stored value no longer fits, as the API says; absent while a rule is being filled in. */
+	problem?: ConstraintValueProblem | null;
 };
 
 /** Each field of a constraint in words; a field not filled in yet has none. */

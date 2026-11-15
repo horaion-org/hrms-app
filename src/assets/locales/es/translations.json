@@ -3194,6 +3194,13 @@
 			"department": "Departamento"
 		},
 		"constraints": {
+			"problems": {
+				"needsAttention": "Requiere atención",
+				"UNAVAILABLE": "{{name}} ya no existe o no está activo. Edita la regla o elimínala.",
+				"NOT_LISTED": "{{name}} ya no está en los turnos de la regla. Edita la regla o añade {{name}} al turno.",
+				"LISTS_NONE": "{{name}} ya no incluye ninguno de los puestos de la regla. Edita la regla o añade uno al turno.",
+				"UNKNOWN": "{{name}} ya no encaja. Edita la regla."
+			},
 			"add": "Añadir restricción",
 			"label": "Restricciones",
 			"name": "Nombre",

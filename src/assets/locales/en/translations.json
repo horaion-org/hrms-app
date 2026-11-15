@@ -3394,6 +3394,13 @@
 			"department": "Department"
 		},
 		"constraints": {
+			"problems": {
+				"needsAttention": "Needs attention",
+				"UNAVAILABLE": "{{name}} no longer exists or isn’t active. Edit the rule or delete it.",
+				"NOT_LISTED": "{{name}} isn’t on the rule’s shifts any more. Edit the rule, or add {{name}} to the shift.",
+				"LISTS_NONE": "{{name}} lists none of the rule’s job titles any more. Edit the rule, or add one to the shift.",
+				"UNKNOWN": "{{name}} no longer fits. Edit the rule."
+			},
 			"add": "Add constraint",
 			"label": "Constraints",
 			"name": "Name",
