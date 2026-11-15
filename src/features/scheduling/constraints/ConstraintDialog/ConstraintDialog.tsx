@@ -37,8 +37,8 @@ import {
 import { appliesToOf } from "@/features/scheduling/constraints/appliesTo";
 import {
 	constraintSchema,
+	valuesByField,
 	type ConstraintDialogBody,
-	type ConstraintFieldValues,
 	type ConstraintFormValues,
 } from "@/features/scheduling/constraints/ConstraintDialog/schema";
 import {
@@ -128,15 +128,6 @@ const isHinted = (field: ConstraintField): field is HintedField =>
 
 /** A row of the form: one of its own fields, or one of the type's. */
 type FieldName = keyof ConstraintFormValues | ConstraintField;
-
-/** A constraint's values by field, as the form holds them; a value that no longer fits is left out. */
-const valuesByField = (values: Constraint["values"]): ConstraintFieldValues => {
-	const byField: ConstraintFieldValues = {};
-	for (const { field, value, problem } of values)
-		if (value !== null && !problem)
-			byField[field] = [...(byField[field] ?? []), value];
-	return byField;
-};
 
 /**
  * Adds a constraint to the department, or changes one; every draft of the

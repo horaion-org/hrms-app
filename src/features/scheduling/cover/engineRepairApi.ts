@@ -30,6 +30,7 @@ const spanSchema = z.object({
 	end: z.string().nullable(),
 });
 
+/** A span of local time; an unreadable end is null. */
 export type RepairSpan = z.infer<typeof spanSchema>;
 
 const moveSchema = z.object({
@@ -50,6 +51,7 @@ const moveSchema = z.object({
 	extensionMinutes: z.number().nullable(),
 });
 
+/** One move of an engine option: who, from where, to which shift and day. */
 export type RepairMove = z.infer<typeof moveSchema>;
 
 const optionSchema = z.object({
@@ -82,6 +84,7 @@ const optionSchema = z.object({
 		.nullish(),
 });
 
+/** One of the engine's ways to fill the gap, or its honest no. */
 export type RepairOption = z.infer<typeof optionSchema>;
 
 /** An option's extra minutes that week, by kind. */
@@ -97,6 +100,7 @@ const notAssignedReasonSchema = z.object({
 	constraintName: z.string().nullable(),
 });
 
+/** One reason someone was not put on the short shift. */
 export type NotAssignedReason = z.infer<typeof notAssignedReasonSchema>;
 
 /** Someone with the gap's job title the engine did not put on the shift, and why. */
@@ -108,6 +112,7 @@ const notAssignedPersonSchema = z.object({
 	reasons: z.array(notAssignedReasonSchema),
 });
 
+/** Someone with the gap's job title who was not assigned, and why. */
 export type NotAssignedPerson = z.infer<typeof notAssignedPersonSchema>;
 
 const repairOptionsSchema = z.object({
@@ -121,6 +126,7 @@ const repairOptionsSchema = z.object({
 	notAssigned: z.array(notAssignedPersonSchema).nullable().default(null),
 });
 
+/** The engine's answer for one gap: its options, and why nobody else was assigned. */
 export type RepairOptions = z.infer<typeof repairOptionsSchema>;
 
 /** The engine's options for `gap` at `expectedRevision`; nothing is written. */

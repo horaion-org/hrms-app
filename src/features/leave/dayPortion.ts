@@ -19,8 +19,9 @@ export type DayPortionChoice =
 	| { kind: "DURATION"; durationId: string }
 	| { kind: "CUSTOM" };
 
-/** The option values of the two choices that are not a duration; a duration is valued by its id. */
+/** The option value of Full day; a duration is valued by its id. */
 export const FULL_DAY_VALUE = "FULL_DAY";
+/** The option value of Custom times. */
 export const CUSTOM_VALUE = "CUSTOM";
 
 /** "09:00–13:00", or "22:00–02:00 next day" when the end is before the start. */

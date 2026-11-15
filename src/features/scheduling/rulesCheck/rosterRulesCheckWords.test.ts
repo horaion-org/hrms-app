@@ -3,9 +3,16 @@ import { beforeAll, describe, expect, it } from "vitest";
 import en from "@/assets/locales/en/translations.json";
 import { ApiProblemError } from "@/common/problem";
 import {
+	rulesCheckFixture,
+	staffingGapFixture,
+} from "@/features/scheduling/rulesCheck/fixtures";
+import {
+	brokenRuleCount,
 	brokenRuleLabel,
 	LABELLED_RULES,
+	namedRuleLabel,
 	rulesCheckRefusalOf,
+	validationMark,
 } from "@/features/scheduling/rulesCheck/rosterRulesCheckWords";
 
 let t: TFunction;
@@ -67,6 +74,73 @@ describe("brokenRuleLabel", () => {
 			expect(
 				brokenRuleLabel({ rule, constraintId: null, constraintName: null }, t)
 			).not.toContain("scheduling.rulesCheck");
+	});
+});
+
+describe("namedRuleLabel", () => {
+	it("names a rule by its constraint, else by the app's label, else leaves the fallback to the caller", () => {
+		expect(
+			namedRuleLabel({ rule: null, constraintName: "Twelve hours" }, t)
+		).toBe("Twelve hours");
+		expect(
+			namedRuleLabel(
+				{ rule: "minimum_rest_between_shifts", constraintName: null },
+				t
+			)
+		).toBe("Rest between shifts");
+		expect(
+			namedRuleLabel({ rule: "a_rule_added_later", constraintName: null }, t)
+		).toBeUndefined();
+		expect(namedRuleLabel({ rule: null, constraintName: null }, t)).toBe(
+			undefined
+		);
+	});
+});
+
+const brokenRule = {
+	rule: "most_minutes_a_day",
+	constraintId: null,
+	constraintName: null,
+};
+
+describe("brokenRuleCount", () => {
+	it("counts one per rule named, one when broken with none named, and none unless broken", () => {
+		expect(
+			brokenRuleCount(
+				rulesCheckFixture({
+					status: "BROKEN",
+					brokenRules: [brokenRule, brokenRule],
+				})
+			)
+		).toBe(2);
+		expect(brokenRuleCount(rulesCheckFixture({ status: "BROKEN" }))).toBe(1);
+		expect(brokenRuleCount(rulesCheckFixture({ status: "HOLDS" }))).toBe(0);
+		expect(brokenRuleCount(rulesCheckFixture({ status: "UNCHECKED" }))).toBe(
+			0
+		);
+	});
+});
+
+describe("validationMark", () => {
+	it("counts broken rules and staffing gaps together", () => {
+		expect(
+			validationMark(
+				rulesCheckFixture({
+					status: "BROKEN",
+					staffingGaps: [staffingGapFixture()],
+				})
+			)
+		).toEqual({ kind: "problems", count: 2 });
+	});
+
+	it("is clean only when every rule holds and staffing was worked out with no gaps", () => {
+		expect(validationMark(rulesCheckFixture())).toEqual({ kind: "clean" });
+		expect(
+			validationMark(rulesCheckFixture({ staffingGaps: null }))
+		).toBeUndefined();
+		expect(
+			validationMark(rulesCheckFixture({ status: "UNCHECKED" }))
+		).toBeUndefined();
 	});
 });
 

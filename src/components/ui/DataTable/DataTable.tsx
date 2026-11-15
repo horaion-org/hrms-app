@@ -56,8 +56,8 @@ export type DataTableColumn<TData extends object> = {
 	sortValue?: (row: TData) => string | number;
 	/**
 	 * Lets the header wrap onto more lines instead of truncating, for a narrow
-	 * column whose header must read in full (as the availability week grid's
-	 * two-line day headers do).
+	 * column whose header must read in full (as the starting days dialog's
+	 * day headers do).
 	 */
 	wrapHeader?: boolean;
 	/** Classes for the header cell, e.g. a fixed width such as `w-30`. */

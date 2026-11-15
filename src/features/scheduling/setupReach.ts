@@ -27,18 +27,28 @@ export const draftsUsing = (
 			).includes(item.id)
 	).length;
 
-/** How many of the department's own constraints name the shift; company constraints name no shift. */
-export const constraintsNamingShift = (
-	constraints: ReadonlyArray<Pick<DepartmentConstraint, "level" | "values">>,
-	shiftId: string
+/** A constraint as the naming counts read it. */
+type NamingConstraint = Pick<DepartmentConstraint, "level" | "values">;
+
+/** How many of the department's own constraints hold a value `names` picks out; company constraints are left out. */
+const departmentConstraintsNaming = (
+	constraints: ReadonlyArray<NamingConstraint>,
+	names: (value: NamingConstraint["values"][number]) => boolean
 ): number =>
 	constraints.filter(
 		(constraint) =>
-			constraint.level !== "COMPANY" &&
-			constraint.values.some(
-				(value) => value.field === "SHIFT" && value.value === shiftId
-			)
+			constraint.level !== "COMPANY" && constraint.values.some(names)
 	).length;
+
+/** How many of the department's own constraints name the shift; company constraints name no shift. */
+export const constraintsNamingShift = (
+	constraints: ReadonlyArray<NamingConstraint>,
+	shiftId: string
+): number =>
+	departmentConstraintsNaming(
+		constraints,
+		(value) => value.field === "SHIFT" && value.value === shiftId
+	);
 
 /**
  * How many of the department's own constraints name the job title, counted
@@ -46,16 +56,13 @@ export const constraintsNamingShift = (
  * title's id. Company constraints name no job title.
  */
 export const constraintsNamingJobTitle = (
-	constraints: ReadonlyArray<Pick<DepartmentConstraint, "level" | "values">>,
+	constraints: ReadonlyArray<NamingConstraint>,
 	jobTitleId: string
 ): number =>
-	constraints.filter(
-		(constraint) =>
-			constraint.level !== "COMPANY" &&
-			constraint.values.some(
-				(value) => value.name !== null && value.value === jobTitleId
-			)
-	).length;
+	departmentConstraintsNaming(
+		constraints,
+		(value) => value.name !== null && value.value === jobTitleId
+	);
 
 /**
  * The edit dialog's note on what saving reaches. `draftCount` is undefined

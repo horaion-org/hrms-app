@@ -34,6 +34,7 @@ const brokenRuleSchema = z.object({
 	constraintName: z.string().nullable(),
 });
 
+/** One working-time rule the roster breaks, by the engine's name and the constraint behind it. */
 export type BrokenRule = z.infer<typeof brokenRuleSchema>;
 
 /** A staffing gap of the roster as it stands, in the shape a generation's findings carry its conflicts. */
@@ -47,6 +48,7 @@ const rosterRulesCheckSchema = z.object({
 	staffingGaps: z.array(findingsConflictSchema).nullable(),
 });
 
+/** Validate schedule's answer: whether the rules hold, which are broken, and the staffing gaps. */
 export type RosterRulesCheck = z.infer<typeof rosterRulesCheckSchema>;
 
 /** Checks the roster at `expectedRevision`; nothing is written. */

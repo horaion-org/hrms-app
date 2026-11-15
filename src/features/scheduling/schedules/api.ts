@@ -107,6 +107,7 @@ const findingsDiagnosticSchema = z.object({
 /** A finding about the schedule's input, made before the solve. */
 export type FindingsDiagnostic = z.infer<typeof findingsDiagnosticSchema>;
 
+/** One conflict of a run's findings; Validate schedule reads its staffing gaps in the same shape. */
 export const findingsConflictSchema = z.object({
 	kind: z.string(),
 	conflictId: z.string(),

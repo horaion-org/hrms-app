@@ -207,6 +207,20 @@ gate, the saves and generating the draft's month.
   docs/adr/0065). Days to decide, and days marked for leave or cover, are `ISSUE_SOURCES` rows listed in the Issues
   panel; a day to decide reads "Needs attention" to a roster editor who can't see leave, with no leave detail. A
   notification about such a day opens its week with the Issues panel (`?week=…&panel=issues`).
+- `cover/` — Find cover for a short shift (`FindCoverPanel`, opened from an Issues row): the API's ranked list
+  (`api.ts`, `useCoverPanel.ts`, `coverOptionWords.ts`, `CoverOptionList`) previewed and applied as a roster change, or
+  sent as an offer on a published roster. Under it, "From the scheduling engine" (`EngineRepairOptions`) asks the
+  engine on demand for its own repair (`engineRepairApi.ts` `…/repair-options`, `useEngineRepair.ts`,
+  `engineRepairWords.ts`); a feasible option the change can state exactly (`engineRepairChange.ts` `repairCells`) is
+  reviewed through Find cover's own preview and Apply, any other is made by hand. `NotAssignedList`
+  (`notAssignedWords.ts`) says why nobody else with the job title was put on the shift. Only a gap the generation
+  stored can be asked about (`generationStoredGap`).
+- `rulesCheck/` — Validate schedule, for whoever may change the roster (`…/roster-check`, under
+  `schedule:edit_shift`): `rosterRulesCheckApi.ts` (the working-time rules broken and the staffing gaps, at one
+  revision, asked on demand), `useRosterRulesCheck.ts` (the ask and the last answer), `rosterRulesCheckWords.ts` (rule
+  labels, refusals, the button's mark), `ValidateScheduleButton` in the week bar, and `issuesFromValidation.ts`: once
+  validated, Issues shows the validation's gaps in place of the generation's conflicts and its broken rules
+  (`ValidationNote` heads the list with where it stands).
 - `roster/roster.ts` — `rosterFromAssignments` (one row per member, each day a shift, off or leave; a row whose
   member is gone keyed by its assignment), `hoursOf`/`hoursInDays` (paid minutes summed first, rounded once, via `paidShiftMinutes`), `weekDays`, `legendOf`,
   `rosterStats`, and `isoDateIn`/`dateTimeFormatIn` for the branch's time zone.

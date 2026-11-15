@@ -50,19 +50,38 @@ export const rulesCheckRefusalOf = (error: unknown): RulesCheckRefusal =>
 		? REFUSALS[error.errorCode]
 		: undefined) ?? "failed";
 
+/** Whether the app has a plain label for the engine's rule name. */
 const isLabelled = (rule: string): rule is LabelledRule =>
 	(LABELLED_RULES as ReadonlyArray<string>).includes(rule);
+
+/**
+ * A rule's name when the app can give one: the company's own constraint
+ * name, else the app's label for the engine's rule; undefined otherwise, so
+ * each caller words its own fallback.
+ */
+export const namedRuleLabel = (
+	rule: Pick<BrokenRule, "constraintName"> & { rule: string | null },
+	t: TFunction
+): string | undefined => {
+	if (rule.constraintName) return rule.constraintName;
+	return rule.rule !== null && isLabelled(rule.rule)
+		? t(`${key}.rule.${rule.rule}`)
+		: undefined;
+};
 
 /**
  * One broken rule's line: the company's own constraint name, else the app's
  * label for the engine's rule, else a generic "A working-time rule".
  */
-export const brokenRuleLabel = (rule: BrokenRule, t: TFunction): string => {
-	if (rule.constraintName) return rule.constraintName;
-	return isLabelled(rule.rule)
-		? t(`${key}.rule.${rule.rule}`)
-		: t(`${key}.unnamedRule`);
-};
+export const brokenRuleLabel = (rule: BrokenRule, t: TFunction): string =>
+	namedRuleLabel(rule, t) ?? t(`${key}.unnamedRule`);
+
+/**
+ * How many problems the check's broken rules count as: one per rule named,
+ * and one when the roster is broken with none named; none unless broken.
+ */
+export const brokenRuleCount = (check: RosterRulesCheck): number =>
+	check.status === "BROKEN" ? Math.max(check.brokenRules.length, 1) : 0;
 
 /**
  * What the week bar's button marks once the current revision is validated:
@@ -73,9 +92,7 @@ export const brokenRuleLabel = (rule: BrokenRule, t: TFunction): string => {
 export const validationMark = (
 	check: RosterRulesCheck
 ): { kind: "problems"; count: number } | { kind: "clean" } | undefined => {
-	const broken =
-		check.status === "BROKEN" ? Math.max(check.brokenRules.length, 1) : 0;
-	const problems = broken + (check.staffingGaps?.length ?? 0);
+	const problems = brokenRuleCount(check) + (check.staffingGaps?.length ?? 0);
 	if (problems > 0) return { kind: "problems", count: problems };
 	return check.status === "HOLDS" && check.staffingGaps !== null
 		? { kind: "clean" }

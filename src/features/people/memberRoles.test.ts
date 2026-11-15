@@ -240,10 +240,10 @@ describe("member access", () => {
 		).toEqual([
 			{
 				place: "Whole company",
-				roles: [expect.any(String)],
+				roles: ["Supervisor"],
 				lines: ["Organisation: View"],
 			},
-			{ place: "Orchard", roles: [expect.any(String)], lines: ["Leave: View"] },
+			{ place: "Orchard", roles: ["Approver"], lines: ["Leave: View"] },
 		]);
 	});
 
