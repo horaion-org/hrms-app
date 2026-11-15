@@ -4852,10 +4852,10 @@
 				"days_of_day_types_per_period": "Rest and off days per period"
 			},
 			"refusal": {
-				"expired": "The engine no longer holds this week’s generation. Generate the week again to check it.",
+				"expired": "The engine no longer holds this week’s generation, so it can’t be validated. Generate the week again, then validate it.",
 				"notConnected": "The scheduling engine isn’t connected here.",
-				"rosterMoved": "The roster changed since you opened it. Reload and check again.",
-				"failed": "The rules couldn’t be checked just now."
+				"rosterMoved": "Someone changed this roster since you opened it. Reload the page, then validate it again.",
+				"failed": "The schedule couldn’t be validated just now."
 			},
 			"changedSinceValidated": "Validate schedule: the schedule changed since it was last validated",
 			"problemsFound_one": "Validate schedule: {{count}} problem found",

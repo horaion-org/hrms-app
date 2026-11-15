@@ -4652,10 +4652,10 @@
 				"days_of_day_types_per_period": "Días de descanso y libres por periodo"
 			},
 			"refusal": {
-				"expired": "El motor ya no guarda la generación de esta semana. Genera la semana de nuevo para comprobarla.",
+				"expired": "El motor ya no guarda la generación de esta semana, así que no se puede validar. Genera la semana de nuevo y luego valídala.",
 				"notConnected": "El motor de planificación no está conectado aquí.",
-				"rosterMoved": "El cuadrante cambió desde que lo abriste. Recarga y comprueba de nuevo.",
-				"failed": "No se pudieron comprobar las reglas ahora."
+				"rosterMoved": "Alguien cambió este cuadrante desde que lo abriste. Recarga la página y vuelve a validarlo.",
+				"failed": "No se pudo validar el cuadrante ahora."
 			},
 			"changedSinceValidated": "Validar cuadrante: el cuadrante cambió desde la última validación",
 			"problemsFound_one": "Validar cuadrante: {{count}} problema encontrado",
