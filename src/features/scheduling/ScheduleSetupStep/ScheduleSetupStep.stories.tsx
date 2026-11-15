@@ -31,7 +31,6 @@ const meta = {
 			name: "",
 			periodStart: "2026-04-13",
 			includeLeave: true,
-			allowOpenShifts: false,
 		},
 		// Wednesday 8 Apr 2026: two weeks back, this week (started) and ten ahead.
 		periods: selectablePeriods(new Date(2026, 3, 8)),
@@ -59,7 +58,6 @@ const savedDraft = {
 		name: "Front Office - Week 16",
 		periodStart: "2026-04-13",
 		includeLeave: true,
-		allowOpenShifts: false,
 	},
 	lockedDepartment: {
 		departmentId: "d-1",

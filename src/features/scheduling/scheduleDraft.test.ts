@@ -51,7 +51,6 @@ const setup = {
 	name: "Front Office - Week 16",
 	periodStart: "2026-10-12",
 	includeLeave: true,
-	allowOpenShifts: false,
 };
 
 /** The fixture shifts chosen and allocated, as the Forecast step leaves them. */
@@ -208,7 +207,6 @@ describe("scheduleDraftReducer", () => {
 			name: "Front Office - Week 42",
 			periodStart: "2026-10-12",
 			includeLeave: true,
-			allowOpenShifts: false,
 		});
 		expect(draft.saved).toEqual({
 			scheduleId: "s-1",

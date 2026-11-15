@@ -267,7 +267,6 @@ export type NewWeek = {
 /** What generating a month sends: the setup of the weeks it creates, and each one's choice. */
 export type GenerateMonthBody = {
 	includeLeave: boolean;
-	allowOpenShifts: boolean;
 	newWeeks: Array<NewWeek>;
 };
 

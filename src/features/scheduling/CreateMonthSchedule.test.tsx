@@ -273,7 +273,6 @@ describe("Create schedules for a month", () => {
 		);
 		expect(post?.body as GenerateMonthBody).toEqual({
 			includeLeave: true,
-			allowOpenShifts: false,
 			newWeeks: ["2026-12-07", "2026-12-14", "2026-12-21", "2026-12-28"].map(
 				(periodStart) => ({
 					periodStart,
@@ -584,7 +583,6 @@ describe("Create schedules for a month: where everyone starts", () => {
 				name: "Week of 2026-12-07",
 				periodStart: "2026-12-07",
 				includeLeave: true,
-				allowOpenShifts: false,
 				includedShiftIds: EVERYTHING.shiftIds,
 				includedConstraintIds: EVERYTHING.constraintIds,
 			},

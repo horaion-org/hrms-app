@@ -3264,8 +3264,6 @@
 			"additional": "Additional settings",
 			"includeLeave": "Include leave requests",
 			"includeLeaveDescription": "Consider approved leave when generating the schedule.",
-			"allowOpenShifts": "Allow open shifts",
-			"allowOpenShiftsDescription": "Generate schedule even if some shifts remain unassigned.",
 			"validation": {
 				"department": "Choose a department.",
 				"name": "Enter a schedule name.",

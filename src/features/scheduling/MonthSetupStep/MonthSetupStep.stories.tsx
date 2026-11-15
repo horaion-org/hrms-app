@@ -31,7 +31,6 @@ const meta = {
 			departmentId: "",
 			month: "2026-11",
 			includeLeave: true,
-			allowOpenShifts: false,
 		},
 		// Thursday 12 Nov 2026: November and the twelve months after it.
 		months: monthChoicesFrom(new Date(2026, 10, 12)),

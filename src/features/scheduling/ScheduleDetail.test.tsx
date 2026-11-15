@@ -530,7 +530,6 @@ it("regenerates the month over a hand-changed week after a danger confirm, then 
 	expect(posts[0]?.search).toBe("departmentId=d-1");
 	expect(posts[0]?.body).toEqual({
 		includeLeave: true,
-		allowOpenShifts: false,
 		newWeeks: [],
 	});
 });

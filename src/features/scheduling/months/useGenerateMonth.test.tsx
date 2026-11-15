@@ -114,7 +114,6 @@ describe("useGenerateMonth", () => {
 			expect(post?.search).toBe("departmentId=d-1");
 			expect(post?.body).toEqual({
 				includeLeave: true,
-				allowOpenShifts: false,
 				newWeeks: ["2026-12-07", "2026-12-14", "2026-12-21", "2026-12-28"].map(
 					(periodStart) => ({
 						periodStart,
@@ -144,7 +143,7 @@ describe("useGenerateMonth", () => {
 					choices: {
 						"2026-12-14": { shiftIds: [SHIFT.shiftId], constraintIds: [] },
 					},
-					setup: { includeLeave: false, allowOpenShifts: true },
+					setup: { includeLeave: false },
 				});
 			});
 

@@ -54,12 +54,11 @@ export const refusedWeeks = (answer: MonthGeneration): Record<string, string> =>
 export type MonthChoices = Record<string, WeekChoiceIds>;
 
 /** The setup of the weeks a run creates. */
-export type MonthSetup = { includeLeave: boolean; allowOpenShifts: boolean };
+export type MonthSetup = { includeLeave: boolean };
 
 /** A new week's setup, as the week wizard starts a new draft (`pages/CreateSchedule.tsx`, `setupDefaults`). */
 export const MONTH_SETUP_DEFAULTS: MonthSetup = {
 	includeLeave: true,
-	allowOpenShifts: false,
 };
 
 /**

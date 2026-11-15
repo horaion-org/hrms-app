@@ -62,7 +62,6 @@ const BODY: ScheduleBody = {
 	name: "Front Office - Week 42",
 	periodStart: "2026-10-12",
 	includeLeave: true,
-	allowOpenShifts: false,
 	includedShiftIds: ["front-desk-am"],
 	includedConstraintIds: ["morning-cover"],
 };

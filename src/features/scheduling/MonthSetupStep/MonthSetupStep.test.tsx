@@ -16,7 +16,6 @@ const DEFAULTS = {
 	departmentId: "",
 	month: "2026-11",
 	includeLeave: true,
-	allowOpenShifts: false,
 };
 
 const clientWithWorkspace = (): QueryClient => {
@@ -101,9 +100,6 @@ describe("MonthSetupStep", () => {
 
 		await user.click(screen.getByRole("button", { name: /Department/ }));
 		await user.click(await screen.findByRole("option", { name: "Kitchen" }));
-		await user.click(
-			screen.getByRole("checkbox", { name: "Allow open shifts" })
-		);
 		await user.click(screen.getByRole("button", { name: "Next" }));
 
 		await vi.waitFor(() => {
@@ -113,8 +109,16 @@ describe("MonthSetupStep", () => {
 			departmentId: "d-2",
 			month: "2026-11",
 			includeLeave: true,
-			allowOpenShifts: true,
 		});
 		expect(onDepartmentChange).toHaveBeenLastCalledWith("d-2");
+	});
+
+	it("given_additionalSettings_when_shown_then_onlyIncludeLeaveRequestsAndNoOpenShiftsSwitch", () => {
+		render(<Harness onSubmit={vi.fn()} />);
+
+		expect(
+			screen.getByRole("checkbox", { name: "Include leave requests" })
+		).toBeInTheDocument();
+		expect(screen.queryByRole("checkbox", { name: /open shifts/i })).toBeNull();
 	});
 });

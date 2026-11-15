@@ -122,7 +122,6 @@ describe("generating a month", () => {
 	const GENERATION = `${NOVEMBER}/generation`;
 	const BODY = {
 		includeLeave: true,
-		allowOpenShifts: false,
 		newWeeks: [
 			{
 				periodStart: "2026-11-30",
