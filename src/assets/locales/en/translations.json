@@ -3427,7 +3427,10 @@
 				"MAX_DAYS_WITHOUT_DAY_TYPES": "Limit on days in a row",
 				"DAY_TYPE_DAYS_PER_WEEK": "Required days each week",
 				"MAX_WORK_HOURS_PER_DAY": "Most hours a day",
-				"MAX_OVERTIME_HOURS_PER_MONTH": "Most overtime a month"
+				"MAX_OVERTIME_HOURS_PER_MONTH": "Most overtime a month",
+				"SHORTEST_PART_SHIFT": "Shortest part of a shift around leave",
+				"MAX_CALL_BACKS_PER_PERSON": "Call-backs on a rest or off day",
+				"PAY_RATES": "Pay rates for extra hours"
 			},
 			"sentences": {
 				"SHIFT_STAFFING": {
@@ -3504,6 +3507,12 @@
 				"MAX_OVERTIME_HOURS_PER_MONTH_zero": "Nobody whose Employment Act limits apply works overtime.",
 				"MAX_OVERTIME_HOURS_PER_MONTH_one": "Nobody whose Employment Act limits apply works more than <OVERTIME_HOURS_A_MONTH/> hour of overtime in a calendar month.",
 				"MAX_OVERTIME_HOURS_PER_MONTH_other": "Nobody whose Employment Act limits apply works more than <OVERTIME_HOURS_A_MONTH/> hours of overtime in a calendar month.",
+				"SHORTEST_PART_SHIFT_one": "A shift is given around leave on the same day only if at least <PART_SHIFT_MINUTES/> minute of it is worked.",
+				"SHORTEST_PART_SHIFT_other": "A shift is given around leave on the same day only if at least <PART_SHIFT_MINUTES/> minutes of it are worked.",
+				"MAX_CALL_BACKS_PER_PERSON_zero": "Nobody is called back to work on a rest or off day.",
+				"MAX_CALL_BACKS_PER_PERSON_one": "Everyone may be called back to work on a rest or off day at most <CALL_BACKS/> time in a roster.",
+				"MAX_CALL_BACKS_PER_PERSON_other": "Everyone may be called back to work on a rest or off day at most <CALL_BACKS/> times in a roster.",
+				"PAY_RATES": "Overtime costs <OVERTIME_PERCENT/>% of normal pay, rest-day work <REST_DAY_WORK_PERCENT/>%, and hours given back as time off <TIME_OFF_EARNED_PERCENT/>%.",
 				"MAX_DAYS_WITHOUT_DAY_TYPES": {
 					"fullTimers_one": "No full-timer goes more than <DAYS_IN_A_ROW/> day in a row without a <DAY_TYPE/>.",
 					"fullTimers_other": "No full-timer goes more than <DAYS_IN_A_ROW/> days in a row without a <DAY_TYPE/>.",
@@ -3540,7 +3549,12 @@
 				"DAYS_IN_A_ROW": "Most days in a row",
 				"DAY_TYPE_COUNT": "Days each week",
 				"WORK_HOURS_A_DAY": "Hours a day",
-				"OVERTIME_HOURS_A_MONTH": "Overtime hours a month"
+				"OVERTIME_HOURS_A_MONTH": "Overtime hours a month",
+				"PART_SHIFT_MINUTES": "Shortest part (minutes)",
+				"CALL_BACKS": "Most call-backs a person",
+				"OVERTIME_PERCENT": "Overtime (% of normal pay)",
+				"REST_DAY_WORK_PERCENT": "Rest-day work (% of normal pay)",
+				"TIME_OFF_EARNED_PERCENT": "Time off earned (%)"
 			},
 			"requirements": {
 				"MUST": "Must",
@@ -3673,7 +3687,12 @@
 				"DAYS_IN_A_ROW": "how many",
 				"DAY_TYPE_COUNT": "how many",
 				"WORK_HOURS_A_DAY": "how many",
-				"OVERTIME_HOURS_A_MONTH": "how many"
+				"OVERTIME_HOURS_A_MONTH": "how many",
+				"PART_SHIFT_MINUTES": "how many",
+				"CALL_BACKS": "how many",
+				"OVERTIME_PERCENT": "how much",
+				"REST_DAY_WORK_PERCENT": "how much",
+				"TIME_OFF_EARNED_PERCENT": "how much"
 			},
 			"statement": "Constraint",
 			"examples": {
@@ -3686,7 +3705,10 @@
 				"MAX_DAYS_WITHOUT_DAY_TYPES": "For example: Nobody goes more than 6 days in a row without a Rest day or Day off.",
 				"DAY_TYPE_DAYS_PER_WEEK": "For example: Everyone has at least 1 Rest day each week.",
 				"MAX_WORK_HOURS_PER_DAY": "For example: Nobody whose Employment Act limits apply works more than 12 hours in a day, overtime included.",
-				"MAX_OVERTIME_HOURS_PER_MONTH": "For example: Nobody whose Employment Act limits apply works more than 72 hours of overtime in a calendar month."
+				"MAX_OVERTIME_HOURS_PER_MONTH": "For example: Nobody whose Employment Act limits apply works more than 72 hours of overtime in a calendar month.",
+				"SHORTEST_PART_SHIFT": "For example: A shift is given around leave on the same day only if at least 240 minutes of it are worked.",
+				"MAX_CALL_BACKS_PER_PERSON": "For example: Everyone may be called back to work on a rest or off day at most 2 times in a roster.",
+				"PAY_RATES": "For example: Overtime costs 150% of normal pay, rest-day work 200%, and hours given back as time off 100%."
 			},
 			"fieldHints": {
 				"SHIFT": "Choose more than one to count them together each day.",
@@ -3699,7 +3721,12 @@
 				"DAYS_IN_A_ROW": "{{min}} to {{max}}.",
 				"DAY_TYPE_COUNT": "{{min}} to {{max}}.",
 				"WORK_HOURS_A_DAY": "{{min}} to {{max}}. MOM’s limit is 12.",
-				"OVERTIME_HOURS_A_MONTH": "{{min}} to {{max}}. MOM’s limit is 72; rest-day work is outside it, except hours past the normal day."
+				"OVERTIME_HOURS_A_MONTH": "{{min}} to {{max}}. MOM’s limit is 72; rest-day work is outside it, except hours past the normal day.",
+				"PART_SHIFT_MINUTES": "{{min}} to {{max}} minutes. Without this setting, a shift that touches a leave is never given.",
+				"CALL_BACKS": "{{min}} to {{max}}. 0 means nobody is called back; without this setting, nobody is called back either.",
+				"OVERTIME_PERCENT": "{{min}} to {{max}}. MOM’s rate is 150, 1.5 times normal pay.",
+				"REST_DAY_WORK_PERCENT": "{{min}} to {{max}}. MOM’s rate is 200, 2 times normal pay.",
+				"TIME_OFF_EARNED_PERCENT": "{{min}} to {{max}}. The rate for hours given back as time off; 100 means one hour off for each extra hour."
 			},
 			"fixedFirmness": {
 				"MUST": "Always a must for this kind of constraint.",
@@ -3715,7 +3742,10 @@
 				"MAX_DAYS_WITHOUT_DAY_TYPES": "Days in a row",
 				"DAY_TYPE_DAYS_PER_WEEK": "Days each week",
 				"MAX_WORK_HOURS_PER_DAY": "Most hours a day",
-				"MAX_OVERTIME_HOURS_PER_MONTH": "Most overtime a month"
+				"MAX_OVERTIME_HOURS_PER_MONTH": "Most overtime a month",
+				"SHORTEST_PART_SHIFT": "Shortest part of a shift",
+				"MAX_CALL_BACKS_PER_PERSON": "Call-backs",
+				"PAY_RATES": "Pay rates"
 			}
 		},
 		"forecast": {
