@@ -39,6 +39,11 @@ import {
 	monthWeekFixture,
 	scheduleMonthFixture,
 } from "@/features/scheduling/months/fixtures";
+import {
+	officerWeek,
+	partTimerWeek,
+	rosterHours,
+} from "@/features/scheduling/hours/fixtures";
 import { frozenShiftsFixture } from "@/features/scheduling/shifts/fixtures";
 
 let app: OpenedApp | undefined;
@@ -60,6 +65,7 @@ const SCHEDULE =
 /** The schedule itself, read by its id alone. */
 const SCHEDULE_READ = "/api/v1/companies/c-1/schedules/s-1";
 const ASSIGNMENTS = `${SCHEDULE}/assignments`;
+const HOURS = `${SCHEDULE}/hours`;
 /** Whether the schedule's week already has its published roster, asked at its department. */
 const PUBLISHED_WEEK =
 	"/api/v1/companies/c-1/branches/b-1/departments/d-1/schedules/published-week";
@@ -216,6 +222,40 @@ it("shows a generated schedule's header, figures and roster from the API", async
 		"Day offRest dayAbsentOn LeaveFront Desk AMLunch RushSwing Shift"
 	);
 	expect(readsOf(calls, ASSIGNMENTS)).toHaveLength(1);
+});
+
+it("shows the roster's hours by person under the grid, with the total", async () => {
+	await openRoster({
+		...signedIn(),
+		[`GET ${SCHEDULE_READ}`]: ok(
+			generatedScheduleFixture({ status: "GENERATED" })
+		),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+		[`GET ${HOURS}`]: ok(rosterHours([officerWeek(), partTimerWeek()])),
+	});
+
+	const hours = await screen.findByRole("table", { name: "Hours" });
+	const aisha = within(hours).getByRole("row", { name: /Aisha Rahman/ });
+	expect(within(aisha).getAllByText("28 h")[0]).toHaveClass("text-warning-900");
+	expect(within(hours).getByRole("row", { name: /Total/ })).toHaveTextContent(
+		"64 h"
+	);
+});
+
+it("shows no hours for a rejected roster, which no longer counts", async () => {
+	const calls = await openRoster({
+		...signedIn(),
+		[`GET ${SCHEDULE_READ}`]: ok(
+			generatedScheduleFixture({ status: "REJECTED" })
+		),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+	});
+
+	expect(
+		await screen.findByRole("table", { name: "Roster" })
+	).toBeInTheDocument();
+	expect(screen.queryByRole("heading", { name: "Hours" })).toBeNull();
+	expect(readsOf(calls, HOURS)).toHaveLength(0);
 });
 
 it("links a schedule to its setup in the wizard", async () => {

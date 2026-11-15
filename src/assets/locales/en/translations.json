@@ -4707,6 +4707,25 @@
 				"handChanged_other": "{{weeks}} were changed by hand.",
 				"replaced": "Those changes will be replaced."
 			}
+		},
+		"rosterHours": {
+			"title": "Hours",
+			"staff": "Staff",
+			"daysWorked": "Days worked",
+			"normal": "Normal",
+			"extra": "Extra",
+			"overtime": "Overtime",
+			"total": "Total",
+			"hours": "{{hours}} h",
+			"daysWorkedCount_one": "{{count}} day worked",
+			"daysWorkedCount_other": "{{count}} days worked",
+			"normalSummary": "Normal {{hours}}",
+			"extraSummary": "Extra {{hours}}",
+			"overtimeSummary": "Overtime {{hours}}",
+			"empty": "Nobody is rostered this week.",
+			"note": "Planned hours from this roster, classified with each person’s employment terms for the week.",
+			"loading": "Loading hours…",
+			"loadFailed": "Couldn’t load the hours."
 		}
 	},
 	"colourSwatchPicker": {

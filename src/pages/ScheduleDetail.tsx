@@ -37,6 +37,11 @@ import {
 	PublishScheduleDialog,
 	type PublishMode,
 } from "@/features/scheduling/PublishScheduleDialog";
+import { hasRosterHours } from "@/features/scheduling/hours/rosterHoursRows";
+import {
+	useRosterHours,
+	type RosterHoursState,
+} from "@/features/scheduling/hours/useRosterHours";
 import { RegenerateMonthDialog } from "@/features/scheduling/RegenerateMonthDialog";
 import { RejectedRosterCallout } from "@/features/scheduling/RejectedRosterCallout";
 import { RejectScheduleDialog } from "@/features/scheduling/RejectScheduleDialog";
@@ -47,6 +52,7 @@ import {
 import { PublishedWeekCallout } from "@/features/scheduling/publishedWeek/PublishedWeekCallout";
 import type { RosterSearch } from "@/features/scheduling/roster/rosterSearch";
 import { RosterHeader } from "@/features/scheduling/RosterHeader";
+import { RosterHours } from "@/features/scheduling/RosterHours";
 import { coverOffersQuery } from "@/features/scheduling/coverOffers/api";
 import { rosterChangeShiftsQuery } from "@/features/scheduling/rosterChanges/api";
 import { ScheduleMenu } from "@/features/scheduling/ScheduleMenu";
@@ -183,10 +189,11 @@ const readyItems = <Item,>(
 	list: { status: "ready"; items: Array<Item> } | { status: string }
 ): Array<Item> => ("items" in list ? list.items : []);
 
-/** The roster itself, once the schedule has one: its rows, or why they aren't shown yet. */
+/** The roster itself, once the schedule has one: its rows and their hours, or why they aren't shown yet. */
 const RosterBody = ({
 	assignments,
 	startingContext,
+	hours,
 	...roster
 }: Omit<
 	GeneratedRosterProps,
@@ -195,6 +202,8 @@ const RosterBody = ({
 	assignments: AssignmentList;
 	/** Where members started the week; undefined until read, or when it can't be. */
 	startingContext?: StartingContext;
+	/** The roster's hours by person, shown under the grid. */
+	hours: RosterHoursState;
 }): FunctionComponent => {
 	const { t } = useTranslation();
 	const viewerMembershipId = useCurrentMembershipId();
@@ -204,19 +213,29 @@ const RosterBody = ({
 				{t(`${key}.${ROSTER_PROBLEMS[assignments.status]}`)}
 			</Problem>
 		);
+	const startingRuns = startingContext
+		? runsByMember(startingContext)
+		: undefined;
 	return (
-		<GeneratedRoster
-			{...roster}
-			assignments={assignments.items}
-			startingRuns={startingContext ? runsByMember(startingContext) : undefined}
-			viewerMembershipId={viewerMembershipId}
-			// Only a frozen context can go stale: members whose week before changed since generation.
-			membersWithChangedStart={
-				startingContext?.frozen === true
-					? startingContext.staleMemberProfileIds.length
-					: 0
-			}
-		/>
+		<>
+			<GeneratedRoster
+				{...roster}
+				assignments={assignments.items}
+				startingRuns={startingRuns}
+				viewerMembershipId={viewerMembershipId}
+				// Only a frozen context can go stale: members whose week before changed since generation.
+				membersWithChangedStart={
+					startingContext?.frozen === true
+						? startingContext.staleMemberProfileIds.length
+						: 0
+				}
+			/>
+			<RosterHours
+				assignments={assignments.items}
+				className="mt-8"
+				hours={hours}
+			/>
+		</>
 	);
 };
 
@@ -326,6 +345,15 @@ const ApiSchedule = ({
 		scheduleId,
 		runId,
 		state.status === "ready" ? state.schedule.rosterRevision : 0
+	);
+	// The roster's hours by person, while the hours ledger holds its days.
+	const rosterHours = useRosterHours(
+		companyId,
+		unit,
+		scheduleId,
+		runId,
+		state.status === "ready" ? state.schedule.rosterRevision : 0,
+		state.status === "ready" && hasRosterHours(state.schedule)
 	);
 	// The frozen shifts and constraints only name what the findings refer to.
 	const rosterSchedule = showsRoster ? state.schedule : undefined;
@@ -677,6 +705,7 @@ const ApiSchedule = ({
 					constraints={readyItems(constraints)}
 					departmentWeeks={departmentWeeks}
 					editing={editing}
+					hours={rosterHours}
 					schedule={schedule}
 					shifts={readyItems(shifts)}
 					startingContext={startingContext.data}

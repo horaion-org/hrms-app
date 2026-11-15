@@ -3,13 +3,19 @@ import { configureApiClient, resetApiClient } from "@/common/api-client";
 import { envelope, stubApi } from "@/common/testing/stubApi";
 import {
 	fetchOpeningBalances,
+	fetchRosterHours,
 	saveOpeningBalances,
 } from "@/features/scheduling/hours/api";
-import { midMonthOpenings } from "@/features/scheduling/hours/fixtures";
+import {
+	midMonthOpenings,
+	rosterHours,
+} from "@/features/scheduling/hours/fixtures";
 
 const UNIT = { branchId: "b-1", departmentId: "d-1" };
 const OPENINGS =
 	"/api/v1/companies/c-1/branches/b-1/departments/d-1/schedules/s-1/opening-balances";
+const HOURS =
+	"/api/v1/companies/c-1/branches/b-1/departments/d-1/schedules/s-1/hours";
 
 beforeEach(() => {
 	configureApiClient({
@@ -61,5 +67,25 @@ describe("opening balances client", () => {
 				},
 			],
 		});
+	});
+});
+
+describe("roster hours client", () => {
+	it("reads each person's week and the totals", async () => {
+		stubApi({
+			[`GET ${HOURS}`]: { status: 200, body: envelope(rosterHours()) },
+		});
+
+		const read = await fetchRosterHours("c-1", UNIT, "s-1");
+
+		expect(read.weekStart).toBe("2026-11-30");
+		expect(read.members[0]).toEqual({
+			memberProfileId: "mp-1",
+			daysWorked: 6,
+			normalMinutes: 2640,
+			extraMinutes: 0,
+			overtimeMinutes: 1680,
+		});
+		expect(read.totals.overtimeMinutes).toBe(1680);
 	});
 });

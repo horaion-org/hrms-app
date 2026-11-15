@@ -4507,6 +4507,25 @@
 				"handChanged_other": "{{weeks}} se cambiaron a mano.",
 				"replaced": "Esos cambios se reemplazarán."
 			}
+		},
+		"rosterHours": {
+			"title": "Horas",
+			"staff": "Personal",
+			"daysWorked": "Días trabajados",
+			"normal": "Normales",
+			"extra": "Complementarias",
+			"overtime": "Horas extra",
+			"total": "Total",
+			"hours": "{{hours}} h",
+			"daysWorkedCount_one": "{{count}} día trabajado",
+			"daysWorkedCount_other": "{{count}} días trabajados",
+			"normalSummary": "Normales {{hours}}",
+			"extraSummary": "Complementarias {{hours}}",
+			"overtimeSummary": "Horas extra {{hours}}",
+			"empty": "Nadie tiene turnos esta semana.",
+			"note": "Horas previstas de este cuadrante, clasificadas con las condiciones de empleo de cada persona para la semana.",
+			"loading": "Cargando las horas…",
+			"loadFailed": "No se pudieron cargar las horas."
 		}
 	},
 	"workspace": {

@@ -179,6 +179,15 @@ gate, the saves and generating the draft's month.
    The editor reads the frozen shifts it offers from `…/roster-changes/shifts` (`rosterChangeShiftsQuery`) under
    the same key, so it needs neither `schedule:update` nor `shift:read`.
 
+- `hours/api.ts` `rosterHoursQuery` (`GET …/schedules/{s}/hours`, per run and revision as the roster's rows),
+  `hours/useRosterHours.ts` (`hidden` without `schedule:read` at the department, on a 403, or while the roster has
+  no hours: `hasRosterHours`, a GENERATED or PUBLISHED roster with no run open; a rejected roster no longer counts),
+  `hours/rosterHoursRows.ts` (pure: the API's rows by member profile id, named and ordered by the roster's own rows,
+  a member the roster no longer names last as "Former member", then the total) and `RosterHours` — the Hours section
+  under the grid: a `DataTable` with Staff, Days worked, Normal, Extra and Overtime ("37.5 h"), overtime above zero in
+  `warning-900`, the total line, and the line that these are planned hours classified with each person's employment
+  terms for the week. Below `sm` the figures read on the name's summary line, as on Job titles. The API's hours
+  ledger classifies them (hrms-backend-v2 `HoursClassifier`); the app only writes them.
 - `schedules/scheduleViewLink.ts` — View on a card or history row: a DRAFT reopens at the wizard's Setup, any other
   status opens the roster; `scheduleSetupLink` is the roster's "View setup".
 - `schedules/useScheduleAssignments.ts` — the roster rows of one run at one revision, asked for only when enabled
