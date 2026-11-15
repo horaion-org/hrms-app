@@ -4325,6 +4325,21 @@
 					"breaksRule": "Incumpliría: {{rule}}",
 					"aWorkingTimeRule": "una norma de tiempo de trabajo",
 					"otherReason": "No puede cubrir este turno."
+				},
+				"hours": {
+					"none": "Sin horas extra.",
+					"and": " y ",
+					"several": "Suma {{parts}} a {{name}} esa semana.",
+					"only": {
+						"overtime": "Suma {{hours}} h de horas extra a {{name}} esa semana.",
+						"restDayWork": "Suma {{hours}} h de trabajo en día de descanso a {{name}}.",
+						"timeOffEarned": "Suma {{hours}} h de descanso compensatorio a {{name}}."
+					},
+					"part": {
+						"overtime": "{{hours}} h de horas extra",
+						"restDayWork": "{{hours}} h de trabajo en día de descanso",
+						"timeOffEarned": "{{hours}} h de descanso compensatorio"
+					}
 				}
 			}
 		},

@@ -139,4 +139,28 @@ describe("engine repair options client", () => {
 			2,
 		]);
 	});
+
+	it("reads an option's kind, any kind a newer engine names, and its extra minutes; neither from the older repair", async () => {
+		stubApi({
+			[`POST ${REPAIR_OPTIONS}`]: {
+				status: 200,
+				body: envelope(
+					repairOptionsFixture([
+						feasibleRepair([callInMove()], {
+							kind: "swap_shifts",
+							extraMinutes: { overtime: 90, restDayWork: 0, timeOffEarned: 0 },
+						}),
+						feasibleRepair(),
+					])
+				),
+			},
+		});
+
+		const parsed = await fetchRepairOptions(TARGET, { ...GAP, expectedRevision: 1 });
+
+		expect(parsed.options[0]?.kind).toBe("swap_shifts");
+		expect(parsed.options[0]?.extraMinutes?.overtime).toBe(90);
+		expect(parsed.options[1]?.kind).toBeUndefined();
+		expect(parsed.options[1]?.extraMinutes).toBeUndefined();
+	});
 });

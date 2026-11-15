@@ -228,4 +228,36 @@ describe("EngineRepairOptions", () => {
 		expect(screen.queryByText(NONE_CHECKED)).toBeNull();
 		expect(screen.getAllByText(NOT_CHECKED)).toHaveLength(1);
 	});
+
+	it("says each option's hours in one line, and nothing for an option from the older repair", () => {
+		render(
+			<EngineRepairOptions
+				names={names}
+				repair={{
+					status: "ready",
+					options: [
+						feasibleRepair([callInMove()], {
+							kind: "call_in",
+							extraMinutes: { overtime: 0, restDayWork: 0, timeOffEarned: 0 },
+						}),
+						feasibleRepair([stretchMove()], {
+							kind: "move",
+							extraMinutes: { overtime: 480, restDayWork: 0, timeOffEarned: 0 },
+						}),
+						feasibleRepair([callInMove()]),
+					],
+					ask: vi.fn(),
+				}}
+			/>
+		);
+
+		const [free, overtime, older] = screen
+			.getAllByRole("listitem")
+			.filter((item) => item.parentElement?.parentElement?.tagName !== "LI");
+		expect(within(free!).getByText("No extra hours.")).toBeVisible();
+		expect(
+			within(overtime!).getByText("Adds 8 h of overtime for Chen Wei that week.")
+		).toBeVisible();
+		expect(older).not.toHaveTextContent(/extra hours|Adds/);
+	});
 });

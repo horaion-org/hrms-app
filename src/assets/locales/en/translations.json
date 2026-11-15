@@ -4525,6 +4525,21 @@
 					"breaksRule": "Would break: {{rule}}",
 					"aWorkingTimeRule": "a working-time rule",
 					"otherReason": "Cannot take this shift."
+				},
+				"hours": {
+					"none": "No extra hours.",
+					"and": " and ",
+					"several": "Adds {{parts}} for {{name}} that week.",
+					"only": {
+						"overtime": "Adds {{hours}} h of overtime for {{name}} that week.",
+						"restDayWork": "Adds {{hours}} h of rest-day work for {{name}}.",
+						"timeOffEarned": "Adds {{hours}} h of time off earned for {{name}}."
+					},
+					"part": {
+						"overtime": "{{hours}} h of overtime",
+						"restDayWork": "{{hours}} h of rest-day work",
+						"timeOffEarned": "{{hours}} h of time off earned"
+					}
 				}
 			}
 		},

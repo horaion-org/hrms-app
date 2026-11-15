@@ -64,9 +64,28 @@ const optionSchema = z.object({
 	leftShort: z.array(spanSchema),
 	leftShortBy: z.number().nullable(),
 	warnings: z.array(z.string()),
+	/**
+	 * What the option does, as the engine names it ("call_in", "move", or one
+	 * added later); absent from the older repair.
+	 */
+	kind: z.string().nullish(),
+	/**
+	 * How the person's minutes of each kind change that week if the option is
+	 * applied, all 0 when it costs no extra hours; absent from the older repair.
+	 */
+	extraMinutes: z
+		.object({
+			overtime: z.number(),
+			restDayWork: z.number(),
+			timeOffEarned: z.number(),
+		})
+		.nullish(),
 });
 
 export type RepairOption = z.infer<typeof optionSchema>;
+
+/** An option's extra minutes that week, by kind. */
+export type RepairExtraMinutes = NonNullable<RepairOption["extraMinutes"]>;
 
 /** One reason the engine gives for not putting someone on the short shift; `code` is open, so a new one still reads. */
 const notAssignedReasonSchema = z.object({
