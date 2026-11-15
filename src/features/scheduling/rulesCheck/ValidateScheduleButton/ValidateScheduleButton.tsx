@@ -1,8 +1,7 @@
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
-import { CountBadge } from "@/components/ui/CountBadge";
-import { TickIcon } from "@/components/ui/Icon";
+import { AlertIcon, TickIcon } from "@/components/ui/Icon";
 import { validationMark } from "@/features/scheduling/rulesCheck/rosterRulesCheckWords";
 import type { LastValidation } from "@/features/scheduling/rulesCheck/useRosterRulesCheck";
 
@@ -28,8 +27,9 @@ const key = "scheduling.rulesCheck";
  * validation's gaps and broken rules. It lights up (the primary look) while the roster changed since it
  * was last validated in this visit, or has hand changes and was never
  * validated, and says so in its name; once the roster on screen is validated
- * it is plain again, with the problems' count, as Issues shows its count, or
- * a tick when there are none.
+ * it is plain again, with the Issues warning icon when it found problems
+ * (Issues beside it holds the count, so it shows no number of its own), or a
+ * tick when there are none.
  */
 export const ValidateScheduleButton = ({
 	revision,
@@ -62,8 +62,9 @@ export const ValidateScheduleButton = ({
 			}}
 		>
 			{t(`${key}.check`)}
+			{/* Issues beside it holds the count; a second number here read as a different total. */}
 			{mark?.kind === "problems" && (
-				<CountBadge aria-hidden="true" count={mark.count} tone="inactive" />
+				<AlertIcon aria-hidden="true" className="text-warning-900" />
 			)}
 			{mark?.kind === "clean" && (
 				<TickIcon aria-hidden="true" className="text-success-500" />
