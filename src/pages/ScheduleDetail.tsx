@@ -53,6 +53,8 @@ import { PublishedWeekCallout } from "@/features/scheduling/publishedWeek/Publis
 import type { RosterSearch } from "@/features/scheduling/roster/rosterSearch";
 import { RosterHeader } from "@/features/scheduling/RosterHeader";
 import { RosterHours } from "@/features/scheduling/RosterHours";
+import { RosterRulesCheck } from "@/features/scheduling/rulesCheck/RosterRulesCheck";
+import { useRosterRulesCheck } from "@/features/scheduling/rulesCheck/useRosterRulesCheck";
 import { coverOffersQuery } from "@/features/scheduling/coverOffers/api";
 import { rosterChangeShiftsQuery } from "@/features/scheduling/rosterChanges/api";
 import { ScheduleMenu } from "@/features/scheduling/ScheduleMenu";
@@ -189,6 +191,16 @@ const readyItems = <Item,>(
 	list: { status: "ready"; items: Array<Item> } | { status: string }
 ): Array<Item> => ("items" in list ? list.items : []);
 
+/** The roster's working-time rules check, for whoever may change the roster now. */
+const RulesCheck = ({
+	editing,
+}: {
+	editing: RosterEditing;
+}): FunctionComponent => {
+	const check = useRosterRulesCheck(editing.target, editing.revision);
+	return <RosterRulesCheck check={check} className="mt-8" />;
+};
+
 /** The roster itself, once the schedule has one: its rows and their hours, or why they aren't shown yet. */
 const RosterBody = ({
 	assignments,
@@ -230,6 +242,7 @@ const RosterBody = ({
 						: 0
 				}
 			/>
+			{roster.editing && <RulesCheck editing={roster.editing} />}
 			<RosterHours
 				assignments={assignments.items}
 				className="mt-8"

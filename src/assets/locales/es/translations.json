@@ -4557,6 +4557,37 @@
 			"note": "Horas previstas de este cuadrante, clasificadas con las condiciones de empleo de cada persona para la semana.",
 			"loading": "Cargando las horas…",
 			"loadFailed": "No se pudieron cargar las horas."
+		},
+		"rulesCheck": {
+			"title": "Reglas de tiempo de trabajo",
+			"check": "Comprobar reglas",
+			"loading": "Comprobando las reglas…",
+			"holds": "Se cumplen todas las reglas de tiempo de trabajo.",
+			"breaks": "Este cuadrante incumple:",
+			"brokenUnnamed": "Este cuadrante incumple una regla de tiempo de trabajo.",
+			"unchecked": "No se pudieron comprobar las reglas.",
+			"unnamedRule": "Una regla de tiempo de trabajo",
+			"rule": {
+				"most_minutes_a_day": "Máximo de horas al día",
+				"most_overtime_minutes_a_month": "Máximo de horas extra al mes",
+				"most_days_a_week": "Máximo de días a la semana",
+				"minimum_rest_between_shifts": "Descanso entre turnos",
+				"most_call_backs_per_person": "Máximo de llamadas por persona",
+				"overtime_past_the_normal_day": "Horas extra sobre la jornada normal",
+				"overtime_past_the_normal_week": "Horas extra sobre la semana normal",
+				"overtime_respects_daily_work_cap": "Horas extra dentro del límite diario",
+				"work_minutes_per_period": "Horas por periodo",
+				"consecutive_day_work_patterns": "Días trabajados seguidos",
+				"max_days_without_day_types": "Días sin un día libre",
+				"off_requirement_per_horizon": "Días libres obligatorios",
+				"days_of_day_types_per_period": "Días de descanso y libres por periodo"
+			},
+			"refusal": {
+				"expired": "El motor ya no guarda la generación de esta semana. Genera la semana de nuevo para comprobarla.",
+				"notConnected": "El motor de planificación no está conectado aquí.",
+				"rosterMoved": "El cuadrante cambió desde que lo abriste. Recarga y comprueba de nuevo.",
+				"failed": "No se pudieron comprobar las reglas ahora."
+			}
 		}
 	},
 	"workspace": {
