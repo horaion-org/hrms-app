@@ -134,6 +134,8 @@ export const SchedulesTab = ({
 						language
 					),
 				sortValue: (schedule) => schedule.periodStart,
+				// A phone keeps the name and the actions as columns; the rest reads on the name's line, as Job titles does.
+				hideBelow: "md",
 			},
 			{
 				id: "createdAt",
@@ -144,6 +146,7 @@ export const SchedulesTab = ({
 					</time>
 				),
 				sortValue: (schedule) => schedule.createdAt,
+				hideBelow: "md",
 			},
 			{
 				id: "status",
@@ -154,11 +157,13 @@ export const SchedulesTab = ({
 					</Badge>
 				),
 				sortValue: (schedule) => t(`${key}.statuses.${schedule.status}`),
+				hideBelow: "md",
 			},
 			{
 				id: "department",
 				header: t(`${key}.history.department`),
 				cell: (schedule) => schedule.departmentName,
+				hideBelow: "md",
 			},
 			{
 				id: "actions",

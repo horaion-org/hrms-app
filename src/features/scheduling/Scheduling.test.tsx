@@ -69,7 +69,7 @@ it("shows API history and links to the saved schedule", async () => {
 		name: "Schedule history",
 	});
 	const row = within(history).getByRole("row", { name: /^API schedule/ });
-	expect(within(row).getByText("Draft")).toBeInTheDocument();
+	expect(within(row).getAllByText("Draft")[0]).toBeInTheDocument();
 	expect(
 		within(row).getByRole("link", { name: "View schedule API schedule" })
 	).toHaveAttribute("href", expect.stringContaining("departmentId=d-1"));
@@ -159,7 +159,7 @@ it("labels and tones every API status in the history", async () => {
 		const row = within(history).getByRole("row", {
 			name: new RegExp(`^${status} schedule`),
 		});
-		expect(within(row).getByText(label)).toHaveClass(background);
+		expect(within(row).getAllByText(label)[0]).toHaveClass(background);
 	}
 });
 
