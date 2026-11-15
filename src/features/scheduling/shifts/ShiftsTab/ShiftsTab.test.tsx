@@ -317,7 +317,7 @@ describe("ShiftsTab", () => {
 
 		expect(
 			await screen.findByText(
-				"Saving changes this shift for Kitchen: new schedules and 1 draft that uses it. Generated and published schedules keep their own copy. 1 rule names this shift; if you take a job title it counts off the shift, it will need attention."
+				"Saving changes this shift for Kitchen: new schedules and 1 draft that uses it. Generated and published schedules keep their own copy. 1 constraint names this shift; if you take a job title it counts off the shift, it will need attention."
 			)
 		).toBeVisible();
 	});
@@ -387,7 +387,7 @@ describe("ShiftsTab", () => {
 		});
 		await waitFor(() => {
 			expect(dialog).toHaveTextContent(
-				"It's removed from Kitchen and from 2 drafts that use it. Generated and published schedules keep their copy. 1 rule names this shift and will need attention."
+				"It's removed from Kitchen and from 2 drafts that use it. Generated and published schedules keep their copy. 1 constraint names this shift and will need attention."
 			);
 		});
 		expect(

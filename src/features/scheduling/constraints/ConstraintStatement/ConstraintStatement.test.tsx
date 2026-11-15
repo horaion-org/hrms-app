@@ -110,7 +110,7 @@ describe("ConstraintStatement", () => {
 		expect(screen.getByText("Closing")).not.toHaveClass("text-warning-700");
 		expect(
 			screen.getByText(
-				"Lead isn’t on the rule’s shifts any more. Edit the rule, or add Lead to the shift."
+				"Lead isn’t on the constraint’s shifts any more. Edit the constraint, or add Lead to the shift."
 			)
 		).toBeVisible();
 	});

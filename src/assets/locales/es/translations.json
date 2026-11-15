@@ -1581,8 +1581,8 @@
 				"activateConfirm": "Activar puesto",
 				"forbidden": "No tienes permiso para cambiar este puesto.",
 				"failed": "No pudimos cambiar el puesto. Inténtalo de nuevo.",
-				"namedByConstraints_one": "{{count}} regla nombra este puesto y requerirá atención.",
-				"namedByConstraints_other": "{{count}} reglas nombran este puesto y requerirán atención."
+				"namedByConstraints_one": "{{count}} restricción nombra este puesto y requerirá atención.",
+				"namedByConstraints_other": "{{count}} restricciones nombran este puesto y requerirán atención."
 			},
 			"department": "Departamento"
 		},
@@ -3198,10 +3198,10 @@
 		"constraints": {
 			"problems": {
 				"needsAttention": "Requiere atención",
-				"UNAVAILABLE": "{{name}} ya no existe o no está activo. Edita la regla o elimínala.",
-				"NOT_LISTED": "{{name}} ya no está en los turnos de la regla. Edita la regla o añade {{name}} al turno.",
-				"LISTS_NONE": "{{name}} ya no incluye ninguno de los puestos de la regla. Edita la regla o añade uno al turno.",
-				"UNKNOWN": "{{name}} ya no encaja. Edita la regla."
+				"UNAVAILABLE": "{{name}} ya no existe o no está activo. Edita la restricción o elimínala.",
+				"NOT_LISTED": "{{name}} ya no está en los turnos de la restricción. Edita la restricción o añade {{name}} al turno.",
+				"LISTS_NONE": "{{name}} ya no incluye ninguno de los puestos de la restricción. Edita la restricción o añade uno al turno.",
+				"UNKNOWN": "{{name}} ya no encaja. Edita la restricción."
 			},
 			"add": "Añadir restricción",
 			"label": "Restricciones",
@@ -3465,7 +3465,7 @@
 					"alsoChosen": "Ya está elegido en {{field}}: elígelo en un solo sitio.",
 					"listsNone_one": "{{names}} no incluye {{listed}}, así que nadie puede contar ahí. Elige uno que incluya o quítalo.",
 					"listsNone_other": "{{names}} no incluyen {{listed}}, así que nadie puede contar ahí. Elige unos que incluyan o quítalos.",
-					"staleTakenOut": "Estos valores ya no encajan y se quitaron: {{items}}. Guarda para mantener la regla sin ellos, o vuelve a elegir."
+					"staleTakenOut": "Estos valores ya no encajan y se quitaron: {{items}}. Guarda para mantener la restricción sin ellos, o vuelve a elegir."
 				}
 			},
 			"preview": {
@@ -4358,10 +4358,10 @@
 			"deleteConstraintBody_other": "Se quita de {{department}} y de {{count}} borradores que la usan. Los horarios generados y publicados conservan su copia.",
 			"deleteConstraintBodyNoDrafts": "Se quita de {{department}}. Los horarios generados y publicados conservan su copia.",
 			"deleteConstraintBodyUnknown": "Se quita de {{department}} y de los borradores que la usen. Los horarios generados y publicados conservan su copia.",
-			"namedByConstraints_one": "{{count}} regla nombra este turno y requerirá atención.",
-			"namedByConstraints_other": "{{count}} reglas nombran este turno y requerirán atención.",
-			"namedByConstraintsOnEdit_one": "{{count}} regla nombra este turno; si quitas del turno un puesto que cuenta, requerirá atención.",
-			"namedByConstraintsOnEdit_other": "{{count}} reglas nombran este turno; las que cuenten un puesto que quites del turno requerirán atención.",
+			"namedByConstraints_one": "{{count}} restricción nombra este turno y requerirá atención.",
+			"namedByConstraints_other": "{{count}} restricciones nombran este turno y requerirán atención.",
+			"namedByConstraintsOnEdit_one": "{{count}} restricción nombra este turno; si quitas del turno un puesto que cuenta, requerirá atención.",
+			"namedByConstraintsOnEdit_other": "{{count}} restricciones nombran este turno; las que cuenten un puesto que quites del turno requerirán atención.",
 			"deleteShift": "Eliminar turno",
 			"deleteConstraint": "Eliminar restricción",
 			"cancel": "Cancelar"
@@ -4395,8 +4395,8 @@
 			"addStaffing": "Añade una restricción de personal: cuántas personas necesita cada turno.",
 			"addShiftFirst": "Añade primero un turno.",
 			"goToConstraints": "Ir a Restricciones",
-			"constraintsNeedAttention_one": "{{count}} regla requiere atención: ya no encaja con sus turnos o puestos.",
-			"constraintsNeedAttention_other": "{{count}} reglas requieren atención: ya no encajan con sus turnos o puestos.",
+			"constraintsNeedAttention_one": "{{count}} restricción requiere atención: ya no encaja con sus turnos o puestos.",
+			"constraintsNeedAttention_other": "{{count}} restricciones requieren atención: ya no encajan con sus turnos o puestos.",
 			"ready": "{{department}} está listo para planificar.",
 			"createSchedule": "Crear horario",
 			"backToSchedule": "Volver al horario",

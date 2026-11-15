@@ -917,7 +917,7 @@ describe("ConstraintDialog", () => {
 			.map((value) => value.name);
 		expect(
 			screen.getByText(
-				`These no longer fit and were taken out: ${names.join(", ")}. Save to keep the rule without them, or choose again.`
+				`These no longer fit and were taken out: ${names.join(", ")}. Save to keep the constraint without them, or choose again.`
 			)
 		).toBeVisible();
 		for (const name of names)

@@ -189,10 +189,10 @@ describe("deleteCopy", () => {
 
 	it("given_constraintsNamingTheShift_when_deleting_then_addsThatTheyStopApplying", () => {
 		expect(deleteCopy(t, "shift", "Late", "Bar", 0, 1).description).toBe(
-			"It's removed from Bar. Generated and published schedules keep their copy. 1 rule names this shift and will need attention."
+			"It's removed from Bar. Generated and published schedules keep their copy. 1 constraint names this shift and will need attention."
 		);
 		expect(deleteCopy(t, "shift", "Late", "Bar", 0, 2).description).toBe(
-			"It's removed from Bar. Generated and published schedules keep their copy. 2 rules name this shift and will need attention."
+			"It's removed from Bar. Generated and published schedules keep their copy. 2 constraints name this shift and will need attention."
 		);
 		expect(deleteCopy(t, "shift", "Late", "Bar", 0, 0)).toEqual({
 			title: "Delete Late?",

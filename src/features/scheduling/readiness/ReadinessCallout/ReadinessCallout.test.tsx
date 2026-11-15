@@ -61,7 +61,7 @@ describe("ReadinessCallout", () => {
 
 		const [attention] = await screen.findAllByRole("note");
 		expect(attention).toHaveTextContent(
-			"2 rules need attention: they no longer fit their shifts or job titles."
+			"2 constraints need attention: they no longer fit their shifts or job titles."
 		);
 		expect(
 			within(attention!).getByRole("link", { name: "Go to Constraints" })
@@ -89,7 +89,7 @@ describe("ReadinessCallout", () => {
 
 		expect(
 			await screen.findByText(
-				"1 rule needs attention: it no longer fits its shifts or job titles."
+				"1 constraint needs attention: it no longer fits its shifts or job titles."
 			)
 		).toBeVisible();
 		expect(

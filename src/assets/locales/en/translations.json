@@ -1951,8 +1951,8 @@
 				"activateConfirm": "Activate job title",
 				"forbidden": "You don’t have permission to change this job title.",
 				"failed": "We couldn’t change the job title. Try again.",
-				"namedByConstraints_one": "{{count}} rule names this job title and will need attention.",
-				"namedByConstraints_other": "{{count}} rules name this job title and will need attention."
+				"namedByConstraints_one": "{{count}} constraint names this job title and will need attention.",
+				"namedByConstraints_other": "{{count}} constraints name this job title and will need attention."
 			},
 			"department": "Department",
 			"people": "People",
@@ -3398,10 +3398,10 @@
 		"constraints": {
 			"problems": {
 				"needsAttention": "Needs attention",
-				"UNAVAILABLE": "{{name}} no longer exists or isn’t active. Edit the rule or delete it.",
-				"NOT_LISTED": "{{name}} isn’t on the rule’s shifts any more. Edit the rule, or add {{name}} to the shift.",
-				"LISTS_NONE": "{{name}} lists none of the rule’s job titles any more. Edit the rule, or add one to the shift.",
-				"UNKNOWN": "{{name}} no longer fits. Edit the rule."
+				"UNAVAILABLE": "{{name}} no longer exists or isn’t active. Edit the constraint or delete it.",
+				"NOT_LISTED": "{{name}} isn’t on the constraint’s shifts any more. Edit the constraint, or add {{name}} to the shift.",
+				"LISTS_NONE": "{{name}} lists none of the constraint’s job titles any more. Edit the constraint, or add one to the shift.",
+				"UNKNOWN": "{{name}} no longer fits. Edit the constraint."
 			},
 			"add": "Add constraint",
 			"label": "Constraints",
@@ -3665,7 +3665,7 @@
 					"alsoChosen": "Already chosen in {{field}}: choose it in one place only.",
 					"listsNone_one": "{{names}} doesn’t list {{listed}}, so no one can be counted there. Choose one it lists, or remove it.",
 					"listsNone_other": "{{names}} don’t list {{listed}}, so no one can be counted there. Choose ones they list, or remove them.",
-					"staleTakenOut": "These no longer fit and were taken out: {{items}}. Save to keep the rule without them, or choose again."
+					"staleTakenOut": "These no longer fit and were taken out: {{items}}. Save to keep the constraint without them, or choose again."
 				}
 			},
 			"preview": {
@@ -4558,10 +4558,10 @@
 			"deleteConstraintBody_other": "It's removed from {{department}} and from {{count}} drafts that use it. Generated and published schedules keep their copy.",
 			"deleteConstraintBodyNoDrafts": "It's removed from {{department}}. Generated and published schedules keep their copy.",
 			"deleteConstraintBodyUnknown": "It's removed from {{department}} and from any drafts that use it. Generated and published schedules keep their copy.",
-			"namedByConstraints_one": "{{count}} rule names this shift and will need attention.",
-			"namedByConstraints_other": "{{count}} rules name this shift and will need attention.",
-			"namedByConstraintsOnEdit_one": "{{count}} rule names this shift; if you take a job title it counts off the shift, it will need attention.",
-			"namedByConstraintsOnEdit_other": "{{count}} rules name this shift; any that counts a job title you take off the shift will need attention.",
+			"namedByConstraints_one": "{{count}} constraint names this shift and will need attention.",
+			"namedByConstraints_other": "{{count}} constraints name this shift and will need attention.",
+			"namedByConstraintsOnEdit_one": "{{count}} constraint names this shift; if you take a job title it counts off the shift, it will need attention.",
+			"namedByConstraintsOnEdit_other": "{{count}} constraints name this shift; any that counts a job title you take off the shift will need attention.",
 			"deleteShift": "Delete shift",
 			"deleteConstraint": "Delete constraint",
 			"cancel": "Cancel"
@@ -4595,8 +4595,8 @@
 			"addStaffing": "Add a staffing constraint: how many people each shift needs.",
 			"addShiftFirst": "Add a shift first.",
 			"goToConstraints": "Go to Constraints",
-			"constraintsNeedAttention_one": "{{count}} rule needs attention: it no longer fits its shifts or job titles.",
-			"constraintsNeedAttention_other": "{{count}} rules need attention: they no longer fit their shifts or job titles.",
+			"constraintsNeedAttention_one": "{{count}} constraint needs attention: it no longer fits its shifts or job titles.",
+			"constraintsNeedAttention_other": "{{count}} constraints need attention: they no longer fit their shifts or job titles.",
 			"ready": "{{department}} is ready to schedule.",
 			"createSchedule": "Create schedule",
 			"backToSchedule": "Back to the schedule",

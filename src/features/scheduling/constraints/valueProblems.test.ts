@@ -19,10 +19,10 @@ describe("valueProblems", () => {
 
 		expect(needsAttention(values)).toBe(true);
 		expect(problemLines(values, t)).toEqual([
-			"Closing no longer exists or isn’t active. Edit the rule or delete it.",
-			"Lead isn’t on the rule’s shifts any more. Edit the rule, or add Lead to the shift.",
-			"Late lists none of the rule’s job titles any more. Edit the rule, or add one to the shift.",
-			"x no longer fits. Edit the rule.",
+			"Closing no longer exists or isn’t active. Edit the constraint or delete it.",
+			"Lead isn’t on the constraint’s shifts any more. Edit the constraint, or add Lead to the shift.",
+			"Late lists none of the constraint’s job titles any more. Edit the constraint, or add one to the shift.",
+			"x no longer fits. Edit the constraint.",
 		]);
 	});
 

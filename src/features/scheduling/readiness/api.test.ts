@@ -63,7 +63,7 @@ describe("scheduling readiness client", () => {
 		]);
 	});
 
-	it("reads how many rules need attention, and none from an API that predates it", async () => {
+	it("reads how many constraints need attention, and none from an API that predates it", async () => {
 		const older: Record<string, unknown> = { ...NOT_READY };
 		delete older["constraintsNeedingAttention"];
 		stubApi({

@@ -170,7 +170,7 @@ describe("noteOf", () => {
 		expect(noteOf(REST, [], SHIFT_IDS)).toBeUndefined();
 	});
 
-	it("says a rule needs attention, before anything else, naming the values that no longer fit", () => {
+	it("says a constraint needs attention, before anything else, naming the values that no longer fit", () => {
 		const lead = {
 			field: "JOB_TITLE" as const,
 			value: "lead",
