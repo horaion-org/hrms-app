@@ -448,6 +448,13 @@ describe("FindCoverPanel", () => {
 		const previewsAfter = calls
 			.slice(applied + 1)
 			.filter((call) => call.path === PREVIEW);
+		// Find cover's own list is asked again, at the new revision only.
+		expect(
+			calls
+				.slice(applied + 1)
+				.filter((call) => call.path === COVER_OPTIONS)
+				.map((call) => (call.body as { expectedRevision: number }).expectedRevision)
+		).toContain(2);
 		expect(
 			previewsAfter.map(
 				(call) => (call.body as { expectedRevision: number }).expectedRevision
@@ -762,6 +769,79 @@ describe("FindCoverPanel", () => {
 				expect(screen.getByRole("radio", { name: "Aisha Rahman" })).toBeChecked();
 			});
 			expect(screen.queryByText(stale)).toBeNull();
+		});
+
+		it("given_noOptionButReasons_when_asked_then_saysTheEngineFoundNoWayAndWhyNobodyWasAssigned", async () => {
+			stubApi({
+				[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
+				[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
+				[`POST ${REPAIR_OPTIONS}`]: answer({
+					...repairOptionsFixture([]),
+					notAssigned: [
+						{
+							memberProfileId: "mp-3",
+							name: "Chen Wei",
+							couldTake: false,
+							reasons: [
+								{
+									code: "RULE",
+									rule: "most_minutes_a_day",
+									constraintId: null,
+									constraintName: null,
+								},
+							],
+						},
+					],
+				}),
+			});
+			show();
+			const user = userEvent.setup();
+			await screen.findByRole("radio", { name: "Aisha Rahman" });
+			await user.click(screen.getByRole("button", { name: "Ask the engine" }));
+
+			expect(
+				await screen.findByText("The engine found no way to fill this.")
+			).toBeVisible();
+			expect(
+				screen.getByRole("region", { name: "Why nobody was assigned" })
+			).toHaveTextContent("Chen Wei");
+		});
+
+		it("given_optionsInTheEnginesOrder_when_listed_then_noExtraHoursFirstAndCostOrderKept", async () => {
+			stubApi({
+				[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
+				[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
+				[`POST ${REPAIR_OPTIONS}`]: answer(
+					repairOptionsFixture([
+						feasibleRepair([callInMove()], {
+							kind: "call_in",
+							extraMinutes: { overtime: 0, restDayWork: 0, timeOffEarned: 0 },
+						}),
+						feasibleRepair([callInMove({ membershipId: "m-3", displayName: "Chen Wei" })], {
+							kind: "move",
+							extraMinutes: { overtime: 120, restDayWork: 0, timeOffEarned: 0 },
+						}),
+						feasibleRepair([callInMove({ membershipId: "m-2", displayName: "Ben Ong" })], {
+							kind: "call_in",
+							extraMinutes: { overtime: 480, restDayWork: 0, timeOffEarned: 0 },
+						}),
+					])
+				),
+			});
+			show();
+			const user = userEvent.setup();
+			await screen.findByRole("radio", { name: "Aisha Rahman" });
+			await user.click(screen.getByRole("button", { name: "Ask the engine" }));
+
+			await screen.findByText("No extra hours.");
+			const lines = screen
+				.getAllByText(/^(No extra hours\.|Adds )/)
+				.map((line) => line.textContent);
+			expect(lines).toEqual([
+				"No extra hours.",
+				"Adds 2 h of overtime for Chen Wei that week.",
+				"Adds 8 h of overtime for Ben Ong that week.",
+			]);
 		});
 	});
 });
