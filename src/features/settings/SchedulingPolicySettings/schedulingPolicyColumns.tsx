@@ -54,7 +54,9 @@ export const schedulingPolicyColumns = (
 			headerClassName: "w-32",
 			cell: (constraint) =>
 				alwaysApplies(constraint) ? (
-					<Badge tone="neutral">{t("scheduling.policy.alwaysApplies")}</Badge>
+					<Badge compact tone="neutral">
+						{t("scheduling.policy.alwaysApplies")}
+					</Badge>
 				) : (
 					<ConstraintOrigin constraint={constraint} showLevel={false} />
 				),

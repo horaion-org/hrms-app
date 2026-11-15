@@ -1,7 +1,9 @@
 import { render, screen, within } from "@testing-library/react";
 import type { ReactElement } from "react";
 import userEvent from "@testing-library/user-event";
-import { I18nextProvider } from "react-i18next";
+import { createInstance } from "i18next";
+import { I18nextProvider, initReactI18next } from "react-i18next";
+import es from "@/assets/locales/es/translations.json";
 import { describe, expect, it, vi } from "vitest";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import type { OpeningBalances } from "@/features/scheduling/hours/api";
@@ -431,5 +433,61 @@ describe("StartingDaysDialog", () => {
 				screen.getByRole("table", { name: "The days before this week" })
 			).getByRole("columnheader", { name: "Sun, Nov 8" })
 		).toBeInTheDocument();
+	});
+
+	it.each([
+		["English", "en"],
+		["Spanish, which runs longer", "es"],
+	])(
+		"given_openingColumnsIn%s_when_shown_then_eachHeaderReadsInFullAndWrapsRatherThanTruncating",
+		async (_language, lng) => {
+			const i18n = createInstance();
+			await i18n.use(initReactI18next).init({
+				lng,
+				resources: { es: { translation: es } },
+				fallbackLng: false,
+			});
+			const resources = lng === "es" ? i18n : authTestI18n;
+			render(
+				<I18nextProvider i18n={resources}>
+					<StartingDaysDialog
+						open
+						nonWorkingDayTypes={[]}
+						openings={midMonthOpenings([editableMember("p-tan")])}
+						saving={false}
+						week={firstWeek()}
+						onClose={vi.fn()}
+						onSave={vi.fn()}
+					/>
+				</I18nextProvider>
+			);
+
+			const headers = within(screen.getByRole("table")).getAllByRole(
+				"columnheader"
+			);
+			const opening = headers.slice(-2);
+			for (const header of opening) {
+				const text = header.textContent ?? "";
+				// The whole sentence, its day included, never cut to an ellipsis.
+				expect(text).toMatch(/\d/);
+				expect(header.querySelector(".truncate")).toBeNull();
+				expect(within(header).getByText(text)).toHaveClass("break-words");
+			}
+			for (const header of headers.slice(1, -2))
+				expect(header.querySelector(".truncate")).toBeNull();
+		}
+	);
+
+	it("given_aLockedCell_when_shown_then_itsFullTextIsItsTitle", () => {
+		show(
+			vi.fn(),
+			firstWeek(),
+			midMonthOpenings([
+				editableMember("p-siti", { editable: false, rosteredBefore: true }),
+			])
+		);
+
+		const locked = screen.getAllByText("From rosters")[0]!;
+		expect(locked).toHaveAttribute("title", "From rosters");
 	});
 });

@@ -625,6 +625,36 @@ describe("DataTable", () => {
 		expect(screen.getByRole("table")).not.toHaveClass("min-w-xl");
 	});
 
+	it("wraps a header asked to wrap instead of truncating it, keeping every other header truncating", () => {
+		type Row = { id: string };
+		const idOf = (row: Row): string => row.id;
+		const columns: Array<DataTableColumn<Row>> = [
+			{ id: "name", header: "Name", cell: idOf },
+			{
+				id: "worked",
+				header: "Paid hours before Mon 23 Nov",
+				cell: idOf,
+				wrapHeader: true,
+			},
+		];
+		render(
+			<DataTable
+				columns={columns}
+				data={[{ id: "a" }]}
+				getRowId={idOf}
+				label="Openings"
+			/>
+		);
+
+		expect(screen.getByText("Paid hours before Mon 23 Nov")).toHaveClass(
+			"break-words"
+		);
+		expect(screen.getByText("Paid hours before Mon 23 Nov")).not.toHaveClass(
+			"truncate"
+		);
+		expect(screen.getByText("Name")).toHaveClass("truncate");
+	});
+
 	it("lets the column naming each row take the room left on a phone, so it truncates", () => {
 		render(
 			<DataTable
