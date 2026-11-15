@@ -60,14 +60,16 @@ const fieldSchema = (
 	spec: ConstraintFieldSpec,
 	t: TFunction
 ): z.ZodType<Array<string>> => {
+	// A number the type may leave out is valid with none; one given must still fit its range.
 	if (spec.kind === "NUMBER")
 		return z
 			.array(z.string())
 			.refine(
 				([text]) =>
-					isWholeNumber(text) &&
-					Number(text) >= (spec.min ?? 0) &&
-					Number(text) <= (spec.max ?? Number.MAX_SAFE_INTEGER),
+					(spec.minCount === 0 && text === undefined) ||
+					(isWholeNumber(text) &&
+						Number(text) >= (spec.min ?? 0) &&
+						Number(text) <= (spec.max ?? Number.MAX_SAFE_INTEGER)),
 				t(`${key}.number`, { min: spec.min, max: spec.max })
 			)
 			.prefault([]);

@@ -43,6 +43,7 @@ const STRICTNESS: Record<ConstraintField, FieldStrictness> = {
 	OVERTIME_PERCENT: "MUST_MATCH",
 	REST_DAY_WORK_PERCENT: "MUST_MATCH",
 	TIME_OFF_EARNED_PERCENT: "MUST_MATCH",
+	DAY_OFF_WORK_PERCENT: "MUST_MATCH",
 };
 
 /** Types that link to nothing may be set for the whole company; the rest by a Department only. */
@@ -113,6 +114,13 @@ const shiftsListing = (
 	listsSomeOf: counted,
 });
 
+/** A number the type may leave out, as the API's optional numbers. */
+const optionalNumber = (
+	field: ConstraintField,
+	min: number,
+	max: number
+): ConstraintFieldSpec => ({ ...number(field, min, max), minCount: 0 });
+
 /** Neither added by the system nor limited to full-timers, as every type but the day-type rules. */
 const ORDINARY = { addedBySystem: false, fullTimersOnly: false } as const;
 
@@ -122,6 +130,7 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 		type: "SHIFT_STAFFING",
 		category: "STAFFING",
 		hasRequirement: true,
+		requirementPolicy: "MUST_OR_SHOULD",
 		onePerDepartment: false,
 		levels: [...DEPARTMENT_ONLY],
 		...ORDINARY,
@@ -136,6 +145,7 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 		type: "SHIFT_STAFFING_WITH_STAND_INS",
 		category: "STAFFING",
 		hasRequirement: true,
+		requirementPolicy: "MUST_OR_SHOULD",
 		onePerDepartment: false,
 		levels: [...DEPARTMENT_ONLY],
 		...ORDINARY,
@@ -151,6 +161,7 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 		type: "ROLE_PRESENCE",
 		category: "ROLE_COVERAGE",
 		hasRequirement: true,
+		requirementPolicy: "MUST_OR_SHOULD",
 		onePerDepartment: false,
 		levels: [...DEPARTMENT_ONLY],
 		...ORDINARY,
@@ -165,6 +176,7 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 		type: "DAYS_OFF_PER_PERIOD",
 		category: "SHIFT_PATTERN",
 		hasRequirement: true,
+		requirementPolicy: "MUST_OR_SHOULD",
 		onePerDepartment: false,
 		levels: [...ANY_LEVEL],
 		...ORDINARY,
@@ -178,6 +190,7 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 		type: "AVOID_DAYS_OFF_ON",
 		category: "SHIFT_PATTERN",
 		hasRequirement: false,
+		requirementPolicy: "ALWAYS_SHOULD",
 		onePerDepartment: false,
 		levels: [...ANY_LEVEL],
 		...ORDINARY,
@@ -186,7 +199,8 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 	{
 		type: "REST_BETWEEN_SHIFTS",
 		category: "WORKING_HOURS",
-		hasRequirement: false,
+		hasRequirement: true,
+		requirementPolicy: "MUST_OR_SHOULD",
 		onePerDepartment: true,
 		levels: [...ANY_LEVEL],
 		...ORDINARY,
@@ -195,7 +209,8 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 	{
 		type: "MAX_DAYS_WITHOUT_DAY_TYPES",
 		category: "SHIFT_PATTERN",
-		hasRequirement: false,
+		hasRequirement: true,
+		requirementPolicy: "MUST_OR_SHOULD",
 		onePerDepartment: false,
 		levels: [...ANY_LEVEL],
 		fields: [
@@ -208,7 +223,8 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 	{
 		type: "DAY_TYPE_DAYS_PER_WEEK",
 		category: "SHIFT_PATTERN",
-		hasRequirement: false,
+		hasRequirement: true,
+		requirementPolicy: "MUST_OR_SHOULD",
 		onePerDepartment: false,
 		levels: [...ANY_LEVEL],
 		fields: [
@@ -223,6 +239,7 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 		type: "MAX_WORK_HOURS_PER_DAY",
 		category: "WORKING_HOURS",
 		hasRequirement: false,
+		requirementPolicy: "ALWAYS_MUST",
 		onePerDepartment: true,
 		levels: [...ANY_LEVEL],
 		fields: [number("WORK_HOURS_A_DAY", 1, 24)],
@@ -233,6 +250,7 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 		type: "MAX_OVERTIME_HOURS_PER_MONTH",
 		category: "WORKING_HOURS",
 		hasRequirement: false,
+		requirementPolicy: "ALWAYS_MUST",
 		onePerDepartment: true,
 		levels: [...ANY_LEVEL],
 		fields: [number("OVERTIME_HOURS_A_MONTH", 0, 744)],
@@ -243,6 +261,7 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 		type: "SHORTEST_PART_SHIFT",
 		category: "WORKING_HOURS",
 		hasRequirement: false,
+		requirementPolicy: "SETTING",
 		onePerDepartment: true,
 		levels: [...ANY_LEVEL],
 		...ORDINARY,
@@ -252,6 +271,7 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 		type: "MAX_CALL_BACKS_PER_PERSON",
 		category: "WORKING_HOURS",
 		hasRequirement: false,
+		requirementPolicy: "SETTING",
 		onePerDepartment: true,
 		levels: [...ANY_LEVEL],
 		...ORDINARY,
@@ -261,14 +281,26 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 		type: "PAY_RATES",
 		category: "WORKING_HOURS",
 		hasRequirement: false,
+		requirementPolicy: "SETTING",
 		onePerDepartment: true,
 		levels: [...ANY_LEVEL],
 		...ORDINARY,
 		fields: [
 			number("OVERTIME_PERCENT", 0, 1000),
 			number("REST_DAY_WORK_PERCENT", 0, 1000),
-			number("TIME_OFF_EARNED_PERCENT", 0, 1000),
+			optionalNumber("TIME_OFF_EARNED_PERCENT", 0, 1000),
+			optionalNumber("DAY_OFF_WORK_PERCENT", 0, 1000),
 		],
+	},
+	{
+		type: "NO_OVERTIME_WHEN_GENERATING",
+		category: "WORKING_HOURS",
+		hasRequirement: false,
+		requirementPolicy: "SETTING",
+		onePerDepartment: true,
+		levels: [...ANY_LEVEL],
+		...ORDINARY,
+		fields: [],
 	},
 ];
 
@@ -387,7 +419,7 @@ export const COMPANY_CONSTRAINT_FIXTURES: Array<DepartmentConstraint> = [
 		name: "Company rest",
 		type: "REST_BETWEEN_SHIFTS",
 		category: "WORKING_HOURS",
-		requirement: null,
+		requirement: "MUST",
 		lock: "LOCKED",
 		values: [plain("REST_HOURS", "11")],
 	}),
@@ -409,7 +441,7 @@ export const WEEKLY_RULE_FIXTURE: DepartmentConstraint =
 		name: "Rest days each week",
 		type: "DAY_TYPE_DAYS_PER_WEEK",
 		category: "SHIFT_PATTERN",
-		requirement: null,
+		requirement: "MUST",
 		lock: "LOCKED",
 		values: [
 			plain("COMPARISON", "AT_LEAST"),
@@ -465,7 +497,7 @@ export const DAYS_LIMIT_FIXTURE: DepartmentConstraint = constraintFixture({
 	name: "Days in a row",
 	type: "MAX_DAYS_WITHOUT_DAY_TYPES",
 	category: "SHIFT_PATTERN",
-	requirement: null,
+	requirement: "MUST",
 	values: [
 		plain("DAYS_IN_A_ROW", "6"),
 		plain("DAY_TYPE", "OFF"),
@@ -565,7 +597,7 @@ export const CONSTRAINT_FIXTURES: Array<DepartmentConstraint> = [
 		name: "Rest between shifts",
 		type: "REST_BETWEEN_SHIFTS",
 		category: "WORKING_HOURS",
-		requirement: null,
+		requirement: "MUST",
 		values: [plain("REST_HOURS", "10")],
 	}),
 	constraintFixture({

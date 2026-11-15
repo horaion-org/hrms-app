@@ -13,12 +13,12 @@ beforeAll(async () => {
 
 const REST = {
 	type: "REST_BETWEEN_SHIFTS" as const,
-	requirement: null,
+	requirement: "MUST" as const,
 	values: [{ field: "REST_HOURS" as const, value: "11", name: null }],
 };
 
 describe("ConstraintStatement", () => {
-	it("puts a Must tag before a fixed must type's sentence, saying what happens when unmet", () => {
+	it("puts a Must tag before a must rule's sentence, saying what happens when unmet", () => {
 		const { container } = render(<ConstraintStatement constraint={REST} />);
 
 		expect(screen.getByText("Must")).toHaveAttribute(
@@ -28,6 +28,31 @@ describe("ConstraintStatement", () => {
 		expect(container).toHaveTextContent(
 			"Must Everyone gets at least 11 hours off between shifts."
 		);
+	});
+
+	it("puts no tag before a setting, which is neither a Must nor an If possible", () => {
+		const { container } = render(
+			<ConstraintStatement
+				constraint={{
+					type: "MAX_CALL_BACKS_PER_PERSON",
+					requirement: null,
+					values: [{ field: "CALL_BACKS", value: "2", name: null }],
+				}}
+			/>
+		);
+
+		expect(screen.queryByText("Must")).toBeNull();
+		expect(container).toHaveTextContent(
+			"Everyone may be called back to work on a rest or off day at most 2 times in a roster."
+		);
+	});
+
+	it("tags rest between shifts chosen as a Should as If possible", () => {
+		render(
+			<ConstraintStatement constraint={{ ...REST, requirement: "SHOULD" }} />
+		);
+
+		expect(screen.getByText("If possible")).toBeVisible();
 	});
 
 	it("tags a chosen Should as If possible, and an always-should type too", () => {

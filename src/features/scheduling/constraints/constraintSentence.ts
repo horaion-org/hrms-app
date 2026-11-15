@@ -49,6 +49,9 @@ type ShiftCount = "oneShift" | "severalShifts";
 /** Who a rule about day types covers. */
 type CoveredGroup = "fullTimers" | "everyone";
 
+/** The pay rates read as their overtime and rest-day rates, then how a day off worked counts. */
+type PayRatesPart = "rates" | "dayOffOrdinary" | "dayOffPriced";
+
 /** The weekly rule takes "at least" or "exactly", never "at most" (`ConstraintFieldSpec.comparisons`). */
 type WeeklyComparison = "AT_LEAST" | "EXACTLY";
 
@@ -64,7 +67,8 @@ export type SentenceKey =
 	| `${typeof SENTENCES}.MAX_OVERTIME_HOURS_PER_MONTH`
 	| `${typeof SENTENCES}.SHORTEST_PART_SHIFT`
 	| `${typeof SENTENCES}.MAX_CALL_BACKS_PER_PERSON`
-	| `${typeof SENTENCES}.PAY_RATES`
+	| `${typeof SENTENCES}.PAY_RATES.${PayRatesPart}`
+	| `${typeof SENTENCES}.NO_OVERTIME_WHEN_GENERATING`
 	| `${typeof SENTENCES}.MAX_DAYS_WITHOUT_DAY_TYPES.${CoveredGroup}`
 	| `${typeof SENTENCES}.DAY_TYPE_DAYS_PER_WEEK.${CoveredGroup}.${WeeklyComparison}`;
 
@@ -77,13 +81,8 @@ const UNFILLED_COUNT = 2;
 /** The types that offer no choice, and how firm they always are. */
 const FIXED_FIRMNESS: Partial<Record<ConstraintType, ConstraintRequirement>> = {
 	AVOID_DAYS_OFF_ON: "SHOULD",
-	REST_BETWEEN_SHIFTS: "MUST",
-	MAX_DAYS_WITHOUT_DAY_TYPES: "MUST",
-	DAY_TYPE_DAYS_PER_WEEK: "MUST",
 	MAX_WORK_HOURS_PER_DAY: "MUST",
 	MAX_OVERTIME_HOURS_PER_MONTH: "MUST",
-	SHORTEST_PART_SHIFT: "MUST",
-	MAX_CALL_BACKS_PER_PERSON: "MUST",
 };
 
 const valuesOf = (
@@ -210,6 +209,14 @@ export const sentencePartsOf = (
 				},
 			];
 		case "PAY_RATES":
+			return [
+				{ i18nKey: `${SENTENCES}.${constraint.type}.rates`, count: 1 },
+				{
+					i18nKey: `${SENTENCES}.${constraint.type}.${valuesOf(constraint, "DAY_OFF_WORK_PERCENT").length > 0 ? "dayOffPriced" : "dayOffOrdinary"}`,
+					count: 1,
+				},
+			];
+		case "NO_OVERTIME_WHEN_GENERATING":
 			return [{ i18nKey: `${SENTENCES}.${constraint.type}`, count: 1 }];
 	}
 };

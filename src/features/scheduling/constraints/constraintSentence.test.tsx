@@ -392,7 +392,7 @@ describe("sentencePartsOf with constraintWords", () => {
 		).toBe(sentence);
 	});
 
-	it("reads the pay rates as one sentence of three percentages", () => {
+	it("reads the pay rates with a day off counted as ordinary hours when it has no rate of its own", () => {
 		expect(
 			read("PAY_RATES", [
 				plain("OVERTIME_PERCENT", "150"),
@@ -400,7 +400,25 @@ describe("sentencePartsOf with constraintWords", () => {
 				plain("TIME_OFF_EARNED_PERCENT", "100"),
 			])
 		).toBe(
-			"Overtime costs 150% of normal pay, rest-day work 200%, and hours given back as time off 100%."
+			"An hour of overtime costs 150% of a normal hour, and an hour of work on a rest day 200%. Work on a day off counts as ordinary hours."
+		);
+	});
+
+	it("reads the pay rates with a day off at its own rate", () => {
+		expect(
+			read("PAY_RATES", [
+				plain("OVERTIME_PERCENT", "150"),
+				plain("REST_DAY_WORK_PERCENT", "200"),
+				plain("DAY_OFF_WORK_PERCENT", "120"),
+			])
+		).toBe(
+			"An hour of overtime costs 150% of a normal hour, and an hour of work on a rest day 200%. An hour of work on a day off costs 120% of a normal hour."
+		);
+	});
+
+	it("reads no overtime when generating as what a generated roster does", () => {
+		expect(read("NO_OVERTIME_WHEN_GENERATING", [])).toBe(
+			"A generated roster gives nobody overtime past their normal day or week and calls nobody back on a rest day. Shifts it can’t staff without extra hours are left as gaps, and overtime is offered in the repair options."
 		);
 	});
 
@@ -540,14 +558,15 @@ describe("sentencePartsOf with constraintWords", () => {
 describe("firmnessOf", () => {
 	it.each([
 		["AVOID_DAYS_OFF_ON", null, "SHOULD"],
-		["REST_BETWEEN_SHIFTS", null, "MUST"],
-		["MAX_DAYS_WITHOUT_DAY_TYPES", null, "MUST"],
-		["DAY_TYPE_DAYS_PER_WEEK", null, "MUST"],
+		["REST_BETWEEN_SHIFTS", "SHOULD", "SHOULD"],
+		["MAX_DAYS_WITHOUT_DAY_TYPES", "MUST", "MUST"],
+		["DAY_TYPE_DAYS_PER_WEEK", "SHOULD", "SHOULD"],
 		["MAX_WORK_HOURS_PER_DAY", null, "MUST"],
 		["MAX_OVERTIME_HOURS_PER_MONTH", null, "MUST"],
-		["SHORTEST_PART_SHIFT", null, "MUST"],
-		["MAX_CALL_BACKS_PER_PERSON", null, "MUST"],
+		["SHORTEST_PART_SHIFT", null, null],
+		["MAX_CALL_BACKS_PER_PERSON", null, null],
 		["PAY_RATES", null, null],
+		["NO_OVERTIME_WHEN_GENERATING", null, null],
 		["SHIFT_STAFFING", "SHOULD", "SHOULD"],
 		["DAYS_OFF_PER_PERIOD", "MUST", "MUST"],
 		["SHIFT_STAFFING", null, null],

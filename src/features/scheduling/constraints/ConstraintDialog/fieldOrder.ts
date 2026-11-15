@@ -35,9 +35,18 @@ export const FIELD_READING_ORDER: Record<
 	PAY_RATES: [
 		"OVERTIME_PERCENT",
 		"REST_DAY_WORK_PERCENT",
-		"TIME_OFF_EARNED_PERCENT",
+		"DAY_OFF_WORK_PERCENT",
 	],
+	NO_OVERTIME_WHEN_GENERATING: [],
 };
+
+/**
+ * Fields the API still takes that the dialog no longer shows: time off earned
+ * has no rule that reads it yet. A stored value is kept and sent back as it was.
+ */
+export const HIDDEN_FIELDS: ReadonlyArray<ConstraintField> = [
+	"TIME_OFF_EARNED_PERCENT",
+];
 
 /** A type's fields in reading order; a field the order does not know keeps its API place after the known ones. */
 export const fieldsInReadingOrder = (
@@ -49,9 +58,9 @@ export const fieldsInReadingOrder = (
 		return place === -1 ? order.length : place;
 	};
 	// A stable sort keeps unknown fields in the API's order.
-	return [...option.fields].sort(
-		(first, second) => placeOf(first) - placeOf(second)
-	);
+	return option.fields
+		.filter((spec) => !HIDDEN_FIELDS.includes(spec.field))
+		.sort((first, second) => placeOf(first) - placeOf(second));
 };
 
 /**

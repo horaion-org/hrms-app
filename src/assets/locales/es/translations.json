@@ -3239,7 +3239,8 @@
 				"MAX_OVERTIME_HOURS_PER_MONTH": "Máximo de horas extra al mes",
 				"SHORTEST_PART_SHIFT": "Parte más corta de un turno junto a un permiso",
 				"MAX_CALL_BACKS_PER_PERSON": "Llamadas a trabajar en un día de descanso o libre",
-				"PAY_RATES": "Tarifas de las horas adicionales"
+				"PAY_RATES": "Tarifas de las horas adicionales",
+				"NO_OVERTIME_WHEN_GENERATING": "Sin horas extra en los cuadrantes generados"
 			},
 			"sentences": {
 				"SHIFT_STAFFING": {
@@ -3321,7 +3322,12 @@
 				"MAX_CALL_BACKS_PER_PERSON_zero": "Nadie es llamado a trabajar en un día de descanso o libre.",
 				"MAX_CALL_BACKS_PER_PERSON_one": "Cualquiera puede ser llamado a trabajar en un día de descanso o libre como máximo <CALL_BACKS/> vez por cuadrante.",
 				"MAX_CALL_BACKS_PER_PERSON_other": "Cualquiera puede ser llamado a trabajar en un día de descanso o libre como máximo <CALL_BACKS/> veces por cuadrante.",
-				"PAY_RATES": "Las horas extra cuestan el <OVERTIME_PERCENT/> % de la tarifa normal, el trabajo en día de descanso el <REST_DAY_WORK_PERCENT/> % y las horas devueltas como tiempo libre el <TIME_OFF_EARNED_PERCENT/> %.",
+				"PAY_RATES": {
+					"rates": "Una hora extra cuesta el <OVERTIME_PERCENT/> % de una hora normal, y una hora de trabajo en día de descanso el <REST_DAY_WORK_PERCENT/> %.",
+					"dayOffOrdinary": "El trabajo en un día libre cuenta como horas ordinarias.",
+					"dayOffPriced": "Una hora de trabajo en un día libre cuesta el <DAY_OFF_WORK_PERCENT/> % de una hora normal."
+				},
+				"NO_OVERTIME_WHEN_GENERATING": "Un cuadrante generado no da a nadie horas extra más allá de su día o semana normal ni llama a nadie en un día de descanso. Los turnos que no pueden cubrirse sin horas adicionales quedan vacíos, y las horas extra se ofrecen en las opciones de reparación.",
 				"MAX_DAYS_WITHOUT_DAY_TYPES": {
 					"fullTimers_one": "Ningún empleado a tiempo completo pasa más de <DAYS_IN_A_ROW/> día seguido sin un <DAY_TYPE/>.",
 					"fullTimers_other": "Ningún empleado a tiempo completo pasa más de <DAYS_IN_A_ROW/> días seguidos sin un <DAY_TYPE/>.",
@@ -3361,9 +3367,10 @@
 				"OVERTIME_HOURS_A_MONTH": "Horas extra al mes",
 				"PART_SHIFT_MINUTES": "Parte más corta (minutos)",
 				"CALL_BACKS": "Máximo de llamadas por persona",
-				"OVERTIME_PERCENT": "Horas extra (% de la tarifa normal)",
-				"REST_DAY_WORK_PERCENT": "Trabajo en día de descanso (% de la tarifa normal)",
-				"TIME_OFF_EARNED_PERCENT": "Tiempo libre ganado (%)"
+				"OVERTIME_PERCENT": "Una hora extra cuesta (% de una hora normal)",
+				"REST_DAY_WORK_PERCENT": "Una hora de trabajo en día de descanso cuesta (% de una hora normal)",
+				"TIME_OFF_EARNED_PERCENT": "Tiempo libre ganado (%)",
+				"DAY_OFF_WORK_PERCENT": "Trabajo en un día libre"
 			},
 			"requirements": {
 				"MUST": "Obligatoria",
@@ -3531,7 +3538,14 @@
 				"CALL_BACKS": "cuántas",
 				"OVERTIME_PERCENT": "cuánto",
 				"REST_DAY_WORK_PERCENT": "cuánto",
-				"TIME_OFF_EARNED_PERCENT": "cuánto"
+				"TIME_OFF_EARNED_PERCENT": "cuánto",
+				"DAY_OFF_WORK_PERCENT": "cuánto"
+			},
+			"optionalNumbers": {
+				"DAY_OFF_WORK_PERCENT": {
+					"unset": "Cuenta como horas ordinarias",
+					"set": "Cuesta este % de una hora normal"
+				}
 			},
 			"statement": "Restricción",
 			"examples": {
@@ -3547,7 +3561,8 @@
 				"MAX_OVERTIME_HOURS_PER_MONTH": "Por ejemplo: Nadie a quien se apliquen los límites de horas de la Ley de Empleo hace más de 72 horas extra en un mes natural.",
 				"SHORTEST_PART_SHIFT": "Por ejemplo: Un turno se da junto a un permiso del mismo día solo si se trabajan al menos 240 minutos de él.",
 				"MAX_CALL_BACKS_PER_PERSON": "Por ejemplo: Cualquiera puede ser llamado a trabajar en un día de descanso o libre como máximo 2 veces por cuadrante.",
-				"PAY_RATES": "Por ejemplo: Las horas extra cuestan el 150 % de la tarifa normal, el trabajo en día de descanso el 200 % y las horas devueltas como tiempo libre el 100 %."
+				"PAY_RATES": "Estas tarifas solo orientan qué cuadrante prefiere el motor; no se usan para pagar.",
+				"NO_OVERTIME_WHEN_GENERATING": "Por ejemplo: los turnos que el equipo no puede cubrir sin horas adicionales quedan abiertos, y eliges las horas extra al reparar el cuadrante."
 			},
 			"fieldHints": {
 				"SHIFT": "Elige más de uno para contarlos juntos cada día.",
@@ -3563,8 +3578,9 @@
 				"OVERTIME_HOURS_A_MONTH": "De {{min}} a {{max}}. El límite del MOM es 72; el trabajo en día de descanso queda fuera, salvo las horas por encima del día normal.",
 				"PART_SHIFT_MINUTES": "De {{min}} a {{max}} minutos. Sin este ajuste, nunca se da un turno que coincida con un permiso.",
 				"CALL_BACKS": "De {{min}} a {{max}}. 0 significa que nadie es llamado; sin este ajuste, tampoco se llama a nadie.",
-				"OVERTIME_PERCENT": "De {{min}} a {{max}}. La tarifa del MOM es 150, 1,5 veces la tarifa normal.",
-				"REST_DAY_WORK_PERCENT": "De {{min}} a {{max}}. La tarifa del MOM es 200, 2 veces la tarifa normal.",
+				"OVERTIME_PERCENT": "De {{min}} a {{max}}. La tarifa del MOM es 150, 1,5 veces una hora normal.",
+				"REST_DAY_WORK_PERCENT": "De {{min}} a {{max}}. La tarifa del MOM es 200, 2 veces una hora normal.",
+				"DAY_OFF_WORK_PERCENT": "De {{min}} a {{max}} cuando un día libre tiene su propia tarifa.",
 				"TIME_OFF_EARNED_PERCENT": "De {{min}} a {{max}}. La tarifa de las horas devueltas como tiempo libre; 100 significa una hora libre por cada hora adicional."
 			},
 			"fixedFirmness": {
@@ -3584,7 +3600,8 @@
 				"MAX_OVERTIME_HOURS_PER_MONTH": "Máximo de horas extra al mes",
 				"SHORTEST_PART_SHIFT": "Parte más corta de un turno",
 				"MAX_CALL_BACKS_PER_PERSON": "Llamadas a trabajar",
-				"PAY_RATES": "Tarifas"
+				"PAY_RATES": "Tarifas",
+				"NO_OVERTIME_WHEN_GENERATING": "Sin horas extra al generar"
 			}
 		},
 		"forecast": {
@@ -4323,7 +4340,8 @@
 						"too_little_shift_left": "El permiso de ese día deja muy poco turno por trabajar.",
 						"works_another_shift": "Ya tiene otro turno ese día.",
 						"breaks_unnamed_rule": "Incumpliría una norma de tiempo de trabajo.",
-						"not_checked": "No se comprobó a tiempo."
+						"not_checked": "No se comprobó a tiempo.",
+						"needs_overtime": "Solo como horas extra, que no se asignan al generar un cuadrante."
 					},
 					"breaksRule": "Incumpliría: {{rule}}",
 					"aWorkingTimeRule": "una norma de tiempo de trabajo",

@@ -85,9 +85,8 @@ describe("constraints client", () => {
 			constraints.find((constraint) => constraint.status === "INACTIVE")?.name
 		).toBe("Weekend days on");
 		expect(
-			constraints.find(
-				(constraint) => constraint.type === "REST_BETWEEN_SHIFTS"
-			)?.requirement
+			constraints.find((constraint) => constraint.type === "AVOID_DAYS_OFF_ON")
+				?.requirement
 		).toBeNull();
 	});
 
@@ -154,7 +153,8 @@ describe("constraints client", () => {
 		).toEqual({
 			type: "REST_BETWEEN_SHIFTS",
 			category: "WORKING_HOURS",
-			hasRequirement: false,
+			hasRequirement: true,
+			requirementPolicy: "MUST_OR_SHOULD",
 			onePerDepartment: true,
 			levels: ["COMPANY", "DEPARTMENT"],
 			fields: [
@@ -496,9 +496,37 @@ describe("constraints client", () => {
 					["OVERTIME_PERCENT", 0, 1000],
 					["REST_DAY_WORK_PERCENT", 0, 1000],
 					["TIME_OFF_EARNED_PERCENT", 0, 1000],
+					["DAY_OFF_WORK_PERCENT", 0, 1000],
 				],
 			},
 		]);
+	});
+
+	it("reads each type's requirement policy, a setting neither Must nor If possible, and an unknown one safely", async () => {
+		stubApi({
+			[`GET ${DEPARTMENT}/constraint-options`]: {
+				status: 200,
+				body: envelope({
+					...CONSTRAINT_OPTIONS_RESPONSE,
+					types: CONSTRAINT_OPTIONS_RESPONSE.types.map((type) =>
+						type.type === "SHIFT_STAFFING"
+							? { ...type, requirementPolicy: "SOMETHING_NEW" }
+							: type
+					),
+				}),
+			},
+		});
+
+		const options = await fetchConstraintOptions("c-1", UNIT);
+		const policyOf = (type: string): string | undefined =>
+			options.types.find((option) => option.type === type)?.requirementPolicy;
+
+		expect(policyOf("PAY_RATES")).toBe("SETTING");
+		expect(policyOf("NO_OVERTIME_WHEN_GENERATING")).toBe("SETTING");
+		expect(policyOf("REST_BETWEEN_SHIFTS")).toBe("MUST_OR_SHOULD");
+		expect(policyOf("DAY_TYPE_DAYS_PER_WEEK")).toBe("MUST_OR_SHOULD");
+		expect(policyOf("MAX_WORK_HOURS_PER_DAY")).toBe("ALWAYS_MUST");
+		expect(policyOf("SHIFT_STAFFING")).toBe("UNKNOWN");
 	});
 
 	it("reads a work policy's pay rates", async () => {

@@ -27,6 +27,7 @@ const WORDED_REASONS = [
 	"works_another_shift",
 	"breaks_unnamed_rule",
 	"not_checked",
+	"needs_overtime",
 ] as const;
 
 type WordedReason = (typeof WORDED_REASONS)[number];
@@ -55,10 +56,18 @@ export const notAssignedReasonLine = (
 		: t(`${key}.otherReason`);
 };
 
+/** The reason of someone who could take the shift only as overtime, which a generated roster never assigns. */
+const NEEDS_OVERTIME = "needs_overtime";
+
+/** Whether the person could take the shift: as the engine says, or only as overtime, which is not a refusal. */
+export const couldTakeTheShift = (person: NotAssignedPerson): boolean =>
+	person.couldTake ||
+	person.reasons.some((reason) => reason.code === NEEDS_OVERTIME);
+
 /** People who could take the shift first, then the rest, each in the engine's order. */
 export const notAssignedInOrder = (
 	people: ReadonlyArray<NotAssignedPerson>
 ): Array<NotAssignedPerson> => [
-	...people.filter((person) => person.couldTake),
-	...people.filter((person) => !person.couldTake),
+	...people.filter((person) => couldTakeTheShift(person)),
+	...people.filter((person) => !couldTakeTheShift(person)),
 ];
