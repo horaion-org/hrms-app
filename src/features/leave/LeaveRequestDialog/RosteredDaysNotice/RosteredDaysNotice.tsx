@@ -85,7 +85,11 @@ export const RosteredDaysNotice = ({
 	const message =
 		name === undefined
 			? words
-				? t("leave.partDayOwn", { ...words, day: list })
+				? // Without the shift's times (two shifts that day), the sentence leaves them out.
+					t(words.shift ? "leave.partDayOwn" : "leave.partDayOwnNoTimes", {
+						...words,
+						day: list,
+					})
 				: t("leave.rosteredOwn", { days: list })
 			: words
 				? t("leave.partDayOther", { ...words, name })

@@ -293,6 +293,7 @@
 			"severalDays": "Un permiso de varios días se toma en días completos."
 		},
 		"partDayOwn": "Tienes turno {{shift}} el {{day}}. Si se aprueba tu permiso, trabajarás {{time}}.",
+		"partDayOwnNoTimes": "Tienes turno el {{day}}. Si se aprueba tu permiso, trabajarás {{time}}.",
 		"partDayOther": "Si se aprueba, {{name}} trabaja {{time}} y {{gap}} necesita cobertura.",
 		"partDayConfirm": "Acortar el turno de {{name}} el {{day}} a {{time}} ({{gap}} necesitará cobertura)"
 	},

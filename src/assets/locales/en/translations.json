@@ -293,6 +293,7 @@
 			"severalDays": "Leave over several days is taken in full days."
 		},
 		"partDayOwn": "You’re rostered {{shift}} on {{day}}. If your leave is approved, you’ll work {{time}}.",
+		"partDayOwnNoTimes": "You’re rostered on {{day}}. If your leave is approved, you’ll work {{time}}.",
 		"partDayOther": "If approved, {{name}} works {{time}} and {{gap}} needs cover.",
 		"partDayConfirm": "Shorten {{name}}’s shift on {{day}} to {{time}} ({{gap}} will need cover)"
 	},

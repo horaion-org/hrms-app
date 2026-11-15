@@ -56,6 +56,15 @@ describe("RosteredDaysNotice", () => {
 		expect(screen.getByText("leave.partDayOwn")).toBeInTheDocument();
 	});
 
+	it("given_partDayLeaveOnADayWithoutTheShiftsTimes_when_rendered_then_leavesTheTimesOut", () => {
+		render(
+			<RosteredDaysNotice
+				days={[{ ...shortened[0]!, shiftStart: null, shiftEnd: null }]}
+			/>
+		);
+		expect(screen.getByText("leave.partDayOwnNoTimes")).toBeInTheDocument();
+	});
+
 	it("given_partDayLeaveForAReviewer_when_rendered_then_asksToShortenTheShift", () => {
 		render(
 			<RosteredDaysNotice confirmed={false} days={shortened} name="Alex Tan" />
