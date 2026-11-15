@@ -184,6 +184,22 @@ describe("FindCoverPanel", () => {
 		});
 	});
 
+	it("given_aGapOnlyAHandEditMade_when_shown_then_noEngineSectionButFindCoversOwnList", async () => {
+		stubApi({
+			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
+			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
+		});
+		show({ engineRepair: false });
+
+		expect(
+			await screen.findByRole("radio", { name: "Aisha Rahman" })
+		).toBeInTheDocument();
+		expect(
+			screen.queryByRole("heading", { name: "From the scheduling engine" })
+		).toBeNull();
+		expect(screen.queryByRole("button", { name: "Ask the engine" })).toBeNull();
+	});
+
 	it("given_aGapTheEngineDidNotReport_when_asked_then_itSaysSoInPlainWords", async () => {
 		stubApi({
 			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),

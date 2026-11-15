@@ -4,6 +4,7 @@ import { createInstance } from "i18next";
 import { initReactI18next } from "react-i18next";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import en from "@/assets/locales/en/translations.json";
+import { staffingGapFixture } from "@/features/scheduling/rulesCheck/fixtures";
 import type { RosterRulesCheck } from "@/features/scheduling/rulesCheck/rosterRulesCheckApi";
 import { ValidateScheduleButton } from "@/features/scheduling/rulesCheck/ValidateScheduleButton";
 
@@ -23,15 +24,7 @@ const TWO_PROBLEMS: RosterRulesCheck = {
 	brokenRules: [
 		{ rule: "most_minutes_a_day", constraintId: null, constraintName: null },
 	],
-	staffingGaps: [
-		{
-			date: "2026-11-10",
-			message: "Short",
-			missing: 1,
-			constraintId: null,
-			constraintName: null,
-		},
-	],
+	staffingGaps: [staffingGapFixture()],
 };
 
 /** The button at `revision`, with the given last validation and changes. */

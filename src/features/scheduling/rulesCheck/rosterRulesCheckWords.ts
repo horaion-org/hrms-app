@@ -1,5 +1,6 @@
 import type { TFunction } from "i18next";
 import { ApiProblemError } from "@/common/problem";
+import type { PanelItem } from "@/features/scheduling/roster/rosterPanels";
 import type {
 	BrokenRule,
 	RosterRulesCheck,
@@ -79,4 +80,22 @@ export const validationMark = (
 	return check.status === "HOLDS" && check.staffingGaps !== null
 		? { kind: "clean" }
 		: undefined;
+};
+
+/**
+ * The broken rules as Issues lists them, one item each: the company's
+ * constraint name, else the app's label, else a generic line; one "breaks a
+ * working-time rule" item when the engine named none.
+ */
+export const brokenRuleItems = (
+	check: RosterRulesCheck,
+	t: TFunction
+): Array<PanelItem> => {
+	if (check.status !== "BROKEN") return [];
+	if (check.brokenRules.length === 0)
+		return [{ key: "unnamed", lines: [t(`${key}.brokenUnnamed`)] }];
+	return check.brokenRules.map((rule, index) => ({
+		key: `${rule.rule}-${index}`,
+		lines: [brokenRuleLabel(rule, t)],
+	}));
 };
