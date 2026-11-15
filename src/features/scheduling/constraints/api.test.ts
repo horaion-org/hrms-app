@@ -748,10 +748,14 @@ describe("constraint refusals", () => {
 		],
 		[
 			400,
-			"CONSTRAINT_JOB_TITLE_NOT_IN_DEPARTMENT",
-			"A chosen job title isn’t an active job title of this department. Choose again.",
+			"CONSTRAINT_LINK_NOT_IN_DEPARTMENT",
+			"A chosen shift or job title is no longer part of this department. Choose again.",
 		],
-		[404, "SHIFT_NOT_FOUND", "A chosen shift no longer exists. Choose again."],
+		[
+			400,
+			"CONSTRAINT_LINK_DOES_NOT_FIT",
+			"A chosen job title isn’t on any chosen shift, or a chosen shift lists none of the chosen job titles. Choose again, or change the shift first.",
+		],
 		[404, "CONSTRAINT_NOT_FOUND", "This constraint no longer exists."],
 		[
 			409,
