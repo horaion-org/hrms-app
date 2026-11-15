@@ -325,6 +325,47 @@ describe("sentencePartsOf with constraintWords", () => {
 		);
 	});
 
+	it.each([
+		[
+			"12",
+			"Nobody whose Employment Act limits apply works more than 12 hours in a day, overtime included.",
+		],
+		[
+			"1",
+			"Nobody whose Employment Act limits apply works more than 1 hour in a day, overtime included.",
+		],
+	])("reads most hours a day of %s", (hours, sentence) => {
+		expect(
+			read("MAX_WORK_HOURS_PER_DAY", [plain("WORK_HOURS_A_DAY", hours)])
+		).toBe(sentence);
+	});
+
+	it.each([
+		[
+			"72",
+			"Nobody whose Employment Act limits apply works more than 72 hours of overtime in a calendar month.",
+		],
+		[
+			"1",
+			"Nobody whose Employment Act limits apply works more than 1 hour of overtime in a calendar month.",
+		],
+		["0", "Nobody whose Employment Act limits apply works overtime."],
+	])("reads most overtime a month of %s", (hours, sentence) => {
+		expect(
+			read("MAX_OVERTIME_HOURS_PER_MONTH", [
+				plain("OVERTIME_HOURS_A_MONTH", hours),
+			])
+		).toBe(sentence);
+	});
+
+	it("reads most hours a day in Spanish", () => {
+		expect(
+			read("MAX_WORK_HOURS_PER_DAY", [plain("WORK_HOURS_A_DAY", "12")], "es")
+		).toBe(
+			"Nadie a quien se apliquen los límites de horas de la Ley de Empleo trabaja más de 12 horas en un día, horas extra incluidas."
+		);
+	});
+
 	it("reads a number not filled in yet as plural, and a missing comparison as at least", () => {
 		expect(sentencePartsOf({ type: "SHIFT_STAFFING", values: [] })).toEqual([
 			{
@@ -456,6 +497,8 @@ describe("firmnessOf", () => {
 		["REST_BETWEEN_SHIFTS", null, "MUST"],
 		["MAX_DAYS_WITHOUT_DAY_TYPES", null, "MUST"],
 		["DAY_TYPE_DAYS_PER_WEEK", null, "MUST"],
+		["MAX_WORK_HOURS_PER_DAY", null, "MUST"],
+		["MAX_OVERTIME_HOURS_PER_MONTH", null, "MUST"],
 		["SHIFT_STAFFING", "SHOULD", "SHOULD"],
 		["DAYS_OFF_PER_PERIOD", "MUST", "MUST"],
 		["SHIFT_STAFFING", null, null],

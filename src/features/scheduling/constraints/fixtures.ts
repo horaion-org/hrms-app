@@ -36,6 +36,8 @@ const STRICTNESS: Record<ConstraintField, FieldStrictness> = {
 	DAY_TYPE: "MUST_MATCH",
 	DAYS_IN_A_ROW: "LOWER_IS_STRICTER",
 	DAY_TYPE_COUNT: "FOLLOWS_COMPARISON",
+	WORK_HOURS_A_DAY: "LOWER_IS_STRICTER",
+	OVERTIME_HOURS_A_MONTH: "LOWER_IS_STRICTER",
 };
 
 /** Types that link to nothing may be set for the whole company; the rest by a Department only. */
@@ -189,6 +191,26 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 		addedBySystem: true,
 		fullTimersOnly: true,
 	},
+	{
+		type: "MAX_WORK_HOURS_PER_DAY",
+		category: "WORKING_HOURS",
+		hasRequirement: false,
+		onePerDepartment: true,
+		levels: [...ANY_LEVEL],
+		fields: [number("WORK_HOURS_A_DAY", 1, 24)],
+		addedBySystem: true,
+		fullTimersOnly: false,
+	},
+	{
+		type: "MAX_OVERTIME_HOURS_PER_MONTH",
+		category: "WORKING_HOURS",
+		hasRequirement: false,
+		onePerDepartment: true,
+		levels: [...ANY_LEVEL],
+		fields: [number("OVERTIME_HOURS_A_MONTH", 0, 744)],
+		addedBySystem: true,
+		fullTimersOnly: false,
+	},
 ];
 
 /** The day types a rule may name, as the API lists them: its non-working day types, then leave. */
@@ -328,6 +350,30 @@ export const WEEKLY_RULE_FIXTURE: DepartmentConstraint =
 			plain("DAY_TYPE_COUNT", "1"),
 			plain("DAY_TYPE", "REST"),
 		],
+	});
+
+/** The work policy's most hours a day the system adds, locked: 12 hours, overtime included. */
+export const MOST_HOURS_A_DAY_FIXTURE: DepartmentConstraint =
+	companyConstraintFixture({
+		constraintId: "most-hours-a-day",
+		name: "Most hours a day",
+		type: "MAX_WORK_HOURS_PER_DAY",
+		category: "WORKING_HOURS",
+		requirement: null,
+		lock: "LOCKED",
+		values: [plain("WORK_HOURS_A_DAY", "12")],
+	});
+
+/** The work policy's most overtime a month the system adds, locked: 72 hours. */
+export const MOST_OVERTIME_A_MONTH_FIXTURE: DepartmentConstraint =
+	companyConstraintFixture({
+		constraintId: "most-overtime-a-month",
+		name: "Most overtime a month",
+		type: "MAX_OVERTIME_HOURS_PER_MONTH",
+		category: "WORKING_HOURS",
+		requirement: null,
+		lock: "LOCKED",
+		values: [plain("OVERTIME_HOURS_A_MONTH", "72")],
 	});
 
 /** Front Office's days limit: at most 6 days in a row without a Rest day or a Day off. */

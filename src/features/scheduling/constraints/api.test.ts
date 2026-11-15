@@ -4,6 +4,7 @@ import { ApiProblemError, UnexpectedResponseError } from "@/common/problem";
 import { envelope, stubApi } from "@/common/testing/stubApi";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import {
+	CONSTRAINT_TYPES,
 	companyConstraintsQuery,
 	createConstraint,
 	deleteConstraint,
@@ -22,6 +23,8 @@ import {
 	CONSTRAINT_FIXTURES,
 	CONSTRAINT_OPTIONS,
 	CONSTRAINT_OPTIONS_RESPONSE,
+	MOST_HOURS_A_DAY_FIXTURE,
+	MOST_OVERTIME_A_MONTH_FIXTURE,
 } from "@/features/scheduling/constraints/fixtures";
 
 const UNIT = { branchId: "b-1", departmentId: "d-1" };
@@ -276,7 +279,82 @@ describe("constraints client", () => {
 		expect(options.types[0]?.fields[0]?.comparisons).toBeNull();
 	});
 
-	it("keeps all eight types when the department has no shifts or job titles", async () => {
+	it("reads the work policy's most hours a day and most overtime a month as system-owned, a lower figure stricter", async () => {
+		stubApi({
+			[`GET ${DEPARTMENT}/constraint-options`]: {
+				status: 200,
+				body: envelope(CONSTRAINT_OPTIONS_RESPONSE),
+			},
+		});
+
+		const options = await fetchConstraintOptions("c-1", UNIT);
+		const ceilings = options.types.filter(
+			(type) =>
+				type.type === "MAX_WORK_HOURS_PER_DAY" ||
+				type.type === "MAX_OVERTIME_HOURS_PER_MONTH"
+		);
+
+		expect(
+			ceilings.map(({ type, category, addedBySystem, onePerDepartment }) => ({
+				type,
+				category,
+				addedBySystem,
+				onePerDepartment,
+			}))
+		).toEqual([
+			{
+				type: "MAX_WORK_HOURS_PER_DAY",
+				category: "WORKING_HOURS",
+				addedBySystem: true,
+				onePerDepartment: true,
+			},
+			{
+				type: "MAX_OVERTIME_HOURS_PER_MONTH",
+				category: "WORKING_HOURS",
+				addedBySystem: true,
+				onePerDepartment: true,
+			},
+		]);
+		expect(
+			ceilings.flatMap((type) =>
+				type.fields.map(({ field, min, max, strictness }) => ({
+					field,
+					min,
+					max,
+					strictness,
+				}))
+			)
+		).toEqual([
+			{
+				field: "WORK_HOURS_A_DAY",
+				min: 1,
+				max: 24,
+				strictness: "LOWER_IS_STRICTER",
+			},
+			{
+				field: "OVERTIME_HOURS_A_MONTH",
+				min: 0,
+				max: 744,
+				strictness: "LOWER_IS_STRICTER",
+			},
+		]);
+	});
+
+	it("reads the seeded ceilings in the work policy", async () => {
+		const rows = [MOST_HOURS_A_DAY_FIXTURE, MOST_OVERTIME_A_MONTH_FIXTURE];
+		stubApi({
+			"GET /api/v1/companies/c-1/constraints": {
+				status: 200,
+				body: envelope(rows),
+			},
+		});
+
+		await expect(fetchCompanyConstraints("c-1", undefined)).resolves.toEqual(
+			rows
+		);
+	});
+
+	it("keeps every type when the department has no shifts or job titles", async () => {
 		stubApi({
 			[`GET ${DEPARTMENT}/constraint-options`]: {
 				status: 200,
@@ -287,7 +365,7 @@ describe("constraints client", () => {
 			},
 		});
 		const options = await fetchConstraintOptions("c-1", UNIT);
-		expect(options.types).toHaveLength(8);
+		expect(options.types).toHaveLength(CONSTRAINT_TYPES.length);
 		expect(options.shifts).toEqual([]);
 		expect(options.jobTitles).toEqual([]);
 	});

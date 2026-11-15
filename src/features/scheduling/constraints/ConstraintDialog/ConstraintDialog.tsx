@@ -96,6 +96,8 @@ const HINTED_FIELDS = [
 	"REST_HOURS",
 	"DAYS_IN_A_ROW",
 	"DAY_TYPE_COUNT",
+	"WORK_HOURS_A_DAY",
+	"OVERTIME_HOURS_A_MONTH",
 ] as const satisfies ReadonlyArray<ConstraintField>;
 
 type HintedField = (typeof HINTED_FIELDS)[number];

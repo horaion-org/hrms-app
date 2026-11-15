@@ -28,6 +28,8 @@ export const FIELD_READING_ORDER: Record<
 	REST_BETWEEN_SHIFTS: ["REST_HOURS"],
 	MAX_DAYS_WITHOUT_DAY_TYPES: ["DAYS_IN_A_ROW", "DAY_TYPE"],
 	DAY_TYPE_DAYS_PER_WEEK: ["COMPARISON", "DAY_TYPE_COUNT", "DAY_TYPE"],
+	MAX_WORK_HOURS_PER_DAY: ["WORK_HOURS_A_DAY"],
+	MAX_OVERTIME_HOURS_PER_MONTH: ["OVERTIME_HOURS_A_MONTH"],
 };
 
 /** A type's fields in reading order; a field the order does not know keeps its API place after the known ones. */
