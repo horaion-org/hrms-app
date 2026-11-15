@@ -27,22 +27,25 @@ const key = "scheduling.rulesCheck";
  */
 
 /** Each name a rule goes by, and the constraint type a manager sets it as. */
-const RULE_TYPES: Readonly<Record<string, ConstraintType>> = {
-	shift_demand_requirement: "SHIFT_STAFFING",
-	shift_demand_with_substitutes: "SHIFT_STAFFING_WITH_STAND_INS",
-	shift_presence_requirement: "ROLE_PRESENCE",
-	off_requirement_per_horizon: "DAYS_OFF_PER_PERIOD",
-	avoid_off_on_weekdays: "AVOID_DAYS_OFF_ON",
-	minimum_rest_between_shifts: "REST_BETWEEN_SHIFTS",
-	max_days_without_day_types: "MAX_DAYS_WITHOUT_DAY_TYPES",
-	days_of_day_types_per_period: "DAY_TYPE_DAYS_PER_WEEK",
-	max_work_hours_per_day: "MAX_WORK_HOURS_PER_DAY",
-	most_minutes_a_day: "MAX_WORK_HOURS_PER_DAY",
-	max_overtime_hours_per_month: "MAX_OVERTIME_HOURS_PER_MONTH",
-	most_overtime_minutes_a_month: "MAX_OVERTIME_HOURS_PER_MONTH",
-	shortest_part_shift: "SHORTEST_PART_SHIFT",
-	most_call_backs_per_person: "MAX_CALL_BACKS_PER_PERSON",
-};
+const RULE_TYPES: ReadonlyMap<string, ConstraintType> = new Map<
+	string,
+	ConstraintType
+>([
+	["shift_demand_requirement", "SHIFT_STAFFING"],
+	["shift_demand_with_substitutes", "SHIFT_STAFFING_WITH_STAND_INS"],
+	["shift_presence_requirement", "ROLE_PRESENCE"],
+	["off_requirement_per_horizon", "DAYS_OFF_PER_PERIOD"],
+	["avoid_off_on_weekdays", "AVOID_DAYS_OFF_ON"],
+	["minimum_rest_between_shifts", "REST_BETWEEN_SHIFTS"],
+	["max_days_without_day_types", "MAX_DAYS_WITHOUT_DAY_TYPES"],
+	["days_of_day_types_per_period", "DAY_TYPE_DAYS_PER_WEEK"],
+	["max_work_hours_per_day", "MAX_WORK_HOURS_PER_DAY"],
+	["most_minutes_a_day", "MAX_WORK_HOURS_PER_DAY"],
+	["max_overtime_hours_per_month", "MAX_OVERTIME_HOURS_PER_MONTH"],
+	["most_overtime_minutes_a_month", "MAX_OVERTIME_HOURS_PER_MONTH"],
+	["shortest_part_shift", "SHORTEST_PART_SHIFT"],
+	["most_call_backs_per_person", "MAX_CALL_BACKS_PER_PERSON"],
+]);
 
 /** The engine's rules that are no setting of their own, each with the roster check's label. */
 const LABELLED_RULES = [
@@ -58,7 +61,7 @@ type LabelledRule = (typeof LABELLED_RULES)[number];
 
 /** Every rule name the table words, for tests and callers that ask before wording. */
 export const NAMED_RULES: ReadonlyArray<string> = [
-	...Object.keys(RULE_TYPES),
+	...RULE_TYPES.keys(),
 	...LABELLED_RULES,
 ];
 
@@ -101,7 +104,7 @@ export const ruleNameLabel = (
 	t: TFunction
 ): string | undefined => {
 	const type =
-		RULE_TYPES[rule] ??
+		RULE_TYPES.get(rule) ??
 		CONSTRAINT_TYPES.find((constraintType) => constraintType === rule);
 	if (type) return t(`scheduling.constraints.types.${type}`);
 	return isLabelled(rule) ? t(`${key}.rule.${rule}`) : undefined;

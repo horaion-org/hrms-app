@@ -392,6 +392,10 @@ export const LeaveApplyForm = ({
 									layout="stacked"
 								>
 									<TimeSelect
+										aria-labelledby={timeIds.labelId}
+										className="w-full"
+										placeholder={t("leave.portion.chooseTime")}
+										value={customTimes[edge]}
 										aria-describedby={
 											error
 												? timeIds.errorId
@@ -399,10 +403,6 @@ export const LeaveApplyForm = ({
 													? timeIds.hintId
 													: undefined
 										}
-										aria-labelledby={timeIds.labelId}
-										className="w-full"
-										placeholder={t("leave.portion.chooseTime")}
-										value={customTimes[edge]}
 										onChange={(time) => {
 											setCustomTimes((times) => ({ ...times, [edge]: time }));
 										}}
