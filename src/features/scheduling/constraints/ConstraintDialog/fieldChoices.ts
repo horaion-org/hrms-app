@@ -126,7 +126,8 @@ export const withoutUnfitting = (
 /**
  * Per field that declares `listsSomeOf`, its chosen values that list none of
  * the chosen values of those fields: on such a shift, no one could be
- * counted. Nothing while none of those fields has a value yet.
+ * counted. Nothing while none of those fields has a value yet; a value no
+ * longer offered is never named, since what it lists is not known.
  */
 export const valuesListingNone = (
 	specs: ReadonlyArray<ConstraintFieldSpec>,
@@ -142,8 +143,10 @@ export const valuesListingNone = (
 				: [];
 		});
 		if (named.length === 0) continue;
+		const offered = links[spec.kind] ?? [];
 		const listingNone = (values[spec.field] ?? []).filter(
 			(value) =>
+				offered.some((link) => link.id === value) &&
 				!named.some(({ id, kind }) =>
 					listedUnder(links, spec.kind, value, kind).includes(id)
 				)

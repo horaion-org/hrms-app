@@ -14,6 +14,10 @@ import {
 	type PolicyLock,
 } from "@/features/scheduling/constraints/api";
 import {
+	valuesListingNone,
+	type LinksByKind,
+} from "@/features/scheduling/constraints/ConstraintDialog/fieldChoices";
+import {
 	unitReachBody,
 	unitReachSchema,
 	type UnitReachValue,
@@ -79,11 +83,27 @@ const fieldSchema = (
 		.prefault([]);
 };
 
-/** The only checks that tie two fields together, as the API's: days off within their period, no stand-in also counted. */
+/**
+ * What the form knows of the shifts and job titles to judge how fields fit
+ * each other: what each lists, and each one's name for the message.
+ */
+export type FieldFit = {
+	links: LinksByKind;
+	nameOf: (id: string) => string;
+};
+
+/**
+ * The checks that tie fields together, as the API's: days off within their
+ * period, then, from the type's declarations, no value also chosen in the
+ * field it `excludes`, and no value of a `listsSomeOf` field that lists none
+ * of the chosen values of those fields.
+ */
 const checkConsistent = (
 	values: ConstraintFieldValues,
 	context: z.RefinementCtx,
-	t: TFunction
+	t: TFunction,
+	fields: ReadonlyArray<ConstraintFieldSpec>,
+	fit: FieldFit
 ): void => {
 	const [daysOff, periodDays] = [values.DAYS_OFF?.[0], values.PERIOD_DAYS?.[0]];
 	if (
@@ -96,19 +116,50 @@ const checkConsistent = (
 			path: ["values", "DAYS_OFF"],
 			message: t(`${key}.daysOffOverPeriod`),
 		});
-	const counted = values.JOB_TITLE ?? [];
-	if ((values.STAND_IN_JOB_TITLE ?? []).some((id) => counted.includes(id)))
+	for (const spec of fields) {
+		const excluded = spec.excludes ? (values[spec.excludes] ?? []) : [];
+		if ((values[spec.field] ?? []).some((id) => excluded.includes(id)))
+			context.addIssue({
+				code: "custom",
+				path: ["values", spec.field],
+				message: t([
+					`${key}.dependency.excludes.${spec.field}`,
+					`${key}.dependency.excludesAny`,
+				]),
+			});
+	}
+	const listingNone = valuesListingNone(fields, values, fit.links);
+	for (const spec of fields) {
+		const ids = listingNone[spec.field];
+		if (!ids) continue;
+		const listed = spec.listsSomeOf.flatMap((field) => values[field] ?? []);
 		context.addIssue({
 			code: "custom",
-			path: ["values", "STAND_IN_JOB_TITLE"],
-			message: t(`${key}.standInAlsoCounted`),
+			path: ["values", spec.field],
+			message: t(
+				[
+					`${key}.dependency.listsNone.${spec.field}`,
+					`${key}.dependency.listsNoneAny`,
+				],
+				{
+					count: ids.length,
+					names: t("scheduling.constraints.list", {
+						items: ids.map(fit.nameOf),
+					}),
+					listed: t("scheduling.constraints.listOr", {
+						items: listed.map(fit.nameOf),
+					}),
+				}
+			),
 		});
+	}
 };
 
 /**
  * Mirrors the API's checks for a constraint of `type`, built from its spec: how
  * many values each field takes, a number's range, a requirement exactly
- * when the type takes one, and the two checks that tie fields together.
+ * when the type takes one, and the checks that tie fields together, judged
+ * with `fit`.
  * Name uniqueness, and whether the job titles and shifts are still live,
  * remain server decisions. Yields the API's body: the type's fields only,
  * one entry per value, with `withLock` the work-policy constraint's lock, and
@@ -118,7 +169,8 @@ export const constraintSchema = (
 	type: ConstraintTypeOption | undefined,
 	t: TFunction,
 	withLock = false,
-	withReach = false
+	withReach = false,
+	fit: FieldFit = { links: {}, nameOf: (id) => id }
 ): z.ZodType<ConstraintDialogBody, ConstraintFormValues> => {
 	const fields = type?.fields ?? [];
 	return z
@@ -154,7 +206,7 @@ export const constraintSchema = (
 						.transform(() => undefined),
 		})
 		.superRefine(({ values }, context) => {
-			checkConsistent(values, context, t);
+			checkConsistent(values, context, t, fields, fit);
 		})
 		.transform(({ values, lock, reach, ...constraint }) => ({
 			...constraint,

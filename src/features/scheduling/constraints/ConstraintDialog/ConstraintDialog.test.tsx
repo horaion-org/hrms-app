@@ -708,13 +708,13 @@ describe("ConstraintDialog", () => {
 		expect(screen.getByRole("radio", { name: "Must" })).toBeChecked();
 		await pick(user, /^At least, at most or exactly/, "At least");
 		await user.type(screen.getByRole("spinbutton", { name: /^People/ }), "2");
+		await pick(user, /^Shifts/, "Front Desk AM");
 		await pick(
 			user,
 			/^Job titles that count/,
 			"Front Desk Staff",
 			"Front Desk Lead"
 		);
-		await pick(user, /^Shifts/, "Front Desk AM");
 		expect(
 			screen.getByRole("region", { name: "How it reads" })
 		).toHaveTextContent(
@@ -770,29 +770,100 @@ describe("ConstraintDialog", () => {
 		expect(nameField()).toHaveValue("Morning cover");
 	});
 
-	it("given_aShiftThatListsNoneOfTheJobTitles_when_chosen_then_warnsAndStillSaves", async () => {
+	it("given_noShiftYet_when_jobTitlesOpened_then_asksForAShiftFirst", async () => {
+		const user = userEvent.setup();
+		renderDialog();
+		await start(user, "People on a shift");
+
+		await user.click(trigger(/^Job titles that count/));
+
+		expect(await screen.findByText("Choose a shift first.")).toBeVisible();
+		expect(screen.queryByRole("option", { name: "Cashier" })).toBeNull();
+	});
+
+	it("given_aShiftChosen_when_jobTitlesOpened_then_offersOnlyTheOnesItLists", async () => {
+		const user = userEvent.setup();
+		renderDialog();
+		await start(user, "People on a shift");
+		await pick(user, /^Shifts/, "Front Desk AM");
+
+		await user.click(trigger(/^Job titles that count/));
+
+		const listbox = await screen.findByRole("listbox");
+		expect(
+			within(listbox)
+				.getAllByRole("option")
+				.map((option) => option.textContent)
+		).toEqual(expect.arrayContaining(["Front Desk Lead", "Front Desk Staff"]));
+		expect(
+			within(listbox).queryByRole("option", { name: "Cashier" })
+		).toBeNull();
+	});
+
+	it("given_aShiftUnticked_when_itsJobTitlesNoLongerFit_then_takesThemOutAndSaysSo", async () => {
+		const user = userEvent.setup();
+		renderDialog();
+		await start(user, "People on a shift");
+		await pick(user, /^Shifts/, "Front Desk AM", "Lunch Rush");
+		await pick(user, /^Job titles that count/, "Front Desk Lead", "Cashier");
+
+		// Ticked again, so unticked.
+		await pick(user, /^Shifts/, "Front Desk AM");
+
+		expect(
+			screen.getByText(
+				"Front Desk Lead was removed: none of the chosen shifts lists it."
+			)
+		).toBeVisible();
+		expect(trigger(/^Job titles that count/)).toHaveTextContent("Cashier");
+		expect(trigger(/^Job titles that count/)).not.toHaveTextContent(
+			"Front Desk Lead"
+		);
+	});
+
+	it("given_aShiftThatListsNoneOfTheJobTitles_when_saved_then_refusesItOnTheShifts", async () => {
 		const user = userEvent.setup();
 		const { onSave } = renderDialog();
 		await start(user, "People on a shift");
-		await pick(user, /^Shifts/, "Front Desk AM");
+		await pick(user, /^Shifts/, "Front Desk AM", "Lunch Rush");
 		await pick(user, /^At least, at most or exactly/, "At least");
 		await user.type(screen.getByRole("spinbutton", { name: /^People/ }), "2");
-
 		await pick(user, /^Job titles that count/, "Front Desk Lead");
-		expect(screen.queryByText(/doesn't list/)).toBeNull();
-
-		// Swaps Front Desk Lead (ticked again, so off) for Cashier, which Front Desk AM does not list.
-		await pick(user, /^Job titles that count/, "Front Desk Lead", "Cashier");
-		expect(
-			screen.getByText(
-				"Front Desk AM doesn't list Cashier, so no one can be counted there. Add them to the shift or choose other job titles."
-			)
-		).toBeVisible();
 
 		await user.click(screen.getByRole("button", { name: "Save" }));
-		await waitFor(() => {
-			expect(onSave).toHaveBeenCalledOnce();
+
+		expect(
+			await screen.findByText(
+				"Lunch Rush doesn’t list Front Desk Lead, so no one can be counted there. Choose a job title it lists, or remove the shift."
+			)
+		).toBeVisible();
+		expect(onSave).not.toHaveBeenCalled();
+	});
+
+	it("given_aSavedRuleWithValuesThatNoLongerFit_when_opened_then_takesThemOutAndNamesThem", async () => {
+		const stale = constraint("closing-supervisor");
+		renderDialog({
+			editing: {
+				...stale,
+				values: stale.values.map((value) =>
+					value.field === "JOB_TITLE"
+						? { ...value, problem: "NOT_LISTED" }
+						: value
+				),
+			},
 		});
+		await screen.findByRole("dialog", { name: "Edit constraint" });
+
+		const names = stale.values
+			.filter((value) => value.field === "JOB_TITLE")
+			.map((value) => value.name);
+		expect(
+			screen.getByText(
+				`These no longer fit and were taken out: ${names.join(", ")}. Save to keep the rule without them, or choose again.`
+			)
+		).toBeVisible();
+		for (const name of names)
+			expect(trigger(/^Job titles that count/)).not.toHaveTextContent(name!);
 	});
 
 	it("given_aSavedConstraint_when_editing_then_keepsItsName", async () => {

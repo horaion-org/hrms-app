@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Fragment, useEffect, useId } from "react";
+import { Fragment, useEffect, useId, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
@@ -28,7 +28,12 @@ import {
 import { constraintRefusal } from "@/features/scheduling/constraints/constraintRefusal";
 import { fieldRowsInReadingOrder } from "@/features/scheduling/constraints/ConstraintDialog/fieldOrder";
 import { nameSuggestion } from "@/features/scheduling/constraints/ConstraintDialog/nameSuggestion";
-import { shiftsMissingTitles } from "@/features/scheduling/constraints/ConstraintDialog/shiftsMissingTitles";
+import {
+	allowedLinkIds,
+	linksByKindOf,
+	withoutUnfitting,
+	type RemovedValue,
+} from "@/features/scheduling/constraints/ConstraintDialog/fieldChoices";
 import { appliesToOf } from "@/features/scheduling/constraints/appliesTo";
 import {
 	constraintSchema,
@@ -113,11 +118,12 @@ const isHinted = (field: ConstraintField): field is HintedField =>
 /** A row of the form: one of its own fields, or one of the type's. */
 type FieldName = keyof ConstraintFormValues | ConstraintField;
 
-/** A constraint's values by field, as the form holds them. */
+/** A constraint's values by field, as the form holds them; a value that no longer fits is left out. */
 const valuesByField = (values: Constraint["values"]): ConstraintFieldValues => {
 	const byField: ConstraintFieldValues = {};
-	for (const { field, value } of values)
-		if (value !== null) byField[field] = [...(byField[field] ?? []), value];
+	for (const { field, value, problem } of values)
+		if (value !== null && !problem)
+			byField[field] = [...(byField[field] ?? []), value];
 	return byField;
 };
 
@@ -149,11 +155,30 @@ export const ConstraintDialog = ({
 		offered?.types.find((option) => option.type === type);
 	// A replacement starts from the company's values, under the company's type.
 	const startingPoint = editing ?? replacing;
+	// Values the API says no longer fit start out of the form, and are named above the fields.
+	const staleNames = (startingPoint?.values ?? [])
+		.filter((value) => value.problem)
+		.map((value) => value.name ?? value.value);
+	const links = linksByKindOf(offered);
+	const nameOfLink = (id: string): string =>
+		offered?.shifts.find((shift) => shift.shiftId === id)?.name ??
+		offered?.jobTitles.find((jobTitle) => jobTitle.jobTitleId === id)?.name ??
+		id;
+	const [removedValues, setRemovedValues] = useState<Array<RemovedValue>>([]);
 	const form = useForm<ConstraintFormValues, unknown, ConstraintDialogBody>({
 		// The fields to check depend on the type chosen, so the schema is built per check.
 		resolver: (values, context, resolverOptions) =>
 			zodResolver(
-				constraintSchema(typeOf(values.type), t, withLock, reach !== undefined)
+				constraintSchema(
+					typeOf(values.type),
+					t,
+					withLock,
+					reach !== undefined,
+					{
+						links,
+						nameOf: nameOfLink,
+					}
+				)
 			)(values, context, resolverOptions),
 		defaultValues: {
 			name: editing?.name ?? "",
@@ -300,28 +325,74 @@ export const ConstraintDialog = ({
 				name: namesById.get(value) ?? null,
 			}))
 		);
-	// Never blocks: a chosen shift that lists none of the counted job titles
-	// could never count anyone, which the manager may still mean to fix later.
-	const shiftWarning = (option: ConstraintTypeOption): string | undefined => {
-		const filled = filledValues(option);
-		const ofField = (fields: Array<ConstraintField>): Array<SentenceValue> =>
-			filled.filter((value) => fields.includes(value.field));
-		const counted = ofField(["JOB_TITLE", "STAND_IN_JOB_TITLE"]);
-		const chosenShiftIds = ofField(["SHIFT"]).map((value) => value.value);
-		const missing = shiftsMissingTitles(
-			(offered?.shifts ?? []).filter((shift) =>
-				chosenShiftIds.includes(shift.shiftId)
-			),
-			counted.map((value) => value.value)
+	const fieldLabel = (field: ConstraintField): string =>
+		t(`scheduling.constraints.fields.${field}`);
+	// A field that depends on another offers only what fits what is chosen there (ADR-0085).
+	const offeredChoices = (spec: ConstraintFieldSpec): Array<SelectOption> => {
+		if (spec.kind === "COMPARISON") return comparisonChoices(spec);
+		const all = choices[spec.kind];
+		if (!spec.listedBy && !spec.excludes) return all;
+		const allowed = allowedLinkIds(spec, chosen?.fields ?? [], values, links);
+		return all.filter((choice) => allowed.includes(choice.value));
+	};
+	// Why a dependent field offers nothing: nothing chosen in the field it depends on, or nothing there lists one.
+	const emptyTextOf = (spec: ConstraintFieldSpec): string | undefined => {
+		if (!spec.listedBy) return noChoices[spec.kind];
+		const parent = spec.listedBy;
+		if ((values[parent] ?? []).length === 0)
+			return t(
+				[
+					`${key}.dependency.chooseFirst.${parent}`,
+					`${key}.dependency.chooseFirstAny`,
+				],
+				{
+					field: fieldLabel(parent),
+				}
+			);
+		return t(
+			[
+				`${key}.dependency.noneListed.${parent}`,
+				`${key}.dependency.noneListedAny`,
+			],
+			{
+				field: fieldLabel(parent),
+			}
 		);
-		if (missing.length === 0) return undefined;
-		return t(`${key}.shiftMissingTitles`, {
-			count: missing.length,
-			shifts: t("scheduling.constraints.list", { items: missing }),
-			jobTitles: t("scheduling.constraints.listOr", {
-				items: counted.map((value) => value.name ?? value.value),
-			}),
+	};
+	// A new choice in one field takes out what no longer fits in the others, and says so under them.
+	const chooseValues = (
+		field: ConstraintField,
+		chosenValues: Array<string>
+	): void => {
+		const next = withoutUnfitting(
+			chosen?.fields ?? [],
+			{ ...values, [field]: chosenValues },
+			links
+		);
+		setValue("values", next.values, {
+			shouldValidate: form.formState.isSubmitted,
 		});
+		setRemovedValues(next.removed);
+	};
+	// The line under a field naming what a change took out of it, and why.
+	const removedNote = (spec: ConstraintFieldSpec): string | undefined => {
+		const removed = removedValues.filter((item) => item.field === spec.field);
+		const [first] = removed;
+		if (!first) return undefined;
+		const because =
+			first.reason === "NOT_LISTED" ? spec.listedBy : spec.excludes;
+		return t(
+			[
+				`${key}.dependency.removed.${first.reason}.${because ?? ""}`,
+				`${key}.dependency.removedAny`,
+			],
+			{
+				count: removed.length,
+				names: t("scheduling.constraints.list", {
+					items: removed.map((item) => nameOfLink(item.value)),
+				}),
+			}
+		);
 	};
 	// A new constraint's name fills itself in from what it controls and its
 	// first shift, until the manager types one; an edit or a replacement keeps
@@ -487,10 +558,7 @@ export const ConstraintDialog = ({
 						const select = {
 							...shared,
 							"aria-labelledby": labelledBy(spec.field),
-							options:
-								spec.kind === "COMPARISON"
-									? comparisonChoices(spec)
-									: choices[spec.kind],
+							options: offeredChoices(spec),
 							placeholder: t(`${key}.pleaseSelect`),
 							// The day type a rule the system adds is about stays as it was set.
 							disabled: alwaysApplies && spec.kind === "DAY_TYPE",
@@ -500,17 +568,19 @@ export const ConstraintDialog = ({
 								{...select}
 								value={value[0] ?? ""}
 								onChange={(choice) => {
-									field.onChange([choice]);
+									chooseValues(spec.field, [choice]);
 								}}
 							/>
 						) : (
 							<Select
 								{...select}
 								multiple
-								emptyText={noChoices[spec.kind]}
+								emptyText={emptyTextOf(spec)}
 								selectAllLabel={t(`${key}.selectAll`)}
 								value={value}
-								onChange={field.onChange}
+								onChange={(chosenValues) => {
+									chooseValues(spec.field, chosenValues);
+								}}
 							/>
 						);
 					}}
@@ -531,6 +601,7 @@ export const ConstraintDialog = ({
 						variant="secondary"
 						onClick={() => {
 							reset();
+							setRemovedValues([]);
 						}}
 					>
 						{t(`${key}.reset`)}
@@ -617,6 +688,7 @@ export const ConstraintDialog = ({
 										onChange: (departmentId): void => {
 											// Shifts and job titles belong to one Department, so a new one starts the values again.
 											setValue("values", {});
+											setRemovedValues([]);
 											department.onChange(departmentId);
 										},
 									}
@@ -629,6 +701,13 @@ export const ConstraintDialog = ({
 							empty: t(`${key}.departmentsEmpty`),
 						}}
 					/>
+				)}
+				{staleNames.length > 0 && (
+					<Callout tone="warning">
+						{t(`${key}.dependency.staleTakenOut`, {
+							items: t("scheduling.constraints.list", { items: staleNames }),
+						})}
+					</Callout>
 				)}
 				{replacing && (
 					<Callout>
@@ -701,8 +780,7 @@ export const ConstraintDialog = ({
 							}}
 						/>
 						{fieldRowsInReadingOrder(chosen).map((row) => {
-							const warning =
-								row[0]?.field === "SHIFT" ? shiftWarning(chosen) : undefined;
+							const notes = row.flatMap((spec) => removedNote(spec) ?? []);
 							return (
 								<Fragment key={row.map((spec) => spec.field).join("-")}>
 									{row.length === 1 ? (
@@ -712,7 +790,15 @@ export const ConstraintDialog = ({
 											{row.map((spec) => valueRow(spec, "sm:flex-1"))}
 										</div>
 									)}
-									{warning && <Callout tone="warning">{warning}</Callout>}
+									{notes.map((note) => (
+										<p
+											key={note}
+											className="text-sm text-neutral-700"
+											role="status"
+										>
+											{note}
+										</p>
+									))}
 								</Fragment>
 							);
 						})}

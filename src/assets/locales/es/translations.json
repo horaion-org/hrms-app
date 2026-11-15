@@ -3401,7 +3401,6 @@
 				"chooseAtLeast_other": "Elige al menos {{count}}.",
 				"chooseAtMost": "Elige como máximo {{count}}.",
 				"daysOffOverPeriod": "Los días libres no pueden ser más que los días del periodo.",
-				"standInAlsoCounted": "Un puesto suplente no puede ser también uno de los puestos contados.",
 				"nameConflict": "Ya existe una restricción llamada \"{{name}}\" en este departamento. Elige otro nombre.",
 				"nameRejected": "Revisa el nombre de la restricción e inténtalo de nuevo.",
 				"typeAlreadyUsed": "Este departamento ya tiene una restricción de este tipo. Edita esa.",
@@ -3438,8 +3437,39 @@
 				"departmentsEmpty": "No hay ningún departamento activo al que puedas añadir restricciones.",
 				"optionsNeedDepartment": "Elige primero un departamento.",
 				"typeHintEmpty": "Elige una opción para ver un ejemplo.",
-				"shiftMissingTitles_one": "{{shifts}} no incluye {{jobTitles}}, así que nadie puede contar ahí. Añádelos al turno o elige otros puestos.",
-				"shiftMissingTitles_other": "{{shifts}} no incluyen {{jobTitles}}, así que nadie puede contar ahí. Añádelos a los turnos o elige otros puestos."
+				"dependency": {
+					"chooseFirst": {
+						"SHIFT": "Elige primero un turno."
+					},
+					"chooseFirstAny": "Elige primero {{field}}.",
+					"noneListed": {
+						"SHIFT": "Ninguno de los turnos elegidos tiene uno. Añádelo antes al turno."
+					},
+					"noneListedAny": "Nada encaja con lo elegido en {{field}}.",
+					"removed": {
+						"NOT_LISTED": {
+							"SHIFT_one": "Se quitó {{names}}: ninguno de los turnos elegidos lo incluye.",
+							"SHIFT_other": "Se quitaron {{names}}: ninguno de los turnos elegidos los incluye."
+						},
+						"EXCLUDED": {
+							"JOB_TITLE_one": "Se quitó {{names}}: ya es un puesto que cuenta.",
+							"JOB_TITLE_other": "Se quitaron {{names}}: ya son puestos que cuentan."
+						}
+					},
+					"removedAny_one": "Se quitó {{names}}: ya no encaja.",
+					"removedAny_other": "Se quitaron {{names}}: ya no encajan.",
+					"excludes": {
+						"STAND_IN_JOB_TITLE": "Un puesto suplente no puede ser también uno de los puestos contados."
+					},
+					"excludesAny": "Un valor de aquí no puede elegirse también en otro campo.",
+					"listsNone": {
+						"SHIFT_one": "{{names}} no incluye {{listed}}, así que nadie puede contar ahí. Elige un puesto que incluya o quita el turno.",
+						"SHIFT_other": "{{names}} no incluyen {{listed}}, así que nadie puede contar ahí. Elige puestos que incluyan o quita esos turnos."
+					},
+					"listsNoneAny_one": "{{names}} no encaja con los demás valores elegidos.",
+					"listsNoneAny_other": "{{names}} no encajan con los demás valores elegidos.",
+					"staleTakenOut": "Estos valores ya no encajan y se quitaron: {{items}}. Guarda para mantener la regla sin ellos, o vuelve a elegir."
+				}
 			},
 			"preview": {
 				"title": "Cómo se lee"

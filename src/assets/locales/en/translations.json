@@ -3601,7 +3601,6 @@
 				"chooseAtLeast_other": "Choose at least {{count}}.",
 				"chooseAtMost": "Choose at most {{count}}.",
 				"daysOffOverPeriod": "Days off can’t be more than the days in the period.",
-				"standInAlsoCounted": "A stand-in job title can’t also be one of the counted job titles.",
 				"nameConflict": "A constraint named \"{{name}}\" already exists in this department. Choose a different name.",
 				"nameRejected": "Check the constraint name and try again.",
 				"typeAlreadyUsed": "This department already has a constraint of this type. Edit that one instead.",
@@ -3638,8 +3637,39 @@
 				"departmentsEmpty": "No active department you can add constraints to.",
 				"optionsNeedDepartment": "Choose a department first.",
 				"typeHintEmpty": "Choose one to see an example.",
-				"shiftMissingTitles_one": "{{shifts}} doesn't list {{jobTitles}}, so no one can be counted there. Add them to the shift or choose other job titles.",
-				"shiftMissingTitles_other": "{{shifts}} don't list {{jobTitles}}, so no one can be counted there. Add them to the shifts or choose other job titles."
+				"dependency": {
+					"chooseFirst": {
+						"SHIFT": "Choose a shift first."
+					},
+					"chooseFirstAny": "Choose {{field}} first.",
+					"noneListed": {
+						"SHIFT": "None of the chosen shifts lists one. Add it to the shift first."
+					},
+					"noneListedAny": "Nothing fits what is chosen in {{field}}.",
+					"removed": {
+						"NOT_LISTED": {
+							"SHIFT_one": "{{names}} was removed: none of the chosen shifts lists it.",
+							"SHIFT_other": "{{names}} were removed: none of the chosen shifts lists them."
+						},
+						"EXCLUDED": {
+							"JOB_TITLE_one": "{{names}} was removed: it is already a job title that counts.",
+							"JOB_TITLE_other": "{{names}} were removed: they are already job titles that count."
+						}
+					},
+					"removedAny_one": "{{names}} was removed: it no longer fits.",
+					"removedAny_other": "{{names}} were removed: they no longer fit.",
+					"excludes": {
+						"STAND_IN_JOB_TITLE": "A stand-in job title can’t also be one of the counted job titles."
+					},
+					"excludesAny": "A value here can’t also be chosen in another field.",
+					"listsNone": {
+						"SHIFT_one": "{{names}} doesn’t list {{listed}}, so no one can be counted there. Choose a job title it lists, or remove the shift.",
+						"SHIFT_other": "{{names}} don’t list {{listed}}, so no one can be counted there. Choose job titles they list, or remove those shifts."
+					},
+					"listsNoneAny_one": "{{names}} doesn’t fit the other values chosen.",
+					"listsNoneAny_other": "{{names}} don’t fit the other values chosen.",
+					"staleTakenOut": "These no longer fit and were taken out: {{items}}. Save to keep the rule without them, or choose again."
+				}
 			},
 			"preview": {
 				"title": "How it reads"
