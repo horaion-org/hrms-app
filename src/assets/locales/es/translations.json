@@ -4637,19 +4637,12 @@
 			"brokenUnnamed": "Este cuadrante incumple una regla de tiempo de trabajo.",
 			"unnamedRule": "Una regla de tiempo de trabajo",
 			"rule": {
-				"most_minutes_a_day": "Máximo de horas al día",
-				"most_overtime_minutes_a_month": "Máximo de horas extra al mes",
 				"most_days_a_week": "Máximo de días a la semana",
-				"minimum_rest_between_shifts": "Descanso entre turnos",
-				"most_call_backs_per_person": "Máximo de llamadas por persona",
 				"overtime_past_the_normal_day": "Horas extra sobre la jornada normal",
 				"overtime_past_the_normal_week": "Horas extra sobre la semana normal",
 				"overtime_respects_daily_work_cap": "Horas extra dentro del límite diario",
 				"work_minutes_per_period": "Horas por periodo",
-				"consecutive_day_work_patterns": "Días trabajados seguidos",
-				"max_days_without_day_types": "Días sin un día libre",
-				"off_requirement_per_horizon": "Días libres obligatorios",
-				"days_of_day_types_per_period": "Días de descanso y libres por periodo"
+				"consecutive_day_work_patterns": "Días trabajados seguidos"
 			},
 			"refusal": {
 				"expired": "El motor ya no guarda la generación de esta semana, así que no se puede validar. Genera la semana de nuevo y luego valídala.",

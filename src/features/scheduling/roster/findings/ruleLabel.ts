@@ -1,28 +1,7 @@
 import type { TFunction } from "i18next";
-import type { ConstraintType } from "@/features/scheduling/constraints/api";
 import type { FindingNames } from "@/features/scheduling/roster/findings/findingNames";
 import { brokenRuleLabel } from "@/features/scheduling/rulesCheck/rosterRulesCheckWords";
 
-/*
- * The engine names a rule by its own rule name (`shift_demand_requirement`),
- * never by the constraint's. These are the engine names the API gives each
- * constraint type (`ConstraintType.java` in the API), so a rule the schedule's
- * constraints can't name still reads as its type.
- */
-const ENGINE_RULE_TYPES: ReadonlyMap<string, ConstraintType> = new Map([
-	["shift_demand_requirement", "SHIFT_STAFFING"],
-	["shift_demand_with_substitutes", "SHIFT_STAFFING_WITH_STAND_INS"],
-	["shift_presence_requirement", "ROLE_PRESENCE"],
-	["off_requirement_per_horizon", "DAYS_OFF_PER_PERIOD"],
-	["avoid_off_on_weekdays", "AVOID_DAYS_OFF_ON"],
-	["minimum_rest_between_shifts", "REST_BETWEEN_SHIFTS"],
-	["max_days_without_day_types", "MAX_DAYS_WITHOUT_DAY_TYPES"],
-	["days_of_day_types_per_period", "DAY_TYPE_DAYS_PER_WEEK"],
-	["max_work_hours_per_day", "MAX_WORK_HOURS_PER_DAY"],
-	["max_overtime_hours_per_month", "MAX_OVERTIME_HOURS_PER_MONTH"],
-	["shortest_part_shift", "SHORTEST_PART_SHIFT"],
-	["most_call_backs_per_person", "MAX_CALL_BACKS_PER_PERSON"],
-]);
 /** The engine's own rule for the demand forecast; no constraint stands behind it. */
 const FORECAST_DEMAND_RULE = "timeblock_demand_coverage";
 
@@ -37,8 +16,8 @@ export type EngineRule = { name: string; constraintId: string | null };
 
 /**
  * What a rule is called on the roster: the schedule's constraint by its own
- * name, else its type, else the forecast, else the roster check's label for
- * a working-time rule, else "a working-time rule": an engine name is never
+ * name, else the forecast, else the one rule table's words
+ * (`brokenRuleLabel`), else "A working-time rule": an engine name is never
  * shown.
  */
 export const ruleLabel = (
@@ -49,8 +28,6 @@ export const ruleLabel = (
 	const constraintName =
 		constraintId === null ? undefined : rules.get(constraintId);
 	if (constraintName !== undefined) return constraintName;
-	const type = ENGINE_RULE_TYPES.get(name);
-	if (type !== undefined) return t(`scheduling.constraints.types.${type}`);
 	if (name === FORECAST_DEMAND_RULE)
 		return t("scheduling.findings.forecastDemand");
 	return brokenRuleLabel({ rule: name, constraintId, constraintName: null }, t);

@@ -1,5 +1,9 @@
 import type { TFunction } from "i18next";
 import { ApiProblemError } from "@/common/problem";
+import {
+	CONSTRAINT_TYPES,
+	type ConstraintType,
+} from "@/features/scheduling/constraints/api";
 import type { PanelItem } from "@/features/scheduling/roster/rosterPanels";
 import type {
 	BrokenRule,
@@ -13,24 +17,50 @@ import type {
 
 const key = "scheduling.rulesCheck";
 
-/** The engine's working-time rules the app has a plain label for. */
+/*
+ * The one table of what each engine rule is called, wherever a rule is named
+ * (Issues, Validate schedule, Find cover, why nobody was assigned). A rule a
+ * manager sets as a constraint reads as that constraint type does in the
+ * settings and the constraint lists ("Most hours a day"), under every name
+ * the engine or the API's settings give it; the engine's own rules that are
+ * no setting read by the roster check's label.
+ */
+
+/** Each name a rule goes by, and the constraint type a manager sets it as. */
+const RULE_TYPES: Readonly<Record<string, ConstraintType>> = {
+	shift_demand_requirement: "SHIFT_STAFFING",
+	shift_demand_with_substitutes: "SHIFT_STAFFING_WITH_STAND_INS",
+	shift_presence_requirement: "ROLE_PRESENCE",
+	off_requirement_per_horizon: "DAYS_OFF_PER_PERIOD",
+	avoid_off_on_weekdays: "AVOID_DAYS_OFF_ON",
+	minimum_rest_between_shifts: "REST_BETWEEN_SHIFTS",
+	max_days_without_day_types: "MAX_DAYS_WITHOUT_DAY_TYPES",
+	days_of_day_types_per_period: "DAY_TYPE_DAYS_PER_WEEK",
+	max_work_hours_per_day: "MAX_WORK_HOURS_PER_DAY",
+	most_minutes_a_day: "MAX_WORK_HOURS_PER_DAY",
+	max_overtime_hours_per_month: "MAX_OVERTIME_HOURS_PER_MONTH",
+	most_overtime_minutes_a_month: "MAX_OVERTIME_HOURS_PER_MONTH",
+	shortest_part_shift: "SHORTEST_PART_SHIFT",
+	most_call_backs_per_person: "MAX_CALL_BACKS_PER_PERSON",
+};
+
+/** The engine's rules that are no setting of their own, each with the roster check's label. */
 export const LABELLED_RULES = [
-	"most_minutes_a_day",
-	"most_overtime_minutes_a_month",
 	"most_days_a_week",
-	"minimum_rest_between_shifts",
-	"most_call_backs_per_person",
 	"overtime_past_the_normal_day",
 	"overtime_past_the_normal_week",
 	"overtime_respects_daily_work_cap",
 	"work_minutes_per_period",
 	"consecutive_day_work_patterns",
-	"max_days_without_day_types",
-	"off_requirement_per_horizon",
-	"days_of_day_types_per_period",
 ] as const;
 
 type LabelledRule = (typeof LABELLED_RULES)[number];
+
+/** Every rule name the table words, for tests and callers that ask before wording. */
+export const NAMED_RULES: ReadonlyArray<string> = [
+	...Object.keys(RULE_TYPES),
+	...LABELLED_RULES,
+];
 
 /** Why the check couldn't be shown, as the section words it. */
 export type RulesCheckRefusal =
@@ -54,14 +84,28 @@ const isLabelled = (rule: string): rule is LabelledRule =>
 	(LABELLED_RULES as ReadonlyArray<string>).includes(rule);
 
 /**
- * One broken rule's line: the company's own constraint name, else the app's
- * label for the engine's rule, else a generic "A working-time rule".
+ * What a rule is called, by any name the engine or the settings give it: its
+ * constraint type's label, else the roster check's label; undefined for a
+ * name the table does not know.
+ */
+export const ruleNameLabel = (
+	rule: string,
+	t: TFunction
+): string | undefined => {
+	const type =
+		RULE_TYPES[rule] ??
+		CONSTRAINT_TYPES.find((constraintType) => constraintType === rule);
+	if (type) return t(`scheduling.constraints.types.${type}`);
+	return isLabelled(rule) ? t(`${key}.rule.${rule}`) : undefined;
+};
+
+/**
+ * One broken rule's line: the company's own constraint name, else what the
+ * rule is called (`ruleNameLabel`), else a generic "A working-time rule".
  */
 export const brokenRuleLabel = (rule: BrokenRule, t: TFunction): string => {
 	if (rule.constraintName) return rule.constraintName;
-	return isLabelled(rule.rule)
-		? t(`${key}.rule.${rule.rule}`)
-		: t(`${key}.unnamedRule`);
+	return ruleNameLabel(rule.rule, t) ?? t(`${key}.unnamedRule`);
 };
 
 /**

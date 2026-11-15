@@ -4,7 +4,8 @@ import en from "@/assets/locales/en/translations.json";
 import { ApiProblemError } from "@/common/problem";
 import {
 	brokenRuleLabel,
-	LABELLED_RULES,
+	NAMED_RULES,
+	ruleNameLabel,
 	rulesCheckRefusalOf,
 } from "@/features/scheduling/rulesCheck/rosterRulesCheckWords";
 
@@ -63,10 +64,23 @@ describe("brokenRuleLabel", () => {
 	});
 
 	it("has a label in the translations for every rule it names", () => {
-		for (const rule of LABELLED_RULES)
+		for (const rule of NAMED_RULES)
 			expect(
 				brokenRuleLabel({ rule, constraintId: null, constraintName: null }, t)
-			).not.toContain("scheduling.rulesCheck");
+			).not.toMatch(/scheduling\.|A working-time rule/);
+	});
+
+	it.each([
+		["most_minutes_a_day", "Most hours a day"],
+		["max_work_hours_per_day", "Most hours a day"],
+		["MAX_WORK_HOURS_PER_DAY", "Most hours a day"],
+		["most_overtime_minutes_a_month", "Most overtime a month"],
+		["max_overtime_hours_per_month", "Most overtime a month"],
+		["most_call_backs_per_person", "Call-backs on a rest or off day"],
+		["max_days_without_day_types", "Limit on days in a row"],
+		["overtime_past_the_normal_day", "Overtime past the normal day"],
+	])("calls %s by the name the settings give it: %s", (rule, label) => {
+		expect(ruleNameLabel(rule, t)).toBe(label);
 	});
 });
 

@@ -3,10 +3,7 @@ import type {
 	NotAssignedPerson,
 	NotAssignedReason,
 } from "@/features/scheduling/cover/engineRepairApi";
-import {
-	brokenRuleLabel,
-	LABELLED_RULES,
-} from "@/features/scheduling/rulesCheck/rosterRulesCheckWords";
+import { ruleNameLabel } from "@/features/scheduling/rulesCheck/rosterRulesCheckWords";
 
 /*
  * Why the engine put nobody else on a short shift, in the app's words, pure:
@@ -35,14 +32,13 @@ type WordedReason = (typeof WORDED_REASONS)[number];
 const isWordedReason = (code: string): code is WordedReason =>
 	(WORDED_REASONS as ReadonlyArray<string>).includes(code);
 
-const isLabelledRule = (rule: string | null): boolean =>
-	rule !== null && (LABELLED_RULES as ReadonlyArray<string>).includes(rule);
-
-/** The rule a reason would break: the company's constraint name, else the app's label for the engine's rule, else "a working-time rule". */
-const brokenRuleName = (reason: NotAssignedReason, t: TFunction): string =>
-	reason.constraintName || isLabelledRule(reason.rule)
-		? brokenRuleLabel({ ...reason, rule: reason.rule ?? "" }, t)
-		: t(`${key}.aWorkingTimeRule`);
+/** The rule a reason would break: the company's constraint name, else what the rule is called, else "a working-time rule". */
+const brokenRuleName = (reason: NotAssignedReason, t: TFunction): string => {
+	if (reason.constraintName) return reason.constraintName;
+	const named =
+		reason.rule === null ? undefined : ruleNameLabel(reason.rule, t);
+	return named ?? t(`${key}.aWorkingTimeRule`);
+};
 
 /** One reason as a plain sentence. */
 export const notAssignedReasonLine = (

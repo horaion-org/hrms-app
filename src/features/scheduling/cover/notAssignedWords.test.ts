@@ -65,9 +65,7 @@ describe("notAssignedReasonLine", () => {
 				reason("breaks_rule", { rule: "most_minutes_a_day" }),
 				t
 			)
-		).toBe(
-			`Would break: ${t("scheduling.rulesCheck.rule.most_minutes_a_day")}`
-		);
+		).toBe("Would break: Most hours a day");
 		expect(
 			notAssignedReasonLine(reason("breaks_rule", { rule: "a_new_rule" }), t)
 		).toBe("Would break: a working-time rule");

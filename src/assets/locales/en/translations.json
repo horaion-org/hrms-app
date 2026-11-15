@@ -4837,19 +4837,12 @@
 			"brokenUnnamed": "This roster breaks a working-time rule.",
 			"unnamedRule": "A working-time rule",
 			"rule": {
-				"most_minutes_a_day": "Most hours a day",
-				"most_overtime_minutes_a_month": "Most overtime a month",
 				"most_days_a_week": "Most days a week",
-				"minimum_rest_between_shifts": "Rest between shifts",
-				"most_call_backs_per_person": "Most call-backs per person",
 				"overtime_past_the_normal_day": "Overtime past the normal day",
 				"overtime_past_the_normal_week": "Overtime past the normal week",
 				"overtime_respects_daily_work_cap": "Overtime within the day's limit",
 				"work_minutes_per_period": "Hours per period",
-				"consecutive_day_work_patterns": "Days worked in a row",
-				"max_days_without_day_types": "Days without a day off",
-				"off_requirement_per_horizon": "Days off required",
-				"days_of_day_types_per_period": "Rest and off days per period"
+				"consecutive_day_work_patterns": "Days worked in a row"
 			},
 			"refusal": {
 				"expired": "The engine no longer holds this week’s generation, so it can’t be validated. Generate the week again, then validate it.",
