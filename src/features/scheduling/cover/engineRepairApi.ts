@@ -1,0 +1,142 @@
+import { queryOptions, skipToken } from "@tanstack/react-query";
+import { z } from "zod";
+import { apiRequest } from "@/common/api-client";
+import type { QueryOptionsFor } from "@/common/query-client";
+import type { CoverGapRequest } from "@/features/scheduling/cover/api";
+import { schedulePath } from "@/features/scheduling/paths";
+import type { RosterChangeTarget } from "@/features/scheduling/rosterChanges/useRosterChangeActions";
+import { scheduleKey } from "@/features/scheduling/schedules/api";
+import { administrativeMeta } from "@/features/workspace/queryAccess";
+
+/*
+ * The scheduling engine's repair options for one short shift (the API's
+ * `…/repair-options`, engine ADR-0018), under `schedule:edit_shift`: the
+ * engine's own ways to fill the gap the generation left, against the roster
+ * as it stands now. Nothing is stored, and the engine checks no
+ * working-time rule, so every option says so.
+ */
+
+// A kind a newer API adds still reads, as a change the app can't describe yet.
+const moveKindSchema = z
+	.enum(["REASSIGN", "CALL_IN", "OVERTIME_EXTENSION", "UNKNOWN"])
+	.catch("UNKNOWN");
+
+/** What one move does: a move between shifts, a call-in on a day off, or a shift stretched into overtime. */
+export type RepairMoveKind = z.infer<typeof moveKindSchema>;
+
+/** A span of local time, `yyyy-MM-ddTHH:mm:ss`; an end the engine wrote unreadably is null. */
+const spanSchema = z.object({
+	start: z.string().nullable(),
+	end: z.string().nullable(),
+});
+
+export type RepairSpan = z.infer<typeof spanSchema>;
+
+const moveSchema = z.object({
+	kind: moveKindSchema,
+	/** Null for someone the roster no longer names. */
+	membershipId: z.string().nullable(),
+	displayName: z.string().nullable(),
+	/** Where a move between shifts leaves; null for the other kinds. */
+	fromShiftName: z.string().nullable(),
+	fromDate: z.string().nullable(),
+	/** The shift worked after the move, and its day. */
+	shiftName: z.string().nullable(),
+	date: z.string().nullable(),
+	period: spanSchema,
+	/** How long a stretch is; null for the other kinds. */
+	extensionMinutes: z.number().nullable(),
+});
+
+export type RepairMove = z.infer<typeof moveSchema>;
+
+const optionSchema = z.object({
+	feasible: z.boolean(),
+	/** Always false tonight: the engine checks no working-time rule. */
+	workingTimeRulesChecked: z.boolean(),
+	moves: z.array(moveSchema),
+	/** The engine's own sentences, quoted, never the app's copy. */
+	summary: z.string().nullable(),
+	infeasibleReason: z.string().nullable(),
+	/** The gap's spans this option still leaves short. */
+	leftShort: z.array(spanSchema),
+	leftShortBy: z.number().nullable(),
+	warnings: z.array(z.string()),
+});
+
+export type RepairOption = z.infer<typeof optionSchema>;
+
+const repairOptionsSchema = z.object({
+	conflictId: z.string(),
+	options: z.array(optionSchema),
+});
+
+export type RepairOptions = z.infer<typeof repairOptionsSchema>;
+
+/** The engine's options for `gap` at `expectedRevision`; nothing is written. */
+export const fetchRepairOptions = (
+	{ companyId, unit, scheduleId }: RosterChangeTarget,
+	body: CoverGapRequest & { expectedRevision: number },
+	signal?: AbortSignal
+): Promise<RepairOptions> =>
+	apiRequest(
+		`${schedulePath(companyId, unit, scheduleId)}/repair-options`,
+		repairOptionsSchema,
+		{ method: "POST", body, signal }
+	);
+
+/** The key one gap's engine options at `revision` are cached under, below the schedule's own. */
+export const repairOptionsKey = (
+	companyId: string,
+	scheduleId: string,
+	gap: CoverGapRequest,
+	revision: number
+): readonly [
+	"scheduling",
+	string,
+	"schedules",
+	string,
+	"repairOptions",
+	string,
+	string,
+	number,
+] =>
+	[
+		...scheduleKey(companyId, scheduleId),
+		"repairOptions",
+		gap.shiftId,
+		gap.day,
+		revision,
+	] as const;
+
+/**
+ * The engine's options for `gap`, asked for only once `asked` (the engine
+ * takes a moment, so a button asks); never cached past its use, as Find
+ * cover's own list.
+ */
+export const repairOptionsQuery = (
+	target: RosterChangeTarget,
+	gap: CoverGapRequest,
+	revision: number,
+	asked: boolean
+): QueryOptionsFor<RepairOptions, ReturnType<typeof repairOptionsKey>> =>
+	queryOptions({
+		queryKey: repairOptionsKey(
+			target.companyId,
+			target.scheduleId,
+			gap,
+			revision
+		),
+		queryFn: asked
+			? ({ signal }): Promise<RepairOptions> =>
+					fetchRepairOptions(
+						target,
+						{ ...gap, expectedRevision: revision },
+						signal
+					)
+			: skipToken,
+		meta: administrativeMeta(target.companyId),
+		staleTime: 0,
+		gcTime: 0,
+		retry: false,
+	});
