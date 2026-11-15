@@ -364,6 +364,13 @@ export const LeaveApplyForm = ({
 					<div className="flex flex-col gap-6 sm:flex-row">
 						{(["start", "end"] as const).map((edge) => {
 							const timeIds = formRowIds(`${id}-${edge}`);
+							// Equal times hold Submit back; say why under the end, as the duration dialog does.
+							const error =
+								edge === "end" &&
+								customTimes.start !== "" &&
+								customTimes.start === customTimes.end
+									? t("leave.portion.timesEqual")
+									: undefined;
 							const hint =
 								edge === "end" && customMinutes > 0
 									? t(
@@ -378,13 +385,20 @@ export const LeaveApplyForm = ({
 									key={edge}
 									required
 									className="sm:flex-1"
+									error={error}
 									hint={hint}
 									htmlFor={`${id}-${edge}`}
 									label={t(`leave.portion.${edge}`)}
 									layout="stacked"
 								>
 									<TimeSelect
-										aria-describedby={hint ? timeIds.hintId : undefined}
+										aria-describedby={
+											error
+												? timeIds.errorId
+												: hint
+													? timeIds.hintId
+													: undefined
+										}
 										aria-labelledby={timeIds.labelId}
 										className="w-full"
 										placeholder={t("leave.portion.chooseTime")}

@@ -288,6 +288,7 @@
 			"start": "Start",
 			"end": "End",
 			"chooseTime": "Choose a time",
+			"timesEqual": "The end must differ from the start.",
 			"length": "{{length}}",
 			"lengthNextDay": "{{length}} · Ends the next day",
 			"severalDays": "Leave over several days is taken in full days."

@@ -288,6 +288,7 @@
 			"start": "Inicio",
 			"end": "Fin",
 			"chooseTime": "Elige una hora",
+			"timesEqual": "El final debe ser distinto del inicio.",
 			"length": "{{length}}",
 			"lengthNextDay": "{{length}} · Termina al día siguiente",
 			"severalDays": "Un permiso de varios días se toma en días completos."

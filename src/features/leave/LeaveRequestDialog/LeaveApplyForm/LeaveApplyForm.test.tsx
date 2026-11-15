@@ -391,6 +391,20 @@ it("given_customChosen_when_bothTimesArePicked_then_showsTheLengthAndSendsThem",
 	expect(onCreate.mock.calls[0]?.[1]).not.toHaveProperty("leaveDurationId");
 });
 
+it("given_customChosen_when_bothTimesAreTheSame_then_saysWhySubmitWaits", async () => {
+	const user = userEvent.setup();
+	renderOwnForm();
+
+	await choosePortion("Custom");
+	await user.click(screen.getByRole("button", { name: "Start" }));
+	await user.click(screen.getByRole("option", { name: "10:00" }));
+	await user.click(screen.getByRole("button", { name: "End" }));
+	await user.click(screen.getByRole("option", { name: "10:00" }));
+
+	expect(screen.getByText("The end must differ from the start.")).toBeVisible();
+	expect(screen.getByRole("button", { name: "Submit request" })).toBeDisabled();
+});
+
 it("given_aTypeTakenInFullDaysOnly_when_chosen_then_doesNotAskHowMuchOfTheDay", async () => {
 	const sick = LEAVE_TYPE_FIXTURES.find((type) => type.code === "SICK")!;
 	renderOwnForm([{ ...sick, allowsPartDays: false }]);
