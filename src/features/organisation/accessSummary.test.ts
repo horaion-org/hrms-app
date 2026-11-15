@@ -204,6 +204,8 @@ describe("a person's access summary", () => {
 				roles: ["HR manager"],
 				// Section by section, in the role editor's order.
 				lines: ["Leave: Manage", "Organisation: View"],
+				branchId: null,
+				departmentId: null,
 			},
 		]);
 	});
@@ -229,6 +231,41 @@ describe("a person's access summary", () => {
 			},
 			{ places: ["Orchard"], roles: ["Viewer"], lines: ["People: View"] },
 			{ places: ["Marina"], roles: ["Leave approver"], lines: manager },
+		]);
+	});
+
+	it("leaves out a Department whose Branch the same entry already names, as the Branch covers it", () => {
+		const manager = ["People: Manage", "Leave: Manage"];
+		expect(
+			groupSameAccess([
+				{
+					place: "North Point",
+					roles: ["Department Manager"],
+					lines: manager,
+					branchId: "b-north",
+					departmentId: null,
+				},
+				{
+					place: "North Point › Security",
+					roles: ["Department Manager"],
+					lines: manager,
+					branchId: "b-north",
+					departmentId: "d-security",
+				},
+				{
+					place: "Orchard › Kitchen",
+					roles: ["Department Manager"],
+					lines: manager,
+					branchId: "b-orchard",
+					departmentId: "d-kitchen",
+				},
+			])
+		).toEqual([
+			{
+				places: ["North Point", "Orchard › Kitchen"],
+				roles: ["Department Manager"],
+				lines: manager,
+			},
 		]);
 	});
 });

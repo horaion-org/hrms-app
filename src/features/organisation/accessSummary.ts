@@ -160,6 +160,9 @@ export type PlaceAccessText = {
 	place: string;
 	roles: Array<string>;
 	lines: Array<string>;
+	/** Which Branch and Department the place is, so a group can tell a Department inside a Branch it also names. */
+	branchId?: string | null;
+	departmentId?: string | null;
 };
 
 /** Places given the same roles and the same access, as one entry naming them all. */
@@ -170,20 +173,42 @@ export type SharedAccessText = {
 };
 
 /**
+ * Whether a place is a Department of a Branch that the same group also names
+ * as a whole: the Branch's access covers it, so naming it again ("North
+ * Point and North Point › Security") adds nothing.
+ */
+const coveredByBranchIn = (
+	text: PlaceAccessText,
+	group: ReadonlyArray<PlaceAccessText>
+): boolean =>
+	Boolean(text.departmentId) &&
+	group.some(
+		(other) =>
+			!other.departmentId &&
+			Boolean(other.branchId) &&
+			other.branchId === text.branchId
+	);
+
+/**
  * Groups places whose roles and access read the same, so a list is not
- * repeated per place; each group keeps the order its first place had.
+ * repeated per place; each group keeps the order its first place had, and
+ * leaves out a Department whose Branch it already names.
  */
 export const groupSameAccess = (
 	texts: ReadonlyArray<PlaceAccessText>
 ): Array<SharedAccessText> => {
-	const groups = new Map<string, SharedAccessText>();
-	for (const { place, roles, lines } of texts) {
-		const sameAs = JSON.stringify([roles, lines]);
-		const group = groups.get(sameAs);
-		if (group) group.places.push(place);
-		else groups.set(sameAs, { places: [place], roles, lines });
+	const groups = new Map<string, Array<PlaceAccessText>>();
+	for (const text of texts) {
+		const sameAs = JSON.stringify([text.roles, text.lines]);
+		groups.set(sameAs, [...(groups.get(sameAs) ?? []), text]);
 	}
-	return [...groups.values()];
+	return [...groups.values()].map((group) => ({
+		places: group
+			.filter((text) => !coveredByBranchIn(text, group))
+			.map((text) => text.place),
+		roles: group[0]!.roles,
+		lines: group[0]!.lines,
+	}));
 };
 
 /**
@@ -202,5 +227,13 @@ export const describeAccess = (
 		const lines = sectionLevels(entry.permissions).map((section) =>
 			sectionLevelText(section, t)
 		);
-		return [{ place, roles: entry.roleNames, lines }];
+		return [
+			{
+				place,
+				roles: entry.roleNames,
+				lines,
+				branchId: entry.branchId,
+				departmentId: entry.departmentId,
+			},
+		];
 	});

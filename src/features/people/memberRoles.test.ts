@@ -242,8 +242,16 @@ describe("member access", () => {
 				place: "Whole company",
 				roles: ["Supervisor"],
 				lines: ["Organisation: View"],
+				branchId: null,
+				departmentId: null,
 			},
-			{ place: "Orchard", roles: ["Approver"], lines: ["Leave: View"] },
+			{
+				place: "Orchard",
+				roles: ["Approver"],
+				lines: ["Leave: View"],
+				branchId: "b-1",
+				departmentId: null,
+			},
 		]);
 	});
 
