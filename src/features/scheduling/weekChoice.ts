@@ -4,6 +4,10 @@ import {
 	type Constraint,
 } from "@/features/scheduling/scheduleDraft";
 import type { ScheduleShift } from "@/features/scheduling/schedules/api";
+import {
+	needsAttention,
+	type ValueWithProblem,
+} from "@/features/scheduling/constraints/valueProblems";
 
 /*
  * What one week uses: which of its department's shifts and constraints the
@@ -23,6 +27,7 @@ export type WeekChoiceIds = {
 /** Why a constraint can't be chosen, shown under its name. */
 export type ConstraintChoiceNote =
 	| { kind: "locked" }
+	| { kind: "needsAttention"; values: Array<ValueWithProblem> }
 	| { kind: "leavesOut"; shiftNames: Array<string> }
 	| { kind: "shiftGone" };
 
@@ -65,11 +70,16 @@ const shiftValuesOf = (
 ): ChoiceConstraint["values"] =>
 	constraint.values.filter((value) => value.field === "SHIFT");
 
-/** Whether every shift the constraint names is among `shiftIds`, as the API's freeze requires. */
+/**
+ * Whether the week can use the constraint, as the API's freeze requires: no
+ * value of it no longer fits (ADR-0085), and every shift it names is among
+ * `shiftIds`.
+ */
 export const usableWith = (
 	constraint: ChoiceConstraint,
 	shiftIds: Array<string>
 ): boolean =>
+	!needsAttention(constraint.values) &&
 	shiftValuesOf(constraint).every((value) => shiftIds.includes(value.value));
 
 /** Everything: every shift, every listed constraint usable with them, and every locked one. */
@@ -121,14 +131,20 @@ export const withShiftsChosen = (
 });
 
 /**
- * Why a constraint can't be chosen this week: it is locked, it names a shift
- * no longer listed, or it names shifts the week leaves out (by their names).
+ * Why a constraint can't be chosen this week: a value of it no longer fits,
+ * it is locked, it names a shift no longer listed, or it names shifts the
+ * week leaves out (by their names).
  */
 export const noteOf = (
 	constraint: ChoiceConstraint,
 	chosenShiftIds: Array<string>,
 	listedShiftIds: Array<string>
 ): ConstraintChoiceNote | undefined => {
+	if (needsAttention(constraint.values))
+		return {
+			kind: "needsAttention",
+			values: constraint.values.filter((value) => value.problem),
+		};
 	if (constraint.locked) return { kind: "locked" };
 	const named = shiftValuesOf(constraint);
 	if (named.some((value) => !listedShiftIds.includes(value.value)))

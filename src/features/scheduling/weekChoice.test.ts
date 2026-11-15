@@ -170,6 +170,23 @@ describe("noteOf", () => {
 		expect(noteOf(REST, [], SHIFT_IDS)).toBeUndefined();
 	});
 
+	it("says a rule needs attention, before anything else, naming the values that no longer fit", () => {
+		const lead = {
+			field: "JOB_TITLE" as const,
+			value: "lead",
+			name: "Lead",
+			problem: "NOT_LISTED" as const,
+		};
+		const stale = { ...OPENING_COVER, values: [...OPENING_COVER.values, lead] };
+
+		expect(noteOf(stale, SHIFT_IDS, SHIFT_IDS)).toEqual({
+			kind: "needsAttention",
+			values: [lead],
+		});
+		expect(isSelectable(stale, SHIFT_IDS)).toBe(false);
+		expect(allOf(SHIFTS, [stale, REST]).constraintIds).toEqual(["rest"]);
+	});
+
 	it("says a named shift no longer exists when it is not listed at all", () => {
 		expect(noteOf(SUNDAY_COVER, ["opening"], ["opening"])).toEqual({
 			kind: "shiftGone",

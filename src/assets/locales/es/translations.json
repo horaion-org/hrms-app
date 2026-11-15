@@ -4396,6 +4396,7 @@
 			"locked": "Bloqueada por la política de trabajo.",
 			"leavesOut": "Usa {{shifts, list}}, que esta semana queda fuera.",
 			"shiftGone": "Usa un turno que ya no existe.",
+			"needsAttention": "Requiere atención: {{problems}}",
 			"noShift": "Elige al menos un turno para esta semana.",
 			"noStaffing": "Marca al menos una restricción de personal. Sin ella, no se asigna a nadie.",
 			"apply": "Usar para la semana",

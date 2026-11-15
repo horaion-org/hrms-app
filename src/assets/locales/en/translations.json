@@ -4596,6 +4596,7 @@
 			"locked": "Locked by the work policy.",
 			"leavesOut": "Uses {{shifts, list}}, which this week leaves out.",
 			"shiftGone": "Uses a shift that no longer exists.",
+			"needsAttention": "Needs attention: {{problems}}",
 			"noShift": "Choose at least one shift for this week.",
 			"noStaffing": "Tick at least one staffing constraint. Without one, nobody is rostered.",
 			"apply": "Use for week",

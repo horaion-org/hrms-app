@@ -5,6 +5,7 @@ import {
 	ConstraintTable,
 	type ConstraintTableRow,
 } from "@/features/scheduling/constraints/ConstraintTable";
+import { problemLines } from "@/features/scheduling/constraints/valueProblems";
 import {
 	ShiftTable,
 	type ShiftTableRow,
@@ -63,6 +64,10 @@ export const WeekChoiceLists = ({
 		note: ConstraintChoiceNote | undefined
 	): string | undefined => {
 		if (note === undefined) return undefined;
+		if (note.kind === "needsAttention")
+			return t(`${key}.needsAttention`, {
+				problems: problemLines(note.values, t).join(" "),
+			});
 		if (note.kind === "locked") return t(`${key}.locked`);
 		if (note.kind === "shiftGone") return t(`${key}.shiftGone`);
 		return t(`${key}.leavesOut`, { shifts: note.shiftNames });

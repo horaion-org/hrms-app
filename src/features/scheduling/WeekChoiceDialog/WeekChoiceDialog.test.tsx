@@ -107,6 +107,29 @@ describe("WeekChoiceDialog", () => {
 		});
 	});
 
+	it("given_aRuleThatNoLongerFits_when_shown_then_itIsUntickedDisabledAndSaysWhy", () => {
+		const stale = {
+			...SUNDAY_COVER,
+			values: [
+				...SUNDAY_COVER.values,
+				{
+					field: "JOB_TITLE" as const,
+					value: "lead",
+					name: "Lead",
+					problem: "NOT_LISTED" as const,
+				},
+			],
+		};
+		const constraints = [COMPANY_REST, OPENING_COVER, stale];
+		show({ constraints, value: allOf(SHIFTS, constraints) });
+
+		expect(box("Sunday cover")).not.toBeChecked();
+		expect(box("Sunday cover")).toBeDisabled();
+		expect(screen.getByRole("row", { name: /Sunday cover/ })).toHaveTextContent(
+			"Needs attention: Lead isn’t on the rule’s shifts any more. Edit the rule, or add Lead to the shift."
+		);
+	});
+
 	it("given_aLockedConstraint_when_shown_then_itIsTickedDisabledAndSaysWhy", () => {
 		show();
 
