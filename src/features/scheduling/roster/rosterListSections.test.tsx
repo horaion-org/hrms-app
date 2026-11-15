@@ -5,6 +5,7 @@ import type { RosterSidePanelSection } from "@/features/scheduling/RosterSidePan
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 import {
 	emptyFindingsFixture,
+	generationFindingsFixture,
 	generatedScheduleFixture,
 	generationFixture,
 	scheduleAssignmentsFixture,
@@ -239,5 +240,43 @@ describe("issueNoteLines", () => {
 
 	it("given_nothingChangedSinceGeneration_when_said_then_saysNothing", () => {
 		expect(issueNoteLines(inputOf())).toEqual([]);
+	});
+
+	it("given_handChanges_when_said_then_saysTheNotesAreFromGenerationOnlyWhereValidateIsNotThere", () => {
+		const [first, ...rest] = scheduleAssignmentsFixture();
+		const edited = [
+			{
+				...first!,
+				lastChange: {
+					changeId: "rc-1",
+					appliedAt: "2026-10-10T09:00:00Z",
+					appliedBy: { membershipId: "m-9", displayName: "Sam Tan" },
+					remark: null,
+					before: {
+						kind: "OFF" as const,
+						dayType: "OFF",
+						shift: null,
+						jobTitle: null,
+					},
+				},
+			},
+			...rest,
+		];
+		const withFindings = (
+			overrides: Partial<RosterListInput>
+		): RosterListInput => {
+			const input = inputOf(overrides, { week: "2026-10-12" }, edited);
+			return {
+				...input,
+				roster: { ...input.roster, findings: generationFindingsFixture() },
+			};
+		};
+
+		expect(issueNoteLines(withFindings({}))).toEqual([
+			"scheduling.rosterEdit.findingsOutOfDate",
+		]);
+		expect(
+			issueNoteLines(withFindings({ validationNote: <p>Validated</p> }))
+		).toEqual([]);
 	});
 });

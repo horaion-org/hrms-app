@@ -82,14 +82,19 @@ export type RosterListInput = {
 	onFindCover?: (gap: CoverGapRequest) => void;
 };
 
-/** One line each, said above the findings in the Issues panel. */
+/**
+ * One line each, said above the findings in the Issues panel. That the
+ * notes are from generation is said only where Validate schedule is not
+ * there to say how the list stands (it would contradict "Validated").
+ */
 export const issueNoteLines = ({
 	roster: { findings, editedDays },
 	membersWithChangedStart,
+	validationNote,
 	t,
 }: Pick<
 	RosterListInput,
-	"roster" | "membersWithChangedStart" | "t"
+	"roster" | "membersWithChangedStart" | "validationNote" | "t"
 >): Array<string> => [
 	...(membersWithChangedStart > 0
 		? [
@@ -98,7 +103,7 @@ export const issueNoteLines = ({
 				}),
 			]
 		: []),
-	...(findings && editedDays.size > 0
+	...(findings && editedDays.size > 0 && !validationNote
 		? [t("scheduling.rosterEdit.findingsOutOfDate")]
 		: []),
 ];
