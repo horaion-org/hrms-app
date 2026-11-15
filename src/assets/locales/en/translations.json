@@ -3654,36 +3654,17 @@
 				"optionsNeedDepartment": "Choose a department first.",
 				"typeHintEmpty": "Choose one to see an example.",
 				"dependency": {
-					"chooseFirst": {
-						"SHIFT": "Choose a shift first."
-					},
-					"chooseFirstAny": "Choose {{field}} first.",
-					"noneListed": {
-						"SHIFT": "None of the chosen shifts lists one. Add it to the shift first."
-					},
-					"noneListedAny": "Nothing fits what is chosen in {{field}}.",
+					"chooseFirst": "Choose in {{field}} first.",
+					"noneListed": "Nothing chosen in {{field}} lists one yet.",
 					"removed": {
-						"NOT_LISTED": {
-							"SHIFT_one": "{{names}} was removed: none of the chosen shifts lists it.",
-							"SHIFT_other": "{{names}} were removed: none of the chosen shifts lists them."
-						},
-						"EXCLUDED": {
-							"JOB_TITLE_one": "{{names}} was removed: it is already a job title that counts.",
-							"JOB_TITLE_other": "{{names}} were removed: they are already job titles that count."
-						}
+						"NOT_LISTED_one": "{{names}} was removed: nothing chosen in {{field}} lists it.",
+						"NOT_LISTED_other": "{{names}} were removed: nothing chosen in {{field}} lists them.",
+						"EXCLUDED_one": "{{names}} was removed: it is already chosen in {{field}}.",
+						"EXCLUDED_other": "{{names}} were removed: they are already chosen in {{field}}."
 					},
-					"removedAny_one": "{{names}} was removed: it no longer fits.",
-					"removedAny_other": "{{names}} were removed: they no longer fit.",
-					"excludes": {
-						"STAND_IN_JOB_TITLE": "A stand-in job title can’t also be one of the counted job titles."
-					},
-					"excludesAny": "A value here can’t also be chosen in another field.",
-					"listsNone": {
-						"SHIFT_one": "{{names}} doesn’t list {{listed}}, so no one can be counted there. Choose a job title it lists, or remove the shift.",
-						"SHIFT_other": "{{names}} don’t list {{listed}}, so no one can be counted there. Choose job titles they list, or remove those shifts."
-					},
-					"listsNoneAny_one": "{{names}} doesn’t fit the other values chosen.",
-					"listsNoneAny_other": "{{names}} don’t fit the other values chosen.",
+					"alsoChosen": "Already chosen in {{field}}: choose it in one place only.",
+					"listsNone_one": "{{names}} doesn’t list {{listed}}, so no one can be counted there. Choose one it lists, or remove it.",
+					"listsNone_other": "{{names}} don’t list {{listed}}, so no one can be counted there. Choose ones they list, or remove them.",
 					"staleTakenOut": "These no longer fit and were taken out: {{items}}. Save to keep the rule without them, or choose again."
 				}
 			},

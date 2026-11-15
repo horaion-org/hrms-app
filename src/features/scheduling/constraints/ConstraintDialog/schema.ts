@@ -118,16 +118,20 @@ const checkConsistent = (
 			path: ["values", "DAYS_OFF"],
 			message: t(`${key}.daysOffOverPeriod`),
 		});
+	const label = (field: ConstraintField): string =>
+		t(`scheduling.constraints.fields.${field}`);
 	for (const spec of fields) {
 		const excluded = spec.excludes ? (values[spec.excludes] ?? []) : [];
-		if ((values[spec.field] ?? []).some((id) => excluded.includes(id)))
+		if (
+			spec.excludes &&
+			(values[spec.field] ?? []).some((id) => excluded.includes(id))
+		)
 			context.addIssue({
 				code: "custom",
 				path: ["values", spec.field],
-				message: t([
-					`${key}.dependency.excludes.${spec.field}`,
-					`${key}.dependency.excludesAny`,
-				]),
+				message: t(`${key}.dependency.alsoChosen`, {
+					field: label(spec.excludes),
+				}),
 			});
 	}
 	const listingNone = valuesListingNone(fields, values, fit.links);
@@ -138,21 +142,15 @@ const checkConsistent = (
 		context.addIssue({
 			code: "custom",
 			path: ["values", spec.field],
-			message: t(
-				[
-					`${key}.dependency.listsNone.${spec.field}`,
-					`${key}.dependency.listsNoneAny`,
-				],
-				{
-					count: ids.length,
-					names: t("scheduling.constraints.list", {
-						items: ids.map(fit.nameOf),
-					}),
-					listed: t("scheduling.constraints.listOr", {
-						items: listed.map(fit.nameOf),
-					}),
-				}
-			),
+			message: t(`${key}.dependency.listsNone`, {
+				count: ids.length,
+				names: t("scheduling.constraints.list", {
+					items: ids.map(fit.nameOf),
+				}),
+				listed: t("scheduling.constraints.listOr", {
+					items: listed.map(fit.nameOf),
+				}),
+			}),
 		});
 	}
 };

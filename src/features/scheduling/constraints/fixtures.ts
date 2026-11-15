@@ -51,11 +51,14 @@ const DEPARTMENT_ONLY = ["DEPARTMENT"] as const;
 const ANY_LEVEL = ["COMPANY", "DEPARTMENT"] as const;
 
 /** A field whose values depend on no other field's. */
-const NO_DEPENDENCY = {
+const NO_DEPENDENCY: Pick<
+	ConstraintFieldSpec,
+	"listedBy" | "listsSomeOf" | "excludes"
+> = {
 	listedBy: null,
 	listsSomeOf: [],
 	excludes: null,
-} as const;
+};
 
 /** A field chosen from a list; one value unless the counts say otherwise. */
 const choice = (

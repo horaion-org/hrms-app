@@ -341,6 +341,8 @@ export const ConstraintDialog = ({
 	// A field that depends on another offers only what fits what is chosen there (ADR-0085).
 	const offeredChoices = (spec: ConstraintFieldSpec): Array<SelectOption> => {
 		if (spec.kind === "COMPARISON") return comparisonChoices(spec);
+		// A number is typed, never chosen.
+		if (spec.kind === "NUMBER") return [];
 		const all = choices[spec.kind];
 		if (!spec.listedBy && !spec.excludes) return all;
 		const allowed = allowedLinkIds(spec, chosen?.fields ?? [], values, links);
@@ -350,24 +352,11 @@ export const ConstraintDialog = ({
 	const emptyTextOf = (spec: ConstraintFieldSpec): string | undefined => {
 		if (!spec.listedBy) return noChoices[spec.kind];
 		const parent = spec.listedBy;
-		if ((values[parent] ?? []).length === 0)
-			return t(
-				[
-					`${key}.dependency.chooseFirst.${parent}`,
-					`${key}.dependency.chooseFirstAny`,
-				],
-				{
-					field: fieldLabel(parent),
-				}
-			);
 		return t(
-			[
-				`${key}.dependency.noneListed.${parent}`,
-				`${key}.dependency.noneListedAny`,
-			],
-			{
-				field: fieldLabel(parent),
-			}
+			(values[parent] ?? []).length === 0
+				? `${key}.dependency.chooseFirst`
+				: `${key}.dependency.noneListed`,
+			{ field: fieldLabel(parent) }
 		);
 	};
 	// A new choice in one field takes out what no longer fits in the others, and says so under them.
@@ -392,18 +381,13 @@ export const ConstraintDialog = ({
 		if (!first) return undefined;
 		const because =
 			first.reason === "NOT_LISTED" ? spec.listedBy : spec.excludes;
-		return t(
-			[
-				`${key}.dependency.removed.${first.reason}.${because ?? ""}`,
-				`${key}.dependency.removedAny`,
-			],
-			{
-				count: removed.length,
-				names: t("scheduling.constraints.list", {
-					items: removed.map((item) => nameOfLink(item.value)),
-				}),
-			}
-		);
+		return t(`${key}.dependency.removed.${first.reason}`, {
+			count: removed.length,
+			names: t("scheduling.constraints.list", {
+				items: removed.map((item) => nameOfLink(item.value)),
+			}),
+			field: because ? fieldLabel(because) : "",
+		});
 	};
 	// A new constraint's name fills itself in from what it controls and its
 	// first shift, until the manager types one; an edit or a replacement keeps

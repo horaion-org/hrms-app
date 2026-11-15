@@ -3454,36 +3454,17 @@
 				"optionsNeedDepartment": "Elige primero un departamento.",
 				"typeHintEmpty": "Elige una opción para ver un ejemplo.",
 				"dependency": {
-					"chooseFirst": {
-						"SHIFT": "Elige primero un turno."
-					},
-					"chooseFirstAny": "Elige primero {{field}}.",
-					"noneListed": {
-						"SHIFT": "Ninguno de los turnos elegidos tiene uno. Añádelo antes al turno."
-					},
-					"noneListedAny": "Nada encaja con lo elegido en {{field}}.",
+					"chooseFirst": "Elige antes en {{field}}.",
+					"noneListed": "Nada de lo elegido en {{field}} incluye uno todavía.",
 					"removed": {
-						"NOT_LISTED": {
-							"SHIFT_one": "Se quitó {{names}}: ninguno de los turnos elegidos lo incluye.",
-							"SHIFT_other": "Se quitaron {{names}}: ninguno de los turnos elegidos los incluye."
-						},
-						"EXCLUDED": {
-							"JOB_TITLE_one": "Se quitó {{names}}: ya es un puesto que cuenta.",
-							"JOB_TITLE_other": "Se quitaron {{names}}: ya son puestos que cuentan."
-						}
+						"NOT_LISTED_one": "Se quitó {{names}}: nada de lo elegido en {{field}} lo incluye.",
+						"NOT_LISTED_other": "Se quitaron {{names}}: nada de lo elegido en {{field}} los incluye.",
+						"EXCLUDED_one": "Se quitó {{names}}: ya está elegido en {{field}}.",
+						"EXCLUDED_other": "Se quitaron {{names}}: ya están elegidos en {{field}}."
 					},
-					"removedAny_one": "Se quitó {{names}}: ya no encaja.",
-					"removedAny_other": "Se quitaron {{names}}: ya no encajan.",
-					"excludes": {
-						"STAND_IN_JOB_TITLE": "Un puesto suplente no puede ser también uno de los puestos contados."
-					},
-					"excludesAny": "Un valor de aquí no puede elegirse también en otro campo.",
-					"listsNone": {
-						"SHIFT_one": "{{names}} no incluye {{listed}}, así que nadie puede contar ahí. Elige un puesto que incluya o quita el turno.",
-						"SHIFT_other": "{{names}} no incluyen {{listed}}, así que nadie puede contar ahí. Elige puestos que incluyan o quita esos turnos."
-					},
-					"listsNoneAny_one": "{{names}} no encaja con los demás valores elegidos.",
-					"listsNoneAny_other": "{{names}} no encajan con los demás valores elegidos.",
+					"alsoChosen": "Ya está elegido en {{field}}: elígelo en un solo sitio.",
+					"listsNone_one": "{{names}} no incluye {{listed}}, así que nadie puede contar ahí. Elige uno que incluya o quítalo.",
+					"listsNone_other": "{{names}} no incluyen {{listed}}, así que nadie puede contar ahí. Elige unos que incluyan o quítalos.",
 					"staleTakenOut": "Estos valores ya no encajan y se quitaron: {{items}}. Guarda para mantener la regla sin ellos, o vuelve a elegir."
 				}
 			},

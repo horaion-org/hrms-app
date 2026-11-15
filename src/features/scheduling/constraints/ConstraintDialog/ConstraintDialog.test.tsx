@@ -835,7 +835,7 @@ describe("ConstraintDialog", () => {
 
 		await user.click(trigger(/^Job titles that count/));
 
-		expect(await screen.findByText("Choose a shift first.")).toBeVisible();
+		expect(await screen.findByText("Choose in Shifts first.")).toBeVisible();
 		expect(screen.queryByRole("option", { name: "Cashier" })).toBeNull();
 	});
 
@@ -870,7 +870,7 @@ describe("ConstraintDialog", () => {
 
 		expect(
 			screen.getByText(
-				"Front Desk Lead was removed: none of the chosen shifts lists it."
+				"Front Desk Lead was removed: nothing chosen in Shifts lists it."
 			)
 		).toBeVisible();
 		expect(trigger(/^Job titles that count/)).toHaveTextContent("Cashier");
@@ -892,7 +892,7 @@ describe("ConstraintDialog", () => {
 
 		expect(
 			await screen.findByText(
-				"Lunch Rush doesn’t list Front Desk Lead, so no one can be counted there. Choose a job title it lists, or remove the shift."
+				"Lunch Rush doesn’t list Front Desk Lead, so no one can be counted there. Choose one it lists, or remove it."
 			)
 		).toBeVisible();
 		expect(onSave).not.toHaveBeenCalled();
@@ -1339,7 +1339,7 @@ describe("constraintSchema", () => {
 			expect.objectContaining({
 				path: ["values", "STAND_IN_JOB_TITLE"],
 				message:
-					"A stand-in job title can’t also be one of the counted job titles.",
+					"Already chosen in Job titles that count: choose it in one place only.",
 			}),
 		]);
 	});
