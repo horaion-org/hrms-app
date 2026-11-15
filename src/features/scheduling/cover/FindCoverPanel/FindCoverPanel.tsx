@@ -36,6 +36,12 @@ export type FindCoverPanelProps = CoverPanelInput & {
 	id?: string;
 	/** Back to Issues. */
 	onClose: () => void;
+	/**
+	 * Whether the scheduling engine can be asked to repair this gap: it looks
+	 * the gap up in the generation's stored result, so a gap a hand edit made
+	 * has none, and the section is left out rather than refused.
+	 */
+	engineRepair?: boolean;
 };
 
 const key = "scheduling.cover.panel";
@@ -56,6 +62,7 @@ const SKELETON_ROWS = ["first", "second", "third"];
 export const FindCoverPanel = ({
 	id,
 	onClose,
+	engineRepair: engineCanRepair = true,
 	...input
 }: FindCoverPanelProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
@@ -263,7 +270,7 @@ export const FindCoverPanel = ({
 		{
 			key: "engine",
 			title: t("scheduling.cover.engine.title"),
-			content: status !== "closed" && (
+			content: engineCanRepair && status !== "closed" && (
 				<EngineRepairOptions
 					names={names}
 					repair={engineRepair}
