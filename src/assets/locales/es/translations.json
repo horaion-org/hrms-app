@@ -4358,6 +4358,14 @@
 						"overtime": "{{hours}} h de horas extra",
 						"restDayWork": "{{hours}} h de trabajo en día de descanso",
 						"timeOffEarned": "{{hours}} h de descanso compensatorio"
+					},
+					"inTotal": {
+						"several": "Suma {{parts}} en total esa semana.",
+						"only": {
+							"overtime": "Suma {{hours}} h de horas extra en total esa semana.",
+							"restDayWork": "Suma {{hours}} h de trabajo en día de descanso en total.",
+							"timeOffEarned": "Suma {{hours}} h de descanso compensatorio en total."
+						}
 					}
 				}
 			}

@@ -4558,6 +4558,14 @@
 						"overtime": "{{hours}} h of overtime",
 						"restDayWork": "{{hours}} h of rest-day work",
 						"timeOffEarned": "{{hours}} h of time off earned"
+					},
+					"inTotal": {
+						"several": "Adds {{parts}} in total that week.",
+						"only": {
+							"overtime": "Adds {{hours}} h of overtime in total that week.",
+							"restDayWork": "Adds {{hours}} h of rest-day work in total.",
+							"timeOffEarned": "Adds {{hours}} h of time off earned in total."
+						}
 					}
 				}
 			}

@@ -95,13 +95,13 @@ describe("extraHoursLine", () => {
 		expect(extraHoursLine(costing(null), names, t)).toBeUndefined();
 	});
 
-	it("names the first person the option moves, or someone the roster no longer names", () => {
-		const move = feasibleRepair([reassignMove(), callInMove()], {
-			kind: "move",
-			extraMinutes: { ...NONE, overtime: 120 },
-		});
-		expect(extraHoursLine(move, names, t)).toBe(
-			"Adds 2 h of overtime for Ben Ong that week."
+	it("names the one person the option moves, even over two of their moves, or someone the roster no longer names", () => {
+		const twoMovesOfOne = feasibleRepair(
+			[reassignMove(), reassignMove({ date: "2026-10-18" })],
+			{ extraMinutes: { ...NONE, overtime: 60 } }
+		);
+		expect(extraHoursLine(twoMovesOfOne, names, t)).toBe(
+			"Adds 1 h of overtime for Ben Ong that week."
 		);
 		const gone = feasibleRepair(
 			[callInMove({ displayName: null, membershipId: null })],
@@ -110,5 +110,66 @@ describe("extraHoursLine", () => {
 		expect(extraHoursLine(gone, names, t)).toBe(
 			"Adds 2 h of overtime for Former member that week."
 		);
+	});
+
+	describe("an option that moves several people, whose minutes are their sum", () => {
+		/** The older repair's two-person option: no kind, the minutes summed. */
+		const twoPeople = (extraMinutes: typeof NONE): RepairOption =>
+			feasibleRepair([reassignMove(), callInMove()], { extraMinutes });
+
+		it.each([
+			[
+				"overtime",
+				{ ...NONE, overtime: 60 },
+				"Adds 1 h of overtime in total that week.",
+			],
+			[
+				"rest-day work",
+				{ ...NONE, restDayWork: 480 },
+				"Adds 8 h of rest-day work in total.",
+			],
+			[
+				"time off earned",
+				{ ...NONE, timeOffEarned: 90 },
+				"Adds 1.5 h of time off earned in total.",
+			],
+		])("names no one for one kind: %s", (_kind, minutes, line) => {
+			expect(extraHoursLine(twoPeople(minutes), names, t)).toBe(line);
+		});
+
+		it("names no one for several kinds in one line", () => {
+			expect(
+				extraHoursLine(
+					twoPeople({ overtime: 60, restDayWork: 480, timeOffEarned: 0 }),
+					names,
+					t
+				)
+			).toBe(
+				"Adds 1 h of overtime and 8 h of rest-day work in total that week."
+			);
+		});
+
+		it("says no extra hours when every kind is 0", () => {
+			expect(extraHoursLine(twoPeople(NONE), names, t)).toBe("No extra hours.");
+		});
+
+		it("counts two people the roster no longer names as several", () => {
+			const gone = callInMove({ displayName: null, membershipId: null });
+			expect(
+				extraHoursLine(
+					feasibleRepair([gone, gone], {
+						extraMinutes: { ...NONE, overtime: 60 },
+					}),
+					names,
+					t
+				)
+			).toBe("Adds 1 h of overtime in total that week.");
+		});
+
+		it("says nothing when the minutes are absent", () => {
+			expect(
+				extraHoursLine(feasibleRepair([reassignMove(), callInMove()]), names, t)
+			).toBeUndefined();
+		});
 	});
 });
