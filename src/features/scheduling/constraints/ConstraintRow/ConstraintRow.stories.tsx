@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { ReactElement } from "react";
 import { fn } from "storybook/test";
 import { ConstraintRow } from "@/features/scheduling/constraints/ConstraintRow";
 import {
@@ -13,7 +14,7 @@ const meta = {
 	component: ConstraintRow,
 	parameters: { layout: "padded" },
 	decorators: [
-		(Story) => (
+		(Story): ReactElement => (
 			<ul className="max-w-200 rounded-xl border border-neutral-400">
 				<Story />
 			</ul>

@@ -54,13 +54,13 @@ describe("ConstraintRow", () => {
 		renderRow(
 			<ConstraintRow
 				needsAttention
+				constraint={own}
+				types={CONSTRAINT_TYPE_OPTIONS}
 				capacity={{
 					headcount: 3,
 					peopleWithTitles: 2,
 					jobTitleNames: ["Supervisor"],
 				}}
-				constraint={own}
-				types={CONSTRAINT_TYPE_OPTIONS}
 				onEdit={onEdit}
 			/>
 		);

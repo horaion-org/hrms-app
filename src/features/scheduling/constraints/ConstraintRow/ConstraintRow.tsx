@@ -66,13 +66,13 @@ export const ConstraintRow = ({
 	return (
 		<li
 			aria-labelledby={nameId}
+			id={id}
+			tabIndex={id === undefined ? undefined : -1}
 			className={
 				needsAttention
 					? "flex flex-col gap-4 bg-error-50 px-6 py-4 sm:flex-row sm:items-start"
 					: "flex flex-col gap-4 px-6 py-4 sm:flex-row sm:items-start"
 			}
-			id={id}
-			tabIndex={id === undefined ? undefined : -1}
 		>
 			<div className="min-w-0 flex-1">
 				{(needsAttention || inactive) && (

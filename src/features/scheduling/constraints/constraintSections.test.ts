@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { constraintSectionsOf } from "@/features/scheduling/constraints/constraintSections";
-import type { SectionedConstraint } from "@/features/scheduling/constraints/constraintSections";
+import {
+	constraintSectionsOf,
+	type SectionedConstraint,
+} from "@/features/scheduling/constraints/constraintSections";
 
 /** A constraint with only what the sections read. */
 const row = (

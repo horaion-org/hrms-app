@@ -158,7 +158,7 @@ export const SchedulingPolicySettings = ({
 								canUpdate
 									? {
 											label: t("scheduling.constraintsTab.addInSection"),
-											onAdd: () => {
+											onAdd: (): void => {
 												setDialog({ startAt: section.category });
 											},
 										}
