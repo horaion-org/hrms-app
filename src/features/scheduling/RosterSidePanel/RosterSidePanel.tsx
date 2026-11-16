@@ -57,14 +57,18 @@ export const RosterSidePanel = ({
 	return (
 		<aside
 			aria-labelledby={titleId}
-			className={joinClassNames("w-full shrink-0 lg:w-96", className)}
+			// Beside the grid it keeps to the grid's height and stays in view: its header stays, its list scrolls.
+			className={joinClassNames(
+				"flex w-full shrink-0 flex-col lg:sticky lg:top-4 lg:max-h-[min(100%,calc(100dvh-2rem))] lg:w-96",
+				className
+			)}
 			id={id}
 			onKeyDown={(event) => {
 				if (event.key === "Escape") onClose();
 			}}
 		>
-			<div className="divide-y divide-neutral-400 overflow-hidden rounded-lg border border-neutral-400">
-				<div className="flex h-14 items-center justify-between px-4">
+			<div className="flex min-h-0 flex-col divide-y divide-neutral-400 overflow-hidden rounded-lg border border-neutral-400">
+				<div className="flex h-14 shrink-0 items-center justify-between px-4">
 					<h2
 						ref={heading}
 						className="font-bold text-neutral-900 outline-none"
@@ -81,7 +85,7 @@ export const RosterSidePanel = ({
 						<CloseIcon />
 					</Button>
 				</div>
-				<div className="flex flex-col gap-4 px-4 py-4">
+				<div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-4">
 					{sections
 						.filter(hasSomething)
 						.map(({ key, title: sectionTitle, items = [], content }) => (

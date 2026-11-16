@@ -85,4 +85,46 @@ describe("RosterSidePanel", () => {
 
 		expect(onClick).toHaveBeenCalledOnce();
 	});
+
+	// Bounded beside the grid, only the list scrolls: the header with its title and close button stays in view, and
+	// every item stays in the tab order (scrolling never removes anything from it).
+	it("given_aPanelBoundedBesideTheGrid_when_itsListIsLong_then_theListScrollsAndTheHeaderStays", async () => {
+		const user = userEvent.setup();
+		render(
+			<RosterSidePanel
+				title="Issues"
+				sections={[
+					{
+						key: "cover",
+						title: "Leave and cover",
+						items: Array.from({ length: 30 }, (_, index) => ({
+							key: `day-${index}`,
+							title: `Person ${index}`,
+							lines: ["Needs cover"],
+							action: { label: `Find cover ${index}`, onClick: vi.fn() },
+						})),
+					},
+				]}
+				onClose={vi.fn()}
+			/>
+		);
+
+		const panel = screen.getByRole("complementary", { name: "Issues" });
+		const header = screen.getByRole("heading", {
+			name: "Issues",
+		}).parentElement;
+		const list = screen
+			.getByRole("heading", { name: "Leave and cover" })
+			.closest("section")?.parentElement;
+		expect(panel).toHaveClass("flex", "flex-col", "lg:sticky");
+		expect(header).toHaveClass("shrink-0");
+		expect(header).not.toHaveClass("overflow-y-auto");
+		expect(list).toHaveClass("min-h-0", "flex-1", "overflow-y-auto");
+		await user.tab();
+		await user.tab();
+		expect(screen.getByRole("button", { name: "Find cover 0" })).toHaveFocus();
+		expect(
+			screen.getByRole("button", { name: "Find cover 29" })
+		).toBeInTheDocument();
+	});
 });

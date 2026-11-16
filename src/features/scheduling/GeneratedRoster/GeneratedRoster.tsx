@@ -170,6 +170,9 @@ export const GeneratedRoster = ({
 		changesLeave: editing?.leave !== undefined,
 	});
 	const { rows, days, period, openList } = roster;
+	// A list or Find cover keeps to the grid's height and scrolls inside, so it never makes the row taller.
+	const panelFollowsGridHeight =
+		roster.sidePanel === "list" || roster.sidePanel === "cover";
 
 	/** The week bar's buttons: each list that has one, while it has something to show. */
 	const toolbarLists = withSummary
@@ -234,6 +237,30 @@ export const GeneratedRoster = ({
 				onFindCover: editing ? roster.openCover : undefined,
 			})
 		: [];
+	const sidePanel = (
+		<RosterSidePanelSlot
+			assignments={assignments}
+			editing={editing}
+			preferenceOutcomes={preferenceOutcomes}
+			roster={roster}
+			timeZone={schedule.timeZone}
+			viewerMembershipId={viewerMembershipId}
+			engineRepairFor={(gap) => generationStoredGap(generationFindings, gap)}
+			list={{
+				id: sidePanelId,
+				resetKey: `${openList ?? ""}|${view.member ?? view.date ?? ""}`,
+				sections: listSections,
+			}}
+			onClose={roster.close}
+			onCloseCover={roster.closeCover}
+			onFindCover={editing ? roster.openCover : undefined}
+			onPreviewDays={roster.onPreviewDays}
+			onApplied={(change) => {
+				setApplied(change);
+				roster.close();
+			}}
+		/>
+	);
 
 	return (
 		<>
@@ -307,9 +334,9 @@ export const GeneratedRoster = ({
 							onDayChange={roster.showDay}
 						/>
 					)}
-					<div className="mt-4 flex flex-col items-start gap-6 lg:flex-row">
+					<div className="mt-4 flex flex-col items-start gap-6 lg:flex-row lg:items-stretch">
 						<RosterGrid
-							className="w-full lg:flex-1"
+							className="w-full lg:flex-1 lg:self-start"
 							compact={roster.sidePanel !== undefined}
 							days={days}
 							editedDays={roster.editedDays}
@@ -325,30 +352,15 @@ export const GeneratedRoster = ({
 							onDaySelect={editing ? roster.openDay : undefined}
 							onShowIssues={roster.showIssuesOf}
 						/>
-						<RosterSidePanelSlot
-							assignments={assignments}
-							editing={editing}
-							preferenceOutcomes={preferenceOutcomes}
-							roster={roster}
-							timeZone={schedule.timeZone}
-							viewerMembershipId={viewerMembershipId}
-							engineRepairFor={(gap) =>
-								generationStoredGap(generationFindings, gap)
-							}
-							list={{
-								id: sidePanelId,
-								resetKey: `${openList ?? ""}|${view.member ?? view.date ?? ""}`,
-								sections: listSections,
-							}}
-							onClose={roster.close}
-							onCloseCover={roster.closeCover}
-							onFindCover={editing ? roster.openCover : undefined}
-							onPreviewDays={roster.onPreviewDays}
-							onApplied={(change) => {
-								setApplied(change);
-								roster.close();
-							}}
-						/>
+						{panelFollowsGridHeight ? (
+							// The column takes the row's height (the grid's, at least 28rem) and the panel sits
+							// over it, so the hours summary follows the grid; the panel bounds itself to it.
+							<div className="relative w-full shrink-0 lg:min-h-112 lg:w-96">
+								<div className="lg:absolute lg:inset-0">{sidePanel}</div>
+							</div>
+						) : (
+							sidePanel
+						)}
 					</div>
 				</>
 			)}
