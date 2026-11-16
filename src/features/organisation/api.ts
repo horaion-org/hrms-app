@@ -310,6 +310,15 @@ export const companyMemberSchema = memberRefSchema.extend({
 export type CompanyMember = z.infer<typeof companyMemberSchema>;
 
 /**
+ * A person a role can be given to, with where they are filed when known, so
+ * two people with one name can be told apart in the picker.
+ */
+export type RoleRecipient = CompanyMember & {
+	branchName?: string | null;
+	departmentName?: string | null;
+};
+
+/**
  * Active company members from the colleagues directory (membership id,
  * display name, status only), for the heads picker and role recipients.
  * Any active member may read it, so a recipient need not belong to the

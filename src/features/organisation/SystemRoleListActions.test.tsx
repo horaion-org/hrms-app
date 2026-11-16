@@ -25,6 +25,7 @@ import { renderAuthApp } from "@/features/auth/testing";
 import { PERMISSION_KEYS } from "@/features/workspace/permissionKeys";
 
 const ROLES = "GET /api/v1/companies/c-1/access-roles";
+const PEOPLE = "GET /api/v1/companies/c-1/member-profiles";
 const ROLE_PATH = "/api/v1/companies/c-1/access-roles/r-2";
 const HOLDERS = `GET ${ROLE_PATH}/access-role-assignments`;
 const ASSIGNMENT_PATH = "/api/v1/companies/c-1/access-role-assignments/a-2";
@@ -54,6 +55,26 @@ const systemAdmin = (): Record<string, unknown> =>
 			(key) => key !== "access_role:assign_system_admin"
 		),
 	});
+
+/** An active person as the People list returns them, filed at Orchard › Kitchen. */
+const activePerson = (
+	membershipId: string,
+	displayName: string
+): Record<string, unknown> => ({
+	membershipId,
+	employeeCode: `EMP-${membershipId}`,
+	displayName,
+	email: `${membershipId}@example.com`,
+	phone: null,
+	branchId: "b-1",
+	branchName: "Orchard",
+	departmentId: "d-1",
+	departmentName: "Kitchen",
+	jobTitleId: null,
+	jobTitleName: null,
+	status: "ACTIVE",
+	invitationPending: false,
+});
 
 // The person testing is `m-c-1`, so the first holder is them.
 const holders = [
@@ -366,7 +387,7 @@ describe("Access role people", () => {
 				status: 200,
 				body: envelope({ content: [], page: { totalElements: 0 } }),
 			},
-			"GET /api/v1/companies/c-1/me/colleagues": {
+			[PEOPLE]: {
 				status: 200,
 				body: envelope({ content: [], page: { totalElements: 0 } }),
 			},
@@ -578,7 +599,6 @@ const spreadHolders = [
 	},
 ];
 
-const COLLEAGUES = "GET /api/v1/companies/c-1/me/colleagues";
 const ASSIGNMENTS = "/access-role-assignments";
 
 describe("Access role people, checked at each assignment's own place", () => {
@@ -586,7 +606,7 @@ describe("Access role people, checked at each assignment's own place", () => {
 		stubApi({
 			...routes(),
 			"GET /api/v1/me/workspace": kitchenAssigner(),
-			[COLLEAGUES]: {
+			[PEOPLE]: {
 				status: 200,
 				body: envelope({ content: [], page: { totalElements: 0 } }),
 			},
@@ -609,12 +629,10 @@ describe("Access role people, checked at each assignment's own place", () => {
 		const calls = stubApi({
 			...routes(role({ permissions: ["department:read"] })),
 			"GET /api/v1/me/workspace": kitchenAssigner(),
-			[COLLEAGUES]: {
+			[PEOPLE]: {
 				status: 200,
 				body: envelope({
-					content: [
-						{ membershipId: "m-5", displayName: "Alice Lim", status: "ACTIVE" },
-					],
+					content: [activePerson("m-5", "Alice Lim")],
 					page: { totalElements: 1 },
 				}),
 			},
@@ -635,10 +653,10 @@ describe("Access role people, checked at each assignment's own place", () => {
 		await userEvent.click(within(dialog).getByLabelText("Person"));
 		expect(
 			await screen.findByRole("option", { name: "Alice Lim" })
-		).toBeVisible();
+		).toHaveTextContent("Orchard › Kitchen");
 
-		// Recipients come from the colleagues directory; places never need the unit lists.
-		expect(calls.some((call) => call.path.endsWith("/me/colleagues"))).toBe(
+		// Recipients come from the People list; places never need the unit lists.
+		expect(calls.some((call) => call.path.endsWith("/member-profiles"))).toBe(
 			true
 		);
 		expect(
@@ -655,7 +673,7 @@ describe("Access role people, checked at each assignment's own place", () => {
 			...routes(),
 			"GET /api/v1/me/workspace": kitchenAssigner(),
 			[HOLDERS]: { status: 200, body: envelope(spreadHolders) },
-			[COLLEAGUES]: {
+			[PEOPLE]: {
 				status: 200,
 				body: envelope({ content: [], page: { totalElements: 0 } }),
 			},
@@ -727,7 +745,7 @@ describe("Access role people, checked at each assignment's own place", () => {
 	it("says how many changes failed when only some did, keeping the dialog open (F12)", async () => {
 		const calls = stubApi({
 			...routes(),
-			[COLLEAGUES]: {
+			[PEOPLE]: {
 				status: 200,
 				body: envelope({ content: [], page: { totalElements: 0 } }),
 			},
@@ -789,15 +807,15 @@ describe("Company roles and access previews in the assign dialog", () => {
 		kind: "COMPANY",
 		permissions: ["branch:read", "branch:create"],
 	});
-	const noColleagues = {
-		[COLLEAGUES]: {
+	const noPeople = {
+		[PEOPLE]: {
 			status: 200,
 			body: envelope({ content: [], page: { totalElements: 0 } }),
 		},
 	};
 
 	it("offers a company role only at the whole company", async () => {
-		stubApi({ ...routes(companyRole), ...noColleagues });
+		stubApi({ ...routes(companyRole), ...noPeople });
 		app = await openApp("/settings/access-roles/r-2?tab=people");
 		renderAuthApp(app);
 
@@ -815,7 +833,7 @@ describe("Company roles and access previews in the assign dialog", () => {
 	it("says a company role can't be given by someone who can't assign at the whole company", async () => {
 		stubApi({
 			...routes(companyRole),
-			...noColleagues,
+			...noPeople,
 			"GET /api/v1/me/workspace": kitchenAssigner(),
 		});
 		app = await openApp("/settings/access-roles/r-2?tab=people");
@@ -878,7 +896,7 @@ describe("Company roles and access previews in the assign dialog", () => {
 		});
 		const calls = stubApi({
 			...routes(manager),
-			...noColleagues,
+			...noPeople,
 			[ROLES]: {
 				status: 200,
 				body: envelope({

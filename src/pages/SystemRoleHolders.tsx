@@ -31,7 +31,7 @@ import {
 	useAccessRoleHolders,
 	useChangeAccessRoleHolders,
 } from "@/features/organisation/useAccessRoleHolders";
-import { useCompanyMemberSearch } from "@/features/organisation/useCompanyMemberSearch";
+import { useActivePeopleSearch } from "@/features/people/useActivePeopleSearch";
 import { useMemberRoles } from "@/features/people/useMemberRoles";
 import { workspaceQuery } from "@/features/workspace/api";
 import { isPermissionKey } from "@/features/workspace/permissionKeys";
@@ -68,8 +68,8 @@ const changeablePart = (
 /**
  * The assign dialog with its people search and the places a role can apply;
  * mounted only while open. Given one role, that role is assigned; given
- * several, the person chooses. Recipients come from the colleagues directory
- * (any active company member, whatever their Branch or Department); places
+ * several, the person chooses. Recipients come from the People list (any
+ * active member, shown with their Branch and Department); places
  * come from the workspace, only where the person holds `access_role:assign`.
  * Given `editing`, it changes where that person already has the role,
  * starting from their current assignments as last loaded: places newly
@@ -93,7 +93,7 @@ export const AssignSystemRole = ({
 	const [query, setQuery] = useState("");
 	const [recipient, setRecipient] = useState(editing?.membershipId ?? "");
 	const held = useMemberRoles(companyId, recipient);
-	const people = useCompanyMemberSearch(companyId, query);
+	const people = useActivePeopleSearch(companyId, query);
 	const { data: workspace } = useQuery({ ...workspaceQuery, retry });
 	const change = useChangeAccessRoleHolders(companyId);
 	const onlyRole = roles.length === 1 ? roles[0] : undefined;

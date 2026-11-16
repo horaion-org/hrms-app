@@ -2096,6 +2096,7 @@
 					"personPlaceholder": "Select a person",
 					"searchPlaceholder": "Search people",
 					"noResults": "No active members found.",
+					"noDepartment": "No department",
 					"places": "Applies to",
 					"placesPlaceholder": "Select where it applies",
 					"placesSearch": "Search branches and departments",

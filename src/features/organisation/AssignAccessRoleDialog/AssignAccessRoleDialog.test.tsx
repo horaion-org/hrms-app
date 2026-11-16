@@ -66,6 +66,49 @@ const describedRows = (container: HTMLElement): Array<string> =>
 		);
 
 describe("AssignAccessRoleDialog", () => {
+	it("tells two people with the same name apart by their branch and department", async () => {
+		const user = userEvent.setup();
+		render(
+			<I18nextProvider i18n={authTestI18n}>
+				<AssignAccessRoleDialog
+					query=""
+					roles={roles}
+					targets={targets}
+					people={[
+						{
+							membershipId: "m-3",
+							displayName: "Wei Ling",
+							status: "ACTIVE",
+							branchName: "Orchard",
+							departmentName: "Kitchen",
+						},
+						{
+							membershipId: "m-4",
+							displayName: "Wei Ling",
+							status: "ACTIVE",
+							branchName: "Tampines",
+							departmentName: "Service",
+						},
+						{ membershipId: "m-5", displayName: "Jo Tan", status: "ACTIVE" },
+					]}
+					onAssign={vi.fn()}
+					onClose={vi.fn()}
+					onQueryChange={vi.fn()}
+				/>
+			</I18nextProvider>
+		);
+
+		await user.click(await screen.findByLabelText("Person"));
+
+		expect(
+			(await screen.findAllByRole("option")).map((option) => option.textContent)
+		).toEqual([
+			"Wei LingOrchard › Kitchen",
+			"Wei LingTampines › Service",
+			"Jo TanNo department",
+		]);
+	});
+
 	it("shows what the chosen role allows and assigns it to a person at several places", async () => {
 		const user = userEvent.setup();
 		const onAssign = vi.fn();
