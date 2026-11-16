@@ -626,32 +626,36 @@ describe("Scheduling's tabs", () => {
 		).toEqual(["branchId=b-1"]);
 	});
 
-	it("given_scheduleRead_when_constraintsShown_then_thePageReadsStaffingAndARuleNobodyCanMeetNeedsAttention", async () => {
+	it("given_jobTitleRead_when_constraintsShown_then_aLiveRuleAskingMoreThanHoldItsTitlesNeedsAttention", async () => {
+		/** A Kitchen job title held by `holderCount` people, as the job titles list answers it. */
+		const jobTitle = (jobTitleId: string, holderCount: number): unknown => ({
+			jobTitleId,
+			branchId: "b-1",
+			branchName: "Orchard",
+			departmentId: "d-1",
+			departmentName: "Kitchen",
+			name: jobTitleId,
+			description: null,
+			status: "ACTIVE",
+			holderCount,
+		});
 		const calls = await openScheduling(
-			companyWideWorkspace(["schedule:read", "constraint:read"]),
+			companyWideWorkspace([
+				"schedule:read",
+				"constraint:read",
+				"job_title:read",
+			]),
 			"/scheduling?view=constraints",
 			{
-				[`GET ${SCHEDULES_PATH}/staffing`]: {
+				// Morning cover asks for at least 2 of these; only 1 person holds either.
+				[`GET /api/v1/companies/c-1/job-titles`]: {
 					status: 200,
 					body: envelope({
-						from: "2026-11-16",
-						to: "2026-11-16",
-						rules: [
-							{
-								departmentId: kitchenCover.departmentId,
-								departmentName: "Kitchen",
-								branchName: "Orchard",
-								ruleName: kitchenCover.name,
-								ruleType: "SHIFT_STAFFING",
-								headcount: 3,
-								jobTitles: [{ jobTitleId: "jt-1", name: "Cook" }],
-								peopleWithTitles: 2,
-								shifts: [],
-								gapsInRange: 0,
-								neededShiftDaysAWeek: 21,
-								holderDaysAWeek: null,
-							},
+						content: [
+							jobTitle("front-desk-lead", 1),
+							jobTitle("front-desk-staff", 0),
 						],
+						page: { totalElements: 2 },
 					}),
 				},
 			}
@@ -661,20 +665,22 @@ describe("Scheduling's tabs", () => {
 		await waitFor(() => {
 			expect(within(row).getByText("Needs attention")).toBeVisible();
 		});
+		// The check reads the live rule, never the generated rosters' staffing read.
 		expect(
 			calls.some((call) => call.path === `${SCHEDULES_PATH}/staffing`)
-		).toBe(true);
+		).toBe(false);
 	});
 
-	it("given_noScheduleRead_when_constraintsShown_then_readsNoStaffing", async () => {
+	it("given_noJobTitleRead_when_constraintsShown_then_flagsNothingForCapacity", async () => {
 		const calls = await openScheduling(
 			companyWideWorkspace(["constraint:read"]),
 			"/scheduling?view=constraints"
 		);
 
-		await screen.findByRole("listitem", { name: /Morning cover/ });
+		const row = await screen.findByRole("listitem", { name: /Morning cover/ });
+		expect(within(row).queryByText("Needs attention")).toBeNull();
 		expect(
-			calls.some((call) => call.path === `${SCHEDULES_PATH}/staffing`)
+			calls.some((call) => call.path === "/api/v1/companies/c-1/job-titles")
 		).toBe(false);
 	});
 

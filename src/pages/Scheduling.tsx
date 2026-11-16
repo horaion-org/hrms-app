@@ -1,10 +1,8 @@
 import { getRouteApi } from "@tanstack/react-router";
-import dayjs from "dayjs";
 import { useEffect, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from "@/components/ui/Tabs";
-import { useStaffing } from "@/features/dashboard/useDashboardReads";
 import { ConstraintsTab } from "@/features/scheduling/constraints/ConstraintsTab";
 import { SchedulesTab } from "@/features/scheduling/SchedulesTab";
 import { SCHEDULING_UNIT_RULES } from "@/features/scheduling/schedules/schedulesUnitRules";
@@ -17,7 +15,6 @@ import {
 } from "@/features/scheduling/schedulingSearch";
 import { ShiftsTab } from "@/features/scheduling/shifts/ShiftsTab";
 import { unitSelectionOf } from "@/features/workspace/unitSearch";
-import { selectedUnits } from "@/features/workspace/unitSelection";
 import { useAccess } from "@/features/workspace/useAccess";
 import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 import { useUnitSelection } from "@/features/workspace/useUnitSelection";
@@ -77,29 +74,10 @@ export const Scheduling = (): FunctionComponent => {
 	};
 	// Set while the wizard waits for a department to be set up here.
 	const returnTo = returnLinkOf(search);
-	// The staffing read, where schedule:read is held, while Shifts or Constraints is shown: both flag a rule
-	// asking for more people than hold its job titles. Today's answer is enough.
-	const today = dayjs().format("YYYY-MM-DD");
-	const staffing = useStaffing(
-		companyId,
-		selectedUnits(units),
-		{ from: today, to: today },
-		view === "shifts" || view === "constraints"
-	);
-	const staffingRules =
-		staffing.status === "ready" ? staffing.data : undefined;
 	const panels: Record<SchedulingView, ReactNode> = {
 		schedules: <SchedulesTab {...tab} />,
-		shifts: (
-			<ShiftsTab {...tab} returnTo={returnTo} staffingRules={staffingRules} />
-		),
-		constraints: (
-			<ConstraintsTab
-				{...tab}
-				returnTo={returnTo}
-				staffingRules={staffingRules}
-			/>
-		),
+		shifts: <ShiftsTab {...tab} returnTo={returnTo} />,
+		constraints: <ConstraintsTab {...tab} returnTo={returnTo} />,
 	};
 
 	return (

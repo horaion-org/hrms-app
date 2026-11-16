@@ -16,11 +16,10 @@ import type {
 	DepartmentConstraint,
 } from "@/features/scheduling/constraints/api";
 import {
-	capacityKeyOf,
-	capacityProblemsOf,
+	capacityProblemOf,
 	type CapacityProblem,
-	type StaffingRuleFacts,
 } from "@/features/scheduling/constraints/capacityProblems";
+import { useJobTitleHolders } from "@/features/scheduling/constraints/useJobTitleHolders";
 import { ConstraintDialog } from "@/features/scheduling/constraints/ConstraintDialog";
 import { typeGroupsOf } from "@/features/scheduling/constraints/ConstraintDialog/typeGroups";
 import { deleteConstraintRefusal } from "@/features/scheduling/constraints/constraintRefusal";
@@ -121,11 +120,6 @@ export type ConstraintsTabProps = {
 	onDepartmentChange: (department: string | undefined) => void;
 	/** The way back into the wizard, when the wizard sent the person here to set a department up. */
 	returnTo?: ReturnLink;
-	/**
-	 * The staffing read's rules, passed by the page where schedules may be
-	 * read; left out, no rule is flagged as one nobody can meet.
-	 */
-	staffingRules?: ReadonlyArray<StaffingRuleFacts>;
 };
 
 /**
@@ -142,7 +136,6 @@ export const ConstraintsTab = ({
 	units,
 	onDepartmentChange,
 	returnTo,
-	staffingRules,
 }: ConstraintsTabProps): FunctionComponent => {
 	const { t } = useTranslation();
 	const key = "scheduling.constraintsTab";
@@ -170,6 +163,7 @@ export const ConstraintsTab = ({
 		);
 	const { data: workspace } = useQuery({ ...workspaceQuery, retry });
 	const list = useConstraintsInUnits(companyId, units);
+	const holders = useJobTitleHolders(companyId, units);
 	const readiness = useSchedulingReadiness(companyId, selectedUnits(units));
 	const actions = useConstraintActions(companyId);
 	const [search, setSearch] = useState("");
@@ -236,14 +230,11 @@ export const ConstraintsTab = ({
 		}
 	);
 
-	// A staffing rule that can never be met, where the page passes the staffing read.
-	const capacity = capacityProblemsOf(staffingRules ?? []);
+	// A staffing rule that can never be met: the live rule against who holds its job titles now.
 	const capacityOf = (
 		constraint: DepartmentConstraint
 	): CapacityProblem | undefined =>
-		constraint.departmentId === null
-			? undefined
-			: capacity.get(capacityKeyOf(constraint.departmentId, constraint.name));
+		holders && capacityProblemOf(constraint, holders);
 	const needsFixing = (constraint: DepartmentConstraint): boolean =>
 		needsAttention(constraint.values) || capacityOf(constraint) !== undefined;
 	const listTypes =

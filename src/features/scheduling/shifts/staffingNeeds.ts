@@ -3,7 +3,7 @@ import type { DepartmentConstraint } from "@/features/scheduling/constraints/api
 /** What one staffing constraint asks of a shift: how many people, as which job titles, and how firmly. */
 export type ShiftNeed = {
 	constraintId: string;
-	/** The constraint's name and Department, to match it to the staffing read. */
+	/** The constraint's name and Department. */
 	name: string;
 	departmentId: string | null;
 	/** At least, at most or exactly; at least when the constraint names none. */

@@ -9,11 +9,10 @@ import { placeOf } from "@/features/organisation/assignmentTargets";
 import { ListToolbar } from "@/features/organisation/ListToolbar";
 import { constraintsQuery } from "@/features/scheduling/constraints/api";
 import {
-	capacityKeyOf,
-	capacityProblemsOf,
+	capacityProblemOf,
 	type CapacityProblem,
-	type StaffingRuleFacts,
 } from "@/features/scheduling/constraints/capacityProblems";
+import { useJobTitleHolders } from "@/features/scheduling/constraints/useJobTitleHolders";
 import { useConstraintsInUnits } from "@/features/scheduling/constraints/useConstraintsInUnits";
 import { departmentUnitOf } from "@/features/scheduling/departmentUnit";
 import { ReadinessCallout } from "@/features/scheduling/readiness/ReadinessCallout";
@@ -100,11 +99,6 @@ export type ShiftsTabProps = {
 	onDepartmentChange: (department: string | undefined) => void;
 	/** The way back into the wizard, when the wizard sent the person here to set a department up. */
 	returnTo?: ReturnLink;
-	/**
-	 * The staffing read's rules, passed by the page where schedules may be
-	 * read; left out, no rule is flagged as one nobody can meet.
-	 */
-	staffingRules?: ReadonlyArray<StaffingRuleFacts>;
 };
 
 /**
@@ -117,7 +111,6 @@ export const ShiftsTab = ({
 	units,
 	onDepartmentChange,
 	returnTo,
-	staffingRules,
 }: ShiftsTabProps): FunctionComponent => {
 	const { t } = useTranslation();
 	const key = "scheduling.shiftsTab";
@@ -151,19 +144,24 @@ export const ShiftsTab = ({
 			? list.items.filter((shift) => matches(shift, search))
 			: [];
 	// What the staffing constraints ask of each shift, where constraints may be read; why one can never be met,
-	// where the page passes the staffing read. Without either the column or the warning is left out.
+	// where job titles may be read. Without either the column or the warning is left out.
 	const constraints = useConstraintsInUnits(companyId, units);
-	const capacity = staffingRules && capacityProblemsOf(staffingRules);
+	const holders = useJobTitleHolders(companyId, units);
+	// A need's warning reads its own live constraint, found by id, against who holds its job titles now.
+	const capacityOf = (need: ShiftNeed): CapacityProblem | undefined => {
+		const constraint =
+			constraints.status === "ready"
+				? constraints.items.find(
+						(each) => each.constraintId === need.constraintId
+					)
+				: undefined;
+		return constraint && holders && capacityProblemOf(constraint, holders);
+	};
 	const needs: ShiftTableNeeds | undefined =
 		constraints.status === "ready"
 			? {
 					byShift: staffingNeedsByShift(constraints.items),
-					capacityOf: capacity
-						? (need: ShiftNeed): CapacityProblem | undefined =>
-								need.departmentId === null
-									? undefined
-									: capacity.get(capacityKeyOf(need.departmentId, need.name))
-						: undefined,
+					capacityOf: holders ? capacityOf : undefined,
 				}
 			: undefined;
 	// The Branch is the header's scope; the Department is the one filter.
