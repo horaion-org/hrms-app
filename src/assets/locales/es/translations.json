@@ -5084,7 +5084,6 @@
 				"changedWeek_one": "{{week}} ({{count}} fuera)",
 				"changedWeek_other": "{{week}} ({{count}} fuera)",
 				"choosePerWeek": "Elegir por semana",
-				"allSet": "Cada semana de {{month}} ya tiene un horario, así que no hay nada que generar. Elige otro mes o abre {{month}} desde Programación para cambiar sus semanas.",
 				"savedDraft": "{{week}} está guardada como borrador; cambia lo que usa en su propia página."
 			},
 			"regenerate": {
