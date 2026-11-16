@@ -3,6 +3,10 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import {
+	mayAssignRole,
+	whoCanAssign,
+} from "@/features/organisation/accessRoleReadOnly";
 import { placeLabels } from "@/features/organisation/accessSummary";
 import {
 	AccessRoleAssignments,
@@ -175,9 +179,10 @@ export type SystemRoleHoldersProps = {
 
 /**
  * What a system role allows, then who has it and where, with assigning,
- * editing and removing for those who may. The Company Owner role is listed
- * but never assigned or changed here: ownership moves only through its own
- * transfer.
+ * editing and removing for those who may: the System Owner or a System Admin
+ * for a custom role, the System Owner alone for the System Admin role. The
+ * System Owner role is listed but never assigned or changed. Anyone else sees
+ * the holders read-only, with one sentence saying who can change them.
  */
 export const SystemRoleHolders = ({
 	role,
@@ -195,11 +200,11 @@ export const SystemRoleHolders = ({
 		switching?.status === "ACTIVE" ? "deactivate" : "activate"
 	}` as const;
 	const active = role.status === "ACTIVE";
-	// Assignment changes are checked per assignment, at its own place; the Owner role never changes here.
-	const canManage = !role.protectedRole;
+	// Who may change this role's holders (API ADR-0108); each assignment is still checked at its own place.
+	const canManage = mayAssignRole(role, access);
 	const canChangePerson = (person: AccessRolePerson): boolean =>
 		canManage && person.places.some(changeableAt(access.can));
-	const canAssign = canManage && access.canAnywhere("access_role:assign");
+	const canAssign = canManage;
 	const closeConfirm = (): void => {
 		change.reset();
 		setRemoving(undefined);
@@ -215,6 +220,11 @@ export const SystemRoleHolders = ({
 			{!active && (
 				<p className="mt-6 text-sm font-semibold text-neutral-900">
 					{t(`${key}.inactive`)}
+				</p>
+			)}
+			{!canManage && (
+				<p className="mt-6 text-sm text-neutral-700">
+					{t(`${key}.whoCanChange.${whoCanAssign(role)}`)}
 				</p>
 			)}
 			{!holders && (

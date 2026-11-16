@@ -2050,6 +2050,11 @@
 				},
 				"loadFailed": "No pudimos cargar quién tiene este rol.",
 				"inactive": "Este rol está inactivo, así que las personas de abajo no tienen sus permisos hasta que se vuelva a activar.",
+				"whoCanChange": {
+					"SYSTEM_OWNER": "El rol Propietario del sistema se queda con la persona que lo tiene.",
+					"SYSTEM_ADMIN": "Solo el Propietario del sistema puede dar o quitar el rol Administrador del sistema.",
+					"CUSTOM": "Solo el Propietario del sistema o un Administrador del sistema pueden dar, cambiar o quitar roles de acceso."
+				},
 				"removeFailed": "No pudimos quitarle el rol a esa persona. Inténtalo de nuevo.",
 				"partial": "No se pudieron hacer {{failed}} de {{total}} cambios; los demás se guardaron. {{reason}}",
 				"remove": {
@@ -2079,7 +2084,7 @@
 				"unavailable": "Solo puedes dar a un rol los permisos que tienes tú, así que los demás no están disponibles.",
 				"scope": "Dónde se aplica este rol se elige al asignarlo a una persona.",
 				"fullAccess": "Acceso completo",
-				"protected": "El rol Propietario de la empresa siempre tiene todos los permisos y no se puede cambiar.",
+				"protected": "Este rol viene incluido: siempre tiene acceso completo y no se puede cambiar.",
 				"viewOnly": "No tienes permiso para cambiar los roles de acceso.",
 				"locked": "Este rol incluye permisos que no tienes, así que no puedes cambiarlo.",
 				"name": "Nombre del rol",

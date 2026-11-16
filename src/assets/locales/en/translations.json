@@ -2118,6 +2118,11 @@
 				},
 				"loadFailed": "We couldn’t load who holds this role.",
 				"inactive": "This role is inactive, so the people below don’t have its permissions until it is activated again.",
+				"whoCanChange": {
+					"SYSTEM_OWNER": "The System Owner role stays with the person who holds it.",
+					"SYSTEM_ADMIN": "Only the System Owner can give or remove the System Admin role.",
+					"CUSTOM": "Only the System Owner or a System Admin can give, change or remove access roles."
+				},
 				"removeFailed": "We couldn’t remove the role from that person. Try again.",
 				"partial": "{{failed}} of {{total}} changes couldn’t be made; the others were saved. {{reason}}",
 				"remove": {
@@ -2170,7 +2175,7 @@
 				"unavailable": "You can only give a role permissions you hold yourself, so the others are unavailable.",
 				"scope": "Where this role applies is chosen when you assign it to a person.",
 				"fullAccess": "Full access",
-				"protected": "The Company Owner role always has every permission and can’t be changed.",
+				"protected": "This role is built in: it always has full access and can’t be changed.",
 				"viewOnly": "You don’t have permission to change access roles.",
 				"locked": "This role includes permissions you don’t hold, so you can’t change it.",
 				"name": "Role name",

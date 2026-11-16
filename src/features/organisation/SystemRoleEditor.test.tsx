@@ -484,7 +484,7 @@ describe("Access role editor, read-only", () => {
 
 		expect(
 			await screen.findByText(
-				"The Company Owner role always has every permission and can’t be changed."
+				"This role is built in: it always has full access and can’t be changed."
 			)
 		).toBeVisible();
 		expectReadOnly();

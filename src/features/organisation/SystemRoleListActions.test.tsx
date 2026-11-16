@@ -43,6 +43,18 @@ const role = (
 	...overrides,
 });
 
+/** The System Admin role as the API lists it: built in, company-wide, every key but the owner-only one. */
+const systemAdmin = (): Record<string, unknown> =>
+	role({
+		name: "System Admin",
+		protectedRole: true,
+		protectedRoleType: "SYSTEM_ADMIN",
+		kind: "COMPANY",
+		permissions: PERMISSION_KEYS.filter(
+			(key) => key !== "access_role:assign_system_admin"
+		),
+	});
+
 // The person testing is `m-c-1`, so the first holder is them.
 const holders = [
 	{
@@ -464,6 +476,60 @@ describe("Access role people", () => {
 			)
 		).toBeVisible();
 		expect(screen.getByText("Inactive")).toBeVisible();
+		expect(
+			screen.queryByRole("button", { name: "Assign role" })
+		).not.toBeInTheDocument();
+	});
+
+	it("shows the holders read-only to a reader who can't assign, saying who can", async () => {
+		stubApi(
+			routes(role(), ["access_role:read", "branch:read", "department:read"])
+		);
+		app = await openApp("/settings/access-roles/r-2?tab=people");
+		renderAuthApp(app);
+
+		expect(
+			await screen.findByText(
+				"Only the System Owner or a System Admin can give, change or remove access roles."
+			)
+		).toBeVisible();
+		expect(
+			screen.queryByRole("button", { name: "Assign role" })
+		).not.toBeInTheDocument();
+	});
+
+	it("lets the System Owner give the System Admin role", async () => {
+		stubApi(routes(systemAdmin()));
+		app = await openApp("/settings/access-roles/r-2?tab=people");
+		renderAuthApp(app);
+
+		expect(
+			await screen.findByRole("button", { name: "Assign role" })
+		).toBeVisible();
+		expect(
+			screen.queryByText(
+				"Only the System Owner can give or remove the System Admin role."
+			)
+		).not.toBeInTheDocument();
+	});
+
+	it("shows a System Admin the System Admin role's holders read-only, saying only the System Owner can change them", async () => {
+		stubApi(
+			routes(
+				systemAdmin(),
+				PERMISSION_KEYS.filter(
+					(key) => key !== "access_role:assign_system_admin"
+				)
+			)
+		);
+		app = await openApp("/settings/access-roles/r-2?tab=people");
+		renderAuthApp(app);
+
+		expect(
+			await screen.findByText(
+				"Only the System Owner can give or remove the System Admin role."
+			)
+		).toBeVisible();
 		expect(
 			screen.queryByRole("button", { name: "Assign role" })
 		).not.toBeInTheDocument();

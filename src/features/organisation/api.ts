@@ -225,7 +225,12 @@ const accessRoleSchema = z.object({
 	accessRoleId: z.string(),
 	name: z.string(),
 	protectedRole: z.boolean(),
-	/** The Company Owner role is a company role, and its kind never changes. */
+	/**
+	 * Which built-in role a protected role is (API ADR-0108); null for a
+	 * custom role, absent from an API older than the field.
+	 */
+	protectedRoleType: z.enum(["SYSTEM_OWNER", "SYSTEM_ADMIN"]).nullish(),
+	/** The System Owner and System Admin roles are company roles, and their kind never changes. */
 	kind: accessRoleKindSchema,
 	/** An inactive role stays assigned but grants nothing until it is activated again. */
 	status: unitStatusSchema,
@@ -235,7 +240,7 @@ const accessRoleSchema = z.object({
 	/**
 	 * When the role's permissions were last saved, changed or not (API
 	 * ADR-0101): keys that reached the app after it are new to the role.
-	 * Null for the owner role; absent from an API older than the field.
+	 * Null for the System Owner and System Admin roles; absent from an API older than the field.
 	 */
 	permissionsReviewedAt: z.iso.datetime({ offset: true }).nullish(),
 });
