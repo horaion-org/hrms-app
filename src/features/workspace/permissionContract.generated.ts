@@ -3,7 +3,7 @@
 
 /** SHA-256 of the contract file this module was generated from. */
 export const PERMISSION_CONTRACT_SHA256 =
-	"30c3ac0ea5f81b932d916840b18afa8008add48c7f0617010c34dff2cbea4707";
+	"118408cfa0f4d16ca84fcdf62acc0fab08955cea6825e056701e67cce24e3e3d";
 
 /** The places a permission can be assigned at, widest first. */
 export const ASSIGNABLE_SCOPES = ["COMPANY", "BRANCH", "DEPARTMENT"] as const;
@@ -883,6 +883,7 @@ export const ROLE_TEMPLATES = [
 			"job_title:read",
 			"member_profile:read",
 			"work_availability:read",
+			"shift_preference:read",
 			"member_employment_terms:read",
 			"leave_duration:read",
 			"schedule:read",

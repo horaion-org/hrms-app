@@ -1291,6 +1291,7 @@
         "job_title:read",
         "member_profile:read",
         "work_availability:read",
+        "shift_preference:read",
         "member_employment_terms:read",
         "leave_duration:read",
         "schedule:read",
