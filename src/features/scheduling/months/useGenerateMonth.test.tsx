@@ -56,9 +56,10 @@ const lists = (): Record<string, StubReply> => ({
 	[`POST ${GENERATION}`]: ok(monthGenerationFixture()),
 });
 
-/** The hook for Kitchen's December, holding `permissions` company-wide. */
+/** The hook for Kitchen's December, holding `permissions` company-wide, generating `chosenWeeks` when given. */
 const generateFor = (
-	permissions: Array<string>
+	permissions: Array<string>,
+	chosenWeeks?: Array<string>
 ): ReturnType<
 	typeof renderHook<ReturnType<typeof useGenerateMonth>, unknown>
 > => {
@@ -81,9 +82,10 @@ const generateFor = (
 			)}
 		</QueryClientProvider>
 	);
-	return renderHook(() => useGenerateMonth("c-1", ungeneratedMonthFixture()), {
-		wrapper,
-	});
+	return renderHook(
+		() => useGenerateMonth("c-1", ungeneratedMonthFixture(), chosenWeeks),
+		{ wrapper }
+	);
 };
 
 describe("useGenerateMonth", () => {
@@ -177,6 +179,44 @@ describe("useGenerateMonth", () => {
 			expect(result.current?.block).toBe("listsHidden");
 		});
 	});
+
+	it("given_chosenWeeksWithoutAWeekToCreate_when_read_then_notBlockedForCannotCreate", async () => {
+		stubApi(lists());
+		const { result } = generateFor(
+			["schedule:generate", "shift:read", "constraint:read"],
+			[]
+		);
+
+		await waitFor(() => {
+			expect(result.current?.block).toBeUndefined();
+		});
+	});
+
+	it(
+		"given_chosenWeeks_when_generated_then_postsOnlyThoseWeeks",
+		{ timeout: 15_000 },
+		async () => {
+			const calls = stubApi(lists());
+			const { result } = generateFor(EVERY_KEY, ["2026-12-21", "2026-12-07"]);
+			await waitFor(() => {
+				expect(calls.filter((call) => call.method === "GET")).toHaveLength(2);
+			});
+
+			await act(async () => {
+				await result.current.generate();
+			});
+
+			const body = calls.find((call) => call.method === "POST")?.body as {
+				weeks: Array<string>;
+				newWeeks: Array<{ periodStart: string }>;
+			};
+			expect(body.weeks).toEqual(["2026-12-07", "2026-12-21"]);
+			expect(body.newWeeks.map((week) => week.periodStart)).toEqual([
+				"2026-12-07",
+				"2026-12-21",
+			]);
+		}
+	);
 
 	it("given_noScheduleCreate_when_read_then_blockedForCannotCreate", async () => {
 		stubApi(lists());

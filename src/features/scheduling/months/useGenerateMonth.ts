@@ -7,6 +7,7 @@ import {
 	type ScheduleMonth,
 } from "@/features/scheduling/months/api";
 import {
+	coveredMondaysOf,
 	generateMonthBody,
 	MONTH_SETUP_DEFAULTS,
 	type MonthChoices,
@@ -42,15 +43,17 @@ export type GenerateMonth = {
 
 /**
  * Generates one Department's month through the month route: every Generate
- * and Regenerate in the app goes through here. "Everything" for a week the
- * run creates is the week wizard's `allOf` over the Department's live shifts
- * and constraints, read as the wizard reads them (only where `shift:read`
- * and `constraint:read` are held there). After the post, every scheduling
- * query reloads, as after any schedule write.
+ * and Regenerate in the app goes through here. It generates `chosenWeeks`
+ * (Mondays), or every covered week when none are given. "Everything" for a
+ * week the run creates is the week wizard's `allOf` over the Department's
+ * live shifts and constraints, read as the wizard reads them (only where
+ * `shift:read` and `constraint:read` are held there). After the post, every
+ * scheduling query reloads, as after any schedule write.
  */
 export const useGenerateMonth = (
 	companyId: string,
-	scheduleMonth: ScheduleMonth | undefined
+	scheduleMonth: ScheduleMonth | undefined,
+	chosenWeeks?: ReadonlyArray<string>
 ): GenerateMonth => {
 	const access = useAccess();
 	const unit = scheduleMonth && {
@@ -82,8 +85,11 @@ export const useGenerateMonth = (
 			generateMonth(companyId, month.departmentId, month.month, body),
 		onSettled: reload,
 	});
+	const chosen =
+		chosenWeeks ?? (scheduleMonth ? coveredMondaysOf(scheduleMonth) : []);
 	const createsWeeks =
-		scheduleMonth !== undefined && weeksToCreate(scheduleMonth).length > 0;
+		scheduleMonth !== undefined &&
+		weeksToCreate(scheduleMonth, chosen).length > 0;
 	const block: GenerateBlock | undefined = !createsWeeks
 		? undefined
 		: access.status !== "ready"
@@ -107,7 +113,8 @@ export const useGenerateMonth = (
 					scheduleMonth,
 					input.choices ?? {},
 					everything,
-					input.setup ?? MONTH_SETUP_DEFAULTS
+					input.setup ?? MONTH_SETUP_DEFAULTS,
+					chosen
 				),
 			});
 		},
