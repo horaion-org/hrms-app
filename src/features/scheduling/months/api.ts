@@ -76,6 +76,8 @@ export const scheduleMonthSchema = z.object({
 	departmentName: z.string(),
 	branchId: z.string(),
 	branchName: z.string(),
+	/** The branch's IANA time zone, whose today decides which weeks have passed; absent from an older API. */
+	timeZone: z.string().nullish(),
 	weeks: z.array(monthWeekSchema),
 });
 

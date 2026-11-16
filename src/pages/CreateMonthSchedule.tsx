@@ -54,6 +54,7 @@ import {
 } from "@/features/scheduling/months/weekTicks";
 import { withRefusedWeeks } from "@/features/scheduling/months/refusedWeeksState";
 import { useGenerateMonth } from "@/features/scheduling/months/useGenerateMonth";
+import { isoDateIn } from "@/features/scheduling/roster/roster";
 import {
 	MonthSetupStep,
 	type MonthSetupValues,
@@ -283,8 +284,13 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 			todayIso,
 			summaries.data.filter((summary) => summary.departmentId === departmentId)
 		);
+	// "Started" follows the branch's today, as the API's "over" does; the browser's date only without its time zone.
+	const branchToday = scheduleMonth.data?.timeZone
+		? isoDateIn(scheduleMonth.data.timeZone, today)
+		: todayIso;
 	const tickable =
-		scheduleMonth.data && tickableWeeksOf(scheduleMonth.data.weeks, todayIso);
+		scheduleMonth.data &&
+		tickableWeeksOf(scheduleMonth.data.weeks, branchToday);
 	// What is ticked, of the weeks that can still be ticked: the manager's ticks, or the defaults.
 	// The month is read again while the wizard is open; Generate names what changed since Setup.
 	const chosenNow = chosenWeeksNow(

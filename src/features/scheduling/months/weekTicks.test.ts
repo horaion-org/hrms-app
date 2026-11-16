@@ -66,6 +66,13 @@ describe("tickableWeekOf", () => {
 		).toMatchObject({ look: "OVER", canTick: false, tickedByDefault: false });
 	});
 
+	it("given_theApiStillGeneratesAWeekTheBrowserThinksIsOver_when_read_then_theApiDecides", () => {
+		// The browser is a day ahead of the branch: its today is the Monday after the week.
+		expect(
+			tickableWeekOf(weekOf("2026-11-09", "NOT_GENERATED", true), "2026-11-16")
+		).toMatchObject({ look: "STARTED", canTick: true });
+	});
+
 	it("given_aWeekOfAnUnknownState_when_read_then_locked", () => {
 		expect(
 			tickableWeekOf(weekOf(NEXT_MONDAY, "UNKNOWN", true), TODAY)

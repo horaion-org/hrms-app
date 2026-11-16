@@ -10,10 +10,11 @@ import { weekStateTones } from "@/features/scheduling/months/weekStateLooks";
 
 /*
  * Which weeks of a month the manager may tick on Setup, and which start
- * ticked, pure. Dates are ISO strings ("YYYY-MM-DD"), `today` included. The
- * API says which weeks a run may generate (`includedInMonthGeneration`, in
- * the branch's time zone); a month summary has no flag, so there a week is
- * over once its Sunday is before today.
+ * ticked, pure. Dates are ISO strings ("YYYY-MM-DD"), `today` included: the
+ * branch's today where the page knows the branch's time zone. The API says
+ * which weeks a run may generate (`includedInMonthGeneration`, in the
+ * branch's time zone), so its flag decides when a week is over; a month
+ * summary has no flag, so there a week is over once its Sunday is before today.
  */
 
 /** How a week looks in the list: its state, or over, or started. */
@@ -80,8 +81,9 @@ const tickRuleOf = (
 ): TickRule => {
 	if (week.state === "PUBLISHED" || week.state === "GENERATING")
 		return locked(week.state);
-	if (week.includedInMonthGeneration === false || periodEnd < today)
-		return locked("OVER");
+	// Published and generating weeks are named above; any other week the API leaves out is over.
+	const open = week.includedInMonthGeneration ?? periodEnd >= today;
+	if (!open) return locked("OVER");
 	if (week.state === "UNKNOWN") return locked("UNKNOWN");
 	if (week.state === "TO_REVIEW" || week.state === "TENTATIVE")
 		return untickedWithNote(week.state, "rosterWaiting");
