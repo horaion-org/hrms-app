@@ -424,6 +424,10 @@ const constraintFieldSpecSchema = z.object({
 	listsSomeOf: z.array(constraintFieldSchema).catch([]),
 	/** No value may also be a chosen value of this field (a stand-in is never also counted); null when free. */
 	excludes: constraintFieldSchema.nullable().catch(null),
+	/** The day type codes a DAY_TYPE field takes (ADR-0087); empty for every code of `dayTypeChoices`. */
+	choices: z.array(z.string()).catch([]),
+	/** The comparisons the type takes while only some of `choices` are chosen; empty when any goes. */
+	partialComparisons: z.array(constraintComparisonSchema).catch([]),
 });
 
 /** One field a constraint type takes, as the API declares it. */
@@ -492,10 +496,13 @@ export const constraintOptionsSchema = z
 		}),
 		/** The day types a DAY_TYPE field may name, as codes; empty from an API that predates them. */
 		dayTypeChoices: z.array(z.string()).catch([]),
+		/** The company's stored name of each non-working day type, by code; the fallback for its label. */
+		dayTypeNames: z.record(z.string(), z.string()).catch({}),
 	})
-	.transform(({ types, links, dayTypeChoices }) => ({
+	.transform(({ types, links, dayTypeChoices, dayTypeNames }) => ({
 		types,
 		dayTypeChoices,
+		dayTypeNames,
 		shifts: links.SHIFT.map(({ id, name, jobTitleIds, listedIds }) => ({
 			shiftId: id,
 			name,

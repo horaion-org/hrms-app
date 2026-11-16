@@ -50,15 +50,20 @@ const STRICTNESS: Record<ConstraintField, FieldStrictness> = {
 const DEPARTMENT_ONLY = ["DEPARTMENT"] as const;
 const ANY_LEVEL = ["COMPANY", "DEPARTMENT"] as const;
 
-/** A field whose values depend on no other field's. */
+/** A field whose values depend on no other field's, and that takes every code of its kind. */
 const NO_DEPENDENCY: Pick<
 	ConstraintFieldSpec,
-	"listedBy" | "listsSomeOf" | "excludes"
+	"listedBy" | "listsSomeOf" | "excludes" | "choices" | "partialComparisons"
 > = {
 	listedBy: null,
 	listsSomeOf: [],
 	excludes: null,
+	choices: [],
+	partialComparisons: [],
 };
+
+/** The non-working day types, as the API names the codes a non-working day-type field takes (ADR-0087). */
+const NON_WORKING_DAY_TYPES = ["OFF", "REST"];
 
 /** A field chosen from a list; one value unless the counts say otherwise. */
 const choice = (
@@ -187,6 +192,11 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 			choice("COMPARISON", "COMPARISON"),
 			number("DAYS_OFF", 0, 31),
 			number("PERIOD_DAYS", 1, 7),
+			{
+				...choice("DAY_TYPE", "DAY_TYPE", 0, 2),
+				choices: NON_WORKING_DAY_TYPES,
+				partialComparisons: ["AT_LEAST"],
+			},
 		],
 	},
 	{
@@ -233,7 +243,7 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 		fields: [
 			comparisonOf(["AT_LEAST", "EXACTLY"]),
 			number("DAY_TYPE_COUNT", 1, 7),
-			choice("DAY_TYPE", "DAY_TYPE", 1, 1),
+			{ ...choice("DAY_TYPE", "DAY_TYPE", 1, 1), choices: NON_WORKING_DAY_TYPES },
 		],
 		addedBySystem: true,
 		fullTimersOnly: true,
@@ -314,6 +324,7 @@ export const DAY_TYPE_CHOICES = ["OFF", "REST", "LEAVE"];
 export const CONSTRAINT_OPTIONS: ConstraintOptions = {
 	types: CONSTRAINT_TYPE_OPTIONS,
 	dayTypeChoices: DAY_TYPE_CHOICES,
+	dayTypeNames: { OFF: "Day off", REST: "Rest day" },
 	shifts: SHIFT_FIXTURES.map(({ shiftId, name, roles }) => ({
 		shiftId,
 		name,
@@ -333,6 +344,7 @@ export const CONSTRAINT_OPTIONS: ConstraintOptions = {
 export const CONSTRAINT_OPTIONS_RESPONSE = {
 	types: CONSTRAINT_OPTIONS.types,
 	dayTypeChoices: CONSTRAINT_OPTIONS.dayTypeChoices,
+	dayTypeNames: CONSTRAINT_OPTIONS.dayTypeNames,
 	links: {
 		SHIFT: CONSTRAINT_OPTIONS.shifts.map(
 			({ shiftId, name, jobTitleIds, listedIds }) => ({

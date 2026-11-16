@@ -170,6 +170,8 @@ describe("constraints client", () => {
 					listedBy: null,
 					listsSomeOf: [],
 					excludes: null,
+					choices: [],
+					partialComparisons: [],
 				},
 			],
 			addedBySystem: false,
