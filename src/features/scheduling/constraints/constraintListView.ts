@@ -63,8 +63,9 @@ export const passesShowing = <Row extends ShowingRow>(
 
 /**
  * Above this many constraints in view, the page no longer shows its shape on
- * one screen (a row with its name and reach is about 90 px), so sections
- * start closed unless something in them needs attention.
+ * one screen (a row with its name and reach is about 90 px), so every
+ * section starts closed; a closed heading still says, in the error tone,
+ * how many need attention, and the banner's links open their section.
  */
 export const OPEN_ALL_UP_TO = 12;
 
@@ -80,20 +81,17 @@ export type FoldableSection = {
 
 /**
  * The sections that start closed: with up to OPEN_ALL_UP_TO constraints, only
- * the company's (it always applies, and is set elsewhere); with more, every
- * section except those holding something that needs attention.
+ * the company's (it always applies, and is set elsewhere) unless something in
+ * it needs attention; with more, every section.
  */
 export const initiallyClosedOf = (
 	sections: ReadonlyArray<FoldableSection>
 ): Array<string> => {
 	const total = sections.reduce((sum, section) => sum + section.rowCount, 0);
-	if (total <= OPEN_ALL_UP_TO)
-		return sections
-			.filter(
-				(section) => section.key === COMPANY_SECTION && !section.needsAttention
-			)
-			.map((section) => section.key);
+	if (total > OPEN_ALL_UP_TO) return sections.map((section) => section.key);
 	return sections
-		.filter((section) => !section.needsAttention)
+		.filter(
+			(section) => section.key === COMPANY_SECTION && !section.needsAttention
+		)
 		.map((section) => section.key);
 };

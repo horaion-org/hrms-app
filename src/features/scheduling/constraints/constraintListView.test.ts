@@ -111,14 +111,15 @@ describe("initiallyClosedOf", () => {
 		).toEqual([COMPANY_SECTION]);
 	});
 
-	it("given_moreThanTheThreshold_when_opened_then_onlySectionsNeedingAttentionStartOpen", () => {
+	// Closed headings keep the attention count in the error tone, so nothing that needs fixing is hidden.
+	it("given_moreThanTheThreshold_when_opened_then_everySectionStartsClosed_evenOneNeedingAttention", () => {
 		expect(
 			initiallyClosedOf([
 				section("STAFFING", 10, true),
 				section("SHIFT_PATTERN", 10),
 				section(COMPANY_SECTION, 6),
 			])
-		).toEqual(["SHIFT_PATTERN", COMPANY_SECTION]);
+		).toEqual(["STAFFING", "SHIFT_PATTERN", COMPANY_SECTION]);
 	});
 
 	it("given_theCompanysNeedingAttention_when_opened_then_itStartsOpen", () => {
