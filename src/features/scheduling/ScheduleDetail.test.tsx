@@ -1,7 +1,7 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import dayjs from "dayjs";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resetApiClient } from "@/common/api-client";
 import {
 	currentUserReply,
@@ -46,7 +46,15 @@ import {
 } from "@/features/scheduling/hours/fixtures";
 import { frozenShiftsFixture } from "@/features/scheduling/shifts/fixtures";
 
+/** Wednesday of the fixtures' week in their Singapore branch: the week has not passed (API ADR-0091). */
+const IN_THE_FIXTURE_WEEK = new Date("2026-10-14T09:00:00+08:00");
+/** The first minute of the Monday after the fixtures' week in their branch: the week has passed. */
+const AFTER_THE_FIXTURE_WEEK = new Date("2026-10-19T00:00:00+08:00");
+
 let app: OpenedApp | undefined;
+beforeEach(() => {
+	vi.useFakeTimers({ toFake: ["Date"], now: IN_THE_FIXTURE_WEEK });
+});
 afterEach(() => {
 	app?.disconnect();
 	app?.queryClient.clear();
@@ -338,6 +346,61 @@ it("deletes the schedule from the header's menu and goes back to the overview", 
 	).toHaveLength(1);
 });
 
+it("says a passed week is final and offers no regeneration, even to someone who may generate", async () => {
+	vi.setSystemTime(AFTER_THE_FIXTURE_WEEK);
+	await openRoster({
+		...signedIn(["schedule:read", "schedule:generate"]),
+		[`GET ${SCHEDULE_READ}`]: ok(
+			generatedScheduleFixture({ status: "REJECTED" })
+		),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+		...octoberRead("REJECTED"),
+	});
+	const user = userEvent.setup();
+
+	expect(
+		await screen.findByText(
+			"This week has passed. Its rules and roster are final; change its days by hand if needed."
+		)
+	).toBeInTheDocument();
+	expect(await menuItemsOf(user)).not.toContain("Regenerate October");
+	expect(
+		screen.queryByRole("button", { name: "Regenerate October" })
+	).toBeNull();
+});
+
+it("says the rules changed since the roster was generated when the month read says so", async () => {
+	await openRoster({
+		...signedIn(["schedule:read", "schedule:generate"]),
+		[`GET ${SCHEDULE_READ}`]: ok(
+			generatedScheduleFixture({ status: "GENERATED" })
+		),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+		[`GET ${OCTOBER_MONTH}`]: ok(
+			scheduleMonthFixture({
+				month: "2026-10",
+				departmentName: "Front Office",
+				weeks: [
+					monthWeekFixture({
+						periodStart: "2026-10-12",
+						periodEnd: "2026-10-18",
+						state: "TO_REVIEW",
+						scheduleId: "s-1",
+						includedInMonthGeneration: true,
+						rulesChanged: true,
+					}),
+				],
+			})
+		),
+	});
+
+	expect(
+		await screen.findByText(
+			"Rules changed since this roster was generated. Regenerate to apply them."
+		)
+	).toBeInTheDocument();
+});
+
 it.each(["GENERATED", "PUBLISHED", "REJECTED"] as const)(
 	"offers only View setup, Details and Export roster, and no primary action, on a %s roster to someone who may only read it",
 	async (status) => {
@@ -550,7 +613,7 @@ const scheduleAtRun = (
 };
 
 it("shows the new run's roster once the poll reports it finished, without a reload", async () => {
-	vi.useFakeTimers({ shouldAdvanceTime: true });
+	vi.useFakeTimers({ shouldAdvanceTime: true, now: IN_THE_FIXTURE_WEEK });
 	// What the API answers now: the run-1 roster, none while run-2 is open, then run-2's.
 	let roster = scheduleAssignmentsFixture();
 	const calls = await openRoster({
@@ -1300,7 +1363,7 @@ it("shows the roster without starting points when they can't be read", async () 
 });
 
 it("reads a schedule being generated every 15 seconds until its roster is ready", async () => {
-	vi.useFakeTimers({ shouldAdvanceTime: true });
+	vi.useFakeTimers({ shouldAdvanceTime: true, now: IN_THE_FIXTURE_WEEK });
 	const calls = await openRoster({
 		...signedIn(),
 		[`GET ${SCHEDULE_READ}`]: [
