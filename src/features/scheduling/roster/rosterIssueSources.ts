@@ -9,6 +9,10 @@ import {
 } from "@/features/scheduling/roster/rosterIssueGroups";
 import type { RosterView } from "@/features/scheduling/roster/rosterView";
 import { LEAVE_MARKER_KEYS } from "@/features/scheduling/roster/rosterMarks";
+import {
+	leaveLineText,
+	leavePortionOf,
+} from "@/features/scheduling/roster/roster";
 import { validationSaysWho } from "@/features/scheduling/rulesCheck/issuesFromValidation";
 import type {
 	BrokenRule,
@@ -89,7 +93,9 @@ const leaveAndCoverIssue = (
 			key: `leave|${row.assignmentId}`,
 			group: "forInformation",
 			time: null,
-			rule: marker,
+			rule: row.leaveTypeName
+				? `${marker}: ${leaveLineText(row.leaveTypeName, leavePortionOf(row), t)}`
+				: marker,
 			action: { kind: "show" },
 		};
 	return {
