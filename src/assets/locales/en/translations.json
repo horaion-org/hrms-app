@@ -2072,7 +2072,7 @@
 			"empty": "No access roles yet.",
 			"assignments": {
 				"tab": "People",
-				"permissionsTab": "Permissions",
+				"permissionsTab": "What it allows",
 				"tabs": "Role sections",
 				"allows": "This role allows",
 				"title": "Who has this role",
@@ -2181,8 +2181,7 @@
 				"nameCharacters": "Use only letters, numbers, spaces and . ' & - in the name.",
 				"nameConflict": "A role named \"{{name}}\" already exists. Choose a different name.",
 				"nameRejected": "Check the role name and try again.",
-				"permissions": "Permissions",
-				"selected": "{{count}} of {{total}} selected",
+				"permissions": "What it allows",
 				"permissionsRequired": "Choose at least one permission.",
 				"added": "{{count}} added",
 				"removed": "{{count}} removed",

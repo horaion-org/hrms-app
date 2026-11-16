@@ -2002,7 +2002,7 @@
 			},
 			"assignments": {
 				"tab": "Personas",
-				"permissionsTab": "Permisos",
+				"permissionsTab": "Qué permite",
 				"tabs": "Secciones del rol",
 				"allows": "Este rol permite",
 				"title": "Quién tiene este rol",
@@ -2088,8 +2088,7 @@
 				"nameCharacters": "Usa solo letras, números, espacios y . ' & - en el nombre.",
 				"nameConflict": "Ya existe un rol llamado \"{{name}}\". Elige otro nombre.",
 				"nameRejected": "Revisa el nombre del rol e inténtalo de nuevo.",
-				"permissions": "Permisos",
-				"selected": "{{count}} de {{total}} seleccionados",
+				"permissions": "Qué permite",
 				"permissionsRequired": "Elige al menos un permiso.",
 				"added": "{{count}} añadidos",
 				"removed": "{{count}} quitados",

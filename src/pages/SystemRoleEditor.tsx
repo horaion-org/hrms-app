@@ -9,6 +9,7 @@ import { ArrowLeftIcon } from "@/components/ui/Icon";
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from "@/components/ui/Tabs";
 import { AccessRoleForm } from "@/features/organisation/AccessRoleForm";
 import { readOnlyReason } from "@/features/organisation/accessRoleReadOnly";
+import { newSinceReview } from "@/features/organisation/newPermissions";
 import { SYSTEM_ROLES_PATH } from "@/features/organisation/systemRolesPath";
 import { useAccessRoleHolders } from "@/features/organisation/useAccessRoleHolders";
 import { useUpdateAccessRole } from "@/features/organisation/useUpdateAccessRole";
@@ -112,6 +113,11 @@ export const SystemRoleEditor = (): FunctionComponent => {
 								name: role.name,
 								permissions: role.permissions.filter(isPermissionKey),
 							}}
+							newPermissions={newSinceReview(
+								role.permissions,
+								role.permissionsReviewedAt,
+								role.kind
+							)}
 							onSubmit={async (values) => {
 								await update.mutateAsync({
 									kind: values.kind,

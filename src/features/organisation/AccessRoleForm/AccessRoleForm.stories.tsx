@@ -66,3 +66,34 @@ export const ReadOnly: Story = {
 		},
 	},
 };
+
+/** A site lead made before shift preferences, reports and people events existed. */
+export const NewPermissions: Story = {
+	args: {
+		initial: {
+			kind: "LOCAL",
+			name: "Site lead",
+			permissions: [
+				"member_profile:read",
+				"leave_request:read",
+				"leave_request:review",
+				"schedule:read",
+				"schedule:create",
+				"schedule:update",
+				"schedule:generate",
+				"schedule:delete",
+				"schedule:publish",
+				"schedule:edit_shift",
+				"shift:read",
+				"constraint:read",
+				"approval:read",
+				"approval:decide",
+			],
+		},
+		newPermissions: [
+			"shift_preference:read",
+			"member_event:read",
+			"report:read",
+		],
+	},
+};
