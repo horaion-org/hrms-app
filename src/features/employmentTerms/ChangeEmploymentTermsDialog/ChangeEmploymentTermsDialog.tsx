@@ -11,13 +11,14 @@ import { FormRow, formRowIds } from "@/components/forms/FormRow";
 import { Input } from "@/components/forms/Input";
 import { Select } from "@/components/forms/Select";
 import { Callout } from "@/components/ui/Callout";
+import { Disclosure } from "@/components/ui/Disclosure";
 import {
 	activeTermsQuery,
 	type EmploymentTerms,
 	type HistoryEntry,
 	type MemberTerms,
 } from "@/features/employmentTerms/api";
-import { formatHours } from "@/features/employmentTerms/hours";
+import { durationShort } from "@/features/employmentTerms/hours";
 import {
 	memberTermsBodyOf,
 	memberTermsFormSchema,
@@ -170,6 +171,7 @@ export const ChangeEmploymentTermsDialog = ({
 	const ownField = (
 		field: "ownWeek" | "ownDay",
 		label: string,
+		unit: string,
 		hint: string | undefined
 	): ReactNode => {
 		const error = errors[field]?.message;
@@ -190,6 +192,7 @@ export const ChangeEmploymentTermsDialog = ({
 					id={idOf(field)}
 					inputMode="decimal"
 					status={error ? "error" : undefined}
+					unit={unit}
 					{...register(field)}
 				/>
 			</FormRow>
@@ -270,7 +273,7 @@ export const ChangeEmploymentTermsDialog = ({
 			</FormRow>
 			{chosen && (
 				<p className="text-sm text-neutral-800">
-					{termsSentence(chosen, reference, t, language)}
+					{termsSentence(chosen, reference, t)}
 				</p>
 			)}
 			<FormRow
@@ -310,37 +313,39 @@ export const ChangeEmploymentTermsDialog = ({
 				startRule.kind === "monday" && (
 					<Callout tone="warning">{t(`${key}.pastDate`)}</Callout>
 				)}
-			<fieldset className="flex flex-col gap-3">
-				<legend className="mb-2 text-sm font-semibold text-neutral-900">
-					{t(`${key}.ownHours`)}
-				</legend>
+			<Disclosure
+				defaultOpen={values.ownWeek !== "" || values.ownDay !== ""}
+				title={t(`${key}.ownHours`)}
+			>
 				<div className="grid gap-4 sm:grid-cols-2">
 					{ownField(
 						"ownWeek",
 						t(`${key}.ownWeek`),
+						t(`${key}.ownWeekUnit`),
 						chosen
 							? t(`${key}.ownWeekHint`, {
-									week: formatHours(chosen.weekMinutes, language),
+									week: durationShort(chosen.weekMinutes, t),
 								})
 							: undefined
 					)}
 					{ownField(
 						"ownDay",
 						t(`${key}.ownDay`),
+						t(`${key}.ownDayUnit`),
 						chosen?.dayMinutes
 							? t(`${key}.ownDayHint`, {
-									day: formatHours(chosen.dayMinutes, language),
+									day: durationShort(chosen.dayMinutes, t),
 								})
 							: undefined
 					)}
 				</div>
-			</fieldset>
+			</Disclosure>
 			{mismatch && chosen && (
 				<Callout tone="warning">
 					{t(`employmentTerms.row.mismatch.${mismatch}`, {
-						week: formatHours(
+						week: durationShort(
 							own.contractedWeekMinutes ?? chosen.weekMinutes,
-							language
+							t
 						),
 					})}
 				</Callout>
