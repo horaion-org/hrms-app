@@ -5041,12 +5041,14 @@
 			"coverOffers": {
 				"title": "Ofertas de cobertura pendientes",
 				"failed": "No pudimos cargar las ofertas de cobertura.",
-				"notAnswered": "{{name}} no ha respondido: {{shift}}, {{day}}",
-				"detailWithDeadline": "{{department}} · responder antes de {{deadline}}",
 				"formerMember": "Un antiguo miembro",
-				"mineTitle": "Tus ofertas por responder",
-				"mine": "{{shift}}, {{day}}",
-				"aShift": "Un turno"
+				"aShift": "Un turno",
+				"you": "Tú",
+				"by": "antes de {{deadline}}",
+				"answer": "Responder",
+				"answerNamed": "Responder: {{shift}}, {{day}}",
+				"openRoster": "Abrir horario",
+				"openRosterNamed": "Abrir horario: {{name}}, {{shift}}, {{day}}"
 			},
 			"nextRoster": {
 				"title": "Próximo horario",

@@ -1,24 +1,29 @@
-import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import { formatDay } from "@/common/formatDay";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
+import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ExpandableList } from "@/components/ui/ExpandableList";
 import { SwapIcon } from "@/components/ui/Icon";
 import type { TeamCoverOffer } from "@/features/dashboard/api";
 import {
-	cardLinkClasses,
 	failedLineClasses,
+	HOME_ROW_COUNT,
 	rowClasses,
-	rowDetailClasses,
+	rowLeadClasses,
 	rowListClasses,
-	rowTitleClasses,
+	rowTextClasses,
 } from "@/features/dashboard/cardStyles";
-import { formatDay } from "@/common/formatDay";
 import type { GuardedRead } from "@/features/dashboard/guardedRead";
 import type { CoverOffer } from "@/features/scheduling/coverOffers/api";
 
 const key = "dashboard.cards.coverOffers";
+
+/** One row of the card: an offer the person owes an answer on, or one their staff have not answered. */
+type Row =
+	| { kind: "mine"; id: string; offer: CoverOffer }
+	| { kind: "team"; id: string; offer: TeamCoverOffer };
 
 export type OpenCoverOffersCardProps = {
 	/** The offers staff in the person's units have not answered. */
@@ -38,9 +43,9 @@ const deadlineLabel = (expiresAt: string, language: string): string =>
 	}).format(new Date(expiresAt));
 
 /**
- * What waits on an answer about cover: the offers staff in the person's
- * units have not answered, each opening its roster, and, only when there
- * are any, the person's own offers to answer. Hidden when neither applies.
+ * What waits on an answer about cover, a line each: first the person's own
+ * offers to answer, then the offers staff in their units have not
+ * answered, each opening its roster. Hidden when neither applies.
  */
 export const OpenCoverOffersCard = ({
 	teamOffers,
@@ -52,6 +57,14 @@ export const OpenCoverOffersCard = ({
 	const team = teamOffers.status === "ready" ? teamOffers.data : [];
 	const mine = myOffers.status === "ready" ? myOffers.data : [];
 	if (teamOffers.status === "hidden" && mine.length === 0) return null;
+	const rows: Array<Row> = [
+		...mine.map((offer): Row => ({ kind: "mine", id: offer.offerId, offer })),
+		...team.map((offer): Row => ({
+			kind: "team",
+			id: offer.coverOfferId,
+			offer,
+		})),
+	];
 	return (
 		<Card className={className} icon={SwapIcon} title={t(`${key}.title`)}>
 			{teamOffers.status === "error" && (
@@ -59,61 +72,70 @@ export const OpenCoverOffersCard = ({
 					{t(`${key}.failed`)}
 				</p>
 			)}
-			{team.length > 0 && (
+			{rows.length > 0 && (
 				<ExpandableList
+					collapsedCount={HOME_ROW_COUNT}
 					itemClassName={rowClasses}
-					items={team}
-					keyOf={(offer) => offer.coverOfferId}
+					items={rows}
+					keyOf={(row) => `${row.kind}|${row.id}`}
 					listClassName={rowListClasses}
-					renderItem={(offer) => (
-						<>
-							<Link
-								className={cardLinkClasses}
-								params={{ scheduleId: offer.scheduleId }}
-								to="/scheduling/$scheduleId"
-							>
-								{t(`${key}.notAnswered`, {
-									name: offer.displayName ?? t(`${key}.formerMember`),
-									shift: offer.shiftName,
-									day: formatDay(offer.day, language),
-								})}
-							</Link>
-							<span className={rowDetailClasses}>
-								{offer.expiresAt
-									? t(`${key}.detailWithDeadline`, {
-											department: offer.departmentName,
-											deadline: deadlineLabel(offer.expiresAt, language),
-										})
-									: offer.departmentName}
-							</span>
-						</>
-					)}
-				/>
-			)}
-			{mine.length > 0 && (
-				<div className="flex flex-col gap-3">
-					<h3 className={rowTitleClasses}>{t(`${key}.mineTitle`)}</h3>
-					<ExpandableList
-						itemClassName={rowClasses}
-						items={mine}
-						keyOf={(offer) => offer.offerId}
-						listClassName={rowListClasses}
-						renderItem={(offer) => (
+					renderItem={(row) => {
+						if (row.kind === "mine") {
+							const shift = row.offer.shift?.name ?? t(`${key}.aShift`);
+							const day = formatDay(row.offer.rosterDate, language);
+							return (
+								<>
+									<span className={rowTextClasses}>
+										<span className={rowLeadClasses}>{t(`${key}.you`)}</span>
+										{" · "}
+										{shift}
+										{" · "}
+										{day}
+									</span>
+									<Button
+										aria-label={t(`${key}.answerNamed`, { shift, day })}
+										className="shrink-0"
+										params={{ scheduleId: row.offer.scheduleId }}
+										to="/me/schedules/$scheduleId"
+										variant="textlink"
+									>
+										{t(`${key}.answer`)}
+									</Button>
+								</>
+							);
+						}
+						const name = row.offer.displayName ?? t(`${key}.formerMember`);
+						const day = formatDay(row.offer.day, language);
+						return (
 							<>
-								<Link
-									className={cardLinkClasses}
-									params={{ scheduleId: offer.scheduleId }}
-									to="/me/schedules/$scheduleId"
-								>
-									{t(`${key}.mine`, {
-										shift: offer.shift?.name ?? t(`${key}.aShift`),
-										day: formatDay(offer.rosterDate, language),
+								<span className={rowTextClasses}>
+									<span className={rowLeadClasses}>{name}</span>
+									{" · "}
+									{row.offer.shiftName}
+									{" · "}
+									{day}
+									{row.offer.expiresAt &&
+										` · ${t(`${key}.by`, {
+											deadline: deadlineLabel(row.offer.expiresAt, language),
+										})}`}
+								</span>
+								<Button
+									className="shrink-0"
+									params={{ scheduleId: row.offer.scheduleId }}
+									to="/scheduling/$scheduleId"
+									variant="textlink"
+									aria-label={t(`${key}.openRosterNamed`, {
+										name,
+										shift: row.offer.shiftName,
+										day,
 									})}
-								</Link>
+								>
+									{t(`${key}.openRoster`)}
+								</Button>
 							</>
-						)}
-					/>
-				</div>
+						);
+					}}
+				/>
 			)}
 		</Card>
 	);

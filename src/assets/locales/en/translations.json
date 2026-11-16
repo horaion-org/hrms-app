@@ -5208,12 +5208,14 @@
 			"coverOffers": {
 				"title": "Cover offers waiting",
 				"failed": "We couldn’t load the cover offers.",
-				"notAnswered": "{{name}} has not answered: {{shift}}, {{day}}",
-				"detailWithDeadline": "{{department}} · answer by {{deadline}}",
 				"formerMember": "A former member",
-				"mineTitle": "Your offers to answer",
-				"mine": "{{shift}}, {{day}}",
-				"aShift": "A shift"
+				"aShift": "A shift",
+				"you": "You",
+				"by": "by {{deadline}}",
+				"answer": "Answer",
+				"answerNamed": "Answer: {{shift}}, {{day}}",
+				"openRoster": "Open roster",
+				"openRosterNamed": "Open roster: {{name}}, {{shift}}, {{day}}"
 			},
 			"nextRoster": {
 				"title": "Next roster",
