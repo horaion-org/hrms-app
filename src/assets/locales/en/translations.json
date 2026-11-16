@@ -4438,6 +4438,33 @@
 			"cancel": "Cancel",
 			"save": "Save hours"
 		},
+		"issues": {
+			"weekBarLabel": "Issues: {{count}} to fix, {{notMet}} could not be met",
+			"groupLabel": "{{group}}, {{count}}",
+			"show": "Show",
+			"nothingWrong": "Nothing to fix: every shift is covered and every rule holds.",
+			"orderLabel": "Order issues",
+			"order": { "byPerson": "By person", "byDay": "By day" },
+			"groups": {
+				"mustFix": "Must fix",
+				"notMet": "Could not be met",
+				"forInformation": "For your information"
+			},
+			"jobShort": "{{job}} short",
+			"unknownJob": "A job title",
+			"shortBy_one": "{{count}} person short",
+			"shortBy_other": "{{count}} people short",
+			"wholeRoster": "Whole roster",
+			"rosterNote": "Roster note",
+			"summary": {
+				"mustFix_one": "{{count}} to fix",
+				"mustFix_other": "{{count}} to fix",
+				"notMet_one": "{{count}} could not be met",
+				"notMet_other": "{{count}} could not be met",
+				"forInformation_one": "{{count}} for your information",
+				"forInformation_other": "{{count}} for your information"
+			}
+		},
 		"rosterMarkers": {
 			"leaveRequested": "Leave requested",
 			"onLeave": "On leave",
@@ -5126,6 +5153,7 @@
 			"loadFailed": "Couldn’t load the hours."
 		},
 		"rulesCheck": {
+			"brokenNamed": "Validated: the schedule breaks {{rules}}.",
 			"check": "Validate schedule",
 			"loading": "Validating the schedule…",
 			"brokenUnnamed": "This roster breaks a working-time rule.",

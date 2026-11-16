@@ -4238,6 +4238,33 @@
 			"cancel": "Cancelar",
 			"save": "Guardar horas"
 		},
+		"issues": {
+			"weekBarLabel": "Incidencias: {{count}} por corregir, {{notMet}} no se pudieron cumplir",
+			"groupLabel": "{{group}}, {{count}}",
+			"show": "Mostrar",
+			"nothingWrong": "Nada que corregir: todos los turnos están cubiertos y se cumplen todas las reglas.",
+			"orderLabel": "Ordenar incidencias",
+			"order": { "byPerson": "Por persona", "byDay": "Por día" },
+			"groups": {
+				"mustFix": "Por corregir",
+				"notMet": "No se pudo cumplir",
+				"forInformation": "Para tu información"
+			},
+			"jobShort": "Falta {{job}}",
+			"unknownJob": "un puesto",
+			"shortBy_one": "Falta {{count}} persona",
+			"shortBy_other": "Faltan {{count}} personas",
+			"wholeRoster": "Todo el turno",
+			"rosterNote": "Nota del turno",
+			"summary": {
+				"mustFix_one": "{{count}} por corregir",
+				"mustFix_other": "{{count}} por corregir",
+				"notMet_one": "{{count}} no se pudo cumplir",
+				"notMet_other": "{{count}} no se pudieron cumplir",
+				"forInformation_one": "{{count}} para tu información",
+				"forInformation_other": "{{count}} para tu información"
+			}
+		},
 		"rosterMarkers": {
 			"leaveRequested": "Permiso solicitado",
 			"onLeave": "De permiso",
@@ -4926,6 +4953,7 @@
 			"loadFailed": "No se pudieron cargar las horas."
 		},
 		"rulesCheck": {
+			"brokenNamed": "Validado: el cuadrante incumple {{rules}}.",
 			"check": "Validar cuadrante",
 			"loading": "Validando el cuadrante…",
 			"brokenUnnamed": "Este cuadrante incumple una regla de tiempo de trabajo.",

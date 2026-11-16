@@ -4,7 +4,10 @@ import { createInstance } from "i18next";
 import { initReactI18next } from "react-i18next";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import en from "@/assets/locales/en/translations.json";
-import { rulesCheckFixture } from "@/features/scheduling/rulesCheck/fixtures";
+import {
+	ruleFixture,
+	rulesCheckFixture,
+} from "@/features/scheduling/rulesCheck/fixtures";
 import type { ValidationStanding } from "@/features/scheduling/rulesCheck/issuesFromValidation";
 import type { RosterValidation } from "@/features/scheduling/rulesCheck/useRosterRulesCheck";
 import { ValidationNote } from "@/features/scheduling/rulesCheck/ValidationNote";
@@ -121,5 +124,21 @@ describe("ValidationNote", () => {
 		);
 
 		expect(ask).toHaveBeenCalledOnce();
+	});
+
+	it("names the rules a broken schedule breaks", () => {
+		show("current", {
+			last: {
+				revision: 1,
+				check: rulesCheckFixture({
+					status: "BROKEN",
+					brokenRules: [ruleFixture({ constraintName: "Twelve hours a day" })],
+				}),
+			},
+		});
+
+		expect(
+			screen.getByText("Validated: the schedule breaks Twelve hours a day.")
+		).toBeVisible();
 	});
 });

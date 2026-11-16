@@ -8,10 +8,18 @@ import { CountBadge } from "@/components/ui/CountBadge";
 import { DaySwitcher } from "@/components/ui/DaySwitcher";
 import type { DescriptionListItem } from "@/components/ui/DescriptionList";
 import { LastRosterChange } from "@/features/scheduling/LastRosterChange";
-import { formatDay } from "@/common/formatDay";
 import type { FindingNameSources } from "@/features/scheduling/roster/findings/findingNames";
 import { legendOf } from "@/features/scheduling/roster/roster";
-import { rosterListSections } from "@/features/scheduling/roster/rosterListSections";
+import { Badge } from "@/components/ui/Badge";
+import {
+	issueCounts,
+	type RosterIssue,
+} from "@/features/scheduling/roster/rosterIssueGroups";
+import { issuesOfRoster } from "@/features/scheduling/roster/rosterIssueSources";
+import {
+	issueNoteLines,
+	rosterListSections,
+} from "@/features/scheduling/roster/rosterListSections";
 import type {
 	RosterPanel,
 	RosterSearch,
@@ -23,6 +31,7 @@ import {
 } from "@/features/scheduling/roster/rosterSummary";
 import type { RosterSchedule } from "@/features/scheduling/roster/rosterView";
 import type { RosterChange } from "@/features/scheduling/rosterChanges/api";
+import { rosterCellKey } from "@/features/scheduling/rosterChanges/rosterEdit";
 import { RosterGrid } from "@/features/scheduling/RosterGrid";
 import {
 	RosterWeekBar,
@@ -34,11 +43,6 @@ import {
 	scheduleWithFindingsShown,
 	validationStanding,
 } from "@/features/scheduling/rulesCheck/issuesFromValidation";
-import {
-	brokenRuleItems,
-	notMetCount,
-	notMetItems,
-} from "@/features/scheduling/rulesCheck/rosterRulesCheckWords";
 import type { RosterValidation } from "@/features/scheduling/rulesCheck/useRosterRulesCheck";
 import { ValidationNote } from "@/features/scheduling/rulesCheck/ValidationNote";
 import { ValidateScheduleButton } from "@/features/scheduling/rulesCheck/ValidateScheduleButton";
@@ -174,6 +178,36 @@ export const GeneratedRoster = ({
 	const panelFollowsGridHeight =
 		roster.sidePanel === "list" || roster.sidePanel === "cover";
 
+	const validationNote = validating && (
+		<ValidationNote standing={standing} validation={validation} />
+	);
+	const issues = issuesOfRoster({
+		roster,
+		check: last?.check,
+		startingRuns,
+		noteLines: issueNoteLines({
+			roster,
+			membersWithChangedStart,
+			validationNote,
+			t,
+		}),
+		t,
+		language,
+	});
+	const counts = issueCounts(issues);
+	/** Outlines an issue's cell, as the day editor outlines the days it would change, and scrolls to it. */
+	const showIssue = (issue: RosterIssue): void => {
+		const row = rows.find(
+			(candidate) => candidate.memberProfileId === issue.memberProfileId
+		);
+		if (!row?.membershipId || !issue.day) return;
+		const cellKey = rosterCellKey(row.membershipId, issue.day);
+		roster.onPreviewDays([cellKey]);
+		document
+			.querySelector(`[data-cell="${CSS.escape(cellKey)}"]`)
+			?.scrollIntoView({ block: "nearest", inline: "nearest" });
+	};
+
 	/** The week bar's buttons: each list that has one, while it has something to show. */
 	const toolbarLists = withSummary
 		? (Object.keys(ROSTER_SIDE_LISTS) as Array<RosterPanel>).flatMap(
@@ -223,16 +257,9 @@ export const GeneratedRoster = ({
 				latestChange,
 				details,
 				approval,
-				validationNote: validating && (
-					<ValidationNote standing={standing} validation={validation} />
-				),
-				brokenRules: last ? brokenRuleItems(last.check, t) : [],
-				notMet: last && {
-					items: notMetItems(last.check, t, (date) =>
-						formatDay(date, language)
-					),
-					count: notMetCount(last.check),
-				},
+				validationNote,
+				issues,
+				onShowIssue: showIssue,
 				onShowAllIssues: roster.showAllIssues,
 				onFindCover: editing ? roster.openCover : undefined,
 			})
@@ -292,10 +319,17 @@ export const GeneratedRoster = ({
 								key={panel}
 								aria-controls={openList === panel ? sidePanelId : undefined}
 								aria-expanded={openList === panel}
-								aria-label={t(button.labelKey, { count })}
 								leadingIcon={<button.icon className={button.iconTone} />}
 								size="sm"
 								variant="secondary"
+								aria-label={
+									panel === "issues"
+										? t("scheduling.issues.weekBarLabel", {
+												count: counts.mustFix,
+												notMet: counts.notMet,
+											})
+										: t(button.labelKey, { count })
+								}
 								onClick={(event) => {
 									// Opening Issues while its list is out of date validates it first.
 									if (
@@ -309,7 +343,28 @@ export const GeneratedRoster = ({
 								}}
 							>
 								{t(ROSTER_SIDE_LISTS[panel].titleKey)}
-								<CountBadge aria-hidden="true" count={count} tone="inactive" />
+								{panel === "issues" ? (
+									<>
+										{counts.mustFix > 0 && (
+											<CountBadge
+												aria-hidden="true"
+												count={counts.mustFix}
+												tone="inactive"
+											/>
+										)}
+										{counts.notMet > 0 && (
+											<Badge compact aria-hidden="true" tone="warning">
+												{String(counts.notMet)}
+											</Badge>
+										)}
+									</>
+								) : (
+									<CountBadge
+										aria-hidden="true"
+										count={count}
+										tone="inactive"
+									/>
+								)}
 							</Button>
 						))}
 						{validation && (
