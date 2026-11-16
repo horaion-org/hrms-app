@@ -71,15 +71,24 @@ describe("shift preferences API", () => {
 		expect(calls[0]?.body).toEqual({ shiftIds: [] });
 	});
 
-	it("given_aDepartmentWeekAndPage_when_theTeamListIsAsked_then_namesEachWithThePageSize", () => {
+	it("given_aBranchDepartmentWeekAndPage_when_theTeamListIsAsked_then_namesEachWithThePageSize", () => {
 		expect(
 			teamPreferencesPath("c-1", {
-				departmentId: "d-1",
 				weekStartMonday: FIXTURE_WEEK,
+				branchId: "b-1",
+				departmentId: "d-1",
 				page: 2,
 			})
 		).toBe(
-			`/api/v1/companies/c-1/shift-preferences?departmentId=d-1&weekStartMonday=${FIXTURE_WEEK}&page=2&size=${TEAM_PAGE_SIZE}`
+			`/api/v1/companies/c-1/shift-preferences?weekStartMonday=${FIXTURE_WEEK}&branchId=b-1&departmentId=d-1&page=2&size=${TEAM_PAGE_SIZE}`
+		);
+	});
+
+	it("given_noUnit_when_theTeamListIsAsked_then_leavesBothOutForEveryUnitInReach", () => {
+		expect(
+			teamPreferencesPath("c-1", { weekStartMonday: FIXTURE_WEEK, page: 0 })
+		).toBe(
+			`/api/v1/companies/c-1/shift-preferences?weekStartMonday=${FIXTURE_WEEK}&page=0&size=${TEAM_PAGE_SIZE}`
 		);
 	});
 
@@ -129,10 +138,10 @@ describe("shift preferences API", () => {
 		]);
 		expect(
 			teamPreferencesKey("c-1", {
-				departmentId: "d-1",
 				weekStartMonday: FIXTURE_WEEK,
+				branchId: "b-1",
 				page: 0,
 			})
-		).toEqual(["shiftPreferences", "c-1", "team", "d-1", FIXTURE_WEEK, 0]);
+		).toEqual(["shiftPreferences", "c-1", "team", "b-1", "", FIXTURE_WEEK, 0]);
 	});
 });

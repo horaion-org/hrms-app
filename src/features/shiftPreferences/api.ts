@@ -14,7 +14,8 @@ import { retry } from "@/features/workspace/retry";
 /*
  * The shift preference routes of the API: the caller's own week
  * and one day of it, read and replaced with nothing granted; a Department's
- * members for one week, read under `shift_preference:read`, a page at a time.
+ * members for one week, read under `shift_preference:read`, a page at a time,
+ * narrowed by Branch and Department as the availability list is.
  * What a generated roster made of them is read on the roster's side
  * (`features/scheduling/preferenceOutcomes`).
  */
@@ -85,11 +86,14 @@ const teamPageSchema = pagedSchema(teamMemberWeekSchema);
 /** One page of a Department's members and their preferences. */
 export type TeamPreferencePage = z.infer<typeof teamPageSchema>;
 
-/** Which Department, week and page the team list is read for. */
+/** Which units, week and page the team list is read for. */
 export type TeamPreferenceQuery = {
-	departmentId: string;
 	/** "YYYY-MM-DD", a Monday. */
 	weekStartMonday: string;
+	/** Narrows the members to one Branch; left out lists every Branch in reach. */
+	branchId?: string;
+	/** Narrows the members to one Department. */
+	departmentId?: string;
 	/** From 0. */
 	page: number;
 };
@@ -150,17 +154,16 @@ export const myPreferenceWeekPath = (
 export const myPreferenceDayPath = (companyId: string, date: string): string =>
 	`${myPreferencesPath(companyId)}/days/${encodeURIComponent(date)}`;
 
-/** One page of a Department's members and their preferences for a week. */
+/** One page of the members of a Branch or Department and their preferences for a week. */
 export const teamPreferencesPath = (
 	companyId: string,
-	{ departmentId, weekStartMonday, page }: TeamPreferenceQuery
+	{ weekStartMonday, branchId, departmentId, page }: TeamPreferenceQuery
 ): string => {
-	const query = new URLSearchParams({
-		departmentId,
-		weekStartMonday,
-		page: String(page),
-		size: String(TEAM_PAGE_SIZE),
-	});
+	const query = new URLSearchParams({ weekStartMonday });
+	if (branchId) query.set("branchId", branchId);
+	if (departmentId) query.set("departmentId", departmentId);
+	query.set("page", String(page));
+	query.set("size", String(TEAM_PAGE_SIZE));
 	return `${companyPath(companyId)}/shift-preferences?${query.toString()}`;
 };
 
@@ -187,7 +190,7 @@ export const replaceMyPreferenceDay = (
 		body: { shiftIds },
 	});
 
-/** One page of a Department's members and their preferences; only members in reach are listed. */
+/** One page of a Branch's or Department's members and their preferences; only members in reach are listed. */
 export const fetchTeamPreferences = (
 	companyId: string,
 	query: TeamPreferenceQuery,
@@ -208,15 +211,24 @@ export const myPreferenceWeekKey = (
 ): readonly ["shiftPreferences", string, "me", string] =>
 	[...shiftPreferencesRoot(companyId), "me", weekStartMonday] as const;
 
-/** The key of one page of the team list. */
+/** The key of one page of the team list; a unit left out is "", every one in reach. */
 export const teamPreferencesKey = (
 	companyId: string,
-	{ departmentId, weekStartMonday, page }: TeamPreferenceQuery
-): readonly ["shiftPreferences", string, "team", string, string, number] =>
+	{ weekStartMonday, branchId, departmentId, page }: TeamPreferenceQuery
+): readonly [
+	"shiftPreferences",
+	string,
+	"team",
+	string,
+	string,
+	string,
+	number,
+] =>
 	[
 		...shiftPreferencesRoot(companyId),
 		"team",
-		departmentId,
+		branchId ?? "",
+		departmentId ?? "",
 		weekStartMonday,
 		page,
 	] as const;
