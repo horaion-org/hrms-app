@@ -8,7 +8,12 @@ const meta = {
 	title: "Features/ShiftPreferences/PreferredShiftsCell",
 	component: PreferredShiftsCell,
 	parameters: { layout: "centered" },
-	args: { names: ["Morning", "Late"] },
+	args: {
+		shifts: [
+			{ shiftId: "s-morning", name: "Morning" },
+			{ shiftId: "s-late", name: "Late" },
+		],
+	},
 	decorators: [
 		(Story): NonNullable<FunctionComponent> => (
 			<I18nextProvider i18n={authTestI18n}>
@@ -27,7 +32,7 @@ type Story = StoryObj<typeof meta>;
 /** Read-only, as the team list shows a member's day. */
 export const TwoShifts: Story = {};
 
-export const NoPreference: Story = { args: { names: [] } };
+export const NoPreference: Story = { args: { shifts: [] } };
 
 /** The caller's own open day: the whole cell is one button. */
 export const Editable: Story = {

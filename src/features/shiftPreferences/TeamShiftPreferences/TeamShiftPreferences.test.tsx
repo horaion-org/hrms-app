@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, within } from "@testing-library/react";
-import type { ReactElement } from "react";
+import { render, screen, waitFor, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { useState, type ReactElement } from "react";
 import { I18nextProvider } from "react-i18next";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { configureApiClient, resetApiClient } from "@/common/api-client";
@@ -18,6 +19,7 @@ import { TeamShiftPreferences } from "@/features/shiftPreferences/TeamShiftPrefe
 const TEAM_PATH = "/api/v1/companies/c-1/shift-preferences";
 const TEAM = `GET ${TEAM_PATH}`;
 const READ = "shift_preference:read";
+const NEXT_WEEK = "2026-11-30";
 
 beforeEach(() => {
 	configureApiClient({
@@ -31,19 +33,15 @@ afterEach(() => {
 	vi.unstubAllGlobals();
 });
 
-/** Renders the list for Department d-1 in company c-1, holding `permissions` company-wide. */
-const show = (permissions: Array<string>): void => {
+/** Renders `list` in company c-1, holding `permissions` company-wide, once the router has loaded. */
+const showList = (permissions: Array<string>, list: ReactElement): void => {
 	const client = new QueryClient({
 		defaultOptions: { queries: { retry: false } },
 	});
 	// The list renders once the router has loaded; "Loaded" marks that.
 	const Story = (): ReactElement => (
 		<>
-			<TeamShiftPreferences
-				companyId="c-1"
-				departmentId="d-1"
-				weekStartMonday={FIXTURE_WEEK}
-			/>
+			{list}
 			<span>Loaded</span>
 		</>
 	);
@@ -55,6 +53,49 @@ const show = (permissions: Array<string>): void => {
 				} as never)}
 			</QueryClientProvider>
 		</I18nextProvider>
+	);
+};
+
+/** Renders the list for Department d-1 in company c-1, holding `permissions` company-wide. */
+const show = (permissions: Array<string>): void => {
+	showList(
+		permissions,
+		<TeamShiftPreferences
+			companyId="c-1"
+			departmentId="d-1"
+			weekStartMonday={FIXTURE_WEEK}
+		/>
+	);
+};
+
+/** The list with buttons that move it to the next week and to Department d-2, as the page's toolbar does. */
+const MovingList = (): ReactElement => {
+	const [week, setWeek] = useState(FIXTURE_WEEK);
+	const [departmentId, setDepartmentId] = useState("d-1");
+	return (
+		<>
+			<button
+				type="button"
+				onClick={() => {
+					setWeek(NEXT_WEEK);
+				}}
+			>
+				Next week
+			</button>
+			<button
+				type="button"
+				onClick={() => {
+					setDepartmentId("d-2");
+				}}
+			>
+				Kitchen
+			</button>
+			<TeamShiftPreferences
+				companyId="c-1"
+				departmentId={departmentId}
+				weekStartMonday={week}
+			/>
+		</>
 	);
 };
 
@@ -99,6 +140,39 @@ describe("TeamShiftPreferences", () => {
 				.getAllByRole("rowheader")
 				.map((header) => header.textContent)
 		).toEqual(["Alex Example", "Former member"]);
+	});
+
+	it("given_aLaterPage_when_theWeekOrDepartmentChanges_then_startsAgainAtTheFirstPage", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			[TEAM]: {
+				status: 200,
+				body: envelope({
+					...fixtureTeamPage(),
+					page: { totalElements: TEAM_PAGE_SIZE * 2 },
+				}),
+			},
+		});
+		showList([READ], <MovingList />);
+
+		await user.click(await screen.findByRole("button", { name: "Next page" }));
+		await waitFor(() => {
+			expect(calls).toHaveLength(2);
+		});
+		await user.click(screen.getByRole("button", { name: "Next week" }));
+		await waitFor(() => {
+			expect(calls).toHaveLength(3);
+		});
+		await user.click(screen.getByRole("button", { name: "Kitchen" }));
+
+		await waitFor(() => {
+			expect(calls.map((call) => call.search)).toEqual([
+				`departmentId=d-1&weekStartMonday=${FIXTURE_WEEK}&page=0&size=${TEAM_PAGE_SIZE}`,
+				`departmentId=d-1&weekStartMonday=${FIXTURE_WEEK}&page=1&size=${TEAM_PAGE_SIZE}`,
+				`departmentId=d-1&weekStartMonday=${NEXT_WEEK}&page=0&size=${TEAM_PAGE_SIZE}`,
+				`departmentId=d-2&weekStartMonday=${NEXT_WEEK}&page=0&size=${TEAM_PAGE_SIZE}`,
+			]);
+		});
 	});
 
 	it("given_noMembersInReach_when_shown_then_saysSoAcrossTheGrid", async () => {

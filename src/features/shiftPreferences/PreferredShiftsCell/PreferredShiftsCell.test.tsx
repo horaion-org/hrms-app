@@ -8,6 +8,9 @@ import {
 	type PreferredShiftsCellProps,
 } from "@/features/shiftPreferences/PreferredShiftsCell";
 
+const MORNING = { shiftId: "s-morning", name: "Morning" };
+const LATE = { shiftId: "s-late", name: "Late" };
+
 const show = (props: PreferredShiftsCellProps): void => {
 	render(
 		<I18nextProvider i18n={authTestI18n}>
@@ -17,8 +20,16 @@ const show = (props: PreferredShiftsCellProps): void => {
 };
 
 describe("PreferredShiftsCell", () => {
+	it("given_twoShiftsOfTheSameName_when_shown_then_listsBoth", () => {
+		show({ shifts: [MORNING, { shiftId: "s-morning-2", name: "Morning" }] });
+
+		expect(
+			screen.getAllByRole("listitem").map((item) => item.textContent)
+		).toEqual(["Morning", "Morning"]);
+	});
+
 	it("given_twoPreferredShifts_when_shown_then_listsAChipForEachInOrder", () => {
-		show({ names: ["Morning", "Late"] });
+		show({ shifts: [MORNING, LATE] });
 
 		expect(
 			screen.getAllByRole("listitem").map((item) => item.textContent)
@@ -27,7 +38,7 @@ describe("PreferredShiftsCell", () => {
 	});
 
 	it("given_noPreferredShift_when_shown_then_readsAsNoPreference", () => {
-		show({ names: [] });
+		show({ shifts: [] });
 
 		expect(screen.getByText("No preference")).toHaveClass("sr-only");
 		expect(screen.queryByRole("list")).not.toBeInTheDocument();
@@ -36,7 +47,7 @@ describe("PreferredShiftsCell", () => {
 	it("given_anEditableDay_when_pressed_then_theWholeCellOpensItsEditor", async () => {
 		const onEdit = vi.fn();
 		show({
-			names: ["Morning"],
+			shifts: [MORNING],
 			onEdit,
 			editLabel: "Choose shifts for Mon 23 Nov",
 		});

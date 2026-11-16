@@ -5,7 +5,10 @@ import type { FunctionComponent } from "@/common/types";
 import { weekdayOf } from "@/common/weekdays";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { WeekGrid } from "@/components/ui/WeekGrid";
-import type { PreferenceDay } from "@/features/shiftPreferences/api";
+import type {
+	PreferenceDay,
+	PreferredShift,
+} from "@/features/shiftPreferences/api";
 import { PreferredShiftsCell } from "@/features/shiftPreferences/PreferredShiftsCell";
 import { ShiftPreferenceDialog } from "@/features/shiftPreferences/ShiftPreferenceDialog";
 import { shiftPreferenceRefusal } from "@/features/shiftPreferences/shiftPreferenceRefusal";
@@ -25,9 +28,9 @@ export type MyShiftPreferencesProps = {
 
 const key = "shiftPreferences";
 
-/** The names of a day's chosen shifts. */
-const preferredNames = (day: PreferenceDay): Array<string> =>
-	day.shifts.filter((shift) => shift.preferred).map((shift) => shift.name);
+/** A day's chosen shifts. */
+const preferredShifts = (day: PreferenceDay): Array<PreferredShift> =>
+	day.shifts.filter((shift) => shift.preferred);
 
 /**
  * The caller's own week as one row of seven days, each day's preferred shifts
@@ -72,7 +75,7 @@ export const MyShiftPreferences = ({
 		cell: (
 			<PreferredShiftsCell
 				editLabel={t(`${key}.editDay`, { day: labelOf(day) })}
-				names={preferredNames(day)}
+				shifts={preferredShifts(day)}
 				onEdit={
 					day.editable
 						? (): void => {

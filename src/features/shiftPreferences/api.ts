@@ -62,6 +62,9 @@ const preferredShiftSchema = z.object({
 	name: z.string(),
 });
 
+/** A shift someone prefers on a day: its id and name. */
+export type PreferredShift = z.infer<typeof preferredShiftSchema>;
+
 const teamMemberWeekSchema = z.object({
 	membershipId: z.string(),
 	/** Null once the member has been removed; their preferences stay listed. */

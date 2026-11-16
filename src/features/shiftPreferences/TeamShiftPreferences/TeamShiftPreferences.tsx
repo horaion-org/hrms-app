@@ -39,7 +39,7 @@ const rowOf = (
 	),
 	days: member.days.map((day) => ({
 		day: weekdayOf(day.date),
-		cell: <PreferredShiftsCell names={day.shifts.map((shift) => shift.name)} />,
+		cell: <PreferredShiftsCell shifts={day.shifts} />,
 	})),
 });
 
@@ -52,7 +52,10 @@ export const TeamShiftPreferences = ({
 	className,
 }: TeamShiftPreferencesProps): FunctionComponent => {
 	const { t } = useTranslation();
-	const [page, setPage] = useState(0);
+	// A page number belongs to one Department's week; another starts again at the first page.
+	const list = `${departmentId}|${weekStartMonday}`;
+	const [paging, setPaging] = useState({ list, page: 0 });
+	const page = paging.list === list ? paging.page : 0;
 	const team = useTeamPreferences(companyId, {
 		departmentId,
 		weekStartMonday,
@@ -89,7 +92,7 @@ export const TeamShiftPreferences = ({
 				pageSize={TEAM_PAGE_SIZE}
 				total={team.page.page.totalElements}
 				onPageChange={(next) => {
-					setPage(next - 1);
+					setPaging({ list, page: next - 1 });
 				}}
 			/>
 		</div>
