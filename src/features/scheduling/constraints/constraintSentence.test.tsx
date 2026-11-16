@@ -495,13 +495,7 @@ describe("sentencePartsOf with constraintWords", () => {
 			];
 
 			expect(
-				read(
-					"BANNED_SHIFT_PATTERN",
-					nightThenMorning,
-					"en",
-					false,
-					requirement
-				)
+				read("BANNED_SHIFT_PATTERN", nightThenMorning, "en", false, requirement)
 			).toBe(sentence);
 		}
 	);
@@ -514,9 +508,7 @@ describe("sentencePartsOf with constraintWords", () => {
 			named("PATTERN_DAY_3", "Morning"),
 		];
 
-		expect(
-			read("BANNED_SHIFT_PATTERN", values, "en", false, "MUST")
-		).toBe(
+		expect(read("BANNED_SHIFT_PATTERN", values, "en", false, "MUST")).toBe(
 			"Nobody works Night or Late then Night then Morning on consecutive days."
 		);
 		expect(

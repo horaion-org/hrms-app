@@ -238,12 +238,11 @@ export const sentencePartsOf = (
 					i18nKey: `${SENTENCES}.${constraint.type}.${firmnessWordsOf(constraint)}`,
 					count: 1,
 				},
-				...laterPatternDaysOf(constraint).map(
-					(day): SentencePart => ({
-						i18nKey: `${SENTENCES}.${constraint.type}.then.${day}`,
-						count: 1,
-					})
-				),
+				...laterPatternDaysOf(constraint).map((day): SentencePart => ({
+					// The type is written out: inside a callback the switch's narrowing of `constraint.type` is lost.
+					i18nKey: `${SENTENCES}.BANNED_SHIFT_PATTERN.then.${day}`,
+					count: 1,
+				})),
 				{ i18nKey: `${SENTENCES}.${constraint.type}.end`, count: 1 },
 			];
 		case "REST_BETWEEN_SHIFTS":

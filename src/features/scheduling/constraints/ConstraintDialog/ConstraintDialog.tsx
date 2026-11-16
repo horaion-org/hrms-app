@@ -969,7 +969,9 @@ export const ConstraintDialog = ({
 										row.every((spec) => isFieldShown(spec.field, values))
 									)
 									.map((row) => {
-										const notes = row.flatMap((spec) => removedNote(spec) ?? []);
+										const notes = row.flatMap(
+											(spec) => removedNote(spec) ?? []
+										);
 										return (
 											<Fragment key={row.map((spec) => spec.field).join("-")}>
 												{row.length === 1 ? (
