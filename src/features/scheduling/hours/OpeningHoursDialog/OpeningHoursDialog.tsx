@@ -107,7 +107,8 @@ export const OpeningHoursDialog = ({
 	): DataTableColumn<OpeningHoursPerson> => ({
 		id: field,
 		header: t(`${key}.${field}`),
-		headerClassName: "w-40",
+		// Narrower on a phone, so both hours columns show beside the names without scrolling sideways.
+		headerClassName: "w-40 max-sm:w-26",
 		cell: (person): ReactNode => {
 			if (!openingByPerson.get(person.memberProfileId)?.editable)
 				return (
@@ -120,7 +121,8 @@ export const OpeningHoursDialog = ({
 				);
 			return (
 				<Input
-					className="w-full"
+					// The field takes its width from the cell (`w-0` then grows), so on a phone the columns fit instead of a number field's own width.
+					className="w-full [&>input]:w-0"
 					inputMode="decimal"
 					min={0}
 					status={trouble ? "error" : undefined}
