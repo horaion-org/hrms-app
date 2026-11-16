@@ -166,6 +166,19 @@ describe("WeekChoiceDialog", () => {
 		expect(use()).toBeDisabled();
 	});
 
+	it("given_aMustAndAnIfPossibleCover_when_listed_then_theirTagsWearTheirTones", () => {
+		const ifPossibleCover = { ...SUNDAY_COVER, requirement: "SHOULD" as const };
+		const constraints = [COMPANY_REST, OPENING_COVER, ifPossibleCover];
+		show({ constraints, value: allOf(SHIFTS, constraints) });
+
+		const opening = screen.getByRole("row", { name: /Opening cover/ });
+		for (const tag of within(opening).getAllByText("Must"))
+			expect(tag).toHaveClass("bg-neutral-400");
+		const sunday = screen.getByRole("row", { name: /Sunday cover/ });
+		for (const tag of within(sunday).getAllByText("If possible"))
+			expect(tag).toHaveClass("bg-warning-100");
+	});
+
 	it("given_changes_when_cancelled_then_closesWithoutApplying", async () => {
 		const user = userEvent.setup();
 		const onApply = vi.fn();

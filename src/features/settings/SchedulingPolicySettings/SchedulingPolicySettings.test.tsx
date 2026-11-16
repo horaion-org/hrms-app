@@ -99,6 +99,26 @@ describe("SchedulingPolicySettings", () => {
 		).toBeVisible();
 	});
 
+	it("tags an If possible constraint in its own tone", async () => {
+		const [rest, ...others] = COMPANY_CONSTRAINT_FIXTURES;
+		stubApi(
+			routes(READ_AND_UPDATE, {
+				[`GET ${POLICY}/constraints`]: {
+					status: 200,
+					body: envelope([{ ...rest!, requirement: "SHOULD" }, ...others]),
+				},
+			})
+		);
+		const panel = await open();
+
+		const table = await within(panel).findByRole("table", {
+			name: "Work policy constraints",
+		});
+		const restRow = within(table).getByRole("row", { name: /Company rest/ });
+		for (const tag of within(restRow).getAllByText("If possible"))
+			expect(tag).toHaveClass("bg-warning-100");
+	});
+
 	it("says where each constraint applies", async () => {
 		stubApi(
 			routes(READ_AND_UPDATE, {

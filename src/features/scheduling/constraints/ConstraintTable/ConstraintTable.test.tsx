@@ -49,6 +49,16 @@ describe("ConstraintTable", () => {
 		);
 	});
 
+	it("given_aMustAndAnIfPossible_when_rendered_then_theirTagsWearTheirTones", () => {
+		render(<ConstraintTable constraints={rows} />);
+
+		// The row and its phone summary each carry the tag.
+		for (const tag of within(row(morningCover.name)).getAllByText("Must"))
+			expect(tag).toHaveClass("bg-neutral-400");
+		for (const tag of within(row(barCover.name)).getAllByText("If possible"))
+			expect(tag).toHaveClass("bg-warning-100");
+	});
+
 	it("given_aRuleWhoseJobTitleLeftItsShift_when_rendered_then_needsAttentionWithWhatToDo", () => {
 		const stale = {
 			...morningCover,
