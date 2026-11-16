@@ -46,11 +46,11 @@ export const ChosenConstraintType = ({
 			</div>
 			{onChange && (
 				<Button
+					disabled={disabled}
+					variant="textlink"
 					aria-label={t("scheduling.constraints.dialog.changeTypeLabel", {
 						type: look.label,
 					})}
-					disabled={disabled}
-					variant="textlink"
 					onClick={onChange}
 				>
 					{t("scheduling.constraints.dialog.changeType")}

@@ -1,6 +1,5 @@
 import type {
 	ConstraintCategory,
-	ConstraintType,
 	ConstraintTypeOption,
 } from "@/features/scheduling/constraints/api";
 
@@ -17,7 +16,7 @@ export type ConstraintTypeGroup = {
  */
 export const typeGroupsOf = (
 	types: ReadonlyArray<ConstraintTypeOption>,
-	shownType?: ConstraintType | string
+	shownType?: string
 ): Array<ConstraintTypeGroup> =>
 	types
 		.filter((option) => !option.addedBySystem || option.type === shownType)
