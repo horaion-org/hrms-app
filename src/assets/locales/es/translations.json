@@ -5397,16 +5397,16 @@
 			"weekHours": "Horas normales a la semana",
 			"restDay": "Día de descanso",
 			"restFixed": "El mismo día cada semana",
-			"restFixedDescription": "El día de descanso es siempre el día de la semana que elijas.",
-			"restRostered": "El cuadrante elige uno cada semana",
-			"restRosteredDescription": "Los cuadrantes dan un día de descanso a la semana, el que mejor convenga al cuadrante.",
+			"restFixedDescription": "El mismo día cada semana.",
+			"restRostered": "Lo elige el cuadrante",
+			"restRosteredDescription": "El cuadrante elige un día cada semana.",
 			"restWeekday": "Día de la semana",
 			"overtime": "Horas extra",
 			"dailyOvertime": "Contar también horas extra después del día normal",
 			"dailyOvertimeDescription": "Las horas por encima de {{day}} en un día son horas extra, aunque no se hayan alcanzado las {{week}} de la semana.",
 			"hoursLimitsDescription": "Cubren a la mayoría del personal. Se puede dejar fuera a directivos, ejecutivos y a quienes las normas de horas de la Ley no cubren.",
 			"name": "Nombre",
-			"nameHint": "Se muestra en los perfiles y en la lista de Personas. Se sugiere a partir de la semana hasta que escribas uno.",
+			"nameHint": "Se sugiere a partir de la semana hasta que escribas uno.",
 			"namePlaceholder": "p. ej., Semana de cinco días, 44 h",
 			"nameCounter": "{{count}}/100",
 			"descriptionLabel": "Descripción (opcional)",
@@ -5452,7 +5452,7 @@
 			"daysVary": "Varían",
 			"daysOption_one": "{{days}} día",
 			"daysOption_other": "{{days}} días",
-			"restPartTime": "Los cuadrantes no fijan un día de descanso a quien trabaja a tiempo parcial, así que aquí no hay nada que elegir.",
+			"restPartTime": "Los cuadrantes no fijan un día de descanso a tiempo parcial.",
 			"overtimeUnknown": "Cuándo empiezan las horas extra se muestra cuando se hayan cargado las cifras de la empresa.",
 			"dailyOvertimeNeedsDay": "Las horas por encima de las horas normales al día también son horas extra. Indica arriba las horas normales al día.",
 			"shiftNoDailyNote": "El trabajo por turnos no tiene horas extra por día: las horas extra se cuentan por semana.",
@@ -5463,7 +5463,8 @@
 			"limitsDontApplyDescription": "Los cuadrantes pueden superar con ellos los límites de horas de trabajo. Sus horas se siguen contando.",
 			"weekAboveDays_one": "{{days}} día de {{day}} suma {{made}}, menos que las {{week}} normales a la semana. Sube las horas al día o los días laborables.",
 			"weekAboveDays_other": "{{days}} días de {{day}} suman {{made}}, menos que las {{week}} normales a la semana. Sube las horas al día o los días laborables.",
-			"dayRequiredForOvertime": "Escribe las horas normales al día, o desmarca las horas extra después del día normal."
+			"dayRequiredForOvertime": "Escribe las horas normales al día, o desmarca las horas extra después del día normal.",
+			"dailyOvertimeDescriptionDayOnly": "Las horas por encima de {{day}} en un día también son horas extra."
 		},
 		"apply": {
 			"title": "¿Cómo se aplica este cambio?",
@@ -5635,7 +5636,9 @@
 				"longestShift": "el turno más largo",
 				"daysPerWeek": "los días laborables a la semana",
 				"restWeekday": "el día de la semana del descanso"
-			}
+			},
+			"showAll": "Ver todo",
+			"showLess": "Ver menos"
 		},
 		"kinds": {
 			"legend": "¿Qué tipo de semana es?",
@@ -5645,7 +5648,7 @@
 			"SHIFT_WORK": "Trabajo por turnos",
 			"PART_TIME": "Tiempo parcial",
 			"CUSTOM": "Una semana propia",
-			"customDescription": "No coincide con ninguno de los tipos de arriba. Los campos de abajo dicen cómo es; elige un tipo para empezar de nuevo con sus cifras.",
+			"customDescription": "No coincide con ningún tipo; los campos de abajo dicen cómo es.",
 			"fixedDescription": "{{week}} a la semana; {{rest}}.",
 			"restOn": "descanso el {{weekday}}",
 			"restOnRoster": "el cuadrante elige el día de descanso",

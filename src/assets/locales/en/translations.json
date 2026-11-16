@@ -5397,16 +5397,16 @@
 			"weekHours": "Normal hours a week",
 			"restDay": "Rest day",
 			"restFixed": "Same day each week",
-			"restFixedDescription": "The rest day is always the weekday you choose.",
-			"restRostered": "The roster picks one each week",
-			"restRosteredDescription": "Rosters give one rest day a week, on the day that suits the roster.",
+			"restFixedDescription": "The same weekday every week.",
+			"restRostered": "The roster picks it",
+			"restRosteredDescription": "The roster picks a day each week.",
 			"restWeekday": "Weekday",
 			"overtime": "Overtime",
 			"dailyOvertime": "Also count overtime after the normal day",
 			"dailyOvertimeDescription": "Hours past {{day}} in a day count as overtime, even before the week’s {{week}} are reached.",
 			"hoursLimitsDescription": "Most staff are covered. Managers, executives and others the Act’s hours rules don’t cover can be left out.",
 			"name": "Name",
-			"nameHint": "Shown on profiles and in the People list. Suggested from the week until you type one.",
+			"nameHint": "Suggested from the week until you type one.",
 			"namePlaceholder": "e.g. Five-day week, 44 h",
 			"nameCounter": "{{count}}/100",
 			"descriptionLabel": "Description (optional)",
@@ -5452,7 +5452,7 @@
 			"daysVary": "It varies",
 			"daysOption_one": "{{days}} day",
 			"daysOption_other": "{{days}} days",
-			"restPartTime": "Rosters don’t set a rest day for part-timers, so there is nothing to choose here.",
+			"restPartTime": "Rosters don’t set a rest day for part-timers.",
 			"overtimeUnknown": "When overtime starts shows once the company’s figures have loaded.",
 			"dailyOvertimeNeedsDay": "Hours past the normal hours a day count as overtime too. Set the normal hours a day above.",
 			"shiftNoDailyNote": "Shift work has no overtime by the day: overtime counts by the week.",
@@ -5463,7 +5463,8 @@
 			"limitsDontApplyDescription": "Rosters may plan them past the work-hour limits. Their hours are still counted.",
 			"weekAboveDays_one": "{{days}} day of {{day}} makes {{made}}, less than the {{week}} normal hours a week. Raise the hours a day or the working days.",
 			"weekAboveDays_other": "{{days}} days of {{day}} make {{made}}, less than the {{week}} normal hours a week. Raise the hours a day or the working days.",
-			"dayRequiredForOvertime": "Enter the normal hours a day, or untick overtime after the normal day."
+			"dayRequiredForOvertime": "Enter the normal hours a day, or untick overtime after the normal day.",
+			"dailyOvertimeDescriptionDayOnly": "Hours past {{day}} in a day count as overtime too."
 		},
 		"apply": {
 			"title": "How should this change apply?",
@@ -5635,7 +5636,9 @@
 				"longestShift": "the longest shift",
 				"daysPerWeek": "the working days a week",
 				"restWeekday": "the rest day’s weekday"
-			}
+			},
+			"showAll": "Show all",
+			"showLess": "Show less"
 		},
 		"kinds": {
 			"legend": "What kind of week is it?",
@@ -5645,7 +5648,7 @@
 			"SHIFT_WORK": "Shift work",
 			"PART_TIME": "Part-time",
 			"CUSTOM": "Your own week",
-			"customDescription": "Matches none of the kinds above. The fields below say what it is; choose a kind to start again from its figures.",
+			"customDescription": "Matches none of these kinds; the fields below say what it is.",
 			"fixedDescription": "{{week}} a week; {{rest}}.",
 			"restOn": "rest day {{weekday}}",
 			"restOnRoster": "the roster picks the rest day",
