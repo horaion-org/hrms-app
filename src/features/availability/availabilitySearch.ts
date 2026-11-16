@@ -12,10 +12,10 @@ import type {
 } from "@/features/workspace/unitSelection";
 
 /** The page's two tabs: the caller's own availability, and their teams'. */
-export type AvailabilityView = "mine" | "team";
+export type AvailabilityView = "mine" | "preferences" | "team";
 
 const searchSchema = z.object({
-	view: z.enum(["mine", "team"]).optional().catch(undefined),
+	view: z.enum(["mine", "preferences", "team"]).optional().catch(undefined),
 	...unitSearchSchema.shape,
 	week: z.iso.date().refine(isMonday).optional().catch(undefined),
 	/** The one day the team grid shows below `md`; today, else the week's first day, when left out (`shownDayOf`). */
@@ -59,7 +59,7 @@ export const weekParameter = (
 ): string | undefined =>
 	weekStartMonday === mondayOf(today) ? undefined : weekStartMonday;
 
-/** The tabs a person has, in order: Mine for a part-timer, Team with the read key held somewhere. */
+/** The tabs a person has, in order: Mine for a part-timer, Shift preferences for everyone, Team with the read key held somewhere. */
 export const viewsOf = ({
 	mine,
 	team,
@@ -68,6 +68,7 @@ export const viewsOf = ({
 	team: boolean;
 }): Array<AvailabilityView> => [
 	...(mine ? (["mine"] as const) : []),
+	"preferences",
 	...(team ? (["team"] as const) : []),
 ];
 

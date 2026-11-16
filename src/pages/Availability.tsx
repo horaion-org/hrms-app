@@ -33,10 +33,13 @@ import {
 	type TeamAvailabilityList,
 } from "@/features/availability/useAvailability";
 import { myProfileQuery } from "@/features/people/api";
+import { MyShiftPreferences } from "@/features/shiftPreferences/MyShiftPreferences";
+import { TeamShiftPreferences } from "@/features/shiftPreferences/TeamShiftPreferences";
 import { workspaceQuery } from "@/features/workspace/api";
 import {
 	AVAILABILITY_READ_KEYS,
 	AVAILABILITY_UPDATE_KEY,
+	SHIFT_PREFERENCE_READ_KEYS,
 } from "@/features/workspace/permissionKeys";
 import { retry } from "@/features/workspace/retry";
 import { recordScope } from "@/features/workspace/scopes";
@@ -238,7 +241,16 @@ export const Availability = (): FunctionComponent => {
 				<TabPanels>
 					{views.map((each) => (
 						<TabPanel key={each}>
-							{each === "mine" ? (
+							{each === "preferences" ? (
+								<>
+									{daySwitcher}
+									<MyShiftPreferences
+										companyId={companyId}
+										shownDay={shownDay}
+										weekStartMonday={week}
+									/>
+								</>
+							) : each === "mine" ? (
 								<>
 									{daySwitcher}
 									<MyAvailability
@@ -273,6 +285,16 @@ export const Availability = (): FunctionComponent => {
 										weekStartMonday={week}
 										onEdit={setEditing}
 									/>
+									{units.department &&
+										access.canAny(SHIFT_PREFERENCE_READ_KEYS, "anywhere") && (
+											<TeamShiftPreferences
+												className="mt-10"
+												companyId={companyId}
+												departmentId={units.department.departmentId}
+												shownDay={shownDay}
+												weekStartMonday={week}
+											/>
+										)}
 								</>
 							)}
 						</TabPanel>

@@ -538,6 +538,9 @@
 			"customWeek": "This week has its own hours in place of your default pattern.",
 			"empty": "No availability set. Add the hours you can work so you can be rostered."
 		},
+		"preferences": {
+			"tab": "Shift preferences"
+		},
 		"team": {
 			"tab": "Team",
 			"label": "Team availability",

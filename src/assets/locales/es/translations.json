@@ -538,6 +538,9 @@
 			"customWeek": "Esta semana tiene sus propias horas en lugar de tu patrón habitual.",
 			"empty": "No hay disponibilidad indicada. Añade las horas en que puedes trabajar para que se te puedan asignar turnos."
 		},
+		"preferences": {
+			"tab": "Preferencias de turno"
+		},
 		"team": {
 			"tab": "Equipo",
 			"label": "Disponibilidad del equipo",
