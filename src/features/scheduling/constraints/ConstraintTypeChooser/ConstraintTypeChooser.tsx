@@ -82,12 +82,12 @@ export const ConstraintTypeChooser = ({
 								return (
 									<RadioCard
 										key={option.type}
-										size="large"
 										checked={value === option.type}
 										disabled={disabled}
 										icon={<look.Icon />}
 										label={look.label}
 										name={`${id}-type`}
+										size="large"
 										value={option.type}
 										description={
 											look.description && (
