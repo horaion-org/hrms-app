@@ -480,9 +480,7 @@ const MonthContent = ({
 				/>
 			)}
 			{generation.error && (
-				<p className="text-sm text-error-700" role="alert">
-					{monthGenerationRefusal(generation.error, t)}
-				</p>
+				<ErrorText>{monthGenerationRefusal(generation.error, t)}</ErrorText>
 			)}
 			{noSchedule && !showsPanel && (
 				<p className="text-sm text-neutral-800">

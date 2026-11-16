@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
+import { ErrorText } from "@/components/ui/ErrorText";
 import { TimeIcon } from "@/components/ui/Icon";
 import type { CoverOffer } from "@/features/scheduling/coverOffers/api";
 import type { CoverOfferRefusal } from "@/features/scheduling/coverOffers/coverOfferRefusal";
@@ -53,9 +54,7 @@ export const CoverOfferSent = ({
 			</p>
 			{offer.remark && <q className="text-neutral-800">{offer.remark}</q>}
 			{refusal && (
-				<p className="text-error-700" role="alert">
-					{t(`${key}.error.${refusal}`, { name })}
-				</p>
+				<ErrorText>{t(`${key}.error.${refusal}`, { name })}</ErrorText>
 			)}
 			<Button
 				disabled={withdrawing}

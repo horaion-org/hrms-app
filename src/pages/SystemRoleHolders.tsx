@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { ErrorText } from "@/components/ui/ErrorText";
 import {
 	changeableAt,
 	changeablePart,
@@ -207,9 +208,7 @@ export const SystemRoleHolders = ({
 				</p>
 			)}
 			{!holders && (
-				<p className="mt-6 text-sm text-error-700" role="alert">
-					{t(`${key}.loadFailed`)}
-				</p>
+				<ErrorText className="mt-6">{t(`${key}.loadFailed`)}</ErrorText>
 			)}
 			<AccessRoleAssignments
 				assignments={holders ?? []}

@@ -790,11 +790,7 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 						</>
 					))}
 			</div>
-			{problem && (
-				<p className="mt-6 text-sm text-error-700" role="alert">
-					{problem}
-				</p>
-			)}
+			{problem && <ErrorText className="mt-6">{problem}</ErrorText>}
 			{step === "generate" ? (
 				// The panel holds Generate; the foot only goes back.
 				back && (

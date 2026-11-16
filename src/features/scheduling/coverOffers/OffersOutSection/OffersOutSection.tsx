@@ -3,6 +3,7 @@ import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { useNow } from "@/common/useNow";
 import { Button } from "@/components/ui/Button";
+import { ErrorText } from "@/components/ui/ErrorText";
 import type { CoverOffer } from "@/features/scheduling/coverOffers/api";
 import { coverOfferRefusal } from "@/features/scheduling/coverOffers/coverOfferRefusal";
 import {
@@ -94,12 +95,12 @@ export const OffersOutSection = ({
 		<>
 			{heading}
 			{withdraw.error && (
-				<p className="mb-2 text-error-700" role="alert">
+				<ErrorText className="mb-2">
 					{t(
 						`scheduling.coverOffers.actions.error.${coverOfferRefusal(withdraw.error)}`,
 						{ name: "" }
 					)}
-				</p>
+				</ErrorText>
 			)}
 			<ul className="flex flex-col divide-y divide-neutral-300">
 				{groups.map((group) => (

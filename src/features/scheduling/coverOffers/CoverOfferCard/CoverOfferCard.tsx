@@ -7,6 +7,7 @@ import { Textarea } from "@/components/forms/Textarea";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { DescriptionList } from "@/components/ui/DescriptionList";
+import { ErrorText } from "@/components/ui/ErrorText";
 import { FillShiftsIcon, TickIcon, TimeIcon } from "@/components/ui/Icon";
 import { Quote } from "@/components/ui/Quote";
 import {
@@ -133,9 +134,7 @@ export const CoverOfferCard = ({
 				</p>
 			);
 		const refusalLine = refusal && (
-			<p className="text-sm text-error-700" role="alert">
-				{t(`${key}.error.${refusal}`, { name: manager })}
-			</p>
+			<ErrorText>{t(`${key}.error.${refusal}`, { name: manager })}</ErrorText>
 		);
 		if (declining)
 			return (

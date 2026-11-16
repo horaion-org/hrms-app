@@ -10,6 +10,7 @@ import { Select, type SelectOption } from "@/components/forms/Select";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import { Dialog } from "@/components/ui/Dialog";
+import { ErrorText } from "@/components/ui/ErrorText";
 import { UnitNameField } from "@/features/organisation/UnitNameField";
 import { useCreateFormSubmit } from "@/features/organisation/useCreateFormSubmit";
 import { ChosenConstraintType } from "@/features/scheduling/constraints/ChosenConstraintType";
@@ -886,9 +887,7 @@ export const ConstraintDialog = ({
 							/>
 						)}
 						{errors.type?.message && (
-							<p className="text-sm text-error-700" role="alert">
-								{errors.type.message}
-							</p>
+							<ErrorText>{errors.type.message}</ErrorText>
 						)}
 						{staleNames.length > 0 && (
 							<Callout tone="warning">

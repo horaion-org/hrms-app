@@ -6,6 +6,7 @@ import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
+import { ErrorText } from "@/components/ui/ErrorText";
 import {
 	ArrowLeftIcon,
 	ArrowRightIcon,
@@ -571,13 +572,13 @@ export const CreateSchedule = (): FunctionComponent => {
 	const generateWeekSummary = weekLine && (
 		<>
 			{weekProblem && (
-				<p className="mb-3 text-sm text-error-700" role="alert">
+				<ErrorText className="mb-3">
 					{t(
 						weekProblem === "noShift"
 							? "scheduling.week.noShift"
 							: "scheduling.week.noStaffing"
 					)}
-				</p>
+				</ErrorText>
 			)}
 			<WeekChoiceSummary
 				actionLabel={canChooseWeek ? t("scheduling.week.change") : undefined}
@@ -713,11 +714,7 @@ export const CreateSchedule = (): FunctionComponent => {
 					/>
 				)}
 			</div>
-			{problem && (
-				<p className="mt-6 text-sm text-error-700" role="alert">
-					{problem}
-				</p>
-			)}
+			{problem && <ErrorText className="mt-6">{problem}</ErrorText>}
 			<StepActions
 				busy={busy}
 				className="mt-12"
