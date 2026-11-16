@@ -5,7 +5,10 @@ import { weekdayOf } from "@/common/weekdays";
 import { Pagination } from "@/components/ui/Pagination";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { WeekGrid, type WeekGridRowData } from "@/components/ui/WeekGrid";
-import { TEAM_PAGE_SIZE, type TeamMemberWeek } from "@/features/shiftPreferences/api";
+import {
+	TEAM_PAGE_SIZE,
+	type TeamMemberWeek,
+} from "@/features/shiftPreferences/api";
 import { PreferredShiftsCell } from "@/features/shiftPreferences/PreferredShiftsCell";
 import { useTeamPreferences } from "@/features/shiftPreferences/useShiftPreferences";
 

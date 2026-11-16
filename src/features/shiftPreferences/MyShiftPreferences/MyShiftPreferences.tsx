@@ -101,7 +101,8 @@ export const MyShiftPreferences = ({
 					saving={replace.isPending}
 					refusal={
 						replace.error
-							? shiftPreferenceRefusal(replace.error, maxShiftsPerDay, t).message
+							? shiftPreferenceRefusal(replace.error, maxShiftsPerDay, t)
+									.message
 							: undefined
 					}
 					onClose={() => {

@@ -1,1 +1,4 @@
-export { PreferredShiftsCell, type PreferredShiftsCellProps } from "./PreferredShiftsCell";
+export {
+	PreferredShiftsCell,
+	type PreferredShiftsCellProps,
+} from "./PreferredShiftsCell";

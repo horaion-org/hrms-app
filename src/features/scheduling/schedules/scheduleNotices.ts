@@ -59,7 +59,10 @@ export const SCHEDULE_NOTICES: ReadonlyArray<{
 	{
 		id: "currentRules",
 		shownWhen: ({ status, generating, weekPassed }) =>
-			!weekPassed && !generating && status !== "DRAFT" && status !== "PUBLISHED",
+			!weekPassed &&
+			!generating &&
+			status !== "DRAFT" &&
+			status !== "PUBLISHED",
 	},
 ];
 

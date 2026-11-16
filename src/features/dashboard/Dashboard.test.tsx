@@ -256,7 +256,9 @@ describe("Dashboard", () => {
 		await open();
 
 		await waitFor(() => {
-			expect(screen.queryByRole("link", { name: "Recent Activity" })).toBeNull();
+			expect(
+				screen.queryByRole("link", { name: "Recent Activity" })
+			).toBeNull();
 		});
 		await waitFor(() => {
 			expect(
