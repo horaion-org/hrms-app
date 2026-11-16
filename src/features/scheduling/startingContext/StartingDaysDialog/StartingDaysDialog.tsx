@@ -106,8 +106,8 @@ export const StartingDaysDialog = ({
 	const dayColumn = (date: string): DataTableColumn<MemberRow> => ({
 		id: date,
 		header: labelOf(date),
-		// Seven of these beside the staff column fit the dialog's 1104 px of content.
-		headerClassName: "w-32",
+		// Seven of these (152 px, room for "Not known") beside the staff column fit the dialog's 1200 px of content.
+		headerClassName: "w-38",
 		wrapHeader: true,
 		cell: (member): ReactNode => {
 			const cell = cellOn(member, date);
@@ -123,7 +123,8 @@ export const StartingDaysDialog = ({
 				);
 			return (
 				<Select
-					className="w-full"
+					// Tighter than a form's select, so "Not known" reads in full in a 152 px day.
+					className="w-full gap-1! px-3!"
 					options={valueOptions}
 					value={entries[member.memberProfileId]?.[date] ?? ""}
 					aria-label={t(`${key}.cellLabel`, {
@@ -148,7 +149,7 @@ export const StartingDaysDialog = ({
 		{
 			id: "member",
 			header: t("scheduling.detail.staff"),
-			headerClassName: "w-40",
+			headerClassName: "w-32",
 			pin: "start",
 			cell: (member) => (
 				<span className="block min-w-0">
@@ -174,7 +175,8 @@ export const StartingDaysDialog = ({
 
 	return (
 		<Dialog
-			className="md:max-w-288"
+			// 1248 px: as wide as a 1280 px window leaves beside the dialog's margins.
+			className="md:max-w-312"
 			description={t(`${key}.explain`)}
 			open={open}
 			preventClose={saving}
