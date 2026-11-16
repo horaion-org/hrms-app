@@ -8,11 +8,17 @@ import { authTestI18n } from "@/features/auth/testingI18n";
 import { storyCompany } from "@/features/people/storyCompany";
 import { approvalKeys } from "@/features/approvals/api";
 import { approvalInstanceFixture } from "@/features/approvals/fixtures";
-import { scheduleMonthSummariesKey } from "@/features/scheduling/months/api";
+import {
+	scheduleMonthSummariesKey,
+	type ScheduleMonthSummary,
+} from "@/features/scheduling/months/api";
 import { monthSummaryFixture } from "@/features/scheduling/months/fixtures";
 import { summaryRange } from "@/features/scheduling/months/monthWeeks";
 import { SchedulesTab } from "@/features/scheduling/SchedulesTab";
-import { schedulesInUnitsKey } from "@/features/scheduling/schedules/api";
+import {
+	schedulesInUnitsKey,
+	type Schedule,
+} from "@/features/scheduling/schedules/api";
 import {
 	generatedScheduleFixture,
 	SCHEDULING_BRANCHES,
@@ -55,7 +61,10 @@ const SUMMARIES = [
 /** Renders the tab in company c-1, its schedules and month summaries seeded; `permissions` as given. */
 const show = (
 	onDepartmentChange = vi.fn(),
-	permissions = ["schedule:read"]
+	permissions = ["schedule:read"],
+	kitchenStatus: Schedule["status"] = "GENERATION_REQUESTED",
+	/** Left unseeded when undefined, so the months are read. */
+	summaries: Array<ScheduleMonthSummary> | undefined = SUMMARIES
 ): { onDepartmentChange: typeof onDepartmentChange } => {
 	// The router scrolls to the top on load, which jsdom does not implement.
 	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
@@ -64,16 +73,21 @@ const show = (
 	});
 	client.setQueryData(schedulesInUnitsKey("c-1", selectedUnits(UNITS)), [
 		scheduleFixture({ name: "Front Office - Week 42" }),
-		generatedScheduleFixture({ scheduleId: "s-2", name: "Kitchen - Week 41" }),
+		generatedScheduleFixture({
+			scheduleId: "s-2",
+			name: "Kitchen - Week 41",
+			status: kitchenStatus,
+		}),
 	]);
-	client.setQueryData(
-		scheduleMonthSummariesKey(
-			"c-1",
-			selectedUnits(UNITS),
-			summaryRange(new Date())
-		),
-		SUMMARIES
-	);
+	if (summaries)
+		client.setQueryData(
+			scheduleMonthSummariesKey(
+				"c-1",
+				selectedUnits(UNITS),
+				summaryRange(new Date())
+			),
+			summaries
+		);
 	client.setQueryData(approvalKeys.pending("c-1"), [
 		approvalInstanceFixture({ subjectId: "s-2" }),
 	]);
@@ -132,6 +146,36 @@ describe("SchedulesTab", () => {
 		).toBeVisible();
 	});
 
+	it("given_aGeneratedSchedule_when_listed_then_itsHistoryStatusReadsToReview", async () => {
+		show(vi.fn(), ["schedule:read"], "GENERATED");
+
+		const history = await screen.findByRole("table", {
+			name: "Schedule history",
+		});
+		const row = within(history).getByRole("row", { name: /Kitchen - Week 41/ });
+		expect(within(row).getAllByText("To review")[0]).toBeInTheDocument();
+		expect(within(row).queryByText("Generated")).toBeNull();
+	});
+
+	it("given_aSchedule_when_listed_then_itsRowStartsWithItsWeekAndTheViewButtonNamesDepartmentAndWeek", async () => {
+		show();
+
+		const history = await screen.findByRole("table", {
+			name: "Schedule history",
+		});
+		const row = within(history).getByRole("row", {
+			name: /Front Office - Week 42/,
+		});
+		expect(within(row).getAllByRole("cell")[0]).toHaveTextContent(
+			/^Oct 12\s?–\s?18, 2026/
+		);
+		expect(
+			within(row).getByRole("link", {
+				name: /^View the Front Office schedule for Oct 12\s?–\s?18, 2026$/,
+			})
+		).toBeInTheDocument();
+	});
+
 	it("given_anApprovalWaitingOnTheViewer_when_rendered_then_itsMonthCardSaysWhichWeek", async () => {
 		show(vi.fn(), ["schedule:read", "approval:decide"]);
 
@@ -151,6 +195,27 @@ describe("SchedulesTab", () => {
 		expect(screen.getByRole("region", { name: "Kitchen" })).toBeVisible();
 		expect(screen.queryByRole("region", { name: "Front Office" })).toBeNull();
 		expect(screen.queryByRole("heading", { name: "December 2026" })).toBeNull();
+	});
+
+	it("given_theMonthsStillLoading_when_rendered_then_saysTheMonthsAreLoading", async () => {
+		// The months' read never answers, so they stay loading.
+		vi.stubGlobal("fetch", () => new Promise(() => {}));
+		show(vi.fn(), ["schedule:read"], "GENERATION_REQUESTED", undefined);
+
+		expect(await screen.findByText("Loading the months…")).toHaveAttribute(
+			"role",
+			"status"
+		);
+	});
+
+	it("given_noMonthWithASchedule_when_rendered_then_saysSoAndPointsAtCreateSchedule", async () => {
+		show(vi.fn(), ["schedule:read"], "GENERATION_REQUESTED", []);
+
+		expect(
+			await screen.findByText(
+				"No month has a schedule yet. Use Create schedule to start one."
+			)
+		).toBeInTheDocument();
 	});
 
 	it("given_aSearch_when_typed_then_narrowsTheHistory", async () => {

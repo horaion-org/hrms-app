@@ -2,6 +2,7 @@ import { normalizeBranchCity } from "@/features/organisation/city";
 import { z } from "zod";
 import { apiRequest, apiRequestVoid, fetchList } from "@/common/api-client";
 import { companyPath } from "@/common/companyPath";
+import { isOneOf } from "@/common/isOneOf";
 import { memberRefSchema, type ListPage } from "@/common/schemas";
 
 const totalSchema = z.object({
@@ -219,7 +220,7 @@ const accessRoleKindSchema = z.enum(ACCESS_ROLE_KINDS);
 export type AccessRoleKind = z.infer<typeof accessRoleKindSchema>;
 
 export const isAccessRoleKind = (value: string): value is AccessRoleKind =>
-	(ACCESS_ROLE_KINDS as ReadonlyArray<string>).includes(value);
+	isOneOf(ACCESS_ROLE_KINDS, value);
 
 const accessRoleSchema = z.object({
 	accessRoleId: z.string(),

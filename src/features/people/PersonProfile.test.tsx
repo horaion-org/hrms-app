@@ -932,7 +932,7 @@ describe("Changing a person's access role", () => {
 			},
 			[`POST ${path}`]: { status: 201 },
 		});
-		await choose(user, /^Role scope/, target);
+		await choose(user, /^Applies to/, target);
 		await choose(user, /^Access role/, "Manager");
 		await save(user);
 		await screen.findByText("Changes to Kent Chua were saved.");
@@ -960,7 +960,7 @@ describe("Changing a person's access role", () => {
 			)
 		).toBeVisible();
 		expect(
-			screen.queryByRole("button", { name: /^Role scope/ })
+			screen.queryByRole("button", { name: /^Applies to/ })
 		).not.toBeInTheDocument();
 	});
 
@@ -991,7 +991,7 @@ describe("Changing a person's access role", () => {
 				]),
 			},
 		});
-		expect(button(/^Role scope/)).toHaveTextContent("Orchard");
+		expect(button(/^Applies to/)).toHaveTextContent("Orchard");
 		expect(button(/^Access role/)).toHaveTextContent("Manager");
 		await save(user);
 		await screen.findByText("Changes to Kent Chua were saved.");

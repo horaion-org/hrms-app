@@ -1,4 +1,5 @@
 import type { TFunction } from "i18next";
+import { isOneOf } from "@/common/isOneOf";
 import { dayTypeLabel } from "@/features/scheduling/dayTypes";
 import type { FindingNames } from "@/features/scheduling/roster/findings/findingNames";
 import {
@@ -32,7 +33,7 @@ export const KNOWN_DIAGNOSTIC_CODES = [
 type KnownDiagnosticCode = (typeof KNOWN_DIAGNOSTIC_CODES)[number];
 
 const isKnownCode = (code: string): code is KnownDiagnosticCode =>
-	(KNOWN_DIAGNOSTIC_CODES as ReadonlyArray<string>).includes(code);
+	isOneOf(KNOWN_DIAGNOSTIC_CODES, code);
 
 const key = "scheduling.findings.codes";
 

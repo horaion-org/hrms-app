@@ -131,6 +131,22 @@ describe("neighbourLine", () => {
 		);
 	});
 
+	it("given_shiftsTheDayBeforeAndAfter_when_worded_then_joinsThemAsAList", () => {
+		const [before] = coverOptionFixture().neighbours;
+		if (!before) throw new Error("fixture has a neighbour");
+		const after = { ...before, day: "2026-10-17" };
+
+		expect(
+			neighbourLine(
+				coverOptionFixture({ neighbours: [before, after] }),
+				names,
+				t
+			)
+		).toBe(
+			"Aisha Rahman works Front Desk AM on Fri, Oct 16 (09:00 – 15:00) and Front Desk AM on Sat, Oct 17 (09:00 – 15:00)."
+		);
+	});
+
 	it("given_noShiftBesideIt_when_worded_then_saysSo", () => {
 		expect(
 			neighbourLine(coverOptionFixture({ neighbours: [] }), names, t)

@@ -54,6 +54,6 @@ describe("RosterChangeChecks", () => {
 			</I18nextProvider>
 		);
 
-		expect(screen.getByText("No problems found.")).toBeVisible();
+		expect(screen.getByText("No issues found.")).toBeVisible();
 	});
 });

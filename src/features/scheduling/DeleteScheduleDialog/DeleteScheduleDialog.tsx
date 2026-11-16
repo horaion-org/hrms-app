@@ -45,7 +45,10 @@ export const DeleteScheduleDialog = ({
 			confirmLabel={t(`${key}.confirm`)}
 			error={remove.error ? deleteRefusal(remove.error, t) : undefined}
 			submitting={remove.isPending}
-			title={t(`${key}.title`, { name: schedule.name })}
+			title={t(`${key}.title`, {
+				department: schedule.departmentName,
+				period,
+			})}
 			tone="danger"
 			description={
 				running

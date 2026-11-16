@@ -2,6 +2,7 @@ import { queryOptions, skipToken } from "@tanstack/react-query";
 import { z } from "zod";
 import { apiRequest, apiRequestVoid } from "@/common/api-client";
 import type { DepartmentPath } from "@/common/companyPath";
+import { isOneOf } from "@/common/isOneOf";
 import type { QueryOptionsFor } from "@/common/query-client";
 import {
 	companyConstraintsPath,
@@ -73,8 +74,7 @@ type RetiredConstraintType = (typeof RETIRED_CONSTRAINT_TYPES)[number];
 /** Whether a type is only read, never offered. */
 export const isRetiredConstraintType = (
 	type: ConstraintType
-): type is RetiredConstraintType =>
-	(RETIRED_CONSTRAINT_TYPES as ReadonlyArray<ConstraintType>).includes(type);
+): type is RetiredConstraintType => isOneOf(RETIRED_CONSTRAINT_TYPES, type);
 
 export const constraintCategorySchema = z.enum([
 	"STAFFING",
@@ -145,8 +145,7 @@ export type PatternDay = (typeof PATTERN_DAYS)[number];
 
 /** Whether a field's values are shifts: a constraint's shifts, or a banned pattern's shifts of one day. */
 export const isShiftField = (field: ConstraintField): boolean =>
-	field === "SHIFT" ||
-	(PATTERN_DAYS as ReadonlyArray<ConstraintField>).includes(field);
+	field === "SHIFT" || isOneOf(PATTERN_DAYS, field);
 
 const constraintFieldKindSchema = z.enum([
 	"NUMBER",

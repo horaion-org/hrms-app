@@ -122,6 +122,9 @@ export const useChangeAccessRoleHolders = (
 				failures,
 			});
 		},
+		meta: {
+			successMessage: "organisation.accessRoles.assignments.toast.changed",
+		},
 		onSettled: () =>
 			Promise.all([
 				client.invalidateQueries({ queryKey: ["organisation", companyId] }),

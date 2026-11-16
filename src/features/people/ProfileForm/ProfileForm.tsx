@@ -329,7 +329,7 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 			<>
 				<span className="block">{t(`${key}.systemRoleHint`)}</span>
 				<span className="block">
-					{t(`${key}.otherRoles`, { roles: edit.otherRoles.join(", ") })}
+					{t(`${key}.otherRoles`, { roles: edit.otherRoles })}
 				</span>
 			</>
 		) : (

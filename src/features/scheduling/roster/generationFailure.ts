@@ -1,4 +1,5 @@
 import type { TFunction } from "i18next";
+import { isOneOf } from "@/common/isOneOf";
 import type { ScheduleGeneration } from "@/features/scheduling/schedules/api";
 
 /*
@@ -33,19 +34,17 @@ const KNOWN_CODES = [
 type KnownCode = (typeof KNOWN_CODES)[number];
 
 const isKnownCode = (code: string): code is KnownCode =>
-	(KNOWN_CODES as ReadonlyArray<string>).includes(code);
+	isOneOf(KNOWN_CODES, code);
 
-/** `engine_http_503` → "503". */
-const ENGINE_HTTP_CODE = /^engine_http_(\d{3})$/;
+/** `engine_http_503`: the engine answered with an HTTP error; the code line shows the status. */
+const ENGINE_HTTP_CODE = /^engine_http_\d{3}$/;
 
 const key = "scheduling.generation";
 
-/** Copy for one error code: its own, the engine's HTTP status, or the generic fallback. */
+/** Copy for one error code: its own, the engine's HTTP error, or the generic fallback. */
 const codeMessage = (code: string, t: TFunction): string => {
 	if (isKnownCode(code)) return t(`${key}.errorCodes.${code}`);
-	const status = ENGINE_HTTP_CODE.exec(code)?.[1];
-	if (status !== undefined)
-		return t(`${key}.errorCodes.engine_http`, { status });
+	if (ENGINE_HTTP_CODE.test(code)) return t(`${key}.errorCodes.engine_http`);
 	return t(`${key}.failed`);
 };
 

@@ -24,6 +24,7 @@ import {
 import { useEngineRepair } from "@/features/scheduling/cover/useEngineRepair";
 import { useRepairWarmUp } from "@/features/scheduling/cover/useRepairWarmUp";
 import { CoverOfferSent } from "@/features/scheduling/coverOffers/CoverOfferActions/CoverOfferSent";
+import { offerActionsOf } from "@/features/scheduling/coverOffers/coverOfferRules";
 import { formatDay } from "@/common/formatDay";
 import { CellPanelFooter } from "@/features/scheduling/RosterCellPanel/CellPanelFooter";
 import { RosterChangeReview } from "@/features/scheduling/RosterChangeReview";
@@ -184,25 +185,13 @@ export const FindCoverPanel = ({
 					notifiesMembers={offer !== undefined}
 					preview={review.preview}
 					remark={review.remark}
+					previewRefusal={review.previewRefusal}
 					showsRulesNote={false}
 					ticked={review.ticked}
 					onRemarkChange={review.setRemark}
+					onRetryPreview={review.retryPreview}
 					onTickedChange={review.setTicked}
 				/>
-				{review.previewRefusal && (
-					<div className="flex flex-col items-start gap-2" role="alert">
-						<p className="text-sm text-error-700">
-							{review.previewRefusal === "revision"
-								? t("scheduling.rosterEdit.error.revision")
-								: t("scheduling.rosterEdit.previewFailed")}
-						</p>
-						<Button variant="textlink" onClick={review.retryPreview}>
-							{review.previewRefusal === "revision"
-								? t("scheduling.rosterEdit.error.reload")
-								: t("scheduling.rosterEdit.tryAgain")}
-						</Button>
-					</div>
-				)}
 				{review.applyRefusal && (
 					<ErrorText>
 						{t(`scheduling.rosterEdit.error.${review.applyRefusal}`)}
@@ -216,20 +205,7 @@ export const FindCoverPanel = ({
 							? "scheduling.rosterEdit.applyAnyway"
 							: "scheduling.rosterEdit.apply"
 					)}
-					offerActions={
-						offer?.consentKind
-							? {
-									name: selectedName,
-									pending: offer.createPending,
-									ready: offer.ready,
-									refusal: offer.createRefusal,
-									rivals: offer.rivals,
-									timeZone: offer.timeZone,
-									onRecord: offer.record,
-									onSend: offer.send,
-								}
-							: undefined
-					}
+					offerActions={offerActionsOf(offer, selectedName)}
 					onApply={review.apply}
 					onCancel={onClose}
 				/>

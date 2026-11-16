@@ -1,5 +1,6 @@
 import type { TFunction } from "i18next";
 import { z } from "zod";
+import { isOneOf } from "@/common/isOneOf";
 import { unitNameSchema } from "@/features/organisation/createSchemas";
 import {
 	CONSTRAINT_REQUIREMENTS,
@@ -76,7 +77,7 @@ const CHOSEN_NUMBER_FIELDS = [
 
 /** Whether a number field is chosen from its range rather than typed. */
 export const isChosenNumber = (field: ConstraintField): boolean =>
-	(CHOSEN_NUMBER_FIELDS as ReadonlyArray<ConstraintField>).includes(field);
+	isOneOf(CHOSEN_NUMBER_FIELDS, field);
 
 const fieldSchema = (
 	spec: ConstraintFieldSpec,
@@ -135,9 +136,7 @@ const patternDayLeftEmpty = (
 	const optionalDays = fields
 		.filter((spec) => spec.minCount === 0)
 		.map((spec) => spec.field)
-		.filter((field) =>
-			(PATTERN_DAYS as ReadonlyArray<ConstraintField>).includes(field)
-		);
+		.filter((field) => isOneOf(PATTERN_DAYS, field));
 	return optionalDays.find(
 		(day, index) =>
 			!hasShifts(day) && optionalDays.slice(index + 1).some(hasShifts)

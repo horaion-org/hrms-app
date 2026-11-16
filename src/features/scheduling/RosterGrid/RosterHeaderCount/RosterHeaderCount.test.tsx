@@ -10,13 +10,13 @@ describe("RosterHeaderCount", () => {
 		render(
 			<RosterHeaderCount
 				count={{ count: 2, tone: "attention" }}
-				label="Ben Ong: 2 to look at. Show in Issues"
+				label="Ben Ong: 2 issues. Show in Issues"
 				onSelect={onSelect}
 			/>
 		);
 
 		const button = screen.getByRole("button", {
-			name: "Ben Ong: 2 to look at. Show in Issues",
+			name: "Ben Ong: 2 issues. Show in Issues",
 		});
 		expect(button).toHaveTextContent("2");
 		expect(button.querySelector("svg")).toHaveClass("text-warning-900");

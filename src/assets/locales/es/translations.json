@@ -1087,6 +1087,7 @@
 	},
 	"stepper": {
 		"step": "Paso {{number}}: {{label}}",
+		"label": "Pasos",
 		"completedStep": "Paso {{number}}: {{label}}, completado"
 	},
 	"daySwitcher": {
@@ -2061,6 +2062,7 @@
 				"remove": {
 					"title": "Quitar a {{name}} de este rol",
 					"description": "{{name}} dejará de tener el rol {{role}} en todos los lugares. El cambio es inmediato.",
+					"descriptionSome": "{{name}} dejará de tener el rol {{role}} en {{places, list}}. Los lugares que no puedes cambiar lo mantienen. El cambio es inmediato.",
 					"confirm": "Quitar del rol"
 				},
 				"status": {
@@ -2075,6 +2077,9 @@
 					"forbidden": "Solo puedes activar un rol cuyos permisos tienes allí.",
 					"failed": "No pudimos cambiarlo. Inténtalo de nuevo.",
 					"kindConflict": "Un rol de empresa solo puede estar activo en toda la empresa. Quítalo de este lugar."
+				},
+				"toast": {
+					"changed": "Se actualizó quién tiene este rol."
 				}
 			},
 			"editor": {
@@ -2227,6 +2232,10 @@
 					"BRANCH": "una sucursal",
 					"DEPARTMENT": "un departamento"
 				}
+			},
+			"toast": {
+				"created": "Rol de acceso creado.",
+				"saved": "Rol de acceso guardado."
 			}
 		},
 		"list": {
@@ -2663,6 +2672,7 @@
 		},
 		"comingSoon": "Este módulo estará disponible pronto.",
 		"menu": "Menú",
+		"mainNavigation": "Navegación principal",
 		"collapseMenu": "Contraer menú",
 		"expandMenu": "Expandir menú",
 		"logo": "Horaion"
@@ -3144,10 +3154,10 @@
 			"managerHint": "Una persona activa de la empresa.",
 			"systemRole": "Rol de acceso",
 			"systemRolePlaceholder": "Seleccionar rol de acceso",
-			"systemRoleHint": "Se aplica en el ámbito del rol seleccionado.",
+			"systemRoleHint": "Lo que esta persona puede hacer allí.",
 			"systemRoleReadOnlyHint": "Solo el Propietario del sistema o un Administrador del sistema pueden cambiar los roles de acceso y dónde se aplican.",
-			"otherRoles": "También tiene en otros lugares: {{roles}}.",
-			"roleScope": "Ámbito del rol",
+			"otherRoles": "También tiene en otros lugares: {{roles, list}}.",
+			"roleScope": "Se aplica a",
 			"roleScopeHint": "Elige dónde se aplica el rol de acceso, con independencia del departamento al que pertenezca.",
 			"roleScopePlaceholder": "Seleccionar empresa, sucursal o departamento",
 			"roleScopeRequired": "Elige dónde se aplica el rol de acceso.",
@@ -3197,7 +3207,7 @@
 			"title": "Programación",
 			"subtitle": "Los horarios, y los turnos y las restricciones con los que se crean.",
 			"search": "Buscar departamento",
-			"viewNamed": "Ver horario {{code}}",
+			"viewNamed": "Ver el horario de {{department}} para {{period}}",
 			"percent": "{{value}} %",
 			"noMatch": "Ningún horario coincide con tu búsqueda.",
 			"empty": "Todavía no hay horarios.",
@@ -3207,7 +3217,6 @@
 			"statuses": {
 				"DRAFT": "Borrador",
 				"GENERATION_REQUESTED": "Generación solicitada",
-				"GENERATED": "Generado",
 				"GENERATION_FAILED": "Generación fallida",
 				"PUBLISHED": "Publicado",
 				"REJECTED": "Rechazado",
@@ -3217,7 +3226,7 @@
 				"title": "Historial de horarios",
 				"description": "Consulta horarios completados y asignaciones de personal anteriores.",
 				"name": "Nombre",
-				"date": "Fecha",
+				"date": "Semana",
 				"createdAt": "Creado el",
 				"status": "Estado",
 				"department": "Departamento",
@@ -3225,7 +3234,7 @@
 			}
 		},
 		"create": {
-			"back": "Volver al resumen",
+			"back": "Volver a Programación",
 			"title": "Crear horario",
 			"subtitle": "Configura la generación de tu horario en unos pocos pasos.",
 			"viewSubtitle": "Cómo se configuró este horario: su departamento, periodo, turnos y restricciones.",
@@ -3306,8 +3315,8 @@
 			"partTimeWithoutAvailability_one": "{{count}} persona a tiempo parcial no tiene disponibilidad y quedará fuera del cuadrante:",
 			"partTimeWithoutAvailability_other": "{{count}} personas a tiempo parcial no tienen disponibilidad y quedarán fuera del cuadrante:",
 			"additional": "Ajustes adicionales",
-			"includeLeave": "Incluir solicitudes de ausencia",
-			"includeLeaveDescription": "Tener en cuenta las ausencias aprobadas al generar el horario.",
+			"includeLeave": "Incluir permisos aprobados",
+			"includeLeaveDescription": "Tener en cuenta los permisos aprobados al generar el horario.",
 			"validation": {
 				"department": "Elige un departamento.",
 				"name": "Escribe un nombre para el horario.",
@@ -3966,7 +3975,8 @@
 		},
 		"forecast": {
 			"title": "Previsión de personal",
-			"description": "Define la demanda de personal de tus turnos. Puedes empezar con algo sencillo y ajustarlo después.",
+			"description": "Cuánto personal necesitan tus turnos, como referencia.",
+			"notUsedYet": "Estas cifras aún no se usan para generar. Cuántas personas tiene cada turno lo deciden sus restricciones de personal. Importar, exportar y reutilizar una previsión están desactivados hasta entonces.",
 			"import": "Importar",
 			"export": "Exportar",
 			"useExisting": "Usar una previsión existente",
@@ -4050,7 +4060,7 @@
 			"weekTaken": "Este departamento ya tiene un horario para esa semana."
 		},
 		"detail": {
-			"back": "Volver al resumen",
+			"back": "Volver a Programación",
 			"title": "Horario de {{department}}",
 			"loadFailed": "No pudimos cargar este horario. Inténtalo de nuevo.",
 			"loading": "Cargando el horario…",
@@ -4145,7 +4155,7 @@
 			"changeRemark": "Comentario:"
 		},
 		"generation": {
-			"inProgress": "Se está generando este horario. Su cuadrante aparecerá aquí cuando esté listo; esta página vuelve a comprobarlo cada 15 segundos.",
+			"inProgress": "Se está generando este horario. Su cuadrante aparecerá aquí cuando esté listo; esta página vuelve a comprobarlo cada {{seconds}} segundos.",
 			"failedTitle": "Por qué no se generó",
 			"failed": "No se pudo generar este horario.",
 			"infeasible": "Ningún cuadrante podía cumplir todos los turnos y restricciones de este horario.",
@@ -4160,28 +4170,28 @@
 				},
 				"engine_unreachable": "No se pudo contactar con el motor de planificación a tiempo, así que no se generó nada.",
 				"result_unmappable": "El cuadrante del motor no encajaba con los turnos y el personal de este horario, así que no se guardó. Ponte en contacto con soporte.",
-				"engine_http": "El motor de planificación respondió con un error (HTTP {{status}}).",
+				"engine_http": "El motor de planificación devolvió un error y no se generó nada. Genera de nuevo; si sigue fallando, contacta con soporte.",
 				"FAILED": "El trabajo del motor terminó sin cuadrante.",
-				"CANCELLED": "El trabajo del motor se canceló antes de terminar.",
-				"job_not_finished": "El motor aún no había terminado el trabajo.",
+				"CANCELLED": "La generación se detuvo antes de guardar un cuadrante. Genera de nuevo.",
+				"job_not_finished": "La generación se detuvo antes de guardar un cuadrante. Genera de nuevo.",
 				"job_failed": "El trabajo del motor terminó sin cuadrante.",
-				"result_expired": "El cuadrante caducó en el motor antes de poder guardarse.",
+				"result_expired": "La generación se detuvo antes de guardar un cuadrante. Genera de nuevo.",
 				"idempotency_key_required": "La solicitud al motor estaba incompleta. Ponte en contacto con soporte.",
 				"idempotency_conflict": "La solicitud al motor chocaba con una anterior. Ponte en contacto con soporte.",
 				"payload_too_large": "Este horario es demasiado grande para que el motor lo genere.",
 				"snapshot_invalid": "El motor no pudo usar los turnos y restricciones de este horario.",
-				"too_many_jobs": "El motor estaba demasiado ocupado para aceptar el trabajo.",
-				"job_not_found": "El motor ya no conocía el trabajo.",
+				"too_many_jobs": "El motor de planificación estaba ocupado. Genera de nuevo en unos minutos.",
+				"job_not_found": "La generación se detuvo antes de guardar un cuadrante. Genera de nuevo.",
 				"unauthorized": "El motor rechazó la solicitud. Ponte en contacto con soporte.",
 				"forbidden": "El motor rechazó la solicitud. Ponte en contacto con soporte.",
-				"worker_failed": "El motor se detuvo mientras preparaba el cuadrante.",
-				"worker_crashed": "El motor se detuvo mientras preparaba el cuadrante."
+				"worker_failed": "La generación se detuvo antes de guardar un cuadrante. Genera de nuevo.",
+				"worker_crashed": "La generación se detuvo antes de guardar un cuadrante. Genera de nuevo."
 			}
 		},
 		"findings": {
-			"setupIssues_one": "{{count}} problema de configuración",
-			"setupIssues_other": "{{count}} problemas de configuración",
-			"setupTitle": "Problemas de configuración ({{count}})",
+			"setupIssues_one": "{{count}} aviso de configuración",
+			"setupIssues_other": "{{count}} avisos de configuración",
+			"setupTitle": "Avisos de configuración ({{count}})",
 			"setupHint": "Corrígelos en la configuración del horario; generarlo de nuevo con la misma configuración no los resolverá.",
 			"rosterTitle": "Notas del cuadrante ({{count}})",
 			"shortSummary_one": "{{count}} turno incompleto; faltan {{people}} en total.",
@@ -4247,10 +4257,10 @@
 				}
 			},
 			"marker": {
-				"row_one": "{{name}}: {{count}} por revisar. Ver en Avisos",
-				"row_other": "{{name}}: {{count}} por revisar. Ver en Avisos",
-				"date_one": "{{day}}: {{count}} por revisar. Ver en Avisos",
-				"date_other": "{{day}}: {{count}} por revisar. Ver en Avisos",
+				"row_one": "{{name}}: {{count}} aviso. Ver en Avisos",
+				"row_other": "{{name}}: {{count}} avisos. Ver en Avisos",
+				"date_one": "{{day}}: {{count}} aviso. Ver en Avisos",
+				"date_other": "{{day}}: {{count}} avisos. Ver en Avisos",
 				"dateShort_one": "{{day}}: falta {{count}} persona. Ver en Avisos",
 				"dateShort_other": "{{day}}: faltan {{count}} personas. Ver en Avisos",
 				"tileLabel_one": "{{label}}, por revisar: {{count}}",
@@ -4264,7 +4274,7 @@
 		},
 		"delete": {
 			"menu": "Eliminar",
-			"title": "¿Eliminar {{name}}?",
+			"title": "¿Eliminar el horario de {{department}} para {{period}}?",
 			"description": "Esto elimina el horario de {{department}} para {{period}}, con su cuadrante. No se puede deshacer.",
 			"runOpen": "Este horario se está generando. Podrás eliminarlo cuando termine la ejecución.",
 			"confirm": "Eliminar horario",
@@ -4313,7 +4323,7 @@
 			"rejected": "Cuadrante rechazado.",
 			"withdraw": "Retirar publicación",
 			"withdrawTitle": "¿Retirar la publicación de este cuadrante?",
-			"withdrawDescription": "El cuadrante vuelve a Generado y sale de Mi cuadrante. Todos los cambios que se le hicieron se mantienen. Se avisa a todas las personas que están en él, con tu observación. Puedes volver a publicarlo más tarde; no se puede regenerar.",
+			"withdrawDescription": "El cuadrante vuelve a Por revisar y sale de Mi cuadrante. Todos los cambios que se le hicieron se mantienen. Se avisa a todas las personas que están en él, con tu observación. Puedes volver a publicarlo más tarde; no se puede regenerar.",
 			"withdrawConfirm": "Retirar publicación",
 			"withdrawRemark": "Observación para las personas de este cuadrante",
 			"withdrawRequired": "Escribe una observación: todas las personas de este cuadrante la leerán.",
@@ -4501,8 +4511,8 @@
 			"beforeAfter": "Antes → después",
 			"checks": "Comprobaciones",
 			"checking": "Comprobando…",
-			"noProblems": "No se encontraron problemas.",
-			"rulesNotChecked": "Las reglas de programación no se vuelven a comprobar en los cambios hechos a mano.",
+			"noProblems": "No se encontraron avisos.",
+			"rulesNotChecked": "Las reglas de tiempo de trabajo no se comprueban en los cambios hechos a mano. Después de aplicarlo, pulsa Validar cuadrante.",
 			"previewFailed": "No pudimos comprobar este cambio.",
 			"tryAgain": "Reintentar",
 			"tick": "He leído estas comprobaciones",
@@ -4694,8 +4704,6 @@
 			"neighbours": "{{name}} trabaja {{shifts}}.",
 			"neighbour": "{{shift}} el {{day}} ({{time}})",
 			"noNeighbours": "{{name}} no tiene turno el día anterior ni el siguiente.",
-			"and": " y ",
-			"jobTitlesOr": " o ",
 			"reason": {
 				"MEMBER_GONE": "Ya no está en la empresa",
 				"ON_LEAVE": "De permiso",
@@ -4729,7 +4737,7 @@
 				"covered": "{{shift}} el {{day}} ya está cubierto.",
 				"close": "Cerrar",
 				"nobody": "Nadie de este cuadrante puede cubrir {{shift}} el {{day}}.",
-				"notChecked": "Aún no se ha comprobado con las reglas de tiempo de trabajo: valida el cuadrante después de hacer el cambio."
+				"notChecked": "Las reglas de tiempo de trabajo (horas al día, horas extra al mes, días a la semana, permisos) no se comprueban en este cambio. Después de aplicarlo, pulsa Validar cuadrante."
 			},
 			"gapWithoutRoles": "{{shift}} · {{day}} · {{time}}",
 			"engine": {
@@ -4742,7 +4750,7 @@
 				"cannotFill": "No puede cubrir el hueco",
 				"reason": "El motivo del motor",
 				"warnings": "El motor también indica",
-				"notChecked": "No se ha comprobado con las reglas de tiempo de trabajo: horas al día, horas extra al mes, días a la semana y permisos. Compruébalo antes de cambiar el cuadrante.",
+				"notChecked": "Las reglas de tiempo de trabajo (horas al día, horas extra al mes, días a la semana, permisos) no se comprueban en este cambio. Después de aplicarlo, pulsa Validar cuadrante.",
 				"unknownShift": "un turno",
 				"leftShort_one": "Aún falta {{count}} {{times}}",
 				"leftShort_other": "Aún faltan {{count}} {{times}}",
@@ -4764,7 +4772,7 @@
 				},
 				"review": "Revisar este cambio",
 				"byHand": "La aplicación no puede aplicar esta: hazla a mano en el cuadrante.",
-				"noneChecked": "Ninguna de estas opciones se ha comprobado con las reglas de tiempo de trabajo: horas al día, horas extra al mes, días a la semana y permisos. Compruébalo antes de cambiar el cuadrante.",
+				"noneChecked": "Ninguna de estas opciones se ha comprobado con las reglas de tiempo de trabajo. Después de aplicar una, pulsa Validar cuadrante.",
 				"whyNot": {
 					"title": "Por qué no se asignó a nadie",
 					"couldTake": "Podría cubrir este turno",
@@ -4955,12 +4963,12 @@
 			},
 			"cover": {
 				"dayCovered": "{{day}} cubierto",
-				"dayShort_one": "{{day}} falta {{count}} turno",
-				"dayShort_other": "{{day}} faltan {{count}} turnos",
+				"dayShort_one": "{{day}}: {{count}} turno con falta de personal",
+				"dayShort_other": "{{day}}: {{count}} turnos con falta de personal",
 				"dayNoRoster": "{{day}} sin cuadrante",
 				"everyShiftCovered": "Todos los turnos cubiertos",
-				"shiftsShort_one": "Falta {{count}} turno",
-				"shiftsShort_other": "Faltan {{count}} turnos",
+				"shiftsShort_one": "{{count}} turno con falta de personal",
+				"shiftsShort_other": "{{count}} turnos con falta de personal",
 				"handChanged_one": "{{count}} día cambiado a mano",
 				"handChanged_other": "{{count}} días cambiados a mano"
 			},
@@ -4999,7 +5007,8 @@
 				"crossingWeek": "{{week}} está en la página de <0>{{month}}</0>.",
 				"noSchedule": "Ninguna semana de {{month}} tiene horario todavía.",
 				"legendCovered": "Todos los turnos cubiertos",
-				"legendShort": "Falta un turno",
+				"legendShort": "Falta personal en un turno",
+				"legendTentative": "Provisional: generada, a la espera de que se publique una semana anterior.",
 				"footnote": "El personal solo ve una semana después de publicarla. Las semanas se publican en orden.",
 				"loading": "Cargando el mes…",
 				"loadFailed": "No pudimos cargar este mes. Inténtalo de nuevo.",
@@ -5012,6 +5021,8 @@
 				"generatedAhead": "Generado por adelantado. Primero va {{month}}."
 			},
 			"tabFailed": "No pudimos cargar los meses. Inténtalo de nuevo.",
+			"tabLoading": "Cargando los meses…",
+			"tabEmpty": "Ningún mes tiene horario todavía. Usa Crear horario para empezar uno.",
 			"roster": {
 				"unpublished": "<0>Sin publicar.</0> El personal no puede ver esta semana.",
 				"publishFirst": "Publica primero {{week}}. Las semanas se publican en orden.",
@@ -5024,6 +5035,8 @@
 				"failed": "No pudimos generar el mes. Inténtalo de nuevo.",
 				"panel": {
 					"title": "Antes de generar {{month}}",
+					"checking": "Comprobando {{month}} antes de generar…",
+					"checkFailed": "No pudimos comprobar {{month}} antes de generar.",
 					"shiftsTitle": "Turnos.",
 					"shifts_one": "{{department}} tiene {{count}} turno.",
 					"shifts_other": "{{department}} tiene {{count}} turnos.",
@@ -5035,15 +5048,15 @@
 					"noStaffing": "Ninguna restricción asigna personas a un turno, así que no se asignaría a nadie.",
 					"editConstraints": "Editar restricciones",
 					"addStaffing": "Añadir una restricción de personal",
-					"leaveTitle": "Ausencias.",
-					"approvedLeave_one": "{{count}} persona tiene una ausencia aprobada en {{month}}.",
-					"approvedLeave_other": "{{count}} personas tienen ausencias aprobadas en {{month}}.",
-					"noApprovedLeave": "No hay ausencias aprobadas en {{month}}. Si alguien piensa ausentarse, apruébalo primero: una ausencia aprobada después cambia el horario.",
+					"leaveTitle": "Permisos.",
+					"approvedLeave_one": "{{count}} persona tiene un permiso aprobado en {{month}}.",
+					"approvedLeave_other": "{{count}} personas tienen permisos aprobados en {{month}}.",
+					"noApprovedLeave": "No hay permisos aprobados en {{month}}. Si alguien piensa tomar un permiso, apruébalo primero: un permiso aprobado después cambia el horario.",
 					"waitingMore_one": "{{count}} solicitud más espera una decisión.",
 					"waitingMore_other": "{{count}} solicitudes más esperan una decisión.",
 					"waiting_one": "{{count}} solicitud espera una decisión.",
 					"waiting_other": "{{count}} solicitudes esperan una decisión.",
-					"openLeave": "Abrir solicitudes de ausencia",
+					"openLeave": "Abrir solicitudes de permiso",
 					"hint": "Generar calcula cada semana de {{month}} que no esté publicada. Después revisas y publicas cada semana.",
 					"hintChosen_one": "Generar calcula la semana que marcaste: {{ranges}}. Después la revisas y la publicas.",
 					"hintChosen_other": "Generar calcula las {{count}} semanas que marcaste: {{ranges}}. Después revisas y publicas cada semana.",
@@ -5099,7 +5112,9 @@
 				"changedWeek_one": "{{week}} ({{count}} fuera)",
 				"changedWeek_other": "{{week}} ({{count}} fuera)",
 				"choosePerWeek": "Elegir por semana",
-				"savedDraft": "{{week}} está guardada como borrador; cambia lo que usa en su propia página."
+				"savedDraft": "{{week}} está guardada como borrador; cambia lo que usa en su propia página.",
+				"title": "Planificar un mes",
+				"subtitle": "Elige un departamento y un mes, marca las semanas que quieres planificar y genera. Después revisas y publicas cada semana."
 			},
 			"regenerate": {
 				"button": "Regenerar {{month}}",
@@ -5148,16 +5163,16 @@
 				"consecutive_day_work_patterns": "Días trabajados seguidos"
 			},
 			"refusal": {
-				"expired": "El motor ya no guarda la generación de esta semana, así que no se puede validar. Genera la semana de nuevo y luego valídala.",
+				"expired": "El motor ya no guarda la generación de esta semana, así que no se puede validar. Regenerar el mes la vuelve a comprobar, pero sustituye los cambios hechos a mano.",
 				"notConnected": "El motor de planificación no está conectado aquí.",
 				"rosterMoved": "Alguien cambió este cuadrante desde que lo abriste. Recarga la página y vuelve a validarlo.",
 				"tooSlow": "El motor tardó demasiado esta vez, así que el cuadrante no se validó.",
 				"failed": "No se pudo validar el cuadrante ahora."
 			},
 			"changedSinceValidated": "Validar cuadrante: el cuadrante cambió desde la última validación",
-			"problemsFound_one": "Validar cuadrante: {{count}} problema encontrado",
-			"problemsFound_other": "Validar cuadrante: {{count}} problemas encontrados",
-			"allClear": "Validar cuadrante: sin problemas",
+			"problemsFound_one": "Validar cuadrante: {{count}} aviso encontrado",
+			"problemsFound_other": "Validar cuadrante: {{count}} avisos encontrados",
+			"allClear": "Validar cuadrante: sin avisos",
 			"staffingUnchecked": "No se pudo comprobar el personal; los turnos con falta de personal de abajo son los anteriores.",
 			"brokenRulesTitle": "Reglas de tiempo de trabajo incumplidas",
 			"outOfDate": "El cuadrante ha cambiado desde que se hizo esta lista. Valídalo para actualizarla.",

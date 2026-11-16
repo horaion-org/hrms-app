@@ -911,6 +911,7 @@
 	},
 	"stepper": {
 		"step": "Step {{number}}: {{label}}",
+		"label": "Steps",
 		"completedStep": "Step {{number}}: {{label}}, completed"
 	},
 	"daySwitcher": {
@@ -941,6 +942,7 @@
 		"accountMenu": "Account menu",
 		"changePassword": "Change password",
 		"menu": "Menu",
+		"mainNavigation": "Main navigation",
 		"collapseMenu": "Collapse menu",
 		"expandMenu": "Expand menu",
 		"logo": "Horaion"
@@ -1024,10 +1026,10 @@
 			"managerHint": "An active member of the company.",
 			"systemRole": "Access role",
 			"systemRolePlaceholder": "Select access role",
-			"systemRoleHint": "Applies at the selected role scope.",
+			"systemRoleHint": "What this person can do there.",
 			"systemRoleReadOnlyHint": "Only the System Owner or a System Admin can change access roles and where they apply.",
-			"otherRoles": "Also holds elsewhere: {{roles}}.",
-			"roleScope": "Role scope",
+			"otherRoles": "Also holds elsewhere: {{roles, list}}.",
+			"roleScope": "Applies to",
 			"roleScopeHint": "Choose where the access role applies, independently of department membership.",
 			"roleScopePlaceholder": "Select company, branch or department",
 			"roleScopeRequired": "Choose where the access role applies.",
@@ -2130,6 +2132,7 @@
 				"remove": {
 					"title": "Remove {{name}} from this role",
 					"description": "{{name}} will no longer have the {{role}} role anywhere. This takes effect immediately.",
+					"descriptionSome": "{{name}} will no longer have the {{role}} role at {{places, list}}. Places you can’t change keep it. This takes effect immediately.",
 					"confirm": "Remove from role"
 				},
 				"status": {
@@ -2144,6 +2147,9 @@
 					"forbidden": "You can only activate a role whose permissions you hold there.",
 					"failed": "We couldn’t change this. Try again.",
 					"kindConflict": "A company role can only be active at the whole company. Remove it from this place instead."
+				},
+				"toast": {
+					"changed": "Who has this role was updated."
 				}
 			},
 			"createDialog": {
@@ -2319,6 +2325,10 @@
 					"BRANCH": "a branch",
 					"DEPARTMENT": "a department"
 				}
+			},
+			"toast": {
+				"created": "Access role created.",
+				"saved": "Access role saved."
 			}
 		},
 		"permissions": {
@@ -3397,7 +3407,7 @@
 			"title": "Scheduling",
 			"subtitle": "Schedules, and the shifts and constraints they are built from.",
 			"search": "Search schedules or departments",
-			"viewNamed": "View schedule {{code}}",
+			"viewNamed": "View the {{department}} schedule for {{period}}",
 			"percent": "{{value}}%",
 			"noMatch": "No schedules match your search.",
 			"empty": "No schedules yet.",
@@ -3407,7 +3417,6 @@
 			"statuses": {
 				"DRAFT": "Draft",
 				"GENERATION_REQUESTED": "Generation requested",
-				"GENERATED": "Generated",
 				"GENERATION_FAILED": "Generation failed",
 				"PUBLISHED": "Published",
 				"REJECTED": "Rejected",
@@ -3417,7 +3426,7 @@
 				"title": "Schedule history",
 				"description": "View saved schedules across your departments.",
 				"name": "Name",
-				"date": "Date",
+				"date": "Week",
 				"createdAt": "Created at",
 				"status": "Status",
 				"department": "Department",
@@ -3425,7 +3434,7 @@
 			}
 		},
 		"create": {
-			"back": "Back to overview",
+			"back": "Back to Scheduling",
 			"title": "Create schedule",
 			"subtitle": "Set up your schedule generation in a few simple steps.",
 			"viewSubtitle": "How this schedule was set up: its department, period, shifts and constraints.",
@@ -3506,7 +3515,7 @@
 			"partTimeWithoutAvailability_one": "{{count}} part-time member has no availability and will be left off the roster:",
 			"partTimeWithoutAvailability_other": "{{count}} part-time members have no availability and will be left off the roster:",
 			"additional": "Additional settings",
-			"includeLeave": "Include leave requests",
+			"includeLeave": "Include approved leave",
 			"includeLeaveDescription": "Consider approved leave when generating the schedule.",
 			"validation": {
 				"department": "Choose a department.",
@@ -4166,7 +4175,8 @@
 		},
 		"forecast": {
 			"title": "Staffing forecast",
-			"description": "Define the staffing demand for your shifts. You can start simple and refine later.",
+			"description": "How many staff your shifts need, for planning.",
+			"notUsedYet": "These numbers aren’t used to generate yet. How many people each shift gets comes from its staffing constraints. Import, export and reusing a forecast are off until they are.",
 			"import": "Import",
 			"export": "Export",
 			"useExisting": "Use existing forecast",
@@ -4250,7 +4260,7 @@
 			"weekTaken": "This department already has a schedule for that week."
 		},
 		"detail": {
-			"back": "Back to Overview",
+			"back": "Back to Scheduling",
 			"title": "{{department}} Schedule",
 			"loadFailed": "This schedule could not be loaded. Please try again.",
 			"loading": "Loading the schedule…",
@@ -4345,7 +4355,7 @@
 			"changeRemark": "Remark:"
 		},
 		"generation": {
-			"inProgress": "This schedule is being generated. Its roster shows here once it’s ready; this page checks again every 15 seconds.",
+			"inProgress": "This schedule is being generated. Its roster shows here once it’s ready; this page checks again every {{seconds}} seconds.",
 			"failedTitle": "Why it wasn’t generated",
 			"failed": "This schedule couldn’t be generated.",
 			"infeasible": "No roster could meet every shift and constraint of this schedule.",
@@ -4360,22 +4370,22 @@
 				},
 				"engine_unreachable": "The scheduling engine couldn’t be reached in time, so nothing was generated.",
 				"result_unmappable": "The engine’s roster didn’t fit this schedule’s shifts and staff, so it wasn’t saved. Please contact support.",
-				"engine_http": "The scheduling engine answered with an error (HTTP {{status}}).",
+				"engine_http": "The scheduling engine returned an error, so nothing was generated. Generate again; if it keeps failing, contact support.",
 				"FAILED": "The engine’s job ended without a roster.",
-				"CANCELLED": "The engine’s job was cancelled before it finished.",
-				"job_not_finished": "The engine hadn’t finished the job yet.",
+				"CANCELLED": "Generating stopped before a roster was saved. Generate again.",
+				"job_not_finished": "Generating stopped before a roster was saved. Generate again.",
 				"job_failed": "The engine’s job ended without a roster.",
-				"result_expired": "The roster expired on the engine before it could be saved.",
+				"result_expired": "Generating stopped before a roster was saved. Generate again.",
 				"idempotency_key_required": "The request to the engine was incomplete. Please contact support.",
 				"idempotency_conflict": "The request to the engine clashed with an earlier one. Please contact support.",
 				"payload_too_large": "This schedule is too large for the engine to generate.",
 				"snapshot_invalid": "The engine couldn’t use this schedule’s shifts and constraints.",
-				"too_many_jobs": "The engine was too busy to take the job.",
-				"job_not_found": "The engine no longer knew about the job.",
+				"too_many_jobs": "The scheduling engine was busy. Generate again in a few minutes.",
+				"job_not_found": "Generating stopped before a roster was saved. Generate again.",
 				"unauthorized": "The engine refused the request. Please contact support.",
 				"forbidden": "The engine refused the request. Please contact support.",
-				"worker_failed": "The engine stopped while working on the roster.",
-				"worker_crashed": "The engine stopped while working on the roster."
+				"worker_failed": "Generating stopped before a roster was saved. Generate again.",
+				"worker_crashed": "Generating stopped before a roster was saved. Generate again."
 			}
 		},
 		"findings": {
@@ -4447,10 +4457,10 @@
 				}
 			},
 			"marker": {
-				"row_one": "{{name}}: {{count}} to look at. Show in Issues",
-				"row_other": "{{name}}: {{count}} to look at. Show in Issues",
-				"date_one": "{{day}}: {{count}} to look at. Show in Issues",
-				"date_other": "{{day}}: {{count}} to look at. Show in Issues",
+				"row_one": "{{name}}: {{count}} issue. Show in Issues",
+				"row_other": "{{name}}: {{count}} issues. Show in Issues",
+				"date_one": "{{day}}: {{count}} issue. Show in Issues",
+				"date_other": "{{day}}: {{count}} issues. Show in Issues",
 				"dateShort_one": "{{day}}: {{count}} person short. Show in Issues",
 				"dateShort_other": "{{day}}: {{count}} people short. Show in Issues",
 				"tileLabel_one": "{{label}}, needs a look: {{count}}",
@@ -4464,7 +4474,7 @@
 		},
 		"delete": {
 			"menu": "Delete",
-			"title": "Delete {{name}}?",
+			"title": "Delete the {{department}} schedule for {{period}}?",
 			"description": "This removes the {{department}} schedule for {{period}}, with its roster. This can’t be undone.",
 			"runOpen": "This schedule is being generated. You can delete it once the run finishes.",
 			"confirm": "Delete schedule",
@@ -4513,7 +4523,7 @@
 			"rejected": "Roster rejected.",
 			"withdraw": "Withdraw publication",
 			"withdrawTitle": "Withdraw this roster’s publication?",
-			"withdrawDescription": "The roster goes back to Generated and leaves My roster. Every change made to it stays. Everyone on it is told, with your remark. You can publish it again later; it can’t be regenerated.",
+			"withdrawDescription": "The roster goes back to To review and leaves My roster. Every change made to it stays. Everyone on it is told, with your remark. You can publish it again later; it can’t be regenerated.",
 			"withdrawConfirm": "Withdraw publication",
 			"withdrawRemark": "Remark for the people on this roster",
 			"withdrawRequired": "Enter a remark: everyone on this roster will read it.",
@@ -4701,8 +4711,8 @@
 			"beforeAfter": "Before → after",
 			"checks": "Checks",
 			"checking": "Checking…",
-			"noProblems": "No problems found.",
-			"rulesNotChecked": "Scheduling rules aren’t checked again for changes made by hand.",
+			"noProblems": "No issues found.",
+			"rulesNotChecked": "Working-time rules aren’t checked for changes made by hand. After you apply this, press Validate schedule.",
 			"previewFailed": "We couldn’t check this change.",
 			"tryAgain": "Try again",
 			"tick": "I’ve read these checks",
@@ -4894,8 +4904,6 @@
 			"neighbours": "{{name}} works {{shifts}}.",
 			"neighbour": "{{shift}} on {{day}} ({{time}})",
 			"noNeighbours": "{{name}} has no shift the day before or after.",
-			"and": " and ",
-			"jobTitlesOr": " or ",
 			"reason": {
 				"MEMBER_GONE": "Has left",
 				"ON_LEAVE": "On leave",
@@ -4929,7 +4937,7 @@
 				"covered": "{{shift}} on {{day}} is covered now.",
 				"close": "Close",
 				"nobody": "Nobody on this roster can cover {{shift}} on {{day}}.",
-				"notChecked": "Not checked against the working-time rules yet: validate the schedule after you make the change."
+				"notChecked": "Working-time rules (hours a day, overtime a month, days a week, leave) aren’t checked for this change. After you apply it, press Validate schedule."
 			},
 			"gapWithoutRoles": "{{shift}} · {{day}} · {{time}}",
 			"engine": {
@@ -4942,7 +4950,7 @@
 				"cannotFill": "Can’t fill the gap",
 				"reason": "The engine’s reason",
 				"warnings": "The engine also notes",
-				"notChecked": "Not checked against working-time rules: hours a day, overtime a month, days a week and leave. Check before you change the roster.",
+				"notChecked": "Working-time rules (hours a day, overtime a month, days a week, leave) aren’t checked for this change. After you apply it, press Validate schedule.",
 				"unknownShift": "a shift",
 				"leftShort_one": "Still {{count}} short {{times}}",
 				"leftShort_other": "Still {{count}} short {{times}}",
@@ -4964,7 +4972,7 @@
 				},
 				"review": "Review this change",
 				"byHand": "The app can’t apply this one: make it by hand on the roster.",
-				"noneChecked": "None of these options is checked against working-time rules: hours a day, overtime a month, days a week and leave. Check before you change the roster.",
+				"noneChecked": "None of these options is checked against working-time rules. After you apply one, press Validate schedule.",
 				"whyNot": {
 					"title": "Why nobody was assigned",
 					"couldTake": "Could take this shift",
@@ -5200,6 +5208,7 @@
 				"noSchedule": "No week of {{month}} has a schedule yet.",
 				"legendCovered": "Every shift covered",
 				"legendShort": "A shift is short",
+				"legendTentative": "Tentative: generated, and waits for an earlier week to be published.",
 				"footnote": "Staff see a week only after it is published. Weeks are published in order.",
 				"loading": "Loading the month…",
 				"loadFailed": "This month could not be loaded. Please try again.",
@@ -5212,6 +5221,8 @@
 				"generatedAhead": "Generated ahead. {{month}} comes first."
 			},
 			"tabFailed": "The months couldn’t be loaded. Please try again.",
+			"tabLoading": "Loading the months…",
+			"tabEmpty": "No month has a schedule yet. Use Create schedule to start one.",
 			"roster": {
 				"unpublished": "<0>Not published.</0> Staff can’t see this week.",
 				"publishFirst": "Publish {{week}} first. Weeks are published in order.",
@@ -5224,6 +5235,8 @@
 				"failed": "We couldn’t generate the month. Try again.",
 				"panel": {
 					"title": "Before you generate {{month}}",
+					"checking": "Checking {{month}} before you generate…",
+					"checkFailed": "We couldn’t check {{month}} before generating.",
 					"shiftsTitle": "Shifts.",
 					"shifts_one": "{{department}} has {{count}} shift.",
 					"shifts_other": "{{department}} has {{count}} shifts.",
@@ -5299,7 +5312,9 @@
 				"changedWeek_one": "{{week}} ({{count}} left out)",
 				"changedWeek_other": "{{week}} ({{count}} left out)",
 				"choosePerWeek": "Choose per week",
-				"savedDraft": "{{week}} is saved as a draft; change what it uses on its own page."
+				"savedDraft": "{{week}} is saved as a draft; change what it uses on its own page.",
+				"title": "Schedule a month",
+				"subtitle": "Choose a department and a month, tick the weeks to roster, then generate. You review and publish each week afterwards."
 			},
 			"regenerate": {
 				"button": "Regenerate {{month}}",
@@ -5348,16 +5363,16 @@
 				"consecutive_day_work_patterns": "Days worked in a row"
 			},
 			"refusal": {
-				"expired": "The engine no longer holds this week’s generation, so it can’t be validated. Generate the week again, then validate it.",
+				"expired": "The engine no longer holds this week’s generation, so it can’t be validated. Regenerating the month checks it again but replaces changes made by hand.",
 				"notConnected": "The scheduling engine isn’t connected here.",
 				"rosterMoved": "Someone changed this roster since you opened it. Reload the page, then validate it again.",
 				"tooSlow": "The engine took too long this time, so the schedule wasn’t validated.",
 				"failed": "The schedule couldn’t be validated just now."
 			},
 			"changedSinceValidated": "Validate schedule: the schedule changed since it was last validated",
-			"problemsFound_one": "Validate schedule: {{count}} problem found",
-			"problemsFound_other": "Validate schedule: {{count}} problems found",
-			"allClear": "Validate schedule: no problems found",
+			"problemsFound_one": "Validate schedule: {{count}} issue found",
+			"problemsFound_other": "Validate schedule: {{count}} issues found",
+			"allClear": "Validate schedule: no issues found",
 			"staffingUnchecked": "Staffing could not be checked; the shifts left short below are from before.",
 			"brokenRulesTitle": "Working-time rules broken",
 			"outOfDate": "The schedule has changed since this list was made. Validate it to refresh the list.",

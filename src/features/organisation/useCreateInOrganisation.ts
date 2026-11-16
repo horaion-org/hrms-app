@@ -16,14 +16,19 @@ import {
 } from "@/features/organisation/api";
 import { workspaceQuery } from "@/features/workspace/api";
 
-/** Refreshes company lists and workspace access, including newly created units. */
+/**
+ * Refreshes company lists and workspace access, including newly created units.
+ * Without a `successMessage` the app's generic success toast shows.
+ */
 const useCompanyCreate = <TBody, TResult>(
 	companyId: string,
-	create: (body: TBody) => Promise<TResult>
+	create: (body: TBody) => Promise<TResult>,
+	successMessage?: "organisation.accessRoles.toast.created"
 ): UseMutationResult<TResult, Error, TBody> => {
 	const client = useQueryClient();
 	return useMutation({
 		mutationFn: create,
+		meta: { successMessage },
 		onSuccess: () =>
 			Promise.all([
 				client.invalidateQueries({ queryKey: ["organisation", companyId] }),
@@ -62,6 +67,8 @@ export const useCreateJobTitle = (
 export const useCreateAccessRole = (
 	companyId: string
 ): UseMutationResult<AccessRole, Error, CreateAccessRoleBody> =>
-	useCompanyCreate(companyId, (body: CreateAccessRoleBody) =>
-		createAccessRole(companyId, body)
+	useCompanyCreate(
+		companyId,
+		(body: CreateAccessRoleBody) => createAccessRole(companyId, body),
+		"organisation.accessRoles.toast.created"
 	);

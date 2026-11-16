@@ -84,21 +84,21 @@ describe("ValidateScheduleButton", () => {
 		).toBeVisible();
 	});
 
-	it("is plain again after validating the roster on screen, naming the problems but showing no second count", () => {
+	it("is plain again after validating the roster on screen, naming the issues but showing no second count", () => {
 		show({ hasChanges: true, last: { revision: 2, check: TWO_PROBLEMS } });
 
 		const button = screen.getByRole("button", {
-			name: "Validate schedule: 2 problems found",
+			name: "Validate schedule: 2 issues found",
 		});
 		expect(button).toHaveTextContent(/^Validate schedule$/);
 	});
 
-	it("shows a tick when the roster on screen has no problems", () => {
+	it("shows a tick when the roster on screen has no issues", () => {
 		show({ hasChanges: true, last: { revision: 2, check: CLEAN } });
 
 		expect(
 			screen.getByRole("button", {
-				name: "Validate schedule: no problems found",
+				name: "Validate schedule: no issues found",
 			})
 		).toBeVisible();
 	});

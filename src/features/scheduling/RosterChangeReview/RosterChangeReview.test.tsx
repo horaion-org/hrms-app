@@ -1,8 +1,12 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { I18nextProvider } from "react-i18next";
 import { describe, expect, it, vi } from "vitest";
 import { authTestI18n } from "@/features/auth/testingI18n";
-import { RosterChangeReview } from "@/features/scheduling/RosterChangeReview";
+import {
+	RosterChangeReview,
+	type RosterChangeReviewProps,
+} from "@/features/scheduling/RosterChangeReview";
 import type { RosterChangePreview } from "@/features/scheduling/rosterChanges/api";
 import {
 	rosterChangePreviewFixture,
@@ -18,17 +22,23 @@ const names = {
 
 const show = (
 	preview: RosterChangePreview | undefined,
-	showsRulesNote?: boolean
+	showsRulesNote?: boolean,
+	refused: Pick<
+		RosterChangeReviewProps,
+		"previewRefusal" | "onRetryPreview"
+	> = {}
 ): void => {
 	render(
 		<I18nextProvider i18n={authTestI18n}>
 			<RosterChangeReview
 				names={names}
 				preview={preview}
+				previewRefusal={refused.previewRefusal}
 				remark=""
 				showsRulesNote={showsRulesNote}
 				ticked={false}
 				onRemarkChange={vi.fn()}
+				onRetryPreview={refused.onRetryPreview}
 				onTickedChange={vi.fn()}
 			/>
 		</I18nextProvider>
@@ -53,7 +63,7 @@ describe("RosterChangeReview", () => {
 		).toBeVisible();
 		expect(
 			screen.getByText(
-				"Scheduling rules aren’t checked again for changes made by hand."
+				"Working-time rules aren’t checked for changes made by hand. After you apply this, press Validate schedule."
 			)
 		).toBeVisible();
 		expect(
@@ -89,4 +99,22 @@ describe("RosterChangeReview", () => {
 		expect(screen.queryByRole("note")).toBeNull();
 		expect(screen.getByText("Checks")).toBeVisible();
 	});
+
+	it.each([
+		["failed", "Try again"],
+		["revision", "Reload roster"],
+	] as const)(
+		"given_aPreviewRefusedAs_%s_when_shown_then_saysWhyWithItsRetry",
+		async (previewRefusal, action) => {
+			const onRetryPreview = vi.fn();
+			show(undefined, true, { previewRefusal, onRetryPreview });
+
+			const alert = screen.getByRole("alert");
+			await userEvent.click(
+				within(alert).getByRole("button", { name: action })
+			);
+
+			expect(onRetryPreview).toHaveBeenCalledOnce();
+		}
+	);
 });

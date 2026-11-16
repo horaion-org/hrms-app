@@ -8,6 +8,7 @@ import { ApiProblemError } from "@/common/problem";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
+import { ErrorText } from "@/components/ui/ErrorText";
 import {
 	ArrowLeftIcon,
 	ChevronLeftIcon,
@@ -270,6 +271,7 @@ const Legend = (): FunctionComponent => {
 					{t(`${key}.legendShort`)}
 				</li>
 			</ul>
+			<p>{t(`${key}.legendTentative`)}</p>
 			<p>{t(`${key}.footnote`)}</p>
 		</div>
 	);
@@ -437,6 +439,28 @@ const MonthContent = ({
 					{t("scheduling.months.generate.generatingDetail")}
 				</Callout>
 			)}
+			{showsPanel && check.isPending && (
+				<p className="text-sm text-neutral-800" role="status">
+					{t("scheduling.months.generate.panel.checking", { month: monthName })}
+				</p>
+			)}
+			{showsPanel && check.isError && (
+				<div className="flex flex-col items-start gap-2">
+					<ErrorText>
+						{t("scheduling.months.generate.panel.checkFailed", {
+							month: monthName,
+						})}
+					</ErrorText>
+					<Button
+						variant="textlink"
+						onClick={() => {
+							void check.refetch();
+						}}
+					>
+						{t("scheduling.rosterEdit.tryAgain")}
+					</Button>
+				</div>
+			)}
 			{showsPanel && check.data && (
 				<BeforeGeneratePanel
 					blockedNote={blockedNoteOf(generation.block, departmentName, t)}
@@ -456,9 +480,7 @@ const MonthContent = ({
 				/>
 			)}
 			{generation.error && (
-				<p className="text-sm text-error-700" role="alert">
-					{monthGenerationRefusal(generation.error, t)}
-				</p>
+				<ErrorText>{monthGenerationRefusal(generation.error, t)}</ErrorText>
 			)}
 			{noSchedule && !showsPanel && (
 				<p className="text-sm text-neutral-800">

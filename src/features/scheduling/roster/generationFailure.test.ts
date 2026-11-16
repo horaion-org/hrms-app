@@ -33,10 +33,17 @@ describe("generationFailure", () => {
 			"engine_unreachable",
 			"The scheduling engine couldn’t be reached in time, so nothing was generated.",
 		],
-		["CANCELLED", "The engine’s job was cancelled before it finished."],
+		[
+			"CANCELLED",
+			"Generating stopped before a roster was saved. Generate again.",
+		],
+		[
+			"too_many_jobs",
+			"The scheduling engine was busy. Generate again in a few minutes.",
+		],
 		[
 			"engine_http_503",
-			"The scheduling engine answered with an error (HTTP 503).",
+			"The scheduling engine returned an error, so nothing was generated. Generate again; if it keeps failing, contact support.",
 		],
 		[
 			"rule.soft_not_allowed",

@@ -3,6 +3,7 @@ import { useRouterState } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
+import { matchesSearch } from "@/common/matchesSearch";
 import type { FunctionComponent } from "@/common/types";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -25,6 +26,7 @@ import {
 import { formatPeriod } from "@/features/scheduling/periods";
 import { ScheduleMenu } from "@/features/scheduling/ScheduleMenu";
 import type { Schedule } from "@/features/scheduling/schedules/api";
+import { statusLabelKey } from "@/features/scheduling/schedules/publishOrder";
 import { scheduleStatusTones } from "@/features/scheduling/schedules/scheduleStatusTones";
 import { scheduleViewLink } from "@/features/scheduling/schedules/scheduleViewLink";
 import { useSchedules } from "@/features/scheduling/schedules/useSchedules";
@@ -41,20 +43,13 @@ import { useAccess } from "@/features/workspace/useAccess";
 
 const key = "scheduling.overview";
 
-const matches = (schedule: Schedule, search: string): boolean => {
-	const text = search.trim().toLocaleLowerCase();
-	return (
-		text === "" ||
-		schedule.name.toLocaleLowerCase().includes(text) ||
-		schedule.departmentName.toLocaleLowerCase().includes(text)
-	);
-};
+const matches = (schedule: Schedule, search: string): boolean =>
+	matchesSearch(schedule.name, search) ||
+	matchesSearch(schedule.departmentName, search);
 
 /** A month card matches the search by its Department's name, as a history row does. */
 const monthMatches = (summary: ScheduleMonthSummary, search: string): boolean =>
-	summary.departmentName
-		.toLocaleLowerCase()
-		.includes(search.trim().toLocaleLowerCase());
+	matchesSearch(summary.departmentName, search);
 
 export type SchedulesTabProps = {
 	companyId: string;
@@ -109,6 +104,11 @@ export const SchedulesTab = ({
 			? list.schedules.filter((schedule) => matches(schedule, search))
 			: [];
 	const columns = useMemo((): Array<DataTableColumn<Schedule>> => {
+		const periodOf = (schedule: Schedule): string =>
+			formatPeriod(
+				{ start: schedule.periodStart, end: schedule.periodEnd },
+				language
+			);
 		const createdAt = new Intl.DateTimeFormat(language, {
 			day: "2-digit",
 			month: "short",
@@ -119,22 +119,19 @@ export const SchedulesTab = ({
 		});
 		return [
 			{
-				id: "name",
-				header: t(`${key}.history.name`),
-				cell: (schedule) => schedule.name,
+				// A schedule is named by its week, in the reader's language; the stored name is the API's.
+				id: "date",
+				header: t(`${key}.history.date`),
+				cell: (schedule) => periodOf(schedule),
 				cellClassName: "font-semibold",
+				sortValue: (schedule) => schedule.periodStart,
 				pin: "start",
 			},
 			{
-				id: "date",
-				header: t(`${key}.history.date`),
-				cell: (schedule) =>
-					formatPeriod(
-						{ start: schedule.periodStart, end: schedule.periodEnd },
-						language
-					),
-				sortValue: (schedule) => schedule.periodStart,
-				// A phone keeps the name and the actions as columns; the rest reads on the name's line, as Job titles does.
+				id: "name",
+				header: t(`${key}.history.name`),
+				cell: (schedule) => schedule.name,
+				// A phone keeps the week and the actions as columns; the rest reads on the week's line, as Job titles does.
 				hideBelow: "md",
 			},
 			{
@@ -153,10 +150,10 @@ export const SchedulesTab = ({
 				header: t(`${key}.history.status`),
 				cell: (schedule) => (
 					<Badge tone={scheduleStatusTones[schedule.status]}>
-						{t(`${key}.statuses.${schedule.status}`)}
+						{t(statusLabelKey(schedule.status))}
 					</Badge>
 				),
-				sortValue: (schedule) => t(`${key}.statuses.${schedule.status}`),
+				sortValue: (schedule) => t(statusLabelKey(schedule.status)),
 				hideBelow: "md",
 			},
 			{
@@ -174,7 +171,10 @@ export const SchedulesTab = ({
 					<div className="flex justify-center">
 						<Button
 							{...scheduleViewLink(schedule)}
-							aria-label={t(`${key}.viewNamed`, { code: schedule.name })}
+							aria-label={t(`${key}.viewNamed`, {
+								department: schedule.departmentName,
+								period: periodOf(schedule),
+							})}
 							variant="icon"
 						>
 							<ViewIcon />
@@ -215,9 +215,19 @@ export const SchedulesTab = ({
 					onDepartmentChange(undefined);
 				}}
 			/>
+			{months.isLoading && (
+				<p className="mt-8 text-sm text-neutral-700" role="status">
+					{t("scheduling.months.tabLoading")}
+				</p>
+			)}
 			{months.isError && (
 				<p className="mt-8 text-sm text-neutral-700" role="alert">
 					{t("scheduling.months.tabFailed")}
+				</p>
+			)}
+			{months.isSuccess && search.trim() === "" && monthGroups.length === 0 && (
+				<p className="mt-8 text-sm text-neutral-700">
+					{t("scheduling.months.tabEmpty")}
 				</p>
 			)}
 			{monthGroups.map(([month, monthSummaries]) => (

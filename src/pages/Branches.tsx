@@ -1,5 +1,6 @@
 import { formattingLocale } from "@/common/formattingLocale";
 import { useMemo, useState } from "react";
+import { matchesSearch } from "@/common/matchesSearch";
 import { mapRefusal } from "@/common/refusal";
 import { useAccess } from "@/features/workspace/useAccess";
 import { branchScope, COMPANY_SCOPE } from "@/features/workspace/scopes";
@@ -17,7 +18,6 @@ import { ListToolbar } from "@/features/organisation/ListToolbar";
 import {
 	describeList,
 	isStatusFilter,
-	matchesSearch,
 	statusFilterChips,
 	statusFilterOptions,
 	type StatusFilter,

@@ -165,6 +165,17 @@ describe("Create schedules for a month", () => {
 			await screen.findByRole("region", { name: "Schedule setup" })
 		).toBeVisible();
 		expect(
+			screen.getByRole("heading", { level: 1, name: "Schedule a month" })
+		).toBeInTheDocument();
+		expect(
+			screen.getByRole("link", { name: "Back to Scheduling" })
+		).toHaveAttribute("href", "/scheduling");
+		expect(
+			screen.getByText(
+				"Choose a department and a month, tick the weeks to roster, then generate. You review and publish each week afterwards."
+			)
+		).toBeInTheDocument();
+		expect(
 			screen.getByText("A week belongs to the month its Monday falls in.")
 		).toBeInTheDocument();
 		const table = await screen.findByRole("table", { name: "Weeks" });
@@ -304,6 +315,52 @@ describe("Create schedules for a month", () => {
 				})
 			),
 		});
+	});
+
+	it("given_theGenerationCheckStillLoading_when_onGenerate_then_saysTheMonthIsBeingChecked", async () => {
+		const user = userEvent.setup();
+		await open(NEW_DECEMBER, {
+			// A 503 is retried, so the check is still loading while the test looks.
+			[`GET ${DECEMBER}/generation-check`]: problemReply(
+				503,
+				"SERVICE_UNAVAILABLE"
+			),
+		});
+
+		await screen.findByText(EVERY_WEEK_LINE);
+		await user.click(next());
+		await screen.findByRole("region", { name: "Staffing forecast" });
+		await user.click(next());
+
+		expect(
+			await screen.findByText("Checking December before you generate…")
+		).toHaveAttribute("role", "status");
+		expect(
+			screen.queryByRole("button", { name: "Generate December" })
+		).toBeNull();
+	});
+
+	it("given_aFailedGenerationCheck_when_tryAgainIsChosen_then_offersGenerate", async () => {
+		const user = userEvent.setup();
+		await open(NEW_DECEMBER, {
+			[`GET ${DECEMBER}/generation-check`]: [
+				problemReply(400, "BAD_REQUEST"),
+				reply(monthGenerationCheckFixture()),
+			],
+		});
+
+		await screen.findByText(EVERY_WEEK_LINE);
+		await user.click(next());
+		await screen.findByRole("region", { name: "Staffing forecast" });
+		await user.click(next());
+		expect(
+			await screen.findByText("We couldn’t check December before generating.")
+		).toHaveAttribute("role", "alert");
+		await user.click(screen.getByRole("button", { name: "Try again" }));
+
+		expect(
+			await screen.findByRole("button", { name: "Generate December" })
+		).toBeInTheDocument();
 	});
 
 	it("given_aRefusedMonth_when_generated_then_saysWhyAndStays", async () => {

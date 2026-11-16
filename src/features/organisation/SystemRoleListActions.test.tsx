@@ -712,6 +712,28 @@ describe("Access role people, checked at each assignment's own place", () => {
 		expect(calls.some((call) => call.path.endsWith("/a-3"))).toBe(false);
 	});
 
+	it("names the places when only some can be removed", async () => {
+		stubApi({
+			...routes(),
+			"GET /api/v1/me/workspace": kitchenAssigner(),
+			[HOLDERS]: { status: 200, body: envelope(spreadHolders) },
+		});
+		app = await openApp("/settings/access-roles/r-2?tab=people");
+		renderAuthApp(app);
+
+		await userEvent.click(
+			await screen.findByRole("button", { name: "More actions for Daniel Tan" })
+		);
+		await userEvent.click(screen.getByRole("menuitem", { name: "Delete" }));
+		const dialog = await screen.findByRole("dialog", {
+			name: "Remove Daniel Tan from this role",
+		});
+
+		expect(dialog).toHaveTextContent(
+			"Daniel Tan will no longer have the Manager role at Orchard › Kitchen. Places you can’t change keep it. This takes effect immediately."
+		);
+	});
+
 	it("removes a grouped person only where the person may assign", async () => {
 		const calls = stubApi({
 			...routes(),

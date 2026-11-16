@@ -2,6 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Fragment, useEffect, useId, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import { isOneOf } from "@/common/isOneOf";
 import type { FunctionComponent } from "@/common/types";
 import { FormRow, formRowIds } from "@/components/forms/FormRow";
 import { Input } from "@/components/forms/Input";
@@ -10,6 +11,7 @@ import { Select, type SelectOption } from "@/components/forms/Select";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import { Dialog } from "@/components/ui/Dialog";
+import { ErrorText } from "@/components/ui/ErrorText";
 import { UnitNameField } from "@/features/organisation/UnitNameField";
 import { useCreateFormSubmit } from "@/features/organisation/useCreateFormSubmit";
 import { ChosenConstraintType } from "@/features/scheduling/constraints/ChosenConstraintType";
@@ -153,10 +155,10 @@ const CHOICE_FIELDS = [
 type ChoiceField = (typeof CHOICE_FIELDS)[number];
 
 const isChoiceField = (field: ConstraintField): field is ChoiceField =>
-	(CHOICE_FIELDS as ReadonlyArray<ConstraintField>).includes(field);
+	isOneOf(CHOICE_FIELDS, field);
 
 const isHinted = (field: ConstraintField): field is HintedField =>
-	(HINTED_FIELDS as ReadonlyArray<ConstraintField>).includes(field);
+	isOneOf(HINTED_FIELDS, field);
 
 /** The whole numbers from `first` to `last`, in order. */
 const numbersFrom = (first: number, last: number): Array<number> =>
@@ -886,9 +888,7 @@ export const ConstraintDialog = ({
 							/>
 						)}
 						{errors.type?.message && (
-							<p className="text-sm text-error-700" role="alert">
-								{errors.type.message}
-							</p>
+							<ErrorText>{errors.type.message}</ErrorText>
 						)}
 						{staleNames.length > 0 && (
 							<Callout tone="warning">

@@ -112,6 +112,19 @@ it("given_novemberOfKitchen_when_opened_then_fiveWeekCardsInMondayOrderWithTheir
 	);
 });
 
+it("given_aMonth_when_opened_then_theLegendExplainsTentative", async () => {
+	await openMonth({
+		...signedIn(),
+		[`GET ${MONTHS}/2026-11`]: ok(scheduleMonthFixture()),
+	});
+
+	expect(
+		await screen.findByText(
+			"Tentative: generated, and waits for an earlier week to be published."
+		)
+	).toBeInTheDocument();
+});
+
 it("given_theWeekUnderReview_when_shown_then_reviewLinksToItsRoster", async () => {
 	await openMonth({
 		...signedIn(),
@@ -263,6 +276,49 @@ it("given_aMonthNothingWasGeneratedIn_when_generated_then_everyWeekIsSentAndTheM
 		screen.queryByRole("heading", { name: "Before you generate December" })
 	).toBeNull();
 	expect(screen.getAllByText("Generating").length).toBeGreaterThanOrEqual(4);
+});
+
+it("given_theGenerationCheckStillLoading_when_opened_then_saysTheMonthIsBeingChecked", async () => {
+	await openMonth(
+		{
+			...decemberRoutes([ok(ungeneratedMonthFixture())]),
+			// A 503 is retried, so the check is still loading while the test looks.
+			[`GET ${DECEMBER}/generation-check`]: problemReply(
+				503,
+				"SERVICE_UNAVAILABLE"
+			),
+		},
+		"/scheduling/months/2026-12?department=d-1"
+	);
+
+	expect(
+		await screen.findByText("Checking December before you generate…")
+	).toHaveAttribute("role", "status");
+	expect(
+		screen.queryByRole("button", { name: "Generate December" })
+	).toBeNull();
+});
+
+it("given_aFailedGenerationCheck_when_tryAgainIsChosen_then_theCheckIsReadAgain", async () => {
+	await openMonth(
+		{
+			...decemberRoutes([ok(ungeneratedMonthFixture())]),
+			[`GET ${DECEMBER}/generation-check`]: [
+				problemReply(400, "BAD_REQUEST"),
+				ok(monthGenerationCheckFixture()),
+			],
+		},
+		"/scheduling/months/2026-12?department=d-1"
+	);
+
+	expect(
+		await screen.findByText("We couldn’t check December before generating.")
+	).toHaveAttribute("role", "alert");
+	await userEvent.click(screen.getByRole("button", { name: "Try again" }));
+
+	expect(
+		await screen.findByRole("heading", { name: "Before you generate December" })
+	).toBeInTheDocument();
 });
 
 it("given_aRefusedWeekInTheAnswer_when_generated_then_itsCardSaysWhy", async () => {

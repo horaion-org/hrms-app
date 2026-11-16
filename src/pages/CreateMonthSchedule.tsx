@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
+import { ErrorText } from "@/components/ui/ErrorText";
 import { ArrowLeftIcon, ArrowRightIcon } from "@/components/ui/Icon";
 import { Stepper, StepperStep } from "@/components/ui/Stepper";
 import { constraintsQuery } from "@/features/scheduling/constraints/api";
@@ -36,11 +37,11 @@ import {
 	formatMonth,
 	formatMonthName,
 	formatWeekDates,
-	formatWeekdayDate,
 	monthChoicesFrom,
 	monthOf,
 	summaryRange,
 } from "@/features/scheduling/months/monthWeeks";
+import { weekRangeText } from "@/features/scheduling/months/monthCopy";
 import { hasRoster } from "@/features/scheduling/months/weekStateLooks";
 import {
 	defaultMonthOf,
@@ -603,12 +604,7 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 	const tickedHint = t("scheduling.months.generate.panel.hintChosen", {
 		count: ticked.length,
 		ranges: new Intl.ListFormat(language, { type: "conjunction" }).format(
-			tickedRangesOf(ticked).map((range) =>
-				t("scheduling.months.setup.weekDates", {
-					from: formatWeekdayDate(range.start, language),
-					to: formatWeekdayDate(range.end, language),
-				})
-			)
+			tickedRangesOf(ticked).map((range) => weekRangeText(range, language, t))
 		),
 	});
 	const generate = async (): Promise<void> => {
@@ -648,10 +644,10 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 				{t("scheduling.create.back")}
 			</Button>
 			<h1 className="mt-4 text-4xl font-medium text-neutral-900">
-				{t("scheduling.create.title")}
+				{t("scheduling.months.create.title")}
 			</h1>
 			<p className="mt-3 text-sm text-neutral-800">
-				{t("scheduling.create.subtitle")}
+				{t("scheduling.months.create.subtitle")}
 			</p>
 			<Stepper
 				className="mt-12"
@@ -749,25 +745,47 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 							{t("scheduling.create.generateForbidden")}
 						</p>
 					) : (
-						check.data && (
-							<BeforeGeneratePanel
-								check={check.data}
-								generating={generation.isPending}
-								hint={tickedHint}
-								month={month}
-								waiting={generation.block === "listsLoading"}
-								onGenerate={() => {
-									void generate();
-								}}
-							/>
-						)
+						<>
+							{check.isPending && (
+								<p className="text-sm text-neutral-800" role="status">
+									{t("scheduling.months.generate.panel.checking", {
+										month: monthName,
+									})}
+								</p>
+							)}
+							{check.isError && (
+								<div className="flex flex-col items-start gap-2">
+									<ErrorText>
+										{t("scheduling.months.generate.panel.checkFailed", {
+											month: monthName,
+										})}
+									</ErrorText>
+									<Button
+										variant="textlink"
+										onClick={() => {
+											void check.refetch();
+										}}
+									>
+										{t("scheduling.rosterEdit.tryAgain")}
+									</Button>
+								</div>
+							)}
+							{check.data && (
+								<BeforeGeneratePanel
+									check={check.data}
+									generating={generation.isPending}
+									hint={tickedHint}
+									month={month}
+									waiting={generation.block === "listsLoading"}
+									onGenerate={() => {
+										void generate();
+									}}
+								/>
+							)}
+						</>
 					))}
 			</div>
-			{problem && (
-				<p className="mt-6 text-sm text-error-700" role="alert">
-					{problem}
-				</p>
-			)}
+			{problem && <ErrorText className="mt-6">{problem}</ErrorText>}
 			{step === "generate" ? (
 				// The panel holds Generate; the foot only goes back.
 				back && (

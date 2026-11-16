@@ -9,6 +9,7 @@ import {
 	scheduleMonthPath,
 	scheduleMonthsPath,
 } from "@/features/scheduling/paths";
+import { GENERATION_POLL_INTERVAL_MS } from "@/features/scheduling/schedules/api";
 import { administrativeMeta } from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";
 import type { UnitSelection } from "@/features/workspace/unitSelection";
@@ -164,9 +165,6 @@ export const scheduleMonthSummariesKey = (
 	UnitSelection,
 	MonthRange,
 ] => [...scheduleMonthsKey(companyId), "summaries", units, range] as const;
-
-/** How often a month with a week being generated is read again. */
-const GENERATION_POLL_INTERVAL_MS = 15_000;
 
 /**
  * One Department's month; `allowed` false asks for nothing. While a week is

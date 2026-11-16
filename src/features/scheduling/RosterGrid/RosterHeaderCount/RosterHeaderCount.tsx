@@ -6,7 +6,7 @@ import type { HeaderCount } from "@/features/scheduling/roster/rosterMarks";
 export type RosterHeaderCountProps = {
 	/** How many to look at, and in which tone (`rowIssueCount`, `dayIssueCount`). */
 	count: HeaderCount;
-	/** Names the count and what choosing it does, e.g. "Ben Ong: 1 to look at. Show in Issues". */
+	/** Names the count and what choosing it does, e.g. "Ben Ong: 1 issue. Show in Issues". */
 	label: string;
 	/** Opens the Issues list for this row or day; `from` gets focus back when it closes. */
 	onSelect: (from: HTMLElement) => void;

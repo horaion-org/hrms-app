@@ -376,7 +376,7 @@ describe("GeneratedRoster", () => {
 		);
 
 		const count = screen.getByRole("button", {
-			name: "Ben Ong: 1 to look at. Show in Issues",
+			name: "Ben Ong: 1 issue. Show in Issues",
 		});
 		await user.click(count);
 
@@ -449,7 +449,7 @@ describe("GeneratedRoster", () => {
 
 		await user.click(
 			screen.getByRole("button", {
-				name: "Aisha Rahman: 1 to look at. Show in Issues",
+				name: "Aisha Rahman: 1 issue. Show in Issues",
 			})
 		);
 
@@ -474,7 +474,9 @@ describe("GeneratedRoster", () => {
 		);
 
 		expect(screen.queryByRole("button", { name: /^Issues/ })).toBeNull();
-		expect(screen.queryByRole("button", { name: /to look at/ })).toBeNull();
+		expect(
+			screen.queryByRole("button", { name: / issues?\. Show in Issues$/ })
+		).toBeNull();
 	});
 
 	describe("on a published roster with offers out", () => {
@@ -714,6 +716,46 @@ describe("GeneratedRoster", () => {
 			expect(notMet).not.toBeNull();
 			expect(notMet).toHaveTextContent("Five days in a row");
 			expect(notMet).toHaveTextContent(/Ben Ong/);
+		});
+
+		it("given_issuesToFixAndNotMet_when_shown_then_theIssuesButtonShowsOneCountTheirSum", () => {
+			const check = rulesCheckFixture({
+				status: "BROKEN",
+				notMet: [
+					ruleFixture({
+						rule: "max_consecutive_work_days",
+						constraintName: "Five days in a row",
+						violations: [
+							{
+								employeeId: "mp-2",
+								date: "2026-10-16",
+								messages: ["If possible, not met: six in a row"],
+							},
+						],
+					}),
+				],
+				members: [
+					{
+						memberProfileId: "mp-2",
+						membershipId: "m-2",
+						displayName: "Ben Ong",
+					},
+				],
+			});
+			showValidated({
+				status: "ready",
+				check,
+				ask: vi.fn(),
+				last: { revision: 1, check },
+			});
+
+			// The label names both groups ("Issues: 1 to fix, 1 could not be met"); the badge shows their sum.
+			const issues = screen.getByRole("button", { name: /^Issues: / });
+			const [toFix = 0, notMet = 0] = (
+				issues.getAttribute("aria-label")?.match(/\d+/g) ?? []
+			).map(Number);
+			expect(notMet).toBeGreaterThan(0);
+			expect(issues).toHaveTextContent(new RegExp(`^Issues${toFix + notMet}$`));
 		});
 
 		it("given_aValidationOfAnEarlierRevision_when_issuesOpens_then_itValidatesAndSaysTheListIsOutOfDateWithTheAction", async () => {

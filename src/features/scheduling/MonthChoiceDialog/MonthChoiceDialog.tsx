@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
+import { ErrorText } from "@/components/ui/ErrorText";
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from "@/components/ui/Tabs";
 import type { ConstraintTypeOption } from "@/features/scheduling/constraints/api";
 import type { MonthChoices } from "@/features/scheduling/months/monthGeneration";
@@ -161,11 +162,7 @@ export const MonthChoiceDialog = ({
 					{t(`${key}.useForEveryWeek`)}
 				</Button>
 			)}
-			{problem && (
-				<p className="mt-6 text-sm text-error-700" role="alert">
-					{problem}
-				</p>
-			)}
+			{problem && <ErrorText className="mt-6">{problem}</ErrorText>}
 		</Dialog>
 	);
 };

@@ -301,7 +301,7 @@ describe("Add employee", () => {
 		await open();
 		await fillRequired(user);
 		await choose(user, /^Job title/, "Chef");
-		await choose(user, /^Role scope/, "Orchard › Kitchen");
+		await choose(user, /^Applies to/, "Orchard › Kitchen");
 		await choose(user, /^Access role/, "Supervisor");
 		await chooseDepartment(user, "No department yet");
 		expect(button(/^Job title/)).toBeDisabled();
@@ -457,7 +457,7 @@ describe("Add employee", () => {
 		await open();
 
 		await fillRequired(user);
-		await choose(user, /^Role scope/, "Orchard › Kitchen");
+		await choose(user, /^Applies to/, "Orchard › Kitchen");
 		await user.click(button(/^Access role/));
 		// The owner's role, inactive roles and company roles, which can't be given at a department, are never offered.
 		expect(
@@ -497,7 +497,7 @@ describe("Add employee", () => {
 		const opened = await open();
 
 		await fillRequired(user);
-		await choose(user, /^Role scope/, "Orchard › Kitchen");
+		await choose(user, /^Applies to/, "Orchard › Kitchen");
 		await choose(user, /^Access role/, "Supervisor");
 		await user.click(confirm());
 
@@ -619,7 +619,7 @@ describe("Add employee", () => {
 		await chooseDepartment(user, "Orchard › Kitchen");
 		expect(await screen.findByText("Access role")).toBeVisible();
 
-		await user.click(button(/^Role scope/));
+		await user.click(button(/^Applies to/));
 		expect(
 			(await screen.findAllByRole("option")).map((option) => option.textContent)
 		).toEqual(["Orchard › Kitchen"]);

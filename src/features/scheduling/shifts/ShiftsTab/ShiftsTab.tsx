@@ -2,9 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { DepartmentPath } from "@/common/companyPath";
+import { matchesSearch } from "@/common/matchesSearch";
 import type { FunctionComponent } from "@/common/types";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { Toast } from "@/components/ui/Toast";
 import { placeOf } from "@/features/organisation/assignmentTargets";
 import { ListToolbar } from "@/features/organisation/ListToolbar";
 import { constraintsQuery } from "@/features/scheduling/constraints/api";
@@ -82,14 +82,9 @@ const unitOf = (shift: DepartmentShift): DepartmentPath => ({
 	departmentId: shift.departmentId,
 });
 
-const matches = (shift: DepartmentShift, search: string): boolean => {
-	const text = search.trim().toLocaleLowerCase();
-	return (
-		text === "" ||
-		shift.name.toLocaleLowerCase().includes(text) ||
-		shift.departmentName.toLocaleLowerCase().includes(text)
-	);
-};
+const matches = (shift: DepartmentShift, search: string): boolean =>
+	matchesSearch(shift.name, search) ||
+	matchesSearch(shift.departmentName, search);
 
 export type ShiftsTabProps = {
 	companyId: string;
@@ -134,10 +129,6 @@ export const ShiftsTab = ({
 	const [search, setSearch] = useState("");
 	const [dialog, setDialog] = useState<DialogState>();
 	const [deleting, setDeleting] = useState<DepartmentShift>();
-	const [toast, setToast] = useState<{ id: number; message: string }>();
-	const notify = (message: string): void => {
-		setToast((previous) => ({ id: (previous?.id ?? 0) + 1, message }));
-	};
 
 	const rows =
 		list.status === "ready"
@@ -222,12 +213,10 @@ export const ShiftsTab = ({
 				shiftId: dialog.shift.shiftId,
 				body,
 			});
-			notify(t("scheduling.shifts.edited"));
 			return;
 		}
 		if (!dialogUnit) return;
 		await actions.createShift.mutateAsync({ unit: dialogUnit, body });
-		notify(t("scheduling.shifts.added"));
 	};
 	const closeDelete = (): void => {
 		actions.deleteShift.reset();
@@ -372,25 +361,10 @@ export const ShiftsTab = ({
 					onConfirm={() => {
 						actions.deleteShift.mutate(
 							{ unit: unitOf(deleting), shiftId: deleting.shiftId },
-							{
-								onSuccess: () => {
-									closeDelete();
-									notify(t("scheduling.shifts.deleted"));
-								},
-							}
+							{ onSuccess: closeDelete }
 						);
 					}}
 				/>
-			)}
-			{toast && (
-				<Toast
-					key={toast.id}
-					onDismiss={() => {
-						setToast(undefined);
-					}}
-				>
-					{toast.message}
-				</Toast>
 			)}
 		</>
 	);

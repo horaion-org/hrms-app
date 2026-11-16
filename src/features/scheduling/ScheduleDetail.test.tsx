@@ -208,7 +208,7 @@ it("shows a generated schedule's header, figures and roster from the API", async
 	expect(
 		screen.getByRole("heading", { level: 1, name: "Front Office Schedule" })
 	).toBeInTheDocument();
-	expect(screen.getByText("Generated")).toBeInTheDocument();
+	expect(screen.getByText("To review")).toBeInTheDocument();
 	expect(screen.getByText("Times in Asia/Singapore")).toBeInTheDocument();
 	expect(screen.queryByText(/Requested by/)).toBeNull();
 	expect(
@@ -329,7 +329,9 @@ it("deletes the schedule from the header's menu and goes back to the overview", 
 	await user.click(screen.getByRole("menuitem", { name: "Delete" }));
 	await user.click(
 		within(
-			screen.getByRole("dialog", { name: "Delete Front Office - Week 42?" })
+			screen.getByRole("dialog", {
+				name: /^Delete the Front Office schedule for Oct 12\s?–\s?18, 2026\?$/,
+			})
 		).getByRole("button", { name: "Delete schedule" })
 	);
 
@@ -952,12 +954,12 @@ it("offers neither Publish nor Reject to someone without schedule:publish", asyn
 		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
 	});
 
-	expect(await screen.findByText("Generated")).toBeInTheDocument();
+	expect(await screen.findByText("To review")).toBeInTheDocument();
 	expect(screen.queryByRole("button", { name: "Publish roster" })).toBeNull();
 	expect(await menuItemsOf(userEvent.setup())).not.toContain("Reject");
 });
 
-it("withdraws a published roster's publication with a remark, back to Generated", async () => {
+it("withdraws a published roster's publication with a remark, back to To review", async () => {
 	const calls = await openRoster({
 		...signedIn(["schedule:read", "schedule:publish"]),
 		[`GET ${SCHEDULE_READ}`]: [
@@ -1004,7 +1006,7 @@ it("withdraws a published roster's publication with a remark, back to Generated"
 	);
 	await user.click(confirm);
 
-	expect(await screen.findByText("Generated")).toBeInTheDocument();
+	expect(await screen.findByText("To review")).toBeInTheDocument();
 	expect(
 		calls.find((call) => call.path === `${SCHEDULE}/publication-withdrawal`)
 			?.body
@@ -1248,7 +1250,7 @@ it("counts findings in the row and day headers, opens them in Issues, and says a
 	).toBe("Q");
 	await user.click(
 		within(roster).getByRole("button", {
-			name: "Ben Ong: 1 to look at. Show in Issues",
+			name: "Ben Ong: 1 issue. Show in Issues",
 		})
 	);
 
@@ -1651,7 +1653,7 @@ it("changes a generated roster's day by hand: preview, apply, mark, then undo", 
 		await within(panel).findByText("Front Desk AM, Mon, Oct 12: 2 → 1 people.")
 	).toBeVisible();
 	expect(panel).toHaveTextContent(
-		"Scheduling rules aren’t checked again for changes made by hand."
+		"Working-time rules aren’t checked for changes made by hand. After you apply this, press Validate schedule."
 	);
 	expect(panel).toHaveTextContent(
 		"Aisha Rahman Front Desk AM · 09:00 – 15:00 → Day off"
@@ -2324,7 +2326,7 @@ describe("the roster in its month", () => {
 		expect(
 			await screen.findByRole("button", { name: "Publish roster" })
 		).toBeEnabled();
-		expect(screen.getByText("Generated")).toBeInTheDocument();
+		expect(screen.getByText("To review")).toBeInTheDocument();
 	});
 
 	it("shows neither the note nor a held Publish on a published week", async () => {

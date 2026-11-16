@@ -80,7 +80,7 @@ export const isFieldShown = (
 	field: ConstraintField,
 	values: Partial<Record<ConstraintField, ReadonlyArray<string>>>
 ): boolean => {
-	const day = (PATTERN_DAYS as ReadonlyArray<ConstraintField>).indexOf(field);
+	const day = PATTERN_DAYS.findIndex((patternDay) => patternDay === field);
 	if (day < ALWAYS_SHOWN_PATTERN_DAYS) return true;
 	const hasShifts = (dayField: ConstraintField): boolean =>
 		(values[dayField] ?? []).some(Boolean);

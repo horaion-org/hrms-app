@@ -21,6 +21,7 @@ import {
 	fillEmpty,
 	hasEnteredDayOn,
 	initialEntries,
+	isCellValue,
 	offCellValue,
 	offDayTypes,
 	shiftCellValue,
@@ -132,13 +133,9 @@ export const StartingDaysDialog = ({
 						day: labelOf(date),
 					})}
 					onChange={(value) => {
+						if (!isCellValue(value)) return;
 						setEntries((current) =>
-							withCell(
-								current,
-								member.memberProfileId,
-								date,
-								value as CellValue
-							)
+							withCell(current, member.memberProfileId, date, value)
 						);
 					}}
 				/>
@@ -231,7 +228,7 @@ export const StartingDaysDialog = ({
 					options={valueOptions.filter((option) => option.value !== "")}
 					value={fillValue}
 					onChange={(value) => {
-						setFillValue(value as CellValue);
+						if (isCellValue(value)) setFillValue(value);
 					}}
 				/>
 				<Button
