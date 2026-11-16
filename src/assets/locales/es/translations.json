@@ -3207,7 +3207,6 @@
 			"statuses": {
 				"DRAFT": "Borrador",
 				"GENERATION_REQUESTED": "Generación solicitada",
-				"GENERATED": "Generado",
 				"GENERATION_FAILED": "Generación fallida",
 				"PUBLISHED": "Publicado",
 				"REJECTED": "Rechazado",
@@ -4304,7 +4303,7 @@
 			"rejected": "Cuadrante rechazado.",
 			"withdraw": "Retirar publicación",
 			"withdrawTitle": "¿Retirar la publicación de este cuadrante?",
-			"withdrawDescription": "El cuadrante vuelve a Generado y sale de Mi cuadrante. Todos los cambios que se le hicieron se mantienen. Se avisa a todas las personas que están en él, con tu observación. Puedes volver a publicarlo más tarde; no se puede regenerar.",
+			"withdrawDescription": "El cuadrante vuelve a Por revisar y sale de Mi cuadrante. Todos los cambios que se le hicieron se mantienen. Se avisa a todas las personas que están en él, con tu observación. Puedes volver a publicarlo más tarde; no se puede regenerar.",
 			"withdrawConfirm": "Retirar publicación",
 			"withdrawRemark": "Observación para las personas de este cuadrante",
 			"withdrawRequired": "Escribe una observación: todas las personas de este cuadrante la leerán.",

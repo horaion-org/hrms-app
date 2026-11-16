@@ -12,7 +12,10 @@ import { scheduleMonthSummariesKey } from "@/features/scheduling/months/api";
 import { monthSummaryFixture } from "@/features/scheduling/months/fixtures";
 import { summaryRange } from "@/features/scheduling/months/monthWeeks";
 import { SchedulesTab } from "@/features/scheduling/SchedulesTab";
-import { schedulesInUnitsKey } from "@/features/scheduling/schedules/api";
+import {
+	schedulesInUnitsKey,
+	type Schedule,
+} from "@/features/scheduling/schedules/api";
 import {
 	generatedScheduleFixture,
 	SCHEDULING_BRANCHES,
@@ -55,7 +58,8 @@ const SUMMARIES = [
 /** Renders the tab in company c-1, its schedules and month summaries seeded; `permissions` as given. */
 const show = (
 	onDepartmentChange = vi.fn(),
-	permissions = ["schedule:read"]
+	permissions = ["schedule:read"],
+	kitchenStatus: Schedule["status"] = "GENERATION_REQUESTED"
 ): { onDepartmentChange: typeof onDepartmentChange } => {
 	// The router scrolls to the top on load, which jsdom does not implement.
 	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
@@ -64,7 +68,11 @@ const show = (
 	});
 	client.setQueryData(schedulesInUnitsKey("c-1", selectedUnits(UNITS)), [
 		scheduleFixture({ name: "Front Office - Week 42" }),
-		generatedScheduleFixture({ scheduleId: "s-2", name: "Kitchen - Week 41" }),
+		generatedScheduleFixture({
+			scheduleId: "s-2",
+			name: "Kitchen - Week 41",
+			status: kitchenStatus,
+		}),
 	]);
 	client.setQueryData(
 		scheduleMonthSummariesKey(
@@ -130,6 +138,17 @@ describe("SchedulesTab", () => {
 		expect(
 			within(history).getByRole("row", { name: /Kitchen - Week 41/ })
 		).toBeVisible();
+	});
+
+	it("given_aGeneratedSchedule_when_listed_then_itsHistoryStatusReadsToReview", async () => {
+		show(vi.fn(), ["schedule:read"], "GENERATED");
+
+		const history = await screen.findByRole("table", {
+			name: "Schedule history",
+		});
+		const row = within(history).getByRole("row", { name: /Kitchen - Week 41/ });
+		expect(within(row).getAllByText("To review")[0]).toBeInTheDocument();
+		expect(within(row).queryByText("Generated")).toBeNull();
 	});
 
 	it("given_anApprovalWaitingOnTheViewer_when_rendered_then_itsMonthCardSaysWhichWeek", async () => {

@@ -28,7 +28,7 @@ describe("RosterHeader", () => {
 		expect(
 			screen.getByRole("heading", { level: 1, name: "Front Office Schedule" })
 		).toBeInTheDocument();
-		expect(screen.getByText("Generated")).toBeInTheDocument();
+		expect(screen.getByText("To review")).toBeInTheDocument();
 		expect(screen.getByText("Times in Asia/Singapore")).toBeInTheDocument();
 		expect(screen.queryByText(/Requested by/)).toBeNull();
 		expect(

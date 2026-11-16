@@ -208,7 +208,7 @@ it("shows a generated schedule's header, figures and roster from the API", async
 	expect(
 		screen.getByRole("heading", { level: 1, name: "Front Office Schedule" })
 	).toBeInTheDocument();
-	expect(screen.getByText("Generated")).toBeInTheDocument();
+	expect(screen.getByText("To review")).toBeInTheDocument();
 	expect(screen.getByText("Times in Asia/Singapore")).toBeInTheDocument();
 	expect(screen.queryByText(/Requested by/)).toBeNull();
 	expect(
@@ -952,12 +952,12 @@ it("offers neither Publish nor Reject to someone without schedule:publish", asyn
 		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
 	});
 
-	expect(await screen.findByText("Generated")).toBeInTheDocument();
+	expect(await screen.findByText("To review")).toBeInTheDocument();
 	expect(screen.queryByRole("button", { name: "Publish roster" })).toBeNull();
 	expect(await menuItemsOf(userEvent.setup())).not.toContain("Reject");
 });
 
-it("withdraws a published roster's publication with a remark, back to Generated", async () => {
+it("withdraws a published roster's publication with a remark, back to To review", async () => {
 	const calls = await openRoster({
 		...signedIn(["schedule:read", "schedule:publish"]),
 		[`GET ${SCHEDULE_READ}`]: [
@@ -1004,7 +1004,7 @@ it("withdraws a published roster's publication with a remark, back to Generated"
 	);
 	await user.click(confirm);
 
-	expect(await screen.findByText("Generated")).toBeInTheDocument();
+	expect(await screen.findByText("To review")).toBeInTheDocument();
 	expect(
 		calls.find((call) => call.path === `${SCHEDULE}/publication-withdrawal`)
 			?.body
@@ -2324,7 +2324,7 @@ describe("the roster in its month", () => {
 		expect(
 			await screen.findByRole("button", { name: "Publish roster" })
 		).toBeEnabled();
-		expect(screen.getByText("Generated")).toBeInTheDocument();
+		expect(screen.getByText("To review")).toBeInTheDocument();
 	});
 
 	it("shows neither the note nor a held Publish on a published week", async () => {

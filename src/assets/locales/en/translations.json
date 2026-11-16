@@ -3407,7 +3407,6 @@
 			"statuses": {
 				"DRAFT": "Draft",
 				"GENERATION_REQUESTED": "Generation requested",
-				"GENERATED": "Generated",
 				"GENERATION_FAILED": "Generation failed",
 				"PUBLISHED": "Published",
 				"REJECTED": "Rejected",
@@ -4504,7 +4503,7 @@
 			"rejected": "Roster rejected.",
 			"withdraw": "Withdraw publication",
 			"withdrawTitle": "Withdraw this roster’s publication?",
-			"withdrawDescription": "The roster goes back to Generated and leaves My roster. Every change made to it stays. Everyone on it is told, with your remark. You can publish it again later; it can’t be regenerated.",
+			"withdrawDescription": "The roster goes back to To review and leaves My roster. Every change made to it stays. Everyone on it is told, with your remark. You can publish it again later; it can’t be regenerated.",
 			"withdrawConfirm": "Withdraw publication",
 			"withdrawRemark": "Remark for the people on this roster",
 			"withdrawRequired": "Enter a remark: everyone on this roster will read it.",

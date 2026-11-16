@@ -25,6 +25,7 @@ import {
 import { formatPeriod } from "@/features/scheduling/periods";
 import { ScheduleMenu } from "@/features/scheduling/ScheduleMenu";
 import type { Schedule } from "@/features/scheduling/schedules/api";
+import { statusLabelKey } from "@/features/scheduling/schedules/publishOrder";
 import { scheduleStatusTones } from "@/features/scheduling/schedules/scheduleStatusTones";
 import { scheduleViewLink } from "@/features/scheduling/schedules/scheduleViewLink";
 import { useSchedules } from "@/features/scheduling/schedules/useSchedules";
@@ -153,10 +154,10 @@ export const SchedulesTab = ({
 				header: t(`${key}.history.status`),
 				cell: (schedule) => (
 					<Badge tone={scheduleStatusTones[schedule.status]}>
-						{t(`${key}.statuses.${schedule.status}`)}
+						{t(statusLabelKey(schedule.status))}
 					</Badge>
 				),
-				sortValue: (schedule) => t(`${key}.statuses.${schedule.status}`),
+				sortValue: (schedule) => t(statusLabelKey(schedule.status)),
 				hideBelow: "md",
 			},
 			{

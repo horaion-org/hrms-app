@@ -3,6 +3,7 @@ import {
 	actionWaitsForEarlierWeek,
 	publishWaitsFor,
 	rosterStatusBadge,
+	statusLabelKey,
 } from "@/features/scheduling/schedules/publishOrder";
 import { generatedScheduleFixture } from "@/features/scheduling/schedules/fixtures";
 
@@ -62,9 +63,9 @@ describe("rosterStatusBadge", () => {
 		});
 	});
 
-	it("given_theWeekUnderReview_when_badged_then_generatedAsToday", () => {
+	it("given_aGeneratedWeekWhosePublishDoesNotWait_when_badged_then_toReviewAsOnTheMonthPage", () => {
 		expect(rosterStatusBadge(generated)).toEqual({
-			labelKey: "scheduling.overview.statuses.GENERATED",
+			labelKey: "scheduling.months.states.TO_REVIEW",
 			tone: "warning",
 		});
 	});
@@ -78,4 +79,21 @@ describe("rosterStatusBadge", () => {
 			tone,
 		});
 	});
+});
+
+describe("statusLabelKey", () => {
+	it("given_aGeneratedSchedule_when_named_then_toReviewAsOnTheMonthPage", () => {
+		expect(statusLabelKey("GENERATED")).toBe(
+			"scheduling.months.states.TO_REVIEW"
+		);
+	});
+
+	it.each(["DRAFT", "PUBLISHED", "GENERATION_FAILED"] as const)(
+		"given_%s_when_named_then_itsOwnStatusWord",
+		(status) => {
+			expect(statusLabelKey(status)).toBe(
+				`scheduling.overview.statuses.${status}`
+			);
+		}
+	);
 });

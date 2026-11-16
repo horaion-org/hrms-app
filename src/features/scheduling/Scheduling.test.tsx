@@ -118,7 +118,7 @@ it("labels and tones every API status in the history", async () => {
 			label: "Generation requested",
 			background: "bg-warning-100",
 		},
-		{ status: "GENERATED", label: "Generated", background: "bg-warning-100" },
+		{ status: "GENERATED", label: "To review", background: "bg-warning-100" },
 		{
 			status: "GENERATION_FAILED",
 			label: "Generation failed",

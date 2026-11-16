@@ -29,21 +29,33 @@ export const actionWaitsForEarlierWeek = (
 ): boolean => PUBLISHING_ACTIONS.has(actionId);
 
 /**
+ * The word for a schedule's status: "To review" on a generated week, the
+ * same word as the month page; the status's own word otherwise.
+ */
+export const statusLabelKey = (
+	status: Schedule["status"]
+):
+	| "scheduling.months.states.TO_REVIEW"
+	| `scheduling.overview.statuses.${Exclude<Schedule["status"], "GENERATED">}` =>
+	status === "GENERATED"
+		? "scheduling.months.states.TO_REVIEW"
+		: `scheduling.overview.statuses.${status}`;
+
+/**
  * The roster header's status badge: "Tentative" (neutral) on a generated
- * week whose Publish waits, the same word as the month page; the status as
- * today otherwise ("Generated" on the week under review).
+ * week whose Publish waits, "To review" on the week under review, the same
+ * words as the month page; the status as today otherwise.
  */
 export const rosterStatusBadge = (
 	schedule: Pick<Schedule, "status" | "publication">
 ): {
 	labelKey:
-		| "scheduling.months.states.TENTATIVE"
-		| `scheduling.overview.statuses.${Schedule["status"]}`;
+		"scheduling.months.states.TENTATIVE" | ReturnType<typeof statusLabelKey>;
 	tone: BadgeTone;
 } =>
 	schedule.status === "GENERATED" && publishWaitsFor(schedule)
 		? { labelKey: "scheduling.months.states.TENTATIVE", tone: "neutral" }
 		: {
-				labelKey: `scheduling.overview.statuses.${schedule.status}`,
+				labelKey: statusLabelKey(schedule.status),
 				tone: scheduleStatusTones[schedule.status],
 			};
