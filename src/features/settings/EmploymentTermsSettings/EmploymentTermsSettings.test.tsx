@@ -81,15 +81,15 @@ describe("EmploymentTermsSettings", () => {
 		const standard = within(rows).getByRole("row", { name: /Standard week/ });
 		expect(standard).toHaveTextContent("44 h over 6 days");
 		expect(standard).toHaveTextContent("Roster picks the rest day");
-		expect(standard).toHaveTextContent("After 44 h a week");
+		expect(standard).toHaveTextContent("Overtime after 44 h a week");
 		expect(standard).toHaveTextContent("Default");
 		// Shift work and part-time say so beside the name, with how overtime counts.
 		const shift = within(rows).getByRole("row", { name: /Six-day shift/ });
 		expect(within(shift).getByText("Shift work")).toBeVisible();
-		expect(shift).toHaveTextContent("By the week, after 44 h");
+		expect(shift).toHaveTextContent("Overtime by the week, after 44 h");
 		const partTime = within(rows).getByRole("row", { name: /Part-time, 20 h/ });
 		expect(within(partTime).getByText("Part-time")).toBeVisible();
-		expect(partTime).toHaveTextContent("Extra hours to 44 h, then overtime");
+		expect(partTime).toHaveTextContent("Extra hours up to 44 h, then overtime");
 		expect(
 			within(rows).getByRole("row", { name: /Six-day shift/ })
 		).toHaveTextContent("41 people+2 from a later date");
@@ -255,6 +255,38 @@ describe("EmploymentTermsSettings", () => {
 		).toBeVisible();
 		expect(dialog).toHaveTextContent(
 			"Not finished yet: fill in or check the normal hours a week and the normal hours a day."
+		);
+		expect(
+			calls.some((call) => call.method === "POST" && call.path === TERMS)
+		).toBe(false);
+	});
+
+	it("says what is wrong at the field as soon as it is left, before saving", async () => {
+		const calls = stubApi(routes(READ_AND_UPDATE));
+		const user = userEvent.setup();
+		const panel = await open();
+
+		await user.click(
+			await within(panel).findByRole("button", { name: "Add employment terms" })
+		);
+		const dialog = await screen.findByRole("dialog", {
+			name: "Add employment terms",
+		});
+		await within(dialog).findByRole("radio", { name: /Fixed hours, 5 days/ });
+		const week = within(dialog).getByLabelText("Normal hours a week");
+		await user.clear(week);
+		await user.type(week, "abc");
+		await user.tab();
+
+		expect(
+			await within(dialog).findByText(
+				"Enter hours such as 8, or hours and minutes such as 8:30."
+			)
+		).toBeVisible();
+		expect(week).toHaveAttribute("aria-invalid", "true");
+		// The read-back says the same, in the footer beside the buttons, never over the field.
+		expect(dialog).toHaveTextContent(
+			"Not finished yet: fill in or check the normal hours a week."
 		);
 		expect(
 			calls.some((call) => call.method === "POST" && call.path === TERMS)
@@ -644,7 +676,7 @@ describe("EmploymentTermsSettings", () => {
 			await within(dialog).findByRole("radio", { name: /Shift work/ })
 		).toBeChecked();
 		expect(dialog).toHaveTextContent(
-			"Shift work has no overtime by the day: overtime counts by the week."
+			"Shift work: overtime counts by the week, after 44 hours."
 		);
 		await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
 

@@ -55,7 +55,7 @@ export const EmploymentTermsHistoryDialog = ({
 			title={t(`${key}.title`)}
 			footer={
 				<div className="flex justify-end">
-					<Button variant="cancel" onClick={onClose}>
+					<Button variant="secondary" onClick={onClose}>
 						{t(`${key}.close`)}
 					</Button>
 				</div>

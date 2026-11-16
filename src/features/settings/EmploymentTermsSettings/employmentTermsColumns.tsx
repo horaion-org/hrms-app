@@ -50,7 +50,11 @@ const statusCell = (terms: TermsOverviewItem, t: TFunction): ReactNode => (
 /** The kinds a list row names with a pill; fixed weeks and the company's own read from their figures. */
 const PILL_KINDS = ["SHIFT_WORK", "PART_TIME"] as const;
 
-/** The terms' name, a pill for shift work or part-time, and the description. */
+/**
+ * The terms in full, so the list reads in the width Settings gives it: the
+ * name with a pill for shift work or part-time, the week and rest day on one
+ * line, when overtime starts on the next, then the description.
+ */
 const termsCell = (
 	terms: TermsOverviewItem,
 	presets: TermsPresets | undefined,
@@ -62,30 +66,35 @@ const termsCell = (
 		presets?.partTimeBelowMinutes ?? null
 	);
 	const pill = PILL_KINDS.find((each) => each === kind);
+	const overtime = overtimeShort(terms, presets, t);
 	return (
-		<>
+		<span className="flex flex-col gap-1">
 			<span className="flex flex-wrap items-center gap-2">
 				{terms.name}
 				{pill && <Badge>{t(`employmentTerms.kinds.${pill}`)}</Badge>}
 			</span>
+			<span className="font-normal text-neutral-900">
+				{weekLines(terms, presets, t).join(" · ")}
+			</span>
+			{overtime && (
+				<span className="font-normal text-neutral-800">{overtime}</span>
+			)}
 			{terms.description && (
-				<span
-					className="block truncate font-normal text-neutral-700"
-					title={terms.description}
-				>
+				<span className="font-normal text-neutral-700">
 					{terms.description}
 				</span>
 			)}
-		</>
+		</span>
 	);
 };
 
 /**
- * The employment terms list's columns: the terms with their kind and
- * description, the week and rest day, when overtime starts, how many people
- * hold them (and are scheduled onto them), the status, and, for someone who
- * may change terms, the row actions (Edit, and a menu to change the start
- * date, make default, activate or deactivate, or delete terms nobody holds).
+ * The employment terms list's columns, few so they fit beside the Settings
+ * menu: the terms in full (kind, week, rest day, overtime, description), how
+ * many people hold them (and are scheduled onto them), the status, and, for
+ * someone who may change terms, the row actions (Edit, and a menu to change
+ * the start date, make default, activate or deactivate, or delete terms
+ * nobody holds). On a phone the people and status read on the name's line.
  */
 export const employmentTermsColumns = (
 	t: TFunction,
@@ -107,30 +116,10 @@ export const employmentTermsColumns = (
 		pin: "start",
 	},
 	{
-		id: "week",
-		header: t(`${key}.week`),
-		cell: (terms) =>
-			weekLines(terms, presets, t).map((line, index) => (
-				<span
-					key={line}
-					className={index === 0 ? "block" : "block text-neutral-700"}
-				>
-					{line}
-				</span>
-			)),
-		// A phone keeps the terms and the actions as columns; the rest reads on the name's line, as Job titles does.
-		summary: (terms) => weekLines(terms, presets, t).join(" · "),
-		hideBelow: "md",
-	},
-	{
-		id: "overtime",
-		header: t(`${key}.overtime`),
-		cell: (terms) => overtimeShort(terms, presets, t),
-		hideBelow: "md",
-	},
-	{
 		id: "people",
 		header: t(`${key}.people`),
+		// The terms column takes the room; the counts, status and actions keep to their content.
+		headerClassName: "w-28",
 		sortValue: (terms) => terms.holderCount,
 		hideBelow: "md",
 		cell: (terms) => (
@@ -166,62 +155,66 @@ export const employmentTermsColumns = (
 	{
 		id: "status",
 		header: t("organisation.list.status"),
-		headerClassName: "w-40",
+		headerClassName: "w-28",
 		sortValue: (terms) => terms.status,
 		cell: (terms) => statusCell(terms, t),
 		hideBelow: "md",
 	},
 	...(canUpdate
 		? [
-				actionsColumn<TermsOverviewItem>(
-					t,
-					(terms) => (
-						<>
-							<OverflowMenuItem
-								disabled={terms.status !== "ACTIVE"}
-								onClick={() => {
-									onChangeFromDate(terms);
-								}}
-							>
-								{t(`${key}.menu.changeFromDate`)}
-							</OverflowMenuItem>
-							<OverflowMenuItem
-								disabled={terms.isDefault || terms.status !== "ACTIVE"}
-								onClick={() => {
-									onRowAction({ kind: "default", terms });
-								}}
-							>
-								{t(`${key}.menu.makeDefault`)}
-							</OverflowMenuItem>
-							<OverflowMenuItem
-								disabled={terms.isDefault || terms.status === "UNKNOWN"}
-								onClick={() => {
-									onRowAction({ kind: "status", terms });
-								}}
-							>
-								{t(
-									terms.status === "INACTIVE"
-										? "organisation.list.activateItem"
-										: "organisation.list.deactivateItem"
-								)}
-							</OverflowMenuItem>
-							{terms.holderCount + terms.scheduledCount === 0 &&
-								!terms.isDefault && (
-									<OverflowMenuItem
-										onClick={() => {
-											onRowAction({ kind: "delete", terms });
-										}}
-									>
-										{t("organisation.list.deleteItem")}
-									</OverflowMenuItem>
-								)}
-						</>
+				{
+					...actionsColumn<TermsOverviewItem>(
+						t,
+						(terms) => (
+							<>
+								<OverflowMenuItem
+									disabled={terms.status !== "ACTIVE"}
+									onClick={() => {
+										onChangeFromDate(terms);
+									}}
+								>
+									{t(`${key}.menu.changeFromDate`)}
+								</OverflowMenuItem>
+								<OverflowMenuItem
+									disabled={terms.isDefault || terms.status !== "ACTIVE"}
+									onClick={() => {
+										onRowAction({ kind: "default", terms });
+									}}
+								>
+									{t(`${key}.menu.makeDefault`)}
+								</OverflowMenuItem>
+								<OverflowMenuItem
+									disabled={terms.isDefault || terms.status === "UNKNOWN"}
+									onClick={() => {
+										onRowAction({ kind: "status", terms });
+									}}
+								>
+									{t(
+										terms.status === "INACTIVE"
+											? "organisation.list.activateItem"
+											: "organisation.list.deactivateItem"
+									)}
+								</OverflowMenuItem>
+								{terms.holderCount + terms.scheduledCount === 0 &&
+									!terms.isDefault && (
+										<OverflowMenuItem
+											onClick={() => {
+												onRowAction({ kind: "delete", terms });
+											}}
+										>
+											{t("organisation.list.deleteItem")}
+										</OverflowMenuItem>
+									)}
+							</>
+						),
+						(terms) => terms.status !== "UNKNOWN",
+						(terms) => {
+							onEdit(terms);
+						}
 					),
-					(terms) => terms.status !== "UNKNOWN",
-					(terms) => {
-						onEdit(terms);
-					}
-				),
+					// Two icons need less than the shared 140 px.
+					headerClassName: "w-24",
+				},
 			]
 		: []),
 ];
