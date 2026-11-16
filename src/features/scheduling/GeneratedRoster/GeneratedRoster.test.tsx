@@ -365,7 +365,7 @@ describe("GeneratedRoster", () => {
 		expect(
 			screen.getByRole("complementary", { name: "Changed" })
 		).toHaveTextContent(
-			"Aisha Rahman · Mon, Oct 12Day off → Front Desk AM · 09:00 – 15:00"
+			/Aisha Rahman · Mon, Oct 12.*Day off→Front Desk AM · 09:00 – 15:00/
 		);
 	});
 

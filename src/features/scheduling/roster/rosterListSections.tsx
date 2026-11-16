@@ -15,8 +15,9 @@ import {
 	issuesOfHeader,
 	type IssuesAbout,
 } from "@/features/scheduling/roster/rosterMarks";
+import { ChangeTimeline } from "@/features/scheduling/roster/ChangeTimeline";
+import { changeTimeline } from "@/features/scheduling/roster/changeTimeline";
 import {
-	changedDayItems,
 	daysToDecideItems,
 	leaveAndCoverItems,
 } from "@/features/scheduling/roster/rosterPanels";
@@ -228,16 +229,22 @@ export const issuesSections = (
 	];
 };
 
-/** Changed: the latest hand change, then every changed day. */
+/** Changed: the latest hand change (with its Undo), then the timeline of every changed day. */
 export const changesSections = ({
 	roster: { changed },
 	latestChange,
 	t,
 	language,
-}: RosterListInput): Array<RosterSidePanelSection> => [
-	{ key: "latest", content: latestChange },
-	{ key: "days", items: changedDayItems(changed, t, language) },
-];
+}: RosterListInput): Array<RosterSidePanelSection> => {
+	const timeline = changeTimeline(changed, t, language);
+	return [
+		{ key: "latest", content: latestChange },
+		{
+			key: "days",
+			content: timeline.length > 0 && <ChangeTimeline days={timeline} />,
+		},
+	];
+};
 
 /** Details: the schedule's history. */
 export const detailsSections = ({
