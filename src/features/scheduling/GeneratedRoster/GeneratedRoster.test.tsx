@@ -631,7 +631,7 @@ describe("GeneratedRoster", () => {
 			expect(within(panel).getByText("Twelve hours a day")).toBeVisible();
 			expect(
 				within(panel).getByText(
-					"Validated: this list is the schedule as it stands."
+					"Validated: the schedule breaks Twelve hours a day."
 				)
 			).toBeVisible();
 		});

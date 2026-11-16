@@ -5153,6 +5153,7 @@
 			"loadFailed": "Couldn’t load the hours."
 		},
 		"rulesCheck": {
+			"brokenNamed": "Validated: the schedule breaks {{rules}}.",
 			"check": "Validate schedule",
 			"loading": "Validating the schedule…",
 			"brokenUnnamed": "This roster breaks a working-time rule.",

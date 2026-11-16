@@ -4953,6 +4953,7 @@
 			"loadFailed": "No se pudieron cargar las horas."
 		},
 		"rulesCheck": {
+			"brokenNamed": "Validado: el cuadrante incumple {{rules}}.",
 			"check": "Validar cuadrante",
 			"loading": "Validando el cuadrante…",
 			"brokenUnnamed": "Este cuadrante incumple una regla de tiempo de trabajo.",

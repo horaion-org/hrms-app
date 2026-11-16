@@ -3,7 +3,10 @@ import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import type { ValidationStanding } from "@/features/scheduling/rulesCheck/issuesFromValidation";
-import { RETRYABLE_CHECK_REFUSALS } from "@/features/scheduling/rulesCheck/rosterRulesCheckWords";
+import {
+	brokenRuleLabel,
+	RETRYABLE_CHECK_REFUSALS,
+} from "@/features/scheduling/rulesCheck/rosterRulesCheckWords";
 import type { RosterValidation } from "@/features/scheduling/rulesCheck/useRosterRulesCheck";
 
 export type ValidationNoteProps = {
@@ -18,8 +21,9 @@ const key = "scheduling.rulesCheck";
 /**
  * The one line at the head of Issues that says how the list stands: being
  * validated; refused (Try again when the engine failed or took too long); out of date since
- * the schedule changed, with Validate schedule right there; validated, with
- * what the engine could not check, or that nothing needs a look. Nothing
+ * the schedule changed, with Validate schedule right there; may be incomplete,
+ * with Validate again; broken, naming the rules; validated, with what the
+ * engine could not check, or that it holds. Nothing
  * while the list is still the generation's and nothing has changed.
  */
 export const ValidationNote = ({
@@ -65,12 +69,30 @@ export const ValidationNote = ({
 	// The engine ran out of time: what it found holds, but the list may not be all of it.
 	if (check.mayBeShort)
 		return (
-			<div className="flex flex-col items-start gap-2">
-				<p className="text-neutral-800">{t(`${key}.mayBeShort`)}</p>
-				<Button variant="textlink" onClick={validation.ask}>
+			<Callout tone="warning">
+				<span className="block">{t(`${key}.mayBeShort`)}</span>
+				<Button
+					className="mt-2"
+					size="sm"
+					variant="secondary"
+					onClick={validation.ask}
+				>
 					{t(`${key}.validateAgain`)}
 				</Button>
-			</div>
+			</Callout>
+		);
+	// Broken: the card names the rules, so the reason is read before the list.
+	if (check.status === "BROKEN")
+		return (
+			<Callout tone="error">
+				{check.brokenRules.length > 0
+					? t(`${key}.brokenNamed`, {
+							rules: check.brokenRules
+								.map((rule) => brokenRuleLabel(rule, t))
+								.join(", "),
+						})
+					: t(`${key}.brokenUnnamed`)}
+			</Callout>
 		);
 	const lines = [
 		check.status === "UNCHECKED" ? t(`${key}.rulesUnchecked`) : undefined,
