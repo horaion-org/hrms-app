@@ -185,7 +185,7 @@ export const MonthSetupStep = ({
 			{
 				id: "state",
 				header: t("scheduling.months.setup.stateColumn"),
-				cell: (week) => {
+				cell: (week): FunctionComponent => {
 					const badge = badgeOf(week.look);
 					return <Badge tone={badge.tone}>{t(badge.key)}</Badge>;
 				},
@@ -196,9 +196,7 @@ export const MonthSetupStep = ({
 	const ticked = weeks?.ticked ?? [];
 	const tickedRanges = new Intl.ListFormat(language, {
 		type: "conjunction",
-	}).format(
-		tickedRangesOf(ticked).map((range) => datesOf(range, language, t))
-	);
+	}).format(tickedRangesOf(ticked).map((range) => datesOf(range, language, t)));
 	// Each ticked week with a note, Monday order: what generating it replaces or how it is generated.
 	const tickedNotes = (weeks?.rows ?? []).flatMap((week) =>
 		week.note !== undefined && ticked.includes(week.periodStart)
@@ -276,12 +274,12 @@ export const MonthSetupStep = ({
 								render={({ field }) => (
 									<Select
 										ref={field.ref}
+										aria-describedby={describedBy("month", true)}
 										aria-labelledby={formRowIds(fieldId("month")).labelId}
 										className="w-full"
 										name={field.name}
 										status={errors.month ? "error" : undefined}
 										value={field.value}
-										aria-describedby={describedBy("month", true)}
 										options={months.map((choice) => ({
 											value: choice,
 											label: formatMonth(choice, language),

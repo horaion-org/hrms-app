@@ -49,7 +49,11 @@ describe("tickableWeekOf", () => {
 	it("given_aGeneratingWeek_when_read_then_lockedAsGenerating", () => {
 		expect(
 			tickableWeekOf(weekOf(NEXT_MONDAY, "GENERATING", false), TODAY)
-		).toMatchObject({ look: "GENERATING", canTick: false, tickedByDefault: false });
+		).toMatchObject({
+			look: "GENERATING",
+			canTick: false,
+			tickedByDefault: false,
+		});
 	});
 
 	it("given_aWeekTheApiLeavesOutOrWhoseSundayHasPassed_when_read_then_lockedAsOver", () => {
@@ -64,7 +68,11 @@ describe("tickableWeekOf", () => {
 	it("given_aWeekOfAnUnknownState_when_read_then_locked", () => {
 		expect(
 			tickableWeekOf(weekOf(NEXT_MONDAY, "UNKNOWN", true), TODAY)
-		).toMatchObject({ look: "UNKNOWN", canTick: false, tickedByDefault: false });
+		).toMatchObject({
+			look: "UNKNOWN",
+			canTick: false,
+			tickedByDefault: false,
+		});
 	});
 
 	it.each(["TO_REVIEW", "TENTATIVE"] as const)(
@@ -125,7 +133,10 @@ describe("tickableWeekOf", () => {
 
 	it("given_today_isTheMonday_when_read_then_notStartedAndTicked", () => {
 		expect(
-			tickableWeekOf(weekOf(STARTED_MONDAY, "NOT_GENERATED", true), STARTED_MONDAY)
+			tickableWeekOf(
+				weekOf(STARTED_MONDAY, "NOT_GENERATED", true),
+				STARTED_MONDAY
+			)
 		).toMatchObject({ look: "NOT_GENERATED", tickedByDefault: true });
 	});
 });
@@ -225,13 +236,17 @@ describe("defaultMonthOf", () => {
 
 	it("given_noMonthWithATick_when_defaultMonth_then_theFirstMonth", () => {
 		const november = monthSummaryFixture({
-			weeks: ["2026-11-02", "2026-11-09", STARTED_MONDAY, NEXT_MONDAY, "2026-11-30"].map(
-				(periodStart) => ({
-					periodStart,
-					state: "PUBLISHED" as const,
-					scheduleId: "s-1",
-				})
-			),
+			weeks: [
+				"2026-11-02",
+				"2026-11-09",
+				STARTED_MONDAY,
+				NEXT_MONDAY,
+				"2026-11-30",
+			].map((periodStart) => ({
+				periodStart,
+				state: "PUBLISHED" as const,
+				scheduleId: "s-1",
+			})),
 		});
 
 		expect(defaultMonthOf(["2026-11"], TODAY, [november])).toBe("2026-11");

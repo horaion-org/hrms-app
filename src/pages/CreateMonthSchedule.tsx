@@ -488,7 +488,9 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 					void saveStartingWeek(week.periodStart, dialog);
 				}
 			: undefined;
-	const openOnStartOf = (scheduleId: string): StartingPointDialog | undefined =>
+	const openOnStartOf = (
+		scheduleId: string
+	): StartingPointDialog | undefined =>
 		savedStart?.scheduleId === scheduleId ? savedStart.dialog : undefined;
 	const startingPoint =
 		!unit || !startingWeek ? undefined : startingWeek.state === "DRAFT" &&
@@ -496,6 +498,7 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 			<StartingContextSection
 				canEdit={allowedHere("schedule:update")}
 				companyId={companyId}
+				openOnStart={openOnStartOf(startingWeek.scheduleId)}
 				scheduleId={startingWeek.scheduleId}
 				unit={unit}
 				nonWorkingDayTypes={
@@ -503,7 +506,6 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 						? startingDraft.schedule.nonWorkingDayTypes
 						: []
 				}
-				openOnStart={openOnStartOf(startingWeek.scheduleId)}
 			/>
 		) : monthBefore.isPending ? undefined : (
 			// Before the first week's draft exists: the week page's two notices; each button saves the draft first.
@@ -529,12 +531,11 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 			</div>
 		);
 	// With later weeks asked too, each set of questions sits under its week's dates.
-	const firstWeekDates = startingWeek &&
-		laterStartingWeeks.length > 0 && (
-			<p className="text-sm font-semibold text-neutral-900">
-				{weekLabel(startingWeek)}
-			</p>
-		);
+	const firstWeekDates = startingWeek && laterStartingWeeks.length > 0 && (
+		<p className="text-sm font-semibold text-neutral-900">
+			{weekLabel(startingWeek)}
+		</p>
+	);
 	const laterStartingPoints =
 		unit &&
 		laterStartingWeeks.map((week) => (

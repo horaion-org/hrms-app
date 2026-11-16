@@ -130,7 +130,9 @@ describe("MonthSetupStep", () => {
 			).toBeDisabled();
 		}
 		expect(
-			screen.getByRole("checkbox", { name: "Select Mon, Nov 23 to Sun, Nov 29" })
+			screen.getByRole("checkbox", {
+				name: "Select Mon, Nov 23 to Sun, Nov 29",
+			})
 		).toBeEnabled();
 	});
 
@@ -144,7 +146,9 @@ describe("MonthSetupStep", () => {
 		);
 
 		await user.click(
-			screen.getByRole("checkbox", { name: "Select Mon, Nov 23 to Sun, Nov 29" })
+			screen.getByRole("checkbox", {
+				name: "Select Mon, Nov 23 to Sun, Nov 29",
+			})
 		);
 
 		expect(onTickedChange).toHaveBeenCalledOnce();
@@ -240,7 +244,9 @@ describe("MonthSetupStep", () => {
 			await screen.findByRole("option", { name: "January 2027" })
 		);
 
-		rerender(<Harness suggestedMonth="2026-12" onMonthChange={onMonthChange} />);
+		rerender(
+			<Harness suggestedMonth="2026-12" onMonthChange={onMonthChange} />
+		);
 
 		expect(onMonthChange).toHaveBeenLastCalledWith("2027-01");
 		expect(onMonthChange).not.toHaveBeenCalledWith("2026-12");

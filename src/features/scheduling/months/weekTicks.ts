@@ -165,7 +165,9 @@ export type WeekLookKey =
 	| `scheduling.months.setup.looks.${"OVER" | "STARTED"}`;
 
 /** A look's badge: the month page's words and tone for a state, a neutral badge for over and started. */
-export const badgeOf = (look: WeekLook): { tone: BadgeTone; key: WeekLookKey } =>
+export const badgeOf = (
+	look: WeekLook
+): { tone: BadgeTone; key: WeekLookKey } =>
 	look === "OVER" || look === "STARTED"
 		? { tone: "neutral", key: `scheduling.months.setup.looks.${look}` }
 		: { tone: weekStateTones[look], key: `scheduling.months.states.${look}` };

@@ -121,7 +121,9 @@ describe("BeforeGeneratePanel", () => {
 	});
 
 	it("given_aHint_when_shown_then_itReplacesTheMonthHint", () => {
-		renderPanel(undefined, { hint: "Generating works out the week you ticked." });
+		renderPanel(undefined, {
+			hint: "Generating works out the week you ticked.",
+		});
 
 		expect(
 			screen.getByText("Generating works out the week you ticked.")

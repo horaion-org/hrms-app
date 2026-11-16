@@ -376,10 +376,9 @@ describe("Create schedules for a month: ticking weeks", () => {
 		),
 	});
 	const box = (dates: string): HTMLElement =>
-		within(screen.getByRole("table", { name: "Weeks" })).getByRole(
-			"checkbox",
-			{ name: `Select ${dates}` }
-		);
+		within(screen.getByRole("table", { name: "Weeks" })).getByRole("checkbox", {
+			name: `Select ${dates}`,
+		});
 	const monthField = (): HTMLElement =>
 		screen.getByRole("button", { name: /Month/ });
 	const chooseMonth = async (
@@ -499,11 +498,31 @@ describe("Create schedules for a month: ticking weeks", () => {
 				monthSummaryFixture({
 					departmentId: "d-1",
 					weeks: [
-						{ periodStart: "2026-11-02", state: "PUBLISHED", scheduleId: "s-1" },
-						{ periodStart: "2026-11-09", state: "PUBLISHED", scheduleId: "s-2" },
-						{ periodStart: "2026-11-16", state: "TO_REVIEW", scheduleId: "s-3" },
-						{ periodStart: "2026-11-23", state: "TENTATIVE", scheduleId: "s-4" },
-						{ periodStart: "2026-11-30", state: "TENTATIVE", scheduleId: "s-5" },
+						{
+							periodStart: "2026-11-02",
+							state: "PUBLISHED",
+							scheduleId: "s-1",
+						},
+						{
+							periodStart: "2026-11-09",
+							state: "PUBLISHED",
+							scheduleId: "s-2",
+						},
+						{
+							periodStart: "2026-11-16",
+							state: "TO_REVIEW",
+							scheduleId: "s-3",
+						},
+						{
+							periodStart: "2026-11-23",
+							state: "TENTATIVE",
+							scheduleId: "s-4",
+						},
+						{
+							periodStart: "2026-11-30",
+							state: "TENTATIVE",
+							scheduleId: "s-5",
+						},
 					],
 				}),
 			]),
@@ -1149,7 +1168,9 @@ describe("Create schedules for a month: where everyone starts", () => {
 				scheduleFixture({ scheduleId: "s-gap" }),
 				201
 			),
-			[`GET ${SCHEDULES}/s-gap`]: reply(scheduleFixture({ scheduleId: "s-gap" })),
+			[`GET ${SCHEDULES}/s-gap`]: reply(
+				scheduleFixture({ scheduleId: "s-gap" })
+			),
 			[`GET ${SCHEDULES}/s-gap/starting-days`]: reply(firstWeek()),
 		});
 
