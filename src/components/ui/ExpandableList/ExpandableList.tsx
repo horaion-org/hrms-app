@@ -18,6 +18,8 @@ export type ExpandableListProps<Item> = {
 	itemClassName?: string;
 	/** Where a full page exists, a link to it replaces the toggle. */
 	seeAll?: ReactNode;
+	/** How many rows show before the rest is offered; five when left out. */
+	collapsedCount?: number;
 };
 
 /**
@@ -31,12 +33,13 @@ export const ExpandableList = <Item,>({
 	listClassName,
 	itemClassName,
 	seeAll,
+	collapsedCount = COLLAPSED_ROW_COUNT,
 }: ExpandableListProps<Item>): FunctionComponent => {
 	const { t } = useTranslation();
 	const [expanded, setExpanded] = useState(false);
-	const overflowing = items.length > COLLAPSED_ROW_COUNT;
+	const overflowing = items.length > collapsedCount;
 	const shown =
-		expanded || !overflowing ? items : items.slice(0, COLLAPSED_ROW_COUNT);
+		expanded || !overflowing ? items : items.slice(0, collapsedCount);
 	return (
 		<div className="flex flex-col gap-3">
 			<ul className={listClassName}>
