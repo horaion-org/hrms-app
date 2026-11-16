@@ -159,6 +159,8 @@ export const useScheduleActions = (companyId: string): ScheduleActions => {
 	};
 	return {
 		create: useMutation({
+			// The month wizard opens the saved week's dialog straight after, which shows what was saved.
+			meta: { successMessage: false },
 			mutationFn: ({ unit, body }: Created) =>
 				createSchedule(companyId, unit, body),
 			onSuccess: saved,

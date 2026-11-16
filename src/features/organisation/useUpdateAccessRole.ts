@@ -23,6 +23,7 @@ export const useUpdateAccessRole = (
 	return useMutation({
 		mutationFn: (body: UpdateAccessRoleBody) =>
 			updateAccessRole(companyId, accessRoleId, body),
+		meta: { successMessage: "organisation.accessRoles.toast.saved" },
 		onSuccess: () =>
 			Promise.all([
 				client.invalidateQueries({ queryKey: ["organisation", companyId] }),

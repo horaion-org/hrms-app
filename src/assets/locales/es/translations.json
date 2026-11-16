@@ -2076,6 +2076,9 @@
 					"forbidden": "Solo puedes activar un rol cuyos permisos tienes allí.",
 					"failed": "No pudimos cambiarlo. Inténtalo de nuevo.",
 					"kindConflict": "Un rol de empresa solo puede estar activo en toda la empresa. Quítalo de este lugar."
+				},
+				"toast": {
+					"changed": "Se actualizó quién tiene este rol."
 				}
 			},
 			"editor": {
@@ -2228,6 +2231,10 @@
 					"BRANCH": "una sucursal",
 					"DEPARTMENT": "un departamento"
 				}
+			},
+			"toast": {
+				"created": "Rol de acceso creado.",
+				"saved": "Rol de acceso guardado."
 			}
 		},
 		"list": {

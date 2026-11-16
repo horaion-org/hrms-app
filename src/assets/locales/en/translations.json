@@ -2145,6 +2145,9 @@
 					"forbidden": "You can only activate a role whose permissions you hold there.",
 					"failed": "We couldn’t change this. Try again.",
 					"kindConflict": "A company role can only be active at the whole company. Remove it from this place instead."
+				},
+				"toast": {
+					"changed": "Who has this role was updated."
 				}
 			},
 			"createDialog": {
@@ -2320,6 +2323,10 @@
 					"BRANCH": "a branch",
 					"DEPARTMENT": "a department"
 				}
+			},
+			"toast": {
+				"created": "Access role created.",
+				"saved": "Access role saved."
 			}
 		},
 		"permissions": {

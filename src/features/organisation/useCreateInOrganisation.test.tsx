@@ -60,6 +60,7 @@ it.each([
 			branchId: "b-1",
 			body: { name: "Bar", initialHeadCompanyMembershipIds: ["m-1"] },
 		},
+		undefined,
 	],
 	[
 		"job title",
@@ -71,6 +72,7 @@ it.each([
 			departmentId: "d-1",
 			body: { name: "Chef", description: "" },
 		},
+		undefined,
 	],
 	[
 		"access role",
@@ -78,10 +80,11 @@ it.each([
 		role,
 		(): unknown => useCreateAccessRole("c-1"),
 		{ name: "Auditor", permissions: ["audit_event:read"] },
+		"organisation.accessRoles.toast.created",
 	],
 ])(
-	"creating a %s invalidates this company's lists and overview only",
-	async (_name, route, reply, hook, variables) => {
+	"creating a %s invalidates this company's lists and overview only, with its own toast or the generic one",
+	async (_name, route, reply, hook, variables, successMessage) => {
 		stubApi({ [route]: { status: 201, body: envelope(reply) } });
 		const client = new QueryClient();
 		const own = ["organisation", "c-1", "job-titles"];
@@ -105,6 +108,9 @@ it.each([
 		expect(client.getQueryState(own)?.isInvalidated).toBe(true);
 		expect(client.getQueryState(overview)?.isInvalidated).toBe(true);
 		expect(client.getQueryState(otherCompany)?.isInvalidated).toBe(false);
+		expect(client.getMutationCache().getAll()[0]?.meta?.successMessage).toBe(
+			successMessage
+		);
 		unmount();
 		client.clear();
 	}
