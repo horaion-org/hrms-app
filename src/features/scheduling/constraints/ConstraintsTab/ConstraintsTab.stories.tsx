@@ -63,8 +63,8 @@ const COPY_NAMES = ["Early", "Late", "Night", "Weekend"];
 
 /**
  * About 30 constraints across the four purposes: each live one copied under
- * four shift names, some "If possible", one switched off, and three whose
- * values no longer fit, so they need attention.
+ * four shift names, some "If possible", some switched off, and one copy of
+ * each whose job title or shift is gone, so it needs attention.
  */
 const LONG_LIST = CONSTRAINT_FIXTURES.flatMap((constraint) =>
 	COPY_NAMES.map((copyName, index) => ({
@@ -81,8 +81,9 @@ const LONG_LIST = CONSTRAINT_FIXTURES.flatMap((constraint) =>
 				: constraint.status,
 		values:
 			index === 2 && constraint.category !== "WORKING_HOURS"
-				? constraint.values.map((value, valueIndex) =>
-						valueIndex === 0
+				? constraint.values.map((value) =>
+						// The first named value (a job title or shift) is the one that went away.
+						value === constraint.values.find((each) => each.name !== null)
 							? { ...value, problem: "UNAVAILABLE" as const }
 							: value
 					)
@@ -90,7 +91,7 @@ const LONG_LIST = CONSTRAINT_FIXTURES.flatMap((constraint) =>
 	}))
 );
 
-/** A long list: with more than twelve constraints in view, only the sections needing attention start open. */
+/** A long list: with more than twelve constraints in view, every section starts closed to its gist. */
 export const LongList: Story = {
 	beforeEach: (): void => {
 		try {

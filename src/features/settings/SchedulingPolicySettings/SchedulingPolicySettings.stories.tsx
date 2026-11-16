@@ -1,7 +1,10 @@
 import { QueryClient } from "@tanstack/react-query";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { effectiveWorkspace } from "@/common/testing/effectiveWorkspace";
-import { storyProviders } from "@/features/organisation/storyApi";
+import {
+	storyCompanyRoute,
+	storyProviders,
+} from "@/features/organisation/storyApi";
 import {
 	COMPANY_CONSTRAINT_FIXTURES,
 	CONSTRAINT_OPTIONS,
@@ -24,7 +27,8 @@ const meta = {
 	component: SchedulingPolicySettings,
 	parameters: { layout: "padded" },
 	args: { companyId: COMPANY },
-	decorators: [storyProviders(client)],
+	// Its terms link is a router link, so the story gives it a route.
+	decorators: [storyCompanyRoute(COMPANY), storyProviders(client)],
 	beforeEach: ({ parameters }): void => {
 		client.setQueryData(
 			workspaceQuery.queryKey,
