@@ -352,9 +352,7 @@ describe("FindCoverPanel", () => {
 				/^None of these options is checked against working-time rules/
 			)
 		).toBeVisible();
-		expect(
-			screen.getByText(/^Not checked against working-time rules/)
-		).toBeVisible();
+		expect(screen.getByText(/^Working-time rules \(hours a day/)).toBeVisible();
 		const apply = screen.getByRole("button", { name: "Apply change" });
 		await waitFor(() => {
 			expect(apply).toBeEnabled();

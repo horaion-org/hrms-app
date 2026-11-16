@@ -1280,7 +1280,7 @@ it("shows nothing about findings when the engine found nothing", async () => {
 	const roster = await screen.findByRole("table", { name: "Roster" });
 	expect(screen.queryByRole("button", { name: /^Issues/ })).toBeNull();
 	expect(
-		within(roster).queryByRole("button", { name: /to look at/ })
+		within(roster).queryByRole("button", { name: / issues?\. Show in Issues$/ })
 	).toBeNull();
 });
 

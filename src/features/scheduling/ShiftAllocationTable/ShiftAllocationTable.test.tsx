@@ -56,7 +56,8 @@ describe("ShiftAllocationTable", () => {
 		expect(row).toHaveTextContent("Weekdays");
 		expect(
 			screen.getByRole("row", { name: /Breakfast Prep/ })
-		).toHaveTextContent("Mon, Wed, Fri and Sat");
+			// The list formatter in the test browser's en-US.
+		).toHaveTextContent("Mon, Wed, Fri, and Sat");
 	});
 
 	it("given_aShift_when_aRoleIsRaised_then_theTotalFollows", async () => {
