@@ -3696,6 +3696,19 @@
 				"ROLE_COVERAGE": "Quién debe estar de servicio todo el turno.",
 				"SHIFT_PATTERN": "Cuántos días libres tiene la gente, y cuáles.",
 				"WORKING_HOURS": "Límites de horas, horas extra y descanso entre turnos."
+			},
+			"row": {
+				"fix": "Corregir",
+				"fixLabel": "Corregir {{name}}",
+				"makeStricter": "Hacer más estricta",
+				"changeHere": "Cambiar aquí",
+				"capacity_one": "Solo {{count}} persona tiene {{titles}}, pero pide {{headcount}}, así que nunca se puede cumplir.",
+				"capacity_other": "Solo {{count}} personas tienen {{titles}}, pero pide {{headcount}}, así que nunca se puede cumplir.",
+				"locks": {
+					"LOCKED": "Siempre se aplica",
+					"DEFAULT": "Marcada por defecto",
+					"SYSTEM": "Exigida por ley"
+				}
 			}
 		},
 		"forecast": {
@@ -4529,12 +4542,22 @@
 			"constraints": "Restricciones"
 		},
 		"constraintsTab": {
-			"descriptionOne": "Cómo se cubre y descansa {{department}}. Las restricciones de la política de trabajo van primero; las bloqueadas se aplican siempre.",
-			"descriptionAll": "Cómo se cubre y descansa cada departamento. Las restricciones de la política de trabajo se aplican donde alcanzan; las bloqueadas, siempre.",
+			"descriptionOne": "Cómo se cubre y descansa {{department}}, según lo que decide cada restricción. La política laboral de la empresa va al final.",
+			"descriptionAll": "Cómo se cubre y descansa cada departamento, según lo que decide cada restricción. La política laboral de la empresa va al final.",
 			"search": "Buscar restricciones",
 			"noMatch": "Ninguna restricción coincide con tu búsqueda.",
 			"emptyGuide": "Este departamento aún no tiene restricciones. Empieza por una restricción de personal: cuántas personas necesita cada turno.",
-			"openWorkPolicy": "Abrir política de trabajo"
+			"openWorkPolicy": "Abrir política de trabajo",
+			"addInSection": "Añadir",
+			"sectionEmpty": "Aún no hay ninguna.",
+			"companyTitle": "Fijadas por la empresa",
+			"companyDescription": "De la política laboral. Siempre se aplican aquí; puedes hacer una más estricta, no más laxa.",
+			"companySummary_one": "Aquí se aplica {{count}} restricción de la empresa.",
+			"companySummary_other": "Aquí se aplican {{count}} restricciones de la empresa.",
+			"showAll": "Ver las {{count}}",
+			"hide": "Ocultar",
+			"attention_one": "{{count}} restricción necesita atención. Un cuadrante no puede usarla hasta que se corrija:",
+			"attention_other": "{{count}} restricciones necesitan atención. Un cuadrante no puede usarlas hasta que se corrijan:"
 		},
 		"readiness": {
 			"departmentsNotReady_one": "{{count}} departamento no está listo para planificar:",

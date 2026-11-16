@@ -3896,6 +3896,19 @@
 				"ROLE_COVERAGE": "Who must be on duty for a whole shift.",
 				"SHIFT_PATTERN": "How many days off people get, and which days.",
 				"WORKING_HOURS": "Limits on hours, overtime and rest between shifts."
+			},
+			"row": {
+				"fix": "Fix",
+				"fixLabel": "Fix {{name}}",
+				"makeStricter": "Make stricter",
+				"changeHere": "Change here",
+				"capacity_one": "Only {{count}} person holds {{titles}}, but it asks for {{headcount}}, so it can never be met.",
+				"capacity_other": "Only {{count}} people hold {{titles}}, but it asks for {{headcount}}, so it can never be met.",
+				"locks": {
+					"LOCKED": "Always applies",
+					"DEFAULT": "Ticked by default",
+					"SYSTEM": "Required by law"
+				}
 			}
 		},
 		"forecast": {
@@ -4729,12 +4742,22 @@
 			"constraints": "Constraints"
 		},
 		"constraintsTab": {
-			"descriptionOne": "How {{department}} is staffed and rested. Work policy constraints come first; locked ones always apply.",
-			"descriptionAll": "How each department is staffed and rested. Work policy constraints apply where they reach; locked ones always apply.",
+			"descriptionOne": "How {{department}} is staffed and rested, by what each constraint decides. The company’s work policy comes last.",
+			"descriptionAll": "How each department is staffed and rested, by what each constraint decides. The company’s work policy comes last.",
 			"search": "Search constraints",
 			"noMatch": "No constraints match your search.",
 			"emptyGuide": "No department constraints yet. Start with a staffing constraint: how many people each shift needs.",
-			"openWorkPolicy": "Open work policy"
+			"openWorkPolicy": "Open work policy",
+			"addInSection": "Add",
+			"sectionEmpty": "None here yet.",
+			"companyTitle": "Set by the company",
+			"companyDescription": "From the work policy. They always apply here; you can make one stricter, not looser.",
+			"companySummary_one": "{{count}} company constraint applies here.",
+			"companySummary_other": "{{count}} company constraints apply here.",
+			"showAll": "Show all {{count}}",
+			"hide": "Hide",
+			"attention_one": "{{count}} constraint needs attention. A roster can’t use it until it’s fixed:",
+			"attention_other": "{{count}} constraints need attention. A roster can’t use them until they’re fixed:"
 		},
 		"readiness": {
 			"departmentsNotReady_one": "{{count}} department isn’t ready to schedule:",
