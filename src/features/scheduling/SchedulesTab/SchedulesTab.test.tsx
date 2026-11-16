@@ -63,8 +63,8 @@ const show = (
 	onDepartmentChange = vi.fn(),
 	permissions = ["schedule:read"],
 	kitchenStatus: Schedule["status"] = "GENERATION_REQUESTED",
-	/** Left unseeded when undefined, so the months are read. */
-	summaries: Array<ScheduleMonthSummary> | undefined = SUMMARIES
+	/** Still loading when null. */
+	summaries: Array<ScheduleMonthSummary> | null = SUMMARIES
 ): { onDepartmentChange: typeof onDepartmentChange } => {
 	// The router scrolls to the top on load, which jsdom does not implement.
 	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
@@ -79,15 +79,18 @@ const show = (
 			status: kitchenStatus,
 		}),
 	]);
-	if (summaries)
-		client.setQueryData(
-			scheduleMonthSummariesKey(
-				"c-1",
-				selectedUnits(UNITS),
-				summaryRange(new Date())
-			),
-			summaries
-		);
+	const monthsKey = scheduleMonthSummariesKey(
+		"c-1",
+		selectedUnits(UNITS),
+		summaryRange(new Date())
+	);
+	if (summaries) client.setQueryData(monthsKey, summaries);
+	// A read that never answers keeps the months loading.
+	else
+		void client.prefetchQuery({
+			queryKey: monthsKey,
+			queryFn: () => new Promise<Array<ScheduleMonthSummary>>(() => {}),
+		});
 	client.setQueryData(approvalKeys.pending("c-1"), [
 		approvalInstanceFixture({ subjectId: "s-2" }),
 	]);
@@ -198,9 +201,7 @@ describe("SchedulesTab", () => {
 	});
 
 	it("given_theMonthsStillLoading_when_rendered_then_saysTheMonthsAreLoading", async () => {
-		// The months' read never answers, so they stay loading.
-		vi.stubGlobal("fetch", () => new Promise(() => {}));
-		show(vi.fn(), ["schedule:read"], "GENERATION_REQUESTED", undefined);
+		show(vi.fn(), ["schedule:read"], "GENERATION_REQUESTED", null);
 
 		expect(await screen.findByText("Loading the months…")).toHaveAttribute(
 			"role",
