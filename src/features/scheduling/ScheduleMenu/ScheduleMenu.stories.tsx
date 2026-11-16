@@ -38,7 +38,9 @@ const openDelete = async (canvasElement: HTMLElement): Promise<HTMLElement> => {
 		})
 	);
 	await userEvent.click(await page.findByRole("menuitem", { name: "Delete" }));
-	return page.findByRole("dialog", { name: "Delete Front Office - Week 42?" });
+	return page.findByRole("dialog", {
+		name: /^Delete the Front Office schedule for /,
+	});
 };
 
 export const Default: Story = {};

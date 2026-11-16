@@ -110,6 +110,11 @@ export const SchedulesTab = ({
 			? list.schedules.filter((schedule) => matches(schedule, search))
 			: [];
 	const columns = useMemo((): Array<DataTableColumn<Schedule>> => {
+		const periodOf = (schedule: Schedule): string =>
+			formatPeriod(
+				{ start: schedule.periodStart, end: schedule.periodEnd },
+				language
+			);
 		const createdAt = new Intl.DateTimeFormat(language, {
 			day: "2-digit",
 			month: "short",
@@ -120,22 +125,19 @@ export const SchedulesTab = ({
 		});
 		return [
 			{
-				id: "name",
-				header: t(`${key}.history.name`),
-				cell: (schedule) => schedule.name,
+				// A schedule is named by its week, in the reader's language; the stored name is the API's.
+				id: "date",
+				header: t(`${key}.history.date`),
+				cell: (schedule) => periodOf(schedule),
 				cellClassName: "font-semibold",
+				sortValue: (schedule) => schedule.periodStart,
 				pin: "start",
 			},
 			{
-				id: "date",
-				header: t(`${key}.history.date`),
-				cell: (schedule) =>
-					formatPeriod(
-						{ start: schedule.periodStart, end: schedule.periodEnd },
-						language
-					),
-				sortValue: (schedule) => schedule.periodStart,
-				// A phone keeps the name and the actions as columns; the rest reads on the name's line, as Job titles does.
+				id: "name",
+				header: t(`${key}.history.name`),
+				cell: (schedule) => schedule.name,
+				// A phone keeps the week and the actions as columns; the rest reads on the week's line, as Job titles does.
 				hideBelow: "md",
 			},
 			{
@@ -175,7 +177,10 @@ export const SchedulesTab = ({
 					<div className="flex justify-center">
 						<Button
 							{...scheduleViewLink(schedule)}
-							aria-label={t(`${key}.viewNamed`, { code: schedule.name })}
+							aria-label={t(`${key}.viewNamed`, {
+								department: schedule.departmentName,
+								period: periodOf(schedule),
+							})}
 							variant="icon"
 						>
 							<ViewIcon />

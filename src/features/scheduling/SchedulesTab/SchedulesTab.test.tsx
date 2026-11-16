@@ -157,6 +157,25 @@ describe("SchedulesTab", () => {
 		expect(within(row).queryByText("Generated")).toBeNull();
 	});
 
+	it("given_aSchedule_when_listed_then_itsRowStartsWithItsWeekAndTheViewButtonNamesDepartmentAndWeek", async () => {
+		show();
+
+		const history = await screen.findByRole("table", {
+			name: "Schedule history",
+		});
+		const row = within(history).getByRole("row", {
+			name: /Front Office - Week 42/,
+		});
+		expect(within(row).getAllByRole("cell")[0]).toHaveTextContent(
+			/^Oct 12\s?–\s?18, 2026/
+		);
+		expect(
+			within(row).getByRole("link", {
+				name: /^View the Front Office schedule for Oct 12\s?–\s?18, 2026$/,
+			})
+		).toBeInTheDocument();
+	});
+
 	it("given_anApprovalWaitingOnTheViewer_when_rendered_then_itsMonthCardSaysWhichWeek", async () => {
 		show(vi.fn(), ["schedule:read", "approval:decide"]);
 

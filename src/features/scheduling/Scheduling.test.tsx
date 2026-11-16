@@ -68,10 +68,12 @@ it("shows API history and links to the saved schedule", async () => {
 	const history = await screen.findByRole("table", {
 		name: "Schedule history",
 	});
-	const row = within(history).getByRole("row", { name: /^API schedule/ });
+	const row = within(history).getByRole("row", { name: /API schedule/ });
 	expect(within(row).getAllByText("Draft")[0]).toBeInTheDocument();
 	expect(
-		within(row).getByRole("link", { name: "View schedule API schedule" })
+		within(row).getByRole("link", {
+			name: /^View the Front Office schedule for Oct 12\s?–\s?18, 2026$/,
+		})
 	).toHaveAttribute("href", expect.stringContaining("departmentId=d-1"));
 });
 
@@ -157,7 +159,7 @@ it("labels and tones every API status in the history", async () => {
 	});
 	for (const { status, label, background } of statuses) {
 		const row = within(history).getByRole("row", {
-			name: new RegExp(`^${status} schedule`),
+			name: new RegExp(`${status} schedule`),
 		});
 		expect(within(row).getAllByText(label)[0]).toHaveClass(background);
 	}
@@ -209,9 +211,9 @@ it("opens a draft in the wizard and any other schedule's roster, from its histor
 		name: "Schedule history",
 	});
 	for (const { status, href } of views) {
-		const name = `View schedule ${status} schedule`;
+		const name = /^View the Front Office schedule for /;
 		const row = within(history).getByRole("row", {
-			name: new RegExp(`^${status} schedule`),
+			name: new RegExp(`${status} schedule`),
 		});
 		expect(within(row).getByRole("link", { name })).toHaveAttribute(
 			"href",
@@ -222,6 +224,10 @@ it("opens a draft in the wizard and any other schedule's roster, from its histor
 
 const SCHEDULE_PATH =
 	"/api/v1/companies/c-1/branches/b-1/departments/d-1/schedules/s-1";
+
+/** The delete dialog names the fixture's department and week (12 – 18 Oct 2026), as en-US writes it. */
+const DELETE_TITLE =
+	/^Delete the Front Office schedule for Oct 12\s?–\s?18, 2026\?$/;
 
 const listOf = (schedules: Array<Schedule>): StubReply => ({
 	status: 200,
@@ -287,7 +293,7 @@ it("deletes a schedule from its history row after a danger confirm naming its de
 	await openRowMenu();
 	await user.click(screen.getByRole("menuitem", { name: "Delete" }));
 	const dialog = screen.getByRole("dialog", {
-		name: "Delete Front Office - Week 42?",
+		name: DELETE_TITLE,
 	});
 	expect(dialog).toHaveTextContent(
 		/This removes the Front Office schedule for .+, with its roster\. This can’t be undone\./
@@ -318,7 +324,7 @@ it("explains why a schedule being generated can't be deleted yet", async () => {
 	await openRowMenu();
 	await user.click(screen.getByRole("menuitem", { name: "Delete" }));
 	const dialog = screen.getByRole("dialog", {
-		name: "Delete Front Office - Week 42?",
+		name: DELETE_TITLE,
 	});
 	expect(dialog).toHaveTextContent(
 		"This schedule is being generated. You can delete it once the run finishes."
@@ -350,7 +356,7 @@ it("shows a refused delete inside the dialog and keeps it open", async () => {
 	await openRowMenu();
 	await user.click(screen.getByRole("menuitem", { name: "Delete" }));
 	const dialog = screen.getByRole("dialog", {
-		name: "Delete Front Office - Week 42?",
+		name: DELETE_TITLE,
 	});
 	await user.click(
 		within(dialog).getByRole("button", { name: "Delete schedule" })

@@ -329,7 +329,9 @@ it("deletes the schedule from the header's menu and goes back to the overview", 
 	await user.click(screen.getByRole("menuitem", { name: "Delete" }));
 	await user.click(
 		within(
-			screen.getByRole("dialog", { name: "Delete Front Office - Week 42?" })
+			screen.getByRole("dialog", {
+				name: /^Delete the Front Office schedule for Oct 12\s?–\s?18, 2026\?$/,
+			})
 		).getByRole("button", { name: "Delete schedule" })
 	);
 
