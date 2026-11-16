@@ -5324,14 +5324,7 @@
 			}
 		},
 		"calm": {
-			"allClear": "All clear.",
-			"short-shifts": "Every shift is staffed this week and next.",
-			"leave-to-decide": "No leave waits for a decision.",
-			"waiting-approvals": "No approval waits in your units.",
-			"next-roster": "Next week’s roster is published in every department.",
-			"cover-offers": "Nobody owes an answer on cover.",
-			"off-today": "Nobody is off today.",
-			"people-events": "Nobody joins, ends probation or leaves in the next 30 days."
+			"allClear": "All clear. Nothing needs you right now."
 		},
 		"tabs": {
 			"label": "Home views",

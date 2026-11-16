@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { cardSpans, sectionStateOf } from "@/features/dashboard/homeLayout";
 
 describe("sectionStateOf", () => {
-	it("is a card with rows or a failure, and a sentence with nothing to act on", () => {
+	it("is a card with rows or a failure, and no card with nothing to act on", () => {
 		expect(sectionStateOf("ready", 3)).toBe("content");
 		expect(sectionStateOf("error", 0)).toBe("content");
 		expect(sectionStateOf("ready", 0)).toBe("empty");
@@ -15,23 +15,29 @@ describe("sectionStateOf", () => {
 });
 
 describe("cardSpans", () => {
-	it("gives the lead card the row and pairs the rest", () => {
+	it("puts two cards to a row", () => {
 		expect([
-			...cardSpans(["short-shifts", "leave-to-decide", "next-roster"]),
+			...cardSpans([
+				"short-shifts",
+				"leave-to-decide",
+				"next-roster",
+				"cover-offers",
+			]),
 		]).toEqual([
-			["short-shifts", "full"],
+			["short-shifts", "half"],
 			["leave-to-decide", "half"],
 			["next-roster", "half"],
+			["cover-offers", "half"],
 		]);
 	});
 
-	it("gives a card left without a neighbour the whole row", () => {
+	it("gives the first card the whole row when their number is odd, so none sits alone", () => {
 		expect([
 			...cardSpans(["leave-to-decide", "next-roster", "people-events"]),
 		]).toEqual([
-			["leave-to-decide", "half"],
+			["leave-to-decide", "full"],
 			["next-roster", "half"],
-			["people-events", "full"],
+			["people-events", "half"],
 		]);
 		expect([...cardSpans(["cover-offers"])]).toEqual([
 			["cover-offers", "full"],

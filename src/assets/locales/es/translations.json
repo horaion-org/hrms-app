@@ -5157,14 +5157,7 @@
 			}
 		},
 		"calm": {
-			"allClear": "Todo en orden.",
-			"short-shifts": "Todos los turnos están cubiertos esta semana y la próxima.",
-			"leave-to-decide": "Ninguna ausencia espera una decisión.",
-			"waiting-approvals": "No hay aprobaciones pendientes en tus unidades.",
-			"next-roster": "El horario de la próxima semana está publicado en todos los departamentos.",
-			"cover-offers": "Nadie tiene una respuesta pendiente.",
-			"off-today": "Nadie está ausente hoy.",
-			"people-events": "Nadie se incorpora, termina el periodo de prueba ni se va en los próximos 30 días."
+			"allClear": "Todo en orden. Nada te necesita ahora."
 		},
 		"tabs": {
 			"label": "Vistas de Inicio",

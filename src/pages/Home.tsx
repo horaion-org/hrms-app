@@ -65,11 +65,18 @@ const route = getRouteApi("/_authenticated/_app/");
 const key = "dashboard";
 
 /**
- * Home's one grid: a single column on small screens and two from `lg`, its
- * cards aligned to the top so none stretches to a taller neighbour.
+ * Home's one grid: a single column on small screens and two from `lg`,
+ * where the cards of a row share its height.
  */
-const homeGridClasses =
-	"mt-6 grid grid-cols-1 items-start gap-6 lg:grid-cols-2";
+const homeGridClasses = "mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2";
+
+/**
+ * A card on the grid fills its place, and from `lg` is at least as tall as
+ * one that lists three rows and the line under them (its padding and title,
+ * 3 × 40 px of rows, 12 + 20 px), so every card is the same height whatever
+ * it lists.
+ */
+const gridCardClasses = "h-full lg:min-h-62";
 
 /** A card's place on the grid: the whole row, or one of its two columns. */
 const SPAN_CLASSES: Record<CardSpan, string> = {
@@ -166,11 +173,17 @@ const Dashboard = ({
 	};
 
 	const cardOf: Record<HomeSection, ReactNode> = {
-		"short-shifts": <ShortShiftsCard shortShifts={home.shortShifts} />,
+		"short-shifts": (
+			<ShortShiftsCard
+				className={gridCardClasses}
+				shortShifts={home.shortShifts}
+			/>
+		),
 		"leave-to-decide": (
 			<LeaveToDecideCard
 				// Nobody decides their own leave; each request is decided where its member is filed, or by its flow's open step.
 				canDecide={leaveDecision.canDecide}
+				className={gridCardClasses}
 				pending={home.pendingLeave}
 				onOpen={(request, mode) => {
 					setDecision({ request, mode });
@@ -178,32 +191,44 @@ const Dashboard = ({
 			/>
 		),
 		"waiting-approvals": (
-			<WaitingApprovalsCard approvals={home.waitingApprovals} />
+			<WaitingApprovalsCard
+				approvals={home.waitingApprovals}
+				className={gridCardClasses}
+			/>
 		),
 		"next-roster": (
 			<NextRosterCard
+				className={gridCardClasses}
 				comingMonday={home.comingMonday}
 				rows={home.rostersToDo}
 			/>
 		),
 		"cover-offers": (
 			<OpenCoverOffersCard
+				className={gridCardClasses}
 				myOffers={home.myOffers}
 				teamOffers={home.teamOffers}
 			/>
 		),
 		"off-today": null,
-		"people-events": <PeopleEventsCard events={home.peopleEvents} />,
+		"people-events": (
+			<PeopleEventsCard
+				className={gridCardClasses}
+				events={home.peopleEvents}
+			/>
+		),
 	};
-	// A section with something to show is a card; one with nothing to act on is a sentence in the note below.
+	// A section with something to show is a card; one with nothing to act on is its tile at zero.
 	const cards = HOME_SECTIONS.filter(
 		(section) =>
 			home.states[section] === "content" && !NOT_A_CARD.includes(section)
 	);
 	const spans = cardSpans(cards);
-	const clear = HOME_SECTIONS.filter(
-		(section) => home.states[section] === "empty"
-	);
+	// With no card at all, and every section known, one line says so.
+	const allClear =
+		cards.length === 0 &&
+		HOME_SECTIONS.some((section) => home.states[section] === "empty") &&
+		HOME_SECTIONS.every((section) => home.states[section] !== "pending");
 
 	const needsYou = (
 		<>
@@ -213,7 +238,7 @@ const Dashboard = ({
 					{cards.map((section) => (
 						<div
 							key={section}
-							className={SPAN_CLASSES[spans.get(section) ?? "full"]}
+							className={`scroll-mt-6 ${SPAN_CLASSES[spans.get(section) ?? "full"]}`}
 							id={section}
 						>
 							{cardOf[section]}
@@ -221,11 +246,8 @@ const Dashboard = ({
 					))}
 				</div>
 			)}
-			{clear.length > 0 && (
-				<Callout className="mt-6">
-					{cards.length === 0 && `${t(`${key}.calm.allClear`)} `}
-					{clear.map((section) => t(`${key}.calm.${section}`)).join(" ")}
-				</Callout>
+			{allClear && (
+				<Callout className="mt-6">{t(`${key}.calm.allClear`)}</Callout>
 			)}
 		</>
 	);
@@ -370,14 +392,15 @@ const Dashboard = ({
  * rules too few people can staff); for everyone else it is the to-do list
  * alone. The view is kept in the URL.
  *
- * "What needs you": a line of counts, then a card for each thing
- * with something to act on, most urgent first, on one two-column grid:
- * shifts short by cause, leave to decide, approvals waiting, the rosters
- * still to get ready, cover offers not answered, and who joins, ends
- * probation or leaves. A section with nothing to act on is a sentence in
- * the all-clear note, never an empty box. Each is left out where the
- * person's grants don't reach it, or where they chose to hide it under
- * Customise; a hidden section is not read.
+ * "What needs you": a row of equal tiles, a number each, then a card for
+ * each thing with something to act on, most urgent first, on one
+ * two-column grid of equal cards: shifts short by cause, leave to decide,
+ * approvals waiting, the rosters still to get ready, cover offers not
+ * answered, and who joins, ends probation or leaves. Every row of a card
+ * is one line with one action. A section with nothing to act on is its
+ * tile at zero, never an empty box. Each is left out where the person's
+ * grants don't reach it, or where they chose to hide it under Customise; a
+ * hidden section is not read.
  */
 export const Home = (): FunctionComponent => {
 	const context = useRouteContext({ from: "/_authenticated" });
