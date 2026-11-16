@@ -196,7 +196,6 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 			{
 				...choice("DAY_TYPE", "DAY_TYPE", 0, 2),
 				choices: NON_WORKING_DAY_TYPES,
-				partialComparisons: ["AT_LEAST"],
 			},
 		],
 	},

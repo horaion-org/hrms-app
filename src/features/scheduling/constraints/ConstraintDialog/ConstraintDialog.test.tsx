@@ -1153,24 +1153,22 @@ describe("ConstraintDialog", () => {
 		).toEqual(["At least", "At most", "Exactly"]);
 	});
 
-	it("given_aDaysOffRuleAtMost_when_onlyRestDaysCount_then_takesOutAtMostAndOffersAtLeastOnly", async () => {
+	it("given_aDaysOffRuleExactly_when_onlyDayOffCounts_then_keepsExactlyAndOffersAllThree", async () => {
 		const user = userEvent.setup();
 		renderDialog();
 		await start(user, "Days off each week");
-		await pick(user, /^At least, at most or exactly/, "At most");
+		await pick(user, /^At least, at most or exactly/, "Exactly");
 
-		// Unticking Day off leaves only Rest days counted.
-		await pick(user, /^Day types/, "Day off");
+		// Unticking Rest day leaves only Day off counted (ADR-0104).
+		await pick(user, /^Day types/, "Rest day");
 
-		expect(
-			screen.getByText(
-				"At most was removed: with only some Day types chosen, a different comparison is offered."
-			)
-		).toBeVisible();
+		expect(trigger(/^At least, at most or exactly/)).toHaveTextContent(
+			"Exactly"
+		);
 		await user.click(trigger(/^At least, at most or exactly/));
 		expect(
 			screen.getAllByRole("option").map((option) => option.textContent)
-		).toEqual(["At least"]);
+		).toEqual(["At least", "At most", "Exactly"]);
 	});
 
 	it("given_aPeopleType_when_chosen_then_offersAllThreeComparisons", async () => {

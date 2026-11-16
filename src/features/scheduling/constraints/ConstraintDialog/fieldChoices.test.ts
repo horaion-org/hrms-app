@@ -269,6 +269,15 @@ const DAYS_OFF = specsOf("DAYS_OFF_PER_PERIOD");
 const WEEKLY = specsOf("DAY_TYPE_DAYS_PER_WEEK");
 const MAX_DAYS = specsOf("MAX_DAYS_WITHOUT_DAY_TYPES");
 const EVERY_COMPARISON = ["AT_LEAST", "AT_MOST", "EXACTLY"] as const;
+/**
+ * The days-off fields as a type that narrows its comparisons for a partial
+ * set would declare them; no type does since ADR-0104, but the API may.
+ */
+const PARTIAL_AT_LEAST = DAYS_OFF.map((spec) =>
+	spec.field === "DAY_TYPE"
+		? { ...spec, partialComparisons: ["AT_LEAST" as const] }
+		: spec
+);
 
 describe("day types (ADR-0087)", () => {
 	it("offers a field's own day types, or every code when it names none", () => {
@@ -291,26 +300,43 @@ describe("day types (ADR-0087)", () => {
 		expect(shownValuesOf(specIn(WEEKLY, "DAY_TYPE"), [])).toEqual([]);
 	});
 
-	it("offers at least only while some but not every day type counts", () => {
+	it("offers every comparison on a days-off rule counting Day off alone (ADR-0104)", () => {
 		expect(
-			allowedComparisons(DAYS_OFF, { DAY_TYPE: ["REST"] }, EVERY_COMPARISON)
-		).toEqual(["AT_LEAST"]);
-		expect(allowedComparisons(DAYS_OFF, {}, EVERY_COMPARISON)).toEqual([
-			...EVERY_COMPARISON,
-		]);
+			allowedComparisons(DAYS_OFF, { DAY_TYPE: ["OFF"] }, EVERY_COMPARISON)
+		).toEqual([...EVERY_COMPARISON]);
+		expect(
+			withoutUnfitComparison(
+				DAYS_OFF,
+				{ COMPARISON: ["EXACTLY"], DAY_TYPE: ["OFF"] },
+				EVERY_COMPARISON
+			).removed
+		).toEqual([]);
+	});
+
+	it("offers only a field's partial comparisons while some but not every day type counts", () => {
 		expect(
 			allowedComparisons(
-				DAYS_OFF,
+				PARTIAL_AT_LEAST,
+				{ DAY_TYPE: ["REST"] },
+				EVERY_COMPARISON
+			)
+		).toEqual(["AT_LEAST"]);
+		expect(allowedComparisons(PARTIAL_AT_LEAST, {}, EVERY_COMPARISON)).toEqual(
+			[...EVERY_COMPARISON]
+		);
+		expect(
+			allowedComparisons(
+				PARTIAL_AT_LEAST,
 				{ DAY_TYPE: ["OFF", "REST"] },
 				EVERY_COMPARISON
 			)
 		).toEqual([...EVERY_COMPARISON]);
 	});
 
-	it("takes out at most once only some day types count, and says why", () => {
+	it("takes out a comparison a partial set does not take, and says why", () => {
 		expect(
 			withoutUnfitComparison(
-				DAYS_OFF,
+				PARTIAL_AT_LEAST,
 				{ COMPARISON: ["AT_MOST"], DAY_TYPE: ["REST"] },
 				EVERY_COMPARISON
 			)
@@ -320,7 +346,7 @@ describe("day types (ADR-0087)", () => {
 		});
 		expect(
 			withoutUnfitComparison(
-				DAYS_OFF,
+				PARTIAL_AT_LEAST,
 				{ COMPARISON: ["AT_LEAST"], DAY_TYPE: ["REST"] },
 				EVERY_COMPARISON
 			).removed
