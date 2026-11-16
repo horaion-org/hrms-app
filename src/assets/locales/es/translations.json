@@ -5030,7 +5030,9 @@
 			},
 			"generate": {
 				"choiceMissing": "Se configuró una semana de este mes mientras estabas aquí. Vuelve a cargar la página y genera de nuevo.",
-				"weekCannotBeGenerated": "Una semana que marcaste ya no se puede generar. Vuelve a Configuración para verla como está ahora.",
+				"weekCannotBeGenerated": "Una semana que marcaste cambió desde Configuración, así que no se generó nada. Ahora queda fuera y se indica arriba; genera de nuevo o vuelve a Configuración para elegir otras semanas.",
+				"droppedNote": "{{week}} ya no se puede generar ({{state}}), así que queda fuera.",
+				"noneLeft": "Ninguna de las semanas que marcaste se puede generar ya. Vuelve a Configuración para elegir de nuevo.",
 				"nothingToGenerate": "Ninguna semana de {{month}} se puede generar: cada una está publicada, terminada o generándose.",
 				"weekChanged": "Una semana de {{month}} cambió después de que se cargara esta página, así que no se generó nada. La página ya muestra {{month}} tal como está; inténtalo de nuevo.",
 				"forbidden": "No tienes permiso para generar este mes aquí.",

@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from "@testing-library/react";
+import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resetApiClient } from "@/common/api-client";
@@ -123,7 +123,7 @@ const routes = (
 
 const open = async (
 	entry: string,
-	extra: Record<string, StubReply | Array<StubReply>> = {},
+	extra: Parameters<typeof stubApi>[0] = {},
 	permissions: Array<string> | Workspace = ALL
 ): Promise<{
 	opened: OpenedApp;
@@ -361,6 +361,52 @@ describe("Create schedules for a month", () => {
 		expect(
 			await screen.findByRole("button", { name: "Generate December" })
 		).toBeInTheDocument();
+	});
+
+	it("given_everyTickedWeekPublishedSinceSetup_when_onGenerate_then_namesThemAndGenerateIsOff", async () => {
+		const user = userEvent.setup();
+		let publishedSince = false;
+		const december = ungeneratedMonthFixture();
+		const { opened, calls } = await open(NEW_DECEMBER, {
+			[`GET ${DECEMBER}`]: () =>
+				reply(
+					publishedSince
+						? {
+								...december,
+								weeks: december.weeks.map((week) => ({
+									...week,
+									state: "PUBLISHED",
+									includedInMonthGeneration: false,
+								})),
+							}
+						: december
+				),
+		});
+		await screen.findByText(EVERY_WEEK_LINE);
+		await user.click(next());
+		await screen.findByRole("region", { name: "Staffing forecast" });
+		await user.click(next());
+		await screen.findByRole("button", { name: "Generate December" });
+
+		// Someone publishes every ticked week while the wizard is open; the month is read again.
+		publishedSince = true;
+		await act(async () => {
+			await opened.queryClient.invalidateQueries();
+		});
+
+		const generate = screen.getByRole("button", { name: "Generate December" });
+		await waitFor(() => {
+			expect(generate).toHaveAccessibleDescription(
+				"None of the weeks you ticked can be generated any more. Go back to Setup to choose again."
+			);
+		});
+		expect(generate).toBeDisabled();
+		expect(
+			screen.getAllByText(
+				/can’t be generated any more \(Published\), so it is left out\.$/
+			)
+		).toHaveLength(4);
+		expect(calls.some((call) => call.path.endsWith("/generation"))).toBe(false);
 	});
 
 	it("given_aRefusedMonth_when_generated_then_saysWhyAndStays", async () => {
@@ -677,7 +723,7 @@ describe("Create schedules for a month: ticking weeks", () => {
 		await generateFromSetup(user);
 
 		expect(await screen.findByRole("alert")).toHaveTextContent(
-			"A week you ticked can no longer be generated. Go back to Setup to see it as it is now."
+			"A week you ticked changed since Setup, so nothing was generated. It is now left out and named above; generate again, or go back to Setup to choose other weeks."
 		);
 	});
 

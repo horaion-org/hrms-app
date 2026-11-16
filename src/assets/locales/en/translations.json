@@ -5230,7 +5230,9 @@
 			},
 			"generate": {
 				"choiceMissing": "A week of this month was set up while you were here. Reload the page and generate again.",
-				"weekCannotBeGenerated": "A week you ticked can no longer be generated. Go back to Setup to see it as it is now.",
+				"weekCannotBeGenerated": "A week you ticked changed since Setup, so nothing was generated. It is now left out and named above; generate again, or go back to Setup to choose other weeks.",
+				"droppedNote": "{{week}} can’t be generated any more ({{state}}), so it is left out.",
+				"noneLeft": "None of the weeks you ticked can be generated any more. Go back to Setup to choose again.",
 				"nothingToGenerate": "No week of {{month}} can be generated: each is published, over or being generated.",
 				"weekChanged": "A week of {{month}} changed since this page loaded, so nothing was generated. The page now shows {{month}} as it is; try again.",
 				"forbidden": "You don’t have permission to generate this month here.",

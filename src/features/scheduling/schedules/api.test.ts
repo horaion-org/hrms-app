@@ -1185,7 +1185,7 @@ describe("schedule refusals", () => {
 		expect(
 			monthGenerationRefusal(problem(400, "MONTH_WEEK_CANNOT_BE_GENERATED"), t)
 		).toBe(
-			"A week you ticked can no longer be generated. Go back to Setup to see it as it is now."
+			"A week you ticked changed since Setup, so nothing was generated. It is now left out and named above; generate again, or go back to Setup to choose other weeks."
 		);
 	});
 

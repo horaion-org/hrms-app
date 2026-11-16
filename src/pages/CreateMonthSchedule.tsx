@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
+import { Callout } from "@/components/ui/Callout";
 import { ErrorText } from "@/components/ui/ErrorText";
 import { ArrowLeftIcon, ArrowRightIcon } from "@/components/ui/Icon";
 import { Stepper, StepperStep } from "@/components/ui/Stepper";
@@ -44,6 +45,8 @@ import {
 import { weekRangeText } from "@/features/scheduling/months/monthCopy";
 import { hasRoster } from "@/features/scheduling/months/weekStateLooks";
 import {
+	badgeOf,
+	chosenWeeksNow,
 	defaultMonthOf,
 	defaultTicksOf,
 	tickableWeeksOf,
@@ -282,15 +285,13 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 		);
 	const tickable =
 		scheduleMonth.data && tickableWeeksOf(scheduleMonth.data.weeks, todayIso);
-	const tickableMondays = new Set(
-		(tickable ?? [])
-			.filter((week) => week.canTick)
-			.map((week) => week.periodStart)
-	);
 	// What is ticked, of the weeks that can still be ticked: the manager's ticks, or the defaults.
-	const ticked = (ticks ?? (tickable ? defaultTicksOf(tickable) : [])).filter(
-		(monday) => tickableMondays.has(monday)
+	// The month is read again while the wizard is open; Generate names what changed since Setup.
+	const chosenNow = chosenWeeksNow(
+		tickable ?? [],
+		ticks ?? (tickable ? defaultTicksOf(tickable) : [])
 	);
+	const ticked = chosenNow.kept;
 	const shifts = useQuery(departmentShiftsQuery(companyId, unit, readsShifts));
 	const constraints = useQuery(
 		constraintsQuery(companyId, unit, readsConstraints)
@@ -746,6 +747,34 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 						</p>
 					) : (
 						<>
+							{chosenNow.dropped.map((week) => (
+								<Callout key={week.periodStart} className="mb-4" tone="warning">
+									{t("scheduling.months.generate.droppedNote", {
+										week: weekRangeText(
+											{ start: week.periodStart, end: week.periodEnd },
+											language,
+											t
+										),
+										state: t(badgeOf(week.look).key),
+									})}
+								</Callout>
+							))}
+							{chosenNow.replacing.map((week) => (
+								<Callout key={week.periodStart} className="mb-4" tone="warning">
+									{t(
+										week.note === "rosterRejected"
+											? "scheduling.months.setup.rosterRejectedNote"
+											: "scheduling.months.setup.rosterWaitingNote",
+										{
+											week: weekRangeText(
+												{ start: week.periodStart, end: week.periodEnd },
+												language,
+												t
+											),
+										}
+									)}
+								</Callout>
+							))}
 							{check.isPending && (
 								<p className="text-sm text-neutral-800" role="status">
 									{t("scheduling.months.generate.panel.checking", {
@@ -774,9 +803,14 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 								<BeforeGeneratePanel
 									check={check.data}
 									generating={generation.isPending}
-									hint={tickedHint}
+									hint={ticked.length > 0 ? tickedHint : ""}
 									month={month}
 									waiting={generation.block === "listsLoading"}
+									blockedNote={
+										ticked.length === 0
+											? t("scheduling.months.generate.noneLeft")
+											: undefined
+									}
 									onGenerate={() => {
 										void generate();
 									}}

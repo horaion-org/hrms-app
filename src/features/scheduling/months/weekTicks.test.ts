@@ -7,6 +7,7 @@ import {
 import { monthSummaryFixture } from "@/features/scheduling/months/fixtures";
 import {
 	badgeOf,
+	chosenWeeksNow,
 	defaultMonthOf,
 	defaultTicksOf,
 	skippedWeeksOf,
@@ -266,5 +267,43 @@ describe("badgeOf", () => {
 			expect(badge.tone).toBe("neutral");
 			expect(authTestI18n.exists(badge.key)).toBe(true);
 		}
+	});
+});
+
+describe("chosenWeeksNow", () => {
+	it("given_chosenWeeksThatChangedSinceSetup_when_read_then_keepsTheTickableDropsTheRestAndNamesTheRostered", () => {
+		const weeks = tickableWeeksOf(
+			[
+				weekOf(NEXT_MONDAY, "GENERATING", false),
+				weekOf("2026-11-30", "TO_REVIEW", true),
+				weekOf("2026-12-07", "NOT_GENERATED", true),
+			],
+			TODAY
+		);
+
+		const now = chosenWeeksNow(weeks, [
+			NEXT_MONDAY,
+			"2026-11-30",
+			"2026-12-07",
+		]);
+
+		expect(now.kept).toEqual(["2026-11-30", "2026-12-07"]);
+		expect(now.dropped.map((week) => week.periodStart)).toEqual([NEXT_MONDAY]);
+		expect(now.replacing.map((week) => week.periodStart)).toEqual([
+			"2026-11-30",
+		]);
+	});
+
+	it("given_noChosenWeekTickableAnyMore_when_read_then_nothingKept", () => {
+		const weeks = tickableWeeksOf(
+			[weekOf(NEXT_MONDAY, "PUBLISHED", false)],
+			TODAY
+		);
+
+		expect(chosenWeeksNow(weeks, [NEXT_MONDAY])).toEqual({
+			kept: [],
+			dropped: weeks,
+			replacing: [],
+		});
 	});
 });

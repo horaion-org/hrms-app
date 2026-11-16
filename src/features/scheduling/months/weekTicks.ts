@@ -118,6 +118,36 @@ export const defaultTicksOf = (
 ): Array<string> =>
 	weeks.filter((week) => week.tickedByDefault).map((week) => week.periodStart);
 
+/** What the Generate step makes of the weeks chosen on Setup, as the month reads now. */
+export type ChosenWeeksNow = {
+	/** The chosen weeks that can still be ticked: what Generate sends. */
+	kept: Array<string>;
+	/** Chosen weeks that can't be ticked any more (published, over or being generated since Setup): left out, and named. */
+	dropped: Array<TickableWeek>;
+	/** Kept weeks that now hold a roster: generating replaces it, as Setup says. */
+	replacing: Array<TickableWeek>;
+};
+
+/**
+ * The weeks chosen on Setup against the month as it reads now: the month is
+ * read again while the wizard is open, so a chosen week may since have been
+ * published, generated or have ended.
+ */
+export const chosenWeeksNow = (
+	weeks: ReadonlyArray<TickableWeek>,
+	chosen: ReadonlyArray<string>
+): ChosenWeeksNow => {
+	const chosenWeeks = weeks.filter((week) => chosen.includes(week.periodStart));
+	const kept = chosenWeeks.filter((week) => week.canTick);
+	return {
+		kept: kept.map((week) => week.periodStart),
+		dropped: chosenWeeks.filter((week) => !week.canTick),
+		replacing: kept.filter(
+			(week) => week.note === "rosterWaiting" || week.note === "rosterRejected"
+		),
+	};
+};
+
 /** One run of ticked weeks, Monday to Sunday. */
 export type TickedRange = { start: string; end: string };
 
