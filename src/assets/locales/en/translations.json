@@ -917,7 +917,7 @@
 			"availability": "Availability",
 			"people": "People",
 			"organisation": "Organisation",
-			"insights": "Insights"
+			"reports": "Reports"
 		},
 		"comingSoon": "This Module is coming soon.",
 		"notifications": "Notifications",
@@ -5413,7 +5413,7 @@
 			"inactiveShown": "Inactive people hold no terms. Show active people to filter by terms."
 		}
 	},
-	"insights": {
+	"reports": {
 		"subtitle": "Where rosters are short, who works the most overtime, and how often published rosters change.",
 		"range": "Dates",
 		"failed": "We couldn’t load this table. Try again in a moment.",

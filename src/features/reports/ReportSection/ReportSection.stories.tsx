@@ -1,17 +1,17 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { ReactNode } from "react";
-import { InsightSection } from "@/features/insights/InsightSection";
+import { ReportSection } from "@/features/reports/ReportSection";
 import "@/common/i18n";
 
 const meta = {
-	title: "Features/Insights/InsightSection",
-	component: InsightSection<string>,
+	title: "Features/Reports/ReportSection",
+	component: ReportSection<string>,
 	args: {
 		id: "overtime",
 		read: { status: "ready", data: "The table goes here." },
 		children: (data: string): ReactNode => <p>{data}</p>,
 	},
-} satisfies Meta<typeof InsightSection<string>>;
+} satisfies Meta<typeof ReportSection<string>>;
 
 export default meta;
 

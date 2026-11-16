@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
-import type { StaffingRule } from "@/features/insights/api";
+import type { StaffingRule } from "@/features/reports/api";
 
-const key = "insights.staffing";
+const key = "reports.staffing";
 
 export type StaffingTableProps = {
 	rules: Array<StaffingRule>;

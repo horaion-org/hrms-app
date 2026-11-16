@@ -4,21 +4,21 @@ import type { FunctionComponent } from "@/common/types";
 import { DatePicker } from "@/components/forms/DatePicker";
 import { Callout } from "@/components/ui/Callout";
 import { useOvertime } from "@/features/dashboard/useDashboardReads";
-import { InsightSection } from "@/features/insights/InsightSection";
-import { INSIGHTS_UNIT_RULES } from "@/features/insights/insightsUnitRules";
+import { ReportSection } from "@/features/reports/ReportSection";
+import { REPORTS_UNIT_RULES } from "@/features/reports/reportsUnitRules";
 import {
 	monthsOf,
 	MOST_DAYS_IN_RANGE,
 	rangeOf,
 	rangeProblemOf,
-} from "@/features/insights/insightsSearch";
-import { OvertimeTable } from "@/features/insights/OvertimeTable";
-import { RosterStabilityTable } from "@/features/insights/RosterStabilityTable";
-import { StaffingTable } from "@/features/insights/StaffingTable";
+} from "@/features/reports/reportsSearch";
+import { OvertimeTable } from "@/features/reports/OvertimeTable";
+import { RosterStabilityTable } from "@/features/reports/RosterStabilityTable";
+import { StaffingTable } from "@/features/reports/StaffingTable";
 import {
 	useRosterChanges,
 	useStaffing,
-} from "@/features/insights/useInsightsReads";
+} from "@/features/reports/useReportsReads";
 import { DepartmentFilter } from "@/features/workspace/DepartmentFilter";
 import { SCHEDULE_READ_KEYS } from "@/features/workspace/permissionKeys";
 import { selectedUnits } from "@/features/workspace/unitSelection";
@@ -26,17 +26,17 @@ import { unitSelectionOf } from "@/features/workspace/unitSearch";
 import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 
-const key = "insights";
+const key = "reports";
 
-const route = getRouteApi("/_authenticated/_app/insights");
+const route = getRouteApi("/_authenticated/_app/reports");
 
 /**
- * Insights: three tables over a range of days in the header's Branch,
+ * Reports: three tables over a range of days in the header's Branch,
  * narrowed to a Department from the filter. Staffing against each staffing
  * rule, overtime by department and month against the ceiling, and how much
  * published rosters changed. The range and units are kept in the URL.
  */
-export const Insights = (): FunctionComponent => {
+export const Reports = (): FunctionComponent => {
 	const { t } = useTranslation();
 	const companyId = useCurrentCompanyId();
 	const navigate = route.useNavigate();
@@ -45,7 +45,7 @@ export const Insights = (): FunctionComponent => {
 		companyId,
 		SCHEDULE_READ_KEYS,
 		unitSelectionOf(search),
-		INSIGHTS_UNIT_RULES
+		REPORTS_UNIT_RULES
 	);
 	const units = selectedUnits(resolved);
 	const range = rangeOf(search, new Date());
@@ -61,7 +61,7 @@ export const Insights = (): FunctionComponent => {
 		<div className="flex flex-col gap-8">
 			<div className="flex flex-col gap-2">
 				<h1 className="text-2xl font-semibold text-neutral-900">
-					{t("shell.navigation.insights")}
+					{t("shell.navigation.reports")}
 				</h1>
 				<p className="text-sm text-neutral-800">{t(`${key}.subtitle`)}</p>
 			</div>
@@ -95,20 +95,20 @@ export const Insights = (): FunctionComponent => {
 				</Callout>
 			)}
 			{nothingInReach && <Callout>{t(`${key}.hidden`)}</Callout>}
-			<InsightSection id="staffing" read={staffing}>
+			<ReportSection id="staffing" read={staffing}>
 				{(rules) => <StaffingTable rules={rules} />}
-			</InsightSection>
-			<InsightSection id="overtime" read={overtime}>
+			</ReportSection>
+			<ReportSection id="overtime" read={overtime}>
 				{(answer) => (
 					<OvertimeTable
 						departments={answer.departments}
 						nearSharePercent={answer.nearSharePercent}
 					/>
 				)}
-			</InsightSection>
-			<InsightSection id="stability" read={changes}>
+			</ReportSection>
+			<ReportSection id="stability" read={changes}>
 				{(departments) => <RosterStabilityTable departments={departments} />}
-			</InsightSection>
+			</ReportSection>
 		</div>
 	);
 };

@@ -4,7 +4,7 @@ import type { DayRange, MonthSpan } from "@/features/dashboard/api";
 import { unitSearchSchema } from "@/features/workspace/unitSearch";
 
 /*
- * The Insights page's URL: its units and the range of days it reads, so a
+ * The Reports page's URL: its units and the range of days it reads, so a
  * reload or a link keeps them. The API takes at most 92 days.
  */
 
@@ -19,12 +19,12 @@ const searchSchema = unitSearchSchema.extend({
 	to: z.iso.date().optional().catch(undefined),
 });
 
-export type InsightsSearch = z.infer<typeof searchSchema>;
+export type ReportsSearch = z.infer<typeof searchSchema>;
 
 /** Reads the URL's units and range, dropping anything it does not recognise. */
-export const parseInsightsSearch = (
+export const parseReportsSearch = (
 	search: Record<string, unknown>
-): InsightsSearch => {
+): ReportsSearch => {
 	const { branch, department, from, to } = searchSchema.parse(search);
 	return {
 		...(branch === undefined ? {} : { branch }),
@@ -41,7 +41,7 @@ export const defaultRange = (today: Date): DayRange => ({
 });
 
 /** The range the URL names, else this month. */
-export const rangeOf = (search: InsightsSearch, today: Date): DayRange =>
+export const rangeOf = (search: ReportsSearch, today: Date): DayRange =>
 	search.from && search.to
 		? { from: search.from, to: search.to }
 		: defaultRange(today);

@@ -2481,7 +2481,7 @@
 			"availability": "Disponibilidad",
 			"people": "Personas",
 			"organisation": "Organización",
-			"insights": "Análisis"
+			"reports": "Informes"
 		},
 		"comingSoon": "Este módulo estará disponible pronto.",
 		"menu": "Menú"
@@ -5413,7 +5413,7 @@
 			"inactiveShown": "Las personas inactivas no tienen condiciones. Muestra las personas activas para filtrar por condiciones."
 		}
 	},
-	"insights": {
+	"reports": {
 		"subtitle": "Dónde faltan personas, quién hace más horas extra y con qué frecuencia cambian los horarios publicados.",
 		"range": "Fechas",
 		"failed": "No pudimos cargar esta tabla. Inténtalo de nuevo en un momento.",

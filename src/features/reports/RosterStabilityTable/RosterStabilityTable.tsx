@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
-import type { RosterChangeDepartment } from "@/features/insights/api";
+import type { RosterChangeDepartment } from "@/features/reports/api";
 
-const key = "insights.stability";
+const key = "reports.stability";
 
 export type RosterStabilityTableProps = {
 	departments: Array<RosterChangeDepartment>;

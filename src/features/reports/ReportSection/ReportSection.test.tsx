@@ -3,7 +3,7 @@ import { createInstance } from "i18next";
 import { initReactI18next } from "react-i18next";
 import { beforeAll, describe, expect, it } from "vitest";
 import en from "@/assets/locales/en/translations.json";
-import { InsightSection } from "@/features/insights/InsightSection";
+import { ReportSection } from "@/features/reports/ReportSection";
 
 beforeAll(async () => {
 	await createInstance()
@@ -11,12 +11,12 @@ beforeAll(async () => {
 		.init({ lng: "en", resources: { en: { translation: en } } });
 });
 
-describe("InsightSection", () => {
+describe("ReportSection", () => {
 	it("heads its table with the analysis' title once answered", () => {
 		render(
-			<InsightSection id="overtime" read={{ status: "ready", data: "answer" }}>
+			<ReportSection id="overtime" read={{ status: "ready", data: "answer" }}>
 				{(data) => <p>{data}</p>}
-			</InsightSection>
+			</ReportSection>
 		);
 
 		expect(
@@ -26,9 +26,9 @@ describe("InsightSection", () => {
 
 	it("says when its read failed", () => {
 		render(
-			<InsightSection id="stability" read={{ status: "error" }}>
+			<ReportSection id="stability" read={{ status: "error" }}>
 				{() => null}
-			</InsightSection>
+			</ReportSection>
 		);
 
 		expect(screen.getByRole("alert")).toHaveTextContent(
@@ -38,9 +38,9 @@ describe("InsightSection", () => {
 
 	it("is left out where its read is out of reach", () => {
 		const { container } = render(
-			<InsightSection id="staffing" read={{ status: "hidden" }}>
+			<ReportSection id="staffing" read={{ status: "hidden" }}>
 				{() => null}
-			</InsightSection>
+			</ReportSection>
 		);
 
 		expect(container).toBeEmptyDOMElement();

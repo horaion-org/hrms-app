@@ -2,17 +2,17 @@ import { describe, expect, it } from "vitest";
 import {
 	defaultRange,
 	monthsOf,
-	parseInsightsSearch,
+	parseReportsSearch,
 	rangeOf,
 	rangeProblemOf,
-} from "@/features/insights/insightsSearch";
+} from "@/features/reports/reportsSearch";
 
 const TODAY = new Date(2026, 10, 16, 9, 0);
 
-describe("insights search", () => {
+describe("reports search", () => {
 	it("keeps the units and range it recognises and drops the rest", () => {
 		expect(
-			parseInsightsSearch({
+			parseReportsSearch({
 				branch: "b-1",
 				from: "2026-11-01",
 				to: "not a date",

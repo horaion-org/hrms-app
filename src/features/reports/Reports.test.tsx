@@ -19,7 +19,7 @@ import { overtimeFixture } from "@/features/dashboard/fixtures";
 import {
 	rosterChangeDepartmentFixture,
 	staffingRuleFixture,
-} from "@/features/insights/fixtures";
+} from "@/features/reports/fixtures";
 
 const SCHEDULES = "/api/v1/companies/c-1/schedules";
 
@@ -102,13 +102,13 @@ const open = async (entry: string): Promise<OpenedApp> => {
 	return app;
 };
 
-describe("Insights", () => {
+describe("Reports", () => {
 	it("shows the three tables over the chosen dates", async () => {
 		const calls = stubApi(routes(["schedule:read"]));
-		await open("/insights?from=2026-10-01&to=2026-11-30");
+		await open("/reports?from=2026-10-01&to=2026-11-30");
 
 		expect(
-			await screen.findByRole("heading", { level: 1, name: "Insights" })
+			await screen.findByRole("heading", { level: 1, name: "Reports" })
 		).toBeInTheDocument();
 		expect(
 			await screen.findByRole("table", { name: "Staffing by rule" })
@@ -141,7 +141,7 @@ describe("Insights", () => {
 
 		const navigation = await screen.findByRole("navigation");
 		expect(
-			within(navigation).queryByRole("link", { name: "Insights" })
+			within(navigation).queryByRole("link", { name: "Reports" })
 		).toBeNull();
 	});
 });

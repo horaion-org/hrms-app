@@ -12,14 +12,14 @@ import { retry } from "@/features/workspace/retry";
 import type { UnitSelection } from "@/features/workspace/unitSearch";
 
 /*
- * The two reads only Insights shows: staffing against each staffing rule,
+ * The two reads only Reports shows: staffing against each staffing rule,
  * and how much published rosters changed. Overtime is the dashboard's read.
  */
 
-/** Every Insights query key starts `["insights", companyId, …]`. */
-export const INSIGHTS_QUERY_ROOT = "insights";
+/** Every Reports query key starts `["reports", companyId, …]`. */
+export const REPORTS_QUERY_ROOT = "reports";
 
-/** How long an Insights answer is fresh before it is read again. */
+/** How long an Reports answer is fresh before it is read again. */
 const STALE_TIME_MS = 60_000;
 
 const staffingRuleSchema = z.object({
@@ -111,14 +111,14 @@ export const fetchRosterChanges = (
 		{ signal }
 	).then((answer) => answer.departments);
 
-/** The key one Insights read is cached under. */
-const insightsKey = (
+/** The key one Reports read is cached under. */
+const reportsKey = (
 	companyId: string,
 	read: string,
 	units: UnitSelection,
 	range: DayRange
 ): ReadonlyArray<unknown> =>
-	[INSIGHTS_QUERY_ROOT, companyId, read, units, range] as const;
+	[REPORTS_QUERY_ROOT, companyId, read, units, range] as const;
 
 /** Staffing by rule; `allowed` false asks for nothing. */
 export const staffingQuery = (
@@ -128,7 +128,7 @@ export const staffingQuery = (
 	allowed: boolean
 ): QueryOptionsFor<Array<StaffingRule>, ReadonlyArray<unknown>> =>
 	queryOptions({
-		queryKey: insightsKey(companyId, "staffing", units, range),
+		queryKey: reportsKey(companyId, "staffing", units, range),
 		queryFn: allowed
 			? ({ signal }): Promise<Array<StaffingRule>> =>
 					fetchStaffing(companyId, units, range, signal)
@@ -146,7 +146,7 @@ export const rosterChangesQuery = (
 	allowed: boolean
 ): QueryOptionsFor<Array<RosterChangeDepartment>, ReadonlyArray<unknown>> =>
 	queryOptions({
-		queryKey: insightsKey(companyId, "rosterChanges", units, range),
+		queryKey: reportsKey(companyId, "rosterChanges", units, range),
 		queryFn: allowed
 			? ({ signal }): Promise<Array<RosterChangeDepartment>> =>
 					fetchRosterChanges(companyId, units, range, signal)

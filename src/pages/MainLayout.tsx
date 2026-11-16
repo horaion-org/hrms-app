@@ -162,15 +162,6 @@ export const MainLayout = (): FunctionComponent => {
 							to="/scheduling"
 						/>
 					</Can>
-					{/* Insights reads rosters, so it is offered where they may be read, at any scope. */}
-					<Can anyOf={SCHEDULE_READ_KEYS} at="anywhere">
-						<SidebarItem
-							activeIcon={TableIcon}
-							icon={TableIcon}
-							label={t("shell.navigation.insights")}
-							to="/insights"
-						/>
-					</Can>
 					{/* Leave is for everyone: a member's own leave needs nothing granted. */}
 					<SidebarItem
 						activeIcon={LeaveFilledIcon}
@@ -202,6 +193,16 @@ export const MainLayout = (): FunctionComponent => {
 							icon={OrganisationIcon}
 							label={t("shell.navigation.organisation")}
 							to="/organisation"
+						/>
+					</Can>
+					{/* Reports reads rosters, so it is offered where they may be read, at any scope. It comes
+					    last: a place to look back, not a daily task. */}
+					<Can anyOf={SCHEDULE_READ_KEYS} at="anywhere">
+						<SidebarItem
+							activeIcon={TableIcon}
+							icon={TableIcon}
+							label={t("shell.navigation.reports")}
+							to="/reports"
 						/>
 					</Can>
 				</Sidebar>

@@ -1,7 +1,7 @@
 import type {
 	RosterChangeDepartment,
 	StaffingRule,
-} from "@/features/insights/api";
+} from "@/features/reports/api";
 
 /** Front desk's rule: 3 needed on each shift, 2 people hold the titles. */
 export const staffingRuleFixture = (

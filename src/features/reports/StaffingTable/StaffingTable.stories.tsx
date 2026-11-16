@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { staffingRuleFixture } from "@/features/insights/fixtures";
-import { StaffingTable } from "@/features/insights/StaffingTable";
+import { staffingRuleFixture } from "@/features/reports/fixtures";
+import { StaffingTable } from "@/features/reports/StaffingTable";
 import "@/common/i18n";
 
 const meta = {
-	title: "Features/Insights/StaffingTable",
+	title: "Features/Reports/StaffingTable",
 	component: StaffingTable,
 	args: {
 		rules: [
