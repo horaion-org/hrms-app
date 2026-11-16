@@ -405,10 +405,10 @@ it("reaches the overview from the Sidebar and marks Organisation current", async
 	).toEqual([
 		"Dashboard",
 		"Scheduling",
-		"Leave",
-		"Shift preferences",
 		"People",
 		"Organisation",
+		"Leave",
+		"Shift preferences",
 		"Reports",
 	]);
 	expect(screen.getByRole("heading", { name: "Dashboard" })).toBeVisible();
