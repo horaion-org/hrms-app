@@ -2061,6 +2061,7 @@
 				"remove": {
 					"title": "Quitar a {{name}} de este rol",
 					"description": "{{name}} dejará de tener el rol {{role}} en todos los lugares. El cambio es inmediato.",
+					"descriptionSome": "{{name}} dejará de tener el rol {{role}} en {{places, list}}. Los lugares que no puedes cambiar lo mantienen. El cambio es inmediato.",
 					"confirm": "Quitar del rol"
 				},
 				"status": {

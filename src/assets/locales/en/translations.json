@@ -2130,6 +2130,7 @@
 				"remove": {
 					"title": "Remove {{name}} from this role",
 					"description": "{{name}} will no longer have the {{role}} role anywhere. This takes effect immediately.",
+					"descriptionSome": "{{name}} will no longer have the {{role}} role at {{places, list}}. Places you can’t change keep it. This takes effect immediately.",
 					"confirm": "Remove from role"
 				},
 				"status": {
