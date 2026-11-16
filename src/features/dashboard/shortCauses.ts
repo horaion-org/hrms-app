@@ -33,6 +33,19 @@ const isShiftOf = (rule: StaffingRule, shortage: Shortage): boolean =>
 			shift.shiftId === shortage.shiftId || shift.name === shortage.shiftName
 	);
 
+/** The rules too few people can staff: the ones no cover fixes. */
+export const unstaffableRulesOf = (
+	rules: ReadonlyArray<StaffingRule>
+): Array<StaffingRule> =>
+	rules.filter((rule) => staffingCauseOf(rule) === "TOO_FEW_PEOPLE");
+
+/** The unstaffable rule a short shift falls under, the first of several; undefined for a gap to cover. */
+export const unstaffableRuleOf = (
+	shortage: Shortage,
+	unstaffableRules: ReadonlyArray<StaffingRule>
+): StaffingRule | undefined =>
+	unstaffableRules.find((rule) => isShiftOf(rule, shortage));
+
 /**
  * The short shifts grouped by cause. A shift under several unstaffable
  * rules counts under the first; a rule with no short shift is left out.
@@ -41,13 +54,11 @@ export const shortShiftsByCause = (
 	shortages: ReadonlyArray<Shortage>,
 	rules: ReadonlyArray<StaffingRule>
 ): ShortShiftsByCause => {
-	const unstaffableRules = rules.filter(
-		(rule) => staffingCauseOf(rule) === "TOO_FEW_PEOPLE"
-	);
+	const unstaffableRules = unstaffableRulesOf(rules);
 	const shortShiftsOf = new Map<StaffingRule, number>();
 	const gaps: Array<Shortage> = [];
 	for (const shortage of shortages) {
-		const rule = unstaffableRules.find((each) => isShiftOf(each, shortage));
+		const rule = unstaffableRuleOf(shortage, unstaffableRules);
 		if (rule) shortShiftsOf.set(rule, (shortShiftsOf.get(rule) ?? 0) + 1);
 		else gaps.push(shortage);
 	}
