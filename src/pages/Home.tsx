@@ -5,6 +5,7 @@ import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
+import { Tab, TabList, TabPanel, TabPanels, Tabs } from "@/components/ui/Tabs";
 import { Toast } from "@/components/ui/Toast";
 import { cardLinkClasses } from "@/features/dashboard/cardStyles";
 import { CustomiseHomeDialog } from "@/features/dashboard/CustomiseHomeDialog";
@@ -15,12 +16,17 @@ import {
 import { DASHBOARD_UNIT_RULES } from "@/features/dashboard/dashboardUnitRules";
 import { HomeCounts } from "@/features/dashboard/HomeCounts";
 import { cardSpans, type CardSpan } from "@/features/dashboard/homeLayout";
+import { HOME_TABS, homeTabOf } from "@/features/dashboard/homeSearch";
 import {
 	HOME_SECTIONS,
 	isShown,
+	OVERVIEW_KEYS,
+	OVERVIEW_SECTIONS,
 	sectionsInReach,
 	withSectionShown,
 	type HomeSection,
+	type OverviewSection,
+	type SectionKey,
 } from "@/features/dashboard/homeSections";
 import {
 	LeaveToDecideCard,
@@ -28,11 +34,13 @@ import {
 } from "@/features/dashboard/LeaveToDecideCard";
 import { NextRosterCard } from "@/features/dashboard/NextRosterCard";
 import { OpenCoverOffersCard } from "@/features/dashboard/OpenCoverOffersCard";
+import { Overview } from "@/features/reports/Overview";
 import { PeopleEventsCard } from "@/features/dashboard/PeopleEventsCard";
 import { SetupChecklistCard } from "@/features/dashboard/SetupChecklistCard";
 import { ShortShiftsCard } from "@/features/dashboard/ShortShiftsCard";
 import { useActivityPage } from "@/features/dashboard/useActivityPage";
 import { useHomeSections } from "@/features/dashboard/useHomeSections";
+import { useOverview } from "@/features/reports/useOverview";
 import { useSetupChecklist } from "@/features/dashboard/useSetupChecklist";
 import { WaitingApprovalsCard } from "@/features/dashboard/WaitingApprovalsCard";
 import type { LeaveRequest } from "@/features/leave/api";
@@ -40,7 +48,13 @@ import { LeaveRequestDialog } from "@/features/leave/LeaveRequestDialog";
 import { useLeaveDecision } from "@/features/leave/useLeaveDecision";
 import { SCHEDULING_KEYS } from "@/features/scheduling/schedulingSearch";
 import { Can } from "@/features/workspace/Can";
-import { LEAVE_READ_KEYS } from "@/features/workspace/permissionKeys";
+import {
+	CONSTRAINT_READ_KEYS,
+	LEAVE_READ_KEYS,
+	PEOPLE_READ_KEYS,
+	SCHEDULE_CREATE_KEYS,
+	SCHEDULE_EDIT_SHIFT_KEYS,
+} from "@/features/workspace/permissionKeys";
 import { unitSelectionOf } from "@/features/workspace/unitSearch";
 import { useAccess } from "@/features/workspace/useAccess";
 import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
@@ -62,6 +76,12 @@ const SPAN_CLASSES: Record<CardSpan, string> = {
 	full: "lg:col-span-2",
 	half: "",
 };
+
+/** Holding one of these is what makes someone a roster builder, who starts on what needs them. */
+const ROSTER_BUILDING_KEYS = [
+	...SCHEDULE_CREATE_KEYS,
+	...SCHEDULE_EDIT_SHIFT_KEYS,
+];
 
 /** The sections that are never a card: who is off today is one count in the line above the cards. */
 const NOT_A_CARD: ReadonlyArray<HomeSection> = ["off-today"];
@@ -87,13 +107,15 @@ const Dashboard = ({
 }): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const companyId = useCurrentCompanyId();
+	const search = route.useSearch();
+	const navigate = route.useNavigate();
 	// The header's Branch, resolved as the header resolves it; every Branch in reach when "All branches" is chosen.
-	const branch = useUnitSelection(
+	const { branch, branches } = useUnitSelection(
 		companyId,
 		LEAVE_READ_KEYS,
-		unitSelectionOf(route.useSearch()),
+		unitSelectionOf(search),
 		DASHBOARD_UNIT_RULES
-	).branch;
+	);
 	const [decision, setDecision] = useState<Decision>();
 	const [toast, setToast] = useState<{ id: number; message: string }>();
 	const [customising, setCustomising] = useState(false);
@@ -101,10 +123,24 @@ const Dashboard = ({
 	const hidden = useHiddenSections(companyId);
 	const saveHidden = useSaveHiddenSections(companyId);
 	const hiddenSections = hidden.status === "ready" ? hidden.hiddenSections : [];
-	// A section is read and shown only once the person's choice is known, and only if they keep it.
-	const shown = (section: HomeSection): boolean =>
+	const overviewInReach = access.canAny(OVERVIEW_KEYS, "anywhere");
+	const tab = homeTabOf(search.tab, {
+		overview: overviewInReach,
+		buildsRosters: access.canAny(ROSTER_BUILDING_KEYS, "anywhere"),
+	});
+	// A section is read and shown only on its own view, once the person's choice is known, and only if they keep it.
+	const kept = (section: SectionKey): boolean =>
 		hidden.status === "ready" && isShown(section, hiddenSections);
+	const shown = (section: HomeSection): boolean =>
+		tab === "needs-you" && kept(section);
+	const shownInOverview = (section: OverviewSection): boolean =>
+		tab === "overview" && kept(section);
 	const home = useHomeSections(companyId, branch?.branchId, shown);
+	const overview = useOverview(
+		companyId,
+		{ branch, branches },
+		shownInOverview
+	);
 	// Read only to learn whether the person may open Recent activity; the page lists it.
 	const activity = useActivityPage(companyId, 1, 1);
 	const setup = useSetupChecklist(companyId);
@@ -170,6 +206,31 @@ const Dashboard = ({
 		(section) => home.states[section] === "empty"
 	);
 
+	const needsYou = (
+		<>
+			<HomeCounts className="mt-6" counts={home.counts} />
+			{cards.length > 0 && (
+				<div className={homeGridClasses}>
+					{cards.map((section) => (
+						<div
+							key={section}
+							className={SPAN_CLASSES[spans.get(section) ?? "full"]}
+							id={section}
+						>
+							{cardOf[section]}
+						</div>
+					))}
+				</div>
+			)}
+			{clear.length > 0 && (
+				<Callout className="mt-6">
+					{cards.length === 0 && `${t(`${key}.calm.allClear`)} `}
+					{clear.map((section) => t(`${key}.calm.${section}`)).join(" ")}
+				</Callout>
+			)}
+		</>
+	);
+
 	return (
 		<>
 			<div className="flex flex-wrap items-end justify-between gap-4">
@@ -221,25 +282,37 @@ const Dashboard = ({
 					onDismiss={setup.dismiss}
 				/>
 			)}
-			<HomeCounts className="mt-6" counts={home.counts} />
-			{cards.length > 0 && (
-				<div className={homeGridClasses}>
-					{cards.map((section) => (
-						<div
-							key={section}
-							className={SPAN_CLASSES[spans.get(section) ?? "full"]}
-							id={section}
-						>
-							{cardOf[section]}
-						</div>
-					))}
-				</div>
-			)}
-			{clear.length > 0 && (
-				<Callout className="mt-6">
-					{cards.length === 0 && `${t(`${key}.calm.allClear`)} `}
-					{clear.map((section) => t(`${key}.calm.${section}`)).join(" ")}
-				</Callout>
+			{overviewInReach ? (
+				<Tabs
+					className="mt-6"
+					selectedIndex={HOME_TABS.indexOf(tab)}
+					onChange={(index) => {
+						void navigate({
+							search: (previous) => ({ ...previous, tab: HOME_TABS[index] }),
+						});
+					}}
+				>
+					<TabList aria-label={t(`${key}.tabs.label`)} className="-ml-1">
+						<Tab>{t(`${key}.tabs.needsYou`)}</Tab>
+						<Tab>{t(`${key}.tabs.overview`)}</Tab>
+					</TabList>
+					<TabPanels>
+						<TabPanel>{needsYou}</TabPanel>
+						<TabPanel className="mt-6">
+							<Overview
+								grouping={branch ? "department" : "branch"}
+								overview={overview}
+								shown={shownInOverview}
+								ruleLinks={{
+									rule: access.canAny(CONSTRAINT_READ_KEYS, "anywhere"),
+									people: access.canAny(PEOPLE_READ_KEYS, "anywhere"),
+								}}
+							/>
+						</TabPanel>
+					</TabPanels>
+				</Tabs>
+			) : (
+				needsYou
 			)}
 			{activity.status !== "hidden" && (
 				<Link className={`${cardLinkClasses} mt-6 inline-block`} to="/activity">
@@ -250,7 +323,11 @@ const Dashboard = ({
 				hiddenSections={hiddenSections}
 				open={customising}
 				saveFailed={saveHidden.isError}
-				sections={sectionsInReach((keys) => access.canAny(keys, "anywhere"))}
+				sections={
+					tab === "overview"
+						? OVERVIEW_SECTIONS
+						: sectionsInReach((keys) => access.canAny(keys, "anywhere"))
+				}
 				onClose={() => {
 					setCustomising(false);
 					saveHidden.reset();
@@ -289,7 +366,12 @@ const Dashboard = ({
 };
 
 /**
- * Home, "What needs you": a line of counts, then a card for each thing
+ * Home. For someone who looks across units it has two views in tabs, the
+ * to-do list and the Overview (headline, key figures, each unit and the
+ * rules too few people can staff); for everyone else it is the to-do list
+ * alone. The view is kept in the URL.
+ *
+ * "What needs you": a line of counts, then a card for each thing
  * with something to act on, most urgent first, on one two-column grid:
  * shifts short by cause, leave to decide, approvals waiting, the rosters
  * still to get ready, cover offers not answered, and who joins, ends

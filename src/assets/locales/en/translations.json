@@ -5146,7 +5146,8 @@
 				"detail_one": "{{department}} · short by {{count}} person",
 				"detail_other": "{{department}} · short by {{count}} people",
 				"rule": "{{rule}} · {{department}}",
-				"ruleCause": "Needs {{needed}} a shift of {{titles}}; {{people}} people hold these job titles, so cover cannot fix it.",
+				"ruleCause_one": "Needs {{needed}} a shift of {{titles}}; {{count}} person holds these job titles, so cover cannot fix it.",
+				"ruleCause_other": "Needs {{needed}} a shift of {{titles}}; {{count}} people hold these job titles, so cover cannot fix it.",
 				"ruleShort_one": "Short on {{count}} shift.",
 				"ruleShort_other": "Short on {{count}} shifts.",
 				"editRule": "Edit rule",
@@ -5227,7 +5228,10 @@
 				"next-roster": "Next roster",
 				"cover-offers": "Cover offers waiting",
 				"off-today": "Who is off today",
-				"people-events": "Joining, probation and leaving"
+				"people-events": "Joining, probation and leaving",
+				"overview-figures": "Headline and key figures",
+				"overview-units": "Branches and departments",
+				"overview-causes": "Why shifts go short"
 			}
 		},
 		"subtitle": "{{branch}} · {{day}}",
@@ -5256,6 +5260,11 @@
 			"cover-offers": "Nobody owes an answer on cover.",
 			"off-today": "Nobody is off today.",
 			"people-events": "Nobody joins, ends probation or leaves in the next 30 days."
+		},
+		"tabs": {
+			"label": "Home views",
+			"needsYou": "What needs you",
+			"overview": "Overview"
 		}
 	},
 	"pageToolbar": {
@@ -5763,6 +5772,92 @@
 			"lastMonth": "Last month",
 			"lastThreeMonths": "Last 3 months",
 			"custom": "Custom"
+		},
+		"overview": {
+			"loading": "Loading…",
+			"failed": "We couldn’t load the overview. Try again in a moment.",
+			"empty": "No rosters here yet. The overview fills in once a roster is generated.",
+			"standings": {
+				"ACT": "Act",
+				"WATCH": "Watch",
+				"ON_TRACK": "On track"
+			},
+			"change": {
+				"up": "Up {{amount}}",
+				"down": "Down {{amount}}"
+			},
+			"headline": {
+				"allOnTrack": "Everything is on track. Every shift is staffed for the next 14 days, nobody is near the overtime limit, and next week is published everywhere.",
+				"allOnTrackWithoutRosters": "Everything is on track. Every shift is staffed for the next 14 days and nobody is near the overtime limit.",
+				"nothingToActOn": "Nothing needs action now.",
+				"needsAttention_one": "{{units}} needs attention.",
+				"needsAttention_other": "{{units}} need attention.",
+				"shortBecause_one": "{{unit}} is short by {{short}} over the next 14 days because {{rule}} needs {{needed}} a shift and {{count}} person holds its job titles.",
+				"shortBecause_other": "{{unit}} is short by {{short}} over the next 14 days because {{rule}} needs {{needed}} a shift and {{count}} people hold its job titles.",
+				"overLimit_one": "{{count}} person is over the overtime limit this month.",
+				"overLimit_other": "{{count}} people are over the overtime limit this month.",
+				"restOnTrack": {
+					"branch_one": "{{count}} branch is on track.",
+					"branch_other": "{{count}} branches are on track.",
+					"department_one": "{{count}} department is on track.",
+					"department_other": "{{count}} departments are on track."
+				}
+			},
+			"figures": {
+				"peopleShort": {
+					"label": "People short",
+					"unit": "next 14 days",
+					"comparison": "on the 14 days before",
+					"comparisonSame": "Same as the 14 days before"
+				},
+				"overLimit": {
+					"label": "Over the overtime limit",
+					"unit_one": "person this month",
+					"unit_other": "people this month",
+					"comparison": "{{near}} near the limit · {{before}} over last month"
+				},
+				"published": {
+					"label": "Next week published",
+					"unit_one": "of {{count}} department",
+					"unit_other": "of {{count}} departments"
+				},
+				"changes": {
+					"label": "Changes after publishing",
+					"unit": "this month",
+					"comparison": "on last month",
+					"comparisonSame": "Same as last month"
+				}
+			},
+			"units": {
+				"title": {
+					"branch": "Branches",
+					"department": "Departments"
+				},
+				"unit": {
+					"branch": "Branch",
+					"department": "Department"
+				},
+				"standing": "Status",
+				"peopleShort": "People short, next 14 days",
+				"rulesShort": "Rules too few people can staff",
+				"overtime": "Overtime this month",
+				"overAndNear": "{{over}} over · {{near}} near",
+				"nextWeek": "Next week",
+				"nextWeekOf": "Next week’s rosters, {{unit}}",
+				"published": "Published",
+				"toDo": "Not yet published",
+				"publishedOf_one": "{{published}} of {{count}} published",
+				"publishedOf_other": "{{published}} of {{count}} published",
+				"changes": "Changes after publishing, this month",
+				"changesSummary_one": "{{count}} change after publishing",
+				"changesSummary_other": "{{count}} changes after publishing",
+				"none": "None"
+			},
+			"causes": {
+				"title": "Why shifts go short",
+				"range": "Rules too few people can staff, over the next 14 days",
+				"none": "Every staffing rule can be met by the people who hold its job titles."
+			}
 		}
 	},
 	"expandableList": {

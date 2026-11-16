@@ -16,8 +16,13 @@ import { retry } from "@/features/workspace/retry";
 /*
  * Which Home sections a member hides (ADR-0096): read and replaced whole at
  * `/me/dashboard-preferences`, so the choice follows them to every device.
- * Nothing saved reads as nothing hidden.
+ * Nothing saved reads as nothing hidden. Home reads it itself and holds its
+ * sections until it answers; the route does not load it, so signing in and
+ * the shell never wait on, or pay for, a Home preference.
  */
+
+/** How long the member's choice is fresh before it is read again; a save updates it at once. */
+const STALE_TIME_MS = 30_000;
 
 const preferencesSchema = z.object({
 	/** The keys of the sections the member hides, sorted. */
@@ -61,6 +66,7 @@ export const dashboardPreferencesQuery = (
 			fetchDashboardPreferences(companyId, signal),
 		// Own read: never gated by, or withdrawn for, administrative grants.
 		meta: selfMeta(companyId),
+		staleTime: STALE_TIME_MS,
 		retry,
 	});
 

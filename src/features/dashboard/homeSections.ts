@@ -3,6 +3,7 @@ import type { PermissionKey } from "@/features/workspace/permissionContract.gene
 import {
 	LEAVE_READ_KEYS,
 	MEMBER_EVENT_READ_KEYS,
+	REPORT_READ_KEYS,
 	SCHEDULE_READ_KEYS,
 } from "@/features/workspace/permissionKeys";
 
@@ -48,9 +49,28 @@ export const sectionsInReach = (
 			SECTION_KEYS[section].length === 0 || canAny(SECTION_KEYS[section])
 	);
 
+/** The Overview's sections, top to bottom, hidden and shown like Home's own. */
+export const OVERVIEW_SECTIONS = [
+	"overview-figures",
+	"overview-units",
+	"overview-causes",
+] as const;
+
+export type OverviewSection = (typeof OVERVIEW_SECTIONS)[number];
+
+/** Any section a member's saved choice can name. */
+export type SectionKey = HomeSection | OverviewSection;
+
+/**
+ * Holding one of these anywhere is what opens the Overview: the key Reports
+ * asks, since the Overview is a reports view shown on Home. The one place
+ * to change it.
+ */
+export const OVERVIEW_KEYS: ReadonlyArray<PermissionKey> = REPORT_READ_KEYS;
+
 /** Whether Home shows a section, given the keys the member hid; an unknown key hides nothing. */
 export const isShown = (
-	section: HomeSection,
+	section: SectionKey,
 	hiddenSections: ReadonlyArray<string>
 ): boolean => !hiddenSections.includes(section);
 
@@ -61,7 +81,7 @@ export const isShown = (
  */
 export const withSectionShown = (
 	hiddenSections: ReadonlyArray<string>,
-	section: HomeSection,
+	section: SectionKey,
 	shown: boolean
 ): Array<string> => {
 	const others = hiddenSections.filter((hidden) => hidden !== section);

@@ -73,6 +73,41 @@ describe("ShortShiftsCard", () => {
 		).toHaveAttribute("href", "/people?department=d-1");
 	});
 
+	it("counts one person who holds the titles as one, and links only where the reader can go", async () => {
+		render(
+			<MemoryRouterHarness>
+				<ShortShiftsCard
+					ruleLinks={{ rule: false, people: true }}
+					shortShifts={{
+						status: "ready",
+						data: {
+							unstaffable: [
+								{
+									rule: staffingRuleFixture({
+										headcount: 2,
+										peopleWithTitles: 1,
+									}),
+									shortShifts: 1,
+								},
+							],
+							gaps: [],
+						},
+					}}
+				/>
+			</MemoryRouterHarness>
+		);
+
+		expect(
+			await screen.findByText(
+				"Needs 2 a shift of Clerk, Lead; 1 person holds these job titles, so cover cannot fix it. Short on 1 shift."
+			)
+		).toBeInTheDocument();
+		expect(screen.queryByRole("link", { name: "Edit rule" })).toBeNull();
+		expect(
+			screen.getByRole("link", { name: "See people in Front desk" })
+		).toBeInTheDocument();
+	});
+
 	it("says when the read failed, and is left out where rosters may not be read", async () => {
 		const { container, rerender } = render(
 			<MemoryRouterHarness>

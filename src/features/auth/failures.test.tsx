@@ -1,4 +1,4 @@
-import { act, screen } from "@testing-library/react";
+import { act, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { z } from "zod";
@@ -221,6 +221,12 @@ it.each([undefined, "/?tab=2", "//evil.test", "https://evil.test"])(
 		app = await openApp("/");
 		renderAuthApp(app);
 		await screen.findByRole("heading", { name: "Dashboard" });
+		// Home reads its sections once it knows which the member keeps; the redirect is counted after that.
+		await waitFor(() => {
+			expect(calls.some((call) => call.path.endsWith("/me/cover-offers"))).toBe(
+				true
+			);
+		});
 		calls.length = 0;
 		const router = app.router;
 		await act(async () => {

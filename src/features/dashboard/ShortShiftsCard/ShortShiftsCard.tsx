@@ -25,6 +25,11 @@ import { coverParameter } from "@/features/scheduling/roster/rosterSearch";
 
 const key = "dashboard.cards.shortShifts";
 
+/** Whether the reader can open a rule's page and its department's people. */
+export type RuleLinks = { rule: boolean; people: boolean };
+
+const EVERY_RULE_LINK: RuleLinks = { rule: true, people: true };
+
 /** One row of the card: a rule nobody can staff, or one gap to cover. */
 type Row =
 	| { kind: "rule"; id: string; unstaffable: UnstaffableRule }
@@ -33,6 +38,10 @@ type Row =
 export type ShortShiftsCardProps = {
 	/** The shifts short this week and next, by cause, most urgent first. */
 	shortShifts: GuardedRead<ShortShiftsByCause>;
+	/** The card's own words where it shows something narrower, such as only the rules nobody can staff. */
+	heading?: { title: string; range: string };
+	/** Which of a rule's two links the reader can open; both when left out. */
+	ruleLinks?: RuleLinks;
 	className?: string;
 };
 
@@ -53,12 +62,15 @@ const rowsOf = ({ unstaffable, gaps }: ShortShiftsByCause): Array<Row> => [
 /**
  * A rule too few people can staff, named once with its cause: what it
  * needs, how many people hold its job titles, and that cover cannot fix
- * it. It leads to the rule and to the department's people.
+ * it. It leads to the rule and to the department's people, each only where
+ * the reader can open it.
  */
 const UnstaffableRuleRow = ({
 	unstaffable: { rule, shortShifts },
+	links,
 }: {
 	unstaffable: UnstaffableRule;
+	links: RuleLinks;
 }): FunctionComponent => {
 	const { t } = useTranslation();
 	return (
@@ -73,26 +85,32 @@ const UnstaffableRuleRow = ({
 				{t(`${key}.ruleCause`, {
 					needed: rule.headcount,
 					titles: rule.jobTitles.map((title) => title.name).join(", "),
-					people: rule.peopleWithTitles,
+					count: rule.peopleWithTitles,
 				})}{" "}
 				{t(`${key}.ruleShort`, { count: shortShifts })}
 			</span>
-			<span className="flex flex-wrap gap-x-4 gap-y-1">
-				<Link
-					className={cardLinkClasses}
-					search={{ view: "constraints", department: rule.departmentId }}
-					to="/scheduling"
-				>
-					{t(`${key}.editRule`)}
-				</Link>
-				<Link
-					className={cardLinkClasses}
-					search={{ department: rule.departmentId }}
-					to="/people"
-				>
-					{t(`${key}.seePeople`, { department: rule.departmentName })}
-				</Link>
-			</span>
+			{(links.rule || links.people) && (
+				<span className="flex flex-wrap gap-x-4 gap-y-1">
+					{links.rule && (
+						<Link
+							className={cardLinkClasses}
+							search={{ view: "constraints", department: rule.departmentId }}
+							to="/scheduling"
+						>
+							{t(`${key}.editRule`)}
+						</Link>
+					)}
+					{links.people && (
+						<Link
+							className={cardLinkClasses}
+							search={{ department: rule.departmentId }}
+							to="/people"
+						>
+							{t(`${key}.seePeople`, { department: rule.departmentName })}
+						</Link>
+					)}
+				</span>
+			)}
 		</>
 	);
 };
@@ -138,13 +156,19 @@ const GapRow = ({ shortage }: { shortage: Shortage }): FunctionComponent => {
  */
 export const ShortShiftsCard = ({
 	shortShifts,
+	heading,
+	ruleLinks = EVERY_RULE_LINK,
 	className,
 }: ShortShiftsCardProps): FunctionComponent => {
 	const { t } = useTranslation();
 	if (shortShifts.status === "hidden") return null;
 	return (
-		<Card className={className} icon={FillShiftsIcon} title={t(`${key}.title`)}>
-			<p className={rowDetailClasses}>{t(`${key}.range`)}</p>
+		<Card
+			className={className}
+			icon={FillShiftsIcon}
+			title={heading?.title ?? t(`${key}.title`)}
+		>
+			<p className={rowDetailClasses}>{heading?.range ?? t(`${key}.range`)}</p>
 			{shortShifts.status === "error" && (
 				<p className={failedLineClasses} role="alert">
 					{t(`${key}.failed`)}
@@ -158,7 +182,10 @@ export const ShortShiftsCard = ({
 					listClassName={rowListClasses}
 					renderItem={(row) =>
 						row.kind === "rule" ? (
-							<UnstaffableRuleRow unstaffable={row.unstaffable} />
+							<UnstaffableRuleRow
+								links={ruleLinks}
+								unstaffable={row.unstaffable}
+							/>
 						) : (
 							<GapRow shortage={row.shortage} />
 						)

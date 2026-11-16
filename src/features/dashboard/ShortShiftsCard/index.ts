@@ -1,1 +1,5 @@
-export { ShortShiftsCard, type ShortShiftsCardProps } from "./ShortShiftsCard";
+export {
+	ShortShiftsCard,
+	type RuleLinks,
+	type ShortShiftsCardProps,
+} from "./ShortShiftsCard";
