@@ -4439,6 +4439,7 @@
 			"save": "Save hours"
 		},
 		"issues": {
+			"weekBarLabel": "Issues: {{count}} to fix, {{notMet}} could not be met",
 			"groupLabel": "{{group}}, {{count}}",
 			"show": "Show",
 			"nothingWrong": "Nothing to fix: every shift is covered and every rule holds.",

@@ -9,7 +9,6 @@ import type { CoverGapRequest } from "@/features/scheduling/cover/api";
 import type { CoverOffer } from "@/features/scheduling/coverOffers/api";
 import { OffersOutSection } from "@/features/scheduling/coverOffers/OffersOutSection";
 import { FindingList } from "@/features/scheduling/FindingList";
-import { FindingsPanel } from "@/features/scheduling/FindingsPanel";
 import { formatDay } from "@/common/formatDay";
 import { findingFamily } from "@/features/scheduling/roster/findings/finding";
 import {
@@ -20,9 +19,9 @@ import {
 	changedDayItems,
 	daysToDecideItems,
 	leaveAndCoverItems,
-	startingPointItems,
-	type PanelItem,
 } from "@/features/scheduling/roster/rosterPanels";
+import type { RosterIssue } from "@/features/scheduling/roster/rosterIssueGroups";
+import { RosterIssueGroups } from "@/features/scheduling/roster/RosterIssueGroups";
 import type { RosterPanel } from "@/features/scheduling/roster/rosterSearch";
 import type { RosterView } from "@/features/scheduling/roster/rosterView";
 import type { RosterChangeTarget } from "@/features/scheduling/rosterChanges/useRosterChangeActions";
@@ -74,13 +73,8 @@ export type RosterListInput = {
 	 * being validated, refused, could not be checked, or holds clean.
 	 */
 	validationNote?: ReactNode;
-	/** The working-time rules the last validation found broken, one item each. */
-	brokenRules?: ReadonlyArray<PanelItem>;
-	/**
-	 * The rules asked "if possible" the last validation found not met, one
-	 * item each, listed apart from what is broken and counted on their own.
-	 */
-	notMet?: { items: ReadonlyArray<PanelItem>; count: number };
+	/** Every Issues item by what to do (`issuesOfRoster`). */
+	issues: ReadonlyArray<RosterIssue>;
 	/** Shows every issue again, from a header's narrowed Issues list. */
 	onShowAllIssues: () => void;
 	/** On a roster that may be changed: opens Find cover for a short shift, from its Issues row. */
@@ -186,94 +180,46 @@ export const headerIssueSections = (
 	];
 };
 
-/** The whole Issues list, or one header's part of it when it was opened from a header. */
+/**
+ * The whole Issues list by what to do, the validation result at its head and
+ * the cover offers out under For your information; or one header's part of
+ * it when it was opened from a header.
+ */
 export const issuesSections = (
 	input: RosterListInput
 ): Array<RosterSidePanelSection> => {
 	const {
-		roster: {
-			rows,
-			days,
-			findings,
-			names,
-			toDecide,
-			leaveAndCover,
-			issuesAbout,
-		},
+		roster: { issuesAbout },
 		assignments,
-		t,
-		language,
-		startingRuns,
 		coverOffers,
 		onFindCover,
 		validationNote,
-		brokenRules,
-		notMet,
+		issues,
 	} = input;
 	if (issuesAbout) return headerIssueSections(issuesAbout, input);
 	return [
-		{ key: "validation", content: validationNote },
 		{
-			key: "brokenRules",
-			title: t("scheduling.rulesCheck.brokenRulesTitle"),
-			items: brokenRules,
-		},
-		{
-			key: "notMet",
-			title: t("scheduling.rulesCheck.notMet.title", {
-				count: notMet?.count ?? 0,
-			}),
-			items: notMet?.items,
-		},
-		// Each note is a section of its own, spaced like the sections around it.
-		...issueNoteLines(input).map((line) => ({
-			key: line,
-			items: [{ key: line, lines: [line] }],
-		})),
-		{
-			key: "findings",
-			content: findings && names && (
-				<FindingsPanel
-					findings={findings}
-					names={names}
-					visibleDays={days}
+			key: "issues",
+			content: (
+				<RosterIssueGroups
+					issues={issues}
+					validationNote={validationNote}
+					information={
+						coverOffers &&
+						(coverOffers.failed || coverOffers.offers.length > 0) && (
+							<OffersOutSection
+								assignments={assignments}
+								failed={coverOffers.failed}
+								offers={coverOffers.offers}
+								target={coverOffers.target}
+								timeZone={coverOffers.timeZone}
+								onRetry={coverOffers.retry}
+							/>
+						)
+					}
 					onFindCover={onFindCover}
 				/>
 			),
-		},
-		{
-			key: "daysToDecide",
-			title: t(`${key}.daysToDecide`),
-			items: daysToDecideItems(toDecide, t, language),
-		},
-		{
-			key: "leaveAndCover",
-			title: t(`${key}.leaveAndCover`),
-			items: leaveAndCoverItems(leaveAndCover, t, language, onFindCover),
-		},
-		{
-			key: "offersOut",
-			content: coverOffers &&
-				(coverOffers.failed || coverOffers.offers.length > 0) && (
-					<OffersOutSection
-						assignments={assignments}
-						failed={coverOffers.failed}
-						offers={coverOffers.offers}
-						target={coverOffers.target}
-						timeZone={coverOffers.timeZone}
-						onRetry={coverOffers.retry}
-					/>
-				),
-		},
-		{
-			key: "startingPoints",
-			// Frozen at generation: once the days before have changed, the title says it is then, not now.
-			title: t(
-				input.membersWithChangedStart > 0
-					? `${key}.startingPointsAsGenerated`
-					: `${key}.startingPoints`
-			),
-			items: startingPointItems(rows, startingRuns, t),
 		},
 	];
 };

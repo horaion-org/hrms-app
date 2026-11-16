@@ -4239,6 +4239,7 @@
 			"save": "Guardar horas"
 		},
 		"issues": {
+			"weekBarLabel": "Incidencias: {{count}} por corregir, {{notMet}} no se pudieron cumplir",
 			"groupLabel": "{{group}}, {{count}}",
 			"show": "Mostrar",
 			"nothingWrong": "Nada que corregir: todos los turnos están cubiertos y se cumplen todas las reglas.",

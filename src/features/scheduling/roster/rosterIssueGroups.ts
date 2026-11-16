@@ -51,12 +51,24 @@ export type RosterIssueInput = {
 	notMet: ReadonlyArray<BrokenRule>;
 	/** Roster notes with nothing to fix, already in words. */
 	notes: ReadonlyArray<string>;
+	/**
+	 * Items already built from the roster's other lists (days to decide,
+	 * leave and cover, starting points), listed first so a shift short
+	 * named by a person's leave wins over the same gap by job title.
+	 */
+	extras?: ReadonlyArray<RosterIssue>;
 	/** Member names by member profile id. */
 	memberNames: ReadonlyMap<string, string>;
 	/** Job title names by role id. */
 	roleNames: ReadonlyMap<string, string>;
 	t: TFunction;
 };
+
+/** One key per shift and day left short, so it is listed once whoever names it. */
+export const gapIssueKey = (
+	shiftId: string | undefined,
+	day: string
+): string | undefined => (shiftId ? `gap|${shiftId}|${day}` : undefined);
 
 /** "09:00" from "2026-10-17T09:00". */
 const clockOf = (dateTime: string): string => dateTime.slice(11, 16);
@@ -67,7 +79,7 @@ const gapIssue = (
 ): RosterIssue => {
 	const shiftId = gap.shiftUuids[0];
 	return {
-		key: `gap|${gap.conflictId}`,
+		key: gapIssueKey(shiftId, gap.date) ?? `gap|${gap.conflictId}`,
 		group: "mustFix",
 		who: t(`${key}.jobShort`, {
 			job: roleNames.get(gap.roleUuid) ?? t(`${key}.unknownJob`),
@@ -140,9 +152,10 @@ const onceEach = (issues: ReadonlyArray<RosterIssue>): Array<RosterIssue> => {
 	});
 };
 
-/** Every issue, once each: shifts short and musts broken, then rules not met, then notes. */
+/** Every issue, once each: the extras, shifts short and musts broken, then rules not met, then notes. */
 export const rosterIssues = (input: RosterIssueInput): Array<RosterIssue> =>
 	onceEach([
+		...(input.extras ?? []),
 		...input.gaps.map((gap) => gapIssue(gap, input)),
 		...input.brokenMusts.flatMap((rule) => ruleIssues(rule, "mustFix", input)),
 		...input.notMet.flatMap((rule) => ruleIssues(rule, "notMet", input)),
