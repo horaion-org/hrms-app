@@ -162,13 +162,13 @@ const Dashboard = ({
 				<ShortShiftsCard shortages={shortages} />
 				{pending.status !== "hidden" && (
 					<Card
+						icon={ApproveRequestsIcon}
+						title={t("notifications.pendingReview")}
 						action={
 							<Link className={viewAllLink} to="/leave">
 								{t(`${key}.viewAll`)}
 							</Link>
 						}
-						icon={ApproveRequestsIcon}
-						title={t("notifications.pendingReview")}
 					>
 						{pending.status === "error" && (
 							<p className="text-sm text-error-700" role="alert">
@@ -186,13 +186,6 @@ const Dashboard = ({
 								items={pending.items}
 								keyOf={(request) => request.leaveRequestId}
 								listClassName="flex flex-col divide-y divide-neutral-300"
-								seeAll={
-									<Link className={viewAllLink} to="/leave">
-										{t(`${key}.notifications.seeAll`, {
-											count: pending.total,
-										})}
-									</Link>
-								}
 								renderItem={(request) => {
 									const reviewable = canReview(request);
 									// Under an approval flow, the step it waits on, beside its title.
@@ -238,6 +231,13 @@ const Dashboard = ({
 										/>
 									);
 								}}
+								seeAll={
+									<Link className={viewAllLink} to="/leave">
+										{t(`${key}.notifications.seeAll`, {
+											count: pending.total,
+										})}
+									</Link>
+								}
 							/>
 						)}
 					</Card>

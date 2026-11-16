@@ -75,7 +75,7 @@ export const MyShiftPreferences = ({
 				names={preferredNames(day)}
 				onEdit={
 					day.editable
-						? () => {
+						? (): void => {
 								replace.reset();
 								setEditing(day);
 							}
