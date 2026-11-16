@@ -951,9 +951,7 @@ describe("Changing a person's access role", () => {
 		);
 
 		await waitFor(() => {
-			expect(textbox("Access role")).toHaveValue(
-				expect.stringContaining("Supervisor")
-			);
+			expect(textbox("Access role")).toHaveValue("Supervisor, Admin");
 		});
 		expect(textbox("Access role")).toBeDisabled();
 		expect(
