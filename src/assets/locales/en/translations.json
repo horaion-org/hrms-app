@@ -329,6 +329,7 @@
 			"waitingOnName": "Waiting on {{name}}",
 			"waitingOnPeople_one": "Waiting on {{count}} person",
 			"waitingOnPeople_other": "Waiting on {{count}} people",
+			"nobodyCanDecide": "Nobody left who can decide it",
 			"anyoneWhoCanPublish": "Anyone who can publish {{department}}",
 			"decidedBy": "{{name}} · {{at}}",
 			"comment": "Comment",
