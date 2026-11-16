@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { FormRow, formRowIds } from "@/components/forms/FormRow";
 import { Textarea } from "@/components/forms/Textarea";
+import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -14,6 +15,7 @@ import {
 import { rosterCellText } from "@/features/scheduling/rosterChanges/cellText";
 import type { CheckNames } from "@/features/scheduling/rosterChanges/checkSentence";
 import { applyGate } from "@/features/scheduling/rosterChanges/rosterEdit";
+import type { RosterChangeRefusal } from "@/features/scheduling/rosterChanges/rosterChangeRefusal";
 
 export type RosterChangeReviewProps = {
 	/** The API's preview; undefined while it loads. */
@@ -32,6 +34,10 @@ export type RosterChangeReviewProps = {
 	remarkHint?: string;
 	/** Says rules aren't re-checked; off where the panel already says so in its own words (Find cover). */
 	showsRulesNote?: boolean;
+	/** Why the preview couldn't be read: "revision" (the roster moved) asks for a reload, anything else a retry. */
+	previewRefusal?: RosterChangeRefusal;
+	/** Reads the preview again, or reloads the roster after a "revision" refusal. */
+	onRetryPreview?: () => void;
 };
 
 const key = "scheduling.rosterEdit";
@@ -40,8 +46,9 @@ const key = "scheduling.rosterEdit";
  * What a change, or the undo of one, would do before it is applied: each day
  * before → after, the checks with what each asks, the line saying rules are
  * not re-checked (unless the panel says it itself), and the remark and tick
- * the checks ask for. Shared by the
- * editor beside the grid and the undo question, so both ask the same way.
+ * the checks ask for, and why the preview couldn't be read with its retry.
+ * Shared by the editor beside the grid, Find cover and the undo question, so
+ * all ask the same way.
  */
 export const RosterChangeReview = ({
 	preview,
@@ -54,6 +61,8 @@ export const RosterChangeReview = ({
 	remarkRequired = false,
 	remarkHint,
 	showsRulesNote = true,
+	previewRefusal,
+	onRetryPreview,
 }: RosterChangeReviewProps): FunctionComponent => {
 	const { t } = useTranslation();
 	const remarkId = useId();
@@ -130,6 +139,22 @@ export const RosterChangeReview = ({
 						onTickedChange(event.target.checked);
 					}}
 				/>
+			)}
+			{previewRefusal && (
+				<div className="flex flex-col items-start gap-2" role="alert">
+					<p className="text-sm text-error-700">
+						{previewRefusal === "revision"
+							? t(`${key}.error.revision`)
+							: t(`${key}.previewFailed`)}
+					</p>
+					{onRetryPreview && (
+						<Button variant="textlink" onClick={onRetryPreview}>
+							{previewRefusal === "revision"
+								? t(`${key}.error.reload`)
+								: t(`${key}.tryAgain`)}
+						</Button>
+					)}
+				</div>
 			)}
 		</div>
 	);
