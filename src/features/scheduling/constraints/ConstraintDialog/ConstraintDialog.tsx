@@ -32,7 +32,10 @@ import {
 	type ConstraintTypeOption,
 } from "@/features/scheduling/constraints/api";
 import { constraintRefusal } from "@/features/scheduling/constraints/constraintRefusal";
-import { fieldRowsInReadingOrder } from "@/features/scheduling/constraints/ConstraintDialog/fieldOrder";
+import {
+	fieldRowsInReadingOrder,
+	isFieldShown,
+} from "@/features/scheduling/constraints/ConstraintDialog/fieldOrder";
 import { nameSuggestion } from "@/features/scheduling/constraints/ConstraintDialog/nameSuggestion";
 import { typeGroupsOf } from "@/features/scheduling/constraints/ConstraintDialog/typeGroups";
 import {
@@ -960,29 +963,34 @@ export const ConstraintDialog = ({
 										requirementPolicy: chosen.requirementPolicy,
 									}}
 								/>
-								{fieldRowsInReadingOrder(chosen).map((row) => {
-									const notes = row.flatMap((spec) => removedNote(spec) ?? []);
-									return (
-										<Fragment key={row.map((spec) => spec.field).join("-")}>
-											{row.length === 1 ? (
-												valueRow(row[0]!)
-											) : (
-												<div className="flex flex-col gap-6 sm:flex-row">
-													{row.map((spec) => valueRow(spec, "sm:flex-1"))}
-												</div>
-											)}
-											{notes.map((note) => (
-												<p
-													key={note}
-													className="text-sm text-neutral-700"
-													role="status"
-												>
-													{note}
-												</p>
-											))}
-										</Fragment>
-									);
-								})}
+								{fieldRowsInReadingOrder(chosen)
+									// A banned pattern's later days appear as the day before is filled.
+									.filter((row) =>
+										row.every((spec) => isFieldShown(spec.field, values))
+									)
+									.map((row) => {
+										const notes = row.flatMap((spec) => removedNote(spec) ?? []);
+										return (
+											<Fragment key={row.map((spec) => spec.field).join("-")}>
+												{row.length === 1 ? (
+													valueRow(row[0]!)
+												) : (
+													<div className="flex flex-col gap-6 sm:flex-row">
+														{row.map((spec) => valueRow(spec, "sm:flex-1"))}
+													</div>
+												)}
+												{notes.map((note) => (
+													<p
+														key={note}
+														className="text-sm text-neutral-700"
+														role="status"
+													>
+														{note}
+													</p>
+												))}
+											</Fragment>
+										);
+									})}
 								{firmnessRow(chosen)}
 								{/* A new constraint is Active; whether to switch one off is asked only when editing. */}
 								{editing &&

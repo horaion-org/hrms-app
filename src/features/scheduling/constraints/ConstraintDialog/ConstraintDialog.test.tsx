@@ -564,7 +564,7 @@ describe("ConstraintDialog", () => {
 			["People on shifts", 2],
 			["On duty throughout", 1],
 			["Days off", 4],
-			["Rest and hours", 4],
+			["Rest and hours", 5],
 		] as const)
 			expect(
 				within(screen.getByRole("radiogroup", { name: category })).getAllByRole(
@@ -696,6 +696,34 @@ describe("ConstraintDialog", () => {
 				expect.objectContaining({
 					type: "REST_BETWEEN_SHIFTS",
 					requirement: "SHOULD",
+				})
+			);
+		});
+	});
+
+	it("given_aBannedShiftPattern_when_daysAreFilled_then_eachLaterDayAppearsInTurnAndTheDaysAreSentInOrder", async () => {
+		const user = userEvent.setup();
+		const { onSave } = renderDialog();
+		await start(user, "Shifts not to follow each other");
+
+		expect(trigger(/^Day 1/)).toBeVisible();
+		expect(trigger(/^Day 2/)).toBeVisible();
+		expect(screen.queryByRole("button", { name: /^Day 3/ })).toBeNull();
+		await pick(user, /^Day 1/, "Overnight Ops");
+		await pick(user, /^Day 2/, "Front Desk AM");
+		expect(trigger(/^Day 3/)).toBeVisible();
+		expect(screen.queryByRole("button", { name: /^Day 4/ })).toBeNull();
+		await user.click(submitButton());
+
+		await waitFor(() => {
+			expect(onSave).toHaveBeenCalledWith(
+				expect.objectContaining({
+					type: "BANNED_SHIFT_PATTERN",
+					requirement: "MUST",
+					values: [
+						{ field: "PATTERN_DAY_1", value: "overnight-ops" },
+						{ field: "PATTERN_DAY_2", value: "front-desk-am" },
+					],
 				})
 			);
 		});
@@ -1575,5 +1603,29 @@ describe("constraintSchema", () => {
 		});
 
 		expect(parsed.error?.issues[0]?.message).toBe("Choose at most 20.");
+	});
+
+	it("given_aBannedPatternWithAnEmptyDayBeforeAFilledOne_when_parsed_then_asksForThatDayOrToClearTheRest", () => {
+		const pattern = CONSTRAINT_TYPE_OPTIONS.find(
+			(option) => option.type === "BANNED_SHIFT_PATTERN"
+		)!;
+		const parsed = constraintSchema(pattern, t).safeParse({
+			name: "No morning after nights",
+			type: "BANNED_SHIFT_PATTERN",
+			requirement: "MUST",
+			status: "ACTIVE" as const,
+			values: {
+				PATTERN_DAY_1: ["overnight-ops"],
+				PATTERN_DAY_2: ["overnight-ops"],
+				PATTERN_DAY_4: ["front-desk-am"],
+			},
+		});
+
+		expect(parsed.error?.issues).toEqual([
+			expect.objectContaining({
+				path: ["values", "PATTERN_DAY_3"],
+				message: "Choose a shift for Day 3, or clear the days after it.",
+			}),
+		]);
 	});
 });

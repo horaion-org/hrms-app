@@ -41,6 +41,7 @@ const TYPE_ICONS: Partial<Record<ConstraintType, Heroicon>> = {
 	DAY_TYPE_DAYS_PER_WEEK: TableIcon,
 	KEEP_DAYS_OFF_TOGETHER: GridIcon,
 	REST_BETWEEN_SHIFTS: BreakIcon,
+	BANNED_SHIFT_PATTERN: CrossIcon,
 	MAX_WORK_HOURS_PER_DAY: TimeIcon,
 	MAX_OVERTIME_HOURS_PER_MONTH: HistoryIcon,
 	MAX_CALL_BACKS_PER_PERSON: PhoneIcon,

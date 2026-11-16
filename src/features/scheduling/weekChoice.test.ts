@@ -100,6 +100,28 @@ describe("allOf", () => {
 	});
 });
 
+describe("a banned shift pattern", () => {
+	const NO_SUNDAY_AFTER_CLOSING = constraintFixture({
+		constraintId: "no-sunday-after-closing",
+		name: "No Sunday after Closing",
+		type: "BANNED_SHIFT_PATTERN",
+		values: [
+			{ field: "PATTERN_DAY_1", value: "closing", name: "Closing" },
+			{ field: "PATTERN_DAY_2", value: "sunday", name: "Sunday" },
+		],
+	});
+
+	it("is switched off when a shift of one of its days is left out, as the API's freeze refuses it", () => {
+		const all = allOf(SHIFTS, [NO_SUNDAY_AFTER_CLOSING]);
+
+		expect(all.constraintIds).toEqual(["no-sunday-after-closing"]);
+		expect(
+			withShiftsChosen(all, ["opening", "closing"], [NO_SUNDAY_AFTER_CLOSING])
+				.constraintIds
+		).toEqual([]);
+	});
+});
+
 describe("leftOutCount", () => {
 	it("given_everything_when_counted_then_nothingIsLeftOut", () => {
 		expect(leftOutCount(allOf(SHIFTS, CONSTRAINTS), SHIFTS, CONSTRAINTS)).toBe(

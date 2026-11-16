@@ -3,6 +3,7 @@ import type { ConstraintFieldSpec } from "@/features/scheduling/constraints/api"
 import {
 	fieldRowsInReadingOrder,
 	fieldsInReadingOrder,
+	isFieldShown,
 } from "@/features/scheduling/constraints/ConstraintDialog/fieldOrder";
 import { CONSTRAINT_TYPE_OPTIONS } from "@/features/scheduling/constraints/fixtures";
 
@@ -29,6 +30,18 @@ describe("fieldsInReadingOrder", () => {
 		],
 		["AVOID_DAYS_OFF_ON", ["WEEKDAY"]],
 		["REST_BETWEEN_SHIFTS", ["REST_HOURS"]],
+		[
+			"BANNED_SHIFT_PATTERN",
+			[
+				"PATTERN_DAY_1",
+				"PATTERN_DAY_2",
+				"PATTERN_DAY_3",
+				"PATTERN_DAY_4",
+				"PATTERN_DAY_5",
+				"PATTERN_DAY_6",
+				"PATTERN_DAY_7",
+			],
+		],
 		["MAX_WORK_HOURS_PER_DAY", ["WORK_HOURS_A_DAY"]],
 		["MAX_OVERTIME_HOURS_PER_MONTH", ["OVERTIME_HOURS_A_MONTH"]],
 		["MAX_CALL_BACKS_PER_PERSON", ["CALL_BACKS"]],
@@ -77,5 +90,35 @@ describe("fieldRowsInReadingOrder", () => {
 		const option = CONSTRAINT_TYPE_OPTIONS.find((each) => each.type === type)!;
 
 		expect(fieldRowsInReadingOrder(option).map(fieldsOf)).toEqual(rows);
+	});
+});
+
+describe("isFieldShown", () => {
+	it("shows a banned pattern's first two days, and each later day once the day before has a shift", () => {
+		const nightThenMorning = {
+			PATTERN_DAY_1: ["night"],
+			PATTERN_DAY_2: ["morning"],
+		};
+
+		expect(isFieldShown("PATTERN_DAY_1", {})).toBe(true);
+		expect(isFieldShown("PATTERN_DAY_2", {})).toBe(true);
+		expect(isFieldShown("PATTERN_DAY_3", {})).toBe(false);
+		expect(isFieldShown("PATTERN_DAY_3", nightThenMorning)).toBe(true);
+		expect(isFieldShown("PATTERN_DAY_4", nightThenMorning)).toBe(false);
+		expect(isFieldShown("PATTERN_DAY_3", { PATTERN_DAY_2: [""] })).toBe(false);
+	});
+
+	it("keeps a day with shifts shown after the day before is cleared, so it can be cleared too", () => {
+		expect(
+			isFieldShown("PATTERN_DAY_3", {
+				PATTERN_DAY_2: [],
+				PATTERN_DAY_3: ["night"],
+			})
+		).toBe(true);
+	});
+
+	it("always shows every other field", () => {
+		expect(isFieldShown("SHIFT", {})).toBe(true);
+		expect(isFieldShown("REST_HOURS", {})).toBe(true);
 	});
 });

@@ -1,6 +1,11 @@
 import type { TFunction } from "i18next";
 import { describe, expect, it } from "vitest";
-import { PeopleIcon, PlaceholderIcon, TimeIcon } from "@/components/ui/Icon";
+import {
+	CrossIcon,
+	PeopleIcon,
+	PlaceholderIcon,
+	TimeIcon,
+} from "@/components/ui/Icon";
 import {
 	categoryIconOf,
 	constraintTypeLookOf,
@@ -17,6 +22,15 @@ describe("constraintTypeLookOf", () => {
 			label: "scheduling.constraints.types.SHIFT_STAFFING",
 			description: "scheduling.constraints.descriptions.SHIFT_STAFFING",
 			example: "scheduling.constraints.examples.SHIFT_STAFFING",
+		});
+	});
+
+	it("given_aBannedShiftPattern_when_looked_then_theNotAllowedIconWithItsWords", () => {
+		expect(constraintTypeLookOf("BANNED_SHIFT_PATTERN", t)).toEqual({
+			Icon: CrossIcon,
+			label: "scheduling.constraints.types.BANNED_SHIFT_PATTERN",
+			description: "scheduling.constraints.descriptions.BANNED_SHIFT_PATTERN",
+			example: "scheduling.constraints.examples.BANNED_SHIFT_PATTERN",
 		});
 	});
 

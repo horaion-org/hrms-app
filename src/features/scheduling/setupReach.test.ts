@@ -75,6 +75,21 @@ describe("constraintsNamingShift", () => {
 
 		expect(constraintsNamingShift(constraints, "late")).toBe(1);
 	});
+
+	it("given_aBannedPatternNamingTheShiftOnItsSecondDay_when_counted_then_itCounts", () => {
+		const pattern = constraintFixture({
+			constraintId: "e",
+			name: "No late after a night",
+			type: "BANNED_SHIFT_PATTERN",
+			values: [
+				{ field: "PATTERN_DAY_1", value: "night", name: "Night" },
+				{ field: "PATTERN_DAY_2", value: "late", name: "Late" },
+			],
+		});
+
+		expect(constraintsNamingShift([pattern], "late")).toBe(1);
+		expect(constraintsNamingShift([pattern], "early")).toBe(0);
+	});
 });
 
 describe("constraintsNamingJobTitle", () => {

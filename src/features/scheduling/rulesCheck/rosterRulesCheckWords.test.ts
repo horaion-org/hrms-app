@@ -87,6 +87,7 @@ describe("brokenRuleLabel", () => {
 		["max_overtime_hours_per_month", "Most overtime a month"],
 		["most_call_backs_per_person", "Call-backs on a rest or off day"],
 		["max_days_without_day_types", "Limit on days in a row"],
+		["consecutive_day_work_patterns", "Shifts not to follow each other"],
 		["overtime_past_the_normal_day", "Overtime past the normal day"],
 	])("calls %s by the name the settings give it: %s", (rule, label) => {
 		expect(ruleNameLabel(rule, t)).toBe(label);

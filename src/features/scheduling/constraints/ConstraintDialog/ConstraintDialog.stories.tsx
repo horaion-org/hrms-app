@@ -4,6 +4,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import { ConstraintDialog } from "@/features/scheduling/constraints/ConstraintDialog";
 import {
+	BANNED_PATTERN_FIXTURE,
 	COMPANY_CONSTRAINT_FIXTURES,
 	CONSTRAINT_FIXTURES,
 	CONSTRAINT_OPTIONS,
@@ -50,6 +51,10 @@ export const EditDaysLimit: Story = {
 /** The weekly rule the system adds: comparison, number and name only; its day type fixed, no lock, status or reach. */
 export const EditWeeklyRule: Story = {
 	args: { withLock: true, editing: WEEKLY_RULE_FIXTURE },
+};
+/** A banned shift pattern: one shift list a day, each later day shown once the day before has a shift. */
+export const EditBannedShiftPattern: Story = {
+	args: { editing: BANNED_PATTERN_FIXTURE },
 };
 export const OptionsLoading: Story = {
 	args: { options: { status: "pending" } },
