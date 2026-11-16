@@ -1,4 +1,5 @@
 import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { createInstance } from "i18next";
 import { initReactI18next } from "react-i18next";
 import { beforeAll, describe, expect, it, vi } from "vitest";
@@ -53,7 +54,8 @@ describe("ShiftTable", () => {
 			screen
 				.getAllByRole("columnheader")
 				.filter((header) => header.getAttribute("scope") === "colgroup")
-				.map((header) => header.textContent)
+				// Each heading ends with the hours its group spans.
+				.map((header) => header.textContent?.replace(/ · [^·]*$/, ""))
 		).toEqual(
 			groups.map((group) =>
 				group === "Service" ? `${group} · 3 shifts` : `${group} · 1 shift`
@@ -62,13 +64,43 @@ describe("ShiftTable", () => {
 		expect(screen.queryByRole("tablist")).toBeNull();
 	});
 
+	it("given_aTickableGroup_when_folded_then_itsHeadingSaysItsSpanAndHowManyAreTicked_andTheTicksStay", async () => {
+		const user = userEvent.setup();
+		window.localStorage.clear();
+		const onChange = vi.fn();
+		const service = SHIFT_FIXTURES.filter((shift) => shift.group === "Service");
+		render(
+			<ShiftTable
+				selection={{ selectedIds: [service[0]!.shiftId], onChange }}
+				shifts={SHIFT_FIXTURES}
+			/>
+		);
+
+		const heading = screen.getByRole("button", { name: /^Service · 3 shifts/ });
+		expect(heading).toHaveAttribute("aria-expanded", "true");
+		await user.click(heading);
+
+		expect(heading).toHaveAttribute("aria-expanded", "false");
+		expect(heading).toHaveTextContent("1 of 3 chosen");
+		expect(
+			screen.queryByRole("row", { name: new RegExp(service[0]!.name) })
+		).toBeNull();
+		expect(onChange).not.toHaveBeenCalled();
+		await user.click(screen.getByRole("button", { name: "Expand all" }));
+		expect(
+			screen.getByRole("checkbox", { name: new RegExp(service[0]!.name) })
+		).toBeChecked();
+	});
+
 	it("given_aShift_when_rendered_then_readsItsTimesAndDaysAndNamesItsJobTitles", () => {
 		render(<ShiftTable shifts={[rows[0]!]} />);
 
 		const frontDesk = screen.getByRole("row", { name: /Front Desk AM/ });
 		expect(frontDesk).toHaveTextContent(/09:00 – 15:00 · /);
 		// Its bar, in its column and, for phones, on the name's line.
-		expect(within(frontDesk).getAllByTestId("shift-day-bar")).not.toHaveLength(0);
+		expect(within(frontDesk).getAllByTestId("shift-day-bar")).not.toHaveLength(
+			0
+		);
 	});
 
 	it("given_needs_when_rendered_then_saysWhatEachShiftNeedsAndWarnsWhereTooFewHoldTheTitles", () => {
@@ -108,9 +140,7 @@ describe("ShiftTable", () => {
 	it("given_noNeeds_when_rendered_then_leavesTheNeededColumnOut", () => {
 		render(<ShiftTable shifts={rows} />);
 
-		expect(
-			screen.queryByRole("columnheader", { name: "Needed" })
-		).toBeNull();
+		expect(screen.queryByRole("columnheader", { name: "Needed" })).toBeNull();
 	});
 
 	it("given_editAndDeleteByRow_when_rendered_then_eachButtonFollowsItsOwnRule", () => {

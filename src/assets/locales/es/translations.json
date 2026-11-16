@@ -3339,7 +3339,9 @@
 				"notSet": "Sin fijar",
 				"capacity_one": "Solo {{count}} tiene el puesto",
 				"capacity_other": "Solo {{count}} tienen el puesto"
-			}
+			},
+			"groupChosen": "{{count}} de {{total}} elegidos",
+			"groupWarns": "Un turno de este grupo necesita atención"
 		},
 		"constraints": {
 			"problems": {

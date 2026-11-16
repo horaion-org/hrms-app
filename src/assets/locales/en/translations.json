@@ -3539,7 +3539,9 @@
 				"notSet": "Not set",
 				"capacity_one": "Only {{count}} holds the title",
 				"capacity_other": "Only {{count}} hold the title"
-			}
+			},
+			"groupChosen": "{{count}} of {{total}} chosen",
+			"groupWarns": "A shift in this group needs attention"
 		},
 		"constraints": {
 			"problems": {

@@ -25,12 +25,17 @@ import {
 	dayAxisOf,
 	inDayOrder,
 } from "@/features/scheduling/shifts/shiftDayAxis";
+import { shiftGroupSummaryOf } from "@/features/scheduling/shifts/shiftGroups";
 import type { ShiftNeed } from "@/features/scheduling/shifts/staffingNeeds";
+import { useSectionFolds } from "@/features/scheduling/useSectionFolds";
 
 /** How many job titles a row names before it counts the rest. */
 const NAMED_JOB_TITLES = 2;
 /** Hours between the list's axis labels: its column is narrow, so every six. */
 const LIST_AXIS_STEP_HOURS = 6;
+
+/** The browser-storage key of the shift groups a person folded; it holds group names only. */
+const CLOSED_GROUPS_KEY = "horaion.shiftGroupsClosed";
 
 /** What the table reads of a shift; a list across departments also names its Branch and Department. */
 export type ShiftTableRow = Pick<
@@ -336,35 +341,82 @@ export const ShiftTable = <Row extends ShiftTableRow>({
 			showDepartment,
 		]
 	);
-	const countIn = (group: string): number =>
-		shifts.filter((shift) => shift.group === group).length;
+	const folds = useSectionFolds(CLOSED_GROUPS_KEY, []);
+	const groups = [...new Set(rows.map((shift) => shift.group))];
+	// A shift warns when the staffing read says one of its needs can never be met.
+	const warns = (shift: Row): boolean =>
+		(needs?.byShift.get(shift.shiftId) ?? []).some(
+			(need) => needs?.capacityOf?.(need) !== undefined
+		);
+	// "Night · 3 shifts · 21:00 to 07:00"; folded, also how many are ticked and a mark if one warns.
+	const groupHeading = (group: string): ReactNode => {
+		const summary = shiftGroupSummaryOf(
+			rows.filter((shift) => shift.group === group),
+			selection?.selectedIds ?? [],
+			warns
+		);
+		if (!summary) return group;
+		const folded = !folds.isOpen(group);
+		return (
+			<>
+				<span className="font-bold">{group}</span>{" "}
+				<span className="text-xs text-neutral-700">
+					{t("scheduling.shifts.groupCount", { count: summary.count })} ·{" "}
+					{formatTimeRange(summary, t)}
+					{folded &&
+						selection &&
+						` · ${t("scheduling.shifts.groupChosen", {
+							count: summary.chosen,
+							total: summary.count,
+						})}`}
+				</span>
+				{folded && summary.warns && (
+					<AlertIcon
+						aria-label={t("scheduling.shifts.groupWarns")}
+						className="ml-2 inline size-4 align-text-bottom text-error-700"
+						role="img"
+					/>
+				)}
+			</>
+		);
+	};
 
 	return (
-		<DataTable
-			className={className}
-			columns={columns}
-			data={rows}
-			emptyState={emptyState ?? t("scheduling.shifts.empty")}
-			getRowId={(shift) => shift.shiftId}
-			label={t("scheduling.shifts.label")}
-			rowGroups={{
-				groupOf: (shift) => shift.group,
-				label: (group) => (
-					<>
-						<span className="font-bold">{group}</span>{" "}
-						<span className="text-xs text-neutral-700">
-							{t("scheduling.shifts.groupCount", { count: countIn(group) })}
-						</span>
-					</>
-				),
-			}}
-			selection={
-				selection && {
-					rowLabel: (shift) => shift.name,
-					selectedIds: selection.selectedIds,
-					onChange: selection.onChange,
+		<div className={className}>
+			{groups.length > 1 && (
+				<div className="mb-3 flex justify-end gap-6">
+					<Button
+						variant="textlink"
+						onClick={() => {
+							folds.closeAll(groups);
+						}}
+					>
+						{t("scheduling.constraintsTab.collapseAll")}
+					</Button>
+					<Button variant="textlink" onClick={folds.openAll}>
+						{t("scheduling.constraintsTab.expandAll")}
+					</Button>
+				</div>
+			)}
+			<DataTable
+				columns={columns}
+				data={rows}
+				emptyState={emptyState ?? t("scheduling.shifts.empty")}
+				getRowId={(shift) => shift.shiftId}
+				label={t("scheduling.shifts.label")}
+				rowGroups={{
+					groupOf: (shift) => shift.group,
+					label: groupHeading,
+					collapse: { isOpen: folds.isOpen, onToggle: folds.toggle },
+				}}
+				selection={
+					selection && {
+						rowLabel: (shift) => shift.name,
+						selectedIds: selection.selectedIds,
+						onChange: selection.onChange,
+					}
 				}
-			}
-		/>
+			/>
+		</div>
 	);
 };
