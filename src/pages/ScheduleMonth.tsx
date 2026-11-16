@@ -58,7 +58,10 @@ import {
 	waitingWeekBefore,
 } from "@/features/scheduling/months/monthWeeks";
 import { formatPeriod, periodStartingOn } from "@/features/scheduling/periods";
-import { stateCountsLine } from "@/features/scheduling/months/monthCopy";
+import {
+	stateCountsLine,
+	weekChangedRefusal,
+} from "@/features/scheduling/months/monthCopy";
 import { WeekCard } from "@/features/scheduling/months/WeekCard";
 import { dayMarkLooks } from "@/features/scheduling/months/weekStateLooks";
 import { generationFailure } from "@/features/scheduling/roster/generationFailure";
@@ -480,7 +483,13 @@ const MonthContent = ({
 				/>
 			)}
 			{generation.error && (
-				<ErrorText>{monthGenerationRefusal(generation.error, t)}</ErrorText>
+				<ErrorText>
+					{monthGenerationRefusal(
+						generation.error,
+						t,
+						weekChangedRefusal(generation.sentWeeks, scheduleMonth, language, t)
+					)}
+				</ErrorText>
 			)}
 			{noSchedule && !showsPanel && (
 				<p className="text-sm text-neutral-800">

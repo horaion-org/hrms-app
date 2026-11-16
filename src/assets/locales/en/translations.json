@@ -5231,6 +5231,7 @@
 			"generate": {
 				"choiceMissing": "A week of this month was set up while you were here. Reload the page and generate again.",
 				"weekCannotBeGenerated": "A week you ticked can no longer be generated. Go back to Setup to see it as it is now.",
+				"weekChanged": "A week of {{month}} changed since this page loaded, so nothing was generated. The page now shows {{month}} as it is; try again.",
 				"forbidden": "You don’t have permission to generate this month here.",
 				"failed": "We couldn’t generate the month. Try again.",
 				"panel": {
@@ -5268,7 +5269,13 @@
 				"generatingTitle": "Generating {{month}}…",
 				"generatingDetail": "The weeks that aren’t published are being worked out. You can leave this page.",
 				"refused": "Not generated: {{reason}}",
-				"draftGeneratesMonth": "Generates every week of {{month}} that isn’t published."
+				"draftGeneratesMonth": "Generates every week of {{month}} that isn’t published.",
+				"weekStopped": {
+					"PUBLISHED": "The week of {{week}} was published since this page loaded, so it can’t be generated.",
+					"GENERATING": "The week of {{week}} started generating since this page loaded, so it can’t be generated now.",
+					"ENDED": "The week of {{week}} is over, so it can’t be generated."
+				},
+				"weekStoppedNext": "Nothing was generated. The page now shows {{month}} as it is; try again for the other weeks."
 			},
 			"choice": {
 				"title": "What {{month}} uses",

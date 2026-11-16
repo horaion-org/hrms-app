@@ -1,7 +1,15 @@
 import type { TFunction } from "i18next";
 import { formatDay } from "@/common/formatDay";
-import type { WeekState } from "@/features/scheduling/months/api";
-import { stateCounts } from "@/features/scheduling/months/monthWeeks";
+import type {
+	ScheduleMonth,
+	WeekState,
+} from "@/features/scheduling/months/api";
+import { weeksNoLongerCovered } from "@/features/scheduling/months/monthGeneration";
+import {
+	formatMonthName,
+	formatWeekDates,
+	stateCounts,
+} from "@/features/scheduling/months/monthWeeks";
 
 /*
  * The months' words that take the person's language, kept apart from the
@@ -44,3 +52,39 @@ export const weekRangeText = (
 		from: formatDay(range.start, language),
 		to: formatDay(range.end, language),
 	});
+
+/** Why a week a run sent can't be generated now, as the month read shows it. */
+const whyNotGenerated = (
+	state: WeekState
+): "PUBLISHED" | "GENERATING" | "ENDED" =>
+	state === "PUBLISHED" || state === "GENERATING" ? state : "ENDED";
+
+/**
+ * A run refused because a week it sent changed since the page read the month
+ * (the API's MONTH_WEEK_CANNOT_BE_GENERATED): each such week and why, from
+ * the month read again, then that nothing was generated and the page shows
+ * the month as it is. Until the new read names the week, one line for the month.
+ */
+export const weekChangedRefusal = (
+	sent: ReadonlyArray<string>,
+	month: ScheduleMonth,
+	language: string,
+	t: TFunction
+): string => {
+	const key = "scheduling.months.generate";
+	const monthName = formatMonthName(month.month, language);
+	const changed = weeksNoLongerCovered(sent, month);
+	if (changed.length === 0)
+		return t(`${key}.weekChanged`, { month: monthName });
+	return [
+		...changed.map((week) =>
+			t(`${key}.weekStopped.${whyNotGenerated(week.state)}`, {
+				week: formatWeekDates(
+					{ start: week.periodStart, end: week.periodEnd },
+					language
+				),
+			})
+		),
+		t(`${key}.weekStoppedNext`, { month: monthName }),
+	].join(" ");
+};

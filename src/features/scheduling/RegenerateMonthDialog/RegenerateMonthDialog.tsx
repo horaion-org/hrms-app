@@ -16,6 +16,7 @@ import {
 	formatMonthName,
 	formatWeekDates,
 } from "@/features/scheduling/months/monthWeeks";
+import { weekChangedRefusal } from "@/features/scheduling/months/monthCopy";
 import { useGenerateMonth } from "@/features/scheduling/months/useGenerateMonth";
 import { monthGenerationRefusal } from "@/features/scheduling/schedules/scheduleRefusal";
 
@@ -88,7 +89,11 @@ export const RegenerateMonthDialog = ({
 			tone={handChanged.length > 0 ? "danger" : "default"}
 			error={
 				generation.error
-					? monthGenerationRefusal(generation.error, t)
+					? monthGenerationRefusal(
+							generation.error,
+							t,
+							weekChangedRefusal(generation.sentWeeks, month, language, t)
+						)
 					: undefined
 			}
 			onClose={onClose}

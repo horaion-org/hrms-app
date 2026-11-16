@@ -37,6 +37,8 @@ export type GenerateMonth = {
 	error: Error | null;
 	/** The last answer, for the weeks it refused. */
 	answer: MonthGeneration | undefined;
+	/** The Mondays the last run sent, to name a week that changed when it is refused. */
+	sentWeeks: ReadonlyArray<string>;
 	/** Set when the month needs new weeks and they can't be made yet: see GenerateBlock. */
 	block: GenerateBlock | undefined;
 };
@@ -121,6 +123,7 @@ export const useGenerateMonth = (
 		isPending: mutation.isPending,
 		error: mutation.error,
 		answer: mutation.data,
+		sentWeeks: mutation.variables?.body.weeks ?? [],
 		block,
 	};
 };

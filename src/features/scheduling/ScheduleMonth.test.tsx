@@ -321,6 +321,48 @@ it("given_aFailedGenerationCheck_when_tryAgainIsChosen_then_theCheckIsReadAgain"
 	).toBeInTheDocument();
 });
 
+it("given_aWeekPublishedSinceTheRead_when_generated_then_namesItWithoutSendingToSetup", async () => {
+	const december = ungeneratedMonthFixture();
+	const publishedSince = ungeneratedMonthFixture({
+		weeks: december.weeks.map((week, index) =>
+			index === 0
+				? {
+						...week,
+						state: "PUBLISHED" as const,
+						includedInMonthGeneration: false,
+					}
+				: week
+		),
+	});
+	await openMonth(
+		{
+			...decemberRoutes([ok(december), ok(publishedSince)]),
+			[`POST ${DECEMBER}/generation`]: problemReply(
+				400,
+				"MONTH_WEEK_CANNOT_BE_GENERATED"
+			),
+		},
+		"/scheduling/months/2026-12?department=d-1"
+	);
+	const generate = await screen.findByRole("button", {
+		name: "Generate December",
+	});
+	await vi.waitFor(() => {
+		expect(generate).toBeEnabled();
+	});
+
+	await userEvent.click(generate);
+
+	// The month is read again, so the refusal names the week as it now is.
+	const alert = await screen.findByText(
+		/^The week of Dec 7\s?–\s?13 was published/
+	);
+	expect(alert).toHaveTextContent(
+		"Nothing was generated. The page now shows December as it is; try again for the other weeks."
+	);
+	expect(alert).not.toHaveTextContent("Setup");
+});
+
 it("given_aRefusedWeekInTheAnswer_when_generated_then_itsCardSaysWhy", async () => {
 	const answer = monthGenerationFixture();
 	answer.weeks[1] = {

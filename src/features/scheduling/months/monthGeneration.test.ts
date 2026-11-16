@@ -17,6 +17,7 @@ import {
 	startingWeekOf,
 	startingWeeksOf,
 	weekNameOf,
+	weeksNoLongerCovered,
 	weeksToCreate,
 } from "@/features/scheduling/months/monthGeneration";
 
@@ -346,5 +347,23 @@ describe("chosen weeks", () => {
 describe("weekNameOf", () => {
 	it("given_aMonday_when_named_then_asTheApiNamesTheWeeksItCreates", () => {
 		expect(weekNameOf("2026-11-02")).toBe("Week of 2026-11-02");
+	});
+});
+
+describe("weeksNoLongerCovered", () => {
+	it("given_sentWeeksTheMonthNoLongerCovers_when_asked_then_thoseWeeksOnly", () => {
+		const month = ungeneratedMonthFixture();
+		month.weeks[1] = {
+			...month.weeks[1]!,
+			state: "PUBLISHED",
+			includedInMonthGeneration: false,
+		};
+		month.weeks[3] = { ...month.weeks[3]!, includedInMonthGeneration: false };
+
+		expect(
+			weeksNoLongerCovered(["2026-12-07", "2026-12-14"], month).map(
+				(week) => week.periodStart
+			)
+		).toEqual(["2026-12-14"]);
 	});
 });

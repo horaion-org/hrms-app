@@ -35,6 +35,7 @@ import {
 	formatMonthName,
 	monthOf,
 } from "@/features/scheduling/months/monthWeeks";
+import { weekChangedRefusal } from "@/features/scheduling/months/monthCopy";
 import { withRefusedWeeks } from "@/features/scheduling/months/refusedWeeksState";
 import { useGenerateMonth } from "@/features/scheduling/months/useGenerateMonth";
 import { PublishedWeekCallout } from "@/features/scheduling/publishedWeek/PublishedWeekCallout";
@@ -430,11 +431,8 @@ export const CreateSchedule = (): FunctionComponent => {
 			setConfirmingRegenerate(true);
 			return;
 		}
-		try {
-			await showMonth(await monthGeneration.generate());
-		} catch (error) {
-			setProblem(monthGenerationRefusal(error, t));
-		}
+		// A refusal shows from monthGeneration.error, worded with the month as it is read again.
+		await monthGeneration.generate().then(showMonth, () => undefined);
 	};
 	const included = includedShifts({ includedShiftIds: ticked }, shiftRows);
 	const summary = summarise(included, draft.allocations);
@@ -715,6 +713,20 @@ export const CreateSchedule = (): FunctionComponent => {
 				)}
 			</div>
 			{problem && <ErrorText className="mt-6">{problem}</ErrorText>}
+			{monthGeneration.error && scheduleMonth.data && (
+				<ErrorText className="mt-6">
+					{monthGenerationRefusal(
+						monthGeneration.error,
+						t,
+						weekChangedRefusal(
+							monthGeneration.sentWeeks,
+							scheduleMonth.data,
+							formattingLocale(i18n),
+							t
+						)
+					)}
+				</ErrorText>
+			)}
 			<StepActions
 				busy={busy}
 				className="mt-12"

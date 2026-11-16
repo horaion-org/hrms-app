@@ -214,17 +214,24 @@ const plainGenerationFailure = (t: TFunction): string =>
 export const refusalOfCode = (errorCode: string, t: TFunction): string =>
 	(WEEK_REFUSAL_WORDS[errorCode] ?? plainGenerationFailure)(t);
 
-/** Why generating a month was refused as a whole, as one message for the page. */
+/**
+ * Why generating a month was refused as a whole, as one message for the page.
+ * `weekChanged` words a week that changed since the page read the month, on
+ * pages without the wizard's Setup (`weekChangedRefusal`); the wizard's own
+ * words send the manager back to Setup.
+ */
 export const monthGenerationRefusal = (
 	error: unknown,
-	t: TFunction
+	t: TFunction,
+	weekChanged?: string
 ): string => {
 	const key = "scheduling.months.generate";
 	return (
 		mapRefusal<never>(error, {
 			alerts: {
 				[codes.weekChoiceMissing]: t(`${key}.choiceMissing`),
-				[codes.weekCannotBeGenerated]: t(`${key}.weekCannotBeGenerated`),
+				[codes.weekCannotBeGenerated]:
+					weekChanged ?? t(`${key}.weekCannotBeGenerated`),
 				[codes.monthNotFound]: t("scheduling.months.page.unavailable"),
 			},
 			forbidden: t(`${key}.forbidden`),

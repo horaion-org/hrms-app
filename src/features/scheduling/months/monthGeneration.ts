@@ -25,6 +25,19 @@ export const coveredWeeks = (month: ScheduleMonth): Array<MonthWeek> =>
 export const coveredMondaysOf = (month: ScheduleMonth): Array<string> =>
 	coveredWeeks(month).map((week) => week.periodStart);
 
+/**
+ * The weeks a refused run sent that the month, read again, no longer covers:
+ * published, being generated or over since the page read it.
+ */
+export const weeksNoLongerCovered = (
+	sent: ReadonlyArray<string>,
+	month: ScheduleMonth
+): Array<MonthWeek> =>
+	month.weeks.filter(
+		(week) =>
+			sent.includes(week.periodStart) && week.includedInMonthGeneration !== true
+	);
+
 /** The chosen covered weeks without a schedule: a run creates them, so it needs a choice for each. */
 export const weeksToCreate = (
 	month: ScheduleMonth,
