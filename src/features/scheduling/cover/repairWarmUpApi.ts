@@ -10,7 +10,7 @@ import { administrativeMeta } from "@/features/workspace/queryAccess";
 
 /*
  * The warm-up of the engine's repair worker (the API's `…/repair-warm-up`,
- * hrms-backend-v2 ADR-0086): sent as a manager turns to repair, so the worker
+ * hrms-backend-v2 ADR-0088): sent as a manager turns to repair, so the worker
  * has the roster's model cached when they ask for repair options or validate.
  * Fire and forget: the API answers 202 with no body, and nothing is shown.
  */
