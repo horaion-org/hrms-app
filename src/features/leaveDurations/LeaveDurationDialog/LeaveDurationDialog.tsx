@@ -24,6 +24,10 @@ import { CreateFormDialog } from "@/features/organisation/CreateFormDialog";
 import { UnitNameField } from "@/features/organisation/UnitNameField";
 import { useCreateFormSubmit } from "@/features/organisation/useCreateFormSubmit";
 import { UnitReachField } from "@/features/workspace/UnitReachField";
+import {
+	NAME_LIMITS,
+	NAME_MAX_LENGTH,
+} from "@/features/organisation/nameSchema";
 
 export type LeaveDurationDialogProps = {
 	/** Set to edit an existing duration; its status and place stay as they are. */
@@ -147,14 +151,17 @@ export const LeaveDurationDialog = ({
 		>
 			<UnitNameField
 				autoFocus
-				counter={t(`${key}.nameCounter`, { count: name.length })}
 				disabled={isSubmitting}
 				error={errors.name?.message}
-				hint={t(`${key}.nameHint`)}
+				hint={t(`${key}.nameHint`, NAME_LIMITS)}
 				id={`${formId}-name`}
 				label={t(`${key}.name`)}
 				placeholder={t(`${key}.namePlaceholder`)}
 				registration={register("name")}
+				counter={t(`${key}.nameCounter`, {
+					count: name.length,
+					max: NAME_MAX_LENGTH,
+				})}
 			/>
 			<div className="flex flex-col gap-6 sm:flex-row">
 				{timeField("startTime")}

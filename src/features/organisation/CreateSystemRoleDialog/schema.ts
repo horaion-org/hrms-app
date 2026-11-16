@@ -7,6 +7,7 @@ import {
 	PERMISSION_KEYS,
 	type PermissionKey,
 } from "@/features/workspace/permissionKeys";
+import { NAME_LIMITS } from "@/features/organisation/nameSchema";
 
 export const createSystemRoleSchema = (
 	t: TFunction
@@ -20,7 +21,7 @@ export const createSystemRoleSchema = (
 		kind: roleKindSchema(t("organisation.accessRoles.kind.required")),
 		name: unitNameSchema({
 			required: t(`${key}.nameRequired`),
-			length: t(`${key}.nameLength`),
+			length: t(`${key}.nameLength`, NAME_LIMITS),
 			characters: t(`${key}.nameCharacters`),
 		}),
 		permissions: z

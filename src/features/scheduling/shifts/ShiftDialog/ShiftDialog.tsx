@@ -36,6 +36,10 @@ import { dayAxisOf } from "@/features/scheduling/shifts/shiftDayAxis";
 import { shiftRefusal } from "@/features/scheduling/shifts/shiftRefusal";
 import { SHIFT_COLOURS } from "@/features/scheduling/shifts/shiftColours";
 import type { ShiftRoleOptions } from "@/features/scheduling/shifts/useShiftRoleOptions";
+import {
+	NAME_LIMITS,
+	NAME_MAX_LENGTH,
+} from "@/features/organisation/nameSchema";
 
 /** The dialog reads only these fields of the shift it edits, a draft's or a department's alike. */
 export type ShiftBeingEdited = Pick<
@@ -296,13 +300,16 @@ export const ShiftDialog = ({
 				)}
 				<UnitNameField
 					autoFocus
-					counter={t(`${key}.nameCounter`, { count: name.length })}
 					error={errors.name?.message}
-					hint={t(`${key}.nameHint`)}
+					hint={t(`${key}.nameHint`, NAME_LIMITS)}
 					id={fieldId("name")}
 					label={t(`${key}.name`)}
 					placeholder={t(`${key}.namePlaceholder`)}
 					registration={register("name")}
+					counter={t(`${key}.nameCounter`, {
+						count: name.length,
+						max: NAME_MAX_LENGTH,
+					})}
 				/>
 				<FormRow
 					required

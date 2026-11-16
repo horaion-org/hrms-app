@@ -12,6 +12,7 @@ import {
 	type SkillBody,
 	type SkillOverview,
 } from "@/features/skills/api";
+import { NAME_LIMITS } from "@/features/organisation/nameSchema";
 
 const key = "organisation.skills.dialog";
 
@@ -29,7 +30,7 @@ export const skillSettingsSchema = (
 	z.object({
 		name: unitNameSchema({
 			required: t(`${key}.nameRequired`),
-			length: t(`${key}.nameLength`),
+			length: t(`${key}.nameLength`, NAME_LIMITS),
 			characters: t(`${key}.nameCharacters`),
 		}),
 		// Optional; when given, the unit-name rule with a shorter limit.

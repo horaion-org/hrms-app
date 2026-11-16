@@ -1,7 +1,7 @@
 import type { TFunction } from "i18next";
 import { z } from "zod";
 import { normalizeBranchCity } from "@/features/organisation/city";
-import { nameSchema } from "@/features/organisation/nameSchema";
+import { NAME_LIMITS, nameSchema } from "@/features/organisation/nameSchema";
 
 /** Mirrors the server's allow-lists; uniqueness remains a server decision. */
 export const createBranchSchema = (
@@ -27,7 +27,7 @@ export const createBranchSchema = (
 	return z.object({
 		name: nameSchema({
 			required: t(`${key}.nameRequired`),
-			length: t(`${key}.nameLength`),
+			length: t(`${key}.nameLength`, NAME_LIMITS),
 			characters: t(`${key}.nameCharacters`),
 		}),
 		code: z

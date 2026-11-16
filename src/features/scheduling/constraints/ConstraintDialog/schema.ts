@@ -25,6 +25,7 @@ import {
 	unitReachSchema,
 	type UnitReachValue,
 } from "@/features/workspace/unitReach";
+import { NAME_LIMITS } from "@/features/organisation/nameSchema";
 
 /** Each field's values as the form holds them: as text, a field of one value as a list of one. */
 export type ConstraintFieldValues = Partial<
@@ -237,7 +238,7 @@ export const constraintSchema = (
 		.object({
 			name: unitNameSchema({
 				required: t(`${key}.nameRequired`),
-				length: t(`${key}.nameLength`),
+				length: t(`${key}.nameLength`, NAME_LIMITS),
 				characters: t(`${key}.nameCharacters`),
 			}),
 			type: z.enum(CONSTRAINT_TYPES, { error: t(`${key}.typeRequired`) }),

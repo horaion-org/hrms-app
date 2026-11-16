@@ -23,6 +23,10 @@ import { UnitNameField } from "@/features/organisation/UnitNameField";
 import { useCreateFormSubmit } from "@/features/organisation/useCreateFormSubmit";
 import type { UnitReachChoices } from "@/features/workspace/unitReach";
 import { UnitReachField } from "@/features/workspace/UnitReachField";
+import {
+	NAME_LIMITS,
+	NAME_MAX_LENGTH,
+} from "@/features/organisation/nameSchema";
 
 export type LeaveTypeDialogProps = {
 	/** Set to edit an existing type; its status stays as it is. */
@@ -100,14 +104,17 @@ export const LeaveTypeDialog = ({
 		>
 			<UnitNameField
 				autoFocus
-				counter={t(`${key}.nameCounter`, { count: name.length })}
 				disabled={isSubmitting}
 				error={errors.name?.message}
-				hint={t(`${key}.nameHint`)}
+				hint={t(`${key}.nameHint`, NAME_LIMITS)}
 				id={`${formId}-name`}
 				label={t(`${key}.name`)}
 				placeholder={t(`${key}.namePlaceholder`)}
 				registration={register("name")}
+				counter={t(`${key}.nameCounter`, {
+					count: name.length,
+					max: NAME_MAX_LENGTH,
+				})}
 			/>
 			<Controller
 				control={control}

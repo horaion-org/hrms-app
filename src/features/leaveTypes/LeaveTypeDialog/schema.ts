@@ -13,6 +13,7 @@ import {
 	unitReachSchema,
 	type UnitReachValue,
 } from "@/features/workspace/unitReach";
+import { NAME_LIMITS } from "@/features/organisation/nameSchema";
 
 const key = "settings.leave.dialog";
 
@@ -34,7 +35,7 @@ export const leaveTypeSchema = (
 	z.object({
 		name: unitNameSchema({
 			required: t(`${key}.nameRequired`),
-			length: t(`${key}.nameLength`),
+			length: t(`${key}.nameLength`, NAME_LIMITS),
 			characters: t(`${key}.nameCharacters`),
 		}),
 		grantKind: z.enum(LEAVE_GRANT_KINDS),

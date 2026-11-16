@@ -3,9 +3,7 @@ import {
 	isRetiredConstraintType,
 	type ConstraintType,
 } from "@/features/scheduling/constraints/api";
-
-/** The longest name the API keeps. */
-const NAME_MAX_LENGTH = 100;
+import { NAME_MAX_LENGTH } from "@/features/organisation/nameSchema";
 
 /**
  * A name for a new constraint from what it controls and its first shift, such

@@ -2,6 +2,7 @@ import type { UseFormRegisterReturn } from "react-hook-form";
 import type { FunctionComponent } from "@/common/types";
 import { FormRow, formRowIds } from "@/components/forms/FormRow";
 import { Input } from "@/components/forms/Input";
+import { NAME_MAX_LENGTH } from "@/features/organisation/nameSchema";
 
 export type UnitNameFieldProps = {
 	id: string;
@@ -50,7 +51,7 @@ export const UnitNameField = ({
 				data-autofocus={autoFocus || undefined}
 				disabled={disabled}
 				id={id}
-				maxLength={100}
+				maxLength={NAME_MAX_LENGTH}
 				placeholder={placeholder}
 				status={error ? "error" : undefined}
 				{...registration}

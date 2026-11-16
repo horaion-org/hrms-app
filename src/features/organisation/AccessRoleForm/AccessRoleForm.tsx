@@ -28,6 +28,10 @@ import {
 	togglePermission,
 } from "@/features/organisation/PermissionChecklist/groups";
 import type { PermissionKey } from "@/features/workspace/permissionKeys";
+import {
+	NAME_LIMITS,
+	NAME_MAX_LENGTH,
+} from "@/features/organisation/nameSchema";
 
 export type AccessRoleFormProps = {
 	/** A new role, or changes to one: decides the submit label and whether changes are counted. */
@@ -197,13 +201,16 @@ export const AccessRoleForm = ({
 			>
 				<FormRow
 					className="min-w-0 grow basis-full lg:basis-0"
-					counter={t(`${key}.nameCounter`, { count: name.length })}
 					error={errors.name?.message}
-					hint={t(`${key}.nameHint`)}
+					hint={t(`${key}.nameHint`, NAME_LIMITS)}
 					htmlFor={nameId}
 					label={t(`${key}.name`)}
 					layout="stacked"
 					required={!readOnly}
+					counter={t(`${key}.nameCounter`, {
+						count: name.length,
+						max: NAME_MAX_LENGTH,
+					})}
 				>
 					<Input
 						aria-describedby={errors.name ? nameIds.errorId : nameIds.hintId}
@@ -211,7 +218,7 @@ export const AccessRoleForm = ({
 						className="w-full"
 						disabled={readOnly || isSubmitting}
 						id={nameId}
-						maxLength={100}
+						maxLength={NAME_MAX_LENGTH}
 						required={!readOnly}
 						status={errors.name ? "error" : undefined}
 						{...register("name")}

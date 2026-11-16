@@ -2,6 +2,7 @@ import type { TFunction } from "i18next";
 import { z } from "zod";
 import { JOB_TITLE_DESCRIPTION_MAX_LENGTH } from "@/features/organisation/api";
 import { unitNameSchema } from "@/features/organisation/createSchemas";
+import { NAME_LIMITS } from "@/features/organisation/nameSchema";
 
 export const createJobTitleSchema = (
 	t: TFunction
@@ -15,7 +16,7 @@ export const createJobTitleSchema = (
 		departmentId: z.string().min(1, t(`${key}.departmentRequired`)),
 		name: unitNameSchema({
 			required: t(`${key}.nameRequired`),
-			length: t(`${key}.nameLength`),
+			length: t(`${key}.nameLength`, NAME_LIMITS),
 			characters: t(`${key}.nameCharacters`),
 		}),
 		// Optional; judged as the API stores it, after trimming.

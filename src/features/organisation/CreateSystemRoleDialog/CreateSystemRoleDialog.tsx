@@ -32,6 +32,10 @@ import {
 	PERMISSION_KEYS,
 	type PermissionKey,
 } from "@/features/workspace/permissionKeys";
+import {
+	NAME_LIMITS,
+	NAME_MAX_LENGTH,
+} from "@/features/organisation/nameSchema";
 
 export type CreateSystemRoleDialogProps = {
 	companyId: string;
@@ -291,14 +295,17 @@ export const CreateSystemRoleDialog = ({
 			</div>
 			<UnitNameField
 				autoFocus
-				counter={t(`${key}.nameCounter`, { count: name.length })}
 				disabled={isSubmitting}
 				error={errors.name?.message}
-				hint={t(`${key}.nameHint`)}
+				hint={t(`${key}.nameHint`, NAME_LIMITS)}
 				id={`${formId}-name`}
 				label={t(`${key}.name`)}
 				placeholder={t(`${key}.namePlaceholder`)}
 				registration={register("name")}
+				counter={t(`${key}.nameCounter`, {
+					count: name.length,
+					max: NAME_MAX_LENGTH,
+				})}
 			/>
 			<Controller
 				control={control}

@@ -22,6 +22,10 @@ import {
 	createBranchSchema,
 	type CreateBranchValues,
 } from "@/features/organisation/CreateBranchDialog/schema";
+import {
+	NAME_LIMITS,
+	NAME_MAX_LENGTH,
+} from "@/features/organisation/nameSchema";
 
 /** The form's fields in the order they appear, for focusing the first problem. */
 const FIELDS = [
@@ -222,12 +226,15 @@ export const CreateBranchDialog = ({
 				)}
 				<FormRow
 					required
-					counter={t(`${key}.nameCounter`, { count: name.length })}
 					error={errors.name?.message}
-					hint={t(`${key}.nameHint`)}
+					hint={t(`${key}.nameHint`, NAME_LIMITS)}
 					htmlFor={nameId}
 					label={t(`${key}.name`)}
 					layout="stacked"
+					counter={t(`${key}.nameCounter`, {
+						count: name.length,
+						max: NAME_MAX_LENGTH,
+					})}
 				>
 					<Input
 						data-autofocus
@@ -238,7 +245,7 @@ export const CreateBranchDialog = ({
 						className="w-full"
 						disabled={isSubmitting}
 						id={nameId}
-						maxLength={100}
+						maxLength={NAME_MAX_LENGTH}
 						placeholder={t(`${key}.namePlaceholder`)}
 						status={errors.name ? "error" : undefined}
 						{...register("name")}

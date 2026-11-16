@@ -21,6 +21,10 @@ import { useCreateDepartment } from "@/features/organisation/useCreateInOrganisa
 import { useBranches } from "@/features/organisation/useOrganisationList";
 import { branchScope } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
+import {
+	NAME_LIMITS,
+	NAME_MAX_LENGTH,
+} from "@/features/organisation/nameSchema";
 
 export type CreateDepartmentDialogProps = {
 	companyId: string;
@@ -181,14 +185,17 @@ export const CreateDepartmentDialog = ({
 			)}
 			<UnitNameField
 				autoFocus
-				counter={t(`${key}.nameCounter`, { count: name.length })}
 				disabled={isSubmitting}
 				error={errors.name?.message}
-				hint={t(`${key}.nameHint`)}
+				hint={t(`${key}.nameHint`, NAME_LIMITS)}
 				id={`${formId}-name`}
 				label={t(`${key}.name`)}
 				placeholder={t(`${key}.namePlaceholder`)}
 				registration={register("name")}
+				counter={t(`${key}.nameCounter`, {
+					count: name.length,
+					max: NAME_MAX_LENGTH,
+				})}
 			/>
 			{!isEditing && (
 				<Controller

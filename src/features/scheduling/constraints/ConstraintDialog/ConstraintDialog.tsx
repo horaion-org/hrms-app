@@ -81,6 +81,10 @@ import {
 } from "@/features/scheduling/SetupDepartmentField";
 import { dayTypeLabel } from "@/features/scheduling/dayTypes";
 import { WEEKDAYS } from "@/features/scheduling/shifts/api";
+import {
+	NAME_LIMITS,
+	NAME_MAX_LENGTH,
+} from "@/features/organisation/nameSchema";
 
 export type ConstraintDialogProps = {
 	/** Set to change one of the department's constraints. */
@@ -1001,13 +1005,16 @@ export const ConstraintDialog = ({
 							</>
 						)}
 						<UnitNameField
-							counter={t(`${key}.nameCounter`, { count: name.length })}
 							error={errors.name?.message}
-							hint={t(`${key}.nameHint`)}
+							hint={t(`${key}.nameHint`, NAME_LIMITS)}
 							id={fieldId("name")}
 							label={t(`${key}.name`)}
 							placeholder={t(`${key}.namePlaceholder`)}
 							registration={register("name")}
+							counter={t(`${key}.nameCounter`, {
+								count: name.length,
+								max: NAME_MAX_LENGTH,
+							})}
 						/>
 						{impactNote && (
 							<p className="text-sm text-neutral-700">{impactNote}</p>
