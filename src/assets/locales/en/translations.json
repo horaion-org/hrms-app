@@ -4175,6 +4175,7 @@
 			"stale_other": "{{count}} people’s days before this week changed after this roster was generated, so what it says about the week before is what was known then. To plan from the days as they are now, regenerate the month from its page.",
 			"opening": {
 				"hint": "Overtime limits count from the 1st. For anyone without a roster earlier this month, add the paid hours and overtime they already worked before {{day}}.",
+				"notNeeded": "This week starts on the 1st, so no hours or overtime carry over from earlier in the month.",
 				"worked": "Paid hours before {{day}}",
 				"overtime": "Overtime before {{day}}",
 				"workedLabel": "{{name}}, paid hours worked this month before {{day}}",

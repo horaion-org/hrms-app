@@ -57,7 +57,7 @@ export type StartingDaysDialogProps = {
 	problem?: string;
 	/**
 	 * The month's opening balances, once loaded; their cells show only when
-	 * days of the month come before the roster.
+	 * days of the month come before the roster, and a line says why when none do.
 	 */
 	openings?: OpeningBalances;
 	/** The entered days, and the openings changed here, or undefined when none were (nothing to send). */
@@ -329,6 +329,11 @@ export const StartingDaysDialog = ({
 			{asksOpenings && (
 				<p className="mt-2 text-sm text-neutral-700">
 					{t(`${key}.opening.hint`, { day: asOfLabel })}
+				</p>
+			)}
+			{openings?.applies === false && (
+				<p className="mt-2 text-sm text-neutral-700">
+					{t(`${key}.opening.notNeeded`)}
 				</p>
 			)}
 			<div className="mt-4 flex flex-wrap items-end gap-3">

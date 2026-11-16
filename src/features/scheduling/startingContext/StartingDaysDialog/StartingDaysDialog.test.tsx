@@ -208,6 +208,41 @@ describe("StartingDaysDialog", () => {
 		]);
 	});
 
+	const NOT_NEEDED =
+		"This week starts on the 1st, so no hours or overtime carry over from earlier in the month.";
+	const OPENING_HINT = /Overtime limits count from the 1st\./;
+
+	it("given_aWeekStartingOnThe1st_when_shown_then_saysNoHoursCarryOverAndAsksNone", () => {
+		show(vi.fn(), firstWeek(), {
+			...midMonthOpenings([editableMember("p-tan")]),
+			asOf: "2026-11-01",
+			applies: false,
+		});
+
+		expect(screen.getByText(NOT_NEEDED)).toBeInTheDocument();
+		expect(screen.queryByText(OPENING_HINT)).toBeNull();
+		expect(
+			screen.queryByRole("spinbutton", { name: /Tan Wei Ming, overtime/ })
+		).toBeNull();
+	});
+
+	it("given_aRosterStartingMidMonth_when_shown_then_theHintAndHoursShowWithoutTheLine", () => {
+		show(vi.fn(), firstWeek(), midMonthOpenings([editableMember("p-tan")]));
+
+		expect(screen.getByText(OPENING_HINT)).toBeInTheDocument();
+		expect(
+			screen.getByRole("spinbutton", { name: /Tan Wei Ming, overtime/ })
+		).toBeInTheDocument();
+		expect(screen.queryByText(NOT_NEEDED)).toBeNull();
+	});
+
+	it("given_openingsStillLoading_when_shown_then_neitherTheHintNorTheLine", () => {
+		show(vi.fn(), firstWeek());
+
+		expect(screen.queryByText(OPENING_HINT)).toBeNull();
+		expect(screen.queryByText(NOT_NEEDED)).toBeNull();
+	});
+
 	it("given_overtimeAboveTheHoursWorked_when_typed_then_saveIsHeldWithAReason", async () => {
 		show(vi.fn(), firstWeek(), midMonthOpenings([editableMember("p-tan")]));
 

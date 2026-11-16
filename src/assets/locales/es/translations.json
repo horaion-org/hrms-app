@@ -3975,6 +3975,7 @@
 			"stale_other": "Los días de {{count}} personas antes de esta semana cambiaron después de generar este cuadrante, así que lo que dice de la semana anterior es lo que se sabía entonces. Para planificar con los días actuales, regenera el mes desde su página.",
 			"opening": {
 				"hint": "Los límites de horas extra cuentan desde el día 1. Para quien no tenga cuadrante antes en este mes, añade las horas remuneradas y horas extra que ya trabajó antes del {{day}}.",
+				"notNeeded": "Esta semana empieza el día 1, así que no se arrastran horas ni horas extra de antes en el mes.",
 				"worked": "Horas remuneradas antes del {{day}}",
 				"overtime": "Horas extra antes del {{day}}",
 				"workedLabel": "{{name}}, horas remuneradas trabajadas este mes antes del {{day}}",
