@@ -4,19 +4,31 @@ import { useTranslation } from "react-i18next";
 import type { DepartmentPath } from "@/common/companyPath";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
+import { Callout } from "@/components/ui/Callout";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { Tab, TabList, Tabs } from "@/components/ui/Tabs";
+import { LockIcon } from "@/components/ui/LockIcon";
 import { Toast } from "@/components/ui/Toast";
 import { placeOf } from "@/features/organisation/assignmentTargets";
 import { ListToolbar } from "@/features/organisation/ListToolbar";
-import {
-	CONSTRAINT_CATEGORIES,
-	type ConstraintBody,
-	type DepartmentConstraint,
+import type {
+	ConstraintBody,
+	ConstraintCategory,
+	DepartmentConstraint,
 } from "@/features/scheduling/constraints/api";
+import {
+	capacityKeyOf,
+	capacityProblemsOf,
+	type CapacityProblem,
+	type StaffingRuleFacts,
+} from "@/features/scheduling/constraints/capacityProblems";
 import { ConstraintDialog } from "@/features/scheduling/constraints/ConstraintDialog";
+import { typeGroupsOf } from "@/features/scheduling/constraints/ConstraintDialog/typeGroups";
 import { deleteConstraintRefusal } from "@/features/scheduling/constraints/constraintRefusal";
-import { ConstraintTable } from "@/features/scheduling/constraints/ConstraintTable";
+import { ConstraintRow } from "@/features/scheduling/constraints/ConstraintRow";
+import { ConstraintSection } from "@/features/scheduling/constraints/ConstraintSection";
+import { constraintSectionsOf } from "@/features/scheduling/constraints/constraintSections";
+import { categoryIconOf } from "@/features/scheduling/constraints/constraintTypeLooks";
+import { needsAttention } from "@/features/scheduling/constraints/valueProblems";
 import { useConstraintActions } from "@/features/scheduling/constraints/useConstraintActions";
 import { useConstraintOptions } from "@/features/scheduling/constraints/useConstraintOptions";
 import { useConstraintsInUnits } from "@/features/scheduling/constraints/useConstraintsInUnits";
@@ -48,8 +60,16 @@ const DIALOG_KEYS: ReadonlyArray<PermissionKey> = [
 	"constraint:update",
 ];
 
-/** The first category tab shows every constraint; the ones after it, one category each. */
-const ALL_TAB = 0;
+/** Where a row sits on the page, so the attention banner can bring it into view. */
+const rowIdOf = (constraint: DepartmentConstraint): string =>
+	`constraint-${constraint.constraintId}`;
+
+/** Brings a row into view and moves focus to it. */
+const showRow = (constraint: DepartmentConstraint): void => {
+	const row = document.getElementById(rowIdOf(constraint));
+	row?.scrollIntoView?.({ block: "center" });
+	row?.focus();
+};
 
 /** What the list says instead of its rows while they load, are refused or failed. */
 const LIST_STATUS_COPY = {
@@ -64,7 +84,7 @@ const LIST_STATUS_COPY = {
  * the dialog making a company constraint stricter in the chosen department.
  */
 type DialogState =
-	| { kind: "add"; departmentId: string }
+	| { kind: "add"; departmentId: string; startAt?: ConstraintCategory }
 	| {
 			kind: "edit";
 			constraint: DepartmentConstraint;
@@ -101,20 +121,28 @@ export type ConstraintsTabProps = {
 	onDepartmentChange: (department: string | undefined) => void;
 	/** The way back into the wizard, when the wizard sent the person here to set a department up. */
 	returnTo?: ReturnLink;
+	/**
+	 * The staffing read's rules, passed by the page where schedules may be
+	 * read; left out, no rule is flagged as one nobody can meet.
+	 */
+	staffingRules?: ReadonlyArray<StaffingRuleFacts>;
 };
 
 /**
  * The live constraints of the departments in the header's Branch, narrowed
- * to one from the Filters and to a category by its tabs, as Job titles
- * lists its titles: add, edit and delete where the person's keys allow,
- * each dialog saying what the change reaches. Company constraints come
- * first and once; under one department they can be made stricter there.
+ * to one from the Filters, in one section per purpose with what needs fixing
+ * first and named in a banner: add, edit and delete where the person's keys
+ * allow, each dialog saying what the change reaches. Company constraints
+ * close the page, folded, once; under one department they can be made
+ * stricter there. Where schedules may be read, a staffing rule asking for
+ * more people than hold its job titles needs attention too.
  */
 export const ConstraintsTab = ({
 	companyId,
 	units,
 	onDepartmentChange,
 	returnTo,
+	staffingRules,
 }: ConstraintsTabProps): FunctionComponent => {
 	const { t } = useTranslation();
 	const key = "scheduling.constraintsTab";
@@ -145,7 +173,6 @@ export const ConstraintsTab = ({
 	const readiness = useSchedulingReadiness(companyId, selectedUnits(units));
 	const actions = useConstraintActions(companyId);
 	const [search, setSearch] = useState("");
-	const [tab, setTab] = useState(ALL_TAB);
 	const [dialog, setDialog] = useState<DialogState>();
 	const [deleting, setDeleting] = useState<DepartmentConstraint>();
 	const [toast, setToast] = useState<{ id: number; message: string }>();
@@ -157,18 +184,6 @@ export const ConstraintsTab = ({
 	const rows = items.filter(
 		(constraint) => isShown(constraint) && matches(constraint, search)
 	);
-	const categories = CONSTRAINT_CATEGORIES.filter((category) =>
-		rows.some((constraint) => constraint.category === category)
-	);
-	// A category that disappears takes its tab with it, so an index past the end means "all".
-	const selected = tab > categories.length ? ALL_TAB : tab;
-	const category = selected === ALL_TAB ? undefined : categories[selected - 1];
-	const countOf = (name: string): number =>
-		rows.filter((constraint) => constraint.category === name).length;
-	const shown =
-		category === undefined
-			? rows
-			: rows.filter((constraint) => constraint.category === category);
 	// The Branch is the header's scope; the Department is the one filter.
 	const chips = departmentChips(
 		units,
@@ -221,14 +236,34 @@ export const ConstraintsTab = ({
 		}
 	);
 
-	// Edit and delete say how many drafts tick the constraint, where schedules may be read.
-	const reached = dialog?.kind === "edit" ? dialog.constraint : deleting;
-	const draftCount = useDraftCount(
-		companyId,
-		reached && unitOf(reached),
-		reached && { kind: "constraint", id: reached.constraintId }
+	// A staffing rule that can never be met, where the page passes the staffing read.
+	const capacity = capacityProblemsOf(staffingRules ?? []);
+	const capacityOf = (
+		constraint: DepartmentConstraint
+	): CapacityProblem | undefined =>
+		constraint.departmentId === null
+			? undefined
+			: capacity.get(capacityKeyOf(constraint.departmentId, constraint.name));
+	const needsFixing = (constraint: DepartmentConstraint): boolean =>
+		needsAttention(constraint.values) || capacityOf(constraint) !== undefined;
+	const listTypes =
+		listOptions.status === "ready" ? listOptions.options.types : [];
+	// The sections follow the categories the API lists, in its order.
+	const laidOut = constraintSectionsOf(
+		rows,
+		typeGroupsOf(listTypes).map((group) => group.category),
+		needsFixing
 	);
-
+	const openAdd = (startAt?: ConstraintCategory): void => {
+		setDialog({
+			kind: "add",
+			departmentId: initialDepartmentOf(
+				addChoices,
+				units.department?.departmentId
+			),
+			startAt,
+		});
+	};
 	const openEdit = (constraint: DepartmentConstraint): void => {
 		// A replacement is edited against the company constraint it replaces.
 		const replacing = constraint.overridesConstraintId
@@ -238,6 +273,50 @@ export const ConstraintsTab = ({
 			: undefined;
 		setDialog({ kind: "edit", constraint, replacing });
 	};
+	const rowOf = (constraint: DepartmentConstraint): FunctionComponent => {
+		const companyRow = constraint.level === "COMPANY";
+		return (
+			<ConstraintRow
+				key={constraint.constraintId}
+				capacity={capacityOf(constraint)}
+				constraint={constraint}
+				id={rowIdOf(constraint)}
+				needsAttention={needsFixing(constraint)}
+				showDepartment={!units.department}
+				types={listTypes}
+				onDelete={
+					!companyRow && canDelete(constraint)
+						? (): void => {
+								setDeleting(constraint);
+							}
+						: undefined
+				}
+				onEdit={
+					!companyRow && canEdit(constraint)
+						? (): void => {
+								openEdit(constraint);
+							}
+						: undefined
+				}
+				onReplace={
+					companyRow && replacesHere
+						? (): void => {
+								setDialog({ kind: "replace", replacing: constraint });
+							}
+						: undefined
+				}
+			/>
+		);
+	};
+
+	// Edit and delete say how many drafts tick the constraint, where schedules may be read.
+	const reached = dialog?.kind === "edit" ? dialog.constraint : deleting;
+	const draftCount = useDraftCount(
+		companyId,
+		reached && unitOf(reached),
+		reached && { kind: "constraint", id: reached.constraintId }
+	);
+
 	const saveConstraint = async (body: ConstraintBody): Promise<void> => {
 		const editedUnit =
 			dialog?.kind === "edit" ? unitOf(dialog.constraint) : undefined;
@@ -297,13 +376,7 @@ export const ConstraintsTab = ({
 				onCreate={
 					canCreate
 						? (): void => {
-								setDialog({
-									kind: "add",
-									departmentId: initialDepartmentOf(
-										addChoices,
-										units.department?.departmentId
-									),
-								});
+								openAdd();
 							}
 						: undefined
 				}
@@ -319,45 +392,85 @@ export const ConstraintsTab = ({
 				/>
 			)}
 			{list.status === "ready" ? (
-				<div className="mt-8">
-					{rows.length > 0 && (
-						<Tabs selectedIndex={selected} onChange={setTab}>
-							<TabList aria-label={t("scheduling.constraints.categoriesLabel")}>
-								<Tab count={rows.length}>
-									{t("scheduling.constraints.allConstraints")}
-								</Tab>
-								{categories.map((each) => (
-									<Tab key={each} count={countOf(each)}>
-										{t(`scheduling.constraints.categories.${each}`)}
-									</Tab>
-								))}
-							</TabList>
-						</Tabs>
+				<div className="mt-8 flex flex-col gap-8">
+					{laidOut.needingAttention.length > 0 && (
+						<Callout tone="error">
+							{t(`${key}.attention`, {
+								count: laidOut.needingAttention.length,
+							})}{" "}
+							{laidOut.needingAttention.map((constraint, index) => (
+								<span key={constraint.constraintId}>
+									{index > 0 && " · "}
+									<Button
+										variant="textlink"
+										onClick={() => {
+											showRow(constraint);
+										}}
+									>
+										{constraint.name}
+									</Button>
+								</span>
+							))}
+						</Callout>
 					)}
-					<ConstraintTable
-						metaOnNameLine
-						canDelete={canDelete}
-						canEdit={canEdit}
-						className={rows.length > 0 ? "mt-6" : undefined}
-						constraints={shown}
-						showBranch={!units.branch}
-						showDepartment={!units.department}
-						emptyState={
-							search.trim() ? t(`${key}.noMatch`) : t(`${key}.emptyGuide`)
-						}
-						types={
-							listOptions.status === "ready" ? listOptions.options.types : []
-						}
-						onDelete={setDeleting}
-						onEdit={openEdit}
-						onReplace={
-							replacesHere
-								? (replacing): void => {
-										setDialog({ kind: "replace", replacing });
+					{rows.length === 0 && search.trim() ? (
+						<p className="text-sm text-neutral-700">{t(`${key}.noMatch`)}</p>
+					) : (
+						<>
+							{laidOut.sections.every(
+								(section) => section.rows.length === 0
+							) && (
+								<p className="text-sm text-neutral-700">
+									{t(`${key}.emptyGuide`)}
+								</p>
+							)}
+							{laidOut.sections.map((section) => (
+								<ConstraintSection
+									key={section.category}
+									count={section.rows.length}
+									emptyText={t(`${key}.sectionEmpty`)}
+									icon={categoryIconOf(section.category)}
+									add={
+										canCreate
+											? {
+													label: t(`${key}.addInSection`),
+													onAdd: (): void => {
+														openAdd(section.category);
+													},
+												}
+											: undefined
 									}
-								: undefined
-						}
-					/>
+									description={t(
+										`scheduling.constraints.categoryDescriptions.${section.category}`
+									)}
+									title={t(
+										`scheduling.constraints.categories.${section.category}`
+									)}
+								>
+									{section.rows.map(rowOf)}
+								</ConstraintSection>
+							))}
+							{laidOut.company.length > 0 && (
+								<ConstraintSection
+									count={laidOut.company.length}
+									description={t(`${key}.companyDescription`)}
+									icon={LockIcon}
+									title={t(`${key}.companyTitle`)}
+									folded={{
+										summary: t(`${key}.companySummary`, {
+											count: laidOut.company.length,
+										}),
+										showLabel: t(`${key}.showAll`, {
+											count: laidOut.company.length,
+										}),
+										hideLabel: t(`${key}.hide`),
+									}}
+								>
+									{laidOut.company.map(rowOf)}
+								</ConstraintSection>
+							)}
+						</>
+					)}
 				</div>
 			) : (
 				<p
@@ -377,6 +490,7 @@ export const ConstraintsTab = ({
 					editing={dialog.kind === "edit" ? dialog.constraint : undefined}
 					options={options}
 					replacing={dialog.kind === "add" ? undefined : dialog.replacing}
+					startAt={dialog.kind === "add" ? dialog.startAt : undefined}
 					department={
 						dialog.kind === "add"
 							? {
@@ -386,7 +500,7 @@ export const ConstraintsTab = ({
 									keys: CREATE_KEYS,
 									value: dialog.departmentId,
 									onChange: (departmentId): void => {
-										setDialog({ kind: "add", departmentId });
+										setDialog({ ...dialog, departmentId });
 									},
 								}
 							: {

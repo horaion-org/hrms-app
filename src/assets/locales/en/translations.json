@@ -3777,8 +3777,6 @@
 			"companyRuleAppliesHint": "The work policy’s constraint is now stricter than this one, so both apply.",
 			"department": "Department",
 			"allDepartments": "All departments",
-			"allConstraints": "All",
-			"categoriesLabel": "Constraint categories",
 			"listOr": "{{items, list(type: disjunction)}}",
 			"firmness": {
 				"MUST": "Always kept. If the people and shifts can't meet it, the schedule shows where it falls short.",

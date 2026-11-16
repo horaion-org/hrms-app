@@ -551,7 +551,8 @@ describe("Scheduling's tabs", () => {
 
 	const openScheduling = async (
 		workspace: Workspace,
-		path = "/scheduling"
+		path = "/scheduling",
+		more: Parameters<typeof stubApi>[0] = {}
 	): Promise<ReturnType<typeof stubApi>> => {
 		vi.spyOn(window, "scrollTo").mockImplementation(() => {});
 		const calls = stubApi({
@@ -571,6 +572,7 @@ describe("Scheduling's tabs", () => {
 				status: 200,
 				body: envelope([kitchenCover]),
 			},
+			...more,
 		});
 		app = await openApp(path);
 		renderAuthApp(app);
@@ -624,6 +626,58 @@ describe("Scheduling's tabs", () => {
 		).toEqual(["branchId=b-1"]);
 	});
 
+	it("given_scheduleRead_when_constraintsShown_then_thePageReadsStaffingAndARuleNobodyCanMeetNeedsAttention", async () => {
+		const calls = await openScheduling(
+			companyWideWorkspace(["schedule:read", "constraint:read"]),
+			"/scheduling?view=constraints",
+			{
+				[`GET ${SCHEDULES_PATH}/staffing`]: {
+					status: 200,
+					body: envelope({
+						from: "2026-11-16",
+						to: "2026-11-16",
+						rules: [
+							{
+								departmentId: kitchenCover.departmentId,
+								departmentName: "Kitchen",
+								branchName: "Orchard",
+								ruleName: kitchenCover.name,
+								ruleType: "SHIFT_STAFFING",
+								headcount: 3,
+								jobTitles: [{ jobTitleId: "jt-1", name: "Cook" }],
+								peopleWithTitles: 2,
+								shifts: [],
+								gapsInRange: 0,
+								neededShiftDaysAWeek: 21,
+								holderDaysAWeek: null,
+							},
+						],
+					}),
+				},
+			}
+		);
+
+		const row = await screen.findByRole("listitem", { name: /Morning cover/ });
+		await waitFor(() => {
+			expect(within(row).getByText("Needs attention")).toBeVisible();
+		});
+		expect(
+			calls.some((call) => call.path === `${SCHEDULES_PATH}/staffing`)
+		).toBe(true);
+	});
+
+	it("given_noScheduleRead_when_constraintsShown_then_readsNoStaffing", async () => {
+		const calls = await openScheduling(
+			companyWideWorkspace(["constraint:read"]),
+			"/scheduling?view=constraints"
+		);
+
+		await screen.findByRole("listitem", { name: /Morning cover/ });
+		expect(
+			calls.some((call) => call.path === `${SCHEDULES_PATH}/staffing`)
+		).toBe(false);
+	});
+
 	it("given_viewConstraints_when_opened_then_listsTheCompanysConstraintsInTheHeadersBranch", async () => {
 		const calls = await openScheduling(
 			companyWideWorkspace(["schedule:read", "constraint:read"]),
@@ -631,7 +685,7 @@ describe("Scheduling's tabs", () => {
 		);
 
 		expect(
-			await screen.findByRole("row", { name: /Morning cover/ })
+			await screen.findByRole("listitem", { name: /Morning cover/ })
 		).toHaveTextContent("Kitchen");
 		expect(
 			calls

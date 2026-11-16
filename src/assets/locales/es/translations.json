@@ -3577,8 +3577,6 @@
 			"companyRuleAppliesHint": "La restricción de la política de trabajo ahora es más estricta que esta, así que se aplican ambas.",
 			"department": "Departamento",
 			"allDepartments": "Todos los departamentos",
-			"allConstraints": "Todas",
-			"categoriesLabel": "Categorías de restricciones",
 			"listOr": "{{items, list(type: disjunction)}}",
 			"firmness": {
 				"MUST": "Se cumple siempre. Si las personas y los turnos no alcanzan, el horario muestra dónde falta.",
