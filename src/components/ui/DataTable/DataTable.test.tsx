@@ -2,7 +2,9 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createInstance } from "i18next";
 import { initReactI18next } from "react-i18next";
+import { useState } from "react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
+import type { FunctionComponent } from "@/common/types";
 import en from "@/assets/locales/en/translations.json";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 
@@ -82,6 +84,52 @@ describe("DataTable", () => {
 			"Code 0002",
 		]);
 		expect(headings[0]).toHaveAttribute("colspan", "2");
+	});
+
+	it("given_collapsibleRowGroups_when_aHeadingIsClicked_then_itFoldsOnlyItsGroupsRows", async () => {
+		const user = userEvent.setup();
+		const grouped = [
+			{ id: "b-1", name: "Main Branch", code: "0010" },
+			{ id: "b-3", name: "Jurong", code: "0010" },
+			{ id: "b-2", name: "Orchard", code: "0002" },
+		];
+		/** A table whose group "0010" folds and unfolds from its heading. */
+		const Folding = (): FunctionComponent => {
+			const [closed, setClosed] = useState<Array<string>>([]);
+			return (
+				<DataTable
+					columns={columns}
+					data={grouped}
+					getRowId={getRowId}
+					label="Branches"
+					rowGroups={{
+						groupOf: (branch) => branch.code,
+						label: (code) => `Code ${code}`,
+						collapse: {
+							isOpen: (code) => !closed.includes(code),
+							onToggle: (code) => {
+								setClosed(
+									closed.includes(code)
+										? closed.filter((each) => each !== code)
+										: [...closed, code]
+								);
+							},
+						},
+					}}
+				/>
+			);
+		};
+		render(<Folding />);
+
+		const heading = screen.getByRole("button", { name: "Code 0010" });
+		expect(heading).toHaveAttribute("aria-expanded", "true");
+		expect(heading.getAttribute("aria-controls")?.split(" ")).toHaveLength(2);
+		await user.click(heading);
+
+		expect(heading).toHaveAttribute("aria-expanded", "false");
+		expect(screen.queryByRole("cell", { name: "Main Branch" })).toBeNull();
+		expect(screen.queryByRole("cell", { name: "Jurong" })).toBeNull();
+		expect(screen.getByRole("cell", { name: "Orchard" })).toBeVisible();
 	});
 
 	it("given_aHeaderCell_when_rendered_then_drawsItInPlaceOfTheHeaderText", () => {

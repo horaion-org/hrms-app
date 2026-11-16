@@ -11,12 +11,20 @@ import {
 	type SortingState,
 	type Updater,
 } from "@tanstack/react-table";
-import { Fragment, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+	Fragment,
+	useId,
+	useMemo,
+	useRef,
+	useState,
+	type ReactNode,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
+import { ChevronDownIcon, ChevronRightIcon } from "@/components/ui/Icon";
 import {
 	pinnedCellClasses,
 	pinningStateOf,
@@ -133,11 +141,17 @@ export type DataTableProps<TData extends object> = {
 	/**
 	 * Heads each run of rows of one group with a row of its own, as a list of
 	 * shifts by their group: `groupOf` names a row's group and `label` says
-	 * what the heading reads. Rows arrive already in group order.
+	 * what the heading reads. Rows arrive already in group order. With
+	 * `collapse`, each heading is a button that folds its group's rows away;
+	 * the table's header stays.
 	 */
 	rowGroups?: {
 		groupOf: (row: TData) => string;
 		label: (group: string) => ReactNode;
+		collapse?: {
+			isOpen: (group: string) => boolean;
+			onToggle: (group: string) => void;
+		};
 	};
 	className?: string;
 };
@@ -298,6 +312,10 @@ export const DataTable = <TData extends object>({
 	const rows = table.getRowModel().rows;
 	const headers = table.getHeaderGroups()[0]?.headers ?? [];
 	const columnCount = headers.length + leadingCount;
+	const tableId = useId();
+	// The id a row carries, so its group's heading can name the rows it folds.
+	const rowIdOf = (row: { id: string }): string => `${tableId}-row-${row.id}`;
+	const collapse = rowGroups?.collapse;
 	const allSelected = rows.length > 0 && table.getIsAllRowsSelected();
 	// Select-all does nothing when no row's box can change.
 	const noneSelectable = !rows.some((row) => row.getCanSelect());
@@ -445,6 +463,8 @@ export const DataTable = <TData extends object>({
 							group !== undefined &&
 							(previous === undefined ||
 								rowGroups?.groupOf(previous.original) !== group);
+						const groupOpen =
+							group === undefined || !collapse || collapse.isOpen(group);
 						return (
 							<Fragment key={row.id}>
 								{startsGroup && (
@@ -454,11 +474,46 @@ export const DataTable = <TData extends object>({
 											colSpan={columnCount}
 											scope="colgroup"
 										>
-											{rowGroups?.label(group)}
+											{collapse ? (
+												<button
+													aria-expanded={groupOpen}
+													className="inline-flex cursor-pointer items-center gap-2 rounded-sm text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-blue-500"
+													type="button"
+													aria-controls={rows
+														.filter(
+															(each) =>
+																rowGroups?.groupOf(each.original) === group
+														)
+														.map(rowIdOf)
+														.join(" ")}
+													onClick={() => {
+														collapse.onToggle(group);
+													}}
+												>
+													{groupOpen ? (
+														<ChevronDownIcon
+															aria-hidden="true"
+															className="size-5 shrink-0"
+														/>
+													) : (
+														<ChevronRightIcon
+															aria-hidden="true"
+															className="size-5 shrink-0"
+														/>
+													)}
+													<span>{rowGroups?.label(group)}</span>
+												</button>
+											) : (
+												rowGroups?.label(group)
+											)}
 										</th>
 									</tr>
 								)}
-								<tr className="hover:[&>td]:bg-neutral-50">
+								<tr
+									className="hover:[&>td]:bg-neutral-50"
+									hidden={!groupOpen}
+									id={collapse ? rowIdOf(row) : undefined}
+								>
 									{selection && (
 										<td
 											className={joinClassNames(

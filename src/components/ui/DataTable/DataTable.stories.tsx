@@ -100,6 +100,32 @@ type Story = StoryObj<typeof meta>;
 /** Sorted on the client from each column's `sortValue`. */
 export const Default: Story = {};
 
+/** Rows under group headings that fold: the "Closed" branches start folded; click a heading to fold or unfold it. */
+export const CollapsibleGroups: Story = {
+	render: (args) => {
+		const [closed, setClosed] = useState<Array<string>>(["Closed"]);
+		return (
+			<DataTable
+				{...args}
+				rowGroups={{
+					groupOf: (branch) => (branch.active ? "Open" : "Closed"),
+					label: (group) => <span className="font-bold">{group}</span>,
+					collapse: {
+						isOpen: (group) => !closed.includes(group),
+						onToggle: (group) => {
+							setClosed(
+								closed.includes(group)
+									? closed.filter((each) => each !== group)
+									: [...closed, group]
+							);
+						},
+					},
+				}}
+			/>
+		);
+	},
+};
+
 export const Selectable: Story = {
 	args: {
 		selection: {
