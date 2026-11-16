@@ -1,20 +1,20 @@
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
-import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ExpandableList } from "@/components/ui/ExpandableList";
 import { GenerateScheduleIcon } from "@/components/ui/Icon";
 import {
 	failedLineClasses,
+	HOME_ROW_COUNT,
+	rowAsideClasses,
 	rowClasses,
-	rowDetailClasses,
+	rowLeadClasses,
 	rowListClasses,
-	rowTitleClasses,
+	rowTextClasses,
 } from "@/features/dashboard/cardStyles";
 import type { GuardedRead } from "@/features/dashboard/guardedRead";
 import type { NextRosterRow } from "@/features/dashboard/nextRoster";
-import { weekStateTones } from "@/features/scheduling/months/weekStateLooks";
 import { fixLinkOf } from "@/features/scheduling/readiness/readinessCopy";
 import { scheduleSetupLink } from "@/features/scheduling/schedules/scheduleViewLink";
 
@@ -31,7 +31,7 @@ export type NextRosterCardProps = {
 	className?: string;
 };
 
-/** The one button a row's step leads to; none while it waits or once published. */
+/** The one action a row's step leads to; words alone while it waits or once published. */
 const StepAction = ({
 	row,
 	comingMonday,
@@ -46,14 +46,15 @@ const StepAction = ({
 		department: row.departmentName,
 	});
 	const unit = { branchId: row.branchId, departmentId: row.departmentId };
+	const waiting = <span className={rowAsideClasses}>{label}</span>;
 	switch (row.step) {
 		case "setUp":
 			return (
 				<Button
 					aria-label={named}
-					size="sm"
+					className="shrink-0"
 					to="/scheduling"
-					variant="secondary"
+					variant="textlink"
 					search={fixLinkOf(
 						row.missing.includes("SHIFT") ? "shifts" : "constraints",
 						unit,
@@ -67,11 +68,11 @@ const StepAction = ({
 			return (
 				<Button
 					aria-label={named}
+					className="shrink-0"
 					params={{ month: monthOf(comingMonday) }}
 					search={{ department: row.departmentId }}
-					size="sm"
 					to="/scheduling/months/$month"
-					variant="secondary"
+					variant="textlink"
 				>
 					{label}
 				</Button>
@@ -84,34 +85,38 @@ const StepAction = ({
 						departmentId: row.departmentId,
 					})}
 					aria-label={named}
-					size="sm"
-					variant="secondary"
+					className="shrink-0"
+					variant="textlink"
 				>
 					{label}
 				</Button>
-			) : null;
+			) : (
+				waiting
+			);
 		case "review":
 		case "fix":
 			return row.scheduleId ? (
 				<Button
 					aria-label={named}
+					className="shrink-0"
 					params={{ scheduleId: row.scheduleId }}
-					size="sm"
 					to="/scheduling/$scheduleId"
-					variant={row.step === "review" ? "primary" : "secondary"}
+					variant="textlink"
 				>
 					{label}
 				</Button>
-			) : null;
+			) : (
+				waiting
+			);
 		default:
-			return <span className={rowDetailClasses}>{label}</span>;
+			return waiting;
 	}
 };
 
 /**
- * For each Department whose coming week is not yet published, its state
- * and the one next step: set up what blocks scheduling, generate, review,
- * or fix. Shown only where rosters may be read.
+ * For each Department whose coming week is not yet published, a line: its
+ * state, or what blocks scheduling, and the one next step: set up,
+ * generate, review, or fix. Shown only where rosters may be read.
  */
 export const NextRosterCard = ({
 	rows,
@@ -133,28 +138,23 @@ export const NextRosterCard = ({
 			)}
 			{rows.status === "ready" && (
 				<ExpandableList
+					collapsedCount={HOME_ROW_COUNT}
 					itemClassName={rowClasses}
 					items={rows.data}
 					keyOf={(row) => row.departmentId}
 					listClassName={rowListClasses}
 					renderItem={(row) => (
 						<>
-							<div className="flex flex-wrap items-center justify-between gap-2">
-								<span className={rowTitleClasses}>{row.departmentName}</span>
-								<Badge tone={weekStateTones[row.state]}>
-									{t(`scheduling.months.states.${row.state}`)}
-								</Badge>
-							</div>
-							{row.missing.length > 0 && (
-								<span className={rowDetailClasses}>
-									{row.missing
-										.map((gap) => t(`${key}.missing.${gap}`))
-										.join(" · ")}
-								</span>
-							)}
-							<div>
-								<StepAction comingMonday={comingMonday} row={row} />
-							</div>
+							<span className={rowTextClasses}>
+								<span className={rowLeadClasses}>{row.departmentName}</span>
+								{" · "}
+								{row.missing.length > 0
+									? row.missing
+											.map((gap) => t(`${key}.missing.${gap}`))
+											.join(", ")
+									: t(`scheduling.months.states.${row.state}`)}
+							</span>
+							<StepAction comingMonday={comingMonday} row={row} />
 						</>
 					)}
 				/>
