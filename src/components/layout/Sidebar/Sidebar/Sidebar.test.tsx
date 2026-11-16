@@ -149,10 +149,10 @@ describe("Sidebar", () => {
 			"lg:w-70",
 			"overflow-y-auto"
 		);
-		// A fingertip-sized target on touch screens, unchanged with a mouse.
-		expect(screen.getByRole("link", { name: "Horaion" })).toHaveClass(
-			"pointer-coarse:size-11",
-			"pointer-coarse:-m-0.5"
+		// The logo is itself a fingertip-sized target: 44 px, 48 px from lg.
+		expect(screen.getByRole("img", { name: "Horaion" })).toHaveClass(
+			"size-11",
+			"lg:size-12"
 		);
 	});
 
