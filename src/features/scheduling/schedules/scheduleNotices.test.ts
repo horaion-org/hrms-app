@@ -11,26 +11,38 @@ const GENERATED: ScheduleNoticeFacts = {
 	generating: false,
 	hasRoster: true,
 	weekPublishedElsewhere: false,
+	weekPassed: false,
 };
 
 describe("scheduleNotices", () => {
 	it.each<
 		[string, Partial<ScheduleNoticeFacts>, Array<ScheduleNoticeId>, boolean]
 	>([
-		["a generated roster", {}, ["unpublished"], true],
+		["a generated roster", {}, ["unpublished", "currentRules"], true],
+		[
+			"a generated roster whose week has passed",
+			{ weekPassed: true },
+			["unpublished", "weekPassed"],
+			true,
+		],
 		[
 			"a roster whose week is published elsewhere",
 			{ weekPublishedElsewhere: true },
-			["weekPublished", "unpublished"],
+			["weekPublished", "unpublished", "currentRules"],
 			true,
 		],
-		["a rejected roster", { status: "REJECTED" }, ["rejected"], true],
+		[
+			"a rejected roster",
+			{ status: "REJECTED" },
+			["rejected", "currentRules"],
+			true,
+		],
 		["a published roster", { status: "PUBLISHED" }, [], true],
 		["a new run open on a roster", { generating: true }, ["generating"], false],
 		[
 			"a failed run",
 			{ status: "GENERATION_FAILED", hasRoster: false },
-			["failed"],
+			["failed", "currentRules"],
 			false,
 		],
 		["a draft", { status: "DRAFT", hasRoster: false }, ["draft"], false],
