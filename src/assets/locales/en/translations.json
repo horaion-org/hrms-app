@@ -3833,7 +3833,7 @@
 					"dayOffOrdinary": "Work on a day off counts as ordinary hours.",
 					"dayOffPriced": "An hour of work on a day off costs <DAY_OFF_WORK_PERCENT/>% of a normal hour."
 				},
-				"NO_OVERTIME_WHEN_GENERATING": "A generated roster gives nobody overtime past their normal day or week and calls nobody back on a rest day. Shifts it can’t staff without extra hours are left as gaps, and overtime is offered in the repair options.",
+				"NO_OVERTIME_WHEN_GENERATING": "A generated roster gives nobody overtime past their normal day or week and calls nobody back on a rest day. Shifts it can’t staff without extra hours are left short, and overtime is offered when you ask the engine in Find cover.",
 				"KEEP_DAYS_OFF_TOGETHER": {
 					"ifPossible": "Keep each person’s rest days, days off and leave together where the roster allows.",
 					"must": "Each person’s rest days, days off and leave in a week are together."
@@ -4090,7 +4090,7 @@
 				"MAX_OVERTIME_HOURS_PER_MONTH": "For example: Nobody whose Employment Act limits apply works more than 72 hours of overtime in a calendar month.",
 				"MAX_CALL_BACKS_PER_PERSON": "For example: Everyone may be called back to work on a rest or off day at most 2 times in a roster.",
 				"PAY_RATES": "These rates only guide which roster the engine prefers; they are not used for pay.",
-				"NO_OVERTIME_WHEN_GENERATING": "For example: shifts the team can’t staff without extra hours stay open, and you choose overtime when you repair the roster.",
+				"NO_OVERTIME_WHEN_GENERATING": "For example: shifts the team can’t staff without extra hours stay open, and you choose overtime when you ask the engine in Find cover.",
 				"OVERTIME_STRETCH": "For example: no Supervisor is on the Late shift until 16:00, so the Supervisor on Early may stay on for 2 hours. A stretch covers a role missing for some hours of a shift; it never adds a person to a shift’s headcount.",
 				"KEEP_DAYS_OFF_TOGETHER": "It never costs cover: it only chooses between rosters that are otherwise equal."
 			},

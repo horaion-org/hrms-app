@@ -539,7 +539,7 @@ describe("sentencePartsOf with constraintWords", () => {
 
 	it("reads no overtime when generating as what a generated roster does", () => {
 		expect(read("NO_OVERTIME_WHEN_GENERATING", [])).toBe(
-			"A generated roster gives nobody overtime past their normal day or week and calls nobody back on a rest day. Shifts it can’t staff without extra hours are left as gaps, and overtime is offered in the repair options."
+			"A generated roster gives nobody overtime past their normal day or week and calls nobody back on a rest day. Shifts it can’t staff without extra hours are left short, and overtime is offered when you ask the engine in Find cover."
 		);
 	});
 
