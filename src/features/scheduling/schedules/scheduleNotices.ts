@@ -9,7 +9,7 @@ export type ScheduleNoticeId =
 	| "failed"
 	| "draft"
 	| "weekPassed"
-	| "currentRules";
+	| "rulesChanged";
 
 /** What decides the notices on one schedule. */
 export type ScheduleNoticeFacts = {
@@ -21,12 +21,15 @@ export type ScheduleNoticeFacts = {
 	weekPublishedElsewhere: boolean;
 	/** The week ended before today in its branch's time zone, so its rules and roster are final (API ADR-0091). */
 	weekPassed: boolean;
+	/** The rules changed since the week was generated, as the month read says (API ADR-0091). */
+	rulesChanged: boolean;
 };
 
 /**
  * The notices the roster page may show, in order. Each says something
- * someone must act on, or why there is no roster to look at; anything
- * merely informative goes in the Issues panel instead.
+ * someone must act on, why there is no roster to look at, or why an action
+ * is missing (a passed week can't be regenerated); anything merely
+ * informative goes in the Issues panel instead.
  */
 export const SCHEDULE_NOTICES: ReadonlyArray<{
 	id: ScheduleNoticeId;
@@ -55,14 +58,11 @@ export const SCHEDULE_NOTICES: ReadonlyArray<{
 			!generating && !hasRoster && status !== "GENERATION_FAILED",
 	},
 	{ id: "weekPassed", shownWhen: ({ weekPassed }) => weekPassed },
-	// Until the week has passed, generating it again takes the department's rules and shifts as they are now.
+	// Until the week has passed, generating it again takes the department's rules as they are now.
 	{
-		id: "currentRules",
-		shownWhen: ({ status, generating, weekPassed }) =>
-			!weekPassed &&
-			!generating &&
-			status !== "DRAFT" &&
-			status !== "PUBLISHED",
+		id: "rulesChanged",
+		shownWhen: ({ rulesChanged, generating, weekPassed }) =>
+			rulesChanged && !generating && !weekPassed,
 	},
 ];
 

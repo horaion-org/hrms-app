@@ -34,8 +34,9 @@ const key = "scheduling.months";
  * week under review, Open on any other week with a schedule (a draft opens
  * its setup, any other its roster), none on a week not generated yet. A
  * tentative or missing week has a dashed frame: it is not final. A failed
- * week says why; a week the last month run refused says why too. A week
- * being generated shows its state only.
+ * week says why; a week the last month run refused says why too; a week whose
+ * rules changed since it was generated says so. A week being generated shows
+ * its state only.
  */
 export const WeekCard = ({
 	week,
@@ -76,6 +77,9 @@ export const WeekCard = ({
 			</div>
 			{week.state === "FAILED" && failureMessage && (
 				<p className="text-sm text-neutral-800">{failureMessage}</p>
+			)}
+			{week.rulesChanged === true && (
+				<p className="text-sm text-neutral-800">{t(`${key}.rulesChanged`)}</p>
 			)}
 			{refusal && (
 				<p className="text-sm text-neutral-800">

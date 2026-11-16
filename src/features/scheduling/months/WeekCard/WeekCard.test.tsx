@@ -41,6 +41,26 @@ describe("WeekCard", () => {
 		);
 	});
 
+	it("given_aWeekWhoseRulesChanged_when_rendered_then_saysRegeneratingAppliesThem", async () => {
+		const changed = await renderCard(
+			monthWeekFixture({ state: "TO_REVIEW", rulesChanged: true })
+		);
+
+		expect(
+			within(changed).getByText(
+				"Rules changed since this roster was generated. Regenerate to apply them."
+			)
+		).toBeInTheDocument();
+	});
+
+	it("given_aWeekWhoseRulesDidNotChange_when_rendered_then_saysNothingOfThem", async () => {
+		const unchanged = await renderCard(
+			monthWeekFixture({ state: "TO_REVIEW", rulesChanged: false })
+		);
+
+		expect(within(unchanged).queryByText(/Rules changed/)).toBeNull();
+	});
+
 	it("given_aDraft_when_rendered_then_openGoesToItsSetup", async () => {
 		const card = await renderCard(
 			monthWeekFixture({ state: "DRAFT", scheduleId: "s-5", ...noRoster })
