@@ -13,6 +13,18 @@ export type KeyFigureChange = {
 	description: string;
 };
 
+/**
+ * How the figure itself is drawn where a tile is too narrow for a status
+ * in words: something to act on, something to do, or nothing there.
+ */
+export type KeyFigureTone = "error" | "warning" | "quiet";
+
+const figureToneClasses: Record<KeyFigureTone, string> = {
+	error: "text-error-700",
+	warning: "text-warning-900",
+	quiet: "text-neutral-600",
+};
+
 export type KeyFigureProps = Omit<
 	ComponentPropsWithRef<"section">,
 	"children" | "title"
@@ -25,6 +37,8 @@ export type KeyFigureProps = Omit<
 	unit?: string;
 	/** Whether the figure needs attention, said in words beside its label. */
 	status?: { tone: BadgeTone; label: string };
+	/** Colours the figure by its status; the label and unit must still say what it counts. */
+	tone?: KeyFigureTone;
 	/** The move against the period before, shown before the comparison. */
 	change?: KeyFigureChange;
 	/** What the figure is compared with, e.g. "on the 14 days before". */
@@ -43,6 +57,7 @@ export const KeyFigure = ({
 	value,
 	unit,
 	status,
+	tone,
 	change,
 	comparison,
 	children,
@@ -75,7 +90,12 @@ export const KeyFigure = ({
 				)}
 			</div>
 			<p className="flex flex-wrap items-baseline gap-x-2">
-				<span className="text-[2rem] leading-10 font-semibold text-neutral-900">
+				<span
+					className={joinClassNames(
+						"text-[2rem] leading-10 font-semibold",
+						tone ? figureToneClasses[tone] : "text-neutral-900"
+					)}
+				>
 					{value}
 				</span>
 				{unit !== undefined && (

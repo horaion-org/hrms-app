@@ -55,7 +55,9 @@ describe("NextRosterCard", () => {
 		expect(
 			await screen.findByRole("link", { name: "Review and publish: Sales" })
 		).toHaveAttribute("href", "/scheduling/s-1");
-		expect(screen.getByText("To review")).toBeInTheDocument();
+		expect(screen.getByRole("listitem")).toHaveTextContent(
+			"Sales · To reviewReview and publish"
+		);
 	});
 
 	it("names what blocks a Department and leads to its set-up", async () => {
@@ -63,22 +65,22 @@ describe("NextRosterCard", () => {
 			row({ step: "setUp", missing: ["SHIFT", "STAFFING_CONSTRAINT"] }),
 		]);
 
-		expect(
-			await screen.findByText("No shift · No staffing rule")
-		).toBeInTheDocument();
+		expect(await screen.findByRole("listitem")).toHaveTextContent(
+			"Sales · No shift, No staffing rule"
+		);
 		expect(
 			screen.getByRole("link", { name: "Set up: Sales" }).getAttribute("href")
 		).toContain("view=shifts");
 	});
 
-	it("stops at five Departments and offers the rest", async () => {
+	it("stops at three Departments and offers the rest", async () => {
 		renderCard(
 			Array.from({ length: 7 }, (_, index) =>
 				row({ departmentId: `d-${index}`, departmentName: `Unit ${index}` })
 			)
 		);
 
-		expect(await screen.findAllByRole("listitem")).toHaveLength(5);
+		expect(await screen.findAllByRole("listitem")).toHaveLength(3);
 		expect(
 			screen.getByRole("button", { name: "Show all 7" })
 		).toBeInTheDocument();

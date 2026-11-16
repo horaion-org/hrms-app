@@ -16,7 +16,6 @@ const meta = {
 			total: 1,
 		},
 		canDecide: (): boolean => true,
-		busy: false,
 		onOpen: (): void => {},
 	},
 } satisfies Meta<typeof LeaveToDecideCard>;

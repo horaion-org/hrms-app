@@ -136,7 +136,7 @@ const open = async (entry = "/"): Promise<OpenedApp> => {
 };
 
 describe("Dashboard", () => {
-	it("given_grants_when_opened_then_listsWhatNeedsThePersonInOneTopAlignedColumn", async () => {
+	it("given_grants_when_opened_then_showsATileAndACardForWhatNeedsThePerson", async () => {
 		stubApi(routes());
 		await open();
 
@@ -151,21 +151,20 @@ describe("Dashboard", () => {
 		const leave = await screen.findByRole("region", {
 			name: "Leave to decide",
 		});
-		expect(
-			await within(leave).findByText("from Aisha Rahman", { exact: false })
-		).toBeInTheDocument();
-		// One grid, aligned to the top so no card stretches to a neighbour; a card with no neighbour takes the row.
+		expect(await within(leave).findByText("Aisha Rahman")).toBeInTheDocument();
+		// One grid whose cards share their row's height; a card with no neighbour takes the row.
 		const place = leave.parentElement;
 		expect(place).toHaveClass("lg:col-span-2");
 		expect(place?.parentElement).toHaveClass(
 			"grid",
 			"grid-cols-1",
-			"items-start",
 			"lg:grid-cols-2"
 		);
-		// The count above the cards leads to the list, and nothing else restates it.
+		expect(place?.parentElement).not.toHaveClass("items-start");
+		// The tile above the cards leads to the list, and nothing else restates it.
+		const tiles = screen.getByRole("navigation", { name: "What needs you" });
 		expect(
-			screen.getByRole("link", { name: "3 leave requests to decide" })
+			within(tiles).getByRole("link", { name: /Leave.*3.*to decide/ })
 		).toHaveAttribute("href", "/#leave-to-decide");
 		// Approvals appear once: no Pending Approvals tile, no notifications list, no shortcuts.
 		expect(
@@ -177,7 +176,7 @@ describe("Dashboard", () => {
 		).toHaveAttribute("href", "/activity");
 	});
 
-	it("given_moreLeaveThanFiveRows_when_opened_then_listsFiveAndLinksToTheRest", async () => {
+	it("given_moreLeaveThanThreeRows_when_opened_then_listsThreeAndLinksToTheRest", async () => {
 		const pending = Array.from({ length: 7 }, (_, index) =>
 			leaveFixture({ leaveRequestId: `leave-${index}` })
 		);
@@ -193,7 +192,7 @@ describe("Dashboard", () => {
 		const leave = await screen.findByRole("region", {
 			name: "Leave to decide",
 		});
-		expect(await within(leave).findAllByRole("listitem")).toHaveLength(5);
+		expect(await within(leave).findAllByRole("listitem")).toHaveLength(3);
 		expect(
 			within(leave).getByRole("link", { name: "See all 7" })
 		).toHaveAttribute("href", "/leave?view=requests");
@@ -240,7 +239,7 @@ describe("Dashboard", () => {
 		expect(branchesAsked()).toContain("b-1");
 	});
 
-	it("given_aPendingRequest_when_approvedAndConfirmed_then_sendsIt", async () => {
+	it("given_aPendingRequest_when_reviewedApprovedAndConfirmed_then_sendsIt", async () => {
 		// Before the fixture's leave starts, so the optional comment stays optional.
 		vi.spyOn(Date, "now").mockReturnValue(BEFORE_THE_FIXTURES_LEAVE);
 		const user = userEvent.setup();
@@ -257,22 +256,20 @@ describe("Dashboard", () => {
 		const notifications = await screen.findByRole("region", {
 			name: "Leave to decide",
 		});
-		await within(notifications).findByText("from Aisha Rahman", {
-			exact: false,
-		});
-
-		const approve = within(notifications).getAllByRole("button", {
-			name: "Approve",
-		})[0]!;
-		await waitFor(() => {
-			expect(approve).toBeEnabled();
-		});
-		await user.click(approve);
+		// The row's one action opens the request, where it is approved or rejected.
+		await user.click(
+			await within(notifications).findByRole("button", {
+				name: /^Review: Aisha Rahman/,
+			})
+		);
+		const dialog = await screen.findByRole("dialog", { name: "Leave request" });
+		await user.click(
+			await within(dialog).findByRole("button", { name: "Approve" })
+		);
 		// Approving asks for confirmation first, with an optional comment.
 		expect(
 			calls.filter((call) => `${call.method} ${call.path}` === APPROVE)
 		).toHaveLength(0);
-		const dialog = await screen.findByRole("dialog", { name: "Leave request" });
 		await user.click(
 			within(dialog).getByRole("button", { name: "Confirm approval" })
 		);
@@ -343,30 +340,31 @@ describe("Dashboard", () => {
 		await open();
 
 		const short = await screen.findByRole("region", { name: "Shifts short" });
-		// The lead card takes the row; the count above it leads to it.
+		// Of three cards the first takes the row; its tile leads to it.
 		expect(short.parentElement).toHaveClass("lg:col-span-2");
-		expect(screen.getByRole("link", { name: "1 shift short" })).toHaveAttribute(
-			"href",
-			"/#short-shifts"
-		);
 		expect(
-			await within(short).findByRole("link", { name: /Morning/ })
+			screen.getByRole("link", { name: /Shifts.*1.*short/ })
+		).toHaveAttribute("href", "/#short-shifts");
+		expect(
+			await within(short).findByRole("link", { name: /^Find cover: Morning/ })
 		).toHaveAttribute(
 			"href",
 			"/scheduling/s-1?week=2026-11-16&day=2026-11-18&cover=fs-am%7C2026-11-18"
 		);
 		const offers = screen.getByRole("region", { name: "Cover offers waiting" });
-		expect(
-			await within(offers).findByText(/Kent Chua has not answered/)
-		).toBeInTheDocument();
-		// Two cards beside each other below the lead card, neither alone in a row.
+		expect(await within(offers).findByText("Kent Chua")).toBeInTheDocument();
+		// Two cards beside each other below the first, neither alone in a row.
 		const leave = await screen.findByRole("region", {
 			name: "Leave to decide",
 		});
 		expect(leave.parentElement).not.toHaveClass("lg:col-span-2");
 		expect(offers.parentElement).not.toHaveClass("lg:col-span-2");
-		// With no Department to roster, nothing is said about the coming week.
+		// With no Department to roster, nothing is said about the coming week: no card and no tile.
 		expect(screen.queryByRole("region", { name: "Next roster" })).toBeNull();
+		const tiles = screen.getByRole("navigation", { name: "What needs you" });
+		expect(within(tiles).queryByText("Rosters")).toBeNull();
+		// Approvals are out of this person's reach, so they have no tile either.
+		expect(within(tiles).getAllByRole("listitem")).toHaveLength(4);
 	});
 
 	it("given_aRuleNobodyCanStaff_when_opened_then_namesItOnceWithItsCause", async () => {
@@ -399,14 +397,15 @@ describe("Dashboard", () => {
 
 		const short = await screen.findByRole("region", { name: "Shifts short" });
 		expect(await within(short).findAllByRole("listitem")).toHaveLength(1);
-		expect(short).toHaveTextContent("Short on 3 shifts.");
-		expect(short).toHaveTextContent("cover cannot fix it");
+		expect(short).toHaveTextContent(
+			"Front desk AM · needs 3, 2 hold the title · 3 shifts"
+		);
 		expect(
-			screen.getByRole("link", { name: "3 shifts short" })
+			screen.getByRole("link", { name: /Shifts.*3.*short/ })
 		).toBeInTheDocument();
 	});
 
-	it("given_nothingToActOn_when_opened_then_saysAllClearInOneNoteAndDrawsNoCard", async () => {
+	it("given_nothingToActOn_when_opened_then_keepsEveryTileAtZeroAndSaysAllClearInOneLine", async () => {
 		stubApi({
 			...routes(["schedule:read", "leave_request:read"]),
 			[LEAVE]: page([], 0),
@@ -431,9 +430,17 @@ describe("Dashboard", () => {
 
 		await waitFor(() => {
 			expect(screen.getByRole("note")).toHaveTextContent(
-				"All clear. Every shift is staffed this week and next. No leave waits for a decision. Nobody is off today."
+				/^All clear\. Nothing needs you right now\.$/
 			);
 		});
+		// Each tile keeps its place at zero, and none of them is a link.
+		const tiles = screen.getByRole("navigation", { name: "What needs you" });
+		expect(
+			within(tiles)
+				.getAllByRole("listitem")
+				.map((tile) => tile.textContent)
+		).toEqual(["Shifts0short", "Leave0to decide", "People0off today"]);
+		expect(within(tiles).queryByRole("link")).toBeNull();
 		expect(screen.queryByRole("region", { name: "Shifts short" })).toBeNull();
 		expect(
 			screen.queryByRole("region", { name: "Leave to decide" })

@@ -3,7 +3,7 @@ import type { HomeSection } from "@/features/dashboard/homeSections";
 /*
  * How Home lays its sections out, decided in one place so the page only
  * renders it. A section with rows is a card on the grid; one with nothing
- * to act on is a sentence in the "all clear" note, never an empty box.
+ * to act on is a quiet tile at zero, never an empty box.
  */
 
 /**
@@ -25,24 +25,17 @@ export const sectionStateOf = (
 /** How wide a card sits on Home's two-column grid. */
 export type CardSpan = "full" | "half";
 
-/** The section whose rows are long enough to want the whole row. */
-const LEAD_SECTION: HomeSection = "short-shifts";
-
 /**
- * Each card's width, in the order given. The lead card takes the whole
- * row; the rest pair up, and a card left without a neighbour takes the
- * whole row too, so none sits beside an empty space.
+ * Each card's width, in the order given: two to a row. With an odd number
+ * of cards the first, the most urgent, takes the whole row, so no card sits
+ * beside an empty space and at most one is wide.
  */
 export const cardSpans = (
 	cards: ReadonlyArray<HomeSection>
-): Map<HomeSection, CardSpan> => {
-	const paired = cards.filter((section) => section !== LEAD_SECTION);
-	const leftAlone =
-		paired.length % 2 === 1 ? paired[paired.length - 1] : undefined;
-	return new Map(
-		cards.map((section) => [
+): Map<HomeSection, CardSpan> =>
+	new Map(
+		cards.map((section, index) => [
 			section,
-			section === LEAD_SECTION || section === leftAlone ? "full" : "half",
+			cards.length % 2 === 1 && index === 0 ? "full" : "half",
 		])
 	);
-};

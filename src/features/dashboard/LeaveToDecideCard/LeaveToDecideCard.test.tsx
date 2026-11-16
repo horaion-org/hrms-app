@@ -25,34 +25,32 @@ const pendingOf = (count: number): LeaveList => ({
 });
 
 describe("LeaveToDecideCard", () => {
-	it("opens a request to approve from its row", async () => {
+	it("opens a request from its row's one action, where it is approved or rejected", async () => {
 		const user = userEvent.setup();
 		const onOpen = vi.fn();
-		const pending = pendingOf(1);
 		render(
 			<MemoryRouterHarness>
 				<LeaveToDecideCard
-					busy={false}
 					canDecide={() => true}
-					pending={pending}
+					pending={pendingOf(1)}
 					onOpen={onOpen}
 				/>
 			</MemoryRouterHarness>
 		);
 
-		await user.click(await screen.findByRole("button", { name: "Approve" }));
+		await user.click(await screen.findByRole("button", { name: /^Review: / }));
 
 		expect(onOpen).toHaveBeenCalledWith(
 			expect.objectContaining({ leaveRequestId: "leave-0" }),
-			"approve"
+			"view"
 		);
+		expect(screen.getAllByRole("button")).toHaveLength(1);
 	});
 
-	it("holds the decision where the person may not decide", async () => {
+	it("only offers a look where the person may not decide", async () => {
 		render(
 			<MemoryRouterHarness>
 				<LeaveToDecideCard
-					busy={false}
 					canDecide={() => false}
 					pending={pendingOf(1)}
 					onOpen={() => {}}
@@ -61,15 +59,14 @@ describe("LeaveToDecideCard", () => {
 		);
 
 		expect(
-			await screen.findByRole("button", { name: "Approve" })
-		).toBeDisabled();
+			await screen.findByRole("button", { name: /^View: / })
+		).toHaveTextContent("View");
 	});
 
-	it("lists five requests and links to the rest", async () => {
+	it("lists three requests and links to the rest", async () => {
 		render(
 			<MemoryRouterHarness>
 				<LeaveToDecideCard
-					busy={false}
 					canDecide={() => true}
 					pending={pendingOf(7)}
 					onOpen={() => {}}
@@ -77,7 +74,7 @@ describe("LeaveToDecideCard", () => {
 			</MemoryRouterHarness>
 		);
 
-		expect(await screen.findAllByRole("listitem")).toHaveLength(5);
+		expect(await screen.findAllByRole("listitem")).toHaveLength(3);
 		expect(screen.getByRole("link", { name: "See all 7" })).toHaveAttribute(
 			"href",
 			"/leave?view=requests"

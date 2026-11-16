@@ -15,7 +15,7 @@ beforeAll(async () => {
 });
 
 describe("OpenCoverOffersCard", () => {
-	it("lists who has not answered, each opening its roster", async () => {
+	it("lists who has not answered on one line, its action opening the roster", async () => {
 		render(
 			<MemoryRouterHarness>
 				<OpenCoverOffersCard
@@ -26,13 +26,34 @@ describe("OpenCoverOffersCard", () => {
 		);
 
 		const link = await screen.findByRole("link", {
-			name: /Kent Chua has not answered: Morning/,
+			name: /^Open roster: Kent Chua, Morning, /,
 		});
 		expect(link).toHaveAttribute("href", "/scheduling/s-1");
-		expect(screen.queryByText("Your offers to answer")).toBeNull();
+		expect(screen.getByRole("listitem")).toHaveTextContent(
+			/^Kent Chua · Morning · .+ · by .+Open roster$/
+		);
 	});
 
-	it("shows the person's own offers only when they have some", async () => {
+	it("puts the person's own offers to answer first, in the same list", async () => {
+		render(
+			<MemoryRouterHarness>
+				<OpenCoverOffersCard
+					teamOffers={{ status: "ready", data: [teamCoverOfferFixture()] }}
+					myOffers={{
+						status: "ready",
+						data: [coverOfferFixture({ status: "OPEN" })],
+					}}
+				/>
+			</MemoryRouterHarness>
+		);
+
+		const rows = await screen.findAllByRole("listitem");
+		expect(rows).toHaveLength(2);
+		expect(rows[0]).toHaveTextContent(/^You · .+Answer$/);
+		expect(screen.getByRole("link", { name: /^Answer: / })).toBeInTheDocument();
+	});
+
+	it("shows the person's own offers where the team's are out of reach", async () => {
 		render(
 			<MemoryRouterHarness>
 				<OpenCoverOffersCard
@@ -45,9 +66,7 @@ describe("OpenCoverOffersCard", () => {
 			</MemoryRouterHarness>
 		);
 
-		expect(
-			await screen.findByText("Your offers to answer")
-		).toBeInTheDocument();
+		expect(await screen.findAllByRole("listitem")).toHaveLength(1);
 	});
 
 	it("is left out when neither applies", () => {

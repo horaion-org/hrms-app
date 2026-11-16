@@ -6,9 +6,14 @@ import { COLLAPSED_ROW_COUNT, ExpandableList } from "./ExpandableList";
 
 const rows = Array.from({ length: 12 }, (_, index) => `Row ${index + 1}`);
 
-const renderList = (items: ReadonlyArray<string>, seeAll?: ReactNode): void => {
+const renderList = (
+	items: ReadonlyArray<string>,
+	seeAll?: ReactNode,
+	collapsedCount?: number
+): void => {
 	render(
 		<ExpandableList
+			collapsedCount={collapsedCount}
 			items={items}
 			keyOf={(item) => item}
 			renderItem={(item) => item}
@@ -26,6 +31,12 @@ describe("ExpandableList", () => {
 		expect(screen.getAllByRole("listitem")).toHaveLength(rows.length);
 		await userEvent.click(screen.getByRole("button", { expanded: true }));
 		expect(screen.getAllByRole("listitem")).toHaveLength(COLLAPSED_ROW_COUNT);
+	});
+
+	it("stops at the number of rows it is given", () => {
+		renderList(rows, undefined, 3);
+		expect(screen.getAllByRole("listitem")).toHaveLength(3);
+		expect(screen.getByRole("button", { expanded: false })).toBeVisible();
 	});
 
 	it("offers no toggle when every row already shows", () => {
