@@ -5056,12 +5056,22 @@
 			"setup": {
 				"description": "Selecciona el departamento y el mes que quieres generar.",
 				"month": "Mes",
-				"weeks_one": "{{count}} semana: del {{from}} al {{to}}. Una semana pertenece al mes en que cae su lunes.",
-				"weeks_other": "{{count}} semanas: del {{from}} al {{to}}. Una semana pertenece al mes en que cae su lunes.",
+				"belongs": "Una semana pertenece al mes en que cae su lunes.",
+				"weeksLabel": "Semanas",
+				"weekColumn": "Semana",
+				"stateColumn": "Estado",
+				"weekDates": "{{from}} a {{to}}",
 				"looks": {
 					"OVER": "Terminado",
 					"STARTED": "Empezado"
 				},
+				"chosen_one": "{{count}} semana: {{ranges}}",
+				"chosen_other": "{{count}} semanas: {{ranges}}",
+				"startedNote": "{{week}} ya ha empezado. Se genera completa, lunes incluido.",
+				"rosterWaitingNote": "{{week}} tiene un horario pendiente de revisión. Generar de nuevo lo sustituye.",
+				"rosterRejectedNote": "{{week}} tiene un horario rechazado. Generar de nuevo lo sustituye.",
+				"noneTicked": "Marca al menos una semana para programar.",
+				"noneOpen": "Ninguna semana de {{month}} se puede programar: cada una está publicada, terminada o generándose. Elige otro mes.",
 				"validation": {
 					"month": "Elige un mes."
 				}

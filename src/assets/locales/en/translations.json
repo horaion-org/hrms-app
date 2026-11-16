@@ -5256,12 +5256,22 @@
 			"setup": {
 				"description": "Select the department and the month to generate.",
 				"month": "Month",
-				"weeks_one": "{{count}} week: {{from}} to {{to}}. A week belongs to the month its Monday falls in.",
-				"weeks_other": "{{count}} weeks: {{from}} to {{to}}. A week belongs to the month its Monday falls in.",
+				"belongs": "A week belongs to the month its Monday falls in.",
+				"weeksLabel": "Weeks",
+				"weekColumn": "Week",
+				"stateColumn": "State",
+				"weekDates": "{{from}} to {{to}}",
 				"looks": {
 					"OVER": "Over",
 					"STARTED": "Started"
 				},
+				"chosen_one": "{{count}} week: {{ranges}}",
+				"chosen_other": "{{count}} weeks: {{ranges}}",
+				"startedNote": "{{week}} has already started. It is generated whole, Monday included.",
+				"rosterWaitingNote": "{{week}} has a roster waiting for review. Generating again replaces it.",
+				"rosterRejectedNote": "{{week}} has a rejected roster. Generating again replaces it.",
+				"noneTicked": "Tick at least one week to schedule.",
+				"noneOpen": "No week of {{month}} can be scheduled: each is published, over or being generated. Choose another month.",
 				"validation": {
 					"month": "Choose a month."
 				}
