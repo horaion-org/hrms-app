@@ -26,10 +26,17 @@ export type TeamShiftPreferencesProps = {
 
 const key = "shiftPreferences.team";
 
-/** One member's row: their name, and each day's preferred shifts as chips. */
-const rowOf = (member: TeamMemberWeek): WeekGridRowData => ({
+/** One member's row: their name (`formerMember` once removed), and each day's preferred shifts as chips. */
+const rowOf = (
+	member: TeamMemberWeek,
+	formerMember: string
+): WeekGridRowData => ({
 	id: member.membershipId,
-	heading: <span className="text-sm font-medium">{member.displayName}</span>,
+	heading: (
+		<span className="text-sm font-medium">
+			{member.displayName ?? formerMember}
+		</span>
+	),
 	days: member.days.map((day) => ({
 		day: weekdayOf(day.date),
 		cell: <PreferredShiftsCell names={day.shifts.map((shift) => shift.name)} />,
@@ -71,7 +78,9 @@ export const TeamShiftPreferences = ({
 				emptyState={t(`${key}.empty`)}
 				headingLabel={t(`${key}.member`)}
 				label={t(`${key}.label`)}
-				rows={team.page.content.map(rowOf)}
+				rows={team.page.content.map((member) =>
+					rowOf(member, t("scheduling.detail.formerMember"))
+				)}
 				shownDay={shownDay}
 				weekStartMonday={weekStartMonday}
 			/>

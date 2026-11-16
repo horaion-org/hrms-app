@@ -82,6 +82,25 @@ export const fixtureTeamPage = (): TeamPreferencePage => ({
 	page: { totalElements: 1 },
 });
 
+/** A team page of Alex and a member since removed, whose name the API sends as null. */
+export const fixtureTeamPageWithFormerMember = (): TeamPreferencePage => {
+	const page = fixtureTeamPage();
+	return {
+		content: [
+			...page.content,
+			{
+				membershipId: "m-2",
+				displayName: null,
+				days: [FIXTURE_WEEK, ...REST_OF_THE_WEEK].map((date) => ({
+					date,
+					shifts: [],
+				})),
+			},
+		],
+		page: { totalElements: 2 },
+	};
+};
+
 /** One outcome of each kind for the same member on three days. */
 export const fixtureOutcomes = (): Array<SchedulePreferenceOutcome> => [
 	{

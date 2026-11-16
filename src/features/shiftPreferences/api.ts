@@ -64,7 +64,8 @@ const preferredShiftSchema = z.object({
 
 const teamMemberWeekSchema = z.object({
 	membershipId: z.string(),
-	displayName: z.string(),
+	/** Null once the member has been removed; their preferences stay listed. */
+	displayName: z.string().nullable(),
 	days: z.array(
 		z.object({
 			date: z.iso.date(),

@@ -11,6 +11,7 @@ import { TEAM_PAGE_SIZE } from "@/features/shiftPreferences/api";
 import {
 	FIXTURE_WEEK,
 	fixtureTeamPage,
+	fixtureTeamPageWithFormerMember,
 } from "@/features/shiftPreferences/fixtures";
 import { TeamShiftPreferences } from "@/features/shiftPreferences/TeamShiftPreferences";
 
@@ -79,6 +80,25 @@ describe("TeamShiftPreferences", () => {
 		expect(calls.map((call) => call.search)).toEqual([
 			`departmentId=d-1&weekStartMonday=${FIXTURE_WEEK}&page=0&size=${TEAM_PAGE_SIZE}`,
 		]);
+	});
+
+	it("given_aRemovedMember_when_shown_then_namesThemAsAFormerMember", async () => {
+		stubApi({
+			[TEAM]: {
+				status: 200,
+				body: envelope(fixtureTeamPageWithFormerMember()),
+			},
+		});
+		show([READ]);
+
+		const table = await screen.findByRole("table", {
+			name: "Team shift preferences",
+		});
+		expect(
+			within(table)
+				.getAllByRole("rowheader")
+				.map((header) => header.textContent)
+		).toEqual(["Alex Example", "Former member"]);
 	});
 
 	it("given_noMembersInReach_when_shown_then_saysSoAcrossTheGrid", async () => {

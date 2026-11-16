@@ -13,6 +13,7 @@ import {
 import {
 	FIXTURE_WEEK,
 	fixtureTeamPage,
+	fixtureTeamPageWithFormerMember,
 	fixtureWeek,
 	MONDAY_WITH_MORNING,
 } from "@/features/shiftPreferences/fixtures";
@@ -97,6 +98,26 @@ describe("shift preferences API", () => {
 				page: 0,
 			})
 		).resolves.toEqual(fixtureTeamPage());
+	});
+
+	it("given_aRemovedMember_when_theTeamPageIsRead_then_keepsTheRowWithANullName", async () => {
+		stubApi({
+			"GET /api/v1/companies/c-1/shift-preferences": {
+				status: 200,
+				body: envelope(fixtureTeamPageWithFormerMember()),
+			},
+		});
+
+		const page = await fetchTeamPreferences("c-1", {
+			departmentId: "d-1",
+			weekStartMonday: FIXTURE_WEEK,
+			page: 0,
+		});
+
+		expect(page.content.map((member) => member.displayName)).toEqual([
+			"Alex Example",
+			null,
+		]);
 	});
 
 	it("given_anOwnWeekAndATeamPage_when_keyed_then_eachHasItsOwnStableKey", () => {
