@@ -126,7 +126,7 @@ describe("WeekChoiceDialog", () => {
 		expect(box("Sunday cover")).not.toBeChecked();
 		expect(box("Sunday cover")).toBeDisabled();
 		expect(screen.getByRole("row", { name: /Sunday cover/ })).toHaveTextContent(
-			"Needs attention: Lead isn’t on the constraint’s shifts any more. Edit the constraint, or add Lead to the shift."
+			"Needs attention: Lead isn’t on every one of the constraint’s shifts any more. Edit the constraint, or add Lead to each of its shifts."
 		);
 	});
 

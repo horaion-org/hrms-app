@@ -31,6 +31,7 @@ import { nameSuggestion } from "@/features/scheduling/constraints/ConstraintDial
 import {
 	allowedLinkIds,
 	linksByKindOf,
+	sharesNothing,
 	withoutUnfitting,
 	type RemovedValue,
 } from "@/features/scheduling/constraints/ConstraintDialog/fieldChoices";
@@ -311,6 +312,10 @@ export const ConstraintDialog = ({
 		JOB_TITLE: t(`${key}.noJobTitles`),
 		SHIFT: t(`${key}.noShifts`),
 	};
+	// What a field of each kind says when the values chosen in the field it depends on share none of that kind.
+	const noOverlap: Partial<Record<ConstraintFieldKind, string>> = {
+		JOB_TITLE: t(`${key}.dependency.noOverlap.JOB_TITLE`),
+	};
 	// Job titles and shifts read as their names; a plain value never matches an id.
 	const namesById = new Map(
 		[...choices.JOB_TITLE, ...choices.SHIFT].map(({ value, label }) => [
@@ -339,9 +344,13 @@ export const ConstraintDialog = ({
 		const allowed = allowedLinkIds(spec, chosen?.fields ?? [], values, links);
 		return all.filter((choice) => allowed.includes(choice.value));
 	};
-	// Why a dependent field offers nothing: nothing chosen in the field it depends on, or nothing there lists one.
+	// Why a dependent field offers nothing: nothing chosen in the field it depends on, what is chosen there shares
+	// nothing of its kind, or nothing there lists one.
 	const emptyTextOf = (spec: ConstraintFieldSpec): string | undefined => {
 		if (!spec.listedBy) return noChoices[spec.kind];
+		const shareNone = noOverlap[spec.kind];
+		if (shareNone && sharesNothing(spec, chosen?.fields ?? [], values, links))
+			return shareNone;
 		const parent = spec.listedBy;
 		return t(
 			(values[parent] ?? []).length === 0

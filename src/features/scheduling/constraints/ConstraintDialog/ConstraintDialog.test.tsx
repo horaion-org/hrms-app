@@ -858,44 +858,55 @@ describe("ConstraintDialog", () => {
 		).toBeNull();
 	});
 
-	it("given_aShiftUnticked_when_itsJobTitlesNoLongerFit_then_takesThemOutAndSaysSo", async () => {
+	it("given_aSecondShiftChosen_when_jobTitlesOutsideTheOverlap_then_takesThemOutAndSaysSo", async () => {
+		const user = userEvent.setup();
+		renderDialog();
+		await start(user, "People on a shift");
+		await pick(user, /^Shifts/, "Lunch Rush");
+		await pick(user, /^Job titles that count/, "Cashier", "Supervisor");
+
+		// Closing Crew takes Supervisor but not Cashier.
+		await pick(user, /^Shifts/, "Closing Crew");
+
+		expect(
+			screen.getByText(
+				"Cashier was removed: not everything chosen in Shifts lists it."
+			)
+		).toBeVisible();
+		expect(trigger(/^Job titles that count/)).toHaveTextContent("Supervisor");
+		expect(trigger(/^Job titles that count/)).not.toHaveTextContent("Cashier");
+	});
+
+	it("given_twoShiftsThatShareNoJobTitle_when_jobTitlesOpened_then_saysTheyShareNone", async () => {
 		const user = userEvent.setup();
 		renderDialog();
 		await start(user, "People on a shift");
 		await pick(user, /^Shifts/, "Front Desk AM", "Lunch Rush");
-		await pick(user, /^Job titles that count/, "Front Desk Lead", "Cashier");
 
-		// Ticked again, so unticked.
-		await pick(user, /^Shifts/, "Front Desk AM");
-
-		expect(
-			screen.getByText(
-				"Front Desk Lead was removed: nothing chosen in Shifts lists it."
-			)
-		).toBeVisible();
-		expect(trigger(/^Job titles that count/)).toHaveTextContent("Cashier");
-		expect(trigger(/^Job titles that count/)).not.toHaveTextContent(
-			"Front Desk Lead"
-		);
-	});
-
-	it("given_aShiftThatListsNoneOfTheJobTitles_when_saved_then_refusesItOnTheShifts", async () => {
-		const user = userEvent.setup();
-		const { onSave } = renderDialog();
-		await start(user, "People on a shift");
-		await pick(user, /^Shifts/, "Front Desk AM", "Lunch Rush");
-		await pick(user, /^At least, at most or exactly/, "At least");
-		await user.type(screen.getByRole("spinbutton", { name: /^People/ }), "2");
-		await pick(user, /^Job titles that count/, "Front Desk Lead");
-
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(trigger(/^Job titles that count/));
 
 		expect(
 			await screen.findByText(
-				"Lunch Rush doesn’t list Front Desk Lead, so no one can be counted there. Choose one it lists, or remove it."
+				"The chosen shifts share no job title. Choose shifts that take the same job title, or fewer shifts."
 			)
 		).toBeVisible();
-		expect(onSave).not.toHaveBeenCalled();
+		expect(screen.queryByRole("option", { name: "Cashier" })).toBeNull();
+	});
+
+	it("given_oneShiftThatListsNoneOffered_when_jobTitlesOpened_then_keepsTheOneShiftLine", async () => {
+		const user = userEvent.setup();
+		renderDialog();
+		await start(user, "People on a shift");
+		await pick(user, /^Shifts/, "Concierge Support");
+
+		await user.click(trigger(/^Job titles that count/));
+
+		expect(
+			await screen.findByText("Nothing chosen in Shifts lists one yet.")
+		).toBeVisible();
+		expect(
+			screen.queryByText(/The chosen shifts share no job title/)
+		).toBeNull();
 	});
 
 	it("given_aSavedRuleWithValuesThatNoLongerFit_when_opened_then_takesThemOutAndNamesThem", async () => {

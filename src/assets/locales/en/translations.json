@@ -3401,7 +3401,7 @@
 			"problems": {
 				"needsAttention": "Needs attention",
 				"UNAVAILABLE": "{{name}} no longer exists or isn’t active. Edit the constraint or delete it.",
-				"NOT_LISTED": "{{name}} isn’t on the constraint’s shifts any more. Edit the constraint, or add {{name}} to the shift.",
+				"NOT_LISTED": "{{name}} isn’t on every one of the constraint’s shifts any more. Edit the constraint, or add {{name}} to each of its shifts.",
 				"LISTS_NONE": "{{name}} lists none of the constraint’s job titles any more. Edit the constraint, or add one to the shift.",
 				"UNKNOWN": "{{name}} no longer fits. Edit the constraint."
 			},
@@ -3624,7 +3624,7 @@
 				"typeAlreadyUsed": "This department already has a constraint of this type. Edit that one instead.",
 				"invalid": "This constraint doesn’t fit its type. Check the values and try again.",
 				"linkNotInDepartment": "A chosen shift or job title is no longer part of this department. Choose again.",
-				"linkDoesNotFit": "A chosen job title isn’t on any chosen shift, or a chosen shift lists none of the chosen job titles. Choose again, or change the shift first.",
+				"linkDoesNotFit": "A chosen job title isn’t on every chosen shift, or a chosen shift lists none of the chosen job titles. Choose again, choose fewer shifts, or change the shift first.",
 				"departmentInactive": "This department is inactive. Activate it first.",
 				"departmentGone": "This department is no longer available.",
 				"forbidden": "You no longer have permission to add constraints here.",
@@ -3658,9 +3658,12 @@
 				"dependency": {
 					"chooseFirst": "Choose in {{field}} first.",
 					"noneListed": "Nothing chosen in {{field}} lists one yet.",
+					"noOverlap": {
+						"JOB_TITLE": "The chosen shifts share no job title. Choose shifts that take the same job title, or fewer shifts."
+					},
 					"removed": {
-						"NOT_LISTED_one": "{{names}} was removed: nothing chosen in {{field}} lists it.",
-						"NOT_LISTED_other": "{{names}} were removed: nothing chosen in {{field}} lists them.",
+						"NOT_LISTED_one": "{{names}} was removed: not everything chosen in {{field}} lists it.",
+						"NOT_LISTED_other": "{{names}} were removed: not everything chosen in {{field}} lists them.",
 						"EXCLUDED_one": "{{names}} was removed: it is already chosen in {{field}}.",
 						"EXCLUDED_other": "{{names}} were removed: they are already chosen in {{field}}."
 					},
