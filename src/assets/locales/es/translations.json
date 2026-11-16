@@ -4239,6 +4239,7 @@
 			"save": "Guardar horas"
 		},
 		"issues": {
+			"groupLabel": "{{group}}, {{count}}",
 			"show": "Mostrar",
 			"nothingWrong": "Nada que corregir: todos los turnos están cubiertos y se cumplen todas las reglas.",
 			"orderLabel": "Ordenar incidencias",

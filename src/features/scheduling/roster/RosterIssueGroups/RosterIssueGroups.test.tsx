@@ -39,7 +39,7 @@ describe("RosterIssueGroups", () => {
 			/>
 		);
 		const fold = screen.getByRole("button", {
-			name: new RegExp(copy.groups.notMet),
+			name: `${copy.groups.notMet}, 1`,
 		});
 
 		await userEvent.click(fold);
