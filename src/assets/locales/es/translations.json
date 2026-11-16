@@ -607,7 +607,6 @@
 	"shiftPreferences": {
 		"tab": "Preferencias de turno",
 		"subtitle": "Los turnos que te gustaría trabajar. Se tienen en cuenta de forma justa al hacer el horario, pero no se garantizan.",
-		"edit": "Elegir turnos",
 		"editDay": "Elegir turnos para {{day}}",
 		"limit": "Elige hasta {{max}} turnos por día.",
 		"count": "{{chosen}} de {{max}} elegidos",
@@ -4856,9 +4855,7 @@
 				"empty": "Todos los turnos están cubiertos esta semana y la próxima.",
 				"shift": "{{shift}} {{start}}–{{end}}, {{day}}",
 				"detail_one": "{{department}} · falta {{count}} persona",
-				"detail_other": "{{department}} · faltan {{count}} personas",
-				"more_one": "y {{count}} más",
-				"more_other": "y {{count}} más"
+				"detail_other": "{{department}} · faltan {{count}} personas"
 			},
 			"coverOffers": {
 				"title": "Ofertas de cobertura pendientes",
