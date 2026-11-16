@@ -479,6 +479,8 @@
 			},
 			"subjects": {
 				"roster": {
+					"pageTitle": "Roster approvals",
+					"pageSubtitle": "Who approves a roster before it is published, step by step. Where nothing is set up, one person decides, as before.",
 					"title": "Roster publishing",
 					"description": "Before a roster is published.",
 					"none": "No approval flow. Rosters publish in one step, by anyone who can publish them.",
@@ -498,6 +500,8 @@
 					"deleteDescription": "Rosters already waiting keep this flow. Deleting it can’t be undone."
 				},
 				"leave": {
+					"pageTitle": "Leave approvals",
+					"pageSubtitle": "Who approves leave requests, step by step. Where nothing is set up, one person decides, as before.",
 					"title": "Leave requests",
 					"description": "Before leave is approved.",
 					"none": "No approval flow. Leave is approved or rejected in one step, by anyone who can review it.",
@@ -1464,6 +1468,60 @@
 		"title": "Settings",
 		"subtitle": "Manage your workspace preferences.",
 		"sections": "Settings sections",
+		"back": "Settings",
+		"groups": {
+			"workspace": "Workspace",
+			"rostering": "Rostering",
+			"leave": "Leave",
+			"accessAndData": "Access and data",
+			"account": "Account"
+		},
+		"entries": {
+			"general": {
+				"title": "General",
+				"description": "Workspace name, language, time zone and date format."
+			},
+			"notifications": {
+				"title": "Notifications",
+				"description": "What you are told about, and how."
+			},
+			"employment": {
+				"title": "Employment terms",
+				"description": "Working days, hours and rest day for each kind of contract."
+			},
+			"scheduling": {
+				"title": "Work policy",
+				"description": "Limits every roster must keep, for the company or chosen branches and departments."
+			},
+			"roster-approvals": {
+				"title": "Roster approvals",
+				"description": "Who approves a roster before it is published, step by step."
+			},
+			"leave-types": {
+				"title": "Leave types",
+				"description": "The kinds of leave people can apply for."
+			},
+			"leave-durations": {
+				"title": "Leave durations",
+				"description": "Half days and other part-day times people can take as leave."
+			},
+			"leave-approvals": {
+				"title": "Leave approvals",
+				"description": "Who approves leave requests, step by step."
+			},
+			"access": {
+				"title": "Access roles",
+				"description": "What people can manage, and where."
+			},
+			"data": {
+				"title": "Import and export",
+				"description": "Bring in or take out your company's data in bulk."
+			},
+			"plan": {
+				"title": "Plan and billing",
+				"description": "Your plan, upgrades and billing details."
+			}
+		},
 		"comingSoon": "These settings are coming soon.",
 		"plan": {
 			"title": "Plan and billing",

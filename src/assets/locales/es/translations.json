@@ -479,6 +479,8 @@
 			},
 			"subjects": {
 				"roster": {
+					"pageTitle": "Aprobaciones de cuadrantes",
+					"pageSubtitle": "Quién aprueba un cuadrante antes de publicarlo, paso a paso. Donde no hay nada configurado, decide una sola persona, como antes.",
 					"title": "Publicación de cuadrantes",
 					"description": "Antes de publicar un cuadrante.",
 					"none": "No hay flujo de aprobación. Los cuadrantes se publican en un paso, por cualquiera que pueda publicarlos.",
@@ -498,6 +500,8 @@
 					"deleteDescription": "Los cuadrantes que ya esperan conservan este flujo. No se puede deshacer."
 				},
 				"leave": {
+					"pageTitle": "Aprobaciones de permisos",
+					"pageSubtitle": "Quién aprueba las solicitudes de permiso, paso a paso. Donde no hay nada configurado, decide una sola persona, como antes.",
 					"title": "Solicitudes de permiso",
 					"description": "Antes de aprobar un permiso.",
 					"none": "No hay flujo de aprobación. Los permisos se aprueban o rechazan en un paso, por cualquiera que pueda revisarlos.",
@@ -663,6 +667,60 @@
 		"title": "Configuración",
 		"subtitle": "Gestiona las preferencias de tu espacio de trabajo.",
 		"sections": "Secciones de configuración",
+		"back": "Configuración",
+		"groups": {
+			"workspace": "Espacio de trabajo",
+			"rostering": "Cuadrantes",
+			"leave": "Permisos",
+			"accessAndData": "Acceso y datos",
+			"account": "Cuenta"
+		},
+		"entries": {
+			"general": {
+				"title": "General",
+				"description": "Nombre del espacio de trabajo, idioma, zona horaria y formato de fecha."
+			},
+			"notifications": {
+				"title": "Notificaciones",
+				"description": "Sobre qué se te avisa y cómo."
+			},
+			"employment": {
+				"title": "Condiciones de empleo",
+				"description": "Días laborables, horas y día de descanso de cada tipo de contrato."
+			},
+			"scheduling": {
+				"title": "Política de trabajo",
+				"description": "Límites que todo cuadrante debe cumplir, para la empresa o para sucursales y departamentos elegidos."
+			},
+			"roster-approvals": {
+				"title": "Aprobaciones de cuadrantes",
+				"description": "Quién aprueba un cuadrante antes de publicarlo, paso a paso."
+			},
+			"leave-types": {
+				"title": "Tipos de permiso",
+				"description": "Los tipos de permiso que se pueden solicitar."
+			},
+			"leave-durations": {
+				"title": "Duraciones de permiso",
+				"description": "Medios días y otras partes del día que se pueden tomar como permiso."
+			},
+			"leave-approvals": {
+				"title": "Aprobaciones de permisos",
+				"description": "Quién aprueba las solicitudes de permiso, paso a paso."
+			},
+			"access": {
+				"title": "Roles de acceso",
+				"description": "Qué puede gestionar cada persona y dónde."
+			},
+			"data": {
+				"title": "Importar y exportar",
+				"description": "Trae o saca los datos de tu empresa en bloque."
+			},
+			"plan": {
+				"title": "Plan y facturación",
+				"description": "Tu plan, las mejoras y los datos de facturación."
+			}
+		},
 		"comingSoon": "Esta configuración estará disponible pronto.",
 		"plan": {
 			"title": "Plan y facturación",
