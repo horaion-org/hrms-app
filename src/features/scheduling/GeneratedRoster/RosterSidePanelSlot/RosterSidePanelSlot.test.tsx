@@ -103,6 +103,25 @@ describe("RosterSidePanelSlot", () => {
 		expect(onCloseCover).toHaveBeenCalledOnce();
 	});
 
+	// The fixtures carry no generation findings: a gap made since, by leave
+	// or a hand change, which the engine finds in the roster when asked.
+	it("given_aGapTheGenerationNeverReported_when_findCoverOpens_then_theEngineCanBeAsked", async () => {
+		show({
+			roster: slotRosterFixture(
+				{ cover: "front-desk-am-copy|2026-10-17" },
+				true
+			),
+			editing: slotEditingFixture(),
+		});
+
+		expect(
+			await screen.findByRole("button", { name: "Ask the engine" })
+		).toBeVisible();
+		expect(
+			screen.getByRole("heading", { name: "From the scheduling engine" })
+		).toBeVisible();
+	});
+
 	it("given_aShiftLeftShortOnTheChosenDay_when_findCoverIsPressed_then_opensItForThatShiftDay", async () => {
 		const user = userEvent.setup();
 		const onFindCover = vi.fn();

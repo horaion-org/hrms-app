@@ -7,7 +7,6 @@ import {
 import {
 	brokenRuleIssueCount,
 	findingsShown,
-	generationStoredGap,
 	scheduleWithFindingsShown,
 	validationStanding,
 } from "@/features/scheduling/rulesCheck/issuesFromValidation";
@@ -16,7 +15,6 @@ import {
 	generationFixture,
 	scheduleFixture,
 } from "@/features/scheduling/schedules/fixtures";
-import { shiftCopyId } from "@/features/scheduling/shifts/fixtures";
 
 const findings = generationFindingsFixture();
 
@@ -101,21 +99,6 @@ describe("brokenRuleIssueCount", () => {
 			})
 		).toBe(1);
 		expect(brokenRuleIssueCount(undefined)).toBe(0);
-	});
-});
-
-describe("generationStoredGap", () => {
-	it("finds a gap the generation stored for the shift and day, and none a hand edit made", () => {
-		const frontDesk = shiftCopyId("front-desk-am");
-		expect(
-			generationStoredGap(findings, { shiftId: frontDesk, day: "2026-10-17" })
-		).toBe(true);
-		expect(
-			generationStoredGap(findings, { shiftId: frontDesk, day: "2026-10-18" })
-		).toBe(false);
-		expect(
-			generationStoredGap(null, { shiftId: frontDesk, day: "2026-10-17" })
-		).toBe(false);
 	});
 });
 

@@ -135,7 +135,7 @@ describe("useEngineRepair", () => {
 					type: "about:blank",
 					title: "Unprocessable",
 					status: 422,
-					errorCode: "REPAIR_GAP_NOT_FROM_ENGINE",
+					errorCode: "REPAIR_GAP_NOT_SEEN_BY_ENGINE",
 				},
 			},
 		});
@@ -147,7 +147,7 @@ describe("useEngineRepair", () => {
 		await waitFor(() => {
 			expect(result.current).toMatchObject({
 				status: "refused",
-				refusal: "notFromEngine",
+				refusal: "notSeenByEngine",
 			});
 		});
 	});

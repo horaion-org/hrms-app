@@ -1,4 +1,3 @@
-import type { CoverGapRequest } from "@/features/scheduling/cover/api";
 import type {
 	RosterRulesCheck,
 	RuleViolation,
@@ -135,19 +134,3 @@ export const brokenRuleIssueCount = (
 	if (check.brokenRules.length === 0) return 1;
 	return check.brokenRules.filter((rule) => !rule.violations?.length).length;
 };
-
-/**
- * Whether the generation stored a gap for this shift and day, as the API
- * looks it up for the engine's repair options; a gap a hand edit made has
- * none, so those options cannot be asked for it.
- */
-export const generationStoredGap = (
-	findings: GenerationFindings | null,
-	gap: CoverGapRequest
-): boolean =>
-	(findings?.conflicts ?? []).some(
-		(conflict) =>
-			conflict.employeeUuid === null &&
-			conflict.date === gap.day &&
-			conflict.shiftUuids.includes(gap.shiftId)
-	);

@@ -213,8 +213,9 @@ gate, the saves and generating the draft's month.
   engine on demand for its own repair (`engineRepairApi.ts` `…/repair-options`, `useEngineRepair.ts`,
   `engineRepairWords.ts`); a feasible option the change can state exactly (`engineRepairChange.ts` `repairCells`) is
   reviewed through Find cover's own preview and Apply, any other is made by hand. `NotAssignedList`
-  (`notAssignedWords.ts`) says why nobody else with the job title was put on the shift. Only a gap the generation
-  stored can be asked about (`generationStoredGap`).
+  (`notAssignedWords.ts`) says why nobody else with the job title was put on the shift. Any open gap can be asked
+  about: the generation's, or one made since (leave, a hand change), which the engine finds in the roster as it
+  stands; a shift it counts staffed (part-day leave) is refused with a pointer to Find cover's list.
 - `rulesCheck/` — Validate schedule, for whoever may change the roster (`…/roster-check`, under
   `schedule:edit_shift`): `rosterRulesCheckApi.ts` (the working-time rules broken and the staffing gaps, at one
   revision, asked on demand), `useRosterRulesCheck.ts` (the ask and the last answer), `rosterRulesCheckWords.ts` (rule

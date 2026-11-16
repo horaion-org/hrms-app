@@ -114,11 +114,11 @@ describe("EngineRepairOptions", () => {
 		const { rerender } = render(
 			<EngineRepairOptions
 				names={names}
-				repair={{ status: "refused", refusal: "notFromEngine", ask }}
+				repair={{ status: "refused", refusal: "notSeenByEngine", ask }}
 			/>
 		);
 		expect(screen.getByRole("alert")).toHaveTextContent(
-			"The engine didn’t report this gap"
+			"The engine sees this shift as fully staffed"
 		);
 		expect(screen.queryByRole("button")).toBeNull();
 

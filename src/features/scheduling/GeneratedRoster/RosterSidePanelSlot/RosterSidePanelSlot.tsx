@@ -53,11 +53,6 @@ export type RosterSidePanelSlotProps = {
 	onFindCover?: (gap: CoverGapRequest) => void;
 	/** Closes Find cover back to Issues. */
 	onCloseCover?: () => void;
-	/**
-	 * Whether the engine can be asked to repair a gap: only one the generation
-	 * stored, as the engine looks it up there; every gap when left out.
-	 */
-	engineRepairFor?: (gap: CoverGapRequest) => boolean;
 	/** The roster's shift preference outcomes by person and day; the chosen day's shows in its panel. */
 	preferenceOutcomes?: PreferenceOutcomeLookup;
 };
@@ -87,7 +82,6 @@ export const RosterSidePanelSlot = ({
 	onApplied,
 	onFindCover,
 	onCloseCover = onClose,
-	engineRepairFor,
 	preferenceOutcomes,
 }: RosterSidePanelSlotProps): FunctionComponent => {
 	const { t } = useTranslation();
@@ -149,7 +143,6 @@ export const RosterSidePanelSlot = ({
 				key={`${coverGap.shiftId}|${coverGap.day}`}
 				assignments={assignments}
 				dayRow={coverDayRow}
-				engineRepair={engineRepairFor ? engineRepairFor(coverGap) : true}
 				gap={coverGap}
 				id={list.id}
 				revision={editing.revision}

@@ -31,7 +31,7 @@ export type RepairNames = {
 
 /** Why the engine's options can't be shown, as the section words it. */
 export type RepairRefusal =
-	| "notFromEngine"
+	| "notSeenByEngine"
 	| "expired"
 	| "notConnected"
 	| "rosterMoved"
@@ -46,7 +46,7 @@ export const RETRYABLE_REPAIR_REFUSALS: ReadonlyArray<RepairRefusal> = [
 
 /** The API's refusal codes, by what the section says. */
 const REFUSALS: Record<string, RepairRefusal> = {
-	REPAIR_GAP_NOT_FROM_ENGINE: "notFromEngine",
+	REPAIR_GAP_NOT_SEEN_BY_ENGINE: "notSeenByEngine",
 	REPAIR_GAP_EXPIRED: "expired",
 	REPAIR_NO_ENGINE_JOB: "expired",
 	REPAIR_ENGINE_NOT_CONFIGURED: "notConnected",
