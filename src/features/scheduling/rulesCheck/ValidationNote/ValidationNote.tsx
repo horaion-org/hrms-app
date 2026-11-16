@@ -62,6 +62,16 @@ export const ValidationNote = ({
 		);
 	const check = validation.last?.check;
 	if (standing !== "current" || !check) return null;
+	// The engine ran out of time: what it found holds, but the list may not be all of it.
+	if (check.mayBeShort)
+		return (
+			<div className="flex flex-col items-start gap-2">
+				<p className="text-neutral-800">{t(`${key}.mayBeShort`)}</p>
+				<Button variant="textlink" onClick={validation.ask}>
+					{t(`${key}.validateAgain`)}
+				</Button>
+			</div>
+		);
 	const lines = [
 		check.status === "UNCHECKED" ? t(`${key}.rulesUnchecked`) : undefined,
 		check.staffingGaps === null ? t(`${key}.staffingUnchecked`) : undefined,
