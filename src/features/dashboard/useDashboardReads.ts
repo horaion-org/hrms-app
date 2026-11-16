@@ -2,7 +2,6 @@ import { useQuery } from "@tanstack/react-query";
 import {
 	APPROVAL_READ_KEYS,
 	daysOffQuery,
-	overtimeQuery,
 	peopleEventsQuery,
 	shortagesQuery,
 	staffingQuery,
@@ -11,7 +10,6 @@ import {
 	type DayOff,
 	type DayRange,
 	type MonthSpan,
-	type Overtime,
 	type PeopleEvent,
 	type Shortage,
 	type StaffingRule,
@@ -66,21 +64,6 @@ export const useDaysOff = (
 	const allowed = access.canAny(SCHEDULE_READ_KEYS, "anywhere");
 	const query = useQuery(
 		daysOffQuery(companyId, units, range, allowed && asked)
-	);
-	return guardedRead(access, allowed, query);
-};
-
-/** Overtime by department and month, where `schedule:read` is held; `asked` false asks for nothing. */
-export const useOvertime = (
-	companyId: string,
-	units: UnitSelection,
-	span: MonthSpan,
-	asked = true
-): GuardedRead<Overtime> => {
-	const access = useAccess();
-	const allowed = access.canAny(SCHEDULE_READ_KEYS, "anywhere");
-	const query = useQuery(
-		overtimeQuery(companyId, units, span, allowed && asked)
 	);
 	return guardedRead(access, allowed, query);
 };

@@ -8,11 +8,6 @@ import { DatePicker } from "@/components/forms/DatePicker";
 import { Callout } from "@/components/ui/Callout";
 import { Tab, TabList, Tabs } from "@/components/ui/Tabs";
 import type { DayRange } from "@/features/dashboard/api";
-import {
-	useOvertime,
-	useShortages,
-	useStaffing,
-} from "@/features/dashboard/useDashboardReads";
 import type { RosterChangeDepartment } from "@/features/reports/api";
 import { OvertimeTable } from "@/features/reports/OvertimeTable";
 import {
@@ -43,9 +38,14 @@ import {
 import { REPORTS_UNIT_RULES } from "@/features/reports/reportsUnitRules";
 import { RosterStabilityTable } from "@/features/reports/RosterStabilityTable";
 import { StaffingTable } from "@/features/reports/StaffingTable";
-import { useRosterChanges } from "@/features/reports/useReportsReads";
+import {
+	useReportOvertime,
+	useReportShortages,
+	useReportStaffing,
+	useRosterChanges,
+} from "@/features/reports/useReportsReads";
 import { DepartmentFilter } from "@/features/workspace/DepartmentFilter";
-import { SCHEDULE_READ_KEYS } from "@/features/workspace/permissionKeys";
+import { REPORT_READ_KEYS } from "@/features/workspace/permissionKeys";
 import { selectedUnits } from "@/features/workspace/unitSelection";
 import { unitSelectionOf } from "@/features/workspace/unitSearch";
 import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
@@ -76,7 +76,7 @@ export const Reports = (): FunctionComponent => {
 	const search = route.useSearch();
 	const resolved = useUnitSelection(
 		companyId,
-		SCHEDULE_READ_KEYS,
+		REPORT_READ_KEYS,
 		unitSelectionOf(search),
 		REPORTS_UNIT_RULES
 	);
@@ -86,11 +86,11 @@ export const Reports = (): FunctionComponent => {
 	const preset = presetOf(range, today);
 	const problem = rangeProblemOf(range);
 	const asked = problem === undefined;
-	const staffing = useStaffing(companyId, units, range, asked);
-	const shortages = useShortages(companyId, units, range, asked);
+	const staffing = useReportStaffing(companyId, units, range, asked);
+	const shortages = useReportShortages(companyId, units, range, asked);
 	// Across the company the charts compare Branches; within one Branch, its Departments.
 	const grouping: UnitGrouping = units.branchId ? "department" : "branch";
-	const overtime = useOvertime(companyId, units, monthsOf(range), asked);
+	const overtime = useReportOvertime(companyId, units, monthsOf(range), asked);
 	const changes = useRosterChanges(companyId, units, range, asked);
 	const nothingInReach = [staffing, overtime, changes].every(
 		(read) => read.status === "hidden"

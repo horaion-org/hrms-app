@@ -23,7 +23,7 @@ import {
 import { rosterChangeDepartmentFixture } from "@/features/reports/fixtures";
 import { presetRange } from "@/features/reports/reportsSearch";
 
-const SCHEDULES = "/api/v1/companies/c-1/schedules";
+const REPORTS = "/api/v1/companies/c-1/reports";
 
 let app: OpenedApp | undefined;
 beforeEach(() => {
@@ -76,7 +76,7 @@ const routes = (permissions: Array<string>): Record<string, StubReply> => ({
 	"POST /api/v1/public/sessions/refreshes": accessPassReply(),
 	"GET /api/v1/me": currentUserReply(),
 	"GET /api/v1/me/workspace": workspaceReply(permissions),
-	[`GET ${SCHEDULES}/staffing`]: {
+	[`GET ${REPORTS}/staffing`]: {
 		status: 200,
 		body: envelope({
 			from: "2026-11-01",
@@ -84,7 +84,7 @@ const routes = (permissions: Array<string>): Record<string, StubReply> => ({
 			rules: [staffingRuleFixture()],
 		}),
 	},
-	[`GET ${SCHEDULES}/shortages`]: {
+	[`GET ${REPORTS}/shortages`]: {
 		status: 200,
 		body: envelope({
 			from: "2026-11-01",
@@ -92,11 +92,11 @@ const routes = (permissions: Array<string>): Record<string, StubReply> => ({
 			shortages: [shortageFixture({ day: "2026-11-18", shortBy: 2 })],
 		}),
 	},
-	[`GET ${SCHEDULES}/overtime`]: {
+	[`GET ${REPORTS}/overtime`]: {
 		status: 200,
 		body: envelope(overtimeFixture()),
 	},
-	[`GET ${SCHEDULES}/roster-changes`]: {
+	[`GET ${REPORTS}/roster-changes`]: {
 		status: 200,
 		body: envelope({
 			from: "2026-11-01",
@@ -114,7 +114,7 @@ const open = async (entry: string): Promise<OpenedApp> => {
 
 describe("Reports", () => {
 	it("answers each question in its heading, over the chosen dates", async () => {
-		const calls = stubApi(routes(["schedule:read"]));
+		const calls = stubApi(routes(["report:read"]));
 		await open("/reports?from=2026-10-01&to=2026-11-30");
 
 		expect(
@@ -164,13 +164,13 @@ describe("Reports", () => {
 			})
 		).toBeInTheDocument();
 		const asked = (read: string): string | undefined =>
-			calls.find((call) => call.path === `${SCHEDULES}/${read}`)?.search;
+			calls.find((call) => call.path === `${REPORTS}/${read}`)?.search;
 		expect(asked("staffing")).toContain("from=2026-10-01&to=2026-11-30");
 		expect(asked("overtime")).toContain("from=2026-10&to=2026-11");
 	});
 
 	it("keeps old Insights links working, dates included", async () => {
-		const calls = stubApi(routes(["schedule:read"]));
+		const calls = stubApi(routes(["report:read"]));
 		const lastMonth = presetRange("lastMonth", new Date());
 		const opened = await open(
 			`/insights?from=${lastMonth.from}&to=${lastMonth.to}`
@@ -182,7 +182,7 @@ describe("Reports", () => {
 		expect(opened.router.state.location.pathname).toBe("/reports");
 		await screen.findByRole("table", { name: "Staffing by rule" });
 		expect(
-			calls.find((call) => call.path === `${SCHEDULES}/staffing`)?.search
+			calls.find((call) => call.path === `${REPORTS}/staffing`)?.search
 		).toContain(`from=${lastMonth.from}&to=${lastMonth.to}`);
 		expect(screen.getByRole("tab", { name: "Last month" })).toHaveAttribute(
 			"aria-selected",
@@ -191,22 +191,35 @@ describe("Reports", () => {
 	});
 
 	it("asks for nothing over a range the API would refuse, and says why", async () => {
-		const calls = stubApi(routes(["schedule:read"]));
+		const calls = stubApi(routes(["report:read"]));
 		await open("/reports?from=2026-01-01&to=2026-12-31");
 
 		expect(
 			await screen.findByText("Choose at most 92 days.")
 		).toBeInTheDocument();
-		expect(calls.some((call) => call.path.startsWith(SCHEDULES))).toBe(false);
+		expect(calls.some((call) => call.path.startsWith(REPORTS))).toBe(false);
 	});
 
-	it("is not offered in the menu without the roster read", async () => {
-		stubApi(routes(["leave_request:read"]));
+	it("is not offered in the menu to someone who reads rosters but holds no report key", async () => {
+		stubApi(routes(["schedule:read"]));
 		await open("/");
 
 		const navigation = await screen.findByRole("navigation");
 		expect(
 			within(navigation).queryByRole("link", { name: "Reports" })
+		).toBeNull();
+	});
+
+	it("is offered in the menu with the report key alone, with no roster entry", async () => {
+		stubApi(routes(["report:read"]));
+		await open("/");
+
+		const navigation = await screen.findByRole("navigation");
+		expect(
+			await within(navigation).findByRole("link", { name: "Reports" })
+		).toBeInTheDocument();
+		expect(
+			within(navigation).queryByRole("link", { name: "Scheduling" })
 		).toBeNull();
 	});
 });

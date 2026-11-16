@@ -9,10 +9,12 @@ import { retry } from "@/features/workspace/retry";
 import type { UnitSelection } from "@/features/workspace/unitSearch";
 
 /*
- * The schedules reads behind the manager dashboard and Reports: shifts
- * short, rostered days off, overtime against the ceiling, and the open
- * cover offers in the person's units. Each is guarded by the API; the app
- * only shows what it answers.
+ * The schedules reads behind Home's cards: shifts short, what each staffing
+ * rule asks for, rostered days off, and the open cover offers in the
+ * person's units, each under the roster's own key. Reports reads the same
+ * answers from its own routes under `report:read` (`features/reports/api`),
+ * and parses them with the schemas here. Each is guarded by the API; the
+ * app only shows what it answers.
  */
 
 /** Every dashboard query key starts `["dashboard", companyId, …]`. */
@@ -62,7 +64,8 @@ const shortageSchema = z.object({
 /** One shift short on one day of a live roster. */
 export type Shortage = z.infer<typeof shortageSchema>;
 
-const shortagesSchema = z.object({
+/** The shortages answer; Home reads it here and Reports under its own key. */
+export const shortagesSchema = z.object({
 	from: z.string(),
 	to: z.string(),
 	shortages: z.array(shortageSchema),
@@ -116,7 +119,8 @@ const overtimeDepartmentSchema = z.object({
 /** One department's month of overtime. */
 export type OvertimeDepartment = z.infer<typeof overtimeDepartmentSchema>;
 
-const overtimeSchema = z.object({
+/** The overtime answer, which Reports reads under its own key (`features/reports/api`). */
+export const overtimeSchema = z.object({
 	from: z.string(),
 	to: z.string(),
 	/** The share of the ceiling at which a person counts as near it. */
@@ -176,19 +180,6 @@ export const fetchDaysOff = (
 		daysOffSchema,
 		{ signal }
 	).then((answer) => answer.daysOff);
-
-/** Overtime by department and month in the span and units. */
-export const fetchOvertime = (
-	companyId: string,
-	units: UnitSelection,
-	span: MonthSpan,
-	signal?: AbortSignal
-): Promise<Overtime> =>
-	apiRequest(
-		`${schedulesReadPath(companyId, "overtime")}${searchOf(units, span)}`,
-		overtimeSchema,
-		{ signal }
-	);
 
 /** The open cover offers in the units, newest first. */
 export const fetchTeamCoverOffers = (
@@ -254,20 +245,6 @@ export const daysOffQuery = (
 		allowed
 	);
 
-/** Overtime by department and month; `allowed` false asks for nothing. */
-export const overtimeQuery = (
-	companyId: string,
-	units: UnitSelection,
-	span: MonthSpan,
-	allowed: boolean
-): QueryOptionsFor<Overtime, ReadonlyArray<unknown>> =>
-	dashboardQuery(
-		companyId,
-		dashboardKey(companyId, "overtime", units, span),
-		(signal) => fetchOvertime(companyId, units, span, signal),
-		allowed
-	);
-
 /** The open cover offers in the units; `allowed` false asks for nothing. */
 export const teamCoverOffersQuery = (
 	companyId: string,
@@ -317,7 +294,8 @@ const staffingRuleSchema = z.object({
 /** One staffing rule against the people who could fill it. */
 export type StaffingRule = z.infer<typeof staffingRuleSchema>;
 
-const staffingSchema = z.object({
+/** The staffing answer; Home reads it here and Reports under its own key. */
+export const staffingSchema = z.object({
 	from: z.string(),
 	to: z.string(),
 	rules: z.array(staffingRuleSchema),
