@@ -286,6 +286,74 @@ describe("ConstraintsTab", () => {
 		expect(calls.map((call) => call.path)).toContain(`${KITCHEN}/constraints`);
 	});
 
+	it("given_oneDepartmentWhoseCompanySetsRest_when_restIsChosenInAdd_then_opensTheCompanysRuleToChangeHere", async () => {
+		const user = userEvent.setup();
+		stubApi({
+			[`GET ${KITCHEN}/constraints`]: ok([companyRest, kitchenCover]),
+			[`GET ${KITCHEN}/constraint-options`]: ok(CONSTRAINT_OPTIONS_RESPONSE),
+		});
+		show({
+			permissions: ["constraint:read", "constraint:create"],
+			requested: KITCHEN_ONLY,
+		});
+
+		await user.click(
+			await screen.findByRole("button", { name: "Add constraint" })
+		);
+		const rest = await screen.findByRole("radio", {
+			name: "Rest between shifts",
+		});
+		expect(rest).toHaveAccessibleDescription(/Set by the company/);
+		await user.click(rest);
+
+		const dialog = await screen.findByRole("dialog", {
+			name: "Set for this department",
+		});
+		expect(
+			within(dialog).getByText(
+				"Company rest is set by the company and locked. You can only make it stricter here."
+			)
+		).toBeVisible();
+	});
+
+	it("given_oneDepartmentThatReplacedTheCompanysRest_when_adding_then_restIsDisabledWithWhy", async () => {
+		const user = userEvent.setup();
+		const kitchenRest = {
+			...companyRest,
+			constraintId: "kitchen-rest",
+			name: "Kitchen rest",
+			level: "DEPARTMENT" as const,
+			departmentId: "d-1",
+			departmentName: "Kitchen",
+			branchId: "b-1",
+			branchName: "Orchard",
+			lock: null,
+			overridesConstraintId: companyRest.constraintId,
+		};
+		stubApi({
+			[`GET ${KITCHEN}/constraints`]: ok([
+				{ ...companyRest, overriddenByConstraintId: kitchenRest.constraintId },
+				kitchenRest,
+			]),
+			[`GET ${KITCHEN}/constraint-options`]: ok(CONSTRAINT_OPTIONS_RESPONSE),
+		});
+		show({
+			permissions: ["constraint:read", "constraint:create"],
+			requested: KITCHEN_ONLY,
+		});
+
+		await user.click(
+			await screen.findByRole("button", { name: "Add constraint" })
+		);
+		const rest = await screen.findByRole("radio", {
+			name: "Rest between shifts",
+		});
+		expect(rest).toBeDisabled();
+		expect(rest).toHaveAccessibleDescription(
+			/this department already has its own version in the list/
+		);
+	});
+
 	it("given_oneDepartment_when_listed_then_aRuleForFullTimersSaysSo", async () => {
 		stubApi({
 			[`GET ${KITCHEN}/constraints`]: ok([companyRest, DAYS_LIMIT_FIXTURE]),

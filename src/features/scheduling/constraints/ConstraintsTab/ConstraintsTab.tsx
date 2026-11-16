@@ -292,6 +292,20 @@ export const ConstraintsTab = ({
 		needsAttention(constraint.values) || capacityOf(constraint) !== undefined;
 	const listTypes =
 		listOptions.status === "ready" ? listOptions.options.types : [];
+	// The company's once-only rules in the department being added to: adding that kind is refused, so its card opens the company's rule instead.
+	const companySetRules =
+		dialog?.kind === "add" &&
+		replacesHere &&
+		dialog.departmentId === units.department?.departmentId
+			? items.filter(
+					(row) =>
+						row.level === "COMPANY" &&
+						row.status === "ACTIVE" &&
+						listTypes.some(
+							(option) => option.type === row.type && option.onePerDepartment
+						)
+				)
+			: [];
 	// The Showing filter narrows the rows; the sections follow the categories the API lists, in its order.
 	const showing = showingOf(showingValues);
 	const shownRows = rows.filter((constraint) =>
@@ -685,6 +699,23 @@ export const ConstraintsTab = ({
 									dialog.constraint.departmentName ?? "",
 									draftCount
 								)
+							: undefined
+					}
+					setByCompany={
+						companySetRules.length > 0
+							? {
+									// A rule the department already replaces is changed through its replacement in the list.
+									kinds: companySetRules.map((rule) => ({
+										type: rule.type,
+										replaceable: rule.overriddenByConstraintId === null,
+									})),
+									onChoose: (type): void => {
+										const rule = companySetRules.find(
+											(item) => item.type === type
+										);
+										if (rule) setDialog({ kind: "replace", replacing: rule });
+									},
+								}
 							: undefined
 					}
 					onSave={saveConstraint}

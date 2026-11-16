@@ -14,7 +14,10 @@ import { UnitNameField } from "@/features/organisation/UnitNameField";
 import { useCreateFormSubmit } from "@/features/organisation/useCreateFormSubmit";
 import { ChosenConstraintType } from "@/features/scheduling/constraints/ChosenConstraintType";
 import { ConstraintPreview } from "@/features/scheduling/constraints/ConstraintPreview";
-import { ConstraintTypeChooser } from "@/features/scheduling/constraints/ConstraintTypeChooser";
+import {
+	type CompanySetKind,
+	ConstraintTypeChooser,
+} from "@/features/scheduling/constraints/ConstraintTypeChooser";
 import {
 	CONSTRAINT_COMPARISONS,
 	CONSTRAINT_REQUIREMENTS,
@@ -95,6 +98,15 @@ export type ConstraintDialogProps = {
 	impactNote?: string;
 	/** The category the chooser brings into view first, as when Add is pressed on that section. */
 	startAt?: ConstraintCategory;
+	/**
+	 * Once-only kinds the company already sets in the department, which the
+	 * API refuses to add there (CONSTRAINT_TYPE_SET_BY_COMPANY). Choosing one
+	 * calls `onChoose` instead, to change the company's rule here.
+	 */
+	setByCompany?: {
+		kinds: ReadonlyArray<CompanySetKind>;
+		onChoose: (type: ConstraintType) => void;
+	};
 	/** Sends the constraint; a rejection is explained on its field or as the alert. */
 	onSave: (body: ConstraintDialogBody) => Promise<unknown>;
 	onClose: () => void;
@@ -177,6 +189,7 @@ export const ConstraintDialog = ({
 	department,
 	impactNote,
 	startAt,
+	setByCompany,
 	onSave,
 	onClose,
 }: ConstraintDialogProps): FunctionComponent => {
@@ -833,9 +846,16 @@ export const ConstraintDialog = ({
 					<ConstraintTypeChooser
 						disabled={isSubmitting}
 						groups={typeGroups}
+						setByCompany={setByCompany?.kinds}
 						startAt={startAt}
 						value={type}
 						onChange={(chosenType: ConstraintType) => {
+							if (
+								setByCompany?.kinds.some((kind) => kind.type === chosenType)
+							) {
+								setByCompany.onChoose(chosenType);
+								return;
+							}
 							setValue("type", chosenType);
 							// A new rule of a kind that was only ever If possible still starts If possible.
 							if (!startingPoint)
