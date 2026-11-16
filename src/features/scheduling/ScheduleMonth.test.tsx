@@ -112,6 +112,19 @@ it("given_novemberOfKitchen_when_opened_then_fiveWeekCardsInMondayOrderWithTheir
 	);
 });
 
+it("given_aMonth_when_opened_then_theLegendExplainsTentative", async () => {
+	await openMonth({
+		...signedIn(),
+		[`GET ${MONTHS}/2026-11`]: ok(scheduleMonthFixture()),
+	});
+
+	expect(
+		await screen.findByText(
+			"Tentative: generated, and waits for an earlier week to be published."
+		)
+	).toBeInTheDocument();
+});
+
 it("given_theWeekUnderReview_when_shown_then_reviewLinksToItsRoster", async () => {
 	await openMonth({
 		...signedIn(),

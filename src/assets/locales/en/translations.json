@@ -5196,6 +5196,7 @@
 				"noSchedule": "No week of {{month}} has a schedule yet.",
 				"legendCovered": "Every shift covered",
 				"legendShort": "A shift is short",
+				"legendTentative": "Tentative: generated, and waits for an earlier week to be published.",
 				"footnote": "Staff see a week only after it is published. Weeks are published in order.",
 				"loading": "Loading the month…",
 				"loadFailed": "This month could not be loaded. Please try again.",

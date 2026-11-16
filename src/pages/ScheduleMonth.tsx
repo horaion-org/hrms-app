@@ -271,6 +271,7 @@ const Legend = (): FunctionComponent => {
 					{t(`${key}.legendShort`)}
 				</li>
 			</ul>
+			<p>{t(`${key}.legendTentative`)}</p>
 			<p>{t(`${key}.footnote`)}</p>
 		</div>
 	);

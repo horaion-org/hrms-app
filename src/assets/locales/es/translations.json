@@ -4996,6 +4996,7 @@
 				"noSchedule": "Ninguna semana de {{month}} tiene horario todavía.",
 				"legendCovered": "Todos los turnos cubiertos",
 				"legendShort": "Falta un turno",
+				"legendTentative": "Provisional: generada, a la espera de que se publique una semana anterior.",
 				"footnote": "El personal solo ve una semana después de publicarla. Las semanas se publican en orden.",
 				"loading": "Cargando el mes…",
 				"loadFailed": "No pudimos cargar este mes. Inténtalo de nuevo.",
