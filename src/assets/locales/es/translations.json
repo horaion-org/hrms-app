@@ -613,6 +613,11 @@
 		"outOfReach": "Algunos días no se pueden cambiar: las preferencias están abiertas desde hoy hasta ocho semanas después.",
 		"loading": "Cargando las preferencias de turno…",
 		"failed": "No pudimos cargar tus preferencias de turno. Inténtalo de nuevo.",
+		"notAvailable": {
+			"week": "No te has marcado como disponible el {{days}}. Sin disponibilidad en un día, no se te asignarán turnos ese día, prefieras lo que prefieras.",
+			"day": "No te has marcado como disponible el {{day}}. Sin disponibilidad ese día, no se te asignarán turnos, prefieras lo que prefieras.",
+			"link": "Indica primero tu disponibilidad"
+		},
 		"team": {
 			"label": "Preferencias de turno del equipo",
 			"member": "Miembro",

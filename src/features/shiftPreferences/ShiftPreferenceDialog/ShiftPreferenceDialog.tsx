@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
+import { Callout } from "@/components/ui/Callout";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Dialog } from "@/components/ui/Dialog";
 import { ErrorText } from "@/components/ui/ErrorText";
@@ -22,19 +23,22 @@ export type ShiftPreferenceDialogProps = {
 	/** Saving: the refusal said, if any. */
 	saving: boolean;
 	refusal?: string;
+	/** Warns that the person has no availability that day; choosing stays possible. */
+	unavailableNote?: string;
 	onSave: (shiftIds: Array<string>) => void;
 	onClose: () => void;
 };
 
 const key = "shiftPreferences";
 
-/** A day's shifts as boxes, at most `maxShifts` ticked, with the count, Save and Clear. */
+/** A day's shifts as boxes, at most `maxShifts` ticked, with the count, Save and Clear, under a warning when given. */
 export const ShiftPreferenceDialog = ({
 	day,
 	dayLabel,
 	maxShifts,
 	saving,
 	refusal,
+	unavailableNote,
 	onSave,
 	onClose,
 }: ShiftPreferenceDialogProps): FunctionComponent => {
@@ -69,6 +73,11 @@ export const ShiftPreferenceDialog = ({
 			}
 			onClose={onClose}
 		>
+			{unavailableNote && (
+				<Callout className="mb-4" tone="warning">
+					{unavailableNote}
+				</Callout>
+			)}
 			{day.shifts.length === 0 ? (
 				<p className="text-sm text-neutral-800">{t(`${key}.noShifts`)}</p>
 			) : (

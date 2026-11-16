@@ -613,6 +613,11 @@
 		"outOfReach": "Some days can’t be changed: preferences are open from today to eight weeks ahead.",
 		"loading": "Loading shift preferences…",
 		"failed": "We couldn’t load your shift preferences. Try again.",
+		"notAvailable": {
+			"week": "You haven’t marked yourself available on {{days}}. Without availability on a day, you won’t be scheduled that day, whatever you prefer.",
+			"day": "You haven’t marked yourself available on {{day}}. Without availability that day, you won’t be scheduled, whatever you prefer.",
+			"link": "Set your availability first"
+		},
 		"team": {
 			"label": "Team shift preferences",
 			"member": "Member",
