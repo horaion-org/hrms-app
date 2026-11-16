@@ -101,6 +101,29 @@ export const SchedulingPolicySettings = ({
 			}))
 		)
 	);
+	// What a closed section says, as on the Constraints tab: how many it holds and, in the error tone, how many need attention.
+	const gistOf = (
+		sectionRows: Array<DepartmentConstraint>
+	): FunctionComponent => {
+		const attention = sectionRows.filter((row) =>
+			needsAttention(row.values)
+		).length;
+		return (
+			<>
+				{t("scheduling.constraintsTab.sectionGist", {
+					count: sectionRows.length,
+				})}
+				{attention > 0 && (
+					<span className="font-semibold text-error-700">
+						{" · "}
+						{t("scheduling.constraintsTab.gistAttention", {
+							count: attention,
+						})}
+					</span>
+				)}
+			</>
+		);
+	};
 	const forbidden =
 		!canRead ||
 		(list.error instanceof ApiProblemError && list.error.status === 403);
@@ -201,9 +224,7 @@ export const SchedulingPolicySettings = ({
 								onToggle: (): void => {
 									folds.toggle(section.category);
 								},
-								gist: t("scheduling.constraintsTab.sectionGist", {
-									count: section.rows.length,
-								}),
+								gist: gistOf(section.rows),
 							}}
 							description={t(
 								`scheduling.constraints.categoryDescriptions.${section.category}`

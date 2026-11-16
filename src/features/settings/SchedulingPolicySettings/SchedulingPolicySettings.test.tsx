@@ -114,6 +114,45 @@ describe("SchedulingPolicySettings", () => {
 			expect(tag).toHaveClass("bg-warning-100");
 	});
 
+	it("folds a section from its heading to its gist, saying in the error tone how many need attention", async () => {
+		const user = userEvent.setup();
+		const [rest, ...others] = COMPANY_CONSTRAINT_FIXTURES;
+		const brokenRest = {
+			...rest!,
+			values: rest!.values.map((value) => ({
+				...value,
+				problem: "UNAVAILABLE" as const,
+			})),
+		};
+		stubApi(
+			routes(READ_AND_UPDATE, {
+				[`GET ${POLICY}/constraints`]: {
+					status: 200,
+					body: envelope([brokenRest, ...others]),
+				},
+			})
+		);
+		const panel = await open();
+
+		const restRow = await within(panel).findByRole("listitem", {
+			name: /Company rest/,
+		});
+		const section = restRow.closest("section")!;
+		const heading = within(
+			within(section).getByRole("heading", { level: 3 })
+		).getByRole("button");
+		expect(heading).toHaveAttribute("aria-expanded", "true");
+		await user.click(heading);
+
+		expect(heading).toHaveAttribute("aria-expanded", "false");
+		expect(
+			within(panel).queryByRole("listitem", { name: /Company rest/ })
+		).toBeNull();
+		expect(within(section).getByText(/1 needs attention/)).toHaveClass(
+			"text-error-700"
+		);
+	});
+
 	it("says where each constraint applies", async () => {
 		stubApi(
 			routes(READ_AND_UPDATE, {
