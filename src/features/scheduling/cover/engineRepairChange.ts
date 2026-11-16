@@ -52,11 +52,12 @@ export const repairCells = (
 	option: RepairOption
 ): Array<RosterChangeCell> | undefined => {
 	if (!option.feasible || option.moves.length === 0) return undefined;
-	const cells = option.moves.map(cellOf);
-	if (cells.some((cell) => cell === undefined)) return undefined;
-	const applicable = cells as Array<RosterChangeCell>;
-	const days = new Set(
-		applicable.map((cell) => `${cell.membershipId}|${cell.day}`)
-	);
-	return days.size === applicable.length ? applicable : undefined;
+	const cells = option.moves.flatMap((move) => {
+		const cell = cellOf(move);
+		return cell ? [cell] : [];
+	});
+	// A move the change cannot state leaves the whole option to be made by hand.
+	if (cells.length < option.moves.length) return undefined;
+	const days = new Set(cells.map((cell) => `${cell.membershipId}|${cell.day}`));
+	return days.size === cells.length ? cells : undefined;
 };
