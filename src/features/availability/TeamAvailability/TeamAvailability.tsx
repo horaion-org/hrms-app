@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/Button";
 import { EditIcon } from "@/components/ui/Icon";
 import type { MemberWeek } from "@/features/availability/api";
 import { windowsByDay } from "@/features/availability/availabilityModel";
+import { availabilityCells } from "@/features/availability/WeekGrid/availabilityCells";
 import {
 	WeekGrid,
 	type WeekGridRowData,
-} from "@/features/availability/WeekGrid";
+} from "@/components/ui/WeekGrid";
 
 export type TeamAvailabilityProps = {
 	/** The Branch's part-timers for the week, as the API listed them. */
@@ -82,7 +83,7 @@ export const TeamAvailability = ({
 		.sort((a, b) => a.displayName.localeCompare(b.displayName, i18n.language))
 		.map((member) => ({
 			id: member.membershipId,
-			days: windowsByDay(member.windows),
+			days: availabilityCells(windowsByDay(member.windows)),
 			heading: (
 				<MemberHeading member={member} showDepartment={showDepartment} />
 			),

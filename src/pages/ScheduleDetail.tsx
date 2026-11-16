@@ -42,6 +42,7 @@ import {
 	useRosterHours,
 	type RosterHoursState,
 } from "@/features/scheduling/hours/useRosterHours";
+import { useRosterPreferenceOutcomes } from "@/features/scheduling/preferenceOutcomes/usePreferenceOutcomes";
 import { RegenerateMonthDialog } from "@/features/scheduling/RegenerateMonthDialog";
 import { RejectedRosterCallout } from "@/features/scheduling/RejectedRosterCallout";
 import { RejectScheduleDialog } from "@/features/scheduling/RejectScheduleDialog";
@@ -358,6 +359,14 @@ const ApiSchedule = ({
 		runId,
 		state.status === "ready" ? state.schedule.rosterRevision : 0,
 		state.status === "ready" && hasRosterHours(state.schedule)
+	);
+	// What the roster made of each person's shift preferences, said in a chosen day's panel.
+	const preferenceOutcomes = useRosterPreferenceOutcomes(
+		companyId,
+		unit,
+		scheduleId,
+		runId,
+		state.status === "ready" ? state.schedule.rosterRevision : 0
 	);
 	// The frozen shifts and constraints only name what the findings refer to.
 	const rosterSchedule = showsRoster ? state.schedule : undefined;
@@ -733,6 +742,7 @@ const ApiSchedule = ({
 					departmentWeeks={departmentWeeks}
 					editing={editing}
 					hours={rosterHours}
+					preferenceOutcomes={preferenceOutcomes}
 					schedule={schedule}
 					shifts={readyItems(shifts)}
 					startingContext={startingContext.data}

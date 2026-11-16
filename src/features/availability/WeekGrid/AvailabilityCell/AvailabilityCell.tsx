@@ -1,7 +1,10 @@
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
-import type { TimeWindow } from "@/features/availability/availabilityModel";
-import { WindowChip } from "@/features/availability/WeekGrid/WindowChip";
+import { Chip } from "@/components/ui/Chip";
+import {
+	formatWindow,
+	type TimeWindow,
+} from "@/features/availability/availabilityModel";
 
 export type AvailabilityCellProps = {
 	/** One day's windows, earliest first. */
@@ -24,7 +27,7 @@ export const AvailabilityCell = ({
 		<ul className="flex flex-col gap-1">
 			{windows.map((window) => (
 				<li key={window.startTime}>
-					<WindowChip window={window} />
+					<Chip label={formatWindow(window)} />
 				</li>
 			))}
 		</ul>

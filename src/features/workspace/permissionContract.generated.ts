@@ -3,7 +3,7 @@
 
 /** SHA-256 of the contract file this module was generated from. */
 export const PERMISSION_CONTRACT_SHA256 =
-	"385a7465cfc3169433b11c54f82433bfdb03c7aed7792160b150c692f9d2ab90";
+	"118408cfa0f4d16ca84fcdf62acc0fab08955cea6825e056701e67cce24e3e3d";
 
 /** The places a permission can be assigned at, widest first. */
 export const ASSIGNABLE_SCOPES = ["COMPANY", "BRANCH", "DEPARTMENT"] as const;
@@ -276,6 +276,22 @@ export const PERMISSION_DEFINITIONS = [
 		module: "people",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: ["work_availability:read"],
+	},
+	{
+		key: "shift_preference:read",
+		resource: "shift_preference",
+		action: "read",
+		module: "people",
+		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
+		prerequisites: [],
+	},
+	{
+		key: "shift_preference:update",
+		resource: "shift_preference",
+		action: "update",
+		module: "people",
+		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
+		prerequisites: ["shift_preference:read"],
 	},
 	{
 		key: "employment_terms:read",
@@ -623,6 +639,8 @@ export const PERMISSION_KEYS = [
 	"member_note:delete",
 	"work_availability:read",
 	"work_availability:update",
+	"shift_preference:read",
+	"shift_preference:update",
 	"employment_terms:read",
 	"employment_terms:update",
 	"member_employment_terms:read",
@@ -701,6 +719,8 @@ export const ROLE_TEMPLATES = [
 			"member_note:delete",
 			"work_availability:read",
 			"work_availability:update",
+			"shift_preference:read",
+			"shift_preference:update",
 			"employment_terms:read",
 			"employment_terms:update",
 			"member_employment_terms:read",
@@ -758,6 +778,7 @@ export const ROLE_TEMPLATES = [
 			"member_note:delete",
 			"work_availability:read",
 			"work_availability:update",
+			"shift_preference:read",
 			"member_employment_terms:read",
 			"member_employment_terms:update",
 			"leave_request:read",
@@ -779,6 +800,7 @@ export const ROLE_TEMPLATES = [
 			"job_title:read",
 			"member_profile:read",
 			"work_availability:read",
+			"shift_preference:read",
 			"leave_request:read",
 			"schedule:read",
 			"schedule:create",
@@ -813,6 +835,7 @@ export const ROLE_TEMPLATES = [
 			"member_note:create",
 			"work_availability:read",
 			"work_availability:update",
+			"shift_preference:read",
 			"leave_request:read",
 			"leave_request:review",
 			"leave_duration:read",
@@ -860,6 +883,7 @@ export const ROLE_TEMPLATES = [
 			"job_title:read",
 			"member_profile:read",
 			"work_availability:read",
+			"shift_preference:read",
 			"member_employment_terms:read",
 			"leave_duration:read",
 			"schedule:read",

@@ -538,6 +538,9 @@
 			"customWeek": "This week has its own hours in place of your default pattern.",
 			"empty": "No availability set. Add the hours you can work so you can be rostered."
 		},
+		"preferences": {
+			"tab": "Shift preferences"
+		},
 		"team": {
 			"tab": "Team",
 			"label": "Team availability",
@@ -600,6 +603,49 @@
 			"weekNotMonday": "That week couldn’t be found. Reload the page and choose the week again."
 		},
 		"controls": "Availability controls"
+	},
+	"shiftPreferences": {
+		"tab": "Shift preferences",
+		"subtitle": "The shifts you’d like to work. They’re weighed fairly when the roster is made, but not promised.",
+		"edit": "Choose shifts",
+		"editDay": "Choose shifts for {{day}}",
+		"limit": "Choose up to {{max}} shifts for a day.",
+		"count": "{{chosen}} of {{max}} chosen",
+		"none": "No preference",
+		"noShifts": "No shift that day needs your job title.",
+		"pastWeek": "This week has ended, so its preferences can’t be changed.",
+		"outOfReach": "This day can’t be changed: preferences are open from today to eight weeks ahead.",
+		"loading": "Loading shift preferences…",
+		"failed": "We couldn’t load your shift preferences. Try again.",
+		"team": {
+			"label": "Team shift preferences",
+			"member": "Member",
+			"empty": "No members here.",
+			"failed": "We couldn’t load the team’s shift preferences. Try again.",
+			"hidden": "You don’t have access to anyone’s shift preferences in this company."
+		},
+		"dialog": {
+			"save": "Save",
+			"clear": "Clear",
+			"saving": "Saving…",
+			"dateOutOfRange": "This day can no longer be changed.",
+			"shiftNotChoosable": "One of these shifts can’t be chosen any more. Close this and try again.",
+			"forbidden": "You can’t change shift preferences here.",
+			"failed": "Your preferences couldn’t be saved. Try again."
+		},
+		"preference": "Preference",
+		"preferred": "Preferred: {{shifts}}",
+		"outcome": {
+			"MET": "Met",
+			"NOT_MET": "Not met",
+			"NOT_CONSIDERED": "Not considered"
+		},
+		"notConsidered": {
+			"ON_LEAVE": "On leave that day",
+			"SHIFT_NOT_IN_ROSTER": "The shift isn’t in this roster",
+			"SHIFT_NOT_ON_DAY": "The shift doesn’t run that day",
+			"ROLE_NOT_STAFFED": "The shift doesn’t need this job title"
+		}
 	},
 	"dialog": {
 		"close": "Close"
@@ -2294,6 +2340,18 @@
 				"actionHints": {
 					"read": "Their weekly hours, and who has none set",
 					"update": "Their weekly pattern and changes for a week"
+				}
+			},
+			"shift_preference": {
+				"name": "Shift preferences",
+				"description": "The shifts each person would like to work on a date.",
+				"actions": {
+					"read": "See people’s shift preferences",
+					"update": "Set someone’s shift preferences"
+				},
+				"actionHints": {
+					"read": "The shifts they would like, day by day",
+					"update": "Stating their own needs nothing"
 				}
 			},
 			"leave_request": {

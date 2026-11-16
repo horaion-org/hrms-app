@@ -1,5 +1,6 @@
 export {
 	WeekGrid,
+	type WeekGridDay,
 	type WeekGridProps,
 	type WeekGridRowData,
-} from "@/features/availability/WeekGrid/WeekGrid/WeekGrid";
+} from "./WeekGrid";

@@ -14,6 +14,10 @@ import {
 } from "@/features/scheduling/RosterSidePanel";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 import { ShiftDetailsPanel } from "@/features/scheduling/ShiftDetailsPanel";
+import {
+	outcomeOfDay,
+	type PreferenceOutcomeLookup,
+} from "@/features/shiftPreferences/preferenceOutcome";
 
 const key = "scheduling.detail";
 
@@ -54,6 +58,8 @@ export type RosterSidePanelSlotProps = {
 	 * stored, as the engine looks it up there; every gap when left out.
 	 */
 	engineRepairFor?: (gap: CoverGapRequest) => boolean;
+	/** The roster's shift preference outcomes by person and day; the chosen day's shows in its panel. */
+	preferenceOutcomes?: PreferenceOutcomeLookup;
 };
 
 /**
@@ -82,8 +88,16 @@ export const RosterSidePanelSlot = ({
 	onFindCover,
 	onCloseCover = onClose,
 	engineRepairFor,
+	preferenceOutcomes,
 }: RosterSidePanelSlotProps): FunctionComponent => {
 	const { t } = useTranslation();
+	const preferenceOutcome =
+		chosenRow &&
+		outcomeOfDay(
+			preferenceOutcomes,
+			chosenRow.member?.membershipId,
+			chosenRow.day
+		);
 	const shortShift = chosenRow?.uncoveredShift;
 	const findCover =
 		onFindCover && chosenRow && shortShift
@@ -109,6 +123,7 @@ export const RosterSidePanelSlot = ({
 				leaveEditing={editing.leave}
 				nonWorkingDayTypes={editing.nonWorkingDayTypes}
 				notifiesMembers={editing.notifiesMembers}
+				preferenceOutcome={preferenceOutcome}
 				revision={editing.revision}
 				shifts={editing.shifts}
 				target={editing.target}
@@ -159,6 +174,7 @@ export const RosterSidePanelSlot = ({
 		return (
 			<ShiftDetailsPanel
 				issues={issues}
+				preferenceOutcome={preferenceOutcome}
 				shift={{ ...chosenCell, date: chosenRow.day }}
 				staffName={chosenRow.member?.displayName ?? t(`${key}.formerMember`)}
 				onClose={onClose}

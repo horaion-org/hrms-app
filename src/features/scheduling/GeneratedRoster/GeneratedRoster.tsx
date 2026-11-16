@@ -38,6 +38,7 @@ import type { RosterValidation } from "@/features/scheduling/rulesCheck/useRoste
 import { ValidationNote } from "@/features/scheduling/rulesCheck/ValidationNote";
 import { ValidateScheduleButton } from "@/features/scheduling/rulesCheck/ValidateScheduleButton";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
+import type { PreferenceOutcomeLookup } from "@/features/shiftPreferences/preferenceOutcome";
 import type { RosterEditing } from "./rosterEditing";
 import { RosterSidePanelSlot } from "./RosterSidePanelSlot";
 import { ROSTER_SIDE_LISTS } from "./rosterSideLists";
@@ -90,6 +91,8 @@ export type GeneratedRosterProps = {
 		weeks: Array<RosterWeek>;
 		onWeekChange: (week: string) => void;
 	};
+	/** The roster's shift preference outcomes by person and day, said in a chosen day's panel; none without. */
+	preferenceOutcomes?: PreferenceOutcomeLookup;
 };
 
 /** Hours in the summary line keep one decimal at most: "37.5 h". */
@@ -130,6 +133,7 @@ export const GeneratedRoster = ({
 	viewerMembershipId,
 	offeredDays,
 	departmentWeeks,
+	preferenceOutcomes,
 }: GeneratedRosterProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const language = formattingLocale(i18n);
@@ -313,6 +317,7 @@ export const GeneratedRoster = ({
 						<RosterSidePanelSlot
 							assignments={assignments}
 							editing={editing}
+							preferenceOutcomes={preferenceOutcomes}
 							roster={roster}
 							timeZone={schedule.timeZone}
 							viewerMembershipId={viewerMembershipId}

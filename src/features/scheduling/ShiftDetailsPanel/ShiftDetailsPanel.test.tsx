@@ -93,6 +93,39 @@ describe("ShiftDetailsPanel", () => {
 		expect(within(panel).getAllByRole("button")).toHaveLength(1);
 	});
 
+	it("given_aPreferenceNotMet_when_rendered_then_namesTheShiftsAndAWarningPill", () => {
+		render(
+			<ShiftDetailsPanel
+				shift={shift}
+				staffName="Aisha Rahman"
+				preferenceOutcome={{
+					membershipId: "m-1",
+					date: shift.date,
+					shiftNames: ["Late"],
+					outcome: "NOT_MET",
+					reason: null,
+				}}
+				onClose={vi.fn()}
+			/>
+		);
+
+		expect(screen.getByText("Preference")).toBeInTheDocument();
+		expect(screen.getByText(/Preferred: Late/)).toBeInTheDocument();
+		expect(screen.getByText("Not met")).toBeInTheDocument();
+	});
+
+	it("given_noPreference_when_rendered_then_showsNoPreferenceSection", () => {
+		render(
+			<ShiftDetailsPanel
+				shift={shift}
+				staffName="Aisha Rahman"
+				onClose={vi.fn()}
+			/>
+		);
+
+		expect(screen.queryByText("Preference")).toBeNull();
+	});
+
 	it("given_close_when_clicked_then_reportsIt", async () => {
 		const user = userEvent.setup();
 		const onClose = vi.fn();

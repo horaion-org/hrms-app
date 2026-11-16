@@ -1,4 +1,5 @@
 import { screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, expect, it, vi } from "vitest";
 import { resetApiClient } from "@/common/api-client";
 import {
@@ -165,4 +166,47 @@ it("shows no Branch in the header: it is the member's own roster, like their lea
 	expect(
 		within(screen.getByRole("banner")).queryByText("Branch")
 	).not.toBeInTheDocument();
+});
+
+it("says, in a chosen shift's panel, whether the member's preference that day was met", async () => {
+	await openMyRoster({
+		...signedInAsWorker(),
+		[`GET ${MY_ROSTER}`]: {
+			status: 200,
+			body: envelope({
+				scheduleId: "s-1",
+				name: "Front Office - Week 42",
+				branchName: "North",
+				departmentName: "Front Office",
+				timeZone: "Asia/Singapore",
+				periodStart: "2026-10-12",
+				periodEnd: "2026-10-18",
+				assignments: scheduleAssignmentsFixture(),
+			}),
+		},
+		[`GET ${MY_ROSTER}/shift-preferences`]: {
+			status: 200,
+			body: envelope({
+				scheduleId: "s-1",
+				preferences: [
+					{
+						membershipId: "m-1",
+						date: "2026-10-12",
+						shiftNames: ["Front Desk AM"],
+						outcome: "MET",
+						reason: null,
+					},
+				],
+			}),
+		},
+	});
+	await screen.findByRole("row", { name: /Aisha Rahman/ });
+
+	await userEvent.click(
+		screen.getByRole("button", { name: /^Aisha Rahman, Mon 09:00 – 15:00/ })
+	);
+
+	const panel = screen.getByRole("complementary", { name: "Shift Details" });
+	expect(within(panel).getByText("Preference")).toBeInTheDocument();
+	expect(within(panel).getByText("Met")).toBeInTheDocument();
 });

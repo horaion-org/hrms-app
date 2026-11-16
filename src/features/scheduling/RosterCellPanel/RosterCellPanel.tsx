@@ -27,6 +27,7 @@ import type {
 	ScheduleAssignment,
 	ScheduleShift,
 } from "@/features/scheduling/schedules/api";
+import type { SchedulePreferenceOutcome } from "@/features/shiftPreferences/api";
 
 export type RosterCellPanelProps = {
 	/** Where the roster lives and which run's rows are shown. */
@@ -68,6 +69,8 @@ export type RosterCellPanelProps = {
 	coverOffers?: { offers: ReadonlyArray<CoverOffer>; timeZone: string };
 	/** A recorded yes landed and applied; the roster refreshes by itself. */
 	onCoverRecorded?: () => void;
+	/** The member's shift preference on the day and what the roster made of it; shown under the day. */
+	preferenceOutcome?: SchedulePreferenceOutcome;
 	className?: string;
 };
 
@@ -92,6 +95,7 @@ export const RosterCellPanel = ({
 	onClose,
 	notifiesMembers = false,
 	issues,
+	preferenceOutcome,
 	className,
 	...input
 }: RosterCellPanelProps): FunctionComponent => {
@@ -142,6 +146,7 @@ export const RosterCellPanel = ({
 				assignment={assignment}
 				language={panel.language}
 				leaveDay={panel.leaveDay}
+				preferenceOutcome={preferenceOutcome}
 				requestDays={panel.requestDays}
 				requestLink={panel.requestLink}
 			/>
