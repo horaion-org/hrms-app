@@ -5069,13 +5069,14 @@
 			"waitingApprovals": {
 				"title": "Aprobaciones pendientes",
 				"failed": "No pudimos cargar las aprobaciones pendientes.",
-				"formerMember": "un antiguo miembro",
+				"formerMember": "Un antiguo miembro",
 				"stalled": "Estancada",
-				"detail": "{{department}} · paso {{step}} de {{total}} · en espera desde {{since}}",
+				"step": "paso {{step}} de {{total}}",
+				"since": "desde {{since}}",
 				"subjects": {
-					"LEAVE_REQUEST": "Solicitud de permiso de {{name}}",
-					"SCHEDULE_PUBLICATION": "Horario por publicar, pedido por {{name}}",
-					"OTHER": "Aprobación pedida por {{name}}"
+					"LEAVE_REQUEST": "Ausencia",
+					"SCHEDULE_PUBLICATION": "Horario por publicar",
+					"OTHER": "Aprobación"
 				}
 			},
 			"peopleEvents": {

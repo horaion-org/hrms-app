@@ -13,7 +13,19 @@ beforeAll(async () => {
 });
 
 describe("WaitingApprovalsCard", () => {
-	it("names what waits, whose it is, its step and since when, and marks a stalled step", () => {
+	it("names on one line whose it is, what waits and its step, with since when on the right", () => {
+		render(
+			<WaitingApprovalsCard
+				approvals={{ status: "ready", data: [waitingApprovalFixture()] }}
+			/>
+		);
+
+		expect(screen.getByRole("listitem")).toHaveTextContent(
+			/^Kent Tan · Leave · step 1 of 2since .+$/
+		);
+	});
+
+	it("marks a stalled step in the day's place", () => {
 		render(
 			<WaitingApprovalsCard
 				approvals={{
@@ -23,11 +35,9 @@ describe("WaitingApprovalsCard", () => {
 			/>
 		);
 
-		expect(screen.getByText("Leave request from Kent Tan")).toBeInTheDocument();
-		expect(screen.getByText("Stalled")).toBeInTheDocument();
-		expect(
-			screen.getByText(/^Sales · step 1 of 2 · waiting since /)
-		).toBeInTheDocument();
+		expect(screen.getByRole("listitem")).toHaveTextContent(
+			/^Kent Tan · Leave · step 1 of 2Stalled$/
+		);
 	});
 
 	it("says when the read failed", () => {

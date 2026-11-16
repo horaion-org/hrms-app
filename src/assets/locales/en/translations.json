@@ -5236,13 +5236,14 @@
 			"waitingApprovals": {
 				"title": "Approvals waiting",
 				"failed": "We couldn’t load the approvals waiting.",
-				"formerMember": "a former member",
+				"formerMember": "A former member",
 				"stalled": "Stalled",
-				"detail": "{{department}} · step {{step}} of {{total}} · waiting since {{since}}",
+				"step": "step {{step}} of {{total}}",
+				"since": "since {{since}}",
 				"subjects": {
-					"LEAVE_REQUEST": "Leave request from {{name}}",
-					"SCHEDULE_PUBLICATION": "Roster to publish, asked by {{name}}",
-					"OTHER": "Approval asked by {{name}}"
+					"LEAVE_REQUEST": "Leave",
+					"SCHEDULE_PUBLICATION": "Roster to publish",
+					"OTHER": "Approval"
 				}
 			},
 			"peopleEvents": {

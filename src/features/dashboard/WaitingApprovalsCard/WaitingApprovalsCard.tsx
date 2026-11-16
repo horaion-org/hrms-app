@@ -8,16 +8,18 @@ import { HistoryIcon } from "@/components/ui/Icon";
 import type { WaitingApproval } from "@/features/dashboard/api";
 import {
 	failedLineClasses,
+	HOME_ROW_COUNT,
+	rowAsideClasses,
 	rowClasses,
-	rowDetailClasses,
+	rowLeadClasses,
 	rowListClasses,
-	rowTitleClasses,
+	rowTextClasses,
 } from "@/features/dashboard/cardStyles";
 import type { GuardedRead } from "@/features/dashboard/guardedRead";
 
 const key = "dashboard.cards.waitingApprovals";
 
-/** The subjects the card names in its own words; anything else reads as "an approval". */
+/** The subjects the card names in its own words; anything else reads as "Approval". */
 type SubjectWords = "LEAVE_REQUEST" | "SCHEDULE_PUBLICATION" | "OTHER";
 
 /** The words an approval's subject is named with. */
@@ -39,9 +41,10 @@ const sinceLabel = (waitingSince: string, language: string): string =>
 	);
 
 /**
- * The approvals waiting in the person's units, oldest first: what waits,
- * whose it is, the step it waits at and since when. A stalled step is
- * marked, since its flow's managers were already told.
+ * The approvals waiting in the person's units, oldest first, a line each:
+ * whose it is, what waits and at which step, and since when on the right.
+ * A stalled step is marked in the day's place, since its flow's managers
+ * were already told.
  */
 export const WaitingApprovalsCard = ({
 	approvals,
@@ -59,34 +62,36 @@ export const WaitingApprovalsCard = ({
 			)}
 			{approvals.status === "ready" && (
 				<ExpandableList
+					collapsedCount={HOME_ROW_COUNT}
 					itemClassName={rowClasses}
 					items={approvals.data}
 					keyOf={(approval) => approval.approvalInstanceId}
 					listClassName={rowListClasses}
 					renderItem={(approval) => (
 						<>
-							<span className="flex flex-wrap items-center gap-2">
-								<span className={rowTitleClasses}>
-									{t(
-										`${key}.subjects.${subjectWordsOf(approval.subjectType)}`,
-										{
-											name:
-												approval.memberDisplayName ?? t(`${key}.formerMember`),
-										}
-									)}
+							<span className={rowTextClasses}>
+								<span className={rowLeadClasses}>
+									{approval.memberDisplayName ?? t(`${key}.formerMember`)}
 								</span>
-								{approval.stalled && (
-									<Badge tone="warning">{t(`${key}.stalled`)}</Badge>
-								)}
-							</span>
-							<span className={rowDetailClasses}>
-								{t(`${key}.detail`, {
-									department: approval.departmentName,
+								{" · "}
+								{t(`${key}.subjects.${subjectWordsOf(approval.subjectType)}`)}
+								{" · "}
+								{t(`${key}.step`, {
 									step: approval.currentStepOrder,
 									total: approval.stepCount,
-									since: sinceLabel(approval.waitingSince, language),
 								})}
 							</span>
+							{approval.stalled ? (
+								<Badge className="shrink-0" tone="warning">
+									{t(`${key}.stalled`)}
+								</Badge>
+							) : (
+								<span className={rowAsideClasses}>
+									{t(`${key}.since`, {
+										since: sinceLabel(approval.waitingSince, language),
+									})}
+								</span>
+							)}
 						</>
 					)}
 				/>
