@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { formatDate } from "@/components/forms/Calendar";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -18,7 +19,9 @@ import { ChangeEmploymentTermsDialog } from "@/features/employmentTerms/ChangeEm
 import { EmploymentTermsHistoryDialog } from "@/features/employmentTerms/EmploymentTermsHistoryDialog";
 import { durationShort } from "@/features/employmentTerms/hours";
 import { memberTermsRefusal } from "@/features/employmentTerms/refusals";
-import { termsSentence } from "@/features/employmentTerms/summary";
+import { weekLines } from "@/features/employmentTerms/summary";
+import { termsFormValuesOf } from "@/features/employmentTerms/termsForm";
+import { kindOf } from "@/features/employmentTerms/termsKinds";
 import { useMemberTermsActions } from "@/features/employmentTerms/useMemberTermsActions";
 import type { MemberProfileDetail } from "@/features/people/api";
 import { personScope } from "@/features/people/profileEditAccess";
@@ -109,6 +112,15 @@ export const EmploymentTermsRow = ({
 		.reverse()
 		.find((entry) => entry.scheduled);
 	const name = inForce ? inForce.name : t(`${key}.unset`);
+	// Shift work and part-time say so beside the name, as the Settings list does.
+	const kind = inForce
+		? kindOf(
+				termsFormValuesOf(inForce),
+				[],
+				current.reference?.partTimeBelowMinutes ?? null
+			)
+		: undefined;
+	const pill = kind === "SHIFT_WORK" || kind === "PART_TIME" ? kind : undefined;
 	return (
 		<span className="flex min-w-0 flex-col gap-1">
 			<span className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -124,6 +136,7 @@ export const EmploymentTermsRow = ({
 				) : (
 					<span>{name}</span>
 				)}
+				{pill && <Badge>{t(`employmentTerms.kinds.${pill}`)}</Badge>}
 				{canChange && (
 					<Button
 						variant="textlink"
@@ -145,13 +158,9 @@ export const EmploymentTermsRow = ({
 					</Button>
 				)}
 			</span>
-			{inForce && (
-				<span className="text-xs text-neutral-700">
-					{termsSentence(inForce, current.reference, t)}
-				</span>
-			)}
 			<span className="text-xs text-neutral-700">
 				{[
+					...(inForce ? weekLines(inForce, current.reference, t) : []),
 					inForce?.since
 						? t(`${key}.since`, { date: formatDate(inForce.since, language) })
 						: undefined,

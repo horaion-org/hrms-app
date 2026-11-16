@@ -155,7 +155,7 @@ const open = async (entry = "/people/m-1"): Promise<HTMLElement> => {
 };
 
 describe("A person's employment terms", () => {
-	it("read in plain words, since when, with the change ahead and a link to the terms", async () => {
+	it("read in short, since when, with the change ahead and a link to the terms", async () => {
 		stubApi(routes(CHANGER));
 		const card = await open();
 
@@ -166,10 +166,12 @@ describe("A person's employment terms", () => {
 			"href",
 			"/settings?section=employment&terms=terms-six-day-shift"
 		);
+		// The kind beside the name, then the week in a few words; the full sentence lives in Settings.
+		expect(within(card).getByText("Shift work")).toBeVisible();
 		expect(card).toHaveTextContent(
-			"Works 44 hours a week over 6 days, in shifts of up to 12 hours."
+			"44 h over 6 days · Shifts up to 12 h · Roster picks the rest day · Since 1 Mar 2025"
 		);
-		expect(card).toHaveTextContent("Since 1 Mar 2025");
+		expect(card).not.toHaveTextContent("Works 44 hours");
 		expect(card).toHaveTextContent(
 			"Changes to Five-day week, 44 h from 4 Jan 2027."
 		);
@@ -284,7 +286,7 @@ describe("A person's employment terms", () => {
 		expect(card).not.toHaveTextContent("Part-time, 20 h");
 	});
 
-	it("change from a Monday, with their own hours, and warn of a mismatch", async () => {
+	it("change from a Monday, with contracted hours, and warn of a mismatch", async () => {
 		const calls = stubApi(
 			routes(EDITOR, undefined, {
 				[`POST ${MEMBER_TERMS_PATH}`]: {
@@ -312,7 +314,22 @@ describe("A person's employment terms", () => {
 		expect(dialog).toHaveTextContent(
 			"Works 44 hours over 5 days a week, 8 hours 48 minutes a day."
 		);
-		await user.type(within(dialog).getByLabelText("Hours a week"), "20");
+		// Contracted hours wait behind their question until asked for.
+		expect(
+			within(dialog).queryByLabelText("Contracted hours a week")
+		).toBeNull();
+		await user.click(
+			within(dialog).getByRole("button", {
+				name: "Contracted for fewer hours than the terms?",
+			})
+		);
+		expect(dialog).toHaveTextContent(
+			"The terms give 44 h a week. Leave empty to use the terms’ hours."
+		);
+		await user.type(
+			within(dialog).getByLabelText("Contracted hours a week"),
+			"20"
+		);
 		expect(dialog).toHaveTextContent(
 			"Their employment type is Full-time, but these terms are part-time (20 h a week)."
 		);
