@@ -13,6 +13,13 @@ import {
 	ChevronLeftIcon,
 	ChevronRightIcon,
 } from "@/components/ui/Icon";
+import { openingBalancesQuery } from "@/features/scheduling/hours/api";
+import { OpeningHoursCallout } from "@/features/scheduling/hours/OpeningHoursCallout";
+import { OpeningHoursSection } from "@/features/scheduling/hours/OpeningHoursSection";
+import {
+	openingWeekOf,
+	unknownOpeningCount,
+} from "@/features/scheduling/hours/openingSummary";
 import {
 	monthGenerationCheckQuery,
 	scheduleMonthQuery,
@@ -337,6 +344,24 @@ const MonthContent = ({
 	const generation = useGenerateMonth(companyId, scheduleMonth);
 	// Generating again over hand changes asks first; the dialog posts the month itself.
 	const [confirmingRegenerate, setConfirmingRegenerate] = useState(false);
+	// The hours worked this month before its first scheduled week, entered on that week.
+	const openingWeek = openingWeekOf(scheduleMonth);
+	const openingScheduleId = openingWeek?.scheduleId ?? "";
+	const unit = { branchId, departmentId };
+	const [hoursOpen, setHoursOpen] = useState(false);
+	const mayChangeHours =
+		access.can("schedule:update", departmentScope(departmentId)) &&
+		openingWeek?.state !== "PUBLISHED";
+	const openings = useQuery(
+		openingBalancesQuery(
+			companyId,
+			unit,
+			openingScheduleId,
+			openingScheduleId !== ""
+		)
+	);
+	const unknownHours =
+		openings.data?.applies === true ? unknownOpeningCount(openings.data) : 0;
 	const [regenerateAnswer, setRegenerateAnswer] = useState<MonthGeneration>();
 	const lastAnswer = generation.answer ?? regenerateAnswer;
 	const refused = {
@@ -391,6 +416,17 @@ const MonthContent = ({
 			</header>
 			<CrossingWeekLine department={departmentId} month={month} />
 			<WaitingWeekLine department={departmentId} month={month} weeks={weeks} />
+			{openingWeek && openingScheduleId !== "" && (
+				<OpeningHoursSection
+					canEdit={mayChangeHours}
+					companyId={companyId}
+					generated={openingWeek.state !== "DRAFT"}
+					open={hoursOpen}
+					scheduleId={openingScheduleId}
+					unit={unit}
+					onOpenChange={setHoursOpen}
+				/>
+			)}
 			{isGenerating(scheduleMonth) && (
 				<Callout role="status">
 					<strong>
@@ -455,6 +491,23 @@ const MonthContent = ({
 				<RegenerateMonthDialog
 					companyId={companyId}
 					month={scheduleMonth}
+					notice={
+						openings.data && unknownHours > 0 ? (
+							<OpeningHoursCallout
+								asOf={openings.data.asOf}
+								className="mb-6"
+								hours={{ kind: "read", unknownCount: unknownHours }}
+								onAdd={
+									mayChangeHours
+										? (): void => {
+												setConfirmingRegenerate(false);
+												setHoursOpen(true);
+											}
+										: undefined
+								}
+							/>
+						) : undefined
+					}
 					onStarted={setRegenerateAnswer}
 					onClose={() => {
 						setConfirmingRegenerate(false);
