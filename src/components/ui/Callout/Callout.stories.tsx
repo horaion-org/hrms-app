@@ -31,3 +31,12 @@ export const Warning: Story = {
 			"2 part-time members have no availability and will be left off the roster.",
 	},
 };
+
+/** Something that blocks the next step until it is fixed. */
+export const Blocking: Story = {
+	args: {
+		tone: "error",
+		children:
+			"2 constraints need attention. A roster can’t use them until they’re fixed.",
+	},
+};

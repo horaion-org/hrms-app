@@ -31,4 +31,13 @@ describe("Callout", () => {
 			"bg-warning-50"
 		);
 	});
+
+	it("given_theErrorTone_when_rendered_then_namesWhatBlocksInErrorColours", () => {
+		render(<Callout tone="error">2 constraints need attention.</Callout>);
+
+		expect(screen.getByRole("note")).toHaveClass(
+			"border-error-400",
+			"bg-error-50"
+		);
+	});
 });
