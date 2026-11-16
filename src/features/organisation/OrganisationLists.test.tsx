@@ -862,6 +862,10 @@ describe("Access roles", () => {
 		expect(
 			await screen.findByRole("heading", { level: 1, name: "Access roles" })
 		).toBeVisible();
+		// The roles page opens from Settings' list; its back link returns there.
+		expect(
+			within(screen.getByRole("main")).getByRole("link", { name: "Settings" })
+		).toHaveAttribute("href", "/settings");
 		const table = await screen.findByRole("table", { name: "Access roles" });
 		await within(table).findByText("Manager");
 		expect(

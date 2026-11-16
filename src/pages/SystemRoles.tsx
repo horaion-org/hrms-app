@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/DataTable";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
+import { ArrowLeftIcon } from "@/components/ui/Icon";
 import { OverflowMenuItem } from "@/components/ui/OverflowMenu";
 import type { AccessRole } from "@/features/organisation/api";
 import { CreateSystemRoleDialog } from "@/features/organisation/CreateSystemRoleDialog";
@@ -205,7 +206,11 @@ export const SystemRoles = (): FunctionComponent => {
 
 	return (
 		<>
-			<h1 className="text-4xl font-medium text-neutral-900">
+			{/* Access roles open from Settings' list, so the way back leads there. */}
+			<Button leadingIcon={<ArrowLeftIcon />} to="/settings" variant="textlink">
+				{t("settings.back")}
+			</Button>
+			<h1 className="mt-4 text-4xl font-medium text-neutral-900">
 				{t("organisation.accessRoles.title")}
 			</h1>
 			<p className="mt-4 text-sm text-neutral-800">
