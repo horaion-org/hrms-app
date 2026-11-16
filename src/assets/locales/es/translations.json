@@ -4149,6 +4149,7 @@
 			"missingAs_one": "Falta {{count}} {{jobTitle}}",
 			"missingAs_other": "Faltan {{count}} como {{jobTitle}}",
 			"rule": "Regla: {{rule}}",
+			"underRule": "{{rule}}: {{sentence}}",
 			"forecastDemand": "Demanda prevista",
 			"unknownMember": "Un antiguo miembro",
 			"unknownShift": "uno de sus turnos",

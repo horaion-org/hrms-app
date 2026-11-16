@@ -165,7 +165,7 @@ describe("diagnosticSentence", () => {
 		});
 
 		expect(diagnosticSentence(diagnostic, withDaysLimit, t, day)).toBe(
-			"Ben Ong has gone 5 days in a row without a Rest day or Day off before this schedule, so one is needed by day 2026-10-13."
+			"Days in a row: Ben Ong has gone 5 days in a row without a Rest day or Day off before this schedule, so one is needed by day 2026-10-13."
 		);
 	});
 
@@ -177,7 +177,7 @@ describe("diagnosticSentence", () => {
 		});
 
 		expect(diagnosticSentence(diagnostic, withDaysLimit, t, day)).toBe(
-			"Ben Ong has gone 1 day in a row without a Rest day or Day off before this schedule, so one is needed by day 2026-10-17."
+			"Days in a row: Ben Ong has gone 1 day in a row without a Rest day or Day off before this schedule, so one is needed by day 2026-10-17."
 		);
 	});
 
@@ -235,7 +235,7 @@ describe("diagnosticSentence", () => {
 		});
 
 		expect(diagnosticSentence(diagnostic, withDaysLimit, t, day)).toBe(
-			"Only 3 of the 14 days before this schedule are known for Ben Ong, so the limit on days in a row is counted from what is known."
+			"Days in a row: Only 3 of the 14 days before this schedule are known for Ben Ong, so the limit on days in a row is counted from what is known."
 		);
 	});
 
@@ -246,8 +246,32 @@ describe("diagnosticSentence", () => {
 		});
 
 		expect(diagnosticSentence(diagnostic, withDaysLimit, t, day)).toBe(
-			"No days before this schedule are known, so the limit on days in a row is counted from its first day."
+			"Days in a row: No days before this schedule are known, so the limit on days in a row is counted from its first day."
 		);
+	});
+
+	it("given_noDayBeforeKnownUnderTwoRules_when_worded_then_eachLineNamesItsOwnRule", () => {
+		const twoLimits = findingNames(findings, {
+			assignments: [],
+			shifts: [],
+			constraints: [
+				DAYS_LIMIT_COPY,
+				{ ...DAYS_LIMIT_COPY, constraintId: "six-copy", name: "Six at most" },
+			],
+		});
+		const sentences = ["days-limit-copy", "six-copy"].map((ruleId) =>
+			diagnosticSentence(
+				dayTypeFinding("PRIOR_DAYS_UNKNOWN", { ruleId, knownDays: 0 }),
+				twoLimits,
+				t,
+				day
+			)
+		);
+
+		expect(sentences).toEqual([
+			"Days in a row: No days before this schedule are known, so the limit on days in a row is counted from its first day.",
+			"Six at most: No days before this schedule are known, so the limit on days in a row is counted from its first day.",
+		]);
 	});
 
 	it("given_daysOfADaysOffBlockNotSent_when_worded_then_namesTheMemberAndSaysHowTheyCount", () => {

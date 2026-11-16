@@ -109,6 +109,24 @@ const ruleDayTypesOf = (
 };
 
 /**
+ * A sentence about one rule's days in a row, led by the rule's name when it
+ * resolves: two such rules (a company's 12 and a department's 6) otherwise
+ * read alike, or as one said twice.
+ */
+const underItsRule = (
+	diagnostic: FindingsDiagnostic,
+	names: FindingNames,
+	t: TFunction,
+	sentence: string
+): string => {
+	const ruleId = entityText(diagnostic, "ruleId");
+	const rule = ruleId === null ? undefined : names.rules.get(ruleId);
+	return rule === undefined
+		? sentence
+		: t("scheduling.findings.underRule", { rule, sentence });
+};
+
+/**
  * The app's sentence for a known code, naming what it is about; null for a
  * code the app doesn't know, which is then shown in the engine's words only.
  * `day` writes a date the way the findings list does.
@@ -168,7 +186,12 @@ export const diagnosticSentence = (
 			// A rule that doesn't resolve has no day types to name, so its sentence names none.
 			return dayTypes === null
 				? t(`${key}.${code}.sentenceWithoutDayTypes`, run)
-				: t(`${key}.${code}.sentence`, { ...run, dayTypes });
+				: underItsRule(
+						diagnostic,
+						names,
+						t,
+						t(`${key}.${code}.sentence`, { ...run, dayTypes })
+					);
 		}
 		case "PRIOR_REST_BLOCKS_SHIFTS": {
 			// Local date-times as the engine keys them, "2026-11-23T09:00".
@@ -190,11 +213,21 @@ export const diagnosticSentence = (
 		case "PRIOR_DAYS_UNKNOWN":
 			// Without a member it is about the whole schedule: no day before it is known.
 			if (entityText(diagnostic, "employeeId") === null)
-				return t(`${key}.${code}.wholeSchedule`);
-			return t(`${key}.${code}.sentence`, {
-				member: member(),
-				count: entityCount(diagnostic, "knownDays"),
-				lookBack: entityCount(diagnostic, "lookBackDays"),
-			});
+				return underItsRule(
+					diagnostic,
+					names,
+					t,
+					t(`${key}.${code}.wholeSchedule`)
+				);
+			return underItsRule(
+				diagnostic,
+				names,
+				t,
+				t(`${key}.${code}.sentence`, {
+					member: member(),
+					count: entityCount(diagnostic, "knownDays"),
+					lookBack: entityCount(diagnostic, "lookBackDays"),
+				})
+			);
 	}
 };
