@@ -3954,7 +3954,7 @@
 			"timeZone": "Times in {{timeZone}}",
 			"draft": "This schedule is still a draft, so it has no roster yet. View its setup to carry on.",
 			"weekPassed": "This week has passed. Its rules and roster are final; change its days by hand if needed.",
-			"currentRules": "Uses the current rules each time it is generated: new rules and shifts since the last generation are applied when it is regenerated. Last generated {{when}}.",
+			"rulesChanged": "Rules changed since this roster was generated. Regenerate to apply them.",
 			"rosterLoading": "Loading the roster…",
 			"rosterFailed": "The roster couldn’t be loaded. Please try again.",
 			"noRows": "No one is rostered in this schedule.",
@@ -4767,6 +4767,7 @@
 			"alwaysApplies": "Always applies"
 		},
 		"months": {
+			"rulesChanged": "Rules changed since this roster was generated. Regenerate to apply them.",
 			"states": {
 				"PUBLISHED": "Published",
 				"TO_REVIEW": "To review",

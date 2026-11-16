@@ -527,6 +527,11 @@ const ApiSchedule = ({
 		hasRoster: hasRoster(schedule),
 		weekPublishedElsewhere: weekPublishedBy !== undefined,
 		weekPassed: passed,
+		rulesChanged:
+			scheduleMonth?.weeks.find(
+				(week) => week.scheduleId === schedule.scheduleId
+			)
+				?.rulesChanged === true,
 	};
 	const moment = dateTimeFormatIn(formattingLocale(i18n), schedule.timeZone, {
 		dateStyle: "medium",
@@ -610,15 +615,7 @@ const ApiSchedule = ({
 		),
 		draft: <Callout>{t(`${key}.draft`)}</Callout>,
 		weekPassed: <Callout>{t(`${key}.weekPassed`)}</Callout>,
-		currentRules: (
-			<Callout>
-				{t(`${key}.currentRules`, {
-					when: schedule.generationRequestedAt
-						? moment.format(new Date(schedule.generationRequestedAt))
-						: "",
-				})}
-			</Callout>
-		),
+		rulesChanged: <Callout>{t(`${key}.rulesChanged`)}</Callout>,
 		unpublished: (
 			<Callout>
 				<Trans

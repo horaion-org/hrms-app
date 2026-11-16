@@ -61,6 +61,8 @@ const monthWeekSchema = z.object({
 			engineOutcome: z.string().nullable(),
 		})
 		.nullish(),
+	/** Whether the rules changed since the week was generated, so regenerating it applies them (API ADR-0091). */
+	rulesChanged: z.boolean().nullish(),
 });
 
 /** One week of a Department's month, as the month page shows it. */
