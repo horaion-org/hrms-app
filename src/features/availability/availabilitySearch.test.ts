@@ -35,6 +35,12 @@ describe("parseAvailabilitySearch", () => {
 		expect(parseAvailabilitySearch({})).toEqual({});
 	});
 
+	it("given_theShiftPreferencesTab_when_parsed_then_keepsIt", () => {
+		expect(parseAvailabilitySearch({ view: "preferences" })).toEqual({
+			view: "preferences",
+		});
+	});
+
 	it("given_unknownOrMalformedParts_when_parsed_then_dropsThem", () => {
 		expect(
 			parseAvailabilitySearch({
@@ -63,16 +69,28 @@ describe("weekOf and weekParameter", () => {
 });
 
 describe("viewsOf and viewOf", () => {
-	it("given_whatThePersonHas_when_listed_then_putsMineFirst", () => {
-		expect(viewsOf({ mine: true, team: true })).toEqual(["mine", "team"]);
-		expect(viewsOf({ mine: false, team: true })).toEqual(["team"]);
-		expect(viewsOf({ mine: false, team: false })).toEqual([]);
+	it("given_whatThePersonHas_when_listed_then_putsMineFirstAndPreferencesAlways", () => {
+		expect(viewsOf({ mine: true, team: true })).toEqual([
+			"mine",
+			"preferences",
+			"team",
+		]);
+		expect(viewsOf({ mine: false, team: true })).toEqual([
+			"preferences",
+			"team",
+		]);
+		expect(viewsOf({ mine: true, team: false })).toEqual([
+			"mine",
+			"preferences",
+		]);
+		expect(viewsOf({ mine: false, team: false })).toEqual(["preferences"]);
 	});
 
 	it("given_aTabTheyLack_when_asked_then_showsTheirFirstOrNone", () => {
-		expect(viewOf("team", ["mine"])).toBe("mine");
-		expect(viewOf(undefined, ["mine", "team"])).toBe("mine");
-		expect(viewOf("team", ["mine", "team"])).toBe("team");
+		expect(viewOf("team", ["mine", "preferences"])).toBe("mine");
+		expect(viewOf("mine", ["preferences", "team"])).toBe("preferences");
+		expect(viewOf(undefined, ["mine", "preferences", "team"])).toBe("mine");
+		expect(viewOf("team", ["mine", "preferences", "team"])).toBe("team");
 		expect(viewOf("mine", [])).toBeUndefined();
 	});
 });

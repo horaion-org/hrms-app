@@ -11,14 +11,17 @@ import type {
 	UnitSelectionRules,
 } from "@/features/workspace/unitSelection";
 
-/** The page's two tabs: the caller's own availability, and their teams'. */
-export type AvailabilityView = "mine" | "preferences" | "team";
+/** The page's three tabs, in order: the caller's own availability, their own shift preferences, and their teams'. */
+const AVAILABILITY_VIEWS = ["mine", "preferences", "team"] as const;
+
+/** One tab of the Availability page. */
+export type AvailabilityView = (typeof AVAILABILITY_VIEWS)[number];
 
 const searchSchema = z.object({
-	view: z.enum(["mine", "preferences", "team"]).optional().catch(undefined),
+	view: z.enum(AVAILABILITY_VIEWS).optional().catch(undefined),
 	...unitSearchSchema.shape,
 	week: z.iso.date().refine(isMonday).optional().catch(undefined),
-	/** The one day the team grid shows below `md`; today, else the week's first day, when left out (`shownDayOf`). */
+	/** The one day a week grid shows below `md`; today, else the week's first day, when left out (`shownDayOf`). */
 	day: z.iso.date().optional().catch(undefined),
 });
 
@@ -72,7 +75,7 @@ export const viewsOf = ({
 	...(team ? (["team"] as const) : []),
 ];
 
-/** The tab shown: the URL's when the person has it, else their first; none when they have neither. */
+/** The tab shown: the URL's when the person has it, else their first; none when they have none. */
 export const viewOf = (
 	requested: AvailabilityView | undefined,
 	views: ReadonlyArray<AvailabilityView>
