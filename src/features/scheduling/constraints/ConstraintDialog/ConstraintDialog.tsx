@@ -140,6 +140,9 @@ const isHinted = (field: ConstraintField): field is HintedField =>
 /** A row of the form: one of its own fields, or one of the type's. */
 type FieldName = keyof ConstraintFormValues | ConstraintField;
 
+/** From a small screen up, the chooser's panel is 880 px wide: three or four cards a row. */
+const CHOOSER_WIDTH_CLASSES = "sm:max-w-220";
+
 /** The dialog's two steps: choosing what the constraint decides, then filling it in. */
 type DialogStep = "choose" | "fill";
 
@@ -677,6 +680,8 @@ export const ConstraintDialog = ({
 	return (
 		<Dialog
 			open
+			// The chooser shows every kind in full, so it takes the wide panel; the form returns to the usual width.
+			className={step === "choose" ? CHOOSER_WIDTH_CLASSES : undefined}
 			preventClose={isSubmitting}
 			description={[
 				department?.kind === "fixed" ? department.label : undefined,
