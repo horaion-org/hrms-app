@@ -46,11 +46,11 @@ export const ShiftDayAxis = ({
 				<span
 					key={tick.percent}
 					aria-hidden="true"
+					style={{ left: `${tick.percent}%` }}
 					className={joinClassNames(
 						"absolute top-0 text-xs font-medium text-neutral-700",
 						labelAlignment(index, ticks.length)
 					)}
-					style={{ left: `${tick.percent}%` }}
 				>
 					{tick.label}
 				</span>
