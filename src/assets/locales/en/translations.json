@@ -911,6 +911,7 @@
 	},
 	"stepper": {
 		"step": "Step {{number}}: {{label}}",
+		"label": "Steps",
 		"completedStep": "Step {{number}}: {{label}}, completed"
 	},
 	"daySwitcher": {
@@ -941,6 +942,7 @@
 		"accountMenu": "Account menu",
 		"changePassword": "Change password",
 		"menu": "Menu",
+		"mainNavigation": "Main navigation",
 		"collapseMenu": "Collapse menu",
 		"expandMenu": "Expand menu",
 		"logo": "Horaion"

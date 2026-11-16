@@ -1087,6 +1087,7 @@
 	},
 	"stepper": {
 		"step": "Paso {{number}}: {{label}}",
+		"label": "Pasos",
 		"completedStep": "Paso {{number}}: {{label}}, completado"
 	},
 	"daySwitcher": {
@@ -2671,6 +2672,7 @@
 		},
 		"comingSoon": "Este módulo estará disponible pronto.",
 		"menu": "Menú",
+		"mainNavigation": "Navegación principal",
 		"collapseMenu": "Contraer menú",
 		"expandMenu": "Expandir menú",
 		"logo": "Horaion"

@@ -1,5 +1,6 @@
 import { Children, type ReactNode, useId, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { HoraionLogo } from "@/components/layout/Sidebar/HoraionLogo";
@@ -32,6 +33,7 @@ export const Sidebar = ({
 	footer,
 	menuLabel,
 }: SidebarProps): FunctionComponent => {
+	const { t } = useTranslation();
 	const panelId = useId();
 	// The menu stays open only on the page it was opened at, so following a link closes it.
 	const location = useRouterState({ select: (state) => state.location.href });
@@ -82,7 +84,7 @@ export const Sidebar = ({
 					menuOpen ? "flex" : "hidden"
 				)}
 			>
-				<nav aria-label="Main navigation">
+				<nav aria-label={t("shell.mainNavigation")}>
 					<ul className="flex flex-col gap-4">
 						{Children.map(children, (child) => child && <li>{child}</li>)}
 					</ul>
