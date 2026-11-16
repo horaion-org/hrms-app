@@ -8,7 +8,7 @@ import { retry } from "@/features/workspace/retry";
 import type { UnitSelection } from "@/features/workspace/unitSearch";
 
 /*
- * The schedules reads behind the manager dashboard and Insights: shifts
+ * The schedules reads behind the manager dashboard and Reports: shifts
  * short, rostered days off, overtime against the ceiling, and the open
  * cover offers in the person's units. Each is guarded by the API; the app
  * only shows what it answers.

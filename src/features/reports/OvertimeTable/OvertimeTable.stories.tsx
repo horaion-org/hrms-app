@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { overtimeFixture } from "@/features/dashboard/fixtures";
-import { OvertimeTable } from "@/features/insights/OvertimeTable";
+import { OvertimeTable } from "@/features/reports/OvertimeTable";
 import "@/common/i18n";
 
 const meta = {
-	title: "Features/Insights/OvertimeTable",
+	title: "Features/Reports/OvertimeTable",
 	component: OvertimeTable,
 	args: {
 		departments: overtimeFixture().departments,

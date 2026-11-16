@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { rosterChangeDepartmentFixture } from "@/features/insights/fixtures";
-import { RosterStabilityTable } from "@/features/insights/RosterStabilityTable";
+import { rosterChangeDepartmentFixture } from "@/features/reports/fixtures";
+import { RosterStabilityTable } from "@/features/reports/RosterStabilityTable";
 import "@/common/i18n";
 
 const meta = {
-	title: "Features/Insights/RosterStabilityTable",
+	title: "Features/Reports/RosterStabilityTable",
 	component: RosterStabilityTable,
 	args: { departments: [rosterChangeDepartmentFixture()] },
 } satisfies Meta<typeof RosterStabilityTable>;

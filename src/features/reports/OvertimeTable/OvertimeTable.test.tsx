@@ -4,7 +4,7 @@ import { initReactI18next } from "react-i18next";
 import { beforeAll, describe, expect, it } from "vitest";
 import en from "@/assets/locales/en/translations.json";
 import { overtimeFixture } from "@/features/dashboard/fixtures";
-import { OvertimeTable } from "@/features/insights/OvertimeTable";
+import { OvertimeTable } from "@/features/reports/OvertimeTable";
 
 beforeAll(async () => {
 	await createInstance()

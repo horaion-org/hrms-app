@@ -1,11 +1,13 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { staffingRuleFixture } from "@/features/insights/fixtures";
-import { StaffingTable } from "@/features/insights/StaffingTable";
+import { withMemoryRouter } from "@/components/utils/MemoryRouterHarness";
+import { staffingRuleFixture } from "@/features/reports/fixtures";
+import { StaffingTable } from "@/features/reports/StaffingTable";
 import "@/common/i18n";
 
 const meta = {
-	title: "Features/Insights/StaffingTable",
+	title: "Features/Reports/StaffingTable",
 	component: StaffingTable,
+	decorators: [withMemoryRouter],
 	args: {
 		rules: [
 			staffingRuleFixture(),
@@ -13,7 +15,9 @@ const meta = {
 				ruleName: "Closing",
 				headcount: 1,
 				peopleWithTitles: 4,
-				gapsInRange: 0,
+				holderDaysAWeek: 20,
+				neededShiftDaysAWeek: 7,
+				gapsInRange: 2,
 			}),
 		],
 	},

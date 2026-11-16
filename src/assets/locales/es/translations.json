@@ -2479,7 +2479,7 @@
 			"availability": "Disponibilidad y preferencias",
 			"people": "Personas",
 			"organisation": "Organización",
-			"insights": "Análisis"
+			"reports": "Informes"
 		},
 		"comingSoon": "Este módulo estará disponible pronto.",
 		"menu": "Menú"
@@ -5411,7 +5411,7 @@
 			"inactiveShown": "Las personas inactivas no tienen condiciones. Muestra las personas activas para filtrar por condiciones."
 		}
 	},
-	"insights": {
+	"reports": {
 		"subtitle": "Dónde faltan personas, quién hace más horas extra y con qué frecuencia cambian los horarios publicados.",
 		"range": "Fechas",
 		"failed": "No pudimos cargar esta tabla. Inténtalo de nuevo en un momento.",
@@ -5423,20 +5423,32 @@
 		},
 		"staffing": {
 			"title": "Personal por regla",
-			"intro": "Lo que pide cada regla de personal, cuántas personas tienen sus puestos y cuántas faltan en sus turnos en estas fechas.",
 			"rule": "Regla",
 			"jobTitles": "Puestos",
 			"needed": "Necesarias por turno",
 			"people": "Personas con estos puestos",
-			"shifts": "Turnos",
-			"shiftDays_one": "{{shift}} ({{count}} día a la semana)",
-			"shiftDays_other": "{{shift}} ({{count}} días a la semana)",
 			"gaps": "Personas que faltan",
-			"empty": "Aún no hay reglas de personal aquí."
+			"empty": "Aún no hay reglas de personal aquí.",
+			"question": "¿Tenemos el personal necesario?",
+			"findings": {
+				"oneRule": "A {{branch}} le faltaron {{total}} personas; {{count}} de ellas por {{rule}}",
+				"branch": "A {{branch}} le faltaron más personas: {{total}}",
+				"noGaps": "Todos los turnos tuvieron personal en estas fechas"
+			},
+			"unit": "{{department}}, {{branch}}",
+			"days": "Días-persona por semana",
+			"daysNeeded": "{{needed}} necesarios",
+			"daysNeededAndHeld": "{{needed}} necesarios · {{held}} disponibles",
+			"cause": "Causa",
+			"causes": {
+				"TOO_FEW_PEOPLE": "Faltan personas",
+				"ONE_OFF": "Huecos puntuales"
+			},
+			"editRule": "Editar regla",
+			"seeGaps": "Ver los huecos"
 		},
 		"overtime": {
 			"title": "Horas extra por mes",
-			"intro": "Horas extra programadas en cada departamento y mes, frente al límite mensual.",
 			"department": "Departamento",
 			"overtime": "Horas extra",
 			"ceiling": "Límite mensual",
@@ -5450,11 +5462,19 @@
 				"NEAR": "cerca",
 				"OVER": "por encima"
 			},
-			"empty": "No hay horas extra en estas fechas."
+			"empty": "No hay horas extra en estas fechas.",
+			"question": "¿Están controladas las horas extra?",
+			"findings": {
+				"overLimit_one": "{{count}} persona superó el límite mensual",
+				"overLimit_other": "{{count}} personas superaron el límite mensual",
+				"nearLimit_one": "Nadie superó el límite; {{count}} persona se acercó",
+				"nearLimit_other": "Nadie superó el límite; {{count}} personas se acercaron",
+				"withinLimit": "Todos quedaron por debajo del límite; {{department}} programó más horas extra",
+				"none": "No se programaron horas extra en estas fechas"
+			}
 		},
 		"stability": {
 			"title": "Cambios tras publicar",
-			"intro": "Con qué frecuencia cada departamento cambió un horario después de publicarlo, y por qué.",
 			"department": "Departamento",
 			"weeks": "Semanas publicadas",
 			"changes": "Cambios",
@@ -5470,7 +5490,20 @@
 				"COVER_OPTION": "Cobertura",
 				"OTHER": "Otro"
 			},
-			"empty": "No hay horarios publicados en estas fechas."
+			"empty": "No hay horarios publicados en estas fechas.",
+			"question": "¿Son estables los cuadrantes publicados?",
+			"findings": {
+				"mostly_one": "{{count}} cambio después de publicar; motivo: {{reason}}",
+				"mostly_other": "{{count}} cambios después de publicar; motivo principal: {{reason}}",
+				"none": "Ningún cuadrante publicado cambió en estas fechas"
+			}
+		},
+		"presets": {
+			"label": "Fechas",
+			"thisMonth": "Este mes",
+			"lastMonth": "El mes pasado",
+			"lastThreeMonths": "Últimos 3 meses",
+			"custom": "Personalizado"
 		}
 	},
 	"expandableList": {

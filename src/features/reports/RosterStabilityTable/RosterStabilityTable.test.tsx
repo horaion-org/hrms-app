@@ -3,8 +3,8 @@ import { createInstance } from "i18next";
 import { initReactI18next } from "react-i18next";
 import { beforeAll, describe, expect, it } from "vitest";
 import en from "@/assets/locales/en/translations.json";
-import { rosterChangeDepartmentFixture } from "@/features/insights/fixtures";
-import { RosterStabilityTable } from "@/features/insights/RosterStabilityTable";
+import { rosterChangeDepartmentFixture } from "@/features/reports/fixtures";
+import { RosterStabilityTable } from "@/features/reports/RosterStabilityTable";
 
 beforeAll(async () => {
 	await createInstance()

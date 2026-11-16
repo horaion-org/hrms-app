@@ -1,7 +1,7 @@
 import type {
 	RosterChangeDepartment,
 	StaffingRule,
-} from "@/features/insights/api";
+} from "@/features/reports/api";
 
 /** Front desk's rule: 3 needed on each shift, 2 people hold the titles. */
 export const staffingRuleFixture = (
@@ -20,6 +20,8 @@ export const staffingRuleFixture = (
 	peopleWithTitles: 2,
 	shifts: [{ shiftId: "sh-am", name: "Morning", daysAWeek: 7 }],
 	gapsInRange: 9,
+	neededShiftDaysAWeek: 21,
+	holderDaysAWeek: 10,
 	...overrides,
 });
 

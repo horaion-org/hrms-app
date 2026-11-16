@@ -9,7 +9,7 @@ import {
 	staffingQuery,
 	type RosterChangeDepartment,
 	type StaffingRule,
-} from "@/features/insights/api";
+} from "@/features/reports/api";
 import { SCHEDULE_READ_KEYS } from "@/features/workspace/permissionKeys";
 import type { UnitSelection } from "@/features/workspace/unitSearch";
 import { useAccess } from "@/features/workspace/useAccess";

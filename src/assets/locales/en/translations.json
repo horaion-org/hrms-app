@@ -917,7 +917,7 @@
 			"availability": "Availability and preferences",
 			"people": "People",
 			"organisation": "Organisation",
-			"insights": "Insights"
+			"reports": "Reports"
 		},
 		"comingSoon": "This Module is coming soon.",
 		"notifications": "Notifications",
@@ -5411,7 +5411,7 @@
 			"inactiveShown": "Inactive people hold no terms. Show active people to filter by terms."
 		}
 	},
-	"insights": {
+	"reports": {
 		"subtitle": "Where rosters are short, who works the most overtime, and how often published rosters change.",
 		"range": "Dates",
 		"failed": "We couldn’t load this table. Try again in a moment.",
@@ -5423,20 +5423,32 @@
 		},
 		"staffing": {
 			"title": "Staffing by rule",
-			"intro": "What each staffing rule asks for, how many people hold its job titles, and the people short on its shifts in these dates.",
 			"rule": "Rule",
 			"jobTitles": "Job titles",
 			"needed": "Needed per shift",
 			"people": "People with these titles",
-			"shifts": "Shifts",
-			"shiftDays_one": "{{shift}} ({{count}} day a week)",
-			"shiftDays_other": "{{shift}} ({{count}} days a week)",
 			"gaps": "People short",
-			"empty": "No staffing rules here yet."
+			"empty": "No staffing rules here yet.",
+			"question": "Are we staffed?",
+			"findings": {
+				"oneRule": "{{branch}} ran {{total}} people short; {{count}} of them come from {{rule}}",
+				"branch": "{{branch}} ran the most people short: {{total}}",
+				"noGaps": "Every shift was staffed in these dates"
+			},
+			"unit": "{{department}}, {{branch}}",
+			"days": "Person-days a week",
+			"daysNeeded": "{{needed}} needed",
+			"daysNeededAndHeld": "{{needed}} needed · {{held}} held",
+			"cause": "Cause",
+			"causes": {
+				"TOO_FEW_PEOPLE": "Too few people",
+				"ONE_OFF": "One-off gaps"
+			},
+			"editRule": "Edit rule",
+			"seeGaps": "See the gaps"
 		},
 		"overtime": {
 			"title": "Overtime by month",
-			"intro": "Overtime rostered in each department and month, against the monthly limit.",
 			"department": "Department",
 			"overtime": "Overtime",
 			"ceiling": "Monthly limit",
@@ -5450,11 +5462,19 @@
 				"NEAR": "near",
 				"OVER": "over"
 			},
-			"empty": "No overtime in these dates."
+			"empty": "No overtime in these dates.",
+			"question": "Is overtime under control?",
+			"findings": {
+				"overLimit_one": "{{count}} person went over the monthly limit",
+				"overLimit_other": "{{count}} people went over the monthly limit",
+				"nearLimit_one": "Nobody went over the limit; {{count}} person came near it",
+				"nearLimit_other": "Nobody went over the limit; {{count}} people came near it",
+				"withinLimit": "Everyone stayed well under the limit; {{department}} rostered the most overtime",
+				"none": "No overtime was rostered in these dates"
+			}
 		},
 		"stability": {
 			"title": "Changes after publishing",
-			"intro": "How often each department changed a roster after publishing it, and why.",
 			"department": "Department",
 			"weeks": "Published weeks",
 			"changes": "Changes",
@@ -5470,7 +5490,20 @@
 				"COVER_OPTION": "Cover",
 				"OTHER": "Other"
 			},
-			"empty": "No published rosters in these dates."
+			"empty": "No published rosters in these dates.",
+			"question": "Are published rosters stable?",
+			"findings": {
+				"mostly_one": "{{count}} change after publishing; reason: {{reason}}",
+				"mostly_other": "{{count}} changes after publishing; main reason: {{reason}}",
+				"none": "No published roster changed in these dates"
+			}
+		},
+		"presets": {
+			"label": "Dates",
+			"thisMonth": "This month",
+			"lastMonth": "Last month",
+			"lastThreeMonths": "Last 3 months",
+			"custom": "Custom"
 		}
 	},
 	"expandableList": {

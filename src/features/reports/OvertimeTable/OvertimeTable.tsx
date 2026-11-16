@@ -5,7 +5,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import type { OvertimeDepartment } from "@/features/dashboard/api";
 import { hoursLabel } from "@/features/dashboard/dashboardDates";
 
-const key = "insights.overtime";
+const key = "reports.overtime";
 
 export type OvertimeTableProps = {
 	departments: Array<OvertimeDepartment>;
