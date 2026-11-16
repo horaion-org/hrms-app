@@ -564,7 +564,7 @@ describe("ConstraintDialog", () => {
 			["People on shifts", 2],
 			["On duty throughout", 1],
 			["Days off", 4],
-			["Rest and hours", 5],
+			["Rest and hours", 4],
 		] as const)
 			expect(
 				within(screen.getByRole("radiogroup", { name: category })).getAllByRole(
@@ -696,33 +696,6 @@ describe("ConstraintDialog", () => {
 				expect.objectContaining({
 					type: "REST_BETWEEN_SHIFTS",
 					requirement: "SHOULD",
-				})
-			);
-		});
-	});
-
-	it("given_theShortestPartOfAShift_when_chosen_then_minutesInADayAndWhatHappensWithoutIt", async () => {
-		const user = userEvent.setup();
-		const { onSave } = renderDialog();
-		await start(user, "Shortest part of a shift around leave");
-
-		expect(
-			screen.getByText(
-				"1 to 1440 minutes. Without this setting, a shift that touches a leave is never given."
-			)
-		).toBeVisible();
-		const minutes = screen.getByRole("spinbutton", {
-			name: /^Shortest part \(minutes\)/,
-		});
-		expect(minutes).toHaveAttribute("max", "1440");
-		await user.type(minutes, "240");
-		await user.click(submitButton());
-
-		await waitFor(() => {
-			expect(onSave).toHaveBeenCalledWith(
-				expect.objectContaining({
-					type: "SHORTEST_PART_SHIFT",
-					values: [{ field: "PART_SHIFT_MINUTES", value: "240" }],
 				})
 			);
 		});

@@ -5,6 +5,7 @@ import { envelope, stubApi } from "@/common/testing/stubApi";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import {
 	CONSTRAINT_TYPES,
+	isRetiredConstraintType,
 	companyConstraintsQuery,
 	createConstraint,
 	deleteConstraint,
@@ -505,9 +506,7 @@ describe("constraints client", () => {
 		const options = await fetchConstraintOptions("c-1", UNIT);
 		const settings = options.types.filter(
 			(type) =>
-				type.type === "SHORTEST_PART_SHIFT" ||
-				type.type === "MAX_CALL_BACKS_PER_PERSON" ||
-				type.type === "PAY_RATES"
+				type.type === "MAX_CALL_BACKS_PER_PERSON" || type.type === "PAY_RATES"
 		);
 
 		expect(
@@ -518,12 +517,6 @@ describe("constraints client", () => {
 				fields: fields.map(({ field, min, max }) => [field, min, max]),
 			}))
 		).toEqual([
-			{
-				type: "SHORTEST_PART_SHIFT",
-				addedBySystem: false,
-				onePerDepartment: true,
-				fields: [["PART_SHIFT_MINUTES", 1, 1440]],
-			},
 			{
 				type: "MAX_CALL_BACKS_PER_PERSON",
 				addedBySystem: false,
@@ -554,7 +547,7 @@ describe("constraints client", () => {
 					types: CONSTRAINT_OPTIONS_RESPONSE.types.map((type) =>
 						type.type === "SHIFT_STAFFING"
 							? { ...type, requirementPolicy: "SOMETHING_NEW" }
-							: type.type === "SHORTEST_PART_SHIFT"
+							: type.type === "MAX_CALL_BACKS_PER_PERSON"
 								? { ...type, requirementPolicy: "ALWAYS_MUST" }
 								: type
 					),
@@ -614,7 +607,9 @@ describe("constraints client", () => {
 			},
 		});
 		const options = await fetchConstraintOptions("c-1", UNIT);
-		expect(options.types).toHaveLength(CONSTRAINT_TYPES.length);
+		expect(options.types).toHaveLength(
+			CONSTRAINT_TYPES.filter((type) => !isRetiredConstraintType(type)).length
+		);
 		expect(options.shifts).toEqual([]);
 		expect(options.jobTitles).toEqual([]);
 	});

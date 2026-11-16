@@ -15,9 +15,10 @@ import {
 	TableIcon,
 	TimeIcon,
 } from "@/components/ui/Icon";
-import type {
-	ConstraintCategory,
-	ConstraintType,
+import {
+	isRetiredConstraintType,
+	type ConstraintCategory,
+	type ConstraintType,
 } from "@/features/scheduling/constraints/api";
 
 /*
@@ -42,7 +43,6 @@ const TYPE_ICONS: Partial<Record<ConstraintType, Heroicon>> = {
 	REST_BETWEEN_SHIFTS: BreakIcon,
 	MAX_WORK_HOURS_PER_DAY: TimeIcon,
 	MAX_OVERTIME_HOURS_PER_MONTH: HistoryIcon,
-	SHORTEST_PART_SHIFT: TimeIcon,
 	MAX_CALL_BACKS_PER_PERSON: PhoneIcon,
 	PAY_RATES: TableIcon,
 	NO_OVERTIME_WHEN_GENERATING: GenerateScheduleIcon,
@@ -71,7 +71,9 @@ export const constraintTypeLookOf = (
 ): ConstraintTypeLook => {
 	const label = t(`scheduling.constraints.types.${type}`);
 	const Icon = TYPE_ICONS[type];
-	if (!Icon) return { Icon: PlaceholderIcon, label };
+	// A retired kind is only read on schedules generated with it, never offered, so it says no more than its label.
+	if (!Icon || isRetiredConstraintType(type))
+		return { Icon: PlaceholderIcon, label };
 	return {
 		Icon,
 		label,

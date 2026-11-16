@@ -1,5 +1,8 @@
 import type { TFunction } from "i18next";
-import type { ConstraintType } from "@/features/scheduling/constraints/api";
+import {
+	isRetiredConstraintType,
+	type ConstraintType,
+} from "@/features/scheduling/constraints/api";
 
 /** The longest name the API keeps. */
 const NAME_MAX_LENGTH = 100;
@@ -13,6 +16,9 @@ export const nameSuggestion = (
 	firstShiftName: string | undefined,
 	t: TFunction
 ): string => {
+	// A retired kind is never offered, so it is never named; it keeps its label.
+	if (isRetiredConstraintType(type))
+		return t(`scheduling.constraints.types.${type}`);
 	const usesShift =
 		type === "SHIFT_STAFFING" ||
 		type === "SHIFT_STAFFING_WITH_STAND_INS" ||

@@ -275,16 +275,6 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 		fullTimersOnly: false,
 	},
 	{
-		type: "SHORTEST_PART_SHIFT",
-		category: "WORKING_HOURS",
-		hasRequirement: false,
-		requirementPolicy: "SETTING",
-		onePerDepartment: true,
-		levels: [...ANY_LEVEL],
-		...ORDINARY,
-		fields: [number("PART_SHIFT_MINUTES", 1, 1440)],
-	},
-	{
 		type: "MAX_CALL_BACKS_PER_PERSON",
 		category: "WORKING_HOURS",
 		hasRequirement: true,
