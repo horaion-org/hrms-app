@@ -54,6 +54,9 @@ import type { RosterSearch } from "@/features/scheduling/roster/rosterSearch";
 import { RosterHeader } from "@/features/scheduling/RosterHeader";
 import { RosterHours } from "@/features/scheduling/RosterHours";
 import { useRosterRulesCheck } from "@/features/scheduling/rulesCheck/useRosterRulesCheck";
+import { validationStanding } from "@/features/scheduling/rulesCheck/issuesFromValidation";
+import { changedDays } from "@/features/scheduling/roster/rosterSummary";
+import { useRepairWarmUpOnValidate } from "@/features/scheduling/cover/useRepairWarmUp";
 import { coverOffersQuery } from "@/features/scheduling/coverOffers/api";
 import { rosterChangeShiftsQuery } from "@/features/scheduling/rosterChanges/api";
 import { ScheduleMenu } from "@/features/scheduling/ScheduleMenu";
@@ -386,6 +389,22 @@ const ApiSchedule = ({
 			? { companyId, unit, scheduleId, runId }
 			: undefined,
 		state.status === "ready" ? state.schedule.rosterRevision : 0
+	);
+	// Validate schedule lighting up after a hand change warms the engine's worker for the check to come.
+	const rosterRevision =
+		state.status === "ready" ? state.schedule.rosterRevision : 0;
+	useRepairWarmUpOnValidate(
+		mayEditShifts && runId !== undefined && unit !== undefined
+			? { companyId, unit, scheduleId, runId }
+			: undefined,
+		rosterRevision,
+		validationStanding({
+			revision: rosterRevision,
+			last: validation.last,
+			hasChanges:
+				assignments.status === "ready" &&
+				changedDays(assignments.items).length > 0,
+		}) === "outOfDate"
 	);
 	const editorShifts = useQuery(
 		rosterChangeShiftsQuery(companyId, unit, scheduleId, mayEditShifts)

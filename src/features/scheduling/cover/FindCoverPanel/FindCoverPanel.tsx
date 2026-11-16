@@ -22,6 +22,7 @@ import {
 	type CoverPanelInput,
 } from "@/features/scheduling/cover/useCoverPanel";
 import { useEngineRepair } from "@/features/scheduling/cover/useEngineRepair";
+import { useRepairWarmUp } from "@/features/scheduling/cover/useRepairWarmUp";
 import { CoverOfferSent } from "@/features/scheduling/coverOffers/CoverOfferActions/CoverOfferSent";
 import { formatDay } from "@/features/scheduling/periods";
 import { CellPanelFooter } from "@/features/scheduling/RosterCellPanel/CellPanelFooter";
@@ -76,6 +77,8 @@ export const FindCoverPanel = ({
 		input.revision,
 		panel.landing
 	);
+	// Opening repair for a gap warms the engine's worker, so its first options come fast.
+	useRepairWarmUp(input.target, input.revision, engineCanRepair);
 	// The roster's own days name a shift when the frozen shifts can't be read.
 	const shiftOf = (shiftId: string): CoverShift | undefined =>
 		input.shifts.find((candidate) => candidate.shiftId === shiftId) ??
