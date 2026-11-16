@@ -3,46 +3,34 @@ import { useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
-import { ActivityItem } from "@/components/ui/ActivityItem";
-import { Button } from "@/components/ui/Button";
+import { ApproveRequestsIcon, CrossIcon, TickIcon } from "@/components/ui/Icon";
+import { Card } from "@/components/ui/Card";
 import {
-	AddStaffIcon,
-	ApproveRequestsIcon,
-	CrossIcon,
-	FillShiftsIcon,
-	GenerateScheduleIcon,
-	SchedulingIcon,
-	TickIcon,
-} from "@/components/ui/Icon";
-import { ProgressBar } from "@/components/ui/ProgressBar";
-import { StatCard } from "@/components/ui/StatCard";
+	COLLAPSED_ROW_COUNT,
+	ExpandableList,
+} from "@/components/ui/ExpandableList";
 import { Toast } from "@/components/ui/Toast";
 import { DASHBOARD_UNIT_RULES } from "@/features/dashboard/dashboardUnitRules";
-import { CloseToLimitCard } from "@/features/dashboard/CloseToLimitCard";
 import {
 	nextMonday,
 	thisAndNextMonth,
 	thisAndNextWeek,
-	thisMonth,
 	todayAndTomorrow,
 } from "@/features/dashboard/dashboardDates";
 import { NextRosterCard } from "@/features/dashboard/NextRosterCard";
 import { OffTodayCard } from "@/features/dashboard/OffTodayCard";
 import { OpenCoverOffersCard } from "@/features/dashboard/OpenCoverOffersCard";
 import { ShortShiftsCard } from "@/features/dashboard/ShortShiftsCard";
-import { NotificationList } from "@/features/notifications/NotificationList";
 import { NotificationItem } from "@/features/dashboard/NotificationItem";
-import { QuickActions } from "@/features/dashboard/QuickActions";
 import { SetupChecklistCard } from "@/features/dashboard/SetupChecklistCard";
-import { useActivityPage } from "@/features/dashboard/useActivityPage";
 import {
 	useDaysOff,
 	useMyOpenCoverOffers,
 	useNextRoster,
-	useOvertime,
 	useShortages,
 	useTeamCoverOffers,
 } from "@/features/dashboard/useDashboardReads";
+import { useActivityPage } from "@/features/dashboard/useActivityPage";
 import { useSetupChecklist } from "@/features/dashboard/useSetupChecklist";
 import type { LeaveRequest } from "@/features/leave/api";
 import { formatPeriod } from "@/features/leave/dates";
@@ -50,31 +38,25 @@ import { LeaveRequestDialog } from "@/features/leave/LeaveRequestDialog";
 import { leaveTypeLabel } from "@/features/leave/leaveTypeLabel";
 import { useLeaveDecision } from "@/features/leave/useLeaveDecision";
 import { useLeaveRequests } from "@/features/leave/useLeaveRequests";
-import {
-	activityDetails,
-	describeActivity,
-} from "@/features/organisation/activity";
-import { ActivityTitle } from "@/features/organisation/ActivityTitle";
 import { LEAVE_READ_KEYS } from "@/features/workspace/permissionKeys";
 import { unitSelectionOf } from "@/features/workspace/unitSearch";
-import {
-	useCurrentCompanyId,
-	useCurrentMembershipId,
-} from "@/features/workspace/useCurrentCompany";
+import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 
 const route = getRouteApi("/_authenticated/_app/");
 
 const key = "dashboard";
 
-const NOTIFICATION_COUNT = 5;
-const ACTIVITY_COUNT = 4;
+/** Pending leave read for the list; more than the list shows, so "See all" knows there are more. */
+const PENDING_LEAVE_COUNT = 20;
 /** Enough approved leave to name everyone off today and tomorrow in one unit. */
 const OFF_TODAY_LEAVE_COUNT = 50;
 
-const sectionHeading = "text-base font-semibold text-ink-blue-600 uppercase";
 const viewAllLink =
 	"shrink-0 text-base font-semibold text-ink-blue-900 underline decoration-2 underline-offset-1 hover:text-ink-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-blue-500";
+
+/** Home's one grid: a single column of cards aligned to the top, so no card stretches or sits alone. */
+const HOME_GRID_CLASSES = "mt-6 grid grid-cols-1 items-start gap-6";
 
 type Decision = { request: LeaveRequest; mode: "view" | "reject" | "approve" };
 
@@ -87,7 +69,6 @@ const Dashboard = ({
 	const { t, i18n } = useTranslation();
 	const language = formattingLocale(i18n);
 	const companyId = useCurrentCompanyId();
-	const ownMembershipId = useCurrentMembershipId();
 	// The header's Branch, resolved as the header resolves it; every Branch in reach when "All branches" is chosen.
 	const branchId = useUnitSelection(
 		companyId,
@@ -97,30 +78,16 @@ const Dashboard = ({
 	).branch?.branchId;
 	const [decision, setDecision] = useState<Decision>();
 	const [toast, setToast] = useState<{ id: number; message: string }>();
-	const numbers = new Intl.NumberFormat(language, { maximumFractionDigits: 1 });
 	const sort = { field: "requestedAt", desc: true } as const;
 	const pending = useLeaveRequests(companyId, {
 		page: 1,
-		size: NOTIFICATION_COUNT,
+		size: PENDING_LEAVE_COUNT,
 		sort,
 		status: "PENDING",
 		branchId,
 	});
-	const approved = useLeaveRequests(companyId, {
-		page: 1,
-		size: 1,
-		sort,
-		status: "APPROVED",
-		branchId,
-	});
-	const rejected = useLeaveRequests(companyId, {
-		page: 1,
-		size: 1,
-		sort,
-		status: "REJECTED",
-		branchId,
-	});
-	const activity = useActivityPage(companyId, 1, ACTIVITY_COUNT);
+	// Read only to learn whether the person may open Recent activity; the page lists it.
+	const activity = useActivityPage(companyId, 1, 1);
 	const setup = useSetupChecklist(companyId);
 	const now = new Date();
 	const units = { branchId };
@@ -135,7 +102,6 @@ const Dashboard = ({
 		thisAndNextMonth(now),
 		comingMonday
 	);
-	const overtime = useOvertime(companyId, units, thisMonth(now));
 	const daysOff = useDaysOff(companyId, units, offDays);
 	const leaveOff = useLeaveRequests(companyId, {
 		page: 1,
@@ -169,110 +135,68 @@ const Dashboard = ({
 	const canReview = leaveDecision.canDecide;
 	const busy = leaveDecision.busy;
 
-	const resolvedShare = ((): number | undefined => {
-		if (
-			pending.status !== "ready" ||
-			approved.status !== "ready" ||
-			rejected.status !== "ready"
-		)
-			return undefined;
-		const resolved = approved.total + rejected.total;
-		const all = resolved + pending.total;
-		return all === 0 ? 100 : Math.round((resolved / all) * 100);
-	})();
-
 	return (
 		<>
 			<h1 className="sr-only">{t("shell.navigation.dashboard")}</h1>
-			{/* Full bleed: the negative margins undo `AppShell`'s page padding at each breakpoint. */}
-			<div className="-mx-4 -mt-6 flex flex-wrap items-start justify-between gap-4 border-b border-neutral-400 px-4 pt-5 pb-5 sm:-mx-6 sm:-mt-8 sm:px-6 lg:-mx-10 lg:-mt-10 lg:px-10">
-				{/* From `lg` the header carries the greeting; below it the page does. */}
-				<p className="w-full text-2xl text-neutral-900 lg:hidden">
-					<Trans
-						i18nKey="shell.welcome"
-						values={{ name: displayName }}
-						components={{
-							name: <span className="font-medium text-ink-blue-900" />,
-						}}
-					/>
-				</p>
-				<Button
-					leadingIcon={<SchedulingIcon />}
-					size="sm"
-					to="/scheduling"
-					variant="secondary"
-				>
-					{t(`${key}.viewSchedule`)}
-				</Button>
-			</div>
+			{/* From `lg` the header carries the greeting; below it the page does. */}
+			<p className="text-2xl text-neutral-900 lg:hidden">
+				<Trans
+					i18nKey="shell.welcome"
+					values={{ name: displayName }}
+					components={{
+						name: <span className="font-medium text-ink-blue-900" />,
+					}}
+				/>
+			</p>
 			{setup.status === "shown" && (
 				<SetupChecklistCard
 					canImportOrganisation={setup.canImportOrganisation}
 					canImportPeople={setup.canImportPeople}
-					className="mt-10"
+					className="mt-6 lg:mt-0"
 					counts={setup.counts}
 					progress={setup.progress}
 					onDismiss={setup.dismiss}
 				/>
 			)}
-			<div className="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,666fr)_minmax(0,390fr)]">
-				<div className="flex min-w-0 flex-col gap-6">
-					<ShortShiftsCard shortages={shortages} />
-					{pending.status !== "hidden" && (
-						<StatCard
-							title={t(`${key}.approvals.title`)}
-							variant="tile"
-							value={
-								pending.status === "ready"
-									? numbers.format(pending.total)
-									: t("organisation.unknownCount")
-							}
-						>
-							{resolvedShare !== undefined && (
-								<div className="mt-2 flex items-center gap-4">
-									<ProgressBar
-										className="w-41 shrink-0"
-										label={t(`${key}.approvals.resolvedLabel`)}
-										tone="accent"
-										track="white"
-										value={resolvedShare}
-									/>
-									<p className="text-sm text-neutral-800">
-										{t(`${key}.approvals.resolved`, {
-											value: resolvedShare,
-										})}
-									</p>
-								</div>
-							)}
-						</StatCard>
-					)}
-				</div>
-				<div className="flex min-w-0 flex-col gap-6">
-					<section
-						aria-labelledby="pending-review"
-						className="flex min-w-0 flex-col rounded-xl bg-neutral-200 px-6 pt-6 pb-2 lg:h-113"
+			{/* One column of to-do cards: each card is as tall as its content and spans the row, so none floats alone. */}
+			<div className={HOME_GRID_CLASSES}>
+				<ShortShiftsCard shortages={shortages} />
+				{pending.status !== "hidden" && (
+					<Card
+						action={
+							<Link className={viewAllLink} to="/leave">
+								{t(`${key}.viewAll`)}
+							</Link>
+						}
+						icon={ApproveRequestsIcon}
+						title={t("notifications.pendingReview")}
 					>
-						<div className="flex items-center justify-between gap-4">
-							<h2
-								className="text-base font-semibold text-ink-blue-600"
-								id="pending-review"
-							>
-								{t("notifications.pendingReview")}
-							</h2>
-							{pending.status !== "hidden" && (
-								<Link className={viewAllLink} to="/leave">
-									{t(`${key}.viewAll`)}
-								</Link>
-							)}
-						</div>
 						{pending.status === "error" && (
-							<p className="mt-6 text-sm text-error-700" role="alert">
+							<p className="text-sm text-error-700" role="alert">
 								{t(`${key}.notifications.failed`)}
 							</p>
 						)}
-						<ul className="mt-6 min-h-0 flex-1 divide-y divide-neutral-400 overflow-y-auto pr-4">
-							{pending.status === "ready" &&
-								pending.items.map((request) => {
+						{pending.status === "ready" && pending.items.length === 0 && (
+							<p className="text-sm text-neutral-700">
+								{t(`${key}.notifications.empty`)}
+							</p>
+						)}
+						{pending.status === "ready" && pending.items.length > 0 && (
+							<ExpandableList
+								itemClassName="py-4 first:pt-0 last:pb-0"
+								items={pending.items}
+								keyOf={(request) => request.leaveRequestId}
+								listClassName="flex flex-col divide-y divide-neutral-300"
+								seeAll={
+									pending.total > COLLAPSED_ROW_COUNT ? (
+										<Link className={viewAllLink} to="/leave">
+											{t(`${key}.notifications.seeAll`, {
+												count: pending.total,
+											})}
+										</Link>
+									) : undefined
+								}
+								renderItem={(request) => {
 									const reviewable = canReview(request);
 									// Under an approval flow, the step it waits on, beside its title.
 									const stepTag = request.approval
@@ -282,54 +206,47 @@ const Dashboard = ({
 											})
 										: undefined;
 									return (
-										<li
-											key={request.leaveRequestId}
-											className="py-5 first:pt-0"
-										>
-											<NotificationItem
-												tag={stepTag}
-												detail={t(`${key}.notifications.leaveDetail`, {
-													name: request.displayName,
-													period: formatPeriod(
-														request.startDate,
-														request.endDate,
-														language
-													),
-												})}
-												primaryAction={{
-													label: t(`${key}.notifications.approve`),
-													icon: <TickIcon />,
-													disabled: !reviewable || busy,
-													onClick: () => {
-														setDecision({ request, mode: "approve" });
-													},
-												}}
-												secondaryAction={{
-													label: t(`${key}.notifications.deny`),
-													icon: <CrossIcon />,
-													disabled: !reviewable || busy,
-													onClick: () => {
-														setDecision({ request, mode: "reject" });
-													},
-												}}
-												title={t(`${key}.notifications.leaveTitle`, {
-													type: leaveTypeLabel(request, t),
-												})}
-												onOpen={() => {
-													setDecision({ request, mode: "view" });
-												}}
-											/>
-										</li>
+										<NotificationItem
+											tag={stepTag}
+											detail={t(`${key}.notifications.leaveDetail`, {
+												name: request.displayName,
+												period: formatPeriod(
+													request.startDate,
+													request.endDate,
+													language
+												),
+											})}
+											primaryAction={{
+												label: t(`${key}.notifications.approve`),
+												icon: <TickIcon />,
+												disabled: !reviewable || busy,
+												onClick: () => {
+													setDecision({ request, mode: "approve" });
+												},
+											}}
+											secondaryAction={{
+												label: t(`${key}.notifications.deny`),
+												icon: <CrossIcon />,
+												disabled: !reviewable || busy,
+												onClick: () => {
+													setDecision({ request, mode: "reject" });
+												},
+											}}
+											title={t(`${key}.notifications.leaveTitle`, {
+												type: leaveTypeLabel(request, t),
+											})}
+											onOpen={() => {
+												setDecision({ request, mode: "view" });
+											}}
+										/>
 									);
-								})}
-						</ul>
-					</section>
-					<OpenCoverOffersCard myOffers={myOffers} teamOffers={teamOffers} />
-				</div>
-			</div>
-			<div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+								}}
+							/>
+						)}
+					</Card>
+				)}
 				<NextRosterCard comingMonday={comingMonday} rows={nextRoster} />
-				<CloseToLimitCard overtime={overtime} />
+				<OpenCoverOffersCard myOffers={myOffers} teamOffers={teamOffers} />
 				<OffTodayCard
 					days={[offDays.from, offDays.to]}
 					daysOff={daysOff}
@@ -340,97 +257,11 @@ const Dashboard = ({
 					}
 				/>
 			</div>
-			<section
-				aria-labelledby="inbox-preview"
-				className="mt-8 rounded-xl border border-neutral-300 p-6"
-			>
-				<div className="mb-4 flex items-center justify-between gap-4">
-					<h2 className="text-base font-semibold" id="inbox-preview">
-						{t("notifications.title")}
-					</h2>
-					<Link className={viewAllLink} to="/notifications">
-						{t("notifications.viewAll")}
-					</Link>
-				</div>
-				<NotificationList
-					key={`${companyId}:${ownMembershipId}`}
-					compact
-					audience="PERSONAL"
-				/>
-			</section>
-			<div className="mt-12 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,666fr)_minmax(0,390fr)]">
-				{activity.status === "hidden" ? (
-					<div />
-				) : (
-					<section aria-labelledby="recent-activity" className="lg:pr-6">
-						<div className="flex items-center justify-between gap-4">
-							<h2 className={sectionHeading} id="recent-activity">
-								{t("organisation.activity.title")}
-							</h2>
-							<Link className={viewAllLink} to="/activity">
-								{t(`${key}.viewAll`)}
-							</Link>
-						</div>
-						{activity.status === "error" && (
-							<p className="mt-6 text-sm text-error-700" role="alert">
-								{t("organisation.activity.failed")}
-							</p>
-						)}
-						{activity.status === "ready" && activity.items.length === 0 && (
-							<p className="mt-6 text-sm text-neutral-700">
-								{t("organisation.activity.empty")}
-							</p>
-						)}
-						{activity.status === "ready" && activity.items.length > 0 && (
-							<ul className="mt-6 flex flex-col gap-7">
-								{activity.items.map((event) => {
-									const described = describeActivity(event, t);
-									return (
-										<li key={described.id}>
-											<ActivityItem
-												details={activityDetails(event, t, now, language)}
-												icon={described.icon}
-												title={<ActivityTitle activity={described} />}
-											/>
-										</li>
-									);
-								})}
-							</ul>
-						)}
-					</section>
-				)}
-				<section aria-labelledby="quick-actions">
-					<h2 className={sectionHeading} id="quick-actions">
-						{t(`${key}.quickActions.title`)}
-					</h2>
-					<QuickActions
-						className="mt-6"
-						label={t(`${key}.quickActions.title`)}
-						actions={[
-							{
-								label: t(`${key}.quickActions.generate`),
-								icon: GenerateScheduleIcon,
-								to: "/scheduling/new",
-							},
-							{
-								label: t(`${key}.quickActions.addStaff`),
-								icon: AddStaffIcon,
-								to: "/people/new",
-							},
-							{
-								label: t(`${key}.quickActions.approve`),
-								icon: ApproveRequestsIcon,
-								to: "/leave",
-							},
-							{
-								label: t(`${key}.quickActions.fillShifts`),
-								icon: FillShiftsIcon,
-								to: "/scheduling",
-							},
-						]}
-					/>
-				</section>
-			</div>
+			{activity.status !== "hidden" && (
+				<Link className={`${viewAllLink} mt-6 inline-block`} to="/activity">
+					{t("organisation.activity.title")}
+				</Link>
+			)}
 			{decision && (
 				<LeaveRequestDialog
 					key={`${decision.request.leaveRequestId}-${decision.mode}`}
@@ -456,11 +287,10 @@ const Dashboard = ({
 };
 
 /**
- * The Dashboard: what to act on first. Shifts short, what waits on the
- * person (leave to decide, cover offers unanswered), the next roster of each
- * Department, people close to the overtime limit, who is off today and
- * tomorrow, then notifications, what changed lately, and shortcuts. Each
- * card is left out where the person's grants don't reach it.
+ * Home, "What needs you": a to-do list, most urgent first. Shifts short,
+ * leave to decide, each Department's next roster, cover offers not answered,
+ * and who is off today and tomorrow; each list stops at five rows with a
+ * toggle. Each card is left out where the person's grants don't reach it.
  */
 export const Home = (): FunctionComponent => {
 	const context = useRouteContext({ from: "/_authenticated" });

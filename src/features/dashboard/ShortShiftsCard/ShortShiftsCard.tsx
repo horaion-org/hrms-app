@@ -4,10 +4,10 @@ import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { mondayOf } from "@/common/weeks";
 import { Card } from "@/components/ui/Card";
+import { ExpandableList } from "@/components/ui/ExpandableList";
 import { FillShiftsIcon } from "@/components/ui/Icon";
 import type { Shortage } from "@/features/dashboard/api";
 import {
-	CARD_ROW_LIMIT,
 	cardLinkClasses,
 	emptyLineClasses,
 	failedLineClasses,
@@ -40,7 +40,6 @@ export const ShortShiftsCard = ({
 	const language = formattingLocale(i18n);
 	if (shortages.status === "hidden") return null;
 	const rows = shortages.status === "ready" ? shortages.data : [];
-	const shown = rows.slice(0, CARD_ROW_LIMIT);
 	return (
 		<Card className={className} icon={FillShiftsIcon} title={t(`${key}.title`)}>
 			<p className={rowDetailClasses}>{t(`${key}.range`)}</p>
@@ -52,13 +51,16 @@ export const ShortShiftsCard = ({
 			{shortages.status === "ready" && rows.length === 0 && (
 				<p className={emptyLineClasses}>{t(`${key}.empty`)}</p>
 			)}
-			{shown.length > 0 && (
-				<ul className={rowListClasses}>
-					{shown.map((shortage) => (
-						<li
-							key={`${shortage.scheduleId}|${shortage.shiftId}|${shortage.day}`}
-							className={rowClasses}
-						>
+			{rows.length > 0 && (
+				<ExpandableList
+					itemClassName={rowClasses}
+					items={rows}
+					keyOf={(shortage) =>
+						`${shortage.scheduleId}|${shortage.shiftId}|${shortage.day}`
+					}
+					listClassName={rowListClasses}
+					renderItem={(shortage) => (
+						<>
 							<Link
 								className={cardLinkClasses}
 								params={{ scheduleId: shortage.scheduleId }}
@@ -82,14 +84,9 @@ export const ShortShiftsCard = ({
 									count: shortage.shortBy,
 								})}
 							</span>
-						</li>
-					))}
-				</ul>
-			)}
-			{rows.length > shown.length && (
-				<p className={rowDetailClasses}>
-					{t(`${key}.more`, { count: rows.length - shown.length })}
-				</p>
+						</>
+					)}
+				/>
 			)}
 		</Card>
 	);
