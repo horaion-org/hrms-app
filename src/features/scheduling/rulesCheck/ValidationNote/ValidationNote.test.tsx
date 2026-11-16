@@ -41,7 +41,7 @@ describe("ValidationNote", () => {
 		const { container } = render(
 			<ValidationNote
 				standing="asGenerated"
-				validation={{ status: "idle", ask: vi.fn() }}
+				validation={{ status: "idle", ask: vi.fn(), revision: 0 }}
 			/>
 		);
 

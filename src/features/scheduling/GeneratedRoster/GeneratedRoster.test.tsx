@@ -19,7 +19,10 @@ import {
 	rulesCheckFixture,
 	staffingGapFixture,
 } from "@/features/scheduling/rulesCheck/fixtures";
-import type { RosterValidation } from "@/features/scheduling/rulesCheck/useRosterRulesCheck";
+import type {
+	RosterRulesCheckState,
+	RosterValidation,
+} from "@/features/scheduling/rulesCheck/useRosterRulesCheck";
 import {
 	emptyFindingsFixture,
 	generatedScheduleFixture,
@@ -543,19 +546,35 @@ describe("GeneratedRoster", () => {
 			"Front Desk AM 09:00 – 15:00•1 Front Desk Staff short";
 		const NEW_GAP = "Swing Shift 14:00 – 22:00•1 Front Desk Staff short";
 
-		/** The roster for an editor, with Validate schedule in the given state. */
-		const showValidated = (validation: RosterValidation): void => {
+		/** The roster at revision 1 with Validate schedule in the given state; for an editor unless told otherwise. */
+		const showValidated = (
+			validation: RosterRulesCheckState &
+				Pick<RosterValidation, "ask" | "last">,
+			mayEdit = true
+		): void => {
 			render(
 				<QueryClientProvider client={new QueryClient()}>
 					<Roster
 						assignments={scheduleAssignmentsFixture()}
-						editing={editing}
+						editing={mayEdit ? editing : undefined}
 						schedule={schedule}
-						validation={validation}
+						validation={{ ...validation, revision: 1 }}
 					/>
 				</QueryClientProvider>
 			);
 		};
+
+		it("given_someoneWhoMayOnlyReadTheRoster_when_shown_then_validateScheduleIsOfferedAndAsks", async () => {
+			const user = userEvent.setup();
+			const ask = vi.fn();
+			showValidated({ status: "idle", ask }, false);
+
+			await user.click(
+				screen.getByRole("button", { name: /Validate schedule/ })
+			);
+
+			expect(ask).toHaveBeenCalledOnce();
+		});
 
 		it("given_noValidationYet_when_issuesOpens_then_theGenerationsConflictsWithNoNote", async () => {
 			const user = userEvent.setup();
