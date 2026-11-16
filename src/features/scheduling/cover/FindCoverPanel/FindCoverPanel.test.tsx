@@ -199,22 +199,6 @@ describe("FindCoverPanel", () => {
 		});
 	});
 
-	it("given_aGapOnlyAHandEditMade_when_shown_then_noEngineSectionButFindCoversOwnList", async () => {
-		stubApi({
-			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
-			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
-		});
-		show({ engineRepair: false });
-
-		expect(
-			await screen.findByRole("radio", { name: "Aisha Rahman" })
-		).toBeInTheDocument();
-		expect(
-			screen.queryByRole("heading", { name: "From the scheduling engine" })
-		).toBeNull();
-		expect(screen.queryByRole("button", { name: "Ask the engine" })).toBeNull();
-	});
-
 	it("given_repairOpenedForAGap_when_shown_then_theEnginesWorkerIsWarmedOnceBeforeAnyAsk", async () => {
 		const calls = stubApi({
 			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
@@ -231,18 +215,6 @@ describe("FindCoverPanel", () => {
 			]);
 		});
 		expect(calls.some((call) => call.path === REPAIR_OPTIONS)).toBe(false);
-	});
-
-	it("given_aGapOnlyAHandEditMade_when_shown_then_noWarmUp", async () => {
-		const calls = stubApi({
-			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
-			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
-		});
-		show({ engineRepair: false });
-
-		await screen.findByRole("radio", { name: "Aisha Rahman" });
-
-		expect(calls.some((call) => call.path === REPAIR_WARM_UP)).toBe(false);
 	});
 
 	it("given_theWarmUpFailing_when_shown_then_nothingIsShownAndTheEngineCanStillBeAsked", async () => {

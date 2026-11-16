@@ -39,7 +39,6 @@ import {
 } from "@/features/scheduling/RosterWeekBar";
 import {
 	brokenRuleIssueCount,
-	generationStoredGap,
 	scheduleWithFindingsShown,
 	validationStanding,
 } from "@/features/scheduling/rulesCheck/issuesFromValidation";
@@ -156,7 +155,6 @@ export const GeneratedRoster = ({
 		last,
 		hasChanges: changedDays(assignments).length > 0,
 	});
-	const generationFindings = schedule.generation?.findings ?? null;
 	const roster = useRosterView({
 		schedule: scheduleWithFindingsShown(schedule, last),
 		assignments,
@@ -268,7 +266,6 @@ export const GeneratedRoster = ({
 		<RosterSidePanelSlot
 			assignments={assignments}
 			editing={editing}
-			engineRepairFor={(gap) => generationStoredGap(generationFindings, gap)}
 			preferenceOutcomes={preferenceOutcomes}
 			roster={roster}
 			timeZone={schedule.timeZone}

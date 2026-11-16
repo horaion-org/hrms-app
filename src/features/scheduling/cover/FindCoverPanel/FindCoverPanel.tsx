@@ -37,12 +37,6 @@ export type FindCoverPanelProps = CoverPanelInput & {
 	id?: string;
 	/** Back to Issues. */
 	onClose: () => void;
-	/**
-	 * Whether the scheduling engine can be asked to repair this gap: it looks
-	 * the gap up in the generation's stored result, so a gap a hand edit made
-	 * has none, and the section is left out rather than refused.
-	 */
-	engineRepair?: boolean;
 };
 
 const key = "scheduling.cover.panel";
@@ -56,14 +50,14 @@ const SKELETON_ROWS = ["first", "second", "third"];
  * same review and actions a hand change gets: Apply on a draft, Send offer
  * or They agreed on a published roster. Under them, "From the scheduling
  * engine" asks the engine for its own repair on demand
- * (`EngineRepairOptions`), while the shift is still short. `useCoverPanel`
+ * (`EngineRepairOptions`), while the shift is still short: for any gap, the
+ * generation's or one made since, which the engine finds in the roster. `useCoverPanel`
  * and `useEngineRepair` hold the state and calls; this component only lays
  * the parts out.
  */
 export const FindCoverPanel = ({
 	id,
 	onClose,
-	engineRepair: engineCanRepair = true,
 	...input
 }: FindCoverPanelProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
@@ -78,7 +72,7 @@ export const FindCoverPanel = ({
 		panel.landing
 	);
 	// Opening repair for a gap warms the engine's worker, so its first options come fast.
-	useRepairWarmUp(input.target, input.revision, engineCanRepair);
+	useRepairWarmUp(input.target, input.revision, true);
 	// The roster's own days name a shift when the frozen shifts can't be read.
 	const shiftOf = (shiftId: string): CoverShift | undefined =>
 		input.shifts.find((candidate) => candidate.shiftId === shiftId) ??
@@ -273,7 +267,7 @@ export const FindCoverPanel = ({
 		{
 			key: "engine",
 			title: t("scheduling.cover.engine.title"),
-			content: engineCanRepair && status !== "closed" && (
+			content: status !== "closed" && (
 				<EngineRepairOptions
 					names={names}
 					repair={engineRepair}
