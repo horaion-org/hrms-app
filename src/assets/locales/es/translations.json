@@ -5125,18 +5125,36 @@
 		"viewRosters": "Ver horarios",
 		"counts": {
 			"label": "Lo que te necesita",
-			"short-shifts_one": "{{count}} turno incompleto",
-			"short-shifts_other": "{{count}} turnos incompletos",
-			"leave-to-decide_one": "{{count}} solicitud de ausencia por decidir",
-			"leave-to-decide_other": "{{count}} solicitudes de ausencia por decidir",
-			"waiting-approvals_one": "{{count}} aprobación pendiente",
-			"waiting-approvals_other": "{{count}} aprobaciones pendientes",
-			"next-roster_one": "{{count}} horario por preparar",
-			"next-roster_other": "{{count}} horarios por preparar",
-			"cover-offers_one": "{{count}} oferta de cobertura pendiente",
-			"cover-offers_other": "{{count}} ofertas de cobertura pendientes",
-			"off-today_one": "{{count}} persona ausente hoy",
-			"off-today_other": "{{count}} personas ausentes hoy"
+			"short-shifts": {
+				"label": "Turnos",
+				"unit_one": "incompleto",
+				"unit_other": "incompletos"
+			},
+			"leave-to-decide": {
+				"label": "Ausencias",
+				"unit_one": "por decidir",
+				"unit_other": "por decidir"
+			},
+			"waiting-approvals": {
+				"label": "Aprobaciones",
+				"unit_one": "pendiente",
+				"unit_other": "pendientes"
+			},
+			"next-roster": {
+				"label": "Horarios",
+				"unit_one": "por preparar",
+				"unit_other": "por preparar"
+			},
+			"cover-offers": {
+				"label": "Coberturas",
+				"unit_one": "pendiente",
+				"unit_other": "pendientes"
+			},
+			"off-today": {
+				"label": "Personas",
+				"unit_one": "ausente hoy",
+				"unit_other": "ausentes hoy"
+			}
 		},
 		"calm": {
 			"allClear": "Todo en orden.",

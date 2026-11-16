@@ -207,7 +207,7 @@ const Dashboard = ({
 
 	const needsYou = (
 		<>
-			<HomeCounts className="mt-6" counts={home.counts} />
+			<HomeCounts className="mt-6" counts={home.counts} states={home.states} />
 			{cards.length > 0 && (
 				<div className={homeGridClasses}>
 					{cards.map((section) => (

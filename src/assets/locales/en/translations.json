@@ -5292,18 +5292,36 @@
 		"viewRosters": "View rosters",
 		"counts": {
 			"label": "What needs you",
-			"short-shifts_one": "{{count}} shift short",
-			"short-shifts_other": "{{count}} shifts short",
-			"leave-to-decide_one": "{{count}} leave request to decide",
-			"leave-to-decide_other": "{{count}} leave requests to decide",
-			"waiting-approvals_one": "{{count}} approval waiting",
-			"waiting-approvals_other": "{{count}} approvals waiting",
-			"next-roster_one": "{{count}} roster to get ready",
-			"next-roster_other": "{{count}} rosters to get ready",
-			"cover-offers_one": "{{count}} cover offer waiting",
-			"cover-offers_other": "{{count}} cover offers waiting",
-			"off-today_one": "{{count}} person off today",
-			"off-today_other": "{{count}} people off today"
+			"short-shifts": {
+				"label": "Shifts",
+				"unit_one": "short",
+				"unit_other": "short"
+			},
+			"leave-to-decide": {
+				"label": "Leave",
+				"unit_one": "to decide",
+				"unit_other": "to decide"
+			},
+			"waiting-approvals": {
+				"label": "Approvals",
+				"unit_one": "waiting",
+				"unit_other": "waiting"
+			},
+			"next-roster": {
+				"label": "Rosters",
+				"unit_one": "to do",
+				"unit_other": "to do"
+			},
+			"cover-offers": {
+				"label": "Cover offers",
+				"unit_one": "waiting",
+				"unit_other": "waiting"
+			},
+			"off-today": {
+				"label": "People",
+				"unit_one": "off today",
+				"unit_other": "off today"
+			}
 		},
 		"calm": {
 			"allClear": "All clear.",
