@@ -155,6 +155,29 @@ describe("Sidebar", () => {
 			"pointer-coarse:-m-0.5"
 		);
 	});
+
+	it("narrows to the icon rail from lg when collapsed and shows the collapse control there only", async () => {
+		render(
+			<MemoryRouterHarness>
+				<Sidebar
+					collapsed
+					className="consumer-layout"
+					collapseToggle={<Button>Expand menu</Button>}
+					menuLabel="Menu"
+				>
+					{null}
+				</Sidebar>
+			</MemoryRouterHarness>
+		);
+		const home = await screen.findByRole("link", { name: "Horaion" });
+		const rail = home.closest(".consumer-layout");
+		expect(rail).toHaveClass("lg:w-20", "lg:p-4");
+		expect(rail).not.toHaveClass("lg:w-70");
+		// Below lg the bar keeps its Menu button; the collapse control is for the desktop rail.
+		expect(
+			screen.getByRole("button", { name: "Expand menu" }).parentElement
+		).toHaveClass("max-lg:hidden");
+	});
 });
 
 it("renders a usable footer after navigation", async () => {
