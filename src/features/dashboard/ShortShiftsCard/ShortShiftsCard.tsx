@@ -33,6 +33,8 @@ type Row =
 export type ShortShiftsCardProps = {
 	/** The shifts short this week and next, by cause, most urgent first. */
 	shortShifts: GuardedRead<ShortShiftsByCause>;
+	/** The card's own words where it shows something narrower, such as only the rules nobody can staff. */
+	heading?: { title: string; range: string };
 	className?: string;
 };
 
@@ -138,13 +140,18 @@ const GapRow = ({ shortage }: { shortage: Shortage }): FunctionComponent => {
  */
 export const ShortShiftsCard = ({
 	shortShifts,
+	heading,
 	className,
 }: ShortShiftsCardProps): FunctionComponent => {
 	const { t } = useTranslation();
 	if (shortShifts.status === "hidden") return null;
 	return (
-		<Card className={className} icon={FillShiftsIcon} title={t(`${key}.title`)}>
-			<p className={rowDetailClasses}>{t(`${key}.range`)}</p>
+		<Card
+			className={className}
+			icon={FillShiftsIcon}
+			title={heading?.title ?? t(`${key}.title`)}
+		>
+			<p className={rowDetailClasses}>{heading?.range ?? t(`${key}.range`)}</p>
 			{shortShifts.status === "error" && (
 				<p className={failedLineClasses} role="alert">
 					{t(`${key}.failed`)}

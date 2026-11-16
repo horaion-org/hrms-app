@@ -59,3 +59,32 @@ export const hoursLabel = (minutes: number, language: string): string =>
 /** The Monday of next week: the coming period a roster is made for. */
 export const nextMonday = (today: Date): string =>
 	dayjs(mondayOf(today)).add(1, "week").format(ISO_DAY);
+
+/** The fourteen days from today, today included: the days the Overview looks ahead. */
+export const comingTwoWeeks = (today: Date): DayRange => ({
+	from: isoDay(today),
+	to: dayjs(today)
+		.add(DAYS_IN_TWO_WEEKS - 1, "day")
+		.format(ISO_DAY),
+});
+
+/** The fourteen days before today: what the coming fourteen are compared with. */
+export const pastTwoWeeks = (today: Date): DayRange => ({
+	from: dayjs(today).subtract(DAYS_IN_TWO_WEEKS, "day").format(ISO_DAY),
+	to: dayjs(today).subtract(1, "day").format(ISO_DAY),
+});
+
+/** A whole calendar month as days: this month, or `monthsBack` months before it. */
+export const monthDays = (today: Date, monthsBack = 0): DayRange => {
+	const month = dayjs(today).subtract(monthsBack, "month");
+	return {
+		from: month.startOf("month").format(ISO_DAY),
+		to: month.endOf("month").format(ISO_DAY),
+	};
+};
+
+/** Last month and this one, as the overtime read takes them. */
+export const lastAndThisMonth = (today: Date): MonthSpan => ({
+	from: dayjs(today).subtract(1, "month").format(ISO_MONTH),
+	to: dayjs(today).format(ISO_MONTH),
+});

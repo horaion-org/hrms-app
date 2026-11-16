@@ -5036,7 +5036,10 @@
 				"next-roster": "Próximo horario",
 				"cover-offers": "Ofertas de cobertura pendientes",
 				"off-today": "Quién está ausente hoy",
-				"people-events": "Incorporaciones, periodos de prueba y bajas"
+				"people-events": "Incorporaciones, periodos de prueba y bajas",
+				"overview-figures": "Titular y cifras clave",
+				"overview-units": "Sucursales y departamentos",
+				"overview-causes": "Por qué faltan personas en los turnos"
 			}
 		},
 		"subtitle": "{{branch}} · {{day}}",

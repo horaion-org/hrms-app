@@ -5203,7 +5203,10 @@
 				"next-roster": "Next roster",
 				"cover-offers": "Cover offers waiting",
 				"off-today": "Who is off today",
-				"people-events": "Joining, probation and leaving"
+				"people-events": "Joining, probation and leaving",
+				"overview-figures": "Headline and key figures",
+				"overview-units": "Branches and departments",
+				"overview-causes": "Why shifts go short"
 			}
 		},
 		"subtitle": "{{branch}} · {{day}}",

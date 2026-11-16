@@ -4,19 +4,19 @@ import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Dialog } from "@/components/ui/Dialog";
 import { failedLineClasses } from "@/features/dashboard/cardStyles";
-import { isShown, type HomeSection } from "@/features/dashboard/homeSections";
+import { isShown, type SectionKey } from "@/features/dashboard/homeSections";
 
 const key = "dashboard.customise";
 
 export type CustomiseHomeDialogProps = {
 	open: boolean;
-	/** The sections the person's grants reach, in Home's order. */
-	sections: ReadonlyArray<HomeSection>;
+	/** The sections of the tab in view that the person's grants reach, in its order. */
+	sections: ReadonlyArray<SectionKey>;
 	/** The keys the person hides. */
 	hiddenSections: ReadonlyArray<string>;
 	/** Whether the last save was refused, so the choice went back. */
 	saveFailed: boolean;
-	onToggle: (section: HomeSection, shown: boolean) => void;
+	onToggle: (section: SectionKey, shown: boolean) => void;
 	onReset: () => void;
 	onClose: () => void;
 };
