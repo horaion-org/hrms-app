@@ -5,6 +5,7 @@ import {
 	departmentShiftFixture,
 } from "@/features/scheduling/shifts/fixtures";
 import { ShiftTable } from "@/features/scheduling/shifts/ShiftTable";
+import { rememberClosed } from "@/features/scheduling/sectionFolds";
 import "@/common/i18n";
 
 const shifts = SHIFT_FIXTURES.map((shift, index) => ({
@@ -85,6 +86,28 @@ export const DeleteOnlyInBar: Story = {
 	args: {
 		showDepartment: true,
 		canEdit: (shift) => shift.departmentName !== "Bar",
+	},
+};
+
+/** The browser-storage key ShiftTable remembers its folded groups under. */
+const CLOSED_GROUPS_KEY = "horaion.shiftGroupsClosed";
+
+/** Ticking shifts, as in a wizard, with Service folded: its heading says its hours and "2 of 3 chosen". */
+export const FoldedGroupWhileChoosing: Story = {
+	args: {
+		selection: {
+			selectedIds: SHIFT_FIXTURES.filter((shift) => shift.group === "Service")
+				.slice(0, 2)
+				.map((shift) => shift.shiftId),
+			onChange: fn(),
+		},
+	},
+	beforeEach: (): (() => void) => {
+		rememberClosed(CLOSED_GROUPS_KEY, ["Service"]);
+		// The other stories start with every group open.
+		return (): void => {
+			rememberClosed(CLOSED_GROUPS_KEY, []);
+		};
 	},
 };
 
