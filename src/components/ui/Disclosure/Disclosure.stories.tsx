@@ -23,3 +23,8 @@ type Story = StoryObj<typeof meta>;
 export const Closed: Story = {};
 
 export const Open: Story = { args: { defaultOpen: true } };
+
+/** Inside a row that has its own border, e.g. an access role's area. */
+export const Inline: Story = {
+	args: { variant: "inline", title: "Details", defaultOpen: true },
+};
