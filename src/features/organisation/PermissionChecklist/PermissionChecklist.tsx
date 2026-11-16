@@ -70,7 +70,7 @@ export type PermissionChecklistProps = {
  * ticks or clears the whole resource and shows a mixed state in between.
  * Ticking a permission ticks what it needs and clearing one clears what
  * needs it, as the API's contract declares; ticking one also ticks what its
- * screens use (`PERMISSION_USES`) and says so, and a row warns when what it
+ * screens use (the contract's `worksWith`) and says so, and a row warns when what it
  * uses is missing. Each permission reads as a plain sentence with a hint;
  * one whose prerequisite can't be given is unavailable with the reason
  * beside it, and where a permission can be given is said beside it as the

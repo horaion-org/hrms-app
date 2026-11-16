@@ -12,7 +12,10 @@ import { readFile, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { format, resolveConfig } from "prettier";
 
-const CONTRACT = new URL("../contracts/permission-catalog.json", import.meta.url);
+const CONTRACT = new URL(
+	"../contracts/permission-catalog.json",
+	import.meta.url
+);
 const OUTPUT = new URL(
 	"../src/features/workspace/permissionContract.generated.ts",
 	import.meta.url
@@ -22,6 +25,8 @@ const SCOPES = ["COMPANY", "BRANCH", "DEPARTMENT"];
 const KEY = /^[a-z_]+:[a-z_]+$/;
 const MODULE = /^[a-z_]+$/;
 const KINDS = ["COMPANY", "LOCAL"];
+const DAY = /^\d{4}-\d{2}-\d{2}$/;
+const REASON = /^[a-z][A-Za-z]*$/;
 
 const fail = (message) => {
 	throw new Error(`permission contract: ${message}`);
@@ -64,7 +69,10 @@ const validateModules = (contract, definitions) => {
  * a kind, known keys and the places a role made from it can be given at.
  */
 const validateTemplates = (contract, keys) => {
-	if (!Array.isArray(contract.roleTemplates) || contract.roleTemplates.length === 0)
+	if (
+		!Array.isArray(contract.roleTemplates) ||
+		contract.roleTemplates.length === 0
+	)
 		fail("roleTemplates must be a non-empty array");
 	const seen = new Set();
 	return contract.roleTemplates.map((entry, index) => {
@@ -81,7 +89,9 @@ const validateTemplates = (contract, keys) => {
 		const permissions = stringArray(entry.permissions, `${key}.permissions`);
 		for (const permission of permissions)
 			if (!keys.has(permission))
-				fail(`role template ${key} carries ${permission}, which is not in the contract`);
+				fail(
+					`role template ${key} carries ${permission}, which is not in the contract`
+				);
 		const assignableScopes = stringArray(
 			entry.assignableScopes,
 			`${key}.assignableScopes`
@@ -129,9 +139,37 @@ const validate = (contract) => {
 			`${key}.prerequisites`
 		);
 		if (prerequisites.includes(key)) fail(`${key} requires itself`);
-		const { module } = entry;
-		return { key, resource, action, module, assignableScopes, prerequisites };
+		const { module, since } = entry;
+		if (typeof since !== "string" || !DAY.test(since))
+			fail(`${key}.since ${JSON.stringify(since)} is not a YYYY-MM-DD day`);
+		if (!Array.isArray(entry.worksWith))
+			fail(`${key}.worksWith must be an array`);
+		const worksWith = entry.worksWith.map((link, linkIndex) => {
+			const at = `${key}.worksWith[${linkIndex}]`;
+			if (link === null || typeof link !== "object")
+				fail(`${at} must be an object`);
+			if (typeof link.key !== "string" || !KEY.test(link.key))
+				fail(`${at}.key ${JSON.stringify(link.key)} is not resource:action`);
+			if (link.key === key) fail(`${key} works with itself`);
+			if (typeof link.reason !== "string" || !REASON.test(link.reason))
+				fail(`${at}.reason ${JSON.stringify(link.reason)} is not camelCase`);
+			return { key: link.key, reason: link.reason };
+		});
+		return {
+			key,
+			resource,
+			action,
+			module,
+			assignableScopes,
+			prerequisites,
+			since,
+			worksWith,
+		};
 	});
+	for (const { key, worksWith } of definitions)
+		for (const link of worksWith)
+			if (!keys.has(link.key))
+				fail(`${key} works with ${link.key}, which is not in the contract`);
 	for (const { key, prerequisites } of definitions)
 		for (const required of prerequisites)
 			if (!keys.has(required))

@@ -203,7 +203,11 @@ describe("what a permission's screens use", () => {
 			).alsoTicked
 		).toEqual([]);
 		expect(
-			tickUses([], ["schedule:read", "schedule:create"], ["shift:read"])
+			tickUses(
+				[],
+				["schedule:read", "schedule:create"],
+				["shift:read", "shift_preference:read"]
+			)
 		).toEqual({
 			selected: ["schedule:read", "schedule:create"],
 			alsoTicked: [],
@@ -227,7 +231,10 @@ describe("what a permission's screens use", () => {
 				["schedule:read", "schedule:create", "schedule:update"],
 				["schedule:read", "schedule:create", "schedule:update"]
 			)
-		).toEqual([{ key: "shift:read", reason: "scheduleShifts" }]);
+		).toEqual([
+			{ key: "shift_preference:read", reason: "rosterPreferences" },
+			{ key: "shift:read", reason: "scheduleShifts" },
+		]);
 		expect(
 			missingUses(["schedule:create"], ["schedule:create", "shift:read"])
 		).toEqual([]);

@@ -1639,6 +1639,22 @@
 				"departmentBranches": {
 					"why": "crear un departamento muestra las sucursales para elegir",
 					"without": "a quien lo tenga no se le ofrecerá crear un departamento"
+				},
+				"generationRules": {
+					"why": "generar un horario sigue las reglas de trabajo del departamento",
+					"without": "quien lo tenga no verá qué reglas sigue un horario generado"
+				},
+				"rosterPreferences": {
+					"why": "la fila de Preferencias del horario muestra las preferencias de turno de las personas",
+					"without": "quien lo tenga no verá la fila de Preferencias del horario"
+				},
+				"rosterApprovals": {
+					"why": "con un flujo de aprobación, publicar un horario decide su paso de aprobación",
+					"without": "quien lo tenga no podrá publicar un horario que necesita aprobación"
+				},
+				"leaveApprovals": {
+					"why": "con un flujo de aprobación, revisar una ausencia decide su paso de aprobación",
+					"without": "quien lo tenga no podrá revisar ausencias que necesitan aprobación"
 				}
 			},
 			"needsAll": "Todo lo demás aquí requiere {{prerequisites}}."

@@ -263,7 +263,7 @@ export type TickedAlong = PermissionUse & { by: PermissionKey };
 
 /**
  * The selection a change turned `before` into `after`, with what the keys it
- * added also use (see `PERMISSION_USES`) ticked along with their
+ * added also use (see `usesOf`, the contract's `worksWith`) ticked along with their
  * prerequisites, when they can be ticked; and those uses, with the key that
  * caused each, to say why where it was ticked. Unlike a prerequisite it
  * never works the other way: clearing a used key leaves whatever uses it

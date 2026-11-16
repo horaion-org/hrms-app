@@ -20,7 +20,9 @@
       "module": "company_settings",
       "prerequisites": [],
       "resource": "company",
-      "resourceName": "Company"
+      "resourceName": "Company",
+      "since": "2026-10-11",
+      "worksWith": []
     },
     {
       "action": "update",
@@ -34,7 +36,9 @@
         "company:read"
       ],
       "resource": "company",
-      "resourceName": "Company"
+      "resourceName": "Company",
+      "since": "2026-10-11",
+      "worksWith": []
     },
     {
       "action": "read",
@@ -47,7 +51,9 @@
       "module": "organisation",
       "prerequisites": [],
       "resource": "branch",
-      "resourceName": "Branch"
+      "resourceName": "Branch",
+      "since": "2026-10-11",
+      "worksWith": []
     },
     {
       "action": "create",
@@ -61,7 +67,9 @@
         "branch:read"
       ],
       "resource": "branch",
-      "resourceName": "Branch"
+      "resourceName": "Branch",
+      "since": "2026-10-11",
+      "worksWith": []
     },
     {
       "action": "update",
@@ -76,7 +84,9 @@
         "branch:read"
       ],
       "resource": "branch",
-      "resourceName": "Branch"
+      "resourceName": "Branch",
+      "since": "2026-10-11",
+      "worksWith": []
     },
     {
       "action": "read",
@@ -89,7 +99,9 @@
       "module": "organisation",
       "prerequisites": [],
       "resource": "branch_member",
-      "resourceName": "Branch Member"
+      "resourceName": "Branch Member",
+      "since": "2026-10-11",
+      "worksWith": []
     },
     {
       "action": "create",
@@ -104,7 +116,9 @@
         "branch_member:read"
       ],
       "resource": "branch_member",
-      "resourceName": "Branch Member"
+      "resourceName": "Branch Member",
+      "since": "2026-10-11",
+      "worksWith": []
     },
     {
       "action": "update",
@@ -119,7 +133,9 @@
         "branch_member:read"
       ],
       "resource": "branch_member",
-      "resourceName": "Branch Member"
+      "resourceName": "Branch Member",
+      "since": "2026-10-11",
+      "worksWith": []
     },
     {
       "action": "deactivate",
@@ -134,7 +150,9 @@
         "branch_member:read"
       ],
       "resource": "branch_member",
-      "resourceName": "Branch Member"
+      "resourceName": "Branch Member",
+      "since": "2026-10-11",
+      "worksWith": []
     },
     {
       "action": "read",
@@ -148,7 +166,9 @@
       "module": "organisation",
       "prerequisites": [],
       "resource": "department",
-      "resourceName": "Department"
+      "resourceName": "Department",
+      "since": "2026-10-11",
+      "worksWith": []
     },
     {
       "action": "create",
@@ -163,7 +183,14 @@
         "department:read"
       ],
       "resource": "department",
-      "resourceName": "Department"
+      "resourceName": "Department",
+      "since": "2026-10-11",
+      "worksWith": [
+        {
+          "key": "branch:read",
+          "reason": "departmentBranches"
+        }
+      ]
     },
     {
       "action": "update",
@@ -179,7 +206,9 @@
         "department:read"
       ],
       "resource": "department",
-      "resourceName": "Department"
+      "resourceName": "Department",
+      "since": "2026-10-11",
+      "worksWith": []
     },
     {
       "action": "read",
@@ -193,7 +222,9 @@
       "module": "organisation",
       "prerequisites": [],
       "resource": "department_member",
-      "resourceName": "Department Member"
+      "resourceName": "Department Member",
+      "since": "2026-10-11",
+      "worksWith": []
     },
     {
       "action": "create",
@@ -209,7 +240,9 @@
         "department_member:read"
       ],
       "resource": "department_member",
-      "resourceName": "Department Member"
+      "resourceName": "Department Member",
+      "since": "2026-10-11",
+      "worksWith": []
     },
     {
       "action": "update",
@@ -225,7 +258,9 @@
         "department_member:read"
       ],
       "resource": "department_member",
-      "resourceName": "Department Member"
+      "resourceName": "Department Member",
+      "since": "2026-10-11",
+      "worksWith": []
     },
     {
       "action": "deactivate",
@@ -241,7 +276,9 @@
         "department_member:read"
       ],
       "resource": "department_member",
-      "resourceName": "Department Member"
+      "resourceName": "Department Member",
+      "since": "2026-10-11",
+      "worksWith": []
     },
     {
       "action": "read",
@@ -255,7 +292,9 @@
       "module": "organisation",
       "prerequisites": [],
       "resource": "job_title",
-      "resourceName": "Job Title"
+      "resourceName": "Job Title",
+      "since": "2026-10-11",
+      "worksWith": []
     },
     {
       "action": "create",
@@ -271,7 +310,9 @@
         "job_title:read"
       ],
       "resource": "job_title",
-      "resourceName": "Job Title"
+      "resourceName": "Job Title",
+      "since": "2026-10-11",
+      "worksWith": []
     },
     {
       "action": "update",
@@ -287,7 +328,9 @@
         "job_title:read"
       ],
       "resource": "job_title",
-      "resourceName": "Job Title"
+      "resourceName": "Job Title",
+      "since": "2026-10-11",
+      "worksWith": []
     },
     {
       "action": "read",
@@ -299,7 +342,9 @@
       "module": "company_settings",
       "prerequisites": [],
       "resource": "skill",
-      "resourceName": "Skill"
+      "resourceName": "Skill",
+      "since": "2026-11-05",
+      "worksWith": []
     },
     {
       "action": "create",
@@ -313,7 +358,9 @@
         "skill:read"
       ],
       "resource": "skill",
-      "resourceName": "Skill"
+      "resourceName": "Skill",
+      "since": "2026-11-05",
+      "worksWith": []
     },
     {
       "action": "update",
@@ -327,7 +374,9 @@
         "skill:read"
       ],
       "resource": "skill",
-      "resourceName": "Skill"
+      "resourceName": "Skill",
+      "since": "2026-11-05",
+      "worksWith": []
     },
     {
       "action": "delete",
@@ -341,7 +390,9 @@
         "skill:read"
       ],
       "resource": "skill",
-      "resourceName": "Skill"
+      "resourceName": "Skill",
+      "since": "2026-11-05",
+      "worksWith": []
     },
     {
       "action": "read",
@@ -355,7 +406,9 @@
       "module": "people",
       "prerequisites": [],
       "resource": "member_profile",
-      "resourceName": "Member Profile"
+      "resourceName": "Member Profile",
+      "since": "2026-10-11",
+      "worksWith": []
     },
     {
       "action": "create",
@@ -371,7 +424,14 @@
         "member_profile:read"
       ],
       "resource": "member_profile",
-      "resourceName": "Member Profile"
+      "resourceName": "Member Profile",
+      "since": "2026-10-11",
+      "worksWith": [
+        {
+          "key": "job_title:read",
+          "reason": "personJobTitles"
+        }
+      ]
     },
     {
       "action": "update",
@@ -387,7 +447,14 @@
         "member_profile:read"
       ],
       "resource": "member_profile",
-      "resourceName": "Member Profile"
+      "resourceName": "Member Profile",
+      "since": "2026-10-11",
+      "worksWith": [
+        {
+          "key": "job_title:read",
+          "reason": "personJobTitles"
+        }
+      ]
     },
     {
       "action": "read",
@@ -401,7 +468,14 @@
       "module": "people",
       "prerequisites": [],
       "resource": "member_note",
-      "resourceName": "Member Note"
+      "resourceName": "Member Note",
+      "since": "2026-10-11",
+      "worksWith": [
+        {
+          "key": "member_profile:read",
+          "reason": "notesOnProfile"
+        }
+      ]
     },
     {
       "action": "create",
@@ -417,7 +491,9 @@
         "member_note:read"
       ],
       "resource": "member_note",
-      "resourceName": "Member Note"
+      "resourceName": "Member Note",
+      "since": "2026-10-11",
+      "worksWith": []
     },
     {
       "action": "update",
@@ -433,7 +509,9 @@
         "member_note:read"
       ],
       "resource": "member_note",
-      "resourceName": "Member Note"
+      "resourceName": "Member Note",
+      "since": "2026-10-11",
+      "worksWith": []
     },
     {
       "action": "delete",
@@ -449,7 +527,9 @@
         "member_note:read"
       ],
       "resource": "member_note",
-      "resourceName": "Member Note"
+      "resourceName": "Member Note",
+      "since": "2026-10-11",
+      "worksWith": []
     },
     {
       "action": "read",
@@ -463,7 +543,9 @@
       "module": "people",
       "prerequisites": [],
       "resource": "work_availability",
-      "resourceName": "Work Availability"
+      "resourceName": "Work Availability",
+      "since": "2026-11-03",
+      "worksWith": []
     },
     {
       "action": "update",
@@ -479,7 +561,9 @@
         "work_availability:read"
       ],
       "resource": "work_availability",
-      "resourceName": "Work Availability"
+      "resourceName": "Work Availability",
+      "since": "2026-11-04",
+      "worksWith": []
     },
     {
       "action": "read",
@@ -493,7 +577,9 @@
       "module": "people",
       "prerequisites": [],
       "resource": "shift_preference",
-      "resourceName": "Shift Preference"
+      "resourceName": "Shift Preference",
+      "since": "2026-11-16",
+      "worksWith": []
     },
     {
       "action": "read",
@@ -507,7 +593,9 @@
       "module": "people",
       "prerequisites": [],
       "resource": "member_event",
-      "resourceName": "Member Event"
+      "resourceName": "Member Event",
+      "since": "2026-11-16",
+      "worksWith": []
     },
     {
       "action": "read",
@@ -519,7 +607,9 @@
       "module": "company_settings",
       "prerequisites": [],
       "resource": "employment_terms",
-      "resourceName": "Employment Terms"
+      "resourceName": "Employment Terms",
+      "since": "2026-11-05",
+      "worksWith": []
     },
     {
       "action": "update",
@@ -533,7 +623,9 @@
         "employment_terms:read"
       ],
       "resource": "employment_terms",
-      "resourceName": "Employment Terms"
+      "resourceName": "Employment Terms",
+      "since": "2026-11-05",
+      "worksWith": []
     },
     {
       "action": "read",
@@ -547,7 +639,9 @@
       "module": "people",
       "prerequisites": [],
       "resource": "member_employment_terms",
-      "resourceName": "Member Employment Terms"
+      "resourceName": "Member Employment Terms",
+      "since": "2026-11-05",
+      "worksWith": []
     },
     {
       "action": "update",
@@ -563,7 +657,9 @@
         "member_employment_terms:read"
       ],
       "resource": "member_employment_terms",
-      "resourceName": "Member Employment Terms"
+      "resourceName": "Member Employment Terms",
+      "since": "2026-11-05",
+      "worksWith": []
     },
     {
       "action": "read",
@@ -577,7 +673,9 @@
       "module": "leave",
       "prerequisites": [],
       "resource": "leave_request",
-      "resourceName": "Leave Request"
+      "resourceName": "Leave Request",
+      "since": "2026-10-11",
+      "worksWith": []
     },
     {
       "action": "create",
@@ -593,7 +691,14 @@
         "leave_request:read"
       ],
       "resource": "leave_request",
-      "resourceName": "Leave Request"
+      "resourceName": "Leave Request",
+      "since": "2026-10-11",
+      "worksWith": [
+        {
+          "key": "member_profile:read",
+          "reason": "leaveForSomeone"
+        }
+      ]
     },
     {
       "action": "review",
@@ -609,7 +714,14 @@
         "leave_request:read"
       ],
       "resource": "leave_request",
-      "resourceName": "Leave Request"
+      "resourceName": "Leave Request",
+      "since": "2026-10-11",
+      "worksWith": [
+        {
+          "key": "approval:decide",
+          "reason": "leaveApprovals"
+        }
+      ]
     },
     {
       "action": "read",
@@ -621,7 +733,9 @@
       "module": "company_settings",
       "prerequisites": [],
       "resource": "leave_type",
-      "resourceName": "Leave Type"
+      "resourceName": "Leave Type",
+      "since": "2026-11-05",
+      "worksWith": []
     },
     {
       "action": "update",
@@ -635,7 +749,9 @@
         "leave_type:read"
       ],
       "resource": "leave_type",
-      "resourceName": "Leave Type"
+      "resourceName": "Leave Type",
+      "since": "2026-11-05",
+      "worksWith": []
     },
     {
       "action": "read",
@@ -649,7 +765,9 @@
       "module": "company_settings",
       "prerequisites": [],
       "resource": "leave_duration",
-      "resourceName": "Leave Duration"
+      "resourceName": "Leave Duration",
+      "since": "2026-11-13",
+      "worksWith": []
     },
     {
       "action": "update",
@@ -665,7 +783,9 @@
         "leave_duration:read"
       ],
       "resource": "leave_duration",
-      "resourceName": "Leave Duration"
+      "resourceName": "Leave Duration",
+      "since": "2026-11-13",
+      "worksWith": []
     },
     {
       "action": "read",
@@ -679,7 +799,14 @@
       "module": "scheduling",
       "prerequisites": [],
       "resource": "schedule",
-      "resourceName": "Schedule"
+      "resourceName": "Schedule",
+      "since": "2026-10-11",
+      "worksWith": [
+        {
+          "key": "shift_preference:read",
+          "reason": "rosterPreferences"
+        }
+      ]
     },
     {
       "action": "create",
@@ -695,7 +822,14 @@
         "schedule:read"
       ],
       "resource": "schedule",
-      "resourceName": "Schedule"
+      "resourceName": "Schedule",
+      "since": "2026-10-11",
+      "worksWith": [
+        {
+          "key": "shift:read",
+          "reason": "scheduleShifts"
+        }
+      ]
     },
     {
       "action": "update",
@@ -711,7 +845,14 @@
         "schedule:read"
       ],
       "resource": "schedule",
-      "resourceName": "Schedule"
+      "resourceName": "Schedule",
+      "since": "2026-10-11",
+      "worksWith": [
+        {
+          "key": "shift:read",
+          "reason": "scheduleShifts"
+        }
+      ]
     },
     {
       "action": "generate",
@@ -727,7 +868,18 @@
         "schedule:read"
       ],
       "resource": "schedule",
-      "resourceName": "Schedule"
+      "resourceName": "Schedule",
+      "since": "2026-10-11",
+      "worksWith": [
+        {
+          "key": "shift:read",
+          "reason": "scheduleShifts"
+        },
+        {
+          "key": "constraint:read",
+          "reason": "generationRules"
+        }
+      ]
     },
     {
       "action": "delete",
@@ -743,7 +895,9 @@
         "schedule:read"
       ],
       "resource": "schedule",
-      "resourceName": "Schedule"
+      "resourceName": "Schedule",
+      "since": "2026-11-04",
+      "worksWith": []
     },
     {
       "action": "publish",
@@ -759,7 +913,14 @@
         "schedule:read"
       ],
       "resource": "schedule",
-      "resourceName": "Schedule"
+      "resourceName": "Schedule",
+      "since": "2026-11-04",
+      "worksWith": [
+        {
+          "key": "approval:decide",
+          "reason": "rosterApprovals"
+        }
+      ]
     },
     {
       "action": "edit_shift",
@@ -775,7 +936,9 @@
         "schedule:read"
       ],
       "resource": "schedule",
-      "resourceName": "Schedule"
+      "resourceName": "Schedule",
+      "since": "2026-11-05",
+      "worksWith": []
     },
     {
       "action": "read",
@@ -789,7 +952,9 @@
       "module": "scheduling",
       "prerequisites": [],
       "resource": "shift",
-      "resourceName": "Shift"
+      "resourceName": "Shift",
+      "since": "2026-10-11",
+      "worksWith": []
     },
     {
       "action": "create",
@@ -805,7 +970,9 @@
         "shift:read"
       ],
       "resource": "shift",
-      "resourceName": "Shift"
+      "resourceName": "Shift",
+      "since": "2026-10-11",
+      "worksWith": []
     },
     {
       "action": "update",
@@ -821,7 +988,9 @@
         "shift:read"
       ],
       "resource": "shift",
-      "resourceName": "Shift"
+      "resourceName": "Shift",
+      "since": "2026-10-11",
+      "worksWith": []
     },
     {
       "action": "delete",
@@ -837,7 +1006,9 @@
         "shift:read"
       ],
       "resource": "shift",
-      "resourceName": "Shift"
+      "resourceName": "Shift",
+      "since": "2026-10-11",
+      "worksWith": []
     },
     {
       "action": "read",
@@ -851,7 +1022,9 @@
       "module": "scheduling",
       "prerequisites": [],
       "resource": "constraint",
-      "resourceName": "Constraint"
+      "resourceName": "Constraint",
+      "since": "2026-10-13",
+      "worksWith": []
     },
     {
       "action": "create",
@@ -867,7 +1040,9 @@
         "constraint:read"
       ],
       "resource": "constraint",
-      "resourceName": "Constraint"
+      "resourceName": "Constraint",
+      "since": "2026-10-13",
+      "worksWith": []
     },
     {
       "action": "update",
@@ -883,7 +1058,9 @@
         "constraint:read"
       ],
       "resource": "constraint",
-      "resourceName": "Constraint"
+      "resourceName": "Constraint",
+      "since": "2026-10-13",
+      "worksWith": []
     },
     {
       "action": "delete",
@@ -899,7 +1076,9 @@
         "constraint:read"
       ],
       "resource": "constraint",
-      "resourceName": "Constraint"
+      "resourceName": "Constraint",
+      "since": "2026-10-13",
+      "worksWith": []
     },
     {
       "action": "read",
@@ -911,7 +1090,9 @@
       "module": "company_settings",
       "prerequisites": [],
       "resource": "scheduling_policy",
-      "resourceName": "Work Policy"
+      "resourceName": "Work Policy",
+      "since": "2026-11-05",
+      "worksWith": []
     },
     {
       "action": "update",
@@ -925,7 +1106,9 @@
         "scheduling_policy:read"
       ],
       "resource": "scheduling_policy",
-      "resourceName": "Work Policy"
+      "resourceName": "Work Policy",
+      "since": "2026-11-05",
+      "worksWith": []
     },
     {
       "action": "read",
@@ -937,7 +1120,9 @@
       "module": "approvals",
       "prerequisites": [],
       "resource": "approval_flow",
-      "resourceName": "Approval Flow"
+      "resourceName": "Approval Flow",
+      "since": "2026-11-07",
+      "worksWith": []
     },
     {
       "action": "manage",
@@ -951,7 +1136,9 @@
         "approval_flow:read"
       ],
       "resource": "approval_flow",
-      "resourceName": "Approval Flow"
+      "resourceName": "Approval Flow",
+      "since": "2026-11-07",
+      "worksWith": []
     },
     {
       "action": "read",
@@ -965,7 +1152,9 @@
       "module": "approvals",
       "prerequisites": [],
       "resource": "approval",
-      "resourceName": "Approval"
+      "resourceName": "Approval",
+      "since": "2026-11-07",
+      "worksWith": []
     },
     {
       "action": "decide",
@@ -981,7 +1170,9 @@
         "approval:read"
       ],
       "resource": "approval",
-      "resourceName": "Approval"
+      "resourceName": "Approval",
+      "since": "2026-11-07",
+      "worksWith": []
     },
     {
       "action": "read",
@@ -995,7 +1186,9 @@
       "module": "reports",
       "prerequisites": [],
       "resource": "report",
-      "resourceName": "Report"
+      "resourceName": "Report",
+      "since": "2026-11-16",
+      "worksWith": []
     },
     {
       "action": "read",
@@ -1009,7 +1202,9 @@
       "module": "access_and_activity",
       "prerequisites": [],
       "resource": "access_role",
-      "resourceName": "Access Role"
+      "resourceName": "Access Role",
+      "since": "2026-10-11",
+      "worksWith": []
     },
     {
       "action": "create",
@@ -1023,7 +1218,9 @@
         "access_role:read"
       ],
       "resource": "access_role",
-      "resourceName": "Access Role"
+      "resourceName": "Access Role",
+      "since": "2026-10-11",
+      "worksWith": []
     },
     {
       "action": "update",
@@ -1037,7 +1234,9 @@
         "access_role:read"
       ],
       "resource": "access_role",
-      "resourceName": "Access Role"
+      "resourceName": "Access Role",
+      "since": "2026-10-11",
+      "worksWith": []
     },
     {
       "action": "delete",
@@ -1051,7 +1250,9 @@
         "access_role:read"
       ],
       "resource": "access_role",
-      "resourceName": "Access Role"
+      "resourceName": "Access Role",
+      "since": "2026-10-11",
+      "worksWith": []
     },
     {
       "action": "assign",
@@ -1067,7 +1268,9 @@
         "access_role:read"
       ],
       "resource": "access_role",
-      "resourceName": "Access Role"
+      "resourceName": "Access Role",
+      "since": "2026-10-11",
+      "worksWith": []
     },
     {
       "action": "read",
@@ -1079,7 +1282,9 @@
       "module": "access_and_activity",
       "prerequisites": [],
       "resource": "audit_event",
-      "resourceName": "Audit Event"
+      "resourceName": "Audit Event",
+      "since": "2026-10-11",
+      "worksWith": []
     }
   ],
   "roleTemplates": [

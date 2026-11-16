@@ -14,6 +14,7 @@ import {
 	PERMISSION_KEYS,
 	PERMISSION_MODULES,
 	unknownKeys,
+	usesOf,
 } from "@/features/workspace/permissionKeys";
 
 describe("the permission catalogue generated from the API's contract", () => {
@@ -52,6 +53,27 @@ describe("the permission catalogue generated from the API's contract", () => {
 		expect(moduleOf("schedule:publish")).toBe("scheduling");
 		expect(moduleOf("approval_flow:manage")).toBe("approvals");
 		expect(moduleOf("audit_event:read")).toBe("access_and_activity");
+	});
+
+	it("carries each key's day and what it works with from the contract", () => {
+		expect(
+			PERMISSION_DEFINITIONS.map(({ key, since, worksWith }) => ({
+				key,
+				since,
+				worksWith,
+			}))
+		).toEqual(
+			contract.permissions.map(({ key, since, worksWith }) => ({
+				key,
+				since,
+				worksWith,
+			}))
+		);
+		expect(usesOf("schedule:generate")).toEqual([
+			{ key: "shift:read", reason: "scheduleShifts" },
+			{ key: "constraint:read", reason: "generationRules" },
+		]);
+		expect(usesOf("branch:read")).toEqual([]);
 	});
 
 	it("tells known keys from keys newer than the app", () => {

@@ -2746,6 +2746,22 @@
 				"departmentBranches": {
 					"why": "creating a department lists the branches to choose from",
 					"without": "holders aren’t offered creating a department"
+				},
+				"generationRules": {
+					"why": "generating a roster follows the department's work rules",
+					"without": "holders can't see which rules a generated roster follows"
+				},
+				"rosterPreferences": {
+					"why": "the roster's Preference row shows people's shift preferences",
+					"without": "holders don't see the roster's Preference row"
+				},
+				"rosterApprovals": {
+					"why": "under an approval flow, publishing a roster decides its approval step",
+					"without": "holders can't publish a roster that needs approval"
+				},
+				"leaveApprovals": {
+					"why": "under an approval flow, reviewing leave decides its approval step",
+					"without": "holders can't review leave that needs approval"
 				}
 			},
 			"needsAll": "Everything else here needs {{prerequisites}}."
