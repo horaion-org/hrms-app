@@ -89,15 +89,16 @@ export const TeamShiftPreferences = ({
 		);
 	if (team.status !== "ready")
 		return headed(<Skeleton className="h-36 w-full rounded-lg" />);
+	const rows = team.page.content.map((member) =>
+		rowOf(member, t("scheduling.detail.formerMember"))
+	);
 	return headed(
 		<>
 			<WeekGrid
 				emptyState={t(`${key}.empty`)}
 				headingLabel={t(`${key}.member`)}
 				label={t(`${key}.label`)}
-				rows={team.page.content.map((member) =>
-					rowOf(member, t("scheduling.detail.formerMember"))
-				)}
+				rows={rows}
 				shownDay={shownDay}
 				weekStartMonday={weekStartMonday}
 			/>
