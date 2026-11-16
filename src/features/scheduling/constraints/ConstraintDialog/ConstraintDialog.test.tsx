@@ -1604,4 +1604,28 @@ describe("constraintSchema", () => {
 
 		expect(parsed.error?.issues[0]?.message).toBe("Choose at most 20.");
 	});
+
+	it("given_aBannedPatternWithAnEmptyDayBeforeAFilledOne_when_parsed_then_asksForThatDayOrToClearTheRest", () => {
+		const pattern = CONSTRAINT_TYPE_OPTIONS.find(
+			(option) => option.type === "BANNED_SHIFT_PATTERN"
+		)!;
+		const parsed = constraintSchema(pattern, t).safeParse({
+			name: "No morning after nights",
+			type: "BANNED_SHIFT_PATTERN",
+			requirement: "MUST",
+			status: "ACTIVE" as const,
+			values: {
+				PATTERN_DAY_1: ["overnight-ops"],
+				PATTERN_DAY_2: ["overnight-ops"],
+				PATTERN_DAY_4: ["front-desk-am"],
+			},
+		});
+
+		expect(parsed.error?.issues).toEqual([
+			expect.objectContaining({
+				path: ["values", "PATTERN_DAY_3"],
+				message: "Choose a shift for Day 3, or clear the days after it.",
+			}),
+		]);
+	});
 });

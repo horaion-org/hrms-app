@@ -5,6 +5,7 @@ import {
 	CONSTRAINT_REQUIREMENTS,
 	CONSTRAINT_STATUSES,
 	CONSTRAINT_TYPES,
+	PATTERN_DAYS,
 	POLICY_LOCKS,
 	type ConstraintBody,
 	type ConstraintField,
@@ -121,8 +122,32 @@ export type FieldFit = {
 const DAYS_IN_A_WEEK = 7;
 
 /**
+ * An optional day of a banned pattern left empty before a day with shifts,
+ * which the API refuses (ADR-0107): its days are read in order and an empty
+ * one is dropped. A required day left empty has its own count message.
+ */
+const patternDayLeftEmpty = (
+	values: ConstraintFieldValues,
+	fields: ReadonlyArray<ConstraintFieldSpec>
+): ConstraintField | undefined => {
+	const hasShifts = (field: ConstraintField): boolean =>
+		(values[field] ?? []).some(Boolean);
+	const optionalDays = fields
+		.filter((spec) => spec.minCount === 0)
+		.map((spec) => spec.field)
+		.filter((field) =>
+			(PATTERN_DAYS as ReadonlyArray<ConstraintField>).includes(field)
+		);
+	return optionalDays.find(
+		(day, index) =>
+			!hasShifts(day) && optionalDays.slice(index + 1).some(hasShifts)
+	);
+};
+
+/**
  * The checks that tie fields together, as the API's: days off within their
- * period, then, from the type's declarations, no value also chosen in the
+ * period, a banned pattern's days filled in order, then, from the type's
+ * declarations, no value also chosen in the
  * field it `excludes`, and no value of a `listsSomeOf` field that lists none
  * of the chosen values of those fields.
  */
@@ -149,6 +174,13 @@ const checkConsistent = (
 		});
 	const label = (field: ConstraintField): string =>
 		t(`scheduling.constraints.fields.${field}`);
+	const emptyDay = patternDayLeftEmpty(values, fields);
+	if (emptyDay)
+		context.addIssue({
+			code: "custom",
+			path: ["values", emptyDay],
+			message: t(`${key}.patternDayEmpty`, { day: label(emptyDay) }),
+		});
 	for (const spec of fields) {
 		const excluded = spec.excludes ? (values[spec.excludes] ?? []) : [];
 		if (
