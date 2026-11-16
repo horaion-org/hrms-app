@@ -1072,6 +1072,112 @@ describe("Create schedules for a month: where everyone starts", () => {
 		).toBeNull();
 	});
 
+	const LAST_WEEKS_DAYS_UNKNOWN =
+		"Horaion doesn’t know what people worked last week.";
+	/** The block under a week's dates line, e.g. /^Dec 21\s?–\s?27$/. */
+	const weekBlock = (dates: RegExp): HTMLElement => {
+		const block = screen.getByText(dates).parentElement;
+		if (!block) throw new Error("a dates line sits in its week's block");
+		return block;
+	};
+	const untick = async (
+		user: ReturnType<typeof userEvent.setup>,
+		dates: string
+	): Promise<void> => {
+		await user.click(
+			within(await screen.findByRole("table", { name: "Weeks" })).getByRole(
+				"checkbox",
+				{ name: `Select ${dates}` }
+			)
+		);
+	};
+
+	it("given_aTickedWeekAfterAnUntickedWeekWithoutARoster_when_onSetup_then_asksForThatWeeksDaysUnderItsDatesWithoutHours", async () => {
+		const user = userEvent.setup();
+		await open(NEW_DECEMBER);
+
+		await screen.findByText(EVERY_WEEK_LINE);
+		await untick(user, "Mon, Dec 14 to Sun, Dec 20");
+
+		const gapWeek = await vi.waitFor(() => weekBlock(/^Dec 21\s?–\s?27$/));
+		expect(within(gapWeek).getByText(LAST_WEEKS_DAYS_UNKNOWN)).toBeVisible();
+		expect(
+			within(gapWeek).getByRole("button", { name: "Add last week’s shifts" })
+		).toBeVisible();
+		expect(within(gapWeek).queryByText(/hours people worked/)).toBeNull();
+		expect(screen.getByText(/^Dec 7\s?–\s?13$/)).toBeVisible();
+		expect(screen.getAllByText(LAST_WEEKS_DAYS_UNKNOWN)).toHaveLength(2);
+		expect(
+			screen.getAllByRole("button", { name: "Add hours worked" })
+		).toHaveLength(1);
+	});
+
+	it("given_thatWeeksDaysAdded_when_saved_then_savesThatWeekAsADraftAndOpensItsGrid", async () => {
+		const user = userEvent.setup();
+		const december = ungeneratedMonthFixture();
+		const { calls } = await open(NEW_DECEMBER, {
+			[`GET ${DECEMBER}`]: [
+				reply(december),
+				reply({
+					...december,
+					weeks: december.weeks.map((week) =>
+						week.periodStart === "2026-12-21"
+							? { ...week, state: "DRAFT", scheduleId: "s-gap" }
+							: week
+					),
+				}),
+			],
+			[`POST ${SCHEDULES}`]: reply(
+				scheduleFixture({ scheduleId: "s-gap" }),
+				201
+			),
+			[`GET ${SCHEDULES}/s-gap`]: reply(scheduleFixture({ scheduleId: "s-gap" })),
+			[`GET ${SCHEDULES}/s-gap/starting-days`]: reply(firstWeek()),
+		});
+
+		await screen.findByText(EVERY_WEEK_LINE);
+		await untick(user, "Mon, Dec 14 to Sun, Dec 20");
+		const gapWeek = await vi.waitFor(() => weekBlock(/^Dec 21\s?–\s?27$/));
+		await user.click(
+			within(gapWeek).getByRole("button", { name: "Add last week’s shifts" })
+		);
+
+		expect(
+			await screen.findByRole("dialog", { name: "Before this week" })
+		).toBeVisible();
+		expect(
+			calls
+				.filter((call) => call.method === "POST" && call.path === SCHEDULES)
+				.map((call) => (call.body as { periodStart: string }).periodStart)
+		).toEqual(["2026-12-21"]);
+	});
+
+	it("given_aTickedWeekAfterAnUntickedWeekWithARoster_when_onSetup_then_asksNothingForIt", async () => {
+		const december = ungeneratedMonthFixture();
+		await open(NEW_DECEMBER, {
+			[`GET ${DECEMBER}`]: reply({
+				...december,
+				weeks: december.weeks.map((week) =>
+					week.periodStart === "2026-12-14"
+						? { ...week, state: "TO_REVIEW", scheduleId: "s-14" }
+						: week
+				),
+			}),
+		});
+
+		expect(await screen.findByText(LAST_WEEKS_DAYS_UNKNOWN)).toBeVisible();
+		expect(screen.getAllByText(LAST_WEEKS_DAYS_UNKNOWN)).toHaveLength(1);
+		expect(screen.queryByText(/^Dec 21\s?–\s?27$/)).toBeNull();
+	});
+
+	it("given_consecutiveTickedWeeks_when_onSetup_then_asksOnlyForTheFirst", async () => {
+		await open(NEW_DECEMBER);
+
+		expect(await screen.findByText(LAST_WEEKS_DAYS_UNKNOWN)).toBeVisible();
+		expect(screen.getAllByText(LAST_WEEKS_DAYS_UNKNOWN)).toHaveLength(1);
+		expect(screen.queryByText(/^Dec 7\s?–\s?13$/)).toBeNull();
+	});
+
 	it("given_aRefusedSave_when_lastWeekAdded_then_saysWhy", async () => {
 		const user = userEvent.setup();
 		await open(NEW_DECEMBER, {

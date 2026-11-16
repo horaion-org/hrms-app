@@ -32,7 +32,10 @@ afterEach(() => {
 	vi.unstubAllGlobals();
 });
 
-const show = (openOnStart?: StartingPointDialog): void => {
+const show = (
+	openOnStart?: StartingPointDialog,
+	showsHours?: boolean
+): void => {
 	const client = new QueryClient({
 		defaultOptions: { queries: { retry: false } },
 	});
@@ -45,6 +48,7 @@ const show = (openOnStart?: StartingPointDialog): void => {
 					nonWorkingDayTypes={[]}
 					openOnStart={openOnStart}
 					scheduleId="s-1"
+					showsHours={showsHours}
 					unit={UNIT}
 				/>
 			</QueryClientProvider>
@@ -78,6 +82,17 @@ describe("StartingContextSection", () => {
 			screen.getByRole("button", { name: "Edit last week’s shifts" })
 		).toBeVisible();
 		expect(screen.getByRole("button", { name: "Add them" })).toBeVisible();
+	});
+
+	it("given_showsHoursFalse_when_shown_then_onlyTheDaysBeforeTheWeek", async () => {
+		const calls = stubApi(reads);
+		show(undefined, false);
+
+		expect(await screen.findByText(/No roster before this week/)).toBeVisible();
+		expect(screen.queryByRole("button", { name: "Add them" })).toBeNull();
+		expect(
+			calls.some((call) => call.path === `${SCHEDULE}/opening-balances`)
+		).toBe(false);
 	});
 
 	it("given_openOnStartDays_when_theDraftIsRead_then_theGridOfDaysOpens", async () => {

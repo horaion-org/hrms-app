@@ -33,6 +33,12 @@ export type StartingContextSectionProps = {
 	canEdit: boolean;
 	/** Opens a dialog as soon as the draft has been read, for a caller that just saved the draft to add to it. */
 	openOnStart?: StartingPointDialog;
+	/**
+	 * Whether the hours worked this month show; true when left out. Left out
+	 * for a later week of a month run: a month has one opening per person,
+	 * entered on its first week.
+	 */
+	showsHours?: boolean;
 	className?: string;
 };
 
@@ -70,6 +76,7 @@ export const StartingContextSection = ({
 	nonWorkingDayTypes,
 	canEdit,
 	openOnStart,
+	showsHours = true,
 	className,
 }: StartingContextSectionProps): FunctionComponent => {
 	const { t } = useTranslation();
@@ -110,15 +117,17 @@ export const StartingContextSection = ({
 						: undefined
 				}
 			/>
-			<OpeningHoursSection
-				canEdit={canEdit}
-				companyId={companyId}
-				generated={false}
-				open={hoursOpen}
-				scheduleId={scheduleId}
-				unit={unit}
-				onOpenChange={setHoursOpen}
-			/>
+			{showsHours && (
+				<OpeningHoursSection
+					canEdit={canEdit}
+					companyId={companyId}
+					generated={false}
+					open={hoursOpen}
+					scheduleId={scheduleId}
+					unit={unit}
+					onOpenChange={setHoursOpen}
+				/>
+			)}
 			{daysOpen && (
 				<StartingDaysDialog
 					open

@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { Navigate, useNavigate, useSearch } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import type { TFunction } from "i18next";
@@ -26,6 +26,7 @@ import {
 	MONTH_SETUP_DEFAULTS,
 	refusedWeeks,
 	startingWeekOf,
+	startingWeeksOf,
 	weekNameOf,
 	weeksToCreate,
 	type MonthChoices,
@@ -65,7 +66,10 @@ import {
 	emptyScheduleDraft,
 	scheduleDraftReducer,
 } from "@/features/scheduling/scheduleDraft";
-import type { ScheduleShift } from "@/features/scheduling/schedules/api";
+import {
+	scheduleQuery,
+	type ScheduleShift,
+} from "@/features/scheduling/schedules/api";
 import {
 	monthGenerationRefusal,
 	scheduleRefusalMessage,
@@ -295,6 +299,21 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 	const startingWeek = scheduleMonth.data
 		? startingWeekOf(scheduleMonth.data, ticked)
 		: undefined;
+	// Each later ticked week with nothing before it (after a gap) is asked for its days before, not for hours.
+	const laterStartingWeeks = scheduleMonth.data
+		? startingWeeksOf(scheduleMonth.data, ticked).filter(
+				(week) => week !== startingWeek
+			)
+		: [];
+	const laterDraftIds = laterStartingWeeks.flatMap((week) =>
+		week.state === "DRAFT" && week.scheduleId ? [week.scheduleId] : []
+	);
+	// The later weeks' saved drafts, read for their day-off types.
+	const laterDrafts = useQueries({
+		queries: laterDraftIds.map((draftId) =>
+			scheduleQuery(companyId, unit, draftId, allowedHere("schedule:read"))
+		),
+	});
 	// A saved first week's draft, read for its day-off types.
 	const startingDraft = useSchedule(
 		companyId,
@@ -454,18 +473,21 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 			setProblem(scheduleRefusalMessage(error, true, t));
 		}
 	};
-	// Saves the first week's draft, then opens one of its dialogs; none without the right to.
-	const addToStartingWeek = (
+	// Saves a week's draft, then opens one of its dialogs; none without the right to.
+	const addToWeek = (
+		week: MonthWeek | undefined,
 		dialog: StartingPointDialog
 	): (() => void) | undefined =>
-		startingWeek &&
+		week &&
 		allowedHere("schedule:create") &&
 		allowedHere("schedule:update") &&
 		everything
 			? (): void => {
-					void saveStartingWeek(startingWeek.periodStart, dialog);
+					void saveStartingWeek(week.periodStart, dialog);
 				}
 			: undefined;
+	const openOnStartOf = (scheduleId: string): StartingPointDialog | undefined =>
+		savedStart?.scheduleId === scheduleId ? savedStart.dialog : undefined;
 	const startingPoint =
 		!unit || !startingWeek ? undefined : startingWeek.state === "DRAFT" &&
 		  startingWeek.scheduleId ? (
@@ -479,11 +501,7 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 						? startingDraft.schedule.nonWorkingDayTypes
 						: []
 				}
-				openOnStart={
-					savedStart?.scheduleId === startingWeek.scheduleId
-						? savedStart.dialog
-						: undefined
-				}
+				openOnStart={openOnStartOf(startingWeek.scheduleId)}
 			/>
 		) : monthBefore.isPending ? undefined : (
 			// Before the first week's draft exists: the week page's two notices; each button saves the draft first.
@@ -496,18 +514,56 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 							? { kind: "carried", periodStart: weekBefore, uncovered: 0 }
 							: { kind: "none" }
 					}
-					onAdd={addToStartingWeek("days")}
+					onAdd={addToWeek(startingWeek, "days")}
 				/>
 				{startsAfterFirst(startingWeek.periodStart) && (
 					<OpeningHoursCallout
 						adding={scheduleActions.create.isPending}
 						asOf={startingWeek.periodStart}
 						hours={{ kind: "notRead", carried: weekBeforeRostered === true }}
-						onAdd={addToStartingWeek("hours")}
+						onAdd={addToWeek(startingWeek, "hours")}
 					/>
 				)}
 			</div>
 		);
+	// With later weeks asked too, each set of questions sits under its week's dates.
+	const firstWeekDates = startingWeek &&
+		laterStartingWeeks.length > 0 && (
+			<p className="text-sm font-semibold text-neutral-900">
+				{weekLabel(startingWeek)}
+			</p>
+		);
+	const laterStartingPoints =
+		unit &&
+		laterStartingWeeks.map((week) => (
+			<div key={week.periodStart} className="flex flex-col gap-4">
+				<p className="text-sm font-semibold text-neutral-900">
+					{weekLabel(week)}
+				</p>
+				{week.state === "DRAFT" && week.scheduleId ? (
+					<StartingContextSection
+						canEdit={allowedHere("schedule:update")}
+						companyId={companyId}
+						openOnStart={openOnStartOf(week.scheduleId)}
+						scheduleId={week.scheduleId}
+						showsHours={false}
+						unit={unit}
+						nonWorkingDayTypes={
+							laterDrafts[laterDraftIds.indexOf(week.scheduleId)]?.data
+								?.nonWorkingDayTypes ?? []
+						}
+					/>
+				) : (
+					// Before the week's draft exists: the button saves it first, then opens its grid.
+					<StartingContextCallout
+						adding={scheduleActions.create.isPending}
+						enteredCount={0}
+						previous={{ kind: "none" }}
+						onAdd={addToWeek(week, "days")}
+					/>
+				)}
+			</div>
+		));
 	// The first week saved as a draft keeps its own choice, changed on its own page.
 	const savedDraftLine =
 		startingWeek?.state === "DRAFT"
@@ -620,7 +676,9 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 								{savedDraftLine && (
 									<p className="text-sm text-neutral-800">{savedDraftLine}</p>
 								)}
+								{firstWeekDates}
 								{startingPoint}
+								{laterStartingPoints}
 							</div>
 						}
 						weeks={
