@@ -4491,7 +4491,7 @@
 			"checks": "Comprobaciones",
 			"checking": "Comprobando…",
 			"noProblems": "No se encontraron problemas.",
-			"rulesNotChecked": "Las reglas de programación no se vuelven a comprobar en los cambios hechos a mano.",
+			"rulesNotChecked": "Las reglas de tiempo de trabajo no se comprueban en los cambios hechos a mano. Después de aplicarlo, pulsa Validar cuadrante.",
 			"previewFailed": "No pudimos comprobar este cambio.",
 			"tryAgain": "Reintentar",
 			"tick": "He leído estas comprobaciones",
@@ -4718,7 +4718,7 @@
 				"covered": "{{shift}} el {{day}} ya está cubierto.",
 				"close": "Cerrar",
 				"nobody": "Nadie de este cuadrante puede cubrir {{shift}} el {{day}}.",
-				"notChecked": "Aún no se ha comprobado con las reglas de tiempo de trabajo: valida el cuadrante después de hacer el cambio."
+				"notChecked": "Las reglas de tiempo de trabajo (horas al día, horas extra al mes, días a la semana, permisos) no se comprueban en este cambio. Después de aplicarlo, pulsa Validar cuadrante."
 			},
 			"gapWithoutRoles": "{{shift}} · {{day}} · {{time}}",
 			"engine": {
@@ -4731,7 +4731,7 @@
 				"cannotFill": "No puede cubrir el hueco",
 				"reason": "El motivo del motor",
 				"warnings": "El motor también indica",
-				"notChecked": "No se ha comprobado con las reglas de tiempo de trabajo: horas al día, horas extra al mes, días a la semana y permisos. Compruébalo antes de cambiar el cuadrante.",
+				"notChecked": "Las reglas de tiempo de trabajo (horas al día, horas extra al mes, días a la semana, permisos) no se comprueban en este cambio. Después de aplicarlo, pulsa Validar cuadrante.",
 				"unknownShift": "un turno",
 				"leftShort_one": "Aún falta {{count}} {{times}}",
 				"leftShort_other": "Aún faltan {{count}} {{times}}",
@@ -4751,7 +4751,7 @@
 				},
 				"review": "Revisar este cambio",
 				"byHand": "La aplicación no puede aplicar esta: hazla a mano en el cuadrante.",
-				"noneChecked": "Ninguna de estas opciones se ha comprobado con las reglas de tiempo de trabajo: horas al día, horas extra al mes, días a la semana y permisos. Compruébalo antes de cambiar el cuadrante.",
+				"noneChecked": "Ninguna de estas opciones se ha comprobado con las reglas de tiempo de trabajo. Después de aplicar una, pulsa Validar cuadrante.",
 				"whyNot": {
 					"title": "Por qué no se asignó a nadie",
 					"couldTake": "Podría cubrir este turno",

@@ -53,7 +53,7 @@ describe("RosterChangeReview", () => {
 		).toBeVisible();
 		expect(
 			screen.getByText(
-				"Scheduling rules aren’t checked again for changes made by hand."
+				"Working-time rules aren’t checked for changes made by hand. After you apply this, press Validate schedule."
 			)
 		).toBeVisible();
 		expect(

@@ -149,7 +149,7 @@ describe("FindCoverPanel", () => {
 			screen.getByText("1 short since the roster was generated")
 		).toBeVisible();
 		expect(screen.getByRole("note")).toHaveTextContent(
-			"Not checked against the working-time rules yet: validate the schedule after you make the change."
+			"Working-time rules (hours a day, overtime a month, days a week, leave) aren’t checked for this change. After you apply it, press Validate schedule."
 		);
 		// One "not checked" line: the review's own is left out here.
 		expect((await screen.findAllByText("Note")).length).toBeGreaterThan(0);

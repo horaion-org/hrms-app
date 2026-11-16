@@ -1651,7 +1651,7 @@ it("changes a generated roster's day by hand: preview, apply, mark, then undo", 
 		await within(panel).findByText("Front Desk AM, Mon, Oct 12: 2 → 1 people.")
 	).toBeVisible();
 	expect(panel).toHaveTextContent(
-		"Scheduling rules aren’t checked again for changes made by hand."
+		"Working-time rules aren’t checked for changes made by hand. After you apply this, press Validate schedule."
 	);
 	expect(panel).toHaveTextContent(
 		"Aisha Rahman Front Desk AM · 09:00 – 15:00 → Day off"

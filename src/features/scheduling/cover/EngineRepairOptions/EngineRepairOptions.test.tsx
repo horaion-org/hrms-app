@@ -26,9 +26,9 @@ const names: RepairNames = {
 	hours: (minutes) => String(minutes / 60),
 };
 const NONE_CHECKED =
-	"None of these options is checked against working-time rules: hours a day, overtime a month, days a week and leave. Check before you change the roster.";
+	"None of these options is checked against working-time rules. After you apply one, press Validate schedule.";
 const NOT_CHECKED =
-	"Not checked against working-time rules: hours a day, overtime a month, days a week and leave. Check before you change the roster.";
+	"Working-time rules (hours a day, overtime a month, days a week, leave) aren’t checked for this change. After you apply it, press Validate schedule.";
 
 describe("EngineRepairOptions", () => {
 	it("asks the engine only when the button is pressed", async () => {

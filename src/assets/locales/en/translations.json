@@ -4691,7 +4691,7 @@
 			"checks": "Checks",
 			"checking": "Checking…",
 			"noProblems": "No problems found.",
-			"rulesNotChecked": "Scheduling rules aren’t checked again for changes made by hand.",
+			"rulesNotChecked": "Working-time rules aren’t checked for changes made by hand. After you apply this, press Validate schedule.",
 			"previewFailed": "We couldn’t check this change.",
 			"tryAgain": "Try again",
 			"tick": "I’ve read these checks",
@@ -4918,7 +4918,7 @@
 				"covered": "{{shift}} on {{day}} is covered now.",
 				"close": "Close",
 				"nobody": "Nobody on this roster can cover {{shift}} on {{day}}.",
-				"notChecked": "Not checked against the working-time rules yet: validate the schedule after you make the change."
+				"notChecked": "Working-time rules (hours a day, overtime a month, days a week, leave) aren’t checked for this change. After you apply it, press Validate schedule."
 			},
 			"gapWithoutRoles": "{{shift}} · {{day}} · {{time}}",
 			"engine": {
@@ -4931,7 +4931,7 @@
 				"cannotFill": "Can’t fill the gap",
 				"reason": "The engine’s reason",
 				"warnings": "The engine also notes",
-				"notChecked": "Not checked against working-time rules: hours a day, overtime a month, days a week and leave. Check before you change the roster.",
+				"notChecked": "Working-time rules (hours a day, overtime a month, days a week, leave) aren’t checked for this change. After you apply it, press Validate schedule.",
 				"unknownShift": "a shift",
 				"leftShort_one": "Still {{count}} short {{times}}",
 				"leftShort_other": "Still {{count}} short {{times}}",
@@ -4951,7 +4951,7 @@
 				},
 				"review": "Review this change",
 				"byHand": "The app can’t apply this one: make it by hand on the roster.",
-				"noneChecked": "None of these options is checked against working-time rules: hours a day, overtime a month, days a week and leave. Check before you change the roster.",
+				"noneChecked": "None of these options is checked against working-time rules. After you apply one, press Validate schedule.",
 				"whyNot": {
 					"title": "Why nobody was assigned",
 					"couldTake": "Could take this shift",
