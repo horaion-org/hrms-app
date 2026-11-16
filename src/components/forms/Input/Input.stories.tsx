@@ -98,3 +98,15 @@ export const DisabledWithError: Story = {
 export const Large: Story = {
 	args: { inputSize: "lg", placeholder: "Search Employee" },
 };
+
+/** A number with its unit after it, e.g. hours in a week; the label names the unit too. */
+export const WithUnit: Story = {
+	args: {
+		"aria-label": "Normal hours a week",
+		defaultValue: "44",
+		inputMode: "decimal",
+		leadingIcon: undefined,
+		trailingIcon: undefined,
+		unit: "h a week",
+	},
+};
