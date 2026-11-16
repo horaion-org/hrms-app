@@ -57,3 +57,50 @@ type Story = StoryObj<typeof meta>;
 
 /** Every department of Main branch: company constraints once, reading "All departments", then Front Office's own. */
 export const AllDepartments: Story = {};
+
+/** Shift names to vary the long list's copies by. */
+const COPY_NAMES = ["Early", "Late", "Night", "Weekend"];
+
+/**
+ * About 30 constraints across the four purposes: each live one copied under
+ * four shift names, some "If possible", one switched off, and three whose
+ * values no longer fit, so they need attention.
+ */
+const LONG_LIST = CONSTRAINT_FIXTURES.flatMap((constraint) =>
+	COPY_NAMES.map((copyName, index) => ({
+		...constraint,
+		constraintId: `${constraint.constraintId}-${index}`,
+		name: `${constraint.name} (${copyName})`,
+		requirement:
+			constraint.requirement && index % 2 === 1
+				? "SHOULD"
+				: constraint.requirement,
+		status:
+			index === 3 && constraint.category === "WORKING_HOURS"
+				? "INACTIVE"
+				: constraint.status,
+		values:
+			index === 2 && constraint.category !== "WORKING_HOURS"
+				? constraint.values.map((value, valueIndex) =>
+						valueIndex === 0
+							? { ...value, problem: "UNAVAILABLE" as const }
+							: value
+					)
+				: constraint.values,
+	}))
+);
+
+/** A long list: with more than twelve constraints in view, only the sections needing attention start open. */
+export const LongList: Story = {
+	beforeEach: (): void => {
+		try {
+			window.localStorage.removeItem("horaion.constraintSectionsClosed");
+		} catch {
+			// Storage is blocked: the sections start as the rule says anyway.
+		}
+		client.setQueryData(
+			companyConstraintsQuery(COMPANY, units.branch?.branchId).queryKey,
+			[...COMPANY_CONSTRAINT_FIXTURES, ...LONG_LIST]
+		);
+	},
+};
