@@ -696,8 +696,10 @@ export const ConstraintDialog = ({
 					<Button disabled={isSubmitting} variant="secondary" onClick={close}>
 						{t(`${key}.cancel`)}
 					</Button>
+					{/* Keyed apart, so the click on Continue never lands on the submit button that replaces it. */}
 					{step === "choose" ? (
 						<Button
+							key="continue"
 							disabled={chosen === undefined}
 							onClick={() => {
 								setStep("fill");
@@ -707,6 +709,7 @@ export const ConstraintDialog = ({
 						</Button>
 					) : (
 						<Button
+							key="submit"
 							disabled={!name.trim() || offered === undefined}
 							form={formId}
 							loading={isSubmitting}
