@@ -2,15 +2,17 @@ import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resetApiClient } from "@/common/api-client";
+import { companyWideWorkspace } from "@/common/testing/effectiveWorkspace";
 import {
 	currentUserReply,
 	openApp,
 	signedInShellRoutes,
 	type OpenedApp,
 } from "@/common/testing/openApp";
-import { accessPassReply, stubApi } from "@/common/testing/stubApi";
+import { accessPassReply, envelope, stubApi } from "@/common/testing/stubApi";
 import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
+import { PERMISSION_KEYS } from "@/features/workspace/permissionKeys";
 import { MENU_COLLAPSED_KEY } from "@/pages/useMenuCollapsed";
 
 let app: OpenedApp | undefined;
@@ -80,6 +82,34 @@ describe("MainLayout side menu", () => {
 			screen.getByRole("button", { name: "Collapse menu" })
 		).toHaveAttribute("aria-expanded", "true");
 		expect(localStorage.getItem(MENU_COLLAPSED_KEY)).toBe("false");
+	});
+
+	it("lists the entries in menu order for a person who holds every key", async () => {
+		stubApi({
+			"POST /api/v1/public/sessions/refreshes": accessPassReply(),
+			"GET /api/v1/me": currentUserReply(),
+			...signedInShellRoutes(),
+			"GET /api/v1/me/workspace": {
+				status: 200,
+				body: envelope(companyWideWorkspace(PERMISSION_KEYS)),
+			},
+		});
+		const navigation = await openDashboard();
+		await within(navigation).findByRole("link", { name: "Reports" });
+
+		const labels = within(navigation)
+			.getAllByRole("link")
+			.map((link) => link.textContent);
+		expect(labels).toEqual([
+			"Dashboard",
+			"Scheduling",
+			"People",
+			"Organisation",
+			"Leave",
+			"Shift preferences",
+			"Availability",
+			"Reports",
+		]);
 	});
 
 	it("opens collapsed when this browser collapsed it before", async () => {
