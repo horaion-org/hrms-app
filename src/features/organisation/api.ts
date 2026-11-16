@@ -232,6 +232,12 @@ const accessRoleSchema = z.object({
 	permissions: z.array(z.string()),
 	/** How many people hold the role; someone holding it at several places counts once. */
 	holderCount: z.number().int().nonnegative(),
+	/**
+	 * When the role's permissions were last saved, changed or not (API
+	 * ADR-0101): keys that reached the app after it are new to the role.
+	 * Null for the owner role; absent from an API older than the field.
+	 */
+	permissionsReviewedAt: z.iso.datetime({ offset: true }).nullish(),
 });
 
 export type AccessRole = z.infer<typeof accessRoleSchema>;
