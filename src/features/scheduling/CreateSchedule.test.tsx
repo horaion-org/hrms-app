@@ -729,6 +729,35 @@ describe("Create Schedule: generating", () => {
 		]);
 	});
 
+	it("given_aMonthWithNoWeekLeftToGenerate_when_onGenerate_then_offSayingWhyAndNothingIsSent", async () => {
+		const user = userEvent.setup();
+		const over = scheduleMonthFixture({
+			month: "2026-10",
+			departmentName: "Front Office",
+			weeks: [
+				monthWeekFixture({
+					periodStart: "2026-10-12",
+					periodEnd: "2026-10-18",
+					state: "DRAFT",
+					scheduleId: "s-1",
+					days: [],
+					includedInMonthGeneration: false,
+				}),
+			],
+		});
+		const { calls } = await reopen({ [`GET ${OCTOBER}`]: reply(over) });
+		await toGenerate(user);
+
+		const generate = screen.getByRole("button", { name: "Generate" });
+		await waitFor(() => {
+			expect(generate).toHaveAccessibleDescription(
+				"No week of October can be generated: each is published, over or being generated."
+			);
+		});
+		expect(generate).toBeDisabled();
+		expect(calls.some((call) => call.path.endsWith("/generation"))).toBe(false);
+	});
+
 	it("given_aCoveredWeekChangedByHand_when_generated_then_asksFirstAndLandsOnTheMonth", async () => {
 		const user = userEvent.setup();
 		const { opened, calls } = await reopen({

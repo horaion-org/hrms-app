@@ -5231,6 +5231,7 @@
 			"generate": {
 				"choiceMissing": "A week of this month was set up while you were here. Reload the page and generate again.",
 				"weekCannotBeGenerated": "A week you ticked can no longer be generated. Go back to Setup to see it as it is now.",
+				"nothingToGenerate": "No week of {{month}} can be generated: each is published, over or being generated.",
 				"weekChanged": "A week of {{month}} changed since this page loaded, so nothing was generated. The page now shows {{month}} as it is; try again.",
 				"forbidden": "You don’t have permission to generate this month here.",
 				"failed": "We couldn’t generate the month. Try again.",

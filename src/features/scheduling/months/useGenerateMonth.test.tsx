@@ -59,7 +59,8 @@ const lists = (): Record<string, StubReply> => ({
 /** The hook for Kitchen's December, holding `permissions` company-wide, generating `chosenWeeks` when given. */
 const generateFor = (
 	permissions: Array<string>,
-	chosenWeeks?: Array<string>
+	chosenWeeks?: Array<string>,
+	month = ungeneratedMonthFixture()
 ): ReturnType<
 	typeof renderHook<ReturnType<typeof useGenerateMonth>, unknown>
 > => {
@@ -82,10 +83,9 @@ const generateFor = (
 			)}
 		</QueryClientProvider>
 	);
-	return renderHook(
-		() => useGenerateMonth("c-1", ungeneratedMonthFixture(), chosenWeeks),
-		{ wrapper }
-	);
+	return renderHook(() => useGenerateMonth("c-1", month, chosenWeeks), {
+		wrapper,
+	});
 };
 
 describe("useGenerateMonth", () => {
@@ -229,5 +229,26 @@ describe("useGenerateMonth", () => {
 		await waitFor(() => {
 			expect(result.current?.block).toBe("cannotCreate");
 		});
+	});
+
+	it("given_noWeekLeftToGenerate_when_generated_then_blockedAndNothingIsSent", async () => {
+		const calls = stubApi(lists());
+		const over = ungeneratedMonthFixture();
+		const noneCovered = {
+			...over,
+			weeks: over.weeks.map((week) => ({
+				...week,
+				includedInMonthGeneration: false,
+			})),
+		};
+		const { result } = generateFor(EVERY_KEY, undefined, noneCovered);
+
+		await waitFor(() => {
+			expect(result.current?.block).toBe("nothingToGenerate");
+		});
+		await act(async () => {
+			await result.current.generate().catch(() => undefined);
+		});
+		expect(calls.some((call) => call.method === "POST")).toBe(false);
 	});
 });

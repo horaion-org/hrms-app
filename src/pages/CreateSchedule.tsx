@@ -561,10 +561,13 @@ export const CreateSchedule = (): FunctionComponent => {
 		saved && !frozen && weekConstraints
 			? weekChoiceProblem(weekChoice, weekConstraints)
 			: undefined;
+	// A month with no week left to generate (published, over or being generated) has nothing to send.
+	const nothingToGenerate = monthGeneration.block === "nothingToGenerate";
 	const canGenerateWeek =
 		canGenerate &&
 		generateGate === undefined &&
 		weekProblem === undefined &&
+		!nothingToGenerate &&
 		scheduleMonth.data !== undefined;
 	// Generate says the same, with the week's problem above it, and "Change" goes back to Setup.
 	const generateWeekSummary = weekLine && (
@@ -618,10 +621,14 @@ export const CreateSchedule = (): FunctionComponent => {
 				? t(generateGate.nextNoteKey, { department: generateGate.department })
 				: weekProblem
 					? t("scheduling.week.problemNote")
-					: canGenerate
-						? // The month is still being read: no note.
-							""
-						: t("scheduling.create.generateForbidden");
+					: nothingToGenerate
+						? t("scheduling.months.generate.nothingToGenerate", {
+								month: formatMonthName(draftMonth, formattingLocale(i18n)),
+							})
+						: canGenerate
+							? // The month is still being read: no note.
+								""
+							: t("scheduling.create.generateForbidden");
 
 	return (
 		<>

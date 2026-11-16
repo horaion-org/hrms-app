@@ -22,10 +22,12 @@ import { useAccess } from "@/features/workspace/useAccess";
 
 /**
  * Why Generate can't run for this month, besides the Department's readiness:
- * no `schedule:create` for the weeks it would make, the Department's shifts or
+ * no week left to generate (the API refuses an empty list), no
+ * `schedule:create` for the weeks it would make, the Department's shifts or
  * constraints unreadable, or still loading (no note is shown for that one).
  */
-export type GenerateBlock = "listsHidden" | "cannotCreate" | "listsLoading";
+export type GenerateBlock =
+	"nothingToGenerate" | "listsHidden" | "cannotCreate" | "listsLoading";
 
 /** What one Generate sends besides the month: the chosen weeks and the setup of the weeks it creates. */
 export type GenerateInput = { choices?: MonthChoices; setup?: MonthSetup };
@@ -39,7 +41,7 @@ export type GenerateMonth = {
 	answer: MonthGeneration | undefined;
 	/** The Mondays the last run sent, to name a week that changed when it is refused. */
 	sentWeeks: ReadonlyArray<string>;
-	/** Set when the month needs new weeks and they can't be made yet: see GenerateBlock. */
+	/** Set when there is no week to generate, or the month needs new weeks that can't be made yet: see GenerateBlock. */
 	block: GenerateBlock | undefined;
 };
 
@@ -92,23 +94,29 @@ export const useGenerateMonth = (
 	const createsWeeks =
 		scheduleMonth !== undefined &&
 		weeksToCreate(scheduleMonth, chosen).length > 0;
-	const block: GenerateBlock | undefined = !createsWeeks
-		? undefined
-		: access.status !== "ready"
-			? "listsLoading"
-			: scope === undefined || !access.can("schedule:create", scope)
-				? "cannotCreate"
-				: !readsShifts || !readsConstraints
-					? "listsHidden"
-					: everything === undefined
-						? "listsLoading"
-						: undefined;
+	const block: GenerateBlock | undefined =
+		scheduleMonth !== undefined && chosen.length === 0
+			? "nothingToGenerate"
+			: !createsWeeks
+				? undefined
+				: access.status !== "ready"
+					? "listsLoading"
+					: scope === undefined || !access.can("schedule:create", scope)
+						? "cannotCreate"
+						: !readsShifts || !readsConstraints
+							? "listsHidden"
+							: everything === undefined
+								? "listsLoading"
+								: undefined;
 
 	return {
 		// The body is built from this render's lists, so a click after they load always sends "everything".
 		generate: (input: GenerateInput = {}): Promise<MonthGeneration> => {
 			if (!scheduleMonth)
 				return Promise.reject(new Error("no month to generate"));
+			// The pages turn Generate off first; this keeps an empty list from ever being sent.
+			if (chosen.length === 0)
+				return Promise.reject(new Error("no week to generate"));
 			return mutation.mutateAsync({
 				month: scheduleMonth,
 				body: generateMonthBody(
