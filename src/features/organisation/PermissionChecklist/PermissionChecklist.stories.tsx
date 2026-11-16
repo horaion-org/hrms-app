@@ -42,7 +42,7 @@ export const ReadOnly: Story = {
 	args: { value: [...PERMISSION_KEYS], disabled: true },
 };
 
-/** A creator who holds Notes' changes but not its View: they can't give any of them. */
+/** A creator who holds Notes' changes but not its View: they can't give any of them (People › Details). */
 export const PrerequisiteUnavailable: Story = {
 	args: { value: [], unavailable: ["member_note:read"] },
 };
@@ -52,12 +52,34 @@ export const UnknownKeys: Story = {
 	args: { unknown: ["leave:approve"] },
 };
 
-/** A local role: company-only permissions and the rows they leave empty are left out. */
+/** A local role: company-only permissions are left out, and the areas they leave empty are named once. */
 export const LocalRole: Story = {
 	args: { kind: "LOCAL", value: ["branch:read", "department:read"] },
 };
 
-/** A company role: every permission, with no hint about where it applies. */
+/** A site lead: some areas managed, some viewed, one custom. */
+export const MixedLevels: Story = {
+	args: {
+		kind: "LOCAL",
+		value: [
+			"schedule:read",
+			"schedule:create",
+			"schedule:update",
+			"schedule:generate",
+			"schedule:delete",
+			"schedule:publish",
+			"schedule:edit_shift",
+			"shift:read",
+			"constraint:read",
+			"leave_request:read",
+			"leave_request:review",
+			"member_profile:read",
+			"report:read",
+		],
+	},
+};
+
+/** A company role: every area, with no hint about where it applies. */
 export const CompanyRole: Story = {
 	args: { kind: "COMPANY" },
 };

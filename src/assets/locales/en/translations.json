@@ -2072,7 +2072,7 @@
 			"empty": "No access roles yet.",
 			"assignments": {
 				"tab": "People",
-				"permissionsTab": "Permissions",
+				"permissionsTab": "What it allows",
 				"tabs": "Role sections",
 				"allows": "This role allows",
 				"title": "Who has this role",
@@ -2181,8 +2181,7 @@
 				"nameCharacters": "Use only letters, numbers, spaces and . ' & - in the name.",
 				"nameConflict": "A role named \"{{name}}\" already exists. Choose a different name.",
 				"nameRejected": "Check the role name and try again.",
-				"permissions": "Permissions",
-				"selected": "{{count}} of {{total}} selected",
+				"permissions": "What it allows",
 				"permissionsRequired": "Choose at least one permission.",
 				"added": "{{count}} added",
 				"removed": "{{count}} removed",
@@ -2316,7 +2315,6 @@
 			}
 		},
 		"permissions": {
-			"groupCount": "{{count}} of {{total}}",
 			"job_title": {
 				"name": "Job titles",
 				"description": "Each department’s job titles.",
@@ -2559,8 +2557,6 @@
 				}
 			},
 			"empty": "No access roles yet.",
-			"needs_one": "{{permissions}} needs {{prerequisites}}.",
-			"needs_other": "{{permissions}} need {{prerequisites}}.",
 			"blockedBy": "Needs {{prerequisites}}, which you can’t give",
 			"companyOnly": "Only for whole-company roles",
 			"unknown": {
@@ -2683,7 +2679,6 @@
 			},
 			"notAtDepartments": "Not at departments",
 			"quoted": "“{{permission}}”",
-			"sectionCount": "{{count}} of {{total}} selected",
 			"alsoTicked": "Also ticked {{permission}}: {{reason}}.",
 			"missingUse": "Without {{permission}}, {{consequence}}.",
 			"summaryLine": "{{section}}: {{level}}",
@@ -2746,9 +2741,24 @@
 				"departmentBranches": {
 					"why": "creating a department lists the branches to choose from",
 					"without": "holders aren’t offered creating a department"
+				},
+				"generationRules": {
+					"why": "generating a roster follows the department's work rules",
+					"without": "holders can't see which rules a generated roster follows"
+				},
+				"rosterPreferences": {
+					"why": "the roster's Preference row shows people's shift preferences",
+					"without": "holders don't see the roster's Preference row"
+				},
+				"rosterApprovals": {
+					"why": "under an approval flow, publishing a roster decides its approval step",
+					"without": "holders can't publish a roster that needs approval"
+				},
+				"leaveApprovals": {
+					"why": "under an approval flow, reviewing leave decides its approval step",
+					"without": "holders can't review leave that needs approval"
 				}
-			},
-			"needsAll": "Everything else here needs {{prerequisites}}."
+			}
 		},
 		"activity": {
 			"title": "Recent Activity",
@@ -3238,6 +3248,99 @@
 				"editForbidden": "You no longer have permission to change skills.",
 				"failed": "We couldn’t create the skill. Try again.",
 				"editFailed": "We couldn’t save the skill. Try again."
+			}
+		},
+		"accessAreas": {
+			"dashboard": {
+				"name": "Dashboard",
+				"description": "Approvals waiting for a decision, and who joins, ends probation or leaves"
+			},
+			"scheduling": {
+				"name": "Scheduling",
+				"description": "Schedules, shifts and rules; generating, changing and publishing rosters"
+			},
+			"leave": {
+				"name": "Leave",
+				"description": "Other people’s leave requests, and approving or rejecting them"
+			},
+			"shiftPreferences": {
+				"name": "Shift preferences",
+				"description": "The shifts each person would like to work, day by day"
+			},
+			"availability": {
+				"name": "Availability",
+				"description": "The hours each part-time person can work in a week"
+			},
+			"people": {
+				"name": "People",
+				"description": "Profiles, notes and who works on which employment terms"
+			},
+			"organisation": {
+				"name": "Organisation",
+				"description": "Branches, departments, their members, job titles, skills and the activity record"
+			},
+			"reports": {
+				"name": "Reports",
+				"description": "Figures across rosters: shifts short, staffing, overtime and changes after publishing"
+			},
+			"settingsCompany": {
+				"name": "Company details",
+				"description": "The company’s own details"
+			},
+			"settingsEmployment": {
+				"name": "Employment terms",
+				"description": "The working week each kind of contract sets"
+			},
+			"settingsWorkPolicy": {
+				"name": "Work policy",
+				"description": "The company’s own scheduling rules for its branches and departments"
+			},
+			"settingsLeave": {
+				"name": "Leave types and durations",
+				"description": "The kinds of leave, and the parts of a day people can take off"
+			},
+			"settingsApprovals": {
+				"name": "Approval flows",
+				"description": "Who approves a roster before it is published"
+			},
+			"settingsAccess": {
+				"name": "Access roles",
+				"description": "Roles like this one, and who they are given to"
+			},
+			"levels": {
+				"NONE": "No access",
+				"VIEW": "Can view",
+				"MANAGE": "Can manage",
+				"CUSTOM": "Custom"
+			},
+			"level": "Level for {{area}}",
+			"settings": "Settings",
+			"details": "Details · {{count}} of {{total}}",
+			"notAtDepartments": "Parts of this can’t be given at a department: Details says which.",
+			"companyOnlyPart": "Parts of this are for whole-company roles only.",
+			"companyOnlyAreas": "Only for whole-company roles: {{areas}}.",
+			"neededBy": "Needed by {{permissions}}",
+			"sentence": {
+				"role": "This role {{clauses}}.",
+				"manages": "manages {{areas}}",
+				"views": "views {{areas}}",
+				"some": "has some of {{areas}}",
+				"nothing": "This role allows nothing yet beyond a person’s own roster, leave and preferences."
+			},
+			"remove": {
+				"title": "Remove {{permission}}?",
+				"description": "These need it, so they would be removed too:",
+				"keep": "Keep them",
+				"confirm_one": "Remove {{count}}",
+				"confirm_other": "Remove all {{count}}"
+			},
+			"newSince": {
+				"title": "New since this role was last edited",
+				"item": "{{permission}} in {{area}}",
+				"add": "Add it",
+				"leave": "Leave it out",
+				"leftOut_one": "{{count}} new permission left out",
+				"leftOut_other": "{{count}} new permissions left out"
 			}
 		}
 	},

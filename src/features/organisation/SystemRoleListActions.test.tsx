@@ -88,7 +88,6 @@ const routes = (
 	[`DELETE ${ASSIGNMENT_PATH}`]: { status: 204 },
 });
 
-
 let app: OpenedApp | undefined;
 beforeEach(() => {
 	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
@@ -282,14 +281,17 @@ describe("Access role list actions", () => {
 		expect(
 			within(dialog).queryByRole("radiogroup", { name: "Start from" })
 		).not.toBeInTheDocument();
-		const box = (group: string, name: string): HTMLElement =>
-			within(within(dialog).getByRole("group", { name: group })).getByRole(
-				"checkbox",
-				{ name }
-			);
-		expect(box("Branches", "See branches")).toBeChecked();
-		expect(box("Departments", "See departments")).toBeChecked();
-		expect(box("Branches", "Edit branches")).not.toBeChecked();
+		const organisation = within(dialog).getByRole("group", {
+			name: "Organisation",
+		});
+		await userEvent.click(
+			within(organisation).getByRole("button", { name: /^Details/ })
+		);
+		const box = (name: string): HTMLElement =>
+			within(organisation).getByRole("checkbox", { name });
+		expect(box("See branches")).toBeChecked();
+		expect(box("See departments")).toBeChecked();
+		expect(box("Edit branches")).not.toBeChecked();
 	});
 
 	it("duplicates a company role as a company role, keeping its company-only permissions", async () => {
@@ -309,11 +311,14 @@ describe("Access role list actions", () => {
 		expect(
 			within(dialog).getByRole("radio", { name: "Across the whole company" })
 		).toBeChecked();
+		const organisation = within(dialog).getByRole("group", {
+			name: "Organisation",
+		});
+		await userEvent.click(
+			within(organisation).getByRole("button", { name: /^Details/ })
+		);
 		expect(
-			within(within(dialog).getByRole("group", { name: "Branches" })).getByRole(
-				"checkbox",
-				{ name: "Create branches" }
-			)
+			within(organisation).getByRole("checkbox", { name: "Create branches" })
 		).toBeChecked();
 		await userEvent.click(
 			within(dialog).getByRole("button", { name: "Create access role" })
@@ -354,7 +359,7 @@ describe("Access role people", () => {
 				body: envelope({ content: [], page: { totalElements: 0 } }),
 			},
 		});
-		app = await openApp("/settings/access-roles/r-2");
+		app = await openApp("/settings/access-roles/r-2?tab=people");
 		renderAuthApp(app);
 
 		await userEvent.click(
@@ -393,7 +398,7 @@ describe("Access role people", () => {
 			...routes(),
 			[`PUT ${ASSIGNMENT_PATH}`]: { status: 200, body: envelope({}) },
 		});
-		app = await openApp("/settings/access-roles/r-2");
+		app = await openApp("/settings/access-roles/r-2?tab=people");
 		renderAuthApp(app);
 
 		await userEvent.click(
@@ -423,7 +428,7 @@ describe("Access role people", () => {
 
 	it("removes the role from one person everywhere from More actions, after asking", async () => {
 		const calls = stubApi(routes());
-		app = await openApp("/settings/access-roles/r-2");
+		app = await openApp("/settings/access-roles/r-2?tab=people");
 		renderAuthApp(app);
 
 		await userEvent.click(
@@ -450,7 +455,7 @@ describe("Access role people", () => {
 
 	it("marks an inactive role and offers no assigning while it is switched off", async () => {
 		stubApi(routes(role({ status: "INACTIVE" })));
-		app = await openApp("/settings/access-roles/r-2");
+		app = await openApp("/settings/access-roles/r-2?tab=people");
 		renderAuthApp(app);
 
 		expect(
@@ -520,7 +525,7 @@ describe("Access role people, checked at each assignment's own place", () => {
 				body: envelope({ content: [], page: { totalElements: 0 } }),
 			},
 		});
-		app = await openApp("/settings/access-roles/r-2");
+		app = await openApp("/settings/access-roles/r-2?tab=people");
 		renderAuthApp(app);
 
 		await userEvent.click(
@@ -548,7 +553,7 @@ describe("Access role people, checked at each assignment's own place", () => {
 				}),
 			},
 		});
-		app = await openApp("/settings/access-roles/r-2");
+		app = await openApp("/settings/access-roles/r-2?tab=people");
 		renderAuthApp(app);
 
 		await userEvent.click(
@@ -589,7 +594,7 @@ describe("Access role people, checked at each assignment's own place", () => {
 				body: envelope({ content: [], page: { totalElements: 0 } }),
 			},
 		});
-		app = await openApp("/settings/access-roles/r-2");
+		app = await openApp("/settings/access-roles/r-2?tab=people");
 		renderAuthApp(app);
 
 		// Priya holds it company-wide, out of reach: nothing on her row can be changed.
@@ -629,7 +634,7 @@ describe("Access role people, checked at each assignment's own place", () => {
 			"GET /api/v1/me/workspace": kitchenAssigner(),
 			[HOLDERS]: { status: 200, body: envelope(spreadHolders) },
 		});
-		app = await openApp("/settings/access-roles/r-2");
+		app = await openApp("/settings/access-roles/r-2?tab=people");
 		renderAuthApp(app);
 
 		await userEvent.click(
@@ -665,7 +670,7 @@ describe("Access role people, checked at each assignment's own place", () => {
 				"AUTHORIZATION_DENIED"
 			),
 		});
-		app = await openApp("/settings/access-roles/r-2");
+		app = await openApp("/settings/access-roles/r-2?tab=people");
 		renderAuthApp(app);
 
 		await userEvent.click(
@@ -727,7 +732,7 @@ describe("Company roles and access previews in the assign dialog", () => {
 
 	it("offers a company role only at the whole company", async () => {
 		stubApi({ ...routes(companyRole), ...noColleagues });
-		app = await openApp("/settings/access-roles/r-2");
+		app = await openApp("/settings/access-roles/r-2?tab=people");
 		renderAuthApp(app);
 
 		await userEvent.click(
@@ -747,7 +752,7 @@ describe("Company roles and access previews in the assign dialog", () => {
 			...noColleagues,
 			"GET /api/v1/me/workspace": kitchenAssigner(),
 		});
-		app = await openApp("/settings/access-roles/r-2");
+		app = await openApp("/settings/access-roles/r-2?tab=people");
 		renderAuthApp(app);
 
 		await userEvent.click(
@@ -776,7 +781,7 @@ describe("Company roles and access previews in the assign dialog", () => {
 				"ACCESS_ROLE_KIND_CONFLICT"
 			),
 		});
-		app = await openApp("/settings/access-roles/r-2");
+		app = await openApp("/settings/access-roles/r-2?tab=people");
 		renderAuthApp(app);
 
 		await userEvent.click(
@@ -835,7 +840,7 @@ describe("Company roles and access previews in the assign dialog", () => {
 				]),
 			},
 		});
-		app = await openApp("/settings/access-roles/r-2");
+		app = await openApp("/settings/access-roles/r-2?tab=people");
 		renderAuthApp(app);
 
 		await userEvent.click(

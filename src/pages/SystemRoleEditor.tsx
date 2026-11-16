@@ -9,6 +9,8 @@ import { ArrowLeftIcon } from "@/components/ui/Icon";
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from "@/components/ui/Tabs";
 import { AccessRoleForm } from "@/features/organisation/AccessRoleForm";
 import { readOnlyReason } from "@/features/organisation/accessRoleReadOnly";
+import { PEOPLE_TAB } from "@/features/organisation/accessRoleTabs";
+import { newSinceReview } from "@/features/organisation/newPermissions";
 import { SYSTEM_ROLES_PATH } from "@/features/organisation/systemRolesPath";
 import { useAccessRoleHolders } from "@/features/organisation/useAccessRoleHolders";
 import { useUpdateAccessRole } from "@/features/organisation/useUpdateAccessRole";
@@ -25,9 +27,6 @@ const route = getRouteApi(
 );
 const key = "organisation.accessRoles.editor";
 const holdersKey = "organisation.accessRoles.assignments";
-/** The `tab` search value that opens the role on its permissions; People is the default. */
-export const PERMISSIONS_TAB = "permissions";
-
 const BackToList = (): FunctionComponent => {
 	const { t } = useTranslation();
 	return (
@@ -42,8 +41,8 @@ const BackToList = (): FunctionComponent => {
 };
 
 /**
- * One access role: who has it and where, then its name and permissions on a
- * second tab, where nothing is saved until "Save changes". The role's
+ * One access role: what it allows first (its name and permissions, where
+ * nothing is saved until "Save changes"), then who has it and where. The role's
  * permissions are shown but can't be changed when it is the Company Owner
  * role, when the person may not change roles, or when it holds a permission
  * the person doesn't: the API refuses any change to such a role.
@@ -76,22 +75,19 @@ export const SystemRoleEditor = (): FunctionComponent => {
 			</div>
 			<Tabs
 				className="mt-8"
-				selectedIndex={tab === PERMISSIONS_TAB ? 1 : 0}
+				selectedIndex={tab === PEOPLE_TAB ? 1 : 0}
 				onChange={(index) => {
 					void navigate({
-						search: index === 1 ? { tab: PERMISSIONS_TAB } : {},
+						search: index === 1 ? { tab: PEOPLE_TAB } : {},
 						replace: true,
 					});
 				}}
 			>
 				<TabList aria-label={t(`${holdersKey}.tabs`)}>
-					<Tab count={people}>{t(`${holdersKey}.tab`)}</Tab>
 					<Tab>{t(`${holdersKey}.permissionsTab`)}</Tab>
+					<Tab count={people}>{t(`${holdersKey}.tab`)}</Tab>
 				</TabList>
 				<TabPanels className="mt-8">
-					<TabPanel>
-						<SystemRoleHolders holders={holders.data} role={role} />
-					</TabPanel>
 					<TabPanel>
 						{reason && (
 							<p className="mb-6 text-sm text-neutral-700">
@@ -112,6 +108,11 @@ export const SystemRoleEditor = (): FunctionComponent => {
 								name: role.name,
 								permissions: role.permissions.filter(isPermissionKey),
 							}}
+							newPermissions={newSinceReview(
+								role.permissions,
+								role.permissionsReviewedAt,
+								role.kind
+							)}
 							onSubmit={async (values) => {
 								await update.mutateAsync({
 									kind: values.kind,
@@ -122,6 +123,9 @@ export const SystemRoleEditor = (): FunctionComponent => {
 								await navigate({ to: SYSTEM_ROLES_PATH });
 							}}
 						/>
+					</TabPanel>
+					<TabPanel>
+						<SystemRoleHolders holders={holders.data} role={role} />
 					</TabPanel>
 				</TabPanels>
 			</Tabs>

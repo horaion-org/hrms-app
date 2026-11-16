@@ -47,6 +47,17 @@ describe("Disclosure", () => {
 		expect(screen.getByText("Hidden option")).toBeVisible();
 	});
 
+	it("opens and closes the same way when drawn inline", async () => {
+		const user = userEvent.setup();
+		render(
+			<Disclosure title="Details" variant="inline">
+				<p>Hidden detail</p>
+			</Disclosure>
+		);
+		await user.click(screen.getByRole("button", { name: "Details" }));
+		expect(screen.getByText("Hidden detail")).toBeVisible();
+	});
+
 	it("never submits the form it sits in", async () => {
 		const user = userEvent.setup();
 		let submitted = false;

@@ -16,11 +16,16 @@ import {
 } from "@/features/organisation/accessRoleFormSchema";
 import { accessRoleRefusal } from "@/features/organisation/accessRoleRefusal";
 import { isAccessRoleKind } from "@/features/organisation/api";
+import { roleSentence } from "@/features/organisation/areaLevels";
+import { areaOf } from "@/features/organisation/permissionAreas";
 import { PermissionChecklist } from "@/features/organisation/PermissionChecklist";
 import {
-	keysFor,
+	canTick,
+	labelKeyOf,
 	permissionList,
 	selectionForKind,
+	tickUses,
+	togglePermission,
 } from "@/features/organisation/PermissionChecklist/groups";
 import type { PermissionKey } from "@/features/workspace/permissionKeys";
 
@@ -36,6 +41,12 @@ export type AccessRoleFormProps = {
 	readOnly?: boolean;
 	/** Permissions the person may not grant. */
 	unavailable?: ReadonlyArray<PermissionKey>;
+	/**
+	 * Permissions added to the app since the role was last saved, which it
+	 * lacks (API ADR-0101). Each can be added or left out; leaving one out
+	 * is saved like any change, which settles it for every administrator.
+	 */
+	newPermissions?: ReadonlyArray<PermissionKey>;
 	/**
 	 * Keys the role holds that this app doesn't know: shown locked, never
 	 * part of the values. The caller saves them back untouched.
@@ -61,7 +72,8 @@ export const AccessRoleForm = ({
 	mode,
 	initial,
 	readOnly = false,
-	unavailable,
+	unavailable = [],
+	newPermissions = [],
 	unknown = [],
 	onSubmit,
 	className,
@@ -111,6 +123,14 @@ export const AccessRoleForm = ({
 	}, []);
 	// What the last switch to a local role cleared, named until the type changes again.
 	const [cleared, setCleared] = useState<Array<PermissionKey>>([]);
+	// New permissions the person chose to leave out; saving records the decision.
+	const [leftOut, setLeftOut] = useState<Array<PermissionKey>>([]);
+	const language = i18n.resolvedLanguage ?? i18n.language;
+	const undecided = readOnly
+		? []
+		: newPermissions.filter(
+				(item) => !permissions.includes(item) && !leftOut.includes(item)
+			);
 	const added = permissions.filter(
 		(item) => !initial.permissions.includes(item)
 	).length;
@@ -121,13 +141,25 @@ export const AccessRoleForm = ({
 		kind !== initial.kind && t(`${key}.typeChanged`),
 		added > 0 && t(`${key}.added`, { count: added }),
 		removed > 0 && t(`${key}.removed`, { count: removed }),
+		leftOut.length > 0 &&
+			t("organisation.accessAreas.newSince.leftOut", { count: leftOut.length }),
 	]
 		.filter(Boolean)
 		.join(", ");
+	// Leaving a new permission out changes no key but is still saved.
+	const changed = isDirty || leftOut.length > 0;
 	const ready =
 		permissions.length + unknown.length > 0 &&
-		(mode === "create" ? kind !== "" && name.trim() !== "" : isDirty);
+		(mode === "create" ? kind !== "" && name.trim() !== "" : changed);
 	const kindError = errors.kind?.message;
+	// Adds a new permission as ticking it would: with what it needs and works with.
+	const addPermission = (item: PermissionKey): void => {
+		const current = getValues("permissions");
+		const next = togglePermission(current, item, true, unavailable);
+		setValue("permissions", tickUses(current, next, unavailable).selected, {
+			shouldDirty: true,
+		});
+	};
 	const submit = async (values: AccessRoleFormValues): Promise<void> => {
 		setMessage(undefined);
 		try {
@@ -188,11 +220,12 @@ export const AccessRoleForm = ({
 				{!readOnly && (
 					<div className="ml-auto flex flex-wrap items-center justify-end gap-3">
 						<Button
-							disabled={!isDirty || isSubmitting}
+							disabled={!changed || isSubmitting}
 							variant="secondary"
 							onClick={() => {
 								setMessage(undefined);
 								setCleared([]);
+								setLeftOut([]);
 								reset();
 							}}
 						>
@@ -268,11 +301,7 @@ export const AccessRoleForm = ({
 					<p className="mt-2 text-sm text-neutral-700">
 						{t(`${kindKey}.removed`, {
 							count: cleared.length,
-							permissions: permissionList(
-								cleared,
-								t,
-								i18n.resolvedLanguage ?? i18n.language
-							),
+							permissions: permissionList(cleared, t, language),
 						})}
 					</p>
 				)}
@@ -281,13 +310,54 @@ export const AccessRoleForm = ({
 				<h2 className="text-xl font-medium text-neutral-900">
 					{t(`${key}.permissions`)}
 				</h2>
-				<p className="text-sm text-neutral-700">
-					{t(`${key}.selected`, {
-						count: permissions.length,
-						total: keysFor(kind || undefined).length,
-					})}
-				</p>
 			</div>
+			<p className="mt-2 max-w-3xl text-base text-neutral-800">
+				{roleSentence(permissions, kind || undefined, t, language)}
+			</p>
+			{undecided.length > 0 && (
+				<Callout className="mt-4" tone="warning">
+					<span className="block">
+						{t("organisation.accessAreas.newSince.title")}
+					</span>
+					<ul className="mt-2 flex flex-col gap-2">
+						{undecided.map((item) => (
+							<li
+								key={item}
+								className="flex flex-wrap items-center gap-x-4 gap-y-1 font-normal"
+							>
+								<span className="min-w-0">
+									{t("organisation.accessAreas.newSince.item", {
+										permission: t(labelKeyOf(item)),
+										area: t(`organisation.accessAreas.${areaOf(item)}.name`),
+									})}
+								</span>
+								<span className="flex gap-4">
+									<Button
+										variant="textlink"
+										disabled={
+											isSubmitting || !canTick(item, permissions, unavailable)
+										}
+										onClick={() => {
+											addPermission(item);
+										}}
+									>
+										{t("organisation.accessAreas.newSince.add")}
+									</Button>
+									<Button
+										disabled={isSubmitting}
+										variant="textlink"
+										onClick={() => {
+											setLeftOut([...leftOut, item]);
+										}}
+									>
+										{t("organisation.accessAreas.newSince.leave")}
+									</Button>
+								</span>
+							</li>
+						))}
+					</ul>
+				</Callout>
+			)}
 			<Callout className="mt-4">
 				{t("organisation.accessRoles.baseline")}
 			</Callout>

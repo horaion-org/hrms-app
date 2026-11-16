@@ -85,10 +85,14 @@ const open = async (entry: string): Promise<OpenedApp> => {
 	return app;
 };
 
-const box = (group: string, name: string): HTMLElement =>
-	within(screen.getByRole("group", { name: group })).getByRole("checkbox", {
-		name,
-	});
+/** A permission's box in an area, opening the area's Details first. */
+const box = async (area: string, name: string): Promise<HTMLElement> => {
+	const group = screen.getByRole("group", { name: area });
+	const details = within(group).getByRole("button", { name: /^Details/ });
+	if (details.getAttribute("aria-expanded") === "false")
+		await userEvent.setup().click(details);
+	return within(group).getByRole("checkbox", { name });
+};
 const create = (): HTMLElement =>
 	screen.getByRole("button", { name: "Create role" });
 const chooseType = async (
@@ -112,7 +116,7 @@ const fillIn = async (name: string): Promise<void> => {
 		await screen.findByRole("textbox", { name: /Role name/ }),
 		name
 	);
-	await user.click(box("Branches", "Edit branches"));
+	await user.click(await box("Organisation", "Edit branches"));
 	await user.click(create());
 };
 
@@ -140,8 +144,10 @@ describe("Create access role", () => {
 			})
 		).getAllByRole("radio"))
 			expect(choice).not.toBeChecked();
-		for (const item of within(dialog).getAllByRole("checkbox")) {
-			expect(item).not.toBeChecked();
+		for (const item of within(dialog).getAllByRole("button", {
+			name: /^Level for /,
+		})) {
+			expect(item).toHaveTextContent("No access");
 			expect(item).toBeDisabled();
 		}
 		expect(
@@ -204,13 +210,13 @@ describe("Create access role", () => {
 				"Choose where this role can be used to see the permissions it can hold."
 			)
 		).toBeVisible();
-		expect(box("Branches", "Create branches")).toBeDisabled();
+		expect(await box("Organisation", "Create branches")).toBeDisabled();
 		await chooseType("Across the whole company");
 		await user.type(
 			screen.getByRole("textbox", { name: /Role name/ }),
 			"Branch creator"
 		);
-		await user.click(box("Branches", "Create branches"));
+		await user.click(await box("Organisation", "Create branches"));
 		await user.click(create());
 
 		expect(
@@ -263,7 +269,7 @@ describe("Create access role", () => {
 			"This role includes permissions you don’t hold, or you can no longer change access roles."
 		);
 		expect(screen.queryByText(/API says/)).not.toBeInTheDocument();
-		expect(box("Branches", "Edit branches")).toBeChecked();
+		expect(await box("Organisation", "Edit branches")).toBeChecked();
 		expect(app?.router.state.location.pathname).toBe(CREATOR);
 	});
 
@@ -281,23 +287,33 @@ describe("Create access role", () => {
 				"You can only give a role permissions you hold yourself, so the others are unavailable."
 			)
 		).toBeVisible();
-		expect(box("Branches", "See branches")).toBeDisabled();
-		expect(box("Branches", "Create branches")).toBeDisabled();
+		expect(await box("Organisation", "See branches")).toBeDisabled();
+		expect(await box("Organisation", "Create branches")).toBeDisabled();
 		// Editing is held, but it needs the view, which isn't, so it can't be given either.
-		expect(box("Branches", "Edit branches")).toBeDisabled();
-		expect(box("Branches", "Edit branches")).toHaveAccessibleDescription(
+		expect(await box("Organisation", "Edit branches")).toBeDisabled();
+		expect(
+			await box("Organisation", "Edit branches")
+		).toHaveAccessibleDescription(
 			"Rename a branch, change its code, city or country, and deactivate or reactivate it. Needs “See branches”, which you can’t give"
 		);
-		expect(box("Branches", "Branches")).toBeDisabled();
-		expect(box("Departments", "Departments")).toBeDisabled();
+		// No level of Organisation can be given but No access.
+		await user.click(
+			screen.getByRole("button", { name: "Level for Organisation" })
+		);
+		for (const level of ["Can view", "Can manage"])
+			expect(screen.getByRole("option", { name: level })).toHaveAttribute(
+				"aria-disabled",
+				"true"
+			);
+		await user.keyboard("{Escape}");
 
-		// The row's select-all for what is held adds it with what it needs.
-		await user.click(box("Access roles", "Access roles"));
+		// Ticking what is held adds it with what it needs.
+		await user.click(await box("Access roles", "Create access roles"));
 		expect(
-			box("Access roles", "See access roles and who holds them")
+			await box("Access roles", "See access roles and who holds them")
 		).toBeChecked();
-		expect(box("Access roles", "Create access roles")).toBeChecked();
-		expect(box("Access roles", "Edit access roles")).not.toBeChecked();
+		expect(await box("Access roles", "Create access roles")).toBeChecked();
+		expect(await box("Access roles", "Edit access roles")).not.toBeChecked();
 	});
 
 	it("sends someone without permission to create roles to the Forbidden page", async () => {

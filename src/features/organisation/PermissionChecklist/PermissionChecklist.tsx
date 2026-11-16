@@ -1,27 +1,40 @@
-import { useId, useImperativeHandle, useRef, useState, type Ref } from "react";
+import { useImperativeHandle, useRef, useState, type Ref } from "react";
 import { useTranslation } from "react-i18next";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { Checkbox } from "@/components/ui/Checkbox";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { AccessAreaRow } from "@/features/organisation/AccessAreaRow";
 import type { AccessRoleKind } from "@/features/organisation/api";
+import {
+	areaLevel,
+	canChooseLevel,
+	choosableLevels,
+	offeredKeys,
+	withAreaLevel,
+} from "@/features/organisation/areaLevels";
+import {
+	AREAS,
+	areaOf,
+	isSettingsArea,
+	type PermissionArea,
+} from "@/features/organisation/permissionAreas";
 import {
 	blockedBy,
 	canTick,
-	dependenciesOf,
 	hintKeyOf,
 	labelKeyOf,
 	missingUses,
-	type PermissionGroup,
 	permissionLabel,
 	permissionList,
 	scopeHintOf,
-	sectionsFor,
 	type TickedAlong,
 	tickUses,
-	toggleGroup,
 	togglePermission,
 } from "@/features/organisation/PermissionChecklist/groups";
 import {
+	dependingOn,
+	isAboveDepartments,
 	isCompanyOnly,
 	PERMISSION_KEYS,
 	type PermissionKey,
@@ -30,6 +43,10 @@ import {
 
 const NONE: ReadonlyArray<never> = [];
 const COMPANY_ONLY = PERMISSION_KEYS.filter(isCompanyOnly);
+const areasKey = "organisation.accessAreas";
+
+/** A key whose clearing waits for the person to confirm, and the keys that go with it. */
+type PendingRemoval = { key: PermissionKey; dependants: Array<PermissionKey> };
 
 export type PermissionChecklistProps = {
 	/** Names the whole list for assistive technology. */
@@ -43,10 +60,10 @@ export type PermissionChecklistProps = {
 	/** Permissions that can't be ticked, e.g. ones the person may not grant. */
 	unavailable?: ReadonlyArray<PermissionKey>;
 	/**
-	 * The role's kind. A local role's list leaves out company-only keys, and
-	 * any row left without keys, and marks the keys that can't be given at
-	 * a Department; a company role's marks nothing, since every key applies
-	 * company-wide. Until a kind is chosen, every key is shown and
+	 * The role's kind. A local role's areas leave out company-only keys, and
+	 * an area left without keys is named once as for whole-company roles; an
+	 * area with keys that can't be given at a Department says so. A company
+	 * role marks nothing. Until a kind is chosen, every key is shown and
 	 * company-only keys are marked.
 	 */
 	kind?: AccessRoleKind;
@@ -60,21 +77,18 @@ export type PermissionChecklistProps = {
 	/** Ids of text describing the whole list, e.g. a hint or an error. */
 	describedBy?: string;
 	className?: string;
-	/** Focuses the first box that can be changed, e.g. after a validation error. */
+	/** Focuses the first control that can be changed, e.g. after a validation error. */
 	ref?: Ref<{ focus: () => void }>;
 };
 
 /**
- * Every permission in the catalog, in one section per module (People,
- * Scheduling, …) and one row per resource inside it. A row's first box
- * ticks or clears the whole resource and shows a mixed state in between.
- * Ticking a permission ticks what it needs and clearing one clears what
- * needs it, as the API's contract declares; ticking one also ticks what its
- * screens use (`PERMISSION_USES`) and says so, and a row warns when what it
- * uses is missing. Each permission reads as a plain sentence with a hint;
- * one whose prerequisite can't be given is unavailable with the reason
- * beside it, and where a permission can be given is said beside it as the
- * role's `kind` needs.
+ * A role's permissions as the app's menu areas, in the menu's order, each
+ * with a level (`AccessAreaRow`) and its single permissions behind Details.
+ * Choosing a level or ticking a permission ticks what it needs, as the
+ * API's contract declares, and what its screens work with (`worksWith`),
+ * saying why on the row. A permission others need says so, and clearing it
+ * asks first, naming what goes with it. A permission whose prerequisite
+ * can't be given is unavailable with the reason beside it.
  */
 export const PermissionChecklist = ({
 	label,
@@ -91,13 +105,15 @@ export const PermissionChecklist = ({
 }: PermissionChecklistProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const list = useRef<HTMLDivElement>(null);
-	const sectionId = useId();
 	// What the last change ticked along, said until the next change.
 	const [alsoTicked, setAlsoTicked] = useState<Array<TickedAlong>>([]);
+	const [removal, setRemoval] = useState<PendingRemoval>();
 	useImperativeHandle(ref, () => ({
 		focus: (): void => {
 			list.current
-				?.querySelector<HTMLInputElement>("input:not(:disabled)")
+				?.querySelector<HTMLElement>(
+					"button:not(:disabled), input:not(:disabled)"
+				)
 				?.focus();
 		},
 	}));
@@ -112,7 +128,7 @@ export const PermissionChecklist = ({
 			: notGrantable;
 	const tickable = (key: PermissionKey): boolean =>
 		canTick(key, value, unavailable);
-	// Whatever a tick implies, an unavailable permission is never added.
+	// Whatever a change implies, an unavailable permission is never added.
 	const change = (next: Array<PermissionKey>): void => {
 		const allowed = next.filter(
 			(key) => value.includes(key) || !unavailable.includes(key)
@@ -125,14 +141,20 @@ export const PermissionChecklist = ({
 		permissionList(keys, t, language);
 	const phraseOf = (use: PermissionUse, part: "why" | "without"): string =>
 		t(`organisation.permissions.uses.${use.reason}.${part}`);
+	// The ticked keys that need `key`, besides itself.
+	const neededBy = (key: PermissionKey): Array<PermissionKey> =>
+		dependingOn(key).filter((item) => item !== key && value.includes(item));
 	const describe = (key: PermissionKey): string => {
 		const missing = unavailable.includes(key)
 			? []
 			: blockedBy(key, value, unavailable);
 		const hint = scopeHintOf(key, kind);
+		const needing = value.includes(key) ? neededBy(key) : [];
 		return [
 			t(hintKeyOf(key)),
 			hint && t(`organisation.permissions.${hint}`),
+			needing.length > 0 &&
+				t(`${areasKey}.neededBy`, { permissions: names(needing) }),
 			missing.length > 0 &&
 				t("organisation.permissions.blockedBy", {
 					prerequisites: names(missing),
@@ -141,61 +163,54 @@ export const PermissionChecklist = ({
 			.filter(Boolean)
 			.join(". ");
 	};
+	const toggle = (key: PermissionKey, checked: boolean): void => {
+		const dependants = checked ? [] : neededBy(key);
+		if (dependants.length > 0) {
+			setRemoval({ key, dependants });
+			return;
+		}
+		change(togglePermission(value, key, checked, unavailable));
+	};
+	const areaNote = (
+		offered: ReadonlyArray<PermissionKey>
+	): string | undefined => {
+		if (kind === "LOCAL" && offered.some(isAboveDepartments))
+			return t(`${areasKey}.notAtDepartments`);
+		if (kind === undefined && offered.some(isCompanyOnly))
+			return t(`${areasKey}.companyOnlyPart`);
+		return undefined;
+	};
 
-	const renderGroup = (group: PermissionGroup): FunctionComponent => {
-		const name = t(`organisation.permissions.${group.resource}.name`);
-		const total = group.keys.length;
-		const count = group.keys.filter((key) => value.includes(key)).length;
-		const open = group.keys.filter(tickable);
-		const full = open.length > 0 && open.every((key) => value.includes(key));
-
+	const renderArea = (area: PermissionArea): FunctionComponent => {
+		const offered = offeredKeys(area, kind);
+		const name = t(`${areasKey}.${area}.name`);
+		const held = offered.filter((key) => value.includes(key)).length;
 		return (
-			<div
-				key={group.resource}
-				aria-label={name}
-				className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3 border-t border-neutral-400 p-4 hover:bg-neutral-50 xl:grid-cols-[18rem_minmax(0,1fr)_3.5rem] xl:gap-6"
-				role="group"
-			>
-				<div className="min-w-0">
-					<Checkbox
-						checked={full}
-						disabled={disabled || open.length === 0}
-						indeterminate={count > 0 && !full}
-						label={name}
-						labelClassName="font-semibold"
-						onChange={(event) => {
-							change(
-								toggleGroup(value, group, event.target.checked, unavailable)
-							);
-						}}
-					/>
-					<p className="mt-1 pl-6 text-sm text-neutral-700">
-						{t(`organisation.permissions.${group.resource}.description`)}
-					</p>
-					{dependenciesOf(group.keys).map((dependency) => (
-						<p
-							key={dependency.prerequisites.join()}
-							className="mt-1 pl-6 text-xs text-neutral-600"
-						>
-							{dependency.everyOther
-								? t("organisation.permissions.needsAll", {
-										prerequisites: names(dependency.prerequisites),
-									})
-								: t("organisation.permissions.needs", {
-										count: dependency.keys.length,
-										permissions: names(dependency.keys),
-										prerequisites: names(dependency.prerequisites),
-									})}
-						</p>
-					))}
-					{/* Said on the row that was ticked, where the person is looking. */}
-					<div aria-live="polite">
+			<AccessAreaRow
+				key={area}
+				className="border-t border-neutral-300 first:border-t-0"
+				description={t(`${areasKey}.${area}.description`)}
+				disabled={disabled}
+				level={areaLevel(offered, value)}
+				name={name}
+				note={areaNote(offered)}
+				detailsTitle={t(`${areasKey}.details`, {
+					count: held,
+					total: offered.length,
+				})}
+				levels={choosableLevels(offered).map((level) => ({
+					level,
+					disabled: !canChooseLevel(offered, level, value, unavailable),
+				}))}
+				messages={
+					<>
+						{/* Said on the area whose change ticked it, where the person is looking. */}
 						{alsoTicked
-							.filter((use) => group.keys.includes(use.by))
+							.filter((use) => areaOf(use.by) === area)
 							.map((use) => (
 								<p
 									key={`${use.key}-${use.reason}`}
-									className="mt-1 pl-6 text-xs text-neutral-700"
+									className="mt-2 text-xs text-neutral-700"
 								>
 									{t("organisation.permissions.alsoTicked", {
 										permission: permissionLabel(use.key, t),
@@ -203,21 +218,25 @@ export const PermissionChecklist = ({
 									})}
 								</p>
 							))}
-					</div>
-					{missingUses(group.keys, value).map((use) => (
-						<p
-							key={`${use.key}-${use.reason}`}
-							className="mt-1 pl-6 text-xs text-warning-800"
-						>
-							{t("organisation.permissions.missingUse", {
-								permission: permissionLabel(use.key, t),
-								consequence: phraseOf(use, "without"),
-							})}
-						</p>
-					))}
-				</div>
-				<div className="col-span-2 row-start-2 mt-1 grid min-w-0 content-start items-start gap-x-6 gap-y-3 border-t border-neutral-200 pt-4 pl-6 sm:grid-cols-2 xl:col-span-1 xl:col-start-2 xl:row-start-1 xl:mt-0 xl:border-t-0 xl:pt-0 xl:pl-0">
-					{group.keys.map((key) => (
+						{missingUses(offered, value).map((use) => (
+							<p
+								key={`${use.key}-${use.reason}`}
+								className="mt-2 text-xs text-warning-800"
+							>
+								{t("organisation.permissions.missingUse", {
+									permission: permissionLabel(use.key, t),
+									consequence: phraseOf(use, "without"),
+								})}
+							</p>
+						))}
+					</>
+				}
+				onLevelChange={(level) => {
+					change(withAreaLevel(value, offered, level, unavailable));
+				}}
+			>
+				<div className="grid gap-x-6 gap-y-3 sm:grid-cols-2">
+					{offered.map((key) => (
 						<Checkbox
 							key={key}
 							checked={value.includes(key)}
@@ -226,24 +245,19 @@ export const PermissionChecklist = ({
 							disabled={disabled || !tickable(key)}
 							label={t(labelKeyOf(key))}
 							onChange={(event) => {
-								change(
-									togglePermission(
-										value,
-										key,
-										event.target.checked,
-										unavailable
-									)
-								);
+								toggle(key, event.target.checked);
 							}}
 						/>
 					))}
 				</div>
-				<p className="col-start-2 row-start-1 text-right text-sm leading-6 text-neutral-700 xl:col-start-3">
-					{t("organisation.permissions.groupCount", { count, total })}
-				</p>
-			</div>
+			</AccessAreaRow>
 		);
 	};
+
+	const withKeys = AREAS.filter((area) => offeredKeys(area, kind).length > 0);
+	const companyOnlyAreas = AREAS.filter(
+		(area) => offeredKeys(area, kind).length === 0
+	);
 
 	return (
 		<div
@@ -257,43 +271,22 @@ export const PermissionChecklist = ({
 				className
 			)}
 		>
-			{sectionsFor(kind).map((section) => {
-				const headingId = `${sectionId}-${section.module}`;
-				const keys = section.groups.flatMap((group) => group.keys);
-				const count = keys.filter((key) => value.includes(key)).length;
-				return (
-					<section
-						key={section.module}
-						aria-labelledby={headingId}
-						className="border-t border-neutral-400 first-of-type:border-t-0"
-					>
-						<div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 bg-neutral-100 px-4 py-3">
-							<div className="min-w-0">
-								<h3
-									className="text-base font-semibold text-neutral-900"
-									id={headingId}
-								>
-									{t(
-										`organisation.permissions.sections.${section.module}.name`
-									)}
-								</h3>
-								<p className="text-sm text-neutral-700">
-									{t(
-										`organisation.permissions.sections.${section.module}.description`
-									)}
-								</p>
-							</div>
-							<p className="text-sm text-neutral-700">
-								{t("organisation.permissions.sectionCount", {
-									count,
-									total: keys.length,
-								})}
-							</p>
-						</div>
-						{section.groups.map(renderGroup)}
-					</section>
-				);
-			})}
+			{withKeys.filter((area) => !isSettingsArea(area)).map(renderArea)}
+			<h3 className="border-t border-neutral-400 bg-neutral-100 px-4 py-3 text-base font-semibold text-neutral-900">
+				{t(`${areasKey}.settings`)}
+			</h3>
+			{withKeys.filter(isSettingsArea).map(renderArea)}
+			{companyOnlyAreas.length > 0 && (
+				<p className="border-t border-neutral-300 px-4 py-4 text-sm text-neutral-700">
+					{t(`${areasKey}.companyOnlyAreas`, {
+						areas: new Intl.ListFormat(language, {
+							type: "conjunction",
+						}).format(
+							companyOnlyAreas.map((area) => t(`${areasKey}.${area}.name`))
+						),
+					})}
+				</p>
+			)}
 			{unknown.length > 0 && (
 				<div
 					aria-label={t("organisation.permissions.unknown.name")}
@@ -321,6 +314,32 @@ export const PermissionChecklist = ({
 						))}
 					</div>
 				</div>
+			)}
+			{removal && (
+				<ConfirmDialog
+					cancelLabel={t(`${areasKey}.remove.keep`)}
+					description={t(`${areasKey}.remove.description`)}
+					tone="danger"
+					confirmLabel={t(`${areasKey}.remove.confirm`, {
+						count: removal.dependants.length + 1,
+					})}
+					title={t(`${areasKey}.remove.title`, {
+						permission: permissionLabel(removal.key, t),
+					})}
+					onClose={() => {
+						setRemoval(undefined);
+					}}
+					onConfirm={() => {
+						change(togglePermission(value, removal.key, false));
+						setRemoval(undefined);
+					}}
+				>
+					<ul className="list-disc pl-5 text-sm text-neutral-800">
+						{removal.dependants.map((key) => (
+							<li key={key}>{t(labelKeyOf(key))}</li>
+						))}
+					</ul>
+				</ConfirmDialog>
 			)}
 		</div>
 	);

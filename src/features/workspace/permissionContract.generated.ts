@@ -3,7 +3,7 @@
 
 /** SHA-256 of the contract file this module was generated from. */
 export const PERMISSION_CONTRACT_SHA256 =
-	"ffc37208349128b1407bd68e7d57a25e1265d8cac9516e270476eda450e6d1c7";
+	"e1a09eebdb7512e0fef2748f9ba91018febd7563a20c9961036be3e0705e515a";
 
 /** The places a permission can be assigned at, widest first. */
 export const ASSIGNABLE_SCOPES = ["COMPANY", "BRANCH", "DEPARTMENT"] as const;
@@ -29,6 +29,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "company_settings",
 		assignableScopes: ["COMPANY"],
 		prerequisites: [],
+		since: "2026-10-11",
+		worksWith: [],
 	},
 	{
 		key: "company:update",
@@ -37,6 +39,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "company_settings",
 		assignableScopes: ["COMPANY"],
 		prerequisites: ["company:read"],
+		since: "2026-10-11",
+		worksWith: [],
 	},
 	{
 		key: "branch:read",
@@ -45,6 +49,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "organisation",
 		assignableScopes: ["COMPANY", "BRANCH"],
 		prerequisites: [],
+		since: "2026-10-11",
+		worksWith: [],
 	},
 	{
 		key: "branch:create",
@@ -53,6 +59,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "organisation",
 		assignableScopes: ["COMPANY"],
 		prerequisites: ["branch:read"],
+		since: "2026-10-11",
+		worksWith: [],
 	},
 	{
 		key: "branch:update",
@@ -61,6 +69,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "organisation",
 		assignableScopes: ["COMPANY", "BRANCH"],
 		prerequisites: ["branch:read"],
+		since: "2026-10-11",
+		worksWith: [],
 	},
 	{
 		key: "branch_member:read",
@@ -69,6 +79,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "organisation",
 		assignableScopes: ["COMPANY", "BRANCH"],
 		prerequisites: [],
+		since: "2026-10-11",
+		worksWith: [],
 	},
 	{
 		key: "branch_member:create",
@@ -77,6 +89,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "organisation",
 		assignableScopes: ["COMPANY", "BRANCH"],
 		prerequisites: ["branch_member:read"],
+		since: "2026-10-11",
+		worksWith: [],
 	},
 	{
 		key: "branch_member:update",
@@ -85,6 +99,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "organisation",
 		assignableScopes: ["COMPANY", "BRANCH"],
 		prerequisites: ["branch_member:read"],
+		since: "2026-10-11",
+		worksWith: [],
 	},
 	{
 		key: "branch_member:deactivate",
@@ -93,6 +109,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "organisation",
 		assignableScopes: ["COMPANY", "BRANCH"],
 		prerequisites: ["branch_member:read"],
+		since: "2026-10-11",
+		worksWith: [],
 	},
 	{
 		key: "department:read",
@@ -101,6 +119,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "organisation",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: [],
+		since: "2026-10-11",
+		worksWith: [],
 	},
 	{
 		key: "department:create",
@@ -109,6 +129,13 @@ export const PERMISSION_DEFINITIONS = [
 		module: "organisation",
 		assignableScopes: ["COMPANY", "BRANCH"],
 		prerequisites: ["department:read"],
+		since: "2026-10-11",
+		worksWith: [
+			{
+				key: "branch:read",
+				reason: "departmentBranches",
+			},
+		],
 	},
 	{
 		key: "department:update",
@@ -117,6 +144,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "organisation",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: ["department:read"],
+		since: "2026-10-11",
+		worksWith: [],
 	},
 	{
 		key: "department_member:read",
@@ -125,6 +154,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "organisation",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: [],
+		since: "2026-10-11",
+		worksWith: [],
 	},
 	{
 		key: "department_member:create",
@@ -133,6 +164,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "organisation",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: ["department_member:read"],
+		since: "2026-10-11",
+		worksWith: [],
 	},
 	{
 		key: "department_member:update",
@@ -141,6 +174,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "organisation",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: ["department_member:read"],
+		since: "2026-10-11",
+		worksWith: [],
 	},
 	{
 		key: "department_member:deactivate",
@@ -149,6 +184,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "organisation",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: ["department_member:read"],
+		since: "2026-10-11",
+		worksWith: [],
 	},
 	{
 		key: "job_title:read",
@@ -157,6 +194,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "organisation",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: [],
+		since: "2026-10-11",
+		worksWith: [],
 	},
 	{
 		key: "job_title:create",
@@ -165,6 +204,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "organisation",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: ["job_title:read"],
+		since: "2026-10-11",
+		worksWith: [],
 	},
 	{
 		key: "job_title:update",
@@ -173,6 +214,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "organisation",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: ["job_title:read"],
+		since: "2026-10-11",
+		worksWith: [],
 	},
 	{
 		key: "skill:read",
@@ -181,6 +224,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "company_settings",
 		assignableScopes: ["COMPANY"],
 		prerequisites: [],
+		since: "2026-11-05",
+		worksWith: [],
 	},
 	{
 		key: "skill:create",
@@ -189,6 +234,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "company_settings",
 		assignableScopes: ["COMPANY"],
 		prerequisites: ["skill:read"],
+		since: "2026-11-05",
+		worksWith: [],
 	},
 	{
 		key: "skill:update",
@@ -197,6 +244,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "company_settings",
 		assignableScopes: ["COMPANY"],
 		prerequisites: ["skill:read"],
+		since: "2026-11-05",
+		worksWith: [],
 	},
 	{
 		key: "skill:delete",
@@ -205,6 +254,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "company_settings",
 		assignableScopes: ["COMPANY"],
 		prerequisites: ["skill:read"],
+		since: "2026-11-05",
+		worksWith: [],
 	},
 	{
 		key: "member_profile:read",
@@ -213,6 +264,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "people",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: [],
+		since: "2026-10-11",
+		worksWith: [],
 	},
 	{
 		key: "member_profile:create",
@@ -221,6 +274,13 @@ export const PERMISSION_DEFINITIONS = [
 		module: "people",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: ["member_profile:read"],
+		since: "2026-10-11",
+		worksWith: [
+			{
+				key: "job_title:read",
+				reason: "personJobTitles",
+			},
+		],
 	},
 	{
 		key: "member_profile:update",
@@ -229,6 +289,13 @@ export const PERMISSION_DEFINITIONS = [
 		module: "people",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: ["member_profile:read"],
+		since: "2026-10-11",
+		worksWith: [
+			{
+				key: "job_title:read",
+				reason: "personJobTitles",
+			},
+		],
 	},
 	{
 		key: "member_note:read",
@@ -237,6 +304,13 @@ export const PERMISSION_DEFINITIONS = [
 		module: "people",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: [],
+		since: "2026-10-11",
+		worksWith: [
+			{
+				key: "member_profile:read",
+				reason: "notesOnProfile",
+			},
+		],
 	},
 	{
 		key: "member_note:create",
@@ -245,6 +319,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "people",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: ["member_note:read"],
+		since: "2026-10-11",
+		worksWith: [],
 	},
 	{
 		key: "member_note:update",
@@ -253,6 +329,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "people",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: ["member_note:read"],
+		since: "2026-10-11",
+		worksWith: [],
 	},
 	{
 		key: "member_note:delete",
@@ -261,6 +339,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "people",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: ["member_note:read"],
+		since: "2026-10-11",
+		worksWith: [],
 	},
 	{
 		key: "work_availability:read",
@@ -269,6 +349,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "people",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: [],
+		since: "2026-11-03",
+		worksWith: [],
 	},
 	{
 		key: "work_availability:update",
@@ -277,6 +359,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "people",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: ["work_availability:read"],
+		since: "2026-11-04",
+		worksWith: [],
 	},
 	{
 		key: "shift_preference:read",
@@ -285,6 +369,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "people",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: [],
+		since: "2026-11-16",
+		worksWith: [],
 	},
 	{
 		key: "member_event:read",
@@ -293,6 +379,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "people",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: [],
+		since: "2026-11-16",
+		worksWith: [],
 	},
 	{
 		key: "employment_terms:read",
@@ -301,6 +389,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "company_settings",
 		assignableScopes: ["COMPANY"],
 		prerequisites: [],
+		since: "2026-11-05",
+		worksWith: [],
 	},
 	{
 		key: "employment_terms:update",
@@ -309,6 +399,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "company_settings",
 		assignableScopes: ["COMPANY"],
 		prerequisites: ["employment_terms:read"],
+		since: "2026-11-05",
+		worksWith: [],
 	},
 	{
 		key: "member_employment_terms:read",
@@ -317,6 +409,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "people",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: [],
+		since: "2026-11-05",
+		worksWith: [],
 	},
 	{
 		key: "member_employment_terms:update",
@@ -325,6 +419,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "people",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: ["member_employment_terms:read"],
+		since: "2026-11-05",
+		worksWith: [],
 	},
 	{
 		key: "leave_request:read",
@@ -333,6 +429,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "leave",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: [],
+		since: "2026-10-11",
+		worksWith: [],
 	},
 	{
 		key: "leave_request:create",
@@ -341,6 +439,13 @@ export const PERMISSION_DEFINITIONS = [
 		module: "leave",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: ["leave_request:read"],
+		since: "2026-10-11",
+		worksWith: [
+			{
+				key: "member_profile:read",
+				reason: "leaveForSomeone",
+			},
+		],
 	},
 	{
 		key: "leave_request:review",
@@ -349,6 +454,13 @@ export const PERMISSION_DEFINITIONS = [
 		module: "leave",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: ["leave_request:read"],
+		since: "2026-10-11",
+		worksWith: [
+			{
+				key: "approval:decide",
+				reason: "leaveApprovals",
+			},
+		],
 	},
 	{
 		key: "leave_type:read",
@@ -357,6 +469,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "company_settings",
 		assignableScopes: ["COMPANY"],
 		prerequisites: [],
+		since: "2026-11-05",
+		worksWith: [],
 	},
 	{
 		key: "leave_type:update",
@@ -365,6 +479,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "company_settings",
 		assignableScopes: ["COMPANY"],
 		prerequisites: ["leave_type:read"],
+		since: "2026-11-05",
+		worksWith: [],
 	},
 	{
 		key: "leave_duration:read",
@@ -373,6 +489,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "company_settings",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: [],
+		since: "2026-11-13",
+		worksWith: [],
 	},
 	{
 		key: "leave_duration:update",
@@ -381,6 +499,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "company_settings",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: ["leave_duration:read"],
+		since: "2026-11-13",
+		worksWith: [],
 	},
 	{
 		key: "schedule:read",
@@ -389,6 +509,13 @@ export const PERMISSION_DEFINITIONS = [
 		module: "scheduling",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: [],
+		since: "2026-10-11",
+		worksWith: [
+			{
+				key: "shift_preference:read",
+				reason: "rosterPreferences",
+			},
+		],
 	},
 	{
 		key: "schedule:create",
@@ -397,6 +524,13 @@ export const PERMISSION_DEFINITIONS = [
 		module: "scheduling",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: ["schedule:read"],
+		since: "2026-10-11",
+		worksWith: [
+			{
+				key: "shift:read",
+				reason: "scheduleShifts",
+			},
+		],
 	},
 	{
 		key: "schedule:update",
@@ -405,6 +539,13 @@ export const PERMISSION_DEFINITIONS = [
 		module: "scheduling",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: ["schedule:read"],
+		since: "2026-10-11",
+		worksWith: [
+			{
+				key: "shift:read",
+				reason: "scheduleShifts",
+			},
+		],
 	},
 	{
 		key: "schedule:generate",
@@ -413,6 +554,17 @@ export const PERMISSION_DEFINITIONS = [
 		module: "scheduling",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: ["schedule:read"],
+		since: "2026-10-11",
+		worksWith: [
+			{
+				key: "shift:read",
+				reason: "scheduleShifts",
+			},
+			{
+				key: "constraint:read",
+				reason: "generationRules",
+			},
+		],
 	},
 	{
 		key: "schedule:delete",
@@ -421,6 +573,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "scheduling",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: ["schedule:read"],
+		since: "2026-11-04",
+		worksWith: [],
 	},
 	{
 		key: "schedule:publish",
@@ -429,6 +583,13 @@ export const PERMISSION_DEFINITIONS = [
 		module: "scheduling",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: ["schedule:read"],
+		since: "2026-11-04",
+		worksWith: [
+			{
+				key: "approval:decide",
+				reason: "rosterApprovals",
+			},
+		],
 	},
 	{
 		key: "schedule:edit_shift",
@@ -437,6 +598,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "scheduling",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: ["schedule:read"],
+		since: "2026-11-05",
+		worksWith: [],
 	},
 	{
 		key: "shift:read",
@@ -445,6 +608,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "scheduling",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: [],
+		since: "2026-10-11",
+		worksWith: [],
 	},
 	{
 		key: "shift:create",
@@ -453,6 +618,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "scheduling",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: ["shift:read"],
+		since: "2026-10-11",
+		worksWith: [],
 	},
 	{
 		key: "shift:update",
@@ -461,6 +628,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "scheduling",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: ["shift:read"],
+		since: "2026-10-11",
+		worksWith: [],
 	},
 	{
 		key: "shift:delete",
@@ -469,6 +638,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "scheduling",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: ["shift:read"],
+		since: "2026-10-11",
+		worksWith: [],
 	},
 	{
 		key: "constraint:read",
@@ -477,6 +648,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "scheduling",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: [],
+		since: "2026-10-13",
+		worksWith: [],
 	},
 	{
 		key: "constraint:create",
@@ -485,6 +658,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "scheduling",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: ["constraint:read"],
+		since: "2026-10-13",
+		worksWith: [],
 	},
 	{
 		key: "constraint:update",
@@ -493,6 +668,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "scheduling",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: ["constraint:read"],
+		since: "2026-10-13",
+		worksWith: [],
 	},
 	{
 		key: "constraint:delete",
@@ -501,6 +678,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "scheduling",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: ["constraint:read"],
+		since: "2026-10-13",
+		worksWith: [],
 	},
 	{
 		key: "scheduling_policy:read",
@@ -509,6 +688,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "company_settings",
 		assignableScopes: ["COMPANY"],
 		prerequisites: [],
+		since: "2026-11-05",
+		worksWith: [],
 	},
 	{
 		key: "scheduling_policy:update",
@@ -517,6 +698,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "company_settings",
 		assignableScopes: ["COMPANY"],
 		prerequisites: ["scheduling_policy:read"],
+		since: "2026-11-05",
+		worksWith: [],
 	},
 	{
 		key: "approval_flow:read",
@@ -525,6 +708,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "approvals",
 		assignableScopes: ["COMPANY"],
 		prerequisites: [],
+		since: "2026-11-07",
+		worksWith: [],
 	},
 	{
 		key: "approval_flow:manage",
@@ -533,6 +718,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "approvals",
 		assignableScopes: ["COMPANY"],
 		prerequisites: ["approval_flow:read"],
+		since: "2026-11-07",
+		worksWith: [],
 	},
 	{
 		key: "approval:read",
@@ -541,6 +728,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "approvals",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: [],
+		since: "2026-11-07",
+		worksWith: [],
 	},
 	{
 		key: "approval:decide",
@@ -549,6 +738,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "approvals",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: ["approval:read"],
+		since: "2026-11-07",
+		worksWith: [],
 	},
 	{
 		key: "report:read",
@@ -557,6 +748,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "reports",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: [],
+		since: "2026-11-16",
+		worksWith: [],
 	},
 	{
 		key: "access_role:read",
@@ -565,6 +758,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "access_and_activity",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: [],
+		since: "2026-10-11",
+		worksWith: [],
 	},
 	{
 		key: "access_role:create",
@@ -573,6 +768,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "access_and_activity",
 		assignableScopes: ["COMPANY"],
 		prerequisites: ["access_role:read"],
+		since: "2026-10-11",
+		worksWith: [],
 	},
 	{
 		key: "access_role:update",
@@ -581,6 +778,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "access_and_activity",
 		assignableScopes: ["COMPANY"],
 		prerequisites: ["access_role:read"],
+		since: "2026-10-11",
+		worksWith: [],
 	},
 	{
 		key: "access_role:delete",
@@ -589,6 +788,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "access_and_activity",
 		assignableScopes: ["COMPANY"],
 		prerequisites: ["access_role:read"],
+		since: "2026-10-11",
+		worksWith: [],
 	},
 	{
 		key: "access_role:assign",
@@ -597,6 +798,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "access_and_activity",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: ["access_role:read"],
+		since: "2026-10-11",
+		worksWith: [],
 	},
 	{
 		key: "audit_event:read",
@@ -605,6 +808,8 @@ export const PERMISSION_DEFINITIONS = [
 		module: "access_and_activity",
 		assignableScopes: ["COMPANY"],
 		prerequisites: [],
+		since: "2026-10-11",
+		worksWith: [],
 	},
 ] as const;
 
