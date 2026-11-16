@@ -13,7 +13,7 @@ import { actual, openAs, screen, settle } from "./support/ui";
 
 const seed = readSeed();
 const accounts = readAccounts();
-const NAV = ["Dashboard", "Scheduling", "Leave", "Shift preferences", "Availability", "People", "Organisation"];
+const NAV = ["Dashboard", "Scheduling", "People", "Organisation", "Leave", "Shift preferences", "Availability"];
 
 /** Navigation each user type should get from its keys (Leave, Shift preferences and Dashboard are every member's own). */
 const EXPECTED_NAV: Record<Exclude<Role, "ownerB">, { shows: string[]; hides: string[] }> = {

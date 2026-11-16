@@ -211,6 +211,25 @@ export const MainLayout = (): FunctionComponent => {
 							to="/scheduling"
 						/>
 					</Can>
+					{/* People and Organisation are offered only when the workspace grants something in them, at any scope. */}
+					<Can anyOf={PEOPLE_READ_KEYS} at="anywhere">
+						<SidebarItem
+							activeIcon={PeopleFilledIcon}
+							collapsed={collapsed}
+							icon={PeopleIcon}
+							label={t("shell.navigation.people")}
+							to="/people"
+						/>
+					</Can>
+					<Can anyOf={ORGANISATION_READ_KEYS} at="anywhere">
+						<SidebarItem
+							activeIcon={OrganisationFilledIcon}
+							collapsed={collapsed}
+							icon={OrganisationIcon}
+							label={t("shell.navigation.organisation")}
+							to="/organisation"
+						/>
+					</Can>
 					{/* Leave is for everyone: a member's own leave needs nothing granted. */}
 					<SidebarItem
 						activeIcon={LeaveFilledIcon}
@@ -237,25 +256,7 @@ export const MainLayout = (): FunctionComponent => {
 							to="/availability"
 						/>
 					)}
-					{/* People and Organisation are offered only when the workspace grants something in them, at any scope. */}
-					<Can anyOf={PEOPLE_READ_KEYS} at="anywhere">
-						<SidebarItem
-							activeIcon={PeopleFilledIcon}
-							collapsed={collapsed}
-							icon={PeopleIcon}
-							label={t("shell.navigation.people")}
-							to="/people"
-						/>
-					</Can>
-					<Can anyOf={ORGANISATION_READ_KEYS} at="anywhere">
-						<SidebarItem
-							activeIcon={OrganisationFilledIcon}
-							collapsed={collapsed}
-							icon={OrganisationIcon}
-							label={t("shell.navigation.organisation")}
-							to="/organisation"
-						/>
-					</Can>
+					{/* Timesheet goes here, between Availability and Reports, once its page exists. */}
 					{/* Reports has a key of its own, so it is offered where that is held, at any scope. It comes
 					    last: a place to look back, not a daily task. */}
 					<Can anyOf={REPORT_READ_KEYS} at="anywhere">
