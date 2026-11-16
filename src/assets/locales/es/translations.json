@@ -5098,7 +5098,9 @@
 				"changedWeek_one": "{{week}} ({{count}} fuera)",
 				"changedWeek_other": "{{week}} ({{count}} fuera)",
 				"choosePerWeek": "Elegir por semana",
-				"savedDraft": "{{week}} está guardada como borrador; cambia lo que usa en su propia página."
+				"savedDraft": "{{week}} está guardada como borrador; cambia lo que usa en su propia página.",
+				"title": "Planificar un mes",
+				"subtitle": "Elige un departamento y un mes, marca las semanas que quieres planificar y genera. Después revisas y publicas cada semana."
 			},
 			"regenerate": {
 				"button": "Regenerar {{month}}",

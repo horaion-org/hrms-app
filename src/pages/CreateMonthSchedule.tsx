@@ -649,10 +649,10 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 				{t("scheduling.create.back")}
 			</Button>
 			<h1 className="mt-4 text-4xl font-medium text-neutral-900">
-				{t("scheduling.create.title")}
+				{t("scheduling.months.create.title")}
 			</h1>
 			<p className="mt-3 text-sm text-neutral-800">
-				{t("scheduling.create.subtitle")}
+				{t("scheduling.months.create.subtitle")}
 			</p>
 			<Stepper
 				className="mt-12"

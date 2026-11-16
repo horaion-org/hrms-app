@@ -165,6 +165,14 @@ describe("Create schedules for a month", () => {
 			await screen.findByRole("region", { name: "Schedule setup" })
 		).toBeVisible();
 		expect(
+			screen.getByRole("heading", { level: 1, name: "Schedule a month" })
+		).toBeInTheDocument();
+		expect(
+			screen.getByText(
+				"Choose a department and a month, tick the weeks to roster, then generate. You review and publish each week afterwards."
+			)
+		).toBeInTheDocument();
+		expect(
 			screen.getByText("A week belongs to the month its Monday falls in.")
 		).toBeInTheDocument();
 		const table = await screen.findByRole("table", { name: "Weeks" });
