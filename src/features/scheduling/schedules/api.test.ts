@@ -971,6 +971,31 @@ describe("a schedule's roster", () => {
 		expect(olderApi?.workedTimes).toBeUndefined();
 	});
 
+	it("reads a stretched day's overtime stretch, and none from an older API", async () => {
+		const [first, second] = scheduleAssignmentsFixture() as [
+			ScheduleAssignment,
+			ScheduleAssignment,
+		];
+		stubApi({
+			[`GET ${SCHEDULES}/s-1/assignments`]: {
+				status: 200,
+				body: envelope([
+					{ ...first, stretch: { beforeMinutes: 0, afterMinutes: 120 } },
+					second,
+				]),
+			},
+		});
+
+		const [stretched, olderApi] = await fetchScheduleAssignments(
+			"c-1",
+			UNIT,
+			"s-1"
+		);
+
+		expect(stretched?.stretch).toEqual({ beforeMinutes: 0, afterMinutes: 120 });
+		expect(olderApi?.stretch).toBeUndefined();
+	});
+
 	it("reads the types a day can be made when not worked, and none from an older API", async () => {
 		stubApi({
 			[`GET ${SCHEDULES}/s-1`]: {

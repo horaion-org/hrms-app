@@ -58,8 +58,10 @@ export const reassignMove = (
 	...overrides,
 });
 
-/** Chen's shift stretched by two hours. */
-export const stretchMove = (): RepairMove => ({
+/** Chen stays on two hours after the swing shift, until 15:00. */
+export const stretchMove = (
+	overrides: Partial<RepairMove> = {}
+): RepairMove => ({
 	kind: "OVERTIME_EXTENSION",
 	membershipId: "m-3",
 	displayName: "Chen Wei",
@@ -71,6 +73,8 @@ export const stretchMove = (): RepairMove => ({
 	date: SATURDAY,
 	period: { start: "2026-10-17T13:00:00", end: "2026-10-17T15:00:00" },
 	extensionMinutes: 120,
+	side: "AFTER_SHIFT",
+	...overrides,
 });
 
 /** A feasible option with the given moves, not checked against working-time rules. */
