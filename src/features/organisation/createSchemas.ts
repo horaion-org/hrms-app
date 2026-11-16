@@ -21,12 +21,8 @@ export const unitNameSchema = (messages: {
 		.max(100, messages.length)
 		.regex(UNIT_NAME_PATTERN, messages.characters);
 
-/** One to twenty chosen people, each an active company member. */
+/** Up to twenty chosen people, each an active company member; none is allowed, so a head can be chosen later. */
 export const headsSchema = (messages: {
-	required: string;
 	max: string;
 }): z.ZodArray<typeof companyMemberSchema> =>
-	z
-		.array(companyMemberSchema)
-		.min(1, messages.required)
-		.max(MAX_HEADS, messages.max);
+	z.array(companyMemberSchema).max(MAX_HEADS, messages.max);

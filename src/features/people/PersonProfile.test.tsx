@@ -815,10 +815,6 @@ describe("Editing a person", () => {
 
 	it.each([
 		[
-			problemReply(409, "LAST_ACTIVE_DEPARTMENT_HEAD"),
-			"They’re the only head of their department. Add another head there first.",
-		],
-		[
 			problemReply(403, "AUTHORIZATION_DENIED"),
 			"You don’t have permission to move people to this department.",
 		],
@@ -842,10 +838,6 @@ describe("Editing a person", () => {
 	);
 
 	it.each([
-		[
-			problemReply(409, "LAST_ACTIVE_DEPARTMENT_HEAD"),
-			"They’re the only head of their department. Add another head there first.",
-		],
 		[
 			problemReply(404, "MEMBER_PROFILE_NOT_FOUND"),
 			"This person is no longer available.",
@@ -1108,7 +1100,10 @@ describe("Deactivating, reactivating and re-inviting", () => {
 		const user = userEvent.setup();
 		stubApi({
 			...routes(),
-			[`PUT ${PROFILE}`]: problemReply(409, "LAST_ACTIVE_DEPARTMENT_HEAD"),
+			[`PUT ${PROFILE}`]: problemReply(
+				409,
+				"COMPANY_OWNER_CANNOT_BE_DEACTIVATED"
+			),
 		});
 		await open();
 
@@ -1122,9 +1117,7 @@ describe("Deactivating, reactivating and re-inviting", () => {
 		);
 
 		expect(
-			await within(dialog).findByText(
-				"They’re the only head of their department. Add another head there first."
-			)
+			await within(dialog).findByText("The company owner can’t be deactivated.")
 		).toHaveAttribute("role", "alert");
 	});
 

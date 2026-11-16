@@ -24,10 +24,7 @@ export const createDepartmentSchema = (
 		}),
 		heads: editing
 			? z.array(companyMemberSchema)
-			: headsSchema({
-					required: t(`${key}.headsRequired`),
-					max: t(`${key}.headsMax`),
-				}),
+			: headsSchema({ max: t(`${key}.headsMax`) }),
 	});
 };
 

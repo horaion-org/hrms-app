@@ -62,10 +62,7 @@ export const CreateBranchDialog = ({
 		timeZoneIds = formRowIds(timeZoneId),
 		headsIds = formRowIds(headsId);
 	const isEditing = editing !== undefined;
-	const schema = useMemo(
-		() => createBranchSchema(t, isEditing),
-		[t, isEditing]
-	);
+	const schema = useMemo(() => createBranchSchema(t), [t]);
 	const {
 		register,
 		control,
@@ -385,7 +382,6 @@ export const CreateBranchDialog = ({
 				)}
 				{!isEditing && (
 					<FormRow
-						required
 						counter={t(`${key}.headsCounter`, { count: heads.length })}
 						error={errors.heads?.message}
 						hint={t(`${key}.headsHint`)}
@@ -399,7 +395,6 @@ export const CreateBranchDialog = ({
 							render={({ field }) => (
 								<Combobox
 									ref={field.ref}
-									aria-required
 									aria-invalid={Boolean(errors.heads)}
 									aria-label={t(`${key}.heads`)}
 									disabled={isSubmitting}
