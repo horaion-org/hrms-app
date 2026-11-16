@@ -518,12 +518,24 @@ describe("shiftStatus", () => {
 	it("given_aStretchedShift_when_worded_then_saysByHowMuch", () => {
 		const stretched = {
 			...scheduleAssignmentsFixture()[0]!,
-			dayType: "REST",
+			dayType: null,
 			stretch: { beforeMinutes: 60, afterMinutes: 60 },
 		};
 
 		expect(shiftStatus(mondayOf(stretched), false, t)).toBe(
 			"Stretched 2 h into overtime"
+		);
+	});
+
+	it("given_aStretchedShiftOnARestDay_when_worded_then_saysBothTheRestDayAndTheStretch", () => {
+		const stretched = {
+			...scheduleAssignmentsFixture()[0]!,
+			dayType: "REST",
+			stretch: { beforeMinutes: 60, afterMinutes: 60 },
+		};
+
+		expect(shiftStatus(mondayOf(stretched), false, t)).toBe(
+			"On rest day · Stretched 2 h into overtime"
 		);
 	});
 

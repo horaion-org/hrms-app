@@ -314,8 +314,10 @@ const timeOffOf = (
  * (the API's ADR-0077, part 4) it names the leave and its time on every
  * roster, ahead of the day type: "Annual leave 07:00–11:00", or "Off
  * 07:00–11:00" for a viewer who may not see the leave. A shift stretched into
- * overtime (the API's ADR-0110) says by how much: "Stretched 2 h into overtime". Any other
- * shift reads as `tileStatus`. Pure.
+ * overtime (the API's ADR-0110) says by how much after what `tileStatus`
+ * says of it, joined as the roster's summary line joins its facts: "On rest
+ * day · Stretched 2 h into overtime". Any other shift reads as `tileStatus`.
+ * Pure.
  */
 export const shiftStatus = (
 	cell: Pick<
@@ -326,9 +328,14 @@ export const shiftStatus = (
 	t: TFunction
 ): string | undefined => {
 	if (!cell.workedTimes?.length && cell.stretchMinutes)
-		return t("scheduling.rosterMarkers.stretched", {
-			hours: hoursFromMinutes(cell.stretchMinutes),
-		});
+		return [
+			tileStatus(cell.note, showsIssues, t),
+			t("scheduling.rosterMarkers.stretched", {
+				hours: hoursFromMinutes(cell.stretchMinutes),
+			}),
+		]
+			.filter(Boolean)
+			.join(" · ");
 	if (!cell.workedTimes?.length) return tileStatus(cell.note, showsIssues, t);
 	const portion = cell.note?.leavePortion;
 	if (cell.note?.leaveTypeName && portion)
