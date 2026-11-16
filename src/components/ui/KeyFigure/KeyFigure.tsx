@@ -67,7 +67,12 @@ export const KeyFigure = ({
 				>
 					{label}
 				</h3>
-				{status && <Badge tone={status.tone}>{status.label}</Badge>}
+				{/* The label wraps; the status is never cut short. */}
+				{status && (
+					<Badge className="shrink-0" tone={status.tone}>
+						{status.label}
+					</Badge>
+				)}
 			</div>
 			<p className="flex flex-wrap items-baseline gap-x-2">
 				<span className="text-[2rem] leading-10 font-semibold text-neutral-900">
