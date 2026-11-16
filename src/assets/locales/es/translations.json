@@ -304,6 +304,7 @@
 		"meta": {
 			"waitingOnYou": "Pendiente de ti · paso {{step}} de {{total}} ({{label}})",
 			"waiting": "Pendiente de aprobación · paso {{step}} de {{total}} ({{label}})",
+			"yourSubmission": "Enviaste tú este cuadrante, así que no puedes aprobarlo · paso {{step}} de {{total}} ({{label}})",
 			"needsApproval": "Necesita aprobación: {{steps}}",
 			"failed": "No se pudo cargar la aprobación.",
 			"retry": "Reintentar",
@@ -328,6 +329,7 @@
 			"waitingOnName": "Pendiente de {{name}}",
 			"waitingOnPeople_one": "Pendiente de {{count}} persona",
 			"waitingOnPeople_other": "Pendiente de {{count}} personas",
+			"nobodyCanDecide": "Ya no hay nadie que pueda decidirlo",
 			"anyoneWhoCanPublish": "Cualquiera que pueda publicar {{department}}",
 			"decidedBy": "{{name}} · {{at}}",
 			"comment": "Comentario",
