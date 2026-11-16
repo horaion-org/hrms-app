@@ -2346,12 +2346,10 @@
 				"name": "Shift preferences",
 				"description": "The shifts each person would like to work on a date.",
 				"actions": {
-					"read": "See people’s shift preferences",
-					"update": "Set someone’s shift preferences"
+					"read": "See people’s shift preferences"
 				},
 				"actionHints": {
-					"read": "The shifts they would like, day by day",
-					"update": "Stating their own needs nothing"
+					"read": "The shifts they would like, day by day"
 				}
 			},
 			"leave_request": {

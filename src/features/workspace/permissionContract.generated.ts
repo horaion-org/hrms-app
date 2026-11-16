@@ -3,7 +3,7 @@
 
 /** SHA-256 of the contract file this module was generated from. */
 export const PERMISSION_CONTRACT_SHA256 =
-	"118408cfa0f4d16ca84fcdf62acc0fab08955cea6825e056701e67cce24e3e3d";
+	"d5d3781a322e345e9c34cd5a280f16e20f879b31ef55e41aaf16c97bd6fa2f3c";
 
 /** The places a permission can be assigned at, widest first. */
 export const ASSIGNABLE_SCOPES = ["COMPANY", "BRANCH", "DEPARTMENT"] as const;
@@ -284,14 +284,6 @@ export const PERMISSION_DEFINITIONS = [
 		module: "people",
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: [],
-	},
-	{
-		key: "shift_preference:update",
-		resource: "shift_preference",
-		action: "update",
-		module: "people",
-		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
-		prerequisites: ["shift_preference:read"],
 	},
 	{
 		key: "employment_terms:read",
@@ -640,7 +632,6 @@ export const PERMISSION_KEYS = [
 	"work_availability:read",
 	"work_availability:update",
 	"shift_preference:read",
-	"shift_preference:update",
 	"employment_terms:read",
 	"employment_terms:update",
 	"member_employment_terms:read",
@@ -720,7 +711,6 @@ export const ROLE_TEMPLATES = [
 			"work_availability:read",
 			"work_availability:update",
 			"shift_preference:read",
-			"shift_preference:update",
 			"employment_terms:read",
 			"employment_terms:update",
 			"member_employment_terms:read",

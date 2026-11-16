@@ -495,22 +495,6 @@
       "resourceName": "Shift Preference"
     },
     {
-      "action": "update",
-      "actionName": "Update",
-      "assignableScopes": [
-        "COMPANY",
-        "BRANCH",
-        "DEPARTMENT"
-      ],
-      "key": "shift_preference:update",
-      "module": "people",
-      "prerequisites": [
-        "shift_preference:read"
-      ],
-      "resource": "shift_preference",
-      "resourceName": "Shift Preference"
-    },
-    {
       "action": "read",
       "actionName": "Read",
       "assignableScopes": [
@@ -1110,7 +1094,6 @@
         "work_availability:read",
         "work_availability:update",
         "shift_preference:read",
-        "shift_preference:update",
         "employment_terms:read",
         "employment_terms:update",
         "member_employment_terms:read",

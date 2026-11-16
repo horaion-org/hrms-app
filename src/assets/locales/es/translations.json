@@ -1285,12 +1285,10 @@
 				"name": "Preferencias de turno",
 				"description": "Los turnos que cada persona querría trabajar en una fecha.",
 				"actions": {
-					"read": "Ver las preferencias de turno de las personas",
-					"update": "Definir las preferencias de turno de alguien"
+					"read": "Ver las preferencias de turno de las personas"
 				},
 				"actionHints": {
-					"read": "Los turnos que querrían, día a día",
-					"update": "Indicar las propias no necesita nada"
+					"read": "Los turnos que querrían, día a día"
 				}
 			},
 			"leave_request": {
