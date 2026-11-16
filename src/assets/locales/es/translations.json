@@ -777,12 +777,10 @@
 				"title": "Política de trabajo",
 				"subtitle": "Restricciones que se aplican a toda la empresa o a sucursales o departamentos elegidos. Un departamento no puede quitar ni relajar una bloqueada; las predeterminadas empiezan marcadas y se pueden quitar.",
 				"add": "Añadir restricción",
-				"label": "Restricciones de la política de trabajo",
 				"empty": "Aún no hay restricciones en la política de trabajo. Cada departamento define las suyas.",
 				"loading": "Cargando la política de trabajo…",
 				"failed": "No pudimos cargar la política de trabajo. Inténtalo de nuevo.",
 				"hidden": "No tienes permiso para ver la política de trabajo.",
-				"lock": "Bloqueo",
 				"added": "Restricción añadida a la política de trabajo",
 				"saved": "Restricción de la política de trabajo guardada",
 				"deleted": "Restricción quitada de la política de trabajo",
@@ -4622,9 +4620,6 @@
 			"noLongerShift": "{{department}} ya no tiene ningún turno, así que este horario no se puede generar.",
 			"noLongerStaffing": "{{department}} ya no tiene ninguna restricción de personal, así que este horario no se puede generar.",
 			"noLongerNote": "Corrige la configuración de {{department}} para generar."
-		},
-		"policy": {
-			"alwaysApplies": "Siempre se aplica"
 		},
 		"months": {
 			"rulesChanged": "Las reglas cambiaron desde que se generó este horario. Vuelve a generarlo para aplicarlas.",

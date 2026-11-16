@@ -1537,12 +1537,10 @@
 				"title": "Work policy",
 				"subtitle": "Constraints that apply to the whole company or to chosen branches or departments. A department can’t remove or loosen a locked one; defaults start ticked and may be left out.",
 				"add": "Add constraint",
-				"label": "Work policy constraints",
 				"empty": "No work policy constraints yet. Each department sets its own.",
 				"loading": "Loading the work policy…",
 				"failed": "We couldn’t load the work policy. Try again.",
 				"hidden": "You don’t have permission to see the work policy.",
-				"lock": "Lock",
 				"added": "Constraint added to the work policy",
 				"saved": "Work policy constraint saved",
 				"deleted": "Constraint removed from the work policy",
@@ -4822,9 +4820,6 @@
 			"noLongerShift": "{{department}} no longer has a shift, so this schedule can’t be generated.",
 			"noLongerStaffing": "{{department}} no longer has a staffing constraint, so this schedule can’t be generated.",
 			"noLongerNote": "Fix {{department}}’s setup to generate."
-		},
-		"policy": {
-			"alwaysApplies": "Always applies"
 		},
 		"months": {
 			"rulesChanged": "Rules changed since this roster was generated. Regenerate to apply them.",

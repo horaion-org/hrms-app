@@ -1,19 +1,25 @@
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { ApiProblemError } from "@/common/problem";
 import { mapRefusal } from "@/common/refusal";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { PlusIcon } from "@/components/ui/Icon";
 import { Toast } from "@/components/ui/Toast";
 import type {
+	ConstraintCategory,
 	DepartmentConstraint,
 	PolicyLock,
 } from "@/features/scheduling/constraints/api";
 import { ConstraintDialog } from "@/features/scheduling/constraints/ConstraintDialog";
+import { typeGroupsOf } from "@/features/scheduling/constraints/ConstraintDialog/typeGroups";
+import { ConstraintRow } from "@/features/scheduling/constraints/ConstraintRow";
+import { ConstraintSection } from "@/features/scheduling/constraints/ConstraintSection";
+import { constraintSectionsOf } from "@/features/scheduling/constraints/constraintSections";
+import { categoryIconOf } from "@/features/scheduling/constraints/constraintTypeLooks";
+import { needsAttention } from "@/features/scheduling/constraints/valueProblems";
 import type { ConstraintOptionsState } from "@/features/scheduling/constraints/useConstraintOptions";
 import {
 	policyConstraintsQuery,
@@ -21,7 +27,6 @@ import {
 } from "@/features/scheduling/policy/api";
 import { reachChoicesOf, reachValueOf } from "@/features/workspace/unitReach";
 import { usePolicyActions } from "@/features/scheduling/policy/usePolicyActions";
-import { schedulingPolicyColumns } from "@/features/settings/SchedulingPolicySettings/schedulingPolicyColumns";
 import { workspaceQuery } from "@/features/workspace/api";
 import { retry } from "@/features/workspace/retry";
 import { COMPANY_SCOPE } from "@/features/workspace/scopes";
@@ -34,8 +39,8 @@ export type SchedulingPolicySettingsProps = {
 /**
  * Settings › Work policy (section key `scheduling`): the company's work
  * policy (ADR-0058, ADR-0072), constraints for the whole company or chosen
- * Branches or Departments. Each reads as its type's sentence with where it
- * applies and its lock; adding, editing and removing need
+ * Branches or Departments, in one section per purpose. Each reads as its
+ * type's sentence with where it applies and its lock; adding, editing and removing need
  * `scheduling_policy:update` held company-wide, and the list itself
  * `scheduling_policy:read`. The constraint dialog is the department's, with
  * the lock and Applies to offered and only the types a company may set.
@@ -52,6 +57,7 @@ export const SchedulingPolicySettings = ({
 	const { data: workspace } = useQuery({ ...workspaceQuery, retry });
 	const [dialog, setDialog] = useState<{
 		editing?: DepartmentConstraint;
+		startAt?: ConstraintCategory;
 	} | null>(null);
 	const [removing, setRemoving] = useState<DepartmentConstraint | null>(null);
 	const [toast, setToast] = useState<{ id: number; message: string }>();
@@ -66,17 +72,18 @@ export const SchedulingPolicySettings = ({
 	const notify = (message: string): void => {
 		setToast((previous) => ({ id: (previous?.id ?? 0) + 1, message }));
 	};
-	const columns = useMemo(
-		(): Array<DataTableColumn<DepartmentConstraint>> =>
-			schedulingPolicyColumns(t, {
-				canUpdate,
-				types: offered.data?.types ?? [],
-				onEdit: (constraint) => {
-					setDialog({ editing: constraint });
-				},
-				onRemove: setRemoving,
-			}),
-		[t, canUpdate, offered.data, setDialog, setRemoving]
+	const types = offered.data?.types ?? [];
+	// A rule the system adds always applies: it is never deleted.
+	const alwaysApplies = (constraint: DepartmentConstraint): boolean =>
+		types.some(
+			(option) => option.type === constraint.type && option.addedBySystem
+		);
+	// The sections follow the categories the API lists for the work policy, in its order.
+	const laidOut = constraintSectionsOf(
+		list.data ?? [],
+		typeGroupsOf(types).map((group) => group.category),
+		(constraint) => needsAttention(constraint.values),
+		false
 	);
 	const forbidden =
 		!canRead ||
@@ -136,20 +143,63 @@ export const SchedulingPolicySettings = ({
 					{problem}
 				</p>
 			) : (
-				<DataTable
-					className="mt-8"
-					columns={columns}
-					data={list.data ?? []}
-					emptyState={t(`${key}.empty`)}
-					getRowId={(constraint) => constraint.constraintId}
-					label={t(`${key}.label`)}
-				/>
+				<div className="mt-8 flex flex-col gap-8">
+					{(list.data ?? []).length === 0 && (
+						<p className="text-sm text-neutral-700">{t(`${key}.empty`)}</p>
+					)}
+					{laidOut.sections.map((section) => (
+						<ConstraintSection
+							key={section.category}
+							count={section.rows.length}
+							emptyText={t("scheduling.constraintsTab.sectionEmpty")}
+							icon={categoryIconOf(section.category)}
+							title={t(`scheduling.constraints.categories.${section.category}`)}
+							add={
+								canUpdate
+									? {
+											label: t("scheduling.constraintsTab.addInSection"),
+											onAdd: () => {
+												setDialog({ startAt: section.category });
+											},
+										}
+									: undefined
+							}
+							description={t(
+								`scheduling.constraints.categoryDescriptions.${section.category}`
+							)}
+						>
+							{section.rows.map((constraint) => (
+								<ConstraintRow
+									key={constraint.constraintId}
+									constraint={constraint}
+									needsAttention={needsAttention(constraint.values)}
+									types={types}
+									onDelete={
+										canUpdate && !alwaysApplies(constraint)
+											? (): void => {
+													setRemoving(constraint);
+												}
+											: undefined
+									}
+									onEdit={
+										canUpdate
+											? (): void => {
+													setDialog({ editing: constraint });
+												}
+											: undefined
+									}
+								/>
+							))}
+						</ConstraintSection>
+					))}
+				</div>
 			)}
 			{dialog && (
 				<ConstraintDialog
 					withLock
 					editing={dialog.editing}
 					options={options}
+					startAt={dialog.startAt}
 					reach={{
 						choices: workspace
 							? reachChoicesOf(workspace, companyId, "scheduling_policy:update")

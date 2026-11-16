@@ -78,22 +78,17 @@ describe("SchedulingPolicySettings", () => {
 		stubApi(routes(READ_AND_UPDATE));
 		const panel = await open();
 
-		const table = await within(panel).findByRole("table", {
-			name: "Work policy constraints",
-		});
-		const rest = within(table).getByRole("row", { name: /Company rest/ });
+		// The constraints, one section per purpose.
+		await within(panel).findAllByRole("listitem");
+		const table = panel;
+		const rest = within(table).getByRole("listitem", { name: /Company rest/ });
 		expect(rest).toHaveTextContent(
 			"Must Everyone gets at least 11 hours off between shifts.Whole company"
 		);
-		expect(rest).toHaveTextContent("Locked");
+		expect(rest).toHaveTextContent("Always applies");
 		expect(
-			within(table)
-				.getAllByRole("columnheader")
-				.map((header) => header.textContent)
-		).not.toContain("Constraint type");
-		expect(
-			within(table).getByRole("row", { name: /Company weekends/ })
-		).toHaveTextContent("Default");
+			within(table).getByRole("listitem", { name: /Company weekends/ })
+		).toHaveTextContent("Ticked by default");
 		expect(
 			within(panel).getByRole("button", { name: "Add constraint" })
 		).toBeVisible();
@@ -111,10 +106,10 @@ describe("SchedulingPolicySettings", () => {
 		);
 		const panel = await open();
 
-		const table = await within(panel).findByRole("table", {
-			name: "Work policy constraints",
-		});
-		const restRow = within(table).getByRole("row", { name: /Company rest/ });
+		// The constraints, one section per purpose.
+		await within(panel).findAllByRole("listitem");
+		const table = panel;
+		const restRow = within(table).getByRole("listitem", { name: /Company rest/ });
 		for (const tag of within(restRow).getAllByText("If possible"))
 			expect(tag).toHaveClass("bg-warning-100");
 	});
@@ -134,17 +129,17 @@ describe("SchedulingPolicySettings", () => {
 		);
 		const panel = await open();
 
-		const table = await within(panel).findByRole("table", {
-			name: "Work policy constraints",
-		});
+		// The constraints, one section per purpose.
+		await within(panel).findAllByRole("listitem");
+		const table = panel;
 		expect(
-			within(table).getByRole("row", { name: /Company rest/ })
+			within(table).getByRole("listitem", { name: /Company rest/ })
 		).toHaveTextContent("Whole company");
 		expect(
-			within(table).getByRole("row", { name: /Kitchen and Bar rest/ })
+			within(table).getByRole("listitem", { name: /Kitchen and Bar rest/ })
 		).toHaveTextContent("Bar, Kitchen");
 		expect(
-			within(table).getByRole("row", { name: /Orchard weekends/ })
+			within(table).getByRole("listitem", { name: /Orchard weekends/ })
 		).toHaveTextContent("Orchard (branch)");
 	});
 
@@ -211,19 +206,19 @@ describe("SchedulingPolicySettings", () => {
 		);
 		const panel = await open();
 
-		const table = await within(panel).findByRole("table", {
-			name: "Work policy constraints",
-		});
-		const weekly = within(table).getByRole("row", {
+		// The constraints, one section per purpose.
+		await within(panel).findAllByRole("listitem");
+		const table = panel;
+		const weekly = within(table).getByRole("listitem", {
 			name: /Rest days each week/,
 		});
 		expect(weekly).toHaveTextContent(
 			"Must Every full-timer has at least 1 Rest day each week.Whole company"
 		);
 		await waitFor(() => {
-			expect(weekly).toHaveTextContent("Always applies");
+			expect(weekly).toHaveTextContent("Required by law");
 		});
-		expect(weekly).not.toHaveTextContent("Locked");
+		expect(weekly).not.toHaveTextContent("Always applies");
 		expect(
 			within(weekly).getByRole("button", { name: "Edit Rest days each week" })
 		).toBeVisible();
@@ -267,7 +262,7 @@ describe("SchedulingPolicySettings", () => {
 			await within(panel).findByText("Loading the work policy…")
 		).toBeVisible();
 		expect(
-			within(panel).queryByRole("row", { name: /Rest days each week/ })
+			within(panel).queryByRole("listitem", { name: /Rest days each week/ })
 		).toBeNull();
 		expect(
 			within(panel).queryByRole("button", {
@@ -343,11 +338,9 @@ describe("SchedulingPolicySettings", () => {
 		stubApi(routes(["scheduling_policy:read"]));
 		const panel = await open();
 
-		await within(panel).findByRole("table", {
-			name: "Work policy constraints",
-		});
+		await within(panel).findAllByRole("listitem");
 		expect(
-			within(panel).queryByRole("button", { name: "Add constraint" })
+			within(panel).queryByRole("button", { name: /^Add/ })
 		).toBeNull();
 		expect(
 			within(panel).queryByRole("button", { name: /^(Edit|Delete) / })
