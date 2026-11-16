@@ -351,11 +351,7 @@ export const ShiftDialog = ({
 				{shiftIsTimed && (
 					<div className="flex flex-col gap-1">
 						<ShiftDayAxis axis={liveAxis} label={t("scheduling.shifts.when")} />
-						<ShiftDayBar
-							axis={liveAxis}
-							className="w-full"
-							shift={{ startTime, endTime }}
-						/>
+						<ShiftDayBar axis={liveAxis} shift={{ startTime, endTime }} />
 					</div>
 				)}
 				<FormRow

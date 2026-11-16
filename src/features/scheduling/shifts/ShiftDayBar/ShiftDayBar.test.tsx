@@ -15,5 +15,6 @@ describe("ShiftDayBar", () => {
 		expect(bar.style.left).toBe("25%");
 		expect(bar.style.width).toBe("50%");
 		expect(container.firstChild).toHaveAttribute("aria-hidden", "true");
+		expect(container.firstChild).toHaveClass("w-full");
 	});
 });
