@@ -1025,6 +1025,7 @@
 			"systemRole": "Access role",
 			"systemRolePlaceholder": "Select access role",
 			"systemRoleHint": "Applies at the selected role scope.",
+			"systemRoleReadOnlyHint": "Only the System Owner or a System Admin can change access roles and where they apply.",
 			"otherRoles": "Also holds elsewhere: {{roles}}.",
 			"roleScope": "Role scope",
 			"roleScopeHint": "Choose where the access role applies, independently of department membership.",

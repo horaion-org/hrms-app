@@ -3144,6 +3144,7 @@
 			"systemRole": "Rol de acceso",
 			"systemRolePlaceholder": "Seleccionar rol de acceso",
 			"systemRoleHint": "Se aplica en el ámbito del rol seleccionado.",
+			"systemRoleReadOnlyHint": "Solo el Propietario del sistema o un Administrador del sistema pueden cambiar los roles de acceso y dónde se aplican.",
 			"otherRoles": "También tiene en otros lugares: {{roles}}.",
 			"roleScope": "Ámbito del rol",
 			"roleScopeHint": "Elige dónde se aplica el rol de acceso, con independencia del departamento al que pertenezca.",

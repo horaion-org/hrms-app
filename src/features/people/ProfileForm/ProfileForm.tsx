@@ -74,6 +74,11 @@ export type ProfileFormEdit = {
 	rolePlace?: { branchId?: string; departmentId?: string };
 	/** Other assignments: shown, never changed here. */
 	otherRoles: ReadonlyArray<string>;
+	/**
+	 * Every role the person holds, shown read-only to someone who may read
+	 * roles but not change them (API ADR-0108); absent otherwise.
+	 */
+	readOnlyRoles?: string;
 	/** The page's header, given the form's Cancel and Save changes buttons to place. */
 	header: (actions: ReactNode) => ReactNode;
 };
@@ -313,6 +318,7 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 	const roleError = errors.accessRoleId?.message;
 	const statusError = errors.status?.message;
 	const emailLocked = edit !== undefined && !edit.emailEditable;
+	const readOnlyRoles = edit?.readOnlyRoles;
 	const emailHint = edit
 		? emailLocked
 			? t(`${key}.emailLocked`)
@@ -721,6 +727,23 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 								/>
 							)}
 						/>
+						{!showRole && readOnlyRoles !== undefined && (
+							<FormRow
+								fieldWidth={fieldWidth}
+								hint={t(`${key}.systemRoleReadOnlyHint`)}
+								htmlFor={idOf("readOnlyRoles")}
+								label={t(`${key}.systemRole`)}
+							>
+								<Input
+									disabled
+									readOnly
+									aria-describedby={formRowIds(idOf("readOnlyRoles")).hintId}
+									className="w-full"
+									id={idOf("readOnlyRoles")}
+									value={readOnlyRoles}
+								/>
+							</FormRow>
+						)}
 						{showRole && (
 							<>
 								<FormRow
