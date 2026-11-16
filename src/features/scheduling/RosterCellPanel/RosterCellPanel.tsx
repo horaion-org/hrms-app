@@ -9,6 +9,7 @@ import { ErrorText } from "@/components/ui/ErrorText";
 import { RosteredDaysNotice } from "@/features/leave/LeaveRequestDialog/RosteredDaysNotice";
 import type { CoverOffer } from "@/features/scheduling/coverOffers/api";
 import { CoverOfferSent } from "@/features/scheduling/coverOffers/CoverOfferActions/CoverOfferSent";
+import { offerActionsOf } from "@/features/scheduling/coverOffers/coverOfferRules";
 import { CellChoices } from "@/features/scheduling/RosterCellPanel/CellChoices";
 import { CellNow } from "@/features/scheduling/RosterCellPanel/CellNow";
 import { CellPanelFooter } from "@/features/scheduling/RosterCellPanel/CellPanelFooter";
@@ -208,6 +209,7 @@ export const RosterCellPanel = ({
 					names={changeReview.names}
 					notifiesMembers={notifiesMembers}
 					preview={changeReview.preview}
+					previewRefusal={changeReview.previewRefusal}
 					remark={changeReview.remark}
 					remarkRequired={changeReview.remarkRequired}
 					ticked={changeReview.ticked}
@@ -217,22 +219,9 @@ export const RosterCellPanel = ({
 							: undefined
 					}
 					onRemarkChange={changeReview.setRemark}
+					onRetryPreview={changeReview.retryPreview}
 					onTickedChange={changeReview.setTicked}
 				/>
-				{changeReview.previewRefusal && (
-					<div className="flex flex-col items-start gap-2" role="alert">
-						<p className="text-sm text-error-700">
-							{changeReview.previewRefusal === "revision"
-								? t(`${key}.error.revision`)
-								: t(`${key}.previewFailed`)}
-						</p>
-						<Button variant="textlink" onClick={changeReview.retryPreview}>
-							{changeReview.previewRefusal === "revision"
-								? t(`${key}.error.reload`)
-								: t(`${key}.tryAgain`)}
-						</Button>
-					</div>
-				)}
 				{changeReview.applyRefusal && !stranded && (
 					<ErrorText>
 						{t(`${key}.error.${changeReview.applyRefusal}`)}
@@ -242,24 +231,10 @@ export const RosterCellPanel = ({
 				<CellPanelFooter
 					applyDisabled={changeReview.applyBlocked}
 					busy={changeReview.busy}
+					offerActions={offerActionsOf(coverOffer, name)}
 					applyLabel={t(
 						changeReview.applyAnyway ? `${key}.applyAnyway` : `${key}.apply`
 					)}
-					offerActions={
-						coverOffer?.consentKind
-							? {
-									name,
-									pending: coverOffer.createPending,
-									ready: coverOffer.ready,
-									refusal: coverOffer.createRefusal,
-									rivals: coverOffer.rivals,
-									sendBlocked: coverOffer.openOffer !== undefined,
-									timeZone: coverOffer.timeZone,
-									onRecord: coverOffer.record,
-									onSend: coverOffer.send,
-								}
-							: undefined
-					}
 					onApply={changeReview.applyChange}
 					onCancel={onClose}
 				/>
