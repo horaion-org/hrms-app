@@ -2316,7 +2316,6 @@
 			}
 		},
 		"permissions": {
-			"groupCount": "{{count}} of {{total}}",
 			"job_title": {
 				"name": "Job titles",
 				"description": "Each department’s job titles.",
@@ -2559,8 +2558,6 @@
 				}
 			},
 			"empty": "No access roles yet.",
-			"needs_one": "{{permissions}} needs {{prerequisites}}.",
-			"needs_other": "{{permissions}} need {{prerequisites}}.",
 			"blockedBy": "Needs {{prerequisites}}, which you can’t give",
 			"companyOnly": "Only for whole-company roles",
 			"unknown": {
@@ -2683,7 +2680,6 @@
 			},
 			"notAtDepartments": "Not at departments",
 			"quoted": "“{{permission}}”",
-			"sectionCount": "{{count}} of {{total}} selected",
 			"alsoTicked": "Also ticked {{permission}}: {{reason}}.",
 			"missingUse": "Without {{permission}}, {{consequence}}.",
 			"summaryLine": "{{section}}: {{level}}",
@@ -2763,8 +2759,7 @@
 					"why": "under an approval flow, reviewing leave decides its approval step",
 					"without": "holders can't review leave that needs approval"
 				}
-			},
-			"needsAll": "Everything else here needs {{prerequisites}}."
+			}
 		},
 		"activity": {
 			"title": "Recent Activity",

@@ -88,7 +88,6 @@ const routes = (
 	[`DELETE ${ASSIGNMENT_PATH}`]: { status: 204 },
 });
 
-
 let app: OpenedApp | undefined;
 beforeEach(() => {
 	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
@@ -282,14 +281,17 @@ describe("Access role list actions", () => {
 		expect(
 			within(dialog).queryByRole("radiogroup", { name: "Start from" })
 		).not.toBeInTheDocument();
-		const box = (group: string, name: string): HTMLElement =>
-			within(within(dialog).getByRole("group", { name: group })).getByRole(
-				"checkbox",
-				{ name }
-			);
-		expect(box("Branches", "See branches")).toBeChecked();
-		expect(box("Departments", "See departments")).toBeChecked();
-		expect(box("Branches", "Edit branches")).not.toBeChecked();
+		const organisation = within(dialog).getByRole("group", {
+			name: "Organisation",
+		});
+		await userEvent.click(
+			within(organisation).getByRole("button", { name: /^Details/ })
+		);
+		const box = (name: string): HTMLElement =>
+			within(organisation).getByRole("checkbox", { name });
+		expect(box("See branches")).toBeChecked();
+		expect(box("See departments")).toBeChecked();
+		expect(box("Edit branches")).not.toBeChecked();
 	});
 
 	it("duplicates a company role as a company role, keeping its company-only permissions", async () => {
@@ -309,11 +311,14 @@ describe("Access role list actions", () => {
 		expect(
 			within(dialog).getByRole("radio", { name: "Across the whole company" })
 		).toBeChecked();
+		const organisation = within(dialog).getByRole("group", {
+			name: "Organisation",
+		});
+		await userEvent.click(
+			within(organisation).getByRole("button", { name: /^Details/ })
+		);
 		expect(
-			within(within(dialog).getByRole("group", { name: "Branches" })).getByRole(
-				"checkbox",
-				{ name: "Create branches" }
-			)
+			within(organisation).getByRole("checkbox", { name: "Create branches" })
 		).toBeChecked();
 		await userEvent.click(
 			within(dialog).getByRole("button", { name: "Create access role" })

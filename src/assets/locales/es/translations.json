@@ -1209,7 +1209,6 @@
 			"counter": "{{count}}/{{max}}"
 		},
 		"permissions": {
-			"groupCount": "{{count}} de {{total}}",
 			"job_title": {
 				"name": "Puestos",
 				"description": "Los puestos de cada departamento.",
@@ -1224,8 +1223,6 @@
 					"update": "Renombrar un puesto, y desactivarlo o reactivarlo"
 				}
 			},
-			"needs_one": "{{permissions}} requiere {{prerequisites}}.",
-			"needs_other": "{{permissions}} requieren {{prerequisites}}.",
 			"blockedBy": "Requiere {{prerequisites}}, que no puedes otorgar",
 			"companyOnly": "Solo para roles de toda la empresa",
 			"unknown": {
@@ -1576,7 +1573,6 @@
 			},
 			"notAtDepartments": "No en departamentos",
 			"quoted": "«{{permission}}»",
-			"sectionCount": "{{count}} de {{total}} seleccionados",
 			"alsoTicked": "También se marcó {{permission}}: {{reason}}.",
 			"missingUse": "Sin {{permission}}, {{consequence}}.",
 			"summaryLine": "{{section}}: {{level}}",
@@ -1656,8 +1652,7 @@
 					"why": "con un flujo de aprobación, revisar una ausencia decide su paso de aprobación",
 					"without": "quien lo tenga no podrá revisar ausencias que necesitan aprobación"
 				}
-			},
-			"needsAll": "Todo lo demás aquí requiere {{prerequisites}}."
+			}
 		},
 		"jobTitles": {
 			"title": "Puestos",
