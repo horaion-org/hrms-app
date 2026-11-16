@@ -7,6 +7,7 @@ import en from "@/assets/locales/en/translations.json";
 import es from "@/assets/locales/es/translations.json";
 import type {
 	ConstraintField,
+	ConstraintRequirement,
 	ConstraintType,
 } from "@/features/scheduling/constraints/api";
 import {
@@ -42,10 +43,11 @@ const read = (
 	type: ConstraintType,
 	values: Array<SentenceValue>,
 	language = "en",
-	fullTimersOnly = false
+	fullTimersOnly = false,
+	requirement: ConstraintRequirement | null = null
 ): string => {
 	const t = i18n.getFixedT(language);
-	const constraint = { type, values, fullTimersOnly };
+	const constraint = { type, values, fullTimersOnly, requirement };
 	const words = constraintWords(constraint, t);
 	const parts = Object.fromEntries(
 		Object.entries(words).map(([field, text]) => [
@@ -452,6 +454,31 @@ describe("sentencePartsOf with constraintWords", () => {
 			"Keep each person’s rest days, days off and leave together where the roster allows."
 		);
 	});
+
+	it.each([
+		[
+			"en",
+			"No days off on Friday and Saturday.",
+			"Each person’s rest days, days off and leave in a week are together.",
+		],
+		[
+			"es",
+			"Sin días libres el Viernes y Sábado.",
+			"Los días de descanso, días libres y permisos de cada persona en una semana van juntos.",
+		],
+	])(
+		"reads the two rules asked as a Must as what never happens (%s)",
+		(language, avoid, together) => {
+			const weekend = [plain("WEEKDAY", "FRI"), plain("WEEKDAY", "SAT")];
+
+			expect(read("AVOID_DAYS_OFF_ON", weekend, language, false, "MUST")).toBe(
+				avoid
+			);
+			expect(read("KEEP_DAYS_OFF_TOGETHER", [], language, false, "MUST")).toBe(
+				together
+			);
+		}
+	);
 
 	it("reads no overtime when generating as what a generated roster does", () => {
 		expect(read("NO_OVERTIME_WHEN_GENERATING", [])).toBe(

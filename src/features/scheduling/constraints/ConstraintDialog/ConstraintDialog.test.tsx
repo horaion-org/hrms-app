@@ -564,7 +564,7 @@ describe("ConstraintDialog", () => {
 			["People on shifts", 2],
 			["On duty throughout", 1],
 			["Days off", 4],
-			["Rest and hours", 5],
+			["Rest and hours", 4],
 		] as const)
 			expect(
 				within(screen.getByRole("radiogroup", { name: category })).getAllByRole(
@@ -696,33 +696,6 @@ describe("ConstraintDialog", () => {
 				expect.objectContaining({
 					type: "REST_BETWEEN_SHIFTS",
 					requirement: "SHOULD",
-				})
-			);
-		});
-	});
-
-	it("given_theShortestPartOfAShift_when_chosen_then_minutesInADayAndWhatHappensWithoutIt", async () => {
-		const user = userEvent.setup();
-		const { onSave } = renderDialog();
-		await start(user, "Shortest part of a shift around leave");
-
-		expect(
-			screen.getByText(
-				"1 to 1440 minutes. Without this setting, a shift that touches a leave is never given."
-			)
-		).toBeVisible();
-		const minutes = screen.getByRole("spinbutton", {
-			name: /^Shortest part \(minutes\)/,
-		});
-		expect(minutes).toHaveAttribute("max", "1440");
-		await user.type(minutes, "240");
-		await user.click(submitButton());
-
-		await waitFor(() => {
-			expect(onSave).toHaveBeenCalledWith(
-				expect.objectContaining({
-					type: "SHORTEST_PART_SHIFT",
-					values: [{ field: "PART_SHIFT_MINUTES", value: "240" }],
 				})
 			);
 		});
@@ -1068,15 +1041,12 @@ describe("ConstraintDialog", () => {
 		expect(trigger(/^Status/)).toHaveTextContent("Active");
 	});
 
-	it("given_aTypeWithoutARequirement_when_saved_then_offersNoneAndSendsNone", async () => {
+	it("given_daysToAvoidGivingOff_when_added_then_startsIfPossibleAndSendsIt", async () => {
 		const user = userEvent.setup();
 		const { onSave } = renderDialog();
 		await start(user, "Days to avoid giving off");
 
-		expect(screen.queryByRole("radiogroup")).toBeNull();
-		expect(
-			screen.getByText("Always if possible for this kind of constraint.")
-		).toBeVisible();
+		expect(screen.getByRole("radio", { name: /^If possible/ })).toBeChecked();
 		await pick(user, /^Days of the week/, "Saturday", "Friday");
 		await user.click(submitButton());
 
@@ -1084,12 +1054,36 @@ describe("ConstraintDialog", () => {
 			expect(onSave).toHaveBeenCalledWith(
 				expect.objectContaining({
 					type: "AVOID_DAYS_OFF_ON",
-					requirement: null,
+					requirement: "SHOULD",
 					// Monday first, whatever order they were chosen in.
 					values: [
 						{ field: "WEEKDAY", value: "FRI" },
 						{ field: "WEEKDAY", value: "SAT" },
 					],
+				})
+			);
+		});
+	});
+
+	it("given_keepDaysOffTogetherAsAMust_when_saved_then_saysScatteredDaysCannotKeepItAndSendsMust", async () => {
+		const user = userEvent.setup();
+		const { onSave } = renderDialog();
+		await start(user, "Keep days off together");
+		const scattered =
+			"As a Must, someone whose available days are scattered, such as a part-timer on Monday, Wednesday and Friday, cannot keep it, so it is best applied to full-timers.";
+
+		expect(screen.getByRole("radio", { name: /^If possible/ })).toBeChecked();
+		expect(screen.queryByText(scattered)).toBeNull();
+		await user.click(screen.getByRole("radio", { name: /^Must/ }));
+		expect(screen.getByText(scattered)).toBeVisible();
+		await user.click(submitButton());
+
+		await waitFor(() => {
+			expect(onSave).toHaveBeenCalledWith(
+				expect.objectContaining({
+					type: "KEEP_DAYS_OFF_TOGETHER",
+					requirement: "MUST",
+					values: [],
 				})
 			);
 		});

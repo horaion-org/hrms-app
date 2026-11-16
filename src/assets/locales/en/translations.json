@@ -1663,8 +1663,9 @@
 				"timesEqual": "The end must differ from the start.",
 				"length": "{{length}}",
 				"lengthNextDay": "{{length}} · Ends the next day",
-				"allowsShiftSameDay": "Can still work a shift that day",
+				"allowsShiftSameDay": "Can still work a shift that day: they work the part of the shift outside their leave",
 				"allowsShiftSameDayDescription": "When off, the person is kept off the roster for the whole day, as with full-day leave.",
+				"allowsShiftSameDayLittleLeft": "This leaves less than 2 hours of a normal 8-hour day. Untick it to keep the person off the roster that day.",
 				"notCovered": "You can only choose departments you manage.",
 				"reachRejected": "A branch or department you chose no longer exists. Choose again.",
 				"gone": "This leave duration is no longer available. Close and reload the page.",
@@ -3668,7 +3669,10 @@
 						"EXACTLY_zero": "No <DAY_TYPE/> <PERIOD_WEEKS/>."
 					}
 				},
-				"AVOID_DAYS_OFF_ON": "Avoid days off on <WEEKDAY/>.",
+				"AVOID_DAYS_OFF_ON": {
+					"ifPossible": "Avoid days off on <WEEKDAY/>.",
+					"must": "No days off on <WEEKDAY/>."
+				},
 				"REST_BETWEEN_SHIFTS_one": "Everyone gets at least <REST_HOURS/> hour off between shifts.",
 				"REST_BETWEEN_SHIFTS_other": "Everyone gets at least <REST_HOURS/> hours off between shifts.",
 				"MAX_WORK_HOURS_PER_DAY_one": "Nobody whose Employment Act limits apply works more than <WORK_HOURS_A_DAY/> hour in a day, overtime included.",
@@ -3687,7 +3691,10 @@
 					"dayOffPriced": "An hour of work on a day off costs <DAY_OFF_WORK_PERCENT/>% of a normal hour."
 				},
 				"NO_OVERTIME_WHEN_GENERATING": "A generated roster gives nobody overtime past their normal day or week and calls nobody back on a rest day. Shifts it can’t staff without extra hours are left as gaps, and overtime is offered in the repair options.",
-				"KEEP_DAYS_OFF_TOGETHER": "Keep each person’s rest days, days off and leave together where the roster allows.",
+				"KEEP_DAYS_OFF_TOGETHER": {
+					"ifPossible": "Keep each person’s rest days, days off and leave together where the roster allows.",
+					"must": "Each person’s rest days, days off and leave in a week are together."
+				},
 				"MAX_DAYS_WITHOUT_DAY_TYPES": {
 					"fullTimers_one": "No full-timer goes more than <DAYS_IN_A_ROW/> day in a row without a <DAY_TYPE/>.",
 					"fullTimers_other": "No full-timer goes more than <DAYS_IN_A_ROW/> days in a row without a <DAY_TYPE/>.",
@@ -3812,7 +3819,8 @@
 				"departmentsEmpty": "No active department you can add constraints to.",
 				"optionsNeedDepartment": "Choose a department first.",
 				"firmnessHints": {
-					"WORKING_HOURS": "Asked “if possible”, the roster may pass this figure when a shift could not be staffed otherwise, and each time it does is listed in Issues."
+					"WORKING_HOURS": "Asked “if possible”, the roster may pass this figure when a shift could not be staffed otherwise, and each time it does is listed in Issues.",
+					"KEEP_DAYS_OFF_TOGETHER": "As a Must, someone whose available days are scattered, such as a part-timer on Monday, Wednesday and Friday, cannot keep it, so it is best applied to full-timers."
 				},
 				"dependency": {
 					"chooseFirst": "Choose in {{field}} first.",
@@ -3917,7 +3925,6 @@
 				"DAY_TYPE_DAYS_PER_WEEK": "For example: Everyone has at least 1 Rest day each week.",
 				"MAX_WORK_HOURS_PER_DAY": "For example: Nobody whose Employment Act limits apply works more than 12 hours in a day, overtime included.",
 				"MAX_OVERTIME_HOURS_PER_MONTH": "For example: Nobody whose Employment Act limits apply works more than 72 hours of overtime in a calendar month.",
-				"SHORTEST_PART_SHIFT": "For example: A shift is given around leave on the same day only if at least 240 minutes of it are worked.",
 				"MAX_CALL_BACKS_PER_PERSON": "For example: Everyone may be called back to work on a rest or off day at most 2 times in a roster.",
 				"PAY_RATES": "These rates only guide which roster the engine prefers; they are not used for pay.",
 				"NO_OVERTIME_WHEN_GENERATING": "For example: shifts the team can’t staff without extra hours stay open, and you choose overtime when you repair the roster.",
@@ -3935,7 +3942,6 @@
 				"DAY_TYPE_COUNT": "{{min}} to {{max}}.",
 				"WORK_HOURS_A_DAY": "{{min}} to {{max}}. MOM’s limit is 12.",
 				"OVERTIME_HOURS_A_MONTH": "{{min}} to {{max}}. MOM’s limit is 72; rest-day work is outside it, except hours past the normal day.",
-				"PART_SHIFT_MINUTES": "{{min}} to {{max}} minutes. Without this setting, a shift that touches a leave is never given.",
 				"CALL_BACKS": "{{min}} to {{max}}. 0 means nobody is called back; without this setting, nobody is called back either.",
 				"OVERTIME_PERCENT": "{{min}} to {{max}}. MOM’s rate is 150, 1.5 times a normal hour.",
 				"REST_DAY_WORK_PERCENT": "{{min}} to {{max}}. MOM’s rate is 200, 2 times a normal hour.",
@@ -3957,7 +3963,6 @@
 				"DAY_TYPE_DAYS_PER_WEEK": "Days each week",
 				"MAX_WORK_HOURS_PER_DAY": "Most hours a day",
 				"MAX_OVERTIME_HOURS_PER_MONTH": "Most overtime a month",
-				"SHORTEST_PART_SHIFT": "Shortest part of a shift",
 				"MAX_CALL_BACKS_PER_PERSON": "Call-backs",
 				"PAY_RATES": "Pay rates",
 				"NO_OVERTIME_WHEN_GENERATING": "No overtime when generating",
@@ -3975,7 +3980,6 @@
 				"REST_BETWEEN_SHIFTS": "The shortest gap between one shift and the next.",
 				"MAX_WORK_HOURS_PER_DAY": "A daily ceiling on the hours anyone works.",
 				"MAX_OVERTIME_HOURS_PER_MONTH": "How much overtime one person may be given in a month.",
-				"SHORTEST_PART_SHIFT": "When a shift is still given around part-day leave.",
 				"MAX_CALL_BACKS_PER_PERSON": "How often someone may be called in on a rest or off day.",
 				"PAY_RATES": "What extra hours cost, so the engine prefers cheaper rosters.",
 				"NO_OVERTIME_WHEN_GENERATING": "Generated rosters leave shifts open rather than add overtime."
