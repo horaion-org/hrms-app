@@ -5137,7 +5137,7 @@
 				"consecutive_day_work_patterns": "Días trabajados seguidos"
 			},
 			"refusal": {
-				"expired": "El motor ya no guarda la generación de esta semana, así que no se puede validar. Genera la semana de nuevo y luego valídala.",
+				"expired": "El motor ya no guarda la generación de esta semana, así que no se puede validar. Regenerar el mes la vuelve a comprobar, pero sustituye los cambios hechos a mano.",
 				"notConnected": "El motor de planificación no está conectado aquí.",
 				"rosterMoved": "Alguien cambió este cuadrante desde que lo abriste. Recarga la página y vuelve a validarlo.",
 				"tooSlow": "El motor tardó demasiado esta vez, así que el cuadrante no se validó.",

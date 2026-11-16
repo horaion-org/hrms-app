@@ -5337,7 +5337,7 @@
 				"consecutive_day_work_patterns": "Days worked in a row"
 			},
 			"refusal": {
-				"expired": "The engine no longer holds this week’s generation, so it can’t be validated. Generate the week again, then validate it.",
+				"expired": "The engine no longer holds this week’s generation, so it can’t be validated. Regenerating the month checks it again but replaces changes made by hand.",
 				"notConnected": "The scheduling engine isn’t connected here.",
 				"rosterMoved": "Someone changed this roster since you opened it. Reload the page, then validate it again.",
 				"tooSlow": "The engine took too long this time, so the schedule wasn’t validated.",
