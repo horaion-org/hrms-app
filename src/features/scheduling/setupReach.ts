@@ -1,5 +1,8 @@
 import type { TFunction } from "i18next";
-import type { DepartmentConstraint } from "@/features/scheduling/constraints/api";
+import {
+	isShiftField,
+	type DepartmentConstraint,
+} from "@/features/scheduling/constraints/api";
 import type { Schedule } from "@/features/scheduling/schedules/api";
 
 /*
@@ -40,14 +43,17 @@ const departmentConstraintsNaming = (
 			constraint.level !== "COMPANY" && constraint.values.some(names)
 	).length;
 
-/** How many of the department's own constraints name the shift; company constraints name no shift. */
+/**
+ * How many of the department's own constraints name the shift, in any shift
+ * field (a banned pattern names it by day); company constraints name no shift.
+ */
 export const constraintsNamingShift = (
 	constraints: ReadonlyArray<NamingConstraint>,
 	shiftId: string
 ): number =>
 	departmentConstraintsNaming(
 		constraints,
-		(value) => value.field === "SHIFT" && value.value === shiftId
+		(value) => isShiftField(value.field) && value.value === shiftId
 	);
 
 /**

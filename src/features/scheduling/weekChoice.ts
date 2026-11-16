@@ -4,6 +4,7 @@ import {
 	type Constraint,
 } from "@/features/scheduling/scheduleDraft";
 import type { ScheduleShift } from "@/features/scheduling/schedules/api";
+import { isShiftField } from "@/features/scheduling/constraints/api";
 import {
 	needsAttention,
 	type ValueWithProblem,
@@ -64,11 +65,11 @@ export const listedConstraints = <Row extends ChoiceConstraint>(
 			(constraint.status === undefined || isTickable(constraint))
 	);
 
-/** The shift ids a constraint names. */
+/** The shift ids a constraint names, in any shift field: a banned pattern names its shifts day by day. */
 const shiftValuesOf = (
 	constraint: ChoiceConstraint
 ): ChoiceConstraint["values"] =>
-	constraint.values.filter((value) => value.field === "SHIFT");
+	constraint.values.filter((value) => isShiftField(value.field));
 
 /**
  * Whether the week can use the constraint, as the API's freeze requires: no
