@@ -3443,7 +3443,8 @@
 				"SHORTEST_PART_SHIFT": "Shortest part of a shift around leave",
 				"MAX_CALL_BACKS_PER_PERSON": "Call-backs on a rest or off day",
 				"PAY_RATES": "Pay rates for extra hours",
-				"NO_OVERTIME_WHEN_GENERATING": "No overtime in generated rosters"
+				"NO_OVERTIME_WHEN_GENERATING": "No overtime in generated rosters",
+				"KEEP_DAYS_OFF_TOGETHER": "Keep days off together"
 			},
 			"sentences": {
 				"SHIFT_STAFFING": {
@@ -3532,6 +3533,7 @@
 					"dayOffPriced": "An hour of work on a day off costs <DAY_OFF_WORK_PERCENT/>% of a normal hour."
 				},
 				"NO_OVERTIME_WHEN_GENERATING": "A generated roster gives nobody overtime past their normal day or week and calls nobody back on a rest day. Shifts it can’t staff without extra hours are left as gaps, and overtime is offered in the repair options.",
+				"KEEP_DAYS_OFF_TOGETHER": "Keep each person’s rest days, days off and leave together where the roster allows.",
 				"MAX_DAYS_WITHOUT_DAY_TYPES": {
 					"fullTimers_one": "No full-timer goes more than <DAYS_IN_A_ROW/> day in a row without a <DAY_TYPE/>.",
 					"fullTimers_other": "No full-timer goes more than <DAYS_IN_A_ROW/> days in a row without a <DAY_TYPE/>.",
@@ -3755,7 +3757,8 @@
 				"SHORTEST_PART_SHIFT": "For example: A shift is given around leave on the same day only if at least 240 minutes of it are worked.",
 				"MAX_CALL_BACKS_PER_PERSON": "For example: Everyone may be called back to work on a rest or off day at most 2 times in a roster.",
 				"PAY_RATES": "These rates only guide which roster the engine prefers; they are not used for pay.",
-				"NO_OVERTIME_WHEN_GENERATING": "For example: shifts the team can’t staff without extra hours stay open, and you choose overtime when you repair the roster."
+				"NO_OVERTIME_WHEN_GENERATING": "For example: shifts the team can’t staff without extra hours stay open, and you choose overtime when you repair the roster.",
+				"KEEP_DAYS_OFF_TOGETHER": "It never costs cover: it only chooses between rosters that are otherwise equal."
 			},
 			"fieldHints": {
 				"SHIFT": "Choose more than one to count them together each day.",
@@ -3794,7 +3797,8 @@
 				"SHORTEST_PART_SHIFT": "Shortest part of a shift",
 				"MAX_CALL_BACKS_PER_PERSON": "Call-backs",
 				"PAY_RATES": "Pay rates",
-				"NO_OVERTIME_WHEN_GENERATING": "No overtime when generating"
+				"NO_OVERTIME_WHEN_GENERATING": "No overtime when generating",
+				"KEEP_DAYS_OFF_TOGETHER": "Days off together"
 			}
 		},
 		"forecast": {
@@ -3985,7 +3989,8 @@
 			"wholeRoster": "Whole roster",
 			"errorCodes": {
 				"rule": {
-					"soft_not_allowed": "This scheduling engine can’t run a rule set to If possible yet. Set those rules to Must, then generate again."
+					"soft_not_allowed": "This scheduling engine can’t run a rule set to If possible yet. Set those rules to Must, then generate again.",
+					"days_not_worked_together_not_supported": "This scheduling engine can’t keep days off together yet. Remove the “Keep days off together” rule from this schedule, then generate again."
 				},
 				"engine_unreachable": "The scheduling engine couldn’t be reached in time, so nothing was generated.",
 				"result_unmappable": "The engine’s roster didn’t fit this schedule’s shifts and staff, so it wasn’t saved. Please contact support.",

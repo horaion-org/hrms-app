@@ -243,7 +243,10 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 		fields: [
 			comparisonOf(["AT_LEAST", "EXACTLY"]),
 			number("DAY_TYPE_COUNT", 1, 7),
-			{ ...choice("DAY_TYPE", "DAY_TYPE", 1, 1), choices: NON_WORKING_DAY_TYPES },
+			{
+				...choice("DAY_TYPE", "DAY_TYPE", 1, 1),
+				choices: NON_WORKING_DAY_TYPES,
+			},
 		],
 		addedBySystem: true,
 		fullTimersOnly: true,
@@ -311,6 +314,16 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 		hasRequirement: false,
 		requirementPolicy: "SETTING",
 		onePerDepartment: true,
+		levels: [...ANY_LEVEL],
+		...ORDINARY,
+		fields: [],
+	},
+	{
+		type: "KEEP_DAYS_OFF_TOGETHER",
+		category: "SHIFT_PATTERN",
+		hasRequirement: false,
+		requirementPolicy: "ALWAYS_SHOULD",
+		onePerDepartment: false,
 		levels: [...ANY_LEVEL],
 		...ORDINARY,
 		fields: [],

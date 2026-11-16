@@ -38,6 +38,7 @@ export const FIELD_READING_ORDER: Record<
 		"DAY_OFF_WORK_PERCENT",
 	],
 	NO_OVERTIME_WHEN_GENERATING: [],
+	KEEP_DAYS_OFF_TOGETHER: [],
 };
 
 /**

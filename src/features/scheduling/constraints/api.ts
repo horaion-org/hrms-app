@@ -49,6 +49,7 @@ export const constraintTypeSchema = z.enum([
 	"MAX_CALL_BACKS_PER_PERSON",
 	"PAY_RATES",
 	"NO_OVERTIME_WHEN_GENERATING",
+	"KEEP_DAYS_OFF_TOGETHER",
 ]);
 
 /** What a constraint says; its copy (label and sentence) is keyed by this name. */

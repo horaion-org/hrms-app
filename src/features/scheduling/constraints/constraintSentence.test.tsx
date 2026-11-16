@@ -436,6 +436,12 @@ describe("sentencePartsOf with constraintWords", () => {
 		);
 	});
 
+	it("reads keep days off together as what the roster tries to do", () => {
+		expect(read("KEEP_DAYS_OFF_TOGETHER", [])).toBe(
+			"Keep each person’s rest days, days off and leave together where the roster allows."
+		);
+	});
+
 	it("reads no overtime when generating as what a generated roster does", () => {
 		expect(read("NO_OVERTIME_WHEN_GENERATING", [])).toBe(
 			"A generated roster gives nobody overtime past their normal day or week and calls nobody back on a rest day. Shifts it can’t staff without extra hours are left as gaps, and overtime is offered in the repair options."

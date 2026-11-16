@@ -71,6 +71,7 @@ export type SentenceKey =
 	| `${typeof SENTENCES}.MAX_CALL_BACKS_PER_PERSON`
 	| `${typeof SENTENCES}.PAY_RATES.${PayRatesPart}`
 	| `${typeof SENTENCES}.NO_OVERTIME_WHEN_GENERATING`
+	| `${typeof SENTENCES}.KEEP_DAYS_OFF_TOGETHER`
 	| `${typeof SENTENCES}.MAX_DAYS_WITHOUT_DAY_TYPES.${CoveredGroup}`
 	| `${typeof SENTENCES}.DAY_TYPE_DAYS_PER_WEEK.${CoveredGroup}.${WeeklyComparison}`;
 
@@ -81,11 +82,12 @@ export type SentencePart = { i18nKey: SentenceKey; count: number };
 const UNFILLED_COUNT = 2;
 
 /** How firm a type always is when its policy gives no choice; a choice or a setting has none fixed. */
-const FIXED_FIRMNESS: Partial<Record<RequirementPolicy, ConstraintRequirement>> =
-	{
-		ALWAYS_MUST: "MUST",
-		ALWAYS_SHOULD: "SHOULD",
-	};
+const FIXED_FIRMNESS: Partial<
+	Record<RequirementPolicy, ConstraintRequirement>
+> = {
+	ALWAYS_MUST: "MUST",
+	ALWAYS_SHOULD: "SHOULD",
+};
 
 /** The types whose sentence is one number, and the field that number is read from. */
 const COUNTED_FIELD = {
@@ -177,7 +179,12 @@ export const sentencePartsOf = (
 				},
 				// Only some day types count as a day off (ADR-0087); none named means every one, as before.
 				...(constraint.values.some((value) => value.field === "DAY_TYPE")
-					? [{ i18nKey: `${SENTENCES}.${constraint.type}.counting` as const, count: 1 }]
+					? [
+							{
+								i18nKey: `${SENTENCES}.${constraint.type}.counting` as const,
+								count: 1,
+							},
+						]
 					: []),
 			];
 		case "AVOID_DAYS_OFF_ON":
@@ -216,6 +223,7 @@ export const sentencePartsOf = (
 				},
 			];
 		case "NO_OVERTIME_WHEN_GENERATING":
+		case "KEEP_DAYS_OFF_TOGETHER":
 			return [{ i18nKey: `${SENTENCES}.${constraint.type}`, count: 1 }];
 	}
 };

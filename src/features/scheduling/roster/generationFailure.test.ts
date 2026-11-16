@@ -42,6 +42,10 @@ describe("generationFailure", () => {
 			"rule.soft_not_allowed",
 			"This scheduling engine can’t run a rule set to If possible yet. Set those rules to Must, then generate again.",
 		],
+		[
+			"rule.days_not_worked_together_not_supported",
+			"This scheduling engine can’t keep days off together yet. Remove the “Keep days off together” rule from this schedule, then generate again.",
+		],
 		["a_code_added_later", "This schedule couldn’t be generated."],
 	])(
 		"given_aRunThatFailedWith_%s_when_explained_then_saysWhyAndShowsTheCode",

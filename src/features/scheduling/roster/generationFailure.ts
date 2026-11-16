@@ -27,6 +27,7 @@ const KNOWN_CODES = [
 	"worker_failed",
 	"worker_crashed",
 	"rule.soft_not_allowed",
+	"rule.days_not_worked_together_not_supported",
 ] as const;
 
 type KnownCode = (typeof KNOWN_CODES)[number];

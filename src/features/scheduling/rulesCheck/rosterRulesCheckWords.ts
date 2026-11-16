@@ -36,6 +36,7 @@ const RULE_TYPES: ReadonlyMap<string, ConstraintType> = new Map<
 	["shift_presence_requirement", "ROLE_PRESENCE"],
 	["off_requirement_per_horizon", "DAYS_OFF_PER_PERIOD"],
 	["avoid_off_on_weekdays", "AVOID_DAYS_OFF_ON"],
+	["days_not_worked_together", "KEEP_DAYS_OFF_TOGETHER"],
 	["minimum_rest_between_shifts", "REST_BETWEEN_SHIFTS"],
 	["max_days_without_day_types", "MAX_DAYS_WITHOUT_DAY_TYPES"],
 	["days_of_day_types_per_period", "DAY_TYPE_DAYS_PER_WEEK"],

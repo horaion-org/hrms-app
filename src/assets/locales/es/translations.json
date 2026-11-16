@@ -3243,7 +3243,8 @@
 				"SHORTEST_PART_SHIFT": "Parte más corta de un turno junto a un permiso",
 				"MAX_CALL_BACKS_PER_PERSON": "Llamadas a trabajar en un día de descanso o libre",
 				"PAY_RATES": "Tarifas de las horas adicionales",
-				"NO_OVERTIME_WHEN_GENERATING": "Sin horas extra en los cuadrantes generados"
+				"NO_OVERTIME_WHEN_GENERATING": "Sin horas extra en los cuadrantes generados",
+				"KEEP_DAYS_OFF_TOGETHER": "Mantener juntos los días libres"
 			},
 			"sentences": {
 				"SHIFT_STAFFING": {
@@ -3332,6 +3333,7 @@
 					"dayOffPriced": "Una hora de trabajo en un día libre cuesta el <DAY_OFF_WORK_PERCENT/> % de una hora normal."
 				},
 				"NO_OVERTIME_WHEN_GENERATING": "Un cuadrante generado no da a nadie horas extra más allá de su día o semana normal ni llama a nadie en un día de descanso. Los turnos que no pueden cubrirse sin horas adicionales quedan vacíos, y las horas extra se ofrecen en las opciones de reparación.",
+				"KEEP_DAYS_OFF_TOGETHER": "Mantener juntos los días de descanso, días libres y permisos de cada persona cuando el cuadrante lo permita.",
 				"MAX_DAYS_WITHOUT_DAY_TYPES": {
 					"fullTimers_one": "Ningún empleado a tiempo completo pasa más de <DAYS_IN_A_ROW/> día seguido sin un <DAY_TYPE/>.",
 					"fullTimers_other": "Ningún empleado a tiempo completo pasa más de <DAYS_IN_A_ROW/> días seguidos sin un <DAY_TYPE/>.",
@@ -3555,7 +3557,8 @@
 				"SHORTEST_PART_SHIFT": "Por ejemplo: Un turno se da junto a un permiso del mismo día solo si se trabajan al menos 240 minutos de él.",
 				"MAX_CALL_BACKS_PER_PERSON": "Por ejemplo: Cualquiera puede ser llamado a trabajar en un día de descanso o libre como máximo 2 veces por cuadrante.",
 				"PAY_RATES": "Estas tarifas solo orientan qué cuadrante prefiere el motor; no se usan para pagar.",
-				"NO_OVERTIME_WHEN_GENERATING": "Por ejemplo: los turnos que el equipo no puede cubrir sin horas adicionales quedan abiertos, y eliges las horas extra al reparar el cuadrante."
+				"NO_OVERTIME_WHEN_GENERATING": "Por ejemplo: los turnos que el equipo no puede cubrir sin horas adicionales quedan abiertos, y eliges las horas extra al reparar el cuadrante.",
+				"KEEP_DAYS_OFF_TOGETHER": "Nunca cuesta cobertura: solo elige entre cuadrantes que, por lo demás, son iguales."
 			},
 			"fieldHints": {
 				"SHIFT": "Elige más de uno para contarlos juntos cada día.",
@@ -3594,7 +3597,8 @@
 				"SHORTEST_PART_SHIFT": "Parte más corta de un turno",
 				"MAX_CALL_BACKS_PER_PERSON": "Llamadas a trabajar",
 				"PAY_RATES": "Tarifas",
-				"NO_OVERTIME_WHEN_GENERATING": "Sin horas extra al generar"
+				"NO_OVERTIME_WHEN_GENERATING": "Sin horas extra al generar",
+				"KEEP_DAYS_OFF_TOGETHER": "Días libres juntos"
 			}
 		},
 		"forecast": {
@@ -3785,7 +3789,8 @@
 			"wholeRoster": "Todo el cuadrante",
 			"errorCodes": {
 				"rule": {
-					"soft_not_allowed": "Este motor de horarios aún no puede aplicar una regla marcada como Si es posible. Pon esas reglas como Obligatoria y vuelve a generar."
+					"soft_not_allowed": "Este motor de horarios aún no puede aplicar una regla marcada como Si es posible. Pon esas reglas como Obligatoria y vuelve a generar.",
+					"days_not_worked_together_not_supported": "Este motor de programación aún no puede mantener juntos los días libres. Quita la regla «Mantener juntos los días libres» de este horario y vuelve a generar."
 				},
 				"engine_unreachable": "No se pudo contactar con el motor de planificación a tiempo, así que no se generó nada.",
 				"result_unmappable": "El cuadrante del motor no encajaba con los turnos y el personal de este horario, así que no se guardó. Ponte en contacto con soporte.",
