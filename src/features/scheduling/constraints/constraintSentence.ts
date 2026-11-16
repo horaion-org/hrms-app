@@ -1,11 +1,13 @@
 import type { TFunction } from "i18next";
 import {
 	CONSTRAINT_COMPARISONS,
+	PATTERN_DAYS,
 	type ConstraintComparison,
 	type ConstraintField,
 	type ConstraintRequirement,
 	type ConstraintType,
 	type ConstraintValueProblem,
+	type PatternDay,
 	type RequirementPolicy,
 } from "@/features/scheduling/constraints/api";
 import { dayTypeLabel } from "@/features/scheduling/dayTypes";
@@ -40,7 +42,7 @@ type SentenceSource = {
 	values: ReadonlyArray<Pick<SentenceValue, "field" | "value">>;
 	/** Whether its type covers full-timers only (`ConstraintTypeOption.fullTimersOnly`); absent reads as everyone. */
 	fullTimersOnly?: boolean;
-	/** Must or If possible, for the two rules whose sentence says it; absent reads as If possible. */
+	/** Must or If possible, for the rules whose sentence says it; absent reads as If possible. */
 	requirement?: ConstraintRequirement | null;
 };
 
@@ -65,6 +67,9 @@ type PayRatesPart = "rates" | "dayOffOrdinary" | "dayOffPriced";
 /** A days-off rule counts every day off, or only the day types it names. */
 type DaysOffCounted = "everyDayOff" | "dayTypes";
 
+/** A banned pattern's days after the first, each read as "then …" in its sentence. */
+type LaterPatternDay = Exclude<PatternDay, "PATTERN_DAY_1">;
+
 /** The weekly rule takes "at least" or "exactly", never "at most" (`ConstraintFieldSpec.comparisons`). */
 type WeeklyComparison = "AT_LEAST" | "EXACTLY";
 
@@ -76,6 +81,9 @@ export type SentenceKey =
 	| `${typeof SENTENCES}.DAYS_OFF_PER_PERIOD.${DaysOffCounted}.${ConstraintComparison}`
 	| `${typeof SENTENCES}.AVOID_DAYS_OFF_ON.${Firmness}`
 	| `${typeof SENTENCES}.REST_BETWEEN_SHIFTS`
+	| `${typeof SENTENCES}.BANNED_SHIFT_PATTERN.${Firmness}`
+	| `${typeof SENTENCES}.BANNED_SHIFT_PATTERN.then.${LaterPatternDay}`
+	| `${typeof SENTENCES}.BANNED_SHIFT_PATTERN.end`
 	| `${typeof SENTENCES}.MAX_WORK_HOURS_PER_DAY`
 	| `${typeof SENTENCES}.MAX_OVERTIME_HOURS_PER_MONTH`
 	| `${typeof SENTENCES}.SHORTEST_PART_SHIFT`
@@ -166,7 +174,26 @@ const daysOffCountedOf = (constraint: SentenceSource): DaysOffCounted =>
 		? "dayTypes"
 		: "everyDayOff";
 
-/** The sentences a constraint reads as: one, or with stand-ins a second saying what a stand-in counts for. */
+const isLaterPatternDay = (day: PatternDay): day is LaterPatternDay =>
+	day !== "PATTERN_DAY_1";
+
+/**
+ * The days after the first a banned pattern's sentence reads: the second
+ * always, so a new pattern shows its placeholder, and a later one once it
+ * has a shift.
+ */
+const laterPatternDaysOf = (
+	constraint: SentenceSource
+): Array<LaterPatternDay> =>
+	PATTERN_DAYS.filter(isLaterPatternDay).filter(
+		(day) => day === "PATTERN_DAY_2" || valuesOf(constraint, day).length > 0
+	);
+
+/**
+ * The sentences a constraint reads as: one, with stand-ins a second saying
+ * what a stand-in counts for, and a banned pattern one per day ("Nobody works
+ * Night", "then Morning", "on consecutive days.").
+ */
 export const sentencePartsOf = (
 	constraint: SentenceSource
 ): Array<SentencePart> => {
@@ -204,6 +231,20 @@ export const sentencePartsOf = (
 					i18nKey: `${SENTENCES}.${constraint.type}.${firmnessWordsOf(constraint)}`,
 					count: 1,
 				},
+			];
+		case "BANNED_SHIFT_PATTERN":
+			return [
+				{
+					i18nKey: `${SENTENCES}.${constraint.type}.${firmnessWordsOf(constraint)}`,
+					count: 1,
+				},
+				...laterPatternDaysOf(constraint).map(
+					(day): SentencePart => ({
+						i18nKey: `${SENTENCES}.${constraint.type}.then.${day}`,
+						count: 1,
+					})
+				),
+				{ i18nKey: `${SENTENCES}.${constraint.type}.end`, count: 1 },
 			];
 		case "REST_BETWEEN_SHIFTS":
 		case "MAX_WORK_HOURS_PER_DAY":
@@ -268,7 +309,8 @@ const wordOf = (
 
 /**
  * Anyone with one of several job titles counts, so they join with "or", as do
- * day types: any one of them breaks a run. On duty "at least" over several
+ * day types: any one of them breaks a run, and the shifts of one day of a
+ * banned pattern: any one of them on that day counts. On duty "at least" over several
  * shifts is met on any one of them, so those shifts join with "or" too;
  * everything else joins with "and".
  */
@@ -279,6 +321,7 @@ const joinsWithOr = (
 	field === "JOB_TITLE" ||
 	field === "STAND_IN_JOB_TITLE" ||
 	field === "DAY_TYPE" ||
+	(PATTERN_DAYS as ReadonlyArray<ConstraintField>).includes(field) ||
 	(field === "SHIFT" &&
 		constraint.type === "ROLE_PRESENCE" &&
 		comparisonOf(constraint) === "AT_LEAST");

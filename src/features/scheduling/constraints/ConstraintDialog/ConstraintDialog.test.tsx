@@ -564,7 +564,7 @@ describe("ConstraintDialog", () => {
 			["People on shifts", 2],
 			["On duty throughout", 1],
 			["Days off", 4],
-			["Rest and hours", 4],
+			["Rest and hours", 5],
 		] as const)
 			expect(
 				within(screen.getByRole("radiogroup", { name: category })).getAllByRole(

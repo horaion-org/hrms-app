@@ -1,13 +1,14 @@
-import type {
-	ConstraintComparison,
-	ConstraintField,
-	ConstraintFieldKind,
-	ConstraintFieldSpec,
-	FieldStrictness,
-	ConstraintOptions,
-	ConstraintTypeOption,
-	ConstraintValue,
-	DepartmentConstraint,
+import {
+	PATTERN_DAYS,
+	type ConstraintComparison,
+	type ConstraintField,
+	type ConstraintFieldKind,
+	type ConstraintFieldSpec,
+	type FieldStrictness,
+	type ConstraintOptions,
+	type ConstraintTypeOption,
+	type ConstraintValue,
+	type DepartmentConstraint,
 } from "@/features/scheduling/constraints/api";
 import type { ScheduleConstraint } from "@/features/scheduling/schedules/api";
 import {
@@ -33,6 +34,13 @@ const STRICTNESS: Record<ConstraintField, FieldStrictness> = {
 	JOB_TITLE: "MUST_MATCH",
 	STAND_IN_JOB_TITLE: "MUST_MATCH",
 	SHIFT: "MUST_MATCH",
+	PATTERN_DAY_1: "MUST_MATCH",
+	PATTERN_DAY_2: "MUST_MATCH",
+	PATTERN_DAY_3: "MUST_MATCH",
+	PATTERN_DAY_4: "MUST_MATCH",
+	PATTERN_DAY_5: "MUST_MATCH",
+	PATTERN_DAY_6: "MUST_MATCH",
+	PATTERN_DAY_7: "MUST_MATCH",
 	WEEKDAY: "SUPERSET_IS_STRICTER",
 	DAY_TYPE: "MUST_MATCH",
 	DAYS_IN_A_ROW: "LOWER_IS_STRICTER",
@@ -218,6 +226,19 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 		levels: [...ANY_LEVEL],
 		...ORDINARY,
 		fields: [number("REST_HOURS", 1, 24)],
+	},
+	{
+		type: "BANNED_SHIFT_PATTERN",
+		category: "WORKING_HOURS",
+		hasRequirement: true,
+		requirementPolicy: "MUST_OR_SHOULD",
+		onePerDepartment: false,
+		levels: [...DEPARTMENT_ONLY],
+		...ORDINARY,
+		// Days 1 and 2 are required, 3 to 7 optional, each 1 to 20 shifts (ADR-0107 in the API).
+		fields: PATTERN_DAYS.map((day, index) =>
+			choice(day, "SHIFT", index < 2 ? 1 : 0, 20)
+		),
 	},
 	{
 		type: "MAX_DAYS_WITHOUT_DAY_TYPES",

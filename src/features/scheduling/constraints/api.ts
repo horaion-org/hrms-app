@@ -41,6 +41,7 @@ export const constraintTypeSchema = z.enum([
 	"DAYS_OFF_PER_PERIOD",
 	"AVOID_DAYS_OFF_ON",
 	"REST_BETWEEN_SHIFTS",
+	"BANNED_SHIFT_PATTERN",
 	"MAX_DAYS_WITHOUT_DAY_TYPES",
 	"DAY_TYPE_DAYS_PER_WEEK",
 	"MAX_WORK_HOURS_PER_DAY",
@@ -98,6 +99,13 @@ const constraintFieldSchema = z.enum([
 	"JOB_TITLE",
 	"STAND_IN_JOB_TITLE",
 	"SHIFT",
+	"PATTERN_DAY_1",
+	"PATTERN_DAY_2",
+	"PATTERN_DAY_3",
+	"PATTERN_DAY_4",
+	"PATTERN_DAY_5",
+	"PATTERN_DAY_6",
+	"PATTERN_DAY_7",
 	"WEEKDAY",
 	"DAY_TYPE",
 	"DAYS_IN_A_ROW",
@@ -116,6 +124,27 @@ const constraintFieldSchema = z.enum([
 export type ConstraintField = z.infer<typeof constraintFieldSchema>;
 
 export const CONSTRAINT_FIELDS = constraintFieldSchema.options;
+
+/**
+ * The days of a banned shift pattern, first to last (ADR-0107 in the API):
+ * each lists the shifts nobody works on that day of the run, filled in order.
+ */
+export const PATTERN_DAYS = [
+	"PATTERN_DAY_1",
+	"PATTERN_DAY_2",
+	"PATTERN_DAY_3",
+	"PATTERN_DAY_4",
+	"PATTERN_DAY_5",
+	"PATTERN_DAY_6",
+	"PATTERN_DAY_7",
+] as const satisfies ReadonlyArray<ConstraintField>;
+
+export type PatternDay = (typeof PATTERN_DAYS)[number];
+
+/** Whether a field's values are shifts: a constraint's shifts, or a banned pattern's shifts of one day. */
+export const isShiftField = (field: ConstraintField): boolean =>
+	field === "SHIFT" ||
+	(PATTERN_DAYS as ReadonlyArray<ConstraintField>).includes(field);
 
 const constraintFieldKindSchema = z.enum([
 	"NUMBER",

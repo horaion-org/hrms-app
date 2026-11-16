@@ -480,6 +480,56 @@ describe("sentencePartsOf with constraintWords", () => {
 		}
 	);
 
+	it.each([
+		["MUST", "Nobody works Night then Morning on consecutive days."],
+		[
+			"SHOULD",
+			"Try not to give anyone Night then Morning on consecutive days.",
+		],
+	] as const)(
+		"reads a banned shift pattern asked as %s day by day",
+		(requirement, sentence) => {
+			const nightThenMorning = [
+				named("PATTERN_DAY_1", "Night"),
+				named("PATTERN_DAY_2", "Morning"),
+			];
+
+			expect(
+				read(
+					"BANNED_SHIFT_PATTERN",
+					nightThenMorning,
+					"en",
+					false,
+					requirement
+				)
+			).toBe(sentence);
+		}
+	);
+
+	it("reads the shifts of one day of a banned pattern as alternatives, every filled day, and in Spanish", () => {
+		const values = [
+			named("PATTERN_DAY_1", "Night"),
+			named("PATTERN_DAY_1", "Late"),
+			named("PATTERN_DAY_2", "Night"),
+			named("PATTERN_DAY_3", "Morning"),
+		];
+
+		expect(
+			read("BANNED_SHIFT_PATTERN", values, "en", false, "MUST")
+		).toBe(
+			"Nobody works Night or Late then Night then Morning on consecutive days."
+		);
+		expect(
+			read(
+				"BANNED_SHIFT_PATTERN",
+				[named("PATTERN_DAY_1", "Noche"), named("PATTERN_DAY_2", "Mañana")],
+				"es",
+				false,
+				"MUST"
+			)
+		).toBe("Nadie trabaja Noche y luego Mañana en días seguidos.");
+	});
+
 	it("reads no overtime when generating as what a generated roster does", () => {
 		expect(read("NO_OVERTIME_WHEN_GENERATING", [])).toBe(
 			"A generated roster gives nobody overtime past their normal day or week and calls nobody back on a rest day. Shifts it can’t staff without extra hours are left as gaps, and overtime is offered in the repair options."

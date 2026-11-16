@@ -1,8 +1,9 @@
-import type {
-	ConstraintField,
-	ConstraintFieldSpec,
-	ConstraintType,
-	ConstraintTypeOption,
+import {
+	PATTERN_DAYS,
+	type ConstraintField,
+	type ConstraintFieldSpec,
+	type ConstraintType,
+	type ConstraintTypeOption,
 } from "@/features/scheduling/constraints/api";
 
 /**
@@ -26,6 +27,7 @@ export const FIELD_READING_ORDER: Record<
 	DAYS_OFF_PER_PERIOD: ["COMPARISON", "DAYS_OFF", "PERIOD_WEEKS"],
 	AVOID_DAYS_OFF_ON: ["WEEKDAY"],
 	REST_BETWEEN_SHIFTS: ["REST_HOURS"],
+	BANNED_SHIFT_PATTERN: PATTERN_DAYS,
 	MAX_DAYS_WITHOUT_DAY_TYPES: ["DAYS_IN_A_ROW", "DAY_TYPE"],
 	DAY_TYPE_DAYS_PER_WEEK: ["COMPARISON", "DAY_TYPE_COUNT", "DAY_TYPE"],
 	MAX_WORK_HOURS_PER_DAY: ["WORK_HOURS_A_DAY"],
