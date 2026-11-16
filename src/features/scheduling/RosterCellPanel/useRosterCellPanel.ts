@@ -12,7 +12,7 @@ import { leaveTypeOptions } from "@/features/leave/leaveTypeOptions";
 import type { CoverOffer } from "@/features/scheduling/coverOffers/api";
 import { useCellCoverOffer } from "@/features/scheduling/coverOffers/useCellCoverOffer";
 import { dayTypeInSentence } from "@/features/scheduling/dayTypes";
-import { formatDay } from "@/features/scheduling/periods";
+import { formatDay } from "@/common/formatDay";
 import type { RosterCellPanelState } from "@/features/scheduling/RosterCellPanel/cellPanelState";
 import { useLeaveMove } from "@/features/scheduling/RosterCellPanel/useLeaveMove";
 import { leaveLinkSearch } from "@/features/scheduling/RosterDayNotes/leaveLinkSearch";

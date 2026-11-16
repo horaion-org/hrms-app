@@ -10,7 +10,7 @@ import type { CoverOffer } from "@/features/scheduling/coverOffers/api";
 import { OffersOutSection } from "@/features/scheduling/coverOffers/OffersOutSection";
 import { FindingList } from "@/features/scheduling/FindingList";
 import { FindingsPanel } from "@/features/scheduling/FindingsPanel";
-import { formatDay } from "@/features/scheduling/periods";
+import { formatDay } from "@/common/formatDay";
 import { findingFamily } from "@/features/scheduling/roster/findings/finding";
 import {
 	issuesOfHeader,

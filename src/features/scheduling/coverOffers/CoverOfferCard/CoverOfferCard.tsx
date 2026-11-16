@@ -20,7 +20,7 @@ import {
 } from "@/features/scheduling/coverOffers/coverOfferRules";
 import { payText } from "@/features/scheduling/coverOffers/coverOfferWords";
 import { formatTimeRange } from "@/features/scheduling/formatShift";
-import { formatDay } from "@/features/scheduling/periods";
+import { formatDay } from "@/common/formatDay";
 
 /** Why the member's answer didn't go through. */
 export type CoverOfferAnswerRefusal = "stale" | "notOpen" | "failed";

@@ -1,7 +1,7 @@
 import type { TFunction } from "i18next";
 import type { BadgeTone } from "@/components/ui/Badge";
 import { timeRangeText } from "@/features/leave/dayPortion";
-import { formatDay } from "@/features/scheduling/periods";
+import { formatDay } from "@/common/formatDay";
 import {
 	leaveLineText,
 	leavePortionOf,

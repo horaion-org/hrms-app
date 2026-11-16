@@ -26,7 +26,7 @@ import {
 	type OpeningValue,
 	type OpeningValues,
 } from "@/features/scheduling/hours/openingGrid";
-import { formatDay } from "@/features/scheduling/periods";
+import { formatDay } from "@/common/formatDay";
 import type {
 	EnteredDay,
 	StartingCell,

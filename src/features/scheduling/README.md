@@ -253,7 +253,7 @@ gate, the saves and generating the draft's month.
 - `RosterDayNotes` — what needs a look on a chosen day, first in its panel (`ShiftDetailsPanel` or `RosterCellPanel`,
   `issues`): the engine's findings on the day, then a day to decide, leave requested or taken (with "Review in Leave",
   `leaveLinkSearch.ts`) and a shift left short. The grid shows only the tile's dot for them.
-- `periods.ts` `formatDay` — "Mon, 12 Oct" for a finding's day.
+- `common/formatDay.ts` `formatDay` — "Mon, 12 Oct" for a finding's day.
 - `RosterHeader` — department, then period, status badge and time zone; `actions` (primary action and menu) at the right.
 - `schedules/scheduleDetails.ts` — the Details list: requested, finished, decided and time zone.
 - `GenerationFailurePanel` — a failed run's copy and code, the engine's reason quoted, and its errors by member.

@@ -6,7 +6,7 @@ import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import type { CoverGapRequest } from "@/features/scheduling/cover/api";
 import { formatTimeRange } from "@/features/scheduling/formatShift";
-import { formatDay } from "@/features/scheduling/periods";
+import { formatDay } from "@/common/formatDay";
 import { conflictClockTimes } from "@/features/scheduling/roster/findings/conflictTimes";
 import { diagnosticSentence } from "@/features/scheduling/roster/findings/diagnostics";
 import {

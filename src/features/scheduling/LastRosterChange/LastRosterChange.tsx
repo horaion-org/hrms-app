@@ -7,7 +7,7 @@ import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { ErrorText } from "@/components/ui/ErrorText";
 import { Toast } from "@/components/ui/Toast";
-import { formatDay } from "@/features/scheduling/periods";
+import { formatDay } from "@/common/formatDay";
 import {
 	latestRosterChangeQuery,
 	type RosterChange,

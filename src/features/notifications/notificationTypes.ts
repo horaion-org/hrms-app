@@ -15,7 +15,7 @@ import {
 import { LEAVE_REQUEST } from "@/features/approvals/api";
 import type { InboxNotification } from "@/features/notifications/api";
 import { formatOfferTime } from "@/features/scheduling/coverOffers/coverOfferRules";
-import { formatDay } from "@/features/scheduling/periods";
+import { formatDay } from "@/common/formatDay";
 
 /** Warning asks the reader to act, success and error are outcomes, info is a fact, neutral is unrecognised. */
 export type NotificationTone =

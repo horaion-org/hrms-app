@@ -24,7 +24,7 @@ import {
 import { useEngineRepair } from "@/features/scheduling/cover/useEngineRepair";
 import { useRepairWarmUp } from "@/features/scheduling/cover/useRepairWarmUp";
 import { CoverOfferSent } from "@/features/scheduling/coverOffers/CoverOfferActions/CoverOfferSent";
-import { formatDay } from "@/features/scheduling/periods";
+import { formatDay } from "@/common/formatDay";
 import { CellPanelFooter } from "@/features/scheduling/RosterCellPanel/CellPanelFooter";
 import { RosterChangeReview } from "@/features/scheduling/RosterChangeReview";
 import {

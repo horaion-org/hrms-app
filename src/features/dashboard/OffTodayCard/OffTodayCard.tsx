@@ -14,7 +14,7 @@ import {
 	rowListClasses,
 	rowTitleClasses,
 } from "@/features/dashboard/cardStyles";
-import { dayLabel } from "@/features/dashboard/dashboardDates";
+import { formatDay } from "@/common/formatDay";
 import type { GuardedRead } from "@/features/dashboard/guardedRead";
 import { offByDay, type PersonOff } from "@/features/dashboard/offToday";
 import type { LeaveRequest } from "@/features/leave/api";
@@ -80,7 +80,7 @@ export const OffTodayCard = ({
 				<div key={group.day} className="flex flex-col gap-2">
 					<h3 className={rowTitleClasses}>
 						{t(index === 0 ? `${key}.today` : `${key}.tomorrow`, {
-							day: dayLabel(group.day, language),
+							day: formatDay(group.day, language),
 						})}
 					</h3>
 					{group.people.length === 0 ? (

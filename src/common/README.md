@@ -18,6 +18,8 @@ The directory contains:
   `"<status> <errorCode>"` key refusal tables are keyed by).
 - `schemas.ts`: API shapes several features read: `memberRefSchema`, `formerMemberRefSchema` (name null once the
   member left), `pagedSchema(item)` and the app's `ListPage`; `api-client.ts`'s `fetchList` reads a paged list into it.
+- `formatDay.ts`: `formatDay`, an ISO date as "Mon, 12 Oct" in the person's language, for scheduling, the dashboard,
+  notifications and shift preferences.
 - `weeks.ts`: Monday-first weeks as ISO dates (`mondayOf`, `weeksOf`, `daysOf`), shared by scheduling and availability.
 
 ## Memory router (tests and stories)

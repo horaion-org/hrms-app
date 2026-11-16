@@ -14,7 +14,7 @@ import {
 	type CellCoverOffer,
 } from "@/features/scheduling/coverOffers/useCellCoverOffer";
 import { dayTypeInSentence } from "@/features/scheduling/dayTypes";
-import { formatDay } from "@/features/scheduling/periods";
+import { formatDay } from "@/common/formatDay";
 import {
 	rosterChangePreviewQuery,
 	type RosterChange,

@@ -5,7 +5,7 @@ import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import type { CoverGapRequest } from "@/features/scheduling/cover/api";
 import { FindingList } from "@/features/scheduling/FindingList";
-import { formatDay } from "@/features/scheduling/periods";
+import { formatDay } from "@/common/formatDay";
 import {
 	diagnosticLabel,
 	groupDiagnostics,

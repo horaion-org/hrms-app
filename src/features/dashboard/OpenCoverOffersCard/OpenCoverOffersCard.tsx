@@ -15,7 +15,7 @@ import {
 	rowListClasses,
 	rowTitleClasses,
 } from "@/features/dashboard/cardStyles";
-import { dayLabel } from "@/features/dashboard/dashboardDates";
+import { formatDay } from "@/common/formatDay";
 import type { GuardedRead } from "@/features/dashboard/guardedRead";
 import type { CoverOffer } from "@/features/scheduling/coverOffers/api";
 
@@ -79,7 +79,7 @@ export const OpenCoverOffersCard = ({
 								{t(`${key}.notAnswered`, {
 									name: offer.displayName ?? t(`${key}.formerMember`),
 									shift: offer.shiftName,
-									day: dayLabel(offer.day, language),
+									day: formatDay(offer.day, language),
 								})}
 							</Link>
 							<span className={rowDetailClasses}>
@@ -111,7 +111,7 @@ export const OpenCoverOffersCard = ({
 								>
 									{t(`${key}.mine`, {
 										shift: offer.shift?.name ?? t(`${key}.aShift`),
-										day: dayLabel(offer.rosterDate, language),
+										day: formatDay(offer.rosterDate, language),
 									})}
 								</Link>
 							</>

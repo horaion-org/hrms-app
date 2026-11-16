@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { formatDay } from "@/common/formatDay";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { weekdayOf } from "@/common/weekdays";
@@ -61,11 +62,7 @@ export const MyShiftPreferences = ({
 	const [editing, setEditing] = useState<PreferenceDay>();
 	const week = useMyPreferenceWeek(companyId, weekStartMonday);
 	const replace = useReplaceMyPreferenceDay(companyId, weekStartMonday);
-	const dayLabel = new Intl.DateTimeFormat(formattingLocale(i18n), {
-		weekday: "short",
-		day: "numeric",
-		month: "short",
-	});
+	const language = formattingLocale(i18n);
 
 	if (week.status === "error")
 		return (
@@ -83,8 +80,7 @@ export const MyShiftPreferences = ({
 
 	const { maxShiftsPerDay, days } = week.week;
 	const closedDaysNote = closedDaysNoteKey(days, weekEnded);
-	const labelOf = (day: PreferenceDay): string =>
-		dayLabel.format(new Date(`${day.date}T00:00:00`));
+	const labelOf = (day: PreferenceDay): string => formatDay(day.date, language);
 	const cells = days.map((day) => ({
 		day: weekdayOf(day.date),
 		cell: (

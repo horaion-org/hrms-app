@@ -3,7 +3,7 @@ import type { FunctionComponent } from "@/common/types";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { dayTypeInSentence } from "@/features/scheduling/dayTypes";
-import { formatDay } from "@/features/scheduling/periods";
+import { formatDay } from "@/common/formatDay";
 import {
 	leaveLineText,
 	leavePortionOf,

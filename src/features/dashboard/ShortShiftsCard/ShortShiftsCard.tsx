@@ -15,7 +15,7 @@ import {
 	rowDetailClasses,
 	rowListClasses,
 } from "@/features/dashboard/cardStyles";
-import { dayLabel } from "@/features/dashboard/dashboardDates";
+import { formatDay } from "@/common/formatDay";
 import type { GuardedRead } from "@/features/dashboard/guardedRead";
 import { coverParameter } from "@/features/scheduling/roster/rosterSearch";
 
@@ -73,7 +73,7 @@ export const ShortShiftsCard = ({
 							>
 								{t(`${key}.shift`, {
 									shift: shortage.shiftName,
-									day: dayLabel(shortage.day, language),
+									day: formatDay(shortage.day, language),
 									start: shortage.startTime,
 									end: shortage.endTime,
 								})}

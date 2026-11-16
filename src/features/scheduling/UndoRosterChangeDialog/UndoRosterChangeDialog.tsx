@@ -4,7 +4,7 @@ import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { dayTypeInSentence } from "@/features/scheduling/dayTypes";
-import { formatDay } from "@/features/scheduling/periods";
+import { formatDay } from "@/common/formatDay";
 import { RosterChangeReview } from "@/features/scheduling/RosterChangeReview";
 import type {
 	RosterChangePreview,

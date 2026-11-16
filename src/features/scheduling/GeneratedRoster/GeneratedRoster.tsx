@@ -8,7 +8,7 @@ import { CountBadge } from "@/components/ui/CountBadge";
 import { DaySwitcher } from "@/components/ui/DaySwitcher";
 import type { DescriptionListItem } from "@/components/ui/DescriptionList";
 import { LastRosterChange } from "@/features/scheduling/LastRosterChange";
-import { formatDay } from "@/features/scheduling/periods";
+import { formatDay } from "@/common/formatDay";
 import type { FindingNameSources } from "@/features/scheduling/roster/findings/findingNames";
 import { legendOf } from "@/features/scheduling/roster/roster";
 import { rosterListSections } from "@/features/scheduling/roster/rosterListSections";
