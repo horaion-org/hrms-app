@@ -66,6 +66,26 @@ export const fieldsInReadingOrder = (
 		.sort((first, second) => placeOf(first) - placeOf(second));
 };
 
+/** The days of a banned pattern always shown: the first two, which every pattern needs. */
+const ALWAYS_SHOWN_PATTERN_DAYS = 2;
+
+/**
+ * Whether the dialog shows a field for the values chosen so far: a banned
+ * pattern's third to seventh days appear one at a time, once the day before
+ * has a shift; a day that holds shifts always shows, so it can be cleared.
+ * Every other field always shows.
+ */
+export const isFieldShown = (
+	field: ConstraintField,
+	values: Partial<Record<ConstraintField, ReadonlyArray<string>>>
+): boolean => {
+	const day = (PATTERN_DAYS as ReadonlyArray<ConstraintField>).indexOf(field);
+	if (day < ALWAYS_SHOWN_PATTERN_DAYS) return true;
+	const hasShifts = (dayField: ConstraintField): boolean =>
+		(values[dayField] ?? []).some(Boolean);
+	return hasShifts(field) || hasShifts(PATTERN_DAYS[day - 1]!);
+};
+
 /**
  * A type's fields as the dialog's rows: a comparison and the number it
  * compares share one row ("At least" beside "2"); every other field has its own.

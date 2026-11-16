@@ -701,6 +701,34 @@ describe("ConstraintDialog", () => {
 		});
 	});
 
+	it("given_aBannedShiftPattern_when_daysAreFilled_then_eachLaterDayAppearsInTurnAndTheDaysAreSentInOrder", async () => {
+		const user = userEvent.setup();
+		const { onSave } = renderDialog();
+		await start(user, "Shifts not to follow each other");
+
+		expect(trigger(/^Day 1/)).toBeVisible();
+		expect(trigger(/^Day 2/)).toBeVisible();
+		expect(screen.queryByRole("button", { name: /^Day 3/ })).toBeNull();
+		await pick(user, /^Day 1/, "Overnight Ops");
+		await pick(user, /^Day 2/, "Front Desk AM");
+		expect(trigger(/^Day 3/)).toBeVisible();
+		expect(screen.queryByRole("button", { name: /^Day 4/ })).toBeNull();
+		await user.click(submitButton());
+
+		await waitFor(() => {
+			expect(onSave).toHaveBeenCalledWith(
+				expect.objectContaining({
+					type: "BANNED_SHIFT_PATTERN",
+					requirement: "MUST",
+					values: [
+						{ field: "PATTERN_DAY_1", value: "overnight-ops" },
+						{ field: "PATTERN_DAY_2", value: "front-desk-am" },
+					],
+				})
+			);
+		});
+	});
+
 	it("given_callBacks_when_noneAllowed_then_zeroIsSent", async () => {
 		const user = userEvent.setup();
 		const { onSave } = renderDialog();
