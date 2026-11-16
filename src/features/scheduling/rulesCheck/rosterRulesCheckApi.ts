@@ -6,6 +6,8 @@ import { schedulePath } from "@/features/scheduling/paths";
 import type { RosterChangeTarget } from "@/features/scheduling/rosterChanges/useRosterChangeActions";
 import {
 	findingsConflictSchema,
+	findingsMemberSchema,
+	findingsViolationSchema,
 	scheduleKey,
 	type FindingsConflict,
 } from "@/features/scheduling/schedules/api";
@@ -32,10 +34,19 @@ const brokenRuleSchema = z.object({
 	constraintId: z.string().nullable(),
 	/** The company constraint's own name, when the engine's id is one of the schedule's. */
 	constraintName: z.string().nullable(),
+	/**
+	 * Who and which days, in the shape a generation's findings carry their
+	 * violations (one per person and day); null when the engine cannot say,
+	 * and from an older API.
+	 */
+	violations: z.array(findingsViolationSchema).nullable().default(null),
 });
 
-/** One working-time rule the roster breaks, by the engine's name and the constraint behind it. */
+/** One working-time rule the roster breaks, or does not meet "if possible", by the engine's name and the constraint behind it. */
 export type BrokenRule = z.infer<typeof brokenRuleSchema>;
+
+/** Who and which day a rule is not kept, as a generation's findings say it. */
+export type RuleViolation = z.infer<typeof findingsViolationSchema>;
 
 /** A staffing gap of the roster as it stands, in the shape a generation's findings carry its conflicts. */
 export type StaffingGap = FindingsConflict;
@@ -46,6 +57,15 @@ const rosterRulesCheckSchema = z.object({
 	brokenRules: z.array(brokenRuleSchema),
 	/** The roster's staffing gaps, read as the Issues list reads a generation's; null when not worked out. */
 	staffingGaps: z.array(findingsConflictSchema).nullable(),
+	/**
+	 * The rules asked "if possible" that the roster does not meet; they never
+	 * change the status. Null when not worked out, and from an older API.
+	 */
+	notMet: z.array(brokenRuleSchema).nullable().default(null),
+	/** Every member the violations name, as a generation's findings list theirs. */
+	members: z.array(findingsMemberSchema).default([]),
+	/** Whether the engine ran out of time, so the lists may be incomplete. */
+	mayBeShort: z.boolean().default(false),
 });
 
 /** Validate schedule's answer: whether the rules hold, which are broken, and the staffing gaps. */

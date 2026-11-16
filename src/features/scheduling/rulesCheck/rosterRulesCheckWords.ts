@@ -115,7 +115,11 @@ export const ruleNameLabel = (
  * One broken rule's line: the company's own constraint name, else what the
  * rule is called (`ruleNameLabel`), else a generic "A working-time rule".
  */
-export const brokenRuleLabel = (rule: BrokenRule, t: TFunction): string => {
+export const brokenRuleLabel = (
+	// Only its names: a generation's finding names a rule the same way, with no violations of its own.
+	rule: Omit<BrokenRule, "violations">,
+	t: TFunction
+): string => {
 	if (rule.constraintName) return rule.constraintName;
 	return ruleNameLabel(rule.rule, t) ?? t(`${key}.unnamedRule`);
 };

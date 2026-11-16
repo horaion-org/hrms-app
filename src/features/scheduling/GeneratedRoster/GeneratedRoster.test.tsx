@@ -578,6 +578,7 @@ describe("GeneratedRoster", () => {
 						rule: "most_minutes_a_day",
 						constraintId: "k-1",
 						constraintName: "Twelve hours a day",
+						violations: null,
 					},
 				],
 				staffingGaps: [

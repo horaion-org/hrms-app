@@ -103,6 +103,7 @@ const brokenRule = {
 	rule: "most_minutes_a_day",
 	constraintId: null,
 	constraintName: null,
+	violations: null,
 };
 
 describe("brokenRuleCount", () => {
