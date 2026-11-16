@@ -639,6 +639,54 @@ describe("Create schedules for a month: where everyone starts", () => {
 		expect(addLastWeek()).toBeNull();
 	});
 
+	it("given_theWeekBeforeRostered_when_onSetup_then_theHoursWorkedThisMonthCanStillBeAdded", async () => {
+		await open(NEW_DECEMBER, {
+			[`GET ${NOVEMBER}`]: novemberEndingIn("PUBLISHED"),
+		});
+
+		expect(
+			await screen.findByText(
+				"Hours worked before Dec 7 come from the roster of the week before, except for anyone it doesn’t cover."
+			)
+		).toBeVisible();
+		expect(
+			screen.getByRole("button", { name: "Add hours worked" })
+		).toBeVisible();
+	});
+
+	it("given_noRosterBefore_when_hoursAdded_then_savesTheWeekAndOpensTheHours", async () => {
+		const user = userEvent.setup();
+		const { calls } = await open(NEW_DECEMBER, {
+			[`GET ${NOVEMBER}`]: novemberEndingIn("NOT_GENERATED"),
+			[`GET ${DECEMBER}`]: [
+				reply(ungeneratedMonthFixture()),
+				decemberWithItsFirstWeekSaved(),
+			],
+			[`POST ${SCHEDULES}`]: reply(
+				scheduleFixture({ scheduleId: "s-start" }),
+				201
+			),
+			[`GET ${SCHEDULES}/s-start/starting-days`]: reply(firstWeek()),
+			[`GET ${SCHEDULES}/s-start/opening-balances`]: reply(midMonthOpenings()),
+		});
+
+		expect(
+			await screen.findByText(
+				"Horaion doesn’t know the hours people worked this month before Dec 7."
+			)
+		).toBeVisible();
+		await user.click(screen.getByRole("button", { name: "Add hours worked" }));
+
+		expect(
+			await screen.findByRole("dialog", {
+				name: /^Hours already worked this month/,
+			})
+		).toBeVisible();
+		expect(
+			calls.filter((call) => call.method === "POST" && call.path === SCHEDULES)
+		).toHaveLength(1);
+	});
+
 	it("given_noScheduleUpdate_when_noRosterBefore_then_noLink", async () => {
 		await open(
 			NEW_DECEMBER,

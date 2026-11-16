@@ -12,6 +12,8 @@ import { Stepper, StepperStep } from "@/components/ui/Stepper";
 import { constraintsQuery } from "@/features/scheduling/constraints/api";
 import { useConstraintOptions } from "@/features/scheduling/constraints/useConstraintOptions";
 import { ForecastStep } from "@/features/scheduling/ForecastStep";
+import { OpeningHoursCallout } from "@/features/scheduling/hours/OpeningHoursCallout";
+import { startsAfterFirst } from "@/features/scheduling/hours/openingSummary";
 import { MonthChoiceDialog } from "@/features/scheduling/MonthChoiceDialog";
 import {
 	monthGenerationCheckQuery,
@@ -71,7 +73,10 @@ import {
 	type DepartmentShift,
 } from "@/features/scheduling/shifts/api";
 import { StartingContextCallout } from "@/features/scheduling/startingContext/StartingContextCallout";
-import { StartingContextSection } from "@/features/scheduling/startingContext/StartingContextSection";
+import {
+	StartingContextSection,
+	type StartingPointDialog,
+} from "@/features/scheduling/startingContext/StartingContextSection";
 import { StepActions } from "@/features/scheduling/StepActions";
 import { isScheduleStep, SCHEDULE_STEPS } from "@/features/scheduling/steps";
 import {
@@ -184,8 +189,11 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 	const [settings, setSettings] = useState<MonthSetup>({
 		includeLeave: setupDefaults.includeLeave,
 	});
-	// The first week's draft this page just saved, so its grid opens once.
-	const [savedStartId, setSavedStartId] = useState<string>();
+	// The first week's draft this page just saved, and which of its dialogs opens once.
+	const [savedStart, setSavedStart] = useState<{
+		scheduleId: string;
+		dialog: StartingPointDialog;
+	}>();
 	const [forecast, dispatch] = useReducer(
 		scheduleDraftReducer,
 		undefined,
@@ -384,7 +392,10 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 		(week) => week.periodStart === weekBefore && hasRoster(week.state)
 	);
 	// Saves the first week as a draft, with its choice and the Setup's settings, to add its starting point.
-	const saveStartingWeek = async (monday: string): Promise<void> => {
+	const saveStartingWeek = async (
+		monday: string,
+		dialog: StartingPointDialog
+	): Promise<void> => {
 		if (!unit || !everything) return;
 		setProblem("");
 		const weekChoice = choices[monday] ?? everything;
@@ -399,18 +410,29 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 					includedConstraintIds: weekChoice.constraintIds,
 				},
 			});
-			setSavedStartId(created.scheduleId);
+			setSavedStart({ scheduleId: created.scheduleId, dialog });
 		} catch (error) {
 			setProblem(scheduleRefusalMessage(error, true, t));
 		}
 	};
+	// Saves the first week's draft, then opens one of its dialogs; none without the right to.
+	const addToStartingWeek = (
+		dialog: StartingPointDialog
+	): (() => void) | undefined =>
+		startingWeek &&
+		allowedHere("schedule:create") &&
+		allowedHere("schedule:update") &&
+		everything
+			? (): void => {
+					void saveStartingWeek(startingWeek.periodStart, dialog);
+				}
+			: undefined;
 	const startingPoint =
 		!unit || !startingWeek ? undefined : startingWeek.state === "DRAFT" &&
 		  startingWeek.scheduleId ? (
 			<StartingContextSection
 				canEdit={allowedHere("schedule:update")}
 				companyId={companyId}
-				openOnStart={savedStartId === startingWeek.scheduleId}
 				scheduleId={startingWeek.scheduleId}
 				unit={unit}
 				nonWorkingDayTypes={
@@ -418,27 +440,34 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 						? startingDraft.schedule.nonWorkingDayTypes
 						: []
 				}
-			/>
-		) : monthBefore.isPending ? undefined : (
-			// Before the first week's draft exists: the same notice the week page shows.
-			<StartingContextCallout
-				adding={scheduleActions.create.isPending}
-				enteredCount={0}
-				previous={
-					weekBefore && weekBeforeRostered
-						? { kind: "carried", periodStart: weekBefore, uncovered: 0 }
-						: { kind: "none" }
-				}
-				onAdd={
-					allowedHere("schedule:create") &&
-					allowedHere("schedule:update") &&
-					everything
-						? (): void => {
-								void saveStartingWeek(startingWeek.periodStart);
-							}
+				openOnStart={
+					savedStart?.scheduleId === startingWeek.scheduleId
+						? savedStart.dialog
 						: undefined
 				}
 			/>
+		) : monthBefore.isPending ? undefined : (
+			// Before the first week's draft exists: the week page's two notices; each button saves the draft first.
+			<div className="flex flex-col gap-4">
+				<StartingContextCallout
+					adding={scheduleActions.create.isPending}
+					enteredCount={0}
+					previous={
+						weekBefore && weekBeforeRostered
+							? { kind: "carried", periodStart: weekBefore, uncovered: 0 }
+							: { kind: "none" }
+					}
+					onAdd={addToStartingWeek("days")}
+				/>
+				{startsAfterFirst(startingWeek.periodStart) && (
+					<OpeningHoursCallout
+						adding={scheduleActions.create.isPending}
+						asOf={startingWeek.periodStart}
+						hours={{ kind: "notRead", carried: weekBeforeRostered === true }}
+						onAdd={addToStartingWeek("hours")}
+					/>
+				)}
+			</div>
 		);
 	// The first week saved as a draft keeps its own choice, changed on its own page.
 	const savedDraftLine =
