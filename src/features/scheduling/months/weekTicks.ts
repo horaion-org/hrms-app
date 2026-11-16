@@ -4,6 +4,7 @@ import type {
 	ScheduleMonthSummary,
 	WeekState,
 } from "@/features/scheduling/months/api";
+import { rosterCarriesOver } from "@/features/scheduling/months/monthGeneration";
 import { mondaysIn } from "@/features/scheduling/months/monthWeeks";
 import { weekStateTones } from "@/features/scheduling/months/weekStateLooks";
 
@@ -134,6 +135,28 @@ export const tickedRangesOf = (
 		else ranges.push({ start: monday, end: sundayOf(monday) });
 	}
 	return ranges;
+};
+
+/**
+ * The unticked weeks without a roster that lie between ticked weeks, Monday
+ * order. Hours worked in them are on no roster, so they don't count towards
+ * the month's overtime: a month has one opening per person, on its first week.
+ */
+export const skippedWeeksOf = (
+	weeks: ReadonlyArray<TickableWeek>,
+	ticked: ReadonlyArray<string>
+): Array<TickableWeek> => {
+	const inOrder = [...ticked].sort();
+	const first = inOrder[0];
+	const last = inOrder[inOrder.length - 1];
+	if (first === undefined || last === undefined) return [];
+	return weeks.filter(
+		(week) =>
+			week.periodStart > first &&
+			week.periodStart < last &&
+			!ticked.includes(week.periodStart) &&
+			!rosterCarriesOver(week.state)
+	);
 };
 
 /** The words of a look, under `scheduling.months`. */

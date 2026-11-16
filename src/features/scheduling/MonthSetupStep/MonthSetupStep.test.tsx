@@ -185,6 +185,20 @@ describe("MonthSetupStep", () => {
 		).toBeInTheDocument();
 	});
 
+	it("given_aSkippedWeekBetweenTickedWeeks_when_shown_then_warnsItsHoursAreNotCounted", () => {
+		render(
+			<Harness
+				weeks={weeksProp(novemberWeeks(), ["2026-11-30", "2026-11-16"])}
+			/>
+		);
+
+		expect(
+			screen.getByText(
+				"Mon, Nov 23 to Sun, Nov 29 is left out and has no roster. Hours worked that week don’t count towards this month’s overtime unless a roster covers it."
+			)
+		).toBeInTheDocument();
+	});
+
 	it("given_nothingTicked_when_shown_then_saysTickAtLeastOneWeek", () => {
 		render(<Harness weeks={weeksProp(novemberWeeks(), [])} />);
 

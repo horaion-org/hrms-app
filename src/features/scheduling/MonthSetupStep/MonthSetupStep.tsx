@@ -19,6 +19,7 @@ import {
 } from "@/features/scheduling/months/monthWeeks";
 import {
 	badgeOf,
+	skippedWeeksOf,
 	tickedRangesOf,
 	type TickableWeek,
 	type TickedRange,
@@ -205,6 +206,7 @@ export const MonthSetupStep = ({
 			: []
 	);
 	const noneCanBeTicked = !(weeks?.rows ?? []).some((week) => week.canTick);
+	const skippedWeeks = skippedWeeksOf(weeks?.rows ?? [], ticked);
 
 	return (
 		<StepPanel
@@ -326,6 +328,13 @@ export const MonthSetupStep = ({
 							{tickedNotes.map(({ week, note }) => (
 								<Callout key={week.periodStart} tone="warning">
 									{t(`scheduling.months.setup.${note}Note`, {
+										week: datesOf(rangeOf(week), language, t),
+									})}
+								</Callout>
+							))}
+							{skippedWeeks.map((week) => (
+								<Callout key={week.periodStart} tone="warning">
+									{t("scheduling.months.setup.skippedNote", {
 										week: datesOf(rangeOf(week), language, t),
 									})}
 								</Callout>

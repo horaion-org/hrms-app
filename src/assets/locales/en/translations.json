@@ -5272,6 +5272,7 @@
 				"startedNote": "{{week}} has already started. It is generated whole, Monday included.",
 				"rosterWaitingNote": "{{week}} has a roster waiting for review. Generating again replaces it.",
 				"rosterRejectedNote": "{{week}} has a rejected roster. Generating again replaces it.",
+				"skippedNote": "{{week}} is left out and has no roster. Hours worked that week don’t count towards this month’s overtime unless a roster covers it.",
 				"noneTicked": "Tick at least one week to schedule.",
 				"noneOpen": "No week of {{month}} can be scheduled: each is published, over or being generated. Choose another month.",
 				"validation": {

@@ -9,6 +9,7 @@ import {
 	badgeOf,
 	defaultMonthOf,
 	defaultTicksOf,
+	skippedWeeksOf,
 	tickableWeekOf,
 	tickableWeeksOf,
 	tickedRangesOf,
@@ -172,6 +173,32 @@ describe("tickedRangesOf", () => {
 			{ start: "2026-11-23", end: "2026-11-29" },
 			{ start: "2026-12-14", end: "2026-12-20" },
 		]);
+	});
+});
+
+describe("skippedWeeksOf", () => {
+	const DECEMBER = tickableWeeksOf(
+		[
+			weekOf("2026-12-07", "NOT_GENERATED", true),
+			weekOf("2026-12-14", "NOT_GENERATED", true),
+			weekOf("2026-12-21", "TO_REVIEW", true),
+			weekOf("2026-12-28", "NOT_GENERATED", true),
+		],
+		TODAY
+	);
+
+	it("given_anUntickedWeekWithoutARosterBetweenTickedWeeks_when_skipped_then_named", () => {
+		expect(
+			skippedWeeksOf(DECEMBER, ["2026-12-28", "2026-12-07"]).map(
+				(week) => week.periodStart
+			)
+		).toEqual(["2026-12-14"]);
+	});
+
+	it("given_untickedWeeksOutsideTheTickedOnesOrWithARoster_when_skipped_then_none", () => {
+		expect(skippedWeeksOf(DECEMBER, ["2026-12-14"])).toEqual([]);
+		expect(skippedWeeksOf(DECEMBER, ["2026-12-14", "2026-12-28"])).toEqual([]);
+		expect(skippedWeeksOf(DECEMBER, [])).toEqual([]);
 	});
 });
 

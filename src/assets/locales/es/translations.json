@@ -5072,6 +5072,7 @@
 				"startedNote": "{{week}} ya ha empezado. Se genera completa, lunes incluido.",
 				"rosterWaitingNote": "{{week}} tiene un horario pendiente de revisión. Generar de nuevo lo sustituye.",
 				"rosterRejectedNote": "{{week}} tiene un horario rechazado. Generar de nuevo lo sustituye.",
+				"skippedNote": "{{week}} queda fuera y no tiene horario. Las horas trabajadas esa semana no cuentan para las horas extra de este mes salvo que un horario la cubra.",
 				"noneTicked": "Marca al menos una semana para programar.",
 				"noneOpen": "Ninguna semana de {{month}} se puede programar: cada una está publicada, terminada o generándose. Elige otro mes.",
 				"validation": {

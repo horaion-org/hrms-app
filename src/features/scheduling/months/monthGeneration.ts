@@ -146,6 +146,10 @@ const STATES_WITH_A_ROSTER: ReadonlyArray<WeekState> = [
 	"GENERATING",
 ];
 
+/** Whether a week has, or will have, a roster before the next week runs. */
+export const rosterCarriesOver = (state: WeekState): boolean =>
+	STATES_WITH_A_ROSTER.includes(state);
+
 /** Whether the week before the month's week at `index` is chosen or has a roster, so it carries into it. */
 const weekBeforeCarriesOver = (
 	month: ScheduleMonth,
@@ -155,8 +159,7 @@ const weekBeforeCarriesOver = (
 	const before = month.weeks[index - 1];
 	return (
 		before !== undefined &&
-		(chosen.includes(before.periodStart) ||
-			STATES_WITH_A_ROSTER.includes(before.state))
+		(chosen.includes(before.periodStart) || rosterCarriesOver(before.state))
 	);
 };
 
