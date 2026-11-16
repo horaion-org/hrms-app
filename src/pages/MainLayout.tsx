@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/Button";
 import {
 	DashboardFilledIcon,
 	DashboardIcon,
+	FillShiftsIcon,
 	LeaveFilledIcon,
 	LeaveIcon,
 	OrganisationFilledIcon,
@@ -28,6 +29,7 @@ import {
 import { AccountMenu } from "@/features/auth/AccountMenu";
 import { usableCompanies } from "@/features/auth/currentCompany";
 import { logOut } from "@/features/auth/session";
+import { useAvailabilityViews } from "@/features/availability/useAvailability";
 import { SCHEDULING_KEYS } from "@/features/scheduling/schedulingSearch";
 import {
 	ORGANISATION_READ_KEYS,
@@ -47,6 +49,7 @@ export const MainLayout = (): FunctionComponent => {
 	const context = useRouteContext({ from: "/_authenticated" });
 	const [switching, setSwitching] = useState(false);
 	const { t } = useTranslation();
+	const availability = useAvailabilityViews();
 	// The Branch the page lists, where it lists by Branch: the one scope shared by every list.
 	const branchScope = useHeaderBranchScope();
 	// The greeting belongs to the dashboard; other pages keep the header for their scope or nothing.
@@ -167,13 +170,22 @@ export const MainLayout = (): FunctionComponent => {
 						label={t("shell.navigation.leave")}
 						to="/leave"
 					/>
-					{/* Availability is for everyone: every member states their own shift preferences there. */}
+					{/* Shift preferences are for everyone: a member's own need nothing granted. */}
 					<SidebarItem
-						activeIcon={TimeIcon}
-						icon={TimeIcon}
-						label={t("shell.navigation.availability")}
-						to="/availability"
+						activeIcon={FillShiftsIcon}
+						icon={FillShiftsIcon}
+						label={t("shell.navigation.shiftPreferences")}
+						to="/shift-preferences"
 					/>
+					{/* Availability is offered to a part-timer, for their own, and to anyone who may read others'. */}
+					{(availability.mine || availability.team) && (
+						<SidebarItem
+							activeIcon={TimeIcon}
+							icon={TimeIcon}
+							label={t("shell.navigation.availability")}
+							to="/availability"
+						/>
+					)}
 					{/* People and Organisation are offered only when the workspace grants something in them, at any scope. */}
 					<Can anyOf={PEOPLE_READ_KEYS} at="anywhere">
 						<SidebarItem

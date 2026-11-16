@@ -3,7 +3,8 @@ import { useTranslation } from "react-i18next";
 import { formatDay } from "@/common/formatDay";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
-import { weekdayOf } from "@/common/weekdays";
+import { weekdayOf, type Weekday } from "@/common/weekdays";
+import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { WeekGrid } from "@/components/ui/WeekGrid";
@@ -11,6 +12,7 @@ import type {
 	PreferenceDay,
 	PreferredShift,
 } from "@/features/shiftPreferences/api";
+import { daysWithoutAvailability } from "@/features/shiftPreferences/availabilityGaps";
 import { PreferredShiftsCell } from "@/features/shiftPreferences/PreferredShiftsCell";
 import { ShiftPreferenceDialog } from "@/features/shiftPreferences/ShiftPreferenceDialog";
 import { shiftPreferenceRefusal } from "@/features/shiftPreferences/shiftPreferenceRefusal";
@@ -27,6 +29,12 @@ export type MyShiftPreferencesProps = {
 	shownDay?: string;
 	/** The week has ended, so none of it can be changed. */
 	weekEnded?: boolean;
+	/**
+	 * The weekdays a part-timer has stated availability on this week; the
+	 * open days on any other are warned about. Left out for someone who is not
+	 * part-time, or while their availability loads: nothing is warned.
+	 */
+	availableWeekdays?: ReadonlyArray<Weekday>;
 	className?: string;
 };
 
@@ -49,13 +57,16 @@ const preferredShifts = (day: PreferenceDay): Array<PreferredShift> =>
 /**
  * The caller's own week as one row of seven days, each day's preferred shifts
  * as chips; an open day is one button that opens its dialog. Saves straight
- * away through their own routes: nothing granted is needed.
+ * away through their own routes: nothing granted is needed. A part-timer is
+ * warned of the open days they have no availability on, with a link to set
+ * it, and the day's dialog repeats it; choosing stays possible.
  */
 export const MyShiftPreferences = ({
 	companyId,
 	weekStartMonday,
 	shownDay,
 	weekEnded = false,
+	availableWeekdays,
 	className,
 }: MyShiftPreferencesProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
@@ -81,6 +92,11 @@ export const MyShiftPreferences = ({
 	const { maxShiftsPerDay, days } = week.week;
 	const closedDaysNote = closedDaysNoteKey(days, weekEnded);
 	const labelOf = (day: PreferenceDay): string => formatDay(day.date, language);
+	// A week that has ended has no open day, so it is never warned about.
+	const unavailableDates =
+		availableWeekdays && !weekEnded
+			? daysWithoutAvailability(days, availableWeekdays)
+			: [];
 	const cells = days.map((day) => ({
 		day: weekdayOf(day.date),
 		cell: (
@@ -104,6 +120,22 @@ export const MyShiftPreferences = ({
 			{closedDaysNote && (
 				<Callout className="mb-4">{t(closedDaysNote)}</Callout>
 			)}
+			{unavailableDates.length > 0 && (
+				<Callout className="mb-4" tone="warning">
+					{t(`${key}.notAvailable.week`, {
+						days: unavailableDates
+							.map((date) => formatDay(date, language))
+							.join(", "),
+					})}{" "}
+					<Button
+						search={{ view: "mine", week: weekStartMonday }}
+						to="/availability"
+						variant="textlink"
+					>
+						{t(`${key}.notAvailable.link`)}
+					</Button>
+				</Callout>
+			)}
 			<WeekGrid
 				label={t(`${key}.tab`)}
 				rows={[{ id: "mine", days: cells }]}
@@ -120,6 +152,11 @@ export const MyShiftPreferences = ({
 						replace.error
 							? shiftPreferenceRefusal(replace.error, maxShiftsPerDay, t)
 									.message
+							: undefined
+					}
+					unavailableNote={
+						unavailableDates.includes(editing.date)
+							? t(`${key}.notAvailable.day`, { day: labelOf(editing) })
 							: undefined
 					}
 					onClose={() => {

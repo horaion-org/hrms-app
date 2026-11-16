@@ -20,8 +20,8 @@ const firstPageOf = (
 	departmentId: string
 ): ReturnType<typeof teamPreferencesQuery>["queryKey"] =>
 	teamPreferencesQuery(COMPANY, {
-		departmentId,
 		weekStartMonday: FIXTURE_WEEK,
+		departmentId,
 		page: 0,
 	}).queryKey;
 client.setQueryData(firstPageOf(DEPARTMENT), fixtureTeamPage());

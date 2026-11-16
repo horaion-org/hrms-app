@@ -30,6 +30,7 @@ import { Route as AuthenticatedAppPeopleRouteImport } from './routes/_authentica
 import { Route as AuthenticatedAppReportsRouteImport } from './routes/_authenticated._app.reports'
 import { Route as AuthenticatedAppSchedulingRouteImport } from './routes/_authenticated._app.scheduling'
 import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated._app.settings'
+import { Route as AuthenticatedAppShiftPreferencesRouteImport } from './routes/_authenticated._app.shift-preferences'
 import { Route as AuthenticatedAppMePasswordRouteImport } from './routes/_authenticated._app.me.password'
 import { Route as AuthenticatedAppMeProfileRouteImport } from './routes/_authenticated._app.me.profile'
 import { Route as AuthenticatedAppOrganisationIndexRouteImport } from './routes/_authenticated._app.organisation.index'
@@ -161,6 +162,12 @@ const AuthenticatedAppSettingsRoute =
   AuthenticatedAppSettingsRouteImport.update({
     id: '/settings',
     path: '/settings',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppShiftPreferencesRoute =
+  AuthenticatedAppShiftPreferencesRouteImport.update({
+    id: '/shift-preferences',
+    path: '/shift-preferences',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
 const AuthenticatedAppMePasswordRoute =
@@ -316,6 +323,7 @@ export interface FileRoutesByFullPath {
   '/reports': typeof AuthenticatedAppReportsRoute
   '/scheduling': typeof AuthenticatedAppSchedulingRoute
   '/settings': typeof AuthenticatedAppSettingsRoute
+  '/shift-preferences': typeof AuthenticatedAppShiftPreferencesRoute
   '/me/password': typeof AuthenticatedAppMePasswordRoute
   '/me/profile': typeof AuthenticatedAppMeProfileRoute
   '/organisation/branches': typeof AuthenticatedAppOrganisationBranchesRoute
@@ -359,6 +367,7 @@ export interface FileRoutesByTo {
   '/reports': typeof AuthenticatedAppReportsRoute
   '/scheduling': typeof AuthenticatedAppSchedulingRoute
   '/settings': typeof AuthenticatedAppSettingsRoute
+  '/shift-preferences': typeof AuthenticatedAppShiftPreferencesRoute
   '/me/password': typeof AuthenticatedAppMePasswordRoute
   '/me/profile': typeof AuthenticatedAppMeProfileRoute
   '/organisation/branches': typeof AuthenticatedAppOrganisationBranchesRoute
@@ -404,6 +413,7 @@ export interface FileRoutesById {
   '/_authenticated/_app/reports': typeof AuthenticatedAppReportsRoute
   '/_authenticated/_app/scheduling': typeof AuthenticatedAppSchedulingRoute
   '/_authenticated/_app/settings': typeof AuthenticatedAppSettingsRoute
+  '/_authenticated/_app/shift-preferences': typeof AuthenticatedAppShiftPreferencesRoute
   '/_authenticated/_app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/_app/me/password': typeof AuthenticatedAppMePasswordRoute
   '/_authenticated/_app/me/profile': typeof AuthenticatedAppMeProfileRoute
@@ -450,6 +460,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/scheduling'
     | '/settings'
+    | '/shift-preferences'
     | '/me/password'
     | '/me/profile'
     | '/organisation/branches'
@@ -493,6 +504,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/scheduling'
     | '/settings'
+    | '/shift-preferences'
     | '/me/password'
     | '/me/profile'
     | '/organisation/branches'
@@ -537,6 +549,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/reports'
     | '/_authenticated/_app/scheduling'
     | '/_authenticated/_app/settings'
+    | '/_authenticated/_app/shift-preferences'
     | '/_authenticated/_app/'
     | '/_authenticated/_app/me/password'
     | '/_authenticated/_app/me/profile'
@@ -723,6 +736,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppSettingsRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/_app/shift-preferences': {
+      id: '/_authenticated/_app/shift-preferences'
+      path: '/shift-preferences'
+      fullPath: '/shift-preferences'
+      preLoaderRoute: typeof AuthenticatedAppShiftPreferencesRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/_app/me/password': {
       id: '/_authenticated/_app/me/password'
       path: '/me/password'
@@ -891,6 +911,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppReportsRoute: typeof AuthenticatedAppReportsRoute
   AuthenticatedAppSchedulingRoute: typeof AuthenticatedAppSchedulingRoute
   AuthenticatedAppSettingsRoute: typeof AuthenticatedAppSettingsRoute
+  AuthenticatedAppShiftPreferencesRoute: typeof AuthenticatedAppShiftPreferencesRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
   AuthenticatedAppMePasswordRoute: typeof AuthenticatedAppMePasswordRoute
   AuthenticatedAppMeProfileRoute: typeof AuthenticatedAppMeProfileRoute
@@ -927,6 +948,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppReportsRoute: AuthenticatedAppReportsRoute,
   AuthenticatedAppSchedulingRoute: AuthenticatedAppSchedulingRoute,
   AuthenticatedAppSettingsRoute: AuthenticatedAppSettingsRoute,
+  AuthenticatedAppShiftPreferencesRoute: AuthenticatedAppShiftPreferencesRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
   AuthenticatedAppMePasswordRoute: AuthenticatedAppMePasswordRoute,
   AuthenticatedAppMeProfileRoute: AuthenticatedAppMeProfileRoute,

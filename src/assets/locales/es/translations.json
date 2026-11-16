@@ -528,9 +528,8 @@
 		}
 	},
 	"availability": {
-		"title": "Disponibilidad y preferencias",
-		"subtitle": "Las horas en que las personas a tiempo parcial pueden trabajar y los turnos que cada persona prefiere, semana a semana.",
-		"preferencesOnlySubtitle": "Elige los turnos que te gustaría trabajar, semana a semana.",
+		"title": "Disponibilidad",
+		"subtitle": "Las horas en que las personas a tiempo parcial pueden trabajar, semana a semana.",
 		"views": "Vistas de disponibilidad",
 		"mine": {
 			"tab": "Mi disponibilidad",
@@ -538,9 +537,6 @@
 			"patternWeek": "Esta semana sigue tu patrón habitual.",
 			"customWeek": "Esta semana tiene sus propias horas en lugar de tu patrón habitual.",
 			"empty": "No hay disponibilidad indicada. Añade las horas en que puedes trabajar para que se te puedan asignar turnos."
-		},
-		"preferences": {
-			"tab": "Preferencias de turno"
 		},
 		"team": {
 			"tab": "Equipo",
@@ -557,6 +553,7 @@
 		"patternFailed": "No pudimos cargar el patrón habitual de {{name}}. Inténtalo de nuevo.",
 		"hidden": "No tienes acceso a la disponibilidad de nadie en esta empresa.",
 		"noBranches": "Añade una sucursal a la organización antes de gestionar la disponibilidad.",
+		"unavailable": "La disponibilidad es para las personas a tiempo parcial y quienes las gestionan, así que aquí no hay nada para ti en esta empresa.",
 		"loading": "Cargando disponibilidad…",
 		"failed": "No pudimos cargar la disponibilidad. Inténtalo de nuevo.",
 		"pastWeek": "Esta semana ya terminó, así que su disponibilidad no se puede cambiar.",
@@ -605,6 +602,14 @@
 		"controls": "Controles de disponibilidad"
 	},
 	"shiftPreferences": {
+		"title": "Preferencias de turno",
+		"pageSubtitle": "Los turnos que a las personas les gustaría trabajar, semana a semana.",
+		"views": "Vistas de preferencias de turno",
+		"controls": "Controles de preferencias de turno",
+		"noBranches": "Añade una sucursal a la organización antes de consultar las preferencias de turno del equipo.",
+		"mine": {
+			"tab": "Mis preferencias"
+		},
 		"tab": "Preferencias de turno",
 		"subtitle": "Los turnos que te gustaría trabajar. Se tienen en cuenta de forma justa al hacer el horario, pero no se garantizan.",
 		"editDay": "Elegir turnos para {{day}}",
@@ -616,7 +621,13 @@
 		"outOfReach": "Algunos días no se pueden cambiar: las preferencias están abiertas desde hoy hasta ocho semanas después.",
 		"loading": "Cargando las preferencias de turno…",
 		"failed": "No pudimos cargar tus preferencias de turno. Inténtalo de nuevo.",
+		"notAvailable": {
+			"week": "No te has marcado como disponible el {{days}}. Sin disponibilidad en un día, no se te asignarán turnos ese día, prefieras lo que prefieras.",
+			"day": "No te has marcado como disponible el {{day}}. Sin disponibilidad ese día, no se te asignarán turnos, prefieras lo que prefieras.",
+			"link": "Indica primero tu disponibilidad"
+		},
 		"team": {
+			"tab": "Equipo",
 			"label": "Preferencias de turno del equipo",
 			"member": "Miembro",
 			"empty": "No hay miembros aquí.",
@@ -2476,7 +2487,8 @@
 			"dashboard": "Panel",
 			"scheduling": "Programación",
 			"leave": "Permisos",
-			"availability": "Disponibilidad y preferencias",
+			"availability": "Disponibilidad",
+			"shiftPreferences": "Preferencias de turno",
 			"people": "Personas",
 			"organisation": "Organización",
 			"reports": "Informes"

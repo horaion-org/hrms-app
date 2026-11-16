@@ -405,7 +405,7 @@ it("reaches the overview from the Sidebar and marks Organisation current", async
 		"Dashboard",
 		"Scheduling",
 		"Leave",
-		"Availability and preferences",
+		"Shift preferences",
 		"People",
 		"Organisation",
 		"Reports",

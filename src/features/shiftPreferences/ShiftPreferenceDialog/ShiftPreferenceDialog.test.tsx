@@ -90,6 +90,17 @@ describe("ShiftPreferenceDialog", () => {
 		expect(screen.getByRole("button", { name: "Clear" })).toBeDisabled();
 	});
 
+	it("given_aDayWithoutAvailability_when_opened_then_warnsAndStillOffersItsShifts", () => {
+		show({
+			unavailableNote: "You haven’t marked yourself available on Mon 23 Nov.",
+		});
+
+		expect(
+			screen.getByText("You haven’t marked yourself available on Mon 23 Nov.")
+		).toBeVisible();
+		expect(screen.getAllByRole("checkbox").length).toBeGreaterThan(0);
+	});
+
 	it("given_aRefusedSave_when_shown_then_saysWhyAsAnAlert", () => {
 		show({ refusal: "Choose up to 5 shifts for a day." });
 

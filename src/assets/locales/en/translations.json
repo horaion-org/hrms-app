@@ -528,9 +528,8 @@
 		}
 	},
 	"availability": {
-		"title": "Availability and preferences",
-		"subtitle": "The hours part-time people can work and the shifts people would like, week by week.",
-		"preferencesOnlySubtitle": "Choose the shifts you’d like to work, week by week.",
+		"title": "Availability",
+		"subtitle": "The hours part-time people can work, week by week.",
 		"views": "Availability views",
 		"mine": {
 			"tab": "My availability",
@@ -538,9 +537,6 @@
 			"patternWeek": "This week follows your default pattern.",
 			"customWeek": "This week has its own hours in place of your default pattern.",
 			"empty": "No availability set. Add the hours you can work so you can be rostered."
-		},
-		"preferences": {
-			"tab": "Shift preferences"
 		},
 		"team": {
 			"tab": "Team",
@@ -557,6 +553,7 @@
 		"patternFailed": "We couldn’t load {{name}}’s default pattern. Try again.",
 		"hidden": "You don’t have access to anyone’s availability in this company.",
 		"noBranches": "Add a branch to the organisation before managing availability.",
+		"unavailable": "Availability is for part-time members and the people who manage them, so there’s nothing here for you in this company.",
 		"loading": "Loading availability…",
 		"failed": "We couldn’t load the availability. Try again.",
 		"pastWeek": "This week has ended, so its availability can’t be changed.",
@@ -605,6 +602,14 @@
 		"controls": "Availability controls"
 	},
 	"shiftPreferences": {
+		"title": "Shift preferences",
+		"pageSubtitle": "The shifts people would like to work, week by week.",
+		"views": "Shift preference views",
+		"controls": "Shift preference controls",
+		"noBranches": "Add a branch to the organisation before reading the team’s shift preferences.",
+		"mine": {
+			"tab": "My preferences"
+		},
 		"tab": "Shift preferences",
 		"subtitle": "The shifts you’d like to work. They’re weighed fairly when the roster is made, but not promised.",
 		"editDay": "Choose shifts for {{day}}",
@@ -616,7 +621,13 @@
 		"outOfReach": "Some days can’t be changed: preferences are open from today to eight weeks ahead.",
 		"loading": "Loading shift preferences…",
 		"failed": "We couldn’t load your shift preferences. Try again.",
+		"notAvailable": {
+			"week": "You haven’t marked yourself available on {{days}}. Without availability on a day, you won’t be scheduled that day, whatever you prefer.",
+			"day": "You haven’t marked yourself available on {{day}}. Without availability that day, you won’t be scheduled, whatever you prefer.",
+			"link": "Set your availability first"
+		},
 		"team": {
+			"tab": "Team",
 			"label": "Team shift preferences",
 			"member": "Member",
 			"empty": "No members here.",
@@ -914,7 +925,8 @@
 			"dashboard": "Dashboard",
 			"scheduling": "Scheduling",
 			"leave": "Leave",
-			"availability": "Availability and preferences",
+			"availability": "Availability",
+			"shiftPreferences": "Shift preferences",
 			"people": "People",
 			"organisation": "Organisation",
 			"reports": "Reports"

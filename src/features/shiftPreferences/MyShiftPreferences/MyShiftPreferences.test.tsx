@@ -10,6 +10,8 @@ import {
 	stubApi,
 	type StubReply,
 } from "@/common/testing/stubApi";
+import type { Weekday } from "@/common/weekdays";
+import { MemoryRouterHarness } from "@/components/utils/MemoryRouterHarness";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import {
 	FIXTURE_WEEK,
@@ -51,6 +53,30 @@ const show = (shownDay?: string, weekEnded?: boolean): void => {
 					weekEnded={weekEnded}
 					weekStartMonday={FIXTURE_WEEK}
 				/>
+			</QueryClientProvider>
+		</I18nextProvider>
+	);
+};
+
+/** Renders a part-timer's week, inside a router for the link to their availability. */
+const showPartTimer = (
+	availableWeekdays: ReadonlyArray<Weekday>,
+	weekEnded = false
+): void => {
+	const client = new QueryClient({
+		defaultOptions: { queries: { retry: false } },
+	});
+	render(
+		<I18nextProvider i18n={authTestI18n}>
+			<QueryClientProvider client={client}>
+				<MemoryRouterHarness>
+					<MyShiftPreferences
+						availableWeekdays={availableWeekdays}
+						companyId="c-1"
+						weekEnded={weekEnded}
+						weekStartMonday={FIXTURE_WEEK}
+					/>
+				</MemoryRouterHarness>
 			</QueryClientProvider>
 		</I18nextProvider>
 	);
@@ -194,5 +220,56 @@ describe("MyShiftPreferences", () => {
 		expect(await screen.findByRole("alert")).toHaveTextContent(
 			"We couldn’t load your shift preferences. Try again."
 		);
+	});
+
+	it("given_aPartTimerWithoutAvailabilityOnSomeDays_when_shown_then_warnsOfThemWithALinkToSetIt", async () => {
+		stubApi({ [`GET ${MINE}`]: weekReply() });
+		showPartTimer(["MON", "TUE", "WED", "THU", "FRI"]);
+
+		const warning = await screen.findByText(
+			/You haven’t marked yourself available on Sat.*Sun/
+		);
+		expect(warning).toHaveTextContent(
+			"you won’t be scheduled that day, whatever you prefer"
+		);
+		expect(
+			screen.getByRole("link", { name: "Set your availability first" })
+		).toHaveAttribute("href", `/availability?view=mine&week=${FIXTURE_WEEK}`);
+	});
+
+	it("given_aPartTimerWithoutAvailabilityThatDay_when_itsDialogOpens_then_repeatsTheWarningAndStillOffersShifts", async () => {
+		const user = userEvent.setup();
+		stubApi({ [`GET ${MINE}`]: weekReply() });
+		showPartTimer([]);
+
+		await user.click(await mondayButton());
+
+		const dialog = await screen.findByRole("dialog");
+		expect(
+			within(dialog).getByText(
+				/Without availability that day, you won’t be scheduled/
+			)
+		).toBeVisible();
+		expect(within(dialog).getAllByRole("checkbox").length).toBeGreaterThan(0);
+	});
+
+	it("given_aPartTimerAvailableOnEveryOpenDay_when_shown_then_warnsOfNothing", async () => {
+		stubApi({ [`GET ${MINE}`]: weekReply() });
+		showPartTimer(["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"]);
+
+		await screen.findByRole("table", { name: "Shift preferences" });
+		expect(
+			screen.queryByText(/You haven’t marked yourself available/)
+		).not.toBeInTheDocument();
+	});
+
+	it("given_aPartTimersWeekThatHasEnded_when_shown_then_warnsOfNothing", async () => {
+		stubApi({ [`GET ${MINE}`]: weekReply() });
+		showPartTimer([], true);
+
+		await screen.findByRole("table", { name: "Shift preferences" });
+		expect(
+			screen.queryByText(/You haven’t marked yourself available/)
+		).not.toBeInTheDocument();
 	});
 });

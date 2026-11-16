@@ -1,16 +1,18 @@
 # Shift preferences
 
 The shifts a member would like on a day, and what a roster made of them. Every member states their own, a week at a
-time, through `/companies/{c}/me/shift-preferences` with nothing granted; a Department's members are read through
-`shift_preference:read`. They are weighed when a roster is generated, never promised. The parts are shown on the
-`/availability` route (`src/pages/Availability.tsx`): a **Shift preferences** tab for everyone, and a chosen
-Department's list beneath the **Team** grid. Everything comes from the API (`features/shiftPreferences/api.ts`);
-nothing is kept in page state beyond the open day and the list's page.
+time, through `/companies/{c}/me/shift-preferences` with nothing granted; a Branch's or Department's members are
+read through `shift_preference:read`. They are weighed when a roster is generated, never promised. The parts are
+shown on their own `/shift-preferences` route (`src/pages/ShiftPreferences.tsx`, in everyone's menu): **My
+preferences** for everyone, and **Team** for holders of the read key, listing the header's Branch and the Department
+chosen in Filters. A part-timer is warned of the open days they have no availability on (read from
+`features/availability`), since they are never scheduled on them. Everything comes from the API
+(`features/shiftPreferences/api.ts`); nothing is kept in page state beyond the open day and the list's page.
 
 ## Shape
 
 - `api.ts` — the zod schemas, the caller's week (`myPreferenceWeekQuery`) and the replacing of one of its days, a
-  Department's members for one week a page at a time (`teamPreferencesQuery`, `TEAM_PAGE_SIZE`; a removed member's
+  Branch's or Department's members for one week a page at a time (`teamPreferencesQuery`, `TEAM_PAGE_SIZE`; a removed member's
   name is null), and the shape of a roster's outcomes, all under `shiftPreferencesRoot`,
   `["shiftPreferences", companyId]`.
 - `useShiftPreferences.ts` — `useMyPreferenceWeek`, `useTeamPreferences` (`hidden` when the read key is held
@@ -21,13 +23,19 @@ nothing is kept in page state beyond the open day and the list's page.
 - `preferenceOutcome.ts` — what a roster made of a preference, without rendering: each outcome's Badge tone and
   words, a reason's words, the preferred shifts as one phrase ("Morning or Late"), and a lookup by person and day.
 - `shiftPreferenceRefusal.ts` — API codes to frontend-owned copy for a refused save.
+- `shiftPreferencesSearch.ts` — what belongs in the page's URL (`view`, `branch`, `department`, `week` as its
+  Monday, `day`), the tabs a person has, and the team view's unit rules for the header.
+- `availabilityGaps.ts` — the open days of a week that fall on a weekday with no availability, for a part-timer's
+  warning.
 - `PreferredShiftsCell` — one day of a week grid: a `Chip` per preferred shift, keyed by shift id, or the icon set's
   minus read as "No preference"; the whole cell is one button when the day can be changed.
 - `MyShiftPreferences` — the caller's week as a one-row `WeekGrid`, with a note when the week has ended or some days
-  are outside today to eight weeks ahead; an open day opens `ShiftPreferenceDialog`, which saves straight away.
-- `ShiftPreferenceDialog` — one day's choosable shifts as boxes, with the count against the day's limit.
-- `TeamShiftPreferences` — a Department's members and their week, read-only, under its own heading, paged; the page
-  starts again at the first when the Department or week changes.
+  are outside today to eight weeks ahead, and, for a part-timer, a warning naming the open days without
+  availability; an open day opens `ShiftPreferenceDialog`, which saves straight away.
+- `ShiftPreferenceDialog` — one day's choosable shifts as boxes, with the count against the day's limit and the
+  day's availability warning when given.
+- `TeamShiftPreferences` — a Branch's or Department's members and their week, read-only, under its own heading,
+  paged; the page starts again at the first when the Branch, Department or week changes.
 - `fixtures.ts` — API-shaped weeks, team pages and outcomes for stories and component tests.
 
 A roster's outcomes are read on the roster's side (`features/scheduling/preferenceOutcomes`) and shown in the roster
