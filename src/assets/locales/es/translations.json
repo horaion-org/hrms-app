@@ -4185,7 +4185,8 @@
 				"unauthorized": "El motor rechazó la solicitud. Ponte en contacto con soporte.",
 				"forbidden": "El motor rechazó la solicitud. Ponte en contacto con soporte.",
 				"worker_failed": "La generación se detuvo antes de guardar un cuadrante. Genera de nuevo.",
-				"worker_crashed": "La generación se detuvo antes de guardar un cuadrante. Genera de nuevo."
+				"worker_crashed": "La generación se detuvo antes de guardar un cuadrante. Genera de nuevo.",
+				"engine_run_timed_out": "El motor de planificación no terminó el cuadrante de esta semana a tiempo, así que se detuvo la generación. Genera de nuevo; si sigue fallando, contacta con soporte."
 			}
 		},
 		"findings": {

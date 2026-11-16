@@ -42,6 +42,10 @@ describe("generationFailure", () => {
 			"The scheduling engine was busy. Generate again in a few minutes.",
 		],
 		[
+			"engine_run_timed_out",
+			"The scheduling engine didn’t finish this week’s roster in time, so generating was stopped. Generate again; if it keeps failing, contact support.",
+		],
+		[
 			"engine_http_503",
 			"The scheduling engine returned an error, so nothing was generated. Generate again; if it keeps failing, contact support.",
 		],

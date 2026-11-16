@@ -4385,7 +4385,8 @@
 				"unauthorized": "The engine refused the request. Please contact support.",
 				"forbidden": "The engine refused the request. Please contact support.",
 				"worker_failed": "Generating stopped before a roster was saved. Generate again.",
-				"worker_crashed": "Generating stopped before a roster was saved. Generate again."
+				"worker_crashed": "Generating stopped before a roster was saved. Generate again.",
+				"engine_run_timed_out": "The scheduling engine didn’t finish this week’s roster in time, so generating was stopped. Generate again; if it keeps failing, contact support."
 			}
 		},
 		"findings": {
