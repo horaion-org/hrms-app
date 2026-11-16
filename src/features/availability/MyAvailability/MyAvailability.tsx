@@ -19,7 +19,8 @@ import {
 	useReplaceMyWeekAvailability,
 	useResetMyWeekAvailability,
 } from "@/features/availability/useAvailability";
-import { WeekGrid } from "@/features/availability/WeekGrid";
+import { availabilityCells } from "@/features/availability/WeekGrid/availabilityCells";
+import { WeekGrid } from "@/components/ui/WeekGrid";
 
 export type MyAvailabilityProps = {
 	companyId: string;
@@ -114,7 +115,7 @@ export const MyAvailability = ({
 			</div>
 			<WeekGrid
 				label={t(`${key}.label`)}
-				rows={[{ id: "mine", days: byDay(week) }]}
+				rows={[{ id: "mine", days: availabilityCells(byDay(week)) }]}
 				shownDay={shownDay}
 				weekStartMonday={weekStartMonday}
 			/>

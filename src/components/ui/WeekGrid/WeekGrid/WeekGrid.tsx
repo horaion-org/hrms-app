@@ -5,18 +5,20 @@ import { dayColumnClasses } from "@/common/dayView";
 import { formattingLocale } from "@/common/formattingLocale";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
+import { weekdayOf } from "@/common/weekdays";
 import { daysOf } from "@/common/weeks";
 import {
-	weekdayOf,
-	type AvailabilityDay,
-} from "@/features/availability/availabilityModel";
-import { WeekGridRow } from "@/features/availability/WeekGrid/WeekGridRow";
+	WeekGridRow,
+	type WeekGridDay,
+} from "@/components/ui/WeekGrid/WeekGridRow";
+
+export type { WeekGridDay };
 
 /** One row of the grid: its days and, when the grid has those columns, its heading and action. */
 export type WeekGridRowData = {
 	id: string;
 	/** The seven days, Monday first. */
-	days: ReadonlyArray<AvailabilityDay>;
+	days: ReadonlyArray<WeekGridDay>;
 	heading?: ReactNode;
 	action?: ReactNode;
 };
@@ -51,9 +53,9 @@ const weekWidthClasses = (withHeading: boolean, oneDay: boolean): string => {
 };
 
 /**
- * A week of availability, laid out as the roster is: a column per day with
- * its weekday and date, a row per person (or one row for the caller's own
- * week), each day's windows as chips. The heading column stays in place
+ * A week laid out as the roster is: a column per day with its weekday and
+ * date, a row per person (or one row for the caller's own week), each day's
+ * cell as its row gives it. The heading column stays in place
  * while the days scroll sideways on a narrow screen.
  */
 export const WeekGrid = ({

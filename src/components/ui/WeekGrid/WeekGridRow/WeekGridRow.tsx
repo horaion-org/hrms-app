@@ -3,12 +3,13 @@ import { dayColumnClasses } from "@/common/dayView";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import type { Weekday } from "@/common/weekdays";
-import type { AvailabilityDay } from "@/features/availability/availabilityModel";
-import { AvailabilityCell } from "@/features/availability/WeekGrid/AvailabilityCell";
+
+/** One day's cell of a week grid: its weekday and what it shows. */
+export type WeekGridDay = { day: Weekday; cell: ReactNode };
 
 export type WeekGridRowProps = {
-	/** The seven days, Monday first, each with its windows. */
-	days: ReadonlyArray<AvailabilityDay>;
+	/** The seven days, Monday first, each with its cell. */
+	days: ReadonlyArray<WeekGridDay>;
 	/** Whether the grid has a heading column, so the row draws its header cell. */
 	withHeading?: boolean;
 	/** Names the row, e.g. a member. */
@@ -39,7 +40,7 @@ export const WeekGridRow = ({
 				{heading}
 			</th>
 		)}
-		{days.map(({ day, windows }) => (
+		{days.map(({ day, cell }) => (
 			<td
 				key={day}
 				className={joinClassNames(
@@ -47,7 +48,7 @@ export const WeekGridRow = ({
 					dayColumnClasses(day, shownWeekday)
 				)}
 			>
-				<AvailabilityCell windows={windows} />
+				{cell}
 			</td>
 		))}
 		{withActions && <td className="px-2 py-3 text-center">{action}</td>}

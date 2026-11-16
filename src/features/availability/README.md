@@ -26,7 +26,7 @@ through the person's grants, with editing on the rows they may change. Everythin
 - `WeekGrid` — a week laid out as the roster lays one out: a column per day with its weekday and date, a row each,
   every day's windows as chips. Its parts, each a quad of its own: `WeekGridRow` (an optional heading, seven
   cells, an optional action), `AvailabilityCell` (one day: its chips, or a muted dash read as "Not available") and
-  `WindowChip` ("09:00–13:00"). Shared by both tabs.
+  `Chip` from `components/ui` ("09:00–13:00"). Shared by both tabs.
 - `MyAvailability` — the caller's week as a one-row `WeekGrid`, "Custom" when it has hours of its own, a warning
   when nothing is set, and one Edit. A week that has ended is shown with a note and no Edit.
 - `TeamAvailability` — a `WeekGrid` row per part-timer (name, their Department when no Department is chosen,
