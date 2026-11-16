@@ -5012,6 +5012,8 @@
 				"failed": "No pudimos generar el mes. Inténtalo de nuevo.",
 				"panel": {
 					"title": "Antes de generar {{month}}",
+					"checking": "Comprobando {{month}} antes de generar…",
+					"checkFailed": "No pudimos comprobar {{month}} antes de generar.",
 					"shiftsTitle": "Turnos.",
 					"shifts_one": "{{department}} tiene {{count}} turno.",
 					"shifts_other": "{{department}} tiene {{count}} turnos.",

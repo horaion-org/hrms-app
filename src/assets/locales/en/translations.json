@@ -5212,6 +5212,8 @@
 				"failed": "We couldn’t generate the month. Try again.",
 				"panel": {
 					"title": "Before you generate {{month}}",
+					"checking": "Checking {{month}} before you generate…",
+					"checkFailed": "We couldn’t check {{month}} before generating.",
 					"shiftsTitle": "Shifts.",
 					"shifts_one": "{{department}} has {{count}} shift.",
 					"shifts_other": "{{department}} has {{count}} shifts.",

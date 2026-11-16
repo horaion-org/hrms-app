@@ -8,6 +8,7 @@ import { ApiProblemError } from "@/common/problem";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
+import { ErrorText } from "@/components/ui/ErrorText";
 import {
 	ArrowLeftIcon,
 	ChevronLeftIcon,
@@ -436,6 +437,28 @@ const MonthContent = ({
 					</strong>{" "}
 					{t("scheduling.months.generate.generatingDetail")}
 				</Callout>
+			)}
+			{showsPanel && check.isPending && (
+				<p className="text-sm text-neutral-800" role="status">
+					{t("scheduling.months.generate.panel.checking", { month: monthName })}
+				</p>
+			)}
+			{showsPanel && check.isError && (
+				<div className="flex flex-col items-start gap-2">
+					<ErrorText>
+						{t("scheduling.months.generate.panel.checkFailed", {
+							month: monthName,
+						})}
+					</ErrorText>
+					<Button
+						variant="textlink"
+						onClick={() => {
+							void check.refetch();
+						}}
+					>
+						{t("scheduling.rosterEdit.tryAgain")}
+					</Button>
+				</div>
 			)}
 			{showsPanel && check.data && (
 				<BeforeGeneratePanel

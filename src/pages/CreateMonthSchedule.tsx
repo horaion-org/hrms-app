@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
+import { ErrorText } from "@/components/ui/ErrorText";
 import { ArrowLeftIcon, ArrowRightIcon } from "@/components/ui/Icon";
 import { Stepper, StepperStep } from "@/components/ui/Stepper";
 import { constraintsQuery } from "@/features/scheduling/constraints/api";
@@ -749,18 +750,44 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 							{t("scheduling.create.generateForbidden")}
 						</p>
 					) : (
-						check.data && (
-							<BeforeGeneratePanel
-								check={check.data}
-								generating={generation.isPending}
-								hint={tickedHint}
-								month={month}
-								waiting={generation.block === "listsLoading"}
-								onGenerate={() => {
-									void generate();
-								}}
-							/>
-						)
+						<>
+							{check.isPending && (
+								<p className="text-sm text-neutral-800" role="status">
+									{t("scheduling.months.generate.panel.checking", {
+										month: monthName,
+									})}
+								</p>
+							)}
+							{check.isError && (
+								<div className="flex flex-col items-start gap-2">
+									<ErrorText>
+										{t("scheduling.months.generate.panel.checkFailed", {
+											month: monthName,
+										})}
+									</ErrorText>
+									<Button
+										variant="textlink"
+										onClick={() => {
+											void check.refetch();
+										}}
+									>
+										{t("scheduling.rosterEdit.tryAgain")}
+									</Button>
+								</div>
+							)}
+							{check.data && (
+								<BeforeGeneratePanel
+									check={check.data}
+									generating={generation.isPending}
+									hint={tickedHint}
+									month={month}
+									waiting={generation.block === "listsLoading"}
+									onGenerate={() => {
+										void generate();
+									}}
+								/>
+							)}
+						</>
 					))}
 			</div>
 			{problem && (

@@ -265,6 +265,49 @@ it("given_aMonthNothingWasGeneratedIn_when_generated_then_everyWeekIsSentAndTheM
 	expect(screen.getAllByText("Generating").length).toBeGreaterThanOrEqual(4);
 });
 
+it("given_theGenerationCheckStillLoading_when_opened_then_saysTheMonthIsBeingChecked", async () => {
+	await openMonth(
+		{
+			...decemberRoutes([ok(ungeneratedMonthFixture())]),
+			// A 503 is retried, so the check is still loading while the test looks.
+			[`GET ${DECEMBER}/generation-check`]: problemReply(
+				503,
+				"SERVICE_UNAVAILABLE"
+			),
+		},
+		"/scheduling/months/2026-12?department=d-1"
+	);
+
+	expect(
+		await screen.findByText("Checking December before you generate…")
+	).toHaveAttribute("role", "status");
+	expect(
+		screen.queryByRole("button", { name: "Generate December" })
+	).toBeNull();
+});
+
+it("given_aFailedGenerationCheck_when_tryAgainIsChosen_then_theCheckIsReadAgain", async () => {
+	await openMonth(
+		{
+			...decemberRoutes([ok(ungeneratedMonthFixture())]),
+			[`GET ${DECEMBER}/generation-check`]: [
+				problemReply(400, "BAD_REQUEST"),
+				ok(monthGenerationCheckFixture()),
+			],
+		},
+		"/scheduling/months/2026-12?department=d-1"
+	);
+
+	expect(
+		await screen.findByText("We couldn’t check December before generating.")
+	).toHaveAttribute("role", "alert");
+	await userEvent.click(screen.getByRole("button", { name: "Try again" }));
+
+	expect(
+		await screen.findByRole("heading", { name: "Before you generate December" })
+	).toBeInTheDocument();
+});
+
 it("given_aRefusedWeekInTheAnswer_when_generated_then_itsCardSaysWhy", async () => {
 	const answer = monthGenerationFixture();
 	answer.weeks[1] = {
