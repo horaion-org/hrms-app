@@ -3780,6 +3780,9 @@
 			"byMember": "Notas por empleado",
 			"wholeRoster": "Todo el cuadrante",
 			"errorCodes": {
+				"rule": {
+					"soft_not_allowed": "Este motor de horarios aún no puede aplicar una regla marcada como Si es posible. Pon esas reglas como Obligatoria y vuelve a generar."
+				},
 				"engine_unreachable": "No se pudo contactar con el motor de planificación a tiempo, así que no se generó nada.",
 				"result_unmappable": "El cuadrante del motor no encajaba con los turnos y el personal de este horario, así que no se guardó. Ponte en contacto con soporte.",
 				"engine_http": "El motor de planificación respondió con un error (HTTP {{status}}).",

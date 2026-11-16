@@ -3980,6 +3980,9 @@
 			"byMember": "Notes by member",
 			"wholeRoster": "Whole roster",
 			"errorCodes": {
+				"rule": {
+					"soft_not_allowed": "This scheduling engine can’t run a rule set to If possible yet. Set those rules to Must, then generate again."
+				},
 				"engine_unreachable": "The scheduling engine couldn’t be reached in time, so nothing was generated.",
 				"result_unmappable": "The engine’s roster didn’t fit this schedule’s shifts and staff, so it wasn’t saved. Please contact support.",
 				"engine_http": "The scheduling engine answered with an error (HTTP {{status}}).",

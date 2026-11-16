@@ -38,6 +38,10 @@ describe("generationFailure", () => {
 			"engine_http_503",
 			"The scheduling engine answered with an error (HTTP 503).",
 		],
+		[
+			"rule.soft_not_allowed",
+			"This scheduling engine can’t run a rule set to If possible yet. Set those rules to Must, then generate again.",
+		],
 		["a_code_added_later", "This schedule couldn’t be generated."],
 	])(
 		"given_aRunThatFailedWith_%s_when_explained_then_saysWhyAndShowsTheCode",
