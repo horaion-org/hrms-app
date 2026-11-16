@@ -41,5 +41,10 @@ type Story = StoryObj<typeof meta>;
 /** Each open day is one button that opens its dialog. */
 export const OpenWeek: Story = {};
 
-/** A week no day of which can be changed: read-only chips. */
+/** A week no day of which can be changed: read-only chips, and why. */
 export const ClosedWeek: Story = { args: { companyId: CLOSED_WEEK_COMPANY } };
+
+/** A week that has ended: said as such, rather than as days out of reach. */
+export const EndedWeek: Story = {
+	args: { companyId: CLOSED_WEEK_COMPANY, weekEnded: true },
+};

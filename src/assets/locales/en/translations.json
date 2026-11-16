@@ -616,7 +616,7 @@
 		"none": "No preference",
 		"noShifts": "No shift that day needs your job title.",
 		"pastWeek": "This week has ended, so its preferences can’t be changed.",
-		"outOfReach": "This day can’t be changed: preferences are open from today to eight weeks ahead.",
+		"outOfReach": "Some days can’t be changed: preferences are open from today to eight weeks ahead.",
 		"loading": "Loading shift preferences…",
 		"failed": "We couldn’t load your shift preferences. Try again.",
 		"team": {

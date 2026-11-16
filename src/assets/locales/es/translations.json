@@ -616,7 +616,7 @@
 		"none": "Sin preferencia",
 		"noShifts": "Ningún turno de ese día necesita tu puesto.",
 		"pastWeek": "Esta semana ya terminó, así que sus preferencias no se pueden cambiar.",
-		"outOfReach": "Este día no se puede cambiar: las preferencias están abiertas desde hoy hasta ocho semanas después.",
+		"outOfReach": "Algunos días no se pueden cambiar: las preferencias están abiertas desde hoy hasta ocho semanas después.",
 		"loading": "Cargando las preferencias de turno…",
 		"failed": "No pudimos cargar tus preferencias de turno. Inténtalo de nuevo.",
 		"team": {

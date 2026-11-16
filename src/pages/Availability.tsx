@@ -245,6 +245,7 @@ export const Availability = (): FunctionComponent => {
 									<MyShiftPreferences
 										companyId={companyId}
 										shownDay={shownDay}
+										weekEnded={past}
 										weekStartMonday={week}
 									/>
 								</>

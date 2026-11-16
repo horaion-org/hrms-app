@@ -38,7 +38,7 @@ const weekReply = (week = fixtureWeek()): StubReply => ({
 	body: envelope(week),
 });
 
-const show = (shownDay?: string): void => {
+const show = (shownDay?: string, weekEnded?: boolean): void => {
 	const client = new QueryClient({
 		defaultOptions: { queries: { retry: false } },
 	});
@@ -48,6 +48,7 @@ const show = (shownDay?: string): void => {
 				<MyShiftPreferences
 					companyId="c-1"
 					shownDay={shownDay}
+					weekEnded={weekEnded}
 					weekStartMonday={FIXTURE_WEEK}
 				/>
 			</QueryClientProvider>
@@ -98,6 +99,39 @@ describe("MyShiftPreferences", () => {
 		expect(
 			screen.queryByRole("button", { name: /^Choose shifts for Mon/ })
 		).not.toBeInTheDocument();
+		expect(
+			screen.getByText(
+				"Some days can’t be changed: preferences are open from today to eight weeks ahead."
+			)
+		).toBeVisible();
+	});
+
+	it("given_aWeekThatHasEnded_when_shown_then_saysSoRatherThanThatDaysAreOutOfReach", async () => {
+		const week = fixtureWeek();
+		stubApi({
+			[`GET ${MINE}`]: weekReply({
+				...week,
+				days: week.days.map((day) => ({ ...day, editable: false })),
+			}),
+		});
+		show(undefined, true);
+
+		expect(
+			await screen.findByText(
+				"This week has ended, so its preferences can’t be changed."
+			)
+		).toBeVisible();
+		expect(
+			screen.queryByText(/^Some days can’t be changed/)
+		).not.toBeInTheDocument();
+	});
+
+	it("given_everyDayOpen_when_shown_then_givesNoReason", async () => {
+		stubApi({ [`GET ${MINE}`]: weekReply() });
+		show();
+
+		await screen.findByRole("table", { name: "Shift preferences" });
+		expect(screen.queryByText(/can’t be changed/)).not.toBeInTheDocument();
 	});
 
 	it("given_aShownDay_when_shown_then_onlyThatDaysColumnShowsBelowMd", async () => {
