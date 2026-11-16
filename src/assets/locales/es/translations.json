@@ -5009,6 +5009,8 @@
 				"generatedAhead": "Generado por adelantado. Primero va {{month}}."
 			},
 			"tabFailed": "No pudimos cargar los meses. Inténtalo de nuevo.",
+			"tabLoading": "Cargando los meses…",
+			"tabEmpty": "Ningún mes tiene horario todavía. Usa Crear horario para empezar uno.",
 			"roster": {
 				"unpublished": "<0>Sin publicar.</0> El personal no puede ver esta semana.",
 				"publishFirst": "Publica primero {{week}}. Las semanas se publican en orden.",

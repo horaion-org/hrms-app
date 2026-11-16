@@ -8,7 +8,10 @@ import { authTestI18n } from "@/features/auth/testingI18n";
 import { storyCompany } from "@/features/people/storyCompany";
 import { approvalKeys } from "@/features/approvals/api";
 import { approvalInstanceFixture } from "@/features/approvals/fixtures";
-import { scheduleMonthSummariesKey } from "@/features/scheduling/months/api";
+import {
+	scheduleMonthSummariesKey,
+	type ScheduleMonthSummary,
+} from "@/features/scheduling/months/api";
 import { monthSummaryFixture } from "@/features/scheduling/months/fixtures";
 import { summaryRange } from "@/features/scheduling/months/monthWeeks";
 import { SchedulesTab } from "@/features/scheduling/SchedulesTab";
@@ -59,7 +62,9 @@ const SUMMARIES = [
 const show = (
 	onDepartmentChange = vi.fn(),
 	permissions = ["schedule:read"],
-	kitchenStatus: Schedule["status"] = "GENERATION_REQUESTED"
+	kitchenStatus: Schedule["status"] = "GENERATION_REQUESTED",
+	/** Left unseeded when undefined, so the months are read. */
+	summaries: Array<ScheduleMonthSummary> | undefined = SUMMARIES
 ): { onDepartmentChange: typeof onDepartmentChange } => {
 	// The router scrolls to the top on load, which jsdom does not implement.
 	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
@@ -74,14 +79,15 @@ const show = (
 			status: kitchenStatus,
 		}),
 	]);
-	client.setQueryData(
-		scheduleMonthSummariesKey(
-			"c-1",
-			selectedUnits(UNITS),
-			summaryRange(new Date())
-		),
-		SUMMARIES
-	);
+	if (summaries)
+		client.setQueryData(
+			scheduleMonthSummariesKey(
+				"c-1",
+				selectedUnits(UNITS),
+				summaryRange(new Date())
+			),
+			summaries
+		);
 	client.setQueryData(approvalKeys.pending("c-1"), [
 		approvalInstanceFixture({ subjectId: "s-2" }),
 	]);
@@ -170,6 +176,27 @@ describe("SchedulesTab", () => {
 		expect(screen.getByRole("region", { name: "Kitchen" })).toBeVisible();
 		expect(screen.queryByRole("region", { name: "Front Office" })).toBeNull();
 		expect(screen.queryByRole("heading", { name: "December 2026" })).toBeNull();
+	});
+
+	it("given_theMonthsStillLoading_when_rendered_then_saysTheMonthsAreLoading", async () => {
+		// The months' read never answers, so they stay loading.
+		vi.stubGlobal("fetch", () => new Promise(() => {}));
+		show(vi.fn(), ["schedule:read"], "GENERATION_REQUESTED", undefined);
+
+		expect(await screen.findByText("Loading the months…")).toHaveAttribute(
+			"role",
+			"status"
+		);
+	});
+
+	it("given_noMonthWithASchedule_when_rendered_then_saysSoAndPointsAtCreateSchedule", async () => {
+		show(vi.fn(), ["schedule:read"], "GENERATION_REQUESTED", []);
+
+		expect(
+			await screen.findByText(
+				"No month has a schedule yet. Use Create schedule to start one."
+			)
+		).toBeInTheDocument();
 	});
 
 	it("given_aSearch_when_typed_then_narrowsTheHistory", async () => {

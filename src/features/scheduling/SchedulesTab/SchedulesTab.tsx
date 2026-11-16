@@ -216,9 +216,19 @@ export const SchedulesTab = ({
 					onDepartmentChange(undefined);
 				}}
 			/>
+			{months.isLoading && (
+				<p className="mt-8 text-sm text-neutral-700" role="status">
+					{t("scheduling.months.tabLoading")}
+				</p>
+			)}
 			{months.isError && (
 				<p className="mt-8 text-sm text-neutral-700" role="alert">
 					{t("scheduling.months.tabFailed")}
+				</p>
+			)}
+			{months.isSuccess && search.trim() === "" && monthGroups.length === 0 && (
+				<p className="mt-8 text-sm text-neutral-700">
+					{t("scheduling.months.tabEmpty")}
 				</p>
 			)}
 			{monthGroups.map(([month, monthSummaries]) => (

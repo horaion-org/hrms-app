@@ -5209,6 +5209,8 @@
 				"generatedAhead": "Generated ahead. {{month}} comes first."
 			},
 			"tabFailed": "The months couldn’t be loaded. Please try again.",
+			"tabLoading": "Loading the months…",
+			"tabEmpty": "No month has a schedule yet. Use Create schedule to start one.",
 			"roster": {
 				"unpublished": "<0>Not published.</0> Staff can’t see this week.",
 				"publishFirst": "Publish {{week}} first. Weeks are published in order.",
