@@ -1,6 +1,7 @@
 import type { Decorator, Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { fn, userEvent, within } from "storybook/test";
+import type { FunctionComponent } from "@/common/types";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -102,7 +103,9 @@ export const Default: Story = {};
 
 /** Rows under group headings that fold: the "Closed" branches start folded; click a heading to fold or unfold it. */
 export const CollapsibleGroups: Story = {
-	render: (args) => {
+	render: function CollapsibleGroupsStory(
+		args
+	): NonNullable<FunctionComponent> {
 		const [closed, setClosed] = useState<Array<string>>(["Closed"]);
 		return (
 			<DataTable

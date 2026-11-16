@@ -6,6 +6,7 @@ import {
 	passesShowing,
 	showingOf,
 	showingValue,
+	type FoldableSection,
 	type ShowingRow,
 } from "@/features/scheduling/constraints/constraintListView";
 
@@ -96,7 +97,11 @@ describe("showingOf and passesShowing", () => {
 });
 
 describe("initiallyClosedOf", () => {
-	const section = (key: string, rowCount: number, needsAttention = false) => ({
+	const section = (
+		key: string,
+		rowCount: number,
+		needsAttention = false
+	): FoldableSection => ({
 		key,
 		rowCount,
 		needsAttention,

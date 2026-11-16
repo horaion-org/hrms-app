@@ -572,13 +572,6 @@ export const ConstraintsTab = ({
 								<ConstraintSection
 									key={section.category}
 									count={section.rows.length}
-									collapse={{
-										open: folds.isOpen(section.category),
-										onToggle: () => {
-											folds.toggle(section.category);
-										},
-										gist: gistOf(section.rows),
-									}}
 									emptyText={t(`${key}.sectionEmpty`)}
 									icon={categoryIconOf(section.category)}
 									add={
@@ -591,6 +584,13 @@ export const ConstraintsTab = ({
 												}
 											: undefined
 									}
+									collapse={{
+										open: folds.isOpen(section.category),
+										onToggle: () => {
+											folds.toggle(section.category);
+										},
+										gist: gistOf(section.rows),
+									}}
 									description={t(
 										`scheduling.constraints.categoryDescriptions.${section.category}`
 									)}

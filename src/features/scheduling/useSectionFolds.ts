@@ -31,22 +31,22 @@ export const useSectionFolds = (
 		setRemembered([...next]);
 	};
 	return {
-		isOpen: (section) => !closed.includes(section),
-		toggle: (section) => {
+		isOpen: (section): boolean => !closed.includes(section),
+		toggle: (section): void => {
 			keep(
 				closed.includes(section)
 					? closed.filter((each) => each !== section)
 					: [...closed, section]
 			);
 		},
-		open: (section) => {
+		open: (section): void => {
 			if (closed.includes(section))
 				keep(closed.filter((each) => each !== section));
 		},
-		closeAll: (sections) => {
+		closeAll: (sections): void => {
 			keep(sections);
 		},
-		openAll: () => {
+		openAll: (): void => {
 			keep([]);
 		},
 	};

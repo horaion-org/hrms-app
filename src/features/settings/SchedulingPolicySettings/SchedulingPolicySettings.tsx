@@ -183,15 +183,6 @@ export const SchedulingPolicySettings = ({
 						<ConstraintSection
 							key={section.category}
 							count={section.rows.length}
-							collapse={{
-								open: folds.isOpen(section.category),
-								onToggle: (): void => {
-									folds.toggle(section.category);
-								},
-								gist: t("scheduling.constraintsTab.sectionGist", {
-									count: section.rows.length,
-								}),
-							}}
 							emptyText={t("scheduling.constraintsTab.sectionEmpty")}
 							icon={categoryIconOf(section.category)}
 							title={t(`scheduling.constraints.categories.${section.category}`)}
@@ -205,6 +196,15 @@ export const SchedulingPolicySettings = ({
 										}
 									: undefined
 							}
+							collapse={{
+								open: folds.isOpen(section.category),
+								onToggle: (): void => {
+									folds.toggle(section.category);
+								},
+								gist: t("scheduling.constraintsTab.sectionGist", {
+									count: section.rows.length,
+								}),
+							}}
 							description={t(
 								`scheduling.constraints.categoryDescriptions.${section.category}`
 							)}
