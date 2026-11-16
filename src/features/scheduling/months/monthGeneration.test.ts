@@ -11,6 +11,7 @@ import {
 	isGenerating,
 	refusedWeeks,
 	showsBeforeGenerate,
+	showsRegenerate,
 	startingWeekOf,
 	weekNameOf,
 	weeksToCreate,
@@ -122,6 +123,73 @@ describe("month generation", () => {
 		expect(refusedWeeks(answer)).toEqual({
 			"2026-12-14": "SCHEDULE_HAS_NO_EMPLOYEES",
 		});
+	});
+});
+
+describe("showsRegenerate", () => {
+	it("given_everyCoveredWeekGenerated_when_read_then_shows", () => {
+		const month = scheduleMonthFixture({
+			weeks: [
+				monthWeekFixture({
+					state: "TO_REVIEW",
+					includedInMonthGeneration: true,
+				}),
+				monthWeekFixture({
+					state: "TENTATIVE",
+					includedInMonthGeneration: true,
+				}),
+			],
+		});
+
+		expect(showsRegenerate(month)).toBe(true);
+	});
+
+	it("given_aCoveredDraft_when_read_then_hidesForBeforeGenerate", () => {
+		const month = scheduleMonthFixture({
+			weeks: [
+				monthWeekFixture({
+					state: "TO_REVIEW",
+					includedInMonthGeneration: true,
+				}),
+				monthWeekFixture({ state: "DRAFT", includedInMonthGeneration: true }),
+			],
+		});
+
+		expect(showsRegenerate(month)).toBe(false);
+	});
+
+	it("given_aWeekBeingGenerated_when_read_then_hides", () => {
+		const month = scheduleMonthFixture({
+			weeks: [
+				monthWeekFixture({
+					state: "GENERATING",
+					includedInMonthGeneration: false,
+				}),
+				monthWeekFixture({
+					state: "TENTATIVE",
+					includedInMonthGeneration: true,
+				}),
+			],
+		});
+
+		expect(showsRegenerate(month)).toBe(false);
+	});
+
+	it("given_everyWeekPublished_when_read_then_hides", () => {
+		const month = scheduleMonthFixture({
+			weeks: [
+				monthWeekFixture({
+					state: "PUBLISHED",
+					includedInMonthGeneration: false,
+				}),
+				monthWeekFixture({
+					state: "PUBLISHED",
+					includedInMonthGeneration: false,
+				}),
+			],
+		});
+
+		expect(showsRegenerate(month)).toBe(false);
 	});
 });
 

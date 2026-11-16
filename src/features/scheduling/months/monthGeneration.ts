@@ -34,6 +34,16 @@ export const showsBeforeGenerate = (month: ScheduleMonth): boolean =>
 		(week) => week.state === "NOT_GENERATED" || week.state === "DRAFT"
 	);
 
+/**
+ * Whether "Regenerate" shows: nothing is generating, "Before you generate"
+ * doesn't show, and a run would work some week out again (one not
+ * published). The month's counterpart of a week's `regenerable`.
+ */
+export const showsRegenerate = (month: ScheduleMonth): boolean =>
+	!isGenerating(month) &&
+	!showsBeforeGenerate(month) &&
+	coveredWeeks(month).length > 0;
+
 /** The covered weeks changed by hand: generating the month replaces those changes. */
 export const handChangedCoveredWeeks = (
 	month: ScheduleMonth

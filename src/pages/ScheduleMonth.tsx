@@ -29,6 +29,7 @@ import {
 	isGenerating,
 	refusedWeeks,
 	showsBeforeGenerate,
+	showsRegenerate,
 } from "@/features/scheduling/months/monthGeneration";
 import { refusedWeeksFrom } from "@/features/scheduling/months/refusedWeeksState";
 import { RegenerateMonthDialog } from "@/features/scheduling/RegenerateMonthDialog";
@@ -313,7 +314,7 @@ const blockedNoteOf = (
 			? t("scheduling.week.listsHiddenNote", { department })
 			: undefined;
 
-/** The month itself: its title and summary, before generating or while generating, its weeks, and the legend. */
+/** The month itself: its title and summary, Regenerate once every covered week has a roster, before generating or while generating, its weeks, and the legend. */
 const MonthContent = ({
 	scheduleMonth,
 }: {
@@ -374,7 +375,19 @@ const MonthContent = ({
 					</h1>
 					<p className="text-sm text-neutral-800">{summary}</p>
 				</div>
-				<MonthSteps department={departmentId} month={month} />
+				<div className="flex flex-wrap gap-2">
+					{mayGenerate && showsRegenerate(scheduleMonth) && (
+						<Button
+							variant="secondary"
+							onClick={() => {
+								setConfirmingRegenerate(true);
+							}}
+						>
+							{t("scheduling.months.regenerate.button", { month: monthName })}
+						</Button>
+					)}
+					<MonthSteps department={departmentId} month={month} />
+				</div>
 			</header>
 			<CrossingWeekLine department={departmentId} month={month} />
 			<WaitingWeekLine department={departmentId} month={month} weeks={weeks} />

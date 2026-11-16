@@ -384,6 +384,62 @@ it("given_aCoveredWeekChangedByHand_when_generated_then_asksFirstAndPostsOnConfi
 	});
 });
 
+describe("regenerating a month whose weeks all have a roster", () => {
+	const generatedDecember = ungeneratedMonthFixture({
+		weeks: ungeneratedMonthFixture().weeks.map((week, index) => ({
+			...week,
+			state: "TENTATIVE" as const,
+			scheduleId: `s-${index + 10}`,
+		})),
+	});
+
+	it("given_scheduleGenerate_when_regenerateIsChosen_then_asksInTheDialog", async () => {
+		const user = userEvent.setup();
+		await openMonth(
+			decemberRoutes([ok(generatedDecember)]),
+			"/scheduling/months/2026-12?department=d-1"
+		);
+
+		await user.click(
+			await screen.findByRole("button", { name: "Regenerate December" })
+		);
+
+		expect(
+			await screen.findByRole("dialog", { name: "Regenerate December?" })
+		).toBeInTheDocument();
+		expect(
+			screen.queryByRole("heading", { name: "Before you generate December" })
+		).toBeNull();
+	});
+
+	it("given_noScheduleGenerate_when_opened_then_noRegenerate", async () => {
+		await openMonth(
+			{ ...decemberRoutes([ok(generatedDecember)]), ...signedIn() },
+			"/scheduling/months/2026-12?department=d-1"
+		);
+
+		await screen.findByRole("heading", {
+			level: 1,
+			name: "Kitchen · December 2026",
+		});
+		expect(
+			screen.queryByRole("button", { name: "Regenerate December" })
+		).toBeNull();
+	});
+
+	it("given_aMonthBeingGenerated_when_opened_then_noRegenerate", async () => {
+		await openMonth(
+			decemberRoutes([ok(generatingDecember)]),
+			"/scheduling/months/2026-12?department=d-1"
+		);
+
+		expect(await screen.findByText("Generating December…")).toBeInTheDocument();
+		expect(
+			screen.queryByRole("button", { name: "Regenerate December" })
+		).toBeNull();
+	});
+});
+
 describe("a month held back by an earlier month's week", () => {
 	const tentativeDecember = ungeneratedMonthFixture({
 		weeks: ungeneratedMonthFixture().weeks.map((week, index) => ({
