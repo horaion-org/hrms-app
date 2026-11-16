@@ -3,6 +3,7 @@ import type {
 	Overtime,
 	PeopleEvent,
 	Shortage,
+	StaffingRule,
 	TeamCoverOffer,
 	WaitingApproval,
 } from "@/features/dashboard/api";
@@ -119,5 +120,27 @@ export const peopleEventFixture = (
 	branchName: "Main branch",
 	departmentId: "d-1",
 	departmentName: "Sales",
+	...overrides,
+});
+
+/** Front desk's rule: 3 needed on each shift, 2 people hold the titles. */
+export const staffingRuleFixture = (
+	overrides: Partial<StaffingRule> = {}
+): StaffingRule => ({
+	departmentId: "d-1",
+	departmentName: "Front desk",
+	branchName: "Main branch",
+	ruleName: "Front desk AM",
+	ruleType: "SHIFT_STAFFING",
+	headcount: 3,
+	jobTitles: [
+		{ jobTitleId: "jt-clerk", name: "Clerk" },
+		{ jobTitleId: "jt-lead", name: "Lead" },
+	],
+	peopleWithTitles: 2,
+	shifts: [{ shiftId: "sh-am", name: "Morning", daysAWeek: 7 }],
+	gapsInRange: 9,
+	neededShiftDaysAWeek: 21,
+	holderDaysAWeek: 10,
 	...overrides,
 });

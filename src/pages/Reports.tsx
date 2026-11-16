@@ -5,7 +5,10 @@ import { DatePicker } from "@/components/forms/DatePicker";
 import { Callout } from "@/components/ui/Callout";
 import { Tab, TabList, Tabs } from "@/components/ui/Tabs";
 import type { DayRange } from "@/features/dashboard/api";
-import { useOvertime } from "@/features/dashboard/useDashboardReads";
+import {
+	useOvertime,
+	useStaffing,
+} from "@/features/dashboard/useDashboardReads";
 import type { RosterChangeDepartment } from "@/features/reports/api";
 import { OvertimeTable } from "@/features/reports/OvertimeTable";
 import {
@@ -27,10 +30,7 @@ import {
 import { REPORTS_UNIT_RULES } from "@/features/reports/reportsUnitRules";
 import { RosterStabilityTable } from "@/features/reports/RosterStabilityTable";
 import { StaffingTable } from "@/features/reports/StaffingTable";
-import {
-	useRosterChanges,
-	useStaffing,
-} from "@/features/reports/useReportsReads";
+import { useRosterChanges } from "@/features/reports/useReportsReads";
 import { DepartmentFilter } from "@/features/workspace/DepartmentFilter";
 import { SCHEDULE_READ_KEYS } from "@/features/workspace/permissionKeys";
 import { selectedUnits } from "@/features/workspace/unitSelection";

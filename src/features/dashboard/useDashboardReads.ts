@@ -3,16 +3,18 @@ import {
 	APPROVAL_READ_KEYS,
 	daysOffQuery,
 	overtimeQuery,
-	shortagesQuery,
 	peopleEventsQuery,
+	shortagesQuery,
+	staffingQuery,
 	teamCoverOffersQuery,
 	waitingApprovalsQuery,
 	type DayOff,
 	type DayRange,
 	type MonthSpan,
 	type Overtime,
-	type Shortage,
 	type PeopleEvent,
+	type Shortage,
+	type StaffingRule,
 	type TeamCoverOffer,
 	type WaitingApproval,
 } from "@/features/dashboard/api";
@@ -168,6 +170,21 @@ export const usePeopleEvents = (
 	const allowed = access.canAny(PEOPLE_READ_KEYS, "anywhere");
 	const query = useQuery(
 		peopleEventsQuery(companyId, units, range, allowed && asked)
+	);
+	return guardedRead(access, allowed, query);
+};
+
+/** Staffing by rule, where `schedule:read` is held; `asked` false asks for nothing. */
+export const useStaffing = (
+	companyId: string,
+	units: UnitSelection,
+	range: DayRange,
+	asked = true
+): GuardedRead<Array<StaffingRule>> => {
+	const access = useAccess();
+	const allowed = access.canAny(SCHEDULE_READ_KEYS, "anywhere");
+	const query = useQuery(
+		staffingQuery(companyId, units, range, allowed && asked)
 	);
 	return guardedRead(access, allowed, query);
 };

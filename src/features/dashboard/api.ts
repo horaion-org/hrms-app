@@ -282,6 +282,75 @@ export const teamCoverOffersQuery = (
 	);
 
 /*
+ * Staffing by rule: what each staffing rule asks for against the people
+ * who could fill it. Home names a rule nobody can staff; Reports lists
+ * them all.
+ */
+
+const staffingRuleSchema = z.object({
+	departmentId: z.string(),
+	departmentName: z.string(),
+	branchName: z.string(),
+	ruleName: z.string(),
+	ruleType: z.string(),
+	/** How many people the rule asks for on each of its shifts. */
+	headcount: z.number().int(),
+	/** The job titles the rule counts together. */
+	jobTitles: z.array(z.object({ jobTitleId: z.string(), name: z.string() })),
+	/** How many people hold one of those job titles. */
+	peopleWithTitles: z.number().int(),
+	shifts: z.array(
+		z.object({
+			shiftId: z.string(),
+			name: z.string(),
+			daysAWeek: z.number().int(),
+		})
+	),
+	/** The people short on the rule's shifts over the range, added up. */
+	gapsInRange: z.number().int(),
+	/** The person-days a week the rule asks for: its headcount times the days its shifts run. */
+	neededShiftDaysAWeek: z.number().int(),
+	/** The days a week the title holders are contracted to work, added up; null when none has terms. */
+	holderDaysAWeek: z.number().int().nullable(),
+});
+
+/** One staffing rule against the people who could fill it. */
+export type StaffingRule = z.infer<typeof staffingRuleSchema>;
+
+const staffingSchema = z.object({
+	from: z.string(),
+	to: z.string(),
+	rules: z.array(staffingRuleSchema),
+});
+
+/** Each staffing rule in the range and units. */
+export const fetchStaffing = (
+	companyId: string,
+	units: UnitSelection,
+	range: DayRange,
+	signal?: AbortSignal
+): Promise<Array<StaffingRule>> =>
+	apiRequest(
+		`${schedulesReadPath(companyId, "staffing")}${searchOf(units, range)}`,
+		staffingSchema,
+		{ signal }
+	).then((answer) => answer.rules);
+
+/** Staffing by rule; `allowed` false asks for nothing. */
+export const staffingQuery = (
+	companyId: string,
+	units: UnitSelection,
+	range: DayRange,
+	allowed: boolean
+): QueryOptionsFor<Array<StaffingRule>, ReadonlyArray<unknown>> =>
+	dashboardQuery(
+		companyId,
+		dashboardKey(companyId, "staffing", units, range),
+		(signal) => fetchStaffing(companyId, units, range, signal),
+		allowed
+	);
+
+/*
  * Two reads beyond the schedules (ADR-0095): the approvals waiting in the
  * person's units, and who joins, ends probation or leaves.
  */

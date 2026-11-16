@@ -15,11 +15,11 @@ import {
 } from "@/common/testing/stubApi";
 import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
-import { overtimeFixture } from "@/features/dashboard/fixtures";
 import {
-	rosterChangeDepartmentFixture,
+	overtimeFixture,
 	staffingRuleFixture,
-} from "@/features/reports/fixtures";
+} from "@/features/dashboard/fixtures";
+import { rosterChangeDepartmentFixture } from "@/features/reports/fixtures";
 import { presetRange } from "@/features/reports/reportsSearch";
 
 const SCHEDULES = "/api/v1/companies/c-1/schedules";

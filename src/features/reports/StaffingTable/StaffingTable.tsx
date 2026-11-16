@@ -4,12 +4,12 @@ import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
+import type { StaffingRule } from "@/features/dashboard/api";
 import { cardLinkClasses } from "@/features/dashboard/cardStyles";
-import type { StaffingRule } from "@/features/reports/api";
 import {
 	staffingCauseOf,
 	type StaffingCause,
-} from "@/features/reports/reportFindings";
+} from "@/features/dashboard/staffingCause";
 
 const key = "reports.staffing";
 

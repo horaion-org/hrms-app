@@ -4,7 +4,7 @@ import { initReactI18next } from "react-i18next";
 import { beforeAll, describe, expect, it } from "vitest";
 import en from "@/assets/locales/en/translations.json";
 import { MemoryRouterHarness } from "@/components/utils/MemoryRouterHarness";
-import { staffingRuleFixture } from "@/features/reports/fixtures";
+import { staffingRuleFixture } from "@/features/dashboard/fixtures";
 import { StaffingTable } from "@/features/reports/StaffingTable";
 
 beforeAll(async () => {

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { withMemoryRouter } from "@/components/utils/MemoryRouterHarness";
-import { staffingRuleFixture } from "@/features/reports/fixtures";
+import { staffingRuleFixture } from "@/features/dashboard/fixtures";
 import { StaffingTable } from "@/features/reports/StaffingTable";
 import "@/common/i18n";
 
