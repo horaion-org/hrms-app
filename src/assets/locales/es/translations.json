@@ -3201,7 +3201,7 @@
 			"problems": {
 				"needsAttention": "Requiere atención",
 				"UNAVAILABLE": "{{name}} ya no existe o no está activo. Edita la restricción o elimínala.",
-				"NOT_LISTED": "{{name}} ya no está en los turnos de la restricción. Edita la restricción o añade {{name}} al turno.",
+				"NOT_LISTED": "{{name}} ya no está en todos los turnos de la restricción. Edita la restricción o añade {{name}} a cada uno de sus turnos.",
 				"LISTS_NONE": "{{name}} ya no incluye ninguno de los puestos de la restricción. Edita la restricción o añade uno al turno.",
 				"UNKNOWN": "{{name}} ya no encaja. Edita la restricción."
 			},
@@ -3424,7 +3424,7 @@
 				"typeAlreadyUsed": "Este departamento ya tiene una restricción de este tipo. Edita esa.",
 				"invalid": "Esta restricción no encaja con su tipo. Revisa los valores e inténtalo de nuevo.",
 				"linkNotInDepartment": "Un turno o puesto elegido ya no forma parte de este departamento. Elige de nuevo.",
-				"linkDoesNotFit": "Un puesto elegido no está en ningún turno elegido, o un turno elegido no tiene ninguno de los puestos elegidos. Elige de nuevo o cambia antes el turno.",
+				"linkDoesNotFit": "Un puesto elegido no está en todos los turnos elegidos, o un turno elegido no tiene ninguno de los puestos elegidos. Elige de nuevo, elige menos turnos o cambia antes el turno.",
 				"departmentInactive": "Este departamento está inactivo. Actívalo primero.",
 				"departmentGone": "Este departamento ya no está disponible.",
 				"forbidden": "Ya no tienes permiso para añadir restricciones aquí.",
@@ -3458,9 +3458,12 @@
 				"dependency": {
 					"chooseFirst": "Elige antes en {{field}}.",
 					"noneListed": "Nada de lo elegido en {{field}} incluye uno todavía.",
+					"noOverlap": {
+						"JOB_TITLE": "Los turnos elegidos no comparten ningún puesto. Elige turnos que admitan el mismo puesto, o menos turnos."
+					},
 					"removed": {
-						"NOT_LISTED_one": "Se quitó {{names}}: nada de lo elegido en {{field}} lo incluye.",
-						"NOT_LISTED_other": "Se quitaron {{names}}: nada de lo elegido en {{field}} los incluye.",
+						"NOT_LISTED_one": "Se quitó {{names}}: no todo lo elegido en {{field}} lo incluye.",
+						"NOT_LISTED_other": "Se quitaron {{names}}: no todo lo elegido en {{field}} los incluye.",
 						"EXCLUDED_one": "Se quitó {{names}}: ya está elegido en {{field}}.",
 						"EXCLUDED_other": "Se quitaron {{names}}: ya están elegidos en {{field}}."
 					},

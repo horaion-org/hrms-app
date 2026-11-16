@@ -62,7 +62,7 @@ describe("ConstraintTable", () => {
 
 		expect(row(stale.name)).toHaveTextContent("Needs attention");
 		expect(row(stale.name)).toHaveTextContent(
-			"Front Desk Lead isn’t on the constraint’s shifts any more. Edit the constraint, or add Front Desk Lead to the shift."
+			"Front Desk Lead isn’t on every one of the constraint’s shifts any more. Edit the constraint, or add Front Desk Lead to each of its shifts."
 		);
 		expect(row(barCover.name)).not.toHaveTextContent("Needs attention");
 		expect(row(barCover.name)).not.toHaveTextContent("any more");

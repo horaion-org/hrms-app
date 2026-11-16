@@ -786,7 +786,7 @@ describe("constraint refusals", () => {
 		[
 			400,
 			"CONSTRAINT_LINK_DOES_NOT_FIT",
-			"A chosen job title isn’t on any chosen shift, or a chosen shift lists none of the chosen job titles. Choose again, or change the shift first.",
+			"A chosen job title isn’t on every chosen shift, or a chosen shift lists none of the chosen job titles. Choose again, choose fewer shifts, or change the shift first.",
 		],
 		[404, "CONSTRAINT_NOT_FOUND", "This constraint no longer exists."],
 		[
