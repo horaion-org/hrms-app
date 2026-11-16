@@ -6,7 +6,6 @@ import {
 	formatMonth,
 	formatMonthName,
 	formatWeekDates,
-	formatWeekdayDate,
 	mondaysIn,
 	monthChoicesFrom,
 	monthOf,
@@ -79,12 +78,6 @@ describe("mondaysIn", () => {
 			"2027-02-15",
 			"2027-02-22",
 		]);
-	});
-});
-
-describe("formatWeekdayDate", () => {
-	it("given_aDate_when_formatted_then_weekdayDayAndMonth", () => {
-		expect(formatWeekdayDate("2026-11-02", "en-GB")).toBe("Mon 2 Nov");
 	});
 });
 

@@ -5,7 +5,10 @@ import type {
 	ScheduleMonthSummary,
 	WeekState,
 } from "@/features/scheduling/months/api";
-import type { SchedulePeriod } from "@/features/scheduling/periods";
+import type {
+	RangeFormat,
+	SchedulePeriod,
+} from "@/features/scheduling/periods";
 
 /*
  * Months as "yyyy-MM", pure. A week belongs to the month its Monday falls
@@ -53,14 +56,6 @@ export const mondaysIn = (month: string): Array<string> => {
 	return mondays;
 };
 
-/** A date with its weekday in the person's language, e.g. "Mon 2 Nov". */
-export const formatWeekdayDate = (date: string, language: string): string =>
-	new Intl.DateTimeFormat(language, {
-		weekday: "short",
-		day: "numeric",
-		month: "short",
-	}).format(dayjs(date).toDate());
-
 /** A month in the person's language, e.g. "November 2026". */
 export const formatMonth = (month: string, language: string): string =>
 	new Intl.DateTimeFormat(language, { month: "long", year: "numeric" }).format(
@@ -88,11 +83,6 @@ export const stateCounts = (
 		if (state !== "NOT_GENERATED") counts[state] = (counts[state] ?? 0) + 1;
 	}
 	return counts;
-};
-
-/** `formatRange` is ES2021, past the ES2020 lib this project compiles against. */
-type RangeFormat = Intl.DateTimeFormat & {
-	formatRange: (start: Date, end: Date) => string;
 };
 
 /** A week's dates without the year, as the month page names a week, e.g. "16 – 22 Nov". */

@@ -37,11 +37,11 @@ import {
 	formatMonth,
 	formatMonthName,
 	formatWeekDates,
-	formatWeekdayDate,
 	monthChoicesFrom,
 	monthOf,
 	summaryRange,
 } from "@/features/scheduling/months/monthWeeks";
+import { weekRangeText } from "@/features/scheduling/months/monthCopy";
 import { hasRoster } from "@/features/scheduling/months/weekStateLooks";
 import {
 	defaultMonthOf,
@@ -604,12 +604,7 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 	const tickedHint = t("scheduling.months.generate.panel.hintChosen", {
 		count: ticked.length,
 		ranges: new Intl.ListFormat(language, { type: "conjunction" }).format(
-			tickedRangesOf(ticked).map((range) =>
-				t("scheduling.months.setup.weekDates", {
-					from: formatWeekdayDate(range.start, language),
-					to: formatWeekdayDate(range.end, language),
-				})
-			)
+			tickedRangesOf(ticked).map((range) => weekRangeText(range, language, t))
 		),
 	});
 	const generate = async (): Promise<void> => {

@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { authTestI18n } from "@/features/auth/testingI18n";
-import { stateCountsLine } from "@/features/scheduling/months/monthCopy";
+import {
+	stateCountsLine,
+	weekRangeText,
+} from "@/features/scheduling/months/monthCopy";
 
 describe("stateCountsLine", () => {
 	it("given_aMonthsWeeks_when_said_then_publishedFirstAndPluralsByCount", () => {
@@ -23,5 +26,17 @@ describe("stateCountsLine", () => {
 		expect(stateCountsLine([{ state: "NOT_GENERATED" }], authTestI18n.t)).toBe(
 			""
 		);
+	});
+});
+
+describe("weekRangeText", () => {
+	it("given_aWeek_when_said_then_itsFirstAndLastDayWithTheirWeekdays", () => {
+		expect(
+			weekRangeText(
+				{ start: "2026-11-23", end: "2026-11-29" },
+				"en-GB",
+				authTestI18n.t
+			)
+		).toBe("Mon 23 Nov to Sun 29 Nov");
 	});
 });

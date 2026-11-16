@@ -1,4 +1,5 @@
 import dayjs from "dayjs";
+import { mondayOf } from "@/common/weeks";
 
 /** Where a week sits next to today's: the one before it, its own, or the one after. */
 export type RelativeWeek = "last" | "this" | "next";
@@ -23,7 +24,7 @@ export const FUTURE_WEEKS = 10;
 const isoFormat = "YYYY-MM-DD";
 
 /** `formatRange` is ES2021, past the ES2020 lib this project compiles against. */
-type RangeFormat = Intl.DateTimeFormat & {
+export type RangeFormat = Intl.DateTimeFormat & {
 	formatRange: (start: Date, end: Date) => string;
 };
 
@@ -32,12 +33,6 @@ export const periodStartingOn = (start: string): SchedulePeriod => ({
 	start,
 	end: dayjs(start).add(6, "day").format(isoFormat),
 });
-
-/** The Monday of the week `today` falls in, at the start of its day. */
-const mondayOf = (today: Date): dayjs.Dayjs =>
-	dayjs(today)
-		.startOf("day")
-		.subtract((today.getDay() + 6) % 7, "day");
 
 const RELATIVE_WEEKS: Record<number, RelativeWeek> = {
 	[-1]: "last",
@@ -49,7 +44,7 @@ const RELATIVE_WEEKS: Record<number, RelativeWeek> = {
 const placedPeriod = (start: string, today: Date): SchedulePeriod => {
 	// Rounded, so a daylight-saving hour between the two Mondays does not shift it.
 	const weeksFromThis = Math.round(
-		dayjs(start).diff(mondayOf(today), "day", true) / 7
+		dayjs(start).diff(dayjs(mondayOf(today)), "day", true) / 7
 	);
 	const relative = RELATIVE_WEEKS[weeksFromThis];
 	return {
@@ -69,7 +64,7 @@ export const selectablePeriods = (
 	today: Date,
 	{ weeksBack = PAST_WEEKS, weeksAhead = FUTURE_WEEKS } = {}
 ): Array<SchedulePeriod> => {
-	const firstMonday = mondayOf(today).subtract(weeksBack, "week");
+	const firstMonday = dayjs(mondayOf(today)).subtract(weeksBack, "week");
 	return Array.from({ length: weeksBack + 1 + weeksAhead }, (_, week) =>
 		placedPeriod(firstMonday.add(week, "week").format(isoFormat), today)
 	);

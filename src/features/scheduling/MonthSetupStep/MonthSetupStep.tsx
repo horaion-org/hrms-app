@@ -1,6 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
-import type { TFunction } from "i18next";
 import { useEffect, useId, useMemo, type ReactNode } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -13,10 +12,8 @@ import { Callout } from "@/components/ui/Callout";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import type { MonthSetup } from "@/features/scheduling/months/monthGeneration";
-import {
-	formatMonth,
-	formatWeekdayDate,
-} from "@/features/scheduling/months/monthWeeks";
+import { weekRangeText } from "@/features/scheduling/months/monthCopy";
+import { formatMonth } from "@/features/scheduling/months/monthWeeks";
 import {
 	badgeOf,
 	skippedWeeksOf,
@@ -80,13 +77,6 @@ const SETTINGS = [
 		descriptionKey: "scheduling.setup.includeLeaveDescription",
 	},
 ] as const;
-
-/** A week's or a range's dates in the person's language, e.g. "Mon 23 Nov to Sun 29 Nov". */
-const datesOf = (range: TickedRange, language: string, t: TFunction): string =>
-	t("scheduling.months.setup.weekDates", {
-		from: formatWeekdayDate(range.start, language),
-		to: formatWeekdayDate(range.end, language),
-	});
 
 const rangeOf = (week: TickableWeek): TickedRange => ({
 	start: week.periodStart,
@@ -180,7 +170,7 @@ export const MonthSetupStep = ({
 			{
 				id: "week",
 				header: t("scheduling.months.setup.weekColumn"),
-				cell: (week) => datesOf(rangeOf(week), language, t),
+				cell: (week) => weekRangeText(rangeOf(week), language, t),
 			},
 			{
 				id: "state",
@@ -196,7 +186,9 @@ export const MonthSetupStep = ({
 	const ticked = weeks?.ticked ?? [];
 	const tickedRanges = new Intl.ListFormat(language, {
 		type: "conjunction",
-	}).format(tickedRangesOf(ticked).map((range) => datesOf(range, language, t)));
+	}).format(
+		tickedRangesOf(ticked).map((range) => weekRangeText(range, language, t))
+	);
 	// Each ticked week with a note, Monday order: what generating it replaces or how it is generated.
 	const tickedNotes = (weeks?.rows ?? []).flatMap((week) =>
 		week.note !== undefined && ticked.includes(week.periodStart)
@@ -301,7 +293,7 @@ export const MonthSetupStep = ({
 								getRowId={(week) => week.periodStart}
 								label={t("scheduling.months.setup.weeksLabel")}
 								selection={{
-									rowLabel: (week) => datesOf(rangeOf(week), language, t),
+									rowLabel: (week) => weekRangeText(rangeOf(week), language, t),
 									selectedIds: weeks.ticked,
 									onChange: weeks.onTickedChange,
 									canSelect: (week) => week.canTick,
@@ -326,14 +318,14 @@ export const MonthSetupStep = ({
 							{tickedNotes.map(({ week, note }) => (
 								<Callout key={week.periodStart} tone="warning">
 									{t(`scheduling.months.setup.${note}Note`, {
-										week: datesOf(rangeOf(week), language, t),
+										week: weekRangeText(rangeOf(week), language, t),
 									})}
 								</Callout>
 							))}
 							{skippedWeeks.map((week) => (
 								<Callout key={week.periodStart} tone="warning">
 									{t("scheduling.months.setup.skippedNote", {
-										week: datesOf(rangeOf(week), language, t),
+										week: weekRangeText(rangeOf(week), language, t),
 									})}
 								</Callout>
 							))}

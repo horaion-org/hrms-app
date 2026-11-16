@@ -1,4 +1,5 @@
 import type { TFunction } from "i18next";
+import { formatDay } from "@/common/formatDay";
 import type { WeekState } from "@/features/scheduling/months/api";
 import { stateCounts } from "@/features/scheduling/months/monthWeeks";
 
@@ -32,3 +33,14 @@ export const stateCountsLine = (
 		)
 		.join(" · ");
 };
+
+/** A week's or a range's dates in the person's language, e.g. "Mon 23 Nov to Sun 29 Nov". */
+export const weekRangeText = (
+	range: { start: string; end: string },
+	language: string,
+	t: TFunction
+): string =>
+	t("scheduling.months.setup.weekDates", {
+		from: formatDay(range.start, language),
+		to: formatDay(range.end, language),
+	});
