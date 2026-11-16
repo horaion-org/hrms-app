@@ -26,9 +26,58 @@ type Story = StoryObj<typeof meta>;
 /** One department chosen: its shifts, without Branch or Department columns. */
 export const OneDepartment: Story = {};
 
-/** Every department in reach: each row names its Branch and Department. */
+/** Every department in reach: each row names its Branch and Department under its name. */
 export const AcrossDepartments: Story = {
 	args: { showBranch: true, showDepartment: true },
+};
+
+/** With what the staffing constraints ask of each shift, and one that too few people can meet. */
+export const WithNeeds: Story = {
+	args: {
+		showDepartment: true,
+		needs: {
+			byShift: new Map([
+				[
+					"front-desk-am",
+					[
+						{
+							constraintId: "desk-cover",
+							name: "Desk cover",
+							departmentId: "d-1",
+							comparison: "AT_LEAST",
+							headcount: 2,
+							jobTitleNames: ["Front Desk Staff", "Front Desk Lead"],
+							onDuty: false,
+							ifPossible: false,
+						},
+					],
+				],
+				[
+					"overnight-ops",
+					[
+						{
+							constraintId: "night-audit",
+							name: "Night audit",
+							departmentId: "d-1",
+							comparison: "AT_LEAST",
+							headcount: 3,
+							jobTitleNames: ["Night Auditor"],
+							onDuty: false,
+							ifPossible: false,
+						},
+					],
+				],
+			]),
+			capacityOf: (need) =>
+				need.constraintId === "night-audit"
+					? {
+							headcount: 3,
+							peopleWithTitles: 2,
+							jobTitleNames: ["Night Auditor"],
+						}
+					: undefined,
+		},
+	},
 };
 
 /** Bar's rows offer Delete only: the person holds the delete key there but not the update key. */

@@ -177,7 +177,8 @@ describe("ShiftsTab", () => {
 		show({ permissions: ["shift:read"] });
 
 		const bar = await screen.findByRole("row", { name: /Breakfast Prep/ });
-		expect(headers()).toContain("Department");
+		// The department reads under the shift's name, not in a column of its own.
+		expect(headers()).not.toContain("Department");
 		expect(bar).toHaveTextContent("Bar");
 		expect(
 			screen.getByText(

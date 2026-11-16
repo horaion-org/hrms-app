@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { AlertIcon, DeleteIcon, EditIcon } from "@/components/ui/Icon";
-import { branchColumn } from "@/features/organisation/listColumns";
+import { placeOf } from "@/features/organisation/assignmentTargets";
 import {
 	CONSTRAINT_COMPARISONS,
 	type ConstraintComparison,
@@ -29,6 +29,8 @@ import type { ShiftNeed } from "@/features/scheduling/shifts/staffingNeeds";
 
 /** How many job titles a row names before it counts the rest. */
 const NAMED_JOB_TITLES = 2;
+/** Hours between the list's axis labels: its column is narrow, so every six. */
+const LIST_AXIS_STEP_HOURS = 6;
 
 /** What the table reads of a shift; a list across departments also names its Branch and Department. */
 export type ShiftTableRow = Pick<
@@ -93,6 +95,21 @@ const jobTitlesOf = (shift: ShiftTableRow, t: TFunction): string => {
 		: named;
 };
 
+/** Where a shift belongs, when the list spans several: its Branch, its Department, or both. */
+const placeLineOf = (
+	shift: ShiftTableRow,
+	showBranch: boolean,
+	showDepartment: boolean,
+	t: TFunction
+): string | undefined => {
+	if (showBranch && showDepartment)
+		return placeOf(
+			{ branchName: shift.branchName, departmentName: shift.departmentName },
+			t
+		);
+	return showDepartment ? shift.departmentName : shift.branchName;
+};
+
 /** One need as it reads in the Needed column: "3 Duty Manager", "At most 1 Operator", "1 Team Lead on duty". */
 const needLine = (need: ShiftNeed, t: TFunction): string => {
 	const titles = t("scheduling.constraints.list", {
@@ -155,39 +172,41 @@ export const ShiftTable = <Row extends ShiftTableRow>({
 						<span className="text-neutral-700">
 							{formatTimeRange(shift, t)} · {daysOf(shift, t)}
 						</span>
+						{(showBranch || showDepartment) && (
+							<span className="text-neutral-700">
+								{placeLineOf(shift, showBranch, showDepartment, t)}
+							</span>
+						)}
 					</span>
 				),
+				headerClassName: "w-48",
 				pin: "start",
 			},
-			...(showBranch ? [branchColumn<Row>(t)] : []),
-			...(showDepartment
-				? [
-						{
-							id: "department",
-							header: t("scheduling.shifts.department"),
-							cell: (shift: Row): string => shift.departmentName ?? "",
-							hideBelow: "md",
-						} satisfies DataTableColumn<Row>,
-					]
-				: []),
 			{
 				id: "when",
 				header: t("scheduling.shifts.when"),
+				// The axis and each bar fill this one column, so they share its width and scale.
 				headerCell: (
-					<ShiftDayAxis axis={axis} label={t("scheduling.shifts.when")} />
+					<ShiftDayAxis
+						axis={axis}
+						label={t("scheduling.shifts.when")}
+						stepHours={LIST_AXIS_STEP_HOURS}
+					/>
 				),
-				headerClassName: "w-60",
 				cell: (shift) => <ShiftDayBar axis={axis} shift={shift} />,
 				hideBelow: "md",
 			},
 			{
 				id: "paidHours",
 				header: t("scheduling.shifts.paidHours"),
+				headerClassName: "w-28",
 				cell: (shift) => (
 					<div className="flex flex-col items-start gap-1">
 						<span>{formatPaidHours(shift, t)}</span>
 						{shift.carriesOvertime && (
-							<Badge>{t("scheduling.shifts.carriesOvertime")}</Badge>
+							<Badge className="uppercase">
+								{t("scheduling.shifts.carriesOvertime")}
+							</Badge>
 						)}
 					</div>
 				),
@@ -196,7 +215,9 @@ export const ShiftTable = <Row extends ShiftTableRow>({
 					<span className="inline-flex items-center gap-1">
 						{formatPaidHours(shift, t)}
 						{shift.carriesOvertime && (
-							<Badge>{t("scheduling.shifts.carriesOvertime")}</Badge>
+							<Badge className="uppercase">
+								{t("scheduling.shifts.carriesOvertime")}
+							</Badge>
 						)}
 					</span>
 				),
@@ -205,6 +226,7 @@ export const ShiftTable = <Row extends ShiftTableRow>({
 			{
 				id: "jobTitles",
 				header: t("scheduling.shifts.roleCount"),
+				headerClassName: "w-36",
 				cell: (shift) => jobTitlesOf(shift, t),
 				summary: (shift) =>
 					t("scheduling.shifts.roleCountValue", { count: shift.roles.length }),
@@ -215,6 +237,7 @@ export const ShiftTable = <Row extends ShiftTableRow>({
 						{
 							id: "needed",
 							header: t("scheduling.shifts.needed"),
+							headerClassName: "w-44",
 							cell: (shift: Row): ReactNode => {
 								const shiftNeeds = needs.byShift.get(shift.shiftId) ?? [];
 								if (shiftNeeds.length === 0)
@@ -264,7 +287,7 @@ export const ShiftTable = <Row extends ShiftTableRow>({
 						{
 							id: "actions",
 							header: t("scheduling.shifts.actions"),
-							headerClassName: "w-35",
+							headerClassName: "w-28",
 							pin: "end" as const,
 							cell: (shift: Row) => (
 								<div className="flex justify-center gap-2">

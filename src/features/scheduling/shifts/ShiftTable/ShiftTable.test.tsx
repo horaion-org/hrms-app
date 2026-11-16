@@ -29,13 +29,13 @@ const headers = (): Array<string> =>
 	screen.getAllByRole("columnheader").map((header) => header.textContent ?? "");
 
 describe("ShiftTable", () => {
-	it("given_noBranchOrDepartmentChosen_when_rendered_then_namesEachRowsBranchAndDepartment", () => {
+	it("given_noBranchOrDepartmentChosen_when_rendered_then_namesEachRowsBranchAndDepartmentUnderItsName", () => {
 		render(<ShiftTable showBranch showDepartment shifts={rows} />);
 
-		expect(headers()).toEqual(expect.arrayContaining(["Branch", "Department"]));
+		expect(headers()).not.toContain("Branch");
+		expect(headers()).not.toContain("Department");
 		const bar = screen.getByRole("row", { name: /Breakfast Prep/ });
-		expect(bar).toHaveTextContent("Main branch");
-		expect(bar).toHaveTextContent("Bar");
+		expect(bar).toHaveTextContent("Main branch › Bar");
 	});
 
 	it("given_branchAndDepartmentChosen_when_rendered_then_leavesTheirColumnsOut", () => {
@@ -154,8 +154,6 @@ describe("ShiftTable", () => {
 			.filter((header) => header.className.includes("hidden md:table-cell"))
 			.map((header) => header.textContent);
 		expect(hiddenOnPhones).toEqual([
-			"Branch",
-			"Department",
 			expect.stringMatching(/^When it runs/),
 			"Paid hours",
 			"Job titles",
