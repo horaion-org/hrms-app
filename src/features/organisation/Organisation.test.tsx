@@ -401,7 +401,14 @@ it("reaches the overview from the Sidebar and marks Organisation current", async
 		within(navigation)
 			.getAllByRole("link")
 			.map((link) => link.textContent)
-	).toEqual(["Dashboard", "Scheduling", "Leave", "People", "Organisation"]);
+	).toEqual([
+		"Dashboard",
+		"Scheduling",
+		"Insights",
+		"Leave",
+		"People",
+		"Organisation",
+	]);
 	expect(screen.getByRole("heading", { name: "Dashboard" })).toBeVisible();
 	await user.click(
 		within(navigation).getByRole("link", { name: "Organisation" })
