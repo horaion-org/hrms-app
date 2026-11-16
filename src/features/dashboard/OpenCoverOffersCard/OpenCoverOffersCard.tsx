@@ -3,10 +3,10 @@ import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { Card } from "@/components/ui/Card";
+import { ExpandableList } from "@/components/ui/ExpandableList";
 import { SwapIcon } from "@/components/ui/Icon";
 import type { TeamCoverOffer } from "@/features/dashboard/api";
 import {
-	CARD_ROW_LIMIT,
 	cardLinkClasses,
 	emptyLineClasses,
 	failedLineClasses,
@@ -64,9 +64,13 @@ export const OpenCoverOffersCard = ({
 				<p className={emptyLineClasses}>{t(`${key}.empty`)}</p>
 			)}
 			{team.length > 0 && (
-				<ul className={rowListClasses}>
-					{team.slice(0, CARD_ROW_LIMIT).map((offer) => (
-						<li key={offer.coverOfferId} className={rowClasses}>
+				<ExpandableList
+					itemClassName={rowClasses}
+					items={team}
+					keyOf={(offer) => offer.coverOfferId}
+					listClassName={rowListClasses}
+					renderItem={(offer) => (
+						<>
 							<Link
 								className={cardLinkClasses}
 								params={{ scheduleId: offer.scheduleId }}
@@ -86,16 +90,20 @@ export const OpenCoverOffersCard = ({
 										})
 									: offer.departmentName}
 							</span>
-						</li>
-					))}
-				</ul>
+						</>
+					)}
+				/>
 			)}
 			{mine.length > 0 && (
 				<div className="flex flex-col gap-3">
 					<h3 className={rowTitleClasses}>{t(`${key}.mineTitle`)}</h3>
-					<ul className={rowListClasses}>
-						{mine.slice(0, CARD_ROW_LIMIT).map((offer) => (
-							<li key={offer.offerId} className={rowClasses}>
+					<ExpandableList
+						itemClassName={rowClasses}
+						items={mine}
+						keyOf={(offer) => offer.offerId}
+						listClassName={rowListClasses}
+						renderItem={(offer) => (
+							<>
 								<Link
 									className={cardLinkClasses}
 									params={{ scheduleId: offer.scheduleId }}
@@ -106,9 +114,9 @@ export const OpenCoverOffersCard = ({
 										day: dayLabel(offer.rosterDate, language),
 									})}
 								</Link>
-							</li>
-						))}
-					</ul>
+							</>
+						)}
+					/>
 				</div>
 			)}
 		</Card>

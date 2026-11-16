@@ -24,6 +24,3 @@ export const rowDetailClasses = "text-sm text-neutral-800";
 /** A text link inside a card, as the setup card's links look. */
 export const cardLinkClasses =
 	"text-sm font-semibold text-ink-blue-700 underline underline-offset-2 hover:text-ink-blue-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-blue-500";
-
-/** How many rows a card lists before it says how many more there are. */
-export const CARD_ROW_LIMIT = 6;

@@ -4976,14 +4976,7 @@
 		"clear": "Clear selection"
 	},
 	"dashboard": {
-		"viewSchedule": "View Schedule",
 		"viewAll": "View All",
-		"approvals": {
-			"title": "Pending Approvals",
-			"caption": "Leave requests waiting",
-			"resolved": "{{value}}% Resolved",
-			"resolvedLabel": "Resolved"
-		},
 		"notifications": {
 			"title": "Notifications",
 			"failed": "We couldn’t load pending leave requests.",
@@ -4991,14 +4984,9 @@
 			"leaveTitle": "{{type}} request",
 			"leaveDetail": "from {{name}} ({{period}})",
 			"approve": "Approve",
-			"deny": "Reject with reason"
-		},
-		"quickActions": {
-			"title": "Quick Actions",
-			"generate": "Generate Schedule",
-			"addStaff": "Add Staff",
-			"approve": "Approve Requests",
-			"fillShifts": "Fill Open Shifts"
+			"deny": "Reject with reason",
+			"empty": "No leave waits for a decision.",
+			"seeAll": "See all {{count}}"
 		},
 		"activity": {
 			"back": "Back to Overview",
@@ -5065,20 +5053,6 @@
 					"SHIFT": "No shift",
 					"STAFFING_CONSTRAINT": "No staffing rule"
 				}
-			},
-			"closeToLimit": {
-				"title": "Close to the overtime limit",
-				"seeInsights": "See Insights",
-				"share": "At {{share}}% of the monthly overtime limit or more.",
-				"failed": "We couldn’t load overtime.",
-				"noCeiling": "No monthly overtime limit is set.",
-				"empty": "Nobody is close to the limit this month.",
-				"formerMember": "A former member",
-				"standing": {
-					"NEAR": "Near",
-					"OVER": "Over"
-				},
-				"hours": "{{hours}} h of {{ceiling}} h overtime · {{department}}"
 			},
 			"offToday": {
 				"title": "Off today and tomorrow",
@@ -5490,5 +5464,9 @@
 			},
 			"empty": "No published rosters in these dates."
 		}
+	},
+	"expandableList": {
+		"showAll": "Show all {{count}}",
+		"showFewer": "Show fewer"
 	}
 }

@@ -136,7 +136,7 @@ const open = async (entry = "/"): Promise<OpenedApp> => {
 };
 
 describe("Dashboard", () => {
-	it("given_grants_when_opened_then_showsApprovalsNotificationsAndActivity", async () => {
+	it("given_grants_when_opened_then_listsWhatNeedsThePersonInOneTopAlignedColumn", async () => {
 		stubApi(routes());
 		await open();
 
@@ -148,26 +148,23 @@ describe("Dashboard", () => {
 				element?.tagName === "P" && element.textContent === "Welcome, José."
 		);
 		expect(pageGreeting).toHaveClass("lg:hidden");
-		const approvals = await screen.findByRole("region", {
-			name: "Pending Approvals",
-		});
-		await within(approvals).findByText("3");
-		expect(approvals).toHaveTextContent("70% Resolved");
-		const notifications = screen.getByRole("region", {
+		const leave = await screen.findByRole("region", {
 			name: "Pending leave requests",
 		});
 		expect(
-			await within(notifications).findByText("from Aisha Rahman", {
-				exact: false,
-			})
+			await within(leave).findByText("from Aisha Rahman", { exact: false })
 		).toBeInTheDocument();
-		expect(within(notifications).queryByText("Example")).toBeNull();
+		// One grid, one column, aligned to the top: no card stretches to a neighbour or sits alone.
+		const grid = leave.parentElement;
+		expect(grid).toHaveClass("grid", "grid-cols-1", "items-start");
+		// Approvals appear once: no Pending Approvals tile, no notifications list, no shortcuts.
 		expect(
-			await screen.findByText("Kent Chua added to People")
-		).toBeInTheDocument();
+			screen.queryByRole("region", { name: "Pending Approvals" })
+		).toBeNull();
+		expect(screen.queryByRole("list", { name: "Quick Actions" })).toBeNull();
 		expect(
-			screen.getByRole("list", { name: "Quick Actions" })
-		).toBeInTheDocument();
+			screen.getByRole("link", { name: "Recent Activity" })
+		).toHaveAttribute("href", "/activity");
 	});
 
 	it("given_severalBranches_when_theHeaderBranchChanges_then_theFiguresFollowIt", async () => {
@@ -254,14 +251,13 @@ describe("Dashboard", () => {
 		).toHaveLength(1);
 	});
 
-	it("given_noGrants_when_opened_then_leavesOutApprovalsAndActivity", async () => {
+	it("given_noGrants_when_opened_then_leavesOutWhatTheyCannotActOn", async () => {
 		const calls = stubApi(routes([]));
 		await open();
 
-		await screen.findByRole("list", { name: "Quick Actions" });
-		expect(
-			screen.queryByRole("region", { name: "Active Workforce" })
-		).toBeNull();
+		await waitFor(() => {
+			expect(screen.queryByRole("link", { name: "Recent Activity" })).toBeNull();
+		});
 		await waitFor(() => {
 			expect(
 				screen.queryByRole("region", { name: "Pending Approvals" })

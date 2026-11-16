@@ -4809,14 +4809,7 @@
 		"clear": "Borrar selección"
 	},
 	"dashboard": {
-		"viewSchedule": "Ver horario",
 		"viewAll": "Ver todo",
-		"approvals": {
-			"title": "Aprobaciones pendientes",
-			"caption": "Solicitudes de ausencia en espera",
-			"resolved": "{{value}} % resuelto",
-			"resolvedLabel": "Resuelto"
-		},
 		"notifications": {
 			"title": "Notificaciones",
 			"failed": "No hemos podido cargar las solicitudes de ausencia pendientes.",
@@ -4824,14 +4817,9 @@
 			"leaveTitle": "Solicitud de {{type}}",
 			"leaveDetail": "de {{name}} ({{period}})",
 			"approve": "Aprobar",
-			"deny": "Rechazar con motivo"
-		},
-		"quickActions": {
-			"title": "Acciones rápidas",
-			"generate": "Generar horario",
-			"addStaff": "Añadir personal",
-			"approve": "Aprobar solicitudes",
-			"fillShifts": "Cubrir turnos abiertos"
+			"deny": "Rechazar con motivo",
+			"empty": "Ninguna ausencia espera una decisión.",
+			"seeAll": "Ver las {{count}}"
 		},
 		"activity": {
 			"back": "Volver al resumen",
@@ -4898,20 +4886,6 @@
 					"SHIFT": "Sin turno",
 					"STAFFING_CONSTRAINT": "Sin regla de personal"
 				}
-			},
-			"closeToLimit": {
-				"title": "Cerca del límite de horas extra",
-				"seeInsights": "Ver Análisis",
-				"share": "Al {{share}}% del límite mensual de horas extra o más.",
-				"failed": "No pudimos cargar las horas extra.",
-				"noCeiling": "No hay un límite mensual de horas extra.",
-				"empty": "Nadie está cerca del límite este mes.",
-				"formerMember": "Un antiguo miembro",
-				"standing": {
-					"NEAR": "Cerca",
-					"OVER": "Por encima"
-				},
-				"hours": "{{hours}} h de {{ceiling}} h extra · {{department}}"
 			},
 			"offToday": {
 				"title": "Ausentes hoy y mañana",
@@ -5490,5 +5464,9 @@
 			},
 			"empty": "No hay horarios publicados en estas fechas."
 		}
+	},
+	"expandableList": {
+		"showAll": "Mostrar los {{count}}",
+		"showFewer": "Mostrar menos"
 	}
 }
