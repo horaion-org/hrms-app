@@ -10,7 +10,6 @@ import type { DescriptionListItem } from "@/components/ui/DescriptionList";
 import { LastRosterChange } from "@/features/scheduling/LastRosterChange";
 import type { FindingNameSources } from "@/features/scheduling/roster/findings/findingNames";
 import { legendOf } from "@/features/scheduling/roster/roster";
-import { Badge } from "@/components/ui/Badge";
 import {
 	issueCounts,
 	type RosterIssue,
@@ -340,28 +339,14 @@ export const GeneratedRoster = ({
 								}}
 							>
 								{t(ROSTER_SIDE_LISTS[panel].titleKey)}
-								{panel === "issues" ? (
-									<>
-										{counts.mustFix > 0 && (
-											<CountBadge
-												aria-hidden="true"
-												count={counts.mustFix}
-												tone="inactive"
-											/>
-										)}
-										{counts.notMet > 0 && (
-											<Badge compact aria-hidden="true" tone="warning">
-												{String(counts.notMet)}
-											</Badge>
-										)}
-									</>
-								) : (
-									<CountBadge
-										aria-hidden="true"
-										count={count}
-										tone="inactive"
-									/>
-								)}
+								{/* Issues counts both groups; its panel's headings tell them apart. */}
+								<CountBadge
+									aria-hidden="true"
+									count={
+										panel === "issues" ? counts.mustFix + counts.notMet : count
+									}
+									tone="inactive"
+								/>
 							</Button>
 						))}
 						{validation && (
