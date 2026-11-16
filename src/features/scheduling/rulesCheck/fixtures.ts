@@ -1,4 +1,5 @@
 import type {
+	BrokenRule,
 	RosterRulesCheck,
 	StaffingGap,
 } from "@/features/scheduling/rulesCheck/rosterRulesCheckApi";
@@ -39,5 +40,19 @@ export const rulesCheckFixture = (
 	status: "HOLDS",
 	brokenRules: [],
 	staffingGaps: [],
+	notMet: null,
+	members: [],
+	mayBeShort: false,
+	...overrides,
+});
+
+/** A rule broken or not met, the engine's id known to no constraint, with who and which days when given. */
+export const ruleFixture = (
+	overrides: Partial<BrokenRule> = {}
+): BrokenRule => ({
+	rule: "most_minutes_a_day",
+	constraintId: null,
+	constraintName: null,
+	violations: null,
 	...overrides,
 });

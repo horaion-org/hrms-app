@@ -87,7 +87,8 @@ const OPEN_RUN_STATUSES: ReadonlyArray<GenerationRunStatus> = [
  * copy (ADR-0003). Keys the app doesn't know are dropped.
  */
 
-const findingsViolationSchema = z.object({
+/** One violation of a run's findings; Validate schedule reads who breaks a rule in the same shape. */
+export const findingsViolationSchema = z.object({
 	/** The member profile it is about, or null for a day's entry. */
 	employeeId: z.string().nullable(),
 	/** The day it is about, or null for a member's entry. */
@@ -138,7 +139,8 @@ const findingsAssignmentMessagesSchema = z.object({
 	messages: z.array(z.string()),
 });
 
-const findingsMemberSchema = z.object({
+/** One member a run's findings name; Validate schedule names its own in the same shape. */
+export const findingsMemberSchema = z.object({
 	/** The engine's employee id, which the other findings refer to. */
 	memberProfileId: z.string(),
 	/** Null when the id did not resolve to a member of the company. */

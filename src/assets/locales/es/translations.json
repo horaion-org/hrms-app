@@ -4769,7 +4769,15 @@
 			"brokenRulesTitle": "Reglas de tiempo de trabajo incumplidas",
 			"outOfDate": "El cuadrante ha cambiado desde que se hizo esta lista. Valídalo para actualizarla.",
 			"rulesUnchecked": "No se pudieron comprobar las reglas de tiempo de trabajo; la lista de abajo es la anterior.",
-			"validated": "Validado: esta lista es el cuadrante tal como está."
+			"validated": "Validado: esta lista es el cuadrante tal como está.",
+			"mayBeShort": "La comprobación se quedó sin tiempo, así que esta lista puede estar incompleta.",
+			"validateAgain": "Validar de nuevo",
+			"notMet": {
+				"title_one": "Si es posible, no cumplida ({{count}})",
+				"title_other": "Si es posible, no cumplidas ({{count}})",
+				"place": "{{person}} · {{day}}",
+				"line": "{{place}}: «{{message}}»"
+			}
 		}
 	},
 	"workspace": {

@@ -106,4 +106,20 @@ describe("ValidationNote", () => {
 
 		expect(screen.getByText(copy.validated)).toBeInTheDocument();
 	});
+
+	it("says a check that ran out of time may be incomplete, and validates again", async () => {
+		const check = rulesCheckFixture({ mayBeShort: true });
+		const ask = show("current", {
+			status: "ready",
+			check,
+			last: { revision: 1, check },
+		});
+
+		expect(screen.getByText(copy.mayBeShort)).toBeVisible();
+		await userEvent.click(
+			screen.getByRole("button", { name: copy.validateAgain })
+		);
+
+		expect(ask).toHaveBeenCalledOnce();
+	});
 });

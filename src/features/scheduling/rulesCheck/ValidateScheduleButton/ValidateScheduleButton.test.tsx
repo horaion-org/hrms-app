@@ -4,7 +4,10 @@ import { createInstance } from "i18next";
 import { initReactI18next } from "react-i18next";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import en from "@/assets/locales/en/translations.json";
-import { staffingGapFixture } from "@/features/scheduling/rulesCheck/fixtures";
+import {
+	rulesCheckFixture,
+	staffingGapFixture,
+} from "@/features/scheduling/rulesCheck/fixtures";
 import type { RosterRulesCheck } from "@/features/scheduling/rulesCheck/rosterRulesCheckApi";
 import { ValidateScheduleButton } from "@/features/scheduling/rulesCheck/ValidateScheduleButton";
 
@@ -14,18 +17,23 @@ beforeAll(async () => {
 		.init({ lng: "en", resources: { en: { translation: en } } });
 });
 
-const CLEAN: RosterRulesCheck = {
+const CLEAN: RosterRulesCheck = rulesCheckFixture({
 	status: "HOLDS",
 	brokenRules: [],
 	staffingGaps: [],
-};
-const TWO_PROBLEMS: RosterRulesCheck = {
+});
+const TWO_PROBLEMS: RosterRulesCheck = rulesCheckFixture({
 	status: "BROKEN",
 	brokenRules: [
-		{ rule: "most_minutes_a_day", constraintId: null, constraintName: null },
+		{
+			rule: "most_minutes_a_day",
+			constraintId: null,
+			constraintName: null,
+			violations: null,
+		},
 	],
 	staffingGaps: [staffingGapFixture()],
-};
+});
 
 /** The button at `revision`, with the given last validation and changes. */
 const show = (

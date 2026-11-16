@@ -15,6 +15,7 @@ import {
 } from "@/features/scheduling/GeneratedRoster";
 import type { RosterSearch } from "@/features/scheduling/roster/rosterSearch";
 import {
+	ruleFixture,
 	rulesCheckFixture,
 	staffingGapFixture,
 } from "@/features/scheduling/rulesCheck/fixtures";
@@ -578,6 +579,7 @@ describe("GeneratedRoster", () => {
 						rule: "most_minutes_a_day",
 						constraintId: "k-1",
 						constraintName: "Twelve hours a day",
+						violations: null,
 					},
 				],
 				staffingGaps: [
@@ -615,6 +617,88 @@ describe("GeneratedRoster", () => {
 					"Validated: this list is the schedule as it stands."
 				)
 			).toBeVisible();
+		});
+
+		it("given_aValidationThatSaysWho_when_issuesOpens_then_mustsByPersonAndDayAndIfPossibleApartAndUncounted", async () => {
+			const user = userEvent.setup();
+			const check = rulesCheckFixture({
+				status: "BROKEN",
+				brokenRules: [
+					ruleFixture({
+						constraintName: "Twelve hours a day",
+						violations: [
+							{
+								employeeId: "mp-1",
+								date: "2026-10-16",
+								messages: ["Aisha works 13 h."],
+							},
+							{
+								employeeId: "mp-1",
+								date: "2026-10-17",
+								messages: ["Aisha works 14 h."],
+							},
+						],
+					}),
+				],
+				notMet: [
+					ruleFixture({
+						rule: "max_consecutive_work_days",
+						constraintName: "Five days in a row",
+						violations: [
+							{
+								employeeId: "mp-2",
+								date: "2026-10-16",
+								messages: ["If possible, not met: six in a row"],
+							},
+							{
+								employeeId: "mp-2",
+								date: "2026-10-17",
+								messages: ["If possible, not met: seven in a row"],
+							},
+						],
+					}),
+				],
+				members: [
+					{
+						memberProfileId: "mp-1",
+						membershipId: "m-1",
+						displayName: "Aisha Rahman",
+					},
+					{
+						memberProfileId: "mp-2",
+						membershipId: "m-2",
+						displayName: "Ben Ong",
+					},
+				],
+			});
+			showValidated({
+				status: "ready",
+				check,
+				ask: vi.fn(),
+				last: { revision: 1, check },
+			});
+
+			// The generation's gap and Ben's violation out (no gaps now); the must's two lines in, its rule not
+			// counted again; Chen's day message and the setup issue stay; the two not met if possible never count.
+			await user.click(screen.getByRole("button", { name: "Issues: 4" }));
+
+			const panel = screen.getByRole("complementary", { name: "Issues" });
+			// The must's people and days replace the generation's violation about Ben.
+			expect(panel).not.toHaveTextContent(
+				"Ben Ong works more than five days in a row."
+			);
+			expect(panel).toHaveTextContent("Aisha works 13 h.");
+			expect(panel).toHaveTextContent("Aisha works 14 h.");
+			const ifPossible = within(panel).getByRole("heading", {
+				name: "If possible, not met (2)",
+			});
+			const section = ifPossible.closest("section");
+			expect(section).not.toBeNull();
+			expect(within(section!).getByText("If possible")).toBeVisible();
+			expect(section).toHaveTextContent("Five days in a row");
+			expect(section).toHaveTextContent(
+				/Ben Ong · .+: “If possible, not met: six in a row”/
+			);
 		});
 
 		it("given_aValidationOfAnEarlierRevision_when_issuesOpens_then_itValidatesAndSaysTheListIsOutOfDateWithTheAction", async () => {
