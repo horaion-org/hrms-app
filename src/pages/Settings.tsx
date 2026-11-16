@@ -1,11 +1,10 @@
 import { getRouteApi, useRouteContext } from "@tanstack/react-router";
-import { useRef } from "react";
+import { useRef, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
-import { ArrowUpIcon } from "@/components/ui/Icon";
-import { Tab, TabList, TabPanel, TabPanels, Tabs } from "@/components/ui/Tabs";
-import { subjectOfSlug } from "@/features/approvals/approvalSubjects";
+import { ArrowLeftIcon, ArrowUpIcon } from "@/components/ui/Icon";
 import { ApprovalsSettings } from "@/features/settings/ApprovalsSettings";
 import { dataItemsFor } from "@/features/settings/dataAccess";
 import { DataSettings } from "@/features/settings/DataSettings";
@@ -15,25 +14,28 @@ import { LeaveDurationsSettings } from "@/features/settings/LeaveDurationsSettin
 import { LeaveTypesSettings } from "@/features/settings/LeaveTypesSettings";
 import { PlanSettings } from "@/features/settings/PlanSettings";
 import { SchedulingPolicySettings } from "@/features/settings/SchedulingPolicySettings";
+import { SettingsNav } from "@/features/settings/SettingsNav";
 import { useGeneralSettings } from "@/features/settings/useGeneralSettings";
 import {
-	searchForSection,
-	selectedSectionIndex,
-	visibleSections,
+	selectedSection,
+	visibleGroups,
 	type SettingsSection,
 } from "@/features/settings/sections";
-import { offeredSections } from "@/features/settings/settingsAccess";
+import {
+	offeredSections,
+	sectionForAccess,
+} from "@/features/settings/settingsAccess";
 import { useRenameWorkspace } from "@/features/settings/useRenameWorkspace";
 import { COMPANY_SCOPE } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
 
 const route = getRouteApi("/_authenticated/_app/settings");
 
-const COMING_SOON_SECTIONS = ["notifications"] as const;
-
-const panelClasses =
-	"p-6 outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink-blue-500";
-
+/**
+ * Settings: the grouped list of sections beside the one shown. On a phone
+ * the list is the page until a section is chosen, which then shows alone
+ * with a link back to the list.
+ */
 export const Settings = (): FunctionComponent => {
 	const context = useRouteContext({ from: "/_authenticated" });
 	// The parent layout renders only once a company is settled.
@@ -49,11 +51,91 @@ export const Settings = (): FunctionComponent => {
 	const search = route.useSearch();
 	const dataItems = dataItemsFor(access);
 	// The section lives in the URL, so a link such as `?section=data` opens it.
-	const sections = visibleSections(offeredSections(access, search));
-	const selectedIndex = selectedSectionIndex(sections, search.section);
-	const planTabRef = useRef<HTMLButtonElement>(null);
-	const show = (next: SettingsSection): void => {
-		void navigate({ search: searchForSection(next), replace: true });
+	const asked = sectionForAccess(access, search.section);
+	const groups = visibleGroups(offeredSections(access, { section: asked }));
+	const selected = selectedSection(groups, asked);
+	// With no section in the address, a phone shows the list and `md` up shows General.
+	const listOnPhone = search.section === undefined;
+	const panelRef = useRef<HTMLElement>(null);
+	const approvalsProps = {
+		canManage: access.can("approval_flow:manage", COMPANY_SCOPE),
+		canRead: access.can("approval_flow:read", COMPANY_SCOPE),
+		companyId,
+	};
+
+	/** A section's heading and its one-line description, for the panels drawn here. */
+	const headingOf = (section: SettingsSection): ReactNode => (
+		<>
+			<h2 className="text-xl font-semibold text-neutral-900">
+				{t(`settings.entries.${section}.title`)}
+			</h2>
+			<p className="mt-3 text-sm text-neutral-800">
+				{t(`settings.entries.${section}.description`)}
+			</p>
+		</>
+	);
+
+	/** The panel of one section. */
+	const panelOf = (section: SettingsSection): ReactNode => {
+		switch (section) {
+			case "general":
+				return (
+					<div className="flex flex-1 flex-col">
+						{headingOf(section)}
+						{general.status === "error" && (
+							<p className="mt-8 text-sm text-error-700" role="alert">
+								{t("settings.general.failed")}
+							</p>
+						)}
+						{general.status === "ready" && (
+							<GeneralSettingsForm
+								canRename={access.can("company:update", COMPANY_SCOPE)}
+								className="mt-8 flex-1"
+								defaultValues={general.values}
+								onSave={renameWorkspace.mutateAsync}
+							/>
+						)}
+					</div>
+				);
+			case "notifications":
+				return (
+					<>
+						{headingOf(section)}
+						<p className="mt-8 text-sm text-neutral-700">
+							{t("settings.comingSoon")}
+						</p>
+					</>
+				);
+			case "employment":
+				return (
+					<EmploymentTermsSettings
+						companyId={companyId}
+						openTermsId={search.terms}
+						onTermsClosed={() => {
+							void navigate({ search: { section: "employment" }, replace: true });
+						}}
+					/>
+				);
+			case "scheduling":
+				return <SchedulingPolicySettings companyId={companyId} />;
+			case "roster-approvals":
+				return (
+					<ApprovalsSettings {...approvalsProps} subject="SCHEDULE_PUBLICATION" />
+				);
+			case "leave-types":
+				return <LeaveTypesSettings companyId={companyId} />;
+			case "leave-durations":
+				return <LeaveDurationsSettings companyId={companyId} />;
+			case "leave-approvals":
+				return <ApprovalsSettings {...approvalsProps} subject="LEAVE_REQUEST" />;
+			case "data":
+				return <DataSettings companyId={companyId} items={dataItems} />;
+			case "plan":
+				return <PlanSettings />;
+			case "access":
+				// The list links Access roles to their own page, and the route sends `?section=access` there.
+				return null;
+		}
 	};
 
 	return (
@@ -71,138 +153,48 @@ export const Settings = (): FunctionComponent => {
 					className="self-start sm:self-auto"
 					leadingIcon={<ArrowUpIcon />}
 					onClick={() => {
-						show("plan");
-						planTabRef.current?.focus();
+						void navigate({ search: { section: "plan" } }).then(() => {
+							panelRef.current?.focus();
+						});
 					}}
 				>
 					{t("settings.upgrade.action")}
 				</Button>
 			</div>
-			<Tabs
-				// On a phone the sections are one scrolling row of tabs above the section; from `md` a column beside it.
-				className="mt-10 flex flex-col overflow-hidden rounded-xl border border-neutral-400 md:min-h-144 md:flex-row"
-				orientation="verticalFromMd"
-				selectedIndex={selectedIndex}
-				onChange={(index) => {
-					show(sections[index] ?? "general");
-				}}
-			>
-				<TabList
-					aria-label={t("settings.sections")}
-					className="max-md:border-b max-md:border-neutral-400 max-md:px-4 md:w-63 md:shrink-0 md:border-r md:border-neutral-400"
+			<div className="mt-10 flex flex-col overflow-hidden rounded-xl border border-neutral-400 md:min-h-144 md:flex-row">
+				<SettingsNav
+					groups={groups}
+					selected={selected}
+					// Only as wide as its longest entry, so the panels keep the width.
+					className={joinClassNames(
+						"md:w-52 md:shrink-0 md:border-r md:border-neutral-400",
+						!listOnPhone && "max-md:hidden"
+					)}
+				/>
+				{!listOnPhone && (
+					<Button
+						// The list's own address; exact, so the link is never marked as the current page.
+						activeOptions={{ exact: true, includeSearch: true }}
+						className="mx-6 mt-6 self-start md:hidden"
+						leadingIcon={<ArrowLeftIcon />}
+						to="/settings"
+						variant="textlink"
+					>
+						{t("settings.back")}
+					</Button>
+				)}
+				<section
+					ref={panelRef}
+					aria-label={t(`settings.entries.${selected}.title`)}
+					tabIndex={-1}
+					className={joinClassNames(
+						"flex min-w-0 flex-1 flex-col p-6 outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink-blue-500",
+						listOnPhone && "max-md:hidden"
+					)}
 				>
-					{sections.map((shown) => (
-						<Tab
-							key={shown}
-							ref={shown === "plan" ? planTabRef : undefined}
-							description={t(`settings.${shown}.description`)}
-						>
-							{t(`settings.${shown}.title`)}
-						</Tab>
-					))}
-				</TabList>
-				<TabPanels className="flex min-w-0 flex-1 flex-col">
-					<TabPanel className={`flex flex-1 flex-col ${panelClasses}`}>
-						<h2 className="text-xl font-semibold text-neutral-900">
-							{t("settings.general.title")}
-						</h2>
-						<p className="mt-3 text-sm text-neutral-800">
-							{t("settings.general.subtitle")}
-						</p>
-						{general.status === "error" && (
-							<p className="mt-8 text-sm text-error-700" role="alert">
-								{t("settings.general.failed")}
-							</p>
-						)}
-						{general.status === "ready" && (
-							<GeneralSettingsForm
-								canRename={access.can("company:update", COMPANY_SCOPE)}
-								className="mt-8 flex-1"
-								defaultValues={general.values}
-								onSave={renameWorkspace.mutateAsync}
-							/>
-						)}
-					</TabPanel>
-					{COMING_SOON_SECTIONS.map((section) => (
-						<TabPanel key={section} className={panelClasses}>
-							<h2 className="text-xl font-semibold text-neutral-900">
-								{t(`settings.${section}.title`)}
-							</h2>
-							<p className="mt-3 text-sm text-neutral-800">
-								{t(`settings.${section}.description`)}
-							</p>
-							<p className="mt-8 text-sm text-neutral-700">
-								{t("settings.comingSoon")}
-							</p>
-						</TabPanel>
-					))}
-					{sections.includes("employment") && (
-						<TabPanel className={panelClasses}>
-							<EmploymentTermsSettings
-								companyId={companyId}
-								openTermsId={search.terms}
-								onTermsClosed={() => {
-									show("employment");
-								}}
-							/>
-						</TabPanel>
-					)}
-					{sections.includes("scheduling") && (
-						<TabPanel className={panelClasses}>
-							<SchedulingPolicySettings companyId={companyId} />
-						</TabPanel>
-					)}
-					{sections.includes("leave") && (
-						<TabPanel className={panelClasses}>
-							{/* A department admin who manages only durations sees only those; the types card
-							also answers a link opened without either key, to say it is not theirs to see. */}
-							{(access.can("leave_type:read", COMPANY_SCOPE) ||
-								!access.canAnywhere("leave_duration:read")) && (
-								<LeaveTypesSettings companyId={companyId} />
-							)}
-							{access.canAnywhere("leave_duration:read") && (
-								<div className="mt-8 border-t border-neutral-200 pt-6 first:mt-0 first:border-t-0 first:pt-0">
-									<LeaveDurationsSettings companyId={companyId} />
-								</div>
-							)}
-						</TabPanel>
-					)}
-					{sections.includes("approvals") && (
-						<TabPanel className={panelClasses}>
-							<ApprovalsSettings
-								canManage={access.can("approval_flow:manage", COMPANY_SCOPE)}
-								canRead={access.can("approval_flow:read", COMPANY_SCOPE)}
-								companyId={companyId}
-								subject={subjectOfSlug(search.subject)}
-							/>
-						</TabPanel>
-					)}
-					{sections.includes("access") && (
-						<TabPanel className={panelClasses}>
-							<h2 className="text-xl font-semibold text-neutral-900">
-								{t("settings.access.title")}
-							</h2>
-							<p className="mt-3 text-sm text-neutral-800">
-								{t("settings.access.description")}
-							</p>
-							<p className="mt-3 text-sm text-neutral-800">
-								{t("organisation.accessRoles.baseline")}
-							</p>
-							<Button className="mt-6" to="/settings/access-roles">
-								{t("settings.access.open")}
-							</Button>
-						</TabPanel>
-					)}
-					<TabPanel className={panelClasses}>
-						<PlanSettings />
-					</TabPanel>
-					{sections.includes("data") && (
-						<TabPanel className={panelClasses}>
-							<DataSettings companyId={companyId} items={dataItems} />
-						</TabPanel>
-					)}
-				</TabPanels>
-			</Tabs>
+					{panelOf(selected)}
+				</section>
+			</div>
 		</>
 	);
 };

@@ -68,14 +68,24 @@ const routes = (
 	...extra,
 });
 
-const open = async (): Promise<HTMLElement> => {
-	app = await openApp("/settings?section=approvals");
+/** The panel names of the two approvals entries. */
+const PANEL_NAMES = {
+	"roster-approvals": "Roster approvals",
+	"leave-approvals": "Leave approvals",
+} as const;
+
+/** Opens one approvals entry of Settings, at its address or at an old one, and returns its panel. */
+const open = async (
+	section: keyof typeof PANEL_NAMES = "roster-approvals",
+	address = `/settings?section=${section}`
+): Promise<HTMLElement> => {
+	app = await openApp(address);
 	renderAuthApp(app);
-	return screen.findByRole("tabpanel", { name: "Approvals" });
+	return screen.findByRole("region", { name: PANEL_NAMES[section] });
 };
 
 describe("ApprovalsSettings", () => {
-	it("lists each subject's flows in its own group, with where each applies, its steps and whether it is on", async () => {
+	it("lists the roster flows, with where each applies, its steps and whether it is on, and no leave flow", async () => {
 		stubApi(
 			routes(READ_AND_MANAGE, [
 				companyFlowFixture(),
@@ -86,8 +96,14 @@ describe("ApprovalsSettings", () => {
 
 		const panel = await open();
 		const rosters = await within(panel).findByRole("table", {
-			name: "Roster publishing",
+			name: "Roster approvals",
 		});
+		expect(
+			within(panel).getByRole("heading", { level: 2, name: "Roster approvals" })
+		).toBeVisible();
+		expect(panel).toHaveTextContent(
+			"Who approves a roster before it is published, step by step."
+		);
 		const [, company, kitchen] = within(rosters).getAllByRole("row");
 		// Each cell's own content: on phones the first cell adds a line with the steps after it.
 		const cellsOf = (row: HTMLElement | undefined): Array<string | undefined> =>
@@ -120,32 +136,57 @@ describe("ApprovalsSettings", () => {
 		expect(
 			within(rosters).getByRole("columnheader", { name: "Applies to" })
 		).not.toHaveClass("hidden");
-		const leave = within(panel).getByRole("table", { name: "Leave requests" });
-		const leaveRows = within(leave).getAllByRole("row");
-		expect(leaveRows).toHaveLength(2);
-		expect(cellsOf(leaveRows[1]).slice(0, 3)).toEqual([
-			"Company default",
-			"1 Manager → 2 HR",
-			"On",
-		]);
-		// Rosters have a department flow beside the default; leave has only the default.
+		// Only the roster flows: the leave flow sits under Leave approvals.
+		expect(within(rosters).getAllByRole("row")).toHaveLength(3);
+		expect(within(panel).getAllByRole("table")).toHaveLength(1);
+		// Rosters have a department flow beside the default.
 		expect(
 			within(panel).getByText(
 				"Other departments, and any whose flow is off, use the company default."
 			)
 		).toBeInTheDocument();
 		expect(
-			within(panel).getByText("Every department uses the company default.")
-		).toBeInTheDocument();
-		expect(
-			within(panel).getByRole("button", { name: "Add flow Roster publishing" })
-		).toBeInTheDocument();
-		expect(
-			within(panel).getByRole("button", { name: "Add flow Leave requests" })
+			within(panel).getByRole("button", { name: "Add flow Roster approvals" })
 		).toBeInTheDocument();
 	});
 
-	it("says each subject is decided in one step without a flow, and offers no change to a reader", async () => {
+	it("lists only the leave flows under Leave approvals", async () => {
+		stubApi(
+			routes(READ_AND_MANAGE, [
+				companyFlowFixture(),
+				KITCHEN_FLOW,
+				leaveFlowFixture(),
+			])
+		);
+
+		const panel = await open("leave-approvals");
+		const leave = await within(panel).findByRole("table", {
+			name: "Leave approvals",
+		});
+		const leaveRows = within(leave).getAllByRole("row");
+		expect(leaveRows).toHaveLength(2);
+		expect(leaveRows[1]).toHaveTextContent("Company default");
+		expect(leaveRows[1]).toHaveTextContent("1 Manager → 2 HR");
+		expect(within(panel).getAllByRole("table")).toHaveLength(1);
+		expect(
+			within(panel).getByText("Every department uses the company default.")
+		).toBeInTheDocument();
+		expect(
+			within(panel).getByRole("button", { name: "Add flow Leave approvals" })
+		).toBeInTheDocument();
+	});
+
+	it.each([
+		["/settings?section=approvals&subject=leave", "leave-approvals"],
+		["/settings?section=approvals&subject=roster", "roster-approvals"],
+		["/settings?section=approvals", "roster-approvals"],
+	] as const)("opens the old address %s as %s", async (address, section) => {
+		stubApi(routes(["approval_flow:read"], []));
+
+		expect(await open(section, address)).toBeVisible();
+	});
+
+	it("says rosters are decided in one step without a flow, and offers no change to a reader", async () => {
 		stubApi(routes(["approval_flow:read"], []));
 
 		const panel = await open();
@@ -154,15 +195,21 @@ describe("ApprovalsSettings", () => {
 				"No approval flow. Rosters publish in one step, by anyone who can publish them."
 			)
 		).toBeInTheDocument();
-		expect(
-			within(panel).getByText(
-				"No approval flow. Leave is approved or rejected in one step, by anyone who can review it."
-			)
-		).toBeInTheDocument();
 		expect(within(panel).queryByRole("table")).toBeNull();
 		expect(
 			within(panel).queryByRole("button", { name: /Add flow/ })
 		).toBeNull();
+	});
+
+	it("says leave is decided in one step without a flow", async () => {
+		stubApi(routes(["approval_flow:read"], []));
+
+		const panel = await open("leave-approvals");
+		expect(
+			await within(panel).findByText(
+				"No approval flow. Leave is approved or rejected in one step, by anyone who can review it."
+			)
+		).toBeInTheDocument();
 	});
 
 	it("says departments outside a subject's flows decide in one step when no company default is on", async () => {
@@ -176,13 +223,13 @@ describe("ApprovalsSettings", () => {
 		).toBeInTheDocument();
 	});
 
-	it("hides the section from someone without approval_flow:read", async () => {
+	it("hides both approvals entries from someone without approval_flow:read", async () => {
 		stubApi(routes(["leave_type:read"], []));
 		app = await openApp("/settings");
 		renderAuthApp(app);
 
-		await screen.findByRole("tab", { name: /Leave/ });
-		expect(screen.queryByRole("tab", { name: /Approvals/ })).toBeNull();
+		await screen.findByRole("link", { name: "Leave types" });
+		expect(screen.queryByRole("link", { name: /approvals/ })).toBeNull();
 	});
 
 	it("adds a flow: names its steps, asks for people where only named people decide, then posts it", async () => {
@@ -196,7 +243,7 @@ describe("ApprovalsSettings", () => {
 		const panel = await open();
 		await user.click(
 			await within(panel).findByRole("button", {
-				name: "Add flow Roster publishing",
+				name: "Add flow Roster approvals",
 			})
 		);
 		const dialog = screen.getByRole("dialog", {
@@ -287,10 +334,10 @@ describe("ApprovalsSettings", () => {
 		);
 		const user = userEvent.setup();
 
-		const panel = await open();
+		const panel = await open("leave-approvals");
 		await user.click(
 			await within(panel).findByRole("button", {
-				name: "Add flow Leave requests",
+				name: "Add flow Leave approvals",
 			})
 		);
 		const dialog = screen.getByRole("dialog", {
@@ -325,7 +372,7 @@ describe("ApprovalsSettings", () => {
 		const panel = await open();
 		await user.click(
 			await within(panel).findByRole("button", {
-				name: "Add flow Roster publishing",
+				name: "Add flow Roster approvals",
 			})
 		);
 		const dialog = screen.getByRole("dialog", {
@@ -363,10 +410,10 @@ describe("ApprovalsSettings", () => {
 		stubApi(routes(READ_AND_MANAGE, []));
 		const user = userEvent.setup();
 
-		const panel = await open();
+		const panel = await open("leave-approvals");
 		await user.click(
 			await within(panel).findByRole("button", {
-				name: "Add flow Leave requests",
+				name: "Add flow Leave approvals",
 			})
 		);
 		const dialog = screen.getByRole("dialog", {
@@ -464,7 +511,7 @@ describe("ApprovalsSettings", () => {
 		const panel = await open();
 		await user.click(
 			await within(panel).findByRole("button", {
-				name: "Add flow Roster publishing",
+				name: "Add flow Roster approvals",
 			})
 		);
 		const dialog = screen.getByRole("dialog", {
@@ -524,7 +571,7 @@ describe("ApprovalsSettings", () => {
 		stubApi(routes(READ_AND_MANAGE, [leaveFlowFixture()]));
 		const user = userEvent.setup();
 
-		const panel = await open();
+		const panel = await open("leave-approvals");
 		await user.click(
 			await within(panel).findByRole("button", {
 				name: "More actions for Company leave approval",
@@ -560,10 +607,10 @@ describe("ApprovalsSettings", () => {
 		);
 		const user = userEvent.setup();
 
-		const panel = await open();
+		const panel = await open("leave-approvals");
 		await user.click(
 			await within(panel).findByRole("button", {
-				name: "Add flow Leave requests",
+				name: "Add flow Leave approvals",
 			})
 		);
 		const dialog = screen.getByRole("dialog", {

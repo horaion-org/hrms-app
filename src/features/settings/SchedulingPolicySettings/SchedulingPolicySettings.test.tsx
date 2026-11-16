@@ -70,7 +70,7 @@ const routes = (
 const open = async (): Promise<HTMLElement> => {
 	app = await openApp("/settings?section=scheduling");
 	renderAuthApp(app);
-	return screen.findByRole("tabpanel", { name: "Work policy" });
+	return screen.findByRole("region", { name: "Work policy" });
 };
 
 describe("SchedulingPolicySettings", () => {

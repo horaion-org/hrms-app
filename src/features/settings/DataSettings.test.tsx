@@ -132,10 +132,12 @@ describe("Settings › Data", () => {
 		});
 		const opened = await open("/settings?section=data");
 
+		const panel = await screen.findByRole("region", {
+			name: "Import and export",
+		});
 		expect(
-			await screen.findByRole("tab", { name: "Data", selected: true })
-		).toBeVisible();
-		const panel = screen.getByRole("tabpanel", { name: "Data" });
+			screen.getByRole("link", { name: "Import and export" })
+		).toHaveAttribute("aria-current", "page");
 		expect(
 			within(panel).getByRole("link", { name: "Import organisation" })
 		).toHaveAttribute("href", "/settings/data/import-organisation");
@@ -180,7 +182,7 @@ describe("Settings › Data", () => {
 		});
 		await open("/settings?section=data");
 
-		const panel = await screen.findByRole("tabpanel", { name: "Data" });
+		const panel = await screen.findByRole("region", { name: "Import and export" });
 		expect(within(panel).queryByRole("link")).not.toBeInTheDocument();
 		expect(
 			within(panel).queryByRole("table", { name: "Import history" })
@@ -212,7 +214,7 @@ describe("Settings › Data", () => {
 		});
 		await open("/settings?section=data");
 
-		const panel = await screen.findByRole("tabpanel", { name: "Data" });
+		const panel = await screen.findByRole("region", { name: "Import and export" });
 		expect(
 			within(panel).getByRole("link", { name: "Import people" })
 		).toBeVisible();
@@ -222,14 +224,16 @@ describe("Settings › Data", () => {
 		expect(await within(panel).findByText("No imports yet.")).toBeVisible();
 	});
 
-	it("has no Data tab without any of its keys, and falls back to General", async () => {
+	it("has no Import and export entry without any of its keys, and falls back to General", async () => {
 		stubApi(routes(["branch:read"]));
 		await open("/settings?section=data");
 
 		expect(
-			await screen.findByRole("tab", { name: "General", selected: true })
+			await screen.findByRole("region", { name: "General" })
 		).toBeVisible();
-		expect(screen.queryByRole("tab", { name: "Data" })).not.toBeInTheDocument();
+		expect(
+			screen.queryByRole("link", { name: "Import and export" })
+		).not.toBeInTheDocument();
 	});
 
 	it("puts the chosen section in the address", async () => {
@@ -240,14 +244,18 @@ describe("Settings › Data", () => {
 		});
 		const opened = await open("/settings");
 
-		await user.click(await screen.findByRole("tab", { name: "Data" }));
+		await user.click(
+			await screen.findByRole("link", { name: "Import and export" })
+		);
 
 		await waitFor(() => {
 			expect(opened.router.state.location.search).toEqual({ section: "data" });
 		});
-		await user.click(screen.getByRole("tab", { name: "General" }));
+		await user.click(screen.getByRole("link", { name: "General" }));
 		await waitFor(() => {
-			expect(opened.router.state.location.search).toEqual({});
+			expect(opened.router.state.location.search).toEqual({
+				section: "general",
+			});
 		});
 	});
 });

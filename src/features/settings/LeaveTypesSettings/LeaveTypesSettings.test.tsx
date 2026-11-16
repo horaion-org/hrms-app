@@ -71,9 +71,9 @@ const catalogueReads = (calls: ReturnType<typeof stubApi>): number =>
 		.length;
 
 const open = async (): Promise<HTMLElement> => {
-	app = await openApp("/settings?section=leave");
+	app = await openApp("/settings?section=leave-types");
 	renderAuthApp(app);
-	return screen.findByRole("tabpanel", { name: "Leave" });
+	return screen.findByRole("region", { name: "Leave types" });
 };
 
 describe("LeaveTypesSettings", () => {

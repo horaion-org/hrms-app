@@ -788,7 +788,7 @@
 			"description": "Controla sobre qué se te notifica y cómo."
 		},
 		"data": {
-			"title": "Datos",
+			"title": "Importar y exportar",
 			"description": "Importa y exporta en bloque.",
 			"subtitle": "Trae o saca los datos de tu empresa en bloque.",
 			"import": "Importar",

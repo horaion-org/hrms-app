@@ -1781,7 +1781,7 @@
 			"description": "Who approves rosters and leave requests."
 		},
 		"data": {
-			"title": "Data",
+			"title": "Import and export",
 			"description": "Import and export in bulk.",
 			"subtitle": "Bring in or take out your company's data in bulk.",
 			"import": "Import",

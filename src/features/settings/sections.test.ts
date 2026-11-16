@@ -1,41 +1,38 @@
 import { describe, expect, it } from "vitest";
 import {
 	parseSettingsSearch,
-	searchForSection,
-	selectedSectionIndex,
-	visibleSections,
+	selectedSection,
+	visibleGroups,
+	type OptionalSections,
 } from "@/features/settings/sections";
 
 describe("parseSettingsSearch", () => {
-	it("keeps a known section and drops General, unknown values and other types", () => {
+	it("keeps a known section, General included, and drops unknown values and other types", () => {
 		expect(parseSettingsSearch({ section: "data" })).toEqual({
 			section: "data",
 		});
-		expect(parseSettingsSearch({ section: "plan" })).toEqual({
-			section: "plan",
+		expect(parseSettingsSearch({ section: "leave-durations" })).toEqual({
+			section: "leave-durations",
 		});
-		expect(parseSettingsSearch({ section: "leave" })).toEqual({
-			section: "leave",
+		expect(parseSettingsSearch({ section: "general" })).toEqual({
+			section: "general",
 		});
-		expect(parseSettingsSearch({ section: "general" })).toEqual({});
 		expect(parseSettingsSearch({ section: "billing" })).toEqual({});
 		expect(parseSettingsSearch({ section: 3 })).toEqual({});
 		expect(parseSettingsSearch({})).toEqual({});
 	});
 
-	it("keeps a known `subject` only with Approvals, for a link to one subject's flows", () => {
-		expect(
-			parseSettingsSearch({ section: "approvals", subject: "leave" })
-		).toEqual({ section: "approvals", subject: "leave" });
-		expect(
-			parseSettingsSearch({ section: "approvals", subject: "overtime" })
-		).toEqual({ section: "approvals" });
-		expect(parseSettingsSearch({ section: "leave", subject: "leave" })).toEqual(
-			{ section: "leave" }
-		);
+	it.each([
+		[{ section: "leave" }, "leave-types"],
+		[{ section: "approvals", subject: "leave" }, "leave-approvals"],
+		[{ section: "approvals", subject: "roster" }, "roster-approvals"],
+		[{ section: "approvals" }, "roster-approvals"],
+		[{ section: "approvals", subject: "overtime" }, "roster-approvals"],
+	])("opens the old address %o as %s", (search, section) => {
+		expect(parseSettingsSearch(search)).toEqual({ section });
 	});
 
-	it("keeps `terms` only with Employment, for a link to one terms", () => {
+	it("keeps `terms` only with Employment terms, for a link to one terms", () => {
 		expect(
 			parseSettingsSearch({ section: "employment", terms: "t-1" })
 		).toEqual({ section: "employment", terms: "t-1" });
@@ -48,104 +45,60 @@ describe("parseSettingsSearch", () => {
 	});
 });
 
-describe("searchForSection", () => {
-	it("keeps General's address bare", () => {
-		expect(searchForSection("general")).toEqual({});
-		expect(searchForSection("data")).toEqual({ section: "data" });
-	});
-});
-
-describe("visibleSections and selectedSectionIndex", () => {
-	const everything = {
-		employment: true,
-		scheduling: true,
-		leave: true,
-		approvals: true,
-		access: true,
-		data: true,
-	};
-	const neither = {
+describe("visibleGroups and selectedSection", () => {
+	const nothing: OptionalSections = {
 		employment: false,
 		scheduling: false,
-		leave: false,
-		approvals: false,
+		"roster-approvals": false,
+		"leave-types": false,
+		"leave-durations": false,
+		"leave-approvals": false,
 		access: false,
 		data: false,
 	};
+	const everything: OptionalSections = {
+		employment: true,
+		scheduling: true,
+		"roster-approvals": true,
+		"leave-types": true,
+		"leave-durations": true,
+		"leave-approvals": true,
+		access: true,
+		data: true,
+	};
 
-	it("adds Employment, Scheduling, Leave, Approvals, Access roles and Data only when they have something to offer", () => {
-		expect(visibleSections(neither)).toEqual([
-			"general",
-			"notifications",
-			"plan",
-		]);
-		expect(
-			visibleSections({
-				employment: false,
-				scheduling: true,
-				leave: false,
-				approvals: false,
-				access: false,
-				data: false,
-			})
-		).toEqual(["general", "notifications", "scheduling", "plan"]);
-		expect(
-			visibleSections({
-				employment: false,
-				scheduling: false,
-				leave: true,
-				approvals: false,
-				access: false,
-				data: false,
-			})
-		).toEqual(["general", "notifications", "leave", "plan"]);
-		expect(
-			visibleSections({
-				employment: true,
-				scheduling: false,
-				leave: false,
-				approvals: false,
-				access: false,
-				data: false,
-			})
-		).toEqual(["general", "notifications", "employment", "plan"]);
-		expect(
-			visibleSections({
-				employment: false,
-				scheduling: false,
-				leave: false,
-				approvals: true,
-				access: false,
-				data: false,
-			})
-		).toEqual(["general", "notifications", "approvals", "plan"]);
-		expect(visibleSections({ ...neither, access: true })).toEqual([
-			"general",
-			"notifications",
-			"access",
-			"plan",
-		]);
-		expect(visibleSections(everything)).toEqual([
-			"general",
-			"notifications",
-			"employment",
-			"scheduling",
-			"leave",
-			"approvals",
-			"access",
-			"plan",
-			"data",
+	it("lists every group in order when everything is offered", () => {
+		expect(visibleGroups(everything)).toEqual([
+			{ group: "workspace", sections: ["general", "notifications"] },
+			{
+				group: "rostering",
+				sections: ["employment", "scheduling", "roster-approvals"],
+			},
+			{
+				group: "leave",
+				sections: ["leave-types", "leave-durations", "leave-approvals"],
+			},
+			{ group: "accessAndData", sections: ["access", "data"] },
+			{ group: "account", sections: ["plan"] },
 		]);
 	});
 
-	it("selects the asked-for section, or General when it is not shown", () => {
-		expect(selectedSectionIndex(visibleSections(everything), "data")).toBe(8);
-		expect(selectedSectionIndex(visibleSections(everything), "leave")).toBe(4);
-		expect(selectedSectionIndex(visibleSections(neither), "data")).toBe(0);
-		expect(selectedSectionIndex(visibleSections(neither), "scheduling")).toBe(
-			0
-		);
-		expect(selectedSectionIndex(visibleSections(neither), "plan")).toBe(2);
-		expect(selectedSectionIndex(visibleSections(neither), undefined)).toBe(0);
+	it("leaves out groups with nothing offered and keeps only the offered entries", () => {
+		expect(visibleGroups(nothing)).toEqual([
+			{ group: "workspace", sections: ["general", "notifications"] },
+			{ group: "account", sections: ["plan"] },
+		]);
+		expect(visibleGroups({ ...nothing, "leave-durations": true })).toEqual([
+			{ group: "workspace", sections: ["general", "notifications"] },
+			{ group: "leave", sections: ["leave-durations"] },
+			{ group: "account", sections: ["plan"] },
+		]);
+	});
+
+	it("selects the asked-for section when shown, otherwise General", () => {
+		expect(selectedSection(visibleGroups(everything), "data")).toBe("data");
+		expect(selectedSection(visibleGroups(nothing), "data")).toBe("general");
+		expect(selectedSection(visibleGroups(nothing), "plan")).toBe("plan");
+		expect(selectedSection(visibleGroups(nothing), undefined)).toBe("general");
 	});
 });

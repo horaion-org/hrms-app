@@ -67,9 +67,9 @@ afterEach(() => {
 });
 
 const openPanel = async (): Promise<HTMLElement> => {
-	app = await openApp("/settings?section=leave");
+	app = await openApp("/settings?section=leave-types");
 	renderAuthApp(app);
-	return screen.findByRole("tabpanel", { name: "Leave" });
+	return screen.findByRole("region", { name: "Leave types" });
 };
 
 const openAdd = async (): Promise<HTMLElement> => {

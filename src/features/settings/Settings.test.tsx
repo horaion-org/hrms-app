@@ -80,31 +80,30 @@ it("shows the General settings prefilled with the current company's name", async
 			selector: "h1 + p",
 		})
 	).toBeVisible();
-	const sections = screen.getByRole("tablist", { name: "Settings sections" });
-	expect(sections).toHaveAttribute("aria-orientation", "vertical");
+	const sections = screen.getByRole("navigation", {
+		name: "Settings sections",
+	});
 	expect(
 		within(sections)
-			.getAllByRole("tab")
-			.map((tab) => [tab.getAttribute("aria-selected"), tab.textContent])
+			.getAllByRole("link")
+			.map((link) => [link.getAttribute("aria-current"), link.textContent])
 	).toEqual([
-		["true", "General Core workspace preferences."],
-		["false", "Notifications Control what you are notified about and how."],
-		[
-			"false",
-			"Plan and billing View your plan, upgrade options and billing details.",
-		],
+		["page", "General"],
+		[null, "Notifications"],
+		[null, "Plan and billing"],
 	]);
-	expect(
-		screen.getByRole("tab", {
-			name: "General",
-			description: "Core workspace preferences.",
-		})
-	).toBeVisible();
+	// Only the groups with something offered are listed.
+	expect(within(sections).getAllByRole("list")).toHaveLength(2);
+	expect(within(sections).getByRole("list", { name: "Workspace" })).toBeVisible();
+	expect(within(sections).getByRole("list", { name: "Account" })).toBeVisible();
 
-	const general = screen.getByRole("tabpanel", { name: "General" });
+	const general = screen.getByRole("region", { name: "General" });
 	expect(
 		within(general).getByRole("heading", { level: 2, name: "General" })
 	).toBeVisible();
+	expect(general).toHaveTextContent(
+		"Workspace name, language, time zone and date format."
+	);
 	expect(
 		await within(general).findByRole("textbox", { name: "Workspace Name" })
 	).toHaveValue("Horaion");
@@ -132,7 +131,7 @@ it("shows the General settings prefilled with the current company's name", async
 	).toHaveLength(1);
 });
 
-it("offers Access roles to people who may read roles, and opens the list from it", async () => {
+it("offers Access roles to people who may read roles, as a link to their own page", async () => {
 	stubApi({
 		[REFRESH]: accessPassReply(),
 		[ME]: currentUserReply(),
@@ -140,25 +139,30 @@ it("offers Access roles to people who may read roles, and opens the list from it
 			{ uuid: "c-1", name: "Horaion", permissions: ["access_role:read"] },
 		]),
 	});
-	await open("/settings?section=access");
+	await open();
 
-	const sections = await screen.findByRole("tablist", {
+	const sections = await screen.findByRole("navigation", {
 		name: "Settings sections",
 	});
 	expect(
-		within(sections)
-			.getAllByRole("tab")
-			.map((tab) => tab.textContent)
-	).toContain("Access roles Decide what people can manage, and where.");
-	const panel = screen.getByRole("tabpanel", { name: "Access roles" });
+		within(sections).getByRole("list", { name: "Access and data" })
+	).toHaveTextContent("Access roles");
 	expect(
-		within(panel).getByText(
-			"Everyone can already see their own roster, apply for their own leave and set their own availability. Roles are for managing other people."
-		)
-	).toBeVisible();
-	expect(
-		within(panel).getByRole("link", { name: "Open access roles" })
+		within(sections).getByRole("link", { name: "Access roles" })
 	).toHaveAttribute("href", "/settings/access-roles");
+});
+
+it("sends the old Access roles address to the roles page", async () => {
+	stubApi({
+		[REFRESH]: accessPassReply(),
+		[ME]: currentUserReply(),
+		[WORKSPACE]: workspaceReply([{ uuid: "c-1", name: "Horaion" }]),
+	});
+	const opened = await open("/settings?section=access");
+
+	await waitFor(() => {
+		expect(opened.router.state.location.pathname).toBe("/settings/access-roles");
+	});
 });
 
 it("leaves Access roles out without the key to read roles", async () => {
@@ -167,15 +171,54 @@ it("leaves Access roles out without the key to read roles", async () => {
 		[ME]: currentUserReply(),
 		[WORKSPACE]: workspaceReply([{ uuid: "c-1", name: "Horaion" }]),
 	});
-	await open("/settings?section=access");
+	await open();
 
-	await screen.findByRole("tablist", { name: "Settings sections" });
+	await screen.findByRole("navigation", { name: "Settings sections" });
 	expect(
-		screen.queryByRole("tab", { name: /^Access roles/ })
+		screen.queryByRole("link", { name: "Access roles" })
 	).not.toBeInTheDocument();
 });
 
-it("switches through the settings sections with the arrow keys", async () => {
+it("opens one section at a time from its link, marking it current", async () => {
+	stubApi({
+		[REFRESH]: accessPassReply(),
+		[ME]: currentUserReply(),
+		[WORKSPACE]: workspaceReply([{ uuid: "c-1", name: "Horaion" }]),
+	});
+	const opened = await open();
+	const user = userEvent.setup();
+	await screen.findByRole("textbox", { name: "Workspace Name" });
+
+	await user.click(screen.getByRole("link", { name: "Notifications" }));
+	const notifications = await screen.findByRole("region", {
+		name: "Notifications",
+	});
+	expect(
+		within(notifications).getByRole("heading", { name: "Notifications" })
+	).toBeVisible();
+	expect(notifications).toHaveTextContent("These settings are coming soon.");
+	expect(screen.getByRole("link", { name: "Notifications" })).toHaveAttribute(
+		"aria-current",
+		"page"
+	);
+	expect(
+		screen.queryByRole("textbox", { name: "Workspace Name" })
+	).not.toBeInTheDocument();
+	expect(opened.router.state.location.search).toEqual({
+		section: "notifications",
+	});
+
+	// Without scheduling_policy:read or leave_type:read neither entry is offered.
+	expect(screen.queryByRole("link", { name: "Work policy" })).toBeNull();
+	expect(screen.queryByRole("link", { name: "Leave types" })).toBeNull();
+
+	await user.click(screen.getByRole("link", { name: "Plan and billing" }));
+	const plan = await screen.findByRole("region", { name: "Plan and billing" });
+	expect(plan).toHaveTextContent("Free plan");
+	expect(plan).toHaveTextContent("Billing details");
+});
+
+it("opens Plan and billing from Upgrade plan and moves focus to it", async () => {
 	stubApi({
 		[REFRESH]: accessPassReply(),
 		[ME]: currentUserReply(),
@@ -183,37 +226,44 @@ it("switches through the settings sections with the arrow keys", async () => {
 	});
 	await open();
 	const user = userEvent.setup();
-	const general = await screen.findByRole("tab", { name: "General" });
-	await screen.findByRole("textbox", { name: "Workspace Name" });
 
-	await user.click(general);
-	await user.keyboard("{ArrowDown}");
-	const notifications = screen.getByRole("tabpanel", { name: "Notifications" });
-	expect(
-		within(notifications).getByRole("heading", { name: "Notifications" })
-	).toBeVisible();
-	expect(notifications).toHaveTextContent("These settings are coming soon.");
-	expect(
-		screen.queryByRole("textbox", { name: "Workspace Name" })
-	).not.toBeInTheDocument();
-
-	// Without scheduling_policy:read or leave_type:read neither tab is offered.
-	expect(screen.queryByRole("tab", { name: "Scheduling" })).toBeNull();
-	expect(screen.queryByRole("tab", { name: "Leave" })).toBeNull();
-
-	await user.keyboard("{ArrowDown}");
-	const plan = screen.getByRole("tabpanel", { name: "Plan and billing" });
-	expect(plan).toHaveTextContent("Free plan");
-	expect(plan).toHaveTextContent("Paid plan");
-	expect(plan).toHaveTextContent("Billing details");
-
-	await user.keyboard("{ArrowDown}");
-	expect(
-		await screen.findByRole("textbox", { name: "Workspace Name" })
-	).toHaveValue("Horaion");
+	await user.click(await screen.findByRole("button", { name: "Upgrade plan" }));
+	const plan = await screen.findByRole("region", { name: "Plan and billing" });
+	await waitFor(() => {
+		expect(plan).toHaveFocus();
+	});
 });
 
-it("shows each Leave card under its own key", async () => {
+it("shows the list alone on a phone until a section is chosen, then the section with a link back", async () => {
+	stubApi({
+		[REFRESH]: accessPassReply(),
+		[ME]: currentUserReply(),
+		[WORKSPACE]: workspaceReply([{ uuid: "c-1", name: "Horaion" }]),
+	});
+	await open();
+
+	// jsdom applies no styles, so the breakpoint classes stand in for what a phone shows.
+	const list = await screen.findByRole("navigation", {
+		name: "Settings sections",
+	});
+	expect(list).not.toHaveClass("max-md:hidden");
+	expect(screen.getByRole("region", { name: "General" })).toHaveClass(
+		"max-md:hidden"
+	);
+
+	await userEvent.click(within(list).getByRole("link", { name: "Notifications" }));
+	const panel = await screen.findByRole("region", { name: "Notifications" });
+	expect(panel).not.toHaveClass("max-md:hidden");
+	expect(list).toHaveClass("max-md:hidden");
+	const back = within(screen.getByRole("main")).getByRole("link", {
+		name: "Settings",
+	});
+	expect(back).toHaveAttribute("href", "/settings");
+	expect(back).toHaveClass("md:hidden");
+	expect(back).not.toHaveAttribute("aria-current");
+});
+
+it("opens Leave types from the old Leave address, without the durations", async () => {
 	stubApi({
 		[REFRESH]: accessPassReply(),
 		[ME]: currentUserReply(),
@@ -227,16 +277,53 @@ it("shows each Leave card under its own key", async () => {
 	});
 	await open("/settings?section=leave");
 
-	const panel = await screen.findByRole("tabpanel", { name: "Leave" });
+	const panel = await screen.findByRole("region", { name: "Leave types" });
 	expect(
 		await within(panel).findByRole("heading", { name: "Leave types" })
 	).toBeVisible();
 	expect(
 		within(panel).queryByRole("heading", { name: "Leave durations" })
 	).toBeNull();
+	expect(
+		within(screen.getByRole("list", { name: "Leave" }))
+			.getAllByRole("link")
+			.map((link) => link.textContent)
+	).toEqual(["Leave types"]);
 });
 
-it("shows someone who manages only leave durations just that card", async () => {
+it("opens Leave durations on its own entry", async () => {
+	stubApi({
+		[REFRESH]: accessPassReply(),
+		[ME]: currentUserReply(),
+		[WORKSPACE]: workspaceReply([
+			{
+				uuid: "c-1",
+				name: "Horaion",
+				permissions: ["leave_type:read", "leave_duration:read"],
+			},
+		]),
+		"GET /api/v1/companies/c-1/leave-durations": {
+			status: 200,
+			body: envelope([]),
+		},
+	});
+	await open("/settings?section=leave-durations");
+
+	const panel = await screen.findByRole("region", { name: "Leave durations" });
+	expect(
+		await within(panel).findByRole("heading", { name: "Leave durations" })
+	).toBeVisible();
+	expect(
+		within(panel).queryByRole("heading", { name: "Leave types" })
+	).toBeNull();
+	expect(
+		within(screen.getByRole("list", { name: "Leave" }))
+			.getAllByRole("link")
+			.map((link) => link.textContent)
+	).toEqual(["Leave types", "Leave durations"]);
+});
+
+it("shows someone who manages only leave durations just that entry, also from the old Leave address", async () => {
 	stubApi({
 		[REFRESH]: accessPassReply(),
 		[ME]: currentUserReply(),
@@ -254,13 +341,15 @@ it("shows someone who manages only leave durations just that card", async () => 
 	});
 	await open("/settings?section=leave");
 
-	const panel = await screen.findByRole("tabpanel", { name: "Leave" });
+	const panel = await screen.findByRole("region", { name: "Leave durations" });
 	expect(
 		await within(panel).findByRole("heading", { name: "Leave durations" })
 	).toBeVisible();
 	expect(
-		within(panel).queryByRole("heading", { name: "Leave types" })
-	).toBeNull();
+		within(screen.getByRole("list", { name: "Leave" }))
+			.getAllByRole("link")
+			.map((link) => [link.textContent, link.getAttribute("aria-current")])
+	).toEqual([["Leave durations", "page"]]);
 });
 
 it("leaves the workspace name empty when the workspace does not list the current company", async () => {
@@ -292,7 +381,7 @@ it("explains when the workspace cannot be loaded and shows no form", async () =>
 	expect(
 		screen.queryByRole("textbox", { name: "Workspace Name" })
 	).not.toBeInTheDocument();
-	expect(screen.getByRole("tab", { name: "Notifications" })).toBeVisible();
+	expect(screen.getByRole("link", { name: "Notifications" })).toBeVisible();
 });
 
 it("renders inside the app shell without adding a Sidebar entry", async () => {

@@ -66,7 +66,7 @@ const open = async (
 ): Promise<HTMLElement> => {
 	app = await openApp(path);
 	renderAuthApp(app);
-	return screen.findByRole("tabpanel", { name: "Employment" });
+	return screen.findByRole("region", { name: "Employment terms" });
 };
 
 const table = (panel: HTMLElement): Promise<HTMLElement> =>
@@ -149,8 +149,8 @@ describe("EmploymentTermsSettings", () => {
 		app = await openApp("/settings");
 		renderAuthApp(app);
 
-		await screen.findByRole("tab", { name: /Work policy/ });
-		expect(screen.queryByRole("tab", { name: /Employment/ })).toBeNull();
+		await screen.findByRole("link", { name: "Work policy" });
+		expect(screen.queryByRole("link", { name: "Employment terms" })).toBeNull();
 	});
 
 	it("adds terms from a common week, reading them back as they change", async () => {

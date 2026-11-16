@@ -23,7 +23,7 @@ export type NotificationLink =
 	| { to: "/settings/data/import-people"; search: { import: string } }
 	| {
 			to: "/settings";
-			search: { section: "approvals"; subject: "leave" };
+			search: { section: "leave-approvals" };
 	  };
 
 /**
@@ -32,7 +32,7 @@ export type NotificationLink =
  * with the Issues list beside it, an approval with its trail), a
  * rostered member's own view of that roster (with an offer's card when
  * it is about one), the people import's result under Settings › Data, or
- * the leave requests' approval flows under Settings › Approvals.
+ * the leave approval flows under Settings › Leave approvals.
  */
 export const notificationLink = (
 	target: NotificationTarget
@@ -76,7 +76,7 @@ export const notificationLink = (
 		case "leaveApprovalFlows":
 			return linkOptions({
 				to: "/settings",
-				search: { section: "approvals", subject: "leave" },
+				search: { section: "leave-approvals" },
 			});
 	}
 };
