@@ -5427,5 +5427,9 @@
 			},
 			"empty": "No hay horarios publicados en estas fechas."
 		}
+	},
+	"expandableList": {
+		"showAll": "Mostrar los {{count}}",
+		"showFewer": "Mostrar menos"
 	}
 }
