@@ -15,7 +15,7 @@ Department's preferences beneath the Team grid. Everything comes from the API
   (`AvailabilityOwner`), the company's list of part-timers for one week inside one Branch (`availabilityListQuery`, `GET /companies/{c}/availability`), a Department's readiness for the Schedule
   wizard, and every query's options, all under `availabilityRoot`, `["availability", companyId]`, as leave roots its own.
 - `availabilitySearch.ts` — what belongs in the URL (`view`, `branch`, `department`, `week` as its Monday), the
-  tabs a person has, the page heading true for them (`headingOf`: Shift preferences for someone with no other tab),
+  tabs a person has, the line beneath the page title true for them (`subtitleOf`: their own shift preferences for someone with no other tab),
   and the list asked for (`availabilityQueryOf`). A week left out is the one today is in, worked out on every render, so a page left open
   across a Monday moves on.
 - `availabilityModel.ts` — the pure rules: windows by day (`byDay`, and `windowsByDay` for a week's dated windows),

@@ -18,7 +18,7 @@ import { isPastWeek } from "@/features/availability/availabilityModel";
 import {
 	availabilityQueryOf,
 	AVAILABILITY_TEAM_UNIT_RULES,
-	headingOf,
+	subtitleOf,
 	viewOf,
 	viewsOf,
 	weekOf,
@@ -71,7 +71,7 @@ const problemKeyOf = (
 
 /**
  * Work availability and shift preferences, in three tabs decided by data,
- * never roles, under a heading for the tabs the person has. "Mine" is a
+ * never roles, under a line true for the tabs the person has. "Mine" is a
  * part-timer's own week and pattern, changed with nothing granted. "Team" is
  * the part-timers of the header's Branch (every Branch in reach under "All
  * branches") for one week, read through the person's grants, with editing
@@ -140,15 +140,14 @@ export const Availability = (): FunctionComponent => {
 		access.can(AVAILABILITY_UPDATE_KEY, recordScope(member.departmentId));
 	const editsAnywhere = access.canAnywhere(AVAILABILITY_UPDATE_KEY);
 
-	// The heading depends on the tabs, so nothing is shown until they are known.
+	// The line beneath the title depends on the tabs, so nothing is shown until they are known.
 	if (!tabsKnown) return null;
-	const heading = headingOf(views);
 	const header = (
 		<div>
 			<h1 className="text-4xl font-medium text-neutral-900">
-				{t(heading.title)}
+				{t("availability.title")}
 			</h1>
-			<p className="mt-4 text-sm text-neutral-800">{t(heading.subtitle)}</p>
+			<p className="mt-4 text-sm text-neutral-800">{t(subtitleOf(views))}</p>
 		</div>
 	);
 

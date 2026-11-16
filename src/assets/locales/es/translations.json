@@ -528,12 +528,9 @@
 		}
 	},
 	"availability": {
-		"title": "Disponibilidad",
+		"title": "Disponibilidad y preferencias",
 		"subtitle": "Las horas en que las personas a tiempo parcial pueden trabajar y los turnos que cada persona prefiere, semana a semana.",
-		"preferencesOnly": {
-			"title": "Preferencias de turno",
-			"subtitle": "Elige los turnos que te gustaría trabajar, semana a semana."
-		},
+		"preferencesOnlySubtitle": "Elige los turnos que te gustaría trabajar, semana a semana.",
 		"views": "Vistas de disponibilidad",
 		"mine": {
 			"tab": "Mi disponibilidad",
@@ -2481,7 +2478,7 @@
 			"dashboard": "Panel",
 			"scheduling": "Programación",
 			"leave": "Permisos",
-			"availability": "Disponibilidad",
+			"availability": "Disponibilidad y preferencias",
 			"people": "Personas",
 			"organisation": "Organización",
 			"insights": "Análisis"

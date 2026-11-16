@@ -170,12 +170,17 @@ describe("Availability", () => {
 		await open("/availability");
 
 		expect(
-			await screen.findByRole("heading", { level: 1, name: "Availability" })
+			await screen.findByRole("heading", {
+				level: 1,
+				name: "Availability and preferences",
+			})
 		).toBeVisible();
 		expect(await screen.findAllByText("09:00–13:00")).toHaveLength(5);
 		expect(tabNames()).toEqual(["My availability", "Shift preferences"]);
 		expect(
-			within(navigation()).getByRole("link", { name: "Availability" })
+			within(navigation()).getByRole("link", {
+				name: "Availability and preferences",
+			})
 		).toBeVisible();
 		expect(calls.some((call) => call.path === TEAM_PATH)).toBe(false);
 	});
@@ -351,7 +356,7 @@ describe("Availability", () => {
 		).toBeVisible();
 	});
 
-	it("shows someone neither part-time nor holding the read key their shift preferences only, headed as such", async () => {
+	it("shows someone neither part-time nor holding the read key their shift preferences only, described as such", async () => {
 		const calls = stubApi(routes("FULL_TIME", workspaceReply([])));
 		await open("/availability");
 
@@ -360,14 +365,19 @@ describe("Availability", () => {
 		).toBeVisible();
 		expect(tabNames()).toEqual(["Shift preferences"]);
 		expect(
-			screen.getByRole("heading", { level: 1, name: "Shift preferences" })
+			screen.getByRole("heading", {
+				level: 1,
+				name: "Availability and preferences",
+			})
 		).toBeVisible();
 		expect(
 			screen.getByText("Choose the shifts you’d like to work, week by week.")
 		).toBeVisible();
 		// The menu offers the page to everyone, so a full-timer reaches it too.
 		expect(
-			within(navigation()).getByRole("link", { name: "Availability" })
+			within(navigation()).getByRole("link", {
+				name: "Availability and preferences",
+			})
 		).toBeVisible();
 		expect(
 			screen.getByRole("button", { name: /^Choose shifts for Mon/ })

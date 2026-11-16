@@ -528,12 +528,9 @@
 		}
 	},
 	"availability": {
-		"title": "Availability",
+		"title": "Availability and preferences",
 		"subtitle": "The hours part-time people can work and the shifts people would like, week by week.",
-		"preferencesOnly": {
-			"title": "Shift preferences",
-			"subtitle": "Choose the shifts you’d like to work, week by week."
-		},
+		"preferencesOnlySubtitle": "Choose the shifts you’d like to work, week by week.",
 		"views": "Availability views",
 		"mine": {
 			"tab": "My availability",
@@ -917,7 +914,7 @@
 			"dashboard": "Dashboard",
 			"scheduling": "Scheduling",
 			"leave": "Leave",
-			"availability": "Availability",
+			"availability": "Availability and preferences",
 			"people": "People",
 			"organisation": "Organisation",
 			"insights": "Insights"

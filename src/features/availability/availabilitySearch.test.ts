@@ -3,8 +3,8 @@ import {
 	availabilityQueryOf,
 	availabilityUnitRulesOf,
 	AVAILABILITY_TEAM_UNIT_RULES,
-	headingOf,
 	parseAvailabilitySearch,
+	subtitleOf,
 	viewOf,
 	viewsOf,
 	weekOf,
@@ -98,19 +98,16 @@ describe("viewsOf and viewOf", () => {
 	});
 });
 
-describe("headingOf", () => {
-	it("given_anAvailabilityTab_when_headed_then_isAvailability", () => {
-		expect(headingOf(["mine", "preferences"]).title).toBe("availability.title");
-		expect(headingOf(["team", "preferences"]).title).toBe(
-			"availability.title"
-		);
+describe("subtitleOf", () => {
+	it("given_anAvailabilityTab_when_asked_then_namesAvailabilityAndPreferences", () => {
+		expect(subtitleOf(["mine", "preferences"])).toBe("availability.subtitle");
+		expect(subtitleOf(["team", "preferences"])).toBe("availability.subtitle");
 	});
 
-	it("given_shiftPreferencesAlone_when_headed_then_isShiftPreferences", () => {
-		expect(headingOf(["preferences"])).toEqual({
-			title: "availability.preferencesOnly.title",
-			subtitle: "availability.preferencesOnly.subtitle",
-		});
+	it("given_shiftPreferencesAlone_when_asked_then_namesTheirOwnPreferences", () => {
+		expect(subtitleOf(["preferences"])).toBe(
+			"availability.preferencesOnlySubtitle"
+		);
 	});
 });
 

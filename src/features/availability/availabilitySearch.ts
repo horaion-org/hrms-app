@@ -91,30 +91,17 @@ export const viewOf = (
 		? requested
 		: (views[0] ?? EVERYONES_VIEW);
 
-/** The page heading for anyone with an availability tab: availability, and preferences beside it. */
-const AVAILABILITY_HEADING = {
-	title: "availability.title",
-	subtitle: "availability.subtitle",
-} as const;
-
-/** The page heading for someone whose only tab is Shift preferences. */
-const PREFERENCES_ONLY_HEADING = {
-	title: "availability.preferencesOnly.title",
-	subtitle: "availability.preferencesOnly.subtitle",
-} as const;
-
-/** The translation keys of the page's title and the line beneath it. */
-export type AvailabilityHeading =
-	| typeof AVAILABILITY_HEADING
-	| typeof PREFERENCES_ONLY_HEADING;
-
-/** The page heading true for the person: Availability with one of its tabs, else Shift preferences, their only tab. */
-export const headingOf = (
+/**
+ * The line beneath the page's title, true for the person: availability and
+ * preferences for anyone with Mine or Team, else their own shift
+ * preferences, the only tab they have.
+ */
+export const subtitleOf = (
 	views: ReadonlyArray<AvailabilityView>
-): AvailabilityHeading =>
+): "availability.subtitle" | "availability.preferencesOnlySubtitle" =>
 	views.includes("mine") || views.includes("team")
-		? AVAILABILITY_HEADING
-		: PREFERENCES_ONLY_HEADING;
+		? "availability.subtitle"
+		: "availability.preferencesOnlySubtitle";
 
 /** The team tab lists part-timers by Branch, and by Department within it. */
 export const AVAILABILITY_TEAM_UNIT_RULES: UnitSelectionRules = {
