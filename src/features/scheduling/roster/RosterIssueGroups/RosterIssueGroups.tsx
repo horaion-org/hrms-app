@@ -12,7 +12,8 @@ import {
 	type IssueOrder,
 	type RosterIssue,
 } from "@/features/scheduling/roster/rosterIssueGroups";
-import { GROUP_TONES, IssueGroupSection } from "./IssueGroupSection";
+import { IssueGroupSection } from "./IssueGroupSection";
+import { GROUP_TONES } from "./issueGroupTones";
 
 const key = "scheduling.issues";
 

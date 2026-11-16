@@ -1,7 +1,7 @@
 import { useId, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
-import { Badge, type BadgeTone } from "@/components/ui/Badge";
+import { Badge } from "@/components/ui/Badge";
 import { ChevronDownIcon } from "@/components/ui/Icon";
 import type { CoverGapRequest } from "@/features/scheduling/cover/api";
 import type {
@@ -9,13 +9,7 @@ import type {
 	RosterIssue,
 } from "@/features/scheduling/roster/rosterIssueGroups";
 import { IssueRow } from "./IssueRow";
-
-/** Each group's tone, in the header summary and on its heading. */
-export const GROUP_TONES: Record<IssueGroup, BadgeTone> = {
-	mustFix: "error",
-	notMet: "warning",
-	forInformation: "neutral",
-};
+import { GROUP_TONES } from "./issueGroupTones";
 
 export type IssueGroupSectionProps = {
 	group: IssueGroup;
@@ -47,12 +41,12 @@ export const IssueGroupSection = ({
 			<button
 				aria-controls={listId}
 				aria-expanded={open}
+				className="flex w-full cursor-pointer items-center justify-between gap-3 text-left text-sm font-semibold text-neutral-900"
+				type="button"
 				aria-label={t("scheduling.issues.groupLabel", {
 					group: title,
 					count: items.length,
 				})}
-				className="flex w-full cursor-pointer items-center justify-between gap-3 text-left text-sm font-semibold text-neutral-900"
-				type="button"
 				onClick={(): void => {
 					setOpen((wasOpen) => !wasOpen);
 				}}

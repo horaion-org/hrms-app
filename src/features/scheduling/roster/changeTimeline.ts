@@ -65,7 +65,7 @@ export const changeTimeline = (
 			before: rosterCellText(change.before, t),
 			after: rosterCellText(assignmentCell(row), t),
 		};
-		const last = timeline.at(-1);
+		const last = timeline[timeline.length - 1];
 		if (last?.appliedOn === appliedOn) last.entries.push(entry);
 		else
 			timeline.push({
