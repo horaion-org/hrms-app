@@ -76,3 +76,14 @@ const GroupDemo = (): FunctionComponent => {
 };
 
 export const Group: Story = { render: () => <GroupDemo /> };
+
+/** Large, as in a grid of many choices: icon, label and radio on one row, the description full width. */
+export const Large: Story = {
+	args: {
+		size: "large",
+		checked: false,
+		label: "People on a shift",
+		description: "How many people a shift needs, by job title.",
+		className: "max-w-80",
+	},
+};

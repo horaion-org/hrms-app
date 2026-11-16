@@ -581,6 +581,8 @@ describe("ConstraintDialog", () => {
 		expect(
 			screen.getByRole("dialog", { description: "Step 2 of 2" })
 		).toBeVisible();
+		// Continue only moves on: nothing is checked or refused yet.
+		expect(screen.queryByRole("alert")).toBeNull();
 		expect(
 			screen.getByText("The shortest gap between one shift and the next.")
 		).toBeVisible();

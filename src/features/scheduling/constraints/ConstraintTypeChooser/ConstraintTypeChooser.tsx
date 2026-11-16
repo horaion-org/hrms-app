@@ -74,7 +74,7 @@ export const ConstraintTypeChooser = ({
 						</div>
 						<div
 							aria-labelledby={headingId}
-							className="grid gap-4 sm:grid-cols-2"
+							className="grid grid-cols-[repeat(auto-fit,minmax(15rem,1fr))] gap-3"
 							role="radiogroup"
 						>
 							{types.map((option) => {
@@ -87,12 +87,13 @@ export const ConstraintTypeChooser = ({
 										icon={<look.Icon />}
 										label={look.label}
 										name={`${id}-type`}
+										size="large"
 										value={option.type}
 										description={
 											look.description && (
 												<>
 													{look.description}
-													<span className="mt-1 block font-normal text-neutral-700">
+													<span className="mt-2 block rounded-sm bg-neutral-100 px-3 py-2 text-neutral-900">
 														{look.example}
 													</span>
 												</>
