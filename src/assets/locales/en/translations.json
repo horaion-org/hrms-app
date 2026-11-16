@@ -4439,6 +4439,15 @@
 			"save": "Save hours"
 		},
 		"issues": {
+			"show": "Show",
+			"nothingWrong": "Nothing to fix: every shift is covered and every rule holds.",
+			"orderLabel": "Order issues",
+			"order": { "byPerson": "By person", "byDay": "By day" },
+			"groups": {
+				"mustFix": "Must fix",
+				"notMet": "Could not be met",
+				"forInformation": "For your information"
+			},
 			"jobShort": "{{job}} short",
 			"unknownJob": "A job title",
 			"shortBy_one": "{{count}} person short",

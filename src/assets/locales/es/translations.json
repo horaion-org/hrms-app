@@ -4239,6 +4239,15 @@
 			"save": "Guardar horas"
 		},
 		"issues": {
+			"show": "Mostrar",
+			"nothingWrong": "Nada que corregir: todos los turnos están cubiertos y se cumplen todas las reglas.",
+			"orderLabel": "Ordenar incidencias",
+			"order": { "byPerson": "Por persona", "byDay": "Por día" },
+			"groups": {
+				"mustFix": "Por corregir",
+				"notMet": "No se pudo cumplir",
+				"forInformation": "Para tu información"
+			},
 			"jobShort": "Falta {{job}}",
 			"unknownJob": "un puesto",
 			"shortBy_one": "Falta {{count}} persona",
