@@ -4,8 +4,8 @@ The authenticated `/availability` route: the hours part-time members can work, a
 for any week from this one on, an override in its place (ADR-0053 of the API). Its tabs are offered from data and
 never from roles. **Mine** is a part-timer's own week and pattern, read and changed through
 `/companies/{c}/me/availability` with nothing granted. **Team** is a Branch's part-timers for one week, read
-through the person's grants, with editing on the rows they may change. Between them the page shows a third tab,
-**Shift preferences**, to everyone; its parts live in `features/shiftPreferences`, which also lists a chosen
+through the person's grants, with editing on the rows they may change. After them the page shows a third tab,
+**Shift preferences**, to everyone, last so a part-timer opens on Mine and a manager on Team; its parts live in `features/shiftPreferences`, which also lists a chosen
 Department's preferences beneath the Team grid. Everything comes from the API
 (`features/availability/api.ts`); nothing is kept in page state beyond the open editor.
 

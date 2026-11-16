@@ -70,15 +70,16 @@ describe("weekOf and weekParameter", () => {
 });
 
 describe("viewsOf and viewOf", () => {
-	it("given_whatThePersonHas_when_listed_then_putsMineFirstAndPreferencesAlways", () => {
+	it("given_whatThePersonHas_when_listed_then_putsMineThenTeamFirstAndPreferencesAlwaysLast", () => {
 		expect(viewsOf({ mine: true, team: true })).toEqual([
 			"mine",
-			"preferences",
 			"team",
+			"preferences",
 		]);
+		// A manager who is not part-time opens on the team.
 		expect(viewsOf({ mine: false, team: true })).toEqual([
-			"preferences",
 			"team",
+			"preferences",
 		]);
 		expect(viewsOf({ mine: true, team: false })).toEqual([
 			"mine",
@@ -89,9 +90,9 @@ describe("viewsOf and viewOf", () => {
 
 	it("given_aTabTheyLack_when_asked_then_showsTheirFirst", () => {
 		expect(viewOf("team", ["mine", "preferences"])).toBe("mine");
-		expect(viewOf("mine", ["preferences", "team"])).toBe("preferences");
-		expect(viewOf(undefined, ["mine", "preferences", "team"])).toBe("mine");
-		expect(viewOf("team", ["mine", "preferences", "team"])).toBe("team");
+		expect(viewOf("mine", ["team", "preferences"])).toBe("team");
+		expect(viewOf(undefined, ["mine", "team", "preferences"])).toBe("mine");
+		expect(viewOf("team", ["mine", "team", "preferences"])).toBe("team");
 		// No list yet: Shift preferences, which everyone has.
 		expect(viewOf("mine", [])).toBe("preferences");
 	});
@@ -100,7 +101,7 @@ describe("viewsOf and viewOf", () => {
 describe("headingOf", () => {
 	it("given_anAvailabilityTab_when_headed_then_isAvailability", () => {
 		expect(headingOf(["mine", "preferences"]).title).toBe("availability.title");
-		expect(headingOf(["preferences", "team"]).title).toBe(
+		expect(headingOf(["team", "preferences"]).title).toBe(
 			"availability.title"
 		);
 	});

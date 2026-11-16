@@ -72,18 +72,19 @@ const problemKeyOf = (
 
 /**
  * Work availability and shift preferences, in three tabs decided by data,
- * never roles, under a heading for the tabs the person has. "Mine" is a part-timer's own week and pattern, changed with
- * nothing granted. "Shift preferences" is everyone's own week of preferred
- * shifts, also changed with nothing granted. "Team" is the part-timers of
- * the header's Branch (every Branch in reach under "All branches") for one
- * week, read through the person's grants, with editing on the rows they may
- * change; once a Department is chosen, its members' shift preferences are
- * listed beneath for those who may read them. Beneath the tabs, one toolbar
- * holds the team's Department filter and the week. The tab (written once it
- * is known), units and week live in the URL; a week left out is this one,
- * worked out on every render. Any week can be read; only this week and
- * later ones are edited. Page-level composition only: the parts live in
- * `features/availability` and `features/shiftPreferences`.
+ * never roles, under a heading for the tabs the person has. "Mine" is a
+ * part-timer's own week and pattern, changed with nothing granted. "Team" is
+ * the part-timers of the header's Branch (every Branch in reach under "All
+ * branches") for one week, read through the person's grants, with editing
+ * on the rows they may change; once a Department is chosen, its members'
+ * shift preferences are listed beneath. "Shift preferences", last, is
+ * everyone's own week of preferred shifts, also changed with nothing
+ * granted. Beneath the tabs, one toolbar holds the team's Department filter
+ * and the week. The tab (written once it is known), units and week live in
+ * the URL; a week left out is this one, worked out on every render. Any week
+ * can be read; only this week and later ones are edited. Page-level
+ * composition only: the parts live in `features/availability` and
+ * `features/shiftPreferences`.
  */
 export const Availability = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();

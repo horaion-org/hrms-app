@@ -11,8 +11,8 @@ import type {
 	UnitSelectionRules,
 } from "@/features/workspace/unitSelection";
 
-/** The page's three tabs, in order: the caller's own availability, their own shift preferences, and their teams'. */
-const AVAILABILITY_VIEWS = ["mine", "preferences", "team"] as const;
+/** The page's three tabs, in order: the caller's own availability, their teams', and their own shift preferences. */
+const AVAILABILITY_VIEWS = ["mine", "team", "preferences"] as const;
 
 /** One tab of the Availability page. */
 export type AvailabilityView = (typeof AVAILABILITY_VIEWS)[number];
@@ -62,7 +62,11 @@ export const weekParameter = (
 ): string | undefined =>
 	weekStartMonday === mondayOf(today) ? undefined : weekStartMonday;
 
-/** The tabs a person has, in order: Mine for a part-timer, Shift preferences for everyone, Team with the read key held somewhere. */
+/**
+ * The tabs a person has, in order: Mine for a part-timer, Team with the read
+ * key held somewhere, Shift preferences for everyone. Last, so a part-timer
+ * still opens on their own week and a manager on their team's.
+ */
 export const viewsOf = ({
 	mine,
 	team,
@@ -71,8 +75,8 @@ export const viewsOf = ({
 	team: boolean;
 }): Array<AvailabilityView> => [
 	...(mine ? (["mine"] as const) : []),
-	"preferences",
 	...(team ? (["team"] as const) : []),
+	"preferences",
 ];
 
 /** Shift preferences: the tab every member has. */

@@ -180,18 +180,20 @@ describe("Availability", () => {
 		expect(calls.some((call) => call.path === TEAM_PATH)).toBe(false);
 	});
 
-	it("opens someone holding the read key, and not part-time, on their shift preferences: their first tab", async () => {
+	it("opens someone holding the read key, and not part-time, on the team: their first tab", async () => {
 		const calls = stubApi(routes("FULL_TIME", workspaceReply([READ])));
 		const { router } = await open("/availability");
 
 		expect(
-			await screen.findByRole("table", { name: "Shift preferences" })
+			await screen.findByRole("table", { name: "Team availability" })
 		).toBeVisible();
-		expect(tabNames()).toEqual(["Shift preferences", "Team"]);
+		expect(tabNames()).toEqual(["Team", "Shift preferences"]);
 		await waitFor(() => {
-			expect(router.state.location.search).toEqual({ view: "preferences" });
+			expect(router.state.location.search).toEqual({ view: "team" });
 		});
-		expect(calls.some((call) => call.path === TEAM_PATH)).toBe(false);
+		expect(calls.some((call) => call.path === MY_PREFERENCES_PATH)).toBe(
+			false
+		);
 	});
 
 	it("shows someone holding the read key the team's week, without reading a week of their own", async () => {
@@ -202,7 +204,7 @@ describe("Availability", () => {
 			name: "Team availability",
 		});
 		expect(await within(table).findByText("Aisha Rahman")).toBeVisible();
-		expect(tabNames()).toEqual(["Shift preferences", "Team"]);
+		expect(tabNames()).toEqual(["Team", "Shift preferences"]);
 		expect(
 			calls.filter((call) => call.path === TEAM_PATH).map((call) => call.search)
 		).toEqual([`weekStartMonday=${mondayOf(new Date())}&branchId=b-1`]);
@@ -306,8 +308,8 @@ describe("Availability", () => {
 		await screen.findAllByText("09:00–13:00");
 		expect(tabNames()).toEqual([
 			"My availability",
-			"Shift preferences",
 			"Team",
+			"Shift preferences",
 		]);
 		// Their own week lists nothing by Branch: the URL names the tab and the header shows no Branch.
 		await waitFor(() => {
