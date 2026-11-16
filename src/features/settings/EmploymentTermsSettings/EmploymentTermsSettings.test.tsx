@@ -1,6 +1,14 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+	afterEach,
+	beforeAll,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	vi,
+} from "vitest";
 import { resetApiClient } from "@/common/api-client";
 import { companyWideWorkspace } from "@/common/testing/effectiveWorkspace";
 import {
@@ -28,6 +36,11 @@ import {
 const TERMS = "/api/v1/companies/c-1/employment-terms";
 const READ_AND_UPDATE = ["employment_terms:read", "employment_terms:update"];
 
+// The router splits each page's code out; loading it once here keeps that
+// first load out of the first test's time.
+beforeAll(async () => {
+	await import("@/pages/Settings");
+});
 let app: OpenedApp | undefined;
 beforeEach(() => {
 	vi.spyOn(window, "scrollTo").mockImplementation(() => {});

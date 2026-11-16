@@ -1,7 +1,15 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import dayjs from "dayjs";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+	afterEach,
+	beforeAll,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	vi,
+} from "vitest";
 import { resetApiClient } from "@/common/api-client";
 import {
 	currentUserReply,
@@ -52,6 +60,11 @@ const IN_THE_FIXTURE_WEEK = new Date("2026-10-14T09:00:00+08:00");
 /** The first minute of the Monday after the fixtures' week in their branch: the week has passed. */
 const AFTER_THE_FIXTURE_WEEK = new Date("2026-10-19T00:00:00+08:00");
 
+// The router splits each page's code out; loading it once here keeps that
+// first load out of the first test's time.
+beforeAll(async () => {
+	await import("@/pages/ScheduleDetail");
+});
 let app: OpenedApp | undefined;
 beforeEach(() => {
 	vi.useFakeTimers({ toFake: ["Date"], now: IN_THE_FIXTURE_WEEK });

@@ -1,6 +1,14 @@
 import { act, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+	afterEach,
+	beforeAll,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	vi,
+} from "vitest";
 import { resetApiClient } from "@/common/api-client";
 import { companyWideWorkspace } from "@/common/testing/effectiveWorkspace";
 import {
@@ -55,6 +63,12 @@ const cases = [
 	},
 ] as const;
 
+// The router splits each page's code out; loading it once here keeps that
+// first load out of the first test's time.
+beforeAll(async () => {
+	await import("@/pages/Branches");
+	await import("@/pages/Departments");
+});
 let app: OpenedApp | undefined;
 beforeEach(() => {
 	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
@@ -103,7 +117,8 @@ describe.each(cases)("editing a $kind from its list", (item) => {
 	): Promise<void> => {
 		const input = within(dialog).getByLabelText(item.label);
 		await userEvent.clear(input);
-		await userEvent.type(input, value);
+		// At once, as a paste does: typing key by key made these tests slow.
+		await userEvent.paste(value);
 	};
 	const save = (dialog: HTMLElement): Promise<void> =>
 		userEvent.click(
@@ -137,20 +152,14 @@ describe.each(cases)("editing a $kind from its list", (item) => {
 				"Singapore"
 			);
 			await userEvent.clear(within(dialog).getByLabelText("Branch code"));
-			await userEvent.type(
-				within(dialog).getByLabelText("Branch code"),
-				"cen-2"
-			);
+			await userEvent.paste("cen-2");
 			await userEvent.clear(within(dialog).getByLabelText("City"));
-			await userEvent.type(
-				within(dialog).getByLabelText("City"),
-				"  Kuala   Lumpur  "
-			);
+			await userEvent.paste("  Kuala   Lumpur  ");
 			await userEvent.click(within(dialog).getByLabelText("Country"));
-			await userEvent.type(
-				screen.getByRole("combobox", { name: "Search countries" }),
-				"Malaysia"
+			await userEvent.click(
+				screen.getByRole("combobox", { name: "Search countries" })
 			);
+			await userEvent.paste("Malaysia");
 			await userEvent.click(
 				await screen.findByRole("option", { name: "Malaysia" })
 			);
@@ -158,10 +167,10 @@ describe.each(cases)("editing a $kind from its list", (item) => {
 			expect(timeZone).toHaveTextContent("(GMT+08:00) Asia/Singapore");
 			expect(within(dialog).queryByRole("note")).not.toBeInTheDocument();
 			await userEvent.click(timeZone);
-			await userEvent.type(
-				screen.getByRole("combobox", { name: "Search city, region or offset" }),
-				"kuala"
+			await userEvent.click(
+				screen.getByRole("combobox", { name: "Search city, region or offset" })
 			);
+			await userEvent.paste("kuala");
 			await userEvent.click(
 				await screen.findByRole("option", { name: /Asia\/Kuala Lumpur/ })
 			);
