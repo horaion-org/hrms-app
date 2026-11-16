@@ -165,6 +165,32 @@ describe("Dashboard", () => {
 		).toHaveAttribute("href", "/activity");
 	});
 
+	it("given_moreLeaveThanFiveRows_when_opened_then_listsFiveAndLinksToTheRest", async () => {
+		const pending = Array.from({ length: 7 }, (_, index) =>
+			leaveFixture({ leaveRequestId: `leave-${index}` })
+		);
+		stubApi({
+			...routes(),
+			[LEAVE]: (call) =>
+				new URLSearchParams(call.search).get("status") === "PENDING"
+					? page(pending, 7)
+					: page([], 0),
+		});
+		await open();
+
+		const leave = await screen.findByRole("region", {
+			name: "Pending leave requests",
+		});
+		expect(await within(leave).findAllByRole("listitem")).toHaveLength(5);
+		expect(
+			within(leave).getByRole("link", { name: "See all 7" })
+		).toHaveAttribute("href", "/leave");
+		// The full list is a page of its own, so the card offers no toggle.
+		expect(
+			within(leave).queryByRole("button", { name: /^Show all/ })
+		).toBeNull();
+	});
+
 	it("given_severalBranches_when_theHeaderBranchChanges_then_theFiguresFollowIt", async () => {
 		const user = userEvent.setup();
 		const calls = stubApi({
