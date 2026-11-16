@@ -1114,7 +1114,10 @@ it("counts what the engine found on one Issues button and lists it in the side p
 	});
 	const user = userEvent.setup();
 
-	const issues = await screen.findByRole("button", { name: "Issues: 4" });
+	// What is to fix: the shift short and Ben's run; nothing asked "if possible".
+	const issues = await screen.findByRole("button", {
+		name: "Issues: 2 to fix, 0 could not be met",
+	});
 	expect(issues).toHaveAttribute("aria-expanded", "false");
 	// Only the note that the roster isn't published; findings stay in the Issues panel.
 	expect(screen.getByRole("note")).toHaveTextContent("Not published.");
@@ -1125,28 +1128,27 @@ it("counts what the engine found on one Issues button and lists it in the side p
 	expect(issues).toHaveAttribute("aria-expanded", "true");
 	expect(issues).toHaveAttribute("aria-controls", panel.id);
 
-	const setup = screen.getByRole("region", { name: "Setup issues (1)" });
-	expect(setup).toHaveTextContent("Shifts nobody can take · 1");
-	expect(setup).toHaveTextContent(
+	const information = within(panel)
+		.getByRole("button", { name: /^For your information, / })
+		.closest("section");
+	expect(information).toHaveTextContent(
 		"No one in this schedule can take Breakfast Prep."
 	);
 	// The app's own sentence stands alone; the engine's is not repeated under it.
-	expect(
-		within(setup).queryByText(
-			"Shift Breakfast Prep: no employee holds an eligible role."
-		)
-	).toBeNull();
-	const roster = screen.getByRole("region", { name: "Roster notes (3)" });
-	expect(roster).toHaveTextContent("1 shift short, 1 person in all.");
-	expect(roster).toHaveTextContent(
-		"Sat, Oct 17Front Desk AM 09:00 – 15:00•1 Front Desk Staff short"
+	expect(information).not.toHaveTextContent(
+		"Shift Breakfast Prep: no employee holds an eligible role."
 	);
-	expect(roster).toHaveTextContent("Rule: Morning cover");
-	expect(roster).toHaveTextContent(
-		"Ben OngBen Ong works more than five days in a row."
-	);
-	expect(roster).toHaveTextContent(
+	expect(information).toHaveTextContent(
 		"Chen WeiSun, Oct 18Chen Wei covers the Sunday swing alone."
+	);
+	const mustFix = within(panel)
+		.getByRole("button", { name: "Must fix, 2" })
+		.closest("section");
+	expect(mustFix).toHaveTextContent(
+		"Front Desk Staff shortSat, Oct 17 · 09:00–15:001 person short · Morning cover"
+	);
+	expect(mustFix).toHaveTextContent(
+		"Ben OngBen Ong works more than five days in a row."
 	);
 	expect(screen.queryByRole("dialog")).toBeNull();
 	await waitFor(() => {
@@ -1171,7 +1173,7 @@ it("opens on the side panel its link names, and keeps what is opened in the URL"
 	expect(
 		await screen.findByRole("complementary", { name: "Issues" })
 	).toBeInTheDocument();
-	await user.click(screen.getByRole("button", { name: "Issues: 4" }));
+	await user.click(screen.getByRole("button", { name: /^Issues: / }));
 
 	expect(screen.queryByRole("complementary", { name: "Issues" })).toBeNull();
 	expect(app?.router.state.location.search).toEqual({ week: "2026-10-12" });
@@ -1207,14 +1209,13 @@ it("names findings without reading the setup it can't see", async () => {
 	});
 	const user = userEvent.setup();
 
-	await user.click(await screen.findByRole("button", { name: "Issues: 4" }));
+	await user.click(await screen.findByRole("button", { name: /^Issues: / }));
 
-	expect(
-		screen.getByRole("region", { name: "Roster notes (3)" })
-	).toHaveTextContent("Rule: People on a shift");
-	expect(
-		screen.getByRole("region", { name: "Setup issues (1)" })
-	).toHaveTextContent("No one in this schedule can take one of its shifts.");
+	const panel = screen.getByRole("complementary", { name: "Issues" });
+	expect(panel).toHaveTextContent("1 person short · People on a shift");
+	expect(panel).toHaveTextContent(
+		"No one in this schedule can take one of its shifts."
+	);
 	expect(readsOf(calls, `${SCHEDULE}/shifts`)).toHaveLength(0);
 	expect(readsOf(calls, `${SCHEDULE}/constraints`)).toHaveLength(0);
 });
@@ -1250,7 +1251,7 @@ it("counts findings in the row and day headers, opens them in Issues, and says a
 		})
 	);
 
-	expect(screen.getByRole("button", { name: "Issues: 4" })).toHaveAttribute(
+	expect(screen.getByRole("button", { name: /^Issues: / })).toHaveAttribute(
 		"aria-expanded",
 		"true"
 	);
@@ -1317,7 +1318,7 @@ it("lists where members started the week, and that it changed since, under Issue
 
 	const roster = await screen.findByRole("table", { name: "Roster" });
 	await userEvent.click(
-		await screen.findByRole("button", { name: "Issues: 5" })
+		await screen.findByRole("button", { name: /^Issues: / })
 	);
 
 	const panel = screen.getByRole("complementary", { name: "Issues" });
@@ -1331,12 +1332,6 @@ it("lists where members started the week, and that it changed since, under Issue
 	expect(
 		within(panel).getByText(
 			/^1 person’s days before this week changed after this roster was generated, so what it says about the week before is what was known then\. To plan from the days as they are now, regenerate the month from its page\.$/
-		)
-	).toBeInTheDocument();
-	// What it lists is from generation, and the heading says so.
-	expect(
-		within(panel).getByText(
-			"Where people started the week, when it was generated"
 		)
 	).toBeInTheDocument();
 	expect(within(roster).queryByText(/in a row before this week/)).toBeNull();
@@ -1690,7 +1685,7 @@ it("changes a generated roster's day by hand: preview, apply, mark, then undo", 
 	).toBeVisible();
 	expect(
 		screen.getByRole("complementary", { name: "Changed" })
-	).toHaveTextContent("Aisha Rahman · Mon, Oct 12Front Desk AM");
+	).toHaveTextContent(/Aisha Rahman · Mon, Oct 12.*Front Desk AM/);
 
 	await user.click(screen.getAllByRole("button", { name: "Undo" })[0]!);
 

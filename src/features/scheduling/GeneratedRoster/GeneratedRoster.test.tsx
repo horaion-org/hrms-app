@@ -299,7 +299,7 @@ describe("GeneratedRoster", () => {
 		await user.click(issues);
 		const panel = screen.getByRole("complementary", { name: "Issues" });
 		expect(
-			within(panel).getByRole("region", { name: "Roster notes (3)" })
+			within(panel).getByRole("button", { name: /^Must fix, / })
 		).toBeInTheDocument();
 		expect(
 			within(panel).getByRole("heading", { level: 2, name: "Issues" })
@@ -404,7 +404,7 @@ describe("GeneratedRoster", () => {
 		// The whole list opens afresh, its heading taking focus.
 		const all = screen.getByRole("complementary", { name: "Issues" });
 		expect(
-			within(all).getByRole("region", { name: "Roster notes (3)" })
+			within(all).getByRole("button", { name: /^Must fix, / })
 		).toBeInTheDocument();
 		expect(
 			within(all).getByRole("heading", { level: 2, name: "Issues" })
