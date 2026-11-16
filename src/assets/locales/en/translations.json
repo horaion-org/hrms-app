@@ -3636,7 +3636,11 @@
 				"AT_LEAST": "{{count}} {{titles}}",
 				"AT_MOST": "At most {{count}} {{titles}}",
 				"EXACTLY": "Exactly {{count}} {{titles}}",
-				"onDuty": "{{count}} {{titles}} on duty",
+				"onDuty": {
+					"AT_LEAST": "{{count}} {{titles}} on duty",
+					"AT_MOST": "At most {{count}} {{titles}} on duty",
+					"EXACTLY": "Exactly {{count}} {{titles}} on duty"
+				},
 				"ifPossible": "if possible",
 				"notSet": "Not set",
 				"capacity_one": "Only {{count}} holds the title",

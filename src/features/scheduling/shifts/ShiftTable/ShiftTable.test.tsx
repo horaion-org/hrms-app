@@ -137,6 +137,40 @@ describe("ShiftTable", () => {
 		).toHaveTextContent("Not set");
 	});
 
+	it("given_onDutyNeedsWithEachComparison_when_rendered_then_eachSaysItsComparison", () => {
+		const onDuty = {
+			name: "Agents on duty",
+			departmentId: "d-1",
+			headcount: 2,
+			jobTitleNames: ["Agent"],
+			onDuty: true,
+			ifPossible: false,
+		};
+		render(
+			<ShiftTable
+				shifts={rows}
+				needs={{
+					byShift: new Map([
+						[
+							"front-desk-am",
+							[
+								{ ...onDuty, constraintId: "c-1", comparison: "AT_LEAST" },
+								{ ...onDuty, constraintId: "c-2", comparison: "AT_MOST" },
+								{ ...onDuty, constraintId: "c-3", comparison: "EXACTLY" },
+							],
+						],
+					]),
+					capacityOf: () => undefined,
+				}}
+			/>
+		);
+
+		const frontDesk = screen.getByRole("row", { name: /Front Desk AM/ });
+		expect(frontDesk).toHaveTextContent("2 Agent on duty");
+		expect(frontDesk).toHaveTextContent("At most 2 Agent on duty");
+		expect(frontDesk).toHaveTextContent("Exactly 2 Agent on duty");
+	});
+
 	it("given_noNeeds_when_rendered_then_leavesTheNeededColumnOut", () => {
 		render(<ShiftTable shifts={rows} />);
 

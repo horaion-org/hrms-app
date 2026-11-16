@@ -115,23 +115,22 @@ const placeLineOf = (
 	return showDepartment ? shift.departmentName : shift.branchName;
 };
 
-/** One need as it reads in the Needed column: "3 Duty Manager", "At most 1 Operator", "1 Team Lead on duty". */
+/**
+ * One need as it reads in the Needed column, with its comparison: "3 Duty
+ * Manager", "At most 1 Operator", "1 Team Lead on duty", "At most 2 Agents
+ * on duty".
+ */
 const needLine = (need: ShiftNeed, t: TFunction): string => {
 	const titles = t("scheduling.constraints.list", {
 		items: need.jobTitleNames,
 	});
-	if (need.onDuty)
-		return t("scheduling.shifts.needs.onDuty", {
-			count: need.headcount,
-			titles,
-		});
 	const comparison: ConstraintComparison =
 		CONSTRAINT_COMPARISONS.find((each) => each === need.comparison) ??
 		"AT_LEAST";
-	return t(`scheduling.shifts.needs.${comparison}`, {
-		count: need.headcount,
-		titles,
-	});
+	const options = { count: need.headcount, titles };
+	return need.onDuty
+		? t(`scheduling.shifts.needs.onDuty.${comparison}`, options)
+		: t(`scheduling.shifts.needs.${comparison}`, options);
 };
 
 /**
