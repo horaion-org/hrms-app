@@ -2547,6 +2547,99 @@
 				"failed": "No pudimos crear la habilidad. Inténtelo de nuevo.",
 				"editFailed": "No pudimos guardar la habilidad. Inténtelo de nuevo."
 			}
+		},
+		"accessAreas": {
+			"dashboard": {
+				"name": "Panel",
+				"description": "Aprobaciones pendientes de decisión, y quién entra, termina el periodo de prueba o se va"
+			},
+			"scheduling": {
+				"name": "Programación",
+				"description": "Horarios, turnos y reglas; generar, cambiar y publicar cuadrantes"
+			},
+			"leave": {
+				"name": "Permisos",
+				"description": "Las solicitudes de permiso de otras personas, y aprobarlas o rechazarlas"
+			},
+			"shiftPreferences": {
+				"name": "Preferencias de turno",
+				"description": "Los turnos que cada persona querría trabajar, día a día"
+			},
+			"availability": {
+				"name": "Disponibilidad",
+				"description": "Las horas que cada persona a tiempo parcial puede trabajar por semana"
+			},
+			"people": {
+				"name": "Personas",
+				"description": "Perfiles, notas y con qué condiciones de empleo trabaja cada persona"
+			},
+			"organisation": {
+				"name": "Organización",
+				"description": "Sucursales, departamentos, sus miembros, puestos, habilidades y el registro de actividad"
+			},
+			"reports": {
+				"name": "Informes",
+				"description": "Cifras de los cuadrantes: turnos sin cubrir, plantilla, horas extra y cambios tras publicar"
+			},
+			"settingsCompany": {
+				"name": "Datos de la empresa",
+				"description": "Los datos propios de la empresa"
+			},
+			"settingsEmployment": {
+				"name": "Condiciones de empleo",
+				"description": "La semana laboral que fija cada tipo de contrato"
+			},
+			"settingsWorkPolicy": {
+				"name": "Política de trabajo",
+				"description": "Las reglas de horarios propias de la empresa para sus sucursales y departamentos"
+			},
+			"settingsLeave": {
+				"name": "Tipos y duraciones de permiso",
+				"description": "Los tipos de permiso, y las partes del día que se pueden tomar"
+			},
+			"settingsApprovals": {
+				"name": "Flujos de aprobación",
+				"description": "Quién aprueba un cuadrante antes de publicarlo"
+			},
+			"settingsAccess": {
+				"name": "Roles de acceso",
+				"description": "Roles como este, y a quién se dan"
+			},
+			"levels": {
+				"NONE": "Sin acceso",
+				"VIEW": "Puede ver",
+				"MANAGE": "Puede gestionar",
+				"CUSTOM": "Personalizado"
+			},
+			"level": "Nivel de {{area}}",
+			"settings": "Configuración",
+			"details": "Detalles · {{count}} de {{total}}",
+			"notAtDepartments": "Parte de esto no se puede dar en un departamento: Detalles indica qué.",
+			"companyOnlyPart": "Parte de esto es solo para roles de toda la empresa.",
+			"companyOnlyAreas": "Solo para roles de toda la empresa: {{areas}}.",
+			"neededBy": "Lo necesita {{permissions}}",
+			"sentence": {
+				"role": "Este rol {{clauses}}.",
+				"manages": "gestiona {{areas}}",
+				"views": "ve {{areas}}",
+				"some": "tiene parte de {{areas}}",
+				"nothing": "Este rol aún no permite nada más allá del propio cuadrante, ausencias y preferencias de cada persona."
+			},
+			"remove": {
+				"title": "¿Quitar {{permission}}?",
+				"description": "Estos lo necesitan, así que también se quitarían:",
+				"keep": "Mantenerlos",
+				"confirm_one": "Quitar {{count}}",
+				"confirm_other": "Quitar los {{count}}"
+			},
+			"newSince": {
+				"title": "Nuevo desde la última edición de este rol",
+				"item": "{{permission}} en {{area}}",
+				"add": "Añadirlo",
+				"leave": "Dejarlo fuera",
+				"leftOut_one": "{{count}} permiso nuevo dejado fuera",
+				"leftOut_other": "{{count}} permisos nuevos dejados fuera"
+			}
 		}
 	},
 	"shell": {
