@@ -447,7 +447,10 @@ export const ConstraintDialog = ({
 		const label = t(`${key}.requirement`);
 		const error = errors.requirement?.message;
 		if (!option.hasRequirement) {
-			const fixed = firmnessOf({ type: option.type, requirement: null });
+			const fixed = firmnessOf({
+				requirement: null,
+				requirementPolicy: option.requirementPolicy,
+			});
 			return (
 				fixed && (
 					<FormRow htmlFor={id} label={label} layout="stacked">
@@ -807,6 +810,7 @@ export const ConstraintDialog = ({
 									: null,
 								values: filledValues(chosen),
 								fullTimersOnly: chosen.fullTimersOnly,
+								requirementPolicy: chosen.requirementPolicy,
 							}}
 						/>
 						{fieldRowsInReadingOrder(chosen).map((row) => {

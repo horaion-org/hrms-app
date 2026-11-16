@@ -74,6 +74,9 @@ export const constraintColumns = <Row extends ConstraintRow>(
 							(option) =>
 								option.type === constraint.type && option.fullTimersOnly
 						),
+						requirementPolicy: types.find(
+							(option) => option.type === constraint.type
+						)?.requirementPolicy,
 					}}
 				/>
 			),

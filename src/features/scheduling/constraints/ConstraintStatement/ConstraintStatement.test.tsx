@@ -72,6 +72,7 @@ describe("ConstraintStatement", () => {
 					constraint={{
 						type: "AVOID_DAYS_OFF_ON",
 						requirement: null,
+						requirementPolicy: "ALWAYS_SHOULD",
 						values: [{ field: "WEEKDAY", value: "SUN", name: null }],
 					}}
 				/>

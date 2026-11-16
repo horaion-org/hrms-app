@@ -6,6 +6,7 @@ import {
 	type ConstraintRequirement,
 	type ConstraintType,
 	type ConstraintValueProblem,
+	type RequirementPolicy,
 } from "@/features/scheduling/constraints/api";
 import { dayTypeLabel } from "@/features/scheduling/dayTypes";
 import { WEEKDAYS, type Weekday } from "@/features/scheduling/shifts/api";
@@ -78,12 +79,12 @@ export type SentencePart = { i18nKey: SentenceKey; count: number };
 /** A number not filled in yet reads as plural, so the preview says "how many people". */
 const UNFILLED_COUNT = 2;
 
-/** The types that offer no choice, and how firm they always are. */
-const FIXED_FIRMNESS: Partial<Record<ConstraintType, ConstraintRequirement>> = {
-	AVOID_DAYS_OFF_ON: "SHOULD",
-	MAX_WORK_HOURS_PER_DAY: "MUST",
-	MAX_OVERTIME_HOURS_PER_MONTH: "MUST",
-};
+/** How firm a type always is when its policy gives no choice; a choice or a setting has none fixed. */
+const FIXED_FIRMNESS: Partial<Record<RequirementPolicy, ConstraintRequirement>> =
+	{
+		ALWAYS_MUST: "MUST",
+		ALWAYS_SHOULD: "SHOULD",
+	};
 
 /** The types whose sentence is one number, and the field that number is read from. */
 const COUNTED_FIELD = {
@@ -268,9 +269,17 @@ export const constraintWords = (
 	return words;
 };
 
-/** Must or If possible: the chosen requirement, or the one a fixed type always has; null while none is chosen. */
+/**
+ * Must or If possible: the chosen requirement, or the one its type's policy
+ * always gives (the API's `requirementPolicy`); null while none is chosen,
+ * for a setting, or while the type's policy is not known yet.
+ */
 export const firmnessOf = (constraint: {
-	type: ConstraintType;
 	requirement: ConstraintRequirement | null;
+	requirementPolicy?: RequirementPolicy;
 }): ConstraintRequirement | null =>
-	constraint.requirement ?? FIXED_FIRMNESS[constraint.type] ?? null;
+	constraint.requirement ??
+	(constraint.requirementPolicy
+		? FIXED_FIRMNESS[constraint.requirementPolicy]
+		: undefined) ??
+	null;

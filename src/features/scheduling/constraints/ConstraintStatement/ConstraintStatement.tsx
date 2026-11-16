@@ -7,6 +7,7 @@ import {
 	CONSTRAINT_FIELDS,
 	type ConstraintRequirement,
 	type ConstraintType,
+	type RequirementPolicy,
 } from "@/features/scheduling/constraints/api";
 import {
 	constraintWords,
@@ -24,6 +25,8 @@ export type ConstraintStatementProps = {
 		values: ReadonlyArray<SentenceValue>;
 		/** Whether its type covers full-timers only, which its sentence says; absent reads as everyone. */
 		fullTimersOnly?: boolean;
+		/** How its type runs, for the tag of a type that offers no choice; absent shows no fixed tag. */
+		requirementPolicy?: RequirementPolicy;
 	};
 	/** Who it applies to, as a muted line under the sentence (see `appliesToOf`). */
 	appliesTo?: string;

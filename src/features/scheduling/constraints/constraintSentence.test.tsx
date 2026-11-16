@@ -557,20 +557,19 @@ describe("sentencePartsOf with constraintWords", () => {
 
 describe("firmnessOf", () => {
 	it.each([
-		["AVOID_DAYS_OFF_ON", null, "SHOULD"],
-		["REST_BETWEEN_SHIFTS", "SHOULD", "SHOULD"],
-		["MAX_DAYS_WITHOUT_DAY_TYPES", "MUST", "MUST"],
-		["DAY_TYPE_DAYS_PER_WEEK", "SHOULD", "SHOULD"],
-		["MAX_WORK_HOURS_PER_DAY", null, "MUST"],
-		["MAX_OVERTIME_HOURS_PER_MONTH", null, "MUST"],
-		["SHORTEST_PART_SHIFT", null, null],
-		["MAX_CALL_BACKS_PER_PERSON", null, null],
-		["PAY_RATES", null, null],
-		["NO_OVERTIME_WHEN_GENERATING", null, null],
-		["SHIFT_STAFFING", "SHOULD", "SHOULD"],
-		["DAYS_OFF_PER_PERIOD", "MUST", "MUST"],
-		["SHIFT_STAFFING", null, null],
-	] as const)("reads %s with %s as %s", (type, requirement, firmness) => {
-		expect(firmnessOf({ type, requirement })).toBe(firmness);
-	});
+		["ALWAYS_SHOULD", null, "SHOULD"],
+		["ALWAYS_MUST", null, "MUST"],
+		["MUST_OR_SHOULD", "SHOULD", "SHOULD"],
+		["MUST_OR_SHOULD", "MUST", "MUST"],
+		["MUST_OR_SHOULD", null, null],
+		["SETTING", null, null],
+		["UNKNOWN", null, null],
+		[undefined, "SHOULD", "SHOULD"],
+		[undefined, null, null],
+	] as const)(
+		"reads a %s type with %s as %s",
+		(requirementPolicy, requirement, firmness) => {
+			expect(firmnessOf({ requirement, requirementPolicy })).toBe(firmness);
+		}
+	);
 });
