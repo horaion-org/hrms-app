@@ -4668,10 +4668,19 @@
 			"companyDescription": "De la política laboral. Siempre se aplican aquí; puedes hacer una más estricta, no más laxa.",
 			"companySummary_one": "Aquí se aplica {{count}} restricción de la empresa.",
 			"companySummary_other": "Aquí se aplican {{count}} restricciones de la empresa.",
-			"showAll": "Ver las {{count}}",
-			"hide": "Ocultar",
 			"attention_one": "{{count}} restricción necesita atención. Un cuadrante no puede usarla hasta que se corrija:",
-			"attention_other": "{{count}} restricciones necesitan atención. Un cuadrante no puede usarlas hasta que se corrijan:"
+			"attention_other": "{{count}} restricciones necesitan atención. Un cuadrante no puede usarlas hasta que se corrijan:",
+			"showing": "Mostrando",
+			"showingEverything": "Todo",
+			"showingStatus": "Estado",
+			"sectionGist_one": "{{count}} restricción",
+			"sectionGist_other": "{{count}} restricciones",
+			"gistAttention_one": "{{count}} necesita atención",
+			"gistAttention_other": "{{count}} necesitan atención",
+			"collapseAll": "Plegar todo",
+			"expandAll": "Desplegar todo",
+			"attentionOutside_one": "{{count}} más necesita atención fuera de este filtro.",
+			"attentionOutside_other": "{{count}} más necesitan atención fuera de este filtro."
 		},
 		"readiness": {
 			"departmentsNotReady_one": "{{count}} departamento no está listo para planificar:",

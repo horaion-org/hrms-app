@@ -150,6 +150,8 @@ beforeEach(() => {
 	jobTitleReads = 0;
 	// The router scrolls to the top on load, which jsdom does not implement.
 	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+	// Sections a test folded are remembered; each test starts with none.
+	window.localStorage.clear();
 });
 afterEach(() => {
 	resetApiClient();
@@ -221,7 +223,9 @@ const KITCHEN_ONLY: UnitSelection = {
 const showCompany = async (
 	user: ReturnType<typeof userEvent.setup>
 ): Promise<void> => {
-	await user.click(await screen.findByRole("button", { name: /^Show all/ }));
+	await user.click(
+		await screen.findByRole("button", { name: /^Set by the company/ })
+	);
 };
 
 describe("ConstraintsTab", () => {
@@ -849,5 +853,61 @@ describe("ConstraintsTab: readiness", () => {
 		expect(
 			calls.filter((call) => call.path.endsWith("/scheduling-readiness"))
 		).toEqual([]);
+	});
+
+	it("given_aSectionHeading_when_clicked_then_itFoldsToItsGist_andCollapseAllFoldsEverySection", async () => {
+		const user = userEvent.setup();
+		stubApi({ [`GET ${KITCHEN}/constraints`]: ok([kitchenCover]) });
+		show({ permissions: ["constraint:read"], requested: KITCHEN_ONLY });
+
+		const heading = await screen.findByRole("button", {
+			name: /^People on shifts/,
+		});
+		expect(heading).toHaveAttribute("aria-expanded", "true");
+		await user.click(heading);
+		expect(heading).toHaveAttribute("aria-expanded", "false");
+		expect(
+			screen.queryByRole("listitem", { name: /Morning cover/ })
+		).toBeNull();
+		expect(screen.getByText("1 constraint")).toBeVisible();
+
+		await user.click(screen.getByRole("button", { name: "Expand all" }));
+		expect(
+			screen.getByRole("listitem", { name: /Morning cover/ })
+		).toBeVisible();
+		await user.click(screen.getByRole("button", { name: "Collapse all" }));
+		expect(heading).toHaveAttribute("aria-expanded", "false");
+		expect(
+			screen.queryByRole("listitem", { name: /Morning cover/ })
+		).toBeNull();
+	});
+
+	it("given_aShowingFilter_when_itLeavesOutARuleNeedingAttention_then_theBannerSaysSo", async () => {
+		const user = userEvent.setup();
+		stubApi({
+			[`GET ${KITCHEN}/constraints`]: ok([
+				dutyCover("3"),
+				{ ...barSupervisor, departmentId: "d-1", requirement: "SHOULD" },
+			]),
+			...TWO_DUTY_MANAGERS,
+		});
+		show({
+			permissions: ["constraint:read", "job_title:read"],
+			requested: KITCHEN_ONLY,
+		});
+
+		const row = await screen.findByRole("listitem", { name: /Duty cover/ });
+		expect(await within(row).findByText("Needs attention")).toBeVisible();
+		await user.click(screen.getByRole("button", { name: /^Filters/ }));
+		await user.click(screen.getByRole("button", { name: /^Showing/ }));
+		await user.click(screen.getByRole("option", { name: "If possible" }));
+
+		expect(screen.queryByRole("listitem", { name: /Duty cover/ })).toBeNull();
+		expect(
+			screen.getByText("1 more needs attention outside this filter.")
+		).toBeVisible();
+		expect(
+			screen.getByRole("button", { name: "Remove Showing: If possible" })
+		).toBeVisible();
 	});
 });

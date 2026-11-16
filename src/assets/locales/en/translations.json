@@ -4868,10 +4868,19 @@
 			"companyDescription": "From the work policy. They always apply here; you can make one stricter, not looser.",
 			"companySummary_one": "{{count}} company constraint applies here.",
 			"companySummary_other": "{{count}} company constraints apply here.",
-			"showAll": "Show all {{count}}",
-			"hide": "Hide",
 			"attention_one": "{{count}} constraint needs attention. A roster can’t use it until it’s fixed:",
-			"attention_other": "{{count}} constraints need attention. A roster can’t use them until they’re fixed:"
+			"attention_other": "{{count}} constraints need attention. A roster can’t use them until they’re fixed:",
+			"showing": "Showing",
+			"showingEverything": "Everything",
+			"showingStatus": "Status",
+			"sectionGist_one": "{{count}} constraint",
+			"sectionGist_other": "{{count}} constraints",
+			"gistAttention_one": "{{count}} needs attention",
+			"gistAttention_other": "{{count}} need attention",
+			"collapseAll": "Collapse all",
+			"expandAll": "Expand all",
+			"attentionOutside_one": "{{count}} more needs attention outside this filter.",
+			"attentionOutside_other": "{{count}} more need attention outside this filter."
 		},
 		"readiness": {
 			"departmentsNotReady_one": "{{count}} department isn’t ready to schedule:",

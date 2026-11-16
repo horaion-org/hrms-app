@@ -3,6 +3,7 @@ import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { DepartmentPath } from "@/common/companyPath";
 import type { FunctionComponent } from "@/common/types";
+import type { SelectOption } from "@/components/forms/Select";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -13,6 +14,7 @@ import { ListToolbar } from "@/features/organisation/ListToolbar";
 import type {
 	ConstraintBody,
 	ConstraintCategory,
+	ConstraintType,
 	DepartmentConstraint,
 } from "@/features/scheduling/constraints/api";
 import {
@@ -25,8 +27,21 @@ import { typeGroupsOf } from "@/features/scheduling/constraints/ConstraintDialog
 import { deleteConstraintRefusal } from "@/features/scheduling/constraints/constraintRefusal";
 import { ConstraintRow } from "@/features/scheduling/constraints/ConstraintRow";
 import { ConstraintSection } from "@/features/scheduling/constraints/ConstraintSection";
+import {
+	COMPANY_SECTION,
+	SHOWING_FIRMNESS,
+	SHOWING_STATUSES,
+	initiallyClosedOf,
+	passesShowing,
+	showingOf,
+	showingValue,
+} from "@/features/scheduling/constraints/constraintListView";
+import { useSectionFolds } from "@/features/scheduling/useSectionFolds";
 import { constraintSectionsOf } from "@/features/scheduling/constraints/constraintSections";
-import { categoryIconOf } from "@/features/scheduling/constraints/constraintTypeLooks";
+import {
+	categoryIconOf,
+	constraintTypeLookOf,
+} from "@/features/scheduling/constraints/constraintTypeLooks";
 import { needsAttention } from "@/features/scheduling/constraints/valueProblems";
 import { useConstraintActions } from "@/features/scheduling/constraints/useConstraintActions";
 import { useConstraintOptions } from "@/features/scheduling/constraints/useConstraintOptions";
@@ -40,7 +55,7 @@ import { deleteCopy, editNote } from "@/features/scheduling/setupReach";
 import { useDraftCount } from "@/features/scheduling/useDraftCount";
 import { workspaceQuery } from "@/features/workspace/api";
 import { DepartmentFilter } from "@/features/workspace/DepartmentFilter";
-import { departmentChips } from "@/features/workspace/filterChips";
+import { departmentChips, filterChip } from "@/features/workspace/filterChips";
 import type { PermissionKey } from "@/features/workspace/permissionKeys";
 import { retry } from "@/features/workspace/retry";
 import { COMPANY_SCOPE, departmentScope } from "@/features/workspace/scopes";
@@ -63,12 +78,21 @@ const DIALOG_KEYS: ReadonlyArray<PermissionKey> = [
 const rowIdOf = (constraint: DepartmentConstraint): string =>
 	`constraint-${constraint.constraintId}`;
 
-/** Brings a row into view and moves focus to it. */
-const showRow = (constraint: DepartmentConstraint): void => {
-	const row = document.getElementById(rowIdOf(constraint));
-	row?.scrollIntoView?.({ block: "center" });
-	row?.focus();
+/** Brings a row into view and moves focus to it, once its section has opened. */
+const focusRow = (constraint: DepartmentConstraint): void => {
+	requestAnimationFrame(() => {
+		const row = document.getElementById(rowIdOf(constraint));
+		row?.scrollIntoView?.({ block: "center" });
+		row?.focus();
+	});
 };
+
+/** The browser-storage key of the sections a person closed here; it holds section names only. */
+const CLOSED_SECTIONS_KEY = "horaion.constraintSectionsClosed";
+
+/** The section a constraint is listed in: its category, or the company's own. */
+const sectionKeyOf = (constraint: DepartmentConstraint): string =>
+	constraint.level === "COMPANY" ? COMPANY_SECTION : constraint.category;
 
 /** What the list says instead of its rows while they load, are refused or failed. */
 const LIST_STATUS_COPY = {
@@ -167,6 +191,7 @@ export const ConstraintsTab = ({
 	const readiness = useSchedulingReadiness(companyId, selectedUnits(units));
 	const actions = useConstraintActions(companyId);
 	const [search, setSearch] = useState("");
+	const [showingValues, setShowingValues] = useState<Array<string>>([]);
 	const [dialog, setDialog] = useState<DialogState>();
 	const [deleting, setDeleting] = useState<DepartmentConstraint>();
 	const [toast, setToast] = useState<{ id: number; message: string }>();
@@ -178,14 +203,42 @@ export const ConstraintsTab = ({
 	const rows = items.filter(
 		(constraint) => isShown(constraint) && matches(constraint, search)
 	);
-	// The Branch is the header's scope; the Department is the one filter.
-	const chips = departmentChips(
-		units,
-		() => {
-			onDepartmentChange(undefined);
-		},
-		t
-	);
+	// What a Showing value reads as, on its option and on its chip.
+	const showingLabelOf = (value: string): string => {
+		const [kind, choice = ""] = value.split(":");
+		if (kind === "status")
+			return choice === "INACTIVE"
+				? t("scheduling.constraints.statuses.INACTIVE")
+				: t("scheduling.constraints.problems.needsAttention");
+		if (kind === "firmness")
+			return t(
+				choice === "SHOULD"
+					? "scheduling.constraints.requirements.SHOULD"
+					: "scheduling.constraints.requirements.MUST"
+			);
+		return constraintTypeLookOf(choice as ConstraintType, t).label;
+	};
+	// The Branch is the header's scope; the Department and Showing are the filters.
+	const chips = [
+		...departmentChips(
+			units,
+			() => {
+				onDepartmentChange(undefined);
+			},
+			t
+		),
+		...showingValues.map((value) =>
+			filterChip(
+				value,
+				t(`${key}.showing`),
+				showingLabelOf(value),
+				() => {
+					setShowingValues(showingValues.filter((each) => each !== value));
+				},
+				t
+			)
+		),
+	];
 
 	// The add dialog offers the active departments of the header's Branch where the person may add constraints.
 	const addChoices = workspace
@@ -239,12 +292,82 @@ export const ConstraintsTab = ({
 		needsAttention(constraint.values) || capacityOf(constraint) !== undefined;
 	const listTypes =
 		listOptions.status === "ready" ? listOptions.options.types : [];
-	// The sections follow the categories the API lists, in its order.
+	// The Showing filter narrows the rows; the sections follow the categories the API lists, in its order.
+	const showing = showingOf(showingValues);
+	const shownRows = rows.filter((constraint) =>
+		passesShowing(constraint, showing, needsFixing)
+	);
 	const laidOut = constraintSectionsOf(
-		rows,
+		shownRows,
 		typeGroupsOf(listTypes).map((group) => group.category),
 		needsFixing
 	);
+	// What needs attention but the filter leaves out, so the banner says so.
+	const attentionOutside =
+		rows.filter(needsFixing).length - laidOut.needingAttention.length;
+	const folds = useSectionFolds(
+		CLOSED_SECTIONS_KEY,
+		initiallyClosedOf([
+			...laidOut.sections.map((section) => ({
+				key: section.category,
+				rowCount: section.rows.length,
+				needsAttention: section.rows.some(needsFixing),
+			})),
+			{
+				key: COMPANY_SECTION,
+				rowCount: laidOut.company.length,
+				needsAttention: laidOut.company.some(needsFixing),
+			},
+		])
+	);
+	// The Showing choices: status and firmness, then the kinds in view under their purpose, in the API's order.
+	const kindsInView = typeGroupsOf(listTypes).flatMap((group) =>
+		group.types
+			.filter((option) => rows.some((row) => row.type === option.type))
+			.map((option) => ({ type: option.type, category: group.category }))
+	);
+	const showingOptions: Array<SelectOption> = [
+		...SHOWING_STATUSES.map((choice) => ({
+			value: showingValue("status", choice),
+			label: showingLabelOf(showingValue("status", choice)),
+			group: t(`${key}.showingStatus`),
+		})),
+		...SHOWING_FIRMNESS.map((choice) => ({
+			value: showingValue("firmness", choice),
+			label: showingLabelOf(showingValue("firmness", choice)),
+			group: t("scheduling.constraints.requirements.unset"),
+		})),
+		...kindsInView.map(({ type, category }) => ({
+			value: showingValue("type", type),
+			label: showingLabelOf(showingValue("type", type)),
+			group: t(`scheduling.constraints.categories.${category}`),
+		})),
+	];
+	const sectionKeys = [
+		...laidOut.sections.map((section) => section.category),
+		COMPANY_SECTION,
+	];
+	const showRow = (constraint: DepartmentConstraint): void => {
+		folds.open(sectionKeyOf(constraint));
+		focusRow(constraint);
+	};
+	// What a closed section says: how many it holds and, in the error tone, how many need attention.
+	const gistOf = (
+		sectionRows: Array<DepartmentConstraint>
+	): FunctionComponent => {
+		const attention = sectionRows.filter(needsFixing).length;
+		return (
+			<>
+				{t(`${key}.sectionGist`, { count: sectionRows.length })}
+				{attention > 0 && (
+					<span className="font-semibold text-error-700">
+						{" · "}
+						{t(`${key}.gistAttention`, { count: attention })}
+					</span>
+				)}
+			</>
+		);
+	};
 	const openAdd = (startAt?: ConstraintCategory): void => {
 		setDialog({
 			kind: "add",
@@ -360,9 +483,17 @@ export const ConstraintsTab = ({
 						<DepartmentFilter selection={units} onChange={onDepartmentChange} />
 					)
 				}
+				multipleFilter={{
+					label: t(`${key}.showing`),
+					value: showingValues,
+					options: showingOptions,
+					onChange: setShowingValues,
+					placeholder: t(`${key}.showingEverything`),
+				}}
 				onSearchChange={setSearch}
 				onClearFilters={() => {
 					onDepartmentChange(undefined);
+					setShowingValues([]);
 				}}
 				onCreate={
 					canCreate
@@ -384,11 +515,12 @@ export const ConstraintsTab = ({
 			)}
 			{list.status === "ready" ? (
 				<div className="mt-8 flex flex-col gap-8">
-					{laidOut.needingAttention.length > 0 && (
+					{(laidOut.needingAttention.length > 0 || attentionOutside > 0) && (
 						<Callout tone="error">
-							{t(`${key}.attention`, {
-								count: laidOut.needingAttention.length,
-							})}{" "}
+							{laidOut.needingAttention.length > 0 &&
+								t(`${key}.attention`, {
+									count: laidOut.needingAttention.length,
+								})}{" "}
 							{laidOut.needingAttention.map((constraint, index) => (
 								<span key={constraint.constraintId}>
 									{index > 0 && " · "}
@@ -402,9 +534,30 @@ export const ConstraintsTab = ({
 									</Button>
 								</span>
 							))}
+							{attentionOutside > 0 && (
+								<span className="block">
+									{t(`${key}.attentionOutside`, { count: attentionOutside })}
+								</span>
+							)}
 						</Callout>
 					)}
-					{rows.length === 0 && search.trim() ? (
+					{shownRows.length > 0 && (
+						<div className="flex justify-end gap-6">
+							<Button
+								variant="textlink"
+								onClick={() => {
+									folds.closeAll(sectionKeys);
+								}}
+							>
+								{t(`${key}.collapseAll`)}
+							</Button>
+							<Button variant="textlink" onClick={folds.openAll}>
+								{t(`${key}.expandAll`)}
+							</Button>
+						</div>
+					)}
+					{shownRows.length === 0 &&
+					(search.trim() || showingValues.length > 0) ? (
 						<p className="text-sm text-neutral-700">{t(`${key}.noMatch`)}</p>
 					) : (
 						<>
@@ -419,6 +572,13 @@ export const ConstraintsTab = ({
 								<ConstraintSection
 									key={section.category}
 									count={section.rows.length}
+									collapse={{
+										open: folds.isOpen(section.category),
+										onToggle: () => {
+											folds.toggle(section.category);
+										},
+										gist: gistOf(section.rows),
+									}}
 									emptyText={t(`${key}.sectionEmpty`)}
 									icon={categoryIconOf(section.category)}
 									add={
@@ -447,14 +607,14 @@ export const ConstraintsTab = ({
 									description={t(`${key}.companyDescription`)}
 									icon={LockIcon}
 									title={t(`${key}.companyTitle`)}
-									folded={{
-										summary: t(`${key}.companySummary`, {
+									collapse={{
+										open: folds.isOpen(COMPANY_SECTION),
+										onToggle: () => {
+											folds.toggle(COMPANY_SECTION);
+										},
+										gist: t(`${key}.companySummary`, {
 											count: laidOut.company.length,
 										}),
-										showLabel: t(`${key}.showAll`, {
-											count: laidOut.company.length,
-										}),
-										hideLabel: t(`${key}.hide`),
 									}}
 								>
 									{laidOut.company.map(rowOf)}

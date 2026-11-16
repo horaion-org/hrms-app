@@ -20,6 +20,8 @@ import { ConstraintSection } from "@/features/scheduling/constraints/ConstraintS
 import { constraintSectionsOf } from "@/features/scheduling/constraints/constraintSections";
 import { categoryIconOf } from "@/features/scheduling/constraints/constraintTypeLooks";
 import { needsAttention } from "@/features/scheduling/constraints/valueProblems";
+import { initiallyClosedOf } from "@/features/scheduling/constraints/constraintListView";
+import { useSectionFolds } from "@/features/scheduling/useSectionFolds";
 import type { ConstraintOptionsState } from "@/features/scheduling/constraints/useConstraintOptions";
 import {
 	policyConstraintsQuery,
@@ -31,6 +33,9 @@ import { workspaceQuery } from "@/features/workspace/api";
 import { retry } from "@/features/workspace/retry";
 import { COMPANY_SCOPE } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
+
+/** The browser-storage key of the policy sections a person closed; it holds section names only. */
+const CLOSED_SECTIONS_KEY = "horaion.workPolicySectionsClosed";
 
 export type SchedulingPolicySettingsProps = {
 	companyId: string;
@@ -84,6 +89,17 @@ export const SchedulingPolicySettings = ({
 		typeGroupsOf(types).map((group) => group.category),
 		(constraint) => needsAttention(constraint.values),
 		false
+	);
+	// Each section folds from its heading, as on the Constraints tab; a long policy starts with them closed.
+	const folds = useSectionFolds(
+		CLOSED_SECTIONS_KEY,
+		initiallyClosedOf(
+			laidOut.sections.map((section) => ({
+				key: section.category,
+				rowCount: section.rows.length,
+				needsAttention: section.rows.some((row) => needsAttention(row.values)),
+			}))
+		)
 	);
 	const forbidden =
 		!canRead ||
@@ -144,13 +160,38 @@ export const SchedulingPolicySettings = ({
 				</p>
 			) : (
 				<div className="mt-8 flex flex-col gap-8">
-					{(list.data ?? []).length === 0 && (
+					{(list.data ?? []).length === 0 ? (
 						<p className="text-sm text-neutral-700">{t(`${key}.empty`)}</p>
+					) : (
+						<div className="flex justify-end gap-6">
+							<Button
+								variant="textlink"
+								onClick={() => {
+									folds.closeAll(
+										laidOut.sections.map((section) => section.category)
+									);
+								}}
+							>
+								{t("scheduling.constraintsTab.collapseAll")}
+							</Button>
+							<Button variant="textlink" onClick={folds.openAll}>
+								{t("scheduling.constraintsTab.expandAll")}
+							</Button>
+						</div>
 					)}
 					{laidOut.sections.map((section) => (
 						<ConstraintSection
 							key={section.category}
 							count={section.rows.length}
+							collapse={{
+								open: folds.isOpen(section.category),
+								onToggle: (): void => {
+									folds.toggle(section.category);
+								},
+								gist: t("scheduling.constraintsTab.sectionGist", {
+									count: section.rows.length,
+								}),
+							}}
 							emptyText={t("scheduling.constraintsTab.sectionEmpty")}
 							icon={categoryIconOf(section.category)}
 							title={t(`scheduling.constraints.categories.${section.category}`)}

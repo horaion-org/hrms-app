@@ -41,15 +41,13 @@ export const Empty: Story = {
 	},
 };
 
-/** The company's constraints, folded to a line. */
-export const Folded: Story = {
+/** A foldable section, closed: its heading folds it and it says its gist. */
+export const Closed: Story = {
 	args: {
-		title: "Set by the company",
-		add: undefined,
-		folded: {
-			summary: "2 company constraints apply here.",
-			showLabel: "Show all 2",
-			hideLabel: "Hide",
+		collapse: {
+			open: false,
+			onToggle: fn(),
+			gist: "2 constraints · 1 needs attention",
 		},
 	},
 };

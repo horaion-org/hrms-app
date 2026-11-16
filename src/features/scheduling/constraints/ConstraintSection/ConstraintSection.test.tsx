@@ -47,34 +47,53 @@ describe("ConstraintSection", () => {
 		).toBeVisible();
 	});
 
-	it("given_folded_when_rendered_then_saysTheSummaryUntilOpened", async () => {
+	it("given_aClosedFoldableSection_when_rendered_then_itsHeadingIsAButtonSayingTheGistAndItsRowsAreHidden", async () => {
 		const user = userEvent.setup();
+		const onToggle = vi.fn();
 		render(
 			<ConstraintSection
 				count={1}
-				description="From the work policy."
+				description="Who must be on each shift, and how many."
 				icon={PeopleIcon}
-				title="Set by the company"
-				folded={{
-					summary: "1 company constraint applies here.",
-					showLabel: "Show all 1",
-					hideLabel: "Hide",
+				title="People on shifts"
+				collapse={{
+					open: false,
+					onToggle,
+					gist: "1 constraint · 1 needs attention",
 				}}
 			>
-				<li>Company rest</li>
+				<li>Night cover</li>
+			</ConstraintSection>
+		);
+
+		const heading = screen.getByRole("button", { name: /People on shifts/ });
+		expect(heading).toHaveAttribute("aria-expanded", "false");
+		expect(heading).toHaveAttribute("aria-controls");
+		expect(screen.getByText("1 constraint · 1 needs attention")).toBeVisible();
+		expect(screen.queryByRole("listitem")).toBeNull();
+		await user.click(heading);
+		expect(onToggle).toHaveBeenCalled();
+	});
+
+	it("given_anOpenFoldableSection_when_rendered_then_showsItsRowsAndWhatItDecides", () => {
+		render(
+			<ConstraintSection
+				collapse={{ open: true, onToggle: vi.fn(), gist: "1 constraint" }}
+				count={1}
+				description="Who must be on each shift, and how many."
+				icon={PeopleIcon}
+				title="People on shifts"
+			>
+				<li>Night cover</li>
 			</ConstraintSection>
 		);
 
 		expect(
-			screen.getByText("1 company constraint applies here.")
+			screen.getByRole("button", { name: /People on shifts/ })
+		).toHaveAttribute("aria-expanded", "true");
+		expect(screen.getByRole("listitem")).toHaveTextContent("Night cover");
+		expect(
+			screen.getByText("Who must be on each shift, and how many.")
 		).toBeVisible();
-		expect(screen.queryByRole("listitem")).toBeNull();
-		await user.click(screen.getByRole("button", { name: "Show all 1" }));
-
-		expect(screen.getByRole("listitem")).toHaveTextContent("Company rest");
-		expect(screen.getByRole("button", { name: "Hide" })).toHaveAttribute(
-			"aria-expanded",
-			"true"
-		);
 	});
 });

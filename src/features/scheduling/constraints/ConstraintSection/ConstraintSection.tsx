@@ -1,7 +1,11 @@
-import { useId, useState, type ReactNode } from "react";
+import { useId, type ReactNode } from "react";
 import type { FunctionComponent, Heroicon } from "@/common/types";
 import { Button } from "@/components/ui/Button";
-import { PlusIcon } from "@/components/ui/Icon";
+import {
+	ChevronDownIcon,
+	ChevronRightIcon,
+	PlusIcon,
+} from "@/components/ui/Icon";
 
 export type ConstraintSectionProps = {
 	title: string;
@@ -14,8 +18,12 @@ export type ConstraintSectionProps = {
 	add?: { label: string; onAdd: () => void };
 	/** A link beside the title, such as where the section's constraints are set. */
 	action?: ReactNode;
-	/** Starts folded, saying `summary`, until opened with the show label. */
-	folded?: { summary: string; showLabel: string; hideLabel: string };
+	/**
+	 * Lets the heading fold the section: whether it is open, what a click on the
+	 * heading does, and the one line said while it is closed. Without it the
+	 * section is always open.
+	 */
+	collapse?: { open: boolean; onToggle: () => void; gist: ReactNode };
 	/** Said in place of the rows when there are none. */
 	emptyText?: string;
 	/** The section's rows, each a ConstraintRow. */
@@ -25,7 +33,8 @@ export type ConstraintSectionProps = {
 /**
  * One purpose's constraints on the Constraints page and the work policy: an
  * icon, its title with a count and what it decides, an Add for that purpose,
- * then its rows in one card. The company's section starts folded to a line.
+ * then its rows in one card. A foldable section's title is the button that
+ * folds it, and a closed section says its gist in one line.
  */
 export const ConstraintSection = ({
 	title,
@@ -34,14 +43,19 @@ export const ConstraintSection = ({
 	count,
 	add,
 	action,
-	folded,
+	collapse,
 	emptyText,
 	children,
 }: ConstraintSectionProps): FunctionComponent => {
 	const id = useId();
 	const headingId = `${id}-heading`;
-	const rowsId = `${id}-rows`;
-	const [open, setOpen] = useState(folded === undefined);
+	const bodyId = `${id}-body`;
+	const open = collapse?.open ?? true;
+	const titleText = (
+		<>
+			{title} <span className="font-medium text-neutral-700">· {count}</span>
+		</>
+	);
 	return (
 		<section aria-labelledby={headingId} className="flex flex-col gap-3">
 			<div className="flex flex-wrap items-center gap-3">
@@ -53,10 +67,34 @@ export const ConstraintSection = ({
 				</span>
 				<div className="min-w-0 flex-1">
 					<h3 className="text-xl font-semibold text-neutral-900" id={headingId}>
-						{title}{" "}
-						<span className="font-medium text-neutral-700">· {count}</span>
+						{collapse ? (
+							<button
+								aria-controls={bodyId}
+								aria-expanded={open}
+								className="inline-flex cursor-pointer items-center gap-2 rounded-sm text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-blue-500"
+								type="button"
+								onClick={collapse.onToggle}
+							>
+								{open ? (
+									<ChevronDownIcon
+										aria-hidden="true"
+										className="size-5 shrink-0"
+									/>
+								) : (
+									<ChevronRightIcon
+										aria-hidden="true"
+										className="size-5 shrink-0"
+									/>
+								)}
+								<span>{titleText}</span>
+							</button>
+						) : (
+							titleText
+						)}
 					</h3>
-					<p className="text-xs text-neutral-700">{description}</p>
+					<p className="text-xs text-neutral-700">
+						{collapse && !open ? collapse.gist : description}
+					</p>
 				</div>
 				{action}
 				{add && (
@@ -69,40 +107,16 @@ export const ConstraintSection = ({
 					</Button>
 				)}
 			</div>
-			{count === 0 && emptyText ? (
-				// Nothing to list: one quiet line, not an empty box.
-				<p className="text-sm text-neutral-700">{emptyText}</p>
-			) : (
-				<div className="rounded-xl border border-neutral-400 bg-white">
-					{folded && (
-						<div className="flex flex-wrap items-center justify-between gap-4 px-6 py-4">
-							{!open && (
-								<p className="min-w-0 flex-1 text-sm text-neutral-800">
-									{folded.summary}
-								</p>
-							)}
-							<Button
-								aria-controls={rowsId}
-								aria-expanded={open}
-								className="ml-auto"
-								variant="textlink"
-								onClick={() => {
-									setOpen(!open);
-								}}
-							>
-								{open ? folded.hideLabel : folded.showLabel}
-							</Button>
-						</div>
-					)}
-					<ul
-						className="divide-y divide-neutral-300 border-neutral-300 [&:not(:first-child)]:border-t"
-						hidden={!open}
-						id={rowsId}
-					>
+			<div hidden={!open} id={bodyId}>
+				{count === 0 && emptyText ? (
+					// Nothing to list: one quiet line, not an empty box.
+					<p className="text-sm text-neutral-700">{emptyText}</p>
+				) : (
+					<ul className="divide-y divide-neutral-300 rounded-xl border border-neutral-400 bg-white">
 						{children}
 					</ul>
-				</div>
-			)}
+				)}
+			</div>
 		</section>
 	);
 };
