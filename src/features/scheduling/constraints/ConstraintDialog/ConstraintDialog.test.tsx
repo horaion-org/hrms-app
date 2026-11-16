@@ -7,6 +7,7 @@ import { describe, expect, it, vi } from "vitest";
 import { ApiProblemError } from "@/common/problem";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import { ConstraintDialog } from "@/features/scheduling/constraints/ConstraintDialog";
+import { typeGroupsOf } from "@/features/scheduling/constraints/ConstraintDialog/typeGroups";
 import {
 	constraintSchema,
 	type ConstraintDialogBody,
@@ -78,6 +79,23 @@ const pick = async (
 	if (screen.queryByRole("listbox")) await user.keyboard("{Escape}");
 };
 
+/** Chooses what the constraint decides on the chooser, then goes on to the form. */
+const chooseType = async (
+	user: ReturnType<typeof userEvent.setup>,
+	label: string
+): Promise<void> => {
+	await user.click(await screen.findByRole("radio", { name: label }));
+	await user.click(screen.getByRole("button", { name: "Continue" }));
+};
+
+/** The button that sends the form: Add constraint for a new one, Save for an edit. */
+const submitButton = (): HTMLElement =>
+	screen.getByRole("button", { name: /^(Save|Add constraint)$/ });
+
+/** The link back to the chooser, offered while the kind may change. */
+const changeTypeLink = (): HTMLElement | null =>
+	screen.queryByRole("button", { name: /^Change what it decides/ });
+
 const nameField = (): HTMLElement =>
 	screen.getByRole("textbox", { name: /^Name/ });
 
@@ -96,8 +114,8 @@ const start = async (
 	type: string
 ): Promise<void> => {
 	await screen.findByRole("dialog", { name: "Add constraint" });
+	await chooseType(user, type);
 	await typeName(user, "Morning cover");
-	await pick(user, /^What it controls/, type);
 };
 
 /** Orchard with Kitchen and Bar, and Marina; the Applies to field chooses from these. */
@@ -165,7 +183,7 @@ describe("ConstraintDialog for the Scheduling policy (ADR-0058)", () => {
 			screen.getByRole("spinbutton", { name: /^Hours off/ }),
 			"11"
 		);
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 
 		await waitFor(() => {
 			expect(onSave).toHaveBeenCalledWith(
@@ -187,13 +205,13 @@ describe("ConstraintDialog for the Scheduling policy (ADR-0058)", () => {
 				"Company rest is set by the company and locked. You can only make it stricter here."
 			)
 		).toBeVisible();
-		expect(trigger(/^What it controls/)).toBeDisabled();
+		expect(changeTypeLink()).toBeNull();
 
 		await typeName(user, "Front rest");
 		const hours = screen.getByRole("spinbutton", { name: /^Hours off/ });
 		await user.clear(hours);
 		await user.type(hours, "10");
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 
 		expect(
 			await screen.findByText(
@@ -212,14 +230,14 @@ describe("ConstraintDialog for the Scheduling policy (ADR-0058)", () => {
 		const hours = screen.getByRole("spinbutton", { name: /^Hours off/ });
 		await user.clear(hours);
 		await user.type(hours, "12");
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 		expect(await screen.findByRole("alert")).toHaveTextContent(
 			"We couldn’t add the constraint. Try again."
 		);
 
 		await user.clear(hours);
 		await user.type(hours, "10");
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 
 		await waitFor(() => {
 			expect(screen.getByRole("alert")).toHaveTextContent(
@@ -239,7 +257,7 @@ describe("ConstraintDialog for the Scheduling policy (ADR-0058)", () => {
 		const hours = screen.getByRole("spinbutton", { name: /^Hours off/ });
 		await user.clear(hours);
 		await user.type(hours, "12");
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 
 		await waitFor(() => {
 			expect(onSave).toHaveBeenCalledWith(
@@ -258,7 +276,7 @@ describe("ConstraintDialog for the Scheduling policy (ADR-0058)", () => {
 		await screen.findByRole("dialog", { name: "Set for this department" });
 
 		await typeName(user, "No weekends");
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 
 		await waitFor(() => {
 			expect(onSave).toHaveBeenCalledWith(
@@ -272,14 +290,14 @@ describe("ConstraintDialog for the Scheduling policy (ADR-0058)", () => {
 		const { onSave } = renderDialog({ editing: companyRest, withLock: true });
 		await screen.findByRole("dialog", { name: "Edit constraint" });
 
-		expect(trigger(/^What it controls/)).toBeDisabled();
+		expect(changeTypeLink()).toBeNull();
 		expect(
 			screen.getByText(
 				"A company constraint’s type can’t be changed. Add a new constraint instead."
 			)
 		).toBeVisible();
 
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 		await waitFor(() => {
 			expect(onSave).toHaveBeenCalledWith(
 				expect.objectContaining({ type: companyRest.type })
@@ -296,8 +314,8 @@ describe("ConstraintDialog for the Scheduling policy (ADR-0058)", () => {
 		});
 		await screen.findByRole("dialog", { name: "Edit constraint" });
 
-		expect(trigger(/^What it controls/)).toHaveTextContent("Most hours a day");
-		expect(trigger(/^What it controls/)).toBeDisabled();
+		expect(screen.getByText("Most hours a day")).toBeVisible();
+		expect(changeTypeLink()).toBeNull();
 		expect(screen.queryByRole("button", { name: /^Lock/ })).toBeNull();
 		expect(screen.queryByRole("button", { name: /^Status/ })).toBeNull();
 		expect(screen.getByText("1 to 24. MOM’s limit is 12.")).toBeVisible();
@@ -306,7 +324,7 @@ describe("ConstraintDialog for the Scheduling policy (ADR-0058)", () => {
 
 		await user.clear(hours);
 		await user.type(hours, "13");
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 
 		await waitFor(() => {
 			expect(onSave).toHaveBeenCalledWith(
@@ -339,7 +357,7 @@ describe("ConstraintDialog for the Scheduling policy (ADR-0058)", () => {
 
 		await user.clear(hours);
 		await user.type(hours, "0");
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 
 		await waitFor(() => {
 			expect(onSave).toHaveBeenCalledWith(
@@ -360,7 +378,7 @@ describe("ConstraintDialog for the Scheduling policy (ADR-0058)", () => {
 
 		await user.clear(hours);
 		await user.type(hours, "13");
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 		expect(
 			await screen.findByText(
 				"These values wouldn’t be at least as strict as the company’s locked constraint in every part. Make them stricter, or keep the company’s."
@@ -370,7 +388,7 @@ describe("ConstraintDialog for the Scheduling policy (ADR-0058)", () => {
 
 		await user.clear(hours);
 		await user.type(hours, "10");
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 
 		await waitFor(() => {
 			expect(onSave).toHaveBeenCalledWith(
@@ -399,7 +417,7 @@ describe("ConstraintDialog for the Scheduling policy (ADR-0058)", () => {
 			)
 		).toBeVisible();
 		await user.click(screen.getByRole("radio", { name: "If possible" }));
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 
 		await waitFor(() => {
 			expect(onSave).toHaveBeenCalledWith(
@@ -419,7 +437,7 @@ describe("ConstraintDialog for the Scheduling policy (ADR-0058)", () => {
 		await typeName(user, "Kitchen hours");
 
 		await user.click(screen.getByRole("radio", { name: "If possible" }));
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 
 		expect(
 			await screen.findByText(
@@ -433,7 +451,9 @@ describe("ConstraintDialog for the Scheduling policy (ADR-0058)", () => {
 		renderDialog({ withLock: true });
 		await screen.findByRole("dialog", { name: "Add constraint" });
 
-		expect(trigger(/^What it controls/)).toBeEnabled();
+		expect(
+			screen.getByRole("radio", { name: "Rest between shifts" })
+		).toBeVisible();
 	});
 
 	it("given_theApiRefusesAsNotStricter_when_saved_then_explainsIt", async () => {
@@ -445,7 +465,7 @@ describe("ConstraintDialog for the Scheduling policy (ADR-0058)", () => {
 		await screen.findByRole("dialog", { name: "Set for this department" });
 
 		await typeName(user, "No weekends");
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 
 		expect(
 			await screen.findByText(
@@ -469,7 +489,7 @@ describe("ConstraintDialog for a work-policy constraint's reach (ADR-0072)", () 
 			screen.getByRole("spinbutton", { name: /^Hours off/ }),
 			"11"
 		);
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 
 		await waitFor(() => {
 			expect(onSave).toHaveBeenCalled();
@@ -492,7 +512,7 @@ describe("ConstraintDialog for a work-policy constraint's reach (ADR-0072)", () 
 			screen.getByRole("spinbutton", { name: /^Hours off/ }),
 			"11"
 		);
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 
 		expect(
 			await screen.findByText("Choose at least one branch.")
@@ -523,31 +543,23 @@ describe("ConstraintDialog for a work-policy constraint's reach (ADR-0072)", () 
 });
 
 describe("ConstraintDialog", () => {
-	it("given_noTypeYet_when_rendered_then_offersEveryTypeUnderItsCategory", async () => {
-		const user = userEvent.setup();
+	it("given_noTypeYet_when_rendered_then_offersEveryTypeAsACardUnderItsCategory", async () => {
 		renderDialog();
-		await screen.findByRole("dialog", { name: "Add constraint" });
+		await screen.findByRole("dialog", {
+			name: "Add constraint",
+			description: "Step 1 of 2: choose what it decides",
+		});
 
 		expect(screen.queryByRole("spinbutton")).toBeNull();
-		expect(screen.queryByRole("button", { name: /^Status/ })).toBeNull();
-		await user.click(trigger(/^What it controls/));
-
+		expect(screen.queryByRole("textbox", { name: /^Name/ })).toBeNull();
+		expect(screen.getByRole("button", { name: "Continue" })).toBeDisabled();
 		expect(
-			screen.getAllByRole("option").map((option) => option.textContent)
-		).toEqual([
-			"People on a shift",
-			"People on a shift, with stand-ins",
-			"Someone on duty for the whole shift",
-			"Days off in a run of days",
-			"Days to avoid giving off",
-			"Limit on days in a row",
-			"Keep days off together",
-			"Rest between shifts",
-			"Shortest part of a shift around leave",
-			"Call-backs on a rest or off day",
-			"Pay rates for extra hours",
-			"No overtime in generated rosters",
-		]);
+			screen.getAllByRole("radio").map((radio) => radio.getAttribute("value"))
+		).toEqual(
+			typeGroupsOf(CONSTRAINT_TYPE_OPTIONS).flatMap((group) =>
+				group.types.map((option) => option.type)
+			)
+		);
 		for (const [category, count] of [
 			["People on shifts", 2],
 			["On duty throughout", 1],
@@ -555,10 +567,28 @@ describe("ConstraintDialog", () => {
 			["Rest and hours", 5],
 		] as const)
 			expect(
-				within(screen.getByRole("group", { name: category })).getAllByRole(
-					"option"
+				within(screen.getByRole("radiogroup", { name: category })).getAllByRole(
+					"radio"
 				)
 			).toHaveLength(count);
+	});
+
+	it("given_aKindChosen_when_continued_then_theFormKeepsItAtTheTopAndChangeGoesBack", async () => {
+		const user = userEvent.setup();
+		renderDialog();
+		await chooseType(user, "Rest between shifts");
+
+		expect(
+			screen.getByRole("dialog", { description: "Step 2 of 2" })
+		).toBeVisible();
+		expect(
+			screen.getByText("The shortest gap between one shift and the next.")
+		).toBeVisible();
+		await user.click(changeTypeLink()!);
+
+		expect(
+			screen.getByRole("radio", { name: "Rest between shifts" })
+		).toBeChecked();
 	});
 
 	it("given_payRates_when_chosen_then_explainsThemselvesWithNoFirmnessAndNoTimeOff", async () => {
@@ -601,7 +631,7 @@ describe("ConstraintDialog", () => {
 		).toHaveTextContent(
 			"An hour of work on a day off costs 120% of a normal hour."
 		);
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 
 		await waitFor(() => {
 			expect(onSave).toHaveBeenCalledWith(
@@ -633,7 +663,7 @@ describe("ConstraintDialog", () => {
 			}),
 			"200"
 		);
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 
 		await waitFor(() => {
 			expect(onSave).toHaveBeenCalledWith(
@@ -657,7 +687,7 @@ describe("ConstraintDialog", () => {
 			screen.getByRole("spinbutton", { name: /^Hours off/ }),
 			"11"
 		);
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 
 		await waitFor(() => {
 			expect(onSave).toHaveBeenCalledWith(
@@ -684,7 +714,7 @@ describe("ConstraintDialog", () => {
 		});
 		expect(minutes).toHaveAttribute("max", "1440");
 		await user.type(minutes, "240");
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 
 		await waitFor(() => {
 			expect(onSave).toHaveBeenCalledWith(
@@ -705,7 +735,7 @@ describe("ConstraintDialog", () => {
 			screen.getByRole("spinbutton", { name: /^Most call-backs a person/ }),
 			"0"
 		);
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 
 		await waitFor(() => {
 			expect(onSave).toHaveBeenCalledWith(
@@ -736,7 +766,7 @@ describe("ConstraintDialog", () => {
 			)
 		).toBeVisible();
 		await user.keyboard("{Escape}");
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 		expect(onSave).not.toHaveBeenCalled();
 	});
 
@@ -761,19 +791,14 @@ describe("ConstraintDialog", () => {
 		expect(trigger(/^Shifts/)).toHaveTextContent("3 selected");
 	});
 
-	it("given_aTypeChosen_when_rendered_then_itsHintIsAWorkedExample", async () => {
-		const user = userEvent.setup();
+	it("given_theChooser_when_rendered_then_eachKindSaysWhatItDoesWithAWorkedExample", async () => {
 		renderDialog();
-		await screen.findByRole("dialog", { name: "Add constraint" });
-		expect(screen.getByText("Choose one to see an example.")).toBeVisible();
-
-		await pick(user, /^What it controls/, "Rest between shifts");
 
 		expect(
-			screen.getByText(
-				"For example: Everyone gets at least 11 hours off between shifts."
-			)
-		).toBeVisible();
+			await screen.findByRole("radio", { name: "Rest between shifts" })
+		).toHaveAccessibleDescription(
+			"The shortest gap between one shift and the next.For example: Everyone gets at least 11 hours off between shifts."
+		);
 	});
 
 	it("given_aType_when_chosen_then_rendersOneRowPerFieldOfItsSpecByKind", async () => {
@@ -836,7 +861,7 @@ describe("ConstraintDialog", () => {
 		const { onSave } = renderDialog();
 		await start(user, "People on a shift");
 
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 
 		const alerts = await screen.findAllByRole("alert");
 		// In reading order: shifts, comparison, people, job titles; how firm starts as Must.
@@ -869,7 +894,7 @@ describe("ConstraintDialog", () => {
 		).toHaveTextContent(
 			"Must Front Desk AM needs at least 2 people as Front Desk Lead or Front Desk Staff.Front Desk AM"
 		);
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 
 		await waitFor(() => {
 			expect(onSave).toHaveBeenCalledWith({
@@ -909,7 +934,7 @@ describe("ConstraintDialog", () => {
 		renderDialog();
 		await screen.findByRole("dialog", { name: "Add constraint" });
 
-		await pick(user, /^What it controls/, "People on a shift");
+		await chooseType(user, "People on a shift");
 		expect(nameField()).toHaveValue("People on a shift");
 		await pick(user, /^Shifts/, "Front Desk AM");
 		expect(nameField()).toHaveValue("Front Desk AM staffing");
@@ -1051,7 +1076,7 @@ describe("ConstraintDialog", () => {
 			screen.getByText("Always if possible for this kind of constraint.")
 		).toBeVisible();
 		await pick(user, /^Days of the week/, "Saturday", "Friday");
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 
 		await waitFor(() => {
 			expect(onSave).toHaveBeenCalledWith(
@@ -1077,10 +1102,8 @@ describe("ConstraintDialog", () => {
 		});
 		await screen.findByRole("dialog", { name: "Edit constraint" });
 
-		expect(trigger(/^What it controls/)).toHaveTextContent(
-			"Required days each week"
-		);
-		expect(trigger(/^What it controls/)).toBeDisabled();
+		expect(screen.getByText("Required days each week")).toBeVisible();
+		expect(changeTypeLink()).toBeNull();
 		expect(screen.queryByRole("button", { name: /^Lock/ })).toBeNull();
 		expect(screen.queryByRole("button", { name: /^Status/ })).toBeNull();
 		expect(screen.queryByRole("radiogroup", { name: /Applies to/ })).toBeNull();
@@ -1097,7 +1120,7 @@ describe("ConstraintDialog", () => {
 			screen.getAllByRole("option").map((option) => option.textContent)
 		).toEqual(["At least", "Exactly"]);
 		await user.click(screen.getByRole("option", { name: "Exactly" }));
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 
 		await waitFor(() => {
 			expect(onSave).toHaveBeenCalledWith(
@@ -1206,7 +1229,7 @@ describe("ConstraintDialog", () => {
 		).toHaveTextContent(
 			"No full-timer goes more than 12 days in a row without a Rest day or Public holiday off."
 		);
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 		await waitFor(() => {
 			expect(onSave).toHaveBeenCalledWith(
 				expect.objectContaining({
@@ -1231,7 +1254,7 @@ describe("ConstraintDialog", () => {
 			screen.getByRole("spinbutton", { name: /^Hours off/ }),
 			"25"
 		);
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 
 		expect(
 			await screen.findByText("Enter a whole number from 1 to 24.")
@@ -1239,16 +1262,14 @@ describe("ConstraintDialog", () => {
 		expect(onSave).not.toHaveBeenCalled();
 	});
 
-	it("given_aConstraint_when_editing_then_startsFromItsValuesChecksAcrossFieldsAndResetReturnsToThem", async () => {
+	it("given_aConstraint_when_editing_then_startsFromItsValuesAndChecksAcrossFields", async () => {
 		const user = userEvent.setup();
 		const { onSave } = renderDialog({ editing: constraint("two-days-off") });
 		await screen.findByRole("dialog", { name: "Edit constraint" });
 		const daysOff = screen.getByRole("spinbutton", { name: /^Days off/ });
 
 		expect(nameField()).toHaveValue("Two days off");
-		expect(trigger(/^What it controls/)).toHaveTextContent(
-			"Days off in a run of days"
-		);
+		expect(screen.getByText("Days off in a run of days")).toBeVisible();
 		expect(screen.getByRole("radio", { name: "Must" })).toBeChecked();
 		expect(trigger(/^At least, at most or exactly/)).toHaveTextContent(
 			"At least"
@@ -1257,7 +1278,7 @@ describe("ConstraintDialog", () => {
 
 		await user.clear(daysOff);
 		await user.type(daysOff, "8");
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 		expect(
 			await screen.findByText(
 				"Days off can’t be more than the days in the period."
@@ -1265,9 +1286,9 @@ describe("ConstraintDialog", () => {
 		).toBeVisible();
 		expect(onSave).not.toHaveBeenCalled();
 
-		await user.click(screen.getByRole("button", { name: "Reset" }));
-		expect(daysOff).toHaveValue(2);
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.clear(daysOff);
+		await user.type(daysOff, "2");
+		await user.click(submitButton());
 
 		await waitFor(() => {
 			expect(onSave).toHaveBeenCalledWith({
@@ -1298,7 +1319,7 @@ describe("ConstraintDialog", () => {
 
 		await user.clear(periodDays);
 		await user.type(periodDays, "8");
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 		expect(
 			await screen.findByText("Enter a whole number from 1 to 7.")
 		).toBeVisible();
@@ -1324,7 +1345,7 @@ describe("ConstraintDialog", () => {
 			});
 			await screen.findByRole("dialog", { name: "Edit constraint" });
 
-			await user.click(screen.getByRole("button", { name: "Save" }));
+			await user.click(submitButton());
 
 			expect(await screen.findByRole("alert")).toHaveTextContent(copy);
 			expect(onClose).not.toHaveBeenCalled();
@@ -1340,8 +1361,8 @@ describe("ConstraintDialog", () => {
 				"You don’t have permission to see this department’s constraint types."
 			)
 		).toBeVisible();
-		expect(trigger(/^What it controls/)).toBeDisabled();
-		expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
+		expect(screen.queryByRole("radio")).toBeNull();
+		expect(screen.getByRole("button", { name: "Continue" })).toBeDisabled();
 	});
 });
 
@@ -1380,20 +1401,21 @@ describe("ConstraintDialog with a Department field", () => {
 		);
 	};
 
-	it("given_noDepartmentYet_when_named_then_keepsSaveDisabledAndAsksForTheDepartmentFirst", async () => {
+	it("given_noDepartmentYet_when_rendered_then_asksForTheDepartmentFirstAndOffersNoKind", async () => {
 		const user = userEvent.setup();
 		renderInCompany(<ChoosingDialog initial="" />);
 		await screen.findByRole("dialog", { name: "Add constraint" });
 
-		await typeName(user, "Rest");
-
-		expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
 		expect(screen.getByText("Choose a department first.")).toBeVisible();
-		expect(trigger(/^What it controls/)).toBeDisabled();
+		expect(screen.queryByRole("radio")).toBeNull();
+		expect(screen.getByRole("button", { name: "Continue" })).toBeDisabled();
 
 		await user.click(trigger(/^Department/));
 		await user.click(screen.getByRole("option", { name: /Front Office/ }));
-		expect(screen.getByRole("button", { name: "Save" })).toBeEnabled();
+		await user.click(
+			await screen.findByRole("radio", { name: "Rest between shifts" })
+		);
+		expect(screen.getByRole("button", { name: "Continue" })).toBeEnabled();
 	});
 
 	it("given_valuesFilledIn_when_theDepartmentChanges_then_clearsThemAndKeepsTheRest", async () => {
@@ -1412,12 +1434,10 @@ describe("ConstraintDialog with a Department field", () => {
 			null
 		);
 		expect(nameField()).toHaveValue("Morning cover");
-		expect(trigger(/^What it controls/)).toHaveTextContent(
-			"Rest between shifts"
-		);
+		expect(screen.getByText("Rest between shifts")).toBeVisible();
 	});
 
-	it("given_aFixedDepartmentAndANote_when_editing_then_showsTheDepartmentDisabledAndTheNote", async () => {
+	it("given_aFixedDepartmentAndANote_when_editing_then_namesTheDepartmentUnderTheTitleAndShowsTheNote", async () => {
 		renderInCompany(
 			<ConstraintDialog
 				editing={CONSTRAINT_FIXTURES[2]}
@@ -1434,10 +1454,10 @@ describe("ConstraintDialog with a Department field", () => {
 		);
 		await screen.findByRole("dialog", { name: "Edit constraint" });
 
-		expect(trigger(/^Department/)).toBeDisabled();
-		expect(trigger(/^Department/)).toHaveTextContent(
-			"Main branch › Front Office"
-		);
+		expect(
+			screen.getByRole("dialog", { description: "Main branch › Front Office" })
+		).toBeVisible();
+		expect(screen.queryByRole("button", { name: /^Department/ })).toBeNull();
 		expect(
 			screen.getByText(
 				"Saving changes this constraint for Front Office and new schedules."

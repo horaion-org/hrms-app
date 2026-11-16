@@ -10,12 +10,12 @@ import { Select, type SelectOption } from "@/components/forms/Select";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import { Dialog } from "@/components/ui/Dialog";
-import { SaveIcon, SwapIcon } from "@/components/ui/Icon";
 import { UnitNameField } from "@/features/organisation/UnitNameField";
 import { useCreateFormSubmit } from "@/features/organisation/useCreateFormSubmit";
+import { ChosenConstraintType } from "@/features/scheduling/constraints/ChosenConstraintType";
 import { ConstraintPreview } from "@/features/scheduling/constraints/ConstraintPreview";
+import { ConstraintTypeChooser } from "@/features/scheduling/constraints/ConstraintTypeChooser";
 import {
-	CONSTRAINT_CATEGORIES,
 	CONSTRAINT_COMPARISONS,
 	CONSTRAINT_REQUIREMENTS,
 	CONSTRAINT_STATUSES,
@@ -25,11 +25,13 @@ import {
 	type ConstraintField,
 	type ConstraintFieldKind,
 	type ConstraintFieldSpec,
+	type ConstraintType,
 	type ConstraintTypeOption,
 } from "@/features/scheduling/constraints/api";
 import { constraintRefusal } from "@/features/scheduling/constraints/constraintRefusal";
 import { fieldRowsInReadingOrder } from "@/features/scheduling/constraints/ConstraintDialog/fieldOrder";
 import { nameSuggestion } from "@/features/scheduling/constraints/ConstraintDialog/nameSuggestion";
+import { typeGroupsOf } from "@/features/scheduling/constraints/ConstraintDialog/typeGroups";
 import {
 	allowedComparisons,
 	allowedLinkIds,
@@ -90,6 +92,8 @@ export type ConstraintDialogProps = {
 	department?: SetupDepartment;
 	/** What saving the change reaches, said below the last field. */
 	impactNote?: string;
+	/** The category the chooser brings into view first, as when Add is pressed on that section. */
+	startAt?: ConstraintCategory;
 	/** Sends the constraint; a rejection is explained on its field or as the alert. */
 	onSave: (body: ConstraintDialogBody) => Promise<unknown>;
 	onClose: () => void;
@@ -136,13 +140,17 @@ const isHinted = (field: ConstraintField): field is HintedField =>
 /** A row of the form: one of its own fields, or one of the type's. */
 type FieldName = keyof ConstraintFormValues | ConstraintField;
 
+/** The dialog's two steps: choosing what the constraint decides, then filling it in. */
+type DialogStep = "choose" | "fill";
+
 /**
  * Adds a constraint to the department, or changes one; every draft of the
- * department sees it. The type decides the fields: one row per field the
+ * department sees it. Adding starts on a chooser of every kind the API
+ * offers; the form follows, with the chosen kind kept at its top. Editing
+ * opens on the form. The type decides the fields: one row per field the
  * API's spec gives it, a number as a number box in its range, a field of one
  * value as a Select and one of several as a multi-choice Select. Mount when
- * opened and unmount when closed so every attempt starts fresh; Reset
- * returns the form to what it opened with.
+ * opened and unmount when closed so every attempt starts fresh.
  */
 export const ConstraintDialog = ({
 	editing,
@@ -152,6 +160,7 @@ export const ConstraintDialog = ({
 	reach,
 	department,
 	impactNote,
+	startAt,
 	onSave,
 	onClose,
 }: ConstraintDialogProps): FunctionComponent => {
@@ -174,6 +183,9 @@ export const ConstraintDialog = ({
 		offered?.jobTitles.find((jobTitle) => jobTitle.jobTitleId === id)?.name ??
 		id;
 	const [removedValues, setRemovedValues] = useState<Array<RemovedValue>>([]);
+	const [step, setStep] = useState<DialogStep>(
+		startingPoint ? "fill" : "choose"
+	);
 	const form = useForm<ConstraintFormValues, unknown, ConstraintDialogBody>({
 		// The fields to check depend on the type chosen, so the schema is built per check.
 		resolver: (values, context, resolverOptions) =>
@@ -207,7 +219,6 @@ export const ConstraintDialog = ({
 		register,
 		control,
 		handleSubmit,
-		reset,
 		setValue,
 		formState: { errors, isSubmitting },
 	} = form;
@@ -234,36 +245,26 @@ export const ConstraintDialog = ({
 	};
 	const labelledBy = (name: FieldName): string =>
 		formRowIds(fieldId(name)).labelId;
-	// Grouped under their category: the Select heads each run of one group.
-	// A type the system adds is never offered, only shown on its own rule.
-	const typeOptions: Array<SelectOption> = CONSTRAINT_CATEGORIES.flatMap(
-		(category) =>
-			(offered?.types ?? [])
-				.filter(
-					(option) =>
-						option.category === category &&
-						(!option.addedBySystem || option.type === startingPoint?.type)
-				)
-				.map((option) => ({
-					value: option.type,
-					label: t(`scheduling.constraints.types.${option.type}`),
-					group: t(`scheduling.constraints.categories.${category}`),
-				}))
-	);
+	// The kinds on offer, grouped and ordered as the API lists them.
+	const typeGroups = typeGroupsOf(offered?.types ?? [], startingPoint?.type);
 	// A saved company rule keeps its type (the API answers CONSTRAINT_TYPE_FIXED); a new rule is added instead.
 	const typeFixed = withLock && editing !== undefined;
 	// Until a Department is chosen there are no types, shifts or job titles to offer.
 	const departmentMissing =
 		department?.kind === "choose" && department.value === "";
-	// Why there is nothing to choose yet, or once a type is chosen, one worked example of it.
-	const typeHint = (): string => {
-		if (typeFixed) return t(`${key}.typeFixed`);
+	// A replacement, a department's own copy of a company rule, a saved company rule and a rule the system adds keep their kind.
+	const typeChangeable =
+		!typeFixed &&
+		replacing === undefined &&
+		editing?.overridesConstraintId == null &&
+		!alwaysApplies;
+	// Why there is nothing to choose from yet.
+	const optionsNote = (): string | undefined => {
 		if (departmentMissing) return t(`${key}.optionsNeedDepartment`);
 		if (options.status === "pending") return t(`${key}.optionsLoading`);
 		if (options.status === "hidden") return t(`${key}.optionsHidden`);
 		if (options.status === "error") return t(`${key}.optionsFailed`);
-		if (chosen) return t(`scheduling.constraints.examples.${chosen.type}`);
-		return t(`${key}.typeHintEmpty`);
+		return undefined;
 	};
 	const statusOptions: Array<SelectOption> = CONSTRAINT_STATUSES.map(
 		(status) => ({
@@ -449,7 +450,7 @@ export const ConstraintDialog = ({
 		if (suggestsName && !nameTyped) setValue("name", suggestedName);
 	}, [suggestsName, nameTyped, suggestedName, setValue]);
 	const selectRow = (
-		field: "type" | "status" | "lock",
+		field: "status" | "lock",
 		choiceOptions: Array<SelectOption>,
 		hint: string,
 		disabled = false
@@ -677,28 +678,38 @@ export const ConstraintDialog = ({
 		<Dialog
 			open
 			preventClose={isSubmitting}
+			description={[
+				department?.kind === "fixed" ? department.label : undefined,
+				startingPoint
+					? undefined
+					: t(step === "choose" ? `${key}.stepChoose` : `${key}.stepFill`),
+			]
+				.filter(Boolean)
+				.join(" · ")}
 			footer={
 				<div className="grid gap-6 sm:grid-cols-2">
-					<Button
-						disabled={isSubmitting}
-						leadingIcon={<SwapIcon />}
-						variant="secondary"
-						onClick={() => {
-							reset();
-							setRemovedValues([]);
-						}}
-					>
-						{t(`${key}.reset`)}
+					<Button disabled={isSubmitting} variant="secondary" onClick={close}>
+						{t(`${key}.cancel`)}
 					</Button>
-					<Button
-						disabled={!name.trim() || offered === undefined}
-						form={formId}
-						leadingIcon={<SaveIcon />}
-						loading={isSubmitting}
-						type="submit"
-					>
-						{t(`${key}.submit`)}
-					</Button>
+					{step === "choose" ? (
+						<Button
+							disabled={chosen === undefined}
+							onClick={() => {
+								setStep("fill");
+							}}
+						>
+							{t(`${key}.continue`)}
+						</Button>
+					) : (
+						<Button
+							disabled={!name.trim() || offered === undefined}
+							form={formId}
+							loading={isSubmitting}
+							type="submit"
+						>
+							{t(startingPoint ? `${key}.submit` : `${key}.add`)}
+						</Button>
+					)}
 				</div>
 			}
 			title={t(
@@ -763,21 +774,17 @@ export const ConstraintDialog = ({
 						{message}
 					</p>
 				)}
-				{department && (
+				{department?.kind === "choose" && (
 					<SetupDepartmentField
-						department={
-							department.kind === "choose"
-								? {
-										...department,
-										onChange: (departmentId): void => {
-											// Shifts and job titles belong to one Department, so a new one starts the values again.
-											setValue("values", {});
-											setRemovedValues([]);
-											department.onChange(departmentId);
-										},
-									}
-								: department
-						}
+						department={{
+							...department,
+							onChange: (departmentId): void => {
+								// Shifts and job titles belong to one Department, so a new one starts the values again.
+								setValue("values", {});
+								setRemovedValues([]);
+								department.onChange(departmentId);
+							},
+						}}
 						labels={{
 							label: t(`${key}.department`),
 							placeholder: t(`${key}.departmentPlaceholder`),
@@ -786,124 +793,158 @@ export const ConstraintDialog = ({
 						}}
 					/>
 				)}
-				{staleNames.length > 0 && (
-					<Callout tone="warning">
-						{t(`${key}.dependency.staleTakenOut`, {
-							items: t("scheduling.constraints.list", { items: staleNames }),
-						})}
-					</Callout>
+				{optionsNote() !== undefined && (
+					<p className="text-sm text-neutral-700">{optionsNote()}</p>
 				)}
-				{replacing && (
-					<Callout>
-						{t(
-							replacing.locked
-								? `${key}.replacingLocked`
-								: `${key}.replacingDefault`,
-							{ name: replacing.name }
-						)}
-					</Callout>
-				)}
-				{selectRow(
-					"type",
-					typeOptions,
-					typeHint(),
-					offered === undefined ||
-						typeFixed ||
-						replacing !== undefined ||
-						editing?.overridesConstraintId != null
-				)}
-				{reach && !alwaysApplies && (
-					<Controller
-						control={control}
-						name="reach"
-						render={({ field }) => (
-							<UnitReachField
-								choices={reach.choices}
-								disabled={isSubmitting}
-								idPrefix={fieldId("reach")}
-								value={field.value ?? reach.initial}
-								error={
-									errors.reach?.branchIds?.message ??
-									errors.reach?.departmentIds?.message
-								}
-								onChange={field.onChange}
-							/>
-						)}
+				{step === "choose" && (
+					<ConstraintTypeChooser
+						disabled={isSubmitting}
+						groups={typeGroups}
+						startAt={startAt}
+						value={type}
+						onChange={(chosenType: ConstraintType) => {
+							setValue("type", chosenType);
+						}}
 					/>
 				)}
-				{withLock &&
-					!alwaysApplies &&
-					selectRow(
-						"lock",
-						lockOptions,
-						t(`${key}.lockHints.${lock === "DEFAULT" ? "DEFAULT" : "LOCKED"}`)
-					)}
-				{chosen && (
+				{step === "fill" && (
 					<>
-						<ConstraintPreview
-							appliesTo={appliesToOf(
-								{
-									type: chosen.type,
-									level: withLock ? "COMPANY" : "DEPARTMENT",
-									values: filledValues(chosen),
-									...(reach && chosenReach
-										? reachedUnitsOf(chosenReach, reach.choices)
-										: {}),
-								},
-								t
-							)}
-							constraint={{
-								type: chosen.type,
-								requirement: chosen.hasRequirement
-									? (CONSTRAINT_REQUIREMENTS.find(
-											(choice) => choice === requirement
-										) ?? null)
-									: null,
-								values: filledValues(chosen),
-								fullTimersOnly: chosen.fullTimersOnly,
-								requirementPolicy: chosen.requirementPolicy,
-							}}
-						/>
-						{fieldRowsInReadingOrder(chosen).map((row) => {
-							const notes = row.flatMap((spec) => removedNote(spec) ?? []);
-							return (
-								<Fragment key={row.map((spec) => spec.field).join("-")}>
-									{row.length === 1 ? (
-										valueRow(row[0]!)
-									) : (
-										<div className="flex flex-col gap-6 sm:flex-row">
-											{row.map((spec) => valueRow(spec, "sm:flex-1"))}
-										</div>
-									)}
-									{notes.map((note) => (
-										<p
-											key={note}
-											className="text-sm text-neutral-700"
-											role="status"
-										>
-											{note}
-										</p>
-									))}
-								</Fragment>
-							);
-						})}
-						{firmnessRow(chosen)}
-						{/* A new constraint is Active; whether to switch one off is asked only when editing. */}
-						{editing &&
+						{chosen && (
+							<ChosenConstraintType
+								disabled={isSubmitting}
+								note={typeFixed ? t(`${key}.typeFixed`) : undefined}
+								type={chosen.type}
+								onChange={
+									typeChangeable
+										? (): void => {
+												setStep("choose");
+											}
+										: undefined
+								}
+							/>
+						)}
+						{errors.type?.message && (
+							<p className="text-sm text-error-700" role="alert">
+								{errors.type.message}
+							</p>
+						)}
+						{staleNames.length > 0 && (
+							<Callout tone="warning">
+								{t(`${key}.dependency.staleTakenOut`, {
+									items: t("scheduling.constraints.list", {
+										items: staleNames,
+									}),
+								})}
+							</Callout>
+						)}
+						{replacing && (
+							<Callout>
+								{t(
+									replacing.locked
+										? `${key}.replacingLocked`
+										: `${key}.replacingDefault`,
+									{ name: replacing.name }
+								)}
+							</Callout>
+						)}
+						{reach && !alwaysApplies && (
+							<Controller
+								control={control}
+								name="reach"
+								render={({ field }) => (
+									<UnitReachField
+										choices={reach.choices}
+										disabled={isSubmitting}
+										idPrefix={fieldId("reach")}
+										value={field.value ?? reach.initial}
+										error={
+											errors.reach?.branchIds?.message ??
+											errors.reach?.departmentIds?.message
+										}
+										onChange={field.onChange}
+									/>
+								)}
+							/>
+						)}
+						{withLock &&
 							!alwaysApplies &&
-							selectRow("status", statusOptions, t(`${key}.statusHint`))}
+							selectRow(
+								"lock",
+								lockOptions,
+								t(
+									`${key}.lockHints.${lock === "DEFAULT" ? "DEFAULT" : "LOCKED"}`
+								)
+							)}
+						{chosen && (
+							<>
+								<ConstraintPreview
+									appliesTo={appliesToOf(
+										{
+											type: chosen.type,
+											level: withLock ? "COMPANY" : "DEPARTMENT",
+											values: filledValues(chosen),
+											...(reach && chosenReach
+												? reachedUnitsOf(chosenReach, reach.choices)
+												: {}),
+										},
+										t
+									)}
+									constraint={{
+										type: chosen.type,
+										requirement: chosen.hasRequirement
+											? (CONSTRAINT_REQUIREMENTS.find(
+													(choice) => choice === requirement
+												) ?? null)
+											: null,
+										values: filledValues(chosen),
+										fullTimersOnly: chosen.fullTimersOnly,
+										requirementPolicy: chosen.requirementPolicy,
+									}}
+								/>
+								{fieldRowsInReadingOrder(chosen).map((row) => {
+									const notes = row.flatMap((spec) => removedNote(spec) ?? []);
+									return (
+										<Fragment key={row.map((spec) => spec.field).join("-")}>
+											{row.length === 1 ? (
+												valueRow(row[0]!)
+											) : (
+												<div className="flex flex-col gap-6 sm:flex-row">
+													{row.map((spec) => valueRow(spec, "sm:flex-1"))}
+												</div>
+											)}
+											{notes.map((note) => (
+												<p
+													key={note}
+													className="text-sm text-neutral-700"
+													role="status"
+												>
+													{note}
+												</p>
+											))}
+										</Fragment>
+									);
+								})}
+								{firmnessRow(chosen)}
+								{/* A new constraint is Active; whether to switch one off is asked only when editing. */}
+								{editing &&
+									!alwaysApplies &&
+									selectRow("status", statusOptions, t(`${key}.statusHint`))}
+							</>
+						)}
+						<UnitNameField
+							counter={t(`${key}.nameCounter`, { count: name.length })}
+							error={errors.name?.message}
+							hint={t(`${key}.nameHint`)}
+							id={fieldId("name")}
+							label={t(`${key}.name`)}
+							placeholder={t(`${key}.namePlaceholder`)}
+							registration={register("name")}
+						/>
+						{impactNote && (
+							<p className="text-sm text-neutral-700">{impactNote}</p>
+						)}
 					</>
 				)}
-				<UnitNameField
-					counter={t(`${key}.nameCounter`, { count: name.length })}
-					error={errors.name?.message}
-					hint={t(`${key}.nameHint`)}
-					id={fieldId("name")}
-					label={t(`${key}.name`)}
-					placeholder={t(`${key}.namePlaceholder`)}
-					registration={register("name")}
-				/>
-				{impactNote && <p className="text-sm text-neutral-700">{impactNote}</p>}
 			</form>
 		</Dialog>
 	);
