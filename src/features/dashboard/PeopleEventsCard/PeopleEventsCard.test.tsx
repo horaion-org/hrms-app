@@ -13,7 +13,7 @@ beforeAll(async () => {
 });
 
 describe("PeopleEventsCard", () => {
-	it("names each person's event, its day and department", () => {
+	it("names each person's event and department on one line, with its day on the right", () => {
 		render(
 			<PeopleEventsCard
 				events={{
@@ -30,11 +30,11 @@ describe("PeopleEventsCard", () => {
 			/>
 		);
 
-		expect(
-			screen.getByText("Aisha Rahman's probation ends")
-		).toBeInTheDocument();
-		expect(screen.getByText("A former member leaves")).toBeInTheDocument();
-		expect(screen.getAllByText(/ · Sales$/)).toHaveLength(2);
+		const rows = screen.getAllByRole("listitem");
+		expect(rows[0]).toHaveTextContent(
+			/^Aisha Rahman · probation ends · Sales.*20/
+		);
+		expect(rows[1]).toHaveTextContent(/^A former member · leaves · Sales/);
 	});
 
 	it("says when the read failed", () => {

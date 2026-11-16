@@ -8,10 +8,12 @@ import { PeopleIcon } from "@/components/ui/Icon";
 import type { PeopleEvent } from "@/features/dashboard/api";
 import {
 	failedLineClasses,
+	HOME_ROW_COUNT,
+	rowAsideClasses,
 	rowClasses,
-	rowDetailClasses,
+	rowLeadClasses,
 	rowListClasses,
-	rowTitleClasses,
+	rowTextClasses,
 } from "@/features/dashboard/cardStyles";
 import type { GuardedRead } from "@/features/dashboard/guardedRead";
 
@@ -29,7 +31,8 @@ const keyOf = (event: PeopleEvent): string =>
 
 /**
  * Who joins, whose probation ends and who leaves in the person's units over
- * the coming days, by day: the HR dates a manager prepares for.
+ * the coming days, a line each with its day on the right: the HR dates a
+ * manager prepares for.
  */
 export const PeopleEventsCard = ({
 	events,
@@ -47,22 +50,24 @@ export const PeopleEventsCard = ({
 			)}
 			{events.status === "ready" && (
 				<ExpandableList
+					collapsedCount={HOME_ROW_COUNT}
 					itemClassName={rowClasses}
 					items={events.data}
 					keyOf={keyOf}
 					listClassName={rowListClasses}
 					renderItem={(event) => (
 						<>
-							<span className={rowTitleClasses}>
-								{t(`${key}.kinds.${event.kind}`, {
-									name: event.displayName ?? t(`${key}.formerMember`),
-								})}
+							<span className={rowTextClasses}>
+								<span className={rowLeadClasses}>
+									{event.displayName ?? t(`${key}.formerMember`)}
+								</span>
+								{" · "}
+								{t(`${key}.kinds.${event.kind}`)}
+								{" · "}
+								{event.departmentName}
 							</span>
-							<span className={rowDetailClasses}>
-								{t(`${key}.detail`, {
-									day: formatDay(event.day, language),
-									department: event.departmentName,
-								})}
+							<span className={rowAsideClasses}>
+								{formatDay(event.day, language)}
 							</span>
 						</>
 					)}

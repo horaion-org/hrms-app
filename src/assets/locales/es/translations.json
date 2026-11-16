@@ -5082,14 +5082,13 @@
 				}
 			},
 			"peopleEvents": {
-				"title": "Incorporaciones, periodos de prueba y bajas",
+				"title": "Incorporaciones y bajas",
 				"failed": "No pudimos cargar quién se incorpora o se va.",
 				"formerMember": "Un antiguo miembro",
-				"detail": "{{day}} · {{department}}",
 				"kinds": {
-					"JOINS": "{{name}} se incorpora",
-					"PROBATION_ENDS": "Termina el periodo de prueba de {{name}}",
-					"LEAVES": "{{name}} se va"
+					"JOINS": "se incorpora",
+					"PROBATION_ENDS": "termina el periodo de prueba",
+					"LEAVES": "se va"
 				}
 			},
 			"leaveToDecide": {

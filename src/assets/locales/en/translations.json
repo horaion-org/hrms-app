@@ -5249,14 +5249,13 @@
 				}
 			},
 			"peopleEvents": {
-				"title": "Joining, probation and leaving",
+				"title": "Joining and leaving",
 				"failed": "We couldn’t load who joins or leaves.",
 				"formerMember": "A former member",
-				"detail": "{{day}} · {{department}}",
 				"kinds": {
-					"JOINS": "{{name}} joins",
-					"PROBATION_ENDS": "{{name}}'s probation ends",
-					"LEAVES": "{{name}} leaves"
+					"JOINS": "joins",
+					"PROBATION_ENDS": "probation ends",
+					"LEAVES": "leaves"
 				}
 			},
 			"leaveToDecide": {

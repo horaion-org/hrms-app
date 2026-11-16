@@ -18,9 +18,6 @@ export const rowClasses =
 export const rowTextClasses =
 	"line-clamp-2 min-w-0 text-sm text-neutral-800 sm:line-clamp-1";
 
-/** A row's main line. */
-export const rowTitleClasses = "text-sm font-semibold text-neutral-900";
-
 /** The name a row leads with. */
 export const rowLeadClasses = "font-semibold text-neutral-900";
 
