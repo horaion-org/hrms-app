@@ -13,6 +13,7 @@ import { PlusIcon } from "@/components/ui/Icon";
 import { Toast } from "@/components/ui/Toast";
 import {
 	termsOverviewQuery,
+	termsPresetsQuery,
 	type TermsOverviewItem,
 } from "@/features/employmentTerms/api";
 import {
@@ -100,6 +101,8 @@ export const EmploymentTermsSettings = ({
 		access.can("member_profile:read", COMPANY_SCOPE) &&
 		access.can("member_employment_terms:read", COMPANY_SCOPE);
 	const overview = useQuery(termsOverviewQuery(companyId, canRead));
+	// The country's figures and common weeks, to name each terms' kind and when overtime starts.
+	const presets = useQuery(termsPresetsQuery(companyId, canRead));
 	const actions = useEmploymentTermsActions(companyId);
 	const [editing, setEditing] = useState<Editing | null>(null);
 	const [action, setAction] = useState<TermsRowAction | null>(null);
@@ -119,6 +122,7 @@ export const EmploymentTermsSettings = ({
 	const columns = useMemo(
 		(): Array<DataTableColumn<TermsOverviewItem>> =>
 			employmentTermsColumns(t, {
+				presets: presets.data,
 				canUpdate,
 				canListHolders,
 				onEdit: (terms) => {
@@ -129,7 +133,7 @@ export const EmploymentTermsSettings = ({
 				},
 				onRowAction: setAction,
 			}),
-		[t, canUpdate, canListHolders]
+		[t, presets.data, canUpdate, canListHolders]
 	);
 	const forbidden =
 		!canRead ||

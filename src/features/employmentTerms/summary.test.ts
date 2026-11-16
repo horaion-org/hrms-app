@@ -11,10 +11,10 @@ import {
 	STANDARD_WEEK,
 } from "@/features/employmentTerms/fixtures";
 import {
-	restShort,
+	overtimeShort,
 	suggestedTermsName,
 	termsSentence,
-	weekShort,
+	weekLines,
 } from "@/features/employmentTerms/summary";
 
 const t = i18n.getFixedT("en");
@@ -75,14 +75,33 @@ describe("termsSentence", () => {
 	});
 });
 
-describe("weekShort and restShort", () => {
-	it.each<[WeekFields, string, string]>([
-		[FIVE_DAY_WEEK, "5 days · 8 h 48 min a day · 44 h", "Rest day Sunday"],
-		[SIX_DAY_SHIFT, "6 days · 12 h shifts · 44 h", "Rest day on the roster"],
-		[PART_TIME_20, "20 h a week", "Rest day on the roster"],
-	])("shortens %o", (fields, week, rest) => {
-		expect(weekShort(fields, t)).toBe(week);
-		expect(restShort(fields, t)).toBe(rest);
+describe("weekLines and overtimeShort", () => {
+	it.each<[string, WeekFields, Array<string>, string]>([
+		[
+			"a five-day week",
+			FIVE_DAY_WEEK,
+			["44 h over 5 days", "Rest day Sunday"],
+			"After 8 h 48 min a day or 44 h a week",
+		],
+		[
+			"shift work",
+			SIX_DAY_SHIFT,
+			["44 h over 6 days", "Shifts up to 12 h", "Roster picks the rest day"],
+			"By the week, after 44 h",
+		],
+		[
+			"part-time, with no rest day",
+			PART_TIME_20,
+			["20 h a week", "Days vary"],
+			"Extra hours to 44 h, then overtime",
+		],
+	])("words %s for the list", (_, fields, lines, overtime) => {
+		expect(weekLines(fields, REFERENCE, t)).toEqual(lines);
+		expect(overtimeShort(fields, REFERENCE, t)).toBe(overtime);
+	});
+
+	it("says nothing about overtime without the API's figures", () => {
+		expect(overtimeShort(FIVE_DAY_WEEK, undefined, t)).toBe("");
 	});
 });
 

@@ -5202,14 +5202,14 @@
 			"add": "Add employment terms",
 			"label": "Employment terms",
 			"terms": "Terms",
-			"week": "Week",
+			"week": "Week and rest day",
 			"people": "People",
 			"default": "Default",
 			"peopleCount_one": "{{count}} person",
 			"peopleCount_other": "{{count}} people",
 			"scheduledCount_one": "+{{count}} from a later date",
 			"scheduledCount_other": "+{{count}} from a later date",
-			"empty": "No employment terms yet. Start from a common week and adjust it.",
+			"empty": "No employment terms yet. Add the working week most of your people have; shift work and part-time terms can follow.",
 			"loading": "Loading employment terms…",
 			"failed": "We couldn’t load the employment terms. Try again.",
 			"hidden": "You don’t have access to employment terms.",
@@ -5259,7 +5259,8 @@
 				"held": "People have had these terms, so they can’t be deleted. Deactivate them instead.",
 				"inactive": "These terms are inactive. Activate them first."
 			},
-			"peopleLink": "Show the people on {{name}}"
+			"peopleLink": "Show the people on {{name}}",
+			"overtime": "Overtime"
 		},
 		"summary": {
 			"weekOnly": "Works {{week}} a week; the days vary.",
@@ -5272,14 +5273,8 @@
 			"limitsApply": "Employment Act hour limits apply: rosters keep them within the work-hour limits.",
 			"limitsDontApply": "Employment Act hour limits don’t apply: rosters may plan them past the work-hour limits, and their hours are still counted.",
 			"short": {
-				"weekOnly": "{{week}} a week",
-				"days_one": "{{days}} day",
-				"days_other": "{{days}} days",
-				"day": "{{day}} a day",
-				"shifts": "{{day}} shifts",
-				"week": "{{week}}",
 				"restFixed": "Rest day {{weekday}}",
-				"restRostered": "Rest day on the roster"
+				"restRostered": "Roster picks the rest day"
 			},
 			"name": {
 				"days": "{{days}}-day week, {{week}}",
@@ -5295,7 +5290,19 @@
 			"inShifts_one": "Works {{week}} a week over {{days}} day, in shifts of up to {{day}}.",
 			"inShifts_other": "Works {{week}} a week over {{days}} days, in shifts of up to {{day}}.",
 			"restPartTime": "Rosters don’t set a rest day for part-timers.",
-			"overtimeShiftWork": "Shift work: overtime counts by the week, after {{week}}."
+			"overtimeShiftWork": "Shift work: overtime counts by the week, after {{week}}.",
+			"list": {
+				"weekOnly": "{{week}} a week",
+				"daysVary": "Days vary",
+				"overDays_one": "{{week}} over {{days}} day",
+				"overDays_other": "{{week}} over {{days}} days",
+				"shifts": "Shifts up to {{day}}",
+				"overtimeWeek": "After {{week}} a week",
+				"overtimeDayOrWeek": "After {{day}} a day or {{week}} a week",
+				"overtimeShiftWork": "By the week, after {{week}}",
+				"overtimePartTime": "Extra hours to a full-timer’s week, then overtime",
+				"overtimePartTimeUntil": "Extra hours to {{full}}, then overtime"
+			}
 		},
 		"dialog": {
 			"addTitle": "Add employment terms",

@@ -5202,14 +5202,14 @@
 			"add": "Añadir condiciones de empleo",
 			"label": "Condiciones de empleo",
 			"terms": "Condiciones",
-			"week": "Semana",
+			"week": "Semana y día de descanso",
 			"people": "Personas",
 			"default": "Predeterminadas",
 			"peopleCount_one": "{{count}} persona",
 			"peopleCount_other": "{{count}} personas",
 			"scheduledCount_one": "+{{count}} desde una fecha posterior",
 			"scheduledCount_other": "+{{count}} desde una fecha posterior",
-			"empty": "Aún no hay condiciones de empleo. Empieza con una semana habitual y ajústala.",
+			"empty": "Aún no hay condiciones de empleo. Añade la semana laboral que tiene la mayoría de tu personal; después pueden venir las de turnos y tiempo parcial.",
 			"loading": "Cargando condiciones de empleo…",
 			"failed": "No pudimos cargar las condiciones de empleo. Inténtalo de nuevo.",
 			"hidden": "No tienes acceso a las condiciones de empleo.",
@@ -5259,7 +5259,8 @@
 				"held": "Hay personas que han tenido estas condiciones, así que no se pueden eliminar. Desactívalas.",
 				"inactive": "Estas condiciones están inactivas. Actívalas primero."
 			},
-			"peopleLink": "Ver las personas con {{name}}"
+			"peopleLink": "Ver las personas con {{name}}",
+			"overtime": "Horas extra"
 		},
 		"summary": {
 			"weekOnly": "Trabaja {{week}} a la semana; los días varían.",
@@ -5272,14 +5273,8 @@
 			"limitsApply": "Se aplican los límites de horas de la Ley de Empleo: los cuadrantes los mantienen dentro de los límites de horas de trabajo.",
 			"limitsDontApply": "No se aplican los límites de horas de la Ley de Empleo: los cuadrantes pueden superar con ellos los límites de horas de trabajo, y sus horas se siguen contando.",
 			"short": {
-				"weekOnly": "{{week}} a la semana",
-				"days_one": "{{days}} día",
-				"days_other": "{{days}} días",
-				"day": "{{day}} al día",
-				"shifts": "turnos de {{day}}",
-				"week": "{{week}}",
 				"restFixed": "Descanso: {{weekday}}",
-				"restRostered": "Descanso según el cuadrante"
+				"restRostered": "El cuadrante elige el descanso"
 			},
 			"name": {
 				"days": "Semana de {{days}} días, {{week}}",
@@ -5295,7 +5290,19 @@
 			"inShifts_one": "Trabaja {{week}} a la semana en {{days}} día, en turnos de hasta {{day}}.",
 			"inShifts_other": "Trabaja {{week}} a la semana en {{days}} días, en turnos de hasta {{day}}.",
 			"restPartTime": "Los cuadrantes no fijan un día de descanso a quien trabaja a tiempo parcial.",
-			"overtimeShiftWork": "Trabajo por turnos: las horas extra se cuentan por semana, después de {{week}}."
+			"overtimeShiftWork": "Trabajo por turnos: las horas extra se cuentan por semana, después de {{week}}.",
+			"list": {
+				"weekOnly": "{{week}} a la semana",
+				"daysVary": "Los días varían",
+				"overDays_one": "{{week}} en {{days}} día",
+				"overDays_other": "{{week}} en {{days}} días",
+				"shifts": "Turnos de hasta {{day}}",
+				"overtimeWeek": "Después de {{week}} a la semana",
+				"overtimeDayOrWeek": "Después de {{day}} al día o {{week}} a la semana",
+				"overtimeShiftWork": "Por semana, después de {{week}}",
+				"overtimePartTime": "Horas adicionales hasta la semana de un tiempo completo; después, horas extra",
+				"overtimePartTimeUntil": "Horas adicionales hasta {{full}}; después, horas extra"
+			}
 		},
 		"dialog": {
 			"addTitle": "Añadir condiciones de empleo",
