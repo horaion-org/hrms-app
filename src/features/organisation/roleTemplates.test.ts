@@ -24,6 +24,7 @@ describe("role templates from the API's contract", () => {
 			"roster_planner",
 			"department_manager",
 			"leave_approver",
+			"executive",
 			"viewer",
 		]);
 	});

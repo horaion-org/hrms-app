@@ -5,6 +5,7 @@
     "scheduling",
     "approvals",
     "organisation",
+    "reports",
     "company_settings",
     "access_and_activity"
   ],
@@ -498,6 +499,20 @@
       "action": "read",
       "actionName": "Read",
       "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
+      "key": "member_event:read",
+      "module": "people",
+      "prerequisites": [],
+      "resource": "member_event",
+      "resourceName": "Member Event"
+    },
+    {
+      "action": "read",
+      "actionName": "Read",
+      "assignableScopes": [
         "COMPANY"
       ],
       "key": "employment_terms:read",
@@ -976,6 +991,20 @@
         "BRANCH",
         "DEPARTMENT"
       ],
+      "key": "report:read",
+      "module": "reports",
+      "prerequisites": [],
+      "resource": "report",
+      "resourceName": "Report"
+    },
+    {
+      "action": "read",
+      "actionName": "Read",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
       "key": "access_role:read",
       "module": "access_and_activity",
       "prerequisites": [],
@@ -1094,6 +1123,7 @@
         "work_availability:read",
         "work_availability:update",
         "shift_preference:read",
+        "member_event:read",
         "employment_terms:read",
         "employment_terms:update",
         "member_employment_terms:read",
@@ -1126,6 +1156,7 @@
         "approval_flow:manage",
         "approval:read",
         "approval:decide",
+        "report:read",
         "access_role:read",
         "access_role:create",
         "access_role:update",
@@ -1155,6 +1186,7 @@
         "work_availability:read",
         "work_availability:update",
         "shift_preference:read",
+        "member_event:read",
         "member_employment_terms:read",
         "member_employment_terms:update",
         "leave_request:read",
@@ -1198,7 +1230,8 @@
         "constraint:update",
         "constraint:delete",
         "approval:read",
-        "approval:decide"
+        "approval:decide",
+        "report:read"
       ]
     },
     {
@@ -1220,6 +1253,7 @@
         "work_availability:read",
         "work_availability:update",
         "shift_preference:read",
+        "member_event:read",
         "leave_request:read",
         "leave_request:review",
         "leave_duration:read",
@@ -1240,7 +1274,8 @@
         "constraint:update",
         "constraint:delete",
         "approval:read",
-        "approval:decide"
+        "approval:decide",
+        "report:read"
       ]
     },
     {
@@ -1264,6 +1299,23 @@
         "COMPANY",
         "BRANCH"
       ],
+      "key": "executive",
+      "kind": "LOCAL",
+      "permissions": [
+        "branch:read",
+        "branch_member:read",
+        "department:read",
+        "department_member:read",
+        "job_title:read",
+        "approval:read",
+        "report:read"
+      ]
+    },
+    {
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH"
+      ],
       "key": "viewer",
       "kind": "LOCAL",
       "permissions": [
@@ -1275,12 +1327,14 @@
         "member_profile:read",
         "work_availability:read",
         "shift_preference:read",
+        "member_event:read",
         "member_employment_terms:read",
         "leave_duration:read",
         "schedule:read",
         "shift:read",
         "constraint:read",
         "approval:read",
+        "report:read",
         "access_role:read"
       ]
     }

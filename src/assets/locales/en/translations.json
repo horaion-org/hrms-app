@@ -2260,6 +2260,10 @@
 					"name": "Leave approver",
 					"description": "Approves or rejects leave for the people where given."
 				},
+				"executive": {
+					"name": "Executive",
+					"description": "Sees Reports, what waits for approval and how the company is organised; opens no roster, profile or leave."
+				},
 				"viewer": {
 					"name": "Viewer",
 					"description": "Sees what happens where given, except HR notes and leave reasons, and changes nothing."
@@ -2364,6 +2368,26 @@
 				},
 				"actionHints": {
 					"read": "The shifts they would like, day by day"
+				}
+			},
+			"member_event": {
+				"name": "People events",
+				"description": "Who joins, whose probation ends and who leaves, by day.",
+				"actions": {
+					"read": "See who joins, ends probation or leaves"
+				},
+				"actionHints": {
+					"read": "Their name, their department and the day; nothing else of their profile"
+				}
+			},
+			"report": {
+				"name": "Reports",
+				"description": "Figures across rosters: shifts short, staffing, overtime and changes after publishing.",
+				"actions": {
+					"read": "See Reports and the overview"
+				},
+				"actionHints": {
+					"read": "The figures, without opening the rosters behind them"
 				}
 			},
 			"leave_request": {
@@ -2659,6 +2683,10 @@
 				"organisation": {
 					"name": "Organisation",
 					"description": "Branches, departments, who belongs where, and job titles."
+				},
+				"reports": {
+					"name": "Reports",
+					"description": "Reports and the overview, read across rosters without opening them."
 				},
 				"company_settings": {
 					"name": "Company settings",
