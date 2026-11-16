@@ -3177,10 +3177,10 @@
 				"namePlaceholder": "p. ej., Turno de mañana",
 				"nameHint": "De 2 a 100 caracteres. Solo letras, números, espacios y . ' & -.",
 				"nameCounter": "{{count}}/100",
-				"group": "Grupo de turno",
-				"groupPlaceholder": "Selecciona o crea un grupo",
+				"group": "Grupo",
+				"groupPlaceholder": "Elige o crea un grupo",
 				"groupSearch": "Buscar grupos",
-				"groupEmpty": "No hay tipos de turno disponibles. Escribe un nombre arriba para crear uno.",
+				"groupEmpty": "Aún no hay grupos. Escribe un nombre arriba para crear uno.",
 				"colour": "Color del turno",
 				"startTime": "Hora de inicio",
 				"endTime": "Hora de fin",
@@ -3193,7 +3193,6 @@
 				"rolesEmpty": "Este departamento aún no tiene puestos activos. Crea uno en Organización primero.",
 				"rolesHidden": "No tienes permiso para ver los puestos de este departamento.",
 				"rolesFailed": "No pudimos cargar los puestos. Inténtalo de nuevo.",
-				"reset": "Restablecer",
 				"submit": "Guardar",
 				"nameRequired": "Escribe un nombre de turno.",
 				"nameLength": "Usa de 2 a 100 caracteres.",
@@ -3254,7 +3253,9 @@
 				"departmentPlaceholder": "Selecciona un departamento",
 				"departmentHint": "Cada turno pertenece a un departamento.",
 				"departmentsEmpty": "No hay ningún departamento activo al que puedas añadir turnos.",
-				"rolesNeedDepartment": "Elige primero un departamento."
+				"rolesNeedDepartment": "Elige primero un departamento.",
+				"groupHint": "Los turnos de un grupo se listan juntos, y una restricción puede elegir el grupo entero.",
+				"cancel": "Cancelar"
 			},
 			"types": {
 				"REGULAR": "Regular",

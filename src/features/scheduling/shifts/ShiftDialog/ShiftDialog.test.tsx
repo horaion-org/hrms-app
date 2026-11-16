@@ -62,7 +62,7 @@ const pickGroup = async (
 	user: ReturnType<typeof userEvent.setup>,
 	group: string
 ): Promise<void> => {
-	await user.click(trigger(/Shift type/));
+	await user.click(trigger(/^Group/));
 	await user.type(screen.getByRole("combobox"), group);
 	await user.click(
 		(await screen.findAllByRole("option", { name: new RegExp(group) }))[0] ??
@@ -100,12 +100,12 @@ describe("ShiftDialog", () => {
 
 		const alerts = await screen.findAllByRole("alert");
 		expect(alerts.map((alert) => alert.textContent)).toEqual([
-			"Choose or create a type.",
-			"Choose a colour.",
+			"Choose or create a group.",
 			"Choose a time.",
 			"Choose a time.",
 			"Choose at least one day.",
 			"Choose at least one job title.",
+			"Choose a colour.",
 		]);
 		expect(dialog).toBeVisible();
 		expect(onSave).not.toHaveBeenCalled();
@@ -118,7 +118,7 @@ describe("ShiftDialog", () => {
 
 		await user.type(screen.getByLabelText("Shift name"), " Front Desk AM ");
 		await pickGroup(user, "Kitchen");
-		expect(trigger(/Shift type/)).toHaveTextContent("Kitchen");
+		expect(trigger(/^Group/)).toHaveTextContent("Kitchen");
 		await user.click(screen.getByRole("radio", { name: "Orange" }));
 		await pick(user, /Start time/, "09:00");
 		await pick(user, /End time/, "15:00");
@@ -167,22 +167,13 @@ describe("ShiftDialog", () => {
 		});
 	});
 
-	it("given_aShiftWithABreakAndTick_when_editing_then_startsFromThemAndResetReturnsToThem", async () => {
-		const user = userEvent.setup();
+	it("given_aShiftWithABreakAndTick_when_editing_then_startsFromThem", async () => {
 		renderDialog({
 			editing: longShift({ unpaidBreakMinutes: 60, carriesOvertime: true }),
 		});
 		await screen.findByRole("dialog", { name: "Edit shift" });
 		const field = screen.getByLabelText("Unpaid break (minutes)");
 		const tick = screen.getByLabelText("Carries built-in overtime");
-		expect(field).toHaveValue(60);
-		expect(tick).toBeChecked();
-
-		await user.clear(field);
-		await user.type(field, "30");
-		await user.click(tick);
-		await user.click(screen.getByRole("button", { name: "Reset" }));
-
 		expect(field).toHaveValue(60);
 		expect(tick).toBeChecked();
 	});
@@ -272,15 +263,15 @@ describe("ShiftDialog", () => {
 		const user = userEvent.setup();
 		const { onSave } = renderDialog({ editing: SHIFT_FIXTURES[0] });
 		await screen.findByRole("dialog", { name: "Edit shift" });
-		expect(trigger(/Shift type/)).toHaveTextContent("Front Desk");
+		expect(trigger(/^Group/)).toHaveTextContent("Front Desk");
 
-		await user.click(trigger(/Shift type/));
+		await user.click(trigger(/^Group/));
 		await user.type(screen.getByRole("combobox"), "Night ");
 		await user.click(screen.getByRole("option", { name: 'Create "Night"' }));
-		expect(trigger(/Shift type/)).toHaveTextContent("Night");
+		expect(trigger(/^Group/)).toHaveTextContent("Night");
 
 		// The new group is now offered like any other.
-		await user.click(trigger(/Shift type/));
+		await user.click(trigger(/^Group/));
 		expect(screen.getByRole("option", { name: "Night" })).toBeVisible();
 		await user.keyboard("{Escape}");
 		await user.click(screen.getByRole("button", { name: "Save" }));
@@ -311,23 +302,22 @@ describe("ShiftDialog", () => {
 		});
 	});
 
-	it("given_aShift_when_editing_then_startsFromItsDetailsAndResetReturnsToThem", async () => {
+	it("given_aShift_when_editing_then_startsFromItsDetailsWithItsBarOnTheDay", async () => {
 		const user = userEvent.setup();
 		const { onSave } = renderDialog({ editing: SHIFT_FIXTURES[0] });
 		await screen.findByRole("dialog", { name: "Edit shift" });
 
 		expect(screen.getByLabelText("Shift name")).toHaveValue("Front Desk AM");
-		expect(trigger(/Shift type/)).toHaveTextContent("Front Desk");
+		expect(trigger(/^Group/)).toHaveTextContent("Front Desk");
 		expect(screen.getByRole("radio", { name: "Orange" })).toBeChecked();
 		expect(trigger(/Start time/)).toHaveTextContent("09:00");
 		expect(trigger(/Days applied to/)).toHaveTextContent("5 selected");
 		expect(trigger(/Job titles that can work it/)).toHaveTextContent("2 selected");
 
-		await user.type(screen.getByLabelText("Shift name"), " Late");
-		await user.click(screen.getByRole("radio", { name: "Olive" }));
-		await user.click(screen.getByRole("button", { name: "Reset" }));
-		expect(screen.getByLabelText("Shift name")).toHaveValue("Front Desk AM");
-		expect(screen.getByRole("radio", { name: "Orange" })).toBeChecked();
+		expect(screen.getByTestId("shift-day-bar").style.left).toBe("37.5%");
+		expect(
+			screen.getByRole("button", { name: "Cancel" })
+		).toBeEnabled();
 
 		await user.click(screen.getByRole("button", { name: "Save" }));
 
@@ -387,7 +377,7 @@ describe("ShiftDialog", () => {
 		const { onSave } = renderDialog({ editing: SHIFT_FIXTURES[0] });
 		await screen.findByRole("dialog", { name: "Edit shift" });
 
-		await user.click(trigger(/Shift type/));
+		await user.click(trigger(/^Group/));
 		await user.type(screen.getByRole("combobox"), "N");
 		await user.click(screen.getByRole("option", { name: 'Create "N"' }));
 		await user.click(screen.getByRole("button", { name: "Save" }));
@@ -470,7 +460,7 @@ describe("ShiftDialog with a Department field", () => {
 		);
 	});
 
-	it("given_aFixedDepartmentAndANote_when_editing_then_showsTheDepartmentDisabledAndTheNote", async () => {
+	it("given_aFixedDepartmentAndANote_when_editing_then_namesTheDepartmentUnderTheTitleAndShowsTheNote", async () => {
 		renderInCompany(
 			<ShiftDialog
 				editing={SHIFT_FIXTURES[0]}
@@ -488,10 +478,10 @@ describe("ShiftDialog with a Department field", () => {
 		);
 		await screen.findByRole("dialog", { name: "Edit shift" });
 
-		expect(trigger(/^Department/)).toBeDisabled();
-		expect(trigger(/^Department/)).toHaveTextContent(
-			"Main branch › Front Office"
-		);
+		expect(
+			screen.getByRole("dialog", { description: "Main branch › Front Office" })
+		).toBeVisible();
+		expect(screen.queryByRole("button", { name: /^Department/ })).toBeNull();
 		expect(
 			screen.getByText(
 				"Saving changes this shift for Front Office and new schedules."

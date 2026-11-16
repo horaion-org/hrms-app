@@ -13,7 +13,6 @@ import { TimeSelect } from "@/components/forms/TimeSelect";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Dialog } from "@/components/ui/Dialog";
-import { SaveIcon, SwapIcon } from "@/components/ui/Icon";
 import { UnitNameField } from "@/features/organisation/UnitNameField";
 import { useCreateFormSubmit } from "@/features/organisation/useCreateFormSubmit";
 import {
@@ -31,6 +30,9 @@ import {
 	type ShiftFormValues,
 	type ShiftValues,
 } from "@/features/scheduling/shifts/ShiftDialog/schema";
+import { ShiftDayAxis } from "@/features/scheduling/shifts/ShiftDayAxis";
+import { ShiftDayBar } from "@/features/scheduling/shifts/ShiftDayBar";
+import { dayAxisOf } from "@/features/scheduling/shifts/shiftDayAxis";
 import { shiftRefusal } from "@/features/scheduling/shifts/shiftRefusal";
 import { SHIFT_COLOURS } from "@/features/scheduling/shifts/shiftColours";
 import type { ShiftRoleOptions } from "@/features/scheduling/shifts/useShiftRoleOptions";
@@ -65,23 +67,28 @@ export type ShiftDialogProps = {
 	onClose: () => void;
 };
 
+/** The fields in the order the form shows them, so a refusal focuses the first. */
 const FIELDS = [
 	"name",
 	"group",
-	"colour",
 	"startTime",
 	"endTime",
+	"unpaidBreakMinutes",
 	"days",
 	"jobTitleIds",
-	"unpaidBreakMinutes",
+	"colour",
 ] as const;
 
 const same = (a: string): string => a;
 
+/** A whole day from midnight, so the live bar reads against the clock; an overnight shift runs past it. */
+const MIDNIGHT_TO_MIDNIGHT = { startTime: "00:00", endTime: "00:00" };
+
 /**
  * Adds a shift to the department, or changes one; every draft of the
- * department sees it. Mount when opened and unmount when closed so every
- * attempt starts fresh; Reset returns the form to what it opened with.
+ * department sees it. Name and group come first, then when it runs with a
+ * live bar, its days and job titles, and its roster colour last. Mount when
+ * opened and unmount when closed so every attempt starts fresh.
  */
 export const ShiftDialog = ({
 	editing,
@@ -117,7 +124,6 @@ export const ShiftDialog = ({
 		register,
 		control,
 		handleSubmit,
-		reset,
 		setValue,
 		trigger,
 		formState: { errors, isSubmitting },
@@ -177,6 +183,11 @@ export const ShiftDialog = ({
 		shiftIsTimed &&
 		unpaidBreakMinutes >= 0 &&
 		unpaidBreakMinutes < shiftMinutes({ startTime, endTime });
+	const liveAxis = dayAxisOf(
+		shiftIsTimed
+			? [MIDNIGHT_TO_MIDNIGHT, { startTime, endTime }]
+			: [MIDNIGHT_TO_MIDNIGHT]
+	);
 	const breakHint = breakFits
 		? t(`${key}.paidHours`, {
 				count: paidShiftHours({ startTime, endTime, unpaidBreakMinutes }),
@@ -220,24 +231,17 @@ export const ShiftDialog = ({
 	return (
 		<Dialog
 			open
+			description={department?.kind === "fixed" ? department.label : undefined}
 			preventClose={isSubmitting}
 			title={t(editing ? `${key}.editTitle` : `${key}.title`)}
 			footer={
 				<div className="grid gap-6 sm:grid-cols-2">
-					<Button
-						disabled={isSubmitting}
-						leadingIcon={<SwapIcon />}
-						variant="secondary"
-						onClick={() => {
-							reset();
-						}}
-					>
-						{t(`${key}.reset`)}
+					<Button disabled={isSubmitting} variant="secondary" onClick={close}>
+						{t(`${key}.cancel`)}
 					</Button>
 					<Button
 						disabled={!name.trim() || departmentMissing}
 						form={formId}
-						leadingIcon={<SaveIcon />}
 						loading={isSubmitting}
 						type="submit"
 					>
@@ -272,20 +276,16 @@ export const ShiftDialog = ({
 						{message}
 					</p>
 				)}
-				{department && (
+				{department?.kind === "choose" && (
 					<SetupDepartmentField
-						department={
-							department.kind === "choose"
-								? {
-										...department,
-										onChange: (departmentId): void => {
-											// Roles belong to one Department, so a new one starts them again.
-											setValue("jobTitleIds", []);
-											department.onChange(departmentId);
-										},
-									}
-								: department
-						}
+						department={{
+							...department,
+							onChange: (departmentId): void => {
+								// Roles belong to one Department, so a new one starts them again.
+								setValue("jobTitleIds", []);
+								department.onChange(departmentId);
+							},
+						}}
 						labels={{
 							label: t(`${key}.department`),
 							placeholder: t(`${key}.departmentPlaceholder`),
@@ -307,6 +307,7 @@ export const ShiftDialog = ({
 				<FormRow
 					required
 					error={errors.group?.message}
+					hint={t(`${key}.groupHint`)}
 					htmlFor={fieldId("group")}
 					label={t(`${key}.group`)}
 					layout="stacked"
@@ -343,34 +344,20 @@ export const ShiftDialog = ({
 						)}
 					/>
 				</FormRow>
-				<FormRow
-					required
-					error={errors.colour?.message}
-					htmlFor={fieldId("colour")}
-					label={t(`${key}.colour`)}
-					layout="stacked"
-				>
-					<Controller
-						control={control}
-						name="colour"
-						render={({ field }) => (
-							<SwatchPicker
-								aria-describedby={describedBy("colour")}
-								aria-labelledby={labelledBy("colour")}
-								id={fieldId("colour")}
-								name={field.name}
-								options={colourOptions}
-								status={errors.colour ? "error" : undefined}
-								value={field.value || undefined}
-								onChange={field.onChange}
-							/>
-						)}
-					/>
-				</FormRow>
 				<div className="flex flex-col gap-6 sm:flex-row">
 					{timeField("startTime")}
 					{timeField("endTime")}
 				</div>
+				{shiftIsTimed && (
+					<div className="flex flex-col gap-1">
+						<ShiftDayAxis axis={liveAxis} label={t("scheduling.shifts.when")} />
+						<ShiftDayBar
+							axis={liveAxis}
+							className="w-full"
+							shift={{ startTime, endTime }}
+						/>
+					</div>
+				)}
 				<FormRow
 					error={errors.unpaidBreakMinutes?.message}
 					hint={breakHint}
@@ -389,22 +376,6 @@ export const ShiftDialog = ({
 						{...register("unpaidBreakMinutes", { valueAsNumber: true })}
 					/>
 				</FormRow>
-				<Controller
-					control={control}
-					name="carriesOvertime"
-					render={({ field }) => (
-						<Checkbox
-							checked={field.value}
-							description={t(`${key}.carriesOvertimeDescription`)}
-							label={t(`${key}.carriesOvertime`)}
-							name={field.name}
-							onBlur={field.onBlur}
-							onChange={(event) => {
-								field.onChange(event.target.checked);
-							}}
-						/>
-					)}
-				/>
 				<div className="flex flex-col gap-6 sm:flex-row">
 					<FormRow
 						className="sm:flex-1"
@@ -464,6 +435,46 @@ export const ShiftDialog = ({
 						/>
 					</FormRow>
 				</div>
+				<Controller
+					control={control}
+					name="carriesOvertime"
+					render={({ field }) => (
+						<Checkbox
+							checked={field.value}
+							description={t(`${key}.carriesOvertimeDescription`)}
+							label={t(`${key}.carriesOvertime`)}
+							name={field.name}
+							onBlur={field.onBlur}
+							onChange={(event) => {
+								field.onChange(event.target.checked);
+							}}
+						/>
+					)}
+				/>
+				<FormRow
+					required
+					error={errors.colour?.message}
+					htmlFor={fieldId("colour")}
+					label={t(`${key}.colour`)}
+					layout="stacked"
+				>
+					<Controller
+						control={control}
+						name="colour"
+						render={({ field }) => (
+							<SwatchPicker
+								aria-describedby={describedBy("colour")}
+								aria-labelledby={labelledBy("colour")}
+								id={fieldId("colour")}
+								name={field.name}
+								options={colourOptions}
+								status={errors.colour ? "error" : undefined}
+								value={field.value || undefined}
+								onChange={field.onChange}
+							/>
+						)}
+					/>
+				</FormRow>
 				{impactNote && <p className="text-sm text-neutral-700">{impactNote}</p>}
 			</form>
 		</Dialog>
