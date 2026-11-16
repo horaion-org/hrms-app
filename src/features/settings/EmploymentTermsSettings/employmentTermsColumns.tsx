@@ -119,7 +119,9 @@ export const employmentTermsColumns = (
 		id: "people",
 		header: t(`${key}.people`),
 		// The terms column takes the room; the counts, status and actions keep to their content.
-		headerClassName: "w-28",
+		// A sortable header needs its text plus about 70 px (padding, gap and the sort button at
+		// its touch size): 144 px holds "Personas" (about 64 px), the wider of English and Spanish.
+		headerClassName: "w-36",
 		sortValue: (terms) => terms.holderCount,
 		hideBelow: "md",
 		cell: (terms) => (
@@ -155,7 +157,9 @@ export const employmentTermsColumns = (
 	{
 		id: "status",
 		header: t("organisation.list.status"),
-		headerClassName: "w-28",
+		// 176 px holds the widest pill, Spanish "Predeterminadas" (about 136 px with its padding), with room
+		// to spare; Active and Default share a line where they fit and wrap where they do not.
+		headerClassName: "w-44",
 		sortValue: (terms) => terms.status,
 		cell: (terms) => statusCell(terms, t),
 		hideBelow: "md",
