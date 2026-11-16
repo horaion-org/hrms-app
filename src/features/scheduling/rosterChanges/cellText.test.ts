@@ -40,6 +40,23 @@ describe("rosterCellText", () => {
 	});
 });
 
+describe("a stretched day in words", () => {
+	it("writes the times it is worked, and carries the stretch into a change's cell", () => {
+		const plain = scheduleAssignmentsFixture()[0]!;
+		const stretched = {
+			...plain,
+			stretch: { beforeMinutes: 0, afterMinutes: 120 },
+		};
+
+		const cell = assignmentCell(stretched);
+
+		expect(cell.stretch).toEqual({ beforeMinutes: 0, afterMinutes: 120 });
+		expect(rosterCellText(cell, t)).toBe(
+			`${plain.shift!.name} · 09:00 – 17:00`
+		);
+	});
+});
+
 describe("assignmentCell", () => {
 	const roster = scheduleAssignmentsFixture();
 	const dayOf = (name: string, day: string): ScheduleAssignment =>

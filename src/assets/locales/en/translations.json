@@ -4629,7 +4629,8 @@
 			"partDayLeave": "{{type}} {{time}}",
 			"partDayOff": "Off {{time}}",
 			"partGapNeedsCover": "{{time}} needs cover",
-			"partGap": "Short {{time}}: {{name}} is on leave"
+			"partGap": "Short {{time}}: {{name}} is on leave",
+			"stretched": "Stretched +{{hours}} h"
 		},
 		"rosterEdit": {
 			"title": "{{name}} · {{date}}",

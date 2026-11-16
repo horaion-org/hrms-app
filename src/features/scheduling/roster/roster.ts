@@ -6,6 +6,10 @@ import { dayTypeLabel } from "@/features/scheduling/dayTypes";
 import { formatTimeRange } from "@/features/scheduling/formatShift";
 import type { SchedulePeriod } from "@/features/scheduling/periods";
 import {
+	stretchedTimes,
+	stretchMinutes,
+} from "@/features/scheduling/roster/shiftStretch";
+import {
 	hoursFromMinutes,
 	paidShiftMinutes,
 } from "@/features/scheduling/scheduleDraft";
@@ -26,9 +30,17 @@ export type RosterShiftCell = {
 	group: string;
 	/** "#RRGGBB", as the frozen shift was coloured. */
 	colour: string;
-	/** "HH:mm"; an end at or before the start runs past midnight. */
+	/**
+	 * "HH:mm" the day is worked; an end at or before the start runs past
+	 * midnight. The shift's own, widened by an overtime stretch.
+	 */
 	start: string;
 	end: string;
+	/**
+	 * The minutes an overtime stretch adds before and after the shift (the
+	 * API's ADR-0110); absent when the day is worked as its shift is.
+	 */
+	stretchMinutes?: number;
 	/** As frozen with the shift. */
 	unpaidBreakMinutes: number;
 	carriesOvertime: boolean;
@@ -213,6 +225,11 @@ const cellOf = (assignment: ScheduleAssignment): RosterCell => {
 		const cell = offCellOf(assignment);
 		return note ? { ...cell, note } : cell;
 	}
+	const times = stretchedTimes(
+		{ start: assignment.shift.startTime, end: assignment.shift.endTime },
+		assignment.stretch
+	);
+	const stretch = stretchMinutes(assignment.stretch);
 	return {
 		kind: "shift",
 		assignmentId: assignment.assignmentId,
@@ -220,11 +237,12 @@ const cellOf = (assignment: ScheduleAssignment): RosterCell => {
 		name: assignment.shift.name,
 		group: assignment.shift.group,
 		colour: assignment.shift.colour,
-		start: assignment.shift.startTime,
-		end: assignment.shift.endTime,
+		start: times.start,
+		end: times.end,
 		unpaidBreakMinutes: assignment.shift.unpaidBreakMinutes,
 		carriesOvertime: assignment.shift.carriesOvertime,
 		role: assignment.jobTitle?.name ?? "",
+		...(stretch > 0 ? { stretchMinutes: stretch } : {}),
 		...(workedTimes ? { workedTimes } : {}),
 		...(note ? { note } : {}),
 	};
