@@ -18,6 +18,8 @@ export type BeforeGeneratePanelProps = {
 	month: string;
 	/** Why Generate waits besides readiness (lists unreadable, no schedule:create); undefined when it may run. */
 	blockedNote?: string;
+	/** Says what Generate works out, in place of the month's words: the create flow names the ticked weeks. */
+	hint?: string;
 	/** Generate waits without a note: the lists it needs are still loading. */
 	waiting?: boolean;
 	/** The fix links, each only where the person may follow it. */
@@ -81,6 +83,7 @@ export const BeforeGeneratePanel = ({
 	check,
 	month,
 	blockedNote,
+	hint,
 	waiting = false,
 	links = {},
 	generating,
@@ -166,7 +169,7 @@ export const BeforeGeneratePanel = ({
 			</ul>
 			<div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-t border-neutral-400 pt-4">
 				<p className="min-w-0 flex-1 basis-80 text-sm text-neutral-800">
-					{t(`${key}.hint`, { month: monthName })}
+					{hint ?? t(`${key}.hint`, { month: monthName })}
 				</p>
 				<div className="flex flex-col items-end gap-1 max-sm:w-full">
 					<Button

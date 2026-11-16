@@ -120,6 +120,17 @@ describe("BeforeGeneratePanel", () => {
 		);
 	});
 
+	it("given_aHint_when_shown_then_itReplacesTheMonthHint", () => {
+		renderPanel(undefined, { hint: "Generating works out the week you ticked." });
+
+		expect(
+			screen.getByText("Generating works out the week you ticked.")
+		).toBeInTheDocument();
+		expect(
+			screen.queryByText(/^Generating works out every week of December/)
+		).toBeNull();
+	});
+
 	it("given_theListsLoading_when_rendered_then_generateWaitsWithoutANote", () => {
 		renderPanel(undefined, { waiting: true });
 

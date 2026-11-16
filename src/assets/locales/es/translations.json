@@ -5033,6 +5033,8 @@
 					"waiting_other": "{{count}} solicitudes esperan una decisión.",
 					"openLeave": "Abrir solicitudes de ausencia",
 					"hint": "Generar calcula cada semana de {{month}} que no esté publicada. Después revisas y publicas cada semana.",
+					"hintChosen_one": "Generar calcula la semana que marcaste: {{ranges}}. Después la revisas y la publicas.",
+					"hintChosen_other": "Generar calcula las {{count}} semanas que marcaste: {{ranges}}. Después revisas y publicas cada semana.",
 					"generate": "Generar {{month}}",
 					"blockedShift": "{{department}} no se puede generar hasta que tenga un turno.",
 					"blockedStaffing": "{{department}} no se puede generar hasta que una restricción asigne personas a un turno."

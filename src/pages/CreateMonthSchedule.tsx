@@ -36,6 +36,7 @@ import {
 	formatMonth,
 	formatMonthName,
 	formatWeekDates,
+	formatWeekdayDate,
 	monthChoicesFrom,
 	monthOf,
 	summaryRange,
@@ -45,6 +46,7 @@ import {
 	defaultMonthOf,
 	defaultTicksOf,
 	tickableWeeksOf,
+	tickedRangesOf,
 } from "@/features/scheduling/months/weekTicks";
 import { withRefusedWeeks } from "@/features/scheduling/months/refusedWeeksState";
 import { useGenerateMonth } from "@/features/scheduling/months/useGenerateMonth";
@@ -596,6 +598,18 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 			: listsWaiting || nothingTicked
 				? ""
 				: undefined;
+	// The Generate step names the ticked weeks, joined where they touch, as Setup's list does.
+	const tickedHint = t("scheduling.months.generate.panel.hintChosen", {
+		count: ticked.length,
+		ranges: new Intl.ListFormat(language, { type: "conjunction" }).format(
+			tickedRangesOf(ticked).map((range) =>
+				t("scheduling.months.setup.weekDates", {
+					from: formatWeekdayDate(range.start, language),
+					to: formatWeekdayDate(range.end, language),
+				})
+			)
+		),
+	});
 	const generate = async (): Promise<void> => {
 		if (!setup) return;
 		setProblem("");
@@ -738,6 +752,7 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 							<BeforeGeneratePanel
 								check={check.data}
 								generating={generation.isPending}
+								hint={tickedHint}
 								month={month}
 								waiting={generation.block === "listsLoading"}
 								onGenerate={() => {

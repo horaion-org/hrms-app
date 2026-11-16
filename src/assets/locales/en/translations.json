@@ -5233,6 +5233,8 @@
 					"waiting_other": "{{count}} requests are waiting for a decision.",
 					"openLeave": "Open leave requests",
 					"hint": "Generating works out every week of {{month}} that isn’t published. You then review and publish them week by week.",
+					"hintChosen_one": "Generating works out the week you ticked: {{ranges}}. You then review and publish it.",
+					"hintChosen_other": "Generating works out the {{count}} weeks you ticked: {{ranges}}. You then review and publish them week by week.",
 					"generate": "Generate {{month}}",
 					"blockedShift": "{{department}} can’t be generated until it has a shift.",
 					"blockedStaffing": "{{department}} can’t be generated until a constraint puts people on a shift."

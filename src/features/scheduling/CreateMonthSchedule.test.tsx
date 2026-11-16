@@ -570,6 +570,24 @@ describe("Create schedules for a month: ticking weeks", () => {
 		expect(tabs).not.toContainEqual(expect.stringMatching(/^Dec 21/));
 	});
 
+	it("given_twoTickedWeeks_when_onGenerate_then_thePanelNamesThem", async () => {
+		const user = userEvent.setup();
+		await open(NEW_DECEMBER);
+
+		await screen.findByText(EVERY_WEEK_LINE);
+		await user.click(box("Mon, Dec 14 to Sun, Dec 20"));
+		await user.click(box("Mon, Dec 28 to Sun, Jan 3"));
+		await user.click(next());
+		await screen.findByRole("region", { name: "Staffing forecast" });
+		await user.click(next());
+
+		expect(
+			await screen.findByText(
+				"Generating works out the 2 weeks you ticked: Mon, Dec 7 to Sun, Dec 13 and Mon, Dec 21 to Sun, Dec 27. You then review and publish them week by week."
+			)
+		).toBeInTheDocument();
+	});
+
 	it("given_aWeekThatCannotBeGenerated_when_generated_then_saysGoBackToSetup", async () => {
 		const user = userEvent.setup();
 		await open(NEW_DECEMBER, {
