@@ -1023,7 +1023,7 @@ describe("ConstraintDialog", () => {
 		});
 	});
 
-	it("given_theWeeklyRule_when_edited_then_offersItsComparisonsAndNumberWithItsDayTypeFixed", async () => {
+	it("given_theWeeklyRule_when_edited_then_offersItsComparisonsNumberAndOneNonWorkingDayType", async () => {
 		const user = userEvent.setup();
 		const { onSave } = renderDialog({
 			withLock: true,
@@ -1040,7 +1040,13 @@ describe("ConstraintDialog", () => {
 		expect(screen.queryByRole("button", { name: /^Status/ })).toBeNull();
 		expect(screen.queryByRole("radiogroup", { name: /Applies to/ })).toBeNull();
 		expect(trigger(/^Day types/)).toHaveTextContent("Rest day");
-		expect(trigger(/^Day types/)).toBeDisabled();
+		expect(trigger(/^Day types/)).toBeEnabled();
+		await user.click(trigger(/^Day types/));
+		// The non-working day types only: never leave (ADR-0087).
+		expect(
+			screen.getAllByRole("option").map((option) => option.textContent)
+		).toEqual(["Day off", "Rest day"]);
+		await user.click(screen.getByRole("option", { name: "Day off" }));
 		await user.click(trigger(/^At least, at most or exactly/));
 		expect(
 			screen.getAllByRole("option").map((option) => option.textContent)
@@ -1056,11 +1062,51 @@ describe("ConstraintDialog", () => {
 					values: [
 						{ field: "COMPARISON", value: "EXACTLY" },
 						{ field: "DAY_TYPE_COUNT", value: "1" },
-						{ field: "DAY_TYPE", value: "REST" },
+						{ field: "DAY_TYPE", value: "OFF" },
 					],
 				})
 			);
 		});
+	});
+
+	it("given_theWeeklyRuleReplacedByADepartment_when_opened_then_itsDayTypeStaysTheCompanys", async () => {
+		renderDialog({ replacing: WEEKLY_RULE_FIXTURE });
+		await screen.findByRole("dialog", { name: "Set for this department" });
+
+		expect(trigger(/^Day types/)).toHaveTextContent("Rest day");
+		expect(trigger(/^Day types/)).toBeDisabled();
+	});
+
+	it("given_aNewDaysOffRule_when_chosen_then_everyNonWorkingDayTypeCountsAndAllComparisonsAreOffered", async () => {
+		const user = userEvent.setup();
+		renderDialog();
+		await start(user, "Days off in a run of days");
+
+		expect(trigger(/^Day types/)).toHaveTextContent(/2/);
+		await user.click(trigger(/^At least, at most or exactly/));
+		expect(
+			screen.getAllByRole("option").map((option) => option.textContent)
+		).toEqual(["At least", "At most", "Exactly"]);
+	});
+
+	it("given_aDaysOffRuleAtMost_when_onlyRestDaysCount_then_takesOutAtMostAndOffersAtLeastOnly", async () => {
+		const user = userEvent.setup();
+		renderDialog();
+		await start(user, "Days off in a run of days");
+		await pick(user, /^At least, at most or exactly/, "At most");
+
+		// Unticking Day off leaves only Rest days counted.
+		await pick(user, /^Day types/, "Day off");
+
+		expect(
+			screen.getByText(
+				"At most was removed: with only some Day types chosen, a different comparison is offered."
+			)
+		).toBeVisible();
+		await user.click(trigger(/^At least, at most or exactly/));
+		expect(
+			screen.getAllByRole("option").map((option) => option.textContent)
+		).toEqual(["At least"]);
 	});
 
 	it("given_aPeopleType_when_chosen_then_offersAllThreeComparisons", async () => {

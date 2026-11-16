@@ -3309,7 +3309,8 @@
 					"AT_MOST_zero": "Nadie tiene días libres en ningún periodo de <PERIOD_DAYS/> días seguidos.",
 					"EXACTLY_one": "Todos tienen exactamente <DAYS_OFF/> día libre en cualquier periodo de <PERIOD_DAYS/> días seguidos.",
 					"EXACTLY_other": "Todos tienen exactamente <DAYS_OFF/> días libres en cualquier periodo de <PERIOD_DAYS/> días seguidos.",
-					"EXACTLY_zero": "Nadie tiene días libres en ningún periodo de <PERIOD_DAYS/> días seguidos."
+					"EXACTLY_zero": "Nadie tiene días libres en ningún periodo de <PERIOD_DAYS/> días seguidos.",
+					"counting": "Solo cuentan como días libres: <DAY_TYPE/>."
 				},
 				"AVOID_DAYS_OFF_ON": "Evitar días libres el <WEEKDAY/>.",
 				"REST_BETWEEN_SHIFTS_one": "Todos tienen al menos <REST_HOURS/> hora libre entre turnos.",
@@ -3468,7 +3469,9 @@
 						"NOT_LISTED_one": "Se quitó {{names}}: no todo lo elegido en {{field}} lo incluye.",
 						"NOT_LISTED_other": "Se quitaron {{names}}: no todo lo elegido en {{field}} los incluye.",
 						"EXCLUDED_one": "Se quitó {{names}}: ya está elegido en {{field}}.",
-						"EXCLUDED_other": "Se quitaron {{names}}: ya están elegidos en {{field}}."
+						"EXCLUDED_other": "Se quitaron {{names}}: ya están elegidos en {{field}}.",
+						"PARTIAL_one": "Se quitó {{names}}: con solo algunos {{field}} elegidos se ofrece otra comparación.",
+						"PARTIAL_other": "Se quitaron {{names}}: con solo algunos {{field}} elegidos se ofrece otra comparación."
 					},
 					"alsoChosen": "Ya está elegido en {{field}}: elígelo en un solo sitio.",
 					"listsNone_one": "{{names}} no incluye {{listed}}, así que nadie puede contar ahí. Elige uno que incluya o quítalo.",

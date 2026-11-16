@@ -62,6 +62,7 @@ export type SentenceKey =
 	| `${typeof SENTENCES}.SHIFT_STAFFING_WITH_STAND_INS.${ShiftCount}.AT_LEAST`
 	| `${typeof SENTENCES}.SHIFT_STAFFING_WITH_STAND_INS.standIns`
 	| `${typeof SENTENCES}.DAYS_OFF_PER_PERIOD.${ConstraintComparison}`
+	| `${typeof SENTENCES}.DAYS_OFF_PER_PERIOD.counting`
 	| `${typeof SENTENCES}.AVOID_DAYS_OFF_ON`
 	| `${typeof SENTENCES}.REST_BETWEEN_SHIFTS`
 	| `${typeof SENTENCES}.MAX_WORK_HOURS_PER_DAY`
@@ -130,11 +131,19 @@ const coveredGroupOf = (constraint: SentenceSource): CoveredGroup =>
 const weeklyComparisonOf = (constraint: SentenceSource): WeeklyComparison =>
 	comparisonOf(constraint) === "EXACTLY" ? "EXACTLY" : "AT_LEAST";
 
-/** How many days of its day types the weekly rule asks for; any other rule names one day ("without a Rest day"). */
-const dayTypeCountOf = (constraint: SentenceSource): number =>
-	constraint.type === "DAY_TYPE_DAYS_PER_WEEK"
-		? countOf(constraint, "DAY_TYPE_COUNT")
-		: 1;
+/** A day type named as a group, as the days-off rule names what counts ("Only Rest days count"). */
+const MANY_DAYS = 2;
+
+/**
+ * How many days of its day types a rule names: the weekly rule its count, the
+ * days-off rule many ("Only Rest days count"), any other one day ("without a
+ * Rest day").
+ */
+const dayTypeCountOf = (constraint: SentenceSource): number => {
+	if (constraint.type === "DAY_TYPE_DAYS_PER_WEEK")
+		return countOf(constraint, "DAY_TYPE_COUNT");
+	return constraint.type === "DAYS_OFF_PER_PERIOD" ? MANY_DAYS : 1;
+};
 
 /** The sentences a constraint reads as: one, or with stand-ins a second saying what a stand-in counts for. */
 export const sentencePartsOf = (
@@ -166,6 +175,10 @@ export const sentencePartsOf = (
 					i18nKey: `${SENTENCES}.${constraint.type}.${comparisonOf(constraint)}`,
 					count: countOf(constraint, "DAYS_OFF"),
 				},
+				// Only some day types count as a day off (ADR-0087); none named means every one, as before.
+				...(constraint.values.some((value) => value.field === "DAY_TYPE")
+					? [{ i18nKey: `${SENTENCES}.${constraint.type}.counting` as const, count: 1 }]
+					: []),
 			];
 		case "AVOID_DAYS_OFF_ON":
 			return [{ i18nKey: `${SENTENCES}.${constraint.type}`, count: 1 }];

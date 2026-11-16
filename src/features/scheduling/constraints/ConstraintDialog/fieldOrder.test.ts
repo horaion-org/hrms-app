@@ -23,7 +23,7 @@ describe("fieldsInReadingOrder", () => {
 			],
 		],
 		["ROLE_PRESENCE", ["SHIFT", "COMPARISON", "HEADCOUNT", "JOB_TITLE"]],
-		["DAYS_OFF_PER_PERIOD", ["COMPARISON", "DAYS_OFF", "PERIOD_DAYS"]],
+		["DAYS_OFF_PER_PERIOD", ["COMPARISON", "DAYS_OFF", "PERIOD_DAYS", "DAY_TYPE"]],
 		["AVOID_DAYS_OFF_ON", ["WEEKDAY"]],
 		["REST_BETWEEN_SHIFTS", ["REST_HOURS"]],
 		["MAX_WORK_HOURS_PER_DAY", ["WORK_HOURS_A_DAY"]],
@@ -57,7 +57,10 @@ describe("fieldsInReadingOrder", () => {
 describe("fieldRowsInReadingOrder", () => {
 	it.each([
 		["SHIFT_STAFFING", [["SHIFT"], ["COMPARISON", "HEADCOUNT"], ["JOB_TITLE"]]],
-		["DAYS_OFF_PER_PERIOD", [["COMPARISON", "DAYS_OFF"], ["PERIOD_DAYS"]]],
+		[
+			"DAYS_OFF_PER_PERIOD",
+			[["COMPARISON", "DAYS_OFF"], ["PERIOD_DAYS"], ["DAY_TYPE"]],
+		],
 		[
 			"SHIFT_STAFFING_WITH_STAND_INS",
 			[

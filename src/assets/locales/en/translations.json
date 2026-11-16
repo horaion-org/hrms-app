@@ -3509,7 +3509,8 @@
 					"AT_MOST_zero": "Everyone gets no days off in any <PERIOD_DAYS/> days in a row.",
 					"EXACTLY_one": "Everyone gets exactly <DAYS_OFF/> day off in any <PERIOD_DAYS/> days in a row.",
 					"EXACTLY_other": "Everyone gets exactly <DAYS_OFF/> days off in any <PERIOD_DAYS/> days in a row.",
-					"EXACTLY_zero": "Everyone gets no days off in any <PERIOD_DAYS/> days in a row."
+					"EXACTLY_zero": "Everyone gets no days off in any <PERIOD_DAYS/> days in a row.",
+					"counting": "Only <DAY_TYPE/> count as days off."
 				},
 				"AVOID_DAYS_OFF_ON": "Avoid days off on <WEEKDAY/>.",
 				"REST_BETWEEN_SHIFTS_one": "Everyone gets at least <REST_HOURS/> hour off between shifts.",
@@ -3668,7 +3669,9 @@
 						"NOT_LISTED_one": "{{names}} was removed: not everything chosen in {{field}} lists it.",
 						"NOT_LISTED_other": "{{names}} were removed: not everything chosen in {{field}} lists them.",
 						"EXCLUDED_one": "{{names}} was removed: it is already chosen in {{field}}.",
-						"EXCLUDED_other": "{{names}} were removed: they are already chosen in {{field}}."
+						"EXCLUDED_other": "{{names}} were removed: they are already chosen in {{field}}.",
+						"PARTIAL_one": "{{names}} was removed: with only some {{field}} chosen, a different comparison is offered.",
+						"PARTIAL_other": "{{names}} were removed: with only some {{field}} chosen, a different comparison is offered."
 					},
 					"alsoChosen": "Already chosen in {{field}}: choose it in one place only.",
 					"listsNone_one": "{{names}} doesn’t list {{listed}}, so no one can be counted there. Choose one it lists, or remove it.",

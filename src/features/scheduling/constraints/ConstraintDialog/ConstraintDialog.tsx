@@ -21,6 +21,7 @@ import {
 	CONSTRAINT_STATUSES,
 	POLICY_LOCKS,
 	type ConstraintCategory,
+	type ConstraintComparison,
 	type ConstraintField,
 	type ConstraintFieldKind,
 	type ConstraintFieldSpec,
@@ -30,9 +31,13 @@ import { constraintRefusal } from "@/features/scheduling/constraints/constraintR
 import { fieldRowsInReadingOrder } from "@/features/scheduling/constraints/ConstraintDialog/fieldOrder";
 import { nameSuggestion } from "@/features/scheduling/constraints/ConstraintDialog/nameSuggestion";
 import {
+	allowedComparisons,
 	allowedLinkIds,
+	dayTypeCodesOf,
 	linksByKindOf,
 	sharesNothing,
+	shownValuesOf,
+	withoutUnfitComparison,
 	withoutUnfitting,
 	type RemovedValue,
 } from "@/features/scheduling/constraints/ConstraintDialog/fieldChoices";
@@ -282,11 +287,22 @@ export const ConstraintDialog = ({
 			compareStrictness(parentType, replacing, body)
 		);
 	};
-	// The comparisons a field takes, as the API lists them; all three when it lists none.
+	// The comparisons a field takes, as the API lists them (all three when it lists none), narrowed while a field
+	// holds only some of its day types (ADR-0087).
+	const comparisonsOf = (
+		spec: ConstraintFieldSpec | undefined
+	): ReadonlyArray<ConstraintComparison> =>
+		spec?.comparisons ?? CONSTRAINT_COMPARISONS;
+	const comparisonLabel = (comparison: string): string =>
+		t(`scheduling.constraints.comparisons.${comparison as ConstraintComparison}`);
 	const comparisonChoices = (spec: ConstraintFieldSpec): Array<SelectOption> =>
-		(spec.comparisons ?? CONSTRAINT_COMPARISONS).map((comparison) => ({
+		allowedComparisons(
+			chosen?.fields ?? [],
+			values,
+			comparisonsOf(spec)
+		).map((comparison) => ({
 			value: comparison,
-			label: t(`scheduling.constraints.comparisons.${comparison}`),
+			label: comparisonLabel(comparison),
 		}));
 	// What a field of each other kind but a number is chosen from.
 	const choices: Record<
@@ -307,7 +323,7 @@ export const ConstraintDialog = ({
 		})),
 		DAY_TYPE: (offered?.dayTypeChoices ?? []).map((code) => ({
 			value: code,
-			label: dayTypeLabel(code, t),
+			label: dayTypeLabel(code, t, 1, offered?.dayTypeNames[code]),
 		})),
 	};
 	const noChoices: Partial<Record<ConstraintFieldKind, string>> = {
@@ -341,6 +357,14 @@ export const ConstraintDialog = ({
 		if (spec.kind === "COMPARISON") return comparisonChoices(spec);
 		// A number is typed, never chosen.
 		if (spec.kind === "NUMBER") return [];
+		// A day-type field offers its own codes, named as the company stores them when there is no translation.
+		if (spec.kind === "DAY_TYPE")
+			return dayTypeCodesOf(spec, offered?.dayTypeChoices ?? []).map(
+				(code) => ({
+					value: code,
+					label: dayTypeLabel(code, t, 1, offered?.dayTypeNames[code]),
+				})
+			);
 		const all = choices[spec.kind];
 		if (!spec.listedBy && !spec.excludes) return all;
 		const allowed = allowedLinkIds(spec, chosen?.fields ?? [], values, links);
@@ -366,27 +390,41 @@ export const ConstraintDialog = ({
 		field: ConstraintField,
 		chosenValues: Array<string>
 	): void => {
-		const next = withoutUnfitting(
-			chosen?.fields ?? [],
+		const fields = chosen?.fields ?? [];
+		const fitting = withoutUnfitting(
+			fields,
 			{ ...values, [field]: chosenValues },
 			links
+		);
+		const next = withoutUnfitComparison(
+			fields,
+			fitting.values,
+			comparisonsOf(fields.find((spec) => spec.kind === "COMPARISON"))
 		);
 		setValue("values", next.values, {
 			shouldValidate: form.formState.isSubmitted,
 		});
-		setRemovedValues(next.removed);
+		setRemovedValues([...fitting.removed, ...next.removed]);
 	};
 	// The line under a field naming what a change took out of it, and why.
 	const removedNote = (spec: ConstraintFieldSpec): string | undefined => {
 		const removed = removedValues.filter((item) => item.field === spec.field);
 		const [first] = removed;
 		if (!first) return undefined;
-		const because =
-			first.reason === "NOT_LISTED" ? spec.listedBy : spec.excludes;
+		const because = {
+			NOT_LISTED: spec.listedBy,
+			EXCLUDED: spec.excludes,
+			PARTIAL: chosen?.fields.find((other) => other.partialComparisons.length > 0)
+				?.field,
+		}[first.reason];
 		return t(`${key}.dependency.removed.${first.reason}`, {
 			count: removed.length,
 			names: t("scheduling.constraints.list", {
-				items: removed.map((item) => nameOfLink(item.value)),
+				items: removed.map((item) =>
+					item.reason === "PARTIAL"
+						? comparisonLabel(item.value)
+						: nameOfLink(item.value)
+				),
 			}),
 			field: because ? fieldLabel(because) : "",
 		});
@@ -602,8 +640,8 @@ export const ConstraintDialog = ({
 							"aria-labelledby": labelledBy(spec.field),
 							options: offeredChoices(spec),
 							placeholder: t(`${key}.pleaseSelect`),
-							// The day type a rule the system adds is about stays as it was set.
-							disabled: alwaysApplies && spec.kind === "DAY_TYPE",
+							// A department's replacement keeps the company's day type; the company chooses it (ADR-0087).
+							disabled: replacing !== undefined && spec.kind === "DAY_TYPE",
 						};
 						return spec.maxCount === 1 ? (
 							<Select
@@ -619,7 +657,7 @@ export const ConstraintDialog = ({
 								multiple
 								emptyText={emptyTextOf(spec)}
 								selectAllLabel={t(`${key}.selectAll`)}
-								value={value}
+								value={shownValuesOf(spec, value)}
 								onChange={(chosenValues) => {
 									chooseValues(spec.field, chosenValues);
 								}}

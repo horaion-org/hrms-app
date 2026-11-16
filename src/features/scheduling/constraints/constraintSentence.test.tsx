@@ -307,6 +307,26 @@ describe("sentencePartsOf with constraintWords", () => {
 		).toBe(sentence);
 	});
 
+	it("reads a days-off rule counting only Rest days with what counts, and one counting every type as before", () => {
+		expect(
+			read("DAYS_OFF_PER_PERIOD", [
+				plain("COMPARISON", "AT_LEAST"),
+				plain("DAYS_OFF", "2"),
+				plain("PERIOD_DAYS", "7"),
+				plain("DAY_TYPE", "REST"),
+			])
+		).toBe(
+			"Everyone gets at least 2 days off in any 7 days in a row. Only Rest days count as days off."
+		);
+		expect(
+			read("DAYS_OFF_PER_PERIOD", [
+				plain("COMPARISON", "AT_LEAST"),
+				plain("DAYS_OFF", "2"),
+				plain("PERIOD_DAYS", "7"),
+			])
+		).toBe("Everyone gets at least 2 days off in any 7 days in a row.");
+	});
+
 	it("reads avoided days off with the weekdays joined by and", () => {
 		expect(
 			read("AVOID_DAYS_OFF_ON", [

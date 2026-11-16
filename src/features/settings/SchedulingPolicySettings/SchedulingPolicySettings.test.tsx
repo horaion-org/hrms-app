@@ -258,7 +258,7 @@ describe("SchedulingPolicySettings", () => {
 		).toBeNull();
 	});
 
-	it("edits the weekly rule's comparison and number only", async () => {
+	it("edits the weekly rule's comparison, number and its one day type", async () => {
 		const calls = stubApi(
 			routes(READ_AND_UPDATE, {
 				[`GET ${POLICY}/constraints`]: {
@@ -291,7 +291,7 @@ describe("SchedulingPolicySettings", () => {
 		).toBeNull();
 		expect(
 			within(dialog).getByRole("button", { name: /^Day types/ })
-		).toBeDisabled();
+		).toBeEnabled();
 		const days = within(dialog).getByRole("spinbutton", {
 			name: /^Days each week/,
 		});
