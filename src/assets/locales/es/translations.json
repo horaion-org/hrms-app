@@ -398,8 +398,6 @@
 			}
 		},
 		"flows": {
-			"title": "Aprobaciones",
-			"subtitle": "Quién aprueba cuadrantes y solicitudes de permiso, paso a paso. Donde no hay nada configurado, decide una sola persona, como antes.",
 			"add": "Añadir flujo",
 			"appliesTo": "Se aplica a",
 			"steps": "Pasos",
@@ -745,9 +743,6 @@
 			"dismiss": "Entendido"
 		},
 		"general": {
-			"title": "General",
-			"description": "Preferencias básicas del espacio de trabajo.",
-			"subtitle": "Gestiona las preferencias de tu espacio de trabajo.",
 			"workspaceName": "Nombre del espacio de trabajo",
 			"defaultLanguage": "Idioma predeterminado",
 			"timeZone": "Zona horaria",
@@ -783,13 +778,8 @@
 				"rejected": "Revisa el nombre del espacio de trabajo e inténtalo de nuevo."
 			}
 		},
-		"notifications": {
-			"title": "Notificaciones",
-			"description": "Controla sobre qué se te notifica y cómo."
-		},
 		"data": {
 			"title": "Importar y exportar",
-			"description": "Importa y exporta en bloque.",
 			"subtitle": "Trae o saca los datos de tu empresa en bloque.",
 			"import": "Importar",
 			"export": "Exportar",
@@ -829,8 +819,6 @@
 			}
 		},
 		"scheduling": {
-			"title": "Política de trabajo",
-			"description": "Restricciones que se aplican a toda la empresa o a sucursales o departamentos elegidos.",
 			"policy": {
 				"title": "Política de trabajo",
 				"subtitle": "Restricciones que se aplican a toda la empresa o a sucursales o departamentos elegidos. Un departamento no puede quitar ni relajar una bloqueada; las predeterminadas empiezan marcadas y se pueden quitar.",
@@ -927,8 +915,6 @@
 				"failed": "No pudimos añadir la duración de permiso. Inténtalo de nuevo.",
 				"editFailed": "No pudimos guardar la duración de permiso. Inténtalo de nuevo."
 			},
-			"title": "Permisos",
-			"description": "Tipos de permiso que se pueden solicitar.",
 			"types": {
 				"title": "Tipos de permiso",
 				"subtitle": "Los tipos de permiso que se eligen al solicitar, agrupados según cómo se cuentan. Un tipo de permiso nunca se elimina: desactívalo para dejar de ofrecerlo.",
@@ -1015,19 +1001,6 @@
 				"editFailed": "No pudimos guardar el tipo de permiso. Inténtalo de nuevo.",
 				"reachRejected": "Una sucursal o un departamento que elegiste ya no existe. Vuelve a elegir."
 			}
-		},
-		"approvals": {
-			"title": "Aprobaciones",
-			"description": "Quién aprueba cuadrantes y solicitudes de permiso."
-		},
-		"employment": {
-			"title": "Empleo",
-			"description": "Días laborables, horas y día de descanso de cada tipo de contrato."
-		},
-		"access": {
-			"title": "Roles de acceso",
-			"description": "Decide qué puede gestionar cada persona y dónde.",
-			"open": "Abrir roles de acceso"
 		}
 	},
 	"combobox": {

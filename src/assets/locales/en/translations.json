@@ -398,8 +398,6 @@
 			}
 		},
 		"flows": {
-			"title": "Approvals",
-			"subtitle": "Who approves rosters and leave requests, step by step. Where nothing is set up, one person decides, as before.",
 			"add": "Add flow",
 			"appliesTo": "Applies to",
 			"steps": "Steps",
@@ -1546,9 +1544,6 @@
 			"dismiss": "Got it"
 		},
 		"general": {
-			"title": "General",
-			"description": "Core workspace preferences.",
-			"subtitle": "Manage your workspace preferences.",
 			"workspaceName": "Workspace Name",
 			"defaultLanguage": "Default Language",
 			"timeZone": "Time Zone",
@@ -1584,13 +1579,7 @@
 			"renameForbidden": "You no longer have permission to rename this workspace.",
 			"saveFailed": "We couldn’t save the workspace name. Please try again."
 		},
-		"notifications": {
-			"title": "Notifications",
-			"description": "Control what you are notified about and how."
-		},
 		"scheduling": {
-			"title": "Work policy",
-			"description": "Constraints that apply to the whole company or to chosen branches or departments.",
 			"policy": {
 				"title": "Work policy",
 				"subtitle": "Constraints that apply to the whole company or to chosen branches or departments. A department can’t remove or loosen a locked one; defaults start ticked and may be left out.",
@@ -1687,8 +1676,6 @@
 				"failed": "We couldn’t add the leave duration. Try again.",
 				"editFailed": "We couldn’t save the leave duration. Try again."
 			},
-			"title": "Leave",
-			"description": "Kinds of leave people apply for.",
 			"types": {
 				"title": "Leave types",
 				"subtitle": "The kinds of leave people choose from when they apply, grouped by how they are counted. A leave type is never deleted: deactivate it to stop offering it.",
@@ -1776,13 +1763,8 @@
 				"reachRejected": "A branch or department you chose no longer exists. Choose again."
 			}
 		},
-		"approvals": {
-			"title": "Approvals",
-			"description": "Who approves rosters and leave requests."
-		},
 		"data": {
 			"title": "Import and export",
-			"description": "Import and export in bulk.",
 			"subtitle": "Bring in or take out your company's data in bulk.",
 			"import": "Import",
 			"export": "Export",
@@ -1820,15 +1802,6 @@
 				"addedSince_one": "{{count}} added since",
 				"addedSince_other": "{{count}} added since"
 			}
-		},
-		"employment": {
-			"title": "Employment",
-			"description": "Working days, hours and rest day for each kind of contract."
-		},
-		"access": {
-			"title": "Access roles",
-			"description": "Decide what people can manage, and where.",
-			"open": "Open access roles"
 		}
 	},
 	"organisation": {

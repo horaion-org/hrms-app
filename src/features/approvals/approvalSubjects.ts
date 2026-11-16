@@ -1,12 +1,7 @@
-import {
-	APPROVAL_SUBJECTS,
-	type ApprovalFlow,
-	type ApprovalSubject,
-} from "@/features/approvals/api";
+import type { ApprovalFlow, ApprovalSubject } from "@/features/approvals/api";
 
 /**
- * Each subject's short name: the `?subject=` value that opens its group in
- * Settings › Approvals, and the segment of its copy under
+ * Each subject's short name: the segment of its copy under
  * `approvals.flows.subjects`.
  */
 export const SUBJECT_SLUGS = {
@@ -21,10 +16,6 @@ export const subjectCopyKey = (
 	subject: ApprovalSubject
 ): `approvals.flows.subjects.${ApprovalSubjectSlug}` =>
 	`approvals.flows.subjects.${SUBJECT_SLUGS[subject]}`;
-
-/** The subject a short name stands for; undefined for anything else. */
-export const subjectOfSlug = (slug: unknown): ApprovalSubject | undefined =>
-	APPROVAL_SUBJECTS.find((subject) => SUBJECT_SLUGS[subject] === slug);
 
 /** One subject's flows, in the API's order (the company default first). */
 export const flowsOfSubject = (

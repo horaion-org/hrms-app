@@ -3,7 +3,6 @@ import {
 	fallbackLineOf,
 	flowsOfSubject,
 	subjectCopyKey,
-	subjectOfSlug,
 } from "@/features/approvals/approvalSubjects";
 import {
 	approvalFlowFixture,
@@ -61,12 +60,12 @@ describe("flowsOfSubject", () => {
 });
 
 describe("subject names", () => {
-	it("maps each subject to its short name and back", () => {
+	it("maps each subject to its copy's short name", () => {
 		expect(subjectCopyKey("LEAVE_REQUEST")).toBe(
 			"approvals.flows.subjects.leave"
 		);
-		expect(subjectOfSlug("roster")).toBe("SCHEDULE_PUBLICATION");
-		expect(subjectOfSlug("leave")).toBe("LEAVE_REQUEST");
-		expect(subjectOfSlug("overtime")).toBeUndefined();
+		expect(subjectCopyKey("SCHEDULE_PUBLICATION")).toBe(
+			"approvals.flows.subjects.roster"
+		);
 	});
 });
