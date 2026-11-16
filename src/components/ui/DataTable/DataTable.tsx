@@ -51,7 +51,11 @@ export type DataTableColumn<TData extends object> = {
 	id: string;
 	/** Visible header text; also names the column's sort button. */
 	header: string;
-	/** Drawn in the header cell in place of `header`'s text, such as a scale; it carries its own accessible name. */
+	/**
+	 * Drawn in the header cell in place of `header`'s text, such as a scale, at
+	 * the full width of the cell's content box, as the body cells' content is;
+	 * it carries its own accessible name.
+	 */
 	headerCell?: ReactNode;
 	cell: (row: TData) => ReactNode;
 	/** The value the column sorts by; a column with one is sortable. */
@@ -358,15 +362,22 @@ export const DataTable = <TData extends object>({
 									)}
 								>
 									<div className="flex items-center justify-between gap-2">
-										<span
-											className={
-												column?.wrapHeader
-													? "min-w-0 py-1 break-words"
-													: "min-w-0 truncate"
-											}
-										>
-											{column?.headerCell ?? column?.header}
-										</span>
+										{column?.headerCell ? (
+											// A drawn header fills the cell, so it measures the same box as the cells below it.
+											<span className="block w-full min-w-0">
+												{column.headerCell}
+											</span>
+										) : (
+											<span
+												className={
+													column?.wrapHeader
+														? "min-w-0 py-1 break-words"
+														: "min-w-0 truncate"
+												}
+											>
+												{column?.header}
+											</span>
+										)}
 										{column === naming &&
 											hiddenSort.bands.map((band) => (
 												<span

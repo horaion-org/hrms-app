@@ -97,6 +97,11 @@ describe("DataTable", () => {
 		expect(
 			screen.getByRole("columnheader", { name: /Drawn header/ })
 		).toBeVisible();
+		// It fills the cell, so a scale in it shares the width of the column's cells.
+		expect(screen.getByText("Drawn header").parentElement).toHaveClass(
+			"block",
+			"w-full"
+		);
 	});
 
 	it("sorts a column with a sort value on the client, toggling direction", async () => {
