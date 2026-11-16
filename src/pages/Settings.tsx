@@ -164,6 +164,7 @@ export const Settings = (): FunctionComponent => {
 			<div className="mt-10 flex flex-col overflow-hidden rounded-xl border border-neutral-400 md:min-h-144 md:flex-row">
 				<SettingsNav
 					groups={groups}
+					listIsPage={listOnPhone}
 					selected={selected}
 					// Only as wide as its longest entry, so the panels keep the width.
 					className={joinClassNames(

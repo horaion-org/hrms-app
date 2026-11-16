@@ -89,4 +89,17 @@ describe("SettingsNav", () => {
 			within(nav).getByRole("link", { name: "Leave types" })
 		).not.toHaveAttribute("aria-current");
 	});
+
+	it("tints the current entry only from md when the list is the page on a phone", async () => {
+		render(
+			<I18nextProvider i18n={authTestI18n}>
+				<MemoryRouterHarness initialEntry="/settings">
+					<SettingsNav listIsPage groups={EVERYTHING} selected="general" />
+				</MemoryRouterHarness>
+			</I18nextProvider>
+		);
+		const general = await screen.findByRole("link", { name: "General" });
+		expect(general).toHaveClass("md:aria-[current=page]:bg-ink-blue-100");
+		expect(general).not.toHaveClass("aria-[current=page]:bg-ink-blue-100");
+	});
 });

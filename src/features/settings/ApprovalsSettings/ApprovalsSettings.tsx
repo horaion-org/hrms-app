@@ -137,7 +137,7 @@ export const ApprovalsSettings = ({
 
 	return (
 		<>
-			<div className="flex items-start justify-between gap-3">
+			<div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 				<div>
 					<h2 className="text-xl font-semibold text-neutral-900" id={headingId}>
 						{t(`${copy}.pageTitle`)}
