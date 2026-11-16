@@ -235,8 +235,8 @@ export const ShiftDialog = ({
 			preventClose={isSubmitting}
 			title={t(editing ? `${key}.editTitle` : `${key}.title`)}
 			footer={
-				<div className="grid gap-6 sm:grid-cols-2">
-					<Button disabled={isSubmitting} variant="secondary" onClick={close}>
+				<div className="grid grid-cols-2 gap-4">
+					<Button disabled={isSubmitting} variant="cancel" onClick={close}>
 						{t(`${key}.cancel`)}
 					</Button>
 					<Button

@@ -707,8 +707,8 @@ export const ConstraintDialog = ({
 				.filter(Boolean)
 				.join(" · ")}
 			footer={
-				<div className="grid gap-6 sm:grid-cols-2">
-					<Button disabled={isSubmitting} variant="secondary" onClick={close}>
+				<div className="grid grid-cols-2 gap-4">
+					<Button disabled={isSubmitting} variant="cancel" onClick={close}>
 						{t(`${key}.cancel`)}
 					</Button>
 					{/* Keyed apart, so the click on Continue never lands on the submit button that replaces it. */}
