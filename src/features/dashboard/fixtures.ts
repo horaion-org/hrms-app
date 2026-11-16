@@ -1,0 +1,87 @@
+import type {
+	DayOff,
+	Overtime,
+	Shortage,
+	TeamCoverOffer,
+} from "@/features/dashboard/api";
+
+/** A shift short by one on a published roster. */
+export const shortageFixture = (
+	overrides: Partial<Shortage> = {}
+): Shortage => ({
+	scheduleId: "s-1",
+	scheduleStatus: "PUBLISHED",
+	branchId: "b-1",
+	branchName: "Main branch",
+	departmentId: "d-1",
+	departmentName: "Sales",
+	day: "2026-11-18",
+	shiftId: "fs-am",
+	shiftName: "Morning",
+	startTime: "07:00",
+	endTime: "15:00",
+	shortBy: 1,
+	shortSinceGeneration: 0,
+	...overrides,
+});
+
+/** A person rostered off tomorrow. */
+export const dayOffFixture = (overrides: Partial<DayOff> = {}): DayOff => ({
+	day: "2026-11-17",
+	membershipId: "ms-kent",
+	displayName: "Kent Chua",
+	departmentId: "d-1",
+	departmentName: "Sales",
+	dayTypeName: "Rest day",
+	...overrides,
+});
+
+/** One department's month with one person over the ceiling. */
+export const overtimeFixture = (
+	overrides: Partial<Overtime> = {}
+): Overtime => ({
+	from: "2026-11",
+	to: "2026-11",
+	nearSharePercent: 80,
+	departments: [
+		{
+			branchId: "b-1",
+			branchName: "Main branch",
+			departmentId: "d-1",
+			departmentName: "Sales",
+			month: "2026-11",
+			ceilingMinutes: 72 * 60,
+			overtimeMinutes: 80 * 60,
+			members: [
+				{
+					membershipId: "ms-aisha",
+					displayName: "Aisha Rahman",
+					overtimeMinutes: 74 * 60,
+					standing: "OVER",
+				},
+			],
+		},
+	],
+	...overrides,
+});
+
+/** An offer sent to Kent that he has not answered. */
+export const teamCoverOfferFixture = (
+	overrides: Partial<TeamCoverOffer> = {}
+): TeamCoverOffer => ({
+	coverOfferId: "co-1",
+	scheduleId: "s-1",
+	branchId: "b-1",
+	departmentId: "d-1",
+	departmentName: "Sales",
+	day: "2026-11-18",
+	shiftId: "fs-am",
+	shiftName: "Morning",
+	startTime: "07:00",
+	endTime: "15:00",
+	membershipId: "ms-kent",
+	displayName: "Kent Chua",
+	sentAt: "2026-11-16T09:00:00Z",
+	expiresAt: "2026-11-17T09:00:00Z",
+	...overrides,
+});

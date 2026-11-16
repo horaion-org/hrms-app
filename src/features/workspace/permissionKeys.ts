@@ -103,6 +103,11 @@ export const SCHEDULE_READ_KEYS: ReadonlyArray<PermissionKey> = [
 	"schedule:read",
 ];
 
+/** A roster's shifts are changed and cover is offered where this is held at its Department: the dashboard's open offers. */
+export const SCHEDULE_EDIT_SHIFT_KEYS: ReadonlyArray<PermissionKey> = [
+	"schedule:edit_shift",
+];
+
 /** Shifts are listed where this is held at their Department: the Shifts tab's unit choices. */
 export const SHIFT_READ_KEYS: ReadonlyArray<PermissionKey> = ["shift:read"];
 
