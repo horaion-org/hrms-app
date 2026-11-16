@@ -5072,6 +5072,48 @@
 				"person": "{{name}}: {{reason}}",
 				"dayOff": "Day off",
 				"formerMember": "A former member"
+			},
+			"waitingApprovals": {
+				"title": "Approvals waiting",
+				"failed": "We couldn’t load the approvals waiting.",
+				"empty": "No approval waits in your units.",
+				"formerMember": "a former member",
+				"stalled": "Stalled",
+				"detail": "{{department}} · step {{step}} of {{total}} · waiting since {{since}}",
+				"subjects": {
+					"LEAVE_REQUEST": "Leave request from {{name}}",
+					"SCHEDULE_PUBLICATION": "Roster to publish, asked by {{name}}",
+					"OTHER": "Approval asked by {{name}}"
+				}
+			},
+			"peopleEvents": {
+				"title": "Joining, probation and leaving",
+				"failed": "We couldn’t load who joins or leaves.",
+				"empty": "Nobody joins, ends probation or leaves in the next 30 days.",
+				"formerMember": "A former member",
+				"detail": "{{day}} · {{department}}",
+				"kinds": {
+					"JOINS": "{{name}} joins",
+					"PROBATION_ENDS": "{{name}}'s probation ends",
+					"LEAVES": "{{name}} leaves"
+				}
+			}
+		},
+		"customise": {
+			"open": "Customise",
+			"title": "Customise Home",
+			"intro": "Choose the sections Home shows you. Your choice is saved for you on every device.",
+			"reset": "Reset to default",
+			"done": "Done",
+			"failed": "We couldn’t save your choice. It is back as it was; try again.",
+			"sections": {
+				"short-shifts": "Shifts short",
+				"leave-to-decide": "Pending leave requests",
+				"waiting-approvals": "Approvals waiting",
+				"next-roster": "Next roster",
+				"cover-offers": "Cover offers waiting",
+				"off-today": "Off today and tomorrow",
+				"people-events": "Joining, probation and leaving"
 			}
 		}
 	},

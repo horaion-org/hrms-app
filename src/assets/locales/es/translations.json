@@ -4905,6 +4905,48 @@
 				"person": "{{name}}: {{reason}}",
 				"dayOff": "Día libre",
 				"formerMember": "Un antiguo miembro"
+			},
+			"waitingApprovals": {
+				"title": "Aprobaciones pendientes",
+				"failed": "No pudimos cargar las aprobaciones pendientes.",
+				"empty": "No hay aprobaciones pendientes en tus unidades.",
+				"formerMember": "un antiguo miembro",
+				"stalled": "Estancada",
+				"detail": "{{department}} · paso {{step}} de {{total}} · en espera desde {{since}}",
+				"subjects": {
+					"LEAVE_REQUEST": "Solicitud de permiso de {{name}}",
+					"SCHEDULE_PUBLICATION": "Horario por publicar, pedido por {{name}}",
+					"OTHER": "Aprobación pedida por {{name}}"
+				}
+			},
+			"peopleEvents": {
+				"title": "Incorporaciones, periodos de prueba y bajas",
+				"failed": "No pudimos cargar quién se incorpora o se va.",
+				"empty": "Nadie se incorpora, termina el periodo de prueba ni se va en los próximos 30 días.",
+				"formerMember": "Un antiguo miembro",
+				"detail": "{{day}} · {{department}}",
+				"kinds": {
+					"JOINS": "{{name}} se incorpora",
+					"PROBATION_ENDS": "Termina el periodo de prueba de {{name}}",
+					"LEAVES": "{{name}} se va"
+				}
+			}
+		},
+		"customise": {
+			"open": "Personalizar",
+			"title": "Personalizar Inicio",
+			"intro": "Elige las secciones que te muestra Inicio. Tu elección se guarda para ti en todos tus dispositivos.",
+			"reset": "Restablecer",
+			"done": "Listo",
+			"failed": "No pudimos guardar tu elección. Vuelve a estar como antes; inténtalo de nuevo.",
+			"sections": {
+				"short-shifts": "Turnos incompletos",
+				"leave-to-decide": "Solicitudes de permiso pendientes",
+				"waiting-approvals": "Aprobaciones pendientes",
+				"next-roster": "Próximo horario",
+				"cover-offers": "Ofertas de cobertura pendientes",
+				"off-today": "Ausentes hoy y mañana",
+				"people-events": "Incorporaciones, periodos de prueba y bajas"
 			}
 		}
 	},
