@@ -140,9 +140,7 @@ describe("Sidebar", () => {
 			screen.queryByRole("link", { name: "Dashboard" })
 		).not.toBeInTheDocument();
 		expect(
-			screen
-				.getByRole("link", { name: "Horaion" })
-				.closest(".consumer-layout")
+			screen.getByRole("link", { name: "Horaion" }).closest(".consumer-layout")
 		).toHaveClass(
 			"w-full",
 			"lg:sticky",

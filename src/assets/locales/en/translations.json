@@ -938,6 +938,8 @@
 		"accountMenu": "Account menu",
 		"changePassword": "Change password",
 		"menu": "Menu",
+		"collapseMenu": "Collapse menu",
+		"expandMenu": "Expand menu",
 		"logo": "Horaion"
 	},
 	"people": {
