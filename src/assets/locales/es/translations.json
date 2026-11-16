@@ -3050,7 +3050,6 @@
 			"identityShared": "Este nombre no se puede cambiar aquí porque también pertenece a otra empresa.",
 			"selfDeactivation": "No puedes desactivarte a ti mismo.",
 			"ownerDeactivation": "No se puede desactivar al propietario de la empresa.",
-			"lastDepartmentHead": "Es el único responsable de su departamento. Añade primero otro responsable allí.",
 			"departmentForbidden": "No tienes permiso para mover personas a este departamento.",
 			"inactiveMove": "Está inactivo. Reactívalo antes de moverlo a otro departamento.",
 			"forbiddenSave": "Ya no tienes permiso para editar a esta persona.",

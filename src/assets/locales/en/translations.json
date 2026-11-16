@@ -1041,7 +1041,6 @@
 			"identityShared": "This name can’t be changed here because they also belong to another company.",
 			"selfDeactivation": "You can’t deactivate yourself.",
 			"ownerDeactivation": "The company owner can’t be deactivated.",
-			"lastDepartmentHead": "They’re the only head of their department. Add another head there first.",
 			"departmentForbidden": "You don’t have permission to move people to this department.",
 			"inactiveMove": "They’re inactive. Reactivate them before moving them to another department.",
 			"forbiddenSave": "You no longer have permission to edit this person.",
