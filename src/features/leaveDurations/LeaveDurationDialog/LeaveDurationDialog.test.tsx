@@ -88,6 +88,28 @@ describe("LeaveDurationDialog", () => {
 		});
 	});
 
+	it("says how to keep the person off the roster when the leave leaves very little of a normal day", async () => {
+		const user = userEvent.setup();
+		render(<CompanyAdminAdds />);
+
+		await chooseTime(user, "Starts", "09:00");
+		await chooseTime(user, "Ends", "16:00");
+		expect(
+			screen.getByText(
+				"This leaves less than 2 hours of a normal 8-hour day. Untick it to keep the person off the roster that day."
+			)
+		).toBeVisible();
+		await user.click(
+			screen.getByRole("checkbox", { name: /Can still work a shift that day/ })
+		);
+
+		expect(
+			screen.getByText(
+				"When off, the person is kept off the roster for the whole day, as with full-day leave."
+			)
+		).toBeVisible();
+	});
+
 	it("shows an edited duration's choice and sends it back turned on", async () => {
 		const user = userEvent.setup();
 		const onSave = fn<LeaveDurationDialogProps["onSave"]>(() =>

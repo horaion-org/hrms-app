@@ -11,6 +11,7 @@ import type {
 	LeaveDurationBody,
 	ManagedLeaveDuration,
 } from "@/features/leaveDurations/api";
+import { leavesLittleOfADay } from "@/features/leaveDurations/LeaveDurationDialog/leftOfADay";
 import { refusalFor } from "@/features/leaveDurations/LeaveDurationDialog/refusalFor";
 import {
 	initialLeaveDurationValues,
@@ -67,9 +68,9 @@ export const LeaveDurationDialog = ({
 		handleSubmit,
 		formState: { errors, isSubmitting },
 	} = form;
-	const [name, startTime, endTime] = useWatch({
+	const [name, startTime, endTime, allowsShiftSameDay] = useWatch({
 		control,
-		name: ["name", "startTime", "endTime"],
+		name: ["name", "startTime", "endTime", "allowsShiftSameDay"],
 	});
 	const submit = useCreateFormSubmit(form, FIELDS, onClose);
 	const length = startTime && endTime ? minutesBetween(startTime, endTime) : 0;
@@ -165,10 +166,15 @@ export const LeaveDurationDialog = ({
 				render={({ field }) => (
 					<Checkbox
 						checked={field.value}
-						description={t(`${key}.allowsShiftSameDayDescription`)}
 						disabled={isSubmitting}
 						label={t(`${key}.allowsShiftSameDay`)}
 						name={field.name}
+						description={
+							// A tick that leaves very little of the day says how to keep the person off the roster.
+							allowsShiftSameDay && leavesLittleOfADay(length)
+								? t(`${key}.allowsShiftSameDayLittleLeft`)
+								: t(`${key}.allowsShiftSameDayDescription`)
+						}
 						onBlur={field.onBlur}
 						onChange={(event) => {
 							field.onChange(event.target.checked);
