@@ -20,7 +20,9 @@ import { useAccess } from "@/features/workspace/useAccess";
 /**
  * A roster's outcomes by person and day, read as `useRosterHours` reads the
  * hours: a hand change moves the revision, so they are read again. Undefined
- * while loading, without `schedule:read` at the Department, or on failure.
+ * while loading, without `shift_preference:read` at the Department (what a
+ * person would like to work is theirs, so the roster's own key does not show
+ * it: hrms-backend-v2 docs/adr/0097), or on failure.
  */
 export const useRosterPreferenceOutcomes = (
 	companyId: string,
@@ -32,7 +34,7 @@ export const useRosterPreferenceOutcomes = (
 	const access = useAccess();
 	const allowed =
 		unit !== undefined &&
-		access.can("schedule:read", departmentScope(unit.departmentId));
+		access.can("shift_preference:read", departmentScope(unit.departmentId));
 	const query = useQuery(
 		rosterPreferenceOutcomesQuery(
 			companyId,
