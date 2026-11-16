@@ -53,6 +53,7 @@ const STRICTNESS: Record<ConstraintField, FieldStrictness> = {
 	REST_DAY_WORK_PERCENT: "MUST_MATCH",
 	TIME_OFF_EARNED_PERCENT: "MUST_MATCH",
 	DAY_OFF_WORK_PERCENT: "MUST_MATCH",
+	STRETCH_HOURS: "LOWER_IS_STRICTER",
 };
 
 /** Types that link to nothing may be set for the whole company; the rest by a Department only. */
