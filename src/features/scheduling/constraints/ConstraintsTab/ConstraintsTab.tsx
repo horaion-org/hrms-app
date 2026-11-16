@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { DepartmentPath } from "@/common/companyPath";
+import { matchesSearch } from "@/common/matchesSearch";
 import type { FunctionComponent } from "@/common/types";
 import type { SelectOption } from "@/components/forms/Select";
 import { Button } from "@/components/ui/Button";
@@ -126,14 +127,9 @@ const unitOf = (
 const isShown = (constraint: DepartmentConstraint): boolean =>
 	!constraint.overriddenByConstraintId;
 
-const matches = (constraint: DepartmentConstraint, search: string): boolean => {
-	const text = search.trim().toLocaleLowerCase();
-	return (
-		text === "" ||
-		constraint.name.toLocaleLowerCase().includes(text) ||
-		(constraint.departmentName ?? "").toLocaleLowerCase().includes(text)
-	);
-};
+const matches = (constraint: DepartmentConstraint, search: string): boolean =>
+	matchesSearch(constraint.name, search) ||
+	matchesSearch(constraint.departmentName ?? "", search);
 
 export type ConstraintsTabProps = {
 	companyId: string;

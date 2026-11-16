@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { DepartmentPath } from "@/common/companyPath";
+import { matchesSearch } from "@/common/matchesSearch";
 import type { FunctionComponent } from "@/common/types";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { placeOf } from "@/features/organisation/assignmentTargets";
@@ -81,14 +82,9 @@ const unitOf = (shift: DepartmentShift): DepartmentPath => ({
 	departmentId: shift.departmentId,
 });
 
-const matches = (shift: DepartmentShift, search: string): boolean => {
-	const text = search.trim().toLocaleLowerCase();
-	return (
-		text === "" ||
-		shift.name.toLocaleLowerCase().includes(text) ||
-		shift.departmentName.toLocaleLowerCase().includes(text)
-	);
-};
+const matches = (shift: DepartmentShift, search: string): boolean =>
+	matchesSearch(shift.name, search) ||
+	matchesSearch(shift.departmentName, search);
 
 export type ShiftsTabProps = {
 	companyId: string;

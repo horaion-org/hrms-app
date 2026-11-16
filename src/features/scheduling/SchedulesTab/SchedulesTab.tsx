@@ -3,6 +3,7 @@ import { useRouterState } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
+import { matchesSearch } from "@/common/matchesSearch";
 import type { FunctionComponent } from "@/common/types";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -42,20 +43,13 @@ import { useAccess } from "@/features/workspace/useAccess";
 
 const key = "scheduling.overview";
 
-const matches = (schedule: Schedule, search: string): boolean => {
-	const text = search.trim().toLocaleLowerCase();
-	return (
-		text === "" ||
-		schedule.name.toLocaleLowerCase().includes(text) ||
-		schedule.departmentName.toLocaleLowerCase().includes(text)
-	);
-};
+const matches = (schedule: Schedule, search: string): boolean =>
+	matchesSearch(schedule.name, search) ||
+	matchesSearch(schedule.departmentName, search);
 
 /** A month card matches the search by its Department's name, as a history row does. */
 const monthMatches = (summary: ScheduleMonthSummary, search: string): boolean =>
-	summary.departmentName
-		.toLocaleLowerCase()
-		.includes(search.trim().toLocaleLowerCase());
+	matchesSearch(summary.departmentName, search);
 
 export type SchedulesTabProps = {
 	companyId: string;

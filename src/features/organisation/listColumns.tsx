@@ -1,5 +1,6 @@
 import type { TFunction } from "i18next";
 import type { ReactNode } from "react";
+import { matchesSearch } from "@/common/matchesSearch";
 import { formatDate } from "@/components/forms/Calendar";
 import type { SelectOption } from "@/components/forms/Select";
 import { Badge } from "@/components/ui/Badge";
@@ -173,10 +174,6 @@ export const actionsColumn = <T extends { name: string }>(
 	cellClassName: "px-0",
 	pin: "end",
 });
-
-/** Whether a name contains the search, ignoring case and outer spaces. */
-export const matchesSearch = (name: string, search: string): boolean =>
-	name.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase());
 
 /** What a list page shows for a list's state. */
 export type ListView<T> = {
