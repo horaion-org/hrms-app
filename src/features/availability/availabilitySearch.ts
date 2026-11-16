@@ -75,12 +75,42 @@ export const viewsOf = ({
 	...(team ? (["team"] as const) : []),
 ];
 
-/** The tab shown: the URL's when the person has it, else their first; none when they have none. */
+/** Shift preferences: the tab every member has. */
+const EVERYONES_VIEW = "preferences";
+
+/** The tab shown: the URL's when the person has it, else their first. */
 export const viewOf = (
 	requested: AvailabilityView | undefined,
 	views: ReadonlyArray<AvailabilityView>
-): AvailabilityView | undefined =>
-	requested && views.includes(requested) ? requested : views[0];
+): AvailabilityView =>
+	requested && views.includes(requested)
+		? requested
+		: (views[0] ?? EVERYONES_VIEW);
+
+/** The page heading for anyone with an availability tab: availability, and preferences beside it. */
+const AVAILABILITY_HEADING = {
+	title: "availability.title",
+	subtitle: "availability.subtitle",
+} as const;
+
+/** The page heading for someone whose only tab is Shift preferences. */
+const PREFERENCES_ONLY_HEADING = {
+	title: "availability.preferencesOnly.title",
+	subtitle: "availability.preferencesOnly.subtitle",
+} as const;
+
+/** The translation keys of the page's title and the line beneath it. */
+export type AvailabilityHeading =
+	| typeof AVAILABILITY_HEADING
+	| typeof PREFERENCES_ONLY_HEADING;
+
+/** The page heading true for the person: Availability with one of its tabs, else Shift preferences, their only tab. */
+export const headingOf = (
+	views: ReadonlyArray<AvailabilityView>
+): AvailabilityHeading =>
+	views.includes("mine") || views.includes("team")
+		? AVAILABILITY_HEADING
+		: PREFERENCES_ONLY_HEADING;
 
 /** The team tab lists part-timers by Branch, and by Department within it. */
 export const AVAILABILITY_TEAM_UNIT_RULES: UnitSelectionRules = {

@@ -529,7 +529,11 @@
 	},
 	"availability": {
 		"title": "Disponibilidad",
-		"subtitle": "Las horas en que las personas a tiempo parcial pueden trabajar, semana a semana.",
+		"subtitle": "Las horas en que las personas a tiempo parcial pueden trabajar y los turnos que cada persona prefiere, semana a semana.",
+		"preferencesOnly": {
+			"title": "Preferencias de turno",
+			"subtitle": "Elige los turnos que te gustaría trabajar, semana a semana."
+		},
 		"views": "Vistas de disponibilidad",
 		"mine": {
 			"tab": "Mi disponibilidad",
@@ -556,7 +560,6 @@
 		"patternFailed": "No pudimos cargar el patrón habitual de {{name}}. Inténtalo de nuevo.",
 		"hidden": "No tienes acceso a la disponibilidad de nadie en esta empresa.",
 		"noBranches": "Añade una sucursal a la organización antes de gestionar la disponibilidad.",
-		"unavailable": "La disponibilidad es para las personas a tiempo parcial y quienes las gestionan, así que aquí no hay nada para ti en esta empresa.",
 		"loading": "Cargando disponibilidad…",
 		"failed": "No pudimos cargar la disponibilidad. Inténtalo de nuevo.",
 		"pastWeek": "Esta semana ya terminó, así que su disponibilidad no se puede cambiar.",

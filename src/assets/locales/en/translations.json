@@ -529,7 +529,11 @@
 	},
 	"availability": {
 		"title": "Availability",
-		"subtitle": "The hours part-time people can work, week by week.",
+		"subtitle": "The hours part-time people can work and the shifts people would like, week by week.",
+		"preferencesOnly": {
+			"title": "Shift preferences",
+			"subtitle": "Choose the shifts you’d like to work, week by week."
+		},
 		"views": "Availability views",
 		"mine": {
 			"tab": "My availability",
@@ -556,7 +560,6 @@
 		"patternFailed": "We couldn’t load {{name}}’s default pattern. Try again.",
 		"hidden": "You don’t have access to anyone’s availability in this company.",
 		"noBranches": "Add a branch to the organisation before managing availability.",
-		"unavailable": "Availability is for part-time members and the people who manage them, so there’s nothing here for you in this company.",
 		"loading": "Loading availability…",
 		"failed": "We couldn’t load the availability. Try again.",
 		"pastWeek": "This week has ended, so its availability can’t be changed.",

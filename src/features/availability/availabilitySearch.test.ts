@@ -3,6 +3,7 @@ import {
 	availabilityQueryOf,
 	availabilityUnitRulesOf,
 	AVAILABILITY_TEAM_UNIT_RULES,
+	headingOf,
 	parseAvailabilitySearch,
 	viewOf,
 	viewsOf,
@@ -86,12 +87,29 @@ describe("viewsOf and viewOf", () => {
 		expect(viewsOf({ mine: false, team: false })).toEqual(["preferences"]);
 	});
 
-	it("given_aTabTheyLack_when_asked_then_showsTheirFirstOrNone", () => {
+	it("given_aTabTheyLack_when_asked_then_showsTheirFirst", () => {
 		expect(viewOf("team", ["mine", "preferences"])).toBe("mine");
 		expect(viewOf("mine", ["preferences", "team"])).toBe("preferences");
 		expect(viewOf(undefined, ["mine", "preferences", "team"])).toBe("mine");
 		expect(viewOf("team", ["mine", "preferences", "team"])).toBe("team");
-		expect(viewOf("mine", [])).toBeUndefined();
+		// No list yet: Shift preferences, which everyone has.
+		expect(viewOf("mine", [])).toBe("preferences");
+	});
+});
+
+describe("headingOf", () => {
+	it("given_anAvailabilityTab_when_headed_then_isAvailability", () => {
+		expect(headingOf(["mine", "preferences"]).title).toBe("availability.title");
+		expect(headingOf(["preferences", "team"]).title).toBe(
+			"availability.title"
+		);
+	});
+
+	it("given_shiftPreferencesAlone_when_headed_then_isShiftPreferences", () => {
+		expect(headingOf(["preferences"])).toEqual({
+			title: "availability.preferencesOnly.title",
+			subtitle: "availability.preferencesOnly.subtitle",
+		});
 	});
 });
 

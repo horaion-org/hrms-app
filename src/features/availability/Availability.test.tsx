@@ -329,7 +329,7 @@ describe("Availability", () => {
 		).toBeVisible();
 	});
 
-	it("shows someone neither part-time nor holding the read key their shift preferences only", async () => {
+	it("shows someone neither part-time nor holding the read key their shift preferences only, headed as such", async () => {
 		const calls = stubApi(routes("FULL_TIME", workspaceReply([])));
 		await open("/availability");
 
@@ -337,6 +337,16 @@ describe("Availability", () => {
 			await screen.findByRole("table", { name: "Shift preferences" })
 		).toBeVisible();
 		expect(tabNames()).toEqual(["Shift preferences"]);
+		expect(
+			screen.getByRole("heading", { level: 1, name: "Shift preferences" })
+		).toBeVisible();
+		expect(
+			screen.getByText("Choose the shifts you’d like to work, week by week.")
+		).toBeVisible();
+		// The menu offers the page to everyone, so a full-timer reaches it too.
+		expect(
+			within(navigation()).getByRole("link", { name: "Availability" })
+		).toBeVisible();
 		expect(
 			screen.getByRole("button", { name: /^Choose shifts for Mon/ })
 		).toBeVisible();

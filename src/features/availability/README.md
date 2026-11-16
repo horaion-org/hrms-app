@@ -15,12 +15,13 @@ Department's preferences beneath the Team grid. Everything comes from the API
   (`AvailabilityOwner`), the company's list of part-timers for one week inside one Branch (`availabilityListQuery`, `GET /companies/{c}/availability`), a Department's readiness for the Schedule
   wizard, and every query's options, all under `availabilityRoot`, `["availability", companyId]`, as leave roots its own.
 - `availabilitySearch.ts` — what belongs in the URL (`view`, `branch`, `department`, `week` as its Monday), the
-  tabs a person has, and the list asked for (`availabilityQueryOf`). A week left out is the one today is in, worked out on every render, so a page left open
+  tabs a person has, the page heading true for them (`headingOf`: Shift preferences for someone with no other tab),
+  and the list asked for (`availabilityQueryOf`). A week left out is the one today is in, worked out on every render, so a page left open
   across a Monday moves on.
 - `availabilityModel.ts` — the pure rules: windows by day (`byDay`, and `windowsByDay` for a week's dated windows),
   the editor's rows and their validation (overlaps on the week as a circle, at most four starts a day), what the
   editor opens on (`defaultEditTarget`), whether a week has ended (`isPastWeek`), dated windows as weekly ones.
-- `useAvailability.ts` — `useAvailabilityViews` (the tabs, for the page and the sidebar), the read hooks
+- `useAvailability.ts` — `useAvailabilityViews` (the tabs, for the page), the read hooks
   (`useMyAvailability`, `useMemberAvailability`, `useAvailabilityList`, each with `useLeaveRequests`'
   `pending`/`error`/`hidden`/`ready` states) and the writes for a member or the caller, each reloading every
   availability entry of the company.
@@ -49,8 +50,8 @@ Schedule wizard's warning about part-timers without availability is `scheduling/
 
 ## Permissions
 
-The sidebar offers the Module to a part-timer (from their own profile's employment type) and to anyone holding
-`work_availability:read` anywhere; nobody else sees it. Mine needs nothing granted. Team appears with the read key
+The sidebar offers the Module to every member, since everyone states their own shift preferences there. Mine is a
+part-timer's (from their own profile's employment type) and needs nothing granted. Team appears with the read key
 held anywhere and offers the Branches where it is held at the Branch or a Department beneath it; the API lists only
 the part-timers of the units where it is held, so a Department-only grant lists that Department. Editing a row needs
 `work_availability:update` at that member's Department (or the company, for a member filed at none). The API

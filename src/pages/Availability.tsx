@@ -18,6 +18,7 @@ import { isPastWeek } from "@/features/availability/availabilityModel";
 import {
 	availabilityQueryOf,
 	AVAILABILITY_TEAM_UNIT_RULES,
+	headingOf,
 	viewOf,
 	viewsOf,
 	weekOf,
@@ -71,7 +72,7 @@ const problemKeyOf = (
 
 /**
  * Work availability and shift preferences, in three tabs decided by data,
- * never roles. "Mine" is a part-timer's own week and pattern, changed with
+ * never roles, under a heading for the tabs the person has. "Mine" is a part-timer's own week and pattern, changed with
  * nothing granted. "Shift preferences" is everyone's own week of preferred
  * shifts, also changed with nothing granted. "Team" is the part-timers of
  * the header's Branch (every Branch in reach under "All branches") for one
@@ -124,39 +125,32 @@ export const Availability = (): FunctionComponent => {
 		void navigate({ search: (previous) => ({ ...previous, ...next }) });
 	};
 	// The URL names the tab shown, so the header knows whether this view lists by Branch.
+	// Written once the tabs are known, so a first tab guessed while loading does not stick.
+	const tabsKnown = offered.status === "ready";
 	useEffect(() => {
-		if (view && view !== search.view)
+		if (tabsKnown && view !== search.view)
 			void navigate({
 				search: (previous) => ({ ...previous, view }),
 				replace: true,
 			});
-	}, [view, search.view, navigate]);
+	}, [tabsKnown, view, search.view, navigate]);
 	// A row is changed where its member is filed, and only in a week still to come.
 	const canEdit = (member: MemberWeek): boolean =>
 		!past &&
 		access.can(AVAILABILITY_UPDATE_KEY, recordScope(member.departmentId));
 	const editsAnywhere = access.canAnywhere(AVAILABILITY_UPDATE_KEY);
 
+	// The heading depends on the tabs, so nothing is shown until they are known.
+	if (!tabsKnown) return null;
+	const heading = headingOf(views);
 	const header = (
 		<div>
 			<h1 className="text-4xl font-medium text-neutral-900">
-				{t("availability.title")}
+				{t(heading.title)}
 			</h1>
-			<p className="mt-4 text-sm text-neutral-800">
-				{t("availability.subtitle")}
-			</p>
+			<p className="mt-4 text-sm text-neutral-800">{t(heading.subtitle)}</p>
 		</div>
 	);
-	if (offered.status === "pending") return header;
-	if (!view)
-		return (
-			<div>
-				{header}
-				<p className="mt-8 text-sm text-neutral-700">
-					{t("availability.unavailable")}
-				</p>
-			</div>
-		);
 
 	const teamProblem = problemKeyOf(team);
 	// Every tab's grid shows the week one day at a time on a phone; one tab is mounted at a time.
