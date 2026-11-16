@@ -4438,6 +4438,22 @@
 			"cancel": "Cancel",
 			"save": "Save hours"
 		},
+		"issues": {
+			"jobShort": "{{job}} short",
+			"unknownJob": "A job title",
+			"shortBy_one": "{{count}} person short",
+			"shortBy_other": "{{count}} people short",
+			"wholeRoster": "Whole roster",
+			"rosterNote": "Roster note",
+			"summary": {
+				"mustFix_one": "{{count}} to fix",
+				"mustFix_other": "{{count}} to fix",
+				"notMet_one": "{{count}} could not be met",
+				"notMet_other": "{{count}} could not be met",
+				"forInformation_one": "{{count}} for your information",
+				"forInformation_other": "{{count}} for your information"
+			}
+		},
 		"rosterMarkers": {
 			"leaveRequested": "Leave requested",
 			"onLeave": "On leave",
