@@ -5057,6 +5057,10 @@
 				"month": "Mes",
 				"weeks_one": "{{count}} semana: del {{from}} al {{to}}. Una semana pertenece al mes en que cae su lunes.",
 				"weeks_other": "{{count}} semanas: del {{from}} al {{to}}. Una semana pertenece al mes en que cae su lunes.",
+				"looks": {
+					"OVER": "Terminado",
+					"STARTED": "Empezado"
+				},
 				"validation": {
 					"month": "Elige un mes."
 				}

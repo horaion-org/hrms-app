@@ -5257,6 +5257,10 @@
 				"month": "Month",
 				"weeks_one": "{{count}} week: {{from}} to {{to}}. A week belongs to the month its Monday falls in.",
 				"weeks_other": "{{count}} weeks: {{from}} to {{to}}. A week belongs to the month its Monday falls in.",
+				"looks": {
+					"OVER": "Over",
+					"STARTED": "Started"
+				},
 				"validation": {
 					"month": "Choose a month."
 				}
