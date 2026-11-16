@@ -4,6 +4,7 @@ import type {
 	BrokenRule,
 	StaffingGap,
 } from "@/features/scheduling/rulesCheck/rosterRulesCheckApi";
+import { ruleLabel } from "@/features/scheduling/roster/findings/ruleLabel";
 import { brokenRuleLabel } from "@/features/scheduling/rulesCheck/rosterRulesCheckWords";
 
 /*
@@ -61,6 +62,8 @@ export type RosterIssueInput = {
 	memberNames: ReadonlyMap<string, string>;
 	/** Job title names by role id. */
 	roleNames: ReadonlyMap<string, string>;
+	/** The schedule's constraint names by constraint copy id, which name a gap's rule. */
+	ruleNames: ReadonlyMap<string, string>;
 	t: TFunction;
 };
 
@@ -75,7 +78,7 @@ const clockOf = (dateTime: string): string => dateTime.slice(11, 16);
 
 const gapIssue = (
 	gap: StaffingGap,
-	{ roleNames, t }: RosterIssueInput
+	{ roleNames, ruleNames, t }: RosterIssueInput
 ): RosterIssue => {
 	const shiftId = gap.shiftUuids[0];
 	return {
@@ -87,7 +90,14 @@ const gapIssue = (
 		memberProfileId: null,
 		day: gap.date,
 		time: `${clockOf(gap.start)}–${clockOf(gap.end)}`,
-		rule: t(`${key}.shortBy`, { count: gap.missing }),
+		rule: t(`${key}.shortOnRule`, {
+			count: gap.missing,
+			rule: ruleLabel(
+				{ name: gap.sourceRule, constraintId: gap.sourceRuleId },
+				ruleNames,
+				t
+			),
+		}),
 		action: shiftId
 			? { kind: "findCover", gap: { shiftId, day: gap.date } }
 			: { kind: "show" },

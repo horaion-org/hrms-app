@@ -4542,6 +4542,9 @@
 			"save": "Save hours"
 		},
 		"issues": {
+			"shortOnRule_one": "{{count}} person short · {{rule}}",
+			"shortOnRule_other": "{{count}} people short · {{rule}}",
+			"conflict": "A clash on this day",
 			"weekBarLabel": "Issues: {{count}} to fix, {{notMet}} could not be met",
 			"groupLabel": "{{group}}, {{count}}",
 			"show": "Show",
@@ -4555,8 +4558,6 @@
 			},
 			"jobShort": "{{job}} short",
 			"unknownJob": "A job title",
-			"shortBy_one": "{{count}} person short",
-			"shortBy_other": "{{count}} people short",
 			"wholeRoster": "Whole roster",
 			"rosterNote": "Roster note",
 			"summary": {

@@ -4342,6 +4342,9 @@
 			"save": "Guardar horas"
 		},
 		"issues": {
+			"shortOnRule_one": "Falta {{count}} persona · {{rule}}",
+			"shortOnRule_other": "Faltan {{count}} personas · {{rule}}",
+			"conflict": "Un conflicto en este día",
 			"weekBarLabel": "Incidencias: {{count}} por corregir, {{notMet}} no se pudieron cumplir",
 			"groupLabel": "{{group}}, {{count}}",
 			"show": "Mostrar",
@@ -4355,8 +4358,6 @@
 			},
 			"jobShort": "Falta {{job}}",
 			"unknownJob": "un puesto",
-			"shortBy_one": "Falta {{count}} persona",
-			"shortBy_other": "Faltan {{count}} personas",
 			"wholeRoster": "Todo el turno",
 			"rosterNote": "Nota del turno",
 			"summary": {

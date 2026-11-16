@@ -29,6 +29,7 @@ const input = (
 		["mp-2", "Ben Ortiz"],
 	]),
 	roleNames: new Map([["front-desk-staff", "Front Desk Staff"]]),
+	ruleNames: new Map(),
 	t,
 	...overrides,
 });
@@ -50,12 +51,12 @@ describe("rosterIssues", () => {
 			who: "scheduling.issues.jobShort(Front Desk Staff)",
 			day: "2026-10-17",
 			time: "09:00–15:00",
-			rule: "scheduling.issues.shortBy(1)",
 			action: {
 				kind: "findCover",
 				gap: { day: "2026-10-17" },
 			},
 		});
+		expect(issue?.rule).toMatch(/^scheduling\.issues\.shortOnRule\(1\|/);
 	});
 
 	it("offers Show for a gap with no shift to find cover for", () => {

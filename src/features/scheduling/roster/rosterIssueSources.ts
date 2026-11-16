@@ -164,7 +164,7 @@ const findingIssues = (
 			memberProfileId: conflict.employeeUuid,
 			day: conflict.date,
 			time: null,
-			rule: conflict.message,
+			rule: conflict.message ?? t("scheduling.issues.conflict"),
 			action: { kind: "show" },
 		}));
 	const errors = (withErrors ? findings.errors : []).flatMap((violation) =>
@@ -179,7 +179,21 @@ const findingIssues = (
 			action: { kind: "show" },
 		}))
 	);
-	return [...conflicts, ...errors];
+	// A day's message from the engine names something to look at, not to fix.
+	const dayMessages = findings.assignmentMessages.flatMap(
+		({ employeeId, day, messages }) =>
+			messages.map((message): RosterIssue => ({
+				key: `message|${employeeId}|${day}|${message}`,
+				group: "forInformation",
+				who: who(employeeId),
+				memberProfileId: employeeId,
+				day,
+				time: null,
+				rule: message,
+				action: { kind: "show" },
+			}))
+	);
+	return [...conflicts, ...errors, ...dayMessages];
 };
 
 /** The engine's notes on the schedule's setup, in the app's words where it knows them. */
@@ -225,6 +239,7 @@ export const issuesOfRoster = (
 		notes: [...noteLines, ...setupNotes(input)],
 		memberNames: roster.names?.members ?? new Map<string, string>(),
 		roleNames: roster.names?.jobTitles ?? new Map<string, string>(),
+		ruleNames: roster.names?.rules ?? new Map<string, string>(),
 		t,
 	});
 };
