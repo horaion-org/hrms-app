@@ -6,7 +6,8 @@ import type {
 	WeekFields,
 } from "@/features/employmentTerms/api";
 import {
-	formatHours,
+	durationShort,
+	formatDays,
 	hoursInput,
 	parseHours,
 } from "@/features/employmentTerms/hours";
@@ -52,6 +53,12 @@ export const BLANK_TERMS: TermsFormValues = {
 	shiftWork: false,
 	hoursLimitsApply: true,
 };
+
+/** The working days the form offers: "It varies" (null), then ½ to 7 in half days, as the API stores them. */
+export const DAYS_CHOICES: ReadonlyArray<number | null> = [
+	null,
+	...Array.from({ length: 14 }, (_, index) => (index + 1) / 2),
+];
 
 /** Working days a week: 0.5 to 7, in half days; empty is allowed (part-time). */
 export const parseDays = (text: string): number | null | "invalid" => {
@@ -140,35 +147,31 @@ const hoursProblem = (
 		max,
 	}: { required: boolean; min: number; max: number | null },
 	t: TFunction,
-	language: string
+	requiredMessage: string
 ): string | undefined => {
 	const parsed = parseHours(text);
-	if (parsed.kind === "empty")
-		return required ? t(`${key}.hoursRequired`) : undefined;
+	if (parsed.kind === "empty") return required ? requiredMessage : undefined;
 	if (parsed.kind === "invalid") return t(`${key}.hoursInvalid`);
 	if (parsed.kind === "notWholeMinutes") return t(`${key}.hoursWholeMinutes`);
 	if (parsed.minutes < min || (max !== null && parsed.minutes > max))
 		return t(`${key}.hoursRange`, {
-			min: formatHours(min, language),
-			max: formatHours(max ?? MAX_WEEK_MINUTES, language),
+			min: durationShort(min, t),
+			max: durationShort(max ?? MAX_WEEK_MINUTES, t),
 		});
 	return undefined;
 };
 
 /**
  * Mirrors the API's rules for terms (`EmploymentTermsRules`) so most
- * mistakes show before saving: a name, whole-minute hours in range, a week
- * no longer than its days × its day, a day when overtime counts by the day,
- * and a weekday for a fixed rest day. The longest normal day is the
- * country's, so it comes from the API (`maxDayMinutes`); without it the API
- * alone judges it.
+ * mistakes show before saving, each as a sentence saying what to change: a
+ * name, whole-minute hours in range, a week its working days can hold, a
+ * day when overtime counts by the day, and a weekday for a fixed rest day.
+ * The longest normal day is the country's, so it comes from the API
+ * (`maxDayMinutes`); without it the API alone judges it.
  */
 export const termsFormSchema = (
 	t: TFunction,
-	{
-		maxDayMinutes = null,
-		language = "en",
-	}: { maxDayMinutes?: number | null; language?: string } = {}
+	{ maxDayMinutes = null }: { maxDayMinutes?: number | null } = {}
 ): z.ZodType<TermsFormValues, TermsFormValues> =>
 	z
 		.object({
@@ -204,14 +207,14 @@ export const termsFormSchema = (
 				values.dayHours,
 				{ required: dayRequired, min: MIN_DAY_MINUTES, max: maxDayMinutes },
 				t,
-				language
+				t(`${key}.dayRequiredForOvertime`)
 			);
 			if (dayProblem) problem("dayHours", dayProblem);
 			const weekProblem = hoursProblem(
 				values.weekHours,
 				{ required: true, min: MIN_WEEK_MINUTES, max: MAX_WEEK_MINUTES },
 				t,
-				language
+				t(`${key}.hoursRequired`)
 			);
 			if (weekProblem) problem("weekHours", weekProblem);
 			if (values.restKind === "FIXED" && values.restWeekday === "")
@@ -225,5 +228,14 @@ export const termsFormSchema = (
 				week !== null &&
 				week > days * day + ROUNDING_MINUTES
 			)
-				problem("weekHours", t(`${key}.weekAboveDays`));
+				problem(
+					"weekHours",
+					t(`${key}.weekAboveDays`, {
+						days: formatDays(days),
+						count: days,
+						day: durationShort(day, t),
+						made: durationShort(Math.round(days * day), t),
+						week: durationShort(week, t),
+					})
+				);
 		});

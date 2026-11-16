@@ -16,7 +16,7 @@ import {
 } from "@/features/employmentTerms/api";
 import { ChangeEmploymentTermsDialog } from "@/features/employmentTerms/ChangeEmploymentTermsDialog";
 import { EmploymentTermsHistoryDialog } from "@/features/employmentTerms/EmploymentTermsHistoryDialog";
-import { formatHours } from "@/features/employmentTerms/hours";
+import { durationShort } from "@/features/employmentTerms/hours";
 import { memberTermsRefusal } from "@/features/employmentTerms/refusals";
 import { termsSentence } from "@/features/employmentTerms/summary";
 import { useMemberTermsActions } from "@/features/employmentTerms/useMemberTermsActions";
@@ -147,7 +147,7 @@ export const EmploymentTermsRow = ({
 			</span>
 			{inForce && (
 				<span className="text-xs text-neutral-700">
-					{termsSentence(inForce, current.reference, t, language)}
+					{termsSentence(inForce, current.reference, t)}
 				</span>
 			)}
 			<span className="text-xs text-neutral-700">
@@ -157,7 +157,7 @@ export const EmploymentTermsRow = ({
 						: undefined,
 					inForce?.contractedWeekMinutes
 						? t(self ? `${key}.selfOwnHours` : `${key}.ownHours`, {
-								week: formatHours(inForce.contractedWeekMinutes, language),
+								week: durationShort(inForce.contractedWeekMinutes, t),
 							})
 						: undefined,
 				]
@@ -180,10 +180,7 @@ export const EmploymentTermsRow = ({
 								? `${key}.mismatch.partTimeOnFullTerms`
 								: `${key}.mismatch.fullTimeOnPartTerms`,
 							{
-								week: formatHours(
-									current.mismatch.effectiveWeekMinutes,
-									language
-								),
+								week: durationShort(current.mismatch.effectiveWeekMinutes, t),
 							}
 						)}
 					</Callout>

@@ -6,7 +6,7 @@ import type {
 	TermsOverviewItem,
 	WeekFields,
 } from "@/features/employmentTerms/api";
-import { formatHours } from "@/features/employmentTerms/hours";
+import { durationShort } from "@/features/employmentTerms/hours";
 import { isPartTimeWeek } from "@/features/employmentTerms/summary";
 
 /** The fields that change how hours are counted; name and description never do. */
@@ -63,8 +63,8 @@ export const successorNameOf = (
 	t: TFunction,
 	language: string
 ): string => {
-	const hours = formatHours(next.weekMinutes, language);
-	const withHours = currentName.replace(/\d+([.,]\d+)?\s*h\b/, `${hours} h`);
+	const hours = durationShort(next.weekMinutes, t);
+	const withHours = currentName.replace(/\d+([.,]\d+)?\s*h\b/, hours);
 	if (withHours !== currentName) return withHours;
 	return t("employmentTerms.apply.successorName", {
 		name: currentName,

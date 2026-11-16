@@ -3,7 +3,11 @@ import type {
 	TermsReference,
 	WeekFields,
 } from "@/features/employmentTerms/api";
-import { formatDays, formatHours } from "@/features/employmentTerms/hours";
+import {
+	durationLong,
+	durationShort,
+	formatDays,
+} from "@/features/employmentTerms/hours";
 
 const key = "employmentTerms.summary";
 
@@ -14,53 +18,71 @@ export const isPartTimeWeek = (
 ): boolean =>
 	partTimeBelowMinutes !== null && weekMinutes < partTimeBelowMinutes;
 
-/** "Works 5 days a week, 8.8 hours a day." and its shift and part-time forms. */
-const workSentence = (
+/** Whether the reader's figures make these terms part-time; unknown figures never do. */
+const partTimeOf = (
 	fields: WeekFields,
-	t: TFunction,
-	language: string
-): string => {
-	const week = formatHours(fields.weekMinutes, language);
+	reference: TermsReference | undefined
+): boolean =>
+	reference !== undefined &&
+	isPartTimeWeek(fields.weekMinutes, reference.partTimeBelowMinutes);
+
+/** "Works 44 hours over 5½ days a week." and its shift, day and varying forms. */
+const workSentence = (fields: WeekFields, t: TFunction): string => {
+	const week = durationLong(fields.weekMinutes, t);
 	if (fields.daysPerWeek === null) return t(`${key}.weekOnly`, { week });
-	const days = formatDays(fields.daysPerWeek, language);
+	const days = formatDays(fields.daysPerWeek);
 	const count = fields.daysPerWeek;
-	if (fields.dayMinutes === null) return t(`${key}.days`, { days, count });
-	const day = formatHours(fields.dayMinutes, language);
+	if (fields.dayMinutes === null)
+		return t(`${key}.overDays`, { week, days, count });
+	const day = durationLong(fields.dayMinutes, t);
 	return fields.shiftWork
-		? t(`${key}.daysInShifts`, { days, day, count })
-		: t(`${key}.daysAndHours`, { days, day, count });
+		? t(`${key}.inShifts`, { week, days, count, day })
+		: t(`${key}.overDaysWithDay`, { week, days, count, day });
 };
 
-const restSentence = (fields: WeekFields, t: TFunction): string => {
+/** The rest day: a weekday, the roster's choice, or none for a part-timer. */
+const restSentence = (
+	fields: WeekFields,
+	partTime: boolean,
+	t: TFunction
+): string => {
+	if (partTime) return t(`${key}.restPartTime`);
 	if (fields.restDay === "ROSTERED") return t(`${key}.restRostered`);
 	if (fields.restDay === "UNKNOWN") return t(`${key}.restUnknown`);
 	return t(`${key}.restFixed`, { weekday: t(`weekdays.${fields.restDay}`) });
 };
 
-const overtimeSentence = (
+/**
+ * When overtime starts, read against the API's figures. Shift work counts
+ * by the week: the product does not average hours over several weeks.
+ */
+export const overtimeSentence = (
 	fields: WeekFields,
-	{ partTimeBelowMinutes, fullTimeWeekMinutes }: TermsReference,
-	t: TFunction,
-	language: string
+	reference: TermsReference,
+	t: TFunction
 ): string => {
-	if (isPartTimeWeek(fields.weekMinutes, partTimeBelowMinutes)) {
-		const line = formatHours(partTimeBelowMinutes ?? 0, language);
-		return fullTimeWeekMinutes === null
+	if (isPartTimeWeek(fields.weekMinutes, reference.partTimeBelowMinutes)) {
+		const line = durationLong(reference.partTimeBelowMinutes ?? 0, t);
+		return reference.fullTimeWeekMinutes === null
 			? t(`${key}.partTime`, { line })
 			: t(`${key}.partTimeUntil`, {
 					line,
-					full: formatHours(fullTimeWeekMinutes, language),
+					full: durationLong(reference.fullTimeWeekMinutes, t),
 				});
 	}
-	const week = formatHours(fields.weekMinutes, language);
-	if (fields.shiftWork) return t(`${key}.overtimeAveraged`, { week });
+	const week = durationLong(fields.weekMinutes, t);
+	if (fields.shiftWork) return t(`${key}.overtimeShiftWork`, { week });
 	if (fields.dailyOvertime && fields.dayMinutes !== null)
 		return t(`${key}.overtimeDayOrWeek`, {
-			day: formatHours(fields.dayMinutes, language),
+			day: durationLong(fields.dayMinutes, t),
 			week,
 		});
 	return t(`${key}.overtimeWeek`, { week });
 };
+
+/** Whether the Employment Act's hour limits hold, and what that means for a roster. */
+export const limitsSentence = (fields: WeekFields, t: TFunction): string =>
+	t(fields.hoursLimitsApply ? `${key}.limitsApply` : `${key}.limitsDontApply`);
 
 /**
  * What terms mean, in plain words, built from their fields alone: the
@@ -73,38 +95,31 @@ const overtimeSentence = (
 export const termsSentence = (
 	fields: WeekFields,
 	reference: TermsReference | undefined,
-	t: TFunction,
-	language: string
+	t: TFunction
 ): string =>
 	[
-		workSentence(fields, t, language),
-		restSentence(fields, t),
+		workSentence(fields, t),
+		restSentence(fields, partTimeOf(fields, reference), t),
 		...(reference === undefined
 			? []
-			: [overtimeSentence(fields, reference, t, language)]),
-		t(
-			fields.hoursLimitsApply ? `${key}.limitsApply` : `${key}.limitsDontApply`
-		),
+			: [overtimeSentence(fields, reference, t)]),
+		limitsSentence(fields, t),
 	].join(" ");
 
-/** The catalogue's short form: "5 days · 8.8 h a day · 44 h", or "20 h a week". */
-export const weekShort = (
-	fields: WeekFields,
-	t: TFunction,
-	language: string
-): string => {
-	const week = formatHours(fields.weekMinutes, language);
+/** The catalogue's short form: "5 days · 8 h 48 min a day · 44 h", or "20 h a week". */
+export const weekShort = (fields: WeekFields, t: TFunction): string => {
+	const week = durationShort(fields.weekMinutes, t);
 	if (fields.daysPerWeek === null) return t(`${key}.short.weekOnly`, { week });
 	const parts = [
 		t(`${key}.short.days`, {
-			days: formatDays(fields.daysPerWeek, language),
+			days: formatDays(fields.daysPerWeek),
 			count: fields.daysPerWeek,
 		}),
 	];
 	if (fields.dayMinutes !== null)
 		parts.push(
 			t(fields.shiftWork ? `${key}.short.shifts` : `${key}.short.day`, {
-				day: formatHours(fields.dayMinutes, language),
+				day: durationShort(fields.dayMinutes, t),
 			})
 		);
 	parts.push(t(`${key}.short.week`, { week }));
@@ -118,18 +133,17 @@ export const weekShort = (
 export const suggestedTermsName = (
 	fields: WeekFields,
 	partTimeBelowMinutes: number | null,
-	t: TFunction,
-	language: string
+	t: TFunction
 ): string => {
-	const week = formatHours(fields.weekMinutes, language);
+	const week = durationShort(fields.weekMinutes, t);
 	if (isPartTimeWeek(fields.weekMinutes, partTimeBelowMinutes))
 		return t(`${key}.name.partTime`, { week });
 	if (fields.daysPerWeek === null) return t(`${key}.name.weekOnly`, { week });
-	const days = formatDays(fields.daysPerWeek, language);
+	const days = formatDays(fields.daysPerWeek);
 	if (fields.shiftWork && fields.dayMinutes !== null)
 		return t(`${key}.name.shiftWork`, {
 			days,
-			day: formatHours(fields.dayMinutes, language),
+			day: durationShort(fields.dayMinutes, t),
 		});
 	return t(`${key}.name.days`, { days, week });
 };

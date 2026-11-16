@@ -167,7 +167,7 @@ describe("A person's employment terms", () => {
 			"/settings?section=employment&terms=terms-six-day-shift"
 		);
 		expect(card).toHaveTextContent(
-			"Works 6 days a week in shifts of up to 12 hours."
+			"Works 44 hours a week over 6 days, in shifts of up to 12 hours."
 		);
 		expect(card).toHaveTextContent("Since 1 Mar 2025");
 		expect(card).toHaveTextContent(
@@ -309,7 +309,9 @@ describe("A person's employment terms", () => {
 		await user.click(
 			await screen.findByRole("option", { name: "Five-day week, 44 h" })
 		);
-		expect(dialog).toHaveTextContent("Works 5 days a week, 8.8 hours a day.");
+		expect(dialog).toHaveTextContent(
+			"Works 44 hours over 5 days a week, 8 hours 48 minutes a day."
+		);
 		await user.type(within(dialog).getByLabelText("Hours a week"), "20");
 		expect(dialog).toHaveTextContent(
 			"Their employment type is Full-time, but these terms are part-time (20 h a week)."

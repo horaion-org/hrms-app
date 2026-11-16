@@ -17,7 +17,7 @@ import {
 	type HistoryEntry,
 	type MemberTerms,
 } from "@/features/employmentTerms/api";
-import { formatHours } from "@/features/employmentTerms/hours";
+import { durationShort } from "@/features/employmentTerms/hours";
 import {
 	memberTermsBodyOf,
 	memberTermsFormSchema,
@@ -270,7 +270,7 @@ export const ChangeEmploymentTermsDialog = ({
 			</FormRow>
 			{chosen && (
 				<p className="text-sm text-neutral-800">
-					{termsSentence(chosen, reference, t, language)}
+					{termsSentence(chosen, reference, t)}
 				</p>
 			)}
 			<FormRow
@@ -320,7 +320,7 @@ export const ChangeEmploymentTermsDialog = ({
 						t(`${key}.ownWeek`),
 						chosen
 							? t(`${key}.ownWeekHint`, {
-									week: formatHours(chosen.weekMinutes, language),
+									week: durationShort(chosen.weekMinutes, t),
 								})
 							: undefined
 					)}
@@ -329,7 +329,7 @@ export const ChangeEmploymentTermsDialog = ({
 						t(`${key}.ownDay`),
 						chosen?.dayMinutes
 							? t(`${key}.ownDayHint`, {
-									day: formatHours(chosen.dayMinutes, language),
+									day: durationShort(chosen.dayMinutes, t),
 								})
 							: undefined
 					)}
@@ -338,9 +338,9 @@ export const ChangeEmploymentTermsDialog = ({
 			{mismatch && chosen && (
 				<Callout tone="warning">
 					{t(`employmentTerms.row.mismatch.${mismatch}`, {
-						week: formatHours(
+						week: durationShort(
 							own.contractedWeekMinutes ?? chosen.weekMinutes,
-							language
+							t
 						),
 					})}
 				</Callout>

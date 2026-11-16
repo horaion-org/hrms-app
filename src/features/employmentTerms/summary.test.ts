@@ -26,58 +26,62 @@ describe("termsSentence", () => {
 		[
 			"a five-day week with daily overtime",
 			FIVE_DAY_WEEK,
-			"Works 5 days a week, 8.8 hours a day. Rest day Sunday. Overtime starts after 8.8 hours in a day or 44 hours in a week. Employment Act hour limits apply.",
+			"Works 44 hours over 5 days a week, 8 hours 48 minutes a day. Sunday is the rest day, every week. Overtime starts after 8 hours 48 minutes in a day or 44 hours in a week. Employment Act hour limits apply: rosters keep them within the work-hour limits.",
 		],
 		[
-			"shift work, averaged, rest day on the roster",
+			"shift work, counted by the week, rest day on the roster",
 			SIX_DAY_SHIFT,
-			"Works 6 days a week in shifts of up to 12 hours. The roster sets one rest day each week. Overtime starts after an average of 44 hours a week. Employment Act hour limits apply.",
+			"Works 44 hours a week over 6 days, in shifts of up to 12 hours. The roster picks one rest day each week. Shift work: overtime counts by the week, after 44 hours. Employment Act hour limits apply: rosters keep them within the work-hour limits.",
 		],
 		[
-			"a part-time week below the line",
+			"a part-time week below the line, with no rest day",
 			PART_TIME_20,
-			"Works 20 hours a week. The roster sets one rest day each week. Part-time: below 35 hours a week. Hours past their own hours are extra hours until 44 hours a week, then overtime. Employment Act hour limits apply.",
+			"Works 20 hours a week; the days vary. Rosters don’t set a rest day for part-timers. Part-time (under 35 hours a week): hours past their own hours are extra hours until 44 hours a week, then overtime. Employment Act hour limits apply: rosters keep them within the work-hour limits.",
 		],
 		[
 			"days without a day figure, limits off",
 			{ ...STANDARD_WEEK, hoursLimitsApply: false },
-			"Works 6 days a week. The roster sets one rest day each week. Overtime starts after 44 hours in a week. Employment Act hour limits don’t apply; hours are still counted.",
+			"Works 44 hours over 6 days a week. The roster picks one rest day each week. Overtime starts after 44 hours in a week. Employment Act hour limits don’t apply: rosters may plan them past the work-hour limits, and their hours are still counted.",
 		],
 		[
 			"half days",
 			{ ...FIVE_DAY_WEEK, daysPerWeek: 5.5, dayMinutes: 480, restDay: "SAT" },
-			"Works 5.5 days a week, 8 hours a day. Rest day Saturday. Overtime starts after 8 hours in a day or 44 hours in a week. Employment Act hour limits apply.",
+			"Works 44 hours over 5½ days a week, 8 hours a day. Saturday is the rest day, every week. Overtime starts after 8 hours in a day or 44 hours in a week. Employment Act hour limits apply: rosters keep them within the work-hour limits.",
 		],
 	])("reads %s", (_, fields, sentence) => {
-		expect(termsSentence(fields, REFERENCE, t, "en")).toBe(sentence);
+		expect(termsSentence(fields, REFERENCE, t)).toBe(sentence);
+	});
+
+	it("never says shift work is averaged", () => {
+		expect(termsSentence(SIX_DAY_SHIFT, REFERENCE, t)).not.toMatch(/average/i);
 	});
 
 	it("leaves overtime out when the reader can't know the part-time line", () => {
-		expect(termsSentence(PART_TIME_20, undefined, t, "en")).toBe(
-			"Works 20 hours a week. The roster sets one rest day each week. Employment Act hour limits apply."
+		expect(termsSentence(PART_TIME_20, undefined, t)).toBe(
+			"Works 20 hours a week; the days vary. The roster picks one rest day each week. Employment Act hour limits apply: rosters keep them within the work-hour limits."
 		);
 	});
 
 	it("never calls a week part-time when the company has no line", () => {
-		expect(termsSentence(PART_TIME_20, NO_LINE, t, "en")).toContain(
+		expect(termsSentence(PART_TIME_20, NO_LINE, t)).toContain(
 			"Overtime starts after 4 hours in a day or 20 hours in a week."
 		);
 	});
 
-	it("is written in Spanish too, with Spanish numbers", () => {
-		expect(termsSentence(FIVE_DAY_WEEK, NO_LINE, es, "es")).toBe(
-			"Trabaja 5 días a la semana, 8,8 horas al día. Día de descanso: Domingo. Las horas extra empiezan después de 8,8 horas al día o 44 horas a la semana. Se aplican los límites de horas de la Ley de Empleo."
+	it("is written in Spanish too", () => {
+		expect(termsSentence(FIVE_DAY_WEEK, NO_LINE, es)).toBe(
+			"Trabaja 44 horas en 5 días a la semana, 8 horas 48 minutos al día. El Domingo es el día de descanso, todas las semanas. Las horas extra empiezan después de 8 horas 48 minutos al día o 44 horas a la semana. Se aplican los límites de horas de la Ley de Empleo: los cuadrantes los mantienen dentro de los límites de horas de trabajo."
 		);
 	});
 });
 
 describe("weekShort and restShort", () => {
 	it.each<[WeekFields, string, string]>([
-		[FIVE_DAY_WEEK, "5 days · 8.8 h a day · 44 h", "Rest day Sunday"],
+		[FIVE_DAY_WEEK, "5 days · 8 h 48 min a day · 44 h", "Rest day Sunday"],
 		[SIX_DAY_SHIFT, "6 days · 12 h shifts · 44 h", "Rest day on the roster"],
 		[PART_TIME_20, "20 h a week", "Rest day on the roster"],
 	])("shortens %o", (fields, week, rest) => {
-		expect(weekShort(fields, t, "en")).toBe(week);
+		expect(weekShort(fields, t)).toBe(week);
 		expect(restShort(fields, t)).toBe(rest);
 	});
 });
@@ -89,8 +93,6 @@ describe("suggestedTermsName", () => {
 		[PART_TIME_20, "Part-time, 20 h"],
 		[{ ...FIVE_DAY_WEEK, daysPerWeek: null }, "44 h week"],
 	])("names %o", (fields, name) => {
-		expect(suggestedTermsName(fields, PART_TIME_BELOW_MINUTES, t, "en")).toBe(
-			name
-		);
+		expect(suggestedTermsName(fields, PART_TIME_BELOW_MINUTES, t)).toBe(name);
 	});
 });

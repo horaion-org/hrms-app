@@ -91,7 +91,7 @@ export const TERMS_OVERVIEW: TermsOverview = {
 	terms: [STANDARD_WEEK, FIVE_DAY_WEEK, SIX_DAY_SHIFT, PART_TIME_20],
 };
 
-/** The presets route's answer: the country's figures and two common weeks (no figure lives in the app). */
+/** The presets route's answer: the country's figures and the four common weeks (no figure lives in the app). */
 export const TERMS_PRESETS: TermsPresets = {
 	...REFERENCE,
 	presets: [
@@ -107,6 +107,17 @@ export const TERMS_PRESETS: TermsPresets = {
 			hoursLimitsApply: true,
 		},
 		{
+			key: "FIVE_AND_HALF_DAY",
+			name: "Five-and-a-half-day week, 44 h",
+			daysPerWeek: 5.5,
+			weekMinutes: 2640,
+			dayMinutes: 480,
+			restDay: "SUN",
+			dailyOvertime: true,
+			shiftWork: false,
+			hoursLimitsApply: true,
+		},
+		{
 			key: "SIX_DAY_SHIFT",
 			name: "Six-day shift, 12 h",
 			daysPerWeek: 6,
@@ -115,6 +126,17 @@ export const TERMS_PRESETS: TermsPresets = {
 			restDay: "ROSTERED",
 			dailyOvertime: false,
 			shiftWork: true,
+			hoursLimitsApply: true,
+		},
+		{
+			key: "PART_TIME",
+			name: "Part-time, 20 h",
+			daysPerWeek: null,
+			weekMinutes: 1200,
+			dayMinutes: null,
+			restDay: "ROSTERED",
+			dailyOvertime: false,
+			shiftWork: false,
 			hoursLimitsApply: true,
 		},
 	],

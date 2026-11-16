@@ -6,7 +6,13 @@ import {
 	PART_TIME_20,
 	SIX_DAY_SHIFT,
 } from "@/features/employmentTerms/fixtures";
-import { formatHours, parseHours } from "@/features/employmentTerms/hours";
+import {
+	durationLong,
+	durationShort,
+	formatDays,
+	hoursInput,
+	parseHours,
+} from "@/features/employmentTerms/hours";
 import {
 	BLANK_TERMS,
 	parseDays,
@@ -42,15 +48,41 @@ describe("parseHours", () => {
 		["eight", { kind: "invalid" }],
 		["-4", { kind: "invalid" }],
 		["8.33", { kind: "notWholeMinutes" }],
-		// A stored 500 minutes shows as 8.3333 and reads back as itself.
 		["8.3333", { kind: "minutes", minutes: 500 }],
+		["8:48", { kind: "minutes", minutes: 528 }],
+		["8h48", { kind: "minutes", minutes: 528 }],
+		["8 h 48 min", { kind: "minutes", minutes: 528 }],
+		["8h", { kind: "minutes", minutes: 480 }],
+		["8:60", { kind: "invalid" }],
 	])("reads %j", (text, parsed) => {
 		expect(parseHours(text)).toEqual(parsed);
 	});
 
-	it("formats minutes back as hours", () => {
-		expect(formatHours(528, "en")).toBe("8.8");
-		expect(formatHours(2640, "es")).toBe("44");
+	it("shows minutes in a field as hours, or hours and minutes, never decimals", () => {
+		expect(hoursInput(2640)).toBe("44");
+		expect(hoursInput(528)).toBe("8:48");
+		expect(hoursInput(500)).toBe("8:20");
+		expect(hoursInput(null)).toBe("");
+		// What the field shows reads back as the same minutes.
+		expect(parseHours(hoursInput(500))).toEqual({
+			kind: "minutes",
+			minutes: 500,
+		});
+	});
+
+	it("words a duration in hours and minutes, in English and Spanish", () => {
+		expect(durationLong(528, t)).toBe("8 hours 48 minutes");
+		expect(durationLong(60, t)).toBe("1 hour");
+		expect(durationLong(30, t)).toBe("30 minutes");
+		expect(durationShort(528, t)).toBe("8 h 48 min");
+		expect(durationShort(2640, t)).toBe("44 h");
+		expect(durationLong(528, i18n.getFixedT("es"))).toBe("8 horas 48 minutos");
+	});
+
+	it("writes half days with ½", () => {
+		expect(formatDays(5)).toBe("5");
+		expect(formatDays(5.5)).toBe("5½");
+		expect(formatDays(0.5)).toBe("½");
 	});
 });
 
@@ -80,19 +112,23 @@ describe("termsFormSchema", () => {
 		[
 			"hours that aren't whole minutes",
 			{ dayHours: "8.33" },
-			{ dayHours: "Use hours that make whole minutes, such as 8.5 or 8.75." },
+			{ dayHours: "Use whole minutes, such as 8:30 or 8:45." },
 		],
 		[
 			"a week longer than its days",
 			{ weekHours: "48" },
 			{
-				weekHours: "The week is longer than its working days × the normal day.",
+				weekHours:
+					"5 days of 8 h 48 min make 44 h, less than the 48 h normal hours a week. Raise the hours a day or the working days.",
 			},
 		],
 		[
 			"daily overtime without a day",
 			{ dayHours: "" },
-			{ dayHours: "Enter the hours." },
+			{
+				dayHours:
+					"Enter the normal hours a day, or untick overtime after the normal day.",
+			},
 		],
 		[
 			"a fixed rest day without a weekday",

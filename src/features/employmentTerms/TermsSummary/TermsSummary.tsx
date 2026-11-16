@@ -1,52 +1,41 @@
 import { useTranslation } from "react-i18next";
-import { formattingLocale } from "@/common/formattingLocale";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
-import type {
-	TermsReference,
-	WeekFields,
-} from "@/features/employmentTerms/api";
-import { termsSentence } from "@/features/employmentTerms/summary";
+import type { ReadBack } from "@/features/employmentTerms/termsReadBack";
 
 export type TermsSummaryProps = {
-	/** The week so far; undefined while it is incomplete. */
-	fields: WeekFields | undefined;
-	/** The figures to read overtime against; without them overtime is left out. */
-	reference: TermsReference | undefined;
+	/** What the terms on the form mean, or what is left to fill in. */
+	readBack: ReadBack;
 	className?: string;
 };
 
 /**
- * What the terms being built mean, in plain words, updated as they change
- * and announced politely, in the box the constraint dialog's preview uses.
+ * "These terms in words": the form's terms read back as a sentence, or what
+ * is still to fill in, updated as the form changes and announced politely.
  */
 export const TermsSummary = ({
-	fields,
-	reference,
+	readBack,
 	className,
 }: TermsSummaryProps): FunctionComponent => {
-	const { t, i18n } = useTranslation();
-	const language = formattingLocale(i18n);
+	const { t } = useTranslation();
 	return (
 		<section
 			aria-live="polite"
 			className={joinClassNames(
-				"rounded-lg border border-neutral-400 bg-neutral-100 px-4 py-3",
+				"border-b border-ink-blue-100 bg-ink-blue-50 py-4",
 				className
 			)}
 		>
-			<h3 className="text-sm font-semibold text-neutral-900">
-				{t("employmentTerms.summary.title")}
+			<h3 className="text-xs font-semibold text-ink-blue-900 uppercase">
+				{t("employmentTerms.readBack.title")}
 			</h3>
 			<p
 				className={joinClassNames(
-					"mt-2 text-sm",
-					fields ? "text-neutral-900" : "text-neutral-700"
+					"mt-1 text-sm",
+					readBack.complete ? "text-neutral-900" : "text-neutral-700"
 				)}
 			>
-				{fields
-					? termsSentence(fields, reference, t, language)
-					: t("employmentTerms.summary.incomplete")}
+				{readBack.text}
 			</p>
 		</section>
 	);

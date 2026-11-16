@@ -1,6 +1,5 @@
 import { useId } from "react";
 import { useTranslation } from "react-i18next";
-import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { FormRow, formRowIds } from "@/components/forms/FormRow";
 import { Select } from "@/components/forms/Select";
@@ -9,7 +8,7 @@ import type {
 	TermsReference,
 } from "@/features/employmentTerms/api";
 import { Callout } from "@/components/ui/Callout";
-import { formatHours } from "@/features/employmentTerms/hours";
+import { durationShort } from "@/features/employmentTerms/hours";
 import { termsSentence } from "@/features/employmentTerms/summary";
 import { partTimeMismatch } from "@/features/employmentTerms/termsChanges";
 import { PROFILE_FIELD_WIDTH } from "@/features/people/profileLayout";
@@ -41,8 +40,7 @@ export const EmploymentTermsField = ({
 	reference,
 	disabled = false,
 }: EmploymentTermsFieldProps): FunctionComponent => {
-	const { t, i18n } = useTranslation();
-	const language = formattingLocale(i18n);
+	const { t } = useTranslation();
 	const id = useId();
 	const ids = formRowIds(id);
 	const chosen = terms.find((each) => each.id === value);
@@ -62,7 +60,7 @@ export const EmploymentTermsField = ({
 				label={t("people.form.employmentTerms")}
 				hint={
 					chosen
-						? `${termsSentence(chosen, reference, t, language)} ${t("people.form.employmentTermsHint")}`
+						? `${termsSentence(chosen, reference, t)} ${t("people.form.employmentTermsHint")}`
 						: t("people.form.employmentTermsHint")
 				}
 			>
@@ -82,7 +80,7 @@ export const EmploymentTermsField = ({
 			{mismatch && chosen && (
 				<Callout tone="warning">
 					{t(`employmentTerms.row.mismatch.${mismatch}`, {
-						week: formatHours(chosen.weekMinutes, language),
+						week: durationShort(chosen.weekMinutes, t),
 					})}
 				</Callout>
 			)}

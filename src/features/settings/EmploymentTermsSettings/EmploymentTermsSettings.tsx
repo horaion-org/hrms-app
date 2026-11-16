@@ -119,7 +119,6 @@ export const EmploymentTermsSettings = ({
 	const columns = useMemo(
 		(): Array<DataTableColumn<TermsOverviewItem>> =>
 			employmentTermsColumns(t, {
-				language,
 				canUpdate,
 				canListHolders,
 				onEdit: (terms) => {
@@ -130,7 +129,7 @@ export const EmploymentTermsSettings = ({
 				},
 				onRowAction: setAction,
 			}),
-		[t, language, canUpdate, canListHolders]
+		[t, canUpdate, canListHolders]
 	);
 	const forbidden =
 		!canRead ||

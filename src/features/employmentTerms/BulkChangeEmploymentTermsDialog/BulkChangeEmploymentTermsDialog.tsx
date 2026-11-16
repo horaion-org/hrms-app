@@ -134,7 +134,7 @@ export const BulkChangeEmploymentTermsDialog = ({
 			</FormRow>
 			{selected && (
 				<p className="text-sm text-neutral-800">
-					{termsSentence(selected, terms.data?.reference, t, language)}
+					{termsSentence(selected, terms.data?.reference, t)}
 				</p>
 			)}
 			<FormRow

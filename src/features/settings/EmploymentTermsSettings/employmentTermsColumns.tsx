@@ -18,8 +18,6 @@ export type TermsRowAction = {
 };
 
 export type EmploymentTermsColumnsOptions = {
-	/** The locale the working week is written in. */
-	language: string;
 	/** Whether the reader may change terms (`employment_terms:update`); without it there are no row actions. */
 	canUpdate: boolean;
 	/** Whether each count links to the People list (people and their terms readable company-wide). */
@@ -52,7 +50,6 @@ const statusCell = (terms: TermsOverviewItem, t: TFunction): ReactNode => (
 export const employmentTermsColumns = (
 	t: TFunction,
 	{
-		language,
 		canUpdate,
 		canListHolders,
 		onEdit,
@@ -69,7 +66,7 @@ export const employmentTermsColumns = (
 		header: t(`${key}.week`),
 		cell: (terms) => (
 			<>
-				<span className="block">{weekShort(terms, t, language)}</span>
+				<span className="block">{weekShort(terms, t)}</span>
 				<span className="block text-neutral-700">{restShort(terms, t)}</span>
 			</>
 		),
