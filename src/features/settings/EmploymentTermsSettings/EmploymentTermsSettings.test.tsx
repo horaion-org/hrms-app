@@ -81,15 +81,15 @@ describe("EmploymentTermsSettings", () => {
 		const standard = within(rows).getByRole("row", { name: /Standard week/ });
 		expect(standard).toHaveTextContent("44 h over 6 days");
 		expect(standard).toHaveTextContent("Roster picks the rest day");
-		expect(standard).toHaveTextContent("After 44 h a week");
+		expect(standard).toHaveTextContent("Overtime after 44 h a week");
 		expect(standard).toHaveTextContent("Default");
 		// Shift work and part-time say so beside the name, with how overtime counts.
 		const shift = within(rows).getByRole("row", { name: /Six-day shift/ });
 		expect(within(shift).getByText("Shift work")).toBeVisible();
-		expect(shift).toHaveTextContent("By the week, after 44 h");
+		expect(shift).toHaveTextContent("Overtime by the week, after 44 h");
 		const partTime = within(rows).getByRole("row", { name: /Part-time, 20 h/ });
 		expect(within(partTime).getByText("Part-time")).toBeVisible();
-		expect(partTime).toHaveTextContent("Extra hours to 44 h, then overtime");
+		expect(partTime).toHaveTextContent("Extra hours up to 44 h, then overtime");
 		expect(
 			within(rows).getByRole("row", { name: /Six-day shift/ })
 		).toHaveTextContent("41 people+2 from a later date");

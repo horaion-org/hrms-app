@@ -5285,7 +5285,6 @@
 			"add": "Add employment terms",
 			"label": "Employment terms",
 			"terms": "Terms",
-			"week": "Week and rest day",
 			"people": "People",
 			"default": "Default",
 			"peopleCount_one": "{{count}} person",
@@ -5342,8 +5341,7 @@
 				"held": "People have had these terms, so they can’t be deleted. Deactivate them instead.",
 				"inactive": "These terms are inactive. Activate them first."
 			},
-			"peopleLink": "Show the people on {{name}}",
-			"overtime": "Overtime"
+			"peopleLink": "Show the people on {{name}}"
 		},
 		"summary": {
 			"weekOnly": "Works {{week}} a week; the days vary.",
@@ -5380,11 +5378,11 @@
 				"overDays_one": "{{week}} over {{days}} day",
 				"overDays_other": "{{week}} over {{days}} days",
 				"shifts": "Shifts up to {{day}}",
-				"overtimeWeek": "After {{week}} a week",
-				"overtimeDayOrWeek": "After {{day}} a day or {{week}} a week",
-				"overtimeShiftWork": "By the week, after {{week}}",
-				"overtimePartTime": "Extra hours to a full-timer’s week, then overtime",
-				"overtimePartTimeUntil": "Extra hours to {{full}}, then overtime"
+				"overtimeWeek": "Overtime after {{week}} a week",
+				"overtimeDayOrWeek": "Overtime after {{day}} a day or {{week}} a week",
+				"overtimeShiftWork": "Overtime by the week, after {{week}}",
+				"overtimePartTime": "Extra hours up to a full-timer’s week, then overtime",
+				"overtimePartTimeUntil": "Extra hours up to {{full}}, then overtime"
 			}
 		},
 		"dialog": {

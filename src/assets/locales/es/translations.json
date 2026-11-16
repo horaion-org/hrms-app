@@ -5285,7 +5285,6 @@
 			"add": "Añadir condiciones de empleo",
 			"label": "Condiciones de empleo",
 			"terms": "Condiciones",
-			"week": "Semana y día de descanso",
 			"people": "Personas",
 			"default": "Predeterminadas",
 			"peopleCount_one": "{{count}} persona",
@@ -5342,8 +5341,7 @@
 				"held": "Hay personas que han tenido estas condiciones, así que no se pueden eliminar. Desactívalas.",
 				"inactive": "Estas condiciones están inactivas. Actívalas primero."
 			},
-			"peopleLink": "Ver las personas con {{name}}",
-			"overtime": "Horas extra"
+			"peopleLink": "Ver las personas con {{name}}"
 		},
 		"summary": {
 			"weekOnly": "Trabaja {{week}} a la semana; los días varían.",
@@ -5380,9 +5378,9 @@
 				"overDays_one": "{{week}} en {{days}} día",
 				"overDays_other": "{{week}} en {{days}} días",
 				"shifts": "Turnos de hasta {{day}}",
-				"overtimeWeek": "Después de {{week}} a la semana",
-				"overtimeDayOrWeek": "Después de {{day}} al día o {{week}} a la semana",
-				"overtimeShiftWork": "Por semana, después de {{week}}",
+				"overtimeWeek": "Horas extra después de {{week}} a la semana",
+				"overtimeDayOrWeek": "Horas extra después de {{day}} al día o {{week}} a la semana",
+				"overtimeShiftWork": "Horas extra por semana, después de {{week}}",
 				"overtimePartTime": "Horas adicionales hasta la semana de un tiempo completo; después, horas extra",
 				"overtimePartTimeUntil": "Horas adicionales hasta {{full}}; después, horas extra"
 			}

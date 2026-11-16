@@ -81,19 +81,19 @@ describe("weekLines and overtimeShort", () => {
 			"a five-day week",
 			FIVE_DAY_WEEK,
 			["44 h over 5 days", "Rest day Sunday"],
-			"After 8 h 48 min a day or 44 h a week",
+			"Overtime after 8 h 48 min a day or 44 h a week",
 		],
 		[
 			"shift work",
 			SIX_DAY_SHIFT,
 			["44 h over 6 days", "Shifts up to 12 h", "Roster picks the rest day"],
-			"By the week, after 44 h",
+			"Overtime by the week, after 44 h",
 		],
 		[
 			"part-time, with no rest day",
 			PART_TIME_20,
 			["20 h a week", "Days vary"],
-			"Extra hours to 44 h, then overtime",
+			"Extra hours up to 44 h, then overtime",
 		],
 	])("words %s for the list", (_, fields, lines, overtime) => {
 		expect(weekLines(fields, REFERENCE, t)).toEqual(lines);
