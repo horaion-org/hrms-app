@@ -21,6 +21,7 @@ import {
 	asksForDecision,
 	marksLeaveOrCover,
 } from "@/features/scheduling/roster/rosterSummary";
+import { hoursFromMinutes } from "@/features/scheduling/scheduleDraft";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 
 /*
@@ -312,14 +313,22 @@ const timeOffOf = (
  * A shift tile's status line. On a shift kept around approved part-day leave
  * (the API's ADR-0077, part 4) it names the leave and its time on every
  * roster, ahead of the day type: "Annual leave 07:00–11:00", or "Off
- * 07:00–11:00" for a viewer who may not see the leave. Any other shift reads
- * as `tileStatus`. Pure.
+ * 07:00–11:00" for a viewer who may not see the leave. A shift stretched into
+ * overtime (the API's ADR-0110) says by how much: "Stretched +2 h". Any other
+ * shift reads as `tileStatus`. Pure.
  */
 export const shiftStatus = (
-	cell: Pick<RosterShiftCell, "start" | "end" | "workedTimes" | "note">,
+	cell: Pick<
+		RosterShiftCell,
+		"start" | "end" | "workedTimes" | "note" | "stretchMinutes"
+	>,
 	showsIssues: boolean,
 	t: TFunction
 ): string | undefined => {
+	if (!cell.workedTimes?.length && cell.stretchMinutes)
+		return t("scheduling.rosterMarkers.stretched", {
+			hours: hoursFromMinutes(cell.stretchMinutes),
+		});
 	if (!cell.workedTimes?.length) return tileStatus(cell.note, showsIssues, t);
 	const portion = cell.note?.leavePortion;
 	if (cell.note?.leaveTypeName && portion)

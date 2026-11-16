@@ -425,6 +425,21 @@ describe("sentencePartsOf with constraintWords", () => {
 		).toBe(sentence);
 	});
 
+	it.each([
+		[
+			"1",
+			"When a role is missing for some hours of a shift, someone already working the shift next to it may stay on after their shift, or start before it, for up to 1 hour. Offered when you repair the roster, never in a generated roster.",
+		],
+		[
+			"2",
+			"When a role is missing for some hours of a shift, someone already working the shift next to it may stay on after their shift, or start before it, for up to 2 hours. Offered when you repair the roster, never in a generated roster.",
+		],
+	])("reads an overtime stretch of %s hours", (hours, sentence) => {
+		expect(read("OVERTIME_STRETCH", [plain("STRETCH_HOURS", hours)])).toBe(
+			sentence
+		);
+	});
+
 	it("reads the pay rates with a day off counted as ordinary hours when it has no rate of its own", () => {
 		expect(
 			read("PAY_RATES", [

@@ -515,6 +515,16 @@ describe("shiftStatus", () => {
 			end: "2026-10-18",
 		})[0]!.days["2026-10-12"] as RosterShiftCell;
 
+	it("given_aStretchedShift_when_worded_then_saysByHowMuch", () => {
+		const stretched = {
+			...scheduleAssignmentsFixture()[0]!,
+			dayType: "REST",
+			stretch: { beforeMinutes: 60, afterMinutes: 60 },
+		};
+
+		expect(shiftStatus(mondayOf(stretched), false, t)).toBe("Stretched +2 h");
+	});
+
 	it("given_aShiftKeptAroundLeaveAndALeaveReader_when_worded_then_namesTheLeaveAndItsTime", () => {
 		expect(shiftStatus(mondayOf(shortenedShiftFixture()), true, t)).toBe(
 			"Annual leave 09:00–11:00"

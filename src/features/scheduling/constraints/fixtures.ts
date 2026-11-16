@@ -330,6 +330,16 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 		fields: [],
 	},
 	{
+		type: "OVERTIME_STRETCH",
+		category: "WORKING_HOURS",
+		hasRequirement: false,
+		requirementPolicy: "SETTING",
+		onePerDepartment: true,
+		levels: [...ANY_LEVEL],
+		...ORDINARY,
+		fields: [number("STRETCH_HOURS", 1, 4)],
+	},
+	{
 		type: "KEEP_DAYS_OFF_TOGETHER",
 		category: "SHIFT_PATTERN",
 		hasRequirement: true,

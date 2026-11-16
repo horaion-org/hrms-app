@@ -49,6 +49,12 @@ const moveSchema = z.object({
 	period: spanSchema,
 	/** How long a stretch is; null for the other kinds. */
 	extensionMinutes: z.number().nullable(),
+	/**
+	 * Which edge of the shift a stretch hangs off (the API's ADR-0110): the
+	 * person starts early, or stays on after it. Null for the other kinds, for
+	 * a side the API does not know, and absent from an older API.
+	 */
+	side: z.enum(["BEFORE_SHIFT", "AFTER_SHIFT"]).nullish().catch(null),
 });
 
 /** One move of an engine option: who, from where, to which shift and day. */

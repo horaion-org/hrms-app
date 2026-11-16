@@ -3706,6 +3706,7 @@
 				"MAX_CALL_BACKS_PER_PERSON": "Call-backs on a rest or off day",
 				"PAY_RATES": "Pay rates for extra hours",
 				"NO_OVERTIME_WHEN_GENERATING": "No overtime in generated rosters",
+				"OVERTIME_STRETCH": "Overtime stretch",
 				"KEEP_DAYS_OFF_TOGETHER": "Keep days off together"
 			},
 			"sentences": {
@@ -3816,6 +3817,8 @@
 				"MAX_CALL_BACKS_PER_PERSON_zero": "Nobody is called back to work on a rest or off day.",
 				"MAX_CALL_BACKS_PER_PERSON_one": "Everyone may be called back to work on a rest or off day at most <CALL_BACKS/> time in a roster.",
 				"MAX_CALL_BACKS_PER_PERSON_other": "Everyone may be called back to work on a rest or off day at most <CALL_BACKS/> times in a roster.",
+				"OVERTIME_STRETCH_one": "When a role is missing for some hours of a shift, someone already working the shift next to it may stay on after their shift, or start before it, for up to <STRETCH_HOURS/> hour. Offered when you repair the roster, never in a generated roster.",
+				"OVERTIME_STRETCH_other": "When a role is missing for some hours of a shift, someone already working the shift next to it may stay on after their shift, or start before it, for up to <STRETCH_HOURS/> hours. Offered when you repair the roster, never in a generated roster.",
 				"PAY_RATES": {
 					"rates": "An hour of overtime costs <OVERTIME_PERCENT/>% of a normal hour, and an hour of work on a rest day <REST_DAY_WORK_PERCENT/>%.",
 					"dayOffOrdinary": "Work on a day off counts as ordinary hours.",
@@ -3873,6 +3876,7 @@
 				"OVERTIME_HOURS_A_MONTH": "Overtime hours a month",
 				"PART_SHIFT_MINUTES": "Shortest part (minutes)",
 				"CALL_BACKS": "Most call-backs a person",
+				"STRETCH_HOURS": "Most hours before or after a shift",
 				"OVERTIME_PERCENT": "An hour of overtime costs (% of a normal hour)",
 				"REST_DAY_WORK_PERCENT": "An hour of work on a rest day costs (% of a normal hour)",
 				"TIME_OFF_EARNED_PERCENT": "Time off earned (%)",
@@ -4050,6 +4054,7 @@
 				"OVERTIME_HOURS_A_MONTH": "how many",
 				"PART_SHIFT_MINUTES": "how many",
 				"CALL_BACKS": "how many",
+				"STRETCH_HOURS": "how many",
 				"OVERTIME_PERCENT": "how much",
 				"REST_DAY_WORK_PERCENT": "how much",
 				"TIME_OFF_EARNED_PERCENT": "how much",
@@ -4077,6 +4082,7 @@
 				"MAX_CALL_BACKS_PER_PERSON": "For example: Everyone may be called back to work on a rest or off day at most 2 times in a roster.",
 				"PAY_RATES": "These rates only guide which roster the engine prefers; they are not used for pay.",
 				"NO_OVERTIME_WHEN_GENERATING": "For example: shifts the team can’t staff without extra hours stay open, and you choose overtime when you repair the roster.",
+				"OVERTIME_STRETCH": "For example: no Supervisor is on the Late shift until 16:00, so the Supervisor on Early may stay on 2 hours. A stretch covers a role missing for some hours of a shift; it never adds a person to a shift’s headcount.",
 				"KEEP_DAYS_OFF_TOGETHER": "It never costs cover: it only chooses between rosters that are otherwise equal."
 			},
 			"fieldHints": {
@@ -4092,6 +4098,7 @@
 				"WORK_HOURS_A_DAY": "{{min}} to {{max}}. MOM’s limit is 12.",
 				"OVERTIME_HOURS_A_MONTH": "{{min}} to {{max}}. MOM’s limit is 72; rest-day work is outside it, except hours past the normal day.",
 				"CALL_BACKS": "{{min}} to {{max}}. 0 means nobody is called back; without this setting, nobody is called back either.",
+				"STRETCH_HOURS": "{{min}} to {{max}} hours. Without this setting, nobody is asked to stay on or start early.",
 				"OVERTIME_PERCENT": "{{min}} to {{max}}. MOM’s rate is 150, 1.5 times a normal hour.",
 				"REST_DAY_WORK_PERCENT": "{{min}} to {{max}}. MOM’s rate is 200, 2 times a normal hour.",
 				"DAY_OFF_WORK_PERCENT": "{{min}} to {{max}} when a day off has its own rate.",
@@ -4116,6 +4123,7 @@
 				"MAX_CALL_BACKS_PER_PERSON": "Call-backs",
 				"PAY_RATES": "Pay rates",
 				"NO_OVERTIME_WHEN_GENERATING": "No overtime when generating",
+				"OVERTIME_STRETCH": "Overtime stretch",
 				"KEEP_DAYS_OFF_TOGETHER": "Days off together"
 			},
 			"descriptions": {
@@ -4133,7 +4141,8 @@
 				"MAX_OVERTIME_HOURS_PER_MONTH": "How much overtime one person may be given in a month.",
 				"MAX_CALL_BACKS_PER_PERSON": "How often someone may be called in on a rest or off day.",
 				"PAY_RATES": "What extra hours cost, so the engine prefers cheaper rosters.",
-				"NO_OVERTIME_WHEN_GENERATING": "Generated rosters leave shifts open rather than add overtime."
+				"NO_OVERTIME_WHEN_GENERATING": "Generated rosters leave shifts open rather than add overtime.",
+				"OVERTIME_STRETCH": "Cover a role missing for some hours of a shift by someone staying on or starting early, in the repair options."
 			},
 			"categoryDescriptions": {
 				"STAFFING": "Who must be on each shift, and how many.",
@@ -4629,7 +4638,8 @@
 			"partDayLeave": "{{type}} {{time}}",
 			"partDayOff": "Off {{time}}",
 			"partGapNeedsCover": "{{time}} needs cover",
-			"partGap": "Short {{time}}: {{name}} is on leave"
+			"partGap": "Short {{time}}: {{name}} is on leave",
+			"stretched": "Stretched +{{hours}} h"
 		},
 		"rosterEdit": {
 			"title": "{{name}} · {{date}}",
@@ -4940,6 +4950,8 @@
 					"REASSIGN": "Move {{name}} from {{fromShift}} {{fromDay}} to {{shift}} {{day}}",
 					"CALL_IN": "Call in {{name}} for {{shift}} {{day}}",
 					"OVERTIME_EXTENSION": "Extend {{name}}’s {{shift}} by {{hours}} h",
+					"OVERTIME_EXTENSION_AFTER": "{{name}} stays on after {{shift}} until {{time}} (+{{hours}} h)",
+					"OVERTIME_EXTENSION_BEFORE": "{{name}} starts {{shift}} early at {{time}} (+{{hours}} h)",
 					"UNKNOWN": "A change the app can’t describe yet"
 				},
 				"refusal": {

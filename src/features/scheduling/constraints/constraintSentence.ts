@@ -88,6 +88,7 @@ export type SentenceKey =
 	| `${typeof SENTENCES}.MAX_OVERTIME_HOURS_PER_MONTH`
 	| `${typeof SENTENCES}.SHORTEST_PART_SHIFT`
 	| `${typeof SENTENCES}.MAX_CALL_BACKS_PER_PERSON`
+	| `${typeof SENTENCES}.OVERTIME_STRETCH`
 	| `${typeof SENTENCES}.PAY_RATES.${PayRatesPart}`
 	| `${typeof SENTENCES}.NO_OVERTIME_WHEN_GENERATING`
 	| `${typeof SENTENCES}.KEEP_DAYS_OFF_TOGETHER.${Firmness}`
@@ -115,6 +116,7 @@ const COUNTED_FIELD = {
 	MAX_OVERTIME_HOURS_PER_MONTH: "OVERTIME_HOURS_A_MONTH",
 	SHORTEST_PART_SHIFT: "PART_SHIFT_MINUTES",
 	MAX_CALL_BACKS_PER_PERSON: "CALL_BACKS",
+	OVERTIME_STRETCH: "STRETCH_HOURS",
 } as const satisfies Partial<Record<ConstraintType, ConstraintField>>;
 
 const valuesOf = (
@@ -250,6 +252,7 @@ export const sentencePartsOf = (
 		case "MAX_OVERTIME_HOURS_PER_MONTH":
 		case "SHORTEST_PART_SHIFT":
 		case "MAX_CALL_BACKS_PER_PERSON":
+		case "OVERTIME_STRETCH":
 			return [
 				{
 					i18nKey: `${SENTENCES}.${constraint.type}`,

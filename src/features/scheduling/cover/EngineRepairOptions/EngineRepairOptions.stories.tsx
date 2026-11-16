@@ -51,6 +51,23 @@ export const Options: Story = {
 	},
 };
 
+/** Chen stays on after the swing shift: a stretch checked by the engine, ready to review. */
+export const OvertimeStretch: Story = {
+	args: {
+		repair: {
+			status: "ready",
+			options: [
+				feasibleRepair([stretchMove()], {
+					kind: "overtime_stretch",
+					workingTimeRulesChecked: true,
+					extraMinutes: { overtime: 120, restDayWork: 0, timeOffEarned: 0 },
+				}),
+			],
+			ask: fn(),
+		},
+	},
+};
+
 /** The engine found nothing. */
 export const Nothing: Story = {
 	args: { repair: { status: "ready", options: [], ask: fn() } },

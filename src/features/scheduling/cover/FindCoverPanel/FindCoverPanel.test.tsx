@@ -500,12 +500,12 @@ describe("FindCoverPanel", () => {
 		);
 	});
 
-	it("given_aStretchOrAPublishedRoster_when_listed_then_madeByHandWithNothingToReview", async () => {
+	it("given_aStretchWithoutItsSide_when_listed_then_madeByHandWithNothingToReview", async () => {
 		stubApi({
 			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
 			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
 			[`POST ${REPAIR_OPTIONS}`]: answer(
-				repairOptionsFixture([feasibleRepair([stretchMove()])])
+				repairOptionsFixture([feasibleRepair([stretchMove({ side: null })])])
 			),
 		});
 		show();

@@ -657,6 +657,18 @@ const rosterCellKindSchema = z
 const dayTypeSchema = z.string().nullable().catch(null);
 
 /**
+ * An overtime stretch of a worked day (the API's ADR-0110): the minutes worked
+ * before its shift starts and after it ends. Null, or absent from an older
+ * API, for a day worked as its shift is.
+ */
+const shiftStretchSchema = z
+	.object({ beforeMinutes: z.number(), afterMinutes: z.number() })
+	.nullish();
+
+/** A worked day's minutes before and after its shift. */
+export type ShiftStretch = NonNullable<z.infer<typeof shiftStretchSchema>>;
+
+/**
  * What a roster day holds before or after a hand change: a shift worked as a
  * job title, a non-working day of its type, leave (only for someone who may
  * read leave), or absent.
@@ -666,6 +678,8 @@ export const rosterCellSchema = z.object({
 	dayType: dayTypeSchema,
 	shift: rosterShiftSchema.nullable(),
 	jobTitle: rosterJobTitleSchema.nullable(),
+	/** A worked day's overtime stretch; see `shiftStretchSchema`. */
+	stretch: shiftStretchSchema,
 });
 
 export type RosterCellValue = z.infer<typeof rosterCellSchema>;
@@ -768,6 +782,8 @@ export const scheduleAssignmentSchema = z.object({
 	/** With `uncoveredShift`, when only part of it is short: the hours that need cover. */
 	uncoveredFrom: z.string().nullish(),
 	uncoveredTo: z.string().nullish(),
+	/** A worked day's overtime stretch; see `shiftStretchSchema`. */
+	stretch: shiftStretchSchema,
 });
 
 /** One member's day in a generated schedule: a frozen shift, or off with its reason. */

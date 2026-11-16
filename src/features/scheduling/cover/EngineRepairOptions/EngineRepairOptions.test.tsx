@@ -80,7 +80,9 @@ describe("EngineRepairOptions", () => {
 			)
 		).toBeVisible();
 		expect(
-			within(fills!).getByText("Extend Chen Wei’s Swing Shift by 2 h")
+			within(fills!).getByText(
+				"Chen Wei stays on after Swing Shift until 15:00 (+2 h)"
+			)
 		).toBeVisible();
 		expect(within(cannot!).getByText("Can’t fill the gap")).toBeVisible();
 		expect(
@@ -154,7 +156,7 @@ describe("EngineRepairOptions", () => {
 			status: "ready" as const,
 			options: [
 				feasibleRepair([callInMove()]),
-				feasibleRepair([stretchMove()]),
+				feasibleRepair([stretchMove({ side: null })]),
 			],
 			ask: vi.fn(),
 		};
@@ -185,6 +187,43 @@ describe("EngineRepairOptions", () => {
 		).toHaveLength(2);
 	});
 
+	it("offers to review a stretch, sent as the person's own shift with the minutes after it", async () => {
+		const onReview = vi.fn();
+		render(
+			<EngineRepairOptions
+				names={names}
+				repair={{
+					status: "ready",
+					options: [
+						feasibleRepair([stretchMove()], {
+							kind: "overtime_stretch",
+							workingTimeRulesChecked: true,
+						}),
+					],
+					ask: vi.fn(),
+				}}
+				onReview={onReview}
+			/>
+		);
+
+		await userEvent.click(
+			screen.getByRole("button", { name: "Review this change" })
+		);
+
+		expect(onReview).toHaveBeenCalledWith([
+			expect.objectContaining({
+				membershipId: "m-3",
+				kind: "WORK",
+				stretchAfterMinutes: 120,
+			}),
+		]);
+		expect(
+			screen.queryByText(
+				"The app can’t apply this one: make it by hand on the roster."
+			)
+		).toBeNull();
+	});
+
 	it("shows a feasible option the app cannot apply with its moves and the by-hand line, an infeasible one with its reason only", () => {
 		render(
 			<EngineRepairOptions
@@ -192,7 +231,7 @@ describe("EngineRepairOptions", () => {
 				repair={{
 					status: "ready",
 					options: [
-						feasibleRepair([stretchMove()]),
+						feasibleRepair([stretchMove({ side: null })]),
 						feasibleRepair([reassignMove({ fromDate: "2026-10-16" })]),
 						infeasibleRepair(),
 					],

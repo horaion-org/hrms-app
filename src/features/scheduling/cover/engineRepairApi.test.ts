@@ -10,6 +10,7 @@ import {
 	feasibleRepair,
 	NOT_ASSIGNED_FIXTURE,
 	repairOptionsFixture,
+	stretchMove,
 } from "@/features/scheduling/cover/engineRepairFixtures";
 import { scheduleKey } from "@/features/scheduling/schedules/api";
 
@@ -165,5 +166,29 @@ describe("engine repair options client", () => {
 		expect(parsed.options[0]?.extraMinutes?.overtime).toBe(90);
 		expect(parsed.options[1]?.kind).toBeUndefined();
 		expect(parsed.options[1]?.extraMinutes).toBeUndefined();
+	});
+
+	it("reads a stretch move's side, and a side it does not know as none", async () => {
+		stubApi({
+			[`POST ${REPAIR_OPTIONS}`]: {
+				status: 200,
+				body: envelope(
+					repairOptionsFixture([
+						feasibleRepair([stretchMove()]),
+						feasibleRepair([stretchMove({ side: "SIDEWAYS" as never })]),
+						feasibleRepair([callInMove()]),
+					])
+				),
+			},
+		});
+
+		const parsed = await fetchRepairOptions(TARGET, {
+			...GAP,
+			expectedRevision: 1,
+		});
+
+		expect(parsed.options[0]?.moves[0]?.side).toBe("AFTER_SHIFT");
+		expect(parsed.options[1]?.moves[0]?.side).toBeNull();
+		expect(parsed.options[2]?.moves[0]?.side).toBeUndefined();
 	});
 });

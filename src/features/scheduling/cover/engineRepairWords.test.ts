@@ -51,6 +51,19 @@ describe("moveLine", () => {
 			"Call in Aisha Rahman for Front Desk AM Sat, Oct 17"
 		);
 		expect(moveLine(stretchMove(), names, t)).toBe(
+			"Chen Wei stays on after Swing Shift until 15:00 (+2 h)"
+		);
+		expect(
+			moveLine(
+				stretchMove({
+					side: "BEFORE_SHIFT",
+					period: { start: "2026-10-17T07:00:00", end: "2026-10-17T09:00:00" },
+				}),
+				names,
+				t
+			)
+		).toBe("Chen Wei starts Swing Shift early at 07:00 (+2 h)");
+		expect(moveLine(stretchMove({ side: null }), names, t)).toBe(
 			"Extend Chen Wei’s Swing Shift by 2 h"
 		);
 		expect(moveLine({ ...callInMove(), kind: "UNKNOWN" }, names, t)).toBe(

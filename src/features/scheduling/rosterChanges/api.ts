@@ -28,7 +28,19 @@ import { administrativeMeta } from "@/features/workspace/queryAccess";
  * part-timer's day, or an older API) the API decides what the day becomes.
  */
 export type RosterChangeCell =
-	| { membershipId: string; day: string; kind: "WORK"; shiftId: string }
+	| {
+			membershipId: string;
+			day: string;
+			kind: "WORK";
+			shiftId: string;
+			/**
+			 * An overtime stretch (the API's ADR-0110): minutes worked before the
+			 * shift starts, or after it ends. Left out, the day keeps its own on
+			 * the shift it holds, and has none on another.
+			 */
+			stretchBeforeMinutes?: number;
+			stretchAfterMinutes?: number;
+	  }
 	| { membershipId: string; day: string; kind: "OFF"; dayType?: string };
 
 /** What a preview and an apply send. */

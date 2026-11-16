@@ -47,6 +47,7 @@ const TYPE_ICONS: Partial<Record<ConstraintType, Heroicon>> = {
 	MAX_CALL_BACKS_PER_PERSON: PhoneIcon,
 	PAY_RATES: TableIcon,
 	NO_OVERTIME_WHEN_GENERATING: GenerateScheduleIcon,
+	OVERTIME_STRETCH: TimeIcon,
 };
 
 /** The icon heading each category, where constraints are grouped by what they are for. */

@@ -47,8 +47,31 @@ describe("repairCells", () => {
 		]);
 	});
 
+	it("turns a stretch into the person's own shift with the minutes on its side", () => {
+		expect(repairCells(feasibleRepair([stretchMove()]))).toEqual([
+			{
+				membershipId: "m-3",
+				day: "2026-10-17",
+				kind: "WORK",
+				shiftId: shiftCopyId("swing-shift"),
+				stretchAfterMinutes: 120,
+			},
+		]);
+		expect(
+			repairCells(feasibleRepair([stretchMove({ side: "BEFORE_SHIFT" })]))
+		).toEqual([
+			{
+				membershipId: "m-3",
+				day: "2026-10-17",
+				kind: "WORK",
+				shiftId: shiftCopyId("swing-shift"),
+				stretchBeforeMinutes: 120,
+			},
+		]);
+	});
+
 	it.each([
-		["a stretch into overtime", feasibleRepair([stretchMove()])],
+		["a stretch without its side", feasibleRepair([stretchMove({ side: null })])],
 		[
 			"a move to another day",
 			feasibleRepair([reassignMove({ fromDate: "2026-10-16" })]),

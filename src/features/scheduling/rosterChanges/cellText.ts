@@ -1,6 +1,7 @@
 import type { TFunction } from "i18next";
 import { dayTypeLabel } from "@/features/scheduling/dayTypes";
 import { formatTimeRange } from "@/features/scheduling/formatShift";
+import { stretchedTimes } from "@/features/scheduling/roster/shiftStretch";
 import type {
 	RosterCellValue,
 	ScheduleAssignment,
@@ -8,7 +9,7 @@ import type {
 
 type CellSource = Pick<
 	ScheduleAssignment,
-	"offReason" | "dayType" | "shift" | "jobTitle"
+	"offReason" | "dayType" | "shift" | "jobTitle" | "stretch"
 >;
 
 /** Leave and absent keep their reason; any other day is worked or not by its shift. */
@@ -24,12 +25,14 @@ export const assignmentCell = (assignment: CellSource): RosterCellValue => ({
 	dayType: assignment.dayType,
 	shift: assignment.shift,
 	jobTitle: assignment.jobTitle,
+	stretch: assignment.stretch,
 });
 
 /**
  * A roster day in words, as the editor, the undo question and "Was:" show
- * it: "Front Desk AM · 09:00 – 15:00", the day's type ("Rest day"), "Day off"
- * without one, "Absent" or "On leave". Pure.
+ * it: "Front Desk AM · 09:00 – 15:00" (the times worked, so a stretched day
+ * reads "09:00 – 17:00"), the day's type ("Rest day"), "Day off" without one,
+ * "Absent" or "On leave". Pure.
  */
 export const rosterCellText = (cell: RosterCellValue, t: TFunction): string => {
 	if (cell.kind === "LEAVE") return t("scheduling.rosterEdit.onLeave");
@@ -38,8 +41,12 @@ export const rosterCellText = (cell: RosterCellValue, t: TFunction): string => {
 		return cell.dayType === null
 			? t("scheduling.rosterEdit.dayOff")
 			: dayTypeLabel(cell.dayType, t);
+	const times = stretchedTimes(
+		{ start: cell.shift.startTime, end: cell.shift.endTime },
+		cell.stretch
+	);
 	const time = formatTimeRange(
-		{ startTime: cell.shift.startTime, endTime: cell.shift.endTime },
+		{ startTime: times.start, endTime: times.end },
 		t
 	);
 	return `${cell.shift.name} · ${time}`;
