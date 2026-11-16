@@ -406,7 +406,6 @@ it("reaches the overview from the Sidebar and marks Organisation current", async
 		"Scheduling",
 		"Insights",
 		"Leave",
-		"Availability and preferences",
 		"People",
 		"Organisation",
 	]);

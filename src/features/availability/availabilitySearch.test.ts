@@ -4,7 +4,6 @@ import {
 	availabilityUnitRulesOf,
 	AVAILABILITY_TEAM_UNIT_RULES,
 	parseAvailabilitySearch,
-	subtitleOf,
 	viewOf,
 	viewsOf,
 	weekOf,
@@ -36,12 +35,6 @@ describe("parseAvailabilitySearch", () => {
 		expect(parseAvailabilitySearch({})).toEqual({});
 	});
 
-	it("given_theShiftPreferencesTab_when_parsed_then_keepsIt", () => {
-		expect(parseAvailabilitySearch({ view: "preferences" })).toEqual({
-			view: "preferences",
-		});
-	});
-
 	it("given_unknownOrMalformedParts_when_parsed_then_dropsThem", () => {
 		expect(
 			parseAvailabilitySearch({
@@ -70,44 +63,17 @@ describe("weekOf and weekParameter", () => {
 });
 
 describe("viewsOf and viewOf", () => {
-	it("given_whatThePersonHas_when_listed_then_putsMineThenTeamFirstAndPreferencesAlwaysLast", () => {
-		expect(viewsOf({ mine: true, team: true })).toEqual([
-			"mine",
-			"team",
-			"preferences",
-		]);
-		// A manager who is not part-time opens on the team.
-		expect(viewsOf({ mine: false, team: true })).toEqual([
-			"team",
-			"preferences",
-		]);
-		expect(viewsOf({ mine: true, team: false })).toEqual([
-			"mine",
-			"preferences",
-		]);
-		expect(viewsOf({ mine: false, team: false })).toEqual(["preferences"]);
+	it("given_whatThePersonHas_when_listed_then_putsMineFirst", () => {
+		expect(viewsOf({ mine: true, team: true })).toEqual(["mine", "team"]);
+		expect(viewsOf({ mine: false, team: true })).toEqual(["team"]);
+		expect(viewsOf({ mine: false, team: false })).toEqual([]);
 	});
 
-	it("given_aTabTheyLack_when_asked_then_showsTheirFirst", () => {
-		expect(viewOf("team", ["mine", "preferences"])).toBe("mine");
-		expect(viewOf("mine", ["team", "preferences"])).toBe("team");
-		expect(viewOf(undefined, ["mine", "team", "preferences"])).toBe("mine");
-		expect(viewOf("team", ["mine", "team", "preferences"])).toBe("team");
-		// No list yet: Shift preferences, which everyone has.
-		expect(viewOf("mine", [])).toBe("preferences");
-	});
-});
-
-describe("subtitleOf", () => {
-	it("given_anAvailabilityTab_when_asked_then_namesAvailabilityAndPreferences", () => {
-		expect(subtitleOf(["mine", "preferences"])).toBe("availability.subtitle");
-		expect(subtitleOf(["team", "preferences"])).toBe("availability.subtitle");
-	});
-
-	it("given_shiftPreferencesAlone_when_asked_then_namesTheirOwnPreferences", () => {
-		expect(subtitleOf(["preferences"])).toBe(
-			"availability.preferencesOnlySubtitle"
-		);
+	it("given_aTabTheyLack_when_asked_then_showsTheirFirstOrNone", () => {
+		expect(viewOf("team", ["mine"])).toBe("mine");
+		expect(viewOf(undefined, ["mine", "team"])).toBe("mine");
+		expect(viewOf("team", ["mine", "team"])).toBe("team");
+		expect(viewOf("mine", [])).toBeUndefined();
 	});
 });
 

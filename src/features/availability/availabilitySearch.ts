@@ -11,17 +11,14 @@ import type {
 	UnitSelectionRules,
 } from "@/features/workspace/unitSelection";
 
-/** The page's three tabs, in order: the caller's own availability, their teams', and their own shift preferences. */
-const AVAILABILITY_VIEWS = ["mine", "team", "preferences"] as const;
-
-/** One tab of the Availability page. */
-export type AvailabilityView = (typeof AVAILABILITY_VIEWS)[number];
+/** The page's two tabs: the caller's own availability, and their teams'. */
+export type AvailabilityView = "mine" | "team";
 
 const searchSchema = z.object({
-	view: z.enum(AVAILABILITY_VIEWS).optional().catch(undefined),
+	view: z.enum(["mine", "team"]).optional().catch(undefined),
 	...unitSearchSchema.shape,
 	week: z.iso.date().refine(isMonday).optional().catch(undefined),
-	/** The one day a week grid shows below `md`; today, else the week's first day, when left out (`shownDayOf`). */
+	/** The one day the team grid shows below `md`; today, else the week's first day, when left out (`shownDayOf`). */
 	day: z.iso.date().optional().catch(undefined),
 });
 
@@ -62,11 +59,7 @@ export const weekParameter = (
 ): string | undefined =>
 	weekStartMonday === mondayOf(today) ? undefined : weekStartMonday;
 
-/**
- * The tabs a person has, in order: Mine for a part-timer, Team with the read
- * key held somewhere, Shift preferences for everyone. Last, so a part-timer
- * still opens on their own week and a manager on their team's.
- */
+/** The tabs a person has, in order: Mine for a part-timer, Team with the read key held somewhere. */
 export const viewsOf = ({
 	mine,
 	team,
@@ -76,32 +69,14 @@ export const viewsOf = ({
 }): Array<AvailabilityView> => [
 	...(mine ? (["mine"] as const) : []),
 	...(team ? (["team"] as const) : []),
-	"preferences",
 ];
 
-/** Shift preferences: the tab every member has. */
-const EVERYONES_VIEW = "preferences";
-
-/** The tab shown: the URL's when the person has it, else their first. */
+/** The tab shown: the URL's when the person has it, else their first; none when they have neither. */
 export const viewOf = (
 	requested: AvailabilityView | undefined,
 	views: ReadonlyArray<AvailabilityView>
-): AvailabilityView =>
-	requested && views.includes(requested)
-		? requested
-		: (views[0] ?? EVERYONES_VIEW);
-
-/**
- * The line beneath the page's title, true for the person: availability and
- * preferences for anyone with Mine or Team, else their own shift
- * preferences, the only tab they have.
- */
-export const subtitleOf = (
-	views: ReadonlyArray<AvailabilityView>
-): "availability.subtitle" | "availability.preferencesOnlySubtitle" =>
-	views.includes("mine") || views.includes("team")
-		? "availability.subtitle"
-		: "availability.preferencesOnlySubtitle";
+): AvailabilityView | undefined =>
+	requested && views.includes(requested) ? requested : views[0];
 
 /** The team tab lists part-timers by Branch, and by Department within it. */
 export const AVAILABILITY_TEAM_UNIT_RULES: UnitSelectionRules = {

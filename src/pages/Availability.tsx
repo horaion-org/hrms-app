@@ -18,7 +18,6 @@ import { isPastWeek } from "@/features/availability/availabilityModel";
 import {
 	availabilityQueryOf,
 	AVAILABILITY_TEAM_UNIT_RULES,
-	subtitleOf,
 	viewOf,
 	viewsOf,
 	weekOf,
@@ -34,8 +33,6 @@ import {
 	type TeamAvailabilityList,
 } from "@/features/availability/useAvailability";
 import { myProfileQuery } from "@/features/people/api";
-import { MyShiftPreferences } from "@/features/shiftPreferences/MyShiftPreferences";
-import { TeamShiftPreferences } from "@/features/shiftPreferences/TeamShiftPreferences";
 import { workspaceQuery } from "@/features/workspace/api";
 import {
 	AVAILABILITY_READ_KEYS,
@@ -70,20 +67,16 @@ const problemKeyOf = (
 };
 
 /**
- * Work availability and shift preferences, in three tabs decided by data,
- * never roles, under a line true for the tabs the person has. "Mine" is a
- * part-timer's own week and pattern, changed with nothing granted. "Team" is
- * the part-timers of the header's Branch (every Branch in reach under "All
- * branches") for one week, read through the person's grants, with editing
- * on the rows they may change; once a Department is chosen, its members'
- * shift preferences are listed beneath, under their own heading. "Shift preferences", last, is
- * everyone's own week of preferred shifts, also changed with nothing
- * granted. Beneath the tabs, one toolbar holds the team's Department filter
- * and the week. The tab (written once it is known), units and week live in
- * the URL; a week left out is this one, worked out on every render. Any week
- * can be read; only this week and later ones are edited. Page-level
- * composition only: the parts live in `features/availability` and
- * `features/shiftPreferences`.
+ * Work availability, in two tabs decided by data, never roles. "Mine" is a
+ * part-timer's own week and pattern, changed with nothing granted. "Team"
+ * is the part-timers of the header's Branch (every Branch in reach under
+ * "All branches") for one week, read through the person's grants, with
+ * editing on the rows they may change. Beneath the tabs, one toolbar holds
+ * the team's Department filter and the week. The tab (written once it is
+ * known), units and week live in the URL; a week left out is this one,
+ * worked out on every render. Any week can be read; only this week and
+ * later ones are edited. Page-level composition only: the parts live in
+ * `features/availability`.
  */
 export const Availability = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
@@ -97,7 +90,7 @@ export const Availability = (): FunctionComponent => {
 	const view = viewOf(search.view, views);
 	const today = new Date();
 	const week = weekOf(search, today);
-	// A phone shows a week one day at a time; the grid hides the others' columns.
+	// A phone shows the team's week one day at a time; the grid hides the others' columns.
 	const todayDate = dayjs(today).format("YYYY-MM-DD");
 	const weekDates = daysOf(week);
 	const shownDay = shownDayOf(weekDates, search.day, todayDate);
@@ -125,34 +118,42 @@ export const Availability = (): FunctionComponent => {
 		void navigate({ search: (previous) => ({ ...previous, ...next }) });
 	};
 	// The URL names the tab shown, so the header knows whether this view lists by Branch.
-	// Written once the tabs are known, so a first tab guessed while loading does not stick.
-	const tabsKnown = offered.status === "ready";
 	useEffect(() => {
-		if (tabsKnown && view !== search.view)
+		if (view && view !== search.view)
 			void navigate({
 				search: (previous) => ({ ...previous, view }),
 				replace: true,
 			});
-	}, [tabsKnown, view, search.view, navigate]);
+	}, [view, search.view, navigate]);
 	// A row is changed where its member is filed, and only in a week still to come.
 	const canEdit = (member: MemberWeek): boolean =>
 		!past &&
 		access.can(AVAILABILITY_UPDATE_KEY, recordScope(member.departmentId));
 	const editsAnywhere = access.canAnywhere(AVAILABILITY_UPDATE_KEY);
 
-	// The line beneath the title depends on the tabs, so nothing is shown until they are known.
-	if (!tabsKnown) return null;
 	const header = (
 		<div>
 			<h1 className="text-4xl font-medium text-neutral-900">
 				{t("availability.title")}
 			</h1>
-			<p className="mt-4 text-sm text-neutral-800">{t(subtitleOf(views))}</p>
+			<p className="mt-4 text-sm text-neutral-800">
+				{t("availability.subtitle")}
+			</p>
 		</div>
 	);
+	if (offered.status === "pending") return header;
+	if (!view)
+		return (
+			<div>
+				{header}
+				<p className="mt-8 text-sm text-neutral-700">
+					{t("availability.unavailable")}
+				</p>
+			</div>
+		);
 
 	const teamProblem = problemKeyOf(team);
-	// Every tab's grid shows the week one day at a time on a phone; one tab is mounted at a time.
+	// Both tabs' grids show the week one day at a time on a phone; one tab is mounted at a time.
 	const daySwitcher = shownDay && (
 		<DaySwitcher
 			className="mb-4"
@@ -237,17 +238,7 @@ export const Availability = (): FunctionComponent => {
 				<TabPanels>
 					{views.map((each) => (
 						<TabPanel key={each}>
-							{each === "preferences" ? (
-								<>
-									{daySwitcher}
-									<MyShiftPreferences
-										companyId={companyId}
-										shownDay={shownDay}
-										weekEnded={past}
-										weekStartMonday={week}
-									/>
-								</>
-							) : each === "mine" ? (
+							{each === "mine" ? (
 								<>
 									{daySwitcher}
 									<MyAvailability
@@ -282,15 +273,6 @@ export const Availability = (): FunctionComponent => {
 										weekStartMonday={week}
 										onEdit={setEditing}
 									/>
-									{units.department && (
-										<TeamShiftPreferences
-											className="mt-10"
-											companyId={companyId}
-											departmentId={units.department.departmentId}
-											shownDay={shownDay}
-											weekStartMonday={week}
-										/>
-									)}
 								</>
 							)}
 						</TabPanel>

@@ -1,12 +1,11 @@
 # Availability
 
 The authenticated `/availability` route: the hours part-time members can work, as a weekly default pattern and,
-for any week from this one on, an override in its place (ADR-0053 of the API). Its tabs are offered from data and
+for any week from this one on, an override in its place (ADR-0053 of the API). Two tabs, offered from data and
 never from roles. **Mine** is a part-timer's own week and pattern, read and changed through
 `/companies/{c}/me/availability` with nothing granted. **Team** is a Branch's part-timers for one week, read
-through the person's grants, with editing on the rows they may change. After them the page shows a third tab,
-**Shift preferences**, to everyone, last so a part-timer opens on Mine and a manager on Team; its parts live in `features/shiftPreferences`, which also lists a chosen
-Department's preferences beneath the Team grid. Everything comes from the API
+through the person's grants, with editing on the rows they may change. Shift preferences have their own page, `/shift-preferences`
+(`features/shiftPreferences`). Everything comes from the API
 (`features/availability/api.ts`); nothing is kept in page state beyond the open editor.
 
 ## Shape
@@ -15,13 +14,12 @@ Department's preferences beneath the Team grid. Everything comes from the API
   (`AvailabilityOwner`), the company's list of part-timers for one week inside one Branch (`availabilityListQuery`, `GET /companies/{c}/availability`), a Department's readiness for the Schedule
   wizard, and every query's options, all under `availabilityRoot`, `["availability", companyId]`, as leave roots its own.
 - `availabilitySearch.ts` — what belongs in the URL (`view`, `branch`, `department`, `week` as its Monday), the
-  tabs a person has, the line beneath the page title true for them (`subtitleOf`: their own shift preferences for someone with no other tab),
-  and the list asked for (`availabilityQueryOf`). A week left out is the one today is in, worked out on every render, so a page left open
+  tabs a person has, and the list asked for (`availabilityQueryOf`). A week left out is the one today is in, worked out on every render, so a page left open
   across a Monday moves on.
 - `availabilityModel.ts` — the pure rules: windows by day (`byDay`, and `windowsByDay` for a week's dated windows),
   the editor's rows and their validation (overlaps on the week as a circle, at most four starts a day), what the
   editor opens on (`defaultEditTarget`), whether a week has ended (`isPastWeek`), dated windows as weekly ones.
-- `useAvailability.ts` — `useAvailabilityViews` (the tabs, for the page), the read hooks
+- `useAvailability.ts` — `useAvailabilityViews` (the tabs, for the page and the sidebar), the read hooks
   (`useMyAvailability`, `useMemberAvailability`, `useAvailabilityList`, each with `useLeaveRequests`'
   `pending`/`error`/`hidden`/`ready` states) and the writes for a member or the caller, each reloading every
   availability entry of the company.
