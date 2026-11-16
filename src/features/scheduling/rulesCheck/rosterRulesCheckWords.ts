@@ -4,10 +4,12 @@ import {
 	CONSTRAINT_TYPES,
 	type ConstraintType,
 } from "@/features/scheduling/constraints/api";
+import { requirementTagTone } from "@/features/scheduling/constraints/requirementTagTones";
 import type { PanelItem } from "@/features/scheduling/roster/rosterPanels";
 import type {
 	BrokenRule,
 	RosterRulesCheck,
+	RuleViolation,
 } from "@/features/scheduling/rulesCheck/rosterRulesCheckApi";
 
 /*
@@ -162,5 +164,60 @@ export const brokenRuleItems = (
 	return check.brokenRules.map((rule, index) => ({
 		key: `${rule.rule}-${index}`,
 		lines: [brokenRuleLabel(rule, t)],
+	}));
+};
+
+/** Who and which day one violation is about: "Lina Tan · Tue 10 Nov", "Lina Tan", "Tue 10 Nov", or nothing. */
+const placeOf = (
+	violation: RuleViolation,
+	names: ReadonlyMap<string, string | null>,
+	t: TFunction,
+	formatDay: (date: string) => string
+): string | undefined => {
+	const person =
+		violation.employeeId === null
+			? undefined
+			: (names.get(violation.employeeId) ??
+				t("scheduling.detail.formerMember"));
+	const day = violation.date === null ? undefined : formatDay(violation.date);
+	if (person && day) return t(`${key}.notMet.place`, { person, day });
+	return person ?? day;
+};
+
+/** How many people and days the rules asked "if possible" are not met for: one per placed violation. */
+export const notMetCount = (check: RosterRulesCheck): number =>
+	(check.notMet ?? []).reduce(
+		(total, rule) => total + Math.max(rule.violations?.length ?? 0, 1),
+		0
+	);
+
+/**
+ * The rules asked "if possible" that the roster does not meet, as Issues
+ * lists them apart from the musts: one item per rule, titled by its name and
+ * tagged "If possible" in that tag's own tone, then one line per person and
+ * day with the engine's own words. None when every one is met or the check
+ * could not say.
+ */
+export const notMetItems = (
+	check: RosterRulesCheck,
+	t: TFunction,
+	formatDay: (date: string) => string
+): Array<PanelItem> => {
+	const names = new Map(
+		check.members.map((member) => [member.memberProfileId, member.displayName])
+	);
+	return (check.notMet ?? []).map((rule, index) => ({
+		key: `${rule.rule}-${index}`,
+		title: brokenRuleLabel(rule, t),
+		tag: {
+			label: t("scheduling.constraints.requirements.SHOULD"),
+			tone: requirementTagTone("SHOULD"),
+		},
+		lines: (rule.violations ?? []).flatMap((violation) => {
+			const place = placeOf(violation, names, t, formatDay);
+			return violation.messages.map((message) =>
+				place ? t(`${key}.notMet.line`, { place, message }) : message
+			);
+		}),
 	}));
 };

@@ -1,4 +1,5 @@
 import type { TFunction } from "i18next";
+import type { BadgeTone } from "@/components/ui/Badge";
 import { timeRangeText } from "@/features/leave/dayPortion";
 import { formatDay } from "@/features/scheduling/periods";
 import {
@@ -21,6 +22,8 @@ export type PanelItem = {
 	lines: ReadonlyArray<string>;
 	/** A button under the lines, such as Find cover on a shift left short. */
 	action?: { label: string; onClick: () => void };
+	/** A tag beside the title in its own tone, such as a rule's "If possible". */
+	tag?: { label: string; tone: BadgeTone };
 };
 
 /**

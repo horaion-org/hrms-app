@@ -3,6 +3,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import en from "@/assets/locales/en/translations.json";
 import { ApiProblemError } from "@/common/problem";
 import {
+	ruleFixture,
 	rulesCheckFixture,
 	staffingGapFixture,
 } from "@/features/scheduling/rulesCheck/fixtures";
@@ -10,6 +11,8 @@ import {
 	brokenRuleCount,
 	brokenRuleLabel,
 	NAMED_RULES,
+	notMetCount,
+	notMetItems,
 	ruleNameLabel,
 	rulesCheckRefusalOf,
 	validationMark,
@@ -155,5 +158,83 @@ describe("rulesCheckRefusalOf", () => {
 		["ROSTER_CHECK_ENGINE_FAILED", "failed"],
 	] as const)("reads %s as %s", (code, refusal) => {
 		expect(rulesCheckRefusalOf(problem(code))).toBe(refusal);
+	});
+});
+
+describe("notMetItems", () => {
+	/** Days as the page writes them, short for the test. */
+	const day = (date: string): string => `day ${date}`;
+	const check = rulesCheckFixture({
+		notMet: [
+			ruleFixture({
+				rule: "max_consecutive_work_days",
+				constraintName: "Five in a row",
+				violations: [
+					{
+						employeeId: "mp-1",
+						date: "2026-10-16",
+						messages: ["If possible, not met: five in a row"],
+					},
+					{
+						employeeId: "mp-1",
+						date: null,
+						messages: ["If possible, not met: a long week"],
+					},
+					{
+						employeeId: null,
+						date: "2026-10-17",
+						messages: ["If possible, not met: short rest"],
+					},
+					{
+						employeeId: "mp-gone",
+						date: null,
+						messages: ["If possible, not met: gone"],
+					},
+					{
+						employeeId: null,
+						date: null,
+						messages: ["If possible, not met: anywhere"],
+					},
+				],
+			}),
+			ruleFixture({ rule: "most_days_a_week", violations: null }),
+		],
+		members: [
+			{
+				memberProfileId: "mp-1",
+				membershipId: "m-1",
+				displayName: "Aisha Rahman",
+			},
+			{ memberProfileId: "mp-gone", membershipId: null, displayName: null },
+		],
+	});
+
+	it("lists each rule by name, tagged If possible in its own amber tone, with who and which days", () => {
+		const [fiveInARow, daysAWeek] = notMetItems(check, t, day);
+
+		expect(fiveInARow?.title).toBe("Five in a row");
+		expect(fiveInARow?.tag).toEqual({ label: "If possible", tone: "warning" });
+		expect(fiveInARow?.lines).toEqual([
+			"Aisha Rahman · day 2026-10-16: “If possible, not met: five in a row”",
+			"Aisha Rahman: “If possible, not met: a long week”",
+			"day 2026-10-17: “If possible, not met: short rest”",
+			"Former member: “If possible, not met: gone”",
+			"If possible, not met: anywhere",
+		]);
+		// A rule that cannot say who is still listed, by its name only.
+		expect(daysAWeek?.title).toBe("Most days a week");
+		expect(daysAWeek?.lines).toEqual([]);
+	});
+
+	it("lists nothing when every rule is met or the check could not say", () => {
+		expect(notMetItems(rulesCheckFixture({ notMet: [] }), t, day)).toEqual([]);
+		expect(notMetItems(rulesCheckFixture({ notMet: null }), t, day)).toEqual(
+			[]
+		);
+	});
+
+	it("counts one per person and day, and one for a rule that cannot say who", () => {
+		expect(notMetCount(check)).toBe(6);
+		expect(notMetCount(rulesCheckFixture({ notMet: null }))).toBe(0);
 	});
 });

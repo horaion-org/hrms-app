@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { CloseIcon } from "@/components/ui/Icon";
 import type { PanelItem } from "@/features/scheduling/roster/rosterPanels";
@@ -108,6 +109,15 @@ export const RosterSidePanel = ({
 												{item.title && (
 													<p className="font-semibold text-neutral-900">
 														{item.title}
+														{item.tag && (
+															<Badge
+																compact
+																className="ml-2"
+																tone={item.tag.tone}
+															>
+																{item.tag.label}
+															</Badge>
+														)}
 													</p>
 												)}
 												{item.lines.map((line, index) => (

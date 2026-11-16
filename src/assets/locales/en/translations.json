@@ -4970,7 +4970,15 @@
 			"brokenRulesTitle": "Working-time rules broken",
 			"outOfDate": "The schedule has changed since this list was made. Validate it to refresh the list.",
 			"rulesUnchecked": "The working-time rules could not be checked; the list below is from before.",
-			"validated": "Validated: this list is the schedule as it stands."
+			"validated": "Validated: this list is the schedule as it stands.",
+			"mayBeShort": "The check ran out of time, so this list may be incomplete.",
+			"validateAgain": "Validate again",
+			"notMet": {
+				"title_one": "If possible, not met ({{count}})",
+				"title_other": "If possible, not met ({{count}})",
+				"place": "{{person}} · {{day}}",
+				"line": "{{place}}: “{{message}}”"
+			}
 		}
 	},
 	"colourSwatchPicker": {

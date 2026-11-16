@@ -76,6 +76,11 @@ export type RosterListInput = {
 	validationNote?: ReactNode;
 	/** The working-time rules the last validation found broken, one item each. */
 	brokenRules?: ReadonlyArray<PanelItem>;
+	/**
+	 * The rules asked "if possible" the last validation found not met, one
+	 * item each, listed apart from what is broken and counted on their own.
+	 */
+	notMet?: { items: ReadonlyArray<PanelItem>; count: number };
 	/** Shows every issue again, from a header's narrowed Issues list. */
 	onShowAllIssues: () => void;
 	/** On a roster that may be changed: opens Find cover for a short shift, from its Issues row. */
@@ -203,6 +208,7 @@ export const issuesSections = (
 		onFindCover,
 		validationNote,
 		brokenRules,
+		notMet,
 	} = input;
 	if (issuesAbout) return headerIssueSections(issuesAbout, input);
 	return [
@@ -211,6 +217,13 @@ export const issuesSections = (
 			key: "brokenRules",
 			title: t("scheduling.rulesCheck.brokenRulesTitle"),
 			items: brokenRules,
+		},
+		{
+			key: "notMet",
+			title: t("scheduling.rulesCheck.notMet.title", {
+				count: notMet?.count ?? 0,
+			}),
+			items: notMet?.items,
 		},
 		// Each note is a section of its own, spaced like the sections around it.
 		...issueNoteLines(input).map((line) => ({

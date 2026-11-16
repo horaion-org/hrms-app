@@ -8,6 +8,7 @@ import { CountBadge } from "@/components/ui/CountBadge";
 import { DaySwitcher } from "@/components/ui/DaySwitcher";
 import type { DescriptionListItem } from "@/components/ui/DescriptionList";
 import { LastRosterChange } from "@/features/scheduling/LastRosterChange";
+import { formatDay } from "@/features/scheduling/periods";
 import type { FindingNameSources } from "@/features/scheduling/roster/findings/findingNames";
 import { legendOf } from "@/features/scheduling/roster/roster";
 import { rosterListSections } from "@/features/scheduling/roster/rosterListSections";
@@ -33,7 +34,11 @@ import {
 	scheduleWithFindingsShown,
 	validationStanding,
 } from "@/features/scheduling/rulesCheck/issuesFromValidation";
-import { brokenRuleItems } from "@/features/scheduling/rulesCheck/rosterRulesCheckWords";
+import {
+	brokenRuleItems,
+	notMetCount,
+	notMetItems,
+} from "@/features/scheduling/rulesCheck/rosterRulesCheckWords";
 import type { RosterValidation } from "@/features/scheduling/rulesCheck/useRosterRulesCheck";
 import { ValidationNote } from "@/features/scheduling/rulesCheck/ValidationNote";
 import { ValidateScheduleButton } from "@/features/scheduling/rulesCheck/ValidateScheduleButton";
@@ -219,6 +224,12 @@ export const GeneratedRoster = ({
 					<ValidationNote standing={standing} validation={validation} />
 				),
 				brokenRules: last ? brokenRuleItems(last.check, t) : [],
+				notMet: last && {
+					items: notMetItems(last.check, t, (date) =>
+						formatDay(date, language)
+					),
+					count: notMetCount(last.check),
+				},
 				onShowAllIssues: roster.showAllIssues,
 				onFindCover: editing ? roster.openCover : undefined,
 			})
