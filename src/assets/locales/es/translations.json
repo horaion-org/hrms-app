@@ -4793,7 +4793,6 @@
 				},
 				"hours": {
 					"none": "Sin horas extra.",
-					"and": " y ",
 					"several": "Suma {{parts}} a {{name}} esa semana.",
 					"only": {
 						"overtime": "Suma {{hours}} h de horas extra a {{name}} esa semana.",

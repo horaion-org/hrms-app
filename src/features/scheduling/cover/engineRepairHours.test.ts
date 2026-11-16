@@ -55,7 +55,8 @@ describe("extraHoursLine", () => {
 				t
 			)
 		).toBe(
-			"Adds 8 h of overtime, 8 h of rest-day work and 4 h of time off earned for Aisha Rahman that week."
+			// The list formatter in en adds the serial comma.
+			"Adds 8 h of overtime, 8 h of rest-day work, and 4 h of time off earned for Aisha Rahman that week."
 		);
 		expect(
 			extraHoursLine(

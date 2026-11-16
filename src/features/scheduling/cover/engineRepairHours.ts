@@ -54,12 +54,6 @@ const extraKindsOf = (
 		minutes: minutes[kind],
 	}));
 
-/** "8 h of overtime, 8 h of rest-day work and 4 h of time off earned". */
-const listOf = (parts: Array<string>, t: TFunction): string =>
-	parts.length <= 1
-		? (parts[0] ?? "")
-		: `${parts.slice(0, -1).join(", ")}${t(`${key}.and`)}${parts[parts.length - 1] ?? ""}`;
-
 /**
  * One line about the option's hours: "No extra hours.", one kind in its own
  * sentence ("Adds 8 h of overtime for Lina Tan that week."), or several in
@@ -85,5 +79,8 @@ export const extraHoursLine = (
 	const parts = extra.map(({ kind, minutes }) =>
 		t(`${key}.part.${kind}`, { hours: names.hours(minutes) })
 	);
-	return t(`${wording}.several`, { parts: listOf(parts, t), name });
+	return t(`${wording}.several`, {
+		parts: t("scheduling.constraints.list", { items: parts }),
+		name,
+	});
 };

@@ -129,13 +129,13 @@ export const CellChoices = ({
 						<p className="text-sm text-neutral-800">
 							{t(`${key}.notAvailable`, {
 								count: partners.unavailable.length,
-								names: partners.unavailable
-									.map(
+								names: t("scheduling.constraints.list", {
+									items: partners.unavailable.map(
 										(row) =>
 											row.member?.displayName ??
 											t("scheduling.detail.formerMember")
-									)
-									.join(", "),
+									),
+								}),
 							})}
 						</p>
 					)}

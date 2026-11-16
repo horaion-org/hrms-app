@@ -4993,7 +4993,6 @@
 				},
 				"hours": {
 					"none": "No extra hours.",
-					"and": " and ",
 					"several": "Adds {{parts}} for {{name}} that week.",
 					"only": {
 						"overtime": "Adds {{hours}} h of overtime for {{name}} that week.",
