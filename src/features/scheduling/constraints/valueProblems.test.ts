@@ -26,6 +26,17 @@ describe("valueProblems", () => {
 		]);
 	});
 
+	it("words a days-off period still kept in days as one to choose in weeks", () => {
+		const values = [
+			{ value: "6", name: null, problem: "PERIOD_IN_DAYS" as const },
+		];
+
+		expect(needsAttention(values)).toBe(true);
+		expect(problemLines(values, t)).toEqual([
+			"This constraint still counts days off over 6 days. Edit it and choose every week, or every 2, 3 or 4 weeks.",
+		]);
+	});
+
 	it("finds nothing on a healthy rule or a frozen copy", () => {
 		const values = [{ value: "clerk", name: "Clerk", problem: null }];
 
