@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isWeekday, WEEKDAYS } from "@/common/weekdays";
+import { isWeekday, weekdayOf, WEEKDAYS } from "@/common/weekdays";
 
 describe("weekdays", () => {
 	it("given_theWeek_when_listed_then_startsOnMonday", () => {
@@ -11,5 +11,10 @@ describe("weekdays", () => {
 		expect(isWeekday("sun")).toBe(false);
 		expect(isWeekday("Sunday")).toBe(false);
 		expect(isWeekday("")).toBe(false);
+	});
+
+	it("given_aDate_when_asked_then_namesTheWeekdayItFallsOn", () => {
+		expect(weekdayOf("2026-11-09")).toBe("MON");
+		expect(weekdayOf("2026-11-15")).toBe("SUN");
 	});
 });

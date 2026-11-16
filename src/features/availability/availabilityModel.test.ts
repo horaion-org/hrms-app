@@ -13,7 +13,6 @@ import {
 	isPastWeek,
 	toReplaceRequest,
 	validateWindows,
-	weekdayOf,
 	weeklyWindowsOf,
 	windowsByDay,
 	windowsOf,
@@ -365,12 +364,10 @@ describe("effectiveWindows", () => {
 	});
 });
 
-describe("isMonday and weekdayOf", () => {
-	it("given_aDate_when_asked_then_namesItsWeekday", () => {
+describe("isMonday", () => {
+	it("given_aDate_when_asked_then_saysWhetherAWeekMayStartOnIt", () => {
 		expect(isMonday("2026-11-09")).toBe(true);
 		expect(isMonday("2026-11-10")).toBe(false);
-		expect(weekdayOf("2026-11-09")).toBe("MON");
-		expect(weekdayOf("2026-11-15")).toBe("SUN");
 	});
 });
 
