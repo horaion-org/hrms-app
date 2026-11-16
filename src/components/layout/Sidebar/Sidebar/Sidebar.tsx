@@ -41,7 +41,6 @@ export const Sidebar = ({
 			<div className="flex w-full items-center justify-between">
 				<Link
 					activeOptions={{ exact: true }}
-					aria-label="Horaion home"
 					// 44 px on touch around the 40 px logo, the margin keeping the logo where it was.
 					className="flex items-center justify-center rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white pointer-coarse:-m-0.5 pointer-coarse:size-11"
 					to="/"

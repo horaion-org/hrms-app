@@ -5,6 +5,8 @@ import { RouterProvider } from "@tanstack/react-router";
 import { createMemoryRouter } from "@/common/createMemoryRouter";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouterHarness } from "@/components/utils/MemoryRouterHarness";
+// Registers bundled English as react-i18next's instance, so the logo reads "Horaion".
+import "@/features/auth/testingI18n";
 import { Sidebar, SidebarItem } from "@/components/layout/Sidebar";
 import {
 	DashboardIcon,
@@ -44,7 +46,7 @@ describe("Sidebar", () => {
 		);
 		await router.load();
 		render(<RouterProvider router={router} />);
-		const home = screen.getByRole("link", { name: "Horaion home" });
+		const home = screen.getByRole("link", { name: "Horaion" });
 		const dashboard = screen.getByRole("link", { name: "Dashboard" });
 		const scheduling = screen.getByRole("link", { name: "Scheduling" });
 		// The logo links to "/", so the router marks it current on the Dashboard too.
@@ -91,7 +93,7 @@ describe("Sidebar", () => {
 		);
 		await screen.findByRole("navigation", { name: "Main navigation" });
 		await user.tab();
-		expect(screen.getByRole("link", { name: "Horaion home" })).toHaveFocus();
+		expect(screen.getByRole("link", { name: "Horaion" })).toHaveFocus();
 		// The small-screen Menu button: CSS hides it from `sm`, which jsdom does not apply.
 		await user.tab();
 		expect(screen.getByRole("button", { name: "Menu" })).toHaveFocus();
@@ -139,7 +141,7 @@ describe("Sidebar", () => {
 		).not.toBeInTheDocument();
 		expect(
 			screen
-				.getByRole("link", { name: "Horaion home" })
+				.getByRole("link", { name: "Horaion" })
 				.closest(".consumer-layout")
 		).toHaveClass(
 			"w-full",
@@ -150,7 +152,7 @@ describe("Sidebar", () => {
 			"overflow-y-auto"
 		);
 		// A fingertip-sized target on touch screens, unchanged with a mouse.
-		expect(screen.getByRole("link", { name: "Horaion home" })).toHaveClass(
+		expect(screen.getByRole("link", { name: "Horaion" })).toHaveClass(
 			"pointer-coarse:size-11",
 			"pointer-coarse:-m-0.5"
 		);
@@ -173,7 +175,7 @@ it("renders a usable footer after navigation", async () => {
 	const button = await screen.findByRole("button", { name: "Log out" });
 	expect(screen.getByRole("navigation")).not.toContainElement(button);
 	await user.tab();
-	expect(screen.getByRole("link", { name: "Horaion home" })).toHaveFocus();
+	expect(screen.getByRole("link", { name: "Horaion" })).toHaveFocus();
 	await user.tab();
 	expect(screen.getByRole("button", { name: "Menu" })).toHaveFocus();
 	await user.tab();

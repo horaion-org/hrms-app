@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/Button";
 import en from "@/assets/locales/en/translations.json";
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import "@/common/i18n";
 import { Sidebar, SidebarItem } from "@/components/layout/Sidebar";
 import { withMemoryRouter } from "@/components/utils/MemoryRouterHarness";
 import {
