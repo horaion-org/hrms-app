@@ -52,7 +52,7 @@ const submit = async (body: HTMLElement): Promise<void> => {
 
 /** Nothing can be ticked until the role's type is chosen. */
 export const Owner: Story = {};
-/** A company role: the Company Owner holds every permission, so every box can be chosen. */
+/** A company role: the System Owner holds every permission, so every box can be chosen. */
 export const CompanyRole: Story = {
 	play: async ({ canvasElement }) => {
 		await chooseType(

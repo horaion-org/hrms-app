@@ -788,8 +788,8 @@ describe("Editing a person", () => {
 			(): HTMLElement => button(/^Employment status/),
 		],
 		[
-			problemReply(409, "COMPANY_OWNER_CANNOT_BE_DEACTIVATED"),
-			"The company owner can’t be deactivated.",
+			problemReply(409, "SYSTEM_OWNER_CANNOT_BE_DEACTIVATED"),
+			"The System Owner can’t be deactivated.",
 			(): HTMLElement => button(/^Employment status/),
 		],
 		[
@@ -1123,7 +1123,7 @@ describe("Deactivating, reactivating and re-inviting", () => {
 			...routes(),
 			[`PUT ${PROFILE}`]: problemReply(
 				409,
-				"COMPANY_OWNER_CANNOT_BE_DEACTIVATED"
+				"SYSTEM_OWNER_CANNOT_BE_DEACTIVATED"
 			),
 		});
 		await open();
@@ -1138,7 +1138,7 @@ describe("Deactivating, reactivating and re-inviting", () => {
 		);
 
 		expect(
-			await within(dialog).findByText("The company owner can’t be deactivated.")
+			await within(dialog).findByText("The System Owner can’t be deactivated.")
 		).toHaveAttribute("role", "alert");
 	});
 

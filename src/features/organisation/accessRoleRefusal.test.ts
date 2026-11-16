@@ -40,7 +40,7 @@ describe("access role refusal mapping", () => {
 	});
 
 	it.each([
-		[409, "PROTECTED_ACCESS_ROLE", "The Company Owner role can’t be changed."],
+		[409, "PROTECTED_ACCESS_ROLE", "The System Owner and System Admin roles can’t be changed."],
 		[404, "ACCESS_ROLE_NOT_FOUND", "This role no longer exists."],
 		[
 			403,

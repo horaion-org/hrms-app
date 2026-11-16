@@ -131,7 +131,7 @@ describe("profileRefusal, editing only", () => {
 		],
 		["409 CANNOT_DEACTIVATE_SELF", "status", "people.form.selfDeactivation"],
 		[
-			"409 COMPANY_OWNER_CANNOT_BE_DEACTIVATED",
+			"409 SYSTEM_OWNER_CANNOT_BE_DEACTIVATED",
 			"status",
 			"people.form.ownerDeactivation",
 		],
@@ -181,7 +181,7 @@ describe("profileActionRefusal", () => {
 	it.each([
 		["409 CANNOT_DEACTIVATE_SELF", "people.form.selfDeactivation"],
 		[
-			"409 COMPANY_OWNER_CANNOT_BE_DEACTIVATED",
+			"409 SYSTEM_OWNER_CANNOT_BE_DEACTIVATED",
 			"people.form.ownerDeactivation",
 		],
 		["409 INVITATION_NOT_PENDING", "people.profile.invitationNotPending"],

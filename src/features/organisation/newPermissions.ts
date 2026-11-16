@@ -10,7 +10,7 @@ import {
  * saved (`reviewedAt`), that a role of `kind` may hold and `held` lacks, in
  * the catalogue's order. A key counts from its day (`since`, UTC), so one
  * that arrived on the day of the save is not new (API ADR-0101). None when
- * the role has no review time: the owner role, or an API that doesn't send
+ * the role has no review time: a built-in role, or an API that doesn't send
  * one.
  */
 export const newSinceReview = (

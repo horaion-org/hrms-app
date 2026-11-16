@@ -828,7 +828,7 @@ describe("Access roles", () => {
 				{
 					accessRoleId: "r-1",
 					companyId: "c-1",
-					name: "Company Owner",
+					name: "System Owner",
 					protectedRole: true,
 					kind: "COMPANY",
 					status: "ACTIVE",
@@ -891,13 +891,13 @@ describe("Access roles", () => {
 					.map((cell) => cell.firstChild?.textContent)
 			)
 		).toEqual([
-			["Company Owner", "Whole company", "Full system access", "1 person"],
+			["System Owner", "Whole company", "Full system access", "1 person"],
 			// Keys this app doesn't know (leave:approve, leave:create) aren't summarised.
 			["Manager", "Branches or departments", "Organisation: View", "3 people"],
 			["Staff", "Branches or departments", "No permissions yet.", "0 people"],
 		]);
 		expect(
-			screen.getByRole("button", { name: "Edit Company Owner" })
+			screen.getByRole("button", { name: "Edit System Owner" })
 		).toBeDisabled();
 		expect(screen.getByRole("button", { name: "Edit Manager" })).toBeEnabled();
 		// The status filter waits behind Filters; nothing is set.

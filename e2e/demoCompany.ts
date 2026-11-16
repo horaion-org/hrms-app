@@ -164,7 +164,7 @@ const JOB_TITLES = PEOPLE.map((person) => ({
 }));
 
 const ACCESS_ROLES = [
-	["r-1", "Company Owner", true, 1, "COMPANY"],
+	["r-1", "System Owner", true, 1, "COMPANY"],
 	["r-2", "Branch Manager", false, 2, "LOCAL"],
 	["r-3", "Department Head", false, 4, "LOCAL"],
 ].map(([accessRoleId, name, protectedRole, holderCount, kind]) => ({
