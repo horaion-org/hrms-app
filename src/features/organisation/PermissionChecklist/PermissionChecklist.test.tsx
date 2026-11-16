@@ -301,7 +301,7 @@ describe("PermissionChecklist", () => {
 
 		expect(
 			screen.getByText(
-				"Only for whole-company roles: Company details, Employment terms, Work policy and Approval flows."
+				"Only for whole-company roles: Company details, Employment terms, Work policy, and Approval flows."
 			)
 		).toBeVisible();
 		expect(areaNames()).not.toContain("Work policy");
