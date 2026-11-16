@@ -3467,7 +3467,6 @@
 				"namePlaceholder": "p. ej., Cobertura de mañana",
 				"nameHint": "Se muestra en la lista. De 2 a 100 caracteres.",
 				"nameCounter": "{{count}}/100",
-				"type": "Qué controla",
 				"optionsLoading": "Cargando tipos de restricción…",
 				"optionsHidden": "No tienes permiso para ver los tipos de restricción de este departamento.",
 				"optionsFailed": "No pudimos cargar los tipos de restricción. Inténtalo de nuevo.",
@@ -3478,7 +3477,6 @@
 				"selectAll": "Seleccionar todo",
 				"noJobTitles": "Este departamento aún no tiene puestos activos. Crea uno en Organización primero.",
 				"noShifts": "Este departamento aún no tiene turnos. Añade uno en el paso Turnos primero.",
-				"reset": "Restablecer",
 				"submit": "Guardar",
 				"nameRequired": "Escribe un nombre de restricción.",
 				"nameLength": "Usa de 2 a 100 caracteres.",
@@ -3526,7 +3524,6 @@
 				"departmentHint": "Cada restricción pertenece a un departamento; las de la política de trabajo se definen en Configuración.",
 				"departmentsEmpty": "No hay ningún departamento activo al que puedas añadir restricciones.",
 				"optionsNeedDepartment": "Elige primero un departamento.",
-				"typeHintEmpty": "Elige una opción para ver un ejemplo.",
 				"firmnessHints": {
 					"WORKING_HOURS": "Con «Si es posible», el horario puede superar esta cifra cuando un turno no podría cubrirse de otro modo, y cada vez que lo haga aparece en Avisos."
 				},
@@ -3548,7 +3545,14 @@
 					"listsNone_one": "{{names}} no incluye {{listed}}, así que nadie puede contar ahí. Elige uno que incluya o quítalo.",
 					"listsNone_other": "{{names}} no incluyen {{listed}}, así que nadie puede contar ahí. Elige unos que incluyan o quítalos.",
 					"staleTakenOut": "Estos valores ya no encajan y se quitaron: {{items}}. Guarda para mantener la restricción sin ellos, o vuelve a elegir."
-				}
+				},
+				"changeType": "Cambiar",
+				"changeTypeLabel": "Cambiar qué decide: {{type}}",
+				"stepChoose": "Paso 1 de 2: elige qué decide",
+				"stepFill": "Paso 2 de 2",
+				"continue": "Continuar",
+				"cancel": "Cancelar",
+				"add": "Añadir restricción"
 			},
 			"preview": {
 				"title": "Cómo se lee"
@@ -3667,6 +3671,29 @@
 				"PAY_RATES": "Tarifas",
 				"NO_OVERTIME_WHEN_GENERATING": "Sin horas extra al generar",
 				"KEEP_DAYS_OFF_TOGETHER": "Días libres juntos"
+			},
+			"descriptions": {
+				"SHIFT_STAFFING": "Cuántas personas necesita un turno, por puesto.",
+				"SHIFT_STAFFING_WITH_STAND_INS": "Lo mismo, cuando personas de otro puesto pueden suplir.",
+				"ROLE_PRESENCE": "Un puesto que debe estar de servicio de principio a fin del turno.",
+				"DAYS_OFF_PER_PERIOD": "Cuántos días libres tiene cada persona en una racha de días.",
+				"AVOID_DAYS_OFF_ON": "Días de mucho trabajo en que la gente debe trabajar, no librar.",
+				"MAX_DAYS_WITHOUT_DAY_TYPES": "La racha más larga de días que alguien trabaja sin descanso.",
+				"DAY_TYPE_DAYS_PER_WEEK": "Días de un tipo que cada persona debe tener cada semana.",
+				"KEEP_DAYS_OFF_TOGETHER": "Días de descanso, libres y permisos juntos, no dispersos.",
+				"REST_BETWEEN_SHIFTS": "El intervalo más corto entre un turno y el siguiente.",
+				"MAX_WORK_HOURS_PER_DAY": "Un máximo diario de horas para cualquiera.",
+				"MAX_OVERTIME_HOURS_PER_MONTH": "Cuántas horas extra puede recibir una persona al mes.",
+				"SHORTEST_PART_SHIFT": "Cuándo se asigna aún un turno junto a un permiso de parte del día.",
+				"MAX_CALL_BACKS_PER_PERSON": "Cada cuánto se puede llamar a alguien en un día de descanso o libre.",
+				"PAY_RATES": "Lo que cuestan las horas adicionales, para que el motor prefiera cuadrantes más baratos.",
+				"NO_OVERTIME_WHEN_GENERATING": "Los cuadrantes generados dejan turnos abiertos en vez de añadir horas extra."
+			},
+			"categoryDescriptions": {
+				"STAFFING": "Quién debe estar en cada turno, y cuántos.",
+				"ROLE_COVERAGE": "Quién debe estar de servicio todo el turno.",
+				"SHIFT_PATTERN": "Cuántos días libres tiene la gente, y cuáles.",
+				"WORKING_HOURS": "Límites de horas, horas extra y descanso entre turnos."
 			}
 		},
 		"forecast": {

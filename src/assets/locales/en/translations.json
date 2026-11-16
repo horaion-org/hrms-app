@@ -3667,7 +3667,6 @@
 				"namePlaceholder": "e.g. Morning cover",
 				"nameHint": "Shown in the list. 2–100 characters.",
 				"nameCounter": "{{count}}/100",
-				"type": "What it controls",
 				"optionsLoading": "Loading constraint types…",
 				"optionsHidden": "You don’t have permission to see this department’s constraint types.",
 				"optionsFailed": "We couldn’t load constraint types. Try again.",
@@ -3678,7 +3677,6 @@
 				"selectAll": "Select all",
 				"noJobTitles": "This department has no active job titles yet. Create one under Organisation first.",
 				"noShifts": "This department has no shifts yet. Add one on the Shifts step first.",
-				"reset": "Reset",
 				"submit": "Save",
 				"nameRequired": "Enter a constraint name.",
 				"nameLength": "Use 2 to 100 characters.",
@@ -3726,7 +3724,6 @@
 				"departmentHint": "Constraints belong to one department; work policy ones are set in Settings.",
 				"departmentsEmpty": "No active department you can add constraints to.",
 				"optionsNeedDepartment": "Choose a department first.",
-				"typeHintEmpty": "Choose one to see an example.",
 				"firmnessHints": {
 					"WORKING_HOURS": "Asked “if possible”, the roster may pass this figure when a shift could not be staffed otherwise, and each time it does is listed in Issues."
 				},
@@ -3748,7 +3745,14 @@
 					"listsNone_one": "{{names}} doesn’t list {{listed}}, so no one can be counted there. Choose one it lists, or remove it.",
 					"listsNone_other": "{{names}} don’t list {{listed}}, so no one can be counted there. Choose ones they list, or remove them.",
 					"staleTakenOut": "These no longer fit and were taken out: {{items}}. Save to keep the constraint without them, or choose again."
-				}
+				},
+				"changeType": "Change",
+				"changeTypeLabel": "Change what it decides: {{type}}",
+				"stepChoose": "Step 1 of 2: choose what it decides",
+				"stepFill": "Step 2 of 2",
+				"continue": "Continue",
+				"cancel": "Cancel",
+				"add": "Add constraint"
 			},
 			"preview": {
 				"title": "How it reads"
@@ -3867,6 +3871,29 @@
 				"PAY_RATES": "Pay rates",
 				"NO_OVERTIME_WHEN_GENERATING": "No overtime when generating",
 				"KEEP_DAYS_OFF_TOGETHER": "Days off together"
+			},
+			"descriptions": {
+				"SHIFT_STAFFING": "How many people a shift needs, by job title.",
+				"SHIFT_STAFFING_WITH_STAND_INS": "The same, where people of another job title may stand in.",
+				"ROLE_PRESENCE": "A job title that must be on duty from the start of a shift to its end.",
+				"DAYS_OFF_PER_PERIOD": "How many days off each person gets in a run of days.",
+				"AVOID_DAYS_OFF_ON": "Busy days when people should be working, not off.",
+				"MAX_DAYS_WITHOUT_DAY_TYPES": "The longest run of days anyone works without a break.",
+				"DAY_TYPE_DAYS_PER_WEEK": "Days of a kind each person must have every week.",
+				"KEEP_DAYS_OFF_TOGETHER": "Rest days, days off and leave side by side, not scattered.",
+				"REST_BETWEEN_SHIFTS": "The shortest gap between one shift and the next.",
+				"MAX_WORK_HOURS_PER_DAY": "A daily ceiling on the hours anyone works.",
+				"MAX_OVERTIME_HOURS_PER_MONTH": "How much overtime one person may be given in a month.",
+				"SHORTEST_PART_SHIFT": "When a shift is still given around part-day leave.",
+				"MAX_CALL_BACKS_PER_PERSON": "How often someone may be called in on a rest or off day.",
+				"PAY_RATES": "What extra hours cost, so the engine prefers cheaper rosters.",
+				"NO_OVERTIME_WHEN_GENERATING": "Generated rosters leave shifts open rather than add overtime."
+			},
+			"categoryDescriptions": {
+				"STAFFING": "Who must be on each shift, and how many.",
+				"ROLE_COVERAGE": "Who must be on duty for a whole shift.",
+				"SHIFT_PATTERN": "How many days off people get, and which days.",
+				"WORKING_HOURS": "Limits on hours, overtime and rest between shifts."
 			}
 		},
 		"forecast": {

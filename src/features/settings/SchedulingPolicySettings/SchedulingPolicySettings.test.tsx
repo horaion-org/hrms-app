@@ -166,15 +166,13 @@ describe("SchedulingPolicySettings", () => {
 		const dialog = await screen.findByRole("dialog", {
 			name: "Add constraint",
 		});
+		await user.click(
+			within(dialog).getByRole("radio", { name: "Rest between shifts" })
+		);
+		await user.click(within(dialog).getByRole("button", { name: "Continue" }));
 		const name = within(dialog).getByRole("textbox", { name: /^Name/ });
 		await user.clear(name);
 		await user.type(name, "Rest");
-		await user.click(
-			within(dialog).getByRole("button", { name: /^What it controls/ })
-		);
-		await user.click(
-			await screen.findByRole("option", { name: "Rest between shifts" })
-		);
 		await user.click(
 			within(dialog).getByRole("radio", { name: "Chosen departments" })
 		);
@@ -187,7 +185,7 @@ describe("SchedulingPolicySettings", () => {
 			within(dialog).getByRole("spinbutton", { name: /^Hours off/ }),
 			"11"
 		);
-		await user.click(within(dialog).getByRole("button", { name: "Save" }));
+		await user.click(within(dialog).getByRole("button", { name: "Add constraint" }));
 
 		await waitFor(() => {
 			expect(
@@ -374,22 +372,18 @@ describe("SchedulingPolicySettings", () => {
 		const dialog = await screen.findByRole("dialog", {
 			name: "Add constraint",
 		});
+		await user.click(
+			within(dialog).getByRole("radio", { name: "Rest between shifts" })
+		);
+		await user.click(within(dialog).getByRole("button", { name: "Continue" }));
 		const name = within(dialog).getByRole("textbox", { name: /^Name/ });
 		await user.clear(name);
 		await user.type(name, "Rest");
-		await user.click(
-			within(dialog).getByRole("button", { name: /^What it controls/ })
-		);
-		await user.click(
-			await screen.findByRole("option", {
-				name: "Rest between shifts",
-			})
-		);
 		await user.type(
 			within(dialog).getByRole("spinbutton", { name: /^Hours off/ }),
 			"11"
 		);
-		await user.click(within(dialog).getByRole("button", { name: "Save" }));
+		await user.click(within(dialog).getByRole("button", { name: "Add constraint" }));
 
 		await waitFor(() => {
 			expect(
@@ -468,22 +462,18 @@ describe("SchedulingPolicySettings", () => {
 		const dialog = await screen.findByRole("dialog", {
 			name: "Add constraint",
 		});
+		await user.click(
+			within(dialog).getByRole("radio", { name: "Rest between shifts" })
+		);
+		await user.click(within(dialog).getByRole("button", { name: "Continue" }));
 		const name = within(dialog).getByRole("textbox", { name: /^Name/ });
 		await user.clear(name);
 		await user.type(name, "Rest");
-		await user.click(
-			within(dialog).getByRole("button", { name: /^What it controls/ })
-		);
-		await user.click(
-			await screen.findByRole("option", {
-				name: "Rest between shifts",
-			})
-		);
 		await user.type(
 			within(dialog).getByRole("spinbutton", { name: /^Hours off/ }),
 			"12"
 		);
-		await user.click(within(dialog).getByRole("button", { name: "Save" }));
+		await user.click(within(dialog).getByRole("button", { name: "Add constraint" }));
 
 		expect(
 			await within(dialog).findByText(

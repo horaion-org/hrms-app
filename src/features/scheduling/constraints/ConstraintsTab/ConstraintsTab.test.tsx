@@ -218,9 +218,7 @@ describe("ConstraintsTab", () => {
 		const dialog = await screen.findByRole("dialog", {
 			name: "Set for this department",
 		});
-		expect(
-			within(dialog).getByRole("button", { name: /^Department/ })
-		).toHaveTextContent("Orchard › Kitchen");
+		expect(dialog).toHaveAccessibleDescription("Orchard › Kitchen");
 		expect(calls.map((call) => call.path)).toContain(`${KITCHEN}/constraints`);
 	});
 
@@ -402,7 +400,9 @@ describe("ConstraintsTab", () => {
 				"Saving changes this constraint for Kitchen: new schedules and 1 draft that uses it. Generated and published schedules keep their own copy."
 			)
 		).toBeVisible();
-		expect(screen.getByRole("button", { name: /^Department/ })).toBeDisabled();
+		expect(
+			screen.getByRole("dialog", { name: "Edit constraint" })
+		).toHaveAccessibleDescription("Orchard › Kitchen");
 	});
 
 	it("given_schedulesNotReadable_when_editing_then_theNoteSaysAnyDrafts", async () => {
