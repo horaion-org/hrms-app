@@ -30,6 +30,13 @@ export const reasonLabelKey = (
 ): `shiftPreferences.notConsidered.${PreferenceReason}` =>
 	`shiftPreferences.notConsidered.${reason}`;
 
+/** A day's preferred shifts as one phrase, "Morning or Late": any one of them meets it. */
+export const preferredShiftsText = (
+	shiftNames: ReadonlyArray<string>,
+	language: string
+): string =>
+	new Intl.ListFormat(language, { type: "disjunction" }).format(shiftNames);
+
 /** The outcomes of one roster, by person and day. */
 export type PreferenceOutcomeLookup = ReadonlyMap<
 	string,

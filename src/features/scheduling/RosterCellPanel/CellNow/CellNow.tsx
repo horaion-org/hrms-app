@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { dayTypeInSentence } from "@/features/scheduling/dayTypes";
 import { formatDay } from "@/features/scheduling/periods";
@@ -16,6 +17,13 @@ import {
 } from "@/features/scheduling/rosterChanges/cellText";
 import { leaveTookTheShift } from "@/features/scheduling/rosterChanges/rosterLeave";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
+import type { SchedulePreferenceOutcome } from "@/features/shiftPreferences/api";
+import {
+	OUTCOME_TONES,
+	outcomeLabelKey,
+	preferredShiftsText,
+	reasonLabelKey,
+} from "@/features/shiftPreferences/preferenceOutcome";
 
 export type CellNowProps = {
 	assignment: ScheduleAssignment;
@@ -26,6 +34,8 @@ export type CellNowProps = {
 	/** How many days the request covers. */
 	requestDays: number;
 	language: string;
+	/** The member's shift preference on the day and what the roster made of it; no row without. */
+	preferenceOutcome?: SchedulePreferenceOutcome;
 };
 
 const key = "scheduling.rosterEdit";
@@ -36,7 +46,8 @@ const key = "scheduling.rosterEdit";
  * leave type (with its part of the day for part-day leave, and why the whole
  * day was kept free), the
  * day type a shift falls on, the leave behind a day off, a link to change the
- * whole request in Leave, and who changed the day last, from what, and why.
+ * whole request in Leave, who changed the day last, from what, and why, and
+ * the member's shift preference that day with what the roster made of it.
  */
 export const CellNow = ({
 	assignment,
@@ -44,6 +55,7 @@ export const CellNow = ({
 	requestLink,
 	requestDays,
 	language,
+	preferenceOutcome,
 }: CellNowProps): FunctionComponent => {
 	const { t } = useTranslation();
 	const lastChange = assignment.lastChange;
@@ -146,6 +158,32 @@ export const CellNow = ({
 					)}
 					{lastChange.remark && <q className="block">{lastChange.remark}</q>}
 				</dd>
+			)}
+			{preferenceOutcome && (
+				<>
+					<dt className="mt-3 font-medium text-neutral-800">
+						{t("shiftPreferences.preference")}
+					</dt>
+					<dd className="flex flex-wrap items-center gap-2 text-neutral-900">
+						{t("shiftPreferences.preferred", {
+							shifts: preferredShiftsText(
+								preferenceOutcome.shiftNames,
+								language
+							),
+						})}
+						<Badge
+							className="uppercase"
+							tone={OUTCOME_TONES[preferenceOutcome.outcome]}
+						>
+							{t(outcomeLabelKey(preferenceOutcome.outcome))}
+						</Badge>
+					</dd>
+					{preferenceOutcome.reason && (
+						<dd className="text-xs text-neutral-800">
+							{t(reasonLabelKey(preferenceOutcome.reason))}
+						</dd>
+					)}
+				</>
 			)}
 		</dl>
 	);

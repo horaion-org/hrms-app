@@ -3,6 +3,7 @@ import { I18nextProvider } from "react-i18next";
 import { describe, expect, it, vi } from "vitest";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
+import type { SchedulePreferenceOutcome } from "@/features/shiftPreferences/api";
 import { editedAssignmentFixture } from "@/features/scheduling/rosterChanges/fixtures";
 import {
 	scheduleAssignmentsFixture,
@@ -170,5 +171,56 @@ describe("CellNow", () => {
 			expect(screen.getByText("Shortened for leave")).toBeVisible();
 			expect(screen.queryByText("Taken off for leave")).toBeNull();
 		});
+	});
+
+	describe("shift preference", () => {
+		/** A preference for Morning or Late on the shown day, with `change` applied. */
+		const outcome = (
+			change: Partial<SchedulePreferenceOutcome>
+		): SchedulePreferenceOutcome => ({
+			membershipId: "m-1",
+			date: "2026-10-12",
+			shiftNames: ["Morning", "Late"],
+			outcome: "MET",
+			reason: null,
+			...change,
+		});
+
+		it("given_noPreference_when_rendered_then_showsNoPreferenceRow", () => {
+			show();
+
+			expect(screen.queryByText("Preference")).toBeNull();
+		});
+
+		it.each([
+			["MET", "Met"],
+			["NOT_MET", "Not met"],
+		] as const)(
+			"given_an%sPreference_when_rendered_then_namesTheShiftsAndItsPill",
+			(kind, pill) => {
+				show({ preferenceOutcome: outcome({ outcome: kind }) });
+
+				expect(screen.getByText("Preference")).toBeVisible();
+				expect(screen.getByText(/Preferred: Morning or Late/)).toBeVisible();
+				expect(screen.getByText(pill)).toBeVisible();
+			}
+		);
+
+		it.each([
+			["ON_LEAVE", "On leave that day"],
+			["SHIFT_NOT_IN_ROSTER", "The shift isn’t in this roster"],
+			["SHIFT_NOT_ON_DAY", "The shift doesn’t run that day"],
+			["ROLE_NOT_STAFFED", "The shift doesn’t need this job title"],
+		] as const)(
+			"given_aPreferenceLeftOutFor%s_when_rendered_then_saysNotConsideredAndWhy",
+			(reason, words) => {
+				show({
+					preferenceOutcome: outcome({ outcome: "NOT_CONSIDERED", reason }),
+				});
+
+				expect(screen.getByText("Not considered")).toBeVisible();
+				expect(screen.getByText(words)).toBeVisible();
+			}
+		);
 	});
 });
