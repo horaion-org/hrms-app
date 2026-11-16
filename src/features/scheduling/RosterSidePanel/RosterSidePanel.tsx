@@ -57,12 +57,12 @@ export const RosterSidePanel = ({
 	return (
 		<aside
 			aria-labelledby={titleId}
+			id={id}
 			// Beside the grid it keeps to the grid's height and stays in view: its header stays, its list scrolls.
 			className={joinClassNames(
 				"flex w-full shrink-0 flex-col lg:sticky lg:top-4 lg:max-h-[min(100%,calc(100dvh-2rem))] lg:w-96",
 				className
 			)}
-			id={id}
 			onKeyDown={(event) => {
 				if (event.key === "Escape") onClose();
 			}}

@@ -241,11 +241,11 @@ export const GeneratedRoster = ({
 		<RosterSidePanelSlot
 			assignments={assignments}
 			editing={editing}
+			engineRepairFor={(gap) => generationStoredGap(generationFindings, gap)}
 			preferenceOutcomes={preferenceOutcomes}
 			roster={roster}
 			timeZone={schedule.timeZone}
 			viewerMembershipId={viewerMembershipId}
-			engineRepairFor={(gap) => generationStoredGap(generationFindings, gap)}
 			list={{
 				id: sidePanelId,
 				resetKey: `${openList ?? ""}|${view.member ?? view.date ?? ""}`,

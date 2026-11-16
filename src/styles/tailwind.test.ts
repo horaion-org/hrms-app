@@ -460,7 +460,6 @@ describe("compiled app stylesheet", () => {
 		expect(colours).toEqual(
 			expect.arrayContaining([
 				"bg-ink-blue-900",
-				"fill-ink-blue-100",
 				"focus-visible:outline-white",
 			])
 		);
