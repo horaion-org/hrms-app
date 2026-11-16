@@ -4986,6 +4986,74 @@
 				"done_one": "{{count}} person",
 				"done_other": "{{count}} people"
 			}
+		},
+		"cards": {
+			"shortShifts": {
+				"title": "Shifts short",
+				"range": "This week and next",
+				"failed": "We couldn’t load the shifts short.",
+				"empty": "Every shift is staffed this week and next.",
+				"shift": "{{shift}} {{start}}–{{end}}, {{day}}",
+				"detail_one": "{{department}} · short by {{count}} person",
+				"detail_other": "{{department}} · short by {{count}} people",
+				"more_one": "and {{count}} more",
+				"more_other": "and {{count}} more"
+			},
+			"coverOffers": {
+				"title": "Cover offers waiting",
+				"failed": "We couldn’t load the cover offers.",
+				"empty": "Nobody owes an answer on cover.",
+				"notAnswered": "{{name}} has not answered: {{shift}}, {{day}}",
+				"detailWithDeadline": "{{department}} · answer by {{deadline}}",
+				"formerMember": "A former member",
+				"mineTitle": "Your offers to answer",
+				"mine": "{{shift}}, {{day}}",
+				"aShift": "A shift"
+			},
+			"nextRoster": {
+				"title": "Next roster",
+				"failed": "We couldn’t load the coming rosters.",
+				"empty": "No departments to roster yet.",
+				"stepNamed": "{{step}}: {{department}}",
+				"steps": {
+					"setUp": "Set up",
+					"generate": "Generate",
+					"wait": "Being generated",
+					"review": "Review and publish",
+					"fix": "Fix and try again",
+					"carryOn": "Carry on",
+					"done": "Published"
+				},
+				"missing": {
+					"SHIFT": "No shift",
+					"STAFFING_CONSTRAINT": "No staffing rule"
+				}
+			},
+			"closeToLimit": {
+				"title": "Close to the overtime limit",
+				"seeInsights": "See Insights",
+				"share": "At {{share}}% of the monthly overtime limit or more.",
+				"failed": "We couldn’t load overtime.",
+				"noCeiling": "No monthly overtime limit is set.",
+				"empty": "Nobody is close to the limit this month.",
+				"formerMember": "A former member",
+				"standing": {
+					"NEAR": "Near",
+					"OVER": "Over"
+				},
+				"hours": "{{hours}} h of {{ceiling}} h overtime · {{department}}"
+			},
+			"offToday": {
+				"title": "Off today and tomorrow",
+				"seeLeave": "See leave",
+				"failed": "We couldn’t load who is off.",
+				"today": "Today, {{day}}",
+				"tomorrow": "Tomorrow, {{day}}",
+				"nobody": "Nobody is off.",
+				"person": "{{name}}: {{reason}}",
+				"dayOff": "Day off",
+				"formerMember": "A former member"
+			}
 		}
 	},
 	"pageToolbar": {

@@ -4819,6 +4819,74 @@
 				"done_one": "{{count}} persona",
 				"done_other": "{{count}} personas"
 			}
+		},
+		"cards": {
+			"shortShifts": {
+				"title": "Turnos incompletos",
+				"range": "Esta semana y la próxima",
+				"failed": "No pudimos cargar los turnos incompletos.",
+				"empty": "Todos los turnos están cubiertos esta semana y la próxima.",
+				"shift": "{{shift}} {{start}}–{{end}}, {{day}}",
+				"detail_one": "{{department}} · falta {{count}} persona",
+				"detail_other": "{{department}} · faltan {{count}} personas",
+				"more_one": "y {{count}} más",
+				"more_other": "y {{count}} más"
+			},
+			"coverOffers": {
+				"title": "Ofertas de cobertura pendientes",
+				"failed": "No pudimos cargar las ofertas de cobertura.",
+				"empty": "Nadie tiene una respuesta pendiente.",
+				"notAnswered": "{{name}} no ha respondido: {{shift}}, {{day}}",
+				"detailWithDeadline": "{{department}} · responder antes de {{deadline}}",
+				"formerMember": "Un antiguo miembro",
+				"mineTitle": "Tus ofertas por responder",
+				"mine": "{{shift}}, {{day}}",
+				"aShift": "Un turno"
+			},
+			"nextRoster": {
+				"title": "Próximo horario",
+				"failed": "No pudimos cargar los próximos horarios.",
+				"empty": "Aún no hay departamentos que programar.",
+				"stepNamed": "{{step}}: {{department}}",
+				"steps": {
+					"setUp": "Configurar",
+					"generate": "Generar",
+					"wait": "Generándose",
+					"review": "Revisar y publicar",
+					"fix": "Corregir y reintentar",
+					"carryOn": "Continuar",
+					"done": "Publicado"
+				},
+				"missing": {
+					"SHIFT": "Sin turno",
+					"STAFFING_CONSTRAINT": "Sin regla de personal"
+				}
+			},
+			"closeToLimit": {
+				"title": "Cerca del límite de horas extra",
+				"seeInsights": "Ver Análisis",
+				"share": "Al {{share}}% del límite mensual de horas extra o más.",
+				"failed": "No pudimos cargar las horas extra.",
+				"noCeiling": "No hay un límite mensual de horas extra.",
+				"empty": "Nadie está cerca del límite este mes.",
+				"formerMember": "Un antiguo miembro",
+				"standing": {
+					"NEAR": "Cerca",
+					"OVER": "Por encima"
+				},
+				"hours": "{{hours}} h de {{ceiling}} h extra · {{department}}"
+			},
+			"offToday": {
+				"title": "Ausentes hoy y mañana",
+				"seeLeave": "Ver ausencias",
+				"failed": "No pudimos cargar quién está ausente.",
+				"today": "Hoy, {{day}}",
+				"tomorrow": "Mañana, {{day}}",
+				"nobody": "Nadie está ausente.",
+				"person": "{{name}}: {{reason}}",
+				"dayOff": "Día libre",
+				"formerMember": "Un antiguo miembro"
+			}
 		}
 	},
 	"auth": {
