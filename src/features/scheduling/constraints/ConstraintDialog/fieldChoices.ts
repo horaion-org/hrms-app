@@ -1,4 +1,5 @@
 import type {
+	ConstraintComparison,
 	ConstraintField,
 	ConstraintFieldKind,
 	ConstraintFieldSpec,
@@ -25,8 +26,12 @@ export type LinksByKind = Partial<
 	Record<ConstraintFieldKind, ReadonlyArray<LinkChoice>>
 >;
 
-/** Why a value was taken out of the form: not every chosen parent lists it, or another field already holds it. */
-export type RemovalReason = "NOT_LISTED" | "EXCLUDED";
+/**
+ * Why a value was taken out of the form: not every chosen parent lists it,
+ * another field already holds it, or a comparison the field's partial set of
+ * day types does not take.
+ */
+export type RemovalReason = "NOT_LISTED" | "EXCLUDED" | "PARTIAL";
 
 /** A value taken out of the form, and why. */
 export type RemovedValue = {
@@ -200,4 +205,92 @@ export const valuesListingNone = (
 		if (listingNone.length > 0) result[spec.field] = listingNone;
 	}
 	return result;
+};
+
+/** The day type codes a field offers: its own choices, or every code the API lists when it names none (ADR-0087). */
+export const dayTypeCodesOf = (
+	spec: ConstraintFieldSpec,
+	everyCode: ReadonlyArray<string>
+): ReadonlyArray<string> =>
+	spec.choices.length > 0 ? spec.choices : everyCode;
+
+/**
+ * What a field shows as chosen: an optional field of choices with none
+ * chosen means every choice (the API stores "every" as none), so it shows
+ * them all.
+ */
+export const shownValuesOf = (
+	spec: ConstraintFieldSpec,
+	chosen: ReadonlyArray<string>
+): Array<string> =>
+	spec.minCount === 0 && spec.choices.length > 0 && chosen.length === 0
+		? [...spec.choices]
+		: [...chosen];
+
+/** Whether a field of choices holds some but not every one of them. */
+const isPartial = (
+	spec: ConstraintFieldSpec,
+	chosen: ReadonlyArray<string>
+): boolean =>
+	spec.choices.length > 0 &&
+	chosen.length > 0 &&
+	!spec.choices.every((code) => chosen.includes(code));
+
+/**
+ * The comparisons the type offers now: every one its comparison field takes,
+ * but only those a field declares for a partial set while that field holds
+ * some but not every one of its choices.
+ */
+export const allowedComparisons = (
+	specs: ReadonlyArray<ConstraintFieldSpec>,
+	values: ConstraintFieldValues,
+	comparisons: ReadonlyArray<ConstraintComparison>
+): Array<ConstraintComparison> =>
+	specs
+		.filter(
+			(spec) =>
+				spec.partialComparisons.length > 0 &&
+				isPartial(spec, values[spec.field] ?? [])
+		)
+		.reduce(
+			(allowed, spec) =>
+				allowed.filter((comparison) =>
+					spec.partialComparisons.includes(comparison)
+				),
+			[...comparisons]
+		);
+
+/**
+ * The type's comparison field's chosen value taken out when a partial set of
+ * day types no longer takes it, and why; `comparisons` is every comparison
+ * that field takes.
+ */
+export const withoutUnfitComparison = (
+	specs: ReadonlyArray<ConstraintFieldSpec>,
+	values: ConstraintFieldValues,
+	comparisons: ReadonlyArray<ConstraintComparison>
+): { values: ConstraintFieldValues; removed: Array<RemovedValue> } => {
+	const comparisonField = specs.find((spec) => spec.kind === "COMPARISON")?.field;
+	if (!comparisonField) return { values, removed: [] };
+	const allowed: ReadonlyArray<string> = allowedComparisons(
+		specs,
+		values,
+		comparisons
+	);
+	const chosen = values[comparisonField] ?? [];
+	const removed = chosen
+		.filter((value) => !allowed.includes(value))
+		.map((value) => ({
+			field: comparisonField,
+			value,
+			reason: "PARTIAL" as const,
+		}));
+	if (removed.length === 0) return { values, removed };
+	return {
+		values: {
+			...values,
+			[comparisonField]: chosen.filter((value) => allowed.includes(value)),
+		},
+		removed,
+	};
 };

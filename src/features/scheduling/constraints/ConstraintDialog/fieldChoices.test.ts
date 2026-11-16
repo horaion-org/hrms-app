@@ -5,10 +5,14 @@ import type {
 	ConstraintType,
 } from "@/features/scheduling/constraints/api";
 import {
+	allowedComparisons,
 	allowedLinkIds,
+	dayTypeCodesOf,
 	linksByKindOf,
 	sharesNothing,
+	shownValuesOf,
 	valuesListingNone,
+	withoutUnfitComparison,
 	withoutUnfitting,
 } from "@/features/scheduling/constraints/ConstraintDialog/fieldChoices";
 import { CONSTRAINT_OPTIONS } from "@/features/scheduling/constraints/fixtures";
@@ -258,5 +262,68 @@ describe("valuesListingNone", () => {
 				links
 			)
 		).toEqual({});
+	});
+});
+
+const DAYS_OFF = specsOf("DAYS_OFF_PER_PERIOD");
+const WEEKLY = specsOf("DAY_TYPE_DAYS_PER_WEEK");
+const MAX_DAYS = specsOf("MAX_DAYS_WITHOUT_DAY_TYPES");
+const EVERY_COMPARISON = ["AT_LEAST", "AT_MOST", "EXACTLY"] as const;
+
+describe("day types (ADR-0087)", () => {
+	it("offers a field's own day types, or every code when it names none", () => {
+		expect(
+			dayTypeCodesOf(specIn(DAYS_OFF, "DAY_TYPE"), ["OFF", "REST", "LEAVE"])
+		).toEqual(["OFF", "REST"]);
+		expect(
+			dayTypeCodesOf(specIn(MAX_DAYS, "DAY_TYPE"), ["OFF", "REST", "LEAVE"])
+		).toEqual(["OFF", "REST", "LEAVE"]);
+	});
+
+	it("shows every day type as chosen when an optional field holds none, and what is chosen otherwise", () => {
+		expect(shownValuesOf(specIn(DAYS_OFF, "DAY_TYPE"), [])).toEqual([
+			"OFF",
+			"REST",
+		]);
+		expect(shownValuesOf(specIn(DAYS_OFF, "DAY_TYPE"), ["REST"])).toEqual([
+			"REST",
+		]);
+		expect(shownValuesOf(specIn(WEEKLY, "DAY_TYPE"), [])).toEqual([]);
+	});
+
+	it("offers at least only while some but not every day type counts", () => {
+		expect(
+			allowedComparisons(DAYS_OFF, { DAY_TYPE: ["REST"] }, EVERY_COMPARISON)
+		).toEqual(["AT_LEAST"]);
+		expect(allowedComparisons(DAYS_OFF, {}, EVERY_COMPARISON)).toEqual([
+			...EVERY_COMPARISON,
+		]);
+		expect(
+			allowedComparisons(
+				DAYS_OFF,
+				{ DAY_TYPE: ["OFF", "REST"] },
+				EVERY_COMPARISON
+			)
+		).toEqual([...EVERY_COMPARISON]);
+	});
+
+	it("takes out at most once only some day types count, and says why", () => {
+		expect(
+			withoutUnfitComparison(
+				DAYS_OFF,
+				{ COMPARISON: ["AT_MOST"], DAY_TYPE: ["REST"] },
+				EVERY_COMPARISON
+			)
+		).toEqual({
+			values: { COMPARISON: [], DAY_TYPE: ["REST"] },
+			removed: [{ field: "COMPARISON", value: "AT_MOST", reason: "PARTIAL" }],
+		});
+		expect(
+			withoutUnfitComparison(
+				DAYS_OFF,
+				{ COMPARISON: ["AT_LEAST"], DAY_TYPE: ["REST"] },
+				EVERY_COMPARISON
+			).removed
+		).toEqual([]);
 	});
 });
