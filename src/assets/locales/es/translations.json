@@ -3712,7 +3712,7 @@
 				"notStricter": "Estos valores no serían, en todos sus aspectos, al menos tan estrictos como la restricción bloqueada de la empresa. Hazlos más estrictos o mantén la de la empresa.",
 				"overrideInvalid": "Esto ya no puede sustituir esa restricción de la empresa. Recarga e inténtalo de nuevo.",
 				"alreadyOverridden": "Este departamento ya tiene su propia versión de esa restricción de la empresa. Edita esa.",
-				"typeSetByCompany": "La empresa ya define esto. Haz aquí más estricta la de la empresa.",
+				"typeSetByCompany": "La empresa ya define esto. Usa “Hacer más estricta” en la regla de la empresa de esta lista.",
 				"levelNotAllowed": "Este tipo de restricción nombra turnos o puestos de un departamento, así que solo un departamento puede definirla.",
 				"nameConflictCompany": "La empresa ya tiene una restricción llamada \"{{name}}\". Elige otro nombre.",
 				"typeAlreadyUsedCompany": "La empresa ya tiene una restricción de este tipo. Edita esa.",
