@@ -37,7 +37,7 @@ describe("ConstraintPreview", () => {
 					values: [
 						{ field: "COMPARISON", value: "AT_LEAST", name: null },
 						{ field: "DAYS_OFF", value: "2", name: null },
-						{ field: "PERIOD_DAYS", value: "7", name: null },
+						{ field: "PERIOD_WEEKS", value: "1", name: null },
 					],
 				}}
 			/>
@@ -46,7 +46,7 @@ describe("ConstraintPreview", () => {
 		expect(
 			screen.getByRole("region", { name: "How it reads" })
 		).toHaveTextContent(
-			"If possible Everyone gets at least 2 days off in any 7 days in a row.Everyone rostered in Sales"
+			"If possible At least 2 days off every week.Everyone rostered in Sales"
 		);
 	});
 });

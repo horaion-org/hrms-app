@@ -74,7 +74,9 @@ const constraintFieldSchema = z.enum([
 	"HEADCOUNT",
 	"STAND_INS_PER_PERSON",
 	"DAYS_OFF",
+	// Retired: a days-off period still kept in days, read only; PERIOD_WEEKS replaced it (ADR-0097 in the API).
 	"PERIOD_DAYS",
+	"PERIOD_WEEKS",
 	"REST_HOURS",
 	"JOB_TITLE",
 	"STAND_IN_JOB_TITLE",
@@ -189,13 +191,20 @@ export type FieldStrictness = z.infer<typeof fieldStrictnessSchema>;
 
 // A problem a newer API adds reads as UNKNOWN: still a problem, worded generically.
 const constraintValueProblemSchema = z
-	.enum(["UNAVAILABLE", "NOT_LISTED", "LISTS_NONE", "UNKNOWN"])
+	.enum([
+		"UNAVAILABLE",
+		"NOT_LISTED",
+		"LISTS_NONE",
+		"PERIOD_IN_DAYS",
+		"UNKNOWN",
+	])
 	.catch("UNKNOWN");
 
 /**
  * Why a stored value no longer fits (ADR-0085 in the API): its shift or job
- * title is gone or inactive, a job title no chosen shift lists any more, or a
- * shift that lists none of the chosen job titles.
+ * title is gone or inactive, a job title no chosen shift lists any more, a
+ * shift that lists none of the chosen job titles, or a days-off period still
+ * kept in days (ADR-0097).
  */
 export type ConstraintValueProblem = z.infer<
 	typeof constraintValueProblemSchema

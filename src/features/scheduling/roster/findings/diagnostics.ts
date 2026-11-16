@@ -11,8 +11,9 @@ import type { FindingsDiagnostic } from "@/features/scheduling/schedules/api";
  * The engine's diagnostics in the app's words. The first four codes are those
  * of the engine's `scheduling_core/diagnostics/checks.py`; the next two are
  * its findings about the days before a schedule, for a rule about day types;
- * the last says when someone may first start after rest carried in from
- * before.
+ * the next says when someone may first start after rest carried in from
+ * before; the last says days of a days-off block before the schedule were not
+ * sent, which is information only.
  * The set is open, so a code added later reads by its code and the engine's
  * own sentence.
  */
@@ -25,6 +26,7 @@ export const KNOWN_DIAGNOSTIC_CODES = [
 	"PRIOR_RUN_NEEDS_DAY_TYPE",
 	"PRIOR_DAYS_UNKNOWN",
 	"PRIOR_REST_BLOCKS_SHIFTS",
+	"OFF_BLOCK_HISTORY_MISSING",
 ] as const;
 
 type KnownDiagnosticCode = (typeof KNOWN_DIAGNOSTIC_CODES)[number];
@@ -180,6 +182,11 @@ export const diagnosticSentence = (
 				endTime: clockOf(previousEnd),
 			});
 		}
+		case "OFF_BLOCK_HISTORY_MISSING":
+			// Without a member it is about everyone the rule counts.
+			if (entityText(diagnostic, "employeeId") === null)
+				return t(`${key}.${code}.wholeSchedule`);
+			return t(`${key}.${code}.sentence`, { member: member() });
 		case "PRIOR_DAYS_UNKNOWN":
 			// Without a member it is about the whole schedule: no day before it is known.
 			if (entityText(diagnostic, "employeeId") === null)

@@ -68,6 +68,15 @@ const key = "scheduling.constraints.dialog";
 const isWholeNumber = (text = ""): boolean => /^\d+$/.test(text);
 
 /** One field's values as its spec allows: how many, and for a number its range. A field not touched yet has none. */
+/** Numbers chosen from their whole range, each worded, instead of typed: "Every 2 weeks". */
+const CHOSEN_NUMBER_FIELDS = [
+	"PERIOD_WEEKS",
+] as const satisfies ReadonlyArray<ConstraintField>;
+
+/** Whether a number field is chosen from its range rather than typed. */
+export const isChosenNumber = (field: ConstraintField): boolean =>
+	(CHOSEN_NUMBER_FIELDS as ReadonlyArray<ConstraintField>).includes(field);
+
 const fieldSchema = (
 	spec: ConstraintFieldSpec,
 	t: TFunction
@@ -82,7 +91,9 @@ const fieldSchema = (
 					(isWholeNumber(text) &&
 						Number(text) >= (spec.min ?? 0) &&
 						Number(text) <= (spec.max ?? Number.MAX_SAFE_INTEGER)),
-				t(`${key}.number`, { min: spec.min, max: spec.max })
+				isChosenNumber(spec.field)
+					? t(`${key}.chooseOne`)
+					: t(`${key}.number`, { min: spec.min, max: spec.max })
 			)
 			.prefault([]);
 	return z
@@ -106,6 +117,9 @@ export type FieldFit = {
 	nameOf: (id: string) => string;
 };
 
+/** A week's days, so days off are checked against the days of a period in weeks. */
+const DAYS_IN_A_WEEK = 7;
+
 /**
  * The checks that tie fields together, as the API's: days off within their
  * period, then, from the type's declarations, no value also chosen in the
@@ -119,11 +133,14 @@ const checkConsistent = (
 	fields: ReadonlyArray<ConstraintFieldSpec>,
 	fit: FieldFit
 ): void => {
-	const [daysOff, periodDays] = [values.DAYS_OFF?.[0], values.PERIOD_DAYS?.[0]];
+	const [daysOff, periodWeeks] = [
+		values.DAYS_OFF?.[0],
+		values.PERIOD_WEEKS?.[0],
+	];
 	if (
 		isWholeNumber(daysOff) &&
-		isWholeNumber(periodDays) &&
-		Number(daysOff) > Number(periodDays)
+		isWholeNumber(periodWeeks) &&
+		Number(daysOff) > Number(periodWeeks) * DAYS_IN_A_WEEK
 	)
 		context.addIssue({
 			code: "custom",

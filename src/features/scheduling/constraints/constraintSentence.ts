@@ -53,6 +53,9 @@ type CoveredGroup = "fullTimers" | "everyone";
 /** The pay rates read as their overtime and rest-day rates, then how a day off worked counts. */
 type PayRatesPart = "rates" | "dayOffOrdinary" | "dayOffPriced";
 
+/** A days-off rule counts every day off, or only the day types it names. */
+type DaysOffCounted = "everyDayOff" | "dayTypes";
+
 /** The weekly rule takes "at least" or "exactly", never "at most" (`ConstraintFieldSpec.comparisons`). */
 type WeeklyComparison = "AT_LEAST" | "EXACTLY";
 
@@ -61,8 +64,7 @@ export type SentenceKey =
 	| `${typeof SENTENCES}.${"SHIFT_STAFFING" | "ROLE_PRESENCE"}.${ShiftCount}.${ConstraintComparison}`
 	| `${typeof SENTENCES}.SHIFT_STAFFING_WITH_STAND_INS.${ShiftCount}.AT_LEAST`
 	| `${typeof SENTENCES}.SHIFT_STAFFING_WITH_STAND_INS.standIns`
-	| `${typeof SENTENCES}.DAYS_OFF_PER_PERIOD.${ConstraintComparison}`
-	| `${typeof SENTENCES}.DAYS_OFF_PER_PERIOD.counting`
+	| `${typeof SENTENCES}.DAYS_OFF_PER_PERIOD.${DaysOffCounted}.${ConstraintComparison}`
 	| `${typeof SENTENCES}.AVOID_DAYS_OFF_ON`
 	| `${typeof SENTENCES}.REST_BETWEEN_SHIFTS`
 	| `${typeof SENTENCES}.MAX_WORK_HOURS_PER_DAY`
@@ -133,19 +135,27 @@ const coveredGroupOf = (constraint: SentenceSource): CoveredGroup =>
 const weeklyComparisonOf = (constraint: SentenceSource): WeeklyComparison =>
 	comparisonOf(constraint) === "EXACTLY" ? "EXACTLY" : "AT_LEAST";
 
-/** A day type named as a group, as the days-off rule names what counts ("Only Rest days count"). */
-const MANY_DAYS = 2;
-
 /**
  * How many days of its day types a rule names: the weekly rule its count, the
- * days-off rule many ("Only Rest days count"), any other one day ("without a
+ * days-off rule its days off ("2 Rest days"), any other one day ("without a
  * Rest day").
  */
 const dayTypeCountOf = (constraint: SentenceSource): number => {
 	if (constraint.type === "DAY_TYPE_DAYS_PER_WEEK")
 		return countOf(constraint, "DAY_TYPE_COUNT");
-	return constraint.type === "DAYS_OFF_PER_PERIOD" ? MANY_DAYS : 1;
+	return constraint.type === "DAYS_OFF_PER_PERIOD"
+		? countOf(constraint, "DAYS_OFF")
+		: 1;
 };
+
+/**
+ * Whether a days-off rule counts every day off, or only the day types it
+ * names (ADR-0087 in the API): "2 days off" or "2 Rest days".
+ */
+const daysOffCountedOf = (constraint: SentenceSource): DaysOffCounted =>
+	constraint.values.some((value) => value.field === "DAY_TYPE")
+		? "dayTypes"
+		: "everyDayOff";
 
 /** The sentences a constraint reads as: one, or with stand-ins a second saying what a stand-in counts for. */
 export const sentencePartsOf = (
@@ -174,18 +184,9 @@ export const sentencePartsOf = (
 		case "DAYS_OFF_PER_PERIOD":
 			return [
 				{
-					i18nKey: `${SENTENCES}.${constraint.type}.${comparisonOf(constraint)}`,
+					i18nKey: `${SENTENCES}.${constraint.type}.${daysOffCountedOf(constraint)}.${comparisonOf(constraint)}`,
 					count: countOf(constraint, "DAYS_OFF"),
 				},
-				// Only some day types count as a day off (ADR-0087); none named means every one, as before.
-				...(constraint.values.some((value) => value.field === "DAY_TYPE")
-					? [
-							{
-								i18nKey: `${SENTENCES}.${constraint.type}.counting` as const,
-								count: 1,
-							},
-						]
-					: []),
 			];
 		case "AVOID_DAYS_OFF_ON":
 			return [{ i18nKey: `${SENTENCES}.${constraint.type}`, count: 1 }];
@@ -243,6 +244,10 @@ const wordOf = (
 ): string => {
 	if (name !== null) return name;
 	if (field === "DAY_TYPE") return dayTypeLabel(value, t, dayTypeCount);
+	if (field === "PERIOD_WEEKS" && value !== "")
+		return t("scheduling.constraints.periodWeeksInSentence", {
+			count: Number(value),
+		});
 	if (isWeekday(value)) return t(`weekdays.${value}`);
 	return value;
 };
@@ -287,6 +292,9 @@ export const constraintWords = (
 					.map((value) => wordOf(value, dayTypeCount, t)),
 			}
 		);
+	// A days-off rule that kept its period in days has no period in weeks yet (ADR-0097 in the API).
+	if (fields.has("PERIOD_DAYS") && !fields.has("PERIOD_WEEKS"))
+		words.PERIOD_WEEKS = t("scheduling.constraints.periodToChoose");
 	return words;
 };
 

@@ -33,7 +33,7 @@ describe("ruleLabel", () => {
 		["shift_demand_requirement", "People on a shift"],
 		["shift_demand_with_substitutes", "People on a shift, with stand-ins"],
 		["shift_presence_requirement", "Someone on duty for the whole shift"],
-		["off_requirement_per_horizon", "Days off in a run of days"],
+		["off_requirement_per_horizon", "Days off each week"],
 		["avoid_off_on_weekdays", "Days to avoid giving off"],
 		["minimum_rest_between_shifts", "Rest between shifts"],
 		["max_days_without_day_types", "Limit on days in a row"],

@@ -3515,6 +3515,7 @@
 				"UNAVAILABLE": "{{name}} no longer exists or isn’t active. Edit the constraint or delete it.",
 				"NOT_LISTED": "{{name}} isn’t on every one of the constraint’s shifts any more. Edit the constraint, or add {{name}} to each of its shifts.",
 				"LISTS_NONE": "{{name}} lists none of the constraint’s job titles any more. Edit the constraint, or add one to the shift.",
+				"PERIOD_IN_DAYS": "This constraint still counts days off over {{name}} days. Edit it and choose every week, or every 2, 3 or 4 weeks.",
 				"UNKNOWN": "{{name}} no longer fits. Edit the constraint."
 			},
 			"add": "Add constraint",
@@ -3544,7 +3545,7 @@
 				"SHIFT_STAFFING": "People on a shift",
 				"SHIFT_STAFFING_WITH_STAND_INS": "People on a shift, with stand-ins",
 				"ROLE_PRESENCE": "Someone on duty for the whole shift",
-				"DAYS_OFF_PER_PERIOD": "Days off in a run of days",
+				"DAYS_OFF_PER_PERIOD": "Days off each week",
 				"AVOID_DAYS_OFF_ON": "Days to avoid giving off",
 				"REST_BETWEEN_SHIFTS": "Rest between shifts",
 				"MAX_DAYS_WITHOUT_DAY_TYPES": "Limit on days in a row",
@@ -3615,15 +3616,26 @@
 					}
 				},
 				"DAYS_OFF_PER_PERIOD": {
-					"AT_LEAST_one": "Everyone gets at least <DAYS_OFF/> day off in any <PERIOD_DAYS/> days in a row.",
-					"AT_LEAST_other": "Everyone gets at least <DAYS_OFF/> days off in any <PERIOD_DAYS/> days in a row.",
-					"AT_MOST_one": "Everyone gets at most <DAYS_OFF/> day off in any <PERIOD_DAYS/> days in a row.",
-					"AT_MOST_other": "Everyone gets at most <DAYS_OFF/> days off in any <PERIOD_DAYS/> days in a row.",
-					"AT_MOST_zero": "Everyone gets no days off in any <PERIOD_DAYS/> days in a row.",
-					"EXACTLY_one": "Everyone gets exactly <DAYS_OFF/> day off in any <PERIOD_DAYS/> days in a row.",
-					"EXACTLY_other": "Everyone gets exactly <DAYS_OFF/> days off in any <PERIOD_DAYS/> days in a row.",
-					"EXACTLY_zero": "Everyone gets no days off in any <PERIOD_DAYS/> days in a row.",
-					"counting": "Only <DAY_TYPE/> count as days off."
+					"everyDayOff": {
+						"AT_LEAST_one": "At least <DAYS_OFF/> day off <PERIOD_WEEKS/>.",
+						"AT_LEAST_other": "At least <DAYS_OFF/> days off <PERIOD_WEEKS/>.",
+						"AT_MOST_one": "At most <DAYS_OFF/> day off <PERIOD_WEEKS/>.",
+						"AT_MOST_other": "At most <DAYS_OFF/> days off <PERIOD_WEEKS/>.",
+						"AT_MOST_zero": "No days off <PERIOD_WEEKS/>.",
+						"EXACTLY_one": "Exactly <DAYS_OFF/> day off <PERIOD_WEEKS/>.",
+						"EXACTLY_other": "Exactly <DAYS_OFF/> days off <PERIOD_WEEKS/>.",
+						"EXACTLY_zero": "No days off <PERIOD_WEEKS/>."
+					},
+					"dayTypes": {
+						"AT_LEAST_one": "At least <DAYS_OFF/> <DAY_TYPE/> <PERIOD_WEEKS/>.",
+						"AT_LEAST_other": "At least <DAYS_OFF/> <DAY_TYPE/> <PERIOD_WEEKS/>.",
+						"AT_MOST_one": "At most <DAYS_OFF/> <DAY_TYPE/> <PERIOD_WEEKS/>.",
+						"AT_MOST_other": "At most <DAYS_OFF/> <DAY_TYPE/> <PERIOD_WEEKS/>.",
+						"AT_MOST_zero": "No <DAY_TYPE/> <PERIOD_WEEKS/>.",
+						"EXACTLY_one": "Exactly <DAYS_OFF/> <DAY_TYPE/> <PERIOD_WEEKS/>.",
+						"EXACTLY_other": "Exactly <DAYS_OFF/> <DAY_TYPE/> <PERIOD_WEEKS/>.",
+						"EXACTLY_zero": "No <DAY_TYPE/> <PERIOD_WEEKS/>."
+					}
 				},
 				"AVOID_DAYS_OFF_ON": "Avoid days off on <WEEKDAY/>.",
 				"REST_BETWEEN_SHIFTS_one": "Everyone gets at least <REST_HOURS/> hour off between shifts.",
@@ -3671,7 +3683,8 @@
 				"HEADCOUNT": "People",
 				"STAND_INS_PER_PERSON": "Stand-ins for 1 person",
 				"DAYS_OFF": "Days off",
-				"PERIOD_DAYS": "Days in a row",
+				"PERIOD_DAYS": "Old period in days",
+				"PERIOD_WEEKS": "How often",
 				"REST_HOURS": "Hours off",
 				"JOB_TITLE": "Job titles that count",
 				"STAND_IN_JOB_TITLE": "Job titles that can stand in",
@@ -3819,6 +3832,11 @@
 			"department": "Department",
 			"allDepartments": "All departments",
 			"listOr": "{{items, list(type: disjunction)}}",
+			"periodWeeks_one": "Every week",
+			"periodWeeks_other": "Every {{count}} weeks",
+			"periodWeeksInSentence_one": "every week",
+			"periodWeeksInSentence_other": "every {{count}} weeks",
+			"periodToChoose": "in a period still to choose",
 			"firmness": {
 				"MUST": "Always kept. If the people and shifts can't meet it, the schedule shows where it falls short.",
 				"SHOULD": "Kept when it can be. The schedule shows where it wasn't."
@@ -3833,6 +3851,7 @@
 				"STAND_INS_PER_PERSON": "how many",
 				"DAYS_OFF": "how many",
 				"PERIOD_DAYS": "how many",
+				"PERIOD_WEEKS": "every how many weeks",
 				"REST_HOURS": "how many",
 				"JOB_TITLE": "which job titles",
 				"STAND_IN_JOB_TITLE": "which job titles",
@@ -3860,7 +3879,7 @@
 				"SHIFT_STAFFING": "For example: Front desk AM needs at least 2 people as Clerk or Lead.",
 				"SHIFT_STAFFING_WITH_STAND_INS": "For example: Closing needs at least 2 people as Lead. 2 people as Clerk count as 1 Lead.",
 				"ROLE_PRESENCE": "For example: Closing has at least 1 person as Supervisor on duty from start to finish. Overtime from the shift before counts.",
-				"DAYS_OFF_PER_PERIOD": "For example: Everyone gets at least 2 days off in any 7 days in a row.",
+				"DAYS_OFF_PER_PERIOD": "For example: At least 1 day off every week.",
 				"AVOID_DAYS_OFF_ON": "For example: Avoid days off on Friday and Saturday, your busiest days.",
 				"REST_BETWEEN_SHIFTS": "For example: Everyone gets at least 11 hours off between shifts.",
 				"MAX_DAYS_WITHOUT_DAY_TYPES": "For example: Nobody goes more than 6 days in a row without a Rest day or Day off.",
@@ -3879,7 +3898,7 @@
 				"JOB_TITLE": "Anyone with one of these counts.",
 				"STAND_INS_PER_PERSON": "For example 2: two stand-ins count as one person. {{min}} to {{max}}.",
 				"DAYS_OFF": "{{min}} to {{max}}.",
-				"PERIOD_DAYS": "For example 7: any 7 days in a row. {{min}} to {{max}}.",
+				"PERIOD_WEEKS": "Weeks run Monday to Sunday. A period of 2 to 4 weeks is a fixed block that carries on from one schedule to the next.",
 				"REST_HOURS": "From the end of one shift to the start of the next. {{min}} to {{max}}.",
 				"DAYS_IN_A_ROW": "{{min}} to {{max}}.",
 				"DAY_TYPE_COUNT": "{{min}} to {{max}}.",
@@ -3917,7 +3936,7 @@
 				"SHIFT_STAFFING": "How many people a shift needs, by job title.",
 				"SHIFT_STAFFING_WITH_STAND_INS": "The same, where people of another job title may stand in.",
 				"ROLE_PRESENCE": "A job title that must be on duty from the start of a shift to its end.",
-				"DAYS_OFF_PER_PERIOD": "How many days off each person gets in a run of days.",
+				"DAYS_OFF_PER_PERIOD": "How many days off each person gets every week, or every 2, 3 or 4 weeks.",
 				"AVOID_DAYS_OFF_ON": "Busy days when people should be working, not off.",
 				"MAX_DAYS_WITHOUT_DAY_TYPES": "The longest run of days anyone works without a break.",
 				"DAY_TYPE_DAYS_PER_WEEK": "Days of a kind each person must have every week.",
@@ -4224,6 +4243,11 @@
 				"PRIOR_REST_BLOCKS_SHIFTS": {
 					"label": "Rest carried in from before",
 					"sentence": "{{member}} can only start from {{time}} on {{day}}, because of rest after their last shift, which ended {{endDay}} at {{endTime}}."
+				},
+				"OFF_BLOCK_HISTORY_MISSING": {
+					"label": "Days before not sent",
+					"sentence": "{{member}}: some days before this schedule in a days-off period were not sent, so they are counted as days that could have been off.",
+					"wholeSchedule": "Some days before this schedule in a days-off period were not sent, so they are counted as days that could have been off."
 				}
 			},
 			"marker": {

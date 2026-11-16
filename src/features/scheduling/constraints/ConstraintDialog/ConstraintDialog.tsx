@@ -46,6 +46,7 @@ import {
 import { appliesToOf } from "@/features/scheduling/constraints/appliesTo";
 import {
 	constraintSchema,
+	isChosenNumber,
 	valuesByField,
 	type ConstraintDialogBody,
 	type ConstraintFormValues,
@@ -108,7 +109,7 @@ const HINTED_FIELDS = [
 	"JOB_TITLE",
 	"STAND_INS_PER_PERSON",
 	"DAYS_OFF",
-	"PERIOD_DAYS",
+	"PERIOD_WEEKS",
 	"REST_HOURS",
 	"DAYS_IN_A_ROW",
 	"DAY_TYPE_COUNT",
@@ -136,6 +137,13 @@ const isChoiceField = (field: ConstraintField): field is ChoiceField =>
 
 const isHinted = (field: ConstraintField): field is HintedField =>
 	(HINTED_FIELDS as ReadonlyArray<ConstraintField>).includes(field);
+
+/** The whole numbers from `first` to `last`, in order. */
+const numbersFrom = (first: number, last: number): Array<number> =>
+	Array.from(
+		{ length: Math.max(last - first + 1, 0) },
+		(_, index) => first + index
+	);
 
 /** A row of the form: one of its own fields, or one of the type's. */
 type FieldName = keyof ConstraintFormValues | ConstraintField;
@@ -358,8 +366,14 @@ export const ConstraintDialog = ({
 	// A field that depends on another offers only what fits what is chosen there (ADR-0085).
 	const offeredChoices = (spec: ConstraintFieldSpec): Array<SelectOption> => {
 		if (spec.kind === "COMPARISON") return comparisonChoices(spec);
-		// A number is typed, never chosen.
-		if (spec.kind === "NUMBER") return [];
+		// A number is typed, except one chosen from its range, each worded: "Every 2 weeks".
+		if (spec.kind === "NUMBER")
+			return isChosenNumber(spec.field)
+				? numbersFrom(spec.min ?? 1, spec.max ?? 1).map((count) => ({
+						value: String(count),
+						label: t("scheduling.constraints.periodWeeks", { count }),
+					}))
+				: [];
 		// A day-type field offers its own codes, named as the company stores them when there is no translation.
 		if (spec.kind === "DAY_TYPE")
 			return dayTypeCodesOf(spec, offered?.dayTypeChoices ?? []).map(
@@ -638,7 +652,8 @@ export const ConstraintDialog = ({
 									{value.length > 0 && numberInput}
 								</div>
 							);
-						if (spec.kind === "NUMBER") return numberInput;
+						if (spec.kind === "NUMBER" && !isChosenNumber(spec.field))
+							return numberInput;
 						const select = {
 							...shared,
 							"aria-labelledby": labelledBy(spec.field),
