@@ -5007,6 +5007,7 @@
 			},
 			"generate": {
 				"choiceMissing": "Se configuró una semana de este mes mientras estabas aquí. Vuelve a cargar la página y genera de nuevo.",
+				"weekCannotBeGenerated": "Una semana que marcaste ya no se puede generar. Vuelve a Configuración para verla como está ahora.",
 				"forbidden": "No tienes permiso para generar este mes aquí.",
 				"failed": "No pudimos generar el mes. Inténtalo de nuevo.",
 				"panel": {
