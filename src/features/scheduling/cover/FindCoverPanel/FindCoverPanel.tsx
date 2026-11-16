@@ -184,8 +184,8 @@ export const FindCoverPanel = ({
 					names={review.names}
 					notifiesMembers={offer !== undefined}
 					preview={review.preview}
-					remark={review.remark}
 					previewRefusal={review.previewRefusal}
+					remark={review.remark}
 					showsRulesNote={false}
 					ticked={review.ticked}
 					onRemarkChange={review.setRemark}
@@ -200,12 +200,12 @@ export const FindCoverPanel = ({
 				<CellPanelFooter
 					applyDisabled={review.applyBlocked}
 					busy={review.busy}
+					offerActions={offerActionsOf(offer, selectedName)}
 					applyLabel={t(
 						review.applyAnyway
 							? "scheduling.rosterEdit.applyAnyway"
 							: "scheduling.rosterEdit.apply"
 					)}
-					offerActions={offerActionsOf(offer, selectedName)}
 					onApply={review.apply}
 					onCancel={onClose}
 				/>

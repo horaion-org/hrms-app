@@ -171,11 +171,11 @@ export const SchedulesTab = ({
 					<div className="flex justify-center">
 						<Button
 							{...scheduleViewLink(schedule)}
+							variant="icon"
 							aria-label={t(`${key}.viewNamed`, {
 								department: schedule.departmentName,
 								period: periodOf(schedule),
 							})}
-							variant="icon"
 						>
 							<ViewIcon />
 						</Button>

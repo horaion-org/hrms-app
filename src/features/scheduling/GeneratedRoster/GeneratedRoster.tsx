@@ -340,10 +340,10 @@ export const GeneratedRoster = ({
 								{/* Issues counts both groups; its panel's headings tell them apart. */}
 								<CountBadge
 									aria-hidden="true"
+									tone="inactive"
 									count={
 										panel === "issues" ? counts.mustFix + counts.notMet : count
 									}
-									tone="inactive"
 								/>
 							</Button>
 						))}
