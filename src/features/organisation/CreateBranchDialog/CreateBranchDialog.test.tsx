@@ -406,30 +406,33 @@ describe("create branch through the Branches page", () => {
 		expect(within(fresh).getByLabelText("Branch name")).toHaveValue("");
 		expect(within(fresh).getByLabelText("Branch code")).toHaveValue("");
 	});
-	it("validates missing heads only on submit and clears the error after choosing one", async () => {
-		stubApi(routes());
+	it("creates a branch with no head, saying the head is optional and that anyone in the company can be chosen", async () => {
+		const calls = stubApi({
+			...routes(),
+			[BRANCHES]: [page([]), page([branch])],
+		});
 		await open();
 		const dialog = await openDialog();
-		await userEvent.type(
-			within(dialog).getByLabelText("Branch name"),
-			"Orchard"
+		await fill(dialog);
+		const heads = within(dialog).getByLabelText("Branch heads");
+		expect(heads).not.toHaveAttribute("aria-required");
+		expect(heads).toHaveAccessibleDescription(
+			"Optional. You can choose a head later. Anyone in the company can be chosen, up to 20."
 		);
-		expect(within(dialog).queryByRole("alert")).not.toBeInTheDocument();
+		await userEvent.click(
+			within(dialog).getByRole("button", { name: "Remove Marcus Lim" })
+		);
 		await userEvent.click(
 			within(dialog).getByRole("button", { name: "Create branch" })
 		);
-		expect(
-			await within(dialog).findByText("Choose at least one branch head.")
-		).toBeVisible();
-		await userEvent.click(within(dialog).getByLabelText("Branch heads"));
-		await userEvent.click(
-			await screen.findByRole("option", { name: "Marcus Lim" })
-		);
 		await waitFor(() => {
-			expect(
-				within(dialog).queryByText("Choose at least one branch head.")
-			).not.toBeInTheDocument();
+			expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 		});
+		expect(
+			calls.find(
+				(call) => call.method === "POST" && call.path.endsWith("/branches")
+			)?.body
+		).toMatchObject({ initialHeadCompanyMembershipIds: [] });
 	});
 	it.each([
 		["", "Enter a branch code."],

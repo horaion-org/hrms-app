@@ -275,6 +275,34 @@ describe("create department through the Departments page", () => {
 		});
 	});
 
+	it("creates a department with no head, saying the head is optional and that anyone in the company can be chosen", async () => {
+		const calls = stubApi({
+			...routes(),
+			[DEPARTMENTS]: [page([]), page([department])],
+		});
+		await open();
+		const dialog = await openDialog();
+		await chooseBranch(dialog, "Tampines");
+		await userEvent.type(
+			within(dialog).getByLabelText("Department name"),
+			"Front of house"
+		);
+		const heads = within(dialog).getByLabelText("Department heads");
+		expect(heads).not.toHaveAttribute("aria-required");
+		expect(heads).toHaveAccessibleDescription(
+			"Optional. You can choose a head later. Anyone in the company can be chosen, up to 20; they join the department's branch if needed."
+		);
+		await submit(dialog);
+		await waitFor(() => {
+			expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+		});
+		expect(
+			calls.find(
+				(call) => call.method === "POST" && call.path.endsWith("/departments")
+			)?.body
+		).toEqual({ name: "Front of house", initialHeadCompanyMembershipIds: [] });
+	});
+
 	it("keeps a duplicate name in place, quotes it and focuses name", async () => {
 		stubApi({
 			...routes(),

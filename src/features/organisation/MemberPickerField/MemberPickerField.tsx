@@ -20,7 +20,7 @@ export type MemberFieldProps = {
 	hint: string;
 	error?: string;
 	disabled?: boolean;
-	/** Heads are required; another use of the picker, such as a manager, may not be. */
+	/** Whether someone must be chosen; heads of a new branch or department are optional. */
 	required?: boolean;
 	/** The most people chosen at once; twenty heads unless a use keeps fewer. */
 	max?: number;

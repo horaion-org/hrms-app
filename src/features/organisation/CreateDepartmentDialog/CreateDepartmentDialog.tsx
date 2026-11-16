@@ -204,6 +204,7 @@ export const CreateDepartmentDialog = ({
 							id={`${formId}-heads`}
 							label={t(`${key}.heads`)}
 							placeholder={t(`${key}.headsPlaceholder`)}
+							required={false}
 							value={field.value}
 							onChange={field.onChange}
 						/>
