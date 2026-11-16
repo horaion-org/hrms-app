@@ -192,7 +192,7 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 		fields: [
 			choice("COMPARISON", "COMPARISON"),
 			number("DAYS_OFF", 0, 31),
-			number("PERIOD_DAYS", 1, 7),
+			number("PERIOD_WEEKS", 1, 4),
 			{
 				...choice("DAY_TYPE", "DAY_TYPE", 0, 2),
 				choices: NON_WORKING_DAY_TYPES,
@@ -555,7 +555,7 @@ export const DEPARTMENTS_POLICY_FIXTURE: DepartmentConstraint =
 		values: [
 			plain("COMPARISON", "AT_LEAST"),
 			plain("DAYS_OFF", "2"),
-			plain("PERIOD_DAYS", "7"),
+			plain("PERIOD_WEEKS", "1"),
 		],
 		appliesToDepartments: [
 			{
@@ -646,7 +646,7 @@ export const CONSTRAINT_FIXTURES: Array<DepartmentConstraint> = [
 		values: [
 			plain("COMPARISON", "AT_LEAST"),
 			plain("DAYS_OFF", "2"),
-			plain("PERIOD_DAYS", "7"),
+			plain("PERIOD_WEEKS", "1"),
 		],
 	}),
 	constraintFixture({

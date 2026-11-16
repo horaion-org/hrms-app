@@ -275,56 +275,67 @@ describe("sentencePartsOf with constraintWords", () => {
 	);
 
 	it.each([
-		[
-			"AT_LEAST",
-			"2",
-			"Everyone gets at least 2 days off in any 7 days in a row.",
-		],
-		[
-			"AT_LEAST",
-			"1",
-			"Everyone gets at least 1 day off in any 7 days in a row.",
-		],
-		[
-			"AT_MOST",
-			"3",
-			"Everyone gets at most 3 days off in any 7 days in a row.",
-		],
-		[
-			"EXACTLY",
-			"2",
-			"Everyone gets exactly 2 days off in any 7 days in a row.",
-		],
-		["AT_MOST", "0", "Everyone gets no days off in any 7 days in a row."],
-		["EXACTLY", "0", "Everyone gets no days off in any 7 days in a row."],
-	])("reads days off %s %s", (comparison, daysOff, sentence) => {
+		["AT_LEAST", "1", "1", "At least 1 day off every week."],
+		["AT_LEAST", "2", "2", "At least 2 days off every 2 weeks."],
+		["AT_MOST", "2", "2", "At most 2 days off every 2 weeks."],
+		["EXACTLY", "2", "2", "Exactly 2 days off every 2 weeks."],
+		["AT_LEAST", "4", "4", "At least 4 days off every 4 weeks."],
+		["AT_MOST", "0", "1", "No days off every week."],
+		["EXACTLY", "0", "3", "No days off every 3 weeks."],
+	])(
+		"reads days off %s %s every %s weeks",
+		(comparison, daysOff, weeks, sentence) => {
+			expect(
+				read("DAYS_OFF_PER_PERIOD", [
+					plain("COMPARISON", comparison),
+					plain("DAYS_OFF", daysOff),
+					plain("PERIOD_WEEKS", weeks),
+				])
+			).toBe(sentence);
+		}
+	);
+
+	it.each([
+		["OFF", "1", "1", "At least 1 Day off every week."],
+		["REST", "2", "2", "At least 2 Rest days every 2 weeks."],
+	])(
+		"reads a days-off rule counting only %s with the day type in place of days off",
+		(dayType, daysOff, weeks, sentence) => {
+			expect(
+				read("DAYS_OFF_PER_PERIOD", [
+					plain("COMPARISON", "AT_LEAST"),
+					plain("DAYS_OFF", daysOff),
+					plain("PERIOD_WEEKS", weeks),
+					plain("DAY_TYPE", dayType),
+				])
+			).toBe(sentence);
+		}
+	);
+
+	it("reads a days-off rule in weeks in Spanish", () => {
 		expect(
-			read("DAYS_OFF_PER_PERIOD", [
-				plain("COMPARISON", comparison),
-				plain("DAYS_OFF", daysOff),
-				plain("PERIOD_DAYS", "7"),
-			])
-		).toBe(sentence);
+			read(
+				"DAYS_OFF_PER_PERIOD",
+				[
+					plain("COMPARISON", "AT_LEAST"),
+					plain("DAYS_OFF", "2"),
+					plain("PERIOD_WEEKS", "2"),
+					plain("DAY_TYPE", "REST"),
+				],
+				"es"
+			)
+		).toBe("Al menos 2 Días de descanso cada 2 semanas.");
 	});
 
-	it("reads a days-off rule counting only Rest days with what counts, and one counting every type as before", () => {
-		expect(
-			read("DAYS_OFF_PER_PERIOD", [
-				plain("COMPARISON", "AT_LEAST"),
-				plain("DAYS_OFF", "2"),
-				plain("PERIOD_DAYS", "7"),
-				plain("DAY_TYPE", "REST"),
-			])
-		).toBe(
-			"Everyone gets at least 2 days off in any 7 days in a row. Only Rest days count as days off."
-		);
-		expect(
-			read("DAYS_OFF_PER_PERIOD", [
-				plain("COMPARISON", "AT_LEAST"),
-				plain("DAYS_OFF", "2"),
-				plain("PERIOD_DAYS", "7"),
-			])
-		).toBe("Everyone gets at least 2 days off in any 7 days in a row.");
+	it("reads a days-off rule that kept its period in days as one with a period still to choose, never in days", () => {
+		const sentence = read("DAYS_OFF_PER_PERIOD", [
+			plain("COMPARISON", "AT_LEAST"),
+			plain("DAYS_OFF", "1"),
+			plain("PERIOD_DAYS", "6"),
+		]);
+
+		expect(sentence).toBe("At least 1 day off in a period still to choose.");
+		expect(sentence).not.toMatch(/days in a row|window|rolling/);
 	});
 
 	it("reads avoided days off with the weekdays joined by and", () => {

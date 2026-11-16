@@ -65,7 +65,7 @@ describe("ConstraintStatement", () => {
 						requirement: "SHOULD",
 						values: [
 							{ field: "DAYS_OFF", value: "2", name: null },
-							{ field: "PERIOD_DAYS", value: "7", name: null },
+							{ field: "PERIOD_WEEKS", value: "1", name: null },
 						],
 					}}
 				/>
