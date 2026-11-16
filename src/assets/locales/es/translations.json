@@ -972,6 +972,7 @@
 	},
 	"select": {
 		"noOptions": "No hay opciones",
+		"wholeGroup": "Grupo completo: {{group}}",
 		"selectedCount_one": "{{count}} seleccionado",
 		"selectedCount_other": "{{count}} seleccionados"
 	},

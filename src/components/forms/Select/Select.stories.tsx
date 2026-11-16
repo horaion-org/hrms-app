@@ -115,6 +115,21 @@ export const Grouped: Story = {
 	},
 };
 
+/** A multiple Select whose group headings each choose or clear their whole group, as the constraint dialog's shifts do. */
+export const WholeGroups: Story = {
+	args: {
+		multiple: true,
+		wholeGroups: true,
+		placeholder: "Choose shifts",
+		options: [
+			{ value: "early", label: "Early", group: "Morning" },
+			{ value: "mid", label: "Mid", group: "Morning" },
+			{ value: "late", label: "Late", group: "Evening" },
+			{ value: "night", label: "Night", group: "Evening" },
+		],
+	},
+};
+
 export const EmptyList: Story = { args: { options: [] } };
 
 export const LongList: Story = {

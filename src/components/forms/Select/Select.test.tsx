@@ -902,6 +902,66 @@ describe("Select", () => {
 		expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
 	});
 
+	it("offers each group's heading as a row that chooses or clears that group's available options", async () => {
+		const user = userEvent.setup();
+		const onChange = vi.fn();
+		render(
+			<Select
+				multiple
+				wholeGroups
+				aria-label="Shifts"
+				defaultValue={["late", "early"]}
+				placeholder="Choose shifts"
+				options={[
+					{ value: "early", label: "Early", group: "Morning" },
+					{ value: "mid", label: "Mid", group: "Morning" },
+					{
+						value: "closed",
+						label: "Closed",
+						group: "Morning",
+						disabled: true,
+					},
+					{ value: "late", label: "Late", group: "Evening" },
+				]}
+				onChange={onChange}
+			/>
+		);
+		await user.click(screen.getByRole("button", { name: "Shifts" }));
+		const morning = screen.getByRole("option", {
+			name: "Whole group: Morning",
+		});
+		// Some of the group is chosen: the row shows a half-filled checkbox.
+		expect(morning.querySelector("svg")).toHaveClass("text-ink-blue-900");
+
+		await user.click(morning);
+		expect(onChange).toHaveBeenLastCalledWith(["early", "mid", "late"]);
+
+		await user.click(morning);
+		// The group's available options are cleared; another group's and a disabled one keep their state.
+		expect(onChange).toHaveBeenLastCalledWith(["late"]);
+		expect(screen.getByRole("option", { name: "Closed" })).toHaveAttribute(
+			"aria-selected",
+			"false"
+		);
+	});
+
+	it("lists a group's heading as a plain label when whole groups aren't offered", async () => {
+		const user = userEvent.setup();
+		render(
+			<Select
+				multiple
+				aria-label="Shifts"
+				options={[{ value: "early", label: "Early", group: "Morning" }]}
+			/>
+		);
+		await user.click(screen.getByRole("button", { name: "Shifts" }));
+
+		expect(
+			screen.getAllByRole("option").map((option) => option.textContent)
+		).toEqual(["Early"]);
+		expect(screen.getByRole("group", { name: "Morning" })).toBeVisible();
+	});
+
 	it("reaches the select-all row with the keyboard and keeps a controlled value until the caller updates it", async () => {
 		const user = userEvent.setup();
 		const onChange = vi.fn();
