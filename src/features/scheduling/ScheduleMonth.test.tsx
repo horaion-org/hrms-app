@@ -18,6 +18,10 @@ import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
 import { constraintFixture } from "@/features/scheduling/constraints/fixtures";
 import {
+	editableMember,
+	midMonthOpenings,
+} from "@/features/scheduling/hours/fixtures";
+import {
 	monthGenerationCheckFixture,
 	monthGenerationFixture,
 	monthSummaryFixture,
@@ -27,6 +31,7 @@ import {
 } from "@/features/scheduling/months/fixtures";
 import { departmentShiftFixture } from "@/features/scheduling/shifts/fixtures";
 import { schedulingWorkspace } from "@/features/scheduling/schedules/fixtures";
+import { firstWeek } from "@/features/scheduling/startingContext/fixtures";
 
 let app: OpenedApp | undefined;
 
@@ -492,5 +497,96 @@ describe("a month held back by an earlier month's week", () => {
 		});
 		expect(screen.queryByText(/These weeks wait for/)).toBeNull();
 		expect(calls.some((call) => call.path === MONTHS)).toBe(false);
+	});
+});
+
+describe("the hours worked this month before its first scheduled week", () => {
+	/** December whose weeks all have a roster, the first starting on the 7th. */
+	const generatedDecember = ungeneratedMonthFixture({
+		weeks: ungeneratedMonthFixture().weeks.map((week, index) => ({
+			...week,
+			state: "TENTATIVE" as const,
+			scheduleId: `s-${index + 10}`,
+		})),
+	});
+	const FIRST_WEEK = `${KITCHEN_UNIT}/schedules/s-10`;
+	const hoursRoutes = (permissions: Array<string>): Routes => ({
+		...decemberRoutes([ok(generatedDecember)]),
+		...signedIn(permissions),
+		[`GET ${FIRST_WEEK}/opening-balances`]: ok({
+			...midMonthOpenings([editableMember("p-tan")]),
+			monthStart: "2026-12-01",
+			asOf: "2026-12-07",
+		}),
+		[`GET ${FIRST_WEEK}/starting-days`]: ok(firstWeek()),
+	});
+
+	it("given_unknownHours_when_opened_then_theMonthSaysForHowManyAndAddsThemOnItsFirstWeek", async () => {
+		const user = userEvent.setup();
+		await openMonth(
+			hoursRoutes([...GENERATORS, "schedule:update"]),
+			"/scheduling/months/2026-12?department=d-1"
+		);
+
+		expect(
+			await screen.findByText(
+				"Hours worked before Dec 7 are unknown for 1 person."
+			)
+		).toBeVisible();
+		await user.click(screen.getByRole("button", { name: "Add them" }));
+
+		const dialog = await screen.findByRole("dialog", {
+			name: "Hours already worked this month (Dec 1 to Dec 6)",
+		});
+		expect(dialog).toHaveTextContent(
+			"Changing these hours doesn’t change a roster already generated. Regenerate the month to use them."
+		);
+	});
+
+	it("given_unknownHours_when_regenerateIsChosen_then_theDialogSaysSoAndAddThemOpensTheHours", async () => {
+		const user = userEvent.setup();
+		await openMonth(
+			hoursRoutes([...GENERATORS, "schedule:update"]),
+			"/scheduling/months/2026-12?department=d-1"
+		);
+		await screen.findByText(
+			"Hours worked before Dec 7 are unknown for 1 person."
+		);
+
+		await user.click(
+			await screen.findByRole("button", { name: "Regenerate December" })
+		);
+		const regenerate = await screen.findByRole("dialog", {
+			name: "Regenerate December?",
+		});
+		expect(regenerate).toHaveTextContent(
+			"Hours worked before Dec 7 are unknown for 1 person."
+		);
+		await user.click(
+			within(regenerate).getByRole("button", { name: "Add them" })
+		);
+
+		expect(
+			await screen.findByRole("dialog", {
+				name: "Hours already worked this month (Dec 1 to Dec 6)",
+			})
+		).toBeVisible();
+		expect(
+			screen.queryByRole("dialog", { name: "Regenerate December?" })
+		).toBeNull();
+	});
+
+	it("given_noScheduleUpdate_when_opened_then_theLineHasNoButton", async () => {
+		await openMonth(
+			hoursRoutes(GENERATORS),
+			"/scheduling/months/2026-12?department=d-1"
+		);
+
+		expect(
+			await screen.findByText(
+				"Hours worked before Dec 7 are unknown for 1 person."
+			)
+		).toBeVisible();
+		expect(screen.queryByRole("button", { name: "Add them" })).toBeNull();
 	});
 });

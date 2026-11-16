@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
@@ -25,6 +26,8 @@ export type RegenerateMonthDialogProps = {
 	onClose: () => void;
 	/** Told the run's answer once it started, before the dialog closes. */
 	onStarted?: (answer: MonthGeneration) => void;
+	/** A line shown first, such as the hours worked this month that are still unknown. */
+	notice?: ReactNode;
 };
 
 const key = "scheduling.months.regenerate";
@@ -40,6 +43,7 @@ export const RegenerateMonthDialog = ({
 	month,
 	onClose,
 	onStarted,
+	notice,
 }: RegenerateMonthDialogProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const language = formattingLocale(i18n);
@@ -99,6 +103,7 @@ export const RegenerateMonthDialog = ({
 					.catch(() => undefined);
 			}}
 		>
+			{notice}
 			{handChanged.length > 0 && (
 				<Callout className="mb-6" tone="warning">
 					<strong>

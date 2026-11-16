@@ -1,16 +1,8 @@
 import { render, screen, within } from "@testing-library/react";
-import type { ReactElement } from "react";
 import userEvent from "@testing-library/user-event";
-import { createInstance } from "i18next";
-import { I18nextProvider, initReactI18next } from "react-i18next";
-import es from "@/assets/locales/es/translations.json";
+import { I18nextProvider } from "react-i18next";
 import { describe, expect, it, vi } from "vitest";
 import { authTestI18n } from "@/features/auth/testingI18n";
-import type { OpeningBalances } from "@/features/scheduling/hours/api";
-import {
-	editableMember,
-	midMonthOpenings,
-} from "@/features/scheduling/hours/fixtures";
 import type { StartingDays } from "@/features/scheduling/startingContext/api";
 import {
 	carriedWeek,
@@ -25,7 +17,6 @@ import { StartingDaysDialog } from "@/features/scheduling/startingContext/Starti
 const show = (
 	onSave = vi.fn(),
 	week = firstWeek(),
-	openings?: OpeningBalances,
 	nonWorkingDayTypes: ReadonlyArray<string> = []
 ): void => {
 	render(
@@ -33,7 +24,6 @@ const show = (
 			<StartingDaysDialog
 				open
 				nonWorkingDayTypes={nonWorkingDayTypes}
-				openings={openings}
 				saving={false}
 				week={week}
 				onClose={vi.fn()}
@@ -95,27 +85,24 @@ describe("StartingDaysDialog", () => {
 		);
 		await userEvent.click(screen.getByRole("button", { name: "Save days" }));
 
-		expect(onSave).toHaveBeenCalledWith(
-			[
-				{
-					memberProfileId: "p-tan",
-					date: "2026-11-08",
-					kind: "SHIFT",
-					shiftId: "s-night",
-				},
-				{
-					memberProfileId: "p-siti",
-					date: "2026-11-08",
-					kind: "OFF",
-					shiftId: null,
-				},
-			],
-			undefined
-		);
+		expect(onSave).toHaveBeenCalledWith([
+			{
+				memberProfileId: "p-tan",
+				date: "2026-11-08",
+				kind: "SHIFT",
+				shiftId: "s-night",
+			},
+			{
+				memberProfileId: "p-siti",
+				date: "2026-11-08",
+				kind: "OFF",
+				shiftId: null,
+			},
+		]);
 	});
 
 	it("given_typedDaysOff_when_shown_then_eachReadsItsTypeAndTheChoicesAreTheSchedulesPlusAnyEntered", async () => {
-		show(vi.fn(), typedDaysOffWeek(), undefined, ["OFF", "REST"]);
+		show(vi.fn(), typedDaysOffWeek(), ["OFF", "REST"]);
 
 		const table = screen.getByRole("table", {
 			name: "The days before this week",
@@ -145,7 +132,7 @@ describe("StartingDaysDialog", () => {
 	it("given_aRestDayChosen_when_aDayIsFilledAndSaved_then_itIsSentWithItsType", async () => {
 		const user = userEvent.setup();
 		const onSave = vi.fn();
-		show(onSave, firstWeek(), undefined, ["OFF", "REST"]);
+		show(onSave, firstWeek(), ["OFF", "REST"]);
 
 		expect(screen.getByRole("button", { name: "Fill with" })).toHaveTextContent(
 			"Day off"
@@ -155,176 +142,23 @@ describe("StartingDaysDialog", () => {
 		await user.click(screen.getByRole("button", { name: "Fill empty days" }));
 		await user.click(screen.getByRole("button", { name: "Save days" }));
 
-		expect(onSave).toHaveBeenCalledWith(
-			[
-				{
-					memberProfileId: "p-tan",
-					date: "2026-11-08",
-					kind: "SHIFT",
-					shiftId: "s-night",
-				},
-				{
-					memberProfileId: "p-siti",
-					date: "2026-11-08",
-					kind: "OFF",
-					shiftId: null,
-					dayType: "REST",
-				},
-			],
-			undefined
-		);
-	});
-
-	it("given_aRosterStartingMidMonth_when_hoursTyped_then_theyAreSavedAsMinutesBesideTheDays", async () => {
-		const onSave = vi.fn();
-		show(
-			onSave,
-			firstWeek(),
-			midMonthOpenings([
-				editableMember("p-tan"),
-				editableMember("p-siti", { editable: false, rosteredBefore: true }),
-			])
-		);
-
-		const table = screen.getByRole("table", {
-			name: "The days before this week",
-		});
-		const siti = within(table).getByRole("row", { name: /Siti/ });
-		expect(within(siti).getAllByText("From rosters")).toHaveLength(2);
-		await userEvent.type(
-			screen.getByRole("spinbutton", {
-				name: /Tan Wei Ming, paid hours worked/,
-			}),
-			"72"
-		);
-		await userEvent.type(
-			screen.getByRole("spinbutton", { name: /Tan Wei Ming, overtime/ }),
-			"28"
-		);
-		await userEvent.click(screen.getByRole("button", { name: "Save days" }));
-
-		expect(onSave).toHaveBeenCalledWith(expect.any(Array), [
-			{ memberProfileId: "p-tan", workedMinutes: 4320, overtimeMinutes: 1680 },
+		expect(onSave).toHaveBeenCalledWith([
+			{
+				memberProfileId: "p-tan",
+				date: "2026-11-08",
+				kind: "SHIFT",
+				shiftId: "s-night",
+			},
+			{
+				memberProfileId: "p-siti",
+				date: "2026-11-08",
+				kind: "OFF",
+				shiftId: null,
+				dayType: "REST",
+			},
 		]);
 	});
 
-	const NOT_NEEDED =
-		"This week starts on the 1st, so no hours or overtime carry over from earlier in the month.";
-	const OPENING_HINT = /Overtime limits count from the 1st\./;
-
-	it("given_aWeekStartingOnThe1st_when_shown_then_saysNoHoursCarryOverAndAsksNone", () => {
-		show(vi.fn(), firstWeek(), {
-			...midMonthOpenings([editableMember("p-tan")]),
-			asOf: "2026-11-01",
-			applies: false,
-		});
-
-		expect(screen.getByText(NOT_NEEDED)).toBeInTheDocument();
-		expect(screen.queryByText(OPENING_HINT)).toBeNull();
-		expect(
-			screen.queryByRole("spinbutton", { name: /Tan Wei Ming, overtime/ })
-		).toBeNull();
-	});
-
-	it("given_aRosterStartingMidMonth_when_shown_then_theHintAndHoursShowWithoutTheLine", () => {
-		show(vi.fn(), firstWeek(), midMonthOpenings([editableMember("p-tan")]));
-
-		expect(screen.getByText(OPENING_HINT)).toBeInTheDocument();
-		expect(
-			screen.getByRole("spinbutton", { name: /Tan Wei Ming, overtime/ })
-		).toBeInTheDocument();
-		expect(screen.queryByText(NOT_NEEDED)).toBeNull();
-	});
-
-	it("given_openingsStillLoading_when_shown_then_neitherTheHintNorTheLine", () => {
-		show(vi.fn(), firstWeek());
-
-		expect(screen.queryByText(OPENING_HINT)).toBeNull();
-		expect(screen.queryByText(NOT_NEEDED)).toBeNull();
-	});
-
-	it("given_overtimeAboveTheHoursWorked_when_typed_then_saveIsHeldWithAReason", async () => {
-		show(vi.fn(), firstWeek(), midMonthOpenings([editableMember("p-tan")]));
-
-		await userEvent.type(
-			screen.getByRole("spinbutton", { name: /Tan Wei Ming, overtime/ }),
-			"28"
-		);
-
-		expect(
-			screen.getByText(
-				"Overtime is part of the hours worked, so it can’t be more than them."
-			)
-		).toBeInTheDocument();
-		expect(screen.getByRole("button", { name: "Save days" })).toBeDisabled();
-	});
-
-	it("given_openingsThatArriveAfterTheDialogOpened_when_shownAndSavedUntouched_then_theyShowAndNothingIsSent", async () => {
-		const onSave = vi.fn();
-		const dialog = (openings?: OpeningBalances): ReactElement => (
-			<I18nextProvider i18n={authTestI18n}>
-				<StartingDaysDialog
-					open
-					nonWorkingDayTypes={[]}
-					openings={openings}
-					saving={false}
-					week={firstWeek()}
-					onClose={vi.fn()}
-					onSave={onSave}
-				/>
-			</I18nextProvider>
-		);
-		const { rerender } = render(dialog());
-
-		rerender(
-			dialog(
-				midMonthOpenings([
-					editableMember("p-tan", {
-						workedMinutes: 4320,
-						overtimeMinutes: 1680,
-						enteredAsOf: "2026-11-09",
-					}),
-				])
-			)
-		);
-
-		expect(
-			screen.getByRole("spinbutton", {
-				name: /Tan Wei Ming, paid hours worked/,
-			})
-		).toHaveValue(72);
-		await userEvent.click(screen.getByRole("button", { name: "Save days" }));
-		expect(onSave).toHaveBeenCalledWith(expect.any(Array), undefined);
-	});
-
-	it("given_anOpeningEnteredHere_when_bothCellsAreEmptied_then_itIsSentAsAClear", async () => {
-		const onSave = vi.fn();
-		show(
-			onSave,
-			firstWeek(),
-			midMonthOpenings([
-				editableMember("p-tan", {
-					workedMinutes: 4320,
-					overtimeMinutes: 1680,
-					enteredAsOf: "2026-11-09",
-				}),
-			])
-		);
-
-		await userEvent.clear(
-			screen.getByRole("spinbutton", {
-				name: /Tan Wei Ming, paid hours worked/,
-			})
-		);
-		await userEvent.clear(
-			screen.getByRole("spinbutton", { name: /Tan Wei Ming, overtime/ })
-		);
-		await userEvent.click(screen.getByRole("button", { name: "Save days" }));
-
-		expect(onSave).toHaveBeenCalledWith(expect.any(Array), [
-			{ memberProfileId: "p-tan", workedMinutes: null, overtimeMinutes: null },
-		]);
-	});
 	it("given_fourteenDays_when_opened_then_onlyTheNearerWeekIsShown", () => {
 		show();
 
@@ -384,23 +218,20 @@ describe("StartingDaysDialog", () => {
 		await user.click(screen.getByRole("button", { name: "Hide earlier days" }));
 		await user.click(screen.getByRole("button", { name: "Save days" }));
 
-		expect(onSave).toHaveBeenCalledWith(
-			[
-				{
-					memberProfileId: "p-tan",
-					date: "2026-11-08",
-					kind: "SHIFT",
-					shiftId: "s-night",
-				},
-				{
-					memberProfileId: "p-siti",
-					date: "2026-10-30",
-					kind: "OFF",
-					shiftId: null,
-				},
-			],
-			undefined
-		);
+		expect(onSave).toHaveBeenCalledWith([
+			{
+				memberProfileId: "p-tan",
+				date: "2026-11-08",
+				kind: "SHIFT",
+				shiftId: "s-night",
+			},
+			{
+				memberProfileId: "p-siti",
+				date: "2026-10-30",
+				kind: "OFF",
+				shiftId: null,
+			},
+		]);
 	});
 
 	it("given_dayToFillInTheEarlierWeek_when_hidden_then_dayToFillIsSunday", async () => {
@@ -432,29 +263,26 @@ describe("StartingDaysDialog", () => {
 		await user.click(screen.getByRole("button", { name: "Fill empty days" }));
 		await user.click(screen.getByRole("button", { name: "Save days" }));
 
-		expect(onSave).toHaveBeenCalledWith(
-			[
-				{
-					memberProfileId: "p-tan",
-					date: "2026-10-26",
-					kind: "OFF",
-					shiftId: null,
-				},
-				{
-					memberProfileId: "p-tan",
-					date: "2026-11-08",
-					kind: "SHIFT",
-					shiftId: "s-night",
-				},
-				{
-					memberProfileId: "p-siti",
-					date: "2026-10-26",
-					kind: "OFF",
-					shiftId: null,
-				},
-			],
-			undefined
-		);
+		expect(onSave).toHaveBeenCalledWith([
+			{
+				memberProfileId: "p-tan",
+				date: "2026-10-26",
+				kind: "OFF",
+				shiftId: null,
+			},
+			{
+				memberProfileId: "p-tan",
+				date: "2026-11-08",
+				kind: "SHIFT",
+				shiftId: "s-night",
+			},
+			{
+				memberProfileId: "p-siti",
+				date: "2026-10-26",
+				kind: "OFF",
+				shiftId: null,
+			},
+		]);
 	});
 
 	it("given_onlySevenDays_when_opened_then_noShowEarlierButton", () => {
@@ -468,61 +296,5 @@ describe("StartingDaysDialog", () => {
 				screen.getByRole("table", { name: "The days before this week" })
 			).getByRole("columnheader", { name: "Sun, Nov 8" })
 		).toBeInTheDocument();
-	});
-
-	it.each([
-		["English", "en"],
-		["Spanish, which runs longer", "es"],
-	])(
-		"given_openingColumnsIn%s_when_shown_then_eachHeaderReadsInFullAndWrapsRatherThanTruncating",
-		async (_language, lng) => {
-			const i18n = createInstance();
-			await i18n.use(initReactI18next).init({
-				lng,
-				resources: { es: { translation: es } },
-				fallbackLng: false,
-			});
-			const resources = lng === "es" ? i18n : authTestI18n;
-			render(
-				<I18nextProvider i18n={resources}>
-					<StartingDaysDialog
-						open
-						nonWorkingDayTypes={[]}
-						openings={midMonthOpenings([editableMember("p-tan")])}
-						saving={false}
-						week={firstWeek()}
-						onClose={vi.fn()}
-						onSave={vi.fn()}
-					/>
-				</I18nextProvider>
-			);
-
-			const headers = within(screen.getByRole("table")).getAllByRole(
-				"columnheader"
-			);
-			const opening = headers.slice(-2);
-			for (const header of opening) {
-				const text = header.textContent ?? "";
-				// The whole sentence, its day included, never cut to an ellipsis.
-				expect(text).toMatch(/\d/);
-				expect(header.querySelector(".truncate")).toBeNull();
-				expect(within(header).getByText(text)).toHaveClass("break-words");
-			}
-			for (const header of headers.slice(1, -2))
-				expect(header.querySelector(".truncate")).toBeNull();
-		}
-	);
-
-	it("given_aLockedCell_when_shown_then_itsFullTextIsItsTitle", () => {
-		show(
-			vi.fn(),
-			firstWeek(),
-			midMonthOpenings([
-				editableMember("p-siti", { editable: false, rosteredBefore: true }),
-			])
-		);
-
-		const locked = screen.getAllByText("From rosters")[0]!;
-		expect(locked).toHaveAttribute("title", "From rosters");
 	});
 });
