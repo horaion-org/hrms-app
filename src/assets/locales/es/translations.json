@@ -4146,7 +4146,7 @@
 			"changeRemark": "Comentario:"
 		},
 		"generation": {
-			"inProgress": "Se está generando este horario. Su cuadrante aparecerá aquí cuando esté listo; esta página vuelve a comprobarlo cada 15 segundos.",
+			"inProgress": "Se está generando este horario. Su cuadrante aparecerá aquí cuando esté listo; esta página vuelve a comprobarlo cada {{seconds}} segundos.",
 			"failedTitle": "Por qué no se generó",
 			"failed": "No se pudo generar este horario.",
 			"infeasible": "Ningún cuadrante podía cumplir todos los turnos y restricciones de este horario.",

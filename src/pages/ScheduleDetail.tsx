@@ -63,6 +63,7 @@ import { rosterChangeShiftsQuery } from "@/features/scheduling/rosterChanges/api
 import { ScheduleMenu } from "@/features/scheduling/ScheduleMenu";
 import {
 	decidable,
+	GENERATION_POLL_INTERVAL_MS,
 	generationInProgress,
 	hasRoster,
 	regenerable,
@@ -536,8 +537,7 @@ const ApiSchedule = ({
 		rulesChanged:
 			scheduleMonth?.weeks.find(
 				(week) => week.scheduleId === schedule.scheduleId
-			)
-				?.rulesChanged === true,
+			)?.rulesChanged === true,
 	};
 	const moment = dateTimeFormatIn(formattingLocale(i18n), schedule.timeZone, {
 		dateStyle: "medium",
@@ -612,7 +612,13 @@ const ApiSchedule = ({
 				showsNextStep={regenerable(schedule)}
 			/>
 		),
-		generating: <Callout>{t("scheduling.generation.inProgress")}</Callout>,
+		generating: (
+			<Callout>
+				{t("scheduling.generation.inProgress", {
+					seconds: GENERATION_POLL_INTERVAL_MS / 1000,
+				})}
+			</Callout>
+		),
 		failed: (
 			<GenerationFailurePanel
 				generation={schedule.generation}

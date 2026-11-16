@@ -297,8 +297,8 @@ const scheduleSchema = z.object({
 /** A schedule as the API answers it; its shifts, constraints and roster are read on their own. */
 export type Schedule = z.infer<typeof scheduleSchema>;
 
-/** How often a schedule whose generation is in progress is read again. */
-const GENERATION_POLL_INTERVAL_MS = 15_000;
+/** How often a schedule, or a month, whose generation is in progress is read again. */
+export const GENERATION_POLL_INTERVAL_MS = 15_000;
 
 /**
  * Whether a schedule is still being generated: requested, or GENERATED while
