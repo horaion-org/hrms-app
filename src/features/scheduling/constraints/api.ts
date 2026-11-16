@@ -485,6 +485,8 @@ const constraintLinkOptionSchema = z.object({
 	/** A shift's job titles; empty for a job title, or from an API that predates it. */
 	jobTitleIds: z.array(z.string()).catch([]),
 	listedIds: listedIdsSchema,
+	/** The group a shift is shown under on the Shifts page; none for a job title, or from an API that predates it. */
+	group: z.string().nullable().optional().catch(null),
 });
 
 /** The API groups generic { id, name } choices by link kind (ADR-0050). */
@@ -504,11 +506,12 @@ export const constraintOptionsSchema = z
 		types,
 		dayTypeChoices,
 		dayTypeNames,
-		shifts: links.SHIFT.map(({ id, name, jobTitleIds, listedIds }) => ({
+		shifts: links.SHIFT.map(({ id, name, jobTitleIds, listedIds, group }) => ({
 			shiftId: id,
 			name,
 			jobTitleIds,
 			listedIds,
+			group: group ?? null,
 		})),
 		jobTitles: links.JOB_TITLE.map(({ id, name, listedIds }) => ({
 			jobTitleId: id,

@@ -60,11 +60,20 @@ export type SelectProps = SharedProps &
 				 * available option at once; disabled options keep their state.
 				 */
 				selectAllLabel?: string;
+				/**
+				 * Makes each group heading a row that chooses or clears every
+				 * available option of that group at once, as the select-all row
+				 * does for all of them.
+				 */
+				wholeGroups?: boolean;
 		  }
 	);
 
 /** The value of the select-all row; never reported, never submitted. */
 const SELECT_ALL = "\u0000select-all";
+
+/** The value of a whole-group row is this prefix and the group; never reported, never submitted. */
+const WHOLE_GROUP = "\u0000group:";
 
 /** A run of consecutive options sharing one heading, or none. */
 type OptionRun = { group: string | undefined; options: Array<SelectOption> };
@@ -105,12 +114,14 @@ export const Select = (props: SelectProps): FunctionComponent => {
 		"aria-invalid": ariaInvalid,
 	} = props;
 	const selectAllLabel = props.multiple ? props.selectAllLabel : undefined;
-	// With a select-all row the Select keeps its own value, so the row can set
-	// every option at once even when the caller gave only a default.
+	const wholeGroups = props.multiple === true && props.wholeGroups === true;
+	// With a select-all or whole-group row the Select keeps its own value, so
+	// the row can set many options at once even when the caller gave only a default.
+	const keepsOwnValue = selectAllLabel !== undefined || wholeGroups;
 	const [own, setOwn] = useState<Array<string>>(() =>
 		Array.isArray(defaultValue) ? defaultValue : []
 	);
-	const current = selectAllLabel === undefined ? value : (value ?? own);
+	const current = keepsOwnValue ? (value ?? own) : value;
 	const chosenValues = Array.isArray(current) ? current : [];
 	const available = options.filter((option) => !option.disabled);
 	const allChosen =
@@ -119,6 +130,34 @@ export const Select = (props: SelectProps): FunctionComponent => {
 	const someChosen = available.some((option) =>
 		chosenValues.includes(option.value)
 	);
+	/** Whether every, some or none of a group's available options are chosen. */
+	const groupState = (group: string): "all" | "some" | "none" => {
+		const members = available.filter((option) => option.group === group);
+		const chosen = members.filter((option) =>
+			chosenValues.includes(option.value)
+		);
+		if (members.length > 0 && chosen.length === members.length) return "all";
+		return chosen.length > 0 ? "some" : "none";
+	};
+	/** The values after a whole-group row: its available options all chosen, or all cleared when they already were. */
+	const toggledGroup = (group: string): Array<string> => {
+		const clearing = groupState(group) === "all";
+		return options
+			.filter((option) =>
+				option.group !== group || option.disabled
+					? chosenValues.includes(option.value)
+					: !clearing
+			)
+			.map((option) => option.value);
+	};
+	const stateIcon = (state: "all" | "some" | "none"): ReactNode =>
+		state === "all" ? (
+			<CheckboxFilledIcon className="size-5 text-ink-blue-900" />
+		) : state === "some" ? (
+			<CheckboxHalfIcon className="size-5 text-ink-blue-900" />
+		) : (
+			<CheckboxIcon className="size-5 text-neutral-400" />
+		);
 	const renderOption = (option: SelectOption): ReactNode => (
 		<ListboxOption
 			key={option.value}
@@ -172,18 +211,23 @@ export const Select = (props: SelectProps): FunctionComponent => {
 			value={current}
 			onChange={(nextValue: string | Array<string>) => {
 				if (props.multiple && Array.isArray(nextValue)) {
-					const next = nextValue.includes(SELECT_ALL)
-						? options
-								.filter((option) =>
-									option.disabled
-										? chosenValues.includes(option.value)
-										: !allChosen
-								)
-								.map((option) => option.value)
-						: options
-								.filter((option) => nextValue.includes(option.value))
-								.map((option) => option.value);
-					if (selectAllLabel !== undefined) setOwn(next);
+					const wholeGroup = nextValue.find((chosen) =>
+						chosen.startsWith(WHOLE_GROUP)
+					);
+					const next = wholeGroup
+						? toggledGroup(wholeGroup.slice(WHOLE_GROUP.length))
+						: nextValue.includes(SELECT_ALL)
+							? options
+									.filter((option) =>
+										option.disabled
+											? chosenValues.includes(option.value)
+											: !allChosen
+									)
+									.map((option) => option.value)
+							: options
+									.filter((option) => nextValue.includes(option.value))
+									.map((option) => option.value);
+					if (keepsOwnValue) setOwn(next);
 					props.onChange?.(next);
 				} else if (!props.multiple && typeof nextValue === "string") {
 					props.onChange?.(nextValue);
@@ -276,12 +320,8 @@ export const Select = (props: SelectProps): FunctionComponent => {
 								>
 									<span className="truncate">{selectAllLabel}</span>
 									<span className="size-5 shrink-0">
-										{allChosen ? (
-											<CheckboxFilledIcon className="size-5 text-ink-blue-900" />
-										) : someChosen ? (
-											<CheckboxHalfIcon className="size-5 text-ink-blue-900" />
-										) : (
-											<CheckboxIcon className="size-5 text-neutral-400" />
+										{stateIcon(
+											allChosen ? "all" : someChosen ? "some" : "none"
 										)}
 									</span>
 								</ListboxOption>
@@ -297,12 +337,33 @@ export const Select = (props: SelectProps): FunctionComponent => {
 										aria-labelledby={`${groupId}-${String(index)}`}
 										role="group"
 									>
-										<div
-											className="px-4 pt-2 pb-1 text-xs font-semibold tracking-wide text-neutral-700 uppercase"
-											id={`${groupId}-${String(index)}`}
-										>
-											{run.group}
-										</div>
+										{wholeGroups ? (
+											<ListboxOption
+												className="flex h-10 cursor-pointer items-center justify-between gap-3 px-4 text-xs font-semibold tracking-wide text-neutral-700 uppercase select-none data-focus:bg-neutral-100"
+												id={`${groupId}-${String(index)}`}
+												value={`${WHOLE_GROUP}${run.group}`}
+												aria-label={t("select.wholeGroup", {
+													group: run.group,
+												})}
+												disabled={
+													!available.some(
+														(option) => option.group === run.group
+													)
+												}
+											>
+												<span className="truncate">{run.group}</span>
+												<span className="size-5 shrink-0">
+													{stateIcon(groupState(run.group))}
+												</span>
+											</ListboxOption>
+										) : (
+											<div
+												className="px-4 pt-2 pb-1 text-xs font-semibold tracking-wide text-neutral-700 uppercase"
+												id={`${groupId}-${String(index)}`}
+											>
+												{run.group}
+											</div>
+										)}
 										{run.options.map(renderOption)}
 									</div>
 								)
