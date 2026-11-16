@@ -3348,8 +3348,6 @@
 		"shifts": {
 			"add": "Add shift",
 			"label": "Shifts",
-			"allShifts": "All",
-			"groups": "Shift types",
 			"name": "Shift name",
 			"timeRange": "Time range",
 			"paidHours": "Paid hours",
@@ -3464,7 +3462,23 @@
 				"ON_CALL": "On Call",
 				"OVERTIME": "Overtime"
 			},
-			"department": "Department"
+			"department": "Department",
+			"everyDay": "every day",
+			"jobTitlesMore": "{{names}} +{{count}}",
+			"when": "When it runs",
+			"needed": "Needed",
+			"groupCount_one": "· {{count}} shift",
+			"groupCount_other": "· {{count}} shifts",
+			"needs": {
+				"AT_LEAST": "{{count}} {{titles}}",
+				"AT_MOST": "At most {{count}} {{titles}}",
+				"EXACTLY": "Exactly {{count}} {{titles}}",
+				"onDuty": "{{count}} {{titles}} on duty",
+				"ifPossible": "if possible",
+				"notSet": "Not set",
+				"capacity_one": "Only {{count}} holds the title",
+				"capacity_other": "Only {{count}} hold the title"
+			}
 		},
 		"constraints": {
 			"problems": {

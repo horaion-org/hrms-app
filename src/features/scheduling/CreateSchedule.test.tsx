@@ -224,6 +224,12 @@ const grantedAt = (grants: Record<string, Array<string>>): Workspace => {
 	return workspace;
 };
 
+/** A shift table's rows of shifts, leaving out its header row and its group headings. */
+const shiftRowsIn = (table: HTMLElement): Array<HTMLElement> =>
+	within(table)
+		.getAllByRole("row")
+		.filter((row) => within(row).queryAllByRole("columnheader").length === 0);
+
 describe("Create Schedule: the URL", () => {
 	/** The route's own search validator, as the router runs it. */
 	const parseCreateScheduleSearch = (
@@ -462,9 +468,7 @@ describe("Create Schedule: a reopened draft", () => {
 			name: /^What .+ uses$/,
 		});
 		const table = within(dialog).getByRole("table", { name: "Shifts" });
-		expect(within(table).getAllByRole("row")).toHaveLength(
-			SHIFT_FIXTURES.length + 1
-		);
+		expect(shiftRowsIn(table)).toHaveLength(SHIFT_FIXTURES.length);
 		for (const shift of SHIFT_FIXTURES)
 			if (INCLUDED_SHIFT_IDS.includes(shift.shiftId))
 				expect(checkbox(shift.name)).toBeChecked();
@@ -472,9 +476,12 @@ describe("Create Schedule: a reopened draft", () => {
 		expect(calls.map((call) => `${call.method} ${call.path}`)).toEqual(
 			expect.arrayContaining([`GET ${SCHEDULE}`, `GET ${SCHEDULE_SHIFTS}`])
 		);
-		// A tab per group, above the table.
-		const tabs = within(dialog).getByRole("tablist", { name: "Shift types" });
-		expect(within(tabs).getAllByRole("tab")).toHaveLength(6);
+		// A heading per group, in the table.
+		expect(
+			within(table)
+				.getAllByRole("columnheader")
+				.filter((header) => header.getAttribute("scope") === "colgroup")
+		).toHaveLength(new Set(SHIFT_FIXTURES.map((shift) => shift.group)).size);
 	});
 
 	it("given_aGeneratedSchedule_when_reopenedAtSetup_then_itsDoneStepsAreTickedAheadButNotJumpedTo", async () => {
@@ -884,9 +891,7 @@ describe("Create Schedule: generating", () => {
 			name: /^What .+ used$/,
 		});
 		const table = within(dialog).getByRole("table", { name: "Shifts" });
-		expect(within(table).getAllByRole("row")).toHaveLength(
-			INCLUDED_SHIFT_IDS.length + 1
-		);
+		expect(shiftRowsIn(table)).toHaveLength(INCLUDED_SHIFT_IDS.length);
 		// A copy whose source shift was since deleted is still shown.
 		expect(
 			within(table).getByRole("row", { name: /Breakfast Prep/ })

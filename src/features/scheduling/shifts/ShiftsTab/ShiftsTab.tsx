@@ -8,6 +8,13 @@ import { Toast } from "@/components/ui/Toast";
 import { placeOf } from "@/features/organisation/assignmentTargets";
 import { ListToolbar } from "@/features/organisation/ListToolbar";
 import { constraintsQuery } from "@/features/scheduling/constraints/api";
+import {
+	capacityKeyOf,
+	capacityProblemsOf,
+	type CapacityProblem,
+	type StaffingRuleFacts,
+} from "@/features/scheduling/constraints/capacityProblems";
+import { useConstraintsInUnits } from "@/features/scheduling/constraints/useConstraintsInUnits";
 import { departmentUnitOf } from "@/features/scheduling/departmentUnit";
 import { ReadinessCallout } from "@/features/scheduling/readiness/ReadinessCallout";
 import type { ReturnLink } from "@/features/scheduling/readiness/readinessCopy";
@@ -25,7 +32,14 @@ import {
 } from "@/features/scheduling/shifts/api";
 import { ShiftDialog } from "@/features/scheduling/shifts/ShiftDialog";
 import { deleteShiftRefusal } from "@/features/scheduling/shifts/shiftRefusal";
-import { ShiftTable } from "@/features/scheduling/shifts/ShiftTable";
+import {
+	ShiftTable,
+	type ShiftTableNeeds,
+} from "@/features/scheduling/shifts/ShiftTable";
+import {
+	staffingNeedsByShift,
+	type ShiftNeed,
+} from "@/features/scheduling/shifts/staffingNeeds";
 import { useShiftActions } from "@/features/scheduling/shifts/useShiftActions";
 import { useShiftRoleOptions } from "@/features/scheduling/shifts/useShiftRoleOptions";
 import { useShiftsInUnits } from "@/features/scheduling/shifts/useShiftsInUnits";
@@ -86,6 +100,11 @@ export type ShiftsTabProps = {
 	onDepartmentChange: (department: string | undefined) => void;
 	/** The way back into the wizard, when the wizard sent the person here to set a department up. */
 	returnTo?: ReturnLink;
+	/**
+	 * The staffing read's rules, passed by the page where schedules may be
+	 * read; left out, no rule is flagged as one nobody can meet.
+	 */
+	staffingRules?: ReadonlyArray<StaffingRuleFacts>;
 };
 
 /**
@@ -98,6 +117,7 @@ export const ShiftsTab = ({
 	units,
 	onDepartmentChange,
 	returnTo,
+	staffingRules,
 }: ShiftsTabProps): FunctionComponent => {
 	const { t } = useTranslation();
 	const key = "scheduling.shiftsTab";
@@ -130,6 +150,22 @@ export const ShiftsTab = ({
 		list.status === "ready"
 			? list.items.filter((shift) => matches(shift, search))
 			: [];
+	// What the staffing constraints ask of each shift, where constraints may be read; why one can never be met,
+	// where the page passes the staffing read. Without either the column or the warning is left out.
+	const constraints = useConstraintsInUnits(companyId, units);
+	const capacity = staffingRules && capacityProblemsOf(staffingRules);
+	const needs: ShiftTableNeeds | undefined =
+		constraints.status === "ready"
+			? {
+					byShift: staffingNeedsByShift(constraints.items),
+					capacityOf: capacity
+						? (need: ShiftNeed): CapacityProblem | undefined =>
+								need.departmentId === null
+									? undefined
+									: capacity.get(capacityKeyOf(need.departmentId, need.name))
+						: undefined,
+				}
+			: undefined;
 	// The Branch is the header's scope; the Department is the one filter.
 	const chips = departmentChips(
 		units,
@@ -251,6 +287,7 @@ export const ShiftsTab = ({
 					canDelete={canDelete}
 					canEdit={canEdit}
 					className="mt-8"
+					needs={needs}
 					shifts={rows}
 					showBranch={!units.branch}
 					showDepartment={!units.department}

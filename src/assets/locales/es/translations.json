@@ -3148,8 +3148,6 @@
 		"shifts": {
 			"add": "Añadir turno",
 			"label": "Turnos",
-			"allShifts": "Todos",
-			"groups": "Grupos de turnos",
 			"name": "Nombre del turno",
 			"timeRange": "Horario",
 			"paidHours": "Horas remuneradas",
@@ -3264,7 +3262,23 @@
 				"ON_CALL": "De guardia",
 				"OVERTIME": "Horas extra"
 			},
-			"department": "Departamento"
+			"department": "Departamento",
+			"everyDay": "todos los días",
+			"jobTitlesMore": "{{names}} +{{count}}",
+			"when": "Cuándo se trabaja",
+			"needed": "Necesita",
+			"groupCount_one": "· {{count}} turno",
+			"groupCount_other": "· {{count}} turnos",
+			"needs": {
+				"AT_LEAST": "{{count}} {{titles}}",
+				"AT_MOST": "Como máximo {{count}} {{titles}}",
+				"EXACTLY": "Exactamente {{count}} {{titles}}",
+				"onDuty": "{{count}} {{titles}} de servicio",
+				"ifPossible": "si es posible",
+				"notSet": "Sin fijar",
+				"capacity_one": "Solo {{count}} tiene el puesto",
+				"capacity_other": "Solo {{count}} tienen el puesto"
+			}
 		},
 		"constraints": {
 			"problems": {

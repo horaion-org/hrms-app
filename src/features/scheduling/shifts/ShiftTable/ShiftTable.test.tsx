@@ -1,5 +1,4 @@
 import { render, screen, within } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { createInstance } from "i18next";
 import { initReactI18next } from "react-i18next";
 import { beforeAll, describe, expect, it, vi } from "vitest";
@@ -46,21 +45,72 @@ describe("ShiftTable", () => {
 		expect(headers()).not.toContain("Department");
 	});
 
-	it("given_shiftsInGroups_when_rendered_then_countsEachGroupOnItsTab", async () => {
-		const user = userEvent.setup();
+	it("given_shiftsInGroups_when_rendered_then_headsEachGroupWithItsCountInTheOrderTheDayRuns", () => {
 		render(<ShiftTable shifts={SHIFT_FIXTURES} />);
 
-		const tabs = screen.getByRole("tablist", { name: "Shift types" });
-		expect(within(tabs).getByRole("tab", { name: /^All/ })).toHaveTextContent(
-			String(SHIFT_FIXTURES.length)
-		);
+		const groups = ["Kitchen", "Front Desk", "Concierge", "Service", "Night"];
 		expect(
-			within(tabs).getByRole("tab", { name: /Service/ })
-		).toHaveTextContent("3");
+			screen
+				.getAllByRole("columnheader")
+				.filter((header) => header.getAttribute("scope") === "colgroup")
+				.map((header) => header.textContent)
+		).toEqual(
+			groups.map((group) =>
+				group === "Service" ? `${group} · 3 shifts` : `${group} · 1 shift`
+			)
+		);
+		expect(screen.queryByRole("tablist")).toBeNull();
+	});
 
-		await user.click(within(tabs).getByRole("tab", { name: /Kitchen/ }));
-		const table = screen.getByRole("table", { name: "Shifts" });
-		expect(within(table).getAllByRole("row")).toHaveLength(2);
+	it("given_aShift_when_rendered_then_readsItsTimesAndDaysAndNamesItsJobTitles", () => {
+		render(<ShiftTable shifts={[rows[0]!]} />);
+
+		const frontDesk = screen.getByRole("row", { name: /Front Desk AM/ });
+		expect(frontDesk).toHaveTextContent(/09:00 – 15:00 · /);
+		// Its bar, in its column and, for phones, on the name's line.
+		expect(within(frontDesk).getAllByTestId("shift-day-bar")).not.toHaveLength(0);
+	});
+
+	it("given_needs_when_rendered_then_saysWhatEachShiftNeedsAndWarnsWhereTooFewHoldTheTitles", () => {
+		const need = {
+			constraintId: "c-1",
+			name: "Desk cover",
+			departmentId: "d-1",
+			comparison: "AT_LEAST",
+			headcount: 3,
+			jobTitleNames: ["Clerk"],
+			onDuty: false,
+			ifPossible: false,
+		};
+		render(
+			<ShiftTable
+				shifts={rows}
+				needs={{
+					byShift: new Map([["front-desk-am", [need]]]),
+					capacityOf: () => ({
+						headcount: 3,
+						peopleWithTitles: 2,
+						jobTitleNames: ["Clerk"],
+					}),
+				}}
+			/>
+		);
+
+		expect(screen.getByRole("columnheader", { name: "Needed" })).toBeVisible();
+		const frontDesk = screen.getByRole("row", { name: /Front Desk AM/ });
+		expect(frontDesk).toHaveTextContent("3 Clerk");
+		expect(frontDesk).toHaveTextContent("Only 2 hold the title");
+		expect(
+			screen.getByRole("row", { name: /Breakfast Prep/ })
+		).toHaveTextContent("Not set");
+	});
+
+	it("given_noNeeds_when_rendered_then_leavesTheNeededColumnOut", () => {
+		render(<ShiftTable shifts={rows} />);
+
+		expect(
+			screen.queryByRole("columnheader", { name: "Needed" })
+		).toBeNull();
 	});
 
 	it("given_editAndDeleteByRow_when_rendered_then_eachButtonFollowsItsOwnRule", () => {
@@ -106,9 +156,8 @@ describe("ShiftTable", () => {
 		expect(hiddenOnPhones).toEqual([
 			"Branch",
 			"Department",
-			"Time range",
+			expect.stringMatching(/^When it runs/),
 			"Paid hours",
-			"Days applied to",
 			"Job titles",
 		]);
 		const frontDesk = screen.getByRole("row", { name: /Front Desk AM/ });

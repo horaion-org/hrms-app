@@ -199,6 +199,50 @@ describe("ShiftsTab", () => {
 		expect(calls.map((call) => call.path)).toEqual([`${KITCHEN}/shifts`]);
 	});
 
+	it("given_constraintsReadable_when_listed_then_saysWhatTheStaffingConstraintsNeedOfEachShift", async () => {
+		stubApi({
+			[`GET ${KITCHEN}/shifts`]: ok([kitchenShift]),
+			[`GET ${KITCHEN}/constraints`]: ok([
+				constraintFixture({
+					constraintId: "kitchen-cover",
+					name: "Kitchen cover",
+					type: "SHIFT_STAFFING",
+					values: [
+						{ field: "COMPARISON", value: "AT_LEAST", name: null },
+						{ field: "HEADCOUNT", value: "2", name: null },
+						{ field: "JOB_TITLE", value: "cook", name: "Cook" },
+						{
+							field: "SHIFT",
+							value: kitchenShift.shiftId,
+							name: "Front Desk AM",
+						},
+					],
+				}),
+			]),
+		});
+		show({
+			permissions: ["shift:read", "constraint:read"],
+			requested: { branchId: "b-1", departmentId: "d-1" },
+		});
+
+		const row = await screen.findByRole("row", { name: /Front Desk AM/ });
+		await waitFor(() => {
+			expect(row).toHaveTextContent("2 Cook");
+		});
+		expect(headers()).toContain("Needed");
+	});
+
+	it("given_noConstraintReadKey_when_listed_then_leavesTheNeededColumnOut", async () => {
+		stubApi({ [`GET ${KITCHEN}/shifts`]: ok([kitchenShift]) });
+		show({
+			permissions: ["shift:read"],
+			requested: { branchId: "b-1", departmentId: "d-1" },
+		});
+
+		await screen.findByRole("row", { name: /Front Desk AM/ });
+		expect(headers()).not.toContain("Needed");
+	});
+
 	it("given_aDepartmentFilter_when_adding_then_theDialogStartsInIt", async () => {
 		const user = userEvent.setup();
 		stubApi({
@@ -277,7 +321,9 @@ describe("ShiftsTab", () => {
 				"Saving changes this shift for Kitchen: new schedules and 1 draft that uses it. Generated and published schedules keep their own copy."
 			)
 		).toBeVisible();
-		expect(screen.getByRole("button", { name: /^Department/ })).toBeDisabled();
+		expect(
+			screen.getByRole("dialog", { name: "Edit shift" })
+		).toHaveAccessibleDescription("Orchard › Kitchen");
 	});
 
 	it("given_constraintsNamingTheShift_when_editing_then_theNoteSaysTheyMayNeedAttention", async () => {

@@ -77,20 +77,22 @@ export const Scheduling = (): FunctionComponent => {
 	};
 	// Set while the wizard waits for a department to be set up here.
 	const returnTo = returnLinkOf(search);
-	// The staffing read, where schedule:read is held, while Constraints is shown: it flags a rule asking for
-	// more people than hold its job titles. Today's answer is enough.
+	// The staffing read, where schedule:read is held, while Shifts or Constraints is shown: both flag a rule
+	// asking for more people than hold its job titles. Today's answer is enough.
 	const today = dayjs().format("YYYY-MM-DD");
 	const staffing = useStaffing(
 		companyId,
 		selectedUnits(units),
 		{ from: today, to: today },
-		view === "constraints"
+		view === "shifts" || view === "constraints"
 	);
 	const staffingRules =
 		staffing.status === "ready" ? staffing.data : undefined;
 	const panels: Record<SchedulingView, ReactNode> = {
 		schedules: <SchedulesTab {...tab} />,
-		shifts: <ShiftsTab {...tab} returnTo={returnTo} />,
+		shifts: (
+			<ShiftsTab {...tab} returnTo={returnTo} staffingRules={staffingRules} />
+		),
 		constraints: (
 			<ConstraintsTab
 				{...tab}
