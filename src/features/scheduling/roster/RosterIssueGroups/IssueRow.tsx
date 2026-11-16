@@ -36,11 +36,13 @@ export const IssueRow = ({
 					onFindCover(action.gap);
 				}
 			: undefined;
-	const show = onShow
-		? (): void => {
-				onShow(issue);
-			}
-		: undefined;
+	// Show needs a cell to outline: a person and a day.
+	const show =
+		onShow && issue.memberProfileId !== null && issue.day !== null
+			? (): void => {
+					onShow(issue);
+				}
+			: undefined;
 	const act = findCover ?? show;
 	return (
 		<li className="flex items-start justify-between gap-3 py-2">

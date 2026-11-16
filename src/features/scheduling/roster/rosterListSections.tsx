@@ -75,6 +75,8 @@ export type RosterListInput = {
 	validationNote?: ReactNode;
 	/** Every Issues item by what to do (`issuesOfRoster`). */
 	issues: ReadonlyArray<RosterIssue>;
+	/** Scrolls an item's cell into view and outlines it. */
+	onShowIssue?: (issue: RosterIssue) => void;
 	/** Shows every issue again, from a header's narrowed Issues list. */
 	onShowAllIssues: () => void;
 	/** On a roster that may be changed: opens Find cover for a short shift, from its Issues row. */
@@ -195,6 +197,7 @@ export const issuesSections = (
 		onFindCover,
 		validationNote,
 		issues,
+		onShowIssue,
 	} = input;
 	if (issuesAbout) return headerIssueSections(issuesAbout, input);
 	return [
@@ -218,6 +221,7 @@ export const issuesSections = (
 						)
 					}
 					onFindCover={onFindCover}
+					onShow={onShowIssue}
 				/>
 			),
 		},

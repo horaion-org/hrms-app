@@ -408,6 +408,7 @@ export const RosterGrid = ({
 									return (
 										<td
 											key={date}
+											data-cell={key}
 											className={joinClassNames(
 												"align-middle",
 												compact ? "p-1" : "p-3",

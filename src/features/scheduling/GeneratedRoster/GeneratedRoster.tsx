@@ -11,7 +11,10 @@ import { LastRosterChange } from "@/features/scheduling/LastRosterChange";
 import type { FindingNameSources } from "@/features/scheduling/roster/findings/findingNames";
 import { legendOf } from "@/features/scheduling/roster/roster";
 import { Badge } from "@/components/ui/Badge";
-import { issueCounts } from "@/features/scheduling/roster/rosterIssueGroups";
+import {
+	issueCounts,
+	type RosterIssue,
+} from "@/features/scheduling/roster/rosterIssueGroups";
 import { issuesOfRoster } from "@/features/scheduling/roster/rosterIssueSources";
 import {
 	issueNoteLines,
@@ -28,6 +31,7 @@ import {
 } from "@/features/scheduling/roster/rosterSummary";
 import type { RosterSchedule } from "@/features/scheduling/roster/rosterView";
 import type { RosterChange } from "@/features/scheduling/rosterChanges/api";
+import { rosterCellKey } from "@/features/scheduling/rosterChanges/rosterEdit";
 import { RosterGrid } from "@/features/scheduling/RosterGrid";
 import {
 	RosterWeekBar,
@@ -191,6 +195,18 @@ export const GeneratedRoster = ({
 		language,
 	});
 	const counts = issueCounts(issues);
+	/** Outlines an issue's cell, as the day editor outlines the days it would change, and scrolls to it. */
+	const showIssue = (issue: RosterIssue): void => {
+		const row = rows.find(
+			(candidate) => candidate.memberProfileId === issue.memberProfileId
+		);
+		if (!row?.membershipId || !issue.day) return;
+		const cellKey = rosterCellKey(row.membershipId, issue.day);
+		roster.onPreviewDays([cellKey]);
+		document
+			.querySelector(`[data-cell="${CSS.escape(cellKey)}"]`)
+			?.scrollIntoView({ block: "nearest", inline: "nearest" });
+	};
 
 	/** The week bar's buttons: each list that has one, while it has something to show. */
 	const toolbarLists = withSummary
@@ -243,6 +259,7 @@ export const GeneratedRoster = ({
 				approval,
 				validationNote,
 				issues,
+				onShowIssue: showIssue,
 				onShowAllIssues: roster.showAllIssues,
 				onFindCover: editing ? roster.openCover : undefined,
 			})
