@@ -31,6 +31,7 @@ const ME = "GET /api/v1/me";
 const WORKSPACE = "GET /api/v1/me/workspace";
 const LEAVE_PATH = "/api/v1/companies/c-1/leave-requests";
 const SCHEDULES_PATH = "/api/v1/companies/c-1/schedules";
+const REPORTS_PATH = "/api/v1/companies/c-1/reports";
 const LEAVE = `GET ${LEAVE_PATH}`;
 const AUDIT_EVENTS = "GET /api/v1/companies/c-1/audit-events";
 const APPROVE =
@@ -437,6 +438,122 @@ describe("Dashboard", () => {
 		expect(
 			screen.queryByRole("region", { name: "Leave to decide" })
 		).toBeNull();
+	});
+});
+
+describe("Home's two views", () => {
+	/** Three short Morning shifts under a rule nobody can staff, as one read answers them. */
+	const shortUnderARuleAt = (path: string): Record<string, StubReply> => ({
+		[`GET ${path}/shortages`]: {
+			status: 200,
+			body: envelope({
+				from: "2026-11-16",
+				to: "2026-11-29",
+				shortages: ["2026-11-18", "2026-11-19", "2026-11-20"].map((day) =>
+					shortageFixture({ day })
+				),
+			}),
+		},
+		[`GET ${path}/staffing`]: {
+			status: 200,
+			body: envelope({
+				from: "2026-11-16",
+				to: "2026-11-29",
+				rules: [
+					staffingRuleFixture({
+						shifts: [{ shiftId: "sh-am", name: "Morning", daysAWeek: 7 }],
+					}),
+				],
+			}),
+		},
+	});
+	/** The same answer from the roster's reads and from Reports' own. */
+	const shortUnderARule = {
+		...shortUnderARuleAt(SCHEDULES_PATH),
+		...shortUnderARuleAt(REPORTS_PATH),
+	};
+
+	it("given_someoneWhoReadsReportsAndBuildsNoRoster_when_opened_then_startsOnTheOverview", async () => {
+		const user = userEvent.setup();
+		stubApi({
+			...routes(["report:read", "schedule:read"]),
+			...shortUnderARule,
+		});
+		const opened = await open();
+
+		expect(
+			await screen.findByRole("tab", { name: "Overview" })
+		).toHaveAttribute("aria-selected", "true");
+		const short = await screen.findByRole("region", { name: "People short" });
+		expect(short).toHaveTextContent("3");
+		expect(within(short).getByText("Act")).toBeInTheDocument();
+		expect(
+			screen.getByRole("region", { name: "Why shifts go short" })
+		).toHaveTextContent("Front desk AM");
+
+		await user.click(screen.getByRole("tab", { name: "What needs you" }));
+
+		await waitFor(() => {
+			expect(opened.router.state.location.search).toMatchObject({
+				tab: "needs-you",
+			});
+		});
+		expect(
+			await screen.findByRole("region", { name: "Shifts short" })
+		).toBeInTheDocument();
+	});
+
+	it("given_reportReadAlone_when_opened_then_showsTheOverviewAndAsksNothingOfTheRosters", async () => {
+		const calls = stubApi({
+			...routes(["report:read"]),
+			...shortUnderARuleAt(REPORTS_PATH),
+		});
+		await open();
+
+		expect(
+			await screen.findByRole("region", { name: "People short" })
+		).toHaveTextContent("3");
+		// The rule is named, without links to pages this reader cannot open.
+		const causes = screen.getByRole("region", { name: "Why shifts go short" });
+		expect(causes).toHaveTextContent("Front desk AM");
+		expect(within(causes).queryByRole("link")).toBeNull();
+		// Next week's rosters are the roster's to tell, so nothing is said of them.
+		expect(
+			screen.queryByRole("region", { name: "Next week published" })
+		).toBeNull();
+		expect(calls.some((call) => call.path.startsWith(SCHEDULES_PATH))).toBe(
+			false
+		);
+	});
+
+	it("given_aRosterBuilder_when_opened_then_startsOnWhatNeedsThemWithTheOverviewOneTabAway", async () => {
+		stubApi({
+			...routes(["report:read", "schedule:read", "schedule:edit_shift"]),
+			...shortUnderARule,
+		});
+		await open();
+
+		expect(
+			await screen.findByRole("tab", { name: "What needs you" })
+		).toHaveAttribute("aria-selected", "true");
+		expect(screen.getByRole("tab", { name: "Overview" })).toBeInTheDocument();
+		expect(
+			await screen.findByRole("region", { name: "Shifts short" })
+		).toBeInTheDocument();
+	});
+
+	it("given_noReportRead_when_opened_then_showsTheToDoListAloneWithNoTabs", async () => {
+		const calls = stubApi({
+			...routes(["leave_request:read", "schedule:read"]),
+			...shortUnderARuleAt(SCHEDULES_PATH),
+		});
+		await open("/?tab=overview");
+
+		await screen.findByRole("region", { name: "Shifts short" });
+		expect(screen.queryByRole("tablist")).toBeNull();
+		expect(calls.some((call) => call.path.startsWith(REPORTS_PATH))).toBe(
+			false
+		);
 	});
 });
 

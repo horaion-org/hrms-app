@@ -5069,6 +5069,11 @@
 			"cover-offers": "Nadie tiene una respuesta pendiente.",
 			"off-today": "Nadie está ausente hoy.",
 			"people-events": "Nadie se incorpora, termina el periodo de prueba ni se va en los próximos 30 días."
+		},
+		"tabs": {
+			"label": "Vistas de Inicio",
+			"needsYou": "Lo que te necesita",
+			"overview": "Resumen"
 		}
 	},
 	"auth": {
@@ -5681,6 +5686,92 @@
 			"lastMonth": "El mes pasado",
 			"lastThreeMonths": "Últimos 3 meses",
 			"custom": "Personalizado"
+		},
+		"overview": {
+			"loading": "Cargando…",
+			"failed": "No pudimos cargar el resumen. Inténtalo de nuevo en un momento.",
+			"empty": "Aún no hay horarios aquí. El resumen se completa cuando se genera un horario.",
+			"standings": {
+				"ACT": "Actuar",
+				"WATCH": "Vigilar",
+				"ON_TRACK": "En orden"
+			},
+			"change": {
+				"up": "Sube {{amount}}",
+				"down": "Baja {{amount}}"
+			},
+			"headline": {
+				"allOnTrack": "Todo está en orden. Todos los turnos están cubiertos los próximos 14 días, nadie se acerca al límite de horas extra y la próxima semana está publicada en todas partes.",
+				"allOnTrackWithoutRosters": "Todo está en orden. Todos los turnos están cubiertos los próximos 14 días y nadie se acerca al límite de horas extra.",
+				"nothingToActOn": "Nada requiere acción por ahora.",
+				"needsAttention_one": "{{units}} necesita atención.",
+				"needsAttention_other": "{{units}} necesitan atención.",
+				"shortBecause_one": "{{unit}} tiene un déficit de {{short}} en los próximos 14 días porque {{rule}} necesita {{needed}} por turno y {{count}} persona tiene sus puestos.",
+				"shortBecause_other": "{{unit}} tiene un déficit de {{short}} en los próximos 14 días porque {{rule}} necesita {{needed}} por turno y {{count}} personas tienen sus puestos.",
+				"overLimit_one": "{{count}} persona supera el límite de horas extra este mes.",
+				"overLimit_other": "{{count}} personas superan el límite de horas extra este mes.",
+				"restOnTrack": {
+					"branch_one": "{{count}} sucursal está en orden.",
+					"branch_other": "{{count}} sucursales están en orden.",
+					"department_one": "{{count}} departamento está en orden.",
+					"department_other": "{{count}} departamentos están en orden."
+				}
+			},
+			"figures": {
+				"peopleShort": {
+					"label": "Personas que faltan",
+					"unit": "próximos 14 días",
+					"comparison": "respecto a los 14 días anteriores",
+					"comparisonSame": "Igual que los 14 días anteriores"
+				},
+				"overLimit": {
+					"label": "Por encima del límite de horas extra",
+					"unit_one": "persona este mes",
+					"unit_other": "personas este mes",
+					"comparison": "{{near}} cerca del límite · {{before}} por encima el mes pasado"
+				},
+				"published": {
+					"label": "Próxima semana publicada",
+					"unit_one": "de {{count}} departamento",
+					"unit_other": "de {{count}} departamentos"
+				},
+				"changes": {
+					"label": "Cambios después de publicar",
+					"unit": "este mes",
+					"comparison": "respecto al mes pasado",
+					"comparisonSame": "Igual que el mes pasado"
+				}
+			},
+			"units": {
+				"title": {
+					"branch": "Sucursales",
+					"department": "Departamentos"
+				},
+				"unit": {
+					"branch": "Sucursal",
+					"department": "Departamento"
+				},
+				"standing": "Estado",
+				"peopleShort": "Personas que faltan, próximos 14 días",
+				"rulesShort": "Reglas que muy pocas personas pueden cubrir",
+				"overtime": "Horas extra este mes",
+				"overAndNear": "{{over}} por encima · {{near}} cerca",
+				"nextWeek": "Próxima semana",
+				"nextWeekOf": "Horarios de la próxima semana, {{unit}}",
+				"published": "Publicados",
+				"toDo": "Aún sin publicar",
+				"publishedOf_one": "{{published}} de {{count}} publicado",
+				"publishedOf_other": "{{published}} de {{count}} publicados",
+				"changes": "Cambios después de publicar, este mes",
+				"changesSummary_one": "{{count}} cambio después de publicar",
+				"changesSummary_other": "{{count}} cambios después de publicar",
+				"none": "Ninguna"
+			},
+			"causes": {
+				"title": "Por qué faltan personas en los turnos",
+				"range": "Reglas que muy pocas personas pueden cubrir, en los próximos 14 días",
+				"none": "Todas las reglas de personal pueden cubrirse con las personas que tienen sus puestos."
+			}
 		}
 	},
 	"expandableList": {

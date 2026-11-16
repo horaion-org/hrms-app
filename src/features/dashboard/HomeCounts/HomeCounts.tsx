@@ -51,7 +51,8 @@ export const HomeCounts = ({
 									{label}
 								</Link>
 							) : (
-								<Link className={countLinkClasses} hash={section} to=".">
+								// The view stays as it is; only the place on the page changes.
+								<Link search className={countLinkClasses} hash={section} to=".">
 									{label}
 								</Link>
 							)}
