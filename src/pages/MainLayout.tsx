@@ -38,7 +38,7 @@ import { SCHEDULING_KEYS } from "@/features/scheduling/schedulingSearch";
 import {
 	ORGANISATION_READ_KEYS,
 	PEOPLE_READ_KEYS,
-	SCHEDULE_READ_KEYS,
+	REPORT_READ_KEYS,
 } from "@/features/workspace/permissionKeys";
 import { Can } from "@/features/workspace/Can";
 import { HeaderBranchScope } from "@/features/workspace/HeaderBranchScope";
@@ -256,9 +256,9 @@ export const MainLayout = (): FunctionComponent => {
 							to="/organisation"
 						/>
 					</Can>
-					{/* Reports reads rosters, so it is offered where they may be read, at any scope. It comes
+					{/* Reports has a key of its own, so it is offered where that is held, at any scope. It comes
 					    last: a place to look back, not a daily task. */}
-					<Can anyOf={SCHEDULE_READ_KEYS} at="anywhere">
+					<Can anyOf={REPORT_READ_KEYS} at="anywhere">
 						<SidebarItem
 							activeIcon={TableIcon}
 							collapsed={collapsed}

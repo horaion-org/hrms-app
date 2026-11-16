@@ -393,9 +393,15 @@ const ApiSchedule = ({
 			"schedule:edit_shift",
 			departmentScope(state.schedule.departmentId)
 		);
-	// Validate schedule, for whoever may change the roster: its button joins Issues and Changed.
+	// Validate schedule writes nothing, so whoever may read the roster may ask (hrms-backend-v2
+	// docs/adr/0097): its button joins Issues and Changed. Repair stays with those who may change it.
+	const mayValidate =
+		state.status === "ready" &&
+		runId !== undefined &&
+		rosterEditable(state.schedule) &&
+		access.can("schedule:read", departmentScope(state.schedule.departmentId));
 	const validation = useRosterRulesCheck(
-		mayEditShifts && runId !== undefined && unit !== undefined
+		mayValidate && runId !== undefined && unit !== undefined
 			? { companyId, unit, scheduleId, runId }
 			: undefined,
 		state.status === "ready" ? state.schedule.rosterRevision : 0
@@ -758,7 +764,7 @@ const ApiSchedule = ({
 					schedule={schedule}
 					shifts={readyItems(shifts)}
 					startingContext={startingContext.data}
-					validation={editing && validation}
+					validation={mayValidate ? validation : undefined}
 					view={view}
 					details={scheduleDetailItems(
 						schedule,

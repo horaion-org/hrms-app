@@ -34,6 +34,7 @@ import {
 	rosterChangePreviewFixture,
 	rosterCheckFixture,
 } from "@/features/scheduling/rosterChanges/fixtures";
+import { rulesCheckFixture } from "@/features/scheduling/rulesCheck/fixtures";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 import {
 	monthWeekFixture,
@@ -2345,5 +2346,51 @@ describe("the roster in its month", () => {
 		).toBeInTheDocument();
 		expect(screen.queryByText("Not published.")).toBeNull();
 		expect(screen.queryByText(/Weeks are published in order/)).toBeNull();
+	});
+});
+
+// Each thing on the roster is asked under its own key (hrms-backend-v2 docs/adr/0097).
+describe("what a roster reader is offered", () => {
+	const SHIFT_PREFERENCES = `${SCHEDULE}/shift-preferences`;
+	const ROSTER_CHECK = `${SCHEDULE}/roster-check`;
+
+	const generatedRoster = (permissions: Array<string>): Routes => ({
+		...signedIn(permissions),
+		[`GET ${SCHEDULE_READ}`]: ok(
+			generatedScheduleFixture({ status: "GENERATED" })
+		),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+		[`GET ${SHIFT_PREFERENCES}`]: ok({ scheduleId: "s-1", preferences: [] }),
+		[`POST ${ROSTER_CHECK}`]: ok(rulesCheckFixture()),
+	});
+
+	it("given_onlyTheRosterRead_when_opened_then_validateScheduleIsOfferedAndAsksTheCheck", async () => {
+		const user = userEvent.setup();
+		const calls = await openRoster(generatedRoster(["schedule:read"]));
+		await screen.findByRole("row", { name: /Aisha Rahman/ });
+
+		await user.click(screen.getByRole("button", { name: /Validate schedule/ }));
+
+		await waitFor(() => {
+			expect(postsOf(calls, ROSTER_CHECK)).toHaveLength(1);
+		});
+	});
+
+	it("given_noShiftPreferenceRead_when_opened_then_theRostersPreferencesAreNeverAsked", async () => {
+		const calls = await openRoster(generatedRoster(["schedule:read"]));
+		await screen.findByRole("row", { name: /Aisha Rahman/ });
+
+		expect(readsOf(calls, SHIFT_PREFERENCES)).toHaveLength(0);
+	});
+
+	it("given_theShiftPreferenceRead_when_opened_then_theRostersPreferencesAreAsked", async () => {
+		const calls = await openRoster(
+			generatedRoster(["schedule:read", "shift_preference:read"])
+		);
+		await screen.findByRole("row", { name: /Aisha Rahman/ });
+
+		await waitFor(() => {
+			expect(readsOf(calls, SHIFT_PREFERENCES)).toHaveLength(1);
+		});
 	});
 });

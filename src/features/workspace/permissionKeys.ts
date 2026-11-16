@@ -93,6 +93,15 @@ export const AVAILABILITY_READ_KEYS: ReadonlyArray<PermissionKey> = [
 	"work_availability:read",
 ];
 
+/**
+ * Holding this at any scope is what brings Home's people events into reach:
+ * who joins, ends probation or leaves. A key of its own, never
+ * `member_profile:read` (hrms-backend-v2 docs/adr/0097).
+ */
+export const MEMBER_EVENT_READ_KEYS: ReadonlyArray<PermissionKey> = [
+	"member_event:read",
+];
+
 /** Holding this at a Department is what lets a person see its members' shift preferences. */
 export const SHIFT_PREFERENCE_READ_KEYS: ReadonlyArray<PermissionKey> = [
 	"shift_preference:read",
@@ -107,6 +116,13 @@ export const SCHEDULE_CREATE_KEYS: ReadonlyArray<PermissionKey> = [
 export const SCHEDULE_READ_KEYS: ReadonlyArray<PermissionKey> = [
 	"schedule:read",
 ];
+
+/**
+ * Holding this at any scope is what makes Reports and the overview worth
+ * offering. A key of its own, never `schedule:read`: the figures can be given
+ * without the rosters (hrms-backend-v2 docs/adr/0097).
+ */
+export const REPORT_READ_KEYS: ReadonlyArray<PermissionKey> = ["report:read"];
 
 /** A roster's shifts are changed and cover is offered where this is held at its Department: the dashboard's open offers. */
 export const SCHEDULE_EDIT_SHIFT_KEYS: ReadonlyArray<PermissionKey> = [

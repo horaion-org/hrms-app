@@ -3,7 +3,7 @@
 
 /** SHA-256 of the contract file this module was generated from. */
 export const PERMISSION_CONTRACT_SHA256 =
-	"d5d3781a322e345e9c34cd5a280f16e20f879b31ef55e41aaf16c97bd6fa2f3c";
+	"ffc37208349128b1407bd68e7d57a25e1265d8cac9516e270476eda450e6d1c7";
 
 /** The places a permission can be assigned at, widest first. */
 export const ASSIGNABLE_SCOPES = ["COMPANY", "BRANCH", "DEPARTMENT"] as const;
@@ -15,6 +15,7 @@ export const PERMISSION_MODULES = [
 	"scheduling",
 	"approvals",
 	"organisation",
+	"reports",
 	"company_settings",
 	"access_and_activity",
 ] as const;
@@ -286,6 +287,14 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: [],
 	},
 	{
+		key: "member_event:read",
+		resource: "member_event",
+		action: "read",
+		module: "people",
+		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
+		prerequisites: [],
+	},
+	{
 		key: "employment_terms:read",
 		resource: "employment_terms",
 		action: "read",
@@ -542,6 +551,14 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: ["approval:read"],
 	},
 	{
+		key: "report:read",
+		resource: "report",
+		action: "read",
+		module: "reports",
+		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
+		prerequisites: [],
+	},
+	{
 		key: "access_role:read",
 		resource: "access_role",
 		action: "read",
@@ -632,6 +649,7 @@ export const PERMISSION_KEYS = [
 	"work_availability:read",
 	"work_availability:update",
 	"shift_preference:read",
+	"member_event:read",
 	"employment_terms:read",
 	"employment_terms:update",
 	"member_employment_terms:read",
@@ -664,6 +682,7 @@ export const PERMISSION_KEYS = [
 	"approval_flow:manage",
 	"approval:read",
 	"approval:decide",
+	"report:read",
 	"access_role:read",
 	"access_role:create",
 	"access_role:update",
@@ -711,6 +730,7 @@ export const ROLE_TEMPLATES = [
 			"work_availability:read",
 			"work_availability:update",
 			"shift_preference:read",
+			"member_event:read",
 			"employment_terms:read",
 			"employment_terms:update",
 			"member_employment_terms:read",
@@ -743,6 +763,7 @@ export const ROLE_TEMPLATES = [
 			"approval_flow:manage",
 			"approval:read",
 			"approval:decide",
+			"report:read",
 			"access_role:read",
 			"access_role:create",
 			"access_role:update",
@@ -769,6 +790,7 @@ export const ROLE_TEMPLATES = [
 			"work_availability:read",
 			"work_availability:update",
 			"shift_preference:read",
+			"member_event:read",
 			"member_employment_terms:read",
 			"member_employment_terms:update",
 			"leave_request:read",
@@ -809,6 +831,7 @@ export const ROLE_TEMPLATES = [
 			"constraint:delete",
 			"approval:read",
 			"approval:decide",
+			"report:read",
 		],
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 	},
@@ -826,6 +849,7 @@ export const ROLE_TEMPLATES = [
 			"work_availability:read",
 			"work_availability:update",
 			"shift_preference:read",
+			"member_event:read",
 			"leave_request:read",
 			"leave_request:review",
 			"leave_duration:read",
@@ -847,6 +871,7 @@ export const ROLE_TEMPLATES = [
 			"constraint:delete",
 			"approval:read",
 			"approval:decide",
+			"report:read",
 		],
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 	},
@@ -863,6 +888,20 @@ export const ROLE_TEMPLATES = [
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 	},
 	{
+		key: "executive",
+		kind: "LOCAL",
+		permissions: [
+			"branch:read",
+			"branch_member:read",
+			"department:read",
+			"department_member:read",
+			"job_title:read",
+			"approval:read",
+			"report:read",
+		],
+		assignableScopes: ["COMPANY", "BRANCH"],
+	},
+	{
 		key: "viewer",
 		kind: "LOCAL",
 		permissions: [
@@ -874,12 +913,14 @@ export const ROLE_TEMPLATES = [
 			"member_profile:read",
 			"work_availability:read",
 			"shift_preference:read",
+			"member_event:read",
 			"member_employment_terms:read",
 			"leave_duration:read",
 			"schedule:read",
 			"shift:read",
 			"constraint:read",
 			"approval:read",
+			"report:read",
 			"access_role:read",
 		],
 		assignableScopes: ["COMPANY", "BRANCH"],

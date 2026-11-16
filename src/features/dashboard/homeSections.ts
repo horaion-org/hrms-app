@@ -2,7 +2,7 @@ import { APPROVAL_READ_KEYS } from "@/features/dashboard/api";
 import type { PermissionKey } from "@/features/workspace/permissionContract.generated";
 import {
 	LEAVE_READ_KEYS,
-	PEOPLE_READ_KEYS,
+	MEMBER_EVENT_READ_KEYS,
 	SCHEDULE_READ_KEYS,
 } from "@/features/workspace/permissionKeys";
 
@@ -36,7 +36,7 @@ const SECTION_KEYS: Record<HomeSection, ReadonlyArray<PermissionKey>> = {
 	"next-roster": SCHEDULE_READ_KEYS,
 	"cover-offers": [],
 	"off-today": [...SCHEDULE_READ_KEYS, ...LEAVE_READ_KEYS],
-	"people-events": PEOPLE_READ_KEYS,
+	"people-events": MEMBER_EVENT_READ_KEYS,
 };
 
 /** The sections a person's grants reach, in Home's order: the ones they may choose to hide. */

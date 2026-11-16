@@ -78,7 +78,7 @@ export type GeneratedRosterProps = {
 	/** Lets a day be changed by hand beside the grid; read-only without. */
 	editing?: RosterEditing;
 	/**
-	 * Validate schedule, read by the page for whoever may change the roster:
+	 * Validate schedule, read by the page for whoever may read the roster:
 	 * its button joins Issues and Changed in the week bar, and its result
 	 * opens in the side panel. Not offered without.
 	 */
@@ -111,7 +111,7 @@ const key = "scheduling.detail";
  * grid. Everything else opens in the one panel beside the grid, named by
  * the view in the URL: a chosen day's shift (read-only) or editor, or one
  * list (Issues, Changed, Details, Approval). Findings are also marked on the grid.
- * Validate schedule sits in the week bar after Issues and Changed for whoever may change the roster, lights
+ * Validate schedule sits in the week bar after Issues and Changed for whoever may read the roster, lights
  * up once the roster changed since it was last validated, and validates into Issues: the last validation's
  * gaps stand in for the generation's conflicts there, and its broken rules join them
  * (`issuesFromValidation`).
@@ -145,10 +145,10 @@ export const GeneratedRoster = ({
 	const [applied, setApplied] = useState<RosterChange>();
 	const sidePanelId = useId();
 	// Issues says what is true now: the last validation's gaps and broken rules over the generation's.
-	const validating = editing !== undefined && validation !== undefined;
-	const last = validating ? validation.last : undefined;
+	const validating = validation !== undefined;
+	const last = validation?.last;
 	const standing = validationStanding({
-		revision: editing?.revision ?? 0,
+		revision: validation?.revision ?? 0,
 		last,
 		hasChanges: changedDays(assignments).length > 0,
 	});
@@ -285,13 +285,13 @@ export const GeneratedRoster = ({
 								<CountBadge aria-hidden="true" count={count} tone="inactive" />
 							</Button>
 						))}
-						{editing && validation && (
+						{validation && (
 							<ValidateScheduleButton
 								hasChanges={roster.listCounts.changes > 0}
 								last={validation.last}
 								open={openList === "issues"}
 								panelId={sidePanelId}
-								revision={editing.revision}
+								revision={validation.revision}
 								onClick={(from) => {
 									validation.ask();
 									roster.open({ panel: "issues" }, from);

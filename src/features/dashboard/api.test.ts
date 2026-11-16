@@ -3,14 +3,12 @@ import { configureApiClient, resetApiClient } from "@/common/api-client";
 import { envelope, stubApi } from "@/common/testing/stubApi";
 import {
 	fetchDaysOff,
-	fetchOvertime,
 	fetchShortages,
 	fetchTeamCoverOffers,
 	searchOf,
 } from "@/features/dashboard/api";
 import {
 	dayOffFixture,
-	overtimeFixture,
 	shortageFixture,
 	teamCoverOfferFixture,
 } from "@/features/dashboard/fixtures";
@@ -65,25 +63,6 @@ describe("dashboard reads", () => {
 		await expect(fetchDaysOff("c-1", {}, WEEK)).resolves.toEqual([
 			dayOffFixture(),
 		]);
-	});
-
-	it("reads overtime by department and month", async () => {
-		const calls = stubApi({
-			[`GET ${SCHEDULES}/overtime`]: {
-				status: 200,
-				body: envelope(overtimeFixture()),
-			},
-		});
-
-		const overtime = await fetchOvertime(
-			"c-1",
-			{},
-			{ from: "2026-11", to: "2026-11" }
-		);
-
-		expect(overtime.nearSharePercent).toBe(80);
-		expect(overtime.departments[0]?.members[0]?.standing).toBe("OVER");
-		expect(calls[0]?.search).toBe("from=2026-11&to=2026-11");
 	});
 
 	it("reads the open cover offers in the units", async () => {

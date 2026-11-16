@@ -381,12 +381,13 @@ it("reaches the overview from the Sidebar and marks Organisation current", async
 	stubApi({
 		[REFRESH]: accessPassReply(),
 		[ME]: currentUserReply(),
-		// Scheduling, Leave and People are offered only with their own keys.
+		// Scheduling, Leave, People and Reports are offered only with their own keys.
 		[WORKSPACE]: workspaceReply([
 			"branch:read",
 			"schedule:read",
 			"member_profile:read",
 			"leave_request:read",
+			"report:read",
 		]),
 	});
 	const opened = await open("/");

@@ -1299,6 +1299,26 @@
 					"read": "Los turnos que querrían, día a día"
 				}
 			},
+			"member_event": {
+				"name": "Eventos de personal",
+				"description": "Quién se incorpora, quién termina el periodo de prueba y quién se va, por día.",
+				"actions": {
+					"read": "Ver quién se incorpora, termina el periodo de prueba o se va"
+				},
+				"actionHints": {
+					"read": "Su nombre, su departamento y el día; nada más de su perfil"
+				}
+			},
+			"report": {
+				"name": "Informes",
+				"description": "Cifras de todos los cuadrantes: turnos sin cubrir, dotación, horas extra y cambios tras publicar.",
+				"actions": {
+					"read": "Ver Informes y el resumen"
+				},
+				"actionHints": {
+					"read": "Las cifras, sin abrir los cuadrantes de los que salen"
+				}
+			},
 			"leave_request": {
 				"name": "Permisos",
 				"description": "Las solicitudes de permiso de cada persona, incluido el tipo de permiso y el motivo por el que se rechazó una solicitud.",
@@ -1552,6 +1572,10 @@
 				"organisation": {
 					"name": "Organización",
 					"description": "Sucursales, departamentos, quién pertenece a cada uno y puestos."
+				},
+				"reports": {
+					"name": "Informes",
+					"description": "Informes y el resumen, leídos de los cuadrantes sin abrirlos."
 				},
 				"company_settings": {
 					"name": "Ajustes de la empresa",
@@ -2128,6 +2152,10 @@
 				"leave_approver": {
 					"name": "Aprobador de permisos",
 					"description": "Aprueba o rechaza permisos de las personas donde se le asigne."
+				},
+				"executive": {
+					"name": "Dirección",
+					"description": "Ve Informes, lo que espera aprobación y cómo está organizada la empresa; no abre cuadrantes, perfiles ni permisos."
 				},
 				"viewer": {
 					"name": "Solo lectura",

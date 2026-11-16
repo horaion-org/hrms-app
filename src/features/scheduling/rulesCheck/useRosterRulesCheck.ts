@@ -20,6 +20,8 @@ export type RosterRulesCheckState =
 export type RosterValidation = RosterRulesCheckState & {
 	ask: () => void;
 	last?: LastValidation;
+	/** The roster's revision now, which an answer is compared with to say whether it is out of date. */
+	revision: number;
 };
 
 /** The last answer this visit got, and the revision it was for. */
@@ -35,7 +37,7 @@ const NO_TARGET: RosterChangeTarget = {
 
 /**
  * Validate schedule, asked for on demand: nothing is sent until `ask`, and
- * nothing at all without a `target` (someone who may not change the roster).
+ * nothing at all without a `target` (someone who may not read the roster).
  * An ask holds for the revision it was made at, so a roster changed since is
  * unasked again; `last` keeps the latest answer and its revision, which the
  * week bar's button compares with the roster's revision to light up.
@@ -58,15 +60,16 @@ export const useRosterRulesCheck = (
 		else setAskedAt(revision);
 	};
 
-	if (!asked) return { status: "idle", ask, last };
+	if (!asked) return { status: "idle", ask, last, revision };
 	if (query.isError)
 		return {
 			status: "refused",
 			refusal: rulesCheckRefusalOf(query.error),
 			ask,
 			last,
+			revision,
 		};
 	if (query.data === undefined || query.isFetching)
-		return { status: "loading", ask, last };
-	return { status: "ready", check: query.data, ask, last };
+		return { status: "loading", ask, last, revision };
+	return { status: "ready", check: query.data, ask, last, revision };
 };

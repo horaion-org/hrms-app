@@ -19,6 +19,15 @@ describe("Home sections", () => {
 		expect(sectionsInReach(() => true)).toEqual([...HOME_SECTIONS]);
 	});
 
+	it("brings the people events into reach by their own key, never by the People list's", () => {
+		expect(
+			sectionsInReach((keys) => keys.includes("member_profile:read"))
+		).not.toContain("people-events");
+		expect(
+			sectionsInReach((keys) => keys.includes("member_event:read"))
+		).toEqual(["cover-offers", "people-events"]);
+	});
+
 	it("hides a section once its key is saved, and ignores keys it does not know", () => {
 		const hidden = ["people-events", "a-retired-section"];
 

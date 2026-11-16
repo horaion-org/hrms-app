@@ -2,7 +2,6 @@ import { useQuery } from "@tanstack/react-query";
 import {
 	APPROVAL_READ_KEYS,
 	daysOffQuery,
-	overtimeQuery,
 	peopleEventsQuery,
 	shortagesQuery,
 	staffingQuery,
@@ -11,7 +10,6 @@ import {
 	type DayOff,
 	type DayRange,
 	type MonthSpan,
-	type Overtime,
 	type PeopleEvent,
 	type Shortage,
 	type StaffingRule,
@@ -33,7 +31,7 @@ import {
 import { scheduleMonthSummariesQuery } from "@/features/scheduling/months/api";
 import { useSchedulingReadiness } from "@/features/scheduling/readiness/useSchedulingReadiness";
 import {
-	PEOPLE_READ_KEYS,
+	MEMBER_EVENT_READ_KEYS,
 	SCHEDULE_EDIT_SHIFT_KEYS,
 	SCHEDULE_READ_KEYS,
 } from "@/features/workspace/permissionKeys";
@@ -66,21 +64,6 @@ export const useDaysOff = (
 	const allowed = access.canAny(SCHEDULE_READ_KEYS, "anywhere");
 	const query = useQuery(
 		daysOffQuery(companyId, units, range, allowed && asked)
-	);
-	return guardedRead(access, allowed, query);
-};
-
-/** Overtime by department and month, where `schedule:read` is held; `asked` false asks for nothing. */
-export const useOvertime = (
-	companyId: string,
-	units: UnitSelection,
-	span: MonthSpan,
-	asked = true
-): GuardedRead<Overtime> => {
-	const access = useAccess();
-	const allowed = access.canAny(SCHEDULE_READ_KEYS, "anywhere");
-	const query = useQuery(
-		overtimeQuery(companyId, units, span, allowed && asked)
 	);
 	return guardedRead(access, allowed, query);
 };
@@ -159,7 +142,7 @@ export const useWaitingApprovals = (
 	return guardedRead(access, allowed, query);
 };
 
-/** Who joins, ends probation or leaves in the range, where `member_profile:read` is held; `asked` false asks for nothing. */
+/** Who joins, ends probation or leaves in the range, where `member_event:read` is held; `asked` false asks for nothing. */
 export const usePeopleEvents = (
 	companyId: string,
 	units: UnitSelection,
@@ -167,7 +150,7 @@ export const usePeopleEvents = (
 	asked = true
 ): GuardedRead<Array<PeopleEvent>> => {
 	const access = useAccess();
-	const allowed = access.canAny(PEOPLE_READ_KEYS, "anywhere");
+	const allowed = access.canAny(MEMBER_EVENT_READ_KEYS, "anywhere");
 	const query = useQuery(
 		peopleEventsQuery(companyId, units, range, allowed && asked)
 	);
