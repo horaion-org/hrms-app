@@ -290,7 +290,7 @@ describe("MonthSetupStep", () => {
 		render(<Harness onSubmit={vi.fn()} />);
 
 		expect(
-			screen.getByRole("checkbox", { name: "Include leave requests" })
+			screen.getByRole("checkbox", { name: "Include approved leave" })
 		).toBeInTheDocument();
 		expect(screen.queryByRole("checkbox", { name: /open shifts/i })).toBeNull();
 	});

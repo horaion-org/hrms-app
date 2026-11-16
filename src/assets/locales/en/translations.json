@@ -3513,7 +3513,7 @@
 			"partTimeWithoutAvailability_one": "{{count}} part-time member has no availability and will be left off the roster:",
 			"partTimeWithoutAvailability_other": "{{count}} part-time members have no availability and will be left off the roster:",
 			"additional": "Additional settings",
-			"includeLeave": "Include leave requests",
+			"includeLeave": "Include approved leave",
 			"includeLeaveDescription": "Consider approved leave when generating the schedule.",
 			"validation": {
 				"department": "Choose a department.",

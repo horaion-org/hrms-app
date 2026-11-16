@@ -142,7 +142,7 @@ describe("ScheduleSetupStep", () => {
 		render(<Harness />);
 
 		expect(
-			screen.getByRole("checkbox", { name: "Include leave requests" })
+			screen.getByRole("checkbox", { name: "Include approved leave" })
 		).toHaveAccessibleDescription(
 			"Consider approved leave when generating the schedule."
 		);
@@ -196,7 +196,7 @@ describe("ScheduleSetupStep", () => {
 		).toBeTruthy();
 		expect(
 			extras.compareDocumentPosition(
-				screen.getByRole("checkbox", { name: "Include leave requests" })
+				screen.getByRole("checkbox", { name: "Include approved leave" })
 			) & Node.DOCUMENT_POSITION_FOLLOWING
 		).toBeTruthy();
 	});
@@ -247,7 +247,7 @@ describe("ScheduleSetupStep", () => {
 			screen.getByRole("button", { name: /Schedule period/ })
 		).toBeDisabled();
 		expect(
-			screen.getByRole("checkbox", { name: "Include leave requests" })
+			screen.getByRole("checkbox", { name: "Include approved leave" })
 		).toBeDisabled();
 		await user.click(screen.getByRole("button", { name: "Next" }));
 		await vi.waitFor(() => {
@@ -615,7 +615,7 @@ describe("ScheduleSetupStep", () => {
 		render(<Harness onSubmit={vi.fn()} />);
 
 		expect(
-			screen.getByRole("checkbox", { name: "Include leave requests" })
+			screen.getByRole("checkbox", { name: "Include approved leave" })
 		).toBeInTheDocument();
 		expect(screen.queryByRole("checkbox", { name: /open shifts/i })).toBeNull();
 	});
