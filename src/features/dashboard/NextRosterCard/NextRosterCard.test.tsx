@@ -71,11 +71,16 @@ describe("NextRosterCard", () => {
 		).toContain("view=shifts");
 	});
 
-	it("says so calmly when no Department is in reach", async () => {
-		renderCard([]);
+	it("stops at five Departments and offers the rest", async () => {
+		renderCard(
+			Array.from({ length: 7 }, (_, index) =>
+				row({ departmentId: `d-${index}`, departmentName: `Unit ${index}` })
+			)
+		);
 
+		expect(await screen.findAllByRole("listitem")).toHaveLength(5);
 		expect(
-			await screen.findByText("No departments to roster yet.")
+			screen.getByRole("button", { name: "Show all 7" })
 		).toBeInTheDocument();
 	});
 });

@@ -21,6 +21,7 @@ import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
 import {
 	shortageFixture,
+	staffingRuleFixture,
 	teamCoverOfferFixture,
 } from "@/features/dashboard/fixtures";
 import { leaveFixture } from "@/features/leave/fixtures";
@@ -147,14 +148,24 @@ describe("Dashboard", () => {
 		);
 		expect(pageGreeting).toHaveClass("lg:hidden");
 		const leave = await screen.findByRole("region", {
-			name: "Pending leave requests",
+			name: "Leave to decide",
 		});
 		expect(
 			await within(leave).findByText("from Aisha Rahman", { exact: false })
 		).toBeInTheDocument();
-		// One grid, one column, aligned to the top: no card stretches to a neighbour or sits alone.
-		const grid = leave.parentElement;
-		expect(grid).toHaveClass("grid", "grid-cols-1", "items-start");
+		// One grid, aligned to the top so no card stretches to a neighbour; a card with no neighbour takes the row.
+		const place = leave.parentElement;
+		expect(place).toHaveClass("lg:col-span-2");
+		expect(place?.parentElement).toHaveClass(
+			"grid",
+			"grid-cols-1",
+			"items-start",
+			"lg:grid-cols-2"
+		);
+		// The count above the cards leads to the list, and nothing else restates it.
+		expect(
+			screen.getByRole("link", { name: "3 leave requests to decide" })
+		).toHaveAttribute("href", "/#leave-to-decide");
 		// Approvals appear once: no Pending Approvals tile, no notifications list, no shortcuts.
 		expect(
 			screen.queryByRole("region", { name: "Pending Approvals" })
@@ -179,12 +190,12 @@ describe("Dashboard", () => {
 		await open();
 
 		const leave = await screen.findByRole("region", {
-			name: "Pending leave requests",
+			name: "Leave to decide",
 		});
 		expect(await within(leave).findAllByRole("listitem")).toHaveLength(5);
 		expect(
 			within(leave).getByRole("link", { name: "See all 7" })
-		).toHaveAttribute("href", "/leave");
+		).toHaveAttribute("href", "/leave?view=requests");
 		// The full list is a page of its own, so the card offers no toggle.
 		expect(
 			within(leave).queryByRole("button", { name: /^Show all/ })
@@ -243,7 +254,7 @@ describe("Dashboard", () => {
 		});
 		await open();
 		const notifications = await screen.findByRole("region", {
-			name: "Pending leave requests",
+			name: "Leave to decide",
 		});
 		await within(notifications).findByText("from Aisha Rahman", {
 			exact: false,
@@ -321,7 +332,7 @@ describe("Dashboard", () => {
 			},
 			[`GET ${SCHEDULES_PATH}/days-off`]: {
 				status: 200,
-				body: envelope({ from: "2026-11-16", to: "2026-11-17", daysOff: [] }),
+				body: envelope({ from: "2026-11-16", to: "2026-11-16", daysOff: [] }),
 			},
 			["GET /api/v1/companies/c-1/schedule-months"]: {
 				status: 200,
@@ -331,6 +342,12 @@ describe("Dashboard", () => {
 		await open();
 
 		const short = await screen.findByRole("region", { name: "Shifts short" });
+		// The lead card takes the row; the count above it leads to it.
+		expect(short.parentElement).toHaveClass("lg:col-span-2");
+		expect(screen.getByRole("link", { name: "1 shift short" })).toHaveAttribute(
+			"href",
+			"/#short-shifts"
+		);
 		expect(
 			await within(short).findByRole("link", { name: /Morning/ })
 		).toHaveAttribute(
@@ -341,13 +358,85 @@ describe("Dashboard", () => {
 		expect(
 			await within(offers).findByText(/Kent Chua has not answered/)
 		).toBeInTheDocument();
+		// Two cards beside each other below the lead card, neither alone in a row.
+		const leave = await screen.findByRole("region", {
+			name: "Leave to decide",
+		});
+		expect(leave.parentElement).not.toHaveClass("lg:col-span-2");
+		expect(offers.parentElement).not.toHaveClass("lg:col-span-2");
+		// With no Department to roster, nothing is said about the coming week.
+		expect(screen.queryByRole("region", { name: "Next roster" })).toBeNull();
+	});
+
+	it("given_aRuleNobodyCanStaff_when_opened_then_namesItOnceWithItsCause", async () => {
+		stubApi({
+			...routes(["schedule:read"]),
+			[`GET ${SCHEDULES_PATH}/shortages`]: {
+				status: 200,
+				body: envelope({
+					from: "2026-11-16",
+					to: "2026-11-29",
+					shortages: ["2026-11-18", "2026-11-19", "2026-11-20"].map((day) =>
+						shortageFixture({ day })
+					),
+				}),
+			},
+			[`GET ${SCHEDULES_PATH}/staffing`]: {
+				status: 200,
+				body: envelope({
+					from: "2026-11-16",
+					to: "2026-11-29",
+					rules: [
+						staffingRuleFixture({
+							shifts: [{ shiftId: "sh-am", name: "Morning", daysAWeek: 7 }],
+						}),
+					],
+				}),
+			},
+		});
+		await open();
+
+		const short = await screen.findByRole("region", { name: "Shifts short" });
+		expect(await within(short).findAllByRole("listitem")).toHaveLength(1);
+		expect(short).toHaveTextContent("Short on 3 shifts.");
+		expect(short).toHaveTextContent("cover cannot fix it");
 		expect(
-			screen.getByRole("region", { name: "Next roster" })
+			screen.getByRole("link", { name: "3 shifts short" })
 		).toBeInTheDocument();
+	});
+
+	it("given_nothingToActOn_when_opened_then_saysAllClearInOneNoteAndDrawsNoCard", async () => {
+		stubApi({
+			...routes(["schedule:read", "leave_request:read"]),
+			[LEAVE]: page([], 0),
+			[`GET ${SCHEDULES_PATH}/shortages`]: {
+				status: 200,
+				body: envelope({ from: "2026-11-16", to: "2026-11-29", shortages: [] }),
+			},
+			[`GET ${SCHEDULES_PATH}/staffing`]: {
+				status: 200,
+				body: envelope({ from: "2026-11-16", to: "2026-11-29", rules: [] }),
+			},
+			[`GET ${SCHEDULES_PATH}/days-off`]: {
+				status: 200,
+				body: envelope({ from: "2026-11-16", to: "2026-11-16", daysOff: [] }),
+			},
+			["GET /api/v1/companies/c-1/schedule-months"]: {
+				status: 200,
+				body: envelope([]),
+			},
+		});
+		await open();
+
+		await waitFor(() => {
+			expect(screen.getByRole("note")).toHaveTextContent(
+				"All clear. Every shift is staffed this week and next. No leave waits for a decision. Nobody is off today."
+			);
+		});
+		expect(screen.queryByRole("region", { name: "Shifts short" })).toBeNull();
 		expect(
-			screen.getByRole("region", { name: "Off today and tomorrow" })
-		).toBeInTheDocument();
-		expect(screen.queryByText("Example")).toBeNull();
+			screen.queryByRole("region", { name: "Leave to decide" })
+		).toBeNull();
 	});
 });
 
@@ -359,7 +448,7 @@ const savedHidden = (hiddenSections: Array<string>): StubReply => ({
 	body: envelope({ hiddenSections }),
 });
 
-/** Whether Home asked for pending leave, the read behind "Pending leave requests". */
+/** Whether Home asked for pending leave, the read behind "Leave to decide". */
 const askedForPendingLeave = (
 	calls: Array<{ method: string; path: string; search: string }>
 ): boolean =>
@@ -375,7 +464,7 @@ describe("Customise Home", () => {
 		await open();
 
 		expect(
-			await screen.findByRole("region", { name: "Pending leave requests" })
+			await screen.findByRole("region", { name: "Leave to decide" })
 		).toBeInTheDocument();
 	});
 
@@ -391,7 +480,7 @@ describe("Customise Home", () => {
 			expect(calls.some((call) => call.path === PREFERENCES_PATH)).toBe(true);
 		});
 		expect(
-			screen.queryByRole("region", { name: "Pending leave requests" })
+			screen.queryByRole("region", { name: "Leave to decide" })
 		).toBeNull();
 		expect(askedForPendingLeave(calls)).toBe(false);
 	});
@@ -404,7 +493,7 @@ describe("Customise Home", () => {
 		await open();
 
 		expect(
-			await screen.findByRole("region", { name: "Pending leave requests" })
+			await screen.findByRole("region", { name: "Leave to decide" })
 		).toBeInTheDocument();
 	});
 
@@ -416,17 +505,17 @@ describe("Customise Home", () => {
 			[`PUT ${PREFERENCES_PATH}`]: savedHidden(["leave-to-decide"]),
 		});
 		await open();
-		await screen.findByRole("region", { name: "Pending leave requests" });
+		await screen.findByRole("region", { name: "Leave to decide" });
 
 		await user.click(screen.getByRole("button", { name: "Customise" }));
 		await user.click(
-			await screen.findByRole("checkbox", { name: "Pending leave requests" })
+			await screen.findByRole("checkbox", { name: "Leave to decide" })
 		);
 		await user.click(screen.getByRole("button", { name: "Done" }));
 
 		await waitFor(() => {
 			expect(
-				screen.queryByRole("region", { name: "Pending leave requests" })
+				screen.queryByRole("region", { name: "Leave to decide" })
 			).toBeNull();
 		});
 		expect(calls.find((call) => call.method === "PUT")?.body).toEqual({
@@ -450,7 +539,7 @@ describe("Customise Home", () => {
 		await user.click(screen.getByRole("button", { name: "Done" }));
 
 		expect(
-			await screen.findByRole("region", { name: "Pending leave requests" })
+			await screen.findByRole("region", { name: "Leave to decide" })
 		).toBeInTheDocument();
 		expect(calls.find((call) => call.method === "PUT")?.body).toEqual({
 			hiddenSections: [],
@@ -465,11 +554,11 @@ describe("Customise Home", () => {
 			[`PUT ${PREFERENCES_PATH}`]: { status: 500 },
 		});
 		await open();
-		await screen.findByRole("region", { name: "Pending leave requests" });
+		await screen.findByRole("region", { name: "Leave to decide" });
 
 		await user.click(screen.getByRole("button", { name: "Customise" }));
 		const box = await screen.findByRole("checkbox", {
-			name: "Pending leave requests",
+			name: "Leave to decide",
 		});
 		await user.click(box);
 
@@ -624,7 +713,7 @@ describe("Set up your company", () => {
 		);
 		await open();
 
-		await screen.findByRole("region", { name: "Pending leave requests" });
+		await screen.findByRole("region", { name: "Leave to decide" });
 		expect(
 			screen.queryByRole("region", { name: "Set up your company" })
 		).not.toBeInTheDocument();

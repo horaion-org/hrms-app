@@ -27,10 +27,10 @@ export const thisAndNextWeek = (today: Date): DayRange => {
 	};
 };
 
-/** Today and tomorrow. */
-export const todayAndTomorrow = (today: Date): DayRange => ({
+/** Today alone, as a range: the day Home counts who is off. */
+export const todayOnly = (today: Date): DayRange => ({
 	from: isoDay(today),
-	to: dayjs(today).add(1, "day").format(ISO_DAY),
+	to: isoDay(today),
 });
 
 /** How far ahead Home looks for who joins, ends probation or leaves, today included. */

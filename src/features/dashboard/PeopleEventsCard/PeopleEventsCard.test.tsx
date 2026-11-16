@@ -37,13 +37,11 @@ describe("PeopleEventsCard", () => {
 		expect(screen.getAllByText(/ · Sales$/)).toHaveLength(2);
 	});
 
-	it("says so calmly when nobody joins or leaves", () => {
-		render(<PeopleEventsCard events={{ status: "ready", data: [] }} />);
+	it("says when the read failed", () => {
+		render(<PeopleEventsCard events={{ status: "error" }} />);
 
-		expect(
-			screen.getByText(
-				"Nobody joins, ends probation or leaves in the next 30 days."
-			)
-		).toBeInTheDocument();
+		expect(screen.getByRole("alert")).toHaveTextContent(
+			"We couldn’t load who joins or leaves."
+		);
 	});
 });

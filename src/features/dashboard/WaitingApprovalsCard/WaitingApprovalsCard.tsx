@@ -7,7 +7,6 @@ import { ExpandableList } from "@/components/ui/ExpandableList";
 import { HistoryIcon } from "@/components/ui/Icon";
 import type { WaitingApproval } from "@/features/dashboard/api";
 import {
-	emptyLineClasses,
 	failedLineClasses,
 	rowClasses,
 	rowDetailClasses,
@@ -58,10 +57,7 @@ export const WaitingApprovalsCard = ({
 					{t(`${key}.failed`)}
 				</p>
 			)}
-			{approvals.status === "ready" && approvals.data.length === 0 && (
-				<p className={emptyLineClasses}>{t(`${key}.empty`)}</p>
-			)}
-			{approvals.status === "ready" && approvals.data.length > 0 && (
+			{approvals.status === "ready" && (
 				<ExpandableList
 					itemClassName={rowClasses}
 					items={approvals.data}

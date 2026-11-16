@@ -28,6 +28,4 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
-export const NothingComing: Story = {
-	args: { events: { status: "ready", data: [] } },
-};
+export const Failed: Story = { args: { events: { status: "error" } } };

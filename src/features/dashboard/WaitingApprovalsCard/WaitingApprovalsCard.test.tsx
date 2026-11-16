@@ -30,12 +30,12 @@ describe("WaitingApprovalsCard", () => {
 		).toBeInTheDocument();
 	});
 
-	it("says so calmly when nothing waits", () => {
-		render(<WaitingApprovalsCard approvals={{ status: "ready", data: [] }} />);
+	it("says when the read failed", () => {
+		render(<WaitingApprovalsCard approvals={{ status: "error" }} />);
 
-		expect(
-			screen.getByText("No approval waits in your units.")
-		).toBeInTheDocument();
+		expect(screen.getByRole("alert")).toHaveTextContent(
+			"We couldn’t load the approvals waiting."
+		);
 	});
 
 	it("is left out where approvals may not be read", () => {

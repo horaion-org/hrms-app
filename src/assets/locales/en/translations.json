@@ -4,7 +4,6 @@
 		"audiences": "Notification views",
 		"personal": "For you",
 		"review": "Needs review",
-		"pendingReview": "Pending leave requests",
 		"unreadOnly": "Unread only",
 		"unread": "Unread",
 		"unreadCount_one": "Notifications, {{count}} unread",
@@ -5025,17 +5024,8 @@
 		"clear": "Clear selection"
 	},
 	"dashboard": {
-		"viewAll": "View All",
 		"notifications": {
-			"title": "Notifications",
-			"failed": "We couldn’t load pending leave requests.",
-			"open": "Open {{title}}",
-			"leaveTitle": "{{type}} request",
-			"leaveDetail": "from {{name}} ({{period}})",
-			"approve": "Approve",
-			"deny": "Reject with reason",
-			"empty": "No leave waits for a decision.",
-			"seeAll": "See all {{count}}"
+			"open": "Open {{title}}"
 		},
 		"activity": {
 			"back": "Back to Overview",
@@ -5066,15 +5056,19 @@
 				"title": "Shifts short",
 				"range": "This week and next",
 				"failed": "We couldn’t load the shifts short.",
-				"empty": "Every shift is staffed this week and next.",
 				"shift": "{{shift}} {{start}}–{{end}}, {{day}}",
 				"detail_one": "{{department}} · short by {{count}} person",
-				"detail_other": "{{department}} · short by {{count}} people"
+				"detail_other": "{{department}} · short by {{count}} people",
+				"rule": "{{rule}} · {{department}}",
+				"ruleCause": "Needs {{needed}} a shift of {{titles}}; {{people}} people hold these job titles, so cover cannot fix it.",
+				"ruleShort_one": "Short on {{count}} shift.",
+				"ruleShort_other": "Short on {{count}} shifts.",
+				"editRule": "Edit rule",
+				"seePeople": "See people in {{department}}"
 			},
 			"coverOffers": {
 				"title": "Cover offers waiting",
 				"failed": "We couldn’t load the cover offers.",
-				"empty": "Nobody owes an answer on cover.",
 				"notAnswered": "{{name}} has not answered: {{shift}}, {{day}}",
 				"detailWithDeadline": "{{department}} · answer by {{deadline}}",
 				"formerMember": "A former member",
@@ -5085,7 +5079,6 @@
 			"nextRoster": {
 				"title": "Next roster",
 				"failed": "We couldn’t load the coming rosters.",
-				"empty": "No departments to roster yet.",
 				"stepNamed": "{{step}}: {{department}}",
 				"steps": {
 					"setUp": "Set up",
@@ -5101,21 +5094,9 @@
 					"STAFFING_CONSTRAINT": "No staffing rule"
 				}
 			},
-			"offToday": {
-				"title": "Off today and tomorrow",
-				"seeLeave": "See leave",
-				"failed": "We couldn’t load who is off.",
-				"today": "Today, {{day}}",
-				"tomorrow": "Tomorrow, {{day}}",
-				"nobody": "Nobody is off.",
-				"person": "{{name}}: {{reason}}",
-				"dayOff": "Day off",
-				"formerMember": "A former member"
-			},
 			"waitingApprovals": {
 				"title": "Approvals waiting",
 				"failed": "We couldn’t load the approvals waiting.",
-				"empty": "No approval waits in your units.",
 				"formerMember": "a former member",
 				"stalled": "Stalled",
 				"detail": "{{department}} · step {{step}} of {{total}} · waiting since {{since}}",
@@ -5128,7 +5109,6 @@
 			"peopleEvents": {
 				"title": "Joining, probation and leaving",
 				"failed": "We couldn’t load who joins or leaves.",
-				"empty": "Nobody joins, ends probation or leaves in the next 30 days.",
 				"formerMember": "A former member",
 				"detail": "{{day}} · {{department}}",
 				"kinds": {
@@ -5136,6 +5116,15 @@
 					"PROBATION_ENDS": "{{name}}'s probation ends",
 					"LEAVES": "{{name}} leaves"
 				}
+			},
+			"leaveToDecide": {
+				"title": "Leave to decide",
+				"failed": "We couldn’t load the leave to decide.",
+				"request": "{{type}} request",
+				"detail": "from {{name}} ({{period}})",
+				"approve": "Approve",
+				"reject": "Reject with reason",
+				"seeAll": "See all {{count}}"
 			}
 		},
 		"customise": {
@@ -5147,13 +5136,40 @@
 			"failed": "We couldn’t save your choice. It is back as it was; try again.",
 			"sections": {
 				"short-shifts": "Shifts short",
-				"leave-to-decide": "Pending leave requests",
+				"leave-to-decide": "Leave to decide",
 				"waiting-approvals": "Approvals waiting",
 				"next-roster": "Next roster",
 				"cover-offers": "Cover offers waiting",
-				"off-today": "Off today and tomorrow",
+				"off-today": "Who is off today",
 				"people-events": "Joining, probation and leaving"
 			}
+		},
+		"subtitle": "{{branch}} · {{day}}",
+		"viewRosters": "View rosters",
+		"counts": {
+			"label": "What needs you",
+			"short-shifts_one": "{{count}} shift short",
+			"short-shifts_other": "{{count}} shifts short",
+			"leave-to-decide_one": "{{count}} leave request to decide",
+			"leave-to-decide_other": "{{count}} leave requests to decide",
+			"waiting-approvals_one": "{{count}} approval waiting",
+			"waiting-approvals_other": "{{count}} approvals waiting",
+			"next-roster_one": "{{count}} roster to get ready",
+			"next-roster_other": "{{count}} rosters to get ready",
+			"cover-offers_one": "{{count}} cover offer waiting",
+			"cover-offers_other": "{{count}} cover offers waiting",
+			"off-today_one": "{{count}} person off today",
+			"off-today_other": "{{count}} people off today"
+		},
+		"calm": {
+			"allClear": "All clear.",
+			"short-shifts": "Every shift is staffed this week and next.",
+			"leave-to-decide": "No leave waits for a decision.",
+			"waiting-approvals": "No approval waits in your units.",
+			"next-roster": "Next week’s roster is published in every department.",
+			"cover-offers": "Nobody owes an answer on cover.",
+			"off-today": "Nobody is off today.",
+			"people-events": "Nobody joins, ends probation or leaves in the next 30 days."
 		}
 	},
 	"pageToolbar": {

@@ -4,7 +4,7 @@ import {
 	nextMonday,
 	thisAndNextMonth,
 	thisAndNextWeek,
-	todayAndTomorrow,
+	todayOnly,
 } from "@/features/dashboard/dashboardDates";
 
 /** A Wednesday, near a month's end so "next" crosses into December. */
@@ -25,10 +25,10 @@ describe("dashboard dates", () => {
 		});
 	});
 
-	it("reads today and tomorrow", () => {
-		expect(todayAndTomorrow(WEDNESDAY)).toEqual({
+	it("reads today alone", () => {
+		expect(todayOnly(WEDNESDAY)).toEqual({
 			from: "2026-11-25",
-			to: "2026-11-26",
+			to: "2026-11-25",
 		});
 	});
 

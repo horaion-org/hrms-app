@@ -1,58 +1,45 @@
 import { getRouteApi, Link, useRouteContext } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
-import { ApproveRequestsIcon, CrossIcon, TickIcon } from "@/components/ui/Icon";
-import { Card } from "@/components/ui/Card";
-import { ExpandableList } from "@/components/ui/ExpandableList";
+import { Callout } from "@/components/ui/Callout";
 import { Toast } from "@/components/ui/Toast";
+import { cardLinkClasses } from "@/features/dashboard/cardStyles";
 import { CustomiseHomeDialog } from "@/features/dashboard/CustomiseHomeDialog";
 import {
 	useHiddenSections,
 	useSaveHiddenSections,
 } from "@/features/dashboard/dashboardPreferences";
 import { DASHBOARD_UNIT_RULES } from "@/features/dashboard/dashboardUnitRules";
+import { HomeCounts } from "@/features/dashboard/HomeCounts";
+import { cardSpans, type CardSpan } from "@/features/dashboard/homeLayout";
 import {
-	comingPeopleDays,
-	nextMonday,
-	thisAndNextMonth,
-	thisAndNextWeek,
-	todayAndTomorrow,
-} from "@/features/dashboard/dashboardDates";
-import {
+	HOME_SECTIONS,
 	isShown,
 	sectionsInReach,
 	withSectionShown,
 	type HomeSection,
 } from "@/features/dashboard/homeSections";
+import {
+	LeaveToDecideCard,
+	type LeaveStep,
+} from "@/features/dashboard/LeaveToDecideCard";
 import { NextRosterCard } from "@/features/dashboard/NextRosterCard";
-import { OffTodayCard } from "@/features/dashboard/OffTodayCard";
 import { OpenCoverOffersCard } from "@/features/dashboard/OpenCoverOffersCard";
 import { PeopleEventsCard } from "@/features/dashboard/PeopleEventsCard";
-import { ShortShiftsCard } from "@/features/dashboard/ShortShiftsCard";
-import { NotificationItem } from "@/features/dashboard/NotificationItem";
 import { SetupChecklistCard } from "@/features/dashboard/SetupChecklistCard";
-import {
-	useDaysOff,
-	useMyOpenCoverOffers,
-	useNextRoster,
-	usePeopleEvents,
-	useShortages,
-	useTeamCoverOffers,
-	useWaitingApprovals,
-} from "@/features/dashboard/useDashboardReads";
+import { ShortShiftsCard } from "@/features/dashboard/ShortShiftsCard";
 import { useActivityPage } from "@/features/dashboard/useActivityPage";
+import { useHomeSections } from "@/features/dashboard/useHomeSections";
 import { useSetupChecklist } from "@/features/dashboard/useSetupChecklist";
 import { WaitingApprovalsCard } from "@/features/dashboard/WaitingApprovalsCard";
-import { approvalsNotListed } from "@/features/dashboard/waitingApprovals";
 import type { LeaveRequest } from "@/features/leave/api";
-import { formatPeriod } from "@/features/leave/dates";
 import { LeaveRequestDialog } from "@/features/leave/LeaveRequestDialog";
-import { leaveTypeLabel } from "@/features/leave/leaveTypeLabel";
 import { useLeaveDecision } from "@/features/leave/useLeaveDecision";
-import { useLeaveRequests } from "@/features/leave/useLeaveRequests";
+import { SCHEDULING_KEYS } from "@/features/scheduling/schedulingSearch";
+import { Can } from "@/features/workspace/Can";
 import { LEAVE_READ_KEYS } from "@/features/workspace/permissionKeys";
 import { unitSelectionOf } from "@/features/workspace/unitSearch";
 import { useAccess } from "@/features/workspace/useAccess";
@@ -63,22 +50,35 @@ const route = getRouteApi("/_authenticated/_app/");
 
 const key = "dashboard";
 
-/** Pending leave read for the list; more than the list shows, so "See all" knows there are more. */
-const PENDING_LEAVE_COUNT = 20;
-/** Enough approved leave to name everyone off today and tomorrow in one unit. */
-const OFF_TODAY_LEAVE_COUNT = 50;
+/**
+ * Home's one grid: a single column on small screens and two from `lg`, its
+ * cards aligned to the top so none stretches to a taller neighbour.
+ */
+const homeGridClasses =
+	"mt-6 grid grid-cols-1 items-start gap-6 lg:grid-cols-2";
 
-/** A link to a card's full page, or to Recent activity beneath the cards. */
-const viewAllLink =
-	"shrink-0 text-base font-semibold text-ink-blue-900 underline decoration-2 underline-offset-1 hover:text-ink-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-blue-500";
+/** A card's place on the grid: the whole row, or one of its two columns. */
+const SPAN_CLASSES: Record<CardSpan, string> = {
+	full: "lg:col-span-2",
+	half: "",
+};
 
-/** Home's one grid: a single column of cards aligned to the top, so no card stretches or sits alone. */
-const homeGridClasses = "mt-6 grid grid-cols-1 items-start gap-6";
+/** The sections that are never a card: who is off today is one count in the line above the cards. */
+const NOT_A_CARD: ReadonlyArray<HomeSection> = ["off-today"];
 
 /** The leave request open in the dialog, and what the person is doing with it. */
-type Decision = { request: LeaveRequest; mode: "view" | "reject" | "approve" };
+type Decision = { request: LeaveRequest; mode: LeaveStep };
 
-/** Home's cards for the settled company, with the leave dialog and toast they open. */
+/** Today as Home's subtitle writes it, e.g. "Monday 16 Nov 2026". */
+const todayLabel = (language: string): string =>
+	new Intl.DateTimeFormat(language, {
+		weekday: "long",
+		day: "numeric",
+		month: "short",
+		year: "numeric",
+	}).format(new Date());
+
+/** Home for the settled company: its counts, cards and all-clear note, with the dialogs they open. */
 const Dashboard = ({
 	displayName,
 }: {
@@ -86,15 +86,14 @@ const Dashboard = ({
 	displayName: string;
 }): FunctionComponent => {
 	const { t, i18n } = useTranslation();
-	const language = formattingLocale(i18n);
 	const companyId = useCurrentCompanyId();
 	// The header's Branch, resolved as the header resolves it; every Branch in reach when "All branches" is chosen.
-	const branchId = useUnitSelection(
+	const branch = useUnitSelection(
 		companyId,
 		LEAVE_READ_KEYS,
 		unitSelectionOf(route.useSearch()),
 		DASHBOARD_UNIT_RULES
-	).branch?.branchId;
+	).branch;
 	const [decision, setDecision] = useState<Decision>();
 	const [toast, setToast] = useState<{ id: number; message: string }>();
 	const [customising, setCustomising] = useState(false);
@@ -105,88 +104,15 @@ const Dashboard = ({
 	// A section is read and shown only once the person's choice is known, and only if they keep it.
 	const shown = (section: HomeSection): boolean =>
 		hidden.status === "ready" && isShown(section, hiddenSections);
-	const pending = useLeaveRequests(
-		companyId,
-		{
-			page: 1,
-			size: PENDING_LEAVE_COUNT,
-			sort: { field: "requestedAt", desc: true },
-			status: "PENDING",
-			branchId,
-		},
-		shown("leave-to-decide")
-	);
+	const home = useHomeSections(companyId, branch?.branchId, shown);
 	// Read only to learn whether the person may open Recent activity; the page lists it.
 	const activity = useActivityPage(companyId, 1, 1);
 	const setup = useSetupChecklist(companyId);
-	const now = new Date();
-	const units = { branchId };
-	const offDays = todayAndTomorrow(now);
-	const comingMonday = nextMonday(now);
-	const shortages = useShortages(
-		companyId,
-		units,
-		thisAndNextWeek(now),
-		shown("short-shifts")
-	);
-	const waiting = useWaitingApprovals(
-		companyId,
-		units,
-		shown("waiting-approvals")
-	);
-	const teamOffers = useTeamCoverOffers(
-		companyId,
-		units,
-		shown("cover-offers")
-	);
-	const myOffers = useMyOpenCoverOffers(companyId, shown("cover-offers"));
-	const nextRoster = useNextRoster(
-		companyId,
-		units,
-		thisAndNextMonth(now),
-		comingMonday,
-		shown("next-roster")
-	);
-	const daysOff = useDaysOff(companyId, units, offDays, shown("off-today"));
-	const leaveOff = useLeaveRequests(
-		companyId,
-		{
-			page: 1,
-			size: OFF_TODAY_LEAVE_COUNT,
-			sort: { field: "startDate", desc: false },
-			status: "APPROVED",
-			branchId,
-			...offDays,
-		},
-		shown("off-today")
-	);
-	const peopleEvents = usePeopleEvents(
-		companyId,
-		units,
-		comingPeopleDays(now),
-		shown("people-events")
-	);
-	// A leave request listed to decide is not said again among the approvals waiting.
-	const listedLeaveIds = new Set(
-		pending.status === "ready"
-			? pending.items.map((request) => request.leaveRequestId)
-			: []
-	);
-	const waitingNotListed =
-		waiting.status === "ready"
-			? {
-					status: "ready" as const,
-					data: approvalsNotListed(waiting.data, listedLeaveIds),
-				}
-			: waiting;
-	const saveSections = (next: ReadonlyArray<string>): void => {
-		saveHidden.mutate(next);
-	};
 
 	const notify = (message: string): void => {
 		setToast((previous) => ({ id: (previous?.id ?? 0) + 1, message }));
 	};
-	// The dashboard says the outcome in its own toast.
+	// Home says the outcome in its own toast.
 	const leaveDecision = useLeaveDecision(companyId, {
 		ownConfirmation: true,
 		onDecided: (message) => {
@@ -202,33 +128,88 @@ const Dashboard = ({
 		close();
 		notify(message);
 	};
-	// Nobody decides their own leave; each request is decided where its member is filed, or by its flow's open step.
-	const canReview = leaveDecision.canDecide;
-	const busy = leaveDecision.busy;
+
+	const cardOf: Record<HomeSection, ReactNode> = {
+		"short-shifts": <ShortShiftsCard shortShifts={home.shortShifts} />,
+		"leave-to-decide": (
+			<LeaveToDecideCard
+				busy={leaveDecision.busy}
+				// Nobody decides their own leave; each request is decided where its member is filed, or by its flow's open step.
+				canDecide={leaveDecision.canDecide}
+				pending={home.pendingLeave}
+				onOpen={(request, mode) => {
+					setDecision({ request, mode });
+				}}
+			/>
+		),
+		"waiting-approvals": (
+			<WaitingApprovalsCard approvals={home.waitingApprovals} />
+		),
+		"next-roster": (
+			<NextRosterCard
+				comingMonday={home.comingMonday}
+				rows={home.rostersToDo}
+			/>
+		),
+		"cover-offers": (
+			<OpenCoverOffersCard
+				myOffers={home.myOffers}
+				teamOffers={home.teamOffers}
+			/>
+		),
+		"off-today": null,
+		"people-events": <PeopleEventsCard events={home.peopleEvents} />,
+	};
+	// A section with something to show is a card; one with nothing to act on is a sentence in the note below.
+	const cards = HOME_SECTIONS.filter(
+		(section) =>
+			home.states[section] === "content" && !NOT_A_CARD.includes(section)
+	);
+	const spans = cardSpans(cards);
+	const clear = HOME_SECTIONS.filter(
+		(section) => home.states[section] === "empty"
+	);
 
 	return (
 		<>
-			<h1 className="sr-only">{t("shell.navigation.dashboard")}</h1>
-			{/* From `lg` the header carries the greeting; below it the page does. */}
-			<p className="text-2xl text-neutral-900 lg:hidden">
-				<Trans
-					i18nKey="shell.welcome"
-					values={{ name: displayName }}
-					components={{
-						name: <span className="font-medium text-ink-blue-900" />,
-					}}
-				/>
-			</p>
-			<div className="mt-6 flex justify-end lg:mt-0">
-				<Button
-					size="sm"
-					variant="secondary"
-					onClick={() => {
-						setCustomising(true);
-					}}
-				>
-					{t(`${key}.customise.open`)}
-				</Button>
+			<div className="flex flex-wrap items-end justify-between gap-4">
+				<div className="flex flex-col gap-1">
+					{/* From `lg` the header carries the greeting; below it the page does, in the title's place. */}
+					<p className="text-2xl text-neutral-900 lg:hidden">
+						<Trans
+							i18nKey="shell.welcome"
+							values={{ name: displayName }}
+							components={{
+								name: <span className="font-medium text-ink-blue-900" />,
+							}}
+						/>
+					</p>
+					<h1 className="text-[2rem] leading-10 font-medium text-neutral-900 max-lg:sr-only">
+						{t("shell.navigation.dashboard")}
+					</h1>
+					<p className="text-sm text-neutral-800">
+						{t(`${key}.subtitle`, {
+							branch: branch?.name ?? t("workspace.branchSelector.allBranches"),
+							day: todayLabel(formattingLocale(i18n)),
+						})}
+					</p>
+				</div>
+				<div className="flex flex-wrap gap-3">
+					<Can anyOf={SCHEDULING_KEYS} at="anywhere">
+						<Button size="sm" to="/scheduling" variant="secondary">
+							{t(`${key}.viewRosters`)}
+						</Button>
+					</Can>
+					<Button
+						size="sm"
+						variant="secondary"
+						onClick={() => {
+							setCustomising(true);
+						}}
+					>
+						{t(`${key}.customise.open`)}
+					</Button>
+				</div>
 			</div>
 			{setup.status === "shown" && (
 				<SetupChecklistCard
@@ -240,115 +221,28 @@ const Dashboard = ({
 					onDismiss={setup.dismiss}
 				/>
 			)}
-			{/* One column of to-do cards: each card is as tall as its content and spans the row, so none floats alone. */}
-			<div className={homeGridClasses}>
-				{shown("short-shifts") && <ShortShiftsCard shortages={shortages} />}
-				{shown("leave-to-decide") && pending.status !== "hidden" && (
-					<Card
-						icon={ApproveRequestsIcon}
-						title={t("notifications.pendingReview")}
-						action={
-							<Link className={viewAllLink} to="/leave">
-								{t(`${key}.viewAll`)}
-							</Link>
-						}
-					>
-						{pending.status === "error" && (
-							<p className="text-sm text-error-700" role="alert">
-								{t(`${key}.notifications.failed`)}
-							</p>
-						)}
-						{pending.status === "ready" && pending.items.length === 0 && (
-							<p className="text-sm text-neutral-700">
-								{t(`${key}.notifications.empty`)}
-							</p>
-						)}
-						{pending.status === "ready" && pending.items.length > 0 && (
-							<ExpandableList
-								itemClassName="py-4 first:pt-0 last:pb-0"
-								items={pending.items}
-								keyOf={(request) => request.leaveRequestId}
-								listClassName="flex flex-col divide-y divide-neutral-300"
-								renderItem={(request) => {
-									const reviewable = canReview(request);
-									// Under an approval flow, the step it waits on, beside its title.
-									const stepTag = request.approval
-										? t("approvals.meta.stepShort", {
-												step: request.approval.currentStepOrder,
-												total: request.approval.stepCount,
-											})
-										: undefined;
-									return (
-										<NotificationItem
-											tag={stepTag}
-											detail={t(`${key}.notifications.leaveDetail`, {
-												name: request.displayName,
-												period: formatPeriod(
-													request.startDate,
-													request.endDate,
-													language
-												),
-											})}
-											primaryAction={{
-												label: t(`${key}.notifications.approve`),
-												icon: <TickIcon />,
-												disabled: !reviewable || busy,
-												onClick: () => {
-													setDecision({ request, mode: "approve" });
-												},
-											}}
-											secondaryAction={{
-												label: t(`${key}.notifications.deny`),
-												icon: <CrossIcon />,
-												disabled: !reviewable || busy,
-												onClick: () => {
-													setDecision({ request, mode: "reject" });
-												},
-											}}
-											title={t(`${key}.notifications.leaveTitle`, {
-												type: leaveTypeLabel(request, t),
-											})}
-											onOpen={() => {
-												setDecision({ request, mode: "view" });
-											}}
-										/>
-									);
-								}}
-								seeAll={
-									<Link className={viewAllLink} to="/leave">
-										{t(`${key}.notifications.seeAll`, {
-											count: pending.total,
-										})}
-									</Link>
-								}
-							/>
-						)}
-					</Card>
-				)}
-				{shown("waiting-approvals") && (
-					<WaitingApprovalsCard approvals={waitingNotListed} />
-				)}
-				{shown("next-roster") && (
-					<NextRosterCard comingMonday={comingMonday} rows={nextRoster} />
-				)}
-				{shown("cover-offers") && (
-					<OpenCoverOffersCard myOffers={myOffers} teamOffers={teamOffers} />
-				)}
-				{shown("off-today") && (
-					<OffTodayCard
-						days={[offDays.from, offDays.to]}
-						daysOff={daysOff}
-						leave={
-							leaveOff.status === "ready"
-								? { status: "ready", data: leaveOff.items }
-								: leaveOff
-						}
-					/>
-				)}
-				{shown("people-events") && <PeopleEventsCard events={peopleEvents} />}
-			</div>
+			<HomeCounts className="mt-6" counts={home.counts} />
+			{cards.length > 0 && (
+				<div className={homeGridClasses}>
+					{cards.map((section) => (
+						<div
+							key={section}
+							className={SPAN_CLASSES[spans.get(section) ?? "full"]}
+							id={section}
+						>
+							{cardOf[section]}
+						</div>
+					))}
+				</div>
+			)}
+			{clear.length > 0 && (
+				<Callout className="mt-6">
+					{cards.length === 0 && `${t(`${key}.calm.allClear`)} `}
+					{clear.map((section) => t(`${key}.calm.${section}`)).join(" ")}
+				</Callout>
+			)}
 			{activity.status !== "hidden" && (
-				<Link className={`${viewAllLink} mt-6 inline-block`} to="/activity">
+				<Link className={`${cardLinkClasses} mt-6 inline-block`} to="/activity">
 					{t("organisation.activity.title")}
 				</Link>
 			)}
@@ -362,10 +256,12 @@ const Dashboard = ({
 					saveHidden.reset();
 				}}
 				onReset={() => {
-					saveSections([]);
+					saveHidden.mutate([]);
 				}}
 				onToggle={(section, isNowShown) => {
-					saveSections(withSectionShown(hiddenSections, section, isNowShown));
+					saveHidden.mutate(
+						withSectionShown(hiddenSections, section, isNowShown)
+					);
 				}}
 			/>
 			{decision && (
@@ -393,12 +289,14 @@ const Dashboard = ({
 };
 
 /**
- * Home, "What needs you": a to-do list, most urgent first. Shifts short,
- * leave to decide, the approvals waiting, each Department's next roster,
- * cover offers not answered, who is off today and tomorrow, and who joins,
- * ends probation or leaves; each list stops at five rows with a toggle.
- * Each card is left out where the person's grants don't reach it, or where
- * they chose to hide it under Customise; a hidden card is not read.
+ * Home, "What needs you": a line of counts, then a card for each thing
+ * with something to act on, most urgent first, on one two-column grid:
+ * shifts short by cause, leave to decide, approvals waiting, the rosters
+ * still to get ready, cover offers not answered, and who joins, ends
+ * probation or leaves. A section with nothing to act on is a sentence in
+ * the all-clear note, never an empty box. Each is left out where the
+ * person's grants don't reach it, or where they chose to hide it under
+ * Customise; a hidden section is not read.
  */
 export const Home = (): FunctionComponent => {
 	const context = useRouteContext({ from: "/_authenticated" });

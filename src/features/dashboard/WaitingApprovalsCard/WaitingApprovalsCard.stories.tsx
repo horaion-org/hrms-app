@@ -27,6 +27,4 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
-export const NothingWaiting: Story = {
-	args: { approvals: { status: "ready", data: [] } },
-};
+export const Failed: Story = { args: { approvals: { status: "error" } } };

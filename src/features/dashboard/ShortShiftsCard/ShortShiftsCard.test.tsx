@@ -4,7 +4,10 @@ import { initReactI18next } from "react-i18next";
 import { beforeAll, describe, expect, it } from "vitest";
 import en from "@/assets/locales/en/translations.json";
 import { MemoryRouterHarness } from "@/components/utils/MemoryRouterHarness";
-import { shortageFixture } from "@/features/dashboard/fixtures";
+import {
+	shortageFixture,
+	staffingRuleFixture,
+} from "@/features/dashboard/fixtures";
 import { ShortShiftsCard } from "@/features/dashboard/ShortShiftsCard";
 
 beforeAll(async () => {
@@ -14,13 +17,16 @@ beforeAll(async () => {
 });
 
 describe("ShortShiftsCard", () => {
-	it("links each short shift to its roster with Find cover open on that day", async () => {
+	it("links each gap to its roster with Find cover open on that day", async () => {
 		render(
 			<MemoryRouterHarness>
 				<ShortShiftsCard
-					shortages={{
+					shortShifts={{
 						status: "ready",
-						data: [shortageFixture({ shortBy: 2 })],
+						data: {
+							unstaffable: [],
+							gaps: [shortageFixture({ shortBy: 2 })],
+						},
 					}}
 				/>
 			</MemoryRouterHarness>
@@ -34,25 +40,55 @@ describe("ShortShiftsCard", () => {
 		expect(screen.getByText("Sales · short by 2 people")).toBeInTheDocument();
 	});
 
-	it("says so calmly when every shift is staffed", async () => {
+	it("names a rule nobody can staff once, with its cause and where to fix it", async () => {
 		render(
 			<MemoryRouterHarness>
-				<ShortShiftsCard shortages={{ status: "ready", data: [] }} />
+				<ShortShiftsCard
+					shortShifts={{
+						status: "ready",
+						data: {
+							unstaffable: [{ rule: staffingRuleFixture(), shortShifts: 14 }],
+							gaps: [],
+						},
+					}}
+				/>
 			</MemoryRouterHarness>
 		);
 
 		expect(
-			await screen.findByText("Every shift is staffed this week and next.")
+			await screen.findByText("Front desk AM · Front desk")
 		).toBeInTheDocument();
+		expect(
+			screen.getByText(
+				"Needs 3 a shift of Clerk, Lead; 2 people hold these job titles, so cover cannot fix it. Short on 14 shifts."
+			)
+		).toBeInTheDocument();
+		expect(screen.getAllByRole("listitem")).toHaveLength(1);
+		expect(screen.getByRole("link", { name: "Edit rule" })).toHaveAttribute(
+			"href",
+			"/scheduling?view=constraints&department=d-1"
+		);
+		expect(
+			screen.getByRole("link", { name: "See people in Front desk" })
+		).toHaveAttribute("href", "/people?department=d-1");
 	});
 
-	it("is left out where rosters may not be read", () => {
-		const { container } = render(
+	it("says when the read failed, and is left out where rosters may not be read", async () => {
+		const { container, rerender } = render(
 			<MemoryRouterHarness>
-				<ShortShiftsCard shortages={{ status: "hidden" }} />
+				<ShortShiftsCard shortShifts={{ status: "error" }} />
 			</MemoryRouterHarness>
 		);
 
-		expect(container).toBeEmptyDOMElement();
+		expect(await screen.findByRole("alert")).toHaveTextContent(
+			"We couldn’t load the shifts short."
+		);
+
+		rerender(
+			<MemoryRouterHarness>
+				<ShortShiftsCard shortShifts={{ status: "hidden" }} />
+			</MemoryRouterHarness>
+		);
+		expect(container.querySelector("section")).toBeNull();
 	});
 });

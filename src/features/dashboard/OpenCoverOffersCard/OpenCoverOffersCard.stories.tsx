@@ -29,6 +29,4 @@ export const WithTheirOwnOffer: Story = {
 		},
 	},
 };
-export const NothingWaiting: Story = {
-	args: { teamOffers: { status: "ready", data: [] } },
-};
+export const Failed: Story = { args: { teamOffers: { status: "error" } } };

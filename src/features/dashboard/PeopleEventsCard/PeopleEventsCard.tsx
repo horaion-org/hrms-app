@@ -7,7 +7,6 @@ import { ExpandableList } from "@/components/ui/ExpandableList";
 import { PeopleIcon } from "@/components/ui/Icon";
 import type { PeopleEvent } from "@/features/dashboard/api";
 import {
-	emptyLineClasses,
 	failedLineClasses,
 	rowClasses,
 	rowDetailClasses,
@@ -46,10 +45,7 @@ export const PeopleEventsCard = ({
 					{t(`${key}.failed`)}
 				</p>
 			)}
-			{events.status === "ready" && events.data.length === 0 && (
-				<p className={emptyLineClasses}>{t(`${key}.empty`)}</p>
-			)}
-			{events.status === "ready" && events.data.length > 0 && (
+			{events.status === "ready" && (
 				<ExpandableList
 					itemClassName={rowClasses}
 					items={events.data}

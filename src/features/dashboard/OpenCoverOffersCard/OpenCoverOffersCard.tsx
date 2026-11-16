@@ -8,7 +8,6 @@ import { SwapIcon } from "@/components/ui/Icon";
 import type { TeamCoverOffer } from "@/features/dashboard/api";
 import {
 	cardLinkClasses,
-	emptyLineClasses,
 	failedLineClasses,
 	rowClasses,
 	rowDetailClasses,
@@ -59,9 +58,6 @@ export const OpenCoverOffersCard = ({
 				<p className={failedLineClasses} role="alert">
 					{t(`${key}.failed`)}
 				</p>
-			)}
-			{teamOffers.status === "ready" && team.length === 0 && (
-				<p className={emptyLineClasses}>{t(`${key}.empty`)}</p>
 			)}
 			{team.length > 0 && (
 				<ExpandableList

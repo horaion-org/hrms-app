@@ -50,6 +50,4 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
-export const NoDepartments: Story = {
-	args: { rows: { status: "ready", data: [] } },
-};
+export const Failed: Story = { args: { rows: { status: "error" } } };

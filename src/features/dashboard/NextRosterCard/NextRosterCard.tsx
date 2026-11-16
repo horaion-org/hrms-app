@@ -3,9 +3,9 @@ import type { FunctionComponent } from "@/common/types";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { ExpandableList } from "@/components/ui/ExpandableList";
 import { GenerateScheduleIcon } from "@/components/ui/Icon";
 import {
-	emptyLineClasses,
 	failedLineClasses,
 	rowClasses,
 	rowDetailClasses,
@@ -24,7 +24,7 @@ const key = "dashboard.cards.nextRoster";
 const monthOf = (day: string): string => day.slice(0, "yyyy-MM".length);
 
 export type NextRosterCardProps = {
-	/** Each Department's coming week and its step. */
+	/** The Departments whose coming week still waits on a step. */
 	rows: GuardedRead<Array<NextRosterRow>>;
 	/** The coming week's Monday. */
 	comingMonday: string;
@@ -109,9 +109,9 @@ const StepAction = ({
 };
 
 /**
- * For each Department in reach, the coming week's state and the one next
- * step: set up what blocks scheduling, generate, review, or fix. Shown only
- * where rosters may be read.
+ * For each Department whose coming week is not yet published, its state
+ * and the one next step: set up what blocks scheduling, generate, review,
+ * or fix. Shown only where rosters may be read.
  */
 export const NextRosterCard = ({
 	rows,
@@ -120,7 +120,6 @@ export const NextRosterCard = ({
 }: NextRosterCardProps): FunctionComponent => {
 	const { t } = useTranslation();
 	if (rows.status === "hidden") return null;
-	const departments = rows.status === "ready" ? rows.data : [];
 	return (
 		<Card
 			className={className}
@@ -132,13 +131,14 @@ export const NextRosterCard = ({
 					{t(`${key}.failed`)}
 				</p>
 			)}
-			{rows.status === "ready" && departments.length === 0 && (
-				<p className={emptyLineClasses}>{t(`${key}.empty`)}</p>
-			)}
-			{departments.length > 0 && (
-				<ul className={rowListClasses}>
-					{departments.map((row) => (
-						<li key={row.departmentId} className={rowClasses}>
+			{rows.status === "ready" && (
+				<ExpandableList
+					itemClassName={rowClasses}
+					items={rows.data}
+					keyOf={(row) => row.departmentId}
+					listClassName={rowListClasses}
+					renderItem={(row) => (
+						<>
 							<div className="flex flex-wrap items-center justify-between gap-2">
 								<span className={rowTitleClasses}>{row.departmentName}</span>
 								<Badge tone={weekStateTones[row.state]}>
@@ -155,9 +155,9 @@ export const NextRosterCard = ({
 							<div>
 								<StepAction comingMonday={comingMonday} row={row} />
 							</div>
-						</li>
-					))}
-				</ul>
+						</>
+					)}
+				/>
 			)}
 		</Card>
 	);

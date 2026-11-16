@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import { formatDay } from "@/common/formatDay";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { mondayOf } from "@/common/weeks";
@@ -9,83 +10,159 @@ import { FillShiftsIcon } from "@/components/ui/Icon";
 import type { Shortage } from "@/features/dashboard/api";
 import {
 	cardLinkClasses,
-	emptyLineClasses,
 	failedLineClasses,
 	rowClasses,
 	rowDetailClasses,
 	rowListClasses,
+	rowTitleClasses,
 } from "@/features/dashboard/cardStyles";
-import { formatDay } from "@/common/formatDay";
 import type { GuardedRead } from "@/features/dashboard/guardedRead";
+import type {
+	ShortShiftsByCause,
+	UnstaffableRule,
+} from "@/features/dashboard/shortCauses";
 import { coverParameter } from "@/features/scheduling/roster/rosterSearch";
 
 const key = "dashboard.cards.shortShifts";
 
+/** One row of the card: a rule nobody can staff, or one gap to cover. */
+type Row =
+	| { kind: "rule"; id: string; unstaffable: UnstaffableRule }
+	| { kind: "gap"; id: string; shortage: Shortage };
+
 export type ShortShiftsCardProps = {
-	/** The shifts short this week and next, most urgent first. */
-	shortages: GuardedRead<Array<Shortage>>;
+	/** The shifts short this week and next, by cause, most urgent first. */
+	shortShifts: GuardedRead<ShortShiftsByCause>;
 	className?: string;
 };
 
+/** The rules nobody can staff first, each once, then the gaps to cover. */
+const rowsOf = ({ unstaffable, gaps }: ShortShiftsByCause): Array<Row> => [
+	...unstaffable.map((each): Row => ({
+		kind: "rule",
+		id: `rule|${each.rule.departmentId}|${each.rule.ruleName}`,
+		unstaffable: each,
+	})),
+	...gaps.map((shortage): Row => ({
+		kind: "gap",
+		id: `gap|${shortage.scheduleId}|${shortage.shiftId}|${shortage.day}`,
+		shortage,
+	})),
+];
+
 /**
- * The shifts short this week and next. Each opens its roster on that week
- * and day with Find cover for the shift, where the repair options are.
- * Shown only where rosters may be read.
+ * A rule too few people can staff, named once with its cause: what it
+ * needs, how many people hold its job titles, and that cover cannot fix
+ * it. It leads to the rule and to the department's people.
  */
-export const ShortShiftsCard = ({
-	shortages,
-	className,
-}: ShortShiftsCardProps): FunctionComponent => {
+const UnstaffableRuleRow = ({
+	unstaffable: { rule, shortShifts },
+}: {
+	unstaffable: UnstaffableRule;
+}): FunctionComponent => {
+	const { t } = useTranslation();
+	return (
+		<>
+			<span className={rowTitleClasses}>
+				{t(`${key}.rule`, {
+					rule: rule.ruleName,
+					department: rule.departmentName,
+				})}
+			</span>
+			<span className={rowDetailClasses}>
+				{t(`${key}.ruleCause`, {
+					needed: rule.headcount,
+					titles: rule.jobTitles.map((title) => title.name).join(", "),
+					people: rule.peopleWithTitles,
+				})}{" "}
+				{t(`${key}.ruleShort`, { count: shortShifts })}
+			</span>
+			<span className="flex flex-wrap gap-x-4 gap-y-1">
+				<Link
+					className={cardLinkClasses}
+					search={{ view: "constraints", department: rule.departmentId }}
+					to="/scheduling"
+				>
+					{t(`${key}.editRule`)}
+				</Link>
+				<Link
+					className={cardLinkClasses}
+					search={{ department: rule.departmentId }}
+					to="/people"
+				>
+					{t(`${key}.seePeople`, { department: rule.departmentName })}
+				</Link>
+			</span>
+		</>
+	);
+};
+
+/** One gap to cover: it opens its roster on that week and day with Find cover for the shift. */
+const GapRow = ({ shortage }: { shortage: Shortage }): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const language = formattingLocale(i18n);
-	if (shortages.status === "hidden") return null;
-	const rows = shortages.status === "ready" ? shortages.data : [];
+	return (
+		<>
+			<Link
+				className={cardLinkClasses}
+				params={{ scheduleId: shortage.scheduleId }}
+				to="/scheduling/$scheduleId"
+				search={{
+					week: mondayOf(shortage.day),
+					day: shortage.day,
+					cover: coverParameter(shortage),
+				}}
+			>
+				{t(`${key}.shift`, {
+					shift: shortage.shiftName,
+					day: formatDay(shortage.day, language),
+					start: shortage.startTime,
+					end: shortage.endTime,
+				})}
+			</Link>
+			<span className={rowDetailClasses}>
+				{t(`${key}.detail`, {
+					department: shortage.departmentName,
+					count: shortage.shortBy,
+				})}
+			</span>
+		</>
+	);
+};
+
+/**
+ * The shifts short this week and next, by cause. A rule too few people can
+ * staff is named once, with what would fix it; every other short shift is
+ * a gap that opens Find cover on its roster. Shown only where rosters may
+ * be read.
+ */
+export const ShortShiftsCard = ({
+	shortShifts,
+	className,
+}: ShortShiftsCardProps): FunctionComponent => {
+	const { t } = useTranslation();
+	if (shortShifts.status === "hidden") return null;
 	return (
 		<Card className={className} icon={FillShiftsIcon} title={t(`${key}.title`)}>
 			<p className={rowDetailClasses}>{t(`${key}.range`)}</p>
-			{shortages.status === "error" && (
+			{shortShifts.status === "error" && (
 				<p className={failedLineClasses} role="alert">
 					{t(`${key}.failed`)}
 				</p>
 			)}
-			{shortages.status === "ready" && rows.length === 0 && (
-				<p className={emptyLineClasses}>{t(`${key}.empty`)}</p>
-			)}
-			{rows.length > 0 && (
+			{shortShifts.status === "ready" && (
 				<ExpandableList
 					itemClassName={rowClasses}
-					items={rows}
+					items={rowsOf(shortShifts.data)}
+					keyOf={(row) => row.id}
 					listClassName={rowListClasses}
-					keyOf={(shortage) =>
-						`${shortage.scheduleId}|${shortage.shiftId}|${shortage.day}`
+					renderItem={(row) =>
+						row.kind === "rule" ? (
+							<UnstaffableRuleRow unstaffable={row.unstaffable} />
+						) : (
+							<GapRow shortage={row.shortage} />
+						)
 					}
-					renderItem={(shortage) => (
-						<>
-							<Link
-								className={cardLinkClasses}
-								params={{ scheduleId: shortage.scheduleId }}
-								to="/scheduling/$scheduleId"
-								search={{
-									week: mondayOf(shortage.day),
-									day: shortage.day,
-									cover: coverParameter(shortage),
-								}}
-							>
-								{t(`${key}.shift`, {
-									shift: shortage.shiftName,
-									day: formatDay(shortage.day, language),
-									start: shortage.startTime,
-									end: shortage.endTime,
-								})}
-							</Link>
-							<span className={rowDetailClasses}>
-								{t(`${key}.detail`, {
-									department: shortage.departmentName,
-									count: shortage.shortBy,
-								})}
-							</span>
-						</>
-					)}
 				/>
 			)}
 		</Card>

@@ -4,7 +4,6 @@
 		"audiences": "Vistas de notificaciones",
 		"personal": "Para ti",
 		"review": "Pendientes de revisión",
-		"pendingReview": "Solicitudes de permiso pendientes",
 		"unreadOnly": "Solo sin leer",
 		"unread": "Sin leer",
 		"unreadCount_one": "Notificaciones, {{count}} sin leer",
@@ -4858,17 +4857,8 @@
 		"clear": "Borrar selección"
 	},
 	"dashboard": {
-		"viewAll": "Ver todo",
 		"notifications": {
-			"title": "Notificaciones",
-			"failed": "No hemos podido cargar las solicitudes de ausencia pendientes.",
-			"open": "Abrir {{title}}",
-			"leaveTitle": "Solicitud de {{type}}",
-			"leaveDetail": "de {{name}} ({{period}})",
-			"approve": "Aprobar",
-			"deny": "Rechazar con motivo",
-			"empty": "Ninguna ausencia espera una decisión.",
-			"seeAll": "Ver las {{count}}"
+			"open": "Abrir {{title}}"
 		},
 		"activity": {
 			"back": "Volver al resumen",
@@ -4899,15 +4889,19 @@
 				"title": "Turnos incompletos",
 				"range": "Esta semana y la próxima",
 				"failed": "No pudimos cargar los turnos incompletos.",
-				"empty": "Todos los turnos están cubiertos esta semana y la próxima.",
 				"shift": "{{shift}} {{start}}–{{end}}, {{day}}",
 				"detail_one": "{{department}} · falta {{count}} persona",
-				"detail_other": "{{department}} · faltan {{count}} personas"
+				"detail_other": "{{department}} · faltan {{count}} personas",
+				"rule": "{{rule}} · {{department}}",
+				"ruleCause": "Necesita {{needed}} por turno de {{titles}}; {{people}} personas tienen estos puestos, así que una cobertura no lo resuelve.",
+				"ruleShort_one": "Incompleto en {{count}} turno.",
+				"ruleShort_other": "Incompleto en {{count}} turnos.",
+				"editRule": "Editar regla",
+				"seePeople": "Ver personas de {{department}}"
 			},
 			"coverOffers": {
 				"title": "Ofertas de cobertura pendientes",
 				"failed": "No pudimos cargar las ofertas de cobertura.",
-				"empty": "Nadie tiene una respuesta pendiente.",
 				"notAnswered": "{{name}} no ha respondido: {{shift}}, {{day}}",
 				"detailWithDeadline": "{{department}} · responder antes de {{deadline}}",
 				"formerMember": "Un antiguo miembro",
@@ -4918,7 +4912,6 @@
 			"nextRoster": {
 				"title": "Próximo horario",
 				"failed": "No pudimos cargar los próximos horarios.",
-				"empty": "Aún no hay departamentos que programar.",
 				"stepNamed": "{{step}}: {{department}}",
 				"steps": {
 					"setUp": "Configurar",
@@ -4934,21 +4927,9 @@
 					"STAFFING_CONSTRAINT": "Sin regla de personal"
 				}
 			},
-			"offToday": {
-				"title": "Ausentes hoy y mañana",
-				"seeLeave": "Ver ausencias",
-				"failed": "No pudimos cargar quién está ausente.",
-				"today": "Hoy, {{day}}",
-				"tomorrow": "Mañana, {{day}}",
-				"nobody": "Nadie está ausente.",
-				"person": "{{name}}: {{reason}}",
-				"dayOff": "Día libre",
-				"formerMember": "Un antiguo miembro"
-			},
 			"waitingApprovals": {
 				"title": "Aprobaciones pendientes",
 				"failed": "No pudimos cargar las aprobaciones pendientes.",
-				"empty": "No hay aprobaciones pendientes en tus unidades.",
 				"formerMember": "un antiguo miembro",
 				"stalled": "Estancada",
 				"detail": "{{department}} · paso {{step}} de {{total}} · en espera desde {{since}}",
@@ -4961,7 +4942,6 @@
 			"peopleEvents": {
 				"title": "Incorporaciones, periodos de prueba y bajas",
 				"failed": "No pudimos cargar quién se incorpora o se va.",
-				"empty": "Nadie se incorpora, termina el periodo de prueba ni se va en los próximos 30 días.",
 				"formerMember": "Un antiguo miembro",
 				"detail": "{{day}} · {{department}}",
 				"kinds": {
@@ -4969,6 +4949,15 @@
 					"PROBATION_ENDS": "Termina el periodo de prueba de {{name}}",
 					"LEAVES": "{{name}} se va"
 				}
+			},
+			"leaveToDecide": {
+				"title": "Ausencias por decidir",
+				"failed": "No hemos podido cargar las ausencias por decidir.",
+				"request": "Solicitud de {{type}}",
+				"detail": "de {{name}} ({{period}})",
+				"approve": "Aprobar",
+				"reject": "Rechazar con motivo",
+				"seeAll": "Ver las {{count}}"
 			}
 		},
 		"customise": {
@@ -4980,13 +4969,40 @@
 			"failed": "No pudimos guardar tu elección. Vuelve a estar como antes; inténtalo de nuevo.",
 			"sections": {
 				"short-shifts": "Turnos incompletos",
-				"leave-to-decide": "Solicitudes de permiso pendientes",
+				"leave-to-decide": "Ausencias por decidir",
 				"waiting-approvals": "Aprobaciones pendientes",
 				"next-roster": "Próximo horario",
 				"cover-offers": "Ofertas de cobertura pendientes",
-				"off-today": "Ausentes hoy y mañana",
+				"off-today": "Quién está ausente hoy",
 				"people-events": "Incorporaciones, periodos de prueba y bajas"
 			}
+		},
+		"subtitle": "{{branch}} · {{day}}",
+		"viewRosters": "Ver horarios",
+		"counts": {
+			"label": "Lo que te necesita",
+			"short-shifts_one": "{{count}} turno incompleto",
+			"short-shifts_other": "{{count}} turnos incompletos",
+			"leave-to-decide_one": "{{count}} solicitud de ausencia por decidir",
+			"leave-to-decide_other": "{{count}} solicitudes de ausencia por decidir",
+			"waiting-approvals_one": "{{count}} aprobación pendiente",
+			"waiting-approvals_other": "{{count}} aprobaciones pendientes",
+			"next-roster_one": "{{count}} horario por preparar",
+			"next-roster_other": "{{count}} horarios por preparar",
+			"cover-offers_one": "{{count}} oferta de cobertura pendiente",
+			"cover-offers_other": "{{count}} ofertas de cobertura pendientes",
+			"off-today_one": "{{count}} persona ausente hoy",
+			"off-today_other": "{{count}} personas ausentes hoy"
+		},
+		"calm": {
+			"allClear": "Todo en orden.",
+			"short-shifts": "Todos los turnos están cubiertos esta semana y la próxima.",
+			"leave-to-decide": "Ninguna ausencia espera una decisión.",
+			"waiting-approvals": "No hay aprobaciones pendientes en tus unidades.",
+			"next-roster": "El horario de la próxima semana está publicado en todos los departamentos.",
+			"cover-offers": "Nadie tiene una respuesta pendiente.",
+			"off-today": "Nadie está ausente hoy.",
+			"people-events": "Nadie se incorpora, termina el periodo de prueba ni se va en los próximos 30 días."
 		}
 	},
 	"auth": {
