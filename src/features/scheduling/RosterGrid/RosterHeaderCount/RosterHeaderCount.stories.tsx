@@ -7,7 +7,7 @@ const meta = {
 	component: RosterHeaderCount,
 	args: {
 		count: { count: 2, tone: "attention" },
-		label: "Ben Ong: 2 to look at. Show in Issues",
+		label: "Ben Ong: 2 issues. Show in Issues",
 		onSelect: fn(),
 	},
 } satisfies Meta<typeof RosterHeaderCount>;
@@ -23,7 +23,7 @@ export const ToLookAt: Story = {};
 export const InformationOnly: Story = {
 	args: {
 		count: { count: 1, tone: "info" },
-		label: "Ben Ong: 1 to look at. Show in Issues",
+		label: "Ben Ong: 1 issue. Show in Issues",
 	},
 };
 

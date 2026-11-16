@@ -246,18 +246,18 @@ describe("RosterGrid", () => {
 		const ben = screen.getByRole("row", { name: /Ben Ong/ });
 		expect(
 			within(ben).getByRole("button", {
-				name: "Ben Ong: 3 to look at. Show in Issues",
+				name: "Ben Ong: 3 issues. Show in Issues",
 			})
 		).toHaveTextContent("3");
 		// Chen's row counts the issue on his Sunday.
 		expect(
 			screen.getByRole("button", {
-				name: "Chen Wei: 1 to look at. Show in Issues",
+				name: "Chen Wei: 1 issue. Show in Issues",
 			})
 		).toBeInTheDocument();
 		expect(
 			screen.getByRole("button", {
-				name: "Friday, October 16: 3 to look at. Show in Issues",
+				name: "Friday, October 16: 3 issues. Show in Issues",
 			})
 		).toBeInTheDocument();
 		// Saturday holds only a shift left short, so its count is the people it is short.
@@ -276,9 +276,9 @@ describe("RosterGrid", () => {
 			"bg-warning-900"
 		);
 		// The cell's words open with the tile; it has no count of its own.
-		expect(screen.getAllByRole("button", { name: /to look at/ })).toHaveLength(
-			3
-		);
+		expect(
+			screen.getAllByRole("button", { name: / issues?\. Show in Issues$/ })
+		).toHaveLength(3);
 	});
 
 	it("given_aDayChangedByHand_when_rendered_then_ringsItUnlessAnIssuesDotWins", () => {
@@ -341,7 +341,9 @@ describe("RosterGrid", () => {
 	it("when_noFindingsAreGiven_then_marksNothing", () => {
 		render(<RosterGrid days={week} rows={rows} onShowIssues={vi.fn()} />);
 
-		expect(screen.queryByRole("button", { name: /to look at/ })).toBeNull();
+		expect(
+			screen.queryByRole("button", { name: / issues?\. Show in Issues$/ })
+		).toBeNull();
 	});
 
 	it("given_aMembersOwnRoster_when_findingsAreGiven_then_countsNothing", () => {
@@ -355,7 +357,9 @@ describe("RosterGrid", () => {
 			/>
 		);
 
-		expect(screen.queryByRole("button", { name: /to look at/ })).toBeNull();
+		expect(
+			screen.queryByRole("button", { name: / issues?\. Show in Issues$/ })
+		).toBeNull();
 		expect(
 			screen.getByRole("button", { name: "Chen Wei, Sun 14:00 – 22:00" })
 		).toBeInTheDocument();

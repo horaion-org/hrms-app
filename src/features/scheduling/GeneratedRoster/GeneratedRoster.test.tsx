@@ -376,7 +376,7 @@ describe("GeneratedRoster", () => {
 		);
 
 		const count = screen.getByRole("button", {
-			name: "Ben Ong: 1 to look at. Show in Issues",
+			name: "Ben Ong: 1 issue. Show in Issues",
 		});
 		await user.click(count);
 
@@ -449,7 +449,7 @@ describe("GeneratedRoster", () => {
 
 		await user.click(
 			screen.getByRole("button", {
-				name: "Aisha Rahman: 1 to look at. Show in Issues",
+				name: "Aisha Rahman: 1 issue. Show in Issues",
 			})
 		);
 
@@ -474,7 +474,9 @@ describe("GeneratedRoster", () => {
 		);
 
 		expect(screen.queryByRole("button", { name: /^Issues/ })).toBeNull();
-		expect(screen.queryByRole("button", { name: /to look at/ })).toBeNull();
+		expect(
+			screen.queryByRole("button", { name: / issues?\. Show in Issues$/ })
+		).toBeNull();
 	});
 
 	describe("on a published roster with offers out", () => {

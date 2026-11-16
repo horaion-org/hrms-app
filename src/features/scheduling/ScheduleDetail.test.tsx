@@ -1248,7 +1248,7 @@ it("counts findings in the row and day headers, opens them in Issues, and says a
 	).toBe("Q");
 	await user.click(
 		within(roster).getByRole("button", {
-			name: "Ben Ong: 1 to look at. Show in Issues",
+			name: "Ben Ong: 1 issue. Show in Issues",
 		})
 	);
 
