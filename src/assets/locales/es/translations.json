@@ -4697,7 +4697,7 @@
 					"UNKNOWN": "Un cambio que la aplicación aún no sabe describir"
 				},
 				"refusal": {
-					"notFromEngine": "El motor no informó de este hueco, así que no tiene nada que reparar. Puede faltar alguien por un permiso.",
+					"notSeenByEngine": "El motor ve este turno completo tal como está el cuadrante, así que no tiene nada que reparar. Los permisos de parte de un turno aún no se le envían: elige a alguien de las personas que muestra Buscar cobertura.",
 					"expired": "El motor ya no guarda la generación de esta semana. Genera la semana de nuevo para preguntarle.",
 					"notConnected": "El motor de planificación no está conectado aquí.",
 					"rosterMoved": "El cuadrante cambió desde que abriste esto. Busca cobertura de nuevo para preguntar al motor.",

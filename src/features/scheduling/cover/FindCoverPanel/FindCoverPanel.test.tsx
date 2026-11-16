@@ -243,7 +243,7 @@ describe("FindCoverPanel", () => {
 		).toBeVisible();
 	});
 
-	it("given_aGapTheEngineDidNotReport_when_asked_then_itSaysSoInPlainWords", async () => {
+	it("given_aShiftTheEngineCountsStaffed_when_asked_then_itPointsToFindCoversList", async () => {
 		stubApi({
 			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
 			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
@@ -252,7 +252,7 @@ describe("FindCoverPanel", () => {
 				body: {
 					status: 409,
 					title: "Conflict",
-					errorCode: "REPAIR_GAP_NOT_FROM_ENGINE",
+					errorCode: "REPAIR_GAP_NOT_SEEN_BY_ENGINE",
 				},
 			},
 		});
@@ -263,7 +263,7 @@ describe("FindCoverPanel", () => {
 		await user.click(screen.getByRole("button", { name: "Ask the engine" }));
 
 		expect(
-			await screen.findByText(/The engine didn’t report this gap/)
+			await screen.findByText(/choose someone from the people Find cover lists/)
 		).toBeVisible();
 	});
 

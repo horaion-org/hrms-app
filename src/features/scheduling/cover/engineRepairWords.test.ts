@@ -84,7 +84,7 @@ describe("optionsInOrder", () => {
 
 describe("repairRefusalOf", () => {
 	it.each([
-		["REPAIR_GAP_NOT_FROM_ENGINE", "notFromEngine"],
+		["REPAIR_GAP_NOT_SEEN_BY_ENGINE", "notSeenByEngine"],
 		["REPAIR_GAP_EXPIRED", "expired"],
 		["REPAIR_NO_ENGINE_JOB", "expired"],
 		["REPAIR_ENGINE_NOT_CONFIGURED", "notConnected"],

@@ -4897,7 +4897,7 @@
 					"UNKNOWN": "A change the app can’t describe yet"
 				},
 				"refusal": {
-					"notFromEngine": "The engine didn’t report this gap, so it has nothing to repair. It may be short because of leave.",
+					"notSeenByEngine": "The engine sees this shift as fully staffed as the roster stands, so it has nothing to repair. Leave that takes only part of a shift isn’t sent to the engine yet: choose someone from the people Find cover lists.",
 					"expired": "The engine no longer holds this week’s generation. Generate the week again to ask it.",
 					"notConnected": "The scheduling engine isn’t connected here.",
 					"rosterMoved": "The roster changed since you opened this. Find cover again to ask the engine.",
