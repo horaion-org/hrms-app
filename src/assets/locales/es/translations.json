@@ -602,6 +602,14 @@
 		"controls": "Controles de disponibilidad"
 	},
 	"shiftPreferences": {
+		"title": "Preferencias de turno",
+		"pageSubtitle": "Los turnos que a las personas les gustaría trabajar, semana a semana.",
+		"views": "Vistas de preferencias de turno",
+		"controls": "Controles de preferencias de turno",
+		"noBranches": "Añade una sucursal a la organización antes de consultar las preferencias de turno del equipo.",
+		"mine": {
+			"tab": "Mis preferencias"
+		},
 		"tab": "Preferencias de turno",
 		"subtitle": "Los turnos que te gustaría trabajar. Se tienen en cuenta de forma justa al hacer el horario, pero no se garantizan.",
 		"editDay": "Elegir turnos para {{day}}",
@@ -619,6 +627,7 @@
 			"link": "Indica primero tu disponibilidad"
 		},
 		"team": {
+			"tab": "Equipo",
 			"label": "Preferencias de turno del equipo",
 			"member": "Miembro",
 			"empty": "No hay miembros aquí.",
@@ -2479,6 +2488,7 @@
 			"scheduling": "Programación",
 			"leave": "Permisos",
 			"availability": "Disponibilidad",
+			"shiftPreferences": "Preferencias de turno",
 			"people": "Personas",
 			"organisation": "Organización",
 			"insights": "Análisis"

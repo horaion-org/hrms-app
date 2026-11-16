@@ -13,9 +13,9 @@ import { actual, openAs, screen, settle } from "./support/ui";
 
 const seed = readSeed();
 const accounts = readAccounts();
-const NAV = ["Dashboard", "Scheduling", "Leave", "Availability", "People", "Organisation"];
+const NAV = ["Dashboard", "Scheduling", "Leave", "Shift preferences", "Availability", "People", "Organisation"];
 
-/** Navigation each user type should get from its keys (Leave and Dashboard are every member's own). */
+/** Navigation each user type should get from its keys (Leave, Shift preferences and Dashboard are every member's own). */
 const EXPECTED_NAV: Record<Exclude<Role, "ownerB">, { shows: string[]; hides: string[] }> = {
 	admin: { shows: NAV, hides: [] },
 	manager: { shows: ["Scheduling", "Leave"], hides: ["People", "Organisation"] },
@@ -23,7 +23,7 @@ const EXPECTED_NAV: Record<Exclude<Role, "ownerB">, { shows: string[]; hides: st
 	editor: { shows: ["Scheduling"], hides: ["People", "Organisation"] },
 	hr: { shows: ["Leave"], hides: ["Scheduling", "People", "Organisation"] },
 	approver: { shows: ["Scheduling"], hides: ["People", "Organisation"] },
-	worker: { shows: ["Leave"], hides: ["Scheduling", "People", "Organisation"] },
+	worker: { shows: ["Leave", "Shift preferences"], hides: ["Scheduling", "People", "Organisation"] },
 };
 
 test("E2E-120 each user type's navigation offers only what its keys open", async ({ browser }, testInfo) => {

@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/Button";
 import {
 	DashboardFilledIcon,
 	DashboardIcon,
+	FillShiftsIcon,
 	LeaveFilledIcon,
 	LeaveIcon,
 	OrganisationFilledIcon,
@@ -177,6 +178,13 @@ export const MainLayout = (): FunctionComponent => {
 						icon={LeaveIcon}
 						label={t("shell.navigation.leave")}
 						to="/leave"
+					/>
+					{/* Shift preferences are for everyone: a member's own need nothing granted. */}
+					<SidebarItem
+						activeIcon={FillShiftsIcon}
+						icon={FillShiftsIcon}
+						label={t("shell.navigation.shiftPreferences")}
+						to="/shift-preferences"
 					/>
 					{/* Availability is offered to a part-timer, for their own, and to anyone who may read others'. */}
 					{(availability.mine || availability.team) && (

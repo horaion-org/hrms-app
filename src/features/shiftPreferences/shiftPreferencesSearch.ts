@@ -1,14 +1,10 @@
 import { z } from "zod";
 import { mondayOf } from "@/common/weeks";
-import type { TeamPreferenceQuery } from "@/features/shiftPreferences/api";
 import {
 	unitSearchOf,
 	unitSearchSchema,
 } from "@/features/workspace/unitSearch";
-import type {
-	UnitSelection,
-	UnitSelectionRules,
-} from "@/features/workspace/unitSelection";
+import type { UnitSelectionRules } from "@/features/workspace/unitSelection";
 
 /** The page's two tabs, in order: the caller's own preferences, and their teams'. */
 const SHIFT_PREFERENCE_VIEWS = ["mine", "team"] as const;
@@ -92,13 +88,3 @@ export const shiftPreferencesUnitRulesOf = (
 	view: ShiftPreferencesSearch["view"]
 ): UnitSelectionRules | undefined =>
 	view === "team" ? SHIFT_PREFERENCES_TEAM_UNIT_RULES : undefined;
-
-/** The team list's units and week, without its page: the Branch and Department shown, if any. */
-export const teamQueryOf = (
-	{ branchId, departmentId }: UnitSelection,
-	weekStartMonday: string
-): Omit<TeamPreferenceQuery, "page"> => ({
-	weekStartMonday,
-	...(branchId ? { branchId } : {}),
-	...(departmentId ? { departmentId } : {}),
-});

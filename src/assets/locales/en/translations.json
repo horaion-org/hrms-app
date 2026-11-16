@@ -602,6 +602,14 @@
 		"controls": "Availability controls"
 	},
 	"shiftPreferences": {
+		"title": "Shift preferences",
+		"pageSubtitle": "The shifts people would like to work, week by week.",
+		"views": "Shift preference views",
+		"controls": "Shift preference controls",
+		"noBranches": "Add a branch to the organisation before reading the team’s shift preferences.",
+		"mine": {
+			"tab": "My preferences"
+		},
 		"tab": "Shift preferences",
 		"subtitle": "The shifts you’d like to work. They’re weighed fairly when the roster is made, but not promised.",
 		"editDay": "Choose shifts for {{day}}",
@@ -619,6 +627,7 @@
 			"link": "Set your availability first"
 		},
 		"team": {
+			"tab": "Team",
 			"label": "Team shift preferences",
 			"member": "Member",
 			"empty": "No members here.",
@@ -917,6 +926,7 @@
 			"scheduling": "Scheduling",
 			"leave": "Leave",
 			"availability": "Availability",
+			"shiftPreferences": "Shift preferences",
 			"people": "People",
 			"organisation": "Organisation",
 			"insights": "Insights"

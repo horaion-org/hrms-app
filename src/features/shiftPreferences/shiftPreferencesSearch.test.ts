@@ -4,7 +4,6 @@ import {
 	parseShiftPreferencesSearch,
 	SHIFT_PREFERENCES_TEAM_UNIT_RULES,
 	shiftPreferencesUnitRulesOf,
-	teamQueryOf,
 	viewOf,
 	viewsOf,
 	weekOf,
@@ -82,24 +81,5 @@ describe("the tabs", () => {
 		);
 		expect(shiftPreferencesUnitRulesOf("mine")).toBeUndefined();
 		expect(shiftPreferencesUnitRulesOf(undefined)).toBeUndefined();
-	});
-});
-
-describe("teamQueryOf", () => {
-	it("given_unitsAndAWeek_when_built_then_addsEachUnitOnlyWhenChosen", () => {
-		expect(teamQueryOf({ branchId: "b-1" }, "2026-11-09")).toEqual({
-			weekStartMonday: "2026-11-09",
-			branchId: "b-1",
-		});
-		expect(
-			teamQueryOf({ branchId: "b-1", departmentId: "d-1" }, "2026-11-09")
-		).toEqual({
-			weekStartMonday: "2026-11-09",
-			branchId: "b-1",
-			departmentId: "d-1",
-		});
-		expect(teamQueryOf({}, "2026-11-09")).toEqual({
-			weekStartMonday: "2026-11-09",
-		});
 	});
 });
