@@ -121,4 +121,29 @@ describe("issuesOfRoster", () => {
 			["notMet", "scheduling.issues.wholeRoster"],
 		]);
 	});
+
+	it("lists a generation error marked if possible as not met, and any other as to fix", () => {
+		const issues = issuesOfRoster(
+			input(
+				{},
+				{
+					findings: {
+						...emptyFindingsFixture(),
+						errors: [
+							{
+								employeeId: null,
+								date: "2026-10-12",
+								messages: [
+									"If possible, not met: shift Morning: got 1 of at least 2.",
+									"Ann: 2 days off in the 2 weeks, needs at least 3.",
+								],
+							},
+						],
+					},
+				}
+			)
+		);
+
+		expect(issues.map((issue) => issue.group)).toEqual(["notMet", "mustFix"]);
+	});
 });

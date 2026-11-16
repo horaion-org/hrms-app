@@ -53,6 +53,12 @@ const UNNAMED_RULE: BrokenRule = {
 	violations: null,
 };
 
+/**
+ * How the engine starts each message of a rule asked "if possible" that gave
+ * way: a rule not met, never a must broken.
+ */
+const IF_POSSIBLE_NOT_MET = "If possible, not met: ";
+
 const nameOf = (row: ScheduleAssignment, t: TFunction): string =>
 	row.member?.displayName ?? t("scheduling.detail.formerMember");
 
@@ -144,7 +150,11 @@ const listIssues = ({
 	}),
 ];
 
-/** The findings' own lines about a person: a conflict naming them, or an error the check did not replace. */
+/**
+ * The findings' own lines about a person: a conflict naming them, or an error
+ * the check did not replace. An error marked "if possible" could not be met;
+ * every other one is to fix.
+ */
 const findingIssues = (
 	{ roster: { findings, names }, t }: RosterIssueSourceInput,
 	withErrors: boolean
@@ -170,7 +180,7 @@ const findingIssues = (
 	const errors = (withErrors ? findings.errors : []).flatMap((violation) =>
 		violation.messages.map((message): RosterIssue => ({
 			key: `error|${violation.employeeId ?? ""}|${violation.date ?? ""}|${message}`,
-			group: "mustFix",
+			group: message.startsWith(IF_POSSIBLE_NOT_MET) ? "notMet" : "mustFix",
 			who: who(violation.employeeId),
 			memberProfileId: violation.employeeId,
 			day: violation.date,
