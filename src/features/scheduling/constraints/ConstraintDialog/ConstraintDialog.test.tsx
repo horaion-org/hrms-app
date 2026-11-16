@@ -541,6 +541,7 @@ describe("ConstraintDialog", () => {
 			"Days off in a run of days",
 			"Days to avoid giving off",
 			"Limit on days in a row",
+			"Keep days off together",
 			"Rest between shifts",
 			"Shortest part of a shift around leave",
 			"Call-backs on a rest or off day",
@@ -550,7 +551,7 @@ describe("ConstraintDialog", () => {
 		for (const [category, count] of [
 			["People on shifts", 2],
 			["On duty throughout", 1],
-			["Days off", 3],
+			["Days off", 4],
 			["Rest and hours", 5],
 		] as const)
 			expect(
