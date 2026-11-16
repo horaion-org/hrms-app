@@ -17,7 +17,7 @@ beforeAll(async () => {
 });
 
 describe("ShortShiftsCard", () => {
-	it("links each gap to its roster with Find cover open on that day", async () => {
+	it("gives each gap one line, its action opening its roster with Find cover on that day", async () => {
 		render(
 			<MemoryRouterHarness>
 				<ShortShiftsCard
@@ -32,15 +32,19 @@ describe("ShortShiftsCard", () => {
 			</MemoryRouterHarness>
 		);
 
-		const link = await screen.findByRole("link", { name: /Morning/ });
+		const link = await screen.findByRole("link", {
+			name: /^Find cover: Morning, /,
+		});
 		expect(link).toHaveAttribute(
 			"href",
 			"/scheduling/s-1?week=2026-11-16&day=2026-11-18&cover=fs-am%7C2026-11-18"
 		);
-		expect(screen.getByText("Sales · short by 2 people")).toBeInTheDocument();
+		expect(screen.getByRole("listitem")).toHaveTextContent(
+			/^Morning · .+ · Sales · short by 2Find cover$/
+		);
 	});
 
-	it("names a rule nobody can staff once, with its cause and where to fix it", async () => {
+	it("names a rule nobody can staff once, on one line with its one action", async () => {
 		render(
 			<MemoryRouterHarness>
 				<ShortShiftsCard
@@ -55,25 +59,17 @@ describe("ShortShiftsCard", () => {
 			</MemoryRouterHarness>
 		);
 
-		expect(
-			await screen.findByText("Front desk AM · Front desk")
-		).toBeInTheDocument();
-		expect(
-			screen.getByText(
-				"Needs 3 a shift of Clerk, Lead; 2 people hold these job titles, so cover cannot fix it. Short on 14 shifts."
-			)
-		).toBeInTheDocument();
-		expect(screen.getAllByRole("listitem")).toHaveLength(1);
-		expect(screen.getByRole("link", { name: "Edit rule" })).toHaveAttribute(
-			"href",
-			"/scheduling?view=constraints&department=d-1"
+		const row = await screen.findByRole("listitem");
+		expect(row).toHaveTextContent(
+			"Front desk AM · needs 3, 2 hold the title · 14 shifts"
 		);
+		expect(screen.getAllByRole("link")).toHaveLength(1);
 		expect(
-			screen.getByRole("link", { name: "See people in Front desk" })
-		).toHaveAttribute("href", "/people?department=d-1");
+			screen.getByRole("link", { name: "Edit rule: Front desk AM" })
+		).toHaveAttribute("href", "/scheduling?view=constraints&department=d-1");
 	});
 
-	it("counts one person who holds the titles as one, and links only where the reader can go", async () => {
+	it("counts one person who holds the titles as one, and leads to the people where the rule cannot be opened", async () => {
 		render(
 			<MemoryRouterHarness>
 				<ShortShiftsCard
@@ -97,14 +93,38 @@ describe("ShortShiftsCard", () => {
 			</MemoryRouterHarness>
 		);
 
-		expect(
-			await screen.findByText(
-				"Needs 2 a shift of Clerk, Lead; 1 person holds these job titles, so cover cannot fix it. Short on 1 shift."
-			)
-		).toBeInTheDocument();
-		expect(screen.queryByRole("link", { name: "Edit rule" })).toBeNull();
+		expect(await screen.findByRole("listitem")).toHaveTextContent(
+			"Front desk AM · needs 2, 1 holds the title · 1 shift"
+		);
+		expect(screen.queryByRole("link", { name: /Edit rule/ })).toBeNull();
 		expect(
 			screen.getByRole("link", { name: "See people in Front desk" })
+		).toHaveAttribute("href", "/people?department=d-1");
+	});
+
+	it("lists three rows and offers the rest", async () => {
+		render(
+			<MemoryRouterHarness>
+				<ShortShiftsCard
+					shortShifts={{
+						status: "ready",
+						data: {
+							unstaffable: [],
+							gaps: [
+								"2026-11-17",
+								"2026-11-18",
+								"2026-11-19",
+								"2026-11-20",
+							].map((day) => shortageFixture({ day })),
+						},
+					}}
+				/>
+			</MemoryRouterHarness>
+		);
+
+		expect(await screen.findAllByRole("listitem")).toHaveLength(3);
+		expect(
+			screen.getByRole("button", { name: "Show all 4" })
 		).toBeInTheDocument();
 	});
 

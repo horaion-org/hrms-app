@@ -74,7 +74,7 @@ describe("Overview", () => {
 		expect(rows[1]).toHaveTextContent("1 over · 0 near");
 		const causes = screen.getByRole("region", { name: "Why shifts go short" });
 		expect(within(causes).getAllByRole("listitem")).toHaveLength(1);
-		expect(causes).toHaveTextContent("Short on 3 shifts.");
+		expect(causes).toHaveTextContent("3 shifts");
 	});
 
 	it("leaves next week unsaid, figure and column, for someone who may not read rosters", async () => {

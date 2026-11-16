@@ -1,20 +1,22 @@
-import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { formatDay } from "@/common/formatDay";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { mondayOf } from "@/common/weeks";
+import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ExpandableList } from "@/components/ui/ExpandableList";
 import { FillShiftsIcon } from "@/components/ui/Icon";
 import type { Shortage } from "@/features/dashboard/api";
 import {
-	cardLinkClasses,
 	failedLineClasses,
+	HOME_ROW_COUNT,
+	rowAsideClasses,
 	rowClasses,
 	rowDetailClasses,
+	rowLeadClasses,
 	rowListClasses,
-	rowTitleClasses,
+	rowTextClasses,
 } from "@/features/dashboard/cardStyles";
 import type { GuardedRead } from "@/features/dashboard/guardedRead";
 import type {
@@ -40,7 +42,7 @@ export type ShortShiftsCardProps = {
 	shortShifts: GuardedRead<ShortShiftsByCause>;
 	/** The card's own words where it shows something narrower, such as only the rules nobody can staff. */
 	heading?: { title: string; range: string };
-	/** Which of a rule's two links the reader can open; both when left out. */
+	/** Which of a rule's two pages the reader can open; both when left out. */
 	ruleLinks?: RuleLinks;
 	className?: string;
 };
@@ -60,10 +62,10 @@ const rowsOf = ({ unstaffable, gaps }: ShortShiftsByCause): Array<Row> => [
 ];
 
 /**
- * A rule too few people can staff, named once with its cause: what it
- * needs, how many people hold its job titles, and that cover cannot fix
- * it. It leads to the rule and to the department's people, each only where
- * the reader can open it.
+ * A rule too few people can staff, on one line: what it needs, how many
+ * people hold its job titles, and how many shifts that leaves short. Its
+ * one action is the rule itself, where the reader can open it, or else the
+ * department's people.
  */
 const UnstaffableRuleRow = ({
 	unstaffable: { rule, shortShifts },
@@ -75,84 +77,85 @@ const UnstaffableRuleRow = ({
 	const { t } = useTranslation();
 	return (
 		<>
-			<span className={rowTitleClasses}>
-				{t(`${key}.rule`, {
-					rule: rule.ruleName,
-					department: rule.departmentName,
-				})}
-			</span>
-			<span className={rowDetailClasses}>
-				{t(`${key}.ruleCause`, {
+			<span className={rowTextClasses}>
+				<span className={rowLeadClasses}>{rule.ruleName}</span>
+				{" · "}
+				{t(`${key}.ruleNeeds`, {
 					needed: rule.headcount,
-					titles: rule.jobTitles.map((title) => title.name).join(", "),
 					count: rule.peopleWithTitles,
-				})}{" "}
-				{t(`${key}.ruleShort`, { count: shortShifts })}
+				})}
+				{" · "}
+				{t(`${key}.ruleShifts`, { count: shortShifts })}
 			</span>
-			{(links.rule || links.people) && (
-				<span className="flex flex-wrap gap-x-4 gap-y-1">
-					{links.rule && (
-						<Link
-							className={cardLinkClasses}
-							search={{ view: "constraints", department: rule.departmentId }}
-							to="/scheduling"
-						>
-							{t(`${key}.editRule`)}
-						</Link>
-					)}
-					{links.people && (
-						<Link
-							className={cardLinkClasses}
-							search={{ department: rule.departmentId }}
-							to="/people"
-						>
-							{t(`${key}.seePeople`, { department: rule.departmentName })}
-						</Link>
-					)}
-				</span>
+			{links.rule && (
+				<Button
+					aria-label={t(`${key}.editRuleNamed`, { rule: rule.ruleName })}
+					className="shrink-0"
+					search={{ view: "constraints", department: rule.departmentId }}
+					to="/scheduling"
+					variant="textlink"
+				>
+					{t(`${key}.editRule`)}
+				</Button>
+			)}
+			{!links.rule && links.people && (
+				<Button
+					className="shrink-0"
+					search={{ department: rule.departmentId }}
+					to="/people"
+					variant="textlink"
+					aria-label={t(`${key}.seePeopleNamed`, {
+						department: rule.departmentName,
+					})}
+				>
+					{t(`${key}.seePeople`)}
+				</Button>
 			)}
 		</>
 	);
 };
 
-/** One gap to cover: it opens its roster on that week and day with Find cover for the shift. */
+/** One gap to cover, on one line; its action opens its roster on that week and day with Find cover for the shift. */
 const GapRow = ({ shortage }: { shortage: Shortage }): FunctionComponent => {
 	const { t, i18n } = useTranslation();
-	const language = formattingLocale(i18n);
+	const day = formatDay(shortage.day, formattingLocale(i18n));
 	return (
 		<>
-			<Link
-				className={cardLinkClasses}
+			<span className={rowTextClasses}>
+				<span className={rowLeadClasses}>{shortage.shiftName}</span>
+				{" · "}
+				{day}
+				{" · "}
+				{shortage.departmentName}
+				{shortage.shortBy > 1 &&
+					` · ${t(`${key}.shortBy`, { count: shortage.shortBy })}`}
+			</span>
+			<Button
+				className="shrink-0"
 				params={{ scheduleId: shortage.scheduleId }}
 				to="/scheduling/$scheduleId"
+				variant="textlink"
+				aria-label={t(`${key}.findCoverNamed`, {
+					shift: shortage.shiftName,
+					day,
+				})}
 				search={{
 					week: mondayOf(shortage.day),
 					day: shortage.day,
 					cover: coverParameter(shortage),
 				}}
 			>
-				{t(`${key}.shift`, {
-					shift: shortage.shiftName,
-					day: formatDay(shortage.day, language),
-					start: shortage.startTime,
-					end: shortage.endTime,
-				})}
-			</Link>
-			<span className={rowDetailClasses}>
-				{t(`${key}.detail`, {
-					department: shortage.departmentName,
-					count: shortage.shortBy,
-				})}
-			</span>
+				{t(`${key}.findCover`)}
+			</Button>
 		</>
 	);
 };
 
 /**
- * The shifts short this week and next, by cause. A rule too few people can
- * staff is named once, with what would fix it; every other short shift is
- * a gap that opens Find cover on its roster. Shown only where rosters may
- * be read.
+ * The shifts short this week and next, by cause, a line each. A rule too
+ * few people can staff is named once, with what it needs; every other
+ * short shift is a gap whose action opens Find cover on its roster. Shown
+ * only where rosters may be read.
  */
 export const ShortShiftsCard = ({
 	shortShifts,
@@ -167,8 +170,14 @@ export const ShortShiftsCard = ({
 			className={className}
 			icon={FillShiftsIcon}
 			title={heading?.title ?? t(`${key}.title`)}
+			action={
+				// The days the list covers, beside the title; a narrower list says its own under it.
+				heading ? undefined : (
+					<span className={rowAsideClasses}>{t(`${key}.range`)}</span>
+				)
+			}
 		>
-			<p className={rowDetailClasses}>{heading?.range ?? t(`${key}.range`)}</p>
+			{heading && <p className={rowDetailClasses}>{heading.range}</p>}
 			{shortShifts.status === "error" && (
 				<p className={failedLineClasses} role="alert">
 					{t(`${key}.failed`)}
@@ -176,6 +185,7 @@ export const ShortShiftsCard = ({
 			)}
 			{shortShifts.status === "ready" && (
 				<ExpandableList
+					collapsedCount={HOME_ROW_COUNT}
 					itemClassName={rowClasses}
 					items={rowsOf(shortShifts.data)}
 					keyOf={(row) => row.id}
