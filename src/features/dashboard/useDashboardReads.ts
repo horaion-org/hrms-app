@@ -11,7 +11,10 @@ import {
 	type Shortage,
 	type TeamCoverOffer,
 } from "@/features/dashboard/api";
-import { guardedRead, type GuardedRead } from "@/features/dashboard/guardedRead";
+import {
+	guardedRead,
+	type GuardedRead,
+} from "@/features/dashboard/guardedRead";
 import {
 	nextRosterRows,
 	type NextRosterRow,
@@ -53,15 +56,18 @@ export const useDaysOff = (
 	return guardedRead(access, allowed, query);
 };
 
-/** Overtime by department and month, where `schedule:read` is held. */
+/** Overtime by department and month, where `schedule:read` is held; `asked` false asks for nothing. */
 export const useOvertime = (
 	companyId: string,
 	units: UnitSelection,
-	span: MonthSpan
+	span: MonthSpan,
+	asked = true
 ): GuardedRead<Overtime> => {
 	const access = useAccess();
 	const allowed = access.canAny(SCHEDULE_READ_KEYS, "anywhere");
-	const query = useQuery(overtimeQuery(companyId, units, span, allowed));
+	const query = useQuery(
+		overtimeQuery(companyId, units, span, allowed && asked)
+	);
 	return guardedRead(access, allowed, query);
 };
 

@@ -23,6 +23,7 @@ import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedAppActivityRouteImport } from './routes/_authenticated._app.activity'
 import { Route as AuthenticatedAppAvailabilityRouteImport } from './routes/_authenticated._app.availability'
 import { Route as AuthenticatedAppForbiddenRouteImport } from './routes/_authenticated._app.forbidden'
+import { Route as AuthenticatedAppInsightsRouteImport } from './routes/_authenticated._app.insights'
 import { Route as AuthenticatedAppLeaveRouteImport } from './routes/_authenticated._app.leave'
 import { Route as AuthenticatedAppNotificationsRouteImport } from './routes/_authenticated._app.notifications'
 import { Route as AuthenticatedAppPeopleRouteImport } from './routes/_authenticated._app.people'
@@ -120,6 +121,12 @@ const AuthenticatedAppForbiddenRoute =
   AuthenticatedAppForbiddenRouteImport.update({
     id: '/forbidden',
     path: '/forbidden',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppInsightsRoute =
+  AuthenticatedAppInsightsRouteImport.update({
+    id: '/insights',
+    path: '/insights',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
 const AuthenticatedAppLeaveRoute = AuthenticatedAppLeaveRouteImport.update({
@@ -296,6 +303,7 @@ export interface FileRoutesByFullPath {
   '/activity': typeof AuthenticatedAppActivityRoute
   '/availability': typeof AuthenticatedAppAvailabilityRoute
   '/forbidden': typeof AuthenticatedAppForbiddenRoute
+  '/insights': typeof AuthenticatedAppInsightsRoute
   '/leave': typeof AuthenticatedAppLeaveRoute
   '/notifications': typeof AuthenticatedAppNotificationsRoute
   '/people': typeof AuthenticatedAppPeopleRoute
@@ -337,6 +345,7 @@ export interface FileRoutesByTo {
   '/activity': typeof AuthenticatedAppActivityRoute
   '/availability': typeof AuthenticatedAppAvailabilityRoute
   '/forbidden': typeof AuthenticatedAppForbiddenRoute
+  '/insights': typeof AuthenticatedAppInsightsRoute
   '/leave': typeof AuthenticatedAppLeaveRoute
   '/notifications': typeof AuthenticatedAppNotificationsRoute
   '/people': typeof AuthenticatedAppPeopleRoute
@@ -380,6 +389,7 @@ export interface FileRoutesById {
   '/_authenticated/_app/activity': typeof AuthenticatedAppActivityRoute
   '/_authenticated/_app/availability': typeof AuthenticatedAppAvailabilityRoute
   '/_authenticated/_app/forbidden': typeof AuthenticatedAppForbiddenRoute
+  '/_authenticated/_app/insights': typeof AuthenticatedAppInsightsRoute
   '/_authenticated/_app/leave': typeof AuthenticatedAppLeaveRoute
   '/_authenticated/_app/notifications': typeof AuthenticatedAppNotificationsRoute
   '/_authenticated/_app/people': typeof AuthenticatedAppPeopleRoute
@@ -424,6 +434,7 @@ export interface FileRouteTypes {
     | '/activity'
     | '/availability'
     | '/forbidden'
+    | '/insights'
     | '/leave'
     | '/notifications'
     | '/people'
@@ -465,6 +476,7 @@ export interface FileRouteTypes {
     | '/activity'
     | '/availability'
     | '/forbidden'
+    | '/insights'
     | '/leave'
     | '/notifications'
     | '/people'
@@ -507,6 +519,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/activity'
     | '/_authenticated/_app/availability'
     | '/_authenticated/_app/forbidden'
+    | '/_authenticated/_app/insights'
     | '/_authenticated/_app/leave'
     | '/_authenticated/_app/notifications'
     | '/_authenticated/_app/people'
@@ -647,6 +660,13 @@ declare module '@tanstack/react-router' {
       path: '/forbidden'
       fullPath: '/forbidden'
       preLoaderRoute: typeof AuthenticatedAppForbiddenRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/insights': {
+      id: '/_authenticated/_app/insights'
+      path: '/insights'
+      fullPath: '/insights'
+      preLoaderRoute: typeof AuthenticatedAppInsightsRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/_app/leave': {
@@ -845,6 +865,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppActivityRoute: typeof AuthenticatedAppActivityRoute
   AuthenticatedAppAvailabilityRoute: typeof AuthenticatedAppAvailabilityRoute
   AuthenticatedAppForbiddenRoute: typeof AuthenticatedAppForbiddenRoute
+  AuthenticatedAppInsightsRoute: typeof AuthenticatedAppInsightsRoute
   AuthenticatedAppLeaveRoute: typeof AuthenticatedAppLeaveRoute
   AuthenticatedAppNotificationsRoute: typeof AuthenticatedAppNotificationsRoute
   AuthenticatedAppPeopleRoute: typeof AuthenticatedAppPeopleRoute
@@ -879,6 +900,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppActivityRoute: AuthenticatedAppActivityRoute,
   AuthenticatedAppAvailabilityRoute: AuthenticatedAppAvailabilityRoute,
   AuthenticatedAppForbiddenRoute: AuthenticatedAppForbiddenRoute,
+  AuthenticatedAppInsightsRoute: AuthenticatedAppInsightsRoute,
   AuthenticatedAppLeaveRoute: AuthenticatedAppLeaveRoute,
   AuthenticatedAppNotificationsRoute: AuthenticatedAppNotificationsRoute,
   AuthenticatedAppPeopleRoute: AuthenticatedAppPeopleRoute,

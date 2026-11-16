@@ -2422,7 +2422,8 @@
 			"leave": "Permisos",
 			"availability": "Disponibilidad",
 			"people": "Personas",
-			"organisation": "Organización"
+			"organisation": "Organización",
+			"insights": "Análisis"
 		},
 		"comingSoon": "Este módulo estará disponible pronto.",
 		"menu": "Menú"
@@ -5363,6 +5364,68 @@
 			"inactive": "{{name}} (inactivas)",
 			"unknown": "Condiciones seleccionadas",
 			"inactiveShown": "Las personas inactivas no tienen condiciones. Muestra las personas activas para filtrar por condiciones."
+		}
+	},
+	"insights": {
+		"subtitle": "Dónde faltan personas, quién hace más horas extra y con qué frecuencia cambian los horarios publicados.",
+		"range": "Fechas",
+		"failed": "No pudimos cargar esta tabla. Inténtalo de nuevo en un momento.",
+		"loading": "Cargando…",
+		"hidden": "No tienes acceso a ningún horario aquí.",
+		"rangeProblems": {
+			"inverted": "La fecha final es anterior a la inicial. Vuelve a elegir las fechas.",
+			"tooLong": "Elige como máximo {{days}} días."
+		},
+		"staffing": {
+			"title": "Personal por regla",
+			"intro": "Lo que pide cada regla de personal, cuántas personas tienen sus puestos y cuántas faltan en sus turnos en estas fechas.",
+			"rule": "Regla",
+			"jobTitles": "Puestos",
+			"needed": "Necesarias por turno",
+			"people": "Personas con estos puestos",
+			"shifts": "Turnos",
+			"shiftDays_one": "{{shift}} ({{count}} día a la semana)",
+			"shiftDays_other": "{{shift}} ({{count}} días a la semana)",
+			"gaps": "Personas que faltan",
+			"empty": "Aún no hay reglas de personal aquí."
+		},
+		"overtime": {
+			"title": "Horas extra por mes",
+			"intro": "Horas extra programadas en cada departamento y mes, frente al límite mensual.",
+			"department": "Departamento",
+			"overtime": "Horas extra",
+			"ceiling": "Límite mensual",
+			"noCeiling": "Sin límite",
+			"hours": "{{hours}} h",
+			"people": "Al {{share}}% del límite o más",
+			"nobody": "Nadie",
+			"person": "{{name}} {{hours}} h ({{standing}})",
+			"formerMember": "Un antiguo miembro",
+			"standing": {
+				"NEAR": "cerca",
+				"OVER": "por encima"
+			},
+			"empty": "No hay horas extra en estas fechas."
+		},
+		"stability": {
+			"title": "Cambios tras publicar",
+			"intro": "Con qué frecuencia cada departamento cambió un horario después de publicarlo, y por qué.",
+			"department": "Departamento",
+			"weeks": "Semanas publicadas",
+			"changes": "Cambios",
+			"reasons": "Por motivo",
+			"none": "Ninguno",
+			"reason_one": "{{reason}}: {{changes}} ({{count}} día)",
+			"reason_other": "{{reason}}: {{changes}} ({{count}} días)",
+			"reasonNames": {
+				"MANUAL": "A mano",
+				"LEAVE_APPROVED": "Ausencia aprobada",
+				"LEAVE_RECORDED": "Ausencia registrada",
+				"LEAVE_MOVE": "Ausencia movida",
+				"COVER_OPTION": "Cobertura",
+				"OTHER": "Otro"
+			},
+			"empty": "No hay horarios publicados en estas fechas."
 		}
 	}
 }

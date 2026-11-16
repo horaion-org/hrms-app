@@ -22,6 +22,7 @@ import {
 	SchedulingFilledIcon,
 	SchedulingIcon,
 	SettingsIcon,
+	TableIcon,
 	TimeIcon,
 } from "@/components/ui/Icon";
 import { AccountMenu } from "@/features/auth/AccountMenu";
@@ -32,6 +33,7 @@ import { SCHEDULING_KEYS } from "@/features/scheduling/schedulingSearch";
 import {
 	ORGANISATION_READ_KEYS,
 	PEOPLE_READ_KEYS,
+	SCHEDULE_READ_KEYS,
 } from "@/features/workspace/permissionKeys";
 import { Can } from "@/features/workspace/Can";
 import { HeaderBranchScope } from "@/features/workspace/HeaderBranchScope";
@@ -158,6 +160,15 @@ export const MainLayout = (): FunctionComponent => {
 							icon={SchedulingIcon}
 							label={t("shell.navigation.scheduling")}
 							to="/scheduling"
+						/>
+					</Can>
+					{/* Insights reads rosters, so it is offered where they may be read, at any scope. */}
+					<Can anyOf={SCHEDULE_READ_KEYS} at="anywhere">
+						<SidebarItem
+							activeIcon={TableIcon}
+							icon={TableIcon}
+							label={t("shell.navigation.insights")}
+							to="/insights"
 						/>
 					</Can>
 					{/* Leave is for everyone: a member's own leave needs nothing granted. */}

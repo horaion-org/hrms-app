@@ -870,7 +870,8 @@
 			"leave": "Leave",
 			"availability": "Availability",
 			"people": "People",
-			"organisation": "Organisation"
+			"organisation": "Organisation",
+			"insights": "Insights"
 		},
 		"comingSoon": "This Module is coming soon.",
 		"notifications": "Notifications",
@@ -5363,6 +5364,68 @@
 			"inactive": "{{name}} (inactive)",
 			"unknown": "Selected terms",
 			"inactiveShown": "Inactive people hold no terms. Show active people to filter by terms."
+		}
+	},
+	"insights": {
+		"subtitle": "Where rosters are short, who works the most overtime, and how often published rosters change.",
+		"range": "Dates",
+		"failed": "We couldn’t load this table. Try again in a moment.",
+		"loading": "Loading…",
+		"hidden": "You don’t have access to any rosters here.",
+		"rangeProblems": {
+			"inverted": "The end date is before the start date. Choose the dates again.",
+			"tooLong": "Choose at most {{days}} days."
+		},
+		"staffing": {
+			"title": "Staffing by rule",
+			"intro": "What each staffing rule asks for, how many people hold its job titles, and the people short on its shifts in these dates.",
+			"rule": "Rule",
+			"jobTitles": "Job titles",
+			"needed": "Needed per shift",
+			"people": "People with these titles",
+			"shifts": "Shifts",
+			"shiftDays_one": "{{shift}} ({{count}} day a week)",
+			"shiftDays_other": "{{shift}} ({{count}} days a week)",
+			"gaps": "People short",
+			"empty": "No staffing rules here yet."
+		},
+		"overtime": {
+			"title": "Overtime by month",
+			"intro": "Overtime rostered in each department and month, against the monthly limit.",
+			"department": "Department",
+			"overtime": "Overtime",
+			"ceiling": "Monthly limit",
+			"noCeiling": "No limit",
+			"hours": "{{hours}} h",
+			"people": "At {{share}}% of the limit or more",
+			"nobody": "Nobody",
+			"person": "{{name}} {{hours}} h ({{standing}})",
+			"formerMember": "A former member",
+			"standing": {
+				"NEAR": "near",
+				"OVER": "over"
+			},
+			"empty": "No overtime in these dates."
+		},
+		"stability": {
+			"title": "Changes after publishing",
+			"intro": "How often each department changed a roster after publishing it, and why.",
+			"department": "Department",
+			"weeks": "Published weeks",
+			"changes": "Changes",
+			"reasons": "By reason",
+			"none": "None",
+			"reason_one": "{{reason}}: {{changes}} ({{count}} day)",
+			"reason_other": "{{reason}}: {{changes}} ({{count}} days)",
+			"reasonNames": {
+				"MANUAL": "By hand",
+				"LEAVE_APPROVED": "Leave approved",
+				"LEAVE_RECORDED": "Leave recorded",
+				"LEAVE_MOVE": "Leave moved",
+				"COVER_OPTION": "Cover",
+				"OTHER": "Other"
+			},
+			"empty": "No published rosters in these dates."
 		}
 	}
 }
