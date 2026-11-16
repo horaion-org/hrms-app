@@ -20,6 +20,8 @@ export const staffingRuleFixture = (
 	peopleWithTitles: 2,
 	shifts: [{ shiftId: "sh-am", name: "Morning", daysAWeek: 7 }],
 	gapsInRange: 9,
+	neededShiftDaysAWeek: 21,
+	holderDaysAWeek: 10,
 	...overrides,
 });
 

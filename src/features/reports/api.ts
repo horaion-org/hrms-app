@@ -43,6 +43,10 @@ const staffingRuleSchema = z.object({
 	),
 	/** The people short on the rule's shifts over the range, added up. */
 	gapsInRange: z.number().int(),
+	/** The person-days a week the rule asks for: its headcount times the days its shifts run. */
+	neededShiftDaysAWeek: z.number().int(),
+	/** The days a week the title holders are contracted to work, added up; null when none has terms. */
+	holderDaysAWeek: z.number().int().nullable(),
 });
 
 /** One staffing rule against the people who could fill it. */

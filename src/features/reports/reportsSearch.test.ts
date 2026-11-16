@@ -3,6 +3,8 @@ import {
 	defaultRange,
 	monthsOf,
 	parseReportsSearch,
+	presetOf,
+	presetRange,
 	rangeOf,
 	rangeProblemOf,
 } from "@/features/reports/reportsSearch";
@@ -43,6 +45,29 @@ describe("reports search", () => {
 		expect(
 			rangeProblemOf({ from: "2026-01-01", to: "2026-04-02" })
 		).toBeUndefined();
+	});
+
+	it("gives each preset its whole months, which the API always reads", () => {
+		expect(presetRange("thisMonth", TODAY)).toEqual({
+			from: "2026-11-01",
+			to: "2026-11-30",
+		});
+		expect(presetRange("lastMonth", TODAY)).toEqual({
+			from: "2026-10-01",
+			to: "2026-10-31",
+		});
+		const threeMonths = presetRange("lastThreeMonths", TODAY);
+		expect(threeMonths).toEqual({ from: "2026-09-01", to: "2026-11-30" });
+		expect(rangeProblemOf(threeMonths)).toBeUndefined();
+	});
+
+	it("names the preset a range matches, else custom", () => {
+		expect(presetOf({ from: "2026-10-01", to: "2026-10-31" }, TODAY)).toBe(
+			"lastMonth"
+		);
+		expect(presetOf({ from: "2026-10-02", to: "2026-10-31" }, TODAY)).toBe(
+			"custom"
+		);
 	});
 
 	it("names the months a range touches", () => {

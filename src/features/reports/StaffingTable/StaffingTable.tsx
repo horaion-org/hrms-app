@@ -1,9 +1,23 @@
+import { Link } from "@tanstack/react-router";
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
+import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
+import { cardLinkClasses } from "@/features/dashboard/cardStyles";
 import type { StaffingRule } from "@/features/reports/api";
+import {
+	staffingCauseOf,
+	type StaffingCause,
+} from "@/features/reports/reportFindings";
 
 const key = "reports.staffing";
+
+/** Too few people is a hiring question nobody can cover; one-off gaps are a manager's to fill. */
+const CAUSE_TONES: Record<StaffingCause, BadgeTone> = {
+	TOO_FEW_PEOPLE: "error",
+	ONE_OFF: "warning",
+};
 
 export type StaffingTableProps = {
 	rules: Array<StaffingRule>;
@@ -13,11 +27,31 @@ export type StaffingTableProps = {
 const rowIdOf = (rule: StaffingRule): string =>
 	`${rule.departmentId}|${rule.ruleName}`;
 
+/** Where a cause is acted on: the rule itself when too few people hold its titles, else the gaps on Home. */
+const NextStep = ({ cause }: { cause: StaffingCause }): FunctionComponent => {
+	const { t } = useTranslation();
+	if (cause === "TOO_FEW_PEOPLE")
+		return (
+			<Link
+				className={cardLinkClasses}
+				search={{ view: "constraints" }}
+				to="/scheduling"
+			>
+				{t(`${key}.editRule`)}
+			</Link>
+		);
+	return (
+		<Link className={cardLinkClasses} to="/">
+			{t(`${key}.seeGaps`)}
+		</Link>
+	);
+};
+
 /**
  * Each staffing rule beside the people who could fill it: how many it asks
- * for on each shift, how many hold the job titles it counts, the shifts it
- * covers and the people short on them over the range. A department short
- * by design shows more needed than held, with gaps to match.
+ * for on each shift, how many hold the job titles it counts, the person-days
+ * a week it needs against those its title holders can work, and the people
+ * short over the range. Each rule names why it runs short and where to act.
  */
 export const StaffingTable = ({
 	rules,
@@ -32,11 +66,11 @@ export const StaffingTable = ({
 				<div className="flex flex-col gap-1">
 					<span className="font-semibold">{rule.ruleName}</span>
 					<span>
-						{t(`scheduling.constraints.types.${rule.ruleType}`, {
-							defaultValue: "",
+						{t(`${key}.unit`, {
+							department: rule.departmentName,
+							branch: rule.branchName,
 						})}
 					</span>
-					<span>{rule.departmentName}</span>
 				</div>
 			),
 			sortValue: (rule) => `${rule.departmentName} ${rule.ruleName}`,
@@ -44,6 +78,7 @@ export const StaffingTable = ({
 		{
 			id: "jobTitles",
 			header: t(`${key}.jobTitles`),
+			hideBelow: "md",
 			cell: (rule) => rule.jobTitles.map((title) => title.name).join(", "),
 		},
 		{
@@ -59,21 +94,38 @@ export const StaffingTable = ({
 			sortValue: (rule) => rule.peopleWithTitles,
 		},
 		{
-			id: "shifts",
-			header: t(`${key}.shifts`),
+			id: "days",
+			header: t(`${key}.days`),
 			hideBelow: "md",
 			cell: (rule) =>
-				rule.shifts
-					.map((shift) =>
-						t(`${key}.shiftDays`, { shift: shift.name, count: shift.daysAWeek })
-					)
-					.join(", "),
+				rule.holderDaysAWeek === null
+					? t(`${key}.daysNeeded`, { needed: rule.neededShiftDaysAWeek })
+					: t(`${key}.daysNeededAndHeld`, {
+							needed: rule.neededShiftDaysAWeek,
+							held: rule.holderDaysAWeek,
+						}),
 		},
 		{
 			id: "gaps",
 			header: t(`${key}.gaps`),
 			cell: (rule) => rule.gapsInRange,
 			sortValue: (rule) => rule.gapsInRange,
+		},
+		{
+			id: "cause",
+			header: t(`${key}.cause`),
+			cell: (rule): ReactNode => {
+				const cause = staffingCauseOf(rule);
+				if (cause === undefined) return null;
+				return (
+					<div className="flex flex-col items-start gap-2">
+						<Badge tone={CAUSE_TONES[cause]}>
+							{t(`${key}.causes.${cause}`)}
+						</Badge>
+						<NextStep cause={cause} />
+					</div>
+				);
+			},
 		},
 	];
 	return (

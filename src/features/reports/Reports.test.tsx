@@ -20,6 +20,7 @@ import {
 	rosterChangeDepartmentFixture,
 	staffingRuleFixture,
 } from "@/features/reports/fixtures";
+import { presetRange } from "@/features/reports/reportsSearch";
 
 const SCHEDULES = "/api/v1/companies/c-1/schedules";
 
@@ -103,12 +104,30 @@ const open = async (entry: string): Promise<OpenedApp> => {
 };
 
 describe("Reports", () => {
-	it("shows the three tables over the chosen dates", async () => {
+	it("answers each question in its heading, over the chosen dates", async () => {
 		const calls = stubApi(routes(["schedule:read"]));
 		await open("/reports?from=2026-10-01&to=2026-11-30");
 
 		expect(
 			await screen.findByRole("heading", { level: 1, name: "Reports" })
+		).toBeInTheDocument();
+		expect(
+			await screen.findByRole("heading", {
+				level: 2,
+				name: "Main branch ran 9 people short; 9 of them come from Front desk AM",
+			})
+		).toBeInTheDocument();
+		expect(
+			screen.getByRole("heading", {
+				level: 2,
+				name: "1 person went over the monthly limit",
+			})
+		).toBeInTheDocument();
+		expect(
+			screen.getByRole("heading", {
+				level: 2,
+				name: "4 changes after publishing; main reason: By hand",
+			})
 		).toBeInTheDocument();
 		expect(
 			await screen.findByRole("table", { name: "Staffing by rule" })
@@ -125,9 +144,30 @@ describe("Reports", () => {
 		expect(asked("overtime")).toContain("from=2026-10&to=2026-11");
 	});
 
+	it("keeps old Insights links working, dates included", async () => {
+		const calls = stubApi(routes(["schedule:read"]));
+		const lastMonth = presetRange("lastMonth", new Date());
+		const opened = await open(
+			`/insights?from=${lastMonth.from}&to=${lastMonth.to}`
+		);
+
+		expect(
+			await screen.findByRole("heading", { level: 1, name: "Reports" })
+		).toBeInTheDocument();
+		expect(opened.router.state.location.pathname).toBe("/reports");
+		await screen.findByRole("table", { name: "Staffing by rule" });
+		expect(
+			calls.find((call) => call.path === `${SCHEDULES}/staffing`)?.search
+		).toContain(`from=${lastMonth.from}&to=${lastMonth.to}`);
+		expect(screen.getByRole("tab", { name: "Last month" })).toHaveAttribute(
+			"aria-selected",
+			"true"
+		);
+	});
+
 	it("asks for nothing over a range the API would refuse, and says why", async () => {
 		const calls = stubApi(routes(["schedule:read"]));
-		await open("/insights?from=2026-01-01&to=2026-12-31");
+		await open("/reports?from=2026-01-01&to=2026-12-31");
 
 		expect(
 			await screen.findByText("Choose at most 92 days.")

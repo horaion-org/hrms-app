@@ -11,26 +11,64 @@ beforeAll(async () => {
 		.init({ lng: "en", resources: { en: { translation: en } } });
 });
 
+const overtimeFinding = (): { key: string; values: { count: number } } => ({
+	key: "overLimit",
+	values: { count: 2 },
+});
+
 describe("ReportSection", () => {
-	it("heads its table with the analysis' title once answered", () => {
+	it("asks its question and heads its table with the finding once answered", () => {
 		render(
-			<ReportSection id="overtime" read={{ status: "ready", data: "answer" }}>
+			<ReportSection
+				findingOf={overtimeFinding}
+				id="overtime"
+				isEmpty={() => false}
+				read={{ status: "ready", data: "answer" }}
+			>
 				{(data) => <p>{data}</p>}
 			</ReportSection>
 		);
 
-		expect(
-			screen.getByRole("region", { name: "Overtime by month" })
-		).toHaveTextContent("answer");
+		const section = screen.getByRole("region", {
+			name: "2 people went over the monthly limit",
+		});
+		expect(section).toHaveTextContent("Is overtime under control?");
+		expect(section).toHaveTextContent("answer");
 	});
 
-	it("says when its read failed", () => {
+	it("says an empty answer in one line, with no table", () => {
 		render(
-			<ReportSection id="stability" read={{ status: "error" }}>
+			<ReportSection
+				findingOf={() => ({ key: "none" })}
+				id="stability"
+				isEmpty={() => true}
+				read={{ status: "ready", data: [] }}
+			>
+				{() => <table />}
+			</ReportSection>
+		);
+
+		expect(
+			screen.getByText("No published rosters in these dates.")
+		).toBeInTheDocument();
+		expect(screen.queryByRole("table")).toBeNull();
+	});
+
+	it("names the section plainly and says when its read failed", () => {
+		render(
+			<ReportSection
+				findingOf={overtimeFinding}
+				id="stability"
+				isEmpty={() => false}
+				read={{ status: "error" }}
+			>
 				{() => null}
 			</ReportSection>
 		);
 
+		expect(
+			screen.getByRole("region", { name: "Changes after publishing" })
+		).toBeInTheDocument();
 		expect(screen.getByRole("alert")).toHaveTextContent(
 			"We couldn’t load this table."
 		);
@@ -38,7 +76,12 @@ describe("ReportSection", () => {
 
 	it("is left out where its read is out of reach", () => {
 		const { container } = render(
-			<ReportSection id="staffing" read={{ status: "hidden" }}>
+			<ReportSection
+				findingOf={overtimeFinding}
+				id="staffing"
+				isEmpty={() => false}
+				read={{ status: "hidden" }}
+			>
 				{() => null}
 			</ReportSection>
 		);

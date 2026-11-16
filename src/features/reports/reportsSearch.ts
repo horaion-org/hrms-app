@@ -56,6 +56,57 @@ export const rangeProblemOf = (
 	return undefined;
 };
 
+/** The ranges offered as tabs; "custom" is any other range, chosen with the date field. */
+export const RANGE_PRESETS = [
+	"thisMonth",
+	"lastMonth",
+	"lastThreeMonths",
+	"custom",
+] as const;
+
+export type RangePreset = (typeof RANGE_PRESETS)[number];
+
+/** How many months "last three months" spans, this one included. */
+const THREE_MONTHS = 3;
+
+/** The months a preset covers, both ends whole months. */
+const presetMonths = (
+	preset: Exclude<RangePreset, "custom">,
+	today: Date
+): { first: dayjs.Dayjs; last: dayjs.Dayjs } => {
+	const thisMonth = dayjs(today).startOf("month");
+	if (preset === "lastMonth") {
+		const lastMonth = thisMonth.subtract(1, "month");
+		return { first: lastMonth, last: lastMonth };
+	}
+	if (preset === "lastThreeMonths")
+		return {
+			first: thisMonth.subtract(THREE_MONTHS - 1, "month"),
+			last: thisMonth,
+		};
+	return { first: thisMonth, last: thisMonth };
+};
+
+/** The range a preset stands for, from its first month's first day to its last month's last day. */
+export const presetRange = (
+	preset: Exclude<RangePreset, "custom">,
+	today: Date
+): DayRange => {
+	const { first, last } = presetMonths(preset, today);
+	return {
+		from: first.format(ISO_DAY),
+		to: last.endOf("month").format(ISO_DAY),
+	};
+};
+
+/** The preset a range matches, or "custom" when it matches none. */
+export const presetOf = (range: DayRange, today: Date): RangePreset =>
+	RANGE_PRESETS.find((preset) => {
+		if (preset === "custom") return true;
+		const candidate = presetRange(preset, today);
+		return candidate.from === range.from && candidate.to === range.to;
+	}) ?? "custom";
+
 /** The months the range touches, as the overtime read takes them. */
 export const monthsOf = (range: DayRange): MonthSpan => ({
 	from: dayjs(range.from).format(ISO_MONTH),
