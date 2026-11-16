@@ -29,6 +29,29 @@ describe("RosterStabilityTable", () => {
 		);
 	});
 
+	it("draws each department's reasons as a bar, its length against the one that changed most", () => {
+		render(
+			<RosterStabilityTable
+				departments={[
+					rosterChangeDepartmentFixture(),
+					rosterChangeDepartmentFixture({
+						departmentId: "d-2",
+						departmentName: "Kitchen",
+						totalChanges: 8,
+						reasons: [{ reason: "MANUAL", changes: 8, days: 9 }],
+					}),
+				]}
+			/>
+		);
+
+		const sales = screen.getByRole("img", {
+			name: /^Changes after publishing in Sales: By hand 3, Leave approved 1,/,
+		});
+		// Sales changed 4 times against Kitchen's 8, so its bar fills half the track.
+		expect(sales.children[0]).toHaveStyle({ width: "37.5%" });
+		expect(sales.children[1]).toHaveStyle({ width: "12.5%" });
+	});
+
 	it("names a reason it does not know as Other", () => {
 		render(
 			<RosterStabilityTable

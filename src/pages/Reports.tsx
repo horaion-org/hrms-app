@@ -1,16 +1,29 @@
 import { getRouteApi } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
+import { ColumnChart } from "@/components/charts/bar/ColumnChart";
+import { SegmentedBar } from "@/components/charts/bar/SegmentedBar";
 import { DatePicker } from "@/components/forms/DatePicker";
 import { Callout } from "@/components/ui/Callout";
 import { Tab, TabList, Tabs } from "@/components/ui/Tabs";
 import type { DayRange } from "@/features/dashboard/api";
 import {
 	useOvertime,
+	useShortages,
 	useStaffing,
 } from "@/features/dashboard/useDashboardReads";
 import type { RosterChangeDepartment } from "@/features/reports/api";
 import { OvertimeTable } from "@/features/reports/OvertimeTable";
+import {
+	changeSegments,
+	OVERTIME_SERIES,
+	overtimeByMonthGroups,
+	SHORT_SERIES,
+	shortByWeekGroups,
+	spansSeveralMonths,
+	type UnitGrouping,
+} from "@/features/reports/reportCharts";
 import {
 	overtimeFinding,
 	stabilityFinding,
@@ -50,7 +63,14 @@ const route = getRouteApi("/_authenticated/_app/reports");
  * the URL.
  */
 export const Reports = (): FunctionComponent => {
-	const { t } = useTranslation();
+	const { t, i18n } = useTranslation();
+	const language = formattingLocale(i18n);
+	// A week's Monday and a month, as the charts' columns name them.
+	const dayMonth = new Intl.DateTimeFormat(language, {
+		day: "numeric",
+		month: "short",
+	});
+	const monthName = new Intl.DateTimeFormat(language, { month: "short" });
 	const companyId = useCurrentCompanyId();
 	const navigate = route.useNavigate();
 	const search = route.useSearch();
@@ -67,6 +87,9 @@ export const Reports = (): FunctionComponent => {
 	const problem = rangeProblemOf(range);
 	const asked = problem === undefined;
 	const staffing = useStaffing(companyId, units, range, asked);
+	const shortages = useShortages(companyId, units, range, asked);
+	// Across the company the charts compare Branches; within one Branch, its Departments.
+	const grouping: UnitGrouping = units.branchId ? "department" : "branch";
 	const overtime = useOvertime(companyId, units, monthsOf(range), asked);
 	const changes = useRosterChanges(companyId, units, range, asked);
 	const nothingInReach = [staffing, overtime, changes].every(
@@ -144,16 +167,42 @@ export const Reports = (): FunctionComponent => {
 				</Callout>
 			)}
 			{nothingInReach && <Callout>{t(`${key}.hidden`)}</Callout>}
-			{/* A ColumnChart of people short per week, by branch, goes above this table once approved. */}
 			<ReportSection
 				findingOf={staffingFinding}
 				id="staffing"
 				isEmpty={(rules) => rules.length === 0}
 				read={staffing}
 			>
-				{(rules) => <StaffingTable rules={rules} />}
+				{(rules) => (
+					<>
+						{shortages.status === "ready" && (
+							<ColumnChart
+								label={t(`${key}.staffing.chart.label`)}
+								groups={shortByWeekGroups(
+									shortages.data,
+									rules,
+									range,
+									grouping,
+									(monday) => dayMonth.format(new Date(`${monday}T00:00:00`))
+								)}
+								series={[
+									{
+										id: SHORT_SERIES.tooFew,
+										label: t(`${key}.staffing.chart.tooFew`),
+										colour: "inkBlue900",
+									},
+									{
+										id: SHORT_SERIES.oneOff,
+										label: t(`${key}.staffing.chart.oneOff`),
+										colour: "inkBlue200",
+									},
+								]}
+							/>
+						)}
+						<StaffingTable rules={rules} />
+					</>
+				)}
 			</ReportSection>
-			{/* A ColumnChart of overtime by month, by branch, goes above this table once approved. */}
 			<ReportSection
 				findingOf={(answer) => overtimeFinding(answer.departments)}
 				id="overtime"
@@ -161,20 +210,61 @@ export const Reports = (): FunctionComponent => {
 				read={overtime}
 			>
 				{(answer) => (
-					<OvertimeTable
-						departments={answer.departments}
-						nearSharePercent={answer.nearSharePercent}
-					/>
+					<>
+						<ColumnChart
+							label={t(`${key}.overtime.chart.label`)}
+							groups={overtimeByMonthGroups(
+								answer.departments,
+								grouping,
+								(month) => monthName.format(new Date(`${month}-01T00:00:00`))
+							)}
+							series={[
+								{
+									id: OVERTIME_SERIES.latest,
+									label: t(`${key}.overtime.chart.latest`),
+									colour: "inkBlue900",
+								},
+								...(spansSeveralMonths(answer.departments)
+									? [
+											{
+												id: OVERTIME_SERIES.earlier,
+												label: t(`${key}.overtime.chart.earlier`),
+												colour: "inkBlue200" as const,
+											},
+										]
+									: []),
+							]}
+						/>
+						<OvertimeTable
+							departments={answer.departments}
+							nearSharePercent={answer.nearSharePercent}
+						/>
+					</>
 				)}
 			</ReportSection>
-			{/* A SegmentedBar per branch, by reason, goes above this table once approved. */}
 			<ReportSection
 				findingOf={stabilityFindingOf}
 				id="stability"
 				isEmpty={(departments) => departments.length === 0}
 				read={changes}
 			>
-				{(departments) => <RosterStabilityTable departments={departments} />}
+				{(departments) => (
+					<>
+						{/* Every reason across the units in view, with the legend the table's bars share. */}
+						<SegmentedBar
+							legend
+							label={t(`${key}.stability.chart.label`)}
+							segments={changeSegments(
+								departments.flatMap((row) => row.reasons),
+								(reason) =>
+									t(`${key}.stability.reasonNames.${reason}`, {
+										defaultValue: t(`${key}.stability.reasonNames.OTHER`),
+									})
+							)}
+						/>
+						<RosterStabilityTable departments={departments} />
+					</>
+				)}
 			</ReportSection>
 		</div>
 	);

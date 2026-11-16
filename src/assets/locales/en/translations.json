@@ -5542,7 +5542,12 @@
 				"ONE_OFF": "One-off gaps"
 			},
 			"editRule": "Edit rule",
-			"seeGaps": "See the gaps"
+			"seeGaps": "See the gaps",
+			"chart": {
+				"label": "People short by week",
+				"tooFew": "Under a rule too few people can staff",
+				"oneOff": "One-off gaps"
+			}
 		},
 		"overtime": {
 			"title": "Overtime by month",
@@ -5568,6 +5573,11 @@
 				"nearLimit_other": "Nobody went over the limit; {{count}} people came near it",
 				"withinLimit": "Everyone stayed well under the limit; {{department}} rostered the most overtime",
 				"none": "No overtime was rostered in these dates"
+			},
+			"chart": {
+				"label": "Overtime hours by month",
+				"latest": "Latest month",
+				"earlier": "Earlier months"
 			}
 		},
 		"stability": {
@@ -5593,7 +5603,11 @@
 				"mostly_one": "{{count}} change after publishing; reason: {{reason}}",
 				"mostly_other": "{{count}} changes after publishing; main reason: {{reason}}",
 				"none": "No published roster changed in these dates"
-			}
+			},
+			"chart": {
+				"label": "Changes after publishing by reason"
+			},
+			"barLabel": "Changes after publishing in {{department}}"
 		},
 		"presets": {
 			"label": "Dates",

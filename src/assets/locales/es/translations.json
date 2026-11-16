@@ -5542,7 +5542,12 @@
 				"ONE_OFF": "Huecos puntuales"
 			},
 			"editRule": "Editar regla",
-			"seeGaps": "Ver los huecos"
+			"seeGaps": "Ver los huecos",
+			"chart": {
+				"label": "Personas que faltan por semana",
+				"tooFew": "Por una regla que muy pocas personas pueden cubrir",
+				"oneOff": "Huecos puntuales"
+			}
 		},
 		"overtime": {
 			"title": "Horas extra por mes",
@@ -5568,6 +5573,11 @@
 				"nearLimit_other": "Nadie superó el límite; {{count}} personas se acercaron",
 				"withinLimit": "Todos quedaron por debajo del límite; {{department}} programó más horas extra",
 				"none": "No se programaron horas extra en estas fechas"
+			},
+			"chart": {
+				"label": "Horas extra por mes",
+				"latest": "Último mes",
+				"earlier": "Meses anteriores"
 			}
 		},
 		"stability": {
@@ -5593,7 +5603,11 @@
 				"mostly_one": "{{count}} cambio después de publicar; motivo: {{reason}}",
 				"mostly_other": "{{count}} cambios después de publicar; motivo principal: {{reason}}",
 				"none": "Ningún cuadrante publicado cambió en estas fechas"
-			}
+			},
+			"chart": {
+				"label": "Cambios después de publicar, por motivo"
+			},
+			"barLabel": "Cambios después de publicar en {{department}}"
 		},
 		"presets": {
 			"label": "Fechas",

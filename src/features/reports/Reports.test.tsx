@@ -17,6 +17,7 @@ import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
 import {
 	overtimeFixture,
+	shortageFixture,
 	staffingRuleFixture,
 } from "@/features/dashboard/fixtures";
 import { rosterChangeDepartmentFixture } from "@/features/reports/fixtures";
@@ -83,6 +84,14 @@ const routes = (permissions: Array<string>): Record<string, StubReply> => ({
 			rules: [staffingRuleFixture()],
 		}),
 	},
+	[`GET ${SCHEDULES}/shortages`]: {
+		status: 200,
+		body: envelope({
+			from: "2026-11-01",
+			to: "2026-11-30",
+			shortages: [shortageFixture({ day: "2026-11-18", shortBy: 2 })],
+		}),
+	},
 	[`GET ${SCHEDULES}/overtime`]: {
 		status: 200,
 		body: envelope(overtimeFixture()),
@@ -138,6 +147,22 @@ describe("Reports", () => {
 		expect(
 			await screen.findByRole("table", { name: "Changes after publishing" })
 		).toHaveTextContent("By hand");
+		// Each section's chart reads its amounts out, by unit: the Departments of the Branch in view.
+		expect(
+			await screen.findByRole("img", {
+				name: /^People short by week, Sales: .*(16 Nov|Nov 16) 2/,
+			})
+		).toBeInTheDocument();
+		expect(
+			screen.getByRole("img", {
+				name: "Overtime hours by month, Sales: Nov 80",
+			})
+		).toBeInTheDocument();
+		expect(
+			screen.getByRole("img", {
+				name: /^Changes after publishing by reason: By hand 3, Leave approved 1,/,
+			})
+		).toBeInTheDocument();
 		const asked = (read: string): string | undefined =>
 			calls.find((call) => call.path === `${SCHEDULES}/${read}`)?.search;
 		expect(asked("staffing")).toContain("from=2026-10-01&to=2026-11-30");
