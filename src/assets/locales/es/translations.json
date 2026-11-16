@@ -3455,6 +3455,9 @@
 				"departmentsEmpty": "No hay ningún departamento activo al que puedas añadir restricciones.",
 				"optionsNeedDepartment": "Elige primero un departamento.",
 				"typeHintEmpty": "Elige una opción para ver un ejemplo.",
+				"firmnessHints": {
+					"WORKING_HOURS": "Con «Si es posible», el horario puede superar esta cifra cuando un turno no podría cubrirse de otro modo, y cada vez que lo haga aparece en Avisos."
+				},
 				"dependency": {
 					"chooseFirst": "Elige antes en {{field}}.",
 					"noneListed": "Nada de lo elegido en {{field}} incluye uno todavía.",

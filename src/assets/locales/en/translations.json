@@ -3655,6 +3655,9 @@
 				"departmentsEmpty": "No active department you can add constraints to.",
 				"optionsNeedDepartment": "Choose a department first.",
 				"typeHintEmpty": "Choose one to see an example.",
+				"firmnessHints": {
+					"WORKING_HOURS": "Asked “if possible”, the roster may pass this figure when a shift could not be staffed otherwise, and each time it does is listed in Issues."
+				},
 				"dependency": {
 					"chooseFirst": "Choose in {{field}} first.",
 					"noneListed": "Nothing chosen in {{field}} lists one yet.",

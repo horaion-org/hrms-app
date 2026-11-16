@@ -20,6 +20,7 @@ import {
 	CONSTRAINT_REQUIREMENTS,
 	CONSTRAINT_STATUSES,
 	POLICY_LOCKS,
+	type ConstraintCategory,
 	type ConstraintField,
 	type ConstraintFieldKind,
 	type ConstraintFieldSpec,
@@ -187,7 +188,8 @@ export const ConstraintDialog = ({
 			name: editing?.name ?? "",
 			type: startingPoint?.type ?? "",
 			// A new constraint starts as a Must; an edit or replacement keeps its own.
-			requirement: startingPoint ? (startingPoint.requirement ?? "") : "MUST",
+			// A row saved without a requirement ran as a Must, as the API reads it (ADR-0086).
+			requirement: startingPoint?.requirement ?? "MUST",
 			status: editing?.status ?? "ACTIVE",
 			lock: withLock ? (editing?.lock ?? "LOCKED") : "",
 			values: startingPoint ? valuesByField(startingPoint.values) : {},
@@ -441,11 +443,17 @@ export const ConstraintDialog = ({
 			/>
 		</FormRow>
 	);
+	// What If possible lets a rule of each group do, said under the two cards: a working-hours figure may be passed.
+	const firmnessHints: Partial<Record<ConstraintCategory, string>> = {
+		WORKING_HOURS: t(`${key}.firmnessHints.WORKING_HOURS`),
+	};
 	// Must or If possible as two cards, each saying what happens when unmet; a type that offers no choice says which it always is.
 	const firmnessRow = (option: ConstraintTypeOption): FunctionComponent => {
 		const id = fieldId("requirement");
 		const label = t(`${key}.requirement`);
 		const error = errors.requirement?.message;
+		const hint = firmnessHints[option.category];
+		const hinted = hint !== undefined;
 		if (!option.hasRequirement) {
 			const fixed = firmnessOf({
 				requirement: null,
@@ -465,6 +473,7 @@ export const ConstraintDialog = ({
 			<FormRow
 				required
 				error={error}
+				hint={hint}
 				htmlFor={id}
 				label={label}
 				layout="stacked"
@@ -474,7 +483,7 @@ export const ConstraintDialog = ({
 					name="requirement"
 					render={({ field }) => (
 						<div
-							aria-describedby={describedBy("requirement", error, false)}
+							aria-describedby={describedBy("requirement", error, hinted)}
 							aria-labelledby={labelledBy("requirement")}
 							className="grid gap-4 sm:grid-cols-2"
 							id={id}

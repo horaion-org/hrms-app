@@ -383,6 +383,52 @@ describe("ConstraintDialog for the Scheduling policy (ADR-0058)", () => {
 		});
 	});
 
+	it("given_aCeilingSavedWithoutARequirement_when_theCompanyEditsIt_then_opensAsMustAndSavesIfPossible", async () => {
+		const user = userEvent.setup();
+		const { onSave } = renderDialog({
+			withLock: true,
+			editing: MOST_HOURS_A_DAY_FIXTURE,
+			reach: { choices: REACH.choices, initial: reachValueOf() },
+		});
+		await screen.findByRole("dialog", { name: "Edit constraint" });
+
+		expect(screen.getByRole("radio", { name: "Must" })).toBeChecked();
+		expect(
+			screen.getByText(
+				"Asked “if possible”, the roster may pass this figure when a shift could not be staffed otherwise, and each time it does is listed in Issues."
+			)
+		).toBeVisible();
+		await user.click(screen.getByRole("radio", { name: "If possible" }));
+		await user.click(screen.getByRole("button", { name: "Save" }));
+
+		await waitFor(() => {
+			expect(onSave).toHaveBeenCalledWith(
+				expect.objectContaining({
+					type: "MAX_WORK_HOURS_PER_DAY",
+					requirement: "SHOULD",
+					lock: "LOCKED",
+				})
+			);
+		});
+	});
+
+	it("given_theLockedMostHoursADay_when_aDepartmentMakesItIfPossible_then_refusedBeforeSending", async () => {
+		const user = userEvent.setup();
+		const { onSave } = renderDialog({ replacing: MOST_HOURS_A_DAY_FIXTURE });
+		await screen.findByRole("dialog", { name: "Set for this department" });
+		await typeName(user, "Kitchen hours");
+
+		await user.click(screen.getByRole("radio", { name: "If possible" }));
+		await user.click(screen.getByRole("button", { name: "Save" }));
+
+		expect(
+			await screen.findByText(
+				"These values wouldn’t be at least as strict as the company’s locked constraint in every part. Make them stricter, or keep the company’s."
+			)
+		).toBeVisible();
+		expect(onSave).not.toHaveBeenCalled();
+	});
+
 	it("given_aNewCompanyRule_when_added_then_itsTypeCanBeChosen", async () => {
 		renderDialog({ withLock: true });
 		await screen.findByRole("dialog", { name: "Add constraint" });

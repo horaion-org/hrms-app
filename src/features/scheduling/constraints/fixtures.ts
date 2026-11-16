@@ -241,8 +241,8 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 	{
 		type: "MAX_WORK_HOURS_PER_DAY",
 		category: "WORKING_HOURS",
-		hasRequirement: false,
-		requirementPolicy: "ALWAYS_MUST",
+		hasRequirement: true,
+		requirementPolicy: "MUST_OR_SHOULD",
 		onePerDepartment: true,
 		levels: [...ANY_LEVEL],
 		fields: [number("WORK_HOURS_A_DAY", 1, 24)],
@@ -252,8 +252,8 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 	{
 		type: "MAX_OVERTIME_HOURS_PER_MONTH",
 		category: "WORKING_HOURS",
-		hasRequirement: false,
-		requirementPolicy: "ALWAYS_MUST",
+		hasRequirement: true,
+		requirementPolicy: "MUST_OR_SHOULD",
 		onePerDepartment: true,
 		levels: [...ANY_LEVEL],
 		fields: [number("OVERTIME_HOURS_A_MONTH", 0, 744)],
@@ -273,8 +273,8 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 	{
 		type: "MAX_CALL_BACKS_PER_PERSON",
 		category: "WORKING_HOURS",
-		hasRequirement: false,
-		requirementPolicy: "SETTING",
+		hasRequirement: true,
+		requirementPolicy: "MUST_OR_SHOULD",
 		onePerDepartment: true,
 		levels: [...ANY_LEVEL],
 		...ORDINARY,
