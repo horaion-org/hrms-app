@@ -3913,6 +3913,8 @@
 				"overrideInvalid": "This can’t replace that company constraint any more. Reload and try again.",
 				"alreadyOverridden": "This department already has its own version of that company constraint. Edit that one.",
 				"typeSetByCompany": "The company already sets this. Use “Make stricter” on the company’s rule in this list.",
+				"setByCompany": "Set by the company: choosing it changes the company’s rule for this department.",
+				"setByCompanyReplaced": "Set by the company, and this department already has its own version in the list.",
 				"levelNotAllowed": "This kind of constraint names a department’s shifts or job titles, so only a department can set it.",
 				"nameConflictCompany": "The company already has a constraint named \"{{name}}\". Choose a different name.",
 				"typeAlreadyUsedCompany": "The company already has a constraint of this type. Edit that one instead.",

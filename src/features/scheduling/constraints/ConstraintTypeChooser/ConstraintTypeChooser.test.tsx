@@ -65,4 +65,44 @@ describe("ConstraintTypeChooser", () => {
 
 		expect(screen.getByRole("radio")).not.toHaveAccessibleDescription();
 	});
+
+	it("given_aKindTheCompanySets_when_rendered_then_itsCardSaysSoAndCanBeChosen", async () => {
+		const user = userEvent.setup();
+		const onChange = vi.fn();
+		render(
+			<ConstraintTypeChooser
+				groups={GROUPS}
+				setByCompany={[{ type: "REST_BETWEEN_SHIFTS", replaceable: true }]}
+				value=""
+				onChange={onChange}
+			/>
+		);
+
+		const card = screen.getByRole("radio", { name: "Rest between shifts" });
+		expect(card).toHaveAccessibleDescription(
+			/Set by the company: choosing it changes the company’s rule for this department\./
+		);
+		await user.click(card);
+		expect(onChange).toHaveBeenCalledWith("REST_BETWEEN_SHIFTS");
+	});
+
+	it("given_aKindTheCompanySetsAndTheDepartmentReplaced_when_rendered_then_itsCardIsDisabledWithWhy", () => {
+		render(
+			<ConstraintTypeChooser
+				groups={GROUPS}
+				setByCompany={[{ type: "REST_BETWEEN_SHIFTS", replaceable: false }]}
+				value=""
+				onChange={vi.fn()}
+			/>
+		);
+
+		const card = screen.getByRole("radio", { name: "Rest between shifts" });
+		expect(card).toBeDisabled();
+		expect(card).toHaveAccessibleDescription(
+			/Set by the company, and this department already has its own version in the list\./
+		);
+		expect(
+			screen.getByRole("radio", { name: "People on a shift" })
+		).toBeEnabled();
+	});
 });
