@@ -2493,7 +2493,10 @@
 			"reports": "Informes"
 		},
 		"comingSoon": "Este módulo estará disponible pronto.",
-		"menu": "Menú"
+		"menu": "Menú",
+		"collapseMenu": "Contraer menú",
+		"expandMenu": "Expandir menú",
+		"logo": "Horaion"
 	},
 	"people": {
 		"title": "Resumen de personas",

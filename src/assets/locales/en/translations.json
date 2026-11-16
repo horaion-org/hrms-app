@@ -936,7 +936,10 @@
 		"myProfile": "My profile",
 		"accountMenu": "Account menu",
 		"changePassword": "Change password",
-		"menu": "Menu"
+		"menu": "Menu",
+		"collapseMenu": "Collapse menu",
+		"expandMenu": "Expand menu",
+		"logo": "Horaion"
 	},
 	"people": {
 		"title": "People overview",

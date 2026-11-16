@@ -178,4 +178,23 @@ describe("SidebarItem", () => {
 		expect(link.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
 		expect(link.querySelector("svg")).toHaveAttribute("fill", "none");
 	});
+
+	it("keeps a collapsed entry named by its label, which is also its tooltip", async () => {
+		render(
+			<MemoryRouterHarness>
+				<SidebarItem
+					collapsed
+					activeIcon={HomeFilledIcon}
+					icon={HomeIcon}
+					label="Scheduling"
+					to="/register"
+				/>
+			</MemoryRouterHarness>
+		);
+		const link = await screen.findByRole("link", { name: "Scheduling" });
+		expect(link).toHaveAttribute("title", "Scheduling");
+		expect(link).toHaveClass("lg:w-12", "lg:justify-center");
+		// The name is hidden visually from lg only; the phone drawer still shows it.
+		expect(link.querySelector("span")).toHaveClass("lg:sr-only");
+	});
 });
