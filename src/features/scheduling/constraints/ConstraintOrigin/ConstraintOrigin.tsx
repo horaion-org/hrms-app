@@ -66,7 +66,7 @@ export const ConstraintOrigin = ({
 	const label = (): FunctionComponent => {
 		if (level === "COMPANY") {
 			return companyLabel ? (
-				<Badge compact tone="neutral">
+				<Badge compact className="uppercase" tone="neutral">
 					{companyLabel}
 				</Badge>
 			) : (
@@ -77,6 +77,7 @@ export const ConstraintOrigin = ({
 			return (
 				<Badge
 					compact
+					className="uppercase"
 					title={t(`${key}.companyRuleAppliesHint`)}
 					tone="warning"
 				>
@@ -86,7 +87,7 @@ export const ConstraintOrigin = ({
 		}
 		if (standsIn(constraint)) {
 			return (
-				<Badge compact tone="neutral">
+				<Badge compact className="uppercase" tone="neutral">
 					{t(locked ? `${key}.stricterHere` : `${key}.changedHere`)}
 				</Badge>
 			);

@@ -103,7 +103,7 @@ export const ConstraintStatement = ({
 					<>
 						<Badge
 							compact
-							className="mr-1"
+							className="mr-1 uppercase"
 							title={tagTitle}
 							tone={requirementTagTone(firmness)}
 						>

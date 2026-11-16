@@ -78,12 +78,12 @@ export const ConstraintRow = ({
 				{(needsAttention || inactive) && (
 					<p className="mb-2 flex flex-wrap gap-1">
 						{needsAttention && (
-							<Badge compact tone="error">
+							<Badge compact className="uppercase" tone="error">
 								{t(`${key}.problems.needsAttention`)}
 							</Badge>
 						)}
 						{inactive && (
-							<Badge compact tone="neutral">
+							<Badge compact className="uppercase" tone="neutral">
 								{t(`${key}.statuses.INACTIVE`)}
 							</Badge>
 						)}
