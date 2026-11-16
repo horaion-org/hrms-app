@@ -553,6 +553,20 @@ export const DAYS_LIMIT_FIXTURE: DepartmentConstraint = constraintFixture({
 	],
 });
 
+/** A banned pattern of three days: Overnight Ops twice, then Front Desk AM, a Must (ADR-0107 in the API). */
+export const BANNED_PATTERN_FIXTURE: DepartmentConstraint = constraintFixture({
+	constraintId: "banned-pattern",
+	name: "No morning after nights",
+	type: "BANNED_SHIFT_PATTERN",
+	category: "WORKING_HOURS",
+	requirement: "MUST",
+	values: [
+		named("PATTERN_DAY_1", "overnight-ops", "Overnight Ops"),
+		named("PATTERN_DAY_2", "overnight-ops", "Overnight Ops"),
+		named("PATTERN_DAY_3", "front-desk-am", "Front Desk AM"),
+	],
+});
+
 /** A work-policy constraint for two chosen Departments, Orchard's Kitchen and Bar. */
 export const DEPARTMENTS_POLICY_FIXTURE: DepartmentConstraint =
 	companyConstraintFixture({
