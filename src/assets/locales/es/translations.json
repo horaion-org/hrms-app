@@ -3991,6 +3991,11 @@
 				"PRIOR_REST_BLOCKS_SHIFTS": {
 					"label": "Descanso que viene de antes",
 					"sentence": "{{member}} solo puede empezar desde las {{time}} del {{day}}, por el descanso tras su último turno, que terminó el {{endDay}} a las {{endTime}}."
+				},
+				"OFF_BLOCK_HISTORY_MISSING": {
+					"label": "Días anteriores no enviados",
+					"sentence": "{{member}}: algunos días antes de este horario dentro de un periodo de días libres no se enviaron, así que se cuentan como días que podrían haber sido libres.",
+					"wholeSchedule": "Algunos días antes de este horario dentro de un periodo de días libres no se enviaron, así que se cuentan como días que podrían haber sido libres."
 				}
 			},
 			"marker": {

@@ -4191,6 +4191,11 @@
 				"PRIOR_REST_BLOCKS_SHIFTS": {
 					"label": "Rest carried in from before",
 					"sentence": "{{member}} can only start from {{time}} on {{day}}, because of rest after their last shift, which ended {{endDay}} at {{endTime}}."
+				},
+				"OFF_BLOCK_HISTORY_MISSING": {
+					"label": "Days before not sent",
+					"sentence": "{{member}}: some days before this schedule in a days-off period were not sent, so they are counted as days that could have been off.",
+					"wholeSchedule": "Some days before this schedule in a days-off period were not sent, so they are counted as days that could have been off."
 				}
 			},
 			"marker": {

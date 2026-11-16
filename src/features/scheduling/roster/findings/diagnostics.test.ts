@@ -250,6 +250,19 @@ describe("diagnosticSentence", () => {
 		);
 	});
 
+	it("given_daysOfADaysOffBlockNotSent_when_worded_then_namesTheMemberAndSaysHowTheyCount", () => {
+		const diagnostic = dayTypeFinding("OFF_BLOCK_HISTORY_MISSING", {
+			employeeId: "mp-2",
+		});
+
+		expect(diagnosticSentence(diagnostic, withDaysLimit, t, day)).toBe(
+			"Ben Ong: some days before this schedule in a days-off period were not sent, so they are counted as days that could have been off."
+		);
+		expect(diagnosticLabel("OFF_BLOCK_HISTORY_MISSING", t)).toBe(
+			"Days before not sent"
+		);
+	});
+
 	it("given_aCodeTheAppDoesNotKnow_when_worded_then_isNull", () => {
 		expect(
 			diagnosticSentence(withCode("SHIFT_TOO_SHORT"), named, t, day)
