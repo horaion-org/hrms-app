@@ -1,1 +1,4 @@
-export { TeamShiftPreferences, type TeamShiftPreferencesProps } from "./TeamShiftPreferences";
+export {
+	TeamShiftPreferences,
+	type TeamShiftPreferencesProps,
+} from "./TeamShiftPreferences";

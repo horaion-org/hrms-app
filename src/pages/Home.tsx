@@ -5,10 +5,7 @@ import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { ApproveRequestsIcon, CrossIcon, TickIcon } from "@/components/ui/Icon";
 import { Card } from "@/components/ui/Card";
-import {
-	COLLAPSED_ROW_COUNT,
-	ExpandableList,
-} from "@/components/ui/ExpandableList";
+import { ExpandableList } from "@/components/ui/ExpandableList";
 import { Toast } from "@/components/ui/Toast";
 import { DASHBOARD_UNIT_RULES } from "@/features/dashboard/dashboardUnitRules";
 import {
@@ -52,14 +49,17 @@ const PENDING_LEAVE_COUNT = 20;
 /** Enough approved leave to name everyone off today and tomorrow in one unit. */
 const OFF_TODAY_LEAVE_COUNT = 50;
 
+/** A link to a card's full page, or to Recent activity beneath the cards. */
 const viewAllLink =
 	"shrink-0 text-base font-semibold text-ink-blue-900 underline decoration-2 underline-offset-1 hover:text-ink-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-blue-500";
 
 /** Home's one grid: a single column of cards aligned to the top, so no card stretches or sits alone. */
-const HOME_GRID_CLASSES = "mt-6 grid grid-cols-1 items-start gap-6";
+const homeGridClasses = "mt-6 grid grid-cols-1 items-start gap-6";
 
+/** The leave request open in the dialog, and what the person is doing with it. */
 type Decision = { request: LeaveRequest; mode: "view" | "reject" | "approve" };
 
+/** Home's cards for the settled company, with the leave dialog and toast they open. */
 const Dashboard = ({
 	displayName,
 }: {
@@ -78,11 +78,10 @@ const Dashboard = ({
 	).branch?.branchId;
 	const [decision, setDecision] = useState<Decision>();
 	const [toast, setToast] = useState<{ id: number; message: string }>();
-	const sort = { field: "requestedAt", desc: true } as const;
 	const pending = useLeaveRequests(companyId, {
 		page: 1,
 		size: PENDING_LEAVE_COUNT,
-		sort,
+		sort: { field: "requestedAt", desc: true },
 		status: "PENDING",
 		branchId,
 	});
@@ -159,17 +158,17 @@ const Dashboard = ({
 				/>
 			)}
 			{/* One column of to-do cards: each card is as tall as its content and spans the row, so none floats alone. */}
-			<div className={HOME_GRID_CLASSES}>
+			<div className={homeGridClasses}>
 				<ShortShiftsCard shortages={shortages} />
 				{pending.status !== "hidden" && (
 					<Card
+						icon={ApproveRequestsIcon}
+						title={t("notifications.pendingReview")}
 						action={
 							<Link className={viewAllLink} to="/leave">
 								{t(`${key}.viewAll`)}
 							</Link>
 						}
-						icon={ApproveRequestsIcon}
-						title={t("notifications.pendingReview")}
 					>
 						{pending.status === "error" && (
 							<p className="text-sm text-error-700" role="alert">
@@ -187,15 +186,6 @@ const Dashboard = ({
 								items={pending.items}
 								keyOf={(request) => request.leaveRequestId}
 								listClassName="flex flex-col divide-y divide-neutral-300"
-								seeAll={
-									pending.total > COLLAPSED_ROW_COUNT ? (
-										<Link className={viewAllLink} to="/leave">
-											{t(`${key}.notifications.seeAll`, {
-												count: pending.total,
-											})}
-										</Link>
-									) : undefined
-								}
 								renderItem={(request) => {
 									const reviewable = canReview(request);
 									// Under an approval flow, the step it waits on, beside its title.
@@ -241,6 +231,13 @@ const Dashboard = ({
 										/>
 									);
 								}}
+								seeAll={
+									<Link className={viewAllLink} to="/leave">
+										{t(`${key}.notifications.seeAll`, {
+											count: pending.total,
+										})}
+									</Link>
+								}
 							/>
 						)}
 					</Card>

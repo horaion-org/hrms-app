@@ -33,12 +33,6 @@ export const todayAndTomorrow = (today: Date): DayRange => ({
 	to: dayjs(today).add(1, "day").format(ISO_DAY),
 });
 
-/** This calendar month, as a span of one month. */
-export const thisMonth = (today: Date): MonthSpan => {
-	const month = dayjs(today).format(ISO_MONTH);
-	return { from: month, to: month };
-};
-
 /** The months this month and next, as the month summaries read them. */
 export const thisAndNextMonth = (today: Date): MonthSpan => ({
 	from: dayjs(today).format(ISO_MONTH),

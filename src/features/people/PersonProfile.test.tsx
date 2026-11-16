@@ -594,6 +594,14 @@ describe("Editing a person", () => {
 		).toBeInTheDocument();
 	});
 
+	it("shows no developer's comment beside the employment terms row", async () => {
+		stubApi(routes(workspaceReply([...ALL, "member_employment_terms:read"])));
+		await open("/people/m-1?edit=true");
+
+		await screen.findByRole("group", { name: "Employment terms" });
+		expect(screen.queryByText(/Not a form control/)).not.toBeInTheDocument();
+	});
+
 	it("keeps the email address once they've logged in, and lets it be corrected before", async () => {
 		stubApi(routes());
 		await open("/people/m-1?edit=true");

@@ -1,1 +1,4 @@
-export { MyShiftPreferences, type MyShiftPreferencesProps } from "./MyShiftPreferences";
+export {
+	MyShiftPreferences,
+	type MyShiftPreferencesProps,
+} from "./MyShiftPreferences";

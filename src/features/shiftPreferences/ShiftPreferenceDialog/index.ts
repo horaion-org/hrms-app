@@ -1,1 +1,4 @@
-export { ShiftPreferenceDialog, type ShiftPreferenceDialogProps } from "./ShiftPreferenceDialog";
+export {
+	ShiftPreferenceDialog,
+	type ShiftPreferenceDialogProps,
+} from "./ShiftPreferenceDialog";

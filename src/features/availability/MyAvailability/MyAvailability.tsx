@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import { EditIcon } from "@/components/ui/Icon";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { WeekGrid } from "@/components/ui/WeekGrid";
 import { AvailabilityDialog } from "@/features/availability/AvailabilityDialog";
 import {
 	byDay,
@@ -20,7 +21,6 @@ import {
 	useResetMyWeekAvailability,
 } from "@/features/availability/useAvailability";
 import { availabilityCells } from "@/features/availability/WeekGrid/availabilityCells";
-import { WeekGrid } from "@/components/ui/WeekGrid";
 
 export type MyAvailabilityProps = {
 	companyId: string;

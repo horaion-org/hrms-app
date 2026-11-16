@@ -75,7 +75,7 @@ export const MyShiftPreferences = ({
 				names={preferredNames(day)}
 				onEdit={
 					day.editable
-						? () => {
+						? (): void => {
 								replace.reset();
 								setEditing(day);
 							}
@@ -101,7 +101,8 @@ export const MyShiftPreferences = ({
 					saving={replace.isPending}
 					refusal={
 						replace.error
-							? shiftPreferenceRefusal(replace.error, maxShiftsPerDay, t).message
+							? shiftPreferenceRefusal(replace.error, maxShiftsPerDay, t)
+									.message
 							: undefined
 					}
 					onClose={() => {

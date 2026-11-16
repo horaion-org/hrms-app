@@ -77,12 +77,12 @@ export const ShiftPreferenceDialog = ({
 						<Checkbox
 							key={shift.shiftId}
 							checked={chosen.includes(shift.shiftId)}
-							description={t("scheduling.timeRange", {
-				start: shift.startTime,
-				end: shift.endTime,
-			})}
 							disabled={!chosen.includes(shift.shiftId) && full}
 							label={shift.name}
+							description={t("scheduling.timeRange", {
+								start: shift.startTime,
+								end: shift.endTime,
+							})}
 							onChange={() => {
 								setChosen(toggledShiftIds(chosen, shift.shiftId, maxShifts));
 							}}

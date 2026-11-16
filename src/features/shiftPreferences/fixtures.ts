@@ -37,20 +37,23 @@ export const MONDAY_WITH_MORNING: PreferenceDay = {
 	],
 };
 
+/** The fixture week's Tuesday to Sunday. */
+const REST_OF_THE_WEEK = [
+	"2026-11-24",
+	"2026-11-25",
+	"2026-11-26",
+	"2026-11-27",
+	"2026-11-28",
+	"2026-11-29",
+];
+
 /** A week with one preference on Monday and nothing on the other days. */
 export const fixtureWeek = (): MyPreferenceWeek => ({
 	weekStartMonday: FIXTURE_WEEK,
 	maxShiftsPerDay: 5,
 	days: [
 		MONDAY_WITH_MORNING,
-		...[
-			"2026-11-24",
-			"2026-11-25",
-			"2026-11-26",
-			"2026-11-27",
-			"2026-11-28",
-			"2026-11-29",
-		].map((date) => ({
+		...REST_OF_THE_WEEK.map((date) => ({
 			date,
 			editable: true,
 			shifts: [
@@ -61,7 +64,7 @@ export const fixtureWeek = (): MyPreferenceWeek => ({
 	],
 });
 
-/** A team page of one member who prefers Morning on Monday. */
+/** A team page of one member who prefers Morning on Monday; the API sends all seven days. */
 export const fixtureTeamPage = (): TeamPreferencePage => ({
 	content: [
 		{
@@ -72,6 +75,7 @@ export const fixtureTeamPage = (): TeamPreferencePage => ({
 					date: FIXTURE_WEEK,
 					shifts: [{ shiftId: MORNING.shiftId, name: MORNING.name }],
 				},
+				...REST_OF_THE_WEEK.map((date) => ({ date, shifts: [] })),
 			],
 		},
 	],

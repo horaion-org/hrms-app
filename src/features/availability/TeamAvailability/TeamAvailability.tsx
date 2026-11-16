@@ -4,13 +4,10 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { EditIcon } from "@/components/ui/Icon";
+import { WeekGrid, type WeekGridRowData } from "@/components/ui/WeekGrid";
 import type { MemberWeek } from "@/features/availability/api";
 import { windowsByDay } from "@/features/availability/availabilityModel";
 import { availabilityCells } from "@/features/availability/WeekGrid/availabilityCells";
-import {
-	WeekGrid,
-	type WeekGridRowData,
-} from "@/components/ui/WeekGrid";
 
 export type TeamAvailabilityProps = {
 	/** The Branch's part-timers for the week, as the API listed them. */

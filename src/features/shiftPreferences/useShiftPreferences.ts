@@ -40,7 +40,7 @@ export const useMyPreferenceWeek = (
 /**
  * One page of a Department's members and their preferences. `hidden` when
  * `shift_preference:read` is held nowhere, whether the workspace says so up
- * front or the API refuses with a 403. `query` undefined asks for nothing.
+ * front or the API refuses with a 403.
  */
 export type TeamPreferencesState =
 	| { status: "pending" | "error" | "hidden" }
@@ -49,17 +49,11 @@ export type TeamPreferencesState =
 /** The team list's page for `query`, read only where the key is held somewhere. */
 export const useTeamPreferences = (
 	companyId: string,
-	query: TeamPreferenceQuery | undefined
+	query: TeamPreferenceQuery
 ): TeamPreferencesState => {
 	const access = useAccess();
 	const allowed = access.canAny(SHIFT_PREFERENCE_READ_KEYS, "anywhere");
-	const page = useQuery(
-		teamPreferencesQuery(
-			companyId,
-			query ?? { departmentId: "", weekStartMonday: "", page: 0 },
-			allowed && query !== undefined
-		)
-	);
+	const page = useQuery(teamPreferencesQuery(companyId, query, allowed));
 	if (access.status !== "ready") return { status: access.status };
 	if (!allowed || isRefused(page.error)) return { status: "hidden" };
 	if (page.isError) return { status: "error" };

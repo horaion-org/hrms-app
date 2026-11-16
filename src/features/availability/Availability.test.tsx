@@ -26,6 +26,7 @@ import {
 	WEEKDAY_MORNINGS,
 	weeklyAvailabilityFixture,
 } from "@/features/availability/fixtures";
+import { fixtureWeek } from "@/features/shiftPreferences/fixtures";
 
 const REFRESH = "POST /api/v1/public/sessions/refreshes";
 const ME = "GET /api/v1/me";
@@ -33,6 +34,7 @@ const WORKSPACE = "GET /api/v1/me/workspace";
 const MY_PROFILE = "GET /api/v1/companies/c-1/me/profile";
 const MINE_PATH = "/api/v1/companies/c-1/me/availability";
 const TEAM_PATH = "/api/v1/companies/c-1/availability";
+const MY_PREFERENCES_PATH = "/api/v1/companies/c-1/me/shift-preferences";
 const READ = "work_availability:read";
 const UPDATE = "work_availability:update";
 
@@ -145,6 +147,10 @@ const routes = (
 			members: MEMBER_WEEK_FIXTURES,
 		}),
 	},
+	[`GET ${MY_PREFERENCES_PATH}`]: {
+		status: 200,
+		body: envelope(fixtureWeek()),
+	},
 });
 
 /** The Monday `by` weeks from this one. */
@@ -159,7 +165,7 @@ const tabNames = (): Array<string | null> =>
 		.map((tab) => tab.textContent?.trim() ?? null);
 
 describe("Availability", () => {
-	it("shows a part-timer their own week only, with nothing granted", async () => {
+	it("shows a part-timer their own week and their shift preferences, with nothing granted", async () => {
 		const calls = stubApi(routes("PART_TIME", workspaceReply([])));
 		await open("/availability");
 
@@ -167,28 +173,42 @@ describe("Availability", () => {
 			await screen.findByRole("heading", { level: 1, name: "Availability" })
 		).toBeVisible();
 		expect(await screen.findAllByText("09:00–13:00")).toHaveLength(5);
-		expect(tabNames()).toEqual(["My availability"]);
+		expect(tabNames()).toEqual(["My availability", "Shift preferences"]);
 		expect(
 			within(navigation()).getByRole("link", { name: "Availability" })
 		).toBeVisible();
 		expect(calls.some((call) => call.path === TEAM_PATH)).toBe(false);
 	});
 
-	it("shows someone holding the read key the team view only, for this week", async () => {
+	it("opens someone holding the read key, and not part-time, on their shift preferences: their first tab", async () => {
 		const calls = stubApi(routes("FULL_TIME", workspaceReply([READ])));
 		const { router } = await open("/availability");
+
+		expect(
+			await screen.findByRole("table", { name: "Shift preferences" })
+		).toBeVisible();
+		expect(tabNames()).toEqual(["Shift preferences", "Team"]);
+		await waitFor(() => {
+			expect(router.state.location.search).toEqual({ view: "preferences" });
+		});
+		expect(calls.some((call) => call.path === TEAM_PATH)).toBe(false);
+	});
+
+	it("shows someone holding the read key the team's week, without reading a week of their own", async () => {
+		const calls = stubApi(routes("FULL_TIME", workspaceReply([READ])));
+		const { router } = await open("/availability?view=team");
 
 		const table = await screen.findByRole("table", {
 			name: "Team availability",
 		});
 		expect(await within(table).findByText("Aisha Rahman")).toBeVisible();
-		expect(tabNames()).toEqual(["Team"]);
+		expect(tabNames()).toEqual(["Shift preferences", "Team"]);
 		expect(
 			calls.filter((call) => call.path === TEAM_PATH).map((call) => call.search)
 		).toEqual([`weekStartMonday=${mondayOf(new Date())}&branchId=b-1`]);
 		expect(calls.some((call) => call.path === MINE_PATH)).toBe(false);
 		await waitFor(() => {
-			// The tab is written so the header knows it; the first Branch is shown, not written.
+			// The first Branch is shown, not written.
 			expect(router.state.location.search).toEqual({ view: "team" });
 		});
 		// Reading without the update key offers no editing.
@@ -200,7 +220,7 @@ describe("Availability", () => {
 	it("shows the team's one Branch in the header and narrows to a Department through Filters", async () => {
 		const user = userEvent.setup();
 		const calls = stubApi(routes("FULL_TIME", workspaceReply([READ])));
-		const { router } = await open("/availability");
+		const { router } = await open("/availability?view=team");
 		await screen.findByRole("table", { name: "Team availability" });
 
 		// One Branch the team must show: the header names it as text.
@@ -238,7 +258,7 @@ describe("Availability", () => {
 				body: envelope(companyWideWorkspace([READ])),
 			})
 		);
-		const { router } = await open("/availability");
+		const { router } = await open("/availability?view=team");
 		await screen.findByRole("table", { name: "Team availability" });
 
 		expect(screen.getByRole("button", { name: "Branch" })).toHaveTextContent(
@@ -267,7 +287,7 @@ describe("Availability", () => {
 
 	it("lists the Branch of a Department-only read grant from the company's list", async () => {
 		const calls = stubApi(routes("FULL_TIME", workspaceReply([], [READ])));
-		await open("/availability");
+		await open("/availability?view=team");
 
 		const table = await screen.findByRole("table", {
 			name: "Team availability",
@@ -278,13 +298,17 @@ describe("Availability", () => {
 		).toEqual([`weekStartMonday=${mondayOf(new Date())}&branchId=b-1`]);
 	});
 
-	it("gives a part-timer holding the read key both tabs, their own first", async () => {
+	it("gives a part-timer holding the read key all three tabs, their own week first", async () => {
 		const user = userEvent.setup();
 		stubApi(routes("PART_TIME", workspaceReply([READ])));
 		const { router } = await open("/availability");
 
 		await screen.findAllByText("09:00–13:00");
-		expect(tabNames()).toEqual(["My availability", "Team"]);
+		expect(tabNames()).toEqual([
+			"My availability",
+			"Shift preferences",
+			"Team",
+		]);
 		// Their own week lists nothing by Branch: the URL names the tab and the header shows no Branch.
 		await waitFor(() => {
 			expect(router.state.location.search).toMatchObject({ view: "mine" });
@@ -305,19 +329,19 @@ describe("Availability", () => {
 		).toBeVisible();
 	});
 
-	it("offers nothing to someone neither part-time nor holding the read key", async () => {
-		stubApi(routes("FULL_TIME", workspaceReply([])));
+	it("shows someone neither part-time nor holding the read key their shift preferences only", async () => {
+		const calls = stubApi(routes("FULL_TIME", workspaceReply([])));
 		await open("/availability");
 
 		expect(
-			await screen.findByText(
-				"Availability is for part-time members and the people who manage them, so there’s nothing here for you in this company."
-			)
+			await screen.findByRole("table", { name: "Shift preferences" })
 		).toBeVisible();
-		expect(screen.queryByRole("tablist")).not.toBeInTheDocument();
+		expect(tabNames()).toEqual(["Shift preferences"]);
 		expect(
-			within(navigation()).queryByRole("link", { name: "Availability" })
-		).not.toBeInTheDocument();
+			screen.getByRole("button", { name: /^Choose shifts for Mon/ })
+		).toBeVisible();
+		expect(calls.some((call) => call.path === MINE_PATH)).toBe(false);
+		expect(calls.some((call) => call.path === TEAM_PATH)).toBe(false);
 	});
 
 	it("offers editing only on the rows of the Departments where the update key is held", async () => {
@@ -343,7 +367,7 @@ describe("Availability", () => {
 	it("shows a week that has ended without offering to change it", async () => {
 		const user = userEvent.setup();
 		const calls = stubApi(routes("FULL_TIME", workspaceReply([READ, UPDATE])));
-		const { router } = await open("/availability");
+		const { router } = await open("/availability?view=team");
 		const table = await screen.findByRole("table", {
 			name: "Team availability",
 		});
@@ -377,7 +401,7 @@ describe("Availability", () => {
 	it("opens one editor for a row, on this week, without reading a pattern it already shows", async () => {
 		const user = userEvent.setup();
 		const calls = stubApi(routes("FULL_TIME", workspaceReply([READ, UPDATE])));
-		await open("/availability");
+		await open("/availability?view=team");
 		await screen.findByText("Aisha Rahman");
 
 		await user.click(
@@ -399,7 +423,7 @@ describe("Availability", () => {
 	it("moves a week on, and back to this week, through the URL", async () => {
 		const user = userEvent.setup();
 		const calls = stubApi(routes("FULL_TIME", workspaceReply([READ])));
-		const { router } = await open("/availability");
+		const { router } = await open("/availability?view=team");
 		await screen.findByRole("table", { name: "Team availability" });
 		const next = weekFromThis(1);
 

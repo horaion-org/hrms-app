@@ -1,10 +1,12 @@
 # Availability
 
 The authenticated `/availability` route: the hours part-time members can work, as a weekly default pattern and,
-for any week from this one on, an override in its place (ADR-0053 of the API). Two tabs, offered from data and
+for any week from this one on, an override in its place (ADR-0053 of the API). Its tabs are offered from data and
 never from roles. **Mine** is a part-timer's own week and pattern, read and changed through
 `/companies/{c}/me/availability` with nothing granted. **Team** is a Branch's part-timers for one week, read
-through the person's grants, with editing on the rows they may change. Everything comes from the API
+through the person's grants, with editing on the rows they may change. Between them the page shows a third tab,
+**Shift preferences**, to everyone; its parts live in `features/shiftPreferences`, which also lists a chosen
+Department's preferences beneath the Team grid. Everything comes from the API
 (`features/availability/api.ts`); nothing is kept in page state beyond the open editor.
 
 ## Shape
@@ -23,10 +25,10 @@ through the person's grants, with editing on the rows they may change. Everythin
   `pending`/`error`/`hidden`/`ready` states) and the writes for a member or the caller, each reloading every
   availability entry of the company.
 - `availabilityRefusal.ts` — API codes to frontend-owned copy, on the editor's rows or as its alert.
-- `WeekGrid` — a week laid out as the roster lays one out: a column per day with its weekday and date, a row each,
-  every day's windows as chips. Its parts, each a quad of its own: `WeekGridRow` (an optional heading, seven
-  cells, an optional action), `AvailabilityCell` (one day: its chips, or a muted dash read as "Not available") and
-  `Chip` from `components/ui` ("09:00–13:00"). Shared by both tabs.
+- `WeekGrid/` — what availability puts in the shared `WeekGrid` of `components/ui` (a column per day with its
+  weekday and date, a row each): `availabilityCells` turns a week's windows into the grid's cells, and
+  `AvailabilityCell` is one day, a `Chip` from `components/ui` per window ("09:00–13:00") or a muted dash read as
+  "Not available". Used by both availability tabs.
 - `MyAvailability` — the caller's week as a one-row `WeekGrid`, "Custom" when it has hours of its own, a warning
   when nothing is set, and one Edit. A week that has ended is shown with a note and no Edit.
 - `TeamAvailability` — a `WeekGrid` row per part-timer (name, their Department when no Department is chosen,

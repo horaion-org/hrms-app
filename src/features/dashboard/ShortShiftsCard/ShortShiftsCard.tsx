@@ -55,10 +55,10 @@ export const ShortShiftsCard = ({
 				<ExpandableList
 					itemClassName={rowClasses}
 					items={rows}
+					listClassName={rowListClasses}
 					keyOf={(shortage) =>
 						`${shortage.scheduleId}|${shortage.shiftId}|${shortage.day}`
 					}
-					listClassName={rowListClasses}
 					renderItem={(shortage) => (
 						<>
 							<Link

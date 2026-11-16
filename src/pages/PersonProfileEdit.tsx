@@ -99,8 +99,7 @@ export const PersonProfileEdit = ({
 									htmlFor={termsId}
 									label={t("people.form.employmentTerms")}
 								>
-									// Not a form control: the row is a group the label names, so
-									a screen reader announces it.
+									{/* Not a form control: the row is a group the label names, so a screen reader announces it. */}
 									<div
 										aria-labelledby={formRowIds(termsId).labelId}
 										id={termsId}

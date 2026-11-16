@@ -3,7 +3,6 @@ import {
 	nextMonday,
 	thisAndNextMonth,
 	thisAndNextWeek,
-	thisMonth,
 	todayAndTomorrow,
 } from "@/features/dashboard/dashboardDates";
 
@@ -25,8 +24,7 @@ describe("dashboard dates", () => {
 		});
 	});
 
-	it("reads this month, and this month and next", () => {
-		expect(thisMonth(WEDNESDAY)).toEqual({ from: "2026-11", to: "2026-11" });
+	it("reads this month and next", () => {
 		expect(thisAndNextMonth(WEDNESDAY)).toEqual({
 			from: "2026-11",
 			to: "2026-12",

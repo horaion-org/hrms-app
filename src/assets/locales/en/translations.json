@@ -607,7 +607,6 @@
 	"shiftPreferences": {
 		"tab": "Shift preferences",
 		"subtitle": "The shifts you’d like to work. They’re weighed fairly when the roster is made, but not promised.",
-		"edit": "Choose shifts",
 		"editDay": "Choose shifts for {{day}}",
 		"limit": "Choose up to {{max}} shifts for a day.",
 		"count": "{{chosen}} of {{max}} chosen",
@@ -5024,9 +5023,7 @@
 				"empty": "Every shift is staffed this week and next.",
 				"shift": "{{shift}} {{start}}–{{end}}, {{day}}",
 				"detail_one": "{{department}} · short by {{count}} person",
-				"detail_other": "{{department}} · short by {{count}} people",
-				"more_one": "and {{count}} more",
-				"more_other": "and {{count}} more"
+				"detail_other": "{{department}} · short by {{count}} people"
 			},
 			"coverOffers": {
 				"title": "Cover offers waiting",

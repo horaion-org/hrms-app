@@ -227,9 +227,6 @@ export const isPastWeek = (monday: string, today: Date | string): boolean =>
 /** Whether "YYYY-MM-DD" is a Monday, the only day a week may start on. */
 export const isMonday = (date: string): boolean => dayjs(date).day() === 1;
 
-/** The weekday a "YYYY-MM-DD" date falls on; kept here for availability's callers. */
-export { weekdayOf };
-
 /** One week's dated windows as the weekly windows the editor opens with. */
 export const weeklyWindowsOf = (
 	windows: ReadonlyArray<DatedWindow>
