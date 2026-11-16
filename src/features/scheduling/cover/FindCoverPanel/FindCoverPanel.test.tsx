@@ -37,6 +37,7 @@ const PREVIEW = `${SCHEDULE}/roster-changes/preview`;
 const CHANGES = `${SCHEDULE}/roster-changes`;
 const OFFERS = `${SCHEDULE}/cover-offers`;
 const REPAIR_OPTIONS = `${SCHEDULE}/repair-options`;
+const REPAIR_WARM_UP = `${SCHEDULE}/repair-warm-up`;
 const NETWORK_MILLISECONDS = 5;
 const SETTLE_MILLISECONDS = 50;
 const GAP = coverOptionsFixture().gap;
@@ -212,6 +213,62 @@ describe("FindCoverPanel", () => {
 			screen.queryByRole("heading", { name: "From the scheduling engine" })
 		).toBeNull();
 		expect(screen.queryByRole("button", { name: "Ask the engine" })).toBeNull();
+	});
+
+	it("given_repairOpenedForAGap_when_shown_then_theEnginesWorkerIsWarmedOnceBeforeAnyAsk", async () => {
+		const calls = stubApi({
+			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
+			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
+			[`POST ${REPAIR_WARM_UP}`]: { status: 202 },
+		});
+		show();
+
+		await screen.findByRole("radio", { name: "Aisha Rahman" });
+
+		await waitFor(() => {
+			expect(calls.filter((call) => call.path === REPAIR_WARM_UP)).toEqual([
+				expect.objectContaining({ body: { expectedRevision: 1 } }),
+			]);
+		});
+		expect(calls.some((call) => call.path === REPAIR_OPTIONS)).toBe(false);
+	});
+
+	it("given_aGapOnlyAHandEditMade_when_shown_then_noWarmUp", async () => {
+		const calls = stubApi({
+			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
+			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
+		});
+		show({ engineRepair: false });
+
+		await screen.findByRole("radio", { name: "Aisha Rahman" });
+
+		expect(calls.some((call) => call.path === REPAIR_WARM_UP)).toBe(false);
+	});
+
+	it("given_theWarmUpFailing_when_shown_then_nothingIsShownAndTheEngineCanStillBeAsked", async () => {
+		const calls = stubApi({
+			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
+			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
+			[`POST ${REPAIR_WARM_UP}`]: {
+				status: 502,
+				body: { status: 502, title: "Bad gateway", errorCode: "ENGINE_FAILED" },
+			},
+			[`POST ${REPAIR_OPTIONS}`]: answer(
+				repairOptionsFixture([feasibleRepair([callInMove()])])
+			),
+		});
+		show();
+		const user = userEvent.setup();
+		await screen.findByRole("radio", { name: "Aisha Rahman" });
+		await waitFor(() => {
+			expect(calls.some((call) => call.path === REPAIR_WARM_UP)).toBe(true);
+		});
+
+		expect(screen.queryByRole("alert")).toBeNull();
+		await user.click(screen.getByRole("button", { name: "Ask the engine" }));
+		expect(
+			await screen.findByRole("button", { name: "Review this change" })
+		).toBeVisible();
 	});
 
 	it("given_aGapTheEngineDidNotReport_when_asked_then_itSaysSoInPlainWords", async () => {
