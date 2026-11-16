@@ -169,7 +169,6 @@ const Dashboard = ({
 		"short-shifts": <ShortShiftsCard shortShifts={home.shortShifts} />,
 		"leave-to-decide": (
 			<LeaveToDecideCard
-				busy={leaveDecision.busy}
 				// Nobody decides their own leave; each request is decided where its member is filed, or by its flow's open step.
 				canDecide={leaveDecision.canDecide}
 				pending={home.pendingLeave}

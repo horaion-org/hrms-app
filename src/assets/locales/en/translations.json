@@ -5259,10 +5259,10 @@
 			"leaveToDecide": {
 				"title": "Leave to decide",
 				"failed": "We couldn’t load the leave to decide.",
-				"request": "{{type}} request",
-				"detail": "from {{name}} ({{period}})",
-				"approve": "Approve",
-				"reject": "Reject with reason",
+				"review": "Review",
+				"reviewNamed": "Review: {{name}}, {{type}}",
+				"view": "View",
+				"viewNamed": "View: {{name}}, {{type}}",
 				"seeAll": "See all {{count}}"
 			}
 		},

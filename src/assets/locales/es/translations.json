@@ -5092,10 +5092,10 @@
 			"leaveToDecide": {
 				"title": "Ausencias por decidir",
 				"failed": "No hemos podido cargar las ausencias por decidir.",
-				"request": "Solicitud de {{type}}",
-				"detail": "de {{name}} ({{period}})",
-				"approve": "Aprobar",
-				"reject": "Rechazar con motivo",
+				"review": "Revisar",
+				"reviewNamed": "Revisar: {{name}}, {{type}}",
+				"view": "Ver",
+				"viewNamed": "Ver: {{name}}, {{type}}",
 				"seeAll": "Ver las {{count}}"
 			}
 		},
