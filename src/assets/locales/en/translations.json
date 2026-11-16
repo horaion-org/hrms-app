@@ -4914,19 +4914,6 @@
 	"dashboard": {
 		"viewSchedule": "View Schedule",
 		"viewAll": "View All",
-		"example": "Example data: the workforce and coverage figures, and the shift swap and shortage notifications, will come from the scheduling service once it is available.",
-		"exampleTag": "Example",
-		"workforce": {
-			"title": "Active Workforce",
-			"caption": "People active today",
-			"onShift": "On Shift",
-			"onCall": "On Call",
-			"remote": "Remote"
-		},
-		"coverage": {
-			"title": "Schedule Coverage",
-			"caption": "Shifts filled"
-		},
 		"approvals": {
 			"title": "Pending Approvals",
 			"caption": "Leave requests waiting",
@@ -4940,21 +4927,7 @@
 			"leaveTitle": "{{type}} request",
 			"leaveDetail": "from {{name}} ({{period}})",
 			"approve": "Approve",
-			"deny": "Reject with reason",
-			"examples": {
-				"shiftSwap": {
-					"title": "Shift swap request",
-					"detail": "between Aisha Rahman and Wei Jun for next Friday",
-					"primary": "Approve",
-					"secondary": "Deny with reason"
-				},
-				"staffShortage": {
-					"title": "Staff shortage detected",
-					"detail": "for Saturday (Dinner Shift), 2 roles unfilled",
-					"primary": "Fill shift",
-					"secondary": "Dismiss"
-				}
-			}
+			"deny": "Reject with reason"
 		},
 		"quickActions": {
 			"title": "Quick Actions",

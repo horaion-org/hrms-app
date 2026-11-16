@@ -5,7 +5,6 @@ import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { ActivityItem } from "@/components/ui/ActivityItem";
 import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
 import {
 	AddStaffIcon,
 	ApproveRequestsIcon,
@@ -19,12 +18,31 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import { StatCard } from "@/components/ui/StatCard";
 import { Toast } from "@/components/ui/Toast";
 import { DASHBOARD_UNIT_RULES } from "@/features/dashboard/dashboardUnitRules";
-import { exampleWorkforce } from "@/features/dashboard/exampleDashboard";
+import { CloseToLimitCard } from "@/features/dashboard/CloseToLimitCard";
+import {
+	nextMonday,
+	thisAndNextMonth,
+	thisAndNextWeek,
+	thisMonth,
+	todayAndTomorrow,
+} from "@/features/dashboard/dashboardDates";
+import { NextRosterCard } from "@/features/dashboard/NextRosterCard";
+import { OffTodayCard } from "@/features/dashboard/OffTodayCard";
+import { OpenCoverOffersCard } from "@/features/dashboard/OpenCoverOffersCard";
+import { ShortShiftsCard } from "@/features/dashboard/ShortShiftsCard";
 import { NotificationList } from "@/features/notifications/NotificationList";
 import { NotificationItem } from "@/features/dashboard/NotificationItem";
 import { QuickActions } from "@/features/dashboard/QuickActions";
 import { SetupChecklistCard } from "@/features/dashboard/SetupChecklistCard";
 import { useActivityPage } from "@/features/dashboard/useActivityPage";
+import {
+	useDaysOff,
+	useMyOpenCoverOffers,
+	useNextRoster,
+	useOvertime,
+	useShortages,
+	useTeamCoverOffers,
+} from "@/features/dashboard/useDashboardReads";
 import { useSetupChecklist } from "@/features/dashboard/useSetupChecklist";
 import type { LeaveRequest } from "@/features/leave/api";
 import { formatPeriod } from "@/features/leave/dates";
@@ -51,6 +69,8 @@ const key = "dashboard";
 
 const NOTIFICATION_COUNT = 5;
 const ACTIVITY_COUNT = 4;
+/** Enough approved leave to name everyone off today and tomorrow in one unit. */
+const OFF_TODAY_LEAVE_COUNT = 50;
 
 const sectionHeading = "text-base font-semibold text-ink-blue-600 uppercase";
 const viewAllLink =
@@ -77,7 +97,6 @@ const Dashboard = ({
 	).branch?.branchId;
 	const [decision, setDecision] = useState<Decision>();
 	const [toast, setToast] = useState<{ id: number; message: string }>();
-	const [workforce] = useState(exampleWorkforce);
 	const numbers = new Intl.NumberFormat(language, { maximumFractionDigits: 1 });
 	const sort = { field: "requestedAt", desc: true } as const;
 	const pending = useLeaveRequests(companyId, {
@@ -104,11 +123,28 @@ const Dashboard = ({
 	const activity = useActivityPage(companyId, 1, ACTIVITY_COUNT);
 	const setup = useSetupChecklist(companyId);
 	const now = new Date();
-	const exampleTag = (
-		<Badge className="shrink-0" tone="neutral">
-			{t(`${key}.exampleTag`)}
-		</Badge>
+	const units = { branchId };
+	const offDays = todayAndTomorrow(now);
+	const comingMonday = nextMonday(now);
+	const shortages = useShortages(companyId, units, thisAndNextWeek(now));
+	const teamOffers = useTeamCoverOffers(companyId, units);
+	const myOffers = useMyOpenCoverOffers(companyId);
+	const nextRoster = useNextRoster(
+		companyId,
+		units,
+		thisAndNextMonth(now),
+		comingMonday
 	);
+	const overtime = useOvertime(companyId, units, thisMonth(now));
+	const daysOff = useDaysOff(companyId, units, offDays);
+	const leaveOff = useLeaveRequests(companyId, {
+		page: 1,
+		size: OFF_TODAY_LEAVE_COUNT,
+		sort: { field: "startDate", desc: false },
+		status: "APPROVED",
+		branchId,
+		...offDays,
+	});
 
 	const notify = (message: string): void => {
 		setToast((previous) => ({ id: (previous?.id ?? 0) + 1, message }));
@@ -180,140 +216,129 @@ const Dashboard = ({
 				/>
 			)}
 			<div className="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,666fr)_minmax(0,390fr)]">
-				<div>
-					<StatCard
-						action={exampleTag}
-						size="lg"
-						title={t(`${key}.workforce.title`)}
-						value={numbers.format(workforce.active)}
-						variant="tile"
-					>
-						<dl className="mt-7 grid grid-cols-3 gap-7">
-							{(["onShift", "onCall", "remote"] as const).map((split) => (
-								<div key={split}>
-									<dt className="text-sm text-neutral-800">
-										{t(`${key}.workforce.${split}`)}
-									</dt>
-									<dd className="mt-2 text-[2rem] leading-10 font-medium text-neutral-900">
-										{numbers.format(workforce[split])}
-									</dd>
-								</div>
-							))}
-						</dl>
-					</StatCard>
-					<div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
+				<div className="flex min-w-0 flex-col gap-6">
+					<ShortShiftsCard shortages={shortages} />
+					{pending.status !== "hidden" && (
 						<StatCard
-							action={exampleTag}
-							caption={t(`${key}.coverage.caption`)}
-							title={t(`${key}.coverage.title`)}
+							title={t(`${key}.approvals.title`)}
 							variant="tile"
-							value={t("scheduling.overview.percent", {
-								value: numbers.format(workforce.coverage),
-							})}
-						/>
-						{pending.status !== "hidden" && (
-							<StatCard
-								title={t(`${key}.approvals.title`)}
-								variant="tile"
-								value={
-									pending.status === "ready"
-										? numbers.format(pending.total)
-										: t("organisation.unknownCount")
-								}
-							>
-								{resolvedShare !== undefined && (
-									<div className="mt-2 flex items-center gap-4">
-										<ProgressBar
-											className="w-41 shrink-0"
-											label={t(`${key}.approvals.resolvedLabel`)}
-											tone="accent"
-											track="white"
-											value={resolvedShare}
-										/>
-										<p className="text-sm text-neutral-800">
-											{t(`${key}.approvals.resolved`, {
-												value: resolvedShare,
-											})}
-										</p>
-									</div>
-								)}
-							</StatCard>
-						)}
-					</div>
-				</div>
-				<section
-					aria-labelledby="pending-review"
-					className="flex min-w-0 flex-col rounded-xl bg-neutral-200 px-6 pt-6 pb-2 lg:h-113"
-				>
-					<div className="flex items-center justify-between gap-4">
-						<h2
-							className="text-base font-semibold text-ink-blue-600"
-							id="pending-review"
+							value={
+								pending.status === "ready"
+									? numbers.format(pending.total)
+									: t("organisation.unknownCount")
+							}
 						>
-							{t("notifications.pendingReview")}
-						</h2>
-						{pending.status !== "hidden" && (
-							<Link className={viewAllLink} to="/leave">
-								{t(`${key}.viewAll`)}
-							</Link>
-						)}
-					</div>
-					{pending.status === "error" && (
-						<p className="mt-6 text-sm text-error-700" role="alert">
-							{t(`${key}.notifications.failed`)}
-						</p>
+							{resolvedShare !== undefined && (
+								<div className="mt-2 flex items-center gap-4">
+									<ProgressBar
+										className="w-41 shrink-0"
+										label={t(`${key}.approvals.resolvedLabel`)}
+										tone="accent"
+										track="white"
+										value={resolvedShare}
+									/>
+									<p className="text-sm text-neutral-800">
+										{t(`${key}.approvals.resolved`, {
+											value: resolvedShare,
+										})}
+									</p>
+								</div>
+							)}
+						</StatCard>
 					)}
-					<ul className="mt-6 min-h-0 flex-1 divide-y divide-neutral-400 overflow-y-auto pr-4">
-						{pending.status === "ready" &&
-							pending.items.map((request) => {
-								const reviewable = canReview(request);
-								// Under an approval flow, the step it waits on, beside its title.
-								const stepTag = request.approval
-									? t("approvals.meta.stepShort", {
-											step: request.approval.currentStepOrder,
-											total: request.approval.stepCount,
-										})
-									: undefined;
-								return (
-									<li key={request.leaveRequestId} className="py-5 first:pt-0">
-										<NotificationItem
-											tag={stepTag}
-											detail={t(`${key}.notifications.leaveDetail`, {
-												name: request.displayName,
-												period: formatPeriod(
-													request.startDate,
-													request.endDate,
-													language
-												),
-											})}
-											primaryAction={{
-												label: t(`${key}.notifications.approve`),
-												icon: <TickIcon />,
-												disabled: !reviewable || busy,
-												onClick: () => {
-													setDecision({ request, mode: "approve" });
-												},
-											}}
-											secondaryAction={{
-												label: t(`${key}.notifications.deny`),
-												icon: <CrossIcon />,
-												disabled: !reviewable || busy,
-												onClick: () => {
-													setDecision({ request, mode: "reject" });
-												},
-											}}
-											title={t(`${key}.notifications.leaveTitle`, {
-												type: leaveTypeLabel(request, t),
-											})}
-											onOpen={() => {
-												setDecision({ request, mode: "view" });
-											}}
-										/>
-									</li>
-								);
-							})}
-					</ul>
-				</section>
+				</div>
+				<div className="flex min-w-0 flex-col gap-6">
+					<section
+						aria-labelledby="pending-review"
+						className="flex min-w-0 flex-col rounded-xl bg-neutral-200 px-6 pt-6 pb-2 lg:h-113"
+					>
+						<div className="flex items-center justify-between gap-4">
+							<h2
+								className="text-base font-semibold text-ink-blue-600"
+								id="pending-review"
+							>
+								{t("notifications.pendingReview")}
+							</h2>
+							{pending.status !== "hidden" && (
+								<Link className={viewAllLink} to="/leave">
+									{t(`${key}.viewAll`)}
+								</Link>
+							)}
+						</div>
+						{pending.status === "error" && (
+							<p className="mt-6 text-sm text-error-700" role="alert">
+								{t(`${key}.notifications.failed`)}
+							</p>
+						)}
+						<ul className="mt-6 min-h-0 flex-1 divide-y divide-neutral-400 overflow-y-auto pr-4">
+							{pending.status === "ready" &&
+								pending.items.map((request) => {
+									const reviewable = canReview(request);
+									// Under an approval flow, the step it waits on, beside its title.
+									const stepTag = request.approval
+										? t("approvals.meta.stepShort", {
+												step: request.approval.currentStepOrder,
+												total: request.approval.stepCount,
+											})
+										: undefined;
+									return (
+										<li
+											key={request.leaveRequestId}
+											className="py-5 first:pt-0"
+										>
+											<NotificationItem
+												tag={stepTag}
+												detail={t(`${key}.notifications.leaveDetail`, {
+													name: request.displayName,
+													period: formatPeriod(
+														request.startDate,
+														request.endDate,
+														language
+													),
+												})}
+												primaryAction={{
+													label: t(`${key}.notifications.approve`),
+													icon: <TickIcon />,
+													disabled: !reviewable || busy,
+													onClick: () => {
+														setDecision({ request, mode: "approve" });
+													},
+												}}
+												secondaryAction={{
+													label: t(`${key}.notifications.deny`),
+													icon: <CrossIcon />,
+													disabled: !reviewable || busy,
+													onClick: () => {
+														setDecision({ request, mode: "reject" });
+													},
+												}}
+												title={t(`${key}.notifications.leaveTitle`, {
+													type: leaveTypeLabel(request, t),
+												})}
+												onOpen={() => {
+													setDecision({ request, mode: "view" });
+												}}
+											/>
+										</li>
+									);
+								})}
+						</ul>
+					</section>
+					<OpenCoverOffersCard myOffers={myOffers} teamOffers={teamOffers} />
+				</div>
+			</div>
+			<div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+				<NextRosterCard comingMonday={comingMonday} rows={nextRoster} />
+				<CloseToLimitCard overtime={overtime} />
+				<OffTodayCard
+					days={[offDays.from, offDays.to]}
+					daysOff={daysOff}
+					leave={
+						leaveOff.status === "ready"
+							? { status: "ready", data: leaveOff.items }
+							: leaveOff
+					}
+				/>
 			</div>
 			<section
 				aria-labelledby="inbox-preview"
@@ -431,10 +456,11 @@ const Dashboard = ({
 };
 
 /**
- * The Dashboard: the workforce at a glance, what is waiting on the person,
- * what changed lately, and shortcuts. Leave requests and activity are live;
- * the workforce and coverage figures are example data until their service
- * exists, and say so.
+ * The Dashboard: what to act on first. Shifts short, what waits on the
+ * person (leave to decide, cover offers unanswered), the next roster of each
+ * Department, people close to the overtime limit, who is off today and
+ * tomorrow, then notifications, what changed lately, and shortcuts. Each
+ * card is left out where the person's grants don't reach it.
  */
 export const Home = (): FunctionComponent => {
 	const context = useRouteContext({ from: "/_authenticated" });

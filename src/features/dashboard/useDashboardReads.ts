@@ -13,9 +13,15 @@ import {
 } from "@/features/dashboard/api";
 import { guardedRead, type GuardedRead } from "@/features/dashboard/guardedRead";
 import {
+	nextRosterRows,
+	type NextRosterRow,
+} from "@/features/dashboard/nextRoster";
+import {
 	myCoverOffersQuery,
 	type CoverOffer,
 } from "@/features/scheduling/coverOffers/api";
+import { scheduleMonthSummariesQuery } from "@/features/scheduling/months/api";
+import { useSchedulingReadiness } from "@/features/scheduling/readiness/useSchedulingReadiness";
 import {
 	SCHEDULE_EDIT_SHIFT_KEYS,
 	SCHEDULE_READ_KEYS,
@@ -82,4 +88,34 @@ export const useMyOpenCoverOffers = (
 		...query,
 		data: query.data?.filter((offer) => offer.status === "OPEN"),
 	});
+};
+
+/**
+ * Each Department's coming week and its step: the month summaries this
+ * month and next, where `schedule:read` is held, with readiness where
+ * schedules may be created (without it, the weeks alone).
+ */
+export const useNextRoster = (
+	companyId: string,
+	units: UnitSelection,
+	months: MonthSpan,
+	comingMonday: string
+): GuardedRead<Array<NextRosterRow>> => {
+	const access = useAccess();
+	const allowed = access.canAny(SCHEDULE_READ_KEYS, "anywhere");
+	const summaries = useQuery(
+		scheduleMonthSummariesQuery(companyId, units, months, allowed)
+	);
+	const readiness = useSchedulingReadiness(companyId, units);
+	const weeks = guardedRead(access, allowed, summaries);
+	if (weeks.status !== "ready") return weeks;
+	if (readiness.status === "pending") return { status: "pending" };
+	return {
+		status: "ready",
+		data: nextRosterRows(
+			weeks.data,
+			readiness.status === "ready" ? readiness.rows : [],
+			comingMonday
+		),
+	};
 };

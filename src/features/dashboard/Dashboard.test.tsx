@@ -19,12 +19,18 @@ import {
 } from "@/common/testing/stubApi";
 import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
+import {
+	overtimeFixture,
+	shortageFixture,
+	teamCoverOfferFixture,
+} from "@/features/dashboard/fixtures";
 import { leaveFixture } from "@/features/leave/fixtures";
 
 const REFRESH = "POST /api/v1/public/sessions/refreshes";
 const ME = "GET /api/v1/me";
 const WORKSPACE = "GET /api/v1/me/workspace";
 const LEAVE_PATH = "/api/v1/companies/c-1/leave-requests";
+const SCHEDULES_PATH = "/api/v1/companies/c-1/schedules";
 const LEAVE = `GET ${LEAVE_PATH}`;
 const AUDIT_EVENTS = "GET /api/v1/companies/c-1/audit-events";
 const APPROVE =
@@ -252,7 +258,10 @@ describe("Dashboard", () => {
 		const calls = stubApi(routes([]));
 		await open();
 
-		await screen.findByRole("region", { name: "Active Workforce" });
+		await screen.findByRole("list", { name: "Quick Actions" });
+		expect(
+			screen.queryByRole("region", { name: "Active Workforce" })
+		).toBeNull();
 		await waitFor(() => {
 			expect(
 				screen.queryByRole("region", { name: "Pending Approvals" })
@@ -267,6 +276,63 @@ describe("Dashboard", () => {
 		expect(calls.some((call) => call.path.endsWith("/audit-events"))).toBe(
 			false
 		);
+		expect(calls.some((call) => call.path.startsWith(SCHEDULES_PATH))).toBe(
+			false
+		);
+		expect(screen.queryByRole("region", { name: "Shifts short" })).toBeNull();
+	});
+
+	it("given_rosterGrants_when_opened_then_leadsToTheShortShiftAndShowsEachCard", async () => {
+		stubApi({
+			...routes(["schedule:read", "schedule:edit_shift", "leave_request:read"]),
+			[`GET ${SCHEDULES_PATH}/shortages`]: {
+				status: 200,
+				body: envelope({
+					from: "2026-11-16",
+					to: "2026-11-29",
+					shortages: [shortageFixture()],
+				}),
+			},
+			[`GET ${SCHEDULES_PATH}/cover-offers`]: {
+				status: 200,
+				body: envelope({ offers: [teamCoverOfferFixture()] }),
+			},
+			[`GET ${SCHEDULES_PATH}/overtime`]: {
+				status: 200,
+				body: envelope(overtimeFixture()),
+			},
+			[`GET ${SCHEDULES_PATH}/days-off`]: {
+				status: 200,
+				body: envelope({ from: "2026-11-16", to: "2026-11-17", daysOff: [] }),
+			},
+			["GET /api/v1/companies/c-1/schedule-months"]: {
+				status: 200,
+				body: envelope([]),
+			},
+		});
+		await open();
+
+		const short = await screen.findByRole("region", { name: "Shifts short" });
+		expect(
+			await within(short).findByRole("link", { name: /Morning/ })
+		).toHaveAttribute(
+			"href",
+			"/scheduling/s-1?week=2026-11-16&day=2026-11-18&cover=fs-am%7C2026-11-18"
+		);
+		const offers = screen.getByRole("region", { name: "Cover offers waiting" });
+		expect(
+			await within(offers).findByText(/Kent Chua has not answered/)
+		).toBeInTheDocument();
+		expect(
+			await screen.findByRole("region", { name: "Close to the overtime limit" })
+		).toHaveTextContent("Aisha Rahman");
+		expect(
+			screen.getByRole("region", { name: "Next roster" })
+		).toBeInTheDocument();
+		expect(
+			screen.getByRole("region", { name: "Off today and tomorrow" })
+		).toBeInTheDocument();
+		expect(screen.queryByText("Example")).toBeNull();
 	});
 });
 

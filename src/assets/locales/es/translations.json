@@ -4747,19 +4747,6 @@
 	"dashboard": {
 		"viewSchedule": "Ver horario",
 		"viewAll": "Ver todo",
-		"example": "Datos de ejemplo: las cifras de plantilla y cobertura, y los avisos de cambio de turno y de falta de personal, vendrán del servicio de planificación cuando esté disponible.",
-		"exampleTag": "Ejemplo",
-		"workforce": {
-			"title": "Plantilla activa",
-			"caption": "Personas activas hoy",
-			"onShift": "En turno",
-			"onCall": "De guardia",
-			"remote": "En remoto"
-		},
-		"coverage": {
-			"title": "Cobertura de horarios",
-			"caption": "Turnos cubiertos"
-		},
 		"approvals": {
 			"title": "Aprobaciones pendientes",
 			"caption": "Solicitudes de ausencia en espera",
@@ -4773,21 +4760,7 @@
 			"leaveTitle": "Solicitud de {{type}}",
 			"leaveDetail": "de {{name}} ({{period}})",
 			"approve": "Aprobar",
-			"deny": "Rechazar con motivo",
-			"examples": {
-				"shiftSwap": {
-					"title": "Solicitud de cambio de turno",
-					"detail": "entre Aisha Rahman y Wei Jun para el próximo viernes",
-					"primary": "Aprobar",
-					"secondary": "Rechazar con motivo"
-				},
-				"staffShortage": {
-					"title": "Falta de personal detectada",
-					"detail": "para el sábado (turno de cena), 2 roles sin cubrir",
-					"primary": "Cubrir turno",
-					"secondary": "Descartar"
-				}
-			}
+			"deny": "Rechazar con motivo"
 		},
 		"quickActions": {
 			"title": "Acciones rápidas",
