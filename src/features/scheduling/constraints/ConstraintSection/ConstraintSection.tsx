@@ -69,38 +69,40 @@ export const ConstraintSection = ({
 					</Button>
 				)}
 			</div>
-			<div className="rounded-xl border border-neutral-400 bg-white">
-				{folded && (
-					<div className="flex flex-wrap items-center justify-between gap-4 px-6 py-4">
-						{!open && (
-							<p className="min-w-0 flex-1 text-sm text-neutral-800">
-								{folded.summary}
-							</p>
-						)}
-						<Button
-							aria-controls={rowsId}
-							aria-expanded={open}
-							className="ml-auto"
-							variant="textlink"
-							onClick={() => {
-								setOpen(!open);
-							}}
-						>
-							{open ? folded.hideLabel : folded.showLabel}
-						</Button>
-					</div>
-				)}
-				<ul
-					className="divide-y divide-neutral-300 border-neutral-300 [&:not(:first-child)]:border-t"
-					hidden={!open}
-					id={rowsId}
-				>
-					{children}
-				</ul>
-				{open && count === 0 && emptyText && (
-					<p className="px-6 py-4 text-sm text-neutral-800">{emptyText}</p>
-				)}
-			</div>
+			{count === 0 && emptyText ? (
+				// Nothing to list: one quiet line, not an empty box.
+				<p className="text-sm text-neutral-700">{emptyText}</p>
+			) : (
+				<div className="rounded-xl border border-neutral-400 bg-white">
+					{folded && (
+						<div className="flex flex-wrap items-center justify-between gap-4 px-6 py-4">
+							{!open && (
+								<p className="min-w-0 flex-1 text-sm text-neutral-800">
+									{folded.summary}
+								</p>
+							)}
+							<Button
+								aria-controls={rowsId}
+								aria-expanded={open}
+								className="ml-auto"
+								variant="textlink"
+								onClick={() => {
+									setOpen(!open);
+								}}
+							>
+								{open ? folded.hideLabel : folded.showLabel}
+							</Button>
+						</div>
+					)}
+					<ul
+						className="divide-y divide-neutral-300 border-neutral-300 [&:not(:first-child)]:border-t"
+						hidden={!open}
+						id={rowsId}
+					>
+						{children}
+					</ul>
+				</div>
+			)}
 		</section>
 	);
 };
