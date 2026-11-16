@@ -7,7 +7,9 @@ export type ScheduleNoticeId =
 	| "rejected"
 	| "generating"
 	| "failed"
-	| "draft";
+	| "draft"
+	| "weekPassed"
+	| "currentRules";
 
 /** What decides the notices on one schedule. */
 export type ScheduleNoticeFacts = {
@@ -17,6 +19,8 @@ export type ScheduleNoticeFacts = {
 	hasRoster: boolean;
 	/** Another schedule is already the week's published roster. */
 	weekPublishedElsewhere: boolean;
+	/** The week ended before today in its branch's time zone, so its rules and roster are final (API ADR-0091). */
+	weekPassed: boolean;
 };
 
 /**
@@ -49,6 +53,13 @@ export const SCHEDULE_NOTICES: ReadonlyArray<{
 		id: "draft",
 		shownWhen: ({ status, generating, hasRoster }) =>
 			!generating && !hasRoster && status !== "GENERATION_FAILED",
+	},
+	{ id: "weekPassed", shownWhen: ({ weekPassed }) => weekPassed },
+	// Until the week has passed, generating it again takes the department's rules and shifts as they are now.
+	{
+		id: "currentRules",
+		shownWhen: ({ status, generating, weekPassed }) =>
+			!weekPassed && !generating && status !== "DRAFT" && status !== "PUBLISHED",
 	},
 ];
 

@@ -85,6 +85,7 @@ import {
 	type ScheduleNoticeFacts,
 	type ScheduleNoticeId,
 } from "@/features/scheduling/schedules/scheduleNotices";
+import { weekPassed } from "@/features/scheduling/schedules/weekPassed";
 import { scheduleSetupLink } from "@/features/scheduling/schedules/scheduleViewLink";
 import { useCompanySchedule } from "@/features/scheduling/schedules/useSchedule";
 import { useScheduleApproval } from "@/features/scheduling/schedules/useScheduleApproval";
@@ -466,9 +467,12 @@ const ApiSchedule = ({
 				</Problem>
 			</>
 		);
+	// A passed week's rules and roster are final, so it is never generated again (API ADR-0091).
+	const passed = weekPassed(state.schedule, new Date());
 	// Regenerating names the month's weeks, so it waits for the month's read.
 	const openRegenerate =
 		scheduleMonth !== undefined &&
+		!passed &&
 		regenerable(state.schedule) &&
 		weekPublishedBy === undefined &&
 		access.can(
@@ -513,6 +517,7 @@ const ApiSchedule = ({
 		generating: generationInProgress(schedule),
 		hasRoster: hasRoster(schedule),
 		weekPublishedElsewhere: weekPublishedBy !== undefined,
+		weekPassed: passed,
 	};
 	const moment = dateTimeFormatIn(formattingLocale(i18n), schedule.timeZone, {
 		dateStyle: "medium",
@@ -595,6 +600,16 @@ const ApiSchedule = ({
 			/>
 		),
 		draft: <Callout>{t(`${key}.draft`)}</Callout>,
+		weekPassed: <Callout>{t(`${key}.weekPassed`)}</Callout>,
+		currentRules: (
+			<Callout>
+				{t(`${key}.currentRules`, {
+					when: schedule.generationRequestedAt
+						? moment.format(new Date(schedule.generationRequestedAt))
+						: "",
+				})}
+			</Callout>
+		),
 		unpublished: (
 			<Callout>
 				<Trans

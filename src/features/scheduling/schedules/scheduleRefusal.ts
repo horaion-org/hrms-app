@@ -25,6 +25,7 @@ export const SCHEDULE_REFUSAL_CODES = {
 	notGenerated: "409 SCHEDULE_NOT_GENERATED",
 	alreadyDecided: "409 SCHEDULE_ALREADY_DECIDED",
 	weekAlreadyPublished: "409 SCHEDULE_WEEK_ALREADY_PUBLISHED",
+	weekPassed: "409 SCHEDULE_WEEK_PASSED",
 	weekTaken: "409 SCHEDULE_WEEK_TAKEN",
 	earlierWeekUnpublished: "409 SCHEDULE_EARLIER_WEEK_UNPUBLISHED",
 	published: "409 SCHEDULE_PUBLISHED",
@@ -193,6 +194,7 @@ const WEEK_REFUSAL_WORDS: Record<string, (t: TFunction) => string> = {
 	[errorCodeOf(codes.weekAlreadyPublished)]: (t) =>
 		t("scheduling.generate.weekAlreadyPublished"),
 	[errorCodeOf(codes.weekTaken)]: (t) => t("scheduling.draft.weekTaken"),
+	[errorCodeOf(codes.weekPassed)]: (t) => t("scheduling.generate.weekPassed"),
 	[errorCodeOf(codes.generationInProgress)]: (t) =>
 		t("scheduling.regenerate.inProgress"),
 	[errorCodeOf(codes.published)]: (t) => t("scheduling.regenerate.published"),
