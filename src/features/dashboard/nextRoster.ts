@@ -58,6 +58,11 @@ const comingWeekOf = (
 	return { state: "NOT_GENERATED", scheduleId: null };
 };
 
+/** The Departments whose coming week still waits on something: every one not yet published. */
+export const rostersToDo = (
+	rows: ReadonlyArray<NextRosterRow>
+): Array<NextRosterRow> => rows.filter((row) => row.step !== "done");
+
 /**
  * Every Department the month summaries or readiness name, by name: the
  * coming week's state and its step. A Department not ready to schedule
