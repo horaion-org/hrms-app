@@ -10,6 +10,7 @@ import {
 	type PatternDay,
 	type RequirementPolicy,
 } from "@/features/scheduling/constraints/api";
+import { isOneOf } from "@/common/isOneOf";
 import { dayTypeLabel } from "@/features/scheduling/dayTypes";
 import { WEEKDAYS, type Weekday } from "@/features/scheduling/shifts/api";
 
@@ -283,8 +284,7 @@ export const sentencePartsOf = (
 	}
 };
 
-const isWeekday = (text: string): text is Weekday =>
-	(WEEKDAYS as ReadonlyArray<string>).includes(text);
+const isWeekday = (text: string): text is Weekday => isOneOf(WEEKDAYS, text);
 
 /**
  * One value in words: a job title's or shift's name, a day type by its label
@@ -320,7 +320,7 @@ const joinsWithOr = (
 	field === "JOB_TITLE" ||
 	field === "STAND_IN_JOB_TITLE" ||
 	field === "DAY_TYPE" ||
-	(PATTERN_DAYS as ReadonlyArray<ConstraintField>).includes(field) ||
+	isOneOf(PATTERN_DAYS, field) ||
 	(field === "SHIFT" &&
 		constraint.type === "ROLE_PRESENCE" &&
 		comparisonOf(constraint) === "AT_LEAST");

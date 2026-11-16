@@ -28,6 +28,12 @@ const OFF_PREFIX = "off:";
 /** The days nearest the period the dialog shows first. */
 export const NEARER_DAYS = 7;
 
+/** Whether a Select's value is a cell value: not known, a day off or a shift. */
+export const isCellValue = (value: string): value is CellValue =>
+	value === "" ||
+	value.startsWith(OFF_PREFIX) ||
+	value.startsWith(SHIFT_PREFIX);
+
 /** The value a cell holds when it names the shift worked. */
 export const shiftCellValue = (shiftId: string): CellValue =>
 	`${SHIFT_PREFIX}${shiftId}`;

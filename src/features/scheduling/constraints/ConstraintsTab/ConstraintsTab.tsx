@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { DepartmentPath } from "@/common/companyPath";
+import { isOneOf } from "@/common/isOneOf";
 import { matchesSearch } from "@/common/matchesSearch";
 import type { FunctionComponent } from "@/common/types";
 import type { SelectOption } from "@/components/forms/Select";
@@ -11,11 +12,11 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { LockIcon } from "@/components/ui/LockIcon";
 import { placeOf } from "@/features/organisation/assignmentTargets";
 import { ListToolbar } from "@/features/organisation/ListToolbar";
-import type {
-	ConstraintBody,
-	ConstraintCategory,
-	ConstraintType,
-	DepartmentConstraint,
+import {
+	CONSTRAINT_TYPES,
+	type ConstraintBody,
+	type ConstraintCategory,
+	type DepartmentConstraint,
 } from "@/features/scheduling/constraints/api";
 import {
 	capacityProblemOf,
@@ -207,7 +208,9 @@ export const ConstraintsTab = ({
 					? "scheduling.constraints.requirements.SHOULD"
 					: "scheduling.constraints.requirements.MUST"
 			);
-		return constraintTypeLookOf(choice as ConstraintType, t).label;
+		return isOneOf(CONSTRAINT_TYPES, choice)
+			? constraintTypeLookOf(choice, t).label
+			: choice;
 	};
 	// The Branch is the header's scope; the Department and Showing are the filters.
 	const chips = [

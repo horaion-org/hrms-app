@@ -3,6 +3,7 @@ import type {
 	NotAssignedPerson,
 	NotAssignedReason,
 } from "@/features/scheduling/cover/engineRepairApi";
+import { isOneOf } from "@/common/isOneOf";
 import { ruleNameLabel } from "@/features/scheduling/rulesCheck/rosterRulesCheckWords";
 
 /*
@@ -31,7 +32,7 @@ type WordedReason = (typeof WORDED_REASONS)[number];
 
 /** Whether the app has a sentence for the reason code. */
 const isWordedReason = (code: string): code is WordedReason =>
-	(WORDED_REASONS as ReadonlyArray<string>).includes(code);
+	isOneOf(WORDED_REASONS, code);
 
 /** The rule a reason would break: the company's constraint name, else what the rule is called, else "a working-time rule". */
 const brokenRuleName = (reason: NotAssignedReason, t: TFunction): string => {

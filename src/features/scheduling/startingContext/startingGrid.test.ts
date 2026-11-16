@@ -14,6 +14,7 @@ import {
 	fillEmpty,
 	hasEnteredDayOn,
 	initialEntries,
+	isCellValue,
 	offCellValue,
 	offDayTypes,
 	previousWeekOf,
@@ -183,5 +184,18 @@ describe("startingGrid", () => {
 		});
 
 		expect([...runs]).toEqual([["p-tan", 3]]);
+	});
+});
+
+describe("isCellValue", () => {
+	it.each(["", "off:", "off:REST", "shift:s-night"])(
+		"given_%s_when_asked_then_aCellValue",
+		(value) => {
+			expect(isCellValue(value)).toBe(true);
+		}
+	);
+
+	it("given_anythingElse_when_asked_then_notACellValue", () => {
+		expect(isCellValue("s-night")).toBe(false);
 	});
 });

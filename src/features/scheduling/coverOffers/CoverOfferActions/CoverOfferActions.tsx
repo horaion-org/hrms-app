@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
+import { isOneOf } from "@/common/isOneOf";
 import type { FunctionComponent } from "@/common/types";
 import { FormRow, formRowIds } from "@/components/forms/FormRow";
 import { Select } from "@/components/forms/Select";
@@ -116,7 +117,7 @@ export const CoverOfferActions = ({
 							label: t(`${key}.howOptions.${value}`),
 						}))}
 						onChange={(value) => {
-							setHow(value as CoverOfferRecordedHow);
+							if (isOneOf(RECORDED_HOW, value)) setHow(value);
 						}}
 					/>
 				</FormRow>

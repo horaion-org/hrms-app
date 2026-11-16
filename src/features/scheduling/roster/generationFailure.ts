@@ -1,4 +1,5 @@
 import type { TFunction } from "i18next";
+import { isOneOf } from "@/common/isOneOf";
 import type { ScheduleGeneration } from "@/features/scheduling/schedules/api";
 
 /*
@@ -33,7 +34,7 @@ const KNOWN_CODES = [
 type KnownCode = (typeof KNOWN_CODES)[number];
 
 const isKnownCode = (code: string): code is KnownCode =>
-	(KNOWN_CODES as ReadonlyArray<string>).includes(code);
+	isOneOf(KNOWN_CODES, code);
 
 /** `engine_http_503`: the engine answered with an HTTP error; the code line shows the status. */
 const ENGINE_HTTP_CODE = /^engine_http_\d{3}$/;

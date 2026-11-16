@@ -1,4 +1,5 @@
 import type { TFunction } from "i18next";
+import { isOneOf } from "@/common/isOneOf";
 import { ApiProblemError } from "@/common/problem";
 import {
 	CONSTRAINT_TYPES,
@@ -95,7 +96,7 @@ export const rulesCheckRefusalOf = (error: unknown): RulesCheckRefusal =>
 
 /** Whether the app has a plain label for the engine's rule name. */
 const isLabelled = (rule: string): rule is LabelledRule =>
-	(LABELLED_RULES as ReadonlyArray<string>).includes(rule);
+	isOneOf(LABELLED_RULES, rule);
 
 /**
  * What a rule is called, by any name the engine or the settings give it: its

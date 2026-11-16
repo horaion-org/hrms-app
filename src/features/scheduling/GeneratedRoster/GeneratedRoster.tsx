@@ -19,9 +19,9 @@ import {
 	issueNoteLines,
 	rosterListSections,
 } from "@/features/scheduling/roster/rosterListSections";
-import type {
-	RosterPanel,
-	RosterSearch,
+import {
+	ROSTER_PANELS,
+	type RosterSearch,
 } from "@/features/scheduling/roster/rosterSearch";
 import {
 	changedDays,
@@ -207,13 +207,11 @@ export const GeneratedRoster = ({
 
 	/** The week bar's buttons: each list that has one, while it has something to show. */
 	const toolbarLists = withSummary
-		? (Object.keys(ROSTER_SIDE_LISTS) as Array<RosterPanel>).flatMap(
-				(panel) => {
-					const button = ROSTER_SIDE_LISTS[panel].button;
-					const count = roster.listCounts[panel];
-					return button && count > 0 ? [{ panel, button, count }] : [];
-				}
-			)
+		? ROSTER_PANELS.flatMap((panel) => {
+				const button = ROSTER_SIDE_LISTS[panel].button;
+				const count = roster.listCounts[panel];
+				return button && count > 0 ? [{ panel, button, count }] : [];
+			})
 		: [];
 	const numbers = new Intl.NumberFormat(language, {
 		maximumFractionDigits: HOURS_FRACTION_DIGITS,

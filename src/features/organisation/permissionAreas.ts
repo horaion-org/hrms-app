@@ -66,9 +66,12 @@ const AREA_OF_RESOURCE = new Map<PermissionResource, PermissionArea>(
 	)
 );
 
-/** The area a key is edited in. */
-export const areaOf = (key: PermissionKey): PermissionArea =>
-	AREA_OF_RESOURCE.get(resourceOf(key)) as PermissionArea;
+/** The area a key is edited in; every resource has one, so a missing area is a programming error. */
+export const areaOf = (key: PermissionKey): PermissionArea => {
+	const area = AREA_OF_RESOURCE.get(resourceOf(key));
+	if (area === undefined) throw new Error(`No permission area for ${key}`);
+	return area;
+};
 
 /** Every key of an area, in the catalogue's order. */
 export const keysOfArea = (area: PermissionArea): Array<PermissionKey> =>
