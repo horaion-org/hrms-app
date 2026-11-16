@@ -36,18 +36,18 @@ export const useShiftActions = (companyId: string): ShiftActions => {
 		});
 	return {
 		createShift: useMutation({
-			meta: { successMessage: false },
+			meta: { successMessage: "scheduling.shifts.added" },
 			mutationFn: ({ unit, body }: Saved) => createShift(companyId, unit, body),
 			onSuccess: reload,
 		}),
 		updateShift: useMutation({
-			meta: { successMessage: false },
+			meta: { successMessage: "scheduling.shifts.edited" },
 			mutationFn: ({ unit, shiftId, body }: Replaced) =>
 				updateShift(companyId, unit, shiftId, body),
 			onSuccess: reload,
 		}),
 		deleteShift: useMutation({
-			meta: { successMessage: false },
+			meta: { successMessage: "scheduling.shifts.deleted" },
 			mutationFn: ({ unit, shiftId }: Removed) =>
 				deleteShift(companyId, unit, shiftId),
 			onSuccess: reload,

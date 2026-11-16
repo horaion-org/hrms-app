@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { LockIcon } from "@/components/ui/LockIcon";
-import { Toast } from "@/components/ui/Toast";
 import { placeOf } from "@/features/organisation/assignmentTargets";
 import { ListToolbar } from "@/features/organisation/ListToolbar";
 import type {
@@ -194,10 +193,6 @@ export const ConstraintsTab = ({
 	const [showingValues, setShowingValues] = useState<Array<string>>([]);
 	const [dialog, setDialog] = useState<DialogState>();
 	const [deleting, setDeleting] = useState<DepartmentConstraint>();
-	const [toast, setToast] = useState<{ id: number; message: string }>();
-	const notify = (message: string): void => {
-		setToast((previous) => ({ id: (previous?.id ?? 0) + 1, message }));
-	};
 
 	const items = list.status === "ready" ? list.items : [];
 	const rows = items.filter(
@@ -454,12 +449,10 @@ export const ConstraintsTab = ({
 				constraintId: dialog.constraint.constraintId,
 				body,
 			});
-			notify(t("scheduling.constraints.edited"));
 			return;
 		}
 		if (!dialogUnit) return;
 		await actions.createConstraint.mutateAsync({ unit: dialogUnit, body });
-		notify(t("scheduling.constraints.added"));
 	};
 	const closeDelete = (): void => {
 		actions.deleteConstraint.reset();
@@ -746,25 +739,10 @@ export const ConstraintsTab = ({
 						if (!deletingUnit) return;
 						actions.deleteConstraint.mutate(
 							{ unit: deletingUnit, constraintId: deleting.constraintId },
-							{
-								onSuccess: () => {
-									closeDelete();
-									notify(t("scheduling.constraints.deleted"));
-								},
-							}
+							{ onSuccess: closeDelete }
 						);
 					}}
 				/>
-			)}
-			{toast && (
-				<Toast
-					key={toast.id}
-					onDismiss={() => {
-						setToast(undefined);
-					}}
-				>
-					{toast.message}
-				</Toast>
 			)}
 		</>
 	);
