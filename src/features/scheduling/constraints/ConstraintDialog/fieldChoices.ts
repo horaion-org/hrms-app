@@ -10,8 +10,9 @@ import type { ConstraintFieldValues } from "@/features/scheduling/constraints/Co
 /*
  * Which shifts and job titles a rule's fields may hold, given what is chosen
  * in the others, pure and driven only by the type's declarations (the API's
- * ADR-0085): `listedBy` (a value must be listed by a chosen value of another
- * field), `excludes` (no value may also be a value of another field) and
+ * ADR-0085): `listedBy` (a value must be listed by every chosen value of
+ * another field, so several shifts offer only the job titles they share, as
+ * v1's "all" match did), `excludes` (no value may also be a value of another field) and
  * `listsSomeOf` (each value must list a chosen value of other fields). No
  * rule type or field is named here.
  */
@@ -24,7 +25,7 @@ export type LinksByKind = Partial<
 	Record<ConstraintFieldKind, ReadonlyArray<LinkChoice>>
 >;
 
-/** Why a value was taken out of the form: no chosen parent lists it, or another field already holds it. */
+/** Why a value was taken out of the form: not every chosen parent lists it, or another field already holds it. */
 export type RemovalReason = "NOT_LISTED" | "EXCLUDED";
 
 /** A value taken out of the form, and why. */
@@ -63,6 +64,36 @@ const listedUnder = (
 ): ReadonlyArray<string> =>
 	links[linkKind]?.find((link) => link.id === id)?.listedIds[kind] ?? [];
 
+/**
+ * The chosen values of a field that are still offered, so a shift no longer
+ * offered is never asked, as the API does not ask a deleted one.
+ */
+const offeredChosen = (
+	spec: ConstraintFieldSpec,
+	values: ConstraintFieldValues,
+	links: LinksByKind
+): Array<string> =>
+	(values[spec.field] ?? []).filter((id) =>
+		(links[spec.kind] ?? []).some((link) => link.id === id)
+	);
+
+/** Whether every offered chosen value of `parent` lists `value`; never with none chosen, so nothing is offered yet. */
+const listedByEveryChosen = (
+	parent: ConstraintFieldSpec,
+	kind: ConstraintFieldKind,
+	values: ConstraintFieldValues,
+	links: LinksByKind,
+	value: string
+): boolean => {
+	const parents = offeredChosen(parent, values, links);
+	return (
+		parents.length > 0 &&
+		parents.every((parentId) =>
+			listedUnder(links, parent.kind, parentId, kind).includes(value)
+		)
+	);
+};
+
 /** Why `value` cannot be held by `spec` with these values, or undefined when it fits. */
 const unfitReason = (
 	spec: ConstraintFieldSpec,
@@ -72,12 +103,7 @@ const unfitReason = (
 	value: string
 ): RemovalReason | undefined => {
 	const parent = spec.listedBy ? specOf(specs, spec.listedBy) : undefined;
-	if (
-		parent &&
-		!(values[parent.field] ?? []).some((parentId) =>
-			listedUnder(links, parent.kind, parentId, spec.kind).includes(value)
-		)
-	)
+	if (parent && !listedByEveryChosen(parent, spec.kind, values, links, value))
 		return "NOT_LISTED";
 	if (spec.excludes && (values[spec.excludes] ?? []).includes(value))
 		return "EXCLUDED";
@@ -86,8 +112,9 @@ const unfitReason = (
 
 /**
  * The ids a link field may offer now: every one of its kind, then only
- * those a chosen value of its `listedBy` field lists, without the values its
- * `excludes` field holds. A field with no declarations offers all of them.
+ * those every chosen value of its `listedBy` field lists (none while nothing
+ * is chosen there), without the values its `excludes` field holds. A field
+ * with no declarations offers all of them.
  */
 export const allowedLinkIds = (
 	spec: ConstraintFieldSpec,
@@ -98,6 +125,25 @@ export const allowedLinkIds = (
 	(links[spec.kind] ?? [])
 		.map((link) => link.id)
 		.filter((id) => unfitReason(spec, specs, values, links, id) === undefined);
+
+/**
+ * Whether a `listedBy` field offers nothing because the two or more values
+ * chosen in the field it depends on share none of its kind: the shifts
+ * chosen have no job title in common. One chosen value, or none, is never
+ * this.
+ */
+export const sharesNothing = (
+	spec: ConstraintFieldSpec,
+	specs: ReadonlyArray<ConstraintFieldSpec>,
+	values: ConstraintFieldValues,
+	links: LinksByKind
+): boolean => {
+	const parent = spec.listedBy ? specOf(specs, spec.listedBy) : undefined;
+	if (!parent || offeredChosen(parent, values, links).length < 2) return false;
+	return !(links[spec.kind] ?? []).some((link) =>
+		listedByEveryChosen(parent, spec.kind, values, links, link.id)
+	);
+};
 
 /**
  * The values with every one that no longer fits taken out, field by field in

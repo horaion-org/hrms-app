@@ -7,6 +7,7 @@ import type {
 import {
 	allowedLinkIds,
 	linksByKindOf,
+	sharesNothing,
 	valuesListingNone,
 	withoutUnfitting,
 } from "@/features/scheduling/constraints/ConstraintDialog/fieldChoices";
@@ -42,7 +43,18 @@ describe("allowedLinkIds", () => {
 		).toEqual(["front-desk-lead", "front-desk-staff"]);
 	});
 
-	it("offers the job titles any of two chosen shifts lists", () => {
+	it("offers only the job titles both of two chosen shifts list", () => {
+		expect(
+			allowedLinkIds(
+				specIn(STAFFING, "JOB_TITLE"),
+				STAFFING,
+				{ SHIFT: ["lunch-rush", "closing-crew"] },
+				links
+			)
+		).toEqual(["service-staff", "supervisor"]);
+	});
+
+	it("offers nothing when two chosen shifts share no job title", () => {
 		expect(
 			allowedLinkIds(
 				specIn(STAFFING, "JOB_TITLE"),
@@ -50,13 +62,18 @@ describe("allowedLinkIds", () => {
 				{ SHIFT: ["front-desk-am", "lunch-rush"] },
 				links
 			)
-		).toEqual([
-			"cashier",
-			"front-desk-lead",
-			"front-desk-staff",
-			"service-staff",
-			"supervisor",
-		]);
+		).toEqual([]);
+	});
+
+	it("never asks a chosen shift that is no longer offered", () => {
+		expect(
+			allowedLinkIds(
+				specIn(STAFFING, "JOB_TITLE"),
+				STAFFING,
+				{ SHIFT: ["front-desk-am", "a-deleted-shift"] },
+				links
+			)
+		).toEqual(["front-desk-lead", "front-desk-staff"]);
 	});
 
 	it("offers no job title before a shift is chosen", () => {
@@ -83,8 +100,89 @@ describe("allowedLinkIds", () => {
 	});
 });
 
+describe("sharesNothing", () => {
+	it("says two chosen shifts share no job title", () => {
+		expect(
+			sharesNothing(
+				specIn(STAFFING, "JOB_TITLE"),
+				STAFFING,
+				{ SHIFT: ["front-desk-am", "lunch-rush"] },
+				links
+			)
+		).toBe(true);
+	});
+
+	it("is not said when two chosen shifts share one", () => {
+		expect(
+			sharesNothing(
+				specIn(STAFFING, "JOB_TITLE"),
+				STAFFING,
+				{ SHIFT: ["lunch-rush", "closing-crew"] },
+				links
+			)
+		).toBe(false);
+	});
+
+	it("is never said with one shift, or none, chosen", () => {
+		const jobTitles = specIn(STAFFING, "JOB_TITLE");
+		expect(
+			sharesNothing(
+				jobTitles,
+				STAFFING,
+				{ SHIFT: ["concierge-support"] },
+				links
+			)
+		).toBe(false);
+		expect(sharesNothing(jobTitles, STAFFING, {}, links)).toBe(false);
+	});
+
+	it("is not said for stand-ins left out only because they are counted", () => {
+		expect(
+			sharesNothing(
+				specIn(WITH_STAND_INS, "STAND_IN_JOB_TITLE"),
+				WITH_STAND_INS,
+				{
+					SHIFT: ["lunch-rush", "closing-crew"],
+					JOB_TITLE: ["service-staff", "supervisor"],
+				},
+				links
+			)
+		).toBe(false);
+	});
+
+	it("is never said for a field that depends on nothing", () => {
+		expect(
+			sharesNothing(
+				specIn(STAFFING, "SHIFT"),
+				STAFFING,
+				{ SHIFT: ["front-desk-am", "lunch-rush"] },
+				links
+			)
+		).toBe(false);
+	});
+});
+
 describe("withoutUnfitting", () => {
-	it("takes out a job title once no chosen shift lists it, and says why", () => {
+	it("takes out the job titles outside the overlap when a second shift is chosen", () => {
+		expect(
+			withoutUnfitting(
+				STAFFING,
+				{
+					SHIFT: ["lunch-rush", "closing-crew"],
+					JOB_TITLE: ["cashier", "supervisor"],
+				},
+				links
+			)
+		).toEqual({
+			values: {
+				SHIFT: ["lunch-rush", "closing-crew"],
+				JOB_TITLE: ["supervisor"],
+			},
+			removed: [{ field: "JOB_TITLE", value: "cashier", reason: "NOT_LISTED" }],
+		});
+	});
+
+	it("takes out a job title once the chosen shift does not list it, and says why", () => {
 		expect(
 			withoutUnfitting(
 				STAFFING,
