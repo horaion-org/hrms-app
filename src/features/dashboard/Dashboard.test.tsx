@@ -20,7 +20,6 @@ import {
 import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
 import {
-	overtimeFixture,
 	shortageFixture,
 	teamCoverOfferFixture,
 } from "@/features/dashboard/fixtures";
@@ -93,11 +92,10 @@ const workspaceReply = (permissions: Array<string>): StubReply => ({
 	),
 });
 
-/** Pending: 2 shown of 3; approved 5; rejected 2 — so 70% resolved. */
+/** Pending leave: one request shown of 3. Approved leave, read for who is off: none. */
 const leaveByStatus = (call: { search: string }): StubReply => {
 	const status = new URLSearchParams(call.search).get("status");
-	if (status === "APPROVED") return page([], 5);
-	if (status === "REJECTED") return page([], 2);
+	if (status === "APPROVED") return page([], 0);
 	return page([leaveFixture({ leaveRequestId: "leave-aisha" })], 3);
 };
 
@@ -295,10 +293,6 @@ describe("Dashboard", () => {
 				status: 200,
 				body: envelope({ offers: [teamCoverOfferFixture()] }),
 			},
-			[`GET ${SCHEDULES_PATH}/overtime`]: {
-				status: 200,
-				body: envelope(overtimeFixture()),
-			},
 			[`GET ${SCHEDULES_PATH}/days-off`]: {
 				status: 200,
 				body: envelope({ from: "2026-11-16", to: "2026-11-17", daysOff: [] }),
@@ -321,9 +315,6 @@ describe("Dashboard", () => {
 		expect(
 			await within(offers).findByText(/Kent Chua has not answered/)
 		).toBeInTheDocument();
-		expect(
-			await screen.findByRole("region", { name: "Close to the overtime limit" })
-		).toHaveTextContent("Aisha Rahman");
 		expect(
 			screen.getByRole("region", { name: "Next roster" })
 		).toBeInTheDocument();
@@ -478,7 +469,7 @@ describe("Set up your company", () => {
 		);
 		await open();
 
-		await screen.findByRole("region", { name: "Pending Approvals" });
+		await screen.findByRole("region", { name: "Pending leave requests" });
 		expect(
 			screen.queryByRole("region", { name: "Set up your company" })
 		).not.toBeInTheDocument();
