@@ -41,6 +41,8 @@ describe("PreferredShiftsCell", () => {
 		show({ shifts: [] });
 
 		expect(screen.getByText("No preference")).toHaveClass("sr-only");
+		// The icon set's minus, not a typed dash.
+		expect(screen.queryByText("—")).not.toBeInTheDocument();
 		expect(screen.queryByRole("list")).not.toBeInTheDocument();
 	});
 

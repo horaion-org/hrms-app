@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { Chip } from "@/components/ui/Chip";
+import { MinusIcon } from "@/components/ui/Icon";
 import type { PreferredShift } from "@/features/shiftPreferences/api";
 
 export type PreferredShiftsCellProps = {
@@ -12,7 +13,7 @@ export type PreferredShiftsCellProps = {
 	editLabel?: string;
 };
 
-/** One day of a week grid: a chip per preferred shift, or a dash read as "No preference". */
+/** One day of a week grid: a chip per preferred shift, or a minus icon read as "No preference". */
 export const PreferredShiftsCell = ({
 	shifts,
 	onEdit,
@@ -21,8 +22,8 @@ export const PreferredShiftsCell = ({
 	const { t } = useTranslation();
 	const content =
 		shifts.length === 0 ? (
-			<span className="block text-center text-sm text-neutral-600">
-				<span aria-hidden="true">—</span>
+			<span className="flex justify-center text-neutral-600">
+				<MinusIcon className="size-4" />
 				<span className="sr-only">{t("shiftPreferences.none")}</span>
 			</span>
 		) : (

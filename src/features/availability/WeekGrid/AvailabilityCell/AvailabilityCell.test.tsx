@@ -29,6 +29,8 @@ describe("AvailabilityCell", () => {
 		show([]);
 
 		expect(screen.getByText("Not available")).toHaveClass("sr-only");
+		// The icon set's minus, not a typed dash.
+		expect(screen.queryByText("—")).not.toBeInTheDocument();
 		expect(screen.queryByRole("list")).not.toBeInTheDocument();
 	});
 });

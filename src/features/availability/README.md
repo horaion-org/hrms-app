@@ -28,7 +28,7 @@ Department's preferences beneath the Team grid. Everything comes from the API
 - `availabilityRefusal.ts` — API codes to frontend-owned copy, on the editor's rows or as its alert.
 - `WeekGrid/` — what availability puts in the shared `WeekGrid` of `components/ui` (a column per day with its
   weekday and date, a row each): `availabilityCells` turns a week's windows into the grid's cells, and
-  `AvailabilityCell` is one day, a `Chip` from `components/ui` per window ("09:00–13:00") or a muted dash read as
+  `AvailabilityCell` is one day, a `Chip` from `components/ui` per window ("09:00–13:00") or a muted minus icon read as
   "Not available". Used by both availability tabs.
 - `MyAvailability` — the caller's week as a one-row `WeekGrid`, "Custom" when it has hours of its own, a warning
   when nothing is set, and one Edit. A week that has ended is shown with a note and no Edit.

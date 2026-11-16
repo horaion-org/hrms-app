@@ -9,6 +9,12 @@ describe("Chip", () => {
 		expect(screen.getByText("22:00–06:00")).toBeVisible();
 	});
 
+	it("given_aLabel_when_shown_then_isPaddedOnTheSystemsFourPixelStep", () => {
+		render(<Chip label="Morning" />);
+
+		expect(screen.getByText("Morning")).toHaveClass("p-1");
+	});
+
 	it("given_aLabelLongerThanItsCell_when_shown_then_keepsToOneLine", () => {
 		render(<Chip label="Front Desk Afternoon" />);
 
