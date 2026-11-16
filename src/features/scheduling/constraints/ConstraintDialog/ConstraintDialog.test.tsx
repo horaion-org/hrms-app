@@ -917,7 +917,7 @@ describe("ConstraintDialog", () => {
 	it("given_IfPossibleChosen_when_previewed_then_theTagFollows", async () => {
 		const user = userEvent.setup();
 		renderDialog();
-		await start(user, "Days off in a run of days");
+		await start(user, "Days off each week");
 		const preview = screen.getByRole("region", { name: "How it reads" });
 		expect(within(preview).getByText("Must")).toBeVisible();
 
@@ -1148,7 +1148,7 @@ describe("ConstraintDialog", () => {
 	it("given_aNewDaysOffRule_when_chosen_then_everyNonWorkingDayTypeCountsAndAllComparisonsAreOffered", async () => {
 		const user = userEvent.setup();
 		renderDialog();
-		await start(user, "Days off in a run of days");
+		await start(user, "Days off each week");
 
 		expect(trigger(/^Day types/)).toHaveTextContent(/2/);
 		await user.click(trigger(/^At least, at most or exactly/));
@@ -1160,7 +1160,7 @@ describe("ConstraintDialog", () => {
 	it("given_aDaysOffRuleAtMost_when_onlyRestDaysCount_then_takesOutAtMostAndOffersAtLeastOnly", async () => {
 		const user = userEvent.setup();
 		renderDialog();
-		await start(user, "Days off in a run of days");
+		await start(user, "Days off each week");
 		await pick(user, /^At least, at most or exactly/, "At most");
 
 		// Unticking Day off leaves only Rest days counted.
@@ -1269,7 +1269,7 @@ describe("ConstraintDialog", () => {
 		const daysOff = screen.getByRole("spinbutton", { name: /^Days off/ });
 
 		expect(nameField()).toHaveValue("Two days off");
-		expect(screen.getByText("Days off in a run of days")).toBeVisible();
+		expect(screen.getByText("Days off each week")).toBeVisible();
 		expect(screen.getByRole("radio", { name: "Must" })).toBeChecked();
 		expect(trigger(/^At least, at most or exactly/)).toHaveTextContent(
 			"At least"
@@ -1299,31 +1299,90 @@ describe("ConstraintDialog", () => {
 				values: [
 					{ field: "COMPARISON", value: "AT_LEAST" },
 					{ field: "DAYS_OFF", value: "2" },
-					{ field: "PERIOD_DAYS", value: "7" },
+					{ field: "PERIOD_WEEKS", value: "1" },
 				],
 			});
 		});
 	});
 
-	it("given_aDaysOffConstraint_when_itsPeriodIsLongerThanAWeek_then_refusedWithTheDeclaredRange", async () => {
+	it("given_aDaysOffConstraint_when_itsPeriodIsChosen_then_offeredAsEveryWeekToEvery4WeeksAndSentInWeeks", async () => {
 		const user = userEvent.setup();
 		const { onSave } = renderDialog({ editing: constraint("two-days-off") });
 		await screen.findByRole("dialog", { name: "Edit constraint" });
-		const periodDays = screen.getByRole("spinbutton", {
-			name: /^Days in a row/,
-		});
 
+		expect(trigger(/^How often/)).toHaveTextContent("Every week");
 		expect(
-			screen.getByText("For example 7: any 7 days in a row. 1 to 7.")
+			screen.getByText(
+				"Weeks run Monday to Sunday. A period of 2 to 4 weeks is a fixed block that carries on from one schedule to the next."
+			)
 		).toBeVisible();
-
-		await user.clear(periodDays);
-		await user.type(periodDays, "8");
+		await user.click(trigger(/^How often/));
+		expect(
+			screen.getAllByRole("option").map((option) => option.textContent)
+		).toEqual([
+			"Every week",
+			"Every 2 weeks",
+			"Every 3 weeks",
+			"Every 4 weeks",
+		]);
+		await user.click(screen.getByRole("option", { name: "Every 2 weeks" }));
+		const daysOff = screen.getByRole("spinbutton", { name: /^Days off/ });
+		await user.clear(daysOff);
+		await user.type(daysOff, "8");
 		await user.click(submitButton());
-		expect(
-			await screen.findByText("Enter a whole number from 1 to 7.")
-		).toBeVisible();
+
+		await waitFor(() => {
+			expect(onSave).toHaveBeenCalledWith(
+				expect.objectContaining({
+					values: [
+						{ field: "COMPARISON", value: "AT_LEAST" },
+						{ field: "DAYS_OFF", value: "8" },
+						{ field: "PERIOD_WEEKS", value: "2" },
+					],
+				})
+			);
+		});
+	});
+
+	it("given_aDaysOffConstraintThatKeptItsPeriodInDays_when_edited_then_asksForAPeriodInWeeksAndSendsNoDays", async () => {
+		const user = userEvent.setup();
+		const twoDaysOff = constraint("two-days-off");
+		const { onSave } = renderDialog({
+			editing: {
+				...twoDaysOff,
+				values: [
+					...twoDaysOff.values.filter(
+						(value) => value.field !== "PERIOD_WEEKS"
+					),
+					{
+						field: "PERIOD_DAYS",
+						value: "6",
+						name: null,
+						problem: "PERIOD_IN_DAYS",
+					},
+				],
+			},
+		});
+		await screen.findByRole("dialog", { name: "Edit constraint" });
+
+		await user.click(submitButton());
+		expect(await screen.findByText("Choose one.")).toBeVisible();
 		expect(onSave).not.toHaveBeenCalled();
+
+		await pick(user, /^How often/, "Every week");
+		await user.click(submitButton());
+
+		await waitFor(() => {
+			expect(onSave).toHaveBeenCalledWith(
+				expect.objectContaining({
+					values: [
+						{ field: "COMPARISON", value: "AT_LEAST" },
+						{ field: "DAYS_OFF", value: "2" },
+						{ field: "PERIOD_WEEKS", value: "1" },
+					],
+				})
+			);
+		});
 	});
 
 	it.each([
